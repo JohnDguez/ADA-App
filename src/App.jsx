@@ -7,6 +7,7 @@ import { HomePage } from './pages/HomePage'
 import { PaymentsPage } from './pages/PaymentsPage'
 import { BudgetPage } from './pages/BudgetPage'
 import { HistoryPage } from './pages/HistoryPage'
+import { RecurrentsPage } from './pages/RecurrentsPage'
 import { SettingsPage } from './pages/SettingsPage'
 import { BottomNav } from './components/BottomNav'
 import { PaymentModal } from './components/PaymentModal'
@@ -19,7 +20,9 @@ export default function App() {
   const {
     payments, addPayment, addInstallmentPayment,
     updatePayment, markPaid, markUnpaid,
-    postponePayment, deletePayment, deleteGroup, deleteInstallmentGroup
+    postponePayment,
+    pauseRecurrent, resumeRecurrent,
+    deletePayment, deleteRecurrentFuture, deleteInstallmentGroup, deleteGroup,
   } = usePayments(user?.id)
   const { profile, updateProfile } = useProfile(user?.id)
   const [tab, setTab] = useState('home')
@@ -35,8 +38,7 @@ export default function App() {
 
   async function handleMarkPaid(p) {
     if (p.is_variable && !p.is_paid) {
-      setVarModal({ open: true, payment: p })
-      return
+      setVarModal({ open: true, payment: p }); return
     }
     await markPaid(p.id)
     showToast(`${p.name} marcado como pagado`)
@@ -45,7 +47,7 @@ export default function App() {
   async function handleVarConfirm(amount) {
     const p = varModal.payment
     await markPaid(p.id, amount)
-    showToast(`${p.name} pagado — ${amount}`)
+    showToast(`${p.name} — ${amount} registrado`)
     setVarModal({ open: false, payment: null })
   }
 
@@ -61,7 +63,7 @@ export default function App() {
 
   async function handleAdvance(p) {
     await markPaid(p.id)
-    showToast(`Pago ${p.current_installment}/${p.total_installments} adelantado`)
+    showToast(`Pago ${p.current_installment}/${p.total_installments} completado`)
   }
 
   async function handleDelete(id) {
@@ -80,10 +82,25 @@ export default function App() {
         await deletePayment(id)
       }
     } else {
-      if (!window.confirm(`¿Eliminar "${p.name}"?`)) return
+      if (!window.confirm(`¿Eliminar este pago?`)) return
       await deletePayment(id)
     }
     showToast('Pago eliminado')
+  }
+
+  async function handlePauseRecurrent(name) {
+    await pauseRecurrent(name)
+    showToast(`${name} pausado`)
+  }
+
+  async function handleResumeRecurrent(name) {
+    await resumeRecurrent(name)
+    showToast(`${name} reactivado`)
+  }
+
+  async function handleDeleteRecurrent(name) {
+    await deleteRecurrentFuture(name)
+    showToast('Pagos futuros eliminados')
   }
 
   async function handleSave(data) {
@@ -113,19 +130,24 @@ export default function App() {
     onAdvance: handleAdvance,
   }
 
+  const showFab = ['home', 'payments'].includes(tab)
+
   return (
     <>
       {tab === 'home' && <HomePage payments={payments} profile={profile} onAdd={openAdd} {...sharedHandlers} />}
       {tab === 'payments' && <PaymentsPage payments={payments} profile={profile} onAdd={openAdd} {...sharedHandlers} />}
+      {tab === 'recurrents' && <RecurrentsPage payments={payments} onPause={handlePauseRecurrent} onResume={handleResumeRecurrent} onDelete={handleDeleteRecurrent} />}
       {tab === 'history' && <HistoryPage payments={payments} />}
       {tab === 'budget' && <BudgetPage payments={payments} profile={profile} />}
       {tab === 'settings' && <SettingsPage profile={profile} user={user} onUpdate={updateProfile} />}
 
       <BottomNav active={tab} onChange={setTab} />
 
-      <button onClick={openAdd} style={{ position: 'fixed', bottom: 84, right: 'calc(50% - 194px)', width: 50, height: 50, borderRadius: '50%', background: '#1E6B45', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 3px 10px rgba(30,107,69,0.28)', zIndex: 99, cursor: 'pointer' }}>
-        <Plus size={20} color="#fff" strokeWidth={2.4} />
-      </button>
+      {showFab && (
+        <button onClick={openAdd} style={{ position: 'fixed', bottom: 84, right: 'calc(50% - 194px)', width: 50, height: 50, borderRadius: '50%', background: '#1E6B45', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 3px 10px rgba(30,107,69,0.28)', zIndex: 99, cursor: 'pointer' }}>
+          <Plus size={20} color="#fff" strokeWidth={2.4} />
+        </button>
+      )}
 
       <PaymentModal
         open={modalOpen}
@@ -134,6 +156,7 @@ export default function App() {
         onSaveInstallment={handleSaveInstallment}
         onDelete={handleDelete}
         initial={editPayment}
+        payments={payments}
       />
 
       <VariableAmountModal

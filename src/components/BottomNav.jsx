@@ -1,10 +1,10 @@
-import { Home, CreditCard, DollarSign, Clock, Settings } from 'lucide-react'
+import { Home, CreditCard, DollarSign, Clock, Settings, RefreshCw } from 'lucide-react'
 
 const TABS = [
   { id: 'home', label: 'Inicio', Icon: Home },
   { id: 'payments', label: 'Pagos', Icon: CreditCard },
+  { id: 'recurrents', label: 'Fijos', Icon: RefreshCw },
   { id: 'history', label: 'Historial', Icon: Clock },
-  { id: 'budget', label: 'Presupuesto', Icon: DollarSign },
   { id: 'settings', label: 'Ajustes', Icon: Settings },
 ]
 
