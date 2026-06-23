@@ -14,7 +14,7 @@ import { Plus } from 'lucide-react'
 
 export default function App() {
   const { user, loading: authLoading } = useAuth()
-  const { payments, addPayment, updatePayment, markPaid, deletePayment } = usePayments(user?.id)
+  const { payments, addPayment, updatePayment, markPaid, postponePayment, deletePayment, deleteGroup } = usePayments(user?.id)
   const { profile, updateProfile } = useProfile(user?.id)
   const [tab, setTab] = useState('home')
   const [modalOpen, setModalOpen] = useState(false)
@@ -24,16 +24,34 @@ export default function App() {
   if (!user) return <AuthPage />
 
   function openAdd() { setEditPayment(null); setModalOpen(true) }
-
   function openEdit(p) { setEditPayment(p); setModalOpen(true) }
 
-  async function handleCardClick(p) {
-    if (!p.is_paid) {
-      await markPaid(p.id)
-      showToast(`${p.name} marcado como pagado`)
+  async function handleMarkPaid(p) {
+    await markPaid(p.id)
+    showToast(`${p.name} marcado como pagado`)
+  }
+
+  async function handlePostpone(p) {
+    await postponePayment(p)
+    showToast(`${p.name} pospuesto al siguiente periodo`)
+  }
+
+  async function handleDelete(id) {
+    const p = payments.find(x => x.id === id)
+    if (p?.is_recurrent && !p?.parent_id) {
+      const hasChildren = payments.some(x => x.parent_id === id)
+      if (hasChildren) {
+        if (!window.confirm(`¿Eliminar "${p.name}" y todos sus periodos?`)) return
+        await deleteGroup(id)
+      } else {
+        if (!window.confirm(`¿Eliminar "${p?.name}"?`)) return
+        await deletePayment(id)
+      }
     } else {
-      openEdit(p)
+      if (!window.confirm(`¿Eliminar este pago?`)) return
+      await deletePayment(id)
     }
+    showToast('Pago eliminado')
   }
 
   async function handleSave(data) {
@@ -48,24 +66,23 @@ export default function App() {
     }
   }
 
-  async function handleDelete(id) {
-    const { error } = await deletePayment(id)
-    if (error) showToast('Error al eliminar')
-    else showToast('Pago eliminado')
+  const sharedHandlers = {
+    onMarkPaid: handleMarkPaid,
+    onEdit: openEdit,
+    onDelete: handleDelete,
+    onPostpone: handlePostpone,
   }
-
-  const sharedProps = { payments, profile, onAdd: openAdd, onCardClick: handleCardClick }
 
   return (
     <>
-      {tab === 'home' && <HomePage {...sharedProps} />}
-      {tab === 'payments' && <PaymentsPage {...sharedProps} />}
-      {tab === 'budget' && <BudgetPage payments={payments} />}
+      {tab === 'home' && <HomePage payments={payments} profile={profile} onAdd={openAdd} {...sharedHandlers} />}
+      {tab === 'payments' && <PaymentsPage payments={payments} profile={profile} onAdd={openAdd} {...sharedHandlers} />}
+      {tab === 'budget' && <BudgetPage payments={payments} profile={profile} />}
       {tab === 'settings' && <SettingsPage profile={profile} user={user} onUpdate={updateProfile} />}
 
       <BottomNav active={tab} onChange={setTab} />
 
-      <button onClick={openAdd} style={{ position: 'fixed', bottom: 84, right: 'calc(50% - 194px)', width: 50, height: 50, borderRadius: '50%', background: '#1E6B45', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 3px 10px rgba(30,107,69,0.28)', zIndex: 99 }}>
+      <button onClick={openAdd} style={{ position: 'fixed', bottom: 84, right: 'calc(50% - 194px)', width: 50, height: 50, borderRadius: '50%', background: '#1E6B45', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 3px 10px rgba(30,107,69,0.28)', zIndex: 99, cursor: 'pointer' }}>
         <Plus size={20} color="#fff" strokeWidth={2.4} />
       </button>
 
@@ -76,7 +93,6 @@ export default function App() {
         onDelete={handleDelete}
         initial={editPayment}
       />
-
       <Toast />
     </>
   )

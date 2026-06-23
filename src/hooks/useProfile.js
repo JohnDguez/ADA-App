@@ -7,6 +7,8 @@ const DEFAULT_PROFILE = {
   cobro_freq: 'weekly',
   cobro_weekday: 5,
   reminder_days: 3,
+  salary_enabled: false,
+  salary_amount: 0,
 }
 
 export function useProfile(userId) {

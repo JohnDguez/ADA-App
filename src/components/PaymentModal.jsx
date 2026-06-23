@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { CATEGORIES } from '../lib/utils'
+import { CATEGORIES, RECUR_FREQ } from '../lib/utils'
 
 export function PaymentModal({ open, onClose, onSave, onDelete, initial }) {
   const [name, setName] = useState('')
@@ -8,6 +8,7 @@ export function PaymentModal({ open, onClose, onSave, onDelete, initial }) {
   const [category, setCategory] = useState('Servicios')
   const [isVariable, setIsVariable] = useState(false)
   const [isRecurrent, setIsRecurrent] = useState(false)
+  const [recurFreq, setRecurFreq] = useState('monthly')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
 
@@ -19,9 +20,12 @@ export function PaymentModal({ open, onClose, onSave, onDelete, initial }) {
       setCategory(initial.category || 'Servicios')
       setIsVariable(initial.is_variable || false)
       setIsRecurrent(initial.is_recurrent || false)
+      setRecurFreq(initial.recur_freq || 'monthly')
     } else {
-      setName(''); setAmount(''); setDueDate(new Date().toISOString().split('T')[0])
-      setCategory('Servicios'); setIsVariable(false); setIsRecurrent(false)
+      setName(''); setAmount('')
+      setDueDate(new Date().toISOString().split('T')[0])
+      setCategory('Servicios'); setIsVariable(false)
+      setIsRecurrent(false); setRecurFreq('monthly')
     }
     setError('')
   }, [initial, open])
@@ -31,23 +35,35 @@ export function PaymentModal({ open, onClose, onSave, onDelete, initial }) {
     if (!dueDate) { setError('Selecciona la fecha de vencimiento'); return }
     if (!isVariable && (!amount || isNaN(parseFloat(amount)))) { setError('Agrega el monto o marca como variable'); return }
     setSaving(true)
-    await onSave({ name: name.trim(), amount: isVariable ? 0 : parseFloat(amount), due_date: dueDate, category, is_variable: isVariable, is_recurrent: isRecurrent, is_paid: initial?.is_paid || false })
+    await onSave({
+      name: name.trim(),
+      amount: isVariable ? 0 : parseFloat(amount),
+      due_date: dueDate,
+      category,
+      is_variable: isVariable,
+      is_recurrent: isRecurrent,
+      recur_freq: isRecurrent ? recurFreq : null,
+      is_paid: initial?.is_paid || false,
+    })
     setSaving(false)
     onClose()
   }
 
   async function handleDelete() {
     if (!initial?.id) return
-    if (!window.confirm(`¿Eliminar "${initial.name}"?`)) return
     await onDelete(initial.id)
     onClose()
   }
 
   if (!open) return null
 
+  const S = {
+    input: { width: '100%', padding: '10px 12px', border: '0.5px solid #E4E2DC', borderRadius: 8, fontFamily: 'DM Sans, sans-serif', fontSize: 14, background: '#F7F6F3', color: '#1A1915', outline: 'none', WebkitAppearance: 'none', appearance: 'none' },
+  }
+
   return (
-    <div onClick={(e) => e.target === e.currentTarget && onClose()} style={{ position: 'fixed', inset: 0, background: 'rgba(26,25,21,0.45)', zIndex: 200, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
-      <div style={{ background: '#fff', borderRadius: '20px 20px 0 0', width: '100%', maxWidth: 420, padding: '18px 16px 32px', maxHeight: '88vh', overflowY: 'auto' }}>
+    <div onClick={e => e.target === e.currentTarget && onClose()} style={{ position: 'fixed', inset: 0, background: 'rgba(26,25,21,0.45)', zIndex: 200, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
+      <div style={{ background: '#fff', borderRadius: '20px 20px 0 0', width: '100%', maxWidth: 420, padding: '18px 16px 32px', maxHeight: '90vh', overflowY: 'auto' }}>
         <div style={{ width: 34, height: 4, borderRadius: 2, background: '#E4E2DC', margin: '0 auto 18px' }} />
         <div style={{ fontSize: 16, fontWeight: 600, color: '#1A1915', marginBottom: 16 }}>
           {initial ? 'Editar pago' : 'Nuevo pago'}
@@ -56,14 +72,14 @@ export function PaymentModal({ open, onClose, onSave, onDelete, initial }) {
         {error && <div style={{ background: '#FCDEDE', border: '0.5px solid #F5BABA', borderRadius: 8, padding: '8px 12px', fontSize: 13, color: '#B83232', marginBottom: 12 }}>{error}</div>}
 
         <Field label="Nombre">
-          <input type="text" value={name} onChange={e => setName(e.target.value)} placeholder="Ej. Renta, Netflix, Telcel…" />
+          <input style={S.input} type="text" value={name} onChange={e => setName(e.target.value)} placeholder="Ej. Renta, Netflix, Super…" />
         </Field>
 
         <Toggle label="Monto variable" sub="Luz, agua — cambia cada mes" value={isVariable} onChange={setIsVariable} />
 
         {!isVariable && (
           <Field label="Monto">
-            <input type="number" value={amount} onChange={e => setAmount(e.target.value)} placeholder="0.00" />
+            <input style={S.input} type="number" value={amount} onChange={e => setAmount(e.target.value)} placeholder="0.00" />
           </Field>
         )}
 
@@ -75,25 +91,38 @@ export function PaymentModal({ open, onClose, onSave, onDelete, initial }) {
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
           <Field label="Fecha de vencimiento">
-            <input type="date" value={dueDate} onChange={e => setDueDate(e.target.value)} />
+            <input style={S.input} type="date" value={dueDate} onChange={e => setDueDate(e.target.value)} />
           </Field>
           <Field label="Categoría">
-            <select value={category} onChange={e => setCategory(e.target.value)}>
+            <select style={S.input} value={category} onChange={e => setCategory(e.target.value)}>
               {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
             </select>
           </Field>
         </div>
 
-        <Toggle label="Pago recurrente" sub="Se repite cada mes en la misma fecha" value={isRecurrent} onChange={setIsRecurrent} />
+        <Toggle label="Pago recurrente" sub="Se repite en la misma fecha" value={isRecurrent} onChange={setIsRecurrent} />
 
-        <button onClick={handleSave} disabled={saving} style={{ width: '100%', padding: 12, background: '#1E6B45', color: '#fff', border: 'none', borderRadius: 8, fontSize: 14, fontWeight: 600, marginTop: 4, opacity: saving ? 0.7 : 1 }}>
+        {isRecurrent && (
+          <div style={{ marginBottom: 12 }}>
+            <label style={{ display: 'block', fontSize: 10, fontWeight: 600, color: '#5C5A55', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>Frecuencia</label>
+            <div style={{ display: 'flex', gap: 6 }}>
+              {Object.entries(RECUR_FREQ).map(([val, label]) => (
+                <button key={val} onClick={() => setRecurFreq(val)} style={{ flex: 1, padding: '8px 0', borderRadius: 8, border: recurFreq === val ? '1.5px solid #1E6B45' : '0.5px solid #E4E2DC', background: recurFreq === val ? '#EAF4EE' : '#F7F6F3', color: recurFreq === val ? '#1E6B45' : '#5C5A55', fontSize: 13, fontWeight: recurFreq === val ? 600 : 400, fontFamily: 'DM Sans, sans-serif', cursor: 'pointer' }}>
+                  {label}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        <button onClick={handleSave} disabled={saving} style={{ width: '100%', padding: 12, background: '#1E6B45', color: '#fff', border: 'none', borderRadius: 8, fontSize: 14, fontWeight: 600, fontFamily: 'DM Sans, sans-serif', marginTop: 4, opacity: saving ? 0.7 : 1, cursor: 'pointer' }}>
           {saving ? 'Guardando…' : initial ? 'Guardar cambios' : 'Guardar pago'}
         </button>
-        <button onClick={onClose} style={{ width: '100%', padding: 10, background: 'none', color: '#5C5A55', border: '0.5px solid #E4E2DC', borderRadius: 8, fontSize: 14, marginTop: 8 }}>
+        <button onClick={onClose} style={{ width: '100%', padding: 10, background: 'none', color: '#5C5A55', border: '0.5px solid #E4E2DC', borderRadius: 8, fontSize: 14, fontFamily: 'DM Sans, sans-serif', cursor: 'pointer', marginTop: 8 }}>
           Cancelar
         </button>
         {initial && (
-          <button onClick={handleDelete} style={{ width: '100%', padding: 10, background: 'none', color: '#B83232', border: '0.5px solid #FCDEDE', borderRadius: 8, fontSize: 14, marginTop: 6 }}>
+          <button onClick={handleDelete} style={{ width: '100%', padding: 10, background: 'none', color: '#B83232', border: '0.5px solid #FCDEDE', borderRadius: 8, fontSize: 14, fontFamily: 'DM Sans, sans-serif', cursor: 'pointer', marginTop: 6 }}>
             Eliminar pago
           </button>
         )}
