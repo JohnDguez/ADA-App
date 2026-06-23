@@ -1,108 +1,164 @@
 import { useState, useEffect } from 'react'
-import { CATEGORIES, RECUR_FREQ } from '../lib/utils'
+import { CATEGORIES, RECUR_FREQ, WEEKDAYS_SHORT, nextWeekdayDate, nextBiweeklyDate } from '../lib/utils'
 
-export function PaymentModal({ open, onClose, onSave, onDelete, initial }) {
+export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelete, initial }) {
+  const [mode, setMode] = useState('single') // single | recurrent | installment
   const [name, setName] = useState('')
   const [amount, setAmount] = useState('')
   const [dueDate, setDueDate] = useState('')
   const [category, setCategory] = useState('Servicios')
   const [isVariable, setIsVariable] = useState(false)
-  const [isRecurrent, setIsRecurrent] = useState(false)
   const [recurFreq, setRecurFreq] = useState('monthly')
+  const [weekday, setWeekday] = useState(5)
+  // Parcialidades
+  const [totalInstallments, setTotalInstallments] = useState('')
+  const [startFrom, setStartFrom] = useState('1')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
 
   useEffect(() => {
+    if (!open) return
     if (initial) {
       setName(initial.name || '')
       setAmount(initial.amount || '')
       setDueDate(initial.due_date || '')
       setCategory(initial.category || 'Servicios')
       setIsVariable(initial.is_variable || false)
-      setIsRecurrent(initial.is_recurrent || false)
       setRecurFreq(initial.recur_freq || 'monthly')
+      setMode(initial.is_installment ? 'installment' : initial.is_recurrent ? 'recurrent' : 'single')
+      setTotalInstallments(initial.total_installments || '')
+      setStartFrom('1')
     } else {
-      setName(''); setAmount('')
+      setName(''); setAmount(''); setCategory('Servicios')
+      setIsVariable(false); setRecurFreq('monthly'); setWeekday(5)
+      setMode('single'); setTotalInstallments(''); setStartFrom('1')
       setDueDate(new Date().toISOString().split('T')[0])
-      setCategory('Servicios'); setIsVariable(false)
-      setIsRecurrent(false); setRecurFreq('monthly')
     }
     setError('')
   }, [initial, open])
 
+  // Auto-calcula fecha según frecuencia
+  function calcFirstDate() {
+    if (recurFreq === 'monthly') return dueDate
+    if (recurFreq === 'weekly') return nextWeekdayDate(weekday).toISOString().split('T')[0]
+    if (recurFreq === 'biweekly') return nextBiweeklyDate().toISOString().split('T')[0]
+    return dueDate
+  }
+
   async function handleSave() {
-    if (!name.trim()) { setError('Escribe el nombre del pago'); return }
-    if (!dueDate) { setError('Selecciona la fecha de vencimiento'); return }
+    setError('')
+    if (!name.trim()) { setError('Escribe el nombre'); return }
+
+    if (mode === 'installment') {
+      if (!amount || isNaN(parseFloat(amount))) { setError('Agrega el monto por pago'); return }
+      if (!totalInstallments || isNaN(parseInt(totalInstallments))) { setError('Agrega el número de pagos'); return }
+      const total = parseInt(totalInstallments)
+      const start = parseInt(startFrom) || 1
+      if (start > total) { setError('El pago inicial no puede ser mayor al total'); return }
+      const firstDate = calcFirstDate()
+      if (!firstDate) { setError('Selecciona la fecha del primer pago'); return }
+      setSaving(true)
+      await onSaveInstallment({
+        name: name.trim(), amount: parseFloat(amount),
+        totalInstallments: total, startFrom: start,
+        recurFreq, category, firstDate
+      })
+      setSaving(false)
+      onClose(); return
+    }
+
     if (!isVariable && (!amount || isNaN(parseFloat(amount)))) { setError('Agrega el monto o marca como variable'); return }
+
+    let finalDate = dueDate
+    if (mode === 'recurrent' && recurFreq !== 'monthly') finalDate = calcFirstDate()
+    if (!finalDate) { setError('Selecciona la fecha'); return }
+
     setSaving(true)
     await onSave({
       name: name.trim(),
       amount: isVariable ? 0 : parseFloat(amount),
-      due_date: dueDate,
+      due_date: finalDate,
       category,
       is_variable: isVariable,
-      is_recurrent: isRecurrent,
-      recur_freq: isRecurrent ? recurFreq : null,
+      is_recurrent: mode === 'recurrent',
+      recur_freq: mode === 'recurrent' ? recurFreq : null,
       is_paid: initial?.is_paid || false,
+      is_installment: false,
     })
     setSaving(false)
     onClose()
   }
 
-  async function handleDelete() {
-    if (!initial?.id) return
-    await onDelete(initial.id)
-    onClose()
-  }
-
   if (!open) return null
 
-  const S = {
-    input: { width: '100%', padding: '10px 12px', border: '0.5px solid #E4E2DC', borderRadius: 8, fontFamily: 'DM Sans, sans-serif', fontSize: 14, background: '#F7F6F3', color: '#1A1915', outline: 'none', WebkitAppearance: 'none', appearance: 'none' },
-  }
+  const S = { input: { width: '100%', padding: '10px 12px', border: '0.5px solid #E4E2DC', borderRadius: 8, fontFamily: 'DM Sans, sans-serif', fontSize: 14, background: '#F7F6F3', color: '#1A1915', outline: 'none', WebkitAppearance: 'none', appearance: 'none' } }
+
+  const showDatePicker = mode === 'single' || (mode === 'recurrent' && recurFreq === 'monthly') || (mode === 'installment' && recurFreq === 'monthly')
+  const showWeekdayPicker = (mode === 'recurrent' || mode === 'installment') && recurFreq === 'weekly'
+  const showBiweeklyInfo = (mode === 'recurrent' || mode === 'installment') && recurFreq === 'biweekly'
 
   return (
     <div onClick={e => e.target === e.currentTarget && onClose()} style={{ position: 'fixed', inset: 0, background: 'rgba(26,25,21,0.45)', zIndex: 200, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
-      <div style={{ background: '#fff', borderRadius: '20px 20px 0 0', width: '100%', maxWidth: 420, padding: '18px 16px 32px', maxHeight: '90vh', overflowY: 'auto' }}>
-        <div style={{ width: 34, height: 4, borderRadius: 2, background: '#E4E2DC', margin: '0 auto 18px' }} />
-        <div style={{ fontSize: 16, fontWeight: 600, color: '#1A1915', marginBottom: 16 }}>
-          {initial ? 'Editar pago' : 'Nuevo pago'}
+      <div style={{ background: '#fff', borderRadius: '20px 20px 0 0', width: '100%', maxWidth: 420, padding: '18px 16px 32px', maxHeight: '92vh', overflowY: 'auto' }}>
+        <div style={{ width: 34, height: 4, borderRadius: 2, background: '#E4E2DC', margin: '0 auto 16px' }} />
+
+        {/* Selector de tipo */}
+        {!initial && (
+          <div style={{ display: 'flex', background: '#F0EFE9', borderRadius: 10, padding: 3, marginBottom: 16 }}>
+            {[['single','Pago único'],['recurrent','Recurrente'],['installment','Parcialidades']].map(([m, label]) => (
+              <button key={m} onClick={() => setMode(m)} style={{ flex: 1, padding: '8px 0', borderRadius: 8, border: 'none', background: mode === m ? '#fff' : 'transparent', color: mode === m ? '#1A1915' : '#5C5A55', fontWeight: mode === m ? 600 : 400, fontSize: 12, fontFamily: 'DM Sans, sans-serif', cursor: 'pointer', transition: 'all .15s' }}>
+                {label}
+              </button>
+            ))}
+          </div>
+        )}
+
+        <div style={{ fontSize: 16, fontWeight: 600, color: '#1A1915', marginBottom: 14 }}>
+          {initial ? 'Editar pago' : mode === 'installment' ? 'Pago en parcialidades' : mode === 'recurrent' ? 'Pago recurrente' : 'Nuevo pago'}
         </div>
 
         {error && <div style={{ background: '#FCDEDE', border: '0.5px solid #F5BABA', borderRadius: 8, padding: '8px 12px', fontSize: 13, color: '#B83232', marginBottom: 12 }}>{error}</div>}
 
         <Field label="Nombre">
-          <input style={S.input} type="text" value={name} onChange={e => setName(e.target.value)} placeholder="Ej. Renta, Netflix, Super…" />
+          <input style={S.input} type="text" value={name} onChange={e => setName(e.target.value)} placeholder={mode === 'installment' ? 'Ej. Celular a pagos, Deuda hermano…' : 'Ej. Renta, Netflix, Super…'} />
         </Field>
 
-        <Toggle label="Monto variable" sub="Luz, agua — cambia cada mes" value={isVariable} onChange={setIsVariable} />
+        {mode !== 'installment' && (
+          <Toggle label="Monto variable" sub="Luz, agua — cambia cada mes" value={isVariable} onChange={setIsVariable} />
+        )}
 
-        {!isVariable && (
-          <Field label="Monto">
+        {(!isVariable || mode === 'installment') && (
+          <Field label={mode === 'installment' ? 'Monto por pago' : 'Monto'}>
             <input style={S.input} type="number" value={amount} onChange={e => setAmount(e.target.value)} placeholder="0.00" />
           </Field>
         )}
 
-        {isVariable && (
+        {isVariable && mode !== 'installment' && (
           <div style={{ background: '#FEF3DC', border: '0.5px solid #F5D9A0', borderRadius: 8, padding: '10px 12px', marginBottom: 12, fontSize: 12, color: '#A06B12' }}>
-            Se guardará sin monto fijo. La app te recordará 3 días antes y en tu día de cobro más cercano.
+            Se guardará sin monto fijo. La app te recordará 3 días antes y en tu día de cobro.
           </div>
         )}
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-          <Field label="Fecha de vencimiento">
-            <input style={S.input} type="date" value={dueDate} onChange={e => setDueDate(e.target.value)} />
-          </Field>
-          <Field label="Categoría">
-            <select style={S.input} value={category} onChange={e => setCategory(e.target.value)}>
-              {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
-            </select>
-          </Field>
-        </div>
+        {/* Parcialidades: número de pagos y desde cuál */}
+        {mode === 'installment' && (
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+            <Field label="Total de pagos">
+              <input style={S.input} type="number" min="1" value={totalInstallments} onChange={e => setTotalInstallments(e.target.value)} placeholder="Ej. 12" />
+            </Field>
+            <Field label="Empezar desde pago #">
+              <input style={S.input} type="number" min="1" value={startFrom} onChange={e => setStartFrom(e.target.value)} placeholder="1" />
+            </Field>
+          </div>
+        )}
 
-        <Toggle label="Pago recurrente" sub="Se repite en la misma fecha" value={isRecurrent} onChange={setIsRecurrent} />
+        <Field label="Categoría">
+          <select style={S.input} value={category} onChange={e => setCategory(e.target.value)}>
+            {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+          </select>
+        </Field>
 
-        {isRecurrent && (
+        {/* Frecuencia para recurrente y parcialidades */}
+        {(mode === 'recurrent' || mode === 'installment') && (
           <div style={{ marginBottom: 12 }}>
             <label style={{ display: 'block', fontSize: 10, fontWeight: 600, color: '#5C5A55', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>Frecuencia</label>
             <div style={{ display: 'flex', gap: 6 }}>
@@ -115,6 +171,48 @@ export function PaymentModal({ open, onClose, onSave, onDelete, initial }) {
           </div>
         )}
 
+        {/* Día de semana */}
+        {showWeekdayPicker && (
+          <div style={{ marginBottom: 12 }}>
+            <label style={{ display: 'block', fontSize: 10, fontWeight: 600, color: '#5C5A55', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>Día de la semana</label>
+            <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap' }}>
+              {WEEKDAYS_SHORT.map((d, i) => (
+                <button key={i} onClick={() => setWeekday(i)} style={{ padding: '6px 10px', borderRadius: 20, border: weekday === i ? '1.5px solid #1E6B45' : '0.5px solid #E4E2DC', background: weekday === i ? '#EAF4EE' : '#F7F6F3', color: weekday === i ? '#1E6B45' : '#5C5A55', fontSize: 12, fontWeight: weekday === i ? 600 : 400, fontFamily: 'DM Sans, sans-serif', cursor: 'pointer' }}>
+                  {d}
+                </button>
+              ))}
+            </div>
+            <div style={{ fontSize: 11, color: '#5C5A55', marginTop: 6 }}>
+              El primer pago será el próximo {WEEKDAYS_SHORT[weekday]} — {nextWeekdayDate(weekday).toLocaleDateString('es-MX', { day: 'numeric', month: 'long' })}
+            </div>
+          </div>
+        )}
+
+        {/* Info quincenal */}
+        {showBiweeklyInfo && (
+          <div style={{ background: '#EAF4EE', border: '0.5px solid #C5E0CF', borderRadius: 8, padding: '10px 12px', marginBottom: 12, fontSize: 12, color: '#1E6B45' }}>
+            El primer pago será el {nextBiweeklyDate().toLocaleDateString('es-MX', { day: 'numeric', month: 'long' })} (próxima quincena)
+          </div>
+        )}
+
+        {/* Fecha para mensual y único */}
+        {showDatePicker && (
+          <Field label={mode === 'installment' ? 'Fecha del primer pago' : 'Fecha de vencimiento'}>
+            <input style={S.input} type="date" value={dueDate} onChange={e => setDueDate(e.target.value)} />
+          </Field>
+        )}
+
+        {/* Resumen parcialidades */}
+        {mode === 'installment' && totalInstallments && startFrom && amount && (
+          <div style={{ background: '#F7F6F3', border: '0.5px solid #E4E2DC', borderRadius: 8, padding: '10px 12px', marginBottom: 12 }}>
+            <div style={{ fontSize: 12, color: '#5C5A55', lineHeight: 1.6 }}>
+              <div>Total: <strong style={{ color: '#1A1915' }}>{fmt(parseFloat(amount || 0) * parseInt(totalInstallments || 0))}</strong> en {totalInstallments} pagos</div>
+              {parseInt(startFrom) > 1 && <div>Pagos 1–{parseInt(startFrom) - 1} marcados como completados</div>}
+              <div>Activo desde: <strong style={{ color: '#1A1915' }}>Pago {startFrom}/{totalInstallments}</strong></div>
+            </div>
+          </div>
+        )}
+
         <button onClick={handleSave} disabled={saving} style={{ width: '100%', padding: 12, background: '#1E6B45', color: '#fff', border: 'none', borderRadius: 8, fontSize: 14, fontWeight: 600, fontFamily: 'DM Sans, sans-serif', marginTop: 4, opacity: saving ? 0.7 : 1, cursor: 'pointer' }}>
           {saving ? 'Guardando…' : initial ? 'Guardar cambios' : 'Guardar pago'}
         </button>
@@ -122,7 +220,7 @@ export function PaymentModal({ open, onClose, onSave, onDelete, initial }) {
           Cancelar
         </button>
         {initial && (
-          <button onClick={handleDelete} style={{ width: '100%', padding: 10, background: 'none', color: '#B83232', border: '0.5px solid #FCDEDE', borderRadius: 8, fontSize: 14, fontFamily: 'DM Sans, sans-serif', cursor: 'pointer', marginTop: 6 }}>
+          <button onClick={() => { onDelete(initial.id); onClose() }} style={{ width: '100%', padding: 10, background: 'none', color: '#B83232', border: '0.5px solid #FCDEDE', borderRadius: 8, fontSize: 14, fontFamily: 'DM Sans, sans-serif', cursor: 'pointer', marginTop: 6 }}>
             Eliminar pago
           </button>
         )}
@@ -130,6 +228,8 @@ export function PaymentModal({ open, onClose, onSave, onDelete, initial }) {
     </div>
   )
 }
+
+function fmt(n) { return '$' + Number(n).toLocaleString('es-MX', { minimumFractionDigits: 0, maximumFractionDigits: 0 }) }
 
 function Field({ label, children }) {
   return (

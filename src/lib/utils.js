@@ -6,15 +6,11 @@ export const CATEGORIES = ['Servicios','Suscripciones','Créditos','Renta','Segu
 export const RECUR_FREQ = { weekly: 'Semanal', biweekly: 'Quincenal', monthly: 'Mensual' }
 
 export function today() {
-  const d = new Date()
-  d.setHours(0, 0, 0, 0)
-  return d
+  const d = new Date(); d.setHours(0,0,0,0); return d
 }
 
 export function dateOf(str) {
-  const d = new Date(str + 'T12:00:00')
-  d.setHours(0, 0, 0, 0)
-  return d
+  const d = new Date(str + 'T12:00:00'); d.setHours(0,0,0,0); return d
 }
 
 export function daysDiff(str) {
@@ -26,18 +22,33 @@ export function fmt(n) {
 }
 
 export function addDays(date, n) {
-  const d = new Date(date)
-  d.setDate(d.getDate() + n)
-  return d
+  const d = new Date(date); d.setDate(d.getDate() + n); return d
 }
 
 export function nextPeriodDate(date, freq) {
   const d = dateOf(typeof date === 'string' ? date : date.toISOString().split('T')[0])
   if (freq === 'weekly') return addDays(d, 7)
   if (freq === 'biweekly') return addDays(d, 15)
-  const next = new Date(d)
-  next.setMonth(next.getMonth() + 1)
-  return next
+  const next = new Date(d); next.setMonth(next.getMonth() + 1); return next
+}
+
+// Calcula la próxima fecha de un día de semana dado (0=Dom...6=Sáb)
+export function nextWeekdayDate(weekday) {
+  const t = today()
+  const td = t.getDay()
+  let diff = weekday - td
+  if (diff <= 0) diff += 7
+  return addDays(t, diff)
+}
+
+// Próxima quincena (día 1 o 16 del mes)
+export function nextBiweeklyDate() {
+  const t = today()
+  const d = t.getDate()
+  if (d < 16) {
+    const r = new Date(t); r.setDate(16); return r
+  }
+  const r = new Date(t); r.setMonth(r.getMonth() + 1); r.setDate(1); return r
 }
 
 export function periodLabel(dateStr, freq) {
@@ -60,16 +71,13 @@ export function nextCobroDate(cfg) {
     const td = t.getDay()
     let diff = wd - td
     if (diff < 0) diff += 7
-    const d = new Date(t)
-    d.setDate(t.getDate() + diff)
-    return d
+    const d = new Date(t); d.setDate(t.getDate() + diff); return d
   }
   return t
 }
 
 export function isTodayCobro(cfg) {
-  const nc = nextCobroDate(cfg)
-  return nc.getTime() === today().getTime()
+  return nextCobroDate(cfg).getTime() === today().getTime()
 }
 
 export function getPagarEsteCobro(payments, cfg) {
@@ -96,7 +104,13 @@ export function statusOf(p, cfg) {
   return 'ok'
 }
 
-// Agrupa pagos recurrentes por parent_id
+// Etiqueta de parcialidad: "Pago 3/12"
+export function installmentLabel(p) {
+  if (!p.is_installment) return null
+  return `Pago ${p.current_installment}/${p.total_installments}`
+}
+
+// Agrupa pagos recurrentes por parent_id — solo para la vista de Pagos
 export function groupPayments(payments) {
   const parents = {}
   const children = {}
@@ -124,9 +138,5 @@ export function groupPayments(payments) {
     .flatMap(([, ch]) => ch)
 
   return [...standalone, ...groups, ...orphanChildren]
-    .sort((a, b) => {
-      const da = dateOf(a.due_date)
-      const db = dateOf(b.due_date)
-      return da - db
-    })
+    .sort((a, b) => dateOf(a.due_date) - dateOf(b.due_date))
 }

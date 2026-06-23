@@ -1,12 +1,11 @@
 import { Plus, Bell } from 'lucide-react'
-import { PayCard, GroupCard } from '../components/PayCard'
-import { fmt, nextCobroDate, isTodayCobro, getPagarEsteCobro, statusOf, daysDiff, MONTHS, WEEKDAYS, groupPayments } from '../lib/utils'
+import { PayCard } from '../components/PayCard'
+import { fmt, nextCobroDate, isTodayCobro, getPagarEsteCobro, statusOf, daysDiff, MONTHS, WEEKDAYS } from '../lib/utils'
 
-export function HomePage({ payments, profile, onAdd, onMarkPaid, onEdit, onDelete, onPostpone }) {
+export function HomePage({ payments, profile, onAdd, onMarkPaid, onMarkUnpaid, onEdit, onDelete, onPostpone, onAdvance }) {
   const now = new Date()
   const dateStr = now.toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric', month: 'long' })
   const cobroLabel = profile.cobro_freq === 'weekly' ? WEEKDAYS[profile.cobro_weekday].toLowerCase() : 'día de cobro'
-
   const nc = nextCobroDate(profile)
   const isCobro = isTodayCobro(profile)
   const pagarEsteCobro = getPagarEsteCobro(payments, profile)
@@ -22,19 +21,13 @@ export function HomePage({ payments, profile, onAdd, onMarkPaid, onEdit, onDelet
   const pendingAmt = pending.filter(p => !p.is_variable).reduce((a, p) => a + Number(p.amount), 0)
   const totalAmt = payments.filter(p => !p.is_variable).reduce((a, p) => a + Number(p.amount), 0)
 
+  // En Inicio: pagos simples sin agrupar
   const upcoming = payments.filter(p => {
     const s = statusOf(p, profile)
     return !p.is_paid && !p.postponed && (s === 'ok' || s === 'soon')
-  }).sort((a, b) => new Date(a.due_date) - new Date(b.due_date)).slice(0, 4)
+  }).sort((a, b) => new Date(a.due_date) - new Date(b.due_date)).slice(0, 5)
 
-  const cobroGrouped = groupPayments(pagarEsteCobro)
-
-  function renderItem(item, handlers) {
-    if (item._isGroup) return <GroupCard key={item.id} group={item} cfg={profile} {...handlers} />
-    return <PayCard key={item.id} payment={item} cfg={profile} {...handlers} />
-  }
-
-  const handlers = { onMarkPaid, onEdit, onDelete, onPostpone }
+  const handlers = { onMarkPaid, onMarkUnpaid, onEdit, onDelete, onPostpone, onAdvance }
 
   return (
     <div style={{ paddingBottom: 80 }}>
@@ -51,12 +44,8 @@ export function HomePage({ payments, profile, onAdd, onMarkPaid, onEdit, onDelet
       {isCobro && pagarEsteCobro.length > 0 && (
         <div style={{ margin: '4px 16px 0', background: '#1E6B45', borderRadius: 12, padding: '14px 16px' }}>
           <div style={{ fontSize: 10, fontWeight: 600, color: 'rgba(255,255,255,0.7)', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 4 }}>Dia de cobro</div>
-          <div style={{ fontSize: 15, fontWeight: 600, color: '#fff', marginBottom: 2 }}>
-            Hoy es {WEEKDAYS[nc.getDay()]} {nc.getDate()} de {MONTHS[nc.getMonth()]}
-          </div>
-          <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.75)' }}>
-            {pagarEsteCobro.length} pago{pagarEsteCobro.length !== 1 ? 's' : ''} que cubrir hoy
-          </div>
+          <div style={{ fontSize: 15, fontWeight: 600, color: '#fff', marginBottom: 2 }}>Hoy es {WEEKDAYS[nc.getDay()]} {nc.getDate()} de {MONTHS[nc.getMonth()]}</div>
+          <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.75)' }}>{pagarEsteCobro.length} pago{pagarEsteCobro.length !== 1 ? 's' : ''} que cubrir hoy</div>
         </div>
       )}
 
@@ -87,9 +76,9 @@ export function HomePage({ payments, profile, onAdd, onMarkPaid, onEdit, onDelet
 
       <SectionHead title={`Pagar este ${cobroLabel}`} />
       <div style={{ padding: '0 16px', display: 'flex', flexDirection: 'column', gap: 7 }}>
-        {cobroGrouped.length === 0
+        {pagarEsteCobro.length === 0
           ? <Empty text={`Sin pagos urgentes para este ${cobroLabel}`} />
-          : cobroGrouped.map(item => renderItem(item, handlers))
+          : pagarEsteCobro.map(p => <PayCard key={p.id} payment={p} cfg={profile} {...handlers} />)
         }
       </div>
 
@@ -107,7 +96,6 @@ export function HomePage({ payments, profile, onAdd, onMarkPaid, onEdit, onDelet
 function SectionHead({ title }) {
   return <div style={{ padding: '16px 16px 8px' }}><h2 style={{ fontSize: 10, fontWeight: 600, color: '#5C5A55', textTransform: 'uppercase', letterSpacing: '0.07em' }}>{title}</h2></div>
 }
-
 function Empty({ text }) {
   return <div style={{ textAlign: 'center', padding: '24px', fontSize: 13, color: '#5C5A55' }}>{text}</div>
 }

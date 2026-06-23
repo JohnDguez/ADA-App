@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '../lib/supabase'
-import { nextPeriodDate } from '../lib/utils'
+import { nextPeriodDate, nextWeekdayDate, nextBiweeklyDate, dateOf } from '../lib/utils'
 
 export function usePayments(userId) {
   const [payments, setPayments] = useState([])
@@ -29,6 +29,43 @@ export function usePayments(userId) {
     return { data, error }
   }
 
+  // Crea un set de pagos en parcialidades
+  async function addInstallmentPayment({ name, amount, totalInstallments, startFrom, recurFreq, category, firstDate }) {
+    const toInsert = []
+    let currentDate = new Date(firstDate + 'T12:00:00')
+
+    for (let i = 1; i <= totalInstallments; i++) {
+      const dateStr = currentDate.toISOString().split('T')[0]
+      toInsert.push({
+        user_id: userId,
+        name,
+        amount,
+        due_date: dateStr,
+        category,
+        is_variable: false,
+        is_recurrent: true,
+        recur_freq: recurFreq,
+        is_paid: i < startFrom,
+        paid_at: i < startFrom ? new Date().toISOString() : null,
+        postponed: false,
+        is_installment: true,
+        current_installment: i,
+        total_installments: totalInstallments,
+      })
+      // Calcula siguiente fecha
+      const next = nextPeriodDate(dateStr, recurFreq)
+      currentDate = next
+    }
+
+    // Insertar todos de una
+    const { data, error } = await supabase
+      .from('payments')
+      .insert(toInsert)
+      .select()
+    if (!error) setPayments(prev => [...prev, ...data])
+    return { data, error }
+  }
+
   async function updatePayment(id, updates) {
     const { data, error } = await supabase
       .from('payments')
@@ -40,16 +77,20 @@ export function usePayments(userId) {
     return { data, error }
   }
 
-  async function markPaid(id) {
-    return updatePayment(id, { is_paid: true, paid_at: new Date().toISOString() })
+  async function markPaid(id, amount) {
+    const updates = { is_paid: true, paid_at: new Date().toISOString() }
+    if (amount !== undefined) updates.amount = amount
+    return updatePayment(id, updates)
+  }
+
+  async function markUnpaid(id) {
+    return updatePayment(id, { is_paid: false, paid_at: null })
   }
 
   async function postponePayment(payment) {
-    // Marca el periodo actual como pospuesto
     await updatePayment(payment.id, { postponed: true })
-
-    // Crea el siguiente periodo
-    const nextDate = nextPeriodDate(payment.due_date, payment.recur_freq || 'monthly')
+    const freq = payment.recur_freq || 'monthly'
+    const nextDate = nextPeriodDate(payment.due_date, freq)
     const nextDateStr = nextDate.toISOString().split('T')[0]
 
     const { data, error } = await supabase
@@ -62,17 +103,28 @@ export function usePayments(userId) {
         category: payment.category,
         is_variable: payment.is_variable,
         is_recurrent: payment.is_recurrent,
-        recur_freq: payment.recur_freq,
+        recur_freq: freq,
         is_paid: false,
         postponed: false,
         parent_id: payment.parent_id || payment.id,
         period_date: nextDateStr,
+        is_installment: payment.is_installment,
+        current_installment: payment.current_installment,
+        total_installments: payment.total_installments,
       })
       .select()
       .single()
 
     if (!error) setPayments(prev => [...prev, data])
     return { data, error }
+  }
+
+  // Adelantar pago en parcialidades: marca el actual como pagado y activa el siguiente
+  async function advanceInstallment(payment, amount) {
+    await markPaid(payment.id, amount)
+    // El siguiente periodo ya existe (fue creado con addInstallmentPayment)
+    // Solo necesitamos activar el siguiente no pagado del mismo grupo
+    return { error: null }
   }
 
   async function deletePayment(id) {
@@ -82,7 +134,6 @@ export function usePayments(userId) {
   }
 
   async function deleteGroup(parentId) {
-    // Elimina el parent y todos sus hijos
     const { error } = await supabase
       .from('payments')
       .delete()
@@ -91,5 +142,23 @@ export function usePayments(userId) {
     return { error }
   }
 
-  return { payments, loading, addPayment, updatePayment, markPaid, postponePayment, deletePayment, deleteGroup, refetch: fetchPayments }
+  // Elimina todos los pagos del mismo nombre que son parcialidades
+  async function deleteInstallmentGroup(name, userId_) {
+    const ids = payments
+      .filter(p => p.is_installment && p.name === name)
+      .map(p => p.id)
+    if (!ids.length) return { error: null }
+    const { error } = await supabase.from('payments').delete().in('id', ids)
+    if (!error) setPayments(prev => prev.filter(p => !ids.includes(p.id)))
+    return { error }
+  }
+
+  return {
+    payments, loading,
+    addPayment, addInstallmentPayment,
+    updatePayment, markPaid, markUnpaid,
+    postponePayment, advanceInstallment,
+    deletePayment, deleteGroup, deleteInstallmentGroup,
+    refetch: fetchPayments
+  }
 }
