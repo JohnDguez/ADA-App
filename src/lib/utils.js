@@ -14,7 +14,7 @@ export function addDays(date, n) { const d = new Date(date); d.setDate(d.getDate
 export function nextPeriodDate(date, freq) {
   const d = dateOf(typeof date === 'string' ? date : date.toISOString().split('T')[0])
   if (freq === 'weekly') return addDays(d, 7)
-  if (freq === 'biweekly') return addDays(d, 15)
+  if (freq === 'biweekly') return addDays(d, 14)
   const next = new Date(d); next.setMonth(next.getMonth() + 1); return next
 }
 
@@ -25,24 +25,14 @@ export function nextWeekdayDate(weekday) {
   return addDays(t, diff)
 }
 
-// Quincenal personalizado: siguiente fecha a partir del día del mes especificado
-export function nextBiweeklyFromDay(dayOfMonth) {
+// Quincenal: fecha exacta elegida por el usuario, luego cada 14 días
+export function nextBiweeklyFromDate(dateStr) {
+  const chosen = dateOf(dateStr)
   const t = today()
-  const currentDay = t.getDate()
-  const d = new Date(t)
-  if (currentDay < dayOfMonth) {
-    d.setDate(dayOfMonth)
-    return d
-  }
-  // Siguiente periodo: +15 días desde ese día
-  const nextDay = dayOfMonth + 15
-  if (nextDay <= 28) {
-    d.setDate(nextDay)
-    return d
-  }
-  // Pasó al siguiente mes
-  d.setMonth(d.getMonth() + 1)
-  d.setDate(dayOfMonth)
+  if (chosen >= t) return chosen
+  // Ya pasó — avanza en múltiplos de 14 hasta llegar al futuro
+  let d = new Date(chosen)
+  while (d < t) d = addDays(d, 14)
   return d
 }
 
@@ -59,27 +49,48 @@ export function periodCountLabel(count, freq) {
   return `${count} mes${count !== 1 ? 'es' : ''}`
 }
 
-export function nextCobroDate(cfg) {
+export function installmentLabel(p) {
+  if (!p.is_installment) return null
+  return `Pago ${p.current_installment}/${p.total_installments}`
+}
+
+// Calcula el rango del periodo de cobro actual
+// Retorna { start, end } donde start = día después del último cobro, end = próximo cobro
+export function cobroPeriod(cfg) {
   const t = today()
   if (cfg.cobro_freq === 'weekly') {
     const wd = cfg.cobro_weekday
-    let diff = wd - t.getDay()
-    if (diff < 0) diff += 7
-    const d = new Date(t); d.setDate(t.getDate() + diff); return d
+    const td = t.getDay()
+    // Próximo cobro
+    let diffNext = wd - td
+    if (diffNext < 0) diffNext += 7
+    const nextCobro = addDays(t, diffNext)
+    // Cobro anterior
+    const prevCobro = addDays(nextCobro, -7)
+    // Inicio del periodo = día después del cobro anterior
+    const start = addDays(prevCobro, 1)
+    return { start, end: nextCobro }
   }
-  return t
+  return { start: t, end: t }
 }
 
-export function isTodayCobro(cfg) { return nextCobroDate(cfg).getTime() === today().getTime() }
+export function nextCobroDate(cfg) {
+  const { end } = cobroPeriod(cfg)
+  return end
+}
 
+export function isTodayCobro(cfg) {
+  return nextCobroDate(cfg).getTime() === today().getTime()
+}
+
+// Pagos del periodo actual: vencen entre start y end (inclusive)
+// Incluye vencidos del periodo (overdue dentro del periodo)
 export function getPagarEsteCobro(payments, cfg) {
-  const nc = nextCobroDate(cfg)
-  const nextNext = new Date(nc)
-  if (cfg.cobro_freq === 'weekly') nextNext.setDate(nc.getDate() + 7)
+  const { start, end } = cobroPeriod(cfg)
   return payments.filter(p => {
-    if (p.is_paid || p.postponed || p.paused) return false
+    if (p.is_paid || p.paused) return false
     const vence = dateOf(p.due_date)
-    return vence >= today() && vence < nextNext
+    return vence >= start && vence <= end
   })
 }
 
@@ -89,17 +100,11 @@ export function statusOf(p, cfg) {
   if (p.is_paid) return 'paid'
   const d = daysDiff(p.due_date)
   if (d < 0) return 'overdue'
-  const nc = nextCobroDate(cfg)
-  const nextNext = new Date(nc)
-  if (cfg.cobro_freq === 'weekly') nextNext.setDate(nc.getDate() + 7)
-  if (dateOf(p.due_date) < nextNext) return 'cobro'
+  const { start, end } = cobroPeriod(cfg)
+  const vence = dateOf(p.due_date)
+  if (vence >= start && vence <= end) return 'cobro'
   if (d <= 5) return 'soon'
   return 'ok'
-}
-
-export function installmentLabel(p) {
-  if (!p.is_installment) return null
-  return `Pago ${p.current_installment}/${p.total_installments}`
 }
 
 export function groupPayments(payments) {
@@ -124,12 +129,12 @@ export function groupPayments(payments) {
   return [...standalone, ...groups, ...orphanChildren].sort((a, b) => dateOf(a.due_date) - dateOf(b.due_date))
 }
 
-// Validación de nombre duplicado — ignora pagos que ya fueron eliminados (solo futuros no pagados)
+// Solo bloquea duplicados si hay pagos PENDIENTES (no pagados) con ese nombre
 export function nameExistsActive(payments, name, excludeId = null) {
   const lower = name.trim().toLowerCase()
   return payments.some(p =>
     p.name.toLowerCase() === lower &&
     p.id !== excludeId &&
-    !p.is_paid // solo cuenta si hay al menos uno activo
+    !p.is_paid
   )
 }

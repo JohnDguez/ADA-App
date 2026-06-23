@@ -9,10 +9,7 @@ export function usePayments(userId) {
   const fetchPayments = useCallback(async () => {
     if (!userId) return
     const { data, error } = await supabase
-      .from('payments')
-      .select('*')
-      .eq('user_id', userId)
-      .order('due_date', { ascending: true })
+      .from('payments').select('*').eq('user_id', userId).order('due_date', { ascending: true })
     if (!error) setPayments(data || [])
     setLoading(false)
   }, [userId])
@@ -20,11 +17,7 @@ export function usePayments(userId) {
   useEffect(() => { fetchPayments() }, [fetchPayments])
 
   async function addPayment(payment) {
-    const { data, error } = await supabase
-      .from('payments')
-      .insert({ ...payment, user_id: userId })
-      .select()
-      .single()
+    const { data, error } = await supabase.from('payments').insert({ ...payment, user_id: userId }).select().single()
     if (!error) setPayments(prev => [...prev, data])
     return { data, error }
   }
@@ -35,16 +28,11 @@ export function usePayments(userId) {
     for (let i = 1; i <= totalInstallments; i++) {
       const dateStr = currentDate.toISOString().split('T')[0]
       toInsert.push({
-        user_id: userId, name, amount,
-        due_date: dateStr, category,
-        is_variable: false, is_recurrent: true,
-        recur_freq: recurFreq,
-        is_paid: i < startFrom,
-        paid_at: i < startFrom ? new Date().toISOString() : null,
+        user_id: userId, name, amount, due_date: dateStr, category,
+        is_variable: false, is_recurrent: true, recur_freq: recurFreq,
+        is_paid: i < startFrom, paid_at: i < startFrom ? new Date().toISOString() : null,
         postponed: false, paused: false,
-        is_installment: true,
-        current_installment: i,
-        total_installments: totalInstallments,
+        is_installment: true, current_installment: i, total_installments: totalInstallments,
       })
       currentDate = nextPeriodDate(dateStr, recurFreq)
     }
@@ -54,8 +42,7 @@ export function usePayments(userId) {
   }
 
   async function updatePayment(id, updates) {
-    const { data, error } = await supabase
-      .from('payments').update(updates).eq('id', id).select().single()
+    const { data, error } = await supabase.from('payments').update(updates).eq('id', id).select().single()
     if (!error) setPayments(prev => prev.map(p => p.id === id ? { ...p, ...data } : p))
     return { data, error }
   }
@@ -63,22 +50,23 @@ export function usePayments(userId) {
   async function markPaid(id, amount) {
     const updates = { is_paid: true, paid_at: new Date().toISOString() }
     if (amount !== undefined) updates.amount = amount
-    const { data, error } = await supabase
-      .from('payments').update(updates).eq('id', id).select().single()
+    const { data, error } = await supabase.from('payments').update(updates).eq('id', id).select().single()
     if (!error) setPayments(prev => prev.map(p => p.id === id ? { ...p, ...data } : p))
     return { data, error }
   }
 
-  // FIX: actualiza estado local directamente sin depender del retorno
+  // markUnpaid: actualiza DB primero, luego fuerza estado local
   async function markUnpaid(id) {
     const { error } = await supabase
       .from('payments')
       .update({ is_paid: false, paid_at: null })
       .eq('id', id)
+      .eq('user_id', userId)
     if (!error) {
       setPayments(prev => prev.map(p =>
         p.id === id ? { ...p, is_paid: false, paid_at: null } : p
       ))
+      return { error: null }
     }
     return { error }
   }
@@ -87,13 +75,13 @@ export function usePayments(userId) {
     await updatePayment(payment.id, { postponed: true })
     const freq = payment.recur_freq || 'monthly'
     const nextDate = nextPeriodDate(payment.due_date, freq)
-    const nextDateStr = nextDate.toISOString().split('T')[0]
     const { data, error } = await supabase.from('payments').insert({
       user_id: userId, name: payment.name, amount: payment.amount,
-      due_date: nextDateStr, category: payment.category,
-      is_variable: payment.is_variable, is_recurrent: payment.is_recurrent,
-      recur_freq: freq, is_paid: false, postponed: false, paused: false,
-      parent_id: payment.parent_id || payment.id, period_date: nextDateStr,
+      due_date: nextDate.toISOString().split('T')[0],
+      category: payment.category, is_variable: payment.is_variable,
+      is_recurrent: payment.is_recurrent, recur_freq: freq,
+      is_paid: false, postponed: false, paused: false,
+      parent_id: payment.parent_id || payment.id,
       is_installment: payment.is_installment,
       current_installment: payment.current_installment,
       total_installments: payment.total_installments,
@@ -119,31 +107,35 @@ export function usePayments(userId) {
   }
 
   async function deletePayment(id) {
-    const { error } = await supabase.from('payments').delete().eq('id', id)
+    const { error } = await supabase.from('payments').delete().eq('id', id).eq('user_id', userId)
     if (!error) setPayments(prev => prev.filter(p => p.id !== id))
     return { error }
   }
 
-  // Elimina futuros no pagados Y el nombre queda libre (no cuenta como duplicado)
+  // Elimina futuros no pagados por nombre — libera el nombre
   async function deleteRecurrentFuture(name) {
-    const ids = payments.filter(p => p.name === name && p.is_recurrent && !p.is_paid).map(p => p.id)
-    if (!ids.length) return { error: null }
-    const { error } = await supabase.from('payments').delete().in('id', ids)
+    const toDelete = payments.filter(p => p.name === name && p.is_recurrent && !p.is_paid)
+    if (!toDelete.length) return { error: null }
+    const ids = toDelete.map(p => p.id)
+    const { error } = await supabase.from('payments').delete().in('id', ids).eq('user_id', userId)
     if (!error) setPayments(prev => prev.filter(p => !ids.includes(p.id)))
     return { error }
   }
 
   async function deleteInstallmentFuture(name) {
-    const ids = payments.filter(p => p.is_installment && p.name === name && !p.is_paid).map(p => p.id)
-    if (!ids.length) return { error: null }
-    const { error } = await supabase.from('payments').delete().in('id', ids)
+    const toDelete = payments.filter(p => p.is_installment && p.name === name && !p.is_paid)
+    if (!toDelete.length) return { error: null }
+    const ids = toDelete.map(p => p.id)
+    const { error } = await supabase.from('payments').delete().in('id', ids).eq('user_id', userId)
     if (!error) setPayments(prev => prev.filter(p => !ids.includes(p.id)))
     return { error }
   }
 
   async function deleteGroup(parentId) {
-    const { error } = await supabase.from('payments').delete().or(`id.eq.${parentId},parent_id.eq.${parentId}`)
-    if (!error) setPayments(prev => prev.filter(p => p.id !== parentId && p.parent_id !== parentId))
+    const toDelete = payments.filter(p => p.id === parentId || p.parent_id === parentId)
+    const ids = toDelete.map(p => p.id)
+    const { error } = await supabase.from('payments').delete().in('id', ids).eq('user_id', userId)
+    if (!error) setPayments(prev => prev.filter(p => !ids.includes(p.id)))
     return { error }
   }
 
@@ -151,8 +143,7 @@ export function usePayments(userId) {
     payments, loading,
     addPayment, addInstallmentPayment,
     updatePayment, markPaid, markUnpaid,
-    postponePayment,
-    pauseRecurrent, resumeRecurrent,
+    postponePayment, pauseRecurrent, resumeRecurrent,
     deletePayment, deleteRecurrentFuture, deleteInstallmentFuture, deleteGroup,
     refetch: fetchPayments
   }
