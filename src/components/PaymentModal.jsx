@@ -1,5 +1,5 @@
-import { useState, useEffect, useCallback } from 'react'
-import { CATEGORIES, RECUR_FREQ, WEEKDAYS_SHORT, nextWeekdayDate, nextBiweeklyDate, nameExists, fmt } from '../lib/utils'
+import { useState, useEffect } from 'react'
+import { CATEGORIES, RECUR_FREQ, WEEKDAYS_SHORT, nextWeekdayDate, nextBiweeklyFromDay, fmt, nameExistsActive } from '../lib/utils'
 import { ConfirmCloseModal } from './ConfirmCloseModal'
 
 export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelete, initial, payments }) {
@@ -11,6 +11,7 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
   const [isVariable, setIsVariable] = useState(false)
   const [recurFreq, setRecurFreq] = useState('monthly')
   const [weekday, setWeekday] = useState(5)
+  const [biweeklyDay, setBiweeklyDay] = useState(1)
   const [totalInstallments, setTotalInstallments] = useState('')
   const [startFrom, setStartFrom] = useState('1')
   const [saving, setSaving] = useState(false)
@@ -33,36 +34,34 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
       setName(''); setAmount('')
       setDueDate(new Date().toISOString().split('T')[0])
       setCategory('Servicios'); setIsVariable(false)
-      setRecurFreq('monthly'); setWeekday(5)
+      setRecurFreq('monthly'); setWeekday(5); setBiweeklyDay(1)
       setMode('single'); setTotalInstallments(''); setStartFrom('1')
     }
     setError(''); setConfirmClose(false)
   }, [initial, open])
 
-  // Detecta si hay cambios sin guardar
-  function hasDirtyFields() {
-    if (initial) return true // en edición siempre preguntar
-    return name.trim() !== '' || amount !== '' || totalInstallments !== ''
-  }
-
-  function requestClose() {
-    if (hasDirtyFields()) { setConfirmClose(true); return }
-    onClose()
-  }
-
-  // Intercepta botón atrás del celular
   useEffect(() => {
     if (!open) return
-    const handler = (e) => { e.preventDefault(); requestClose() }
+    const handler = () => { if (hasDirty()) setConfirmClose(true); else onClose() }
     window.history.pushState(null, '', window.location.href)
     window.addEventListener('popstate', handler)
     return () => window.removeEventListener('popstate', handler)
   }, [open, name, amount, totalInstallments])
 
+  function hasDirty() {
+    if (initial) return true
+    return name.trim() !== '' || amount !== '' || totalInstallments !== ''
+  }
+
+  function requestClose() {
+    if (hasDirty()) { setConfirmClose(true); return }
+    onClose()
+  }
+
   function calcFirstDate() {
     if (recurFreq === 'monthly') return dueDate
     if (recurFreq === 'weekly') return nextWeekdayDate(weekday).toISOString().split('T')[0]
-    if (recurFreq === 'biweekly') return nextBiweeklyDate().toISOString().split('T')[0]
+    if (recurFreq === 'biweekly') return nextBiweeklyFromDay(biweeklyDay).toISOString().split('T')[0]
     return dueDate
   }
 
@@ -70,9 +69,9 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
     setError('')
     if (!name.trim()) { setError('Escribe el nombre del pago'); return }
 
-    // Validación nombre duplicado
-    if (nameExists(payments || [], name, initial?.id)) {
-      setError(`Ya existe un pago con el nombre "${name.trim()}". Usa un nombre diferente.`)
+    // Validación: nombre duplicado solo si hay pagos activos con ese nombre
+    if (nameExistsActive(payments || [], name, initial?.id)) {
+      setError(`Ya existe un pago activo con el nombre "${name.trim()}". Usa un nombre diferente.`)
       return
     }
 
@@ -86,8 +85,7 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
       if (!firstDate) { setError('Selecciona la fecha del primer pago'); return }
       setSaving(true)
       await onSaveInstallment({ name: name.trim(), amount: parseFloat(amount), totalInstallments: total, startFrom: start, recurFreq, category, firstDate })
-      setSaving(false)
-      onClose(); return
+      setSaving(false); onClose(); return
     }
 
     if (!isVariable && (!amount || isNaN(parseFloat(amount)))) { setError('Agrega el monto o marca como variable'); return }
@@ -99,16 +97,14 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
     await onSave({
       name: name.trim(),
       amount: isVariable ? 0 : parseFloat(amount),
-      due_date: finalDate,
-      category,
+      due_date: finalDate, category,
       is_variable: isVariable,
       is_recurrent: mode === 'recurrent',
       recur_freq: mode === 'recurrent' ? recurFreq : null,
       is_paid: initial?.is_paid || false,
       is_installment: false,
     })
-    setSaving(false)
-    onClose()
+    setSaving(false); onClose()
   }
 
   if (!open) return null
@@ -116,7 +112,9 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
   const S = { input: { width: '100%', padding: '10px 12px', border: '0.5px solid #E4E2DC', borderRadius: 8, fontFamily: 'DM Sans, sans-serif', fontSize: 14, background: '#F7F6F3', color: '#1A1915', outline: 'none', WebkitAppearance: 'none', appearance: 'none' } }
   const showDatePicker = mode === 'single' || (mode === 'recurrent' && recurFreq === 'monthly') || (mode === 'installment' && recurFreq === 'monthly')
   const showWeekdayPicker = (mode === 'recurrent' || mode === 'installment') && recurFreq === 'weekly'
-  const showBiweeklyInfo = (mode === 'recurrent' || mode === 'installment') && recurFreq === 'biweekly'
+  const showBiweeklyPicker = (mode === 'recurrent' || mode === 'installment') && recurFreq === 'biweekly'
+
+  const nextBiDate = nextBiweeklyFromDay(biweeklyDay)
 
   return (
     <>
@@ -206,9 +204,23 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
             </div>
           )}
 
-          {showBiweeklyInfo && (
-            <div style={{ background: '#EAF4EE', border: '0.5px solid #C5E0CF', borderRadius: 8, padding: '10px 12px', marginBottom: 12, fontSize: 12, color: '#1E6B45' }}>
-              Primer pago: {nextBiweeklyDate().toLocaleDateString('es-MX', { day: 'numeric', month: 'long' })} (próxima quincena)
+          {showBiweeklyPicker && (
+            <div style={{ marginBottom: 12 }}>
+              <label style={{ display: 'block', fontSize: 10, fontWeight: 600, color: '#5C5A55', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>Día del primer pago del mes</label>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <input
+                  type="number" min="1" max="28"
+                  value={biweeklyDay}
+                  onChange={e => setBiweeklyDay(Math.min(28, Math.max(1, parseInt(e.target.value) || 1)))}
+                  style={{ ...S.input, width: 80, textAlign: 'center' }}
+                />
+                <span style={{ fontSize: 13, color: '#5C5A55', flex: 1 }}>
+                  Siguiente: día {biweeklyDay} y día {biweeklyDay + 15 <= 28 ? biweeklyDay + 15 : biweeklyDay} del mes siguiente
+                </span>
+              </div>
+              <div style={{ fontSize: 11, color: '#1E6B45', marginTop: 6 }}>
+                Primer pago: {nextBiDate.toLocaleDateString('es-MX', { day: 'numeric', month: 'long' })}
+              </div>
             </div>
           )}
 
@@ -241,12 +253,7 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
           )}
         </div>
       </div>
-
-      <ConfirmCloseModal
-        open={confirmClose}
-        onConfirm={() => { setConfirmClose(false); onClose() }}
-        onCancel={() => setConfirmClose(false)}
-      />
+      <ConfirmCloseModal open={confirmClose} onConfirm={() => { setConfirmClose(false); onClose() }} onCancel={() => setConfirmClose(false)} />
     </>
   )
 }

@@ -22,7 +22,7 @@ export default function App() {
     updatePayment, markPaid, markUnpaid,
     postponePayment,
     pauseRecurrent, resumeRecurrent,
-    deletePayment, deleteRecurrentFuture, deleteInstallmentGroup, deleteGroup,
+    deletePayment, deleteRecurrentFuture, deleteInstallmentFuture, deleteGroup,
   } = usePayments(user?.id)
   const { profile, updateProfile } = useProfile(user?.id)
   const [tab, setTab] = useState('home')
@@ -37,9 +37,7 @@ export default function App() {
   function openEdit(p) { setEditPayment(p); setModalOpen(true) }
 
   async function handleMarkPaid(p) {
-    if (p.is_variable && !p.is_paid) {
-      setVarModal({ open: true, payment: p }); return
-    }
+    if (p.is_variable && !p.is_paid) { setVarModal({ open: true, payment: p }); return }
     await markPaid(p.id)
     showToast(`${p.name} marcado como pagado`)
   }
@@ -47,7 +45,7 @@ export default function App() {
   async function handleVarConfirm(amount) {
     const p = varModal.payment
     await markPaid(p.id, amount)
-    showToast(`${p.name} — ${amount} registrado`)
+    showToast(`${p.name} — ${fmt(amount)} registrado`)
     setVarModal({ open: false, payment: null })
   }
 
@@ -70,13 +68,13 @@ export default function App() {
     const p = payments.find(x => x.id === id)
     if (!p) return
     if (p.is_installment) {
-      if (!window.confirm(`¿Eliminar todos los pagos de "${p.name}"?`)) return
-      await deleteInstallmentGroup(p.name)
+      if (!window.confirm(`¿Eliminar los pagos pendientes de "${p.name}"?`)) return
+      await deleteInstallmentFuture(p.name)
     } else if (p.is_recurrent && !p.parent_id) {
       const hasChildren = payments.some(x => x.parent_id === id)
       if (hasChildren) {
-        if (!window.confirm(`¿Eliminar "${p.name}" y todos sus periodos?`)) return
-        await deleteGroup(id)
+        if (!window.confirm(`¿Eliminar "${p.name}" y todos sus periodos pendientes?`)) return
+        await deleteRecurrentFuture(p.name)
       } else {
         if (!window.confirm(`¿Eliminar "${p.name}"?`)) return
         await deletePayment(id)
@@ -89,18 +87,13 @@ export default function App() {
   }
 
   async function handlePauseRecurrent(name) {
-    await pauseRecurrent(name)
-    showToast(`${name} pausado`)
+    await pauseRecurrent(name); showToast(`${name} pausado`)
   }
-
   async function handleResumeRecurrent(name) {
-    await resumeRecurrent(name)
-    showToast(`${name} reactivado`)
+    await resumeRecurrent(name); showToast(`${name} reactivado`)
   }
-
   async function handleDeleteRecurrent(name) {
-    await deleteRecurrentFuture(name)
-    showToast('Pagos futuros eliminados')
+    await deleteRecurrentFuture(name); showToast('Pagos futuros eliminados')
   }
 
   async function handleSave(data) {
@@ -136,7 +129,7 @@ export default function App() {
     <>
       {tab === 'home' && <HomePage payments={payments} profile={profile} onAdd={openAdd} {...sharedHandlers} />}
       {tab === 'payments' && <PaymentsPage payments={payments} profile={profile} onAdd={openAdd} {...sharedHandlers} />}
-      {tab === 'recurrents' && <RecurrentsPage payments={payments} onPause={handlePauseRecurrent} onResume={handleResumeRecurrent} onDelete={handleDeleteRecurrent} />}
+      {tab === 'recurrents' && <RecurrentsPage payments={payments} onPause={handlePauseRecurrent} onResume={handleResumeRecurrent} onDelete={handleDeleteRecurrent} onEdit={openEdit} />}
       {tab === 'history' && <HistoryPage payments={payments} />}
       {tab === 'budget' && <BudgetPage payments={payments} profile={profile} />}
       {tab === 'settings' && <SettingsPage profile={profile} user={user} onUpdate={updateProfile} />}
@@ -170,6 +163,8 @@ export default function App() {
     </>
   )
 }
+
+function fmt(n) { return '$' + Number(n).toLocaleString('es-MX', { minimumFractionDigits: 0, maximumFractionDigits: 0 }) }
 
 function Splash() {
   return (

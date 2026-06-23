@@ -11,18 +11,31 @@ export function HomePage({ payments, profile, onAdd, onMarkPaid, onMarkUnpaid, o
   const pagarEsteCobro = getPagarEsteCobro(payments, profile)
 
   const varReminders = payments.filter(p => {
-    if (p.is_paid || !p.is_variable) return false
+    if (p.is_paid || !p.is_variable || p.paused) return false
     const d = daysDiff(p.due_date)
     return d >= 0 && d <= (profile.reminder_days || 3)
   })
 
-  const pending = payments.filter(p => !p.is_paid && !p.postponed)
-  const paid = payments.filter(p => p.is_paid)
-  const pendingAmt = pending.filter(p => !p.is_variable).reduce((a, p) => a + Number(p.amount), 0)
-  const totalAmt = payments.filter(p => !p.is_variable).reduce((a, p) => a + Number(p.amount), 0)
+  // Pendientes del periodo actual únicamente
+  const pendingThisPeriod = pagarEsteCobro
+  const pendingAmt = pendingThisPeriod.filter(p => !p.is_variable).reduce((a, p) => a + Number(p.amount), 0)
 
-  // En Inicio: pagos simples sin agrupar
+  // Pagados del mes actual
+  const thisMonth = now.getMonth()
+  const thisYear = now.getFullYear()
+  const paid = payments.filter(p => {
+    if (!p.is_paid) return false
+    const d = new Date(p.due_date + 'T12:00:00')
+    return d.getMonth() === thisMonth && d.getFullYear() === thisYear
+  })
+  const totalThisMonth = payments.filter(p => {
+    const d = new Date(p.due_date + 'T12:00:00')
+    return d.getMonth() === thisMonth && d.getFullYear() === thisYear && !p.is_variable
+  }).reduce((a, p) => a + Number(p.amount), 0)
+
+  // Próximamente: fuera del periodo de cobro, sin agrupar
   const upcoming = payments.filter(p => {
+    if (p.paused) return false
     const s = statusOf(p, profile)
     return !p.is_paid && !p.postponed && (s === 'ok' || s === 'soon')
   }).sort((a, b) => new Date(a.due_date) - new Date(b.due_date)).slice(0, 5)
@@ -61,15 +74,16 @@ export function HomePage({ payments, profile, onAdd, onMarkPaid, onMarkUnpaid, o
         </div>
       )}
 
+      {/* Resumen: solo del periodo actual vs mes */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, padding: '8px 16px 0' }}>
         <div style={{ background: '#1E6B45', borderRadius: 12, padding: '13px 14px' }}>
-          <div style={{ fontSize: 10, fontWeight: 600, color: 'rgba(255,255,255,0.7)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 3 }}>Por pagar</div>
+          <div style={{ fontSize: 10, fontWeight: 600, color: 'rgba(255,255,255,0.7)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 3 }}>Pagar este {cobroLabel}</div>
           <div style={{ fontSize: 21, fontWeight: 600, color: '#fff' }}>{fmt(pendingAmt)}</div>
-          <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.72)', marginTop: 1 }}>{pending.length} pago{pending.length !== 1 ? 's' : ''}</div>
+          <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.72)', marginTop: 1 }}>{pendingThisPeriod.length} pago{pendingThisPeriod.length !== 1 ? 's' : ''}</div>
         </div>
         <div style={{ background: '#fff', border: '0.5px solid #E4E2DC', borderRadius: 12, padding: '13px 14px' }}>
           <div style={{ fontSize: 10, fontWeight: 600, color: '#5C5A55', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 3 }}>Este mes</div>
-          <div style={{ fontSize: 21, fontWeight: 600, color: '#1A1915' }}>{fmt(totalAmt)}</div>
+          <div style={{ fontSize: 21, fontWeight: 600, color: '#1A1915' }}>{fmt(totalThisMonth)}</div>
           <div style={{ fontSize: 12, color: '#5C5A55', marginTop: 1 }}>{paid.length} pagado{paid.length !== 1 ? 's' : ''}</div>
         </div>
       </div>
