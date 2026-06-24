@@ -114,12 +114,12 @@ export function groupPayments(payments) {
   return [...standalone, ...groups, ...orphanChildren].sort((a, b) => dateOf(a.due_date) - dateOf(b.due_date))
 }
 
-// Solo bloquea si hay pagos PENDIENTES con ese nombre — al editar excluye el id propio
-export function nameExistsActive(payments, name, excludeId = null) {
+// Al editar: excluye por nombre original para soportar parcialidades (múltiples registros mismo nombre)
+// excludeName = nombre actual del pago que se está editando
+export function nameExistsActive(payments, name, excludeName = null) {
   const lower = name.trim().toLowerCase()
-  return payments.some(p =>
-    p.name.toLowerCase() === lower &&
-    p.id !== excludeId &&
-    !p.is_paid
-  )
+  // Si el nombre no cambió respecto al original, no hay duplicado
+  if (excludeName && excludeName.trim().toLowerCase() === lower) return false
+  // Si cambió, verificar que el nuevo nombre no exista en pagos activos
+  return payments.some(p => p.name.toLowerCase() === lower && !p.is_paid)
 }
