@@ -5,17 +5,38 @@ export const WEEKDAYS_SHORT = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb']
 export const CATEGORIES = ['Servicios','Suscripciones','Créditos','Renta','Seguros','Alimentación','Otros']
 export const RECUR_FREQ = { weekly: 'Semanal', biweekly: 'Quincenal', monthly: 'Mensual' }
 
-export function today() { const d = new Date(); d.setHours(0,0,0,0); return d }
-export function dateOf(str) { const d = new Date(str + 'T12:00:00'); d.setHours(0,0,0,0); return d }
-export function daysDiff(str) { return Math.round((dateOf(str) - today()) / 864e5) }
-export function fmt(n) { return '$' + Number(n).toLocaleString('es-MX', { minimumFractionDigits: 0, maximumFractionDigits: 0 }) }
-export function addDays(date, n) { const d = new Date(date); d.setDate(d.getDate() + n); return d }
+// Siempre usa fecha LOCAL del dispositivo, nunca UTC
+export function today() {
+  const now = new Date()
+  return new Date(now.getFullYear(), now.getMonth(), now.getDate())
+}
+
+// Parsea fecha de string YYYY-MM-DD como fecha LOCAL (sin conversión UTC)
+export function dateOf(str) {
+  if (!str) return today()
+  const [y, m, d] = str.split('-').map(Number)
+  return new Date(y, m - 1, d)
+}
+
+export function daysDiff(str) {
+  return Math.round((dateOf(str) - today()) / 864e5)
+}
+
+export function fmt(n) {
+  return '$' + Number(n).toLocaleString('es-MX', { minimumFractionDigits: 0, maximumFractionDigits: 0 })
+}
+
+export function addDays(date, n) {
+  const d = new Date(date)
+  d.setDate(d.getDate() + n)
+  return d
+}
 
 export function nextPeriodDate(date, freq) {
-  const d = dateOf(typeof date === 'string' ? date : date.toISOString().split('T')[0])
+  const d = typeof date === 'string' ? dateOf(date) : new Date(date)
   if (freq === 'weekly') return addDays(d, 7)
   if (freq === 'biweekly') return addDays(d, 14)
-  const next = new Date(d); next.setMonth(next.getMonth() + 1); return next
+  return new Date(d.getFullYear(), d.getMonth() + 1, d.getDate())
 }
 
 export function nextWeekdayDate(weekday) {
@@ -52,30 +73,45 @@ export function installmentLabel(p) {
   return `Pago ${p.current_installment}/${p.total_installments}`
 }
 
+// Periodo de cobro:
+// start = hoy
+// end = día ANTES del próximo viernes (o día de cobro)
+// Ej: hoy martes 23 jun, próximo viernes 26 jun → periodo: 23 jun al 25 jun
+// Un pago que vence el 25 entra, uno que vence el 26 NO (ese es el siguiente cobro)
 export function cobroPeriod(cfg) {
   const t = today()
   if (cfg.cobro_freq === 'weekly') {
     const wd = cfg.cobro_weekday
     const td = t.getDay()
     let diffNext = wd - td
-    if (diffNext < 0) diffNext += 7
+    if (diffNext <= 0) diffNext += 7
+    // Próximo día de cobro
     const nextCobro = addDays(t, diffNext)
-    const prevCobro = addDays(nextCobro, -7)
-    const start = addDays(prevCobro, 1)
-    return { start, end: nextCobro }
+    // El periodo va desde hoy hasta el DÍA ANTERIOR al cobro
+    const end = addDays(nextCobro, -1)
+    return { start: t, end, nextCobro }
   }
-  return { start: t, end: t }
+  return { start: t, end: t, nextCobro: t }
 }
 
-export function nextCobroDate(cfg) { return cobroPeriod(cfg).end }
-export function isTodayCobro(cfg) { return nextCobroDate(cfg).getTime() === today().getTime() }
+export function nextCobroDate(cfg) {
+  return cobroPeriod(cfg).nextCobro
+}
 
+export function isTodayCobro(cfg) {
+  return nextCobroDate(cfg).getTime() === today().getTime()
+}
+
+// Pagos que entran en el periodo actual de cobro:
+// 1. Todos los vencidos no pagados (fecha < hoy)
+// 2. Los que vencen entre hoy y el día antes del próximo cobro
 export function getPagarEsteCobro(payments, cfg) {
-  const { start, end } = cobroPeriod(cfg)
+  const { end } = cobroPeriod(cfg)
   return payments.filter(p => {
     if (p.is_paid || p.paused) return false
     const vence = dateOf(p.due_date)
-    return vence >= start && vence <= end
+    // Vencido (pasado) O vence dentro del periodo actual
+    return vence <= end
   })
 }
 
@@ -85,9 +121,10 @@ export function statusOf(p, cfg) {
   if (p.is_paid) return 'paid'
   const d = daysDiff(p.due_date)
   if (d < 0) return 'overdue'
-  const { start, end } = cobroPeriod(cfg)
+  const { end } = cobroPeriod(cfg)
   const vence = dateOf(p.due_date)
-  if (vence >= start && vence <= end) return 'cobro'
+  // Cae dentro del periodo actual (hoy hasta día antes del cobro)
+  if (vence <= end) return 'cobro'
   if (d <= 5) return 'soon'
   return 'ok'
 }
@@ -110,16 +147,15 @@ export function groupPayments(payments) {
     ...parent, _isGroup: true,
     _children: (children[parent.id] || []).sort((a, b) => dateOf(a.due_date) - dateOf(b.due_date))
   }))
-  const orphanChildren = Object.entries(children).filter(([pid]) => !parents[pid]).flatMap(([, ch]) => ch)
-  return [...standalone, ...groups, ...orphanChildren].sort((a, b) => dateOf(a.due_date) - dateOf(b.due_date))
+  const orphanChildren = Object.entries(children)
+    .filter(([pid]) => !parents[pid])
+    .flatMap(([, ch]) => ch)
+  return [...standalone, ...groups, ...orphanChildren]
+    .sort((a, b) => dateOf(a.due_date) - dateOf(b.due_date))
 }
 
-// Al editar: excluye por nombre original para soportar parcialidades (múltiples registros mismo nombre)
-// excludeName = nombre actual del pago que se está editando
 export function nameExistsActive(payments, name, excludeName = null) {
   const lower = name.trim().toLowerCase()
-  // Si el nombre no cambió respecto al original, no hay duplicado
   if (excludeName && excludeName.trim().toLowerCase() === lower) return false
-  // Si cambió, verificar que el nuevo nombre no exista en pagos activos
   return payments.some(p => p.name.toLowerCase() === lower && !p.is_paid)
 }
