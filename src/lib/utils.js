@@ -106,8 +106,10 @@ export function cobroPeriod(cfg) {
     let diffNext = wd - td
     if (diffNext <= 0) diffNext += 7
     const nextCobro = addDays(t, diffNext)
-    const end = addDays(nextCobro, -1)
-    return { start: t, end, nextCobro }
+    const prevCobro = addDays(nextCobro, -7)       // viernes anterior
+    const start = addDays(prevCobro, 1)             // sábado después del cobro anterior
+    const end = addDays(nextCobro, -1)              // jueves antes del próximo cobro
+    return { start, end, nextCobro }
   }
   return { start: t, end: t, nextCobro: t }
 }
