@@ -18,6 +18,9 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
   const [error, setError] = useState('')
   const [confirmClose, setConfirmClose] = useState(false)
 
+  // Si es edición de parcialidad, bloqueamos edición
+  const isEditingInstallment = !!(initial?.is_installment)
+
   useEffect(() => {
     if (!open) return
     if (initial) {
@@ -58,8 +61,8 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
 
   function calcFirstDate() {
     if (recurFreq === 'monthly') return dueDate
-    if (recurFreq === 'weekly') return nextWeekdayDate(weekday).toISOString().split('T')[0]
-    if (recurFreq === 'biweekly') return biweeklyDate ? nextBiweeklyFromDate(biweeklyDate).toISOString().split('T')[0] : new Date().toISOString().split('T')[0]
+    if (recurFreq === 'weekly') return dueDate // para parcialidades usamos dueDate directo
+    if (recurFreq === 'biweekly') return biweeklyDate || dueDate
     return dueDate
   }
 
@@ -67,8 +70,6 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
     setError('')
     if (!name.trim()) { setError('Escribe el nombre del pago'); return }
 
-    // Al editar: solo bloquea si OTRO pago (diferente id) tiene ese nombre activo
-    // Al crear: bloquea si cualquier pago activo tiene ese nombre
     const checkName = initial?.name || null
     if (nameExistsActive(payments || [], name, checkName)) {
       setError(`Ya existe un pago activo con el nombre "${name.trim()}"`)
@@ -81,16 +82,24 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
       const total = parseInt(totalInstallments)
       const start = parseInt(startFrom) || 1
       if (start > total) { setError('El pago inicial no puede ser mayor al total'); return }
-      const firstDate = calcFirstDate()
-      if (!firstDate) { setError('Selecciona la fecha del primer pago'); return }
+      if (!dueDate) { setError('Selecciona la fecha del primer pago'); return }
       setSaving(true)
-      await onSaveInstallment({ name: name.trim(), amount: parseFloat(amount), totalInstallments: total, startFrom: start, recurFreq, category, firstDate })
+      await onSaveInstallment({
+        name: name.trim(),
+        amount: parseFloat(amount),
+        totalInstallments: total,
+        startFrom: start,
+        recurFreq,
+        category,
+        firstDate: dueDate, // siempre la fecha real del pago #1, puede ser pasada
+      })
       setSaving(false); onClose(); return
     }
 
     if (!isVariable && (!amount || isNaN(parseFloat(amount)))) { setError('Agrega el monto o marca como variable'); return }
     let finalDate = dueDate
-    if (mode === 'recurrent' && recurFreq !== 'monthly') finalDate = calcFirstDate()
+    if (mode === 'recurrent' && recurFreq === 'weekly') finalDate = nextWeekdayDate(weekday).toISOString().split('T')[0]
+    if (mode === 'recurrent' && recurFreq === 'biweekly') finalDate = biweeklyDate ? nextBiweeklyFromDate(biweeklyDate).toISOString().split('T')[0] : dueDate
     if (!finalDate) { setError('Selecciona la fecha de vencimiento'); return }
 
     setSaving(true)
@@ -107,10 +116,45 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
   if (!open) return null
 
   const S = { input: { width: '100%', padding: '10px 12px', border: '0.5px solid #E4E2DC', borderRadius: 8, fontFamily: 'DM Sans, sans-serif', fontSize: 14, background: '#F7F6F3', color: '#1A1915', outline: 'none', WebkitAppearance: 'none', appearance: 'none' } }
-  const showDatePicker = mode === 'single' || (mode === 'recurrent' && recurFreq === 'monthly') || (mode === 'installment' && recurFreq === 'monthly')
-  const showWeekdayPicker = (mode === 'recurrent' || mode === 'installment') && recurFreq === 'weekly'
-  const showBiweeklyPicker = (mode === 'recurrent' || mode === 'installment') && recurFreq === 'biweekly'
+  const showDatePicker = mode === 'single' || (mode === 'recurrent' && recurFreq === 'monthly')
+  const showWeekdayPicker = mode === 'recurrent' && recurFreq === 'weekly'
+  const showBiweeklyPicker = mode === 'recurrent' && recurFreq === 'biweekly'
   const nextBiDate = biweeklyDate ? nextBiweeklyFromDate(biweeklyDate) : null
+
+  // Vista bloqueada para edición de parcialidades
+  if (isEditingInstallment) {
+    return (
+      <>
+        <div onClick={e => e.target === e.currentTarget && onClose()} style={{ position: 'fixed', inset: 0, background: 'rgba(26,25,21,0.45)', zIndex: 200, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
+          <div style={{ background: '#fff', borderRadius: '20px 20px 0 0', width: '100%', maxWidth: 420, padding: '18px 16px 32px' }}>
+            <div style={{ width: 34, height: 4, borderRadius: 2, background: '#E4E2DC', margin: '0 auto 16px' }} />
+            <div style={{ fontSize: 16, fontWeight: 600, color: '#1A1915', marginBottom: 12 }}>Pago en parcialidades</div>
+            <div style={{ background: '#FEF3DC', border: '0.5px solid #F5D9A0', borderRadius: 10, padding: '12px 14px', marginBottom: 16 }}>
+              <div style={{ fontSize: 13, fontWeight: 600, color: '#A06B12', marginBottom: 4 }}>No se puede editar</div>
+              <div style={{ fontSize: 12, color: '#5C5A55', lineHeight: 1.6 }}>
+                Los pagos en parcialidades no se pueden modificar una vez creados. Si necesitas corregir algo, elimina este pago y vuelve a crearlo con los datos correctos.
+              </div>
+            </div>
+            <div style={{ background: '#F7F6F3', border: '0.5px solid #E4E2DC', borderRadius: 10, padding: '12px 14px', marginBottom: 16 }}>
+              <div style={{ fontSize: 12, color: '#5C5A55', lineHeight: 1.8 }}>
+                <div><strong style={{ color: '#1A1915' }}>Nombre:</strong> {initial.name}</div>
+                <div><strong style={{ color: '#1A1915' }}>Monto por pago:</strong> {fmt(initial.amount)}</div>
+                <div><strong style={{ color: '#1A1915' }}>Total de pagos:</strong> {initial.total_installments}</div>
+                <div><strong style={{ color: '#1A1915' }}>Frecuencia:</strong> {RECUR_FREQ[initial.recur_freq] || initial.recur_freq}</div>
+                <div><strong style={{ color: '#1A1915' }}>Categoría:</strong> {initial.category}</div>
+              </div>
+            </div>
+            <button onClick={() => { onDelete(initial.id); onClose() }} style={{ width: '100%', padding: 11, background: 'none', color: '#B83232', border: '0.5px solid #FCDEDE', borderRadius: 8, fontSize: 14, fontFamily: 'DM Sans, sans-serif', cursor: 'pointer', marginBottom: 8 }}>
+              Eliminar todos los pagos pendientes
+            </button>
+            <button onClick={onClose} style={{ width: '100%', padding: 11, background: 'none', color: '#5C5A55', border: '0.5px solid #E4E2DC', borderRadius: 8, fontSize: 14, fontFamily: 'DM Sans, sans-serif', cursor: 'pointer' }}>
+              Cerrar
+            </button>
+          </div>
+        </div>
+      </>
+    )
+  }
 
   return (
     <>
@@ -129,6 +173,13 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
           <div style={{ fontSize: 16, fontWeight: 600, color: '#1A1915', marginBottom: 14 }}>
             {initial ? 'Editar pago' : mode === 'installment' ? 'Pago en parcialidades' : mode === 'recurrent' ? 'Pago recurrente' : 'Nuevo pago'}
           </div>
+
+          {/* Advertencia al crear parcialidades */}
+          {mode === 'installment' && !initial && (
+            <div style={{ background: '#FEF3DC', border: '0.5px solid #F5D9A0', borderRadius: 8, padding: '10px 12px', marginBottom: 12, fontSize: 12, color: '#A06B12' }}>
+              Los pagos en parcialidades no se pueden editar una vez creados. Revisa bien los datos antes de guardar.
+            </div>
+          )}
 
           {error && <div style={{ background: '#FCDEDE', border: '0.5px solid #F5BABA', borderRadius: 8, padding: '8px 12px', fontSize: 13, color: '#B83232', marginBottom: 12 }}>{error}</div>}
 
@@ -149,10 +200,15 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
           )}
 
           {mode === 'installment' && (
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-              <Field label="Total de pagos"><input style={S.input} type="number" min="1" value={totalInstallments} onChange={e => setTotalInstallments(e.target.value)} placeholder="Ej. 12" /></Field>
-              <Field label="Empezar desde pago #"><input style={S.input} type="number" min="1" value={startFrom} onChange={e => setStartFrom(e.target.value)} placeholder="1" /></Field>
-            </div>
+            <>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                <Field label="Total de pagos"><input style={S.input} type="number" min="1" value={totalInstallments} onChange={e => setTotalInstallments(e.target.value)} placeholder="Ej. 20" /></Field>
+                <Field label="Empezar desde pago #"><input style={S.input} type="number" min="1" value={startFrom} onChange={e => setStartFrom(e.target.value)} placeholder="1" /></Field>
+              </div>
+              <div style={{ fontSize: 11, color: '#5C5A55', marginTop: -8, marginBottom: 12, lineHeight: 1.5 }}>
+                Si ya realizaste pagos anteriores, indica desde qué número empieza el próximo. Los pagos previos se marcarán como completados automáticamente.
+              </div>
+            </>
           )}
 
           <Field label="Categoría">
@@ -194,27 +250,42 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
             </div>
           )}
 
+          {/* Para parcialidades: siempre pide la fecha real del primer pago (puede ser pasada) */}
+          {mode === 'installment' && (
+            <div style={{ marginBottom: 12 }}>
+              <label style={{ display: 'block', fontSize: 10, fontWeight: 600, color: '#5C5A55', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>Fecha real del primer pago</label>
+              <input style={S.input} type="date" value={dueDate} onChange={e => setDueDate(e.target.value)} />
+              <div style={{ fontSize: 11, color: '#5C5A55', marginTop: 5 }}>
+                Puede ser una fecha pasada. La app calculará cada periodo desde esta fecha.
+              </div>
+            </div>
+          )}
+
           {showDatePicker && (
-            <Field label={mode === 'installment' ? 'Fecha del primer pago' : 'Fecha de vencimiento'}>
+            <Field label="Fecha de vencimiento">
               <input style={S.input} type="date" value={dueDate} onChange={e => setDueDate(e.target.value)} />
             </Field>
           )}
 
-          {mode === 'installment' && totalInstallments && startFrom && amount && (
+          {/* Resumen parcialidades */}
+          {mode === 'installment' && totalInstallments && startFrom && amount && dueDate && (
             <div style={{ background: '#F7F6F3', border: '0.5px solid #E4E2DC', borderRadius: 8, padding: '10px 12px', marginBottom: 12 }}>
-              <div style={{ fontSize: 12, color: '#5C5A55', lineHeight: 1.6 }}>
-                <div>Total: <strong style={{ color: '#1A1915' }}>{fmt(parseFloat(amount || 0) * parseInt(totalInstallments || 0))}</strong> en {totalInstallments} pagos</div>
-                {parseInt(startFrom) > 1 && <div>Pagos 1–{parseInt(startFrom) - 1} marcados como completados</div>}
-                <div>Activo desde: <strong style={{ color: '#1A1915' }}>Pago {startFrom}/{totalInstallments}</strong></div>
+              <div style={{ fontSize: 12, color: '#5C5A55', lineHeight: 1.7 }}>
+                <div>Total: <strong style={{ color: '#1A1915' }}>{fmt(parseFloat(amount || 0) * parseInt(totalInstallments || 0))}</strong> en {totalInstallments} pagos de {fmt(parseFloat(amount))}</div>
+                {parseInt(startFrom) > 1 && (
+                  <div>Pagos 1–{parseInt(startFrom) - 1} se marcarán como <strong style={{ color: '#1E6B45' }}>completados</strong></div>
+                )}
+                <div>Próximo activo: <strong style={{ color: '#1A1915' }}>Pago {startFrom}/{totalInstallments}</strong></div>
+                <div style={{ color: '#A06B12', marginTop: 2 }}>Frecuencia: cada {recurFreq === 'weekly' ? '7 días' : recurFreq === 'biweekly' ? '14 días' : 'mes'}</div>
               </div>
             </div>
           )}
 
           <button onClick={handleSave} disabled={saving} style={{ width: '100%', padding: 12, background: '#1E6B45', color: '#fff', border: 'none', borderRadius: 8, fontSize: 14, fontWeight: 600, fontFamily: 'DM Sans, sans-serif', marginTop: 4, opacity: saving ? 0.7 : 1, cursor: 'pointer' }}>
-            {saving ? 'Guardando…' : initial ? 'Guardar cambios' : 'Guardar pago'}
+            {saving ? 'Guardando…' : initial ? 'Guardar cambios' : mode === 'installment' ? 'Crear pagos' : 'Guardar pago'}
           </button>
           <button onClick={requestClose} style={{ width: '100%', padding: 10, background: 'none', color: '#5C5A55', border: '0.5px solid #E4E2DC', borderRadius: 8, fontSize: 14, fontFamily: 'DM Sans, sans-serif', cursor: 'pointer', marginTop: 8 }}>Cancelar</button>
-          {initial && (
+          {initial && !isEditingInstallment && (
             <button onClick={() => { onDelete(initial.id); onClose() }} style={{ width: '100%', padding: 10, background: 'none', color: '#B83232', border: '0.5px solid #FCDEDE', borderRadius: 8, fontSize: 14, fontFamily: 'DM Sans, sans-serif', cursor: 'pointer', marginTop: 6 }}>Eliminar pago</button>
           )}
         </div>
