@@ -69,8 +69,8 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
 
     // Al editar: solo bloquea si OTRO pago (diferente id) tiene ese nombre activo
     // Al crear: bloquea si cualquier pago activo tiene ese nombre
-    const checkId = initial?.id || null
-    if (nameExistsActive(payments || [], name, checkId)) {
+    const checkName = initial?.name || null
+    if (nameExistsActive(payments || [], name, checkName)) {
       setError(`Ya existe un pago activo con el nombre "${name.trim()}"`)
       return
     }
