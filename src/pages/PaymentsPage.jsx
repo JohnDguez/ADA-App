@@ -3,7 +3,7 @@ import { ChevronLeft, ChevronRight, Plus } from 'lucide-react'
 import { PayCard, GroupCard } from '../components/PayCard'
 import { dateOf, MONTHS, groupPayments } from '../lib/utils'
 
-export function PaymentsPage({ payments, profile, onAdd, onMarkPaid, onEdit, onDelete, onPostpone }) {
+export function PaymentsPage({ payments, profile, onAdd, onMarkPaid, onMarkUnpaid, onEdit, onDelete, onPostpone, onAdvance }) {
   const now = new Date()
   const [month, setMonth] = useState(now.getMonth())
   const [year, setYear] = useState(now.getFullYear())
@@ -25,11 +25,11 @@ export function PaymentsPage({ payments, profile, onAdd, onMarkPaid, onEdit, onD
 
   const grouped = groupPayments(pending)
 
+  const handlers = { onMarkPaid, onMarkUnpaid, onEdit, onDelete, onPostpone, onAdvance }
+
   function renderItem(item) {
-    if (item._isGroup) {
-      return <GroupCard key={item.id} group={item} cfg={profile} onMarkPaid={onMarkPaid} onEdit={onEdit} onDelete={onDelete} onPostpone={onPostpone} />
-    }
-    return <PayCard key={item.id} payment={item} cfg={profile} onMarkPaid={onMarkPaid} onEdit={onEdit} onDelete={onDelete} onPostpone={onPostpone} />
+    if (item._isGroup) return <GroupCard key={item.id} group={item} cfg={profile} {...handlers} />
+    return <PayCard key={item.id} payment={item} cfg={profile} {...handlers} />
   }
 
   return (
@@ -63,7 +63,7 @@ export function PaymentsPage({ payments, profile, onAdd, onMarkPaid, onEdit, onD
         <>
           <SectionHead title="Pospuestos" />
           <div style={{ padding: '0 16px', display: 'flex', flexDirection: 'column', gap: 7 }}>
-            {postponed.map(p => <PayCard key={p.id} payment={p} cfg={profile} onMarkPaid={onMarkPaid} onEdit={onEdit} onDelete={onDelete} onPostpone={onPostpone} />)}
+            {postponed.map(p => <PayCard key={p.id} payment={p} cfg={profile} {...handlers} />)}
           </div>
         </>
       )}
@@ -72,7 +72,7 @@ export function PaymentsPage({ payments, profile, onAdd, onMarkPaid, onEdit, onD
       <div style={{ padding: '0 16px', display: 'flex', flexDirection: 'column', gap: 7 }}>
         {paid.length === 0
           ? <Empty text="Sin pagos registrados como pagados" />
-          : paid.map(p => <PayCard key={p.id} payment={p} cfg={profile} onMarkPaid={onMarkPaid} onEdit={onEdit} onDelete={onDelete} onPostpone={onPostpone} />)
+          : paid.map(p => <PayCard key={p.id} payment={p} cfg={profile} {...handlers} />)
         }
       </div>
     </div>
