@@ -1,13 +1,28 @@
-import { Plus, Bell } from 'lucide-react'
+import { Plus, Bell, Settings } from 'lucide-react'
 import { PayCard } from '../components/PayCard'
-import { fmt, cobroPeriod, nextCobroDate, isTodayCobro, getPagarEsteCobro, daysDiff, dateOf, MONTHS, WEEKDAYS } from '../lib/utils'
+import { fmt, cobroPeriod, nextCobroDate, isTodayCobro, getPagarEsteCobro, daysDiff, dateOf, MONTHS, MONTHS_SHORT, WEEKDAYS } from '../lib/utils'
 
-export function HomePage({ payments, profile, onAdd, onMarkPaid, onMarkUnpaid, onEdit, onDelete, onPostpone, onAdvance }) {
+function greeting() {
+  const h = new Date().getHours()
+  if (h < 12) return '¡Buenos días!'
+  if (h < 19) return '¡Buenas tardes!'
+  return '¡Buenas noches!'
+}
+
+function periodRange(cfg) {
+  const { start, end } = cobroPeriod(cfg)
+  const sameMonth = start.getMonth() === end.getMonth()
+  if (sameMonth) return `${start.getDate()} – ${end.getDate()} ${MONTHS_SHORT[end.getMonth()]}`
+  return `${start.getDate()} ${MONTHS_SHORT[start.getMonth()]} – ${end.getDate()} ${MONTHS_SHORT[end.getMonth()]}`
+}
+
+export function HomePage({ payments, profile, onAdd, onMarkPaid, onMarkUnpaid, onEdit, onDelete, onPostpone, onAdvance, onGoSettings }) {
   const now = new Date()
   const dateStr = now.toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric', month: 'long' })
-  const cobroLabel = profile.cobro_freq === 'weekly' ? WEEKDAYS[profile.cobro_weekday].toLowerCase() : 'día de cobro'
+  const timeStr = now.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })
+
   const nc = nextCobroDate(profile)
-  const isCobro = isTodayCobro(profile)
+  const { end } = cobroPeriod(profile)
   const pagarEsteCobro = getPagarEsteCobro(payments, profile)
   const vencidos = pagarEsteCobro.filter(p => daysDiff(p.due_date) < 0).sort((a, b) => dateOf(a.due_date) - dateOf(b.due_date))
   const delPeriodo = pagarEsteCobro.filter(p => daysDiff(p.due_date) >= 0).sort((a, b) => dateOf(a.due_date) - dateOf(b.due_date))
@@ -18,8 +33,10 @@ export function HomePage({ payments, profile, onAdd, onMarkPaid, onMarkUnpaid, o
     return d >= 0 && d <= (profile.reminder_days || 3)
   })
 
+  // Monto pendiente del periodo
   const pendingAmt = pagarEsteCobro.filter(p => !p.is_variable).reduce((a, p) => a + Number(p.amount), 0)
 
+  // Este mes
   const thisMonth = now.getMonth()
   const thisYear = now.getFullYear()
   const paidThisMonth = payments.filter(p => {
@@ -27,113 +44,154 @@ export function HomePage({ payments, profile, onAdd, onMarkPaid, onMarkUnpaid, o
     const d = dateOf(p.due_date)
     return d.getMonth() === thisMonth && d.getFullYear() === thisYear
   })
+  const variableThisMonth = paidThisMonth.filter(p => p.is_variable).length
   const totalThisMonth = payments.filter(p => {
     const d = dateOf(p.due_date)
-    return d.getMonth() === thisMonth && d.getFullYear() === thisYear && !p.is_variable && !p.paused
+    return d.getMonth() === thisMonth && d.getFullYear() === thisYear && !p.paused
   }).reduce((a, p) => a + Number(p.amount), 0)
 
-  const { end } = cobroPeriod(profile)
+  // Próximamente
   const upcoming = payments.filter(p => {
     if (p.is_paid || p.paused || p.postponed) return false
     return dateOf(p.due_date) > end
-  }).sort((a, b) => dateOf(a.due_date) - dateOf(b.due_date)).slice(0, 5)
+  }).sort((a, b) => dateOf(a.due_date) - dateOf(b.due_date)).slice(0, 6)
 
   const handlers = { onMarkPaid, onMarkUnpaid, onEdit, onDelete, onPostpone, onAdvance }
+  const initials = (profile.name || 'U').slice(0, 2).toUpperCase()
 
   return (
-    <div style={{ paddingBottom: 80 }}>
-      {/* Banner pre-alpha */}
-      <div style={{ background: 'var(--text)', padding: '6px 16px', textAlign: 'center' }}>
-        <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.45)', fontWeight: 500 }}>Pre-Alpha · Puede haber errores</span>
-      </div>
+    <div style={{ paddingBottom: 80, background: 'var(--bg)', minHeight: '100vh' }}>
 
-      <div style={{ padding: '16px 16px 8px', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
-        <div>
-          <div style={{ fontSize: 22, fontWeight: 600, color: 'var(--text)' }}>Hola, {profile.name || 'bienvenido'}</div>
-          <div style={{ fontSize: 13, color: 'var(--muted)', marginTop: 2 }}>{dateStr.charAt(0).toUpperCase() + dateStr.slice(1)}</div>
-        </div>
-        <button onClick={onAdd} style={{ width: 36, height: 36, borderRadius: '50%', background: 'var(--surface)', border: '0.5px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginTop: 2, cursor: 'pointer' }}>
-          <Plus size={16} color="var(--text)" />
-        </button>
-      </div>
-
-      {isCobro && (
-        <div style={{ margin: '4px 16px 0', background: 'var(--accent)', borderRadius: 'var(--radius)', padding: '14px 16px' }}>
-          <div style={{ fontSize: 10, fontWeight: 600, color: 'rgba(255,255,255,0.7)', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 4 }}>Dia de cobro</div>
-          <div style={{ fontSize: 15, fontWeight: 600, color: '#fff', marginBottom: 2 }}>Hoy es {WEEKDAYS[nc.getDay()]} {nc.getDate()} de {MONTHS[nc.getMonth()]}</div>
-          <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.75)' }}>{pagarEsteCobro.length} pago{pagarEsteCobro.length !== 1 ? 's' : ''} pendientes de cubrir</div>
-        </div>
-      )}
-
-      {vencidos.length > 0 && (
-        <div style={{ margin: '8px 16px 0', background: 'var(--danger-soft)', border: '0.5px solid var(--danger-border)', borderRadius: 'var(--radius)', padding: '10px 14px' }}>
-          <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--danger)' }}>
-            {vencidos.length} pago{vencidos.length !== 1 ? 's' : ''} vencido{vencidos.length !== 1 ? 's' : ''} — atiéndelos lo antes posible
+      {/* Header con gradiente oscuro */}
+      <div style={{
+        background: 'linear-gradient(160deg, #020A1F 0%, #0A1A3D 60%, #0F2560 100%)',
+        padding: '52px 20px 28px',
+        position: 'relative',
+      }}>
+        {/* Fila superior */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
+          {/* Avatar + saludo */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            {profile.avatar_url
+              ? <img src={profile.avatar_url} alt="avatar" style={{ width: 48, height: 48, borderRadius: '50%', objectFit: 'cover', border: '2px solid rgba(255,255,255,0.2)' }} />
+              : <div style={{ width: 48, height: 48, borderRadius: '50%', background: 'var(--accent)', border: '2px solid rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, fontWeight: 600, color: '#fff' }}>{initials}</div>
+            }
+            <div>
+              <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.65)', fontWeight: 400 }}>{greeting()}</div>
+              <div style={{ fontSize: 20, fontWeight: 600, color: '#fff' }}>{profile.name || 'bienvenido'}</div>
+            </div>
+          </div>
+          {/* Íconos */}
+          <div style={{ display: 'flex', gap: 8 }}>
+            <IconBtn onClick={() => {}} icon={<Bell size={18} color="#fff" />} />
+            <IconBtn onClick={onGoSettings} icon={<Settings size={18} color="#fff" />} />
           </div>
         </div>
-      )}
 
-      {varReminders.length > 0 && (
-        <div style={{ margin: '8px 16px 0', background: 'var(--warning-soft)', border: '0.5px solid var(--warning-border)', borderRadius: 'var(--radius)', padding: '12px 14px', display: 'flex', alignItems: 'flex-start', gap: 10 }}>
-          <Bell size={16} color="var(--warning)" style={{ flexShrink: 0, marginTop: 1 }} />
-          <div>
-            <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)' }}>Recordatorio: {varReminders.map(r => r.name).join(', ')}</div>
-            <div style={{ fontSize: 12, color: 'var(--muted)', marginTop: 1 }}>
-              {daysDiff(varReminders[0].due_date) === 0 ? 'Fecha estimada hoy' : `Vence en ${daysDiff(varReminders[0].due_date)} día${daysDiff(varReminders[0].due_date) !== 1 ? 's' : ''}`}
+        {/* Fecha y hora */}
+        <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.45)', marginTop: 6, paddingLeft: 60 }}>
+          {dateStr.charAt(0).toUpperCase() + dateStr.slice(1)} · {timeStr}
+        </div>
+      </div>
+
+      {/* Cards de resumen — encimadas sobre el header */}
+      <div style={{ margin: '-1px 16px 0', background: 'var(--surface)', borderRadius: 'var(--radius)', border: '0.5px solid var(--border)', padding: '16px', boxShadow: '0 2px 12px rgba(2,10,31,0.08)' }}>
+        <div style={{ display: 'flex', gap: 0 }}>
+          {/* Pendientes */}
+          <div style={{ flex: 1, paddingRight: 16 }}>
+            <div style={{ fontSize: 11, color: 'var(--muted)', fontWeight: 500, marginBottom: 4 }}>Pagos de este periodo</div>
+            <div style={{ fontSize: 28, fontWeight: 700, color: vencidos.length > 0 ? 'var(--danger)' : 'var(--text)', letterSpacing: '-0.5px' }}>{fmt(pendingAmt)}</div>
+            <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 4, display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+              <span>{pagarEsteCobro.length} pago{pagarEsteCobro.length !== 1 ? 's' : ''}</span>
+              {vencidos.length > 0 && <span style={{ color: 'var(--danger)', fontWeight: 600 }}>· {vencidos.length} vencido{vencidos.length !== 1 ? 's' : ''}</span>}
+            </div>
+          </div>
+
+          {/* Separador */}
+          <div style={{ width: '0.5px', background: 'var(--border)', alignSelf: 'stretch', margin: '0 16px 0 0' }} />
+
+          {/* Este mes */}
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: 11, color: 'var(--muted)', fontWeight: 500, marginBottom: 4 }}>Por pagar este mes</div>
+            <div style={{ fontSize: 22, fontWeight: 700, color: 'var(--text)', letterSpacing: '-0.5px' }}>{fmt(totalThisMonth)}</div>
+            <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 4, display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+              <span>{paidThisMonth.length} pagados</span>
+              {variableThisMonth > 0 && <span style={{ color: 'var(--accent)', fontWeight: 500 }}>· {variableThisMonth} variables</span>}
             </div>
           </div>
         </div>
-      )}
-
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, padding: '8px 16px 0' }}>
-        <div style={{ background: vencidos.length > 0 ? 'var(--danger)' : 'var(--accent)', borderRadius: 'var(--radius)', padding: '13px 14px' }}>
-          <div style={{ fontSize: 10, fontWeight: 600, color: 'rgba(255,255,255,0.7)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 3 }}>
-            Pendientes al {nc.getDate()} {MONTHS[nc.getMonth()].slice(0,3)}
-          </div>
-          <div style={{ fontSize: 21, fontWeight: 600, color: '#fff' }}>{fmt(pendingAmt)}</div>
-          <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.72)', marginTop: 1 }}>
-            {pagarEsteCobro.length} pago{pagarEsteCobro.length !== 1 ? 's' : ''}
-            {vencidos.length > 0 && ` · ${vencidos.length} vencido${vencidos.length !== 1 ? 's' : ''}`}
-          </div>
-        </div>
-        <div style={{ background: 'var(--surface)', border: '0.5px solid var(--border)', borderRadius: 'var(--radius)', padding: '13px 14px' }}>
-          <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 3 }}>Este mes</div>
-          <div style={{ fontSize: 21, fontWeight: 600, color: 'var(--text)' }}>{fmt(totalThisMonth)}</div>
-          <div style={{ fontSize: 12, color: 'var(--muted)', marginTop: 1 }}>{paidThisMonth.length} pagado{paidThisMonth.length !== 1 ? 's' : ''}</div>
-        </div>
       </div>
 
-      {vencidos.length > 0 && (
-        <>
-          <SectionHead title="Vencidos — atención urgente" color="var(--danger)" />
-          <div style={{ padding: '0 16px', display: 'flex', flexDirection: 'column', gap: 7 }}>
-            {vencidos.map(p => <PayCard key={p.id} payment={p} cfg={profile} {...handlers} />)}
-          </div>
-        </>
-      )}
+      <div style={{ padding: '0 16px' }}>
 
-      <SectionHead title={`Pagar antes del ${cobroLabel} ${nc.getDate()} de ${MONTHS[nc.getMonth()]}`} />
-      <div style={{ padding: '0 16px', display: 'flex', flexDirection: 'column', gap: 7 }}>
+        {/* Vencidos */}
+        {vencidos.length > 0 && (
+          <>
+            <div style={{ paddingTop: 20, paddingBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
+              <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--danger)' }}>
+                {vencidos.length} Pago{vencidos.length !== 1 ? 's' : ''} vencido{vencidos.length !== 1 ? 's' : ''} — Atención urgente
+              </span>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {vencidos.map(p => <PayCard key={p.id} payment={p} cfg={profile} {...handlers} />)}
+            </div>
+          </>
+        )}
+
+        {/* Próximos a vencer en el periodo */}
+        <div style={{ paddingTop: 20, paddingBottom: 8, display: 'flex', alignItems: 'baseline', justifyContent: 'space-between' }}>
+          <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)' }}>Próximos a vencer</span>
+          <span style={{ fontSize: 11, color: 'var(--muted)' }}>Periodo {periodRange(profile)}</span>
+        </div>
         {delPeriodo.length === 0
           ? <Empty text="Sin pagos pendientes para este periodo" />
-          : delPeriodo.map(p => <PayCard key={p.id} payment={p} cfg={profile} {...handlers} />)
+          : <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {delPeriodo.map(p => <PayCard key={p.id} payment={p} cfg={profile} {...handlers} />)}
+            </div>
         }
+
+        {/* Próximos pagos */}
+        {upcoming.length > 0 && (
+          <>
+            <div style={{ paddingTop: 20, paddingBottom: 8, display: 'flex', alignItems: 'baseline', justifyContent: 'space-between' }}>
+              <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)' }}>Próximos pagos</span>
+              <span style={{ fontSize: 11, color: 'var(--muted)' }}>Próximo periodo</span>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {upcoming.map(p => <PayCard key={p.id} payment={p} cfg={profile} {...handlers} />)}
+            </div>
+          </>
+        )}
       </div>
 
-      <SectionHead title="Proximamente" />
-      <div style={{ padding: '0 16px', display: 'flex', flexDirection: 'column', gap: 7 }}>
-        {upcoming.length === 0
-          ? <Empty text="Sin más pagos próximos" />
-          : upcoming.map(p => <PayCard key={p.id} payment={p} cfg={profile} {...handlers} />)
-        }
-      </div>
+      {/* FAB */}
+      <button onClick={onAdd} style={{
+        position: 'fixed', bottom: 84, right: 'calc(50% - 194px)',
+        width: 52, height: 52, borderRadius: '50%',
+        background: 'var(--accent)', border: 'none',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        boxShadow: '0 4px 14px rgba(47,140,250,0.4)', zIndex: 99, cursor: 'pointer',
+      }}>
+        <Plus size={22} color="#fff" strokeWidth={2.2} />
+      </button>
     </div>
   )
 }
 
-function SectionHead({ title, color }) {
-  return <div style={{ padding: '16px 16px 8px' }}><h2 className="section-head" style={{ color: color || 'var(--muted)' }}>{title}</h2></div>
+function IconBtn({ onClick, icon }) {
+  return (
+    <button onClick={onClick} style={{
+      width: 38, height: 38, borderRadius: '50%',
+      background: 'rgba(255,255,255,0.1)',
+      border: '0.5px solid rgba(255,255,255,0.15)',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      cursor: 'pointer',
+    }}>
+      {icon}
+    </button>
+  )
 }
+
 function Empty({ text }) {
-  return <div style={{ textAlign: 'center', padding: '20px', fontSize: 13, color: 'var(--muted)' }}>{text}</div>
+  return <div style={{ textAlign: 'center', padding: '20px 0', fontSize: 13, color: 'var(--muted)' }}>{text}</div>
 }
