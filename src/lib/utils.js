@@ -3,15 +3,25 @@ export const MONTHS_SHORT = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Se
 export const WEEKDAYS = ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado']
 export const WEEKDAYS_SHORT = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb']
 export const CATEGORIES = ['Servicios','Suscripciones','Créditos','Renta','Seguros','Alimentación','Otros']
-export const RECUR_FREQ = { weekly: 'Semanal', biweekly: 'Quincenal', monthly: 'Mensual' }
 
-// Siempre usa fecha LOCAL del dispositivo, nunca UTC
+export const RECUR_FREQ = {
+  weekly: 'Semanal',
+  biweekly: 'Quincenal',
+  monthly: 'Mensual',
+  bimonthly: 'Bimestral',
+  quarterly: 'Trimestral',
+  semiannual: 'Semestral',
+  annual: 'Anual',
+}
+
+export const RECUR_FREQ_COMMON = ['weekly', 'biweekly', 'monthly']
+export const RECUR_FREQ_EXTRA = ['bimonthly', 'quarterly', 'semiannual', 'annual']
+
 export function today() {
   const now = new Date()
   return new Date(now.getFullYear(), now.getMonth(), now.getDate())
 }
 
-// Parsea fecha de string YYYY-MM-DD como fecha LOCAL (sin conversión UTC)
 export function dateOf(str) {
   if (!str) return today()
   const [y, m, d] = str.split('-').map(Number)
@@ -32,11 +42,22 @@ export function addDays(date, n) {
   return d
 }
 
+export function addMonths(date, n) {
+  const d = new Date(date)
+  d.setMonth(d.getMonth() + n)
+  return d
+}
+
 export function nextPeriodDate(date, freq) {
   const d = typeof date === 'string' ? dateOf(date) : new Date(date)
   if (freq === 'weekly') return addDays(d, 7)
   if (freq === 'biweekly') return addDays(d, 14)
-  return new Date(d.getFullYear(), d.getMonth() + 1, d.getDate())
+  if (freq === 'monthly') return addMonths(d, 1)
+  if (freq === 'bimonthly') return addMonths(d, 2)
+  if (freq === 'quarterly') return addMonths(d, 3)
+  if (freq === 'semiannual') return addMonths(d, 6)
+  if (freq === 'annual') return addMonths(d, 12)
+  return addMonths(d, 1)
 }
 
 export function nextWeekdayDate(weekday) {
@@ -65,6 +86,10 @@ export function periodLabel(dateStr, freq) {
 export function periodCountLabel(count, freq) {
   if (freq === 'weekly') return `${count} semana${count !== 1 ? 's' : ''}`
   if (freq === 'biweekly') return `${count} quincena${count !== 1 ? 's' : ''}`
+  if (freq === 'bimonthly') return `${count} bimestre${count !== 1 ? 's' : ''}`
+  if (freq === 'quarterly') return `${count} trimestre${count !== 1 ? 's' : ''}`
+  if (freq === 'semiannual') return `${count} semestre${count !== 1 ? 's' : ''}`
+  if (freq === 'annual') return `${count} año${count !== 1 ? 's' : ''}`
   return `${count} mes${count !== 1 ? 'es' : ''}`
 }
 
@@ -73,11 +98,6 @@ export function installmentLabel(p) {
   return `Pago ${p.current_installment}/${p.total_installments}`
 }
 
-// Periodo de cobro:
-// start = hoy
-// end = día ANTES del próximo viernes (o día de cobro)
-// Ej: hoy martes 23 jun, próximo viernes 26 jun → periodo: 23 jun al 25 jun
-// Un pago que vence el 25 entra, uno que vence el 26 NO (ese es el siguiente cobro)
 export function cobroPeriod(cfg) {
   const t = today()
   if (cfg.cobro_freq === 'weekly') {
@@ -85,33 +105,21 @@ export function cobroPeriod(cfg) {
     const td = t.getDay()
     let diffNext = wd - td
     if (diffNext <= 0) diffNext += 7
-    // Próximo día de cobro
     const nextCobro = addDays(t, diffNext)
-    // El periodo va desde hoy hasta el DÍA ANTERIOR al cobro
     const end = addDays(nextCobro, -1)
     return { start: t, end, nextCobro }
   }
   return { start: t, end: t, nextCobro: t }
 }
 
-export function nextCobroDate(cfg) {
-  return cobroPeriod(cfg).nextCobro
-}
+export function nextCobroDate(cfg) { return cobroPeriod(cfg).nextCobro }
+export function isTodayCobro(cfg) { return nextCobroDate(cfg).getTime() === today().getTime() }
 
-export function isTodayCobro(cfg) {
-  return nextCobroDate(cfg).getTime() === today().getTime()
-}
-
-// Pagos que entran en el periodo actual de cobro:
-// 1. Todos los vencidos no pagados (fecha < hoy)
-// 2. Los que vencen entre hoy y el día antes del próximo cobro
 export function getPagarEsteCobro(payments, cfg) {
   const { end } = cobroPeriod(cfg)
   return payments.filter(p => {
     if (p.is_paid || p.paused) return false
-    const vence = dateOf(p.due_date)
-    // Vencido (pasado) O vence dentro del periodo actual
-    return vence <= end
+    return dateOf(p.due_date) <= end
   })
 }
 
@@ -122,9 +130,7 @@ export function statusOf(p, cfg) {
   const d = daysDiff(p.due_date)
   if (d < 0) return 'overdue'
   const { end } = cobroPeriod(cfg)
-  const vence = dateOf(p.due_date)
-  // Cae dentro del periodo actual (hoy hasta día antes del cobro)
-  if (vence <= end) return 'cobro'
+  if (dateOf(p.due_date) <= end) return 'cobro'
   if (d <= 5) return 'soon'
   return 'ok'
 }
