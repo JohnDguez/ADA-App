@@ -34,7 +34,7 @@ export function ResetPasswordPage({ onDone }) {
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 24, background: 'var(--bg)' }}>
       <div style={{ width: '100%', maxWidth: 380 }}>
         <div style={{ textAlign: 'center', marginBottom: 32 }}>
-          <img src="/ADA-Pay-logo.svg" alt="ADA Pay" style={{ height: 80, marginBottom: 8 }} />
+          <img src="/ADA-Pay-logo.svg" alt="ADA Pay" style={{ height: 160, marginBottom: 8 }} />
         </div>
         {error && <Alert type="danger">{error}</Alert>}
         {success && <Alert type="success">{success}</Alert>}
@@ -107,7 +107,7 @@ export function AuthPage() {
 
         {/* Logo */}
         <div style={{ textAlign: 'center', marginBottom: 32 }}>
-          <img src="/ADA-Pay-logo.svg" alt="ADA Pay" style={{ height: 100, marginBottom: 4 }} />
+          <img src="/ADA-Pay-logo.svg" alt="ADA Pay" style={{ height: 160, marginBottom: 4 }} />
         </div>
 
         {mode !== 'forgot' && (
