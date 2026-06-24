@@ -8,11 +8,15 @@ export function HomePage({ payments, profile, onAdd, onMarkPaid, onMarkUnpaid, o
   const cobroLabel = profile.cobro_freq === 'weekly' ? WEEKDAYS[profile.cobro_weekday].toLowerCase() : 'día de cobro'
   const nc = nextCobroDate(profile)
   const isCobro = isTodayCobro(profile)
+
+  // Todos los pendientes del periodo actual (vencidos + vencen antes del próximo cobro)
   const pagarEsteCobro = getPagarEsteCobro(payments, profile)
 
-  // Vencidos dentro del periodo (prioritarios)
+  // Separar vencidos de los que vencen en el periodo
   const vencidos = pagarEsteCobro.filter(p => daysDiff(p.due_date) < 0)
-  const pendientes = pagarEsteCobro.filter(p => daysDiff(p.due_date) >= 0)
+    .sort((a, b) => dateOf(a.due_date) - dateOf(b.due_date))
+  const delPeriodo = pagarEsteCobro.filter(p => daysDiff(p.due_date) >= 0)
+    .sort((a, b) => dateOf(a.due_date) - dateOf(b.due_date))
 
   const varReminders = payments.filter(p => {
     if (p.is_paid || !p.is_variable || p.paused) return false
@@ -20,10 +24,10 @@ export function HomePage({ payments, profile, onAdd, onMarkPaid, onMarkUnpaid, o
     return d >= 0 && d <= (profile.reminder_days || 3)
   })
 
-  // Suma del periodo actual (solo fijos)
+  // Monto pendiente del periodo (solo fijos)
   const pendingAmt = pagarEsteCobro.filter(p => !p.is_variable).reduce((a, p) => a + Number(p.amount), 0)
 
-  // Suma del mes corriente (todos los pagos que vencen este mes)
+  // Este mes
   const thisMonth = now.getMonth()
   const thisYear = now.getFullYear()
   const paidThisMonth = payments.filter(p => {
@@ -36,12 +40,11 @@ export function HomePage({ payments, profile, onAdd, onMarkPaid, onMarkUnpaid, o
     return d.getMonth() === thisMonth && d.getFullYear() === thisYear && !p.is_variable && !p.paused
   }).reduce((a, p) => a + Number(p.amount), 0)
 
-  // Próximamente: fuera del periodo de cobro actual
+  // Próximamente: vencen DESPUÉS del periodo actual
   const { end } = cobroPeriod(profile)
   const upcoming = payments.filter(p => {
     if (p.is_paid || p.paused || p.postponed) return false
-    const vence = dateOf(p.due_date)
-    return vence > end
+    return dateOf(p.due_date) > end
   }).sort((a, b) => dateOf(a.due_date) - dateOf(b.due_date)).slice(0, 5)
 
   const handlers = { onMarkPaid, onMarkUnpaid, onEdit, onDelete, onPostpone, onAdvance }
@@ -49,8 +52,8 @@ export function HomePage({ payments, profile, onAdd, onMarkPaid, onMarkUnpaid, o
   return (
     <div style={{ paddingBottom: 80 }}>
       {/* Banner pre-alpha */}
-      <div style={{ background: '#1A1915', padding: '6px 16px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.6)', fontWeight: 500 }}>Pre-Alpha · Puede haber errores</span>
+      <div style={{ background: '#1A1915', padding: '6px 16px', textAlign: 'center' }}>
+        <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', fontWeight: 500 }}>Pre-Alpha · Puede haber errores</span>
       </div>
 
       <div style={{ padding: '16px 16px 8px', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
@@ -63,11 +66,16 @@ export function HomePage({ payments, profile, onAdd, onMarkPaid, onMarkUnpaid, o
         </button>
       </div>
 
-      {isCobro && pagarEsteCobro.length > 0 && (
+      {/* Banner día de cobro */}
+      {isCobro && (
         <div style={{ margin: '4px 16px 0', background: '#1E6B45', borderRadius: 12, padding: '14px 16px' }}>
           <div style={{ fontSize: 10, fontWeight: 600, color: 'rgba(255,255,255,0.7)', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 4 }}>Dia de cobro</div>
-          <div style={{ fontSize: 15, fontWeight: 600, color: '#fff', marginBottom: 2 }}>Hoy es {WEEKDAYS[nc.getDay()]} {nc.getDate()} de {MONTHS[nc.getMonth()]}</div>
-          <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.75)' }}>{pagarEsteCobro.length} pago{pagarEsteCobro.length !== 1 ? 's' : ''} que cubrir hoy</div>
+          <div style={{ fontSize: 15, fontWeight: 600, color: '#fff', marginBottom: 2 }}>
+            Hoy es {WEEKDAYS[nc.getDay()]} {nc.getDate()} de {MONTHS[nc.getMonth()]}
+          </div>
+          <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.75)' }}>
+            {pagarEsteCobro.length} pago{pagarEsteCobro.length !== 1 ? 's' : ''} pendientes de cubrir
+          </div>
         </div>
       )}
 
@@ -75,12 +83,13 @@ export function HomePage({ payments, profile, onAdd, onMarkPaid, onMarkUnpaid, o
       {vencidos.length > 0 && (
         <div style={{ margin: '8px 16px 0', background: '#FCDEDE', border: '0.5px solid #F5BABA', borderRadius: 12, padding: '10px 14px' }}>
           <div style={{ fontSize: 13, fontWeight: 600, color: '#B83232' }}>
-            {vencidos.length} pago{vencidos.length !== 1 ? 's' : ''} vencido{vencidos.length !== 1 ? 's' : ''} — cúbrelos lo antes posible
+            {vencidos.length} pago{vencidos.length !== 1 ? 's' : ''} vencido{vencidos.length !== 1 ? 's' : ''} — atiéndelos lo antes posible
           </div>
         </div>
       )}
 
-      {varReminders.length > 0 && !isCobro && (
+      {/* Recordatorio variables */}
+      {varReminders.length > 0 && (
         <div style={{ margin: '8px 16px 0', background: '#FEF3DC', border: '0.5px solid #F5D9A0', borderRadius: 12, padding: '12px 14px', display: 'flex', alignItems: 'flex-start', gap: 10 }}>
           <Bell size={16} color="#A06B12" style={{ flexShrink: 0, marginTop: 1 }} />
           <div>
@@ -92,9 +101,12 @@ export function HomePage({ payments, profile, onAdd, onMarkPaid, onMarkUnpaid, o
         </div>
       )}
 
+      {/* Tarjetas resumen */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, padding: '8px 16px 0' }}>
         <div style={{ background: vencidos.length > 0 ? '#B83232' : '#1E6B45', borderRadius: 12, padding: '13px 14px' }}>
-          <div style={{ fontSize: 10, fontWeight: 600, color: 'rgba(255,255,255,0.7)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 3 }}>Pagar este {cobroLabel}</div>
+          <div style={{ fontSize: 10, fontWeight: 600, color: 'rgba(255,255,255,0.7)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 3 }}>
+            Pendientes al {nc.getDate()} {MONTHS[nc.getMonth()].slice(0,3)}
+          </div>
           <div style={{ fontSize: 21, fontWeight: 600, color: '#fff' }}>{fmt(pendingAmt)}</div>
           <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.72)', marginTop: 1 }}>
             {pagarEsteCobro.length} pago{pagarEsteCobro.length !== 1 ? 's' : ''}
@@ -108,30 +120,30 @@ export function HomePage({ payments, profile, onAdd, onMarkPaid, onMarkUnpaid, o
         </div>
       </div>
 
-      {/* Vencidos primero */}
+      {/* Vencidos — prioritarios */}
       {vencidos.length > 0 && (
         <>
-          <SectionHead title="Vencidos — pago urgente" color="#B83232" />
+          <SectionHead title="Vencidos — atención urgente" color="#B83232" />
           <div style={{ padding: '0 16px', display: 'flex', flexDirection: 'column', gap: 7 }}>
             {vencidos.map(p => <PayCard key={p.id} payment={p} cfg={profile} {...handlers} />)}
           </div>
         </>
       )}
 
-      <SectionHead title={`Pagar este ${cobroLabel}`} />
+      {/* Pagar antes del próximo cobro */}
+      <SectionHead title={`Pagar antes del ${cobroLabel} ${nc.getDate()} de ${MONTHS[nc.getMonth()]}`} />
       <div style={{ padding: '0 16px', display: 'flex', flexDirection: 'column', gap: 7 }}>
-        {pendientes.length === 0 && vencidos.length === 0
-          ? <Empty text={`Sin pagos para este ${cobroLabel}`} />
-          : pendientes.length === 0
-            ? <Empty text="Sin pagos pendientes adicionales" />
-            : pendientes.map(p => <PayCard key={p.id} payment={p} cfg={profile} {...handlers} />)
+        {delPeriodo.length === 0
+          ? <Empty text={`Sin pagos pendientes para este periodo`} />
+          : delPeriodo.map(p => <PayCard key={p.id} payment={p} cfg={profile} {...handlers} />)
         }
       </div>
 
+      {/* Próximamente */}
       <SectionHead title="Proximamente" />
       <div style={{ padding: '0 16px', display: 'flex', flexDirection: 'column', gap: 7 }}>
         {upcoming.length === 0
-          ? <Empty text="Sin mas pagos proximos" />
+          ? <Empty text="Sin más pagos próximos" />
           : upcoming.map(p => <PayCard key={p.id} payment={p} cfg={profile} {...handlers} />)
         }
       </div>
@@ -140,8 +152,10 @@ export function HomePage({ payments, profile, onAdd, onMarkPaid, onMarkUnpaid, o
 }
 
 function SectionHead({ title, color }) {
-  return <div style={{ padding: '16px 16px 8px' }}><h2 style={{ fontSize: 10, fontWeight: 600, color: color || '#5C5A55', textTransform: 'uppercase', letterSpacing: '0.07em' }}>{title}</h2></div>
+  return <div style={{ padding: '16px 16px 8px' }}>
+    <h2 style={{ fontSize: 10, fontWeight: 600, color: color || '#5C5A55', textTransform: 'uppercase', letterSpacing: '0.07em' }}>{title}</h2>
+  </div>
 }
 function Empty({ text }) {
-  return <div style={{ textAlign: 'center', padding: '24px', fontSize: 13, color: '#5C5A55' }}>{text}</div>
+  return <div style={{ textAlign: 'center', padding: '20px', fontSize: 13, color: '#5C5A55' }}>{text}</div>
 }
