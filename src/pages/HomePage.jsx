@@ -79,7 +79,7 @@ export function HomePage({ payments, profile, onAdd, onMarkPaid, onMarkUnpaid, o
 
       {/* Header oscuro */}
       <div style={{
-        background: 'linear-gradient(160deg, #020A1F 0%, #0A1A3D 60%, #0F2560 100%)',
+        background: 'url(/Header_bg.jpg) center/cover no-repeat',
         padding: '52px 20px 36px',
         position: 'relative',
       }}>
