@@ -17,7 +17,6 @@ export function ResetPasswordPage({ onDone }) {
     if (newPassword !== confirm) { setError('Las contraseñas no coinciden'); return }
     setLoading(true)
     const { error } = await supabase.auth.updateUser({ password: newPassword })
-        console.log('updateUser result:', { data, error })
     if (error) {
       if (error.message?.includes('expired') || error.message?.includes('invalid')) {
         setError('El enlace expiró o ya fue usado. Solicita uno nuevo desde "¿Olvidaste tu contraseña?"')
