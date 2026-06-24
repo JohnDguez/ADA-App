@@ -4,16 +4,27 @@ import { Mail, Lock, User, Eye, EyeOff, KeyRound } from 'lucide-react'
 
 export function ResetPasswordPage({ onDone }) {
   const [newPassword, setNewPassword] = useState('')
+  const [confirm, setConfirm] = useState('')
   const [showNew, setShowNew] = useState(false)
+  const [showConfirm, setShowConfirm] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
 
   async function handleUpdate() {
+    setError('')
     if (newPassword.length < 6) { setError('La contraseña debe tener al menos 6 caracteres'); return }
+    if (newPassword !== confirm) { setError('Las contraseñas no coinciden'); return }
     setLoading(true)
     const { error } = await supabase.auth.updateUser({ password: newPassword })
-    if (error) { setError('No se pudo actualizar la contraseña'); setLoading(false); return }
+    if (error) {
+      if (error.message?.includes('expired') || error.message?.includes('invalid')) {
+        setError('El enlace expiró o ya fue usado. Solicita uno nuevo desde "¿Olvidaste tu contraseña?"')
+      } else {
+        setError('No se pudo actualizar la contraseña. Intenta de nuevo.')
+      }
+      setLoading(false); return
+    }
     setSuccess('Contraseña actualizada correctamente')
     setTimeout(async () => { await supabase.auth.signOut(); onDone() }, 1800)
     setLoading(false)
@@ -31,8 +42,14 @@ export function ResetPasswordPage({ onDone }) {
         {success && <Alert type="success">{success}</Alert>}
         <Field label="Nueva contraseña">
           <FieldIcon><Lock size={15} color="var(--muted)" /></FieldIcon>
-          <input className="field-input" style={{ paddingLeft: 40, paddingRight: 40 }} type={showNew ? 'text' : 'password'} value={newPassword} onChange={e => setNewPassword(e.target.value)} placeholder="Mínimo 6 caracteres" onKeyDown={e => e.key === 'Enter' && handleUpdate()} />
+          <input className="field-input" style={{ paddingLeft: 40, paddingRight: 40 }} type={showNew ? 'text' : 'password'} value={newPassword} onChange={e => setNewPassword(e.target.value)} placeholder="Mínimo 6 caracteres" />
           <EyeBtn show={showNew} onToggle={() => setShowNew(v => !v)} />
+        </Field>
+        <Field label="Confirmar contraseña">
+          <FieldIcon><Lock size={15} color="var(--muted)" /></FieldIcon>
+          <input className="field-input" style={{ paddingLeft: 40, paddingRight: 40, borderColor: confirm && newPassword !== confirm ? 'var(--danger)' : undefined }} type={showConfirm ? 'text' : 'password'} value={confirm} onChange={e => setConfirm(e.target.value)} placeholder="Repite tu contraseña" onKeyDown={e => e.key === 'Enter' && handleUpdate()} />
+          <EyeBtn show={showConfirm} onToggle={() => setShowConfirm(v => !v)} />
+          {confirm && newPassword !== confirm && <div style={{ fontSize: 11, color: 'var(--danger)', marginTop: 4 }}>Las contraseñas no coinciden</div>}
         </Field>
         <button onClick={handleUpdate} disabled={loading} className="btn-primary" style={{ marginTop: 8 }}>
           {loading ? 'Guardando…' : 'Guardar contraseña'}
