@@ -66,7 +66,7 @@ export function SettingsPage({ profile, user, onUpdate, onUploadAvatar }) {
   const FIELD_STYLE = { width: '100%', padding: '10px 12px', border: '0.5px solid var(--border)', borderRadius: 'var(--radius-sm)', fontFamily: 'DM Sans, sans-serif', fontSize: 14, background: 'var(--bg)', color: 'var(--text)', outline: 'none' }
 
   return (
-    <div style={{ paddingBottom: 80 }}>
+    <div style={{ paddingBottom: 100 }}>
       <div style={{ padding: '20px 16px 8px' }}>
         <div style={{ fontSize: 22, fontWeight: 600, color: 'var(--text)' }}>Ajustes</div>
       </div>

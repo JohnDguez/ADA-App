@@ -35,7 +35,7 @@ export function RecurrentsPage({ payments, onPause, onResume, onDelete, onEdit }
 
   if (groups.length === 0) {
     return (
-      <div style={{ paddingBottom: 80 }}>
+      <div style={{ paddingBottom: 100 }}>
         <Header />
         <div style={{ textAlign: 'center', padding: '60px 24px' }}>
           <CreditCard size={36} color="var(--border)" style={{ marginBottom: 12 }} />
@@ -46,7 +46,7 @@ export function RecurrentsPage({ payments, onPause, onResume, onDelete, onEdit }
   }
 
   return (
-    <div style={{ paddingBottom: 80 }}>
+    <div style={{ paddingBottom: 100 }}>
       <Header />
       <div style={{ padding: '0 16px', display: 'flex', flexDirection: 'column', gap: 8 }}>
         {groups.map(group => {

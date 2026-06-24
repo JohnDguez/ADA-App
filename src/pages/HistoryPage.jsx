@@ -32,7 +32,7 @@ export function HistoryPage({ payments }) {
   const avgMonthly = grandTotal / monthsBack
 
   return (
-    <div style={{ paddingBottom: 80 }}>
+    <div style={{ paddingBottom: 100 }}>
       <div style={{ padding: '20px 16px 8px' }}>
         <div style={{ fontSize: 22, fontWeight: 600, color: 'var(--text)' }}>Historial</div>
         <div style={{ fontSize: 13, color: 'var(--muted)', marginTop: 2 }}>Revisa tus pagos de los últimos meses</div>
