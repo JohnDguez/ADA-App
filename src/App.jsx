@@ -103,7 +103,7 @@ export default function App() {
       <BottomNav active={tab} onChange={setTab} />
 
       {showFab && (
-        <button onClick={openAdd} style={{ position: 'fixed', bottom: 84, right: 'calc(50% - 194px)', width: 50, height: 50, borderRadius: '50%', background: 'var(--accent)', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 3px 10px rgba(47,140,250,0.3)', zIndex: 99, cursor: 'pointer' }}>
+        <button onClick={openAdd} style={{ position: 'fixed', bottom: 100, right: 'calc(50% - 194px)', width: 50, height: 50, borderRadius: '50%', background: 'var(--accent)', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 3px 10px rgba(47,140,250,0.3)', zIndex: 99, cursor: 'pointer' }}>
           <Plus size={20} color="#fff" strokeWidth={2.4} />
         </button>
       )}
