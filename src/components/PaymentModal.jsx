@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { CATEGORIES, RECUR_FREQ, WEEKDAYS_SHORT, nextWeekdayDate, nextBiweeklyFromDate, fmt, nameExistsActive } from '../lib/utils'
 import { ConfirmCloseModal } from './ConfirmCloseModal'
+import { FrequencyPicker } from './FrequencyPicker'
 
 export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelete, initial, payments }) {
   const [mode, setMode] = useState('single')
@@ -218,14 +219,7 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
           </Field>
 
           {(mode === 'recurrent' || mode === 'installment') && (
-            <div style={{ marginBottom: 12 }}>
-              <label style={{ display: 'block', fontSize: 10, fontWeight: 600, color: '#5C5A55', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>Frecuencia</label>
-              <div style={{ display: 'flex', gap: 6 }}>
-                {Object.entries(RECUR_FREQ).map(([val, label]) => (
-                  <button key={val} onClick={() => setRecurFreq(val)} style={{ flex: 1, padding: '8px 0', borderRadius: 8, border: recurFreq === val ? '1.5px solid #1E6B45' : '0.5px solid #E4E2DC', background: recurFreq === val ? '#EAF4EE' : '#F7F6F3', color: recurFreq === val ? '#1E6B45' : '#5C5A55', fontSize: 13, fontWeight: recurFreq === val ? 600 : 400, fontFamily: 'DM Sans, sans-serif', cursor: 'pointer' }}>{label}</button>
-                ))}
-              </div>
-            </div>
+            <FrequencyPicker value={recurFreq} onChange={setRecurFreq} />
           )}
 
           {showWeekdayPicker && (
