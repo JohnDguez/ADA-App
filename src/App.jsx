@@ -3,6 +3,7 @@ import { useAuth } from './hooks/useAuth'
 import { usePayments } from './hooks/usePayments'
 import { useProfile } from './hooks/useProfile'
 import { AuthPage, ResetPasswordPage } from './pages/AuthPage'
+import { OnboardingPage } from './pages/OnboardingPage'
 import { HomePage } from './pages/HomePage'
 import { PaymentsPage } from './pages/PaymentsPage'
 import { HistoryPage } from './pages/HistoryPage'
@@ -24,15 +25,20 @@ export default function App() {
     postponePayment, pauseRecurrent, resumeRecurrent,
     deletePayment, deleteRecurrentFuture, deleteInstallmentFuture, deleteGroup,
   } = usePayments(user?.id)
-  const { profile, updateProfile, uploadAvatar } = useProfile(user?.id)
+  const { profile, loading: profileLoading, updateProfile, uploadAvatar } = useProfile(user?.id)
   const [tab, setTab] = useState('home')
   const [modalOpen, setModalOpen] = useState(false)
   const [editPayment, setEditPayment] = useState(null)
   const [varModal, setVarModal] = useState({ open: false, payment: null })
 
-  if (authLoading) return <Splash />
+  if (authLoading || (user && profileLoading)) return <Splash />
   if (isRecovery) return <ResetPasswordPage onDone={() => setIsRecovery(false)} />
   if (!user) return <AuthPage />
+
+  // Mostrar onboarding si no lo ha completado
+  if (user && profile && !profile.onboarding_completed) {
+    return <OnboardingPage user={user} onComplete={updateProfile} />
+  }
 
   function openAdd() { setEditPayment(null); setModalOpen(true) }
   function openEdit(p) { setEditPayment(p); setModalOpen(true) }
@@ -103,8 +109,8 @@ export default function App() {
       <BottomNav active={tab} onChange={setTab} />
 
       {showFab && (
-        <button onClick={openAdd} style={{ position: 'fixed', bottom: 100, right: 'calc(50% - 194px)', width: 50, height: 50, borderRadius: '50%', background: 'var(--accent)', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 3px 10px rgba(47,140,250,0.3)', zIndex: 99, cursor: 'pointer' }}>
-          <Plus size={20} color="#fff" strokeWidth={2.4} />
+        <button onClick={openAdd} style={{ position: 'fixed', bottom: 100, right: 'calc(50% - 194px)', width: 52, height: 52, borderRadius: '50%', background: 'var(--accent)', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 14px rgba(47,140,250,0.4)', zIndex: 99, cursor: 'pointer' }}>
+          <Plus size={22} color="#fff" strokeWidth={2.2} />
         </button>
       )}
 
@@ -118,9 +124,7 @@ export default function App() {
 function Splash() {
   return (
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg)' }}>
-      <div style={{ width: 44, height: 44, background: 'var(--accent)', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <img src="/favicon.svg" alt="ADA Pay" style={{ width: 44, height: 44 }} />
-      </div>
+      <img src="/favicon.svg" alt="ADA Pay" style={{ width: 56, height: 56 }} />
     </div>
   )
 }
