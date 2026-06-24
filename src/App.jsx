@@ -94,7 +94,7 @@ export default function App() {
 
   return (
     <>
-      {tab === 'home' && <HomePage payments={payments} profile={profile} onAdd={openAdd} {...sharedHandlers} />}
+      {tab === 'home' && <HomePage payments={payments} profile={profile} onAdd={openAdd} {...sharedHandlers} onGoSettings={() => setTab('settings')} />}
       {tab === 'payments' && <PaymentsPage payments={payments} profile={profile} onAdd={openAdd} {...sharedHandlers} />}
       {tab === 'recurrents' && <RecurrentsPage payments={payments} onPause={handlePauseRecurrent} onResume={handleResumeRecurrent} onDelete={handleDeleteRecurrent} onEdit={openEdit} />}
       {tab === 'history' && <HistoryPage payments={payments} />}
