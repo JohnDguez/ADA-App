@@ -119,7 +119,8 @@ export function usePayments(userId) {
   async function deleteRecurrentFuture(name) {
     const ids = payments.filter(p => p.name === name && p.is_recurrent && !p.is_paid).map(p => p.id)
     if (!ids.length) return { error: null }
-    const { error } = await supabase.from('payments').delete().in('id', ids).eq('user_id', userId)
+    // RLS ya garantiza que solo el usuario borra sus pagos — no encadenar .eq() con .in()
+    const { error } = await supabase.from('payments').delete().in('id', ids)
     if (!error) setPayments(prev => prev.filter(p => !ids.includes(p.id)))
     return { error }
   }
@@ -127,14 +128,15 @@ export function usePayments(userId) {
   async function deleteInstallmentFuture(name) {
     const ids = payments.filter(p => p.is_installment && p.name === name && !p.is_paid).map(p => p.id)
     if (!ids.length) return { error: null }
-    const { error } = await supabase.from('payments').delete().in('id', ids).eq('user_id', userId)
+    const { error } = await supabase.from('payments').delete().in('id', ids)
     if (!error) setPayments(prev => prev.filter(p => !ids.includes(p.id)))
     return { error }
   }
 
   async function deleteGroup(parentId) {
     const ids = payments.filter(p => p.id === parentId || p.parent_id === parentId).map(p => p.id)
-    const { error } = await supabase.from('payments').delete().in('id', ids).eq('user_id', userId)
+    if (!ids.length) return { error: null }
+    const { error } = await supabase.from('payments').delete().in('id', ids)
     if (!error) setPayments(prev => prev.filter(p => !ids.includes(p.id)))
     return { error }
   }
