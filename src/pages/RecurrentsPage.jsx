@@ -6,7 +6,6 @@ export function RecurrentsPage({ payments, onPause, onResume, onDelete, onEdit }
   const [confirmDelete, setConfirmDelete] = useState(null)
 
   const recurrentMap = {}
-  // Incluir todos los recurrentes para stats
   payments.filter(p => p.is_recurrent).forEach(p => {
     if (!recurrentMap[p.name]) {
       recurrentMap[p.name] = { name: p.name, category: p.category, recur_freq: p.recur_freq, is_installment: p.is_installment, total_installments: p.total_installments, is_variable: p.is_variable, items: [], representative: null }
@@ -17,7 +16,6 @@ export function RecurrentsPage({ payments, onPause, onResume, onDelete, onEdit }
   Object.values(recurrentMap).forEach(g => {
     if (!g.representative && g.items.length > 0) g.representative = g.items[g.items.length - 1]
   })
-  // Solo mostrar grupos con al menos un pago pendiente — si todos están pagados no aparece en Fijos
   Object.keys(recurrentMap).forEach(name => {
     const hasPending = recurrentMap[name].items.some(p => !p.is_paid)
     if (!hasPending) delete recurrentMap[name]
@@ -40,8 +38,8 @@ export function RecurrentsPage({ payments, onPause, onResume, onDelete, onEdit }
       <div style={{ paddingBottom: 80 }}>
         <Header />
         <div style={{ textAlign: 'center', padding: '60px 24px' }}>
-          <CreditCard size={36} color="#C8C5BE" style={{ marginBottom: 12 }} />
-          <div style={{ fontSize: 14, color: '#5C5A55' }}>Sin pagos recurrentes registrados</div>
+          <CreditCard size={36} color="var(--border)" style={{ marginBottom: 12 }} />
+          <div style={{ fontSize: 14, color: 'var(--muted)' }}>Sin pagos recurrentes registrados</div>
         </div>
       </div>
     )
@@ -60,52 +58,50 @@ export function RecurrentsPage({ payments, onPause, onResume, onDelete, onEdit }
           const isDeleting = confirmDelete === group.name
 
           return (
-            <div key={group.name} style={{ background: '#fff', border: `0.5px solid ${paused ? '#F5D9A0' : '#E4E2DC'}`, borderRadius: 12, overflow: 'hidden' }}>
-              <div style={{ padding: '13px 14px', borderBottom: isDeleting ? '0.5px solid #E4E2DC' : 'none' }}>
+            <div key={group.name} style={{ background: 'var(--surface)', border: `0.5px solid ${paused ? 'var(--warning-border)' : 'var(--border)'}`, borderRadius: 'var(--radius)', overflow: 'hidden' }}>
+              <div style={{ padding: '13px 14px', borderBottom: isDeleting ? '0.5px solid var(--border)' : 'none' }}>
                 <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 6 }}>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 2 }}>
-                      <span style={{ fontSize: 14, fontWeight: 600, color: '#1A1915', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 170 }}>{group.name}</span>
-                      {paused && <span style={{ fontSize: 10, fontWeight: 600, color: '#A06B12', background: '#FEF3DC', padding: '2px 7px', borderRadius: 20, flexShrink: 0 }}>Pausado</span>}
+                      <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 170 }}>{group.name}</span>
+                      {paused && <span className="badge badge-soon">Pausado</span>}
                     </div>
-                    <div style={{ fontSize: 11, color: '#5C5A55' }}>
+                    <div style={{ fontSize: 11, color: 'var(--muted)' }}>
                       {group.category} · {freqLabel}
                       {group.is_installment && ` · ${paid}/${group.total_installments} pagos`}
                       {group.is_variable && ' · Variable'}
                     </div>
                   </div>
-                  {/* Sin botón de eliminar en la card — solo editar y pausar */}
                   <div style={{ display: 'flex', gap: 6, flexShrink: 0, marginLeft: 8 }}>
                     {group.representative && (
-                      <button onClick={() => onEdit(group.representative)} title="Editar" style={{ width: 32, height: 32, borderRadius: '50%', border: '0.5px solid #E4E2DC', background: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
-                        <Pencil size={14} color="#5C5A55" />
+                      <button onClick={() => onEdit(group.representative)} style={{ width: 32, height: 32, borderRadius: '50%', border: '0.5px solid var(--border)', background: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+                        <Pencil size={14} color="var(--muted)" />
                       </button>
                     )}
-                    <button onClick={() => paused ? onResume(group.name) : onPause(group.name)} title={paused ? 'Reactivar' : 'Pausar'} style={{ width: 32, height: 32, borderRadius: '50%', border: '0.5px solid #E4E2DC', background: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
-                      {paused ? <Play size={14} color="#1E6B45" /> : <Pause size={14} color="#A06B12" />}
+                    <button onClick={() => paused ? onResume(group.name) : onPause(group.name)} style={{ width: 32, height: 32, borderRadius: '50%', border: '0.5px solid var(--border)', background: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+                      {paused ? <Play size={14} color="var(--paid)" /> : <Pause size={14} color="var(--warning)" />}
                     </button>
                   </div>
                 </div>
 
                 <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between' }}>
                   <div style={{ display: 'flex', gap: 12 }}>
-                    {total > 0 && <div style={{ fontSize: 12, color: '#5C5A55' }}>Pagado: <strong style={{ color: '#1A1915' }}>{fmt(total)}</strong></div>}
-                    {next && <div style={{ fontSize: 12, color: '#5C5A55' }}>Próximo: <strong style={{ color: '#1A1915' }}>{dateOf(next.due_date).getDate()} {MONTHS_SHORT[dateOf(next.due_date).getMonth()]}{!group.is_variable && next.amount > 0 ? ` · ${fmt(next.amount)}` : ''}</strong></div>}
+                    {total > 0 && <div style={{ fontSize: 12, color: 'var(--muted)' }}>Pagado: <strong style={{ color: 'var(--text)' }}>{fmt(total)}</strong></div>}
+                    {next && <div style={{ fontSize: 12, color: 'var(--muted)' }}>Próximo: <strong style={{ color: 'var(--text)' }}>{dateOf(next.due_date).getDate()} {MONTHS_SHORT[dateOf(next.due_date).getMonth()]}{!group.is_variable && next.amount > 0 ? ` · ${fmt(next.amount)}` : ''}</strong></div>}
                   </div>
-                  {/* Eliminar como texto link */}
-                  <button onClick={() => setConfirmDelete(isDeleting ? null : group.name)} style={{ fontSize: 12, color: '#B83232', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'DM Sans, sans-serif', padding: 0 }}>
+                  <button onClick={() => setConfirmDelete(isDeleting ? null : group.name)} style={{ fontSize: 12, color: 'var(--danger)', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'DM Sans, sans-serif', padding: 0 }}>
                     Eliminar
                   </button>
                 </div>
               </div>
 
               {isDeleting && (
-                <div style={{ padding: '12px 14px', background: '#FFF8F8', borderTop: '0.5px solid #FCDEDE' }}>
-                  <div style={{ fontSize: 13, fontWeight: 500, color: '#1A1915', marginBottom: 4 }}>¿Eliminar "{group.name}"?</div>
-                  <div style={{ fontSize: 12, color: '#5C5A55', marginBottom: 10 }}>Los pagos realizados quedan en el historial. Los pendientes se eliminan y podrás reusar este nombre.</div>
+                <div style={{ padding: '12px 14px', background: 'var(--danger-soft)', borderTop: '0.5px solid var(--danger-border)' }}>
+                  <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--text)', marginBottom: 4 }}>¿Eliminar "{group.name}"?</div>
+                  <div style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 10 }}>Los pagos realizados quedan en el historial. Los pendientes se eliminan y podrás reusar este nombre.</div>
                   <div style={{ display: 'flex', gap: 8 }}>
-                    <button onClick={() => { onDelete(group.name); setConfirmDelete(null) }} style={{ flex: 1, padding: '9px 0', background: '#B83232', color: '#fff', border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 600, fontFamily: 'DM Sans, sans-serif', cursor: 'pointer' }}>Eliminar</button>
-                    <button onClick={() => setConfirmDelete(null)} style={{ flex: 1, padding: '9px 0', background: 'none', color: '#5C5A55', border: '0.5px solid #E4E2DC', borderRadius: 8, fontSize: 13, fontFamily: 'DM Sans, sans-serif', cursor: 'pointer' }}>Cancelar</button>
+                    <button onClick={() => { onDelete(group.name); setConfirmDelete(null) }} style={{ flex: 1, padding: '9px 0', background: 'var(--danger)', color: '#fff', border: 'none', borderRadius: 'var(--radius-sm)', fontSize: 13, fontWeight: 600, fontFamily: 'DM Sans, sans-serif', cursor: 'pointer' }}>Eliminar</button>
+                    <button onClick={() => setConfirmDelete(null)} style={{ flex: 1, padding: '9px 0', background: 'none', color: 'var(--muted)', border: '0.5px solid var(--border)', borderRadius: 'var(--radius-sm)', fontSize: 13, fontFamily: 'DM Sans, sans-serif', cursor: 'pointer' }}>Cancelar</button>
                   </div>
                 </div>
               )}
@@ -120,8 +116,8 @@ export function RecurrentsPage({ payments, onPause, onResume, onDelete, onEdit }
 function Header() {
   return (
     <div style={{ padding: '20px 16px 8px' }}>
-      <div style={{ fontSize: 22, fontWeight: 600, color: '#1A1915' }}>Fijos</div>
-      <div style={{ fontSize: 13, color: '#5C5A55', marginTop: 2 }}>Gestiona tus pagos recurrentes y parcialidades</div>
+      <div style={{ fontSize: 22, fontWeight: 600, color: 'var(--text)' }}>Fijos</div>
+      <div style={{ fontSize: 13, color: 'var(--muted)', marginTop: 2 }}>Gestiona tus pagos recurrentes y parcialidades</div>
     </div>
   )
 }

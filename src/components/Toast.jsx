@@ -13,7 +13,15 @@ export function Toast() {
   }, [])
 
   return (
-    <div style={{ position: 'fixed', bottom: 90, left: '50%', transform: `translateX(-50%) translateY(${visible ? 0 : 16}px)`, background: '#1A1915', color: '#F7F6F3', fontSize: 13, fontWeight: 500, padding: '9px 16px', borderRadius: 30, zIndex: 300, opacity: visible ? 1 : 0, transition: 'all .22s', pointerEvents: 'none', whiteSpace: 'nowrap' }}>
+    <div style={{
+      position: 'fixed', bottom: 90, left: '50%',
+      transform: `translateX(-50%) translateY(${visible ? 0 : 16}px)`,
+      background: 'var(--text)', color: 'var(--surface)',
+      fontSize: 13, fontWeight: 500,
+      padding: '9px 16px', borderRadius: 'var(--radius-full)',
+      zIndex: 300, opacity: visible ? 1 : 0,
+      transition: 'all .22s', pointerEvents: 'none', whiteSpace: 'nowrap',
+    }}>
       {msg}
     </div>
   )

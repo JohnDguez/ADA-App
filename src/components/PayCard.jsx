@@ -4,42 +4,29 @@ import { statusOf, daysDiff, dateOf, fmt, MONTHS_SHORT, WEEKDAYS_SHORT, nextCobr
 
 function badgeOf(p, cfg) {
   const s = statusOf(p, cfg)
-  if (s === 'postponed') return { cls: 'postponed', label: 'Pospuesto' }
-  if (s === 'paid') return { cls: 'paid', label: p.is_installment ? installmentLabel(p) + ' ✓' : 'Pagado' }
-  if (s === 'paused') return { cls: 'paused', label: 'Pausado' }
+  if (s === 'postponed') return { cls: 'badge-paused', label: 'Pospuesto' }
+  if (s === 'paid')      return { cls: 'badge-paid',   label: p.is_installment ? installmentLabel(p) + ' ✓' : 'Pagado' }
+  if (s === 'paused')    return { cls: 'badge-paused', label: 'Pausado' }
   const d = daysDiff(p.due_date)
-  if (s === 'overdue') return { cls: 'due', label: 'Vencido' }
+  if (s === 'overdue')   return { cls: 'badge-due',    label: 'Vencido' }
   if (s === 'cobro') {
-    if (d < 0) return { cls: 'due', label: `Vencido hace ${Math.abs(d)} día${Math.abs(d) !== 1 ? 's' : ''}` }
+    if (d < 0) return { cls: 'badge-due', label: `Vencido hace ${Math.abs(d)} día${Math.abs(d) !== 1 ? 's' : ''}` }
     const nc = nextCobroDate(cfg)
     const t = new Date(); t.setHours(0,0,0,0)
     const base = p.is_installment ? installmentLabel(p) : (nc.getTime() === t.getTime() ? 'Pagar hoy' : `Pagar este ${WEEKDAYS_SHORT[nc.getDay()]}`)
-    return { cls: d < 0 ? 'due' : 'cobro', label: base }
+    return { cls: 'badge-cobro', label: base }
   }
   const base = p.is_installment ? installmentLabel(p) : (d === 0 ? 'Hoy' : d === 1 ? 'Mañana' : `En ${d} días`)
-  return { cls: d <= 2 ? 'soon' : 'ok', label: base }
-}
-
-const BADGE = {
-  ok: { background: '#EAF4EE', color: '#1E6B45' },
-  soon: { background: '#FEF3DC', color: '#A06B12' },
-  due: { background: '#FCDEDE', color: '#B83232' },
-  paid: { background: '#F0EFE9', color: '#5C5A55' },
-  cobro: { background: '#1A1915', color: '#fff' },
-  postponed: { background: '#F0EFE9', color: '#5C5A55' },
-  paused: { background: '#F0EFE9', color: '#5C5A55' },
+  return { cls: d <= 2 ? 'badge-soon' : 'badge-ok', label: base }
 }
 
 function barColor(p, cfg) {
   const s = statusOf(p, cfg)
-  if (s === 'postponed' || s === 'paid' || s === 'paused') return '#C8C5BE'
-  if (s === 'overdue') return '#B83232'
-  if (s === 'cobro') {
-    const d = daysDiff(p.due_date)
-    return d < 0 ? '#B83232' : '#B83232'
-  }
-  if (s === 'soon') return '#A06B12'
-  return '#1E6B45'
+  if (s === 'postponed' || s === 'paid' || s === 'paused') return 'var(--border-mid)'
+  if (s === 'overdue') return 'var(--danger)'
+  if (s === 'cobro') { return daysDiff(p.due_date) < 0 ? 'var(--danger)' : 'var(--danger)' }
+  if (s === 'soon') return 'var(--warning)'
+  return 'var(--paid)'
 }
 
 export function PayCard({ payment: p, cfg, onMarkPaid, onMarkUnpaid, onEdit, onDelete, onPostpone, onAdvance }) {
@@ -57,37 +44,37 @@ export function PayCard({ payment: p, cfg, onMarkPaid, onMarkUnpaid, onEdit, onD
   }, [menuOpen])
 
   return (
-    <div style={{ background: '#fff', border: '0.5px solid #E4E2DC', borderRadius: 12, display: 'flex', overflow: 'visible', position: 'relative' }}>
-      <div style={{ width: 4, flexShrink: 0, background: bar, borderRadius: '12px 0 0 12px' }} />
+    <div style={{ background: 'var(--surface)', border: '0.5px solid var(--border)', borderRadius: 'var(--radius)', display: 'flex', overflow: 'visible', position: 'relative' }}>
+      <div style={{ width: 4, flexShrink: 0, background: bar, borderRadius: 'var(--radius) 0 0 var(--radius)' }} />
       <div style={{ flex: 1, padding: '11px 8px 11px 13px', minWidth: 0 }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 3 }}>
-          <span style={{ fontSize: 14, fontWeight: 600, color: '#1A1915', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 155 }}>{p.name}</span>
+          <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--text)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 155 }}>{p.name}</span>
           {p.is_variable && !p.is_paid
-            ? <span style={{ fontSize: 11, fontWeight: 500, color: '#A06B12', background: '#FEF3DC', padding: '2px 8px', borderRadius: 20 }}>Variable</span>
-            : <span style={{ fontSize: 14, fontWeight: 600, color: '#1A1915' }}>{fmt(p.amount)}</span>
+            ? <span className="badge badge-soon">Variable</span>
+            : <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--text)' }}>{fmt(p.amount)}</span>
           }
         </div>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <span style={{ fontSize: 11, color: '#5C5A55' }}>
+          <span style={{ fontSize: 11, color: 'var(--muted)' }}>
             {p.category} · {d.getDate()} {MONTHS_SHORT[d.getMonth()]}
-            {p.is_recurrent && p.recur_freq && !p.is_installment && <span style={{ color: '#A06B12' }}> · {RECUR_FREQ[p.recur_freq]}</span>}
+            {p.is_recurrent && p.recur_freq && !p.is_installment && <span style={{ color: 'var(--accent)' }}> · {RECUR_FREQ[p.recur_freq]}</span>}
           </span>
-          <span style={{ fontSize: 10, fontWeight: 600, padding: '2px 8px', borderRadius: 20, ...BADGE[b.cls] }}>{b.label}</span>
+          <span className={`badge ${b.cls}`}>{b.label}</span>
         </div>
       </div>
 
       <div style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '0 10px 0 4px', flexShrink: 0 }}>
         {isPending && (
-          <button onClick={() => onMarkPaid(p)} style={{ width: 32, height: 32, borderRadius: '50%', background: '#1E6B45', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+          <button onClick={() => onMarkPaid(p)} style={{ width: 32, height: 32, borderRadius: '50%', background: 'var(--paid)', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
             <Check size={15} color="#fff" strokeWidth={2.5} />
           </button>
         )}
         <div ref={menuRef} style={{ position: 'relative' }}>
-          <button onClick={() => setMenuOpen(v => !v)} style={{ width: 30, height: 30, borderRadius: '50%', background: 'none', border: '0.5px solid #E4E2DC', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
-            <MoreVertical size={14} color="#5C5A55" />
+          <button onClick={() => setMenuOpen(v => !v)} style={{ width: 30, height: 30, borderRadius: '50%', background: 'none', border: '0.5px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+            <MoreVertical size={14} color="var(--muted)" />
           </button>
           {menuOpen && (
-            <div style={{ position: 'absolute', right: 0, top: 34, background: '#fff', border: '0.5px solid #E4E2DC', borderRadius: 10, boxShadow: '0 4px 16px rgba(0,0,0,0.1)', zIndex: 50, minWidth: 170, overflow: 'hidden' }}>
+            <div style={{ position: 'absolute', right: 0, top: 34, background: 'var(--surface)', border: '0.5px solid var(--border)', borderRadius: 10, boxShadow: '0 4px 16px rgba(0,0,0,0.1)', zIndex: 50, minWidth: 170, overflow: 'hidden' }}>
               {isPending && <MenuItem icon={<Pencil size={14}/>} label="Editar" onClick={() => { onEdit(p); setMenuOpen(false) }} />}
               {isPending && p.is_recurrent && !p.is_installment && <MenuItem icon={<Clock size={14}/>} label="Posponer" onClick={() => { onPostpone(p); setMenuOpen(false) }} />}
               {isPending && p.is_installment && onAdvance && <MenuItem icon={<FastForward size={14}/>} label="Adelantar pago" onClick={() => { onAdvance(p); setMenuOpen(false) }} />}
@@ -103,8 +90,8 @@ export function PayCard({ payment: p, cfg, onMarkPaid, onMarkUnpaid, onEdit, onD
 
 function MenuItem({ icon, label, onClick, danger }) {
   return (
-    <button onClick={onClick} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', background: 'none', border: 'none', borderBottom: '0.5px solid #F0EFE9', fontSize: 13, fontWeight: 500, color: danger ? '#B83232' : '#1A1915', fontFamily: 'DM Sans, sans-serif', cursor: 'pointer', textAlign: 'left' }}>
-      <span style={{ color: danger ? '#B83232' : '#5C5A55' }}>{icon}</span>{label}
+    <button onClick={onClick} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', background: 'none', border: 'none', borderBottom: '0.5px solid var(--bg)', fontSize: 13, fontWeight: 500, color: danger ? 'var(--danger)' : 'var(--text)', fontFamily: 'DM Sans, sans-serif', cursor: 'pointer', textAlign: 'left' }}>
+      <span style={{ color: danger ? 'var(--danger)' : 'var(--muted)' }}>{icon}</span>{label}
     </button>
   )
 }
@@ -122,60 +109,59 @@ export function GroupCard({ group, cfg, onMarkPaid, onMarkUnpaid, onEdit, onDele
     : periodCountLabel(paidItems.length, freq) + ' pagadas'
 
   return (
-    <div style={{ background: '#fff', border: '0.5px solid #E4E2DC', borderRadius: 12, overflow: 'visible' }}>
+    <div style={{ background: 'var(--surface)', border: '0.5px solid var(--border)', borderRadius: 'var(--radius)', overflow: 'visible' }}>
       <div style={{ display: 'flex', overflow: 'visible' }}>
-        <div style={{ width: 4, flexShrink: 0, background: '#1E6B45', borderRadius: expanded ? '12px 0 0 0' : '12px 0 0 12px' }} />
+        <div style={{ width: 4, flexShrink: 0, background: 'var(--paid)', borderRadius: expanded ? 'var(--radius) 0 0 0' : 'var(--radius) 0 0 var(--radius)' }} />
         <div style={{ flex: 1, padding: '11px 8px 11px 13px', minWidth: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 3 }}>
-            <span style={{ fontSize: 14, fontWeight: 600, color: '#1A1915' }}>{group.name}</span>
-            <span style={{ fontSize: 14, fontWeight: 600, color: '#1A1915' }}>{totalPaid > 0 ? fmt(totalPaid) : '—'}</span>
+            <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--text)' }}>{group.name}</span>
+            <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--text)' }}>{totalPaid > 0 ? fmt(totalPaid) : '—'}</span>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-            <span style={{ fontSize: 11, color: '#5C5A55' }}>{freqLabel}</span>
-            {paidItems.length > 0 && <span style={{ fontSize: 10, fontWeight: 600, color: '#1E6B45', background: '#EAF4EE', padding: '1px 7px', borderRadius: 20 }}>{countLabel}</span>}
+            <span style={{ fontSize: 11, color: 'var(--muted)' }}>{freqLabel}</span>
+            {paidItems.length > 0 && <span className="badge badge-paid">{countLabel}</span>}
           </div>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '0 10px 0 4px', flexShrink: 0 }}>
           {isPending && (
-            <button onClick={() => onMarkPaid(group)} style={{ width: 32, height: 32, borderRadius: '50%', background: '#1E6B45', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+            <button onClick={() => onMarkPaid(group)} style={{ width: 32, height: 32, borderRadius: '50%', background: 'var(--paid)', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
               <Check size={15} color="#fff" strokeWidth={2.5} />
             </button>
           )}
-          <button onClick={() => setExpanded(v => !v)} style={{ width: 30, height: 30, borderRadius: '50%', background: 'none', border: '0.5px solid #E4E2DC', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
-            {expanded ? <ChevronUp size={14} color="#5C5A55" /> : <ChevronDown size={14} color="#5C5A55" />}
+          <button onClick={() => setExpanded(v => !v)} style={{ width: 30, height: 30, borderRadius: '50%', background: 'none', border: '0.5px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+            {expanded ? <ChevronUp size={14} color="var(--muted)" /> : <ChevronDown size={14} color="var(--muted)" />}
           </button>
         </div>
       </div>
 
       {expanded && (
-        <div style={{ borderTop: '0.5px solid #E4E2DC' }}>
+        <div style={{ borderTop: '0.5px solid var(--border)' }}>
           {allItems.map((p, i) => {
-            const s = statusOf(p, cfg)
+            const overdue = daysDiff(p.due_date) < 0 && !p.is_paid
             const isPend = !p.is_paid && !p.postponed
             const isLast = i === allItems.length - 1
             const instLabel = p.is_installment ? `Pago ${p.current_installment}/${p.total_installments}` : periodLabel(p.due_date, freq)
-            const overdue = daysDiff(p.due_date) < 0 && !p.is_paid
-            const badgeStyle = p.is_paid ? BADGE.paid : p.postponed ? BADGE.postponed : overdue ? BADGE.due : BADGE.soon
+            const badgeCls = p.is_paid ? 'badge-paid' : p.postponed ? 'badge-paused' : overdue ? 'badge-due' : 'badge-soon'
             const badgeText = p.is_paid ? 'Pagado' : p.postponed ? 'Pospuesto' : overdue ? 'Vencido' : 'Pendiente'
             return (
-              <div key={p.id} style={{ display: 'flex', alignItems: 'center', padding: '9px 12px 9px 20px', borderBottom: isLast ? 'none' : '0.5px solid #F0EFE9', gap: 6 }}>
-                <div style={{ width: 6, height: 6, borderRadius: '50%', background: overdue ? '#B83232' : p.is_paid ? '#C8C5BE' : '#1E6B45', flexShrink: 0 }} />
-                <span style={{ fontSize: 12, color: '#5C5A55', flex: 1 }}>{instLabel}</span>
-                {p.amount > 0 && <span style={{ fontSize: 12, fontWeight: 500, color: '#1A1915' }}>{fmt(p.amount)}</span>}
-                <span style={{ fontSize: 10, fontWeight: 600, padding: '2px 7px', borderRadius: 20, ...badgeStyle }}>{badgeText}</span>
+              <div key={p.id} style={{ display: 'flex', alignItems: 'center', padding: '9px 12px 9px 20px', borderBottom: isLast ? 'none' : '0.5px solid var(--bg)', gap: 6 }}>
+                <div style={{ width: 6, height: 6, borderRadius: '50%', background: overdue ? 'var(--danger)' : p.is_paid ? 'var(--border-mid)' : 'var(--paid)', flexShrink: 0 }} />
+                <span style={{ fontSize: 12, color: 'var(--muted)', flex: 1 }}>{instLabel}</span>
+                {p.amount > 0 && <span style={{ fontSize: 12, fontWeight: 500, color: 'var(--text)' }}>{fmt(p.amount)}</span>}
+                <span className={`badge ${badgeCls}`}>{badgeText}</span>
                 {isPend && (
-                  <button onClick={() => onMarkPaid(p)} style={{ width: 22, height: 22, borderRadius: '50%', background: '#1E6B45', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0 }}>
+                  <button onClick={() => onMarkPaid(p)} style={{ width: 22, height: 22, borderRadius: '50%', background: 'var(--paid)', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0 }}>
                     <Check size={10} color="#fff" strokeWidth={2.5} />
                   </button>
                 )}
                 {isPend && p.is_recurrent && !p.is_installment && (
-                  <button onClick={() => onPostpone(p)} style={{ width: 22, height: 22, borderRadius: '50%', background: 'none', border: '0.5px solid #E4E2DC', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0 }}>
-                    <Clock size={10} color="#5C5A55" />
+                  <button onClick={() => onPostpone(p)} style={{ width: 22, height: 22, borderRadius: '50%', background: 'none', border: '0.5px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0 }}>
+                    <Clock size={10} color="var(--muted)" />
                   </button>
                 )}
                 {p.is_paid && (
-                  <button onClick={() => onMarkUnpaid(p.id)} style={{ width: 22, height: 22, borderRadius: '50%', background: 'none', border: '0.5px solid #E4E2DC', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0 }}>
-                    <RotateCcw size={10} color="#5C5A55" />
+                  <button onClick={() => onMarkUnpaid(p.id)} style={{ width: 22, height: 22, borderRadius: '50%', background: 'none', border: '0.5px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0 }}>
+                    <RotateCcw size={10} color="var(--muted)" />
                   </button>
                 )}
               </div>

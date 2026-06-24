@@ -19,7 +19,6 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
   const [error, setError] = useState('')
   const [confirmClose, setConfirmClose] = useState(false)
 
-  // Si es edición de parcialidad, bloqueamos edición
   const isEditingInstallment = !!(initial?.is_installment)
 
   useEffect(() => {
@@ -60,9 +59,10 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
   }
   function requestClose() { if (hasDirty()) { setConfirmClose(true); return }; onClose() }
 
+  const monthBasedFreqs = ['monthly', 'bimonthly', 'quarterly', 'semiannual', 'annual']
   function calcFirstDate() {
-    if (recurFreq === 'monthly') return dueDate
-    if (recurFreq === 'weekly') return dueDate // para parcialidades usamos dueDate directo
+    if (monthBasedFreqs.includes(recurFreq)) return dueDate
+    if (recurFreq === 'weekly') return dueDate
     if (recurFreq === 'biweekly') return biweeklyDate || dueDate
     return dueDate
   }
@@ -70,13 +70,10 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
   async function handleSave() {
     setError('')
     if (!name.trim()) { setError('Escribe el nombre del pago'); return }
-
     const checkName = initial?.name || null
     if (nameExistsActive(payments || [], name, checkName)) {
-      setError(`Ya existe un pago activo con el nombre "${name.trim()}"`)
-      return
+      setError(`Ya existe un pago activo con el nombre "${name.trim()}"`); return
     }
-
     if (mode === 'installment') {
       if (!amount || isNaN(parseFloat(amount))) { setError('Agrega el monto por pago'); return }
       if (!totalInstallments || isNaN(parseInt(totalInstallments))) { setError('Agrega el número total de pagos'); return }
@@ -85,73 +82,50 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
       if (start > total) { setError('El pago inicial no puede ser mayor al total'); return }
       if (!dueDate) { setError('Selecciona la fecha del primer pago'); return }
       setSaving(true)
-      await onSaveInstallment({
-        name: name.trim(),
-        amount: parseFloat(amount),
-        totalInstallments: total,
-        startFrom: start,
-        recurFreq,
-        category,
-        firstDate: dueDate, // siempre la fecha real del pago #1, puede ser pasada
-      })
+      await onSaveInstallment({ name: name.trim(), amount: parseFloat(amount), totalInstallments: total, startFrom: start, recurFreq, category, firstDate: dueDate })
       setSaving(false); onClose(); return
     }
-
     if (!isVariable && (!amount || isNaN(parseFloat(amount)))) { setError('Agrega el monto o marca como variable'); return }
     let finalDate = dueDate
     if (mode === 'recurrent' && recurFreq === 'weekly') finalDate = nextWeekdayDate(weekday).toISOString().split('T')[0]
     if (mode === 'recurrent' && recurFreq === 'biweekly') finalDate = biweeklyDate ? nextBiweeklyFromDate(biweeklyDate).toISOString().split('T')[0] : dueDate
     if (!finalDate) { setError('Selecciona la fecha de vencimiento'); return }
-
     setSaving(true)
-    await onSave({
-      name: name.trim(), amount: isVariable ? 0 : parseFloat(amount),
-      due_date: finalDate, category,
-      is_variable: isVariable, is_recurrent: mode === 'recurrent',
-      recur_freq: mode === 'recurrent' ? recurFreq : null,
-      is_paid: initial?.is_paid || false, is_installment: false,
-    })
+    await onSave({ name: name.trim(), amount: isVariable ? 0 : parseFloat(amount), due_date: finalDate, category, is_variable: isVariable, is_recurrent: mode === 'recurrent', recur_freq: mode === 'recurrent' ? recurFreq : null, is_paid: initial?.is_paid || false, is_installment: false })
     setSaving(false); onClose()
   }
 
   if (!open) return null
 
-  const S = { input: { width: '100%', padding: '10px 12px', border: '0.5px solid #E4E2DC', borderRadius: 8, fontFamily: 'DM Sans, sans-serif', fontSize: 14, background: '#F7F6F3', color: '#1A1915', outline: 'none', WebkitAppearance: 'none', appearance: 'none' } }
-  const monthBasedFreqs = ['monthly', 'bimonthly', 'quarterly', 'semiannual', 'annual']
   const showDatePicker = mode === 'single' || (mode === 'recurrent' && monthBasedFreqs.includes(recurFreq)) || (mode === 'installment' && monthBasedFreqs.includes(recurFreq))
   const showWeekdayPicker = (mode === 'recurrent' || mode === 'installment') && recurFreq === 'weekly'
   const showBiweeklyPicker = (mode === 'recurrent' || mode === 'installment') && recurFreq === 'biweekly'
   const nextBiDate = biweeklyDate ? nextBiweeklyFromDate(biweeklyDate) : null
 
-  // Vista bloqueada para edición de parcialidades
+  const modalStyle = { background: 'var(--surface)', borderRadius: '20px 20px 0 0', width: '100%', maxWidth: 420, padding: '18px 16px 32px', maxHeight: '92vh', overflowY: 'auto' }
+
   if (isEditingInstallment) {
     return (
       <>
-        <div onClick={e => e.target === e.currentTarget && onClose()} style={{ position: 'fixed', inset: 0, background: 'rgba(26,25,21,0.45)', zIndex: 200, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
-          <div style={{ background: '#fff', borderRadius: '20px 20px 0 0', width: '100%', maxWidth: 420, padding: '18px 16px 32px' }}>
-            <div style={{ width: 34, height: 4, borderRadius: 2, background: '#E4E2DC', margin: '0 auto 16px' }} />
-            <div style={{ fontSize: 16, fontWeight: 600, color: '#1A1915', marginBottom: 12 }}>Pago en parcialidades</div>
-            <div style={{ background: '#FEF3DC', border: '0.5px solid #F5D9A0', borderRadius: 10, padding: '12px 14px', marginBottom: 16 }}>
-              <div style={{ fontSize: 13, fontWeight: 600, color: '#A06B12', marginBottom: 4 }}>No se puede editar</div>
-              <div style={{ fontSize: 12, color: '#5C5A55', lineHeight: 1.6 }}>
-                Los pagos en parcialidades no se pueden modificar una vez creados. Si necesitas corregir algo, elimina este pago y vuelve a crearlo con los datos correctos.
+        <div onClick={e => e.target === e.currentTarget && onClose()} style={{ position: 'fixed', inset: 0, background: 'rgba(2,10,31,0.45)', zIndex: 200, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
+          <div style={modalStyle}>
+            <div style={{ width: 34, height: 4, borderRadius: 2, background: 'var(--border)', margin: '0 auto 16px' }} />
+            <div style={{ fontSize: 16, fontWeight: 600, color: 'var(--text)', marginBottom: 12 }}>Pago en parcialidades</div>
+            <div style={{ background: 'var(--warning-soft)', border: '0.5px solid var(--warning-border)', borderRadius: 'var(--radius)', padding: '12px 14px', marginBottom: 16 }}>
+              <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--warning)', marginBottom: 4 }}>No se puede editar</div>
+              <div style={{ fontSize: 12, color: 'var(--muted)', lineHeight: 1.6 }}>Los pagos en parcialidades no se pueden modificar una vez creados. Si necesitas corregir algo, elimínalo y vuelve a crearlo.</div>
+            </div>
+            <div style={{ background: 'var(--bg)', border: '0.5px solid var(--border)', borderRadius: 'var(--radius)', padding: '12px 14px', marginBottom: 16 }}>
+              <div style={{ fontSize: 12, color: 'var(--muted)', lineHeight: 1.8 }}>
+                <div><strong style={{ color: 'var(--text)' }}>Nombre:</strong> {initial.name}</div>
+                <div><strong style={{ color: 'var(--text)' }}>Monto por pago:</strong> {fmt(initial.amount)}</div>
+                <div><strong style={{ color: 'var(--text)' }}>Total de pagos:</strong> {initial.total_installments}</div>
+                <div><strong style={{ color: 'var(--text)' }}>Frecuencia:</strong> {RECUR_FREQ[initial.recur_freq] || initial.recur_freq}</div>
+                <div><strong style={{ color: 'var(--text)' }}>Categoría:</strong> {initial.category}</div>
               </div>
             </div>
-            <div style={{ background: '#F7F6F3', border: '0.5px solid #E4E2DC', borderRadius: 10, padding: '12px 14px', marginBottom: 16 }}>
-              <div style={{ fontSize: 12, color: '#5C5A55', lineHeight: 1.8 }}>
-                <div><strong style={{ color: '#1A1915' }}>Nombre:</strong> {initial.name}</div>
-                <div><strong style={{ color: '#1A1915' }}>Monto por pago:</strong> {fmt(initial.amount)}</div>
-                <div><strong style={{ color: '#1A1915' }}>Total de pagos:</strong> {initial.total_installments}</div>
-                <div><strong style={{ color: '#1A1915' }}>Frecuencia:</strong> {RECUR_FREQ[initial.recur_freq] || initial.recur_freq}</div>
-                <div><strong style={{ color: '#1A1915' }}>Categoría:</strong> {initial.category}</div>
-              </div>
-            </div>
-            <button onClick={() => { onDelete(initial.id); onClose() }} style={{ width: '100%', padding: 11, background: 'none', color: '#B83232', border: '0.5px solid #FCDEDE', borderRadius: 8, fontSize: 14, fontFamily: 'DM Sans, sans-serif', cursor: 'pointer', marginBottom: 8 }}>
-              Eliminar todos los pagos pendientes
-            </button>
-            <button onClick={onClose} style={{ width: '100%', padding: 11, background: 'none', color: '#5C5A55', border: '0.5px solid #E4E2DC', borderRadius: 8, fontSize: 14, fontFamily: 'DM Sans, sans-serif', cursor: 'pointer' }}>
-              Cerrar
-            </button>
+            <button onClick={() => { onDelete(initial.id); onClose() }} className="btn-danger" style={{ marginBottom: 8 }}>Eliminar todos los pagos pendientes</button>
+            <button onClick={onClose} className="btn-ghost">Cerrar</button>
           </div>
         </div>
       </>
@@ -160,43 +134,42 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
 
   return (
     <>
-      <div onClick={e => e.target === e.currentTarget && requestClose()} style={{ position: 'fixed', inset: 0, background: 'rgba(26,25,21,0.45)', zIndex: 200, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
-        <div style={{ background: '#fff', borderRadius: '20px 20px 0 0', width: '100%', maxWidth: 420, padding: '18px 16px 32px', maxHeight: '92vh', overflowY: 'auto' }}>
-          <div style={{ width: 34, height: 4, borderRadius: 2, background: '#E4E2DC', margin: '0 auto 16px' }} />
+      <div onClick={e => e.target === e.currentTarget && requestClose()} style={{ position: 'fixed', inset: 0, background: 'rgba(2,10,31,0.45)', zIndex: 200, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
+        <div style={modalStyle}>
+          <div style={{ width: 34, height: 4, borderRadius: 2, background: 'var(--border)', margin: '0 auto 16px' }} />
 
           {!initial && (
-            <div style={{ display: 'flex', background: '#F0EFE9', borderRadius: 10, padding: 3, marginBottom: 16 }}>
+            <div style={{ display: 'flex', background: 'var(--bg)', borderRadius: 10, padding: 3, marginBottom: 16, border: '0.5px solid var(--border)' }}>
               {[['single','Pago único'],['recurrent','Recurrente'],['installment','Parcialidades']].map(([m, label]) => (
-                <button key={m} onClick={() => setMode(m)} style={{ flex: 1, padding: '8px 0', borderRadius: 8, border: 'none', background: mode === m ? '#fff' : 'transparent', color: mode === m ? '#1A1915' : '#5C5A55', fontWeight: mode === m ? 600 : 400, fontSize: 12, fontFamily: 'DM Sans, sans-serif', cursor: 'pointer' }}>{label}</button>
+                <button key={m} onClick={() => setMode(m)} style={{ flex: 1, padding: '8px 0', borderRadius: 8, border: 'none', background: mode === m ? 'var(--surface)' : 'transparent', color: mode === m ? 'var(--text)' : 'var(--muted)', fontWeight: mode === m ? 600 : 400, fontSize: 12, fontFamily: 'DM Sans, sans-serif', cursor: 'pointer' }}>{label}</button>
               ))}
             </div>
           )}
 
-          <div style={{ fontSize: 16, fontWeight: 600, color: '#1A1915', marginBottom: 14 }}>
+          <div style={{ fontSize: 16, fontWeight: 600, color: 'var(--text)', marginBottom: 14 }}>
             {initial ? 'Editar pago' : mode === 'installment' ? 'Pago en parcialidades' : mode === 'recurrent' ? 'Pago recurrente' : 'Nuevo pago'}
           </div>
 
-          {/* Advertencia al crear parcialidades */}
           {mode === 'installment' && !initial && (
-            <div style={{ background: '#FEF3DC', border: '0.5px solid #F5D9A0', borderRadius: 8, padding: '10px 12px', marginBottom: 12, fontSize: 12, color: '#A06B12' }}>
+            <div style={{ background: 'var(--warning-soft)', border: '0.5px solid var(--warning-border)', borderRadius: 'var(--radius-sm)', padding: '10px 12px', marginBottom: 12, fontSize: 12, color: 'var(--warning)' }}>
               Los pagos en parcialidades no se pueden editar una vez creados. Revisa bien los datos antes de guardar.
             </div>
           )}
 
-          {error && <div style={{ background: '#FCDEDE', border: '0.5px solid #F5BABA', borderRadius: 8, padding: '8px 12px', fontSize: 13, color: '#B83232', marginBottom: 12 }}>{error}</div>}
+          {error && <div style={{ background: 'var(--danger-soft)', border: '0.5px solid var(--danger-border)', borderRadius: 'var(--radius-sm)', padding: '8px 12px', fontSize: 13, color: 'var(--danger)', marginBottom: 12 }}>{error}</div>}
 
-          <Field label="Nombre"><input style={S.input} type="text" value={name} onChange={e => setName(e.target.value)} placeholder="Nombre del gasto" /></Field>
+          <Field label="Nombre"><input className="field-input" type="text" value={name} onChange={e => setName(e.target.value)} placeholder="Nombre del gasto" /></Field>
 
           {mode !== 'installment' && <Toggle label="Monto variable" sub="El monto cambia cada periodo" value={isVariable} onChange={setIsVariable} />}
 
           {(!isVariable || mode === 'installment') && (
             <Field label={mode === 'installment' ? 'Monto por pago' : 'Monto'}>
-              <input style={S.input} type="number" value={amount} onChange={e => setAmount(e.target.value)} placeholder="0.00" />
+              <input className="field-input" type="number" value={amount} onChange={e => setAmount(e.target.value)} placeholder="0.00" />
             </Field>
           )}
 
           {isVariable && mode !== 'installment' && (
-            <div style={{ background: '#FEF3DC', border: '0.5px solid #F5D9A0', borderRadius: 8, padding: '10px 12px', marginBottom: 12, fontSize: 12, color: '#A06B12' }}>
+            <div style={{ background: 'var(--warning-soft)', border: '0.5px solid var(--warning-border)', borderRadius: 'var(--radius-sm)', padding: '10px 12px', marginBottom: 12, fontSize: 12, color: 'var(--warning)' }}>
               Se guardará sin monto fijo. Te recordaremos 3 días antes y en tu día de cobro.
             </div>
           )}
@@ -204,34 +177,32 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
           {mode === 'installment' && (
             <>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-                <Field label="Total de pagos"><input style={S.input} type="number" min="1" value={totalInstallments} onChange={e => setTotalInstallments(e.target.value)} placeholder="Ej. 20" /></Field>
-                <Field label="Empezar desde pago #"><input style={S.input} type="number" min="1" value={startFrom} onChange={e => setStartFrom(e.target.value)} placeholder="1" /></Field>
+                <Field label="Total de pagos"><input className="field-input" type="number" min="1" value={totalInstallments} onChange={e => setTotalInstallments(e.target.value)} placeholder="Ej. 20" /></Field>
+                <Field label="Empezar desde pago #"><input className="field-input" type="number" min="1" value={startFrom} onChange={e => setStartFrom(e.target.value)} placeholder="1" /></Field>
               </div>
-              <div style={{ fontSize: 11, color: '#5C5A55', marginTop: -8, marginBottom: 12, lineHeight: 1.5 }}>
-                Si ya realizaste pagos anteriores, indica desde qué número empieza el próximo. Los pagos previos se marcarán como completados automáticamente.
+              <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: -8, marginBottom: 12, lineHeight: 1.5 }}>
+                Si ya realizaste pagos anteriores, indica desde qué número empieza el próximo.
               </div>
             </>
           )}
 
           <Field label="Categoría">
-            <select style={S.input} value={category} onChange={e => setCategory(e.target.value)}>
+            <select className="field-input" value={category} onChange={e => setCategory(e.target.value)}>
               {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
             </select>
           </Field>
 
-          {(mode === 'recurrent' || mode === 'installment') && (
-            <FrequencyPicker value={recurFreq} onChange={setRecurFreq} />
-          )}
+          {(mode === 'recurrent' || mode === 'installment') && <FrequencyPicker value={recurFreq} onChange={setRecurFreq} />}
 
           {showWeekdayPicker && (
             <div style={{ marginBottom: 12 }}>
-              <label style={{ display: 'block', fontSize: 10, fontWeight: 600, color: '#5C5A55', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>Día de la semana</label>
+              <label className="field-label" style={{ display: 'block', marginBottom: 6 }}>Día de la semana</label>
               <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap' }}>
                 {WEEKDAYS_SHORT.map((d, i) => (
-                  <button key={i} onClick={() => setWeekday(i)} style={{ padding: '6px 10px', borderRadius: 20, border: weekday === i ? '1.5px solid #1E6B45' : '0.5px solid #E4E2DC', background: weekday === i ? '#EAF4EE' : '#F7F6F3', color: weekday === i ? '#1E6B45' : '#5C5A55', fontSize: 12, fontWeight: weekday === i ? 600 : 400, fontFamily: 'DM Sans, sans-serif', cursor: 'pointer' }}>{d}</button>
+                  <button key={i} onClick={() => setWeekday(i)} style={{ padding: '6px 10px', borderRadius: 'var(--radius-full)', border: weekday === i ? '1.5px solid var(--accent)' : '0.5px solid var(--border)', background: weekday === i ? 'var(--accent-soft)' : 'var(--bg)', color: weekday === i ? 'var(--accent)' : 'var(--muted)', fontSize: 12, fontWeight: weekday === i ? 600 : 400, fontFamily: 'DM Sans, sans-serif', cursor: 'pointer' }}>{d}</button>
                 ))}
               </div>
-              <div style={{ fontSize: 11, color: '#5C5A55', marginTop: 6 }}>
+              <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 6 }}>
                 Primer pago: {WEEKDAYS_SHORT[weekday]} {nextWeekdayDate(weekday).toLocaleDateString('es-MX', { day: 'numeric', month: 'long' })}
               </div>
             </div>
@@ -239,49 +210,43 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
 
           {showBiweeklyPicker && (
             <div style={{ marginBottom: 12 }}>
-              <label style={{ display: 'block', fontSize: 10, fontWeight: 600, color: '#5C5A55', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>Fecha del primer pago quincenal</label>
-              <input style={S.input} type="date" value={biweeklyDate} onChange={e => setBiweeklyDate(e.target.value)} />
-              {nextBiDate && <div style={{ fontSize: 11, color: '#1E6B45', marginTop: 6 }}>Primer pago: {nextBiDate.toLocaleDateString('es-MX', { day: 'numeric', month: 'long' })} · luego cada 14 días</div>}
+              <label className="field-label" style={{ display: 'block', marginBottom: 4 }}>Fecha del primer pago quincenal</label>
+              <input className="field-input" type="date" value={biweeklyDate} onChange={e => setBiweeklyDate(e.target.value)} />
+              {nextBiDate && <div style={{ fontSize: 11, color: 'var(--accent)', marginTop: 6 }}>Primer pago: {nextBiDate.toLocaleDateString('es-MX', { day: 'numeric', month: 'long' })} · luego cada 14 días</div>}
             </div>
           )}
 
-          {/* Para parcialidades: siempre pide la fecha real del primer pago (puede ser pasada) */}
           {mode === 'installment' && (
             <div style={{ marginBottom: 12 }}>
-              <label style={{ display: 'block', fontSize: 10, fontWeight: 600, color: '#5C5A55', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>Fecha real del primer pago</label>
-              <input style={S.input} type="date" value={dueDate} onChange={e => setDueDate(e.target.value)} />
-              <div style={{ fontSize: 11, color: '#5C5A55', marginTop: 5 }}>
-                Puede ser una fecha pasada. La app calculará cada periodo desde esta fecha.
-              </div>
+              <label className="field-label" style={{ display: 'block', marginBottom: 4 }}>Fecha real del primer pago</label>
+              <input className="field-input" type="date" value={dueDate} onChange={e => setDueDate(e.target.value)} />
+              <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 5 }}>Puede ser una fecha pasada. La app calculará cada periodo desde aquí.</div>
             </div>
           )}
 
-          {showDatePicker && (
+          {showDatePicker && mode !== 'installment' && (
             <Field label="Fecha de vencimiento">
-              <input style={S.input} type="date" value={dueDate} onChange={e => setDueDate(e.target.value)} />
+              <input className="field-input" type="date" value={dueDate} onChange={e => setDueDate(e.target.value)} />
             </Field>
           )}
 
-          {/* Resumen parcialidades */}
           {mode === 'installment' && totalInstallments && startFrom && amount && dueDate && (
-            <div style={{ background: '#F7F6F3', border: '0.5px solid #E4E2DC', borderRadius: 8, padding: '10px 12px', marginBottom: 12 }}>
-              <div style={{ fontSize: 12, color: '#5C5A55', lineHeight: 1.7 }}>
-                <div>Total: <strong style={{ color: '#1A1915' }}>{fmt(parseFloat(amount || 0) * parseInt(totalInstallments || 0))}</strong> en {totalInstallments} pagos de {fmt(parseFloat(amount))}</div>
-                {parseInt(startFrom) > 1 && (
-                  <div>Pagos 1–{parseInt(startFrom) - 1} se marcarán como <strong style={{ color: '#1E6B45' }}>completados</strong></div>
-                )}
-                <div>Próximo activo: <strong style={{ color: '#1A1915' }}>Pago {startFrom}/{totalInstallments}</strong></div>
-                <div style={{ color: '#A06B12', marginTop: 2 }}>Frecuencia: cada {recurFreq === 'weekly' ? '7 días' : recurFreq === 'biweekly' ? '14 días' : 'mes'}</div>
+            <div style={{ background: 'var(--bg)', border: '0.5px solid var(--border)', borderRadius: 'var(--radius-sm)', padding: '10px 12px', marginBottom: 12 }}>
+              <div style={{ fontSize: 12, color: 'var(--muted)', lineHeight: 1.7 }}>
+                <div>Total: <strong style={{ color: 'var(--text)' }}>{fmt(parseFloat(amount || 0) * parseInt(totalInstallments || 0))}</strong> en {totalInstallments} pagos de {fmt(parseFloat(amount))}</div>
+                {parseInt(startFrom) > 1 && <div>Pagos 1–{parseInt(startFrom) - 1} se marcarán como <strong style={{ color: 'var(--paid)' }}>completados</strong></div>}
+                <div>Próximo activo: <strong style={{ color: 'var(--text)' }}>Pago {startFrom}/{totalInstallments}</strong></div>
+                <div style={{ color: 'var(--accent)', marginTop: 2 }}>Frecuencia: cada {recurFreq === 'weekly' ? '7 días' : recurFreq === 'biweekly' ? '14 días' : 'mes'}</div>
               </div>
             </div>
           )}
 
-          <button onClick={handleSave} disabled={saving} style={{ width: '100%', padding: 12, background: '#1E6B45', color: '#fff', border: 'none', borderRadius: 8, fontSize: 14, fontWeight: 600, fontFamily: 'DM Sans, sans-serif', marginTop: 4, opacity: saving ? 0.7 : 1, cursor: 'pointer' }}>
+          <button onClick={handleSave} disabled={saving} className="btn-primary" style={{ marginTop: 4, opacity: saving ? 0.7 : 1 }}>
             {saving ? 'Guardando…' : initial ? 'Guardar cambios' : mode === 'installment' ? 'Crear pagos' : 'Guardar pago'}
           </button>
-          <button onClick={requestClose} style={{ width: '100%', padding: 10, background: 'none', color: '#5C5A55', border: '0.5px solid #E4E2DC', borderRadius: 8, fontSize: 14, fontFamily: 'DM Sans, sans-serif', cursor: 'pointer', marginTop: 8 }}>Cancelar</button>
+          <button onClick={requestClose} className="btn-ghost" style={{ marginTop: 8 }}>Cancelar</button>
           {initial && !isEditingInstallment && (
-            <button onClick={() => { onDelete(initial.id); onClose() }} style={{ width: '100%', padding: 10, background: 'none', color: '#B83232', border: '0.5px solid #FCDEDE', borderRadius: 8, fontSize: 14, fontFamily: 'DM Sans, sans-serif', cursor: 'pointer', marginTop: 6 }}>Eliminar pago</button>
+            <button onClick={() => { onDelete(initial.id); onClose() }} className="btn-danger" style={{ marginTop: 6 }}>Eliminar pago</button>
           )}
         </div>
       </div>
@@ -293,7 +258,7 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
 function Field({ label, children }) {
   return (
     <div style={{ marginBottom: 12 }}>
-      <label style={{ display: 'block', fontSize: 10, fontWeight: 600, color: '#5C5A55', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>{label}</label>
+      <label className="field-label">{label}</label>
       {children}
     </div>
   )
@@ -301,13 +266,13 @@ function Field({ label, children }) {
 
 function Toggle({ label, sub, value, onChange }) {
   return (
-    <div onClick={() => onChange(!value)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 12px', background: '#F7F6F3', borderRadius: 8, marginBottom: 12, border: '0.5px solid #E4E2DC', cursor: 'pointer' }}>
+    <div onClick={() => onChange(!value)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 12px', background: 'var(--bg)', borderRadius: 'var(--radius-sm)', marginBottom: 12, border: '0.5px solid var(--border)', cursor: 'pointer' }}>
       <div>
-        <div style={{ fontSize: 13, fontWeight: 500, color: '#1A1915' }}>{label}</div>
-        <div style={{ fontSize: 11, color: '#5C5A55' }}>{sub}</div>
+        <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--text)' }}>{label}</div>
+        <div style={{ fontSize: 11, color: 'var(--muted)' }}>{sub}</div>
       </div>
-      <div style={{ width: 38, height: 22, background: value ? '#1E6B45' : '#E4E2DC', borderRadius: 11, position: 'relative', flexShrink: 0, transition: 'background .2s' }}>
-        <div style={{ position: 'absolute', top: 3, left: value ? 19 : 3, width: 16, height: 16, borderRadius: '50%', background: '#fff', transition: 'left .2s' }} />
+      <div className="toggle-track" style={{ background: value ? 'var(--accent)' : 'var(--border)' }}>
+        <div className="toggle-thumb" style={{ left: value ? 19 : 3 }} />
       </div>
     </div>
   )
