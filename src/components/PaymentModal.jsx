@@ -117,9 +117,10 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
   if (!open) return null
 
   const S = { input: { width: '100%', padding: '10px 12px', border: '0.5px solid #E4E2DC', borderRadius: 8, fontFamily: 'DM Sans, sans-serif', fontSize: 14, background: '#F7F6F3', color: '#1A1915', outline: 'none', WebkitAppearance: 'none', appearance: 'none' } }
-  const showDatePicker = mode === 'single' || (mode === 'recurrent' && recurFreq === 'monthly')
-  const showWeekdayPicker = mode === 'recurrent' && recurFreq === 'weekly'
-  const showBiweeklyPicker = mode === 'recurrent' && recurFreq === 'biweekly'
+  const monthBasedFreqs = ['monthly', 'bimonthly', 'quarterly', 'semiannual', 'annual']
+  const showDatePicker = mode === 'single' || (mode === 'recurrent' && monthBasedFreqs.includes(recurFreq)) || (mode === 'installment' && monthBasedFreqs.includes(recurFreq))
+  const showWeekdayPicker = (mode === 'recurrent' || mode === 'installment') && recurFreq === 'weekly'
+  const showBiweeklyPicker = (mode === 'recurrent' || mode === 'installment') && recurFreq === 'biweekly'
   const nextBiDate = biweeklyDate ? nextBiweeklyFromDate(biweeklyDate) : null
 
   // Vista bloqueada para edición de parcialidades
