@@ -34,9 +34,7 @@ export function ResetPasswordPage({ onDone }) {
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 24, background: 'var(--bg)' }}>
       <div style={{ width: '100%', maxWidth: 380 }}>
         <div style={{ textAlign: 'center', marginBottom: 32 }}>
-          <LogoIcon />
-          <h1 style={{ fontSize: 22, fontWeight: 600, color: 'var(--text)', marginBottom: 4 }}>Nueva contraseña</h1>
-          <p style={{ fontSize: 14, color: 'var(--muted)' }}>Escribe tu nueva contraseña para continuar.</p>
+          <img src="/ADA-Pay-logo.svg" alt="ADA Pay" style={{ height: 80, marginBottom: 8 }} />
         </div>
         {error && <Alert type="danger">{error}</Alert>}
         {success && <Alert type="success">{success}</Alert>}
@@ -106,10 +104,10 @@ export function AuthPage() {
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 24, background: 'var(--bg)' }}>
       <div style={{ width: '100%', maxWidth: 380 }}>
+
+        {/* Logo */}
         <div style={{ textAlign: 'center', marginBottom: 32 }}>
-          <LogoIcon />
-          <h1 style={{ fontSize: 26, fontWeight: 600, color: 'var(--text)', marginBottom: 4 }}>Ada</h1>
-          <p style={{ fontSize: 14, color: 'var(--muted)' }}>Controla tus pagos, sin sorpresas.</p>
+          <img src="/ADA-Pay-logo.svg" alt="ADA Pay" style={{ height: 100, marginBottom: 4 }} />
         </div>
 
         {mode !== 'forgot' && (
@@ -181,13 +179,6 @@ export function AuthPage() {
   )
 }
 
-function LogoIcon() {
-  return (
-    <div style={{ width: 52, height: 52, background: 'var(--accent)', borderRadius: 14, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
-    </div>
-  )
-}
 function Alert({ type, children }) {
   const styles = {
     danger: { bg: 'var(--danger-soft)', border: 'var(--danger-border)', color: 'var(--danger)' },
