@@ -24,6 +24,7 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
       setName(initial.name || '')
       setAmount(initial.amount || '')
       setDueDate(initial.due_date || '')
+      setBiweeklyDate(initial.due_date || new Date().toISOString().split('T')[0])
       setCategory(initial.category || 'Servicios')
       setIsVariable(initial.is_variable || false)
       setRecurFreq(initial.recur_freq || 'monthly')
@@ -58,19 +59,22 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
   function calcFirstDate() {
     if (recurFreq === 'monthly') return dueDate
     if (recurFreq === 'weekly') return nextWeekdayDate(weekday).toISOString().split('T')[0]
-    if (recurFreq === 'biweekly') {
-      if (!biweeklyDate) return new Date().toISOString().split('T')[0]
-      return nextBiweeklyFromDate(biweeklyDate).toISOString().split('T')[0]
-    }
+    if (recurFreq === 'biweekly') return biweeklyDate ? nextBiweeklyFromDate(biweeklyDate).toISOString().split('T')[0] : new Date().toISOString().split('T')[0]
     return dueDate
   }
 
   async function handleSave() {
     setError('')
     if (!name.trim()) { setError('Escribe el nombre del pago'); return }
-    if (nameExistsActive(payments || [], name, initial?.id)) {
-      setError(`Ya existe un pago activo con el nombre "${name.trim()}"`); return
+
+    // Al editar: solo bloquea si OTRO pago (diferente id) tiene ese nombre activo
+    // Al crear: bloquea si cualquier pago activo tiene ese nombre
+    const checkId = initial?.id || null
+    if (nameExistsActive(payments || [], name, checkId)) {
+      setError(`Ya existe un pago activo con el nombre "${name.trim()}"`)
+      return
     }
+
     if (mode === 'installment') {
       if (!amount || isNaN(parseFloat(amount))) { setError('Agrega el monto por pago'); return }
       if (!totalInstallments || isNaN(parseInt(totalInstallments))) { setError('Agrega el número total de pagos'); return }
@@ -83,10 +87,12 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
       await onSaveInstallment({ name: name.trim(), amount: parseFloat(amount), totalInstallments: total, startFrom: start, recurFreq, category, firstDate })
       setSaving(false); onClose(); return
     }
+
     if (!isVariable && (!amount || isNaN(parseFloat(amount)))) { setError('Agrega el monto o marca como variable'); return }
     let finalDate = dueDate
     if (mode === 'recurrent' && recurFreq !== 'monthly') finalDate = calcFirstDate()
     if (!finalDate) { setError('Selecciona la fecha de vencimiento'); return }
+
     setSaving(true)
     await onSave({
       name: name.trim(), amount: isVariable ? 0 : parseFloat(amount),
@@ -104,7 +110,6 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
   const showDatePicker = mode === 'single' || (mode === 'recurrent' && recurFreq === 'monthly') || (mode === 'installment' && recurFreq === 'monthly')
   const showWeekdayPicker = (mode === 'recurrent' || mode === 'installment') && recurFreq === 'weekly'
   const showBiweeklyPicker = (mode === 'recurrent' || mode === 'installment') && recurFreq === 'biweekly'
-
   const nextBiDate = biweeklyDate ? nextBiweeklyFromDate(biweeklyDate) : null
 
   return (
@@ -185,11 +190,7 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
             <div style={{ marginBottom: 12 }}>
               <label style={{ display: 'block', fontSize: 10, fontWeight: 600, color: '#5C5A55', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>Fecha del primer pago quincenal</label>
               <input style={S.input} type="date" value={biweeklyDate} onChange={e => setBiweeklyDate(e.target.value)} />
-              {nextBiDate && (
-                <div style={{ fontSize: 11, color: '#1E6B45', marginTop: 6 }}>
-                  Primer pago: {nextBiDate.toLocaleDateString('es-MX', { day: 'numeric', month: 'long' })} · luego cada 14 días
-                </div>
-              )}
+              {nextBiDate && <div style={{ fontSize: 11, color: '#1E6B45', marginTop: 6 }}>Primer pago: {nextBiDate.toLocaleDateString('es-MX', { day: 'numeric', month: 'long' })} · luego cada 14 días</div>}
             </div>
           )}
 

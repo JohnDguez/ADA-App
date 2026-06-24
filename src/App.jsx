@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useAuth } from './hooks/useAuth'
 import { usePayments } from './hooks/usePayments'
 import { useProfile } from './hooks/useProfile'
-import { AuthPage } from './pages/AuthPage'
+import { AuthPage, ResetPasswordPage } from './pages/AuthPage'
 import { HomePage } from './pages/HomePage'
 import { PaymentsPage } from './pages/PaymentsPage'
 import { BudgetPage } from './pages/BudgetPage'
@@ -16,21 +16,24 @@ import { Toast, showToast } from './components/Toast'
 import { Plus } from 'lucide-react'
 
 export default function App() {
-  const { user, loading: authLoading } = useAuth()
+  const { user, loading: authLoading, isRecovery, setIsRecovery } = useAuth()
   const {
     payments, addPayment, addInstallmentPayment,
     updatePayment, markPaid, markUnpaid,
-    postponePayment,
-    pauseRecurrent, resumeRecurrent,
+    postponePayment, pauseRecurrent, resumeRecurrent,
     deletePayment, deleteRecurrentFuture, deleteInstallmentFuture, deleteGroup,
   } = usePayments(user?.id)
-  const { profile, updateProfile } = useProfile(user?.id)
+  const { profile, updateProfile, uploadAvatar } = useProfile(user?.id)
   const [tab, setTab] = useState('home')
   const [modalOpen, setModalOpen] = useState(false)
   const [editPayment, setEditPayment] = useState(null)
   const [varModal, setVarModal] = useState({ open: false, payment: null })
 
   if (authLoading) return <Splash />
+
+  // Si viene de recovery link, mostrar pantalla de nueva contraseña
+  if (isRecovery) return <ResetPasswordPage onDone={() => setIsRecovery(false)} />
+
   if (!user) return <AuthPage />
 
   function openAdd() { setEditPayment(null); setModalOpen(true) }
@@ -38,8 +41,7 @@ export default function App() {
 
   async function handleMarkPaid(p) {
     if (p.is_variable && !p.is_paid) { setVarModal({ open: true, payment: p }); return }
-    await markPaid(p.id)
-    showToast(`${p.name} marcado como pagado`)
+    await markPaid(p.id); showToast(`${p.name} marcado como pagado`)
   }
 
   async function handleVarConfirm(amount) {
@@ -50,18 +52,15 @@ export default function App() {
   }
 
   async function handleMarkUnpaid(id) {
-    await markUnpaid(id)
-    showToast('Marcado como no pagado')
+    await markUnpaid(id); showToast('Marcado como no pagado')
   }
 
   async function handlePostpone(p) {
-    await postponePayment(p)
-    showToast(`${p.name} pospuesto al siguiente periodo`)
+    await postponePayment(p); showToast(`${p.name} pospuesto al siguiente periodo`)
   }
 
   async function handleAdvance(p) {
-    await markPaid(p.id)
-    showToast(`Pago ${p.current_installment}/${p.total_installments} completado`)
+    await markPaid(p.id); showToast(`Pago ${p.current_installment}/${p.total_installments} completado`)
   }
 
   async function handleDelete(id) {
@@ -71,14 +70,8 @@ export default function App() {
       if (!window.confirm(`¿Eliminar los pagos pendientes de "${p.name}"?`)) return
       await deleteInstallmentFuture(p.name)
     } else if (p.is_recurrent && !p.parent_id) {
-      const hasChildren = payments.some(x => x.parent_id === id)
-      if (hasChildren) {
-        if (!window.confirm(`¿Eliminar "${p.name}" y todos sus periodos pendientes?`)) return
-        await deleteRecurrentFuture(p.name)
-      } else {
-        if (!window.confirm(`¿Eliminar "${p.name}"?`)) return
-        await deletePayment(id)
-      }
+      if (!window.confirm(`¿Eliminar "${p.name}" y sus periodos pendientes?`)) return
+      await deleteRecurrentFuture(p.name)
     } else {
       if (!window.confirm(`¿Eliminar este pago?`)) return
       await deletePayment(id)
@@ -86,15 +79,9 @@ export default function App() {
     showToast('Pago eliminado')
   }
 
-  async function handlePauseRecurrent(name) {
-    await pauseRecurrent(name); showToast(`${name} pausado`)
-  }
-  async function handleResumeRecurrent(name) {
-    await resumeRecurrent(name); showToast(`${name} reactivado`)
-  }
-  async function handleDeleteRecurrent(name) {
-    await deleteRecurrentFuture(name); showToast('Pagos futuros eliminados')
-  }
+  async function handlePauseRecurrent(name) { await pauseRecurrent(name); showToast(`${name} pausado`) }
+  async function handleResumeRecurrent(name) { await resumeRecurrent(name); showToast(`${name} reactivado`) }
+  async function handleDeleteRecurrent(name) { await deleteRecurrentFuture(name); showToast('Pagos futuros eliminados') }
 
   async function handleSave(data) {
     if (editPayment) {
@@ -115,14 +102,10 @@ export default function App() {
   }
 
   const sharedHandlers = {
-    onMarkPaid: handleMarkPaid,
-    onMarkUnpaid: handleMarkUnpaid,
-    onEdit: openEdit,
-    onDelete: handleDelete,
-    onPostpone: handlePostpone,
-    onAdvance: handleAdvance,
+    onMarkPaid: handleMarkPaid, onMarkUnpaid: handleMarkUnpaid,
+    onEdit: openEdit, onDelete: handleDelete,
+    onPostpone: handlePostpone, onAdvance: handleAdvance,
   }
-
   const showFab = ['home', 'payments'].includes(tab)
 
   return (
@@ -132,7 +115,7 @@ export default function App() {
       {tab === 'recurrents' && <RecurrentsPage payments={payments} onPause={handlePauseRecurrent} onResume={handleResumeRecurrent} onDelete={handleDeleteRecurrent} onEdit={openEdit} />}
       {tab === 'history' && <HistoryPage payments={payments} />}
       {tab === 'budget' && <BudgetPage payments={payments} profile={profile} />}
-      {tab === 'settings' && <SettingsPage profile={profile} user={user} onUpdate={updateProfile} />}
+      {tab === 'settings' && <SettingsPage profile={profile} user={user} onUpdate={updateProfile} onUploadAvatar={uploadAvatar} />}
 
       <BottomNav active={tab} onChange={setTab} />
 
@@ -142,23 +125,8 @@ export default function App() {
         </button>
       )}
 
-      <PaymentModal
-        open={modalOpen}
-        onClose={() => { setModalOpen(false); setEditPayment(null) }}
-        onSave={handleSave}
-        onSaveInstallment={handleSaveInstallment}
-        onDelete={handleDelete}
-        initial={editPayment}
-        payments={payments}
-      />
-
-      <VariableAmountModal
-        open={varModal.open}
-        payment={varModal.payment}
-        onConfirm={handleVarConfirm}
-        onClose={() => setVarModal({ open: false, payment: null })}
-      />
-
+      <PaymentModal open={modalOpen} onClose={() => { setModalOpen(false); setEditPayment(null) }} onSave={handleSave} onSaveInstallment={handleSaveInstallment} onDelete={handleDelete} initial={editPayment} payments={payments} />
+      <VariableAmountModal open={varModal.open} payment={varModal.payment} onConfirm={handleVarConfirm} onClose={() => setVarModal({ open: false, payment: null })} />
       <Toast />
     </>
   )

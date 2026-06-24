@@ -25,12 +25,10 @@ export function nextWeekdayDate(weekday) {
   return addDays(t, diff)
 }
 
-// Quincenal: fecha exacta elegida por el usuario, luego cada 14 días
 export function nextBiweeklyFromDate(dateStr) {
   const chosen = dateOf(dateStr)
   const t = today()
   if (chosen >= t) return chosen
-  // Ya pasó — avanza en múltiplos de 14 hasta llegar al futuro
   let d = new Date(chosen)
   while (d < t) d = addDays(d, 14)
   return d
@@ -54,37 +52,24 @@ export function installmentLabel(p) {
   return `Pago ${p.current_installment}/${p.total_installments}`
 }
 
-// Calcula el rango del periodo de cobro actual
-// Retorna { start, end } donde start = día después del último cobro, end = próximo cobro
 export function cobroPeriod(cfg) {
   const t = today()
   if (cfg.cobro_freq === 'weekly') {
     const wd = cfg.cobro_weekday
     const td = t.getDay()
-    // Próximo cobro
     let diffNext = wd - td
     if (diffNext < 0) diffNext += 7
     const nextCobro = addDays(t, diffNext)
-    // Cobro anterior
     const prevCobro = addDays(nextCobro, -7)
-    // Inicio del periodo = día después del cobro anterior
     const start = addDays(prevCobro, 1)
     return { start, end: nextCobro }
   }
   return { start: t, end: t }
 }
 
-export function nextCobroDate(cfg) {
-  const { end } = cobroPeriod(cfg)
-  return end
-}
+export function nextCobroDate(cfg) { return cobroPeriod(cfg).end }
+export function isTodayCobro(cfg) { return nextCobroDate(cfg).getTime() === today().getTime() }
 
-export function isTodayCobro(cfg) {
-  return nextCobroDate(cfg).getTime() === today().getTime()
-}
-
-// Pagos del periodo actual: vencen entre start y end (inclusive)
-// Incluye vencidos del periodo (overdue dentro del periodo)
 export function getPagarEsteCobro(payments, cfg) {
   const { start, end } = cobroPeriod(cfg)
   return payments.filter(p => {
@@ -129,7 +114,7 @@ export function groupPayments(payments) {
   return [...standalone, ...groups, ...orphanChildren].sort((a, b) => dateOf(a.due_date) - dateOf(b.due_date))
 }
 
-// Solo bloquea duplicados si hay pagos PENDIENTES (no pagados) con ese nombre
+// Solo bloquea si hay pagos PENDIENTES con ese nombre — al editar excluye el id propio
 export function nameExistsActive(payments, name, excludeId = null) {
   const lower = name.trim().toLowerCase()
   return payments.some(p =>
