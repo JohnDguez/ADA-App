@@ -6,6 +6,7 @@ export function RecurrentsPage({ payments, onPause, onResume, onDelete, onEdit }
   const [confirmDelete, setConfirmDelete] = useState(null)
 
   const recurrentMap = {}
+  // Incluir todos los recurrentes para stats
   payments.filter(p => p.is_recurrent).forEach(p => {
     if (!recurrentMap[p.name]) {
       recurrentMap[p.name] = { name: p.name, category: p.category, recur_freq: p.recur_freq, is_installment: p.is_installment, total_installments: p.total_installments, is_variable: p.is_variable, items: [], representative: null }
@@ -15,6 +16,11 @@ export function RecurrentsPage({ payments, onPause, onResume, onDelete, onEdit }
   })
   Object.values(recurrentMap).forEach(g => {
     if (!g.representative && g.items.length > 0) g.representative = g.items[g.items.length - 1]
+  })
+  // Solo mostrar grupos con al menos un pago pendiente — si todos están pagados no aparece en Fijos
+  Object.keys(recurrentMap).forEach(name => {
+    const hasPending = recurrentMap[name].items.some(p => !p.is_paid)
+    if (!hasPending) delete recurrentMap[name]
   })
 
   const groups = Object.values(recurrentMap).sort((a, b) => a.name.localeCompare(b.name))

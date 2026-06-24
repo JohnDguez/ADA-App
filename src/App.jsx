@@ -81,7 +81,7 @@ export default function App() {
 
   async function handlePauseRecurrent(name) { await pauseRecurrent(name); showToast(`${name} pausado`) }
   async function handleResumeRecurrent(name) { await resumeRecurrent(name); showToast(`${name} reactivado`) }
-  async function handleDeleteRecurrent(name) { await deleteRecurrentFuture(name); showToast('Pagos futuros eliminados') }
+  async function handleDeleteRecurrent(name) { await deleteRecurrentFuture(name); showToast(`${name} eliminado — el historial se conserva`) }
 
   async function handleSave(data) {
     if (editPayment) {
