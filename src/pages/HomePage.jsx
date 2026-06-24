@@ -109,49 +109,48 @@ export function HomePage({ payments, profile, onAdd, onMarkPaid, onMarkUnpaid, o
               </div>
               <IconBtn onClick={onGoSettings} icon={<Settings size={18} color="#fff" />} />
             </div>
-            {/* Fecha y hora debajo de los botones */}
-            <div style={{ fontSize: 11, fontWeight: 400, color: 'rgba(255,255,255,0.5)', textAlign: 'right' }}>
+            {/* Fecha y hora debajo de los botones — con separación */}
+            <div style={{ fontSize: 11, fontWeight: 400, color: 'rgba(255,255,255,0.5)', textAlign: 'right', marginTop: 15 }}>
               {dateStr.charAt(0).toUpperCase() + dateStr.slice(1)} · {timeStr}
             </div>
           </div>
         </div>
       </div>
 
-      {/* Contenedor principal — sube sobre el header, esquinas superiores redondeadas, de borde a borde */}
+      {/* Contenedor principal — sube sobre el header con z-index */}
       <div style={{
         background: 'var(--bg)',
         borderRadius: '24px 24px 0 0',
         marginTop: -24,
         minHeight: 'calc(100vh - 160px)',
+        position: 'relative',
+        zIndex: 10,
       }}>
-        {/* Métricas — sin card, viven directo en el contenedor */}
-        <div style={{ display: 'flex', gap: 0, padding: '24px 20px 0' }}>
-          {/* Pendientes del periodo */}
-          <div style={{ flex: 1.2, paddingRight: 16 }}>
-            <div style={{ fontSize: 12, fontWeight: 500, color: 'var(--muted)', marginBottom: 4 }}>Pagos de este periodo</div>
-            <div style={{ fontSize: 32, fontWeight: 700, color: 'var(--text)', letterSpacing: '-1px', lineHeight: 1 }}>{fmt(pendingAmt)}</div>
-            <div style={{ fontSize: 12, fontWeight: 400, color: 'var(--muted)', marginTop: 6, display: 'flex', gap: 6 }}>
+        {/* Métricas — sin card, con padding top generoso */}
+        <div style={{ display: 'flex', gap: 0, padding: '28px 20px 0' }}>
+          {/* Pendientes del periodo — más grande, más importante */}
+          <div style={{ flex: 1.6, paddingRight: 20 }}>
+            <div style={{ fontSize: 12, fontWeight: 500, color: 'var(--muted)', marginBottom: 6 }}>Pagos de este periodo</div>
+            <div style={{ fontSize: 36, fontWeight: 700, color: 'var(--text)', letterSpacing: '-1px', lineHeight: 1 }}>{fmt(pendingAmt)}</div>
+            <div style={{ fontSize: 12, fontWeight: 400, color: 'var(--muted)', marginTop: 8, display: 'flex', gap: 6 }}>
               <span>{pagarEsteCobro.length} pago{pagarEsteCobro.length !== 1 ? 's' : ''}</span>
               {vencidos.length > 0 && <span style={{ color: 'var(--danger)', fontWeight: 600 }}>· {vencidos.length} vencido{vencidos.length !== 1 ? 's' : ''}</span>}
             </div>
           </div>
 
-          {/* Separador */}
+          {/* Separador vertical */}
           <div style={{ width: '0.5px', background: 'var(--border)', alignSelf: 'stretch', flexShrink: 0 }} />
 
-          {/* Este mes */}
-          <div style={{ flex: 1, paddingLeft: 16 }}>
-            <div style={{ fontSize: 12, fontWeight: 500, color: 'var(--muted)', marginBottom: 4 }}>Por pagar este mes</div>
+          {/* Este mes — más pequeño */}
+          <div style={{ flex: 1, paddingLeft: 20 }}>
+            <div style={{ fontSize: 11, fontWeight: 500, color: 'var(--muted)', marginBottom: 6 }}>Por pagar este mes</div>
             <div style={{ fontSize: 22, fontWeight: 700, color: 'var(--text)', letterSpacing: '-0.5px', lineHeight: 1 }}>{fmt(totalThisMonth)}</div>
-            <div style={{ fontSize: 11, fontWeight: 400, color: 'var(--muted)', marginTop: 6 }}>
+            <div style={{ fontSize: 11, fontWeight: 400, color: 'var(--muted)', marginTop: 8 }}>
               <span>{paidThisMonth.length} pagados</span>
               {variableThisMonth > 0 && <span style={{ color: 'var(--accent)', fontWeight: 500 }}> · {variableThisMonth} variables</span>}
             </div>
           </div>
         </div>
-
-        {/* Divisor */}
-        <div style={{ height: '0.5px', background: 'var(--border)', margin: '20px 0 0' }} />
 
         {/* Listas de pagos */}
         <div style={{ padding: '0 16px' }}>
