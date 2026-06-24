@@ -75,7 +75,7 @@ export function HomePage({ payments, profile, onAdd, onMarkPaid, onMarkUnpaid, o
   const initials = (profile.name || 'U').slice(0, 2).toUpperCase()
 
   return (
-    <div style={{ paddingBottom: 80, background: 'var(--bg)', minHeight: '100vh' }}>
+    <div style={{ paddingBottom: 100, background: 'var(--bg)', minHeight: '100vh' }}>
 
       {/* Header oscuro */}
       <div style={{
@@ -192,7 +192,7 @@ export function HomePage({ payments, profile, onAdd, onMarkPaid, onMarkUnpaid, o
 
       {/* FAB */}
       <button onClick={onAdd} style={{
-        position: 'fixed', bottom: 84, right: 'calc(50% - 194px)',
+        position: 'fixed', bottom: 100, right: 'calc(50% - 194px)',
         width: 52, height: 52, borderRadius: '50%',
         background: 'var(--accent)', border: 'none',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
