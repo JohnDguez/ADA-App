@@ -7,48 +7,53 @@ export function useAuth() {
   const [isRecovery, setIsRecovery] = useState(false)
 
   useEffect(() => {
-    // Detectar recovery desde el hash ANTES de cualquier otra cosa
-    const hash = window.location.hash
-    const isRecoveryHash = hash.includes('type=recovery')
+    async function init() {
+      const hash = window.location.hash
 
-    // Si viene de un link de recovery, esperar al evento — no llamar getSession todavía
-    if (!isRecoveryHash) {
-      supabase.auth.getSession().then(({ data: { session } }) => {
-        setUser(session?.user ?? null)
-        setLoading(false)
-      })
+      // Si viene de un link de recovery, extraer tokens y establecer sesión manualmente
+      if (hash.includes('type=recovery')) {
+        const params = new URLSearchParams(hash.replace('#', ''))
+        const accessToken = params.get('access_token')
+        const refreshToken = params.get('refresh_token')
+
+        if (accessToken && refreshToken) {
+          // Establecer la sesión con los tokens del hash
+          const { data, error } = await supabase.auth.setSession({
+            access_token: accessToken,
+            refresh_token: refreshToken,
+          })
+
+          if (!error && data.session) {
+            // Limpiar el hash de la URL
+            window.history.replaceState(null, '', window.location.pathname)
+            setUser(data.session.user)
+            setIsRecovery(true)
+            setLoading(false)
+            return
+          }
+        }
+      }
+
+      // Flujo normal
+      const { data: { session } } = await supabase.auth.getSession()
+      setUser(session?.user ?? null)
+      setLoading(false)
     }
+
+    init()
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === 'PASSWORD_RECOVERY') {
-        // Limpiar el hash de la URL para que no interfiera en recargas
-        window.history.replaceState(null, '', window.location.pathname)
         setIsRecovery(true)
         setUser(session?.user ?? null)
         setLoading(false)
         return
       }
-
-      // Si es recovery hash pero no disparó el evento aún, ignorar otros eventos
-      if (isRecoveryHash && !isRecovery) return
-
-      setUser(session?.user ?? null)
-      setLoading(false)
+      if (!isRecovery) {
+        setUser(session?.user ?? null)
+        setLoading(false)
+      }
     })
-
-    // Si viene de recovery hash pero el evento tarda, timeout de seguridad
-    if (isRecoveryHash) {
-      const timeout = setTimeout(() => {
-        supabase.auth.getSession().then(({ data: { session } }) => {
-          if (session) {
-            setIsRecovery(true)
-            setUser(session.user)
-          }
-          setLoading(false)
-        })
-      }, 1500)
-      return () => { subscription.unsubscribe(); clearTimeout(timeout) }
-    }
 
     return () => subscription.unsubscribe()
   }, [])
