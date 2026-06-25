@@ -1,5 +1,7 @@
 <div align="center">
 
+  <img src="https://raw.githubusercontent.com/JohnDguez/ADA-App/main/public/ADA-Pay-logo.svg" alt="ADA Pay" height="120" />
+
   # ADA Pay
   
   **Track. Pay. Relax.**
