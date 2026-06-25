@@ -1,0 +1,21 @@
+name: Send Push Notifications
+
+on:
+  schedule:
+    - cron: '0 * * * *'  # Cada hora en punto
+  workflow_dispatch:       # Permite ejecutar manualmente desde GitHub
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send notifications
+        run: |
+          response=$(curl -s -o /dev/null -w "%{http_code}" \
+            -X GET "https://ada-app-phi.vercel.app/api/send-notifications?force=false" \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}")
+          echo "Response status: $response"
+          if [ "$response" != "200" ]; then
+            echo "Error: endpoint returned $response"
+            exit 1
+          fi
