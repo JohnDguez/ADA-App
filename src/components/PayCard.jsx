@@ -36,6 +36,7 @@ export function PayCard({ payment: p, cfg, onMarkPaid, onMarkUnpaid, onEdit, onD
   const d = dateOf(p.due_date)
   const isPending = !p.is_paid && !p.postponed && !p.paused
   const freqLabel = p.is_recurrent && p.recur_freq && !p.is_installment ? RECUR_FREQ[p.recur_freq] : null
+  const instLabel = p.is_installment ? `Pago ${p.current_installment}/${p.total_installments}` : null
 
   const longPress = useLongPress(() => setMenuOpen(true))
 
@@ -69,6 +70,9 @@ export function PayCard({ payment: p, cfg, onMarkPaid, onMarkUnpaid, onEdit, onD
           </div>
           {freqLabel && (
             <div style={{ fontSize: 11, color: 'var(--accent)', fontWeight: 500, marginTop: 1 }}>{freqLabel}</div>
+          )}
+          {instLabel && (
+            <div style={{ fontSize: 11, color: 'var(--muted)', fontWeight: 500, marginTop: 1 }}>{instLabel}</div>
           )}
         </div>
 
