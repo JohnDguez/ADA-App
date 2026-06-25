@@ -264,7 +264,10 @@ export function SettingsPage({ profile, user, onUpdate, onUploadAvatar }) {
                 <span style={{ fontSize: 12, color: 'var(--muted)' }}>Hora de notificación</span>
                 <select
                   value={profile.notif_hour || 8}
-                  onChange={e => onUpdate({ notif_hour: parseInt(e.target.value) })}
+                  onChange={e => onUpdate({ 
+                    notif_hour: parseInt(e.target.value),
+                    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'America/Mazatlan'
+                  })}
                   style={{ padding: '4px 8px', borderRadius: 6, border: '0.5px solid var(--border)', background: 'var(--bg)', color: 'var(--text)', fontSize: 12, fontFamily: 'DM Sans, sans-serif', outline: 'none', cursor: 'pointer' }}
                 >
                   {[6,7,8,9,10,11,12,13,14,15,16,17,18,19,20].map(h => (

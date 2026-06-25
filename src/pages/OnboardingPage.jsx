@@ -29,6 +29,7 @@ export function OnboardingPage({ user, onComplete }) {
       salary_enabled: salaryEnabled,
       salary_amount: salaryEnabled && salaryAmount ? parseFloat(salaryAmount) : 0,
       onboarding_completed: true,
+      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'America/Mazatlan',
     }
     await onComplete(updates)
     setSaving(false)
