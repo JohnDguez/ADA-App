@@ -1,5 +1,5 @@
-import webpush from 'web-push'
-import { createClient } from '@supabase/supabase-js'
+const webpush = require('web-push')
+const { createClient } = require('@supabase/supabase-js')
 
 webpush.setVapidDetails(
   process.env.VAPID_EMAIL,
@@ -12,8 +12,7 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY
 )
 
-export default async function handler(req, res) {
-  // Proteger el endpoint con un token secreto
+module.exports = async function handler(req, res) {
   const authHeader = req.headers.authorization
   if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
     return res.status(401).json({ error: 'Unauthorized' })
@@ -24,12 +23,10 @@ export default async function handler(req, res) {
     today.setHours(0, 0, 0, 0)
     const todayStr = today.toISOString().split('T')[0]
 
-    // Fecha de 3 días en adelante
     const in3Days = new Date(today)
     in3Days.setDate(in3Days.getDate() + 3)
     const in3DaysStr = in3Days.toISOString().split('T')[0]
 
-    // Obtener todas las suscripciones
     const { data: subs } = await supabase
       .from('push_subscriptions')
       .select('user_id, subscription')
@@ -40,7 +37,6 @@ export default async function handler(req, res) {
     for (const sub of subs) {
       const notifications = []
 
-      // Pagos vencidos
       const { data: overdue } = await supabase
         .from('payments')
         .select('name')
@@ -58,7 +54,6 @@ export default async function handler(req, res) {
         })
       }
 
-      // Pagos próximos (vencen en 3 días)
       const { data: upcoming } = await supabase
         .from('payments')
         .select('name, due_date')
@@ -77,7 +72,6 @@ export default async function handler(req, res) {
         })
       }
 
-      // Enviar notificaciones
       for (const notif of notifications) {
         try {
           await webpush.sendNotification(
@@ -86,7 +80,6 @@ export default async function handler(req, res) {
           )
           sent++
         } catch (e) {
-          // Si la suscripción expiró, eliminarla
           if (e.statusCode === 410) {
             await supabase
               .from('push_subscriptions')
