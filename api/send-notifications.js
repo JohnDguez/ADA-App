@@ -73,16 +73,21 @@ module.exports = async function handler(req, res) {
     let sent = 0
     let skipped = 0
 
+    // Si force=true, ignorar verificación de hora (solo para testing)
+    const force = req.query.force === 'true'
+
     for (const sub of subs) {
       const profile = sub.profiles
       const timezone = profile.timezone || 'America/Mazatlan'
       const notifHour = profile.notif_hour ?? 8
 
       // Verificar si es la hora correcta para este usuario
-      const userCurrentHour = getLocalHour(timezone)
-      if (userCurrentHour !== notifHour) {
-        skipped++
-        continue
+      if (!force) {
+        const userCurrentHour = getLocalHour(timezone)
+        if (userCurrentHour !== notifHour) {
+          skipped++
+          continue
+        }
       }
 
       const todayStr = getLocalDateStr(timezone)
