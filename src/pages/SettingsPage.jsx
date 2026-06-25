@@ -1,7 +1,8 @@
 import { useState, useRef } from 'react'
 import { supabase } from '../lib/supabase'
 import { WEEKDAYS_SHORT } from '../lib/utils'
-import { ChevronRight, LogOut, Camera, Lock, Mail, User } from 'lucide-react'
+import { ChevronRight, LogOut, Camera, Lock, Mail, User, Bell, BellOff } from 'lucide-react'
+import { usePushNotifications } from '../hooks/usePushNotifications'
 import { showToast } from '../components/Toast'
 
 export function SettingsPage({ profile, user, onUpdate, onUploadAvatar }) {
@@ -16,6 +17,8 @@ export function SettingsPage({ profile, user, onUpdate, onUploadAvatar }) {
   const fileRef = useRef(null)
   const initials = (profile.name || user?.email || 'U').slice(0, 2).toUpperCase()
 
+  const { permission, subscribed, loading: pushLoading, subscribe, unsubscribe } = usePushNotifications(user?.id)
+
   async function handleFreq(freq) { await onUpdate({ cobro_freq: freq }) }
   async function handleWeekday(day) { await onUpdate({ cobro_weekday: day }) }
   async function handleSalaryToggle() { await onUpdate({ salary_enabled: !profile.salary_enabled }) }
@@ -25,6 +28,18 @@ export function SettingsPage({ profile, user, onUpdate, onUploadAvatar }) {
     await onUpdate({ salary_amount: val }); showToast('Salario actualizado')
   }
   async function handleLogout() { await supabase.auth.signOut() }
+
+  async function handlePushToggle() {
+    if (subscribed) {
+      await unsubscribe()
+      showToast('Notificaciones desactivadas')
+    } else {
+      const { error } = await subscribe()
+      if (error === 'Permiso denegado') showToast('Permiso denegado — actívalo en ajustes del navegador')
+      else if (error) showToast('Error al activar notificaciones')
+      else showToast('Notificaciones activadas')
+    }
+  }
 
   function openEdit(section) {
     setEditSection(section)
@@ -179,6 +194,29 @@ export function SettingsPage({ profile, user, onUpdate, onUploadAvatar }) {
               {profile.salary_amount > 0 && <div style={{ fontSize: 12, color: 'var(--muted)', marginTop: 8 }}>Ingreso actual: <strong style={{ color: 'var(--text)' }}>${Number(profile.salary_amount).toLocaleString('es-MX')}</strong> por periodo</div>}
             </div>
           )}
+        </Card>
+
+        {/* Notificaciones push */}
+        <Card>
+          <div style={{ padding: '13px 14px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer' }} onClick={handlePushToggle}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                {subscribed ? <Bell size={16} color="var(--accent)" /> : <BellOff size={16} color="var(--muted)" />}
+                <div>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)' }}>Notificaciones push</div>
+                  <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 1 }}>
+                    {permission === 'denied' ? 'Bloqueadas en el navegador' : subscribed ? 'Recibirás alertas de pagos' : 'Activa para recibir recordatorios'}
+                  </div>
+                </div>
+              </div>
+              {pushLoading
+                ? <div style={{ fontSize: 12, color: 'var(--muted)' }}>...</div>
+                : <div className="toggle-track" style={{ background: subscribed ? 'var(--accent)' : 'var(--border)' }}>
+                    <div className="toggle-thumb" style={{ left: subscribed ? 19 : 3 }} />
+                  </div>
+              }
+            </div>
+          </div>
         </Card>
 
         <Card>
