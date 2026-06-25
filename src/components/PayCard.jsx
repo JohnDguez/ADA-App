@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { MoreVertical, DollarSign, Pencil, Trash2, Clock, ChevronDown, ChevronUp, RotateCcw, FastForward } from 'lucide-react'
-import { statusOf, daysDiff, dateOf, fmt, MONTHS_SHORT, WEEKDAYS_SHORT, nextCobroDate, periodLabel, periodCountLabel, RECUR_FREQ, installmentLabel } from '../lib/utils'
+import { statusOf, daysDiff, dateOf, fmt, MONTHS_SHORT, periodLabel, periodCountLabel, RECUR_FREQ, installmentLabel } from '../lib/utils'
 
 function statusInfo(p, cfg) {
   const s = statusOf(p, cfg)
@@ -46,12 +46,10 @@ export function PayCard({ payment: p, cfg, onMarkPaid, onMarkUnpaid, onEdit, onD
   }, [menuOpen])
 
   return (
-    <div ref={menuRef} style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: 6 }}>
-      {/* Card principal */}
+    <div ref={menuRef} style={{ position: 'relative' }}>
       <div
         {...longPress}
         style={{
-          flex: 1,
           background: '#FFFFFF',
           borderRadius: 8,
           borderLeft: `5px solid ${borderLeft || 'var(--border)'}`,
@@ -62,8 +60,8 @@ export function PayCard({ payment: p, cfg, onMarkPaid, onMarkUnpaid, onEdit, onD
         }}
       >
         {/* Info izquierda */}
-        <div style={{ flex: 1, padding: '10px 8px 10px 12px', minWidth: 0 }}>
-          <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--text)', marginBottom: 2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 155 }}>
+        <div style={{ flex: 1, padding: '11px 8px 11px 12px', minWidth: 0 }}>
+          <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--text)', marginBottom: 2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 150 }}>
             {p.name}
           </div>
           <div style={{ fontSize: 11, color: 'var(--muted)' }}>
@@ -75,44 +73,45 @@ export function PayCard({ payment: p, cfg, onMarkPaid, onMarkUnpaid, onEdit, onD
         </div>
 
         {/* Monto + badge */}
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', padding: '10px 10px 10px 4px', flexShrink: 0 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 2, padding: '11px 8px', flexShrink: 0 }}>
           {p.is_variable && !p.is_paid
-            ? <div style={{ fontSize: 11, fontWeight: 600, color: '#fff', background: '#8B5CF6', padding: '2px 8px', borderRadius: 20, marginBottom: 2 }}>Pago variable</div>
-            : <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--text)', marginBottom: 2 }}>{fmt(p.amount)}</div>
+            ? <div style={{ fontSize: 11, fontWeight: 600, color: '#fff', background: '#8B5CF6', padding: '2px 8px', borderRadius: 20 }}>Pago variable</div>
+            : <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--text)' }}>{fmt(p.amount)}</div>
           }
           <div style={{ fontSize: 11, fontWeight: 500, color: info.color }}>{info.label}</div>
         </div>
 
-        {/* Botón $ — cuadrado redondeado, dentro del card */}
-        {isPending && (
+        {/* Botón $ — cuadrado redondeado con margen interno */}
+        <div style={{ padding: '8px 6px', display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
+          {isPending && (
+            <button
+              onClick={e => { e.stopPropagation(); onMarkPaid(p) }}
+              style={{
+                width: 40, height: 40,
+                background: 'var(--paid)',
+                border: 'none', borderRadius: 10,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                cursor: 'pointer',
+              }}
+            >
+              <DollarSign size={18} color="#fff" strokeWidth={2.5} />
+            </button>
+          )}
+          {p.is_paid && (
+            <div style={{ width: 40, height: 40, background: 'var(--paid)', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <DollarSign size={18} color="#fff" strokeWidth={2.5} />
+            </div>
+          )}
+
+          {/* 3 puntos — dentro del card */}
           <button
-            onClick={e => { e.stopPropagation(); onMarkPaid(p) }}
-            style={{
-              width: 48, height: '100%', minHeight: 56,
-              background: 'var(--paid)',
-              border: 'none', borderRadius: '0 8px 8px 0',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              cursor: 'pointer', flexShrink: 0,
-            }}
+            onClick={e => { e.stopPropagation(); setMenuOpen(v => !v) }}
+            style={{ width: 24, height: 24, borderRadius: '50%', background: 'none', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', padding: 0 }}
           >
-            <DollarSign size={20} color="#fff" strokeWidth={2.5} />
+            <MoreVertical size={15} color="var(--muted)" />
           </button>
-        )}
-
-        {p.is_paid && (
-          <div style={{ width: 48, height: '100%', minHeight: 56, background: 'var(--paid)', borderRadius: '0 8px 8px 0', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-            <DollarSign size={20} color="#fff" strokeWidth={2.5} />
-          </div>
-        )}
+        </div>
       </div>
-
-      {/* 3 puntos — fuera del card */}
-      <button
-        onClick={e => { e.stopPropagation(); setMenuOpen(v => !v) }}
-        style={{ width: 28, height: 28, borderRadius: '50%', background: 'none', border: '0.5px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0 }}
-      >
-        <MoreVertical size={13} color="var(--muted)" />
-      </button>
 
       {/* Menú contextual */}
       {menuOpen && (
@@ -149,63 +148,58 @@ export function GroupCard({ group, cfg, onMarkPaid, onMarkUnpaid, onEdit, onDele
     : periodCountLabel(paidItems.length, freq) + ' pagadas'
 
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 6, position: 'relative' }}>
-      <div style={{ flex: 1, background: '#FFFFFF', borderRadius: 8, borderLeft: '5px solid var(--accent)', overflow: 'hidden' }}>
-        <div style={{ display: 'flex', alignItems: 'center' }}>
-          <div style={{ flex: 1, padding: '10px 8px 10px 12px', minWidth: 0 }}>
-            <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--text)', marginBottom: 2 }}>{group.name}</div>
-            <div style={{ fontSize: 11, color: 'var(--muted)' }}>{freqLabel}</div>
-            {paidItems.length > 0 && <div style={{ fontSize: 11, color: 'var(--paid)', fontWeight: 500, marginTop: 1 }}>{countLabel}</div>}
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 10px 10px 4px', flexShrink: 0 }}>
-            {totalPaid > 0 && <span style={{ fontSize: 16, fontWeight: 700, color: 'var(--text)' }}>{fmt(totalPaid)}</span>}
-            <button onClick={() => setExpanded(v => !v)} style={{ width: 28, height: 28, borderRadius: '50%', background: 'none', border: '0.5px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
-              {expanded ? <ChevronUp size={13} color="var(--muted)" /> : <ChevronDown size={13} color="var(--muted)" />}
-            </button>
-          </div>
+    <div style={{ background: '#FFFFFF', borderRadius: 8, borderLeft: '5px solid var(--accent)', overflow: 'hidden' }}>
+      <div style={{ display: 'flex', alignItems: 'center' }}>
+        <div style={{ flex: 1, padding: '11px 8px 11px 12px', minWidth: 0 }}>
+          <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--text)', marginBottom: 2 }}>{group.name}</div>
+          <div style={{ fontSize: 11, color: 'var(--muted)' }}>{freqLabel}</div>
+          {paidItems.length > 0 && <div style={{ fontSize: 11, color: 'var(--paid)', fontWeight: 500, marginTop: 1 }}>{countLabel}</div>}
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 2, padding: '11px 8px', flexShrink: 0 }}>
+          {totalPaid > 0 && <span style={{ fontSize: 16, fontWeight: 700, color: 'var(--text)' }}>{fmt(totalPaid)}</span>}
+        </div>
+        <div style={{ padding: '8px 6px', display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
           {isPending && (
-            <button onClick={() => onMarkPaid(group)} style={{ width: 48, height: '100%', minHeight: 56, background: 'var(--paid)', border: 'none', borderRadius: '0 8px 8px 0', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0 }}>
-              <DollarSign size={20} color="#fff" strokeWidth={2.5} />
+            <button onClick={() => onMarkPaid(group)} style={{ width: 40, height: 40, background: 'var(--paid)', border: 'none', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+              <DollarSign size={18} color="#fff" strokeWidth={2.5} />
             </button>
           )}
+          <button onClick={() => setExpanded(v => !v)} style={{ width: 24, height: 24, background: 'none', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', padding: 0 }}>
+            {expanded ? <ChevronUp size={15} color="var(--muted)" /> : <ChevronDown size={15} color="var(--muted)" />}
+          </button>
         </div>
-
-        {expanded && (
-          <div style={{ borderTop: '0.5px solid var(--border)' }}>
-            {allItems.map((p, i) => {
-              const overdue = daysDiff(p.due_date) < 0 && !p.is_paid
-              const isPend = !p.is_paid && !p.postponed
-              const isLast = i === allItems.length - 1
-              const instLabel = p.is_installment ? `Pago ${p.current_installment}/${p.total_installments}` : periodLabel(p.due_date, freq)
-              const bColor = p.is_paid ? 'var(--paid)' : p.postponed ? 'var(--muted)' : overdue ? 'var(--danger)' : '#FE7600'
-              const bLabel = p.is_paid ? 'Pagado' : p.postponed ? 'Pospuesto' : overdue ? 'Vencido' : 'Pendiente'
-              return (
-                <div key={p.id} style={{ display: 'flex', alignItems: 'center', padding: '9px 12px 9px 18px', borderBottom: isLast ? 'none' : '0.5px solid var(--bg)', gap: 6 }}>
-                  <div style={{ width: 6, height: 6, borderRadius: '50%', background: overdue ? 'var(--danger)' : p.is_paid ? 'var(--border-mid)' : 'var(--paid)', flexShrink: 0 }} />
-                  <span style={{ fontSize: 12, color: 'var(--muted)', flex: 1 }}>{instLabel}</span>
-                  {p.amount > 0 && <span style={{ fontSize: 12, fontWeight: 500, color: 'var(--text)' }}>{fmt(p.amount)}</span>}
-                  <span style={{ fontSize: 11, fontWeight: 500, color: bColor }}>{bLabel}</span>
-                  {isPend && (
-                    <button onClick={() => onMarkPaid(p)} style={{ width: 22, height: 22, borderRadius: 6, background: 'var(--paid)', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
-                      <DollarSign size={11} color="#fff" strokeWidth={2.5} />
-                    </button>
-                  )}
-                  {p.is_paid && (
-                    <button onClick={() => onMarkUnpaid(p.id)} style={{ width: 22, height: 22, borderRadius: '50%', background: 'none', border: '0.5px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
-                      <RotateCcw size={10} color="var(--muted)" />
-                    </button>
-                  )}
-                </div>
-              )
-            })}
-          </div>
-        )}
       </div>
 
-      {/* 3 puntos fuera del card */}
-      <button onClick={() => onEdit(group)} style={{ width: 28, height: 28, borderRadius: '50%', background: 'none', border: '0.5px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0 }}>
-        <MoreVertical size={13} color="var(--muted)" />
-      </button>
+      {expanded && (
+        <div style={{ borderTop: '0.5px solid var(--border)' }}>
+          {allItems.map((p, i) => {
+            const overdue = daysDiff(p.due_date) < 0 && !p.is_paid
+            const isPend = !p.is_paid && !p.postponed
+            const isLast = i === allItems.length - 1
+            const instLabel = p.is_installment ? `Pago ${p.current_installment}/${p.total_installments}` : periodLabel(p.due_date, freq)
+            const bColor = p.is_paid ? 'var(--paid)' : p.postponed ? 'var(--muted)' : overdue ? 'var(--danger)' : '#FE7600'
+            const bLabel = p.is_paid ? 'Pagado' : p.postponed ? 'Pospuesto' : overdue ? 'Vencido' : 'Pendiente'
+            return (
+              <div key={p.id} style={{ display: 'flex', alignItems: 'center', padding: '9px 12px 9px 18px', borderBottom: isLast ? 'none' : '0.5px solid var(--bg)', gap: 6 }}>
+                <div style={{ width: 6, height: 6, borderRadius: '50%', background: overdue ? 'var(--danger)' : p.is_paid ? 'var(--border-mid)' : 'var(--paid)', flexShrink: 0 }} />
+                <span style={{ fontSize: 12, color: 'var(--muted)', flex: 1 }}>{instLabel}</span>
+                {p.amount > 0 && <span style={{ fontSize: 12, fontWeight: 500, color: 'var(--text)' }}>{fmt(p.amount)}</span>}
+                <span style={{ fontSize: 11, fontWeight: 500, color: bColor }}>{bLabel}</span>
+                {isPend && (
+                  <button onClick={() => onMarkPaid(p)} style={{ width: 24, height: 24, borderRadius: 6, background: 'var(--paid)', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+                    <DollarSign size={12} color="#fff" strokeWidth={2.5} />
+                  </button>
+                )}
+                {p.is_paid && (
+                  <button onClick={() => onMarkUnpaid(p.id)} style={{ width: 24, height: 24, borderRadius: '50%', background: 'none', border: '0.5px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+                    <RotateCcw size={10} color="var(--muted)" />
+                  </button>
+                )}
+              </div>
+            )
+          })}
+        </div>
+      )}
     </div>
   )
 }
