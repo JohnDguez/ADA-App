@@ -131,7 +131,7 @@ export function HomePage({ payments, profile, onAdd, onMarkPaid, onMarkUnpaid, o
                 {vencidos.length} Pago{vencidos.length !== 1 ? 's' : ''} vencido{vencidos.length !== 1 ? 's' : ''} — Atención urgente
               </div>
               {/* Contenedor #D9D9D9 para vencidos */}
-              <div style={{ background: '#D9D9D9', borderRadius: 12, padding: '12px', display: 'flex', flexDirection: 'column', gap: 8, paddingRight: 28 }}>
+              <div style={{ background: '#D9D9D9', borderRadius: 12, padding: '12px', display: 'flex', flexDirection: 'column', gap: 8 }}>
                 {vencidos.map(p => <PayCard key={p.id} payment={p} cfg={profile} {...handlers} borderLeft="#B10F17" />)}
               </div>
             </div>
@@ -142,7 +142,7 @@ export function HomePage({ payments, profile, onAdd, onMarkPaid, onMarkUnpaid, o
             <SectionHead left="Próximos a vencer" right={`Periodo ${periodRange(profile)}`} />
             {delPeriodo.length === 0
               ? <Empty text="Sin pagos pendientes para este periodo" />
-              : <div style={{ background: '#D9D9D9', borderRadius: 12, padding: '12px', display: 'flex', flexDirection: 'column', gap: 8, paddingRight: 28 }}>
+              : <div style={{ background: '#D9D9D9', borderRadius: 12, padding: '12px', display: 'flex', flexDirection: 'column', gap: 8 }}>
                   {delPeriodo.map(p => <PayCard key={p.id} payment={p} cfg={profile} {...handlers} borderLeft="#FAAC2F" />)}
                 </div>
             }
@@ -152,7 +152,7 @@ export function HomePage({ payments, profile, onAdd, onMarkPaid, onMarkUnpaid, o
           {upcoming.length > 0 && (
             <div style={{ marginTop: 20 }}>
               <SectionHead left="Próximos pagos" right="Próximo periodo" />
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 8, paddingRight: 28 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                 {upcoming.map(p => <PayCard key={p.id} payment={p} cfg={profile} {...handlers} borderLeft="var(--accent)" />)}
               </div>
             </div>
