@@ -53,10 +53,16 @@ export function usePushNotifications(userId) {
       setPermission(perm)
       if (perm !== 'granted') { setLoading(false); return { error: 'Permiso denegado' } }
 
-      const sub = await reg.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY),
-      })
+      // Verificar si ya hay una suscripción activa
+      let sub = await reg.pushManager.getSubscription()
+
+      // Si no hay suscripción, crear una nueva
+      if (!sub) {
+        sub = await reg.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY),
+        })
+      }
 
       const { error } = await supabase.from('push_subscriptions').upsert({
         user_id: userId,
@@ -67,6 +73,7 @@ export function usePushNotifications(userId) {
       setLoading(false)
       return { error }
     } catch (e) {
+      console.error('Subscribe error:', e)
       setLoading(false)
       return { error: e.message }
     }
@@ -77,7 +84,9 @@ export function usePushNotifications(userId) {
     try {
       const reg = await navigator.serviceWorker.ready
       const sub = await reg.pushManager.getSubscription()
-      if (sub) await sub.unsubscribe()
+      if (sub) {
+        await sub.unsubscribe()
+      }
       await supabase.from('push_subscriptions').delete().eq('user_id', userId)
       setSubscribed(false)
     } catch (e) {
