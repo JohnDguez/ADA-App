@@ -198,7 +198,8 @@ export function SettingsPage({ profile, user, onUpdate, onUploadAvatar }) {
 
         {/* Notificaciones push */}
         <Card>
-          <div style={{ padding: '13px 14px' }}>
+          {/* Toggle principal */}
+          <div style={{ padding: '13px 14px', borderBottom: subscribed ? '0.5px solid var(--border)' : 'none' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer' }} onClick={handlePushToggle}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                 {subscribed ? <Bell size={16} color="var(--accent)" /> : <BellOff size={16} color="var(--muted)" />}
@@ -217,6 +218,62 @@ export function SettingsPage({ profile, user, onUpdate, onUploadAvatar }) {
               }
             </div>
           </div>
+
+          {/* Preferencias — solo visibles si está activo */}
+          {subscribed && (
+            <>
+              <NotifPref
+                label="Día de cobro"
+                sub="Recibe un resumen el día que te pagan"
+                value={profile.notif_cobro_day !== false}
+                onChange={v => onUpdate({ notif_cobro_day: v })}
+              />
+              <NotifPref
+                label="Pago vence hoy"
+                sub="Recordatorio de pagos que vencen ese día"
+                value={profile.notif_due_today !== false}
+                onChange={v => onUpdate({ notif_due_today: v })}
+              />
+              <NotifPref
+                label="Recordatorio anticipado"
+                sub={`Aviso ${profile.notif_days_before || 3} días antes del vencimiento`}
+                value={profile.notif_upcoming !== false}
+                onChange={v => onUpdate({ notif_upcoming: v })}
+              />
+              <NotifPref
+                label="Pagos vencidos"
+                sub="Alerta de pagos sin registrar"
+                value={profile.notif_overdue !== false}
+                onChange={v => onUpdate({ notif_overdue: v })}
+              />
+
+              {/* Días de anticipación */}
+              <div style={{ padding: '10px 14px', borderTop: '0.5px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <span style={{ fontSize: 12, color: 'var(--muted)' }}>Días de anticipación</span>
+                <div style={{ display: 'flex', gap: 4 }}>
+                  {[1, 2, 3, 5, 7].map(d => (
+                    <button key={d} onClick={() => onUpdate({ notif_days_before: d })} style={{ width: 28, height: 28, borderRadius: 6, border: (profile.notif_days_before || 3) === d ? '1.5px solid var(--accent)' : '0.5px solid var(--border)', background: (profile.notif_days_before || 3) === d ? 'var(--accent-soft)' : 'var(--bg)', color: (profile.notif_days_before || 3) === d ? 'var(--accent)' : 'var(--muted)', fontSize: 12, fontWeight: (profile.notif_days_before || 3) === d ? 600 : 400, fontFamily: 'DM Sans, sans-serif', cursor: 'pointer' }}>
+                      {d}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Hora de notificación */}
+              <div style={{ padding: '10px 14px', borderTop: '0.5px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <span style={{ fontSize: 12, color: 'var(--muted)' }}>Hora de notificación</span>
+                <select
+                  value={profile.notif_hour || 8}
+                  onChange={e => onUpdate({ notif_hour: parseInt(e.target.value) })}
+                  style={{ padding: '4px 8px', borderRadius: 6, border: '0.5px solid var(--border)', background: 'var(--bg)', color: 'var(--text)', fontSize: 12, fontFamily: 'DM Sans, sans-serif', outline: 'none', cursor: 'pointer' }}
+                >
+                  {[6,7,8,9,10,11,12,13,14,15,16,17,18,19,20].map(h => (
+                    <option key={h} value={h}>{h < 12 ? `${h}:00 am` : h === 12 ? '12:00 pm' : `${h-12}:00 pm`}</option>
+                  ))}
+                </select>
+              </div>
+            </>
+          )}
         </Card>
 
         <Card>
@@ -227,6 +284,20 @@ export function SettingsPage({ profile, user, onUpdate, onUploadAvatar }) {
         </Card>
 
         <div style={{ textAlign: 'center', fontSize: 11, color: 'var(--muted)', padding: '4px 0' }}>Ada v0.8.0 · Pre-Alpha</div>
+      </div>
+    </div>
+  )
+}
+
+function NotifPref({ label, sub, value, onChange }) {
+  return (
+    <div style={{ padding: '10px 14px', borderTop: '0.5px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer' }} onClick={() => onChange(!value)}>
+      <div>
+        <div style={{ fontSize: 12, fontWeight: 500, color: 'var(--text)' }}>{label}</div>
+        <div style={{ fontSize: 11, color: 'var(--muted)' }}>{sub}</div>
+      </div>
+      <div className="toggle-track" style={{ background: value ? 'var(--accent)' : 'var(--border)', flexShrink: 0 }}>
+        <div className="toggle-thumb" style={{ left: value ? 19 : 3 }} />
       </div>
     </div>
   )

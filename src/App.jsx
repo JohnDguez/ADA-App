@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useAuth } from './hooks/useAuth'
 import { usePayments } from './hooks/usePayments'
 import { useProfile } from './hooks/useProfile'
+import { useNotifications } from './hooks/useNotifications'
 import { AuthPage, ResetPasswordPage } from './pages/AuthPage'
 import { OnboardingPage } from './pages/OnboardingPage'
 import { HomePage } from './pages/HomePage'
@@ -19,13 +20,9 @@ function fmt(n) { return '$' + Number(n).toLocaleString('es-MX', { minimumFracti
 
 export default function App() {
   const { user, loading: authLoading, isRecovery, setIsRecovery } = useAuth()
-  const {
-    payments, addPayment, addInstallmentPayment,
-    updatePayment, markPaid, markUnpaid,
-    postponePayment, pauseRecurrent, resumeRecurrent,
-    deletePayment, deleteRecurrentFuture, deleteInstallmentFuture, deleteGroup,
-  } = usePayments(user?.id)
+  const { payments, addPayment, addInstallmentPayment, updatePayment, markPaid, markUnpaid, postponePayment, pauseRecurrent, resumeRecurrent, deletePayment, deleteRecurrentFuture, deleteInstallmentFuture, deleteGroup } = usePayments(user?.id)
   const { profile, loading: profileLoading, updateProfile, uploadAvatar } = useProfile(user?.id)
+  const { notifications, unreadCount, markAsRead, markAllAsRead, deleteNotification, clearAll } = useNotifications(user?.id)
   const [tab, setTab] = useState('home')
   const [modalOpen, setModalOpen] = useState(false)
   const [editPayment, setEditPayment] = useState(null)
@@ -34,8 +31,6 @@ export default function App() {
   if (authLoading || (user && profileLoading)) return <Splash />
   if (isRecovery) return <ResetPasswordPage onDone={() => setIsRecovery(false)} />
   if (!user) return <AuthPage />
-
-  // Mostrar onboarding si no lo ha completado
   if (user && profile && !profile.onboarding_completed) {
     return <OnboardingPage user={user} onComplete={updateProfile} />
   }
@@ -100,7 +95,19 @@ export default function App() {
 
   return (
     <>
-      {tab === 'home' && <HomePage payments={payments} profile={profile} onAdd={openAdd} {...sharedHandlers} onGoSettings={() => setTab('settings')} />}
+      {tab === 'home' && (
+        <HomePage
+          payments={payments} profile={profile} onAdd={openAdd}
+          {...sharedHandlers}
+          onGoSettings={() => setTab('settings')}
+          notifications={notifications}
+          unreadCount={unreadCount}
+          onMarkAsRead={markAsRead}
+          onMarkAllAsRead={markAllAsRead}
+          onDeleteNotif={deleteNotification}
+          onClearAllNotifs={clearAll}
+        />
+      )}
       {tab === 'payments' && <PaymentsPage payments={payments} profile={profile} onAdd={openAdd} {...sharedHandlers} />}
       {tab === 'recurrents' && <RecurrentsPage payments={payments} onPause={handlePauseRecurrent} onResume={handleResumeRecurrent} onDelete={handleDeleteRecurrent} onEdit={openEdit} />}
       {tab === 'history' && <HistoryPage payments={payments} />}

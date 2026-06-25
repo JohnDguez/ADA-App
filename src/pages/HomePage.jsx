@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { Plus, Bell, Settings, X, AlertCircle, Clock } from 'lucide-react'
 import { PayCard } from '../components/PayCard'
-import { fmt, cobroPeriod, nextCobroDate, getPagarEsteCobro, daysDiff, dateOf, MONTHS, MONTHS_SHORT, WEEKDAYS } from '../lib/utils'
+import { NotificationsPanel } from '../components/NotificationsPanel'
+import { fmt, cobroPeriod, nextCobroDate, getPagarEsteCobro, daysDiff, dateOf, MONTHS, MONTHS_SHORT } from '../lib/utils'
 
 function greeting() {
   const h = new Date().getHours()
@@ -17,9 +18,8 @@ function periodRange(cfg) {
   return `${start.getDate()} ${MONTHS_SHORT[start.getMonth()]} – ${end.getDate()} ${MONTHS[end.getMonth()]}`
 }
 
-export function HomePage({ payments, profile, onAdd, onMarkPaid, onMarkUnpaid, onEdit, onDelete, onPostpone, onAdvance, onGoSettings }) {
+export function HomePage({ payments, profile, onAdd, onMarkPaid, onMarkUnpaid, onEdit, onDelete, onPostpone, onAdvance, onGoSettings, notifications, unreadCount, onMarkAsRead, onMarkAllAsRead, onDeleteNotif, onClearAllNotifs }) {
   const [notifOpen, setNotifOpen] = useState(false)
-  const [notifSeen, setNotifSeen] = useState(false)
 
   const now = new Date()
   const dateStr = now.toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric', month: 'long' })
@@ -30,20 +30,6 @@ export function HomePage({ payments, profile, onAdd, onMarkPaid, onMarkUnpaid, o
   const pagarEsteCobro = getPagarEsteCobro(payments, profile)
   const vencidos = pagarEsteCobro.filter(p => daysDiff(p.due_date) < 0).sort((a, b) => dateOf(a.due_date) - dateOf(b.due_date))
   const delPeriodo = pagarEsteCobro.filter(p => daysDiff(p.due_date) >= 0).sort((a, b) => dateOf(a.due_date) - dateOf(b.due_date))
-
-  // Notificaciones
-  const notifications = []
-  vencidos.forEach(p => notifications.push({ id: `v-${p.id}`, type: 'danger', title: `${p.name} vencido`, body: 'Revisar urgente' }))
-  payments.filter(p => {
-    if (p.is_paid || !p.is_variable || p.paused) return false
-    const d = daysDiff(p.due_date)
-    return d >= 0 && d <= (profile.reminder_days || 3)
-  }).forEach(p => {
-    const d = daysDiff(p.due_date)
-    notifications.push({ id: `r-${p.id}`, type: 'warning', title: `Recordatorio: ${p.name}`, body: d === 0 ? 'Vence hoy' : `Vence en ${d} día${d !== 1 ? 's' : ''}` })
-  })
-  const hasUnread = notifications.length > 0 && !notifSeen
-  function openNotif() { setNotifOpen(true); setNotifSeen(true) }
 
   const pendingAmt = pagarEsteCobro.filter(p => !p.is_variable).reduce((a, p) => a + Number(p.amount), 0)
   const thisMonth = now.getMonth()
@@ -67,6 +53,11 @@ export function HomePage({ payments, profile, onAdd, onMarkPaid, onMarkUnpaid, o
   const handlers = { onMarkPaid, onMarkUnpaid, onEdit, onDelete, onPostpone, onAdvance }
   const initials = (profile.name || 'U').slice(0, 2).toUpperCase()
 
+  function handleNavigate(url) {
+    // Por ahora solo scroll al top
+    window.scrollTo(0, 0)
+  }
+
   return (
     <div style={{ paddingBottom: 100, background: 'var(--bg)', minHeight: '100vh' }}>
 
@@ -86,8 +77,10 @@ export function HomePage({ payments, profile, onAdd, onMarkPaid, onMarkUnpaid, o
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 0 }}>
             <div style={{ display: 'flex', gap: 8 }}>
               <div style={{ position: 'relative' }}>
-                <IconBtn onClick={openNotif} icon={<Bell size={18} color="#fff" />} />
-                {hasUnread && <div style={{ position: 'absolute', top: 6, right: 6, width: 8, height: 8, borderRadius: '50%', background: 'var(--danger)', border: '1.5px solid rgba(10,26,61,0.8)' }} />}
+                <IconBtn onClick={() => setNotifOpen(true)} icon={<Bell size={18} color="#fff" />} />
+                {unreadCount > 0 && (
+                  <div style={{ position: 'absolute', top: 6, right: 6, width: 8, height: 8, borderRadius: '50%', background: 'var(--danger)', border: '1.5px solid rgba(10,26,61,0.8)' }} />
+                )}
               </div>
               <IconBtn onClick={onGoSettings} icon={<Settings size={18} color="#fff" />} />
             </div>
@@ -98,7 +91,7 @@ export function HomePage({ payments, profile, onAdd, onMarkPaid, onMarkUnpaid, o
         </div>
       </div>
 
-      {/* Contenedor principal sobre el header */}
+      {/* Contenedor principal */}
       <div style={{ background: 'var(--bg)', borderRadius: '24px 24px 0 0', marginTop: -24, position: 'relative', zIndex: 10 }}>
 
         {/* Métricas */}
@@ -124,20 +117,19 @@ export function HomePage({ payments, profile, onAdd, onMarkPaid, onMarkUnpaid, o
 
         <div style={{ padding: '0 16px' }}>
 
-          {/* Vencidos — separados 25px de las métricas */}
+          {/* Vencidos */}
           {vencidos.length > 0 && (
             <div style={{ marginTop: 25 }}>
               <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--danger)', marginBottom: 10 }}>
                 {vencidos.length} Pago{vencidos.length !== 1 ? 's' : ''} vencido{vencidos.length !== 1 ? 's' : ''} — Atención urgente
               </div>
-              {/* Contenedor #D9D9D9 para vencidos */}
               <div style={{ background: '#D9D9D9', borderRadius: 12, padding: '12px', display: 'flex', flexDirection: 'column', gap: 8 }}>
                 {vencidos.map(p => <PayCard key={p.id} payment={p} cfg={profile} {...handlers} borderLeft="#B10F17" />)}
               </div>
             </div>
           )}
 
-          {/* Próximos a vencer — contenedor #D9D9D9 */}
+          {/* Próximos a vencer */}
           <div style={{ marginTop: 20 }}>
             <SectionHead left="Próximos a vencer" right={`Periodo ${periodRange(profile)}`} />
             {delPeriodo.length === 0
@@ -148,7 +140,7 @@ export function HomePage({ payments, profile, onAdd, onMarkPaid, onMarkUnpaid, o
             }
           </div>
 
-          {/* Próximos pagos — sin contenedor gris, border azul */}
+          {/* Próximos pagos */}
           {upcoming.length > 0 && (
             <div style={{ marginTop: 20 }}>
               <SectionHead left="Próximos pagos" right="Próximo periodo" />
@@ -165,29 +157,18 @@ export function HomePage({ payments, profile, onAdd, onMarkPaid, onMarkUnpaid, o
         <Plus size={22} color="#fff" strokeWidth={2.2} />
       </button>
 
-      {/* Panel notificaciones */}
-      {notifOpen && (
-        <div onClick={e => e.target === e.currentTarget && setNotifOpen(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(2,10,31,0.5)', zIndex: 200, display: 'flex', alignItems: 'flex-start', justifyContent: 'flex-end', padding: '60px 16px 0' }}>
-          <div style={{ background: 'var(--surface)', borderRadius: 16, width: '100%', maxWidth: 340, boxShadow: '0 8px 32px rgba(2,10,31,0.2)', overflow: 'hidden' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px', borderBottom: '0.5px solid var(--border)' }}>
-              <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--text)' }}>Notificaciones</span>
-              <button onClick={() => setNotifOpen(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex' }}><X size={18} color="var(--muted)" /></button>
-            </div>
-            {notifications.length === 0
-              ? <div style={{ padding: '24px 16px', textAlign: 'center', fontSize: 13, color: 'var(--muted)' }}>Sin notificaciones pendientes</div>
-              : notifications.map(n => (
-                <div key={n.id} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '12px 16px', borderBottom: '0.5px solid var(--bg)' }}>
-                  {n.type === 'danger' ? <AlertCircle size={16} color="var(--danger)" style={{ flexShrink: 0, marginTop: 1 }} /> : <Clock size={16} color="var(--warning)" style={{ flexShrink: 0, marginTop: 1 }} />}
-                  <div>
-                    <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)' }}>{n.title}</div>
-                    <div style={{ fontSize: 12, color: 'var(--muted)', marginTop: 1 }}>{n.body}</div>
-                  </div>
-                </div>
-              ))
-            }
-          </div>
-        </div>
-      )}
+      {/* Panel de notificaciones */}
+      <NotificationsPanel
+        open={notifOpen}
+        onClose={() => setNotifOpen(false)}
+        notifications={notifications}
+        unreadCount={unreadCount}
+        onMarkAsRead={onMarkAsRead}
+        onMarkAllAsRead={onMarkAllAsRead}
+        onDelete={onDeleteNotif}
+        onClearAll={onClearAllNotifs}
+        onNavigate={handleNavigate}
+      />
     </div>
   )
 }
