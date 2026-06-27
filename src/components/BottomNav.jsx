@@ -20,15 +20,14 @@ export function BottomNav({ active, onChange, onAdd }) {
       maxWidth: 388,
       zIndex: 100,
     }}>
-      {/* Botón + flotante encima del nav */}
+      {/* Botón + flotante — debajo del nav en z-index pero clickeable por el hueco central */}
       <div style={{
         display: 'flex',
         justifyContent: 'center',
         position: 'absolute',
         top: 0, left: 0, right: 0,
         transform: 'translateY(-40%)',
-        zIndex: 101,
-        pointerEvents: 'none', // no bloquea clicks de los tabs
+        zIndex: 99,
       }}>
         <button
           onClick={onAdd}
@@ -44,7 +43,6 @@ export function BottomNav({ active, onChange, onAdd }) {
             boxShadow: '0 4px 20px rgba(47,140,250,0.55)',
             cursor: 'pointer',
             flexShrink: 0,
-            pointerEvents: 'auto', // el botón sí recibe clicks
           }}
         >
           <Plus size={28} color="#fff" strokeWidth={2.5} />
@@ -61,14 +59,14 @@ export function BottomNav({ active, onChange, onAdd }) {
         gap: 4,
         boxShadow: '0 8px 24px rgba(1,75,163,0.35), 0 2px 8px rgba(0,0,0,0.2)',
         position: 'relative',
-        zIndex: 102, // encima del botón +, los tabs reciben clicks primero
+        zIndex: 100,
       }}>
         {LEFT_TABS.map(({ id, Icon }) => (
           <TabBtn key={id} id={id} Icon={Icon} active={active === id} onChange={onChange} />
         ))}
 
-        {/* Espacio central para el botón + */}
-        <div style={{ flex: 1 }} />
+        {/* Hueco central — transparente y sin pointer events para que el click llegue al botón + */}
+        <div style={{ flex: 1, pointerEvents: 'none' }} />
 
         {RIGHT_TABS.map(({ id, Icon }) => (
           <TabBtn key={id} id={id} Icon={Icon} active={active === id} onChange={onChange} />
@@ -91,6 +89,8 @@ function TabBtn({ id, Icon, active, onChange }) {
         border: 'none',
         cursor: 'pointer',
         borderRadius: 8,
+        position: 'relative',
+        zIndex: 101, // tabs encima del nav para recibir clicks correctamente
         background: active
           ? 'linear-gradient(180deg, rgba(255,255,255,0.25) 0%, rgba(255,255,255,0) 100%)'
           : 'none',
