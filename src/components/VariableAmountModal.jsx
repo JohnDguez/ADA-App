@@ -1,20 +1,25 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { ConfirmCloseModal } from './ConfirmCloseModal'
 
 export function VariableAmountModal({ open, payment, onConfirm, onClose }) {
   const [amount, setAmount] = useState('')
   const [error, setError] = useState('')
   const [confirmClose, setConfirmClose] = useState(false)
+  const amountRef = useRef(amount)
 
+  useEffect(() => { amountRef.current = amount }, [amount])
   useEffect(() => { if (!open) { setAmount(''); setError('') } }, [open])
 
   useEffect(() => {
     if (!open) return
-    const handler = () => { if (amount) setConfirmClose(true); else onClose() }
+    const handler = () => {
+      if (amountRef.current) setConfirmClose(true)
+      else onClose()
+    }
     window.history.pushState(null, '', window.location.href)
     window.addEventListener('popstate', handler)
     return () => window.removeEventListener('popstate', handler)
-  }, [open, amount])
+  }, [open]) // Solo depende de open — el ref siempre tiene el valor actual
 
   function requestClose() { if (amount) { setConfirmClose(true); return }; onClose() }
 
@@ -35,7 +40,7 @@ export function VariableAmountModal({ open, payment, onConfirm, onClose }) {
       }}>
         <div style={{ background: 'var(--surface)', borderRadius: 16, width: '100%', maxWidth: 340, padding: '24px 20px' }}>
           <div style={{ fontSize: 16, fontWeight: 600, color: 'var(--text)', marginBottom: 4 }}>Registrar pago</div>
-          <div style={{ fontSize: 13, color: 'var(--muted)', marginBottom: 16 }}>{payment.name} — ingresa el monto que pagaste</div>
+          <div style={{ fontSize: 13, color: 'var(--text)', marginBottom: 16 }}>{payment.name} — ingresa el monto que pagaste</div>
           {error && <div style={{ background: 'var(--danger-soft)', border: '0.5px solid var(--danger-border)', borderRadius: 'var(--radius-sm)', padding: '8px 12px', fontSize: 13, color: 'var(--danger)', marginBottom: 12 }}>{error}</div>}
           <label className="field-label">Monto pagado</label>
           <input autoFocus type="number" value={amount} onChange={e => setAmount(e.target.value)} placeholder="0.00" onKeyDown={e => e.key === 'Enter' && handleConfirm()} className="field-input" style={{ marginBottom: 14 }} />
