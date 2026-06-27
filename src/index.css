@@ -178,3 +178,10 @@ a { color: inherit; text-decoration: none; }
   background: var(--surface);
   transition: left .2s;
 }
+
+/* Bloquear scroll del body cuando hay un modal abierto */
+body.modal-open {
+  overflow: hidden;
+  position: fixed;
+  width: 100%;
+}
