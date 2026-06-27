@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { ChevronLeft, ChevronRight, Bell, Settings } from 'lucide-react'
+import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { PageHeader } from '../components/PageHeader'
 import { fmt, dateOf, MONTHS, MONTHS_SHORT, CATEGORIES, cobroPeriod } from '../lib/utils'
 
 const CAT_COLOR = {
@@ -12,29 +13,14 @@ const CAT_COLOR = {
   'Otros':         'var(--cat-otros)',
 }
 
-function greeting() {
-  const h = new Date().getHours()
-  if (h < 12) return '¡Buenos días!'
-  if (h < 19) return '¡Buenas tardes!'
-  return '¡Buenas noches!'
-}
-
-export function PaymentsPage({ payments, profile, onGoSettings, notifications, unreadCount, onOpenNotifs }) {
+export function PaymentsPage({ payments, profile, unreadCount, onOpenNotifs, onGoSettings }) {
   const now = new Date()
-  const dateStr = now.toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric', month: 'long' })
-  const timeStr = now.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })
-  const initials = (profile?.name || 'U').slice(0, 2).toUpperCase()
 
-  // Bloque 1 — gráfica
-  const [monthsBack, setMonthsBack] = useState(3)
+  const [monthsBack,  setMonthsBack]  = useState(3)
   const [selectedCat, setSelectedCat] = useState(null)
-
-  // Bloque 2 — por categoría
-  const [catRange, setCatRange] = useState('mes')
-
-  // Bloque 3 — pagos realizados
-  const [viewMonth, setViewMonth] = useState(now.getMonth())
-  const [viewYear, setViewYear]   = useState(now.getFullYear())
+  const [catRange,    setCatRange]    = useState('mes')
+  const [viewMonth,   setViewMonth]   = useState(now.getMonth())
+  const [viewYear,    setViewYear]    = useState(now.getFullYear())
 
   const paidPayments = payments.filter(p => p.is_paid)
 
@@ -106,69 +92,43 @@ export function PaymentsPage({ payments, profile, onGoSettings, notifications, u
   return (
     <div style={{ paddingBottom: 120, background: 'var(--bg)', minHeight: '100vh' }}>
 
-      {/* ── HEADER ── */}
-      <div style={{ background: 'url(/Header_bg.jpg) center/cover no-repeat', padding: '52px 20px 36px' }}>
-        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
-          {/* Avatar + saludo */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            {profile?.avatar_url
-              ? <img src={profile.avatar_url} alt="avatar" style={{ width: 48, height: 48, borderRadius: '50%', objectFit: 'cover', border: '2px solid rgba(255,255,255,0.3)' }} />
-              : <div style={{ width: 48, height: 48, borderRadius: '50%', background: 'rgba(255,255,255,0.15)', border: '2px solid rgba(255,255,255,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, fontWeight: 600, color: '#fff' }}>{initials}</div>
-            }
-            <div>
-              <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.75)' }}>{greeting()}</div>
-              <div style={{ fontSize: 20, fontWeight: 700, color: '#fff' }}>{profile?.name || ''}</div>
-            </div>
-          </div>
-          {/* Iconos */}
-          <div style={{ display: 'flex', gap: 8 }}>
-            <IconBtn onClick={onOpenNotifs} icon={
-              <div style={{ position: 'relative' }}>
-                <Bell size={18} color="#fff" />
-                {unreadCount > 0 && (
-                  <span style={{ position: 'absolute', top: -4, right: -4, width: 8, height: 8, borderRadius: '50%', background: 'var(--paid)', border: '1.5px solid rgba(0,0,0,0.3)' }} />
-                )}
-              </div>
-            } />
-            <IconBtn onClick={onGoSettings} icon={<Settings size={18} color="#fff" />} />
-          </div>
-        </div>
-        <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.6)', marginTop: 8, textAlign: 'right' }}>
-          {dateStr} {timeStr}
-        </div>
-      </div>
+      <PageHeader
+        profile={profile}
+        unreadCount={unreadCount}
+        onOpenNotifs={onOpenNotifs}
+        onGoSettings={onGoSettings}
+      />
 
-      {/* Contenido con bordes redondeados arriba */}
-      <div style={{ background: 'var(--bg)', borderRadius: '20px 20px 0 0', marginTop: -16, paddingTop: 20 }}>
+      {/* Contenido */}
+      <div style={{ background: 'var(--bg)', borderRadius: '24px 24px 0 0', marginTop: -24, position: 'relative', zIndex: 10, paddingTop: 20 }}>
 
         {/* Título */}
         <div style={{ padding: '0 16px 12px' }}>
           <div style={{ fontSize: 22, fontWeight: 700, color: 'var(--text)' }}>Mis Gastos</div>
         </div>
 
-        {/* ── BLOQUE 1: Chips de categoría ── */}
-        <div style={{ padding: '0 16px 15px', display: 'flex', gap: 6, overflowX: 'auto', scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-          <style>{`.cat-scroll::-webkit-scrollbar { display: none; }`}</style>
+        {/* Chips de categoría */}
+        <div style={{ padding: '0 16px 15px', display: 'flex', gap: 6, overflowX: 'auto', msOverflowStyle: 'none', scrollbarWidth: 'none' }}>
           <FilterChip label="Todos" active={!selectedCat} onClick={() => setSelectedCat(null)} />
           {CATEGORIES.map(c => (
             <FilterChip key={c} label={c} active={selectedCat === c} onClick={() => setSelectedCat(selectedCat === c ? null : c)} />
           ))}
         </div>
 
-        {/* Stats — un contenedor con divisor */}
+        {/* Stats */}
         <div style={{ margin: '0 16px 12px', background: 'var(--surface)', border: '0.5px solid var(--border)', borderRadius: 'var(--radius)', padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 16 }}>
-          <div style={{ flex: 1 }}>
-            <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 2 }}>
+          <div style={{ flex: 1.6 }}>
+            <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--text)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 4 }}>
               Total {monthsBack} meses
             </div>
             <div style={{ fontSize: 28, fontWeight: 700, color: 'var(--text)', lineHeight: 1.1 }}>{fmt(grandTotal)}</div>
           </div>
           <div style={{ width: 1, height: 40, background: 'var(--border)', flexShrink: 0 }} />
           <div style={{ flex: 1 }}>
-            <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 2 }}>
+            <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--text)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 4 }}>
               Promedio mensual
             </div>
-            <div style={{ fontSize: 20, fontWeight: 600, color: 'var(--text)', lineHeight: 1.1 }}>{fmt(Math.round(avgMonthly))}</div>
+            <div style={{ fontSize: 20, fontWeight: 700, color: 'var(--text)', lineHeight: 1.1 }}>{fmt(Math.round(avgMonthly))}</div>
           </div>
         </div>
 
@@ -181,7 +141,7 @@ export function PaymentsPage({ payments, profile, onGoSettings, notifications, u
 
         {/* Gráfica */}
         <div style={{ margin: '0 16px 20px', background: 'var(--surface)', border: '0.5px solid var(--border)', borderRadius: 'var(--radius)', padding: '16px 14px' }}>
-          <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 14 }}>
+          <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--text)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 14 }}>
             Gastos mensuales
           </div>
           <div style={{ display: 'flex', alignItems: 'flex-end', gap: 6, height: 100 }}>
@@ -194,7 +154,7 @@ export function PaymentsPage({ payments, profile, onGoSettings, notifications, u
               return (
                 <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
                   {total > 0 && (
-                    <div style={{ fontSize: 9, color: isCurrent ? barColor : 'var(--muted)', fontWeight: 600, textAlign: 'center' }}>
+                    <div style={{ fontSize: 9, fontWeight: 700, color: isCurrent ? barColor : 'var(--text)', textAlign: 'center' }}>
                       {fmt(total)}
                     </div>
                   )}
@@ -206,7 +166,7 @@ export function PaymentsPage({ payments, profile, onGoSettings, notifications, u
                     minHeight: total > 0 ? 4 : 0,
                     transition: 'height .3s',
                   }} />
-                  <div style={{ fontSize: 9, color: isCurrent ? barColor : 'var(--muted)', fontWeight: isCurrent ? 600 : 400, textAlign: 'center' }}>
+                  <div style={{ fontSize: 9, fontWeight: isCurrent ? 700 : 500, color: isCurrent ? barColor : 'var(--text)', textAlign: 'center' }}>
                     {MONTHS_SHORT[m.month]}
                   </div>
                 </div>
@@ -215,10 +175,10 @@ export function PaymentsPage({ payments, profile, onGoSettings, notifications, u
           </div>
         </div>
 
-        {/* ── BLOQUE 2: Por Categoría ── */}
+        {/* Por Categoría */}
         <div style={{ padding: '0 16px 20px' }}>
           <div style={{ marginBottom: 10 }}>
-            <span style={{ fontSize: 15, fontWeight: 600, color: 'var(--text)' }}>Por Categoría</span>
+            <span style={{ fontSize: 15, fontWeight: 700, color: 'var(--text)' }}>Por Categoría</span>
           </div>
           <div style={{ display: 'flex', gap: 6, marginBottom: 14 }}>
             {[{ id: 'mes', label: 'Mes actual' }, { id: 'periodo', label: 'Periodo' }, { id: 'año', label: 'Año' }].map(o => (
@@ -227,7 +187,7 @@ export function PaymentsPage({ payments, profile, onGoSettings, notifications, u
           </div>
 
           {catData.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '24px 0', fontSize: 13, color: 'var(--muted)' }}>
+            <div style={{ textAlign: 'center', padding: '24px 0', fontSize: 13, fontWeight: 500, color: 'var(--text)' }}>
               Sin gastos registrados
             </div>
           ) : (
@@ -236,7 +196,7 @@ export function PaymentsPage({ payments, profile, onGoSettings, notifications, u
                 <div key={cat}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 5 }}>
                     <span style={{ fontSize: 13, fontWeight: 500, color: 'var(--text)' }}>{cat}</span>
-                    <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)' }}>{fmt(total)}</span>
+                    <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)' }}>{fmt(total)}</span>
                   </div>
                   <div style={{ height: 6, background: 'var(--border)', borderRadius: 'var(--radius-full)', overflow: 'hidden' }}>
                     <div style={{
@@ -253,42 +213,40 @@ export function PaymentsPage({ payments, profile, onGoSettings, notifications, u
           )}
         </div>
 
-        {/* ── BLOQUE 3: Pagos realizados ── */}
+        {/* Pagos realizados */}
         <div style={{ padding: '0 16px' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-            <span style={{ fontSize: 15, fontWeight: 600, color: 'var(--text)' }}>Pagos</span>
+            <span style={{ fontSize: 15, fontWeight: 700, color: 'var(--text)' }}>Pagos</span>
             <div style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
               <button onClick={() => changeViewMonth(-1)} style={{ background: 'none', border: 'none', padding: 4, display: 'flex', cursor: 'pointer' }}>
-                <ChevronLeft size={18} color="var(--muted)" />
+                <ChevronLeft size={18} color="var(--text)" />
               </button>
               <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)', minWidth: 110, textAlign: 'center' }}>
                 {MONTHS[viewMonth]} {viewYear}
               </span>
               <button onClick={() => changeViewMonth(1)} style={{ background: 'none', border: 'none', padding: 4, display: 'flex', cursor: 'pointer' }}>
-                <ChevronRight size={18} color="var(--muted)" />
+                <ChevronRight size={18} color="var(--text)" />
               </button>
             </div>
           </div>
 
           {paidInView.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '32px 0', fontSize: 13, color: 'var(--muted)' }}>
+            <div style={{ textAlign: 'center', padding: '32px 0', fontSize: 13, fontWeight: 500, color: 'var(--text)' }}>
               Sin pagos realizados en {MONTHS[viewMonth]}
             </div>
           ) : (
             <>
               <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 8 }}>
-                <span style={{ fontSize: 12, color: 'var(--muted)' }}>
-                  Total: <strong style={{ color: 'var(--text)' }}>{fmt(totalInView)}</strong>
+                <span style={{ fontSize: 12, fontWeight: 500, color: 'var(--text)' }}>
+                  Total: <strong style={{ fontWeight: 700 }}>{fmt(totalInView)}</strong>
                 </span>
               </div>
               <div style={{ background: 'var(--surface)', border: '0.5px solid var(--border)', borderRadius: 'var(--radius)', overflow: 'hidden' }}>
                 {paidInView.map((p, i) => {
-                  const d      = dateOf(p.due_date)
-                  const isLast = i === paidInView.length - 1
+                  const d        = dateOf(p.due_date)
+                  const isLast   = i === paidInView.length - 1
                   const paidDate = p.paid_at ? new Date(p.paid_at) : null
-                  const paidDateStr = paidDate
-                    ? `Pagado el ${paidDate.getDate()} de ${MONTHS_SHORT[paidDate.getMonth()]}`
-                    : null
+                  const paidStr  = paidDate ? `Pagado el ${paidDate.getDate()} de ${MONTHS_SHORT[paidDate.getMonth()]}` : null
                   return (
                     <div key={p.id} style={{
                       display: 'flex', alignItems: 'center',
@@ -300,7 +258,7 @@ export function PaymentsPage({ payments, profile, onGoSettings, notifications, u
                       {/* Fecha */}
                       <div style={{ textAlign: 'center', minWidth: 28, flexShrink: 0 }}>
                         <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text)', lineHeight: 1 }}>{d.getDate()}</div>
-                        <div style={{ fontSize: 9, color: 'var(--muted)', textTransform: 'uppercase' }}>{MONTHS_SHORT[d.getMonth()]}</div>
+                        <div style={{ fontSize: 9, fontWeight: 600, color: 'var(--text)', textTransform: 'uppercase' }}>{MONTHS_SHORT[d.getMonth()]}</div>
                       </div>
                       <div style={{ width: 1, height: 28, background: 'var(--border)', flexShrink: 0 }} />
                       {/* Info */}
@@ -308,15 +266,15 @@ export function PaymentsPage({ payments, profile, onGoSettings, notifications, u
                         <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)', display: 'flex', alignItems: 'center', gap: 6 }}>
                           {p.name}
                           {p.is_installment && (
-                            <span style={{ fontSize: 10, color: 'var(--muted)', fontWeight: 400 }}>
+                            <span style={{ fontSize: 10, fontWeight: 500, color: 'var(--text)' }}>
                               {p.current_installment}/{p.total_installments}
                             </span>
                           )}
                         </div>
-                        <div style={{ fontSize: 11, color: 'var(--muted)', display: 'flex', alignItems: 'center', gap: 5 }}>
-                          <span style={{ width: 6, height: 6, borderRadius: '50%', background: CAT_COLOR[p.category] || 'var(--muted)', display: 'inline-block', flexShrink: 0 }} />
+                        <div style={{ fontSize: 11, fontWeight: 500, color: 'var(--text)', display: 'flex', alignItems: 'center', gap: 5 }}>
+                          <span style={{ width: 6, height: 6, borderRadius: '50%', background: CAT_COLOR[p.category] || 'var(--text)', display: 'inline-block', flexShrink: 0 }} />
                           {p.category}
-                          {p.is_recurrent && <span style={{ color: 'var(--muted)' }}>· Mensual</span>}
+                          {p.is_recurrent && <span style={{ fontWeight: 400 }}>· Mensual</span>}
                         </div>
                       </div>
                       {/* Monto */}
@@ -327,11 +285,8 @@ export function PaymentsPage({ payments, profile, onGoSettings, notifications, u
                             Variable
                           </span>
                         )}
-                        {paidDateStr && !p.is_variable && (
-                          <div style={{ fontSize: 10, color: 'var(--paid)', marginTop: 1 }}>{paidDateStr}</div>
-                        )}
-                        {p.is_variable && paidDateStr && (
-                          <div style={{ fontSize: 10, color: 'var(--paid)', marginTop: 1 }}>{paidDateStr}</div>
+                        {paidStr && (
+                          <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--paid)', marginTop: 1 }}>{paidStr}</div>
                         )}
                       </div>
                     </div>
@@ -346,14 +301,6 @@ export function PaymentsPage({ payments, profile, onGoSettings, notifications, u
   )
 }
 
-function IconBtn({ onClick, icon }) {
-  return (
-    <button onClick={onClick} style={{ width: 40, height: 40, borderRadius: 12, background: 'rgba(255,255,255,0.1)', border: '0.5px solid rgba(255,255,255,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
-      {icon}
-    </button>
-  )
-}
-
 function FilterChip({ label, active, onClick }) {
   return (
     <button
@@ -363,9 +310,9 @@ function FilterChip({ label, active, onClick }) {
         borderRadius: 5,
         border: active ? 'none' : '0.5px solid var(--border)',
         background: active ? 'var(--accent)' : 'var(--surface)',
-        color: active ? '#fff' : 'var(--muted)',
+        color: active ? '#fff' : 'var(--text)',
         fontSize: 12,
-        fontWeight: active ? 600 : 400,
+        fontWeight: active ? 700 : 500,
         fontFamily: 'DM Sans, sans-serif',
         cursor: 'pointer',
         whiteSpace: 'nowrap',
