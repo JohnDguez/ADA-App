@@ -1,24 +1,33 @@
-import { AlertCircle, Clock, Bell, Trash2, CheckCheck, X, ChevronRight } from 'lucide-react'
+import { useEffect } from 'react'
+import { AlertCircle, Clock, Bell, Trash2, CheckCheck, X } from 'lucide-react'
 import { MONTHS_SHORT } from '../lib/utils'
 
 function timeAgo(dateStr) {
-  const now = new Date()
+  const now  = new Date()
   const date = new Date(dateStr)
   const diff = Math.floor((now - date) / 1000)
-  if (diff < 60) return 'ahora'
-  if (diff < 3600) return `hace ${Math.floor(diff / 60)} min`
+  if (diff < 60)    return 'ahora'
+  if (diff < 3600)  return `hace ${Math.floor(diff / 60)} min`
   if (diff < 86400) return `hace ${Math.floor(diff / 3600)} h`
   return `${date.getDate()} ${MONTHS_SHORT[date.getMonth()]}`
 }
 
 function NotifIcon({ type }) {
-  if (type === 'overdue') return <AlertCircle size={16} color="var(--danger)" />
+  if (type === 'overdue')   return <AlertCircle size={16} color="var(--danger)" />
   if (type === 'due_today') return <Clock size={16} color="#FE7600" />
   if (type === 'cobro_day') return <Bell size={16} color="var(--accent)" />
-  return <Bell size={16} color="var(--muted)" />
+  return <Bell size={16} color="var(--text)" />
 }
 
 export function NotificationsPanel({ open, onClose, notifications, unreadCount, onMarkAsRead, onMarkAllAsRead, onDelete, onClearAll, onNavigate }) {
+
+  // Bloquear scroll del body mientras el panel está abierto
+  useEffect(() => {
+    if (open) document.body.classList.add('modal-open')
+    else document.body.classList.remove('modal-open')
+    return () => document.body.classList.remove('modal-open')
+  }, [open])
+
   if (!open) return null
 
   return (
@@ -44,11 +53,11 @@ export function NotificationsPanel({ open, onClose, notifications, unreadCount, 
             )}
             {notifications.length > 0 && (
               <button onClick={onClearAll} title="Eliminar todas" style={{ width: 28, height: 28, borderRadius: '50%', background: 'none', border: '0.5px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
-                <Trash2 size={14} color="var(--muted)" />
+                <Trash2 size={14} color="var(--text)" />
               </button>
             )}
             <button onClick={onClose} style={{ width: 28, height: 28, borderRadius: '50%', background: 'none', border: '0.5px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
-              <X size={14} color="var(--muted)" />
+              <X size={14} color="var(--text)" />
             </button>
           </div>
         </div>
@@ -58,7 +67,7 @@ export function NotificationsPanel({ open, onClose, notifications, unreadCount, 
           {notifications.length === 0 ? (
             <div style={{ padding: '32px 16px', textAlign: 'center' }}>
               <Bell size={28} color="var(--border)" style={{ marginBottom: 8 }} />
-              <div style={{ fontSize: 13, color: 'var(--muted)' }}>Sin notificaciones</div>
+              <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--text)' }}>Sin notificaciones</div>
             </div>
           ) : (
             notifications.map(n => (
@@ -72,8 +81,8 @@ export function NotificationsPanel({ open, onClose, notifications, unreadCount, 
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: 13, fontWeight: n.read ? 400 : 600, color: 'var(--text)', marginBottom: 2 }}>{n.title}</div>
-                  <div style={{ fontSize: 11, color: 'var(--muted)', lineHeight: 1.4 }}>{n.body}</div>
-                  <div style={{ fontSize: 10, color: 'var(--muted)', marginTop: 4 }}>{timeAgo(n.created_at)}</div>
+                  <div style={{ fontSize: 11, fontWeight: 400, color: 'var(--text)', lineHeight: 1.4 }}>{n.body}</div>
+                  <div style={{ fontSize: 10, fontWeight: 400, color: 'var(--text)', marginTop: 4 }}>{timeAgo(n.created_at)}</div>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0 }}>
                   {!n.read && <div style={{ width: 7, height: 7, borderRadius: '50%', background: 'var(--accent)' }} />}
@@ -81,7 +90,7 @@ export function NotificationsPanel({ open, onClose, notifications, unreadCount, 
                     onClick={e => { e.stopPropagation(); onDelete(n.id) }}
                     style={{ width: 22, height: 22, borderRadius: '50%', background: 'none', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', opacity: 0.5 }}
                   >
-                    <X size={12} color="var(--muted)" />
+                    <X size={12} color="var(--text)" />
                   </button>
                 </div>
               </div>

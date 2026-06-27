@@ -21,6 +21,16 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
 
   const isEditingInstallment = !!(initial?.is_installment)
 
+  // Bloquear scroll del body mientras el modal está abierto
+  useEffect(() => {
+    if (open) {
+      document.body.classList.add('modal-open')
+    } else {
+      document.body.classList.remove('modal-open')
+    }
+    return () => document.body.classList.remove('modal-open')
+  }, [open])
+
   // Ref para acceder a los valores actuales desde el listener de popstate
   // sin re-registrarlo cada vez que cambia el estado
   const dirtyRef = useRef(false)

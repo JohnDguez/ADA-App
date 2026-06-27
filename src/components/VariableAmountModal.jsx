@@ -11,6 +11,14 @@ export function VariableAmountModal({ open, payment, onConfirm, onClose }) {
   useEffect(() => { if (!open) { setAmount(''); setError('') } }, [open])
 
   useEffect(() => {
+    if (open) document.body.classList.add('modal-open')
+    else document.body.classList.remove('modal-open')
+    return () => document.body.classList.remove('modal-open')
+  }, [open])
+
+
+
+  useEffect(() => {
     if (!open) return
     const handler = () => {
       if (amountRef.current) setConfirmClose(true)
