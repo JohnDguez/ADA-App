@@ -127,7 +127,7 @@ export default function App() {
           onClearAllNotifs={clearAll}
         />
       )}
-      {tab === 'payments'   && <PaymentsPage payments={payments} {...headerProps} onMarkUnpaid={handleMarkUnpaid} onDelete={handleDelete} />}
+      {tab === 'payments'   && <PaymentsPage payments={payments} {...headerProps} onMarkUnpaid={handleMarkUnpaid} onDelete={handleDelete} onDeleteDirect={async (id) => { await deletePayment(id); showToast('Pago eliminado') }} />}
       {tab === 'recurrents' && <RecurrentsPage payments={payments} onPause={handlePauseRecurrent} onResume={handleResumeRecurrent} onDelete={handleDeleteRecurrent} onEdit={openEdit} />}
       {tab === 'settings'   && <SettingsPage profile={profile} user={user} onUpdate={updateProfile} onUploadAvatar={uploadAvatar} />}
 
