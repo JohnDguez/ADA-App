@@ -19,15 +19,51 @@ export function BottomNav({ active, onChange, onAdd }) {
       width: 'calc(100% - 32px)',
       maxWidth: 388,
       zIndex: 100,
+      // El contenedor NO tiene background ni overflow hidden
     }}>
-      {/* Botón + flotante — debajo del nav en z-index pero clickeable por el hueco central */}
+      {/* Nav izquierda */}
       <div style={{
-        display: 'flex',
-        justifyContent: 'center',
         position: 'absolute',
-        top: 0, left: 0, right: 0,
-        transform: 'translateY(-40%)',
-        zIndex: 99,
+        bottom: 0, left: 0,
+        width: 'calc(50% - 38px)',
+        background: '#014BA3',
+        borderRadius: '10px 0 0 10px',
+        display: 'flex',
+        padding: '8px 8px 8px 8px',
+        gap: 4,
+        boxShadow: '0 8px 24px rgba(1,75,163,0.35)',
+        zIndex: 100,
+      }}>
+        {LEFT_TABS.map(({ id, Icon }) => (
+          <TabBtn key={id} id={id} Icon={Icon} active={active === id} onChange={onChange} />
+        ))}
+      </div>
+
+      {/* Nav derecha */}
+      <div style={{
+        position: 'absolute',
+        bottom: 0, right: 0,
+        width: 'calc(50% - 38px)',
+        background: '#014BA3',
+        borderRadius: '0 10px 10px 0',
+        display: 'flex',
+        padding: '8px 8px 8px 8px',
+        gap: 4,
+        boxShadow: '0 8px 24px rgba(1,75,163,0.35)',
+        zIndex: 100,
+      }}>
+        {RIGHT_TABS.map(({ id, Icon }) => (
+          <TabBtn key={id} id={id} Icon={Icon} active={active === id} onChange={onChange} />
+        ))}
+      </div>
+
+      {/* Botón + central — encima de todo */}
+      <div style={{
+        position: 'absolute',
+        bottom: 6,
+        left: '50%',
+        transform: 'translateX(-50%)',
+        zIndex: 102,
       }}>
         <button
           onClick={onAdd}
@@ -42,36 +78,14 @@ export function BottomNav({ active, onChange, onAdd }) {
             justifyContent: 'center',
             boxShadow: '0 4px 20px rgba(47,140,250,0.55)',
             cursor: 'pointer',
-            flexShrink: 0,
           }}
         >
           <Plus size={28} color="#fff" strokeWidth={2.5} />
         </button>
       </div>
 
-      {/* Barra de navegación */}
-      <nav style={{
-        background: '#014BA3',
-        borderRadius: 10,
-        display: 'flex',
-        alignItems: 'center',
-        padding: '8px',
-        gap: 4,
-        boxShadow: '0 8px 24px rgba(1,75,163,0.35), 0 2px 8px rgba(0,0,0,0.2)',
-        position: 'relative',
-        zIndex: 100,
-      }}>
-        {LEFT_TABS.map(({ id, Icon }) => (
-          <TabBtn key={id} id={id} Icon={Icon} active={active === id} onChange={onChange} />
-        ))}
-
-        {/* Hueco central — transparente y sin pointer events para que el click llegue al botón + */}
-        <div style={{ flex: 1, pointerEvents: 'none' }} />
-
-        {RIGHT_TABS.map(({ id, Icon }) => (
-          <TabBtn key={id} id={id} Icon={Icon} active={active === id} onChange={onChange} />
-        ))}
-      </nav>
+      {/* Spacer para que el contenedor tenga altura */}
+      <div style={{ height: 56 }} />
     </div>
   )
 }
@@ -89,8 +103,6 @@ function TabBtn({ id, Icon, active, onChange }) {
         border: 'none',
         cursor: 'pointer',
         borderRadius: 8,
-        position: 'relative',
-        zIndex: 101, // tabs encima del nav para recibir clicks correctamente
         background: active
           ? 'linear-gradient(180deg, rgba(255,255,255,0.25) 0%, rgba(255,255,255,0) 100%)'
           : 'none',
