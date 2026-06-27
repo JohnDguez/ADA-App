@@ -156,7 +156,7 @@ export function SettingsPage({ profile, user, onUpdate, onUploadAvatar }) {
         {profile.cobro_freq === 'biweekly' && (
           <div style={{ padding: '13px 14px', borderBottom: '0.5px solid var(--border)' }}>
             <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)', marginBottom: 10 }}>Días de quincena</div>
-            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 12 }}>
+            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: isCustomBiweekly() ? 12 : 0 }}>
               {BIWEEKLY_PRESETS.map(preset => {
                 const active = profile.cobro_day1 === preset.d1 && profile.cobro_day2 === preset.d2
                 return (
@@ -166,21 +166,24 @@ export function SettingsPage({ profile, user, onUpdate, onUploadAvatar }) {
                   </button>
                 )
               })}
-              <button onClick={() => onUpdate({ cobro_day1: null, cobro_day2: null })}
+              <button onClick={() => { if (!isCustomBiweekly()) onUpdate({ cobro_day1: null, cobro_day2: null }) }}
                 style={{ padding: '7px 14px', borderRadius: 5, border: 'none', background: isCustomBiweekly() ? 'var(--accent)' : 'var(--bg)', color: isCustomBiweekly() ? '#fff' : 'var(--text)', fontWeight: isCustomBiweekly() ? 600 : 400, fontSize: 13, fontFamily: 'DM Sans, sans-serif', cursor: 'pointer' }}>
                 Personalizado
               </button>
             </div>
-            <div style={{ display: 'flex', gap: 10 }}>
-              <div style={{ flex: 1 }}>
-                <label style={{ display: 'block', fontSize: 11, fontWeight: 500, color: 'var(--text)', marginBottom: 4 }}>Día 1</label>
-                <input type="number" min="1" max="31" defaultValue={profile.cobro_day1 ?? 1} onBlur={e => onUpdate({ cobro_day1: parseInt(e.target.value) || 1 })} placeholder="ej. 13" className="field-input" />
+            {/* Campos solo visibles en modo personalizado */}
+            {isCustomBiweekly() && (
+              <div style={{ display: 'flex', gap: 10 }}>
+                <div style={{ flex: 1 }}>
+                  <label style={{ display: 'block', fontSize: 11, fontWeight: 500, color: 'var(--text)', marginBottom: 4 }}>Día 1 (1–28)</label>
+                  <input type="number" min="1" max="28" defaultValue={profile.cobro_day1 ?? ''} onBlur={e => { const v = Math.min(28, Math.max(1, parseInt(e.target.value)||1)); e.target.value=v; onUpdate({ cobro_day1: v }) }} placeholder="ej. 13" className="field-input" />
+                </div>
+                <div style={{ flex: 1 }}>
+                  <label style={{ display: 'block', fontSize: 11, fontWeight: 500, color: 'var(--text)', marginBottom: 4 }}>Día 2 (1–31)</label>
+                  <input type="number" min="1" max="31" defaultValue={profile.cobro_day2 ?? ''} onBlur={e => { const v = Math.min(31, Math.max(1, parseInt(e.target.value)||1)); e.target.value=v; onUpdate({ cobro_day2: v }) }} placeholder="ej. 28" className="field-input" />
+                </div>
               </div>
-              <div style={{ flex: 1 }}>
-                <label style={{ display: 'block', fontSize: 11, fontWeight: 500, color: 'var(--text)', marginBottom: 4 }}>Día 2</label>
-                <input type="number" min="1" max="31" defaultValue={profile.cobro_day2 ?? 16} onBlur={e => onUpdate({ cobro_day2: parseInt(e.target.value) || 16 })} placeholder="ej. 28" className="field-input" />
-              </div>
-            </div>
+            )}
           </div>
         )}
 

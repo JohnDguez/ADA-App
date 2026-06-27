@@ -126,35 +126,42 @@ export function OnboardingPage({ userId, onDone }) {
 
 
             {/* Días de quincena */}
-            {cobroFreq === 'biweekly' && (
-              <div style={{ marginTop: 16 }}>
-                <label className="field-label">Días de quincena</label>
-                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 8, marginBottom: 12 }}>
-                  {[{label:'1 y 16',d1:1,d2:16},{label:'13 y 28',d1:13,d2:28},{label:'15 y 30',d1:15,d2:30},{label:'Personalizado',d1:null,d2:null}].map(preset => {
-                    const isCustomPreset = preset.d1 === null
-                    const presetActive = isCustomPreset
-                      ? !([{d1:1,d2:16},{d1:13,d2:28},{d1:15,d2:30}].some(p => p.d1===cobroDay1 && p.d2===cobroDay2))
-                      : cobroDay1 === preset.d1 && cobroDay2 === preset.d2
-                    return (
-                      <button key={preset.label} onClick={() => { if (preset.d1 !== null) { setCobroDay1(preset.d1); setCobroDay2(preset.d2) } else { setCobroDay1(null); setCobroDay2(null) } }}
-                        style={{ padding: '7px 14px', borderRadius: 5, border: presetActive ? '1.5px solid var(--accent)' : '0.5px solid var(--border)', background: presetActive ? 'var(--accent)' : 'var(--surface)', color: presetActive ? '#fff' : 'var(--text)', fontWeight: presetActive ? 600 : 400, fontSize: 13, fontFamily: 'DM Sans, sans-serif', cursor: 'pointer' }}>
-                        {preset.label}
-                      </button>
-                    )
-                  })}
-                </div>
-                <div style={{ display: 'flex', gap: 10 }}>
-                  <div style={{ flex: 1 }}>
-                    <label style={{ display: 'block', fontSize: 11, fontWeight: 500, color: 'var(--text)', marginBottom: 4 }}>Día 1</label>
-                    <input type="number" min="1" max="31" value={cobroDay1 ?? ''} onChange={e => setCobroDay1(parseInt(e.target.value)||1)} placeholder="ej. 13" className="field-input" />
+            {cobroFreq === 'biweekly' && (() => {
+              const PRESETS = [{label:'1 y 16',d1:1,d2:16},{label:'13 y 28',d1:13,d2:28},{label:'15 y 30',d1:15,d2:30}]
+              const isCustom = !PRESETS.some(p => p.d1===cobroDay1 && p.d2===cobroDay2)
+              return (
+                <div style={{ marginTop: 16 }}>
+                  <label className="field-label">Días de quincena</label>
+                  <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 8, marginBottom: isCustom ? 12 : 0 }}>
+                    {PRESETS.map(preset => {
+                      const active = cobroDay1 === preset.d1 && cobroDay2 === preset.d2
+                      return (
+                        <button key={preset.label} onClick={() => { setCobroDay1(preset.d1); setCobroDay2(preset.d2) }}
+                          style={{ padding: '7px 14px', borderRadius: 5, border: 'none', background: active ? 'var(--accent)' : 'var(--surface)', color: active ? '#fff' : 'var(--text)', fontWeight: active ? 600 : 400, fontSize: 13, fontFamily: 'DM Sans, sans-serif', cursor: 'pointer' }}>
+                          {preset.label}
+                        </button>
+                      )
+                    })}
+                    <button onClick={() => { if (!isCustom) { setCobroDay1(null); setCobroDay2(null) } }}
+                      style={{ padding: '7px 14px', borderRadius: 5, border: 'none', background: isCustom ? 'var(--accent)' : 'var(--surface)', color: isCustom ? '#fff' : 'var(--text)', fontWeight: isCustom ? 600 : 400, fontSize: 13, fontFamily: 'DM Sans, sans-serif', cursor: 'pointer' }}>
+                      Personalizado
+                    </button>
                   </div>
-                  <div style={{ flex: 1 }}>
-                    <label style={{ display: 'block', fontSize: 11, fontWeight: 500, color: 'var(--text)', marginBottom: 4 }}>Día 2</label>
-                    <input type="number" min="1" max="31" value={cobroDay2 ?? ''} onChange={e => setCobroDay2(parseInt(e.target.value)||16)} placeholder="ej. 28" className="field-input" />
-                  </div>
+                  {isCustom && (
+                    <div style={{ display: 'flex', gap: 10 }}>
+                      <div style={{ flex: 1 }}>
+                        <label style={{ display: 'block', fontSize: 11, fontWeight: 500, color: 'var(--text)', marginBottom: 4 }}>Día 1 (1–28)</label>
+                        <input type="number" min="1" max="28" value={cobroDay1 ?? ''} onChange={e => setCobroDay1(Math.min(28, Math.max(1, parseInt(e.target.value)||1)))} placeholder="ej. 13" className="field-input" />
+                      </div>
+                      <div style={{ flex: 1 }}>
+                        <label style={{ display: 'block', fontSize: 11, fontWeight: 500, color: 'var(--text)', marginBottom: 4 }}>Día 2 (1–31)</label>
+                        <input type="number" min="1" max="31" value={cobroDay2 ?? ''} onChange={e => setCobroDay2(Math.min(31, Math.max(1, parseInt(e.target.value)||1)))} placeholder="ej. 28" className="field-input" />
+                      </div>
+                    </div>
+                  )}
                 </div>
-              </div>
-            )}
+              )
+            })()}
 
             {/* Día de cobro mensual */}
             {cobroFreq === 'monthly' && (
