@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { ChevronLeft, ChevronRight, MoreVertical } from 'lucide-react'
 import { PageHeader } from '../components/PageHeader'
 import { fmt, dateOf, MONTHS, MONTHS_SHORT, CATEGORIES, cobroPeriod } from '../lib/utils'
@@ -13,7 +13,7 @@ const CAT_COLOR = {
   'Otros':         'var(--cat-otros)',
 }
 
-export function PaymentsPage({ payments, profile, unreadCount, onOpenNotifs, onGoSettings, onMarkUnpaid, onDelete }) {
+export function PaymentsPage({ payments, profile, unreadCount, onOpenNotifs, onGoSettings, onMarkUnpaid, onDelete, onDeleteDirect }) {
   const now = new Date()
 
   const [monthsBack,  setMonthsBack]  = useState(3)
@@ -21,7 +21,7 @@ export function PaymentsPage({ payments, profile, unreadCount, onOpenNotifs, onG
   const [catRange,    setCatRange]    = useState('mes')
   const [viewMonth,   setViewMonth]   = useState(now.getMonth())
   const [viewYear,    setViewYear]    = useState(now.getFullYear())
-  const [openMenu,    setOpenMenu]    = useState(null) // id del pago con menú abierto
+  const [openMenu,    setOpenMenu]    = useState(null) // { id, top, right }
 
   const paidPayments = payments.filter(p => p.is_paid)
 
@@ -97,11 +97,51 @@ export function PaymentsPage({ payments, profile, unreadCount, onOpenNotifs, onG
   function handleMenuAction(action, payment) {
     setOpenMenu(null)
     if (action === 'unpaid') onMarkUnpaid && onMarkUnpaid(payment.id)
-    if (action === 'delete') onDelete && onDelete(payment.id, payment)
+    if (action === 'delete') {
+      // Pagos ya pagados: eliminar directamente sin lógica de parcialidades futuras
+      if (payment.is_paid) {
+        if (!window.confirm('¿Eliminar este pago del historial?')) return
+        onDeleteDirect && onDeleteDirect(payment.id)
+      } else {
+        onDelete && onDelete(payment.id, payment)
+      }
+    }
   }
 
   return (
     <div style={{ paddingBottom: 120, background: 'var(--bg)', minHeight: '100vh' }} onClick={() => setOpenMenu(null)}>
+      {/* Menú contextual flotante — fuera del overflow del contenedor */}
+      {openMenu && (
+        <div
+          onClick={e => e.stopPropagation()}
+          style={{
+            position: 'fixed',
+            top: openMenu.top,
+            right: openMenu.right,
+            zIndex: 999,
+            background: 'var(--surface)',
+            borderRadius: 'var(--radius-sm)',
+            boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
+            minWidth: 180,
+            overflow: 'hidden',
+          }}
+        >
+          {(() => {
+            const p = payments.find(x => x.id === openMenu.id)
+            if (!p) return null
+            return (
+              <>
+                <button onClick={() => handleMenuAction('unpaid', p)} style={{ width: '100%', padding: '11px 14px', background: 'none', border: 'none', textAlign: 'left', fontSize: 13, fontWeight: 500, color: 'var(--text)', cursor: 'pointer', display: 'block', borderBottom: '0.5px solid var(--bg)' }}>
+                  Marcar como no pagado
+                </button>
+                <button onClick={() => handleMenuAction('delete', p)} style={{ width: '100%', padding: '11px 14px', background: 'none', border: 'none', textAlign: 'left', fontSize: 13, fontWeight: 500, color: 'var(--danger)', cursor: 'pointer', display: 'block' }}>
+                  Eliminar
+                </button>
+              </>
+            )
+          })()}
+        </div>
+      )}
 
       <PageHeader
         profile={profile}
@@ -315,36 +355,15 @@ export function PaymentsPage({ payments, profile, unreadCount, onOpenNotifs, onG
                       {/* Tres puntos */}
                       <div style={{ position: 'relative', flexShrink: 0 }}>
                         <button
-                          onClick={e => { e.stopPropagation(); setOpenMenu(menuOpen ? null : p.id) }}
+                          onClick={e => {
+                            e.stopPropagation()
+                            const rect = e.currentTarget.getBoundingClientRect()
+                            setOpenMenu(openMenu?.id === p.id ? null : { id: p.id, top: rect.bottom + 4, right: window.innerWidth - rect.right })
+                          }}
                           style={{ background: 'none', border: 'none', padding: '4px', display: 'flex', alignItems: 'center', cursor: 'pointer', borderRadius: 4 }}
                         >
                           <MoreVertical size={16} color="var(--text)" strokeWidth={1.8} />
                         </button>
-                        {menuOpen && (
-                          <div
-                            onClick={e => e.stopPropagation()}
-                            style={{
-                              position: 'absolute', right: 0, top: 28, zIndex: 200,
-                              background: 'var(--surface)', borderRadius: 'var(--radius-sm)',
-                              boxShadow: '0 4px 16px rgba(0,0,0,0.12)',
-                              minWidth: 160, overflow: 'hidden',
-                            }}
-                          >
-                            <button
-                              onClick={() => handleMenuAction('unpaid', p)}
-                              style={{ width: '100%', padding: '10px 14px', background: 'none', border: 'none', textAlign: 'left', fontSize: 13, fontWeight: 500, color: 'var(--text)', cursor: 'pointer', display: 'block' }}
-                            >
-                              Marcar como no pagado
-                            </button>
-                            <div style={{ height: '0.5px', background: 'var(--bg)' }} />
-                            <button
-                              onClick={() => handleMenuAction('delete', p)}
-                              style={{ width: '100%', padding: '10px 14px', background: 'none', border: 'none', textAlign: 'left', fontSize: 13, fontWeight: 500, color: 'var(--danger)', cursor: 'pointer', display: 'block' }}
-                            >
-                              Eliminar
-                            </button>
-                          </div>
-                        )}
                       </div>
                     </div>
                   )
