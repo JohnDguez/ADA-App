@@ -21,7 +21,15 @@ export function BottomNav({ active, onChange, onAdd }) {
       zIndex: 100,
     }}>
       {/* Botón + flotante encima del nav */}
-      <div style={{ display: 'flex', justifyContent: 'center', position: 'absolute', top: 0, left: 0, right: 0, transform: 'translateY(-40%)', zIndex: 101 }}>
+      <div style={{
+        display: 'flex',
+        justifyContent: 'center',
+        position: 'absolute',
+        top: 0, left: 0, right: 0,
+        transform: 'translateY(-40%)',
+        zIndex: 101,
+        pointerEvents: 'none', // no bloquea clicks de los tabs
+      }}>
         <button
           onClick={onAdd}
           style={{
@@ -36,6 +44,7 @@ export function BottomNav({ active, onChange, onAdd }) {
             boxShadow: '0 4px 20px rgba(47,140,250,0.55)',
             cursor: 'pointer',
             flexShrink: 0,
+            pointerEvents: 'auto', // el botón sí recibe clicks
           }}
         >
           <Plus size={28} color="#fff" strokeWidth={2.5} />
@@ -51,6 +60,8 @@ export function BottomNav({ active, onChange, onAdd }) {
         padding: '8px',
         gap: 4,
         boxShadow: '0 8px 24px rgba(1,75,163,0.35), 0 2px 8px rgba(0,0,0,0.2)',
+        position: 'relative',
+        zIndex: 102, // encima del botón +, los tabs reciben clicks primero
       }}>
         {LEFT_TABS.map(({ id, Icon }) => (
           <TabBtn key={id} id={id} Icon={Icon} active={active === id} onChange={onChange} />
