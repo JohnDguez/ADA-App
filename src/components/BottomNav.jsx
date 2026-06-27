@@ -11,54 +11,59 @@ const RIGHT_TABS = [
 
 export function BottomNav({ active, onChange, onAdd }) {
   return (
-    <nav style={{
+    <div style={{
       position: 'fixed',
       bottom: 16,
       left: '50%',
       transform: 'translateX(-50%)',
       width: 'calc(100% - 32px)',
       maxWidth: 388,
-      background: '#014BA3',
-      borderRadius: 10,
-      display: 'flex',
-      alignItems: 'center',
       zIndex: 100,
-      padding: '6px 8px',
-      gap: 4,
-      boxShadow: '0 8px 24px rgba(1,75,163,0.35), 0 2px 8px rgba(0,0,0,0.2)',
     }}>
-      {LEFT_TABS.map(({ id, label, Icon }) => (
-        <TabBtn key={id} id={id} label={label} Icon={Icon} active={active === id} onChange={onChange} />
-      ))}
-
-      {/* Botón + central elevado */}
-      <div style={{ flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+      {/* Botón + flotante encima del nav */}
+      <div style={{ display: 'flex', justifyContent: 'center', position: 'absolute', top: 0, left: 0, right: 0, transform: 'translateY(-40%)', zIndex: 101 }}>
         <button
           onClick={onAdd}
           style={{
-            width: 58,
-            height: 58,
+            width: 60,
+            height: 60,
             borderRadius: '50%',
             background: 'var(--accent)',
             border: '4px solid #014BA3',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            boxShadow: '0 4px 16px rgba(47,140,250,0.5)',
+            boxShadow: '0 4px 20px rgba(47,140,250,0.55)',
             cursor: 'pointer',
-            marginBottom: 24,
             flexShrink: 0,
-            transition: 'transform .15s',
           }}
         >
-          <Plus size={26} color="#fff" strokeWidth={2.5} />
+          <Plus size={28} color="#fff" strokeWidth={2.5} />
         </button>
       </div>
 
-      {RIGHT_TABS.map(({ id, label, Icon }) => (
-        <TabBtn key={id} id={id} label={label} Icon={Icon} active={active === id} onChange={onChange} />
-      ))}
-    </nav>
+      {/* Barra de navegación */}
+      <nav style={{
+        background: '#014BA3',
+        borderRadius: 10,
+        display: 'flex',
+        alignItems: 'center',
+        padding: '6px 8px',
+        gap: 4,
+        boxShadow: '0 8px 24px rgba(1,75,163,0.35), 0 2px 8px rgba(0,0,0,0.2)',
+      }}>
+        {LEFT_TABS.map(({ id, label, Icon }) => (
+          <TabBtn key={id} id={id} label={label} Icon={Icon} active={active === id} onChange={onChange} />
+        ))}
+
+        {/* Espacio central para el botón + */}
+        <div style={{ flex: 1 }} />
+
+        {RIGHT_TABS.map(({ id, label, Icon }) => (
+          <TabBtn key={id} id={id} label={label} Icon={Icon} active={active === id} onChange={onChange} />
+        ))}
+      </nav>
+    </div>
   )
 }
 
