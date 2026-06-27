@@ -22,7 +22,6 @@ function getLocalHour(timezone) {
     })
     return parseInt(formatter.format(now))
   } catch (e) {
-    // Si el timezone es inválido, usar UTC
     return new Date().getUTCHours()
   }
 }
@@ -36,7 +35,7 @@ function getLocalDateStr(timezone) {
       month: '2-digit',
       day: '2-digit',
     })
-    return formatter.format(now) // Devuelve YYYY-MM-DD
+    return formatter.format(now)
   } catch (e) {
     return new Date().toISOString().split('T')[0]
   }
@@ -49,50 +48,48 @@ module.exports = async function handler(req, res) {
   }
 
   try {
-    // Obtener suscripciones con preferencias del usuario
-    const { data: subs } = await supabase
-      .from('push_subscriptions')
-      .select(`
-        user_id,
-        subscription,
-        profiles!inner (
-          notif_cobro_day,
-          notif_due_today,
-          notif_upcoming,
-          notif_overdue,
-          notif_days_before,
-          notif_hour,
-          timezone,
-          cobro_freq,
-          cobro_weekday
-        )
-      `)
+    const force = req.query.force === 'true'
 
+    // 1. Obtener suscripciones push
+    const { data: subs, error: subsError } = await supabase
+      .from('push_subscriptions')
+      .select('user_id, subscription')
+
+    if (subsError) return res.status(500).json({ error: subsError.message })
     if (!subs || subs.length === 0) return res.json({ sent: 0, users: 0 })
+
+    // 2. Obtener perfiles de esos usuarios por separado
+    const userIds = subs.map(s => s.user_id)
+    const { data: profiles, error: profilesError } = await supabase
+      .from('profiles')
+      .select('id, notif_cobro_day, notif_due_today, notif_upcoming, notif_overdue, notif_days_before, notif_hour, timezone, cobro_freq, cobro_weekday')
+      .in('id', userIds)
+
+    if (profilesError) return res.status(500).json({ error: profilesError.message })
+
+    // Crear mapa user_id → profile para acceso rápido
+    const profileMap = {}
+    for (const p of (profiles || [])) {
+      profileMap[p.id] = p
+    }
 
     let sent = 0
     let skipped = 0
 
-    // Si force=true, ignorar verificación de hora (solo para testing)
-    const force = req.query.force === 'true'
-
     for (const sub of subs) {
-      const profile = sub.profiles
-      const timezone = profile.timezone || 'America/Mazatlan'
+      const profile = profileMap[sub.user_id]
+      if (!profile) { skipped++; continue }
+
+      const timezone  = profile.timezone || 'America/Mazatlan'
       const notifHour = profile.notif_hour ?? 8
 
-      // Verificar si es la hora correcta para este usuario
       if (!force) {
         const userCurrentHour = getLocalHour(timezone)
-        if (userCurrentHour !== notifHour) {
-          skipped++
-          continue
-        }
+        if (userCurrentHour !== notifHour) { skipped++; continue }
       }
 
       const todayStr = getLocalDateStr(timezone)
-      const today = new Date(todayStr + 'T12:00:00')
-
+      const today    = new Date(todayStr + 'T12:00:00')
       const notifications = []
 
       // Pagos vencidos
@@ -139,17 +136,15 @@ module.exports = async function handler(req, res) {
         }
       }
 
-      // Pagos próximos (según notif_days_before)
+      // Pagos próximos
       if (profile.notif_upcoming !== false) {
-        const daysAhead = profile.notif_days_before ?? 3
+        const daysAhead  = profile.notif_days_before ?? 3
         const futureDate = new Date(today)
         futureDate.setDate(futureDate.getDate() + daysAhead)
         const futureDateStr = futureDate.toISOString().split('T')[0]
-
-        // Excluir hoy (ya cubierto por notif_due_today)
-        const tomorrow = new Date(today)
+        const tomorrow      = new Date(today)
         tomorrow.setDate(tomorrow.getDate() + 1)
-        const tomorrowStr = tomorrow.toISOString().split('T')[0]
+        const tomorrowStr   = tomorrow.toISOString().split('T')[0]
 
         const { data: upcoming } = await supabase
           .from('payments')
