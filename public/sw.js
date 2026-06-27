@@ -8,6 +8,13 @@ self.addEventListener('activate', e => {
   e.waitUntil(clients.claim())
 })
 
+// Evita el error "message channel closed before a response was received"
+self.addEventListener('message', e => {
+  if (e.data && e.data.type === 'SKIP_WAITING') {
+    self.skipWaiting()
+  }
+})
+
 self.addEventListener('push', e => {
   if (!e.data) return
   const data = e.data.json()
