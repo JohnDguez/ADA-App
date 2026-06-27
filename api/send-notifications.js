@@ -50,7 +50,6 @@ module.exports = async function handler(req, res) {
   try {
     const force = req.query.force === 'true'
 
-    // 1. Obtener suscripciones push
     const { data: subs, error: subsError } = await supabase
       .from('push_subscriptions')
       .select('user_id, subscription')
@@ -58,7 +57,6 @@ module.exports = async function handler(req, res) {
     if (subsError) return res.status(500).json({ error: subsError.message })
     if (!subs || subs.length === 0) return res.json({ sent: 0, users: 0 })
 
-    // 2. Obtener perfiles por separado (no hay FK directa a profiles)
     const userIds = subs.map(s => s.user_id)
     const { data: profiles, error: profilesError } = await supabase
       .from('profiles')
@@ -92,21 +90,15 @@ module.exports = async function handler(req, res) {
       // Pagos vencidos
       if (profile.notif_overdue !== false) {
         const { data: overdue } = await supabase
-          .from('payments')
-          .select('name')
-          .eq('user_id', sub.user_id)
-          .eq('is_paid', false)
-          .eq('paused', false)
-          .lt('due_date', todayStr)
+          .from('payments').select('name')
+          .eq('user_id', sub.user_id).eq('is_paid', false).eq('paused', false).lt('due_date', todayStr)
 
         if (overdue && overdue.length > 0) {
           notifications.push({
             type: 'overdue',
-            title: `⚠️ ${overdue.length} pago${overdue.length > 1 ? 's' : ''} vencido${overdue.length > 1 ? 's' : ''}`,
+            title: `${overdue.length} pago${overdue.length > 1 ? 's' : ''} vencido${overdue.length > 1 ? 's' : ''}`,
             body: overdue.map(p => p.name).join(', '),
-            tag: 'overdue',
-            urgent: true,
-            url: '/',
+            tag: 'overdue', urgent: true, url: '/',
           })
         }
       }
@@ -114,22 +106,16 @@ module.exports = async function handler(req, res) {
       // Pagos que vencen hoy
       if (profile.notif_due_today !== false) {
         const { data: dueToday } = await supabase
-          .from('payments')
-          .select('name')
-          .eq('user_id', sub.user_id)
-          .eq('is_paid', false)
-          .eq('paused', false)
-          .eq('due_date', todayStr)
+          .from('payments').select('name')
+          .eq('user_id', sub.user_id).eq('is_paid', false).eq('paused', false).eq('due_date', todayStr)
 
         if (dueToday && dueToday.length > 0) {
           dueToday.forEach(p => {
             notifications.push({
               type: 'due_today',
-              title: `🔔 ${p.name} vence hoy`,
+              title: `${p.name} vence hoy`,
               body: 'No olvides hacer el pago y registrarlo',
-              tag: `due-today-${p.name}`,
-              urgent: false,
-              url: '/',
+              tag: `due-today-${p.name}`, urgent: false, url: '/',
             })
           })
         }
@@ -146,22 +132,16 @@ module.exports = async function handler(req, res) {
         const tomorrowStr   = tomorrow.toISOString().split('T')[0]
 
         const { data: upcoming } = await supabase
-          .from('payments')
-          .select('name, due_date')
-          .eq('user_id', sub.user_id)
-          .eq('is_paid', false)
-          .eq('paused', false)
-          .gte('due_date', tomorrowStr)
-          .lte('due_date', futureDateStr)
+          .from('payments').select('name, due_date')
+          .eq('user_id', sub.user_id).eq('is_paid', false).eq('paused', false)
+          .gte('due_date', tomorrowStr).lte('due_date', futureDateStr)
 
         if (upcoming && upcoming.length > 0) {
           notifications.push({
             type: 'upcoming',
-            title: `📅 ${upcoming.length} pago${upcoming.length > 1 ? 's' : ''} próximo${upcoming.length > 1 ? 's' : ''}`,
+            title: `${upcoming.length} pago${upcoming.length > 1 ? 's' : ''} próximo${upcoming.length > 1 ? 's' : ''}`,
             body: `${upcoming.map(p => p.name).join(', ')} — vence${upcoming.length > 1 ? 'n' : ''} pronto`,
-            tag: 'upcoming',
-            urgent: false,
-            url: '/',
+            tag: 'upcoming', urgent: false, url: '/',
           })
         }
       }
@@ -171,21 +151,15 @@ module.exports = async function handler(req, res) {
         const dayOfWeek = today.getDay()
         if (dayOfWeek === (profile.cobro_weekday ?? 5)) {
           const { data: pendingToday } = await supabase
-            .from('payments')
-            .select('name, amount')
-            .eq('user_id', sub.user_id)
-            .eq('is_paid', false)
-            .eq('paused', false)
-            .lte('due_date', todayStr)
+            .from('payments').select('name, amount')
+            .eq('user_id', sub.user_id).eq('is_paid', false).eq('paused', false).lte('due_date', todayStr)
 
           if (pendingToday && pendingToday.length > 0) {
             notifications.push({
               type: 'cobro_day',
-              title: `💰 Hoy es tu día de cobro`,
+              title: `Hoy es tu día de cobro`,
               body: `Tienes ${pendingToday.length} pago${pendingToday.length > 1 ? 's' : ''} pendiente${pendingToday.length > 1 ? 's' : ''} por cubrir`,
-              tag: 'cobro-day',
-              urgent: false,
-              url: '/',
+              tag: 'cobro-day', urgent: false, url: '/',
             })
           }
         }
@@ -193,27 +167,24 @@ module.exports = async function handler(req, res) {
 
       if (notifications.length === 0) continue
 
-      // 3. Guardar en tabla notifications (para el panel in-app)
-      const toInsert = notifications.map(n => ({
-        user_id: sub.user_id,
-        type:    n.type,
-        title:   n.title,
-        body:    n.body,
-        url:     n.url,
-        read:    false,
-      }))
+      // Guardar en tabla notifications
+      await supabase.from('notifications').insert(
+        notifications.map(n => ({
+          user_id: sub.user_id,
+          type:    n.type,
+          title:   n.title,
+          body:    n.body,
+          url:     n.url,
+          read:    false,
+        }))
+      )
 
-      await supabase.from('notifications').insert(toInsert)
-
-      // 4. Enviar push
+      // Enviar push
       for (const notif of notifications) {
         try {
           await webpush.sendNotification(sub.subscription, JSON.stringify({
-            title:  notif.title,
-            body:   notif.body,
-            tag:    notif.tag,
-            urgent: notif.urgent,
-            url:    notif.url,
+            title: notif.title, body: notif.body,
+            tag: notif.tag, urgent: notif.urgent, url: notif.url,
           }))
           sent++
         } catch (e) {
