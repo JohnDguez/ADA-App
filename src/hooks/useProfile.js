@@ -6,6 +6,8 @@ const DEFAULT_PROFILE = {
   currency: 'MXN',
   cobro_freq: 'weekly',
   cobro_weekday: 5,
+  cobro_day1: 1,
+  cobro_day2: 16,
   reminder_days: 3,
   salary_enabled: false,
   salary_amount: 0,
@@ -34,21 +36,14 @@ export function useProfile(userId) {
   }
 
   async function uploadAvatar(file) {
-    // Límite: 2MB
-    if (file.size > 2 * 1024 * 1024) {
-      return { error: { message: 'La imagen no puede superar 2 MB' } }
-    }
+    if (file.size > 2 * 1024 * 1024) return { error: { message: 'La imagen no puede superar 2 MB' } }
     const allowed = ['image/jpeg', 'image/png', 'image/webp']
-    if (!allowed.includes(file.type)) {
-      return { error: { message: 'Solo se permiten imágenes JPG, PNG o WebP' } }
-    }
+    if (!allowed.includes(file.type)) return { error: { message: 'Solo se permiten imágenes JPG, PNG o WebP' } }
     const ext = file.name.split('.').pop()
     const path = `${userId}/avatar.${ext}`
-    const { error: uploadError } = await supabase.storage
-      .from('avatars').upload(path, file, { upsert: true })
+    const { error: uploadError } = await supabase.storage.from('avatars').upload(path, file, { upsert: true })
     if (uploadError) return { error: uploadError }
     const { data: { publicUrl } } = supabase.storage.from('avatars').getPublicUrl(path)
-    // Fuerza cache-busting
     const urlWithCacheBust = `${publicUrl}?t=${Date.now()}`
     await updateProfile({ avatar_url: urlWithCacheBust })
     return { url: urlWithCacheBust, error: null }
