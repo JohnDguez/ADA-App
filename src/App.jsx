@@ -125,7 +125,7 @@ export default function App() {
           onClearAllNotifs={clearAll}
         />
       )}
-      {tab === 'payments'   && <PaymentsPage payments={payments} {...headerProps} />}
+      {tab === 'payments'   && <PaymentsPage payments={payments} {...headerProps} onMarkUnpaid={handleMarkUnpaid} onDelete={handleDelete} />}
       {tab === 'recurrents' && <RecurrentsPage payments={payments} onPause={handlePauseRecurrent} onResume={handleResumeRecurrent} onDelete={handleDeleteRecurrent} onEdit={openEdit} />}
       {tab === 'settings'   && <SettingsPage profile={profile} user={user} onUpdate={updateProfile} onUploadAvatar={uploadAvatar} />}
 
