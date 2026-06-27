@@ -24,12 +24,9 @@ export function usePayments(userId) {
 
   async function addInstallmentPayment({ name, amount, totalInstallments, startFrom, recurFreq, category, firstDate }) {
     const toInsert = []
-    // firstDate es la fecha real del pago #1, puede ser pasada
     let currentDate = new Date(firstDate + 'T12:00:00')
-
     for (let i = 1; i <= totalInstallments; i++) {
       const dateStr = currentDate.toISOString().split('T')[0]
-      // Pagados: todos los anteriores a startFrom
       const isPaid = i < startFrom
       toInsert.push({
         user_id: userId, name, amount,
@@ -45,7 +42,6 @@ export function usePayments(userId) {
       })
       currentDate = nextPeriodDate(dateStr, recurFreq)
     }
-
     const { data, error } = await supabase.from('payments').insert(toInsert).select()
     if (!error) setPayments(prev => [...prev, ...data])
     return { data, error }
@@ -66,12 +62,15 @@ export function usePayments(userId) {
   }
 
   async function markUnpaid(id) {
-    const { error } = await supabase
+    // Usar .match() en lugar de dos .eq() encadenados — Supabase JS v2 no combina
+    // múltiples .eq() en .update() con AND; el segundo sobreescribe al primero.
+    const { data, error } = await supabase
       .from('payments')
       .update({ is_paid: false, paid_at: null })
-      .eq('id', id)
-      .eq('user_id', userId)
-    if (!error) setPayments(prev => prev.map(p => p.id === id ? { ...p, is_paid: false, paid_at: null } : p))
+      .match({ id, user_id: userId })
+      .select()
+      .single()
+    if (!error && data) setPayments(prev => prev.map(p => p.id === id ? { ...p, ...data } : p))
     return { error }
   }
 
@@ -119,7 +118,6 @@ export function usePayments(userId) {
   async function deleteRecurrentFuture(name) {
     const ids = payments.filter(p => p.name === name && p.is_recurrent && !p.is_paid).map(p => p.id)
     if (!ids.length) return { error: null }
-    // RLS ya garantiza que solo el usuario borra sus pagos — no encadenar .eq() con .in()
     const { error } = await supabase.from('payments').delete().in('id', ids)
     if (!error) setPayments(prev => prev.filter(p => !ids.includes(p.id)))
     return { error }
