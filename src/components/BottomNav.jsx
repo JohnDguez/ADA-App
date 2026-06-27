@@ -11,86 +11,57 @@ const RIGHT_TABS = [
 
 export function BottomNav({ active, onChange, onAdd }) {
   return (
-    <div style={{
+    <nav style={{
       position: 'fixed',
       bottom: 16,
       left: '50%',
       transform: 'translateX(-50%)',
       width: 'calc(100% - 32px)',
       maxWidth: 388,
+      background: '#014BA3',
+      borderRadius: 10,
+      display: 'flex',
+      alignItems: 'center',
+      padding: '8px',
+      gap: 4,
+      boxShadow: '0 8px 24px rgba(1,75,163,0.35), 0 2px 8px rgba(0,0,0,0.2)',
       zIndex: 100,
-      height: 64,
+      overflow: 'visible',
     }}>
+      {LEFT_TABS.map(({ id, Icon }) => (
+        <TabBtn key={id} id={id} Icon={Icon} active={active === id} onChange={onChange} />
+      ))}
 
-      {/* Nav con SVG clip-path para crear hueco circular */}
-      <svg width="0" height="0" style={{ position: 'absolute' }}>
-        <defs>
-          <clipPath id="navClip" clipPathUnits="objectBoundingBox">
-            {/* Rectángulo completo menos círculo central */}
-            <path d="
-              M0,0 L1,0 L1,1 L0,1 Z
-              M0.5,0
-              m-0.115,0
-              a0.115,1 0 1,0 0.23,0
-              a0.115,1 0 1,0 -0.23,0
-            " fillRule="evenodd" />
-          </clipPath>
-        </defs>
-      </svg>
-
-      {/* Fondo del nav con clip */}
-      <div style={{
-        position: 'absolute',
-        inset: 0,
-        background: '#014BA3',
-        borderRadius: 10,
-        clipPath: 'url(#navClip)',
-        boxShadow: '0 8px 24px rgba(1,75,163,0.35), 0 2px 8px rgba(0,0,0,0.2)',
-      }} />
-
-      {/* Tabs — encima del fondo recortado */}
-      <div style={{
-        position: 'absolute',
-        inset: 0,
-        display: 'flex',
-        alignItems: 'center',
-        padding: '0 8px',
-        gap: 4,
-      }}>
-        {LEFT_TABS.map(({ id, Icon }) => (
-          <TabBtn key={id} id={id} Icon={Icon} active={active === id} onChange={onChange} />
-        ))}
-        {/* Espacio central */}
-        <div style={{ flex: 1 }} />
-        {RIGHT_TABS.map(({ id, Icon }) => (
-          <TabBtn key={id} id={id} Icon={Icon} active={active === id} onChange={onChange} />
-        ))}
+      {/* Botón + dentro del nav, sale hacia arriba con position absolute */}
+      <div style={{ flex: 1, position: 'relative', display: 'flex', justifyContent: 'center' }}>
+        <button
+          onClick={onAdd}
+          style={{
+            position: 'absolute',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -72%)',
+            width: 56,
+            height: 56,
+            borderRadius: '50%',
+            background: 'var(--accent)',
+            border: 'none',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            boxShadow: '0 4px 20px rgba(47,140,250,0.55)',
+            cursor: 'pointer',
+            zIndex: 1, // menor que los TabBtn
+          }}
+        >
+          <Plus size={26} color="#fff" strokeWidth={2.5} />
+        </button>
       </div>
 
-      {/* Botón + flotante encima de todo */}
-      <button
-        onClick={onAdd}
-        style={{
-          position: 'absolute',
-          top: '50%',
-          left: '50%',
-          transform: 'translate(-50%, -46%)',
-          width: 56,
-          height: 56,
-          borderRadius: '50%',
-          background: 'var(--accent)',
-          border: 'none',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          boxShadow: '0 4px 20px rgba(47,140,250,0.55)',
-          cursor: 'pointer',
-          zIndex: 101,
-        }}
-      >
-        <Plus size={26} color="#fff" strokeWidth={2.5} />
-      </button>
-    </div>
+      {RIGHT_TABS.map(({ id, Icon }) => (
+        <TabBtn key={id} id={id} Icon={Icon} active={active === id} onChange={onChange} />
+      ))}
+    </nav>
   )
 }
 
@@ -104,7 +75,6 @@ function TabBtn({ id, Icon, active, onChange }) {
         alignItems: 'center',
         justifyContent: 'center',
         padding: '10px 4px',
-        height: '100%',
         border: 'none',
         cursor: 'pointer',
         borderRadius: 8,
@@ -113,7 +83,7 @@ function TabBtn({ id, Icon, active, onChange }) {
           : 'none',
         transition: 'background .2s',
         position: 'relative',
-        zIndex: 101,
+        zIndex: 2, // mayor que el botón +
       }}
     >
       <Icon size={22} strokeWidth={active ? 2.2 : 1.8} color={active ? '#fff' : 'rgba(255,255,255,0.5)'} />
