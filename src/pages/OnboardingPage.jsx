@@ -136,8 +136,8 @@ export function OnboardingPage({ userId, onDone }) {
                       ? !([{d1:1,d2:16},{d1:13,d2:28},{d1:15,d2:30}].some(p => p.d1===cobroDay1 && p.d2===cobroDay2))
                       : cobroDay1 === preset.d1 && cobroDay2 === preset.d2
                     return (
-                      <button key={preset.label} onClick={() => { setCobroDay1(preset.d1 ?? cobroDay1); setCobroDay2(preset.d2 ?? cobroDay2) }}
-                        style={{ padding: '7px 14px', borderRadius: 5, border: presetActive ? '1.5px solid var(--accent)' : '0.5px solid var(--border)', background: presetActive ? 'var(--accent-soft)' : 'var(--surface)', color: presetActive ? 'var(--accent)' : 'var(--text)', fontWeight: presetActive ? 600 : 400, fontSize: 13, fontFamily: 'DM Sans, sans-serif', cursor: 'pointer' }}>
+                      <button key={preset.label} onClick={() => { if (preset.d1 !== null) { setCobroDay1(preset.d1); setCobroDay2(preset.d2) } else { setCobroDay1(null); setCobroDay2(null) } }}
+                        style={{ padding: '7px 14px', borderRadius: 5, border: presetActive ? '1.5px solid var(--accent)' : '0.5px solid var(--border)', background: presetActive ? 'var(--accent)' : 'var(--surface)', color: presetActive ? '#fff' : 'var(--text)', fontWeight: presetActive ? 600 : 400, fontSize: 13, fontFamily: 'DM Sans, sans-serif', cursor: 'pointer' }}>
                         {preset.label}
                       </button>
                     )
@@ -161,7 +161,7 @@ export function OnboardingPage({ userId, onDone }) {
               <div style={{ marginTop: 16 }}>
                 <label className="field-label">Día de cobro</label>
                 <input type="number" min="1" max="31" value={cobroDay1 ?? ''} onChange={e => setCobroDay1(parseInt(e.target.value)||1)} placeholder="ej. 5" className="field-input" style={{ maxWidth: 120, marginTop: 8 }} />
-                {cobroDay1 && <div style={{ fontSize: 12, fontWeight: 400, color: 'var(--text)', marginTop: 6 }}>Te cobraremos el día <strong>{cobroDay1}</strong> de cada mes.</div>}
+                {cobroDay1 && <div style={{ fontSize: 12, fontWeight: 400, color: 'var(--text)', marginTop: 6 }}>Tu periodo de cobro empieza el día <strong>{cobroDay1}</strong> de cada mes.</div>}
               </div>
             )}
           </div>
