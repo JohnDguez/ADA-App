@@ -5,17 +5,11 @@ export const WEEKDAYS_SHORT = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb']
 export const CATEGORIES = ['Servicios','Suscripciones','Créditos','Renta','Seguros','Alimentación','Otros']
 
 export const RECUR_FREQ = {
-  weekly: 'Semanal',
-  biweekly: 'Quincenal',
-  monthly: 'Mensual',
-  bimonthly: 'Bimestral',
-  quarterly: 'Trimestral',
-  semiannual: 'Semestral',
-  annual: 'Anual',
+  weekly: 'Semanal', biweekly: 'Quincenal', monthly: 'Mensual',
+  bimonthly: 'Bimestral', quarterly: 'Trimestral', semiannual: 'Semestral', annual: 'Anual',
 }
-
 export const RECUR_FREQ_COMMON = ['weekly', 'biweekly', 'monthly']
-export const RECUR_FREQ_EXTRA = ['bimonthly', 'quarterly', 'semiannual', 'annual']
+export const RECUR_FREQ_EXTRA  = ['bimonthly', 'quarterly', 'semiannual', 'annual']
 
 export function today() {
   const now = new Date()
@@ -37,26 +31,22 @@ export function fmt(n) {
 }
 
 export function addDays(date, n) {
-  const d = new Date(date)
-  d.setDate(d.getDate() + n)
-  return d
+  const d = new Date(date); d.setDate(d.getDate() + n); return d
 }
 
 export function addMonths(date, n) {
-  const d = new Date(date)
-  d.setMonth(d.getMonth() + n)
-  return d
+  const d = new Date(date); d.setMonth(d.getMonth() + n); return d
 }
 
 export function nextPeriodDate(date, freq) {
   const d = typeof date === 'string' ? dateOf(date) : new Date(date)
-  if (freq === 'weekly') return addDays(d, 7)
-  if (freq === 'biweekly') return addDays(d, 14)
-  if (freq === 'monthly') return addMonths(d, 1)
-  if (freq === 'bimonthly') return addMonths(d, 2)
-  if (freq === 'quarterly') return addMonths(d, 3)
+  if (freq === 'weekly')     return addDays(d, 7)
+  if (freq === 'biweekly')   return addDays(d, 14)
+  if (freq === 'monthly')    return addMonths(d, 1)
+  if (freq === 'bimonthly')  return addMonths(d, 2)
+  if (freq === 'quarterly')  return addMonths(d, 3)
   if (freq === 'semiannual') return addMonths(d, 6)
-  if (freq === 'annual') return addMonths(d, 12)
+  if (freq === 'annual')     return addMonths(d, 12)
   return addMonths(d, 1)
 }
 
@@ -78,18 +68,18 @@ export function nextBiweeklyFromDate(dateStr) {
 
 export function periodLabel(dateStr, freq) {
   const d = dateOf(dateStr)
-  if (freq === 'weekly') return `Sem ${d.getDate()} ${MONTHS_SHORT[d.getMonth()]}`
+  if (freq === 'weekly')   return `Sem ${d.getDate()} ${MONTHS_SHORT[d.getMonth()]}`
   if (freq === 'biweekly') return `Qna ${d.getDate()} ${MONTHS_SHORT[d.getMonth()]}`
   return `${MONTHS_SHORT[d.getMonth()]} ${d.getFullYear()}`
 }
 
 export function periodCountLabel(count, freq) {
-  if (freq === 'weekly') return `${count} semana${count !== 1 ? 's' : ''}`
-  if (freq === 'biweekly') return `${count} quincena${count !== 1 ? 's' : ''}`
+  if (freq === 'weekly')    return `${count} semana${count !== 1 ? 's' : ''}`
+  if (freq === 'biweekly')  return `${count} quincena${count !== 1 ? 's' : ''}`
   if (freq === 'bimonthly') return `${count} bimestre${count !== 1 ? 's' : ''}`
   if (freq === 'quarterly') return `${count} trimestre${count !== 1 ? 's' : ''}`
-  if (freq === 'semiannual') return `${count} semestre${count !== 1 ? 's' : ''}`
-  if (freq === 'annual') return `${count} año${count !== 1 ? 's' : ''}`
+  if (freq === 'semiannual')return `${count} semestre${count !== 1 ? 's' : ''}`
+  if (freq === 'annual')    return `${count} año${count !== 1 ? 's' : ''}`
   return `${count} mes${count !== 1 ? 'es' : ''}`
 }
 
@@ -98,23 +88,86 @@ export function installmentLabel(p) {
   return `Pago ${p.current_installment}/${p.total_installments}`
 }
 
+// ── cobroPeriod ────────────────────────────────────────────────────────────────
+// Lógica unificada: el periodo empieza el día de cobro y termina el día anterior
+// al siguiente cobro, para todos los tipos (weekly, biweekly, monthly).
+//
+// Parámetros en profile:
+//   weekly:   cobro_weekday (0-6)
+//   biweekly: cobro_day1, cobro_day2 (ej. 13 y 28)
+//   monthly:  cobro_day1 (ej. 5)
+
 export function cobroPeriod(cfg) {
   const t = today()
+
+  // ── SEMANAL ──
   if (cfg.cobro_freq === 'weekly') {
-    const wd = cfg.cobro_weekday
+    const wd = cfg.cobro_weekday ?? 5
     const td = t.getDay()
     let diffNext = wd - td
     if (diffNext <= 0) diffNext += 7
     const nextCobro = addDays(t, diffNext)
-    const prevCobro = addDays(nextCobro, -7)       // viernes anterior = inicio del periodo
-    const end = addDays(nextCobro, -1)              // jueves antes del próximo cobro
+    const prevCobro = addDays(nextCobro, -7)
+    const end = addDays(nextCobro, -1)
     return { start: prevCobro, end, nextCobro }
   }
+
+  // ── QUINCENAL ──
+  if (cfg.cobro_freq === 'biweekly') {
+    const d1 = cfg.cobro_day1 ?? 1
+    const d2 = cfg.cobro_day2 ?? 16
+    const [dayA, dayB] = d1 < d2 ? [d1, d2] : [d2, d1]
+    const y = t.getFullYear()
+    const m = t.getMonth()
+    const day = t.getDate()
+
+    // Construir las fechas de cobro de este mes y adyacentes
+    const cobroDates = [
+      new Date(y, m - 1, dayA), new Date(y, m - 1, dayB),
+      new Date(y, m, dayA),     new Date(y, m, dayB),
+      new Date(y, m + 1, dayA), new Date(y, m + 1, dayB),
+    ]
+
+    // Encontrar el cobro anterior (start) y el próximo (nextCobro)
+    const past   = cobroDates.filter(d => d <= t).sort((a, b) => b - a)
+    const future = cobroDates.filter(d => d > t).sort((a, b) => a - b)
+
+    const start     = past[0]   || new Date(y, m, dayA)
+    const nextCobro = future[0] || new Date(y, m + 1, dayA)
+    const end       = addDays(nextCobro, -1)
+
+    return { start, end, nextCobro }
+  }
+
+  // ── MENSUAL ──
+  if (cfg.cobro_freq === 'monthly') {
+    const d1  = cfg.cobro_day1 ?? 1
+    const y   = t.getFullYear()
+    const m   = t.getMonth()
+    const day = t.getDate()
+
+    let start, nextCobro
+
+    if (day >= d1) {
+      // Ya cobré este mes → periodo actual
+      start      = new Date(y, m, d1)
+      nextCobro  = new Date(y, m + 1, d1)
+    } else {
+      // Aún no cobro → periodo del mes anterior
+      start      = new Date(y, m - 1, d1)
+      nextCobro  = new Date(y, m, d1)
+    }
+
+    const end = addDays(nextCobro, -1)
+    return { start, end, nextCobro }
+  }
+
+  // Fallback
   return { start: t, end: t, nextCobro: t }
 }
 
 export function nextCobroDate(cfg) { return cobroPeriod(cfg).nextCobro }
-export function isTodayCobro(cfg) { return nextCobroDate(cfg).getTime() === today().getTime() }
+export function isTodayCobro(cfg)  { return nextCobroDate(cfg).getTime() === today().getTime() }
 
 export function getPagarEsteCobro(payments, cfg) {
   const { end } = cobroPeriod(cfg)
@@ -125,9 +178,9 @@ export function getPagarEsteCobro(payments, cfg) {
 }
 
 export function statusOf(p, cfg) {
-  if (p.paused) return 'paused'
+  if (p.paused)    return 'paused'
   if (p.postponed) return 'postponed'
-  if (p.is_paid) return 'paid'
+  if (p.is_paid)   return 'paid'
   const d = daysDiff(p.due_date)
   if (d < 0) return 'overdue'
   const { end } = cobroPeriod(cfg)
@@ -137,9 +190,7 @@ export function statusOf(p, cfg) {
 }
 
 export function groupPayments(payments) {
-  const parents = {}
-  const children = {}
-  const standalone = []
+  const parents = {}, children = {}, standalone = []
   payments.forEach(p => {
     if (p.parent_id) {
       if (!children[p.parent_id]) children[p.parent_id] = []
