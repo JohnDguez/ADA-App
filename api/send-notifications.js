@@ -58,7 +58,7 @@ module.exports = async function handler(req, res) {
     if (subsError) return res.status(500).json({ error: subsError.message })
     if (!subs || subs.length === 0) return res.json({ sent: 0, users: 0 })
 
-    // 2. Obtener perfiles de esos usuarios por separado
+    // 2. Obtener perfiles por separado (no hay FK directa a profiles)
     const userIds = subs.map(s => s.user_id)
     const { data: profiles, error: profilesError } = await supabase
       .from('profiles')
@@ -67,11 +67,8 @@ module.exports = async function handler(req, res) {
 
     if (profilesError) return res.status(500).json({ error: profilesError.message })
 
-    // Crear mapa user_id → profile para acceso rápido
     const profileMap = {}
-    for (const p of (profiles || [])) {
-      profileMap[p.id] = p
-    }
+    for (const p of (profiles || [])) profileMap[p.id] = p
 
     let sent = 0
     let skipped = 0
@@ -104,6 +101,7 @@ module.exports = async function handler(req, res) {
 
         if (overdue && overdue.length > 0) {
           notifications.push({
+            type: 'overdue',
             title: `⚠️ ${overdue.length} pago${overdue.length > 1 ? 's' : ''} vencido${overdue.length > 1 ? 's' : ''}`,
             body: overdue.map(p => p.name).join(', '),
             tag: 'overdue',
@@ -126,6 +124,7 @@ module.exports = async function handler(req, res) {
         if (dueToday && dueToday.length > 0) {
           dueToday.forEach(p => {
             notifications.push({
+              type: 'due_today',
               title: `🔔 ${p.name} vence hoy`,
               body: 'No olvides hacer el pago y registrarlo',
               tag: `due-today-${p.name}`,
@@ -138,8 +137,8 @@ module.exports = async function handler(req, res) {
 
       // Pagos próximos
       if (profile.notif_upcoming !== false) {
-        const daysAhead  = profile.notif_days_before ?? 3
-        const futureDate = new Date(today)
+        const daysAhead     = profile.notif_days_before ?? 3
+        const futureDate    = new Date(today)
         futureDate.setDate(futureDate.getDate() + daysAhead)
         const futureDateStr = futureDate.toISOString().split('T')[0]
         const tomorrow      = new Date(today)
@@ -157,6 +156,7 @@ module.exports = async function handler(req, res) {
 
         if (upcoming && upcoming.length > 0) {
           notifications.push({
+            type: 'upcoming',
             title: `📅 ${upcoming.length} pago${upcoming.length > 1 ? 's' : ''} próximo${upcoming.length > 1 ? 's' : ''}`,
             body: `${upcoming.map(p => p.name).join(', ')} — vence${upcoming.length > 1 ? 'n' : ''} pronto`,
             tag: 'upcoming',
@@ -179,8 +179,8 @@ module.exports = async function handler(req, res) {
             .lte('due_date', todayStr)
 
           if (pendingToday && pendingToday.length > 0) {
-            const total = pendingToday.reduce((a, p) => a + Number(p.amount || 0), 0)
             notifications.push({
+              type: 'cobro_day',
               title: `💰 Hoy es tu día de cobro`,
               body: `Tienes ${pendingToday.length} pago${pendingToday.length > 1 ? 's' : ''} pendiente${pendingToday.length > 1 ? 's' : ''} por cubrir`,
               tag: 'cobro-day',
@@ -191,10 +191,30 @@ module.exports = async function handler(req, res) {
         }
       }
 
-      // Enviar notificaciones
+      if (notifications.length === 0) continue
+
+      // 3. Guardar en tabla notifications (para el panel in-app)
+      const toInsert = notifications.map(n => ({
+        user_id: sub.user_id,
+        type:    n.type,
+        title:   n.title,
+        body:    n.body,
+        url:     n.url,
+        read:    false,
+      }))
+
+      await supabase.from('notifications').insert(toInsert)
+
+      // 4. Enviar push
       for (const notif of notifications) {
         try {
-          await webpush.sendNotification(sub.subscription, JSON.stringify(notif))
+          await webpush.sendNotification(sub.subscription, JSON.stringify({
+            title:  notif.title,
+            body:   notif.body,
+            tag:    notif.tag,
+            urgent: notif.urgent,
+            url:    notif.url,
+          }))
           sent++
         } catch (e) {
           if (e.statusCode === 410) {
