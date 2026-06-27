@@ -1,8 +1,8 @@
 import { Home, Wallet, CalendarClock, User, Plus } from 'lucide-react'
 
 const LEFT_TABS = [
-  { id: 'home',       Icon: Home },
-  { id: 'payments',   Icon: Wallet },
+  { id: 'home',     Icon: Home },
+  { id: 'payments', Icon: Wallet },
 ]
 const RIGHT_TABS = [
   { id: 'recurrents', Icon: CalendarClock },
@@ -19,73 +19,77 @@ export function BottomNav({ active, onChange, onAdd }) {
       width: 'calc(100% - 32px)',
       maxWidth: 388,
       zIndex: 100,
-      // El contenedor NO tiene background ni overflow hidden
+      height: 64,
     }}>
-      {/* Nav izquierda */}
+
+      {/* Nav con SVG clip-path para crear hueco circular */}
+      <svg width="0" height="0" style={{ position: 'absolute' }}>
+        <defs>
+          <clipPath id="navClip" clipPathUnits="objectBoundingBox">
+            {/* Rectángulo completo menos círculo central */}
+            <path d="
+              M0,0 L1,0 L1,1 L0,1 Z
+              M0.5,0
+              m-0.115,0
+              a0.115,1 0 1,0 0.23,0
+              a0.115,1 0 1,0 -0.23,0
+            " fillRule="evenodd" />
+          </clipPath>
+        </defs>
+      </svg>
+
+      {/* Fondo del nav con clip */}
       <div style={{
         position: 'absolute',
-        bottom: 0, left: 0,
-        width: 'calc(50% - 38px)',
+        inset: 0,
         background: '#014BA3',
-        borderRadius: '10px 0 0 10px',
+        borderRadius: 10,
+        clipPath: 'url(#navClip)',
+        boxShadow: '0 8px 24px rgba(1,75,163,0.35), 0 2px 8px rgba(0,0,0,0.2)',
+      }} />
+
+      {/* Tabs — encima del fondo recortado */}
+      <div style={{
+        position: 'absolute',
+        inset: 0,
         display: 'flex',
-        padding: '8px 8px 8px 8px',
+        alignItems: 'center',
+        padding: '0 8px',
         gap: 4,
-        boxShadow: '0 8px 24px rgba(1,75,163,0.35)',
-        zIndex: 100,
       }}>
         {LEFT_TABS.map(({ id, Icon }) => (
           <TabBtn key={id} id={id} Icon={Icon} active={active === id} onChange={onChange} />
         ))}
-      </div>
-
-      {/* Nav derecha */}
-      <div style={{
-        position: 'absolute',
-        bottom: 0, right: 0,
-        width: 'calc(50% - 38px)',
-        background: '#014BA3',
-        borderRadius: '0 10px 10px 0',
-        display: 'flex',
-        padding: '8px 8px 8px 8px',
-        gap: 4,
-        boxShadow: '0 8px 24px rgba(1,75,163,0.35)',
-        zIndex: 100,
-      }}>
+        {/* Espacio central */}
+        <div style={{ flex: 1 }} />
         {RIGHT_TABS.map(({ id, Icon }) => (
           <TabBtn key={id} id={id} Icon={Icon} active={active === id} onChange={onChange} />
         ))}
       </div>
 
-      {/* Botón + central — encima de todo */}
-      <div style={{
-        position: 'absolute',
-        bottom: 6,
-        left: '50%',
-        transform: 'translateX(-50%)',
-        zIndex: 102,
-      }}>
-        <button
-          onClick={onAdd}
-          style={{
-            width: 60,
-            height: 60,
-            borderRadius: '50%',
-            background: 'var(--accent)',
-            border: 'none',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            boxShadow: '0 4px 20px rgba(47,140,250,0.55)',
-            cursor: 'pointer',
-          }}
-        >
-          <Plus size={28} color="#fff" strokeWidth={2.5} />
-        </button>
-      </div>
-
-      {/* Spacer para que el contenedor tenga altura */}
-      <div style={{ height: 56 }} />
+      {/* Botón + flotante encima de todo */}
+      <button
+        onClick={onAdd}
+        style={{
+          position: 'absolute',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -46%)',
+          width: 56,
+          height: 56,
+          borderRadius: '50%',
+          background: 'var(--accent)',
+          border: 'none',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          boxShadow: '0 4px 20px rgba(47,140,250,0.55)',
+          cursor: 'pointer',
+          zIndex: 101,
+        }}
+      >
+        <Plus size={26} color="#fff" strokeWidth={2.5} />
+      </button>
     </div>
   )
 }
@@ -100,6 +104,7 @@ function TabBtn({ id, Icon, active, onChange }) {
         alignItems: 'center',
         justifyContent: 'center',
         padding: '10px 4px',
+        height: '100%',
         border: 'none',
         cursor: 'pointer',
         borderRadius: 8,
@@ -107,6 +112,8 @@ function TabBtn({ id, Icon, active, onChange }) {
           ? 'linear-gradient(180deg, rgba(255,255,255,0.25) 0%, rgba(255,255,255,0) 100%)'
           : 'none',
         transition: 'background .2s',
+        position: 'relative',
+        zIndex: 101,
       }}
     >
       <Icon size={22} strokeWidth={active ? 2.2 : 1.8} color={active ? '#fff' : 'rgba(255,255,255,0.5)'} />
