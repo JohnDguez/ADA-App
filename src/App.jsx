@@ -42,8 +42,10 @@ export default function App() {
     if (error) showToast('Error al marcar como pagado')
     else showToast(`${payment.name} marcado como pagado`)
   }
-  async function handleVarConfirm(payment, amount) {
+  async function handleVarConfirm(amount) {
+    const payment = varModal.payment
     setVarModal({ open: false, payment: null })
+    if (!payment?.id) { showToast('Error: pago no encontrado'); return }
     const { error } = await markPaid(payment.id, amount)
     if (error) showToast('Error al registrar pago')
     else showToast(`${payment.name} registrado — ${fmt(amount)}`)
