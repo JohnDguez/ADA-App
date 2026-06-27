@@ -30,6 +30,15 @@
   --radius: 12px;
   --radius-sm: 8px;
   --radius-full: 999px;
+
+  /* Colores por categoría */
+  --cat-servicios:     #F5A623;
+  --cat-suscripciones: #2ECC71;
+  --cat-creditos:      #3498DB;
+  --cat-renta:         #9B59B6;
+  --cat-seguros:       #1A6FC4;
+  --cat-alimentacion:  #27AE60;
+  --cat-otros:         #E74C3C;
 }
 
 html, body {
