@@ -10,6 +10,7 @@ import { PaymentsPage } from './pages/PaymentsPage'
 import { RecurrentsPage } from './pages/RecurrentsPage'
 import { SettingsPage } from './pages/SettingsPage'
 import { BottomNav } from './components/BottomNav'
+import { NotificationsPanel } from './components/NotificationsPanel'
 import { PaymentModal } from './components/PaymentModal'
 import { VariableAmountModal } from './components/VariableAmountModal'
 import { Toast, showToast } from './components/Toast'
@@ -21,11 +22,11 @@ export default function App() {
   const { payments, addPayment, addInstallmentPayment, updatePayment, markPaid, markUnpaid, postponePayment, pauseRecurrent, resumeRecurrent, deletePayment, deleteRecurrentFuture, deleteInstallmentFuture, deleteGroup } = usePayments(user?.id)
   const { profile, loading: profileLoading, updateProfile, uploadAvatar } = useProfile(user?.id)
   const { notifications, unreadCount, markAsRead, markAllAsRead, deleteNotification, clearAll } = useNotifications(user?.id)
-  const [tab, setTab] = useState('home')
-  const [modalOpen, setModalOpen] = useState(false)
+  const [tab,        setTab]        = useState('home')
+  const [modalOpen,  setModalOpen]  = useState(false)
   const [editPayment, setEditPayment] = useState(null)
-  const [varModal, setVarModal] = useState({ open: false, payment: null })
-  const [notifOpen, setNotifOpen] = useState(false)
+  const [varModal,   setVarModal]   = useState({ open: false, payment: null })
+  const [notifOpen,  setNotifOpen]  = useState(false)
 
   if (authLoading || (user && profileLoading)) return <Splash />
   if (isRecovery) return <ResetPasswordPage onDone={() => setIsRecovery(false)} />
@@ -99,14 +100,15 @@ export default function App() {
     onPostpone: handlePostpone, onAdvance: handleAdvance,
   }
 
-  // Props compartidos del header para páginas que lo necesitan
+  // Props del header compartidos entre páginas
   const headerProps = {
     profile,
-    notifications,
     unreadCount,
     onOpenNotifs: () => setNotifOpen(true),
     onGoSettings: () => setTab('settings'),
   }
+
+  function handleNavigate() { window.scrollTo(0, 0) }
 
   return (
     <>
@@ -121,9 +123,6 @@ export default function App() {
           onMarkAllAsRead={markAllAsRead}
           onDeleteNotif={deleteNotification}
           onClearAllNotifs={clearAll}
-          notifOpen={notifOpen}
-          onOpenNotifs={() => setNotifOpen(true)}
-          onCloseNotifs={() => setNotifOpen(false)}
         />
       )}
       {tab === 'payments'   && <PaymentsPage payments={payments} {...headerProps} />}
@@ -131,6 +130,19 @@ export default function App() {
       {tab === 'settings'   && <SettingsPage profile={profile} user={user} onUpdate={updateProfile} onUploadAvatar={uploadAvatar} />}
 
       <BottomNav active={tab} onChange={setTab} onAdd={openAdd} />
+
+      {/* Panel de notificaciones — global, funciona desde cualquier página */}
+      <NotificationsPanel
+        open={notifOpen}
+        onClose={() => setNotifOpen(false)}
+        notifications={notifications}
+        unreadCount={unreadCount}
+        onMarkAsRead={markAsRead}
+        onMarkAllAsRead={markAllAsRead}
+        onDelete={deleteNotification}
+        onClearAll={clearAll}
+        onNavigate={handleNavigate}
+      />
 
       <PaymentModal open={modalOpen} onClose={() => { setModalOpen(false); setEditPayment(null) }} onSave={handleSave} onSaveInstallment={handleSaveInstallment} onDelete={handleDelete} initial={editPayment} payments={payments} />
       <VariableAmountModal open={varModal.open} payment={varModal.payment} onConfirm={handleVarConfirm} onClose={() => setVarModal({ open: false, payment: null })} />
