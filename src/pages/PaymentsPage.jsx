@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { ChevronLeft, ChevronRight, MoreVertical } from 'lucide-react'
 import { PageHeader } from '../components/PageHeader'
 import { fmt, dateOf, MONTHS, MONTHS_SHORT, CATEGORIES, cobroPeriod } from '../lib/utils'
 
@@ -13,7 +13,7 @@ const CAT_COLOR = {
   'Otros':         'var(--cat-otros)',
 }
 
-export function PaymentsPage({ payments, profile, unreadCount, onOpenNotifs, onGoSettings }) {
+export function PaymentsPage({ payments, profile, unreadCount, onOpenNotifs, onGoSettings, onMarkUnpaid, onDelete }) {
   const now = new Date()
 
   const [monthsBack,  setMonthsBack]  = useState(3)
@@ -21,6 +21,7 @@ export function PaymentsPage({ payments, profile, unreadCount, onOpenNotifs, onG
   const [catRange,    setCatRange]    = useState('mes')
   const [viewMonth,   setViewMonth]   = useState(now.getMonth())
   const [viewYear,    setViewYear]    = useState(now.getFullYear())
+  const [openMenu,    setOpenMenu]    = useState(null) // id del pago con menú abierto
 
   const paidPayments = payments.filter(p => p.is_paid)
 
@@ -31,7 +32,7 @@ export function PaymentsPage({ payments, profile, unreadCount, onOpenNotifs, onG
     })
   }
 
-  // Gráfica
+  // ── Gráfica ──────────────────────────────────────────────
   function getMonthsArray(n) {
     const arr = []
     for (let i = n - 1; i >= 0; i--) {
@@ -55,7 +56,7 @@ export function PaymentsPage({ payments, profile, unreadCount, onOpenNotifs, onG
   const grandTotal  = chartTotals.reduce((a, b) => a + b, 0)
   const avgMonthly  = grandTotal / monthsBack
 
-  // Por categoría
+  // ── Por categoría ─────────────────────────────────────────
   function getCatTotal(cat) {
     if (catRange === 'mes') {
       return paidInMonth(now.getMonth(), now.getFullYear(), cat).reduce((a, p) => a + Number(p.amount), 0)
@@ -78,7 +79,7 @@ export function PaymentsPage({ payments, profile, unreadCount, onOpenNotifs, onG
 
   const maxCat = Math.max(...catData.map(d => d.total), 1)
 
-  // Pagos del mes
+  // ── Pagos realizados ──────────────────────────────────────
   function changeViewMonth(delta) {
     let m = viewMonth + delta, y = viewYear
     if (m > 11) { m = 0; y++ }
@@ -86,11 +87,21 @@ export function PaymentsPage({ payments, profile, unreadCount, onOpenNotifs, onG
     setViewMonth(m); setViewYear(y)
   }
 
+  // Filtros de mes y año
+  const availableYears = [...new Set(paidPayments.map(p => dateOf(p.due_date).getFullYear()))].sort((a, b) => b - a)
+  if (!availableYears.includes(viewYear)) availableYears.unshift(viewYear)
+
   const paidInView  = paidInMonth(viewMonth, viewYear).sort((a, b) => dateOf(b.due_date) - dateOf(a.due_date))
   const totalInView = paidInView.reduce((a, p) => a + Number(p.amount), 0)
 
+  function handleMenuAction(action, payment) {
+    setOpenMenu(null)
+    if (action === 'unpaid') onMarkUnpaid && onMarkUnpaid(payment.id)
+    if (action === 'delete') onDelete && onDelete(payment.id, payment)
+  }
+
   return (
-    <div style={{ paddingBottom: 120, background: 'var(--bg)', minHeight: '100vh' }}>
+    <div style={{ paddingBottom: 120, background: 'var(--bg)', minHeight: '100vh' }} onClick={() => setOpenMenu(null)}>
 
       <PageHeader
         profile={profile}
@@ -99,7 +110,6 @@ export function PaymentsPage({ payments, profile, unreadCount, onOpenNotifs, onG
         onGoSettings={onGoSettings}
       />
 
-      {/* Contenido */}
       <div style={{ background: 'var(--bg)', borderRadius: '24px 24px 0 0', marginTop: -24, position: 'relative', zIndex: 10, paddingTop: 20 }}>
 
         {/* Título */}
@@ -116,16 +126,16 @@ export function PaymentsPage({ payments, profile, unreadCount, onOpenNotifs, onG
         </div>
 
         {/* Stats */}
-        <div style={{ margin: '0 16px 12px', background: 'var(--surface)', border: '0.5px solid var(--border)', borderRadius: 'var(--radius)', padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 16 }}>
+        <div style={{ margin: '0 16px 12px', background: 'var(--surface)', borderRadius: 'var(--radius)', padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 16 }}>
           <div style={{ flex: 1.6 }}>
-            <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--text)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 4 }}>
+            <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--text)', textTransform: 'none', marginBottom: 4 }}>
               Total {monthsBack} meses
             </div>
             <div style={{ fontSize: 28, fontWeight: 700, color: 'var(--text)', lineHeight: 1.1 }}>{fmt(grandTotal)}</div>
           </div>
           <div style={{ width: 1, height: 40, background: 'var(--border)', flexShrink: 0 }} />
           <div style={{ flex: 1 }}>
-            <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--text)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 4 }}>
+            <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--text)', marginBottom: 4 }}>
               Promedio mensual
             </div>
             <div style={{ fontSize: 20, fontWeight: 700, color: 'var(--text)', lineHeight: 1.1 }}>{fmt(Math.round(avgMonthly))}</div>
@@ -140,9 +150,9 @@ export function PaymentsPage({ payments, profile, unreadCount, onOpenNotifs, onG
         </div>
 
         {/* Gráfica */}
-        <div style={{ margin: '0 16px 20px', background: 'var(--surface)', border: '0.5px solid var(--border)', borderRadius: 'var(--radius)', padding: '16px 14px' }}>
-          <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--text)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 14 }}>
-            Gastos mensuales
+        <div style={{ margin: '0 16px 20px', background: 'var(--surface)', borderRadius: 'var(--radius)', padding: '16px 14px' }}>
+          <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)', marginBottom: 14 }}>
+            Gastos Mensuales
           </div>
           <div style={{ display: 'flex', alignItems: 'flex-end', gap: 6, height: 100 }}>
             {chartMonths.map((m, i) => {
@@ -181,7 +191,7 @@ export function PaymentsPage({ payments, profile, unreadCount, onOpenNotifs, onG
             <span style={{ fontSize: 15, fontWeight: 700, color: 'var(--text)' }}>Por Categoría</span>
           </div>
           <div style={{ display: 'flex', gap: 6, marginBottom: 14 }}>
-            {[{ id: 'mes', label: 'Mes actual' }, { id: 'periodo', label: 'Periodo' }, { id: 'año', label: 'Año' }].map(o => (
+            {[{ id: 'mes', label: 'Mes Actual' }, { id: 'periodo', label: 'Periodo' }, { id: 'año', label: 'Año' }].map(o => (
               <FilterChip key={o.id} label={o.label} active={catRange === o.id} onClick={() => setCatRange(o.id)} />
             ))}
           </div>
@@ -213,26 +223,42 @@ export function PaymentsPage({ payments, profile, unreadCount, onOpenNotifs, onG
           )}
         </div>
 
-        {/* Pagos realizados */}
+        {/* ── Pagos realizados ── */}
         <div style={{ padding: '0 16px' }}>
+
+          {/* Header sección */}
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
             <span style={{ fontSize: 15, fontWeight: 700, color: 'var(--text)' }}>Pagos</span>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-              <button onClick={() => changeViewMonth(-1)} style={{ background: 'none', border: 'none', padding: 4, display: 'flex', cursor: 'pointer' }}>
-                <ChevronLeft size={18} color="var(--text)" />
-              </button>
-              <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)', minWidth: 110, textAlign: 'center' }}>
-                {MONTHS[viewMonth]} {viewYear}
-              </span>
-              <button onClick={() => changeViewMonth(1)} style={{ background: 'none', border: 'none', padding: 4, display: 'flex', cursor: 'pointer' }}>
-                <ChevronRight size={18} color="var(--text)" />
-              </button>
+          </div>
+
+          {/* Filtros Mes y Año */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+            <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--text)' }}>Filtros</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <span style={{ fontSize: 12, fontWeight: 500, color: 'var(--text)' }}>Mes:</span>
+              <select
+                value={viewMonth}
+                onChange={e => setViewMonth(Number(e.target.value))}
+                style={{ padding: '5px 8px', borderRadius: 5, border: '0.5px solid var(--border)', background: 'var(--surface)', color: 'var(--text)', fontSize: 12, fontWeight: 500, fontFamily: 'DM Sans, sans-serif', outline: 'none', cursor: 'pointer' }}
+              >
+                {MONTHS.map((m, i) => <option key={i} value={i}>{m}</option>)}
+              </select>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <span style={{ fontSize: 12, fontWeight: 500, color: 'var(--text)' }}>Año:</span>
+              <select
+                value={viewYear}
+                onChange={e => setViewYear(Number(e.target.value))}
+                style={{ padding: '5px 8px', borderRadius: 5, border: '0.5px solid var(--border)', background: 'var(--surface)', color: 'var(--text)', fontSize: 12, fontWeight: 500, fontFamily: 'DM Sans, sans-serif', outline: 'none', cursor: 'pointer' }}
+              >
+                {availableYears.map(y => <option key={y} value={y}>{y}</option>)}
+              </select>
             </div>
           </div>
 
           {paidInView.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '32px 0', fontSize: 13, fontWeight: 500, color: 'var(--text)' }}>
-              Sin pagos realizados en {MONTHS[viewMonth]}
+              Sin pagos realizados en {MONTHS[viewMonth]} {viewYear}
             </div>
           ) : (
             <>
@@ -241,12 +267,11 @@ export function PaymentsPage({ payments, profile, unreadCount, onOpenNotifs, onG
                   Total: <strong style={{ fontWeight: 700 }}>{fmt(totalInView)}</strong>
                 </span>
               </div>
-              <div style={{ background: 'var(--surface)', border: '0.5px solid var(--border)', borderRadius: 'var(--radius)', overflow: 'hidden' }}>
+              <div style={{ background: 'var(--surface)', borderRadius: 'var(--radius)', overflow: 'hidden' }}>
                 {paidInView.map((p, i) => {
-                  const d        = dateOf(p.due_date)
+                  const paidDate = p.paid_at ? new Date(p.paid_at) : dateOf(p.due_date)
                   const isLast   = i === paidInView.length - 1
-                  const paidDate = p.paid_at ? new Date(p.paid_at) : null
-                  const paidStr  = paidDate ? `Pagado el ${paidDate.getDate()} de ${MONTHS_SHORT[paidDate.getMonth()]}` : null
+                  const menuOpen = openMenu === p.id
                   return (
                     <div key={p.id} style={{
                       display: 'flex', alignItems: 'center',
@@ -254,11 +279,12 @@ export function PaymentsPage({ payments, profile, unreadCount, onOpenNotifs, onG
                       borderBottom: isLast ? 'none' : '0.5px solid var(--bg)',
                       borderLeft: '4px solid var(--paid)',
                       gap: 10,
+                      position: 'relative',
                     }}>
-                      {/* Fecha */}
+                      {/* Fecha de pago */}
                       <div style={{ textAlign: 'center', minWidth: 28, flexShrink: 0 }}>
-                        <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text)', lineHeight: 1 }}>{d.getDate()}</div>
-                        <div style={{ fontSize: 9, fontWeight: 600, color: 'var(--text)', textTransform: 'uppercase' }}>{MONTHS_SHORT[d.getMonth()]}</div>
+                        <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text)', lineHeight: 1 }}>{paidDate.getDate()}</div>
+                        <div style={{ fontSize: 9, fontWeight: 600, color: 'var(--text)', textTransform: 'uppercase' }}>{MONTHS_SHORT[paidDate.getMonth()]}</div>
                       </div>
                       <div style={{ width: 1, height: 28, background: 'var(--border)', flexShrink: 0 }} />
                       {/* Info */}
@@ -277,16 +303,47 @@ export function PaymentsPage({ payments, profile, unreadCount, onOpenNotifs, onG
                           {p.is_recurrent && <span style={{ fontWeight: 400 }}>· Mensual</span>}
                         </div>
                       </div>
-                      {/* Monto */}
+                      {/* Monto + etiqueta variable */}
                       <div style={{ textAlign: 'right', flexShrink: 0 }}>
                         <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text)' }}>{fmt(p.amount)}</div>
                         {p.is_variable && (
-                          <span style={{ fontSize: 9, background: '#8B5CF6', color: '#fff', padding: '1px 5px', borderRadius: 4, fontWeight: 600 }}>
+                          <span style={{ fontSize: 9, background: '#6884A9', color: '#fff', padding: '1px 6px', borderRadius: 4, fontWeight: 600 }}>
                             Variable
                           </span>
                         )}
-                        {paidStr && (
-                          <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--paid)', marginTop: 1 }}>{paidStr}</div>
+                      </div>
+                      {/* Tres puntos */}
+                      <div style={{ position: 'relative', flexShrink: 0 }}>
+                        <button
+                          onClick={e => { e.stopPropagation(); setOpenMenu(menuOpen ? null : p.id) }}
+                          style={{ background: 'none', border: 'none', padding: '4px', display: 'flex', alignItems: 'center', cursor: 'pointer', borderRadius: 4 }}
+                        >
+                          <MoreVertical size={16} color="var(--text)" strokeWidth={1.8} />
+                        </button>
+                        {menuOpen && (
+                          <div
+                            onClick={e => e.stopPropagation()}
+                            style={{
+                              position: 'absolute', right: 0, top: 28, zIndex: 200,
+                              background: 'var(--surface)', borderRadius: 'var(--radius-sm)',
+                              boxShadow: '0 4px 16px rgba(0,0,0,0.12)',
+                              minWidth: 160, overflow: 'hidden',
+                            }}
+                          >
+                            <button
+                              onClick={() => handleMenuAction('unpaid', p)}
+                              style={{ width: '100%', padding: '10px 14px', background: 'none', border: 'none', textAlign: 'left', fontSize: 13, fontWeight: 500, color: 'var(--text)', cursor: 'pointer', display: 'block' }}
+                            >
+                              Marcar como no pagado
+                            </button>
+                            <div style={{ height: '0.5px', background: 'var(--bg)' }} />
+                            <button
+                              onClick={() => handleMenuAction('delete', p)}
+                              style={{ width: '100%', padding: '10px 14px', background: 'none', border: 'none', textAlign: 'left', fontSize: 13, fontWeight: 500, color: 'var(--danger)', cursor: 'pointer', display: 'block' }}
+                            >
+                              Eliminar
+                            </button>
+                          </div>
                         )}
                       </div>
                     </div>
