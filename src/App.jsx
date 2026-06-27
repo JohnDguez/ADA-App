@@ -25,14 +25,15 @@ export default function App() {
   const [modalOpen, setModalOpen] = useState(false)
   const [editPayment, setEditPayment] = useState(null)
   const [varModal, setVarModal] = useState({ open: false, payment: null })
+  const [notifOpen, setNotifOpen] = useState(false)
 
   if (authLoading || (user && profileLoading)) return <Splash />
   if (isRecovery) return <ResetPasswordPage onDone={() => setIsRecovery(false)} />
   if (!user) return <AuthPage />
   if (user && !profile.onboarding_completed) return <OnboardingPage userId={user.id} onDone={updateProfile} />
 
-  function openAdd()  { setEditPayment(null); setModalOpen(true) }
-  function openEdit(p){ setEditPayment(p);    setModalOpen(true) }
+  function openAdd()   { setEditPayment(null); setModalOpen(true) }
+  function openEdit(p) { setEditPayment(p);    setModalOpen(true) }
 
   async function handleMarkPaid(payment) {
     if (payment.is_variable) { setVarModal({ open: true, payment }); return }
@@ -74,9 +75,9 @@ export default function App() {
     showToast('Pago eliminado')
   }
 
-  async function handlePauseRecurrent(name)  { await pauseRecurrent(name);         showToast(`${name} pausado`) }
-  async function handleResumeRecurrent(name) { await resumeRecurrent(name);        showToast(`${name} reactivado`) }
-  async function handleDeleteRecurrent(name) { await deleteRecurrentFuture(name);  showToast(`${name} eliminado — el historial se conserva`) }
+  async function handlePauseRecurrent(name)  { await pauseRecurrent(name);        showToast(`${name} pausado`) }
+  async function handleResumeRecurrent(name) { await resumeRecurrent(name);       showToast(`${name} reactivado`) }
+  async function handleDeleteRecurrent(name) { await deleteRecurrentFuture(name); showToast(`${name} eliminado — el historial se conserva`) }
 
   async function handleSave(data) {
     if (editPayment) {
@@ -98,6 +99,15 @@ export default function App() {
     onPostpone: handlePostpone, onAdvance: handleAdvance,
   }
 
+  // Props compartidos del header para páginas que lo necesitan
+  const headerProps = {
+    profile,
+    notifications,
+    unreadCount,
+    onOpenNotifs: () => setNotifOpen(true),
+    onGoSettings: () => setTab('settings'),
+  }
+
   return (
     <>
       {tab === 'home' && (
@@ -111,9 +121,12 @@ export default function App() {
           onMarkAllAsRead={markAllAsRead}
           onDeleteNotif={deleteNotification}
           onClearAllNotifs={clearAll}
+          notifOpen={notifOpen}
+          onOpenNotifs={() => setNotifOpen(true)}
+          onCloseNotifs={() => setNotifOpen(false)}
         />
       )}
-      {tab === 'payments'   && <PaymentsPage payments={payments} profile={profile} />}
+      {tab === 'payments'   && <PaymentsPage payments={payments} {...headerProps} />}
       {tab === 'recurrents' && <RecurrentsPage payments={payments} onPause={handlePauseRecurrent} onResume={handleResumeRecurrent} onDelete={handleDeleteRecurrent} onEdit={openEdit} />}
       {tab === 'settings'   && <SettingsPage profile={profile} user={user} onUpdate={updateProfile} onUploadAvatar={uploadAvatar} />}
 
