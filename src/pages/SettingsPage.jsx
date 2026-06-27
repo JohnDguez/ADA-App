@@ -14,6 +14,10 @@ export function SettingsPage({ profile, user, onUpdate, onUploadAvatar }) {
   const [saving,          setSaving]          = useState(false)
   const [editError,       setEditError]       = useState('')
   const [uploadingAvatar, setUploadingAvatar] = useState(false)
+  const [biweeklyCustom,  setBiweeklyCustom]  = useState(() => {
+    const PRESETS = [{d1:1,d2:16},{d1:13,d2:28},{d1:15,d2:30}]
+    return !PRESETS.some(p => p.d1 === (profile.cobro_day1 ?? 1) && p.d2 === (profile.cobro_day2 ?? 16))
+  })
   const fileRef  = useRef(null)
   const initials = (profile.name || user?.email || 'U').slice(0, 2).toUpperCase()
   const isGoogle = user?.app_metadata?.provider === 'google'
@@ -156,23 +160,22 @@ export function SettingsPage({ profile, user, onUpdate, onUploadAvatar }) {
         {profile.cobro_freq === 'biweekly' && (
           <div style={{ padding: '13px 14px', borderBottom: '0.5px solid var(--border)' }}>
             <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)', marginBottom: 10 }}>Días de quincena</div>
-            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: isCustomBiweekly() ? 12 : 0 }}>
+            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: biweeklyCustom ? 12 : 0 }}>
               {BIWEEKLY_PRESETS.map(preset => {
-                const active = profile.cobro_day1 === preset.d1 && profile.cobro_day2 === preset.d2
+                const active = !biweeklyCustom && profile.cobro_day1 === preset.d1 && profile.cobro_day2 === preset.d2
                 return (
-                  <button key={preset.label} onClick={() => onUpdate({ cobro_day1: preset.d1, cobro_day2: preset.d2 })}
+                  <button key={preset.label} onClick={() => { setBiweeklyCustom(false); onUpdate({ cobro_day1: preset.d1, cobro_day2: preset.d2 }) }}
                     style={{ padding: '7px 14px', borderRadius: 5, border: 'none', background: active ? 'var(--accent)' : 'var(--bg)', color: active ? '#fff' : 'var(--text)', fontWeight: active ? 600 : 400, fontSize: 13, fontFamily: 'DM Sans, sans-serif', cursor: 'pointer' }}>
                     {preset.label}
                   </button>
                 )
               })}
-              <button onClick={() => { if (!isCustomBiweekly()) onUpdate({ cobro_day1: null, cobro_day2: null }) }}
-                style={{ padding: '7px 14px', borderRadius: 5, border: 'none', background: isCustomBiweekly() ? 'var(--accent)' : 'var(--bg)', color: isCustomBiweekly() ? '#fff' : 'var(--text)', fontWeight: isCustomBiweekly() ? 600 : 400, fontSize: 13, fontFamily: 'DM Sans, sans-serif', cursor: 'pointer' }}>
+              <button onClick={() => setBiweeklyCustom(true)}
+                style={{ padding: '7px 14px', borderRadius: 5, border: 'none', background: biweeklyCustom ? 'var(--accent)' : 'var(--bg)', color: biweeklyCustom ? '#fff' : 'var(--text)', fontWeight: biweeklyCustom ? 600 : 400, fontSize: 13, fontFamily: 'DM Sans, sans-serif', cursor: 'pointer' }}>
                 Personalizado
               </button>
             </div>
-            {/* Campos solo visibles en modo personalizado */}
-            {isCustomBiweekly() && (
+            {biweeklyCustom && (
               <div style={{ display: 'flex', gap: 10 }}>
                 <div style={{ flex: 1 }}>
                   <label style={{ display: 'block', fontSize: 11, fontWeight: 500, color: 'var(--text)', marginBottom: 4 }}>Día 1 (1–28)</label>
