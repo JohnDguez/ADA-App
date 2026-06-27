@@ -1,8 +1,8 @@
-import { Home, LayoutGrid, RefreshCw, User, Plus } from 'lucide-react'
+import { Home, Wallet, RefreshCw, User, Plus } from 'lucide-react'
 
 const LEFT_TABS = [
-  { id: 'home',     label: 'Inicio',     Icon: Home },
-  { id: 'payments', label: 'Mis Gastos', Icon: LayoutGrid },
+  { id: 'home',       label: 'Inicio',     Icon: Home },
+  { id: 'payments',   label: 'Mis Gastos', Icon: Wallet },
 ]
 const RIGHT_TABS = [
   { id: 'recurrents', label: 'Fijos',  Icon: RefreshCw },
@@ -36,22 +36,22 @@ export function BottomNav({ active, onChange, onAdd }) {
         <button
           onClick={onAdd}
           style={{
-            width: 52,
-            height: 52,
+            width: 58,
+            height: 58,
             borderRadius: '50%',
             background: 'var(--accent)',
-            border: '3px solid #014BA3',
+            border: '4px solid #014BA3',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            boxShadow: '0 4px 14px rgba(47,140,250,0.45)',
+            boxShadow: '0 4px 16px rgba(47,140,250,0.5)',
             cursor: 'pointer',
-            marginBottom: 20,
+            marginBottom: 24,
             flexShrink: 0,
             transition: 'transform .15s',
           }}
         >
-          <Plus size={24} color="#fff" strokeWidth={2.5} />
+          <Plus size={26} color="#fff" strokeWidth={2.5} />
         </button>
       </div>
 
