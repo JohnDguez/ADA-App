@@ -137,7 +137,7 @@ export default function App() {
       )}
       {tab === 'payments'   && <PaymentsPage payments={payments} {...headerProps} onMarkUnpaid={handleMarkUnpaid} onDelete={handleDelete} onDeleteDirect={async (id) => { await deletePayment(id); showToast('Pago eliminado') }} />}
       {tab === 'recurrents' && <RecurrentsPage payments={payments} onPause={handlePauseRecurrent} onResume={handleResumeRecurrent} onDelete={handleDeleteRecurrent} onEdit={openEdit} />}
-      {tab === 'settings'   && <SettingsPage profile={profile} user={user} onUpdate={updateProfile} onUploadAvatar={uploadAvatar} />}
+      {tab === 'settings'   && <SettingsPage profile={profile} user={user} onUpdate={updateProfile} onUploadAvatar={uploadAvatar} onDataDeleted={() => { refetch() }} />}
 
       <BottomNav active={tab} onChange={t => { setTab(t); sessionStorage.setItem('ada_tab', t); window.scrollTo(0, 0) }} onAdd={openAdd} />
 
