@@ -1,50 +1,126 @@
 import { useState } from 'react'
 import { supabase } from '../lib/supabase'
-import { Mail, Lock, Eye, EyeOff, KeyRound } from 'lucide-react'
+import { Eye, EyeOff, Lock, Mail, KeyRound, X } from 'lucide-react'
 
+// ── Modal de Términos y Condiciones ──────────────────────────────────────────
+function TermsModal({ onClose }) {
+  return (
+    <div
+      onClick={e => e.target === e.currentTarget && onClose()}
+      style={{ position: 'fixed', inset: 0, background: 'rgba(2,10,31,0.5)', zIndex: 300, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}
+    >
+      <div style={{ background: 'var(--surface)', borderRadius: '20px 20px 0 0', width: '100%', maxWidth: 420, maxHeight: '85vh', display: 'flex', flexDirection: 'column' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', borderBottom: '0.5px solid var(--border)', flexShrink: 0 }}>
+          <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--text)' }}>Términos y Condiciones</div>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', padding: 4 }}>
+            <X size={20} color="var(--text)" />
+          </button>
+        </div>
+        <div style={{ overflowY: 'auto', padding: '20px', flex: 1, lineHeight: 1.7, fontSize: 13, color: 'var(--text)' }}>
+
+          <p style={{ marginBottom: 16 }}>Última actualización: junio de 2026</p>
+
+          <p style={{ marginBottom: 16 }}>Bienvenido a <strong>ADA Pay</strong>. Al crear una cuenta, aceptas los presentes Términos y Condiciones de uso. Por favor léelos cuidadosamente antes de continuar.</p>
+
+          <Section title="1. Descripción del servicio">
+            ADA Pay es una aplicación de seguimiento personal de pagos y compromisos financieros. Su propósito es ayudarte a organizar y recordar tus pagos según tu periodo de cobro. ADA Pay no es una institución financiera, no gestiona dinero real, no realiza transferencias y no tiene acceso a tus cuentas bancarias.
+          </Section>
+
+          <Section title="2. Registro y cuenta">
+            Para usar ADA Pay debes crear una cuenta con un correo electrónico válido o mediante tu cuenta de Google. Eres responsable de mantener la confidencialidad de tus credenciales de acceso. Debes ser mayor de 18 años para registrarte.
+          </Section>
+
+          <Section title="3. Uso aceptable">
+            Te comprometes a usar ADA Pay únicamente para fines personales y lícitos. Queda prohibido usar la aplicación para actividades fraudulentas, suplantar identidades, o intentar vulnerar la seguridad del sistema.
+          </Section>
+
+          <Section title="4. Privacidad y datos">
+            Los datos que ingresas en ADA Pay (nombre, pagos, montos) se almacenan de forma segura en servidores de Supabase. No vendemos ni compartimos tu información personal con terceros con fines comerciales. Puedes eliminar tu cuenta y tus datos en cualquier momento desde Ajustes.
+          </Section>
+
+          <Section title="5. Notificaciones push">
+            Si activas las notificaciones, ADA Pay enviará alertas relacionadas con tus pagos registrados. Puedes desactivarlas en cualquier momento desde Ajustes o desde la configuración de tu dispositivo.
+          </Section>
+
+          <Section title="6. Limitación de responsabilidad">
+            ADA Pay es una herramienta de apoyo personal. No garantizamos que el uso de la aplicación prevenga pagos tardíos, cargos por mora u otras consecuencias financieras. El usuario es el único responsable de sus decisiones financieras.
+          </Section>
+
+          <Section title="7. Disponibilidad del servicio">
+            Nos esforzamos por mantener el servicio disponible en todo momento, pero no garantizamos disponibilidad ininterrumpida. Podemos realizar mantenimientos o actualizaciones sin previo aviso.
+          </Section>
+
+          <Section title="8. Modificaciones">
+            Nos reservamos el derecho de modificar estos términos en cualquier momento. Te notificaremos de cambios significativos a través de la aplicación. El uso continuado de ADA Pay tras los cambios implica tu aceptación.
+          </Section>
+
+          <Section title="9. Cancelación">
+            Puedes dejar de usar ADA Pay y eliminar tu cuenta en cualquier momento. Nos reservamos el derecho de suspender cuentas que violen estos términos.
+          </Section>
+
+          <Section title="10. Contacto">
+            Si tienes dudas sobre estos términos, puedes contactarnos a través de los canales disponibles en la aplicación.
+          </Section>
+
+          <p style={{ marginTop: 16, fontWeight: 600 }}>Al crear tu cuenta, confirmas que has leído y aceptas estos Términos y Condiciones.</p>
+        </div>
+        <div style={{ padding: '14px 20px', borderTop: '0.5px solid var(--border)', flexShrink: 0 }}>
+          <button onClick={onClose} className="btn-primary">Entendido</button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function Section({ title, children }) {
+  return (
+    <div style={{ marginBottom: 16 }}>
+      <div style={{ fontWeight: 700, marginBottom: 6 }}>{title}</div>
+      <p>{children}</p>
+    </div>
+  )
+}
+
+// ── Reset Password ────────────────────────────────────────────────────────────
 export function ResetPasswordPage({ onDone }) {
   const [newPassword, setNewPassword] = useState('')
-  const [confirm, setConfirm] = useState('')
-  const [showNew, setShowNew] = useState(false)
+  const [confirm,     setConfirm]     = useState('')
+  const [showNew,     setShowNew]     = useState(false)
   const [showConfirm, setShowConfirm] = useState(false)
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
-  const [success, setSuccess] = useState('')
+  const [loading,     setLoading]     = useState(false)
+  const [error,       setError]       = useState('')
 
   async function handleUpdate() {
     setError('')
-    if (newPassword.length < 6) { setError('La contraseña debe tener al menos 6 caracteres'); return }
+    if (!newPassword || newPassword.length < 6) { setError('La contraseña debe tener al menos 6 caracteres'); return }
     if (newPassword !== confirm) { setError('Las contraseñas no coinciden'); return }
     setLoading(true)
-    const { error } = await supabase.auth.updateUser({ password: newPassword })
-    if (error) {
-      if (error.message?.includes('expired') || error.message?.includes('invalid')) {
-        setError('El enlace expiró o ya fue usado. Solicita uno nuevo desde "¿Olvidaste tu contraseña?"')
-      } else {
-        setError('No se pudo actualizar la contraseña. Intenta de nuevo.')
-      }
-      setLoading(false); return
+    const hashParams = new URLSearchParams(window.location.hash.slice(1))
+    const accessToken  = hashParams.get('access_token')
+    const refreshToken = hashParams.get('refresh_token')
+    if (accessToken && refreshToken) {
+      await supabase.auth.setSession({ access_token: accessToken, refresh_token: refreshToken })
     }
-    setSuccess('Contraseña actualizada correctamente')
-    setTimeout(async () => { await supabase.auth.signOut(); onDone() }, 1800)
+    const { error } = await supabase.auth.updateUser({ password: newPassword })
     setLoading(false)
+    if (error) setError(error.message)
+    else { window.location.hash = ''; onDone() }
   }
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 24, background: 'var(--bg)' }}>
-      <div style={{ width: '100%', maxWidth: 380 }}>
-        <div style={{ textAlign: 'center', marginBottom: 32 }}>
-          <img src="/ADA-Pay-logo.svg" alt="ADA Pay" style={{ height: 160, marginBottom: 8 }} />
-        </div>
-        {error && <Alert type="danger">{error}</Alert>}
-        {success && <Alert type="success">{success}</Alert>}
+    <div style={{ minHeight: '100vh', background: 'var(--bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 24px' }}>
+      <div style={{ width: '100%', maxWidth: 360 }}>
+        <img src="/ADA-Pay-logo.svg" alt="ADA Pay" style={{ height: 40, marginBottom: 32 }} />
+        <div style={{ fontSize: 22, fontWeight: 700, color: 'var(--text)', marginBottom: 6 }}>Nueva contraseña</div>
+        <div style={{ fontSize: 14, color: 'var(--text)', marginBottom: 24 }}>Elige una contraseña segura para tu cuenta.</div>
+        {error && <div style={{ background: 'var(--danger-soft)', border: '0.5px solid var(--danger-border)', borderRadius: 'var(--radius-sm)', padding: '10px 12px', fontSize: 13, color: 'var(--danger)', marginBottom: 16 }}>{error}</div>}
         <Field label="Nueva contraseña">
-          <FieldIcon><Lock size={15} color="var(--muted)" /></FieldIcon>
+          <FieldIcon><Lock size={15} color="var(--text)" /></FieldIcon>
           <input className="field-input" style={{ paddingLeft: 40, paddingRight: 40 }} type={showNew ? 'text' : 'password'} value={newPassword} onChange={e => setNewPassword(e.target.value)} placeholder="Mínimo 6 caracteres" />
           <EyeBtn show={showNew} onToggle={() => setShowNew(v => !v)} />
         </Field>
         <Field label="Confirmar contraseña">
-          <FieldIcon><Lock size={15} color="var(--muted)" /></FieldIcon>
+          <FieldIcon><Lock size={15} color="var(--text)" /></FieldIcon>
           <input className="field-input" style={{ paddingLeft: 40, paddingRight: 40, borderColor: confirm && newPassword !== confirm ? 'var(--danger)' : undefined }} type={showConfirm ? 'text' : 'password'} value={confirm} onChange={e => setConfirm(e.target.value)} placeholder="Repite tu contraseña" onKeyDown={e => e.key === 'Enter' && handleUpdate()} />
           <EyeBtn show={showConfirm} onToggle={() => setShowConfirm(v => !v)} />
           {confirm && newPassword !== confirm && <div style={{ fontSize: 11, color: 'var(--danger)', marginTop: 4 }}>Las contraseñas no coinciden</div>}
@@ -57,30 +133,31 @@ export function ResetPasswordPage({ onDone }) {
   )
 }
 
+// ── Auth Page ─────────────────────────────────────────────────────────────────
 export function AuthPage() {
-  const [mode, setMode] = useState('login')
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [confirm, setConfirm] = useState('')
-  const [accessCode, setAccessCode] = useState('')
-  const [showPass, setShowPass] = useState(false)
-  const [showConfirm, setShowConfirm] = useState(false)
-  const [loading, setLoading] = useState(false)
+  const [mode,          setMode]          = useState('login')
+  const [email,         setEmail]         = useState('')
+  const [password,      setPassword]      = useState('')
+  const [confirm,       setConfirm]       = useState('')
+  const [accessCode,    setAccessCode]    = useState('')
+  const [showPass,      setShowPass]      = useState(false)
+  const [showConfirm,   setShowConfirm]   = useState(false)
+  const [loading,       setLoading]       = useState(false)
   const [googleLoading, setGoogleLoading] = useState(false)
-  const [error, setError] = useState('')
-  const [success, setSuccess] = useState('')
+  const [error,         setError]         = useState('')
+  const [success,       setSuccess]       = useState('')
+  const [termsAccepted, setTermsAccepted] = useState(false)
+  const [showTerms,     setShowTerms]     = useState(false)
 
   async function handleGoogle() {
     setGoogleLoading(true)
-    await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: { redirectTo: window.location.origin },
-    })
+    await supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: window.location.origin } })
     setGoogleLoading(false)
   }
 
   async function handleSubmit() {
     setError(''); setSuccess('')
+
     if (mode === 'forgot') {
       if (!email) { setError('Ingresa tu correo electrónico'); return }
       setLoading(true)
@@ -89,150 +166,178 @@ export function AuthPage() {
       else setSuccess('Revisa tu correo — te enviamos el enlace para restablecer tu contraseña.')
       setLoading(false); return
     }
+
+    if (!email || !password) { setError('Completa todos los campos'); return }
+
     if (mode === 'register') {
-      if (!accessCode.trim()) { setError('Ingresa el código de acceso'); return }
+      if (!termsAccepted) { setError('Debes aceptar los Términos y Condiciones para continuar'); return }
       if (password.length < 6) { setError('La contraseña debe tener al menos 6 caracteres'); return }
       if (password !== confirm) { setError('Las contraseñas no coinciden'); return }
+      if (!accessCode.trim()) { setError('Ingresa tu código de acceso'); return }
       setLoading(true)
-      const { data: codeData, error: codeError } = await supabase.from('access_codes').select('code,active').eq('code', accessCode.trim().toUpperCase()).eq('active', true).single()
-      if (codeError || !codeData) { setError('Código de acceso inválido. Solicítalo al administrador.'); setLoading(false); return }
+      const { data: codeData } = await supabase.from('access_codes').select('id').eq('code', accessCode.trim().toUpperCase()).eq('active', true).single()
+      if (!codeData) { setError('Código de acceso inválido o inactivo'); setLoading(false); return }
       const { error } = await supabase.auth.signUp({ email, password })
       if (error) setError(error.message)
-      else setSuccess('Cuenta creada. Ya puedes iniciar sesión.')
+      else setSuccess('¡Cuenta creada! Revisa tu correo para confirmar.')
       setLoading(false); return
     }
+
     setLoading(true)
     const { error } = await supabase.auth.signInWithPassword({ email, password })
     if (error) setError('Correo o contraseña incorrectos')
     setLoading(false)
   }
 
-  function switchMode(m) { setMode(m); setError(''); setSuccess(''); setPassword(''); setConfirm(''); setAccessCode('') }
-
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 24, background: 'var(--bg)' }}>
-      <div style={{ width: '100%', maxWidth: 380 }}>
-
-        <div style={{ textAlign: 'center', marginBottom: 28 }}>
-          <img src="/ADA-Pay-logo.svg" alt="ADA Pay" style={{ height: 160, marginBottom: 4 }} />
-        </div>
+    <div style={{ minHeight: '100vh', background: 'var(--bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 24px' }}>
+      <div style={{ width: '100%', maxWidth: 360 }}>
+        <img src="/ADA-Pay-logo.svg" alt="ADA Pay" style={{ height: 40, marginBottom: 32 }} />
 
         {mode !== 'forgot' && (
-          <div style={{ display: 'flex', background: 'var(--border)', borderRadius: 10, padding: 3, marginBottom: 20 }}>
-            {[['login','Iniciar sesión'],['register','Crear cuenta']].map(([m, label]) => (
-              <button key={m} onClick={() => switchMode(m)} style={{ flex: 1, padding: '9px 0', borderRadius: 8, border: 'none', background: mode === m ? 'var(--surface)' : 'transparent', color: mode === m ? 'var(--text)' : 'var(--muted)', fontWeight: mode === m ? 600 : 400, fontSize: 14, fontFamily: 'DM Sans, sans-serif', cursor: 'pointer' }}>{label}</button>
+          <div style={{ display: 'flex', background: 'var(--surface)', borderRadius: 10, padding: 3, marginBottom: 24, border: '0.5px solid var(--border)' }}>
+            {[['login','Iniciar sesión'],['register','Registrarse']].map(([m, label]) => (
+              <button key={m} onClick={() => { setMode(m); setError(''); setSuccess('') }} style={{ flex: 1, padding: '9px 0', borderRadius: 8, border: 'none', background: mode === m ? 'var(--accent)' : 'transparent', color: mode === m ? '#fff' : 'var(--text)', fontWeight: mode === m ? 600 : 400, fontSize: 14, fontFamily: 'DM Sans, sans-serif', cursor: 'pointer', transition: 'background .15s' }}>
+                {label}
+              </button>
             ))}
           </div>
         )}
 
         {mode === 'forgot' && (
           <div style={{ marginBottom: 20 }}>
-            <button onClick={() => switchMode('login')} style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'none', border: 'none', color: 'var(--muted)', fontSize: 14, cursor: 'pointer', fontFamily: 'DM Sans, sans-serif', padding: 0, marginBottom: 16 }}>← Volver al inicio de sesión</button>
-            <div style={{ fontSize: 16, fontWeight: 600, color: 'var(--text)', marginBottom: 4 }}>Restablecer contraseña</div>
-            <div style={{ fontSize: 13, color: 'var(--muted)' }}>Te enviaremos un enlace a tu correo para crear una nueva contraseña.</div>
+            <div style={{ fontSize: 20, fontWeight: 700, color: 'var(--text)', marginBottom: 6 }}>Recuperar contraseña</div>
+            <div style={{ fontSize: 14, color: 'var(--text)' }}>Te enviaremos un enlace para restablecer tu contraseña.</div>
           </div>
         )}
 
-        {error && <Alert type="danger">{error}</Alert>}
-        {success && <Alert type="success">{success}</Alert>}
-
-        {/* Botón Google — solo en login y register */}
-        {mode !== 'forgot' && (
-          <>
-            <button onClick={handleGoogle} disabled={googleLoading} style={{ width: '100%', padding: '11px 0', background: 'var(--surface)', color: 'var(--text)', border: '0.5px solid var(--border)', borderRadius: 'var(--radius-sm)', fontSize: 14, fontWeight: 500, fontFamily: 'DM Sans, sans-serif', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, marginBottom: 16, opacity: googleLoading ? 0.7 : 1 }}>
-              <GoogleIcon />
-              {googleLoading ? 'Redirigiendo…' : mode === 'login' ? 'Continuar con Google' : 'Registrarse con Google'}
-            </button>
-            <Divider />
-          </>
-        )}
+        {error   && <div style={{ background: 'var(--danger-soft)', border: '0.5px solid var(--danger-border)', borderRadius: 'var(--radius-sm)', padding: '10px 12px', fontSize: 13, color: 'var(--danger)', marginBottom: 16 }}>{error}</div>}
+        {success && <div style={{ background: 'var(--paid-soft)',   border: '0.5px solid var(--paid-border)',   borderRadius: 'var(--radius-sm)', padding: '10px 12px', fontSize: 13, color: 'var(--paid)',   marginBottom: 16 }}>{success}</div>}
 
         <Field label="Correo electrónico">
-          <FieldIcon><Mail size={15} color="var(--muted)" /></FieldIcon>
-          <input className="field-input" style={{ paddingLeft: 40 }} type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="correo@ejemplo.com" />
+          <FieldIcon><Mail size={15} color="var(--text)" /></FieldIcon>
+          <input autoFocus className="field-input" style={{ paddingLeft: 40 }} type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="tu@correo.com" onKeyDown={e => e.key === 'Enter' && handleSubmit()} enterKeyHint="next" />
         </Field>
 
         {mode !== 'forgot' && (
           <Field label="Contraseña">
-            <FieldIcon><Lock size={15} color="var(--muted)" /></FieldIcon>
-            <input className="field-input" style={{ paddingLeft: 40, paddingRight: 40 }} type={showPass ? 'text' : 'password'} value={password} onChange={e => setPassword(e.target.value)} placeholder="Mínimo 6 caracteres" onKeyDown={e => e.key === 'Enter' && mode === 'login' && handleSubmit()} />
+            <FieldIcon><Lock size={15} color="var(--text)" /></FieldIcon>
+            <input className="field-input" style={{ paddingLeft: 40, paddingRight: 40 }} type={showPass ? 'text' : 'password'} value={password} onChange={e => setPassword(e.target.value)} placeholder="••••••••" onKeyDown={e => e.key === 'Enter' && handleSubmit()} enterKeyHint={mode === 'register' ? 'next' : 'done'} />
             <EyeBtn show={showPass} onToggle={() => setShowPass(v => !v)} />
           </Field>
         )}
 
-        {mode === 'register' && (
-          <>
-            <Field label="Confirmar contraseña">
-              <FieldIcon><Lock size={15} color="var(--muted)" /></FieldIcon>
-              <input className="field-input" style={{ paddingLeft: 40, paddingRight: 40, borderColor: confirm && password !== confirm ? 'var(--danger)' : undefined }} type={showConfirm ? 'text' : 'password'} value={confirm} onChange={e => setConfirm(e.target.value)} placeholder="Repite tu contraseña" />
-              <EyeBtn show={showConfirm} onToggle={() => setShowConfirm(v => !v)} />
-              {confirm && password !== confirm && <div style={{ fontSize: 11, color: 'var(--danger)', marginTop: 4 }}>Las contraseñas no coinciden</div>}
-            </Field>
-            <Field label="Código de acceso">
-              <FieldIcon><KeyRound size={15} color="var(--muted)" /></FieldIcon>
-              <input className="field-input" style={{ paddingLeft: 40, textTransform: 'uppercase', letterSpacing: '0.1em' }} type="text" value={accessCode} onChange={e => setAccessCode(e.target.value.toUpperCase())} placeholder="Código de invitación" onKeyDown={e => e.key === 'Enter' && handleSubmit()} />
-            </Field>
-            <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: -8, marginBottom: 12 }}>Solicita el código al administrador de la app.</div>
-          </>
-        )}
+        {mode === 'register' && (<>
+          <Field label="Confirmar contraseña">
+            <FieldIcon><Lock size={15} color="var(--text)" /></FieldIcon>
+            <input className="field-input" style={{ paddingLeft: 40, paddingRight: 40, borderColor: confirm && password !== confirm ? 'var(--danger)' : undefined }} type={showConfirm ? 'text' : 'password'} value={confirm} onChange={e => setConfirm(e.target.value)} placeholder="Repite tu contraseña" enterKeyHint="next" />
+            <EyeBtn show={showConfirm} onToggle={() => setShowConfirm(v => !v)} />
+          </Field>
+          <Field label="Código de acceso">
+            <FieldIcon><KeyRound size={15} color="var(--text)" /></FieldIcon>
+            <input className="field-input" style={{ paddingLeft: 40 }} type="text" value={accessCode} onChange={e => setAccessCode(e.target.value)} placeholder="Ej. ADA2024" onKeyDown={e => e.key === 'Enter' && handleSubmit()} enterKeyHint="done" />
+          </Field>
 
-        <button onClick={handleSubmit} disabled={loading} className="btn-primary" style={{ marginTop: 8 }}>
-          {loading ? 'Cargando…' : mode === 'login' ? 'Entrar' : mode === 'forgot' ? 'Enviar enlace' : 'Crear cuenta'}
+          {/* Checkbox de términos */}
+          <div
+            onClick={() => setTermsAccepted(v => !v)}
+            style={{ display: 'flex', alignItems: 'flex-start', gap: 10, marginBottom: 20, cursor: 'pointer' }}
+          >
+            <div style={{
+              width: 18, height: 18, borderRadius: 4, flexShrink: 0, marginTop: 1,
+              border: termsAccepted ? 'none' : '1.5px solid var(--border)',
+              background: termsAccepted ? 'var(--accent)' : 'var(--surface)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              transition: 'background .15s',
+            }}>
+              {termsAccepted && (
+                <svg width="11" height="9" viewBox="0 0 11 9" fill="none">
+                  <path d="M1 4L4 7.5L10 1" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              )}
+            </div>
+            <div style={{ fontSize: 13, color: 'var(--text)', lineHeight: 1.5 }}>
+              He leído y acepto los{' '}
+              <span
+                onClick={e => { e.stopPropagation(); setShowTerms(true) }}
+                style={{ color: 'var(--accent)', fontWeight: 600, textDecoration: 'underline', cursor: 'pointer' }}
+              >
+                Términos y Condiciones
+              </span>
+              {' '}de uso
+            </div>
+          </div>
+        </>)}
+
+        <button onClick={handleSubmit} disabled={loading} className="btn-primary" style={{ marginBottom: 12 }}>
+          {loading ? 'Cargando…' : mode === 'login' ? 'Iniciar sesión' : mode === 'register' ? 'Crear cuenta' : 'Enviar enlace'}
         </button>
 
         {mode === 'login' && (
-          <button onClick={() => switchMode('forgot')} style={{ width: '100%', marginTop: 14, background: 'none', border: 'none', color: 'var(--muted)', fontSize: 13, cursor: 'pointer', fontFamily: 'DM Sans, sans-serif' }}>
+          <button onClick={() => { setMode('forgot'); setError(''); setSuccess('') }} style={{ background: 'none', border: 'none', fontSize: 13, color: 'var(--accent)', cursor: 'pointer', display: 'block', margin: '0 auto 16px', fontFamily: 'DM Sans, sans-serif' }}>
             ¿Olvidaste tu contraseña?
           </button>
         )}
+        {mode === 'forgot' && (
+          <button onClick={() => { setMode('login'); setError(''); setSuccess('') }} style={{ background: 'none', border: 'none', fontSize: 13, color: 'var(--accent)', cursor: 'pointer', display: 'block', margin: '0 auto 16px', fontFamily: 'DM Sans, sans-serif' }}>
+            Volver al inicio de sesión
+          </button>
+        )}
+
+        {mode !== 'forgot' && (<>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '4px 0 16px' }}>
+            <div style={{ flex: 1, height: '0.5px', background: 'var(--border)' }} />
+            <span style={{ fontSize: 12, color: 'var(--text)' }}>o continúa con</span>
+            <div style={{ flex: 1, height: '0.5px', background: 'var(--border)' }} />
+          </div>
+          <button onClick={handleGoogle} disabled={googleLoading} style={{ width: '100%', padding: '11px', background: 'var(--surface)', border: '0.5px solid var(--border)', borderRadius: 'var(--radius-sm)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, fontSize: 14, fontWeight: 500, color: 'var(--text)', fontFamily: 'DM Sans, sans-serif', cursor: 'pointer' }}>
+            <GoogleIcon />
+            {googleLoading ? 'Conectando…' : 'Google'}
+          </button>
+          {mode === 'register' && (
+            <div style={{ fontSize: 11, color: 'var(--text)', textAlign: 'center', marginTop: 10 }}>
+              Al continuar con Google aceptas nuestros{' '}
+              <span onClick={() => setShowTerms(true)} style={{ color: 'var(--accent)', cursor: 'pointer', textDecoration: 'underline' }}>
+                Términos y Condiciones
+              </span>
+            </div>
+          )}
+        </>)}
       </div>
+
+      {showTerms && <TermsModal onClose={() => setShowTerms(false)} />}
     </div>
   )
 }
 
-function GoogleIcon() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 48 48">
-      <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
-      <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
-      <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
-      <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
-    </svg>
-  )
-}
-
-function Divider() {
-  return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
-      <div style={{ flex: 1, height: '0.5px', background: 'var(--border)' }} />
-      <span style={{ fontSize: 12, color: 'var(--muted)' }}>o continúa con correo</span>
-      <div style={{ flex: 1, height: '0.5px', background: 'var(--border)' }} />
-    </div>
-  )
-}
-
-function Alert({ type, children }) {
-  const styles = {
-    danger: { bg: 'var(--danger-soft)', border: 'var(--danger-border)', color: 'var(--danger)' },
-    success: { bg: 'var(--paid-soft)', border: 'var(--paid-border)', color: 'var(--paid)' },
-  }[type]
-  return <div style={{ background: styles.bg, border: `0.5px solid ${styles.border}`, borderRadius: 'var(--radius-sm)', padding: '10px 13px', fontSize: 13, color: styles.color, marginBottom: 14 }}>{children}</div>
-}
 function Field({ label, children }) {
   return (
-    <div style={{ marginBottom: 13 }}>
+    <div style={{ position: 'relative', marginBottom: 14 }}>
       <label className="field-label">{label}</label>
       <div style={{ position: 'relative' }}>{children}</div>
     </div>
   )
 }
+
 function FieldIcon({ children }) {
-  return <div style={{ position: 'absolute', left: 13, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', display: 'flex' }}>{children}</div>
+  return <div style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', zIndex: 1, display: 'flex' }}>{children}</div>
 }
+
 function EyeBtn({ show, onToggle }) {
   return (
-    <button onClick={onToggle} style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', display: 'flex', padding: 2 }}>
-      {show ? <EyeOff size={15} color="var(--muted)" /> : <Eye size={15} color="var(--muted)" />}
+    <button type="button" onClick={onToggle} style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', display: 'flex', padding: 4 }}>
+      {show ? <EyeOff size={16} color="var(--text)" /> : <Eye size={16} color="var(--text)" />}
     </button>
+  )
+}
+
+function GoogleIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 18 18">
+      <path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.615z" fill="#4285F4"/>
+      <path d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332C2.438 15.983 5.482 18 9 18z" fill="#34A853"/>
+      <path d="M3.964 10.71c-.18-.54-.282-1.117-.282-1.71s.102-1.17.282-1.71V4.958H.957C.347 6.173 0 7.548 0 9s.348 2.827.957 4.042l3.007-2.332z" fill="#FBBC05"/>
+      <path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0 5.482 0 2.438 2.017.957 4.958L3.964 6.29C4.672 4.163 6.656 3.58 9 3.58z" fill="#EA4335"/>
+    </svg>
   )
 }
