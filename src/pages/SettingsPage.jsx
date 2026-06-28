@@ -5,7 +5,7 @@ import { ChevronRight, LogOut, Camera, Bell, BellOff } from 'lucide-react'
 import { usePushNotifications } from '../hooks/usePushNotifications'
 import { showToast } from '../components/Toast'
 
-export function SettingsPage({ profile, user, onUpdate, onUploadAvatar }) {
+export function SettingsPage({ profile, user, onUpdate, onUploadAvatar, onDataDeleted }) {
   const [salaryAmount,    setSalaryAmount]    = useState(profile.salary_amount || '')
   const [editSection,     setEditSection]     = useState(null)
   const [fieldVal,        setFieldVal]        = useState('')
@@ -54,6 +54,7 @@ export function SettingsPage({ profile, user, onUpdate, onUploadAvatar }) {
     setDangerLoading(false)
     if (error) { setDangerError('Error al eliminar los datos'); return }
     setDangerModal(null); setDangerInput('')
+    onDataDeleted && onDataDeleted()
     showToast('Todos tus datos han sido eliminados')
   }
 
@@ -389,6 +390,8 @@ export function SettingsPage({ profile, user, onUpdate, onUploadAvatar }) {
               value={dangerInput}
               onChange={e => setDangerInput(e.target.value)}
               placeholder={dangerModal === 'data' ? 'ELIMINAR' : profile.name}
+              onKeyDown={e => e.key === 'Enter' && (dangerModal === 'data' ? handleDeleteData() : handleDeleteAccount())}
+              enterKeyHint="done"
               style={{ marginBottom: 14, borderColor: 'var(--danger-border)' }}
             />
 
