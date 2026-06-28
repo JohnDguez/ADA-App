@@ -208,7 +208,9 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
             const numPayments = parseInt(totalInstallments) || 0
             const perPayment = numPayments > 0 ? Math.round((totalAmt / numPayments) * 100) / 100 : 0
             const startNum   = parseInt(startFrom) || 1
-            const nextDate   = dueDate ? new Date(dueDate + 'T12:00:00') : null
+            // Usar la fecha correcta según frecuencia
+            const firstDateStr = recurFreq === 'biweekly' ? biweeklyDate : dueDate
+            const nextDate   = firstDateStr ? new Date(firstDateStr + 'T12:00:00') : null
             return (
               <>
                 <Field label="Monto total a pagar">
@@ -243,9 +245,7 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
           })()}
 
           {(mode === 'recurrent' || mode === 'installment') && (
-            <Field label="Frecuencia">
-              <FrequencyPicker value={recurFreq} onChange={setRecurFreq} />
-            </Field>
+            <FrequencyPicker value={recurFreq} onChange={setRecurFreq} />
           )}
 
           {showDatePicker && (
