@@ -22,7 +22,12 @@ export default function App() {
   const { payments, addPayment, addInstallmentPayment, updatePayment, markPaid, markUnpaid, postponePayment, pauseRecurrent, resumeRecurrent, deletePayment, deleteRecurrentFuture, deleteInstallmentFuture, deleteGroup } = usePayments(user?.id)
   const { profile, loading: profileLoading, updateProfile, uploadAvatar } = useProfile(user?.id)
   const { notifications, unreadCount, markAsRead, markAllAsRead, deleteNotification, clearAll } = useNotifications(user?.id)
-  const [tab,        setTab]        = useState(() => sessionStorage.getItem('ada_tab') || 'home')
+  const [tab,        setTab]        = useState(() => {
+    // Solo restaurar el tab si la sesión ya estaba activa (reload)
+    // Si es apertura nueva, sessionStorage no tendrá 'ada_session' y arrancamos en home
+    const hasActiveSession = sessionStorage.getItem('ada_session')
+    return hasActiveSession ? (sessionStorage.getItem('ada_tab') || 'home') : 'home'
+  })
   const [modalOpen,  setModalOpen]  = useState(false)
   const [editPayment, setEditPayment] = useState(null)
   const [varModal,   setVarModal]   = useState({ open: false, payment: null })
@@ -32,6 +37,9 @@ export default function App() {
   if (isRecovery) return <ResetPasswordPage onDone={() => setIsRecovery(false)} />
   if (!user) return <AuthPage />
   if (user && !profile.onboarding_completed) return <OnboardingPage userId={user.id} onDone={updateProfile} />
+
+  // Marcar sesión activa para distinguir reload de apertura nueva
+  sessionStorage.setItem('ada_session', '1')
 
   function openAdd()   { setEditPayment(null); setModalOpen(true) }
   function openEdit(p) { setEditPayment(p);    setModalOpen(true) }
