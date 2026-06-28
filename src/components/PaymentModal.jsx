@@ -209,7 +209,7 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
             const perPayment = numPayments > 0 ? Math.round((totalAmt / numPayments) * 100) / 100 : 0
             const startNum   = parseInt(startFrom) || 1
             // Usar la fecha correcta según frecuencia
-            const firstDateStr = recurFreq === 'biweekly' ? biweeklyDate : dueDate
+            const firstDateStr = recurFreq === 'biweekly' ? biweeklyDate : recurFreq === 'weekly' ? nextWeekdayDate(weekday).toISOString().split('T')[0] : dueDate
             const nextDate   = firstDateStr ? new Date(firstDateStr + 'T12:00:00') : null
             return (
               <>

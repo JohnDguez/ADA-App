@@ -9,10 +9,10 @@ export function FrequencyPicker({ value, onChange }) {
     const active = value === freq
     return (
       <button onClick={() => onChange(freq)} style={{
-        flex: 1, padding: '8px 0', borderRadius: 'var(--radius-sm)',
-        border: active ? '1.5px solid var(--accent)' : '0.5px solid var(--border)',
-        background: active ? 'var(--accent-soft)' : 'var(--bg)',
-        color: active ? 'var(--accent)' : 'var(--muted)',
+        flex: 1, padding: '8px 0', borderRadius: 5,
+        border: 'none',
+        background: active ? 'var(--accent)' : 'var(--bg)',
+        color: active ? '#fff' : 'var(--text)',
         fontSize: 13, fontWeight: active ? 600 : 400,
         fontFamily: 'DM Sans, sans-serif', cursor: 'pointer', whiteSpace: 'nowrap',
       }}>
@@ -35,7 +35,7 @@ export function FrequencyPicker({ value, onChange }) {
       <button onClick={() => setShowExtra(v => !v)} style={{
         display: 'flex', alignItems: 'center', gap: 4,
         background: 'none', border: 'none', cursor: 'pointer',
-        fontSize: 12, color: 'var(--muted)', fontFamily: 'DM Sans, sans-serif', padding: '2px 0',
+        fontSize: 12, color: 'var(--text)', fontFamily: 'DM Sans, sans-serif', padding: '2px 0',
       }}>
         {showExtra ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
         {showExtra ? 'Menos opciones' : 'Más opciones'}
