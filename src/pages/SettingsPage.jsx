@@ -14,6 +14,10 @@ export function SettingsPage({ profile, user, onUpdate, onUploadAvatar }) {
   const [saving,          setSaving]          = useState(false)
   const [editError,       setEditError]       = useState('')
   const [uploadingAvatar, setUploadingAvatar] = useState(false)
+  const [dangerModal,     setDangerModal]     = useState(null) // 'data' | 'account'
+  const [dangerInput,     setDangerInput]     = useState('')
+  const [dangerLoading,   setDangerLoading]   = useState(false)
+  const [dangerError,     setDangerError]     = useState('')
   const [biweeklyCustom,  setBiweeklyCustom]  = useState(() => {
     const PRESETS = [{d1:1,d2:16},{d1:13,d2:28},{d1:15,d2:30}]
     return !PRESETS.some(p => p.d1 === (profile.cobro_day1 ?? 1) && p.d2 === (profile.cobro_day2 ?? 16))
@@ -42,6 +46,39 @@ export function SettingsPage({ profile, user, onUpdate, onUploadAvatar }) {
     if (isNaN(val)) { showToast('Ingresa un monto válido'); return }
     await onUpdate({ salary_amount: val }); showToast('Salario actualizado')
   }
+  async function handleDeleteData() {
+    setDangerError('')
+    if (dangerInput !== 'ELIMINAR') { setDangerError('Escribe ELIMINAR para confirmar'); return }
+    setDangerLoading(true)
+    const { error } = await supabase.from('payments').delete().eq('user_id', user.id)
+    setDangerLoading(false)
+    if (error) { setDangerError('Error al eliminar los datos'); return }
+    setDangerModal(null); setDangerInput('')
+    showToast('Todos tus datos han sido eliminados')
+  }
+
+  async function handleDeleteAccount() {
+    setDangerError('')
+    if (dangerInput.trim().toLowerCase() !== (profile.name || '').trim().toLowerCase()) {
+      setDangerError(`Escribe tu nombre "${profile.name}" para confirmar`); return
+    }
+    setDangerLoading(true)
+    // Eliminar datos primero
+    await supabase.from('payments').delete().eq('user_id', user.id)
+    await supabase.from('notifications').delete().eq('user_id', user.id)
+    await supabase.from('push_subscriptions').delete().eq('user_id', user.id)
+    // Eliminar cuenta via serverless (requiere service role)
+    const { data: { session } } = await supabase.auth.getSession()
+    const res = await fetch('/api/delete-account', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` },
+      body: JSON.stringify({ userId: user.id }),
+    })
+    setDangerLoading(false)
+    if (!res.ok) { setDangerError('Error al eliminar la cuenta'); return }
+    await supabase.auth.signOut()
+  }
+
   async function handleLogout() { await supabase.auth.signOut() }
 
   async function handlePushToggle() {
@@ -291,6 +328,81 @@ export function SettingsPage({ profile, user, onUpdate, onUploadAvatar }) {
         </button>
       </Card>
 
+      {/* Zona de peligro */}
+      <SectionLabel>Zona de peligro</SectionLabel>
+      <Card>
+        <button onClick={() => { setDangerModal('data'); setDangerInput(''); setDangerError('') }}
+          style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '13px 14px', background: 'none', border: 'none', cursor: 'pointer', borderBottom: '0.5px solid var(--border)' }}>
+          <div style={{ textAlign: 'left' }}>
+            <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--danger)' }}>Eliminar todos mis datos</div>
+            <div style={{ fontSize: 11, fontWeight: 400, color: 'var(--text)', marginTop: 1 }}>Borra todos tus pagos. Tu cuenta se mantiene.</div>
+          </div>
+          <ChevronRight size={14} color="var(--danger)" />
+        </button>
+        <button onClick={() => { setDangerModal('account'); setDangerInput(''); setDangerError('') }}
+          style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '13px 14px', background: 'none', border: 'none', cursor: 'pointer' }}>
+          <div style={{ textAlign: 'left' }}>
+            <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--danger)' }}>Eliminar mi cuenta</div>
+            <div style={{ fontSize: 11, fontWeight: 400, color: 'var(--text)', marginTop: 1 }}>Elimina tu cuenta y todos tus datos permanentemente.</div>
+          </div>
+          <ChevronRight size={14} color="var(--danger)" />
+        </button>
+      </Card>
+
+      {/* Modal Danger Zone */}
+      {dangerModal && (
+        <div onClick={e => e.target === e.currentTarget && setDangerModal(null)}
+          style={{ position: 'fixed', inset: 0, background: 'rgba(2,10,31,0.5)', zIndex: 200, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
+          <div style={{ background: 'var(--surface)', borderRadius: '20px 20px 0 0', width: '100%', maxWidth: 420, padding: '20px 16px 32px' }}>
+            <div style={{ width: 34, height: 4, background: 'var(--border)', borderRadius: 2, margin: '0 auto 16px' }} />
+
+            {/* Ícono de advertencia */}
+            <div style={{ width: 44, height: 44, borderRadius: 12, background: 'var(--danger-soft)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 12 }}>
+              <span style={{ fontSize: 22 }}>⚠️</span>
+            </div>
+
+            <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--danger)', marginBottom: 6 }}>
+              {dangerModal === 'data' ? 'Eliminar todos los datos' : 'Eliminar cuenta'}
+            </div>
+            <div style={{ fontSize: 13, fontWeight: 400, color: 'var(--text)', marginBottom: 16, lineHeight: 1.6 }}>
+              {dangerModal === 'data'
+                ? 'Esta acción eliminará todos tus pagos permanentemente. Tu cuenta se mantendrá activa. Esta acción no se puede deshacer.'
+                : `Esta acción eliminará tu cuenta y todos tus datos permanentemente. No podrás recuperarlos. Esta acción no se puede deshacer.`
+              }
+            </div>
+
+            {dangerError && (
+              <div style={{ background: 'var(--danger-soft)', border: '0.5px solid var(--danger-border)', borderRadius: 'var(--radius-sm)', padding: '8px 12px', fontSize: 13, color: 'var(--danger)', marginBottom: 12 }}>
+                {dangerError}
+              </div>
+            )}
+
+            <label className="field-label" style={{ marginBottom: 6, display: 'block' }}>
+              {dangerModal === 'data'
+                ? 'Escribe ELIMINAR para confirmar'
+                : `Escribe tu nombre "${profile.name}" para confirmar`
+              }
+            </label>
+            <input
+              autoFocus
+              className="field-input"
+              value={dangerInput}
+              onChange={e => setDangerInput(e.target.value)}
+              placeholder={dangerModal === 'data' ? 'ELIMINAR' : profile.name}
+              style={{ marginBottom: 14, borderColor: 'var(--danger-border)' }}
+            />
+
+            <button
+              onClick={dangerModal === 'data' ? handleDeleteData : handleDeleteAccount}
+              disabled={dangerLoading}
+              style={{ width: '100%', padding: 12, background: 'var(--danger)', color: '#fff', border: 'none', borderRadius: 'var(--radius-sm)', fontSize: 14, fontWeight: 600, fontFamily: 'DM Sans, sans-serif', cursor: 'pointer', marginBottom: 8, opacity: dangerLoading ? 0.7 : 1 }}
+            >
+              {dangerLoading ? 'Eliminando…' : dangerModal === 'data' ? 'Eliminar todos mis datos' : 'Eliminar mi cuenta'}
+            </button>
+            <button onClick={() => setDangerModal(null)} className="btn-ghost">Cancelar</button>
+          </div>
+        </div>
+      )}
       {/* Modal edición */}
       {editSection && (
         <div onClick={e => e.target === e.currentTarget && setEditSection(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(2,10,31,0.45)', zIndex: 200, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>

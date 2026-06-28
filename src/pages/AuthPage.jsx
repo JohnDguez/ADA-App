@@ -235,7 +235,7 @@ export function AuthPage() {
           </Field>
           <Field label="Código de acceso">
             <FieldIcon><KeyRound size={15} color="var(--text)" /></FieldIcon>
-            <input className="field-input" style={{ paddingLeft: 40 }} type="text" value={accessCode} onChange={e => setAccessCode(e.target.value)} placeholder="Ej. ADA2024" onKeyDown={e => e.key === 'Enter' && handleSubmit()} enterKeyHint="done" />
+            <input className="field-input" style={{ paddingLeft: 40 }} type="text" value={accessCode} onChange={e => setAccessCode(e.target.value)} placeholder="Ingresa tu código" onKeyDown={e => e.key === 'Enter' && handleSubmit()} enterKeyHint="done" />
           </Field>
 
           {/* Checkbox de términos */}
