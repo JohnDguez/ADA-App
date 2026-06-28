@@ -110,7 +110,7 @@ export function ResetPasswordPage({ onDone }) {
   return (
     <div style={{ minHeight: '100vh', background: 'var(--bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 24px' }}>
       <div style={{ width: '100%', maxWidth: 360 }}>
-        <img src="/ADA-Pay-logo.svg" alt="ADA Pay" style={{ height: 40, marginBottom: 32 }} />
+        <img src="/ADA-Pay-logo.svg" alt="ADA Pay" style={{ height: 80, marginBottom: 40, display: 'block', margin: '0 auto 40px' }} />
         <div style={{ fontSize: 22, fontWeight: 700, color: 'var(--text)', marginBottom: 6 }}>Nueva contraseña</div>
         <div style={{ fontSize: 14, color: 'var(--text)', marginBottom: 24 }}>Elige una contraseña segura para tu cuenta.</div>
         {error && <div style={{ background: 'var(--danger-soft)', border: '0.5px solid var(--danger-border)', borderRadius: 'var(--radius-sm)', padding: '10px 12px', fontSize: 13, color: 'var(--danger)', marginBottom: 16 }}>{error}</div>}
@@ -192,7 +192,7 @@ export function AuthPage() {
   return (
     <div style={{ minHeight: '100vh', background: 'var(--bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 24px' }}>
       <div style={{ width: '100%', maxWidth: 360 }}>
-        <img src="/ADA-Pay-logo.svg" alt="ADA Pay" style={{ height: 40, marginBottom: 32 }} />
+        <img src="/ADA-Pay-logo.svg" alt="ADA Pay" style={{ height: 80, marginBottom: 40, display: 'block', margin: '0 auto 40px' }} />
 
         {mode !== 'forgot' && (
           <div style={{ display: 'flex', background: 'var(--surface)', borderRadius: 10, padding: 3, marginBottom: 24, border: '0.5px solid var(--border)' }}>
