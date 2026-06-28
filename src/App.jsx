@@ -22,7 +22,7 @@ export default function App() {
   const { payments, addPayment, addInstallmentPayment, updatePayment, markPaid, markUnpaid, postponePayment, pauseRecurrent, resumeRecurrent, deletePayment, deleteRecurrentFuture, deleteInstallmentFuture, deleteGroup } = usePayments(user?.id)
   const { profile, loading: profileLoading, updateProfile, uploadAvatar } = useProfile(user?.id)
   const { notifications, unreadCount, markAsRead, markAllAsRead, deleteNotification, clearAll } = useNotifications(user?.id)
-  const [tab,        setTab]        = useState('home')
+  const [tab,        setTab]        = useState(() => sessionStorage.getItem('ada_tab') || 'home')
   const [modalOpen,  setModalOpen]  = useState(false)
   const [editPayment, setEditPayment] = useState(null)
   const [varModal,   setVarModal]   = useState({ open: false, payment: null })
@@ -107,7 +107,7 @@ export default function App() {
     profile,
     unreadCount,
     onOpenNotifs: () => setNotifOpen(true),
-    onGoSettings: () => setTab('settings'),
+    onGoSettings: () => { setTab('settings'); sessionStorage.setItem('ada_tab', 'settings'); window.scrollTo(0, 0) },
   }
 
   function handleNavigate() { window.scrollTo(0, 0) }
@@ -118,7 +118,7 @@ export default function App() {
         <HomePage
           payments={payments} profile={profile} onAdd={openAdd}
           {...sharedHandlers}
-          onGoSettings={() => setTab('settings')}
+          onGoSettings={() => { setTab('settings'); sessionStorage.setItem('ada_tab', 'settings'); window.scrollTo(0, 0) }}
           notifications={notifications}
           unreadCount={unreadCount}
           onMarkAsRead={markAsRead}
@@ -131,7 +131,7 @@ export default function App() {
       {tab === 'recurrents' && <RecurrentsPage payments={payments} onPause={handlePauseRecurrent} onResume={handleResumeRecurrent} onDelete={handleDeleteRecurrent} onEdit={openEdit} />}
       {tab === 'settings'   && <SettingsPage profile={profile} user={user} onUpdate={updateProfile} onUploadAvatar={uploadAvatar} />}
 
-      <BottomNav active={tab} onChange={setTab} onAdd={openAdd} />
+      <BottomNav active={tab} onChange={t => { setTab(t); sessionStorage.setItem('ada_tab', t); window.scrollTo(0, 0) }} onAdd={openAdd} />
 
       {/* Panel de notificaciones — global, funciona desde cualquier página */}
       <NotificationsPanel
