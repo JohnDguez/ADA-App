@@ -157,6 +157,89 @@ export function PaymentsPage({ payments, profile, unreadCount, onOpenNotifs, onG
           <div style={{ fontSize: 22, fontWeight: 700, color: 'var(--text)' }}>Mis Gastos</div>
         </div>
 
+
+        {/* ── BALANCE DEL PERIODO (solo si salary_enabled) ── */}
+        {profile?.salary_enabled && profile?.salary_amount > 0 && (() => {
+          const { start, end } = cobroPeriod(profile)
+          const gastosPeriodo = paidPayments.filter(p => {
+            const d = dateOf(p.due_date)
+            return d >= start && d <= end
+          })
+          const totalGastos  = gastosPeriodo.reduce((a, p) => a + Number(p.amount), 0)
+          const salario      = Number(profile.salary_amount)
+          const disponible   = salario - totalGastos
+          const pctGastos    = Math.min((totalGastos / salario) * 100, 100)
+          const sobrePasado  = totalGastos > salario
+
+          // Segmentos por categoría
+          const segmentos = CATEGORIES
+            .map(cat => ({
+              cat,
+              total: gastosPeriodo.filter(p => p.category === cat).reduce((a, p) => a + Number(p.amount), 0),
+            }))
+            .filter(s => s.total > 0)
+            .sort((a, b) => b.total - a.total)
+
+          return (
+            <div style={{ margin: '0 16px 16px', background: 'var(--surface)', borderRadius: 'var(--radius)', padding: '14px 16px' }}>
+              {/* Cabecera */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 12 }}>
+                <div>
+                  <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--text)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 3 }}>Disponible este periodo</div>
+                  <div style={{ fontSize: 26, fontWeight: 700, color: sobrePasado ? 'var(--danger)' : 'var(--paid)', lineHeight: 1 }}>
+                    {sobrePasado ? '-' : ''}{fmt(Math.abs(disponible))}
+                  </div>
+                </div>
+                <div style={{ textAlign: 'right' }}>
+                  <div style={{ fontSize: 10, fontWeight: 500, color: 'var(--text)', marginBottom: 2 }}>
+                    {fmt(totalGastos)} <span style={{ fontWeight: 400 }}>/ {fmt(salario)}</span>
+                  </div>
+                  {sobrePasado && (
+                    <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--danger)' }}>Presupuesto excedido</div>
+                  )}
+                </div>
+              </div>
+
+              {/* Barra heatmap segmentada */}
+              <div style={{ height: 12, borderRadius: 6, overflow: 'hidden', display: 'flex', background: 'var(--border)', marginBottom: 10 }}>
+                {segmentos.map(({ cat, total }) => (
+                  <div
+                    key={cat}
+                    style={{
+                      height: '100%',
+                      width: `${Math.min((total / salario) * 100, 100)}%`,
+                      background: CAT_COLOR[cat] || 'var(--accent)',
+                      flexShrink: 0,
+                      transition: 'width .4s ease',
+                    }}
+                    title={`${cat}: ${fmt(total)}`}
+                  />
+                ))}
+              </div>
+
+              {/* Chips de categoría */}
+              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                {segmentos.map(({ cat, total }) => (
+                  <div key={cat} style={{
+                    padding: '3px 10px',
+                    borderRadius: 5,
+                    fontSize: 11,
+                    fontWeight: 500,
+                    background: (CAT_COLOR[cat] || 'var(--accent)') + '22',
+                    color: CAT_COLOR[cat] || 'var(--accent)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 4,
+                  }}>
+                    <span style={{ width: 6, height: 6, borderRadius: '50%', background: CAT_COLOR[cat] || 'var(--accent)', display: 'inline-block' }} />
+                    {cat} {fmt(total)}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )
+        })()}
+
         {/* Chips de categoría */}
         <div style={{ padding: '0 16px 15px', display: 'flex', gap: 6, overflowX: 'auto', msOverflowStyle: 'none', scrollbarWidth: 'none' }}>
           <FilterChip label="Todos" active={!selectedCat} onClick={() => setSelectedCat(null)} />
