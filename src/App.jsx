@@ -19,7 +19,7 @@ function fmt(n) { return '$' + Number(n).toLocaleString('es-MX', { minimumFracti
 
 export default function App() {
   const { user, loading: authLoading, isRecovery, setIsRecovery } = useAuth()
-  const { payments, addPayment, addInstallmentPayment, updatePayment, markPaid, markUnpaid, postponePayment, pauseRecurrent, resumeRecurrent, deletePayment, deleteRecurrentFuture, deleteInstallmentFuture, deleteGroup } = usePayments(user?.id)
+  const { payments, addPayment, addInstallmentPayment, updatePayment, markPaid, markUnpaid, postponePayment, pauseRecurrent, resumeRecurrent, deletePayment, deleteRecurrentFuture, deleteInstallmentFuture, deleteGroup, refetch } = usePayments(user?.id)
   const { profile, loading: profileLoading, updateProfile, uploadAvatar } = useProfile(user?.id)
   const { notifications, unreadCount, markAsRead, markAllAsRead, deleteNotification, clearAll } = useNotifications(user?.id)
   const [tab,        setTab]        = useState(() => {
