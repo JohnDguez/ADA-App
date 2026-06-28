@@ -80,7 +80,7 @@ export function SettingsPage({ profile, user, onUpdate, onUploadAvatar, onDataDe
     await supabase.auth.signOut()
   }
 
-  async function handleLogout() { await supabase.auth.signOut() }
+  async function handleLogout() { sessionStorage.removeItem('ada_tab'); sessionStorage.removeItem('ada_session'); await supabase.auth.signOut() }
 
   async function handlePushToggle() {
     if (subscribed) {
