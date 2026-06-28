@@ -15,6 +15,7 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
   const [biweeklyDate, setBiweeklyDate] = useState('')
   const [totalInstallments, setTotalInstallments] = useState('')
   const [startFrom, setStartFrom] = useState('1')
+  const [totalAmount, setTotalAmount] = useState('')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
   const [confirmClose, setConfirmClose] = useState(false)
