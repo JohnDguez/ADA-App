@@ -51,10 +51,11 @@ export function PaymentsPage({ payments, profile, unreadCount, onOpenNotifs, onG
       .reduce((a, p) => a + Number(p.amount), 0)
   }
 
-  const chartTotals = chartMonths.map(m => chartTotalInMonth(m.month, m.year))
-  const maxChart    = Math.max(...chartTotals, 1)
-  const grandTotal  = chartTotals.reduce((a, b) => a + b, 0)
-  const avgMonthly  = grandTotal / monthsBack
+  const chartTotals  = chartMonths.map(m => chartTotalInMonth(m.month, m.year))
+  const maxChart     = Math.max(...chartTotals, 1)
+  const grandTotal   = chartTotals.reduce((a, b) => a + b, 0)
+  const nonZeroMonths = chartTotals.filter(t => t > 0).length
+  const avgMonthly   = nonZeroMonths > 0 ? grandTotal / nonZeroMonths : 0
 
   // ── Por categoría ─────────────────────────────────────────
   function getCatTotal(cat) {
