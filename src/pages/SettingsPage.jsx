@@ -1,7 +1,7 @@
 import { useState, useRef } from 'react'
 import { supabase } from '../lib/supabase'
 import { WEEKDAYS_SHORT } from '../lib/utils'
-import { ChevronRight, LogOut, Camera, Bell, BellOff } from 'lucide-react'
+import { ChevronRight, LogOut, Camera, Bell, BellOff, AlertTriangle } from 'lucide-react'
 import { usePushNotifications } from '../hooks/usePushNotifications'
 import { showToast } from '../components/Toast'
 
@@ -55,7 +55,7 @@ export function SettingsPage({ profile, user, onUpdate, onUploadAvatar, onDataDe
     if (error) { setDangerError('Error al eliminar los datos'); return }
     setDangerModal(null); setDangerInput('')
     onDataDeleted && onDataDeleted()
-    showToast('Todos tus datos han sido eliminados')
+    showToast('Todos tus pagos han sido eliminados')
   }
 
   async function handleDeleteAccount() {
@@ -359,7 +359,7 @@ export function SettingsPage({ profile, user, onUpdate, onUploadAvatar, onDataDe
 
             {/* Ícono de advertencia */}
             <div style={{ width: 44, height: 44, borderRadius: 12, background: 'var(--danger-soft)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 12 }}>
-              <span style={{ fontSize: 22 }}>⚠️</span>
+              <AlertTriangle size={22} color="var(--danger)" />
             </div>
 
             <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--danger)', marginBottom: 6 }}>
