@@ -277,7 +277,25 @@ export function PaymentsPage({ payments, profile, unreadCount, onOpenNotifs, onG
           <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)', marginBottom: 14 }}>
             Gastos Mensuales
           </div>
-          <div style={{ display: 'flex', alignItems: 'flex-end', gap: 6, height: 100 }}>
+          {/* Labels de monto arriba */}
+          <div style={{ display: 'flex', gap: 6, marginBottom: 4, height: 16 }}>
+            {chartMonths.map((m, i) => {
+              const total     = chartTotals[i]
+              const isCurrent = m.month === now.getMonth() && m.year === now.getFullYear()
+              const barColor  = selectedCat ? CAT_COLOR[selectedCat] : 'var(--accent)'
+              return (
+                <div key={i} style={{ flex: 1, textAlign: 'center' }}>
+                  {total > 0 && (
+                    <div style={{ fontSize: 9, fontWeight: 700, color: isCurrent ? barColor : 'var(--text)' }}>
+                      {fmt(total)}
+                    </div>
+                  )}
+                </div>
+              )
+            })}
+          </div>
+          {/* Barras */}
+          <div style={{ display: 'flex', alignItems: 'flex-end', gap: 6, height: 80 }}>
             {chartMonths.map((m, i) => {
               const total     = chartTotals[i]
               const heightPct = (total / maxChart) * 100
@@ -285,23 +303,27 @@ export function PaymentsPage({ payments, profile, unreadCount, onOpenNotifs, onG
               const barColor  = selectedCat ? CAT_COLOR[selectedCat] : 'var(--accent)'
               const barMuted  = selectedCat ? (CAT_COLOR[selectedCat] + '55') : 'var(--accent-border)'
               return (
-                <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
-                  {total > 0 && (
-                    <div style={{ fontSize: 9, fontWeight: 700, color: isCurrent ? barColor : 'var(--text)', textAlign: 'center' }}>
-                      {fmt(total)}
-                    </div>
-                  )}
+                <div key={i} style={{ flex: 1, height: '100%', display: 'flex', alignItems: 'flex-end' }}>
                   <div style={{
                     width: '100%',
-                    height: `${Math.max(heightPct, total > 0 ? 4 : 0)}%`,
+                    height: `${Math.max(heightPct, total > 0 ? 3 : 0)}%`,
                     background: isCurrent ? barColor : barMuted,
                     borderRadius: '3px 3px 0 0',
-                    minHeight: total > 0 ? 4 : 0,
+                    minHeight: total > 0 ? 3 : 0,
                     transition: 'height .3s',
                   }} />
-                  <div style={{ fontSize: 9, fontWeight: isCurrent ? 700 : 500, color: isCurrent ? barColor : 'var(--text)', textAlign: 'center' }}>
-                    {MONTHS_SHORT[m.month]}
-                  </div>
+                </div>
+              )
+            })}
+          </div>
+          {/* Labels de mes abajo */}
+          <div style={{ display: 'flex', gap: 6, marginTop: 4 }}>
+            {chartMonths.map((m, i) => {
+              const isCurrent = m.month === now.getMonth() && m.year === now.getFullYear()
+              const barColor  = selectedCat ? CAT_COLOR[selectedCat] : 'var(--accent)'
+              return (
+                <div key={i} style={{ flex: 1, textAlign: 'center', fontSize: 9, fontWeight: isCurrent ? 700 : 500, color: isCurrent ? barColor : 'var(--text)' }}>
+                  {MONTHS_SHORT[m.month]}
                 </div>
               )
             })}
