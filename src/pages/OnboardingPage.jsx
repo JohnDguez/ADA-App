@@ -98,7 +98,7 @@ export function OnboardingPage({ userId, onDone }) {
             <h2 style={{ fontSize: 24, fontWeight: 700, color: 'var(--text)', marginBottom: 8 }}>¿Cómo te llamas?</h2>
             <p style={{ fontSize: 14, fontWeight: 400, color: 'var(--text)', marginBottom: 28 }}>Así te saludaremos cada vez que abras la app.</p>
             <label className="field-label">Tu nombre</label>
-            <input autoFocus className="field-input" type="text" value={name} onChange={e => setName(e.target.value)} onKeyDown={e => e.key === 'Enter' && nextStep()} placeholder="Ej. Johnatan" style={{ marginBottom: nameError ? 6 : 0 }} />
+            <input autoFocus className="field-input" type="text" value={name} onChange={e => setName(e.target.value)} onKeyDown={e => e.key === 'Enter' && nextStep()} enterKeyHint="next" placeholder="Ej. Johnatan" style={{ marginBottom: nameError ? 6 : 0 }} />
             {nameError && <div style={{ fontSize: 12, color: 'var(--danger)' }}>{nameError}</div>}
           </div>
         )}
@@ -158,11 +158,11 @@ export function OnboardingPage({ userId, onDone }) {
                   <div style={{ display: 'flex', gap: 10 }}>
                     <div style={{ flex: 1 }}>
                       <label style={{ display: 'block', fontSize: 11, fontWeight: 500, color: 'var(--text)', marginBottom: 4 }}>Día 1 (1–28)</label>
-                      <input type="number" min="1" max="28" value={cobroDay1 ?? ''} onChange={e => setCobroDay1(Math.min(28, Math.max(1, parseInt(e.target.value)||1)))} placeholder="ej. 13" className="field-input" />
+                      <input type="number" min="1" max="28" value={cobroDay1 ?? ''} onChange={e => setCobroDay1(Math.min(28, Math.max(1, parseInt(e.target.value)||1)))} onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); document.getElementById('cobro-day2')?.focus() } }} enterKeyHint="next" placeholder="ej. 13" className="field-input" />
                     </div>
                     <div style={{ flex: 1 }}>
                       <label style={{ display: 'block', fontSize: 11, fontWeight: 500, color: 'var(--text)', marginBottom: 4 }}>Día 2 (1–31)</label>
-                      <input type="number" min="1" max="31" value={cobroDay2 ?? ''} onChange={e => setCobroDay2(Math.min(31, Math.max(1, parseInt(e.target.value)||1)))} placeholder="ej. 28" className="field-input" />
+                      <input type="number" min="1" max="31" value={cobroDay2 ?? ''} id="cobro-day2" onChange={e => setCobroDay2(Math.min(31, Math.max(1, parseInt(e.target.value)||1)))} onKeyDown={e => e.key === 'Enter' && nextStep()} enterKeyHint="next" placeholder="ej. 28" className="field-input" />
                     </div>
                   </div>
                 )}
@@ -173,7 +173,7 @@ export function OnboardingPage({ userId, onDone }) {
             {cobroFreq === 'monthly' && (
               <div style={{ marginTop: 16 }}>
                 <label className="field-label">Día de cobro</label>
-                <input type="number" min="1" max="31" value={cobroDay1 ?? ''} onChange={e => setCobroDay1(Math.min(31, Math.max(1, parseInt(e.target.value)||1)))} placeholder="ej. 5" className="field-input" style={{ maxWidth: 120, marginTop: 8 }} />
+                <input type="number" min="1" max="31" value={cobroDay1 ?? ''} onChange={e => setCobroDay1(Math.min(31, Math.max(1, parseInt(e.target.value)||1)))} onKeyDown={e => e.key === 'Enter' && nextStep()} enterKeyHint="next" placeholder="ej. 5" className="field-input" style={{ maxWidth: 120, marginTop: 8 }} />
                 {cobroDay1 && <div style={{ fontSize: 12, fontWeight: 400, color: 'var(--text)', marginTop: 6 }}>Tu periodo de cobro empieza el día <strong>{cobroDay1}</strong> de cada mes.</div>}
               </div>
             )}
@@ -197,7 +197,7 @@ export function OnboardingPage({ userId, onDone }) {
             {salaryEnabled && (
               <div>
                 <label className="field-label">Monto por periodo</label>
-                <input autoFocus type="number" value={salaryAmount} onChange={e => setSalaryAmount(e.target.value)} placeholder="0.00" className="field-input" />
+                <input autoFocus type="number" value={salaryAmount} onChange={e => setSalaryAmount(e.target.value)} onKeyDown={e => e.key === 'Enter' && nextStep()} enterKeyHint="next" placeholder="0.00" className="field-input" />
               </div>
             )}
           </div>
