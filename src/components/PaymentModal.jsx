@@ -58,7 +58,7 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
       setBiweeklyDate(new Date().toISOString().split('T')[0])
       setCategory('Servicios'); setIsVariable(false)
       setRecurFreq('monthly'); setWeekday(5)
-      setMode('single'); setTotalInstallments(''); setStartFrom('1')
+      setMode('single'); setTotalInstallments(''); setStartFrom('1'); setTotalAmount('')
     }
     setError(''); setConfirmClose(false)
   }, [initial, open])
@@ -96,14 +96,17 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
       setError(`Ya existe un pago activo con el nombre "${name.trim()}"`); return
     }
     if (mode === 'installment') {
-      if (!amount || isNaN(parseFloat(amount))) { setError('Agrega el monto por pago'); return }
-      if (!totalInstallments || isNaN(parseInt(totalInstallments))) { setError('Agrega el número total de pagos'); return }
+      const totalAmt = parseFloat(totalAmount)
+      if (!totalAmount || isNaN(totalAmt) || totalAmt <= 0) { setError('Agrega el monto total a pagar'); return }
+      if (!totalInstallments || isNaN(parseInt(totalInstallments))) { setError('Agrega el número de pagos'); return }
       const total = parseInt(totalInstallments)
+      if (total < 2) { setError('El mínimo es 2 pagos'); return }
       const start = parseInt(startFrom) || 1
       if (start > total) { setError('El pago inicial no puede ser mayor al total'); return }
       if (!dueDate) { setError('Selecciona la fecha del primer pago'); return }
+      const amountPerPayment = Math.round((totalAmt / total) * 100) / 100
       setSaving(true)
-      await onSaveInstallment({ name: name.trim(), amount: parseFloat(amount), totalInstallments: total, startFrom: start, recurFreq, category, firstDate: dueDate })
+      await onSaveInstallment({ name: name.trim(), amount: amountPerPayment, totalInstallments: total, startFrom: start, recurFreq, category, firstDate: dueDate })
       setSaving(false); onClose(); return
     }
     if (!isVariable && (!amount || isNaN(parseFloat(amount)))) { setError('Agrega el monto o marca como variable'); return }
@@ -189,25 +192,54 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
             </select>
           </Field>
 
-          <Toggle label="Pago variable" sub="El monto cambia cada vez que pagas" value={isVariable} onChange={setIsVariable} />
+          {mode !== 'installment' && (
+            <Toggle label="Pago variable" sub="El monto cambia cada vez que pagas" value={isVariable} onChange={setIsVariable} />
+          )}
 
-          {!isVariable && (
+          {!isVariable && mode !== 'installment' && (
             <Field label="Monto">
               <input className="field-input" type="number" value={amount} onChange={e => setAmount(e.target.value)} placeholder="0.00" />
             </Field>
           )}
 
-          {mode === 'installment' && (
-            <>
-              <Field label="Total de pagos">
-                <input className="field-input" type="number" value={totalInstallments} onChange={e => setTotalInstallments(e.target.value)} placeholder="Ej. 20" min="2" />
-              </Field>
-              <Field label="Empezar desde el pago #">
-                <input className="field-input" type="number" value={startFrom} onChange={e => setStartFrom(e.target.value)} placeholder="1" min="1" />
-                {startFrom > 1 && <div style={{ fontSize: 11, color: 'var(--text)', marginTop: 4 }}>Los pagos anteriores al #{startFrom} se marcarán como pagados automáticamente.</div>}
-              </Field>
-            </>
-          )}
+          {mode === 'installment' && (() => {
+            const totalAmt   = parseFloat(totalAmount) || 0
+            const numPayments = parseInt(totalInstallments) || 0
+            const perPayment = numPayments > 0 ? Math.round((totalAmt / numPayments) * 100) / 100 : 0
+            const startNum   = parseInt(startFrom) || 1
+            const nextDate   = dueDate ? new Date(dueDate + 'T12:00:00') : null
+            return (
+              <>
+                <Field label="Monto total a pagar">
+                  <input className="field-input" type="number" value={totalAmount} onChange={e => setTotalAmount(e.target.value)} placeholder="Ej. 5000" min="0" enterKeyHint="next" />
+                </Field>
+                <Field label="Número de pagos">
+                  <input className="field-input" type="number" value={totalInstallments} onChange={e => setTotalInstallments(e.target.value)} placeholder="Ej. 10" min="2" enterKeyHint="next" />
+                </Field>
+                <Field label="Empezar desde el pago #">
+                  <input className="field-input" type="number" value={startFrom} onChange={e => setStartFrom(e.target.value)} placeholder="1" min="1" enterKeyHint="next" />
+                  {startNum > 1 && <div style={{ fontSize: 11, color: 'var(--text)', marginTop: 4 }}>Los pagos 1 al {startNum - 1} se marcarán como pagados automáticamente.</div>}
+                </Field>
+
+                {/* Resumen */}
+                {totalAmt > 0 && numPayments >= 2 && (
+                  <div style={{ background: 'var(--accent-soft)', borderRadius: 'var(--radius-sm)', padding: '12px 14px', marginBottom: 12 }}>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--accent)', marginBottom: 6 }}>Resumen</div>
+                    <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--text)', lineHeight: 1.7 }}>
+                      Pagarás <strong>{numPayments} pagos de ${perPayment.toLocaleString('es-MX')}</strong>, uno cada{' '}
+                      {recurFreq === 'weekly' ? 'semana' : recurFreq === 'biweekly' ? 'quincena' : recurFreq === 'monthly' ? 'mes' : recurFreq === 'bimonthly' ? '2 meses' : recurFreq === 'quarterly' ? '3 meses' : recurFreq === 'semiannual' ? '6 meses' : 'año'}.
+                      {nextDate && (
+                        <> Tu próximo pago es el <strong>{nextDate.getDate()} de {['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'][nextDate.getMonth()]}</strong>.</>
+                      )}
+                      {startNum > 1 && (
+                        <> Total restante a pagar: <strong>${((numPayments - startNum + 1) * perPayment).toLocaleString('es-MX')}</strong>.</>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </>
+            )
+          })()}
 
           {(mode === 'recurrent' || mode === 'installment') && (
             <Field label="Frecuencia">
