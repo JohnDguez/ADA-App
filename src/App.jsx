@@ -13,7 +13,6 @@ import { BottomNav } from './components/BottomNav'
 import { NotificationsPanel } from './components/NotificationsPanel'
 import { PaymentModal } from './components/PaymentModal'
 import { VariableAmountModal } from './components/VariableAmountModal'
-import { PasswordSetupModal } from './components/PasswordSetupModal'
 import { Toast, showToast } from './components/Toast'
 
 function fmt(n) { return '$' + Number(n).toLocaleString('es-MX', { minimumFractionDigits: 0, maximumFractionDigits: 0 }) }
@@ -24,32 +23,22 @@ export default function App() {
   const { profile, loading: profileLoading, updateProfile, uploadAvatar } = useProfile(user?.id)
   const { notifications, unreadCount, markAsRead, markAllAsRead, deleteNotification, clearAll } = useNotifications(user?.id)
   const [tab,        setTab]        = useState(() => {
+    // Solo restaurar el tab si la sesión ya estaba activa (reload)
+    // Si es apertura nueva, sessionStorage no tendrá 'ada_session' y arrancamos en home
     const hasActiveSession = sessionStorage.getItem('ada_session')
     return hasActiveSession ? (sessionStorage.getItem('ada_tab') || 'home') : 'home'
   })
-  const [modalOpen,   setModalOpen]   = useState(false)
+  const [modalOpen,  setModalOpen]  = useState(false)
   const [editPayment, setEditPayment] = useState(null)
-  const [varModal,    setVarModal]    = useState({ open: false, payment: null })
-  const [notifOpen,   setNotifOpen]   = useState(false)
+  const [varModal,   setVarModal]   = useState({ open: false, payment: null })
+  const [notifOpen,  setNotifOpen]  = useState(false)
 
   if (authLoading || (user && profileLoading)) return <Splash />
   if (isRecovery) return <ResetPasswordPage onDone={() => setIsRecovery(false)} />
   if (!user) return <AuthPage />
   if (user && !profile.onboarding_completed) return <OnboardingPage userId={user.id} onDone={updateProfile} />
 
-  // Detectar usuario Google que aún no ha creado contraseña
-  const isGoogle    = user?.app_metadata?.provider === 'google'
-  const needsPasswd = isGoogle && profile.has_password === false
-
-  if (needsPasswd) {
-    return (
-      <PasswordSetupModal
-        userId={user.id}
-        onDone={() => updateProfile({ has_password: true })}
-      />
-    )
-  }
-
+  // Marcar sesión activa para distinguir reload de apertura nueva
   sessionStorage.setItem('ada_session', '1')
 
   function openAdd()   { setEditPayment(null); setModalOpen(true) }
@@ -121,6 +110,7 @@ export default function App() {
     onPostpone: handlePostpone, onAdvance: handleAdvance,
   }
 
+  // Props del header compartidos entre páginas
   const headerProps = {
     profile,
     unreadCount,
@@ -145,21 +135,13 @@ export default function App() {
           onClearAllNotifs={clearAll}
         />
       )}
-      {tab === 'payments' && (
-        <PaymentsPage
-          payments={payments}
-          {...headerProps}
-          onMarkUnpaid={handleMarkUnpaid}
-          onDelete={handleDelete}
-          onDeleteDirect={async (id) => { await deletePayment(id); showToast('Pago eliminado') }}
-          onUpdateProfile={updateProfile}
-        />
-      )}
-      {tab === 'recurrents' && <RecurrentsPage payments={payments} onPause={handlePauseRecurrent} onResume={handleResumeRecurrent} onDelete={handleDeleteRecurrent} onEdit={openEdit} />}
+      {tab === 'payments'   && <PaymentsPage payments={payments} {...headerProps} onMarkUnpaid={handleMarkUnpaid} onDelete={handleDelete} onDeleteDirect={async (id) => { await deletePayment(id); showToast('Pago eliminado') }} />}
+      {tab === 'recurrents' && <RecurrentsPage payments={payments} {...headerProps} onPause={handlePauseRecurrent} onResume={handleResumeRecurrent} onDelete={handleDelete} onEdit={openEdit} />}
       {tab === 'settings'   && <SettingsPage profile={profile} user={user} onUpdate={updateProfile} onUploadAvatar={uploadAvatar} onDataDeleted={() => { refetch() }} />}
 
       <BottomNav active={tab} onChange={t => { setTab(t); sessionStorage.setItem('ada_tab', t); window.scrollTo(0, 0) }} onAdd={openAdd} />
 
+      {/* Panel de notificaciones — global, funciona desde cualquier página */}
       <NotificationsPanel
         open={notifOpen}
         onClose={() => setNotifOpen(false)}
