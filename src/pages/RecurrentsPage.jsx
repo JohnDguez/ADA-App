@@ -207,50 +207,42 @@ export function RecurrentsPage({ payments, profile, unreadCount, onOpenNotifs, o
                       <div key={g.name}>
                         <div style={{ display: 'flex', alignItems: 'center', padding: '12px 14px', borderBottom: isLast && !isConfirming ? 'none' : '0.5px solid var(--border)', gap: 10, opacity: paused ? 0.55 : 1, transition: 'opacity .2s' }}>
 
-                          {/* Info */}
+                          {/* Info — 3 líneas */}
                           <div style={{ flex: 1, minWidth: 0 }}>
-                            {/* Fila 1: nombre + frecuencia */}
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4, flexWrap: 'wrap' }}>
-                              <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)' }}>{g.name}</span>
-                              <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--accent)' }}>
-                                {RECUR_FREQ[g.recur_freq] || '—'}
-                              </span>
-                            </div>
-                            {/* Fila 2: etiqueta tipo + datos */}
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-                              {/* Etiqueta tipo */}
+                            {/* Línea 1: nombre */}
+                            <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)', marginBottom: 4 }}>{g.name}</div>
+
+                            {/* Línea 2: etiqueta + frecuencia */}
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4, flexWrap: 'wrap' }}>
                               {g.is_installment && (
-                                <span style={{ fontSize: 9, fontWeight: 700, padding: '2px 7px', borderRadius: 4, background: 'var(--accent)', color: '#fff', flexShrink: 0 }}>Parcialidades</span>
+                                <span style={{ fontSize: 9, fontWeight: 700, padding: '2px 7px', borderRadius: 4, background: 'var(--accent)', color: '#fff' }}>Parcialidades</span>
                               )}
                               {!g.is_installment && !g.is_variable && (
-                                <span style={{ fontSize: 9, fontWeight: 700, padding: '2px 7px', borderRadius: 4, background: 'var(--paid)', color: '#fff', flexShrink: 0 }}>Recurrente</span>
+                                <span style={{ fontSize: 9, fontWeight: 700, padding: '2px 7px', borderRadius: 4, background: 'var(--paid)', color: '#fff' }}>Recurrente</span>
                               )}
                               {g.is_variable && (
-                                <span style={{ fontSize: 9, fontWeight: 700, padding: '2px 7px', borderRadius: 4, background: '#6884A9', color: '#fff', flexShrink: 0 }}>Variable</span>
+                                <span style={{ fontSize: 9, fontWeight: 700, padding: '2px 7px', borderRadius: 4, background: '#6884A9', color: '#fff' }}>Variable</span>
                               )}
                               {paused && (
-                                <span style={{ fontSize: 9, fontWeight: 700, padding: '2px 7px', borderRadius: 4, background: 'var(--warning)', color: '#fff', flexShrink: 0 }}>Pausado</span>
+                                <span style={{ fontSize: 9, fontWeight: 700, padding: '2px 7px', borderRadius: 4, background: 'var(--warning)', color: '#fff' }}>Pausado</span>
                               )}
-                              {/* Separador */}
-                              <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--border)', lineHeight: 1 }}>·</span>
-                              {/* Datos */}
-                              {g.is_installment && (
-                                <>
-                                  <span style={{ fontSize: 11, fontWeight: 500, color: 'var(--text)' }}>{paid}/{g.total_installments} Pagos</span>
-                                  <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--border)', lineHeight: 1 }}>·</span>
-                                </>
-                              )}
-                              {!g.is_variable && next && (
-                                <>
-                                  <span style={{ fontSize: 11, fontWeight: 500, color: 'var(--text)' }}>{fmt(next.amount)}/pago</span>
-                                  <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--border)', lineHeight: 1 }}>·</span>
-                                </>
-                              )}
-                              {next ? (
-                                <span style={{ fontSize: 11, fontWeight: 500, color: 'var(--text)' }}>Próx. {dateOf(next.due_date).getDate()} {MONTHS_SHORT[dateOf(next.due_date).getMonth()]}</span>
-                              ) : (
-                                <span style={{ fontSize: 11, fontWeight: 500, color: 'var(--text)' }}>Sin pendientes</span>
-                              )}
+                              <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--accent)' }}>{RECUR_FREQ[g.recur_freq] || '—'}</span>
+                            </div>
+
+                            {/* Línea 3: datos con punto */}
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 5, flexWrap: 'wrap' }}>
+                              {g.is_installment && (<>
+                                <span style={{ fontSize: 11, fontWeight: 500, color: 'var(--text)' }}>{paid}/{g.total_installments} Pagos</span>
+                                <span style={{ fontSize: 14, fontWeight: 700, color: 'var(--text)', lineHeight: 1 }}>·</span>
+                              </>)}
+                              {!g.is_variable && next && (<>
+                                <span style={{ fontSize: 11, fontWeight: 500, color: 'var(--text)' }}>{fmt(next.amount)}/pago</span>
+                                <span style={{ fontSize: 14, fontWeight: 700, color: 'var(--text)', lineHeight: 1 }}>·</span>
+                              </>)}
+                              {next
+                                ? <span style={{ fontSize: 11, fontWeight: 500, color: 'var(--text)' }}>Próx. {dateOf(next.due_date).getDate()} {MONTHS_SHORT[dateOf(next.due_date).getMonth()]}</span>
+                                : <span style={{ fontSize: 11, fontWeight: 500, color: 'var(--text)' }}>Sin pendientes</span>
+                              }
                             </div>
                           </div>
 
