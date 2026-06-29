@@ -505,9 +505,15 @@ export function PaymentsPage({ payments, profile, unreadCount, onOpenNotifs, onG
             <button
               onClick={handleAddIncome}
               disabled={savingIncome || !incomeAmount || parseFloat(incomeAmount) <= 0}
-              style={{ width: '100%', padding: '12px', background: 'var(--accent)', color: '#fff', border: 'none', borderRadius: 'var(--radius-sm)', fontSize: 14, fontWeight: 600, cursor: 'pointer', opacity: savingIncome || !incomeAmount || parseFloat(incomeAmount) <= 0 ? 0.6 : 1, fontFamily: 'DM Sans, sans-serif' }}
+              style={{ width: '100%', padding: '12px', background: 'var(--accent)', color: '#fff', border: 'none', borderRadius: 'var(--radius-sm)', fontSize: 14, fontWeight: 600, cursor: 'pointer', opacity: savingIncome || !incomeAmount || parseFloat(incomeAmount) <= 0 ? 0.6 : 1, fontFamily: 'DM Sans, sans-serif', marginBottom: 8 }}
             >
               {savingIncome ? 'Guardando...' : 'Guardar ingreso'}
+            </button>
+            <button
+              onClick={() => setIncomeModal(false)}
+              style={{ width: '100%', padding: '10px', background: 'none', color: 'var(--text)', border: '0.5px solid var(--border)', borderRadius: 'var(--radius-sm)', fontSize: 14, fontWeight: 500, cursor: 'pointer', fontFamily: 'DM Sans, sans-serif' }}
+            >
+              Cancelar
             </button>
           </div>
         </div>
