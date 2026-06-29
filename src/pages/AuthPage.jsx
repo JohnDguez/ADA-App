@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { supabase } from '../lib/supabase'
-import { Eye, EyeOff, Lock, Mail, KeyRound, X } from 'lucide-react'
+import { Eye, EyeOff, Lock, Mail, KeyRound, X, Check } from 'lucide-react'
+import { passwordRequirements, isPasswordStrong } from '../components/PasswordSetupModal'
 
 // ── Modal de Términos y Condiciones ──────────────────────────────────────────
 function TermsModal({ onClose }) {
@@ -17,51 +18,18 @@ function TermsModal({ onClose }) {
           </button>
         </div>
         <div style={{ overflowY: 'auto', padding: '20px', flex: 1, lineHeight: 1.7, fontSize: 13, color: 'var(--text)' }}>
-
           <p style={{ marginBottom: 16 }}>Última actualización: junio de 2026</p>
-
           <p style={{ marginBottom: 16 }}>Bienvenido a <strong>ADA Pay</strong>. Al crear una cuenta, aceptas los presentes Términos y Condiciones de uso. Por favor léelos cuidadosamente antes de continuar.</p>
-
-          <Section title="1. Descripción del servicio">
-            ADA Pay es una aplicación de seguimiento personal de pagos y compromisos financieros. Su propósito es ayudarte a organizar y recordar tus pagos según tu periodo de cobro. ADA Pay no es una institución financiera, no gestiona dinero real, no realiza transferencias y no tiene acceso a tus cuentas bancarias.
-          </Section>
-
-          <Section title="2. Registro y cuenta">
-            Para usar ADA Pay debes crear una cuenta con un correo electrónico válido o mediante tu cuenta de Google. Eres responsable de mantener la confidencialidad de tus credenciales de acceso. Debes ser mayor de 18 años para registrarte.
-          </Section>
-
-          <Section title="3. Uso aceptable">
-            Te comprometes a usar ADA Pay únicamente para fines personales y lícitos. Queda prohibido usar la aplicación para actividades fraudulentas, suplantar identidades, o intentar vulnerar la seguridad del sistema.
-          </Section>
-
-          <Section title="4. Privacidad y datos">
-            Los datos que ingresas en ADA Pay (nombre, pagos, montos) se almacenan de forma segura en servidores de Supabase. No vendemos ni compartimos tu información personal con terceros con fines comerciales. Puedes eliminar tu cuenta y tus datos en cualquier momento desde Ajustes.
-          </Section>
-
-          <Section title="5. Notificaciones push">
-            Si activas las notificaciones, ADA Pay enviará alertas relacionadas con tus pagos registrados. Puedes desactivarlas en cualquier momento desde Ajustes o desde la configuración de tu dispositivo.
-          </Section>
-
-          <Section title="6. Limitación de responsabilidad">
-            ADA Pay es una herramienta de apoyo personal. No garantizamos que el uso de la aplicación prevenga pagos tardíos, cargos por mora u otras consecuencias financieras. El usuario es el único responsable de sus decisiones financieras.
-          </Section>
-
-          <Section title="7. Disponibilidad del servicio">
-            Nos esforzamos por mantener el servicio disponible en todo momento, pero no garantizamos disponibilidad ininterrumpida. Podemos realizar mantenimientos o actualizaciones sin previo aviso.
-          </Section>
-
-          <Section title="8. Modificaciones">
-            Nos reservamos el derecho de modificar estos términos en cualquier momento. Te notificaremos de cambios significativos a través de la aplicación. El uso continuado de ADA Pay tras los cambios implica tu aceptación.
-          </Section>
-
-          <Section title="9. Cancelación">
-            Puedes dejar de usar ADA Pay y eliminar tu cuenta en cualquier momento. Nos reservamos el derecho de suspender cuentas que violen estos términos.
-          </Section>
-
-          <Section title="10. Contacto">
-            Si tienes dudas sobre estos términos, puedes contactarnos a través de los canales disponibles en la aplicación.
-          </Section>
-
+          <Section title="1. Descripción del servicio">ADA Pay es una aplicación de seguimiento personal de pagos y compromisos financieros. Su propósito es ayudarte a organizar y recordar tus pagos según tu periodo de cobro. ADA Pay no es una institución financiera, no gestiona dinero real, no realiza transferencias y no tiene acceso a tus cuentas bancarias.</Section>
+          <Section title="2. Registro y cuenta">Para usar ADA Pay debes crear una cuenta con un correo electrónico válido o mediante tu cuenta de Google. Eres responsable de mantener la confidencialidad de tus credenciales de acceso. Debes ser mayor de 18 años para registrarte.</Section>
+          <Section title="3. Uso aceptable">Te comprometes a usar ADA Pay únicamente para fines personales y lícitos. Queda prohibido usar la aplicación para actividades fraudulentas, suplantar identidades, o intentar vulnerar la seguridad del sistema.</Section>
+          <Section title="4. Privacidad y datos">Los datos que ingresas en ADA Pay (nombre, pagos, montos) se almacenan de forma segura en servidores de Supabase. No vendemos ni compartimos tu información personal con terceros con fines comerciales. Puedes eliminar tu cuenta y tus datos en cualquier momento desde Ajustes.</Section>
+          <Section title="5. Notificaciones push">Si activas las notificaciones, ADA Pay enviará alertas relacionadas con tus pagos registrados. Puedes desactivarlas en cualquier momento desde Ajustes o desde la configuración de tu dispositivo.</Section>
+          <Section title="6. Limitación de responsabilidad">ADA Pay es una herramienta de apoyo personal. No garantizamos que el uso de la aplicación prevenga pagos tardíos, cargos por mora u otras consecuencias financieras. El usuario es el único responsable de sus decisiones financieras.</Section>
+          <Section title="7. Disponibilidad del servicio">Nos esforzamos por mantener el servicio disponible en todo momento, pero no garantizamos disponibilidad ininterrumpida. Podemos realizar mantenimientos o actualizaciones sin previo aviso.</Section>
+          <Section title="8. Modificaciones">Nos reservamos el derecho de modificar estos términos en cualquier momento. Te notificaremos de cambios significativos a través de la aplicación. El uso continuado de ADA Pay tras los cambios implica tu aceptación.</Section>
+          <Section title="9. Cancelación">Puedes dejar de usar ADA Pay y eliminar tu cuenta en cualquier momento. Nos reservamos el derecho de suspender cuentas que violen estos términos.</Section>
+          <Section title="10. Contacto">Si tienes dudas sobre estos términos, puedes contactarnos a través de los canales disponibles en la aplicación.</Section>
           <p style={{ marginTop: 16, fontWeight: 600 }}>Al crear tu cuenta, confirmas que has leído y aceptas estos Términos y Condiciones.</p>
         </div>
         <div style={{ padding: '14px 20px', borderTop: '0.5px solid var(--border)', flexShrink: 0 }}>
@@ -81,6 +49,26 @@ function Section({ title, children }) {
   )
 }
 
+// ── Indicador de requisitos de contraseña ────────────────────────────────────
+function RequirementRow({ met, label }) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
+      <div style={{
+        width: 16, height: 16, borderRadius: '50%', flexShrink: 0,
+        background: met ? 'var(--paid)' : 'var(--border)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        transition: 'background .15s',
+      }}>
+        {met
+          ? <Check size={10} color="#fff" strokeWidth={3} />
+          : <X size={10} color="var(--text)" strokeWidth={2.5} />
+        }
+      </div>
+      <span style={{ fontSize: 12, fontWeight: 500, color: 'var(--text)' }}>{label}</span>
+    </div>
+  )
+}
+
 // ── Reset Password ────────────────────────────────────────────────────────────
 export function ResetPasswordPage({ onDone }) {
   const [newPassword, setNewPassword] = useState('')
@@ -90,12 +78,16 @@ export function ResetPasswordPage({ onDone }) {
   const [loading,     setLoading]     = useState(false)
   const [error,       setError]       = useState('')
 
+  const reqs   = passwordRequirements(newPassword)
+  const strong = isPasswordStrong(newPassword)
+  const match  = newPassword && confirm && newPassword === confirm
+
   async function handleUpdate() {
     setError('')
-    if (!newPassword || newPassword.length < 6) { setError('La contraseña debe tener al menos 6 caracteres'); return }
-    if (newPassword !== confirm) { setError('Las contraseñas no coinciden'); return }
+    if (!strong) { setError('La contraseña no cumple todos los requisitos'); return }
+    if (!match)  { setError('Las contraseñas no coinciden'); return }
     setLoading(true)
-    const hashParams = new URLSearchParams(window.location.hash.slice(1))
+    const hashParams   = new URLSearchParams(window.location.hash.slice(1))
     const accessToken  = hashParams.get('access_token')
     const refreshToken = hashParams.get('refresh_token')
     if (accessToken && refreshToken) {
@@ -116,16 +108,24 @@ export function ResetPasswordPage({ onDone }) {
         {error && <div style={{ background: 'var(--danger-soft)', border: '0.5px solid var(--danger-border)', borderRadius: 'var(--radius-sm)', padding: '10px 12px', fontSize: 13, color: 'var(--danger)', marginBottom: 16 }}>{error}</div>}
         <Field label="Nueva contraseña">
           <FieldIcon><Lock size={15} color="var(--text)" /></FieldIcon>
-          <input className="field-input" style={{ paddingLeft: 40, paddingRight: 40 }} type={showNew ? 'text' : 'password'} value={newPassword} onChange={e => setNewPassword(e.target.value)} placeholder="Mínimo 6 caracteres" />
+          <input className="field-input" style={{ paddingLeft: 40, paddingRight: 40 }} type={showNew ? 'text' : 'password'} value={newPassword} onChange={e => setNewPassword(e.target.value)} placeholder="Mínimo 8 caracteres" />
           <EyeBtn show={showNew} onToggle={() => setShowNew(v => !v)} />
         </Field>
+        {newPassword.length > 0 && (
+          <div style={{ background: 'var(--bg)', borderRadius: 'var(--radius-sm)', padding: '10px 12px', marginBottom: 14, border: '0.5px solid var(--border)' }}>
+            <RequirementRow met={reqs.length}    label="Mínimo 8 caracteres" />
+            <RequirementRow met={reqs.uppercase} label="Al menos una mayúscula" />
+            <RequirementRow met={reqs.number}    label="Al menos un número" />
+            <RequirementRow met={reqs.symbol}    label="Al menos un símbolo especial (!@#$...)" />
+          </div>
+        )}
         <Field label="Confirmar contraseña">
           <FieldIcon><Lock size={15} color="var(--text)" /></FieldIcon>
-          <input className="field-input" style={{ paddingLeft: 40, paddingRight: 40, borderColor: confirm && newPassword !== confirm ? 'var(--danger)' : undefined }} type={showConfirm ? 'text' : 'password'} value={confirm} onChange={e => setConfirm(e.target.value)} placeholder="Repite tu contraseña" onKeyDown={e => e.key === 'Enter' && handleUpdate()} />
+          <input className="field-input" style={{ paddingLeft: 40, paddingRight: 40, borderColor: confirm && !match ? 'var(--danger)' : undefined }} type={showConfirm ? 'text' : 'password'} value={confirm} onChange={e => setConfirm(e.target.value)} placeholder="Repite tu contraseña" onKeyDown={e => e.key === 'Enter' && handleUpdate()} />
           <EyeBtn show={showConfirm} onToggle={() => setShowConfirm(v => !v)} />
-          {confirm && newPassword !== confirm && <div style={{ fontSize: 11, color: 'var(--danger)', marginTop: 4 }}>Las contraseñas no coinciden</div>}
+          {confirm && !match && <div style={{ fontSize: 11, color: 'var(--danger)', marginTop: 4 }}>Las contraseñas no coinciden</div>}
         </Field>
-        <button onClick={handleUpdate} disabled={loading} className="btn-primary" style={{ marginTop: 8 }}>
+        <button onClick={handleUpdate} disabled={loading || !strong || !match} className="btn-primary" style={{ marginTop: 8, opacity: loading || !strong || !match ? 0.6 : 1 }}>
           {loading ? 'Guardando…' : 'Guardar contraseña'}
         </button>
       </div>
@@ -149,6 +149,10 @@ export function AuthPage() {
   const [termsAccepted, setTermsAccepted] = useState(false)
   const [showTerms,     setShowTerms]     = useState(false)
 
+  const reqs   = passwordRequirements(password)
+  const strong = isPasswordStrong(password)
+  const match  = password && confirm && password === confirm
+
   async function handleGoogle() {
     setGoogleLoading(true)
     await supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: window.location.origin } })
@@ -171,8 +175,8 @@ export function AuthPage() {
 
     if (mode === 'register') {
       if (!termsAccepted) { setError('Debes aceptar los Términos y Condiciones para continuar'); return }
-      if (password.length < 6) { setError('La contraseña debe tener al menos 6 caracteres'); return }
-      if (password !== confirm) { setError('Las contraseñas no coinciden'); return }
+      if (!strong) { setError('La contraseña no cumple todos los requisitos de seguridad'); return }
+      if (!match)  { setError('Las contraseñas no coinciden'); return }
       if (!accessCode.trim()) { setError('Ingresa tu código de acceso'); return }
       setLoading(true)
       const { data: codeData } = await supabase.from('access_codes').select('id').eq('code', accessCode.trim().toUpperCase()).eq('active', true).single()
@@ -227,11 +231,22 @@ export function AuthPage() {
           </Field>
         )}
 
+        {/* Requisitos de contraseña — solo en registro */}
+        {mode === 'register' && password.length > 0 && (
+          <div style={{ background: 'var(--surface)', borderRadius: 'var(--radius-sm)', padding: '10px 12px', marginBottom: 14, border: '0.5px solid var(--border)' }}>
+            <RequirementRow met={reqs.length}    label="Mínimo 8 caracteres" />
+            <RequirementRow met={reqs.uppercase} label="Al menos una mayúscula" />
+            <RequirementRow met={reqs.number}    label="Al menos un número" />
+            <RequirementRow met={reqs.symbol}    label="Al menos un símbolo especial (!@#$...)" />
+          </div>
+        )}
+
         {mode === 'register' && (<>
           <Field label="Confirmar contraseña">
             <FieldIcon><Lock size={15} color="var(--text)" /></FieldIcon>
-            <input className="field-input" style={{ paddingLeft: 40, paddingRight: 40, borderColor: confirm && password !== confirm ? 'var(--danger)' : undefined }} type={showConfirm ? 'text' : 'password'} value={confirm} onChange={e => setConfirm(e.target.value)} placeholder="Repite tu contraseña" enterKeyHint="next" />
+            <input className="field-input" style={{ paddingLeft: 40, paddingRight: 40, borderColor: confirm && !match ? 'var(--danger)' : undefined }} type={showConfirm ? 'text' : 'password'} value={confirm} onChange={e => setConfirm(e.target.value)} placeholder="Repite tu contraseña" enterKeyHint="next" />
             <EyeBtn show={showConfirm} onToggle={() => setShowConfirm(v => !v)} />
+            {confirm && !match && <div style={{ fontSize: 11, color: 'var(--danger)', marginTop: 4 }}>Las contraseñas no coinciden</div>}
           </Field>
           <Field label="Código de acceso">
             <FieldIcon><KeyRound size={15} color="var(--text)" /></FieldIcon>
@@ -239,17 +254,8 @@ export function AuthPage() {
           </Field>
 
           {/* Checkbox de términos */}
-          <div
-            onClick={() => setTermsAccepted(v => !v)}
-            style={{ display: 'flex', alignItems: 'flex-start', gap: 10, marginBottom: 20, cursor: 'pointer' }}
-          >
-            <div style={{
-              width: 18, height: 18, borderRadius: 4, flexShrink: 0, marginTop: 1,
-              border: termsAccepted ? 'none' : '1.5px solid var(--border)',
-              background: termsAccepted ? 'var(--accent)' : 'var(--surface)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              transition: 'background .15s',
-            }}>
+          <div onClick={() => setTermsAccepted(v => !v)} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, marginBottom: 20, cursor: 'pointer' }}>
+            <div style={{ width: 18, height: 18, borderRadius: 4, flexShrink: 0, marginTop: 1, border: termsAccepted ? 'none' : '1.5px solid var(--border)', background: termsAccepted ? 'var(--accent)' : 'var(--surface)', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'background .15s' }}>
               {termsAccepted && (
                 <svg width="11" height="9" viewBox="0 0 11 9" fill="none">
                   <path d="M1 4L4 7.5L10 1" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
@@ -258,10 +264,7 @@ export function AuthPage() {
             </div>
             <div style={{ fontSize: 13, color: 'var(--text)', lineHeight: 1.5 }}>
               He leído y acepto los{' '}
-              <span
-                onClick={e => { e.stopPropagation(); setShowTerms(true) }}
-                style={{ color: 'var(--accent)', fontWeight: 600, textDecoration: 'underline', cursor: 'pointer' }}
-              >
+              <span onClick={e => { e.stopPropagation(); setShowTerms(true) }} style={{ color: 'var(--accent)', fontWeight: 600, textDecoration: 'underline', cursor: 'pointer' }}>
                 Términos y Condiciones
               </span>
               {' '}de uso
