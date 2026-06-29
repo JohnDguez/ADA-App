@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
 import { WEEKDAYS_SHORT } from '../lib/utils'
 import { ChevronRight, LogOut, Camera, Bell, BellOff, AlertTriangle } from 'lucide-react'
@@ -33,6 +33,16 @@ export function SettingsPage({ profile, user, onUpdate, onUploadAvatar, onDataDe
     { label: '13 y 28', d1: 13, d2: 28 },
     { label: '15 y 30', d1: 15, d2: 30 },
   ]
+
+  // Bloquear scroll cuando hay modal abierto
+  useEffect(() => {
+    if (dangerModal || editSection) {
+      document.body.classList.add('modal-open')
+    } else {
+      document.body.classList.remove('modal-open')
+    }
+    return () => document.body.classList.remove('modal-open')
+  }, [dangerModal, editSection])
 
   async function handleFreq(freq)    { await onUpdate({ cobro_freq: freq }) }
   async function handleWeekday(day)  { await onUpdate({ cobro_weekday: day }) }

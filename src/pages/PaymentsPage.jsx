@@ -101,6 +101,16 @@ export function PaymentsPage({ payments, profile, unreadCount, onOpenNotifs, onG
 
   const paidPayments = payments.filter(p => p.is_paid)
 
+  // ── Bloquear scroll cuando hay modal abierto ──────────────────────────────
+  useEffect(() => {
+    if (incomeModal || remModal) {
+      document.body.classList.add('modal-open')
+    } else {
+      document.body.classList.remove('modal-open')
+    }
+    return () => document.body.classList.remove('modal-open')
+  }, [incomeModal, remModal])
+
   // ── Cargar ingresos y verificar inicio de periodo ─────────────────────────
   useEffect(() => {
     if (!profile) return
