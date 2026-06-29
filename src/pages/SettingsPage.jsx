@@ -231,7 +231,10 @@ export function SettingsPage({ profile, user, onUpdate, onUploadAvatar, onDataDe
       <Card>
         <Row label="Nombre" value={profile.name} onClick={() => openEdit('name')} />
         {isGoogle
-          ? <Row label="Cuenta" value="Google" last />
+          ? <>
+              <Row label="Cuenta" value="Google" />
+              <Row label="Contraseña" value="••••••••" onClick={() => openEdit('password')} last />
+            </>
           : <>
               <Row label="Correo" value={user?.email} onClick={() => openEdit('email')} />
               <Row label="Contraseña" value="••••••••" onClick={() => openEdit('password')} last />
