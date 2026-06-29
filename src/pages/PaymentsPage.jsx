@@ -524,7 +524,7 @@ export function PaymentsPage({ payments, profile, unreadCount, onOpenNotifs, onG
             {/* Cabecera con botón Añadir ingreso */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
               <div>
-                <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--text)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 3 }}>Disponible Este Periodo</div>
+                <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--text)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 15 }}>Disponible Este Periodo</div>
                 <div style={{ fontSize: 26, fontWeight: 700, color: sobrePasado ? 'var(--danger)' : 'var(--paid)', lineHeight: 1 }}>
                   {sobrePasado ? '-' : ''}{fmt(Math.abs(disponible))}
                 </div>
