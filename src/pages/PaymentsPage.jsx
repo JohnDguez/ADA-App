@@ -529,9 +529,9 @@ export function PaymentsPage({ payments, profile, unreadCount, onOpenNotifs, onG
       <div style={{ background: 'var(--bg)', borderRadius: '24px 24px 0 0', marginTop: -24, position: 'relative', zIndex: 10, paddingTop: 20 }}>
 
         {/* Título */}
-        <div style={{ padding: '0 16px 12px' }}>
+        <div style={{ padding: '16px 16px 18px', background: '#E8E8E8', marginBottom: 16 }}>
           <div style={{ fontSize: 22, fontWeight: 700, color: 'var(--text)' }}>Mis gastos e ingresos</div>
-          <div style={{ fontSize: 13, fontWeight: 400, color: 'var(--text)', marginTop: 4 }}>Aquí verás en qué se va tu dinero — gráficas por mes y categoría, tu balance del periodo y el historial de lo que ya pagaste.</div>
+          <div style={{ fontSize: 13, fontWeight: 400, color: 'var(--text)', marginTop: 4 }}>Historial, análisis y balance de tus finanzas del periodo.</div>
         </div>
 
         {/* ── BALANCE DEL PERIODO (solo si salary_enabled) ── */}
