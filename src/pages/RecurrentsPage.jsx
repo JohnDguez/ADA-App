@@ -16,7 +16,7 @@ const CAT_COLOR = {
 export function RecurrentsPage({ payments, profile, unreadCount, onOpenNotifs, onGoSettings, onPause, onResume, onDelete, onEdit }) {
   const [search,        setSearch]        = useState('')
   const [filterStatus,  setFilterStatus]  = useState('todos')
-  const [filterType,    setFilterType]    = useState('todos')
+  const [filterType,    setFilterType]    = useState('todos')  // todos | recurrentes | parcialidades | variables
   const [expandedCats,  setExpandedCats]  = useState({})       // vacío = todos cerrados
   const [confirmDelete, setConfirmDelete] = useState(null)
 
@@ -58,8 +58,9 @@ export function RecurrentsPage({ payments, profile, unreadCount, onOpenNotifs, o
       const paused = pendingItems.every(p => p.paused)
       if (filterStatus === 'activos'  && paused)  return false
       if (filterStatus === 'pausados' && !paused)  return false
-      if (filterType === 'recurrentes'   && g.is_installment)  return false
+      if (filterType === 'recurrentes'   && (g.is_installment || g.is_variable)) return false
       if (filterType === 'parcialidades' && !g.is_installment) return false
+      if (filterType === 'variables'     && !g.is_variable)    return false
       if (search.trim()) {
         const q = search.toLowerCase()
         if (!g.name.toLowerCase().includes(q) && !g.category.toLowerCase().includes(q)) return false
@@ -160,7 +161,7 @@ export function RecurrentsPage({ payments, profile, unreadCount, onOpenNotifs, o
             ))}
           </div>
           <div style={{ display: 'flex', gap: 6 }}>
-            {[['todos','Todos'],['recurrentes','Recurrentes'],['parcialidades','Parcialidades']].map(([val, label]) => (
+            {[['todos','Todos'],['recurrentes','Recurrentes'],['parcialidades','Parcialidades'],['variables','Variables']].map(([val, label]) => (
               <FilterChip key={val} label={label} active={filterType === val} onClick={() => setFilterType(val)} />
             ))}
           </div>
@@ -248,36 +249,34 @@ export function RecurrentsPage({ payments, profile, unreadCount, onOpenNotifs, o
                               <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4, flexWrap: 'wrap' }}>
                                 <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)' }}>{g.name}</span>
                                 {/* Etiqueta tipo */}
-                                <span style={{ fontSize: 9, fontWeight: 600, padding: '1px 6px', borderRadius: 4, background: g.is_installment ? 'var(--accent-soft)' : 'var(--paid-soft)', color: g.is_installment ? 'var(--accent)' : 'var(--paid)', flexShrink: 0 }}>
-                                  {g.is_installment ? 'Parcialidades' : 'Recurrente'}
-                                </span>
+                                {g.is_installment && (
+                                  <span style={{ fontSize: 9, fontWeight: 700, padding: '2px 7px', borderRadius: 4, background: 'var(--accent)', color: '#fff', flexShrink: 0 }}>Parcialidades</span>
+                                )}
+                                {!g.is_installment && !g.is_variable && (
+                                  <span style={{ fontSize: 9, fontWeight: 700, padding: '2px 7px', borderRadius: 4, background: 'var(--paid)', color: '#fff', flexShrink: 0 }}>Recurrente</span>
+                                )}
                                 {g.is_variable && (
-                                  <span style={{ fontSize: 9, fontWeight: 600, padding: '1px 6px', borderRadius: 4, background: '#6884A922', color: '#6884A9', flexShrink: 0 }}>Variable</span>
+                                  <span style={{ fontSize: 9, fontWeight: 700, padding: '2px 7px', borderRadius: 4, background: '#6884A9', color: '#fff', flexShrink: 0 }}>Variable</span>
                                 )}
                                 {paused && (
                                   <span style={{ fontSize: 9, fontWeight: 600, padding: '1px 6px', borderRadius: 4, background: 'var(--warning-soft)', color: 'var(--warning)', flexShrink: 0 }}>Pausado</span>
                                 )}
                               </div>
-                              {/* Línea 2: detalles */}
-                              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '2px 10px' }}>
-                                <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--accent)' }}>
-                                  {RECUR_FREQ[g.recur_freq] || '—'}
-                                </span>
-                                {g.is_installment && (
-                                  <span style={{ fontSize: 11, fontWeight: 500, color: 'var(--text)' }}>
-                                    {paid}/{g.total_installments} pagos
-                                  </span>
-                                )}
-                                {!g.is_variable && next && (
-                                  <span style={{ fontSize: 11, fontWeight: 500, color: 'var(--text)' }}>
-                                    {fmt(next.amount)}/pago
-                                  </span>
-                                )}
-                                {next && (
-                                  <span style={{ fontSize: 11, fontWeight: 500, color: 'var(--text)' }}>
-                                    Próximo {dateOf(next.due_date).getDate()} {MONTHS_SHORT[dateOf(next.due_date).getMonth()]}
-                                  </span>
-                                )}
+                              {/* Línea 2: detalles con punto central */}
+                              <div style={{ fontSize: 11, fontWeight: 500, color: 'var(--text)', display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 4 }}>
+                                <span style={{ fontWeight: 700, color: 'var(--accent)' }}>{RECUR_FREQ[g.recur_freq] || '—'}</span>
+                                {g.is_installment && (<>
+                                  <span style={{ color: 'var(--border)' }}>·</span>
+                                  <span>{paid}/{g.total_installments} Pagos</span>
+                                </>)}
+                                {!g.is_variable && next && (<>
+                                  <span style={{ color: 'var(--border)' }}>·</span>
+                                  <span>{fmt(next.amount)}/pago</span>
+                                </>)}
+                                {next && (<>
+                                  <span style={{ color: 'var(--border)' }}>·</span>
+                                  <span>Próx. {dateOf(next.due_date).getDate()} {MONTHS_SHORT[dateOf(next.due_date).getMonth()]}</span>
+                                </>)}
                               </div>
                             </div>
 
