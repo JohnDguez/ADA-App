@@ -131,12 +131,14 @@ export function SettingsPage({ profile, user, onUpdate, onUploadAvatar, onDataDe
     if (!res.ok) { setDangerError('Error al eliminar la cuenta'); return }
     sessionStorage.removeItem('ada_tab')
     sessionStorage.removeItem('ada_session')
+    sessionStorage.removeItem('ada_user_id')
     await supabase.auth.signOut()
   }
 
   async function handleLogout() {
     sessionStorage.removeItem('ada_tab')
     sessionStorage.removeItem('ada_session')
+    sessionStorage.removeItem('ada_user_id')
     await supabase.auth.signOut()
   }
 
