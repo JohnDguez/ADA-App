@@ -83,7 +83,7 @@ export function PayCard({ payment: p, cfg, onMarkPaid, onMarkUnpaid, onEdit, onD
               onClick={e => { e.stopPropagation(); onMarkPaid(p) }}
               style={{ width: 40, height: 40, background: 'var(--paid)', border: 'none', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
             >
-              <DollarSign size={18} color="#fff" strokeWidth={2.5} />
+              <Check size={18} color="#fff" strokeWidth={2.5} />
             </button>
           )}
           {p.is_paid && (
@@ -148,7 +148,7 @@ export function GroupCard({ group, cfg, onMarkPaid, onMarkUnpaid, onEdit, onDele
         <div style={{ padding: '8px 6px', display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
           {isPending && (
             <button onClick={() => onMarkPaid(group)} style={{ width: 40, height: 40, background: 'var(--paid)', border: 'none', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
-              <DollarSign size={18} color="#fff" strokeWidth={2.5} />
+              <Check size={18} color="#fff" strokeWidth={2.5} />
             </button>
           )}
           <button onClick={() => setExpanded(v => !v)} style={{ width: 24, height: 24, background: 'none', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', padding: 0 }}>
