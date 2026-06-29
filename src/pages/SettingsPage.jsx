@@ -34,10 +34,6 @@ export function SettingsPage({ profile, user, onUpdate, onUploadAvatar, onDataDe
     { label: '15 y 30', d1: 15, d2: 30 },
   ]
 
-  function isCustomBiweekly() {
-    return !BIWEEKLY_PRESETS.some(p => p.d1 === (profile.cobro_day1 ?? 1) && p.d2 === (profile.cobro_day2 ?? 16))
-  }
-
   async function handleFreq(freq)    { await onUpdate({ cobro_freq: freq }) }
   async function handleWeekday(day)  { await onUpdate({ cobro_weekday: day }) }
   async function handleSalaryToggle(){ await onUpdate({ salary_enabled: !profile.salary_enabled }) }
@@ -46,16 +42,20 @@ export function SettingsPage({ profile, user, onUpdate, onUploadAvatar, onDataDe
     if (isNaN(val)) { showToast('Ingresa un monto válido'); return }
     await onUpdate({ salary_amount: val }); showToast('Salario actualizado')
   }
+
   async function handleDeleteData() {
     setDangerError('')
     if (dangerInput !== 'ELIMINAR') { setDangerError('Escribe ELIMINAR para confirmar'); return }
     setDangerLoading(true)
-    const { error } = await supabase.from('payments').delete().eq('user_id', user.id)
+    const [paymentsRes, incomeRes] = await Promise.all([
+      supabase.from('payments').delete().eq('user_id', user.id),
+      supabase.from('period_income').delete().eq('user_id', user.id),
+    ])
     setDangerLoading(false)
-    if (error) { setDangerError('Error al eliminar los datos'); return }
+    if (paymentsRes.error || incomeRes.error) { setDangerError('Error al eliminar los datos'); return }
     setDangerModal(null); setDangerInput('')
     onDataDeleted && onDataDeleted()
-    showToast('Todos tus pagos han sido eliminados')
+    showToast('Todos tus datos han sido eliminados')
   }
 
   async function handleDeleteAccount() {
@@ -64,11 +64,12 @@ export function SettingsPage({ profile, user, onUpdate, onUploadAvatar, onDataDe
       setDangerError(`Escribe tu nombre "${profile.name}" para confirmar`); return
     }
     setDangerLoading(true)
-    // Eliminar datos primero
-    await supabase.from('payments').delete().eq('user_id', user.id)
-    await supabase.from('notifications').delete().eq('user_id', user.id)
-    await supabase.from('push_subscriptions').delete().eq('user_id', user.id)
-    // Eliminar cuenta via serverless (requiere service role)
+    await Promise.all([
+      supabase.from('payments').delete().eq('user_id', user.id),
+      supabase.from('notifications').delete().eq('user_id', user.id),
+      supabase.from('push_subscriptions').delete().eq('user_id', user.id),
+      supabase.from('period_income').delete().eq('user_id', user.id),
+    ])
     const { data: { session } } = await supabase.auth.getSession()
     const res = await fetch('/api/delete-account', {
       method: 'POST',
@@ -168,7 +169,6 @@ export function SettingsPage({ profile, user, onUpdate, onUploadAvatar, onDataDe
       {/* Periodo de cobro */}
       <SectionLabel>Periodo de cobro</SectionLabel>
       <Card>
-        {/* Frecuencia */}
         <div style={{ padding: '13px 14px', borderBottom: '0.5px solid var(--border)' }}>
           <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)', marginBottom: 10 }}>Frecuencia</div>
           <div style={{ display: 'flex', gap: 6 }}>
@@ -180,7 +180,6 @@ export function SettingsPage({ profile, user, onUpdate, onUploadAvatar, onDataDe
           </div>
         </div>
 
-        {/* Semanal — día de semana */}
         {profile.cobro_freq === 'weekly' && (
           <div style={{ padding: '13px 14px', borderBottom: '0.5px solid var(--border)' }}>
             <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)', marginBottom: 8 }}>Día de la semana</div>
@@ -194,7 +193,6 @@ export function SettingsPage({ profile, user, onUpdate, onUploadAvatar, onDataDe
           </div>
         )}
 
-        {/* Quincenal — días */}
         {profile.cobro_freq === 'biweekly' && (
           <div style={{ padding: '13px 14px', borderBottom: '0.5px solid var(--border)' }}>
             <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)', marginBottom: 10 }}>Días de quincena</div>
@@ -228,7 +226,6 @@ export function SettingsPage({ profile, user, onUpdate, onUploadAvatar, onDataDe
           </div>
         )}
 
-        {/* Mensual — día */}
         {profile.cobro_freq === 'monthly' && (
           <div style={{ padding: '13px 14px', borderBottom: '0.5px solid var(--border)' }}>
             <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)', marginBottom: 8 }}>Día de cobro</div>
@@ -270,7 +267,6 @@ export function SettingsPage({ profile, user, onUpdate, onUploadAvatar, onDataDe
       {/* Notificaciones */}
       <SectionLabel>Notificaciones</SectionLabel>
       <Card>
-        {/* Toggle principal */}
         <div style={{ padding: '13px 14px', borderBottom: '0.5px solid var(--border)' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer' }} onClick={handlePushToggle}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -287,7 +283,6 @@ export function SettingsPage({ profile, user, onUpdate, onUploadAvatar, onDataDe
         </div>
 
         {subscribed && (<>
-          {/* Hora */}
           <div style={{ padding: '13px 14px', borderBottom: '0.5px solid var(--border)' }}>
             <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)', marginBottom: 8 }}>Hora de notificación</div>
             <select value={profile.notif_hour ?? 8} onChange={e => onUpdate({ notif_hour: parseInt(e.target.value) })} className="field-input" style={{ maxWidth: 140 }}>
@@ -297,7 +292,6 @@ export function SettingsPage({ profile, user, onUpdate, onUploadAvatar, onDataDe
             </select>
           </div>
 
-          {/* Tipos de notificación */}
           <NotifToggle label="Pagos vencidos" sub="Cuando un pago no se cubrió a tiempo" value={profile.notif_overdue !== false} onChange={v => onUpdate({ notif_overdue: v })} />
           <NotifToggle label="Vencen hoy" sub="Pagos que llegan a su fecha límite hoy" value={profile.notif_due_today !== false} onChange={v => onUpdate({ notif_due_today: v })} />
           <NotifToggle label="Próximos pagos" sub="Recordatorio días antes del vencimiento" value={profile.notif_upcoming !== false} onChange={v => onUpdate({ notif_upcoming: v })} />
@@ -336,7 +330,7 @@ export function SettingsPage({ profile, user, onUpdate, onUploadAvatar, onDataDe
           style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '13px 14px', background: 'none', border: 'none', cursor: 'pointer', borderBottom: '0.5px solid var(--border)' }}>
           <div style={{ textAlign: 'left' }}>
             <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--danger)' }}>Eliminar todos mis datos</div>
-            <div style={{ fontSize: 11, fontWeight: 400, color: 'var(--text)', marginTop: 1 }}>Borra todos tus pagos. Tu cuenta se mantiene.</div>
+            <div style={{ fontSize: 11, fontWeight: 400, color: 'var(--text)', marginTop: 1 }}>Borra todos tus pagos e ingresos. Tu cuenta se mantiene.</div>
           </div>
           <ChevronRight size={14} color="var(--danger)" />
         </button>
@@ -357,7 +351,6 @@ export function SettingsPage({ profile, user, onUpdate, onUploadAvatar, onDataDe
           <div style={{ background: 'var(--surface)', borderRadius: '20px 20px 0 0', width: '100%', maxWidth: 420, padding: '20px 16px 32px' }}>
             <div style={{ width: 34, height: 4, background: 'var(--border)', borderRadius: 2, margin: '0 auto 16px' }} />
 
-            {/* Ícono de advertencia */}
             <div style={{ width: 44, height: 44, borderRadius: 12, background: 'var(--danger-soft)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 12 }}>
               <AlertTriangle size={22} color="var(--danger)" />
             </div>
@@ -367,7 +360,7 @@ export function SettingsPage({ profile, user, onUpdate, onUploadAvatar, onDataDe
             </div>
             <div style={{ fontSize: 13, fontWeight: 400, color: 'var(--text)', marginBottom: 16, lineHeight: 1.6 }}>
               {dangerModal === 'data'
-                ? 'Esta acción eliminará todos tus pagos permanentemente. Tu cuenta se mantendrá activa. Esta acción no se puede deshacer.'
+                ? 'Esta acción eliminará todos tus pagos e ingresos permanentemente. Tu cuenta se mantendrá activa. Esta acción no se puede deshacer.'
                 : `Esta acción eliminará tu cuenta y todos tus datos permanentemente. No podrás recuperarlos. Esta acción no se puede deshacer.`
               }
             </div>
@@ -406,6 +399,7 @@ export function SettingsPage({ profile, user, onUpdate, onUploadAvatar, onDataDe
           </div>
         </div>
       )}
+
       {/* Modal edición */}
       {editSection && (
         <div onClick={e => e.target === e.currentTarget && setEditSection(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(2,10,31,0.45)', zIndex: 200, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
