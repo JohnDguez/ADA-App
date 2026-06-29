@@ -13,6 +13,7 @@ import { BottomNav } from './components/BottomNav'
 import { NotificationsPanel } from './components/NotificationsPanel'
 import { PaymentModal } from './components/PaymentModal'
 import { VariableAmountModal } from './components/VariableAmountModal'
+import { PasswordSetupModal } from './components/PasswordSetupModal'
 import { Toast, showToast } from './components/Toast'
 
 function fmt(n) { return '$' + Number(n).toLocaleString('es-MX', { minimumFractionDigits: 0, maximumFractionDigits: 0 }) }
@@ -26,15 +27,28 @@ export default function App() {
     const hasActiveSession = sessionStorage.getItem('ada_session')
     return hasActiveSession ? (sessionStorage.getItem('ada_tab') || 'home') : 'home'
   })
-  const [modalOpen,  setModalOpen]  = useState(false)
+  const [modalOpen,   setModalOpen]   = useState(false)
   const [editPayment, setEditPayment] = useState(null)
-  const [varModal,   setVarModal]   = useState({ open: false, payment: null })
-  const [notifOpen,  setNotifOpen]  = useState(false)
+  const [varModal,    setVarModal]    = useState({ open: false, payment: null })
+  const [notifOpen,   setNotifOpen]   = useState(false)
 
   if (authLoading || (user && profileLoading)) return <Splash />
   if (isRecovery) return <ResetPasswordPage onDone={() => setIsRecovery(false)} />
   if (!user) return <AuthPage />
   if (user && !profile.onboarding_completed) return <OnboardingPage userId={user.id} onDone={updateProfile} />
+
+  // Detectar usuario Google que aún no ha creado contraseña
+  const isGoogle    = user?.app_metadata?.provider === 'google'
+  const needsPasswd = isGoogle && profile.has_password === false
+
+  if (needsPasswd) {
+    return (
+      <PasswordSetupModal
+        userId={user.id}
+        onDone={() => updateProfile({ has_password: true })}
+      />
+    )
+  }
 
   sessionStorage.setItem('ada_session', '1')
 
