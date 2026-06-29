@@ -107,8 +107,9 @@ export function RecurrentsPage({ payments, profile, unreadCount, onOpenNotifs, o
 
       <div style={{ background: 'var(--bg)', borderRadius: '24px 24px 0 0', marginTop: -24, position: 'relative', zIndex: 10, paddingTop: 20 }}>
 
-        <div style={{ padding: '0 16px 14px' }}>
-          <div style={{ fontSize: 22, fontWeight: 700, color: 'var(--text)' }}>Gastos Recurrentes</div>
+        <div style={{ padding: '0 16px 12px' }}>
+          <div style={{ fontSize: 22, fontWeight: 700, color: 'var(--text)' }}>Gastos recurrentes</div>
+          <div style={{ fontSize: 13, fontWeight: 400, color: 'var(--text)', marginTop: 4 }}>Tus pagos que se repiten cada semana, quincena o mes. Páusalos, elimínalos o revisa cuánto llevas pagado.</div>
         </div>
 
         {/* Buscador */}
