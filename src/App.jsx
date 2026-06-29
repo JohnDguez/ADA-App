@@ -23,8 +23,6 @@ export default function App() {
   const { profile, loading: profileLoading, updateProfile, uploadAvatar } = useProfile(user?.id)
   const { notifications, unreadCount, markAsRead, markAllAsRead, deleteNotification, clearAll } = useNotifications(user?.id)
   const [tab,        setTab]        = useState(() => {
-    // Solo restaurar el tab si la sesión ya estaba activa (reload)
-    // Si es apertura nueva, sessionStorage no tendrá 'ada_session' y arrancamos en home
     const hasActiveSession = sessionStorage.getItem('ada_session')
     return hasActiveSession ? (sessionStorage.getItem('ada_tab') || 'home') : 'home'
   })
@@ -38,7 +36,6 @@ export default function App() {
   if (!user) return <AuthPage />
   if (user && !profile.onboarding_completed) return <OnboardingPage userId={user.id} onDone={updateProfile} />
 
-  // Marcar sesión activa para distinguir reload de apertura nueva
   sessionStorage.setItem('ada_session', '1')
 
   function openAdd()   { setEditPayment(null); setModalOpen(true) }
@@ -110,7 +107,6 @@ export default function App() {
     onPostpone: handlePostpone, onAdvance: handleAdvance,
   }
 
-  // Props del header compartidos entre páginas
   const headerProps = {
     profile,
     unreadCount,
@@ -135,13 +131,21 @@ export default function App() {
           onClearAllNotifs={clearAll}
         />
       )}
-      {tab === 'payments'   && <PaymentsPage payments={payments} {...headerProps} onMarkUnpaid={handleMarkUnpaid} onDelete={handleDelete} onDeleteDirect={async (id) => { await deletePayment(id); showToast('Pago eliminado') }} />}
+      {tab === 'payments' && (
+        <PaymentsPage
+          payments={payments}
+          {...headerProps}
+          onMarkUnpaid={handleMarkUnpaid}
+          onDelete={handleDelete}
+          onDeleteDirect={async (id) => { await deletePayment(id); showToast('Pago eliminado') }}
+          onUpdateProfile={updateProfile}
+        />
+      )}
       {tab === 'recurrents' && <RecurrentsPage payments={payments} onPause={handlePauseRecurrent} onResume={handleResumeRecurrent} onDelete={handleDeleteRecurrent} onEdit={openEdit} />}
       {tab === 'settings'   && <SettingsPage profile={profile} user={user} onUpdate={updateProfile} onUploadAvatar={uploadAvatar} onDataDeleted={() => { refetch() }} />}
 
       <BottomNav active={tab} onChange={t => { setTab(t); sessionStorage.setItem('ada_tab', t); window.scrollTo(0, 0) }} onAdd={openAdd} />
 
-      {/* Panel de notificaciones — global, funciona desde cualquier página */}
       <NotificationsPanel
         open={notifOpen}
         onClose={() => setNotifOpen(false)}
