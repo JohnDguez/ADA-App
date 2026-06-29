@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-import { MoreVertical, DollarSign, Pencil, Trash2, Clock, ChevronDown, ChevronUp, RotateCcw, FastForward } from 'lucide-react'
+import { MoreVertical, Check, Pencil, Trash2, Clock, ChevronDown, ChevronUp, RotateCcw, FastForward } from 'lucide-react'
 import { statusOf, daysDiff, dateOf, fmt, MONTHS_SHORT, periodLabel, periodCountLabel, RECUR_FREQ, installmentLabel } from '../lib/utils'
 
 function statusInfo(p, cfg) {
@@ -88,7 +88,7 @@ export function PayCard({ payment: p, cfg, onMarkPaid, onMarkUnpaid, onEdit, onD
           )}
           {p.is_paid && (
             <div style={{ width: 40, height: 40, background: 'var(--paid)', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <DollarSign size={18} color="#fff" strokeWidth={2.5} />
+              <Check size={18} color="#fff" strokeWidth={2.5} />
             </div>
           )}
           <button
@@ -174,7 +174,7 @@ export function GroupCard({ group, cfg, onMarkPaid, onMarkUnpaid, onEdit, onDele
                 <span style={{ fontSize: 11, fontWeight: 500, color: bColor }}>{bLabel}</span>
                 {isPend && (
                   <button onClick={() => onMarkPaid(p)} style={{ width: 24, height: 24, borderRadius: 6, background: 'var(--paid)', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
-                    <DollarSign size={12} color="#fff" strokeWidth={2.5} />
+                    <Check size={12} color="#fff" strokeWidth={2.5} />
                   </button>
                 )}
                 {p.is_paid && (
