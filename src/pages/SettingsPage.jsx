@@ -129,6 +129,8 @@ export function SettingsPage({ profile, user, onUpdate, onUploadAvatar, onDataDe
     })
     setDangerLoading(false)
     if (!res.ok) { setDangerError('Error al eliminar la cuenta'); return }
+    sessionStorage.removeItem('ada_tab')
+    sessionStorage.removeItem('ada_session')
     await supabase.auth.signOut()
   }
 
