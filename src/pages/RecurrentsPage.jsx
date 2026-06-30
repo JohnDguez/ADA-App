@@ -105,9 +105,9 @@ export function RecurrentsPage({ payments, profile, unreadCount, onOpenNotifs, o
 
       <PageHeader profile={profile} unreadCount={unreadCount} onOpenNotifs={onOpenNotifs} onGoSettings={onGoSettings} />
 
-      <div style={{ background: 'var(--bg)', borderRadius: '24px 24px 0 0', marginTop: -24, position: 'relative', zIndex: 10, paddingTop: 20 }}>
+      <div style={{ background: 'var(--bg)', borderRadius: '24px 24px 0 0', marginTop: -24, position: 'relative', zIndex: 10 }}>
 
-        <div style={{ padding: '16px 16px 18px', background: '#E8E8E8', marginBottom: 16 }}>
+        <div style={{ background: '#E8E8E8', borderRadius: '24px 24px 0 0', padding: '20px 16px 18px', marginBottom: 16 }}>
           <div style={{ fontSize: 22, fontWeight: 700, color: 'var(--text)' }}>Gastos recurrentes</div>
           <div style={{ fontSize: 13, fontWeight: 400, color: 'var(--text)', marginTop: 4 }}>Gestiona tus pagos fijos, parcialidades y variables.</div>
         </div>
