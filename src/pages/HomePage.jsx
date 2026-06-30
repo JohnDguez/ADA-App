@@ -54,7 +54,8 @@ export function HomePage({ payments, profile, onAdd, onMarkPaid, onMarkUnpaid, o
       />
 
       {/* Contenedor principal */}
-      <div className={slideClass} style={{ background: 'var(--bg)', borderRadius: '24px 24px 0 0', marginTop: -24, position: 'relative', zIndex: 10 }}>
+      <div style={{ background: 'var(--bg)', borderRadius: '24px 24px 0 0', marginTop: -24, position: 'relative', zIndex: 10 }}>
+        <div className={slideClass}>
 
         {/* Métricas */}
         <div style={{ display: 'flex', padding: '28px 20px 0' }}>
@@ -111,6 +112,7 @@ export function HomePage({ payments, profile, onAdd, onMarkPaid, onMarkUnpaid, o
               </div>
             </div>
           )}
+        </div>
         </div>
       </div>
 

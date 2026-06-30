@@ -527,6 +527,7 @@ export function PaymentsPage({ payments, profile, unreadCount, onOpenNotifs, onG
       />
 
       <div style={{ background: 'var(--bg)', borderRadius: '24px 24px 0 0', marginTop: -24, position: 'relative', zIndex: 10 }}>
+        <div className={slideClass}>
 
         {/* Zona de título con fondo diferente */}
         <div style={{ background: '#E8E8E8', borderRadius: '24px 24px 0 0', padding: '20px 16px 18px', marginBottom: 16 }}>
@@ -871,6 +872,7 @@ export function PaymentsPage({ payments, profile, unreadCount, onOpenNotifs, onG
               </div>
             </>
           )}
+        </div>
         </div>
       </div>
     </div>

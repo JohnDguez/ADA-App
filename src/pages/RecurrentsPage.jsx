@@ -105,7 +105,8 @@ export function RecurrentsPage({ payments, profile, unreadCount, onOpenNotifs, o
 
       <PageHeader profile={profile} unreadCount={unreadCount} onOpenNotifs={onOpenNotifs} onGoSettings={onGoSettings} />
 
-      <div className={slideClass} style={{ background: 'var(--bg)', borderRadius: '24px 24px 0 0', marginTop: -24, position: 'relative', zIndex: 10 }}>
+      <div style={{ background: 'var(--bg)', borderRadius: '24px 24px 0 0', marginTop: -24, position: 'relative', zIndex: 10 }}>
+        <div className={slideClass}>
 
         <div style={{ background: '#E8E8E8', borderRadius: '24px 24px 0 0', padding: '20px 16px 18px', marginBottom: 16 }}>
           <div style={{ fontSize: 22, fontWeight: 700, color: 'var(--text)' }}>Gastos recurrentes</div>
@@ -288,6 +289,7 @@ export function RecurrentsPage({ payments, profile, unreadCount, onOpenNotifs, o
               </div>
             )
           })}
+          </div>
         </div>
       </div>
     </div>
