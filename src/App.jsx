@@ -131,10 +131,10 @@ export default function App() {
 
   return (
     <>
-      <div key={tab} className={`page-slide-${slideDir}`} style={{ position: 'relative' }}>
       {tab === 'home' && (
         <HomePage
           payments={payments} profile={profile} onAdd={openAdd}
+          slideClass={`page-slide-${slideDir}`}
           {...sharedHandlers}
           onGoSettings={() => { setTab('settings'); sessionStorage.setItem('ada_tab', 'settings'); window.scrollTo(0, 0) }}
           notifications={notifications}
@@ -145,11 +145,9 @@ export default function App() {
           onClearAllNotifs={clearAll}
         />
       )}
-      {tab === 'payments'   && <PaymentsPage payments={payments} {...headerProps} onMarkUnpaid={handleMarkUnpaid} onDelete={handleDelete} onDeleteDirect={async (id) => { await deletePayment(id); showToast('Pago eliminado') }} />}
-      {tab === 'recurrents' && <RecurrentsPage payments={payments} {...headerProps} onPause={handlePauseRecurrent} onResume={handleResumeRecurrent} onDelete={handleDelete} onEdit={openEdit} />}
-      {tab === 'settings'   && <SettingsPage profile={profile} user={user} onUpdate={updateProfile} onUploadAvatar={uploadAvatar} onDataDeleted={() => { refetch() }} />}
-
-      </div>
+      {tab === 'payments'   && <PaymentsPage payments={payments} slideClass={`page-slide-${slideDir}`} {...headerProps} onMarkUnpaid={handleMarkUnpaid} onDelete={handleDelete} onDeleteDirect={async (id) => { await deletePayment(id); showToast('Pago eliminado') }} />}
+      {tab === 'recurrents' && <RecurrentsPage payments={payments} slideClass={`page-slide-${slideDir}`} {...headerProps} onPause={handlePauseRecurrent} onResume={handleResumeRecurrent} onDelete={handleDelete} onEdit={openEdit} />}
+      {tab === 'settings'   && <SettingsPage profile={profile} user={user} onUpdate={updateProfile} onUploadAvatar={uploadAvatar} onDataDeleted={() => { refetch() }} slideClass={`page-slide-${slideDir}`} />}
 
       <BottomNav active={tab} onChange={t => {
           const fromIdx = TAB_ORDER.indexOf(tab)
