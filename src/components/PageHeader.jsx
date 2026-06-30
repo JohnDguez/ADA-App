@@ -19,8 +19,8 @@ export function PageHeader({ profile, unreadCount, onOpenNotifs }) {
   const initials = (profile?.name || 'U').slice(0, 2).toUpperCase()
 
   return (
-    <div style={{ background: 'url(/Header_bg.jpg) center/cover no-repeat', padding: '25px 20px 40px' }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+    <div style={{ background: 'url(/Header_bg.jpg) center/cover no-repeat', height: 125, display: 'flex', alignItems: 'center', padding: '0 20px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
 
         {/* Avatar + saludo + nombre */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, flex: 1, minWidth: 0 }}>
