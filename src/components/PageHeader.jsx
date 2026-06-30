@@ -16,17 +16,13 @@ function nameFontSize(name) {
 }
 
 export function PageHeader({ profile, unreadCount, onOpenNotifs }) {
-  const now     = new Date()
-  const dateStr = now.toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric', month: 'long' })
-  const timeStr = now.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })
   const initials = (profile?.name || 'U').slice(0, 2).toUpperCase()
-  const dateTime = `${dateStr.charAt(0).toUpperCase() + dateStr.slice(1)} · ${timeStr}`
 
   return (
-    <div style={{ background: 'url(/Header_bg.jpg) center/cover no-repeat', padding: '36px 20px 36px' }}>
-      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+    <div style={{ background: 'url(/Header_bg.jpg) center/cover no-repeat', padding: '25px 20px 40px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
 
-        {/* Avatar + saludo + nombre + fecha */}
+        {/* Avatar + saludo + nombre */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, flex: 1, minWidth: 0 }}>
           <div style={{ flexShrink: 0 }}>
             {profile?.avatar_url
@@ -39,40 +35,29 @@ export function PageHeader({ profile, unreadCount, onOpenNotifs }) {
             <div style={{ fontSize: nameFontSize(profile?.name), fontWeight: 700, color: '#fff', lineHeight: 1.2, wordBreak: 'break-word' }}>
               {profile?.name || ''}
             </div>
-            <div style={{ fontSize: 11, fontWeight: 500, color: 'rgba(255,255,255,0.8)', marginTop: 4 }}>
-              {dateTime}
-            </div>
           </div>
         </div>
 
-        {/* Solo campana */}
-        <div style={{ flexShrink: 0, marginLeft: 12 }}>
-          <div style={{ position: 'relative' }}>
-            <IconBtn onClick={onOpenNotifs} icon={<Bell size={18} color="#fff" />} />
-            {unreadCount > 0 && (
-              <div style={{ position: 'absolute', top: 6, right: 6, width: 8, height: 8, borderRadius: '50%', background: 'var(--danger)', border: '1.5px solid rgba(10,26,61,0.8)' }} />
-            )}
-          </div>
+        {/* Campana — fondo sólido accent */}
+        <div style={{ flexShrink: 0, marginLeft: 12, position: 'relative' }}>
+          <button
+            onClick={onOpenNotifs}
+            style={{
+              width: 40, height: 40, borderRadius: 12,
+              background: 'var(--accent)',
+              border: 'none',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              cursor: 'pointer',
+            }}
+          >
+            <Bell size={18} color="#fff" />
+          </button>
+          {unreadCount > 0 && (
+            <div style={{ position: 'absolute', top: 6, right: 6, width: 8, height: 8, borderRadius: '50%', background: 'var(--danger)', border: '1.5px solid var(--accent)' }} />
+          )}
         </div>
 
       </div>
     </div>
-  )
-}
-
-function IconBtn({ onClick, icon }) {
-  return (
-    <button
-      onClick={onClick}
-      style={{
-        width: 40, height: 40, borderRadius: 12,
-        background: 'rgba(255,255,255,0.1)',
-        border: '0.5px solid rgba(255,255,255,0.15)',
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        cursor: 'pointer',
-      }}
-    >
-      {icon}
-    </button>
   )
 }

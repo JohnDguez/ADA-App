@@ -35,7 +35,7 @@ export function NotificationsPanel({ open, onClose, notifications, unreadCount, 
       onClick={e => e.target === e.currentTarget && onClose()}
       style={{ position: 'fixed', inset: 0, background: 'rgba(2,10,31,0.5)', zIndex: 200, display: 'flex', alignItems: 'flex-start', justifyContent: 'flex-end', padding: '70px 16px 0' }}
     >
-      <div style={{ background: 'var(--surface)', borderRadius: 16, width: '100%', maxWidth: 340, boxShadow: '0 8px 32px rgba(2,10,31,0.2)', overflow: 'hidden', maxHeight: 'calc(100vh - 100px)', display: 'flex', flexDirection: 'column' }}>
+      <div style={{ background: 'var(--surface)', borderRadius: 16, width: '100%', maxWidth: 340, boxShadow: '0 8px 32px rgba(2,10,31,0.2)', overflow: 'hidden', maxHeight: 'calc(100vh - 100px)', display: 'flex', flexDirection: 'column', animation: 'notifSlideIn .25s cubic-bezier(0.25, 0.46, 0.45, 0.94) both' }}>
 
         {/* Header */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px', borderBottom: '0.5px solid var(--border)', flexShrink: 0 }}>
