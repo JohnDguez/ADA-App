@@ -13,7 +13,7 @@ const CAT_COLOR = {
   'Otros':         'var(--cat-otros)',
 }
 
-export function RecurrentsPage({ payments, profile, unreadCount, onOpenNotifs, onGoSettings, onPause, onResume, onDelete }) {
+export function RecurrentsPage({ payments, profile, unreadCount, onOpenNotifs, onGoSettings, onPause, onResume, onDelete, slideClass }) {
   const [search,        setSearch]        = useState('')
   const [filterStatus,  setFilterStatus]  = useState('todos')
   const [filterType,    setFilterType]    = useState('todos')
@@ -105,7 +105,7 @@ export function RecurrentsPage({ payments, profile, unreadCount, onOpenNotifs, o
 
       <PageHeader profile={profile} unreadCount={unreadCount} onOpenNotifs={onOpenNotifs} onGoSettings={onGoSettings} />
 
-      <div style={{ background: 'var(--bg)', borderRadius: '24px 24px 0 0', marginTop: -24, position: 'relative', zIndex: 10 }}>
+      <div className={slideClass} style={{ background: 'var(--bg)', borderRadius: '24px 24px 0 0', marginTop: -24, position: 'relative', zIndex: 10 }}>
 
         <div style={{ background: '#E8E8E8', borderRadius: '24px 24px 0 0', padding: '20px 16px 18px', marginBottom: 16 }}>
           <div style={{ fontSize: 22, fontWeight: 700, color: 'var(--text)' }}>Gastos recurrentes</div>

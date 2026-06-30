@@ -71,7 +71,7 @@ function prevPeriod(profile) {
   return { start: t, end: prevEnd }
 }
 
-export function PaymentsPage({ payments, profile, unreadCount, onOpenNotifs, onGoSettings, onMarkUnpaid, onDelete, onDeleteDirect, onUpdateProfile }) {
+export function PaymentsPage({ payments, profile, unreadCount, onOpenNotifs, onGoSettings, onMarkUnpaid, onDelete, onDeleteDirect, onUpdateProfile, slideClass }) {
   const now = new Date()
 
   const [monthsBack,  setMonthsBack]  = useState(3)
