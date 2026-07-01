@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Trophy } from 'lucide-react'
 import { PayCard } from '../components/PayCard'
 import { PageHeader } from '../components/PageHeader'
 import { NotificationsPanel } from '../components/NotificationsPanel'
@@ -78,9 +79,13 @@ export function HomePage({ payments, profile, onAdd, onMarkPaid, onMarkUnpaid, o
               {/* Card 1 — Periodo actual */}
               <div style={{ minWidth: '100%', background: 'var(--accent)', borderRadius: 16, padding: '18px 20px' }}>
                 <div style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.75)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 6 }}>Pagos de este periodo</div>
-                <div style={{ fontSize: 38, fontWeight: 700, color: '#fff', letterSpacing: '-1px', lineHeight: 1, marginBottom: pendingAmt === 0 ? 6 : 14 }}>{fmt(pendingAmt)}</div>
-                {pendingAmt === 0 && (
-                  <div style={{ fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.9)', marginBottom: 14 }}>¡Sin deudas pendientes!</div>
+                {pendingAmt === 0 ? (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14 }}>
+                    <Trophy size={36} color="#fff" strokeWidth={1.8} />
+                    <div style={{ fontSize: 20, fontWeight: 700, color: '#fff', lineHeight: 1.3 }}>¡Sin deudas pendientes!</div>
+                  </div>
+                ) : (
+                  <div style={{ fontSize: 38, fontWeight: 700, color: '#fff', letterSpacing: '-1px', lineHeight: 1, marginBottom: 14 }}>{fmt(pendingAmt)}</div>
                 )}
                 <div style={{ display: 'flex', gap: 8 }}>
                   <span style={{ fontSize: 12, fontWeight: 600, background: 'rgba(255,255,255,0.2)', color: '#fff', padding: '4px 10px', borderRadius: 20 }}>
