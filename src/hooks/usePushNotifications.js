@@ -13,7 +13,7 @@ function urlBase64ToUint8Array(base64String) {
 export function usePushNotifications(userId) {
   const [permission, setPermission] = useState(Notification.permission)
   const [subscribed, setSubscribed] = useState(false)
-  const [loading, setLoading] = useState(false)
+  const [loading,    setLoading]    = useState(false)
 
   useEffect(() => {
     if (!userId || !('serviceWorker' in navigator)) return
@@ -53,10 +53,7 @@ export function usePushNotifications(userId) {
       setPermission(perm)
       if (perm !== 'granted') { setLoading(false); return { error: 'Permiso denegado' } }
 
-      // Verificar si ya hay una suscripción activa
       let sub = await reg.pushManager.getSubscription()
-
-      // Si no hay suscripción, crear una nueva
       if (!sub) {
         sub = await reg.pushManager.subscribe({
           userVisibleOnly: true,
@@ -64,10 +61,15 @@ export function usePushNotifications(userId) {
         })
       }
 
+      // Guardar suscripción push
       const { error } = await supabase.from('push_subscriptions').upsert({
         user_id: userId,
         subscription: sub.toJSON(),
       }, { onConflict: 'user_id' })
+
+      // Guardar timezone del dispositivo para que el cron filtre la hora correctamente
+      const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone
+      await supabase.from('profiles').update({ timezone: userTimezone }).eq('id', userId)
 
       if (!error) setSubscribed(true)
       setLoading(false)
@@ -84,9 +86,7 @@ export function usePushNotifications(userId) {
     try {
       const reg = await navigator.serviceWorker.ready
       const sub = await reg.pushManager.getSubscription()
-      if (sub) {
-        await sub.unsubscribe()
-      }
+      if (sub) await sub.unsubscribe()
       await supabase.from('push_subscriptions').delete().eq('user_id', userId)
       setSubscribed(false)
     } catch (e) {
