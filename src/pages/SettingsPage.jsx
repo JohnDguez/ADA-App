@@ -194,237 +194,242 @@ export function SettingsPage({ profile, user, onUpdate, onUploadAvatar, onDataDe
   }
 
   return (
-    <div className={slideClass} style={{ paddingBottom: 120, background: 'var(--bg)', minHeight: '100vh' }}>
-      <div style={{ padding: '52px 16px 20px' }}>
-        <div style={{ fontSize: 22, fontWeight: 700, color: 'var(--text)' }}>Perfil</div>
-      </div>
+    <>
+      {/* ── Contenido principal (animado) ── */}
+      <div className={slideClass} style={{ paddingBottom: 120, background: 'var(--bg)', minHeight: '100vh' }}>
+        <div style={{ padding: '52px 16px 20px' }}>
+          <div style={{ fontSize: 22, fontWeight: 700, color: 'var(--text)' }}>Perfil</div>
+        </div>
 
-      {/* Avatar */}
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: 24 }}>
-        <div style={{ position: 'relative' }}>
-          {profile.avatar_url
-            ? <img src={profile.avatar_url} alt="avatar" style={{ width: 80, height: 80, borderRadius: '50%', objectFit: 'cover' }} />
-            : <div style={{ width: 80, height: 80, borderRadius: '50%', background: 'var(--accent)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28, fontWeight: 700, color: '#fff' }}>{initials}</div>
+        {/* Avatar */}
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: 24 }}>
+          <div style={{ position: 'relative' }}>
+            {profile.avatar_url
+              ? <img src={profile.avatar_url} alt="avatar" style={{ width: 80, height: 80, borderRadius: '50%', objectFit: 'cover' }} />
+              : <div style={{ width: 80, height: 80, borderRadius: '50%', background: 'var(--accent)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28, fontWeight: 700, color: 'var(--surface)' }}>{initials}</div>
+            }
+            <button onClick={() => fileRef.current?.click()} style={{ position: 'absolute', bottom: 0, right: 0, width: 28, height: 28, borderRadius: '50%', background: 'var(--surface)', border: '0.5px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+              {uploadingAvatar
+                ? <div style={{ width: 12, height: 12, borderRadius: '50%', border: '2px solid var(--accent)', borderTopColor: 'transparent' }} />
+                : <Camera size={14} color="var(--text)" />}
+            </button>
+            <input ref={fileRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handleAvatarChange} />
+          </div>
+          <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--text)', marginTop: 10 }}>{profile.name}</div>
+          <div style={{ fontSize: 13, fontWeight: 400, color: 'var(--text)' }}>{user?.email}</div>
+        </div>
+
+        {/* Cuenta */}
+        <Card>
+          <Row label="Nombre" value={profile.name} onClick={() => openEdit('name')} />
+          {isGoogle
+            ? <>
+                <Row label="Cuenta" value="Google" />
+                <Row label="Contraseña" value="••••••••" onClick={() => openEdit('password')} last />
+              </>
+            : <>
+                <Row label="Correo" value={user?.email} onClick={() => openEdit('email')} />
+                <Row label="Contraseña" value="••••••••" onClick={() => openEdit('password')} last />
+              </>
           }
-          <button onClick={() => fileRef.current?.click()} style={{ position: 'absolute', bottom: 0, right: 0, width: 28, height: 28, borderRadius: '50%', background: 'var(--surface)', border: '0.5px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
-            {uploadingAvatar
-              ? <div style={{ width: 12, height: 12, borderRadius: '50%', border: '2px solid var(--accent)', borderTopColor: 'transparent' }} />
-              : <Camera size={14} color="var(--text)" />}
-          </button>
-          <input ref={fileRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handleAvatarChange} />
-        </div>
-        <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--text)', marginTop: 10 }}>{profile.name}</div>
-        <div style={{ fontSize: 13, fontWeight: 400, color: 'var(--text)' }}>{user?.email}</div>
-      </div>
+        </Card>
 
-      {/* Cuenta */}
-      <Card>
-        <Row label="Nombre" value={profile.name} onClick={() => openEdit('name')} />
-        {isGoogle
-          ? <>
-              <Row label="Cuenta" value="Google" />
-              <Row label="Contraseña" value="••••••••" onClick={() => openEdit('password')} last />
-            </>
-          : <>
-              <Row label="Correo" value={user?.email} onClick={() => openEdit('email')} />
-              <Row label="Contraseña" value="••••••••" onClick={() => openEdit('password')} last />
-            </>
-        }
-      </Card>
-
-      {/* Periodo de cobro */}
-      <SectionLabel>Periodo de cobro</SectionLabel>
-      <Card>
-        <div style={{ padding: '13px 14px', borderBottom: '0.5px solid var(--border)' }}>
-          <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)', marginBottom: 10 }}>Frecuencia</div>
-          <div style={{ display: 'flex', gap: 6 }}>
-            {[['weekly','Semanal'],['biweekly','Quincenal'],['monthly','Mensual']].map(([val, label]) => (
-              <button key={val} onClick={() => handleFreq(val)} style={{ flex: 1, padding: '8px 0', borderRadius: 5, border: 'none', background: profile.cobro_freq === val ? 'var(--accent)' : 'var(--bg)', color: profile.cobro_freq === val ? '#fff' : 'var(--text)', fontWeight: profile.cobro_freq === val ? 600 : 400, fontSize: 13, fontFamily: 'DM Sans, sans-serif', cursor: 'pointer' }}>
-                {label}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {profile.cobro_freq === 'weekly' && (
+        {/* Periodo de cobro */}
+        <SectionLabel>Periodo de cobro</SectionLabel>
+        <Card>
           <div style={{ padding: '13px 14px', borderBottom: '0.5px solid var(--border)' }}>
-            <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)', marginBottom: 8 }}>Día de cobro</div>
-            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-              {WEEKDAYS_SHORT.map((day, i) => (
-                <button key={i} onClick={() => handleWeekday(i)}
-                  style={{ width: 38, height: 38, borderRadius: 5, border: 'none', background: profile.cobro_weekday === i ? 'var(--accent)' : 'var(--bg)', color: profile.cobro_weekday === i ? '#fff' : 'var(--text)', fontWeight: profile.cobro_weekday === i ? 600 : 400, fontSize: 13, fontFamily: 'DM Sans, sans-serif', cursor: 'pointer' }}>
-                  {day}
+            <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)', marginBottom: 10 }}>Frecuencia</div>
+            <div style={{ display: 'flex', gap: 6 }}>
+              {[['weekly','Semanal'],['biweekly','Quincenal'],['monthly','Mensual']].map(([val, label]) => (
+                <button key={val} onClick={() => handleFreq(val)} style={{ flex: 1, padding: '8px 0', borderRadius: 5, border: 'none', background: profile.cobro_freq === val ? 'var(--accent)' : 'var(--bg)', color: profile.cobro_freq === val ? 'var(--surface)' : 'var(--text)', fontWeight: profile.cobro_freq === val ? 600 : 400, fontSize: 13, fontFamily: 'DM Sans, sans-serif', cursor: 'pointer' }}>
+                  {label}
                 </button>
               ))}
             </div>
           </div>
-        )}
 
-        {profile.cobro_freq === 'biweekly' && (
-          <div style={{ padding: '13px 14px', borderBottom: '0.5px solid var(--border)' }}>
-            <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)', marginBottom: 8 }}>Días de cobro</div>
-            <div style={{ display: 'flex', gap: 6, marginBottom: 8 }}>
-              {BIWEEKLY_PRESETS.map(p => (
-                <button key={p.label} onClick={() => { onUpdate({ cobro_day1: p.d1, cobro_day2: p.d2 }); setBiweeklyCustom(false) }}
-                  style={{ padding: '7px 12px', borderRadius: 5, border: 'none', background: !isCustomBiweekly() && profile.cobro_day1 === p.d1 && profile.cobro_day2 === p.d2 ? 'var(--accent)' : 'var(--bg)', color: !isCustomBiweekly() && profile.cobro_day1 === p.d1 && profile.cobro_day2 === p.d2 ? '#fff' : 'var(--text)', fontWeight: !isCustomBiweekly() && profile.cobro_day1 === p.d1 && profile.cobro_day2 === p.d2 ? 600 : 400, fontSize: 13, fontFamily: 'DM Sans, sans-serif', cursor: 'pointer' }}>
-                  {p.label}
-                </button>
-              ))}
-              <button onClick={() => setBiweeklyCustom(true)}
-                style={{ padding: '7px 12px', borderRadius: 5, border: 'none', background: isCustomBiweekly() ? 'var(--accent)' : 'var(--bg)', color: isCustomBiweekly() ? '#fff' : 'var(--text)', fontWeight: isCustomBiweekly() ? 600 : 400, fontSize: 13, fontFamily: 'DM Sans, sans-serif', cursor: 'pointer' }}>
-                Otro
-              </button>
-            </div>
-            {isCustomBiweekly() && (
-              <div style={{ display: 'flex', gap: 8 }}>
-                <div style={{ flex: 1 }}>
-                  <label style={{ display: 'block', fontSize: 11, fontWeight: 500, color: 'var(--text)', marginBottom: 4 }}>Día 1 (1–31)</label>
-                  <input type="number" min="1" max="31" defaultValue={profile.cobro_day1 ?? ''} onBlur={e => { const v = Math.min(31, Math.max(1, parseInt(e.target.value)||1)); e.target.value=v; onUpdate({ cobro_day1: v }) }} placeholder="ej. 13" className="field-input" />
-                </div>
-                <div style={{ flex: 1 }}>
-                  <label style={{ display: 'block', fontSize: 11, fontWeight: 500, color: 'var(--text)', marginBottom: 4 }}>Día 2 (1–31)</label>
-                  <input type="number" min="1" max="31" defaultValue={profile.cobro_day2 ?? ''} onBlur={e => { const v = Math.min(31, Math.max(1, parseInt(e.target.value)||1)); e.target.value=v; onUpdate({ cobro_day2: v }) }} placeholder="ej. 28" className="field-input" />
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-
-        {profile.cobro_freq === 'monthly' && (
-          <div style={{ padding: '13px 14px', borderBottom: '0.5px solid var(--border)' }}>
-            <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)', marginBottom: 8 }}>Día de cobro</div>
-            <input type="number" min="1" max="31" defaultValue={profile.cobro_day1 ?? 1} onBlur={e => onUpdate({ cobro_day1: parseInt(e.target.value) || 1 })} placeholder="ej. 5" className="field-input" style={{ maxWidth: 120 }} />
-            {profile.cobro_day1 && (
-              <div style={{ fontSize: 12, fontWeight: 400, color: 'var(--text)', marginTop: 6 }}>
-                Tu periodo de cobro empieza el día <strong>{profile.cobro_day1}</strong> de cada mes.
-              </div>
-            )}
-          </div>
-        )}
-
-        <Row label="Moneda" value="MXN $" last />
-      </Card>
-
-      {/* Ingreso */}
-      <SectionLabel>Ingreso por periodo</SectionLabel>
-      <Card>
-        <div style={{ padding: '13px 14px', borderBottom: profile.salary_enabled ? '0.5px solid var(--border)' : 'none' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer' }} onClick={handleSalaryToggle}>
-            <div>
-              <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)' }}>Ingreso por periodo</div>
-              <div style={{ fontSize: 11, fontWeight: 400, color: 'var(--text)', marginTop: 1 }}>Activa para ver alertas de presupuesto</div>
-            </div>
-            <Toggle on={profile.salary_enabled} />
-          </div>
-        </div>
-        {profile.salary_enabled && (
-          <div style={{ padding: '13px 14px' }}>
-            <label className="field-label">Monto</label>
-            <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
-              <input type="number" value={salaryAmount} onChange={e => setSalaryAmount(e.target.value)} placeholder="0.00" className="field-input" style={{ flex: 1 }} />
-              <button onClick={handleSalaryAmount} className="btn-primary" style={{ width: 'auto', padding: '0 16px' }}>Guardar</button>
-            </div>
-          </div>
-        )}
-      </Card>
-
-      {/* Notificaciones */}
-      <SectionLabel>Notificaciones</SectionLabel>
-      <Card>
-        <div style={{ padding: '13px 14px', borderBottom: '0.5px solid var(--border)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer' }} onClick={handlePushToggle}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              {subscribed ? <Bell size={18} color="var(--accent)" /> : <BellOff size={18} color="var(--text)" />}
-              <div>
-                <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)' }}>{subscribed ? 'Notificaciones activas' : 'Activar notificaciones'}</div>
-                <div style={{ fontSize: 11, fontWeight: 400, color: 'var(--text)', marginTop: 1 }}>
-                  {subscribed ? 'Recibes alertas en este dispositivo' : 'Recibe recordatorios de pagos'}
-                </div>
-              </div>
-            </div>
-            <Toggle on={subscribed} />
-          </div>
-        </div>
-
-        {subscribed && (<>
-          {/* Hora */}
-          <div style={{ padding: '13px 14px', borderBottom: '0.5px solid var(--border)' }}>
-            <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)', marginBottom: 8 }}>Hora de notificación</div>
-            <select value={profile.notif_hour ?? 8} onChange={e => onUpdate({ notif_hour: parseInt(e.target.value) })} className="field-input" style={{ maxWidth: 140 }}>
-              {Array.from({ length: 24 }, (_, i) => (
-                <option key={i} value={i}>{i === 0 ? '12:00 am' : i < 12 ? `${i}:00 am` : i === 12 ? '12:00 pm' : `${i - 12}:00 pm`}</option>
-              ))}
-            </select>
-          </div>
-
-          <NotifToggle label="Pagos vencidos"  sub="Cuando un pago no se cubrió a tiempo"       value={profile.notif_overdue    !== false} onChange={v => onUpdate({ notif_overdue:    v })} />
-          <NotifToggle label="Vencen hoy"      sub="Pagos que llegan a su fecha límite hoy"     value={profile.notif_due_today  !== false} onChange={v => onUpdate({ notif_due_today:  v })} />
-          <NotifToggle label="Próximos pagos"  sub="Recordatorio días antes del vencimiento"    value={profile.notif_upcoming   !== false} onChange={v => onUpdate({ notif_upcoming:   v })} />
-
-          {profile.notif_upcoming !== false && (
-            <div style={{ padding: '0 14px 13px' }}>
-              <div style={{ fontSize: 12, fontWeight: 500, color: 'var(--text)', marginBottom: 6 }}>Días de anticipación</div>
-              <div style={{ display: 'flex', gap: 6 }}>
-                {[1, 2, 3, 5, 7].map(d => (
-                  <button key={d} onClick={() => onUpdate({ notif_days_before: d })}
-                    style={{ width: 36, height: 36, borderRadius: 5, border: 'none', background: (profile.notif_days_before ?? 3) === d ? 'var(--accent)' : 'var(--bg)', color: (profile.notif_days_before ?? 3) === d ? '#fff' : 'var(--text)', fontWeight: (profile.notif_days_before ?? 3) === d ? 600 : 400, fontSize: 13, fontFamily: 'DM Sans, sans-serif', cursor: 'pointer' }}>
-                    {d}
+          {profile.cobro_freq === 'weekly' && (
+            <div style={{ padding: '13px 14px', borderBottom: '0.5px solid var(--border)' }}>
+              <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)', marginBottom: 8 }}>Día de cobro</div>
+              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                {WEEKDAYS_SHORT.map((day, i) => (
+                  <button key={i} onClick={() => handleWeekday(i)}
+                    style={{ width: 38, height: 38, borderRadius: 5, border: 'none', background: profile.cobro_weekday === i ? 'var(--accent)' : 'var(--bg)', color: profile.cobro_weekday === i ? 'var(--surface)' : 'var(--text)', fontWeight: profile.cobro_weekday === i ? 600 : 400, fontSize: 13, fontFamily: 'DM Sans, sans-serif', cursor: 'pointer' }}>
+                    {day}
                   </button>
                 ))}
               </div>
             </div>
           )}
 
-          <NotifToggle label="Día de cobro" sub="Resumen de pagos pendientes al cobrar" value={profile.notif_cobro_day !== false} onChange={v => onUpdate({ notif_cobro_day: v })} last />
-        </>)}
-      </Card>
+          {profile.cobro_freq === 'biweekly' && (
+            <div style={{ padding: '13px 14px', borderBottom: '0.5px solid var(--border)' }}>
+              <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)', marginBottom: 8 }}>Días de cobro</div>
+              <div style={{ display: 'flex', gap: 6, marginBottom: 8 }}>
+                {BIWEEKLY_PRESETS.map(p => (
+                  <button key={p.label} onClick={() => { onUpdate({ cobro_day1: p.d1, cobro_day2: p.d2 }); setBiweeklyCustom(false) }}
+                    style={{ padding: '7px 12px', borderRadius: 5, border: 'none', background: !isCustomBiweekly() && profile.cobro_day1 === p.d1 && profile.cobro_day2 === p.d2 ? 'var(--accent)' : 'var(--bg)', color: !isCustomBiweekly() && profile.cobro_day1 === p.d1 && profile.cobro_day2 === p.d2 ? 'var(--surface)' : 'var(--text)', fontWeight: !isCustomBiweekly() && profile.cobro_day1 === p.d1 && profile.cobro_day2 === p.d2 ? 600 : 400, fontSize: 13, fontFamily: 'DM Sans, sans-serif', cursor: 'pointer' }}>
+                    {p.label}
+                  </button>
+                ))}
+                <button onClick={() => setBiweeklyCustom(true)}
+                  style={{ padding: '7px 12px', borderRadius: 5, border: 'none', background: isCustomBiweekly() ? 'var(--accent)' : 'var(--bg)', color: isCustomBiweekly() ? 'var(--surface)' : 'var(--text)', fontWeight: isCustomBiweekly() ? 600 : 400, fontSize: 13, fontFamily: 'DM Sans, sans-serif', cursor: 'pointer' }}>
+                  Otro
+                </button>
+              </div>
+              {isCustomBiweekly() && (
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <div style={{ flex: 1 }}>
+                    <label style={{ display: 'block', fontSize: 11, fontWeight: 500, color: 'var(--text)', marginBottom: 4 }}>Día 1 (1–31)</label>
+                    <input type="number" min="1" max="31" defaultValue={profile.cobro_day1 ?? ''} onBlur={e => { const v = Math.min(31, Math.max(1, parseInt(e.target.value)||1)); e.target.value=v; onUpdate({ cobro_day1: v }) }} placeholder="ej. 13" className="field-input" />
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <label style={{ display: 'block', fontSize: 11, fontWeight: 500, color: 'var(--text)', marginBottom: 4 }}>Día 2 (1–31)</label>
+                    <input type="number" min="1" max="31" defaultValue={profile.cobro_day2 ?? ''} onBlur={e => { const v = Math.min(31, Math.max(1, parseInt(e.target.value)||1)); e.target.value=v; onUpdate({ cobro_day2: v }) }} placeholder="ej. 28" className="field-input" />
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
 
-      {/* Sesión */}
-      <SectionLabel>Sesión</SectionLabel>
-      <Card>
-        <button onClick={handleLogout} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '13px 14px', background: 'none', border: 'none', cursor: 'pointer' }}>
-          <LogOut size={16} color="var(--danger)" />
-          <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--danger)' }}>Cerrar sesión</span>
-        </button>
-      </Card>
+          {profile.cobro_freq === 'monthly' && (
+            <div style={{ padding: '13px 14px', borderBottom: '0.5px solid var(--border)' }}>
+              <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)', marginBottom: 8 }}>Día de cobro</div>
+              <input type="number" min="1" max="31" defaultValue={profile.cobro_day1 ?? 1} onBlur={e => onUpdate({ cobro_day1: parseInt(e.target.value) || 1 })} placeholder="ej. 5" className="field-input" style={{ maxWidth: 120 }} />
+              {profile.cobro_day1 && (
+                <div style={{ fontSize: 12, fontWeight: 400, color: 'var(--text)', marginTop: 6 }}>
+                  Tu periodo de cobro empieza el día <strong>{profile.cobro_day1}</strong> de cada mes.
+                </div>
+              )}
+            </div>
+          )}
 
-      {/* Zona de peligro */}
-      <SectionLabel>Zona de peligro</SectionLabel>
-      <Card>
-        <button onClick={() => { setDangerModal('data'); setDangerPassword(''); setDangerError('') }}
-          style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '13px 14px', background: 'none', border: 'none', cursor: 'pointer', borderBottom: '0.5px solid var(--border)' }}>
-          <div style={{ textAlign: 'left' }}>
-            <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--danger)' }}>Eliminar todos mis datos</div>
-            <div style={{ fontSize: 11, fontWeight: 400, color: 'var(--text)', marginTop: 1 }}>Borra todos tus pagos e ingresos. Tu cuenta se mantiene.</div>
+          <Row label="Moneda" value="MXN $" last />
+        </Card>
+
+        {/* Ingreso */}
+        <SectionLabel>Ingreso por periodo</SectionLabel>
+        <Card>
+          <div style={{ padding: '13px 14px', borderBottom: profile.salary_enabled ? '0.5px solid var(--border)' : 'none' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer' }} onClick={handleSalaryToggle}>
+              <div>
+                <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)' }}>Ingreso por periodo</div>
+                <div style={{ fontSize: 11, fontWeight: 400, color: 'var(--text)', marginTop: 1 }}>Activa para ver alertas de presupuesto</div>
+              </div>
+              <Toggle on={profile.salary_enabled} />
+            </div>
           </div>
-          <ChevronRight size={14} color="var(--danger)" />
-        </button>
-        <button onClick={() => { setDangerModal('account'); setDangerPassword(''); setDangerError('') }}
-          style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '13px 14px', background: 'none', border: 'none', cursor: 'pointer' }}>
-          <div style={{ textAlign: 'left' }}>
-            <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--danger)' }}>Eliminar mi cuenta</div>
-            <div style={{ fontSize: 11, fontWeight: 400, color: 'var(--text)', marginTop: 1 }}>Elimina tu cuenta y todos tus datos permanentemente.</div>
-          </div>
-          <ChevronRight size={14} color="var(--danger)" />
-        </button>
-      </Card>
+          {profile.salary_enabled && (
+            <div style={{ padding: '13px 14px' }}>
+              <label className="field-label">Monto</label>
+              <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
+                <input type="number" value={salaryAmount} onChange={e => setSalaryAmount(e.target.value)} placeholder="0.00" className="field-input" style={{ flex: 1 }} />
+                <button onClick={handleSalaryAmount} className="btn-primary" style={{ width: 'auto', padding: '0 16px' }}>Guardar</button>
+              </div>
+            </div>
+          )}
+        </Card>
 
-      {/* Versión */}
-      <div style={{ textAlign: 'center', padding: '8px 0 24px', fontSize: 11, fontWeight: 500, color: 'var(--text)', opacity: 0.4 }}>
-        ADA Pay v0.9.13 — Alpha
+        {/* Notificaciones */}
+        <SectionLabel>Notificaciones</SectionLabel>
+        <Card>
+          <div style={{ padding: '13px 14px', borderBottom: '0.5px solid var(--border)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer' }} onClick={handlePushToggle}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                {subscribed ? <Bell size={18} color="var(--accent)" /> : <BellOff size={18} color="var(--text)" />}
+                <div>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)' }}>{subscribed ? 'Notificaciones activas' : 'Activar notificaciones'}</div>
+                  <div style={{ fontSize: 11, fontWeight: 400, color: 'var(--text)', marginTop: 1 }}>
+                    {subscribed ? 'Recibes alertas en este dispositivo' : 'Recibe recordatorios de pagos'}
+                  </div>
+                </div>
+              </div>
+              <Toggle on={subscribed} />
+            </div>
+          </div>
+
+          {subscribed && (<>
+            <div style={{ padding: '13px 14px', borderBottom: '0.5px solid var(--border)' }}>
+              <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)', marginBottom: 8 }}>Hora de notificación</div>
+              <select value={profile.notif_hour ?? 8} onChange={e => onUpdate({ notif_hour: parseInt(e.target.value) })} className="field-input" style={{ maxWidth: 140 }}>
+                {Array.from({ length: 24 }, (_, i) => (
+                  <option key={i} value={i}>{i === 0 ? '12:00 am' : i < 12 ? `${i}:00 am` : i === 12 ? '12:00 pm' : `${i - 12}:00 pm`}</option>
+                ))}
+              </select>
+            </div>
+
+            <NotifToggle label="Pagos vencidos"  sub="Cuando un pago no se cubrió a tiempo"    value={profile.notif_overdue    !== false} onChange={v => onUpdate({ notif_overdue:    v })} />
+            <NotifToggle label="Vencen hoy"      sub="Pagos que llegan a su fecha límite hoy"  value={profile.notif_due_today  !== false} onChange={v => onUpdate({ notif_due_today:  v })} />
+            <NotifToggle label="Próximos pagos"  sub="Recordatorio días antes del vencimiento" value={profile.notif_upcoming   !== false} onChange={v => onUpdate({ notif_upcoming:   v })} />
+
+            {profile.notif_upcoming !== false && (
+              <div style={{ padding: '0 14px 13px' }}>
+                <div style={{ fontSize: 12, fontWeight: 500, color: 'var(--text)', marginBottom: 6 }}>Días de anticipación</div>
+                <div style={{ display: 'flex', gap: 6 }}>
+                  {[1, 2, 3, 5, 7].map(d => (
+                    <button key={d} onClick={() => onUpdate({ notif_days_before: d })}
+                      style={{ width: 36, height: 36, borderRadius: 5, border: 'none', background: (profile.notif_days_before ?? 3) === d ? 'var(--accent)' : 'var(--bg)', color: (profile.notif_days_before ?? 3) === d ? 'var(--surface)' : 'var(--text)', fontWeight: (profile.notif_days_before ?? 3) === d ? 600 : 400, fontSize: 13, fontFamily: 'DM Sans, sans-serif', cursor: 'pointer' }}>
+                      {d}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <NotifToggle label="Día de cobro" sub="Resumen de pagos pendientes al cobrar" value={profile.notif_cobro_day !== false} onChange={v => onUpdate({ notif_cobro_day: v })} last />
+          </>)}
+        </Card>
+
+        {/* Sesión */}
+        <SectionLabel>Sesión</SectionLabel>
+        <Card>
+          <button onClick={handleLogout} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '13px 14px', background: 'none', border: 'none', cursor: 'pointer' }}>
+            <LogOut size={16} color="var(--danger)" />
+            <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--danger)' }}>Cerrar sesión</span>
+          </button>
+        </Card>
+
+        {/* Zona de peligro */}
+        <SectionLabel>Zona de peligro</SectionLabel>
+        <Card>
+          <button onClick={() => { setDangerModal('data'); setDangerPassword(''); setDangerError('') }}
+            style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '13px 14px', background: 'none', border: 'none', cursor: 'pointer', borderBottom: '0.5px solid var(--border)' }}>
+            <div style={{ textAlign: 'left' }}>
+              <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--danger)' }}>Eliminar todos mis datos</div>
+              <div style={{ fontSize: 11, fontWeight: 400, color: 'var(--text)', marginTop: 1 }}>Borra todos tus pagos e ingresos. Tu cuenta se mantiene.</div>
+            </div>
+            <ChevronRight size={14} color="var(--danger)" />
+          </button>
+          <button onClick={() => { setDangerModal('account'); setDangerPassword(''); setDangerError('') }}
+            style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '13px 14px', background: 'none', border: 'none', cursor: 'pointer' }}>
+            <div style={{ textAlign: 'left' }}>
+              <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--danger)' }}>Eliminar mi cuenta</div>
+              <div style={{ fontSize: 11, fontWeight: 400, color: 'var(--text)', marginTop: 1 }}>Elimina tu cuenta y todos tus datos permanentemente.</div>
+            </div>
+            <ChevronRight size={14} color="var(--danger)" />
+          </button>
+        </Card>
+
+        {/* Versión */}
+        <div style={{ textAlign: 'center', padding: '8px 0 24px', fontSize: 11, fontWeight: 500, color: 'var(--text)', opacity: 0.4 }}>
+          ADA Pay v0.9.14 — Alpha
+        </div>
       </div>
 
-      {/* ── Modal Danger Zone ── */}
+      {/* ── Modales fuera del div animado ──────────────────────────────────────────
+          IMPORTANTE: los modales van aquí, FUERA del div con slideClass.
+          Dentro del div animado, `transform` crea stacking context y atrapa
+          los `position:fixed` hijos. Al sacarlos, el z-index funciona correctamente.
+      ─────────────────────────────────────────────────────────────────────────── */}
+
       {dangerModal && (
         <div onClick={e => e.target === e.currentTarget && setDangerModal(null)}
           style={{ position: 'fixed', inset: 0, background: 'rgba(2,10,31,0.5)', zIndex: 200, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
-          <div style={{ background: 'var(--surface)', borderRadius: '20px 20px 0 0', width: '100%', maxWidth: 420, padding: '20px 16px 32px', animation: 'modalSlideUp .32s cubic-bezier(0.25, 0.46, 0.45, 0.94) both' }}>
+          <div style={{ background: 'var(--surface)', borderRadius: '20px 20px 0 0', width: '100%', maxWidth: 420, padding: '20px 16px 32px', animation: 'modalSlideUp .3s cubic-bezier(0.25, 0.46, 0.45, 0.94) both' }}>
             <div style={{ width: 34, height: 4, background: 'var(--border)', borderRadius: 2, margin: '0 auto 16px' }} />
-
             <div style={{ width: 44, height: 44, borderRadius: 12, background: 'var(--danger-soft)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 12 }}>
               <AlertTriangle size={22} color="var(--danger)" />
             </div>
-
             <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--danger)', marginBottom: 6 }}>
               {dangerModal === 'data' ? 'Eliminar todos los datos' : 'Eliminar cuenta'}
             </div>
@@ -434,13 +439,11 @@ export function SettingsPage({ profile, user, onUpdate, onUploadAvatar, onDataDe
                 : 'Esta acción eliminará tu cuenta y todos tus datos permanentemente. No podrás recuperarlos. Esta acción no se puede deshacer.'
               }
             </div>
-
             {dangerError && (
               <div style={{ background: 'var(--danger-soft)', border: '0.5px solid var(--danger-border)', borderRadius: 'var(--radius-sm)', padding: '8px 12px', fontSize: 13, color: 'var(--danger)', marginBottom: 12 }}>
                 {dangerError}
               </div>
             )}
-
             <label className="field-label" style={{ marginBottom: 6, display: 'block' }}>Confirma con tu contraseña</label>
             <div style={{ position: 'relative', marginBottom: 14 }}>
               <input
@@ -458,12 +461,10 @@ export function SettingsPage({ profile, user, onUpdate, onUploadAvatar, onDataDe
                 {showDangerPass ? <EyeOff size={16} color="var(--text)" /> : <Eye size={16} color="var(--text)" />}
               </button>
             </div>
-
             <button
               onClick={dangerModal === 'data' ? handleDeleteData : handleDeleteAccount}
               disabled={dangerLoading || !dangerPassword}
-              style={{ width: '100%', padding: 12, background: 'var(--danger)', color: '#fff', border: 'none', borderRadius: 'var(--radius-sm)', fontSize: 14, fontWeight: 600, fontFamily: 'DM Sans, sans-serif', cursor: 'pointer', marginBottom: 8, opacity: dangerLoading || !dangerPassword ? 0.7 : 1 }}
-            >
+              style={{ width: '100%', padding: 12, background: 'var(--danger)', color: 'var(--surface)', border: 'none', borderRadius: 'var(--radius-sm)', fontSize: 14, fontWeight: 600, fontFamily: 'DM Sans, sans-serif', cursor: 'pointer', marginBottom: 8, opacity: dangerLoading || !dangerPassword ? 0.7 : 1 }}>
               {dangerLoading ? 'Verificando…' : dangerModal === 'data' ? 'Eliminar todos mis datos' : 'Eliminar mi cuenta'}
             </button>
             <button onClick={() => { setDangerModal(null); setDangerPassword('') }} className="btn-ghost">Cancelar</button>
@@ -471,11 +472,10 @@ export function SettingsPage({ profile, user, onUpdate, onUploadAvatar, onDataDe
         </div>
       )}
 
-      {/* ── Modal edición (nombre / correo / contraseña) ── */}
       {editSection && (
         <div onClick={e => e.target === e.currentTarget && setEditSection(null)}
           style={{ position: 'fixed', inset: 0, background: 'rgba(2,10,31,0.45)', zIndex: 200, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
-          <div style={{ background: 'var(--surface)', borderRadius: '20px 20px 0 0', width: '100%', maxWidth: 420, padding: '20px 16px 32px', animation: 'modalSlideUp .32s cubic-bezier(0.25, 0.46, 0.45, 0.94) both' }}>
+          <div style={{ background: 'var(--surface)', borderRadius: '20px 20px 0 0', width: '100%', maxWidth: 420, padding: '20px 16px 32px', animation: 'modalSlideUp .3s cubic-bezier(0.25, 0.46, 0.45, 0.94) both' }}>
             <div style={{ width: 34, height: 4, background: 'var(--border)', borderRadius: 2, margin: '0 auto 16px' }} />
             <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--text)', marginBottom: 14 }}>
               {editSection === 'name' ? 'Editar nombre' : editSection === 'email' ? 'Cambiar correo' : 'Cambiar contraseña'}
@@ -499,7 +499,6 @@ export function SettingsPage({ profile, user, onUpdate, onUploadAvatar, onDataDe
             )}
 
             {editSection === 'password' && (<>
-              {/* Contraseña actual */}
               <div style={{ marginBottom: 12 }}>
                 <label className="field-label">Contraseña actual</label>
                 <div style={{ position: 'relative' }}>
@@ -513,7 +512,6 @@ export function SettingsPage({ profile, user, onUpdate, onUploadAvatar, onDataDe
                 </button>
               </div>
 
-              {/* Nueva contraseña */}
               <div style={{ marginBottom: 8 }}>
                 <label className="field-label">Nueva contraseña</label>
                 <div style={{ position: 'relative' }}>
@@ -524,7 +522,6 @@ export function SettingsPage({ profile, user, onUpdate, onUploadAvatar, onDataDe
                 </div>
               </div>
 
-              {/* Requisitos */}
               {fieldVal.length > 0 && (
                 <div style={{ background: 'var(--bg)', borderRadius: 'var(--radius-sm)', padding: '10px 12px', marginBottom: 10 }}>
                   <RequirementRow met={newPassReqs.length}    label="Mínimo 8 caracteres" />
@@ -534,7 +531,6 @@ export function SettingsPage({ profile, user, onUpdate, onUploadAvatar, onDataDe
                 </div>
               )}
 
-              {/* Confirmar nueva */}
               <div style={{ marginBottom: 14 }}>
                 <label className="field-label">Confirmar nueva contraseña</label>
                 <div style={{ position: 'relative' }}>
@@ -554,7 +550,7 @@ export function SettingsPage({ profile, user, onUpdate, onUploadAvatar, onDataDe
           </div>
         </div>
       )}
-    </div>
+    </>
   )
 }
 
