@@ -31,7 +31,6 @@
   --radius-sm: 8px;
   --radius-full: 999px;
 
-  /* Colores por categoría */
   --cat-servicios:     #F5A623;
   --cat-suscripciones: #2ECC71;
   --cat-creditos:      #3498DB;
@@ -61,7 +60,6 @@ button { cursor: pointer; font-family: 'DM Sans', sans-serif; }
 input, select { font-family: 'DM Sans', sans-serif; }
 a { color: inherit; text-decoration: none; }
 
-/* Utilidades globales reutilizables */
 .card {
   background: var(--surface);
   border: 0.5px solid var(--border);
@@ -179,20 +177,18 @@ a { color: inherit; text-decoration: none; }
   transition: left .2s;
 }
 
-/* Bloquear scroll del body cuando hay un modal abierto */
 body.modal-open {
   overflow: hidden;
   position: fixed;
   width: 100%;
 }
 
-/* ── Animaciones de transición entre páginas ── */
-/*
-  FIX z-index: los keyframes terminan en `transform: none` (NO `translateX(0)`).
-  `translateX(0)` crea stacking context aunque sea identidad visual, lo que atrapa
-  los `position: fixed` hijos impidiéndoles aparecer sobre el BottomNav.
-  `transform: none` no crea stacking context.
-*/
+/* ── Transición entre páginas ─────────────────────────────────────────────────
+   FIX: `to` usa `transform: none` en lugar de `translateX(0)`.
+   `translateX(0)` crea stacking context aunque sea visualmente idéntico,
+   atrapando los `position:fixed` hijos bajo el BottomNav.
+   `transform: none` no crea stacking context.
+────────────────────────────────────────────────────────────────────────────── */
 @keyframes slideInRight {
   from { transform: translateX(100%); opacity: 0; }
   to   { transform: none;             opacity: 1; }
@@ -209,25 +205,22 @@ body.modal-open {
   animation: slideInLeft 0.28s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
 }
 
-/* ── Animación panel de notificaciones ── */
+/* ── Panel de notificaciones ─────────────────────────────────────────────── */
 @keyframes notifSlideIn {
   from { transform: translateY(-16px); opacity: 0; }
   to   { transform: translateY(0);     opacity: 1; }
 }
 
-/* ── Animaciones de modales ── */
-
-/*
-  FIX: NO usar translateY(100%) como from — browsers móviles omiten la
-  animación si el elemento empieza completamente off-screen. Se usa un
-  desplazamiento pequeño + opacity para un efecto suave y confiable.
-*/
+/* ── Animaciones de modales ───────────────────────────────────────────────────
+   modalSlideUp: solo transform, sin opacity.
+   Usar opacity en fill-mode:both causa invisibilidad permanente cuando
+   body.modal-open{position:fixed} interfiere con el inicio de la animación.
+────────────────────────────────────────────────────────────────────────────── */
 @keyframes modalSlideUp {
-  from { transform: translateY(32px); opacity: 0; }
-  to   { transform: translateY(0);    opacity: 1; }
+  from { transform: translateY(32px); }
+  to   { transform: translateY(0); }
 }
 
-/* Diálogos centrados: leve escala + fade */
 @keyframes modalPopIn {
   from { transform: scale(0.96); opacity: 0; }
   to   { transform: scale(1);    opacity: 1; }
