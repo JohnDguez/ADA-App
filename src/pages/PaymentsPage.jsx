@@ -229,15 +229,9 @@ export function PaymentsPage({ payments, profile, unreadCount, onOpenNotifs, onG
   // ── Totales del periodo ───────────────────────────────────────────────────
   const { start: periodStart, end: periodEnd } = cobroPeriod(profile || {})
   const gastosPeriodo = paidPayments.filter(p => {
-    const d = dateOf(p.due_date)
-    if (d >= periodStart && d <= periodEnd) return true
-    // Solo pagos ADELANTADOS: due_date en el futuro pero pagados en el periodo actual
-    // (no aplica a pagos vencidos de periodos anteriores)
-    if (d > periodEnd && p.paid_at) {
-      const paidDate = dateOf(new Date(p.paid_at).toISOString().split('T')[0])
-      return paidDate >= periodStart && paidDate <= periodEnd
-    }
-    return false
+    if (!p.paid_at) return false
+    const paidDate = dateOf(new Date(p.paid_at).toISOString().split('T')[0])
+    return paidDate >= periodStart && paidDate <= periodEnd
   })
   const totalGastos  = gastosPeriodo.reduce((a, p) => a + Number(p.amount), 0)
   const totalExtras  = periodIncomes.reduce((a, i) => a + Number(i.amount), 0)
