@@ -11,6 +11,7 @@ export function ConfirmCloseModal({ open, onConfirm, onCancel }) {
       <div style={{
         background: 'var(--surface)', borderRadius: 16,
         width: '100%', maxWidth: 320, padding: '24px 20px',
+        animation: 'modalPopIn .22s cubic-bezier(0.25, 0.46, 0.45, 0.94) both',
       }}>
         <div style={{ fontSize: 15, fontWeight: 600, color: 'var(--text)', marginBottom: 6 }}>Descartar cambios</div>
         <div style={{ fontSize: 13, color: 'var(--muted)', marginBottom: 20 }}>Tienes información sin guardar. Si cierras la perderás.</div>

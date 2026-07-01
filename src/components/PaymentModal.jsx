@@ -4,38 +4,31 @@ import { ConfirmCloseModal } from './ConfirmCloseModal'
 import { FrequencyPicker } from './FrequencyPicker'
 
 export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelete, initial, payments }) {
-  const [mode, setMode] = useState('single')
-  const [name, setName] = useState('')
-  const [amount, setAmount] = useState('')
-  const [dueDate, setDueDate] = useState('')
-  const [category, setCategory] = useState('Servicios')
-  const [isVariable, setIsVariable] = useState(false)
-  const [recurFreq, setRecurFreq] = useState('monthly')
-  const [weekday, setWeekday] = useState(5)
-  const [biweeklyDate, setBiweeklyDate] = useState('')
-  const [totalInstallments, setTotalInstallments] = useState('')
-  const [startFrom, setStartFrom] = useState('1')
-  const [totalAmount, setTotalAmount] = useState('')
-  const [saving, setSaving] = useState(false)
-  const [error, setError] = useState('')
-  const [confirmClose, setConfirmClose] = useState(false)
+  const [mode,               setMode]               = useState('single')
+  const [name,               setName]               = useState('')
+  const [amount,             setAmount]             = useState('')
+  const [dueDate,            setDueDate]            = useState('')
+  const [category,           setCategory]           = useState('Servicios')
+  const [isVariable,         setIsVariable]         = useState(false)
+  const [recurFreq,          setRecurFreq]          = useState('monthly')
+  const [weekday,            setWeekday]            = useState(5)
+  const [biweeklyDate,       setBiweeklyDate]       = useState('')
+  const [totalInstallments,  setTotalInstallments]  = useState('')
+  const [startFrom,          setStartFrom]          = useState('1')
+  const [totalAmount,        setTotalAmount]        = useState('')
+  const [saving,             setSaving]             = useState(false)
+  const [error,              setError]              = useState('')
+  const [confirmClose,       setConfirmClose]       = useState(false)
 
   const isEditingInstallment = !!(initial?.is_installment)
 
-  // Bloquear scroll del body mientras el modal está abierto
   useEffect(() => {
-    if (open) {
-      document.body.classList.add('modal-open')
-    } else {
-      document.body.classList.remove('modal-open')
-    }
+    if (open) document.body.classList.add('modal-open')
+    else      document.body.classList.remove('modal-open')
     return () => document.body.classList.remove('modal-open')
   }, [open])
 
-  // Ref para acceder a los valores actuales desde el listener de popstate
-  // sin re-registrarlo cada vez que cambia el estado
   const dirtyRef = useRef(false)
-
   useEffect(() => {
     dirtyRef.current = initial ? true : (name.trim() !== '' || amount !== '' || totalInstallments !== '')
   }, [initial, name, amount, totalInstallments])
@@ -73,7 +66,7 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
     window.history.pushState(null, '', window.location.href)
     window.addEventListener('popstate', handler)
     return () => window.removeEventListener('popstate', handler)
-  }, [open]) // Solo depende de open — el ref siempre tiene el valor actual
+  }, [open])
 
   function hasDirty() {
     if (initial) return true
@@ -82,12 +75,6 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
   function requestClose() { if (hasDirty()) { setConfirmClose(true); return }; onClose() }
 
   const monthBasedFreqs = ['monthly', 'bimonthly', 'quarterly', 'semiannual', 'annual']
-  function calcFirstDate() {
-    if (monthBasedFreqs.includes(recurFreq)) return dueDate
-    if (recurFreq === 'weekly') return dueDate
-    if (recurFreq === 'biweekly') return biweeklyDate || dueDate
-    return dueDate
-  }
 
   async function handleSave() {
     setError('')
@@ -112,8 +99,8 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
     }
     if (!isVariable && (!amount || isNaN(parseFloat(amount)))) { setError('Agrega el monto o marca como variable'); return }
     let finalDate = dueDate
-    if (mode === 'recurrent' && recurFreq === 'weekly') finalDate = nextWeekdayDate(weekday).toISOString().split('T')[0]
-    if (mode === 'recurrent' && recurFreq === 'biweekly') finalDate = biweeklyDate ? nextBiweeklyFromDate(biweeklyDate).toISOString().split('T')[0] : dueDate
+    if (mode === 'recurrent' && recurFreq === 'weekly')    finalDate = nextWeekdayDate(weekday).toISOString().split('T')[0]
+    if (mode === 'recurrent' && recurFreq === 'biweekly')  finalDate = biweeklyDate ? nextBiweeklyFromDate(biweeklyDate).toISOString().split('T')[0] : dueDate
     if (!finalDate) { setError('Selecciona la fecha de vencimiento'); return }
     setSaving(true)
     await onSave({ name: name.trim(), amount: isVariable ? 0 : parseFloat(amount), due_date: finalDate, category, is_variable: isVariable, is_recurrent: mode === 'recurrent', recur_freq: mode === 'recurrent' ? recurFreq : null, is_paid: initial?.is_paid || false, is_installment: false })
@@ -122,12 +109,17 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
 
   if (!open) return null
 
-  const showDatePicker = mode === 'single' || (mode === 'recurrent' && monthBasedFreqs.includes(recurFreq)) || (mode === 'installment' && monthBasedFreqs.includes(recurFreq))
-  const showWeekdayPicker = (mode === 'recurrent' || mode === 'installment') && recurFreq === 'weekly'
+  const showDatePicker     = mode === 'single' || (mode === 'recurrent' && monthBasedFreqs.includes(recurFreq)) || (mode === 'installment' && monthBasedFreqs.includes(recurFreq))
+  const showWeekdayPicker  = (mode === 'recurrent' || mode === 'installment') && recurFreq === 'weekly'
   const showBiweeklyPicker = (mode === 'recurrent' || mode === 'installment') && recurFreq === 'biweekly'
-  const nextBiDate = biweeklyDate ? nextBiweeklyFromDate(biweeklyDate) : null
+  const nextBiDate         = biweeklyDate ? nextBiweeklyFromDate(biweeklyDate) : null
 
-  const modalStyle = { background: 'var(--surface)', borderRadius: '20px 20px 0 0', width: '100%', maxWidth: 420, padding: '18px 16px 32px', maxHeight: '92vh', overflowY: 'auto' }
+  const modalStyle = {
+    background: 'var(--surface)', borderRadius: '20px 20px 0 0',
+    width: '100%', maxWidth: 420, padding: '18px 16px 32px',
+    maxHeight: '92vh', overflowY: 'auto',
+    animation: 'modalSlideUp .32s cubic-bezier(0.25, 0.46, 0.45, 0.94) both',
+  }
 
   if (isEditingInstallment) {
     return (
@@ -166,7 +158,7 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
           {!initial && (
             <div style={{ display: 'flex', background: 'var(--bg)', borderRadius: 10, padding: 3, marginBottom: 16, border: '0.5px solid var(--border)' }}>
               {[['single','Pago único'],['recurrent','Recurrente'],['installment','Parcialidades']].map(([m, label]) => (
-                <button key={m} onClick={() => setMode(m)} style={{ flex: 1, padding: '8px 0', borderRadius: 8, border: 'none', background: mode === m ? 'var(--surface)' : 'transparent', color: mode === m ? 'var(--text)' : 'var(--text)', fontWeight: mode === m ? 600 : 400, fontSize: 12, fontFamily: 'DM Sans, sans-serif', cursor: 'pointer' }}>{label}</button>
+                <button key={m} onClick={() => setMode(m)} style={{ flex: 1, padding: '8px 0', borderRadius: 8, border: 'none', background: mode === m ? 'var(--surface)' : 'transparent', color: 'var(--text)', fontWeight: mode === m ? 600 : 400, fontSize: 12, fontFamily: 'DM Sans, sans-serif', cursor: 'pointer' }}>{label}</button>
               ))}
             </div>
           )}
@@ -204,13 +196,12 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
           )}
 
           {mode === 'installment' && (() => {
-            const totalAmt   = parseFloat(totalAmount) || 0
+            const totalAmt    = parseFloat(totalAmount) || 0
             const numPayments = parseInt(totalInstallments) || 0
-            const perPayment = numPayments > 0 ? Math.round((totalAmt / numPayments) * 100) / 100 : 0
-            const startNum   = parseInt(startFrom) || 1
-            // Usar la fecha correcta según frecuencia
+            const perPayment  = numPayments > 0 ? Math.round((totalAmt / numPayments) * 100) / 100 : 0
+            const startNum    = parseInt(startFrom) || 1
             const firstDateStr = recurFreq === 'biweekly' ? biweeklyDate : recurFreq === 'weekly' ? nextWeekdayDate(weekday).toISOString().split('T')[0] : dueDate
-            const nextDate   = firstDateStr ? new Date(firstDateStr + 'T12:00:00') : null
+            const nextDate    = firstDateStr ? new Date(firstDateStr + 'T12:00:00') : null
             return (
               <>
                 <Field label="Monto total a pagar">
@@ -223,8 +214,6 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
                   <input className="field-input" type="number" value={startFrom} onChange={e => setStartFrom(e.target.value)} placeholder="1" min="1" enterKeyHint="next" />
                   {startNum > 1 && <div style={{ fontSize: 11, color: 'var(--text)', marginTop: 4 }}>Los pagos 1 al {startNum - 1} se marcarán como pagados automáticamente.</div>}
                 </Field>
-
-                {/* Resumen */}
                 {totalAmt > 0 && numPayments >= 2 && (
                   <div style={{ background: 'var(--accent-soft)', borderRadius: 'var(--radius-sm)', padding: '12px 14px', marginBottom: 12 }}>
                     <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--accent)', marginBottom: 6 }}>Resumen</div>

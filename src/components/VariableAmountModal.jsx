@@ -16,8 +16,6 @@ export function VariableAmountModal({ open, payment, onConfirm, onClose }) {
     return () => document.body.classList.remove('modal-open')
   }, [open])
 
-
-
   useEffect(() => {
     if (!open) return
     const handler = () => {
@@ -27,7 +25,7 @@ export function VariableAmountModal({ open, payment, onConfirm, onClose }) {
     window.history.pushState(null, '', window.location.href)
     window.addEventListener('popstate', handler)
     return () => window.removeEventListener('popstate', handler)
-  }, [open]) // Solo depende de open — el ref siempre tiene el valor actual
+  }, [open])
 
   function requestClose() { if (amount) { setConfirmClose(true); return }; onClose() }
 
@@ -46,7 +44,11 @@ export function VariableAmountModal({ open, payment, onConfirm, onClose }) {
         zIndex: 250, display: 'flex', alignItems: 'center',
         justifyContent: 'center', padding: '0 24px',
       }}>
-        <div style={{ background: 'var(--surface)', borderRadius: 16, width: '100%', maxWidth: 340, padding: '24px 20px' }}>
+        <div style={{
+          background: 'var(--surface)', borderRadius: 16,
+          width: '100%', maxWidth: 340, padding: '24px 20px',
+          animation: 'modalPopIn .22s cubic-bezier(0.25, 0.46, 0.45, 0.94) both',
+        }}>
           <div style={{ fontSize: 16, fontWeight: 600, color: 'var(--text)', marginBottom: 4 }}>Registrar pago</div>
           <div style={{ fontSize: 13, color: 'var(--text)', marginBottom: 16 }}>{payment.name} — ingresa el monto que pagaste</div>
           {error && <div style={{ background: 'var(--danger-soft)', border: '0.5px solid var(--danger-border)', borderRadius: 'var(--radius-sm)', padding: '8px 12px', fontSize: 13, color: 'var(--danger)', marginBottom: 12 }}>{error}</div>}

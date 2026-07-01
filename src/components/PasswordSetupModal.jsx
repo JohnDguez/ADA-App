@@ -38,12 +38,12 @@ function RequirementRow({ met, label }) {
 
 // ── Modal de configuración de contraseña (Google users) ──────────────────────
 export function PasswordSetupModal({ userId, onDone }) {
-  const [password,   setPassword]   = useState('')
-  const [confirm,    setConfirm]    = useState('')
-  const [showPass,   setShowPass]   = useState(false)
-  const [showConf,   setShowConf]   = useState(false)
-  const [loading,    setLoading]    = useState(false)
-  const [error,      setError]      = useState('')
+  const [password, setPassword] = useState('')
+  const [confirm,  setConfirm]  = useState('')
+  const [showPass, setShowPass] = useState(false)
+  const [showConf, setShowConf] = useState(false)
+  const [loading,  setLoading]  = useState(false)
+  const [error,    setError]    = useState('')
 
   const reqs   = passwordRequirements(password)
   const strong = isPasswordStrong(password)
@@ -63,7 +63,6 @@ export function PasswordSetupModal({ userId, onDone }) {
     const { error: updErr } = await supabase.auth.updateUser({ password })
     if (updErr) { setError(updErr.message); setLoading(false); return }
 
-    // Marcar has_password = true en profiles
     await supabase.from('profiles').update({ has_password: true }).eq('id', userId)
     setLoading(false)
     onDone()
@@ -81,6 +80,7 @@ export function PasswordSetupModal({ userId, onDone }) {
         borderRadius: '20px 20px 0 0',
         width: '100%', maxWidth: 420,
         padding: '24px 20px 36px',
+        animation: 'modalSlideUp .32s cubic-bezier(0.25, 0.46, 0.45, 0.94) both',
       }}>
         {/* Encabezado */}
         <div style={{ marginBottom: 20 }}>
