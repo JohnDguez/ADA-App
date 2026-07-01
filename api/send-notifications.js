@@ -21,7 +21,7 @@ function getLocalHour(timezone) {
       hour12: false,
     })
     const hour = parseInt(formatter.format(now))
-    return hour === 24 ? 0 : hour  // Fix: Intl puede devolver 24 a medianoche en algunos motores
+    return hour === 24 ? 0 : hour  // Fix: Intl puede devolver 24 a medianoche
   } catch (e) {
     return new Date().getUTCHours()
   }
@@ -61,7 +61,7 @@ module.exports = async function handler(req, res) {
     const userIds = subs.map(s => s.user_id)
     const { data: profiles, error: profilesError } = await supabase
       .from('profiles')
-      .select('id, notif_cobro_day, notif_due_today, notif_upcoming, notif_overdue, notif_days_before, notif_hour, timezone, cobro_freq, cobro_weekday')
+      .select('id, notif_cobro_day, notif_due_today, notif_upcoming, notif_overdue, notif_days_before, notif_hour, timezone, cobro_freq, cobro_weekday, notif_last_sent')
       .in('id', userIds)
 
     if (profilesError) return res.status(500).json({ error: profilesError.message })
@@ -78,13 +78,19 @@ module.exports = async function handler(req, res) {
 
       const timezone  = profile.timezone || 'America/Mazatlan'
       const notifHour = profile.notif_hour ?? 8
+      const todayStr  = getLocalDateStr(timezone)
 
       if (!force) {
         const userCurrentHour = getLocalHour(timezone)
-        if (userCurrentHour !== notifHour) { skipped++; continue }
+
+        // Muy temprano — aún no es la hora configurada
+        if (userCurrentHour < notifHour) { skipped++; continue }
+
+        // Ya se envió una notificación hoy — evita duplicados si el cron
+        // corre varias veces después de la hora objetivo (por retrasos de GitHub Actions)
+        if (profile.notif_last_sent === todayStr) { skipped++; continue }
       }
 
-      const todayStr = getLocalDateStr(timezone)
       const today    = new Date(todayStr + 'T12:00:00')
       const notifications = []
 
@@ -165,6 +171,10 @@ module.exports = async function handler(req, res) {
           }
         }
       }
+
+      // Marcar como enviado hoy (aunque no haya notificaciones que enviar)
+      // Esto evita que el cron intente enviar de nuevo más tarde en el día
+      await supabase.from('profiles').update({ notif_last_sent: todayStr }).eq('id', profile.id)
 
       if (notifications.length === 0) continue
 
