@@ -716,13 +716,13 @@ export function PaymentsPage({ payments, profile, unreadCount, onOpenNotifs, onG
               const heightPct = (total / maxChart) * 100
               const isCurrent = m.month === now.getMonth() && m.year === now.getFullYear()
               const barColor  = selectedCat ? CAT_COLOR[selectedCat] : 'var(--accent)'
-              const barMuted  = selectedCat ? (CAT_COLOR[selectedCat] + '55') : 'var(--accent-border)'
               return (
                 <div key={i} style={{ flex: 1, height: '100%', display: 'flex', alignItems: 'flex-end' }}>
                   <div style={{
                     width: '100%',
                     height: `${Math.max(heightPct, total > 0 ? 3 : 0)}%`,
-                    background: isCurrent ? barColor : barMuted,
+                    background: isCurrent ? barColor : (selectedCat ? CAT_COLOR[selectedCat] : 'var(--accent-border)'),
+                    opacity: isCurrent ? 1 : (selectedCat ? 0.45 : 1),
                     borderRadius: '3px 3px 0 0',
                     minHeight: total > 0 ? 3 : 0,
                     transition: 'height .3s',
