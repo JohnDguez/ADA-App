@@ -351,7 +351,7 @@ export function SettingsPage({ profile, user, onUpdate, onUploadAvatar, onDataDe
           {subscribed && (<>
             <div style={{ padding: '13px 14px', borderBottom: '0.5px solid var(--border)' }}>
               <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)', marginBottom: 8 }}>Hora de notificación</div>
-              <select value={profile.notif_hour ?? 8} onChange={e => onUpdate({ notif_hour: parseInt(e.target.value) })} className="field-input" style={{ maxWidth: 140 }}>
+              <select value={profile.notif_hour ?? 8} onChange={e => onUpdate({ notif_hour: parseInt(e.target.value), notif_last_sent: null })} className="field-input" style={{ maxWidth: 140 }}>
                 {Array.from({ length: 24 }, (_, i) => (
                   <option key={i} value={i}>{i === 0 ? '12:00 am' : i < 12 ? `${i}:00 am` : i === 12 ? '12:00 pm' : `${i - 12}:00 pm`}</option>
                 ))}
@@ -412,7 +412,7 @@ export function SettingsPage({ profile, user, onUpdate, onUploadAvatar, onDataDe
 
         {/* Versión */}
         <div style={{ textAlign: 'center', padding: '8px 0 24px', fontSize: 11, fontWeight: 500, color: 'var(--text)', opacity: 0.4 }}>
-          ADA Pay v0.9.14 — Alpha
+          ADA Pay v0.9.16 — Alpha
         </div>
       </div>
 
