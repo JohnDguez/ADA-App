@@ -290,17 +290,24 @@ export function PaymentsPage({ payments, profile, unreadCount, onOpenNotifs, onG
   const maxCat = Math.max(...catData.map(d => d.total), 1)
 
   // ── Pagos realizados ──────────────────────────────────────────────────────
-  const availableYears = [...new Set(paidPayments.map(p => dateOf(p.due_date).getFullYear()))].sort((a, b) => b - a)
+  const availableYears = [...new Set(paidPayments.map(p => {
+    const d = p.paid_at ? new Date(p.paid_at) : dateOf(p.due_date)
+    return d.getFullYear()
+  }))].sort((a, b) => b - a)
   if (!availableYears.includes(viewYear)) availableYears.unshift(viewYear)
 
   function paidInMonth(month, year) {
     return paidPayments.filter(p => {
-      const d = dateOf(p.due_date)
+      const d = p.paid_at ? new Date(p.paid_at) : dateOf(p.due_date)
       return d.getMonth() === month && d.getFullYear() === year
     })
   }
 
-  const paidInView  = paidInMonth(viewMonth, viewYear).sort((a, b) => dateOf(b.due_date) - dateOf(a.due_date))
+  const paidInView  = paidInMonth(viewMonth, viewYear).sort((a, b) => {
+    const da = a.paid_at ? new Date(a.paid_at) : dateOf(a.due_date)
+    const db = b.paid_at ? new Date(b.paid_at) : dateOf(b.due_date)
+    return db - da
+  })
   const totalInView = paidInView.reduce((a, p) => a + Number(p.amount), 0)
 
   function handleMenuAction(action, payment) {
