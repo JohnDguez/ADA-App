@@ -412,7 +412,7 @@ export function SettingsPage({ profile, user, onUpdate, onUploadAvatar, onDataDe
 
         {/* Versión */}
         <div style={{ textAlign: 'center', padding: '8px 0 24px', fontSize: 11, fontWeight: 500, color: 'var(--text)', opacity: 0.4 }}>
-          ADA Pay v0.9.16 — Alpha
+          ADA Pay v0.9.19 — Alpha
         </div>
       </div>
 
