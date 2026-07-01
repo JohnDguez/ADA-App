@@ -255,7 +255,10 @@ export function PaymentsPage({ payments, profile, unreadCount, onOpenNotifs, onG
 
   function chartTotalInMonth(month, year) {
     return chartFiltered
-      .filter(p => { const d = dateOf(p.due_date); return d.getMonth() === month && d.getFullYear() === year })
+      .filter(p => {
+        const d = p.paid_at ? new Date(p.paid_at) : dateOf(p.due_date)
+        return d.getMonth() === month && d.getFullYear() === year
+      })
       .reduce((a, p) => a + Number(p.amount), 0)
   }
 
@@ -267,18 +270,19 @@ export function PaymentsPage({ payments, profile, unreadCount, onOpenNotifs, onG
 
   // ── Por categoría ─────────────────────────────────────────────────────────
   function getCatTotal(cat) {
+    const d = p => p.paid_at ? new Date(p.paid_at) : dateOf(p.due_date)
     if (catRange === 'mes') {
       return paidPayments
-        .filter(p => { const d = dateOf(p.due_date); return p.category === cat && d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear() })
+        .filter(p => p.category === cat && d(p).getMonth() === now.getMonth() && d(p).getFullYear() === now.getFullYear())
         .reduce((a, p) => a + Number(p.amount), 0)
     }
     if (catRange === 'periodo') {
-      return paidPayments
-        .filter(p => { const d = dateOf(p.due_date); return p.category === cat && d >= periodStart && d <= periodEnd })
+      return gastosPeriodo
+        .filter(p => p.category === cat)
         .reduce((a, p) => a + Number(p.amount), 0)
     }
     return paidPayments
-      .filter(p => { const d = dateOf(p.due_date); return p.category === cat && d.getFullYear() === now.getFullYear() })
+      .filter(p => p.category === cat && d(p).getFullYear() === now.getFullYear())
       .reduce((a, p) => a + Number(p.amount), 0)
   }
 
