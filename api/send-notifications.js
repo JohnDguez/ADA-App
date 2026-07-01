@@ -20,7 +20,8 @@ function getLocalHour(timezone) {
       hour: 'numeric',
       hour12: false,
     })
-    return parseInt(formatter.format(now))
+    const hour = parseInt(formatter.format(now))
+    return hour === 24 ? 0 : hour  // Fix: Intl puede devolver 24 a medianoche en algunos motores
   } catch (e) {
     return new Date().getUTCHours()
   }
