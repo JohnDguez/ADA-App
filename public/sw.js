@@ -21,8 +21,8 @@ self.addEventListener('push', e => {
   e.waitUntil(
     self.registration.showNotification(data.title, {
       body: data.body,
-      icon: '/favicon.svg',
-      badge: '/notification-icon.png',
+      icon: '/notification-icon.png',   // PNG requerido — Android no soporta SVG
+      badge: '/notification-icon.png',  // Ícono monocromático en barra de estado
       tag: data.tag || 'ada-pay',
       requireInteraction: data.urgent || false,
       data: { url: data.url || '/' },
