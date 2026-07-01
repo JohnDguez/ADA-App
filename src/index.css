@@ -225,3 +225,31 @@ body.modal-open {
   from { transform: scale(0.96); opacity: 0; }
   to   { transform: scale(1);    opacity: 1; }
 }
+
+/* ── Skeleton loader ─────────────────────────────────────────────────────── */
+@keyframes shimmer {
+  0%   { background-position: -400px 0; }
+  100% { background-position:  400px 0; }
+}
+
+.skeleton-bone {
+  background: linear-gradient(
+    90deg,
+    var(--border) 25%,
+    #F5F4F0    50%,
+    var(--border) 75%
+  );
+  background-size: 400px 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+}
+
+.skeleton-bone-dark {
+  background: linear-gradient(
+    90deg,
+    rgba(255,255,255,0.12) 25%,
+    rgba(255,255,255,0.28) 50%,
+    rgba(255,255,255,0.12) 75%
+  );
+  background-size: 400px 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+}
