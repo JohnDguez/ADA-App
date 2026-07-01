@@ -13,6 +13,7 @@ function periodRange(cfg) {
 
 export function HomePage({ payments, profile, onAdd, onMarkPaid, onMarkUnpaid, onEdit, onDelete, onPostpone, onAdvance, onGoSettings, notifications, unreadCount, onMarkAsRead, onMarkAllAsRead, onDeleteNotif, onClearAllNotifs, slideClass }) {
   const [notifOpen, setNotifOpen] = useState(false)
+  const [activeCard, setActiveCard] = useState(0)
 
   const now        = new Date()
   const { end }    = cobroPeriod(profile)
@@ -57,24 +58,64 @@ export function HomePage({ payments, profile, onAdd, onMarkPaid, onMarkUnpaid, o
       <div style={{ background: 'var(--bg)', borderRadius: '24px 24px 0 0', marginTop: -24, position: 'relative', zIndex: 10 }}>
         <div className={slideClass}>
 
-        {/* Métricas */}
-        <div style={{ display: 'flex', padding: '28px 20px 0' }}>
-          <div style={{ flex: 1.6, paddingRight: 20 }}>
-            <div style={{ fontSize: 12, fontWeight: 500, color: 'var(--text)', marginBottom: 6 }}>Pagos de este periodo</div>
-            <div style={{ fontSize: 36, fontWeight: 700, color: 'var(--text)', letterSpacing: '-1px', lineHeight: 1 }}>{fmt(pendingAmt)}</div>
-            <div style={{ fontSize: 12, fontWeight: 500, color: 'var(--text)', marginTop: 8, display: 'flex', gap: 6 }}>
-              <span>{pagarEsteCobro.length} pago{pagarEsteCobro.length !== 1 ? 's' : ''}</span>
-              {vencidos.length > 0 && <span style={{ color: 'var(--danger)', fontWeight: 700 }}>· {vencidos.length} vencido{vencidos.length !== 1 ? 's' : ''}</span>}
+        {/* Slider de métricas */}
+        <div style={{ padding: '20px 16px 0', userSelect: 'none' }}>
+          {/* Cards slider */}
+          <div
+            style={{ overflow: 'hidden', borderRadius: 16 }}
+            onTouchStart={e => { e._startX = e.touches[0].clientX }}
+            onTouchEnd={e => {
+              const dx = e.changedTouches[0].clientX - e._startX
+              if (dx < -40) setActiveCard(1)
+              if (dx > 40)  setActiveCard(0)
+            }}
+          >
+            <div style={{ display: 'flex', transition: 'transform .3s cubic-bezier(0.25,0.46,0.45,0.94)', transform: `translateX(${activeCard * -100}%)` }}>
+
+              {/* Card 1 — Periodo actual */}
+              <div style={{ minWidth: '100%', background: 'var(--accent)', borderRadius: 16, padding: '18px 20px' }}>
+                <div style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.75)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 6 }}>Pagos de este periodo</div>
+                <div style={{ fontSize: 38, fontWeight: 700, color: '#fff', letterSpacing: '-1px', lineHeight: 1, marginBottom: 14 }}>{fmt(pendingAmt)}</div>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <span style={{ fontSize: 12, fontWeight: 600, background: 'rgba(255,255,255,0.2)', color: '#fff', padding: '4px 10px', borderRadius: 20 }}>
+                    {pagarEsteCobro.length} pago{pagarEsteCobro.length !== 1 ? 's' : ''}
+                  </span>
+                  {vencidos.length > 0 && (
+                    <span style={{ fontSize: 12, fontWeight: 600, background: 'var(--danger)', color: '#fff', padding: '4px 10px', borderRadius: 20 }}>
+                      {vencidos.length} vencido{vencidos.length !== 1 ? 's' : ''}
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              {/* Card 2 — Este mes */}
+              <div style={{ minWidth: '100%', background: 'var(--accent)', borderRadius: 16, padding: '18px 20px' }}>
+                <div style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.75)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 6 }}>Por pagar este mes</div>
+                <div style={{ fontSize: 38, fontWeight: 700, color: '#fff', letterSpacing: '-1px', lineHeight: 1, marginBottom: 14 }}>{fmt(totalThisMonth)}</div>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <span style={{ fontSize: 12, fontWeight: 600, background: 'rgba(255,255,255,0.2)', color: '#fff', padding: '4px 10px', borderRadius: 20 }}>
+                    {paidThisMonth.length} pagados
+                  </span>
+                  {variableThisMonth > 0 && (
+                    <span style={{ fontSize: 12, fontWeight: 600, background: 'rgba(255,255,255,0.2)', color: '#fff', padding: '4px 10px', borderRadius: 20 }}>
+                      {variableThisMonth} variables
+                    </span>
+                  )}
+                </div>
+              </div>
+
             </div>
           </div>
-          <div style={{ width: '0.5px', background: 'var(--border)', alignSelf: 'stretch', flexShrink: 0 }} />
-          <div style={{ flex: 1, paddingLeft: 20 }}>
-            <div style={{ fontSize: 11, fontWeight: 500, color: 'var(--text)', marginBottom: 6 }}>Por pagar este mes</div>
-            <div style={{ fontSize: 22, fontWeight: 700, color: 'var(--text)', letterSpacing: '-0.5px', lineHeight: 1 }}>{fmt(totalThisMonth)}</div>
-            <div style={{ fontSize: 11, fontWeight: 500, color: 'var(--text)', marginTop: 8 }}>
-              <span>{paidThisMonth.length} pagados</span>
-              {variableThisMonth > 0 && <span style={{ color: 'var(--accent)', fontWeight: 700 }}> · {variableThisMonth} variables</span>}
-            </div>
+
+          {/* Dots indicadores */}
+          <div style={{ display: 'flex', justifyContent: 'center', gap: 6, marginTop: 10 }}>
+            {[0, 1].map(i => (
+              <div
+                key={i}
+                onClick={() => setActiveCard(i)}
+                style={{ width: activeCard === i ? 18 : 6, height: 6, borderRadius: 3, background: activeCard === i ? 'var(--accent)' : 'var(--border)', transition: 'all .25s', cursor: 'pointer' }}
+              />
+            ))}
           </div>
         </div>
 
