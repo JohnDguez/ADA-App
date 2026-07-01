@@ -406,6 +406,11 @@ export function SettingsPage({ profile, user, onUpdate, onUploadAvatar, onDataDe
           </div>
         </div>
       )}
+      {/* Versión */}
+      <div style={{ textAlign: 'center', padding: '8px 0 24px', fontSize: 11, fontWeight: 500, color: 'var(--text)', opacity: 0.4 }}>
+        ADA Pay v0.9.2 — Alpha
+      </div>
+
       {/* Modal edición */}
       {editSection && (
         <div onClick={e => e.target === e.currentTarget && setEditSection(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(2,10,31,0.45)', zIndex: 200, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
