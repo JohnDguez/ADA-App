@@ -14,6 +14,7 @@ import { NotificationsPanel } from './components/NotificationsPanel'
 import { PaymentModal } from './components/PaymentModal'
 import { VariableAmountModal } from './components/VariableAmountModal'
 import { Toast, showToast } from './components/Toast'
+import { SkeletonLoader } from './components/SkeletonLoader'
 
 function fmt(n) { return '$' + Number(n).toLocaleString('es-MX', { minimumFractionDigits: 0, maximumFractionDigits: 0 }) }
 
@@ -32,7 +33,7 @@ export default function App() {
   const [notifOpen,   setNotifOpen]   = useState(false)
   const [slideDir,    setSlideDir]    = useState('right')
 
-  if (authLoading || (user && profileLoading)) return <Splash />
+  if (authLoading || (user && profileLoading)) return <SkeletonLoader />
   if (isRecovery) return <ResetPasswordPage onDone={() => setIsRecovery(false)} />
   if (!user) return <AuthPage />
   if (user && !profile.onboarding_completed) return <OnboardingPage userId={user.id} onDone={updateProfile} />
