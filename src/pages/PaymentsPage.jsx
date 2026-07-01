@@ -231,8 +231,9 @@ export function PaymentsPage({ payments, profile, unreadCount, onOpenNotifs, onG
   const gastosPeriodo = paidPayments.filter(p => {
     const d = dateOf(p.due_date)
     if (d >= periodStart && d <= periodEnd) return true
-    // Pagos adelantados: due_date fuera del periodo pero pagados dentro de él
-    if (p.paid_at) {
+    // Solo pagos ADELANTADOS: due_date en el futuro pero pagados en el periodo actual
+    // (no aplica a pagos vencidos de periodos anteriores)
+    if (d > periodEnd && p.paid_at) {
       const paidDate = dateOf(new Date(p.paid_at).toISOString().split('T')[0])
       return paidDate >= periodStart && paidDate <= periodEnd
     }
