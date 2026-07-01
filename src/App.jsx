@@ -22,28 +22,33 @@ export default function App() {
   const { payments, addPayment, addInstallmentPayment, updatePayment, markPaid, markUnpaid, postponePayment, pauseRecurrent, resumeRecurrent, deletePayment, deleteRecurrentFuture, deleteInstallmentFuture, deleteGroup, refetch } = usePayments(user?.id)
   const { profile, loading: profileLoading, updateProfile, uploadAvatar } = useProfile(user?.id)
   const { notifications, unreadCount, markAsRead, markAllAsRead, deleteNotification, clearAll } = useNotifications(user?.id)
-  const [tab,        setTab]        = useState(() => {
-    // Solo restaurar el tab si la sesión ya estaba activa (reload)
-    // Si es apertura nueva, sessionStorage no tendrá 'ada_session' y arrancamos en home
+  const [tab,         setTab]         = useState(() => {
     const hasActiveSession = sessionStorage.getItem('ada_session')
     return hasActiveSession ? (sessionStorage.getItem('ada_tab') || 'home') : 'home'
   })
-  const [modalOpen,  setModalOpen]  = useState(false)
+  const [modalOpen,   setModalOpen]   = useState(false)
   const [editPayment, setEditPayment] = useState(null)
-  const [varModal,   setVarModal]   = useState({ open: false, payment: null })
-  const [notifOpen,  setNotifOpen]  = useState(false)
-  const [slideDir,   setSlideDir]   = useState('right') // dirección de la animación
+  const [varModal,    setVarModal]    = useState({ open: false, payment: null })
+  const [notifOpen,   setNotifOpen]   = useState(false)
+  const [slideDir,    setSlideDir]    = useState('right')
 
   if (authLoading || (user && profileLoading)) return <Splash />
   if (isRecovery) return <ResetPasswordPage onDone={() => setIsRecovery(false)} />
   if (!user) return <AuthPage />
   if (user && !profile.onboarding_completed) return <OnboardingPage userId={user.id} onDone={updateProfile} />
 
-  // Orden de tabs para calcular dirección del slide
   const TAB_ORDER = ['home', 'payments', 'recurrents', 'settings']
 
-  // Marcar sesión activa para distinguir reload de apertura nueva
   sessionStorage.setItem('ada_session', '1')
+
+  // Detecta cambio de usuario para resetear el tab
+  const storedUserId = sessionStorage.getItem('ada_user_id')
+  if (storedUserId && storedUserId !== user.id) {
+    sessionStorage.setItem('ada_tab', 'home')
+    sessionStorage.setItem('ada_user_id', user.id)
+  } else if (!storedUserId) {
+    sessionStorage.setItem('ada_user_id', user.id)
+  }
 
   function openAdd()   { setEditPayment(null); setModalOpen(true) }
   function openEdit(p) { setEditPayment(p);    setModalOpen(true) }
@@ -67,7 +72,7 @@ export default function App() {
     if (error) showToast('Error')
   }
   async function handlePostpone(payment) {
-    const { error } = await postponePayment(payment.id)
+    const { error } = await postponePayment(payment)
     if (error) showToast('Error al posponer')
     else showToast(`${payment.name} pospuesto al siguiente periodo`)
   }
@@ -89,7 +94,6 @@ export default function App() {
     }
     showToast('Pago eliminado')
   }
-
   async function handlePauseRecurrent(name)  { await pauseRecurrent(name);        showToast(`${name} pausado`) }
   async function handleResumeRecurrent(name) { await resumeRecurrent(name);       showToast(`${name} reactivado`) }
   async function handleDeleteRecurrent(name) { await deleteRecurrentFuture(name); showToast(`${name} eliminado — el historial se conserva`) }
@@ -136,7 +140,12 @@ export default function App() {
           payments={payments} profile={profile} onAdd={openAdd}
           slideClass={`page-slide-${slideDir}`}
           {...sharedHandlers}
-          onGoSettings={() => { setTab('settings'); sessionStorage.setItem('ada_tab', 'settings'); window.scrollTo(0, 0) }}
+          onGoSettings={() => {
+            const fromIdx = TAB_ORDER.indexOf(tab)
+            const toIdx   = TAB_ORDER.indexOf('settings')
+            setSlideDir(toIdx >= fromIdx ? 'right' : 'left')
+            setTab('settings'); sessionStorage.setItem('ada_tab', 'settings'); window.scrollTo(0, 0)
+          }}
           notifications={notifications}
           unreadCount={unreadCount}
           onMarkAsRead={markAsRead}
@@ -145,20 +154,52 @@ export default function App() {
           onClearAllNotifs={clearAll}
         />
       )}
-      {tab === 'payments'   && <PaymentsPage payments={payments} slideClass={`page-slide-${slideDir}`} {...headerProps} onMarkUnpaid={handleMarkUnpaid} onDelete={handleDelete} onDeleteDirect={async (id) => { await deletePayment(id); showToast('Pago eliminado') }} />}
-      {tab === 'recurrents' && <RecurrentsPage payments={payments} slideClass={`page-slide-${slideDir}`} {...headerProps} onPause={handlePauseRecurrent} onResume={handleResumeRecurrent} onDelete={handleDelete} onEdit={openEdit} />}
-      {tab === 'settings'   && <SettingsPage profile={profile} user={user} onUpdate={updateProfile} onUploadAvatar={uploadAvatar} onDataDeleted={() => { refetch() }} slideClass={`page-slide-${slideDir}`} />}
+      {tab === 'payments' && (
+        <PaymentsPage
+          payments={payments}
+          slideClass={`page-slide-${slideDir}`}
+          {...headerProps}
+          onMarkUnpaid={handleMarkUnpaid}
+          onDelete={handleDelete}
+          onDeleteDirect={async (id) => { await deletePayment(id); showToast('Pago eliminado') }}
+          onUpdateProfile={updateProfile}
+        />
+      )}
+      {tab === 'recurrents' && (
+        <RecurrentsPage
+          payments={payments}
+          slideClass={`page-slide-${slideDir}`}
+          {...headerProps}
+          onPause={handlePauseRecurrent}
+          onResume={handleResumeRecurrent}
+          onDelete={handleDelete}
+          onEdit={openEdit}
+        />
+      )}
+      {tab === 'settings' && (
+        <SettingsPage
+          profile={profile}
+          user={user}
+          onUpdate={updateProfile}
+          onUploadAvatar={uploadAvatar}
+          onDataDeleted={() => { refetch() }}
+          slideClass={`page-slide-${slideDir}`}
+        />
+      )}
 
-      <BottomNav active={tab} onChange={t => {
+      <BottomNav
+        active={tab}
+        onChange={t => {
           const fromIdx = TAB_ORDER.indexOf(tab)
           const toIdx   = TAB_ORDER.indexOf(t)
           setSlideDir(toIdx >= fromIdx ? 'right' : 'left')
           setTab(t)
           sessionStorage.setItem('ada_tab', t)
           window.scrollTo(0, 0)
-        }} onAdd={openAdd} />
+        }}
+        onAdd={openAdd}
+      />
 
-      {/* Panel de notificaciones — global, funciona desde cualquier página */}
       <NotificationsPanel
         open={notifOpen}
         onClose={() => setNotifOpen(false)}
@@ -171,8 +212,21 @@ export default function App() {
         onNavigate={handleNavigate}
       />
 
-      <PaymentModal open={modalOpen} onClose={() => { setModalOpen(false); setEditPayment(null) }} onSave={handleSave} onSaveInstallment={handleSaveInstallment} onDelete={handleDelete} initial={editPayment} payments={payments} />
-      <VariableAmountModal open={varModal.open} payment={varModal.payment} onConfirm={handleVarConfirm} onClose={() => setVarModal({ open: false, payment: null })} />
+      <PaymentModal
+        open={modalOpen}
+        onClose={() => { setModalOpen(false); setEditPayment(null) }}
+        onSave={handleSave}
+        onSaveInstallment={handleSaveInstallment}
+        onDelete={handleDelete}
+        initial={editPayment}
+        payments={payments}
+      />
+      <VariableAmountModal
+        open={varModal.open}
+        payment={varModal.payment}
+        onConfirm={handleVarConfirm}
+        onClose={() => setVarModal({ open: false, payment: null })}
+      />
       <Toast />
     </>
   )
