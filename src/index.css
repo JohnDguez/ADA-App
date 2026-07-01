@@ -188,10 +188,10 @@ body.modal-open {
 
 /* ── Animaciones de transición entre páginas ── */
 /*
-  IMPORTANTE: los keyframes terminan en `transform: none` (NO `translateX(0)`).
-  `translateX(0)` crea un nuevo stacking context aunque sea identidad visual,
-  lo que hace que los `position: fixed` hijos queden atrapados y no aparezcan
-  sobre el BottomNav. `transform: none` no crea stacking context.
+  FIX z-index: los keyframes terminan en `transform: none` (NO `translateX(0)`).
+  `translateX(0)` crea stacking context aunque sea identidad visual, lo que atrapa
+  los `position: fixed` hijos impidiéndoles aparecer sobre el BottomNav.
+  `transform: none` no crea stacking context.
 */
 @keyframes slideInRight {
   from { transform: translateX(100%); opacity: 0; }
@@ -217,13 +217,17 @@ body.modal-open {
 
 /* ── Animaciones de modales ── */
 
-/* Bottom sheets: se deslizan de abajo hacia arriba */
+/*
+  FIX: NO usar translateY(100%) como from — browsers móviles omiten la
+  animación si el elemento empieza completamente off-screen. Se usa un
+  desplazamiento pequeño + opacity para un efecto suave y confiable.
+*/
 @keyframes modalSlideUp {
-  from { transform: translateY(100%); }
-  to   { transform: translateY(0); }
+  from { transform: translateY(32px); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
 }
 
-/* Diálogos centrados: aparecen con leve escala + fade */
+/* Diálogos centrados: leve escala + fade */
 @keyframes modalPopIn {
   from { transform: scale(0.96); opacity: 0; }
   to   { transform: scale(1);    opacity: 1; }
