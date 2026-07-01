@@ -14,6 +14,7 @@ function periodRange(cfg) {
 export function HomePage({ payments, profile, onAdd, onMarkPaid, onMarkUnpaid, onEdit, onDelete, onPostpone, onAdvance, onGoSettings, notifications, unreadCount, onMarkAsRead, onMarkAllAsRead, onDeleteNotif, onClearAllNotifs, slideClass }) {
   const [notifOpen, setNotifOpen] = useState(false)
   const [activeCard, setActiveCard] = useState(0)
+  const [touchStartX, setTouchStartX] = useState(null)
 
   const now        = new Date()
   const { end }    = cobroPeriod(profile)
@@ -63,11 +64,13 @@ export function HomePage({ payments, profile, onAdd, onMarkPaid, onMarkUnpaid, o
           {/* Cards slider */}
           <div
             style={{ overflow: 'hidden', borderRadius: 16 }}
-            onTouchStart={e => { e._startX = e.touches[0].clientX }}
+            onTouchStart={e => setTouchStartX(e.touches[0].clientX)}
             onTouchEnd={e => {
-              const dx = e.changedTouches[0].clientX - e._startX
+              if (touchStartX === null) return
+              const dx = e.changedTouches[0].clientX - touchStartX
               if (dx < -40) setActiveCard(1)
               if (dx > 40)  setActiveCard(0)
+              setTouchStartX(null)
             }}
           >
             <div style={{ display: 'flex', transition: 'transform .3s cubic-bezier(0.25,0.46,0.45,0.94)', transform: `translateX(${activeCard * -100}%)` }}>
@@ -75,7 +78,10 @@ export function HomePage({ payments, profile, onAdd, onMarkPaid, onMarkUnpaid, o
               {/* Card 1 — Periodo actual */}
               <div style={{ minWidth: '100%', background: 'var(--accent)', borderRadius: 16, padding: '18px 20px' }}>
                 <div style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.75)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 6 }}>Pagos de este periodo</div>
-                <div style={{ fontSize: 38, fontWeight: 700, color: '#fff', letterSpacing: '-1px', lineHeight: 1, marginBottom: 14 }}>{fmt(pendingAmt)}</div>
+                <div style={{ fontSize: 38, fontWeight: 700, color: '#fff', letterSpacing: '-1px', lineHeight: 1, marginBottom: pendingAmt === 0 ? 6 : 14 }}>{fmt(pendingAmt)}</div>
+                {pendingAmt === 0 && (
+                  <div style={{ fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.9)', marginBottom: 14 }}>¡Sin deudas pendientes!</div>
+                )}
                 <div style={{ display: 'flex', gap: 8 }}>
                   <span style={{ fontSize: 12, fontWeight: 600, background: 'rgba(255,255,255,0.2)', color: '#fff', padding: '4px 10px', borderRadius: 20 }}>
                     {pagarEsteCobro.length} pago{pagarEsteCobro.length !== 1 ? 's' : ''}
@@ -98,7 +104,7 @@ export function HomePage({ payments, profile, onAdd, onMarkPaid, onMarkUnpaid, o
                   </span>
                   {variableThisMonth > 0 && (
                     <span style={{ fontSize: 12, fontWeight: 600, background: 'rgba(255,255,255,0.2)', color: '#fff', padding: '4px 10px', borderRadius: 20 }}>
-                      {variableThisMonth} variables
+                      {variableThisMonth} pago{variableThisMonth !== 1 ? 's' : ''} variables
                     </span>
                   )}
                 </div>
