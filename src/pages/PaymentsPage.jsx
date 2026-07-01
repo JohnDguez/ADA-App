@@ -230,7 +230,13 @@ export function PaymentsPage({ payments, profile, unreadCount, onOpenNotifs, onG
   const { start: periodStart, end: periodEnd } = cobroPeriod(profile || {})
   const gastosPeriodo = paidPayments.filter(p => {
     const d = dateOf(p.due_date)
-    return d >= periodStart && d <= periodEnd
+    if (d >= periodStart && d <= periodEnd) return true
+    // Pagos adelantados: due_date fuera del periodo pero pagados dentro de él
+    if (p.paid_at) {
+      const paidDate = dateOf(new Date(p.paid_at).toISOString().split('T')[0])
+      return paidDate >= periodStart && paidDate <= periodEnd
+    }
+    return false
   })
   const totalGastos  = gastosPeriodo.reduce((a, p) => a + Number(p.amount), 0)
   const totalExtras  = periodIncomes.reduce((a, i) => a + Number(i.amount), 0)
