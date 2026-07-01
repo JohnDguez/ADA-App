@@ -179,7 +179,15 @@ export function AuthPage() {
       if (!match)  { setError('Las contraseñas no coinciden'); return }
       if (!accessCode.trim()) { setError('Ingresa tu código de acceso'); return }
       setLoading(true)
-      const { data: codeData } = await supabase.from('access_codes').select('id').eq('code', accessCode.trim().toUpperCase()).eq('active', true).single()
+      // FIX v0.9.15: se cambia .select('id') por .select('code') — la tabla
+      // access_codes no tiene columna `id`, solo `code`, `created_at` y `active`.
+      // Supabase devolvía error 400 → data null → "código inválido" aunque existiera.
+      const { data: codeData } = await supabase
+        .from('access_codes')
+        .select('code')
+        .eq('code', accessCode.trim().toUpperCase())
+        .eq('active', true)
+        .single()
       if (!codeData) { setError('Código de acceso inválido o inactivo'); setLoading(false); return }
       const { error } = await supabase.auth.signUp({ email, password })
       if (error) setError(error.message)
