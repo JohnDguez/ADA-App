@@ -51,18 +51,20 @@ export default function App() {
 
   const migrationRan = useRef(false)
 
-  // Migración one-time: crea masters para recurrentes sin sistema nuevo
+  // Migración: crea masters para recurrentes y parcialidades sin sistema nuevo
+  // Corre cada vez que haya datos sin migrar (no bloquea por migrationRan si hay installlments pendientes)
   useEffect(() => {
-    if (!user || !payments.length || migrationRan.current) return
+    if (!user || !payments.length) return
+    const hasOldInstallments = payments.some(p => (p.is_installment || (p.current_installment > 0 && p.total_installments > 0)) && !p.is_master && !p.parent_id)
+    // Permitir re-ejecución si quedan parcialidades sin migrar
+    if (migrationRan.current && !hasOldInstallments) return
     migrationRan.current = true
 
     const hasOldRecurrents   = payments.some(p => p.is_recurrent && !p.is_master && !p.parent_id && !p.is_installment)
-    const hasOldInstallments  = payments.some(p => p.is_installment && !p.is_master && !p.parent_id)
+    const hasOldInstallments  = payments.some(p => (p.is_installment || (p.current_installment > 0 && p.total_installments > 0)) && !p.is_master && !p.parent_id)
 
     if (hasOldRecurrents || hasOldInstallments) {
-      // Migración automática — no espera al usuario
       migrateRecurrents()
-      // Modal solo como aviso informativo, solo la primera vez
       if (!localStorage.getItem('ada_recurrent_v2_seen')) {
         setMigrationModal(true)
       }
