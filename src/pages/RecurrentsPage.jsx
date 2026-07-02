@@ -24,6 +24,7 @@ function FilterChip({ label, active, onClick }) {
 export function RecurrentsPage({ payments, profile, unreadCount, onOpenNotifs, onGoSettings, onPause, onResume, onDelete, onEdit, slideClass }) {
   const [search,        setSearch]        = useState('')
   const [filterStatus,  setFilterStatus]  = useState('todos')
+  const [filterType,    setFilterType]    = useState('todos')
   const [expandedCats,  setExpandedCats]  = useState({})
   const [confirmDelete, setConfirmDelete] = useState(null)
 
@@ -55,13 +56,15 @@ export function RecurrentsPage({ payments, profile, unreadCount, onOpenNotifs, o
     return masters.filter(m => {
       if (filterStatus === 'activos'  &&  m.paused) return false
       if (filterStatus === 'pausados' && !m.paused) return false
+      if (filterType === 'recurrentes'   &&  m.is_installment) return false
+      if (filterType === 'parcialidades' && !m.is_installment) return false
       if (search.trim()) {
         const q = search.toLowerCase()
         if (!m.name.toLowerCase().includes(q) && !m.category?.toLowerCase().includes(q)) return false
       }
       return true
     })
-  }, [masters, filterStatus, search])
+  }, [masters, filterStatus, filterType, search])
 
   // Agrupar por categoría
   const byCategory = useMemo(() => {
@@ -119,9 +122,14 @@ export function RecurrentsPage({ payments, profile, unreadCount, onOpenNotifs, o
           </div>
 
           {/* Filtros */}
-          <div style={{ padding: '0 16px 14px', display: 'flex', gap: 6 }}>
+          <div style={{ padding: '0 16px 6px', display: 'flex', gap: 6 }}>
             {[['todos','Todos'],['activos','Activos'],['pausados','Pausados']].map(([val, label]) => (
               <FilterChip key={val} label={label} active={filterStatus === val} onClick={() => setFilterStatus(val)} />
+            ))}
+          </div>
+          <div style={{ padding: '0 16px 14px', display: 'flex', gap: 6 }}>
+            {[['todos','Todos'],['recurrentes','Recurrentes'],['parcialidades','Parcialidades']].map(([val, label]) => (
+              <FilterChip key={val} label={label} active={filterType === val} onClick={() => setFilterType(val)} />
             ))}
           </div>
 
