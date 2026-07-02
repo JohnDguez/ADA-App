@@ -19,6 +19,7 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
   const [saving,             setSaving]             = useState(false)
   const [error,              setError]              = useState('')
   const [confirmClose,       setConfirmClose]       = useState(false)
+  const [alreadyPaid,        setAlreadyPaid]        = useState(false)
 
   const isEditingInstallment = !!(initial?.is_installment)
 
@@ -54,7 +55,7 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
       setRecurFreq('monthly'); setWeekday(5)
       setMode('single'); setTotalInstallments(''); setStartFrom('1'); setTotalAmount('')
     }
-    setError(''); setConfirmClose(false)
+    setError(''); setConfirmClose(false); setAlreadyPaid(false)
   }, [initial, open])
 
   useEffect(() => {
@@ -103,7 +104,7 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
     if (mode === 'recurrent' && recurFreq === 'biweekly')  finalDate = biweeklyDate ? nextBiweeklyFromDate(biweeklyDate).toISOString().split('T')[0] : dueDate
     if (!finalDate) { setError('Selecciona la fecha de vencimiento'); return }
     setSaving(true)
-    await onSave({ name: name.trim(), amount: isVariable ? 0 : parseFloat(amount), due_date: finalDate, category, is_variable: isVariable, is_recurrent: mode === 'recurrent', recur_freq: mode === 'recurrent' ? recurFreq : null, is_paid: initial?.is_paid || false, is_installment: false })
+    await onSave({ name: name.trim(), amount: isVariable ? 0 : parseFloat(amount), due_date: finalDate, category, is_variable: isVariable, is_recurrent: mode === 'recurrent', recur_freq: mode === 'recurrent' ? recurFreq : null, is_paid: alreadyPaid, paid_at: alreadyPaid ? new Date().toISOString() : null, is_installment: false })
     setSaving(false); onClose()
   }
 
@@ -238,9 +239,25 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
           )}
 
           {showDatePicker && (
-            <Field label={mode === 'installment' ? 'Fecha del primer pago' : 'Fecha de vencimiento'}>
+            <div style={{ marginBottom: 12 }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
+                <label className="field-label" style={{ marginBottom: 0 }}>
+                  {mode === 'installment' ? 'Fecha del primer pago' : 'Fecha de vencimiento'}
+                </label>
+                {mode === 'single' && !initial && !isVariable && (
+                  <div onClick={() => setAlreadyPaid(v => !v)}
+                    style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer' }}>
+                    <span style={{ fontSize: 11, fontWeight: 600, color: alreadyPaid ? 'var(--paid)' : 'var(--text)' }}>
+                      Ya lo pagué
+                    </span>
+                    <div className="toggle-track" style={{ background: alreadyPaid ? 'var(--paid)' : 'var(--border)' }}>
+                      <div className="toggle-thumb" style={{ left: alreadyPaid ? 19 : 3 }} />
+                    </div>
+                  </div>
+                )}
+              </div>
               <input className="field-input" type="date" value={dueDate} onChange={e => setDueDate(e.target.value)} />
-            </Field>
+            </div>
           )}
 
           {showWeekdayPicker && (
@@ -270,7 +287,7 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
           )}
 
           <button onClick={handleSave} disabled={saving} className="btn-primary" style={{ marginTop: 4, opacity: saving ? 0.7 : 1 }}>
-            {saving ? 'Guardando…' : initial ? 'Guardar cambios' : mode === 'installment' ? 'Crear pagos' : 'Guardar pago'}
+            {saving ? 'Guardando…' : initial ? 'Guardar cambios' : mode === 'installment' ? 'Crear pagos' : alreadyPaid ? 'Guardar como pagado' : 'Guardar pago'}
           </button>
           <button onClick={requestClose} className="btn-ghost" style={{ marginTop: 8 }}>Cancelar</button>
           {initial && !isEditingInstallment && (
