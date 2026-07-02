@@ -18,7 +18,7 @@ export function BottomNav({ active, onChange, onAdd }) {
       transform: 'translateX(-50%)',
       width: 'calc(100% - 32px)',
       maxWidth: 388,
-      background: '#014BA3',
+      background: 'var(--nav-bg)',
       borderRadius: 10,
       display: 'flex',
       alignItems: 'center',
@@ -32,7 +32,6 @@ export function BottomNav({ active, onChange, onAdd }) {
         <TabBtn key={id} id={id} Icon={Icon} active={active === id} onChange={onChange} />
       ))}
 
-      {/* Botón + dentro del nav, sale hacia arriba con position absolute */}
       <div style={{ flex: 1, position: 'relative', display: 'flex', justifyContent: 'center' }}>
         <button
           onClick={onAdd}
@@ -51,7 +50,7 @@ export function BottomNav({ active, onChange, onAdd }) {
             justifyContent: 'center',
             boxShadow: '0 4px 20px rgba(47,140,250,0.55)',
             cursor: 'pointer',
-            zIndex: 1, // menor que los TabBtn
+            zIndex: 1,
           }}
         >
           <Plus size={26} color="#fff" strokeWidth={2.5} />
@@ -83,7 +82,7 @@ function TabBtn({ id, Icon, active, onChange }) {
           : 'none',
         transition: 'background .2s',
         position: 'relative',
-        zIndex: 2, // mayor que el botón +
+        zIndex: 2,
       }}
     >
       <Icon size={22} strokeWidth={active ? 2.2 : 1.8} color={active ? '#fff' : 'rgba(255,255,255,0.5)'} />

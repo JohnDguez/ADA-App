@@ -11,11 +11,10 @@ function statusInfo(p, cfg) {
   if (s === 'overdue') return { label: d === -1 ? 'Venció ayer' : `Venció hace ${Math.abs(d)} días`, color: 'var(--danger)' }
   if (s === 'cobro') {
     if (d < 0) return { label: `Venció hace ${Math.abs(d)} días`, color: 'var(--danger)' }
-    // Para parcialidades en periodo: mostrar días, no "Pago X/Y"
-    return { label: d === 0 ? 'Vence hoy' : `Vence en ${d} día${d !== 1 ? 's' : ''}`, color: '#FE7600' }
+    return { label: d === 0 ? 'Vence hoy' : `Vence en ${d} día${d !== 1 ? 's' : ''}`, color: 'var(--soon-color)' }
   }
-  if (d === 0) return { label: 'Vence hoy', color: '#FE7600' }
-  if (d === 1) return { label: 'Vence mañana', color: '#FE7600' }
+  if (d === 0) return { label: 'Vence hoy',     color: 'var(--soon-color)' }
+  if (d === 1) return { label: 'Vence mañana',  color: 'var(--soon-color)' }
   return { label: `Vence en ${d} días`, color: 'var(--accent)' }
 }
 
@@ -33,7 +32,6 @@ export function PayCard({ payment: p, cfg, onMarkPaid, onMarkUnpaid, onEdit, onD
   const d         = dateOf(p.due_date)
   const isPending = !p.is_paid && !p.postponed && !p.paused
   const freqLabel = p.is_recurrent && p.recur_freq && !p.is_installment ? RECUR_FREQ[p.recur_freq] : null
-  // instLabel solo aparece en la parte izquierda del card (info), no en el precio
   const instLabel = p.is_installment ? `Pago ${p.current_installment}/${p.total_installments}` : null
 
   const longPress = useLongPress(() => setMenuOpen(true))
@@ -48,7 +46,7 @@ export function PayCard({ payment: p, cfg, onMarkPaid, onMarkUnpaid, onEdit, onD
     <div ref={menuRef} style={{ position: 'relative' }}>
       <div
         {...longPress}
-        style={{ background: '#FFFFFF', borderRadius: 8, borderLeft: `5px solid ${borderLeft || 'var(--border)'}`, display: 'flex', alignItems: 'center', overflow: 'hidden', userSelect: 'none' }}
+        style={{ background: 'var(--surface)', borderRadius: 8, borderLeft: `5px solid ${borderLeft || 'var(--border)'}`, display: 'flex', alignItems: 'center', overflow: 'hidden', userSelect: 'none' }}
       >
         {/* Info izquierda */}
         <div style={{ flex: 1, padding: '11px 8px 11px 12px', minWidth: 0 }}>
@@ -69,10 +67,9 @@ export function PayCard({ payment: p, cfg, onMarkPaid, onMarkUnpaid, onEdit, onD
         {/* Monto + estado */}
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 2, padding: '11px 8px', flexShrink: 0 }}>
           {p.is_variable && !p.is_paid
-            ? <div style={{ fontSize: 11, fontWeight: 600, color: '#fff', background: '#6884A9', padding: '2px 8px', borderRadius: 5 }}>Pago variable</div>
+            ? <div style={{ fontSize: 11, fontWeight: 600, color: '#fff', background: 'var(--label-variable)', padding: '2px 8px', borderRadius: 5 }}>Pago variable</div>
             : <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--text)' }}>{fmt(p.amount)}</div>
           }
-          {/* Estado — siempre muestra días/vencimiento, nunca "Pago X/Y" aquí */}
           <div style={{ fontSize: 11, fontWeight: 500, color: info.color }}>{info.label}</div>
         </div>
 
@@ -135,7 +132,7 @@ export function GroupCard({ group, cfg, onMarkPaid, onMarkUnpaid, onEdit, onDele
     : periodCountLabel(paidItems.length, freq) + ' pagadas'
 
   return (
-    <div style={{ background: '#FFFFFF', borderRadius: 8, borderLeft: '5px solid var(--accent)', overflow: 'hidden' }}>
+    <div style={{ background: 'var(--surface)', borderRadius: 8, borderLeft: '5px solid var(--accent)', overflow: 'hidden' }}>
       <div style={{ display: 'flex', alignItems: 'center' }}>
         <div style={{ flex: 1, padding: '11px 8px 11px 12px', minWidth: 0 }}>
           <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--text)', marginBottom: 2 }}>{group.name}</div>
@@ -164,7 +161,7 @@ export function GroupCard({ group, cfg, onMarkPaid, onMarkUnpaid, onEdit, onDele
             const isPend   = !p.is_paid && !p.postponed
             const isLast   = i === allItems.length - 1
             const instLabel = p.is_installment ? `Pago ${p.current_installment}/${p.total_installments}` : periodLabel(p.due_date, freq)
-            const bColor   = p.is_paid ? 'var(--paid)' : p.postponed ? 'var(--muted)' : overdue ? 'var(--danger)' : '#FE7600'
+            const bColor   = p.is_paid ? 'var(--paid)' : p.postponed ? 'var(--muted)' : overdue ? 'var(--danger)' : 'var(--soon-color)'
             const bLabel   = p.is_paid ? 'Pagado' : p.postponed ? 'Pospuesto' : overdue ? 'Vencido' : 'Pendiente'
             return (
               <div key={p.id} style={{ display: 'flex', alignItems: 'center', padding: '9px 12px 9px 18px', borderBottom: isLast ? 'none' : '0.5px solid var(--bg)', gap: 6 }}>
