@@ -15,11 +15,13 @@ import { PaymentModal } from './components/PaymentModal'
 import { VariableAmountModal } from './components/VariableAmountModal'
 import { Toast, showToast } from './components/Toast'
 import { SkeletonLoader } from './components/SkeletonLoader'
+import { useTheme } from './hooks/useTheme'
 
 function fmt(n) { return '$' + Number(n).toLocaleString('es-MX', { minimumFractionDigits: 0, maximumFractionDigits: 0 }) }
 
 export default function App() {
   const { user, loading: authLoading, isRecovery, setIsRecovery } = useAuth()
+  const { theme, setTheme } = useTheme()
   const { payments, addPayment, addInstallmentPayment, updatePayment, markPaid, markUnpaid, postponePayment, pauseRecurrent, resumeRecurrent, deletePayment, deleteRecurrentFuture, deleteInstallmentFuture, deleteGroup, refetch } = usePayments(user?.id)
   const { profile, loading: profileLoading, updateProfile, uploadAvatar } = useProfile(user?.id)
   const { notifications, unreadCount, markAsRead, markAllAsRead, deleteNotification, clearAll } = useNotifications(user?.id)
@@ -185,6 +187,8 @@ export default function App() {
           onUploadAvatar={uploadAvatar}
           onDataDeleted={() => { refetch() }}
           slideClass={`page-slide-${slideDir}`}
+          theme={theme}
+          onThemeChange={setTheme}
         />
       )}
 
