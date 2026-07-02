@@ -498,8 +498,11 @@ export function usePayments(userId) {
     }
 
     // También migrar parcialidades existentes sin master
+    // Filtro defensivo: is_installment puede ser null en registros viejos,
+    // por eso también se detecta por current_installment > 0
     const orphanedInstallments = payments.filter(p =>
-      p.is_installment && !p.is_master && !p.parent_id
+      (p.is_installment || (p.current_installment > 0 && p.total_installments > 0))
+      && !p.is_master && !p.parent_id
     )
 
     const instGroups = {}
