@@ -74,14 +74,6 @@ export function RecurrentsPage({ payments, profile, unreadCount, onOpenNotifs, o
     return Object.entries(map).sort((a, b) => b[1].length - a[1].length)
   }, [filtered])
 
-  // Parcialidades (sin master todavía — sistema antiguo)
-  const installments = useMemo(() => {
-    const map = {}
-    payments
-      .filter(p => p.is_installment && !p.is_paid && !p.is_master)
-      .forEach(p => { if (!map[p.name]) map[p.name] = p })
-    return Object.values(map)
-  }, [payments])
 
   function formatNextDate(due_date) {
     if (!due_date) return null
@@ -187,11 +179,16 @@ export function RecurrentsPage({ payments, profile, unreadCount, onOpenNotifs, o
                               </div>
                               <div style={{ fontSize: 11, color: 'var(--text)', marginTop: 2 }}>
                                 {RECUR_FREQ[master.recur_freq] || master.recur_freq}
-                                {paid > 0 && ` · ${paid} realizado${paid !== 1 ? 's' : ''}`}
+                                {!master.is_installment && paid > 0 && ` · ${paid} realizado${paid !== 1 ? 's' : ''}`}
                               </div>
-                              {!master.paused && next && (
+                              {!master.paused && next && !master.is_installment && (
                                 <div style={{ fontSize: 11, color: 'var(--accent)', fontWeight: 500, marginTop: 2 }}>
                                   Próximo: {formatNextDate(next.due_date)}
+                                </div>
+                              )}
+                              {!master.paused && next && master.is_installment && (
+                                <div style={{ fontSize: 11, color: 'var(--accent)', fontWeight: 500, marginTop: 2 }}>
+                                  Pago {next.current_installment} de {master.total_installments}
                                 </div>
                               )}
                               {master.paused && (
@@ -250,25 +247,6 @@ export function RecurrentsPage({ payments, profile, unreadCount, onOpenNotifs, o
               )
             })}
 
-            {/* Parcialidades (sistema anterior) */}
-            {installments.length > 0 && (
-              <div style={{ background: 'var(--surface)', borderRadius: 'var(--radius)', overflow: 'hidden' }}>
-                <div style={{ padding: '14px 14px 10px', borderBottom: '0.5px solid var(--border)' }}>
-                  <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text)' }}>Parcialidades</div>
-                </div>
-                {installments.map((p, idx) => (
-                  <div key={p.id} style={{ display: 'flex', alignItems: 'center', padding: '12px 14px', borderBottom: idx < installments.length - 1 ? '0.5px solid var(--border)' : 'none' }}>
-                    <div style={{ flex: 1 }}>
-                      <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--text)' }}>{p.name}</div>
-                      <div style={{ fontSize: 11, color: 'var(--text)', marginTop: 2 }}>
-                        Pago {p.current_installment} de {p.total_installments} · {RECUR_FREQ[p.recur_freq] || p.recur_freq}
-                      </div>
-                    </div>
-                    <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--text)' }}>{fmt(p.amount)}</div>
-                  </div>
-                ))}
-              </div>
-            )}
           </div>
 
         </div>
