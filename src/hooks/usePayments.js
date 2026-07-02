@@ -87,25 +87,48 @@ export function usePayments(userId) {
 
   async function addInstallmentPayment({ name, amount, totalInstallments, startFrom, recurFreq, category, firstDate }) {
     const from = startFrom || 1
-    const { data, error } = await supabase.from('payments').insert({
+
+    // Crear master (template raíz de la parcialidad)
+    const { data: master, error: masterErr } = await supabase.from('payments').insert({
       user_id:             userId,
-      name, amount,
-      due_date:            firstDate,
-      category,
+      name, amount, category,
       is_variable:         false,
       is_recurrent:        true,
       recur_freq:          recurFreq,
+      is_master:           true,
+      parent_id:           null,
+      due_date:            firstDate,
       is_paid:             false,
       paid_at:             null,
       postponed:           false,
       paused:              false,
-      is_master:           false,
-      parent_id:           null,
       is_installment:      true,
       current_installment: from,
       total_installments:  totalInstallments,
     }).select().single()
-    if (!error) setPayments(prev => [...prev, data])
+
+    if (masterErr) return { error: masterErr }
+
+    // Crear primera copia (el pago actual a mostrar)
+    const { data, error } = await supabase.from('payments').insert({
+      user_id:             userId,
+      name, amount, category,
+      is_variable:         false,
+      is_recurrent:        true,
+      recur_freq:          recurFreq,
+      is_master:           false,
+      parent_id:           master.id,
+      due_date:            firstDate,
+      is_paid:             false,
+      paid_at:             null,
+      postponed:           false,
+      paused:              false,
+      is_installment:      true,
+      current_installment: from,
+      total_installments:  totalInstallments,
+    }).select().single()
+
+    if (!error) setPayments(prev => [...prev, master, data])
     return { data, error }
   }
 
@@ -245,7 +268,7 @@ export function usePayments(userId) {
           postponed:           false,
           paused:              false,
           is_master:           false,
-          parent_id:           null,
+          parent_id:           payment.parent_id,  // hereda el master de la copia pagada
           is_installment:      true,
           current_installment: payment.current_installment + 1,
           total_installments:  payment.total_installments,
@@ -467,6 +490,53 @@ export function usePayments(userId) {
           continue
         }
       }
+
+      setPayments(prev => [
+        ...prev.map(p => ids.includes(p.id) ? { ...p, parent_id: master.id } : p),
+        master,
+      ])
+    }
+
+    // También migrar parcialidades existentes sin master
+    const orphanedInstallments = payments.filter(p =>
+      p.is_installment && !p.is_master && !p.parent_id
+    )
+
+    const instGroups = {}
+    orphanedInstallments.forEach(p => {
+      if (!instGroups[p.name]) instGroups[p.name] = []
+      instGroups[p.name].push(p)
+    })
+
+    for (const items of Object.values(instGroups)) {
+      // Tomar el pendiente más próximo como referencia
+      const pending = items.filter(p => !p.is_paid).sort((a, b) => a.current_installment - b.current_installment)
+      const sample  = pending.length > 0 ? pending[0] : items[0]
+
+      const { data: master } = await supabase.from('payments').insert({
+        user_id:             userId,
+        name:                sample.name,
+        amount:              sample.amount,
+        category:            sample.category,
+        is_variable:         false,
+        is_recurrent:        true,
+        recur_freq:          sample.recur_freq,
+        is_master:           true,
+        parent_id:           null,
+        due_date:            sample.due_date,
+        is_paid:             false,
+        paid_at:             null,
+        postponed:           false,
+        paused:              sample.paused || false,
+        is_installment:      true,
+        current_installment: sample.current_installment,
+        total_installments:  sample.total_installments,
+      }).select().single()
+
+      if (!master) continue
+
+      const ids = items.map(p => p.id)
+      await supabase.from('payments').update({ parent_id: master.id }).in('id', ids)
 
       setPayments(prev => [
         ...prev.map(p => ids.includes(p.id) ? { ...p, parent_id: master.id } : p),
