@@ -39,7 +39,7 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
     if (initial) {
       setName(initial.name || '')
       setAmount(initial.amount || '')
-      setDueDate(initial.due_date || '')
+      setDueDate(initial.due_date || new Date().toISOString().split('T')[0])
       setBiweeklyDate(initial.due_date || new Date().toISOString().split('T')[0])
       setCategory(initial.category || 'Servicios')
       setIsVariable(initial.is_variable || false)
@@ -123,27 +123,77 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
   }
 
   if (isEditingInstallment) {
+    async function handleEditInstallment() {
+      setError('')
+      if (!name.trim()) { setError('Escribe el nombre del pago'); return }
+      if (!amount || isNaN(parseFloat(amount)) || parseFloat(amount) <= 0) { setError('Ingresa el monto por pago'); return }
+      const total = parseInt(totalInstallments)
+      if (!total || total < initial.current_installment) {
+        setError(`El total no puede ser menor al pago actual (${initial.current_installment})`); return
+      }
+      if (!dueDate) { setError('Selecciona la fecha del próximo pago'); return }
+      setSaving(true)
+      await onSave({
+        name: name.trim(),
+        amount: parseFloat(amount),
+        total_installments: total,
+        category,
+        recur_freq: recurFreq,
+        due_date: dueDate,
+      })
+      setSaving(false); onClose()
+    }
+
     return (
       <>
         <div onClick={e => e.target === e.currentTarget && onClose()} style={{ position: 'fixed', inset: 0, background: 'rgba(2,10,31,0.45)', zIndex: 200, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
           <div style={modalStyle}>
             <div style={{ width: 34, height: 4, borderRadius: 2, background: 'var(--border)', margin: '0 auto 16px' }} />
-            <div style={{ fontSize: 16, fontWeight: 600, color: 'var(--text)', marginBottom: 12 }}>Pago en parcialidades</div>
-            <div style={{ background: 'var(--warning-soft)', border: '0.5px solid var(--warning-border)', borderRadius: 'var(--radius)', padding: '12px 14px', marginBottom: 16 }}>
-              <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--warning)', marginBottom: 4 }}>No se puede editar</div>
-              <div style={{ fontSize: 12, color: 'var(--text)', lineHeight: 1.6 }}>Los pagos en parcialidades no se pueden modificar una vez creados. Si necesitas corregir algo, elimínalo y vuelve a crearlo.</div>
-            </div>
-            <div style={{ background: 'var(--bg)', borderRadius: 'var(--radius)', padding: '12px 14px', marginBottom: 16 }}>
-              <div style={{ fontSize: 12, color: 'var(--text)', lineHeight: 1.8 }}>
-                <div><strong>Nombre:</strong> {initial.name}</div>
-                <div><strong>Monto por pago:</strong> {fmt(initial.amount)}</div>
-                <div><strong>Total de pagos:</strong> {initial.total_installments}</div>
-                <div><strong>Frecuencia:</strong> {RECUR_FREQ[initial.recur_freq] || initial.recur_freq}</div>
-                <div><strong>Categoría:</strong> {initial.category}</div>
+
+            {/* Contexto */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+              <div style={{ fontSize: 16, fontWeight: 600, color: 'var(--text)' }}>Editar parcialidades</div>
+              <div style={{ fontSize: 12, fontWeight: 600, background: 'var(--accent-soft)', color: 'var(--accent)', padding: '4px 10px', borderRadius: 20 }}>
+                Pago {initial.current_installment}/{initial.total_installments}
               </div>
             </div>
-            <button onClick={() => { onDelete(initial.id); onClose() }} className="btn-danger" style={{ marginBottom: 8 }}>Eliminar todos los pagos pendientes</button>
-            <button onClick={onClose} className="btn-ghost">Cerrar</button>
+
+            {error && <div style={{ background: 'var(--danger-soft)', border: '0.5px solid var(--danger-border)', borderRadius: 'var(--radius-sm)', padding: '8px 12px', fontSize: 13, color: 'var(--danger)', marginBottom: 12 }}>{error}</div>}
+
+            <Field label="Nombre">
+              <input className="field-input" type="text" value={name} onChange={e => setName(e.target.value)} />
+            </Field>
+
+            <Field label="Categoría">
+              <select className="field-input" value={category} onChange={e => setCategory(e.target.value)}>
+                {CATEGORIES.map(c => <option key={c}>{c}</option>)}
+              </select>
+            </Field>
+
+            <Field label="Monto por pago">
+              <input className="field-input" type="number" value={amount} onChange={e => setAmount(e.target.value)} placeholder="0.00" />
+            </Field>
+
+            <Field label="Total de pagos">
+              <input className="field-input" type="number" value={totalInstallments} onChange={e => setTotalInstallments(e.target.value)} placeholder="Ej. 20" min={initial.current_installment} />
+              <div style={{ fontSize: 11, color: 'var(--text)', marginTop: 4 }}>
+                Quedan {Math.max(0, parseInt(totalInstallments) - initial.current_installment + 1) || '—'} pagos por cubrir
+              </div>
+            </Field>
+
+            <FrequencyPicker value={recurFreq} onChange={setRecurFreq} />
+
+            <Field label="Fecha del próximo pago">
+              <input className="field-input" type="date" value={dueDate} onChange={e => setDueDate(e.target.value)} />
+            </Field>
+
+            <button onClick={handleEditInstallment} disabled={saving} className="btn-primary" style={{ marginTop: 4, opacity: saving ? 0.7 : 1 }}>
+              {saving ? 'Guardando…' : 'Guardar cambios'}
+            </button>
+            <button onClick={onClose} className="btn-ghost" style={{ marginTop: 8 }}>Cancelar</button>
+            <button onClick={() => { onDelete(initial.id, initial); onClose() }} className="btn-danger" style={{ marginTop: 6 }}>
+              Cancelar parcialidades
+            </button>
           </div>
         </div>
       </>
@@ -165,12 +215,12 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
           )}
 
           <div style={{ fontSize: 16, fontWeight: 600, color: 'var(--text)', marginBottom: 14 }}>
-            {initial ? 'Editar pago' : mode === 'installment' ? 'Pago en parcialidades' : mode === 'recurrent' ? 'Pago recurrente' : 'Nuevo pago'}
+            {initial?.is_master && initial?.paused ? 'Reactivar pago recurrente' : initial?.is_master ? 'Editar pago recurrente' : initial ? 'Editar pago' : mode === 'installment' ? 'Pago en parcialidades' : mode === 'recurrent' ? 'Pago recurrente' : 'Nuevo pago'}
           </div>
 
           {mode === 'installment' && !initial && (
-            <div style={{ background: 'var(--warning-soft)', border: '0.5px solid var(--warning-border)', borderRadius: 'var(--radius-sm)', padding: '10px 12px', marginBottom: 12, fontSize: 12, color: 'var(--warning)' }}>
-              Los pagos en parcialidades no se pueden editar una vez creados.
+            <div style={{ background: 'var(--accent-soft)', border: '0.5px solid var(--accent-border)', borderRadius: 'var(--radius-sm)', padding: '10px 12px', marginBottom: 12, fontSize: 12, color: 'var(--accent)' }}>
+              Los pagos se generan uno a uno. Al marcar cada pago como pagado, el siguiente aparece automáticamente.
             </div>
           )}
 
@@ -287,7 +337,7 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
           )}
 
           <button onClick={handleSave} disabled={saving} className="btn-primary" style={{ marginTop: 4, opacity: saving ? 0.7 : 1 }}>
-            {saving ? 'Guardando…' : initial ? 'Guardar cambios' : mode === 'installment' ? 'Crear pagos' : alreadyPaid ? 'Guardar como pagado' : 'Guardar pago'}
+            {saving ? 'Guardando…' : initial?.is_master && initial?.paused ? 'Reactivar' : initial ? 'Guardar cambios' : mode === 'installment' ? 'Crear pagos' : alreadyPaid ? 'Guardar como pagado' : 'Guardar pago'}
           </button>
           <button onClick={requestClose} className="btn-ghost" style={{ marginTop: 8 }}>Cancelar</button>
           {initial && !isEditingInstallment && (
