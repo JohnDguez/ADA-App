@@ -13,6 +13,18 @@
     <link rel="apple-touch-icon" href="/favicon.svg" />
     <link rel="manifest" href="/manifest.json" />
     <title>ADA Pay</title>
+    <!-- Aplicar tema antes de que React hidrate para evitar flash (FOUC) -->
+    <script>
+      (function () {
+        var theme = localStorage.getItem('ada_theme') || 'sistema';
+        if (theme === 'dark') {
+          document.documentElement.setAttribute('data-theme', 'dark');
+        } else if (theme === 'light') {
+          document.documentElement.setAttribute('data-theme', 'light');
+        }
+        // 'sistema': no se toca el atributo, el @media prefers-color-scheme lo gestiona
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>
