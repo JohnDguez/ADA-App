@@ -25,6 +25,13 @@ export function usePushNotifications(userId) {
       const reg = await navigator.serviceWorker.ready
       const sub = await reg.pushManager.getSubscription()
       setSubscribed(!!sub)
+      // Si ya está suscrito, actualizar timezone en cada carga
+      // Cubre casos como usuarios de Baja California que cambian de zona horaria
+      // o que se suscribieron antes de que se guardara el timezone correctamente
+      if (sub && userId) {
+        const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone
+        await supabase.from('profiles').update({ timezone: userTimezone }).eq('id', userId)
+      }
     } catch (e) {
       console.error('Error checking subscription:', e)
     }
