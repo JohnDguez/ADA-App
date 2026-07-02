@@ -108,7 +108,7 @@ export function RecurrentsPage({ payments, profile, unreadCount, onOpenNotifs, o
       <div style={{ background: 'var(--bg)', borderRadius: '24px 24px 0 0', marginTop: -24, position: 'relative', zIndex: 10 }}>
         <div className={slideClass}>
 
-        <div style={{ background: '#E8E8E8', borderRadius: '24px 24px 0 0', padding: '20px 16px 18px', marginBottom: 16 }}>
+        <div style={{ background: 'var(--title-bg)', borderRadius: '24px 24px 0 0', padding: '20px 16px 18px', marginBottom: 16 }}>
           <div style={{ fontSize: 22, fontWeight: 700, color: 'var(--text)' }}>Gastos recurrentes</div>
           <div style={{ fontSize: 13, fontWeight: 400, color: 'var(--text)', marginTop: 4 }}>Gestiona tus pagos fijos, parcialidades y variables.</div>
         </div>
@@ -223,7 +223,7 @@ export function RecurrentsPage({ payments, profile, unreadCount, onOpenNotifs, o
                                 <span style={{ fontSize: 9, fontWeight: 700, padding: '2px 7px', borderRadius: 4, background: 'var(--paid)', color: '#fff' }}>Recurrente</span>
                               )}
                               {g.is_variable && (
-                                <span style={{ fontSize: 9, fontWeight: 700, padding: '2px 7px', borderRadius: 4, background: '#6884A9', color: '#fff' }}>Variable</span>
+                                <span style={{ fontSize: 9, fontWeight: 700, padding: '2px 7px', borderRadius: 4, background: 'var(--label-variable)', color: '#fff' }}>Variable</span>
                               )}
                               {paused && (
                                 <span style={{ fontSize: 9, fontWeight: 700, padding: '2px 7px', borderRadius: 4, background: 'var(--warning)', color: '#fff' }}>Pausado</span>

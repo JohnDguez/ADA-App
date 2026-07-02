@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { Eye, EyeOff, Lock, Mail, KeyRound, X, Check } from 'lucide-react'
 import { passwordRequirements, isPasswordStrong } from '../components/PasswordSetupModal'
+import { useTheme } from '../hooks/useTheme'
 
 // ── Modal de Términos y Condiciones ──────────────────────────────────────────
 function TermsModal({ onClose }) {
@@ -71,6 +72,10 @@ function RequirementRow({ met, label }) {
 
 // ── Reset Password ────────────────────────────────────────────────────────────
 export function ResetPasswordPage({ onDone }) {
+  const { theme } = useTheme()
+  const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
+  const isDark = theme === 'dark' || (theme === 'sistema' && prefersDark)
+  const logoSrc = isDark ? '/ADA-Pay-logo-white.svg' : '/ADA-Pay-logo.svg'
   const [newPassword, setNewPassword] = useState('')
   const [confirm,     setConfirm]     = useState('')
   const [showNew,     setShowNew]     = useState(false)
@@ -102,7 +107,7 @@ export function ResetPasswordPage({ onDone }) {
   return (
     <div style={{ minHeight: '100vh', background: 'var(--bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 24px' }}>
       <div style={{ width: '100%', maxWidth: 360 }}>
-        <img src="/ADA-Pay-logo.svg" alt="ADA Pay" style={{ width: '50%', maxWidth: 180, display: 'block', margin: '0 auto 40px' }} />
+        <img src={logoSrc} alt="ADA Pay" style={{ width: '50%', maxWidth: 180, display: 'block', margin: '0 auto 40px' }} />
         <div style={{ fontSize: 22, fontWeight: 700, color: 'var(--text)', marginBottom: 6 }}>Nueva contraseña</div>
         <div style={{ fontSize: 14, color: 'var(--text)', marginBottom: 24 }}>Elige una contraseña segura para tu cuenta.</div>
         {error && <div style={{ background: 'var(--danger-soft)', border: '0.5px solid var(--danger-border)', borderRadius: 'var(--radius-sm)', padding: '10px 12px', fontSize: 13, color: 'var(--danger)', marginBottom: 16 }}>{error}</div>}
@@ -135,6 +140,10 @@ export function ResetPasswordPage({ onDone }) {
 
 // ── Auth Page ─────────────────────────────────────────────────────────────────
 export function AuthPage() {
+  const { theme } = useTheme()
+  const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
+  const isDark = theme === 'dark' || (theme === 'sistema' && prefersDark)
+  const logoSrc = isDark ? '/ADA-Pay-logo-white.svg' : '/ADA-Pay-logo.svg'
   const [mode,          setMode]          = useState('login')
   const [email,         setEmail]         = useState('')
   const [password,      setPassword]      = useState('')
@@ -204,7 +213,7 @@ export function AuthPage() {
   return (
     <div style={{ minHeight: '100vh', background: 'var(--bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 24px' }}>
       <div style={{ width: '100%', maxWidth: 360 }}>
-        <img src="/ADA-Pay-logo.svg" alt="ADA Pay" style={{ width: '50%', maxWidth: 180, display: 'block', margin: '0 auto 40px' }} />
+        <img src={logoSrc} alt="ADA Pay" style={{ width: '50%', maxWidth: 180, display: 'block', margin: '0 auto 40px' }} />
 
         {mode !== 'forgot' && (
           <div style={{ display: 'flex', background: 'var(--surface)', borderRadius: 10, padding: 3, marginBottom: 24, border: '0.5px solid var(--border)' }}>
