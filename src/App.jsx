@@ -131,8 +131,13 @@ export default function App() {
     } else if (payment?.is_recurrent && !payment?.is_installment && payment?.parent_id) {
       if (!window.confirm(`¿Eliminar el pago recurrente "${payment.name}"?\nLos pagos ya realizados se conservarán en el historial.`)) return
       await deleteRecurrent(payment.parent_id)
+    } else if (payment?.is_installment && payment?.parent_id) {
+      // Copia de parcialidad con master → eliminar via deleteRecurrent
+      if (!window.confirm(`¿Cancelar las parcialidades restantes de "${payment.name}"?\nLos pagos ya realizados se conservarán en el historial.`)) return
+      await deleteRecurrent(payment.parent_id)
     } else if (payment?.is_installment) {
-      if (!window.confirm(`¿Cancelar las parcialidades restantes de "${payment.name}"?\nLos pagos anteriores se conservarán.`)) return
+      // Parcialidad sin master (sistema antiguo, fallback)
+      if (!window.confirm(`¿Cancelar las parcialidades restantes de "${payment.name}"?`)) return
       await deleteInstallmentFuture(payment.name)
     } else {
       if (!window.confirm('¿Eliminar este pago?')) return
