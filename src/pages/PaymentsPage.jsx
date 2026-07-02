@@ -542,7 +542,7 @@ export function PaymentsPage({ payments, profile, unreadCount, onOpenNotifs, onG
         <div className={slideClass}>
 
         {/* Zona de título con fondo diferente */}
-        <div style={{ background: '#E8E8E8', borderRadius: '24px 24px 0 0', padding: '20px 16px 18px', marginBottom: 16 }}>
+        <div style={{ background: 'var(--title-bg)', borderRadius: '24px 24px 0 0', padding: '20px 16px 18px', marginBottom: 16 }}>
           <div style={{ fontSize: 22, fontWeight: 700, color: 'var(--text)' }}>Mis gastos e ingresos</div>
           <div style={{ fontSize: 13, fontWeight: 400, color: 'var(--text)', marginTop: 4 }}>Historial, análisis y balance de tus finanzas del periodo.</div>
         </div>
@@ -861,7 +861,7 @@ export function PaymentsPage({ payments, profile, unreadCount, onOpenNotifs, onG
                       <div style={{ textAlign: 'right', flexShrink: 0 }}>
                         <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text)' }}>{fmt(p.amount)}</div>
                         {p.is_variable && (
-                          <span style={{ fontSize: 9, background: '#6884A9', color: '#fff', padding: '1px 6px', borderRadius: 4, fontWeight: 600 }}>
+                          <span style={{ fontSize: 9, background: 'var(--label-variable)', color: '#fff', padding: '1px 6px', borderRadius: 4, fontWeight: 600 }}>
                             Variable
                           </span>
                         )}

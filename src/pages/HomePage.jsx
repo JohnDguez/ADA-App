@@ -3,7 +3,7 @@ import { Trophy } from 'lucide-react'
 import { PayCard } from '../components/PayCard'
 import { PageHeader } from '../components/PageHeader'
 import { NotificationsPanel } from '../components/NotificationsPanel'
-import { fmt, cobroPeriod, nextCobroDate, getPagarEsteCobro, daysDiff, dateOf, MONTHS, MONTHS_SHORT } from '../lib/utils'
+import { fmt, cobroPeriod, getPagarEsteCobro, daysDiff, dateOf, MONTHS, MONTHS_SHORT } from '../lib/utils'
 
 function periodRange(cfg) {
   const { start, end } = cobroPeriod(cfg)
@@ -13,8 +13,8 @@ function periodRange(cfg) {
 }
 
 export function HomePage({ payments, profile, onAdd, onMarkPaid, onMarkUnpaid, onEdit, onDelete, onPostpone, onAdvance, onGoSettings, notifications, unreadCount, onMarkAsRead, onMarkAllAsRead, onDeleteNotif, onClearAllNotifs, slideClass }) {
-  const [notifOpen, setNotifOpen] = useState(false)
-  const [activeCard, setActiveCard] = useState(0)
+  const [notifOpen,   setNotifOpen]   = useState(false)
+  const [activeCard,  setActiveCard]  = useState(0)
   const [touchStartX, setTouchStartX] = useState(null)
 
   const now        = new Date()
@@ -62,7 +62,6 @@ export function HomePage({ payments, profile, onAdd, onMarkPaid, onMarkUnpaid, o
 
         {/* Slider de métricas */}
         <div style={{ padding: '20px 16px 0', userSelect: 'none' }}>
-          {/* Cards slider */}
           <div
             style={{ overflow: 'hidden', borderRadius: 16 }}
             onTouchStart={e => setTouchStartX(e.touches[0].clientX)}
@@ -138,8 +137,8 @@ export function HomePage({ payments, profile, onAdd, onMarkPaid, onMarkUnpaid, o
               <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--danger)', marginBottom: 10 }}>
                 {vencidos.length} Pago{vencidos.length !== 1 ? 's' : ''} vencido{vencidos.length !== 1 ? 's' : ''} — Atención urgente
               </div>
-              <div style={{ background: '#D9D9D9', borderRadius: 12, padding: '12px', display: 'flex', flexDirection: 'column', gap: 8 }}>
-                {vencidos.map(p => <PayCard key={p.id} payment={p} cfg={profile} {...handlers} borderLeft="#B10F17" />)}
+              <div style={{ background: 'var(--section-bg)', borderRadius: 12, padding: '12px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {vencidos.map(p => <PayCard key={p.id} payment={p} cfg={profile} {...handlers} borderLeft="var(--overdue-border)" />)}
               </div>
             </div>
           )}
@@ -149,8 +148,8 @@ export function HomePage({ payments, profile, onAdd, onMarkPaid, onMarkUnpaid, o
             <SectionHead left="Próximos a vencer" right={`Periodo ${periodRange(profile)}`} />
             {delPeriodo.length === 0
               ? <Empty text="Sin pagos pendientes para este periodo" />
-              : <div style={{ background: '#D9D9D9', borderRadius: 12, padding: '12px', display: 'flex', flexDirection: 'column', gap: 8 }}>
-                  {delPeriodo.map(p => <PayCard key={p.id} payment={p} cfg={profile} {...handlers} borderLeft="#FAAC2F" />)}
+              : <div style={{ background: 'var(--section-bg)', borderRadius: 12, padding: '12px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  {delPeriodo.map(p => <PayCard key={p.id} payment={p} cfg={profile} {...handlers} borderLeft="var(--upcoming-border)" />)}
                 </div>
             }
           </div>

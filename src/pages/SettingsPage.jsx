@@ -22,7 +22,7 @@ function RequirementRow({ met, label }) {
   )
 }
 
-export function SettingsPage({ profile, user, onUpdate, onUploadAvatar, onDataDeleted, slideClass }) {
+export function SettingsPage({ profile, user, onUpdate, onUploadAvatar, onDataDeleted, slideClass, theme, onThemeChange }) {
   const [salaryAmount,    setSalaryAmount]    = useState(profile.salary_amount || '')
   const [editSection,     setEditSection]     = useState(null)
   const [fieldVal,        setFieldVal]        = useState('')
@@ -378,6 +378,25 @@ export function SettingsPage({ profile, user, onUpdate, onUploadAvatar, onDataDe
 
             <NotifToggle label="Día de cobro" sub="Resumen de pagos pendientes al cobrar" value={profile.notif_cobro_day !== false} onChange={v => onUpdate({ notif_cobro_day: v })} last />
           </>)}
+        </Card>
+
+        {/* Apariencia */}
+        <SectionLabel>Apariencia</SectionLabel>
+        <Card>
+          <div style={{ padding: '13px 14px' }}>
+            <div style={{ display: 'flex', gap: 6 }}>
+              {[
+                { id: 'sistema', label: 'Sistema' },
+                { id: 'light',   label: 'Claro' },
+                { id: 'dark',    label: 'Oscuro' },
+              ].map(({ id, label }) => (
+                <button key={id} onClick={() => onThemeChange(id)}
+                  style={{ flex: 1, padding: '8px 0', borderRadius: 5, border: 'none', background: theme === id ? 'var(--accent)' : 'var(--bg)', color: theme === id ? 'var(--surface)' : 'var(--text)', fontWeight: theme === id ? 600 : 400, fontSize: 13, fontFamily: 'DM Sans, sans-serif', cursor: 'pointer' }}>
+                  {label}
+                </button>
+              ))}
+            </div>
+          </div>
         </Card>
 
         {/* Sesión */}
