@@ -127,7 +127,7 @@ export function RecurrentsPage({ payments, profile, unreadCount, onOpenNotifs, o
 
           {/* Lista por categoría */}
           <div style={{ padding: '0 16px', display: 'flex', flexDirection: 'column', gap: 8 }}>
-            {byCategory.length === 0 && installments.length === 0 ? (
+            {byCategory.length === 0 ? (
               <div style={{ textAlign: 'center', padding: '40px 0' }}>
                 <CreditCard size={32} color="var(--border)" style={{ marginBottom: 10 }} />
                 <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--text)' }}>
