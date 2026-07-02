@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useAuth } from './hooks/useAuth'
 import { usePayments } from './hooks/usePayments'
 import { useProfile } from './hooks/useProfile'
@@ -13,6 +13,7 @@ import { BottomNav } from './components/BottomNav'
 import { NotificationsPanel } from './components/NotificationsPanel'
 import { PaymentModal } from './components/PaymentModal'
 import { VariableAmountModal } from './components/VariableAmountModal'
+import { RecurrentMigrationModal } from './components/RecurrentMigrationModal'
 import { Toast, showToast } from './components/Toast'
 import { SkeletonLoader } from './components/SkeletonLoader'
 import { useTheme } from './hooks/useTheme'
@@ -21,19 +22,54 @@ function fmt(n) { return '$' + Number(n).toLocaleString('es-MX', { minimumFracti
 
 export default function App() {
   const { user, loading: authLoading, isRecovery, setIsRecovery } = useAuth()
-  const { theme, setTheme } = useTheme()
-  const { payments, addPayment, addInstallmentPayment, updatePayment, markPaid, markUnpaid, postponePayment, pauseRecurrent, resumeRecurrent, deletePayment, deleteRecurrentFuture, deleteInstallmentFuture, deleteGroup, refetch } = usePayments(user?.id)
+  const {
+    payments, loading: paymentsLoading,
+    addPayment, addRecurrentPayment, addInstallmentPayment,
+    updatePayment, updateRecurrentName, updateRecurrentConfig,
+    markPaid, markUnpaid,
+    postponePayment,
+    pauseRecurrent, resumeRecurrent,
+    deletePayment, deleteRecurrent,
+    deleteRecurrentFuture, deleteInstallmentFuture,
+    migrateRecurrents,
+    refetch,
+  } = usePayments(user?.id)
   const { profile, loading: profileLoading, updateProfile, uploadAvatar } = useProfile(user?.id)
   const { notifications, unreadCount, markAsRead, markAllAsRead, deleteNotification, clearAll } = useNotifications(user?.id)
-  const [tab,         setTab]         = useState(() => {
+  const { theme, setTheme } = useTheme()
+
+  const [tab,            setTab]           = useState(() => {
     const hasActiveSession = sessionStorage.getItem('ada_session')
     return hasActiveSession ? (sessionStorage.getItem('ada_tab') || 'home') : 'home'
   })
-  const [modalOpen,   setModalOpen]   = useState(false)
-  const [editPayment, setEditPayment] = useState(null)
-  const [varModal,    setVarModal]    = useState({ open: false, payment: null })
-  const [notifOpen,   setNotifOpen]   = useState(false)
-  const [slideDir,    setSlideDir]    = useState('right')
+  const [modalOpen,      setModalOpen]     = useState(false)
+  const [editPayment,    setEditPayment]   = useState(null)
+  const [varModal,       setVarModal]      = useState({ open: false, payment: null })
+  const [notifOpen,      setNotifOpen]     = useState(false)
+  const [slideDir,       setSlideDir]      = useState('right')
+  const [resumeModal,    setResumeModal]   = useState({ open: false, masterId: null }) // modal de reactivar pausa
+  const [migrationModal, setMigrationModal] = useState(false)
+
+  const migrationRan = useRef(false)
+
+  // Migración one-time: crea masters para recurrentes sin sistema nuevo
+  useEffect(() => {
+    if (!user || !payments.length || migrationRan.current) return
+    migrationRan.current = true
+
+    const hasOldRecurrents = payments.some(p =>
+      p.is_recurrent && !p.is_master && !p.parent_id && !p.is_installment
+    )
+
+    if (hasOldRecurrents) {
+      // Migración automática — no espera al usuario
+      migrateRecurrents()
+      // Modal solo como aviso informativo, solo la primera vez
+      if (!localStorage.getItem('ada_recurrent_v2_seen')) {
+        setMigrationModal(true)
+      }
+    }
+  }, [user, payments])
 
   if (authLoading || (user && profileLoading)) return <SkeletonLoader />
   if (isRecovery) return <ResetPasswordPage onDone={() => setIsRecovery(false)} />
@@ -41,10 +77,8 @@ export default function App() {
   if (user && !profile.onboarding_completed) return <OnboardingPage userId={user.id} onDone={updateProfile} />
 
   const TAB_ORDER = ['home', 'payments', 'recurrents', 'settings']
-
   sessionStorage.setItem('ada_session', '1')
 
-  // Detecta cambio de usuario para resetear el tab
   const storedUserId = sessionStorage.getItem('ada_user_id')
   if (storedUserId && storedUserId !== user.id) {
     sessionStorage.setItem('ada_tab', 'home')
@@ -54,7 +88,14 @@ export default function App() {
   }
 
   function openAdd()   { setEditPayment(null); setModalOpen(true) }
-  function openEdit(p) { setEditPayment(p);    setModalOpen(true) }
+  function openEdit(p) {
+    // Si es una copia de recurrente, editar el master
+    if (p.is_recurrent && !p.is_master && p.parent_id && !p.is_installment) {
+      const master = payments.find(m => m.id === p.parent_id)
+      if (master) { setEditPayment(master); setModalOpen(true); return }
+    }
+    setEditPayment(p); setModalOpen(true)
+  }
 
   async function handleMarkPaid(payment) {
     if (payment.is_variable) { setVarModal({ open: true, payment }); return }
@@ -77,54 +118,85 @@ export default function App() {
   async function handlePostpone(payment) {
     const { error } = await postponePayment(payment)
     if (error) showToast('Error al posponer')
-    else showToast(`${payment.name} pospuesto al siguiente periodo`)
+    else showToast(`${payment.name} pospuesto`)
   }
-  async function handleAdvance(postponedPayment) {
-    const { error } = await updatePayment(postponedPayment.id, { postponed: false })
+  async function handleAdvance(payment) {
+    const { error } = await updatePayment(payment.id, { postponed: false })
     if (error) showToast('Error')
     else showToast('Pago regresado al periodo actual')
   }
   async function handleDelete(id, payment) {
-    if (payment?.is_recurrent && !payment?.is_installment) {
-      if (!window.confirm(`¿Eliminar todos los pagos futuros de "${payment.name}"?\nEl historial de pagos anteriores se conservará.`)) return
-      await deleteRecurrentFuture(payment.name)
+    if (payment?.is_master) {
+      if (!window.confirm(`¿Eliminar el pago recurrente "${payment.name}"?\nLos pagos ya realizados se conservarán en el historial.`)) return
+      await deleteRecurrent(payment.id)
+    } else if (payment?.is_recurrent && !payment?.is_installment && payment?.parent_id) {
+      if (!window.confirm(`¿Eliminar el pago recurrente "${payment.name}"?\nLos pagos ya realizados se conservarán en el historial.`)) return
+      await deleteRecurrent(payment.parent_id)
     } else if (payment?.is_installment) {
-      if (!window.confirm(`¿Eliminar las parcialidades restantes de "${payment.name}"?\nLos pagos anteriores se conservarán.`)) return
+      if (!window.confirm(`¿Cancelar las parcialidades restantes de "${payment.name}"?\nLos pagos anteriores se conservarán.`)) return
       await deleteInstallmentFuture(payment.name)
     } else {
-      if (!window.confirm(`¿Eliminar este pago?`)) return
+      if (!window.confirm('¿Eliminar este pago?')) return
       await deletePayment(id)
     }
     showToast('Pago eliminado')
   }
-  async function handlePauseRecurrent(name)  { await pauseRecurrent(name);        showToast(`${name} pausado`) }
-  async function handleResumeRecurrent(name) { await resumeRecurrent(name);       showToast(`${name} reactivado`) }
-  async function handleDeleteRecurrent(name) { await deleteRecurrentFuture(name); showToast(`${name} eliminado — el historial se conserva`) }
+
+  async function handlePauseRecurrent(masterId) {
+    const master = payments.find(p => p.id === masterId)
+    await pauseRecurrent(masterId)
+    showToast(`${master?.name || 'Pago'} pausado`)
+  }
+  async function handleResumeRecurrent(masterId) {
+    // Abrir el modal de edición del master para que el usuario configure el próximo vencimiento
+    setResumeModal({ open: true, masterId })
+  }
+  async function handleConfirmResume(masterId, config) {
+    const { error } = await resumeRecurrent(masterId, config)
+    if (error) showToast('Error al reactivar')
+    else showToast('Pago reactivado')
+    setResumeModal({ open: false, masterId: null })
+  }
 
   async function handleSave(data) {
     if (editPayment) {
+      // Editar master de recurrente
+      if (editPayment.is_master) {
+        const { firstDate, ...rest } = data
+        // Si solo cambia el nombre (sin firstDate), usar updateRecurrentName
+        if (!firstDate && data.name && Object.keys(rest).length === 1) {
+          const { error } = await updateRecurrentName(editPayment.id, data.name)
+          if (error) showToast('Error al guardar'); else showToast('Pago actualizado')
+        } else {
+          const { error } = await updateRecurrentConfig(editPayment.id, { ...data, firstDate: firstDate || editPayment.due_date })
+          if (error) showToast('Error al guardar'); else showToast('Pago actualizado')
+        }
+        return
+      }
+      // Editar pago normal o parcialidad
       const { error } = await updatePayment(editPayment.id, data)
       if (error) showToast('Error al guardar'); else showToast('Pago actualizado')
     } else {
-      const { error } = await addPayment(data)
-      if (error) showToast('Error al guardar'); else showToast('Pago agregado')
+      // Crear nuevo
+      if (data.is_recurrent && !data.is_installment) {
+        const { firstDate, recur_freq, name, amount, category, is_variable } = data
+        const { error } = await addRecurrentPayment({ name, amount, category, recur_freq, is_variable: is_variable || false, firstDate: firstDate || data.due_date })
+        if (error) showToast('Error al guardar'); else showToast(`${name} agregado`)
+      } else {
+        const { error } = await addPayment(data)
+        if (error) showToast('Error al guardar'); else showToast('Pago agregado')
+      }
     }
   }
+
   async function handleSaveInstallment(data) {
     const { error } = await addInstallmentPayment(data)
-    if (error) showToast('Error al guardar'); else showToast(`${data.totalInstallments} pagos creados desde #${data.startFrom}`)
+    if (error) showToast('Error al guardar')
+    else showToast(`Pago ${data.startFrom || 1} de ${data.totalInstallments} creado`)
   }
 
-  const sharedHandlers = {
-    onMarkPaid: handleMarkPaid, onMarkUnpaid: handleMarkUnpaid,
-    onEdit: openEdit, onDelete: handleDelete,
-    onPostpone: handlePostpone, onAdvance: handleAdvance,
-  }
-
-  // Props del header compartidos entre páginas
   const headerProps = {
-    profile,
-    unreadCount,
+    profile, unreadCount,
     onOpenNotifs: () => setNotifOpen(true),
     onGoSettings: () => {
       const fromIdx = TAB_ORDER.indexOf(tab)
@@ -134,15 +206,23 @@ export default function App() {
     },
   }
 
-  function handleNavigate() { window.scrollTo(0, 0) }
+  // Pagos que se muestran en Home/Pagos: excluir masters (is_master: true)
+  const visiblePayments = payments.filter(p => !p.is_master)
 
   return (
     <>
       {tab === 'home' && (
         <HomePage
-          payments={payments} profile={profile} onAdd={openAdd}
+          payments={visiblePayments}
+          profile={profile}
+          onAdd={openAdd}
           slideClass={`page-slide-${slideDir}`}
-          {...sharedHandlers}
+          onMarkPaid={handleMarkPaid}
+          onMarkUnpaid={handleMarkUnpaid}
+          onEdit={openEdit}
+          onDelete={handleDelete}
+          onPostpone={handlePostpone}
+          onAdvance={handleAdvance}
           onGoSettings={() => {
             const fromIdx = TAB_ORDER.indexOf(tab)
             const toIdx   = TAB_ORDER.indexOf('settings')
@@ -159,7 +239,7 @@ export default function App() {
       )}
       {tab === 'payments' && (
         <PaymentsPage
-          payments={payments}
+          payments={visiblePayments}
           slideClass={`page-slide-${slideDir}`}
           {...headerProps}
           onMarkUnpaid={handleMarkUnpaid}
@@ -198,9 +278,7 @@ export default function App() {
           const fromIdx = TAB_ORDER.indexOf(tab)
           const toIdx   = TAB_ORDER.indexOf(t)
           setSlideDir(toIdx >= fromIdx ? 'right' : 'left')
-          setTab(t)
-          sessionStorage.setItem('ada_tab', t)
-          window.scrollTo(0, 0)
+          setTab(t); sessionStorage.setItem('ada_tab', t); window.scrollTo(0, 0)
         }}
         onAdd={openAdd}
       />
@@ -214,7 +292,7 @@ export default function App() {
         onMarkAllAsRead={markAllAsRead}
         onDelete={deleteNotification}
         onClearAll={clearAll}
-        onNavigate={handleNavigate}
+        onNavigate={() => window.scrollTo(0, 0)}
       />
 
       <PaymentModal
@@ -225,6 +303,9 @@ export default function App() {
         onDelete={handleDelete}
         initial={editPayment}
         payments={payments}
+        isResumingPause={resumeModal.open}
+        onConfirmResume={handleConfirmResume}
+        resumeMasterId={resumeModal.masterId}
       />
       <VariableAmountModal
         open={varModal.open}
@@ -232,15 +313,14 @@ export default function App() {
         onConfirm={handleVarConfirm}
         onClose={() => setVarModal({ open: false, payment: null })}
       />
+      <RecurrentMigrationModal
+        open={migrationModal}
+        onClose={() => {
+          localStorage.setItem('ada_recurrent_v2_seen', '1')
+          setMigrationModal(false)
+        }}
+      />
       <Toast />
     </>
-  )
-}
-
-function Splash() {
-  return (
-    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg)' }}>
-      <img src="/favicon.svg" alt="ADA Pay" style={{ width: 56, height: 56 }} />
-    </div>
   )
 }
