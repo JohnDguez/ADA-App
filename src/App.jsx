@@ -47,7 +47,6 @@ export default function App() {
   const [varModal,       setVarModal]      = useState({ open: false, payment: null })
   const [notifOpen,      setNotifOpen]     = useState(false)
   const [slideDir,       setSlideDir]      = useState('right')
-  const [resumeModal,    setResumeModal]   = useState({ open: false, masterId: null }) // modal de reactivar pausa
   const [migrationModal, setMigrationModal] = useState(false)
 
   const migrationRan = useRef(false)
@@ -148,27 +147,34 @@ export default function App() {
     showToast(`${master?.name || 'Pago'} pausado`)
   }
   async function handleResumeRecurrent(masterId) {
-    // Abrir el modal de edición del master para que el usuario configure el próximo vencimiento
-    setResumeModal({ open: true, masterId })
-  }
-  async function handleConfirmResume(masterId, config) {
-    const { error } = await resumeRecurrent(masterId, config)
-    if (error) showToast('Error al reactivar')
-    else showToast('Pago reactivado')
-    setResumeModal({ open: false, masterId: null })
+    const master = payments.find(p => p.id === masterId)
+    if (master) { setEditPayment(master); setModalOpen(true) }
   }
 
   async function handleSave(data) {
     if (editPayment) {
-      // Editar master de recurrente
       if (editPayment.is_master) {
-        const { firstDate, ...rest } = data
-        // Si solo cambia el nombre (sin firstDate), usar updateRecurrentName
-        if (!firstDate && data.name && Object.keys(rest).length === 1) {
-          const { error } = await updateRecurrentName(editPayment.id, data.name)
-          if (error) showToast('Error al guardar'); else showToast('Pago actualizado')
+        if (editPayment.paused) {
+          // Reactivar desde pausa: crear 2 nuevas copias con nueva config
+          const { error } = await resumeRecurrent(editPayment.id, {
+            name:        data.name        || editPayment.name,
+            amount:      data.amount      ?? editPayment.amount,
+            recur_freq:  data.recur_freq  || editPayment.recur_freq,
+            category:    data.category    || editPayment.category,
+            is_variable: data.is_variable ?? editPayment.is_variable,
+            firstDate:   data.due_date    || editPayment.due_date,
+          })
+          if (error) showToast('Error al reactivar'); else showToast(`${editPayment.name} reactivado`)
         } else {
-          const { error } = await updateRecurrentConfig(editPayment.id, { ...data, firstDate: firstDate || editPayment.due_date })
+          // Editar master activo
+          const { error } = await updateRecurrentConfig(editPayment.id, {
+            name:        data.name        || editPayment.name,
+            amount:      data.amount      ?? editPayment.amount,
+            recur_freq:  data.recur_freq  || editPayment.recur_freq,
+            category:    data.category    || editPayment.category,
+            is_variable: data.is_variable ?? editPayment.is_variable,
+            firstDate:   data.due_date    || editPayment.due_date,
+          })
           if (error) showToast('Error al guardar'); else showToast('Pago actualizado')
         }
         return
@@ -179,9 +185,15 @@ export default function App() {
     } else {
       // Crear nuevo
       if (data.is_recurrent && !data.is_installment) {
-        const { firstDate, recur_freq, name, amount, category, is_variable } = data
-        const { error } = await addRecurrentPayment({ name, amount, category, recur_freq, is_variable: is_variable || false, firstDate: firstDate || data.due_date })
-        if (error) showToast('Error al guardar'); else showToast(`${name} agregado`)
+        const { error } = await addRecurrentPayment({
+          name:        data.name,
+          amount:      data.amount,
+          category:    data.category,
+          recur_freq:  data.recur_freq,
+          is_variable: data.is_variable || false,
+          firstDate:   data.due_date,
+        })
+        if (error) showToast('Error al guardar'); else showToast(`${data.name} agregado`)
       } else {
         const { error } = await addPayment(data)
         if (error) showToast('Error al guardar'); else showToast('Pago agregado')
@@ -303,9 +315,6 @@ export default function App() {
         onDelete={handleDelete}
         initial={editPayment}
         payments={payments}
-        isResumingPause={resumeModal.open}
-        onConfirmResume={handleConfirmResume}
-        resumeMasterId={resumeModal.masterId}
       />
       <VariableAmountModal
         open={varModal.open}
