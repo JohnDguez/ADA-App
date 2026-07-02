@@ -56,11 +56,10 @@ export default function App() {
     if (!user || !payments.length || migrationRan.current) return
     migrationRan.current = true
 
-    const hasOldRecurrents = payments.some(p =>
-      p.is_recurrent && !p.is_master && !p.parent_id && !p.is_installment
-    )
+    const hasOldRecurrents   = payments.some(p => p.is_recurrent && !p.is_master && !p.parent_id && !p.is_installment)
+    const hasOldInstallments  = payments.some(p => p.is_installment && !p.is_master && !p.parent_id)
 
-    if (hasOldRecurrents) {
+    if (hasOldRecurrents || hasOldInstallments) {
       // Migración automática — no espera al usuario
       migrateRecurrents()
       // Modal solo como aviso informativo, solo la primera vez
