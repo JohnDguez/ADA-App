@@ -83,6 +83,7 @@ export function PaymentsPage({ payments, profile, unreadCount, onOpenNotifs, onG
   const [catRange,    setCatRange]    = useState('mes')
   const [viewMonth,   setViewMonth]   = useState(now.getMonth())
   const [viewYear,    setViewYear]    = useState(now.getFullYear())
+  const [viewMode,    setViewMode]    = useState('mes')  // 'mes' | 'periodo'
   const [openMenu,    setOpenMenu]    = useState(null)
 
   // Ingresos extras del periodo actual
@@ -311,11 +312,17 @@ export function PaymentsPage({ payments, profile, unreadCount, onOpenNotifs, onG
     })
   }
 
-  const paidInView  = paidInMonth(viewMonth, viewYear).sort((a, b) => {
-    const da = a.paid_at ? new Date(a.paid_at) : dateOf(a.due_date)
-    const db = b.paid_at ? new Date(b.paid_at) : dateOf(b.due_date)
-    return db - da
-  })
+  const paidInView = viewMode === 'periodo'
+    ? [...gastosPeriodo].sort((a, b) => {
+        const da = a.paid_at ? new Date(a.paid_at) : dateOf(a.due_date)
+        const db = b.paid_at ? new Date(b.paid_at) : dateOf(b.due_date)
+        return db - da
+      })
+    : paidInMonth(viewMonth, viewYear).sort((a, b) => {
+        const da = a.paid_at ? new Date(a.paid_at) : dateOf(a.due_date)
+        const db = b.paid_at ? new Date(b.paid_at) : dateOf(b.due_date)
+        return db - da
+      })
   const totalInView = paidInView.reduce((a, p) => a + Number(p.amount), 0)
 
   function handleMenuAction(action, payment) {
@@ -793,34 +800,39 @@ export function PaymentsPage({ payments, profile, unreadCount, onOpenNotifs, onG
             <span style={{ fontSize: 15, fontWeight: 700, color: 'var(--text)' }}>Pagos</span>
           </div>
 
-          {/* Filtros Mes y Año */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
-            <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--text)' }}>Filtros</span>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <span style={{ fontSize: 12, fontWeight: 500, color: 'var(--text)' }}>Mes:</span>
-              <select
-                value={viewMonth}
-                onChange={e => setViewMonth(Number(e.target.value))}
-                style={{ padding: '5px 8px', borderRadius: 5, border: '0.5px solid var(--border)', background: 'var(--surface)', color: 'var(--text)', fontSize: 12, fontWeight: 500, fontFamily: 'DM Sans, sans-serif', outline: 'none', cursor: 'pointer' }}
-              >
-                {MONTHS.map((m, i) => <option key={i} value={i}>{m}</option>)}
-              </select>
+          {/* Filtros */}
+          <div style={{ marginBottom: 12 }}>
+            <div style={{ display: 'flex', gap: 6, marginBottom: 8 }}>
+              {[['mes','Por mes'],['periodo','Periodo actual']].map(([val, label]) => (
+                <button key={val} onClick={() => setViewMode(val)}
+                  style={{ padding: '6px 14px', borderRadius: 20, border: 'none', background: viewMode === val ? 'var(--accent)' : 'var(--surface)', color: viewMode === val ? 'var(--surface)' : 'var(--text)', fontWeight: viewMode === val ? 600 : 400, fontSize: 12, fontFamily: 'DM Sans, sans-serif', cursor: 'pointer' }}>
+                  {label}
+                </button>
+              ))}
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <span style={{ fontSize: 12, fontWeight: 500, color: 'var(--text)' }}>Año:</span>
-              <select
-                value={viewYear}
-                onChange={e => setViewYear(Number(e.target.value))}
-                style={{ padding: '5px 8px', borderRadius: 5, border: '0.5px solid var(--border)', background: 'var(--surface)', color: 'var(--text)', fontSize: 12, fontWeight: 500, fontFamily: 'DM Sans, sans-serif', outline: 'none', cursor: 'pointer' }}
-              >
-                {availableYears.map(y => <option key={y} value={y}>{y}</option>)}
-              </select>
-            </div>
+            {viewMode === 'mes' && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <span style={{ fontSize: 12, fontWeight: 500, color: 'var(--text)' }}>Mes:</span>
+                  <select value={viewMonth} onChange={e => setViewMonth(Number(e.target.value))}
+                    style={{ padding: '5px 8px', borderRadius: 5, border: '0.5px solid var(--border)', background: 'var(--surface)', color: 'var(--text)', fontSize: 12, fontFamily: 'DM Sans, sans-serif', outline: 'none', cursor: 'pointer' }}>
+                    {MONTHS.map((m, i) => <option key={i} value={i}>{m}</option>)}
+                  </select>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <span style={{ fontSize: 12, fontWeight: 500, color: 'var(--text)' }}>Año:</span>
+                  <select value={viewYear} onChange={e => setViewYear(Number(e.target.value))}
+                    style={{ padding: '5px 8px', borderRadius: 5, border: '0.5px solid var(--border)', background: 'var(--surface)', color: 'var(--text)', fontSize: 12, fontFamily: 'DM Sans, sans-serif', outline: 'none', cursor: 'pointer' }}>
+                    {availableYears.map(y => <option key={y} value={y}>{y}</option>)}
+                  </select>
+                </div>
+              </div>
+            )}
           </div>
 
           {paidInView.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '32px 0', fontSize: 13, fontWeight: 500, color: 'var(--text)' }}>
-              Sin pagos realizados en {MONTHS[viewMonth]} {viewYear}
+              {viewMode === 'periodo' ? 'Sin pagos realizados en el periodo actual' : `Sin pagos realizados en ${MONTHS[viewMonth]} ${viewYear}`}
             </div>
           ) : (
             <>
