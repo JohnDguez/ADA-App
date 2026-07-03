@@ -1,4 +1,5 @@
 import { Bell } from 'lucide-react'
+import { useTimeOfDay } from '../hooks/useTimeOfDay'
 
 function greeting() {
   const h = new Date().getHours()
@@ -15,12 +16,41 @@ function nameFontSize(name) {
   return 13
 }
 
+const HEADER_IMAGES = {
+  amanecer: '/header-amanecer.png',
+  mediodia: '/header-mediodia.png',
+  atardecer: '/header-atardecer.png',
+  noche: '/header-noche.png',
+}
+
 export function PageHeader({ profile, unreadCount, onOpenNotifs }) {
   const initials = (profile?.name || 'U').slice(0, 2).toUpperCase()
+  const timeOfDay = useTimeOfDay(profile?.timezone)
 
   return (
-    <div style={{ background: 'url(/Header_bg.jpg) center/cover no-repeat', height: 140, display: 'flex', alignItems: 'center', padding: '0 20px', paddingBottom: 24 }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+    <div style={{ position: 'relative', height: 140, display: 'flex', alignItems: 'center', padding: '0 20px', paddingBottom: 24, overflow: 'hidden' }}>
+
+      {/* Fondo pixel art con crossfade según franja horaria */}
+      {Object.entries(HEADER_IMAGES).map(([key, src]) => (
+        <img
+          key={key}
+          src={src}
+          alt=""
+          style={{
+            position: 'absolute',
+            inset: 0,
+            width: '100%',
+            height: '100%',
+            objectFit: 'cover',
+            opacity: timeOfDay === key ? 1 : 0,
+            transition: 'opacity 1.5s ease',
+            pointerEvents: 'none',
+            zIndex: 0,
+          }}
+        />
+      ))}
+
+      <div style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
 
         {/* Avatar + saludo + nombre */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, flex: 1, minWidth: 0 }}>
