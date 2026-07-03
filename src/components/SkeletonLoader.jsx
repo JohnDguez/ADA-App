@@ -60,7 +60,7 @@ export function SkeletonLoader() {
         </div>
 
         {/* Tarjetas de pago */}
-        <div style={{ background: '#D9D9D9', borderRadius: 12, padding: 12, display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 20 }}>
+        <div style={{ background: 'var(--section-bg)', borderRadius: 12, padding: 12, display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 20 }}>
           {[0, 1, 2].map(i => (
             <div key={i} style={{ background: 'var(--surface)', borderRadius: 12, padding: '12px 10px', display: 'flex', alignItems: 'center', gap: 10 }}>
               {/* Border izquierdo */}
@@ -103,7 +103,7 @@ export function SkeletonLoader() {
         left: '50%', transform: 'translateX(-50%)',
         width: 'calc(100% - 32px)', maxWidth: 388,
         height: 56, borderRadius: 10,
-        background: '#014BA3',
+        background: 'var(--nav-bg)',
         display: 'flex', alignItems: 'center',
         justifyContent: 'space-around',
         padding: '0 16px',
