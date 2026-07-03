@@ -151,8 +151,9 @@ export function PaymentsPage({ payments, profile, unreadCount, onOpenNotifs, onG
     // Calcular remanente del periodo anterior
     const prev = prevPeriod(profile)
     const gastosPrev = paidPayments.filter(p => {
-      const d = dateOf(p.due_date)
-      return d >= prev.start && d <= prev.end
+      if (!p.paid_at) return false
+      const paidDate = dateOf(new Date(p.paid_at).toISOString().split('T')[0])
+      return paidDate >= prev.start && paidDate <= prev.end
     })
     const totalGastosPrev = gastosPrev.reduce((a, p) => a + Number(p.amount), 0)
     const salario = Number(profile.salary_amount)
