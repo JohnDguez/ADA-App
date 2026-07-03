@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react'
-import { Pause, Play, Trash2, Search, ChevronDown, CreditCard, Pencil } from 'lucide-react'
+import { Pause, Play, Trash2, Search, ChevronDown, CreditCard, Pencil, MoreVertical } from 'lucide-react'
 import { PageHeader } from '../components/PageHeader'
 import { fmt, RECUR_FREQ, dateOf, MONTHS_SHORT } from '../lib/utils'
 
@@ -31,6 +31,7 @@ export function RecurrentsPage({ payments, profile, unreadCount, onOpenNotifs, o
   const [filterType,    setFilterType]    = useState('todos')
   const [expandedCats,  setExpandedCats]  = useState({})
   const [confirmDelete, setConfirmDelete] = useState(null)
+  const [openMenu,      setOpenMenu]      = useState(null)
 
   // Masters: registros raíz de cada pago recurrente
   const masters = useMemo(() =>
@@ -91,8 +92,38 @@ export function RecurrentsPage({ payments, profile, unreadCount, onOpenNotifs, o
   }
 
   return (
-    <div style={{ paddingBottom: 120, background: 'var(--bg)', minHeight: '100vh' }}>
+    <div style={{ paddingBottom: 120, background: 'var(--bg)', minHeight: '100vh' }} onClick={() => setOpenMenu(null)}>
       <PageHeader profile={profile} unreadCount={unreadCount} onOpenNotifs={onOpenNotifs} onGoSettings={onGoSettings} />
+
+      {/* Menú contextual flotante */}
+      {openMenu && (
+        <div
+          onClick={e => e.stopPropagation()}
+          style={{
+            position: 'fixed',
+            top: openMenu.top,
+            right: openMenu.right,
+            zIndex: 999,
+            background: 'var(--menu-bg)',
+            border: '0.5px solid var(--border)',
+            borderRadius: 'var(--radius-sm)',
+            boxShadow: '0 4px 16px rgba(0,0,0,0.12)',
+            minWidth: 180,
+            overflow: 'hidden',
+          }}
+        >
+          {(() => {
+            const master = masters.find(m => m.id === openMenu.id)
+            if (!master) return null
+            return (
+              <>
+                <MenuItem icon={<Pencil size={14} />} label="Editar" onClick={() => { onEdit && onEdit(master); setOpenMenu(null) }} />
+                <MenuItem icon={<Trash2 size={14} />} label="Eliminar" onClick={() => { setConfirmDelete(master.id); setOpenMenu(null) }} danger />
+              </>
+            )
+          })()}
+        </div>
+      )}
 
       <div style={{ background: 'var(--bg)', borderRadius: '24px 24px 0 0', marginTop: -24, position: 'relative', zIndex: 10 }}>
         <div className={slideClass}>
@@ -218,22 +249,26 @@ export function RecurrentsPage({ payments, profile, unreadCount, onOpenNotifs, o
                             )}
 
                             {/* Botones */}
-                            <div style={{ display: 'flex', gap: 5, flexShrink: 0 }}>
-                              <ActionBtn onClick={() => onEdit && onEdit(master)} color="var(--accent-soft)">
-                                <Pencil size={13} color="var(--accent)" />
-                              </ActionBtn>
+                            <div style={{ display: 'flex', gap: 5, flexShrink: 0, alignItems: 'center' }}>
                               <ActionBtn
                                 onClick={() => master.paused ? onResume(master.id) : onPause(master.id)}
-                                color={master.paused ? 'var(--paid-soft)' : 'var(--warning-soft)'}
+                                color={master.paused ? 'var(--paid)' : 'var(--warning)'}
                               >
                                 {master.paused
-                                  ? <Play size={13} color="var(--paid)" />
-                                  : <Pause size={13} color="var(--warning)" />
+                                  ? <Play size={13} color="#fff" />
+                                  : <Pause size={13} color="#fff" />
                                 }
                               </ActionBtn>
-                              <ActionBtn onClick={() => setConfirmDelete(isConfirming ? null : master.id)} color="var(--danger-soft)">
-                                <Trash2 size={13} color="var(--danger)" />
-                              </ActionBtn>
+                              <button
+                                onClick={e => {
+                                  e.stopPropagation()
+                                  const rect = e.currentTarget.getBoundingClientRect()
+                                  setOpenMenu(openMenu?.id === master.id ? null : { id: master.id, top: rect.bottom + 4, right: window.innerWidth - rect.right })
+                                }}
+                                style={{ width: 32, height: 32, borderRadius: 8, border: 'none', background: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0 }}
+                              >
+                                <MoreVertical size={16} color="var(--text)" />
+                              </button>
                             </div>
                           </div>
 
@@ -273,6 +308,14 @@ function ActionBtn({ onClick, color, children }) {
   return (
     <button onClick={onClick} style={{ width: 32, height: 32, borderRadius: 8, border: 'none', background: color, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0 }}>
       {children}
+    </button>
+  )
+}
+
+function MenuItem({ icon, label, onClick, danger }) {
+  return (
+    <button onClick={onClick} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', background: 'none', border: 'none', borderBottom: '0.5px solid var(--bg)', fontSize: 13, fontWeight: 500, color: danger ? 'var(--danger)' : 'var(--text)', fontFamily: 'DM Sans, sans-serif', cursor: 'pointer', textAlign: 'left' }}>
+      <span style={{ color: danger ? 'var(--danger)' : 'var(--text)' }}>{icon}</span>{label}
     </button>
   )
 }

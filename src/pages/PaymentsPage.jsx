@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { ChevronLeft, ChevronRight, MoreVertical, Plus, CircleDollarSign, ChevronDown, ChevronUp } from 'lucide-react'
+import { ChevronLeft, ChevronRight, MoreVertical, Plus, CircleDollarSign, ChevronDown, ChevronUp, Pencil, RotateCcw, Trash2 } from 'lucide-react'
 import { PageHeader } from '../components/PageHeader'
 import { fmt, dateOf, MONTHS, MONTHS_SHORT, CATEGORIES, cobroPeriod, addDays } from '../lib/utils'
 import { supabase } from '../lib/supabase'
@@ -365,7 +365,7 @@ export function PaymentsPage({ payments, profile, unreadCount, onOpenNotifs, onG
             background: 'var(--menu-bg)',
             border: '0.5px solid var(--border)',
             borderRadius: 'var(--radius-sm)',
-            boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
+            boxShadow: '0 4px 16px rgba(0,0,0,0.12)',
             minWidth: 180,
             overflow: 'hidden',
           }}
@@ -375,15 +375,9 @@ export function PaymentsPage({ payments, profile, unreadCount, onOpenNotifs, onG
             if (!p) return null
             return (
               <>
-                <button onClick={() => handleMenuAction('edit', p)} style={{ width: '100%', padding: '11px 14px', background: 'none', border: 'none', textAlign: 'left', fontSize: 13, fontWeight: 500, color: 'var(--text)', cursor: 'pointer', display: 'block', borderBottom: '0.5px solid var(--bg)' }}>
-                  Editar
-                </button>
-                <button onClick={() => handleMenuAction('unpaid', p)} style={{ width: '100%', padding: '11px 14px', background: 'none', border: 'none', textAlign: 'left', fontSize: 13, fontWeight: 500, color: 'var(--text)', cursor: 'pointer', display: 'block', borderBottom: '0.5px solid var(--bg)' }}>
-                  Marcar como no pagado
-                </button>
-                <button onClick={() => handleMenuAction('delete', p)} style={{ width: '100%', padding: '11px 14px', background: 'none', border: 'none', textAlign: 'left', fontSize: 13, fontWeight: 500, color: 'var(--danger)', cursor: 'pointer', display: 'block' }}>
-                  Eliminar
-                </button>
+                <MenuItem icon={<Pencil size={14} />} label="Editar" onClick={() => handleMenuAction('edit', p)} />
+                <MenuItem icon={<RotateCcw size={14} />} label="Marcar como no pagado" onClick={() => handleMenuAction('unpaid', p)} />
+                <MenuItem icon={<Trash2 size={14} />} label="Eliminar" onClick={() => handleMenuAction('delete', p)} danger />
               </>
             )
           })()}
@@ -909,6 +903,14 @@ export function PaymentsPage({ payments, profile, unreadCount, onOpenNotifs, onG
         </div>
       </div>
     </div>
+  )
+}
+
+function MenuItem({ icon, label, onClick, danger }) {
+  return (
+    <button onClick={onClick} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', background: 'none', border: 'none', borderBottom: '0.5px solid var(--bg)', fontSize: 13, fontWeight: 500, color: danger ? 'var(--danger)' : 'var(--text)', fontFamily: 'DM Sans, sans-serif', cursor: 'pointer', textAlign: 'left' }}>
+      <span style={{ color: danger ? 'var(--danger)' : 'var(--text)' }}>{icon}</span>{label}
+    </button>
   )
 }
 
