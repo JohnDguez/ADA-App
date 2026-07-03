@@ -274,6 +274,21 @@ export function PaymentsPage({ payments, profile, unreadCount, onOpenNotifs, onG
   const nonZeroMonths = chartTotals.filter(t => t > 0).length
   const avgMonthly    = nonZeroMonths > 0 ? grandTotal / nonZeroMonths : 0
 
+  // Categorías con gasto real dentro del rango de meses activo (3/6/12 meses)
+  const chartMonthKeys  = new Set(chartMonths.map(m => `${m.year}-${m.month}`))
+  const catsWithExpense = new Set(
+    paidPayments
+      .filter(p => {
+        const d = p.paid_at ? new Date(p.paid_at) : dateOf(p.due_date)
+        return chartMonthKeys.has(`${d.getFullYear()}-${d.getMonth()}`)
+      })
+      .map(p => p.category)
+  )
+  const visibleCats = [
+    ...CATEGORIES.filter(c => catsWithExpense.has(c)),
+    ...[...catsWithExpense].filter(c => !CATEGORIES.includes(c)),
+  ]
+
   // ── Por categoría ─────────────────────────────────────────────────────────
   function getCatTotal(cat) {
     const d = p => p.paid_at ? new Date(p.paid_at) : dateOf(p.due_date)
@@ -669,7 +684,7 @@ export function PaymentsPage({ payments, profile, unreadCount, onOpenNotifs, onG
         {/* Chips de categoría */}
         <div style={{ padding: '0 16px 15px', display: 'flex', gap: 6, overflowX: 'auto', msOverflowStyle: 'none', scrollbarWidth: 'none' }}>
           <FilterChip label="Todos" active={!selectedCat} onClick={() => setSelectedCat(null)} />
-          {CATEGORIES.map(c => (
+          {visibleCats.map(c => (
             <FilterChip key={c} label={c} active={selectedCat === c} onClick={() => setSelectedCat(selectedCat === c ? null : c)} />
           ))}
         </div>
@@ -694,7 +709,7 @@ export function PaymentsPage({ payments, profile, unreadCount, onOpenNotifs, onG
         {/* Selector de rango */}
         <div style={{ padding: '0 16px 10px', display: 'flex', gap: 6 }}>
           {[3, 6, 12].map(n => (
-            <FilterChip key={n} label={`${n} meses`} active={monthsBack === n} onClick={() => setMonthsBack(n)} />
+            <FilterChip key={n} label={`${n} meses`} active={monthsBack === n} onClick={() => { setMonthsBack(n); setSelectedCat(null) }} />
           ))}
         </div>
 
