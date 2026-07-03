@@ -75,7 +75,7 @@ function prevPeriod(profile) {
   return { start: t, end: prevEnd }
 }
 
-export function PaymentsPage({ payments, profile, unreadCount, onOpenNotifs, onGoSettings, onMarkUnpaid, onDelete, onDeleteDirect, onUpdateProfile, slideClass }) {
+export function PaymentsPage({ payments, profile, unreadCount, onOpenNotifs, onGoSettings, onMarkUnpaid, onDelete, onDeleteDirect, onUpdateProfile, onEdit, slideClass }) {
   const now = new Date()
 
   const [monthsBack,  setMonthsBack]  = useState(3)
@@ -327,6 +327,7 @@ export function PaymentsPage({ payments, profile, unreadCount, onOpenNotifs, onG
 
   function handleMenuAction(action, payment) {
     setOpenMenu(null)
+    if (action === 'edit') onEdit && onEdit(payment)
     if (action === 'unpaid') onMarkUnpaid && onMarkUnpaid(payment.id)
     if (action === 'delete') {
       if (payment.is_paid) {
@@ -373,6 +374,9 @@ export function PaymentsPage({ payments, profile, unreadCount, onOpenNotifs, onG
             if (!p) return null
             return (
               <>
+                <button onClick={() => handleMenuAction('edit', p)} style={{ width: '100%', padding: '11px 14px', background: 'none', border: 'none', textAlign: 'left', fontSize: 13, fontWeight: 500, color: 'var(--text)', cursor: 'pointer', display: 'block', borderBottom: '0.5px solid var(--bg)' }}>
+                  Editar
+                </button>
                 <button onClick={() => handleMenuAction('unpaid', p)} style={{ width: '100%', padding: '11px 14px', background: 'none', border: 'none', textAlign: 'left', fontSize: 13, fontWeight: 500, color: 'var(--text)', cursor: 'pointer', display: 'block', borderBottom: '0.5px solid var(--bg)' }}>
                   Marcar como no pagado
                 </button>
