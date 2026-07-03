@@ -3,7 +3,7 @@ import { Trophy } from 'lucide-react'
 import { PayCard } from '../components/PayCard'
 import { PageHeader } from '../components/PageHeader'
 import { NotificationsPanel } from '../components/NotificationsPanel'
-import { fmt, cobroPeriod, getPagarEsteCobro, daysDiff, dateOf, MONTHS, MONTHS_SHORT } from '../lib/utils'
+import { fmt, cobroPeriod, nextCobroPeriod, getPagarEsteCobro, daysDiff, dateOf, MONTHS, MONTHS_SHORT } from '../lib/utils'
 
 function periodRange(cfg) {
   const { start, end } = cobroPeriod(cfg)
@@ -12,13 +12,31 @@ function periodRange(cfg) {
   return `${start.getDate()} ${MONTHS_SHORT[start.getMonth()]} – ${end.getDate()} ${MONTHS[end.getMonth()]}`
 }
 
+function nextPeriodRange(cfg) {
+  const { start, end } = nextCobroPeriod(cfg)
+  const sameMonth = start.getMonth() === end.getMonth()
+  if (sameMonth) return `${start.getDate()} – ${end.getDate()} ${MONTHS[end.getMonth()]}`
+  return `${start.getDate()} ${MONTHS_SHORT[start.getMonth()]} – ${end.getDate()} ${MONTHS[end.getMonth()]}`
+}
+
 export function HomePage({ payments, profile, onAdd, onMarkPaid, onMarkUnpaid, onEdit, onDelete, onPostpone, onAdvance, onGoSettings, notifications, unreadCount, onMarkAsRead, onMarkAllAsRead, onDeleteNotif, onClearAllNotifs, slideClass }) {
-  const [notifOpen,   setNotifOpen]   = useState(false)
-  const [activeCard,  setActiveCard]  = useState(0)
-  const [touchStartX, setTouchStartX] = useState(null)
+  const [notifOpen,      setNotifOpen]      = useState(false)
+  const [activeCard,     setActiveCard]     = useState(0)
+  const [touchStartX,    setTouchStartX]    = useState(null)
+  const [showNextPeriod, setShowNextPeriod] = useState(() =>
+    localStorage.getItem('ada_show_next_period') !== 'false'
+  )
+
+  function toggleNextPeriod() {
+    const next = !showNextPeriod
+    setShowNextPeriod(next)
+    localStorage.setItem('ada_show_next_period', String(next))
+  }
 
   const now        = new Date()
   const { end }    = cobroPeriod(profile)
+  const { start: nextStart, end: nextEnd } = nextCobroPeriod(profile)
+
   const pagarEsteCobro = getPagarEsteCobro(payments, profile)
   const vencidos   = pagarEsteCobro.filter(p => daysDiff(p.due_date) < 0).sort((a, b) => dateOf(a.due_date) - dateOf(b.due_date))
   const delPeriodo = pagarEsteCobro.filter(p => daysDiff(p.due_date) >= 0).sort((a, b) => dateOf(a.due_date) - dateOf(b.due_date))
@@ -37,18 +55,17 @@ export function HomePage({ payments, profile, onAdd, onMarkPaid, onMarkUnpaid, o
     return d.getMonth() === thisMonth && d.getFullYear() === thisYear && !p.paused
   }).reduce((a, p) => a + Number(p.amount), 0)
 
+  // Solo pagos DENTRO del próximo periodo (no todos los futuros)
   const upcoming = payments.filter(p => {
-    if (p.is_paid || p.paused || p.postponed) return false
-    return dateOf(p.due_date) > end
-  }).sort((a, b) => dateOf(a.due_date) - dateOf(b.due_date)).slice(0, 6)
+    if (p.is_paid || p.paused || p.postponed || p.is_master) return false
+    const d = dateOf(p.due_date)
+    return d >= nextStart && d <= nextEnd
+  }).sort((a, b) => dateOf(a.due_date) - dateOf(b.due_date))
 
   const handlers = { onMarkPaid, onMarkUnpaid, onEdit, onDelete, onPostpone, onAdvance }
 
-  function handleNavigate() { window.scrollTo(0, 0) }
-
   return (
     <div style={{ paddingBottom: 120, background: 'var(--bg)', minHeight: '100vh' }}>
-
       <PageHeader
         profile={profile}
         unreadCount={unreadCount}
@@ -56,7 +73,6 @@ export function HomePage({ payments, profile, onAdd, onMarkPaid, onMarkUnpaid, o
         onGoSettings={onGoSettings}
       />
 
-      {/* Contenedor principal */}
       <div style={{ background: 'var(--bg)', borderRadius: '24px 24px 0 0', marginTop: -24, position: 'relative', zIndex: 10 }}>
         <div className={slideClass}>
 
@@ -77,7 +93,9 @@ export function HomePage({ payments, profile, onAdd, onMarkPaid, onMarkUnpaid, o
 
               {/* Card 1 — Periodo actual */}
               <div style={{ minWidth: '100%', background: 'var(--accent)', borderRadius: 16, padding: '18px 20px' }}>
-                <div style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.75)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 6 }}>Pagos de este periodo</div>
+                <div style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.75)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 6 }}>
+                  Pagos de este periodo
+                </div>
                 {pendingAmt === 0 ? (
                   <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14 }}>
                     <Trophy size={36} color="#fff" strokeWidth={1.8} />
@@ -100,7 +118,9 @@ export function HomePage({ payments, profile, onAdd, onMarkPaid, onMarkUnpaid, o
 
               {/* Card 2 — Este mes */}
               <div style={{ minWidth: '100%', background: 'var(--accent)', borderRadius: 16, padding: '18px 20px' }}>
-                <div style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.75)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 6 }}>Por pagar este mes</div>
+                <div style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.75)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 6 }}>
+                  Por pagar este mes
+                </div>
                 <div style={{ fontSize: 38, fontWeight: 700, color: '#fff', letterSpacing: '-1px', lineHeight: 1, marginBottom: 14 }}>{fmt(totalThisMonth)}</div>
                 <div style={{ display: 'flex', gap: 8 }}>
                   <span style={{ fontSize: 12, fontWeight: 600, background: 'rgba(255,255,255,0.2)', color: '#fff', padding: '4px 10px', borderRadius: 20 }}>
@@ -108,23 +128,18 @@ export function HomePage({ payments, profile, onAdd, onMarkPaid, onMarkUnpaid, o
                   </span>
                   {variableThisMonth > 0 && (
                     <span style={{ fontSize: 12, fontWeight: 600, background: 'rgba(255,255,255,0.2)', color: '#fff', padding: '4px 10px', borderRadius: 20 }}>
-                      {variableThisMonth} pago{variableThisMonth !== 1 ? 's' : ''} variables
+                      {variableThisMonth} variable{variableThisMonth !== 1 ? 's' : ''}
                     </span>
                   )}
                 </div>
               </div>
-
             </div>
           </div>
 
-          {/* Dots indicadores */}
+          {/* Dots */}
           <div style={{ display: 'flex', justifyContent: 'center', gap: 6, marginTop: 10 }}>
             {[0, 1].map(i => (
-              <div
-                key={i}
-                onClick={() => setActiveCard(i)}
-                style={{ width: activeCard === i ? 18 : 6, height: 6, borderRadius: 3, background: activeCard === i ? 'var(--accent)' : 'var(--border)', transition: 'all .25s', cursor: 'pointer' }}
-              />
+              <div key={i} onClick={() => setActiveCard(i)} style={{ width: activeCard === i ? 18 : 6, height: 6, borderRadius: 3, background: activeCard === i ? 'var(--accent)' : 'var(--border)', transition: 'all .25s', cursor: 'pointer' }} />
             ))}
           </div>
         </div>
@@ -143,7 +158,7 @@ export function HomePage({ payments, profile, onAdd, onMarkPaid, onMarkUnpaid, o
             </div>
           )}
 
-          {/* Próximos a vencer */}
+          {/* Próximos a vencer (periodo actual) */}
           <div style={{ marginTop: 20 }}>
             <SectionHead left="Próximos a vencer" right={`Periodo ${periodRange(profile)}`} />
             {delPeriodo.length === 0
@@ -154,20 +169,32 @@ export function HomePage({ payments, profile, onAdd, onMarkPaid, onMarkUnpaid, o
             }
           </div>
 
-          {/* Próximos pagos */}
-          {upcoming.length > 0 && (
-            <div style={{ marginTop: 20 }}>
-              <SectionHead left="Próximos pagos" right="Próximo periodo" />
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                {upcoming.map(p => <PayCard key={p.id} payment={p} cfg={profile} {...handlers} borderLeft="var(--accent)" />)}
+          {/* Próximo periodo — toggle + filtro exacto al periodo */}
+          <div style={{ marginTop: 20, marginBottom: 4 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 2 }}>
+              <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)' }}>Próximo periodo</span>
+              <div onClick={toggleNextPeriod} style={{ cursor: 'pointer' }}>
+                <div className="toggle-track" style={{ background: showNextPeriod ? 'var(--accent)' : 'var(--border)' }}>
+                  <div className="toggle-thumb" style={{ left: showNextPeriod ? 19 : 3 }} />
+                </div>
               </div>
             </div>
+            <span style={{ fontSize: 11, fontWeight: 400, color: 'var(--text)' }}>
+              {nextPeriodRange(profile)}
+            </span>
+          </div>
+
+          {showNextPeriod && (
+            upcoming.length === 0
+              ? <Empty text="Sin pagos registrados para el próximo periodo" />
+              : <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 8 }}>
+                  {upcoming.map(p => <PayCard key={p.id} payment={p} cfg={profile} {...handlers} borderLeft="var(--accent)" />)}
+                </div>
           )}
         </div>
         </div>
       </div>
 
-      {/* Panel de notificaciones */}
       <NotificationsPanel
         open={notifOpen}
         onClose={() => setNotifOpen(false)}
@@ -177,7 +204,7 @@ export function HomePage({ payments, profile, onAdd, onMarkPaid, onMarkUnpaid, o
         onMarkAllAsRead={onMarkAllAsRead}
         onDelete={onDeleteNotif}
         onClearAll={onClearAllNotifs}
-        onNavigate={handleNavigate}
+        onNavigate={() => window.scrollTo(0, 0)}
       />
     </div>
   )

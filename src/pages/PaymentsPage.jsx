@@ -11,6 +11,10 @@ const CAT_COLOR = {
   'Renta':         'var(--cat-renta)',
   'Seguros':       'var(--cat-seguros)',
   'Alimentación':  'var(--cat-alimentacion)',
+  'Transporte':    'var(--cat-transporte)',
+  'Medicina':      'var(--cat-medicina)',
+  'Doctor':        'var(--cat-doctor)',
+  'Mantenimiento': 'var(--cat-mantenimiento)',
   'Otros':         'var(--cat-otros)',
 }
 
@@ -229,9 +233,8 @@ export function PaymentsPage({ payments, profile, unreadCount, onOpenNotifs, onG
   // ── Totales del periodo ───────────────────────────────────────────────────
   const { start: periodStart, end: periodEnd } = cobroPeriod(profile || {})
   const gastosPeriodo = paidPayments.filter(p => {
-    if (!p.paid_at) return false
-    const paidDate = dateOf(new Date(p.paid_at).toISOString().split('T')[0])
-    return paidDate >= periodStart && paidDate <= periodEnd
+    const d = dateOf(p.due_date)
+    return d >= periodStart && d <= periodEnd
   })
   const totalGastos  = gastosPeriodo.reduce((a, p) => a + Number(p.amount), 0)
   const totalExtras  = periodIncomes.reduce((a, i) => a + Number(i.amount), 0)
@@ -255,10 +258,7 @@ export function PaymentsPage({ payments, profile, unreadCount, onOpenNotifs, onG
 
   function chartTotalInMonth(month, year) {
     return chartFiltered
-      .filter(p => {
-        const d = p.paid_at ? new Date(p.paid_at) : dateOf(p.due_date)
-        return d.getMonth() === month && d.getFullYear() === year
-      })
+      .filter(p => { const d = dateOf(p.due_date); return d.getMonth() === month && d.getFullYear() === year })
       .reduce((a, p) => a + Number(p.amount), 0)
   }
 
@@ -270,19 +270,18 @@ export function PaymentsPage({ payments, profile, unreadCount, onOpenNotifs, onG
 
   // ── Por categoría ─────────────────────────────────────────────────────────
   function getCatTotal(cat) {
-    const d = p => p.paid_at ? new Date(p.paid_at) : dateOf(p.due_date)
     if (catRange === 'mes') {
       return paidPayments
-        .filter(p => p.category === cat && d(p).getMonth() === now.getMonth() && d(p).getFullYear() === now.getFullYear())
+        .filter(p => { const d = dateOf(p.due_date); return p.category === cat && d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear() })
         .reduce((a, p) => a + Number(p.amount), 0)
     }
     if (catRange === 'periodo') {
-      return gastosPeriodo
-        .filter(p => p.category === cat)
+      return paidPayments
+        .filter(p => { const d = dateOf(p.due_date); return p.category === cat && d >= periodStart && d <= periodEnd })
         .reduce((a, p) => a + Number(p.amount), 0)
     }
     return paidPayments
-      .filter(p => p.category === cat && d(p).getFullYear() === now.getFullYear())
+      .filter(p => { const d = dateOf(p.due_date); return p.category === cat && d.getFullYear() === now.getFullYear() })
       .reduce((a, p) => a + Number(p.amount), 0)
   }
 
@@ -294,24 +293,17 @@ export function PaymentsPage({ payments, profile, unreadCount, onOpenNotifs, onG
   const maxCat = Math.max(...catData.map(d => d.total), 1)
 
   // ── Pagos realizados ──────────────────────────────────────────────────────
-  const availableYears = [...new Set(paidPayments.map(p => {
-    const d = p.paid_at ? new Date(p.paid_at) : dateOf(p.due_date)
-    return d.getFullYear()
-  }))].sort((a, b) => b - a)
+  const availableYears = [...new Set(paidPayments.map(p => dateOf(p.due_date).getFullYear()))].sort((a, b) => b - a)
   if (!availableYears.includes(viewYear)) availableYears.unshift(viewYear)
 
   function paidInMonth(month, year) {
     return paidPayments.filter(p => {
-      const d = p.paid_at ? new Date(p.paid_at) : dateOf(p.due_date)
+      const d = dateOf(p.due_date)
       return d.getMonth() === month && d.getFullYear() === year
     })
   }
 
-  const paidInView  = paidInMonth(viewMonth, viewYear).sort((a, b) => {
-    const da = a.paid_at ? new Date(a.paid_at) : dateOf(a.due_date)
-    const db = b.paid_at ? new Date(b.paid_at) : dateOf(b.due_date)
-    return db - da
-  })
+  const paidInView  = paidInMonth(viewMonth, viewYear).sort((a, b) => dateOf(b.due_date) - dateOf(a.due_date))
   const totalInView = paidInView.reduce((a, p) => a + Number(p.amount), 0)
 
   function handleMenuAction(action, payment) {
@@ -542,7 +534,7 @@ export function PaymentsPage({ payments, profile, unreadCount, onOpenNotifs, onG
         <div className={slideClass}>
 
         {/* Zona de título con fondo diferente */}
-        <div style={{ background: 'var(--title-bg)', borderRadius: '24px 24px 0 0', padding: '20px 16px 18px', marginBottom: 16 }}>
+        <div style={{ background: '#E8E8E8', borderRadius: '24px 24px 0 0', padding: '20px 16px 18px', marginBottom: 16 }}>
           <div style={{ fontSize: 22, fontWeight: 700, color: 'var(--text)' }}>Mis gastos e ingresos</div>
           <div style={{ fontSize: 13, fontWeight: 400, color: 'var(--text)', marginTop: 4 }}>Historial, análisis y balance de tus finanzas del periodo.</div>
         </div>
@@ -716,13 +708,13 @@ export function PaymentsPage({ payments, profile, unreadCount, onOpenNotifs, onG
               const heightPct = (total / maxChart) * 100
               const isCurrent = m.month === now.getMonth() && m.year === now.getFullYear()
               const barColor  = selectedCat ? CAT_COLOR[selectedCat] : 'var(--accent)'
+              const barMuted  = selectedCat ? (CAT_COLOR[selectedCat] + '55') : 'var(--accent-border)'
               return (
                 <div key={i} style={{ flex: 1, height: '100%', display: 'flex', alignItems: 'flex-end' }}>
                   <div style={{
                     width: '100%',
                     height: `${Math.max(heightPct, total > 0 ? 3 : 0)}%`,
-                    background: isCurrent ? barColor : (selectedCat ? CAT_COLOR[selectedCat] : 'var(--accent-border)'),
-                    opacity: isCurrent ? 1 : (selectedCat ? 0.45 : 1),
+                    background: isCurrent ? barColor : barMuted,
                     borderRadius: '3px 3px 0 0',
                     minHeight: total > 0 ? 3 : 0,
                     transition: 'height .3s',
@@ -861,7 +853,7 @@ export function PaymentsPage({ payments, profile, unreadCount, onOpenNotifs, onG
                       <div style={{ textAlign: 'right', flexShrink: 0 }}>
                         <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text)' }}>{fmt(p.amount)}</div>
                         {p.is_variable && (
-                          <span style={{ fontSize: 9, background: 'var(--label-variable)', color: '#fff', padding: '1px 6px', borderRadius: 4, fontWeight: 600 }}>
+                          <span style={{ fontSize: 9, background: '#6884A9', color: '#fff', padding: '1px 6px', borderRadius: 4, fontWeight: 600 }}>
                             Variable
                           </span>
                         )}
