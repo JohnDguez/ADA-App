@@ -56,8 +56,10 @@ export function RecurrentsPage({ payments, profile, unreadCount, onOpenNotifs, o
     return masters.filter(m => {
       if (filterStatus === 'activos'  &&  m.paused) return false
       if (filterStatus === 'pausados' && !m.paused) return false
-      if (filterType === 'recurrentes'   &&  m.is_installment) return false
-      if (filterType === 'parcialidades' && !m.is_installment) return false
+      // Filtro defensivo: is_installment puede ser null en registros viejos
+      const isInstallment = m.is_installment || (m.total_installments > 0)
+      if (filterType === 'recurrentes'   &&  isInstallment) return false
+      if (filterType === 'parcialidades' && !isInstallment) return false
       if (search.trim()) {
         const q = search.toLowerCase()
         if (!m.name.toLowerCase().includes(q) && !m.category?.toLowerCase().includes(q)) return false
@@ -187,14 +189,14 @@ export function RecurrentsPage({ payments, profile, unreadCount, onOpenNotifs, o
                               </div>
                               <div style={{ fontSize: 11, color: 'var(--text)', marginTop: 2 }}>
                                 {RECUR_FREQ[master.recur_freq] || master.recur_freq}
-                                {!master.is_installment && paid > 0 && ` · ${paid} realizado${paid !== 1 ? 's' : ''}`}
+                                {!(master.is_installment || master.total_installments > 0) && paid > 0 && ` · ${paid} realizado${paid !== 1 ? 's' : ''}`}
                               </div>
-                              {!master.paused && next && !master.is_installment && (
+                              {!master.paused && next && !(master.is_installment || master.total_installments > 0) && (
                                 <div style={{ fontSize: 11, color: 'var(--accent)', fontWeight: 500, marginTop: 2 }}>
                                   Próximo: {formatNextDate(next.due_date)}
                                 </div>
                               )}
-                              {!master.paused && next && master.is_installment && (
+                              {!master.paused && next && (master.is_installment || master.total_installments > 0) && (
                                 <div style={{ fontSize: 11, color: 'var(--accent)', fontWeight: 500, marginTop: 2 }}>
                                   Pago {next.current_installment} de {master.total_installments}
                                 </div>
