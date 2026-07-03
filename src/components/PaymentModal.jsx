@@ -3,7 +3,7 @@ import { CATEGORIES, RECUR_FREQ, WEEKDAYS_SHORT, nextWeekdayDate, nextBiweeklyFr
 import { ConfirmCloseModal } from './ConfirmCloseModal'
 import { FrequencyPicker } from './FrequencyPicker'
 
-export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelete, initial, payments }) {
+export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelete, initial, payments, customCategories = [], onAddCategory }) {
   const [mode,               setMode]               = useState('single')
   const [name,               setName]               = useState('')
   const [amount,             setAmount]             = useState('')
@@ -20,6 +20,8 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
   const [error,              setError]              = useState('')
   const [confirmClose,       setConfirmClose]       = useState(false)
   const [alreadyPaid,        setAlreadyPaid]        = useState(false)
+  const [addingCategory,     setAddingCategory]     = useState(false)
+  const [newCategoryName,    setNewCategoryName]    = useState('')
 
   const isEditingInstallment = !!(initial?.is_installment)
 
@@ -55,7 +57,7 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
       setRecurFreq('monthly'); setWeekday(5)
       setMode('single'); setTotalInstallments(''); setStartFrom('1'); setTotalAmount('')
     }
-    setError(''); setConfirmClose(false); setAlreadyPaid(false)
+    setError(''); setConfirmClose(false); setAlreadyPaid(false); setAddingCategory(false); setNewCategoryName('')
   }, [initial, open])
 
   useEffect(() => {
@@ -106,6 +108,17 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
     setSaving(true)
     await onSave({ name: name.trim(), amount: isVariable ? 0 : parseFloat(amount), due_date: finalDate, category, is_variable: isVariable, is_recurrent: mode === 'recurrent', recur_freq: mode === 'recurrent' ? recurFreq : null, is_paid: alreadyPaid, paid_at: alreadyPaid ? new Date().toISOString() : null, is_installment: false })
     setSaving(false); onClose()
+  }
+
+  const allCategories = [...CATEGORIES, ...customCategories]
+
+  async function handleAddCategory() {
+    const cat = newCategoryName.trim()
+    if (!cat) return
+    if (onAddCategory) await onAddCategory(cat)
+    setCategory(cat)
+    setAddingCategory(false)
+    setNewCategoryName('')
   }
 
   if (!open) return null
@@ -166,7 +179,7 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
 
             <Field label="Categoría">
               <select className="field-input" value={category} onChange={e => setCategory(e.target.value)}>
-                {CATEGORIES.map(c => <option key={c}>{c}</option>)}
+                {allCategories.map(c => <option key={c}>{c}</option>)}
               </select>
             </Field>
 
@@ -232,7 +245,7 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
 
           <Field label="Categoría">
             <select className="field-input" value={category} onChange={e => setCategory(e.target.value)}>
-              {CATEGORIES.map(c => <option key={c}>{c}</option>)}
+              {allCategories.map(c => <option key={c}>{c}</option>)}
             </select>
           </Field>
 
