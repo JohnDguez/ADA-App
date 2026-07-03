@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { CATEGORIES, RECUR_FREQ, WEEKDAYS_SHORT, nextWeekdayDate, nextBiweeklyFromDate, fmt, nameExistsActive } from '../lib/utils'
+import { CATEGORIES, RECUR_FREQ, WEEKDAYS_SHORT, nextWeekdayDate, nextBiweeklyFromDate, nextPeriodDate, fmt, nameExistsActive } from '../lib/utils'
 import { ConfirmCloseModal } from './ConfirmCloseModal'
 import { FrequencyPicker } from './FrequencyPicker'
 
@@ -303,7 +303,16 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
             const perPayment  = numPayments > 0 ? Math.round((totalAmt / numPayments) * 100) / 100 : 0
             const startNum    = parseInt(startFrom) || 1
             const firstDateStr = dueDate  // parcialidades siempre usan fecha fija (date picker)
-            const nextDate    = firstDateStr ? new Date(firstDateStr + 'T12:00:00') : null
+            // El usuario ingresa la fecha del pago #1. Si startFrom > 1,
+            // el primer pago pendiente estará (startFrom - 1) periodos después.
+            let nextDate = firstDateStr ? new Date(firstDateStr + 'T12:00:00') : null
+            if (nextDate && startNum > 1 && firstDateStr) {
+              let dateStr = firstDateStr
+              for (let i = 1; i < startNum; i++) {
+                dateStr = nextPeriodDate(dateStr, recurFreq).toISOString().split('T')[0]
+              }
+              nextDate = new Date(dateStr + 'T12:00:00')
+            }
             return (
               <>
                 <Field label="Monto total a pagar">
