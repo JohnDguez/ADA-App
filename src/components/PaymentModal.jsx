@@ -123,9 +123,9 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
 
   if (!open) return null
 
-  const showDatePicker     = mode === 'single' || (mode === 'recurrent' && monthBasedFreqs.includes(recurFreq)) || (mode === 'installment' && monthBasedFreqs.includes(recurFreq))
-  const showWeekdayPicker  = (mode === 'recurrent' || mode === 'installment') && recurFreq === 'weekly'
-  const showBiweeklyPicker = (mode === 'recurrent' || mode === 'installment') && recurFreq === 'biweekly'
+  const showDatePicker     = mode === 'single' || mode === 'installment' || (mode === 'recurrent' && monthBasedFreqs.includes(recurFreq))
+  const showWeekdayPicker  = mode === 'recurrent' && recurFreq === 'weekly'
+  const showBiweeklyPicker = mode === 'recurrent' && recurFreq === 'biweekly'
   const nextBiDate         = biweeklyDate ? nextBiweeklyFromDate(biweeklyDate) : null
 
   const modalStyle = {
@@ -302,7 +302,7 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
             const numPayments = parseInt(totalInstallments) || 0
             const perPayment  = numPayments > 0 ? Math.round((totalAmt / numPayments) * 100) / 100 : 0
             const startNum    = parseInt(startFrom) || 1
-            const firstDateStr = recurFreq === 'biweekly' ? biweeklyDate : recurFreq === 'weekly' ? nextWeekdayDate(weekday).toISOString().split('T')[0] : dueDate
+            const firstDateStr = dueDate  // parcialidades siempre usan fecha fija (date picker)
             const nextDate    = firstDateStr ? new Date(firstDateStr + 'T12:00:00') : null
             return (
               <>
