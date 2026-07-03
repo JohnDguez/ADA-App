@@ -49,6 +49,7 @@
   --overdue-border:   #B10F17;
   --upcoming-border:  #FAAC2F;
   --soon-color:       #FE7600;
+  --menu-bg:          #F5F5F2;
 }
 
 /* ── Tema oscuro manual ([data-theme="dark"] en <html>) ───────────────────── */
@@ -85,6 +86,7 @@
   --overdue-border:  #B10F17;
   --upcoming-border: #FAAC2F;
   --soon-color:      #FE7600;
+  --menu-bg:         #242837;
 }
 
 /* ── Tema oscuro automático (preferencia del sistema) ─────────────────────── */
@@ -115,6 +117,7 @@
     --overdue-border:  #B10F17;
     --upcoming-border: #FAAC2F;
     --soon-color:      #FE7600;
+    --menu-bg:         #242837;
   }
 }
 
