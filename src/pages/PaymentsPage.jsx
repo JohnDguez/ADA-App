@@ -11,6 +11,10 @@ const CAT_COLOR = {
   'Renta':         'var(--cat-renta)',
   'Seguros':       'var(--cat-seguros)',
   'Alimentación':  'var(--cat-alimentacion)',
+  'Transporte':    'var(--cat-transporte)',
+  'Medicina':      'var(--cat-medicina)',
+  'Doctor':        'var(--cat-doctor)',
+  'Mantenimiento': 'var(--cat-mantenimiento)',
   'Otros':         'var(--cat-otros)',
 }
 
