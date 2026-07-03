@@ -322,3 +322,18 @@ body.modal-open {
   background-size: 400px 100%;
   animation: shimmer 1.5s ease-in-out infinite;
 }
+
+/* ── Nuevas categorías built-in ─────────────────────────────────────────────── */
+/* Añadir también en [data-theme="dark"] si se desean overrides */
+:root {
+  --cat-transporte:    #E67E22;
+  --cat-medicina:      #E91E63;
+  --cat-doctor:        #9C27B0;
+  --cat-mantenimiento: #795548;
+  /* Paleta para categorías personalizadas del usuario */
+  --cat-custom-1: #1ABC9C;
+  --cat-custom-2: #3F51B5;
+  --cat-custom-3: #009688;
+  --cat-custom-4: #FF5722;
+  --cat-custom-5: #607D8B;
+}

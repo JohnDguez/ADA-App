@@ -320,6 +320,10 @@ export default function App() {
         onDelete={handleDelete}
         initial={editPayment}
         payments={payments}
+        customCategories={profile.custom_categories || []}
+        onAddCategory={async (cat) => {
+          await updateProfile({ custom_categories: [...(profile.custom_categories || []), cat] })
+        }}
       />
       <VariableAmountModal
         open={varModal.open}
