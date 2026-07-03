@@ -19,7 +19,7 @@ const CAT_COLOR = {
 
 function FilterChip({ label, active, onClick }) {
   return (
-    <button onClick={onClick} style={{ padding: '6px 14px', borderRadius: 20, border: 'none', background: active ? 'var(--accent)' : 'var(--surface)', color: active ? 'var(--surface)' : 'var(--text)', fontWeight: active ? 600 : 400, fontSize: 12, fontFamily: 'DM Sans, sans-serif', cursor: 'pointer', transition: 'background .15s, color .15s' }}>
+    <button onClick={onClick} style={{ padding: '6px 14px', borderRadius: 5, border: 'none', background: active ? 'var(--accent)' : 'var(--surface)', color: active ? 'var(--surface)' : 'var(--text)', fontWeight: active ? 600 : 400, fontSize: 12, fontFamily: 'DM Sans, sans-serif', cursor: 'pointer', transition: 'background .15s, color .15s' }}>
       {label}
     </button>
   )
