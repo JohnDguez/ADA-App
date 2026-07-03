@@ -177,11 +177,30 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
               <input className="field-input" type="text" value={name} onChange={e => setName(e.target.value)} />
             </Field>
 
-            <Field label="Categoría">
+            <div style={{ marginBottom: 12 }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
+                <label className="field-label">Categoría</label>
+                <button type="button" onClick={() => { setAddingCategory(true); setNewCategoryName('') }}
+                  style={{ fontSize: 11, fontWeight: 600, color: 'var(--accent)', background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontFamily: 'DM Sans, sans-serif' }}>
+                  + Agregar
+                </button>
+              </div>
               <select className="field-input" value={category} onChange={e => setCategory(e.target.value)}>
                 {allCategories.map(c => <option key={c}>{c}</option>)}
               </select>
-            </Field>
+              {addingCategory && (
+                <div style={{ marginTop: 8, display: 'flex', gap: 6 }}>
+                  <input autoFocus className="field-input" placeholder="Nombre de la categoría" value={newCategoryName}
+                    onChange={e => setNewCategoryName(e.target.value)}
+                    onKeyDown={e => { if (e.key === 'Enter' && newCategoryName.trim()) handleAddCategory(); if (e.key === 'Escape') setAddingCategory(false) }}
+                    style={{ flex: 1 }} />
+                  <button type="button" onClick={handleAddCategory} disabled={!newCategoryName.trim()}
+                    style={{ padding: '0 14px', borderRadius: 'var(--radius-sm)', border: 'none', background: 'var(--accent)', color: 'var(--surface)', fontSize: 13, fontWeight: 600, cursor: 'pointer', opacity: !newCategoryName.trim() ? 0.5 : 1, fontFamily: 'DM Sans, sans-serif' }}>
+                    Añadir
+                  </button>
+                </div>
+              )}
+            </div>
 
             <Field label="Monto por pago">
               <input className="field-input" type="number" value={amount} onChange={e => setAmount(e.target.value)} placeholder="0.00" />
@@ -243,11 +262,30 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
             <input autoFocus={!initial} className="field-input" type="text" value={name} onChange={e => setName(e.target.value)} placeholder="Ej. Netflix, Renta, Luz…" />
           </Field>
 
-          <Field label="Categoría">
+          <div style={{ marginBottom: 12 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
+              <label className="field-label">Categoría</label>
+              <button type="button" onClick={() => { setAddingCategory(true); setNewCategoryName('') }}
+                style={{ fontSize: 11, fontWeight: 600, color: 'var(--accent)', background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontFamily: 'DM Sans, sans-serif' }}>
+                + Agregar
+              </button>
+            </div>
             <select className="field-input" value={category} onChange={e => setCategory(e.target.value)}>
               {allCategories.map(c => <option key={c}>{c}</option>)}
             </select>
-          </Field>
+            {addingCategory && (
+              <div style={{ marginTop: 8, display: 'flex', gap: 6 }}>
+                <input autoFocus className="field-input" placeholder="Nombre de la categoría" value={newCategoryName}
+                  onChange={e => setNewCategoryName(e.target.value)}
+                  onKeyDown={e => { if (e.key === 'Enter' && newCategoryName.trim()) handleAddCategory(); if (e.key === 'Escape') setAddingCategory(false) }}
+                  style={{ flex: 1 }} />
+                <button type="button" onClick={handleAddCategory} disabled={!newCategoryName.trim()}
+                  style={{ padding: '0 14px', borderRadius: 'var(--radius-sm)', border: 'none', background: 'var(--accent)', color: 'var(--surface)', fontSize: 13, fontWeight: 600, cursor: 'pointer', opacity: !newCategoryName.trim() ? 0.5 : 1, fontFamily: 'DM Sans, sans-serif' }}>
+                  Añadir
+                </button>
+              </div>
+            )}
+          </div>
 
           {mode !== 'installment' && (
             <Toggle label="Pago variable" sub="El monto cambia cada vez que pagas" value={isVariable} onChange={setIsVariable} />
