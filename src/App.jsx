@@ -263,6 +263,7 @@ export default function App() {
           onDelete={handleDelete}
           onDeleteDirect={async (id) => { await deletePayment(id); showToast('Pago eliminado') }}
           onUpdateProfile={updateProfile}
+          onEdit={openEdit}
         />
       )}
       {tab === 'recurrents' && (
