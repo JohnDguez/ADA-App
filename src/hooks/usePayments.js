@@ -109,27 +109,28 @@ export function usePayments(userId) {
 
     if (masterErr) return { error: masterErr }
 
-    // Crear primera copia (el pago actual a mostrar)
-    const { data, error } = await supabase.from('payments').insert({
-      user_id:             userId,
-      name, amount, category,
-      is_variable:         false,
-      is_recurrent:        true,
-      recur_freq:          recurFreq,
-      is_master:           false,
-      parent_id:           master.id,
-      due_date:            firstDate,
-      is_paid:             false,
-      paid_at:             null,
-      postponed:           false,
-      paused:              false,
-      is_installment:      true,
-      current_installment: from,
-      total_installments:  totalInstallments,
-    }).select().single()
+    // Crear hasta 2 copias (misma lógica que recurrentes, pero con límite)
+    const copiesToInsert = [
+      { current_installment: from, due_date: firstDate }
+    ]
+    if (from + 1 <= totalInstallments) {
+      const date2 = nextPeriodDate(firstDate, recurFreq).toISOString().split('T')[0]
+      copiesToInsert.push({ current_installment: from + 1, due_date: date2 })
+    }
 
-    if (!error) setPayments(prev => [...prev, master, data])
-    return { data, error }
+    const installCopies = copiesToInsert.map(c => ({
+      user_id: userId, name, amount, category,
+      is_variable: false, is_recurrent: true, recur_freq: recurFreq,
+      is_master: false, parent_id: master.id, due_date: c.due_date,
+      is_paid: false, paid_at: null, postponed: false, paused: false,
+      is_installment: true,
+      current_installment: c.current_installment,
+      total_installments: totalInstallments,
+    }))
+
+    const { data: copiesData, error } = await supabase.from('payments').insert(installCopies).select()
+    if (!error && copiesData) setPayments(prev => [...prev, master, ...copiesData])
+    return { data: copiesData?.[0], error }
   }
 
   async function updatePayment(id, updates) {
@@ -251,29 +252,50 @@ export function usePayments(userId) {
         if (newCopies.length > 0) setPayments(prev => [...prev, ...newCopies])
       }
 
-      // Parcialidad: generar el siguiente si no es el último
-      if (payment?.is_installment && payment.current_installment < payment.total_installments) {
-        const nextDate = nextPeriodDate(payment.due_date, payment.recur_freq || 'monthly')
-        const { data: next } = await supabase.from('payments').insert({
-          user_id:             userId,
-          name:                payment.name,
-          amount:              data?.amount ?? payment.amount,
-          due_date:            nextDate.toISOString().split('T')[0],
-          category:            payment.category,
-          is_variable:         false,
-          is_recurrent:        true,
-          recur_freq:          payment.recur_freq,
-          is_paid:             false,
-          paid_at:             null,
-          postponed:           false,
-          paused:              false,
-          is_master:           false,
-          parent_id:           payment.parent_id,  // hereda el master de la copia pagada
-          is_installment:      true,
-          current_installment: payment.current_installment + 1,
-          total_installments:  payment.total_installments,
-        }).select().single()
-        if (next) setPayments(prev => [...prev, next])
+      // Parcialidad: asegurar siempre 2 pendientes en cola (hasta el límite total)
+      if (payment?.is_installment && payment.parent_id) {
+        // Copias pendientes restantes DESPUÉS de marcar esta como pagada
+        const remainingPending = updatedPayments.filter(p =>
+          p.parent_id === payment.parent_id && !p.is_paid && !p.is_master
+        )
+        const pendingNums = new Set(remainingPending.map(p => p.current_installment))
+        const sortedPending = [...remainingPending].sort((a, b) => a.current_installment - b.current_installment)
+        const lastPending = sortedPending[sortedPending.length - 1]
+
+        let lastDate = lastPending?.due_date ?? payment.due_date
+        let lastNum  = lastPending?.current_installment ?? payment.current_installment
+
+        const needed = Math.max(0, 2 - remainingPending.length)
+        for (let i = 0; i < needed; i++) {
+          const nextNum = lastNum + 1
+          if (nextNum > payment.total_installments) break
+          if (pendingNums.has(nextNum)) { lastNum = nextNum; continue } // ya existe
+
+          const nextDate = nextPeriodDate(lastDate, payment.recur_freq || 'monthly')
+          lastDate = nextDate.toISOString().split('T')[0]
+          lastNum  = nextNum
+
+          const { data: next } = await supabase.from('payments').insert({
+            user_id:             userId,
+            name:                payment.name,
+            amount:              data?.amount ?? payment.amount,
+            due_date:            lastDate,
+            category:            payment.category,
+            is_variable:         false,
+            is_recurrent:        true,
+            recur_freq:          payment.recur_freq,
+            is_paid:             false,
+            paid_at:             null,
+            postponed:           false,
+            paused:              false,
+            is_master:           false,
+            parent_id:           payment.parent_id,
+            is_installment:      true,
+            current_installment: nextNum,
+            total_installments:  payment.total_installments,
+          }).select().single()
+          if (next) setPayments(prev => [...prev, next])
+        }
       }
     }
     return { data, error }
