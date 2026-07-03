@@ -98,7 +98,7 @@ module.exports = async function handler(req, res) {
       if (profile.notif_overdue !== false) {
         const { data: overdue } = await supabase
           .from('payments').select('name')
-          .eq('user_id', sub.user_id).eq('is_paid', false).eq('paused', false).lt('due_date', todayStr)
+          .eq('user_id', sub.user_id).eq('is_paid', false).eq('paused', false).not('is_master', 'is', true).lt('due_date', todayStr)
 
         if (overdue && overdue.length > 0) {
           notifications.push({
@@ -114,7 +114,7 @@ module.exports = async function handler(req, res) {
       if (profile.notif_due_today !== false) {
         const { data: dueToday } = await supabase
           .from('payments').select('name')
-          .eq('user_id', sub.user_id).eq('is_paid', false).eq('paused', false).eq('due_date', todayStr)
+          .eq('user_id', sub.user_id).eq('is_paid', false).eq('paused', false).not('is_master', 'is', true).eq('due_date', todayStr)
 
         if (dueToday && dueToday.length > 0) {
           dueToday.forEach(p => {
@@ -140,7 +140,7 @@ module.exports = async function handler(req, res) {
 
         const { data: upcoming } = await supabase
           .from('payments').select('name, due_date')
-          .eq('user_id', sub.user_id).eq('is_paid', false).eq('paused', false)
+          .eq('user_id', sub.user_id).eq('is_paid', false).eq('paused', false).not('is_master', 'is', true)
           .gte('due_date', tomorrowStr).lte('due_date', futureDateStr)
 
         if (upcoming && upcoming.length > 0) {
@@ -159,7 +159,7 @@ module.exports = async function handler(req, res) {
         if (dayOfWeek === (profile.cobro_weekday ?? 5)) {
           const { data: pendingToday } = await supabase
             .from('payments').select('name, amount')
-            .eq('user_id', sub.user_id).eq('is_paid', false).eq('paused', false).lte('due_date', todayStr)
+            .eq('user_id', sub.user_id).eq('is_paid', false).eq('paused', false).not('is_master', 'is', true).lte('due_date', todayStr)
 
           if (pendingToday && pendingToday.length > 0) {
             notifications.push({
