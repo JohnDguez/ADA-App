@@ -60,8 +60,7 @@ export default function App() {
     if (migrationRan.current && !hasOldInstallments) return
     migrationRan.current = true
 
-    const hasOldRecurrents   = payments.some(p => p.is_recurrent && !p.is_master && !p.parent_id && !p.is_installment)
-    const hasOldInstallments  = payments.some(p => (p.is_installment || (p.current_installment > 0 && p.total_installments > 0)) && !p.is_master && !p.parent_id)
+    const hasOldRecurrents = payments.some(p => p.is_recurrent && !p.is_master && !p.parent_id && !p.is_installment)
 
     if (hasOldRecurrents || hasOldInstallments) {
       migrateRecurrents()
