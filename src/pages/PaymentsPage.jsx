@@ -290,6 +290,8 @@ export function PaymentsPage({ payments, profile, unreadCount, onOpenNotifs, onG
   ]
 
   // ── Por categoría ─────────────────────────────────────────────────────────
+  const ALL_CATS = [...CATEGORIES, ...(profile.custom_categories || [])]
+
   function getCatTotal(cat) {
     const d = p => p.paid_at ? new Date(p.paid_at) : dateOf(p.due_date)
     if (catRange === 'mes') {
@@ -307,7 +309,7 @@ export function PaymentsPage({ payments, profile, unreadCount, onOpenNotifs, onG
       .reduce((a, p) => a + Number(p.amount), 0)
   }
 
-  const catData = CATEGORIES
+  const catData = ALL_CATS
     .map(cat => ({ cat, total: getCatTotal(cat) }))
     .filter(d => d.total > 0)
     .sort((a, b) => b.total - a.total)
@@ -356,7 +358,7 @@ export function PaymentsPage({ payments, profile, unreadCount, onOpenNotifs, onG
   }
 
   // Segmentos heatmap
-  const segmentos = CATEGORIES
+  const segmentos = ALL_CATS
     .map(cat => ({
       cat,
       total: gastosPeriodo.filter(p => p.category === cat).reduce((a, p) => a + Number(p.amount), 0),
