@@ -20,6 +20,7 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
   const [error,              setError]              = useState('')
   const [confirmClose,       setConfirmClose]       = useState(false)
   const [alreadyPaid,        setAlreadyPaid]        = useState(false)
+  const [paidAt,             setPaidAt]             = useState('')
   const [addingCategory,     setAddingCategory]     = useState(false)
   const [newCategoryName,    setNewCategoryName]    = useState('')
 
@@ -49,6 +50,8 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
       setMode(initial.is_installment ? 'installment' : initial.is_recurrent ? 'recurrent' : 'single')
       setTotalInstallments(initial.total_installments || '')
       setStartFrom('1')
+      setAlreadyPaid(!!initial.is_paid)
+      setPaidAt(initial.paid_at ? new Date(initial.paid_at).toISOString().split('T')[0] : new Date().toISOString().split('T')[0])
     } else {
       setName(''); setAmount('')
       setDueDate(new Date().toISOString().split('T')[0])
@@ -56,8 +59,10 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
       setCategory('Servicios'); setIsVariable(false)
       setRecurFreq('monthly'); setWeekday(5)
       setMode('single'); setTotalInstallments(''); setStartFrom('1'); setTotalAmount('')
+      setAlreadyPaid(false)
+      setPaidAt('')
     }
-    setError(''); setConfirmClose(false); setAlreadyPaid(false); setAddingCategory(false); setNewCategoryName('')
+    setError(''); setConfirmClose(false); setAddingCategory(false); setNewCategoryName('')
   }, [initial, open])
 
   useEffect(() => {
@@ -106,7 +111,28 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
     if (mode === 'recurrent' && recurFreq === 'biweekly')  finalDate = biweeklyDate ? nextBiweeklyFromDate(biweeklyDate).toISOString().split('T')[0] : dueDate
     if (!finalDate) { setError('Selecciona la fecha de vencimiento'); return }
     setSaving(true)
-    await onSave({ name: name.trim(), amount: isVariable ? 0 : parseFloat(amount), due_date: finalDate, category, is_variable: isVariable, is_recurrent: mode === 'recurrent', recur_freq: mode === 'recurrent' ? recurFreq : null, is_paid: alreadyPaid, paid_at: alreadyPaid ? new Date().toISOString() : null, is_installment: false })
+    const payload = {
+      name: name.trim(),
+      amount: isVariable ? 0 : parseFloat(amount),
+      due_date: finalDate,
+      category,
+      is_variable: isVariable,
+      is_recurrent: mode === 'recurrent',
+      recur_freq: mode === 'recurrent' ? recurFreq : null,
+      is_installment: false,
+    }
+    // Solo tocar is_paid/paid_at cuando corresponde:
+    // - Pago nuevo: refleja el toggle "Ya lo pagué"
+    // - Edición de un pago que YA estaba pagado: se mantiene pagado y se respeta la fecha editada
+    // - Edición de un pago pendiente (o de un master): no se incluyen estas llaves, así el update no las toca
+    if (!initial) {
+      payload.is_paid = alreadyPaid
+      payload.paid_at = alreadyPaid ? new Date().toISOString() : null
+    } else if (initial.is_paid) {
+      payload.is_paid = true
+      payload.paid_at = paidAt ? new Date(paidAt + 'T12:00:00').toISOString() : initial.paid_at
+    }
+    await onSave(payload)
     setSaving(false); onClose()
   }
 
@@ -368,6 +394,12 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
               </div>
               <input className="field-input" type="date" value={dueDate} onChange={e => setDueDate(e.target.value)} />
             </div>
+          )}
+
+          {mode === 'single' && initial && initial.is_paid && (
+            <Field label="Fecha en que pagaste">
+              <input className="field-input" type="date" value={paidAt} onChange={e => setPaidAt(e.target.value)} />
+            </Field>
           )}
 
           {showWeekdayPicker && (
