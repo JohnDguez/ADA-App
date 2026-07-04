@@ -12,7 +12,7 @@ jobs:
       - name: Send notifications
         run: |
           response=$(curl -s -o /dev/null -w "%{http_code}" \
-            -X GET "https://ada-app-phi.vercel.app/api/send-notifications?force=true" \
+            -X GET "https://ada-app-phi.vercel.app/api/send-notifications" \
             -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}")
           echo "Response status: $response"
           if [ "$response" != "200" ]; then
