@@ -202,6 +202,48 @@ export function groupPayments(payments) {
     .sort((a, b) => dateOf(a.due_date) - dateOf(b.due_date))
 }
 
+// Proyecta el impacto de un pago (uno ya existente o uno nuevo que se está
+// armando en el formulario) sobre el periodo actual y el siguiente. Es un
+// cálculo en memoria — no crea registros ni toca Supabase. `candidate` es
+// opcional: { dueDate: 'YYYY-MM-DD', amount: number, isVariable: bool,
+// isRecurring: bool, recurFreq: string }
+export function projectPeriodImpact(payments, profile, candidate = null) {
+  const cur = cobroPeriod(profile)
+  const nxt = nextCobroPeriod(profile)
+  const salario = profile.salary_enabled ? Number(profile.salary_amount || 0) : 0
+  const activos = payments.filter(p => !p.is_paid && !p.paused && !p.is_master)
+
+  function build(key, start, end, includeOverdue) {
+    const inRange = p => {
+      const d = dateOf(p.due_date)
+      return includeOverdue ? d <= end : (d >= start && d <= end)
+    }
+    const comprometido = activos
+      .filter(p => !p.is_variable && inRange(p))
+      .reduce((a, p) => a + Number(p.amount), 0)
+    const variablesPendientes = activos.filter(p => p.is_variable && inRange(p)).length
+
+    let ocurrencias = 0
+    if (candidate?.dueDate && !candidate.isVariable) {
+      let d = dateOf(candidate.dueDate)
+      for (let i = 0; i < 6 && d <= end; i++) {
+        if (d >= start) ocurrencias++
+        if (!candidate.isRecurring) break
+        d = nextPeriodDate(d, candidate.recurFreq)
+      }
+    }
+    const montoCandidato    = ocurrencias * Number(candidate?.amount || 0)
+    const disponibleAntes   = salario - comprometido
+    const disponibleDespues = disponibleAntes - montoCandidato
+    return { key, start, end, salario, comprometido, variablesPendientes, disponibleAntes, disponibleDespues, montoCandidato, ocurrencias }
+  }
+
+  return [
+    build('actual', cur.start, cur.end, true),
+    build('siguiente', nxt.start, nxt.end, false),
+  ]
+}
+
 export function nameExistsActive(payments, name, excludeName = null) {
   const lower = name.trim().toLowerCase()
   if (excludeName && excludeName.trim().toLowerCase() === lower) return false
