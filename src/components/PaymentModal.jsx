@@ -1,9 +1,10 @@
 import { useState, useEffect, useRef } from 'react'
-import { CATEGORIES, RECUR_FREQ, WEEKDAYS_SHORT, nextWeekdayDate, nextBiweeklyFromDate, nextPeriodDate, fmt, nameExistsActive } from '../lib/utils'
+import { Wallet } from 'lucide-react'
+import { CATEGORIES, RECUR_FREQ, WEEKDAYS_SHORT, MONTHS_SHORT, nextWeekdayDate, nextBiweeklyFromDate, nextPeriodDate, fmt, nameExistsActive, projectPeriodImpact } from '../lib/utils'
 import { ConfirmCloseModal } from './ConfirmCloseModal'
 import { FrequencyPicker } from './FrequencyPicker'
 
-export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelete, initial, payments, customCategories = [], onAddCategory }) {
+export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelete, initial, payments, profile, customCategories = [], onAddCategory }) {
   const [mode,               setMode]               = useState('single')
   const [name,               setName]               = useState('')
   const [amount,             setAmount]             = useState('')
@@ -153,6 +154,26 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
   const showWeekdayPicker  = mode === 'recurrent' && recurFreq === 'weekly'
   const showBiweeklyPicker = mode === 'recurrent' && recurFreq === 'biweekly'
   const nextBiDate         = biweeklyDate ? nextBiweeklyFromDate(biweeklyDate) : null
+
+  // Simulador — impacto en el periodo actual y el siguiente. Solo aplica a
+  // pagos nuevos (no ediciones) de tipo único o recurrente con monto fijo.
+  // NOTA: función de prueba, sin gate de premium por ahora (ver CONTEXT.md).
+  const previewDueDate =
+    mode === 'recurrent' && recurFreq === 'weekly'   ? nextWeekdayDate(weekday).toISOString().split('T')[0] :
+    mode === 'recurrent' && recurFreq === 'biweekly' ? (biweeklyDate ? nextBiweeklyFromDate(biweeklyDate).toISOString().split('T')[0] : dueDate) :
+    dueDate
+
+  const showImpactPreview = !initial && !!profile && mode !== 'installment' && !isVariable
+    && !!amount && !isNaN(parseFloat(amount)) && parseFloat(amount) > 0 && !!previewDueDate
+
+  const impactPreview = showImpactPreview
+    ? projectPeriodImpact(payments || [], profile, {
+        dueDate: previewDueDate,
+        amount: parseFloat(amount),
+        isRecurring: mode === 'recurrent',
+        recurFreq,
+      })
+    : null
 
   const modalStyle = {
     background: 'var(--surface)', borderRadius: '20px 20px 0 0',
@@ -428,6 +449,30 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
             </div>
           )}
 
+          {impactPreview && (
+            <div style={{ background: 'var(--accent-soft)', borderRadius: 'var(--radius-sm)', padding: '12px 14px', marginBottom: 12 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8 }}>
+                <Wallet size={14} color="var(--accent)" />
+                <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--accent)' }}>Impacto en tu quincena</div>
+              </div>
+              {!profile.salary_enabled && (
+                <div style={{ fontSize: 12, color: 'var(--text)', marginBottom: 6 }}>
+                  Configura tu sueldo en Ajustes para ver tu disponible completo.
+                </div>
+              )}
+              {impactPreview.map(p => (
+                <div key={p.key} style={{ fontSize: 12.5, fontWeight: 500, color: 'var(--text)', lineHeight: 1.6, marginBottom: 4 }}>
+                  <strong>{p.key === 'actual' ? 'Este periodo' : 'Próximo periodo'}</strong> ({rangeLabel(p.start, p.end)}): con este pago te quedarían{' '}
+                  <strong style={{ color: p.disponibleDespues < 0 ? 'var(--danger)' : 'var(--text)' }}>{fmt(p.disponibleDespues)}</strong>
+                  {' '}disponibles (antes {fmt(p.disponibleAntes)}).
+                  {p.variablesPendientes > 0 && (
+                    <> + {p.variablesPendientes} pago{p.variablesPendientes > 1 ? 's' : ''} variable{p.variablesPendientes > 1 ? 's' : ''} sin contar.</>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+
           <button onClick={handleSave} disabled={saving} className="btn-primary" style={{ marginTop: 4, opacity: saving ? 0.7 : 1 }}>
             {saving ? 'Guardando…' : initial?.is_master && initial?.paused ? 'Reactivar' : initial ? 'Guardar cambios' : mode === 'installment' ? 'Crear pagos' : alreadyPaid ? 'Guardar como pagado' : 'Guardar pago'}
           </button>
@@ -440,6 +485,12 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
       <ConfirmCloseModal open={confirmClose} onConfirm={() => { setConfirmClose(false); onClose() }} onCancel={() => setConfirmClose(false)} />
     </>
   )
+}
+
+function rangeLabel(start, end) {
+  const sameMonth = start.getMonth() === end.getMonth()
+  if (sameMonth) return `${start.getDate()}–${end.getDate()} ${MONTHS_SHORT[end.getMonth()]}`
+  return `${start.getDate()} ${MONTHS_SHORT[start.getMonth()]} – ${end.getDate()} ${MONTHS_SHORT[end.getMonth()]}`
 }
 
 function Field({ label, children }) {
