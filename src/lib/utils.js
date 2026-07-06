@@ -217,23 +217,46 @@ export function groupPayments(payments) {
 // del diseño: no aporta a la decisión de "me alcanza o no cuando venza").
 // Cálculo en memoria — no crea registros ni toca Supabase.
 // `candidate`: { dueDate: 'YYYY-MM-DD', amount, isVariable, isRecurring, recurFreq }
-export function projectPeriodImpact(payments, profile, candidate) {
+// `periodIncomes`: filas de `period_income` del periodo ACTUAL únicamente
+// (no aplica a periodos futuros, que no tienen ingresos extra registrados).
+//
+// Periodo actual: se usa la misma lógica que el remanente real de
+// `PaymentsPage.jsx` (`checkPeriodStart`) — ingreso = sueldo + extras del
+// periodo; se resta lo YA pagado este periodo (por `paid_at`, no `due_date`,
+// porque el dinero sale de la cartera cuando se paga, no cuando vence) más lo
+// pendiente que todavía vence este periodo (por `due_date`, igual que antes).
+// Periodo futuro: sueldo − lo pendiente que vence ese periodo (sin extras, sin
+// paid_at, porque ese periodo aún no ocurre).
+export function projectPeriodImpact(payments, profile, candidate, periodIncomes = []) {
   if (!candidate?.dueDate || candidate.isVariable) return []
 
   const salario = profile.salary_enabled ? Number(profile.salary_amount || 0) : 0
-  const activos = payments.filter(p => !p.is_paid && !p.paused && !p.is_master)
   const cur = cobroPeriod(profile)
+  const extrasActual = periodIncomes.reduce((a, inc) => a + Number(inc.amount || 0), 0)
 
-  function committedIn(start, end, includeOverdue) {
+  const pendientes = payments.filter(p => !p.is_paid && !p.paused && !p.is_master)
+  const pagados    = payments.filter(p => p.is_paid && !p.is_master)
+
+  function pendienteEn(start, end, includeOverdue) {
     const inRange = p => {
       const d = dateOf(p.due_date)
       return includeOverdue ? d <= end : (d >= start && d <= end)
     }
-    const comprometido = activos
+    const comprometido = pendientes
       .filter(p => !p.is_variable && inRange(p))
       .reduce((a, p) => a + Number(p.amount), 0)
-    const variablesPendientes = activos.filter(p => p.is_variable && inRange(p)).length
+    const variablesPendientes = pendientes.filter(p => p.is_variable && inRange(p)).length
     return { comprometido, variablesPendientes }
+  }
+
+  function pagadoEn(start, end) {
+    return pagados
+      .filter(p => {
+        if (!p.paid_at) return false
+        const d = dateOf(new Date(p.paid_at).toISOString().split('T')[0])
+        return d >= start && d <= end
+      })
+      .reduce((a, p) => a + Number(p.amount), 0)
   }
 
   const maxOcurrencias = candidate.isRecurring ? 2 : 1
@@ -241,9 +264,12 @@ export function projectPeriodImpact(payments, profile, candidate) {
   let d = dateOf(candidate.dueDate)
   for (let i = 0; i < maxOcurrencias; i++) {
     const p = cobroPeriod(profile, d)
-    const includeOverdue = p.start.getTime() === cur.start.getTime()
-    const { comprometido, variablesPendientes } = committedIn(p.start, p.end, includeOverdue)
-    const disponibleAntes   = salario - comprometido
+    const esActual = p.start.getTime() === cur.start.getTime()
+    const { comprometido, variablesPendientes } = pendienteEn(p.start, p.end, esActual)
+
+    const disponibleAntes = esActual
+      ? salario + extrasActual - pagadoEn(p.start, p.end) - comprometido
+      : salario - comprometido
     const disponibleDespues = disponibleAntes - Number(candidate.amount)
     results.push({ start: p.start, end: p.end, disponibleAntes, disponibleDespues, variablesPendientes })
     if (!candidate.isRecurring) break
