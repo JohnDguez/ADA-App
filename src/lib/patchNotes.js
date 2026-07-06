@@ -1,11 +1,18 @@
 // Fuente única de verdad para la versión visible al usuario (footer de SettingsPage,
 // modal de Novedades). No confundir con el historial técnico completo en CONTEXT.md:
 // aquí solo van cambios que le sirven o interesan al usuario final.
-export const APP_VERSION = '0.9.36'
+export const APP_VERSION = '0.9.37'
 
 // Cada entrada: { version, date, items: [string] }
 // Orden: más reciente primero. Solo agregar entradas con contenido útil para el usuario.
 export const PATCH_NOTES = [
+  {
+    version: '0.9.37',
+    date: 'Julio 2026',
+    items: [
+      'Corregido: el aviso de novedades ya no vuelve a aparecer cada vez que abres la app.',
+    ],
+  },
   {
     version: '0.9.36',
     date: 'Julio 2026',
