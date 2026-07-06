@@ -1,10 +1,10 @@
 import { useState, useEffect, useRef } from 'react'
-import { Wallet } from 'lucide-react'
+import { Wallet, AlertTriangle, Repeat, Crown } from 'lucide-react'
 import { CATEGORIES, RECUR_FREQ, WEEKDAYS_SHORT, MONTHS_SHORT, nextWeekdayDate, nextBiweeklyFromDate, nextPeriodDate, fmt, nameExistsActive, projectPeriodImpact } from '../lib/utils'
 import { ConfirmCloseModal } from './ConfirmCloseModal'
 import { FrequencyPicker } from './FrequencyPicker'
 
-export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelete, initial, payments, profile, customCategories = [], onAddCategory }) {
+export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelete, initial, payments, profile, customCategories = [], onAddCategory, onUpgradeClick }) {
   const [mode,               setMode]               = useState('single')
   const [name,               setName]               = useState('')
   const [amount,             setAmount]             = useState('')
@@ -163,7 +163,7 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
     mode === 'recurrent' && recurFreq === 'biweekly' ? (biweeklyDate ? nextBiweeklyFromDate(biweeklyDate).toISOString().split('T')[0] : dueDate) :
     dueDate
 
-  const showImpactPreview = !initial && !!profile && mode !== 'installment' && !isVariable
+  const showImpactPreview = !initial && !!profile && mode !== 'installment' && !isVariable && !alreadyPaid
     && !!amount && !isNaN(parseFloat(amount)) && parseFloat(amount) > 0 && !!previewDueDate
 
   const impactPreview = showImpactPreview
@@ -449,42 +449,93 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
             </div>
           )}
 
-          {impactPreview && (
-            <div style={{ background: 'var(--accent-soft)', borderRadius: 'var(--radius-sm)', padding: '12px 14px', marginBottom: 12 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8 }}>
-                <Wallet size={14} color="var(--accent)" />
-                <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--accent)' }}>Impacto en tu quincena</div>
+          {impactPreview && impactPreview.length > 0 && (() => {
+            const [first, second] = impactPreview
+            const esNegativo = first.disponibleDespues < 0
+            const isPremium = !!profile.is_premium
+
+            const badge = (
+              <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'var(--accent)', color: 'var(--surface)', padding: '8px 14px', borderRadius: 16, fontSize: 12.5, fontWeight: 600, marginBottom: 10 }}>
+                <Wallet size={14} />
+                Impacto en tus finanzas
               </div>
-              {!profile.salary_enabled && (
-                <div style={{ fontSize: 12, color: 'var(--text)', marginBottom: 6 }}>
-                  Configura tu sueldo en Ajustes para ver tu disponible completo.
-                </div>
-              )}
-              {(() => {
-                let futureCount = 0
-                return impactPreview.map(p => {
-                  const label = p.isCurrent
-                    ? 'Este periodo'
-                    : (++futureCount === 1 ? 'Periodo en que vence este pago' : 'Siguiente ocurrencia')
-                  return (
-                    <div key={p.start.getTime()} style={{ fontSize: 12.5, fontWeight: 500, color: 'var(--text)', lineHeight: 1.6, marginBottom: 4 }}>
-                      <strong>{label}</strong> ({rangeLabel(p.start, p.end)}):{' '}
-                      {p.ocurrencias > 0 ? (
-                        <>con este pago te quedarían{' '}
-                          <strong style={{ color: p.disponibleDespues < 0 ? 'var(--danger)' : 'var(--text)' }}>{fmt(p.disponibleDespues)}</strong>
-                          {' '}disponibles (antes {fmt(p.disponibleAntes)}).</>
-                      ) : (
-                        <>tienes <strong>{fmt(p.disponibleAntes)}</strong> disponibles (este pago no cae aquí).</>
-                      )}
-                      {p.variablesPendientes > 0 && (
-                        <> + {p.variablesPendientes} pago{p.variablesPendientes > 1 ? 's' : ''} variable{p.variablesPendientes > 1 ? 's' : ''} sin contar.</>
-                      )}
+            )
+
+            if (!isPremium) {
+              return (
+                <div style={{ marginBottom: 12 }}>
+                  {badge}
+                  <div style={{ position: 'relative', borderRadius: 'var(--radius-sm)', overflow: 'hidden' }}>
+                    <div aria-hidden="true" style={{ filter: 'blur(6px)', opacity: 0.6, background: 'var(--bg)', borderWidth: '5px 0.5px 0.5px 0.5px', borderStyle: 'solid', borderColor: 'var(--impact-warning)', borderRadius: 'var(--radius-sm)', padding: 14 }}>
+                      <div style={{ fontSize: 28, fontWeight: 700, color: 'var(--text)' }}>{fmt(first.disponibleDespues)}</div>
+                      <div style={{ fontSize: 12, color: 'var(--muted)', marginTop: 6 }}>Disponible actualmente {fmt(first.disponibleAntes)} MXN</div>
                     </div>
-                  )
-                })
-              })()}
-            </div>
-          )}
+                    <div style={{ position: 'absolute', inset: 0, background: 'rgba(2,10,31,0.7)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: 16 }}>
+                      <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--surface)', marginBottom: 12, lineHeight: 1.4 }}>
+                        Descubre cómo este nuevo gasto impacta en tus finanzas de ese periodo
+                      </div>
+                      <button type="button" onClick={() => onUpgradeClick && onUpgradeClick()}
+                        style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'var(--impact-warning)', color: 'var(--impact-warning-text)', border: 'none', borderRadius: 16, padding: '10px 18px', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'DM Sans, sans-serif' }}>
+                        <Crown size={15} />
+                        Prueba Premium GRATIS 7 días
+                      </button>
+                      <div style={{ fontSize: 10.5, color: 'var(--surface)', opacity: 0.75, marginTop: 8 }}>
+                        Solo para nuevos usuarios. Al finalizar la prueba $50 MXN al mes.
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )
+            }
+
+            return (
+              <div style={{ marginBottom: 12 }}>
+                {badge}
+                <div style={{
+                  background: 'var(--bg)', borderRadius: 'var(--radius-sm)', padding: 14,
+                  borderStyle: 'solid', borderColor: esNegativo ? 'var(--impact-warning)' : 'var(--accent)',
+                  borderWidth: '5px 0.5px 0.5px 0.5px',
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8 }}>
+                    <AlertTriangle size={15} color={esNegativo ? 'var(--impact-warning)' : 'var(--accent)'} />
+                    <span style={{ fontSize: 12.5, fontWeight: 500, color: esNegativo ? 'var(--impact-warning)' : 'var(--accent)' }}>
+                      {esNegativo ? '¡Cuidado! Puede alterar tus finanzas' : 'Este pago cabe en tu quincena'} – Periodo {rangeLabel(first.start, first.end)}
+                    </span>
+                  </div>
+                  <div style={{ fontSize: 30, fontWeight: 700, lineHeight: 1.2, color: esNegativo ? 'var(--impact-warning)' : 'var(--text)' }}>
+                    {fmt(first.disponibleDespues)}
+                  </div>
+                  <div style={{ fontSize: 12, color: 'var(--muted)', marginTop: 4 }}>
+                    Disponible actualmente {fmt(first.disponibleAntes)} MXN
+                    {first.variablesPendientes > 0 && <>{'   '}+{first.variablesPendientes} Pago{first.variablesPendientes > 1 ? 's' : ''} variable{first.variablesPendientes > 1 ? 's' : ''}</>}
+                  </div>
+                </div>
+
+                {second && (
+                  <div style={{ marginTop: 10 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                        <Repeat size={13} color="var(--muted)" />
+                        <span style={{ fontSize: 12, color: 'var(--muted)' }}>Disponible al siguiente periodo ({rangeLabel(second.start, second.end)})</span>
+                      </div>
+                      <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--text)' }}>{fmt(second.disponibleDespues)} MXN</span>
+                    </div>
+                    {second.variablesPendientes > 0 && (
+                      <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 2 }}>
+                        +{second.variablesPendientes} Pago{second.variablesPendientes > 1 ? 's' : ''} variable{second.variablesPendientes > 1 ? 's' : ''} sin contar
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {!profile.salary_enabled && (
+                  <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 8 }}>
+                    Configura tu sueldo en Ajustes para ver tu disponible completo.
+                  </div>
+                )}
+              </div>
+            )
+          })()}
 
           <button onClick={handleSave} disabled={saving} className="btn-primary" style={{ marginTop: 4, opacity: saving ? 0.7 : 1 }}>
             {saving ? 'Guardando…' : initial?.is_master && initial?.paused ? 'Reactivar' : initial ? 'Guardar cambios' : mode === 'installment' ? 'Crear pagos' : alreadyPaid ? 'Guardar como pagado' : 'Guardar pago'}
