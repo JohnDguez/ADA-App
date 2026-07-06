@@ -456,43 +456,49 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
 
             return (
               <div style={{ marginBottom: 16 }}>
-                <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'var(--accent)', color: 'var(--surface)', padding: '8px 14px', borderRadius: 5, fontSize: 12.5, fontWeight: 600, marginLeft: 12, marginBottom: -16, position: 'relative', zIndex: 1 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'var(--accent)', fontSize: 12.5, fontWeight: 600, marginLeft: 4, marginBottom: 8 }}>
                   <Wallet size={14} />
                   Impacto en tus finanzas
                 </div>
-                <div style={{ background: 'var(--surface)', borderRadius: 'var(--radius)', padding: '22px 14px 14px' }}>
+                <div style={{ background: 'var(--section-bg)', borderRadius: 'var(--radius)', padding: 14 }}>
                   <div style={{
                     background: 'var(--bg)', borderRadius: 'var(--radius-sm)', padding: 14,
                     borderStyle: 'solid', borderColor: colorEstado,
                     borderWidth: '0.5px 0.5px 0.5px 5px',
                   }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8 }}>
-                      {esNegativo ? <AlertTriangle size={15} color={colorEstado} /> : <Check size={15} color={colorEstado} />}
-                      <span style={{ fontSize: 12.5, fontWeight: 600, color: colorEstado }}>
-                        {esNegativo ? '¡Cuidado! Puede alterar tus finanzas.' : 'Todo bien.'} Periodo {rangeLabel(first.start, first.end)}
-                      </span>
+                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: 6, marginBottom: 8 }}>
+                      {esNegativo ? <AlertTriangle size={15} color={colorEstado} style={{ marginTop: 2, flexShrink: 0 }} /> : <Check size={15} color={colorEstado} style={{ marginTop: 2, flexShrink: 0 }} />}
+                      <div style={{ fontSize: 12.5, fontWeight: 600, color: colorEstado, lineHeight: 1.5 }}>
+                        <div>{esNegativo ? '¡Cuidado! Puede alterar tus finanzas' : 'Todo bien'}</div>
+                        <div>Periodo {rangeLabel(first.start, first.end)}.</div>
+                      </div>
                     </div>
                     <div style={{ fontSize: 30, fontWeight: 700, lineHeight: 1.2, color: colorEstado }}>
                       {fmt(first.disponibleDespues)}
                     </div>
                     <div style={{ fontSize: 12, fontWeight: 400, color: 'var(--text)', marginTop: 4 }}>
-                      Disponible actualmente {fmt(first.disponibleAntes)} MXN
-                      {first.variablesPendientes > 0 && <>{'   '}+{first.variablesPendientes} Pago{first.variablesPendientes > 1 ? 's' : ''} variable{first.variablesPendientes > 1 ? 's' : ''}</>}
+                      <div>Disponible actualmente {fmt(first.disponibleAntes)} MXN</div>
+                      {first.variablesPendientes > 0 && (
+                        <div>+{first.variablesPendientes} Pago{first.variablesPendientes > 1 ? 's' : ''} variable{first.variablesPendientes > 1 ? 's' : ''}</div>
+                      )}
                     </div>
                   </div>
 
                   {second && (
                     <div style={{ marginTop: 10 }}>
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                          <Repeat size={13} color="var(--text)" />
-                          <span style={{ fontSize: 12, fontWeight: 400, color: 'var(--text)' }}>Disponible al siguiente periodo ({rangeLabel(second.start, second.end)})</span>
+                      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 6 }}>
+                        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 6 }}>
+                          <Repeat size={13} color="var(--text)" style={{ marginTop: 2, flexShrink: 0 }} />
+                          <div style={{ fontSize: 12, fontWeight: 400, color: 'var(--text)', lineHeight: 1.5 }}>
+                            <div>Disponible en el siguiente periodo</div>
+                            <div>{rangeLabel(second.start, second.end)}.</div>
+                          </div>
                         </div>
-                        <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--text)' }}>{fmt(second.disponibleDespues)} MXN</span>
+                        <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--text)', whiteSpace: 'nowrap' }}>{fmt(second.disponibleDespues)} MXN</span>
                       </div>
                       {second.variablesPendientes > 0 && (
                         <div style={{ fontSize: 11, fontWeight: 400, color: 'var(--text)', marginTop: 2 }}>
-                          +{second.variablesPendientes} Pago{second.variablesPendientes > 1 ? 's' : ''} variable{second.variablesPendientes > 1 ? 's' : ''} sin contar
+                          +{second.variablesPendientes} Pago{second.variablesPendientes > 1 ? 's' : ''} variable{second.variablesPendientes > 1 ? 's' : ''} sin contar.
                         </div>
                       )}
                     </div>
