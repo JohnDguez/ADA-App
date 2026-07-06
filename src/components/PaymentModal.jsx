@@ -460,16 +460,29 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
                   Configura tu sueldo en Ajustes para ver tu disponible completo.
                 </div>
               )}
-              {impactPreview.map(p => (
-                <div key={p.key} style={{ fontSize: 12.5, fontWeight: 500, color: 'var(--text)', lineHeight: 1.6, marginBottom: 4 }}>
-                  <strong>{p.key === 'actual' ? 'Este periodo' : 'Próximo periodo'}</strong> ({rangeLabel(p.start, p.end)}): con este pago te quedarían{' '}
-                  <strong style={{ color: p.disponibleDespues < 0 ? 'var(--danger)' : 'var(--text)' }}>{fmt(p.disponibleDespues)}</strong>
-                  {' '}disponibles (antes {fmt(p.disponibleAntes)}).
-                  {p.variablesPendientes > 0 && (
-                    <> + {p.variablesPendientes} pago{p.variablesPendientes > 1 ? 's' : ''} variable{p.variablesPendientes > 1 ? 's' : ''} sin contar.</>
-                  )}
-                </div>
-              ))}
+              {(() => {
+                let futureCount = 0
+                return impactPreview.map(p => {
+                  const label = p.isCurrent
+                    ? 'Este periodo'
+                    : (++futureCount === 1 ? 'Periodo en que vence este pago' : 'Siguiente ocurrencia')
+                  return (
+                    <div key={p.start.getTime()} style={{ fontSize: 12.5, fontWeight: 500, color: 'var(--text)', lineHeight: 1.6, marginBottom: 4 }}>
+                      <strong>{label}</strong> ({rangeLabel(p.start, p.end)}):{' '}
+                      {p.ocurrencias > 0 ? (
+                        <>con este pago te quedarían{' '}
+                          <strong style={{ color: p.disponibleDespues < 0 ? 'var(--danger)' : 'var(--text)' }}>{fmt(p.disponibleDespues)}</strong>
+                          {' '}disponibles (antes {fmt(p.disponibleAntes)}).</>
+                      ) : (
+                        <>tienes <strong>{fmt(p.disponibleAntes)}</strong> disponibles (este pago no cae aquí).</>
+                      )}
+                      {p.variablesPendientes > 0 && (
+                        <> + {p.variablesPendientes} pago{p.variablesPendientes > 1 ? 's' : ''} variable{p.variablesPendientes > 1 ? 's' : ''} sin contar.</>
+                      )}
+                    </div>
+                  )
+                })
+              })()}
             </div>
           )}
 
