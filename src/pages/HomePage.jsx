@@ -96,10 +96,10 @@ export function HomePage({ payments, profile, onAdd, onMarkPaid, onMarkUnpaid, o
                 <div style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.75)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 6 }}>
                   Pagos de este periodo
                 </div>
-                {pendingAmt === 0 ? (
+                {pagarEsteCobro.length === 0 ? (
                   <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14 }}>
                     <Trophy size={36} color="#fff" strokeWidth={1.8} />
-                    <div style={{ fontSize: 20, fontWeight: 700, color: '#fff', lineHeight: 1.3 }}>¡Sin deudas pendientes!</div>
+                    <div style={{ fontSize: 20, fontWeight: 700, color: '#fff', lineHeight: 1.3 }}>¡Sin pagos pendientes este periodo!</div>
                   </div>
                 ) : (
                   <div style={{ fontSize: 38, fontWeight: 700, color: '#fff', letterSpacing: '-1px', lineHeight: 1, marginBottom: 14 }}>{fmt(pendingAmt)}</div>
