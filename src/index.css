@@ -28,6 +28,12 @@
   --warning-soft: #FEF6E0;
   --warning-border: #FAD98A;
 
+  /* Warning específico del simulador de impacto (distinto de --warning genérico,
+     para no afectar badges/estados existentes que ya lo usan) */
+  --impact-warning:      #FF6A00;
+  --impact-warning-soft: #FFF1E0;
+  --impact-warning-text: #3D1F00;
+
   --radius: 12px;
   --radius-sm: 8px;
   --radius-full: 999px;
@@ -78,6 +84,10 @@
   --warning-soft: #2D2208;
   --warning-border: #3D2E0A;
 
+  --impact-warning:      #FFC300;
+  --impact-warning-soft: #332B05;
+  --impact-warning-text: #241C00;
+
   /* Colores semánticos en dark */
   --nav-bg:          #014BA3;
   --section-bg:      #1E2130;
@@ -110,6 +120,9 @@
     --warning: #F5B325;
     --warning-soft: #2D2208;
     --warning-border: #3D2E0A;
+    --impact-warning:      #FFC300;
+    --impact-warning-soft: #332B05;
+    --impact-warning-text: #241C00;
     --nav-bg:          #014BA3;
     --section-bg:      #1E2130;
     --title-bg:        #1A1D27;
