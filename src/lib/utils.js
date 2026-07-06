@@ -54,7 +54,7 @@ export function daysDiff(str) { return Math.round((dateOf(str) - today()) / 864e
 export function fmt(n) {
   const num = Number(n)
   const sign = num < 0 ? '-' : ''
-  return sign + '$' + Math.abs(num).toLocaleString('es-MX', { minimumFractionDigits: 0, maximumFractionDigits: 0 })
+  return sign + '$' + Math.abs(num).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 }
 export function addDays(date, n)   { const d = new Date(date); d.setDate(d.getDate() + n); return d }
 export function addMonths(date, n) { const d = new Date(date); d.setMonth(d.getMonth() + n); return d }
