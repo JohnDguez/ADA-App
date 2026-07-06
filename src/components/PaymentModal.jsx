@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { Wallet, AlertTriangle, Repeat } from 'lucide-react'
+import { Wallet, AlertTriangle, Repeat, Check } from 'lucide-react'
 import { CATEGORIES, RECUR_FREQ, WEEKDAYS_SHORT, MONTHS_SHORT, nextWeekdayDate, nextBiweeklyFromDate, nextPeriodDate, fmt, nameExistsActive, projectPeriodImpact } from '../lib/utils'
 import { ConfirmCloseModal } from './ConfirmCloseModal'
 import { FrequencyPicker } from './FrequencyPicker'
@@ -452,6 +452,7 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
           {impactPreview && impactPreview.length > 0 && (() => {
             const [first, second] = impactPreview
             const esNegativo = first.disponibleDespues < 0
+            const colorEstado = esNegativo ? 'var(--impact-warning)' : 'var(--accent)'
 
             return (
               <div style={{ marginBottom: 16 }}>
@@ -459,48 +460,50 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
                   <Wallet size={14} />
                   Impacto en tus finanzas
                 </div>
-                <div style={{
-                  background: 'var(--bg)', borderRadius: 'var(--radius-sm)', padding: '24px 14px 14px',
-                  borderStyle: 'solid', borderColor: esNegativo ? 'var(--impact-warning)' : 'var(--accent)',
-                  borderWidth: '5px 0.5px 0.5px 0.5px',
-                }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8 }}>
-                    <AlertTriangle size={15} color={esNegativo ? 'var(--impact-warning)' : 'var(--accent)'} />
-                    <span style={{ fontSize: 12.5, fontWeight: 500, color: esNegativo ? 'var(--impact-warning)' : 'var(--accent)' }}>
-                      {esNegativo ? '¡Cuidado! Puede alterar tus finanzas' : 'Este pago cabe en tu quincena'} – Periodo {rangeLabel(first.start, first.end)}
-                    </span>
-                  </div>
-                  <div style={{ fontSize: 30, fontWeight: 700, lineHeight: 1.2, color: esNegativo ? 'var(--impact-warning)' : 'var(--text)' }}>
-                    {fmt(first.disponibleDespues)}
-                  </div>
-                  <div style={{ fontSize: 12, color: 'var(--muted)', marginTop: 4 }}>
-                    Disponible actualmente {fmt(first.disponibleAntes)} MXN
-                    {first.variablesPendientes > 0 && <>{'   '}+{first.variablesPendientes} Pago{first.variablesPendientes > 1 ? 's' : ''} variable{first.variablesPendientes > 1 ? 's' : ''}</>}
-                  </div>
-                </div>
-
-                {second && (
-                  <div style={{ marginTop: 10 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                        <Repeat size={13} color="var(--muted)" />
-                        <span style={{ fontSize: 12, color: 'var(--muted)' }}>Disponible al siguiente periodo ({rangeLabel(second.start, second.end)})</span>
-                      </div>
-                      <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--text)' }}>{fmt(second.disponibleDespues)} MXN</span>
+                <div style={{ background: 'var(--surface)', borderRadius: 'var(--radius)', padding: '22px 14px 14px' }}>
+                  <div style={{
+                    background: 'var(--bg)', borderRadius: 'var(--radius-sm)', padding: 14,
+                    borderStyle: 'solid', borderColor: colorEstado,
+                    borderWidth: '0.5px 0.5px 0.5px 5px',
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8 }}>
+                      {esNegativo ? <AlertTriangle size={15} color={colorEstado} /> : <Check size={15} color={colorEstado} />}
+                      <span style={{ fontSize: 12.5, fontWeight: 600, color: colorEstado }}>
+                        {esNegativo ? '¡Cuidado! Puede alterar tus finanzas.' : 'Todo bien.'} Periodo {rangeLabel(first.start, first.end)}
+                      </span>
                     </div>
-                    {second.variablesPendientes > 0 && (
-                      <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 2 }}>
-                        +{second.variablesPendientes} Pago{second.variablesPendientes > 1 ? 's' : ''} variable{second.variablesPendientes > 1 ? 's' : ''} sin contar
-                      </div>
-                    )}
+                    <div style={{ fontSize: 30, fontWeight: 700, lineHeight: 1.2, color: colorEstado }}>
+                      {fmt(first.disponibleDespues)}
+                    </div>
+                    <div style={{ fontSize: 12, fontWeight: 400, color: 'var(--text)', marginTop: 4 }}>
+                      Disponible actualmente {fmt(first.disponibleAntes)} MXN
+                      {first.variablesPendientes > 0 && <>{'   '}+{first.variablesPendientes} Pago{first.variablesPendientes > 1 ? 's' : ''} variable{first.variablesPendientes > 1 ? 's' : ''}</>}
+                    </div>
                   </div>
-                )}
 
-                {!profile.salary_enabled && (
-                  <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 8 }}>
-                    Configura tu sueldo en Ajustes para ver tu disponible completo.
-                  </div>
-                )}
+                  {second && (
+                    <div style={{ marginTop: 10 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                          <Repeat size={13} color="var(--text)" />
+                          <span style={{ fontSize: 12, fontWeight: 400, color: 'var(--text)' }}>Disponible al siguiente periodo ({rangeLabel(second.start, second.end)})</span>
+                        </div>
+                        <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--text)' }}>{fmt(second.disponibleDespues)} MXN</span>
+                      </div>
+                      {second.variablesPendientes > 0 && (
+                        <div style={{ fontSize: 11, fontWeight: 400, color: 'var(--text)', marginTop: 2 }}>
+                          +{second.variablesPendientes} Pago{second.variablesPendientes > 1 ? 's' : ''} variable{second.variablesPendientes > 1 ? 's' : ''} sin contar
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {!profile.salary_enabled && (
+                    <div style={{ fontSize: 11, fontWeight: 400, color: 'var(--text)', marginTop: 8 }}>
+                      Configura tu sueldo en Ajustes para ver tu disponible completo.
+                    </div>
+                  )}
+                </div>
               </div>
             )
           })()}
