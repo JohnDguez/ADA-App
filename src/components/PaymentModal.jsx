@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { Wallet, AlertTriangle, Repeat, Check } from 'lucide-react'
-import { CATEGORIES, RECUR_FREQ, WEEKDAYS_SHORT, MONTHS_SHORT, nextWeekdayDate, nextBiweeklyFromDate, nextPeriodDate, fmt, nameExistsActive, projectPeriodImpact } from '../lib/utils'
+import { CATEGORIES, RECUR_FREQ, WEEKDAYS_SHORT, MONTHS_SHORT, nextWeekdayDate, nextBiweeklyFromDate, nextPeriodDate, cobroPeriod, fmt, nameExistsActive, projectPeriodImpact } from '../lib/utils'
+import { supabase } from '../lib/supabase'
 import { ConfirmCloseModal } from './ConfirmCloseModal'
 import { FrequencyPicker } from './FrequencyPicker'
 
@@ -24,6 +25,7 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
   const [paidAt,             setPaidAt]             = useState('')
   const [addingCategory,     setAddingCategory]     = useState(false)
   const [newCategoryName,    setNewCategoryName]    = useState('')
+  const [periodIncomes,      setPeriodIncomes]      = useState([])
 
   const isEditingInstallment = !!(initial?.is_installment)
 
@@ -37,6 +39,26 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
   useEffect(() => {
     dirtyRef.current = initial ? true : (name.trim() !== '' || amount !== '' || totalInstallments !== '')
   }, [initial, name, amount, totalInstallments])
+
+  // Simulador — ingresos extra del periodo actual (period_income), para que
+  // "Impacto en tus finanzas" refleje lo mismo que el remanente real de la
+  // app cuando el pago cae en el periodo actual (ver `projectPeriodImpact`).
+  // Solo lectura, solo cuando se está creando un pago nuevo.
+  useEffect(() => {
+    if (!open || initial || !profile) { setPeriodIncomes([]); return }
+    let cancelled = false
+    async function loadPeriodIncomes() {
+      const { start } = cobroPeriod(profile)
+      const periodStartStr = start.toISOString().split('T')[0]
+      const { data } = await supabase
+        .from('period_income')
+        .select('amount')
+        .eq('period_start', periodStartStr)
+      if (!cancelled) setPeriodIncomes(data || [])
+    }
+    loadPeriodIncomes()
+    return () => { cancelled = true }
+  }, [open, initial, profile])
 
   useEffect(() => {
     if (!open) return
@@ -172,7 +194,7 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
         amount: parseFloat(amount),
         isRecurring: mode === 'recurrent',
         recurFreq,
-      })
+      }, periodIncomes)
     : null
 
   const modalStyle = {
