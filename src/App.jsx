@@ -75,17 +75,18 @@ export default function App() {
   }, [user, payments])
 
   // Modal de Novedades: se muestra una vez por usuario, acumulando todo lo curado
-  // desde la última versión que vio hasta APP_VERSION actual
+  // desde la última versión que vio hasta APP_VERSION actual.
+  // IMPORTANTE: esperar a que `profile` termine de cargar (profileLoading === false).
+  // useProfile() inicializa `profile` con DEFAULT_PROFILE (sin last_seen_app_version)
+  // mientras trae los datos reales; evaluar antes de eso hacía que el modal se
+  // abriera en cada apertura de la app, sin importar lo que ya se hubiera guardado.
   useEffect(() => {
-    if (!user || !profile) return
+    if (!user || !profile || profileLoading) return
     const lastSeen = profile.last_seen_app_version
-    if (lastSeen === APP_VERSION) return
     const unseen = PATCH_NOTES.filter(n => isNewerVersion(n.version, lastSeen))
-    if (unseen.length > 0) {
-      setPatchNotesToShow(unseen)
-      setPatchNotesOpen(true)
-    }
-  }, [user, profile])
+    setPatchNotesToShow(unseen)
+    setPatchNotesOpen(unseen.length > 0)
+  }, [user, profile, profileLoading])
 
   if (authLoading || (user && profileLoading)) return <SkeletonLoader />
   if (isRecovery) return <ResetPasswordPage onDone={() => setIsRecovery(false)} />
