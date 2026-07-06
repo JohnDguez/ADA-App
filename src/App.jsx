@@ -14,9 +14,11 @@ import { NotificationsPanel } from './components/NotificationsPanel'
 import { PaymentModal } from './components/PaymentModal'
 import { VariableAmountModal } from './components/VariableAmountModal'
 import { RecurrentMigrationModal } from './components/RecurrentMigrationModal'
+import { PatchNotesModal } from './components/PatchNotesModal'
 import { Toast, showToast } from './components/Toast'
 import { SkeletonLoader } from './components/SkeletonLoader'
 import { useTheme } from './hooks/useTheme'
+import { APP_VERSION, PATCH_NOTES, isNewerVersion } from './lib/patchNotes'
 
 function fmt(n) { return '$' + Number(n).toLocaleString('es-MX', { minimumFractionDigits: 0, maximumFractionDigits: 0 }) }
 
@@ -48,6 +50,8 @@ export default function App() {
   const [notifOpen,      setNotifOpen]     = useState(false)
   const [slideDir,       setSlideDir]      = useState('right')
   const [migrationModal, setMigrationModal] = useState(false)
+  const [patchNotesOpen,   setPatchNotesOpen]   = useState(false)
+  const [patchNotesToShow, setPatchNotesToShow] = useState([])
 
   const migrationRan = useRef(false)
 
@@ -69,6 +73,19 @@ export default function App() {
       }
     }
   }, [user, payments])
+
+  // Modal de Novedades: se muestra una vez por usuario, acumulando todo lo curado
+  // desde la última versión que vio hasta APP_VERSION actual
+  useEffect(() => {
+    if (!user || !profile) return
+    const lastSeen = profile.last_seen_app_version
+    if (lastSeen === APP_VERSION) return
+    const unseen = PATCH_NOTES.filter(n => isNewerVersion(n.version, lastSeen))
+    if (unseen.length > 0) {
+      setPatchNotesToShow(unseen)
+      setPatchNotesOpen(true)
+    }
+  }, [user, profile])
 
   if (authLoading || (user && profileLoading)) return <SkeletonLoader />
   if (isRecovery) return <ResetPasswordPage onDone={() => setIsRecovery(false)} />
@@ -144,6 +161,11 @@ export default function App() {
       await deletePayment(id)
     }
     showToast('Pago eliminado')
+  }
+
+  async function handleClosePatchNotes() {
+    setPatchNotesOpen(false)
+    await updateProfile({ last_seen_app_version: APP_VERSION })
   }
 
   async function handlePauseRecurrent(masterId) {
@@ -338,6 +360,11 @@ export default function App() {
           localStorage.setItem('ada_recurrent_v2_seen', '1')
           setMigrationModal(false)
         }}
+      />
+      <PatchNotesModal
+        open={patchNotesOpen}
+        notes={patchNotesToShow}
+        onClose={handleClosePatchNotes}
       />
       <Toast />
     </>
