@@ -206,15 +206,19 @@ export function groupPayments(payments) {
     .sort((a, b) => dateOf(a.due_date) - dateOf(b.due_date))
 }
 
-// Proyecta el impacto de un pago (uno ya existente o uno nuevo que se está
-// armando en el formulario) sobre el periodo en el que realmente vence — sin
-// importar qué tan lejos esté — más el periodo actual como contexto. Si el
-// pago es recurrente, también incluye el periodo de su 2da ocurrencia. Es un
-// cálculo en memoria — no crea registros ni toca Supabase.
-// `candidate` (opcional): { dueDate: 'YYYY-MM-DD', amount, isVariable, isRecurring, recurFreq }
-export function projectPeriodImpact(payments, profile, candidate = null) {
+// Proyecta el impacto de un pago (uno nuevo que se está armando en el
+// formulario) sobre el/los periodo(s) donde realmente cae — sin importar qué
+// tan lejos esté. Si es recurrente, incluye también el periodo de su 2da
+// ocurrencia. Ya NO incluye el periodo actual si el pago no cae ahí (se quitó
+// del diseño: no aporta a la decisión de "me alcanza o no cuando venza").
+// Cálculo en memoria — no crea registros ni toca Supabase.
+// `candidate`: { dueDate: 'YYYY-MM-DD', amount, isVariable, isRecurring, recurFreq }
+export function projectPeriodImpact(payments, profile, candidate) {
+  if (!candidate?.dueDate || candidate.isVariable) return []
+
   const salario = profile.salary_enabled ? Number(profile.salary_amount || 0) : 0
   const activos = payments.filter(p => !p.is_paid && !p.paused && !p.is_master)
+  const cur = cobroPeriod(profile)
 
   function committedIn(start, end, includeOverdue) {
     const inRange = p => {
@@ -228,41 +232,20 @@ export function projectPeriodImpact(payments, profile, candidate = null) {
     return { comprometido, variablesPendientes }
   }
 
-  const cur = cobroPeriod(profile)
+  const maxOcurrencias = candidate.isRecurring ? 2 : 1
   const results = []
-  const byStart = new Map() // start.getTime() -> índice en results, para no duplicar el mismo periodo
-
-  function upsertPeriod(period, isCurrent, montoCandidato, ocurrencias) {
-    const k = period.start.getTime()
-    if (byStart.has(k)) {
-      const r = results[byStart.get(k)]
-      r.montoCandidato    += montoCandidato
-      r.ocurrencias        += ocurrencias
-      r.disponibleDespues   = r.disponibleAntes - r.montoCandidato
-      return
-    }
-    const { comprometido, variablesPendientes } = committedIn(period.start, period.end, isCurrent)
+  let d = dateOf(candidate.dueDate)
+  for (let i = 0; i < maxOcurrencias; i++) {
+    const p = cobroPeriod(profile, d)
+    const includeOverdue = p.start.getTime() === cur.start.getTime()
+    const { comprometido, variablesPendientes } = committedIn(p.start, p.end, includeOverdue)
     const disponibleAntes   = salario - comprometido
-    const disponibleDespues = disponibleAntes - montoCandidato
-    byStart.set(k, results.length)
-    results.push({ isCurrent, start: period.start, end: period.end, comprometido, variablesPendientes, disponibleAntes, disponibleDespues, montoCandidato, ocurrencias })
+    const disponibleDespues = disponibleAntes - Number(candidate.amount)
+    results.push({ start: p.start, end: p.end, disponibleAntes, disponibleDespues, variablesPendientes })
+    if (!candidate.isRecurring) break
+    d = nextPeriodDate(d, candidate.recurFreq)
   }
-
-  // El periodo actual siempre se incluye, como contexto (aunque el pago no caiga aquí)
-  upsertPeriod(cur, true, 0, 0)
-
-  if (candidate?.dueDate && !candidate.isVariable) {
-    const maxOcurrencias = candidate.isRecurring ? 2 : 1
-    let d = dateOf(candidate.dueDate)
-    for (let i = 0; i < maxOcurrencias; i++) {
-      const p = cobroPeriod(profile, d)
-      upsertPeriod(p, p.start.getTime() === cur.start.getTime(), Number(candidate.amount), 1)
-      if (!candidate.isRecurring) break
-      d = nextPeriodDate(d, candidate.recurFreq)
-    }
-  }
-
-  return results.sort((a, b) => a.start - b.start)
+  return results
 }
 
 export function nameExistsActive(payments, name, excludeName = null) {
