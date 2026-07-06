@@ -104,17 +104,26 @@ export function PaymentsPage({ payments, profile, unreadCount, onOpenNotifs, onG
   const [remCustomAmount,  setRemCustomAmount]  = useState('')
   const [savingRem,        setSavingRem]        = useState(false)
 
+  // Modal gestionar ingresos extras (editar / eliminar)
+  const [manageIncomeModal,    setManageIncomeModal]    = useState(false)
+  const [editingIncomeId,      setEditingIncomeId]      = useState(null)
+  const [editIncomeType,       setEditIncomeType]       = useState('Bono')
+  const [editIncomeAmount,     setEditIncomeAmount]     = useState('')
+  const [editIncomeNote,       setEditIncomeNote]       = useState('')
+  const [savingEditIncome,     setSavingEditIncome]     = useState(false)
+  const [confirmDeleteIncomeId, setConfirmDeleteIncomeId] = useState(null)
+
   const paidPayments = payments.filter(p => p.is_paid)
 
   // ── Bloquear scroll cuando hay modal abierto ──────────────────────────────
   useEffect(() => {
-    if (incomeModal || remModal) {
+    if (incomeModal || remModal || manageIncomeModal) {
       document.body.classList.add('modal-open')
     } else {
       document.body.classList.remove('modal-open')
     }
     return () => document.body.classList.remove('modal-open')
-  }, [incomeModal, remModal])
+  }, [incomeModal, remModal, manageIncomeModal])
 
   // ── Cargar ingresos y verificar inicio de periodo ─────────────────────────
   useEffect(() => {
@@ -211,6 +220,46 @@ export function PaymentsPage({ payments, profile, unreadCount, onOpenNotifs, onG
       setIncomeType('Bono')
     }
     setSavingIncome(false)
+  }
+
+  function startEditIncome(inc) {
+    setEditingIncomeId(inc.id)
+    setEditIncomeType(inc.type)
+    setEditIncomeAmount(String(inc.amount))
+    setEditIncomeNote(inc.note || '')
+    setConfirmDeleteIncomeId(null)
+  }
+
+  function cancelEditIncome() {
+    setEditingIncomeId(null)
+    setEditIncomeType('Bono')
+    setEditIncomeAmount('')
+    setEditIncomeNote('')
+  }
+
+  async function handleUpdateIncome(id) {
+    const amount = parseFloat(editIncomeAmount)
+    if (!amount || amount <= 0) return
+    setSavingEditIncome(true)
+
+    const { error } = await supabase.from('period_income').update({
+      type: editIncomeType,
+      amount,
+      note: editIncomeNote.trim() || null,
+    }).eq('id', id)
+
+    if (!error) {
+      await loadIncomes()
+      cancelEditIncome()
+    }
+    setSavingEditIncome(false)
+  }
+
+  async function handleDeleteIncome(id) {
+    await supabase.from('period_income').delete().eq('id', id)
+    await loadIncomes()
+    setConfirmDeleteIncomeId(null)
+    if (editingIncomeId === id) cancelEditIncome()
   }
 
   async function handleAddRemanente(amount) {
@@ -559,6 +608,129 @@ export function PaymentsPage({ payments, profile, unreadCount, onOpenNotifs, onG
         </div>
       )}
 
+      {/* ── Modal Gestionar Ingresos Extras (editar / eliminar) ── */}
+      {manageIncomeModal && (
+        <div
+          onClick={() => { setManageIncomeModal(false); cancelEditIncome(); setConfirmDeleteIncomeId(null) }}
+          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', zIndex: 1000, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}
+        >
+          <div
+            onClick={e => e.stopPropagation()}
+            style={{ background: 'var(--surface)', borderRadius: '20px 20px 0 0', padding: '24px 20px 32px', width: '100%', maxWidth: 420, maxHeight: '80vh', overflowY: 'auto' }}
+          >
+            <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--text)', marginBottom: 16 }}>
+              Ingresos Extras del Periodo
+            </div>
+
+            {periodIncomes.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: '20px 0', fontSize: 13, fontWeight: 500, color: 'var(--text)' }}>
+                Sin ingresos extras este periodo
+              </div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 8 }}>
+                {periodIncomes.map(inc => (
+                  <div key={inc.id} style={{ border: '0.5px solid var(--border)', borderRadius: 'var(--radius-sm)', padding: 12 }}>
+                    {editingIncomeId === inc.id ? (
+                      <>
+                        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 10 }}>
+                          {INCOME_TYPES.map(t => (
+                            <button
+                              key={t}
+                              onClick={() => setEditIncomeType(t)}
+                              style={{
+                                padding: '6px 12px',
+                                borderRadius: 5,
+                                border: editIncomeType === t ? 'none' : '1px solid var(--border)',
+                                background: editIncomeType === t ? 'var(--accent)' : 'var(--surface)',
+                                color: editIncomeType === t ? '#fff' : 'var(--text)',
+                                fontSize: 12,
+                                fontWeight: editIncomeType === t ? 700 : 500,
+                                cursor: 'pointer',
+                                fontFamily: 'DM Sans, sans-serif',
+                              }}
+                            >
+                              {t}
+                            </button>
+                          ))}
+                        </div>
+                        <input
+                          type="number"
+                          placeholder="$0"
+                          value={editIncomeAmount}
+                          onChange={e => setEditIncomeAmount(e.target.value)}
+                          style={{ width: '100%', padding: '9px 11px', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', fontSize: 13, fontWeight: 500, color: 'var(--text)', background: 'var(--bg)', outline: 'none', fontFamily: 'DM Sans, sans-serif', marginBottom: 8 }}
+                        />
+                        <input
+                          type="text"
+                          placeholder="Nota (opcional)"
+                          value={editIncomeNote}
+                          onChange={e => setEditIncomeNote(e.target.value)}
+                          style={{ width: '100%', padding: '9px 11px', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', fontSize: 13, fontWeight: 500, color: 'var(--text)', background: 'var(--bg)', outline: 'none', fontFamily: 'DM Sans, sans-serif', marginBottom: 10 }}
+                        />
+                        <div style={{ display: 'flex', gap: 8 }}>
+                          <button
+                            onClick={() => handleUpdateIncome(inc.id)}
+                            disabled={savingEditIncome || !editIncomeAmount || parseFloat(editIncomeAmount) <= 0}
+                            style={{ flex: 1, padding: '9px', background: 'var(--accent)', color: '#fff', border: 'none', borderRadius: 5, fontSize: 13, fontWeight: 600, cursor: 'pointer', opacity: savingEditIncome || !editIncomeAmount || parseFloat(editIncomeAmount) <= 0 ? 0.6 : 1, fontFamily: 'DM Sans, sans-serif' }}
+                          >
+                            {savingEditIncome ? 'Guardando...' : 'Guardar'}
+                          </button>
+                          <button
+                            onClick={cancelEditIncome}
+                            style={{ flex: 1, padding: '9px', background: 'none', color: 'var(--text)', border: '0.5px solid var(--border)', borderRadius: 5, fontSize: 13, fontWeight: 500, cursor: 'pointer', fontFamily: 'DM Sans, sans-serif' }}
+                          >
+                            Cancelar
+                          </button>
+                        </div>
+                      </>
+                    ) : confirmDeleteIncomeId === inc.id ? (
+                      <div>
+                        <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)', marginBottom: 10 }}>
+                          ¿Eliminar este ingreso?
+                        </div>
+                        <div style={{ display: 'flex', gap: 8 }}>
+                          <button
+                            onClick={() => handleDeleteIncome(inc.id)}
+                            style={{ flex: 1, padding: '9px', background: 'var(--danger)', color: '#fff', border: 'none', borderRadius: 5, fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'DM Sans, sans-serif' }}
+                          >
+                            Sí, eliminar
+                          </button>
+                          <button
+                            onClick={() => setConfirmDeleteIncomeId(null)}
+                            style={{ flex: 1, padding: '9px', background: 'none', color: 'var(--text)', border: '0.5px solid var(--border)', borderRadius: 5, fontSize: 13, fontWeight: 500, cursor: 'pointer', fontFamily: 'DM Sans, sans-serif' }}
+                          >
+                            Cancelar
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <div>
+                          <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)' }}>{inc.type}</div>
+                          {inc.note && <div style={{ fontSize: 11, fontWeight: 400, color: 'var(--text)', marginTop: 2 }}>{inc.note}</div>}
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                          <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--paid)' }}>+{fmt(inc.amount)}</span>
+                          <Pencil size={15} color="var(--text)" style={{ cursor: 'pointer' }} onClick={() => startEditIncome(inc)} />
+                          <Trash2 size={15} color="var(--danger)" style={{ cursor: 'pointer' }} onClick={() => setConfirmDeleteIncomeId(inc.id)} />
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <button
+              onClick={() => { setManageIncomeModal(false); cancelEditIncome(); setConfirmDeleteIncomeId(null) }}
+              style={{ width: '100%', padding: '10px', background: 'none', color: 'var(--text)', border: '0.5px solid var(--border)', borderRadius: 'var(--radius-sm)', fontSize: 14, fontWeight: 500, cursor: 'pointer', fontFamily: 'DM Sans, sans-serif', marginTop: 4 }}
+            >
+              Cerrar
+            </button>
+          </div>
+        </div>
+      )}
+
       <PageHeader
         profile={profile}
         unreadCount={unreadCount}
@@ -666,7 +838,16 @@ export function PaymentsPage({ payments, profile, unreadCount, onOpenNotifs, onG
             {/* Ingresos extras del periodo */}
             {!loadingIncomes && periodIncomes.length > 0 && (
               <div style={{ marginTop: 12, paddingTop: 12, borderTop: '0.5px solid var(--border)' }}>
-                <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--text)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8 }}>Ingresos Extras Este Periodo</div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                  <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--text)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Ingresos Extras Este Periodo</div>
+                  <button
+                    onClick={() => setManageIncomeModal(true)}
+                    style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '3px 8px', borderRadius: 5, border: 'none', background: 'transparent', color: 'var(--accent)', fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: 'DM Sans, sans-serif' }}
+                  >
+                    <Pencil size={11} strokeWidth={2.2} />
+                    Editar
+                  </button>
+                </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                   {periodIncomes.map(inc => (
                     <div key={inc.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
