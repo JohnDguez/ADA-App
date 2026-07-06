@@ -459,7 +459,7 @@ export function PaymentsPage({ payments, profile, unreadCount, onOpenNotifs, onG
         >
           <div
             onClick={e => e.stopPropagation()}
-            style={{ background: 'var(--surface)', borderRadius: '20px 20px 0 0', padding: '24px 20px 32px', width: '100%', maxWidth: 420 }}
+            style={{ background: 'var(--surface)', borderRadius: '20px 20px 0 0', padding: '24px 20px 32px', width: '100%', maxWidth: 420, animation: 'modalSlideUp .32s cubic-bezier(0.25, 0.46, 0.45, 0.94) both' }}
           >
             <div style={{ textAlign: 'center', marginBottom: 20 }}>
               <div style={{ fontSize: 28, marginBottom: 8 }}>
@@ -534,7 +534,7 @@ export function PaymentsPage({ payments, profile, unreadCount, onOpenNotifs, onG
         >
           <div
             onClick={e => e.stopPropagation()}
-            style={{ background: 'var(--surface)', borderRadius: '20px 20px 0 0', padding: '24px 20px 32px', width: '100%', maxWidth: 420 }}
+            style={{ background: 'var(--surface)', borderRadius: '20px 20px 0 0', padding: '24px 20px 32px', width: '100%', maxWidth: 420, animation: 'modalSlideUp .32s cubic-bezier(0.25, 0.46, 0.45, 0.94) both' }}
           >
             <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--text)', marginBottom: 20 }}>
               Añadir Ingreso Extra
@@ -616,7 +616,7 @@ export function PaymentsPage({ payments, profile, unreadCount, onOpenNotifs, onG
         >
           <div
             onClick={e => e.stopPropagation()}
-            style={{ background: 'var(--surface)', borderRadius: '20px 20px 0 0', padding: '24px 20px 32px', width: '100%', maxWidth: 420, maxHeight: '80vh', overflowY: 'auto' }}
+            style={{ background: 'var(--surface)', borderRadius: '20px 20px 0 0', padding: '24px 20px 32px', width: '100%', maxWidth: 420, maxHeight: '80vh', overflowY: 'auto', animation: 'modalSlideUp .32s cubic-bezier(0.25, 0.46, 0.45, 0.94) both' }}
           >
             <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--text)', marginBottom: 16 }}>
               Ingresos Extras del Periodo
