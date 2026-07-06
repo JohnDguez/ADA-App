@@ -270,6 +270,26 @@ export function projectPeriodImpact(payments, profile, candidate, periodIncomes 
     const disponibleAntes = esActual
       ? salario + extrasActual - pagadoEn(p.start, p.end) - comprometido
       : salario - comprometido
+
+    if (esActual) {
+      // TEMPORAL — quitar una vez que se confirme el número correcto.
+      console.log('[simulador debug]', {
+        salario, extrasActual,
+        pagadoEstePeriodo: pagadoEn(p.start, p.end),
+        comprometidoPendiente: comprometido,
+        disponibleAntes,
+        pagosPagadosConsiderados: pagados.filter(pg => {
+          if (!pg.paid_at) return false
+          const d = dateOf(new Date(pg.paid_at).toISOString().split('T')[0])
+          return d >= p.start && d <= p.end
+        }).map(pg => ({ nombre: pg.name, monto: pg.amount, paid_at: pg.paid_at, due_date: pg.due_date })),
+        pagosPendientesConsiderados: pendientes.filter(pg => {
+          if (pg.is_variable) return false
+          const d = dateOf(pg.due_date)
+          return d <= p.end
+        }).map(pg => ({ nombre: pg.name, monto: pg.amount, due_date: pg.due_date })),
+      })
+    }
     const disponibleDespues = disponibleAntes - Number(candidate.amount)
     results.push({ start: p.start, end: p.end, disponibleAntes, disponibleDespues, variablesPendientes })
     if (!candidate.isRecurring) break
