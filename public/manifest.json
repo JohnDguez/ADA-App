@@ -1,6 +1,6 @@
 {
-  "name": "ADA Pay",
-  "short_name": "ADA Pay",
+  "name": "LunaPay",
+  "short_name": "LunaPay",
   "description": "Track. Pay. Relax.",
   "start_url": "/",
   "display": "standalone",
