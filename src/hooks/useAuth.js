@@ -1,6 +1,24 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
 
+// Si el usuario inició sesión con Google y aún no tiene avatar_url guardado,
+// lo toma de los datos que Google ya comparte en el login (una sola vez).
+// El filtro .is('avatar_url', null) hace que esto sea seguro de llamar en
+// cada login: si ya se guardó (o el usuario subió una foto propia en
+// Ajustes), no se sobreescribe ni se vuelve a sincronizar automáticamente.
+async function syncGoogleAvatar(user) {
+  if (!user) return
+  const isGoogle = user.app_metadata?.provider === 'google'
+  if (!isGoogle) return
+  const avatarFromGoogle = user.user_metadata?.avatar_url || user.user_metadata?.picture
+  if (!avatarFromGoogle) return
+  await supabase
+    .from('profiles')
+    .update({ avatar_url: avatarFromGoogle })
+    .eq('id', user.id)
+    .is('avatar_url', null)
+}
+
 export function useAuth() {
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -37,6 +55,7 @@ export function useAuth() {
       // Flujo normal
       const { data: { session } } = await supabase.auth.getSession()
       setUser(session?.user ?? null)
+      syncGoogleAvatar(session?.user)
       setLoading(false)
     }
 
@@ -51,6 +70,7 @@ export function useAuth() {
       }
       if (!isRecovery) {
         setUser(session?.user ?? null)
+        syncGoogleAvatar(session?.user)
         setLoading(false)
       }
     })
