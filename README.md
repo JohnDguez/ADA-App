@@ -1,24 +1,24 @@
 <div align="center">
 
-  <img src="https://raw.githubusercontent.com/JohnDguez/ADA-App/main/public/ADA-Pay-logo.svg" alt="ADA Pay" height="120" />
+  <img src="https://raw.githubusercontent.com/JohnDguez/ADA-App/main/public/Luna-Pay-logo.svg" alt="LunaPay" height="120" />
 
-  # ADA Pay
+  # LunaPay
   
   **Track. Pay. Relax.**
   
   App personal de control de pagos y recordatorios financieros.
   
-  ![Version](https://img.shields.io/badge/version-0.8.0-blue)
-  ![Status](https://img.shields.io/badge/status-Pre--Alpha-orange)
+  ![Version](https://img.shields.io/badge/version-0.9.52-blue)
+  ![Status](https://img.shields.io/badge/status-Alpha-orange)
   ![Stack](https://img.shields.io/badge/stack-React%20%2B%20Supabase-green)
 
 </div>
 
 ---
 
-## ¿Qué es ADA Pay?
+## ¿Qué es LunaPay?
 
-ADA Pay es una PWA (Progressive Web App) de control financiero personal. Te ayuda a:
+LunaPay es una PWA (Progressive Web App) de control financiero personal. Te ayuda a:
 
 - **Registrar** todos tus compromisos de pago
 - **Organizar** los pagos por tu periodo de cobro (semanal, quincenal o mensual)
