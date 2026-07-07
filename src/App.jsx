@@ -15,6 +15,7 @@ import { PaymentModal } from './components/PaymentModal'
 import { VariableAmountModal } from './components/VariableAmountModal'
 import { RecurrentMigrationModal } from './components/RecurrentMigrationModal'
 import { PatchNotesModal } from './components/PatchNotesModal'
+import { PasswordSetupModal } from './components/PasswordSetupModal'
 import { Toast, showToast } from './components/Toast'
 import { SkeletonLoader } from './components/SkeletonLoader'
 import { useTheme } from './hooks/useTheme'
@@ -92,6 +93,15 @@ export default function App() {
   if (isRecovery) return <ResetPasswordPage onDone={() => setIsRecovery(false)} />
   if (!user) return <AuthPage />
   if (user && !profile.onboarding_completed) return <OnboardingPage userId={user.id} onDone={updateProfile} />
+
+  // Usuarios de Google sin contraseña: necesitan una para poder confirmar
+  // acciones sensibles (eliminar datos/cuenta) en SettingsPage. Bloquea el
+  // resto de la app hasta que la configuren — igual de prioritario que el
+  // onboarding. onDone actualiza profile.has_password vía updateProfile (no
+  // solo en Supabase) para que este chequeo no se repita en el mismo render.
+  if (user && profile.onboarding_completed && !profile.has_password) {
+    return <PasswordSetupModal userId={user.id} onDone={() => updateProfile({ has_password: true })} />
+  }
 
   const TAB_ORDER = ['home', 'payments', 'recurrents', 'settings']
   sessionStorage.setItem('ada_session', '1')
