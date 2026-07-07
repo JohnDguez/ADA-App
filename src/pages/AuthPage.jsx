@@ -2,7 +2,8 @@ import { useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { Eye, EyeOff, Lock, Mail, KeyRound, X, Check } from 'lucide-react'
 import { passwordRequirements, isPasswordStrong } from '../components/PasswordSetupModal'
-import { useTheme } from '../hooks/useTheme'
+import Logo from '../components/Logo'
+import { APP_NAME } from '../lib/constants'
 
 // ── Modal de Términos y Condiciones ──────────────────────────────────────────
 function TermsModal({ onClose }) {
@@ -20,16 +21,16 @@ function TermsModal({ onClose }) {
         </div>
         <div style={{ overflowY: 'auto', padding: '20px', flex: 1, lineHeight: 1.7, fontSize: 13, color: 'var(--text)' }}>
           <p style={{ marginBottom: 16 }}>Última actualización: junio de 2026</p>
-          <p style={{ marginBottom: 16 }}>Bienvenido a <strong>ADA Pay</strong>. Al crear una cuenta, aceptas los presentes Términos y Condiciones de uso. Por favor léelos cuidadosamente antes de continuar.</p>
-          <Section title="1. Descripción del servicio">ADA Pay es una aplicación de seguimiento personal de pagos y compromisos financieros. Su propósito es ayudarte a organizar y recordar tus pagos según tu periodo de cobro. ADA Pay no es una institución financiera, no gestiona dinero real, no realiza transferencias y no tiene acceso a tus cuentas bancarias.</Section>
-          <Section title="2. Registro y cuenta">Para usar ADA Pay debes crear una cuenta con un correo electrónico válido o mediante tu cuenta de Google. Eres responsable de mantener la confidencialidad de tus credenciales de acceso. Debes ser mayor de 18 años para registrarte.</Section>
-          <Section title="3. Uso aceptable">Te comprometes a usar ADA Pay únicamente para fines personales y lícitos. Queda prohibido usar la aplicación para actividades fraudulentas, suplantar identidades, o intentar vulnerar la seguridad del sistema.</Section>
-          <Section title="4. Privacidad y datos">Los datos que ingresas en ADA Pay (nombre, pagos, montos) se almacenan de forma segura en servidores de Supabase. No vendemos ni compartimos tu información personal con terceros con fines comerciales. Puedes eliminar tu cuenta y tus datos en cualquier momento desde Ajustes.</Section>
-          <Section title="5. Notificaciones push">Si activas las notificaciones, ADA Pay enviará alertas relacionadas con tus pagos registrados. Puedes desactivarlas en cualquier momento desde Ajustes o desde la configuración de tu dispositivo.</Section>
-          <Section title="6. Limitación de responsabilidad">ADA Pay es una herramienta de apoyo personal. No garantizamos que el uso de la aplicación prevenga pagos tardíos, cargos por mora u otras consecuencias financieras. El usuario es el único responsable de sus decisiones financieras.</Section>
+          <p style={{ marginBottom: 16 }}>Bienvenido a <strong>{APP_NAME}</strong>. Al crear una cuenta, aceptas los presentes Términos y Condiciones de uso. Por favor léelos cuidadosamente antes de continuar.</p>
+          <Section title="1. Descripción del servicio">{APP_NAME} es una aplicación de seguimiento personal de pagos y compromisos financieros. Su propósito es ayudarte a organizar y recordar tus pagos según tu periodo de cobro. {APP_NAME} no es una institución financiera, no gestiona dinero real, no realiza transferencias y no tiene acceso a tus cuentas bancarias.</Section>
+          <Section title="2. Registro y cuenta">Para usar {APP_NAME} debes crear una cuenta con un correo electrónico válido o mediante tu cuenta de Google. Eres responsable de mantener la confidencialidad de tus credenciales de acceso. Debes ser mayor de 18 años para registrarte.</Section>
+          <Section title="3. Uso aceptable">Te comprometes a usar {APP_NAME} únicamente para fines personales y lícitos. Queda prohibido usar la aplicación para actividades fraudulentas, suplantar identidades, o intentar vulnerar la seguridad del sistema.</Section>
+          <Section title="4. Privacidad y datos">Los datos que ingresas en {APP_NAME} (nombre, pagos, montos) se almacenan de forma segura en servidores de Supabase. No vendemos ni compartimos tu información personal con terceros con fines comerciales. Puedes eliminar tu cuenta y tus datos en cualquier momento desde Ajustes.</Section>
+          <Section title="5. Notificaciones push">Si activas las notificaciones, {APP_NAME} enviará alertas relacionadas con tus pagos registrados. Puedes desactivarlas en cualquier momento desde Ajustes o desde la configuración de tu dispositivo.</Section>
+          <Section title="6. Limitación de responsabilidad">{APP_NAME} es una herramienta de apoyo personal. No garantizamos que el uso de la aplicación prevenga pagos tardíos, cargos por mora u otras consecuencias financieras. El usuario es el único responsable de sus decisiones financieras.</Section>
           <Section title="7. Disponibilidad del servicio">Nos esforzamos por mantener el servicio disponible en todo momento, pero no garantizamos disponibilidad ininterrumpida. Podemos realizar mantenimientos o actualizaciones sin previo aviso.</Section>
-          <Section title="8. Modificaciones">Nos reservamos el derecho de modificar estos términos en cualquier momento. Te notificaremos de cambios significativos a través de la aplicación. El uso continuado de ADA Pay tras los cambios implica tu aceptación.</Section>
-          <Section title="9. Cancelación">Puedes dejar de usar ADA Pay y eliminar tu cuenta en cualquier momento. Nos reservamos el derecho de suspender cuentas que violen estos términos.</Section>
+          <Section title="8. Modificaciones">Nos reservamos el derecho de modificar estos términos en cualquier momento. Te notificaremos de cambios significativos a través de la aplicación. El uso continuado de {APP_NAME} tras los cambios implica tu aceptación.</Section>
+          <Section title="9. Cancelación">Puedes dejar de usar {APP_NAME} y eliminar tu cuenta en cualquier momento. Nos reservamos el derecho de suspender cuentas que violen estos términos.</Section>
           <Section title="10. Contacto">Si tienes dudas sobre estos términos, puedes contactarnos a través de los canales disponibles en la aplicación.</Section>
           <p style={{ marginTop: 16, fontWeight: 600 }}>Al crear tu cuenta, confirmas que has leído y aceptas estos Términos y Condiciones.</p>
         </div>
@@ -72,10 +73,6 @@ function RequirementRow({ met, label }) {
 
 // ── Reset Password ────────────────────────────────────────────────────────────
 export function ResetPasswordPage({ onDone }) {
-  const { theme } = useTheme()
-  const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
-  const isDark = theme === 'dark' || (theme === 'sistema' && prefersDark)
-  const logoSrc = isDark ? '/ADA-Pay-logo-white.svg' : '/ADA-Pay-logo.svg'
   const [newPassword, setNewPassword] = useState('')
   const [confirm,     setConfirm]     = useState('')
   const [showNew,     setShowNew]     = useState(false)
@@ -107,7 +104,7 @@ export function ResetPasswordPage({ onDone }) {
   return (
     <div style={{ minHeight: '100vh', background: 'var(--bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 24px' }}>
       <div style={{ width: '100%', maxWidth: 360 }}>
-        <img src={logoSrc} alt="ADA Pay" style={{ width: '50%', maxWidth: 180, display: 'block', margin: '0 auto 40px' }} />
+        <Logo />
         <div style={{ fontSize: 22, fontWeight: 700, color: 'var(--text)', marginBottom: 6 }}>Nueva contraseña</div>
         <div style={{ fontSize: 14, color: 'var(--text)', marginBottom: 24 }}>Elige una contraseña segura para tu cuenta.</div>
         {error && <div style={{ background: 'var(--danger-soft)', border: '0.5px solid var(--danger-border)', borderRadius: 'var(--radius-sm)', padding: '10px 12px', fontSize: 13, color: 'var(--danger)', marginBottom: 16 }}>{error}</div>}
@@ -140,10 +137,6 @@ export function ResetPasswordPage({ onDone }) {
 
 // ── Auth Page ─────────────────────────────────────────────────────────────────
 export function AuthPage() {
-  const { theme } = useTheme()
-  const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
-  const isDark = theme === 'dark' || (theme === 'sistema' && prefersDark)
-  const logoSrc = isDark ? '/ADA-Pay-logo-white.svg' : '/ADA-Pay-logo.svg'
   const [mode,          setMode]          = useState('login')
   const [email,         setEmail]         = useState('')
   const [password,      setPassword]      = useState('')
@@ -213,7 +206,7 @@ export function AuthPage() {
   return (
     <div style={{ minHeight: '100vh', background: 'var(--bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 24px' }}>
       <div style={{ width: '100%', maxWidth: 360 }}>
-        <img src={logoSrc} alt="ADA Pay" style={{ width: '50%', maxWidth: 180, display: 'block', margin: '0 auto 40px' }} />
+        <Logo />
 
         {mode !== 'forgot' && (
           <div style={{ display: 'flex', background: 'var(--surface)', borderRadius: 10, padding: 3, marginBottom: 24, border: '0.5px solid var(--border)' }}>
