@@ -4,6 +4,7 @@ import { CATEGORIES, RECUR_FREQ, WEEKDAYS_SHORT, MONTHS_SHORT, nextWeekdayDate, 
 import { supabase } from '../lib/supabase'
 import { ConfirmCloseModal } from './ConfirmCloseModal'
 import { FrequencyPicker } from './FrequencyPicker'
+import { PremiumLock } from './PremiumLock'
 
 export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelete, initial, payments, profile, customCategories = [], onAddCategory }) {
   const [mode,               setMode]               = useState('single')
@@ -477,6 +478,12 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
             const colorEstado = esNegativo ? 'var(--impact-warning)' : 'var(--accent)'
 
             return (
+              <PremiumLock
+                isPremium={profile?.is_premium}
+                label="Impacto en tus finanzas"
+                icon={Wallet}
+                message="Descubre como este nuevo gasto impacta en tus finanzas de ese periodo"
+              >
               <div style={{ marginBottom: 16 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'var(--accent)', fontSize: 12.5, fontWeight: 600, marginLeft: 4, marginBottom: 8 }}>
                   <Wallet size={14} />
@@ -533,6 +540,7 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
                   )}
                 </div>
               </div>
+              </PremiumLock>
             )
           })()}
 
