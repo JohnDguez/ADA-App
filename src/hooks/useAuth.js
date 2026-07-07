@@ -10,7 +10,6 @@ import { supabase } from '../lib/supabase'
 async function syncGoogleAvatar(user) {
   if (!user) return
   const googleIdentity = user.identities?.find(i => i.provider === 'google')
-  console.log('[avatar debug]', { userId: user.id, identities: user.identities, googleIdentity, userMetadata: user.user_metadata })
   if (!googleIdentity) return
   const avatarFromGoogle =
     googleIdentity.identity_data?.avatar_url ||
@@ -18,12 +17,11 @@ async function syncGoogleAvatar(user) {
     user.user_metadata?.avatar_url ||
     user.user_metadata?.picture
   if (!avatarFromGoogle) return
-  const { error } = await supabase
+  await supabase
     .from('profiles')
     .update({ avatar_url: avatarFromGoogle })
     .eq('id', user.id)
     .is('avatar_url', null)
-  console.log('[avatar debug] update result', { avatarFromGoogle, error })
 }
 
 export function useAuth() {
