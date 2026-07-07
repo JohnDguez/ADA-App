@@ -207,8 +207,8 @@ export function SettingsPage({ profile, user, onUpdate, onUploadAvatar, onDataDe
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: 24 }}>
           <div style={{ position: 'relative' }}>
             {profile.avatar_url
-              ? <img src={profile.avatar_url} alt="avatar" style={{ width: 80, height: 80, borderRadius: '50%', objectFit: 'cover' }} />
-              : <div style={{ width: 80, height: 80, borderRadius: '50%', background: 'var(--accent)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28, fontWeight: 700, color: 'var(--surface)' }}>{initials}</div>
+              ? <img src={profile.avatar_url} alt="avatar" style={{ width: 80, height: 80, borderRadius: '50%', objectFit: 'cover', border: profile.is_premium ? '2px solid var(--premium-gold)' : 'none' }} />
+              : <div style={{ width: 80, height: 80, borderRadius: '50%', background: 'var(--accent)', border: profile.is_premium ? '2px solid var(--premium-gold)' : 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28, fontWeight: 700, color: 'var(--surface)' }}>{initials}</div>
             }
             {profile.is_premium && (
               <div style={{
@@ -230,6 +230,18 @@ export function SettingsPage({ profile, user, onUpdate, onUploadAvatar, onDataDe
           </div>
           <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--text)', marginTop: 10 }}>{profile.name}</div>
           <div style={{ fontSize: 13, fontWeight: 400, color: 'var(--text)' }}>{user?.email}</div>
+          {profile.is_premium && (
+            <div style={{
+              display: 'flex', alignItems: 'center', gap: 5,
+              background: 'var(--premium-gold)', color: 'var(--premium-gold-text)',
+              fontSize: 11, fontWeight: 700,
+              padding: '4px 10px', borderRadius: 'var(--radius-full)',
+              marginTop: 8,
+            }}>
+              <Crown size={11} fill="currentColor" />
+              Cuenta Premium
+            </div>
+          )}
         </div>
 
         {/* Cuenta */}
