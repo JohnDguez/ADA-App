@@ -355,3 +355,16 @@ body.modal-open {
   --cat-custom-4: #FF5722;
   --cat-custom-5: #607D8B;
 }
+
+/* ── Premium (candado de funciones premium) ──────────────────────────────────
+   Tratamiento visual fijo, intencionalmente igual en light y dark: la tarjeta
+   bloqueada siempre es oscura con texto blanco, sin importar el tema activo
+   de la app (mismo criterio que --impact-warning-text, que tampoco depende
+   del tema). Reutilizado por cualquier función detrás de is_premium. */
+:root {
+  --premium-card-bg: #0B1220;
+  --premium-overlay: rgba(11, 18, 32, 0.85);
+  --premium-text:    #FFFFFF;
+  --premium-gold:      #F5C242;
+  --premium-gold-text: #1A1200;
+}
