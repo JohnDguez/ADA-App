@@ -242,11 +242,11 @@ export function projectPeriodImpact(payments, profile, candidate, periodIncomes 
       const d = dateOf(p.due_date)
       return includeOverdue ? d <= end : (d >= start && d <= end)
     }
-    const comprometido = pendientes
-      .filter(p => !p.is_variable && inRange(p))
-      .reduce((a, p) => a + Number(p.amount), 0)
+    const pendientesFijos = pendientes.filter(p => !p.is_variable && inRange(p))
+    const comprometido = pendientesFijos.reduce((a, p) => a + Number(p.amount), 0)
+    const pendientesCount = pendientesFijos.length
     const variablesPendientes = pendientes.filter(p => p.is_variable && inRange(p)).length
-    return { comprometido, variablesPendientes }
+    return { comprometido, pendientesCount, variablesPendientes }
   }
 
   function pagadoEn(start, end) {
@@ -265,13 +265,13 @@ export function projectPeriodImpact(payments, profile, candidate, periodIncomes 
   for (let i = 0; i < maxOcurrencias; i++) {
     const p = cobroPeriod(profile, d)
     const esActual = p.start.getTime() === cur.start.getTime()
-    const { comprometido, variablesPendientes } = pendienteEn(p.start, p.end, esActual)
+    const { comprometido, pendientesCount, variablesPendientes } = pendienteEn(p.start, p.end, esActual)
 
     const disponibleAntes = esActual
       ? salario + extrasActual - pagadoEn(p.start, p.end) - comprometido
       : salario - comprometido
     const disponibleDespues = disponibleAntes - Number(candidate.amount)
-    results.push({ start: p.start, end: p.end, disponibleAntes, disponibleDespues, variablesPendientes })
+    results.push({ start: p.start, end: p.end, disponibleAntes, disponibleDespues, variablesPendientes, pendientesCount, pendientesMonto: comprometido })
     if (!candidate.isRecurring) break
     d = nextPeriodDate(d, candidate.recurFreq)
   }
