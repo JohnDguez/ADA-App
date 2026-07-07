@@ -1,22 +1,29 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
 
-// Si el usuario inició sesión con Google y aún no tiene avatar_url guardado,
-// lo toma de los datos que Google ya comparte en el login (una sola vez).
-// El filtro .is('avatar_url', null) hace que esto sea seguro de llamar en
-// cada login: si ya se guardó (o el usuario subió una foto propia en
-// Ajustes), no se sobreescribe ni se vuelve a sincronizar automáticamente.
+// Si el usuario tiene Google vinculado a su cuenta y aún no tiene avatar_url
+// guardado, lo toma de los datos que Google ya comparte (una sola vez).
+// IMPORTANTE: no usar user.app_metadata.provider — ese campo solo refleja el
+// proveedor con el que el usuario se registró originalmente (ej. 'email'),
+// no los que vinculó/usó después. user.identities sí lista TODOS los
+// proveedores vinculados a la cuenta, cada uno con su propia identity_data.
 async function syncGoogleAvatar(user) {
   if (!user) return
-  const isGoogle = user.app_metadata?.provider === 'google'
-  if (!isGoogle) return
-  const avatarFromGoogle = user.user_metadata?.avatar_url || user.user_metadata?.picture
+  const googleIdentity = user.identities?.find(i => i.provider === 'google')
+  console.log('[avatar debug]', { userId: user.id, identities: user.identities, googleIdentity, userMetadata: user.user_metadata })
+  if (!googleIdentity) return
+  const avatarFromGoogle =
+    googleIdentity.identity_data?.avatar_url ||
+    googleIdentity.identity_data?.picture ||
+    user.user_metadata?.avatar_url ||
+    user.user_metadata?.picture
   if (!avatarFromGoogle) return
-  await supabase
+  const { error } = await supabase
     .from('profiles')
     .update({ avatar_url: avatarFromGoogle })
     .eq('id', user.id)
     .is('avatar_url', null)
+  console.log('[avatar debug] update result', { avatarFromGoogle, error })
 }
 
 export function useAuth() {
