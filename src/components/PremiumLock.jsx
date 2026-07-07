@@ -3,9 +3,9 @@ import { Crown } from 'lucide-react'
 // Candado visual reutilizable para cualquier función detrás de is_premium.
 // Si isPremium es true, muestra `children` normal, sin ningún cambio.
 // Si es false, dibuja `children` de fondo (borroso, solo de referencia visual)
-// y encima el mensaje + CTA de upgrade. El botón NO tiene lógica de cobro
-// todavía (onClick vacío) — is_premium se activa manualmente en Supabase
-// mientras no exista un flujo de pago real.
+// y encima el mensaje + CTA de upgrade. El botón llama a `onUpgradeClick`
+// (típicamente abre PremiumPage) — is_premium en sí se sigue activando
+// manualmente en Supabase mientras no exista un flujo de cobro real.
 export function PremiumLock({
   isPremium,
   label,
@@ -13,6 +13,7 @@ export function PremiumLock({
   message,
   ctaText = 'Prueba Premium GRATIS 7 días',
   finePrint = 'Solo para nuevos usuarios. Al finalizar la prueba $50 MXN al mes.',
+  onUpgradeClick,
   children,
 }) {
   if (isPremium) return children
@@ -49,7 +50,7 @@ export function PremiumLock({
           </div>
 
           <button
-            onClick={() => {}}
+            onClick={onUpgradeClick}
             style={{
               display: 'flex', alignItems: 'center', gap: 8,
               background: 'var(--premium-gold)', color: 'var(--premium-gold-text)',

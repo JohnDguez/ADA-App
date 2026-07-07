@@ -6,7 +6,7 @@ import { ConfirmCloseModal } from './ConfirmCloseModal'
 import { FrequencyPicker } from './FrequencyPicker'
 import { PremiumLock } from './PremiumLock'
 
-export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelete, initial, payments, profile, customCategories = [], onAddCategory }) {
+export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelete, initial, payments, profile, customCategories = [], onAddCategory, onOpenPremium }) {
   const [mode,               setMode]               = useState('single')
   const [name,               setName]               = useState('')
   const [amount,             setAmount]             = useState('')
@@ -483,6 +483,7 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
                 label="Impacto en tus finanzas"
                 icon={Wallet}
                 message="Descubre como este nuevo gasto impacta en tus finanzas de ese periodo"
+                onUpgradeClick={onOpenPremium}
               >
               <div style={{ marginBottom: 16 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'var(--accent)', fontSize: 12.5, fontWeight: 600, marginLeft: 4, marginBottom: 8 }}>
