@@ -21,12 +21,9 @@ export function PremiumLock({
     <div style={{ marginBottom: 16 }}>
       {label && (
         <div style={{
-          display: 'inline-flex', alignItems: 'center', gap: 6,
-          position: 'relative', zIndex: 1,
-          background: 'var(--accent)', color: 'var(--premium-text)',
-          fontSize: 12.5, fontWeight: 600,
-          padding: '10px 16px', borderRadius: 'var(--radius-sm)',
-          marginLeft: 4, marginBottom: -20,
+          display: 'flex', alignItems: 'center', gap: 6,
+          color: 'var(--accent)', fontSize: 12.5, fontWeight: 600,
+          marginLeft: 4, marginBottom: 8,
         }}>
           {Icon && <Icon size={14} />}
           {label}
@@ -36,7 +33,7 @@ export function PremiumLock({
       <div style={{
         position: 'relative', overflow: 'hidden',
         borderRadius: 'var(--radius)', background: 'var(--premium-card-bg)',
-        paddingTop: label ? 32 : 14,
+        paddingTop: 14,
       }}>
         <div style={{ filter: 'blur(6px)', pointerEvents: 'none', userSelect: 'none' }}>
           {children}
