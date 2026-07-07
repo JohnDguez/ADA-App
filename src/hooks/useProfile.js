@@ -12,6 +12,7 @@ const DEFAULT_PROFILE = {
   salary_enabled: false,
   salary_amount: 0,
   avatar_url: null,
+  is_premium: false,
 }
 
 export function useProfile(userId) {
