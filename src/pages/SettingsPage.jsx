@@ -24,7 +24,7 @@ function RequirementRow({ met, label }) {
   )
 }
 
-export function SettingsPage({ profile, user, onUpdate, onUploadAvatar, onDataDeleted, slideClass, theme, onThemeChange }) {
+export function SettingsPage({ profile, user, onUpdate, onUploadAvatar, onDataDeleted, slideClass, theme, onThemeChange, onOpenPremium }) {
   const [salaryAmount,    setSalaryAmount]    = useState(profile.salary_amount || '')
   const [editSection,     setEditSection]     = useState(null)
   const [fieldVal,        setFieldVal]        = useState('')
@@ -243,6 +243,24 @@ export function SettingsPage({ profile, user, onUpdate, onUploadAvatar, onDataDe
             </div>
           )}
         </div>
+
+        {!profile.is_premium && (
+          <button
+            onClick={onOpenPremium}
+            style={{
+              width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+              background: 'var(--surface)', border: '0.5px solid var(--premium-gold)',
+              borderRadius: 'var(--radius)', padding: '14px 16px', marginBottom: 16,
+              cursor: 'pointer',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <Crown size={18} color="var(--premium-gold)" fill="currentColor" />
+              <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--text)' }}>Obtener Premium</span>
+            </div>
+            <ChevronRight size={14} color="var(--text)" />
+          </button>
+        )}
 
         {/* Cuenta */}
         <Card>
