@@ -22,12 +22,23 @@ export function PremiumPage({ onClose }) {
       background: 'var(--bg)', overflowY: 'auto',
     }}>
 
-      {/* Hero: imagen subida por Johnatan (gradiente + corona ilustrada) */}
-      <div style={{ position: 'relative' }}>
+      {/* Hero: fondo (imagen subida por Johnatan, degradado) + corona
+          sobrepuesta (imagen separada, transparente, mitad afuera/adentro
+          del fondo) con flotación suave */}
+      <div style={{ position: 'relative', marginTop: 44 }}>
         <img
-          src="/premium-hero.png"
+          src="/premium-hero-bg.png"
           alt=""
           style={{ width: '100%', display: 'block', borderRadius: '0 0 28px 28px', objectFit: 'cover' }}
+        />
+        <img
+          src="/premium-hero-crown.png"
+          alt=""
+          style={{
+            position: 'absolute', top: -44, left: '50%',
+            width: 150, transform: 'translateX(-50%)',
+            animation: 'premiumCrownFloat 3.2s ease-in-out infinite',
+          }}
         />
         <button
           onClick={onClose}
