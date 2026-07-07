@@ -1,6 +1,6 @@
 <div align="center">
 
-  <img src="https://raw.githubusercontent.com/JohnDguez/ADA-App/main/public/Luna-Pay-logo.svg" alt="LunaPay" height="120" />
+  <img src="https://raw.githubusercontent.com/JohnDguez/ADA-App/main/public/Luna-Pay-logo-white.svg" alt="LunaPay" height="120" />
 
   # LunaPay
   
