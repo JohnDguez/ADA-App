@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
 import { WEEKDAYS_SHORT } from '../lib/utils'
-import { ChevronRight, LogOut, Camera, Bell, BellOff, AlertTriangle, Eye, EyeOff, Check, X } from 'lucide-react'
+import { ChevronRight, LogOut, Camera, Bell, BellOff, AlertTriangle, Eye, EyeOff, Check, X, Crown } from 'lucide-react'
 import { usePushNotifications } from '../hooks/usePushNotifications'
 import { showToast } from '../components/Toast'
 import { passwordRequirements, isPasswordStrong } from '../components/PasswordSetupModal'
@@ -210,6 +210,17 @@ export function SettingsPage({ profile, user, onUpdate, onUploadAvatar, onDataDe
               ? <img src={profile.avatar_url} alt="avatar" style={{ width: 80, height: 80, borderRadius: '50%', objectFit: 'cover' }} />
               : <div style={{ width: 80, height: 80, borderRadius: '50%', background: 'var(--accent)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28, fontWeight: 700, color: 'var(--surface)' }}>{initials}</div>
             }
+            {profile.is_premium && (
+              <div style={{
+                position: 'absolute', top: -2, right: -2,
+                width: 26, height: 26, borderRadius: '50%',
+                background: 'var(--premium-gold)', color: 'var(--premium-gold-text)',
+                border: '2px solid var(--surface)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+              }}>
+                <Crown size={14} fill="currentColor" />
+              </div>
+            )}
             <button onClick={() => fileRef.current?.click()} style={{ position: 'absolute', bottom: 0, right: 0, width: 28, height: 28, borderRadius: '50%', background: 'var(--surface)', border: '0.5px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
               {uploadingAvatar
                 ? <div style={{ width: 12, height: 12, borderRadius: '50%', border: '2px solid var(--accent)', borderTopColor: 'transparent' }} />
