@@ -16,6 +16,7 @@ import { VariableAmountModal } from './components/VariableAmountModal'
 import { RecurrentMigrationModal } from './components/RecurrentMigrationModal'
 import { PatchNotesModal } from './components/PatchNotesModal'
 import { PasswordSetupModal } from './components/PasswordSetupModal'
+import { PremiumPage } from './components/PremiumPage'
 import { Toast, showToast } from './components/Toast'
 import { SkeletonLoader } from './components/SkeletonLoader'
 import { useTheme } from './hooks/useTheme'
@@ -53,6 +54,7 @@ export default function App() {
   const [migrationModal, setMigrationModal] = useState(false)
   const [patchNotesOpen,   setPatchNotesOpen]   = useState(false)
   const [patchNotesToShow, setPatchNotesToShow] = useState([])
+  const [premiumPageOpen, setPremiumPageOpen] = useState(false)
 
   const migrationRan = useRef(false)
 
@@ -320,6 +322,7 @@ export default function App() {
           slideClass={`page-slide-${slideDir}`}
           theme={theme}
           onThemeChange={setTheme}
+          onOpenPremium={() => setPremiumPageOpen(true)}
         />
       )}
 
@@ -356,6 +359,7 @@ export default function App() {
         payments={payments}
         profile={profile}
         customCategories={profile.custom_categories || []}
+        onOpenPremium={() => setPremiumPageOpen(true)}
         onAddCategory={async (cat) => {
           await updateProfile({ custom_categories: [...(profile.custom_categories || []), cat] })
         }}
@@ -379,6 +383,7 @@ export default function App() {
         onClose={handleClosePatchNotes}
       />
       <Toast />
+      {premiumPageOpen && <PremiumPage onClose={() => setPremiumPageOpen(false)} />}
     </>
   )
 }
