@@ -6,6 +6,7 @@ import { usePushNotifications } from '../hooks/usePushNotifications'
 import { showToast } from '../components/Toast'
 import { passwordRequirements, isPasswordStrong } from '../components/PasswordSetupModal'
 import { APP_VERSION } from '../lib/patchNotes'
+import { APP_NAME } from '../lib/constants'
 
 function RequirementRow({ met, label }) {
   return (
@@ -432,7 +433,7 @@ export function SettingsPage({ profile, user, onUpdate, onUploadAvatar, onDataDe
 
         {/* Versión */}
         <div style={{ textAlign: 'center', padding: '8px 0 24px', fontSize: 11, fontWeight: 500, color: 'var(--text)', opacity: 0.4 }}>
-          ADA Pay v{APP_VERSION} — Alpha
+          {APP_NAME} v{APP_VERSION} — Alpha
         </div>
       </div>
 
