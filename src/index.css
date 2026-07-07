@@ -368,3 +368,9 @@ body.modal-open {
   --premium-gold:      #F5C242;
   --premium-gold-text: #1A1200;
 }
+
+/* Flotación suave de la corona en el hero de PremiumPage */
+@keyframes premiumCrownFloat {
+  0%, 100% { transform: translateX(-50%) translateY(0); }
+  50%      { transform: translateX(-50%) translateY(-10px); }
+}
