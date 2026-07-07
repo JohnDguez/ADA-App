@@ -507,8 +507,12 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
                     </div>
                     <div style={{ fontSize: 12, fontWeight: 400, color: 'var(--text)', marginTop: 4 }}>
                       <div>Disponible actualmente {fmt(first.disponibleAntes)} MXN</div>
-                      {first.variablesPendientes > 0 && (
-                        <div>+{first.variablesPendientes} Pago{first.variablesPendientes > 1 ? 's' : ''} variable{first.variablesPendientes > 1 ? 's' : ''}</div>
+                      {(first.pendientesCount > 0 || first.variablesPendientes > 0) && (
+                        <div>
+                          {first.pendientesCount > 0 && `${first.pendientesCount} pago${first.pendientesCount > 1 ? 's' : ''} pendiente${first.pendientesCount > 1 ? 's' : ''} ${fmt(-first.pendientesMonto)}`}
+                          {first.pendientesCount > 0 && first.variablesPendientes > 0 && ' + '}
+                          {first.variablesPendientes > 0 && `${first.variablesPendientes} pago${first.variablesPendientes > 1 ? 's' : ''} variable${first.variablesPendientes > 1 ? 's' : ''}`}
+                        </div>
                       )}
                     </div>
                   </div>
@@ -525,9 +529,11 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
                         </div>
                         <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--text)', whiteSpace: 'nowrap' }}>{fmt(second.disponibleDespues)} MXN</span>
                       </div>
-                      {second.variablesPendientes > 0 && (
+                      {(second.pendientesCount > 0 || second.variablesPendientes > 0) && (
                         <div style={{ fontSize: 11, fontWeight: 400, color: 'var(--text)', marginTop: 2 }}>
-                          +{second.variablesPendientes} Pago{second.variablesPendientes > 1 ? 's' : ''} variable{second.variablesPendientes > 1 ? 's' : ''} sin contar.
+                          {second.pendientesCount > 0 && `${second.pendientesCount} pago${second.pendientesCount > 1 ? 's' : ''} pendiente${second.pendientesCount > 1 ? 's' : ''} ${fmt(-second.pendientesMonto)}`}
+                          {second.pendientesCount > 0 && second.variablesPendientes > 0 && ' + '}
+                          {second.variablesPendientes > 0 && `${second.variablesPendientes} pago${second.variablesPendientes > 1 ? 's' : ''} variable${second.variablesPendientes > 1 ? 's' : ''} sin contar`}
                         </div>
                       )}
                     </div>
