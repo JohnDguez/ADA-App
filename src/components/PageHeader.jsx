@@ -56,12 +56,12 @@ export function PageHeader({ profile, unreadCount, onOpenNotifs }) {
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, flex: 1, minWidth: 0 }}>
           <div style={{ flexShrink: 0, position: 'relative' }}>
             {profile?.avatar_url
-              ? <img src={profile.avatar_url} alt="avatar" style={{ width: 52, height: 52, borderRadius: '50%', objectFit: 'cover', border: '2px solid rgba(255,255,255,0.3)' }} />
-              : <div style={{ width: 52, height: 52, borderRadius: '50%', background: 'var(--accent)', border: '2px solid rgba(255,255,255,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, fontWeight: 700, color: '#fff' }}>{initials}</div>
+              ? <img src={profile.avatar_url} alt="avatar" style={{ width: 52, height: 52, borderRadius: '50%', objectFit: 'cover', border: `2px solid ${profile?.is_premium ? 'var(--premium-gold)' : 'rgba(255,255,255,0.3)'}` }} />
+              : <div style={{ width: 52, height: 52, borderRadius: '50%', background: 'var(--accent)', border: `2px solid ${profile?.is_premium ? 'var(--premium-gold)' : 'rgba(255,255,255,0.3)'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, fontWeight: 700, color: '#fff' }}>{initials}</div>
             }
             {profile?.is_premium && (
               <div style={{
-                position: 'absolute', bottom: -2, right: -2,
+                position: 'absolute', top: -2, right: -2,
                 width: 20, height: 20, borderRadius: '50%',
                 background: 'var(--premium-gold)', color: 'var(--premium-gold-text)',
                 border: '2px solid var(--bg)',
