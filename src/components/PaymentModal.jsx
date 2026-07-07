@@ -509,7 +509,7 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
                       <div>Disponible actualmente {fmt(first.disponibleAntes)} MXN</div>
                       {(first.pendientesCount > 0 || first.variablesPendientes > 0) && (
                         <div>
-                          {first.pendientesCount > 0 && `${first.pendientesCount} pago${first.pendientesCount > 1 ? 's' : ''} pendiente${first.pendientesCount > 1 ? 's' : ''} ${fmt(-first.pendientesMonto)}`}
+                          {first.pendientesCount > 0 && `${first.pendientesCount} pago${first.pendientesCount > 1 ? 's' : ''} pendiente${first.pendientesCount > 1 ? 's' : ''} ${fmt(first.pendientesMonto)}`}
                           {first.pendientesCount > 0 && first.variablesPendientes > 0 && ' + '}
                           {first.variablesPendientes > 0 && `${first.variablesPendientes} pago${first.variablesPendientes > 1 ? 's' : ''} variable${first.variablesPendientes > 1 ? 's' : ''}`}
                         </div>
@@ -531,7 +531,7 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
                       </div>
                       {(second.pendientesCount > 0 || second.variablesPendientes > 0) && (
                         <div style={{ fontSize: 11, fontWeight: 400, color: 'var(--text)', marginTop: 2 }}>
-                          {second.pendientesCount > 0 && `${second.pendientesCount} pago${second.pendientesCount > 1 ? 's' : ''} pendiente${second.pendientesCount > 1 ? 's' : ''} ${fmt(-second.pendientesMonto)}`}
+                          {second.pendientesCount > 0 && `${second.pendientesCount} pago${second.pendientesCount > 1 ? 's' : ''} pendiente${second.pendientesCount > 1 ? 's' : ''} ${fmt(second.pendientesMonto)}`}
                           {second.pendientesCount > 0 && second.variablesPendientes > 0 && ' + '}
                           {second.variablesPendientes > 0 && `${second.variablesPendientes} pago${second.variablesPendientes > 1 ? 's' : ''} variable${second.variablesPendientes > 1 ? 's' : ''} sin contar`}
                         </div>
