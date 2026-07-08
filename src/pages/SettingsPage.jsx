@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { LogOut, Camera, Crown, User, Tag, Calendar, Bell, SunMoon } from 'lucide-react'
 import { showToast } from '../components/Toast'
 import { supabase } from '../lib/supabase'
@@ -26,6 +26,37 @@ export function SettingsPage({ profile, user, onUpdate, onUploadAvatar, onDataDe
   const fileRef  = useRef(null)
   const initials = (profile.name || user?.email || 'U').slice(0, 2).toUpperCase()
 
+  // Accesibilidad: el botón de "atrás" del teléfono (Android) cierra la
+  // sub-página actual en vez de sacar al usuario de la app. Cada vez que se
+  // abre una sub-sección, empujamos una entrada al historial del navegador;
+  // "atrás" dispara popstate, que regresa al menú principal (section: null).
+  // Alcance acotado a las sub-páginas de Ajustes — no afecta tabs ni modales.
+  const sectionRef = useRef(section)
+  sectionRef.current = section
+
+  useEffect(() => {
+    function handlePopState() { setSection(null) }
+    window.addEventListener('popstate', handlePopState)
+    return () => {
+      window.removeEventListener('popstate', handlePopState)
+      // Si el componente se desmonta (ej. el usuario cambió de tab con el
+      // bottom nav) mientras había una sub-página abierta, la entrada que
+      // empujamos queda "colgada" en el historial. La consumimos aquí para
+      // que un "atrás" posterior desde otro tab no regrese aquí por sorpresa.
+      if (sectionRef.current) window.history.back()
+    }
+  }, [])
+
+  function openSection(s) {
+    window.history.pushState({ settingsSection: s }, '')
+    setSection(s)
+  }
+
+  // El botón "atrás" propio de cada sub-página también pasa por history.back(),
+  // no por setSection(null) directo — así el historial del navegador queda
+  // sincronizado con el estado real de React (un tap = una entrada consumida).
+  const back = () => window.history.back()
+
   async function handleAvatarChange(e) {
     const file = e.target.files?.[0]
     if (!file) return
@@ -42,8 +73,6 @@ export function SettingsPage({ profile, user, onUpdate, onUploadAvatar, onDataDe
     sessionStorage.removeItem('ada_user_id')
     await supabase.auth.signOut()
   }
-
-  const back = () => setSection(null)
 
   if (section === 'account') {
     return <SettingsAccountPage profile={profile} user={user} onUpdate={onUpdate} onDataDeleted={onDataDeleted} onBack={back} slideClass={slideClass} />
@@ -110,11 +139,11 @@ export function SettingsPage({ profile, user, onUpdate, onUploadAvatar, onDataDe
 
       {/* Menú */}
       <Card>
-        <Row icon={User}     label="Cuenta"                        onClick={() => setSection('account')} />
-        <Row icon={Tag}      label="Categorías"                    onClick={() => setSection('categories')} />
-        <Row icon={Calendar} label="Periodo de cobro e ingresos"    value={FREQ_LABEL[profile.cobro_freq] || ''} onClick={() => setSection('cobro')} />
-        <Row icon={Bell}     label="Notificaciones"                 onClick={() => setSection('notifications')} />
-        <Row icon={SunMoon}  label="Apariencia"                    value={THEME_LABEL[theme] || ''} onClick={() => setSection('appearance')} />
+        <Row icon={User}     label="Cuenta"                        onClick={() => openSection('account')} />
+        <Row icon={Tag}      label="Categorías"                    onClick={() => openSection('categories')} />
+        <Row icon={Calendar} label="Periodo de cobro e ingresos"    value={FREQ_LABEL[profile.cobro_freq] || ''} onClick={() => openSection('cobro')} />
+        <Row icon={Bell}     label="Notificaciones"                 onClick={() => openSection('notifications')} />
+        <Row icon={SunMoon}  label="Apariencia"                    value={THEME_LABEL[theme] || ''} onClick={() => openSection('appearance')} />
         {!profile.is_premium && (
           <Row icon={Crown} iconColor="var(--premium-gold)" label="Obtener Premium" onClick={onOpenPremium} last />
         )}
