@@ -14,6 +14,7 @@ const DEFAULT_PROFILE = {
   avatar_url: null,
   is_premium: false,
   category_icons: {},
+  category_colors: {},
 }
 
 export function useProfile(userId) {
