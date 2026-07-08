@@ -34,7 +34,13 @@ const CUSTOM_CAT_PALETTE = [
   'var(--cat-custom-4)', 'var(--cat-custom-5)',
 ]
 
-export function getCatColor(cat, customCats = []) {
+// `categoryColors` es opcional (profile.category_colors): si el usuario ya
+// eligió un color propio para esta categoría desde Ajustes, tiene prioridad
+// sobre la asignación automática. Parámetro nuevo y opcional — los llamados
+// existentes sin él (en archivos que no se tocaron todavía) siguen
+// funcionando igual que antes.
+export function getCatColor(cat, customCats = [], categoryColors = {}) {
+  if (categoryColors[cat]) return categoryColors[cat]
   if (CAT_COLORS[cat]) return CAT_COLORS[cat]
   const idx = customCats.indexOf(cat)
   if (idx >= 0) return CUSTOM_CAT_PALETTE[idx % CUSTOM_CAT_PALETTE.length]
