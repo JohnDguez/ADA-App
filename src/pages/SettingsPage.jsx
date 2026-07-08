@@ -78,7 +78,7 @@ export function SettingsPage({ profile, user, onUpdate, onUploadAvatar, onDataDe
     return <SettingsAccountPage profile={profile} user={user} onUpdate={onUpdate} onDataDeleted={onDataDeleted} onBack={back} slideClass={slideClass} />
   }
   if (section === 'categories') {
-    return <SettingsCategoriesPage profile={profile} onBack={back} slideClass={slideClass} />
+    return <SettingsCategoriesPage profile={profile} onUpdate={onUpdate} onBack={back} slideClass={slideClass} />
   }
   if (section === 'cobro') {
     return <SettingsCobroPage profile={profile} onUpdate={onUpdate} onBack={back} slideClass={slideClass} />
