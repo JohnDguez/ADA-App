@@ -1,143 +1,230 @@
-import { useState, useEffect } from 'react'
-import { ChevronLeft, Plus, Check } from 'lucide-react'
+import { useState } from 'react'
+import { ChevronLeft, Plus, Check, Search } from 'lucide-react'
 import { CATEGORIES, getCatColor } from '../../lib/utils'
-import { CATEGORY_ICON_OPTIONS, getCategoryIcon } from '../../lib/categoryIcons'
+import { CATEGORY_ICON_GROUPS, getCategoryIcon, getIconComponent } from '../../lib/categoryIcons'
 import { showToast } from '../../components/Toast'
+import { supabase } from '../../lib/supabase'
 import { Card } from '../../components/SettingsShared'
 
-// Sub-página "Categorías" dentro de Ajustes — fase 2: selector de ícono
-// Lucide por categoría (guardado en profile.category_icons, jsonb) + poder
-// agregar una categoría personalizada nueva directo desde aquí (antes solo
-// se podía desde PaymentModal al crear un pago).
+const PALETTE = Array.from({ length: 16 }, (_, i) => `var(--palette-${i + 1})`)
+
+// Sub-página "Categorías" dentro de Ajustes — fase 3: modal completo
+// (nombre + ícono + color) para agregar y editar cualquier categoría.
+// Las 11 categorías fijas solo permiten cambiar ícono/color (el nombre es
+// de solo lectura, para no desincronizar pagos ya registrados en pantallas
+// que no viven en este archivo). Las personalizadas sí permiten renombrar,
+// y ese cambio se propaga a los pagos existentes con ese nombre.
 export function SettingsCategoriesPage({ profile, onUpdate, onBack, slideClass }) {
-  const [pickerCat,    setPickerCat]    = useState(null)
-  const [adding,       setAdding]       = useState(false)
-  const [newCatName,   setNewCatName]   = useState('')
-  const [addError,     setAddError]     = useState('')
+  const [modalOpen,   setModalOpen]   = useState(false)
+  const [editingCat,  setEditingCat]  = useState(null) // { name, isCustom } | null (null = agregar nueva)
+  const [formName,    setFormName]    = useState('')
+  const [formIcon,    setFormIcon]    = useState('')
+  const [formColor,   setFormColor]   = useState('')
+  const [iconSearch,  setIconSearch]  = useState('')
+  const [nameError,   setNameError]   = useState('')
+  const [saving,      setSaving]      = useState(false)
 
-  const customCats = profile.custom_categories || []
-  const categoryIcons = profile.category_icons || {}
+  const customCats     = profile.custom_categories || []
+  const categoryIcons  = profile.category_icons || {}
+  const categoryColors = profile.category_colors || {}
 
-  useEffect(() => {
-    if (pickerCat) document.body.classList.add('modal-open')
-    else            document.body.classList.remove('modal-open')
-    return () => document.body.classList.remove('modal-open')
-  }, [pickerCat])
-
-  async function handlePickIcon(iconName) {
-    await onUpdate({ category_icons: { ...categoryIcons, [pickerCat]: iconName } })
-    setPickerCat(null)
+  function openEdit(cat, isCustom) {
+    setEditingCat({ name: cat, isCustom })
+    setFormName(cat)
+    setFormIcon(categoryIcons[cat] || '')
+    setFormColor(getCatColor(cat, customCats, categoryColors))
+    setIconSearch(''); setNameError('')
+    setModalOpen(true)
   }
 
-  async function handleAddCategory() {
-    const trimmed = newCatName.trim()
-    if (!trimmed) { setAddError('Escribe un nombre'); return }
-    const allExisting = [...CATEGORIES, ...customCats]
-    if (allExisting.some(c => c.toLowerCase() === trimmed.toLowerCase())) {
-      setAddError('Ya existe una categoría con ese nombre'); return
+  function openAdd() {
+    setEditingCat(null)
+    setFormName(''); setFormIcon(''); setFormColor(PALETTE[0])
+    setIconSearch(''); setNameError('')
+    setModalOpen(true)
+  }
+
+  async function handleSave() {
+    const trimmed = formName.trim()
+    if (!trimmed) { setNameError('Escribe un nombre'); return }
+
+    const oldName  = editingCat?.name
+    const isNew    = !editingCat
+    const isRename = editingCat?.isCustom && trimmed !== oldName
+
+    const others = [...CATEGORIES, ...customCats].filter(c => c !== oldName)
+    if (others.some(c => c.toLowerCase() === trimmed.toLowerCase())) {
+      setNameError('Ya existe una categoría con ese nombre'); return
     }
-    await onUpdate({ custom_categories: [...customCats, trimmed] })
-    showToast(`Categoría "${trimmed}" agregada`)
-    setNewCatName(''); setAddError(''); setAdding(false)
+
+    setSaving(true)
+
+    const updates = {}
+    if (isNew)    updates.custom_categories = [...customCats, trimmed]
+    if (isRename) updates.custom_categories = customCats.map(c => c === oldName ? trimmed : c)
+
+    const newIcons = { ...categoryIcons }
+    if (oldName && oldName !== trimmed && newIcons[oldName]) { newIcons[trimmed] = newIcons[oldName]; delete newIcons[oldName] }
+    if (formIcon) newIcons[trimmed] = formIcon
+    updates.category_icons = newIcons
+
+    const newColors = { ...categoryColors }
+    if (oldName && oldName !== trimmed && newColors[oldName]) { newColors[trimmed] = newColors[oldName]; delete newColors[oldName] }
+    if (formColor) newColors[trimmed] = formColor
+    updates.category_colors = newColors
+
+    await onUpdate(updates)
+
+    if (isRename) {
+      await supabase.from('payments').update({ category: trimmed }).eq('user_id', profile.id).eq('category', oldName)
+      showToast(`Categoría renombrada a "${trimmed}"`)
+    } else if (isNew) {
+      showToast(`Categoría "${trimmed}" agregada`)
+    } else {
+      showToast('Categoría actualizada')
+    }
+
+    setSaving(false)
+    setModalOpen(false)
   }
 
   function CategoryRow({ cat, isCustom, last }) {
-    const Icon = getCategoryIcon(cat, categoryIcons)
+    const Icon  = getCategoryIcon(cat, categoryIcons)
+    const color = getCatColor(cat, customCats, categoryColors)
     return (
-      <div onClick={() => setPickerCat(cat)} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '13px 14px', borderBottom: last ? 'none' : '0.5px solid var(--border)', cursor: 'pointer' }}>
-        <div style={{
-          width: 30, height: 30, borderRadius: '50%', flexShrink: 0,
-          background: 'var(--bg)', display: 'flex', alignItems: 'center', justifyContent: 'center',
-        }}>
-          {Icon
-            ? <Icon size={16} color={getCatColor(cat, customCats)} />
-            : <div style={{ width: 12, height: 12, borderRadius: '50%', background: getCatColor(cat, customCats) }} />
-          }
+      <div onClick={() => openEdit(cat, isCustom)} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '13px 14px', borderBottom: last ? 'none' : '0.5px solid var(--border)', cursor: 'pointer' }}>
+        <div style={{ width: 30, height: 30, borderRadius: '50%', flexShrink: 0, background: 'var(--bg)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          {Icon ? <Icon size={16} color={color} /> : <div style={{ width: 12, height: 12, borderRadius: '50%', background: color }} />}
         </div>
         <span style={{ fontSize: 13, fontWeight: 500, color: 'var(--text)', flex: 1 }}>{cat}</span>
       </div>
     )
   }
 
+  const search = iconSearch.trim().toLowerCase()
+  const filteredGroups = CATEGORY_ICON_GROUPS
+    .map(g => ({ ...g, icons: search ? g.icons.filter(i => i.label.toLowerCase().includes(search)) : g.icons }))
+    .filter(g => g.icons.length > 0)
+
   return (
     <>
       <div className={slideClass} style={{ paddingBottom: 120, background: 'var(--bg)', minHeight: '100vh' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '52px 16px 20px' }}>
-          <button onClick={onBack} style={{ width: 36, height: 36, borderRadius: '50%', background: 'var(--surface)', border: '0.5px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0 }}>
-            <ChevronLeft size={18} color="var(--text)" />
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '52px 16px 20px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <button onClick={onBack} style={{ width: 36, height: 36, borderRadius: '50%', background: 'var(--surface)', border: '0.5px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0 }}>
+              <ChevronLeft size={18} color="var(--text)" />
+            </button>
+            <div style={{ fontSize: 20, fontWeight: 700, color: 'var(--text)' }}>Categorías</div>
+          </div>
+          <button onClick={openAdd} style={{ width: 36, height: 36, borderRadius: '50%', background: 'var(--accent)', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0 }}>
+            <Plus size={18} color="var(--surface)" />
           </button>
-          <div style={{ fontSize: 20, fontWeight: 700, color: 'var(--text)' }}>Categorías</div>
         </div>
 
         <Card>
           {CATEGORIES.map((cat, i) => (
-            <CategoryRow key={cat} cat={cat} last={i === CATEGORIES.length - 1 && customCats.length === 0} />
+            <CategoryRow key={cat} cat={cat} isCustom={false} last={i === CATEGORIES.length - 1 && customCats.length === 0} />
           ))}
           {customCats.map((cat, i) => (
             <CategoryRow key={cat} cat={cat} isCustom last={i === customCats.length - 1} />
           ))}
         </Card>
-
-        <Card>
-          {!adding ? (
-            <button onClick={() => { setAdding(true); setNewCatName(''); setAddError('') }}
-              style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '13px 14px', background: 'none', border: 'none', cursor: 'pointer' }}>
-              <Plus size={16} color="var(--accent)" />
-              <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--accent)' }}>Agregar categoría</span>
-            </button>
-          ) : (
-            <div style={{ padding: '13px 14px' }}>
-              <label className="field-label">Nombre de la categoría</label>
-              <input
-                autoFocus
-                className="field-input"
-                value={newCatName}
-                onChange={e => setNewCatName(e.target.value)}
-                onKeyDown={e => e.key === 'Enter' && handleAddCategory()}
-                placeholder="ej. Gimnasio"
-                style={{ marginTop: 4, marginBottom: addError ? 6 : 10 }}
-              />
-              {addError && <div style={{ fontSize: 11, color: 'var(--danger)', marginBottom: 10 }}>{addError}</div>}
-              <div style={{ display: 'flex', gap: 8 }}>
-                <button onClick={handleAddCategory} className="btn-primary" style={{ flex: 1 }}>Guardar</button>
-                <button onClick={() => setAdding(false)} className="btn-ghost" style={{ flex: 1 }}>Cancelar</button>
-              </div>
-            </div>
-          )}
-        </Card>
       </div>
 
-      {pickerCat && (
-        <div onClick={e => e.target === e.currentTarget && setPickerCat(null)}
+      {modalOpen && (
+        <div onClick={e => e.target === e.currentTarget && setModalOpen(false)}
           style={{ position: 'fixed', inset: 0, background: 'rgba(2,10,31,0.5)', zIndex: 200, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
-          <div style={{ background: 'var(--surface)', borderRadius: '20px 20px 0 0', width: '100%', maxWidth: 420, maxHeight: '75vh', overflowY: 'auto', padding: '20px 16px 32px', animation: 'modalSlideUp .3s cubic-bezier(0.25, 0.46, 0.45, 0.94) both' }}>
+          <div style={{ background: 'var(--surface)', borderRadius: '20px 20px 0 0', width: '100%', maxWidth: 420, maxHeight: '88vh', overflowY: 'auto', padding: '20px 16px 32px', animation: 'modalSlideUp .3s cubic-bezier(0.25, 0.46, 0.45, 0.94) both' }}>
             <div style={{ width: 34, height: 4, background: 'var(--border)', borderRadius: 2, margin: '0 auto 16px' }} />
-            <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--text)', marginBottom: 4 }}>Elige un ícono</div>
-            <div style={{ fontSize: 12, fontWeight: 400, color: 'var(--text)', marginBottom: 16 }}>Para "{pickerCat}"</div>
-
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 8 }}>
-              {CATEGORY_ICON_OPTIONS.map(name => {
-                const Icon = getCategoryIcon(pickerCat, { [pickerCat]: name })
-                const selected = categoryIcons[pickerCat] === name
-                return (
-                  <button key={name} onClick={() => handlePickIcon(name)}
-                    style={{
-                      position: 'relative', aspectRatio: '1', borderRadius: 'var(--radius-sm)',
-                      border: 'none', background: selected ? 'var(--accent)' : 'var(--bg)',
-                      display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
-                    }}>
-                    <Icon size={20} color={selected ? 'var(--surface)' : 'var(--text)'} />
-                    {selected && (
-                      <div style={{ position: 'absolute', top: 3, right: 3, width: 14, height: 14, borderRadius: '50%', background: 'var(--paid)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        <Check size={9} color="#fff" strokeWidth={3} />
-                      </div>
-                    )}
-                  </button>
-                )
-              })}
+            <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--text)', marginBottom: 16 }}>
+              {editingCat ? 'Editar categoría' : 'Agregar categoría'}
             </div>
 
-            <button onClick={() => setPickerCat(null)} className="btn-ghost" style={{ marginTop: 16 }}>Cerrar</button>
+            {/* Nombre */}
+            <div style={{ marginBottom: 18 }}>
+              <label className="field-label">Nombre</label>
+              {editingCat && !editingCat.isCustom ? (
+                <>
+                  <div className="field-input" style={{ opacity: 0.6, marginTop: 4 }}>{formName}</div>
+                  <div style={{ fontSize: 11, fontWeight: 400, color: 'var(--text)', marginTop: 4 }}>
+                    Las categorías por defecto no se pueden renombrar, para no afectar pagos ya registrados.
+                  </div>
+                </>
+              ) : (
+                <input
+                  autoFocus
+                  className="field-input"
+                  value={formName}
+                  onChange={e => { setFormName(e.target.value); setNameError('') }}
+                  placeholder="ej. Gimnasio"
+                  style={{ marginTop: 4 }}
+                />
+              )}
+              {nameError && <div style={{ fontSize: 11, color: 'var(--danger)', marginTop: 4 }}>{nameError}</div>}
+            </div>
+
+            {/* Ícono */}
+            <div style={{ marginBottom: 18 }}>
+              <label className="field-label" style={{ marginBottom: 6, display: 'block' }}>Ícono</label>
+              <div style={{ position: 'relative', marginBottom: 12 }}>
+                <div style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', display: 'flex' }}>
+                  <Search size={14} color="var(--text)" />
+                </div>
+                <input
+                  value={iconSearch}
+                  onChange={e => setIconSearch(e.target.value)}
+                  placeholder="Buscar ícono…"
+                  className="field-input"
+                  style={{ paddingLeft: 34 }}
+                />
+              </div>
+
+              <div style={{ maxHeight: 240, overflowY: 'auto', paddingRight: 2 }}>
+                {filteredGroups.map(group => (
+                  <div key={group.label} style={{ marginBottom: 12 }}>
+                    <div style={{ fontSize: 10.5, fontWeight: 600, color: 'var(--text)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 6 }}>
+                      {group.label}
+                    </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: 6 }}>
+                      {group.icons.map(({ name, label }) => {
+                        const Icon = getIconComponent(name)
+                        const selected = formIcon === name
+                        return (
+                          <button key={name} title={label} onClick={() => setFormIcon(name)}
+                            style={{ position: 'relative', aspectRatio: '1', borderRadius: 'var(--radius-sm)', border: 'none', background: selected ? 'var(--accent)' : 'var(--bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+                            <Icon size={16} color={selected ? 'var(--surface)' : 'var(--text)'} />
+                          </button>
+                        )
+                      })}
+                    </div>
+                  </div>
+                ))}
+                {filteredGroups.length === 0 && (
+                  <div style={{ fontSize: 12, fontWeight: 400, color: 'var(--text)', padding: '8px 0' }}>Sin resultados para "{iconSearch}"</div>
+                )}
+              </div>
+            </div>
+
+            {/* Color */}
+            <div style={{ marginBottom: 20 }}>
+              <label className="field-label" style={{ marginBottom: 6, display: 'block' }}>Color</label>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(8, 1fr)', gap: 8 }}>
+                {PALETTE.map(color => {
+                  const selected = formColor === color
+                  return (
+                    <button key={color} onClick={() => setFormColor(color)}
+                      style={{ position: 'relative', aspectRatio: '1', borderRadius: '50%', border: selected ? '2px solid var(--text)' : 'none', background: color, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      {selected && <Check size={13} color="#fff" strokeWidth={3} />}
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+
+            <button onClick={handleSave} disabled={saving} className="btn-primary" style={{ marginBottom: 8 }}>
+              {saving ? 'Guardando…' : 'Guardar'}
+            </button>
+            <button onClick={() => setModalOpen(false)} className="btn-ghost">Cancelar</button>
           </div>
         </div>
       )}
