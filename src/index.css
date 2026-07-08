@@ -341,6 +341,29 @@ body.modal-open {
   animation: shimmer 1.5s ease-in-out infinite;
 }
 
+/* ── Paleta de colores para categorías (selector libre) ──────────────────────
+   Fija, independiente del tema (igual criterio que --premium-*): un color de
+   categoría debe verse igual sin importar claro/oscuro. Usada por el
+   selector de color en SettingsCategoriesPage.jsx; el valor elegido se
+   guarda como el string "var(--palette-N)" en profile.category_colors. */
+:root {
+  --palette-1:  #F5A623;
+  --palette-2:  #2ECC71;
+  --palette-3:  #3498DB;
+  --palette-4:  #9B59B6;
+  --palette-5:  #1A6FC4;
+  --palette-6:  #27AE60;
+  --palette-7:  #E67E22;
+  --palette-8:  #E91E63;
+  --palette-9:  #795548;
+  --palette-10: #E74C3C;
+  --palette-11: #1ABC9C;
+  --palette-12: #3F51B5;
+  --palette-13: #009688;
+  --palette-14: #FF5722;
+  --palette-15: #607D8B;
+  --palette-16: #F5C242;
+}
 /* ── Nuevas categorías built-in ─────────────────────────────────────────────── */
 /* Añadir también en [data-theme="dark"] si se desean overrides */
 :root {
