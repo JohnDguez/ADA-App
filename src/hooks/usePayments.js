@@ -49,7 +49,7 @@ export function usePayments(userId) {
         toCreate.push({
           user_id:      userId,
           name:         master.name,
-          amount:       master.amount,
+          amount:       master.is_variable ? 0 : master.amount,
           due_date:     lastDate,
           category:     master.category,
           is_variable:  master.is_variable,
@@ -145,10 +145,11 @@ export function usePayments(userId) {
 
   // Crea un master + 2 copias de periodo
   async function addRecurrentPayment({ name, amount, category, recur_freq, is_variable, firstDate }) {
+    const baseAmount = is_variable ? 0 : amount
     // 1. Crear el master (template, no aparece en Home/Pagos)
     const { data: master, error: masterErr } = await supabase.from('payments').insert({
       user_id:      userId,
-      name, amount, category, is_variable,
+      name, amount: baseAmount, category, is_variable,
       is_recurrent: true,
       recur_freq,
       is_master:    true,
@@ -166,10 +167,10 @@ export function usePayments(userId) {
     // 2. Crear copias de periodo 1 y periodo 2
     const date2 = nextPeriodDate(firstDate, recur_freq).toISOString().split('T')[0]
     const copies = [
-      { user_id: userId, name, amount, category, is_variable, is_recurrent: true, recur_freq,
+      { user_id: userId, name, amount: baseAmount, category, is_variable, is_recurrent: true, recur_freq,
         is_master: false, parent_id: master.id, due_date: firstDate,
         is_paid: false, paid_at: null, postponed: false, paused: false, is_installment: false },
-      { user_id: userId, name, amount, category, is_variable, is_recurrent: true, recur_freq,
+      { user_id: userId, name, amount: baseAmount, category, is_variable, is_recurrent: true, recur_freq,
         is_master: false, parent_id: master.id, due_date: date2,
         is_paid: false, paid_at: null, postponed: false, paused: false, is_installment: false },
     ]
@@ -211,11 +212,12 @@ export function usePayments(userId) {
 
     // Crear 2 nuevas copias con la nueva configuración
     const date2 = nextPeriodDate(firstDate, recur_freq).toISOString().split('T')[0]
+    const copyAmount = is_variable ? 0 : amount
     const copies = [
-      { user_id: userId, name, amount, category, is_variable, is_recurrent: true, recur_freq,
+      { user_id: userId, name, amount: copyAmount, category, is_variable, is_recurrent: true, recur_freq,
         is_master: false, parent_id: masterId, due_date: firstDate,
         is_paid: false, paid_at: null, postponed: false, paused: false, is_installment: false },
-      { user_id: userId, name, amount, category, is_variable, is_recurrent: true, recur_freq,
+      { user_id: userId, name, amount: copyAmount, category, is_variable, is_recurrent: true, recur_freq,
         is_master: false, parent_id: masterId, due_date: date2,
         is_paid: false, paid_at: null, postponed: false, paused: false, is_installment: false },
     ]
@@ -429,11 +431,12 @@ export function usePayments(userId) {
 
     // Crear 2 nuevas copias
     const date2 = nextPeriodDate(firstDate, recur_freq).toISOString().split('T')[0]
+    const copyAmount = is_variable ? 0 : amount
     const copies = [
-      { user_id: userId, name, amount, category, is_variable, is_recurrent: true, recur_freq,
+      { user_id: userId, name, amount: copyAmount, category, is_variable, is_recurrent: true, recur_freq,
         is_master: false, parent_id: masterId, due_date: firstDate,
         is_paid: false, paid_at: null, postponed: false, paused: false, is_installment: false },
-      { user_id: userId, name, amount, category, is_variable, is_recurrent: true, recur_freq,
+      { user_id: userId, name, amount: copyAmount, category, is_variable, is_recurrent: true, recur_freq,
         is_master: false, parent_id: masterId, due_date: date2,
         is_paid: false, paid_at: null, postponed: false, paused: false, is_installment: false },
     ]
