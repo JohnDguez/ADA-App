@@ -42,8 +42,11 @@ export function HomePage({ payments, profile, onAdd, onMarkPaid, onMarkUnpaid, o
   const pagarEsteCobro = getPagarEsteCobro(payments, profile)
   const vencidos   = pagarEsteCobro.filter(p => daysDiff(p.due_date) < 0).sort((a, b) => dateOf(a.due_date) - dateOf(b.due_date))
   const delPeriodo = pagarEsteCobro.filter(p => daysDiff(p.due_date) >= 0).sort((a, b) => dateOf(a.due_date) - dateOf(b.due_date))
-  const pendingAmt = pagarEsteCobro.filter(p => !p.is_variable).reduce((a, p) => a + Number(p.amount), 0)
-  const pendingVariableCount = pagarEsteCobro.filter(p => p.is_variable).length
+  // Un variable YA con monto capturado (ej. "Agregar monto" con el recibo en
+  // mano) cuenta igual que uno fijo — ya se sabe cuánto va a costar. Solo el
+  // que sigue sin monto es el que de verdad está "por confirmar".
+  const pendingAmt = pagarEsteCobro.filter(p => !p.is_variable || p.amount > 0).reduce((a, p) => a + Number(p.amount), 0)
+  const pendingVariableCount = pagarEsteCobro.filter(p => p.is_variable && !p.amount).length
 
   // Pagos ya pagados dentro del periodo actual — mismo criterio que
   // `gastosPeriodo`/`checkPeriodStart` en `PaymentsPage.jsx`: se filtra por
@@ -61,7 +64,7 @@ export function HomePage({ payments, profile, onAdd, onMarkPaid, onMarkUnpaid, o
   const pagadoMonto = pagadosEstePeriodo.reduce((a, p) => a + Number(p.amount), 0)
   const totalConocido = pagadoMonto + pendingAmt
   const pctPagado = totalConocido > 0 ? Math.round((pagadoMonto / totalConocido) * 100) : 0
-  const pagosFijosCount = pagarEsteCobro.filter(p => !p.is_variable).length + pagadosEstePeriodo.length
+  const pagosFijosCount = pagarEsteCobro.filter(p => !p.is_variable || p.amount > 0).length + pagadosEstePeriodo.length
 
   const thisMonth  = now.getMonth()
   const thisYear   = now.getFullYear()
