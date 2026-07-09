@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react'
 import { ChevronLeft, ChevronRight, MoreVertical, Plus, CircleDollarSign, ChevronDown, ChevronUp, Pencil, RotateCcw, Trash2 } from 'lucide-react'
 import { PageHeader } from '../components/PageHeader'
-import { fmt, dateOf, MONTHS, MONTHS_SHORT, CATEGORIES, cobroPeriod, addDays } from '../lib/utils'
+import { fmt, dateOf, MONTHS, MONTHS_SHORT, CATEGORIES, cobroPeriod, addDays, getCatColor } from '../lib/utils'
+import { getCategoryIcon } from '../lib/categoryIcons'
 import { supabase } from '../lib/supabase'
 
 const CAT_COLOR = {
@@ -971,23 +972,33 @@ export function PaymentsPage({ payments, profile, unreadCount, onOpenNotifs, onG
             </div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-              {catData.map(({ cat, total }) => (
-                <div key={cat}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 5 }}>
-                    <span style={{ fontSize: 13, fontWeight: 500, color: 'var(--text)' }}>{cat}</span>
-                    <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)' }}>{fmt(total)}</span>
+              {catData.map(({ cat, total }) => {
+                const catColor = getCatColor(cat, profile.custom_categories, profile.category_colors)
+                const CatIcon  = getCategoryIcon(cat, profile.category_icons)
+                return (
+                  <div key={cat}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 5 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                        {CatIcon
+                          ? <CatIcon size={15} color={catColor} strokeWidth={2} />
+                          : <span style={{ width: 6, height: 6, borderRadius: '50%', background: catColor, display: 'inline-block' }} />
+                        }
+                        <span style={{ fontSize: 13, fontWeight: 500, color: 'var(--text)' }}>{cat}</span>
+                      </div>
+                      <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)' }}>{fmt(total)}</span>
+                    </div>
+                    <div style={{ height: 6, background: 'var(--border)', borderRadius: 'var(--radius-full)', overflow: 'hidden' }}>
+                      <div style={{
+                        height: '100%',
+                        width: `${(total / maxCat) * 100}%`,
+                        background: catColor,
+                        borderRadius: 'var(--radius-full)',
+                        transition: 'width .4s ease',
+                      }} />
+                    </div>
                   </div>
-                  <div style={{ height: 6, background: 'var(--border)', borderRadius: 'var(--radius-full)', overflow: 'hidden' }}>
-                    <div style={{
-                      height: '100%',
-                      width: `${(total / maxCat) * 100}%`,
-                      background: CAT_COLOR[cat] || 'var(--accent)',
-                      borderRadius: 'var(--radius-full)',
-                      transition: 'width .4s ease',
-                    }} />
-                  </div>
-                </div>
-              ))}
+                )
+              })}
             </div>
           )}
         </div>
