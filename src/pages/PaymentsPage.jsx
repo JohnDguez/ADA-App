@@ -761,7 +761,7 @@ export function PaymentsPage({ payments, profile, unreadCount, onOpenNotifs, onG
 
         {/* ── BALANCE DEL PERIODO (salario fijo, o al menos un ingreso extra capturado) ── */}
         {showBalance && (
-          <div style={{ margin: '0 16px 16px', background: 'var(--surface)', borderRadius: 'var(--radius)', padding: '14px 16px' }}>
+          <div data-coachmark="gastos-disponible-card" style={{ margin: '0 16px 16px', background: 'var(--surface)', borderRadius: 'var(--radius)', padding: '14px 16px' }}>
 
             {/* Cabecera con botón Añadir ingreso */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
@@ -774,6 +774,7 @@ export function PaymentsPage({ payments, profile, unreadCount, onOpenNotifs, onG
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6 }}>
                 {/* Botón discreto Añadir ingreso */}
                 <button
+                  data-coachmark="gastos-add-income-button"
                   onClick={() => setIncomeModal(true)}
                   style={{
                     display: 'flex',
@@ -912,7 +913,7 @@ export function PaymentsPage({ payments, profile, unreadCount, onOpenNotifs, onG
         )}
 
         {/* Chips de categoría */}
-        <div style={{ padding: '0 16px 15px', display: 'flex', gap: 6, overflowX: 'auto', msOverflowStyle: 'none', scrollbarWidth: 'none' }}>
+        <div data-coachmark="gastos-category-chips" style={{ padding: '0 16px 15px', display: 'flex', gap: 6, overflowX: 'auto', msOverflowStyle: 'none', scrollbarWidth: 'none' }}>
           <FilterChip label="Todos" active={!selectedCat} onClick={() => setSelectedCat(null)} />
           {visibleCats.map(c => (
             <FilterChip
@@ -951,7 +952,7 @@ export function PaymentsPage({ payments, profile, unreadCount, onOpenNotifs, onG
         </div>
 
         {/* Gráfica */}
-        <div style={{ margin: '0 16px 20px', background: 'var(--surface)', borderRadius: 'var(--radius)', padding: '16px 14px' }}>
+        <div data-coachmark="gastos-monthly-chart" style={{ margin: '0 16px 20px', background: 'var(--surface)', borderRadius: 'var(--radius)', padding: '16px 14px' }}>
           <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)', marginBottom: 14 }}>
             Gastos Mensuales
           </div>

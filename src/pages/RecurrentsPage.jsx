@@ -145,7 +145,7 @@ export function RecurrentsPage({ payments, profile, unreadCount, onOpenNotifs, o
           </div>
 
           {/* Resumen */}
-          <div style={{ margin: '0 16px 14px', background: 'var(--surface)', borderRadius: 'var(--radius)', padding: '14px 16px', display: 'flex' }}>
+          <div data-coachmark="recurrentes-stats" style={{ margin: '0 16px 14px', background: 'var(--surface)', borderRadius: 'var(--radius)', padding: '14px 16px', display: 'flex' }}>
             <div style={{ flex: 1, borderRight: '0.5px solid var(--border)', paddingRight: 14 }}>
               <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--text)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 3 }}>Activos</div>
               <div style={{ fontSize: 22, fontWeight: 700, color: 'var(--text)' }}>{activeMasters.length}</div>
@@ -164,7 +164,7 @@ export function RecurrentsPage({ payments, profile, unreadCount, onOpenNotifs, o
               <FilterChip key={val} label={label} active={filterStatus === val} onClick={() => setFilterStatus(val)} />
             ))}
           </div>
-          <div style={{ padding: '0 16px 14px', display: 'flex', gap: 6 }}>
+          <div data-coachmark="recurrentes-filtro-tipo" style={{ padding: '0 16px 14px', display: 'flex', gap: 6 }}>
             {[['todos','Todos'],['recurrentes','Recurrentes'],['parcialidades','Parcialidades']].map(([val, label]) => (
               <FilterChip key={val} label={label} active={filterType === val} onClick={() => setFilterType(val)} />
             ))}

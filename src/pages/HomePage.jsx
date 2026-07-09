@@ -104,7 +104,7 @@ export function HomePage({ payments, profile, onAdd, onMarkPaid, onMarkUnpaid, o
         <div className={slideClass}>
 
         {/* Tabs Periodo / Mes */}
-        <div style={{ padding: '20px 16px 0', userSelect: 'none' }}>
+        <div data-coachmark="home-metric-card" style={{ padding: '20px 16px 0', userSelect: 'none' }}>
           <div style={{ display: 'flex', background: 'var(--section-bg)', borderRadius: 5, padding: 3, marginBottom: 10 }}>
             <button
               onClick={() => setActiveCard(0)}
@@ -195,7 +195,7 @@ export function HomePage({ payments, profile, onAdd, onMarkPaid, onMarkUnpaid, o
 
           {/* Colapsable de pagados — justo debajo de la card de métricas */}
           {pagadosEstePeriodo.length > 0 && (
-            <div style={{ marginTop: 10 }}>
+            <div data-coachmark="home-paid-collapse" style={{ marginTop: 10 }}>
               <PaidCollapse
                 payments={pagadosEstePeriodo}
                 expanded={paidExpanded}
@@ -218,7 +218,7 @@ export function HomePage({ payments, profile, onAdd, onMarkPaid, onMarkUnpaid, o
           {/* Pagos del periodo (antes "Próximos a vencer" — se renombró porque
               puede haber pagos por vencer que en realidad son de OTRO periodo,
               y esta sección es específicamente la del periodo actual) */}
-          <div style={{ marginTop: 20 }}>
+          <div data-coachmark="home-rail" style={{ marginTop: 20 }}>
             <SectionHead left="Pagos del periodo" right={`Periodo ${periodRange(profile)}`} />
 
             {delPeriodo.length === 0

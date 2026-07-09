@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-import { LogOut, Camera, Crown, User, Tag, Calendar, Bell, SunMoon } from 'lucide-react'
+import { LogOut, Camera, Crown, User, Tag, Calendar, Bell, SunMoon, HelpCircle } from 'lucide-react'
 import { showToast } from '../components/Toast'
 import { supabase } from '../lib/supabase'
 import { APP_VERSION } from '../lib/patchNotes'
@@ -140,13 +140,18 @@ export function SettingsPage({ profile, user, onUpdate, onUploadAvatar, onDataDe
       {/* Menú */}
       <Card>
         <Row icon={User}     label="Cuenta"                        onClick={() => openSection('account')} />
-        <Row icon={Tag}      label="Categorías"                    onClick={() => openSection('categories')} />
-        <Row icon={Calendar} label="Periodo de cobro e ingresos"    value={FREQ_LABEL[profile.cobro_freq] || ''} onClick={() => openSection('cobro')} />
+        <Row icon={Tag}      label="Categorías"                    onClick={() => openSection('categories')} data-coachmark="perfil-categorias-row" />
+        <Row icon={Calendar} label="Periodo de cobro e ingresos"    value={FREQ_LABEL[profile.cobro_freq] || ''} onClick={() => openSection('cobro')} data-coachmark="perfil-cobro-row" />
         <Row icon={Bell}     label="Notificaciones"                 onClick={() => openSection('notifications')} />
         <Row icon={SunMoon}  label="Apariencia"                    value={THEME_LABEL[theme] || ''} onClick={() => openSection('appearance')} />
         {!profile.is_premium && (
           <Row icon={Crown} iconColor="var(--premium-gold)" label="Obtener Premium" onClick={onOpenPremium} last />
         )}
+      </Card>
+
+      {/* Ayuda */}
+      <Card>
+        <Row icon={HelpCircle} label="Ver tutorial de nuevo" onClick={() => onUpdate({ coachmarks_seen: {} })} last />
       </Card>
 
       {/* Sesión */}
