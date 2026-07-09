@@ -5,6 +5,8 @@ import { supabase } from '../lib/supabase'
 import { ConfirmCloseModal } from './ConfirmCloseModal'
 import { FrequencyPicker } from './FrequencyPicker'
 import { PremiumLock } from './PremiumLock'
+import { Select } from './Select'
+import { DatePicker } from './DatePicker'
 
 export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelete, initial, payments, profile, customCategories = [], onAddCategory, onOpenPremium }) {
   const [mode,               setMode]               = useState('single')
@@ -255,9 +257,7 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
                   + Agregar
                 </button>
               </div>
-              <select className="field-input" value={category} onChange={e => setCategory(e.target.value)}>
-                {allCategories.map(c => <option key={c}>{c}</option>)}
-              </select>
+              <Select value={category} onChange={setCategory} options={allCategories} />
               {addingCategory && (
                 <div style={{ marginTop: 8, display: 'flex', gap: 6 }}>
                   <input autoFocus className="field-input" placeholder="Nombre de la categoría" value={newCategoryName}
@@ -286,7 +286,7 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
             <FrequencyPicker value={recurFreq} onChange={setRecurFreq} />
 
             <Field label="Fecha del próximo pago">
-              <input className="field-input" type="date" value={dueDate} onChange={e => setDueDate(e.target.value)} />
+              <DatePicker value={dueDate} onChange={setDueDate} />
             </Field>
 
             <button onClick={handleEditInstallment} disabled={saving} className="btn-primary" style={{ marginTop: 4, opacity: saving ? 0.7 : 1 }}>
@@ -340,9 +340,7 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
                 + Agregar
               </button>
             </div>
-            <select className="field-input" value={category} onChange={e => setCategory(e.target.value)}>
-              {allCategories.map(c => <option key={c}>{c}</option>)}
-            </select>
+            <Select value={category} onChange={setCategory} options={allCategories} />
             {addingCategory && (
               <div style={{ marginTop: 8, display: 'flex', gap: 6 }}>
                 <input autoFocus className="field-input" placeholder="Nombre de la categoría" value={newCategoryName}
@@ -436,13 +434,13 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
                   </div>
                 )}
               </div>
-              <input className="field-input" type="date" value={dueDate} onChange={e => setDueDate(e.target.value)} />
+              <DatePicker value={dueDate} onChange={setDueDate} />
             </div>
           )}
 
           {mode === 'single' && initial && initial.is_paid && (
             <Field label="Fecha en que pagaste">
-              <input className="field-input" type="date" value={paidAt} onChange={e => setPaidAt(e.target.value)} />
+              <DatePicker value={paidAt} onChange={setPaidAt} />
             </Field>
           )}
 
@@ -461,7 +459,7 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
 
           {showBiweeklyPicker && (
             <Field label="Fecha base de inicio (quincenal)">
-              <input className="field-input" type="date" value={biweeklyDate} onChange={e => setBiweeklyDate(e.target.value)} />
+              <DatePicker value={biweeklyDate} onChange={setBiweeklyDate} />
               {nextBiDate && <div style={{ fontSize: 11, color: 'var(--text)', marginTop: 6 }}>Próximo vencimiento: {nextBiDate.toLocaleDateString('es-MX', { day: 'numeric', month: 'long' })}</div>}
             </Field>
           )}
