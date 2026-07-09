@@ -8,6 +8,11 @@ import { PayCard } from './PayCard'
 // mes realmente cambia — así nunca hay un día "huérfano" sin saber a qué mes
 // pertenece, incluso si el periodo cruza dos meses).
 //
+// Tanto el punto de día como el punto de mes viven en la misma columna fija
+// de 24px (vía flexbox), en vez de posicionamiento absoluto con números
+// calculados a mano — así quedan garantizadamente alineados entre sí y con
+// la línea vertical, sin depender de la altura exacta de ningún texto.
+//
 // `dotColor`/`dotTextColor`: color del punto y su texto — se pasa una vez
 // por sección (Vencidos / Periodo actual / Próximo periodo), igual que
 // antes se pasaba `borderLeft` a cada `PayCard` de esa sección.
@@ -24,7 +29,7 @@ export function PayRail({ payments, cfg, dotColor, dotTextColor, handlers }) {
   let lastMonth = null
 
   return (
-    <div style={{ position: 'relative', paddingLeft: 34 }}>
+    <div style={{ position: 'relative' }}>
       <div style={{ position: 'absolute', left: 11, top: 6, bottom: 6, width: 2, background: 'var(--border)' }} />
       {groups.map((g, gi) => {
         const d = dateOf(g.key)
@@ -35,22 +40,24 @@ export function PayRail({ payments, cfg, dotColor, dotTextColor, handlers }) {
         return (
           <div key={g.key}>
             {showMonth && (
-              <div style={{ position: 'relative', margin: gi === 0 ? '0 0 10px' : '16px 0 10px' }}>
-                <div style={{ position: 'absolute', left: -30, top: '50%', transform: 'translateY(-50%)', width: 8, height: 8, borderRadius: '50%', background: 'var(--border-mid)' }} />
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: gi === 0 ? '0 0 10px' : '16px 0 10px' }}>
+                <div style={{ width: 24, flexShrink: 0, display: 'flex', justifyContent: 'center' }}>
+                  <div style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--border-mid)' }} />
+                </div>
                 <span style={{ fontSize: 11, fontWeight: 500, color: 'var(--text)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
                   {MONTHS_SHORT[month]}
                 </span>
               </div>
             )}
-            <div style={{ position: 'relative', marginBottom: 10 }}>
+            <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, marginBottom: 10 }}>
               <div style={{
-                position: 'absolute', left: -34, top: 2, width: 24, height: 24, borderRadius: '50%',
+                width: 24, height: 24, borderRadius: '50%', flexShrink: 0,
                 background: dotColor, display: 'flex', alignItems: 'center', justifyContent: 'center',
                 fontSize: 10, fontWeight: 600, color: dotTextColor,
               }}>
                 {d.getDate()}
               </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 8 }}>
                 {g.items.map(p => (
                   <PayCard key={p.id} payment={p} cfg={cfg} {...handlers} railMode hideDate hideDueLabel />
                 ))}
