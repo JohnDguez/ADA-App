@@ -195,10 +195,9 @@ export function HomePage({ payments, profile, onAdd, onMarkPaid, onMarkUnpaid, o
 
           {/* Colapsable de pagados — justo debajo de la card de métricas */}
           {pagadosEstePeriodo.length > 0 && (
-            <div style={{ marginTop: 25 }}>
+            <div style={{ marginTop: 10 }}>
               <PaidCollapse
                 payments={pagadosEstePeriodo}
-                total={pagadoMonto}
                 expanded={paidExpanded}
                 onToggle={() => setPaidExpanded(v => !v)}
                 onMarkUnpaid={onMarkUnpaid}
@@ -287,7 +286,7 @@ function Empty({ text }) {
 // atajo de conveniencia para deshacer/revisar sin salir de Home. Se calcula
 // con el mismo rango de fechas del periodo actual, así que se "reinicia"
 // solo en cuanto cambia de periodo, sin lógica extra de limpieza.
-function PaidCollapse({ payments, total, expanded, onToggle, onMarkUnpaid }) {
+function PaidCollapse({ payments, expanded, onToggle, onMarkUnpaid }) {
   return (
     <div style={{ marginBottom: 12 }}>
       <button
@@ -298,7 +297,7 @@ function PaidCollapse({ payments, total, expanded, onToggle, onMarkUnpaid }) {
           <Check size={11} color="#fff" strokeWidth={3} />
         </div>
         <span style={{ flex: 1, fontSize: 12, fontWeight: 400, color: 'var(--text)', textAlign: 'left' }}>
-          {payments.length} pagado{payments.length !== 1 ? 's' : ''} · {fmt(total)}
+          {payments.length} pagado{payments.length !== 1 ? 's' : ''}
         </span>
         {expanded ? <ChevronUp size={15} color="var(--text)" /> : <ChevronDown size={15} color="var(--text)" />}
       </button>
