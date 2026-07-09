@@ -806,6 +806,7 @@ export function PaymentsPage({ payments, profile, unreadCount, onOpenNotifs, onG
             <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
               {segmentos.map(({ cat, total }) => {
                 const catColor = getCatColor(cat, profile.custom_categories, profile.category_colors)
+                const CatIcon  = getCategoryIcon(cat, profile.category_icons)
                 return (
                   <div key={cat} style={{
                     padding: '3px 10px',
@@ -816,9 +817,12 @@ export function PaymentsPage({ payments, profile, unreadCount, onOpenNotifs, onG
                     color: catColor,
                     display: 'flex',
                     alignItems: 'center',
-                    gap: 4,
+                    gap: 5,
                   }}>
-                    <span style={{ width: 6, height: 6, borderRadius: '50%', background: catColor, display: 'inline-block' }} />
+                    {CatIcon
+                      ? <CatIcon size={12} color={catColor} strokeWidth={2} />
+                      : <span style={{ width: 6, height: 6, borderRadius: '50%', background: catColor, display: 'inline-block' }} />
+                    }
                     {cat} {fmt(total)}
                   </div>
                 )
@@ -858,7 +862,14 @@ export function PaymentsPage({ payments, profile, unreadCount, onOpenNotifs, onG
         <div style={{ padding: '0 16px 15px', display: 'flex', gap: 6, overflowX: 'auto', msOverflowStyle: 'none', scrollbarWidth: 'none' }}>
           <FilterChip label="Todos" active={!selectedCat} onClick={() => setSelectedCat(null)} />
           {visibleCats.map(c => (
-            <FilterChip key={c} label={c} active={selectedCat === c} onClick={() => setSelectedCat(selectedCat === c ? null : c)} />
+            <FilterChip
+              key={c}
+              label={c}
+              active={selectedCat === c}
+              onClick={() => setSelectedCat(selectedCat === c ? null : c)}
+              icon={getCategoryIcon(c, profile.category_icons)}
+              color={getCatColor(c, profile.custom_categories, profile.category_colors)}
+            />
           ))}
         </div>
 
@@ -1115,7 +1126,7 @@ function MenuItem({ icon, label, onClick, danger }) {
   )
 }
 
-function FilterChip({ label, active, onClick }) {
+function FilterChip({ label, active, onClick, icon: Icon, color }) {
   return (
     <button
       onClick={onClick}
@@ -1131,9 +1142,13 @@ function FilterChip({ label, active, onClick }) {
         cursor: 'pointer',
         whiteSpace: 'nowrap',
         flexShrink: 0,
+        display: 'flex',
+        alignItems: 'center',
+        gap: 6,
         transition: 'background .15s, color .15s',
       }}
     >
+      {Icon && <Icon size={13} color={active ? '#fff' : color} strokeWidth={2} />}
       {label}
     </button>
   )
