@@ -5,20 +5,6 @@ import { fmt, dateOf, MONTHS, MONTHS_SHORT, CATEGORIES, cobroPeriod, addDays, ge
 import { getCategoryIcon } from '../lib/categoryIcons'
 import { supabase } from '../lib/supabase'
 
-const CAT_COLOR = {
-  'Servicios':     'var(--cat-servicios)',
-  'Suscripciones': 'var(--cat-suscripciones)',
-  'Créditos':      'var(--cat-creditos)',
-  'Renta':         'var(--cat-renta)',
-  'Seguros':       'var(--cat-seguros)',
-  'Alimentación':  'var(--cat-alimentacion)',
-  'Transporte':    'var(--cat-transporte)',
-  'Medicina':      'var(--cat-medicina)',
-  'Doctor':        'var(--cat-doctor)',
-  'Mantenimiento': 'var(--cat-mantenimiento)',
-  'Otros':         'var(--cat-otros)',
-}
-
 const INCOME_TYPES = ['Bono', 'Préstamo', 'Pago', 'Comisión', 'Otro']
 
 // ── Helpers de periodo anterior ───────────────────────────────────────────────
@@ -807,7 +793,7 @@ export function PaymentsPage({ payments, profile, unreadCount, onOpenNotifs, onG
                   style={{
                     height: '100%',
                     width: `${Math.min((total / ingresoTotal) * 100, 100)}%`,
-                    background: CAT_COLOR[cat] || 'var(--accent)',
+                    background: getCatColor(cat, profile.custom_categories, profile.category_colors),
                     flexShrink: 0,
                     transition: 'width .4s ease',
                   }}
@@ -818,22 +804,25 @@ export function PaymentsPage({ payments, profile, unreadCount, onOpenNotifs, onG
 
             {/* Chips de categoría */}
             <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-              {segmentos.map(({ cat, total }) => (
-                <div key={cat} style={{
-                  padding: '3px 10px',
-                  borderRadius: 5,
-                  fontSize: 11,
-                  fontWeight: 500,
-                  background: (CAT_COLOR[cat] || 'var(--accent)') + '22',
-                  color: CAT_COLOR[cat] || 'var(--accent)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 4,
-                }}>
-                  <span style={{ width: 6, height: 6, borderRadius: '50%', background: CAT_COLOR[cat] || 'var(--accent)', display: 'inline-block' }} />
-                  {cat} {fmt(total)}
-                </div>
-              ))}
+              {segmentos.map(({ cat, total }) => {
+                const catColor = getCatColor(cat, profile.custom_categories, profile.category_colors)
+                return (
+                  <div key={cat} style={{
+                    padding: '3px 10px',
+                    borderRadius: 5,
+                    fontSize: 11,
+                    fontWeight: 500,
+                    background: 'var(--section-bg)',
+                    color: catColor,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 4,
+                  }}>
+                    <span style={{ width: 6, height: 6, borderRadius: '50%', background: catColor, display: 'inline-block' }} />
+                    {cat} {fmt(total)}
+                  </div>
+                )
+              })}
             </div>
 
             {/* Ingresos extras del periodo */}
@@ -907,7 +896,7 @@ export function PaymentsPage({ payments, profile, unreadCount, onOpenNotifs, onG
             {chartMonths.map((m, i) => {
               const total     = chartTotals[i]
               const isCurrent = m.month === now.getMonth() && m.year === now.getFullYear()
-              const barColor  = selectedCat ? CAT_COLOR[selectedCat] : 'var(--accent)'
+              const barColor  = selectedCat ? getCatColor(selectedCat, profile.custom_categories, profile.category_colors) : 'var(--accent)'
               return (
                 <div key={i} style={{ flex: 1, textAlign: 'center' }}>
                   {total > 0 && (
@@ -925,13 +914,13 @@ export function PaymentsPage({ payments, profile, unreadCount, onOpenNotifs, onG
               const total     = chartTotals[i]
               const heightPct = (total / maxChart) * 100
               const isCurrent = m.month === now.getMonth() && m.year === now.getFullYear()
-              const barColor  = selectedCat ? CAT_COLOR[selectedCat] : 'var(--accent)'
+              const barColor  = selectedCat ? getCatColor(selectedCat, profile.custom_categories, profile.category_colors) : 'var(--accent)'
               return (
                 <div key={i} style={{ flex: 1, height: '100%', display: 'flex', alignItems: 'flex-end' }}>
                   <div style={{
                     width: '100%',
                     height: `${Math.max(heightPct, total > 0 ? 3 : 0)}%`,
-                    background: isCurrent ? barColor : (selectedCat ? CAT_COLOR[selectedCat] : 'var(--accent-border)'),
+                    background: isCurrent ? barColor : (selectedCat ? barColor : 'var(--accent-border)'),
                     opacity: isCurrent ? 1 : (selectedCat ? 0.45 : 1),
                     borderRadius: '3px 3px 0 0',
                     minHeight: total > 0 ? 3 : 0,
@@ -945,7 +934,7 @@ export function PaymentsPage({ payments, profile, unreadCount, onOpenNotifs, onG
           <div style={{ display: 'flex', gap: 6, marginTop: 4 }}>
             {chartMonths.map((m, i) => {
               const isCurrent = m.month === now.getMonth() && m.year === now.getFullYear()
-              const barColor  = selectedCat ? CAT_COLOR[selectedCat] : 'var(--accent)'
+              const barColor  = selectedCat ? getCatColor(selectedCat, profile.custom_categories, profile.category_colors) : 'var(--accent)'
               return (
                 <div key={i} style={{ flex: 1, textAlign: 'center', fontSize: 9, fontWeight: isCurrent ? 700 : 500, color: isCurrent ? barColor : 'var(--text)' }}>
                   {MONTHS_SHORT[m.month]}
@@ -1080,7 +1069,7 @@ export function PaymentsPage({ payments, profile, unreadCount, onOpenNotifs, onG
                           )}
                         </div>
                         <div style={{ fontSize: 11, fontWeight: 500, color: 'var(--text)', display: 'flex', alignItems: 'center', gap: 5 }}>
-                          <span style={{ width: 6, height: 6, borderRadius: '50%', background: CAT_COLOR[p.category] || 'var(--text)', display: 'inline-block', flexShrink: 0 }} />
+                          <span style={{ width: 6, height: 6, borderRadius: '50%', background: getCatColor(p.category, profile.custom_categories, profile.category_colors), display: 'inline-block', flexShrink: 0 }} />
                           {p.category}
                           {p.is_recurrent && <span style={{ fontWeight: 400 }}>· Mensual</span>}
                         </div>
