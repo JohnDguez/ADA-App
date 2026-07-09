@@ -239,7 +239,7 @@ export function HomePage({ payments, profile, onAdd, onMarkPaid, onMarkUnpaid, o
             upcoming.length === 0
               ? <Empty text="Sin pagos registrados para el próximo periodo" />
               : <div style={{ marginTop: 8 }}>
-                  <PayRail payments={upcoming} cfg={profile} dotColor="var(--accent)" dotTextColor="#fff" handlers={handlers} />
+                  <PayRail payments={upcoming} cfg={profile} dotColor="var(--accent)" dotTextColor="var(--bg)" handlers={handlers} />
                 </div>
           )}
         </div>
