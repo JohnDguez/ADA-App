@@ -1,10 +1,18 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { supabase } from '../lib/supabase'
 import { nextPeriodDate, dateOf } from '../lib/utils'
 
 export function usePayments(userId) {
   const [payments, setPayments] = useState([])
   const [loading, setLoading] = useState(true)
+  // Candado de concurrencia: evita que ensureTwoAhead se ejecute 2 veces en
+  // paralelo para el MISMO master (ej. doble tap al confirmar un pago, o dos
+  // llamadas casi simultáneas antes de que la primera termine de insertar).
+  // Sin esto, ambas ejecuciones revisan "¿ya existe esta fecha?" contra la
+  // misma copia local desactualizada, ven que no, y las dos la crean —
+  // dejando 2 copias duplicadas con la misma fecha (y el mismo monto si el
+  // master lo tenía mal guardado).
+  const ensureTwoAheadInFlight = useRef(new Set())
 
   const fetchPayments = useCallback(async () => {
     if (!userId) return
@@ -22,6 +30,16 @@ export function usePayments(userId) {
 
   // Asegura siempre 2 copias pendientes en cola para un master dado
   async function ensureTwoAhead(masterId, currentPayments) {
+    if (ensureTwoAheadInFlight.current.has(masterId)) return []
+    ensureTwoAheadInFlight.current.add(masterId)
+    try {
+      return await ensureTwoAheadImpl(masterId, currentPayments)
+    } finally {
+      ensureTwoAheadInFlight.current.delete(masterId)
+    }
+  }
+
+  async function ensureTwoAheadImpl(masterId, currentPayments) {
     const master = currentPayments.find(p => p.id === masterId)
     if (!master || master.paused) return []
 
