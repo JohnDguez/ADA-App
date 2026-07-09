@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { MoreVertical, Check, Pencil, Trash2, Clock, ChevronDown, ChevronUp, RotateCcw, FastForward } from 'lucide-react'
-import { statusOf, daysDiff, dateOf, fmt, MONTHS_SHORT, periodLabel, periodCountLabel, RECUR_FREQ, installmentLabel } from '../lib/utils'
+import { statusOf, daysDiff, dateOf, fmt, MONTHS_SHORT, periodLabel, periodCountLabel, RECUR_FREQ, installmentLabel, canUnmark } from '../lib/utils'
 
 function statusInfo(p, cfg) {
   const s = statusOf(p, cfg)
@@ -110,7 +110,7 @@ export function PayCard({ payment: p, cfg, onMarkPaid, onMarkUnpaid, onEdit, onD
           {isPending && <MenuItem icon={<Pencil size={14}/>} label="Editar" onClick={() => { onEdit(p); setMenuOpen(false) }} />}
           {isPending && p.is_recurrent && !p.is_installment && <MenuItem icon={<Clock size={14}/>} label="Posponer" onClick={() => { onPostpone(p); setMenuOpen(false) }} />}
           {isPending && p.is_installment && onAdvance && <MenuItem icon={<FastForward size={14}/>} label="Adelantar pago" onClick={() => { onAdvance(p); setMenuOpen(false) }} />}
-          {p.is_paid && <MenuItem icon={<RotateCcw size={14}/>} label="Marcar no pagado" onClick={() => { onMarkUnpaid(p.id); setMenuOpen(false) }} />}
+          {p.is_paid && canUnmark(p) && <MenuItem icon={<RotateCcw size={14}/>} label="Marcar no pagado" onClick={() => { onMarkUnpaid(p.id); setMenuOpen(false) }} />}
           <MenuItem icon={<Trash2 size={14}/>} label="Eliminar" onClick={() => { onDelete(p.id); setMenuOpen(false) }} danger />
         </div>
       )}
@@ -181,7 +181,7 @@ export function GroupCard({ group, cfg, onMarkPaid, onMarkUnpaid, onEdit, onDele
                     <Check size={12} color="#fff" strokeWidth={2.5} />
                   </button>
                 )}
-                {p.is_paid && (
+                {p.is_paid && canUnmark(p) && (
                   <button onClick={() => onMarkUnpaid(p.id)} style={{ width: 24, height: 24, borderRadius: '50%', background: 'none', border: '0.5px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
                     <RotateCcw size={10} color="var(--text)" />
                   </button>
