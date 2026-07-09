@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { ChevronLeft, ChevronRight, MoreVertical, Plus, CircleDollarSign, ChevronDown, ChevronUp, Pencil, RotateCcw, Trash2 } from 'lucide-react'
+import { ChevronLeft, ChevronRight, MoreVertical, Plus, CircleDollarSign, ChevronDown, ChevronUp, Pencil, RotateCcw, Trash2, Check } from 'lucide-react'
 import { PageHeader } from '../components/PageHeader'
 import { fmt, dateOf, MONTHS, MONTHS_SHORT, CATEGORIES, cobroPeriod, addDays, getCatColor } from '../lib/utils'
 import { getCategoryIcon } from '../lib/categoryIcons'
@@ -75,6 +75,7 @@ export function PaymentsPage({ payments, profile, unreadCount, onOpenNotifs, onG
 
   // Ingresos extras del periodo actual
   const [periodIncomes,    setPeriodIncomes]    = useState([])
+  const [incomesExpanded,  setIncomesExpanded]  = useState(false)
   const [loadingIncomes,   setLoadingIncomes]   = useState(true)
 
   // Modal agregar ingreso
@@ -854,31 +855,59 @@ export function PaymentsPage({ payments, profile, unreadCount, onOpenNotifs, onG
             </div>
 
             {/* Ingresos extras del periodo */}
-            {!loadingIncomes && periodIncomes.length > 0 && (
-              <div style={{ marginTop: 12, paddingTop: 12, borderTop: '0.5px solid var(--border)' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-                  <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--text)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Ingresos Extras Este Periodo</div>
+            {!loadingIncomes && periodIncomes.length > 0 && (() => {
+              const totalInc = periodIncomes.reduce((a, i) => a + Number(i.amount), 0)
+              return (
+                <div style={{ marginTop: 12, paddingTop: 12, borderTop: '0.5px solid var(--border)' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                    <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--text)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Ingresos Extras Este Periodo</div>
+                    <button
+                      onClick={() => setManageIncomeModal(true)}
+                      style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '3px 8px', borderRadius: 5, border: 'none', background: 'transparent', color: 'var(--accent)', fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: 'DM Sans, sans-serif' }}
+                    >
+                      <Pencil size={11} strokeWidth={2.2} />
+                      Editar
+                    </button>
+                  </div>
+
                   <button
-                    onClick={() => setManageIncomeModal(true)}
-                    style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '3px 8px', borderRadius: 5, border: 'none', background: 'transparent', color: 'var(--accent)', fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: 'DM Sans, sans-serif' }}
+                    onClick={() => setIncomesExpanded(v => !v)}
+                    style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, background: 'var(--section-bg)', border: 'none', borderRadius: 8, padding: '8px 10px', cursor: 'pointer' }}
                   >
-                    <Pencil size={11} strokeWidth={2.2} />
-                    Editar
-                  </button>
-                </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                  {periodIncomes.map(inc => (
-                    <div key={inc.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <div>
-                        <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--text)' }}>{inc.type}</span>
-                        {inc.note && <span style={{ fontSize: 11, fontWeight: 400, color: 'var(--text)', marginLeft: 6 }}>· {inc.note}</span>}
-                      </div>
-                      <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--paid)' }}>+{fmt(inc.amount)}</span>
+                    <div style={{ width: 18, height: 18, borderRadius: '50%', background: 'var(--paid)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                      <Check size={10} color="#fff" strokeWidth={3} />
                     </div>
-                  ))}
+                    <span style={{ flex: 1, fontSize: 12, fontWeight: 400, color: 'var(--text)', textAlign: 'left' }}>
+                      {periodIncomes.length} ingreso{periodIncomes.length !== 1 ? 's' : ''} · +{fmt(totalInc)}
+                    </span>
+                    {incomesExpanded ? <ChevronUp size={15} color="var(--text)" /> : <ChevronDown size={15} color="var(--text)" />}
+                  </button>
+
+                  {incomesExpanded && (
+                    <div style={{ marginTop: 6, display: 'flex', flexDirection: 'column', gap: 6 }}>
+                      {periodIncomes.map(inc => {
+                        const d = inc.created_at ? new Date(inc.created_at) : null
+                        return (
+                          <div key={inc.id} style={{ display: 'flex', alignItems: 'center', gap: 10, background: 'var(--section-bg)', borderRadius: 8, padding: '9px 12px' }}>
+                            {d && (
+                              <div style={{ width: 26, textAlign: 'center', flexShrink: 0 }}>
+                                <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)', lineHeight: 1.1 }}>{d.getDate()}</div>
+                                <div style={{ fontSize: 9, fontWeight: 500, color: 'var(--text)', textTransform: 'uppercase' }}>{MONTHS_SHORT[d.getMonth()]}</div>
+                              </div>
+                            )}
+                            <div style={{ flex: 1, minWidth: 0, overflow: 'hidden' }}>
+                              <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--text)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{inc.type}</div>
+                              {inc.note && <div style={{ fontSize: 11, fontWeight: 400, color: 'var(--text)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{inc.note}</div>}
+                            </div>
+                            <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--paid)', flexShrink: 0 }}>+{fmt(inc.amount)}</span>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  )}
                 </div>
-              </div>
-            )}
+              )
+            })()}
           </div>
         )}
 
