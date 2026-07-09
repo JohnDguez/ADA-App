@@ -73,20 +73,24 @@ export function PayCard({ payment: p, cfg, onMarkPaid, onMarkUnpaid, onCaptureAm
 
         {/* Monto + estado */}
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 2, padding: '11px 8px', flexShrink: 0 }}>
-          {p.is_variable && !p.is_paid && !p.amount
-            ? (
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6 }}>
-                <button
-                  onClick={e => { e.stopPropagation(); onCaptureAmount && onCaptureAmount(p) }}
-                  style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 600, color: '#fff', background: 'none', border: '1px solid var(--accent)', padding: '3px 8px', borderRadius: 5, cursor: 'pointer' }}
-                >
-                  <DollarSign size={12} strokeWidth={2.5} /> Agregar monto
-                </button>
-                <span style={{ fontSize: 10, fontWeight: 500, color: 'var(--label-variable)' }}>Pago variable</span>
-              </div>
-            )
-            : <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--text)' }}>{fmt(p.amount)}</div>
-          }
+          {p.is_variable && !p.is_paid && !p.amount ? (
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6 }}>
+              <button
+                onClick={e => { e.stopPropagation(); onCaptureAmount && onCaptureAmount(p) }}
+                style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 600, color: '#fff', background: 'none', border: '1px solid var(--accent)', padding: '3px 8px', borderRadius: 5, cursor: 'pointer' }}
+              >
+                <DollarSign size={12} strokeWidth={2.5} /> Agregar monto
+              </button>
+              <span style={{ fontSize: 10, fontWeight: 500, color: 'var(--label-variable)' }}>Pago variable</span>
+            </div>
+          ) : p.is_variable && !p.is_paid ? (
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 3 }}>
+              <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--text)' }}>{fmt(p.amount)}</div>
+              <span style={{ fontSize: 10, fontWeight: 500, color: 'var(--label-variable)' }}>Pago variable</span>
+            </div>
+          ) : (
+            <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--text)' }}>{fmt(p.amount)}</div>
+          )}
           {showLabel && <div style={{ fontSize: 11, fontWeight: 500, color: info.color }}>{info.label}</div>}
         </div>
 
