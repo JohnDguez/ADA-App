@@ -1,6 +1,7 @@
 import { useState } from 'react'
-import { Trophy } from 'lucide-react'
+import { Trophy, ChevronDown, ChevronUp, Check, HelpCircle, RotateCcw } from 'lucide-react'
 import { PayCard } from '../components/PayCard'
+import { PayRail } from '../components/PayRail'
 import { PageHeader } from '../components/PageHeader'
 import { NotificationsPanel } from '../components/NotificationsPanel'
 import { fmt, cobroPeriod, nextCobroPeriod, getPagarEsteCobro, daysDiff, dateOf, MONTHS, MONTHS_SHORT } from '../lib/utils'
@@ -26,6 +27,7 @@ export function HomePage({ payments, profile, onAdd, onMarkPaid, onMarkUnpaid, o
   const [showNextPeriod, setShowNextPeriod] = useState(() =>
     localStorage.getItem('ada_show_next_period') !== 'false'
   )
+  const [paidExpanded, setPaidExpanded] = useState(false)
 
   function toggleNextPeriod() {
     const next = !showNextPeriod
@@ -33,14 +35,26 @@ export function HomePage({ payments, profile, onAdd, onMarkPaid, onMarkUnpaid, o
     localStorage.setItem('ada_show_next_period', String(next))
   }
 
-  const now        = new Date()
-  const { end }    = cobroPeriod(profile)
+  const now         = new Date()
+  const { start, end } = cobroPeriod(profile)
   const { start: nextStart, end: nextEnd } = nextCobroPeriod(profile)
 
   const pagarEsteCobro = getPagarEsteCobro(payments, profile)
   const vencidos   = pagarEsteCobro.filter(p => daysDiff(p.due_date) < 0).sort((a, b) => dateOf(a.due_date) - dateOf(b.due_date))
   const delPeriodo = pagarEsteCobro.filter(p => daysDiff(p.due_date) >= 0).sort((a, b) => dateOf(a.due_date) - dateOf(b.due_date))
   const pendingAmt = pagarEsteCobro.filter(p => !p.is_variable).reduce((a, p) => a + Number(p.amount), 0)
+  const pendingVariableCount = pagarEsteCobro.filter(p => p.is_variable).length
+
+  // Pagos ya pagados cuyo vencimiento cae dentro del periodo actual — hoy
+  // `getPagarEsteCobro` los excluye de raíz (solo trae pendientes), así que
+  // esta es una consulta aparte, exclusiva para el resumen colapsable.
+  const pagadosEstePeriodo = payments
+    .filter(p => p.is_paid && !p.is_master && dateOf(p.due_date) >= start && dateOf(p.due_date) <= end)
+    .sort((a, b) => dateOf(a.due_date) - dateOf(b.due_date))
+  const pagadoMonto = pagadosEstePeriodo.reduce((a, p) => a + Number(p.amount), 0)
+  const totalConocido = pagadoMonto + pendingAmt
+  const pctPagado = totalConocido > 0 ? Math.round((pagadoMonto / totalConocido) * 100) : 0
+  const pagosFijosCount = pagarEsteCobro.filter(p => !p.is_variable).length + pagadosEstePeriodo.length
 
   const thisMonth  = now.getMonth()
   const thisYear   = now.getFullYear()
@@ -50,10 +64,13 @@ export function HomePage({ payments, profile, onAdd, onMarkPaid, onMarkUnpaid, o
     return d.getMonth() === thisMonth && d.getFullYear() === thisYear
   })
   const variableThisMonth = paidThisMonth.filter(p => p.is_variable).length
+  const paidThisMonthAmt  = paidThisMonth.reduce((a, p) => a + Number(p.amount), 0)
   const totalThisMonth = payments.filter(p => {
     const d = dateOf(p.due_date)
     return d.getMonth() === thisMonth && d.getFullYear() === thisYear && !p.paused
   }).reduce((a, p) => a + Number(p.amount), 0)
+  const pendingThisMonthAmt = Math.max(totalThisMonth - paidThisMonthAmt, 0)
+  const pctPagadoMes = totalThisMonth > 0 ? Math.round((paidThisMonthAmt / totalThisMonth) * 100) : 0
 
   // Solo pagos DENTRO del próximo periodo (no todos los futuros)
   const upcoming = payments.filter(p => {
@@ -76,10 +93,25 @@ export function HomePage({ payments, profile, onAdd, onMarkPaid, onMarkUnpaid, o
       <div style={{ background: 'var(--bg)', borderRadius: '24px 24px 0 0', marginTop: -24, position: 'relative', zIndex: 10 }}>
         <div className={slideClass}>
 
-        {/* Slider de métricas */}
+        {/* Tabs Periodo / Mes */}
         <div style={{ padding: '20px 16px 0', userSelect: 'none' }}>
+          <div style={{ display: 'flex', background: 'var(--section-bg)', borderRadius: 5, padding: 3, marginBottom: 10 }}>
+            <button
+              onClick={() => setActiveCard(0)}
+              style={{ flex: 1, textAlign: 'center', padding: '8px 0', borderRadius: 5, border: 'none', background: activeCard === 0 ? 'var(--accent)' : 'transparent', color: activeCard === 0 ? '#fff' : 'var(--text)', fontSize: 12, fontWeight: 500, fontFamily: 'DM Sans, sans-serif' }}
+            >
+              Periodo
+            </button>
+            <button
+              onClick={() => setActiveCard(1)}
+              style={{ flex: 1, textAlign: 'center', padding: '8px 0', borderRadius: 5, border: 'none', background: activeCard === 1 ? 'var(--accent)' : 'transparent', color: activeCard === 1 ? '#fff' : 'var(--text)', fontSize: 12, fontWeight: 500, fontFamily: 'DM Sans, sans-serif' }}
+            >
+              Mes
+            </button>
+          </div>
+
           <div
-            style={{ overflow: 'hidden', borderRadius: 16 }}
+            style={{ overflow: 'hidden', borderRadius: 12 }}
             onTouchStart={e => setTouchStartX(e.touches[0].clientX)}
             onTouchEnd={e => {
               if (touchStartX === null) return
@@ -92,55 +124,60 @@ export function HomePage({ payments, profile, onAdd, onMarkPaid, onMarkUnpaid, o
             <div style={{ display: 'flex', transition: 'transform .3s cubic-bezier(0.25,0.46,0.45,0.94)', transform: `translateX(${activeCard * -100}%)` }}>
 
               {/* Card 1 — Periodo actual */}
-              <div style={{ minWidth: '100%', background: 'var(--accent)', borderRadius: 16, padding: '18px 20px' }}>
-                <div style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.75)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 6 }}>
+              <div style={{ minWidth: '100%', background: 'var(--surface)', borderRadius: 12, padding: '16px 14px' }}>
+                <div style={{ fontSize: 11, fontWeight: 500, color: 'var(--accent)', letterSpacing: '0.04em', marginBottom: 6 }}>
                   Pagos de este periodo
                 </div>
                 {pagarEsteCobro.length === 0 ? (
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14 }}>
-                    <Trophy size={36} color="#fff" strokeWidth={1.8} />
-                    <div style={{ fontSize: 20, fontWeight: 700, color: '#fff', lineHeight: 1.3 }}>¡Sin pagos pendientes este periodo!</div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '4px 0 2px' }}>
+                    <Trophy size={32} color="var(--paid)" strokeWidth={1.8} />
+                    <div style={{ fontSize: 15, fontWeight: 600, color: 'var(--text)', lineHeight: 1.3 }}>¡Sin pagos pendientes este periodo!</div>
                   </div>
                 ) : (
-                  <div style={{ fontSize: 38, fontWeight: 700, color: '#fff', letterSpacing: '-1px', lineHeight: 1, marginBottom: 14 }}>{fmt(pendingAmt)}</div>
+                  <>
+                    <div style={{ fontSize: 32, fontWeight: 500, color: 'var(--text)', marginBottom: 4 }}>{fmt(totalConocido)}</div>
+                    <div style={{ fontSize: 12, fontWeight: 400, color: 'var(--text)', marginBottom: 12 }}>
+                      {pagosFijosCount} pago{pagosFijosCount !== 1 ? 's' : ''} fijo{pagosFijosCount !== 1 ? 's' : ''} · periodo {periodRange(profile)}
+                      {vencidos.length > 0 && <span style={{ color: 'var(--danger)' }}> · {vencidos.length} vencido{vencidos.length !== 1 ? 's' : ''}</span>}
+                    </div>
+                    <div style={{ height: 5, background: 'var(--border)', borderRadius: 3, overflow: 'hidden', display: 'flex' }}>
+                      <div style={{ width: `${pctPagado}%`, background: 'var(--paid)' }} />
+                      <div style={{ width: `${100 - pctPagado}%`, background: 'var(--accent)' }} />
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 6, marginBottom: pendingVariableCount > 0 ? 12 : 0 }}>
+                      <span style={{ fontSize: 10, fontWeight: 500, color: 'var(--paid)' }}>{fmt(pagadoMonto)} pagado</span>
+                      <span style={{ fontSize: 10, fontWeight: 500, color: 'var(--text)' }}>{fmt(pendingAmt)} pendiente</span>
+                    </div>
+                    {pendingVariableCount > 0 && (
+                      <div style={{ borderTop: '0.5px solid var(--border)', paddingTop: 10, display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <HelpCircle size={14} color="var(--text)" />
+                        <span style={{ fontSize: 12, fontWeight: 400, color: 'var(--text)' }}>+ {pendingVariableCount} pago{pendingVariableCount !== 1 ? 's' : ''} variable{pendingVariableCount !== 1 ? 's' : ''} por confirmar</span>
+                      </div>
+                    )}
+                  </>
                 )}
-                <div style={{ display: 'flex', gap: 8 }}>
-                  <span style={{ fontSize: 12, fontWeight: 600, background: 'rgba(255,255,255,0.2)', color: '#fff', padding: '4px 10px', borderRadius: 20 }}>
-                    {pagarEsteCobro.length} pago{pagarEsteCobro.length !== 1 ? 's' : ''}
-                  </span>
-                  {vencidos.length > 0 && (
-                    <span style={{ fontSize: 12, fontWeight: 600, background: 'var(--danger)', color: '#fff', padding: '4px 10px', borderRadius: 20 }}>
-                      {vencidos.length} vencido{vencidos.length !== 1 ? 's' : ''}
-                    </span>
-                  )}
-                </div>
               </div>
 
               {/* Card 2 — Este mes */}
-              <div style={{ minWidth: '100%', background: 'var(--accent)', borderRadius: 16, padding: '18px 20px' }}>
-                <div style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.75)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 6 }}>
+              <div style={{ minWidth: '100%', background: 'var(--surface)', borderRadius: 12, padding: '16px 14px' }}>
+                <div style={{ fontSize: 11, fontWeight: 500, color: 'var(--accent)', letterSpacing: '0.04em', marginBottom: 6 }}>
                   Por pagar este mes
                 </div>
-                <div style={{ fontSize: 38, fontWeight: 700, color: '#fff', letterSpacing: '-1px', lineHeight: 1, marginBottom: 14 }}>{fmt(totalThisMonth)}</div>
-                <div style={{ display: 'flex', gap: 8 }}>
-                  <span style={{ fontSize: 12, fontWeight: 600, background: 'rgba(255,255,255,0.2)', color: '#fff', padding: '4px 10px', borderRadius: 20 }}>
-                    {paidThisMonth.length} pagados
-                  </span>
-                  {variableThisMonth > 0 && (
-                    <span style={{ fontSize: 12, fontWeight: 600, background: 'rgba(255,255,255,0.2)', color: '#fff', padding: '4px 10px', borderRadius: 20 }}>
-                      {variableThisMonth} variable{variableThisMonth !== 1 ? 's' : ''}
-                    </span>
-                  )}
+                <div style={{ fontSize: 32, fontWeight: 500, color: 'var(--text)', marginBottom: 4 }}>{fmt(totalThisMonth)}</div>
+                <div style={{ fontSize: 12, fontWeight: 400, color: 'var(--text)', marginBottom: 12 }}>
+                  {paidThisMonth.length} pagado{paidThisMonth.length !== 1 ? 's' : ''}
+                  {variableThisMonth > 0 && ` · ${variableThisMonth} variable${variableThisMonth !== 1 ? 's' : ''}`}
+                </div>
+                <div style={{ height: 5, background: 'var(--border)', borderRadius: 3, overflow: 'hidden', display: 'flex' }}>
+                  <div style={{ width: `${pctPagadoMes}%`, background: 'var(--paid)' }} />
+                  <div style={{ width: `${100 - pctPagadoMes}%`, background: 'var(--accent)' }} />
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 6 }}>
+                  <span style={{ fontSize: 10, fontWeight: 500, color: 'var(--paid)' }}>{fmt(paidThisMonthAmt)} pagado</span>
+                  <span style={{ fontSize: 10, fontWeight: 500, color: 'var(--text)' }}>{fmt(pendingThisMonthAmt)} pendiente</span>
                 </div>
               </div>
             </div>
-          </div>
-
-          {/* Dots */}
-          <div style={{ display: 'flex', justifyContent: 'center', gap: 6, marginTop: 10 }}>
-            {[0, 1].map(i => (
-              <div key={i} onClick={() => setActiveCard(i)} style={{ width: activeCard === i ? 18 : 6, height: 6, borderRadius: 3, background: activeCard === i ? 'var(--accent)' : 'var(--border)', transition: 'all .25s', cursor: 'pointer' }} />
-            ))}
           </div>
         </div>
 
@@ -149,23 +186,30 @@ export function HomePage({ payments, profile, onAdd, onMarkPaid, onMarkUnpaid, o
           {/* Vencidos */}
           {vencidos.length > 0 && (
             <div style={{ marginTop: 25 }}>
-              <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--danger)', marginBottom: 10 }}>
-                {vencidos.length} Pago{vencidos.length !== 1 ? 's' : ''} vencido{vencidos.length !== 1 ? 's' : ''} — Atención urgente
+              <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--danger)', marginBottom: 10 }}>
+                Vencidos
               </div>
-              <div style={{ background: 'var(--section-bg)', borderRadius: 12, padding: '12px', display: 'flex', flexDirection: 'column', gap: 8 }}>
-                {vencidos.map(p => <PayCard key={p.id} payment={p} cfg={profile} {...handlers} borderLeft="var(--overdue-border)" />)}
-              </div>
+              <PayRail payments={vencidos} cfg={profile} dotColor="var(--overdue-border)" dotTextColor="#fff" handlers={handlers} />
             </div>
           )}
 
           {/* Próximos a vencer (periodo actual) */}
           <div style={{ marginTop: 20 }}>
             <SectionHead left="Próximos a vencer" right={`Periodo ${periodRange(profile)}`} />
+
+            {pagadosEstePeriodo.length > 0 && (
+              <PaidCollapse
+                payments={pagadosEstePeriodo}
+                total={pagadoMonto}
+                expanded={paidExpanded}
+                onToggle={() => setPaidExpanded(v => !v)}
+                onMarkUnpaid={onMarkUnpaid}
+              />
+            )}
+
             {delPeriodo.length === 0
-              ? <Empty text="Sin pagos pendientes para este periodo" />
-              : <div style={{ background: 'var(--section-bg)', borderRadius: 12, padding: '12px', display: 'flex', flexDirection: 'column', gap: 8 }}>
-                  {delPeriodo.map(p => <PayCard key={p.id} payment={p} cfg={profile} {...handlers} borderLeft="var(--upcoming-border)" />)}
-                </div>
+              ? (pagadosEstePeriodo.length === 0 && <Empty text="Sin pagos pendientes para este periodo" />)
+              : <PayRail payments={delPeriodo} cfg={profile} dotColor="var(--upcoming-border)" dotTextColor="var(--impact-warning-text)" handlers={handlers} />
             }
           </div>
 
@@ -187,8 +231,8 @@ export function HomePage({ payments, profile, onAdd, onMarkPaid, onMarkUnpaid, o
           {showNextPeriod && (
             upcoming.length === 0
               ? <Empty text="Sin pagos registrados para el próximo periodo" />
-              : <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 8 }}>
-                  {upcoming.map(p => <PayCard key={p.id} payment={p} cfg={profile} {...handlers} borderLeft="var(--accent)" />)}
+              : <div style={{ marginTop: 8 }}>
+                  <PayRail payments={upcoming} cfg={profile} dotColor="var(--accent)" dotTextColor="#fff" handlers={handlers} />
                 </div>
           )}
         </div>
@@ -221,4 +265,48 @@ function SectionHead({ left, right }) {
 
 function Empty({ text }) {
   return <div style={{ textAlign: 'center', padding: '20px 0', fontSize: 13, fontWeight: 500, color: 'var(--text)' }}>{text}</div>
+}
+
+// Resumen colapsable de pagos ya liquidados dentro del periodo actual — no
+// es un segundo registro (ese sigue siendo PaymentsPage/"Pagos"), es solo un
+// atajo de conveniencia para deshacer/revisar sin salir de Home. Se calcula
+// con el mismo rango de fechas del periodo actual, así que se "reinicia"
+// solo en cuanto cambia de periodo, sin lógica extra de limpieza.
+function PaidCollapse({ payments, total, expanded, onToggle, onMarkUnpaid }) {
+  return (
+    <div style={{ marginBottom: 12 }}>
+      <button
+        onClick={onToggle}
+        style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, background: 'var(--surface)', border: 'none', borderRadius: 8, padding: '9px 12px', cursor: 'pointer' }}
+      >
+        <div style={{ width: 20, height: 20, borderRadius: '50%', background: 'var(--paid)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+          <Check size={11} color="#fff" strokeWidth={3} />
+        </div>
+        <span style={{ flex: 1, fontSize: 12, fontWeight: 400, color: 'var(--text)', textAlign: 'left' }}>
+          {payments.length} pagado{payments.length !== 1 ? 's' : ''} · {fmt(total)}
+        </span>
+        {expanded ? <ChevronUp size={15} color="var(--text)" /> : <ChevronDown size={15} color="var(--text)" />}
+      </button>
+
+      {expanded && (
+        <div style={{ marginTop: 6, display: 'flex', flexDirection: 'column', gap: 6 }}>
+          {payments.map(p => (
+            <div key={p.id} style={{ display: 'flex', alignItems: 'center', gap: 10, background: 'var(--surface)', borderRadius: 8, padding: '9px 12px' }}>
+              <div style={{ flex: 1, minWidth: 0, overflow: 'hidden' }}>
+                <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--text)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.name}</div>
+                <div style={{ fontSize: 11, fontWeight: 400, color: 'var(--text)' }}>{p.category}</div>
+              </div>
+              <span style={{ fontSize: 13, fontWeight: 500, color: 'var(--text)' }}>{fmt(p.amount)}</span>
+              <button
+                onClick={() => onMarkUnpaid(p.id)}
+                style={{ width: 26, height: 26, borderRadius: '50%', background: 'none', border: '0.5px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0 }}
+              >
+                <RotateCcw size={11} color="var(--text)" />
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
 }
