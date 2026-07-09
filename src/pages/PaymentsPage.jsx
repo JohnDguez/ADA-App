@@ -977,10 +977,12 @@ export function PaymentsPage({ payments, profile, unreadCount, onOpenNotifs, onG
                 const CatIcon  = getCategoryIcon(cat, profile.category_icons)
                 return (
                   <div key={cat} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    {CatIcon
-                      ? <CatIcon size={28} color={catColor} strokeWidth={1.8} style={{ flexShrink: 0 }} />
-                      : <span style={{ width: 10, height: 10, borderRadius: '50%', background: catColor, flexShrink: 0 }} />
-                    }
+                    <div style={{ width: 36, height: 36, borderRadius: 8, background: catColor, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                      {CatIcon
+                        ? <CatIcon size={19} color="var(--text)" strokeWidth={2} />
+                        : <span style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--text)' }} />
+                      }
+                    </div>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 5 }}>
                         <span style={{ fontSize: 13, fontWeight: 500, color: 'var(--text)' }}>{cat}</span>
