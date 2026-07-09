@@ -20,7 +20,7 @@ function nextPeriodRange(cfg) {
   return `${start.getDate()} ${MONTHS_SHORT[start.getMonth()]} – ${end.getDate()} ${MONTHS[end.getMonth()]}`
 }
 
-export function HomePage({ payments, profile, onAdd, onMarkPaid, onMarkUnpaid, onEdit, onDelete, onPostpone, onAdvance, onGoSettings, notifications, unreadCount, onMarkAsRead, onMarkAllAsRead, onDeleteNotif, onClearAllNotifs, slideClass }) {
+export function HomePage({ payments, profile, onAdd, onMarkPaid, onMarkUnpaid, onCaptureAmount, onEdit, onDelete, onPostpone, onAdvance, onGoSettings, notifications, unreadCount, onMarkAsRead, onMarkAllAsRead, onDeleteNotif, onClearAllNotifs, slideClass }) {
   const [notifOpen,      setNotifOpen]      = useState(false)
   const [activeCard,     setActiveCard]     = useState(0)
   const [touchStartX,    setTouchStartX]    = useState(null)
@@ -86,7 +86,7 @@ export function HomePage({ payments, profile, onAdd, onMarkPaid, onMarkUnpaid, o
     return d >= nextStart && d <= nextEnd
   }).sort((a, b) => dateOf(a.due_date) - dateOf(b.due_date))
 
-  const handlers = { onMarkPaid, onMarkUnpaid, onEdit, onDelete, onPostpone, onAdvance }
+  const handlers = { onMarkPaid, onMarkUnpaid, onCaptureAmount, onEdit, onDelete, onPostpone, onAdvance }
 
   return (
     <div style={{ paddingBottom: 120, background: 'var(--bg)', minHeight: '100vh' }}>
