@@ -326,7 +326,7 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
           <div style={{ width: 34, height: 4, borderRadius: 2, background: 'var(--border)', margin: '0 auto 16px' }} />
 
           {!initial && (
-            <div style={{ display: 'flex', background: 'var(--bg)', borderRadius: 10, padding: 3, marginBottom: 16, border: '0.5px solid var(--border)' }}>
+            <div data-coachmark="modal-payment-type-tabs" style={{ display: 'flex', background: 'var(--bg)', borderRadius: 10, padding: 3, marginBottom: 16, border: '0.5px solid var(--border)' }}>
               {[['single','Pago único'],['recurrent','Recurrente'],['installment','Parcialidades']].map(([m, label]) => (
                 <button key={m} onClick={() => setMode(m)} style={{ flex: 1, padding: '8px 0', borderRadius: 8, border: 'none', background: mode === m ? 'var(--accent)' : 'transparent', color: mode === m ? 'var(--surface)' : 'var(--text)', fontWeight: mode === m ? 600 : 400, fontSize: 12, fontFamily: 'DM Sans, sans-serif', cursor: 'pointer' }}>{label}</button>
               ))}
@@ -357,7 +357,9 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
                 + Agregar
               </button>
             </div>
-            <Select value={category} onChange={setCategory} options={allCategories} renderIcon={renderCategoryIcon} />
+            <div data-coachmark="modal-category-field">
+              <Select value={category} onChange={setCategory} options={allCategories} renderIcon={renderCategoryIcon} />
+            </div>
             {addingCategory && (
               <div style={{ marginTop: 8, display: 'flex', gap: 6 }}>
                 <input autoFocus className="field-input" placeholder="Nombre de la categoría" value={newCategoryName}
@@ -373,7 +375,9 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
           </div>
 
           {mode !== 'installment' && (
-            <Toggle label="Pago variable" sub="El monto cambia cada vez que pagas" value={isVariable} onChange={setIsVariable} />
+            <div data-coachmark="modal-variable-toggle">
+              <Toggle label="Pago variable" sub="El monto cambia cada vez que pagas" value={isVariable} onChange={setIsVariable} />
+            </div>
           )}
 
           {!isVariable && mode !== 'installment' && (
