@@ -303,17 +303,37 @@ export function usePayments(userId) {
 
   async function markUnpaid(id) {
     const payment = payments.find(p => p.id === id)
-    // Pagos recurrentes con nuevo sistema: no se pueden desmarcar
-    if (payment?.is_recurrent && payment?.parent_id && !payment?.is_installment) {
-      return { error: 'Los pagos recurrentes no se pueden desmarcar' }
-    }
+    if (!payment) return { error: 'Pago no encontrado' }
+
     const { data, error } = await supabase
       .from('payments')
       .update({ is_paid: false, paid_at: null })
       .match({ id, user_id: userId })
       .select().single()
-    if (!error && data) setPayments(prev => prev.map(p => p.id === id ? { ...p, ...data } : p))
-    return { error }
+    if (error || !data) return { error }
+
+    let updatedPayments = payments.map(p => p.id === id ? { ...p, ...data } : p)
+
+    // Si es copia de un recurrente o parcialidad, restaurarla a pendiente
+    // puede dejar la cola con una copia de más: la que `ensureTwoAhead`
+    // generó como relleno cuando esta se marcó pagada, para mantener
+    // siempre 2 pendientes. Se recorta de vuelta a 2, quitando la(s)
+    // copia(s) con el due_date más lejano — nunca la que el usuario acaba
+    // de restaurar — para no dejar pagos de más en la cola.
+    if (payment.parent_id && !payment.is_master) {
+      const pending = updatedPayments
+        .filter(p => p.parent_id === payment.parent_id && !p.is_paid && !p.is_master)
+        .sort((a, b) => new Date(a.due_date) - new Date(b.due_date))
+      if (pending.length > 2) {
+        const toRemove = pending.slice(2)
+        const removeIds = toRemove.map(p => p.id)
+        await supabase.from('payments').delete().in('id', removeIds)
+        updatedPayments = updatedPayments.filter(p => !removeIds.includes(p.id))
+      }
+    }
+
+    setPayments(updatedPayments)
+    return { error: null }
   }
 
   // ─────────────────────────────────────────────────────────────────────────
