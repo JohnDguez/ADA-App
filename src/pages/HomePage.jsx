@@ -190,16 +190,7 @@ export function HomePage({ payments, profile, onAdd, onMarkPaid, onMarkUnpaid, o
 
         <div style={{ padding: '0 16px' }}>
 
-          {/* Vencidos */}
-          {vencidos.length > 0 && (
-            <div style={{ marginTop: 25 }}>
-              <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--danger)', marginBottom: 10 }}>
-                Vencidos
-              </div>
-              <PayRail payments={vencidos} cfg={profile} dotColor="var(--overdue-border)" dotTextColor="#fff" handlers={handlers} />
-            </div>
-          )}
-
+          {/* Colapsable de pagados — justo debajo de la card de métricas */}
           {pagadosEstePeriodo.length > 0 && (
             <div style={{ marginTop: 25 }}>
               <PaidCollapse
@@ -212,12 +203,24 @@ export function HomePage({ payments, profile, onAdd, onMarkPaid, onMarkUnpaid, o
             </div>
           )}
 
-          {/* Próximos a vencer (periodo actual) */}
+          {/* Vencidos */}
+          {vencidos.length > 0 && (
+            <div style={{ marginTop: 25 }}>
+              <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--danger)', marginBottom: 10 }}>
+                Vencidos
+              </div>
+              <PayRail payments={vencidos} cfg={profile} dotColor="var(--overdue-border)" dotTextColor="#fff" handlers={handlers} />
+            </div>
+          )}
+
+          {/* Pagos del periodo (antes "Próximos a vencer" — se renombró porque
+              puede haber pagos por vencer que en realidad son de OTRO periodo,
+              y esta sección es específicamente la del periodo actual) */}
           <div style={{ marginTop: 20 }}>
-            <SectionHead left="Próximos a vencer" right={`Periodo ${periodRange(profile)}`} />
+            <SectionHead left="Pagos del periodo" right={`Periodo ${periodRange(profile)}`} />
 
             {delPeriodo.length === 0
-              ? (pagadosEstePeriodo.length === 0 && <Empty text="Sin pagos pendientes para este periodo" />)
+              ? <Empty text="Sin pagos pendientes para este periodo" />
               : <PayRail payments={delPeriodo} cfg={profile} dotColor="var(--upcoming-border)" dotTextColor="var(--impact-warning-text)" handlers={handlers} />
             }
           </div>
