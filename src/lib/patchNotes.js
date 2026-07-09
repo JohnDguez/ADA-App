@@ -1,11 +1,18 @@
 // Fuente única de verdad para la versión visible al usuario (footer de SettingsPage,
 // modal de Novedades). No confundir con el historial técnico completo en CONTEXT.md:
 // aquí solo van cambios que le sirven o interesan al usuario final.
-export const APP_VERSION = '0.9.71'
+export const APP_VERSION = '0.9.88'
 
 // Cada entrada: { version, date, items: [string] }
 // Orden: más reciente primero. Solo agregar entradas con contenido útil para el usuario.
 export const PATCH_NOTES = [
+  {
+    version: '0.9.88',
+    date: 'Julio 2026',
+    items: [
+      'Nuevo: en un pago variable pendiente (como luz o agua) ahora puedes anotar el monto en cuanto lo sepas — desde el menú de opciones, "Agregar monto". Se guarda listo para cuando confirmes el pago, sin afectar pagos pasados ni futuros de esa misma serie.',
+    ],
+  },
   {
     version: '0.9.71',
     date: 'Julio 2026',
