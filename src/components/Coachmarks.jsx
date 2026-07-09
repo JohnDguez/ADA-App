@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useLayoutEffect } from 'react'
 import { X } from 'lucide-react'
 import { COACHMARK_STEPS } from '../lib/coachmarkSteps'
 
@@ -14,43 +14,93 @@ import { COACHMARK_STEPS } from '../lib/coachmarkSteps'
 //
 // El spotlight es un div transparente posicionado exactamente sobre el
 // elemento, con box-shadow: '0 0 0 9999px rgba(...)' — el truco clásico de
-// crear un "agujero" iluminado sin necesitar SVG ni máscaras.
+// crear un "agujero" iluminado sin necesitar SVG ni máscaras. Lleva borde
+// en var(--accent) y una animación de pulso (definida abajo, inyectada una
+// sola vez) para que quede clarísimo hacia dónde mirar.
+const PULSE_STYLE_ID = 'coachmark-pulse-style'
+function ensurePulseStyleInjected() {
+  if (document.getElementById(PULSE_STYLE_ID)) return
+  const style = document.createElement('style')
+  style.id = PULSE_STYLE_ID
+  style.textContent = `
+    @keyframes coachmarkPulse {
+      0%   { box-shadow: 0 0 0 0 rgba(59,158,255,0.55), 0 0 0 9999px rgba(2,10,31,0.92); }
+      70%  { box-shadow: 0 0 0 10px rgba(59,158,255,0), 0 0 0 9999px rgba(2,10,31,0.92); }
+      100% { box-shadow: 0 0 0 0 rgba(59,158,255,0), 0 0 0 9999px rgba(2,10,31,0.92); }
+    }
+  `
+  document.head.appendChild(style)
+}
+
+// Tiempo que se espera antes de la primera medición — le da tiempo a
+// animaciones de entrada (modales con modalSlideUp, transición de pantalla)
+// a terminar, para no medir un elemento a media animación y que el
+// spotlight quede desalineado.
+const SETTLE_DELAY = 320
+
 export function Coachmarks({ screenKey, profile, onUpdateProfile }) {
   const [stepIndex, setStepIndex] = useState(0)
   const [rect, setRect] = useState(null)
   const rafRef = useRef(null)
+  const settleTimerRef = useRef(null)
+  const bubbleRef = useRef(null)
+  const actionLockRef = useRef(false)
 
   const seen  = profile?.coachmarks_seen || {}
   const steps = screenKey ? COACHMARK_STEPS[screenKey] : null
   const alreadySeen = !screenKey || !steps || seen[screenKey]
 
-  // Reinicia al primer paso cada vez que cambia de pantalla
-  useEffect(() => { setStepIndex(0) }, [screenKey])
+  useEffect(() => { ensurePulseStyleInjected() }, [])
 
-  // Ubica el elemento del paso actual — reintenta un par de frames por si el
-  // elemento aún no montó (la pantalla acaba de aparecer)
+  // Reinicia al primer paso cada vez que cambia de pantalla, O cada vez que
+  // se vuelve a activar en la MISMA pantalla (ej. "Ver tutorial de nuevo"
+  // desde Ajustes sin haber navegado) — antes solo reiniciaba con el cambio
+  // de pantalla, así que reactivarlo sin salir de Perfil retomaba el índice
+  // viejo (a veces ya al final) en vez de empezar desde el paso 1.
+  useEffect(() => {
+    if (!alreadySeen) setStepIndex(0)
+  }, [screenKey, alreadySeen])
+
+  // Bloquea el scroll de fondo mientras hay un coach mark activo — igual
+  // que los modales, reutiliza la clase .modal-open ya existente. Sin esto
+  // el usuario podía hacer scroll detrás del overlay y el foco quedaba
+  // desalineado del elemento real.
+  useEffect(() => {
+    const active = !alreadySeen && !!rect
+    if (active) document.body.classList.add('modal-open')
+    else document.body.classList.remove('modal-open')
+    return () => document.body.classList.remove('modal-open')
+  }, [alreadySeen, rect])
+
+  // Ubica el elemento del paso actual. Espera SETTLE_DELAY antes del primer
+  // intento (animaciones de entrada), y ya con eso reintenta por frame unos
+  // cuantos frames más por si el elemento monta un poco después.
   useEffect(() => {
     if (alreadySeen) { setRect(null); return }
     const step = steps[stepIndex]
     if (!step) return
 
+    setRect(null) // oculta mientras se reubica, evita mostrar el rect del paso anterior
     let attempts = 0
     function locate() {
       const el = document.querySelector(`[data-coachmark="${step.target}"]`)
       if (el) {
         setRect(el.getBoundingClientRect())
-      } else if (attempts < 10) {
+      } else if (attempts < 12) {
         attempts += 1
         rafRef.current = requestAnimationFrame(locate)
       } else {
         // No se encontró tras varios intentos (ej. el elemento es
         // condicional y no está presente hoy) — salta al siguiente paso
         // en vez de dejar el tour trabado.
-        goNext()
+        advance()
       }
     }
-    locate()
-    return () => { if (rafRef.current) cancelAnimationFrame(rafRef.current) }
+    settleTimerRef.current = setTimeout(locate, SETTLE_DELAY)
+    return () => {
+      clearTimeout(settleTimerRef.current)
+      if (rafRef.current) cancelAnimationFrame(rafRef.current)
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [screenKey, stepIndex, alreadySeen])
 
@@ -58,11 +108,39 @@ export function Coachmarks({ screenKey, profile, onUpdateProfile }) {
     if (!screenKey) return
     onUpdateProfile({ coachmarks_seen: { ...seen, [screenKey]: true } })
   }
-  function goNext() {
+  function advance() {
     if (steps && stepIndex < steps.length - 1) setStepIndex(i => i + 1)
     else finish()
   }
-  function skipAll() { finish() }
+  // Candado anti doble-click/doble-tap: en varios navegadores móviles un
+  // solo toque puede disparar tanto touchend como click, ejecutando el
+  // handler 2 veces y saltando un paso de más. Un solo botón puede avanzar
+  // por evento real dentro de una ventana corta.
+  function guardedAction(fn) {
+    if (actionLockRef.current) return
+    actionLockRef.current = true
+    fn()
+    setTimeout(() => { actionLockRef.current = false }, 400)
+  }
+  const goNext  = () => guardedAction(advance)
+  const skipAll = () => guardedAction(finish)
+
+  // Recalcula la posición de la burbuja para que nunca quede fuera de la
+  // pantalla — mide su alto real (varía según el largo del texto) y ajusta
+  // hacia arriba/abajo si se saldría por cualquiera de los dos bordes.
+  const [bubblePos, setBubblePos] = useState(null)
+  useLayoutEffect(() => {
+    if (!rect || !bubbleRef.current) { setBubblePos(null); return }
+    const step = steps[stepIndex]
+    const PADDING = 6
+    const bubbleH = bubbleRef.current.offsetHeight
+    const margin  = 16
+    let top = step.placement === 'top'
+      ? rect.top - PADDING - 12 - bubbleH
+      : rect.bottom + PADDING + 12
+    top = Math.max(margin, Math.min(top, window.innerHeight - bubbleH - margin))
+    setBubblePos(top)
+  }, [rect, stepIndex]) // eslint-disable-line react-hooks/exhaustive-deps
 
   if (alreadySeen || !rect) return null
 
@@ -77,24 +155,23 @@ export function Coachmarks({ screenKey, profile, onUpdateProfile }) {
     width: rect.width + PADDING * 2,
     height: rect.height + PADDING * 2,
     borderRadius: 10,
-    boxShadow: '0 0 0 9999px rgba(2,10,31,0.78)',
+    border: '2px solid var(--accent)',
+    animation: 'coachmarkPulse 1.8s ease-out infinite',
     zIndex: 400,
     pointerEvents: 'none',
     transition: 'top .25s, left .25s, width .25s, height .25s',
   }
 
-  const bubbleTop = step.placement === 'top'
-    ? rect.top - PADDING - 12
-    : rect.bottom + PADDING + 12
-  const bubbleTransform = step.placement === 'top' ? 'translateY(-100%)' : 'none'
-
   return (
     <>
       <div style={spotStyle} />
       <div
+        ref={bubbleRef}
         style={{
-          position: 'fixed', top: bubbleTop, left: 16, right: 16,
-          transform: bubbleTransform,
+          position: 'fixed',
+          top: bubblePos ?? -9999, // se posiciona invisible hasta medir su alto real
+          left: 16, right: 16,
+          visibility: bubblePos === null ? 'hidden' : 'visible',
           zIndex: 401, background: 'var(--surface)', borderRadius: 14,
           padding: '16px 16px 14px', boxShadow: '0 8px 24px rgba(0,0,0,0.35)',
           animation: 'modalPopIn .2s cubic-bezier(0.25, 0.46, 0.45, 0.94) both',
