@@ -347,6 +347,24 @@ export function usePayments(userId) {
   }
 
   // ─────────────────────────────────────────────────────────────────────────
+  // MONTO ESTIMADO (pagos variables, antes de marcarlos como pagados)
+  // ─────────────────────────────────────────────────────────────────────────
+  // Actualiza el `amount` de ESTA copia únicamente — a diferencia de editar
+  // un recurrente (que va al master y afecta pasados/futuros), esto es solo
+  // para dejar capturado "cuánto voy a pagar" cuando ya sabes el monto real
+  // (ej. llegó el recibo de luz) sin marcarlo como pagado todavía. No toca
+  // is_paid, paid_at, ni ningún otro pago de la misma serie.
+  async function setEstimatedAmount(id, amount) {
+    const { data, error } = await supabase
+      .from('payments')
+      .update({ amount })
+      .match({ id, user_id: userId })
+      .select().single()
+    if (!error && data) setPayments(prev => prev.map(p => p.id === id ? { ...p, ...data } : p))
+    return { error }
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────
   // POSPONER
   // ─────────────────────────────────────────────────────────────────────────
   async function postponePayment(payment) {
@@ -606,7 +624,7 @@ export function usePayments(userId) {
     payments, loading,
     addPayment, addRecurrentPayment, addInstallmentPayment,
     updatePayment, updateRecurrentName, updateRecurrentConfig,
-    markPaid, markUnpaid,
+    markPaid, markUnpaid, setEstimatedAmount,
     postponePayment,
     pauseRecurrent, resumeRecurrent,
     deletePayment, deleteRecurrent,
