@@ -140,8 +140,12 @@ export function SettingsPage({ profile, user, onUpdate, onUploadAvatar, onDataDe
       {/* Menú */}
       <Card>
         <Row icon={User}     label="Cuenta"                        onClick={() => openSection('account')} />
-        <Row icon={Tag}      label="Categorías"                    onClick={() => openSection('categories')} data-coachmark="perfil-categorias-row" />
-        <Row icon={Calendar} label="Periodo de cobro e ingresos"    value={FREQ_LABEL[profile.cobro_freq] || ''} onClick={() => openSection('cobro')} data-coachmark="perfil-cobro-row" />
+        <div data-coachmark="perfil-categorias-row">
+          <Row icon={Tag}      label="Categorías"                    onClick={() => openSection('categories')} />
+        </div>
+        <div data-coachmark="perfil-cobro-row">
+          <Row icon={Calendar} label="Periodo de cobro e ingresos"    value={FREQ_LABEL[profile.cobro_freq] || ''} onClick={() => openSection('cobro')} />
+        </div>
         <Row icon={Bell}     label="Notificaciones"                 onClick={() => openSection('notifications')} />
         <Row icon={SunMoon}  label="Apariencia"                    value={THEME_LABEL[theme] || ''} onClick={() => openSection('appearance')} />
         {!profile.is_premium && (
