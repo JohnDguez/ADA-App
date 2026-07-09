@@ -18,8 +18,17 @@ export const COACHMARK_STEPS = {
       text: 'Aquí ves cuánto tienes que pagar este periodo. Toca "Periodo" o "Mes" para cambiar la vista.',
       placement: 'bottom',
     },
+    // El botón "+" vive en BottomNav.jsx, que no tengo en esta sesión, así
+    // que no puedo agregarle un data-coachmark directamente. En vez de
+    // quitar el paso (es de los más importantes), se ancla por una vía
+    // alterna: fallbackSelector. Lucide genera automáticamente la clase
+    // `lucide-plus` en el SVG de cualquier ícono <Plus/>, así que se ubica
+    // por ahí y se sube al <button> o <a> más cercano para resaltar el
+    // botón completo, no solo el ícono. Si algún día se sube BottomNav.jsx
+    // y se le agrega el atributo real, `target` tomaría prioridad sola.
     {
       target: 'home-add-button',
+      fallbackSelector: '.lucide-plus',
       title: 'Agrega tu primer pago',
       text: 'Todo empieza aquí — desde este botón registras cualquier gasto, sea único, recurrente o a meses.',
       placement: 'top',
