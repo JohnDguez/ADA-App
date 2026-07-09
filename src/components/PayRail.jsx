@@ -30,7 +30,7 @@ export function PayRail({ payments, cfg, dotColor, dotTextColor, handlers }) {
 
   return (
     <div style={{ position: 'relative' }}>
-      <div style={{ position: 'absolute', left: 11, top: 6, bottom: 6, width: 2, background: 'var(--border)' }} />
+      <div style={{ position: 'absolute', left: 11, top: 6, bottom: 6, width: 2, background: 'var(--border)', zIndex: -1 }} />
       {groups.map((g, gi) => {
         const d = dateOf(g.key)
         const month = d.getMonth()
@@ -40,13 +40,13 @@ export function PayRail({ payments, cfg, dotColor, dotTextColor, handlers }) {
         return (
           <div key={g.key}>
             {showMonth && (
-              <div style={{ position: 'relative', zIndex: 1, margin: gi === 0 ? '0 0 10px' : '18px 0 10px' }}>
+              <div style={{ margin: gi === 0 ? '0 0 10px' : '18px 0 10px' }}>
                 <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--text)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
                   {MONTHS_SHORT[month]}
                 </span>
               </div>
             )}
-            <div style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'flex-start', gap: 10, marginBottom: 10 }}>
+            <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, marginBottom: 10 }}>
               <div style={{
                 width: 24, height: 24, borderRadius: '50%', flexShrink: 0,
                 background: dotColor, display: 'flex', alignItems: 'center', justifyContent: 'center',
