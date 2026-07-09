@@ -142,7 +142,7 @@ export default function App() {
   }
   async function handleMarkUnpaid(id) {
     const { error } = await markUnpaid(id)
-    if (error) showToast('Error')
+    if (error) showToast(typeof error === 'string' ? error : 'Error al desmarcar el pago')
   }
   async function handlePostpone(payment) {
     const { error } = await postponePayment(payment)
