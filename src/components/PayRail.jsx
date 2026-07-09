@@ -35,7 +35,8 @@ export function PayRail({ payments, cfg, dotColor, dotTextColor, handlers }) {
         return (
           <div key={g.key}>
             {showMonth && (
-              <div style={{ paddingLeft: 2, margin: gi === 0 ? '0 0 6px' : '14px 0 6px' }}>
+              <div style={{ position: 'relative', margin: gi === 0 ? '0 0 10px' : '16px 0 10px' }}>
+                <div style={{ position: 'absolute', left: -30, top: '50%', transform: 'translateY(-50%)', width: 8, height: 8, borderRadius: '50%', background: 'var(--border-mid)' }} />
                 <span style={{ fontSize: 11, fontWeight: 500, color: 'var(--text)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
                   {MONTHS_SHORT[month]}
                 </span>
