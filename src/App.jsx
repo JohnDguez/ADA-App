@@ -19,6 +19,7 @@ import { PasswordSetupModal } from './components/PasswordSetupModal'
 import { PremiumPage } from './pages/PremiumPage'
 import { Toast, showToast } from './components/Toast'
 import { SkeletonLoader } from './components/SkeletonLoader'
+import { Coachmarks } from './components/Coachmarks'
 import { useTheme } from './hooks/useTheme'
 import { APP_VERSION, PATCH_NOTES, isNewerVersion } from './lib/patchNotes'
 
@@ -107,6 +108,8 @@ export default function App() {
   }
 
   const TAB_ORDER = ['home', 'payments', 'recurrents', 'settings']
+  const TAB_TO_COACHMARK_KEY = { home: 'home', payments: 'gastos', recurrents: 'recurrentes', settings: 'perfil' }
+  const coachmarkScreenKey = modalOpen ? 'nuevo-pago' : (TAB_TO_COACHMARK_KEY[tab] || null)
   sessionStorage.setItem('ada_session', '1')
 
   const storedUserId = sessionStorage.getItem('ada_user_id')
@@ -389,6 +392,12 @@ export default function App() {
         mode="estimate"
         onConfirm={handleEstimateConfirm}
         onClose={() => setEstimateModal({ open: false, payment: null })}
+      />
+
+      <Coachmarks
+        screenKey={coachmarkScreenKey}
+        profile={profile}
+        onUpdateProfile={updateProfile}
       />
       <RecurrentMigrationModal
         open={migrationModal}
