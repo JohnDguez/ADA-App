@@ -141,8 +141,10 @@ export default function App() {
     else showToast(`${payment.name} registrado — ${fmt(amount)}`)
   }
   async function handleMarkUnpaid(id) {
+    const payment = payments.find(p => p.id === id)
     const { error } = await markUnpaid(id)
     if (error) showToast(typeof error === 'string' ? error : 'Error al desmarcar el pago')
+    else showToast(`${payment?.name || 'Pago'} marcado como no pagado`)
   }
   async function handlePostpone(payment) {
     const { error } = await postponePayment(payment)
