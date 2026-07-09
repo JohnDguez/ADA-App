@@ -302,7 +302,7 @@ function PaidCollapse({ payments, total, expanded, onToggle, onMarkUnpaid }) {
         return (
           <div style={{ marginTop: 6, display: 'flex', flexDirection: 'column', gap: 6 }}>
             {sorted.map(p => {
-              const pd = dateOf(new Date(p.paid_at).toISOString().split('T')[0])
+              const pd = new Date(p.paid_at)
               return (
                 <div key={p.id} style={{ display: 'flex', alignItems: 'center', gap: 10, background: 'var(--surface)', borderRadius: 8, padding: '9px 12px' }}>
                   <div style={{ width: 28, textAlign: 'center', flexShrink: 0 }}>
