@@ -135,8 +135,6 @@ export function PaymentsPage({ payments, profile, unreadCount, onOpenNotifs, onG
   }
 
   async function checkPeriodStart() {
-    if (!profile?.salary_enabled || !profile?.salary_amount) return
-
     const { start } = cobroPeriod(profile)
     const currentPeriodStart = start.toISOString().split('T')[0]
     const lastSeen = profile.last_seen_period_start
@@ -152,7 +150,10 @@ export function PaymentsPage({ payments, profile, unreadCount, onOpenNotifs, onG
       return paidDate >= prev.start && paidDate <= prev.end
     })
     const totalGastosPrev = gastosPrev.reduce((a, p) => a + Number(p.amount), 0)
-    const salario = Number(profile.salary_amount)
+    // Sin `|| 0` esto rompía para usuarios sin salario fijo: profile.salary_amount
+    // llega null/undefined y Number(undefined) da NaN, no 0 — arrastraba NaN a
+    // todo el cálculo del remanente y nunca mostraba el aviso.
+    const salario = Number(profile.salary_amount || 0)
 
     // Sumar ingresos extras del periodo anterior
     const prevStartStr = prev.start.toISOString().split('T')[0]
@@ -402,7 +403,8 @@ export function PaymentsPage({ payments, profile, unreadCount, onOpenNotifs, onG
     .filter(s => s.total > 0)
     .sort((a, b) => b.total - a.total)
 
-  const showBalance = profile?.salary_enabled && profile?.salary_amount > 0
+  const showBalance = (profile?.salary_enabled && profile?.salary_amount > 0) || periodIncomes.length > 0
+  const noIncomeYet = !(profile?.salary_enabled && profile?.salary_amount > 0) && periodIncomes.length === 0
 
   return (
     <div style={{ paddingBottom: 120, background: 'var(--bg)', minHeight: '100vh' }} onClick={() => setOpenMenu(null)}>
@@ -734,7 +736,29 @@ export function PaymentsPage({ payments, profile, unreadCount, onOpenNotifs, onG
           <div style={{ fontSize: 13, fontWeight: 400, color: 'var(--text)', marginTop: 4 }}>Historial, análisis y balance de tus finanzas del periodo.</div>
         </div>
 
-        {/* ── BALANCE DEL PERIODO (solo si salary_enabled) ── */}
+        {/* ── Sin salario fijo y sin ingresos capturados todavía: CTA grande
+             en vez de esconder la sección por completo ── */}
+        {noIncomeYet && (
+          <div style={{ margin: '0 16px 16px', background: 'var(--surface)', borderRadius: 'var(--radius)', padding: '20px 16px', textAlign: 'center' }}>
+            <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--text)', marginBottom: 14 }}>
+              Registra un ingreso de este periodo para ver cuánto te queda disponible
+            </div>
+            <button
+              onClick={() => setIncomeModal(true)}
+              style={{
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                width: '100%', padding: '14px', borderRadius: 'var(--radius-sm)',
+                border: 'none', background: 'var(--accent)', color: '#fff',
+                fontSize: 15, fontWeight: 600, fontFamily: 'DM Sans, sans-serif', cursor: 'pointer',
+              }}
+            >
+              <Plus size={18} strokeWidth={2.2} />
+              Añadir ingreso
+            </button>
+          </div>
+        )}
+
+        {/* ── BALANCE DEL PERIODO (salario fijo, o al menos un ingreso extra capturado) ── */}
         {showBalance && (
           <div style={{ margin: '0 16px 16px', background: 'var(--surface)', borderRadius: 'var(--radius)', padding: '14px 16px' }}>
 
