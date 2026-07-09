@@ -45,12 +45,19 @@ export function HomePage({ payments, profile, onAdd, onMarkPaid, onMarkUnpaid, o
   const pendingAmt = pagarEsteCobro.filter(p => !p.is_variable).reduce((a, p) => a + Number(p.amount), 0)
   const pendingVariableCount = pagarEsteCobro.filter(p => p.is_variable).length
 
-  // Pagos ya pagados cuyo vencimiento cae dentro del periodo actual — hoy
-  // `getPagarEsteCobro` los excluye de raíz (solo trae pendientes), así que
-  // esta es una consulta aparte, exclusiva para el resumen colapsable.
+  // Pagos ya pagados dentro del periodo actual — mismo criterio que
+  // `gastosPeriodo`/`checkPeriodStart` en `PaymentsPage.jsx`: se filtra por
+  // `paid_at` (el dinero cuenta cuando sale del bolsillo), NO por `due_date`.
+  // Antes filtraba por due_date, lo que hacía que el total no coincidiera
+  // con "Disponible este periodo" — corregido para que ambas pantallas
+  // siempre cuadren, usando la misma fuente de verdad.
   const pagadosEstePeriodo = payments
-    .filter(p => p.is_paid && !p.is_master && dateOf(p.due_date) >= start && dateOf(p.due_date) <= end)
-    .sort((a, b) => dateOf(a.due_date) - dateOf(b.due_date))
+    .filter(p => {
+      if (!p.is_paid || p.is_master || !p.paid_at) return false
+      const paidDate = dateOf(new Date(p.paid_at).toISOString().split('T')[0])
+      return paidDate >= start && paidDate <= end
+    })
+    .sort((a, b) => new Date(a.paid_at) - new Date(b.paid_at))
   const pagadoMonto = pagadosEstePeriodo.reduce((a, p) => a + Number(p.amount), 0)
   const totalConocido = pagadoMonto + pendingAmt
   const pctPagado = totalConocido > 0 ? Math.round((pagadoMonto / totalConocido) * 100) : 0
@@ -288,25 +295,43 @@ function PaidCollapse({ payments, total, expanded, onToggle, onMarkUnpaid }) {
         {expanded ? <ChevronUp size={15} color="var(--text)" /> : <ChevronDown size={15} color="var(--text)" />}
       </button>
 
-      {expanded && (
-        <div style={{ marginTop: 6, display: 'flex', flexDirection: 'column', gap: 6 }}>
-          {payments.map(p => (
-            <div key={p.id} style={{ display: 'flex', alignItems: 'center', gap: 10, background: 'var(--surface)', borderRadius: 8, padding: '9px 12px' }}>
-              <div style={{ flex: 1, minWidth: 0, overflow: 'hidden' }}>
-                <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--text)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.name}</div>
-                <div style={{ fontSize: 11, fontWeight: 400, color: 'var(--text)' }}>{p.category}</div>
+      {expanded && (() => {
+        const sorted = [...payments].sort((a, b) => a.name.localeCompare(b.name, 'es', { sensitivity: 'base' }))
+        const letterGroups = []
+        sorted.forEach(p => {
+          const letter = p.name.trim().charAt(0).toUpperCase()
+          const last = letterGroups[letterGroups.length - 1]
+          if (last && last.letter === letter) last.items.push(p)
+          else letterGroups.push({ letter, items: [p] })
+        })
+
+        return (
+          <div style={{ marginTop: 6, display: 'flex', flexDirection: 'column', gap: 12 }}>
+            {letterGroups.map(g => (
+              <div key={g.letter}>
+                <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text)', marginBottom: 6, paddingLeft: 2 }}>{g.letter}</div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  {g.items.map(p => (
+                    <div key={p.id} style={{ display: 'flex', alignItems: 'center', gap: 10, background: 'var(--surface)', borderRadius: 8, padding: '9px 12px' }}>
+                      <div style={{ flex: 1, minWidth: 0, overflow: 'hidden' }}>
+                        <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--text)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.name}</div>
+                        <div style={{ fontSize: 11, fontWeight: 400, color: 'var(--text)' }}>{p.category}</div>
+                      </div>
+                      <span style={{ fontSize: 13, fontWeight: 500, color: 'var(--text)' }}>{fmt(p.amount)}</span>
+                      <button
+                        onClick={() => onMarkUnpaid(p.id)}
+                        style={{ width: 26, height: 26, borderRadius: '50%', background: 'none', border: '0.5px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0 }}
+                      >
+                        <RotateCcw size={11} color="var(--text)" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
               </div>
-              <span style={{ fontSize: 13, fontWeight: 500, color: 'var(--text)' }}>{fmt(p.amount)}</span>
-              <button
-                onClick={() => onMarkUnpaid(p.id)}
-                style={{ width: 26, height: 26, borderRadius: '50%', background: 'none', border: '0.5px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0 }}
-              >
-                <RotateCcw size={11} color="var(--text)" />
-              </button>
-            </div>
-          ))}
-        </div>
-      )}
+            ))}
+          </div>
+        )
+      })()}
     </div>
   )
 }
