@@ -4,19 +4,25 @@ import { statusOf, daysDiff, dateOf, fmt, MONTHS_SHORT, periodLabel, periodCount
 
 function statusInfo(p, cfg) {
   const s = statusOf(p, cfg)
-  if (s === 'postponed') return { label: 'Pospuesto', color: 'var(--muted)' }
-  if (s === 'paid')      return { label: p.is_installment ? installmentLabel(p) + ' ✓' : 'Pagado', color: 'var(--paid)' }
-  if (s === 'paused')    return { label: 'Pausado', color: 'var(--muted)' }
+  if (s === 'postponed') return { label: 'Pospuesto', color: 'var(--text)', status: s }
+  if (s === 'paid')      return { label: p.is_installment ? installmentLabel(p) + ' ✓' : 'Pagado', color: 'var(--paid)', status: s }
+  if (s === 'paused')    return { label: 'Pausado', color: 'var(--text)', status: s }
   const d = daysDiff(p.due_date)
-  if (s === 'overdue') return { label: d === -1 ? 'Venció ayer' : `Venció hace ${Math.abs(d)} días`, color: 'var(--danger)' }
+  if (s === 'overdue') return { label: d === -1 ? 'Venció ayer' : `Venció hace ${Math.abs(d)} días`, color: 'var(--danger)', status: s }
   if (s === 'cobro') {
-    if (d < 0) return { label: `Venció hace ${Math.abs(d)} días`, color: 'var(--danger)' }
-    return { label: d === 0 ? 'Vence hoy' : `Vence en ${d} día${d !== 1 ? 's' : ''}`, color: 'var(--soon-color)' }
+    if (d < 0) return { label: `Venció hace ${Math.abs(d)} días`, color: 'var(--danger)', status: s }
+    return { label: d === 0 ? 'Vence hoy' : `Vence en ${d} día${d !== 1 ? 's' : ''}`, color: 'var(--soon-color)', status: s }
   }
-  if (d === 0) return { label: 'Vence hoy',     color: 'var(--soon-color)' }
-  if (d === 1) return { label: 'Vence mañana',  color: 'var(--soon-color)' }
-  return { label: `Vence en ${d} días`, color: 'var(--accent)' }
+  if (d === 0) return { label: 'Vence hoy',     color: 'var(--soon-color)', status: s }
+  if (d === 1) return { label: 'Vence mañana',  color: 'var(--soon-color)', status: s }
+  return { label: `Vence en ${d} días`, color: 'var(--accent)', status: s }
 }
+
+// Estados cuyo texto NO depende de la cuenta regresiva de vencimiento (el
+// riel ya comunica eso con el color/posición del punto) — estos SÍ se
+// siguen mostrando aunque hideDueLabel esté activo, porque no tienen otra
+// forma de comunicarse en el riel.
+const STATUS_LABELS_ALWAYS_VISIBLE = ['postponed', 'paused']
 
 function useLongPress(callback, ms = 500) {
   const timerRef = useRef(null)
@@ -25,10 +31,11 @@ function useLongPress(callback, ms = 500) {
   return { onMouseDown: start, onMouseUp: stop, onMouseLeave: stop, onTouchStart: start, onTouchEnd: stop, onTouchCancel: stop }
 }
 
-export function PayCard({ payment: p, cfg, onMarkPaid, onMarkUnpaid, onEdit, onDelete, onPostpone, onAdvance, borderLeft }) {
+export function PayCard({ payment: p, cfg, onMarkPaid, onMarkUnpaid, onEdit, onDelete, onPostpone, onAdvance, borderLeft, hideDate, hideDueLabel, railMode }) {
   const [menuOpen, setMenuOpen] = useState(false)
   const menuRef = useRef(null)
   const info      = statusInfo(p, cfg)
+  const showLabel = !hideDueLabel || STATUS_LABELS_ALWAYS_VISIBLE.includes(info.status)
   const d         = dateOf(p.due_date)
   const isPending = !p.is_paid && !p.postponed && !p.paused
   const freqLabel = p.is_recurrent && p.recur_freq && !p.is_installment ? RECUR_FREQ[p.recur_freq] : null
@@ -46,15 +53,15 @@ export function PayCard({ payment: p, cfg, onMarkPaid, onMarkUnpaid, onEdit, onD
     <div ref={menuRef} style={{ position: 'relative' }}>
       <div
         {...longPress}
-        style={{ background: 'var(--surface)', borderRadius: 8, borderLeft: `5px solid ${borderLeft || 'var(--border)'}`, display: 'flex', alignItems: 'center', overflow: 'hidden', userSelect: 'none' }}
+        style={{ background: 'var(--surface)', borderRadius: 8, borderLeft: railMode ? 'none' : `5px solid ${borderLeft || 'var(--border)'}`, display: 'flex', alignItems: 'center', overflow: 'hidden', userSelect: 'none' }}
       >
         {/* Info izquierda */}
-        <div style={{ flex: 1, padding: '11px 8px 11px 12px', minWidth: 0 }}>
-          <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--text)', marginBottom: 2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 150 }}>
+        <div style={{ flex: 1, padding: '11px 8px 11px 12px', minWidth: 0, overflow: 'hidden' }}>
+          <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--text)', marginBottom: 2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
             {p.name}
           </div>
-          <div style={{ fontSize: 11, fontWeight: 400, color: 'var(--text)' }}>
-            {p.category} · {d.getDate()} {MONTHS_SHORT[d.getMonth()]}
+          <div style={{ fontSize: 11, fontWeight: 400, color: 'var(--text)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+            {hideDate ? p.category : `${p.category} · ${d.getDate()} ${MONTHS_SHORT[d.getMonth()]}`}
           </div>
           {freqLabel && (
             <div style={{ fontSize: 11, color: 'var(--accent)', fontWeight: 500, marginTop: 1 }}>{freqLabel}</div>
@@ -70,7 +77,7 @@ export function PayCard({ payment: p, cfg, onMarkPaid, onMarkUnpaid, onEdit, onD
             ? <div style={{ fontSize: 11, fontWeight: 600, color: '#fff', background: 'var(--label-variable)', padding: '2px 8px', borderRadius: 5 }}>Pago variable</div>
             : <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--text)' }}>{fmt(p.amount)}</div>
           }
-          <div style={{ fontSize: 11, fontWeight: 500, color: info.color }}>{info.label}</div>
+          {showLabel && <div style={{ fontSize: 11, fontWeight: 500, color: info.color }}>{info.label}</div>}
         </div>
 
         {/* Botones derecha */}
