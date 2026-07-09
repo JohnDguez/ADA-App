@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '../lib/supabase'
-import { nextPeriodDate } from '../lib/utils'
+import { nextPeriodDate, dateOf } from '../lib/utils'
 
 export function usePayments(userId) {
   const [payments, setPayments] = useState([])
@@ -305,9 +305,15 @@ export function usePayments(userId) {
     const payment = payments.find(p => p.id === id)
     if (!payment) return { error: 'Pago no encontrado' }
 
+    // Si es un pago variable, además de desmarcarlo se le quita el monto
+    // que se le había capturado al pagarlo — vuelve a su estado "Pago
+    // variable" sin cifra fija, como estaba antes de pagarse.
+    const updates = { is_paid: false, paid_at: null }
+    if (payment.is_variable) updates.amount = 0
+
     const { data, error } = await supabase
       .from('payments')
-      .update({ is_paid: false, paid_at: null })
+      .update(updates)
       .match({ id, user_id: userId })
       .select().single()
     if (error || !data) return { error }
@@ -315,18 +321,22 @@ export function usePayments(userId) {
     let updatedPayments = payments.map(p => p.id === id ? { ...p, ...data } : p)
 
     // Si es copia de un recurrente o parcialidad, restaurarla a pendiente
-    // puede dejar la cola con una copia de más: la que `ensureTwoAhead`
-    // generó como relleno cuando esta se marcó pagada, para mantener
-    // siempre 2 pendientes. Se recorta de vuelta a 2, quitando la(s)
-    // copia(s) con el due_date más lejano — nunca la que el usuario acaba
-    // de restaurar — para no dejar pagos de más en la cola.
+    // deja la cola con una copia de más: la que `ensureTwoAhead` generó
+    // como relleno cuando esta se marcó pagada, para mantener siempre 2
+    // pendientes. Se elimina el ÚLTIMO CREADO (por created_at; si la
+    // copia no trae esa columna, se usa el due_date más lejano como
+    // aproximación) — nunca la que el usuario acaba de restaurar — para
+    // volver a quedar en exactamente 2 pendientes.
     if (payment.parent_id && !payment.is_master) {
-      const pending = updatedPayments
-        .filter(p => p.parent_id === payment.parent_id && !p.is_paid && !p.is_master)
-        .sort((a, b) => new Date(a.due_date) - new Date(b.due_date))
-      if (pending.length > 2) {
-        const toRemove = pending.slice(2)
-        const removeIds = toRemove.map(p => p.id)
+      let pending = updatedPayments.filter(p => p.parent_id === payment.parent_id && !p.is_paid && !p.is_master)
+      const creationKey = p => p.created_at ? new Date(p.created_at).getTime() : dateOf(p.due_date).getTime()
+      const removeIds = []
+      while (pending.length > 2) {
+        const last = pending.reduce((a, b) => (creationKey(b) > creationKey(a) ? b : a))
+        removeIds.push(last.id)
+        pending = pending.filter(p => p.id !== last.id)
+      }
+      if (removeIds.length > 0) {
         await supabase.from('payments').delete().in('id', removeIds)
         updatedPayments = updatedPayments.filter(p => !removeIds.includes(p.id))
       }
