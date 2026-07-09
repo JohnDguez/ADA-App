@@ -74,7 +74,11 @@ export function Coachmarks({ screenKey, profile, onUpdateProfile }) {
 
   // Ubica el elemento del paso actual. Espera SETTLE_DELAY antes del primer
   // intento (animaciones de entrada), y ya con eso reintenta por frame unos
-  // cuantos frames más por si el elemento monta un poco después.
+  // cuantos frames más por si el elemento monta un poco después. Si el
+  // elemento no está a la vista, hace scroll automático hacia él ANTES de
+  // medir — y antes de bloquear el scroll de fondo (el bloqueo se activa
+  // solo una vez que ya hay `rect`, así el scrollIntoView todavía puede
+  // mover la página con normalidad).
   useEffect(() => {
     if (alreadySeen) { setRect(null); return }
     const step = steps[stepIndex]
@@ -82,10 +86,32 @@ export function Coachmarks({ screenKey, profile, onUpdateProfile }) {
 
     setRect(null) // oculta mientras se reubica, evita mostrar el rect del paso anterior
     let attempts = 0
-    function locate() {
+    let measureTimer = null
+    // Busca primero por data-coachmark; si el paso trae `fallbackSelector`
+    // (casos donde no se pudo agregar el atributo real, ej. el botón "+"
+    // dentro de BottomNav.jsx) y no hay match, intenta por ahí — y sube al
+    // <button>/<a> más cercano para resaltar el control completo, no solo
+    // el ícono interno que suele ser lo único con clase reconocible.
+    function findElement() {
       const el = document.querySelector(`[data-coachmark="${step.target}"]`)
+      if (el) return el
+      if (step.fallbackSelector) {
+        const fb = document.querySelector(step.fallbackSelector)
+        if (fb) return fb.closest('button, a') || fb
+      }
+      return null
+    }
+    function locate() {
+      const el = findElement()
       if (el) {
-        setRect(el.getBoundingClientRect())
+        const r = el.getBoundingClientRect()
+        const fitsInView = r.top >= 60 && r.bottom <= window.innerHeight - 60
+        if (fitsInView) {
+          setRect(r)
+        } else {
+          el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+          measureTimer = setTimeout(() => setRect(el.getBoundingClientRect()), 380)
+        }
       } else if (attempts < 12) {
         attempts += 1
         rafRef.current = requestAnimationFrame(locate)
@@ -99,6 +125,7 @@ export function Coachmarks({ screenKey, profile, onUpdateProfile }) {
     settleTimerRef.current = setTimeout(locate, SETTLE_DELAY)
     return () => {
       clearTimeout(settleTimerRef.current)
+      clearTimeout(measureTimer)
       if (rafRef.current) cancelAnimationFrame(rafRef.current)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -112,6 +139,9 @@ export function Coachmarks({ screenKey, profile, onUpdateProfile }) {
     if (steps && stepIndex < steps.length - 1) setStepIndex(i => i + 1)
     else finish()
   }
+  function back() {
+    if (stepIndex > 0) setStepIndex(i => i - 1)
+  }
   // Candado anti doble-click/doble-tap: en varios navegadores móviles un
   // solo toque puede disparar tanto touchend como click, ejecutando el
   // handler 2 veces y saltando un paso de más. Un solo botón puede avanzar
@@ -123,6 +153,7 @@ export function Coachmarks({ screenKey, profile, onUpdateProfile }) {
     setTimeout(() => { actionLockRef.current = false }, 400)
   }
   const goNext  = () => guardedAction(advance)
+  const goBack  = () => guardedAction(back)
   const skipAll = () => guardedAction(finish)
 
   // Recalcula la posición de la burbuja para que nunca quede fuera de la
@@ -194,12 +225,14 @@ export function Coachmarks({ screenKey, profile, onUpdateProfile }) {
             ))}
           </div>
           <div style={{ display: 'flex', gap: 8 }}>
-            <button
-              onClick={skipAll}
-              style={{ padding: '7px 10px', background: 'none', border: 'none', color: 'var(--text)', fontSize: 12, fontWeight: 500, cursor: 'pointer', fontFamily: 'DM Sans, sans-serif' }}
-            >
-              Saltar
-            </button>
+            {stepIndex > 0 && (
+              <button
+                onClick={goBack}
+                style={{ padding: '7px 12px', borderRadius: 5, background: 'none', border: '0.5px solid var(--border)', color: 'var(--text)', fontSize: 12, fontWeight: 500, cursor: 'pointer', fontFamily: 'DM Sans, sans-serif' }}
+              >
+                Atrás
+              </button>
+            )}
             <button
               onClick={goNext}
               style={{ padding: '7px 14px', borderRadius: 5, background: 'var(--accent)', border: 'none', color: '#fff', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'DM Sans, sans-serif' }}
