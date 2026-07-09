@@ -976,25 +976,25 @@ export function PaymentsPage({ payments, profile, unreadCount, onOpenNotifs, onG
                 const catColor = getCatColor(cat, profile.custom_categories, profile.category_colors)
                 const CatIcon  = getCategoryIcon(cat, profile.category_icons)
                 return (
-                  <div key={cat}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 5 }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                        {CatIcon
-                          ? <CatIcon size={15} color={catColor} strokeWidth={2} />
-                          : <span style={{ width: 6, height: 6, borderRadius: '50%', background: catColor, display: 'inline-block' }} />
-                        }
+                  <div key={cat} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    {CatIcon
+                      ? <CatIcon size={28} color={catColor} strokeWidth={1.8} style={{ flexShrink: 0 }} />
+                      : <span style={{ width: 10, height: 10, borderRadius: '50%', background: catColor, flexShrink: 0 }} />
+                    }
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 5 }}>
                         <span style={{ fontSize: 13, fontWeight: 500, color: 'var(--text)' }}>{cat}</span>
+                        <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)' }}>{fmt(total)}</span>
                       </div>
-                      <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)' }}>{fmt(total)}</span>
-                    </div>
-                    <div style={{ height: 6, background: 'var(--border)', borderRadius: 'var(--radius-full)', overflow: 'hidden' }}>
-                      <div style={{
-                        height: '100%',
-                        width: `${(total / maxCat) * 100}%`,
-                        background: catColor,
-                        borderRadius: 'var(--radius-full)',
-                        transition: 'width .4s ease',
-                      }} />
+                      <div style={{ height: 6, background: 'var(--border)', borderRadius: 'var(--radius-full)', overflow: 'hidden' }}>
+                        <div style={{
+                          height: '100%',
+                          width: `${(total / maxCat) * 100}%`,
+                          background: catColor,
+                          borderRadius: 'var(--radius-full)',
+                          transition: 'width .4s ease',
+                        }} />
+                      </div>
                     </div>
                   </div>
                 )
