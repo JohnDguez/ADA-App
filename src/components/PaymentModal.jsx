@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { Wallet, AlertTriangle, Repeat, Check } from 'lucide-react'
-import { CATEGORIES, RECUR_FREQ, WEEKDAYS_SHORT, MONTHS_SHORT, nextWeekdayDate, nextBiweeklyFromDate, nextPeriodDate, cobroPeriod, fmt, nameExistsActive, projectPeriodImpact } from '../lib/utils'
+import { CATEGORIES, RECUR_FREQ, WEEKDAYS_SHORT, MONTHS_SHORT, nextWeekdayDate, nextBiweeklyFromDate, nextPeriodDate, cobroPeriod, fmt, nameExistsActive, projectPeriodImpact, getCatColor } from '../lib/utils'
+import { getCategoryIcon } from '../lib/categoryIcons'
 import { supabase } from '../lib/supabase'
 import { ConfirmCloseModal } from './ConfirmCloseModal'
 import { FrequencyPicker } from './FrequencyPicker'
@@ -164,6 +165,22 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
 
   const allCategories = [...CATEGORIES, ...customCategories]
 
+  // Ícono + color de cada categoría, mismo criterio que "Por Categoría" en
+  // PaymentsPage.jsx — cuadro de color con el ícono elegido por el usuario
+  // (o el punto de color si no tiene ícono asignado), sin barra ni monto.
+  function renderCategoryIcon(cat) {
+    const catColor = getCatColor(cat, customCategories, profile?.category_colors)
+    const CatIcon   = getCategoryIcon(cat, profile?.category_icons)
+    return (
+      <div style={{ width: 22, height: 22, borderRadius: 5, background: catColor, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+        {CatIcon
+          ? <CatIcon size={13} color="var(--text)" strokeWidth={2} />
+          : <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--text)' }} />
+        }
+      </div>
+    )
+  }
+
   async function handleAddCategory() {
     const cat = newCategoryName.trim()
     if (!cat) return
@@ -257,7 +274,7 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
                   + Agregar
                 </button>
               </div>
-              <Select value={category} onChange={setCategory} options={allCategories} />
+              <Select value={category} onChange={setCategory} options={allCategories} renderIcon={renderCategoryIcon} />
               {addingCategory && (
                 <div style={{ marginTop: 8, display: 'flex', gap: 6 }}>
                   <input autoFocus className="field-input" placeholder="Nombre de la categoría" value={newCategoryName}
@@ -340,7 +357,7 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
                 + Agregar
               </button>
             </div>
-            <Select value={category} onChange={setCategory} options={allCategories} />
+            <Select value={category} onChange={setCategory} options={allCategories} renderIcon={renderCategoryIcon} />
             {addingCategory && (
               <div style={{ marginTop: 8, display: 'flex', gap: 6 }}>
                 <input autoFocus className="field-input" placeholder="Nombre de la categoría" value={newCategoryName}
