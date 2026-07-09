@@ -284,6 +284,17 @@ export function projectPeriodImpact(payments, profile, candidate, periodIncomes 
   return results
 }
 
+// Único criterio para decidir si un pago puede desmarcarse (usado por la UI
+// para ocultar el botón/opción de "marcar no pagado" antes de que el usuario
+// lo toque) — debe reflejar EXACTAMENTE la misma condición que ya aplica
+// `markUnpaid()` en `usePayments.js`, para no mostrar una acción que el
+// backend va a rechazar. Los pagos recurrentes del sistema de copias no se
+// pueden desmarcar: al pagarse, su copia se reemplaza por una nueva pendiente
+// (`ensureTwoAhead`), así que "deshacer" no encaja con ese modelo.
+export function canUnmark(p) {
+  return !(p.is_recurrent && p.parent_id && !p.is_installment)
+}
+
 export function nameExistsActive(payments, name, excludeName = null) {
   const lower = name.trim().toLowerCase()
   if (excludeName && excludeName.trim().toLowerCase() === lower) return false
