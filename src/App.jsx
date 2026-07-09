@@ -30,7 +30,7 @@ export default function App() {
     payments, loading: paymentsLoading,
     addPayment, addRecurrentPayment, addInstallmentPayment,
     updatePayment, updateRecurrentName, updateRecurrentConfig,
-    markPaid, markUnpaid,
+    markPaid, markUnpaid, setEstimatedAmount,
     postponePayment,
     pauseRecurrent, resumeRecurrent,
     deletePayment, deleteRecurrent,
@@ -49,6 +49,7 @@ export default function App() {
   const [modalOpen,      setModalOpen]     = useState(false)
   const [editPayment,    setEditPayment]   = useState(null)
   const [varModal,       setVarModal]      = useState({ open: false, payment: null })
+  const [estimateModal,  setEstimateModal] = useState({ open: false, payment: null })
   const [notifOpen,      setNotifOpen]     = useState(false)
   const [slideDir,       setSlideDir]      = useState('right')
   const [migrationModal, setMigrationModal] = useState(false)
@@ -139,6 +140,15 @@ export default function App() {
     const { error } = await markPaid(payment.id, amount)
     if (error) showToast('Error al registrar pago')
     else showToast(`${payment.name} registrado — ${fmt(amount)}`)
+  }
+  function openEstimateModal(payment) { setEstimateModal({ open: true, payment }) }
+  async function handleEstimateConfirm(amount) {
+    const payment = estimateModal.payment
+    setEstimateModal({ open: false, payment: null })
+    if (!payment?.id) { showToast('Error: pago no encontrado'); return }
+    const { error } = await setEstimatedAmount(payment.id, amount)
+    if (error) showToast('Error al guardar el monto')
+    else showToast(`Monto guardado para ${payment.name} — ${fmt(amount)}`)
   }
   async function handleMarkUnpaid(id) {
     const payment = payments.find(p => p.id === id)
@@ -273,6 +283,7 @@ export default function App() {
           slideClass={`page-slide-${slideDir}`}
           onMarkPaid={handleMarkPaid}
           onMarkUnpaid={handleMarkUnpaid}
+          onCaptureAmount={openEstimateModal}
           onEdit={openEdit}
           onDelete={handleDelete}
           onPostpone={handlePostpone}
@@ -371,6 +382,13 @@ export default function App() {
         payment={varModal.payment}
         onConfirm={handleVarConfirm}
         onClose={() => setVarModal({ open: false, payment: null })}
+      />
+      <VariableAmountModal
+        open={estimateModal.open}
+        payment={estimateModal.payment}
+        mode="estimate"
+        onConfirm={handleEstimateConfirm}
+        onClose={() => setEstimateModal({ open: false, payment: null })}
       />
       <RecurrentMigrationModal
         open={migrationModal}
