@@ -153,7 +153,7 @@ export function PaymentsPage({ payments, profile, unreadCount, onOpenNotifs, onG
     // Sin `|| 0` esto rompía para usuarios sin salario fijo: profile.salary_amount
     // llega null/undefined y Number(undefined) da NaN, no 0 — arrastraba NaN a
     // todo el cálculo del remanente y nunca mostraba el aviso.
-    const salario = Number(profile.salary_amount || 0)
+    const salario = profile.salary_enabled ? Number(profile.salary_amount || 0) : 0
 
     // Sumar ingresos extras del periodo anterior
     const prevStartStr = prev.start.toISOString().split('T')[0]
@@ -278,7 +278,7 @@ export function PaymentsPage({ payments, profile, unreadCount, onOpenNotifs, onG
   })
   const totalGastos  = gastosPeriodo.reduce((a, p) => a + Number(p.amount), 0)
   const totalExtras  = periodIncomes.reduce((a, i) => a + Number(i.amount), 0)
-  const salario      = Number(profile?.salary_amount || 0)
+  const salario      = profile?.salary_enabled ? Number(profile?.salary_amount || 0) : 0
   const ingresoTotal = salario + totalExtras
   const disponible   = ingresoTotal - totalGastos
   const sobrePasado  = totalGastos > ingresoTotal
