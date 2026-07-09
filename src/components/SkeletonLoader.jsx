@@ -1,6 +1,10 @@
 // ── SkeletonLoader ────────────────────────────────────────────────────────────
 // Pantalla de carga ghost que imita el layout real de la app.
 // Se muestra mientras authLoading || profileLoading en App.jsx.
+// Actualizado en v0.9.71+ para reflejar el rediseño de HomePage: tabs
+// Periodo/Mes + card con barra de progreso (antes card azul con dots),
+// colapsable de pagados, y riel vertical (punto + tarjeta) en vez de listas
+// planas de tarjetas con borde de color a la izquierda.
 
 function Bone({ w, h, r, dark, style }) {
   return (
@@ -40,17 +44,22 @@ export function SkeletonLoader() {
 
       <div style={{ padding: '0 16px' }}>
 
-        {/* ── Card de métricas ── */}
-        <div style={{ marginTop: 20, marginBottom: 8 }}>
-          <div style={{ borderRadius: 16, overflow: 'hidden' }}>
-            <Bone w="100%" h={164} r={16} />
-          </div>
+        {/* ── Tabs Periodo / Mes ── */}
+        <div style={{ display: 'flex', gap: 3, background: 'var(--section-bg)', borderRadius: 5, padding: 3, marginTop: 20, marginBottom: 10 }}>
+          <Bone w="50%" h={30} r={5} />
+          <Bone w="50%" h={30} r={5} />
         </div>
 
-        {/* Dots del slider */}
-        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 6, marginBottom: 28 }}>
-          <Bone w={18} h={6} r={3} />
-          <Bone w={6}  h={6} r={3} />
+        {/* ── Card de métricas (eyebrow, número, barra de progreso) ── */}
+        <div style={{ background: 'var(--surface)', borderRadius: 12, padding: '16px 14px', marginBottom: 20, display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <Bone w={110} h={11} r={4} />
+          <Bone w={140} h={30} r={4} />
+          <Bone w={180} h={11} r={4} />
+          <Bone w="100%" h={5} r={3} />
+          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+            <Bone w={70} h={9} r={4} />
+            <Bone w={70} h={9} r={4} />
+          </div>
         </div>
 
         {/* ── Sección "Próximos a vencer" ── */}
@@ -59,39 +68,41 @@ export function SkeletonLoader() {
           <Bone w={80}  h={13} r={4} />
         </div>
 
-        {/* Tarjetas de pago */}
-        <div style={{ background: 'var(--section-bg)', borderRadius: 12, padding: 12, display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 20 }}>
+        {/* ── Colapsable de pagados ── */}
+        <Bone w="100%" h={40} r={8} style={{ marginBottom: 20 }} />
+
+        {/* ── Sección "Próximos a vencer" (riel vertical) ── */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12 }}>
+          <Bone w={130} h={13} r={4} />
+          <Bone w={80}  h={13} r={4} />
+        </div>
+        <div style={{ position: 'relative', marginBottom: 20 }}>
+          <div style={{ position: 'absolute', left: 11, top: 6, bottom: 6, width: 2, background: 'var(--border)' }} />
           {[0, 1, 2].map(i => (
-            <div key={i} style={{ background: 'var(--surface)', borderRadius: 12, padding: '12px 10px', display: 'flex', alignItems: 'center', gap: 10 }}>
-              {/* Border izquierdo */}
-              <Bone w={4} h={48} r={2} />
-              {/* Contenido */}
-              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 7 }}>
-                <Bone w="38%" h={10} r={4} />
-                <Bone w="65%" h={14} r={4} />
-                <div style={{ display: 'flex', gap: 6 }}>
-                  <Bone w={60} h={10} r={4} />
-                  <Bone w={50} h={10} r={4} />
-                </div>
+            <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, marginBottom: 10 }}>
+              <Bone w={24} h={24} r="50%" />
+              <div style={{ flex: 1, background: 'var(--surface)', borderRadius: 8, padding: '11px 12px', display: 'flex', flexDirection: 'column', gap: 7 }}>
+                <Bone w="55%" h={13} r={4} />
+                <Bone w="30%" h={10} r={4} />
               </div>
-              {/* Botón pagar */}
-              <Bone w={40} h={40} r={10} />
             </div>
           ))}
         </div>
 
-        {/* ── Sección "Próximos pagos" ── */}
-        <Bone w={120} h={13} r={4} style={{ marginBottom: 12 }} />
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        {/* ── Sección "Próximo periodo" (riel vertical) ── */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12 }}>
+          <Bone w={120} h={13} r={4} />
+          <Bone w={38}  h={20} r={11} />
+        </div>
+        <div style={{ position: 'relative' }}>
+          <div style={{ position: 'absolute', left: 11, top: 6, bottom: 6, width: 2, background: 'var(--border)' }} />
           {[0, 1].map(i => (
-            <div key={i} style={{ background: 'var(--surface)', borderRadius: 12, padding: '12px 10px', display: 'flex', alignItems: 'center', gap: 10 }}>
-              <Bone w={4} h={48} r={2} />
-              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 7 }}>
+            <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, marginBottom: 10 }}>
+              <Bone w={24} h={24} r="50%" />
+              <div style={{ flex: 1, background: 'var(--surface)', borderRadius: 8, padding: '11px 12px', display: 'flex', flexDirection: 'column', gap: 7 }}>
+                <Bone w="45%" h={13} r={4} />
                 <Bone w="30%" h={10} r={4} />
-                <Bone w="55%" h={14} r={4} />
-                <Bone w={70}  h={10} r={4} />
               </div>
-              <Bone w={40} h={40} r={10} />
             </div>
           ))}
         </div>
