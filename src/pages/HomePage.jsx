@@ -4,7 +4,7 @@ import { PayCard } from '../components/PayCard'
 import { PayRail } from '../components/PayRail'
 import { PageHeader } from '../components/PageHeader'
 import { NotificationsPanel } from '../components/NotificationsPanel'
-import { fmt, cobroPeriod, nextCobroPeriod, getPagarEsteCobro, daysDiff, dateOf, MONTHS, MONTHS_SHORT } from '../lib/utils'
+import { fmt, cobroPeriod, nextCobroPeriod, getPagarEsteCobro, daysDiff, dateOf, MONTHS, MONTHS_SHORT, canUnmark } from '../lib/utils'
 
 function periodRange(cfg) {
   const { start, end } = cobroPeriod(cfg)
@@ -314,12 +314,14 @@ function PaidCollapse({ payments, total, expanded, onToggle, onMarkUnpaid }) {
                     <div style={{ fontSize: 11, fontWeight: 400, color: 'var(--text)' }}>{p.category}</div>
                   </div>
                   <span style={{ fontSize: 13, fontWeight: 500, color: 'var(--text)' }}>{fmt(p.amount)}</span>
-                  <button
-                    onClick={() => onMarkUnpaid(p.id)}
-                    style={{ width: 26, height: 26, borderRadius: '50%', background: 'none', border: '0.5px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0 }}
-                  >
-                    <RotateCcw size={11} color="var(--text)" />
-                  </button>
+                  {canUnmark(p) && (
+                    <button
+                      onClick={() => onMarkUnpaid(p.id)}
+                      style={{ width: 26, height: 26, borderRadius: '50%', background: 'none', border: '0.5px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0 }}
+                    >
+                      <RotateCcw size={11} color="var(--text)" />
+                    </button>
+                  )}
                 </div>
               )
             })}
