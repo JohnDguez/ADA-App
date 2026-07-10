@@ -97,6 +97,17 @@ export default function App() {
   const [patchNotesOpen,   setPatchNotesOpen]   = useState(false)
   const [patchNotesToShow, setPatchNotesToShow] = useState([])
   const [premiumPageOpen, setPremiumPageOpen] = useState(false)
+  // OJO: este hook tiene que declararse ANTES de los `return` condicionales
+  // de más abajo (authLoading/isRecovery/!user/onboarding/has_password) —
+  // declararlo después de ellos (como pasó en la versión anterior) hace que
+  // este useState NO se ejecute mientras esas condiciones cortan el render
+  // temprano (ej. en la pantalla de login, antes de iniciar sesión), pero SÍ
+  // se ejecute una vez que el usuario ya pasó todas esas condiciones — un
+  // mismo componente montado no puede cambiar su número de hooks entre
+  // renders, y esa inconsistencia es la causa real del "Minified React error
+  // #310" que quedó sin diagnosticar en v0.9.124 (pantalla en blanco justo
+  // después de iniciar sesión, sin navbar ni contenido)
+  const [settingsInitialSection, setSettingsInitialSection] = useState(null)
 
   const migrationRan = useRef(false)
 
@@ -303,7 +314,6 @@ export default function App() {
     else showToast(`Pago ${data.startFrom || 1} de ${data.totalInstallments} creado`)
   }
 
-  const [settingsInitialSection, setSettingsInitialSection] = useState(null)
   function goToSharedSpaceSettings() {
     const fromIdx = TAB_ORDER.indexOf(tab)
     const toIdx   = TAB_ORDER.indexOf('settings')
