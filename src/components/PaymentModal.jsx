@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { Wallet, AlertTriangle, Repeat, Check } from 'lucide-react'
-import { CATEGORIES, RECUR_FREQ, WEEKDAYS_SHORT, MONTHS_SHORT, nextWeekdayDate, nextBiweeklyFromDate, nextPeriodDate, cobroPeriod, fmt, nameExistsActive, projectPeriodImpact, getCatColor } from '../lib/utils'
+import { CATEGORIES, RECUR_FREQ, WEEKDAYS_SHORT, MONTHS_SHORT, nextWeekdayDate, nextBiweeklyFromDate, nextPeriodDate, cobroPeriod, fmt, nameExistsActive, projectPeriodImpact, getCatColor, dateToStr, todayStr } from '../lib/utils'
 import { getCategoryIcon } from '../lib/categoryIcons'
 import { supabase } from '../lib/supabase'
 import { ConfirmCloseModal } from './ConfirmCloseModal'
@@ -53,7 +53,7 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
     let cancelled = false
     async function loadPeriodIncomes() {
       const { start } = cobroPeriod(profile)
-      const periodStartStr = start.toISOString().split('T')[0]
+      const periodStartStr = dateToStr(start)
       const { data } = await supabase
         .from('period_income')
         .select('amount')
@@ -69,8 +69,8 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
     if (initial) {
       setName(initial.name || '')
       setAmount(initial.amount || '')
-      setDueDate(initial.due_date || new Date().toISOString().split('T')[0])
-      setBiweeklyDate(initial.due_date || new Date().toISOString().split('T')[0])
+      setDueDate(initial.due_date || todayStr())
+      setBiweeklyDate(initial.due_date || todayStr())
       setCategory(initial.category || 'Servicios')
       setIsVariable(initial.is_variable || false)
       setRecurFreq(initial.recur_freq || 'monthly')
@@ -78,11 +78,11 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
       setTotalInstallments(initial.total_installments || '')
       setStartFrom('1')
       setAlreadyPaid(!!initial.is_paid)
-      setPaidAt(initial.paid_at ? new Date(initial.paid_at).toISOString().split('T')[0] : new Date().toISOString().split('T')[0])
+      setPaidAt(initial.paid_at ? dateToStr(new Date(initial.paid_at)) : todayStr())
     } else {
       setName(''); setAmount('')
-      setDueDate(new Date().toISOString().split('T')[0])
-      setBiweeklyDate(new Date().toISOString().split('T')[0])
+      setDueDate(todayStr())
+      setBiweeklyDate(todayStr())
       setCategory('Servicios'); setIsVariable(false)
       setRecurFreq('monthly'); setWeekday(5)
       setMode('single'); setTotalInstallments(''); setStartFrom('1'); setTotalAmount('')
@@ -134,8 +134,8 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
     }
     if (!isVariable && (!amount || isNaN(parseFloat(amount)))) { setError('Agrega el monto o marca como variable'); return }
     let finalDate = dueDate
-    if (mode === 'recurrent' && recurFreq === 'weekly')    finalDate = nextWeekdayDate(weekday).toISOString().split('T')[0]
-    if (mode === 'recurrent' && recurFreq === 'biweekly')  finalDate = biweeklyDate ? nextBiweeklyFromDate(biweeklyDate).toISOString().split('T')[0] : dueDate
+    if (mode === 'recurrent' && recurFreq === 'weekly')    finalDate = dateToStr(nextWeekdayDate(weekday))
+    if (mode === 'recurrent' && recurFreq === 'biweekly')  finalDate = biweeklyDate ? dateToStr(nextBiweeklyFromDate(biweeklyDate)) : dueDate
     if (!finalDate) { setError('Selecciona la fecha de vencimiento'); return }
     setSaving(true)
     const payload = {
@@ -201,8 +201,8 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
   // pagos nuevos (no ediciones) de tipo único o recurrente con monto fijo.
   // NOTA: función de prueba, sin gate de premium por ahora (ver CONTEXT.md).
   const previewDueDate =
-    mode === 'recurrent' && recurFreq === 'weekly'   ? nextWeekdayDate(weekday).toISOString().split('T')[0] :
-    mode === 'recurrent' && recurFreq === 'biweekly' ? (biweeklyDate ? nextBiweeklyFromDate(biweeklyDate).toISOString().split('T')[0] : dueDate) :
+    mode === 'recurrent' && recurFreq === 'weekly'   ? dateToStr(nextWeekdayDate(weekday)) :
+    mode === 'recurrent' && recurFreq === 'biweekly' ? (biweeklyDate ? dateToStr(nextBiweeklyFromDate(biweeklyDate)) : dueDate) :
     dueDate
 
   const showImpactPreview = !initial && !!profile && mode !== 'installment' && !isVariable && !alreadyPaid
@@ -398,7 +398,7 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
             if (nextDate && startNum > 1 && firstDateStr) {
               let dateStr = firstDateStr
               for (let i = 1; i < startNum; i++) {
-                dateStr = nextPeriodDate(dateStr, recurFreq).toISOString().split('T')[0]
+                dateStr = dateToStr(nextPeriodDate(dateStr, recurFreq))
               }
               nextDate = new Date(dateStr + 'T12:00:00')
             }
