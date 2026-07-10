@@ -146,7 +146,9 @@ export function SettingsPage({ profile, user, onUpdate, onUploadAvatar, onDataDe
         <div data-coachmark="perfil-cobro-row">
           <Row icon={Calendar} label="Periodo de cobro e ingresos"    value={FREQ_LABEL[profile.cobro_freq] || ''} onClick={() => openSection('cobro')} />
         </div>
-        <Row icon={Bell}     label="Notificaciones"                 onClick={() => openSection('notifications')} />
+        <div data-coachmark="perfil-notificaciones-row">
+          <Row icon={Bell}     label="Notificaciones"                 onClick={() => openSection('notifications')} />
+        </div>
         <Row icon={SunMoon}  label="Apariencia"                    value={THEME_LABEL[theme] || ''} onClick={() => openSection('appearance')} />
         {!profile.is_premium && (
           <Row icon={Crown} iconColor="var(--premium-gold)" label="Obtener Premium" onClick={onOpenPremium} last />
