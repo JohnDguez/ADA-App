@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { supabase } from '../lib/supabase'
-import { nextPeriodDate, dateOf } from '../lib/utils'
+import { nextPeriodDate, dateOf, dateToStr, todayStr } from '../lib/utils'
 
 export function usePayments(userId) {
   const [payments, setPayments] = useState([])
@@ -51,7 +51,7 @@ export function usePayments(userId) {
     // Encontrar la fecha más reciente entre pagadas y pendientes
     const allCopies = currentPayments.filter(p => p.parent_id === masterId && !p.is_master)
     allCopies.sort((a, b) => new Date(b.due_date) - new Date(a.due_date))
-    const baseDate = allCopies.length > 0 ? allCopies[0].due_date : new Date().toISOString().split('T')[0]
+    const baseDate = allCopies.length > 0 ? allCopies[0].due_date : todayStr()
 
     const toCreate = []
     let lastDate = baseDate
@@ -59,7 +59,7 @@ export function usePayments(userId) {
 
     for (let i = 0; i < needed; i++) {
       const nextDate = nextPeriodDate(lastDate, master.recur_freq || 'monthly')
-      lastDate = nextDate.toISOString().split('T')[0]
+      lastDate = dateToStr(nextDate)
 
       // Evitar duplicar una fecha que ya existe
       const exists = currentPayments.some(p => p.parent_id === masterId && p.due_date === lastDate && !p.is_paid)
@@ -132,7 +132,7 @@ export function usePayments(userId) {
       { current_installment: from, due_date: firstDate }
     ]
     if (from + 1 <= totalInstallments) {
-      const date2 = nextPeriodDate(firstDate, recurFreq).toISOString().split('T')[0]
+      const date2 = dateToStr(nextPeriodDate(firstDate, recurFreq))
       copiesToInsert.push({ current_installment: from + 1, due_date: date2 })
     }
 
@@ -183,7 +183,7 @@ export function usePayments(userId) {
     if (masterErr) return { error: masterErr }
 
     // 2. Crear copias de periodo 1 y periodo 2
-    const date2 = nextPeriodDate(firstDate, recur_freq).toISOString().split('T')[0]
+    const date2 = dateToStr(nextPeriodDate(firstDate, recur_freq))
     const copies = [
       { user_id: userId, name, amount: baseAmount, category, is_variable, is_recurrent: true, recur_freq,
         is_master: false, parent_id: master.id, due_date: firstDate,
@@ -229,7 +229,7 @@ export function usePayments(userId) {
     }
 
     // Crear 2 nuevas copias con la nueva configuración
-    const date2 = nextPeriodDate(firstDate, recur_freq).toISOString().split('T')[0]
+    const date2 = dateToStr(nextPeriodDate(firstDate, recur_freq))
     const copyAmount = is_variable ? 0 : amount
     const copies = [
       { user_id: userId, name, amount: copyAmount, category, is_variable, is_recurrent: true, recur_freq,
@@ -292,7 +292,7 @@ export function usePayments(userId) {
           if (pendingNums.has(nextNum)) { lastNum = nextNum; continue } // ya existe
 
           const nextDate = nextPeriodDate(lastDate, payment.recur_freq || 'monthly')
-          lastDate = nextDate.toISOString().split('T')[0]
+          lastDate = dateToStr(nextDate)
           lastNum  = nextNum
 
           const { data: next } = await supabase.from('payments').insert({
@@ -408,7 +408,7 @@ export function usePayments(userId) {
       user_id:      userId,
       name:         payment.name,
       amount:       payment.amount,
-      due_date:     nextDate.toISOString().split('T')[0],
+      due_date:     dateToStr(nextDate),
       category:     payment.category,
       is_variable:  payment.is_variable,
       is_recurrent: false,
@@ -448,7 +448,7 @@ export function usePayments(userId) {
     await supabase.from('payments').update(masterUpdates).eq('id', masterId)
 
     // Crear 2 nuevas copias
-    const date2 = nextPeriodDate(firstDate, recur_freq).toISOString().split('T')[0]
+    const date2 = dateToStr(nextPeriodDate(firstDate, recur_freq))
     const copyAmount = is_variable ? 0 : amount
     const copies = [
       { user_id: userId, name, amount: copyAmount, category, is_variable, is_recurrent: true, recur_freq,
