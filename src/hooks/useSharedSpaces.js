@@ -129,7 +129,19 @@ export function useSharedSpaces(userId) {
   // ─────────────────────────────────────────────────────────────────────────
   async function redeemCode(code) {
     const { data, error } = await supabase.rpc('redeem_space_code', { p_code: code })
-    if (error) return { error: error.message || 'Código inválido' }
+    if (error) {
+      // Autosanación: si el error es "ya perteneces a este espacio" (u otro
+      // que implique que la membresía ya existe en la base de datos), puede
+      // ser que el estado local nunca se haya sincronizado — ej. la unión
+      // real ocurrió en un intento anterior mientras había un problema de
+      // RLS que hacía que `fetchSpaces()` filtrara el espacio por venir
+      // "nulo" desde el join con `shared_spaces` (ver fix de la política
+      // `space_visible_to_members`). Sin este refetch, el switcher se podía
+      // quedar mostrando solo "Personal" indefinidamente para un invitado
+      // real, sin ninguna forma de corregirlo aparte de cerrar sesión.
+      await fetchSpaces()
+      return { error: error.message || 'Código inválido' }
+    }
     await fetchSpaces()
     return { data, error: null }
   }
