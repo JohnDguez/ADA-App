@@ -51,6 +51,21 @@ export function today() {
   const now = new Date()
   return new Date(now.getFullYear(), now.getMonth(), now.getDate())
 }
+// Convierte un objeto Date a 'YYYY-MM-DD' usando sus componentes LOCALES —
+// nunca vía .toISOString() (que convierte a UTC y puede desfasar un día
+// según la zona horaria del usuario: de noche en México, ya es "mañana" en
+// UTC). Reemplaza cualquier `fecha.toISOString().split('T')[0]`. Ver regla
+// de diseño "zona horaria" en CONTEXT.md.
+export function dateToStr(d) {
+  const y = d.getFullYear(), m = String(d.getMonth() + 1).padStart(2, '0'), day = String(d.getDate()).padStart(2, '0')
+  return `${y}-${m}-${day}`
+}
+// 'YYYY-MM-DD' de HOY en la zona horaria local del usuario — reemplaza
+// `new Date().toISOString().split('T')[0]`, que era exactamente el bug:
+// de noche, esa expresión ya devolvía la fecha de mañana en UTC.
+export function todayStr() {
+  return dateToStr(today())
+}
 export function dateOf(str) {
   if (!str) return today()
   const [y, m, d] = str.split('-').map(Number)
@@ -259,7 +274,7 @@ export function projectPeriodImpact(payments, profile, candidate, periodIncomes 
     return pagados
       .filter(p => {
         if (!p.paid_at) return false
-        const d = dateOf(new Date(p.paid_at).toISOString().split('T')[0])
+        const d = dateOf(dateToStr(new Date(p.paid_at)))
         return d >= start && d <= end
       })
       .reduce((a, p) => a + Number(p.amount), 0)
@@ -284,8 +299,14 @@ export function projectPeriodImpact(payments, profile, candidate, periodIncomes 
   return results
 }
 
+// Un pago único puede repetir el nombre de otro pago único (ej. "Comida
+// jueves" se repite cada semana sin ser recurrente formal) — pero ningún
+// pago, sea único, recurrente o parcialidad, puede llamarse igual que un
+// recurrente o parcialidad YA ACTIVO, porque ahí sí generaría ambigüedad
+// real con el sistema de master/copias. Por eso el filtro solo considera
+// `is_recurrent || is_installment`, ignorando los únicos existentes.
 export function nameExistsActive(payments, name, excludeName = null) {
   const lower = name.trim().toLowerCase()
   if (excludeName && excludeName.trim().toLowerCase() === lower) return false
-  return payments.some(p => p.name.toLowerCase() === lower && !p.is_paid)
+  return payments.some(p => p.name.toLowerCase() === lower && !p.is_paid && (p.is_recurrent || p.is_installment))
 }
