@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { ChevronLeft, ChevronRight, MoreVertical, Plus, CircleDollarSign, ChevronDown, ChevronUp, Pencil, RotateCcw, Trash2, Check } from 'lucide-react'
 import { PageHeader } from '../components/PageHeader'
-import { fmt, dateOf, MONTHS, MONTHS_SHORT, CATEGORIES, cobroPeriod, addDays, getCatColor } from '../lib/utils'
+import { fmt, dateOf, dateToStr, MONTHS, MONTHS_SHORT, CATEGORIES, cobroPeriod, addDays, getCatColor } from '../lib/utils'
 import { getCategoryIcon } from '../lib/categoryIcons'
 import { supabase } from '../lib/supabase'
 
@@ -123,7 +123,7 @@ export function PaymentsPage({ payments, profile, unreadCount, onOpenNotifs, onG
   async function loadIncomes() {
     setLoadingIncomes(true)
     const { start } = cobroPeriod(profile)
-    const periodStartStr = start.toISOString().split('T')[0]
+    const periodStartStr = dateToStr(start)
 
     const { data } = await supabase
       .from('period_income')
@@ -137,7 +137,7 @@ export function PaymentsPage({ payments, profile, unreadCount, onOpenNotifs, onG
 
   async function checkPeriodStart() {
     const { start } = cobroPeriod(profile)
-    const currentPeriodStart = start.toISOString().split('T')[0]
+    const currentPeriodStart = dateToStr(start)
     const lastSeen = profile.last_seen_period_start
 
     // Si ya vio este periodo, no mostrar modal
@@ -147,7 +147,7 @@ export function PaymentsPage({ payments, profile, unreadCount, onOpenNotifs, onG
     const prev = prevPeriod(profile)
     const gastosPrev = paidPayments.filter(p => {
       if (!p.paid_at) return false
-      const paidDate = dateOf(new Date(p.paid_at).toISOString().split('T')[0])
+      const paidDate = dateOf(dateToStr(new Date(p.paid_at)))
       return paidDate >= prev.start && paidDate <= prev.end
     })
     const totalGastosPrev = gastosPrev.reduce((a, p) => a + Number(p.amount), 0)
@@ -157,7 +157,7 @@ export function PaymentsPage({ payments, profile, unreadCount, onOpenNotifs, onG
     const salario = profile.salary_enabled ? Number(profile.salary_amount || 0) : 0
 
     // Sumar ingresos extras del periodo anterior
-    const prevStartStr = prev.start.toISOString().split('T')[0]
+    const prevStartStr = dateToStr(prev.start)
     const { data: prevIncomes } = await supabase
       .from('period_income')
       .select('amount')
@@ -191,7 +191,7 @@ export function PaymentsPage({ payments, profile, unreadCount, onOpenNotifs, onG
     setSavingIncome(true)
 
     const { start } = cobroPeriod(profile)
-    const periodStartStr = start.toISOString().split('T')[0]
+    const periodStartStr = dateToStr(start)
 
     const { error } = await supabase.from('period_income').insert({
       user_id: profile.id,
@@ -254,7 +254,7 @@ export function PaymentsPage({ payments, profile, unreadCount, onOpenNotifs, onG
   async function handleAddRemanente(amount) {
     setSavingRem(true)
     const { start } = cobroPeriod(profile)
-    const periodStartStr = start.toISOString().split('T')[0]
+    const periodStartStr = dateToStr(start)
 
     await supabase.from('period_income').insert({
       user_id: profile.id,
@@ -274,7 +274,7 @@ export function PaymentsPage({ payments, profile, unreadCount, onOpenNotifs, onG
   const { start: periodStart, end: periodEnd } = cobroPeriod(profile || {})
   const gastosPeriodo = paidPayments.filter(p => {
     if (!p.paid_at) return false
-    const paidDate = dateOf(new Date(p.paid_at).toISOString().split('T')[0])
+    const paidDate = dateOf(dateToStr(new Date(p.paid_at)))
     return paidDate >= periodStart && paidDate <= periodEnd
   })
   const totalGastos  = gastosPeriodo.reduce((a, p) => a + Number(p.amount), 0)

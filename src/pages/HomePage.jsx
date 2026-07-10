@@ -4,7 +4,7 @@ import { PayCard } from '../components/PayCard'
 import { PayRail } from '../components/PayRail'
 import { PageHeader } from '../components/PageHeader'
 import { NotificationsPanel } from '../components/NotificationsPanel'
-import { fmt, cobroPeriod, nextCobroPeriod, getPagarEsteCobro, daysDiff, dateOf, MONTHS, MONTHS_SHORT } from '../lib/utils'
+import { fmt, cobroPeriod, nextCobroPeriod, getPagarEsteCobro, daysDiff, dateOf, dateToStr, MONTHS, MONTHS_SHORT } from '../lib/utils'
 
 function periodRange(cfg) {
   const { start, end } = cobroPeriod(cfg)
@@ -57,7 +57,7 @@ export function HomePage({ payments, profile, onAdd, onMarkPaid, onMarkUnpaid, o
   const pagadosEstePeriodo = payments
     .filter(p => {
       if (!p.is_paid || p.is_master || !p.paid_at) return false
-      const paidDate = dateOf(new Date(p.paid_at).toISOString().split('T')[0])
+      const paidDate = dateOf(dateToStr(new Date(p.paid_at)))
       return paidDate >= start && paidDate <= end
     })
     .sort((a, b) => new Date(a.paid_at) - new Date(b.paid_at))
