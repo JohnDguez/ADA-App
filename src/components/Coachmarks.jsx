@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef, useLayoutEffect } from 'react'
-import { X } from 'lucide-react'
 import { COACHMARK_STEPS } from '../lib/coachmarkSteps'
 
 // Motor de coach marks: dado un `screenKey` (home, gastos, recurrentes,
@@ -65,11 +64,27 @@ export function Coachmarks({ screenKey, profile, onUpdateProfile }) {
   // que los modales, reutiliza la clase .modal-open ya existente. Sin esto
   // el usuario podía hacer scroll detrás del overlay y el foco quedaba
   // desalineado del elemento real.
+  //
+  // OJO con `.modal-open`: pone `position: fixed` en el body. Sin más, eso
+  // resetea window.scrollY a 0 mientras está activo (el navegador ya no ve
+  // contenido para hacer scroll) — al soltar el candado la página se queda
+  // arriba, "saltando" de donde estaba el usuario. El truco estándar es
+  // guardar el scrollY real antes de bloquear, correr el body hacia arriba
+  // ese mismo tanto con `top: -Npx` (así se ve igual aunque esté fijo), y
+  // al desbloquear restaurar el scroll real con window.scrollTo.
+  const savedScrollYRef = useRef(0)
   useEffect(() => {
     const active = !alreadySeen && !!rect
-    if (active) document.body.classList.add('modal-open')
-    else document.body.classList.remove('modal-open')
-    return () => document.body.classList.remove('modal-open')
+    if (active) {
+      savedScrollYRef.current = window.scrollY
+      document.body.style.top = `-${savedScrollYRef.current}px`
+      document.body.classList.add('modal-open')
+    } else {
+      document.body.classList.remove('modal-open')
+      document.body.style.top = ''
+      window.scrollTo(0, savedScrollYRef.current)
+    }
+    return () => { document.body.classList.remove('modal-open'); document.body.style.top = '' }
   }, [alreadySeen, rect])
 
   // Ubica el elemento del paso actual. Espera SETTLE_DELAY antes del primer
@@ -164,11 +179,24 @@ export function Coachmarks({ screenKey, profile, onUpdateProfile }) {
     if (!rect || !bubbleRef.current) { setBubblePos(null); return }
     const step = steps[stepIndex]
     const PADDING = 6
-    const bubbleH = bubbleRef.current.offsetHeight
+    const GAP = 12
     const margin  = 16
-    let top = step.placement === 'top'
-      ? rect.top - PADDING - 12 - bubbleH
-      : rect.bottom + PADDING + 12
+    const bubbleH = bubbleRef.current.offsetHeight
+
+    const spaceBelow = window.innerHeight - (rect.bottom + PADDING + GAP) - margin
+    const spaceAbove = (rect.top - PADDING - GAP) - margin
+
+    // Respeta el `placement` declarado del paso, pero si de plano no cabe
+    // de ese lado (la burbuja taparía el elemento remarcado) y sí cabe del
+    // otro, se voltea — mejor eso que forzarlo y tapar lo que se supone que
+    // el usuario debe ver.
+    let side = step.placement === 'top' ? 'top' : 'bottom'
+    if (side === 'bottom' && spaceBelow < bubbleH && spaceAbove >= bubbleH) side = 'top'
+    if (side === 'top' && spaceAbove < bubbleH && spaceBelow >= bubbleH) side = 'bottom'
+
+    let top = side === 'top'
+      ? rect.top - PADDING - GAP - bubbleH
+      : rect.bottom + PADDING + GAP
     top = Math.max(margin, Math.min(top, window.innerHeight - bubbleH - margin))
     setBubblePos(top)
   }, [rect, stepIndex]) // eslint-disable-line react-hooks/exhaustive-deps
@@ -210,12 +238,12 @@ export function Coachmarks({ screenKey, profile, onUpdateProfile }) {
       >
         <button
           onClick={skipAll}
-          style={{ position: 'absolute', top: 10, right: 10, width: 24, height: 24, borderRadius: '50%', background: 'none', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
+          style={{ position: 'absolute', top: 12, right: 16, background: 'none', border: 'none', color: 'var(--text)', opacity: 0.6, fontSize: 11, fontWeight: 500, cursor: 'pointer', fontFamily: 'DM Sans, sans-serif' }}
         >
-          <X size={14} color="var(--text)" />
+          Saltar tutorial
         </button>
 
-        <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--text)', marginBottom: 6, paddingRight: 20 }}>{step.title}</div>
+        <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--text)', marginBottom: 6, paddingRight: 92 }}>{step.title}</div>
         <div style={{ fontSize: 13, fontWeight: 400, color: 'var(--text)', lineHeight: 1.4, marginBottom: 14 }}>{step.text}</div>
 
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
