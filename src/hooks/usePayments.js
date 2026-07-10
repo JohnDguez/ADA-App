@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { supabase } from '../lib/supabase'
 import { nextPeriodDate, dateOf, dateToStr, todayStr } from '../lib/utils'
 
-export function usePayments(userId) {
+export function usePayments(userId, activeSpaceId = null) {
   const [payments, setPayments] = useState([])
   const [loading, setLoading] = useState(true)
   // Candado de concurrencia: evita que ensureTwoAhead se ejecute 2 veces en
@@ -16,11 +16,14 @@ export function usePayments(userId) {
 
   const fetchPayments = useCallback(async () => {
     if (!userId) return
-    const { data, error } = await supabase
-      .from('payments').select('*').eq('user_id', userId).order('due_date', { ascending: true })
+    let query = supabase.from('payments').select('*').order('due_date', { ascending: true })
+    query = activeSpaceId
+      ? query.eq('space_id', activeSpaceId)
+      : query.eq('user_id', userId).is('space_id', null)
+    const { data, error } = await query
     if (!error) setPayments(data || [])
     setLoading(false)
-  }, [userId])
+  }, [userId, activeSpaceId])
 
   useEffect(() => { fetchPayments() }, [fetchPayments])
 
@@ -66,6 +69,7 @@ export function usePayments(userId) {
       if (!exists) {
         toCreate.push({
           user_id:      userId,
+          space_id:     activeSpaceId,
           name:         master.name,
           amount:       master.is_variable ? 0 : master.amount,
           due_date:     lastDate,
@@ -97,7 +101,7 @@ export function usePayments(userId) {
 
   async function addPayment(payment) {
     const { data, error } = await supabase.from('payments')
-      .insert({ ...payment, user_id: userId, is_master: false })
+      .insert({ ...payment, user_id: userId, space_id: activeSpaceId, is_master: false })
       .select().single()
     if (!error) setPayments(prev => [...prev, data])
     return { data, error }
@@ -109,6 +113,7 @@ export function usePayments(userId) {
     // Crear master (template raíz de la parcialidad)
     const { data: master, error: masterErr } = await supabase.from('payments').insert({
       user_id:             userId,
+      space_id:            activeSpaceId,
       name, amount, category,
       is_variable:         false,
       is_recurrent:        true,
@@ -137,7 +142,7 @@ export function usePayments(userId) {
     }
 
     const installCopies = copiesToInsert.map(c => ({
-      user_id: userId, name, amount, category,
+      user_id: userId, space_id: activeSpaceId, name, amount, category,
       is_variable: false, is_recurrent: true, recur_freq: recurFreq,
       is_master: false, parent_id: master.id, due_date: c.due_date,
       is_paid: false, paid_at: null, postponed: false, paused: false,
@@ -167,6 +172,7 @@ export function usePayments(userId) {
     // 1. Crear el master (template, no aparece en Home/Pagos)
     const { data: master, error: masterErr } = await supabase.from('payments').insert({
       user_id:      userId,
+      space_id:     activeSpaceId,
       name, amount: baseAmount, category, is_variable,
       is_recurrent: true,
       recur_freq,
@@ -185,10 +191,10 @@ export function usePayments(userId) {
     // 2. Crear copias de periodo 1 y periodo 2
     const date2 = dateToStr(nextPeriodDate(firstDate, recur_freq))
     const copies = [
-      { user_id: userId, name, amount: baseAmount, category, is_variable, is_recurrent: true, recur_freq,
+      { user_id: userId, space_id: activeSpaceId, name, amount: baseAmount, category, is_variable, is_recurrent: true, recur_freq,
         is_master: false, parent_id: master.id, due_date: firstDate,
         is_paid: false, paid_at: null, postponed: false, paused: false, is_installment: false },
-      { user_id: userId, name, amount: baseAmount, category, is_variable, is_recurrent: true, recur_freq,
+      { user_id: userId, space_id: activeSpaceId, name, amount: baseAmount, category, is_variable, is_recurrent: true, recur_freq,
         is_master: false, parent_id: master.id, due_date: date2,
         is_paid: false, paid_at: null, postponed: false, paused: false, is_installment: false },
     ]
@@ -232,10 +238,10 @@ export function usePayments(userId) {
     const date2 = dateToStr(nextPeriodDate(firstDate, recur_freq))
     const copyAmount = is_variable ? 0 : amount
     const copies = [
-      { user_id: userId, name, amount: copyAmount, category, is_variable, is_recurrent: true, recur_freq,
+      { user_id: userId, space_id: activeSpaceId, name, amount: copyAmount, category, is_variable, is_recurrent: true, recur_freq,
         is_master: false, parent_id: masterId, due_date: firstDate,
         is_paid: false, paid_at: null, postponed: false, paused: false, is_installment: false },
-      { user_id: userId, name, amount: copyAmount, category, is_variable, is_recurrent: true, recur_freq,
+      { user_id: userId, space_id: activeSpaceId, name, amount: copyAmount, category, is_variable, is_recurrent: true, recur_freq,
         is_master: false, parent_id: masterId, due_date: date2,
         is_paid: false, paid_at: null, postponed: false, paused: false, is_installment: false },
     ]
@@ -297,6 +303,7 @@ export function usePayments(userId) {
 
           const { data: next } = await supabase.from('payments').insert({
             user_id:             userId,
+            space_id:            activeSpaceId,
             name:                payment.name,
             amount:              data?.amount ?? payment.amount,
             due_date:            lastDate,
@@ -334,7 +341,7 @@ export function usePayments(userId) {
     const { data, error } = await supabase
       .from('payments')
       .update(updates)
-      .match({ id, user_id: userId })
+      .match({ id })
       .select().single()
     if (error || !data) return { error }
 
@@ -378,7 +385,7 @@ export function usePayments(userId) {
     const { data, error } = await supabase
       .from('payments')
       .update({ amount })
-      .match({ id, user_id: userId })
+      .match({ id })
       .select().single()
     if (!error && data) setPayments(prev => prev.map(p => p.id === id ? { ...p, ...data } : p))
     return { error }
@@ -406,6 +413,7 @@ export function usePayments(userId) {
     const nextDate = nextPeriodDate(payment.due_date, freq)
     const { data, error } = await supabase.from('payments').insert({
       user_id:      userId,
+      space_id:     activeSpaceId,
       name:         payment.name,
       amount:       payment.amount,
       due_date:     dateToStr(nextDate),
@@ -451,10 +459,10 @@ export function usePayments(userId) {
     const date2 = dateToStr(nextPeriodDate(firstDate, recur_freq))
     const copyAmount = is_variable ? 0 : amount
     const copies = [
-      { user_id: userId, name, amount: copyAmount, category, is_variable, is_recurrent: true, recur_freq,
+      { user_id: userId, space_id: activeSpaceId, name, amount: copyAmount, category, is_variable, is_recurrent: true, recur_freq,
         is_master: false, parent_id: masterId, due_date: firstDate,
         is_paid: false, paid_at: null, postponed: false, paused: false, is_installment: false },
-      { user_id: userId, name, amount: copyAmount, category, is_variable, is_recurrent: true, recur_freq,
+      { user_id: userId, space_id: activeSpaceId, name, amount: copyAmount, category, is_variable, is_recurrent: true, recur_freq,
         is_master: false, parent_id: masterId, due_date: date2,
         is_paid: false, paid_at: null, postponed: false, paused: false, is_installment: false },
     ]
@@ -472,7 +480,7 @@ export function usePayments(userId) {
   // ELIMINAR
   // ─────────────────────────────────────────────────────────────────────────
   async function deletePayment(id) {
-    const { error } = await supabase.from('payments').delete().eq('id', id).eq('user_id', userId)
+    const { error } = await supabase.from('payments').delete().eq('id', id)
     if (!error) setPayments(prev => prev.filter(p => p.id !== id))
     return { error }
   }
@@ -540,6 +548,7 @@ export function usePayments(userId) {
       // Crear master
       const { data: master } = await supabase.from('payments').insert({
         user_id:      userId,
+        space_id:     activeSpaceId,
         name:         sample.name,
         amount:       sample.amount,
         category:     sample.category,
@@ -609,6 +618,7 @@ export function usePayments(userId) {
 
       const { data: master } = await supabase.from('payments').insert({
         user_id:             userId,
+        space_id:            activeSpaceId,
         name:                sample.name,
         amount:              sample.amount,
         category:            sample.category,
