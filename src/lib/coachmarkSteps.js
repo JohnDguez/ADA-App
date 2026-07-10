@@ -127,5 +127,11 @@ export const COACHMARK_STEPS = {
       text: 'Cambia el ícono y color de cualquier categoría, o crea las tuyas propias.',
       placement: 'bottom',
     },
+    {
+      target: 'perfil-notificaciones-row',
+      title: 'No se te vaya a pasar un pago',
+      text: 'Activa los recordatorios para que la app te avise antes de que venza cada pago.',
+      placement: 'bottom',
+    },
   ],
 }
