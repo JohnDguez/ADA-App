@@ -21,6 +21,8 @@ import { Toast, showToast } from './components/Toast'
 import { SkeletonLoader } from './components/SkeletonLoader'
 import { Coachmarks } from './components/Coachmarks'
 import { useTheme } from './hooks/useTheme'
+import { useSharedSpaces } from './hooks/useSharedSpaces'
+import { SpaceSwitcher } from './components/SpaceSwitcher'
 import { APP_VERSION, PATCH_NOTES, isNewerVersion } from './lib/patchNotes'
 
 function fmt(n) { return '$' + Number(n).toLocaleString('es-MX', { minimumFractionDigits: 0, maximumFractionDigits: 0 }) }
@@ -38,10 +40,43 @@ export default function App() {
     deleteRecurrentFuture, deleteInstallmentFuture,
     migrateRecurrents,
     refetch,
-  } = usePayments(user?.id)
+  } = usePayments(user?.id, activeSpaceId)
   const { profile, loading: profileLoading, updateProfile, uploadAvatar } = useProfile(user?.id)
   const { notifications, unreadCount, markAsRead, markAllAsRead, deleteNotification, clearAll } = useNotifications(user?.id)
   const { theme, setTheme } = useTheme()
+
+  // Espacio activo: null = personal (default). Persistido igual que `tab`,
+  // para que no se resetee a Personal cada vez que se recarga la app.
+  const [activeSpaceId, setActiveSpaceId] = useState(() => sessionStorage.getItem('ada_active_space') || null)
+  function switchSpace(spaceId) {
+    setActiveSpaceId(spaceId)
+    if (spaceId) sessionStorage.setItem('ada_active_space', spaceId)
+    else sessionStorage.removeItem('ada_active_space')
+    window.scrollTo(0, 0)
+  }
+  const sharedSpaces = useSharedSpaces(user?.id)
+  const activeSpaceEntry = activeSpaceId ? sharedSpaces.spaces.find(s => s.space.id === activeSpaceId) : null
+  // "Perfil efectivo": en modo espacio, solo el periodo de cobro cambia
+  // (tiene su propio periodo, independiente del personal de cada quien) —
+  // el nombre y la foto del header NUNCA cambian, siempre son los del
+  // usuario real, sin importar el modo activo (confirmado explícitamente
+  // por Johnatan). El resto del perfil (categorías, avatar) se queda
+  // igual, no se construyó un sistema de categorías aparte por espacio en
+  // esta pasada. `salary_enabled` se fuerza a false porque un espacio
+  // compartido no tiene "salario" propio, solo los ingresos extra
+  // que cualquier miembro registre ahí (ya soportado desde antes para
+  // usuarios sin salario fijo).
+  const effectiveProfile = activeSpaceEntry
+    ? {
+        ...profile,
+        cobro_freq: activeSpaceEntry.space.cobro_freq,
+        cobro_day1: activeSpaceEntry.space.cobro_day1,
+        cobro_day2: activeSpaceEntry.space.cobro_day2,
+        cobro_weekday: activeSpaceEntry.space.cobro_weekday,
+        salary_enabled: false,
+        salary_amount: 0,
+      }
+    : profile
 
   const [tab,            setTab]           = useState(() => {
     const hasActiveSession = sessionStorage.getItem('ada_session')
@@ -64,6 +99,7 @@ export default function App() {
   // Corre cada vez que haya datos sin migrar (no bloquea por migrationRan si hay installlments pendientes)
   useEffect(() => {
     if (!user || !payments.length) return
+    if (activeSpaceId) return // un espacio compartido es nuevo, nunca tiene datos viejos sin migrar
     const hasOldInstallments = payments.some(p => (p.is_installment || (p.current_installment > 0 && p.total_installments > 0)) && !p.is_master && !p.parent_id)
     // Permitir re-ejecución si quedan parcialidades sin migrar
     if (migrationRan.current && !hasOldInstallments) return
@@ -77,7 +113,7 @@ export default function App() {
         setMigrationModal(true)
       }
     }
-  }, [user, payments])
+  }, [user, payments, activeSpaceId])
 
   // Modal de Novedades: se muestra una vez por usuario, acumulando todo lo curado
   // desde la última versión que vio hasta APP_VERSION actual.
@@ -262,8 +298,17 @@ export default function App() {
     else showToast(`Pago ${data.startFrom || 1} de ${data.totalInstallments} creado`)
   }
 
+  const [settingsInitialSection, setSettingsInitialSection] = useState(null)
+  function goToSharedSpaceSettings() {
+    const fromIdx = TAB_ORDER.indexOf(tab)
+    const toIdx   = TAB_ORDER.indexOf('settings')
+    setSlideDir(toIdx >= fromIdx ? 'right' : 'left')
+    setSettingsInitialSection('sharedspace')
+    setTab('settings'); sessionStorage.setItem('ada_tab', 'settings'); window.scrollTo(0, 0)
+  }
+
   const headerProps = {
-    profile, unreadCount,
+    profile: effectiveProfile, unreadCount,
     onOpenNotifs: () => setNotifOpen(true),
     onGoSettings: () => {
       const fromIdx = TAB_ORDER.indexOf(tab)
@@ -281,7 +326,16 @@ export default function App() {
       {tab === 'home' && (
         <HomePage
           payments={visiblePayments}
-          profile={profile}
+          profile={effectiveProfile}
+          spaceSwitcher={
+            <SpaceSwitcher
+              spaces={sharedSpaces.spaces}
+              activeSpaceId={activeSpaceId}
+              onSwitch={switchSpace}
+              onManage={goToSharedSpaceSettings}
+              profile={profile}
+            />
+          }
           onAdd={openAdd}
           slideClass={`page-slide-${slideDir}`}
           onMarkPaid={handleMarkPaid}
@@ -310,6 +364,15 @@ export default function App() {
           payments={visiblePayments}
           slideClass={`page-slide-${slideDir}`}
           {...headerProps}
+          spaceSwitcher={
+            <SpaceSwitcher
+              spaces={sharedSpaces.spaces}
+              activeSpaceId={activeSpaceId}
+              onSwitch={switchSpace}
+              onManage={goToSharedSpaceSettings}
+              profile={profile}
+            />
+          }
           onMarkUnpaid={handleMarkUnpaid}
           onDelete={handleDelete}
           onDeleteDirect={async (id) => { await deletePayment(id); showToast('Pago eliminado') }}
@@ -322,6 +385,15 @@ export default function App() {
           payments={payments}
           slideClass={`page-slide-${slideDir}`}
           {...headerProps}
+          spaceSwitcher={
+            <SpaceSwitcher
+              spaces={sharedSpaces.spaces}
+              activeSpaceId={activeSpaceId}
+              onSwitch={switchSpace}
+              onManage={goToSharedSpaceSettings}
+              profile={profile}
+            />
+          }
           onPause={handlePauseRecurrent}
           onResume={handleResumeRecurrent}
           onDelete={handleDelete}
@@ -339,6 +411,9 @@ export default function App() {
           theme={theme}
           onThemeChange={setTheme}
           onOpenPremium={() => setPremiumPageOpen(true)}
+          sharedSpaces={sharedSpaces}
+          initialSection={settingsInitialSection}
+          onConsumeInitialSection={() => setSettingsInitialSection(null)}
         />
       )}
 
@@ -373,7 +448,7 @@ export default function App() {
         onDelete={handleDelete}
         initial={editPayment}
         payments={payments}
-        profile={profile}
+        profile={effectiveProfile}
         customCategories={profile.custom_categories || []}
         onOpenPremium={() => setPremiumPageOpen(true)}
         onAddCategory={async (cat) => {
