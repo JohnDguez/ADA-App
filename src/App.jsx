@@ -29,6 +29,22 @@ function fmt(n) { return '$' + Number(n).toLocaleString('es-MX', { minimumFracti
 
 export default function App() {
   const { user, loading: authLoading, isRecovery, setIsRecovery } = useAuth()
+
+  // Espacio activo: null = personal (default). Persistido igual que `tab`,
+  // para que no se resetee a Personal cada vez que se recarga la app.
+  // OJO: esto tiene que declararse ANTES de usePayments(), porque
+  // usePayments necesita `activeSpaceId` — declararlo después causaba
+  // "Cannot access 'activeSpaceId' before initialization" (TDZ de `const`).
+  const [activeSpaceId, setActiveSpaceId] = useState(() => sessionStorage.getItem('ada_active_space') || null)
+  function switchSpace(spaceId) {
+    setActiveSpaceId(spaceId)
+    if (spaceId) sessionStorage.setItem('ada_active_space', spaceId)
+    else sessionStorage.removeItem('ada_active_space')
+    window.scrollTo(0, 0)
+  }
+  const sharedSpaces = useSharedSpaces(user?.id)
+  const activeSpaceEntry = activeSpaceId ? sharedSpaces.spaces.find(s => s.space.id === activeSpaceId) : null
+
   const {
     payments, loading: paymentsLoading,
     addPayment, addRecurrentPayment, addInstallmentPayment,
@@ -45,17 +61,6 @@ export default function App() {
   const { notifications, unreadCount, markAsRead, markAllAsRead, deleteNotification, clearAll } = useNotifications(user?.id)
   const { theme, setTheme } = useTheme()
 
-  // Espacio activo: null = personal (default). Persistido igual que `tab`,
-  // para que no se resetee a Personal cada vez que se recarga la app.
-  const [activeSpaceId, setActiveSpaceId] = useState(() => sessionStorage.getItem('ada_active_space') || null)
-  function switchSpace(spaceId) {
-    setActiveSpaceId(spaceId)
-    if (spaceId) sessionStorage.setItem('ada_active_space', spaceId)
-    else sessionStorage.removeItem('ada_active_space')
-    window.scrollTo(0, 0)
-  }
-  const sharedSpaces = useSharedSpaces(user?.id)
-  const activeSpaceEntry = activeSpaceId ? sharedSpaces.spaces.find(s => s.space.id === activeSpaceId) : null
   // "Perfil efectivo": en modo espacio, solo el periodo de cobro cambia
   // (tiene su propio periodo, independiente del personal de cada quien) —
   // el nombre y la foto del header NUNCA cambian, siempre son los del
