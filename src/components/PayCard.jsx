@@ -77,7 +77,7 @@ export function PayCard({ payment: p, cfg, onMarkPaid, onMarkUnpaid, onCaptureAm
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6 }}>
               <button
                 onClick={e => { e.stopPropagation(); onCaptureAmount && onCaptureAmount(p) }}
-                style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 600, color: '#fff', background: 'none', border: '1px solid var(--accent)', padding: '3px 8px', borderRadius: 5, cursor: 'pointer' }}
+                style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 600, color: 'var(--accent)', background: 'none', border: '1px solid var(--accent)', padding: '3px 8px', borderRadius: 5, cursor: 'pointer' }}
               >
                 <DollarSign size={12} strokeWidth={2.5} /> Agregar monto
               </button>
