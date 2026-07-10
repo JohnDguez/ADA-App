@@ -27,7 +27,26 @@ export function useSharedSpaces(userId) {
       .eq('user_id', userId)
 
     if (!error && memberships) {
-      setSpaces(memberships.map(m => ({ membership: m, space: m.shared_spaces })).filter(s => s.space))
+      const withSpace = memberships.map(m => ({ membership: m, space: m.shared_spaces })).filter(s => s.space)
+
+      // Trae también TODOS los miembros de cada espacio (no solo la fila
+      // propia) — necesario para que el dueño vea y configure los permisos
+      // del invitado. La política RLS `members_visible_to_space_members`
+      // ya permite ver las filas de compañeros del mismo espacio.
+      const spaceIds = withSpace.map(s => s.space.id)
+      if (spaceIds.length > 0) {
+        const { data: allMembers } = await supabase
+          .from('shared_space_members')
+          .select('*')
+          .in('space_id', spaceIds)
+        if (allMembers) {
+          withSpace.forEach(entry => {
+            entry.space.members = allMembers.filter(m => m.space_id === entry.space.id)
+          })
+        }
+      }
+
+      setSpaces(withSpace)
     }
     setLoading(false)
   }, [userId])
