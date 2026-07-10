@@ -740,11 +740,12 @@ export function PaymentsPage({ payments, profile, unreadCount, onOpenNotifs, onG
         {/* ── Sin salario fijo y sin ingresos capturados todavía: CTA grande
              en vez de esconder la sección por completo ── */}
         {noIncomeYet && (
-          <div style={{ margin: '0 16px 16px', background: 'var(--surface)', borderRadius: 'var(--radius)', padding: '20px 16px', textAlign: 'center' }}>
+          <div data-coachmark="gastos-disponible-card" style={{ margin: '0 16px 16px', background: 'var(--surface)', borderRadius: 'var(--radius)', padding: '20px 16px', textAlign: 'center' }}>
             <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--text)', marginBottom: 14 }}>
               Registra un ingreso de este periodo para ver cuánto te queda disponible
             </div>
             <button
+              data-coachmark="gastos-add-income-button"
               onClick={() => setIncomeModal(true)}
               style={{
                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
