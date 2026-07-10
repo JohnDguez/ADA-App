@@ -62,7 +62,7 @@ function prevPeriod(profile) {
   return { start: t, end: prevEnd }
 }
 
-export function PaymentsPage({ payments, profile, unreadCount, onOpenNotifs, onGoSettings, onMarkUnpaid, onDelete, onDeleteDirect, onUpdateProfile, onEdit, slideClass }) {
+export function PaymentsPage({ payments, profile, spaceSwitcher, unreadCount, onOpenNotifs, onGoSettings, onMarkUnpaid, onDelete, onDeleteDirect, onUpdateProfile, onEdit, slideClass }) {
   const now = new Date()
 
   const [monthsBack,  setMonthsBack]  = useState(3)
@@ -736,6 +736,8 @@ export function PaymentsPage({ payments, profile, unreadCount, onOpenNotifs, onG
           <div style={{ fontSize: 22, fontWeight: 700, color: 'var(--text)' }}>Mis gastos e ingresos</div>
           <div style={{ fontSize: 13, fontWeight: 400, color: 'var(--text)', marginTop: 4 }}>Historial, análisis y balance de tus finanzas del periodo.</div>
         </div>
+
+        {spaceSwitcher && <div style={{ padding: '0 16px 16px' }}>{spaceSwitcher}</div>}
 
         {/* ── Sin salario fijo y sin ingresos capturados todavía: CTA grande
              en vez de esconder la sección por completo ── */}

@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-import { LogOut, Camera, Crown, User, Tag, Calendar, Bell, SunMoon, HelpCircle } from 'lucide-react'
+import { LogOut, Camera, Crown, User, Tag, Calendar, Bell, SunMoon, HelpCircle, Users } from 'lucide-react'
 import { showToast } from '../components/Toast'
 import { supabase } from '../lib/supabase'
 import { APP_VERSION } from '../lib/patchNotes'
@@ -10,6 +10,7 @@ import { SettingsCategoriesPage } from './settings/SettingsCategoriesPage'
 import { SettingsCobroPage } from './settings/SettingsCobroPage'
 import { SettingsNotificationsPage } from './settings/SettingsNotificationsPage'
 import { SettingsAppearancePage } from './settings/SettingsAppearancePage'
+import { SettingsSharedSpacePage } from './settings/SettingsSharedSpacePage'
 
 const FREQ_LABEL = { weekly: 'Semanal', biweekly: 'Quincenal', monthly: 'Mensual' }
 const THEME_LABEL = { sistema: 'Sistema', light: 'Claro', dark: 'Oscuro' }
@@ -19,9 +20,21 @@ const THEME_LABEL = { sistema: 'Sistema', light: 'Claro', dark: 'Oscuro' }
 // scroll largo; se migró a este patrón de menú para que escale mejor
 // (Categorías, y lo que venga después, no compiten por espacio con todo
 // lo demás).
-export function SettingsPage({ profile, user, onUpdate, onUploadAvatar, onDataDeleted, slideClass, theme, onThemeChange, onOpenPremium }) {
-  const [section, setSection] = useState(null) // null | 'account' | 'categories' | 'cobro' | 'notifications' | 'appearance'
+export function SettingsPage({ profile, user, onUpdate, onUploadAvatar, onDataDeleted, slideClass, theme, onThemeChange, onOpenPremium, sharedSpaces, initialSection, onConsumeInitialSection }) {
+  const [section, setSection] = useState(initialSection || null) // null | 'account' | 'categories' | 'cobro' | 'notifications' | 'appearance' | 'sharedspace'
   const [uploadingAvatar, setUploadingAvatar] = useState(false)
+
+  // Si App.jsx pide abrir directo una sección (ej. "Sumar otro espacio"
+  // desde el selector de Home), se consume la señal una sola vez para no
+  // regresar a ella si el usuario navega y vuelve a entrar a Ajustes.
+  useEffect(() => {
+    if (initialSection) {
+      window.history.pushState({ settingsSection: initialSection }, '')
+      setSection(initialSection)
+      onConsumeInitialSection?.()
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialSection])
 
   const fileRef  = useRef(null)
   const initials = (profile.name || user?.email || 'U').slice(0, 2).toUpperCase()
@@ -89,6 +102,9 @@ export function SettingsPage({ profile, user, onUpdate, onUploadAvatar, onDataDe
   if (section === 'appearance') {
     return <SettingsAppearancePage theme={theme} onThemeChange={onThemeChange} onBack={back} slideClass={slideClass} />
   }
+  if (section === 'sharedspace') {
+    return <SettingsSharedSpacePage profile={profile} user={user} sharedSpaces={sharedSpaces} onBack={back} slideClass={slideClass} />
+  }
 
   return (
     <div className={slideClass} style={{ paddingBottom: 120, background: 'var(--bg)', minHeight: '100vh' }}>
@@ -150,6 +166,7 @@ export function SettingsPage({ profile, user, onUpdate, onUploadAvatar, onDataDe
           <Row icon={Bell}     label="Notificaciones"                 onClick={() => openSection('notifications')} />
         </div>
         <Row icon={SunMoon}  label="Apariencia"                    value={THEME_LABEL[theme] || ''} onClick={() => openSection('appearance')} />
+        <Row icon={Users}    label="Espacio Compartido"            onClick={() => openSection('sharedspace')} last={profile.is_premium} />
         {!profile.is_premium && (
           <Row icon={Crown} iconColor="var(--premium-gold)" label="Obtener Premium" onClick={onOpenPremium} last />
         )}

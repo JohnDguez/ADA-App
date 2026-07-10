@@ -25,7 +25,7 @@ function FilterChip({ label, active, onClick }) {
   )
 }
 
-export function RecurrentsPage({ payments, profile, unreadCount, onOpenNotifs, onGoSettings, onPause, onResume, onDelete, onEdit, slideClass }) {
+export function RecurrentsPage({ payments, profile, spaceSwitcher, unreadCount, onOpenNotifs, onGoSettings, onPause, onResume, onDelete, onEdit, slideClass }) {
   const [search,        setSearch]        = useState('')
   const [filterStatus,  setFilterStatus]  = useState('todos')
   const [filterType,    setFilterType]    = useState('todos')
@@ -133,6 +133,8 @@ export function RecurrentsPage({ payments, profile, unreadCount, onOpenNotifs, o
             <div style={{ fontSize: 22, fontWeight: 700, color: 'var(--text)' }}>Gastos recurrentes</div>
             <div style={{ fontSize: 13, fontWeight: 400, color: 'var(--text)', marginTop: 4 }}>Gestiona tus pagos fijos y variables.</div>
           </div>
+
+          {spaceSwitcher && <div style={{ padding: '0 16px 16px' }}>{spaceSwitcher}</div>}
 
           {/* Buscador */}
           <div style={{ padding: '0 16px 12px' }}>
