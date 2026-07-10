@@ -76,7 +76,7 @@ export const COACHMARK_STEPS = {
     {
       target: 'gastos-disponible-card',
       title: 'Lo que te queda disponible',
-      text: 'Se calcula con tu salario (si lo configuraste) más cualquier ingreso extra que registres este periodo.',
+      text: 'Aquí verás cuánto te queda este periodo, calculado con tu salario (si lo configuraste) más los ingresos extra que registres.',
       placement: 'bottom',
     },
     {
