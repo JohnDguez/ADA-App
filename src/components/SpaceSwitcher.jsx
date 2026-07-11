@@ -79,29 +79,30 @@ export function SpaceSwitcher({ spaces, activeSpaceId, onSwitch, onManage, profi
         const isFront = item === frontItem
         const isRealSpace = isFront && item.kind === 'space'
         const isOwner = isRealSpace && item.entry.membership.role === 'owner'
+        const isFirst = i === 0
         return (
           <div
             key={item.id ?? 'personal'}
             onClick={() => !isFront && onSwitch(item.id === 'new' ? 'new' : item.id)}
             style={{
               display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-              padding: '14px 18px',
-              borderRadius: '18px 18px 0 0',
+              padding: isFront ? '16px 18px 14px' : '16px 18px 24px',
+              borderRadius: '16px 16px 0 0',
               background: isFront ? 'var(--bg)' : (item.kind === 'new' ? 'var(--paid)' : 'var(--label-variable)'),
               position: 'relative',
               zIndex: ordered.length - i,
-              marginBottom: isFront ? 0 : -16,
-              paddingBottom: isFront ? 16 : 30,
+              // Cada tarjeta se ve COMPLETA y cómoda (no una rendija delgada
+              // asomando) — el traslape es solo lo justo (14px) para que la
+              // esquina redondeada de esta tarjeta tape el hueco que
+              // dejaría ver el fondo del contenedor detrás de la esquina
+              // de la tarjeta de arriba. Mockup confirmado con Johnatan
+              // antes de escribir esto — ver conversación.
+              marginTop: isFirst ? 0 : -14,
               cursor: isFront ? 'default' : 'pointer',
               borderBottom: isFront ? '1px solid var(--border)' : 'none',
-              // La sombra hacia arriba es lo que da la sensación de "capa
-              // apilada encima de la siguiente" — sin ella, cada tarjeta se
-              // veía como un bloque plano pegado al de abajo, sin
-              // profundidad (justo lo que Johnatan señaló).
-              boxShadow: isFront ? 'none' : '0 -6px 14px rgba(0,0,0,0.18)',
             }}
           >
-            <span style={{ fontSize: 17, fontWeight: 700, color: isFront ? 'var(--text)' : '#fff', display: 'flex', alignItems: 'center', gap: 6 }}>
+            <span style={{ fontSize: 15, fontWeight: 500, color: isFront ? 'var(--text)' : '#fff', display: 'flex', alignItems: 'center', gap: 6 }}>
               {item.kind === 'new' && <Plus size={16} color="#fff" strokeWidth={2.5} />}
               {item.name}
             </span>
