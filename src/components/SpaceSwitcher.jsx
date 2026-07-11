@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { MoreVertical, Pencil, Trash2, LogOut } from 'lucide-react'
+import { MoreVertical, Pencil, Trash2, LogOut, Plus } from 'lucide-react'
 
 // Selector de espacio activo — tarjetas apiladas (patrón que Johnatan mostró
 // de la app de Banamex). La tarjeta AL FRENTE usa el color de fondo de la
@@ -87,16 +87,24 @@ export function SpaceSwitcher({ spaces, activeSpaceId, onSwitch, onManage, profi
               display: 'flex', alignItems: 'center', justifyContent: 'space-between',
               padding: '14px 18px',
               borderRadius: '18px 18px 0 0',
-              background: isFront ? 'var(--bg)' : 'var(--label-variable)',
+              background: isFront ? 'var(--bg)' : (item.kind === 'new' ? 'var(--paid)' : 'var(--label-variable)'),
               position: 'relative',
               zIndex: ordered.length - i,
               marginBottom: isFront ? 0 : -16,
               paddingBottom: isFront ? 16 : 30,
               cursor: isFront ? 'default' : 'pointer',
               borderBottom: isFront ? '1px solid var(--border)' : 'none',
+              // La sombra hacia arriba es lo que da la sensación de "capa
+              // apilada encima de la siguiente" — sin ella, cada tarjeta se
+              // veía como un bloque plano pegado al de abajo, sin
+              // profundidad (justo lo que Johnatan señaló).
+              boxShadow: isFront ? 'none' : '0 -6px 14px rgba(0,0,0,0.18)',
             }}
           >
-            <span style={{ fontSize: 17, fontWeight: 700, color: isFront ? 'var(--text)' : '#fff' }}>{item.name}</span>
+            <span style={{ fontSize: 17, fontWeight: 700, color: isFront ? 'var(--text)' : '#fff', display: 'flex', alignItems: 'center', gap: 6 }}>
+              {item.kind === 'new' && <Plus size={16} color="#fff" strokeWidth={2.5} />}
+              {item.name}
+            </span>
 
             {!isFront && item.kind !== 'new' && (
               <span style={{ fontSize: 11, fontWeight: 500, color: 'rgba(255,255,255,0.85)' }}>{statFor(item)}</span>
