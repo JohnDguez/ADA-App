@@ -120,6 +120,25 @@ export function PaymentsPage({ payments, profile, spaceSwitcher, activeSpaceId =
     checkPeriodStart()
   }, [profile, activeSpaceId])
 
+  // ── Tiempo real (Ingresos Extras) — solo en modo Espacio Compartido ──────
+  // Mismo criterio que la suscripción de `payments` en `usePayments.js`: se
+  // activa solo con `activeSpaceId`, y ante cualquier cambio simplemente
+  // vuelve a pedir la lista completa (`loadIncomes()`) en vez de aplicar el
+  // payload del evento a mano — más simple y menos propenso a bugs.
+  useEffect(() => {
+    if (!activeSpaceId) return
+    const channel = supabase
+      .channel(`period-income-space-${activeSpaceId}`)
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'period_income', filter: `space_id=eq.${activeSpaceId}` },
+        () => { loadIncomes() }
+      )
+      .subscribe()
+    return () => { supabase.removeChannel(channel) }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeSpaceId])
+
   async function loadIncomes() {
     setLoadingIncomes(true)
     const { start } = cobroPeriod(profile)
