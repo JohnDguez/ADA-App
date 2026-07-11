@@ -4,6 +4,7 @@ import { PayCard } from '../components/PayCard'
 import { PayRail } from '../components/PayRail'
 import { PageHeader } from '../components/PageHeader'
 import { NotificationsPanel } from '../components/NotificationsPanel'
+import { NewSharedSpacePanel } from '../components/NewSharedSpacePanel'
 import { fmt, cobroPeriod, nextCobroPeriod, getPagarEsteCobro, daysDiff, dateOf, dateToStr, MONTHS, MONTHS_SHORT } from '../lib/utils'
 
 function periodRange(cfg) {
@@ -20,7 +21,7 @@ function nextPeriodRange(cfg) {
   return `${start.getDate()} ${MONTHS_SHORT[start.getMonth()]} – ${end.getDate()} ${MONTHS[end.getMonth()]}`
 }
 
-export function HomePage({ payments, profile, spaceSwitcher, onAdd, onMarkPaid, onMarkUnpaid, onCaptureAmount, onEdit, onDelete, onPostpone, onAdvance, onGoSettings, notifications, unreadCount, onMarkAsRead, onMarkAllAsRead, onDeleteNotif, onClearAllNotifs, slideClass }) {
+export function HomePage({ payments, profile, spaceSwitcher, activeSpaceId, sharedSpaces, onOpenPremium, onSpaceReady, onAdd, onMarkPaid, onMarkUnpaid, onCaptureAmount, onEdit, onDelete, onPostpone, onAdvance, onGoSettings, notifications, unreadCount, onMarkAsRead, onMarkAllAsRead, onDeleteNotif, onClearAllNotifs, slideClass }) {
   const [notifOpen,      setNotifOpen]      = useState(false)
   const [activeCard,     setActiveCard]     = useState(0)
   const [touchStartX,    setTouchStartX]    = useState(null)
@@ -105,6 +106,18 @@ export function HomePage({ payments, profile, spaceSwitcher, onAdd, onMarkPaid, 
 
         {spaceSwitcher && <div style={{ padding: '0 16px' }}>{spaceSwitcher}</div>}
 
+        {activeSpaceId === 'new' ? (
+          <div style={{ marginTop: 16 }}>
+            <NewSharedSpacePanel
+              profile={profile}
+              sharedSpaces={sharedSpaces}
+              onOpenPremium={onOpenPremium}
+              onCreated={onSpaceReady}
+              onJoined={onSpaceReady}
+            />
+          </div>
+        ) : (
+        <>
         {/* Tabs Periodo / Mes */}
         <div data-coachmark="home-metric-card" style={{ padding: '20px 16px 0', userSelect: 'none' }}>
           <div style={{ display: 'flex', background: 'var(--section-bg)', borderRadius: 5, padding: 3, marginBottom: 10 }}>
@@ -252,6 +265,8 @@ export function HomePage({ payments, profile, spaceSwitcher, onAdd, onMarkPaid, 
                 </div>
           )}
         </div>
+        </>
+        )}
         </div>
       </div>
 

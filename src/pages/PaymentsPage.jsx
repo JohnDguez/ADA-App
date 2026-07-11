@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { ChevronLeft, ChevronRight, MoreVertical, Plus, CircleDollarSign, ChevronDown, ChevronUp, Pencil, RotateCcw, Trash2, Check } from 'lucide-react'
 import { PageHeader } from '../components/PageHeader'
+import { NewSharedSpacePanel } from '../components/NewSharedSpacePanel'
 import { fmt, dateOf, dateToStr, MONTHS, MONTHS_SHORT, CATEGORIES, cobroPeriod, addDays, getCatColor } from '../lib/utils'
 import { getCategoryIcon } from '../lib/categoryIcons'
 import { supabase } from '../lib/supabase'
@@ -62,7 +63,7 @@ function prevPeriod(profile) {
   return { start: t, end: prevEnd }
 }
 
-export function PaymentsPage({ payments, profile, spaceSwitcher, activeSpaceId = null, unreadCount, onOpenNotifs, onGoSettings, onMarkUnpaid, onDelete, onDeleteDirect, onUpdateProfile, onEdit, slideClass }) {
+export function PaymentsPage({ payments, profile, spaceSwitcher, activeSpaceId = null, rawActiveSpaceId = null, sharedSpaces, onOpenPremium, onSpaceReady, unreadCount, onOpenNotifs, onGoSettings, onMarkUnpaid, onDelete, onDeleteDirect, onUpdateProfile, onEdit, slideClass }) {
   const now = new Date()
 
   const [monthsBack,  setMonthsBack]  = useState(3)
@@ -773,13 +774,26 @@ export function PaymentsPage({ payments, profile, spaceSwitcher, activeSpaceId =
       <div style={{ background: 'var(--bg)', borderRadius: '24px 24px 0 0', marginTop: -24, position: 'relative', zIndex: 10 }}>
         <div className={slideClass}>
 
+        {spaceSwitcher && <div style={{ padding: '16px 16px 0' }}>{spaceSwitcher}</div>}
+
+        {rawActiveSpaceId === 'new' ? (
+          <div style={{ marginTop: 16 }}>
+            <NewSharedSpacePanel
+              profile={profile}
+              sharedSpaces={sharedSpaces}
+              onOpenPremium={onOpenPremium}
+              onCreated={onSpaceReady}
+              onJoined={onSpaceReady}
+            />
+          </div>
+        ) : (
+        <>
         {/* Zona de título con fondo diferente */}
-        <div style={{ background: 'var(--title-bg)', borderRadius: '24px 24px 0 0', padding: '20px 16px 18px', marginBottom: 16 }}>
+        <div style={{ padding: '16px 16px 18px' }}>
           <div style={{ fontSize: 22, fontWeight: 700, color: 'var(--text)' }}>Mis gastos e ingresos</div>
           <div style={{ fontSize: 13, fontWeight: 400, color: 'var(--text)', marginTop: 4 }}>Historial, análisis y balance de tus finanzas del periodo.</div>
         </div>
 
-        {spaceSwitcher && <div style={{ padding: '0 16px 16px' }}>{spaceSwitcher}</div>}
 
         {/* ── Sin salario fijo y sin ingresos capturados todavía: CTA grande
              en vez de esconder la sección por completo ── */}
@@ -1211,6 +1225,8 @@ export function PaymentsPage({ payments, profile, spaceSwitcher, activeSpaceId =
             </>
           )}
         </div>
+        </>
+        )}
         </div>
       </div>
     </div>

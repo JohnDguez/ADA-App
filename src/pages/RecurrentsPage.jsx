@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react'
 import { Pause, Play, Trash2, Search, ChevronDown, CreditCard, Pencil, MoreVertical } from 'lucide-react'
 import { PageHeader } from '../components/PageHeader'
+import { NewSharedSpacePanel } from '../components/NewSharedSpacePanel'
 import { fmt, RECUR_FREQ, dateOf, MONTHS_SHORT } from '../lib/utils'
 
 const CAT_COLOR = {
@@ -25,7 +26,7 @@ function FilterChip({ label, active, onClick }) {
   )
 }
 
-export function RecurrentsPage({ payments, profile, spaceSwitcher, unreadCount, onOpenNotifs, onGoSettings, onPause, onResume, onDelete, onEdit, slideClass }) {
+export function RecurrentsPage({ payments, profile, spaceSwitcher, activeSpaceId = null, sharedSpaces, onOpenPremium, onSpaceReady, unreadCount, onOpenNotifs, onGoSettings, onPause, onResume, onDelete, onEdit, slideClass }) {
   const [search,        setSearch]        = useState('')
   const [filterStatus,  setFilterStatus]  = useState('todos')
   const [filterType,    setFilterType]    = useState('todos')
@@ -128,13 +129,26 @@ export function RecurrentsPage({ payments, profile, spaceSwitcher, unreadCount, 
       <div style={{ background: 'var(--bg)', borderRadius: '24px 24px 0 0', marginTop: -24, position: 'relative', zIndex: 10 }}>
         <div className={slideClass}>
 
+          {spaceSwitcher && <div style={{ padding: '16px 16px 0' }}>{spaceSwitcher}</div>}
+
+          {activeSpaceId === 'new' ? (
+            <div style={{ marginTop: 16 }}>
+              <NewSharedSpacePanel
+                profile={profile}
+                sharedSpaces={sharedSpaces}
+                onOpenPremium={onOpenPremium}
+                onCreated={onSpaceReady}
+                onJoined={onSpaceReady}
+              />
+            </div>
+          ) : (
+          <>
           {/* Zona título */}
-          <div style={{ background: 'var(--title-bg)', borderRadius: '24px 24px 0 0', padding: '20px 16px 18px', marginBottom: 16 }}>
+          <div style={{ padding: '16px 16px 18px' }}>
             <div style={{ fontSize: 22, fontWeight: 700, color: 'var(--text)' }}>Gastos recurrentes</div>
             <div style={{ fontSize: 13, fontWeight: 400, color: 'var(--text)', marginTop: 4 }}>Gestiona tus pagos fijos y variables.</div>
           </div>
 
-          {spaceSwitcher && <div style={{ padding: '0 16px 16px' }}>{spaceSwitcher}</div>}
 
           {/* Buscador */}
           <div style={{ padding: '0 16px 12px' }}>
@@ -299,6 +313,9 @@ export function RecurrentsPage({ payments, profile, spaceSwitcher, unreadCount, 
             })}
 
           </div>
+
+          </>
+          )}
 
         </div>
       </div>
