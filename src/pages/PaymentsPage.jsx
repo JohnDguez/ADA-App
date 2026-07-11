@@ -62,7 +62,7 @@ function prevPeriod(profile) {
   return { start: t, end: prevEnd }
 }
 
-export function PaymentsPage({ payments, profile, spaceSwitcher, unreadCount, onOpenNotifs, onGoSettings, onMarkUnpaid, onDelete, onDeleteDirect, onUpdateProfile, onEdit, slideClass }) {
+export function PaymentsPage({ payments, profile, spaceSwitcher, activeSpaceId = null, unreadCount, onOpenNotifs, onGoSettings, onMarkUnpaid, onDelete, onDeleteDirect, onUpdateProfile, onEdit, slideClass }) {
   const now = new Date()
 
   const [monthsBack,  setMonthsBack]  = useState(3)
@@ -118,18 +118,27 @@ export function PaymentsPage({ payments, profile, spaceSwitcher, unreadCount, on
     if (!profile) return
     loadIncomes()
     checkPeriodStart()
-  }, [profile])
+  }, [profile, activeSpaceId])
 
   async function loadIncomes() {
     setLoadingIncomes(true)
     const { start } = cobroPeriod(profile)
     const periodStartStr = dateToStr(start)
 
-    const { data } = await supabase
+    // Antes esta consulta solo filtraba por `period_start` — como RLS deja
+    // ver tanto los ingresos personales propios (space_id null) como los del
+    // espacio compartido del que se es miembro, sin este filtro se mezclaban
+    // ambos en la misma lista (ej. el remanente personal se colaba en la
+    // vista de un Espacio Compartido). `space_id` es null para personal, o
+    // el id del espacio activo — `.is()` en vez de `.eq()` para el caso null,
+    // porque PostgREST no interpreta `.eq('space_id', null)` como "IS NULL".
+    let query = supabase
       .from('period_income')
       .select('*')
       .eq('period_start', periodStartStr)
-      .order('created_at', { ascending: false })
+    query = activeSpaceId ? query.eq('space_id', activeSpaceId) : query.is('space_id', null)
+
+    const { data } = await query.order('created_at', { ascending: false })
 
     setPeriodIncomes(data || [])
     setLoadingIncomes(false)
@@ -156,12 +165,15 @@ export function PaymentsPage({ payments, profile, spaceSwitcher, unreadCount, on
     // todo el cálculo del remanente y nunca mostraba el aviso.
     const salario = profile.salary_enabled ? Number(profile.salary_amount || 0) : 0
 
-    // Sumar ingresos extras del periodo anterior
+    // Sumar ingresos extras del periodo anterior (mismo filtro de espacio
+    // que loadIncomes — ver nota ahí sobre por qué hace falta)
     const prevStartStr = dateToStr(prev.start)
-    const { data: prevIncomes } = await supabase
+    let prevIncomeQuery = supabase
       .from('period_income')
       .select('amount')
       .eq('period_start', prevStartStr)
+    prevIncomeQuery = activeSpaceId ? prevIncomeQuery.eq('space_id', activeSpaceId) : prevIncomeQuery.is('space_id', null)
+    const { data: prevIncomes } = await prevIncomeQuery
 
     const totalPrevExtras = (prevIncomes || []).reduce((a, i) => a + Number(i.amount), 0)
     const ingresoTotalPrev = salario + totalPrevExtras
@@ -195,6 +207,7 @@ export function PaymentsPage({ payments, profile, spaceSwitcher, unreadCount, on
 
     const { error } = await supabase.from('period_income').insert({
       user_id: profile.id,
+      space_id: activeSpaceId,
       period_start: periodStartStr,
       amount,
       type: incomeType,
@@ -258,6 +271,7 @@ export function PaymentsPage({ payments, profile, spaceSwitcher, unreadCount, on
 
     await supabase.from('period_income').insert({
       user_id: profile.id,
+      space_id: activeSpaceId,
       period_start: periodStartStr,
       amount,
       type: 'Otro',
