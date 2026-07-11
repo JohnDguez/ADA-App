@@ -90,7 +90,17 @@ export function SpaceSwitcher({ spaces, activeSpaceId, onSwitch, onManage, profi
               borderRadius: '16px 16px 0 0',
               background: isFront ? 'var(--bg)' : (item.kind === 'new' ? 'var(--paid)' : 'var(--label-variable)'),
               position: 'relative',
-              zIndex: ordered.length - i,
+              // La activa (al frente) debe pintarse ENCIMA de todo lo demás,
+              // para que su borde tape la "cola" de la tarjeta de arriba y
+              // se vea que esa de arriba está detrás — por eso el z-index
+              // crece según la posición en el arreglo (la activa siempre
+              // va al final de `ordered`, así que siempre gana). Antes
+              // tenía la fórmula invertida (`ordered.length - i`), que le
+              // daba la prioridad más alta a la tarjeta MÁS atrás del
+              // stack — el bug exacto que Johnatan señaló: la tarjeta
+              // "Nuevo espacio compartido" se pintaba encima de "Personal"
+              // en vez de quedar tapada por ella.
+              zIndex: i,
               // Cada tarjeta se ve COMPLETA y cómoda (no una rendija delgada
               // asomando) — el traslape es solo lo justo (14px) para que la
               // esquina redondeada de esta tarjeta tape el hueco que
