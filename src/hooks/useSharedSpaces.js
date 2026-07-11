@@ -54,6 +54,39 @@ export function useSharedSpaces(userId) {
   useEffect(() => { fetchSpaces() }, [fetchSpaces])
 
   // ─────────────────────────────────────────────────────────────────────────
+  // TIEMPO REAL — a diferencia de `payments`/`period_income` (que solo se
+  // sincronizan en vivo mientras hay un espacio activo), esto se mantiene
+  // activo siempre que haya sesión, sin importar en qué espacio esté
+  // parado el usuario ahora mismo — porque el switcher necesita reflejar
+  // cambios de CUALQUIER espacio al que pertenezca (ej. si el dueño le
+  // quita un permiso mientras el invitado está viendo su cuenta Personal,
+  // ese cambio debe estar listo en cuanto vuelva a "Test", sin depender de
+  // que justo en ese momento tuviera el espacio activo).
+  //
+  // No se manda un `filter` explícito por `space_id` (a diferencia de las
+  // suscripciones de `payments`/`period_income`) porque aquí no hay un solo
+  // espacio de referencia — el usuario puede pertenecer hasta a 4 a la vez
+  // (1 propio + 3 como invitado). En vez de armar un filtro `in.(...)` que
+  // habría que reconstruir cada vez que cambia esa lista, nos apoyamos en
+  // que Realtime respeta las políticas RLS por cliente desde 2021 — Postgres
+  // ya solo manda los eventos de filas que este usuario puede ver según la
+  // política de `SELECT`, así que suscribirse "a todo" en estas 2 tablas es
+  // seguro y no requiere mantener el filtro sincronizado con `spaces`.
+  useEffect(() => {
+    if (!userId) return
+    const channel = supabase
+      .channel(`shared-spaces-user-${userId}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'shared_space_members' }, () => {
+        fetchSpaces()
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'shared_spaces' }, () => {
+        fetchSpaces()
+      })
+      .subscribe()
+    return () => { supabase.removeChannel(channel) }
+  }, [userId, fetchSpaces])
+
+  // ─────────────────────────────────────────────────────────────────────────
   // CREAR ESPACIO — solo Premium, máximo 1 de por vida (el índice único de
   // `shared_spaces.owner_id` en la Fase 1 ya lo garantiza a nivel de base de
   // datos; aquí se revisa antes para dar un mensaje claro en vez de un error

@@ -28,6 +28,32 @@ export function usePayments(userId, activeSpaceId = null) {
   useEffect(() => { fetchPayments() }, [fetchPayments])
 
   // ─────────────────────────────────────────────────────────────────────────
+  // TIEMPO REAL — solo en modo Espacio Compartido. Los datos personales no
+  // lo necesitan (nadie más los ve), así que esto se activa únicamente
+  // cuando hay un `activeSpaceId`. En vez de aplicar el payload exacto del
+  // evento (INSERT/UPDATE/DELETE) a mano, se vuelve a pedir todo con
+  // `fetchPayments()` — un poco menos eficiente, pero mucho más seguro dado
+  // lo delicado de la lógica de recurrentes/parcialidades (ensureTwoAhead,
+  // colas de 2 pendientes, etc.) — reimplementar esa lógica a partir de
+  // eventos sueltos de Realtime duplicaría reglas que ya viven arriba y es
+  // una fuente de bugs sutiles. El canal se cierra y se vuelve a abrir cada
+  // vez que cambia `activeSpaceId` (cambiar de espacio, o volver a modo
+  // personal), para no quedar escuchando cambios de un espacio que ya no
+  // es el activo.
+  useEffect(() => {
+    if (!activeSpaceId) return
+    const channel = supabase
+      .channel(`payments-space-${activeSpaceId}`)
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'payments', filter: `space_id=eq.${activeSpaceId}` },
+        () => { fetchPayments() }
+      )
+      .subscribe()
+    return () => { supabase.removeChannel(channel) }
+  }, [activeSpaceId, fetchPayments])
+
+  // ─────────────────────────────────────────────────────────────────────────
   // HELPERS INTERNOS
   // ─────────────────────────────────────────────────────────────────────────
 
