@@ -379,6 +379,7 @@ export default function App() {
           payments={visiblePayments}
           slideClass={`page-slide-${slideDir}`}
           {...headerProps}
+          activeSpaceId={activeSpaceId}
           spaceSwitcher={
             <SpaceSwitcher
               spaces={sharedSpaces.spaces}
