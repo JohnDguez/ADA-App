@@ -127,9 +127,8 @@ export function RecurrentsPage({ payments, profile, spaceSwitcher, activeSpaceId
       )}
 
       <div style={{ background: 'var(--bg)', borderRadius: '24px 24px 0 0', marginTop: -24, position: 'relative', zIndex: 10 }}>
+        {spaceSwitcher}
         <div className={slideClass}>
-
-          {spaceSwitcher}
 
           {activeSpaceId === 'new' ? (
             <div style={{ marginTop: 16 }}>
