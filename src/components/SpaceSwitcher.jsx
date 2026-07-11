@@ -41,6 +41,12 @@ export function SpaceSwitcher({ spaces, activeSpaceId, onSwitch, onManage, profi
   const frontItem  = allItems.find(it => it.id === activeSpaceId) || allItems.find(it => it.kind === 'personal')
   const ordered    = [...peekItems, frontItem]
 
+  function colorsFor(kind) {
+    if (kind === 'new') return { bg: 'var(--space-new-bg)', text: 'var(--space-new-text)' }
+    if (kind === 'personal') return { bg: 'var(--space-personal-bg)', text: 'var(--space-personal-text)' }
+    return { bg: 'var(--space-inactive-bg)', text: 'var(--space-inactive-text)' }
+  }
+
   function statFor(item) {
     const s = stats[item.id ?? 'personal']
     if (!s) return null
@@ -88,7 +94,7 @@ export function SpaceSwitcher({ spaces, activeSpaceId, onSwitch, onManage, profi
               display: 'flex', alignItems: 'center', justifyContent: 'space-between',
               padding: isFront ? '16px 18px 14px' : '16px 18px 24px',
               borderRadius: '16px 16px 0 0',
-              background: isFront ? 'var(--bg)' : (item.kind === 'new' ? 'var(--space-new-bg)' : 'var(--space-inactive-bg)'),
+              background: isFront ? 'var(--bg)' : colorsFor(item.kind).bg,
               position: 'relative',
               // La activa (al frente) debe pintarse ENCIMA de todo lo demás,
               // para que su borde tape la "cola" de la tarjeta de arriba y
@@ -112,7 +118,7 @@ export function SpaceSwitcher({ spaces, activeSpaceId, onSwitch, onManage, profi
               borderBottom: isFront ? '1px solid var(--border)' : 'none',
             }}
           >
-            <span style={{ fontSize: 15, fontWeight: 500, color: isFront ? 'var(--text)' : (item.kind === 'new' ? 'var(--space-new-text)' : 'var(--space-inactive-text)'), display: 'flex', alignItems: 'center', gap: 6 }}>
+            <span style={{ fontSize: 15, fontWeight: 500, color: isFront ? 'var(--text)' : colorsFor(item.kind).text, display: 'flex', alignItems: 'center', gap: 6 }}>
               {item.kind === 'new' && <Plus size={16} color="var(--space-new-text)" strokeWidth={2.5} />}
               {item.name}
             </span>
