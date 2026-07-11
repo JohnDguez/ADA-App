@@ -67,6 +67,8 @@
   --space-new-text:     #E1F5EE;
   --space-inactive-bg:  #6884A9;
   --space-inactive-text: #FFFFFF;
+  --space-personal-bg:   #47576B;
+  --space-personal-text: #FFFFFF;
 }
 
 /* ── Tema oscuro manual ([data-theme="dark"] en <html>) ───────────────────── */
@@ -116,6 +118,8 @@
   --space-new-text:     #E1F5EE;
   --space-inactive-bg:  #7A95B8;
   --space-inactive-text: #FFFFFF;
+  --space-personal-bg:   #566B85;
+  --space-personal-text: #FFFFFF;
 }
 
 /* ── Tema oscuro automático (preferencia del sistema) ─────────────────────── */
@@ -154,6 +158,8 @@
     --space-new-text:     #E1F5EE;
     --space-inactive-bg:  #7A95B8;
     --space-inactive-text: #FFFFFF;
+    --space-personal-bg:   #566B85;
+    --space-personal-text: #FFFFFF;
   }
 }
 
