@@ -208,9 +208,12 @@ export function usePayments(userId, activeSpaceId = null) {
   // Editar solo el nombre (afecta a todos: master, pagados y pendientes)
   async function updateRecurrentName(masterId, name) {
     const ids = payments.filter(p => p.id === masterId || p.parent_id === masterId).map(p => p.id)
-    const { error } = await supabase.from('payments').update({ name }).in('id', ids)
-    if (!error) setPayments(prev => prev.map(p => ids.includes(p.id) ? { ...p, name } : p))
-    return { error }
+    const { data, error } = await supabase.from('payments').update({ name }).in('id', ids).select()
+    if (error || !data || data.length !== ids.length) {
+      return { error: error || { message: 'No tienes permiso para editar este recurrente en este espacio.' } }
+    }
+    setPayments(prev => prev.map(p => ids.includes(p.id) ? { ...p, name } : p))
+    return { error: null }
   }
 
   // Editar configuración completa (master + elimina pendientes y recrea con nueva config)
@@ -220,18 +223,27 @@ export function usePayments(userId, activeSpaceId = null) {
 
     // Actualizar master
     const masterUpdates = { name, amount, recur_freq, category, is_variable }
-    await supabase.from('payments').update(masterUpdates).eq('id', masterId)
+    const { data: masterData, error: masterError } = await supabase.from('payments').update(masterUpdates).eq('id', masterId).select()
+    if (masterError || !masterData || masterData.length === 0) {
+      return { error: masterError || { message: 'No tienes permiso para editar este recurrente en este espacio.' } }
+    }
 
     // Si el nombre cambió, actualizar también las copias pagadas
     const paidCopyIds = payments.filter(p => p.parent_id === masterId && p.is_paid).map(p => p.id)
     if (name !== master.name && paidCopyIds.length > 0) {
-      await supabase.from('payments').update({ name }).in('id', paidCopyIds)
+      const { data, error } = await supabase.from('payments').update({ name }).in('id', paidCopyIds).select()
+      if (error || !data || data.length !== paidCopyIds.length) {
+        return { error: error || { message: 'No tienes permiso para editar este recurrente en este espacio.' } }
+      }
     }
 
     // Eliminar copias pendientes
     const pendingIds = payments.filter(p => p.parent_id === masterId && !p.is_paid).map(p => p.id)
     if (pendingIds.length > 0) {
-      await supabase.from('payments').delete().in('id', pendingIds)
+      const { data, error } = await supabase.from('payments').delete().in('id', pendingIds).select()
+      if (error || !data || data.length !== pendingIds.length) {
+        return { error: error || { message: 'No tienes permiso para editar este recurrente en este espacio.' } }
+      }
     }
 
     // Crear 2 nuevas copias con la nueva configuración
@@ -364,8 +376,17 @@ export function usePayments(userId, activeSpaceId = null) {
         pending = pending.filter(p => p.id !== last.id)
       }
       if (removeIds.length > 0) {
-        await supabase.from('payments').delete().in('id', removeIds)
-        updatedPayments = updatedPayments.filter(p => !removeIds.includes(p.id))
+        const { data, error } = await supabase.from('payments').delete().in('id', removeIds).select()
+        if (error || !data || data.length !== removeIds.length) {
+          // No es una acción que el usuario haya pedido directamente (es
+          // limpieza interna de la cola), así que no se corta el flujo con
+          // un error visible — el desmarcado en sí ya se aplicó arriba. Se
+          // deja tal cual quedó en la base (puede quedar con 3 pendientes en
+          // vez de 2 hasta el siguiente refetch/Realtime); es preferible a
+          // aplicar en el estado local un borrado que RLS pudo no aplicar.
+        } else {
+          updatedPayments = updatedPayments.filter(p => !removeIds.includes(p.id))
+        }
       }
     }
 
@@ -398,7 +419,10 @@ export function usePayments(userId, activeSpaceId = null) {
     // Nuevo sistema de recurrentes: elimina la copia y genera la siguiente
     if (payment.is_recurrent && !payment.is_installment && payment.parent_id) {
       // Eliminar esta copia
-      await supabase.from('payments').delete().eq('id', payment.id)
+      const { data, error } = await supabase.from('payments').delete().eq('id', payment.id).select()
+      if (error || !data || data.length === 0) {
+        return { error: error || { message: 'No tienes permiso para posponer este pago en este espacio.' } }
+      }
       const updatedPayments = payments.filter(p => p.id !== payment.id)
       setPayments(updatedPayments)
       // Asegurar 2 en cola
@@ -435,11 +459,17 @@ export function usePayments(userId, activeSpaceId = null) {
   // ─────────────────────────────────────────────────────────────────────────
   async function pauseRecurrent(masterId) {
     // Marcar master como pausado
-    await supabase.from('payments').update({ paused: true }).eq('id', masterId)
+    const { data: masterData, error: masterError } = await supabase.from('payments').update({ paused: true }).eq('id', masterId).select()
+    if (masterError || !masterData || masterData.length === 0) {
+      return { error: masterError || { message: 'No tienes permiso para pausar este recurrente en este espacio.' } }
+    }
     // Eliminar todas las copias pendientes
     const pendingIds = payments.filter(p => p.parent_id === masterId && !p.is_paid).map(p => p.id)
     if (pendingIds.length > 0) {
-      await supabase.from('payments').delete().in('id', pendingIds)
+      const { data, error } = await supabase.from('payments').delete().in('id', pendingIds).select()
+      if (error || !data || data.length !== pendingIds.length) {
+        return { error: error || { message: 'No tienes permiso para pausar este recurrente en este espacio.' } }
+      }
     }
     setPayments(prev => prev
       .map(p => p.id === masterId ? { ...p, paused: true } : p)
@@ -453,7 +483,10 @@ export function usePayments(userId, activeSpaceId = null) {
     if (!master) return { error: 'Master no encontrado' }
 
     const masterUpdates = { paused: false, name, amount, recur_freq, category, is_variable }
-    await supabase.from('payments').update(masterUpdates).eq('id', masterId)
+    const { data: masterData, error: masterError } = await supabase.from('payments').update(masterUpdates).eq('id', masterId).select()
+    if (masterError || !masterData || masterData.length === 0) {
+      return { error: masterError || { message: 'No tienes permiso para reactivar este recurrente en este espacio.' } }
+    }
 
     // Crear 2 nuevas copias
     const date2 = dateToStr(nextPeriodDate(firstDate, recur_freq))
@@ -479,10 +512,24 @@ export function usePayments(userId, activeSpaceId = null) {
   // ─────────────────────────────────────────────────────────────────────────
   // ELIMINAR
   // ─────────────────────────────────────────────────────────────────────────
+  // NOTA IMPORTANTE sobre todas las funciones de abajo: cuando RLS bloquea
+  // un UPDATE/DELETE (ej. un invitado sin el permiso correspondiente),
+  // Postgres/PostgREST NO regresa un error — simplemente afecta 0 filas y
+  // responde éxito, porque desde su perspectiva "coincidió con 0 filas" no
+  // es un error. Sin pedir `.select()` de vuelta y comparar cuántas filas
+  // regresaron contra cuántas se esperaban, no hay forma de distinguir "sí
+  // se aplicó" de "RLS lo bloqueó en silencio" — y el frontend terminaba
+  // aplicando el cambio en el estado local como si hubiera funcionado, para
+  // luego "revertirse solo" en el siguiente refetch (bug real encontrado
+  // por Johnatan probando permisos de invitado, v0.9.129).
   async function deletePayment(id) {
-    const { error } = await supabase.from('payments').delete().eq('id', id)
-    if (!error) setPayments(prev => prev.filter(p => p.id !== id))
-    return { error }
+    const { data, error } = await supabase.from('payments').delete().eq('id', id).select()
+    if (error) return { error }
+    if (!data || data.length === 0) {
+      return { error: { message: 'No tienes permiso para eliminar este pago en este espacio.' } }
+    }
+    setPayments(prev => prev.filter(p => p.id !== id))
+    return { error: null }
   }
 
   // Elimina el master + copias pendientes, congela las pagadas
@@ -490,15 +537,24 @@ export function usePayments(userId, activeSpaceId = null) {
     // Desconectar copias pagadas (quitan su parent_id para que queden en historial)
     const paidIds = payments.filter(p => p.parent_id === masterId && p.is_paid).map(p => p.id)
     if (paidIds.length > 0) {
-      await supabase.from('payments').update({ parent_id: null }).in('id', paidIds)
+      const { data, error } = await supabase.from('payments').update({ parent_id: null }).in('id', paidIds).select()
+      if (error || !data || data.length !== paidIds.length) {
+        return { error: error || { message: 'No tienes permiso para eliminar este recurrente en este espacio.' } }
+      }
     }
     // Eliminar copias pendientes
     const pendingIds = payments.filter(p => p.parent_id === masterId && !p.is_paid).map(p => p.id)
     if (pendingIds.length > 0) {
-      await supabase.from('payments').delete().in('id', pendingIds)
+      const { data, error } = await supabase.from('payments').delete().in('id', pendingIds).select()
+      if (error || !data || data.length !== pendingIds.length) {
+        return { error: error || { message: 'No tienes permiso para eliminar este recurrente en este espacio.' } }
+      }
     }
     // Eliminar el master
-    await supabase.from('payments').delete().eq('id', masterId)
+    const { data: masterData, error: masterError } = await supabase.from('payments').delete().eq('id', masterId).select()
+    if (masterError || !masterData || masterData.length === 0) {
+      return { error: masterError || { message: 'No tienes permiso para eliminar este recurrente en este espacio.' } }
+    }
 
     setPayments(prev => prev
       .filter(p => p.id !== masterId)
@@ -511,17 +567,23 @@ export function usePayments(userId, activeSpaceId = null) {
   async function deleteRecurrentFuture(name) {
     const ids = payments.filter(p => p.name === name && p.is_recurrent && !p.is_paid && !p.is_master).map(p => p.id)
     if (!ids.length) return { error: null }
-    const { error } = await supabase.from('payments').delete().in('id', ids)
-    if (!error) setPayments(prev => prev.filter(p => !ids.includes(p.id)))
-    return { error }
+    const { data, error } = await supabase.from('payments').delete().in('id', ids).select()
+    if (error || !data || data.length !== ids.length) {
+      return { error: error || { message: 'No tienes permiso para eliminar estos pagos en este espacio.' } }
+    }
+    setPayments(prev => prev.filter(p => !ids.includes(p.id)))
+    return { error: null }
   }
 
   async function deleteInstallmentFuture(name) {
     const ids = payments.filter(p => p.is_installment && p.name === name && !p.is_paid).map(p => p.id)
     if (!ids.length) return { error: null }
-    const { error } = await supabase.from('payments').delete().in('id', ids)
-    if (!error) setPayments(prev => prev.filter(p => !ids.includes(p.id)))
-    return { error }
+    const { data, error } = await supabase.from('payments').delete().in('id', ids).select()
+    if (error || !data || data.length !== ids.length) {
+      return { error: error || { message: 'No tienes permiso para eliminar estos pagos en este espacio.' } }
+    }
+    setPayments(prev => prev.filter(p => !ids.includes(p.id)))
+    return { error: null }
   }
 
   // ─────────────────────────────────────────────────────────────────────────
