@@ -244,13 +244,18 @@ export function PaymentsPage({ payments, profile, spaceSwitcher, activeSpaceId =
     if (!amount || amount <= 0) return
     setSavingEditIncome(true)
 
-    const { error } = await supabase.from('period_income').update({
+    // Mismo bug de fondo que en usePayments.js (ver nota ahí): sin
+    // `.select()` de vuelta, un UPDATE bloqueado por RLS (invitado sin
+    // can_add_income) regresa éxito con 0 filas afectadas, no un error —
+    // y `loadIncomes()` volvía a traer el valor real sin cambios, dando la
+    // sensación de que "no se guardó nada" sin ninguna pista de por qué.
+    const { data, error } = await supabase.from('period_income').update({
       type: editIncomeType,
       amount,
       note: editIncomeNote.trim() || null,
-    }).eq('id', id)
+    }).eq('id', id).select()
 
-    if (!error) {
+    if (!error && data && data.length > 0) {
       await loadIncomes()
       cancelEditIncome()
     }
@@ -258,7 +263,11 @@ export function PaymentsPage({ payments, profile, spaceSwitcher, activeSpaceId =
   }
 
   async function handleDeleteIncome(id) {
-    await supabase.from('period_income').delete().eq('id', id)
+    const { data, error } = await supabase.from('period_income').delete().eq('id', id).select()
+    // Si RLS bloqueó el borrado (0 filas), no cerramos el modal de
+    // confirmación ni tocamos el estado local — ver nota en
+    // handleUpdateIncome sobre por qué hace falta este chequeo.
+    if (error || !data || data.length === 0) return
     await loadIncomes()
     setConfirmDeleteIncomeId(null)
     if (editingIncomeId === id) cancelEditIncome()
