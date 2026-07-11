@@ -88,7 +88,7 @@ export function SpaceSwitcher({ spaces, activeSpaceId, onSwitch, onManage, profi
               display: 'flex', alignItems: 'center', justifyContent: 'space-between',
               padding: isFront ? '16px 18px 14px' : '16px 18px 24px',
               borderRadius: '16px 16px 0 0',
-              background: isFront ? 'var(--bg)' : (item.kind === 'new' ? 'var(--paid)' : 'var(--label-variable)'),
+              background: isFront ? 'var(--bg)' : (item.kind === 'new' ? 'var(--space-new-bg)' : 'var(--space-inactive-bg)'),
               position: 'relative',
               // La activa (al frente) debe pintarse ENCIMA de todo lo demás,
               // para que su borde tape la "cola" de la tarjeta de arriba y
@@ -112,8 +112,8 @@ export function SpaceSwitcher({ spaces, activeSpaceId, onSwitch, onManage, profi
               borderBottom: isFront ? '1px solid var(--border)' : 'none',
             }}
           >
-            <span style={{ fontSize: 15, fontWeight: 500, color: isFront ? 'var(--text)' : '#fff', display: 'flex', alignItems: 'center', gap: 6 }}>
-              {item.kind === 'new' && <Plus size={16} color="#fff" strokeWidth={2.5} />}
+            <span style={{ fontSize: 15, fontWeight: 500, color: isFront ? 'var(--text)' : (item.kind === 'new' ? 'var(--space-new-text)' : 'var(--space-inactive-text)'), display: 'flex', alignItems: 'center', gap: 6 }}>
+              {item.kind === 'new' && <Plus size={16} color="var(--space-new-text)" strokeWidth={2.5} />}
               {item.name}
             </span>
 
