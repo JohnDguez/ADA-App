@@ -1,11 +1,23 @@
 // Fuente única de verdad para la versión visible al usuario (footer de SettingsPage,
 // modal de Novedades). No confundir con el historial técnico completo en CONTEXT.md:
 // aquí solo van cambios que le sirven o interesan al usuario final.
-export const APP_VERSION = '0.9.88'
+export const APP_VERSION = '0.9.135'
 
 // Cada entrada: { version, date, items: [string] }
 // Orden: más reciente primero. Solo agregar entradas con contenido útil para el usuario.
 export const PATCH_NOTES = [
+  {
+    version: '0.9.135',
+    date: 'Julio 2026',
+    items: [
+      'Nuevo: Espacio Compartido — lleva las cuentas de la casa, la renta o el súper junto con tu pareja o roomie, en un espacio aparte de tu cuenta Personal.',
+      'Si eres Premium, puedes crear tu propio Espacio Compartido (con su propio periodo de cobro) e invitar a alguien con un código de 6 dígitos.',
+      'Sin necesidad de Premium, puedes unirte hasta a 3 Espacios Compartidos con el código que te compartan.',
+      'El dueño decide qué puede hacer cada invitado dentro del espacio: agregar pagos, editarlos, marcarlos como pagados, eliminarlos, o agregar ingresos extra — cada permiso se activa por separado.',
+      'Todo se sincroniza al instante entre quienes comparten el espacio, sin necesidad de recargar la app.',
+      'Cambia entre tu cuenta Personal y tus Espacios Compartidos desde el nuevo selector apilado, arriba de Inicio, Gastos y Recurrentes.',
+    ],
+  },
   {
     version: '0.9.88',
     date: 'Julio 2026',
