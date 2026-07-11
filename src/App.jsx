@@ -22,6 +22,7 @@ import { SkeletonLoader } from './components/SkeletonLoader'
 import { Coachmarks } from './components/Coachmarks'
 import { useTheme } from './hooks/useTheme'
 import { useSharedSpaces } from './hooks/useSharedSpaces'
+import { useSpaceStats } from './hooks/useSpaceStats'
 import { SpaceSwitcher } from './components/SpaceSwitcher'
 import { APP_VERSION, PATCH_NOTES, isNewerVersion } from './lib/patchNotes'
 
@@ -38,12 +39,20 @@ export default function App() {
   const [activeSpaceId, setActiveSpaceId] = useState(() => sessionStorage.getItem('ada_active_space') || null)
   function switchSpace(spaceId) {
     setActiveSpaceId(spaceId)
-    if (spaceId) sessionStorage.setItem('ada_active_space', spaceId)
+    if (spaceId && spaceId !== 'new') sessionStorage.setItem('ada_active_space', spaceId)
     else sessionStorage.removeItem('ada_active_space')
     window.scrollTo(0, 0)
   }
   const sharedSpaces = useSharedSpaces(user?.id)
-  const activeSpaceEntry = activeSpaceId ? sharedSpaces.spaces.find(s => s.space.id === activeSpaceId) : null
+  const spaceStats = useSpaceStats(user?.id, sharedSpaces.spaces.map(s => s.space.id))
+  // La tarjeta "Nuevo espacio compartido" no es un espacio real — mientras
+  // está activa, se trata como personal para efectos de qué pagos/periodo
+  // consultar (usePayments, effectiveProfile), porque la página no muestra
+  // esos datos de todas formas (muestra el panel de crear/unirse). Sin este
+  // desvío, `activeSpaceId === 'new'` se mandaría tal cual a Supabase como
+  // si fuera un UUID de espacio real, y fallaría la consulta.
+  const paymentsSpaceId = (activeSpaceId && activeSpaceId !== 'new') ? activeSpaceId : null
+  const activeSpaceEntry = paymentsSpaceId ? sharedSpaces.spaces.find(s => s.space.id === paymentsSpaceId) : null
 
   const {
     payments, loading: paymentsLoading,
@@ -56,7 +65,7 @@ export default function App() {
     deleteRecurrentFuture, deleteInstallmentFuture,
     migrateRecurrents,
     refetch,
-  } = usePayments(user?.id, activeSpaceId)
+  } = usePayments(user?.id, paymentsSpaceId)
   const { profile, loading: profileLoading, updateProfile, uploadAvatar } = useProfile(user?.id)
   const { notifications, unreadCount, markAsRead, markAllAsRead, deleteNotification, clearAll } = useNotifications(user?.id)
   const { theme, setTheme } = useTheme()
@@ -115,7 +124,7 @@ export default function App() {
   // Corre cada vez que haya datos sin migrar (no bloquea por migrationRan si hay installlments pendientes)
   useEffect(() => {
     if (!user || !payments.length) return
-    if (activeSpaceId) return // un espacio compartido es nuevo, nunca tiene datos viejos sin migrar
+    if (paymentsSpaceId) return // un espacio compartido es nuevo, nunca tiene datos viejos sin migrar
     const hasOldInstallments = payments.some(p => (p.is_installment || (p.current_installment > 0 && p.total_installments > 0)) && !p.is_master && !p.parent_id)
     // Permitir re-ejecución si quedan parcialidades sin migrar
     if (migrationRan.current && !hasOldInstallments) return
@@ -129,7 +138,7 @@ export default function App() {
         setMigrationModal(true)
       }
     }
-  }, [user, payments, activeSpaceId])
+  }, [user, payments, paymentsSpaceId])
 
   // Modal de Novedades: se muestra una vez por usuario, acumulando todo lo curado
   // desde la última versión que vio hasta APP_VERSION actual.
@@ -336,21 +345,42 @@ export default function App() {
   // Pagos que se muestran en Home/Pagos: excluir masters (is_master: true)
   const visiblePayments = payments.filter(p => !p.is_master)
 
+  // Un solo switcher, reusado en las 3 pestañas (antes se repetía idéntico
+  // 3 veces) — ya trae las props nuevas del rediseño: `stats` (resumen
+  // mini de pendientes/vencidos por espacio), `user` (para confirmar con
+  // contraseña al eliminar) y `deleteSpace`/`leaveSpace` (acciones del menú
+  // de 3 puntitos en la tarjeta activa).
+  const spaceSwitcherEl = (
+    <SpaceSwitcher
+      spaces={sharedSpaces.spaces}
+      activeSpaceId={activeSpaceId}
+      onSwitch={switchSpace}
+      onManage={goToSharedSpaceSettings}
+      profile={profile}
+      user={user}
+      stats={spaceStats}
+      deleteSpace={sharedSpaces.deleteSpace}
+      leaveSpace={sharedSpaces.leaveSpace}
+    />
+  )
+
+  // Al crear o unirse a un espacio desde el panel "Nuevo espacio
+  // compartido", aterriza directo en ese espacio en vez de dejar al
+  // usuario parado en la tarjeta "Nuevo" (que ya no aplicaría, pues ya
+  // pertenece a él).
+  function handleSpaceReady(spaceId) { switchSpace(spaceId) }
+
   return (
     <>
       {tab === 'home' && (
         <HomePage
           payments={visiblePayments}
           profile={effectiveProfile}
-          spaceSwitcher={
-            <SpaceSwitcher
-              spaces={sharedSpaces.spaces}
-              activeSpaceId={activeSpaceId}
-              onSwitch={switchSpace}
-              onManage={goToSharedSpaceSettings}
-              profile={profile}
-            />
-          }
+          activeSpaceId={activeSpaceId}
+          sharedSpaces={sharedSpaces}
+          onOpenPremium={() => setPremiumPageOpen(true)}
+          onSpaceReady={handleSpaceReady}
+          spaceSwitcher={spaceSwitcherEl}
           onAdd={openAdd}
           slideClass={`page-slide-${slideDir}`}
           onMarkPaid={handleMarkPaid}
@@ -379,16 +409,12 @@ export default function App() {
           payments={visiblePayments}
           slideClass={`page-slide-${slideDir}`}
           {...headerProps}
-          activeSpaceId={activeSpaceId}
-          spaceSwitcher={
-            <SpaceSwitcher
-              spaces={sharedSpaces.spaces}
-              activeSpaceId={activeSpaceId}
-              onSwitch={switchSpace}
-              onManage={goToSharedSpaceSettings}
-              profile={profile}
-            />
-          }
+          activeSpaceId={paymentsSpaceId}
+          rawActiveSpaceId={activeSpaceId}
+          sharedSpaces={sharedSpaces}
+          onOpenPremium={() => setPremiumPageOpen(true)}
+          onSpaceReady={handleSpaceReady}
+          spaceSwitcher={spaceSwitcherEl}
           onMarkUnpaid={handleMarkUnpaid}
           onDelete={handleDelete}
           onDeleteDirect={async (id) => { await deletePayment(id); showToast('Pago eliminado') }}
@@ -401,15 +427,11 @@ export default function App() {
           payments={payments}
           slideClass={`page-slide-${slideDir}`}
           {...headerProps}
-          spaceSwitcher={
-            <SpaceSwitcher
-              spaces={sharedSpaces.spaces}
-              activeSpaceId={activeSpaceId}
-              onSwitch={switchSpace}
-              onManage={goToSharedSpaceSettings}
-              profile={profile}
-            />
-          }
+          activeSpaceId={activeSpaceId}
+          sharedSpaces={sharedSpaces}
+          onOpenPremium={() => setPremiumPageOpen(true)}
+          onSpaceReady={handleSpaceReady}
+          spaceSwitcher={spaceSwitcherEl}
           onPause={handlePauseRecurrent}
           onResume={handleResumeRecurrent}
           onDelete={handleDelete}
