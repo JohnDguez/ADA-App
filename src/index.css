@@ -56,6 +56,17 @@
   --upcoming-border:  #FAAC2F;
   --soon-color:       #FE7600;
   --menu-bg:          #F5F5F2;
+
+  /* Switcher de Espacio Compartido — tarjetas que asoman (no la activa).
+     Antes reutilizaban --paid (verde saturado, pensado para "pagado") y
+     --label-variable (prestado de la etiqueta "Variable" de pagos) — muy
+     chillantes y sin relación semántica real con lo que representan.
+     Variables propias, tono apagado para no competir visualmente con el
+     contenido de abajo. */
+  --space-new-bg:       #2F6E5C;
+  --space-new-text:     #E1F5EE;
+  --space-inactive-bg:  #6884A9;
+  --space-inactive-text: #FFFFFF;
 }
 
 /* ── Tema oscuro manual ([data-theme="dark"] en <html>) ───────────────────── */
@@ -97,6 +108,14 @@
   --upcoming-border: #FAAC2F;
   --soon-color:      #FE7600;
   --menu-bg:         #242837;
+
+  /* Switcher de Espacio Compartido — ver nota en :root. Tono ligeramente
+     más claro que en el tema claro, mismo criterio que --label-variable
+     (más luminosidad para contrastar contra el fondo oscuro). */
+  --space-new-bg:       #3D8B73;
+  --space-new-text:     #E1F5EE;
+  --space-inactive-bg:  #7A95B8;
+  --space-inactive-text: #FFFFFF;
 }
 
 /* ── Tema oscuro automático (preferencia del sistema) ─────────────────────── */
@@ -131,6 +150,10 @@
     --upcoming-border: #FAAC2F;
     --soon-color:      #FE7600;
     --menu-bg:         #242837;
+    --space-new-bg:       #3D8B73;
+    --space-new-text:     #E1F5EE;
+    --space-inactive-bg:  #7A95B8;
+    --space-inactive-text: #FFFFFF;
   }
 }
 
