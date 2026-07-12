@@ -54,6 +54,27 @@ export default function App() {
   const paymentsSpaceId = (activeSpaceId && activeSpaceId !== 'new') ? activeSpaceId : null
   const activeSpaceEntry = paymentsSpaceId ? sharedSpaces.spaces.find(s => s.space.id === paymentsSpaceId) : null
 
+  // Permisos efectivos en el contexto activo — un solo lugar de donde todo
+  // lo demás (modal de pago, tarjetas, menús) lee qué puede hacer el
+  // usuario, en vez de repetir esta lógica en cada archivo. Personal y el
+  // dueño de un espacio siempre pueden todo; un invitado solo lo que el
+  // dueño le haya activado en `shared_space_members`. Mismas 5 llaves que
+  // ya usa la base de datos (`can_add`, `can_edit`, `can_mark_paid`,
+  // `can_delete`, `can_add_income`) — y `isRestricted` para que el resto
+  // del código sepa si hace falta mostrar mensajes de permiso en absoluto
+  // (evita comparar `role === 'owner'` por todos lados).
+  const FULL_PERMISSIONS = { can_add: true, can_edit: true, can_mark_paid: true, can_delete: true, can_add_income: true }
+  const spacePermissions = (!activeSpaceEntry || activeSpaceEntry.membership.role === 'owner')
+    ? { ...FULL_PERMISSIONS, isRestricted: false }
+    : {
+        can_add:        activeSpaceEntry.membership.can_add,
+        can_edit:       activeSpaceEntry.membership.can_edit,
+        can_mark_paid:  activeSpaceEntry.membership.can_mark_paid,
+        can_delete:     activeSpaceEntry.membership.can_delete,
+        can_add_income: activeSpaceEntry.membership.can_add_income,
+        isRestricted: true,
+      }
+
   const {
     payments, loading: paymentsLoading,
     addPayment, addRecurrentPayment, addInstallmentPayment,
@@ -378,6 +399,7 @@ export default function App() {
           profile={effectiveProfile}
           activeSpaceId={activeSpaceId}
           sharedSpaces={sharedSpaces}
+          spacePermissions={spacePermissions}
           onOpenPremium={() => setPremiumPageOpen(true)}
           onSpaceReady={handleSpaceReady}
           spaceSwitcher={spaceSwitcherEl}
@@ -412,6 +434,7 @@ export default function App() {
           activeSpaceId={paymentsSpaceId}
           rawActiveSpaceId={activeSpaceId}
           sharedSpaces={sharedSpaces}
+          spacePermissions={spacePermissions}
           onOpenPremium={() => setPremiumPageOpen(true)}
           onSpaceReady={handleSpaceReady}
           spaceSwitcher={spaceSwitcherEl}
@@ -429,6 +452,7 @@ export default function App() {
           {...headerProps}
           activeSpaceId={activeSpaceId}
           sharedSpaces={sharedSpaces}
+          spacePermissions={spacePermissions}
           onOpenPremium={() => setPremiumPageOpen(true)}
           onSpaceReady={handleSpaceReady}
           spaceSwitcher={spaceSwitcherEl}
@@ -487,6 +511,7 @@ export default function App() {
         initial={editPayment}
         payments={payments}
         profile={effectiveProfile}
+        spacePermissions={spacePermissions}
         customCategories={profile.custom_categories || []}
         onOpenPremium={() => setPremiumPageOpen(true)}
         onAddCategory={async (cat) => {
@@ -496,6 +521,7 @@ export default function App() {
       <VariableAmountModal
         open={varModal.open}
         payment={varModal.payment}
+        spacePermissions={spacePermissions}
         onConfirm={handleVarConfirm}
         onClose={() => setVarModal({ open: false, payment: null })}
       />
@@ -503,6 +529,7 @@ export default function App() {
         open={estimateModal.open}
         payment={estimateModal.payment}
         mode="estimate"
+        spacePermissions={spacePermissions}
         onConfirm={handleEstimateConfirm}
         onClose={() => setEstimateModal({ open: false, payment: null })}
       />
