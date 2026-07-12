@@ -21,7 +21,7 @@ function nextPeriodRange(cfg) {
   return `${start.getDate()} ${MONTHS_SHORT[start.getMonth()]} – ${end.getDate()} ${MONTHS[end.getMonth()]}`
 }
 
-export function HomePage({ payments, profile, spaceSwitcher, activeSpaceId, sharedSpaces, onOpenPremium, onSpaceReady, onAdd, onMarkPaid, onMarkUnpaid, onCaptureAmount, onEdit, onDelete, onPostpone, onAdvance, onGoSettings, notifications, unreadCount, onMarkAsRead, onMarkAllAsRead, onDeleteNotif, onClearAllNotifs, slideClass }) {
+export function HomePage({ payments, profile, spaceSwitcher, activeSpaceId, sharedSpaces, spacePermissions, onOpenPremium, onSpaceReady, onAdd, onMarkPaid, onMarkUnpaid, onCaptureAmount, onEdit, onDelete, onPostpone, onAdvance, onGoSettings, notifications, unreadCount, onMarkAsRead, onMarkAllAsRead, onDeleteNotif, onClearAllNotifs, slideClass }) {
   const [notifOpen,      setNotifOpen]      = useState(false)
   const [activeCard,     setActiveCard]     = useState(0)
   const [touchStartX,    setTouchStartX]    = useState(null)
@@ -225,7 +225,7 @@ export function HomePage({ payments, profile, spaceSwitcher, activeSpaceId, shar
               <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--danger)', marginBottom: 10 }}>
                 Vencidos
               </div>
-              <PayRail payments={vencidos} cfg={profile} dotColor="var(--overdue-border)" dotTextColor="#fff" handlers={handlers} />
+              <PayRail payments={vencidos} cfg={profile} dotColor="var(--overdue-border)" dotTextColor="#fff" handlers={handlers} permissions={spacePermissions} />
             </div>
           )}
 
@@ -237,7 +237,7 @@ export function HomePage({ payments, profile, spaceSwitcher, activeSpaceId, shar
 
             {delPeriodo.length === 0
               ? <Empty text="Sin pagos pendientes para este periodo" />
-              : <PayRail payments={delPeriodo} cfg={profile} dotColor="var(--upcoming-border)" dotTextColor="var(--impact-warning-text)" handlers={handlers} />
+              : <PayRail payments={delPeriodo} cfg={profile} dotColor="var(--upcoming-border)" dotTextColor="var(--impact-warning-text)" handlers={handlers} permissions={spacePermissions} />
             }
           </div>
 
@@ -260,7 +260,7 @@ export function HomePage({ payments, profile, spaceSwitcher, activeSpaceId, shar
             upcoming.length === 0
               ? <Empty text="Sin pagos registrados para el próximo periodo" />
               : <div style={{ marginTop: 8 }}>
-                  <PayRail payments={upcoming} cfg={profile} dotColor="var(--accent)" dotTextColor="var(--bg)" handlers={handlers} />
+                  <PayRail payments={upcoming} cfg={profile} dotColor="var(--accent)" dotTextColor="var(--bg)" handlers={handlers} permissions={spacePermissions} />
                 </div>
           )}
         </div>

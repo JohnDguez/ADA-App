@@ -3,6 +3,7 @@ import { Pause, Play, Trash2, Search, ChevronDown, CreditCard, Pencil, MoreVerti
 import { PageHeader } from '../components/PageHeader'
 import { NewSharedSpacePanel } from '../components/NewSharedSpacePanel'
 import { fmt, RECUR_FREQ, dateOf, MONTHS_SHORT } from '../lib/utils'
+import { showToast } from '../components/Toast'
 
 const CAT_COLOR = {
   'Servicios':     'var(--cat-servicios)',
@@ -26,13 +27,19 @@ function FilterChip({ label, active, onClick }) {
   )
 }
 
-export function RecurrentsPage({ payments, profile, spaceSwitcher, activeSpaceId = null, sharedSpaces, onOpenPremium, onSpaceReady, unreadCount, onOpenNotifs, onGoSettings, onPause, onResume, onDelete, onEdit, slideClass }) {
+export function RecurrentsPage({ payments, profile, spaceSwitcher, activeSpaceId = null, sharedSpaces, spacePermissions, onOpenPremium, onSpaceReady, unreadCount, onOpenNotifs, onGoSettings, onPause, onResume, onDelete, onEdit, slideClass }) {
   const [search,        setSearch]        = useState('')
   const [filterStatus,  setFilterStatus]  = useState('todos')
   const [filterType,    setFilterType]    = useState('todos')
   const [expandedCats,  setExpandedCats]  = useState({})
   const [confirmDelete, setConfirmDelete] = useState(null)
   const [openMenu,      setOpenMenu]      = useState(null)
+
+  const canEdit   = !spacePermissions || spacePermissions.can_edit
+  const canDelete = !spacePermissions || spacePermissions.can_delete
+  function blocked(action) {
+    showToast(`No tienes permitido ${action} en este Espacio Compartido.`)
+  }
 
   // Masters: registros raíz de cada pago recurrente
   const masters = useMemo(() =>
@@ -119,7 +126,7 @@ export function RecurrentsPage({ payments, profile, spaceSwitcher, activeSpaceId
             return (
               <>
                 <MenuItem icon={<Pencil size={14} />} label="Editar" onClick={() => { onEdit && onEdit(master); setOpenMenu(null) }} />
-                <MenuItem icon={<Trash2 size={14} />} label="Eliminar" onClick={() => { setConfirmDelete(master.id); setOpenMenu(null) }} danger />
+                <MenuItem icon={<Trash2 size={14} />} label="Eliminar" onClick={() => { canDelete ? setConfirmDelete(master.id) : blocked('eliminar pagos'); setOpenMenu(null) }} danger />
               </>
             )
           })()}
@@ -266,12 +273,12 @@ export function RecurrentsPage({ payments, profile, spaceSwitcher, activeSpaceId
                             {/* Botones */}
                             <div style={{ display: 'flex', gap: 5, flexShrink: 0, alignItems: 'center' }}>
                               <ActionBtn
-                                onClick={() => master.paused ? onResume(master.id) : onPause(master.id)}
-                                color={master.paused ? 'var(--paid)' : 'var(--warning)'}
+                                onClick={() => canEdit ? (master.paused ? onResume(master.id) : onPause(master.id)) : blocked(master.paused ? 'reactivar pagos' : 'pausar pagos')}
+                                color={!canEdit ? 'var(--border)' : master.paused ? 'var(--paid)' : 'var(--warning)'}
                               >
                                 {master.paused
-                                  ? <Play size={13} color="#fff" />
-                                  : <Pause size={13} color="#fff" />
+                                  ? <Play size={13} color={canEdit ? '#fff' : 'var(--muted)'} />
+                                  : <Pause size={13} color={canEdit ? '#fff' : 'var(--muted)'} />
                                 }
                               </ActionBtn>
                               <button

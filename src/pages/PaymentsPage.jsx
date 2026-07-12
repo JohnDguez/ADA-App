@@ -5,6 +5,7 @@ import { NewSharedSpacePanel } from '../components/NewSharedSpacePanel'
 import { fmt, dateOf, dateToStr, MONTHS, MONTHS_SHORT, CATEGORIES, cobroPeriod, addDays, getCatColor } from '../lib/utils'
 import { getCategoryIcon } from '../lib/categoryIcons'
 import { supabase } from '../lib/supabase'
+import { showToast } from '../components/Toast'
 
 const INCOME_TYPES = ['Bono', 'Préstamo', 'Pago', 'Comisión', 'Otro']
 
@@ -63,7 +64,7 @@ function prevPeriod(profile) {
   return { start: t, end: prevEnd }
 }
 
-export function PaymentsPage({ payments, profile, spaceSwitcher, activeSpaceId = null, rawActiveSpaceId = null, sharedSpaces, onOpenPremium, onSpaceReady, unreadCount, onOpenNotifs, onGoSettings, onMarkUnpaid, onDelete, onDeleteDirect, onUpdateProfile, onEdit, slideClass }) {
+export function PaymentsPage({ payments, profile, spaceSwitcher, activeSpaceId = null, rawActiveSpaceId = null, sharedSpaces, spacePermissions, onOpenPremium, onSpaceReady, unreadCount, onOpenNotifs, onGoSettings, onMarkUnpaid, onDelete, onDeleteDirect, onUpdateProfile, onEdit, slideClass }) {
   const now = new Date()
 
   const [monthsBack,  setMonthsBack]  = useState(3)
@@ -424,11 +425,21 @@ export function PaymentsPage({ payments, profile, spaceSwitcher, activeSpaceId =
       })
   const totalInView = paidInView.reduce((a, p) => a + Number(p.amount), 0)
 
+  const canMarkPaid = !spacePermissions || spacePermissions.can_mark_paid
+  const canDelete   = !spacePermissions || spacePermissions.can_delete
+  function blocked(action) {
+    showToast(`No tienes permitido ${action} en este Espacio Compartido.`)
+  }
+
   function handleMenuAction(action, payment) {
     setOpenMenu(null)
     if (action === 'edit') onEdit && onEdit(payment)
-    if (action === 'unpaid') onMarkUnpaid && onMarkUnpaid(payment.id)
+    if (action === 'unpaid') {
+      if (!canMarkPaid) { blocked('marcar pagos'); return }
+      onMarkUnpaid && onMarkUnpaid(payment.id)
+    }
     if (action === 'delete') {
+      if (!canDelete) { blocked('eliminar pagos'); return }
       if (payment.is_paid) {
         if (!window.confirm('¿Eliminar este pago del historial?')) return
         onDeleteDirect && onDeleteDirect(payment.id)
