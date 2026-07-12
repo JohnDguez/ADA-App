@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { MoreVertical, Check, Pencil, Trash2, Clock, ChevronDown, ChevronUp, RotateCcw, FastForward, DollarSign } from 'lucide-react'
 import { statusOf, daysDiff, dateOf, fmt, MONTHS_SHORT, periodLabel, periodCountLabel, RECUR_FREQ, installmentLabel } from '../lib/utils'
+import { showToast } from './Toast'
 
 function statusInfo(p, cfg) {
   const s = statusOf(p, cfg)
@@ -31,7 +32,7 @@ function useLongPress(callback, ms = 500) {
   return { onMouseDown: start, onMouseUp: stop, onMouseLeave: stop, onTouchStart: start, onTouchEnd: stop, onTouchCancel: stop }
 }
 
-export function PayCard({ payment: p, cfg, onMarkPaid, onMarkUnpaid, onCaptureAmount, onEdit, onDelete, onPostpone, onAdvance, borderLeft, hideDate, hideDueLabel, railMode }) {
+export function PayCard({ payment: p, cfg, onMarkPaid, onMarkUnpaid, onCaptureAmount, onEdit, onDelete, onPostpone, onAdvance, borderLeft, hideDate, hideDueLabel, railMode, permissions }) {
   const [menuOpen, setMenuOpen] = useState(false)
   const menuRef = useRef(null)
   const info      = statusInfo(p, cfg)
@@ -40,6 +41,18 @@ export function PayCard({ payment: p, cfg, onMarkPaid, onMarkUnpaid, onCaptureAm
   const isPending = !p.is_paid && !p.postponed && !p.paused
   const freqLabel = p.is_recurrent && p.recur_freq && !p.is_installment ? RECUR_FREQ[p.recur_freq] : null
   const instLabel = p.is_installment ? `Pago ${p.current_installment}/${p.total_installments}` : null
+
+  // Sin `permissions` (modo personal, o dueño del espacio) todo permitido.
+  // "Editar"/"Agregar monto" abren un modal que ya se bloquea por su cuenta
+  // (PaymentModal/VariableAmountModal) — aquí solo se guardan los flags que
+  // SÍ necesitan bloquearse en el momento, porque son acciones directas sin
+  // modal de por medio.
+  const canMarkPaid = !permissions || permissions.can_mark_paid
+  const canEdit     = !permissions || permissions.can_edit
+  const canDelete   = !permissions || permissions.can_delete
+  function blocked(action) {
+    showToast(`No tienes permitido ${action} en este Espacio Compartido.`)
+  }
 
   const longPress = useLongPress(() => setMenuOpen(true))
 
@@ -98,10 +111,10 @@ export function PayCard({ payment: p, cfg, onMarkPaid, onMarkUnpaid, onCaptureAm
         <div style={{ padding: '8px 6px', display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
           {isPending && (
             <button
-              onClick={e => { e.stopPropagation(); onMarkPaid(p) }}
-              style={{ width: 40, height: 40, background: 'var(--paid)', border: 'none', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
+              onClick={e => { e.stopPropagation(); canMarkPaid ? onMarkPaid(p) : blocked('marcar pagos') }}
+              style={{ width: 40, height: 40, background: canMarkPaid ? 'var(--paid)' : 'var(--border)', border: 'none', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
             >
-              <Check size={18} color="#fff" strokeWidth={2.5} />
+              <Check size={18} color={canMarkPaid ? '#fff' : 'var(--muted)'} strokeWidth={2.5} />
             </button>
           )}
           {p.is_paid && (
@@ -123,10 +136,10 @@ export function PayCard({ payment: p, cfg, onMarkPaid, onMarkUnpaid, onCaptureAm
         <div style={{ position: 'absolute', right: 0, top: '100%', marginTop: 4, background: 'var(--menu-bg)', border: '0.5px solid var(--border)', borderRadius: 'var(--radius-sm)', boxShadow: '0 4px 16px rgba(0,0,0,0.12)', zIndex: 50, minWidth: 180, overflow: 'hidden' }}>
           {isPending && <MenuItem icon={<Pencil size={14}/>} label="Editar" onClick={() => { onEdit(p); setMenuOpen(false) }} />}
           {isPending && p.is_variable && onCaptureAmount && <MenuItem icon={<DollarSign size={14}/>} label={p.amount ? 'Editar monto' : 'Agregar monto'} onClick={() => { onCaptureAmount(p); setMenuOpen(false) }} />}
-          {isPending && p.is_recurrent && !p.is_installment && <MenuItem icon={<Clock size={14}/>} label="Posponer" onClick={() => { onPostpone(p); setMenuOpen(false) }} />}
-          {isPending && p.is_installment && onAdvance && <MenuItem icon={<FastForward size={14}/>} label="Adelantar pago" onClick={() => { onAdvance(p); setMenuOpen(false) }} />}
-          {p.is_paid && <MenuItem icon={<RotateCcw size={14}/>} label="Marcar no pagado" onClick={() => { onMarkUnpaid(p.id); setMenuOpen(false) }} />}
-          <MenuItem icon={<Trash2 size={14}/>} label="Eliminar" onClick={() => { onDelete(p.id); setMenuOpen(false) }} danger />
+          {isPending && p.is_recurrent && !p.is_installment && <MenuItem icon={<Clock size={14}/>} label="Posponer" onClick={() => { canEdit ? onPostpone(p) : blocked('posponer pagos'); setMenuOpen(false) }} />}
+          {isPending && p.is_installment && onAdvance && <MenuItem icon={<FastForward size={14}/>} label="Adelantar pago" onClick={() => { canEdit ? onAdvance(p) : blocked('adelantar pagos'); setMenuOpen(false) }} />}
+          {p.is_paid && <MenuItem icon={<RotateCcw size={14}/>} label="Marcar no pagado" onClick={() => { canMarkPaid ? onMarkUnpaid(p.id) : blocked('marcar pagos'); setMenuOpen(false) }} />}
+          <MenuItem icon={<Trash2 size={14}/>} label="Eliminar" onClick={() => { canDelete ? onDelete(p.id) : blocked('eliminar pagos'); setMenuOpen(false) }} danger />
         </div>
       )}
     </div>

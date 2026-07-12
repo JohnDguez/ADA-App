@@ -9,7 +9,7 @@ import { PremiumLock } from './PremiumLock'
 import { Select } from './Select'
 import { DatePicker } from './DatePicker'
 
-export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelete, initial, payments, profile, customCategories = [], onAddCategory, onOpenPremium }) {
+export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelete, initial, payments, profile, spacePermissions, customCategories = [], onAddCategory, onOpenPremium }) {
   const [mode,               setMode]               = useState('single')
   const [name,               setName]               = useState('')
   const [amount,             setAmount]             = useState('')
@@ -32,6 +32,17 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
   const [periodIncomes,      setPeriodIncomes]      = useState([])
 
   const isEditingInstallment = !!(initial?.is_installment)
+
+  // Crear (sin `initial`) necesita can_add; editar cualquier campo (con
+  // `initial`, incluyendo editar parcialidades) necesita can_edit — mismo
+  // criterio que ya quedó aplicado en el trigger de la base de datos
+  // (v0.9.132). `can_delete` es independiente: se puede tener uno sin el
+  // otro (ej. editar pagos pero no poder eliminarlos).
+  const canWrite  = !spacePermissions || (initial ? spacePermissions.can_edit : spacePermissions.can_add)
+  const canDelete = !spacePermissions || spacePermissions.can_delete
+  const lockedMessage = !canWrite
+    ? `No tienes permitido ${initial ? 'editar' : 'añadir'} pagos en este Espacio Compartido.`
+    : null
 
   useEffect(() => {
     if (open) document.body.classList.add('modal-open')
@@ -112,6 +123,7 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
   const monthBasedFreqs = ['monthly', 'bimonthly', 'quarterly', 'semiannual', 'annual']
 
   async function handleSave() {
+    if (!canWrite) return
     setError('')
     if (!name.trim()) { setError('Escribe el nombre del pago'); return }
     const checkName = initial?.name || null
@@ -226,6 +238,7 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
 
   if (isEditingInstallment) {
     async function handleEditInstallment() {
+      if (!canWrite) return
       setError('')
       if (!name.trim()) { setError('Escribe el nombre del pago'); return }
       if (!amount || isNaN(parseFloat(amount)) || parseFloat(amount) <= 0) { setError('Ingresa el monto por pago'); return }
@@ -261,7 +274,9 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
             </div>
 
             {error && <div style={{ background: 'var(--danger-soft)', border: '0.5px solid var(--danger-border)', borderRadius: 'var(--radius-sm)', padding: '8px 12px', fontSize: 13, color: 'var(--danger)', marginBottom: 12 }}>{error}</div>}
+            {lockedMessage && <div style={{ background: 'var(--warning-soft)', border: '0.5px solid var(--warning-border)', borderRadius: 'var(--radius-sm)', padding: '10px 12px', fontSize: 13, color: 'var(--warning)', marginBottom: 12 }}>{lockedMessage}</div>}
 
+            <div style={{ opacity: canWrite ? 1 : 0.5, pointerEvents: canWrite ? 'auto' : 'none' }}>
             <Field label="Nombre">
               <input className="field-input" type="text" value={name} onChange={e => setName(e.target.value)} />
             </Field>
@@ -305,12 +320,13 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
             <Field label="Fecha del próximo pago">
               <DatePicker value={dueDate} onChange={setDueDate} />
             </Field>
+            </div>
 
-            <button onClick={handleEditInstallment} disabled={saving} className="btn-primary" style={{ marginTop: 4, opacity: saving ? 0.7 : 1 }}>
+            <button onClick={handleEditInstallment} disabled={saving || !canWrite} className="btn-primary" style={{ marginTop: 4, opacity: (saving || !canWrite) ? 0.7 : 1 }}>
               {saving ? 'Guardando…' : 'Guardar cambios'}
             </button>
             <button onClick={onClose} className="btn-ghost" style={{ marginTop: 8 }}>Cancelar</button>
-            <button onClick={() => { onDelete(initial.id, initial); onClose() }} className="btn-danger" style={{ marginTop: 6 }}>
+            <button onClick={() => { onDelete(initial.id, initial); onClose() }} disabled={!canDelete} className="btn-danger" style={{ marginTop: 6, opacity: canDelete ? 1 : 0.5 }}>
               Cancelar parcialidades
             </button>
           </div>
@@ -344,7 +360,9 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
           )}
 
           {error && <div style={{ background: 'var(--danger-soft)', border: '0.5px solid var(--danger-border)', borderRadius: 'var(--radius-sm)', padding: '8px 12px', fontSize: 13, color: 'var(--danger)', marginBottom: 12 }}>{error}</div>}
+          {lockedMessage && <div style={{ background: 'var(--warning-soft)', border: '0.5px solid var(--warning-border)', borderRadius: 'var(--radius-sm)', padding: '10px 12px', fontSize: 13, color: 'var(--warning)', marginBottom: 12 }}>{lockedMessage}</div>}
 
+          <div style={{ opacity: canWrite ? 1 : 0.5, pointerEvents: canWrite ? 'auto' : 'none' }}>
           <Field label="Nombre">
             <input autoFocus={!initial} className="field-input" type="text" value={name} onChange={e => setName(e.target.value)} placeholder="Ej. Netflix, Renta, Luz…" />
           </Field>
@@ -490,6 +508,7 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
               Se generará un nuevo pago automáticamente cada {recurFreq === 'weekly' ? '7 días' : recurFreq === 'biweekly' ? '14 días' : 'mes'}.
             </div>
           )}
+          </div>
 
           {impactPreview && impactPreview.length > 0 && (() => {
             const [first, second] = impactPreview
@@ -570,12 +589,12 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
             )
           })()}
 
-          <button onClick={handleSave} disabled={saving} className="btn-primary" style={{ marginTop: 4, opacity: saving ? 0.7 : 1 }}>
+          <button onClick={handleSave} disabled={saving || !canWrite} className="btn-primary" style={{ marginTop: 4, opacity: (saving || !canWrite) ? 0.7 : 1 }}>
             {saving ? 'Guardando…' : initial?.is_master && initial?.paused ? 'Reactivar' : initial ? 'Guardar cambios' : mode === 'installment' ? 'Crear pagos' : alreadyPaid ? 'Guardar como pagado' : 'Guardar pago'}
           </button>
           <button onClick={requestClose} className="btn-ghost" style={{ marginTop: 8 }}>Cancelar</button>
           {initial && !isEditingInstallment && (
-            <button onClick={() => { onDelete(initial.id); onClose() }} className="btn-danger" style={{ marginTop: 6 }}>Eliminar pago</button>
+            <button onClick={() => { onDelete(initial.id); onClose() }} disabled={!canDelete} className="btn-danger" style={{ marginTop: 6, opacity: canDelete ? 1 : 0.5 }}>Eliminar pago</button>
           )}
         </div>
       </div>

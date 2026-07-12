@@ -16,7 +16,7 @@ import { PayCard } from './PayCard'
 // `dotColor`/`dotTextColor`: color del punto y su texto — se pasa una vez
 // por sección (Vencidos / Periodo actual / Próximo periodo), igual que
 // antes se pasaba `borderLeft` a cada `PayCard` de esa sección.
-export function PayRail({ payments, cfg, dotColor, dotTextColor, handlers }) {
+export function PayRail({ payments, cfg, dotColor, dotTextColor, handlers, permissions }) {
   // `payments` ya viene ordenado ascendente por due_date, así que agrupar
   // por igualdad consecutiva de la key es suficiente (no hace falta un Map).
   const groups = []
@@ -56,7 +56,7 @@ export function PayRail({ payments, cfg, dotColor, dotTextColor, handlers }) {
               </div>
               <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 8 }}>
                 {g.items.map(p => (
-                  <PayCard key={p.id} payment={p} cfg={cfg} {...handlers} railMode hideDate hideDueLabel />
+                  <PayCard key={p.id} payment={p} cfg={cfg} {...handlers} permissions={permissions} railMode hideDate hideDueLabel />
                 ))}
               </div>
             </div>
