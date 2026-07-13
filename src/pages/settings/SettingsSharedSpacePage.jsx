@@ -96,7 +96,12 @@ export function SettingsSharedSpacePage({ profile, user, sharedSpaces, onBack, s
             Espacios donde te invitaron
           </div>
           {guestEntries.map(entry => (
-            <GuestSpaceRow key={entry.membership.id} entry={entry} onLeave={() => leaveSpace(entry.membership.id)} />
+            <GuestSpaceRow
+              key={entry.membership.id}
+              entry={entry}
+              onLeave={() => leaveSpace(entry.membership.id)}
+              onToggleNotify={() => updateMemberPermissions(entry.membership.id, { notify_on_changes: !entry.membership.notify_on_changes })}
+            />
           ))}
         </div>
       )}
@@ -187,7 +192,7 @@ export function SettingsSharedSpacePage({ profile, user, sharedSpaces, onBack, s
 // ── Fila plegable de un espacio donde te invitaron ──────────────────────────
 const FREQ_LABEL = { weekly: 'Semanal', biweekly: 'Quincenal', monthly: 'Mensual' }
 
-function GuestSpaceRow({ entry, onLeave }) {
+function GuestSpaceRow({ entry, onLeave, onToggleNotify }) {
   const [expanded, setExpanded] = useState(false)
 
   return (
@@ -207,6 +212,13 @@ function GuestSpaceRow({ entry, onLeave }) {
         <div style={{ background: 'var(--surface)', border: '0.5px solid var(--border)', borderTop: 'none', borderRadius: '0 0 12px 12px', padding: '12px 14px' }}>
           <div style={{ fontSize: 12, color: 'var(--text)', marginBottom: 12 }}>
             Periodo: {FREQ_LABEL[entry.space.cobro_freq] || entry.space.cobro_freq}
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer', marginBottom: 14 }} onClick={onToggleNotify}>
+            <div>
+              <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)' }}>Notificarme de cambios</div>
+              <div style={{ fontSize: 11, fontWeight: 400, color: 'var(--text)', marginTop: 1 }}>Avisos cuando el dueño agregue, marque pagado, o elimine un pago aquí</div>
+            </div>
+            <Toggle on={entry.membership.notify_on_changes} />
           </div>
           <button
             onClick={onLeave}
@@ -357,6 +369,16 @@ function OwnedSpacePanel({ entry, user, regenerateCode, updateMemberPermissions,
                 </button>
               </div>
               {copied && <div style={{ fontSize: 11, color: 'var(--paid)', marginTop: 4 }}>Copiado</div>}
+            </div>
+
+            <div style={{ padding: '13px 16px', borderBottom: '0.5px solid var(--border)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer' }} onClick={() => updateMemberPermissions(entry.membership.id, { notify_on_changes: !entry.membership.notify_on_changes })}>
+                <div>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)' }}>Notificarme de cambios</div>
+                  <div style={{ fontSize: 11, fontWeight: 400, color: 'var(--text)', marginTop: 1 }}>Avisos cuando tu invitado agregue, marque pagado, o elimine un pago aquí</div>
+                </div>
+                <Toggle on={entry.membership.notify_on_changes} />
+              </div>
             </div>
 
             <div style={{ padding: '13px 16px', borderBottom: entry.space.salary_enabled ? 'none' : '0.5px solid var(--border)' }}>
