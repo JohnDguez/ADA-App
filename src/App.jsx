@@ -147,6 +147,13 @@ export default function App() {
   // #310" que quedó sin diagnosticar en v0.9.124 (pantalla en blanco justo
   // después de iniciar sesión, sin navbar ni contenido)
   const [settingsInitialSection, setSettingsInitialSection] = useState(null)
+  // Tab de origen cuando se entra a una sección de Ajustes por un atajo
+  // directo (ej. "Editar" desde el switcher de Espacio Compartido) — el
+  // PRIMER "atrás" desde ahí debe regresar a este tab, no al menú
+  // principal de Ajustes (una pantalla por la que el usuario nunca pasó a
+  // propósito). Se limpia sola en cuanto se usa, o si el usuario navega
+  // manualmente dentro de Ajustes (`SettingsPage.jsx` la ignora en ese caso).
+  const [settingsReturnTab, setSettingsReturnTab] = useState(null)
 
   const migrationRan = useRef(false)
 
@@ -357,8 +364,22 @@ export default function App() {
     const fromIdx = TAB_ORDER.indexOf(tab)
     const toIdx   = TAB_ORDER.indexOf('settings')
     setSlideDir(toIdx >= fromIdx ? 'right' : 'left')
+    setSettingsReturnTab(tab)
     setSettingsInitialSection('sharedspace')
     setTab('settings'); sessionStorage.setItem('ada_tab', 'settings'); window.scrollTo(0, 0)
+  }
+
+  // SettingsPage.jsx llama esto cuando el usuario presiona "atrás" justo
+  // después de entrar por un atajo (ej. "Editar" desde el switcher) — en
+  // vez de mostrar el menú principal de Ajustes, regresa directo al tab
+  // donde estaba antes de tocar el atajo.
+  function returnFromSettingsShortcut(returnTab) {
+    const fromIdx = TAB_ORDER.indexOf('settings')
+    const toIdx   = TAB_ORDER.indexOf(returnTab)
+    setSlideDir(toIdx >= fromIdx ? 'right' : 'left')
+    setTab(returnTab)
+    sessionStorage.setItem('ada_tab', returnTab)
+    setSettingsReturnTab(null)
   }
 
   const headerProps = {
@@ -485,6 +506,8 @@ export default function App() {
           sharedSpaces={sharedSpaces}
           initialSection={settingsInitialSection}
           onConsumeInitialSection={() => setSettingsInitialSection(null)}
+          returnTab={settingsReturnTab}
+          onReturnToTab={returnFromSettingsShortcut}
         />
       )}
 
