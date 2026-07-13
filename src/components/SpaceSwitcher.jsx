@@ -170,22 +170,38 @@ export function SpaceSwitcher({ spaces, activeSpaceId, onSwitch, onManage, profi
               borderBottom: isFront ? '1px solid var(--border)' : 'none',
             }}
           >
-            {/* "Colchón" de color, oculto en reposo (tapado por la siguiente
-                tarjeta del stack) — solo se expone durante la animación de
-                deslizamiento, para que nunca se vea el corte/final de esta
-                tarjeta ni el fondo de la app detrás. Mismo criterio que usa
-                Banamex (referencia original de este diseño): cada tarjeta
-                lleva su propio color extendido hacia abajo, no solo lo que
-                se ve a simple vista. Solo hace falta en las que asoman — la
-                activa ya se funde con el fondo de la página, no necesita
-                nada detrás. */}
-            {!isFront && (
-              <div style={{
-                position: 'absolute', left: 0, right: 0, top: '100%', height: 60,
-                background: colorsFor(item.kind).bg,
-                filter: item.kind === 'space' ? `brightness(${brightnessFor(item)})` : 'none',
-              }} />
-            )}
+            {/* "Colchón" de color, oculto en reposo (tapado por las tarjetas
+                siguientes del stack) — solo se expone durante la animación
+                de deslizamiento, para que nunca se vea el corte/final de
+                esta tarjeta ni el fondo de la app detrás. Mismo criterio que
+                usa Banamex (referencia original de este diseño): cada
+                tarjeta lleva su propio color extendido hacia abajo, más
+                allá de lo que se ve a simple vista. Solo hace falta en las
+                que asoman — la activa ya se funde con el fondo de la
+                página, no necesita nada detrás.
+
+                El alto NO es un número fijo — depende de cuántas tarjetas
+                quedan detrás de esta hasta llegar al fondo real del stack
+                (bug real: con un número fijo, 40px casi alcanzaba para la
+                tarjeta justo antes de la activa pero se quedaba corto, y
+                60px sobraba de más ahí mismo pero apenas alcanzaba para una
+                tarjeta 2 lugares atrás — cada posición necesita una
+                distancia distinta). PEEK_H/FRONT_H/OVERLAP son estimados a
+                partir del padding+texto real de cada tipo de tarjeta (ver
+                estilos de abajo) — si esos paddings cambian, este cálculo
+                hay que revisarlo también. */}
+            {!isFront && (() => {
+              const PEEK_H = 60, FRONT_H = 52, OVERLAP = 14, BUFFER = 6
+              const remainingAfter = ordered.length - 1 - i // cuántas tarjetas (incluida la activa) quedan después de esta
+              const backdropHeight = (remainingAfter - 1) * (PEEK_H - OVERLAP) + (FRONT_H - OVERLAP) + BUFFER
+              return (
+                <div style={{
+                  position: 'absolute', left: 0, right: 0, top: '100%', height: backdropHeight,
+                  background: colorsFor(item.kind).bg,
+                  filter: item.kind === 'space' ? `brightness(${brightnessFor(item)})` : 'none',
+                }} />
+              )
+            })()}
 
             <span style={{ fontSize: 15, fontWeight: 500, color: isFront ? 'var(--text)' : colorsFor(item.kind).text, display: 'flex', alignItems: 'center', gap: 6 }}>
               {item.kind === 'new' && <Plus size={16} color="var(--space-new-text)" strokeWidth={2.5} />}
