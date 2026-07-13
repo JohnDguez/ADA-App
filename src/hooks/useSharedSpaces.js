@@ -155,6 +155,19 @@ export function useSharedSpaces(userId) {
     return { data: updated, error: null }
   }
 
+  // Actualiza el periodo de cobro del espacio (solo dueño — misma RLS que
+  // regenerateCode). `updates` es un objeto parcial con cualquiera de
+  // cobro_freq/cobro_day1/cobro_day2/cobro_weekday.
+  async function updateSpaceCobro(spaceId, updates) {
+    const { data, error } = await supabase
+      .from('shared_spaces')
+      .update(updates)
+      .eq('id', spaceId)
+      .select().single()
+    if (!error) await fetchSpaces()
+    return { data, error }
+  }
+
   // ─────────────────────────────────────────────────────────────────────────
   // CANJEAR CÓDIGO — vía RPC (ver espacio_compartido_fase2_rpc.sql). El
   // insert directo a shared_space_members está bloqueado por RLS para
@@ -227,7 +240,7 @@ export function useSharedSpaces(userId) {
 
   return {
     spaces, loading,
-    createSpace, regenerateCode, redeemCode,
+    createSpace, regenerateCode, redeemCode, updateSpaceCobro,
     updateMemberPermissions, leaveSpace, removeMember, deleteSpace,
     refetchSpaces: fetchSpaces,
   }
