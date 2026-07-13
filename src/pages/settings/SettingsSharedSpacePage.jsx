@@ -12,7 +12,7 @@ import { showToast } from '../../components/Toast'
 // - Si ya pertenece a alguno: panel de administración (si es dueño) y/o
 //   lista de espacios donde es invitado (con opción de salirse).
 export function SettingsSharedSpacePage({ profile, user, sharedSpaces, onBack, slideClass }) {
-  const { spaces, createSpace, regenerateCode, redeemCode, updateMemberPermissions, updateSpaceConfig, leaveSpace, deleteSpace } = sharedSpaces
+  const { spaces, createSpace, regenerateCode, redeemCode, updateMemberPermissions, updateSpaceConfig, leaveSpace, removeMember, deleteSpace } = sharedSpaces
 
   const ownedEntry  = spaces.find(s => s.membership.role === 'owner')
   const guestEntries = spaces.filter(s => s.membership.role === 'guest')
@@ -83,6 +83,7 @@ export function SettingsSharedSpacePage({ profile, user, sharedSpaces, onBack, s
           regenerateCode={regenerateCode}
           updateMemberPermissions={updateMemberPermissions}
           updateSpaceConfig={updateSpaceConfig}
+          removeMember={removeMember}
           deleteSpace={deleteSpace}
         />
       )}
@@ -194,11 +195,13 @@ export function SettingsSharedSpacePage({ profile, user, sharedSpaces, onBack, s
 }
 
 // ── Panel de administración del espacio propio ──────────────────────────────
-function OwnedSpacePanel({ entry, user, regenerateCode, updateMemberPermissions, updateSpaceConfig, deleteSpace }) {
+function OwnedSpacePanel({ entry, user, regenerateCode, updateMemberPermissions, updateSpaceConfig, removeMember, deleteSpace }) {
   const [copied,        setCopied]        = useState(false)
   const [regenerating,  setRegenerating]  = useState(false)
   const [salaryAmount,  setSalaryAmount]  = useState(entry.space.salary_amount || '')
   const [dangerOpen,    setDangerOpen]    = useState(false)
+  const [confirmExpel,  setConfirmExpel]  = useState(null)
+  const [expelling,     setExpelling]     = useState(false)
   const [dangerPassword,setDangerPassword]= useState('')
   const [dangerError,   setDangerError]   = useState('')
   const [dangerLoading, setDangerLoading] = useState(false)
@@ -218,6 +221,15 @@ function OwnedSpacePanel({ entry, user, regenerateCode, updateMemberPermissions,
     if (isNaN(val)) { showToast('Ingresa un monto válido'); return }
     await updateSpaceConfig(entry.space.id, { salary_amount: val })
     showToast('Ingreso actualizado')
+  }
+
+  async function handleExpel(membershipId) {
+    setExpelling(true)
+    const { error } = await removeMember(membershipId)
+    setExpelling(false)
+    setConfirmExpel(null)
+    if (error) showToast('No se pudo expulsar al invitado')
+    else showToast('Invitado expulsado')
   }
 
   function copyCode() {
@@ -305,16 +317,53 @@ function OwnedSpacePanel({ entry, user, regenerateCode, updateMemberPermissions,
 
       {guestMembers.length > 0 && (
         <Card>
-          <div style={{ padding: '12px 14px 4px', fontSize: 11, fontWeight: 600, color: 'var(--text)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Permisos del invitado</div>
-          {guestMembers.map(m => (
-            <div key={m.id}>
-              <NotifToggle label="Agregar pagos"        value={m.can_add}        onChange={v => updateMemberPermissions(m.id, { can_add: v })} />
-              <NotifToggle label="Editar pagos"          value={m.can_edit}       onChange={v => updateMemberPermissions(m.id, { can_edit: v })} />
-              <NotifToggle label="Marcar pagado/no pagado" value={m.can_mark_paid} onChange={v => updateMemberPermissions(m.id, { can_mark_paid: v })} />
-              <NotifToggle label="Eliminar pagos"        value={m.can_delete}     onChange={v => updateMemberPermissions(m.id, { can_delete: v })} />
-              <NotifToggle label="Agregar ingresos extra" value={m.can_add_income} onChange={v => updateMemberPermissions(m.id, { can_add_income: v })} last />
-            </div>
-          ))}
+          {guestMembers.map((m, i) => {
+            const initials = (m.profile?.name || 'Invitado').slice(0, 2).toUpperCase()
+            const isConfirming = confirmExpel === m.id
+            return (
+              <div key={m.id} style={{ borderBottom: i === guestMembers.length - 1 ? 'none' : '1px solid var(--border-mid)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '13px 14px 8px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    {m.profile?.avatar_url
+                      ? <img src={m.profile.avatar_url} alt="" style={{ width: 32, height: 32, borderRadius: '50%', objectFit: 'cover' }} />
+                      : <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'var(--accent)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, color: 'var(--surface)' }}>{initials}</div>
+                    }
+                    <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)' }}>{m.profile?.name || 'Invitado'}</span>
+                  </div>
+                  <button
+                    onClick={() => setConfirmExpel(m.id)}
+                    style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '5px 10px', borderRadius: 5, border: '0.5px solid var(--danger)', background: 'none', color: 'var(--danger)', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'DM Sans, sans-serif' }}
+                  >
+                    <LogOut size={12} /> Expulsar
+                  </button>
+                </div>
+
+                {isConfirming && (
+                  <div style={{ padding: '0 14px 12px' }}>
+                    <div style={{ background: 'var(--danger-soft)', borderRadius: 'var(--radius-sm)', padding: '10px 12px' }}>
+                      <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--danger)', marginBottom: 8 }}>
+                        ¿Expulsar a {m.profile?.name || 'este invitado'}? Sus pagos ya agregados se quedan en el espacio.
+                      </div>
+                      <div style={{ display: 'flex', gap: 8 }}>
+                        <button onClick={() => setConfirmExpel(null)} style={{ flex: 1, padding: '7px', borderRadius: 6, border: '0.5px solid var(--border)', background: 'var(--surface)', fontSize: 12, fontWeight: 600, color: 'var(--text)', cursor: 'pointer', fontFamily: 'DM Sans, sans-serif' }}>
+                          Cancelar
+                        </button>
+                        <button onClick={() => handleExpel(m.id)} disabled={expelling} style={{ flex: 1, padding: '7px', borderRadius: 6, border: 'none', background: 'var(--danger)', fontSize: 12, fontWeight: 600, color: '#fff', cursor: 'pointer', fontFamily: 'DM Sans, sans-serif', opacity: expelling ? 0.7 : 1 }}>
+                          {expelling ? 'Expulsando…' : 'Expulsar'}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                <NotifToggle label="Agregar pagos"        value={m.can_add}        onChange={v => updateMemberPermissions(m.id, { can_add: v })} />
+                <NotifToggle label="Editar pagos"          value={m.can_edit}       onChange={v => updateMemberPermissions(m.id, { can_edit: v })} />
+                <NotifToggle label="Marcar pagado/no pagado" value={m.can_mark_paid} onChange={v => updateMemberPermissions(m.id, { can_mark_paid: v })} />
+                <NotifToggle label="Eliminar pagos"        value={m.can_delete}     onChange={v => updateMemberPermissions(m.id, { can_delete: v })} />
+                <NotifToggle label="Agregar ingresos extra" value={m.can_add_income} onChange={v => updateMemberPermissions(m.id, { can_add_income: v })} last />
+              </div>
+            )
+          })}
         </Card>
       )}
 
