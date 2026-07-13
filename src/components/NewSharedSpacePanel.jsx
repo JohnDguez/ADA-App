@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Crown } from 'lucide-react'
 import { CobroPeriodFields } from './CobroPeriodFields'
+import { Toggle } from './SettingsShared'
 
 // Panel que reemplaza el contenido normal de Inicio/Gastos/Recurrentes
 // cuando la tarjeta "Nuevo espacio compartido" del switcher está activa.
@@ -22,6 +23,8 @@ export function NewSharedSpacePanel({ profile, sharedSpaces, onOpenPremium, onCr
   const [newDay1,     setNewDay1]     = useState(1)
   const [newDay2,     setNewDay2]     = useState(16)
   const [newWeekday,  setNewWeekday]  = useState(5)
+  const [newSalaryEnabled, setNewSalaryEnabled] = useState(false)
+  const [newSalaryAmount,  setNewSalaryAmount]  = useState('')
   const [createError, setCreateError] = useState('')
   const [createSaving,setCreateSaving]= useState(false)
 
@@ -36,6 +39,8 @@ export function NewSharedSpacePanel({ profile, sharedSpaces, onOpenPremium, onCr
       cobroDay1: newFreq !== 'weekly' ? newDay1 : undefined,
       cobroDay2: newFreq === 'biweekly' ? newDay2 : undefined,
       cobroWeekday: newFreq === 'weekly' ? newWeekday : undefined,
+      salaryEnabled: newSalaryEnabled,
+      salaryAmount: newSalaryEnabled ? (parseFloat(newSalaryAmount) || 0) : null,
     })
     setCreateSaving(false)
     if (error) setCreateError(typeof error === 'string' ? error : 'No se pudo crear el espacio')
@@ -84,12 +89,27 @@ export function NewSharedSpacePanel({ profile, sharedSpaces, onOpenPremium, onCr
           <label className="field-label">Nombre del espacio</label>
           <input className="field-input" value={newName} onChange={e => setNewName(e.target.value)} placeholder="Ej. Depa con Ale" style={{ marginBottom: 16 }} />
           <label className="field-label" style={{ marginBottom: 8, display: 'block' }}>Periodo de cobro</label>
-          <div style={{ marginBottom: 14 }}>
+          <div style={{ marginBottom: 16 }}>
             <CobroPeriodFields
               freq={newFreq} day1={newDay1} day2={newDay2} weekday={newWeekday}
               onChangeFreq={setNewFreq} onChangeDay1={setNewDay1} onChangeDay2={setNewDay2} onChangeWeekday={setNewWeekday}
             />
           </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer', marginBottom: newSalaryEnabled ? 10 : 14 }} onClick={() => setNewSalaryEnabled(v => !v)}>
+            <div>
+              <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)' }}>Ingreso por periodo</div>
+              <div style={{ fontSize: 11, fontWeight: 400, color: 'var(--text)', marginTop: 1 }}>Opcional — además de los Ingresos Extras que cualquier invitado con permiso puede agregar</div>
+            </div>
+            <Toggle on={newSalaryEnabled} />
+          </div>
+          {newSalaryEnabled && (
+            <div style={{ marginBottom: 14 }}>
+              <label className="field-label">Monto</label>
+              <input type="number" value={newSalaryAmount} onChange={e => setNewSalaryAmount(e.target.value)} placeholder="0.00" className="field-input" />
+            </div>
+          )}
+
           {createError && <div style={{ fontSize: 12, color: 'var(--danger)', marginBottom: 10 }}>{createError}</div>}
           <button onClick={handleCreate} disabled={createSaving} className="btn-primary" style={{ opacity: createSaving ? 0.7 : 1 }}>
             {createSaving ? 'Creando…' : 'Crear'}
