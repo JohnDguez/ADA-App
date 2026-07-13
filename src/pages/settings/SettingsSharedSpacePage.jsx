@@ -116,7 +116,7 @@ export function SettingsSharedSpacePage({ profile, user, sharedSpaces, onBack, s
                   Obtén Premium para crear un Espacio Compartido
                 </div>
                 <div style={{ fontSize: 12, color: 'var(--text)', textAlign: 'center', marginBottom: 14 }}>
-                  Lleva el control de gastos con tu pareja o roomie, en un espacio aparte de tu cuenta personal.
+                  Lleva el control de gastos con tu pareja, tus roomies, o quien tú quieras — hasta 2 personas más, en un espacio aparte de tu cuenta personal.
                 </div>
               </>
             ) : !creating ? (
@@ -369,6 +369,13 @@ function OwnedSpacePanel({ entry, user, regenerateCode, updateMemberPermissions,
                 </button>
               </div>
               {copied && <div style={{ fontSize: 11, color: 'var(--paid)', marginTop: 4 }}>Copiado</div>}
+              {(() => {
+                const remaining = 2 - guestMembers.length
+                if (remaining > 0) {
+                  return <div style={{ fontSize: 11, color: 'var(--text)', marginTop: 6 }}>Puedes invitar a {remaining} usuario{remaining !== 1 ? 's' : ''} más</div>
+                }
+                return <div style={{ fontSize: 11, color: 'var(--warning)', marginTop: 6 }}>Espacio lleno — expulsa a alguien para hacerle lugar a otra persona</div>
+              })()}
             </div>
 
             <div style={{ padding: '13px 16px', borderBottom: '0.5px solid var(--border)' }}>
