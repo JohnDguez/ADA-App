@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { ChevronLeft, Users, Copy, RefreshCw, LogOut, Trash2, Crown, Plus } from 'lucide-react'
+import { ChevronLeft, ChevronDown, ChevronUp, Users, Copy, RefreshCw, LogOut, Trash2, Crown, Plus } from 'lucide-react'
 import { Card, Row, NotifToggle, Toggle } from '../../components/SettingsShared'
 import { CobroPeriodFields } from '../../components/CobroPeriodFields'
 import { showToast } from '../../components/Toast'
@@ -90,25 +90,14 @@ export function SettingsSharedSpacePage({ profile, user, sharedSpaces, onBack, s
 
       {/* ── Espacios donde te invitaron ── */}
       {guestEntries.length > 0 && (
-        <Card>
-          <div style={{ padding: '12px 14px 4px', fontSize: 11, fontWeight: 600, color: 'var(--text)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+        <div style={{ marginBottom: 16 }}>
+          <div style={{ padding: '0 2px 8px', fontSize: 11, fontWeight: 600, color: 'var(--text)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
             Espacios donde te invitaron
           </div>
-          {guestEntries.map((entry, i) => (
-            <div key={entry.membership.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '13px 14px', borderBottom: i === guestEntries.length - 1 ? 'none' : '0.5px solid var(--border)' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <Users size={16} color="var(--text)" />
-                <span style={{ fontSize: 13, fontWeight: 500, color: 'var(--text)' }}>{entry.space.name}</span>
-              </div>
-              <button
-                onClick={() => leaveSpace(entry.membership.id)}
-                style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '5px 10px', borderRadius: 5, border: '0.5px solid var(--danger)', background: 'none', color: 'var(--danger)', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'DM Sans, sans-serif' }}
-              >
-                <LogOut size={12} /> Salir
-              </button>
-            </div>
+          {guestEntries.map(entry => (
+            <GuestSpaceRow key={entry.membership.id} entry={entry} onLeave={() => leaveSpace(entry.membership.id)} />
           ))}
-        </Card>
+        </div>
       )}
 
       {/* ── Crear (solo si es Premium y no tiene ya uno propio) ── */}
@@ -194,8 +183,45 @@ export function SettingsSharedSpacePage({ profile, user, sharedSpaces, onBack, s
   )
 }
 
+// ── Fila plegable de un espacio donde te invitaron ──────────────────────────
+const FREQ_LABEL = { weekly: 'Semanal', biweekly: 'Quincenal', monthly: 'Mensual' }
+
+function GuestSpaceRow({ entry, onLeave }) {
+  const [expanded, setExpanded] = useState(false)
+
+  return (
+    <div style={{ marginBottom: 8 }}>
+      <button
+        onClick={() => setExpanded(v => !v)}
+        style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '13px 14px', background: 'var(--surface)', border: '0.5px solid var(--border)', borderRadius: expanded ? '12px 12px 0 0' : 12, cursor: 'pointer' }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <Users size={16} color="var(--text)" />
+          <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)' }}>{entry.space.name}</span>
+        </div>
+        {expanded ? <ChevronUp size={16} color="var(--text)" /> : <ChevronDown size={16} color="var(--text)" />}
+      </button>
+
+      {expanded && (
+        <div style={{ border: '0.5px solid var(--border)', borderTop: 'none', borderRadius: '0 0 12px 12px', padding: '12px 14px' }}>
+          <div style={{ fontSize: 12, color: 'var(--text)', marginBottom: 12 }}>
+            Periodo: {FREQ_LABEL[entry.space.cobro_freq] || entry.space.cobro_freq}
+          </div>
+          <button
+            onClick={onLeave}
+            style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '5px 10px', borderRadius: 5, border: '0.5px solid var(--danger)', background: 'none', color: 'var(--danger)', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'DM Sans, sans-serif' }}
+          >
+            <LogOut size={12} /> Salir
+          </button>
+        </div>
+      )}
+    </div>
+  )
+}
+
 // ── Panel de administración del espacio propio ──────────────────────────────
 function OwnedSpacePanel({ entry, user, regenerateCode, updateMemberPermissions, updateSpaceConfig, removeMember, deleteSpace }) {
+  const [expanded,      setExpanded]      = useState(false)
   const [copied,        setCopied]        = useState(false)
   const [regenerating,  setRegenerating]  = useState(false)
   const [salaryAmount,  setSalaryAmount]  = useState(entry.space.salary_amount || '')
@@ -258,121 +284,124 @@ function OwnedSpacePanel({ entry, user, regenerateCode, updateMemberPermissions,
 
   return (
     <>
-      <Card>
-        <div style={{ padding: '14px 16px 4px', display: 'flex', alignItems: 'center', gap: 8 }}>
-          <Crown size={16} color="var(--premium-gold)" />
-          <span style={{ fontSize: 15, fontWeight: 700, color: 'var(--text)' }}>{entry.space.name}</span>
-        </div>
-        <div style={{ padding: '4px 16px 14px' }}>
-          <label className="field-label" style={{ marginBottom: 8, display: 'block' }}>Periodo de cobro</label>
-          <CobroPeriodFields
-            freq={entry.space.cobro_freq}
-            day1={entry.space.cobro_day1}
-            day2={entry.space.cobro_day2}
-            weekday={entry.space.cobro_weekday}
-            onChangeFreq={v => handleCobroChange({ cobro_freq: v })}
-            onChangeDay1={v => handleCobroChange({ cobro_day1: v })}
-            onChangeDay2={v => handleCobroChange({ cobro_day2: v })}
-            onChangeWeekday={v => handleCobroChange({ cobro_weekday: v })}
-          />
-        </div>
-
-        <div style={{ padding: '0 16px 14px' }}>
-          <label className="field-label">Código de acceso</label>
-          <div style={{ display: 'flex', gap: 8 }}>
-            <div style={{ flex: 1, padding: '10px 12px', borderRadius: 'var(--radius-sm)', border: '0.5px solid var(--border)', background: 'var(--bg)', fontSize: 20, fontWeight: 700, letterSpacing: 4, textAlign: 'center', color: 'var(--text)' }}>
-              {entry.space.access_code}
-            </div>
-            <button onClick={copyCode} style={{ width: 44, borderRadius: 'var(--radius-sm)', border: '0.5px solid var(--border)', background: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
-              <Copy size={16} color="var(--text)" />
-            </button>
-            <button onClick={handleRegenerate} disabled={regenerating} style={{ width: 44, borderRadius: 'var(--radius-sm)', border: '0.5px solid var(--border)', background: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', opacity: regenerating ? 0.6 : 1 }}>
-              <RefreshCw size={16} color="var(--text)" />
-            </button>
+      <div style={{ marginBottom: 16 }}>
+        <button
+          onClick={() => setExpanded(v => !v)}
+          style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px', background: 'var(--surface)', border: '0.5px solid var(--border)', borderRadius: expanded ? 'var(--radius) var(--radius) 0 0' : 'var(--radius)', cursor: 'pointer' }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <Crown size={16} color="var(--premium-gold)" />
+            <span style={{ fontSize: 15, fontWeight: 700, color: 'var(--text)' }}>{entry.space.name}</span>
           </div>
-          {copied && <div style={{ fontSize: 11, color: 'var(--paid)', marginTop: 4 }}>Copiado</div>}
-        </div>
-      </Card>
+          {expanded ? <ChevronUp size={18} color="var(--text)" /> : <ChevronDown size={18} color="var(--text)" />}
+        </button>
 
-      <Card>
-        <div style={{ padding: '13px 14px', borderBottom: entry.space.salary_enabled ? '0.5px solid var(--border)' : 'none' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer' }} onClick={handleSalaryToggle}>
-            <div>
-              <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)' }}>Ingreso por periodo</div>
-              <div style={{ fontSize: 11, fontWeight: 400, color: 'var(--text)', marginTop: 1 }}>Opcional — además de los Ingresos Extras que cualquier invitado con permiso puede agregar</div>
+        {expanded && (
+          <div style={{ border: '0.5px solid var(--border)', borderTop: 'none', borderRadius: '0 0 var(--radius) var(--radius)', overflow: 'hidden' }}>
+            <div style={{ padding: '14px 16px', borderBottom: '0.5px solid var(--border)' }}>
+              <label className="field-label" style={{ marginBottom: 8, display: 'block' }}>Periodo de cobro</label>
+              <CobroPeriodFields
+                freq={entry.space.cobro_freq}
+                day1={entry.space.cobro_day1}
+                day2={entry.space.cobro_day2}
+                weekday={entry.space.cobro_weekday}
+                onChangeFreq={v => handleCobroChange({ cobro_freq: v })}
+                onChangeDay1={v => handleCobroChange({ cobro_day1: v })}
+                onChangeDay2={v => handleCobroChange({ cobro_day2: v })}
+                onChangeWeekday={v => handleCobroChange({ cobro_weekday: v })}
+              />
             </div>
-            <Toggle on={entry.space.salary_enabled} />
-          </div>
-        </div>
-        {entry.space.salary_enabled && (
-          <div style={{ padding: '13px 14px' }}>
-            <label className="field-label">Monto</label>
-            <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
-              <input type="number" value={salaryAmount} onChange={e => setSalaryAmount(e.target.value)} placeholder="0.00" className="field-input" style={{ flex: 1 }} />
-              <button onClick={handleSalaryAmount} className="btn-primary" style={{ width: 'auto', padding: '0 16px' }}>Guardar</button>
-            </div>
-          </div>
-        )}
-      </Card>
 
-      {guestMembers.length > 0 && (
-        <Card>
-          {guestMembers.map((m, i) => {
-            const initials = (m.profile?.name || 'Invitado').slice(0, 2).toUpperCase()
-            const isConfirming = confirmExpel === m.id
-            return (
-              <div key={m.id} style={{ borderBottom: i === guestMembers.length - 1 ? 'none' : '1px solid var(--border-mid)' }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '13px 14px 8px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    {m.profile?.avatar_url
-                      ? <img src={m.profile.avatar_url} alt="" style={{ width: 32, height: 32, borderRadius: '50%', objectFit: 'cover' }} />
-                      : <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'var(--accent)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, color: 'var(--surface)' }}>{initials}</div>
-                    }
-                    <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)' }}>{m.profile?.name || 'Invitado'}</span>
-                  </div>
-                  <button
-                    onClick={() => setConfirmExpel(m.id)}
-                    style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '5px 10px', borderRadius: 5, border: '0.5px solid var(--danger)', background: 'none', color: 'var(--danger)', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'DM Sans, sans-serif' }}
-                  >
-                    <LogOut size={12} /> Expulsar
-                  </button>
+            <div style={{ padding: '14px 16px', borderBottom: '0.5px solid var(--border)' }}>
+              <label className="field-label">Código de acceso</label>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <div style={{ flex: 1, padding: '10px 12px', borderRadius: 'var(--radius-sm)', border: '0.5px solid var(--border)', background: 'var(--bg)', fontSize: 20, fontWeight: 700, letterSpacing: 4, textAlign: 'center', color: 'var(--text)' }}>
+                  {entry.space.access_code}
                 </div>
+                <button onClick={copyCode} style={{ width: 44, borderRadius: 'var(--radius-sm)', border: '0.5px solid var(--border)', background: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+                  <Copy size={16} color="var(--text)" />
+                </button>
+                <button onClick={handleRegenerate} disabled={regenerating} style={{ width: 44, borderRadius: 'var(--radius-sm)', border: '0.5px solid var(--border)', background: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', opacity: regenerating ? 0.6 : 1 }}>
+                  <RefreshCw size={16} color="var(--text)" />
+                </button>
+              </div>
+              {copied && <div style={{ fontSize: 11, color: 'var(--paid)', marginTop: 4 }}>Copiado</div>}
+            </div>
 
-                {isConfirming && (
-                  <div style={{ padding: '0 14px 12px' }}>
-                    <div style={{ background: 'var(--danger-soft)', borderRadius: 'var(--radius-sm)', padding: '10px 12px' }}>
-                      <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--danger)', marginBottom: 8 }}>
-                        ¿Expulsar a {m.profile?.name || 'este invitado'}? Sus pagos ya agregados se quedan en el espacio.
-                      </div>
-                      <div style={{ display: 'flex', gap: 8 }}>
-                        <button onClick={() => setConfirmExpel(null)} style={{ flex: 1, padding: '7px', borderRadius: 6, border: '0.5px solid var(--border)', background: 'var(--surface)', fontSize: 12, fontWeight: 600, color: 'var(--text)', cursor: 'pointer', fontFamily: 'DM Sans, sans-serif' }}>
-                          Cancelar
-                        </button>
-                        <button onClick={() => handleExpel(m.id)} disabled={expelling} style={{ flex: 1, padding: '7px', borderRadius: 6, border: 'none', background: 'var(--danger)', fontSize: 12, fontWeight: 600, color: '#fff', cursor: 'pointer', fontFamily: 'DM Sans, sans-serif', opacity: expelling ? 0.7 : 1 }}>
-                          {expelling ? 'Expulsando…' : 'Expulsar'}
-                        </button>
+            <div style={{ padding: '13px 16px', borderBottom: entry.space.salary_enabled ? 'none' : '0.5px solid var(--border)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer' }} onClick={handleSalaryToggle}>
+                <div>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)' }}>Ingreso por periodo</div>
+                  <div style={{ fontSize: 11, fontWeight: 400, color: 'var(--text)', marginTop: 1 }}>Opcional — además de los Ingresos Extras que cualquier invitado con permiso puede agregar</div>
+                </div>
+                <Toggle on={entry.space.salary_enabled} />
+              </div>
+            </div>
+            {entry.space.salary_enabled && (
+              <div style={{ padding: '0 16px 13px', borderBottom: '0.5px solid var(--border)' }}>
+                <label className="field-label">Monto</label>
+                <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
+                  <input type="number" value={salaryAmount} onChange={e => setSalaryAmount(e.target.value)} placeholder="0.00" className="field-input" style={{ flex: 1 }} />
+                  <button onClick={handleSalaryAmount} className="btn-primary" style={{ width: 'auto', padding: '0 16px' }}>Guardar</button>
+                </div>
+              </div>
+            )}
+
+            {guestMembers.length > 0 && guestMembers.map((m) => {
+              const initials = (m.profile?.name || 'Invitado').slice(0, 2).toUpperCase()
+              const isConfirming = confirmExpel === m.id
+              return (
+                <div key={m.id} style={{ borderBottom: '0.5px solid var(--border)' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '13px 16px 8px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                      {m.profile?.avatar_url
+                        ? <img src={m.profile.avatar_url} alt="" style={{ width: 32, height: 32, borderRadius: '50%', objectFit: 'cover' }} />
+                        : <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'var(--accent)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, color: 'var(--surface)' }}>{initials}</div>
+                      }
+                      <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)' }}>{m.profile?.name || 'Invitado'}</span>
+                    </div>
+                    <button
+                      onClick={() => setConfirmExpel(m.id)}
+                      style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '5px 10px', borderRadius: 5, border: '0.5px solid var(--danger)', background: 'none', color: 'var(--danger)', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'DM Sans, sans-serif' }}
+                    >
+                      <LogOut size={12} /> Expulsar
+                    </button>
+                  </div>
+
+                  {isConfirming && (
+                    <div style={{ padding: '0 16px 12px' }}>
+                      <div style={{ background: 'var(--danger-soft)', borderRadius: 'var(--radius-sm)', padding: '10px 12px' }}>
+                        <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--danger)', marginBottom: 8 }}>
+                          ¿Expulsar a {m.profile?.name || 'este invitado'}? Sus pagos ya agregados se quedan en el espacio.
+                        </div>
+                        <div style={{ display: 'flex', gap: 8 }}>
+                          <button onClick={() => setConfirmExpel(null)} style={{ flex: 1, padding: '7px', borderRadius: 6, border: '0.5px solid var(--border)', background: 'var(--surface)', fontSize: 12, fontWeight: 600, color: 'var(--text)', cursor: 'pointer', fontFamily: 'DM Sans, sans-serif' }}>
+                            Cancelar
+                          </button>
+                          <button onClick={() => handleExpel(m.id)} disabled={expelling} style={{ flex: 1, padding: '7px', borderRadius: 6, border: 'none', background: 'var(--danger)', fontSize: 12, fontWeight: 600, color: '#fff', cursor: 'pointer', fontFamily: 'DM Sans, sans-serif', opacity: expelling ? 0.7 : 1 }}>
+                            {expelling ? 'Expulsando…' : 'Expulsar'}
+                          </button>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                )}
+                  )}
 
-                <NotifToggle label="Agregar pagos"        value={m.can_add}        onChange={v => updateMemberPermissions(m.id, { can_add: v })} />
-                <NotifToggle label="Editar pagos"          value={m.can_edit}       onChange={v => updateMemberPermissions(m.id, { can_edit: v })} />
-                <NotifToggle label="Marcar pagado/no pagado" value={m.can_mark_paid} onChange={v => updateMemberPermissions(m.id, { can_mark_paid: v })} />
-                <NotifToggle label="Eliminar pagos"        value={m.can_delete}     onChange={v => updateMemberPermissions(m.id, { can_delete: v })} />
-                <NotifToggle label="Agregar ingresos extra" value={m.can_add_income} onChange={v => updateMemberPermissions(m.id, { can_add_income: v })} last />
-              </div>
-            )
-          })}
-        </Card>
-      )}
+                  <NotifToggle label="Agregar pagos"        value={m.can_add}        onChange={v => updateMemberPermissions(m.id, { can_add: v })} />
+                  <NotifToggle label="Editar pagos"          value={m.can_edit}       onChange={v => updateMemberPermissions(m.id, { can_edit: v })} />
+                  <NotifToggle label="Marcar pagado/no pagado" value={m.can_mark_paid} onChange={v => updateMemberPermissions(m.id, { can_mark_paid: v })} />
+                  <NotifToggle label="Eliminar pagos"        value={m.can_delete}     onChange={v => updateMemberPermissions(m.id, { can_delete: v })} />
+                  <NotifToggle label="Agregar ingresos extra" value={m.can_add_income} onChange={v => updateMemberPermissions(m.id, { can_add_income: v })} last />
+                </div>
+              )
+            })}
 
-      <Card>
-        <button onClick={() => { setDangerOpen(true); setDangerPassword(''); setDangerError('') }} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '13px 14px', background: 'none', border: 'none', cursor: 'pointer' }}>
-          <Trash2 size={16} color="var(--danger)" />
-          <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--danger)' }}>Eliminar Espacio Compartido</span>
-        </button>
-      </Card>
+            <button onClick={() => { setDangerOpen(true); setDangerPassword(''); setDangerError('') }} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '13px 16px', background: 'none', border: 'none', cursor: 'pointer' }}>
+              <Trash2 size={16} color="var(--danger)" />
+              <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--danger)' }}>Eliminar Espacio Compartido</span>
+            </button>
+          </div>
+        )}
+      </div>
 
       {dangerOpen && (
         <div onClick={e => e.target === e.currentTarget && setDangerOpen(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(2,10,31,0.45)', zIndex: 250, display: 'flex', alignItems: 'flex-end' }}>
