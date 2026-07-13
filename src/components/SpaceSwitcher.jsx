@@ -39,8 +39,20 @@ export function SpaceSwitcher({ spaces, activeSpaceId, onSwitch, onManage, profi
     { id: null, kind: 'personal', name: 'Personal' },
   ]
 
-  const peekItems  = allItems.filter(it => it.id !== activeSpaceId)
+  // Se calcula frontItem PRIMERO, y peekItems excluye ese objeto exacto (por
+  // identidad, no comparando ids) — antes era al revés (peekItems filtraba
+  // por `it.id !== activeSpaceId`, frontItem se buscaba aparte con su
+  // propio respaldo a "Personal"). Si `activeSpaceId` quedaba huérfano
+  // (ej. un id de un espacio al que ya no perteneces, o "pegado" en
+  // `sessionStorage` de una sesión anterior con otra cuenta en el mismo
+  // navegador), el filtro de peekItems no excluía a nadie — ni siquiera a
+  // Personal, cuyo id es `null` y nunca coincide con el id huérfano —
+  // mientras que frontItem sí encontraba "Personal" por su respaldo,
+  // duplicándolo: aparecía tanto en peekItems como en frontItem. Filtrar
+  // por identidad de objeto en vez de por id hace esto imposible sin
+  // importar qué tan "roto" venga `activeSpaceId`.
   const frontItem  = allItems.find(it => it.id === activeSpaceId) || allItems.find(it => it.kind === 'personal')
+  const peekItems  = allItems.filter(it => it !== frontItem)
   const ordered    = [...peekItems, frontItem]
 
   function colorsFor(kind) {
