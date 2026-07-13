@@ -27,13 +27,18 @@ const STATUS_LABELS_ALWAYS_VISIBLE = ['postponed', 'paused']
 
 function useLongPress(callback, ms = 500) {
   const timerRef = useRef(null)
-  function start(e) { e.preventDefault(); timerRef.current = setTimeout(() => { callback(); timerRef.current = null }, ms) }
+  function start(e) {
+    e.preventDefault()
+    const el = e.currentTarget
+    timerRef.current = setTimeout(() => { callback(el); timerRef.current = null }, ms)
+  }
   function stop()  { if (timerRef.current) { clearTimeout(timerRef.current); timerRef.current = null } }
   return { onMouseDown: start, onMouseUp: stop, onMouseLeave: stop, onTouchStart: start, onTouchEnd: stop, onTouchCancel: stop }
 }
 
 export function PayCard({ payment: p, cfg, onMarkPaid, onMarkUnpaid, onCaptureAmount, onEdit, onDelete, onPostpone, onAdvance, borderLeft, hideDate, hideDueLabel, railMode, permissions }) {
   const [menuOpen, setMenuOpen] = useState(false)
+  const [menuUpward, setMenuUpward] = useState(false)
   const menuRef = useRef(null)
   const info      = statusInfo(p, cfg)
   const showLabel = !hideDueLabel || STATUS_LABELS_ALWAYS_VISIBLE.includes(info.status)
@@ -54,7 +59,31 @@ export function PayCard({ payment: p, cfg, onMarkPaid, onMarkUnpaid, onCaptureAm
     showToast(`No tienes permitido ${action} en este Espacio Compartido.`)
   }
 
-  const longPress = useLongPress(() => setMenuOpen(true))
+  // El menú tiene entre 2 y 5 ítems según el tipo de pago — se calcula
+  // cuántos va a mostrar de verdad (mismas condiciones que el JSX de abajo)
+  // para estimar su altura y decidir si cabe hacia abajo antes de abrirlo,
+  // en vez de siempre abrir hacia abajo sin checar (bug real: se veía
+  // cortado por el navbar cuando la tarjeta estaba cerca del fondo).
+  function menuItemCount() {
+    let count = 1 // Eliminar siempre aparece
+    if (isPending) count++ // Editar
+    if (isPending && p.is_variable && onCaptureAmount) count++
+    if (isPending && p.is_recurrent && !p.is_installment) count++
+    if (isPending && p.is_installment && onAdvance) count++
+    if (p.is_paid) count++ // Marcar no pagado
+    return count
+  }
+
+  function openMenuAt(target) {
+    if (target) {
+      const rect = target.getBoundingClientRect()
+      const estimatedHeight = menuItemCount() * 38 + 8
+      setMenuUpward(rect.bottom + estimatedHeight > window.innerHeight)
+    }
+    setMenuOpen(true)
+  }
+
+  const longPress = useLongPress(target => openMenuAt(target))
 
   useEffect(() => {
     function handle(e) { if (menuRef.current && !menuRef.current.contains(e.target)) setMenuOpen(false) }
@@ -123,7 +152,7 @@ export function PayCard({ payment: p, cfg, onMarkPaid, onMarkUnpaid, onCaptureAm
             </div>
           )}
           <button
-            onClick={e => { e.stopPropagation(); setMenuOpen(v => !v) }}
+            onClick={e => { e.stopPropagation(); menuOpen ? setMenuOpen(false) : openMenuAt(e.currentTarget) }}
             style={{ width: 24, height: 24, borderRadius: '50%', background: 'none', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', padding: 0 }}
           >
             <MoreVertical size={15} color="var(--text)" />
@@ -133,7 +162,7 @@ export function PayCard({ payment: p, cfg, onMarkPaid, onMarkUnpaid, onCaptureAm
 
       {/* Menú contextual */}
       {menuOpen && (
-        <div style={{ position: 'absolute', right: 0, top: '100%', marginTop: 4, background: 'var(--menu-bg)', border: '0.5px solid var(--border)', borderRadius: 'var(--radius-sm)', boxShadow: '0 4px 16px rgba(0,0,0,0.12)', zIndex: 50, minWidth: 180, overflow: 'hidden' }}>
+        <div style={{ position: 'absolute', right: 0, top: menuUpward ? 'auto' : '100%', bottom: menuUpward ? '100%' : 'auto', marginTop: menuUpward ? 0 : 4, marginBottom: menuUpward ? 4 : 0, background: 'var(--menu-bg)', border: '0.5px solid var(--border)', borderRadius: 'var(--radius-sm)', boxShadow: '0 4px 16px rgba(0,0,0,0.12)', zIndex: 50, minWidth: 180, overflow: 'hidden' }}>
           {isPending && <MenuItem icon={<Pencil size={14}/>} label="Editar" onClick={() => { onEdit(p); setMenuOpen(false) }} />}
           {isPending && p.is_variable && onCaptureAmount && <MenuItem icon={<DollarSign size={14}/>} label={p.amount ? 'Editar monto' : 'Agregar monto'} onClick={() => { onCaptureAmount(p); setMenuOpen(false) }} />}
           {isPending && p.is_recurrent && !p.is_installment && <MenuItem icon={<Clock size={14}/>} label="Posponer" onClick={() => { canEdit ? onPostpone(p) : blocked('posponer pagos'); setMenuOpen(false) }} />}

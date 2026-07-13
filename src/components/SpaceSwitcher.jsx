@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
+import { createPortal } from 'react-dom'
 import { MoreVertical, Pencil, Trash2, LogOut, Plus } from 'lucide-react'
 
 // Selector de espacio activo — tarjetas apiladas (patrón que Johnatan mostró
@@ -18,6 +19,7 @@ import { MoreVertical, Pencil, Trash2, LogOut, Plus } from 'lucide-react'
 // mismo orden confirmado en el boceto de Johnatan.
 export function SpaceSwitcher({ spaces, activeSpaceId, onSwitch, onManage, profile, user, stats = {}, deleteSpace, leaveSpace }) {
   const [menuOpen,    setMenuOpen]    = useState(false)
+  const [menuUpward,  setMenuUpward]  = useState(false)
   const [dangerOpen,  setDangerOpen]  = useState(false)
   const [dangerPassword, setDangerPassword] = useState('')
   const [dangerError, setDangerError] = useState('')
@@ -145,7 +147,19 @@ export function SpaceSwitcher({ spaces, activeSpaceId, onSwitch, onManage, profi
             {isRealSpace && (
               <div style={{ position: 'relative' }}>
                 <button
-                  onClick={e => { e.stopPropagation(); setMenuOpen(v => !v) }}
+                  onClick={e => {
+                    e.stopPropagation()
+                    if (!menuOpen) {
+                      // El menú siempre tiene 2 ítems (Editar + Eliminar/Salir),
+                      // ~90px de alto — si no caben debajo del botón antes del
+                      // final de la pantalla, se abre hacia arriba en vez de
+                      // hacia abajo (bug real: se veía cortado por el navbar
+                      // cuando el switcher estaba cerca del fondo).
+                      const rect = e.currentTarget.getBoundingClientRect()
+                      setMenuUpward(rect.bottom + 90 > window.innerHeight)
+                    }
+                    setMenuOpen(v => !v)
+                  }}
                   style={{ background: 'none', border: 'none', padding: 4, display: 'flex', alignItems: 'center', cursor: 'pointer', borderRadius: 4 }}
                 >
                   <MoreVertical size={18} color="var(--text)" />
@@ -154,7 +168,11 @@ export function SpaceSwitcher({ spaces, activeSpaceId, onSwitch, onManage, profi
                   <div
                     onClick={e => e.stopPropagation()}
                     style={{
-                      position: 'absolute', top: '100%', right: 0, marginTop: 4, zIndex: 20,
+                      position: 'absolute', right: 0, zIndex: 20,
+                      top: menuUpward ? 'auto' : '100%',
+                      bottom: menuUpward ? '100%' : 'auto',
+                      marginTop: menuUpward ? 0 : 4,
+                      marginBottom: menuUpward ? 4 : 0,
                       background: 'var(--menu-bg)', border: '0.5px solid var(--border)',
                       borderRadius: 'var(--radius-sm)', boxShadow: '0 4px 16px rgba(0,0,0,0.12)',
                       minWidth: 170, overflow: 'hidden',
@@ -189,9 +207,18 @@ export function SpaceSwitcher({ spaces, activeSpaceId, onSwitch, onManage, profi
         )
       })}
 
-      {/* ── Confirmación de Eliminar (dueño, con contraseña) / Salir (invitado) ── */}
-      {dangerOpen && (
-        <div onClick={e => e.target === e.currentTarget && setDangerOpen(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(2,10,31,0.45)', zIndex: 250, display: 'flex', alignItems: 'flex-end' }}>
+      {/* ── Confirmación de Eliminar (dueño, con contraseña) / Salir (invitado) ──
+           Portal a document.body: este modal vive dentro del switcher, que a
+           su vez vive dentro del contenedor de la página con su propio
+           `position:relative; zIndex:10` — eso crea un contexto de apilamiento
+           propio, y ni un z-index alto ni `position:fixed` logran escapar de
+           compararse solo contra otros elementos DENTRO de ese contexto,
+           nunca contra el navbar de más arriba (bug real que Johnatan
+           encontró: el modal quedaba atrapado detrás del navbar). El portal
+           lo inserta directo en <body>, fuera de cualquier contenedor
+           anidado, sin importar dónde viva el switcher en el árbol. */}
+      {dangerOpen && createPortal(
+        <div onClick={e => e.target === e.currentTarget && setDangerOpen(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(2,10,31,0.45)', zIndex: 9999, display: 'flex', alignItems: 'flex-end' }}>
           <div style={{ background: 'var(--surface)', borderRadius: '16px 16px 0 0', width: '100%', padding: '24px 20px', animation: 'modalSlideUp .32s cubic-bezier(0.25, 0.46, 0.45, 0.94) both' }}>
             {frontItem.entry?.membership.role === 'owner' ? (
               <>
@@ -233,7 +260,8 @@ export function SpaceSwitcher({ spaces, activeSpaceId, onSwitch, onManage, profi
             )}
             <button onClick={() => setDangerOpen(false)} className="btn-ghost">Cancelar</button>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   )
