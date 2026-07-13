@@ -471,6 +471,7 @@ export function PaymentsPage({ payments, profile, spaceSwitcher, activeSpaceId =
           style={{
             position: 'fixed',
             top: openMenu.top,
+            bottom: openMenu.bottom,
             right: openMenu.right,
             zIndex: 999,
             background: 'var(--menu-bg)',
@@ -1221,7 +1222,19 @@ export function PaymentsPage({ payments, profile, spaceSwitcher, activeSpaceId =
                           onClick={e => {
                             e.stopPropagation()
                             const rect = e.currentTarget.getBoundingClientRect()
-                            setOpenMenu(openMenu?.id === p.id ? null : { id: p.id, top: rect.bottom + 4, right: window.innerWidth - rect.right })
+                            // Menú fijo de 3 ítems (~140px) — si no cabe
+                            // debajo antes del final de la pantalla, se abre
+                            // hacia arriba en vez de hacia abajo (bug real:
+                            // se veía cortado por el navbar en pagos cerca
+                            // del fondo de la lista).
+                            const estimatedHeight = 140
+                            const openUpward = rect.bottom + estimatedHeight > window.innerHeight
+                            setOpenMenu(openMenu?.id === p.id ? null : {
+                              id: p.id,
+                              top: openUpward ? undefined : rect.bottom + 4,
+                              bottom: openUpward ? window.innerHeight - rect.top + 4 : undefined,
+                              right: window.innerWidth - rect.right,
+                            })
                           }}
                           style={{ background: 'none', border: 'none', padding: '4px', display: 'flex', alignItems: 'center', cursor: 'pointer', borderRadius: 4 }}
                         >

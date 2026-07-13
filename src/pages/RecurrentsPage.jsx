@@ -110,6 +110,7 @@ export function RecurrentsPage({ payments, profile, spaceSwitcher, activeSpaceId
           style={{
             position: 'fixed',
             top: openMenu.top,
+            bottom: openMenu.bottom,
             right: openMenu.right,
             zIndex: 999,
             background: 'var(--menu-bg)',
@@ -285,7 +286,19 @@ export function RecurrentsPage({ payments, profile, spaceSwitcher, activeSpaceId
                                 onClick={e => {
                                   e.stopPropagation()
                                   const rect = e.currentTarget.getBoundingClientRect()
-                                  setOpenMenu(openMenu?.id === master.id ? null : { id: master.id, top: rect.bottom + 4, right: window.innerWidth - rect.right })
+                                  // Menú fijo de 2 ítems (~95px) — si no cabe
+                                  // debajo antes del final de la pantalla, se
+                                  // abre hacia arriba (bug real: se veía
+                                  // cortado por el navbar en recurrentes
+                                  // cerca del fondo de la lista).
+                                  const estimatedHeight = 95
+                                  const openUpward = rect.bottom + estimatedHeight > window.innerHeight
+                                  setOpenMenu(openMenu?.id === master.id ? null : {
+                                    id: master.id,
+                                    top: openUpward ? undefined : rect.bottom + 4,
+                                    bottom: openUpward ? window.innerHeight - rect.top + 4 : undefined,
+                                    right: window.innerWidth - rect.right,
+                                  })
                                 }}
                                 style={{ width: 32, height: 32, borderRadius: 8, border: 'none', background: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0 }}
                               >
