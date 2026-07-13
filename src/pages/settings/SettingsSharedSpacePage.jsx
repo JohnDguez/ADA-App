@@ -12,7 +12,7 @@ import { showToast } from '../../components/Toast'
 // - Si ya pertenece a alguno: panel de administración (si es dueño) y/o
 //   lista de espacios donde es invitado (con opción de salirse).
 export function SettingsSharedSpacePage({ profile, user, sharedSpaces, onBack, slideClass }) {
-  const { spaces, createSpace, regenerateCode, redeemCode, updateMemberPermissions, updateSpaceConfig, leaveSpace, removeMember, deleteSpace } = sharedSpaces
+  const { spaces, createSpace, regenerateCode, redeemCode, updateMemberPermissions, updateSpaceConfig, leaveSpace, removeMember, deleteSpace, clearSpaceData } = sharedSpaces
 
   const ownedEntry  = spaces.find(s => s.membership.role === 'owner')
   const guestEntries = spaces.filter(s => s.membership.role === 'guest')
@@ -85,12 +85,13 @@ export function SettingsSharedSpacePage({ profile, user, sharedSpaces, onBack, s
           updateSpaceConfig={updateSpaceConfig}
           removeMember={removeMember}
           deleteSpace={deleteSpace}
+          clearSpaceData={clearSpaceData}
         />
       )}
 
       {/* ── Espacios donde te invitaron ── */}
       {guestEntries.length > 0 && (
-        <div style={{ marginBottom: 16 }}>
+        <div style={{ margin: '0 16px 16px' }}>
           <div style={{ padding: '0 2px 8px', fontSize: 11, fontWeight: 600, color: 'var(--text)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
             Espacios donde te invitaron
           </div>
@@ -220,14 +221,17 @@ function GuestSpaceRow({ entry, onLeave }) {
 }
 
 // ── Panel de administración del espacio propio ──────────────────────────────
-function OwnedSpacePanel({ entry, user, regenerateCode, updateMemberPermissions, updateSpaceConfig, removeMember, deleteSpace }) {
+function OwnedSpacePanel({ entry, user, regenerateCode, updateMemberPermissions, updateSpaceConfig, removeMember, deleteSpace, clearSpaceData }) {
   const [expanded,      setExpanded]      = useState(false)
   const [copied,        setCopied]        = useState(false)
   const [regenerating,  setRegenerating]  = useState(false)
   const [salaryAmount,  setSalaryAmount]  = useState(entry.space.salary_amount || '')
+  const [nameInput,     setNameInput]     = useState(entry.space.name)
   const [dangerOpen,    setDangerOpen]    = useState(false)
   const [confirmExpel,  setConfirmExpel]  = useState(null)
   const [expelling,     setExpelling]     = useState(false)
+  const [confirmClear,  setConfirmClear]  = useState(false)
+  const [clearing,      setClearing]      = useState(false)
   const [dangerPassword,setDangerPassword]= useState('')
   const [dangerError,   setDangerError]   = useState('')
   const [dangerLoading, setDangerLoading] = useState(false)
@@ -236,6 +240,14 @@ function OwnedSpacePanel({ entry, user, regenerateCode, updateMemberPermissions,
 
   async function handleCobroChange(updates) {
     await updateSpaceConfig(entry.space.id, updates)
+  }
+
+  async function handleNameBlur() {
+    const trimmed = nameInput.trim()
+    if (!trimmed) { setNameInput(entry.space.name); return }
+    if (trimmed === entry.space.name) return
+    await updateSpaceConfig(entry.space.id, { name: trimmed })
+    showToast('Cambios guardados')
   }
 
   async function handleSalaryToggle() {
@@ -256,6 +268,15 @@ function OwnedSpacePanel({ entry, user, regenerateCode, updateMemberPermissions,
     setConfirmExpel(null)
     if (error) showToast('No se pudo expulsar al invitado')
     else showToast('Invitado expulsado')
+  }
+
+  async function handleClearData() {
+    setClearing(true)
+    const { error } = await clearSpaceData(entry.space.id)
+    setClearing(false)
+    setConfirmClear(false)
+    if (error) showToast('No se pudieron borrar los datos')
+    else showToast('Pagos e ingresos del espacio borrados')
   }
 
   function copyCode() {
@@ -284,7 +305,7 @@ function OwnedSpacePanel({ entry, user, regenerateCode, updateMemberPermissions,
 
   return (
     <>
-      <div style={{ marginBottom: 16 }}>
+      <div style={{ margin: '0 16px 16px' }}>
         <button
           onClick={() => setExpanded(v => !v)}
           style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px', background: 'var(--surface)', border: '0.5px solid var(--border)', borderRadius: expanded ? 'var(--radius) var(--radius) 0 0' : 'var(--radius)', cursor: 'pointer' }}
@@ -298,6 +319,16 @@ function OwnedSpacePanel({ entry, user, regenerateCode, updateMemberPermissions,
 
         {expanded && (
           <div style={{ background: 'var(--surface)', border: '0.5px solid var(--border)', borderTop: 'none', borderRadius: '0 0 var(--radius) var(--radius)', overflow: 'hidden' }}>
+            <div style={{ padding: '14px 16px', borderBottom: '0.5px solid var(--border)' }}>
+              <label className="field-label">Nombre del espacio</label>
+              <input
+                className="field-input" value={nameInput}
+                onChange={e => setNameInput(e.target.value)}
+                onBlur={handleNameBlur}
+                onKeyDown={e => e.key === 'Enter' && e.target.blur()}
+              />
+            </div>
+
             <div style={{ padding: '14px 16px', borderBottom: '0.5px solid var(--border)' }}>
               <label className="field-label" style={{ marginBottom: 8, display: 'block' }}>Periodo de cobro</label>
               <CobroPeriodFields
@@ -395,10 +426,36 @@ function OwnedSpacePanel({ entry, user, regenerateCode, updateMemberPermissions,
               )
             })}
 
-            <button onClick={() => { setDangerOpen(true); setDangerPassword(''); setDangerError('') }} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '13px 16px', background: 'none', border: 'none', cursor: 'pointer' }}>
-              <Trash2 size={16} color="var(--danger)" />
-              <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--danger)' }}>Eliminar Espacio Compartido</span>
-            </button>
+            <div style={{ borderTop: '0.5px solid var(--border)' }}>
+              <button onClick={() => setConfirmClear(v => !v)} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '13px 16px', background: 'none', border: 'none', cursor: 'pointer' }}>
+                <Trash2 size={16} color="var(--danger)" />
+                <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--danger)' }}>Borrar todos los pagos e ingresos</span>
+              </button>
+              {confirmClear && (
+                <div style={{ padding: '0 16px 14px' }}>
+                  <div style={{ background: 'var(--danger-soft)', borderRadius: 'var(--radius-sm)', padding: '10px 12px' }}>
+                    <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--danger)', marginBottom: 8 }}>
+                      Se borrarán TODOS los pagos e ingresos de "{entry.space.name}", sin poder deshacerlo. El espacio, el código y los miembros se quedan igual.
+                    </div>
+                    <div style={{ display: 'flex', gap: 8 }}>
+                      <button onClick={() => setConfirmClear(false)} style={{ flex: 1, padding: '7px', borderRadius: 6, border: '0.5px solid var(--border)', background: 'var(--surface)', fontSize: 12, fontWeight: 600, color: 'var(--text)', cursor: 'pointer', fontFamily: 'DM Sans, sans-serif' }}>
+                        Cancelar
+                      </button>
+                      <button onClick={handleClearData} disabled={clearing} style={{ flex: 1, padding: '7px', borderRadius: 6, border: 'none', background: 'var(--danger)', fontSize: 12, fontWeight: 600, color: '#fff', cursor: 'pointer', fontFamily: 'DM Sans, sans-serif', opacity: clearing ? 0.7 : 1 }}>
+                        {clearing ? 'Borrando…' : 'Borrar todo'}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div style={{ borderTop: '0.5px solid var(--border)' }}>
+              <button onClick={() => { setDangerOpen(true); setDangerPassword(''); setDangerError('') }} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '13px 16px', background: 'none', border: 'none', cursor: 'pointer' }}>
+                <Trash2 size={16} color="var(--danger)" />
+                <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--danger)' }}>Eliminar Espacio Compartido</span>
+              </button>
+            </div>
           </div>
         )}
       </div>
