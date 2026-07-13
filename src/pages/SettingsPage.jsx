@@ -110,6 +110,11 @@ export function SettingsPage({ profile, user, onUpdate, onUploadAvatar, onDataDe
     sessionStorage.removeItem('ada_tab')
     sessionStorage.removeItem('ada_session')
     sessionStorage.removeItem('ada_user_id')
+    // Sin esto, si la siguiente cuenta que inicia sesión en el mismo
+    // navegador no pertenece a ningún espacio, `activeSpaceId` se
+    // inicializaba con este id "huérfano" y el switcher terminaba
+    // duplicando la tarjeta de Personal (ver fix en SpaceSwitcher.jsx).
+    sessionStorage.removeItem('ada_active_space')
     await supabase.auth.signOut()
   }
 
