@@ -53,6 +53,19 @@ export default function App() {
   const paymentsSpaceId = (activeSpaceId && activeSpaceId !== 'new') ? activeSpaceId : null
   const activeSpaceEntry = paymentsSpaceId ? sharedSpaces.spaces.find(s => s.space.id === paymentsSpaceId) : null
 
+  // Red de seguridad: si `activeSpaceId` quedó apuntando a un espacio que
+  // ya no existe entre los del usuario (ej. lo sacaron del espacio
+  // mientras lo tenía activo, o `sessionStorage` se "filtró" de una cuenta
+  // anterior en el mismo navegador — ver fix en SpaceSwitcher.jsx y
+  // handleLogout de SettingsPage.jsx), se resetea solo a Personal en
+  // cuanto termine de cargar la lista real de espacios — en vez de dejar
+  // un id huérfano rondando que rompía el switcher.
+  useEffect(() => {
+    if (!paymentsSpaceId || sharedSpaces.loading) return
+    if (!activeSpaceEntry) switchSpace(null)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [paymentsSpaceId, sharedSpaces.loading, activeSpaceEntry])
+
   // Permisos efectivos en el contexto activo — un solo lugar de donde todo
   // lo demás (modal de pago, tarjetas, menús) lee qué puede hacer el
   // usuario, en vez de repetir esta lógica en cada archivo. Personal y el
