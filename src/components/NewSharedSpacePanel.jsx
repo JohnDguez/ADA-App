@@ -1,9 +1,6 @@
 import { useState } from 'react'
 import { Crown } from 'lucide-react'
-import { Select } from './Select'
-
-const FREQ_OPTIONS = ['Semanal', 'Quincenal', 'Mensual']
-const FREQ_TO_VALUE = { Semanal: 'weekly', Quincenal: 'biweekly', Mensual: 'monthly' }
+import { CobroPeriodFields } from './CobroPeriodFields'
 
 // Panel que reemplaza el contenido normal de Inicio/Gastos/Recurrentes
 // cuando la tarjeta "Nuevo espacio compartido" del switcher está activa.
@@ -20,23 +17,25 @@ export function NewSharedSpacePanel({ profile, sharedSpaces, onOpenPremium, onCr
   const slotsLeft    = 3 - guestEntries.length
 
   // ── Crear ──
-  const [newName,      setNewName]      = useState('')
-  const [newFreqLabel, setNewFreqLabel] = useState('Quincenal')
-  const [createError,  setCreateError]  = useState('')
-  const [createSaving, setCreateSaving] = useState(false)
+  const [newName,     setNewName]     = useState('')
+  const [newFreq,     setNewFreq]     = useState('biweekly')
+  const [newDay1,     setNewDay1]     = useState(1)
+  const [newDay2,     setNewDay2]     = useState(16)
+  const [newWeekday,  setNewWeekday]  = useState(5)
+  const [createError, setCreateError] = useState('')
+  const [createSaving,setCreateSaving]= useState(false)
 
   async function handleCreate() {
     if (!newName.trim()) { setCreateError('Ponle un nombre al espacio'); return }
     setCreateSaving(true)
     setCreateError('')
-    const freq = FREQ_TO_VALUE[newFreqLabel]
     const { data, error } = await createSpace({
       name: newName.trim(),
       isPremium: profile.is_premium,
-      cobroFreq: freq,
-      cobroDay1: freq !== 'weekly' ? 1 : undefined,
-      cobroDay2: freq === 'biweekly' ? 16 : undefined,
-      cobroWeekday: freq === 'weekly' ? 5 : undefined,
+      cobroFreq: newFreq,
+      cobroDay1: newFreq !== 'weekly' ? newDay1 : undefined,
+      cobroDay2: newFreq === 'biweekly' ? newDay2 : undefined,
+      cobroWeekday: newFreq === 'weekly' ? newWeekday : undefined,
     })
     setCreateSaving(false)
     if (error) setCreateError(typeof error === 'string' ? error : 'No se pudo crear el espacio')
@@ -83,10 +82,13 @@ export function NewSharedSpacePanel({ profile, sharedSpaces, onOpenPremium, onCr
         <div style={{ background: 'var(--surface)', borderRadius: 'var(--radius)', padding: 16, marginBottom: 16 }}>
           <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--text)', marginBottom: 12 }}>Crear Espacio Compartido</div>
           <label className="field-label">Nombre del espacio</label>
-          <input className="field-input" value={newName} onChange={e => setNewName(e.target.value)} placeholder="Ej. Depa con Ale" style={{ marginBottom: 12 }} />
-          <label className="field-label">Periodo de cobro</label>
-          <div style={{ marginBottom: 12 }}>
-            <Select value={newFreqLabel} onChange={setNewFreqLabel} options={FREQ_OPTIONS} />
+          <input className="field-input" value={newName} onChange={e => setNewName(e.target.value)} placeholder="Ej. Depa con Ale" style={{ marginBottom: 16 }} />
+          <label className="field-label" style={{ marginBottom: 8, display: 'block' }}>Periodo de cobro</label>
+          <div style={{ marginBottom: 14 }}>
+            <CobroPeriodFields
+              freq={newFreq} day1={newDay1} day2={newDay2} weekday={newWeekday}
+              onChangeFreq={setNewFreq} onChangeDay1={setNewDay1} onChangeDay2={setNewDay2} onChangeWeekday={setNewWeekday}
+            />
           </div>
           {createError && <div style={{ fontSize: 12, color: 'var(--danger)', marginBottom: 10 }}>{createError}</div>}
           <button onClick={handleCreate} disabled={createSaving} className="btn-primary" style={{ opacity: createSaving ? 0.7 : 1 }}>
