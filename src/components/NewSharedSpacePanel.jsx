@@ -71,7 +71,7 @@ export function NewSharedSpacePanel({ profile, sharedSpaces, onOpenPremium, onCr
             Obtén Premium para crear un Espacio Compartido
           </div>
           <div style={{ fontSize: 12, color: 'var(--text)', marginBottom: 14 }}>
-            Lleva el control de gastos con tu pareja o roomie, en un espacio aparte de tu cuenta personal.
+            Lleva el control de gastos con tu pareja, tus roomies, o quien tú quieras — hasta 2 personas más, en un espacio aparte de tu cuenta personal.
           </div>
           <button
             onClick={onOpenPremium}
