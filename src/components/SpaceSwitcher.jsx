@@ -181,7 +181,7 @@ export function SpaceSwitcher({ spaces, activeSpaceId, onSwitch, onManage, profi
                 nada detrás. */}
             {!isFront && (
               <div style={{
-                position: 'absolute', left: 0, right: 0, top: '100%', height: 40,
+                position: 'absolute', left: 0, right: 0, top: '100%', height: 60,
                 background: colorsFor(item.kind).bg,
                 filter: item.kind === 'space' ? `brightness(${brightnessFor(item)})` : 'none',
               }} />
