@@ -85,7 +85,7 @@ export default function App() {
     deleteRecurrentFuture, deleteInstallmentFuture,
     migrateRecurrents,
     refetch,
-  } = usePayments(user?.id, paymentsSpaceId)
+  } = usePayments(user?.id, paymentsSpaceId, activeSpaceEntry?.space?.name)
   const { profile, loading: profileLoading, updateProfile, uploadAvatar } = useProfile(user?.id)
 
   // Se declara aquí (no arriba, junto a sharedSpaces) porque necesita
