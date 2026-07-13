@@ -259,10 +259,28 @@ export function useSharedSpaces(userId) {
     return { error }
   }
 
+  // ─────────────────────────────────────────────────────────────────────────
+  // BORRAR SOLO LOS DATOS DEL ESPACIO (pagos e ingresos) — a diferencia de
+  // `deleteSpace`, esto deja el espacio, su código de acceso y sus
+  // miembros intactos; es un "reinicio" del historial, no un borrado del
+  // espacio en sí. Sin confirmación de contraseña (a diferencia de
+  // `deleteSpace`) porque no borra la membresía de nadie — la UI que lo
+  // llama sí debe pedir su propia confirmación antes. Mismas políticas de
+  // RLS de la Fase 1 (`delete_own_or_space_can_delete`/
+  // `delete_own_or_space_can_add_income`) ya dejan al dueño borrar
+  // cualquier fila del espacio, sin necesitar un cambio nuevo en Supabase.
+  async function clearSpaceData(spaceId) {
+    const { error: paymentsError } = await supabase.from('payments').delete().eq('space_id', spaceId)
+    if (paymentsError) return { error: paymentsError }
+    const { error: incomeError } = await supabase.from('period_income').delete().eq('space_id', spaceId)
+    if (incomeError) return { error: incomeError }
+    return { error: null }
+  }
+
   return {
     spaces, loading,
     createSpace, regenerateCode, redeemCode, updateSpaceConfig,
-    updateMemberPermissions, leaveSpace, removeMember, deleteSpace,
+    updateMemberPermissions, leaveSpace, removeMember, deleteSpace, clearSpaceData,
     refetchSpaces: fetchSpaces,
   }
 }
