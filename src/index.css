@@ -378,6 +378,21 @@ body.modal-open {
   to   { transform: translateY(0);    opacity: 1; }
 }
 
+/* ── Fundido del contenido de la página al cambiar de espacio ─────────────── */
+/* El contenido debajo del switcher (Home/Gastos/Recurrentes) se reemplazaba
+   al instante al cambiar de espacio, sin transición — se sentía "de golpe"
+   comparado con la fluidez de las tarjetas del switcher. Esta clase se
+   aplica a un wrapper que se vuelve a montar (via `key`) cada vez que
+   cambia el espacio activo, así el fundido se dispara solo, sin necesitar
+   un mecanismo de ref/estado aparte como el del switcher. */
+@keyframes contentFadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.content-fade-in {
+  animation: contentFadeIn .25s ease both;
+}
+
 /* ── Skeleton loader ─────────────────────────────────────────────────────── */
 @keyframes shimmer {
   0%   { background-position: -400px 0; }
