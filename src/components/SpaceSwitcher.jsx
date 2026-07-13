@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { MoreVertical, Pencil, Trash2, LogOut, Plus } from 'lucide-react'
 
@@ -24,6 +24,24 @@ export function SpaceSwitcher({ spaces, activeSpaceId, onSwitch, onManage, profi
   const [dangerPassword, setDangerPassword] = useState('')
   const [dangerError, setDangerError] = useState('')
   const [dangerLoading, setDangerLoading] = useState(false)
+
+  // Detecta cuándo cambia la tarjeta activa (por tocar una que asoma, o por
+  // cualquier otra razón — ej. crear/unirse a un espacio) y guarda por
+  // 300ms cuál era la de antes (para animarla saliendo hacia abajo) y cuál
+  // es la nueva (para animarla entrando desde abajo). Se limpia sola con
+  // un timeout — después de esos 300ms cada tarjeta ya se ve con su
+  // posición/color final, sin animación, como antes.
+  const prevActiveIdRef = useRef(activeSpaceId)
+  const [animIds, setAnimIds] = useState(null) // { outgoingId, incomingId } | null
+
+  useEffect(() => {
+    if (prevActiveIdRef.current !== activeSpaceId) {
+      setAnimIds({ outgoingId: prevActiveIdRef.current, incomingId: activeSpaceId })
+      prevActiveIdRef.current = activeSpaceId
+      const timer = setTimeout(() => setAnimIds(null), 300)
+      return () => clearTimeout(timer)
+    }
+  }, [activeSpaceId])
 
   const ownedEntry   = spaces.find(s => s.membership.role === 'owner')
   const guestEntries = spaces.filter(s => s.membership.role === 'guest')
@@ -135,7 +153,12 @@ export function SpaceSwitcher({ spaces, activeSpaceId, onSwitch, onManage, profi
               // stack — el bug exacto que Johnatan señaló: la tarjeta
               // "Nuevo espacio compartido" se pintaba encima de "Personal"
               // en vez de quedar tapada por ella.
-              zIndex: i,
+              zIndex: (animIds && (item.id === animIds.outgoingId || item.id === animIds.incomingId)) ? 30 : i,
+              animation: animIds
+                ? (item.id === animIds.outgoingId ? 'spaceCardSlideOutDown .3s ease both'
+                  : item.id === animIds.incomingId ? 'spaceCardSlideInUp .3s ease both'
+                  : 'none')
+                : 'none',
               // Cada tarjeta se ve COMPLETA y cómoda (no una rendija delgada
               // asomando) — el traslape es solo lo justo (14px) para que la
               // esquina redondeada de esta tarjeta tape el hueco que
