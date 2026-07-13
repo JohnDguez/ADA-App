@@ -1,11 +1,7 @@
 import { useState } from 'react'
 import { ChevronLeft, Users, Copy, RefreshCw, LogOut, Trash2, Crown, Plus } from 'lucide-react'
 import { Card, Row, NotifToggle } from '../../components/SettingsShared'
-import { Select } from '../../components/Select'
-
-const FREQ_OPTIONS = ['Semanal', 'Quincenal', 'Mensual']
-const FREQ_TO_VALUE = { Semanal: 'weekly', Quincenal: 'biweekly', Mensual: 'monthly' }
-const VALUE_TO_FREQ = { weekly: 'Semanal', biweekly: 'Quincenal', monthly: 'Mensual' }
+import { CobroPeriodFields } from '../../components/CobroPeriodFields'
 
 // Sub-página de Ajustes → "Espacio Compartido". Sirve para 2 casos a la vez,
 // para no duplicar el formulario de crear/unirse en otro lugar (ej. la
@@ -15,7 +11,7 @@ const VALUE_TO_FREQ = { weekly: 'Semanal', biweekly: 'Quincenal', monthly: 'Mens
 // - Si ya pertenece a alguno: panel de administración (si es dueño) y/o
 //   lista de espacios donde es invitado (con opción de salirse).
 export function SettingsSharedSpacePage({ profile, user, sharedSpaces, onBack, slideClass }) {
-  const { spaces, createSpace, regenerateCode, redeemCode, updateMemberPermissions, leaveSpace, deleteSpace } = sharedSpaces
+  const { spaces, createSpace, regenerateCode, redeemCode, updateMemberPermissions, updateSpaceCobro, leaveSpace, deleteSpace } = sharedSpaces
 
   const ownedEntry  = spaces.find(s => s.membership.role === 'owner')
   const guestEntries = spaces.filter(s => s.membership.role === 'guest')
@@ -23,7 +19,10 @@ export function SettingsSharedSpacePage({ profile, user, sharedSpaces, onBack, s
   // ── Crear ──
   const [creating,    setCreating]    = useState(false)
   const [newName,     setNewName]     = useState('')
-  const [newFreqLabel,setNewFreqLabel]= useState('Quincenal')
+  const [newFreq,     setNewFreq]     = useState('biweekly')
+  const [newDay1,     setNewDay1]     = useState(1)
+  const [newDay2,     setNewDay2]     = useState(16)
+  const [newWeekday,  setNewWeekday]  = useState(5)
   const [createError, setCreateError] = useState('')
   const [createSaving,setCreateSaving]= useState(false)
 
@@ -31,14 +30,13 @@ export function SettingsSharedSpacePage({ profile, user, sharedSpaces, onBack, s
     if (!newName.trim()) { setCreateError('Ponle un nombre al espacio'); return }
     setCreateSaving(true)
     setCreateError('')
-    const freq = FREQ_TO_VALUE[newFreqLabel]
     const { error } = await createSpace({
       name: newName.trim(),
       isPremium: profile.is_premium,
-      cobroFreq: freq,
-      cobroDay1: freq !== 'weekly' ? 1 : undefined,
-      cobroDay2: freq === 'biweekly' ? 16 : undefined,
-      cobroWeekday: freq === 'weekly' ? 5 : undefined,
+      cobroFreq: newFreq,
+      cobroDay1: newFreq !== 'weekly' ? newDay1 : undefined,
+      cobroDay2: newFreq === 'biweekly' ? newDay2 : undefined,
+      cobroWeekday: newFreq === 'weekly' ? newWeekday : undefined,
     })
     setCreateSaving(false)
     if (error) setCreateError(typeof error === 'string' ? error : 'No se pudo crear el espacio')
@@ -79,6 +77,7 @@ export function SettingsSharedSpacePage({ profile, user, sharedSpaces, onBack, s
           user={user}
           regenerateCode={regenerateCode}
           updateMemberPermissions={updateMemberPermissions}
+          updateSpaceCobro={updateSpaceCobro}
           deleteSpace={deleteSpace}
         />
       )}
@@ -129,10 +128,13 @@ export function SettingsSharedSpacePage({ profile, user, sharedSpaces, onBack, s
             ) : (
               <>
                 <label className="field-label">Nombre del espacio</label>
-                <input className="field-input" value={newName} onChange={e => setNewName(e.target.value)} placeholder="Ej. Depa con Ale" style={{ marginBottom: 12 }} />
-                <label className="field-label">Periodo de cobro</label>
-                <div style={{ marginBottom: 12 }}>
-                  <Select value={newFreqLabel} onChange={setNewFreqLabel} options={FREQ_OPTIONS} />
+                <input className="field-input" value={newName} onChange={e => setNewName(e.target.value)} placeholder="Ej. Depa con Ale" style={{ marginBottom: 16 }} />
+                <label className="field-label" style={{ marginBottom: 8, display: 'block' }}>Periodo de cobro</label>
+                <div style={{ marginBottom: 14 }}>
+                  <CobroPeriodFields
+                    freq={newFreq} day1={newDay1} day2={newDay2} weekday={newWeekday}
+                    onChangeFreq={setNewFreq} onChangeDay1={setNewDay1} onChangeDay2={setNewDay2} onChangeWeekday={setNewWeekday}
+                  />
                 </div>
                 {createError && <div style={{ fontSize: 12, color: 'var(--danger)', marginBottom: 10 }}>{createError}</div>}
                 <button onClick={handleCreate} disabled={createSaving} className="btn-primary" style={{ marginBottom: 8, opacity: createSaving ? 0.7 : 1 }}>
@@ -174,7 +176,7 @@ export function SettingsSharedSpacePage({ profile, user, sharedSpaces, onBack, s
 }
 
 // ── Panel de administración del espacio propio ──────────────────────────────
-function OwnedSpacePanel({ entry, user, regenerateCode, updateMemberPermissions, deleteSpace }) {
+function OwnedSpacePanel({ entry, user, regenerateCode, updateMemberPermissions, updateSpaceCobro, deleteSpace }) {
   const [copied,        setCopied]        = useState(false)
   const [regenerating,  setRegenerating]  = useState(false)
   const [dangerOpen,    setDangerOpen]    = useState(false)
@@ -183,6 +185,10 @@ function OwnedSpacePanel({ entry, user, regenerateCode, updateMemberPermissions,
   const [dangerLoading, setDangerLoading] = useState(false)
 
   const guestMembers = entry.space.members?.filter?.(m => m.role === 'guest') || []
+
+  async function handleCobroChange(updates) {
+    await updateSpaceCobro(entry.space.id, updates)
+  }
 
   function copyCode() {
     navigator.clipboard?.writeText(entry.space.access_code)
@@ -215,8 +221,18 @@ function OwnedSpacePanel({ entry, user, regenerateCode, updateMemberPermissions,
           <Crown size={16} color="var(--premium-gold)" />
           <span style={{ fontSize: 15, fontWeight: 700, color: 'var(--text)' }}>{entry.space.name}</span>
         </div>
-        <div style={{ padding: '4px 16px 14px', fontSize: 12, color: 'var(--text)' }}>
-          Periodo: {VALUE_TO_FREQ[entry.space.cobro_freq] || entry.space.cobro_freq}
+        <div style={{ padding: '4px 16px 14px' }}>
+          <label className="field-label" style={{ marginBottom: 8, display: 'block' }}>Periodo de cobro</label>
+          <CobroPeriodFields
+            freq={entry.space.cobro_freq}
+            day1={entry.space.cobro_day1}
+            day2={entry.space.cobro_day2}
+            weekday={entry.space.cobro_weekday}
+            onChangeFreq={v => handleCobroChange({ cobro_freq: v })}
+            onChangeDay1={v => handleCobroChange({ cobro_day1: v })}
+            onChangeDay2={v => handleCobroChange({ cobro_day2: v })}
+            onChangeWeekday={v => handleCobroChange({ cobro_weekday: v })}
+          />
         </div>
 
         <div style={{ padding: '0 16px 14px' }}>
