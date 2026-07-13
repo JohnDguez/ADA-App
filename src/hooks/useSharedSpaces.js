@@ -92,7 +92,7 @@ export function useSharedSpaces(userId) {
   // datos; aquí se revisa antes para dar un mensaje claro en vez de un error
   // crudo de Postgres).
   // ─────────────────────────────────────────────────────────────────────────
-  async function createSpace({ name, isPremium, cobroFreq, cobroDay1, cobroDay2, cobroWeekday }) {
+  async function createSpace({ name, isPremium, cobroFreq, cobroDay1, cobroDay2, cobroWeekday, salaryEnabled, salaryAmount }) {
     if (!isPremium) return { error: 'Necesitas Premium para crear un Espacio Compartido' }
     if (spaces.some(s => s.membership.role === 'owner')) {
       return { error: 'Ya eres dueño de un Espacio Compartido — solo puedes tener uno' }
@@ -113,6 +113,8 @@ export function useSharedSpaces(userId) {
           cobro_day1: cobroDay1 ?? null,
           cobro_day2: cobroDay2 ?? null,
           cobro_weekday: cobroWeekday ?? null,
+          salary_enabled: salaryEnabled ?? false,
+          salary_amount: salaryAmount ?? null,
         })
         .select().single()
       if (!error) { space = data; break }
@@ -155,10 +157,14 @@ export function useSharedSpaces(userId) {
     return { data: updated, error: null }
   }
 
-  // Actualiza el periodo de cobro del espacio (solo dueño — misma RLS que
-  // regenerateCode). `updates` es un objeto parcial con cualquiera de
-  // cobro_freq/cobro_day1/cobro_day2/cobro_weekday.
-  async function updateSpaceCobro(spaceId, updates) {
+  // Actualiza la configuración del espacio (solo dueño — misma RLS que
+  // regenerateCode). `updates` es un objeto parcial: periodo de cobro
+  // (cobro_freq/cobro_day1/cobro_day2/cobro_weekday) o ingreso por periodo
+  // (salary_enabled/salary_amount) — mismo mecanismo genérico de UPDATE
+  // para ambos, no hace falta una función separada por sección. (Antes se
+  // llamaba `updateSpaceCobro`, renombrada al agregar ingreso porque ya no
+  // es solo sobre el periodo de cobro.)
+  async function updateSpaceConfig(spaceId, updates) {
     const { data, error } = await supabase
       .from('shared_spaces')
       .update(updates)
@@ -240,7 +246,7 @@ export function useSharedSpaces(userId) {
 
   return {
     spaces, loading,
-    createSpace, regenerateCode, redeemCode, updateSpaceCobro,
+    createSpace, regenerateCode, redeemCode, updateSpaceConfig,
     updateMemberPermissions, leaveSpace, removeMember, deleteSpace,
     refetchSpaces: fetchSpaces,
   }
