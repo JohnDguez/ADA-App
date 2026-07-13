@@ -170,6 +170,23 @@ export function SpaceSwitcher({ spaces, activeSpaceId, onSwitch, onManage, profi
               borderBottom: isFront ? '1px solid var(--border)' : 'none',
             }}
           >
+            {/* "Colchón" de color, oculto en reposo (tapado por la siguiente
+                tarjeta del stack) — solo se expone durante la animación de
+                deslizamiento, para que nunca se vea el corte/final de esta
+                tarjeta ni el fondo de la app detrás. Mismo criterio que usa
+                Banamex (referencia original de este diseño): cada tarjeta
+                lleva su propio color extendido hacia abajo, no solo lo que
+                se ve a simple vista. Solo hace falta en las que asoman — la
+                activa ya se funde con el fondo de la página, no necesita
+                nada detrás. */}
+            {!isFront && (
+              <div style={{
+                position: 'absolute', left: 0, right: 0, top: '100%', height: 40,
+                background: colorsFor(item.kind).bg,
+                filter: item.kind === 'space' ? `brightness(${brightnessFor(item)})` : 'none',
+              }} />
+            )}
+
             <span style={{ fontSize: 15, fontWeight: 500, color: isFront ? 'var(--text)' : colorsFor(item.kind).text, display: 'flex', alignItems: 'center', gap: 6 }}>
               {item.kind === 'new' && <Plus size={16} color="var(--space-new-text)" strokeWidth={2.5} />}
               {item.name}
