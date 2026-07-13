@@ -40,6 +40,21 @@ export function useSharedSpaces(userId) {
           .select('*')
           .in('space_id', spaceIds)
         if (allMembers) {
+          // `shared_space_members.user_id` referencia `auth.users`, no
+          // `profiles` — no hay una relación de llave foránea que
+          // PostgREST pueda usar para un embed automático tipo
+          // `.select('*, profiles(name, avatar_url)')`. Se trae aparte y
+          // se cruza a mano, para poder mostrar nombre/avatar real de
+          // cada invitado en vez de solo su id.
+          const memberUserIds = [...new Set(allMembers.map(m => m.user_id))]
+          const { data: memberProfiles } = await supabase
+            .from('profiles')
+            .select('id, name, avatar_url')
+            .in('id', memberUserIds)
+          const profileMap = {}
+          for (const p of (memberProfiles || [])) profileMap[p.id] = p
+          allMembers.forEach(m => { m.profile = profileMap[m.user_id] || null })
+
           withSpace.forEach(entry => {
             entry.space.members = allMembers.filter(m => m.space_id === entry.space.id)
           })
