@@ -203,7 +203,7 @@ function GuestSpaceRow({ entry, onLeave }) {
       </button>
 
       {expanded && (
-        <div style={{ border: '0.5px solid var(--border)', borderTop: 'none', borderRadius: '0 0 12px 12px', padding: '12px 14px' }}>
+        <div style={{ background: 'var(--surface)', border: '0.5px solid var(--border)', borderTop: 'none', borderRadius: '0 0 12px 12px', padding: '12px 14px' }}>
           <div style={{ fontSize: 12, color: 'var(--text)', marginBottom: 12 }}>
             Periodo: {FREQ_LABEL[entry.space.cobro_freq] || entry.space.cobro_freq}
           </div>
@@ -297,7 +297,7 @@ function OwnedSpacePanel({ entry, user, regenerateCode, updateMemberPermissions,
         </button>
 
         {expanded && (
-          <div style={{ border: '0.5px solid var(--border)', borderTop: 'none', borderRadius: '0 0 var(--radius) var(--radius)', overflow: 'hidden' }}>
+          <div style={{ background: 'var(--surface)', border: '0.5px solid var(--border)', borderTop: 'none', borderRadius: '0 0 var(--radius) var(--radius)', overflow: 'hidden' }}>
             <div style={{ padding: '14px 16px', borderBottom: '0.5px solid var(--border)' }}>
               <label className="field-label" style={{ marginBottom: 8, display: 'block' }}>Periodo de cobro</label>
               <CobroPeriodFields
