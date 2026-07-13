@@ -365,6 +365,19 @@ body.modal-open {
   to   { transform: scale(1);    opacity: 1; }
 }
 
+/* ── Animación al cambiar de espacio en SpaceSwitcher ─────────────────────── */
+/* La tarjeta que dejas de ver se desliza hacia abajo y se desvanece; la
+   nueva tarjeta activa entra deslizándose desde abajo hacia arriba. */
+@keyframes spaceCardSlideOutDown {
+  from { transform: translateY(0);    opacity: 1; }
+  to   { transform: translateY(24px); opacity: 0; }
+}
+
+@keyframes spaceCardSlideInUp {
+  from { transform: translateY(24px); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+
 /* ── Skeleton loader ─────────────────────────────────────────────────────── */
 @keyframes shimmer {
   0%   { background-position: -400px 0; }
