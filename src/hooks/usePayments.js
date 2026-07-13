@@ -1,9 +1,34 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { supabase } from '../lib/supabase'
-import { nextPeriodDate, dateOf, dateToStr, todayStr } from '../lib/utils'
+import { nextPeriodDate, dateOf, dateToStr, todayStr, fmt } from '../lib/utils'
 
-export function usePayments(userId, activeSpaceId = null) {
+export function usePayments(userId, activeSpaceId = null, activeSpaceName = null) {
   const [payments, setPayments] = useState([])
+
+  // Aviso a los demás miembros del espacio compartido tras agregar, marcar
+  // pagado, o eliminar un pago — SOLO esas 3 acciones (confirmado con
+  // Johnatan, para no saturar con ediciones menores como cambiar el
+  // monto o posponer). No bloquea la acción real si falla — el pago ya se
+  // guardó/marcó/borró bien del lado de la base de datos antes de llegar
+  // aquí; un aviso que no llegó no debe tumbar eso, por eso el try/catch
+  // silencioso. El endpoint mismo decide a quién avisar según quién tenga
+  // `notify_on_changes` activado para este espacio — aquí solo se le pasa
+  // el espacio y el texto.
+  async function notifySpaceChange(title, body) {
+    if (!activeSpaceId) return
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) return
+      await fetch('/api/notify-space-change', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
+        body: JSON.stringify({ spaceId: activeSpaceId, title, body }),
+      })
+    } catch (e) {
+      // Silencioso a propósito — ver nota arriba
+    }
+  }
+
   const [loading, setLoading] = useState(true)
   // Candado de concurrencia: evita que ensureTwoAhead se ejecute 2 veces en
   // paralelo para el MISMO master (ej. doble tap al confirmar un pago, o dos
@@ -129,7 +154,10 @@ export function usePayments(userId, activeSpaceId = null) {
     const { data, error } = await supabase.from('payments')
       .insert({ ...payment, user_id: userId, space_id: activeSpaceId, is_master: false })
       .select().single()
-    if (!error) setPayments(prev => [...prev, data])
+    if (!error) {
+      setPayments(prev => [...prev, data])
+      notifySpaceChange(`Nuevo pago en ${activeSpaceName || 'tu Espacio Compartido'}`, `${data.name} — ${fmt(data.amount)}`)
+    }
     return { data, error }
   }
 
@@ -309,6 +337,7 @@ export function usePayments(userId, activeSpaceId = null) {
     if (!error) {
       const updatedPayments = payments.map(p => p.id === id ? { ...p, ...data } : p)
       setPayments(updatedPayments)
+      notifySpaceChange(`Pago marcado en ${activeSpaceName || 'tu Espacio Compartido'}`, `${data.name} ya fue pagado`)
 
       // Recurrente: asegurar siempre 2 pendientes en cola
       if (payment?.is_recurrent && !payment?.is_master && payment?.parent_id) {
@@ -549,12 +578,14 @@ export function usePayments(userId, activeSpaceId = null) {
   // luego "revertirse solo" en el siguiente refetch (bug real encontrado
   // por Johnatan probando permisos de invitado, v0.9.129).
   async function deletePayment(id) {
+    const payment = payments.find(p => p.id === id)
     const { data, error } = await supabase.from('payments').delete().eq('id', id).select()
     if (error) return { error }
     if (!data || data.length === 0) {
       return { error: { message: 'No tienes permiso para eliminar este pago en este espacio.' } }
     }
     setPayments(prev => prev.filter(p => p.id !== id))
+    if (payment) notifySpaceChange(`Pago eliminado en ${activeSpaceName || 'tu Espacio Compartido'}`, `${payment.name} se eliminó del espacio`)
     return { error: null }
   }
 
