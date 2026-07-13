@@ -191,7 +191,7 @@ export function SpaceSwitcher({ spaces, activeSpaceId, onSwitch, onManage, profi
                 estilos de abajo) — si esos paddings cambian, este cálculo
                 hay que revisarlo también. */}
             {!isFront && (() => {
-              const PEEK_H = 60, FRONT_H = 52, OVERLAP = 14, BUFFER = 6
+              const PEEK_H = 60, FRONT_H = 52, OVERLAP = 14, BUFFER = 20
               const remainingAfter = ordered.length - 1 - i // cuántas tarjetas (incluida la activa) quedan después de esta
               const backdropHeight = (remainingAfter - 1) * (PEEK_H - OVERLAP) + (FRONT_H - OVERLAP) + BUFFER
               return (
