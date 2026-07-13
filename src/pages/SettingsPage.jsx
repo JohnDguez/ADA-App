@@ -20,9 +20,18 @@ const THEME_LABEL = { sistema: 'Sistema', light: 'Claro', dark: 'Oscuro' }
 // scroll largo; se migró a este patrón de menú para que escale mejor
 // (Categorías, y lo que venga después, no compiten por espacio con todo
 // lo demás).
-export function SettingsPage({ profile, user, onUpdate, onUploadAvatar, onDataDeleted, slideClass, theme, onThemeChange, onOpenPremium, sharedSpaces, initialSection, onConsumeInitialSection }) {
+export function SettingsPage({ profile, user, onUpdate, onUploadAvatar, onDataDeleted, slideClass, theme, onThemeChange, onOpenPremium, sharedSpaces, initialSection, onConsumeInitialSection, returnTab, onReturnToTab }) {
   const [section, setSection] = useState(initialSection || null) // null | 'account' | 'categories' | 'cobro' | 'notifications' | 'appearance' | 'sharedspace'
   const [uploadingAvatar, setUploadingAvatar] = useState(false)
+
+  // Si esta sección se abrió por un atajo directo (ej. "Editar" desde el
+  // switcher de Espacio Compartido, con `returnTab` viniendo de App.jsx),
+  // recordamos a qué tab regresar — el PRIMER "atrás" desde ahí debe
+  // regresar a ese tab en vez de al menú principal de Ajustes. Se limpia
+  // en cuanto el usuario navega manualmente dentro de Ajustes
+  // (`openSection`), porque a partir de ahí "atrás" ya debe comportarse
+  // normal (subir un nivel dentro de Ajustes, no saltar de tab).
+  const shortcutReturnRef = useRef(null)
 
   // Si App.jsx pide abrir directo una sección (ej. "Sumar otro espacio"
   // desde el selector de Home), se consume la señal una sola vez para no
@@ -31,6 +40,7 @@ export function SettingsPage({ profile, user, onUpdate, onUploadAvatar, onDataDe
     if (initialSection) {
       window.history.pushState({ settingsSection: initialSection }, '')
       setSection(initialSection)
+      shortcutReturnRef.current = returnTab || null
       onConsumeInitialSection?.()
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -48,7 +58,22 @@ export function SettingsPage({ profile, user, onUpdate, onUploadAvatar, onDataDe
   sectionRef.current = section
 
   useEffect(() => {
-    function handlePopState() { setSection(null) }
+    function handlePopState() {
+      if (shortcutReturnRef.current) {
+        const returnTo = shortcutReturnRef.current
+        shortcutReturnRef.current = null
+        // El "atrás" real del sistema ya se consumió aquí — se marca
+        // `sectionRef` en null a mano (no vía `setSection`, no hay tiempo de
+        // esperar el re-render) para que la limpieza de abajo no intente
+        // otro `history.back()` extra cuando este componente se desmonte
+        // al cambiar de tab (eso navegaría un paso de más, sacando al
+        // usuario de donde no debía).
+        sectionRef.current = null
+        onReturnToTab?.(returnTo)
+        return
+      }
+      setSection(null)
+    }
     window.addEventListener('popstate', handlePopState)
     return () => {
       window.removeEventListener('popstate', handlePopState)
@@ -61,6 +86,7 @@ export function SettingsPage({ profile, user, onUpdate, onUploadAvatar, onDataDe
   }, [])
 
   function openSection(s) {
+    shortcutReturnRef.current = null // navegación manual normal desde aquí en adelante
     window.history.pushState({ settingsSection: s }, '')
     setSection(s)
   }
