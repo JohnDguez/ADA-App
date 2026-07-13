@@ -47,6 +47,20 @@ export function SpaceSwitcher({ spaces, activeSpaceId, onSwitch, onManage, profi
     return { bg: 'var(--space-inactive-bg)', text: 'var(--space-inactive-text)' }
   }
 
+  // Puede haber hasta 4 espacios compartidos reales a la vez (1 propio + 3
+  // como invitado) — todos comparten el mismo color base
+  // (--space-inactive-bg), así que si 2+ asoman juntos en el stack se ven
+  // como una sola franja sin poder distinguir cuál es cuál (bug real que
+  // Johnatan encontró con "Gastos Casa" y "Test" a la vez). En vez de
+  // definir hasta 4 variables de color nuevas, cada espacio real se aclara
+  // un poco más que el anterior según su posición en la lista alfabética —
+  // escala solo con la cantidad real de espacios, sin tocar `index.css`.
+  function brightnessFor(item) {
+    if (item.kind !== 'space') return 1
+    const idx = spaceItems.findIndex(s => s.id === item.id)
+    return 1 + idx * 0.18
+  }
+
   function statFor(item) {
     const s = stats[item.id ?? 'personal']
     if (!s) return null
@@ -95,6 +109,7 @@ export function SpaceSwitcher({ spaces, activeSpaceId, onSwitch, onManage, profi
               padding: isFront ? '16px 18px 14px' : '16px 18px 24px',
               borderRadius: '16px 16px 0 0',
               background: isFront ? 'var(--bg)' : colorsFor(item.kind).bg,
+              filter: (!isFront && item.kind === 'space') ? `brightness(${brightnessFor(item)})` : 'none',
               position: 'relative',
               // La activa (al frente) debe pintarse ENCIMA de todo lo demás,
               // para que su borde tape la "cola" de la tarjeta de arriba y
