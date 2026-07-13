@@ -44,7 +44,6 @@ export default function App() {
     window.scrollTo(0, 0)
   }
   const sharedSpaces = useSharedSpaces(user?.id)
-  const spaceStats = useSpaceStats(user?.id, sharedSpaces.spaces.map(s => s.space.id))
   // La tarjeta "Nuevo espacio compartido" no es un espacio real — mientras
   // está activa, se trata como personal para efectos de qué pagos/periodo
   // consultar (usePayments, effectiveProfile), porque la página no muestra
@@ -88,6 +87,13 @@ export default function App() {
     refetch,
   } = usePayments(user?.id, paymentsSpaceId)
   const { profile, loading: profileLoading, updateProfile, uploadAvatar } = useProfile(user?.id)
+
+  // Se declara aquí (no arriba, junto a sharedSpaces) porque necesita
+  // `profile` ya disponible — cada espacio (y Personal) puede tener su
+  // PROPIO periodo de cobro, así que el hook necesita la configuración
+  // completa de cada uno, no solo su id, para saber qué cuenta como
+  // "periodo actual" en cada caso.
+  const spaceStats = useSpaceStats(user?.id, profile, sharedSpaces.spaces)
   const { notifications, unreadCount, markAsRead, markAllAsRead, deleteNotification, clearAll } = useNotifications(user?.id)
   const { theme, setTheme } = useTheme()
 
