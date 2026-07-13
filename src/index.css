@@ -2,6 +2,16 @@
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
+/* Quita el destello azul (o gris) que Chrome/Safari en móvil pintan por
+   default sobre cualquier elemento clickeable al tocarlo — como casi todo
+   en esta app son `div`s con onClick en vez de <button> nativos, se nota
+   más de lo normal. Sin retroalimentación visual propia a cambio (opción
+   elegida por Johnatan) — cada componente ya maneja su propio estado
+   visual de "activo/presionado" donde hace falta. */
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
 /* ── Tema claro (default) ─────────────────────────────────────────────────── */
 :root {
   --bg: #F2F2F2;
