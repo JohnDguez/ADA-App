@@ -104,6 +104,7 @@ export function HomePage({ payments, profile, spaceSwitcher, activeSpaceId, shar
       <div style={{ background: 'var(--bg)', borderRadius: '24px 24px 0 0', marginTop: -24, position: 'relative', zIndex: 10 }}>
         {spaceSwitcher}
         <div className={slideClass}>
+        <div key={activeSpaceId ?? 'personal'} className="content-fade-in">
 
         {activeSpaceId === 'new' ? (
           <div style={{ marginTop: 16 }}>
@@ -266,6 +267,7 @@ export function HomePage({ payments, profile, spaceSwitcher, activeSpaceId, shar
         </div>
         </>
         )}
+        </div>
         </div>
       </div>
 

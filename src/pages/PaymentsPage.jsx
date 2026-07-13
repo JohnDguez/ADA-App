@@ -786,6 +786,7 @@ export function PaymentsPage({ payments, profile, spaceSwitcher, activeSpaceId =
       <div style={{ background: 'var(--bg)', borderRadius: '24px 24px 0 0', marginTop: -24, position: 'relative', zIndex: 10 }}>
         {spaceSwitcher}
         <div className={slideClass}>
+        <div key={rawActiveSpaceId ?? 'personal'} className="content-fade-in">
 
         {rawActiveSpaceId === 'new' ? (
           <div style={{ marginTop: 16 }}>
@@ -1250,6 +1251,7 @@ export function PaymentsPage({ payments, profile, spaceSwitcher, activeSpaceId =
         </div>
         </>
         )}
+        </div>
         </div>
       </div>
     </div>
