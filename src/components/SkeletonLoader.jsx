@@ -1,10 +1,10 @@
 // ── SkeletonLoader ────────────────────────────────────────────────────────────
 // Pantalla de carga ghost que imita el layout real de la app.
 // Se muestra mientras authLoading || profileLoading en App.jsx.
-// Actualizado en v0.9.71+ para reflejar el rediseño de HomePage: tabs
-// Periodo/Mes + card con barra de progreso (antes card azul con dots),
-// colapsable de pagados, y riel vertical (punto + tarjeta) en vez de listas
-// planas de tarjetas con borde de color a la izquierda.
+// Actualizado en v0.9.153 para reflejar el rediseño de Espacio Compartido
+// (v0.9.133+): el switcher de espacios (tarjeta apilada, "Personal"/espacios
+// compartidos) ahora vive justo debajo del header, antes de las tabs
+// Periodo/Mes — antes no existía y las tabs quedaban pegadas al header.
 
 function Bone({ w, h, r, dark, style }) {
   return (
@@ -42,7 +42,16 @@ export function SkeletonLoader() {
         </div>
       </div>
 
-      <div style={{ padding: '0 16px' }}>
+      {/* ── Switcher de espacios — tarjeta "Personal" por default (caso más
+           común: la mayoría de las cargas no tienen espacios compartidos
+           activos todavía). Esquinas redondeadas arriba, fundida con el
+           contenido de abajo, igual que la tarjeta activa real. ── */}
+      <div style={{ background: 'var(--bg)', borderRadius: '24px 24px 0 0', marginTop: -24, position: 'relative', zIndex: 10 }}>
+        <div style={{ padding: '16px 18px 14px', borderBottom: '1px solid var(--border)' }}>
+          <Bone w={90} h={17} r={4} />
+        </div>
+
+        <div style={{ padding: '0 16px' }}>
 
         {/* ── Tabs Periodo / Mes ── */}
         <div style={{ display: 'flex', gap: 3, background: 'var(--section-bg)', borderRadius: 5, padding: 3, marginTop: 20, marginBottom: 10 }}>
@@ -105,6 +114,7 @@ export function SkeletonLoader() {
               </div>
             </div>
           ))}
+        </div>
         </div>
       </div>
 
