@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { ChevronLeft, Users, Copy, RefreshCw, LogOut, Trash2, Crown, Plus } from 'lucide-react'
-import { Card, Row, NotifToggle } from '../../components/SettingsShared'
+import { Card, Row, NotifToggle, Toggle } from '../../components/SettingsShared'
 import { CobroPeriodFields } from '../../components/CobroPeriodFields'
+import { showToast } from '../../components/Toast'
 
 // Sub-página de Ajustes → "Espacio Compartido". Sirve para 2 casos a la vez,
 // para no duplicar el formulario de crear/unirse en otro lugar (ej. la
@@ -11,7 +12,7 @@ import { CobroPeriodFields } from '../../components/CobroPeriodFields'
 // - Si ya pertenece a alguno: panel de administración (si es dueño) y/o
 //   lista de espacios donde es invitado (con opción de salirse).
 export function SettingsSharedSpacePage({ profile, user, sharedSpaces, onBack, slideClass }) {
-  const { spaces, createSpace, regenerateCode, redeemCode, updateMemberPermissions, updateSpaceCobro, leaveSpace, deleteSpace } = sharedSpaces
+  const { spaces, createSpace, regenerateCode, redeemCode, updateMemberPermissions, updateSpaceConfig, leaveSpace, deleteSpace } = sharedSpaces
 
   const ownedEntry  = spaces.find(s => s.membership.role === 'owner')
   const guestEntries = spaces.filter(s => s.membership.role === 'guest')
@@ -23,6 +24,8 @@ export function SettingsSharedSpacePage({ profile, user, sharedSpaces, onBack, s
   const [newDay1,     setNewDay1]     = useState(1)
   const [newDay2,     setNewDay2]     = useState(16)
   const [newWeekday,  setNewWeekday]  = useState(5)
+  const [newSalaryEnabled, setNewSalaryEnabled] = useState(false)
+  const [newSalaryAmount,  setNewSalaryAmount]  = useState('')
   const [createError, setCreateError] = useState('')
   const [createSaving,setCreateSaving]= useState(false)
 
@@ -37,6 +40,8 @@ export function SettingsSharedSpacePage({ profile, user, sharedSpaces, onBack, s
       cobroDay1: newFreq !== 'weekly' ? newDay1 : undefined,
       cobroDay2: newFreq === 'biweekly' ? newDay2 : undefined,
       cobroWeekday: newFreq === 'weekly' ? newWeekday : undefined,
+      salaryEnabled: newSalaryEnabled,
+      salaryAmount: newSalaryEnabled ? (parseFloat(newSalaryAmount) || 0) : null,
     })
     setCreateSaving(false)
     if (error) setCreateError(typeof error === 'string' ? error : 'No se pudo crear el espacio')
@@ -77,7 +82,7 @@ export function SettingsSharedSpacePage({ profile, user, sharedSpaces, onBack, s
           user={user}
           regenerateCode={regenerateCode}
           updateMemberPermissions={updateMemberPermissions}
-          updateSpaceCobro={updateSpaceCobro}
+          updateSpaceConfig={updateSpaceConfig}
           deleteSpace={deleteSpace}
         />
       )}
@@ -130,12 +135,25 @@ export function SettingsSharedSpacePage({ profile, user, sharedSpaces, onBack, s
                 <label className="field-label">Nombre del espacio</label>
                 <input className="field-input" value={newName} onChange={e => setNewName(e.target.value)} placeholder="Ej. Depa con Ale" style={{ marginBottom: 16 }} />
                 <label className="field-label" style={{ marginBottom: 8, display: 'block' }}>Periodo de cobro</label>
-                <div style={{ marginBottom: 14 }}>
+                <div style={{ marginBottom: 16 }}>
                   <CobroPeriodFields
                     freq={newFreq} day1={newDay1} day2={newDay2} weekday={newWeekday}
                     onChangeFreq={setNewFreq} onChangeDay1={setNewDay1} onChangeDay2={setNewDay2} onChangeWeekday={setNewWeekday}
                   />
                 </div>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer', marginBottom: newSalaryEnabled ? 10 : 14 }} onClick={() => setNewSalaryEnabled(v => !v)}>
+                  <div>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)' }}>Ingreso por periodo</div>
+                    <div style={{ fontSize: 11, fontWeight: 400, color: 'var(--text)', marginTop: 1 }}>Opcional — además de los Ingresos Extras que cualquier invitado con permiso puede agregar</div>
+                  </div>
+                  <Toggle on={newSalaryEnabled} />
+                </div>
+                {newSalaryEnabled && (
+                  <div style={{ marginBottom: 14 }}>
+                    <label className="field-label">Monto</label>
+                    <input type="number" value={newSalaryAmount} onChange={e => setNewSalaryAmount(e.target.value)} placeholder="0.00" className="field-input" />
+                  </div>
+                )}
                 {createError && <div style={{ fontSize: 12, color: 'var(--danger)', marginBottom: 10 }}>{createError}</div>}
                 <button onClick={handleCreate} disabled={createSaving} className="btn-primary" style={{ marginBottom: 8, opacity: createSaving ? 0.7 : 1 }}>
                   {createSaving ? 'Creando…' : 'Crear'}
@@ -176,9 +194,10 @@ export function SettingsSharedSpacePage({ profile, user, sharedSpaces, onBack, s
 }
 
 // ── Panel de administración del espacio propio ──────────────────────────────
-function OwnedSpacePanel({ entry, user, regenerateCode, updateMemberPermissions, updateSpaceCobro, deleteSpace }) {
+function OwnedSpacePanel({ entry, user, regenerateCode, updateMemberPermissions, updateSpaceConfig, deleteSpace }) {
   const [copied,        setCopied]        = useState(false)
   const [regenerating,  setRegenerating]  = useState(false)
+  const [salaryAmount,  setSalaryAmount]  = useState(entry.space.salary_amount || '')
   const [dangerOpen,    setDangerOpen]    = useState(false)
   const [dangerPassword,setDangerPassword]= useState('')
   const [dangerError,   setDangerError]   = useState('')
@@ -187,7 +206,18 @@ function OwnedSpacePanel({ entry, user, regenerateCode, updateMemberPermissions,
   const guestMembers = entry.space.members?.filter?.(m => m.role === 'guest') || []
 
   async function handleCobroChange(updates) {
-    await updateSpaceCobro(entry.space.id, updates)
+    await updateSpaceConfig(entry.space.id, updates)
+  }
+
+  async function handleSalaryToggle() {
+    await updateSpaceConfig(entry.space.id, { salary_enabled: !entry.space.salary_enabled })
+  }
+
+  async function handleSalaryAmount() {
+    const val = parseFloat(salaryAmount)
+    if (isNaN(val)) { showToast('Ingresa un monto válido'); return }
+    await updateSpaceConfig(entry.space.id, { salary_amount: val })
+    showToast('Ingreso actualizado')
   }
 
   function copyCode() {
@@ -250,6 +280,27 @@ function OwnedSpacePanel({ entry, user, regenerateCode, updateMemberPermissions,
           </div>
           {copied && <div style={{ fontSize: 11, color: 'var(--paid)', marginTop: 4 }}>Copiado</div>}
         </div>
+      </Card>
+
+      <Card>
+        <div style={{ padding: '13px 14px', borderBottom: entry.space.salary_enabled ? '0.5px solid var(--border)' : 'none' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer' }} onClick={handleSalaryToggle}>
+            <div>
+              <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)' }}>Ingreso por periodo</div>
+              <div style={{ fontSize: 11, fontWeight: 400, color: 'var(--text)', marginTop: 1 }}>Opcional — además de los Ingresos Extras que cualquier invitado con permiso puede agregar</div>
+            </div>
+            <Toggle on={entry.space.salary_enabled} />
+          </div>
+        </div>
+        {entry.space.salary_enabled && (
+          <div style={{ padding: '13px 14px' }}>
+            <label className="field-label">Monto</label>
+            <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
+              <input type="number" value={salaryAmount} onChange={e => setSalaryAmount(e.target.value)} placeholder="0.00" className="field-input" style={{ flex: 1 }} />
+              <button onClick={handleSalaryAmount} className="btn-primary" style={{ width: 'auto', padding: '0 16px' }}>Guardar</button>
+            </div>
+          </div>
+        )}
       </Card>
 
       {guestMembers.length > 0 && (
