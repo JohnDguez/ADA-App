@@ -97,16 +97,19 @@ export default function App() {
   const { notifications, unreadCount, markAsRead, markAllAsRead, deleteNotification, clearAll } = useNotifications(user?.id)
   const { theme, setTheme } = useTheme()
 
-  // "Perfil efectivo": en modo espacio, solo el periodo de cobro cambia
-  // (tiene su propio periodo, independiente del personal de cada quien) —
-  // el nombre y la foto del header NUNCA cambian, siempre son los del
-  // usuario real, sin importar el modo activo (confirmado explícitamente
-  // por Johnatan). El resto del perfil (categorías, avatar) se queda
-  // igual, no se construyó un sistema de categorías aparte por espacio en
-  // esta pasada. `salary_enabled` se fuerza a false porque un espacio
-  // compartido no tiene "salario" propio, solo los ingresos extra
-  // que cualquier miembro registre ahí (ya soportado desde antes para
-  // usuarios sin salario fijo).
+  // "Perfil efectivo": en modo espacio, el periodo de cobro y el ingreso
+  // por periodo cambian a los del espacio (tiene los suyos propios,
+  // independientes de los de cada quien) — el nombre y la foto del header
+  // NUNCA cambian, siempre son los del usuario real, sin importar el modo
+  // activo (confirmado explícitamente por Johnatan). El resto del perfil
+  // (categorías, avatar) se queda igual, no se construyó un sistema de
+  // categorías aparte por espacio en esta pasada.
+  //
+  // Ingreso por periodo: antes se forzaba false/0 para cualquier espacio
+  // compartido (un espacio nunca podía tener ingreso fijo, solo los
+  // "Ingresos Extras" manuales vía period_income) — ahora el dueño puede
+  // configurar un ingreso fijo igual que en la cuenta personal (Fase 5,
+  // columnas `salary_enabled`/`salary_amount` en shared_spaces).
   const effectiveProfile = activeSpaceEntry
     ? {
         ...profile,
@@ -114,8 +117,8 @@ export default function App() {
         cobro_day1: activeSpaceEntry.space.cobro_day1,
         cobro_day2: activeSpaceEntry.space.cobro_day2,
         cobro_weekday: activeSpaceEntry.space.cobro_weekday,
-        salary_enabled: false,
-        salary_amount: 0,
+        salary_enabled: activeSpaceEntry.space.salary_enabled || false,
+        salary_amount: activeSpaceEntry.space.salary_amount || 0,
       }
     : profile
 
