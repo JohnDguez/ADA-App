@@ -146,6 +146,20 @@ export default function App() {
   const [estimateModal,  setEstimateModal] = useState({ open: false, payment: null })
   const [notifOpen,      setNotifOpen]     = useState(false)
   const [slideDir,       setSlideDir]      = useState('right')
+  // Tab que se está animando "hacia afuera" — se sigue dibujando 300ms más
+  // (superpuesto, con pointer-events:none) mientras el nuevo tab entra
+  // encima, para que el cambio de pestaña también tenga una salida animada
+  // (antes desaparecía de golpe, sin transición propia — solo había "In").
+  const [outgoingTab, setOutgoingTab] = useState(null)
+  const [outgoingDir, setOutgoingDir] = useState('right')
+  const outgoingTimerRef = useRef(null)
+  // Arranque de la app: solo el primer tab que se muestra (justo después
+  // del SkeletonLoader) debe entrar de abajo hacia arriba en vez de lateral
+  // — las tarjetas del switcher están apiladas verticalmente, entrar de
+  // lado rompía la sensación de apilado. Se marca como "usado" apenas se
+  // llega a dibujar contenido real (ver más abajo, antes del `return`) para
+  // que cualquier cambio de tab posterior use el slide lateral normal.
+  const bootDoneRef = useRef(false)
   const [migrationModal, setMigrationModal] = useState(false)
   const [patchNotesOpen,   setPatchNotesOpen]   = useState(false)
   const [patchNotesToShow, setPatchNotesToShow] = useState([])
@@ -374,13 +388,31 @@ export default function App() {
     else showToast(`Pago ${data.startFrom || 1} de ${data.totalInstallments} creado`)
   }
 
-  function goToSharedSpaceSettings() {
+  // Cambia de tab de forma centralizada — antes cada disparador (BottomNav,
+  // headerProps, el atajo de Espacio Compartido, el regreso de Ajustes, el
+  // onGoSettings propio de HomePage) repetía el mismo cálculo de dirección +
+  // setTab + sessionStorage por su cuenta. Ahora todos pasan por aquí, que
+  // además deja montado el tab saliente 300ms más (animando con
+  // page-slide-out-*) para que la salida también quede animada.
+  function changeTab(newTab) {
+    if (newTab === tab) return
     const fromIdx = TAB_ORDER.indexOf(tab)
-    const toIdx   = TAB_ORDER.indexOf('settings')
-    setSlideDir(toIdx >= fromIdx ? 'right' : 'left')
+    const toIdx   = TAB_ORDER.indexOf(newTab)
+    const dir = toIdx >= fromIdx ? 'right' : 'left'
+    if (outgoingTimerRef.current) clearTimeout(outgoingTimerRef.current)
+    setOutgoingTab(tab)
+    setOutgoingDir(dir)
+    setSlideDir(dir)
+    setTab(newTab)
+    sessionStorage.setItem('ada_tab', newTab)
+    window.scrollTo(0, 0)
+    outgoingTimerRef.current = setTimeout(() => setOutgoingTab(null), 300)
+  }
+
+  function goToSharedSpaceSettings() {
     setSettingsReturnTab(tab)
     setSettingsInitialSection('sharedspace')
-    setTab('settings'); sessionStorage.setItem('ada_tab', 'settings'); window.scrollTo(0, 0)
+    changeTab('settings')
   }
 
   // SettingsPage.jsx llama esto cuando el usuario presiona "atrás" justo
@@ -388,24 +420,22 @@ export default function App() {
   // vez de mostrar el menú principal de Ajustes, regresa directo al tab
   // donde estaba antes de tocar el atajo.
   function returnFromSettingsShortcut(returnTab) {
-    const fromIdx = TAB_ORDER.indexOf('settings')
-    const toIdx   = TAB_ORDER.indexOf(returnTab)
-    setSlideDir(toIdx >= fromIdx ? 'right' : 'left')
-    setTab(returnTab)
-    sessionStorage.setItem('ada_tab', returnTab)
+    changeTab(returnTab)
     setSettingsReturnTab(null)
   }
 
   const headerProps = {
     profile: effectiveProfile, unreadCount,
     onOpenNotifs: () => setNotifOpen(true),
-    onGoSettings: () => {
-      const fromIdx = TAB_ORDER.indexOf(tab)
-      const toIdx   = TAB_ORDER.indexOf('settings')
-      setSlideDir(toIdx >= fromIdx ? 'right' : 'left')
-      setTab('settings'); sessionStorage.setItem('ada_tab', 'settings'); window.scrollTo(0, 0)
-    },
+    onGoSettings: () => changeTab('settings'),
   }
+
+  // Verdadero solo en el primer tab que se dibuja después de cargar (ver
+  // bootDoneRef arriba) — usa la entrada vertical de arranque en vez del
+  // slide lateral normal.
+  const isBoot = !bootDoneRef.current
+  bootDoneRef.current = true
+  const tabSlideClass = isBoot ? 'boot-content' : `page-slide-${slideDir}`
 
   // Pagos que se muestran en Home/Pagos: excluir masters (is_master: true)
   const visiblePayments = payments.filter(p => !p.is_master)
@@ -449,6 +479,100 @@ export default function App() {
 
   return (
     <>
+      {/* Tab saliente — se sigue dibujando 300ms más, superpuesto y sin
+          poder tocarse, animando hacia el lado contrario al que entra el
+          nuevo tab (ver changeTab arriba). Callbacks vacíos a propósito:
+          esta instancia es solo visual, nunca debe disparar acciones
+          reales (mutaciones, navegación) mientras se anima hacia afuera. */}
+      {outgoingTab && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 1, pointerEvents: 'none', overflow: 'hidden' }}>
+          {outgoingTab === 'home' && (
+            <HomePage
+              payments={visiblePayments}
+              profile={effectiveProfile}
+              activeSpaceId={activeSpaceId}
+              sharedSpaces={sharedSpaces}
+              spacePermissions={spacePermissions}
+              onOpenPremium={() => {}}
+              onSpaceReady={() => {}}
+              spaceSwitcher={spaceSwitcherEl}
+              activeSpaceHeader={activeSpaceHeaderEl}
+              onAdd={() => {}}
+              slideClass={`page-slide-out-${outgoingDir}`}
+              onMarkPaid={() => {}}
+              onMarkUnpaid={() => {}}
+              onCaptureAmount={() => {}}
+              onEdit={() => {}}
+              onDelete={() => {}}
+              onPostpone={() => {}}
+              onAdvance={() => {}}
+              onGoSettings={() => {}}
+              notifications={notifications}
+              unreadCount={unreadCount}
+              onMarkAsRead={() => {}}
+              onMarkAllAsRead={() => {}}
+              onDeleteNotif={() => {}}
+              onClearAllNotifs={() => {}}
+            />
+          )}
+          {outgoingTab === 'payments' && (
+            <PaymentsPage
+              payments={visiblePayments}
+              slideClass={`page-slide-out-${outgoingDir}`}
+              {...headerProps}
+              activeSpaceId={paymentsSpaceId}
+              rawActiveSpaceId={activeSpaceId}
+              sharedSpaces={sharedSpaces}
+              spacePermissions={spacePermissions}
+              onOpenPremium={() => {}}
+              onSpaceReady={() => {}}
+              spaceSwitcher={spaceSwitcherEl}
+              activeSpaceHeader={activeSpaceHeaderEl}
+              onMarkUnpaid={() => {}}
+              onDelete={() => {}}
+              onDeleteDirect={() => {}}
+              onUpdateProfile={() => {}}
+              onEdit={() => {}}
+            />
+          )}
+          {outgoingTab === 'recurrents' && (
+            <RecurrentsPage
+              payments={payments}
+              slideClass={`page-slide-out-${outgoingDir}`}
+              {...headerProps}
+              activeSpaceId={activeSpaceId}
+              sharedSpaces={sharedSpaces}
+              spacePermissions={spacePermissions}
+              onOpenPremium={() => {}}
+              onSpaceReady={() => {}}
+              spaceSwitcher={spaceSwitcherEl}
+              activeSpaceHeader={activeSpaceHeaderEl}
+              onPause={() => {}}
+              onResume={() => {}}
+              onDelete={() => {}}
+              onEdit={() => {}}
+            />
+          )}
+          {outgoingTab === 'settings' && (
+            <SettingsPage
+              profile={profile}
+              user={user}
+              onUpdate={() => {}}
+              onUploadAvatar={() => {}}
+              onDataDeleted={() => {}}
+              slideClass={`page-slide-out-${outgoingDir}`}
+              theme={theme}
+              onThemeChange={() => {}}
+              onOpenPremium={() => {}}
+              sharedSpaces={sharedSpaces}
+              initialSection={null}
+              onConsumeInitialSection={() => {}}
+              returnTab={null}
+              onReturnToTab={() => {}}
+            />
+          )}
+        </div>
+      )}
       {tab === 'home' && (
         <HomePage
           payments={visiblePayments}
@@ -460,8 +584,9 @@ export default function App() {
           onSpaceReady={handleSpaceReady}
           spaceSwitcher={spaceSwitcherEl}
           activeSpaceHeader={activeSpaceHeaderEl}
+          isBoot={isBoot}
           onAdd={openAdd}
-          slideClass={`page-slide-${slideDir}`}
+          slideClass={tabSlideClass}
           onMarkPaid={handleMarkPaid}
           onMarkUnpaid={handleMarkUnpaid}
           onCaptureAmount={openEstimateModal}
@@ -469,12 +594,7 @@ export default function App() {
           onDelete={handleDelete}
           onPostpone={handlePostpone}
           onAdvance={handleAdvance}
-          onGoSettings={() => {
-            const fromIdx = TAB_ORDER.indexOf(tab)
-            const toIdx   = TAB_ORDER.indexOf('settings')
-            setSlideDir(toIdx >= fromIdx ? 'right' : 'left')
-            setTab('settings'); sessionStorage.setItem('ada_tab', 'settings'); window.scrollTo(0, 0)
-          }}
+          onGoSettings={() => changeTab('settings')}
           notifications={notifications}
           unreadCount={unreadCount}
           onMarkAsRead={markAsRead}
@@ -486,7 +606,7 @@ export default function App() {
       {tab === 'payments' && (
         <PaymentsPage
           payments={visiblePayments}
-          slideClass={`page-slide-${slideDir}`}
+          slideClass={tabSlideClass}
           {...headerProps}
           activeSpaceId={paymentsSpaceId}
           rawActiveSpaceId={activeSpaceId}
@@ -496,6 +616,7 @@ export default function App() {
           onSpaceReady={handleSpaceReady}
           spaceSwitcher={spaceSwitcherEl}
           activeSpaceHeader={activeSpaceHeaderEl}
+          isBoot={isBoot}
           onMarkUnpaid={handleMarkUnpaid}
           onDelete={handleDelete}
           onDeleteDirect={async (id) => { await deletePayment(id); showToast('Pago eliminado') }}
@@ -506,7 +627,7 @@ export default function App() {
       {tab === 'recurrents' && (
         <RecurrentsPage
           payments={payments}
-          slideClass={`page-slide-${slideDir}`}
+          slideClass={tabSlideClass}
           {...headerProps}
           activeSpaceId={activeSpaceId}
           sharedSpaces={sharedSpaces}
@@ -515,6 +636,7 @@ export default function App() {
           onSpaceReady={handleSpaceReady}
           spaceSwitcher={spaceSwitcherEl}
           activeSpaceHeader={activeSpaceHeaderEl}
+          isBoot={isBoot}
           onPause={handlePauseRecurrent}
           onResume={handleResumeRecurrent}
           onDelete={handleDelete}
@@ -528,7 +650,7 @@ export default function App() {
           onUpdate={updateProfile}
           onUploadAvatar={uploadAvatar}
           onDataDeleted={() => { refetch() }}
-          slideClass={`page-slide-${slideDir}`}
+          slideClass={tabSlideClass}
           theme={theme}
           onThemeChange={setTheme}
           onOpenPremium={() => setPremiumPageOpen(true)}
@@ -542,12 +664,7 @@ export default function App() {
 
       <BottomNav
         active={tab}
-        onChange={t => {
-          const fromIdx = TAB_ORDER.indexOf(tab)
-          const toIdx   = TAB_ORDER.indexOf(t)
-          setSlideDir(toIdx >= fromIdx ? 'right' : 'left')
-          setTab(t); sessionStorage.setItem('ada_tab', t); window.scrollTo(0, 0)
-        }}
+        onChange={t => changeTab(t)}
         onAdd={openAdd}
       />
 

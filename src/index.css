@@ -341,11 +341,47 @@ body.modal-open {
   to   { transform: none;              opacity: 1; }
 }
 
+@keyframes slideOutLeft {
+  from { transform: translateX(0);     opacity: 1; }
+  to   { transform: translateX(-100%); opacity: 0; }
+}
+@keyframes slideOutRight {
+  from { transform: translateX(0);    opacity: 1; }
+  to   { transform: translateX(100%); opacity: 0; }
+}
+
 .page-slide-right {
   animation: slideInRight 0.28s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
 }
 .page-slide-left {
   animation: slideInLeft 0.28s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+}
+/* Contraparte de salida — el tab que se deja atrás anima hacia el lado
+   CONTRARIO al que entra el nuevo (si el nuevo entra de la derecha, el
+   viejo sale por la izquierda), para que se sienta un solo movimiento
+   continuo en vez de un corte seco. */
+.page-slide-out-right {
+  animation: slideOutLeft 0.28s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+}
+.page-slide-out-left {
+  animation: slideOutRight 0.28s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+}
+
+/* ── Entrada de arranque (solo la primera vez que abre la app) ────────────
+   Sustituye el slide lateral SOLO en el primer tab que se dibuja tras el
+   SkeletonLoader — las tarjetas del switcher están apiladas verticalmente,
+   entrar de lado a lado rompía esa sensación. El switcher entra un poco
+   antes que el contenido (80ms de retraso) para que no se sientan como un
+   solo bloque llegando al mismo tiempo. */
+@keyframes bootSlideUp {
+  from { transform: translateY(36px); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+.boot-switcher {
+  animation: bootSlideUp 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+}
+.boot-content {
+  animation: bootSlideUp 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.08s both;
 }
 
 /* ── Panel de notificaciones ─────────────────────────────────────────────── */
