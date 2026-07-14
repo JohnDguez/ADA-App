@@ -392,11 +392,11 @@ body.modal-open {
    unidad — reemplaza al fundido chiquito de v0.9.159 (Johnatan pidió más
    recorrido, que se sintiera como una entrada real, no solo un parpadeo). */
 @keyframes pageContentSlideUp {
-  from { opacity: 0; transform: translateY(30px); }
+  from { opacity: 0; transform: translateY(50px); }
   to   { opacity: 1; transform: translateY(0); }
 }
 .content-slide-up {
-  animation: pageContentSlideUp .35s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+  animation: pageContentSlideUp .3s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
 }
 
 /* ── Skeleton loader ─────────────────────────────────────────────────────── */
