@@ -32,7 +32,7 @@ function nextPeriodRange(cfg) {
 // rotate: da control explícito sobre el sentido (el truco de
 // dasharray/rotate para invertir el sentido requiere combinar rotate con
 // un espejo, mucho más propenso a errores).
-function ProgressRing({ percent, size = 128, strokeWidth = 10, children }) {
+function ProgressRing({ percent, size = 132, strokeWidth = 8, children }) {
   const r  = (size - strokeWidth) / 2
   const cx = size / 2
   const cy = size / 2
