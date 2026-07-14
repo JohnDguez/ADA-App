@@ -123,7 +123,7 @@ export function HomePage({ payments, profile, spaceSwitcher, activeSpaceHeader, 
       <div style={{ background: 'var(--bg)', borderRadius: '24px 24px 0 0', marginTop: -24, position: 'relative', zIndex: 10 }}>
         {spaceSwitcher}
 
-        {activeSpaceId !== 'new' && activeSpaceHeader}
+        {activeSpaceHeader}
 
         <div className={slideClass}>
         <div className={spaceJustChanged ? 'content-slide-up' : ''}>
