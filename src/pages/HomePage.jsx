@@ -32,7 +32,7 @@ function nextPeriodRange(cfg) {
 // rotate: da control explícito sobre el sentido (el truco de
 // dasharray/rotate para invertir el sentido requiere combinar rotate con
 // un espejo, mucho más propenso a errores).
-function ProgressRing({ percent, size = 104, strokeWidth = 9, children }) {
+function ProgressRing({ percent, size = 128, strokeWidth = 10, children }) {
   const r  = (size - strokeWidth) / 2
   const cx = size / 2
   const cy = size / 2
@@ -57,7 +57,10 @@ function ProgressRing({ percent, size = 104, strokeWidth = 9, children }) {
           <path d={pathD} fill="none" stroke="var(--paid)" strokeWidth={strokeWidth} strokeLinecap="round" />
         ) : null}
       </svg>
-      <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+      {/* padding horizontal + textAlign:center acotan el contenido a la zona
+          segura del círculo (evita el desborde que Johnatan reportó cuando
+          "$1,200.00 pagado" era más ancho que el propio anillo) */}
+      <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '0 10px', textAlign: 'center' }}>
         {children}
       </div>
     </div>
@@ -219,26 +222,26 @@ export function HomePage({ payments, profile, spaceSwitcher, activeSpaceHeader, 
                   Periodo {periodRange(profile)}
                 </div>
                 {pagarEsteCobro.length === 0 ? (
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
                     <ProgressRing percent={1}>
-                      <Check size={26} color="var(--paid)" strokeWidth={2.5} />
-                      <div style={{ fontSize: 11, fontWeight: 500, color: 'var(--text)', textAlign: 'center', marginTop: 6, lineHeight: 1.3 }}>Sin pagos<br />pendientes</div>
+                      <Check size={30} color="var(--paid)" strokeWidth={2.5} />
+                      <div style={{ fontSize: 12, fontWeight: 500, color: 'var(--text)', marginTop: 6, lineHeight: 1.3 }}>Sin pagos<br />pendientes</div>
                     </ProgressRing>
-                    <div style={{ flex: 1 }}>
-                      <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--accent)', marginBottom: 10 }}>Total de este periodo</div>
-                      <div style={{ fontSize: 24, fontWeight: 700, color: 'var(--text)' }}>{fmt(pagadoMonto)}</div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 12, fontWeight: 500, color: 'var(--accent)', marginBottom: 10 }}>Total de este periodo</div>
+                      <div style={{ fontSize: 28, fontWeight: 700, color: 'var(--text)' }}>{fmt(pagadoMonto)}</div>
                     </div>
                   </div>
                 ) : (
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
                     <ProgressRing percent={pctPagado / 100}>
-                      <span style={{ fontSize: 22, fontWeight: 700, color: 'var(--text)' }}>{pctPagado}%</span>
-                      <span style={{ fontSize: 11, fontWeight: 500, color: 'var(--paid)', marginTop: 2 }}>{fmt(pagadoMonto)} pagado</span>
+                      <span style={{ fontSize: 26, fontWeight: 700, color: 'var(--text)' }}>{pctPagado}%</span>
+                      <span style={{ fontSize: 11, fontWeight: 500, color: 'var(--paid)', marginTop: 3 }}>{fmt(pagadoMonto)} pagado</span>
                       <span style={{ fontSize: 11, fontWeight: 400, color: 'var(--text)' }}>{fmt(pendingAmt)} pendiente</span>
                     </ProgressRing>
-                    <div style={{ flex: 1 }}>
-                      <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--accent)', marginBottom: 10 }}>Total de este periodo</div>
-                      <div style={{ fontSize: 24, fontWeight: 700, color: 'var(--text)', marginBottom: 14 }}>{fmt(totalConocido)}</div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 12, fontWeight: 500, color: 'var(--accent)', marginBottom: 10 }}>Total de este periodo</div>
+                      <div style={{ fontSize: 28, fontWeight: 700, color: 'var(--text)', marginBottom: 14 }}>{fmt(totalConocido)}</div>
                       <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--text)' }}>
                         {pagosFijosCount} pago{pagosFijosCount !== 1 ? 's' : ''} fijo{pagosFijosCount !== 1 ? 's' : ''}
                         {vencidos.length > 0 && <span style={{ color: 'var(--danger)' }}> · {vencidos.length} vencido{vencidos.length !== 1 ? 's' : ''}</span>}
@@ -259,26 +262,26 @@ export function HomePage({ payments, profile, spaceSwitcher, activeSpaceHeader, 
                   {MONTHS[thisMonth]} {thisYear}
                 </div>
                 {pendingThisMonthAmt <= 0 ? (
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
                     <ProgressRing percent={1}>
-                      <Check size={26} color="var(--paid)" strokeWidth={2.5} />
-                      <div style={{ fontSize: 11, fontWeight: 500, color: 'var(--text)', textAlign: 'center', marginTop: 6, lineHeight: 1.3 }}>Sin pagos<br />pendientes</div>
+                      <Check size={30} color="var(--paid)" strokeWidth={2.5} />
+                      <div style={{ fontSize: 12, fontWeight: 500, color: 'var(--text)', marginTop: 6, lineHeight: 1.3 }}>Sin pagos<br />pendientes</div>
                     </ProgressRing>
-                    <div style={{ flex: 1 }}>
-                      <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--accent)', marginBottom: 10 }}>Total de este mes</div>
-                      <div style={{ fontSize: 24, fontWeight: 700, color: 'var(--text)' }}>{fmt(paidThisMonthAmt)}</div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 12, fontWeight: 500, color: 'var(--accent)', marginBottom: 10 }}>Total de este mes</div>
+                      <div style={{ fontSize: 28, fontWeight: 700, color: 'var(--text)' }}>{fmt(paidThisMonthAmt)}</div>
                     </div>
                   </div>
                 ) : (
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
                     <ProgressRing percent={pctPagadoMes / 100}>
-                      <span style={{ fontSize: 22, fontWeight: 700, color: 'var(--text)' }}>{pctPagadoMes}%</span>
-                      <span style={{ fontSize: 11, fontWeight: 500, color: 'var(--paid)', marginTop: 2 }}>{fmt(paidThisMonthAmt)} pagado</span>
+                      <span style={{ fontSize: 26, fontWeight: 700, color: 'var(--text)' }}>{pctPagadoMes}%</span>
+                      <span style={{ fontSize: 11, fontWeight: 500, color: 'var(--paid)', marginTop: 3 }}>{fmt(paidThisMonthAmt)} pagado</span>
                       <span style={{ fontSize: 11, fontWeight: 400, color: 'var(--text)' }}>{fmt(pendingThisMonthAmt)} pendiente</span>
                     </ProgressRing>
-                    <div style={{ flex: 1 }}>
-                      <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--accent)', marginBottom: 10 }}>Total de este mes</div>
-                      <div style={{ fontSize: 24, fontWeight: 700, color: 'var(--text)', marginBottom: 14 }}>{fmt(totalThisMonth)}</div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 12, fontWeight: 500, color: 'var(--accent)', marginBottom: 10 }}>Total de este mes</div>
+                      <div style={{ fontSize: 28, fontWeight: 700, color: 'var(--text)', marginBottom: 14 }}>{fmt(totalThisMonth)}</div>
                       <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--text)' }}>
                         {paidThisMonth.length} pagado{paidThisMonth.length !== 1 ? 's' : ''}
                         {variableThisMonth > 0 && ` · ${variableThisMonth} variable${variableThisMonth !== 1 ? 's' : ''}`}
