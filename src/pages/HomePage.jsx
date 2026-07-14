@@ -227,9 +227,6 @@ export function HomePage({ payments, profile, spaceSwitcher, activeSpaceHeader, 
 
               {/* Card 1 — Periodo actual */}
               <div style={{ minWidth: '100%', background: 'var(--surface)', borderRadius: 12, padding: '20px 16px' }}>
-                <div style={{ textAlign: 'right', fontSize: 12, fontWeight: 500, color: 'var(--text)', marginBottom: 14 }}>
-                  Periodo {periodRange(profile)}
-                </div>
                 {pagarEsteCobro.length === 0 ? (
                   <div style={{ display: 'flex', alignItems: 'center', gap: 18 }}>
                     <ProgressRing percent={1} size={140}>
@@ -237,6 +234,9 @@ export function HomePage({ payments, profile, spaceSwitcher, activeSpaceHeader, 
                       <div style={{ fontSize: 12, fontWeight: 500, color: 'var(--text)', marginTop: 8, lineHeight: 1.3 }}>Sin pagos<br />pendientes</div>
                     </ProgressRing>
                     <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ textAlign: 'right', fontSize: 12, fontWeight: 500, color: 'var(--text)', marginBottom: 14 }}>
+                        Periodo {periodRange(profile)}
+                      </div>
                       <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--accent)', marginBottom: 12 }}>Total de este periodo</div>
                       <div style={{ fontSize: 32, fontWeight: 700, color: 'var(--text)', marginBottom: 16 }}>{fmt(pagadoMonto)}</div>
                       {(pagadosFijosEstePeriodo > 0 || pagadosVariablesEstePeriodo > 0) && (
@@ -256,6 +256,9 @@ export function HomePage({ payments, profile, spaceSwitcher, activeSpaceHeader, 
                       <span style={{ fontSize: 11, fontWeight: 400, color: 'var(--text)' }}>{fmt(pendingAmt)} pendiente</span>
                     </ProgressRing>
                     <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ textAlign: 'right', fontSize: 12, fontWeight: 500, color: 'var(--text)', marginBottom: 14 }}>
+                        Periodo {periodRange(profile)}
+                      </div>
                       <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--accent)', marginBottom: 12 }}>Total de este periodo</div>
                       <div style={{ fontSize: 32, fontWeight: 700, color: 'var(--text)', marginBottom: 16 }}>{fmt(totalConocido)}</div>
                       <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--text)' }}>
@@ -274,9 +277,6 @@ export function HomePage({ payments, profile, spaceSwitcher, activeSpaceHeader, 
 
               {/* Card 2 — Este mes */}
               <div style={{ minWidth: '100%', background: 'var(--surface)', borderRadius: 12, padding: '20px 16px' }}>
-                <div style={{ textAlign: 'right', fontSize: 12, fontWeight: 500, color: 'var(--text)', marginBottom: 14 }}>
-                  {MONTHS[thisMonth]} {thisYear}
-                </div>
                 {pendingThisMonthAmt <= 0 ? (
                   <div style={{ display: 'flex', alignItems: 'center', gap: 18 }}>
                     <ProgressRing percent={1} size={140}>
@@ -284,6 +284,9 @@ export function HomePage({ payments, profile, spaceSwitcher, activeSpaceHeader, 
                       <div style={{ fontSize: 12, fontWeight: 500, color: 'var(--text)', marginTop: 8, lineHeight: 1.3 }}>Sin pagos<br />pendientes</div>
                     </ProgressRing>
                     <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ textAlign: 'right', fontSize: 12, fontWeight: 500, color: 'var(--text)', marginBottom: 14 }}>
+                        {MONTHS[thisMonth]} {thisYear}
+                      </div>
                       <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--accent)', marginBottom: 12 }}>Total de este mes</div>
                       <div style={{ fontSize: 32, fontWeight: 700, color: 'var(--text)', marginBottom: 16 }}>{fmt(paidThisMonthAmt)}</div>
                       {(paidFixedThisMonth > 0 || variableThisMonth > 0) && (
@@ -303,6 +306,9 @@ export function HomePage({ payments, profile, spaceSwitcher, activeSpaceHeader, 
                       <span style={{ fontSize: 11, fontWeight: 400, color: 'var(--text)' }}>{fmt(pendingThisMonthAmt)} pendiente</span>
                     </ProgressRing>
                     <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ textAlign: 'right', fontSize: 12, fontWeight: 500, color: 'var(--text)', marginBottom: 14 }}>
+                        {MONTHS[thisMonth]} {thisYear}
+                      </div>
                       <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--accent)', marginBottom: 12 }}>Total de este mes</div>
                       <div style={{ fontSize: 32, fontWeight: 700, color: 'var(--text)', marginBottom: 16 }}>{fmt(totalThisMonth)}</div>
                       <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--text)' }}>
