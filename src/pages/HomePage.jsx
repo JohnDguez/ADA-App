@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { Trophy, ChevronDown, ChevronUp, Check, HelpCircle, RotateCcw } from 'lucide-react'
 import { PayCard } from '../components/PayCard'
 import { PayRail } from '../components/PayRail'
@@ -22,6 +22,25 @@ function nextPeriodRange(cfg) {
 }
 
 export function HomePage({ payments, profile, spaceSwitcher, activeSpaceHeader, activeSpaceId, sharedSpaces, spacePermissions, onOpenPremium, onSpaceReady, onAdd, onMarkPaid, onMarkUnpaid, onCaptureAmount, onEdit, onDelete, onPostpone, onAdvance, onGoSettings, notifications, unreadCount, onMarkAsRead, onMarkAllAsRead, onDeleteNotif, onClearAllNotifs, slideClass }) {
+  // Detecta un cambio REAL de espacio activo (no el primer montaje de la
+  // página, que también dispararía un `key` remontado sin querer) — antes
+  // se usaba `key={activeSpaceId}` para forzar el remontado del contenido,
+  // pero eso se disparaba CADA VEZ que se entraba a la pestaña (Inicio ya
+  // se monta de cero al cambiar de tab), sumándose sin querer a la
+  // animación horizontal de cambio de pestaña y dando un efecto diagonal
+  // raro (bug real que Johnatan encontró). Con este ref, la animación solo
+  // se activa cuando el espacio cambia MIENTRAS la página ya está montada.
+  const prevSpaceRef = useRef(activeSpaceId)
+  const [spaceJustChanged, setSpaceJustChanged] = useState(false)
+  useEffect(() => {
+    if (prevSpaceRef.current !== activeSpaceId) {
+      setSpaceJustChanged(true)
+      prevSpaceRef.current = activeSpaceId
+      const timer = setTimeout(() => setSpaceJustChanged(false), 300)
+      return () => clearTimeout(timer)
+    }
+  }, [activeSpaceId])
+
   const [notifOpen,      setNotifOpen]      = useState(false)
   const [activeCard,     setActiveCard]     = useState(0)
   const [touchStartX,    setTouchStartX]    = useState(null)
@@ -104,7 +123,7 @@ export function HomePage({ payments, profile, spaceSwitcher, activeSpaceHeader, 
       <div style={{ background: 'var(--bg)', borderRadius: '24px 24px 0 0', marginTop: -24, position: 'relative', zIndex: 10 }}>
         {spaceSwitcher}
         <div className={slideClass}>
-        <div key={activeSpaceId ?? 'personal'} className="content-slide-up">
+        <div className={spaceJustChanged ? 'content-slide-up' : ''}>
 
         {activeSpaceId !== 'new' && activeSpaceHeader}
 

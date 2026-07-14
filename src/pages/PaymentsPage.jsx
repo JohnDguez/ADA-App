@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { ChevronLeft, ChevronRight, MoreVertical, Plus, CircleDollarSign, ChevronDown, ChevronUp, Pencil, RotateCcw, Trash2, Check } from 'lucide-react'
 import { PageHeader } from '../components/PageHeader'
 import { NewSharedSpacePanel } from '../components/NewSharedSpacePanel'
@@ -65,6 +65,20 @@ function prevPeriod(profile) {
 }
 
 export function PaymentsPage({ payments, profile, spaceSwitcher, activeSpaceHeader, activeSpaceId = null, rawActiveSpaceId = null, sharedSpaces, spacePermissions, onOpenPremium, onSpaceReady, unreadCount, onOpenNotifs, onGoSettings, onMarkUnpaid, onDelete, onDeleteDirect, onUpdateProfile, onEdit, slideClass }) {
+  // Mismo mecanismo que HomePage.jsx — ver ahí el porqué (evitar que la
+  // animación de entrada se dispare también en un simple cambio de
+  // pestaña, no solo en un cambio real de espacio).
+  const prevSpaceRef = useRef(rawActiveSpaceId)
+  const [spaceJustChanged, setSpaceJustChanged] = useState(false)
+  useEffect(() => {
+    if (prevSpaceRef.current !== rawActiveSpaceId) {
+      setSpaceJustChanged(true)
+      prevSpaceRef.current = rawActiveSpaceId
+      const timer = setTimeout(() => setSpaceJustChanged(false), 300)
+      return () => clearTimeout(timer)
+    }
+  }, [rawActiveSpaceId])
+
   const now = new Date()
 
   const [monthsBack,  setMonthsBack]  = useState(3)
@@ -786,7 +800,7 @@ export function PaymentsPage({ payments, profile, spaceSwitcher, activeSpaceHead
       <div style={{ background: 'var(--bg)', borderRadius: '24px 24px 0 0', marginTop: -24, position: 'relative', zIndex: 10 }}>
         {spaceSwitcher}
         <div className={slideClass}>
-        <div key={rawActiveSpaceId ?? 'personal'} className="content-slide-up">
+        <div className={spaceJustChanged ? 'content-slide-up' : ''}>
 
         {rawActiveSpaceId !== 'new' && activeSpaceHeader}
 

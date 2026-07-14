@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useRef, useEffect } from 'react'
 import { Pause, Play, Trash2, Search, ChevronDown, CreditCard, Pencil, MoreVertical } from 'lucide-react'
 import { PageHeader } from '../components/PageHeader'
 import { NewSharedSpacePanel } from '../components/NewSharedSpacePanel'
@@ -28,6 +28,20 @@ function FilterChip({ label, active, onClick }) {
 }
 
 export function RecurrentsPage({ payments, profile, spaceSwitcher, activeSpaceHeader, activeSpaceId = null, sharedSpaces, spacePermissions, onOpenPremium, onSpaceReady, unreadCount, onOpenNotifs, onGoSettings, onPause, onResume, onDelete, onEdit, slideClass }) {
+  // Mismo mecanismo que HomePage.jsx — ver ahí el porqué (evitar que la
+  // animación de entrada se dispare también en un simple cambio de
+  // pestaña, no solo en un cambio real de espacio).
+  const prevSpaceRef = useRef(activeSpaceId)
+  const [spaceJustChanged, setSpaceJustChanged] = useState(false)
+  useEffect(() => {
+    if (prevSpaceRef.current !== activeSpaceId) {
+      setSpaceJustChanged(true)
+      prevSpaceRef.current = activeSpaceId
+      const timer = setTimeout(() => setSpaceJustChanged(false), 300)
+      return () => clearTimeout(timer)
+    }
+  }, [activeSpaceId])
+
   const [search,        setSearch]        = useState('')
   const [filterStatus,  setFilterStatus]  = useState('todos')
   const [filterType,    setFilterType]    = useState('todos')
@@ -137,7 +151,7 @@ export function RecurrentsPage({ payments, profile, spaceSwitcher, activeSpaceHe
       <div style={{ background: 'var(--bg)', borderRadius: '24px 24px 0 0', marginTop: -24, position: 'relative', zIndex: 10 }}>
         {spaceSwitcher}
         <div className={slideClass}>
-          <div key={activeSpaceId ?? 'personal'} className="content-slide-up">
+          <div className={spaceJustChanged ? 'content-slide-up' : ''}>
 
           {activeSpaceId !== 'new' && activeSpaceHeader}
 
