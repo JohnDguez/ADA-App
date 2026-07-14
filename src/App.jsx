@@ -146,21 +146,6 @@ export default function App() {
   const [estimateModal,  setEstimateModal] = useState({ open: false, payment: null })
   const [notifOpen,      setNotifOpen]     = useState(false)
   const [slideDir,       setSlideDir]      = useState('right')
-  // Tab que se está animando "hacia afuera" — se sigue dibujando 300ms más
-  // (superpuesto, con pointer-events:none) mientras el nuevo tab entra
-  // encima, para que el cambio de pestaña también tenga una salida animada
-  // (antes desaparecía de golpe, sin transición propia — solo había "In").
-  const [outgoingTab, setOutgoingTab] = useState(null)
-  const [outgoingDir, setOutgoingDir] = useState('right')
-  const outgoingTimerRef = useRef(null)
-  // Arranque de la app: solo el primer tab que se muestra (justo después
-  // del SkeletonLoader) debe entrar de abajo hacia arriba en vez de lateral
-  // — las tarjetas del switcher están apiladas verticalmente, entrar de
-  // lado rompía la sensación de apilado. Se marca como "usado" en un
-  // useEffect (no durante el render — ver el efecto justo antes de
-  // `authLoading || ... return <SkeletonLoader/>` más abajo) para que
-  // funcione igual con o sin React.StrictMode.
-  const bootDoneRef = useRef(false)
   const [migrationModal, setMigrationModal] = useState(false)
   const [patchNotesOpen,   setPatchNotesOpen]   = useState(false)
   const [patchNotesToShow, setPatchNotesToShow] = useState([])
@@ -219,26 +204,6 @@ export default function App() {
     setPatchNotesToShow(unseen)
     setPatchNotesOpen(unseen.length > 0)
   }, [user, profile, profileLoading])
-
-  // Marca el arranque como "consumido" una vez que YA se pintó el primer
-  // tab real (no antes) — se hace en un efecto (después del commit), nunca
-  // mutando la ref durante el render: si el proyecto corre bajo
-  // React.StrictMode en desarrollo, React invoca el render dos veces por
-  // cada commit, y una mutación directa durante el render dejaba la
-  // bandera en `true` desde la primera pasada (descartada), haciendo que
-  // la segunda (la que de verdad se pinta) ya la viera en `true` — la
-  // entrada de arranque nunca se disparaba. Con la mutación movida a un
-  // efecto, ambas pasadas del render son puras (solo leen la ref) y el
-  // efecto se ejecuta una sola vez de forma efectiva tras el commit real.
-  useEffect(() => {
-    if (authLoading) return
-    if (isRecovery) return
-    if (!user) return
-    if (profileLoading) return
-    if (!profile.onboarding_completed) return
-    if (!profile.has_password) return
-    bootDoneRef.current = true
-  }, [authLoading, isRecovery, user, profileLoading, profile])
 
   if (authLoading || (user && profileLoading)) return <SkeletonLoader />
   if (isRecovery) return <ResetPasswordPage onDone={() => setIsRecovery(false)} />
@@ -412,22 +377,16 @@ export default function App() {
   // Cambia de tab de forma centralizada — antes cada disparador (BottomNav,
   // headerProps, el atajo de Espacio Compartido, el regreso de Ajustes, el
   // onGoSettings propio de HomePage) repetía el mismo cálculo de dirección +
-  // setTab + sessionStorage por su cuenta. Ahora todos pasan por aquí, que
-  // además deja montado el tab saliente 300ms más (animando con
-  // page-slide-out-*) para que la salida también quede animada.
+  // setTab + sessionStorage por su cuenta.
   function changeTab(newTab) {
     if (newTab === tab) return
     const fromIdx = TAB_ORDER.indexOf(tab)
     const toIdx   = TAB_ORDER.indexOf(newTab)
     const dir = toIdx >= fromIdx ? 'right' : 'left'
-    if (outgoingTimerRef.current) clearTimeout(outgoingTimerRef.current)
-    setOutgoingTab(tab)
-    setOutgoingDir(dir)
     setSlideDir(dir)
     setTab(newTab)
     sessionStorage.setItem('ada_tab', newTab)
     window.scrollTo(0, 0)
-    outgoingTimerRef.current = setTimeout(() => setOutgoingTab(null), 300)
   }
 
   function goToSharedSpaceSettings() {
@@ -450,12 +409,6 @@ export default function App() {
     onOpenNotifs: () => setNotifOpen(true),
     onGoSettings: () => changeTab('settings'),
   }
-
-  // Verdadero solo en el primer tab que se dibuja después de cargar — la
-  // ref se marca en un efecto (ver arriba, justo antes de `authLoading ||
-  // ... return <SkeletonLoader/>`), nunca aquí durante el render.
-  const isBoot = !bootDoneRef.current
-  const tabSlideClass = isBoot ? 'boot-content' : `page-slide-${slideDir}`
 
   // Pagos que se muestran en Home/Pagos: excluir masters (is_master: true)
   const visiblePayments = payments.filter(p => !p.is_master)
@@ -499,100 +452,6 @@ export default function App() {
 
   return (
     <>
-      {/* Tab saliente — se sigue dibujando 300ms más, superpuesto y sin
-          poder tocarse, animando hacia el lado contrario al que entra el
-          nuevo tab (ver changeTab arriba). Callbacks vacíos a propósito:
-          esta instancia es solo visual, nunca debe disparar acciones
-          reales (mutaciones, navegación) mientras se anima hacia afuera. */}
-      {outgoingTab && (
-        <div style={{ position: 'fixed', inset: 0, zIndex: 1, pointerEvents: 'none', overflow: 'hidden' }}>
-          {outgoingTab === 'home' && (
-            <HomePage
-              payments={visiblePayments}
-              profile={effectiveProfile}
-              activeSpaceId={activeSpaceId}
-              sharedSpaces={sharedSpaces}
-              spacePermissions={spacePermissions}
-              onOpenPremium={() => {}}
-              onSpaceReady={() => {}}
-              spaceSwitcher={spaceSwitcherEl}
-              activeSpaceHeader={activeSpaceHeaderEl}
-              onAdd={() => {}}
-              slideClass={`page-slide-out-${outgoingDir}`}
-              onMarkPaid={() => {}}
-              onMarkUnpaid={() => {}}
-              onCaptureAmount={() => {}}
-              onEdit={() => {}}
-              onDelete={() => {}}
-              onPostpone={() => {}}
-              onAdvance={() => {}}
-              onGoSettings={() => {}}
-              notifications={notifications}
-              unreadCount={unreadCount}
-              onMarkAsRead={() => {}}
-              onMarkAllAsRead={() => {}}
-              onDeleteNotif={() => {}}
-              onClearAllNotifs={() => {}}
-            />
-          )}
-          {outgoingTab === 'payments' && (
-            <PaymentsPage
-              payments={visiblePayments}
-              slideClass={`page-slide-out-${outgoingDir}`}
-              {...headerProps}
-              activeSpaceId={paymentsSpaceId}
-              rawActiveSpaceId={activeSpaceId}
-              sharedSpaces={sharedSpaces}
-              spacePermissions={spacePermissions}
-              onOpenPremium={() => {}}
-              onSpaceReady={() => {}}
-              spaceSwitcher={spaceSwitcherEl}
-              activeSpaceHeader={activeSpaceHeaderEl}
-              onMarkUnpaid={() => {}}
-              onDelete={() => {}}
-              onDeleteDirect={() => {}}
-              onUpdateProfile={() => {}}
-              onEdit={() => {}}
-            />
-          )}
-          {outgoingTab === 'recurrents' && (
-            <RecurrentsPage
-              payments={payments}
-              slideClass={`page-slide-out-${outgoingDir}`}
-              {...headerProps}
-              activeSpaceId={activeSpaceId}
-              sharedSpaces={sharedSpaces}
-              spacePermissions={spacePermissions}
-              onOpenPremium={() => {}}
-              onSpaceReady={() => {}}
-              spaceSwitcher={spaceSwitcherEl}
-              activeSpaceHeader={activeSpaceHeaderEl}
-              onPause={() => {}}
-              onResume={() => {}}
-              onDelete={() => {}}
-              onEdit={() => {}}
-            />
-          )}
-          {outgoingTab === 'settings' && (
-            <SettingsPage
-              profile={profile}
-              user={user}
-              onUpdate={() => {}}
-              onUploadAvatar={() => {}}
-              onDataDeleted={() => {}}
-              slideClass={`page-slide-out-${outgoingDir}`}
-              theme={theme}
-              onThemeChange={() => {}}
-              onOpenPremium={() => {}}
-              sharedSpaces={sharedSpaces}
-              initialSection={null}
-              onConsumeInitialSection={() => {}}
-              returnTab={null}
-              onReturnToTab={() => {}}
-            />
-          )}
-        </div>
-      )}
       {tab === 'home' && (
         <HomePage
           payments={visiblePayments}
@@ -604,9 +463,8 @@ export default function App() {
           onSpaceReady={handleSpaceReady}
           spaceSwitcher={spaceSwitcherEl}
           activeSpaceHeader={activeSpaceHeaderEl}
-          isBoot={isBoot}
           onAdd={openAdd}
-          slideClass={tabSlideClass}
+          slideClass={`page-slide-${slideDir}`}
           onMarkPaid={handleMarkPaid}
           onMarkUnpaid={handleMarkUnpaid}
           onCaptureAmount={openEstimateModal}
@@ -626,7 +484,7 @@ export default function App() {
       {tab === 'payments' && (
         <PaymentsPage
           payments={visiblePayments}
-          slideClass={tabSlideClass}
+          slideClass={`page-slide-${slideDir}`}
           {...headerProps}
           activeSpaceId={paymentsSpaceId}
           rawActiveSpaceId={activeSpaceId}
@@ -636,7 +494,6 @@ export default function App() {
           onSpaceReady={handleSpaceReady}
           spaceSwitcher={spaceSwitcherEl}
           activeSpaceHeader={activeSpaceHeaderEl}
-          isBoot={isBoot}
           onMarkUnpaid={handleMarkUnpaid}
           onDelete={handleDelete}
           onDeleteDirect={async (id) => { await deletePayment(id); showToast('Pago eliminado') }}
@@ -647,7 +504,7 @@ export default function App() {
       {tab === 'recurrents' && (
         <RecurrentsPage
           payments={payments}
-          slideClass={tabSlideClass}
+          slideClass={`page-slide-${slideDir}`}
           {...headerProps}
           activeSpaceId={activeSpaceId}
           sharedSpaces={sharedSpaces}
@@ -656,7 +513,6 @@ export default function App() {
           onSpaceReady={handleSpaceReady}
           spaceSwitcher={spaceSwitcherEl}
           activeSpaceHeader={activeSpaceHeaderEl}
-          isBoot={isBoot}
           onPause={handlePauseRecurrent}
           onResume={handleResumeRecurrent}
           onDelete={handleDelete}
@@ -670,7 +526,7 @@ export default function App() {
           onUpdate={updateProfile}
           onUploadAvatar={uploadAvatar}
           onDataDeleted={() => { refetch() }}
-          slideClass={tabSlideClass}
+          slideClass={`page-slide-${slideDir}`}
           theme={theme}
           onThemeChange={setTheme}
           onOpenPremium={() => setPremiumPageOpen(true)}
