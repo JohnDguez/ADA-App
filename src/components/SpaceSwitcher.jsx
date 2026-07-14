@@ -108,7 +108,15 @@ export function SpaceSwitcher({ spaces, activeSpaceId, onSwitch, profile, stats 
               background: colorsFor(item.kind).bg,
               filter: item.kind === 'space' ? `brightness(${brightnessFor(item)})` : 'none',
               position: 'relative',
-              zIndex: (isEntering || isExiting) ? 30 : i,
+              // Antes: `i` (creciente por posición) — le daba a la ÚLTIMA
+              // tarjeta del stack más prioridad de capa de la que hacía
+              // falta, compitiendo de forma rara contra ActiveSpaceHeader
+              // (z-index 35) en la costura entre ambos. El orden del HTML
+              // ya apila correctamente las tarjetas entre sí sin necesitar
+              // números crecientes (la que viene después ya se pinta
+              // encima, por orden de documento) — mismo z-index base (0)
+              // para todas en reposo, solo sube durante la animación.
+              zIndex: (isEntering || isExiting) ? 30 : 0,
               // Cada tarjeta se ve COMPLETA y cómoda — el traslape es solo lo
               // justo (14px) para que la esquina redondeada de esta tarjeta
               // tape el hueco que dejaría ver el fondo detrás de la esquina
