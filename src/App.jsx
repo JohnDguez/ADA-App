@@ -429,10 +429,12 @@ export default function App() {
   )
 
   // Encabezado del espacio activo — antes era parte de SpaceSwitcher, ver
-  // nota en ActiveSpaceHeader.jsx. `null` cuando la tarjeta "Nuevo espacio
-  // compartido" está activa (ese caso no tiene encabezado propio, el panel
-  // ya trae su propio título).
-  const activeSpaceHeaderEl = activeSpaceId !== 'new' ? (
+  // nota en ActiveSpaceHeader.jsx. Antes se excluía por completo cuando la
+  // tarjeta "Nuevo espacio compartido" estaba activa (se asumía que
+  // NewSharedSpacePanel.jsx ya traía su propio título — no era cierto, el
+  // panel nunca dibujaba ninguno). Ahora ActiveSpaceHeader.jsx también
+  // sabe mostrar "Nuevo espacio compartido" como nombre en ese caso.
+  const activeSpaceHeaderEl = (
     <ActiveSpaceHeader
       activeSpaceId={activeSpaceId}
       sharedSpaces={sharedSpaces}
@@ -442,7 +444,7 @@ export default function App() {
       leaveSpace={sharedSpaces.leaveSpace}
       user={user}
     />
-  ) : null
+  )
 
   // Al crear o unirse a un espacio desde el panel "Nuevo espacio
   // compartido", aterriza directo en ese espacio en vez de dejar al
