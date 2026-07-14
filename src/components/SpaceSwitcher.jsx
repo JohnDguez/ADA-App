@@ -115,8 +115,8 @@ export function SpaceSwitcher({ spaces, activeSpaceId, onSwitch, profile, stats 
               // de la tarjeta de arriba.
               marginTop: isFirst ? 0 : -14,
               cursor: isExiting ? 'default' : 'pointer',
-              animation: isEntering ? 'spaceCardEnterPeek .3s ease both'
-                       : isExiting  ? 'spaceCardExitPeek .3s ease both'
+              animation: isEntering ? 'spaceCardEnterPeek .3s cubic-bezier(0.25, 0.46, 0.45, 0.94) both'
+                       : isExiting  ? 'spaceCardExitPeek .3s cubic-bezier(0.25, 0.46, 0.45, 0.94) both'
                        : 'none',
             }}
           >
