@@ -54,19 +54,6 @@ export function ActiveSpaceHeader({ activeSpaceId, sharedSpaces, onManage, onSwi
 
   return (
     <div style={{ position: 'relative', background: 'var(--bg)', borderRadius: '16px 16px 0 0', marginTop: -14, zIndex: 35 }}>
-      {/* Mismo "colchón" que usan las tarjetas del switcher — este
-          encabezado ahora vive justo después de la última tarjeta que
-          asoma, con el mismo traslape de -14px que usan entre sí, así que
-          necesita la misma protección: mientras el switcher anima sus
-          propias tarjetas (entrando/saliendo del stack), evita que se vea
-          cualquier hueco en esa costura. Más chico que el de las tarjetas
-          del switcher (20px, no 300px) — aquí solo hace falta cubrir la
-          zona de traslape en sí (14px + margen), no toda una animación de
-          desplazamiento larga; uno más grande taparía el texto visible de
-          la tarjeta de arriba sin necesidad. Color `var(--bg)` porque este
-          encabezado ya se funde con el contenido de la página. */}
-      <div style={{ position: 'absolute', left: 0, right: 0, bottom: '100%', height: 20, background: 'var(--bg)' }} />
-
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 18px 14px', borderBottom: '1px solid var(--border)' }}>
       <span style={{ fontSize: 15, fontWeight: 500, color: 'var(--text)' }}>{name}</span>
 
