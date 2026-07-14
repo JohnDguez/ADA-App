@@ -190,7 +190,7 @@ export function SpaceSwitcher({ spaces, activeSpaceId, onSwitch, profile, stats 
                 junto con la tarjeta (mismo cardBg/cardFilter) para que no
                 se vea un color distinto asomando por debajo mientras cambia. */}
             <div style={{
-              position: 'absolute', left: 0, right: 0, top: '100%', height: 300,
+              position: 'absolute', left: 0, right: 0, top: '100%', height: 500,
               background: cardBg,
               filter: cardFilter,
               transition: isEntering ? 'background .3s cubic-bezier(0.25, 0.46, 0.45, 0.94), filter .3s cubic-bezier(0.25, 0.46, 0.45, 0.94)' : 'none',
