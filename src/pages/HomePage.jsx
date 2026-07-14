@@ -131,6 +131,12 @@ export function HomePage({ payments, profile, spaceSwitcher, activeSpaceHeader, 
   const totalConocido = pagadoMonto + pendingAmt
   const pctPagado = totalConocido > 0 ? Math.round((pagadoMonto / totalConocido) * 100) : 0
   const pagosFijosCount = pagarEsteCobro.filter(p => !p.is_variable || p.amount > 0).length + pagadosEstePeriodo.length
+  // Solo para el estado "sin pagos pendientes" (pagarEsteCobro vacío): antes
+  // no se mostraba nada de cuántos pagos hubo este periodo al marcarlos
+  // todos como pagados — Johnatan pidió que sí se muestre, separando fijos
+  // de variables (mismo criterio de "es variable" que el resto de la app).
+  const pagadosFijosEstePeriodo     = pagadosEstePeriodo.filter(p => !p.is_variable).length
+  const pagadosVariablesEstePeriodo = pagadosEstePeriodo.filter(p => p.is_variable).length
 
   const thisMonth  = now.getMonth()
   const thisYear   = now.getFullYear()
@@ -140,6 +146,9 @@ export function HomePage({ payments, profile, spaceSwitcher, activeSpaceHeader, 
     return d.getMonth() === thisMonth && d.getFullYear() === thisYear
   })
   const variableThisMonth = paidThisMonth.filter(p => p.is_variable).length
+  // Igual que en el periodo — para el estado "sin pagos pendientes" de la
+  // tarjeta Mes, cuántos de los ya pagados fueron fijos vs variables.
+  const paidFixedThisMonth = paidThisMonth.length - variableThisMonth
   const paidThisMonthAmt  = paidThisMonth.reduce((a, p) => a + Number(p.amount), 0)
   const totalThisMonth = payments.filter(p => {
     const d = dateOf(p.due_date)
@@ -217,37 +226,44 @@ export function HomePage({ payments, profile, spaceSwitcher, activeSpaceHeader, 
             <div style={{ display: 'flex', transition: 'transform .3s cubic-bezier(0.25,0.46,0.45,0.94)', transform: `translateX(${activeCard * -100}%)` }}>
 
               {/* Card 1 — Periodo actual */}
-              <div style={{ minWidth: '100%', background: 'var(--surface)', borderRadius: 12, padding: '16px 14px' }}>
-                <div style={{ textAlign: 'right', fontSize: 12, fontWeight: 500, color: 'var(--text)', marginBottom: 12 }}>
+              <div style={{ minWidth: '100%', background: 'var(--surface)', borderRadius: 12, padding: '20px 16px' }}>
+                <div style={{ textAlign: 'right', fontSize: 12, fontWeight: 500, color: 'var(--text)', marginBottom: 14 }}>
                   Periodo {periodRange(profile)}
                 </div>
                 {pagarEsteCobro.length === 0 ? (
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-                    <ProgressRing percent={1}>
-                      <Check size={30} color="var(--paid)" strokeWidth={2.5} />
-                      <div style={{ fontSize: 12, fontWeight: 500, color: 'var(--text)', marginTop: 6, lineHeight: 1.3 }}>Sin pagos<br />pendientes</div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 18 }}>
+                    <ProgressRing percent={1} size={140}>
+                      <Check size={32} color="var(--paid)" strokeWidth={2.5} />
+                      <div style={{ fontSize: 12, fontWeight: 500, color: 'var(--text)', marginTop: 8, lineHeight: 1.3 }}>Sin pagos<br />pendientes</div>
                     </ProgressRing>
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: 12, fontWeight: 500, color: 'var(--accent)', marginBottom: 10 }}>Total de este periodo</div>
-                      <div style={{ fontSize: 28, fontWeight: 700, color: 'var(--text)' }}>{fmt(pagadoMonto)}</div>
+                      <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--accent)', marginBottom: 12 }}>Total de este periodo</div>
+                      <div style={{ fontSize: 32, fontWeight: 700, color: 'var(--text)', marginBottom: 16 }}>{fmt(pagadoMonto)}</div>
+                      {(pagadosFijosEstePeriodo > 0 || pagadosVariablesEstePeriodo > 0) && (
+                        <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--text)' }}>
+                          {pagadosFijosEstePeriodo} pago{pagadosFijosEstePeriodo !== 1 ? 's' : ''} fijo{pagadosFijosEstePeriodo !== 1 ? 's' : ''}
+                          {pagadosVariablesEstePeriodo > 0 && ` · ${pagadosVariablesEstePeriodo} variable${pagadosVariablesEstePeriodo !== 1 ? 's' : ''}`}
+                        </div>
+                      )}
                     </div>
                   </div>
                 ) : (
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-                    <ProgressRing percent={pctPagado / 100}>
-                      <span style={{ fontSize: 26, fontWeight: 700, color: 'var(--text)' }}>{pctPagado}%</span>
-                      <span style={{ fontSize: 11, fontWeight: 500, color: 'var(--paid)', marginTop: 3 }}>{fmt(pagadoMonto)} pagado</span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 18 }}>
+                    <ProgressRing percent={pctPagado / 100} size={140}>
+                      <span style={{ fontSize: 30, fontWeight: 700, color: 'var(--text)' }}>{pctPagado}%</span>
+                      <span style={{ fontSize: 11, fontWeight: 500, color: 'var(--paid)', marginTop: 4 }}>{fmt(pagadoMonto)} pagado</span>
+                      <div style={{ width: '55%', height: 1, background: 'var(--border)', margin: '3px 0' }} />
                       <span style={{ fontSize: 11, fontWeight: 400, color: 'var(--text)' }}>{fmt(pendingAmt)} pendiente</span>
                     </ProgressRing>
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: 12, fontWeight: 500, color: 'var(--accent)', marginBottom: 10 }}>Total de este periodo</div>
-                      <div style={{ fontSize: 28, fontWeight: 700, color: 'var(--text)', marginBottom: 14 }}>{fmt(totalConocido)}</div>
+                      <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--accent)', marginBottom: 12 }}>Total de este periodo</div>
+                      <div style={{ fontSize: 32, fontWeight: 700, color: 'var(--text)', marginBottom: 16 }}>{fmt(totalConocido)}</div>
                       <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--text)' }}>
                         {pagosFijosCount} pago{pagosFijosCount !== 1 ? 's' : ''} fijo{pagosFijosCount !== 1 ? 's' : ''}
-                        {vencidos.length > 0 && <span style={{ color: 'var(--danger)' }}> · {vencidos.length} vencido{vencidos.length !== 1 ? 's' : ''}</span>}
+                        {vencidos.length > 0 && <span style={{ color: 'var(--danger)' }}> · {vencidos.length} pago{vencidos.length !== 1 ? 's' : ''} vencido{vencidos.length !== 1 ? 's' : ''}</span>}
                       </div>
                       {pendingVariableCount > 0 && (
-                        <div style={{ fontSize: 12, fontWeight: 400, color: 'var(--text)', marginTop: 8 }}>
+                        <div style={{ fontSize: 12, fontWeight: 400, color: 'var(--text)', marginTop: 10 }}>
                           {pendingVariableCount} pago{pendingVariableCount !== 1 ? 's' : ''} variable{pendingVariableCount !== 1 ? 's' : ''} por confirmar
                         </div>
                       )}
@@ -257,31 +273,38 @@ export function HomePage({ payments, profile, spaceSwitcher, activeSpaceHeader, 
               </div>
 
               {/* Card 2 — Este mes */}
-              <div style={{ minWidth: '100%', background: 'var(--surface)', borderRadius: 12, padding: '16px 14px' }}>
-                <div style={{ textAlign: 'right', fontSize: 12, fontWeight: 500, color: 'var(--text)', marginBottom: 12 }}>
+              <div style={{ minWidth: '100%', background: 'var(--surface)', borderRadius: 12, padding: '20px 16px' }}>
+                <div style={{ textAlign: 'right', fontSize: 12, fontWeight: 500, color: 'var(--text)', marginBottom: 14 }}>
                   {MONTHS[thisMonth]} {thisYear}
                 </div>
                 {pendingThisMonthAmt <= 0 ? (
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-                    <ProgressRing percent={1}>
-                      <Check size={30} color="var(--paid)" strokeWidth={2.5} />
-                      <div style={{ fontSize: 12, fontWeight: 500, color: 'var(--text)', marginTop: 6, lineHeight: 1.3 }}>Sin pagos<br />pendientes</div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 18 }}>
+                    <ProgressRing percent={1} size={140}>
+                      <Check size={32} color="var(--paid)" strokeWidth={2.5} />
+                      <div style={{ fontSize: 12, fontWeight: 500, color: 'var(--text)', marginTop: 8, lineHeight: 1.3 }}>Sin pagos<br />pendientes</div>
                     </ProgressRing>
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: 12, fontWeight: 500, color: 'var(--accent)', marginBottom: 10 }}>Total de este mes</div>
-                      <div style={{ fontSize: 28, fontWeight: 700, color: 'var(--text)' }}>{fmt(paidThisMonthAmt)}</div>
+                      <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--accent)', marginBottom: 12 }}>Total de este mes</div>
+                      <div style={{ fontSize: 32, fontWeight: 700, color: 'var(--text)', marginBottom: 16 }}>{fmt(paidThisMonthAmt)}</div>
+                      {(paidFixedThisMonth > 0 || variableThisMonth > 0) && (
+                        <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--text)' }}>
+                          {paidFixedThisMonth} pago{paidFixedThisMonth !== 1 ? 's' : ''} fijo{paidFixedThisMonth !== 1 ? 's' : ''}
+                          {variableThisMonth > 0 && ` · ${variableThisMonth} variable${variableThisMonth !== 1 ? 's' : ''}`}
+                        </div>
+                      )}
                     </div>
                   </div>
                 ) : (
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-                    <ProgressRing percent={pctPagadoMes / 100}>
-                      <span style={{ fontSize: 26, fontWeight: 700, color: 'var(--text)' }}>{pctPagadoMes}%</span>
-                      <span style={{ fontSize: 11, fontWeight: 500, color: 'var(--paid)', marginTop: 3 }}>{fmt(paidThisMonthAmt)} pagado</span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 18 }}>
+                    <ProgressRing percent={pctPagadoMes / 100} size={140}>
+                      <span style={{ fontSize: 30, fontWeight: 700, color: 'var(--text)' }}>{pctPagadoMes}%</span>
+                      <span style={{ fontSize: 11, fontWeight: 500, color: 'var(--paid)', marginTop: 4 }}>{fmt(paidThisMonthAmt)} pagado</span>
+                      <div style={{ width: '55%', height: 1, background: 'var(--border)', margin: '3px 0' }} />
                       <span style={{ fontSize: 11, fontWeight: 400, color: 'var(--text)' }}>{fmt(pendingThisMonthAmt)} pendiente</span>
                     </ProgressRing>
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: 12, fontWeight: 500, color: 'var(--accent)', marginBottom: 10 }}>Total de este mes</div>
-                      <div style={{ fontSize: 28, fontWeight: 700, color: 'var(--text)', marginBottom: 14 }}>{fmt(totalThisMonth)}</div>
+                      <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--accent)', marginBottom: 12 }}>Total de este mes</div>
+                      <div style={{ fontSize: 32, fontWeight: 700, color: 'var(--text)', marginBottom: 16 }}>{fmt(totalThisMonth)}</div>
                       <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--text)' }}>
                         {paidThisMonth.length} pagado{paidThisMonth.length !== 1 ? 's' : ''}
                         {variableThisMonth > 0 && ` · ${variableThisMonth} variable${variableThisMonth !== 1 ? 's' : ''}`}
