@@ -368,22 +368,30 @@ body.modal-open {
 /* ── Animaciones del switcher de espacios ──────────────────────────────────
    Con el rediseño que separó "Personal"/espacio activo del switcher (ahora
    vive en ActiveSpaceHeader, dentro de cada página) los roles cambiaron:
-   - Una tarjeta que DEJA de estar activa empieza a asomar en el stack por
-     primera vez — "entra" al stack deslizándose hacia abajo.
    - Una tarjeta que asomaba y SE VUELVE activa deja de asomar — "sale" del
-     stack deslizándose hacia abajo también, antes de desaparecer (se va a
-     convertir en el encabezado de la página).
-   Sin desvanecido (solo `transform`) — confirmado con Johnatan vía mockup:
-   si se apaga la opacidad mientras la tarjeta se traslapa con la vecina, se
-   alcanza a ver el corte de la de al lado a través de la transparencia. */
-@keyframes spaceCardEnterPeek {
-  from { transform: translateY(-24px); }
-  to   { transform: translateY(0); }
-}
-
+     stack deslizándose hacia abajo, antes de desaparecer (se va a convertir
+     en el encabezado de la página).
+   - Una tarjeta que DEJA de estar activa ya NO se desliza (mockup
+     confirmado con Johnatan: prácticamente ya está donde debe quedarse) —
+     solo transiciona su color/brillo hacia su tono real de "asoma", vía
+     `transition` inline en SpaceSwitcher.jsx (no un keyframe aquí).
+   Sin desvanecido en la que sale (solo `transform`) — confirmado con
+   Johnatan vía mockup: si se apaga la opacidad mientras la tarjeta se
+   traslapa con la vecina, se alcanza a ver el corte de la de al lado a
+   través de la transparencia. */
 @keyframes spaceCardExitPeek {
   from { transform: translateY(0);    }
   to   { transform: translateY(24px); }
+}
+
+/* ── Entrada del encabezado activo (ActiveSpaceHeader) ─────────────────────
+   Al cambiar de espacio, el nuevo encabezado ("Personal", nombre del
+   espacio, etc.) entra deslizándose de abajo hacia arriba con fundido —
+   antes aparecía de golpe, sin transición propia, aunque las tarjetas del
+   switcher sí tenían la suya (mockup confirmado con Johnatan). */
+@keyframes activeHeaderEnter {
+  from { transform: translateY(40px); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
 }
 
 /* ── Entrada del bloque activo completo (encabezado + contenido) ──────────── */
