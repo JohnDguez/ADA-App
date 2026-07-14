@@ -41,7 +41,14 @@ export function ActiveSpaceHeader({ activeSpaceId, sharedSpaces, onManage, onSwi
   const entry       = (activeSpaceId && activeSpaceId !== 'new') ? sharedSpaces.spaces.find(s => s.space.id === activeSpaceId) : null
   const isRealSpace = !!entry
   const isOwner     = isRealSpace && entry.membership.role === 'owner'
-  const name        = entry ? entry.space.name : 'Personal'
+  // "Nuevo espacio compartido" (NewSharedSpacePanel.jsx) nunca dibujaba su
+  // propio título — se asumía que sí lo hacía, y por eso las páginas lo
+  // excluían de este encabezado (`activeSpaceId !== 'new' && ...`). Ahora
+  // este encabezado también cubre ese caso: mismo nombre que la tarjeta del
+  // switcher, sin menú de 3 puntos (isRealSpace ya da false, no hace falta
+  // guardia extra) y con la misma animación de entrada que cualquier otro
+  // espacio.
+  const name = activeSpaceId === 'new' ? 'Nuevo espacio compartido' : (entry ? entry.space.name : 'Personal')
 
   function openDanger() {
     setMenuOpen(false)
