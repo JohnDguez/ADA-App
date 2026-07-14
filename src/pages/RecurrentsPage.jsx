@@ -27,7 +27,7 @@ function FilterChip({ label, active, onClick }) {
   )
 }
 
-export function RecurrentsPage({ payments, profile, spaceSwitcher, activeSpaceHeader, activeSpaceId = null, sharedSpaces, spacePermissions, onOpenPremium, onSpaceReady, unreadCount, onOpenNotifs, onGoSettings, onPause, onResume, onDelete, onEdit, slideClass }) {
+export function RecurrentsPage({ payments, profile, spaceSwitcher, activeSpaceHeader, activeSpaceId = null, sharedSpaces, spacePermissions, onOpenPremium, onSpaceReady, unreadCount, onOpenNotifs, onGoSettings, onPause, onResume, onDelete, onEdit, slideClass, isBoot }) {
   // Mismo mecanismo que HomePage.jsx — ver ahí el porqué (evitar que la
   // animación de entrada se dispare también en un simple cambio de
   // pestaña, no solo en un cambio real de espacio).
@@ -149,7 +149,7 @@ export function RecurrentsPage({ payments, profile, spaceSwitcher, activeSpaceHe
       )}
 
       <div style={{ background: 'var(--bg)', borderRadius: '24px 24px 0 0', marginTop: -24, position: 'relative', zIndex: 10 }}>
-        {spaceSwitcher}
+        <div className={isBoot ? 'boot-switcher' : undefined}>{spaceSwitcher}</div>
         <div className={slideClass}>
           <div className={spaceJustChanged ? 'content-slide-up' : ''}>
 
