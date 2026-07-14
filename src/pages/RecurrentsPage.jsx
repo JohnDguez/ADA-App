@@ -27,7 +27,7 @@ function FilterChip({ label, active, onClick }) {
   )
 }
 
-export function RecurrentsPage({ payments, profile, spaceSwitcher, activeSpaceId = null, sharedSpaces, spacePermissions, onOpenPremium, onSpaceReady, unreadCount, onOpenNotifs, onGoSettings, onPause, onResume, onDelete, onEdit, slideClass }) {
+export function RecurrentsPage({ payments, profile, spaceSwitcher, activeSpaceHeader, activeSpaceId = null, sharedSpaces, spacePermissions, onOpenPremium, onSpaceReady, unreadCount, onOpenNotifs, onGoSettings, onPause, onResume, onDelete, onEdit, slideClass }) {
   const [search,        setSearch]        = useState('')
   const [filterStatus,  setFilterStatus]  = useState('todos')
   const [filterType,    setFilterType]    = useState('todos')
@@ -137,7 +137,9 @@ export function RecurrentsPage({ payments, profile, spaceSwitcher, activeSpaceId
       <div style={{ background: 'var(--bg)', borderRadius: '24px 24px 0 0', marginTop: -24, position: 'relative', zIndex: 10 }}>
         {spaceSwitcher}
         <div className={slideClass}>
-          <div key={activeSpaceId ?? 'personal'} className="content-fade-in">
+          <div key={activeSpaceId ?? 'personal'} className="content-slide-up">
+
+          {activeSpaceId !== 'new' && activeSpaceHeader}
 
           {activeSpaceId === 'new' ? (
             <div style={{ marginTop: 16 }}>

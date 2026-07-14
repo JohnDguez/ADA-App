@@ -21,7 +21,7 @@ function nextPeriodRange(cfg) {
   return `${start.getDate()} ${MONTHS_SHORT[start.getMonth()]} – ${end.getDate()} ${MONTHS[end.getMonth()]}`
 }
 
-export function HomePage({ payments, profile, spaceSwitcher, activeSpaceId, sharedSpaces, spacePermissions, onOpenPremium, onSpaceReady, onAdd, onMarkPaid, onMarkUnpaid, onCaptureAmount, onEdit, onDelete, onPostpone, onAdvance, onGoSettings, notifications, unreadCount, onMarkAsRead, onMarkAllAsRead, onDeleteNotif, onClearAllNotifs, slideClass }) {
+export function HomePage({ payments, profile, spaceSwitcher, activeSpaceHeader, activeSpaceId, sharedSpaces, spacePermissions, onOpenPremium, onSpaceReady, onAdd, onMarkPaid, onMarkUnpaid, onCaptureAmount, onEdit, onDelete, onPostpone, onAdvance, onGoSettings, notifications, unreadCount, onMarkAsRead, onMarkAllAsRead, onDeleteNotif, onClearAllNotifs, slideClass }) {
   const [notifOpen,      setNotifOpen]      = useState(false)
   const [activeCard,     setActiveCard]     = useState(0)
   const [touchStartX,    setTouchStartX]    = useState(null)
@@ -104,7 +104,9 @@ export function HomePage({ payments, profile, spaceSwitcher, activeSpaceId, shar
       <div style={{ background: 'var(--bg)', borderRadius: '24px 24px 0 0', marginTop: -24, position: 'relative', zIndex: 10 }}>
         {spaceSwitcher}
         <div className={slideClass}>
-        <div key={activeSpaceId ?? 'personal'} className="content-fade-in">
+        <div key={activeSpaceId ?? 'personal'} className="content-slide-up">
+
+        {activeSpaceId !== 'new' && activeSpaceHeader}
 
         {activeSpaceId === 'new' ? (
           <div style={{ marginTop: 16 }}>

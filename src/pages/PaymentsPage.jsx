@@ -64,7 +64,7 @@ function prevPeriod(profile) {
   return { start: t, end: prevEnd }
 }
 
-export function PaymentsPage({ payments, profile, spaceSwitcher, activeSpaceId = null, rawActiveSpaceId = null, sharedSpaces, spacePermissions, onOpenPremium, onSpaceReady, unreadCount, onOpenNotifs, onGoSettings, onMarkUnpaid, onDelete, onDeleteDirect, onUpdateProfile, onEdit, slideClass }) {
+export function PaymentsPage({ payments, profile, spaceSwitcher, activeSpaceHeader, activeSpaceId = null, rawActiveSpaceId = null, sharedSpaces, spacePermissions, onOpenPremium, onSpaceReady, unreadCount, onOpenNotifs, onGoSettings, onMarkUnpaid, onDelete, onDeleteDirect, onUpdateProfile, onEdit, slideClass }) {
   const now = new Date()
 
   const [monthsBack,  setMonthsBack]  = useState(3)
@@ -786,7 +786,9 @@ export function PaymentsPage({ payments, profile, spaceSwitcher, activeSpaceId =
       <div style={{ background: 'var(--bg)', borderRadius: '24px 24px 0 0', marginTop: -24, position: 'relative', zIndex: 10 }}>
         {spaceSwitcher}
         <div className={slideClass}>
-        <div key={rawActiveSpaceId ?? 'personal'} className="content-fade-in">
+        <div key={rawActiveSpaceId ?? 'personal'} className="content-slide-up">
+
+        {rawActiveSpaceId !== 'new' && activeSpaceHeader}
 
         {rawActiveSpaceId === 'new' ? (
           <div style={{ marginTop: 16 }}>
