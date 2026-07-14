@@ -156,9 +156,10 @@ export default function App() {
   // Arranque de la app: solo el primer tab que se muestra (justo después
   // del SkeletonLoader) debe entrar de abajo hacia arriba en vez de lateral
   // — las tarjetas del switcher están apiladas verticalmente, entrar de
-  // lado rompía la sensación de apilado. Se marca como "usado" apenas se
-  // llega a dibujar contenido real (ver más abajo, antes del `return`) para
-  // que cualquier cambio de tab posterior use el slide lateral normal.
+  // lado rompía la sensación de apilado. Se marca como "usado" en un
+  // useEffect (no durante el render — ver el efecto justo antes de
+  // `authLoading || ... return <SkeletonLoader/>` más abajo) para que
+  // funcione igual con o sin React.StrictMode.
   const bootDoneRef = useRef(false)
   const [migrationModal, setMigrationModal] = useState(false)
   const [patchNotesOpen,   setPatchNotesOpen]   = useState(false)
@@ -218,6 +219,26 @@ export default function App() {
     setPatchNotesToShow(unseen)
     setPatchNotesOpen(unseen.length > 0)
   }, [user, profile, profileLoading])
+
+  // Marca el arranque como "consumido" una vez que YA se pintó el primer
+  // tab real (no antes) — se hace en un efecto (después del commit), nunca
+  // mutando la ref durante el render: si el proyecto corre bajo
+  // React.StrictMode en desarrollo, React invoca el render dos veces por
+  // cada commit, y una mutación directa durante el render dejaba la
+  // bandera en `true` desde la primera pasada (descartada), haciendo que
+  // la segunda (la que de verdad se pinta) ya la viera en `true` — la
+  // entrada de arranque nunca se disparaba. Con la mutación movida a un
+  // efecto, ambas pasadas del render son puras (solo leen la ref) y el
+  // efecto se ejecuta una sola vez de forma efectiva tras el commit real.
+  useEffect(() => {
+    if (authLoading) return
+    if (isRecovery) return
+    if (!user) return
+    if (profileLoading) return
+    if (!profile.onboarding_completed) return
+    if (!profile.has_password) return
+    bootDoneRef.current = true
+  }, [authLoading, isRecovery, user, profileLoading, profile])
 
   if (authLoading || (user && profileLoading)) return <SkeletonLoader />
   if (isRecovery) return <ResetPasswordPage onDone={() => setIsRecovery(false)} />
@@ -430,11 +451,10 @@ export default function App() {
     onGoSettings: () => changeTab('settings'),
   }
 
-  // Verdadero solo en el primer tab que se dibuja después de cargar (ver
-  // bootDoneRef arriba) — usa la entrada vertical de arranque en vez del
-  // slide lateral normal.
+  // Verdadero solo en el primer tab que se dibuja después de cargar — la
+  // ref se marca en un efecto (ver arriba, justo antes de `authLoading ||
+  // ... return <SkeletonLoader/>`), nunca aquí durante el render.
   const isBoot = !bootDoneRef.current
-  bootDoneRef.current = true
   const tabSlideClass = isBoot ? 'boot-content' : `page-slide-${slideDir}`
 
   // Pagos que se muestran en Home/Pagos: excluir masters (is_master: true)
