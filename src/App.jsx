@@ -24,6 +24,7 @@ import { useTheme } from './hooks/useTheme'
 import { useSharedSpaces } from './hooks/useSharedSpaces'
 import { useSpaceStats } from './hooks/useSpaceStats'
 import { SpaceSwitcher } from './components/SpaceSwitcher'
+import { ActiveSpaceHeader } from './components/ActiveSpaceHeader'
 import { APP_VERSION, PATCH_NOTES, isNewerVersion } from './lib/patchNotes'
 
 function fmt(n) { return '$' + Number(n).toLocaleString('es-MX', { minimumFractionDigits: 0, maximumFractionDigits: 0 }) }
@@ -419,14 +420,26 @@ export default function App() {
       spaces={sharedSpaces.spaces}
       activeSpaceId={activeSpaceId}
       onSwitch={switchSpace}
-      onManage={goToSharedSpaceSettings}
       profile={profile}
-      user={user}
       stats={spaceStats}
-      deleteSpace={sharedSpaces.deleteSpace}
-      leaveSpace={sharedSpaces.leaveSpace}
     />
   )
+
+  // Encabezado del espacio activo — antes era parte de SpaceSwitcher, ver
+  // nota en ActiveSpaceHeader.jsx. `null` cuando la tarjeta "Nuevo espacio
+  // compartido" está activa (ese caso no tiene encabezado propio, el panel
+  // ya trae su propio título).
+  const activeSpaceHeaderEl = activeSpaceId !== 'new' ? (
+    <ActiveSpaceHeader
+      activeSpaceId={activeSpaceId}
+      sharedSpaces={sharedSpaces}
+      onManage={goToSharedSpaceSettings}
+      onSwitch={switchSpace}
+      deleteSpace={sharedSpaces.deleteSpace}
+      leaveSpace={sharedSpaces.leaveSpace}
+      user={user}
+    />
+  ) : null
 
   // Al crear o unirse a un espacio desde el panel "Nuevo espacio
   // compartido", aterriza directo en ese espacio en vez de dejar al
@@ -446,6 +459,7 @@ export default function App() {
           onOpenPremium={() => setPremiumPageOpen(true)}
           onSpaceReady={handleSpaceReady}
           spaceSwitcher={spaceSwitcherEl}
+          activeSpaceHeader={activeSpaceHeaderEl}
           onAdd={openAdd}
           slideClass={`page-slide-${slideDir}`}
           onMarkPaid={handleMarkPaid}
@@ -481,6 +495,7 @@ export default function App() {
           onOpenPremium={() => setPremiumPageOpen(true)}
           onSpaceReady={handleSpaceReady}
           spaceSwitcher={spaceSwitcherEl}
+          activeSpaceHeader={activeSpaceHeaderEl}
           onMarkUnpaid={handleMarkUnpaid}
           onDelete={handleDelete}
           onDeleteDirect={async (id) => { await deletePayment(id); showToast('Pago eliminado') }}
@@ -499,6 +514,7 @@ export default function App() {
           onOpenPremium={() => setPremiumPageOpen(true)}
           onSpaceReady={handleSpaceReady}
           spaceSwitcher={spaceSwitcherEl}
+          activeSpaceHeader={activeSpaceHeaderEl}
           onPause={handlePauseRecurrent}
           onResume={handleResumeRecurrent}
           onDelete={handleDelete}
