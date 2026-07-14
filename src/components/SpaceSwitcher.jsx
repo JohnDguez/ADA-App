@@ -119,6 +119,18 @@ export function SpaceSwitcher({ spaces, activeSpaceId, onSwitch, profile, stats 
         const isFirst    = i === 0
         const isEntering = animIds && item.id === animIds.outgoingId
         const isExiting  = animIds && item.id === animIds.incomingId
+        // La tarjeta que se tocó sigue montada 300ms más solo para poder
+        // animarse (ver `showIncoming` arriba) — pero mientras dura, SÍ
+        // ocupa espacio real en el documento (flujo normal), y al quitarla
+        // de golpe al terminar la animación, el contenedor se encogía de
+        // repente, empujando bruscamente a ActiveSpaceHeader (que vive
+        // justo debajo, fuera de este componente) — de ahí el salto seco
+        // justo al final de una animación que hasta ese punto se veía
+        // suave. Fix: esta tarjeta se saca del flujo (`position: absolute`,
+        // anclada con `top: 100%` + el mismo `marginTop: -14` que tendría
+        // en flujo normal) — así nunca cuenta para la altura del
+        // contenedor, y desmontarla al final no mueve nada más.
+        const isGhost = showIncoming && item === incomingItem
         // Mientras el color no se ha "asentado" (ver colorsSettled arriba),
         // la tarjeta que acaba de dejar de estar activa se pinta con el
         // color de fondo de la app (el que tenía como encabezado activo)
@@ -137,7 +149,10 @@ export function SpaceSwitcher({ spaces, activeSpaceId, onSwitch, profile, stats 
               borderRadius: '16px 16px 0 0',
               background: cardBg,
               filter: cardFilter,
-              position: 'relative',
+              position: isGhost ? 'absolute' : 'relative',
+              left: isGhost ? 0 : undefined,
+              right: isGhost ? 0 : undefined,
+              top: isGhost ? '100%' : undefined,
               // Antes: `i` (creciente por posición) — le daba a la ÚLTIMA
               // tarjeta del stack más prioridad de capa de la que hacía
               // falta, compitiendo de forma rara contra ActiveSpaceHeader
@@ -151,7 +166,7 @@ export function SpaceSwitcher({ spaces, activeSpaceId, onSwitch, profile, stats 
               // justo (14px) para que la esquina redondeada de esta tarjeta
               // tape el hueco que dejaría ver el fondo detrás de la esquina
               // de la tarjeta de arriba.
-              marginTop: isFirst ? 0 : -14,
+              marginTop: isGhost ? -14 : (isFirst ? 0 : -14),
               cursor: isExiting ? 'default' : 'pointer',
               // La tarjeta que se vuelve activa (`isExiting`) sí se desliza
               // hacia abajo hasta esconderse (spaceCardExitPeek) — pasa a
