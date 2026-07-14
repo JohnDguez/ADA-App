@@ -365,32 +365,38 @@ body.modal-open {
   to   { transform: scale(1);    opacity: 1; }
 }
 
-/* ── Animación al cambiar de espacio en SpaceSwitcher ─────────────────────── */
-/* La tarjeta que dejas de ver se desliza hacia abajo y se desvanece; la
-   nueva tarjeta activa entra deslizándose desde abajo hacia arriba. */
-@keyframes spaceCardSlideOutDown {
-  from { transform: translateY(0);    opacity: 1; }
-  to   { transform: translateY(24px); opacity: 0; }
+/* ── Animaciones del switcher de espacios ──────────────────────────────────
+   Con el rediseño que separó "Personal"/espacio activo del switcher (ahora
+   vive en ActiveSpaceHeader, dentro de cada página) los roles cambiaron:
+   - Una tarjeta que DEJA de estar activa empieza a asomar en el stack por
+     primera vez — "entra" al stack deslizándose hacia abajo.
+   - Una tarjeta que asomaba y SE VUELVE activa deja de asomar — "sale" del
+     stack deslizándose hacia abajo también, antes de desaparecer (se va a
+     convertir en el encabezado de la página).
+   Sin desvanecido (solo `transform`) — confirmado con Johnatan vía mockup:
+   si se apaga la opacidad mientras la tarjeta se traslapa con la vecina, se
+   alcanza a ver el corte de la de al lado a través de la transparencia. */
+@keyframes spaceCardEnterPeek {
+  from { transform: translateY(-24px); }
+  to   { transform: translateY(0); }
 }
 
-@keyframes spaceCardSlideInUp {
-  from { transform: translateY(24px); opacity: 0; }
-  to   { transform: translateY(0);    opacity: 1; }
+@keyframes spaceCardExitPeek {
+  from { transform: translateY(0);    }
+  to   { transform: translateY(24px); }
 }
 
-/* ── Fundido del contenido de la página al cambiar de espacio ─────────────── */
-/* El contenido debajo del switcher (Home/Gastos/Recurrentes) se reemplazaba
-   al instante al cambiar de espacio, sin transición — se sentía "de golpe"
-   comparado con la fluidez de las tarjetas del switcher. Esta clase se
-   aplica a un wrapper que se vuelve a montar (via `key`) cada vez que
-   cambia el espacio activo, así el fundido se dispara solo, sin necesitar
-   un mecanismo de ref/estado aparte como el del switcher. */
-@keyframes contentFadeIn {
-  from { opacity: 0; transform: translateY(6px); }
+/* ── Entrada del bloque activo completo (encabezado + contenido) ──────────── */
+/* Al cambiar de espacio, TODO el bloque (ActiveSpaceHeader + el contenido de
+   la página debajo) entra deslizándose de abajo hacia arriba, como una sola
+   unidad — reemplaza al fundido chiquito de v0.9.159 (Johnatan pidió más
+   recorrido, que se sintiera como una entrada real, no solo un parpadeo). */
+@keyframes pageContentSlideUp {
+  from { opacity: 0; transform: translateY(30px); }
   to   { opacity: 1; transform: translateY(0); }
 }
-.content-fade-in {
-  animation: contentFadeIn .25s ease both;
+.content-slide-up {
+  animation: pageContentSlideUp .35s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
 }
 
 /* ── Skeleton loader ─────────────────────────────────────────────────────── */
