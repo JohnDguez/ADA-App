@@ -237,8 +237,8 @@ export function HomePage({ payments, profile, spaceSwitcher, activeSpaceHeader, 
                       <div style={{ textAlign: 'right', fontSize: 12, fontWeight: 500, color: 'var(--text)', marginBottom: 14 }}>
                         Periodo {periodRange(profile)}
                       </div>
-                      <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--accent)', marginBottom: 6 }}>Total de este periodo</div>
-                      <div style={{ fontSize: 32, fontWeight: 700, color: 'var(--text)', marginBottom: 8 }}>{fmt(pagadoMonto)}</div>
+                      <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--accent)', marginBottom: 3 }}>Total de este periodo</div>
+                      <div style={{ fontSize: 32, fontWeight: 700, color: 'var(--text)', marginBottom: 4 }}>{fmt(pagadoMonto)}</div>
                       {(pagadosFijosEstePeriodo > 0 || pagadosVariablesEstePeriodo > 0) && (
                         <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--text)' }}>
                           {pagadosFijosEstePeriodo} pago{pagadosFijosEstePeriodo !== 1 ? 's' : ''} fijo{pagadosFijosEstePeriodo !== 1 ? 's' : ''}
@@ -259,8 +259,8 @@ export function HomePage({ payments, profile, spaceSwitcher, activeSpaceHeader, 
                       <div style={{ textAlign: 'right', fontSize: 12, fontWeight: 500, color: 'var(--text)', marginBottom: 14 }}>
                         Periodo {periodRange(profile)}
                       </div>
-                      <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--accent)', marginBottom: 6 }}>Total de este periodo</div>
-                      <div style={{ fontSize: 32, fontWeight: 700, color: 'var(--text)', marginBottom: 8 }}>{fmt(totalConocido)}</div>
+                      <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--accent)', marginBottom: 3 }}>Total de este periodo</div>
+                      <div style={{ fontSize: 32, fontWeight: 700, color: 'var(--text)', marginBottom: 4 }}>{fmt(totalConocido)}</div>
                       <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--text)' }}>
                         {pagosFijosCount} pago{pagosFijosCount !== 1 ? 's' : ''} fijo{pagosFijosCount !== 1 ? 's' : ''}
                         {vencidos.length > 0 && <span style={{ color: 'var(--danger)' }}> · {vencidos.length} pago{vencidos.length !== 1 ? 's' : ''} vencido{vencidos.length !== 1 ? 's' : ''}</span>}
@@ -287,8 +287,8 @@ export function HomePage({ payments, profile, spaceSwitcher, activeSpaceHeader, 
                       <div style={{ textAlign: 'right', fontSize: 12, fontWeight: 500, color: 'var(--text)', marginBottom: 14 }}>
                         {MONTHS[thisMonth]} {thisYear}
                       </div>
-                      <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--accent)', marginBottom: 6 }}>Total de este mes</div>
-                      <div style={{ fontSize: 32, fontWeight: 700, color: 'var(--text)', marginBottom: 8 }}>{fmt(paidThisMonthAmt)}</div>
+                      <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--accent)', marginBottom: 3 }}>Total de este mes</div>
+                      <div style={{ fontSize: 32, fontWeight: 700, color: 'var(--text)', marginBottom: 4 }}>{fmt(paidThisMonthAmt)}</div>
                       {(paidFixedThisMonth > 0 || variableThisMonth > 0) && (
                         <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--text)' }}>
                           {paidFixedThisMonth} pago{paidFixedThisMonth !== 1 ? 's' : ''} fijo{paidFixedThisMonth !== 1 ? 's' : ''}
@@ -309,8 +309,8 @@ export function HomePage({ payments, profile, spaceSwitcher, activeSpaceHeader, 
                       <div style={{ textAlign: 'right', fontSize: 12, fontWeight: 500, color: 'var(--text)', marginBottom: 14 }}>
                         {MONTHS[thisMonth]} {thisYear}
                       </div>
-                      <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--accent)', marginBottom: 6 }}>Total de este mes</div>
-                      <div style={{ fontSize: 32, fontWeight: 700, color: 'var(--text)', marginBottom: 8 }}>{fmt(totalThisMonth)}</div>
+                      <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--accent)', marginBottom: 3 }}>Total de este mes</div>
+                      <div style={{ fontSize: 32, fontWeight: 700, color: 'var(--text)', marginBottom: 4 }}>{fmt(totalThisMonth)}</div>
                       <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--text)' }}>
                         {paidThisMonth.length} pagado{paidThisMonth.length !== 1 ? 's' : ''}
                         {variableThisMonth > 0 && ` · ${variableThisMonth} variable${variableThisMonth !== 1 ? 's' : ''}`}
