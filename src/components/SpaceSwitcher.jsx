@@ -20,21 +20,43 @@ import { Plus } from 'lucide-react'
 // Johnatan.
 export function SpaceSwitcher({ spaces, activeSpaceId, onSwitch, profile, stats = {} }) {
   // Detecta cuándo cambia el espacio activo y guarda por 300ms cuál era el
-  // de antes (para animarlo apareciendo por primera vez en el stack,
-  // deslizándose hacia abajo) y cuál es el nuevo (para animarlo
-  // desapareciendo del stack, deslizándose hacia abajo también, antes de
-  // convertirse en el encabezado de la página). Se limpia sola con un
-  // timeout — después de esos 300ms cada tarjeta ya se ve en su posición
-  // final, sin animación, como antes.
+  // de antes (para animarlo cambiando de color hacia su tono de "asoma",
+  // ver `colorsSettled` abajo) y cuál es el nuevo (para animarlo
+  // desapareciendo del stack, deslizándose hacia abajo, antes de
+  // convertirse en el encabezado de la página, vía ActiveSpaceHeader.jsx).
+  // Se limpia sola con un timeout — después de esos 300ms cada tarjeta ya
+  // se ve en su posición/color final, sin animación, como antes.
   const prevActiveIdRef = useRef(activeSpaceId)
   const [animIds, setAnimIds] = useState(null) // { outgoingId, incomingId } | null
+
+  // La tarjeta que ACABA de dejar de estar activa (`outgoingId`) no se
+  // desliza — ya está exactamente donde debe quedarse dentro del stack
+  // (mockup confirmado con Johnatan: "prácticamente la nueva pestaña
+  // activa está arriba solamente", sin necesidad de movimiento). Lo único
+  // que cambia es su COLOR: pasa de `var(--bg)` (el fondo que usaba como
+  // encabezado activo) a su tono real de "asoma". Para que ese cambio de
+  // color se vea como una transición y no un salto, se monta primero con
+  // el color viejo y, un frame después (doble rAF para garantizar que el
+  // navegador ya pintó ese primer color), se activa el color real — el
+  // `transition: background/filter` de abajo hace el resto.
+  const [colorsSettled, setColorsSettled] = useState(true)
+
+  const raf2Ref = useRef(null)
 
   useEffect(() => {
     if (prevActiveIdRef.current !== activeSpaceId) {
       setAnimIds({ outgoingId: prevActiveIdRef.current, incomingId: activeSpaceId })
       prevActiveIdRef.current = activeSpaceId
+      setColorsSettled(false)
+      const raf1 = requestAnimationFrame(() => {
+        raf2Ref.current = requestAnimationFrame(() => setColorsSettled(true))
+      })
       const timer = setTimeout(() => setAnimIds(null), 300)
-      return () => clearTimeout(timer)
+      return () => {
+        clearTimeout(timer)
+        cancelAnimationFrame(raf1)
+        if (raf2Ref.current) cancelAnimationFrame(raf2Ref.current)
+      }
     }
   }, [activeSpaceId])
 
@@ -97,6 +119,14 @@ export function SpaceSwitcher({ spaces, activeSpaceId, onSwitch, profile, stats 
         const isFirst    = i === 0
         const isEntering = animIds && item.id === animIds.outgoingId
         const isExiting  = animIds && item.id === animIds.incomingId
+        // Mientras el color no se ha "asentado" (ver colorsSettled arriba),
+        // la tarjeta que acaba de dejar de estar activa se pinta con el
+        // color de fondo de la app (el que tenía como encabezado activo)
+        // en vez de su tono real de "asoma" — el salto entre ambos es lo
+        // que la transición de CSS de abajo convierte en un cambio suave.
+        const useRestingColor = isEntering && !colorsSettled
+        const cardBg = useRestingColor ? 'var(--bg)' : colorsFor(item.kind).bg
+        const cardFilter = (useRestingColor || item.kind !== 'space') ? 'none' : `brightness(${brightnessFor(item)})`
         return (
           <div
             key={item.id ?? 'personal'}
@@ -105,8 +135,8 @@ export function SpaceSwitcher({ spaces, activeSpaceId, onSwitch, profile, stats 
               display: 'flex', alignItems: 'center', justifyContent: 'space-between',
               padding: '16px 18px 24px',
               borderRadius: '16px 16px 0 0',
-              background: colorsFor(item.kind).bg,
-              filter: item.kind === 'space' ? `brightness(${brightnessFor(item)})` : 'none',
+              background: cardBg,
+              filter: cardFilter,
               position: 'relative',
               // Antes: `i` (creciente por posición) — le daba a la ÚLTIMA
               // tarjeta del stack más prioridad de capa de la que hacía
@@ -123,9 +153,13 @@ export function SpaceSwitcher({ spaces, activeSpaceId, onSwitch, profile, stats 
               // de la tarjeta de arriba.
               marginTop: isFirst ? 0 : -14,
               cursor: isExiting ? 'default' : 'pointer',
-              animation: isEntering ? 'spaceCardEnterPeek .3s cubic-bezier(0.25, 0.46, 0.45, 0.94) both'
-                       : isExiting  ? 'spaceCardExitPeek .3s cubic-bezier(0.25, 0.46, 0.45, 0.94) both'
-                       : 'none',
+              // La tarjeta que se vuelve activa (`isExiting`) sí se desliza
+              // hacia abajo hasta esconderse (spaceCardExitPeek) — pasa a
+              // ser el encabezado, así que sí necesita ese movimiento. La
+              // que DEJA de ser activa (`isEntering`) ya no se desliza —
+              // solo transiciona su color/brillo (ver cardBg/cardFilter).
+              animation: isExiting ? 'spaceCardExitPeek .3s cubic-bezier(0.25, 0.46, 0.45, 0.94) both' : 'none',
+              transition: isEntering ? 'background .3s cubic-bezier(0.25, 0.46, 0.45, 0.94), filter .3s cubic-bezier(0.25, 0.46, 0.45, 0.94)' : 'none',
             }}
           >
             {/* "Colchón" de color, oculto en reposo (tapado por las tarjetas
@@ -137,11 +171,14 @@ export function SpaceSwitcher({ spaces, activeSpaceId, onSwitch, profile, stats 
                 extendido hacia abajo, más allá de lo que se ve a simple
                 vista. Valor fijo generoso — el overflow:hidden de arriba ya
                 contiene cualquier exceso, no hace falta calcular la
-                distancia exacta según la posición en el stack. */}
+                distancia exacta según la posición en el stack. Transiciona
+                junto con la tarjeta (mismo cardBg/cardFilter) para que no
+                se vea un color distinto asomando por debajo mientras cambia. */}
             <div style={{
               position: 'absolute', left: 0, right: 0, top: '100%', height: 300,
-              background: colorsFor(item.kind).bg,
-              filter: item.kind === 'space' ? `brightness(${brightnessFor(item)})` : 'none',
+              background: cardBg,
+              filter: cardFilter,
+              transition: isEntering ? 'background .3s cubic-bezier(0.25, 0.46, 0.45, 0.94), filter .3s cubic-bezier(0.25, 0.46, 0.45, 0.94)' : 'none',
             }} />
 
             <span style={{ fontSize: 15, fontWeight: 500, color: colorsFor(item.kind).text, display: 'flex', alignItems: 'center', gap: 6, position: 'relative' }}>

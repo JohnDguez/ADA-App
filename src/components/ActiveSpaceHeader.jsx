@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { MoreVertical, Pencil, Trash2, LogOut } from 'lucide-react'
 
@@ -21,6 +21,22 @@ export function ActiveSpaceHeader({ activeSpaceId, sharedSpaces, onManage, onSwi
   const [dangerPassword, setDangerPassword] = useState('')
   const [dangerError,    setDangerError]    = useState('')
   const [dangerLoading,  setDangerLoading]  = useState(false)
+
+  // Detecta un cambio REAL de espacio activo para animar la entrada del
+  // encabezado (nombre + fondo) deslizándose de abajo hacia arriba con
+  // fundido — antes aparecía de golpe, sin transición propia, aunque las
+  // tarjetas del switcher sí tenían la suya (mockup confirmado con
+  // Johnatan). Mismo patrón ref+timeout que ya usa SpaceSwitcher.jsx.
+  const prevActiveIdRef = useRef(activeSpaceId)
+  const [entering, setEntering] = useState(false)
+  useEffect(() => {
+    if (prevActiveIdRef.current !== activeSpaceId) {
+      prevActiveIdRef.current = activeSpaceId
+      setEntering(true)
+      const timer = setTimeout(() => setEntering(false), 300)
+      return () => clearTimeout(timer)
+    }
+  }, [activeSpaceId])
 
   const entry       = (activeSpaceId && activeSpaceId !== 'new') ? sharedSpaces.spaces.find(s => s.space.id === activeSpaceId) : null
   const isRealSpace = !!entry
@@ -53,7 +69,7 @@ export function ActiveSpaceHeader({ activeSpaceId, sharedSpaces, onManage, onSwi
   }
 
   return (
-    <div style={{ position: 'relative', background: 'var(--bg)', borderRadius: '16px 16px 0 0', marginTop: -14, zIndex: 35 }}>
+    <div style={{ position: 'relative', background: 'var(--bg)', borderRadius: '16px 16px 0 0', marginTop: -14, zIndex: 35, animation: entering ? 'activeHeaderEnter .3s cubic-bezier(0.25, 0.46, 0.45, 0.94) both' : 'none' }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 18px 14px', borderBottom: '1px solid var(--border)' }}>
       <span style={{ fontSize: 15, fontWeight: 500, color: 'var(--text)' }}>{name}</span>
 
