@@ -21,7 +21,7 @@ function nextPeriodRange(cfg) {
   return `${start.getDate()} ${MONTHS_SHORT[start.getMonth()]} – ${end.getDate()} ${MONTHS[end.getMonth()]}`
 }
 
-export function HomePage({ payments, profile, spaceSwitcher, activeSpaceHeader, activeSpaceId, sharedSpaces, spacePermissions, onOpenPremium, onSpaceReady, onAdd, onMarkPaid, onMarkUnpaid, onCaptureAmount, onEdit, onDelete, onPostpone, onAdvance, onGoSettings, notifications, unreadCount, onMarkAsRead, onMarkAllAsRead, onDeleteNotif, onClearAllNotifs, slideClass, isBoot }) {
+export function HomePage({ payments, profile, spaceSwitcher, activeSpaceHeader, activeSpaceId, sharedSpaces, spacePermissions, onOpenPremium, onSpaceReady, onAdd, onMarkPaid, onMarkUnpaid, onCaptureAmount, onEdit, onDelete, onPostpone, onAdvance, onGoSettings, notifications, unreadCount, onMarkAsRead, onMarkAllAsRead, onDeleteNotif, onClearAllNotifs, slideClass }) {
   // Detecta un cambio REAL de espacio activo (no el primer montaje de la
   // página, que también dispararía un `key` remontado sin querer) — antes
   // se usaba `key={activeSpaceId}` para forzar el remontado del contenido,
@@ -121,11 +121,12 @@ export function HomePage({ payments, profile, spaceSwitcher, activeSpaceHeader, 
       />
 
       <div style={{ background: 'var(--bg)', borderRadius: '24px 24px 0 0', marginTop: -24, position: 'relative', zIndex: 10 }}>
-        <div className={isBoot ? 'boot-switcher' : undefined}>{spaceSwitcher}</div>
-        <div className={slideClass}>
-        <div className={spaceJustChanged ? 'content-slide-up' : ''}>
+        {spaceSwitcher}
 
         {activeSpaceId !== 'new' && activeSpaceHeader}
+
+        <div className={slideClass}>
+        <div className={spaceJustChanged ? 'content-slide-up' : ''}>
 
         {activeSpaceId === 'new' ? (
           <div style={{ marginTop: 16 }}>
