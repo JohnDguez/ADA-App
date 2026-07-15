@@ -21,6 +21,62 @@ function nextPeriodRange(cfg) {
   return `${start.getDate()} ${MONTHS_SHORT[start.getMonth()]} – ${end.getDate()} ${MONTHS[end.getMonth()]}`
 }
 
+// Medio anillo tipo velocímetro — tercer rediseño de las tarjetas "Pagos de
+// este periodo"/"Por pagar este mes" (los dos anteriores, anillo completo y
+// tarjeta-relleno, no convencieron a Johnatan). Mockup confirmado con la
+// referencia "Current balance" que trajo. El % se dibuja DENTRO del anillo,
+// centrado a 55% de la altura (no más arriba — Johnatan lo pidió más al
+// medio del hueco del arco). Track siempre semicírculo completo (180°, de
+// izquierda a derecha pasando por arriba); el arco de progreso anima de 0%
+// al valor real cada vez que el componente se monta (o cuando cambia
+// `percent`, ej. al cambiar de espacio) — mockup confirmado con Johnatan:
+// debe verse "llenarse" cada vez que se entra a la página, no aparecer ya
+// lleno de golpe.
+function HalfRing({ percent, width = 220, strokeWidth = 14 }) {
+  const r  = (width - strokeWidth) / 2
+  const cx = width / 2
+  const cy = r + strokeWidth / 2
+  const height = cy + strokeWidth / 2 + 2
+  const target = Math.max(0, Math.min(1, percent))
+
+  const [animated, setAnimated] = useState(0)
+  useEffect(() => {
+    let raf
+    const t0 = performance.now()
+    const duration = 900
+    function frame(now) {
+      const t = Math.min(1, (now - t0) / duration)
+      const eased = 1 - Math.pow(1 - t, 3) // easeOutCubic
+      setAnimated(target * eased)
+      if (t < 1) raf = requestAnimationFrame(frame)
+    }
+    raf = requestAnimationFrame(frame)
+    return () => cancelAnimationFrame(raf)
+  }, [target])
+
+  const start = { x: cx - r, y: cy }
+  const end   = { x: cx + r, y: cy }
+  const trackD = `M ${start.x} ${start.y} A ${r} ${r} 0 1 1 ${end.x} ${end.y}`
+  let progressD = null
+  if (animated > 0) {
+    const angle = Math.PI - animated * Math.PI
+    const progressEnd = { x: cx + r * Math.cos(angle), y: cy - r * Math.sin(angle) }
+    const largeArc = animated > 0.5 ? 1 : 0
+    progressD = `M ${start.x} ${start.y} A ${r} ${r} 0 ${largeArc} 1 ${progressEnd.x} ${progressEnd.y}`
+  }
+  return (
+    <div style={{ position: 'relative', width, height, margin: '0 auto' }}>
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`}>
+        <path d={trackD} fill="none" stroke="var(--border)" strokeWidth={strokeWidth} strokeLinecap="round" />
+        {progressD && <path d={progressD} fill="none" stroke="var(--paid)" strokeWidth={strokeWidth} strokeLinecap="round" />}
+      </svg>
+      <div style={{ position: 'absolute', top: '55%', left: 0, right: 0, textAlign: 'center' }}>
+        <span style={{ fontSize: 26, fontWeight: 700, color: 'var(--text)' }}>{Math.round(animated * 100)}%</span>
+      </div>
+    </div>
+  )
+}
+
 export function HomePage({ payments, profile, spaceSwitcher, activeSpaceHeader, activeSpaceId, sharedSpaces, spacePermissions, onOpenPremium, onSpaceReady, onAdd, onMarkPaid, onMarkUnpaid, onCaptureAmount, onEdit, onDelete, onPostpone, onAdvance, onGoSettings, notifications, unreadCount, onMarkAsRead, onMarkAllAsRead, onDeleteNotif, onClearAllNotifs, slideClass }) {
   // Detecta un cambio REAL de espacio activo (no el primer montaje de la
   // página, que también dispararía un `key` remontado sin querer) — antes
@@ -179,98 +235,92 @@ export function HomePage({ payments, profile, spaceSwitcher, activeSpaceHeader, 
           >
             <div style={{ display: 'flex', transition: 'transform .3s cubic-bezier(0.25,0.46,0.45,0.94)', transform: `translateX(${activeCard * -100}%)` }}>
 
-              {/* Card 1 — Periodo actual. La tarjeta ENTERA es el indicador de
-                  progreso — no una barra aparte: un wash de var(--paid) al
-                  18% de opacidad (no sólido, para que el texto siga
-                  legible encima sin cambiar de color según la zona) cubre
-                  el % pagado, de izquierda a derecha, sobre el fondo
-                  var(--surface) de la tarjeta (mockup confirmado con
-                  Johnatan tras descartar el anillo — se sentía ajeno al
-                  resto del sitio, que es plano). La fecha vive en su
-                  propio recuadro con var(--surface) — mismo color que la
-                  tarjeta antes del wash — dando el efecto de "hueco" en el
-                  relleno donde se lee sin que el verde le compita encima. */}
-              <div style={{ minWidth: '100%', position: 'relative', borderRadius: 12, overflow: 'hidden', background: 'var(--surface)' }}>
+              {/* Card 1 — Periodo actual. Medio anillo tipo gauge (mockup
+                  confirmado con Johnatan, referencia "Current balance" que
+                  trajo) — tercer rediseño de esta tarjeta. Orden dentro de
+                  la tarjeta, de arriba a abajo: fecha (recuadro var(--bg),
+                  efecto de "hueco"), anillo con el %, pagado/pendiente
+                  PEGADO al anillo (explica directamente el % que se ve
+                  arriba), luego título/monto/estatus (fijos, vencido,
+                  variables — info administrativa, no directamente ligada
+                  al anillo, por eso va después). */}
+              <div style={{ minWidth: '100%', background: 'var(--surface)', borderRadius: 12, padding: '14px 16px' }}>
                 {pagarEsteCobro.length === 0 ? (
                   <>
-                    <div style={{ position: 'absolute', inset: 0, background: 'var(--paid)', opacity: 0.18, width: '100%' }} />
-                    <div style={{ position: 'relative', padding: '14px 16px' }}>
-                      <div style={{ display: 'inline-block', background: 'var(--surface)', borderRadius: 5, padding: '4px 8px', fontSize: 12, fontWeight: 500, color: 'var(--text)', marginBottom: 8 }}>
-                        Periodo {periodRange(profile)}
-                      </div>
-                      <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--accent)', marginBottom: 2 }}>Total de este periodo</div>
-                      <div style={{ fontSize: 32, fontWeight: 700, color: 'var(--text)', marginBottom: 8 }}>{fmt(pagadoMonto)}</div>
-                      {(pagadosFijosEstePeriodo > 0 || pagadosVariablesEstePeriodo > 0) && (
-                        <div style={{ fontSize: 12, fontWeight: 500, color: 'var(--text)' }}>
-                          {pagadosFijosEstePeriodo} pago{pagadosFijosEstePeriodo !== 1 ? 's' : ''} fijo{pagadosFijosEstePeriodo !== 1 ? 's' : ''}
-                          {pagadosVariablesEstePeriodo > 0 && ` · ${pagadosVariablesEstePeriodo} variable${pagadosVariablesEstePeriodo !== 1 ? 's' : ''}`}
-                        </div>
-                      )}
+                    <div style={{ display: 'inline-block', background: 'var(--bg)', borderRadius: 5, padding: '4px 8px', fontSize: 12, fontWeight: 500, color: 'var(--text)', marginBottom: 6, float: 'right' }}>
+                      Periodo {periodRange(profile)}
                     </div>
+                    <div style={{ clear: 'both' }} />
+                    <HalfRing percent={1} />
+                    <div style={{ textAlign: 'center', fontSize: 13, fontWeight: 500, color: 'var(--accent)', marginBottom: 2 }}>Total de este periodo</div>
+                    <div style={{ textAlign: 'center', fontSize: 30, fontWeight: 700, color: 'var(--text)', marginBottom: 8 }}>{fmt(pagadoMonto)}</div>
+                    {(pagadosFijosEstePeriodo > 0 || pagadosVariablesEstePeriodo > 0) && (
+                      <div style={{ textAlign: 'center', fontSize: 12, fontWeight: 500, color: 'var(--text)' }}>
+                        {pagadosFijosEstePeriodo} pago{pagadosFijosEstePeriodo !== 1 ? 's' : ''} fijo{pagadosFijosEstePeriodo !== 1 ? 's' : ''}
+                        {pagadosVariablesEstePeriodo > 0 && ` · ${pagadosVariablesEstePeriodo} variable${pagadosVariablesEstePeriodo !== 1 ? 's' : ''}`}
+                      </div>
+                    )}
                   </>
                 ) : (
                   <>
-                    <div style={{ position: 'absolute', inset: 0, background: 'var(--paid)', opacity: 0.18, width: `${pctPagado}%` }} />
-                    <div style={{ position: 'relative', padding: '14px 16px' }}>
-                      <div style={{ display: 'inline-block', background: 'var(--surface)', borderRadius: 5, padding: '4px 8px', fontSize: 12, fontWeight: 500, color: 'var(--text)', marginBottom: 8 }}>
-                        Periodo {periodRange(profile)}
-                      </div>
-                      <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--accent)', marginBottom: 2 }}>Total de este periodo</div>
-                      <div style={{ fontSize: 32, fontWeight: 700, color: 'var(--text)', marginBottom: 8 }}>{fmt(totalConocido)}</div>
-                      <div style={{ fontSize: 12, fontWeight: 500, color: 'var(--text)' }}>
-                        {pagosFijosCount} pago{pagosFijosCount !== 1 ? 's' : ''} fijo{pagosFijosCount !== 1 ? 's' : ''}
-                        {vencidos.length > 0 && <span style={{ color: 'var(--danger)' }}> · {vencidos.length} pago{vencidos.length !== 1 ? 's' : ''} vencido{vencidos.length !== 1 ? 's' : ''}</span>}
-                      </div>
-                      {pendingVariableCount > 0 && (
-                        <div style={{ fontSize: 11, fontWeight: 400, color: 'var(--text)', marginTop: 6 }}>
-                          {pendingVariableCount} pago{pendingVariableCount !== 1 ? 's' : ''} variable{pendingVariableCount !== 1 ? 's' : ''} por confirmar
-                        </div>
-                      )}
-                      <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 12 }}>
-                        <span style={{ fontSize: 12, fontWeight: 500, color: 'var(--paid)' }}>{fmt(pagadoMonto)} pagado</span>
-                        <span style={{ fontSize: 12, fontWeight: 400, color: 'var(--text)' }}>{fmt(pendingAmt)} pendiente</span>
-                      </div>
+                    <div style={{ display: 'inline-block', background: 'var(--bg)', borderRadius: 5, padding: '4px 8px', fontSize: 12, fontWeight: 500, color: 'var(--text)', marginBottom: 6, float: 'right' }}>
+                      Periodo {periodRange(profile)}
                     </div>
+                    <div style={{ clear: 'both' }} />
+                    <HalfRing percent={pctPagado / 100} />
+                    <div style={{ display: 'flex', justifyContent: 'center', gap: 16, marginBottom: 12 }}>
+                      <span style={{ fontSize: 11, fontWeight: 500, color: 'var(--paid)' }}>{fmt(pagadoMonto)} pagado</span>
+                      <span style={{ fontSize: 11, fontWeight: 400, color: 'var(--text)' }}>{fmt(pendingAmt)} pendiente</span>
+                    </div>
+                    <div style={{ textAlign: 'center', fontSize: 13, fontWeight: 500, color: 'var(--accent)', marginBottom: 2 }}>Total de este periodo</div>
+                    <div style={{ textAlign: 'center', fontSize: 30, fontWeight: 700, color: 'var(--text)', marginBottom: 8 }}>{fmt(totalConocido)}</div>
+                    <div style={{ textAlign: 'center', fontSize: 12, fontWeight: 500, color: 'var(--text)' }}>
+                      {pagosFijosCount} pago{pagosFijosCount !== 1 ? 's' : ''} fijo{pagosFijosCount !== 1 ? 's' : ''}
+                      {vencidos.length > 0 && <span style={{ color: 'var(--danger)' }}> · {vencidos.length} pago{vencidos.length !== 1 ? 's' : ''} vencido{vencidos.length !== 1 ? 's' : ''}</span>}
+                    </div>
+                    {pendingVariableCount > 0 && (
+                      <div style={{ textAlign: 'center', fontSize: 10, fontWeight: 400, color: 'var(--text)', marginTop: 5 }}>
+                        {pendingVariableCount} pago{pendingVariableCount !== 1 ? 's' : ''} variable{pendingVariableCount !== 1 ? 's' : ''} por confirmar
+                      </div>
+                    )}
                   </>
                 )}
               </div>
 
               {/* Card 2 — Este mes. Mismo tratamiento que Card 1. */}
-              <div style={{ minWidth: '100%', position: 'relative', borderRadius: 12, overflow: 'hidden', background: 'var(--surface)' }}>
+              <div style={{ minWidth: '100%', background: 'var(--surface)', borderRadius: 12, padding: '14px 16px' }}>
                 {pendingThisMonthAmt <= 0 ? (
                   <>
-                    <div style={{ position: 'absolute', inset: 0, background: 'var(--paid)', opacity: 0.18, width: '100%' }} />
-                    <div style={{ position: 'relative', padding: '14px 16px' }}>
-                      <div style={{ display: 'inline-block', background: 'var(--surface)', borderRadius: 5, padding: '4px 8px', fontSize: 12, fontWeight: 500, color: 'var(--text)', marginBottom: 8 }}>
-                        {MONTHS[thisMonth]} {thisYear}
-                      </div>
-                      <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--accent)', marginBottom: 2 }}>Total de este mes</div>
-                      <div style={{ fontSize: 32, fontWeight: 700, color: 'var(--text)', marginBottom: 8 }}>{fmt(paidThisMonthAmt)}</div>
-                      {(paidFixedThisMonth > 0 || variableThisMonth > 0) && (
-                        <div style={{ fontSize: 12, fontWeight: 500, color: 'var(--text)' }}>
-                          {paidFixedThisMonth} pago{paidFixedThisMonth !== 1 ? 's' : ''} fijo{paidFixedThisMonth !== 1 ? 's' : ''}
-                          {variableThisMonth > 0 && ` · ${variableThisMonth} variable${variableThisMonth !== 1 ? 's' : ''}`}
-                        </div>
-                      )}
+                    <div style={{ display: 'inline-block', background: 'var(--bg)', borderRadius: 5, padding: '4px 8px', fontSize: 12, fontWeight: 500, color: 'var(--text)', marginBottom: 6, float: 'right' }}>
+                      {MONTHS[thisMonth]} {thisYear}
                     </div>
+                    <div style={{ clear: 'both' }} />
+                    <HalfRing percent={1} />
+                    <div style={{ textAlign: 'center', fontSize: 13, fontWeight: 500, color: 'var(--accent)', marginBottom: 2 }}>Total de este mes</div>
+                    <div style={{ textAlign: 'center', fontSize: 30, fontWeight: 700, color: 'var(--text)', marginBottom: 8 }}>{fmt(paidThisMonthAmt)}</div>
+                    {(paidFixedThisMonth > 0 || variableThisMonth > 0) && (
+                      <div style={{ textAlign: 'center', fontSize: 12, fontWeight: 500, color: 'var(--text)' }}>
+                        {paidFixedThisMonth} pago{paidFixedThisMonth !== 1 ? 's' : ''} fijo{paidFixedThisMonth !== 1 ? 's' : ''}
+                        {variableThisMonth > 0 && ` · ${variableThisMonth} variable${variableThisMonth !== 1 ? 's' : ''}`}
+                      </div>
+                    )}
                   </>
                 ) : (
                   <>
-                    <div style={{ position: 'absolute', inset: 0, background: 'var(--paid)', opacity: 0.18, width: `${pctPagadoMes}%` }} />
-                    <div style={{ position: 'relative', padding: '14px 16px' }}>
-                      <div style={{ display: 'inline-block', background: 'var(--surface)', borderRadius: 5, padding: '4px 8px', fontSize: 12, fontWeight: 500, color: 'var(--text)', marginBottom: 8 }}>
-                        {MONTHS[thisMonth]} {thisYear}
-                      </div>
-                      <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--accent)', marginBottom: 2 }}>Total de este mes</div>
-                      <div style={{ fontSize: 32, fontWeight: 700, color: 'var(--text)', marginBottom: 8 }}>{fmt(totalThisMonth)}</div>
-                      <div style={{ fontSize: 12, fontWeight: 500, color: 'var(--text)' }}>
-                        {paidThisMonth.length} pagado{paidThisMonth.length !== 1 ? 's' : ''}
-                        {variableThisMonth > 0 && ` · ${variableThisMonth} variable${variableThisMonth !== 1 ? 's' : ''}`}
-                      </div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 12 }}>
-                        <span style={{ fontSize: 12, fontWeight: 500, color: 'var(--paid)' }}>{fmt(paidThisMonthAmt)} pagado</span>
-                        <span style={{ fontSize: 12, fontWeight: 400, color: 'var(--text)' }}>{fmt(pendingThisMonthAmt)} pendiente</span>
-                      </div>
+                    <div style={{ display: 'inline-block', background: 'var(--bg)', borderRadius: 5, padding: '4px 8px', fontSize: 12, fontWeight: 500, color: 'var(--text)', marginBottom: 6, float: 'right' }}>
+                      {MONTHS[thisMonth]} {thisYear}
+                    </div>
+                    <div style={{ clear: 'both' }} />
+                    <HalfRing percent={pctPagadoMes / 100} />
+                    <div style={{ display: 'flex', justifyContent: 'center', gap: 16, marginBottom: 12 }}>
+                      <span style={{ fontSize: 11, fontWeight: 500, color: 'var(--paid)' }}>{fmt(paidThisMonthAmt)} pagado</span>
+                      <span style={{ fontSize: 11, fontWeight: 400, color: 'var(--text)' }}>{fmt(pendingThisMonthAmt)} pendiente</span>
+                    </div>
+                    <div style={{ textAlign: 'center', fontSize: 13, fontWeight: 500, color: 'var(--accent)', marginBottom: 2 }}>Total de este mes</div>
+                    <div style={{ textAlign: 'center', fontSize: 30, fontWeight: 700, color: 'var(--text)', marginBottom: 8 }}>{fmt(totalThisMonth)}</div>
+                    <div style={{ textAlign: 'center', fontSize: 12, fontWeight: 500, color: 'var(--text)' }}>
+                      {paidThisMonth.length} pagado{paidThisMonth.length !== 1 ? 's' : ''}
+                      {variableThisMonth > 0 && ` · ${variableThisMonth} variable${variableThisMonth !== 1 ? 's' : ''}`}
                     </div>
                   </>
                 )}
