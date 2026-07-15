@@ -5,6 +5,12 @@
 // (v0.9.133+): el switcher de espacios (tarjeta apilada, "Personal"/espacios
 // compartidos) ahora vive justo debajo del header, antes de las tabs
 // Periodo/Mes — antes no existía y las tabs quedaban pegadas al header.
+// Actualizado de nuevo tras el rediseño de la tarjeta "Pagos de este
+// periodo"/"Por pagar este mes" (medio anillo tipo gauge, confirmado con
+// Johnatan después de descartar el anillo completo y la tarjeta-relleno) y
+// el switch Periodo/Mes (ahora píldora deslizante, no 2 botones cuadrados) —
+// el esqueleto ya no debe mostrar la barra horizontal ni el toggle de 5px,
+// que ya no existen en la pantalla real.
 
 function Bone({ w, h, r, dark, style }) {
   return (
@@ -53,21 +59,37 @@ export function SkeletonLoader() {
 
         <div style={{ padding: '0 16px' }}>
 
-        {/* ── Tabs Periodo / Mes ── */}
-        <div style={{ display: 'flex', gap: 3, background: 'var(--section-bg)', borderRadius: 5, padding: 3, marginTop: 20, marginBottom: 10 }}>
-          <Bone w="50%" h={30} r={5} />
-          <Bone w="50%" h={30} r={5} />
+        {/* ── Switch Periodo / Mes — píldora deslizante (border-radius: 999),
+             ya no el toggle cuadrado de 5px que tenía antes. */}
+        <div style={{ display: 'flex', gap: 3, background: 'var(--section-bg)', borderRadius: 999, padding: 4, marginTop: 20, marginBottom: 10 }}>
+          <Bone w="50%" h={30} r={999} />
+          <Bone w="50%" h={30} r={999} />
         </div>
 
-        {/* ── Card de métricas (eyebrow, número, barra de progreso) ── */}
-        <div style={{ background: 'var(--surface)', borderRadius: 12, padding: '16px 14px', marginBottom: 20, display: 'flex', flexDirection: 'column', gap: 10 }}>
-          <Bone w={110} h={11} r={4} />
-          <Bone w={140} h={30} r={4} />
-          <Bone w={180} h={11} r={4} />
-          <Bone w="100%" h={5} r={3} />
-          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-            <Bone w={70} h={9} r={4} />
-            <Bone w={70} h={9} r={4} />
+        {/* ── Card de métricas — medio anillo tipo gauge (ya no la barra
+             horizontal de antes). Fecha arriba a la derecha, el "domo" del
+             anillo centrado (aproximado con un rectángulo con esquinas
+             superiores muy redondeadas), pagado/pendiente pegado abajo del
+             anillo, y título/monto/estatus debajo. */}
+        <div style={{ background: 'var(--surface)', borderRadius: 12, padding: '14px 16px', marginBottom: 20 }}>
+          <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 8 }}>
+            <Bone w={100} h={20} r={5} />
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 10 }}>
+            <Bone w={180} h={90} r="90px 90px 0 0" />
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'center', gap: 16, marginBottom: 14 }}>
+            <Bone w={90} h={11} r={4} />
+            <Bone w={90} h={11} r={4} />
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 6 }}>
+            <Bone w={120} h={11} r={4} />
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 8 }}>
+            <Bone w={140} h={26} r={4} />
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'center' }}>
+            <Bone w={160} h={11} r={4} />
           </div>
         </div>
 
