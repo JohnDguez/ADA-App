@@ -239,18 +239,34 @@ export function HomePage({ payments, profile, spaceSwitcher, activeSpaceHeader, 
           </div>
         ) : (
         <>
-        {/* Tabs Periodo / Mes */}
+        {/* Tabs Periodo / Mes — switch deslizante real (track + thumb que se
+            mueve), no 2 botones que solo cambian de color. Excepción
+            consciente a "border-radius: 5 en todo" (mockup confirmado con
+            Johnatan): los controles de 2 posiciones (switches/segmented
+            controls) son la única categoría donde la forma de píldora
+            aplica — es la convención universal para ese tipo de control,
+            no una adopción general de curvas por el logo. Este es el
+            patrón oficial a reusar en cualquier otro switch de 2
+            posiciones que se agregue después (ej. futuros toggles en
+            Ajustes) — no repetir el estilo viejo de 5px para eso. */}
         <div data-coachmark="home-metric-card" style={{ padding: '20px 16px 0', userSelect: 'none' }}>
-          <div style={{ display: 'flex', background: 'var(--section-bg)', borderRadius: 5, padding: 3, marginBottom: 10 }}>
+          <div style={{ position: 'relative', display: 'flex', background: 'var(--section-bg)', borderRadius: 999, padding: 4, marginBottom: 10 }}>
+            <div style={{
+              position: 'absolute', top: 4, left: 4,
+              width: 'calc(50% - 4px)', height: 'calc(100% - 8px)',
+              background: 'var(--accent)', borderRadius: 999,
+              transition: 'transform .25s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+              transform: `translateX(${activeCard * 100}%)`,
+            }} />
             <button
               onClick={() => setActiveCard(0)}
-              style={{ flex: 1, textAlign: 'center', padding: '8px 0', borderRadius: 5, border: 'none', background: activeCard === 0 ? 'var(--accent)' : 'transparent', color: activeCard === 0 ? '#fff' : 'var(--text)', fontSize: 12, fontWeight: 500, fontFamily: 'DM Sans, sans-serif' }}
+              style={{ position: 'relative', zIndex: 1, flex: 1, textAlign: 'center', padding: '10px 0', border: 'none', background: 'transparent', color: activeCard === 0 ? '#fff' : 'var(--text)', fontSize: 13, fontWeight: activeCard === 0 ? 500 : 400, fontFamily: 'DM Sans, sans-serif', transition: 'color .2s' }}
             >
               Periodo
             </button>
             <button
               onClick={() => setActiveCard(1)}
-              style={{ flex: 1, textAlign: 'center', padding: '8px 0', borderRadius: 5, border: 'none', background: activeCard === 1 ? 'var(--accent)' : 'transparent', color: activeCard === 1 ? '#fff' : 'var(--text)', fontSize: 12, fontWeight: 500, fontFamily: 'DM Sans, sans-serif' }}
+              style={{ position: 'relative', zIndex: 1, flex: 1, textAlign: 'center', padding: '10px 0', border: 'none', background: 'transparent', color: activeCard === 1 ? '#fff' : 'var(--text)', fontSize: 13, fontWeight: activeCard === 1 ? 500 : 400, fontFamily: 'DM Sans, sans-serif', transition: 'color .2s' }}
             >
               Mes
             </button>
