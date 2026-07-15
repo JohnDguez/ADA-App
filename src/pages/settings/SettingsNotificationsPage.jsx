@@ -2,6 +2,15 @@ import { ChevronLeft, Bell, BellOff } from 'lucide-react'
 import { usePushNotifications } from '../../hooks/usePushNotifications'
 import { showToast } from '../../components/Toast'
 import { Card, Toggle, NotifToggle } from '../../components/SettingsShared'
+import { Select } from '../../components/Select'
+
+// Mismo formato de horas que ya usaba el <select> nativo (12:00 am ... 11:00
+// pm) — Select.jsx trabaja con opciones como texto, así que se guarda el
+// arreglo completo y se convierte de ida (hora → etiqueta) y vuelta
+// (etiqueta → hora, vía indexOf, seguro porque cada etiqueta es única).
+const HOUR_LABELS = Array.from({ length: 24 }, (_, i) =>
+  i === 0 ? '12:00 am' : i < 12 ? `${i}:00 am` : i === 12 ? '12:00 pm' : `${i - 12}:00 pm`
+)
 
 // Sub-página "Notificaciones" dentro de Ajustes. Antes vivía directo en
 // SettingsPage.jsx.
@@ -47,11 +56,13 @@ export function SettingsNotificationsPage({ profile, user, onUpdate, onBack, sli
         {subscribed && (<>
           <div style={{ padding: '13px 14px', borderBottom: '0.5px solid var(--border)' }}>
             <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)', marginBottom: 8 }}>Hora de notificación</div>
-            <select value={profile.notif_hour ?? 8} onChange={e => onUpdate({ notif_hour: parseInt(e.target.value), notif_last_sent: null })} className="field-input" style={{ maxWidth: 140 }}>
-              {Array.from({ length: 24 }, (_, i) => (
-                <option key={i} value={i}>{i === 0 ? '12:00 am' : i < 12 ? `${i}:00 am` : i === 12 ? '12:00 pm' : `${i - 12}:00 pm`}</option>
-              ))}
-            </select>
+            <div style={{ maxWidth: 140 }}>
+              <Select
+                value={HOUR_LABELS[profile.notif_hour ?? 8]}
+                onChange={label => onUpdate({ notif_hour: HOUR_LABELS.indexOf(label), notif_last_sent: null })}
+                options={HOUR_LABELS}
+              />
+            </div>
           </div>
 
           <NotifToggle label="Pagos vencidos"  sub="Cuando un pago no se cubrió a tiempo"    value={profile.notif_overdue    !== false} onChange={v => onUpdate({ notif_overdue:    v })} />
