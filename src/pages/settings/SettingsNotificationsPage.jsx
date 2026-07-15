@@ -56,7 +56,7 @@ export function SettingsNotificationsPage({ profile, user, onUpdate, onBack, sli
 
           <NotifToggle label="Pagos vencidos"  sub="Cuando un pago no se cubrió a tiempo"    value={profile.notif_overdue    !== false} onChange={v => onUpdate({ notif_overdue:    v })} />
           <NotifToggle label="Vencen hoy"      sub="Pagos que llegan a su fecha límite hoy"  value={profile.notif_due_today  !== false} onChange={v => onUpdate({ notif_due_today:  v })} />
-          <NotifToggle label="Próximos pagos"  sub="Recordatorio días antes del vencimiento" value={profile.notif_upcoming   !== false} onChange={v => onUpdate({ notif_upcoming:   v })} />
+          <NotifToggle label="Próximos pagos"  sub="Recordatorio días antes del vencimiento" value={profile.notif_upcoming   !== false} onChange={v => onUpdate({ notif_upcoming:   v })} last={profile.notif_upcoming !== false} />
 
           {profile.notif_upcoming !== false && (
             <div style={{ padding: '0 14px 13px' }}>
