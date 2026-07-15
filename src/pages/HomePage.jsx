@@ -194,7 +194,7 @@ export function HomePage({ payments, profile, spaceSwitcher, activeSpaceHeader, 
                 {pagarEsteCobro.length === 0 ? (
                   <>
                     <div style={{ position: 'absolute', inset: 0, background: 'var(--paid)', opacity: 0.18, width: '100%' }} />
-                    <div style={{ position: 'relative', padding: '20px 16px' }}>
+                    <div style={{ position: 'relative', padding: '14px 16px' }}>
                       <div style={{ display: 'inline-block', background: 'var(--surface)', borderRadius: 5, padding: '4px 8px', fontSize: 12, fontWeight: 500, color: 'var(--text)', marginBottom: 8 }}>
                         Periodo {periodRange(profile)}
                       </div>
@@ -211,7 +211,7 @@ export function HomePage({ payments, profile, spaceSwitcher, activeSpaceHeader, 
                 ) : (
                   <>
                     <div style={{ position: 'absolute', inset: 0, background: 'var(--paid)', opacity: 0.18, width: `${pctPagado}%` }} />
-                    <div style={{ position: 'relative', padding: '20px 16px' }}>
+                    <div style={{ position: 'relative', padding: '14px 16px' }}>
                       <div style={{ display: 'inline-block', background: 'var(--surface)', borderRadius: 5, padding: '4px 8px', fontSize: 12, fontWeight: 500, color: 'var(--text)', marginBottom: 8 }}>
                         Periodo {periodRange(profile)}
                       </div>
@@ -240,7 +240,7 @@ export function HomePage({ payments, profile, spaceSwitcher, activeSpaceHeader, 
                 {pendingThisMonthAmt <= 0 ? (
                   <>
                     <div style={{ position: 'absolute', inset: 0, background: 'var(--paid)', opacity: 0.18, width: '100%' }} />
-                    <div style={{ position: 'relative', padding: '20px 16px' }}>
+                    <div style={{ position: 'relative', padding: '14px 16px' }}>
                       <div style={{ display: 'inline-block', background: 'var(--surface)', borderRadius: 5, padding: '4px 8px', fontSize: 12, fontWeight: 500, color: 'var(--text)', marginBottom: 8 }}>
                         {MONTHS[thisMonth]} {thisYear}
                       </div>
@@ -257,7 +257,7 @@ export function HomePage({ payments, profile, spaceSwitcher, activeSpaceHeader, 
                 ) : (
                   <>
                     <div style={{ position: 'absolute', inset: 0, background: 'var(--paid)', opacity: 0.18, width: `${pctPagadoMes}%` }} />
-                    <div style={{ position: 'relative', padding: '20px 16px' }}>
+                    <div style={{ position: 'relative', padding: '14px 16px' }}>
                       <div style={{ display: 'inline-block', background: 'var(--surface)', borderRadius: 5, padding: '4px 8px', fontSize: 12, fontWeight: 500, color: 'var(--text)', marginBottom: 8 }}>
                         {MONTHS[thisMonth]} {thisYear}
                       </div>
