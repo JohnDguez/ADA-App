@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useId } from 'react'
 import { ChevronDown, ChevronUp, Check, RotateCcw } from 'lucide-react'
 import { PayCard } from '../components/PayCard'
 import { PayRail } from '../components/PayRail'
@@ -38,6 +38,11 @@ function HalfRing({ percent, width = 220, strokeWidth = 14 }) {
   const cy = r + strokeWidth / 2
   const height = cy + strokeWidth / 2 + 2
   const target = Math.max(0, Math.min(1, percent))
+  // Id único del degradado — hacen falta 2 HalfRing en el DOM a la vez
+  // (tarjetas Periodo y Mes, una fuera de vista por el swipe), y los ids de
+  // <defs> son globales al documento — sin esto, ambos anillos apuntarían
+  // al MISMO degradado (el del que se definió primero).
+  const gradId = useId()
 
   const [animated, setAnimated] = useState(0)
   useEffect(() => {
@@ -57,10 +62,13 @@ function HalfRing({ percent, width = 220, strokeWidth = 14 }) {
   const start = { x: cx - r, y: cy }
   const end   = { x: cx + r, y: cy }
   const trackD = `M ${start.x} ${start.y} A ${r} ${r} 0 1 1 ${end.x} ${end.y}`
+  // Punto de la bolita: SIEMPRE en la punta real del progreso animado (no
+  // solo cuando animated > 0) — así, en 0%, la bolita ya está en su lugar
+  // de reposo (el inicio del anillo) en vez de aparecer de la nada.
+  const angle = Math.PI - animated * Math.PI
+  const dotPoint = { x: cx + r * Math.cos(angle), y: cy - r * Math.sin(angle) }
   let progressD = null
   if (animated > 0) {
-    const angle = Math.PI - animated * Math.PI
-    const progressEnd = { x: cx + r * Math.cos(angle), y: cy - r * Math.sin(angle) }
     // Medio anillo: el barrido nunca pasa de 180°, así que este flag SIEMPRE
     // es 0 — a diferencia del anillo completo (360°), donde sí hacía falta
     // alternarlo pasado el 50%. Ponerlo en 1 aquí le pedía al SVG dibujar el
@@ -69,13 +77,32 @@ function HalfRing({ percent, width = 220, strokeWidth = 14 }) {
     // se veían las puntas redondeadas de stroke-linecap, sin la curva
     // conectándolas, porque el arco de en medio se dibujaba fuera de vista.
     const largeArc = 0
-    progressD = `M ${start.x} ${start.y} A ${r} ${r} 0 ${largeArc} 1 ${progressEnd.x} ${progressEnd.y}`
+    // La línea llega hasta el centro exacto de la bolita — el "corte" que
+    // los separa visualmente NO es un hueco angular (se probó y no
+    // convenció), sino el borde de la propia bolita (ver <circle> abajo),
+    // del color de fondo de la tarjeta, que tapa la unión.
+    progressD = `M ${start.x} ${start.y} A ${r} ${r} 0 ${largeArc} 1 ${dotPoint.x} ${dotPoint.y}`
   }
   return (
     <div style={{ position: 'relative', width, height, margin: '0 auto' }}>
       <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`}>
+        <defs>
+          {/* Excepción intencional a "nunca colores hardcodeados / sin
+              degradados" — confirmado con Johnatan, replica el isotipo del
+              logo de LunaPay (verde del anillo hacia azul de marca en la
+              bolita). Documentado en CONTEXT.md junto con las demás
+              excepciones fijas (Premium). */}
+          <linearGradient id={gradId} x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="var(--paid)" />
+            <stop offset="100%" stopColor="var(--accent)" />
+          </linearGradient>
+        </defs>
         <path d={trackD} fill="none" stroke="var(--border)" strokeWidth={strokeWidth} strokeLinecap="round" />
-        {progressD && <path d={progressD} fill="none" stroke="var(--paid)" strokeWidth={strokeWidth} strokeLinecap="round" />}
+        {progressD && <path d={progressD} fill="none" stroke={`url(#${gradId})`} strokeWidth={strokeWidth} strokeLinecap="round" />}
+        {/* Bolita del isotipo — el borde del color de fondo de la tarjeta
+            (var(--surface)) es lo que la hace verse "cortada" de la línea,
+            en vez de un hueco angular (mockup confirmado con Johnatan). */}
+        <circle cx={dotPoint.x} cy={dotPoint.y} r={strokeWidth * 0.65} fill="var(--accent)" stroke="var(--surface)" strokeWidth={3} />
       </svg>
       <div style={{ position: 'absolute', top: '55%', left: 0, right: 0, textAlign: 'center' }}>
         <span style={{ fontSize: 26, fontWeight: 700, color: 'var(--text)' }}>{Math.round(animated * 100)}%</span>
