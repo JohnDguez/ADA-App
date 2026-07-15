@@ -61,7 +61,14 @@ function HalfRing({ percent, width = 220, strokeWidth = 14 }) {
   if (animated > 0) {
     const angle = Math.PI - animated * Math.PI
     const progressEnd = { x: cx + r * Math.cos(angle), y: cy - r * Math.sin(angle) }
-    const largeArc = animated > 0.5 ? 1 : 0
+    // Medio anillo: el barrido nunca pasa de 180°, así que este flag SIEMPRE
+    // es 0 — a diferencia del anillo completo (360°), donde sí hacía falta
+    // alternarlo pasado el 50%. Ponerlo en 1 aquí le pedía al SVG dibujar el
+    // arco "por el otro lado" (por debajo de la línea base, fuera del
+    // lienzo) — bug real que Johnatan encontró probando en su teléfono: solo
+    // se veían las puntas redondeadas de stroke-linecap, sin la curva
+    // conectándolas, porque el arco de en medio se dibujaba fuera de vista.
+    const largeArc = 0
     progressD = `M ${start.x} ${start.y} A ${r} ${r} 0 ${largeArc} 1 ${progressEnd.x} ${progressEnd.y}`
   }
   return (
