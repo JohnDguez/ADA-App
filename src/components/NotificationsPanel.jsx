@@ -99,8 +99,8 @@ export function NotificationsPanel({ open, onClose, notifications, unreadCount, 
                   <div style={{ fontSize: 11, fontWeight: 400, color: 'var(--text)', lineHeight: 1.4 }}>{n.body}</div>
                   <div style={{ fontSize: 10, fontWeight: 400, color: 'var(--text)', marginTop: 4, display: 'flex', alignItems: 'center', gap: 6 }}>
                     <span>{timeAgo(n.created_at)}</span>
-                    {n.type === 'space_change' && (
-                      <span style={{ fontWeight: 600, color: 'var(--space-inactive-bg)' }}>· {n.space_name || 'Espacio Compartido'}</span>
+                    {n.space_name && (
+                      <span style={{ fontWeight: 600, color: 'var(--space-inactive-bg)' }}>· {n.space_name}</span>
                     )}
                   </div>
                 </div>
