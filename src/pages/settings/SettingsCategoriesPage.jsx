@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { ChevronLeft, Plus, Check, Search } from 'lucide-react'
+import { ChevronLeft, Plus, Check, Search, Trash2 } from 'lucide-react'
 import { CATEGORIES, getCatColor } from '../../lib/utils'
 import { CATEGORY_ICON_GROUPS, getCategoryIcon, getIconComponent } from '../../lib/categoryIcons'
 import { showToast } from '../../components/Toast'
@@ -23,6 +23,8 @@ export function SettingsCategoriesPage({ profile, onUpdate, onBack, slideClass }
   const [iconSearch,  setIconSearch]  = useState('')
   const [nameError,   setNameError]   = useState('')
   const [saving,      setSaving]      = useState(false)
+  const [confirmDeleteCat, setConfirmDeleteCat] = useState(null) // nombre de la categoría personalizada a confirmar, o null
+  const [deleting,    setDeleting]    = useState(false)
 
   const customCats     = profile.custom_categories || []
   const categoryIcons  = profile.category_icons || {}
@@ -88,15 +90,65 @@ export function SettingsCategoriesPage({ profile, onUpdate, onBack, slideClass }
     setModalOpen(false)
   }
 
+  // Eliminar categoría personalizada — las 11 fijas nunca pasan por aquí
+  // (el botón de borrar solo se dibuja para isCustom). Los pagos que ya
+  // tenían esta categoría se reasignan a "Otros" en vez de quedar huérfanos
+  // o bloquear el borrado (decisión de Johnatan).
+  async function handleDeleteCategory(cat) {
+    setDeleting(true)
+
+    const newCustom = customCats.filter(c => c !== cat)
+    const newIcons  = { ...categoryIcons };  delete newIcons[cat]
+    const newColors = { ...categoryColors }; delete newColors[cat]
+
+    await onUpdate({ custom_categories: newCustom, category_icons: newIcons, category_colors: newColors })
+    await supabase.from('payments').update({ category: 'Otros' }).eq('user_id', profile.id).eq('category', cat)
+
+    showToast(`Categoría "${cat}" eliminada`)
+    setConfirmDeleteCat(null)
+    setDeleting(false)
+  }
+
   function CategoryRow({ cat, isCustom, last }) {
     const Icon  = getCategoryIcon(cat, categoryIcons)
     const color = getCatColor(cat, customCats, categoryColors)
+    const isConfirming = confirmDeleteCat === cat
+
     return (
-      <div onClick={() => openEdit(cat, isCustom)} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '13px 14px', borderBottom: last ? 'none' : '0.5px solid var(--border)', cursor: 'pointer' }}>
-        <div style={{ width: 30, height: 30, borderRadius: '50%', flexShrink: 0, background: 'var(--bg)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          {Icon ? <Icon size={16} color={color} /> : <div style={{ width: 12, height: 12, borderRadius: '50%', background: color }} />}
+      <div>
+        <div onClick={() => openEdit(cat, isCustom)} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '13px 14px', borderBottom: (last && !isConfirming) ? 'none' : '0.5px solid var(--border)', cursor: 'pointer' }}>
+          <div style={{ width: 36, height: 36, borderRadius: 8, background: color, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            {Icon
+              ? <Icon size={18} color="var(--text)" strokeWidth={2} />
+              : <span style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--text)' }} />
+            }
+          </div>
+          <span style={{ fontSize: 13, fontWeight: 500, color: 'var(--text)', flex: 1 }}>{cat}</span>
+          {isCustom && (
+            <button
+              onClick={e => { e.stopPropagation(); setConfirmDeleteCat(prev => prev === cat ? null : cat) }}
+              style={{ width: 30, height: 30, borderRadius: 8, border: 'none', background: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0 }}
+            >
+              <Trash2 size={16} color="var(--text)" />
+            </button>
+          )}
         </div>
-        <span style={{ fontSize: 13, fontWeight: 500, color: 'var(--text)', flex: 1 }}>{cat}</span>
+
+        {isConfirming && (
+          <div style={{ padding: '10px 14px', background: 'var(--danger-soft)', borderBottom: last ? 'none' : '0.5px solid var(--border)' }}>
+            <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--danger)', marginBottom: 8 }}>
+              ¿Eliminar "{cat}"? Los pagos ya registrados con esta categoría se reasignarán a "Otros".
+            </div>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button onClick={() => setConfirmDeleteCat(null)} style={{ flex: 1, padding: '7px', borderRadius: 6, border: '0.5px solid var(--border)', background: 'var(--surface)', fontSize: 12, fontWeight: 600, color: 'var(--text)', cursor: 'pointer', fontFamily: 'DM Sans, sans-serif' }}>
+                Cancelar
+              </button>
+              <button onClick={() => handleDeleteCategory(cat)} disabled={deleting} style={{ flex: 1, padding: '7px', borderRadius: 6, border: 'none', background: 'var(--danger)', fontSize: 12, fontWeight: 600, color: '#fff', cursor: 'pointer', fontFamily: 'DM Sans, sans-serif' }}>
+                {deleting ? 'Eliminando…' : 'Eliminar'}
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     )
   }
