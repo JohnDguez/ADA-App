@@ -2,19 +2,25 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { supabase } from '../lib/supabase'
 import { nextPeriodDate, dateOf, dateToStr, todayStr, fmt } from '../lib/utils'
 
+// NOTA (Fase 5b): `activeSpaceName` ya no se usa dentro de este hook — el
+// endpoint `notify-space-change.js` ahora trae el nombre REAL del espacio
+// directo de `shared_spaces` (más confiable que lo que el cliente traiga en
+// memoria). Se deja el parámetro para no romper la firma que ya usa
+// `App.jsx` — si Johnatan confirma que no hace falta en ningún otro lado,
+// se puede quitar de los 2 lados en una próxima sesión.
 export function usePayments(userId, activeSpaceId = null, activeSpaceName = null) {
   const [payments, setPayments] = useState([])
 
-  // Aviso a los demás miembros del espacio compartido tras agregar, marcar
-  // pagado, o eliminar un pago — SOLO esas 3 acciones (confirmado con
-  // Johnatan, para no saturar con ediciones menores como cambiar el
-  // monto o posponer). No bloquea la acción real si falla — el pago ya se
-  // guardó/marcó/borró bien del lado de la base de datos antes de llegar
-  // aquí; un aviso que no llegó no debe tumbar eso, por eso el try/catch
-  // silencioso. El endpoint mismo decide a quién avisar según quién tenga
-  // `notify_on_changes` activado para este espacio — aquí solo se le pasa
-  // el espacio y el texto.
-  async function notifySpaceChange(title, body) {
+  // Aviso a los demás miembros del espacio compartido tras agregar (único,
+  // recurrente o en parcialidades), marcar pagado, o eliminar un pago —
+  // SOLO esas acciones (confirmado con Johnatan, para no saturar con
+  // ediciones menores como cambiar el monto o posponer). No bloquea la
+  // acción real si falla — el pago ya se guardó/marcó/borró bien del lado
+  // de la base de datos antes de llegar aquí; un aviso que no llegó no debe
+  // tumbar eso, por eso el try/catch silencioso. El texto final (con el
+  // nombre real de quien hizo el cambio) lo arma el servidor, no aquí —
+  // aquí solo se manda la acción y los datos del pago.
+  async function notifySpaceChange(action, details = {}) {
     if (!activeSpaceId) return
     try {
       const { data: { session } } = await supabase.auth.getSession()
@@ -22,7 +28,7 @@ export function usePayments(userId, activeSpaceId = null, activeSpaceName = null
       await fetch('/api/notify-space-change', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
-        body: JSON.stringify({ spaceId: activeSpaceId, title, body }),
+        body: JSON.stringify({ spaceId: activeSpaceId, action, ...details }),
       })
     } catch (e) {
       // Silencioso a propósito — ver nota arriba
@@ -156,7 +162,7 @@ export function usePayments(userId, activeSpaceId = null, activeSpaceName = null
       .select().single()
     if (!error) {
       setPayments(prev => [...prev, data])
-      notifySpaceChange(`Nuevo pago en ${activeSpaceName || 'tu Espacio Compartido'}`, `${data.name} — ${fmt(data.amount)}`)
+      notifySpaceChange('added', { paymentName: data.name, amount: data.amount, paymentType: 'unico' })
     }
     return { data, error }
   }
@@ -206,7 +212,10 @@ export function usePayments(userId, activeSpaceId = null, activeSpaceName = null
     }))
 
     const { data: copiesData, error } = await supabase.from('payments').insert(installCopies).select()
-    if (!error && copiesData) setPayments(prev => [...prev, master, ...copiesData])
+    if (!error && copiesData) {
+      setPayments(prev => [...prev, master, ...copiesData])
+      notifySpaceChange('added', { paymentName: name, amount, paymentType: 'parcialidades', totalInstallments })
+    }
     return { data: copiesData?.[0], error }
   }
 
@@ -255,6 +264,7 @@ export function usePayments(userId, activeSpaceId = null, activeSpaceName = null
     const { data: copiesData, error: copiesErr } = await supabase.from('payments').insert(copies).select()
     if (!copiesErr && copiesData) {
       setPayments(prev => [...prev, master, ...copiesData])
+      notifySpaceChange('added', { paymentName: name, amount: baseAmount, paymentType: 'recurrente', recurFreq: recur_freq })
     }
     return { error: copiesErr }
   }
@@ -337,7 +347,7 @@ export function usePayments(userId, activeSpaceId = null, activeSpaceName = null
     if (!error) {
       const updatedPayments = payments.map(p => p.id === id ? { ...p, ...data } : p)
       setPayments(updatedPayments)
-      notifySpaceChange(`Pago marcado en ${activeSpaceName || 'tu Espacio Compartido'}`, `${data.name} ya fue pagado`)
+      notifySpaceChange('marked_paid', { paymentName: data.name })
 
       // Recurrente: asegurar siempre 2 pendientes en cola
       if (payment?.is_recurrent && !payment?.is_master && payment?.parent_id) {
@@ -585,7 +595,7 @@ export function usePayments(userId, activeSpaceId = null, activeSpaceName = null
       return { error: { message: 'No tienes permiso para eliminar este pago en este espacio.' } }
     }
     setPayments(prev => prev.filter(p => p.id !== id))
-    if (payment) notifySpaceChange(`Pago eliminado en ${activeSpaceName || 'tu Espacio Compartido'}`, `${payment.name} se eliminó del espacio`)
+    if (payment) notifySpaceChange('deleted', { paymentName: payment.name })
     return { error: null }
   }
 
