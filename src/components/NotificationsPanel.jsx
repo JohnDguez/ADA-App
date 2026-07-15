@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { AlertCircle, Clock, Bell, Trash2, CheckCheck, X, Users } from 'lucide-react'
+import { AlertCircle, Clock, Bell, Trash2, CheckCheck, X } from 'lucide-react'
 import { MONTHS_SHORT } from '../lib/utils'
 
 function timeAgo(dateStr) {
@@ -13,11 +13,22 @@ function timeAgo(dateStr) {
 }
 
 function NotifIcon({ type }) {
-  if (type === 'overdue')      return <AlertCircle size={16} color="var(--danger)" />
-  if (type === 'due_today')    return <Clock size={16} color="#FE7600" />
-  if (type === 'cobro_day')    return <Bell size={16} color="var(--accent)" />
-  if (type === 'space_change') return <Users size={16} color="var(--space-inactive-bg)" />
+  if (type === 'overdue')   return <AlertCircle size={16} color="var(--danger)" />
+  if (type === 'due_today') return <Clock size={16} color="#FE7600" />
+  if (type === 'cobro_day') return <Bell size={16} color="var(--accent)" />
   return <Bell size={16} color="var(--text)" />
+}
+
+function ActorAvatar({ name, avatarUrl }) {
+  if (avatarUrl) {
+    return <img src={avatarUrl} alt="" style={{ width: 24, height: 24, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} />
+  }
+  const initial = (name || '?').charAt(0).toUpperCase()
+  return (
+    <div style={{ width: 24, height: 24, borderRadius: '50%', background: 'var(--space-inactive-bg)', color: 'var(--space-inactive-text)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 600, flexShrink: 0 }}>
+      {initial}
+    </div>
+  )
 }
 
 export function NotificationsPanel({ open, onClose, notifications, unreadCount, onMarkAsRead, onMarkAllAsRead, onDelete, onClearAll, onNavigate }) {
@@ -78,7 +89,10 @@ export function NotificationsPanel({ open, onClose, notifications, unreadCount, 
                 style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '12px 16px', borderBottom: '0.5px solid var(--bg)', background: n.read ? 'transparent' : 'var(--accent-soft)', cursor: 'pointer', transition: 'background .15s' }}
               >
                 <div style={{ flexShrink: 0, marginTop: 1 }}>
-                  <NotifIcon type={n.type} />
+                  {n.type === 'space_change'
+                    ? <ActorAvatar name={n.actor_name} avatarUrl={n.actor_avatar_url} />
+                    : <NotifIcon type={n.type} />
+                  }
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: 13, fontWeight: n.read ? 400 : 600, color: 'var(--text)', marginBottom: 2 }}>{n.title}</div>
@@ -86,7 +100,7 @@ export function NotificationsPanel({ open, onClose, notifications, unreadCount, 
                   <div style={{ fontSize: 10, fontWeight: 400, color: 'var(--text)', marginTop: 4, display: 'flex', alignItems: 'center', gap: 6 }}>
                     <span>{timeAgo(n.created_at)}</span>
                     {n.type === 'space_change' && (
-                      <span style={{ fontWeight: 600, color: 'var(--space-inactive-bg)' }}>· Espacio Compartido</span>
+                      <span style={{ fontWeight: 600, color: 'var(--space-inactive-bg)' }}>· {n.space_name || 'Espacio Compartido'}</span>
                     )}
                   </div>
                 </div>
