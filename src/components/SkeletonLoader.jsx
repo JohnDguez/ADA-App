@@ -67,16 +67,22 @@ export function SkeletonLoader() {
         </div>
 
         {/* ── Card de métricas — medio anillo tipo gauge (ya no la barra
-             horizontal de antes). Fecha arriba a la derecha, el "domo" del
-             anillo centrado (aproximado con un rectángulo con esquinas
-             superiores muy redondeadas), pagado/pendiente pegado abajo del
-             anillo, y título/monto/estatus debajo. */}
+             horizontal de antes). Fecha arriba a la derecha, el medio
+             anillo centrado (un domo con OTRO domo más chico encima, del
+             color de la propia tarjeta, "perforando" el hueco — un domo
+             sólido sin el hueco se veía como medio círculo relleno, no como
+             un anillo, Johnatan lo notó probando en su teléfono), pagado/
+             pendiente pegado abajo del anillo, y título/monto/estatus
+             debajo. */}
         <div style={{ background: 'var(--surface)', borderRadius: 12, padding: '14px 16px', marginBottom: 20 }}>
           <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 8 }}>
             <Bone w={100} h={20} r={5} />
           </div>
           <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 10 }}>
-            <Bone w={180} h={90} r="90px 90px 0 0" />
+            <div style={{ position: 'relative', width: 180, height: 90 }}>
+              <Bone w={180} h={90} r="90px 90px 0 0" style={{ position: 'absolute', top: 0, left: 0 }} />
+              <div style={{ position: 'absolute', bottom: 0, left: 24, width: 132, height: 66, borderRadius: '66px 66px 0 0', background: 'var(--surface)' }} />
+            </div>
           </div>
           <div style={{ display: 'flex', justifyContent: 'center', gap: 16, marginBottom: 14 }}>
             <Bone w={90} h={11} r={4} />
