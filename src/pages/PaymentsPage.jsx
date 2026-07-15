@@ -83,10 +83,10 @@ export function PaymentsPage({ payments, profile, spaceSwitcher, activeSpaceHead
 
   const [monthsBack,  setMonthsBack]  = useState(3)
   const [selectedCat, setSelectedCat] = useState(null)
-  const [catRange,    setCatRange]    = useState('mes')
+  const [catRange,    setCatRange]    = useState('periodo')
   const [viewMonth,   setViewMonth]   = useState(now.getMonth())
   const [viewYear,    setViewYear]    = useState(now.getFullYear())
-  const [viewMode,    setViewMode]    = useState('mes')  // 'mes' | 'periodo'
+  const [viewMode,    setViewMode]    = useState('periodo')  // 'mes' | 'periodo'
   const [openMenu,    setOpenMenu]    = useState(null)
 
   // Ingresos extras del periodo actual
@@ -1103,7 +1103,7 @@ export function PaymentsPage({ payments, profile, spaceSwitcher, activeSpaceHead
             <span style={{ fontSize: 15, fontWeight: 700, color: 'var(--text)' }}>Por Categoría</span>
           </div>
           <div style={{ display: 'flex', gap: 6, marginBottom: 14 }}>
-            {[{ id: 'mes', label: 'Mes Actual' }, { id: 'periodo', label: 'Periodo' }, { id: 'año', label: 'Año' }].map(o => (
+            {[{ id: 'periodo', label: 'Periodo' }, { id: 'mes', label: 'Mes Actual' }, { id: 'año', label: 'Año' }].map(o => (
               <FilterChip key={o.id} label={o.label} active={catRange === o.id} onClick={() => setCatRange(o.id)} />
             ))}
           </div>
@@ -1156,9 +1156,9 @@ export function PaymentsPage({ payments, profile, spaceSwitcher, activeSpaceHead
           {/* Filtros */}
           <div style={{ marginBottom: 12 }}>
             <div style={{ display: 'flex', gap: 6, marginBottom: 8 }}>
-              {[['mes','Por mes'],['periodo','Periodo actual']].map(([val, label]) => (
+              {[['periodo','Periodo actual'],['mes','Por mes']].map(([val, label]) => (
                 <button key={val} onClick={() => setViewMode(val)}
-                  style={{ padding: '6px 14px', borderRadius: 20, border: 'none', background: viewMode === val ? 'var(--accent)' : 'var(--surface)', color: viewMode === val ? 'var(--surface)' : 'var(--text)', fontWeight: viewMode === val ? 600 : 400, fontSize: 12, fontFamily: 'DM Sans, sans-serif', cursor: 'pointer' }}>
+                  style={{ padding: '6px 14px', borderRadius: 5, border: viewMode === val ? 'none' : '0.5px solid var(--border)', background: viewMode === val ? 'var(--accent)' : 'var(--surface)', color: viewMode === val ? 'var(--surface)' : 'var(--text)', fontWeight: viewMode === val ? 600 : 400, fontSize: 12, fontFamily: 'DM Sans, sans-serif', cursor: 'pointer' }}>
                   {label}
                 </button>
               ))}
@@ -1292,7 +1292,7 @@ function FilterChip({ label, active, onClick, icon: Icon, color }) {
         borderRadius: 5,
         border: active ? 'none' : '0.5px solid var(--border)',
         background: active ? 'var(--accent)' : 'var(--surface)',
-        color: active ? '#fff' : 'var(--text)',
+        color: active ? 'var(--surface)' : 'var(--text)',
         fontSize: 12,
         fontWeight: active ? 700 : 500,
         fontFamily: 'DM Sans, sans-serif',
@@ -1305,7 +1305,7 @@ function FilterChip({ label, active, onClick, icon: Icon, color }) {
         transition: 'background .15s, color .15s',
       }}
     >
-      {Icon && <Icon size={13} color={active ? '#fff' : color} strokeWidth={2} />}
+      {Icon && <Icon size={13} color={active ? 'var(--surface)' : color} strokeWidth={2} />}
       {label}
     </button>
   )
