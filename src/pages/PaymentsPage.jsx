@@ -1155,13 +1155,20 @@ export function PaymentsPage({ payments, profile, spaceSwitcher, activeSpaceHead
 
           {/* Filtros */}
           <div style={{ marginBottom: 12 }}>
-            <div style={{ display: 'flex', gap: 6, marginBottom: 8 }}>
-              {[['periodo','Periodo actual'],['mes','Por mes']].map(([val, label]) => (
-                <button key={val} onClick={() => setViewMode(val)}
-                  style={{ padding: '6px 14px', borderRadius: 5, border: viewMode === val ? 'none' : '0.5px solid var(--border)', background: viewMode === val ? 'var(--accent)' : 'var(--surface)', color: viewMode === val ? 'var(--surface)' : 'var(--text)', fontWeight: viewMode === val ? 600 : 400, fontSize: 12, fontFamily: 'DM Sans, sans-serif', cursor: 'pointer' }}>
-                  {label}
-                </button>
-              ))}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+              <div style={{ display: 'flex', gap: 6 }}>
+                {[['periodo','Periodo actual'],['mes','Por mes']].map(([val, label]) => (
+                  <button key={val} onClick={() => setViewMode(val)}
+                    style={{ padding: '6px 14px', borderRadius: 5, border: viewMode === val ? 'none' : '0.5px solid var(--border)', background: viewMode === val ? 'var(--accent)' : 'var(--surface)', color: viewMode === val ? 'var(--surface)' : 'var(--text)', fontWeight: viewMode === val ? 600 : 400, fontSize: 12, fontFamily: 'DM Sans, sans-serif', cursor: 'pointer' }}>
+                    {label}
+                  </button>
+                ))}
+              </div>
+              {paidInView.length > 0 && (
+                <span style={{ fontSize: 12, fontWeight: 500, color: 'var(--text)' }}>
+                  Total: <strong style={{ fontWeight: 700 }}>{fmt(totalInView)}</strong>
+                </span>
+              )}
             </div>
             {viewMode === 'mes' && (
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -1189,11 +1196,6 @@ export function PaymentsPage({ payments, profile, spaceSwitcher, activeSpaceHead
             </div>
           ) : (
             <>
-              <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 8 }}>
-                <span style={{ fontSize: 12, fontWeight: 500, color: 'var(--text)' }}>
-                  Total: <strong style={{ fontWeight: 700 }}>{fmt(totalInView)}</strong>
-                </span>
-              </div>
               <div style={{ background: 'var(--surface)', borderRadius: 'var(--radius)', overflow: 'hidden' }}>
                 {paidInView.map((p, i) => {
                   const paidDate = p.paid_at ? new Date(p.paid_at) : dateOf(p.due_date)
