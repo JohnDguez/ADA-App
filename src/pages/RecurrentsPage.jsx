@@ -2,22 +2,9 @@ import { useState, useMemo, useRef, useEffect } from 'react'
 import { Pause, Play, Trash2, Search, ChevronDown, CreditCard, Pencil, MoreVertical } from 'lucide-react'
 import { PageHeader } from '../components/PageHeader'
 import { NewSharedSpacePanel } from '../components/NewSharedSpacePanel'
-import { fmt, RECUR_FREQ, dateOf, MONTHS_SHORT } from '../lib/utils'
+import { fmt, RECUR_FREQ, dateOf, MONTHS_SHORT, getCatColor } from '../lib/utils'
+import { getCategoryIcon } from '../lib/categoryIcons'
 import { showToast } from '../components/Toast'
-
-const CAT_COLOR = {
-  'Servicios':     'var(--cat-servicios)',
-  'Suscripciones': 'var(--cat-suscripciones)',
-  'Créditos':      'var(--cat-creditos)',
-  'Renta':         'var(--cat-renta)',
-  'Seguros':       'var(--cat-seguros)',
-  'Alimentación':  'var(--cat-alimentacion)',
-  'Transporte':    'var(--cat-transporte)',
-  'Medicina':      'var(--cat-medicina)',
-  'Doctor':        'var(--cat-doctor)',
-  'Mantenimiento': 'var(--cat-mantenimiento)',
-  'Otros':         'var(--cat-otros)',
-}
 
 function FilterChip({ label, active, onClick }) {
   return (
@@ -223,6 +210,8 @@ export function RecurrentsPage({ payments, profile, spaceSwitcher, activeSpaceHe
             ) : byCategory.map(([cat, catMasters]) => {
               const isOpen   = !!expandedCats[cat]
               const catTotal = catMasters.filter(m => !m.is_variable && !m.paused).reduce((s, m) => s + Number(m.amount), 0)
+              const catColor = getCatColor(cat, profile.custom_categories, profile.category_colors)
+              const CatIcon  = getCategoryIcon(cat, profile.category_icons)
 
               return (
                 <div key={cat} style={{ background: 'var(--surface)', borderRadius: 'var(--radius)', overflow: 'hidden' }}>
@@ -231,7 +220,12 @@ export function RecurrentsPage({ payments, profile, spaceSwitcher, activeSpaceHe
                     onClick={() => setExpandedCats(prev => ({ ...prev, [cat]: !prev[cat] }))}
                     style={{ display: 'flex', alignItems: 'center', padding: '14px', cursor: 'pointer', borderBottom: isOpen ? '0.5px solid var(--border)' : 'none', minHeight: 58 }}
                   >
-                    <div style={{ width: 10, height: 10, borderRadius: '50%', background: CAT_COLOR[cat] || 'var(--accent)', flexShrink: 0, marginRight: 10 }} />
+                    <div style={{ width: 36, height: 36, borderRadius: 8, background: catColor, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginRight: 10 }}>
+                      {CatIcon
+                        ? <CatIcon size={18} color="var(--text)" strokeWidth={2} />
+                        : <span style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--text)' }} />
+                      }
+                    </div>
                     <div style={{ flex: 1 }}>
                       <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text)' }}>{cat}</div>
                       <div style={{ fontSize: 11, color: 'var(--text)', marginTop: 1 }}>
