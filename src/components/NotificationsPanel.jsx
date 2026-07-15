@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { AlertCircle, Clock, Bell, Trash2, CheckCheck, X } from 'lucide-react'
+import { AlertCircle, Clock, Bell, Trash2, CheckCheck, X, Users } from 'lucide-react'
 import { MONTHS_SHORT } from '../lib/utils'
 
 function timeAgo(dateStr) {
@@ -13,9 +13,10 @@ function timeAgo(dateStr) {
 }
 
 function NotifIcon({ type }) {
-  if (type === 'overdue')   return <AlertCircle size={16} color="var(--danger)" />
-  if (type === 'due_today') return <Clock size={16} color="#FE7600" />
-  if (type === 'cobro_day') return <Bell size={16} color="var(--accent)" />
+  if (type === 'overdue')      return <AlertCircle size={16} color="var(--danger)" />
+  if (type === 'due_today')    return <Clock size={16} color="#FE7600" />
+  if (type === 'cobro_day')    return <Bell size={16} color="var(--accent)" />
+  if (type === 'space_change') return <Users size={16} color="var(--space-inactive-bg)" />
   return <Bell size={16} color="var(--text)" />
 }
 
@@ -82,7 +83,12 @@ export function NotificationsPanel({ open, onClose, notifications, unreadCount, 
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: 13, fontWeight: n.read ? 400 : 600, color: 'var(--text)', marginBottom: 2 }}>{n.title}</div>
                   <div style={{ fontSize: 11, fontWeight: 400, color: 'var(--text)', lineHeight: 1.4 }}>{n.body}</div>
-                  <div style={{ fontSize: 10, fontWeight: 400, color: 'var(--text)', marginTop: 4 }}>{timeAgo(n.created_at)}</div>
+                  <div style={{ fontSize: 10, fontWeight: 400, color: 'var(--text)', marginTop: 4, display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <span>{timeAgo(n.created_at)}</span>
+                    {n.type === 'space_change' && (
+                      <span style={{ fontWeight: 600, color: 'var(--space-inactive-bg)' }}>· Espacio Compartido</span>
+                    )}
+                  </div>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0 }}>
                   {!n.read && <div style={{ width: 7, height: 7, borderRadius: '50%', background: 'var(--accent)' }} />}
