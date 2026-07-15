@@ -59,7 +59,7 @@ export function SettingsNotificationsPage({ profile, user, onUpdate, onBack, sli
           <NotifToggle label="Próximos pagos"  sub="Recordatorio días antes del vencimiento" value={profile.notif_upcoming   !== false} onChange={v => onUpdate({ notif_upcoming:   v })} last={profile.notif_upcoming !== false} />
 
           {profile.notif_upcoming !== false && (
-            <div style={{ padding: '0 14px 13px' }}>
+            <div style={{ padding: '0 14px 13px', borderBottom: '0.5px solid var(--border)' }}>
               <div style={{ fontSize: 12, fontWeight: 500, color: 'var(--text)', marginBottom: 6 }}>Días de anticipación</div>
               <div style={{ display: 'flex', gap: 6 }}>
                 {[1, 2, 3, 5, 7].map(d => (
