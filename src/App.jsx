@@ -395,6 +395,15 @@ export default function App() {
     changeTab('settings')
   }
 
+  // Mismo atajo que goToSharedSpaceSettings, apuntando a Categorías — para
+  // el link "Personalizar categorías" del EmptyState en PaymentsPage →
+  // "Por Categoría" (v0.9.179).
+  function goToCategories() {
+    setSettingsReturnTab(tab)
+    setSettingsInitialSection('categories')
+    changeTab('settings')
+  }
+
   // SettingsPage.jsx llama esto cuando el usuario presiona "atrás" justo
   // después de entrar por un atajo (ej. "Editar" desde el switcher) — en
   // vez de mostrar el menú principal de Ajustes, regresa directo al tab
@@ -501,6 +510,8 @@ export default function App() {
           onDeleteDirect={async (id) => { await deletePayment(id); showToast('Pago eliminado') }}
           onUpdateProfile={updateProfile}
           onEdit={openEdit}
+          onAdd={openAdd}
+          onGoCategories={goToCategories}
         />
       )}
       {tab === 'recurrents' && (
