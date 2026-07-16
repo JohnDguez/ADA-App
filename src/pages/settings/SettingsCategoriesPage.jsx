@@ -5,6 +5,7 @@ import { CATEGORY_ICON_GROUPS, getCategoryIcon, getIconComponent } from '../../l
 import { showToast } from '../../components/Toast'
 import { supabase } from '../../lib/supabase'
 import { Card } from '../../components/SettingsShared'
+import styles from './SettingsCategoriesPage.module.css'
 
 const PALETTE = Array.from({ length: 16 }, (_, i) => `var(--palette-${i + 1})`)
 
@@ -29,6 +30,16 @@ export function SettingsCategoriesPage({ profile, onUpdate, onBack, slideClass }
   const customCats     = profile.custom_categories || []
   const categoryIcons  = profile.category_icons || {}
   const categoryColors = profile.category_colors || {}
+
+  // Listado combinado (fijas + personalizadas) en orden alfabético — antes
+  // se dibujaban en 2 bloques separados (fijas primero, personalizadas
+  // después) sin ningún encabezado visual que las distinguiera, lo que
+  // hacía más lento encontrar una categoría específica. localeCompare con
+  // locale 'es' para que acentos/ñ ordenen de forma natural.
+  const sortedCats = [
+    ...CATEGORIES.map(cat => ({ name: cat, isCustom: false })),
+    ...customCats.map(cat => ({ name: cat, isCustom: true })),
+  ].sort((a, b) => a.name.localeCompare(b.name, 'es'))
 
   function openEdit(cat, isCustom) {
     setEditingCat({ name: cat, isCustom })
@@ -113,21 +124,25 @@ export function SettingsCategoriesPage({ profile, onUpdate, onBack, slideClass }
     const Icon  = getCategoryIcon(cat, categoryIcons)
     const color = getCatColor(cat, customCats, categoryColors)
     const isConfirming = confirmDeleteCat === cat
+    const noBorder = last && !isConfirming
 
     return (
       <div>
-        <div onClick={() => openEdit(cat, isCustom)} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '13px 14px', borderBottom: (last && !isConfirming) ? 'none' : '0.5px solid var(--border)', cursor: 'pointer' }}>
-          <div style={{ width: 36, height: 36, borderRadius: 8, background: color, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+        <div
+          onClick={() => openEdit(cat, isCustom)}
+          className={`${styles.categoryRow} ${noBorder ? styles.categoryRowNoBorder : ''}`}
+        >
+          <div className={styles.iconWrapper} style={{ background: color }}>
             {Icon
               ? <Icon size={18} color="var(--text)" strokeWidth={2} />
-              : <span style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--text)' }} />
+              : <span className={styles.fallbackDot} />
             }
           </div>
-          <span style={{ fontSize: 13, fontWeight: 500, color: 'var(--text)', flex: 1 }}>{cat}</span>
+          <span className={styles.categoryLabel}>{cat}</span>
           {isCustom && (
             <button
               onClick={e => { e.stopPropagation(); setConfirmDeleteCat(prev => prev === cat ? null : cat) }}
-              style={{ width: 30, height: 30, borderRadius: 8, border: 'none', background: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0 }}
+              className={styles.deleteIconButton}
             >
               <Trash2 size={16} color="var(--text)" />
             </button>
@@ -135,15 +150,15 @@ export function SettingsCategoriesPage({ profile, onUpdate, onBack, slideClass }
         </div>
 
         {isConfirming && (
-          <div style={{ padding: '10px 14px', background: 'var(--danger-soft)', borderBottom: last ? 'none' : '0.5px solid var(--border)' }}>
-            <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--danger)', marginBottom: 8 }}>
+          <div className={`${styles.confirmPanel} ${last ? styles.confirmPanelNoBorder : ''}`}>
+            <div className={styles.confirmText}>
               ¿Eliminar "{cat}"? Los pagos ya registrados con esta categoría se reasignarán a "Otros".
             </div>
-            <div style={{ display: 'flex', gap: 8 }}>
-              <button onClick={() => setConfirmDeleteCat(null)} style={{ flex: 1, padding: '7px', borderRadius: 6, border: '0.5px solid var(--border)', background: 'var(--surface)', fontSize: 12, fontWeight: 600, color: 'var(--text)', cursor: 'pointer', fontFamily: 'DM Sans, sans-serif' }}>
+            <div className={styles.confirmButtonsRow}>
+              <button onClick={() => setConfirmDeleteCat(null)} className={styles.confirmCancelButton}>
                 Cancelar
               </button>
-              <button onClick={() => handleDeleteCategory(cat)} disabled={deleting} style={{ flex: 1, padding: '7px', borderRadius: 6, border: 'none', background: 'var(--danger)', fontSize: 12, fontWeight: 600, color: '#fff', cursor: 'pointer', fontFamily: 'DM Sans, sans-serif' }}>
+              <button onClick={() => handleDeleteCategory(cat)} disabled={deleting} className={styles.confirmDeleteButton}>
                 {deleting ? 'Eliminando…' : 'Eliminar'}
               </button>
             </div>
@@ -160,90 +175,88 @@ export function SettingsCategoriesPage({ profile, onUpdate, onBack, slideClass }
 
   return (
     <>
-      <div className={slideClass} style={{ paddingBottom: 120, background: 'var(--bg)', minHeight: '100vh' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '52px 16px 20px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <button onClick={onBack} style={{ width: 36, height: 36, borderRadius: '50%', background: 'var(--surface)', border: '0.5px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0 }}>
+      <div className={`${slideClass} ${styles.pageWrapper}`}>
+        <div className={styles.header}>
+          <div className={styles.headerLeft}>
+            <button onClick={onBack} className={styles.backButton}>
               <ChevronLeft size={18} color="var(--text)" />
             </button>
-            <div style={{ fontSize: 20, fontWeight: 700, color: 'var(--text)' }}>Categorías</div>
+            <div className={styles.headerTitle}>Categorías</div>
           </div>
-          <button onClick={openAdd} style={{ width: 36, height: 36, borderRadius: '50%', background: 'var(--accent)', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0 }}>
+          <button onClick={openAdd} className={styles.addButton}>
             <Plus size={18} color="var(--surface)" />
           </button>
         </div>
 
         <Card>
-          {CATEGORIES.map((cat, i) => (
-            <CategoryRow key={cat} cat={cat} isCustom={false} last={i === CATEGORIES.length - 1 && customCats.length === 0} />
-          ))}
-          {customCats.map((cat, i) => (
-            <CategoryRow key={cat} cat={cat} isCustom last={i === customCats.length - 1} />
+          {sortedCats.map((c, i) => (
+            <CategoryRow key={c.name} cat={c.name} isCustom={c.isCustom} last={i === sortedCats.length - 1} />
           ))}
         </Card>
       </div>
 
       {modalOpen && (
-        <div onClick={e => e.target === e.currentTarget && setModalOpen(false)}
-          style={{ position: 'fixed', inset: 0, background: 'rgba(2,10,31,0.5)', zIndex: 200, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
-          <div style={{ background: 'var(--surface)', borderRadius: '20px 20px 0 0', width: '100%', maxWidth: 420, maxHeight: '88vh', overflowY: 'auto', padding: '20px 16px 32px', animation: 'modalSlideUp .3s cubic-bezier(0.25, 0.46, 0.45, 0.94) both' }}>
-            <div style={{ width: 34, height: 4, background: 'var(--border)', borderRadius: 2, margin: '0 auto 16px' }} />
-            <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--text)', marginBottom: 16 }}>
+        <div onClick={e => e.target === e.currentTarget && setModalOpen(false)} className={styles.overlay}>
+          <div className={styles.modalPanel}>
+            <div className={styles.handle} />
+            <div className={styles.modalTitle}>
               {editingCat ? 'Editar categoría' : 'Agregar categoría'}
             </div>
 
             {/* Nombre */}
-            <div style={{ marginBottom: 18 }}>
+            <div className={styles.fieldGroup}>
               <label className="field-label">Nombre</label>
               {editingCat && !editingCat.isCustom ? (
                 <>
-                  <div className="field-input" style={{ opacity: 0.6, marginTop: 4 }}>{formName}</div>
-                  <div style={{ fontSize: 11, fontWeight: 400, color: 'var(--text)', marginTop: 4 }}>
+                  <div className={`field-input ${styles.readonlyField}`}>{formName}</div>
+                  <div className={styles.helperText}>
                     Las categorías por defecto no se pueden renombrar, para no afectar pagos ya registrados.
                   </div>
                 </>
               ) : (
                 <input
                   autoFocus
-                  className="field-input"
+                  className={`field-input ${styles.inputMt4}`}
                   value={formName}
                   onChange={e => { setFormName(e.target.value); setNameError('') }}
                   placeholder="ej. Gimnasio"
-                  style={{ marginTop: 4 }}
                 />
               )}
-              {nameError && <div style={{ fontSize: 11, color: 'var(--danger)', marginTop: 4 }}>{nameError}</div>}
+              {nameError && <div className={styles.errorText}>{nameError}</div>}
             </div>
 
             {/* Ícono */}
-            <div style={{ marginBottom: 18 }}>
-              <label className="field-label" style={{ marginBottom: 6, display: 'block' }}>Ícono</label>
-              <div style={{ position: 'relative', marginBottom: 12 }}>
-                <div style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', display: 'flex' }}>
+            <div className={styles.fieldGroup}>
+              <label className={`field-label ${styles.label}`}>Ícono</label>
+              <div className={styles.searchWrapper}>
+                <div className={styles.searchIcon}>
                   <Search size={14} color="var(--text)" />
                 </div>
                 <input
                   value={iconSearch}
                   onChange={e => setIconSearch(e.target.value)}
                   placeholder="Buscar ícono…"
-                  className="field-input"
-                  style={{ paddingLeft: 34 }}
+                  className={`field-input ${styles.searchInput}`}
                 />
               </div>
 
-              <div style={{ maxHeight: 240, overflowY: 'auto', paddingRight: 2 }}>
+              <div className={styles.iconGroupsContainer}>
                 {filteredGroups.map(group => (
-                  <div key={group.label} style={{ marginBottom: 12 }}>
-                    <div style={{ fontSize: 10.5, fontWeight: 600, color: 'var(--text)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 6 }}>
+                  <div key={group.label} className={styles.iconGroup}>
+                    <div className={styles.iconGroupLabel}>
                       {group.label}
                     </div>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: 6 }}>
+                    <div className={styles.iconGrid}>
                       {group.icons.map(({ name, label }) => {
                         const Icon = getIconComponent(name)
                         const selected = formIcon === name
                         return (
-                          <button key={name} title={label} onClick={() => setFormIcon(name)}
-                            style={{ position: 'relative', aspectRatio: '1', borderRadius: 'var(--radius-sm)', border: 'none', background: selected ? 'var(--accent)' : 'var(--bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+                          <button
+                            key={name}
+                            title={label}
+                            onClick={() => setFormIcon(name)}
+                            className={`${styles.iconButton} ${selected ? styles.iconButtonSelected : ''}`}
+                          >
                             <Icon size={16} color={selected ? 'var(--surface)' : 'var(--text)'} />
                           </button>
                         )
@@ -252,28 +265,32 @@ export function SettingsCategoriesPage({ profile, onUpdate, onBack, slideClass }
                   </div>
                 ))}
                 {filteredGroups.length === 0 && (
-                  <div style={{ fontSize: 12, fontWeight: 400, color: 'var(--text)', padding: '8px 0' }}>Sin resultados para "{iconSearch}"</div>
+                  <div className={styles.noResultsText}>Sin resultados para "{iconSearch}"</div>
                 )}
               </div>
             </div>
 
             {/* Color */}
-            <div style={{ marginBottom: 20 }}>
-              <label className="field-label" style={{ marginBottom: 6, display: 'block' }}>Color</label>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(8, 1fr)', gap: 8 }}>
+            <div className={styles.colorFieldGroup}>
+              <label className={`field-label ${styles.label}`}>Color</label>
+              <div className={styles.colorGrid}>
                 {PALETTE.map(color => {
                   const selected = formColor === color
                   return (
-                    <button key={color} onClick={() => setFormColor(color)}
-                      style={{ position: 'relative', aspectRatio: '1', borderRadius: '50%', border: selected ? '2px solid var(--text)' : 'none', background: color, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      {selected && <Check size={13} color="#fff" strokeWidth={3} />}
+                    <button
+                      key={color}
+                      onClick={() => setFormColor(color)}
+                      className={`${styles.colorSwatch} ${selected ? styles.colorSwatchSelected : ''}`}
+                      style={{ background: color }}
+                    >
+                      {selected && <Check size={13} color="var(--surface)" strokeWidth={3} />}
                     </button>
                   )
                 })}
               </div>
             </div>
 
-            <button onClick={handleSave} disabled={saving} className="btn-primary" style={{ marginBottom: 8 }}>
+            <button onClick={handleSave} disabled={saving} className={`btn-primary ${styles.saveButton}`}>
               {saving ? 'Guardando…' : 'Guardar'}
             </button>
             <button onClick={() => setModalOpen(false)} className="btn-ghost">Cancelar</button>

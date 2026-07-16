@@ -1,0 +1,311 @@
+.pageWrapper {
+  padding-bottom: 120px;
+  background: var(--bg);
+  min-height: 100vh;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 52px 16px 20px;
+}
+
+.headerLeft {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.backButton {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--surface);
+  border: 0.5px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.headerTitle {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.addButton {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--accent);
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+/* ── CategoryRow ─────────────────────────────────────────────────────────── */
+.categoryRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 13px 14px;
+  border-bottom: 0.5px solid var(--border);
+  cursor: pointer;
+}
+
+.categoryRowNoBorder {
+  border-bottom: none;
+}
+
+.iconWrapper {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.fallbackDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--text);
+}
+
+.categoryLabel {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text);
+  flex: 1;
+}
+
+.deleteIconButton {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  border: none;
+  background: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.confirmPanel {
+  padding: 10px 14px;
+  background: var(--danger-soft);
+  border-bottom: 0.5px solid var(--border);
+}
+
+.confirmPanelNoBorder {
+  border-bottom: none;
+}
+
+.confirmText {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--danger);
+  margin-bottom: 8px;
+}
+
+.confirmButtonsRow {
+  display: flex;
+  gap: 8px;
+}
+
+.confirmCancelButton {
+  flex: 1;
+  padding: 7px;
+  border-radius: 6px;
+  border: 0.5px solid var(--border);
+  background: var(--surface);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text);
+  cursor: pointer;
+  font-family: 'DM Sans', sans-serif;
+}
+
+.confirmDeleteButton {
+  flex: 1;
+  padding: 7px;
+  border-radius: 6px;
+  border: none;
+  background: var(--danger);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--surface);
+  cursor: pointer;
+  font-family: 'DM Sans', sans-serif;
+}
+
+/* ── Modal agregar/editar categoría ──────────────────────────────────────── */
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(2, 10, 31, 0.5);
+  z-index: 200;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.modalPanel {
+  background: var(--surface);
+  border-radius: 20px 20px 0 0;
+  width: 100%;
+  max-width: 420px;
+  max-height: 88vh;
+  overflow-y: auto;
+  padding: 20px 16px 32px;
+  animation: modalSlideUp .3s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+}
+
+.handle {
+  width: 34px;
+  height: 4px;
+  background: var(--border);
+  border-radius: 2px;
+  margin: 0 auto 16px;
+}
+
+.modalTitle {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 16px;
+}
+
+.fieldGroup {
+  margin-bottom: 18px;
+}
+
+.colorFieldGroup {
+  margin-bottom: 20px;
+}
+
+.label {
+  margin-bottom: 6px;
+  display: block;
+}
+
+.readonlyField {
+  opacity: 0.6;
+  margin-top: 4px;
+}
+
+.helperText {
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--text);
+  margin-top: 4px;
+}
+
+.inputMt4 {
+  margin-top: 4px;
+}
+
+.errorText {
+  font-size: 11px;
+  color: var(--danger);
+  margin-top: 4px;
+}
+
+.searchWrapper {
+  position: relative;
+  margin-bottom: 12px;
+}
+
+.searchIcon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+}
+
+.searchInput {
+  padding-left: 34px;
+}
+
+.iconGroupsContainer {
+  max-height: 240px;
+  overflow-y: auto;
+  padding-right: 2px;
+}
+
+.iconGroup {
+  margin-bottom: 12px;
+}
+
+.iconGroupLabel {
+  font-size: 10.5px;
+  font-weight: 600;
+  color: var(--text);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 6px;
+}
+
+.iconGrid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 6px;
+}
+
+.iconButton {
+  position: relative;
+  aspect-ratio: 1;
+  border-radius: var(--radius-sm);
+  border: none;
+  background: var(--bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.iconButtonSelected {
+  background: var(--accent);
+}
+
+.noResultsText {
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--text);
+  padding: 8px 0;
+}
+
+.colorGrid {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 8px;
+}
+
+.colorSwatch {
+  position: relative;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.colorSwatchSelected {
+  border: 2px solid var(--text);
+}
+
+.saveButton {
+  margin-bottom: 8px;
+}
