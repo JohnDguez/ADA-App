@@ -1,0 +1,56 @@
+.nav {
+  position: fixed;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: calc(100% - 32px);
+  max-width: 388px;
+  background: var(--nav-bg);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  padding: 8px;
+  gap: 4px;
+  box-shadow: 0 8px 24px rgba(1, 75, 163, 0.35), 0 2px 8px rgba(0, 0, 0, 0.2);
+  z-index: 100;
+  overflow: visible;
+}
+
+.addButtonWrapper {
+  flex: 1;
+  position: relative;
+  display: flex;
+  justify-content: center;
+}
+
+.addButton {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -72%);
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: var(--accent);
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 20px rgba(47, 140, 250, 0.55);
+  cursor: pointer;
+  z-index: 1;
+}
+
+.tabButton {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 4px;
+  border: none;
+  cursor: pointer;
+  border-radius: 8px;
+  transition: background .2s;
+  position: relative;
+  z-index: 2;
+}
