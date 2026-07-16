@@ -284,7 +284,7 @@ export function HomePage({ payments, profile, spaceSwitcher, activeSpaceHeader, 
               onClick={() => setActiveCard(1)}
               style={{ position: 'relative', zIndex: 1, flex: 1, textAlign: 'center', padding: '10px 0', border: 'none', background: 'transparent', color: activeCard === 1 ? '#fff' : 'var(--text)', fontSize: 13, fontWeight: activeCard === 1 ? 500 : 400, fontFamily: 'DM Sans, sans-serif', transition: 'color .2s' }}
             >
-              {isMonthly ? 'Próximo mes' : 'Mes'}
+              {isMonthly ? 'Próximo mes' : 'Mes actual'}
             </button>
           </div>
 
@@ -359,7 +359,7 @@ export function HomePage({ payments, profile, spaceSwitcher, activeSpaceHeader, 
                 {isMonthly ? (
                   <>
                     <div style={{ display: 'inline-block', background: 'var(--bg)', borderRadius: 5, padding: '4px 8px', fontSize: 12, fontWeight: 500, color: 'var(--text)', marginBottom: 6, float: 'right' }}>
-                      {MONTHS[nextStart.getMonth()]} {nextStart.getFullYear()}
+                      {nextPeriodRange(profile)}
                     </div>
                     <div style={{ clear: 'both' }} />
                     <HalfRing percent={0} />
