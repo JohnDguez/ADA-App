@@ -1,0 +1,140 @@
+.headerRoot {
+  position: relative;
+  background: var(--bg);
+  border-radius: 16px 16px 0 0;
+  margin-top: -14px;
+  z-index: 35;
+}
+
+.headerRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 18px 14px;
+  border-bottom: 1px solid var(--border);
+}
+
+.headerName {
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--text);
+}
+
+.menuWrapper {
+  position: relative;
+}
+
+.menuButton {
+  background: none;
+  border: none;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.menuOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9997;
+}
+
+.menuPanel {
+  position: fixed;
+  z-index: 9998;
+  background: var(--menu-bg);
+  border: 0.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  min-width: 170px;
+  overflow: hidden;
+}
+
+.menuItem {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  background: none;
+  border: none;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text);
+  font-family: 'DM Sans', sans-serif;
+  cursor: pointer;
+  text-align: left;
+}
+
+.menuItemBordered {
+  border-bottom: 0.5px solid var(--bg);
+}
+
+.menuItemDanger {
+  color: var(--danger);
+}
+
+/* ── Modal de eliminar/salir del espacio ─────────────────────────────────── */
+.dangerOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(2, 10, 31, 0.45);
+  z-index: 9999;
+  display: flex;
+  align-items: flex-end;
+}
+
+.dangerPanel {
+  background: var(--surface);
+  border-radius: 16px 16px 0 0;
+  width: 100%;
+  padding: 24px 20px;
+  animation: modalSlideUp .32s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+}
+
+.dangerTitle {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--danger);
+  margin-bottom: 6px;
+}
+
+.dangerDescription {
+  font-size: 13px;
+  color: var(--text);
+  margin-bottom: 16px;
+}
+
+:global(.field-label).label {
+  margin-bottom: 6px;
+  display: block;
+}
+
+.passwordInput {
+  margin-bottom: 10px;
+}
+
+.errorText {
+  font-size: 12px;
+  color: var(--danger);
+  margin-bottom: 10px;
+}
+
+.confirmButton {
+  width: 100%;
+  padding: 12px;
+  background: var(--danger);
+  color: var(--surface);
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  font-weight: 600;
+  font-family: 'DM Sans', sans-serif;
+  cursor: pointer;
+  margin-bottom: 8px;
+}
+
+.confirmButton:disabled {
+  opacity: 0.7;
+}
