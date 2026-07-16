@@ -1,0 +1,393 @@
+.pageRoot {
+  padding-bottom: 120px;
+  background: var(--bg);
+  min-height: 100vh;
+}
+
+.contextMenu {
+  position: fixed;
+  z-index: 999;
+  background: var(--menu-bg);
+  border: 0.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  min-width: 180px;
+  overflow: hidden;
+}
+
+.roundedContentWrapper {
+  background: var(--bg);
+  border-radius: 24px 24px 0 0;
+  margin-top: -24px;
+  position: relative;
+  z-index: 10;
+}
+
+.newSpacePanelWrapper {
+  margin-top: 16px;
+}
+
+.titleSection {
+  padding: 16px 16px 18px;
+}
+
+.titleHeading {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.titleSubtext {
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--text);
+  margin-top: 4px;
+}
+
+/* ── Buscador ─────────────────────────────────────────────────────────────── */
+.searchWrapper {
+  padding: 0 16px 12px;
+}
+
+.searchInner {
+  position: relative;
+}
+
+.searchIcon {
+  position: absolute;
+  left: 12px;
+  top: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  pointer-events: none;
+}
+
+:global(.field-input).searchInput {
+  padding-left: 36px;
+}
+
+/* ── Resumen ──────────────────────────────────────────────────────────────── */
+.statsCard {
+  margin: 0 16px 14px;
+  background: var(--surface);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  display: flex;
+}
+
+.statsBlockBordered {
+  flex: 1;
+  border-right: 0.5px solid var(--border);
+  padding-right: 14px;
+}
+
+.statsBlockPadded {
+  flex: 1;
+  padding-left: 14px;
+}
+
+.statsLabel {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 3px;
+}
+
+.statsValue {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.statsSubtext {
+  font-size: 11px;
+  color: var(--text);
+  margin-top: 2px;
+}
+
+/* ── Filtros ──────────────────────────────────────────────────────────────── */
+.filterRow {
+  padding: 0 16px 6px;
+  display: flex;
+  gap: 6px;
+}
+
+.filterRowLast {
+  padding: 0 16px 14px;
+  display: flex;
+  gap: 6px;
+}
+
+.filterChip {
+  padding: 6px 14px;
+  border-radius: 5px;
+  border: none;
+  background: var(--surface);
+  color: var(--text);
+  font-weight: 400;
+  font-size: 12px;
+  font-family: 'DM Sans', sans-serif;
+  cursor: pointer;
+  transition: background .15s, color .15s;
+}
+
+.filterChipActive {
+  background: var(--accent);
+  color: var(--surface);
+  font-weight: 600;
+}
+
+/* ── Lista por categoría ──────────────────────────────────────────────────── */
+.categoryListWrapper {
+  padding: 0 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.noResultsBlock {
+  text-align: center;
+  padding: 40px 0;
+}
+
+.noResultsIcon {
+  margin-bottom: 10px;
+}
+
+.noResultsText {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text);
+}
+
+.categoryCard {
+  background: var(--surface);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.categoryHeader {
+  display: flex;
+  align-items: center;
+  padding: 14px;
+  cursor: pointer;
+  min-height: 58px;
+  border-bottom: none;
+}
+
+.categoryHeaderOpen {
+  border-bottom: 0.5px solid var(--border);
+}
+
+.categoryIconWrapper {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-right: 10px;
+}
+
+.categoryFallbackDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--text);
+}
+
+.categoryInfo {
+  flex: 1;
+}
+
+.categoryName {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.categoryMeta {
+  font-size: 11px;
+  color: var(--text);
+  margin-top: 1px;
+}
+
+.categoryChevron {
+  transition: transform .25s ease;
+  transform: rotate(0deg);
+}
+
+.categoryChevronOpen {
+  transform: rotate(180deg);
+}
+
+/* ── Items de un master ───────────────────────────────────────────────────── */
+.masterRow {
+  display: flex;
+  align-items: center;
+  padding: 12px 14px;
+  gap: 8px;
+  border-bottom: 0.5px solid var(--border);
+}
+
+.masterRowNoBorder {
+  border-bottom: none;
+}
+
+.masterInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+.masterNameRow {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.variableBadge {
+  font-size: 9px;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: var(--label-variable);
+  color: var(--surface);
+}
+
+.masterFreqRow {
+  font-size: 11px;
+  color: var(--text);
+  margin-top: 2px;
+}
+
+.masterNextDate {
+  font-size: 11px;
+  color: var(--accent);
+  font-weight: 500;
+  margin-top: 2px;
+}
+
+.masterPausedText {
+  font-size: 11px;
+  color: var(--muted);
+  font-weight: 500;
+  margin-top: 2px;
+}
+
+.masterAmount {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text);
+  flex-shrink: 0;
+}
+
+.masterActionsRow {
+  display: flex;
+  gap: 5px;
+  flex-shrink: 0;
+  align-items: center;
+}
+
+.actionBtn {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.masterMenuButton {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: none;
+  background: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+/* ── Confirmación de borrado ──────────────────────────────────────────────── */
+.deleteConfirmPanel {
+  padding: 10px 14px;
+  background: var(--danger-soft);
+  border-bottom: 0.5px solid var(--border);
+}
+
+.deleteConfirmPanelNoBorder {
+  border-bottom: none;
+}
+
+.deleteConfirmText {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--danger);
+  margin-bottom: 8px;
+}
+
+.deleteConfirmRow {
+  display: flex;
+  gap: 8px;
+}
+
+.deleteCancelButton {
+  flex: 1;
+  padding: 7px;
+  border-radius: 6px;
+  border: 0.5px solid var(--border);
+  background: var(--surface);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text);
+  cursor: pointer;
+  font-family: 'DM Sans', sans-serif;
+}
+
+.deleteConfirmButton {
+  flex: 1;
+  padding: 7px;
+  border-radius: 6px;
+  border: none;
+  background: var(--danger);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--surface);
+  cursor: pointer;
+  font-family: 'DM Sans', sans-serif;
+}
+
+/* ── MenuItem ─────────────────────────────────────────────────────────────── */
+.menuItem {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  background: none;
+  border: none;
+  border-bottom: 0.5px solid var(--bg);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text);
+  font-family: 'DM Sans', sans-serif;
+  cursor: pointer;
+  text-align: left;
+}
+
+.menuItemDanger {
+  color: var(--danger);
+}

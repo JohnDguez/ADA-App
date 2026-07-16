@@ -6,10 +6,11 @@ import { NewSharedSpacePanel } from '../components/NewSharedSpacePanel'
 import { fmt, RECUR_FREQ, dateOf, MONTHS_SHORT, getCatColor } from '../lib/utils'
 import { getCategoryIcon } from '../lib/categoryIcons'
 import { showToast } from '../components/Toast'
+import styles from './RecurrentsPage.module.css'
 
 function FilterChip({ label, active, onClick }) {
   return (
-    <button onClick={onClick} style={{ padding: '6px 14px', borderRadius: 5, border: 'none', background: active ? 'var(--accent)' : 'var(--surface)', color: active ? 'var(--surface)' : 'var(--text)', fontWeight: active ? 600 : 400, fontSize: 12, fontFamily: 'DM Sans, sans-serif', cursor: 'pointer', transition: 'background .15s, color .15s' }}>
+    <button onClick={onClick} className={`${styles.filterChip} ${active ? styles.filterChipActive : ''}`}>
       {label}
     </button>
   )
@@ -102,26 +103,15 @@ export function RecurrentsPage({ payments, profile, spaceSwitcher, activeSpaceHe
   }
 
   return (
-    <div style={{ paddingBottom: 120, background: 'var(--bg)', minHeight: '100vh' }} onClick={() => setOpenMenu(null)}>
+    <div className={styles.pageRoot} onClick={() => setOpenMenu(null)}>
       <PageHeader profile={profile} unreadCount={unreadCount} onOpenNotifs={onOpenNotifs} onGoSettings={onGoSettings} />
 
       {/* Menú contextual flotante */}
       {openMenu && (
         <div
           onClick={e => e.stopPropagation()}
-          style={{
-            position: 'fixed',
-            top: openMenu.top,
-            bottom: openMenu.bottom,
-            right: openMenu.right,
-            zIndex: 999,
-            background: 'var(--menu-bg)',
-            border: '0.5px solid var(--border)',
-            borderRadius: 'var(--radius-sm)',
-            boxShadow: '0 4px 16px rgba(0,0,0,0.12)',
-            minWidth: 180,
-            overflow: 'hidden',
-          }}
+          className={styles.contextMenu}
+          style={{ top: openMenu.top, bottom: openMenu.bottom, right: openMenu.right }}
         >
           {(() => {
             const master = masters.find(m => m.id === openMenu.id)
@@ -136,7 +126,7 @@ export function RecurrentsPage({ payments, profile, spaceSwitcher, activeSpaceHe
         </div>
       )}
 
-      <div style={{ background: 'var(--bg)', borderRadius: '24px 24px 0 0', marginTop: -24, position: 'relative', zIndex: 10 }}>
+      <div className={styles.roundedContentWrapper}>
         {spaceSwitcher}
 
         {activeSpaceHeader}
@@ -145,7 +135,7 @@ export function RecurrentsPage({ payments, profile, spaceSwitcher, activeSpaceHe
           <div className={spaceJustChanged ? 'content-slide-up' : ''}>
 
           {activeSpaceId === 'new' ? (
-            <div style={{ marginTop: 16 }}>
+            <div className={styles.newSpacePanelWrapper}>
               <NewSharedSpacePanel
                 profile={profile}
                 sharedSpaces={sharedSpaces}
@@ -157,55 +147,55 @@ export function RecurrentsPage({ payments, profile, spaceSwitcher, activeSpaceHe
           ) : (
           <>
           {/* Zona título */}
-          <div style={{ padding: '16px 16px 18px' }}>
-            <div style={{ fontSize: 22, fontWeight: 700, color: 'var(--text)' }}>Gastos recurrentes</div>
-            <div style={{ fontSize: 13, fontWeight: 400, color: 'var(--text)', marginTop: 4 }}>Gestiona tus pagos fijos y variables.</div>
+          <div className={styles.titleSection}>
+            <div className={styles.titleHeading}>Gastos recurrentes</div>
+            <div className={styles.titleSubtext}>Gestiona tus pagos fijos y variables.</div>
           </div>
 
 
           {/* Buscador */}
-          <div style={{ padding: '0 16px 12px' }}>
-            <div style={{ position: 'relative' }}>
-              <div style={{ position: 'absolute', left: 12, top: 0, bottom: 0, display: 'flex', alignItems: 'center', pointerEvents: 'none' }}>
+          <div className={styles.searchWrapper}>
+            <div className={styles.searchInner}>
+              <div className={styles.searchIcon}>
                 <Search size={15} color="var(--text)" />
               </div>
-              <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Buscar por nombre o categoría..." className="field-input" style={{ paddingLeft: 36 }} />
+              <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Buscar por nombre o categoría..." className={`field-input ${styles.searchInput}`} />
             </div>
           </div>
 
           {/* Resumen */}
-          <div data-coachmark="recurrentes-stats" style={{ margin: '0 16px 14px', background: 'var(--surface)', borderRadius: 'var(--radius)', padding: '14px 16px', display: 'flex' }}>
-            <div style={{ flex: 1, borderRight: '0.5px solid var(--border)', paddingRight: 14 }}>
-              <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--text)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 3 }}>Activos</div>
-              <div style={{ fontSize: 22, fontWeight: 700, color: 'var(--text)' }}>{activeMasters.length}</div>
-              <div style={{ fontSize: 11, color: 'var(--text)', marginTop: 2 }}>{pausedMasters.length} pausados</div>
+          <div data-coachmark="recurrentes-stats" className={styles.statsCard}>
+            <div className={styles.statsBlockBordered}>
+              <div className={styles.statsLabel}>Activos</div>
+              <div className={styles.statsValue}>{activeMasters.length}</div>
+              <div className={styles.statsSubtext}>{pausedMasters.length} pausados</div>
             </div>
-            <div style={{ flex: 1, paddingLeft: 14 }}>
-              <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--text)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 3 }}>Suma mensual</div>
-              <div style={{ fontSize: 22, fontWeight: 700, color: 'var(--text)' }}>{fmt(totalMensual)}</div>
-              <div style={{ fontSize: 11, color: 'var(--text)', marginTop: 2 }}>pagos mensuales</div>
+            <div className={styles.statsBlockPadded}>
+              <div className={styles.statsLabel}>Suma mensual</div>
+              <div className={styles.statsValue}>{fmt(totalMensual)}</div>
+              <div className={styles.statsSubtext}>pagos mensuales</div>
             </div>
           </div>
 
           {/* Filtros */}
-          <div style={{ padding: '0 16px 6px', display: 'flex', gap: 6 }}>
+          <div className={styles.filterRow}>
             {[['todos','Todos'],['activos','Activos'],['pausados','Pausados']].map(([val, label]) => (
               <FilterChip key={val} label={label} active={filterStatus === val} onClick={() => setFilterStatus(val)} />
             ))}
           </div>
-          <div data-coachmark="recurrentes-filtro-tipo" style={{ padding: '0 16px 14px', display: 'flex', gap: 6 }}>
+          <div data-coachmark="recurrentes-filtro-tipo" className={styles.filterRowLast}>
             {[['todos','Todos'],['recurrentes','Recurrentes'],['parcialidades','Parcialidades']].map(([val, label]) => (
               <FilterChip key={val} label={label} active={filterType === val} onClick={() => setFilterType(val)} />
             ))}
           </div>
 
           {/* Lista por categoría */}
-          <div style={{ padding: '0 16px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <div className={styles.categoryListWrapper}>
             {byCategory.length === 0 ? (
               search ? (
-                <div style={{ textAlign: 'center', padding: '40px 0' }}>
-                  <CreditCard size={32} color="var(--border)" style={{ marginBottom: 10 }} />
-                  <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--text)' }}>
+                <div className={styles.noResultsBlock}>
+                  <CreditCard size={32} color="var(--border)" className={styles.noResultsIcon} />
+                  <div className={styles.noResultsText}>
                     Sin resultados para tu búsqueda
                   </div>
                 </div>
@@ -219,26 +209,26 @@ export function RecurrentsPage({ payments, profile, spaceSwitcher, activeSpaceHe
               const CatIcon  = getCategoryIcon(cat, profile.category_icons)
 
               return (
-                <div key={cat} style={{ background: 'var(--surface)', borderRadius: 'var(--radius)', overflow: 'hidden' }}>
+                <div key={cat} className={styles.categoryCard}>
                   {/* Header categoría */}
                   <div
                     onClick={() => setExpandedCats(prev => ({ ...prev, [cat]: !prev[cat] }))}
-                    style={{ display: 'flex', alignItems: 'center', padding: '14px', cursor: 'pointer', borderBottom: isOpen ? '0.5px solid var(--border)' : 'none', minHeight: 58 }}
+                    className={`${styles.categoryHeader} ${isOpen ? styles.categoryHeaderOpen : ''}`}
                   >
-                    <div style={{ width: 36, height: 36, borderRadius: 8, background: catColor, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginRight: 10 }}>
+                    <div className={styles.categoryIconWrapper} style={{ background: catColor }}>
                       {CatIcon
                         ? <CatIcon size={18} color="var(--text)" strokeWidth={2} />
-                        : <span style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--text)' }} />
+                        : <span className={styles.categoryFallbackDot} />
                       }
                     </div>
-                    <div style={{ flex: 1 }}>
-                      <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text)' }}>{cat}</div>
-                      <div style={{ fontSize: 11, color: 'var(--text)', marginTop: 1 }}>
+                    <div className={styles.categoryInfo}>
+                      <div className={styles.categoryName}>{cat}</div>
+                      <div className={styles.categoryMeta}>
                         {catMasters.length} pago{catMasters.length !== 1 ? 's' : ''}
                         {catTotal > 0 && ` · ${fmt(catTotal)}/mes`}
                       </div>
                     </div>
-                    <div style={{ transition: 'transform .25s ease', transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)' }}>
+                    <div className={`${styles.categoryChevron} ${isOpen ? styles.categoryChevronOpen : ''}`}>
                       <ChevronDown size={18} color="var(--text)" />
                     </div>
                   </div>
@@ -253,50 +243,50 @@ export function RecurrentsPage({ payments, profile, spaceSwitcher, activeSpaceHe
 
                       return (
                         <div key={master.id}>
-                          <div style={{ display: 'flex', alignItems: 'center', padding: '12px 14px', borderBottom: isLast && !isConfirming ? 'none' : '0.5px solid var(--border)', gap: 8 }}>
+                          <div className={`${styles.masterRow} ${isLast && !isConfirming ? styles.masterRowNoBorder : ''}`}>
                             {/* Info */}
-                            <div style={{ flex: 1, minWidth: 0 }}>
-                              <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--text)', display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                            <div className={styles.masterInfo}>
+                              <div className={styles.masterNameRow}>
                                 {master.name}
                                 {master.is_variable && (
-                                  <span style={{ fontSize: 9, fontWeight: 700, padding: '1px 6px', borderRadius: 4, background: 'var(--label-variable)', color: '#fff' }}>Variable</span>
+                                  <span className={styles.variableBadge}>Variable</span>
                                 )}
                               </div>
-                              <div style={{ fontSize: 11, color: 'var(--text)', marginTop: 2 }}>
+                              <div className={styles.masterFreqRow}>
                                 {RECUR_FREQ[master.recur_freq] || master.recur_freq}
                                 {!(master.is_installment || master.total_installments > 0) && paid > 0 && ` · ${paid} realizado${paid !== 1 ? 's' : ''}`}
                               </div>
                               {!master.paused && next && !(master.is_installment || master.total_installments > 0) && (
-                                <div style={{ fontSize: 11, color: 'var(--accent)', fontWeight: 500, marginTop: 2 }}>
+                                <div className={styles.masterNextDate}>
                                   Próximo: {formatNextDate(next.due_date)}
                                 </div>
                               )}
                               {!master.paused && next && (master.is_installment || master.total_installments > 0) && (
-                                <div style={{ fontSize: 11, color: 'var(--accent)', fontWeight: 500, marginTop: 2 }}>
+                                <div className={styles.masterNextDate}>
                                   Pago {next.current_installment} de {master.total_installments}
                                 </div>
                               )}
                               {master.paused && (
-                                <div style={{ fontSize: 11, color: 'var(--muted)', fontWeight: 500, marginTop: 2 }}>Pausado</div>
+                                <div className={styles.masterPausedText}>Pausado</div>
                               )}
                             </div>
 
                             {/* Monto */}
                             {!master.is_variable && (
-                              <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--text)', flexShrink: 0 }}>
+                              <div className={styles.masterAmount}>
                                 {fmt(master.amount)}
                               </div>
                             )}
 
                             {/* Botones */}
-                            <div style={{ display: 'flex', gap: 5, flexShrink: 0, alignItems: 'center' }}>
+                            <div className={styles.masterActionsRow}>
                               <ActionBtn
                                 onClick={() => canEdit ? (master.paused ? onResume(master.id) : onPause(master.id)) : blocked(master.paused ? 'reactivar pagos' : 'pausar pagos')}
                                 color={!canEdit ? 'var(--border)' : master.paused ? 'var(--paid)' : 'var(--warning)'}
                               >
                                 {master.paused
-                                  ? <Play size={13} color={canEdit ? '#fff' : 'var(--muted)'} />
-                                  : <Pause size={13} color={canEdit ? '#fff' : 'var(--muted)'} />
+                                  ? <Play size={13} color={canEdit ? 'var(--surface)' : 'var(--muted)'} />
+                                  : <Pause size={13} color={canEdit ? 'var(--surface)' : 'var(--muted)'} />
                                 }
                               </ActionBtn>
                               <button
@@ -317,7 +307,7 @@ export function RecurrentsPage({ payments, profile, spaceSwitcher, activeSpaceHe
                                     right: window.innerWidth - rect.right,
                                   })
                                 }}
-                                style={{ width: 32, height: 32, borderRadius: 8, border: 'none', background: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0 }}
+                                className={styles.masterMenuButton}
                               >
                                 <MoreVertical size={16} color="var(--text)" />
                               </button>
@@ -326,15 +316,15 @@ export function RecurrentsPage({ payments, profile, spaceSwitcher, activeSpaceHe
 
                           {/* Confirmación borrado */}
                           {isConfirming && (
-                            <div style={{ padding: '10px 14px', background: 'var(--danger-soft)', borderBottom: isLast ? 'none' : '0.5px solid var(--border)' }}>
-                              <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--danger)', marginBottom: 8 }}>
+                            <div className={`${styles.deleteConfirmPanel} ${isLast ? styles.deleteConfirmPanelNoBorder : ''}`}>
+                              <div className={styles.deleteConfirmText}>
                                 ¿Eliminar "{master.name}"? Los pagos ya realizados se conservarán.
                               </div>
-                              <div style={{ display: 'flex', gap: 8 }}>
-                                <button onClick={() => setConfirmDelete(null)} style={{ flex: 1, padding: '7px', borderRadius: 6, border: '0.5px solid var(--border)', background: 'var(--surface)', fontSize: 12, fontWeight: 600, color: 'var(--text)', cursor: 'pointer', fontFamily: 'DM Sans, sans-serif' }}>
+                              <div className={styles.deleteConfirmRow}>
+                                <button onClick={() => setConfirmDelete(null)} className={styles.deleteCancelButton}>
                                   Cancelar
                                 </button>
-                                <button onClick={() => { onDelete && onDelete(master.id, master); setConfirmDelete(null) }} style={{ flex: 1, padding: '7px', borderRadius: 6, border: 'none', background: 'var(--danger)', fontSize: 12, fontWeight: 600, color: '#fff', cursor: 'pointer', fontFamily: 'DM Sans, sans-serif' }}>
+                                <button onClick={() => { onDelete && onDelete(master.id, master); setConfirmDelete(null) }} className={styles.deleteConfirmButton}>
                                   Eliminar
                                 </button>
                               </div>
@@ -362,7 +352,7 @@ export function RecurrentsPage({ payments, profile, spaceSwitcher, activeSpaceHe
 
 function ActionBtn({ onClick, color, children }) {
   return (
-    <button onClick={onClick} style={{ width: 32, height: 32, borderRadius: 8, border: 'none', background: color, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0 }}>
+    <button onClick={onClick} className={styles.actionBtn} style={{ background: color }}>
       {children}
     </button>
   )
@@ -370,8 +360,8 @@ function ActionBtn({ onClick, color, children }) {
 
 function MenuItem({ icon, label, onClick, danger }) {
   return (
-    <button onClick={onClick} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', background: 'none', border: 'none', borderBottom: '0.5px solid var(--bg)', fontSize: 13, fontWeight: 500, color: danger ? 'var(--danger)' : 'var(--text)', fontFamily: 'DM Sans, sans-serif', cursor: 'pointer', textAlign: 'left' }}>
-      <span style={{ color: danger ? 'var(--danger)' : 'var(--text)' }}>{icon}</span>{label}
+    <button onClick={onClick} className={`${styles.menuItem} ${danger ? styles.menuItemDanger : ''}`}>
+      <span>{icon}</span>{label}
     </button>
   )
 }
