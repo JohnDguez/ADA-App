@@ -1,32 +1,14 @@
+import styles from './ConfirmCloseModal.module.css'
+
 export function ConfirmCloseModal({ open, onConfirm, onCancel }) {
   if (!open) return null
   return (
-    <div style={{
-      position: 'fixed', inset: 0,
-      background: 'rgba(2,10,31,0.5)',
-      zIndex: 300, display: 'flex',
-      alignItems: 'center', justifyContent: 'center',
-      padding: '0 32px',
-    }}>
-      <div style={{
-        background: 'var(--surface)', borderRadius: 16,
-        width: '100%', maxWidth: 320, padding: '24px 20px',
-        animation: 'modalPopIn .22s cubic-bezier(0.25, 0.46, 0.45, 0.94) both',
-      }}>
-        <div style={{ fontSize: 15, fontWeight: 600, color: 'var(--text)', marginBottom: 6 }}>Descartar cambios</div>
-        <div style={{ fontSize: 13, color: 'var(--muted)', marginBottom: 20 }}>Tienes información sin guardar. Si cierras la perderás.</div>
-        <button onClick={onConfirm} style={{
-          width: '100%', padding: 11, background: 'var(--danger)',
-          color: 'var(--surface)', border: 'none', borderRadius: 'var(--radius-sm)',
-          fontSize: 14, fontWeight: 600, fontFamily: 'DM Sans, sans-serif',
-          cursor: 'pointer', marginBottom: 8,
-        }}>Descartar</button>
-        <button onClick={onCancel} style={{
-          width: '100%', padding: 11, background: 'none',
-          color: 'var(--muted)', border: '0.5px solid var(--border)',
-          borderRadius: 'var(--radius-sm)', fontSize: 14,
-          fontFamily: 'DM Sans, sans-serif', cursor: 'pointer',
-        }}>Seguir editando</button>
+    <div className={styles.overlay}>
+      <div className={styles.modal}>
+        <div className={styles.title}>Descartar cambios</div>
+        <div className={styles.description}>Tienes información sin guardar. Si cierras la perderás.</div>
+        <button onClick={onConfirm} className={styles.discardButton}>Descartar</button>
+        <button onClick={onCancel} className={styles.cancelButton}>Seguir editando</button>
       </div>
     </div>
   )

@@ -1,0 +1,58 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(2, 10, 31, 0.5);
+  z-index: 300;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 32px;
+}
+
+.modal {
+  background: var(--surface);
+  border-radius: 16px;
+  width: 100%;
+  max-width: 320px;
+  padding: 24px 20px;
+  animation: modalPopIn .22s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+}
+
+.title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 6px;
+}
+
+.description {
+  font-size: 13px;
+  color: var(--muted);
+  margin-bottom: 20px;
+}
+
+.discardButton {
+  width: 100%;
+  padding: 11px;
+  background: var(--danger);
+  color: var(--surface);
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  font-weight: 600;
+  font-family: 'DM Sans', sans-serif;
+  cursor: pointer;
+  margin-bottom: 8px;
+}
+
+.cancelButton {
+  width: 100%;
+  padding: 11px;
+  background: none;
+  color: var(--muted);
+  border: 0.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  font-family: 'DM Sans', sans-serif;
+  cursor: pointer;
+}
