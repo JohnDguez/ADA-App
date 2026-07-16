@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { ChevronLeft, ChevronRight, MoreVertical, Plus, CircleDollarSign, ChevronDown, ChevronUp, Pencil, RotateCcw, Trash2, Check } from 'lucide-react'
 import { PageHeader } from '../components/PageHeader'
 import { NewSharedSpacePanel } from '../components/NewSharedSpacePanel'
+import { EmptyState } from '../components/EmptyState'
 import { fmt, dateOf, dateToStr, MONTHS, MONTHS_SHORT, CATEGORIES, cobroPeriod, addDays, getCatColor } from '../lib/utils'
 import { getCategoryIcon } from '../lib/categoryIcons'
 import { supabase } from '../lib/supabase'
@@ -64,7 +65,7 @@ function prevPeriod(profile) {
   return { start: t, end: prevEnd }
 }
 
-export function PaymentsPage({ payments, profile, spaceSwitcher, activeSpaceHeader, activeSpaceId = null, rawActiveSpaceId = null, sharedSpaces, spacePermissions, onOpenPremium, onSpaceReady, unreadCount, onOpenNotifs, onGoSettings, onMarkUnpaid, onDelete, onDeleteDirect, onUpdateProfile, onEdit, slideClass }) {
+export function PaymentsPage({ payments, profile, spaceSwitcher, activeSpaceHeader, activeSpaceId = null, rawActiveSpaceId = null, sharedSpaces, spacePermissions, onOpenPremium, onSpaceReady, unreadCount, onOpenNotifs, onGoSettings, onMarkUnpaid, onDelete, onDeleteDirect, onUpdateProfile, onEdit, onAdd, onGoCategories, slideClass }) {
   // Mismo mecanismo que HomePage.jsx — ver ahí el porqué (evitar que la
   // animación de entrada se dispare también en un simple cambio de
   // pestaña, no solo en un cambio real de espacio).
@@ -1109,9 +1110,13 @@ export function PaymentsPage({ payments, profile, spaceSwitcher, activeSpaceHead
           </div>
 
           {catData.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '24px 0', fontSize: 13, fontWeight: 500, color: 'var(--text)' }}>
-              Sin gastos registrados
-            </div>
+            <EmptyState
+              title="Sin gastos registrados"
+              subtitle="Toca aquí o el botón + de abajo para añadir uno"
+              onClick={onAdd}
+              secondaryLabel="Personalizar categorías"
+              onSecondaryClick={onGoCategories}
+            />
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               {catData.map(({ cat, total }) => {
@@ -1191,9 +1196,11 @@ export function PaymentsPage({ payments, profile, spaceSwitcher, activeSpaceHead
           </div>
 
           {paidInView.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '32px 0', fontSize: 13, fontWeight: 500, color: 'var(--text)' }}>
-              {viewMode === 'periodo' ? 'Sin pagos realizados en el periodo actual' : `Sin pagos realizados en ${MONTHS[viewMonth]} ${viewYear}`}
-            </div>
+            <EmptyState
+              title={viewMode === 'periodo' ? 'Sin pagos realizados en el periodo actual' : `Sin pagos realizados en ${MONTHS[viewMonth]} ${viewYear}`}
+              subtitle="Toca aquí o el botón + de abajo para añadir uno"
+              onClick={onAdd}
+            />
           ) : (
             <>
               <div style={{ background: 'var(--surface)', borderRadius: 'var(--radius)', overflow: 'hidden' }}>
