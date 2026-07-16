@@ -233,7 +233,7 @@
   display: flex;
 }
 
-.searchInput {
+:global(.field-input).searchInput {
   padding-left: 34px;
 }
 

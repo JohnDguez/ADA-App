@@ -125,11 +125,11 @@
   padding: 4px;
 }
 
-.inputWithToggle {
+:global(.field-input).inputWithToggle {
   padding-right: 40px;
 }
 
-.inputError {
+:global(.field-input).inputError {
   border-color: var(--danger);
 }
 
@@ -186,7 +186,7 @@
   margin-bottom: 14px;
 }
 
-.dangerPasswordInput {
+:global(.field-input).dangerPasswordInput {
   border-color: var(--danger-border);
   padding-right: 40px;
 }
