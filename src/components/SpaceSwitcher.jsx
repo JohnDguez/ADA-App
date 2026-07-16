@@ -203,7 +203,7 @@ export function SpaceSwitcher({ spaces, activeSpaceId, onSwitch, profile, stats 
             </span>
 
             {item.kind !== 'new' && (
-              <span className={styles.spaceStat} style={{ color: 'rgba(255,255,255,0.85)' }}>{statFor(item)}</span>
+              <span className={styles.spaceStat} style={{ color: 'var(--surface)' }}>{statFor(item)}</span>
             )}
           </div>
         )
