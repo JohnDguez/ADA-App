@@ -1,0 +1,1263 @@
+/* ══════════════════════════════════════════════════════════════════════
+   PaymentsPage.module.css
+   Migración incremental por partes — ver CONTEXT.md para el orden completo.
+   Parte 1: menú contextual flotante, MenuItem, FilterChip.
+   ══════════════════════════════════════════════════════════════════════ */
+
+/* ── Parte 1: Menú contextual flotante ──────────────────────────────────── */
+.contextMenu {
+  position: fixed;
+  z-index: 999;
+  background: var(--menu-bg);
+  border: 0.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  min-width: 180px;
+  overflow: hidden;
+}
+
+/* ── Parte 1: MenuItem ───────────────────────────────────────────────────── */
+.menuItem {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  background: none;
+  border: none;
+  border-bottom: 0.5px solid var(--bg);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text);
+  font-family: 'DM Sans', sans-serif;
+  cursor: pointer;
+  text-align: left;
+}
+
+.menuItemDanger {
+  color: var(--danger);
+}
+
+/* ── Parte 1: FilterChip ─────────────────────────────────────────────────── */
+.filterChip {
+  padding: 6px 14px;
+  border-radius: 5px;
+  border: 0.5px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 500;
+  font-family: 'DM Sans', sans-serif;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: background .15s, color .15s;
+}
+
+.filterChipActive {
+  border: none;
+  background: var(--accent);
+  color: var(--surface);
+  font-weight: 700;
+}
+
+/* ── Parte 2: CTA "sin ingreso capturado todavía" ───────────────────────── */
+.noIncomeCard {
+  margin: 0 16px 16px;
+  background: var(--surface);
+  border-radius: var(--radius);
+  padding: 20px 16px;
+  text-align: center;
+}
+
+.noIncomeText {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text);
+  margin-bottom: 14px;
+}
+
+.noIncomeButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 14px;
+  border-radius: var(--radius-sm);
+  border: none;
+  background: var(--accent);
+  color: var(--surface);
+  font-size: 15px;
+  font-weight: 600;
+  font-family: 'DM Sans', sans-serif;
+  cursor: pointer;
+}
+
+/* ── Parte 2: Card de balance del periodo ───────────────────────────────── */
+.balanceCard {
+  margin: 0 16px 16px;
+  background: var(--surface);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+}
+
+.balanceHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 12px;
+}
+
+.balanceLabel {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 15px;
+}
+
+.balanceAmount {
+  font-size: 26px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.balanceActions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+}
+
+.addIncomeButtonSmall {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 10px;
+  border-radius: 5px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: 'DM Sans', sans-serif;
+  flex-shrink: 0;
+}
+
+.balanceSubtext {
+  text-align: right;
+}
+
+.balanceSubtextMain {
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--text);
+}
+
+.balanceSubtextFaded {
+  font-weight: 400;
+}
+
+.balanceExtras {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--paid);
+}
+
+.balanceOverBudget {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--danger);
+}
+
+.heatmapBar {
+  height: 12px;
+  border-radius: 6px;
+  overflow: hidden;
+  display: flex;
+  background: var(--border);
+  margin-bottom: 10px;
+}
+
+.heatmapSegment {
+  height: 100%;
+  flex-shrink: 0;
+  transition: width .4s ease;
+}
+
+.categoryChipsRow {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.categoryChip {
+  padding: 3px 10px;
+  border-radius: 5px;
+  font-size: 11px;
+  font-weight: 500;
+  background: var(--section-bg);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.categoryChipDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+/* ── Parte 2: Ingresos extras (dentro de la card de balance) ────────────── */
+.extrasSection {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 0.5px solid var(--border);
+}
+
+.extrasHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.extrasLabel {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.extrasEditButton {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  border-radius: 5px;
+  border: none;
+  background: transparent;
+  color: var(--accent);
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: 'DM Sans', sans-serif;
+}
+
+.extrasSummaryButton {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--section-bg);
+  border: none;
+  border-radius: 8px;
+  padding: 8px 10px;
+  cursor: pointer;
+}
+
+.extrasCheckIcon {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--paid);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.extrasSummaryText {
+  flex: 1;
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--text);
+  text-align: left;
+}
+
+.extrasList {
+  margin-top: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.extrasListItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--section-bg);
+  border-radius: 8px;
+  padding: 9px 12px;
+}
+
+.extrasItemDate {
+  width: 26px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.extrasItemDay {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  line-height: 1.1;
+}
+
+.extrasItemMonth {
+  font-size: 9px;
+  font-weight: 500;
+  color: var(--text);
+  text-transform: uppercase;
+}
+
+.extrasItemContent {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.extrasItemType {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.extrasItemNote {
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.extrasItemAmount {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--paid);
+  flex-shrink: 0;
+}
+
+/* ── Parte 2: Chips de categoría (scroll horizontal), stats, gráfica ────── */
+.categoryChipsScroll {
+  padding: 0 16px 15px;
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.statsCard {
+  margin: 0 16px 12px;
+  background: var(--surface);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.statsBlockWide {
+  flex: 1.6;
+}
+
+.statsBlock {
+  flex: 1;
+}
+
+.statsLabel {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+
+.statsValueLarge {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1.1;
+}
+
+.statsValue {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1.1;
+}
+
+.statsDivider {
+  width: 1px;
+  height: 40px;
+  background: var(--border);
+  flex-shrink: 0;
+}
+
+.rangeSelectorRow {
+  padding: 0 16px 10px;
+  display: flex;
+  gap: 6px;
+}
+
+.chartCard {
+  margin: 0 16px 20px;
+  background: var(--surface);
+  border-radius: var(--radius);
+  padding: 16px 14px;
+}
+
+.chartTitle {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 14px;
+}
+
+.chartLabelsRow {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 4px;
+  height: 16px;
+}
+
+.chartLabelCell {
+  flex: 1;
+  text-align: center;
+}
+
+.chartLabelAmount {
+  font-size: 9px;
+  font-weight: 700;
+}
+
+.chartBarsRow {
+  display: flex;
+  align-items: flex-end;
+  gap: 6px;
+  height: 80px;
+}
+
+.chartBarCell {
+  flex: 1;
+  height: 100%;
+  display: flex;
+  align-items: flex-end;
+}
+
+.chartBar {
+  width: 100%;
+  border-radius: 3px 3px 0 0;
+  transition: height .3s;
+}
+
+.chartMonthLabelsRow {
+  display: flex;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.chartMonthLabel {
+  flex: 1;
+  text-align: center;
+  font-size: 9px;
+}
+
+/* ── Parte 3: Por Categoría ──────────────────────────────────────────────── */
+.categorySection {
+  padding: 0 16px 20px;
+}
+
+.categorySectionTitle {
+  margin-bottom: 10px;
+}
+
+.categorySectionTitleText {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.categoryRangeRow {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 14px;
+}
+
+.categoryList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.categoryListItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.categoryListIconWrapper {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.categoryListFallbackDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--text);
+}
+
+.categoryListContent {
+  flex: 1;
+  min-width: 0;
+}
+
+.categoryListRow {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 5px;
+}
+
+.categoryListName {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text);
+}
+
+.categoryListAmount {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.categoryProgressTrack {
+  height: 6px;
+  background: var(--border);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+}
+
+.categoryProgressFill {
+  height: 100%;
+  border-radius: var(--radius-full);
+  transition: width .4s ease;
+}
+
+/* ── Parte 4: overlay/panel compartidos por los modales "bottom sheet" ──── */
+.modalOverlayBottom {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  z-index: 1000;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.modalPanelBottom {
+  background: var(--surface);
+  border-radius: 20px 20px 0 0;
+  padding: 24px 20px 32px;
+  width: 100%;
+  max-width: 420px;
+  animation: modalSlideUp .32s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+}
+
+/* ── Parte 4: Modal Remanente ────────────────────────────────────────────── */
+.remanenteHeader {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.remanenteIconWrapper {
+  font-size: 28px;
+  margin-bottom: 8px;
+}
+
+.remanenteIcon {
+  display: block;
+  margin: 0 auto 8px;
+}
+
+.remanenteTitle {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 6px;
+}
+
+.remanenteAmount {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--paid);
+  margin-bottom: 6px;
+}
+
+.remanenteQuestion {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text);
+}
+
+.remanenteActionsRow {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.remanenteConfirmButton {
+  flex: 1;
+  padding: 12px;
+  background: var(--accent);
+  color: var(--surface);
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.remanenteConfirmButton:disabled {
+  opacity: 0.6;
+}
+
+.remanenteCancelButton {
+  flex: 1;
+  padding: 12px;
+  background: none;
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.remanenteCustomToggle {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px;
+  background: none;
+  border: none;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  cursor: pointer;
+}
+
+.remanenteCustomRow {
+  margin-top: 10px;
+  display: flex;
+  gap: 8px;
+}
+
+.remanenteCustomInput {
+  flex: 1;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text);
+  background: var(--bg);
+  outline: none;
+  font-family: 'DM Sans', sans-serif;
+}
+
+.remanenteCustomButton {
+  padding: 10px 16px;
+  background: var(--accent);
+  color: var(--surface);
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* ── Parte 4: Modal Añadir Ingreso ───────────────────────────────────────── */
+.incomeModalTitle {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 20px;
+}
+
+.incomeFieldGroup {
+  margin-bottom: 16px;
+}
+
+.incomeFieldGroupLast {
+  margin-bottom: 20px;
+}
+
+.incomeLabelMb8 {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 8px;
+}
+
+.incomeLabelMb6 {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 6px;
+}
+
+.incomeTypeRow {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.incomeTypeButton {
+  padding: 7px 14px;
+  border-radius: 5px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: 'DM Sans', sans-serif;
+}
+
+.incomeTypeButtonActive {
+  border: none;
+  background: var(--accent);
+  color: var(--surface);
+  font-weight: 700;
+}
+
+.incomeInput {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text);
+  background: var(--bg);
+  outline: none;
+  font-family: 'DM Sans', sans-serif;
+}
+
+.incomeSaveButton {
+  width: 100%;
+  padding: 12px;
+  background: var(--accent);
+  color: var(--surface);
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: 'DM Sans', sans-serif;
+  margin-bottom: 8px;
+}
+
+.incomeSaveButton:disabled {
+  opacity: 0.6;
+}
+
+.incomeCancelButton {
+  width: 100%;
+  padding: 10px;
+  background: none;
+  color: var(--text);
+  border: 0.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: 'DM Sans', sans-serif;
+}
+
+/* ── Parte 5: Modal Gestionar Ingresos Extras ────────────────────────────── */
+.manageModalPanelExtra {
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.manageModalTitle {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 16px;
+}
+
+.manageEmptyText {
+  text-align: center;
+  padding: 20px 0;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text);
+}
+
+.manageList {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.manageListItem {
+  border: 0.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 12px;
+}
+
+.editTypeRow {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+
+.editTypeButton {
+  padding: 6px 12px;
+  border-radius: 5px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: 'DM Sans', sans-serif;
+}
+
+.editTypeButtonActive {
+  border: none;
+  background: var(--accent);
+  color: var(--surface);
+  font-weight: 700;
+}
+
+.editInput {
+  width: 100%;
+  padding: 9px 11px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text);
+  background: var(--bg);
+  outline: none;
+  font-family: 'DM Sans', sans-serif;
+  margin-bottom: 8px;
+}
+
+.editInputMb10 {
+  width: 100%;
+  padding: 9px 11px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text);
+  background: var(--bg);
+  outline: none;
+  font-family: 'DM Sans', sans-serif;
+  margin-bottom: 10px;
+}
+
+.editActionsRow {
+  display: flex;
+  gap: 8px;
+}
+
+.editSaveButton {
+  flex: 1;
+  padding: 9px;
+  background: var(--accent);
+  color: var(--surface);
+  border: none;
+  border-radius: 5px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: 'DM Sans', sans-serif;
+}
+
+.editSaveButton:disabled {
+  opacity: 0.6;
+}
+
+.editCancelButton {
+  flex: 1;
+  padding: 9px;
+  background: none;
+  color: var(--text);
+  border: 0.5px solid var(--border);
+  border-radius: 5px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: 'DM Sans', sans-serif;
+}
+
+.confirmDeleteText {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 10px;
+}
+
+.confirmDeleteRow {
+  display: flex;
+  gap: 8px;
+}
+
+.confirmDeleteButton {
+  flex: 1;
+  padding: 9px;
+  background: var(--danger);
+  color: var(--surface);
+  border: none;
+  border-radius: 5px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: 'DM Sans', sans-serif;
+}
+
+.confirmDeleteCancelButton {
+  flex: 1;
+  padding: 9px;
+  background: none;
+  color: var(--text);
+  border: 0.5px solid var(--border);
+  border-radius: 5px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: 'DM Sans', sans-serif;
+}
+
+.incomeRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.incomeRowType {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.incomeRowNote {
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--text);
+  margin-top: 2px;
+}
+
+.incomeRowActions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.incomeRowAmount {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--paid);
+}
+
+.iconButtonCursor {
+  cursor: pointer;
+}
+
+.manageCloseButton {
+  width: 100%;
+  padding: 10px;
+  background: none;
+  color: var(--text);
+  border: 0.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: 'DM Sans', sans-serif;
+  margin-top: 4px;
+}
+
+/* ── Parte 6: wrappers estructurales sueltos ─────────────────────────────── */
+.pageRoot {
+  padding-bottom: 120px;
+  background: var(--bg);
+  min-height: 100vh;
+}
+
+.roundedContentWrapper {
+  background: var(--bg);
+  border-radius: 24px 24px 0 0;
+  margin-top: -24px;
+  position: relative;
+  z-index: 10;
+}
+
+.newSpacePanelWrapper {
+  margin-top: 16px;
+}
+
+.titleSection {
+  padding: 16px 16px 18px;
+}
+
+.titleSectionHeading {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.titleSectionSubtext {
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--text);
+  margin-top: 4px;
+}
+
+/* ── Parte 6: Pagos realizados — filtros ─────────────────────────────────── */
+.paymentsSection {
+  padding: 0 16px;
+}
+
+.paymentsSectionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.paymentsSectionTitle {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.filtersWrapper {
+  margin-bottom: 12px;
+}
+
+.filtersTopRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.viewModeRow {
+  display: flex;
+  gap: 6px;
+}
+
+.viewModeButton {
+  padding: 6px 14px;
+  border-radius: 5px;
+  border: 0.5px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  font-weight: 400;
+  font-size: 12px;
+  font-family: 'DM Sans', sans-serif;
+  cursor: pointer;
+}
+
+.viewModeButtonActive {
+  border: none;
+  background: var(--accent);
+  color: var(--surface);
+  font-weight: 600;
+}
+
+.totalText {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text);
+}
+
+.totalStrong {
+  font-weight: 700;
+}
+
+.monthYearRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.monthYearGroup {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.monthYearLabel {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text);
+}
+
+.monthYearSelect {
+  padding: 5px 8px;
+  border-radius: 5px;
+  border: 0.5px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  font-size: 12px;
+  font-family: 'DM Sans', sans-serif;
+  outline: none;
+  cursor: pointer;
+}
+
+/* ── Parte 6: Pagos realizados — lista ────────────────────────────────────── */
+.paymentsList {
+  background: var(--surface);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.paymentRow {
+  display: flex;
+  align-items: center;
+  padding: 10px 14px;
+  border-bottom: 0.5px solid var(--bg);
+  border-left: 4px solid var(--paid);
+  gap: 10px;
+  position: relative;
+}
+
+.paymentRowLast {
+  border-bottom: none;
+}
+
+.paymentDate {
+  text-align: center;
+  min-width: 28px;
+  flex-shrink: 0;
+}
+
+.paymentDateDay {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1;
+}
+
+.paymentDateMonth {
+  font-size: 9px;
+  font-weight: 600;
+  color: var(--text);
+  text-transform: uppercase;
+}
+
+.paymentDivider {
+  width: 1px;
+  height: 28px;
+  background: var(--border);
+  flex-shrink: 0;
+}
+
+.paymentInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+.paymentNameRow {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.paymentInstallment {
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--text);
+}
+
+.paymentCategoryRow {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.paymentCategoryDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+.paymentRecurrentTag {
+  font-weight: 400;
+}
+
+.paymentAmountBlock {
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.paymentAmount {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.variableBadge {
+  font-size: 9px;
+  background: var(--label-variable);
+  color: var(--surface);
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-weight: 600;
+}
+
+.paymentMenuWrapper {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.paymentMenuButton {
+  background: none;
+  border: none;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  border-radius: 4px;
+}

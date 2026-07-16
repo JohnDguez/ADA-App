@@ -7,6 +7,7 @@ import { fmt, dateOf, dateToStr, MONTHS, MONTHS_SHORT, CATEGORIES, cobroPeriod, 
 import { getCategoryIcon } from '../lib/categoryIcons'
 import { supabase } from '../lib/supabase'
 import { showToast } from '../components/Toast'
+import styles from './PaymentsPage.module.css'
 
 const INCOME_TYPES = ['Bono', 'Préstamo', 'Pago', 'Comisión', 'Otro']
 
@@ -477,25 +478,14 @@ export function PaymentsPage({ payments, profile, spaceSwitcher, activeSpaceHead
   const noIncomeYet = !(profile?.salary_enabled && profile?.salary_amount > 0) && periodIncomes.length === 0
 
   return (
-    <div style={{ paddingBottom: 120, background: 'var(--bg)', minHeight: '100vh' }} onClick={() => setOpenMenu(null)}>
+    <div className={styles.pageRoot} onClick={() => setOpenMenu(null)}>
 
       {/* Menú contextual flotante */}
       {openMenu && (
         <div
           onClick={e => e.stopPropagation()}
-          style={{
-            position: 'fixed',
-            top: openMenu.top,
-            bottom: openMenu.bottom,
-            right: openMenu.right,
-            zIndex: 999,
-            background: 'var(--menu-bg)',
-            border: '0.5px solid var(--border)',
-            borderRadius: 'var(--radius-sm)',
-            boxShadow: '0 4px 16px rgba(0,0,0,0.12)',
-            minWidth: 180,
-            overflow: 'hidden',
-          }}
+          className={styles.contextMenu}
+          style={{ top: openMenu.top, bottom: openMenu.bottom, right: openMenu.right }}
         >
           {(() => {
             const p = payments.find(x => x.id === openMenu.id)
@@ -515,38 +505,38 @@ export function PaymentsPage({ payments, profile, spaceSwitcher, activeSpaceHead
       {remModal && (
         <div
           onClick={() => { setRemModal(false); setRemCustomOpen(false) }}
-          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', zIndex: 1000, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}
+          className={styles.modalOverlayBottom}
         >
           <div
             onClick={e => e.stopPropagation()}
-            style={{ background: 'var(--surface)', borderRadius: '20px 20px 0 0', padding: '24px 20px 32px', width: '100%', maxWidth: 420, animation: 'modalSlideUp .32s cubic-bezier(0.25, 0.46, 0.45, 0.94) both' }}
+            className={styles.modalPanelBottom}
           >
-            <div style={{ textAlign: 'center', marginBottom: 20 }}>
-              <div style={{ fontSize: 28, marginBottom: 8 }}>
-                <CircleDollarSign size={36} color="var(--paid)" strokeWidth={1.8} style={{ display: 'block', margin: '0 auto 8px' }} />
+            <div className={styles.remanenteHeader}>
+              <div className={styles.remanenteIconWrapper}>
+                <CircleDollarSign size={36} color="var(--paid)" strokeWidth={1.8} className={styles.remanenteIcon} />
               </div>
-              <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--text)', marginBottom: 6 }}>
+              <div className={styles.remanenteTitle}>
                 ¡Quedó un remanente del periodo anterior!
               </div>
-              <div style={{ fontSize: 28, fontWeight: 700, color: 'var(--paid)', marginBottom: 6 }}>
+              <div className={styles.remanenteAmount}>
                 {fmt(remAmount)}
               </div>
-              <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--text)' }}>
+              <div className={styles.remanenteQuestion}>
                 ¿Quieres añadirlo a este periodo?
               </div>
             </div>
 
-            <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
+            <div className={styles.remanenteActionsRow}>
               <button
                 onClick={() => handleAddRemanente(remAmount)}
                 disabled={savingRem}
-                style={{ flex: 1, padding: '12px', background: 'var(--accent)', color: '#fff', border: 'none', borderRadius: 'var(--radius-sm)', fontSize: 14, fontWeight: 600, cursor: 'pointer', opacity: savingRem ? 0.6 : 1 }}
+                className={styles.remanenteConfirmButton}
               >
                 Sí, añadir al periodo
               </button>
               <button
                 onClick={() => { setRemModal(false); setRemCustomOpen(false) }}
-                style={{ flex: 1, padding: '12px', background: 'none', color: 'var(--text)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}
+                className={styles.remanenteCancelButton}
               >
                 No
               </button>
@@ -555,20 +545,20 @@ export function PaymentsPage({ payments, profile, spaceSwitcher, activeSpaceHead
             {/* Monto personalizado */}
             <button
               onClick={() => setRemCustomOpen(!remCustomOpen)}
-              style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '8px', background: 'none', border: 'none', fontSize: 13, fontWeight: 600, color: 'var(--text)', cursor: 'pointer' }}
+              className={styles.remanenteCustomToggle}
             >
               {remCustomOpen ? <ChevronUp size={15} /> : <ChevronDown size={15} />}
               Añadir monto personalizado
             </button>
 
             {remCustomOpen && (
-              <div style={{ marginTop: 10, display: 'flex', gap: 8 }}>
+              <div className={styles.remanenteCustomRow}>
                 <input
                   type="number"
                   placeholder="Monto personalizado"
                   value={remCustomAmount}
                   onChange={e => setRemCustomAmount(e.target.value)}
-                  style={{ flex: 1, padding: '10px 12px', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', fontSize: 14, fontWeight: 500, color: 'var(--text)', background: 'var(--bg)', outline: 'none', fontFamily: 'DM Sans, sans-serif' }}
+                  className={styles.remanenteCustomInput}
                 />
                 <button
                   onClick={() => {
@@ -576,7 +566,8 @@ export function PaymentsPage({ payments, profile, spaceSwitcher, activeSpaceHead
                     if (amt > 0) handleAddRemanente(amt)
                   }}
                   disabled={savingRem || !remCustomAmount || parseFloat(remCustomAmount) <= 0}
-                  style={{ padding: '10px 16px', background: 'var(--accent)', color: '#fff', border: 'none', borderRadius: 'var(--radius-sm)', fontSize: 13, fontWeight: 600, cursor: 'pointer', opacity: savingRem ? 0.6 : 1 }}
+                  className={styles.remanenteCustomButton}
+                  style={{ opacity: savingRem ? 0.6 : 1 }}
                 >
                   Añadir
                 </button>
@@ -590,35 +581,25 @@ export function PaymentsPage({ payments, profile, spaceSwitcher, activeSpaceHead
       {incomeModal && (
         <div
           onClick={() => setIncomeModal(false)}
-          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', zIndex: 1000, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}
+          className={styles.modalOverlayBottom}
         >
           <div
             onClick={e => e.stopPropagation()}
-            style={{ background: 'var(--surface)', borderRadius: '20px 20px 0 0', padding: '24px 20px 32px', width: '100%', maxWidth: 420, animation: 'modalSlideUp .32s cubic-bezier(0.25, 0.46, 0.45, 0.94) both' }}
+            className={styles.modalPanelBottom}
           >
-            <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--text)', marginBottom: 20 }}>
+            <div className={styles.incomeModalTitle}>
               Añadir Ingreso Extra
             </div>
 
             {/* Tipo */}
-            <div style={{ marginBottom: 16 }}>
-              <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--text)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>Tipo</div>
-              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+            <div className={styles.incomeFieldGroup}>
+              <div className={styles.incomeLabelMb8}>Tipo</div>
+              <div className={styles.incomeTypeRow}>
                 {INCOME_TYPES.map(t => (
                   <button
                     key={t}
                     onClick={() => setIncomeType(t)}
-                    style={{
-                      padding: '7px 14px',
-                      borderRadius: 5,
-                      border: incomeType === t ? 'none' : '1px solid var(--border)',
-                      background: incomeType === t ? 'var(--accent)' : 'var(--surface)',
-                      color: incomeType === t ? '#fff' : 'var(--text)',
-                      fontSize: 13,
-                      fontWeight: incomeType === t ? 700 : 500,
-                      cursor: 'pointer',
-                      fontFamily: 'DM Sans, sans-serif',
-                    }}
+                    className={`${styles.incomeTypeButton} ${incomeType === t ? styles.incomeTypeButtonActive : ''}`}
                   >
                     {t}
                   </button>
@@ -627,40 +608,40 @@ export function PaymentsPage({ payments, profile, spaceSwitcher, activeSpaceHead
             </div>
 
             {/* Monto */}
-            <div style={{ marginBottom: 16 }}>
-              <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--text)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>Monto</div>
+            <div className={styles.incomeFieldGroup}>
+              <div className={styles.incomeLabelMb6}>Monto</div>
               <input
                 type="number"
                 placeholder="$0"
                 value={incomeAmount}
                 onChange={e => setIncomeAmount(e.target.value)}
                 autoFocus
-                style={{ width: '100%', padding: '10px 12px', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', fontSize: 14, fontWeight: 500, color: 'var(--text)', background: 'var(--bg)', outline: 'none', fontFamily: 'DM Sans, sans-serif' }}
+                className={styles.incomeInput}
               />
             </div>
 
             {/* Nota opcional */}
-            <div style={{ marginBottom: 20 }}>
-              <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--text)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>Nota (opcional)</div>
+            <div className={styles.incomeFieldGroupLast}>
+              <div className={styles.incomeLabelMb6}>Nota (opcional)</div>
               <input
                 type="text"
                 placeholder="Ej. Bono de productividad"
                 value={incomeNote}
                 onChange={e => setIncomeNote(e.target.value)}
-                style={{ width: '100%', padding: '10px 12px', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', fontSize: 14, fontWeight: 500, color: 'var(--text)', background: 'var(--bg)', outline: 'none', fontFamily: 'DM Sans, sans-serif' }}
+                className={styles.incomeInput}
               />
             </div>
 
             <button
               onClick={handleAddIncome}
               disabled={savingIncome || !incomeAmount || parseFloat(incomeAmount) <= 0}
-              style={{ width: '100%', padding: '12px', background: 'var(--accent)', color: '#fff', border: 'none', borderRadius: 'var(--radius-sm)', fontSize: 14, fontWeight: 600, cursor: 'pointer', opacity: savingIncome || !incomeAmount || parseFloat(incomeAmount) <= 0 ? 0.6 : 1, fontFamily: 'DM Sans, sans-serif', marginBottom: 8 }}
+              className={styles.incomeSaveButton}
             >
               {savingIncome ? 'Guardando...' : 'Guardar ingreso'}
             </button>
             <button
               onClick={() => setIncomeModal(false)}
-              style={{ width: '100%', padding: '10px', background: 'none', color: 'var(--text)', border: '0.5px solid var(--border)', borderRadius: 'var(--radius-sm)', fontSize: 14, fontWeight: 500, cursor: 'pointer', fontFamily: 'DM Sans, sans-serif' }}
+              className={styles.incomeCancelButton}
             >
               Cancelar
             </button>
@@ -672,42 +653,32 @@ export function PaymentsPage({ payments, profile, spaceSwitcher, activeSpaceHead
       {manageIncomeModal && (
         <div
           onClick={() => { setManageIncomeModal(false); cancelEditIncome(); setConfirmDeleteIncomeId(null) }}
-          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', zIndex: 1000, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}
+          className={styles.modalOverlayBottom}
         >
           <div
             onClick={e => e.stopPropagation()}
-            style={{ background: 'var(--surface)', borderRadius: '20px 20px 0 0', padding: '24px 20px 32px', width: '100%', maxWidth: 420, maxHeight: '80vh', overflowY: 'auto', animation: 'modalSlideUp .32s cubic-bezier(0.25, 0.46, 0.45, 0.94) both' }}
+            className={`${styles.modalPanelBottom} ${styles.manageModalPanelExtra}`}
           >
-            <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--text)', marginBottom: 16 }}>
+            <div className={styles.manageModalTitle}>
               Ingresos Extras del Periodo
             </div>
 
             {periodIncomes.length === 0 ? (
-              <div style={{ textAlign: 'center', padding: '20px 0', fontSize: 13, fontWeight: 500, color: 'var(--text)' }}>
+              <div className={styles.manageEmptyText}>
                 Sin ingresos extras este periodo
               </div>
             ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 8 }}>
+              <div className={styles.manageList}>
                 {periodIncomes.map(inc => (
-                  <div key={inc.id} style={{ border: '0.5px solid var(--border)', borderRadius: 'var(--radius-sm)', padding: 12 }}>
+                  <div key={inc.id} className={styles.manageListItem}>
                     {editingIncomeId === inc.id ? (
                       <>
-                        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 10 }}>
+                        <div className={styles.editTypeRow}>
                           {INCOME_TYPES.map(t => (
                             <button
                               key={t}
                               onClick={() => setEditIncomeType(t)}
-                              style={{
-                                padding: '6px 12px',
-                                borderRadius: 5,
-                                border: editIncomeType === t ? 'none' : '1px solid var(--border)',
-                                background: editIncomeType === t ? 'var(--accent)' : 'var(--surface)',
-                                color: editIncomeType === t ? '#fff' : 'var(--text)',
-                                fontSize: 12,
-                                fontWeight: editIncomeType === t ? 700 : 500,
-                                cursor: 'pointer',
-                                fontFamily: 'DM Sans, sans-serif',
-                              }}
+                              className={`${styles.editTypeButton} ${editIncomeType === t ? styles.editTypeButtonActive : ''}`}
                             >
                               {t}
                             </button>
@@ -718,26 +689,26 @@ export function PaymentsPage({ payments, profile, spaceSwitcher, activeSpaceHead
                           placeholder="$0"
                           value={editIncomeAmount}
                           onChange={e => setEditIncomeAmount(e.target.value)}
-                          style={{ width: '100%', padding: '9px 11px', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', fontSize: 13, fontWeight: 500, color: 'var(--text)', background: 'var(--bg)', outline: 'none', fontFamily: 'DM Sans, sans-serif', marginBottom: 8 }}
+                          className={styles.editInput}
                         />
                         <input
                           type="text"
                           placeholder="Nota (opcional)"
                           value={editIncomeNote}
                           onChange={e => setEditIncomeNote(e.target.value)}
-                          style={{ width: '100%', padding: '9px 11px', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', fontSize: 13, fontWeight: 500, color: 'var(--text)', background: 'var(--bg)', outline: 'none', fontFamily: 'DM Sans, sans-serif', marginBottom: 10 }}
+                          className={styles.editInputMb10}
                         />
-                        <div style={{ display: 'flex', gap: 8 }}>
+                        <div className={styles.editActionsRow}>
                           <button
                             onClick={() => handleUpdateIncome(inc.id)}
                             disabled={savingEditIncome || !editIncomeAmount || parseFloat(editIncomeAmount) <= 0}
-                            style={{ flex: 1, padding: '9px', background: 'var(--accent)', color: '#fff', border: 'none', borderRadius: 5, fontSize: 13, fontWeight: 600, cursor: 'pointer', opacity: savingEditIncome || !editIncomeAmount || parseFloat(editIncomeAmount) <= 0 ? 0.6 : 1, fontFamily: 'DM Sans, sans-serif' }}
+                            className={styles.editSaveButton}
                           >
                             {savingEditIncome ? 'Guardando...' : 'Guardar'}
                           </button>
                           <button
                             onClick={cancelEditIncome}
-                            style={{ flex: 1, padding: '9px', background: 'none', color: 'var(--text)', border: '0.5px solid var(--border)', borderRadius: 5, fontSize: 13, fontWeight: 500, cursor: 'pointer', fontFamily: 'DM Sans, sans-serif' }}
+                            className={styles.editCancelButton}
                           >
                             Cancelar
                           </button>
@@ -745,34 +716,34 @@ export function PaymentsPage({ payments, profile, spaceSwitcher, activeSpaceHead
                       </>
                     ) : confirmDeleteIncomeId === inc.id ? (
                       <div>
-                        <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)', marginBottom: 10 }}>
+                        <div className={styles.confirmDeleteText}>
                           ¿Eliminar este ingreso?
                         </div>
-                        <div style={{ display: 'flex', gap: 8 }}>
+                        <div className={styles.confirmDeleteRow}>
                           <button
                             onClick={() => handleDeleteIncome(inc.id)}
-                            style={{ flex: 1, padding: '9px', background: 'var(--danger)', color: '#fff', border: 'none', borderRadius: 5, fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'DM Sans, sans-serif' }}
+                            className={styles.confirmDeleteButton}
                           >
                             Sí, eliminar
                           </button>
                           <button
                             onClick={() => setConfirmDeleteIncomeId(null)}
-                            style={{ flex: 1, padding: '9px', background: 'none', color: 'var(--text)', border: '0.5px solid var(--border)', borderRadius: 5, fontSize: 13, fontWeight: 500, cursor: 'pointer', fontFamily: 'DM Sans, sans-serif' }}
+                            className={styles.confirmDeleteCancelButton}
                           >
                             Cancelar
                           </button>
                         </div>
                       </div>
                     ) : (
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <div className={styles.incomeRow}>
                         <div>
-                          <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)' }}>{inc.type}</div>
-                          {inc.note && <div style={{ fontSize: 11, fontWeight: 400, color: 'var(--text)', marginTop: 2 }}>{inc.note}</div>}
+                          <div className={styles.incomeRowType}>{inc.type}</div>
+                          {inc.note && <div className={styles.incomeRowNote}>{inc.note}</div>}
                         </div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                          <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--paid)' }}>+{fmt(inc.amount)}</span>
-                          <Pencil size={15} color="var(--text)" style={{ cursor: 'pointer' }} onClick={() => startEditIncome(inc)} />
-                          <Trash2 size={15} color="var(--danger)" style={{ cursor: 'pointer' }} onClick={() => setConfirmDeleteIncomeId(inc.id)} />
+                        <div className={styles.incomeRowActions}>
+                          <span className={styles.incomeRowAmount}>+{fmt(inc.amount)}</span>
+                          <Pencil size={15} color="var(--text)" className={styles.iconButtonCursor} onClick={() => startEditIncome(inc)} />
+                          <Trash2 size={15} color="var(--danger)" className={styles.iconButtonCursor} onClick={() => setConfirmDeleteIncomeId(inc.id)} />
                         </div>
                       </div>
                     )}
@@ -783,7 +754,7 @@ export function PaymentsPage({ payments, profile, spaceSwitcher, activeSpaceHead
 
             <button
               onClick={() => { setManageIncomeModal(false); cancelEditIncome(); setConfirmDeleteIncomeId(null) }}
-              style={{ width: '100%', padding: '10px', background: 'none', color: 'var(--text)', border: '0.5px solid var(--border)', borderRadius: 'var(--radius-sm)', fontSize: 14, fontWeight: 500, cursor: 'pointer', fontFamily: 'DM Sans, sans-serif', marginTop: 4 }}
+              className={styles.manageCloseButton}
             >
               Cerrar
             </button>
@@ -798,7 +769,7 @@ export function PaymentsPage({ payments, profile, spaceSwitcher, activeSpaceHead
         onGoSettings={onGoSettings}
       />
 
-      <div style={{ background: 'var(--bg)', borderRadius: '24px 24px 0 0', marginTop: -24, position: 'relative', zIndex: 10 }}>
+      <div className={styles.roundedContentWrapper}>
         {spaceSwitcher}
 
         {activeSpaceHeader}
@@ -807,7 +778,7 @@ export function PaymentsPage({ payments, profile, spaceSwitcher, activeSpaceHead
         <div className={spaceJustChanged ? 'content-slide-up' : ''}>
 
         {rawActiveSpaceId === 'new' ? (
-          <div style={{ marginTop: 16 }}>
+          <div className={styles.newSpacePanelWrapper}>
             <NewSharedSpacePanel
               profile={profile}
               sharedSpaces={sharedSpaces}
@@ -819,28 +790,23 @@ export function PaymentsPage({ payments, profile, spaceSwitcher, activeSpaceHead
         ) : (
         <>
         {/* Zona de título con fondo diferente */}
-        <div style={{ padding: '16px 16px 18px' }}>
-          <div style={{ fontSize: 22, fontWeight: 700, color: 'var(--text)' }}>Mis gastos e ingresos</div>
-          <div style={{ fontSize: 13, fontWeight: 400, color: 'var(--text)', marginTop: 4 }}>Historial, análisis y balance de tus finanzas del periodo.</div>
+        <div className={styles.titleSection}>
+          <div className={styles.titleSectionHeading}>Mis gastos e ingresos</div>
+          <div className={styles.titleSectionSubtext}>Historial, análisis y balance de tus finanzas del periodo.</div>
         </div>
 
 
         {/* ── Sin salario fijo y sin ingresos capturados todavía: CTA grande
              en vez de esconder la sección por completo ── */}
         {noIncomeYet && (
-          <div data-coachmark="gastos-disponible-card" style={{ margin: '0 16px 16px', background: 'var(--surface)', borderRadius: 'var(--radius)', padding: '20px 16px', textAlign: 'center' }}>
-            <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--text)', marginBottom: 14 }}>
+          <div data-coachmark="gastos-disponible-card" className={styles.noIncomeCard}>
+            <div className={styles.noIncomeText}>
               Registra un ingreso de este periodo para ver cuánto te queda disponible
             </div>
             <button
               data-coachmark="gastos-add-income-button"
               onClick={() => setIncomeModal(true)}
-              style={{
-                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-                width: '100%', padding: '14px', borderRadius: 'var(--radius-sm)',
-                border: 'none', background: 'var(--accent)', color: '#fff',
-                fontSize: 15, fontWeight: 600, fontFamily: 'DM Sans, sans-serif', cursor: 'pointer',
-              }}
+              className={styles.noIncomeButton}
             >
               <Plus size={18} strokeWidth={2.2} />
               Añadir ingreso
@@ -850,67 +816,51 @@ export function PaymentsPage({ payments, profile, spaceSwitcher, activeSpaceHead
 
         {/* ── BALANCE DEL PERIODO (salario fijo, o al menos un ingreso extra capturado) ── */}
         {showBalance && (
-          <div data-coachmark="gastos-disponible-card" style={{ margin: '0 16px 16px', background: 'var(--surface)', borderRadius: 'var(--radius)', padding: '14px 16px' }}>
+          <div data-coachmark="gastos-disponible-card" className={styles.balanceCard}>
 
             {/* Cabecera con botón Añadir ingreso */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
+            <div className={styles.balanceHeader}>
               <div>
-                <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--text)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 15 }}>Disponible Este Periodo</div>
-                <div style={{ fontSize: 26, fontWeight: 700, color: sobrePasado ? 'var(--danger)' : 'var(--paid)', lineHeight: 1 }}>
+                <div className={styles.balanceLabel}>Disponible Este Periodo</div>
+                <div className={styles.balanceAmount} style={{ color: sobrePasado ? 'var(--danger)' : 'var(--paid)' }}>
                   {sobrePasado ? '-' : ''}{fmt(Math.abs(disponible))}
                 </div>
               </div>
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6 }}>
+              <div className={styles.balanceActions}>
                 {/* Botón discreto Añadir ingreso */}
                 <button
                   data-coachmark="gastos-add-income-button"
                   onClick={() => setIncomeModal(true)}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 5,
-                    padding: '6px 10px',
-                    borderRadius: 5,
-                    border: '1px solid var(--border)',
-                    background: 'var(--surface)',
-                    color: 'var(--text)',
-                    fontSize: 12,
-                    fontWeight: 600,
-                    cursor: 'pointer',
-                    fontFamily: 'DM Sans, sans-serif',
-                    flexShrink: 0,
-                  }}
+                  className={styles.addIncomeButtonSmall}
                 >
                   <Plus size={13} strokeWidth={2.2} />
                   Añadir ingreso
                 </button>
-                <div style={{ textAlign: 'right' }}>
-                  <div style={{ fontSize: 10, fontWeight: 500, color: 'var(--text)' }}>
-                    {fmt(totalGastos)} <span style={{ fontWeight: 400 }}>/ {fmt(ingresoTotal)}</span>
+                <div className={styles.balanceSubtext}>
+                  <div className={styles.balanceSubtextMain}>
+                    {fmt(totalGastos)} <span className={styles.balanceSubtextFaded}>/ {fmt(ingresoTotal)}</span>
                   </div>
                   {totalExtras > 0 && (
-                    <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--paid)' }}>
+                    <div className={styles.balanceExtras}>
                       +{fmt(totalExtras)} extras
                     </div>
                   )}
                   {sobrePasado && (
-                    <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--danger)' }}>Presupuesto excedido</div>
+                    <div className={styles.balanceOverBudget}>Presupuesto excedido</div>
                   )}
                 </div>
               </div>
             </div>
 
             {/* Barra heatmap segmentada */}
-            <div style={{ height: 12, borderRadius: 6, overflow: 'hidden', display: 'flex', background: 'var(--border)', marginBottom: 10 }}>
+            <div className={styles.heatmapBar}>
               {segmentos.map(({ cat, total }) => (
                 <div
                   key={cat}
+                  className={styles.heatmapSegment}
                   style={{
-                    height: '100%',
                     width: `${Math.min((total / ingresoTotal) * 100, 100)}%`,
                     background: getCatColor(cat, profile.custom_categories, profile.category_colors),
-                    flexShrink: 0,
-                    transition: 'width .4s ease',
                   }}
                   title={`${cat}: ${fmt(total)}`}
                 />
@@ -918,25 +868,15 @@ export function PaymentsPage({ payments, profile, spaceSwitcher, activeSpaceHead
             </div>
 
             {/* Chips de categoría */}
-            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+            <div className={styles.categoryChipsRow}>
               {segmentos.map(({ cat, total }) => {
                 const catColor = getCatColor(cat, profile.custom_categories, profile.category_colors)
                 const CatIcon  = getCategoryIcon(cat, profile.category_icons)
                 return (
-                  <div key={cat} style={{
-                    padding: '3px 10px',
-                    borderRadius: 5,
-                    fontSize: 11,
-                    fontWeight: 500,
-                    background: 'var(--section-bg)',
-                    color: catColor,
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 5,
-                  }}>
+                  <div key={cat} className={styles.categoryChip} style={{ color: catColor }}>
                     {CatIcon
                       ? <CatIcon size={12} color={catColor} strokeWidth={2} />
-                      : <span style={{ width: 6, height: 6, borderRadius: '50%', background: catColor, display: 'inline-block' }} />
+                      : <span className={styles.categoryChipDot} style={{ background: catColor }} />
                     }
                     {cat} {fmt(total)}
                   </div>
@@ -948,12 +888,12 @@ export function PaymentsPage({ payments, profile, spaceSwitcher, activeSpaceHead
             {!loadingIncomes && periodIncomes.length > 0 && (() => {
               const totalInc = periodIncomes.reduce((a, i) => a + Number(i.amount), 0)
               return (
-                <div style={{ marginTop: 12, paddingTop: 12, borderTop: '0.5px solid var(--border)' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-                    <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--text)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Ingresos Extras Este Periodo</div>
+                <div className={styles.extrasSection}>
+                  <div className={styles.extrasHeader}>
+                    <div className={styles.extrasLabel}>Ingresos Extras Este Periodo</div>
                     <button
                       onClick={() => setManageIncomeModal(true)}
-                      style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '3px 8px', borderRadius: 5, border: 'none', background: 'transparent', color: 'var(--accent)', fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: 'DM Sans, sans-serif' }}
+                      className={styles.extrasEditButton}
                     >
                       <Pencil size={11} strokeWidth={2.2} />
                       Editar
@@ -962,34 +902,34 @@ export function PaymentsPage({ payments, profile, spaceSwitcher, activeSpaceHead
 
                   <button
                     onClick={() => setIncomesExpanded(v => !v)}
-                    style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, background: 'var(--section-bg)', border: 'none', borderRadius: 8, padding: '8px 10px', cursor: 'pointer' }}
+                    className={styles.extrasSummaryButton}
                   >
-                    <div style={{ width: 18, height: 18, borderRadius: '50%', background: 'var(--paid)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                      <Check size={10} color="#fff" strokeWidth={3} />
+                    <div className={styles.extrasCheckIcon}>
+                      <Check size={10} color="var(--surface)" strokeWidth={3} />
                     </div>
-                    <span style={{ flex: 1, fontSize: 12, fontWeight: 400, color: 'var(--text)', textAlign: 'left' }}>
+                    <span className={styles.extrasSummaryText}>
                       {periodIncomes.length} ingreso{periodIncomes.length !== 1 ? 's' : ''} · +{fmt(totalInc)}
                     </span>
                     {incomesExpanded ? <ChevronUp size={15} color="var(--text)" /> : <ChevronDown size={15} color="var(--text)" />}
                   </button>
 
                   {incomesExpanded && (
-                    <div style={{ marginTop: 6, display: 'flex', flexDirection: 'column', gap: 6 }}>
+                    <div className={styles.extrasList}>
                       {periodIncomes.map(inc => {
                         const d = inc.created_at ? new Date(inc.created_at) : null
                         return (
-                          <div key={inc.id} style={{ display: 'flex', alignItems: 'center', gap: 10, background: 'var(--section-bg)', borderRadius: 8, padding: '9px 12px' }}>
+                          <div key={inc.id} className={styles.extrasListItem}>
                             {d && (
-                              <div style={{ width: 26, textAlign: 'center', flexShrink: 0 }}>
-                                <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)', lineHeight: 1.1 }}>{d.getDate()}</div>
-                                <div style={{ fontSize: 9, fontWeight: 500, color: 'var(--text)', textTransform: 'uppercase' }}>{MONTHS_SHORT[d.getMonth()]}</div>
+                              <div className={styles.extrasItemDate}>
+                                <div className={styles.extrasItemDay}>{d.getDate()}</div>
+                                <div className={styles.extrasItemMonth}>{MONTHS_SHORT[d.getMonth()]}</div>
                               </div>
                             )}
-                            <div style={{ flex: 1, minWidth: 0, overflow: 'hidden' }}>
-                              <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--text)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{inc.type}</div>
-                              {inc.note && <div style={{ fontSize: 11, fontWeight: 400, color: 'var(--text)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{inc.note}</div>}
+                            <div className={styles.extrasItemContent}>
+                              <div className={styles.extrasItemType}>{inc.type}</div>
+                              {inc.note && <div className={styles.extrasItemNote}>{inc.note}</div>}
                             </div>
-                            <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--paid)', flexShrink: 0 }}>+{fmt(inc.amount)}</span>
+                            <span className={styles.extrasItemAmount}>+{fmt(inc.amount)}</span>
                           </div>
                         )
                       })}
@@ -1002,7 +942,7 @@ export function PaymentsPage({ payments, profile, spaceSwitcher, activeSpaceHead
         )}
 
         {/* Chips de categoría */}
-        <div data-coachmark="gastos-category-chips" style={{ padding: '0 16px 15px', display: 'flex', gap: 6, overflowX: 'auto', msOverflowStyle: 'none', scrollbarWidth: 'none' }}>
+        <div data-coachmark="gastos-category-chips" className={styles.categoryChipsScroll}>
           <FilterChip label="Todos" active={!selectedCat} onClick={() => setSelectedCat(null)} />
           {visibleCats.map(c => (
             <FilterChip
@@ -1017,44 +957,44 @@ export function PaymentsPage({ payments, profile, spaceSwitcher, activeSpaceHead
         </div>
 
         {/* Stats */}
-        <div style={{ margin: '0 16px 12px', background: 'var(--surface)', borderRadius: 'var(--radius)', padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 16 }}>
-          <div style={{ flex: 1.6 }}>
-            <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--text)', marginBottom: 4 }}>
+        <div className={styles.statsCard}>
+          <div className={styles.statsBlockWide}>
+            <div className={styles.statsLabel}>
               Total {monthsBack} meses
             </div>
-            <div style={{ fontSize: 28, fontWeight: 700, color: 'var(--text)', lineHeight: 1.1 }}>{fmt(grandTotal)}</div>
+            <div className={styles.statsValueLarge}>{fmt(grandTotal)}</div>
           </div>
-          <div style={{ width: 1, height: 40, background: 'var(--border)', flexShrink: 0 }} />
-          <div style={{ flex: 1 }}>
-            <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--text)', marginBottom: 4 }}>
+          <div className={styles.statsDivider} />
+          <div className={styles.statsBlock}>
+            <div className={styles.statsLabel}>
               Promedio mensual
             </div>
-            <div style={{ fontSize: 20, fontWeight: 700, color: 'var(--text)', lineHeight: 1.1 }}>{fmt(Math.round(avgMonthly))}</div>
+            <div className={styles.statsValue}>{fmt(Math.round(avgMonthly))}</div>
           </div>
         </div>
 
         {/* Selector de rango */}
-        <div style={{ padding: '0 16px 10px', display: 'flex', gap: 6 }}>
+        <div className={styles.rangeSelectorRow}>
           {[3, 6, 12].map(n => (
             <FilterChip key={n} label={`${n} meses`} active={monthsBack === n} onClick={() => { setMonthsBack(n); setSelectedCat(null) }} />
           ))}
         </div>
 
         {/* Gráfica */}
-        <div data-coachmark="gastos-monthly-chart" style={{ margin: '0 16px 20px', background: 'var(--surface)', borderRadius: 'var(--radius)', padding: '16px 14px' }}>
-          <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)', marginBottom: 14 }}>
+        <div data-coachmark="gastos-monthly-chart" className={styles.chartCard}>
+          <div className={styles.chartTitle}>
             Gastos Mensuales
           </div>
           {/* Labels de monto arriba */}
-          <div style={{ display: 'flex', gap: 6, marginBottom: 4, height: 16 }}>
+          <div className={styles.chartLabelsRow}>
             {chartMonths.map((m, i) => {
               const total     = chartTotals[i]
               const isCurrent = m.month === now.getMonth() && m.year === now.getFullYear()
               const barColor  = selectedCat ? getCatColor(selectedCat, profile.custom_categories, profile.category_colors) : 'var(--accent)'
               return (
-                <div key={i} style={{ flex: 1, textAlign: 'center' }}>
+                <div key={i} className={styles.chartLabelCell}>
                   {total > 0 && (
-                    <div style={{ fontSize: 9, fontWeight: 700, color: isCurrent ? barColor : 'var(--text)' }}>
+                    <div className={styles.chartLabelAmount} style={{ color: isCurrent ? barColor : 'var(--text)' }}>
                       {fmt(total)}
                     </div>
                   )}
@@ -1063,34 +1003,31 @@ export function PaymentsPage({ payments, profile, spaceSwitcher, activeSpaceHead
             })}
           </div>
           {/* Barras */}
-          <div style={{ display: 'flex', alignItems: 'flex-end', gap: 6, height: 80 }}>
+          <div className={styles.chartBarsRow}>
             {chartMonths.map((m, i) => {
               const total     = chartTotals[i]
               const heightPct = (total / maxChart) * 100
               const isCurrent = m.month === now.getMonth() && m.year === now.getFullYear()
               const barColor  = selectedCat ? getCatColor(selectedCat, profile.custom_categories, profile.category_colors) : 'var(--accent)'
               return (
-                <div key={i} style={{ flex: 1, height: '100%', display: 'flex', alignItems: 'flex-end' }}>
-                  <div style={{
-                    width: '100%',
+                <div key={i} className={styles.chartBarCell}>
+                  <div className={styles.chartBar} style={{
                     height: `${Math.max(heightPct, total > 0 ? 3 : 0)}%`,
                     background: isCurrent ? barColor : (selectedCat ? barColor : 'var(--accent-border)'),
                     opacity: isCurrent ? 1 : (selectedCat ? 0.45 : 1),
-                    borderRadius: '3px 3px 0 0',
                     minHeight: total > 0 ? 3 : 0,
-                    transition: 'height .3s',
                   }} />
                 </div>
               )
             })}
           </div>
           {/* Labels de mes abajo */}
-          <div style={{ display: 'flex', gap: 6, marginTop: 4 }}>
+          <div className={styles.chartMonthLabelsRow}>
             {chartMonths.map((m, i) => {
               const isCurrent = m.month === now.getMonth() && m.year === now.getFullYear()
               const barColor  = selectedCat ? getCatColor(selectedCat, profile.custom_categories, profile.category_colors) : 'var(--accent)'
               return (
-                <div key={i} style={{ flex: 1, textAlign: 'center', fontSize: 9, fontWeight: isCurrent ? 700 : 500, color: isCurrent ? barColor : 'var(--text)' }}>
+                <div key={i} className={styles.chartMonthLabel} style={{ fontWeight: isCurrent ? 700 : 500, color: isCurrent ? barColor : 'var(--text)' }}>
                   {MONTHS_SHORT[m.month]}
                 </div>
               )
@@ -1099,11 +1036,11 @@ export function PaymentsPage({ payments, profile, spaceSwitcher, activeSpaceHead
         </div>
 
         {/* Por Categoría */}
-        <div style={{ padding: '0 16px 20px' }}>
-          <div style={{ marginBottom: 10 }}>
-            <span style={{ fontSize: 15, fontWeight: 700, color: 'var(--text)' }}>Por Categoría</span>
+        <div className={styles.categorySection}>
+          <div className={styles.categorySectionTitle}>
+            <span className={styles.categorySectionTitleText}>Por Categoría</span>
           </div>
-          <div style={{ display: 'flex', gap: 6, marginBottom: 14 }}>
+          <div className={styles.categoryRangeRow}>
             {[{ id: 'periodo', label: 'Periodo' }, { id: 'mes', label: 'Mes Actual' }, { id: 'año', label: 'Año' }].map(o => (
               <FilterChip key={o.id} label={o.label} active={catRange === o.id} onClick={() => setCatRange(o.id)} />
             ))}
@@ -1118,30 +1055,27 @@ export function PaymentsPage({ payments, profile, spaceSwitcher, activeSpaceHead
               onSecondaryClick={onGoCategories}
             />
           ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <div className={styles.categoryList}>
               {catData.map(({ cat, total }) => {
                 const catColor = getCatColor(cat, profile.custom_categories, profile.category_colors)
                 const CatIcon  = getCategoryIcon(cat, profile.category_icons)
                 return (
-                  <div key={cat} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <div style={{ width: 36, height: 36, borderRadius: 8, background: catColor, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <div key={cat} className={styles.categoryListItem}>
+                    <div className={styles.categoryListIconWrapper} style={{ background: catColor }}>
                       {CatIcon
                         ? <CatIcon size={19} color="var(--text)" strokeWidth={2} />
-                        : <span style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--text)' }} />
+                        : <span className={styles.categoryListFallbackDot} />
                       }
                     </div>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 5 }}>
-                        <span style={{ fontSize: 13, fontWeight: 500, color: 'var(--text)' }}>{cat}</span>
-                        <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)' }}>{fmt(total)}</span>
+                    <div className={styles.categoryListContent}>
+                      <div className={styles.categoryListRow}>
+                        <span className={styles.categoryListName}>{cat}</span>
+                        <span className={styles.categoryListAmount}>{fmt(total)}</span>
                       </div>
-                      <div style={{ height: 6, background: 'var(--border)', borderRadius: 'var(--radius-full)', overflow: 'hidden' }}>
-                        <div style={{
-                          height: '100%',
+                      <div className={styles.categoryProgressTrack}>
+                        <div className={styles.categoryProgressFill} style={{
                           width: `${(total / maxCat) * 100}%`,
                           background: catColor,
-                          borderRadius: 'var(--radius-full)',
-                          transition: 'width .4s ease',
                         }} />
                       </div>
                     </div>
@@ -1153,41 +1087,41 @@ export function PaymentsPage({ payments, profile, spaceSwitcher, activeSpaceHead
         </div>
 
         {/* ── Pagos realizados ── */}
-        <div style={{ padding: '0 16px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-            <span style={{ fontSize: 15, fontWeight: 700, color: 'var(--text)' }}>Pagos</span>
+        <div className={styles.paymentsSection}>
+          <div className={styles.paymentsSectionHeader}>
+            <span className={styles.paymentsSectionTitle}>Pagos</span>
           </div>
 
           {/* Filtros */}
-          <div style={{ marginBottom: 12 }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-              <div style={{ display: 'flex', gap: 6 }}>
+          <div className={styles.filtersWrapper}>
+            <div className={styles.filtersTopRow}>
+              <div className={styles.viewModeRow}>
                 {[['periodo','Periodo actual'],['mes','Por mes']].map(([val, label]) => (
                   <button key={val} onClick={() => setViewMode(val)}
-                    style={{ padding: '6px 14px', borderRadius: 5, border: viewMode === val ? 'none' : '0.5px solid var(--border)', background: viewMode === val ? 'var(--accent)' : 'var(--surface)', color: viewMode === val ? 'var(--surface)' : 'var(--text)', fontWeight: viewMode === val ? 600 : 400, fontSize: 12, fontFamily: 'DM Sans, sans-serif', cursor: 'pointer' }}>
+                    className={`${styles.viewModeButton} ${viewMode === val ? styles.viewModeButtonActive : ''}`}>
                     {label}
                   </button>
                 ))}
               </div>
               {paidInView.length > 0 && (
-                <span style={{ fontSize: 12, fontWeight: 500, color: 'var(--text)' }}>
-                  Total: <strong style={{ fontWeight: 700 }}>{fmt(totalInView)}</strong>
+                <span className={styles.totalText}>
+                  Total: <strong className={styles.totalStrong}>{fmt(totalInView)}</strong>
                 </span>
               )}
             </div>
             {viewMode === 'mes' && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <span style={{ fontSize: 12, fontWeight: 500, color: 'var(--text)' }}>Mes:</span>
+              <div className={styles.monthYearRow}>
+                <div className={styles.monthYearGroup}>
+                  <span className={styles.monthYearLabel}>Mes:</span>
                   <select value={viewMonth} onChange={e => setViewMonth(Number(e.target.value))}
-                    style={{ padding: '5px 8px', borderRadius: 5, border: '0.5px solid var(--border)', background: 'var(--surface)', color: 'var(--text)', fontSize: 12, fontFamily: 'DM Sans, sans-serif', outline: 'none', cursor: 'pointer' }}>
+                    className={styles.monthYearSelect}>
                     {MONTHS.map((m, i) => <option key={i} value={i}>{m}</option>)}
                   </select>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <span style={{ fontSize: 12, fontWeight: 500, color: 'var(--text)' }}>Año:</span>
+                <div className={styles.monthYearGroup}>
+                  <span className={styles.monthYearLabel}>Año:</span>
                   <select value={viewYear} onChange={e => setViewYear(Number(e.target.value))}
-                    style={{ padding: '5px 8px', borderRadius: 5, border: '0.5px solid var(--border)', background: 'var(--surface)', color: 'var(--text)', fontSize: 12, fontFamily: 'DM Sans, sans-serif', outline: 'none', cursor: 'pointer' }}>
+                    className={styles.monthYearSelect}>
                     {availableYears.map(y => <option key={y} value={y}>{y}</option>)}
                   </select>
                 </div>
@@ -1203,48 +1137,41 @@ export function PaymentsPage({ payments, profile, spaceSwitcher, activeSpaceHead
             />
           ) : (
             <>
-              <div style={{ background: 'var(--surface)', borderRadius: 'var(--radius)', overflow: 'hidden' }}>
+              <div className={styles.paymentsList}>
                 {paidInView.map((p, i) => {
                   const paidDate = p.paid_at ? new Date(p.paid_at) : dateOf(p.due_date)
                   const isLast   = i === paidInView.length - 1
                   return (
-                    <div key={p.id} style={{
-                      display: 'flex', alignItems: 'center',
-                      padding: '10px 14px',
-                      borderBottom: isLast ? 'none' : '0.5px solid var(--bg)',
-                      borderLeft: '4px solid var(--paid)',
-                      gap: 10,
-                      position: 'relative',
-                    }}>
-                      <div style={{ textAlign: 'center', minWidth: 28, flexShrink: 0 }}>
-                        <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text)', lineHeight: 1 }}>{paidDate.getDate()}</div>
-                        <div style={{ fontSize: 9, fontWeight: 600, color: 'var(--text)', textTransform: 'uppercase' }}>{MONTHS_SHORT[paidDate.getMonth()]}</div>
+                    <div key={p.id} className={`${styles.paymentRow} ${isLast ? styles.paymentRowLast : ''}`}>
+                      <div className={styles.paymentDate}>
+                        <div className={styles.paymentDateDay}>{paidDate.getDate()}</div>
+                        <div className={styles.paymentDateMonth}>{MONTHS_SHORT[paidDate.getMonth()]}</div>
                       </div>
-                      <div style={{ width: 1, height: 28, background: 'var(--border)', flexShrink: 0 }} />
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)', display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <div className={styles.paymentDivider} />
+                      <div className={styles.paymentInfo}>
+                        <div className={styles.paymentNameRow}>
                           {p.name}
                           {p.is_installment && (
-                            <span style={{ fontSize: 10, fontWeight: 500, color: 'var(--text)' }}>
+                            <span className={styles.paymentInstallment}>
                               {p.current_installment}/{p.total_installments}
                             </span>
                           )}
                         </div>
-                        <div style={{ fontSize: 11, fontWeight: 500, color: 'var(--text)', display: 'flex', alignItems: 'center', gap: 5 }}>
-                          <span style={{ width: 6, height: 6, borderRadius: '50%', background: getCatColor(p.category, profile.custom_categories, profile.category_colors), display: 'inline-block', flexShrink: 0 }} />
+                        <div className={styles.paymentCategoryRow}>
+                          <span className={styles.paymentCategoryDot} style={{ background: getCatColor(p.category, profile.custom_categories, profile.category_colors) }} />
                           {p.category}
-                          {p.is_recurrent && <span style={{ fontWeight: 400 }}>· Mensual</span>}
+                          {p.is_recurrent && <span className={styles.paymentRecurrentTag}>· Mensual</span>}
                         </div>
                       </div>
-                      <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                        <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text)' }}>{fmt(p.amount)}</div>
+                      <div className={styles.paymentAmountBlock}>
+                        <div className={styles.paymentAmount}>{fmt(p.amount)}</div>
                         {p.is_variable && (
-                          <span style={{ fontSize: 9, background: 'var(--label-variable)', color: '#fff', padding: '1px 6px', borderRadius: 4, fontWeight: 600 }}>
+                          <span className={styles.variableBadge}>
                             Variable
                           </span>
                         )}
                       </div>
-                      <div style={{ position: 'relative', flexShrink: 0 }}>
+                      <div className={styles.paymentMenuWrapper}>
                         <button
                           onClick={e => {
                             e.stopPropagation()
@@ -1263,7 +1190,7 @@ export function PaymentsPage({ payments, profile, spaceSwitcher, activeSpaceHead
                               right: window.innerWidth - rect.right,
                             })
                           }}
-                          style={{ background: 'none', border: 'none', padding: '4px', display: 'flex', alignItems: 'center', cursor: 'pointer', borderRadius: 4 }}
+                          className={styles.paymentMenuButton}
                         >
                           <MoreVertical size={16} color="var(--text)" strokeWidth={1.8} />
                         </button>
@@ -1286,8 +1213,8 @@ export function PaymentsPage({ payments, profile, spaceSwitcher, activeSpaceHead
 
 function MenuItem({ icon, label, onClick, danger }) {
   return (
-    <button onClick={onClick} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', background: 'none', border: 'none', borderBottom: '0.5px solid var(--bg)', fontSize: 13, fontWeight: 500, color: danger ? 'var(--danger)' : 'var(--text)', fontFamily: 'DM Sans, sans-serif', cursor: 'pointer', textAlign: 'left' }}>
-      <span style={{ color: danger ? 'var(--danger)' : 'var(--text)' }}>{icon}</span>{label}
+    <button onClick={onClick} className={`${styles.menuItem} ${danger ? styles.menuItemDanger : ''}`}>
+      <span>{icon}</span>{label}
     </button>
   )
 }
@@ -1296,23 +1223,7 @@ function FilterChip({ label, active, onClick, icon: Icon, color }) {
   return (
     <button
       onClick={onClick}
-      style={{
-        padding: '6px 14px',
-        borderRadius: 5,
-        border: active ? 'none' : '0.5px solid var(--border)',
-        background: active ? 'var(--accent)' : 'var(--surface)',
-        color: active ? 'var(--surface)' : 'var(--text)',
-        fontSize: 12,
-        fontWeight: active ? 700 : 500,
-        fontFamily: 'DM Sans, sans-serif',
-        cursor: 'pointer',
-        whiteSpace: 'nowrap',
-        flexShrink: 0,
-        display: 'flex',
-        alignItems: 'center',
-        gap: 6,
-        transition: 'background .15s, color .15s',
-      }}
+      className={`${styles.filterChip} ${active ? styles.filterChipActive : ''}`}
     >
       {Icon && <Icon size={13} color={active ? 'var(--surface)' : color} strokeWidth={2} />}
       {label}
