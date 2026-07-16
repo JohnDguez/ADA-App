@@ -519,6 +519,7 @@ export default function App() {
           onResume={handleResumeRecurrent}
           onDelete={handleDelete}
           onEdit={openEdit}
+          onAdd={openAdd}
         />
       )}
       {tab === 'settings' && (
