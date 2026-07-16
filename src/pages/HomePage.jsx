@@ -7,6 +7,7 @@ import { NotificationsPanel } from '../components/NotificationsPanel'
 import { NewSharedSpacePanel } from '../components/NewSharedSpacePanel'
 import { EmptyState } from '../components/EmptyState'
 import { fmt, cobroPeriod, nextCobroPeriod, getPagarEsteCobro, daysDiff, dateOf, dateToStr, MONTHS, MONTHS_SHORT } from '../lib/utils'
+import styles from './HomePage.module.css'
 
 function periodRange(cfg) {
   const { start, end } = cobroPeriod(cfg)
@@ -85,7 +86,7 @@ function HalfRing({ percent, width = 220, strokeWidth = 14 }) {
     progressD = `M ${start.x} ${start.y} A ${r} ${r} 0 ${largeArc} 1 ${dotPoint.x} ${dotPoint.y}`
   }
   return (
-    <div style={{ position: 'relative', width, height, margin: '0 auto' }}>
+    <div className={styles.halfRingWrapper} style={{ width, height }}>
       <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`}>
         <defs>
           {/* Excepción intencional a "nunca colores hardcodeados / sin
@@ -105,8 +106,8 @@ function HalfRing({ percent, width = 220, strokeWidth = 14 }) {
             en vez de un hueco angular (mockup confirmado con Johnatan). */}
         <circle cx={dotPoint.x} cy={dotPoint.y} r={strokeWidth * 0.65} fill="var(--accent)" stroke="var(--surface)" strokeWidth={3} />
       </svg>
-      <div style={{ position: 'absolute', top: '55%', left: 0, right: 0, textAlign: 'center' }}>
-        <span style={{ fontSize: 26, fontWeight: 700, color: 'var(--text)' }}>{Math.round(animated * 100)}%</span>
+      <div className={styles.halfRingPercentWrapper}>
+        <span className={styles.halfRingPercentText}>{Math.round(animated * 100)}%</span>
       </div>
     </div>
   )
@@ -228,7 +229,7 @@ export function HomePage({ payments, profile, spaceSwitcher, activeSpaceHeader, 
   const handlers = { onMarkPaid, onMarkUnpaid, onCaptureAmount, onEdit, onDelete, onPostpone, onAdvance }
 
   return (
-    <div style={{ paddingBottom: 120, background: 'var(--bg)', minHeight: '100vh' }}>
+    <div className={styles.pageRoot}>
       <PageHeader
         profile={profile}
         unreadCount={unreadCount}
@@ -236,7 +237,7 @@ export function HomePage({ payments, profile, spaceSwitcher, activeSpaceHeader, 
         onGoSettings={onGoSettings}
       />
 
-      <div style={{ background: 'var(--bg)', borderRadius: '24px 24px 0 0', marginTop: -24, position: 'relative', zIndex: 10 }}>
+      <div className={styles.roundedContentWrapper}>
         {spaceSwitcher}
 
         {activeSpaceHeader}
@@ -245,7 +246,7 @@ export function HomePage({ payments, profile, spaceSwitcher, activeSpaceHeader, 
         <div className={spaceJustChanged ? 'content-slide-up' : ''}>
 
         {activeSpaceId === 'new' ? (
-          <div style={{ marginTop: 16 }}>
+          <div className={styles.newSpacePanelWrapper}>
             <NewSharedSpacePanel
               profile={profile}
               sharedSpaces={sharedSpaces}
@@ -266,31 +267,25 @@ export function HomePage({ payments, profile, spaceSwitcher, activeSpaceHeader, 
             patrón oficial a reusar en cualquier otro switch de 2
             posiciones que se agregue después (ej. futuros toggles en
             Ajustes) — no repetir el estilo viejo de 5px para eso. */}
-        <div data-coachmark="home-metric-card" style={{ padding: '20px 16px 0', userSelect: 'none' }}>
-          <div style={{ position: 'relative', display: 'flex', background: 'var(--section-bg)', borderRadius: 999, padding: 4, marginBottom: 10 }}>
-            <div style={{
-              position: 'absolute', top: 4, left: 4,
-              width: 'calc(50% - 4px)', height: 'calc(100% - 8px)',
-              background: 'var(--accent)', borderRadius: 999,
-              transition: 'transform .25s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
-              transform: `translateX(${activeCard * 100}%)`,
-            }} />
+        <div data-coachmark="home-metric-card" className={styles.metricCardSection}>
+          <div className={styles.tabTrack}>
+            <div className={styles.tabThumb} style={{ transform: `translateX(${activeCard * 100}%)` }} />
             <button
               onClick={() => setActiveCard(0)}
-              style={{ position: 'relative', zIndex: 1, flex: 1, textAlign: 'center', padding: '10px 0', border: 'none', background: 'transparent', color: activeCard === 0 ? '#fff' : 'var(--text)', fontSize: 13, fontWeight: activeCard === 0 ? 500 : 400, fontFamily: 'DM Sans, sans-serif', transition: 'color .2s' }}
+              className={`${styles.tabButton} ${activeCard === 0 ? styles.tabButtonActive : ''}`}
             >
               Periodo
             </button>
             <button
               onClick={() => setActiveCard(1)}
-              style={{ position: 'relative', zIndex: 1, flex: 1, textAlign: 'center', padding: '10px 0', border: 'none', background: 'transparent', color: activeCard === 1 ? '#fff' : 'var(--text)', fontSize: 13, fontWeight: activeCard === 1 ? 500 : 400, fontFamily: 'DM Sans, sans-serif', transition: 'color .2s' }}
+              className={`${styles.tabButton} ${activeCard === 1 ? styles.tabButtonActive : ''}`}
             >
               {isMonthly ? 'Próximo periodo' : 'Mes actual'}
             </button>
           </div>
 
           <div
-            style={{ overflow: 'hidden', borderRadius: 12 }}
+            className={styles.cardSwipeWrapper}
             onTouchStart={e => setTouchStartX(e.touches[0].clientX)}
             onTouchEnd={e => {
               if (touchStartX === null) return
@@ -300,7 +295,7 @@ export function HomePage({ payments, profile, spaceSwitcher, activeSpaceHeader, 
               setTouchStartX(null)
             }}
           >
-            <div style={{ display: 'flex', transition: 'transform .3s cubic-bezier(0.25,0.46,0.45,0.94)', transform: `translateX(${activeCard * -100}%)` }}>
+            <div className={styles.cardSwipeTrack} style={{ transform: `translateX(${activeCard * -100}%)` }}>
 
               {/* Card 1 — Periodo actual. Medio anillo tipo gauge (mockup
                   confirmado con Johnatan, referencia "Current balance" que
@@ -311,18 +306,18 @@ export function HomePage({ payments, profile, spaceSwitcher, activeSpaceHeader, 
                   arriba), luego título/monto/estatus (fijos, vencido,
                   variables — info administrativa, no directamente ligada
                   al anillo, por eso va después). */}
-              <div style={{ minWidth: '100%', background: 'var(--surface)', borderRadius: 12, padding: '14px 16px' }}>
+              <div className={styles.metricCard}>
                 {pagarEsteCobro.length === 0 ? (
                   <>
-                    <div style={{ display: 'inline-block', background: 'var(--bg)', borderRadius: 5, padding: '4px 8px', fontSize: 12, fontWeight: 500, color: 'var(--text)', marginBottom: 6, float: 'right' }}>
+                    <div className={styles.dateBadge}>
                       Periodo {periodRange(profile)}
                     </div>
-                    <div style={{ clear: 'both' }} />
+                    <div className={styles.clearFloat} />
                     <HalfRing percent={1} />
-                    <div style={{ textAlign: 'center', fontSize: 13, fontWeight: 500, color: 'var(--accent)', marginBottom: 2 }}>Total de este periodo</div>
-                    <div style={{ textAlign: 'center', fontSize: 30, fontWeight: 700, color: 'var(--text)', marginBottom: 8 }}>{fmt(pagadoMonto)}</div>
+                    <div className={styles.cardTitle}>Total de este periodo</div>
+                    <div className={styles.cardAmount}>{fmt(pagadoMonto)}</div>
                     {(pagadosFijosEstePeriodo > 0 || pagadosVariablesEstePeriodo > 0) && (
-                      <div style={{ textAlign: 'center', fontSize: 12, fontWeight: 500, color: 'var(--text)' }}>
+                      <div className={styles.cardMeta}>
                         {pagadosFijosEstePeriodo} pago{pagadosFijosEstePeriodo !== 1 ? 's' : ''} fijo{pagadosFijosEstePeriodo !== 1 ? 's' : ''}
                         {pagadosVariablesEstePeriodo > 0 && ` · ${pagadosVariablesEstePeriodo} variable${pagadosVariablesEstePeriodo !== 1 ? 's' : ''}`}
                       </div>
@@ -330,23 +325,23 @@ export function HomePage({ payments, profile, spaceSwitcher, activeSpaceHeader, 
                   </>
                 ) : (
                   <>
-                    <div style={{ display: 'inline-block', background: 'var(--bg)', borderRadius: 5, padding: '4px 8px', fontSize: 12, fontWeight: 500, color: 'var(--text)', marginBottom: 6, float: 'right' }}>
+                    <div className={styles.dateBadge}>
                       Periodo {periodRange(profile)}
                     </div>
-                    <div style={{ clear: 'both' }} />
+                    <div className={styles.clearFloat} />
                     <HalfRing percent={pctPagado / 100} />
-                    <div style={{ display: 'flex', justifyContent: 'center', gap: 16, marginBottom: 12 }}>
-                      <span style={{ fontSize: 11, fontWeight: 500, color: 'var(--paid)' }}>{fmt(pagadoMonto)} pagado</span>
-                      <span style={{ fontSize: 11, fontWeight: 400, color: 'var(--text)' }}>{fmt(pendingAmt)} pendiente</span>
+                    <div className={styles.cardPaidPendingRow}>
+                      <span className={styles.cardPaidText}>{fmt(pagadoMonto)} pagado</span>
+                      <span className={styles.cardPendingText}>{fmt(pendingAmt)} pendiente</span>
                     </div>
-                    <div style={{ textAlign: 'center', fontSize: 13, fontWeight: 500, color: 'var(--accent)', marginBottom: 2 }}>Total de este periodo</div>
-                    <div style={{ textAlign: 'center', fontSize: 30, fontWeight: 700, color: 'var(--text)', marginBottom: 8 }}>{fmt(totalConocido)}</div>
-                    <div style={{ textAlign: 'center', fontSize: 12, fontWeight: 500, color: 'var(--text)' }}>
+                    <div className={styles.cardTitle}>Total de este periodo</div>
+                    <div className={styles.cardAmount}>{fmt(totalConocido)}</div>
+                    <div className={styles.cardMeta}>
                       {pagosFijosCount} pago{pagosFijosCount !== 1 ? 's' : ''} fijo{pagosFijosCount !== 1 ? 's' : ''}
-                      {vencidos.length > 0 && <span style={{ color: 'var(--danger)' }}> · {vencidos.length} pago{vencidos.length !== 1 ? 's' : ''} vencido{vencidos.length !== 1 ? 's' : ''}</span>}
+                      {vencidos.length > 0 && <span className={styles.cardMetaDanger}> · {vencidos.length} pago{vencidos.length !== 1 ? 's' : ''} vencido{vencidos.length !== 1 ? 's' : ''}</span>}
                     </div>
                     {pendingVariableCount > 0 && (
-                      <div style={{ textAlign: 'center', fontSize: 10, fontWeight: 400, color: 'var(--text)', marginTop: 5 }}>
+                      <div className={styles.cardVariableNote}>
                         {pendingVariableCount} pago{pendingVariableCount !== 1 ? 's' : ''} variable{pendingVariableCount !== 1 ? 's' : ''} por confirmar
                       </div>
                     )}
@@ -356,36 +351,36 @@ export function HomePage({ payments, profile, spaceSwitcher, activeSpaceHeader, 
 
               {/* Card 2 — Este mes / Próximo periodo. Mismo tratamiento visual
                   que Card 1 en los 3 casos. */}
-              <div style={{ minWidth: '100%', background: 'var(--surface)', borderRadius: 12, padding: '14px 16px' }}>
+              <div className={styles.metricCard}>
                 {isMonthly ? (
                   <>
-                    <div style={{ display: 'inline-block', background: 'var(--bg)', borderRadius: 5, padding: '4px 8px', fontSize: 12, fontWeight: 500, color: 'var(--text)', marginBottom: 6, float: 'right' }}>
+                    <div className={styles.dateBadge}>
                       {nextPeriodRange(profile)}
                     </div>
-                    <div style={{ clear: 'both' }} />
+                    <div className={styles.clearFloat} />
                     <HalfRing percent={0} />
-                    <div style={{ textAlign: 'center', fontSize: 13, fontWeight: 500, color: 'var(--accent)', marginBottom: 2 }}>Total del próximo periodo</div>
-                    <div style={{ textAlign: 'center', fontSize: 30, fontWeight: 700, color: 'var(--text)', marginBottom: 8 }}>{fmt(nextMonthKnownTotal)}</div>
-                    <div style={{ textAlign: 'center', fontSize: 12, fontWeight: 500, color: 'var(--text)' }}>
+                    <div className={styles.cardTitle}>Total del próximo periodo</div>
+                    <div className={styles.cardAmount}>{fmt(nextMonthKnownTotal)}</div>
+                    <div className={styles.cardMeta}>
                       {nextMonthFixedCount} pago{nextMonthFixedCount !== 1 ? 's' : ''} fijo{nextMonthFixedCount !== 1 ? 's' : ''}
                     </div>
                     {nextMonthPendingVariableCount > 0 && (
-                      <div style={{ textAlign: 'center', fontSize: 10, fontWeight: 400, color: 'var(--text)', marginTop: 5 }}>
+                      <div className={styles.cardVariableNote}>
                         {nextMonthPendingVariableCount} pago{nextMonthPendingVariableCount !== 1 ? 's' : ''} variable{nextMonthPendingVariableCount !== 1 ? 's' : ''} por confirmar
                       </div>
                     )}
                   </>
                 ) : pendingThisMonthAmt <= 0 ? (
                   <>
-                    <div style={{ display: 'inline-block', background: 'var(--bg)', borderRadius: 5, padding: '4px 8px', fontSize: 12, fontWeight: 500, color: 'var(--text)', marginBottom: 6, float: 'right' }}>
+                    <div className={styles.dateBadge}>
                       {MONTHS[thisMonth]} {thisYear}
                     </div>
-                    <div style={{ clear: 'both' }} />
+                    <div className={styles.clearFloat} />
                     <HalfRing percent={1} />
-                    <div style={{ textAlign: 'center', fontSize: 13, fontWeight: 500, color: 'var(--accent)', marginBottom: 2 }}>Total de este mes</div>
-                    <div style={{ textAlign: 'center', fontSize: 30, fontWeight: 700, color: 'var(--text)', marginBottom: 8 }}>{fmt(paidThisMonthAmt)}</div>
+                    <div className={styles.cardTitle}>Total de este mes</div>
+                    <div className={styles.cardAmount}>{fmt(paidThisMonthAmt)}</div>
                     {(paidFixedThisMonth > 0 || variableThisMonth > 0) && (
-                      <div style={{ textAlign: 'center', fontSize: 12, fontWeight: 500, color: 'var(--text)' }}>
+                      <div className={styles.cardMeta}>
                         {paidFixedThisMonth} pago{paidFixedThisMonth !== 1 ? 's' : ''} fijo{paidFixedThisMonth !== 1 ? 's' : ''}
                         {variableThisMonth > 0 && ` · ${variableThisMonth} variable${variableThisMonth !== 1 ? 's' : ''}`}
                       </div>
@@ -393,18 +388,18 @@ export function HomePage({ payments, profile, spaceSwitcher, activeSpaceHeader, 
                   </>
                 ) : (
                   <>
-                    <div style={{ display: 'inline-block', background: 'var(--bg)', borderRadius: 5, padding: '4px 8px', fontSize: 12, fontWeight: 500, color: 'var(--text)', marginBottom: 6, float: 'right' }}>
+                    <div className={styles.dateBadge}>
                       {MONTHS[thisMonth]} {thisYear}
                     </div>
-                    <div style={{ clear: 'both' }} />
+                    <div className={styles.clearFloat} />
                     <HalfRing percent={pctPagadoMes / 100} />
-                    <div style={{ display: 'flex', justifyContent: 'center', gap: 16, marginBottom: 12 }}>
-                      <span style={{ fontSize: 11, fontWeight: 500, color: 'var(--paid)' }}>{fmt(paidThisMonthAmt)} pagado</span>
-                      <span style={{ fontSize: 11, fontWeight: 400, color: 'var(--text)' }}>{fmt(pendingThisMonthAmt)} pendiente</span>
+                    <div className={styles.cardPaidPendingRow}>
+                      <span className={styles.cardPaidText}>{fmt(paidThisMonthAmt)} pagado</span>
+                      <span className={styles.cardPendingText}>{fmt(pendingThisMonthAmt)} pendiente</span>
                     </div>
-                    <div style={{ textAlign: 'center', fontSize: 13, fontWeight: 500, color: 'var(--accent)', marginBottom: 2 }}>Total de este mes</div>
-                    <div style={{ textAlign: 'center', fontSize: 30, fontWeight: 700, color: 'var(--text)', marginBottom: 8 }}>{fmt(totalThisMonth)}</div>
-                    <div style={{ textAlign: 'center', fontSize: 12, fontWeight: 500, color: 'var(--text)' }}>
+                    <div className={styles.cardTitle}>Total de este mes</div>
+                    <div className={styles.cardAmount}>{fmt(totalThisMonth)}</div>
+                    <div className={styles.cardMeta}>
                       {paidThisMonth.length} pagado{paidThisMonth.length !== 1 ? 's' : ''}
                       {variableThisMonth > 0 && ` · ${variableThisMonth} variable${variableThisMonth !== 1 ? 's' : ''}`}
                     </div>
@@ -415,11 +410,11 @@ export function HomePage({ payments, profile, spaceSwitcher, activeSpaceHeader, 
           </div>
         </div>
 
-        <div style={{ padding: '0 16px' }}>
+        <div className={styles.contentPadding}>
 
           {/* Colapsable de pagados — justo debajo de la card de métricas */}
           {pagadosEstePeriodo.length > 0 && (
-            <div data-coachmark="home-paid-collapse" style={{ marginTop: 10 }}>
+            <div data-coachmark="home-paid-collapse" className={styles.paidCollapseWrapper}>
               <PaidCollapse
                 payments={pagadosEstePeriodo}
                 expanded={paidExpanded}
@@ -431,11 +426,11 @@ export function HomePage({ payments, profile, spaceSwitcher, activeSpaceHeader, 
 
           {/* Vencidos */}
           {vencidos.length > 0 && (
-            <div style={{ marginTop: 25 }}>
-              <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--danger)', marginBottom: 10 }}>
+            <div className={styles.overdueSection}>
+              <div className={styles.overdueTitle}>
                 Vencidos
               </div>
-              <PayRail payments={vencidos} cfg={profile} dotColor="var(--overdue-border)" dotTextColor="#fff" handlers={handlers} permissions={spacePermissions} />
+              <PayRail payments={vencidos} cfg={profile} dotColor="var(--overdue-border)" dotTextColor="var(--surface)" handlers={handlers} permissions={spacePermissions} />
             </div>
           )}
 
@@ -458,7 +453,7 @@ export function HomePage({ payments, profile, spaceSwitcher, activeSpaceHeader, 
 
             return (
               <>
-                <div data-coachmark="home-rail" style={{ marginTop: 20 }}>
+                <div data-coachmark="home-rail" className={styles.periodSection}>
                   <SectionHead left="Pagos del periodo" right={`Periodo ${periodRange(profile)}`} />
 
                   {currentEmpty
@@ -470,16 +465,16 @@ export function HomePage({ payments, profile, spaceSwitcher, activeSpaceHeader, 
                 {!mergeEmpty && (
                   <>
                     {/* Próximo periodo — toggle + filtro exacto al periodo */}
-                    <div style={{ marginTop: 20, marginBottom: 4 }}>
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 2 }}>
-                        <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)' }}>Próximo periodo</span>
-                        <div onClick={toggleNextPeriod} style={{ cursor: 'pointer' }}>
+                    <div className={styles.nextPeriodSection}>
+                      <div className={styles.nextPeriodHeader}>
+                        <span className={styles.nextPeriodLabel}>Próximo periodo</span>
+                        <div onClick={toggleNextPeriod} className={styles.toggleClickWrap}>
                           <div className="toggle-track" style={{ background: showNextPeriod ? 'var(--accent)' : 'var(--border)' }}>
                             <div className="toggle-thumb" style={{ left: showNextPeriod ? 19 : 3 }} />
                           </div>
                         </div>
                       </div>
-                      <span style={{ fontSize: 11, fontWeight: 400, color: 'var(--text)' }}>
+                      <span className={styles.nextPeriodRangeText}>
                         {nextPeriodRange(profile)}
                       </span>
                     </div>
@@ -487,7 +482,7 @@ export function HomePage({ payments, profile, spaceSwitcher, activeSpaceHeader, 
                     {showNextPeriod && (
                       nextEmpty
                         ? <EmptyState title="Sin pagos registrados para el próximo periodo" subtitle="Toca aquí o el botón + de abajo para añadir uno" onClick={onAdd} />
-                        : <div style={{ marginTop: 8 }}>
+                        : <div className={styles.upcomingListWrapper}>
                             <PayRail payments={upcoming} cfg={profile} dotColor="var(--accent)" dotTextColor="var(--bg)" handlers={handlers} permissions={spacePermissions} />
                           </div>
                     )}
@@ -520,9 +515,9 @@ export function HomePage({ payments, profile, spaceSwitcher, activeSpaceHeader, 
 
 function SectionHead({ left, right }) {
   return (
-    <div style={{ paddingBottom: 10, display: 'flex', alignItems: 'baseline', justifyContent: 'space-between' }}>
-      <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)' }}>{left}</span>
-      {right && <span style={{ fontSize: 11, fontWeight: 500, color: 'var(--text)' }}>{right}</span>}
+    <div className={styles.sectionHead}>
+      <span className={styles.sectionHeadLeft}>{left}</span>
+      {right && <span className={styles.sectionHeadRight}>{right}</span>}
     </div>
   )
 }
@@ -537,15 +532,15 @@ function SectionHead({ left, right }) {
 // solo en cuanto cambia de periodo, sin lógica extra de limpieza.
 function PaidCollapse({ payments, expanded, onToggle, onMarkUnpaid }) {
   return (
-    <div style={{ marginBottom: 12 }}>
+    <div className={styles.paidCollapseRoot}>
       <button
         onClick={onToggle}
-        style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, background: 'var(--surface)', border: 'none', borderRadius: 8, padding: '9px 12px', cursor: 'pointer' }}
+        className={styles.paidCollapseToggle}
       >
-        <div style={{ width: 20, height: 20, borderRadius: '50%', background: 'var(--paid)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-          <Check size={11} color="#fff" strokeWidth={3} />
+        <div className={styles.paidCollapseCheckIcon}>
+          <Check size={11} color="var(--surface)" strokeWidth={3} />
         </div>
-        <span style={{ flex: 1, fontSize: 12, fontWeight: 400, color: 'var(--text)', textAlign: 'left' }}>
+        <span className={styles.paidCollapseSummaryText}>
           {payments.length} pagado{payments.length !== 1 ? 's' : ''}
         </span>
         {expanded ? <ChevronUp size={15} color="var(--text)" /> : <ChevronDown size={15} color="var(--text)" />}
@@ -554,23 +549,23 @@ function PaidCollapse({ payments, expanded, onToggle, onMarkUnpaid }) {
       {expanded && (() => {
         const sorted = [...payments].sort((a, b) => new Date(b.paid_at) - new Date(a.paid_at))
         return (
-          <div style={{ marginTop: 6, display: 'flex', flexDirection: 'column', gap: 6 }}>
+          <div className={styles.paidCollapseList}>
             {sorted.map(p => {
               const pd = new Date(p.paid_at)
               return (
-                <div key={p.id} style={{ display: 'flex', alignItems: 'center', gap: 10, background: 'var(--surface)', borderRadius: 8, padding: '9px 12px' }}>
-                  <div style={{ width: 28, textAlign: 'center', flexShrink: 0 }}>
-                    <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)', lineHeight: 1.1 }}>{pd.getDate()}</div>
-                    <div style={{ fontSize: 9, fontWeight: 500, color: 'var(--text)', textTransform: 'uppercase' }}>{MONTHS_SHORT[pd.getMonth()]}</div>
+                <div key={p.id} className={styles.paidCollapseItem}>
+                  <div className={styles.paidCollapseDate}>
+                    <div className={styles.paidCollapseDay}>{pd.getDate()}</div>
+                    <div className={styles.paidCollapseMonth}>{MONTHS_SHORT[pd.getMonth()]}</div>
                   </div>
-                  <div style={{ flex: 1, minWidth: 0, overflow: 'hidden' }}>
-                    <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--text)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.name}</div>
-                    <div style={{ fontSize: 11, fontWeight: 400, color: 'var(--text)' }}>{p.category}</div>
+                  <div className={styles.paidCollapseInfo}>
+                    <div className={styles.paidCollapseName}>{p.name}</div>
+                    <div className={styles.paidCollapseCategory}>{p.category}</div>
                   </div>
-                  <span style={{ fontSize: 13, fontWeight: 500, color: 'var(--text)' }}>{fmt(p.amount)}</span>
+                  <span className={styles.paidCollapseAmount}>{fmt(p.amount)}</span>
                   <button
                     onClick={() => onMarkUnpaid(p.id)}
-                    style={{ width: 26, height: 26, borderRadius: '50%', background: 'none', border: '0.5px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0 }}
+                    className={styles.paidCollapseUndoButton}
                   >
                     <RotateCcw size={11} color="var(--text)" />
                   </button>
