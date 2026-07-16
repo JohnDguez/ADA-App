@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { ChevronDown, Check } from 'lucide-react'
+import styles from './Select.module.css'
 
 const PANEL_HEIGHT = 240
 
@@ -32,27 +33,21 @@ export function Select({ value, onChange, options, placeholder, renderIcon }) {
   }
 
   return (
-    <div ref={ref} style={{ position: 'relative' }}>
+    <div ref={ref} className={styles.wrapper}>
       <button
         type="button"
         onClick={toggleOpen}
-        className="field-input"
-        style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', textAlign: 'left', cursor: 'pointer' }}
+        className={`field-input ${styles.trigger}`}
       >
-        <span style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
+        <span className={styles.triggerContent}>
           {renderIcon && value && renderIcon(value)}
-          <span style={{ color: value ? 'var(--text)' : 'var(--muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{value || placeholder || 'Selecciona'}</span>
+          <span className={`${styles.triggerText} ${value ? styles.triggerTextFilled : styles.triggerTextPlaceholder}`}>{value || placeholder || 'Selecciona'}</span>
         </span>
-        <ChevronDown size={16} color="var(--text)" style={{ transform: open ? 'rotate(180deg)' : 'none', transition: 'transform .15s', flexShrink: 0 }} />
+        <ChevronDown size={16} color="var(--text)" className={`${styles.chevron} ${open ? styles.chevronOpen : ''}`} />
       </button>
 
       {open && (
-        <div style={{
-          position: 'absolute', [dropUp ? 'bottom' : 'top']: '100%', left: 0, right: 0,
-          [dropUp ? 'marginBottom' : 'marginTop']: 6,
-          background: 'var(--menu-bg)', border: '0.5px solid var(--border)', borderRadius: 'var(--radius-sm)',
-          boxShadow: '0 4px 16px rgba(0,0,0,0.12)', zIndex: 60, maxHeight: 240, overflowY: 'auto',
-        }}>
+        <div className={`${styles.panel} ${dropUp ? styles.panelUp : styles.panelDown}`}>
           {options.map(opt => {
             const isSel = opt === value
             return (
@@ -60,16 +55,11 @@ export function Select({ value, onChange, options, placeholder, renderIcon }) {
                 type="button"
                 key={opt}
                 onClick={() => { onChange(opt); setOpen(false) }}
-                style={{
-                  width: '100%', display: 'flex', alignItems: 'center', gap: 10,
-                  padding: '9px 12px', background: isSel ? 'var(--accent)' : 'none', border: 'none',
-                  fontSize: 13, fontWeight: isSel ? 600 : 400, color: isSel ? '#fff' : 'var(--text)',
-                  fontFamily: 'DM Sans, sans-serif', textAlign: 'left', cursor: 'pointer',
-                }}
+                className={`${styles.option} ${isSel ? styles.optionSelected : ''}`}
               >
                 {renderIcon && renderIcon(opt)}
-                <span style={{ flex: 1, minWidth: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{opt}</span>
-                {isSel && <Check size={14} color="#fff" style={{ flexShrink: 0 }} />}
+                <span className={styles.optionText}>{opt}</span>
+                {isSel && <Check size={14} color="var(--surface)" className={styles.checkIcon} />}
               </button>
             )
           })}

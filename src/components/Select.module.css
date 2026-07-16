@@ -1,0 +1,98 @@
+.wrapper {
+  position: relative;
+}
+
+.trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  text-align: left;
+  cursor: pointer;
+}
+
+.triggerContent {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.triggerText {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.triggerTextFilled {
+  color: var(--text);
+}
+
+.triggerTextPlaceholder {
+  color: var(--muted);
+}
+
+.chevron {
+  transition: transform .15s;
+  flex-shrink: 0;
+}
+
+.chevronOpen {
+  transform: rotate(180deg);
+}
+
+.panel {
+  position: absolute;
+  left: 0;
+  right: 0;
+  background: var(--menu-bg);
+  border: 0.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  z-index: 60;
+  max-height: 240px;
+  overflow-y: auto;
+}
+
+.panelDown {
+  top: 100%;
+  margin-top: 6px;
+}
+
+.panelUp {
+  bottom: 100%;
+  margin-bottom: 6px;
+}
+
+.option {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px;
+  background: none;
+  border: none;
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--text);
+  font-family: 'DM Sans', sans-serif;
+  text-align: left;
+  cursor: pointer;
+}
+
+.optionSelected {
+  background: var(--accent);
+  font-weight: 600;
+  color: var(--surface);
+}
+
+.optionText {
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.checkIcon {
+  flex-shrink: 0;
+}
