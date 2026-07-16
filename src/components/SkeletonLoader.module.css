@@ -1,0 +1,175 @@
+.pageRoot {
+  background: var(--bg);
+  min-height: 100vh;
+  padding-bottom: 120px;
+}
+
+.header {
+  background: #020A1F;
+  height: 140px;
+  display: flex;
+  align-items: center;
+  padding: 0 20px 24px;
+}
+
+.headerInner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.headerLeft {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.headerTextCol {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.roundedWrapper {
+  background: var(--bg);
+  border-radius: 24px 24px 0 0;
+  margin-top: -24px;
+  position: relative;
+  z-index: 10;
+}
+
+.switcherPlaceholder {
+  padding: 16px 18px 14px;
+  border-bottom: 1px solid var(--border);
+}
+
+.contentPadding {
+  padding: 0 16px;
+}
+
+.tabsRow {
+  display: flex;
+  gap: 3px;
+  background: var(--section-bg);
+  border-radius: 999px;
+  padding: 4px;
+  margin-top: 20px;
+  margin-bottom: 10px;
+}
+
+.metricCard {
+  background: var(--surface);
+  border-radius: 12px;
+  padding: 14px 16px;
+  margin-bottom: 20px;
+}
+
+.metricCardDateRow {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 8px;
+}
+
+.ringWrapper {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 10px;
+}
+
+.ringOuter {
+  position: relative;
+  width: 180px;
+  height: 90px;
+}
+
+.ringInnerCut {
+  position: absolute;
+  bottom: 0;
+  left: 24px;
+  width: 132px;
+  height: 66px;
+  border-radius: 66px 66px 0 0;
+  background: var(--surface);
+}
+
+.metricPaidPendingRow {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  margin-bottom: 14px;
+}
+
+.metricCenterRowMb6 {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 6px;
+}
+
+.metricCenterRowMb8 {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 8px;
+}
+
+.metricCenterRow {
+  display: flex;
+  justify-content: center;
+}
+
+.sectionHeaderRow {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.railWrapper {
+  position: relative;
+  margin-bottom: 20px;
+}
+
+.railWrapperNoMb {
+  position: relative;
+}
+
+.railLine {
+  position: absolute;
+  left: 11px;
+  top: 6px;
+  bottom: 6px;
+  width: 2px;
+  background: var(--border);
+}
+
+.railItem {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.railItemCard {
+  flex: 1;
+  background: var(--surface);
+  border-radius: 8px;
+  padding: 11px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.bottomNavSkeleton {
+  position: fixed;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: calc(100% - 32px);
+  max-width: 388px;
+  height: 56px;
+  border-radius: 10px;
+  background: var(--nav-bg);
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  padding: 0 16px;
+}
