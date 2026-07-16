@@ -363,9 +363,6 @@ export function HomePage({ payments, profile, spaceSwitcher, activeSpaceHeader, 
                     </div>
                     <div style={{ clear: 'both' }} />
                     <HalfRing percent={0} />
-                    <div style={{ textAlign: 'center', fontSize: 11, fontWeight: 500, color: 'var(--text)', marginBottom: 12 }}>
-                      {fmt(nextMonthKnownTotal)} programados
-                    </div>
                     <div style={{ textAlign: 'center', fontSize: 13, fontWeight: 500, color: 'var(--accent)', marginBottom: 2 }}>Total del próximo mes</div>
                     <div style={{ textAlign: 'center', fontSize: 30, fontWeight: 700, color: 'var(--text)', marginBottom: 8 }}>{fmt(nextMonthKnownTotal)}</div>
                     <div style={{ textAlign: 'center', fontSize: 12, fontWeight: 500, color: 'var(--text)' }}>
