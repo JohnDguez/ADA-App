@@ -11,7 +11,14 @@ import { Plus } from 'lucide-react'
 // que no sea "agregar algo" (ej. un estado vacío de búsqueda sin resultados).
 // `onClick` es opcional — si no se pasa, el área se ve igual pero sin cursor
 // de puntero ni acción (estado vacío puramente informativo).
-export function EmptyState({ icon: Icon = Plus, title, subtitle, onClick }) {
+// `secondaryLabel`/`onSecondaryClick` (ambos opcionales): un link chiquito
+// debajo del subtítulo para una SEGUNDA acción relacionada pero distinta a
+// la principal (ej. en PaymentsPage → "Por Categoría": la acción principal
+// es agregar un pago, pero también tiene sentido invitar a personalizar
+// categorías — dos acciones del mismo tamaño hubieran competido por el
+// mismo tap, por eso es un link chiquito y no otro botón grande). Lleva su
+// propio `stopPropagation` para no disparar también el `onClick` principal.
+export function EmptyState({ icon: Icon = Plus, title, subtitle, onClick, secondaryLabel, onSecondaryClick }) {
   return (
     <div onClick={onClick} style={{ border: '1.5px dashed var(--border)', borderRadius: 8, padding: '28px 16px', textAlign: 'center', cursor: onClick ? 'pointer' : 'default' }}>
       <div style={{ width: 40, height: 40, borderRadius: '50%', background: 'var(--accent)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 10px' }}>
@@ -19,6 +26,14 @@ export function EmptyState({ icon: Icon = Plus, title, subtitle, onClick }) {
       </div>
       <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--text)', marginBottom: 4 }}>{title}</div>
       {subtitle && <div style={{ fontSize: 11, fontWeight: 400, color: 'var(--text)' }}>{subtitle}</div>}
+      {secondaryLabel && onSecondaryClick && (
+        <div
+          onClick={e => { e.stopPropagation(); onSecondaryClick() }}
+          style={{ fontSize: 12, fontWeight: 500, color: 'var(--accent)', marginTop: 12, cursor: 'pointer' }}
+        >
+          {secondaryLabel} →
+        </div>
+      )}
     </div>
   )
 }
