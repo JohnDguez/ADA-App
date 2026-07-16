@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { Plus } from 'lucide-react'
+import styles from './SpaceSwitcher.module.css'
 
 // Selector de espacio activo — tarjetas apiladas (patrón que Johnatan mostró
 // de la app de Banamex). Dibuja SOLO las tarjetas que asoman (no la activa
@@ -114,7 +115,7 @@ export function SpaceSwitcher({ spaces, activeSpaceId, onSwitch, profile, stats 
   if (renderList.length === 0) return null
 
   return (
-    <div style={{ position: 'relative', overflow: 'hidden' }}>
+    <div className={styles.switcherContainer}>
       {renderList.map((item, i) => {
         const isFirst    = i === 0
         const isEntering = animIds && item.id === animIds.outgoingId
@@ -143,10 +144,8 @@ export function SpaceSwitcher({ spaces, activeSpaceId, onSwitch, profile, stats 
           <div
             key={item.id ?? 'personal'}
             onClick={() => !isExiting && onSwitch(item.id === 'new' ? 'new' : item.id)}
+            className={styles.spaceCard}
             style={{
-              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-              padding: '16px 18px 24px',
-              borderRadius: '16px 16px 0 0',
               background: cardBg,
               filter: cardFilter,
               position: isGhost ? 'absolute' : 'relative',
@@ -189,20 +188,22 @@ export function SpaceSwitcher({ spaces, activeSpaceId, onSwitch, profile, stats 
                 distancia exacta según la posición en el stack. Transiciona
                 junto con la tarjeta (mismo cardBg/cardFilter) para que no
                 se vea un color distinto asomando por debajo mientras cambia. */}
-            <div style={{
-              position: 'absolute', left: 0, right: 0, top: '100%', height: 500,
-              background: cardBg,
-              filter: cardFilter,
-              transition: isEntering ? 'background .3s cubic-bezier(0.25, 0.46, 0.45, 0.94), filter .3s cubic-bezier(0.25, 0.46, 0.45, 0.94)' : 'none',
-            }} />
+            <div
+              className={styles.cardCushion}
+              style={{
+                background: cardBg,
+                filter: cardFilter,
+                transition: isEntering ? 'background .3s cubic-bezier(0.25, 0.46, 0.45, 0.94), filter .3s cubic-bezier(0.25, 0.46, 0.45, 0.94)' : 'none',
+              }}
+            />
 
-            <span style={{ fontSize: 15, fontWeight: 500, color: colorsFor(item.kind).text, display: 'flex', alignItems: 'center', gap: 6, position: 'relative' }}>
+            <span className={styles.spaceName} style={{ color: colorsFor(item.kind).text }}>
               {item.kind === 'new' && <Plus size={16} color="var(--space-new-text)" strokeWidth={2.5} />}
               {item.name}
             </span>
 
             {item.kind !== 'new' && (
-              <span style={{ fontSize: 11, fontWeight: 500, color: 'rgba(255,255,255,0.85)', position: 'relative' }}>{statFor(item)}</span>
+              <span className={styles.spaceStat} style={{ color: 'rgba(255,255,255,0.85)' }}>{statFor(item)}</span>
             )}
           </div>
         )

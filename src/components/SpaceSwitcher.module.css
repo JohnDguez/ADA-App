@@ -1,0 +1,35 @@
+.switcherContainer {
+  position: relative;
+  overflow: hidden;
+}
+
+.spaceCard {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 18px 24px;
+  border-radius: 16px 16px 0 0;
+}
+
+.cardCushion {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 100%;
+  height: 500px;
+}
+
+.spaceName {
+  font-size: 15px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  position: relative;
+}
+
+.spaceStat {
+  font-size: 11px;
+  font-weight: 500;
+  position: relative;
+}
