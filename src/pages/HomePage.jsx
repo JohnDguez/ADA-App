@@ -5,6 +5,7 @@ import { PayRail } from '../components/PayRail'
 import { PageHeader } from '../components/PageHeader'
 import { NotificationsPanel } from '../components/NotificationsPanel'
 import { NewSharedSpacePanel } from '../components/NewSharedSpacePanel'
+import { EmptyState } from '../components/EmptyState'
 import { fmt, cobroPeriod, nextCobroPeriod, getPagarEsteCobro, daysDiff, dateOf, dateToStr, MONTHS, MONTHS_SHORT } from '../lib/utils'
 
 function periodRange(cfg) {
@@ -441,37 +442,60 @@ export function HomePage({ payments, profile, spaceSwitcher, activeSpaceHeader, 
           {/* Pagos del periodo (antes "Próximos a vencer" — se renombró porque
               puede haber pagos por vencer que en realidad son de OTRO periodo,
               y esta sección es específicamente la del periodo actual) */}
-          <div data-coachmark="home-rail" style={{ marginTop: 20 }}>
-            <SectionHead left="Pagos del periodo" right={`Periodo ${periodRange(profile)}`} />
+          {/* v0.9.176 — un amigo de Johnatan probó la app sin ver el coach
+              mark y no encontró cómo agregar un pago desde una sección vacía.
+              El estado vacío ahora es un área tipo drop-zone (borde punteado,
+              tocable) que abre onAdd directo, inspirado en el patrón de Budge.
+              Cuando NO hay datos ni en este periodo ni en el próximo, la
+              sección "Próximo periodo" completa (header + toggle) se oculta y
+              esta única área cubre ambos casos — no tiene sentido un segundo
+              bloque vacío debajo del primero. En cuanto cualquiera de los dos
+              tenga datos, "Próximo periodo" vuelve a aparecer con su toggle. */}
+          {(() => {
+            const currentEmpty = delPeriodo.length === 0
+            const nextEmpty     = upcoming.length === 0
+            const mergeEmpty    = currentEmpty && nextEmpty
 
-            {delPeriodo.length === 0
-              ? <Empty text="Sin pagos pendientes para este periodo" />
-              : <PayRail payments={delPeriodo} cfg={profile} dotColor="var(--upcoming-border)" dotTextColor="var(--impact-warning-text)" handlers={handlers} permissions={spacePermissions} />
-            }
-          </div>
+            return (
+              <>
+                <div data-coachmark="home-rail" style={{ marginTop: 20 }}>
+                  <SectionHead left="Pagos del periodo" right={`Periodo ${periodRange(profile)}`} />
 
-          {/* Próximo periodo — toggle + filtro exacto al periodo */}
-          <div style={{ marginTop: 20, marginBottom: 4 }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 2 }}>
-              <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)' }}>Próximo periodo</span>
-              <div onClick={toggleNextPeriod} style={{ cursor: 'pointer' }}>
-                <div className="toggle-track" style={{ background: showNextPeriod ? 'var(--accent)' : 'var(--border)' }}>
-                  <div className="toggle-thumb" style={{ left: showNextPeriod ? 19 : 3 }} />
+                  {currentEmpty
+                    ? <EmptyState title="Sin pagos pendientes para este periodo" subtitle="Toca aquí o el botón + de abajo para añadir uno" onClick={onAdd} />
+                    : <PayRail payments={delPeriodo} cfg={profile} dotColor="var(--upcoming-border)" dotTextColor="var(--impact-warning-text)" handlers={handlers} permissions={spacePermissions} />
+                  }
                 </div>
-              </div>
-            </div>
-            <span style={{ fontSize: 11, fontWeight: 400, color: 'var(--text)' }}>
-              {nextPeriodRange(profile)}
-            </span>
-          </div>
 
-          {showNextPeriod && (
-            upcoming.length === 0
-              ? <Empty text="Sin pagos registrados para el próximo periodo" />
-              : <div style={{ marginTop: 8 }}>
-                  <PayRail payments={upcoming} cfg={profile} dotColor="var(--accent)" dotTextColor="var(--bg)" handlers={handlers} permissions={spacePermissions} />
-                </div>
-          )}
+                {!mergeEmpty && (
+                  <>
+                    {/* Próximo periodo — toggle + filtro exacto al periodo */}
+                    <div style={{ marginTop: 20, marginBottom: 4 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 2 }}>
+                        <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)' }}>Próximo periodo</span>
+                        <div onClick={toggleNextPeriod} style={{ cursor: 'pointer' }}>
+                          <div className="toggle-track" style={{ background: showNextPeriod ? 'var(--accent)' : 'var(--border)' }}>
+                            <div className="toggle-thumb" style={{ left: showNextPeriod ? 19 : 3 }} />
+                          </div>
+                        </div>
+                      </div>
+                      <span style={{ fontSize: 11, fontWeight: 400, color: 'var(--text)' }}>
+                        {nextPeriodRange(profile)}
+                      </span>
+                    </div>
+
+                    {showNextPeriod && (
+                      nextEmpty
+                        ? <EmptyState title="Sin pagos registrados para el próximo periodo" subtitle="Toca aquí o el botón + de abajo para añadir uno" onClick={onAdd} />
+                        : <div style={{ marginTop: 8 }}>
+                            <PayRail payments={upcoming} cfg={profile} dotColor="var(--accent)" dotTextColor="var(--bg)" handlers={handlers} permissions={spacePermissions} />
+                          </div>
+                    )}
+                  </>
+                )}
+              </>
+            )
+          })()}
         </div>
         </>
         )}
@@ -503,9 +527,8 @@ function SectionHead({ left, right }) {
   )
 }
 
-function Empty({ text }) {
-  return <div style={{ textAlign: 'center', padding: '20px 0', fontSize: 13, fontWeight: 500, color: 'var(--text)' }}>{text}</div>
-}
+// (Empty/EmptyState ahora vive en components/EmptyState.jsx — extraído en
+// v0.9.176 para poder reutilizarlo fuera de Home)
 
 // Resumen colapsable de pagos ya liquidados dentro del periodo actual — no
 // es un segundo registro (ese sigue siendo PaymentsPage/"Pagos"), es solo un
