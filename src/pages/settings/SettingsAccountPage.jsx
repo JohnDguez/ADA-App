@@ -1,21 +1,11 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
-import { ChevronLeft, ChevronRight, AlertTriangle, Eye, EyeOff, Check, X } from 'lucide-react'
+import { ChevronLeft, ChevronRight, AlertTriangle, Eye, EyeOff } from 'lucide-react'
 import { showToast } from '../../components/Toast'
 import { passwordRequirements, isPasswordStrong } from '../../components/PasswordSetupModal'
+import { RequirementRow } from '../../components/RequirementRow'
 import { Card, Row, SectionLabel } from '../../components/SettingsShared'
 import styles from './SettingsAccountPage.module.css'
-
-function RequirementRow({ met, label }) {
-  return (
-    <div className={styles.reqRow}>
-      <div className={`${styles.reqCircle} ${met ? styles.reqCircleMet : ''}`}>
-        {met ? <Check size={10} color="var(--surface)" strokeWidth={3} /> : <X size={10} color="var(--text)" strokeWidth={2.5} />}
-      </div>
-      <span className={styles.reqLabel}>{label}</span>
-    </div>
-  )
-}
 
 // Sub-página "Cuenta" dentro de Ajustes: Nombre, Correo/Google, Contraseña, y
 // la zona de peligro (Eliminar mis datos / Eliminar mi cuenta). Antes vivía

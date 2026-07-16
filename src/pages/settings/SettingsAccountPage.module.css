@@ -260,33 +260,3 @@
 .saveButton {
   margin-bottom: 8px;
 }
-
-/* ── RequirementRow (componente local, duplicado del de PasswordSetupModal.jsx) ── */
-.reqRow {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin-bottom: 4px;
-}
-
-.reqCircle {
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
-  flex-shrink: 0;
-  background: var(--border);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: background .15s;
-}
-
-.reqCircleMet {
-  background: var(--paid);
-}
-
-.reqLabel {
-  font-size: 12px;
-  font-weight: 500;
-  color: var(--text);
-}
