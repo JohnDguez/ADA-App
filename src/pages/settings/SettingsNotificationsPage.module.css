@@ -1,0 +1,109 @@
+.pageWrapper {
+  padding-bottom: 120px;
+  background: var(--bg);
+  min-height: 100vh;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 52px 16px 20px;
+}
+
+.backButton {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--surface);
+  border: 0.5px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.headerTitle {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.subSection {
+  padding: 13px 14px;
+  border-bottom: 0.5px solid var(--border);
+}
+
+.toggleRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+}
+
+.toggleRowLeft {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.toggleLabel {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.toggleSubtitle {
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--text);
+  margin-top: 1px;
+}
+
+.hourLabel {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 8px;
+}
+
+.hourSelectWrapper {
+  max-width: 140px;
+}
+
+.daysBeforeSection {
+  padding: 0 14px 13px;
+  border-bottom: 0.5px solid var(--border);
+}
+
+.daysBeforeLabel {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text);
+  margin-bottom: 6px;
+}
+
+.daysBeforeRow {
+  display: flex;
+  gap: 6px;
+}
+
+.dayButton {
+  width: 36px;
+  height: 36px;
+  border-radius: 5px;
+  border: none;
+  background: var(--bg);
+  color: var(--text);
+  font-weight: 400;
+  font-size: 13px;
+  font-family: 'DM Sans', sans-serif;
+  cursor: pointer;
+}
+
+.dayButtonActive {
+  background: var(--accent);
+  color: var(--surface);
+  font-weight: 600;
+}
