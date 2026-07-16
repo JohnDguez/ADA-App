@@ -1,5 +1,6 @@
 import { Bell, Crown } from 'lucide-react'
 import { useTimeOfDay } from '../hooks/useTimeOfDay'
+import styles from './PageHeader.module.css'
 
 function greeting() {
   const h = new Date().getHours()
@@ -28,7 +29,7 @@ export function PageHeader({ profile, unreadCount, onOpenNotifs }) {
   const timeOfDay = useTimeOfDay(profile?.timezone)
 
   return (
-    <div style={{ position: 'relative', height: 140, display: 'flex', alignItems: 'center', padding: '0 20px', paddingBottom: 24, overflow: 'hidden' }}>
+    <div className={styles.headerRoot}>
 
       {/* Fondo pixel art con crossfade según franja horaria */}
       {Object.entries(HEADER_IMAGES).map(([key, src]) => (
@@ -36,65 +37,44 @@ export function PageHeader({ profile, unreadCount, onOpenNotifs }) {
           key={key}
           src={src}
           alt=""
-          style={{
-            position: 'absolute',
-            inset: 0,
-            width: '100%',
-            height: '100%',
-            objectFit: 'cover',
-            opacity: timeOfDay === key ? 1 : 0,
-            transition: 'opacity 1.5s ease',
-            pointerEvents: 'none',
-            zIndex: 0,
-          }}
+          className={styles.bgImage}
+          style={{ opacity: timeOfDay === key ? 1 : 0 }}
         />
       ))}
 
-      <div style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+      <div className={styles.contentRow}>
 
         {/* Avatar + saludo + nombre */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, flex: 1, minWidth: 0 }}>
-          <div style={{ flexShrink: 0, position: 'relative' }}>
+        <div className={styles.avatarSection}>
+          <div className={styles.avatarWrapper}>
             {profile?.avatar_url
-              ? <img src={profile.avatar_url} alt="avatar" style={{ width: 52, height: 52, borderRadius: '50%', objectFit: 'cover', border: `2px solid ${profile?.is_premium ? 'var(--premium-gold)' : 'rgba(255,255,255,0.3)'}` }} />
-              : <div style={{ width: 52, height: 52, borderRadius: '50%', background: 'var(--accent)', border: `2px solid ${profile?.is_premium ? 'var(--premium-gold)' : 'rgba(255,255,255,0.3)'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, fontWeight: 700, color: '#fff' }}>{initials}</div>
+              ? <img src={profile.avatar_url} alt="avatar" className={styles.avatarImg} style={{ border: `2px solid ${profile?.is_premium ? 'var(--premium-gold)' : 'rgba(255,255,255,0.3)'}` }} />
+              : <div className={styles.avatarFallback} style={{ border: `2px solid ${profile?.is_premium ? 'var(--premium-gold)' : 'rgba(255,255,255,0.3)'}` }}>{initials}</div>
             }
             {profile?.is_premium && (
-              <div style={{
-                position: 'absolute', top: -2, right: -2,
-                width: 20, height: 20, borderRadius: '50%',
-                background: 'var(--premium-gold)', color: 'var(--premium-gold-text)',
-                border: '2px solid var(--bg)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-              }}>
+              <div className={styles.premiumBadge}>
                 <Crown size={11} fill="currentColor" />
               </div>
             )}
           </div>
-          <div style={{ minWidth: 0, flex: 1 }}>
-            <div style={{ fontSize: 14, fontWeight: 400, color: '#fff', lineHeight: 1.3 }}>{greeting()}</div>
-            <div style={{ fontSize: nameFontSize(profile?.name), fontWeight: 700, color: '#fff', lineHeight: 1.2, wordBreak: 'break-word' }}>
+          <div className={styles.textCol}>
+            <div className={styles.greetingText}>{greeting()}</div>
+            <div className={styles.nameText} style={{ fontSize: nameFontSize(profile?.name) }}>
               {profile?.name || ''}
             </div>
           </div>
         </div>
 
         {/* Campana — fondo sólido accent */}
-        <div style={{ flexShrink: 0, marginLeft: 12, position: 'relative' }}>
+        <div className={styles.bellWrapper}>
           <button
             onClick={onOpenNotifs}
-            style={{
-              width: 40, height: 40, borderRadius: 12,
-              background: 'var(--accent)',
-              border: 'none',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              cursor: 'pointer',
-            }}
+            className={styles.bellButton}
           >
-            <Bell size={18} color="#fff" />
+            <Bell size={18} color="var(--surface)" />
           </button>
           {unreadCount > 0 && (
-            <div style={{ position: 'absolute', top: 6, right: 6, width: 8, height: 8, borderRadius: '50%', background: 'var(--danger)', border: '1.5px solid var(--accent)' }} />
+            <div className={styles.unreadDot} />
           )}
         </div>
 
