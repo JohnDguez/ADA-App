@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
-import { Lock, Eye, EyeOff, Check, X } from 'lucide-react'
+import { Lock, Eye, EyeOff } from 'lucide-react'
 import { supabase } from '../lib/supabase'
+import { RequirementRow } from './RequirementRow'
 import styles from './PasswordSetupModal.module.css'
 
 // ── Validador de fortaleza de contraseña ─────────────────────────────────────
@@ -16,20 +17,6 @@ export function passwordRequirements(pwd) {
 export function isPasswordStrong(pwd) {
   const r = passwordRequirements(pwd)
   return r.length && r.uppercase && r.number && r.symbol
-}
-
-function RequirementRow({ met, label }) {
-  return (
-    <div className={styles.reqRow}>
-      <div className={`${styles.reqCircle} ${met ? styles.reqCircleMet : ''}`}>
-        {met
-          ? <Check size={10} color="var(--surface)" strokeWidth={3} />
-          : <X size={10} color="var(--text)" strokeWidth={2.5} />
-        }
-      </div>
-      <span className={styles.reqLabel}>{label}</span>
-    </div>
-  )
 }
 
 // ── Modal de configuración de contraseña (Google users) ──────────────────────
