@@ -55,10 +55,6 @@
   color: var(--text);
 }
 
-.toggleTrack {
-  flex-shrink: 0;
-}
-
 .notifRow {
   display: flex;
   align-items: center;

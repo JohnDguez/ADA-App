@@ -34,7 +34,7 @@ export function Row({ label, value, onClick, last, icon: Icon, iconColor }) {
 
 export function Toggle({ on }) {
   return (
-    <div className={`toggle-track ${styles.toggleTrack}`} style={{ background: on ? 'var(--accent)' : 'var(--border)' }}>
+    <div className="toggle-track" style={{ background: on ? 'var(--accent)' : 'var(--border)' }}>
       <div className="toggle-thumb" style={{ left: on ? 19 : 3 }} />
     </div>
   )
