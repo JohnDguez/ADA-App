@@ -2,7 +2,7 @@
   margin-bottom: 12px;
 }
 
-.label {
+:global(.field-label).label {
   margin-bottom: 6px;
   display: block;
 }
