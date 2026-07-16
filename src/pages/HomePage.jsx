@@ -208,6 +208,22 @@ export function HomePage({ payments, profile, spaceSwitcher, activeSpaceHeader, 
     return d >= nextStart && d <= nextEnd
   }).sort((a, b) => dateOf(a.due_date) - dateOf(b.due_date))
 
+  // Card 2 de la tarjeta de métricas — para usuarios con periodo de cobro
+  // Mensual, "Mes" mostraba exactamente el mismo rango que "Periodo"
+  // (redundante cuando el corte mensual es el día 1, ya que el periodo de
+  // cobro completo coincide con el mes calendario). Para ellos la pestaña
+  // pasa a llamarse "Próximo mes" y muestra el periodo siguiente en vez de
+  // repetir el actual — mismo diseño de tarjeta/anillo, solo cambia la
+  // data. Como ese periodo aún no arranca, nada está "pagado" todavía: el
+  // anillo se queda vacío (0%) y la fila de pagado/pendiente se reemplaza
+  // por un solo total "programado" (decisión de Johnatan, para no mostrar
+  // un confuso "$0.00 pagado"). Mismo criterio de pago fijo/variable ya
+  // usado para `pendingAmt`/`pendingVariableCount` del periodo actual.
+  const isMonthly = profile.cobro_freq === 'monthly'
+  const nextMonthKnownTotal          = upcoming.filter(p => !p.is_variable || p.amount > 0).reduce((a, p) => a + Number(p.amount), 0)
+  const nextMonthFixedCount          = upcoming.filter(p => !p.is_variable || p.amount > 0).length
+  const nextMonthPendingVariableCount = upcoming.filter(p => p.is_variable && !p.amount).length
+
   const handlers = { onMarkPaid, onMarkUnpaid, onCaptureAmount, onEdit, onDelete, onPostpone, onAdvance }
 
   return (
@@ -268,7 +284,7 @@ export function HomePage({ payments, profile, spaceSwitcher, activeSpaceHeader, 
               onClick={() => setActiveCard(1)}
               style={{ position: 'relative', zIndex: 1, flex: 1, textAlign: 'center', padding: '10px 0', border: 'none', background: 'transparent', color: activeCard === 1 ? '#fff' : 'var(--text)', fontSize: 13, fontWeight: activeCard === 1 ? 500 : 400, fontFamily: 'DM Sans, sans-serif', transition: 'color .2s' }}
             >
-              Mes
+              {isMonthly ? 'Próximo mes' : 'Mes'}
             </button>
           </div>
 
@@ -337,9 +353,31 @@ export function HomePage({ payments, profile, spaceSwitcher, activeSpaceHeader, 
                 )}
               </div>
 
-              {/* Card 2 — Este mes. Mismo tratamiento que Card 1. */}
+              {/* Card 2 — Este mes / Próximo mes. Mismo tratamiento visual
+                  que Card 1 en los 3 casos. */}
               <div style={{ minWidth: '100%', background: 'var(--surface)', borderRadius: 12, padding: '14px 16px' }}>
-                {pendingThisMonthAmt <= 0 ? (
+                {isMonthly ? (
+                  <>
+                    <div style={{ display: 'inline-block', background: 'var(--bg)', borderRadius: 5, padding: '4px 8px', fontSize: 12, fontWeight: 500, color: 'var(--text)', marginBottom: 6, float: 'right' }}>
+                      {MONTHS[nextStart.getMonth()]} {nextStart.getFullYear()}
+                    </div>
+                    <div style={{ clear: 'both' }} />
+                    <HalfRing percent={0} />
+                    <div style={{ textAlign: 'center', fontSize: 11, fontWeight: 500, color: 'var(--text)', marginBottom: 12 }}>
+                      {fmt(nextMonthKnownTotal)} programados
+                    </div>
+                    <div style={{ textAlign: 'center', fontSize: 13, fontWeight: 500, color: 'var(--accent)', marginBottom: 2 }}>Total del próximo mes</div>
+                    <div style={{ textAlign: 'center', fontSize: 30, fontWeight: 700, color: 'var(--text)', marginBottom: 8 }}>{fmt(nextMonthKnownTotal)}</div>
+                    <div style={{ textAlign: 'center', fontSize: 12, fontWeight: 500, color: 'var(--text)' }}>
+                      {nextMonthFixedCount} pago{nextMonthFixedCount !== 1 ? 's' : ''} fijo{nextMonthFixedCount !== 1 ? 's' : ''}
+                    </div>
+                    {nextMonthPendingVariableCount > 0 && (
+                      <div style={{ textAlign: 'center', fontSize: 10, fontWeight: 400, color: 'var(--text)', marginTop: 5 }}>
+                        {nextMonthPendingVariableCount} pago{nextMonthPendingVariableCount !== 1 ? 's' : ''} variable{nextMonthPendingVariableCount !== 1 ? 's' : ''} por confirmar
+                      </div>
+                    )}
+                  </>
+                ) : pendingThisMonthAmt <= 0 ? (
                   <>
                     <div style={{ display: 'inline-block', background: 'var(--bg)', borderRadius: 5, padding: '4px 8px', fontSize: 12, fontWeight: 500, color: 'var(--text)', marginBottom: 6, float: 'right' }}>
                       {MONTHS[thisMonth]} {thisYear}
