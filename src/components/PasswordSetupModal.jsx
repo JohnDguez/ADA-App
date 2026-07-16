@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Lock, Eye, EyeOff, Check, X } from 'lucide-react'
 import { supabase } from '../lib/supabase'
+import styles from './PasswordSetupModal.module.css'
 
 // ── Validador de fortaleza de contraseña ─────────────────────────────────────
 export function passwordRequirements(pwd) {
@@ -19,19 +20,14 @@ export function isPasswordStrong(pwd) {
 
 function RequirementRow({ met, label }) {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
-      <div style={{
-        width: 16, height: 16, borderRadius: '50%', flexShrink: 0,
-        background: met ? 'var(--paid)' : 'var(--border)',
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        transition: 'background .15s',
-      }}>
+    <div className={styles.reqRow}>
+      <div className={`${styles.reqCircle} ${met ? styles.reqCircleMet : ''}`}>
         {met
-          ? <Check size={10} color="#fff" strokeWidth={3} />
+          ? <Check size={10} color="var(--surface)" strokeWidth={3} />
           : <X size={10} color="var(--text)" strokeWidth={2.5} />
         }
       </div>
-      <span style={{ fontSize: 12, fontWeight: 500, color: 'var(--text)' }}>{label}</span>
+      <span className={styles.reqLabel}>{label}</span>
     </div>
   )
 }
@@ -69,42 +65,31 @@ export function PasswordSetupModal({ userId, onDone }) {
   }
 
   return (
-    <div style={{
-      position: 'fixed', inset: 0,
-      background: 'rgba(2,10,31,0.6)',
-      zIndex: 500,
-      display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
-    }}>
-      <div style={{
-        background: 'var(--surface)',
-        borderRadius: '20px 20px 0 0',
-        width: '100%', maxWidth: 420,
-        padding: '24px 20px 36px',
-        animation: 'modalSlideUp .32s cubic-bezier(0.25, 0.46, 0.45, 0.94) both',
-      }}>
+    <div className={styles.overlay}>
+      <div className={styles.modal}>
         {/* Encabezado */}
-        <div style={{ marginBottom: 20 }}>
-          <div style={{ fontSize: 18, fontWeight: 700, color: 'var(--text)', marginBottom: 6 }}>
+        <div className={styles.header}>
+          <div className={styles.headerTitle}>
             Crea una contraseña
           </div>
-          <div style={{ fontSize: 13, fontWeight: 400, color: 'var(--text)', lineHeight: 1.6 }}>
+          <div className={styles.headerDescription}>
             Para mantener tu cuenta segura necesitas una contraseña. La usarás para confirmar acciones importantes como eliminar datos.
           </div>
         </div>
 
         {error && (
-          <div style={{ background: 'var(--danger-soft)', border: '0.5px solid var(--danger-border)', borderRadius: 'var(--radius-sm)', padding: '10px 12px', fontSize: 13, color: 'var(--danger)', marginBottom: 14 }}>
+          <div className={styles.errorBox}>
             {error}
           </div>
         )}
 
         {/* Campo contraseña */}
-        <div style={{ marginBottom: 12 }}>
-          <label style={{ display: 'block', fontSize: 10, fontWeight: 600, color: 'var(--text)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>
+        <div className={styles.passwordField}>
+          <label className={styles.fieldLabel}>
             Contraseña
           </label>
-          <div style={{ position: 'relative' }}>
-            <div style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', display: 'flex' }}>
+          <div className={styles.inputWrapper}>
+            <div className={styles.inputIconLeft}>
               <Lock size={15} color="var(--text)" />
             </div>
             <input
@@ -113,11 +98,9 @@ export function PasswordSetupModal({ userId, onDone }) {
               value={password}
               onChange={e => setPassword(e.target.value)}
               placeholder="••••••••"
-              className="field-input"
-              style={{ paddingLeft: 40, paddingRight: 40 }}
+              className={`field-input ${styles.input}`}
             />
-            <button type="button" onClick={() => setShowPass(v => !v)}
-              style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', display: 'flex', padding: 4 }}>
+            <button type="button" onClick={() => setShowPass(v => !v)} className={styles.toggleVisibilityButton}>
               {showPass ? <EyeOff size={16} color="var(--text)" /> : <Eye size={16} color="var(--text)" />}
             </button>
           </div>
@@ -125,7 +108,7 @@ export function PasswordSetupModal({ userId, onDone }) {
 
         {/* Requisitos */}
         {password.length > 0 && (
-          <div style={{ background: 'var(--bg)', borderRadius: 'var(--radius-sm)', padding: '10px 12px', marginBottom: 12 }}>
+          <div className={styles.requirementsBox}>
             <RequirementRow met={reqs.length}    label="Mínimo 8 caracteres" />
             <RequirementRow met={reqs.uppercase} label="Al menos una mayúscula" />
             <RequirementRow met={reqs.number}    label="Al menos un número" />
@@ -134,12 +117,12 @@ export function PasswordSetupModal({ userId, onDone }) {
         )}
 
         {/* Campo confirmar */}
-        <div style={{ marginBottom: 20 }}>
-          <label style={{ display: 'block', fontSize: 10, fontWeight: 600, color: 'var(--text)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>
+        <div className={styles.confirmField}>
+          <label className={styles.fieldLabel}>
             Confirmar contraseña
           </label>
-          <div style={{ position: 'relative' }}>
-            <div style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', display: 'flex' }}>
+          <div className={styles.inputWrapper}>
+            <div className={styles.inputIconLeft}>
               <Lock size={15} color="var(--text)" />
             </div>
             <input
@@ -147,20 +130,15 @@ export function PasswordSetupModal({ userId, onDone }) {
               value={confirm}
               onChange={e => setConfirm(e.target.value)}
               placeholder="Repite tu contraseña"
-              className="field-input"
-              style={{
-                paddingLeft: 40, paddingRight: 40,
-                borderColor: confirm && !match ? 'var(--danger)' : undefined,
-              }}
+              className={`field-input ${styles.input} ${confirm && !match ? styles.inputError : ''}`}
               onKeyDown={e => e.key === 'Enter' && handleSave()}
             />
-            <button type="button" onClick={() => setShowConf(v => !v)}
-              style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', display: 'flex', padding: 4 }}>
+            <button type="button" onClick={() => setShowConf(v => !v)} className={styles.toggleVisibilityButton}>
               {showConf ? <EyeOff size={16} color="var(--text)" /> : <Eye size={16} color="var(--text)" />}
             </button>
           </div>
           {confirm && !match && (
-            <div style={{ fontSize: 11, color: 'var(--danger)', marginTop: 4 }}>Las contraseñas no coinciden</div>
+            <div className={styles.matchError}>Las contraseñas no coinciden</div>
           )}
         </div>
 
@@ -168,7 +146,6 @@ export function PasswordSetupModal({ userId, onDone }) {
           onClick={handleSave}
           disabled={loading || !strong || !match}
           className="btn-primary"
-          style={{ opacity: loading || !strong || !match ? 0.6 : 1 }}
         >
           {loading ? 'Guardando…' : 'Crear contraseña'}
         </button>
