@@ -1,5 +1,6 @@
 import { useState, useMemo, useRef, useEffect } from 'react'
 import { Pause, Play, Trash2, Search, ChevronDown, CreditCard, Pencil, MoreVertical } from 'lucide-react'
+import { EmptyState } from '../components/EmptyState'
 import { PageHeader } from '../components/PageHeader'
 import { NewSharedSpacePanel } from '../components/NewSharedSpacePanel'
 import { fmt, RECUR_FREQ, dateOf, MONTHS_SHORT, getCatColor } from '../lib/utils'
@@ -14,7 +15,7 @@ function FilterChip({ label, active, onClick }) {
   )
 }
 
-export function RecurrentsPage({ payments, profile, spaceSwitcher, activeSpaceHeader, activeSpaceId = null, sharedSpaces, spacePermissions, onOpenPremium, onSpaceReady, unreadCount, onOpenNotifs, onGoSettings, onPause, onResume, onDelete, onEdit, slideClass }) {
+export function RecurrentsPage({ payments, profile, spaceSwitcher, activeSpaceHeader, activeSpaceId = null, sharedSpaces, spacePermissions, onOpenPremium, onSpaceReady, unreadCount, onOpenNotifs, onGoSettings, onPause, onResume, onDelete, onEdit, onAdd, slideClass }) {
   // Mismo mecanismo que HomePage.jsx — ver ahí el porqué (evitar que la
   // animación de entrada se dispare también en un simple cambio de
   // pestaña, no solo en un cambio real de espacio).
@@ -201,12 +202,16 @@ export function RecurrentsPage({ payments, profile, spaceSwitcher, activeSpaceHe
           {/* Lista por categoría */}
           <div style={{ padding: '0 16px', display: 'flex', flexDirection: 'column', gap: 8 }}>
             {byCategory.length === 0 ? (
-              <div style={{ textAlign: 'center', padding: '40px 0' }}>
-                <CreditCard size={32} color="var(--border)" style={{ marginBottom: 10 }} />
-                <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--text)' }}>
-                  {search ? 'Sin resultados para tu búsqueda' : 'Sin gastos recurrentes registrados'}
+              search ? (
+                <div style={{ textAlign: 'center', padding: '40px 0' }}>
+                  <CreditCard size={32} color="var(--border)" style={{ marginBottom: 10 }} />
+                  <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--text)' }}>
+                    Sin resultados para tu búsqueda
+                  </div>
                 </div>
-              </div>
+              ) : (
+                <EmptyState title="Sin gastos recurrentes registrados" subtitle="Toca aquí o el botón + de abajo para añadir uno" onClick={onAdd} />
+              )
             ) : byCategory.map(([cat, catMasters]) => {
               const isOpen   = !!expandedCats[cat]
               const catTotal = catMasters.filter(m => !m.is_variable && !m.paused).reduce((s, m) => s + Number(m.amount), 0)
