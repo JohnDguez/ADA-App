@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { Calendar, ChevronLeft, ChevronRight, ChevronUp, ChevronDown } from 'lucide-react'
 import { MONTHS, MONTHS_SHORT, WEEKDAYS_SHORT, dateOf, addMonths } from '../lib/utils'
+import styles from './DatePicker.module.css'
 
 function toStr(d) {
   const y = d.getFullYear(), m = String(d.getMonth() + 1).padStart(2, '0'), day = String(d.getDate()).padStart(2, '0')
@@ -71,48 +72,42 @@ export function DatePicker({ value, onChange, placeholder }) {
     : (placeholder || 'Selecciona una fecha')
 
   return (
-    <div ref={ref} style={{ position: 'relative' }}>
+    <div ref={ref} className={styles.wrapper}>
       <button
         type="button"
         onClick={toggleOpen}
-        className="field-input"
-        style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', textAlign: 'left', cursor: 'pointer' }}
+        className={`field-input ${styles.trigger}`}
       >
-        <span style={{ color: selected ? 'var(--text)' : 'var(--muted)' }}>{label}</span>
-        <Calendar size={20} color="var(--accent)" strokeWidth={2} style={{ flexShrink: 0 }} />
+        <span className={selected ? styles.triggerLabelFilled : styles.triggerLabelPlaceholder}>{label}</span>
+        <Calendar size={20} color="var(--accent)" strokeWidth={2} className={styles.calendarIcon} />
       </button>
 
       {open && (
-        <div style={{
-          position: 'absolute', [dropUp ? 'bottom' : 'top']: '100%', left: 0, right: 0,
-          [dropUp ? 'marginBottom' : 'marginTop']: 6,
-          background: 'var(--menu-bg)', border: '0.5px solid var(--border)', borderRadius: 'var(--radius-sm)',
-          boxShadow: '0 4px 16px rgba(0,0,0,0.12)', zIndex: 60, padding: 12,
-        }}>
+        <div className={`${styles.panel} ${dropUp ? styles.panelUp : styles.panelDown}`}>
           {mode === 'days' ? (
             <>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-                <button type="button" onClick={() => setViewDate(addMonths(viewDate, -1))} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, display: 'flex' }}>
+              <div className={styles.navRow}>
+                <button type="button" onClick={() => setViewDate(addMonths(viewDate, -1))} className={styles.navArrowButton}>
                   <ChevronLeft size={16} color="var(--text)" />
                 </button>
                 <button
                   type="button"
                   onClick={() => setMode('monthYear')}
-                  style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, padding: '4px 8px', borderRadius: 5 }}
+                  className={styles.monthYearButton}
                 >
-                  <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)' }}>{MONTHS[month]} {year}</span>
+                  <span className={styles.monthYearLabel}>{MONTHS[month]} {year}</span>
                   <ChevronDown size={13} color="var(--text)" />
                 </button>
-                <button type="button" onClick={() => setViewDate(addMonths(viewDate, 1))} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, display: 'flex' }}>
+                <button type="button" onClick={() => setViewDate(addMonths(viewDate, 1))} className={styles.navArrowButton}>
                   <ChevronRight size={16} color="var(--text)" />
                 </button>
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 2, paddingBottom: 6, marginBottom: 6, borderBottom: '0.5px solid var(--border)' }}>
+              <div className={styles.weekdaysRow}>
                 {WEEKDAYS_SHORT.map((w, i) => (
-                  <div key={w + i} style={{ textAlign: 'center', fontSize: 10, color: 'var(--muted)', fontWeight: 600, textTransform: 'uppercase' }}>{w[0]}</div>
+                  <div key={w + i} className={styles.weekdayCell}>{w[0]}</div>
                 ))}
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 2 }}>
+              <div className={styles.daysGrid}>
                 {cells.map((c, i) => {
                   const isSel = isSameDay(c.dateObj, selected)
                   return (
@@ -120,12 +115,7 @@ export function DatePicker({ value, onChange, placeholder }) {
                       type="button"
                       key={i}
                       onClick={() => pick(c.dateObj)}
-                      style={{
-                        textAlign: 'center', fontSize: 12, padding: '7px 0', border: 'none', borderRadius: 5,
-                        background: isSel ? 'var(--accent)' : 'none',
-                        color: isSel ? '#fff' : c.muted ? 'var(--border-mid)' : 'var(--text)',
-                        fontWeight: isSel ? 600 : 400, cursor: 'pointer',
-                      }}
+                      className={`${styles.dayCell} ${isSel ? styles.dayCellSelected : c.muted ? styles.dayCellMuted : ''}`}
                     >
                       {c.day}
                     </button>
@@ -135,23 +125,23 @@ export function DatePicker({ value, onChange, placeholder }) {
             </>
           ) : (
             <>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-                <button type="button" onClick={() => setViewDate(new Date(year - 1, month, 1))} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, display: 'flex' }}>
+              <div className={styles.navRow}>
+                <button type="button" onClick={() => setViewDate(new Date(year - 1, month, 1))} className={styles.navArrowButton}>
                   <ChevronLeft size={16} color="var(--text)" />
                 </button>
                 <button
                   type="button"
                   onClick={() => setMode('days')}
-                  style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, padding: '4px 8px', borderRadius: 5 }}
+                  className={styles.monthYearButton}
                 >
-                  <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)' }}>{year}</span>
+                  <span className={styles.monthYearLabel}>{year}</span>
                   <ChevronUp size={13} color="var(--text)" />
                 </button>
-                <button type="button" onClick={() => setViewDate(new Date(year + 1, month, 1))} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, display: 'flex' }}>
+                <button type="button" onClick={() => setViewDate(new Date(year + 1, month, 1))} className={styles.navArrowButton}>
                   <ChevronRight size={16} color="var(--text)" />
                 </button>
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 6 }}>
+              <div className={styles.monthsGrid}>
                 {MONTHS_SHORT.map((m, i) => {
                   const isSel = i === month
                   return (
@@ -159,13 +149,7 @@ export function DatePicker({ value, onChange, placeholder }) {
                       type="button"
                       key={m}
                       onClick={() => pickMonth(i)}
-                      style={{
-                        padding: '10px 0', border: 'none', borderRadius: 5, textAlign: 'center',
-                        background: isSel ? 'var(--accent)' : 'var(--bg)',
-                        color: isSel ? '#fff' : 'var(--text)',
-                        fontSize: 12, fontWeight: isSel ? 600 : 400, cursor: 'pointer',
-                        fontFamily: 'DM Sans, sans-serif',
-                      }}
+                      className={`${styles.monthCell} ${isSel ? styles.monthCellSelected : ''}`}
                     >
                       {m}
                     </button>

@@ -1,0 +1,147 @@
+.wrapper {
+  position: relative;
+}
+
+.trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  text-align: left;
+  cursor: pointer;
+}
+
+.triggerLabelFilled {
+  color: var(--text);
+}
+
+.triggerLabelPlaceholder {
+  color: var(--muted);
+}
+
+.calendarIcon {
+  flex-shrink: 0;
+}
+
+.panel {
+  position: absolute;
+  left: 0;
+  right: 0;
+  background: var(--menu-bg);
+  border: 0.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  z-index: 60;
+  padding: 12px;
+}
+
+.panelDown {
+  top: 100%;
+  margin-top: 6px;
+}
+
+.panelUp {
+  bottom: 100%;
+  margin-bottom: 6px;
+}
+
+.navRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.navArrowButton {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+}
+
+.monthYearButton {
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  border-radius: 5px;
+}
+
+.monthYearLabel {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.weekdaysRow {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+  padding-bottom: 6px;
+  margin-bottom: 6px;
+  border-bottom: 0.5px solid var(--border);
+}
+
+.weekdayCell {
+  text-align: center;
+  font-size: 10px;
+  color: var(--muted);
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.daysGrid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+}
+
+.dayCell {
+  text-align: center;
+  font-size: 12px;
+  padding: 7px 0;
+  border: none;
+  border-radius: 5px;
+  background: none;
+  color: var(--text);
+  font-weight: 400;
+  cursor: pointer;
+}
+
+.dayCellMuted {
+  color: var(--border-mid);
+}
+
+.dayCellSelected {
+  background: var(--accent);
+  color: var(--surface);
+  font-weight: 600;
+}
+
+.monthsGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+}
+
+.monthCell {
+  padding: 10px 0;
+  border: none;
+  border-radius: 5px;
+  text-align: center;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 400;
+  cursor: pointer;
+  font-family: 'DM Sans', sans-serif;
+}
+
+.monthCellSelected {
+  background: var(--accent);
+  color: var(--surface);
+  font-weight: 600;
+}
