@@ -1,5 +1,6 @@
 import { useTheme } from '../hooks/useTheme'
 import { APP_NAME } from '../lib/constants'
+import styles from './Logo.module.css'
 
 // Componente centralizado del logo. Resuelve la variante light/dark según el tema
 // activo (igual lógica que antes vivía duplicada en AuthPage/ResetPasswordPage).
@@ -14,7 +15,8 @@ export default function Logo({ width = '50%', maxWidth = 180, style = {} }) {
     <img
       src={src}
       alt={APP_NAME}
-      style={{ width, maxWidth, display: 'block', margin: '0 auto 40px', ...style }}
+      className={styles.logo}
+      style={{ width, maxWidth, ...style }}
     />
   )
 }
