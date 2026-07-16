@@ -1,4 +1,4 @@
-import { Plus } from 'lucide-react'
+import { Plus, MoveRight } from 'lucide-react'
 
 // Estado vacío reutilizable — área tipo "drop-zone" (borde punteado, ícono
 // circular, título + subtítulo), tocable. Nace en HomePage.jsx v0.9.176 para
@@ -29,9 +29,10 @@ export function EmptyState({ icon: Icon = Plus, title, subtitle, onClick, second
       {secondaryLabel && onSecondaryClick && (
         <div
           onClick={e => { e.stopPropagation(); onSecondaryClick() }}
-          style={{ fontSize: 12, fontWeight: 500, color: 'var(--accent)', marginTop: 12, cursor: 'pointer' }}
+          style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 12, fontWeight: 500, color: 'var(--accent)', marginTop: 12, cursor: 'pointer' }}
         >
-          {secondaryLabel} →
+          {secondaryLabel}
+          <MoveRight size={13} color="var(--accent)" />
         </div>
       )}
     </div>
