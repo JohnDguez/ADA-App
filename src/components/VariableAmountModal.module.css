@@ -1,0 +1,70 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(2, 10, 31, 0.45);
+  z-index: 250;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 24px;
+}
+
+.modal {
+  background: var(--surface);
+  border-radius: 16px;
+  width: 100%;
+  max-width: 340px;
+  padding: 24px 20px;
+  animation: modalPopIn .22s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+}
+
+.title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+
+.description {
+  font-size: 13px;
+  color: var(--text);
+  margin-bottom: 16px;
+}
+
+.warningBox {
+  background: var(--warning-soft);
+  border: 0.5px solid var(--warning-border);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  font-size: 13px;
+  color: var(--warning);
+  margin-bottom: 12px;
+}
+
+.errorBox {
+  background: var(--danger-soft);
+  border: 0.5px solid var(--danger-border);
+  border-radius: var(--radius-sm);
+  padding: 8px 12px;
+  font-size: 13px;
+  color: var(--danger);
+  margin-bottom: 12px;
+}
+
+.formWrapper {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.formDisabled {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.input {
+  margin-bottom: 14px;
+}
+
+.confirmButton {
+  margin-bottom: 8px;
+}

@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { ConfirmCloseModal } from './ConfirmCloseModal'
+import styles from './VariableAmountModal.module.css'
 
 export function VariableAmountModal({ open, payment, mode = 'pay', spacePermissions, onConfirm, onClose }) {
   const [amount, setAmount] = useState('')
@@ -51,32 +52,24 @@ export function VariableAmountModal({ open, payment, mode = 'pay', spacePermissi
 
   return (
     <>
-      <div onClick={e => e.target === e.currentTarget && requestClose()} style={{
-        position: 'fixed', inset: 0, background: 'rgba(2,10,31,0.45)',
-        zIndex: 250, display: 'flex', alignItems: 'center',
-        justifyContent: 'center', padding: '0 24px',
-      }}>
-        <div style={{
-          background: 'var(--surface)', borderRadius: 16,
-          width: '100%', maxWidth: 340, padding: '24px 20px',
-          animation: 'modalPopIn .22s cubic-bezier(0.25, 0.46, 0.45, 0.94) both',
-        }}>
-          <div style={{ fontSize: 16, fontWeight: 600, color: 'var(--text)', marginBottom: 4 }}>
+      <div onClick={e => e.target === e.currentTarget && requestClose()} className={styles.overlay}>
+        <div className={styles.modal}>
+          <div className={styles.title}>
             {mode === 'estimate' ? 'Monto a pagar' : 'Registrar pago'}
           </div>
-          <div style={{ fontSize: 13, color: 'var(--text)', marginBottom: 16 }}>
+          <div className={styles.description}>
             {payment.name} — {mode === 'estimate' ? 'ingresa el monto que vas a pagar' : 'ingresa el monto que pagaste'}
           </div>
           {!allowed && (
-            <div style={{ background: 'var(--warning-soft)', border: '0.5px solid var(--warning-border)', borderRadius: 'var(--radius-sm)', padding: '10px 12px', fontSize: 13, color: 'var(--warning)', marginBottom: 12 }}>
+            <div className={styles.warningBox}>
               No tienes permitido {mode === 'estimate' ? 'editar' : 'marcar'} pagos en este Espacio Compartido.
             </div>
           )}
-          {error && <div style={{ background: 'var(--danger-soft)', border: '0.5px solid var(--danger-border)', borderRadius: 'var(--radius-sm)', padding: '8px 12px', fontSize: 13, color: 'var(--danger)', marginBottom: 12 }}>{error}</div>}
-          <div style={{ opacity: allowed ? 1 : 0.5, pointerEvents: allowed ? 'auto' : 'none' }}>
+          {error && <div className={styles.errorBox}>{error}</div>}
+          <div className={`${styles.formWrapper} ${!allowed ? styles.formDisabled : ''}`}>
             <label className="field-label">{mode === 'estimate' ? 'Monto' : 'Monto pagado'}</label>
-            <input autoFocus type="number" value={amount} onChange={e => setAmount(e.target.value)} placeholder="0.00" onKeyDown={e => e.key === 'Enter' && handleConfirm()} className="field-input" style={{ marginBottom: 14 }} />
-            <button onClick={handleConfirm} disabled={!allowed} className="btn-primary" style={{ marginBottom: 8, opacity: allowed ? 1 : 0.6 }}>{mode === 'estimate' ? 'Guardar monto' : 'Confirmar pago'}</button>
+            <input autoFocus type="number" value={amount} onChange={e => setAmount(e.target.value)} placeholder="0.00" onKeyDown={e => e.key === 'Enter' && handleConfirm()} className={`field-input ${styles.input}`} />
+            <button onClick={handleConfirm} disabled={!allowed} className={`btn-primary ${styles.confirmButton}`}>{mode === 'estimate' ? 'Guardar monto' : 'Confirmar pago'}</button>
           </div>
           <button onClick={requestClose} className="btn-ghost">Cancelar</button>
         </div>
