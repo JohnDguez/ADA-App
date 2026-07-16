@@ -212,7 +212,7 @@ export function HomePage({ payments, profile, spaceSwitcher, activeSpaceHeader, 
   // Mensual, "Mes" mostraba exactamente el mismo rango que "Periodo"
   // (redundante cuando el corte mensual es el día 1, ya que el periodo de
   // cobro completo coincide con el mes calendario). Para ellos la pestaña
-  // pasa a llamarse "Próximo mes" y muestra el periodo siguiente en vez de
+  // pasa a llamarse "Próximo periodo" y muestra el periodo siguiente en vez de
   // repetir el actual — mismo diseño de tarjeta/anillo, solo cambia la
   // data. Como ese periodo aún no arranca, nada está "pagado" todavía: el
   // anillo se queda vacío (0%) y la fila de pagado/pendiente se reemplaza
@@ -284,7 +284,7 @@ export function HomePage({ payments, profile, spaceSwitcher, activeSpaceHeader, 
               onClick={() => setActiveCard(1)}
               style={{ position: 'relative', zIndex: 1, flex: 1, textAlign: 'center', padding: '10px 0', border: 'none', background: 'transparent', color: activeCard === 1 ? '#fff' : 'var(--text)', fontSize: 13, fontWeight: activeCard === 1 ? 500 : 400, fontFamily: 'DM Sans, sans-serif', transition: 'color .2s' }}
             >
-              {isMonthly ? 'Próximo mes' : 'Mes actual'}
+              {isMonthly ? 'Próximo periodo' : 'Mes actual'}
             </button>
           </div>
 
@@ -353,7 +353,7 @@ export function HomePage({ payments, profile, spaceSwitcher, activeSpaceHeader, 
                 )}
               </div>
 
-              {/* Card 2 — Este mes / Próximo mes. Mismo tratamiento visual
+              {/* Card 2 — Este mes / Próximo periodo. Mismo tratamiento visual
                   que Card 1 en los 3 casos. */}
               <div style={{ minWidth: '100%', background: 'var(--surface)', borderRadius: 12, padding: '14px 16px' }}>
                 {isMonthly ? (
@@ -363,7 +363,7 @@ export function HomePage({ payments, profile, spaceSwitcher, activeSpaceHeader, 
                     </div>
                     <div style={{ clear: 'both' }} />
                     <HalfRing percent={0} />
-                    <div style={{ textAlign: 'center', fontSize: 13, fontWeight: 500, color: 'var(--accent)', marginBottom: 2 }}>Total del próximo mes</div>
+                    <div style={{ textAlign: 'center', fontSize: 13, fontWeight: 500, color: 'var(--accent)', marginBottom: 2 }}>Total del próximo periodo</div>
                     <div style={{ textAlign: 'center', fontSize: 30, fontWeight: 700, color: 'var(--text)', marginBottom: 8 }}>{fmt(nextMonthKnownTotal)}</div>
                     <div style={{ textAlign: 'center', fontSize: 12, fontWeight: 500, color: 'var(--text)' }}>
                       {nextMonthFixedCount} pago{nextMonthFixedCount !== 1 ? 's' : ''} fijo{nextMonthFixedCount !== 1 ? 's' : ''}
