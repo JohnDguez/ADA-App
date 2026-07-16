@@ -1,0 +1,54 @@
+.wrapper {
+  margin-bottom: 12px;
+}
+
+.label {
+  margin-bottom: 6px;
+  display: block;
+}
+
+.pillGroup {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+
+.pillGroupExtra {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 6px;
+  flex-wrap: wrap;
+}
+
+.pill {
+  flex: 1;
+  padding: 8px 0;
+  border-radius: 5px;
+  border: none;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 400;
+  font-family: 'DM Sans', sans-serif;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.pillActive {
+  background: var(--accent);
+  color: var(--surface);
+  font-weight: 600;
+}
+
+.toggleButton {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 12px;
+  color: var(--text);
+  font-family: 'DM Sans', sans-serif;
+  padding: 2px 0;
+}
