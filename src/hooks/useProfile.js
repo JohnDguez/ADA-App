@@ -13,6 +13,7 @@ const DEFAULT_PROFILE = {
   salary_amount: 0,
   avatar_url: null,
   is_premium: false,
+  default_space_id: null,
   category_icons: {},
   category_colors: {},
 }
