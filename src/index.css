@@ -62,6 +62,7 @@
   --nav-icon:         #F2F2F2;
   --header-text:      #FFFFFF;
   --pay-icon:         #F2F2F2;
+  --overdue-text:     #FFFFFF;
   --section-bg:       #D9D9D9;
   --title-bg:         #E8E8E8;
   --label-variable:   #6884A9;
@@ -168,6 +169,7 @@
   --nav-icon:        #F2F2F2;
   --header-text:     #FFFFFF;
   --pay-icon:        #F2F2F2;
+  --overdue-text:    #FFFFFF;
   --section-bg:      #1E2130;
   --title-bg:        #1A1D27;
   --label-variable:  #7A95B8;
@@ -215,6 +217,7 @@
     --nav-icon:        #F2F2F2;
     --header-text:     #FFFFFF;
     --pay-icon:        #F2F2F2;
+    --overdue-text:    #FFFFFF;
     --section-bg:      #1E2130;
     --title-bg:        #1A1D27;
     --label-variable:  #7A95B8;
