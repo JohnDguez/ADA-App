@@ -1,0 +1,71 @@
+.wrapper {
+  margin-bottom: 16px;
+}
+
+.label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--accent);
+  font-size: 12.5px;
+  font-weight: 600;
+  margin-left: 4px;
+  margin-bottom: 8px;
+}
+
+.lockContainer {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--radius);
+  background: var(--premium-card-bg);
+  padding-top: 14px;
+}
+
+.blurredContent {
+  filter: blur(6px);
+  pointer-events: none;
+  user-select: none;
+}
+
+.overlay {
+  position: absolute;
+  inset: 0;
+  background: var(--premium-overlay);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 24px 20px;
+  gap: 16px;
+}
+
+.message {
+  color: var(--premium-text);
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 1.4;
+  max-width: 260px;
+}
+
+.ctaButton {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--premium-gold);
+  color: var(--premium-gold-text);
+  border: none;
+  border-radius: var(--radius-full);
+  padding: 12px 24px;
+  font-size: 14px;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.finePrint {
+  color: var(--premium-text);
+  font-size: 10.5px;
+  font-weight: 400;
+  opacity: 0.75;
+}

@@ -1,4 +1,5 @@
 import { Crown } from 'lucide-react'
+import styles from './PremiumLock.module.css'
 
 // Candado visual reutilizable para cualquier función detrás de is_premium.
 // Si isPremium es true, muestra `children` normal, sin ningún cambio.
@@ -19,51 +20,33 @@ export function PremiumLock({
   if (isPremium) return children
 
   return (
-    <div style={{ marginBottom: 16 }}>
+    <div className={styles.wrapper}>
       {label && (
-        <div style={{
-          display: 'flex', alignItems: 'center', gap: 6,
-          color: 'var(--accent)', fontSize: 12.5, fontWeight: 600,
-          marginLeft: 4, marginBottom: 8,
-        }}>
+        <div className={styles.label}>
           {Icon && <Icon size={14} />}
           {label}
         </div>
       )}
 
-      <div style={{
-        position: 'relative', overflow: 'hidden',
-        borderRadius: 'var(--radius)', background: 'var(--premium-card-bg)',
-        paddingTop: 14,
-      }}>
-        <div style={{ filter: 'blur(6px)', pointerEvents: 'none', userSelect: 'none' }}>
+      <div className={styles.lockContainer}>
+        <div className={styles.blurredContent}>
           {children}
         </div>
 
-        <div style={{
-          position: 'absolute', inset: 0, background: 'var(--premium-overlay)',
-          display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-          textAlign: 'center', padding: '24px 20px', gap: 16,
-        }}>
-          <div style={{ color: 'var(--premium-text)', fontSize: 15, fontWeight: 500, lineHeight: 1.4, maxWidth: 260 }}>
+        <div className={styles.overlay}>
+          <div className={styles.message}>
             {message}
           </div>
 
           <button
             onClick={onUpgradeClick}
-            style={{
-              display: 'flex', alignItems: 'center', gap: 8,
-              background: 'var(--premium-gold)', color: 'var(--premium-gold-text)',
-              border: 'none', borderRadius: 'var(--radius-full)',
-              padding: '12px 24px', fontSize: 14, fontWeight: 700,
-              fontFamily: 'inherit', cursor: 'pointer',
-            }}
+            className={styles.ctaButton}
           >
             <Crown size={16} />
             {ctaText}
           </button>
 
-          <div style={{ color: 'var(--premium-text)', fontSize: 10.5, fontWeight: 400, opacity: 0.75 }}>
+          <div className={styles.finePrint}>
             {finePrint}
           </div>
         </div>
