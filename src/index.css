@@ -64,6 +64,12 @@
   --pay-icon:         #F2F2F2;
   --overdue-text:     #FFFFFF;
   --section-bg:       #D9D9D9;
+  /* Versión más clara de --section-bg, para envolventes grises que
+     necesitan menos contraste con el resto de la UI (ej. PaymentsPage.jsx:
+     chip de categoría, resumen/lista de ingresos extras) — variable propia
+     para no afectar --section-bg donde ya se usa para otra cosa (ej. el
+     track del switch Periodo/Mes en HomePage.jsx) */
+  --section-bg-soft:  #EDEBE7;
   --title-bg:         #E8E8E8;
   --label-variable:   #6884A9;
   --overdue-border:   #B10F17;
@@ -171,6 +177,7 @@
   --pay-icon:        #F2F2F2;
   --overdue-text:    #FFFFFF;
   --section-bg:      #1E2130;
+  --section-bg-soft: #1E2130;
   --title-bg:        #1A1D27;
   --label-variable:  #7A95B8;
   --overdue-border:  #B10F17;
@@ -219,6 +226,7 @@
     --pay-icon:        #F2F2F2;
     --overdue-text:    #FFFFFF;
     --section-bg:      #1E2130;
+    --section-bg-soft: #1E2130;
     --title-bg:        #1A1D27;
     --label-variable:  #7A95B8;
     --overdue-border:  #B10F17;
