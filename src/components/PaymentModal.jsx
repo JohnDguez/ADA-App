@@ -8,6 +8,7 @@ import { FrequencyPicker } from './FrequencyPicker'
 import { PremiumLock } from './PremiumLock'
 import { Select } from './Select'
 import { DatePicker } from './DatePicker'
+import styles from './PaymentModal.module.css'
 
 export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelete, initial, payments, profile, spacePermissions, customCategories = [], onAddCategory, onOpenPremium }) {
   const [mode,               setMode]               = useState('single')
@@ -184,10 +185,10 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
     const catColor = getCatColor(cat, customCategories, profile?.category_colors)
     const CatIcon   = getCategoryIcon(cat, profile?.category_icons)
     return (
-      <div style={{ width: 22, height: 22, borderRadius: 5, background: catColor, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+      <div className={styles.categoryIconSquare} style={{ background: catColor }}>
         {CatIcon
           ? <CatIcon size={13} color="var(--text)" strokeWidth={2} />
-          : <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--text)' }} />
+          : <span className={styles.categoryIconFallbackDot} />
         }
       </div>
     )
@@ -229,13 +230,6 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
       }, periodIncomes)
     : null
 
-  const modalStyle = {
-    background: 'var(--surface)', borderRadius: '20px 20px 0 0',
-    width: '100%', maxWidth: 420, padding: '18px 16px 32px',
-    maxHeight: '92vh', overflowY: 'auto',
-    animation: 'modalSlideUp .32s cubic-bezier(0.25, 0.46, 0.45, 0.94) both',
-  }
-
   if (isEditingInstallment) {
     async function handleEditInstallment() {
       if (!canWrite) return
@@ -261,43 +255,42 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
 
     return (
       <>
-        <div onClick={e => e.target === e.currentTarget && onClose()} style={{ position: 'fixed', inset: 0, background: 'rgba(2,10,31,0.45)', zIndex: 200, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
-          <div style={modalStyle}>
-            <div style={{ width: 34, height: 4, borderRadius: 2, background: 'var(--border)', margin: '0 auto 16px' }} />
+        <div onClick={e => e.target === e.currentTarget && onClose()} className={styles.overlay}>
+          <div className={styles.panel}>
+            <div className={styles.handle} />
 
             {/* Contexto */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
-              <div style={{ fontSize: 16, fontWeight: 600, color: 'var(--text)' }}>Editar parcialidades</div>
-              <div style={{ fontSize: 12, fontWeight: 600, background: 'var(--accent-soft)', color: 'var(--accent)', padding: '4px 10px', borderRadius: 20 }}>
+            <div className={styles.installmentHeaderRow}>
+              <div className={styles.installmentHeaderTitle}>Editar parcialidades</div>
+              <div className={styles.installmentBadge}>
                 Pago {initial.current_installment}/{initial.total_installments}
               </div>
             </div>
 
-            {error && <div style={{ background: 'var(--danger-soft)', border: '0.5px solid var(--danger-border)', borderRadius: 'var(--radius-sm)', padding: '8px 12px', fontSize: 13, color: 'var(--danger)', marginBottom: 12 }}>{error}</div>}
-            {lockedMessage && <div style={{ background: 'var(--warning-soft)', border: '0.5px solid var(--warning-border)', borderRadius: 'var(--radius-sm)', padding: '10px 12px', fontSize: 13, color: 'var(--warning)', marginBottom: 12 }}>{lockedMessage}</div>}
+            {error && <div className={styles.errorBox}>{error}</div>}
+            {lockedMessage && <div className={styles.warningBox}>{lockedMessage}</div>}
 
-            <div style={{ opacity: canWrite ? 1 : 0.5, pointerEvents: canWrite ? 'auto' : 'none' }}>
+            <div className={canWrite ? styles.formWrapper : styles.formDisabled}>
             <Field label="Nombre">
               <input className="field-input" type="text" value={name} onChange={e => setName(e.target.value)} />
             </Field>
 
-            <div style={{ marginBottom: 12 }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
+            <div className={styles.fieldGroup}>
+              <div className={styles.categoryHeaderRow}>
                 <label className="field-label">Categoría</label>
                 <button type="button" onClick={() => { setAddingCategory(true); setNewCategoryName('') }}
-                  style={{ fontSize: 11, fontWeight: 600, color: 'var(--accent)', background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontFamily: 'DM Sans, sans-serif' }}>
+                  className={styles.addCategoryButton}>
                   + Agregar
                 </button>
               </div>
               <Select value={category} onChange={setCategory} options={allCategories} renderIcon={renderCategoryIcon} />
               {addingCategory && (
-                <div style={{ marginTop: 8, display: 'flex', gap: 6 }}>
-                  <input autoFocus className="field-input" placeholder="Nombre de la categoría" value={newCategoryName}
+                <div className={styles.addCategoryRow}>
+                  <input autoFocus className={`field-input ${styles.addCategoryInput}`} placeholder="Nombre de la categoría" value={newCategoryName}
                     onChange={e => setNewCategoryName(e.target.value)}
-                    onKeyDown={e => { if (e.key === 'Enter' && newCategoryName.trim()) handleAddCategory(); if (e.key === 'Escape') setAddingCategory(false) }}
-                    style={{ flex: 1 }} />
+                    onKeyDown={e => { if (e.key === 'Enter' && newCategoryName.trim()) handleAddCategory(); if (e.key === 'Escape') setAddingCategory(false) }} />
                   <button type="button" onClick={handleAddCategory} disabled={!newCategoryName.trim()}
-                    style={{ padding: '0 14px', borderRadius: 'var(--radius-sm)', border: 'none', background: 'var(--accent)', color: 'var(--surface)', fontSize: 13, fontWeight: 600, cursor: 'pointer', opacity: !newCategoryName.trim() ? 0.5 : 1, fontFamily: 'DM Sans, sans-serif' }}>
+                    className={styles.addCategorySubmitButton}>
                     Añadir
                   </button>
                 </div>
@@ -310,7 +303,7 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
 
             <Field label="Total de pagos">
               <input className="field-input" type="number" value={totalInstallments} onChange={e => setTotalInstallments(e.target.value)} placeholder="Ej. 20" min={initial.current_installment} />
-              <div style={{ fontSize: 11, color: 'var(--text)', marginTop: 4 }}>
+              <div className={styles.helperText}>
                 Quedan {Math.max(0, parseInt(totalInstallments) - initial.current_installment + 1) || '—'} pagos por cubrir
               </div>
             </Field>
@@ -322,11 +315,11 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
             </Field>
             </div>
 
-            <button onClick={handleEditInstallment} disabled={saving || !canWrite} className="btn-primary" style={{ marginTop: 4, opacity: (saving || !canWrite) ? 0.7 : 1 }}>
+            <button onClick={handleEditInstallment} disabled={saving || !canWrite} className={`btn-primary ${styles.saveButtonSpacing}`} style={{ opacity: (saving || !canWrite) ? 0.7 : 1 }}>
               {saving ? 'Guardando…' : 'Guardar cambios'}
             </button>
-            <button onClick={onClose} className="btn-ghost" style={{ marginTop: 8 }}>Cancelar</button>
-            <button onClick={() => { onDelete(initial.id, initial); onClose() }} disabled={!canDelete} className="btn-danger" style={{ marginTop: 6, opacity: canDelete ? 1 : 0.5 }}>
+            <button onClick={onClose} className={`btn-ghost ${styles.cancelButtonSpacing}`}>Cancelar</button>
+            <button onClick={() => { onDelete(initial.id, initial); onClose() }} disabled={!canDelete} className={`btn-danger ${styles.deleteButtonSpacing}`} style={{ opacity: canDelete ? 1 : 0.5 }}>
               Cancelar parcialidades
             </button>
           </div>
@@ -337,41 +330,41 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
 
   return (
     <>
-      <div onClick={e => e.target === e.currentTarget && requestClose()} style={{ position: 'fixed', inset: 0, background: 'rgba(2,10,31,0.45)', zIndex: 200, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
-        <div style={modalStyle}>
-          <div style={{ width: 34, height: 4, borderRadius: 2, background: 'var(--border)', margin: '0 auto 16px' }} />
+      <div onClick={e => e.target === e.currentTarget && requestClose()} className={styles.overlay}>
+        <div className={styles.panel}>
+          <div className={styles.handle} />
 
           {!initial && (
-            <div data-coachmark="modal-payment-type-tabs" style={{ display: 'flex', background: 'var(--bg)', borderRadius: 10, padding: 3, marginBottom: 16, border: '0.5px solid var(--border)' }}>
+            <div data-coachmark="modal-payment-type-tabs" className={styles.paymentTypeTabs}>
               {[['single','Pago único'],['recurrent','Recurrente'],['installment','Parcialidades']].map(([m, label]) => (
-                <button key={m} onClick={() => setMode(m)} style={{ flex: 1, padding: '8px 0', borderRadius: 8, border: 'none', background: mode === m ? 'var(--accent)' : 'transparent', color: mode === m ? 'var(--surface)' : 'var(--text)', fontWeight: mode === m ? 600 : 400, fontSize: 12, fontFamily: 'DM Sans, sans-serif', cursor: 'pointer' }}>{label}</button>
+                <button key={m} onClick={() => setMode(m)} className={`${styles.paymentTypeTab} ${mode === m ? styles.paymentTypeTabActive : ''}`}>{label}</button>
               ))}
             </div>
           )}
 
-          <div style={{ fontSize: 16, fontWeight: 600, color: 'var(--text)', marginBottom: 14 }}>
+          <div className={styles.modalTitle}>
             {initial?.is_master && initial?.paused ? 'Reactivar pago recurrente' : initial?.is_master ? 'Editar pago recurrente' : initial ? 'Editar pago' : mode === 'installment' ? 'Pago en parcialidades' : mode === 'recurrent' ? 'Pago recurrente' : 'Nuevo pago'}
           </div>
 
           {mode === 'installment' && !initial && (
-            <div style={{ background: 'var(--accent-soft)', border: '0.5px solid var(--accent-border)', borderRadius: 'var(--radius-sm)', padding: '10px 12px', marginBottom: 12, fontSize: 12, color: 'var(--accent)' }}>
+            <div className={styles.infoBanner}>
               Los pagos se generan uno a uno. Al marcar cada pago como pagado, el siguiente aparece automáticamente.
             </div>
           )}
 
-          {error && <div style={{ background: 'var(--danger-soft)', border: '0.5px solid var(--danger-border)', borderRadius: 'var(--radius-sm)', padding: '8px 12px', fontSize: 13, color: 'var(--danger)', marginBottom: 12 }}>{error}</div>}
-          {lockedMessage && <div style={{ background: 'var(--warning-soft)', border: '0.5px solid var(--warning-border)', borderRadius: 'var(--radius-sm)', padding: '10px 12px', fontSize: 13, color: 'var(--warning)', marginBottom: 12 }}>{lockedMessage}</div>}
+          {error && <div className={styles.errorBox}>{error}</div>}
+          {lockedMessage && <div className={styles.warningBox}>{lockedMessage}</div>}
 
-          <div style={{ opacity: canWrite ? 1 : 0.5, pointerEvents: canWrite ? 'auto' : 'none' }}>
+          <div className={canWrite ? styles.formWrapper : styles.formDisabled}>
           <Field label="Nombre">
             <input autoFocus={!initial} className="field-input" type="text" value={name} onChange={e => setName(e.target.value)} placeholder="Ej. Netflix, Renta, Luz…" />
           </Field>
 
-          <div style={{ marginBottom: 12 }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
+          <div className={styles.fieldGroup}>
+            <div className={styles.categoryHeaderRow}>
               <label className="field-label">Categoría</label>
               <button type="button" onClick={() => { setAddingCategory(true); setNewCategoryName('') }}
-                style={{ fontSize: 11, fontWeight: 600, color: 'var(--accent)', background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontFamily: 'DM Sans, sans-serif' }}>
+                className={styles.addCategoryButton}>
                 + Agregar
               </button>
             </div>
@@ -379,13 +372,12 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
               <Select value={category} onChange={setCategory} options={allCategories} renderIcon={renderCategoryIcon} />
             </div>
             {addingCategory && (
-              <div style={{ marginTop: 8, display: 'flex', gap: 6 }}>
-                <input autoFocus className="field-input" placeholder="Nombre de la categoría" value={newCategoryName}
+              <div className={styles.addCategoryRow}>
+                <input autoFocus className={`field-input ${styles.addCategoryInput}`} placeholder="Nombre de la categoría" value={newCategoryName}
                   onChange={e => setNewCategoryName(e.target.value)}
-                  onKeyDown={e => { if (e.key === 'Enter' && newCategoryName.trim()) handleAddCategory(); if (e.key === 'Escape') setAddingCategory(false) }}
-                  style={{ flex: 1 }} />
+                  onKeyDown={e => { if (e.key === 'Enter' && newCategoryName.trim()) handleAddCategory(); if (e.key === 'Escape') setAddingCategory(false) }} />
                 <button type="button" onClick={handleAddCategory} disabled={!newCategoryName.trim()}
-                  style={{ padding: '0 14px', borderRadius: 'var(--radius-sm)', border: 'none', background: 'var(--accent)', color: 'var(--surface)', fontSize: 13, fontWeight: 600, cursor: 'pointer', opacity: !newCategoryName.trim() ? 0.5 : 1, fontFamily: 'DM Sans, sans-serif' }}>
+                  className={styles.addCategorySubmitButton}>
                   Añadir
                 </button>
               </div>
@@ -430,12 +422,12 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
                 </Field>
                 <Field label="Empezar desde el pago #">
                   <input className="field-input" type="number" value={startFrom} onChange={e => setStartFrom(e.target.value)} placeholder="1" min="1" enterKeyHint="next" />
-                  {startNum > 1 && <div style={{ fontSize: 11, color: 'var(--text)', marginTop: 4 }}>Los pagos 1 al {startNum - 1} se marcarán como pagados automáticamente.</div>}
+                  {startNum > 1 && <div className={styles.helperText}>Los pagos 1 al {startNum - 1} se marcarán como pagados automáticamente.</div>}
                 </Field>
                 {totalAmt > 0 && numPayments >= 2 && (
-                  <div style={{ background: 'var(--accent-soft)', borderRadius: 'var(--radius-sm)', padding: '12px 14px', marginBottom: 12 }}>
-                    <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--accent)', marginBottom: 6 }}>Resumen</div>
-                    <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--text)', lineHeight: 1.7 }}>
+                  <div className={styles.summaryBox}>
+                    <div className={styles.summaryTitle}>Resumen</div>
+                    <div className={styles.summaryText}>
                       Pagarás <strong>{numPayments} pagos de ${perPayment.toLocaleString('es-MX')}</strong>, uno cada{' '}
                       {recurFreq === 'weekly' ? 'semana' : recurFreq === 'biweekly' ? 'quincena' : recurFreq === 'monthly' ? 'mes' : recurFreq === 'bimonthly' ? '2 meses' : recurFreq === 'quarterly' ? '3 meses' : recurFreq === 'semiannual' ? '6 meses' : 'año'}.
                       {nextDate && (
@@ -456,15 +448,15 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
           )}
 
           {showDatePicker && (
-            <div style={{ marginBottom: 12 }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
-                <label className="field-label" style={{ marginBottom: 0 }}>
+            <div className={styles.fieldGroup}>
+              <div className={styles.categoryHeaderRow}>
+                <label className={`field-label ${styles.dueDateLabelNoMargin}`}>
                   {mode === 'installment' ? 'Fecha del primer pago' : 'Fecha de vencimiento'}
                 </label>
                 {mode === 'single' && !initial && !isVariable && (
                   <div onClick={() => setAlreadyPaid(v => !v)}
-                    style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer' }}>
-                    <span style={{ fontSize: 11, fontWeight: 600, color: alreadyPaid ? 'var(--paid)' : 'var(--text)' }}>
+                    className={styles.alreadyPaidToggle}>
+                    <span className={styles.alreadyPaidLabel} style={{ color: alreadyPaid ? 'var(--paid)' : 'var(--text)' }}>
                       Ya lo pagué
                     </span>
                     <div className="toggle-track" style={{ background: alreadyPaid ? 'var(--paid)' : 'var(--border)' }}>
@@ -485,12 +477,12 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
 
           {showWeekdayPicker && (
             <Field label="Día de vencimiento">
-              <div style={{ display: 'flex', gap: 6 }}>
+              <div className={styles.weekdayRow}>
                 {WEEKDAYS_SHORT.map((d, i) => (
-                  <button key={i} onClick={() => setWeekday(i)} style={{ flex: 1, padding: '8px 0', borderRadius: 6, border: weekday === i ? '1.5px solid var(--accent)' : '0.5px solid var(--border)', background: weekday === i ? 'var(--accent-soft)' : 'var(--bg)', color: weekday === i ? 'var(--accent)' : 'var(--text)', fontSize: 11, fontWeight: weekday === i ? 600 : 400, fontFamily: 'DM Sans, sans-serif', cursor: 'pointer' }}>{d}</button>
+                  <button key={i} onClick={() => setWeekday(i)} className={`${styles.weekdayButton} ${weekday === i ? styles.weekdayButtonActive : ''}`}>{d}</button>
                 ))}
               </div>
-              <div style={{ fontSize: 11, color: 'var(--text)', marginTop: 6 }}>
+              <div className={styles.helperTextMt6}>
                 Próximo: {nextWeekdayDate(weekday).toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric', month: 'long' })}
               </div>
             </Field>
@@ -499,12 +491,12 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
           {showBiweeklyPicker && (
             <Field label="Fecha base de inicio (quincenal)">
               <DatePicker value={biweeklyDate} onChange={setBiweeklyDate} />
-              {nextBiDate && <div style={{ fontSize: 11, color: 'var(--text)', marginTop: 6 }}>Próximo vencimiento: {nextBiDate.toLocaleDateString('es-MX', { day: 'numeric', month: 'long' })}</div>}
+              {nextBiDate && <div className={styles.helperTextMt6}>Próximo vencimiento: {nextBiDate.toLocaleDateString('es-MX', { day: 'numeric', month: 'long' })}</div>}
             </Field>
           )}
 
           {mode === 'recurrent' && (
-            <div style={{ background: 'var(--bg)', borderRadius: 'var(--radius-sm)', padding: '10px 12px', marginBottom: 12, fontSize: 12, color: 'var(--text)' }}>
+            <div className={styles.recurrentNote}>
               Se generará un nuevo pago automáticamente cada {recurFreq === 'weekly' ? '7 días' : recurFreq === 'biweekly' ? '14 días' : 'mes'}.
             </div>
           )}
@@ -523,28 +515,24 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
                 message="Descubre como este nuevo gasto impacta en tus finanzas de ese periodo"
                 onUpgradeClick={onOpenPremium}
               >
-              <div style={{ marginBottom: 16 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'var(--accent)', fontSize: 12.5, fontWeight: 600, marginLeft: 4, marginBottom: 8 }}>
+              <div className={styles.impactWrapper}>
+                <div className={styles.impactLabel}>
                   <Wallet size={14} />
                   Impacto en tus finanzas
                 </div>
-                <div style={{ background: 'var(--section-bg)', borderRadius: 'var(--radius)', padding: 14 }}>
-                  <div style={{
-                    background: 'var(--bg)', borderRadius: 'var(--radius-sm)', padding: 14,
-                    borderStyle: 'solid', borderColor: colorEstado,
-                    borderWidth: '0.5px 0.5px 0.5px 5px',
-                  }}>
-                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: 6, marginBottom: 8 }}>
-                      {esNegativo ? <AlertTriangle size={15} color={colorEstado} style={{ marginTop: 2, flexShrink: 0 }} /> : <Check size={15} color={colorEstado} style={{ marginTop: 2, flexShrink: 0 }} />}
-                      <div style={{ fontSize: 12.5, fontWeight: 600, color: colorEstado, lineHeight: 1.5 }}>
+                <div className={styles.impactCard}>
+                  <div className={styles.impactPeriodBox} style={{ borderColor: colorEstado }}>
+                    <div className={styles.impactStatusRow}>
+                      {esNegativo ? <AlertTriangle size={15} color={colorEstado} className={styles.impactStatusIcon} /> : <Check size={15} color={colorEstado} className={styles.impactStatusIcon} />}
+                      <div className={styles.impactStatusText} style={{ color: colorEstado }}>
                         <div>{esNegativo ? '¡Cuidado! Puede alterar tus finanzas' : 'Todo bien'}</div>
                         <div>Periodo {rangeLabel(first.start, first.end)}.</div>
                       </div>
                     </div>
-                    <div style={{ fontSize: 30, fontWeight: 700, lineHeight: 1.2, color: colorEstado }}>
+                    <div className={styles.impactAmount} style={{ color: colorEstado }}>
                       {fmt(first.disponibleDespues)}
                     </div>
-                    <div style={{ fontSize: 12, fontWeight: 400, color: 'var(--text)', marginTop: 4 }}>
+                    <div className={styles.impactDetails}>
                       <div>Disponible actualmente {fmt(first.disponibleAntes)} MXN</div>
                       {(first.pendientesCount > 0 || first.variablesPendientes > 0) && (
                         <div>
@@ -557,19 +545,19 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
                   </div>
 
                   {second && (
-                    <div style={{ marginTop: 10 }}>
-                      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 6 }}>
-                        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 6 }}>
-                          <Repeat size={13} color="var(--text)" style={{ marginTop: 2, flexShrink: 0 }} />
-                          <div style={{ fontSize: 12, fontWeight: 400, color: 'var(--text)', lineHeight: 1.5 }}>
+                    <div className={styles.impactSecondPeriod}>
+                      <div className={styles.impactSecondRow}>
+                        <div className={styles.impactSecondLeft}>
+                          <Repeat size={13} color="var(--text)" className={styles.impactSecondIcon} />
+                          <div className={styles.impactSecondText}>
                             <div>Disponible en el siguiente periodo</div>
                             <div>{rangeLabel(second.start, second.end)}.</div>
                           </div>
                         </div>
-                        <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--text)', whiteSpace: 'nowrap' }}>{fmt(second.disponibleDespues)} MXN</span>
+                        <span className={styles.impactSecondAmount}>{fmt(second.disponibleDespues)} MXN</span>
                       </div>
                       {(second.pendientesCount > 0 || second.variablesPendientes > 0) && (
-                        <div style={{ fontSize: 11, fontWeight: 400, color: 'var(--text)', marginTop: 2 }}>
+                        <div className={styles.impactSecondDetails}>
                           {second.pendientesCount > 0 && `${second.pendientesCount} pago${second.pendientesCount > 1 ? 's' : ''} pendiente${second.pendientesCount > 1 ? 's' : ''} ${fmt(second.pendientesMonto)}`}
                           {second.pendientesCount > 0 && second.variablesPendientes > 0 && ' + '}
                           {second.variablesPendientes > 0 && `${second.variablesPendientes} pago${second.variablesPendientes > 1 ? 's' : ''} variable${second.variablesPendientes > 1 ? 's' : ''} sin contar`}
@@ -579,7 +567,7 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
                   )}
 
                   {!profile.salary_enabled && (
-                    <div style={{ fontSize: 11, fontWeight: 400, color: 'var(--text)', marginTop: 8 }}>
+                    <div className={styles.impactSalaryHint}>
                       Configura tu sueldo en Ajustes para ver tu disponible completo.
                     </div>
                   )}
@@ -589,12 +577,12 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
             )
           })()}
 
-          <button onClick={handleSave} disabled={saving || !canWrite} className="btn-primary" style={{ marginTop: 4, opacity: (saving || !canWrite) ? 0.7 : 1 }}>
+          <button onClick={handleSave} disabled={saving || !canWrite} className={`btn-primary ${styles.saveButtonSpacing}`} style={{ opacity: (saving || !canWrite) ? 0.7 : 1 }}>
             {saving ? 'Guardando…' : initial?.is_master && initial?.paused ? 'Reactivar' : initial ? 'Guardar cambios' : mode === 'installment' ? 'Crear pagos' : alreadyPaid ? 'Guardar como pagado' : 'Guardar pago'}
           </button>
-          <button onClick={requestClose} className="btn-ghost" style={{ marginTop: 8 }}>Cancelar</button>
+          <button onClick={requestClose} className={`btn-ghost ${styles.cancelButtonSpacing}`}>Cancelar</button>
           {initial && !isEditingInstallment && (
-            <button onClick={() => { onDelete(initial.id); onClose() }} disabled={!canDelete} className="btn-danger" style={{ marginTop: 6, opacity: canDelete ? 1 : 0.5 }}>Eliminar pago</button>
+            <button onClick={() => { onDelete(initial.id); onClose() }} disabled={!canDelete} className={`btn-danger ${styles.deleteButtonSpacing}`} style={{ opacity: canDelete ? 1 : 0.5 }}>Eliminar pago</button>
           )}
         </div>
       </div>
@@ -611,7 +599,7 @@ function rangeLabel(start, end) {
 
 function Field({ label, children }) {
   return (
-    <div style={{ marginBottom: 12 }}>
+    <div className={styles.fieldGroup}>
       <label className="field-label">{label}</label>
       {children}
     </div>
@@ -620,10 +608,10 @@ function Field({ label, children }) {
 
 function Toggle({ label, sub, value, onChange }) {
   return (
-    <div onClick={() => onChange(!value)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 12px', background: 'var(--bg)', borderRadius: 'var(--radius-sm)', marginBottom: 12, border: '0.5px solid var(--border)', cursor: 'pointer' }}>
+    <div onClick={() => onChange(!value)} className={styles.toggleWrapper}>
       <div>
-        <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--text)' }}>{label}</div>
-        <div style={{ fontSize: 11, color: 'var(--text)', fontWeight: 400 }}>{sub}</div>
+        <div className={styles.toggleLabel}>{label}</div>
+        <div className={styles.toggleSub}>{sub}</div>
       </div>
       <div className="toggle-track" style={{ background: value ? 'var(--accent)' : 'var(--border)' }}>
         <div className="toggle-thumb" style={{ left: value ? 19 : 3 }} />

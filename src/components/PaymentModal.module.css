@@ -1,0 +1,434 @@
+/* ══════════════════════════════════════════════════════════════════════
+   PaymentModal.module.css
+   Migración incremental por partes — ver CONTEXT.md para el orden completo.
+   Parte 1: shell del modal (overlay/panel/handle, compartidos por las 2
+   ramas de render), rama "editar parcialidades", helpers Field/Toggle.
+   ══════════════════════════════════════════════════════════════════════ */
+
+/* ── Shell compartido por ambas ramas (editar parcialidades / normal) ──── */
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(2, 10, 31, 0.45);
+  z-index: 200;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.panel {
+  background: var(--surface);
+  border-radius: 20px 20px 0 0;
+  width: 100%;
+  max-width: 420px;
+  padding: 18px 16px 32px;
+  max-height: 92vh;
+  overflow-y: auto;
+  animation: modalSlideUp .32s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+}
+
+.handle {
+  width: 34px;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--border);
+  margin: 0 auto 16px;
+}
+
+.errorBox {
+  background: var(--danger-soft);
+  border: 0.5px solid var(--danger-border);
+  border-radius: var(--radius-sm);
+  padding: 8px 12px;
+  font-size: 13px;
+  color: var(--danger);
+  margin-bottom: 12px;
+}
+
+.warningBox {
+  background: var(--warning-soft);
+  border: 0.5px solid var(--warning-border);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  font-size: 13px;
+  color: var(--warning);
+  margin-bottom: 12px;
+}
+
+.formWrapper {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.formDisabled {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.fieldGroup {
+  margin-bottom: 12px;
+}
+
+.categoryHeaderRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+
+.addCategoryButton {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--accent);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  font-family: 'DM Sans', sans-serif;
+}
+
+.addCategoryRow {
+  margin-top: 8px;
+  display: flex;
+  gap: 6px;
+}
+
+.addCategoryInput {
+  flex: 1;
+}
+
+.addCategorySubmitButton {
+  padding: 0 14px;
+  border-radius: var(--radius-sm);
+  border: none;
+  background: var(--accent);
+  color: var(--surface);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: 'DM Sans', sans-serif;
+}
+
+.addCategorySubmitButton:disabled {
+  opacity: 0.5;
+}
+
+.helperText {
+  font-size: 11px;
+  color: var(--text);
+  margin-top: 4px;
+}
+
+.saveButtonSpacing {
+  margin-top: 4px;
+}
+
+.cancelButtonSpacing {
+  margin-top: 8px;
+}
+
+.deleteButtonSpacing {
+  margin-top: 6px;
+}
+
+/* ── Rama "Editar parcialidades" ─────────────────────────────────────────── */
+.installmentHeaderRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.installmentHeaderTitle {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.installmentBadge {
+  font-size: 12px;
+  font-weight: 600;
+  background: var(--accent-soft);
+  color: var(--accent);
+  padding: 4px 10px;
+  border-radius: 20px;
+}
+
+/* ── Helpers: Field, Toggle ───────────────────────────────────────────────── */
+.toggleWrapper {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  background: var(--bg);
+  border-radius: var(--radius-sm);
+  margin-bottom: 12px;
+  border: 0.5px solid var(--border);
+  cursor: pointer;
+}
+
+.toggleLabel {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text);
+}
+
+.toggleSub {
+  font-size: 11px;
+  color: var(--text);
+  font-weight: 400;
+}
+
+/* ── Parte 2: tabs de tipo de pago, título, banner informativo ──────────── */
+.paymentTypeTabs {
+  display: flex;
+  background: var(--bg);
+  border-radius: 10px;
+  padding: 3px;
+  margin-bottom: 16px;
+  border: 0.5px solid var(--border);
+}
+
+.paymentTypeTab {
+  flex: 1;
+  padding: 8px 0;
+  border-radius: 8px;
+  border: none;
+  background: transparent;
+  color: var(--text);
+  font-weight: 400;
+  font-size: 12px;
+  font-family: 'DM Sans', sans-serif;
+  cursor: pointer;
+}
+
+.paymentTypeTabActive {
+  background: var(--accent);
+  color: var(--surface);
+  font-weight: 600;
+}
+
+.modalTitle {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 14px;
+}
+
+.infoBanner {
+  background: var(--accent-soft);
+  border: 0.5px solid var(--accent-border);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  margin-bottom: 12px;
+  font-size: 12px;
+  color: var(--accent);
+}
+
+/* ── Parte 3: resumen de parcialidades ────────────────────────────────────── */
+.summaryBox {
+  background: var(--accent-soft);
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+  margin-bottom: 12px;
+}
+
+.summaryTitle {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--accent);
+  margin-bottom: 6px;
+}
+
+.summaryText {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text);
+  line-height: 1.7;
+}
+
+/* ── Parte 4: selector de fecha, "Ya lo pagué", weekday/biweekly, nota ──── */
+:global(.field-label).dueDateLabelNoMargin {
+  margin-bottom: 0;
+}
+
+.alreadyPaidToggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+}
+
+.alreadyPaidLabel {
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.weekdayRow {
+  display: flex;
+  gap: 6px;
+}
+
+.weekdayButton {
+  flex: 1;
+  padding: 8px 0;
+  border-radius: 6px;
+  border: 0.5px solid var(--border);
+  background: var(--bg);
+  color: var(--text);
+  font-size: 11px;
+  font-weight: 400;
+  font-family: 'DM Sans', sans-serif;
+  cursor: pointer;
+}
+
+.weekdayButtonActive {
+  border: 1.5px solid var(--accent);
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.helperTextMt6 {
+  font-size: 11px;
+  color: var(--text);
+  margin-top: 6px;
+}
+
+.recurrentNote {
+  background: var(--bg);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  margin-bottom: 12px;
+  font-size: 12px;
+  color: var(--text);
+}
+
+/* ── Parte 5: simulador "Impacto en tus finanzas" ─────────────────────────── */
+.impactWrapper {
+  margin-bottom: 16px;
+}
+
+.impactLabel {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--accent);
+  font-size: 12.5px;
+  font-weight: 600;
+  margin-left: 4px;
+  margin-bottom: 8px;
+}
+
+.impactCard {
+  background: var(--section-bg);
+  border-radius: var(--radius);
+  padding: 14px;
+}
+
+.impactPeriodBox {
+  background: var(--bg);
+  border-radius: var(--radius-sm);
+  padding: 14px;
+  border-style: solid;
+  border-width: 0.5px 0.5px 0.5px 5px;
+}
+
+.impactStatusRow {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.impactStatusIcon {
+  margin-top: 2px;
+  flex-shrink: 0;
+}
+
+.impactStatusText {
+  font-size: 12.5px;
+  font-weight: 600;
+  line-height: 1.5;
+}
+
+.impactAmount {
+  font-size: 30px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.impactDetails {
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--text);
+  margin-top: 4px;
+}
+
+.impactSecondPeriod {
+  margin-top: 10px;
+}
+
+.impactSecondRow {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.impactSecondLeft {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+.impactSecondIcon {
+  margin-top: 2px;
+  flex-shrink: 0;
+}
+
+.impactSecondText {
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--text);
+  line-height: 1.5;
+}
+
+.impactSecondAmount {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text);
+  white-space: nowrap;
+}
+
+.impactSecondDetails {
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--text);
+  margin-top: 2px;
+}
+
+.impactSalaryHint {
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--text);
+  margin-top: 8px;
+}
+
+/* ── renderCategoryIcon (helper interno) ─────────────────────────────────── */
+.categoryIconSquare {
+  width: 22px;
+  height: 22px;
+  border-radius: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.categoryIconFallbackDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--text);
+}
