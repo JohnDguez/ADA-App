@@ -1,0 +1,104 @@
+.spotlight {
+  position: fixed;
+  border-radius: 10px;
+  border: 2px solid var(--accent);
+  animation: coachmarkPulse 1.8s ease-out infinite;
+  z-index: 400;
+  pointer-events: none;
+  transition: top .25s, left .25s, width .25s, height .25s;
+}
+
+.bubble {
+  position: fixed;
+  left: 16px;
+  right: 16px;
+  z-index: 401;
+  background: var(--surface);
+  border-radius: 14px;
+  padding: 16px 16px 14px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  animation: modalPopIn .2s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+}
+
+.skipButton {
+  position: absolute;
+  top: 12px;
+  right: 16px;
+  background: none;
+  border: none;
+  color: var(--text);
+  opacity: 0.6;
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: 'DM Sans', sans-serif;
+}
+
+.title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 6px;
+  padding-right: 92px;
+}
+
+.text {
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--text);
+  line-height: 1.4;
+  margin-bottom: 14px;
+}
+
+.footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.dotsRow {
+  display: flex;
+  gap: 4px;
+}
+
+.dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 3px;
+  background: var(--border);
+  transition: all .2s;
+}
+
+.dotActive {
+  width: 14px;
+  background: var(--accent);
+}
+
+.buttonsRow {
+  display: flex;
+  gap: 8px;
+}
+
+.backButton {
+  padding: 7px 12px;
+  border-radius: 5px;
+  background: none;
+  border: 0.5px solid var(--border);
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: 'DM Sans', sans-serif;
+}
+
+.nextButton {
+  padding: 7px 14px;
+  border-radius: 5px;
+  background: var(--accent);
+  border: none;
+  color: var(--surface);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: 'DM Sans', sans-serif;
+}

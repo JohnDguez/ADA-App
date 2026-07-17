@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useLayoutEffect } from 'react'
 import { COACHMARK_STEPS } from '../lib/coachmarkSteps'
+import styles from './Coachmarks.module.css'
 
 // Motor de coach marks: dado un `screenKey` (home, gastos, recurrentes,
 // perfil, nuevo-pago), busca sus pasos en COACHMARK_STEPS y, si el usuario
@@ -207,63 +208,53 @@ export function Coachmarks({ screenKey, profile, onUpdateProfile }) {
   const isLast = stepIndex === steps.length - 1
   const PADDING = 6
 
-  const spotStyle = {
-    position: 'fixed',
-    top: rect.top - PADDING,
-    left: rect.left - PADDING,
-    width: rect.width + PADDING * 2,
-    height: rect.height + PADDING * 2,
-    borderRadius: 10,
-    border: '2px solid var(--accent)',
-    animation: 'coachmarkPulse 1.8s ease-out infinite',
-    zIndex: 400,
-    pointerEvents: 'none',
-    transition: 'top .25s, left .25s, width .25s, height .25s',
-  }
-
   return (
     <>
-      <div style={spotStyle} />
+      <div
+        className={styles.spotlight}
+        style={{
+          top: rect.top - PADDING,
+          left: rect.left - PADDING,
+          width: rect.width + PADDING * 2,
+          height: rect.height + PADDING * 2,
+        }}
+      />
       <div
         ref={bubbleRef}
+        className={styles.bubble}
         style={{
-          position: 'fixed',
           top: bubblePos ?? -9999, // se posiciona invisible hasta medir su alto real
-          left: 16, right: 16,
           visibility: bubblePos === null ? 'hidden' : 'visible',
-          zIndex: 401, background: 'var(--surface)', borderRadius: 14,
-          padding: '16px 16px 14px', boxShadow: '0 8px 24px rgba(0,0,0,0.35)',
-          animation: 'modalPopIn .2s cubic-bezier(0.25, 0.46, 0.45, 0.94) both',
         }}
       >
         <button
           onClick={skipAll}
-          style={{ position: 'absolute', top: 12, right: 16, background: 'none', border: 'none', color: 'var(--text)', opacity: 0.6, fontSize: 11, fontWeight: 500, cursor: 'pointer', fontFamily: 'DM Sans, sans-serif' }}
+          className={styles.skipButton}
         >
           Saltar tutorial
         </button>
 
-        <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--text)', marginBottom: 6, paddingRight: 92 }}>{step.title}</div>
-        <div style={{ fontSize: 13, fontWeight: 400, color: 'var(--text)', lineHeight: 1.4, marginBottom: 14 }}>{step.text}</div>
+        <div className={styles.title}>{step.title}</div>
+        <div className={styles.text}>{step.text}</div>
 
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <div style={{ display: 'flex', gap: 4 }}>
+        <div className={styles.footer}>
+          <div className={styles.dotsRow}>
             {steps.map((_, i) => (
-              <div key={i} style={{ width: i === stepIndex ? 14 : 5, height: 5, borderRadius: 3, background: i === stepIndex ? 'var(--accent)' : 'var(--border)', transition: 'all .2s' }} />
+              <div key={i} className={`${styles.dot} ${i === stepIndex ? styles.dotActive : ''}`} />
             ))}
           </div>
-          <div style={{ display: 'flex', gap: 8 }}>
+          <div className={styles.buttonsRow}>
             {stepIndex > 0 && (
               <button
                 onClick={goBack}
-                style={{ padding: '7px 12px', borderRadius: 5, background: 'none', border: '0.5px solid var(--border)', color: 'var(--text)', fontSize: 12, fontWeight: 500, cursor: 'pointer', fontFamily: 'DM Sans, sans-serif' }}
+                className={styles.backButton}
               >
                 Atrás
               </button>
             )}
             <button
               onClick={goNext}
-              style={{ padding: '7px 14px', borderRadius: 5, background: 'var(--accent)', border: 'none', color: '#fff', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'DM Sans, sans-serif' }}
+              className={styles.nextButton}
             >
               {isLast ? 'Entendido' : 'Siguiente'}
             </button>
