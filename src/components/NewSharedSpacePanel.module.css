@@ -1,0 +1,151 @@
+.wrapper {
+  padding: 0 16px 16px;
+}
+
+.card {
+  background: var(--surface);
+  border-radius: var(--radius);
+  padding: 20px 16px;
+  text-align: center;
+  margin-bottom: 16px;
+}
+
+.premiumCtaTitle {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 6px;
+}
+
+.premiumCtaText {
+  font-size: 12px;
+  color: var(--text);
+  margin-bottom: 14px;
+}
+
+.premiumButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 12px;
+  border-radius: var(--radius-sm);
+  border: none;
+  background: var(--premium-gold);
+  color: var(--premium-gold-text);
+  font-size: 14px;
+  font-weight: 700;
+  font-family: 'DM Sans', sans-serif;
+  cursor: pointer;
+}
+
+.createCard {
+  background: var(--surface);
+  border-radius: var(--radius);
+  padding: 16px;
+  margin-bottom: 16px;
+}
+
+.createTitle {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 12px;
+}
+
+.fieldGroupMb16 {
+  margin-bottom: 16px;
+}
+
+.fieldGroupMb14 {
+  margin-bottom: 14px;
+}
+
+.fieldLabelSpaced {
+  margin-bottom: 8px;
+  display: block;
+}
+
+.toggleRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+}
+
+.toggleRowMb10 {
+  margin-bottom: 10px;
+}
+
+.toggleRowMb14 {
+  margin-bottom: 14px;
+}
+
+.toggleTitle {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.toggleSubtitle {
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--text);
+  margin-top: 1px;
+}
+
+.errorText {
+  font-size: 12px;
+  color: var(--danger);
+  margin-bottom: 10px;
+}
+
+.ownedCard {
+  background: var(--surface);
+  border-radius: var(--radius);
+  padding: 16px;
+  margin-bottom: 16px;
+  text-align: center;
+}
+
+.ownedText {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.joinCard {
+  background: var(--surface);
+  border-radius: var(--radius);
+  padding: 16px;
+}
+
+.joinTitle {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+
+.joinText {
+  font-size: 12px;
+  color: var(--text);
+  margin-bottom: 12px;
+}
+
+:global(.field-input).joinCodeInput {
+  text-align: center;
+  font-size: 20px;
+  letter-spacing: 4px;
+  margin-bottom: 10px;
+}
+
+.maxJoinedCard {
+  background: var(--surface);
+  border-radius: var(--radius);
+  padding: 16px;
+  text-align: center;
+  font-size: 12px;
+  color: var(--text);
+}
