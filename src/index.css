@@ -82,6 +82,55 @@
   --space-inactive-text: #FFFFFF;
   --space-personal-bg:   #47576B;
   --space-personal-text: #FFFFFF;
+
+  /* ── Paleta de colores para categorías (selector libre) ──────────────────
+     Fija, independiente del tema (igual criterio que --premium-*): un color
+     de categoría debe verse igual sin importar claro/oscuro. Usada por el
+     selector de color en SettingsCategoriesPage.jsx; el valor elegido se
+     guarda como el string "var(--palette-N)" en profile.category_colors. */
+  --palette-1:  #F5A623;
+  --palette-2:  #2ECC71;
+  --palette-3:  #3498DB;
+  --palette-4:  #9B59B6;
+  --palette-5:  #1A6FC4;
+  --palette-6:  #27AE60;
+  --palette-7:  #E67E22;
+  --palette-8:  #E91E63;
+  --palette-9:  #795548;
+  --palette-10: #E74C3C;
+  --palette-11: #1ABC9C;
+  --palette-12: #3F51B5;
+  --palette-13: #009688;
+  --palette-14: #FF5722;
+  --palette-15: #607D8B;
+  --palette-16: #F5C242;
+
+  /* ── Nuevas categorías built-in ────────────────────────────────────────── */
+  /* Añadir también en [data-theme="dark"] si se desean overrides */
+  --cat-transporte:    #E67E22;
+  --cat-medicina:      #E91E63;
+  --cat-doctor:        #9C27B0;
+  --cat-mantenimiento: #795548;
+  /* Paleta para categorías personalizadas del usuario — mismos valores que
+     --palette-11 a --palette-15 (consolidado: antes repetía el mismo hex a
+     mano en 2 lugares distintos). */
+  --cat-custom-1: var(--palette-11);
+  --cat-custom-2: var(--palette-12);
+  --cat-custom-3: var(--palette-13);
+  --cat-custom-4: var(--palette-14);
+  --cat-custom-5: var(--palette-15);
+
+  /* ── Premium (candado de funciones premium) ───────────────────────────────
+     Tratamiento visual fijo, intencionalmente igual en light y dark: la
+     tarjeta bloqueada siempre es oscura con texto blanco, sin importar el
+     tema activo de la app (mismo criterio que --impact-warning-text, que
+     tampoco depende del tema). Reutilizado por cualquier función detrás de
+     is_premium. */
+  --premium-card-bg: #0B1220;
+  --premium-overlay: rgba(11, 18, 32, 0.85);
+  --premium-text:    #FFFFFF;
+  --premium-gold:      #F5C242;
+  --premium-gold-text: #1A1200;
 }
 
 /* ── Tema oscuro manual ([data-theme="dark"] en <html>) ───────────────────── */
@@ -271,6 +320,7 @@ a { color: inherit; text-decoration: none; }
   font-size: 10px;
   font-weight: 600;
   color: var(--text);
+  text-transform: uppercase;
   letter-spacing: 0.06em;
   margin-bottom: 4px;
 }
@@ -443,56 +493,14 @@ body.modal-open {
   animation: shimmer 1.5s ease-in-out infinite;
 }
 
-/* ── Paleta de colores para categorías (selector libre) ──────────────────────
-   Fija, independiente del tema (igual criterio que --premium-*): un color de
-   categoría debe verse igual sin importar claro/oscuro. Usada por el
-   selector de color en SettingsCategoriesPage.jsx; el valor elegido se
-   guarda como el string "var(--palette-N)" en profile.category_colors. */
-:root {
-  --palette-1:  #F5A623;
-  --palette-2:  #2ECC71;
-  --palette-3:  #3498DB;
-  --palette-4:  #9B59B6;
-  --palette-5:  #1A6FC4;
-  --palette-6:  #27AE60;
-  --palette-7:  #E67E22;
-  --palette-8:  #E91E63;
-  --palette-9:  #795548;
-  --palette-10: #E74C3C;
-  --palette-11: #1ABC9C;
-  --palette-12: #3F51B5;
-  --palette-13: #009688;
-  --palette-14: #FF5722;
-  --palette-15: #607D8B;
-  --palette-16: #F5C242;
-}
-/* ── Nuevas categorías built-in ─────────────────────────────────────────────── */
-/* Añadir también en [data-theme="dark"] si se desean overrides */
-:root {
-  --cat-transporte:    #E67E22;
-  --cat-medicina:      #E91E63;
-  --cat-doctor:        #9C27B0;
-  --cat-mantenimiento: #795548;
-  /* Paleta para categorías personalizadas del usuario */
-  --cat-custom-1: #1ABC9C;
-  --cat-custom-2: #3F51B5;
-  --cat-custom-3: #009688;
-  --cat-custom-4: #FF5722;
-  --cat-custom-5: #607D8B;
-}
+/* ── Paleta de colores para categorías (selector libre) — ver arriba, ya
+   consolidada dentro del bloque :root principal. ── */
 
-/* ── Premium (candado de funciones premium) ──────────────────────────────────
-   Tratamiento visual fijo, intencionalmente igual en light y dark: la tarjeta
-   bloqueada siempre es oscura con texto blanco, sin importar el tema activo
-   de la app (mismo criterio que --impact-warning-text, que tampoco depende
-   del tema). Reutilizado por cualquier función detrás de is_premium. */
-:root {
-  --premium-card-bg: #0B1220;
-  --premium-overlay: rgba(11, 18, 32, 0.85);
-  --premium-text:    #FFFFFF;
-  --premium-gold:      #F5C242;
-  --premium-gold-text: #1A1200;
-}
+/* ── Nuevas categorías built-in — ver arriba, ya consolidada dentro del
+   bloque :root principal. ── */
+
+/* ── Premium (candado de funciones premium) — ver arriba, ya consolidada
+   dentro del bloque :root principal. ── */
 
 /* Flotación suave de la corona en el hero de PremiumPage */
 @keyframes premiumCrownFloat {
