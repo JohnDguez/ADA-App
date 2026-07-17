@@ -131,12 +131,33 @@ export function PaymentsPage({ payments, profile, spaceSwitcher, activeSpaceHead
     return () => document.body.classList.remove('modal-open')
   }, [incomeModal, remModal, manageIncomeModal])
 
-  // ── Cargar ingresos y verificar inicio de periodo ─────────────────────────
+  // ── Cargar ingresos (se recarga con cualquier cambio de profile/espacio,
+  // incluyendo cambios de config de cobro — el período de las consultas sí
+  // debe reflejarlos siempre) ────────────────────────────────────────────────
   useEffect(() => {
     if (!profile) return
     loadIncomes()
-    checkPeriodStart()
   }, [profile, activeSpaceId])
+
+  // ── Verificar inicio de periodo — SOLO al abrir la página o cambiar de
+  // espacio activo, nunca en cada edición de perfil. Bug real (Johnatan,
+  // v0.9.182): antes esto vivía en el mismo efecto que loadIncomes, con
+  // `profile` completo como dependencia — cualquier cambio de perfil
+  // (incluyendo editar temporalmente `cobro_freq`/`cobro_day1`/`cobro_day2`
+  // en Ajustes para probar algo, y luego revertirlo) volvía a disparar
+  // `checkPeriodStart()`, que siempre sobreescribe `last_seen_period_start`
+  // con el `cobroPeriod()` calculado en ESE momento — con la config de
+  // prueba todavía activa, eso guardaba una fecha de inicio de periodo que
+  // no correspondía a la config real, "ensuciando" el valor para futuras
+  // comparaciones y disparando el modal de remanente de forma falsa más
+  // tarde, sin relación con el periodo real. Se usa `profile?.id` (no
+  // cambia al editar campos del mismo perfil) en vez de `profile` completo,
+  // así este chequeo solo corre cuando de verdad cambia de perfil/espacio.
+  useEffect(() => {
+    if (!profile) return
+    checkPeriodStart()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [profile?.id, activeSpaceId])
 
   // ── Tiempo real (Ingresos Extras) — solo en modo Espacio Compartido ──────
   // Mismo criterio que la suscripción de `payments` en `usePayments.js`: se
@@ -184,9 +205,33 @@ export function PaymentsPage({ payments, profile, spaceSwitcher, activeSpaceHead
   async function checkPeriodStart() {
     const { start } = cobroPeriod(profile)
     const currentPeriodStart = dateToStr(start)
-    const lastSeen = profile.last_seen_period_start
 
-    // Si ya vio este periodo, no mostrar modal
+    // `last_seen_period_start` es independiente por contexto (Personal vs.
+    // cada espacio compartido) — antes vivía SOLO en `profiles` (una sola
+    // columna global), y cambiar a un espacio con un ciclo de cobro distinto
+    // al personal sobreescribía ese valor con una fecha que no correspondía
+    // a ningún contexto real, disparando el modal de remanente de forma
+    // falsa al volver (bug real, Johnatan v0.9.187 — encontrado con espacio
+    // "Pagos Departamento" en el mismo ciclo semanal que Personal, pero el
+    // riesgo aplica sobre todo cuando los ciclos difieren). En Personal se
+    // sigue usando `profiles.last_seen_period_start` (sin cambios de
+    // comportamiento ahí); en un espacio se usa la columna nueva
+    // `shared_space_members.last_seen_period_start`, por usuario+espacio —
+    // ver migración `last_seen_period_start_por_espacio.sql`.
+    let lastSeen
+    if (activeSpaceId) {
+      const { data: memberRow } = await supabase
+        .from('shared_space_members')
+        .select('last_seen_period_start')
+        .eq('space_id', activeSpaceId)
+        .eq('user_id', profile.id)
+        .maybeSingle()
+      lastSeen = memberRow?.last_seen_period_start
+    } else {
+      lastSeen = profile.last_seen_period_start
+    }
+
+    // Si ya vio este periodo (en este contexto), no mostrar modal
     if (lastSeen === currentPeriodStart) return
 
     // Calcular remanente del periodo anterior
@@ -216,14 +261,23 @@ export function PaymentsPage({ payments, profile, spaceSwitcher, activeSpaceHead
     const ingresoTotalPrev = salario + totalPrevExtras
     const remanente = ingresoTotalPrev - totalGastosPrev
 
-    // Actualizar last_seen_period_start primero (para no volver a mostrar)
-    await supabase
-      .from('profiles')
-      .update({ last_seen_period_start: currentPeriodStart })
-      .eq('id', profile.id)
+    // Actualizar last_seen_period_start primero (para no volver a mostrar) —
+    // en la tabla correcta según el contexto activo, nunca cruzando ambas
+    if (activeSpaceId) {
+      await supabase
+        .from('shared_space_members')
+        .update({ last_seen_period_start: currentPeriodStart })
+        .eq('space_id', activeSpaceId)
+        .eq('user_id', profile.id)
+    } else {
+      await supabase
+        .from('profiles')
+        .update({ last_seen_period_start: currentPeriodStart })
+        .eq('id', profile.id)
 
-    if (onUpdateProfile) {
-      onUpdateProfile({ last_seen_period_start: currentPeriodStart })
+      if (onUpdateProfile) {
+        onUpdateProfile({ last_seen_period_start: currentPeriodStart })
+      }
     }
 
     // Solo mostrar si hay remanente positivo y no es el primer periodo (lastSeen existe)
@@ -791,7 +845,7 @@ export function PaymentsPage({ payments, profile, spaceSwitcher, activeSpaceHead
         <>
         {/* Zona de título con fondo diferente */}
         <div className={styles.titleSection}>
-          <div className={styles.titleSectionHeading}>Gastos e ingresos</div>
+          <div className={styles.titleSectionHeading}>Mis gastos e ingresos</div>
           <div className={styles.titleSectionSubtext}>Historial, análisis y balance de tus finanzas del periodo.</div>
         </div>
 
@@ -905,7 +959,7 @@ export function PaymentsPage({ payments, profile, spaceSwitcher, activeSpaceHead
                     className={styles.extrasSummaryButton}
                   >
                     <div className={styles.extrasCheckIcon}>
-                      <Check size={10} color="var(--pay-icon)" strokeWidth={3} />
+                      <Check size={10} color="var(--surface)" strokeWidth={3} />
                     </div>
                     <span className={styles.extrasSummaryText}>
                       {periodIncomes.length} ingreso{periodIncomes.length !== 1 ? 's' : ''} · +{fmt(totalInc)}
