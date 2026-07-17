@@ -205,6 +205,24 @@ export default function App() {
     setPatchNotesOpen(unseen.length > 0)
   }, [user, profile, profileLoading])
 
+  // Pin de "espacio principal" (ActiveSpaceHeader.jsx): aplica el default
+  // guardado en profiles.default_space_id al abrir o recargar la app — pero
+  // solo si esta sesión del navegador no traía ya un espacio activo propio
+  // (sessionStorage), para no pisar un cambio de pestaña que el usuario
+  // acaba de hacer sin recargar. Corre una sola vez por carga, guardado con
+  // un ref (no un estado — no necesita re-render propio, solo evitar que se
+  // repita en cada cambio de profile/sharedSpaces).
+  const appliedDefaultSpaceRef = useRef(false)
+  useEffect(() => {
+    if (appliedDefaultSpaceRef.current) return
+    if (profileLoading || sharedSpaces.loading) return
+    appliedDefaultSpaceRef.current = true
+    if (sessionStorage.getItem('ada_active_space')) return
+    const defId = profile.default_space_id
+    if (defId && sharedSpaces.spaces.some(s => s.space.id === defId)) switchSpace(defId)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [profileLoading, sharedSpaces.loading, profile.default_space_id, sharedSpaces.spaces])
+
   if (authLoading || (user && profileLoading)) return <SkeletonLoader />
   if (isRecovery) return <ResetPasswordPage onDone={() => setIsRecovery(false)} />
   if (!user) return <AuthPage />
@@ -452,6 +470,8 @@ export default function App() {
       deleteSpace={sharedSpaces.deleteSpace}
       leaveSpace={sharedSpaces.leaveSpace}
       user={user}
+      defaultSpaceId={profile.default_space_id ?? null}
+      onSetDefault={handleSetDefaultSpace}
     />
   )
 
@@ -460,6 +480,20 @@ export default function App() {
   // usuario parado en la tarjeta "Nuevo" (que ya no aplicaría, pues ya
   // pertenece a él).
   function handleSpaceReady(spaceId) { switchSpace(spaceId) }
+
+  // Pin de "espacio principal" — llamado desde el botón de pin de
+  // ActiveSpaceHeader.jsx. spaceId es null para Personal, o el id real del
+  // espacio compartido activo.
+  async function handleSetDefaultSpace(spaceId) {
+    const { error } = await updateProfile({ default_space_id: spaceId })
+    if (error) { showToast('Error al guardar tu pestaña principal'); return }
+    if (spaceId === null) {
+      showToast('Personal es tu pestaña principal')
+    } else {
+      const entry = sharedSpaces.spaces.find(s => s.space.id === spaceId)
+      showToast(`"${entry?.space?.name || 'Espacio'}" es tu pestaña principal`)
+    }
+  }
 
   return (
     <>
