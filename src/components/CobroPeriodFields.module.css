@@ -1,0 +1,136 @@
+.fieldGroup {
+  margin-bottom: 14px;
+}
+
+.subLabelMb10 {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 10px;
+}
+
+.subLabelMb8 {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 8px;
+}
+
+.pillRow {
+  display: flex;
+  gap: 6px;
+}
+
+.pill {
+  flex: 1;
+  padding: 8px 0;
+  border-radius: 5px;
+  border: none;
+  background: var(--bg);
+  color: var(--text);
+  font-weight: 400;
+  font-size: 13px;
+  font-family: 'DM Sans', sans-serif;
+  cursor: pointer;
+}
+
+.pillActive {
+  background: var(--accent);
+  color: var(--surface);
+  font-weight: 600;
+}
+
+.weekdayRow {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.weekdayButton {
+  width: 38px;
+  height: 38px;
+  border-radius: 5px;
+  border: none;
+  background: var(--bg);
+  color: var(--text);
+  font-weight: 400;
+  font-size: 13px;
+  font-family: 'DM Sans', sans-serif;
+  cursor: pointer;
+}
+
+.weekdayButtonActive {
+  background: var(--accent);
+  color: var(--surface);
+  font-weight: 600;
+}
+
+.presetsRow {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+}
+
+.presetButton {
+  padding: 7px 12px;
+  border-radius: 5px;
+  border: none;
+  background: var(--bg);
+  color: var(--text);
+  font-weight: 400;
+  font-size: 13px;
+  font-family: 'DM Sans', sans-serif;
+  cursor: pointer;
+}
+
+.presetButtonActive {
+  background: var(--accent);
+  color: var(--surface);
+  font-weight: 600;
+}
+
+.customDaysRow {
+  display: flex;
+  gap: 8px;
+}
+
+.customDayField {
+  flex: 1;
+}
+
+.customDayLabel {
+  display: block;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+
+.monthlyDayInput {
+  max-width: 120px;
+}
+
+.monthlyHelperText {
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--text);
+  margin-top: 6px;
+}
+
+.currencyRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
+  padding-top: 4px;
+}
+
+.currencyLabel {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.currencyValue {
+  color: var(--text);
+}
