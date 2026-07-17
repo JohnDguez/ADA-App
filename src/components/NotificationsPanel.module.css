@@ -1,0 +1,199 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(2, 10, 31, 0.5);
+  z-index: 200;
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-end;
+  padding: 70px 16px 0;
+}
+
+.panel {
+  background: var(--surface);
+  border-radius: 16px;
+  width: 100%;
+  max-width: 340px;
+  box-shadow: 0 8px 32px rgba(2, 10, 31, 0.2);
+  overflow: hidden;
+  max-height: calc(100vh - 100px);
+  display: flex;
+  flex-direction: column;
+  animation: notifSlideIn .25s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  border-bottom: 0.5px solid var(--border);
+  flex-shrink: 0;
+}
+
+.headerLeft {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.headerTitle {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.unreadBadge {
+  background: var(--danger);
+  color: var(--surface);
+  font-size: 10px;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 20px;
+  min-width: 18px;
+  text-align: center;
+}
+
+.headerActions {
+  display: flex;
+  gap: 6px;
+}
+
+.iconButton {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: none;
+  border: 0.5px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.list {
+  overflow-y: auto;
+  flex: 1;
+}
+
+.emptyState {
+  padding: 32px 16px;
+  text-align: center;
+}
+
+.emptyIcon {
+  margin-bottom: 8px;
+}
+
+.emptyText {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text);
+}
+
+.notifRow {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 16px;
+  border-bottom: 0.5px solid var(--bg);
+  cursor: pointer;
+  transition: background .15s;
+}
+
+.notifRowUnread {
+  background: var(--accent-soft);
+}
+
+.notifIconWrapper {
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.notifContent {
+  flex: 1;
+  min-width: 0;
+}
+
+.notifTitle {
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--text);
+  margin-bottom: 2px;
+}
+
+.notifTitleUnread {
+  font-weight: 600;
+}
+
+.notifBody {
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--text);
+  line-height: 1.4;
+}
+
+.notifMeta {
+  font-size: 10px;
+  font-weight: 400;
+  color: var(--text);
+  margin-top: 4px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.notifSpaceName {
+  font-weight: 600;
+  color: var(--space-inactive-text);
+}
+
+.notifActions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.unreadDot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+
+.deleteButton {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: none;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  opacity: 0.5;
+}
+
+/* ── ActorAvatar ──────────────────────────────────────────────────────────── */
+.avatarImg {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.avatarFallback {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--space-inactive-bg);
+  color: var(--space-inactive-text);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 600;
+  flex-shrink: 0;
+}
