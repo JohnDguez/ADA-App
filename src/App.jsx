@@ -142,7 +142,7 @@ export default function App() {
   })
   const [modalOpen,      setModalOpen]     = useState(false)
   const [editPayment,    setEditPayment]   = useState(null)
-  const [varModal,       setVarModal]      = useState({ open: false, payment: null })
+  const [varModal,       setVarModal]      = useState({ open: false, payment: null, resolver: null })
   const [estimateModal,  setEstimateModal] = useState({ open: false, payment: null })
   const [notifOpen,      setNotifOpen]     = useState(false)
   const [slideDir,       setSlideDir]      = useState('right')
@@ -260,19 +260,52 @@ export default function App() {
     setEditPayment(p); setModalOpen(true)
   }
 
+  // handleMarkPaid: usado por PayCard (Home) al terminar su animación de
+  // pintado en pagos fijos — ya no muestra un toast de éxito, el "Pagado"
+  // ahora vive dentro de la propia card animada; el toast de error se
+  // conserva. También sigue siendo el punto de entrada de flujos SIN
+  // animación (ej. GroupCard en RecurrentsPage): ahí un pago variable
+  // sigue abriendo el modal directo, sin resolver, igual que siempre.
   async function handleMarkPaid(payment) {
-    if (payment.is_variable) { setVarModal({ open: true, payment }); return }
+    if (payment.is_variable) { setVarModal({ open: true, payment, resolver: null }); return }
     const { error } = await markPaid(payment.id)
     if (error) showToast('Error al marcar como pagado')
-    else showToast(`${payment.name} marcado como pagado`)
+  }
+  // requestVariableAmount: usado por PayCard (Home) cuando el pago es
+  // variable — abre el mismo modal de siempre, pero en vez de guardar el
+  // pago de inmediato, resuelve una promesa con el monto capturado (o
+  // `null` si se cancela) para que PayCard decida cómo continuar su
+  // animación (mostrar "Pagado" y salir, o revertir el pintado).
+  function requestVariableAmount(payment) {
+    return new Promise(resolve => {
+      setVarModal({ open: true, payment, resolver: resolve })
+    })
+  }
+  // confirmVariablePaid: el guardado real de un pago variable animado —
+  // PayCard lo llama hasta que su propia animación de salida terminó, para
+  // que la card (ya invisible) no salte al actualizarse la lista.
+  async function confirmVariablePaid(payment, amount) {
+    const { error } = await markPaid(payment.id, amount)
+    if (error) showToast('Error al registrar pago')
   }
   async function handleVarConfirm(amount) {
-    const payment = varModal.payment
-    setVarModal({ open: false, payment: null })
+    const payment  = varModal.payment
+    const resolver = varModal.resolver
+    setVarModal({ open: false, payment: null, resolver: null })
+    if (resolver) { resolver(amount); return }
     if (!payment?.id) { showToast('Error: pago no encontrado'); return }
     const { error } = await markPaid(payment.id, amount)
     if (error) showToast('Error al registrar pago')
     else showToast(`${payment.name} registrado — ${fmt(amount)}`)
+  }
+  // handleVarModalClose: reemplaza el onClose inline de VariableAmountModal
+  // (varModal) — si el modal se abrió vía requestVariableAmount (resolver
+  // presente), cancelar debe resolver la promesa con `null` para que
+  // PayCard revierta su animación en vez de quedarse esperando para siempre.
+  function handleVarModalClose() {
+    const resolver = varModal.resolver
+    setVarModal({ open: false, payment: null, resolver: null })
+    if (resolver) resolver(null)
   }
   function openEstimateModal(payment) { setEstimateModal({ open: true, payment }) }
   async function handleEstimateConfirm(amount) {
@@ -511,6 +544,8 @@ export default function App() {
           onAdd={openAdd}
           slideClass={`page-slide-${slideDir}`}
           onMarkPaid={handleMarkPaid}
+          onRequestVariableAmount={requestVariableAmount}
+          onConfirmVariablePaid={confirmVariablePaid}
           onMarkUnpaid={handleMarkUnpaid}
           onCaptureAmount={openEstimateModal}
           onEdit={openEdit}
@@ -625,7 +660,7 @@ export default function App() {
         payment={varModal.payment}
         spacePermissions={spacePermissions}
         onConfirm={handleVarConfirm}
-        onClose={() => setVarModal({ open: false, payment: null })}
+        onClose={handleVarModalClose}
       />
       <VariableAmountModal
         open={estimateModal.open}
