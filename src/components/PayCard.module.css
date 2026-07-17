@@ -1,14 +1,80 @@
 .cardWrapper {
   position: relative;
+  overflow: hidden;
+  transition: max-height 0.45s ease, margin-bottom 0.45s ease;
 }
 
 .card {
   background: var(--surface);
   border-radius: 8px;
-  display: flex;
-  align-items: center;
+  position: relative;
   overflow: hidden;
   user-select: none;
+  transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.45s ease;
+}
+
+.cardExiting {
+  transform: translateX(110%);
+  opacity: 0;
+}
+
+/* Capa de pintado verde (izquierda a derecha) al marcar como pagado */
+.fillLayer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 0%;
+  background: var(--paid);
+  transition: width 0.5s ease;
+}
+
+.fillLayerActive {
+  width: 100%;
+}
+
+/* "Pagado" + checkmark, se muestran encima de la capa ya pintada */
+.fillLabel {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: var(--pay-icon);
+  font-size: 14px;
+  font-weight: 600;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.fillLabelVisible {
+  opacity: 1;
+}
+
+.checkPath {
+  stroke-dasharray: 26;
+  stroke-dashoffset: 26;
+  transition: stroke-dashoffset 0.4s ease;
+}
+
+.checkPathDrawn {
+  stroke-dashoffset: 0;
+}
+
+/* Contenido normal de la card (nombre/monto/botones) — se desvanece
+   cuando termina de pintarse en verde, antes de mostrar "Pagado" */
+.cardContentRow {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  transition: opacity 0.2s ease;
+}
+
+.cardContentHidden {
+  opacity: 0;
+  pointer-events: none;
 }
 
 .infoSection {

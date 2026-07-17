@@ -26,6 +26,12 @@ function statusInfo(p, cfg) {
 // forma de comunicarse en el riel.
 const STATUS_LABELS_ALWAYS_VISIBLE = ['postponed', 'paused']
 
+// Timing de la animación de "marcar como pagado" — ver PayCard.module.css
+// para las transiciones CSS que estos valores deben calzar.
+const FILL_MS       = 500 // pintado de izquierda a derecha (y su reversa al cancelar un monto variable)
+const LABEL_HOLD_MS = 700 // cuánto se queda "Pagado" + checkmark visible antes de deslizarse
+const EXIT_MS       = 450 // deslizado + desvanecido + colapso de espacio
+
 function useLongPress(callback, ms = 500) {
   const timerRef = useRef(null)
   function start(e) {
@@ -37,10 +43,76 @@ function useLongPress(callback, ms = 500) {
   return { onMouseDown: start, onMouseUp: stop, onMouseLeave: stop, onTouchStart: start, onTouchEnd: stop, onTouchCancel: stop }
 }
 
-export function PayCard({ payment: p, cfg, onMarkPaid, onMarkUnpaid, onCaptureAmount, onEdit, onDelete, onPostpone, onAdvance, borderLeft, hideDate, hideDueLabel, railMode, permissions }) {
+export function PayCard({ payment: p, cfg, onMarkPaid, onRequestVariableAmount, onConfirmVariablePaid, onMarkUnpaid, onCaptureAmount, onEdit, onDelete, onPostpone, onAdvance, borderLeft, hideDate, hideDueLabel, railMode, permissions }) {
   const [menuOpen, setMenuOpen] = useState(false)
   const [menuUpward, setMenuUpward] = useState(false)
   const menuRef = useRef(null)
+
+  // Fases de la animación de "marcar como pagado":
+  // idle → filling → (waitingModal solo si es variable) → labeled → exiting
+  // 'reversing' es el camino de vuelta cuando se cancela el modal de monto.
+  const [phase, setPhase] = useState('idle')
+  const wrapperRef = useRef(null)
+  const timers = useRef([])
+
+  useEffect(() => {
+    return () => { timers.current.forEach(clearTimeout) }
+  }, [])
+
+  function after(ms, fn) {
+    const id = setTimeout(fn, ms)
+    timers.current.push(id)
+  }
+
+  // Colapsa el alto real de la card (medido en el momento) a 0, para que la
+  // card de abajo suba suavemente en vez de saltar cuando esta se elimine
+  // del arreglo. El -8px de marginBottom cancela el `gap: 8px` fijo de
+  // `.dayItemsCol` en PayRail.module.css (el gap de flexbox no colapsa solo
+  // por reducir el alto del hijo a 0) — si ese gap cambia de valor ahí, hay
+  // que actualizarlo aquí también.
+  function collapseWrapper() {
+    const el = wrapperRef.current
+    if (!el) return
+    const h = el.offsetHeight
+    el.style.maxHeight = `${h}px`
+    el.style.marginBottom = '0px'
+    void el.offsetHeight // fuerza reflow para que la transición sí anime desde este valor
+    requestAnimationFrame(() => {
+      el.style.maxHeight = '0px'
+      el.style.marginBottom = '-8px'
+    })
+  }
+
+  async function handleMarkPaidClick(e) {
+    e.stopPropagation()
+    if (!canMarkPaid) { blocked('marcar pagos'); return }
+    if (phase !== 'idle') return
+    setPhase('filling')
+    after(FILL_MS, async () => {
+      if (p.is_variable) {
+        setPhase('waitingModal')
+        const amount = await onRequestVariableAmount(p)
+        if (amount == null) {
+          setPhase('reversing')
+          after(FILL_MS, () => setPhase('idle'))
+        } else {
+          setPhase('labeled')
+          after(LABEL_HOLD_MS, () => {
+            setPhase('exiting')
+            collapseWrapper()
+            after(EXIT_MS, () => onConfirmVariablePaid(p, amount))
+          })
+        }
+      } else {
+        setPhase('labeled')
+        after(LABEL_HOLD_MS, () => {
+          setPhase('exiting')
+          collapseWrapper()
+          after(EXIT_MS, () => onMarkPaid(p))
+        })
+      }
+    })
+  }
   const info      = statusInfo(p, cfg)
   const showLabel = !hideDueLabel || STATUS_LABELS_ALWAYS_VISIBLE.includes(info.status)
   const d         = dateOf(p.due_date)
@@ -92,74 +164,95 @@ export function PayCard({ payment: p, cfg, onMarkPaid, onMarkUnpaid, onCaptureAm
     return () => document.removeEventListener('mousedown', handle)
   }, [menuOpen])
 
+  const contentHidden = phase === 'waitingModal' || phase === 'labeled' || phase === 'exiting'
+  const fillActive    = phase === 'filling' || phase === 'waitingModal' || phase === 'labeled' || phase === 'exiting'
+
   return (
-    <div ref={menuRef} className={styles.cardWrapper}>
+    <div ref={el => { menuRef.current = el; wrapperRef.current = el }} className={styles.cardWrapper}>
       <div
         {...longPress}
-        className={styles.card}
+        className={`${styles.card} ${phase === 'exiting' ? styles.cardExiting : ''}`}
         style={{ borderLeft: railMode ? 'none' : `5px solid ${borderLeft || 'var(--border)'}` }}
       >
-        {/* Info izquierda */}
-        <div className={styles.infoSection}>
-          <div className={styles.name}>
-            {p.name}
-          </div>
-          <div className={styles.subtitle}>
-            {hideDate ? p.category : `${p.category} · ${d.getDate()} ${MONTHS_SHORT[d.getMonth()]}`}
-          </div>
-          {freqLabel && (
-            <div className={styles.freqLabel}>{freqLabel}</div>
-          )}
-          {instLabel && (
-            <div className={styles.instLabel}>{instLabel}</div>
-          )}
+        <div className={`${styles.fillLayer} ${fillActive ? styles.fillLayerActive : ''}`} />
+        <div className={`${styles.fillLabel} ${phase === 'labeled' || phase === 'exiting' ? styles.fillLabelVisible : ''}`}>
+          <span>Pagado</span>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+            <path
+              className={`${styles.checkPath} ${phase === 'labeled' || phase === 'exiting' ? styles.checkPathDrawn : ''}`}
+              d="M4 12.5l5.5 5.5L20 6.5"
+              stroke="currentColor"
+              strokeWidth="3"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
         </div>
 
-        {/* Monto + estado */}
-        <div className={styles.amountSection}>
-          {p.is_variable && !p.is_paid && !p.amount ? (
-            <div className={styles.variableGroup}>
-              <button
-                onClick={e => { e.stopPropagation(); onCaptureAmount && onCaptureAmount(p) }}
-                className={styles.captureButton}
-              >
-                <DollarSign size={12} strokeWidth={2.5} /> Agregar monto
-              </button>
-              <span className={styles.variableTag}>Pago variable</span>
+        <div className={`${styles.cardContentRow} ${contentHidden ? styles.cardContentHidden : ''}`}>
+          {/* Info izquierda */}
+          <div className={styles.infoSection}>
+            <div className={styles.name}>
+              {p.name}
             </div>
-          ) : p.is_variable && !p.is_paid ? (
-            <div className={styles.variableGroupTight}>
+            <div className={styles.subtitle}>
+              {hideDate ? p.category : `${p.category} · ${d.getDate()} ${MONTHS_SHORT[d.getMonth()]}`}
+            </div>
+            {freqLabel && (
+              <div className={styles.freqLabel}>{freqLabel}</div>
+            )}
+            {instLabel && (
+              <div className={styles.instLabel}>{instLabel}</div>
+            )}
+          </div>
+
+          {/* Monto + estado */}
+          <div className={styles.amountSection}>
+            {p.is_variable && !p.is_paid && !p.amount ? (
+              <div className={styles.variableGroup}>
+                <button
+                  onClick={e => { e.stopPropagation(); onCaptureAmount && onCaptureAmount(p) }}
+                  className={styles.captureButton}
+                >
+                  <DollarSign size={12} strokeWidth={2.5} /> Agregar monto
+                </button>
+                <span className={styles.variableTag}>Pago variable</span>
+              </div>
+            ) : p.is_variable && !p.is_paid ? (
+              <div className={styles.variableGroupTight}>
+                <div className={styles.amountText}>{fmt(p.amount)}</div>
+                <span className={styles.variableTag}>Pago variable</span>
+              </div>
+            ) : (
               <div className={styles.amountText}>{fmt(p.amount)}</div>
-              <span className={styles.variableTag}>Pago variable</span>
-            </div>
-          ) : (
-            <div className={styles.amountText}>{fmt(p.amount)}</div>
-          )}
-          {showLabel && <div className={styles.statusLabel} style={{ color: info.color }}>{info.label}</div>}
-        </div>
+            )}
+            {showLabel && <div className={styles.statusLabel} style={{ color: info.color }}>{info.label}</div>}
+          </div>
 
-        {/* Botones derecha */}
-        <div className={styles.actionsSection}>
-          {isPending && (
+          {/* Botones derecha */}
+          <div className={styles.actionsSection}>
+            {isPending && (
+              <button
+                onClick={handleMarkPaidClick}
+                disabled={phase !== 'idle'}
+                className={styles.markPaidButton}
+                style={{ background: canMarkPaid ? 'var(--paid)' : 'var(--border)' }}
+              >
+                <Check size={18} color={canMarkPaid ? 'var(--pay-icon)' : 'var(--muted)'} strokeWidth={2.5} />
+              </button>
+            )}
+            {p.is_paid && (
+              <div className={styles.paidIndicator}>
+                <Check size={18} color="var(--pay-icon)" strokeWidth={2.5} />
+              </div>
+            )}
             <button
-              onClick={e => { e.stopPropagation(); canMarkPaid ? onMarkPaid(p) : blocked('marcar pagos') }}
-              className={styles.markPaidButton}
-              style={{ background: canMarkPaid ? 'var(--paid)' : 'var(--border)' }}
+              onClick={e => { e.stopPropagation(); menuOpen ? setMenuOpen(false) : openMenuAt(e.currentTarget) }}
+              className={styles.menuTriggerButton}
             >
-              <Check size={18} color={canMarkPaid ? 'var(--pay-icon)' : 'var(--muted)'} strokeWidth={2.5} />
+              <MoreVertical size={15} color="var(--text)" />
             </button>
-          )}
-          {p.is_paid && (
-            <div className={styles.paidIndicator}>
-              <Check size={18} color="var(--pay-icon)" strokeWidth={2.5} />
-            </div>
-          )}
-          <button
-            onClick={e => { e.stopPropagation(); menuOpen ? setMenuOpen(false) : openMenuAt(e.currentTarget) }}
-            className={styles.menuTriggerButton}
-          >
-            <MoreVertical size={15} color="var(--text)" />
-          </button>
+          </div>
         </div>
       </div>
 
