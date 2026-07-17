@@ -31,7 +31,7 @@ export function RecurrentMigrationModal({ open, onClose }) {
           ].map((text, i) => (
             <div key={i} className={styles.benefitItem}>
               <div className={styles.checkCircle}>
-                <Check size={11} color="var(--surface)" strokeWidth={3} />
+                <Check size={11} color="var(--pay-icon)" strokeWidth={3} />
               </div>
               <span className={styles.benefitText}>{text}</span>
             </div>

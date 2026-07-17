@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react'
 import { MoreVertical, Check, Pencil, Trash2, Clock, ChevronDown, ChevronUp, RotateCcw, FastForward, DollarSign } from 'lucide-react'
 import { statusOf, daysDiff, dateOf, fmt, MONTHS_SHORT, periodLabel, periodCountLabel, RECUR_FREQ, installmentLabel } from '../lib/utils'
 import { showToast } from './Toast'
+import styles from './PayCard.module.css'
 
 function statusInfo(p, cfg) {
   const s = statusOf(p, cfg)
@@ -92,68 +93,70 @@ export function PayCard({ payment: p, cfg, onMarkPaid, onMarkUnpaid, onCaptureAm
   }, [menuOpen])
 
   return (
-    <div ref={menuRef} style={{ position: 'relative' }}>
+    <div ref={menuRef} className={styles.cardWrapper}>
       <div
         {...longPress}
-        style={{ background: 'var(--surface)', borderRadius: 8, borderLeft: railMode ? 'none' : `5px solid ${borderLeft || 'var(--border)'}`, display: 'flex', alignItems: 'center', overflow: 'hidden', userSelect: 'none' }}
+        className={styles.card}
+        style={{ borderLeft: railMode ? 'none' : `5px solid ${borderLeft || 'var(--border)'}` }}
       >
         {/* Info izquierda */}
-        <div style={{ flex: 1, padding: '11px 8px 11px 12px', minWidth: 0, overflow: 'hidden' }}>
-          <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--text)', marginBottom: 2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+        <div className={styles.infoSection}>
+          <div className={styles.name}>
             {p.name}
           </div>
-          <div style={{ fontSize: 11, fontWeight: 400, color: 'var(--text)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+          <div className={styles.subtitle}>
             {hideDate ? p.category : `${p.category} · ${d.getDate()} ${MONTHS_SHORT[d.getMonth()]}`}
           </div>
           {freqLabel && (
-            <div style={{ fontSize: 11, color: 'var(--accent)', fontWeight: 500, marginTop: 1 }}>{freqLabel}</div>
+            <div className={styles.freqLabel}>{freqLabel}</div>
           )}
           {instLabel && (
-            <div style={{ fontSize: 11, fontWeight: 500, color: 'var(--text)', marginTop: 1 }}>{instLabel}</div>
+            <div className={styles.instLabel}>{instLabel}</div>
           )}
         </div>
 
         {/* Monto + estado */}
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 2, padding: '11px 8px', flexShrink: 0 }}>
+        <div className={styles.amountSection}>
           {p.is_variable && !p.is_paid && !p.amount ? (
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6 }}>
+            <div className={styles.variableGroup}>
               <button
                 onClick={e => { e.stopPropagation(); onCaptureAmount && onCaptureAmount(p) }}
-                style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 600, color: 'var(--accent)', background: 'none', border: '1px solid var(--accent)', padding: '3px 8px', borderRadius: 5, cursor: 'pointer' }}
+                className={styles.captureButton}
               >
                 <DollarSign size={12} strokeWidth={2.5} /> Agregar monto
               </button>
-              <span style={{ fontSize: 10, fontWeight: 500, color: 'var(--label-variable)' }}>Pago variable</span>
+              <span className={styles.variableTag}>Pago variable</span>
             </div>
           ) : p.is_variable && !p.is_paid ? (
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 3 }}>
-              <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--text)' }}>{fmt(p.amount)}</div>
-              <span style={{ fontSize: 10, fontWeight: 500, color: 'var(--label-variable)' }}>Pago variable</span>
+            <div className={styles.variableGroupTight}>
+              <div className={styles.amountText}>{fmt(p.amount)}</div>
+              <span className={styles.variableTag}>Pago variable</span>
             </div>
           ) : (
-            <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--text)' }}>{fmt(p.amount)}</div>
+            <div className={styles.amountText}>{fmt(p.amount)}</div>
           )}
-          {showLabel && <div style={{ fontSize: 11, fontWeight: 500, color: info.color }}>{info.label}</div>}
+          {showLabel && <div className={styles.statusLabel} style={{ color: info.color }}>{info.label}</div>}
         </div>
 
         {/* Botones derecha */}
-        <div style={{ padding: '8px 6px', display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
+        <div className={styles.actionsSection}>
           {isPending && (
             <button
               onClick={e => { e.stopPropagation(); canMarkPaid ? onMarkPaid(p) : blocked('marcar pagos') }}
-              style={{ width: 40, height: 40, background: canMarkPaid ? 'var(--paid)' : 'var(--border)', border: 'none', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
+              className={styles.markPaidButton}
+              style={{ background: canMarkPaid ? 'var(--paid)' : 'var(--border)' }}
             >
-              <Check size={18} color={canMarkPaid ? '#fff' : 'var(--muted)'} strokeWidth={2.5} />
+              <Check size={18} color={canMarkPaid ? 'var(--pay-icon)' : 'var(--muted)'} strokeWidth={2.5} />
             </button>
           )}
           {p.is_paid && (
-            <div style={{ width: 40, height: 40, background: 'var(--paid)', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <Check size={18} color="#fff" strokeWidth={2.5} />
+            <div className={styles.paidIndicator}>
+              <Check size={18} color="var(--pay-icon)" strokeWidth={2.5} />
             </div>
           )}
           <button
             onClick={e => { e.stopPropagation(); menuOpen ? setMenuOpen(false) : openMenuAt(e.currentTarget) }}
-            style={{ width: 24, height: 24, borderRadius: '50%', background: 'none', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', padding: 0 }}
+            className={styles.menuTriggerButton}
           >
             <MoreVertical size={15} color="var(--text)" />
           </button>
@@ -162,7 +165,15 @@ export function PayCard({ payment: p, cfg, onMarkPaid, onMarkUnpaid, onCaptureAm
 
       {/* Menú contextual */}
       {menuOpen && (
-        <div style={{ position: 'absolute', right: 0, top: menuUpward ? 'auto' : '100%', bottom: menuUpward ? '100%' : 'auto', marginTop: menuUpward ? 0 : 4, marginBottom: menuUpward ? 4 : 0, background: 'var(--menu-bg)', border: '0.5px solid var(--border)', borderRadius: 'var(--radius-sm)', boxShadow: '0 4px 16px rgba(0,0,0,0.12)', zIndex: 50, minWidth: 180, overflow: 'hidden' }}>
+        <div
+          className={styles.contextMenu}
+          style={{
+            top: menuUpward ? 'auto' : '100%',
+            bottom: menuUpward ? '100%' : 'auto',
+            marginTop: menuUpward ? 0 : 4,
+            marginBottom: menuUpward ? 4 : 0,
+          }}
+        >
           {isPending && <MenuItem icon={<Pencil size={14}/>} label="Editar" onClick={() => { onEdit(p); setMenuOpen(false) }} />}
           {isPending && p.is_variable && onCaptureAmount && <MenuItem icon={<DollarSign size={14}/>} label={p.amount ? 'Editar monto' : 'Agregar monto'} onClick={() => { onCaptureAmount(p); setMenuOpen(false) }} />}
           {isPending && p.is_recurrent && !p.is_installment && <MenuItem icon={<Clock size={14}/>} label="Posponer" onClick={() => { canEdit ? onPostpone(p) : blocked('posponer pagos'); setMenuOpen(false) }} />}
@@ -177,8 +188,8 @@ export function PayCard({ payment: p, cfg, onMarkPaid, onMarkUnpaid, onCaptureAm
 
 function MenuItem({ icon, label, onClick, danger }) {
   return (
-    <button onClick={onClick} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', background: 'none', border: 'none', borderBottom: '0.5px solid var(--bg)', fontSize: 13, fontWeight: 500, color: danger ? 'var(--danger)' : 'var(--text)', fontFamily: 'DM Sans, sans-serif', cursor: 'pointer', textAlign: 'left' }}>
-      <span style={{ color: danger ? 'var(--danger)' : 'var(--text)' }}>{icon}</span>{label}
+    <button onClick={onClick} className={`${styles.menuItem} ${danger ? styles.menuItemDanger : ''}`}>
+      <span>{icon}</span>{label}
     </button>
   )
 }
@@ -196,30 +207,30 @@ export function GroupCard({ group, cfg, onMarkPaid, onMarkUnpaid, onEdit, onDele
     : periodCountLabel(paidItems.length, freq) + ' pagadas'
 
   return (
-    <div style={{ background: 'var(--surface)', borderRadius: 8, borderLeft: '5px solid var(--accent)', overflow: 'hidden' }}>
-      <div style={{ display: 'flex', alignItems: 'center' }}>
-        <div style={{ flex: 1, padding: '11px 8px 11px 12px', minWidth: 0 }}>
-          <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--text)', marginBottom: 2 }}>{group.name}</div>
-          <div style={{ fontSize: 11, fontWeight: 400, color: 'var(--text)' }}>{freqLabel}</div>
-          {paidItems.length > 0 && <div style={{ fontSize: 11, color: 'var(--paid)', fontWeight: 500, marginTop: 1 }}>{countLabel}</div>}
+    <div className={styles.groupCard}>
+      <div className={styles.groupHeader}>
+        <div className={styles.groupInfo}>
+          <div className={styles.groupName}>{group.name}</div>
+          <div className={styles.groupFreq}>{freqLabel}</div>
+          {paidItems.length > 0 && <div className={styles.groupCountLabel}>{countLabel}</div>}
         </div>
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 2, padding: '11px 8px', flexShrink: 0 }}>
-          {totalPaid > 0 && <span style={{ fontSize: 16, fontWeight: 700, color: 'var(--text)' }}>{fmt(totalPaid)}</span>}
+        <div className={styles.groupAmountSection}>
+          {totalPaid > 0 && <span className={styles.groupAmountText}>{fmt(totalPaid)}</span>}
         </div>
-        <div style={{ padding: '8px 6px', display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
+        <div className={styles.groupActions}>
           {isPending && (
-            <button onClick={() => onMarkPaid(group)} style={{ width: 40, height: 40, background: 'var(--paid)', border: 'none', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
-              <Check size={18} color="#fff" strokeWidth={2.5} />
+            <button onClick={() => onMarkPaid(group)} className={styles.groupMarkPaidButton}>
+              <Check size={18} color="var(--pay-icon)" strokeWidth={2.5} />
             </button>
           )}
-          <button onClick={() => setExpanded(v => !v)} style={{ width: 24, height: 24, background: 'none', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', padding: 0 }}>
+          <button onClick={() => setExpanded(v => !v)} className={styles.groupExpandButton}>
             {expanded ? <ChevronUp size={15} color="var(--text)" /> : <ChevronDown size={15} color="var(--text)" />}
           </button>
         </div>
       </div>
 
       {expanded && (
-        <div style={{ borderTop: '0.5px solid var(--border)' }}>
+        <div className={styles.groupExpandedList}>
           {allItems.map((p, i) => {
             const overdue  = daysDiff(p.due_date) < 0 && !p.is_paid
             const isPend   = !p.is_paid && !p.postponed
@@ -228,18 +239,18 @@ export function GroupCard({ group, cfg, onMarkPaid, onMarkUnpaid, onEdit, onDele
             const bColor   = p.is_paid ? 'var(--paid)' : p.postponed ? 'var(--muted)' : overdue ? 'var(--danger)' : 'var(--soon-color)'
             const bLabel   = p.is_paid ? 'Pagado' : p.postponed ? 'Pospuesto' : overdue ? 'Vencido' : 'Pendiente'
             return (
-              <div key={p.id} style={{ display: 'flex', alignItems: 'center', padding: '9px 12px 9px 18px', borderBottom: isLast ? 'none' : '0.5px solid var(--bg)', gap: 6 }}>
-                <div style={{ width: 6, height: 6, borderRadius: '50%', background: overdue ? 'var(--danger)' : p.is_paid ? 'var(--border-mid)' : 'var(--paid)', flexShrink: 0 }} />
-                <span style={{ fontSize: 12, fontWeight: 400, color: 'var(--text)', flex: 1 }}>{instLabel}</span>
-                {p.amount > 0 && <span style={{ fontSize: 12, fontWeight: 500, color: 'var(--text)' }}>{fmt(p.amount)}</span>}
-                <span style={{ fontSize: 11, fontWeight: 500, color: bColor }}>{bLabel}</span>
+              <div key={p.id} className={`${styles.groupItemRow} ${!isLast ? styles.groupItemRowBordered : ''}`}>
+                <div className={styles.groupItemDot} style={{ background: overdue ? 'var(--danger)' : p.is_paid ? 'var(--border-mid)' : 'var(--paid)' }} />
+                <span className={styles.groupItemLabel}>{instLabel}</span>
+                {p.amount > 0 && <span className={styles.groupItemAmount}>{fmt(p.amount)}</span>}
+                <span className={styles.groupItemStatus} style={{ color: bColor }}>{bLabel}</span>
                 {isPend && (
-                  <button onClick={() => onMarkPaid(p)} style={{ width: 24, height: 24, borderRadius: 6, background: 'var(--paid)', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
-                    <Check size={12} color="#fff" strokeWidth={2.5} />
+                  <button onClick={() => onMarkPaid(p)} className={styles.groupItemMarkPaidButton}>
+                    <Check size={12} color="var(--pay-icon)" strokeWidth={2.5} />
                   </button>
                 )}
                 {p.is_paid && (
-                  <button onClick={() => onMarkUnpaid(p.id)} style={{ width: 24, height: 24, borderRadius: '50%', background: 'none', border: '0.5px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+                  <button onClick={() => onMarkUnpaid(p.id)} className={styles.groupItemUndoButton}>
                     <RotateCcw size={10} color="var(--text)" />
                   </button>
                 )}

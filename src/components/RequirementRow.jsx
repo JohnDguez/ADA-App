@@ -10,7 +10,7 @@ export function RequirementRow({ met, label }) {
     <div className={styles.row}>
       <div className={`${styles.circle} ${met ? styles.circleMet : ''}`}>
         {met
-          ? <Check size={10} color="var(--surface)" strokeWidth={3} />
+          ? <Check size={10} color="var(--pay-icon)" strokeWidth={3} />
           : <X size={10} color="var(--text)" strokeWidth={2.5} />
         }
       </div>

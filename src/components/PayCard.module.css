@@ -1,0 +1,331 @@
+.cardWrapper {
+  position: relative;
+}
+
+.card {
+  background: var(--surface);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  user-select: none;
+}
+
+.infoSection {
+  flex: 1;
+  padding: 11px 8px 11px 12px;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.subtitle {
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.freqLabel {
+  font-size: 11px;
+  color: var(--accent);
+  font-weight: 500;
+  margin-top: 1px;
+}
+
+.instLabel {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text);
+  margin-top: 1px;
+}
+
+.amountSection {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+  padding: 11px 8px;
+  flex-shrink: 0;
+}
+
+.variableGroup {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+}
+
+.variableGroupTight {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 3px;
+}
+
+.captureButton {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--accent);
+  background: none;
+  border: 1px solid var(--accent);
+  padding: 3px 8px;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.variableTag {
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--label-variable);
+}
+
+.amountText {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.statusLabel {
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.actionsSection {
+  padding: 8px 6px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.markPaidButton {
+  width: 40px;
+  height: 40px;
+  border: none;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.paidIndicator {
+  width: 40px;
+  height: 40px;
+  background: var(--paid);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.menuTriggerButton {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: none;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+}
+
+.contextMenu {
+  position: absolute;
+  right: 0;
+  background: var(--menu-bg);
+  border: 0.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  z-index: 50;
+  min-width: 180px;
+  overflow: hidden;
+}
+
+.menuItem {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  background: none;
+  border: none;
+  border-bottom: 0.5px solid var(--bg);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text);
+  font-family: 'DM Sans', sans-serif;
+  cursor: pointer;
+  text-align: left;
+}
+
+.menuItemDanger {
+  color: var(--danger);
+}
+
+/* ── GroupCard ────────────────────────────────────────────────────────────── */
+.groupCard {
+  background: var(--surface);
+  border-radius: 8px;
+  border-left: 5px solid var(--accent);
+  overflow: hidden;
+}
+
+.groupHeader {
+  display: flex;
+  align-items: center;
+}
+
+.groupInfo {
+  flex: 1;
+  padding: 11px 8px 11px 12px;
+  min-width: 0;
+}
+
+.groupName {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 2px;
+}
+
+.groupFreq {
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--text);
+}
+
+.groupCountLabel {
+  font-size: 11px;
+  color: var(--paid);
+  font-weight: 500;
+  margin-top: 1px;
+}
+
+.groupAmountSection {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+  padding: 11px 8px;
+  flex-shrink: 0;
+}
+
+.groupAmountText {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.groupActions {
+  padding: 8px 6px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.groupMarkPaidButton {
+  width: 40px;
+  height: 40px;
+  background: var(--paid);
+  border: none;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.groupExpandButton {
+  width: 24px;
+  height: 24px;
+  background: none;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+}
+
+.groupExpandedList {
+  border-top: 0.5px solid var(--border);
+}
+
+.groupItemRow {
+  display: flex;
+  align-items: center;
+  padding: 9px 12px 9px 18px;
+  gap: 6px;
+}
+
+.groupItemRowBordered {
+  border-bottom: 0.5px solid var(--bg);
+}
+
+.groupItemDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.groupItemLabel {
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--text);
+  flex: 1;
+}
+
+.groupItemAmount {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text);
+}
+
+.groupItemStatus {
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.groupItemMarkPaidButton {
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  background: var(--paid);
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.groupItemUndoButton {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: none;
+  border: 0.5px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
