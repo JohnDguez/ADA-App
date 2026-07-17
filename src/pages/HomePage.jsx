@@ -538,7 +538,7 @@ function PaidCollapse({ payments, expanded, onToggle, onMarkUnpaid }) {
         className={styles.paidCollapseToggle}
       >
         <div className={styles.paidCollapseCheckIcon}>
-          <Check size={11} color="var(--surface)" strokeWidth={3} />
+          <Check size={11} color="var(--pay-icon)" strokeWidth={3} />
         </div>
         <span className={styles.paidCollapseSummaryText}>
           {payments.length} pagado{payments.length !== 1 ? 's' : ''}
