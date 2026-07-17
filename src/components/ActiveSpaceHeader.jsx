@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { createPortal } from 'react-dom'
-import { MoreVertical, Pencil, Trash2, LogOut } from 'lucide-react'
+import { MoreVertical, Pencil, Trash2, LogOut, Pin } from 'lucide-react'
 import styles from './ActiveSpaceHeader.module.css'
 
 // Encabezado del espacio activo — antes vivía DENTRO de SpaceSwitcher.jsx
@@ -15,7 +15,7 @@ import styles from './ActiveSpaceHeader.module.css'
 // Cada página (HomePage/PaymentsPage/RecurrentsPage) lo dibuja como lo
 // primero dentro de su propio contenedor de contenido — no dentro de
 // SpaceSwitcher.jsx, que ahora solo dibuja las tarjetas que asoman.
-export function ActiveSpaceHeader({ activeSpaceId, sharedSpaces, onManage, onSwitch, deleteSpace, leaveSpace, user }) {
+export function ActiveSpaceHeader({ activeSpaceId, sharedSpaces, onManage, onSwitch, deleteSpace, leaveSpace, user, defaultSpaceId, onSetDefault }) {
   const [menuOpen,       setMenuOpen]       = useState(false)
   const [menuPos,        setMenuPos]        = useState(null) // { top, bottom, right } en coordenadas de pantalla
   const [dangerOpen,     setDangerOpen]     = useState(false)
@@ -51,6 +51,19 @@ export function ActiveSpaceHeader({ activeSpaceId, sharedSpaces, onManage, onSwi
   // espacio.
   const name = activeSpaceId === 'new' ? 'Nuevo espacio compartido' : (entry ? entry.space.name : 'Personal')
 
+  // Pin de "espacio principal": qué pestaña ver por default al abrir/recargar
+  // la app. "Nuevo espacio compartido" no es un espacio real ni Personal —
+  // no aplica pinearlo. currentId es null para Personal (igual que
+  // profile.default_space_id cuando el default es Personal), o el id real
+  // del espacio activo — así el pin también se puede "pinear" explícitamente
+  // en Personal, sin necesitar una bandera aparte.
+  const isNewPanel = activeSpaceId === 'new'
+  const currentId  = isRealSpace ? entry.space.id : null
+  const isPinned   = (defaultSpaceId ?? null) === currentId
+  function handleTogglePin() {
+    onSetDefault(isPinned ? null : currentId)
+  }
+
   function openDanger() {
     setMenuOpen(false)
     setDangerOpen(true)
@@ -80,6 +93,16 @@ export function ActiveSpaceHeader({ activeSpaceId, sharedSpaces, onManage, onSwi
     <div className={styles.headerRoot} style={{ animation: entering ? 'activeHeaderEnter .3s cubic-bezier(0.25, 0.46, 0.45, 0.94) both' : 'none' }}>
       <div className={styles.headerRow}>
       <span className={styles.headerName}>{name}</span>
+
+      {!isNewPanel && (
+      <div className={styles.headerActions}>
+        <button
+          onClick={handleTogglePin}
+          className={styles.pinButton}
+          aria-label={isPinned ? 'Quitar como pestaña principal' : 'Marcar como pestaña principal'}
+        >
+          <Pin size={18} color={isPinned ? 'var(--accent)' : 'var(--text)'} fill={isPinned ? 'var(--accent)' : 'none'} />
+        </button>
 
       {isRealSpace && (
         <div className={styles.menuWrapper}>
@@ -141,6 +164,8 @@ export function ActiveSpaceHeader({ activeSpaceId, sharedSpaces, onManage, onSwi
             document.body
           )}
         </div>
+      )}
+      </div>
       )}
 
       {/* Portal — mismo motivo que el resto de los modales de esta función:

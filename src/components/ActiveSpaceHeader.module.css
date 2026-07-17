@@ -20,6 +20,16 @@
   color: var(--text);
 }
 
+.headerActions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.pinButton {
+  composes: menuButton;
+}
+
 .menuWrapper {
   position: relative;
 }
