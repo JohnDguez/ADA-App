@@ -26,10 +26,6 @@
   gap: 4px;
 }
 
-.pinButton {
-  composes: menuButton;
-}
-
 .menuWrapper {
   position: relative;
 }
@@ -42,6 +38,10 @@
   align-items: center;
   cursor: pointer;
   border-radius: 4px;
+}
+
+.pinButton {
+  composes: menuButton;
 }
 
 .menuOverlay {
