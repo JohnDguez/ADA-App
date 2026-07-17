@@ -430,7 +430,7 @@ export function HomePage({ payments, profile, spaceSwitcher, activeSpaceHeader, 
               <div className={styles.overdueTitle}>
                 Vencidos
               </div>
-              <PayRail payments={vencidos} cfg={profile} dotColor="var(--overdue-border)" dotTextColor="var(--surface)" handlers={handlers} permissions={spacePermissions} />
+              <PayRail payments={vencidos} cfg={profile} dotColor="var(--overdue-border)" dotTextColor="var(--overdue-text)" handlers={handlers} permissions={spacePermissions} />
             </div>
           )}
 
