@@ -791,7 +791,7 @@ export function PaymentsPage({ payments, profile, spaceSwitcher, activeSpaceHead
         <>
         {/* Zona de título con fondo diferente */}
         <div className={styles.titleSection}>
-          <div className={styles.titleSectionHeading}>Mis gastos e ingresos</div>
+          <div className={styles.titleSectionHeading}>Gastos e ingresos</div>
           <div className={styles.titleSectionSubtext}>Historial, análisis y balance de tus finanzas del periodo.</div>
         </div>
 
