@@ -10,7 +10,7 @@ export const PATCH_NOTES = [
     version: '0.9.183',
     date: 'Julio 2026',
     items: [
-      'Nuevo: fija tu pestaña principal. Toca el ícono de pin junto al nombre de Personal o de un Espacio Compartido para que esa sea la primera que veas cada vez que abres o recargas la app.',
+      'Nuevo: fija tu pestaña principal. Toca el ícono de pin junto al nombre de Personal o de un Espacio Compartido para que esa sea la primera que veas cada vez que abras o recargues la app.',
     ],
   },
   {
