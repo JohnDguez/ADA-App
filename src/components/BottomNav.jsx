@@ -22,7 +22,7 @@ export function BottomNav({ active, onChange, onAdd }) {
           onClick={onAdd}
           className={styles.addButton}
         >
-          <Plus size={26} color="var(--surface)" strokeWidth={2.5} />
+          <Plus size={26} color="var(--nav-icon)" strokeWidth={2.5} />
         </button>
       </div>
 
@@ -44,7 +44,7 @@ function TabBtn({ id, Icon, active, onChange }) {
           : 'none',
       }}
     >
-      <Icon size={22} strokeWidth={active ? 2.2 : 1.8} color={active ? 'var(--surface)' : 'rgba(255,255,255,0.5)'} />
+      <Icon size={22} strokeWidth={active ? 2.2 : 1.8} color={active ? 'var(--nav-icon)' : 'rgba(255,255,255,0.5)'} />
     </button>
   )
 }
