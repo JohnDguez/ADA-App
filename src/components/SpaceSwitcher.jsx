@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-import { Plus } from 'lucide-react'
+import { Plus, UserRound, Crown, UsersRound } from 'lucide-react'
 import styles from './SpaceSwitcher.module.css'
 
 // Selector de espacio activo — tarjetas apiladas (patrón que Johnatan mostró
@@ -112,6 +112,15 @@ export function SpaceSwitcher({ spaces, activeSpaceId, onSwitch, profile, stats 
     return `${s.pending} pago${s.pending !== 1 ? 's' : ''} pendiente${s.pending !== 1 ? 's' : ''}` + (s.overdue > 0 ? ` · ${s.overdue} vencido${s.overdue !== 1 ? 's' : ''}` : '')
   }
 
+  // Ícono diferenciador junto al nombre — solo para Personal y espacios
+  // compartidos reales (owner/guest); "Nuevo espacio compartido" ya tiene
+  // su propio ícono de "+" y no necesita otro.
+  function iconFor(item) {
+    if (item.kind === 'personal') return UserRound
+    if (item.kind === 'space') return item.entry.membership.role === 'owner' ? Crown : UsersRound
+    return null
+  }
+
   if (renderList.length === 0) return null
 
   return (
@@ -132,6 +141,7 @@ export function SpaceSwitcher({ spaces, activeSpaceId, onSwitch, profile, stats 
         // en flujo normal) — así nunca cuenta para la altura del
         // contenedor, y desmontarla al final no mueve nada más.
         const isGhost = showIncoming && item === incomingItem
+        const SpaceIcon = iconFor(item)
         // Mientras el color no se ha "asentado" (ver colorsSettled arriba),
         // la tarjeta que acaba de dejar de estar activa se pinta con el
         // color de fondo de la app (el que tenía como encabezado activo)
@@ -199,6 +209,7 @@ export function SpaceSwitcher({ spaces, activeSpaceId, onSwitch, profile, stats 
 
             <span className={styles.spaceName} style={{ color: colorsFor(item.kind).text }}>
               {item.kind === 'new' && <Plus size={16} color="var(--space-new-text)" strokeWidth={2.5} />}
+              {SpaceIcon && <SpaceIcon size={15} color={colorsFor(item.kind).text} strokeWidth={2} />}
               {item.name}
             </span>
 

@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { createPortal } from 'react-dom'
-import { MoreVertical, Pencil, Trash2, LogOut, Pin } from 'lucide-react'
+import { MoreVertical, Pencil, Trash2, LogOut, Pin, UserRound, Crown, UsersRound } from 'lucide-react'
 import styles from './ActiveSpaceHeader.module.css'
 
 // Encabezado del espacio activo — antes vivía DENTRO de SpaceSwitcher.jsx
@@ -59,6 +59,10 @@ export function ActiveSpaceHeader({ activeSpaceId, sharedSpaces, onManage, onSwi
   // en Personal, sin necesitar una bandera aparte.
   const isNewPanel = activeSpaceId === 'new'
   const currentId  = isRealSpace ? entry.space.id : null
+  // Mismo criterio que SpaceSwitcher.jsx para el ícono diferenciador junto
+  // al nombre — "Nuevo espacio compartido" no lleva ninguno (mismo caso que
+  // en el switcher, ya se distingue por estar en su propio panel).
+  const HeaderIcon = isNewPanel ? null : (isRealSpace ? (isOwner ? Crown : UsersRound) : UserRound)
   const isPinned   = (defaultSpaceId ?? null) === currentId
   function handleTogglePin() {
     onSetDefault(isPinned ? null : currentId)
@@ -92,7 +96,10 @@ export function ActiveSpaceHeader({ activeSpaceId, sharedSpaces, onManage, onSwi
   return (
     <div className={styles.headerRoot} style={{ animation: entering ? 'activeHeaderEnter .3s cubic-bezier(0.25, 0.46, 0.45, 0.94) both' : 'none' }}>
       <div className={styles.headerRow}>
-      <span className={styles.headerName}>{name}</span>
+      <span className={styles.headerName}>
+        {HeaderIcon && <HeaderIcon size={15} color="var(--text)" strokeWidth={2} />}
+        {name}
+      </span>
 
       {!isNewPanel && (
       <div className={styles.headerActions}>

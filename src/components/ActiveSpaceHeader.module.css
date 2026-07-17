@@ -18,6 +18,9 @@
   font-size: 15px;
   font-weight: 500;
   color: var(--text);
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .headerActions {
