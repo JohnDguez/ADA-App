@@ -31,6 +31,7 @@ const STATUS_LABELS_ALWAYS_VISIBLE = ['postponed', 'paused']
 const FILL_MS       = 500 // pintado de izquierda a derecha (y su reversa al cancelar un monto variable)
 const LABEL_HOLD_MS = 700 // cuánto se queda "Pagado" + checkmark visible antes de deslizarse
 const EXIT_MS       = 450 // deslizado + desvanecido + colapso de espacio
+const ENTRY_MS      = 420 // "crecer" al aparecer una card nueva en la lista
 
 function useLongPress(callback, ms = 500) {
   const timerRef = useRef(null)
@@ -43,7 +44,7 @@ function useLongPress(callback, ms = 500) {
   return { onMouseDown: start, onMouseUp: stop, onMouseLeave: stop, onTouchStart: start, onTouchEnd: stop, onTouchCancel: stop }
 }
 
-export function PayCard({ payment: p, cfg, onMarkPaid, onRequestVariableAmount, onConfirmVariablePaid, onMarkUnpaid, onCaptureAmount, onEdit, onDelete, onPostpone, onAdvance, borderLeft, hideDate, hideDueLabel, railMode, permissions }) {
+export function PayCard({ payment: p, cfg, onMarkPaid, onRequestVariableAmount, onConfirmVariablePaid, onMarkUnpaid, onCaptureAmount, onEdit, onDelete, onPostpone, onAdvance, borderLeft, hideDate, hideDueLabel, railMode, permissions, initialLoad = true }) {
   const [menuOpen, setMenuOpen] = useState(false)
   const [menuUpward, setMenuUpward] = useState(false)
   const menuRef = useRef(null)
@@ -57,6 +58,31 @@ export function PayCard({ payment: p, cfg, onMarkPaid, onRequestVariableAmount, 
 
   useEffect(() => {
     return () => { timers.current.forEach(clearTimeout) }
+  }, [])
+
+  // "Crecer" al aparecer: espejo de collapseWrapper() (la salida al marcar
+  // pagado), pero de 0 hacia su alto real — solo corre una vez, al montar,
+  // y solo si esta card es genuinamente nueva (PayRail ya filtró la carga
+  // inicial vía `initialLoad`, ver PayRail.jsx). El alto máximo (140px) es
+  // un tope generoso, no el alto exacto — se limpia a `''` (auto) al
+  // terminar, para no dejar ninguna card artificialmente topada después.
+  useEffect(() => {
+    if (initialLoad) return
+    const el = wrapperRef.current
+    if (!el) return
+    el.style.maxHeight = '0px'
+    el.style.opacity = '0'
+    void el.offsetHeight // fuerza reflow para que la transición sí anime desde este valor
+    requestAnimationFrame(() => {
+      el.style.maxHeight = '140px'
+      el.style.opacity = '1'
+    })
+    const t = setTimeout(() => {
+      el.style.maxHeight = ''
+      el.style.opacity = ''
+    }, ENTRY_MS)
+    timers.current.push(t)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   function after(ms, fn) {

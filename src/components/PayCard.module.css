@@ -1,7 +1,7 @@
 .cardWrapper {
   position: relative;
   overflow: hidden;
-  transition: max-height 0.45s ease, margin-bottom 0.45s ease;
+  transition: max-height 0.45s ease, margin-bottom 0.45s ease, opacity 0.4s ease;
 }
 
 .card {

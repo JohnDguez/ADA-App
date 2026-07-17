@@ -1,3 +1,4 @@
+import { useRef, useEffect } from 'react'
 import { dateOf, MONTHS_SHORT } from '../lib/utils'
 import { PayCard } from './PayCard'
 import styles from './PayRail.module.css'
@@ -18,6 +19,17 @@ import styles from './PayRail.module.css'
 // por sección (Vencidos / Periodo actual / Próximo periodo), igual que
 // antes se pasaba `borderLeft` a cada `PayCard` de esa sección.
 export function PayRail({ payments, cfg, dotColor, dotTextColor, handlers, permissions }) {
+  // Detecta el primer render de ESTE riel — las cards que ya vienen desde
+  // ahí no deben "crecer" al aparecer (se verían todas animando de golpe
+  // al cargar la página). Solo las que se agregan DESPUÉS (un pago nuevo,
+  // el siguiente periodo de un recurrente, etc.) cuentan como nuevas —
+  // cada `PayCard` ya está `key`-eado por `p.id`, así que React monta una
+  // instancia genuinamente nueva solo para un id que no existía antes; una
+  // card que ya estaba solo se vuelve a renderizar, nunca se re-monta.
+  const firstRenderRef = useRef(true)
+  const initialLoad = firstRenderRef.current
+  useEffect(() => { firstRenderRef.current = false }, [])
+
   // `payments` ya viene ordenado ascendente por due_date, así que agrupar
   // por igualdad consecutiva de la key es suficiente (no hace falta un Map).
   const groups = []
@@ -53,7 +65,7 @@ export function PayRail({ payments, cfg, dotColor, dotTextColor, handlers, permi
               </div>
               <div className={styles.dayItemsCol}>
                 {g.items.map(p => (
-                  <PayCard key={p.id} payment={p} cfg={cfg} {...handlers} permissions={permissions} railMode hideDate hideDueLabel />
+                  <PayCard key={p.id} payment={p} cfg={cfg} {...handlers} permissions={permissions} railMode hideDate hideDueLabel initialLoad={initialLoad} />
                 ))}
               </div>
             </div>
