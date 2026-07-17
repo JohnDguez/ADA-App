@@ -1,5 +1,6 @@
 import { dateOf, MONTHS_SHORT } from '../lib/utils'
 import { PayCard } from './PayCard'
+import styles from './PayRail.module.css'
 
 // Riel vertical de pagos: una línea continua con un punto de fecha por DÍA
 // (no por pago) — si caen 2+ pagos el mismo día, comparten el punto y se
@@ -29,8 +30,8 @@ export function PayRail({ payments, cfg, dotColor, dotTextColor, handlers, permi
   let lastMonth = null
 
   return (
-    <div style={{ position: 'relative' }}>
-      <div style={{ position: 'absolute', left: 11, top: 6, bottom: 6, width: 2, background: 'var(--border)', zIndex: -1 }} />
+    <div className={styles.railWrapper}>
+      <div className={styles.railLine} />
       {groups.map((g, gi) => {
         const d = dateOf(g.key)
         const month = d.getMonth()
@@ -40,21 +41,17 @@ export function PayRail({ payments, cfg, dotColor, dotTextColor, handlers, permi
         return (
           <div key={g.key}>
             {showMonth && (
-              <div style={{ margin: gi === 0 ? '0 0 10px' : '18px 0 10px' }}>
-                <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--text)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+              <div className={gi === 0 ? styles.monthLabelWrapperFirst : styles.monthLabelWrapper}>
+                <span className={styles.monthLabelText}>
                   {MONTHS_SHORT[month]}
                 </span>
               </div>
             )}
-            <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, marginBottom: 10 }}>
-              <div style={{
-                width: 24, height: 24, borderRadius: '50%', flexShrink: 0,
-                background: dotColor, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: 10, fontWeight: 600, color: dotTextColor,
-              }}>
+            <div className={styles.dayGroup}>
+              <div className={styles.dayDot} style={{ background: dotColor, color: dotTextColor }}>
                 {d.getDate()}
               </div>
-              <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <div className={styles.dayItemsCol}>
                 {g.items.map(p => (
                   <PayCard key={p.id} payment={p} cfg={cfg} {...handlers} permissions={permissions} railMode hideDate hideDueLabel />
                 ))}
