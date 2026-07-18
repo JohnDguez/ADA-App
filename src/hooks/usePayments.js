@@ -167,7 +167,7 @@ export function usePayments(userId, activeSpaceId = null, activeSpaceName = null
     return { data, error }
   }
 
-  async function addInstallmentPayment({ name, amount, totalInstallments, startFrom, recurFreq, category, firstDate }) {
+  async function addInstallmentPayment({ name, amount, totalAmount, totalInstallments, startFrom, recurFreq, category, firstDate }) {
     const from = startFrom || 1
 
     // Crear master (template raíz de la parcialidad)
@@ -175,6 +175,7 @@ export function usePayments(userId, activeSpaceId = null, activeSpaceName = null
       user_id:             userId,
       space_id:            activeSpaceId,
       name, amount, category,
+      total_amount:        totalAmount,
       is_variable:         false,
       is_recurrent:        true,
       recur_freq:          recurFreq,
@@ -217,6 +218,137 @@ export function usePayments(userId, activeSpaceId = null, activeSpaceName = null
       notifySpaceChange('added', { paymentName: name, amount, paymentType: 'parcialidades', totalInstallments })
     }
     return { data: copiesData?.[0], error }
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // ABONAR A UNA PARCIALIDAD (reemplaza "editar" para copias individuales)
+  // ─────────────────────────────────────────────────────────────────────────
+  // Regla confirmada con Johnatan:
+  // - Si el abono es MENOR al monto pendiente de ESTE pago: no lo liquida, no
+  //   genera nada nuevo, no toca el total_installments — solo reduce el monto
+  //   pendiente de esta misma copia. Sigue su cronología normal (vencidos, etc).
+  // - Si el abono es IGUAL o MAYOR: liquida este pago, y el sobrante (si lo
+  //   hay) se descuenta del total fijo (`master.total_amount`) — recortando
+  //   cuántos pagos faltan hacia adelante. Si el sobrante cubre todo lo que
+  //   resta, la parcialidad se da por completa: se borran las copias
+  //   pendientes que ya no hacen falta y `total_installments` se ajusta al
+  //   número de este pago.
+  async function abonarInstallment(copyId, abonado) {
+    const copy = payments.find(p => p.id === copyId)
+    if (!copy || !copy.parent_id) return { error: { message: 'Pago no encontrado' } }
+    const master = payments.find(p => p.id === copy.parent_id)
+    if (!master) return { error: { message: 'Parcialidad no encontrada' } }
+
+    const montoRef     = Number(master.amount)
+    const totalAmount  = master.total_amount != null ? Number(master.total_amount) : montoRef * master.total_installments
+
+    // ── Abono parcial: se queda en esta misma copia, nada más se toca ──────
+    if (abonado < Number(copy.amount)) {
+      const nuevoMonto = Math.round((Number(copy.amount) - abonado) * 100) / 100
+      const { data, error } = await supabase.from('payments').update({ amount: nuevoMonto }).eq('id', copyId).select()
+      if (error || !data || data.length === 0) {
+        return { error: error || { message: 'No tienes permiso para abonar a este pago en este espacio.' } }
+      }
+      setPayments(prev => prev.map(p => p.id === copyId ? { ...p, amount: nuevoMonto } : p))
+      return { error: null, done: false }
+    }
+
+    // ── Abono que liquida esta copia (con posible sobrante) ────────────────
+    const sobra        = abonado - Number(copy.amount)
+    const paidBefore    = payments
+      .filter(p => p.parent_id === master.id && p.is_paid)
+      .reduce((s, p) => s + Number(p.amount), 0)
+    const pendienteAntes = totalAmount - paidBefore // incluye este pago
+    const restanteTotal  = pendienteAntes - Number(copy.amount) - sobra // = pendienteAntes - abonado
+
+    const { data: paidData, error: paidErr } = await supabase.from('payments')
+      .update({ is_paid: true, paid_at: new Date().toISOString() })
+      .eq('id', copyId).select()
+    if (paidErr || !paidData || paidData.length === 0) {
+      return { error: paidErr || { message: 'No tienes permiso para marcar este pago en este espacio.' } }
+    }
+    let updatedPayments = payments.map(p => p.id === copyId ? { ...p, ...paidData[0] } : p)
+    setPayments(updatedPayments)
+    notifySpaceChange('marked_paid', { paymentName: copy.name })
+
+    if (restanteTotal <= 0) {
+      // Plan completo — este pago fue el último. Elimina cualquier copia
+      // pendiente que ya existiera de más y ajusta total_installments.
+      const futurePending = updatedPayments.filter(p => p.parent_id === master.id && !p.is_paid && !p.is_master)
+      if (futurePending.length > 0) {
+        const ids = futurePending.map(p => p.id)
+        await supabase.from('payments').delete().in('id', ids)
+        updatedPayments = updatedPayments.filter(p => !ids.includes(p.id))
+      }
+      await supabase.from('payments').update({ total_installments: copy.current_installment }).eq('id', master.id)
+      updatedPayments = updatedPayments.map(p => p.id === master.id ? { ...p, total_installments: copy.current_installment } : p)
+      setPayments(updatedPayments)
+      return { error: null, done: true }
+    }
+
+    // Todavía queda plan por delante — recalcular cuántos pagos faltan y
+    // reacomodar lo que ya existe como fila pendiente.
+    const faltan      = Math.ceil(restanteTotal / montoRef)
+    const newTotal     = copy.current_installment + faltan
+    const montoUltimo  = Math.round((restanteTotal - (faltan - 1) * montoRef) * 100) / 100
+
+    let stillPending = updatedPayments
+      .filter(p => p.parent_id === master.id && !p.is_paid && !p.is_master)
+      .sort((a, b) => a.current_installment - b.current_installment)
+
+    // Elimina pendientes que ya no caben en el nuevo total recortado
+    const toDelete = stillPending.filter(p => p.current_installment > newTotal)
+    if (toDelete.length > 0) {
+      const ids = toDelete.map(p => p.id)
+      await supabase.from('payments').delete().in('id', ids)
+      updatedPayments = updatedPayments.filter(p => !ids.includes(p.id))
+      stillPending = stillPending.filter(p => !ids.includes(p.id))
+    }
+
+    // Actualiza total_installments en las copias que sí siguen vigentes
+    const keepIds = stillPending.map(p => p.id)
+    if (keepIds.length > 0) {
+      await supabase.from('payments').update({ total_installments: newTotal }).in('id', keepIds)
+      updatedPayments = updatedPayments.map(p => keepIds.includes(p.id) ? { ...p, total_installments: newTotal } : p)
+    }
+
+    // Ajusta el monto del nuevo último pago, si ya existe como fila
+    const lastExisting = stillPending.find(p => p.current_installment === newTotal)
+    if (lastExisting) {
+      await supabase.from('payments').update({ amount: montoUltimo }).eq('id', lastExisting.id)
+      updatedPayments = updatedPayments.map(p => p.id === lastExisting.id ? { ...p, amount: montoUltimo } : p)
+    }
+
+    await supabase.from('payments').update({ total_installments: newTotal }).eq('id', master.id)
+    updatedPayments = updatedPayments.map(p => p.id === master.id ? { ...p, total_installments: newTotal } : p)
+    setPayments(updatedPayments)
+
+    // Asegura 2 pendientes en cola (mismo criterio que el resto de la app),
+    // usando el monto de referencia salvo para el nuevo último pago.
+    const nowPending = updatedPayments
+      .filter(p => p.parent_id === master.id && !p.is_paid && !p.is_master)
+      .sort((a, b) => a.current_installment - b.current_installment)
+    const needed = Math.max(0, 2 - nowPending.length)
+    let lastNum  = nowPending.length ? nowPending[nowPending.length - 1].current_installment : copy.current_installment
+    let lastDate = nowPending.length ? nowPending[nowPending.length - 1].due_date : copy.due_date
+    for (let i = 0; i < needed; i++) {
+      const nextNum = lastNum + 1
+      if (nextNum > newTotal) break
+      const nextDate = nextPeriodDate(lastDate, master.recur_freq || 'monthly')
+      lastDate = dateToStr(nextDate)
+      lastNum  = nextNum
+      const amt = nextNum === newTotal ? montoUltimo : montoRef
+      const { data: next } = await supabase.from('payments').insert({
+        user_id: userId, space_id: activeSpaceId, name: master.name, amount: amt,
+        due_date: lastDate, category: master.category, is_variable: false, is_recurrent: true,
+        recur_freq: master.recur_freq, is_paid: false, paid_at: null, postponed: false, paused: false,
+        is_master: false, parent_id: master.id, is_installment: true, current_installment: nextNum,
+        total_installments: newTotal,
+      }).select().single()
+      if (next) setPayments(prev => [...prev, next])
+    }
+
+    return { error: null, done: false }
   }
 
   async function updatePayment(id, updates) {
@@ -784,6 +916,7 @@ export function usePayments(userId, activeSpaceId = null, activeSpaceName = null
     payments, loading,
     addPayment, addRecurrentPayment, addInstallmentPayment,
     updatePayment, updateRecurrentName, updateRecurrentConfig,
+    abonarInstallment,
     markPaid, markUnpaid, setEstimatedAmount,
     postponePayment,
     pauseRecurrent, resumeRecurrent,
