@@ -181,7 +181,8 @@ export function PayCard({ payment: p, cfg, onMarkPaid, onRequestVariableAmount, 
   const fillActive    = phase === 'filling' || phase === 'waitingModal' || phase === 'labeled' || phase === 'exiting'
 
   return (
-    <div ref={el => { menuRef.current = el; wrapperRef.current = el }} className={styles.cardWrapper}>
+    <div ref={menuRef} className={styles.cardOuter}>
+      <div ref={wrapperRef} className={styles.cardWrapper}>
       <div
         className={`${styles.card} ${phase === 'exiting' ? styles.cardExiting : ''}`}
         style={{ borderLeft: railMode ? 'none' : `5px solid ${borderLeft || 'var(--border)'}` }}
@@ -267,8 +268,11 @@ export function PayCard({ payment: p, cfg, onMarkPaid, onRequestVariableAmount, 
           </div>
         </div>
       </div>
+      </div>
 
-      {/* Menú contextual */}
+      {/* Menú contextual — fuera de .cardWrapper (que tiene overflow:hidden
+          para la animación de colapso/crecimiento) para que no se recorte;
+          vive en .cardOuter, que solo posiciona, sin recortar nada. */}
       {menuOpen && (
         <div
           className={styles.contextMenu}

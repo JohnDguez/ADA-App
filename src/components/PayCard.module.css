@@ -1,3 +1,7 @@
+.cardOuter {
+  position: relative;
+}
+
 .cardWrapper {
   position: relative;
   overflow: hidden;
