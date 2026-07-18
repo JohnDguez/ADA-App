@@ -142,7 +142,7 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
       if (!dueDate) { setError('Selecciona la fecha del primer pago'); return }
       const amountPerPayment = Math.round((totalAmt / total) * 100) / 100
       setSaving(true)
-      await onSaveInstallment({ name: name.trim(), amount: amountPerPayment, totalInstallments: total, startFrom: start, recurFreq, category, firstDate: dueDate })
+      await onSaveInstallment({ name: name.trim(), amount: amountPerPayment, totalAmount: totalAmt, totalInstallments: total, startFrom: start, recurFreq, category, firstDate: dueDate })
       setSaving(false); onClose(); return
     }
     if (!isVariable && (!amount || isNaN(parseFloat(amount)))) { setError('Agrega el monto o marca como variable'); return }

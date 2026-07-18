@@ -33,7 +33,7 @@ const LABEL_HOLD_MS = 450 // cuánto se queda "Pagado" + checkmark visible antes
 const EXIT_MS       = 320 // deslizado + desvanecido + colapso de espacio
 const ENTRY_MS      = 300 // "crecer" al aparecer una card nueva en la lista
 
-export function PayCard({ payment: p, cfg, onMarkPaid, onRequestVariableAmount, onConfirmVariablePaid, onMarkUnpaid, onCaptureAmount, onEdit, onDelete, onPostpone, onAdvance, borderLeft, hideDate, hideDueLabel, railMode, permissions, initialLoad = true }) {
+export function PayCard({ payment: p, cfg, onMarkPaid, onRequestVariableAmount, onConfirmVariablePaid, onMarkUnpaid, onCaptureAmount, onEdit, onAbonar, onDelete, onPostpone, onAdvance, borderLeft, hideDate, hideDueLabel, railMode, permissions, initialLoad = true }) {
   const [menuOpen, setMenuOpen] = useState(false)
   const [menuUpward, setMenuUpward] = useState(false)
   const menuRef = useRef(null)
@@ -189,7 +189,7 @@ export function PayCard({ payment: p, cfg, onMarkPaid, onRequestVariableAmount, 
       >
         <div className={`${styles.fillLayer} ${fillActive ? styles.fillLayerActive : ''}`} />
         <div className={`${styles.fillLabel} ${phase === 'labeled' || phase === 'exiting' ? styles.fillLabelVisible : ''}`}>
-          <span>Pagado</span>
+          <span>{p.is_installment && p.current_installment === p.total_installments ? '¡Terminaste todos los pagos!' : 'Pagado'}</span>
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
             <path
               className={`${styles.checkPath} ${phase === 'labeled' || phase === 'exiting' ? styles.checkPathDrawn : ''}`}
@@ -283,7 +283,8 @@ export function PayCard({ payment: p, cfg, onMarkPaid, onRequestVariableAmount, 
             marginBottom: menuUpward ? 4 : 0,
           }}
         >
-          {isPending && <MenuItem icon={<Pencil size={14}/>} label="Editar" onClick={() => { onEdit(p); setMenuOpen(false) }} />}
+          {isPending && p.is_installment && onAbonar && <MenuItem icon={<DollarSign size={14}/>} label="Abonar" onClick={() => { canMarkPaid ? onAbonar(p) : blocked('registrar abonos'); setMenuOpen(false) }} />}
+          {isPending && !p.is_installment && <MenuItem icon={<Pencil size={14}/>} label="Editar" onClick={() => { onEdit(p); setMenuOpen(false) }} />}
           {isPending && p.is_variable && onCaptureAmount && <MenuItem icon={<DollarSign size={14}/>} label={p.amount ? 'Editar monto' : 'Agregar monto'} onClick={() => { onCaptureAmount(p); setMenuOpen(false) }} />}
           {isPending && p.is_recurrent && !p.is_installment && <MenuItem icon={<Clock size={14}/>} label="Posponer" onClick={() => { canEdit ? onPostpone(p) : blocked('posponer pagos'); setMenuOpen(false) }} />}
           {isPending && p.is_installment && onAdvance && <MenuItem icon={<FastForward size={14}/>} label="Adelantar pago" onClick={() => { canEdit ? onAdvance(p) : blocked('adelantar pagos'); setMenuOpen(false) }} />}
