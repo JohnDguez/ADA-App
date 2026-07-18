@@ -65,6 +65,7 @@ export function InstallmentAbonarModal({ open, payment, payments, spacePermissio
   const pendienteAntes = totalAmount - paidBefore
 
   const abonadoNum = parseFloat(amount) || 0
+  const totalPagadoConAbono = Math.min(paidBefore + abonadoNum, totalAmount)
   const pills = []
   for (let i = 1; i < payment.current_installment; i++) pills.push({ n: i, amt: montoRef, state: 'pagado' })
 
@@ -95,8 +96,6 @@ export function InstallmentAbonarModal({ open, payment, payments, spacePermissio
       if (newTotal < master.total_installments) {
         previewText = `El plan se ajusta de ${master.total_installments} a ${newTotal} pagos en total.`
         previewClass = styles.previewAccent
-      } else {
-        previewText = `Pago cubierto. El plan sigue en ${master.total_installments} pagos.`
       }
     }
   }
@@ -115,6 +114,10 @@ export function InstallmentAbonarModal({ open, payment, payments, spacePermissio
           <div className={styles.refRow}>
             <span>Monto de referencia</span>
             <span className={styles.refAmount}>{fmt(montoRef)}</span>
+          </div>
+          <div className={`${styles.refRow} ${styles.refRowNoTop}`}>
+            <span>Total de la deuda</span>
+            <span className={styles.refAmount}>{fmt(totalPagadoConAbono)} / {fmt(totalAmount)}</span>
           </div>
 
           {!allowed && (

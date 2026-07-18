@@ -71,6 +71,11 @@
   margin-bottom: 14px;
 }
 
+.refRowNoTop {
+  border-top: none;
+  margin-top: -14px;
+}
+
 .refAmount {
   font-weight: 600;
   opacity: 1;
