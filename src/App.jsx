@@ -322,6 +322,16 @@ export default function App() {
     if (error) showToast(typeof error === 'string' ? error : 'Error al desmarcar el pago')
     else showToast(`${payment?.name || 'Pago'} marcado como no pagado`)
   }
+  // handleMarkUnpaidAnimated: usado por PaidCollapseItem (Home) al terminar
+  // su propia animación de "desmarcar" (pintado amarillo + "Marcado como no
+  // pagado" + salida) — sin toast de éxito, el mensaje ya vivió dentro de
+  // la fila. `handleMarkUnpaid` (arriba) se conserva intacto para
+  // PaymentsPage.jsx, que no tiene esta animación y sigue necesitando el
+  // toast como única confirmación.
+  async function handleMarkUnpaidAnimated(id) {
+    const { error } = await markUnpaid(id)
+    if (error) showToast(typeof error === 'string' ? error : 'Error al desmarcar el pago')
+  }
   async function handlePostpone(payment) {
     const { error } = await postponePayment(payment)
     if (error) showToast('Error al posponer')
@@ -546,7 +556,7 @@ export default function App() {
           onMarkPaid={handleMarkPaid}
           onRequestVariableAmount={requestVariableAmount}
           onConfirmVariablePaid={confirmVariablePaid}
-          onMarkUnpaid={handleMarkUnpaid}
+          onMarkUnpaid={handleMarkUnpaidAnimated}
           onCaptureAmount={openEstimateModal}
           onEdit={openEdit}
           onDelete={handleDelete}
