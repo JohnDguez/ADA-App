@@ -13,6 +13,7 @@ import { BottomNav } from './components/BottomNav'
 import { NotificationsPanel } from './components/NotificationsPanel'
 import { PaymentModal } from './components/PaymentModal'
 import { VariableAmountModal } from './components/VariableAmountModal'
+import { InstallmentAbonarModal } from './components/InstallmentAbonarModal'
 import { RecurrentMigrationModal } from './components/RecurrentMigrationModal'
 import { PatchNotesModal } from './components/PatchNotesModal'
 import { PasswordSetupModal } from './components/PasswordSetupModal'
@@ -92,6 +93,7 @@ export default function App() {
     payments, loading: paymentsLoading,
     addPayment, addRecurrentPayment, addInstallmentPayment,
     updatePayment, updateRecurrentName, updateRecurrentConfig,
+    abonarInstallment,
     markPaid, markUnpaid, setEstimatedAmount,
     postponePayment,
     pauseRecurrent, resumeRecurrent,
@@ -144,6 +146,7 @@ export default function App() {
   const [editPayment,    setEditPayment]   = useState(null)
   const [varModal,       setVarModal]      = useState({ open: false, payment: null, resolver: null })
   const [estimateModal,  setEstimateModal] = useState({ open: false, payment: null })
+  const [abonarModal,    setAbonarModal]   = useState({ open: false, payment: null })
   const [notifOpen,      setNotifOpen]     = useState(false)
   const [slideDir,       setSlideDir]      = useState('right')
   const [migrationModal, setMigrationModal] = useState(false)
@@ -268,6 +271,15 @@ export default function App() {
   // sigue abriendo el modal directo, sin resolver, igual que siempre.
   async function handleMarkPaid(payment) {
     if (payment.is_variable) { setVarModal({ open: true, payment, resolver: null }); return }
+    // Parcialidad: el check paga directo el monto de referencia de ESTE
+    // pago (sin abrir el modal de Abonar — eso vive solo en el menú de 3
+    // puntos) pasando por la misma lógica de abonarInstallment, para que el
+    // total fijo y el plan se mantengan consistentes igual que un abono.
+    if (payment.is_installment) {
+      const { error } = await abonarInstallment(payment.id, Number(payment.amount))
+      if (error) showToast('Error al marcar como pagado')
+      return
+    }
     const { error } = await markPaid(payment.id)
     if (error) showToast('Error al marcar como pagado')
   }
@@ -306,6 +318,16 @@ export default function App() {
     const resolver = varModal.resolver
     setVarModal({ open: false, payment: null, resolver: null })
     if (resolver) resolver(null)
+  }
+  function openAbonarModal(payment) { setAbonarModal({ open: true, payment }) }
+  async function handleAbonarConfirm(amount) {
+    const payment = abonarModal.payment
+    setAbonarModal({ open: false, payment: null })
+    if (!payment?.id) { showToast('Error: pago no encontrado'); return }
+    const { error, done } = await abonarInstallment(payment.id, amount)
+    if (error) showToast(typeof error === 'string' ? error : (error.message || 'Error al registrar el abono'))
+    else if (done) showToast('¡Terminaste todos los pagos!')
+    else showToast(`Abono registrado — ${fmt(amount)}`)
   }
   function openEstimateModal(payment) { setEstimateModal({ open: true, payment }) }
   async function handleEstimateConfirm(amount) {
@@ -559,6 +581,7 @@ export default function App() {
           onMarkUnpaid={handleMarkUnpaidAnimated}
           onCaptureAmount={openEstimateModal}
           onEdit={openEdit}
+          onAbonar={openAbonarModal}
           onDelete={handleDelete}
           onPostpone={handlePostpone}
           onAdvance={handleAdvance}
@@ -679,6 +702,15 @@ export default function App() {
         spacePermissions={spacePermissions}
         onConfirm={handleEstimateConfirm}
         onClose={() => setEstimateModal({ open: false, payment: null })}
+      />
+
+      <InstallmentAbonarModal
+        open={abonarModal.open}
+        payment={abonarModal.payment}
+        payments={payments}
+        spacePermissions={spacePermissions}
+        onConfirm={handleAbonarConfirm}
+        onClose={() => setAbonarModal({ open: false, payment: null })}
       />
 
       <Coachmarks
