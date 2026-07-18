@@ -33,17 +33,6 @@ const LABEL_HOLD_MS = 450 // cuánto se queda "Pagado" + checkmark visible antes
 const EXIT_MS       = 320 // deslizado + desvanecido + colapso de espacio
 const ENTRY_MS      = 300 // "crecer" al aparecer una card nueva en la lista
 
-function useLongPress(callback, ms = 500) {
-  const timerRef = useRef(null)
-  function start(e) {
-    e.preventDefault()
-    const el = e.currentTarget
-    timerRef.current = setTimeout(() => { callback(el); timerRef.current = null }, ms)
-  }
-  function stop()  { if (timerRef.current) { clearTimeout(timerRef.current); timerRef.current = null } }
-  return { onMouseDown: start, onMouseUp: stop, onMouseLeave: stop, onTouchStart: start, onTouchEnd: stop, onTouchCancel: stop }
-}
-
 export function PayCard({ payment: p, cfg, onMarkPaid, onRequestVariableAmount, onConfirmVariablePaid, onMarkUnpaid, onCaptureAmount, onEdit, onDelete, onPostpone, onAdvance, borderLeft, hideDate, hideDueLabel, railMode, permissions, initialLoad = true }) {
   const [menuOpen, setMenuOpen] = useState(false)
   const [menuUpward, setMenuUpward] = useState(false)
@@ -182,8 +171,6 @@ export function PayCard({ payment: p, cfg, onMarkPaid, onRequestVariableAmount, 
     setMenuOpen(true)
   }
 
-  const longPress = useLongPress(target => openMenuAt(target))
-
   useEffect(() => {
     function handle(e) { if (menuRef.current && !menuRef.current.contains(e.target)) setMenuOpen(false) }
     if (menuOpen) document.addEventListener('mousedown', handle)
@@ -196,7 +183,6 @@ export function PayCard({ payment: p, cfg, onMarkPaid, onRequestVariableAmount, 
   return (
     <div ref={el => { menuRef.current = el; wrapperRef.current = el }} className={styles.cardWrapper}>
       <div
-        {...longPress}
         className={`${styles.card} ${phase === 'exiting' ? styles.cardExiting : ''}`}
         style={{ borderLeft: railMode ? 'none' : `5px solid ${borderLeft || 'var(--border)'}` }}
       >
