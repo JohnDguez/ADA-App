@@ -289,13 +289,70 @@
   gap: 6px;
 }
 
+.paidCollapseItemWrapper {
+  position: relative;
+  overflow: hidden;
+  transition: max-height 0.45s ease, margin-bottom 0.45s ease;
+}
+
 .paidCollapseItem {
+  position: relative;
+  overflow: hidden;
+  background: var(--surface);
+  border-radius: 8px;
+  transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.45s ease;
+}
+
+.paidCollapseItemExiting {
+  transform: translateX(-110%);
+  opacity: 0;
+}
+
+/* Capa de pintado amarillo (derecha a izquierda) al desmarcar como pagado —
+   espejo de .fillLayer en PayCard.module.css, pero desde el otro lado */
+.paidUnmarkFill {
+  position: absolute;
+  top: 0;
+  right: 0;
+  height: 100%;
+  width: 0%;
+  background: var(--upcoming-border);
+  transition: width 0.5s ease;
+}
+
+.paidUnmarkFillActive {
+  width: 100%;
+}
+
+.paidUnmarkLabel {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--pending-icon);
+  font-size: 13px;
+  font-weight: 500;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.paidUnmarkLabelVisible {
+  opacity: 1;
+}
+
+.paidCollapseItemRow {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 10px;
-  background: var(--surface);
-  border-radius: 8px;
   padding: 9px 12px;
+  transition: opacity 0.2s ease;
+}
+
+.paidCollapseItemRowHidden {
+  opacity: 0;
+  pointer-events: none;
 }
 
 .paidCollapseDate {

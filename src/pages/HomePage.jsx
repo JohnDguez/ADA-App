@@ -525,6 +525,96 @@ function SectionHead({ left, right }) {
 // (Empty/EmptyState ahora vive en components/EmptyState.jsx — extraído en
 // v0.9.176 para poder reutilizarlo fuera de Home)
 
+// Timing de la animación de "marcar como no pagado" en PaidCollapse — mismo
+// criterio que FILL_MS/LABEL_HOLD_MS/EXIT_MS en PayCard.jsx, pero en
+// reversa: pinta de var(--upcoming-border) de derecha a izquierda, y sale
+// deslizándose hacia la izquierda (el opuesto de cómo una card sale hacia
+// la derecha al pagar).
+const UNMARK_FILL_MS = 500
+const UNMARK_HOLD_MS = 700
+const UNMARK_EXIT_MS = 450
+
+// Fila individual del colapsable de pagados — antes vivía inline dentro del
+// .map() de PaidCollapse; se extrajo para poder darle su propia fase local
+// de animación (idle → filling → labeled → exiting), igual patrón que ya
+// usa PayCard.jsx para "marcar pagado": el guardado real (onMarkUnpaid) se
+// dispara HASTA que la animación de salida terminó, nunca antes, para que
+// la fila nunca desaparezca del arreglo (y se desmonte) a la mitad de su
+// propia animación.
+function PaidCollapseItem({ p, onMarkUnpaid }) {
+  const [phase, setPhase] = useState('idle') // idle | filling | labeled | exiting
+  const wrapperRef = useRef(null)
+  const timers = useRef([])
+
+  useEffect(() => {
+    return () => { timers.current.forEach(clearTimeout) }
+  }, [])
+
+  function after(ms, fn) {
+    const id = setTimeout(fn, ms)
+    timers.current.push(id)
+  }
+
+  function handleUndo(e) {
+    e.stopPropagation()
+    if (phase !== 'idle') return
+    setPhase('filling')
+    after(UNMARK_FILL_MS, () => {
+      setPhase('labeled')
+      after(UNMARK_HOLD_MS, () => {
+        setPhase('exiting')
+        const el = wrapperRef.current
+        if (el) {
+          const h = el.offsetHeight
+          el.style.maxHeight = `${h}px`
+          el.style.marginBottom = '0px'
+          void el.offsetHeight // fuerza reflow para que la transición sí anime desde este valor
+          requestAnimationFrame(() => {
+            el.style.maxHeight = '0px'
+            // -6px cancela el `gap: 6px` fijo de .paidCollapseList — mismo
+            // criterio que collapseWrapper() en PayCard.jsx
+            el.style.marginBottom = '-6px'
+          })
+        }
+        after(UNMARK_EXIT_MS, () => onMarkUnpaid(p.id))
+      })
+    })
+  }
+
+  const contentHidden = phase === 'labeled' || phase === 'exiting'
+  const fillActive    = phase === 'filling' || phase === 'labeled' || phase === 'exiting'
+  const pd = new Date(p.paid_at)
+
+  return (
+    <div ref={wrapperRef} className={styles.paidCollapseItemWrapper}>
+      <div className={`${styles.paidCollapseItem} ${phase === 'exiting' ? styles.paidCollapseItemExiting : ''}`}>
+        <div className={`${styles.paidUnmarkFill} ${fillActive ? styles.paidUnmarkFillActive : ''}`} />
+        <div className={`${styles.paidUnmarkLabel} ${phase === 'labeled' || phase === 'exiting' ? styles.paidUnmarkLabelVisible : ''}`}>
+          Marcado como no pagado
+        </div>
+        <div className={`${styles.paidCollapseItemRow} ${contentHidden ? styles.paidCollapseItemRowHidden : ''}`}>
+          <div className={styles.paidCollapseDate}>
+            <div className={styles.paidCollapseDay}>{pd.getDate()}</div>
+            <div className={styles.paidCollapseMonth}>{MONTHS_SHORT[pd.getMonth()]}</div>
+          </div>
+          <div className={styles.paidCollapseInfo}>
+            <div className={styles.paidCollapseName}>{p.name}</div>
+            <div className={styles.paidCollapseCategory}>{p.category}</div>
+          </div>
+          <span className={styles.paidCollapseAmount}>{fmt(p.amount)}</span>
+          <button
+            onClick={handleUndo}
+            disabled={phase !== 'idle'}
+            className={styles.paidCollapseUndoButton}
+          >
+            <RotateCcw size={11} color="var(--text)" />
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // Resumen colapsable de pagos ya liquidados dentro del periodo actual — no
 // es un segundo registro (ese sigue siendo PaymentsPage/"Pagos"), es solo un
 // atajo de conveniencia para deshacer/revisar sin salir de Home. Se calcula
@@ -550,28 +640,9 @@ function PaidCollapse({ payments, expanded, onToggle, onMarkUnpaid }) {
         const sorted = [...payments].sort((a, b) => new Date(b.paid_at) - new Date(a.paid_at))
         return (
           <div className={styles.paidCollapseList}>
-            {sorted.map(p => {
-              const pd = new Date(p.paid_at)
-              return (
-                <div key={p.id} className={styles.paidCollapseItem}>
-                  <div className={styles.paidCollapseDate}>
-                    <div className={styles.paidCollapseDay}>{pd.getDate()}</div>
-                    <div className={styles.paidCollapseMonth}>{MONTHS_SHORT[pd.getMonth()]}</div>
-                  </div>
-                  <div className={styles.paidCollapseInfo}>
-                    <div className={styles.paidCollapseName}>{p.name}</div>
-                    <div className={styles.paidCollapseCategory}>{p.category}</div>
-                  </div>
-                  <span className={styles.paidCollapseAmount}>{fmt(p.amount)}</span>
-                  <button
-                    onClick={() => onMarkUnpaid(p.id)}
-                    className={styles.paidCollapseUndoButton}
-                  >
-                    <RotateCcw size={11} color="var(--text)" />
-                  </button>
-                </div>
-              )
-            })}
+            {sorted.map(p => (
+              <PaidCollapseItem key={p.id} p={p} onMarkUnpaid={onMarkUnpaid} />
+            ))}
           </div>
         )
       })()}
