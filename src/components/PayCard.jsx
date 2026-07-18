@@ -28,10 +28,10 @@ const STATUS_LABELS_ALWAYS_VISIBLE = ['postponed', 'paused']
 
 // Timing de la animación de "marcar como pagado" — ver PayCard.module.css
 // para las transiciones CSS que estos valores deben calzar.
-const FILL_MS       = 500 // pintado de izquierda a derecha (y su reversa al cancelar un monto variable)
-const LABEL_HOLD_MS = 700 // cuánto se queda "Pagado" + checkmark visible antes de deslizarse
-const EXIT_MS       = 450 // deslizado + desvanecido + colapso de espacio
-const ENTRY_MS      = 420 // "crecer" al aparecer una card nueva en la lista
+const FILL_MS       = 350 // pintado de izquierda a derecha (y su reversa al cancelar un monto variable)
+const LABEL_HOLD_MS = 450 // cuánto se queda "Pagado" + checkmark visible antes de deslizarse — cubre los 300ms que tarda en dibujarse el checkmark (ver .checkPath en PayCard.module.css) + una pausa corta para que se alcance a leer
+const EXIT_MS       = 320 // deslizado + desvanecido + colapso de espacio
+const ENTRY_MS      = 300 // "crecer" al aparecer una card nueva en la lista
 
 function useLongPress(callback, ms = 500) {
   const timerRef = useRef(null)
