@@ -530,9 +530,9 @@ function SectionHead({ left, right }) {
 // reversa: pinta de var(--upcoming-border) de derecha a izquierda, y sale
 // deslizándose hacia la izquierda (el opuesto de cómo una card sale hacia
 // la derecha al pagar).
-const UNMARK_FILL_MS = 500
-const UNMARK_HOLD_MS = 700
-const UNMARK_EXIT_MS = 450
+const UNMARK_FILL_MS = 350
+const UNMARK_HOLD_MS = 400
+const UNMARK_EXIT_MS = 320
 
 // Fila individual del colapsable de pagados — antes vivía inline dentro del
 // .map() de PaidCollapse; se extrajo para poder darle su propia fase local
