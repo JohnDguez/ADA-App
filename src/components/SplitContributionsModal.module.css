@@ -145,7 +145,7 @@
   gap: 8px;
 }
 
-.editInput {
+:global(.field-input).editInput {
   flex: 1;
 }
 
