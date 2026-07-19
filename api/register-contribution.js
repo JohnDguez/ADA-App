@@ -24,13 +24,15 @@ module.exports = async function handler(req, res) {
   if (userError || !userData?.user) return res.status(401).json({ error: 'Token inválido' })
   const actorId = userData.user.id
 
-  const { paymentId, memberUserId, amount } = req.body || {}
-  if (!paymentId || !memberUserId || amount == null) return res.status(400).json({ error: 'Faltan datos' })
+  const { paymentId, memberUserId, amount, payRemaining } = req.body || {}
+  if (!paymentId || !memberUserId || (amount == null && !payRemaining)) {
+    return res.status(400).json({ error: 'Faltan datos' })
+  }
 
   try {
     const { data: payment, error: paymentErr } = await supabase
       .from('payments')
-      .select('id, space_id, name, category, due_date')
+      .select('id, space_id, name, category, due_date, amount, is_paid')
       .eq('id', paymentId)
       .maybeSingle()
     if (paymentErr || !payment || !payment.space_id) {
@@ -49,14 +51,30 @@ module.exports = async function handler(req, res) {
     if (!memberIds.includes(actorId))      return res.status(403).json({ error: 'No perteneces a este espacio' })
     if (!memberIds.includes(memberUserId)) return res.status(400).json({ error: 'Ese miembro no pertenece a este espacio' })
 
-    const numAmount = Number(amount)
-
     const { data: existingContribution } = await supabase
       .from('payment_contributions')
-      .select('id')
+      .select('id, amount')
       .eq('payment_id', paymentId)
       .eq('user_id', memberUserId)
       .maybeSingle()
+
+    let numAmount
+    if (payRemaining) {
+      // El check de la card: calcular el faltante REAL en este momento
+      // (nunca confiar en lo que el cliente crea que falta, para evitar
+      // condiciones de carrera contra abonos casi simultáneos de otros
+      // miembros) — se suma sobre lo que este miembro ya tenía puesto, no
+      // lo reemplaza.
+      const { data: allContribs } = await supabase
+        .from('payment_contributions')
+        .select('amount')
+        .eq('payment_id', paymentId)
+      const sumAll = (allContribs || []).reduce((s, r) => s + Number(r.amount), 0)
+      const restante = Number(payment.amount) - sumAll
+      numAmount = (existingContribution?.amount || 0) + Math.max(0, restante)
+    } else {
+      numAmount = Number(amount)
+    }
 
     const { data: existingReflection } = await supabase
       .from('payments')
@@ -97,6 +115,22 @@ module.exports = async function handler(req, res) {
       reflectionId = created?.id
     }
 
+    // ¿Ya se completó el total con este abono? Se recalcula DESPUÉS de
+    // escribir (no se reutiliza sumAll de arriba, que solo se calculó en el
+    // modo payRemaining) — así cubre ambos modos con la misma lógica.
+    let settled = false
+    if (!payment.is_paid) {
+      const { data: allContribsAfter } = await supabase
+        .from('payment_contributions')
+        .select('amount')
+        .eq('payment_id', paymentId)
+      const sumAfter = (allContribsAfter || []).reduce((s, r) => s + Number(r.amount), 0)
+      if (sumAfter >= Number(payment.amount)) {
+        await supabase.from('payments').update({ is_paid: true, paid_at: new Date().toISOString() }).eq('id', paymentId)
+        settled = true
+      }
+    }
+
     // Aviso a los demás miembros del espacio (mismo criterio de
     // notify_on_changes que ya usa notify-space-change.js) — quien registró
     // la contribución no se avisa a sí mismo.
@@ -126,7 +160,7 @@ module.exports = async function handler(req, res) {
       )
     }
 
-    return res.json({ error: null, reflectionPaymentId: reflectionId })
+    return res.json({ error: null, reflectionPaymentId: reflectionId, settled })
   } catch (e) {
     console.error(e)
     return res.status(500).json({ error: e.message })
