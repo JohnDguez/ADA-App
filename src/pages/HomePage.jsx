@@ -600,7 +600,7 @@ function PaidCollapseItem({ p, onMarkUnpaid, onViewSource }) {
           </div>
           <div className={styles.paidCollapseInfo}>
             <div className={styles.paidCollapseName}>{p.name}</div>
-            <div className={styles.paidCollapseCategory}>{p.category}</div>
+            <div className={styles.paidCollapseCategory}>{p.category}{p.is_contribution_reflection ? ' · Compartido' : ''}</div>
           </div>
           <span className={styles.paidCollapseAmount}>{fmt(p.amount)}</span>
           {p.is_contribution_reflection ? (

@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { ChevronLeft, ChevronRight, MoreVertical, Plus, CircleDollarSign, ChevronDown, ChevronUp, Pencil, RotateCcw, Trash2, Check } from 'lucide-react'
+import { ChevronLeft, ChevronRight, MoreVertical, Plus, CircleDollarSign, ChevronDown, ChevronUp, Pencil, RotateCcw, Trash2, Check, Eye } from 'lucide-react'
 import { PageHeader } from '../components/PageHeader'
 import { NewSharedSpacePanel } from '../components/NewSharedSpacePanel'
 import { EmptyState } from '../components/EmptyState'
@@ -66,7 +66,7 @@ function prevPeriod(profile) {
   return { start: t, end: prevEnd }
 }
 
-export function PaymentsPage({ payments, profile, spaceSwitcher, activeSpaceHeader, activeSpaceId = null, rawActiveSpaceId = null, sharedSpaces, spacePermissions, onOpenPremium, onSpaceReady, unreadCount, onOpenNotifs, onGoSettings, onMarkUnpaid, onDelete, onDeleteDirect, onUpdateProfile, onEdit, onAdd, onGoCategories, slideClass }) {
+export function PaymentsPage({ payments, profile, spaceSwitcher, activeSpaceHeader, activeSpaceId = null, rawActiveSpaceId = null, sharedSpaces, spacePermissions, onOpenPremium, onSpaceReady, unreadCount, onOpenNotifs, onGoSettings, onMarkUnpaid, onDelete, onDeleteDirect, onUpdateProfile, onEdit, onViewSource, onAdd, onGoCategories, slideClass }) {
   // Mismo mecanismo que HomePage.jsx — ver ahí el porqué (evitar que la
   // animación de entrada se dispare también en un simple cambio de
   // pestaña, no solo en un cambio real de espacio).
@@ -1215,6 +1215,7 @@ export function PaymentsPage({ payments, profile, spaceSwitcher, activeSpaceHead
                           <span className={styles.paymentCategoryDot} style={{ background: getCatColor(p.category, profile.custom_categories, profile.category_colors) }} />
                           {p.category}
                           {p.is_recurrent && <span className={styles.paymentRecurrentTag}>· Mensual</span>}
+                          {p.is_contribution_reflection && <span className={styles.paymentRecurrentTag}>· Compartido</span>}
                         </div>
                       </div>
                       <div className={styles.paymentAmountBlock}>
@@ -1226,6 +1227,15 @@ export function PaymentsPage({ payments, profile, spaceSwitcher, activeSpaceHead
                         )}
                       </div>
                       <div className={styles.paymentMenuWrapper}>
+                        {p.is_contribution_reflection ? (
+                          <button
+                            onClick={e => { e.stopPropagation(); onViewSource && onViewSource(p) }}
+                            aria-label="Ver en el espacio compartido"
+                            className={styles.paymentMenuButton}
+                          >
+                            <Eye size={16} color="var(--text)" strokeWidth={1.8} />
+                          </button>
+                        ) : (
                         <button
                           onClick={e => {
                             e.stopPropagation()
@@ -1248,6 +1258,7 @@ export function PaymentsPage({ payments, profile, spaceSwitcher, activeSpaceHead
                         >
                           <MoreVertical size={16} color="var(--text)" strokeWidth={1.8} />
                         </button>
+                        )}
                       </div>
                     </div>
                   )
