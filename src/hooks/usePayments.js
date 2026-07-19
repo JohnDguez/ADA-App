@@ -35,6 +35,45 @@ export function usePayments(userId, activeSpaceId = null, activeSpaceName = null
     }
   }
 
+  // Registra/edita/quita la contribución de UN miembro a un gasto del
+  // espacio — pasa por el endpoint (service role) porque necesita poder
+  // escribir el reflejo en el Home PERSONAL de OTRO miembro, algo que el
+  // RLS normal de `payments` nunca permite a un cliente común. `amount <= 0`
+  // borra la contribución y su reflejo (ver register-contribution.js).
+  async function registerContribution(paymentId, memberUserId, amount) {
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) return { error: { message: 'Sesión no encontrada' } }
+      const res = await fetch('/api/register-contribution', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
+        body: JSON.stringify({ paymentId, memberUserId, amount }),
+      })
+      const result = await res.json()
+      if (!res.ok) return { error: result.error ? { message: result.error } : { message: 'Error al registrar el abono' } }
+      // Si el reflejo se creó/actualizó en MI propia cuenta (soy el miembro
+      // registrado), refrescar el estado local para verlo de inmediato en
+      // Home sin esperar a Realtime.
+      if (memberUserId === userId) await fetchPayments()
+      return { error: null, ...result }
+    } catch (e) {
+      return { error: { message: 'Error de conexión al registrar el abono' } }
+    }
+  }
+
+  // Lee las contribuciones ya registradas de un gasto compartido — lectura
+  // directa con el cliente normal (la política de SELECT de
+  // payment_contributions ya deja ver esto a cualquier miembro del
+  // espacio), sin necesitar el endpoint.
+  async function getContributions(paymentId) {
+    const { data, error } = await supabase
+      .from('payment_contributions')
+      .select('user_id, amount')
+      .eq('payment_id', paymentId)
+    if (error) return { error, contributions: [] }
+    return { error: null, contributions: data || [] }
+  }
+
   const [loading, setLoading] = useState(true)
   // Candado de concurrencia: evita que ensureTwoAhead se ejecute 2 veces en
   // paralelo para el MISMO master (ej. doble tap al confirmar un pago, o dos
@@ -917,6 +956,7 @@ export function usePayments(userId, activeSpaceId = null, activeSpaceName = null
     addPayment, addRecurrentPayment, addInstallmentPayment,
     updatePayment, updateRecurrentName, updateRecurrentConfig,
     abonarInstallment,
+    registerContribution, getContributions,
     markPaid, markUnpaid, setEstimatedAmount,
     postponePayment,
     pauseRecurrent, resumeRecurrent,
