@@ -61,7 +61,11 @@ module.exports = async function handler(req, res) {
       if (!payment.is_paid) {
         const { data: allContribs } = await supabase.from('payment_contributions').select('amount').eq('payment_id', paymentId)
         const sumAll = (allContribs || []).reduce((s, r) => s + Number(r.amount), 0)
-        if (sumAll >= newTotal) {
+        // Comparación en centavos (enteros) — sumar/restar decimales en JS
+        // puede dejar residuos tipo 1340.9999999999998 en vez de 1341
+        // exacto; comparando floats directo, eso hace fallar un ">="
+        // que en pantalla (ya redondeado a 2 decimales) se ve idéntico.
+        if (Math.round(sumAll * 100) >= Math.round(newTotal * 100)) {
           await supabase.from('payments').update({ is_paid: true, paid_at: new Date().toISOString() }).eq('id', paymentId)
           settled = true
         }
@@ -99,7 +103,7 @@ module.exports = async function handler(req, res) {
         .eq('payment_id', paymentId)
       const sumAll = (allContribs || []).reduce((s, r) => s + Number(r.amount), 0)
       const restante = Number(payment.amount) - sumAll
-      numAmount = (existingContribution?.amount || 0) + Math.max(0, restante)
+      numAmount = Math.round(((existingContribution?.amount || 0) + Math.max(0, restante)) * 100) / 100
     } else {
       numAmount = Number(amount)
     }
@@ -153,7 +157,7 @@ module.exports = async function handler(req, res) {
         .select('amount')
         .eq('payment_id', paymentId)
       const sumAfter = (allContribsAfter || []).reduce((s, r) => s + Number(r.amount), 0)
-      if (sumAfter >= Number(payment.amount)) {
+      if (Math.round(sumAfter * 100) >= Math.round(Number(payment.amount) * 100)) {
         await supabase.from('payments').update({ is_paid: true, paid_at: new Date().toISOString() }).eq('id', paymentId)
         settled = true
       }
