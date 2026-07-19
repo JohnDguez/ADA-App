@@ -40,6 +40,9 @@ export function usePayments(userId, activeSpaceId = null, activeSpaceName = null
   // escribir el reflejo en el Home PERSONAL de OTRO miembro, algo que el
   // RLS normal de `payments` nunca permite a un cliente común. `amount <= 0`
   // borra la contribución y su reflejo (ver register-contribution.js).
+  // Siempre refresca — un abono puede completar el total y marcar pagado el
+  // gasto ORIGINAL (visible en el espacio activo), no solo crear el reflejo
+  // en la cuenta de quien contribuyó.
   async function registerContribution(paymentId, memberUserId, amount) {
     try {
       const { data: { session } } = await supabase.auth.getSession()
@@ -51,13 +54,35 @@ export function usePayments(userId, activeSpaceId = null, activeSpaceName = null
       })
       const result = await res.json()
       if (!res.ok) return { error: result.error ? { message: result.error } : { message: 'Error al registrar el abono' } }
-      // Si el reflejo se creó/actualizó en MI propia cuenta (soy el miembro
-      // registrado), refrescar el estado local para verlo de inmediato en
-      // Home sin esperar a Realtime.
-      if (memberUserId === userId) await fetchPayments()
+      await fetchPayments()
       return { error: null, ...result }
     } catch (e) {
       return { error: { message: 'Error de conexión al registrar el abono' } }
+    }
+  }
+
+  // El check de la card en Home, para un gasto PENDIENTE de un Espacio
+  // Compartido: en vez de marcarlo pagado con el monto completo (que ya
+  // podría estar parcialmente cubierto por abonos de otros miembros), se
+  // registra un abono a nombre de quien tocó el check por LO QUE FALTA —
+  // el servidor calcula el faltante real al momento (nunca el monto
+  // completo desde cero), evitando condiciones de carrera contra abonos de
+  // otros miembros que pudieran llegar casi al mismo tiempo.
+  async function payRemainingContribution(paymentId) {
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) return { error: { message: 'Sesión no encontrada' } }
+      const res = await fetch('/api/register-contribution', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
+        body: JSON.stringify({ paymentId, memberUserId: userId, payRemaining: true }),
+      })
+      const result = await res.json()
+      if (!res.ok) return { error: result.error ? { message: result.error } : { message: 'Error al marcar como pagado' } }
+      await fetchPayments()
+      return { error: null, ...result }
+    } catch (e) {
+      return { error: { message: 'Error de conexión al marcar como pagado' } }
     }
   }
 
@@ -91,7 +116,24 @@ export function usePayments(userId, activeSpaceId = null, activeSpaceName = null
       ? query.eq('space_id', activeSpaceId)
       : query.eq('user_id', userId).is('space_id', null)
     const { data, error } = await query
-    if (!error) setPayments(data || [])
+    if (!error) {
+      let rows = data || []
+      // Progreso de "Dividir entre miembros" — solo aplica dentro de un
+      // Espacio Compartido. Se trae aparte (no es un embed automático de
+      // PostgREST) y se suma por payment_id, para poder mostrar "$X / $Y"
+      // en la card mientras el gasto sigue pendiente (ver PayCard.jsx).
+      if (activeSpaceId && rows.length > 0) {
+        const ids = rows.map(p => p.id)
+        const { data: contribRows } = await supabase
+          .from('payment_contributions')
+          .select('payment_id, amount')
+          .in('payment_id', ids)
+        const sums = {}
+        for (const r of (contribRows || [])) sums[r.payment_id] = (sums[r.payment_id] || 0) + Number(r.amount)
+        rows = rows.map(p => ({ ...p, contributed_amount: sums[p.id] || 0 }))
+      }
+      setPayments(rows)
+    }
     setLoading(false)
   }, [userId, activeSpaceId])
 
@@ -956,7 +998,7 @@ export function usePayments(userId, activeSpaceId = null, activeSpaceName = null
     addPayment, addRecurrentPayment, addInstallmentPayment,
     updatePayment, updateRecurrentName, updateRecurrentConfig,
     abonarInstallment,
-    registerContribution, getContributions,
+    registerContribution, getContributions, payRemainingContribution,
     markPaid, markUnpaid, setEstimatedAmount,
     postponePayment,
     pauseRecurrent, resumeRecurrent,
