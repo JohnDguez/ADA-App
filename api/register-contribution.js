@@ -8,6 +8,17 @@ const { createClient } = require('@supabase/supabase-js')
 // este endpoint necesita escribir una fila de `payments` en la cuenta
 // PERSONAL de OTRO miembro (el reflejo), algo que el RLS normal de
 // `payments` (user_id = auth.uid()) nunca dejaría hacer a un cliente común.
+// NOTA IMPORTANTE (pendiente de confirmar): el service role salta las
+// políticas RLS, pero NO salta triggers de Postgres. Si existe un trigger
+// `BEFORE UPDATE` en `payments` que valide permisos usando `auth.uid()`
+// (como `check_payment_update_permission`, de una sesión anterior de este
+// proyecto), ese trigger seguiría corriendo aquí con `auth.uid()` = NULL
+// (no hay JWT de usuario real detrás de esta conexión) — podría estar
+// bloqueando en silencio el UPDATE de `is_paid`. Este archivo ya revisa el
+// error de cada escritura y lo reporta (antes no lo hacía, y por eso el
+// bloqueo pasaba desapercibido) — si el error mencionado aquí aparece en
+// producción, la función necesita un ajuste en Supabase para exceptuar al
+// service role de esa validación.
 const supabase = createClient(
   process.env.VITE_SUPABASE_URL,
   process.env.SUPABASE_SERVICE_ROLE_KEY
@@ -56,7 +67,8 @@ module.exports = async function handler(req, res) {
     // cambio de monto vuelve a correr la misma revisión de "completo".
     if (setTotalAmount != null) {
       const newTotal = Number(setTotalAmount)
-      await supabase.from('payments').update({ amount: newTotal }).eq('id', paymentId)
+      const { error: amountErr } = await supabase.from('payments').update({ amount: newTotal }).eq('id', paymentId)
+      if (amountErr) return res.status(500).json({ error: 'No se pudo guardar el monto: ' + amountErr.message })
       let settled = false
       if (!payment.is_paid) {
         const { data: allContribs } = await supabase.from('payment_contributions').select('amount').eq('payment_id', paymentId)
@@ -66,7 +78,8 @@ module.exports = async function handler(req, res) {
         // exacto; comparando floats directo, eso hace fallar un ">="
         // que en pantalla (ya redondeado a 2 decimales) se ve idéntico.
         if (Math.round(sumAll * 100) >= Math.round(newTotal * 100)) {
-          await supabase.from('payments').update({ is_paid: true, paid_at: new Date().toISOString() }).eq('id', paymentId)
+          const { error: paidErr } = await supabase.from('payments').update({ is_paid: true, paid_at: new Date().toISOString() }).eq('id', paymentId)
+          if (paidErr) return res.status(500).json({ error: 'El monto se guardó, pero no se pudo marcar como pagado: ' + paidErr.message })
           settled = true
         }
       }
@@ -125,25 +138,29 @@ module.exports = async function handler(req, res) {
     }
 
     if (existingContribution) {
-      await supabase.from('payment_contributions')
+      const { error: updContribErr } = await supabase.from('payment_contributions')
         .update({ amount: numAmount, updated_by: actorId, updated_at: new Date().toISOString() })
         .eq('id', existingContribution.id)
+      if (updContribErr) return res.status(500).json({ error: 'No se pudo guardar el abono: ' + updContribErr.message })
     } else {
-      await supabase.from('payment_contributions')
+      const { error: insContribErr } = await supabase.from('payment_contributions')
         .insert({ payment_id: paymentId, user_id: memberUserId, amount: numAmount, updated_by: actorId })
+      if (insContribErr) return res.status(500).json({ error: 'No se pudo guardar el abono: ' + insContribErr.message })
     }
 
     let reflectionId
     if (existingReflection) {
-      await supabase.from('payments').update({ amount: numAmount }).eq('id', existingReflection.id)
+      const { error: updReflErr } = await supabase.from('payments').update({ amount: numAmount }).eq('id', existingReflection.id)
+      if (updReflErr) return res.status(500).json({ error: 'El abono se guardó, pero no se pudo actualizar el reflejo: ' + updReflErr.message })
       reflectionId = existingReflection.id
     } else {
-      const { data: created } = await supabase.from('payments').insert({
+      const { data: created, error: insReflErr } = await supabase.from('payments').insert({
         user_id: memberUserId, space_id: null, name: payment.name, category: payment.category,
         amount: numAmount, due_date: payment.due_date, is_paid: true, paid_at: new Date().toISOString(),
         is_variable: false, is_recurrent: false, postponed: false, paused: false,
         source_payment_id: paymentId, source_space_id: payment.space_id, is_contribution_reflection: true,
       }).select().single()
+      if (insReflErr) return res.status(500).json({ error: 'El abono se guardó, pero no se pudo crear el reflejo: ' + insReflErr.message })
       reflectionId = created?.id
     }
 
@@ -158,7 +175,15 @@ module.exports = async function handler(req, res) {
         .eq('payment_id', paymentId)
       const sumAfter = (allContribsAfter || []).reduce((s, r) => s + Number(r.amount), 0)
       if (Math.round(sumAfter * 100) >= Math.round(Number(payment.amount) * 100)) {
-        await supabase.from('payments').update({ is_paid: true, paid_at: new Date().toISOString() }).eq('id', paymentId)
+        const { error: paidErr } = await supabase.from('payments').update({ is_paid: true, paid_at: new Date().toISOString() }).eq('id', paymentId)
+        if (paidErr) {
+          // El abono ya quedó registrado y el reflejo ya existe — esto
+          // solo significa que el gasto ORIGINAL no se pudo marcar pagado
+          // (típicamente el trigger `check_payment_update_permission`
+          // bloqueando la escritura del service role — ver nota al
+          // principio del archivo). Se avisa en vez de reportar éxito.
+          return res.status(500).json({ error: 'Se registró el abono, pero no se pudo marcar el gasto como pagado: ' + paidErr.message })
+        }
         settled = true
       }
     }
