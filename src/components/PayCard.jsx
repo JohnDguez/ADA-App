@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-import { MoreVertical, Check, Pencil, Trash2, Clock, ChevronDown, ChevronUp, RotateCcw, FastForward, DollarSign } from 'lucide-react'
+import { MoreVertical, Check, Pencil, Trash2, Clock, ChevronDown, ChevronUp, RotateCcw, FastForward, DollarSign, Eye } from 'lucide-react'
 import { statusOf, daysDiff, dateOf, fmt, MONTHS_SHORT, periodLabel, periodCountLabel, RECUR_FREQ, installmentLabel } from '../lib/utils'
 import { showToast } from './Toast'
 import styles from './PayCard.module.css'
@@ -33,7 +33,39 @@ const LABEL_HOLD_MS = 450 // cuánto se queda "Pagado" + checkmark visible antes
 const EXIT_MS       = 320 // deslizado + desvanecido + colapso de espacio
 const ENTRY_MS      = 300 // "crecer" al aparecer una card nueva en la lista
 
-export function PayCard({ payment: p, cfg, onMarkPaid, onRequestVariableAmount, onConfirmVariablePaid, onMarkUnpaid, onCaptureAmount, onEdit, onAbonar, onDelete, onPostpone, onAdvance, borderLeft, hideDate, hideDueLabel, railMode, permissions, initialLoad = true }) {
+export function PayCard({ payment: p, cfg, onMarkPaid, onRequestVariableAmount, onConfirmVariablePaid, onMarkUnpaid, onCaptureAmount, onEdit, onAbonar, onViewSource, onDelete, onPostpone, onAdvance, borderLeft, hideDate, hideDueLabel, railMode, permissions, initialLoad = true }) {
+  // Card de solo lectura — reflejo automático de una contribución a un
+  // gasto de un Espacio Compartido (registrada por cualquier miembro desde
+  // "Dividir entre miembros"). Nunca se captura a mano, así que no se puede
+  // editar/eliminar/pagar desde aquí — la única acción es el ojo, que lleva
+  // de vuelta al gasto real en su espacio. Se resuelve ANTES que el resto
+  // del componente porque no comparte casi nada del render normal (sin fill
+  // animation, sin menú, sin checkmark).
+  if (p.is_contribution_reflection) {
+    return (
+      <div className={styles.cardOuter}>
+        <div className={styles.cardWrapper}>
+          <div className={styles.card} style={{ borderLeft: `5px solid ${borderLeft || 'var(--border)'}` }}>
+            <div className={styles.cardContentRow}>
+              <div className={styles.infoSection}>
+                <div className={styles.name}>{p.name}</div>
+              </div>
+              <div className={styles.amountSection}>
+                <span className={styles.amountText}>{fmt(p.amount)}</span>
+                <span className={styles.statusLabel} style={{ color: 'var(--paid)' }}>Pagado</span>
+              </div>
+              <div className={styles.actionsSection}>
+                <button onClick={() => onViewSource && onViewSource(p)} aria-label="Ver en el espacio compartido" className={styles.menuTriggerButton}>
+                  <Eye size={14} color="var(--text)" style={{ opacity: 0.6 }} />
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   const [menuOpen, setMenuOpen] = useState(false)
   const [menuUpward, setMenuUpward] = useState(false)
   const menuRef = useRef(null)

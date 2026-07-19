@@ -1,0 +1,155 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  z-index: 250;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.modal {
+  background: var(--surface);
+  border-radius: 20px 20px 0 0;
+  padding: 12px 20px 32px;
+  width: 100%;
+  max-width: 420px;
+  max-height: 88vh;
+  overflow-y: auto;
+  animation: slideUp 0.32s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+}
+
+@keyframes slideUp {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+.handle {
+  width: 36px;
+  height: 4px;
+  background: var(--border);
+  border-radius: 2px;
+  margin: 0 auto 16px;
+}
+
+.title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 2px;
+}
+
+.description {
+  font-size: 13px;
+  color: var(--text);
+  opacity: 0.7;
+  margin-bottom: 14px;
+}
+
+.progress {
+  border-radius: 8px;
+  padding: 12px 14px;
+  background: var(--bg);
+  margin-bottom: 14px;
+}
+
+.progressDone {
+  background: var(--bg);
+}
+
+.progressAmounts {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.progressDone .progressAmounts {
+  color: var(--paid);
+}
+
+.progressStatus {
+  font-size: 12px;
+  color: var(--text);
+  opacity: 0.7;
+  margin-top: 2px;
+}
+
+.progressDone .progressStatus {
+  color: var(--paid);
+  opacity: 1;
+}
+
+.errorBox {
+  background: var(--bg);
+  border: 0.5px solid var(--danger);
+  border-radius: 5px;
+  padding: 10px 12px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--danger);
+  margin-bottom: 12px;
+}
+
+.members {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.memberCard {
+  background: var(--bg);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.memberRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  cursor: pointer;
+}
+
+.memberName {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text);
+}
+
+.memberAmount {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.editLabel {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--accent);
+}
+
+.memberEmpty {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text);
+  opacity: 0.5;
+}
+
+.editRow {
+  padding: 0 12px 12px;
+  display: flex;
+  gap: 8px;
+}
+
+.editInput {
+  flex: 1;
+}
+
+.saveButton {
+  width: auto;
+  padding: 0 16px;
+}
