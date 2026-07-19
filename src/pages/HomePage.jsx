@@ -113,7 +113,7 @@ function HalfRing({ percent, width = 220, strokeWidth = 14 }) {
   )
 }
 
-export function HomePage({ payments, profile, spaceSwitcher, activeSpaceHeader, activeSpaceId, sharedSpaces, spacePermissions, onOpenPremium, onSpaceReady, onAdd, onMarkPaid, onRequestVariableAmount, onConfirmVariablePaid, onMarkUnpaid, onCaptureAmount, onEdit, onAbonar, onViewSource, onDelete, onPostpone, onAdvance, onGoSettings, notifications, unreadCount, onMarkAsRead, onMarkAllAsRead, onDeleteNotif, onClearAllNotifs, slideClass }) {
+export function HomePage({ payments, profile, spaceSwitcher, activeSpaceHeader, activeSpaceId, sharedSpaces, spacePermissions, onOpenPremium, onSpaceReady, onAdd, onMarkPaid, onRequestVariableAmount, onConfirmVariablePaid, onMarkUnpaid, onCaptureAmount, onEdit, onAbonar, onSplit, onViewSource, onDelete, onPostpone, onAdvance, onGoSettings, notifications, unreadCount, onMarkAsRead, onMarkAllAsRead, onDeleteNotif, onClearAllNotifs, slideClass }) {
   // Detecta un cambio REAL de espacio activo (no el primer montaje de la
   // página, que también dispararía un `key` remontado sin querer) — antes
   // se usaba `key={activeSpaceId}` para forzar el remontado del contenido,
@@ -226,7 +226,7 @@ export function HomePage({ payments, profile, spaceSwitcher, activeSpaceHeader, 
   const nextMonthFixedCount          = upcoming.filter(p => !p.is_variable || p.amount > 0).length
   const nextMonthPendingVariableCount = upcoming.filter(p => p.is_variable && !p.amount).length
 
-  const handlers = { onMarkPaid, onRequestVariableAmount, onConfirmVariablePaid, onMarkUnpaid, onCaptureAmount, onEdit, onAbonar, onDelete, onPostpone, onAdvance }
+  const handlers = { onMarkPaid, onRequestVariableAmount, onConfirmVariablePaid, onMarkUnpaid, onCaptureAmount, onEdit, onAbonar, onSplit, onDelete, onPostpone, onAdvance }
 
   return (
     <div className={styles.pageRoot}>
