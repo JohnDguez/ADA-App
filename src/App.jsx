@@ -95,7 +95,7 @@ export default function App() {
     addPayment, addRecurrentPayment, addInstallmentPayment,
     updatePayment, updateRecurrentName, updateRecurrentConfig,
     abonarInstallment,
-    registerContribution, getContributions, payRemainingContribution,
+    registerContribution, getContributions, payRemainingContribution, setContributionTotalAmount,
     markPaid, markUnpaid, setEstimatedAmount,
     postponePayment,
     pauseRecurrent, resumeRecurrent,
@@ -149,7 +149,7 @@ export default function App() {
   const [varModal,       setVarModal]      = useState({ open: false, payment: null, resolver: null })
   const [estimateModal,  setEstimateModal] = useState({ open: false, payment: null })
   const [abonarModal,    setAbonarModal]   = useState({ open: false, payment: null })
-  const [splitModal,     setSplitModal]    = useState({ open: false, payment: null })
+  const [splitModal,     setSplitModal]    = useState({ open: false, paymentId: null })
   const [notifOpen,      setNotifOpen]     = useState(false)
   const [slideDir,       setSlideDir]      = useState('right')
   const [migrationModal, setMigrationModal] = useState(false)
@@ -273,7 +273,13 @@ export default function App() {
   // animación (ej. GroupCard en RecurrentsPage): ahí un pago variable
   // sigue abriendo el modal directo, sin resolver, igual que siempre.
   async function handleMarkPaid(payment) {
-    if (payment.is_variable) { setVarModal({ open: true, payment, resolver: null }); return }
+    // BUG real corregido: antes `is_variable` se revisaba primero SIEMPRE,
+    // así que un pago variable de un Espacio Compartido caía al modal viejo
+    // (`VariableAmountModal` → `confirmVariablePaid`), que nunca pasa por
+    // `registerContribution` — nunca reparte, nunca genera el reflejo en el
+    // Home de quien pagó, nunca revisa si ya se completó. Un variable
+    // personal (sin `space_id`) se queda exactamente igual que siempre.
+    if (payment.is_variable && !payment.space_id) { setVarModal({ open: true, payment, resolver: null }); return }
     // Parcialidad: el check paga directo el monto de referencia de ESTE
     // pago (sin abrir el modal de Abonar — eso vive solo en el menú de 3
     // puntos) pasando por la misma lógica de abonarInstallment, para que el
@@ -289,6 +295,14 @@ export default function App() {
     // faltante real (ver register-contribution.js, modo payRemaining), no
     // el cliente, para evitar condiciones de carrera.
     if (payment.space_id) {
+      // Variable sin monto todavía capturado — no hay "lo que falta" que
+      // calcular sin saber el total primero. Se abre "Dividir" directo
+      // (ahí mismo se puede fijar el monto, ver SplitContributionsModal),
+      // en vez del modal viejo de "Agregar monto".
+      if (payment.is_variable && !(Number(payment.amount) > 0)) {
+        openSplitModal(payment)
+        return
+      }
       const { error } = await payRemainingContribution(payment.id)
       if (error) showToast('Error al marcar como pagado')
       return
@@ -342,7 +356,7 @@ export default function App() {
     else if (done) showToast('¡Terminaste todos los pagos!')
     else showToast(`Abono registrado — ${fmt(amount)}`)
   }
-  function openSplitModal(payment) { setSplitModal({ open: true, payment }) }
+  function openSplitModal(payment) { setSplitModal({ open: true, paymentId: payment.id }) }
 
   // Card de reflejo (Home personal) → el ojo lleva de vuelta al espacio de
   // origen. Usa el atajo que ya existe (`switchSpace`) — no hace falta
@@ -742,12 +756,13 @@ export default function App() {
 
       <SplitContributionsModal
         open={splitModal.open}
-        payment={splitModal.payment}
+        payment={payments.find(p => p.id === splitModal.paymentId) || null}
         spaceMembers={activeSpaceEntry?.space?.members || []}
         currentUserId={user?.id}
         getContributions={getContributions}
         registerContribution={registerContribution}
-        onClose={() => setSplitModal({ open: false, payment: null })}
+        onSetTotalAmount={setContributionTotalAmount}
+        onClose={() => setSplitModal({ open: false, paymentId: null })}
       />
 
       <Coachmarks
