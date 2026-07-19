@@ -304,7 +304,7 @@ export default function App() {
         return
       }
       const { error } = await payRemainingContribution(payment.id)
-      if (error) showToast('Error al marcar como pagado')
+      if (error) showToast(error.message || 'Error al marcar como pagado')
       return
     }
     const { error } = await markPaid(payment.id)
