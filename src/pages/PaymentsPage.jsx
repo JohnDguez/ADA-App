@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { ChevronLeft, ChevronRight, MoreVertical, Plus, CircleDollarSign, ChevronDown, ChevronUp, Pencil, RotateCcw, Trash2, Check } from 'lucide-react'
+import { ChevronLeft, ChevronRight, MoreVertical, Plus, CircleDollarSign, ChevronDown, ChevronUp, Pencil, RotateCcw, Trash2, Check, Users } from 'lucide-react'
 import { PageHeader } from '../components/PageHeader'
 import { NewSharedSpacePanel } from '../components/NewSharedSpacePanel'
 import { EmptyState } from '../components/EmptyState'
@@ -66,7 +66,7 @@ function prevPeriod(profile) {
   return { start: t, end: prevEnd }
 }
 
-export function PaymentsPage({ payments, profile, spaceSwitcher, activeSpaceHeader, activeSpaceId = null, rawActiveSpaceId = null, sharedSpaces, spacePermissions, onOpenPremium, onSpaceReady, unreadCount, onOpenNotifs, onGoSettings, onMarkUnpaid, onDelete, onDeleteDirect, onUpdateProfile, onEdit, onAdd, onGoCategories, slideClass }) {
+export function PaymentsPage({ payments, profile, spaceSwitcher, activeSpaceHeader, activeSpaceId = null, rawActiveSpaceId = null, sharedSpaces, spacePermissions, onOpenPremium, onSpaceReady, unreadCount, onOpenNotifs, onGoSettings, onMarkUnpaid, onDelete, onDeleteDirect, onUpdateProfile, onEdit, onSplit, onAdd, onGoCategories, slideClass }) {
   // Mismo mecanismo que HomePage.jsx — ver ahí el porqué (evitar que la
   // animación de entrada se dispare también en un simple cambio de
   // pestaña, no solo en un cambio real de espacio).
@@ -517,6 +517,7 @@ export function PaymentsPage({ payments, profile, spaceSwitcher, activeSpaceHead
         onDelete && onDelete(payment.id, payment)
       }
     }
+    if (action === 'split') onSplit && onSplit(payment)
   }
 
   // Segmentos heatmap
@@ -547,6 +548,7 @@ export function PaymentsPage({ payments, profile, spaceSwitcher, activeSpaceHead
             return (
               <>
                 <MenuItem icon={<Pencil size={14} />} label="Editar" onClick={() => handleMenuAction('edit', p)} />
+                {p.space_id && <MenuItem icon={<Users size={14} />} label="Dividir entre miembros" onClick={() => handleMenuAction('split', p)} />}
                 <MenuItem icon={<RotateCcw size={14} />} label="Marcar como no pagado" onClick={() => handleMenuAction('unpaid', p)} />
                 <MenuItem icon={<Trash2 size={14} />} label="Eliminar" onClick={() => handleMenuAction('delete', p)} danger />
               </>
@@ -1230,12 +1232,14 @@ export function PaymentsPage({ payments, profile, spaceSwitcher, activeSpaceHead
                           onClick={e => {
                             e.stopPropagation()
                             const rect = e.currentTarget.getBoundingClientRect()
-                            // Menú fijo de 3 ítems (~140px) — si no cabe
-                            // debajo antes del final de la pantalla, se abre
-                            // hacia arriba en vez de hacia abajo (bug real:
-                            // se veía cortado por el navbar en pagos cerca
+                            // Menú de 3 ítems normalmente (~140px), 4 si el
+                            // pago es de un Espacio Compartido (agrega
+                            // "Dividir entre miembros") — si no cabe debajo
+                            // antes del final de la pantalla, se abre hacia
+                            // arriba en vez de hacia abajo (bug real: se
+                            // veía cortado por el navbar en pagos cerca
                             // del fondo de la lista).
-                            const estimatedHeight = 140
+                            const estimatedHeight = p.space_id ? 178 : 140
                             const openUpward = rect.bottom + estimatedHeight > window.innerHeight
                             setOpenMenu(openMenu?.id === p.id ? null : {
                               id: p.id,

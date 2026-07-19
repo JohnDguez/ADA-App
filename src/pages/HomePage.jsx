@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useId } from 'react'
-import { ChevronDown, ChevronUp, Check, RotateCcw } from 'lucide-react'
+import { ChevronDown, ChevronUp, Check, RotateCcw, Eye } from 'lucide-react'
 import { PayCard } from '../components/PayCard'
 import { PayRail } from '../components/PayRail'
 import { PageHeader } from '../components/PageHeader'
@@ -113,7 +113,7 @@ function HalfRing({ percent, width = 220, strokeWidth = 14 }) {
   )
 }
 
-export function HomePage({ payments, profile, spaceSwitcher, activeSpaceHeader, activeSpaceId, sharedSpaces, spacePermissions, onOpenPremium, onSpaceReady, onAdd, onMarkPaid, onRequestVariableAmount, onConfirmVariablePaid, onMarkUnpaid, onCaptureAmount, onEdit, onAbonar, onDelete, onPostpone, onAdvance, onGoSettings, notifications, unreadCount, onMarkAsRead, onMarkAllAsRead, onDeleteNotif, onClearAllNotifs, slideClass }) {
+export function HomePage({ payments, profile, spaceSwitcher, activeSpaceHeader, activeSpaceId, sharedSpaces, spacePermissions, onOpenPremium, onSpaceReady, onAdd, onMarkPaid, onRequestVariableAmount, onConfirmVariablePaid, onMarkUnpaid, onCaptureAmount, onEdit, onAbonar, onViewSource, onDelete, onPostpone, onAdvance, onGoSettings, notifications, unreadCount, onMarkAsRead, onMarkAllAsRead, onDeleteNotif, onClearAllNotifs, slideClass }) {
   // Detecta un cambio REAL de espacio activo (no el primer montaje de la
   // página, que también dispararía un `key` remontado sin querer) — antes
   // se usaba `key={activeSpaceId}` para forzar el remontado del contenido,
@@ -420,6 +420,7 @@ export function HomePage({ payments, profile, spaceSwitcher, activeSpaceHeader, 
                 expanded={paidExpanded}
                 onToggle={() => setPaidExpanded(v => !v)}
                 onMarkUnpaid={onMarkUnpaid}
+                onViewSource={onViewSource}
               />
             </div>
           )}
@@ -541,7 +542,7 @@ const UNMARK_EXIT_MS = 320
 // dispara HASTA que la animación de salida terminó, nunca antes, para que
 // la fila nunca desaparezca del arreglo (y se desmonte) a la mitad de su
 // propia animación.
-function PaidCollapseItem({ p, onMarkUnpaid }) {
+function PaidCollapseItem({ p, onMarkUnpaid, onViewSource }) {
   const [phase, setPhase] = useState('idle') // idle | filling | labeled | exiting
   const wrapperRef = useRef(null)
   const timers = useRef([])
@@ -602,13 +603,23 @@ function PaidCollapseItem({ p, onMarkUnpaid }) {
             <div className={styles.paidCollapseCategory}>{p.category}</div>
           </div>
           <span className={styles.paidCollapseAmount}>{fmt(p.amount)}</span>
-          <button
-            onClick={handleUndo}
-            disabled={phase !== 'idle'}
-            className={styles.paidCollapseUndoButton}
-          >
-            <RotateCcw size={11} color="var(--text)" />
-          </button>
+          {p.is_contribution_reflection ? (
+            <button
+              onClick={e => { e.stopPropagation(); onViewSource && onViewSource(p) }}
+              aria-label="Ver en el espacio compartido"
+              className={styles.paidCollapseUndoButton}
+            >
+              <Eye size={11} color="var(--text)" />
+            </button>
+          ) : (
+            <button
+              onClick={handleUndo}
+              disabled={phase !== 'idle'}
+              className={styles.paidCollapseUndoButton}
+            >
+              <RotateCcw size={11} color="var(--text)" />
+            </button>
+          )}
         </div>
       </div>
     </div>
@@ -620,7 +631,7 @@ function PaidCollapseItem({ p, onMarkUnpaid }) {
 // atajo de conveniencia para deshacer/revisar sin salir de Home. Se calcula
 // con el mismo rango de fechas del periodo actual, así que se "reinicia"
 // solo en cuanto cambia de periodo, sin lógica extra de limpieza.
-function PaidCollapse({ payments, expanded, onToggle, onMarkUnpaid }) {
+function PaidCollapse({ payments, expanded, onToggle, onMarkUnpaid, onViewSource }) {
   return (
     <div className={styles.paidCollapseRoot}>
       <button
@@ -641,7 +652,7 @@ function PaidCollapse({ payments, expanded, onToggle, onMarkUnpaid }) {
         return (
           <div className={styles.paidCollapseList}>
             {sorted.map(p => (
-              <PaidCollapseItem key={p.id} p={p} onMarkUnpaid={onMarkUnpaid} />
+              <PaidCollapseItem key={p.id} p={p} onMarkUnpaid={onMarkUnpaid} onViewSource={onViewSource} />
             ))}
           </div>
         )
