@@ -86,6 +86,29 @@ export function usePayments(userId, activeSpaceId = null, activeSpaceName = null
     }
   }
 
+  // Fija/edita el monto total de un pago VARIABLE del espacio — antes esto
+  // solo se podía hacer con "Agregar monto" (setEstimatedAmount), un camino
+  // aparte que nunca revisaba si los abonos ya cubrían el total; ahora vive
+  // en el mismo modal de "Dividir entre miembros" y pasa por el mismo
+  // endpoint, que sí vuelve a revisar "completo" después del cambio.
+  async function setContributionTotalAmount(paymentId, amount) {
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) return { error: { message: 'Sesión no encontrada' } }
+      const res = await fetch('/api/register-contribution', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
+        body: JSON.stringify({ paymentId, setTotalAmount: amount }),
+      })
+      const result = await res.json()
+      if (!res.ok) return { error: result.error ? { message: result.error } : { message: 'Error al guardar el monto' } }
+      await fetchPayments()
+      return { error: null, ...result }
+    } catch (e) {
+      return { error: { message: 'Error de conexión al guardar el monto' } }
+    }
+  }
+
   // Lee las contribuciones ya registradas de un gasto compartido — lectura
   // directa con el cliente normal (la política de SELECT de
   // payment_contributions ya deja ver esto a cualquier miembro del
@@ -998,7 +1021,7 @@ export function usePayments(userId, activeSpaceId = null, activeSpaceName = null
     addPayment, addRecurrentPayment, addInstallmentPayment,
     updatePayment, updateRecurrentName, updateRecurrentConfig,
     abonarInstallment,
-    registerContribution, getContributions, payRemainingContribution,
+    registerContribution, getContributions, payRemainingContribution, setContributionTotalAmount,
     markPaid, markUnpaid, setEstimatedAmount,
     postponePayment,
     pauseRecurrent, resumeRecurrent,
