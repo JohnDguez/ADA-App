@@ -653,6 +653,7 @@ export default function App() {
           onDeleteDirect={async (id) => { await deletePayment(id); showToast('Pago eliminado') }}
           onUpdateProfile={updateProfile}
           onEdit={openEdit}
+          onViewSource={handleViewSource}
           onAdd={openAdd}
           onGoCategories={goToCategories}
         />
