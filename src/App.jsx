@@ -95,7 +95,7 @@ export default function App() {
     addPayment, addRecurrentPayment, addInstallmentPayment,
     updatePayment, updateRecurrentName, updateRecurrentConfig,
     abonarInstallment,
-    registerContribution, getContributions,
+    registerContribution, getContributions, payRemainingContribution,
     markPaid, markUnpaid, setEstimatedAmount,
     postponePayment,
     pauseRecurrent, resumeRecurrent,
@@ -280,6 +280,16 @@ export default function App() {
     // total fijo y el plan se mantengan consistentes igual que un abono.
     if (payment.is_installment) {
       const { error } = await abonarInstallment(payment.id, Number(payment.amount))
+      if (error) showToast('Error al marcar como pagado')
+      return
+    }
+    // Gasto de un Espacio Compartido: el check paga "lo que falta" en vez
+    // del monto completo — puede que ya tenga abonos de otros miembros
+    // registrados vía "Dividir entre miembros". El servidor calcula el
+    // faltante real (ver register-contribution.js, modo payRemaining), no
+    // el cliente, para evitar condiciones de carrera.
+    if (payment.space_id) {
+      const { error } = await payRemainingContribution(payment.id)
       if (error) showToast('Error al marcar como pagado')
       return
     }
@@ -597,6 +607,7 @@ export default function App() {
           onCaptureAmount={openEstimateModal}
           onEdit={openEdit}
           onAbonar={openAbonarModal}
+          onSplit={openSplitModal}
           onViewSource={handleViewSource}
           onDelete={handleDelete}
           onPostpone={handlePostpone}
@@ -628,7 +639,6 @@ export default function App() {
           onDeleteDirect={async (id) => { await deletePayment(id); showToast('Pago eliminado') }}
           onUpdateProfile={updateProfile}
           onEdit={openEdit}
-          onSplit={openSplitModal}
           onAdd={openAdd}
           onGoCategories={goToCategories}
         />
