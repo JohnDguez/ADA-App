@@ -14,6 +14,7 @@ import { NotificationsPanel } from './components/NotificationsPanel'
 import { PaymentModal } from './components/PaymentModal'
 import { VariableAmountModal } from './components/VariableAmountModal'
 import { InstallmentAbonarModal } from './components/InstallmentAbonarModal'
+import { SplitContributionsModal } from './components/SplitContributionsModal'
 import { RecurrentMigrationModal } from './components/RecurrentMigrationModal'
 import { PatchNotesModal } from './components/PatchNotesModal'
 import { PasswordSetupModal } from './components/PasswordSetupModal'
@@ -94,6 +95,7 @@ export default function App() {
     addPayment, addRecurrentPayment, addInstallmentPayment,
     updatePayment, updateRecurrentName, updateRecurrentConfig,
     abonarInstallment,
+    registerContribution, getContributions,
     markPaid, markUnpaid, setEstimatedAmount,
     postponePayment,
     pauseRecurrent, resumeRecurrent,
@@ -147,6 +149,7 @@ export default function App() {
   const [varModal,       setVarModal]      = useState({ open: false, payment: null, resolver: null })
   const [estimateModal,  setEstimateModal] = useState({ open: false, payment: null })
   const [abonarModal,    setAbonarModal]   = useState({ open: false, payment: null })
+  const [splitModal,     setSplitModal]    = useState({ open: false, payment: null })
   const [notifOpen,      setNotifOpen]     = useState(false)
   const [slideDir,       setSlideDir]      = useState('right')
   const [migrationModal, setMigrationModal] = useState(false)
@@ -329,6 +332,18 @@ export default function App() {
     else if (done) showToast('¡Terminaste todos los pagos!')
     else showToast(`Abono registrado — ${fmt(amount)}`)
   }
+  function openSplitModal(payment) { setSplitModal({ open: true, payment }) }
+
+  // Card de reflejo (Home personal) → el ojo lleva de vuelta al espacio de
+  // origen. Usa el atajo que ya existe (`switchSpace`) — no hace falta
+  // resaltar el pago original en esta primera versión, con entrar al
+  // espacio correcto basta.
+  function handleViewSource(payment) {
+    if (!payment?.source_space_id) return
+    switchSpace(payment.source_space_id)
+    changeTab('home')
+  }
+
   function openEstimateModal(payment) { setEstimateModal({ open: true, payment }) }
   async function handleEstimateConfirm(amount) {
     const payment = estimateModal.payment
@@ -582,6 +597,7 @@ export default function App() {
           onCaptureAmount={openEstimateModal}
           onEdit={openEdit}
           onAbonar={openAbonarModal}
+          onViewSource={handleViewSource}
           onDelete={handleDelete}
           onPostpone={handlePostpone}
           onAdvance={handleAdvance}
@@ -612,6 +628,7 @@ export default function App() {
           onDeleteDirect={async (id) => { await deletePayment(id); showToast('Pago eliminado') }}
           onUpdateProfile={updateProfile}
           onEdit={openEdit}
+          onSplit={openSplitModal}
           onAdd={openAdd}
           onGoCategories={goToCategories}
         />
@@ -711,6 +728,16 @@ export default function App() {
         spacePermissions={spacePermissions}
         onConfirm={handleAbonarConfirm}
         onClose={() => setAbonarModal({ open: false, payment: null })}
+      />
+
+      <SplitContributionsModal
+        open={splitModal.open}
+        payment={splitModal.payment}
+        spaceMembers={activeSpaceEntry?.space?.members || []}
+        currentUserId={user?.id}
+        getContributions={getContributions}
+        registerContribution={registerContribution}
+        onClose={() => setSplitModal({ open: false, payment: null })}
       />
 
       <Coachmarks
