@@ -10,7 +10,7 @@ import { Select } from './Select'
 import { DatePicker } from './DatePicker'
 import styles from './PaymentModal.module.css'
 
-export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelete, initial, payments, profile, spacePermissions, customCategories = [], onAddCategory, onOpenPremium }) {
+export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelete, initial, payments, profile, spacePermissions, isSharedSpace = false, customCategories = [], onAddCategory, onOpenPremium }) {
   const [mode,               setMode]               = useState('single')
   const [name,               setName]               = useState('')
   const [amount,             setAmount]             = useState('')
@@ -218,7 +218,7 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
     mode === 'recurrent' && recurFreq === 'biweekly' ? (biweeklyDate ? dateToStr(nextBiweeklyFromDate(biweeklyDate)) : dueDate) :
     dueDate
 
-  const showImpactPreview = !initial && !!profile && mode !== 'installment' && !isVariable && !alreadyPaid
+  const showImpactPreview = !initial && !!profile && mode !== 'installment' && !isVariable && !alreadyPaid && !isSharedSpace
     && !!amount && !isNaN(parseFloat(amount)) && parseFloat(amount) > 0 && !!previewDueDate
 
   const impactPreview = showImpactPreview
@@ -453,7 +453,7 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
                 <label className={`field-label ${styles.dueDateLabelNoMargin}`}>
                   {mode === 'installment' ? 'Fecha del primer pago' : 'Fecha de vencimiento'}
                 </label>
-                {mode === 'single' && !initial && !isVariable && (
+                {mode === 'single' && !initial && !isVariable && !isSharedSpace && (
                   <div onClick={() => setAlreadyPaid(v => !v)}
                     className={styles.alreadyPaidToggle}>
                     <span className={styles.alreadyPaidLabel} style={{ color: alreadyPaid ? 'var(--paid)' : 'var(--text)' }}>
