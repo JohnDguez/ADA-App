@@ -323,7 +323,28 @@ export default function App() {
   // confirmVariablePaid: el guardado real de un pago variable animado —
   // PayCard lo llama hasta que su propia animación de salida terminó, para
   // que la card (ya invisible) no salte al actualizarse la lista.
+  // BUG real encontrado (v0.9.208): esta función SIEMPRE llamaba `markPaid`
+  // directo, sin importar `payment.space_id` — así que el check de un pago
+  // VARIABLE compartido nunca pasaba por el sistema de abonos (nunca
+  // repartía, nunca generaba el reflejo, nunca revisaba "¿ya se
+  // completó?"). Los fixes anteriores (v0.9.199 y siguientes) solo tocaron
+  // `handleMarkPaid`/`payRemainingContribution` — la ruta de los NO
+  // variables — este camino paralelo (variable) se quedó sin tocar hasta
+  // ahora, que se conectó con el mini-menú del check ("Pagar todo").
   async function confirmVariablePaid(payment, amount) {
+    if (payment.space_id) {
+      // Si este variable compartido todavía no tenía monto capturado, el
+      // que se acaba de capturar aquí se vuelve el total fijo Y la
+      // contribución completa de quien tocó "Pagar todo", de un jalón —
+      // sin esto, registerContribution compararía contra un total en $0.
+      if (!(Number(payment.amount) > 0)) {
+        const { error: totalErr } = await setContributionTotalAmount(payment.id, amount)
+        if (totalErr) { showToast(totalErr.message || 'Error al registrar pago'); return }
+      }
+      const { error } = await registerContribution(payment.id, user?.id, amount)
+      if (error) showToast(error.message || 'Error al registrar pago')
+      return
+    }
     const { error } = await markPaid(payment.id, amount)
     if (error) showToast('Error al registrar pago')
   }
