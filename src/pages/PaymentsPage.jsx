@@ -7,7 +7,6 @@ import { fmt, dateOf, dateToStr, MONTHS, MONTHS_SHORT, CATEGORIES, cobroPeriod, 
 import { getCategoryIcon } from '../lib/categoryIcons'
 import { supabase } from '../lib/supabase'
 import { showToast } from '../components/Toast'
-import { useSharedFund } from '../hooks/useSharedFund'
 import styles from './PaymentsPage.module.css'
 
 const INCOME_TYPES = ['Bono', 'Préstamo', 'Pago', 'Comisión', 'Otro']
@@ -67,7 +66,7 @@ function prevPeriod(profile) {
   return { start: t, end: prevEnd }
 }
 
-export function PaymentsPage({ payments, profile, spaceSwitcher, activeSpaceHeader, activeSpaceId = null, rawActiveSpaceId = null, sharedSpaces, spacePermissions, onOpenPremium, onSpaceReady, unreadCount, onOpenNotifs, onGoSettings, onMarkUnpaid, onDelete, onDeleteDirect, onUpdateProfile, onEdit, onViewSource, onSplit, onAdd, onGoCategories, slideClass }) {
+export function PaymentsPage({ payments, profile, spaceSwitcher, activeSpaceHeader, activeSpaceId = null, rawActiveSpaceId = null, sharedSpaces, spacePermissions, onOpenPremium, onSpaceReady, unreadCount, onOpenNotifs, onGoSettings, onMarkUnpaid, onDelete, onDeleteDirect, onUpdateProfile, onEdit, onViewSource, onSplit, onAdd, onGoCategories, sharedFund, slideClass }) {
   // Mismo mecanismo que HomePage.jsx — ver ahí el porqué (evitar que la
   // animación de entrada se dispare también en un simple cambio de
   // pestaña, no solo en un cambio real de espacio).
@@ -120,10 +119,9 @@ export function PaymentsPage({ payments, profile, spaceSwitcher, activeSpaceHead
   const [savingEditIncome,     setSavingEditIncome]     = useState(false)
   const [confirmDeleteIncomeId, setConfirmDeleteIncomeId] = useState(null)
 
-  // Fondo Compartido — solo aplica en modo espacio (activeSpaceId). En
-  // personal, esta sección ni se monta (el hook regresa lista vacía si
-  // spaceId es null, pero ni se llama fetchLedger en ese caso).
-  const sharedFund = useSharedFund(activeSpaceId)
+  // Fondo Compartido — instanciado en App.jsx (Fase 3, v0.9.220), llega
+  // como prop para que la misma instancia (y su bitácora ya cargada) la
+  // compartan también el check de Home y "Dividir entre miembros".
   const [fundExpanded,      setFundExpanded]      = useState(false)
   const [addFundModal,      setAddFundModal]      = useState(false)
   const [fundAmount,        setFundAmount]        = useState('')
@@ -140,11 +138,6 @@ export function PaymentsPage({ payments, profile, spaceSwitcher, activeSpaceHead
   // descuenta de ahí, así que no puede exceder lo que hay).
   const [personalAvailable, setPersonalAvailable] = useState(null)
   const [loadingPersonalAvailable, setLoadingPersonalAvailable] = useState(false)
-
-  useEffect(() => {
-    if (activeSpaceId) sharedFund.fetchLedger()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeSpaceId])
 
   useEffect(() => {
     if (!addFundModal || !activeSpaceId) return
