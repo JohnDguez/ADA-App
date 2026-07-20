@@ -8,6 +8,8 @@ import styles from './SplitContributionsModal.module.css'
 // quien se acuerda, y cualquier miembro puede editar la entrada de
 // cualquier otro (confirmado con Johnatan). Nunca es obligatorio llenar a
 // todos de un jalón — el progreso mostrado es informativo, nunca bloquea.
+const PRESET_PERCENTAGES = [25, 50, 60, 75]
+
 export function SplitContributionsModal({ open, payment, spaceMembers, currentUserId, getContributions, registerContribution, onSetTotalAmount, onClose }) {
   const [contributions, setContributions] = useState({}) // { [user_id]: amount }
   const [loading,  setLoading]  = useState(false)
@@ -125,9 +127,34 @@ export function SplitContributionsModal({ open, payment, spaceMembers, currentUs
                         : <span className={styles.memberEmpty}>Sin registrar</span>}
                     </div>
                     {isOpen && (
-                      <div className={styles.editRow}>
-                        <input autoFocus type="number" value={draft} onChange={e => setDraft(e.target.value)} placeholder="0.00" onKeyDown={e => e.key === 'Enter' && handleSave(m.user_id)} className={`field-input ${styles.editInput}`} />
-                        <button onClick={() => handleSave(m.user_id)} disabled={saving} className={`btn-primary ${styles.saveButton}`}>Guardar</button>
+                      <div>
+                        {/* Porcentajes SIEMPRE sobre el total fijo, nunca
+                            sobre lo que resta — pero se bloquean los que se
+                            pasarían de lo que en verdad queda disponible,
+                            contando lo que ya pusieron los demás miembros. */}
+                        <div className={styles.availableHint}>Disponible: {fmt(Math.max(0, total - (registrado - (amount || 0))))} de {fmt(total)}</div>
+                        <div className={styles.presetRow}>
+                          {PRESET_PERCENTAGES.map(pct => {
+                            const presetAmt = Math.round(total * pct) / 100
+                            const available = total - (registrado - (amount || 0))
+                            const disabled = Math.round(presetAmt * 100) > Math.round(available * 100) + 1
+                            return (
+                              <button
+                                key={pct}
+                                type="button"
+                                disabled={disabled}
+                                onClick={() => setDraft(String(presetAmt))}
+                                className={styles.presetButton}
+                              >
+                                {pct}%
+                              </button>
+                            )
+                          })}
+                        </div>
+                        <div className={styles.editRow}>
+                          <input autoFocus type="number" value={draft} onChange={e => setDraft(e.target.value)} placeholder="0.00" onKeyDown={e => e.key === 'Enter' && handleSave(m.user_id)} className={`field-input ${styles.editInput}`} />
+                          <button onClick={() => handleSave(m.user_id)} disabled={saving} className={`btn-primary ${styles.saveButton}`}>Guardar</button>
+                        </div>
                       </div>
                     )}
                   </div>

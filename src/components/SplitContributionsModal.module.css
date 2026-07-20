@@ -139,6 +139,38 @@
   opacity: 0.5;
 }
 
+.availableHint {
+  font-size: 11px;
+  color: var(--text);
+  opacity: 0.5;
+  padding: 0 12px;
+  margin-bottom: 6px;
+}
+
+.presetRow {
+  display: flex;
+  gap: 6px;
+  padding: 0 12px;
+  margin-bottom: 8px;
+}
+
+.presetButton {
+  flex: 1;
+  font-size: 12px;
+  font-weight: 500;
+  padding: 6px 0;
+  border-radius: 5px;
+  border: 0.5px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+}
+
+.presetButton:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
 .editRow {
   padding: 0 12px 12px;
   display: flex;
