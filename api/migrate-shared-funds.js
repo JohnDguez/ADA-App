@@ -73,7 +73,19 @@ module.exports = async function handler(req, res) {
       .eq('id', spaceId)
       .maybeSingle()
     if (spaceErr || !space) return res.status(404).json({ error: 'Espacio no encontrado' })
-    if (space.owner_id !== actorId) return res.status(403).json({ error: 'Solo el dueño del espacio puede migrar su Fondo' })
+
+    // Cualquier miembro puede disparar esto (se llama automático desde el
+    // cliente la primera vez que alguien abre "Fondos" — no solo el owner,
+    // para que no dependa de que él sea quien primero visite esa pantalla).
+    // Es seguro porque es idempotente (revisa abajo si ya se migró) y usa
+    // datos de todo el espacio, no privilegiados de nadie en particular.
+    const { data: actorMembership } = await supabase
+      .from('shared_space_members')
+      .select('id')
+      .eq('space_id', spaceId)
+      .eq('user_id', actorId)
+      .maybeSingle()
+    if (!actorMembership) return res.status(403).json({ error: 'No perteneces a este espacio' })
 
     // No migrar dos veces — si ya existe una fila 'migration' para este
     // espacio, esto ya se corrió antes.
