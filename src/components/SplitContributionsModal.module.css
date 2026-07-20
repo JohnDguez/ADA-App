@@ -181,3 +181,16 @@
   width: auto;
   padding: 0 16px;
 }
+
+.payButton {
+  width: 100%;
+  border: none;
+  border-radius: 8px;
+  background: var(--paid);
+  color: var(--surface);
+  font-size: 14px;
+  font-weight: 600;
+  padding: 12px 0;
+  margin-bottom: 8px;
+  cursor: pointer;
+}

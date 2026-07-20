@@ -10,13 +10,14 @@ import styles from './SplitContributionsModal.module.css'
 // todos de un jalón — el progreso mostrado es informativo, nunca bloquea.
 const PRESET_PERCENTAGES = [25, 50, 60, 75]
 
-export function SplitContributionsModal({ open, payment, spaceMembers, currentUserId, getContributions, registerContribution, onSetTotalAmount, onClose }) {
+export function SplitContributionsModal({ open, payment, spaceMembers, currentUserId, getContributions, registerContribution, onSetTotalAmount, onForceSettle, onClose }) {
   const [contributions, setContributions] = useState({}) // { [user_id]: amount }
   const [loading,  setLoading]  = useState(false)
   const [openId,   setOpenId]   = useState(null)
   const [draft,    setDraft]    = useState('')
   const [saving,   setSaving]   = useState(false)
   const [error,    setError]    = useState('')
+  const [settling, setSettling] = useState(false)
 
   // Solo para pagos variables — el monto no se sabe de antemano, así que se
   // captura/edita aquí mismo (antes vivía solo en "Agregar monto", un
@@ -56,6 +57,14 @@ export function SplitContributionsModal({ open, payment, spaceMembers, currentUs
     setError('')
   }
 
+  async function handlePagar() {
+    setSettling(true)
+    const { error: err } = await onForceSettle(payment.id)
+    setSettling(false)
+    if (err) { setError(err.message || 'Error al marcar como pagado'); return }
+    onClose()
+  }
+
   const total = Number(payment.amount) || 0
   const needsTotal = payment.is_variable && total <= 0
   const registrado = Object.values(contributions).reduce((s, v) => s + v, 0)
@@ -72,6 +81,18 @@ export function SplitContributionsModal({ open, payment, spaceMembers, currentUs
   async function handleSave(memberId) {
     const val = parseFloat(draft)
     if (draft !== '' && (isNaN(val) || val < 0)) { setError('Ingresa un monto válido'); return }
+    // Mientras el pago sigue PENDIENTE, nadie puede poner más de lo que en
+    // verdad queda disponible — si ya está pagado (se está agregando un
+    // contribuyente nuevo a uno ya completo), sí se permite exceder: el
+    // servidor resta el sobrante de los demás contribuyentes (ver
+    // register-contribution.js, es harina de otro costal).
+    if (!payment.is_paid && val > 0) {
+      const available = total - (registrado - (contributions[memberId] || 0))
+      if (Math.round(val * 100) > Math.round(available * 100) + 1) {
+        setError(`No puedes exceder lo disponible (${fmt(Math.max(0, available))})`)
+        return
+      }
+    }
     setSaving(true)
     const { error: err } = await registerContribution(payment.id, memberId, val || 0)
     setSaving(false)
@@ -164,6 +185,11 @@ export function SplitContributionsModal({ open, payment, spaceMembers, currentUs
           </>
         )}
 
+        {done && !payment.is_paid && (
+          <button onClick={handlePagar} disabled={settling} className={styles.payButton}>
+            {settling ? 'Marcando…' : 'Pagar'}
+          </button>
+        )}
         <button onClick={onClose} className="btn-ghost">Cerrar</button>
       </div>
     </div>
