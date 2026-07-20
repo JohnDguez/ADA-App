@@ -1237,7 +1237,7 @@ export function PaymentsPage({ payments, profile, spaceSwitcher, activeSpaceHead
                           const typeColor =
                             entry.type === 'migration' ? 'var(--cat-ahorro)' :
                             entry.type === 'reversal'  ? 'var(--accent)' :
-                            entry.type === 'spend'     ? 'var(--text)' :
+                            entry.type === 'spend'     ? 'var(--impact-warning)' :
                             'var(--paid)'
                           return (
                             <div key={entry.id} className={styles.extrasListItem}>
