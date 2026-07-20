@@ -920,17 +920,28 @@ export function PaymentsPage({ payments, profile, spaceSwitcher, activeSpaceHead
             <div className={styles.manageModalTitle}>Añadir fondos</div>
             <div className={styles.fundInfoText}>
               Este monto se descontará de tu remanente personal, como si fuera un gasto tuyo.
-              {activeSpaceId && !loadingPersonalAvailable && personalAvailable != null && (
-                <> Tienes <strong>{fmt(personalAvailable)}</strong> disponible este periodo.</>
-              )}
             </div>
             <div className={styles.incomeFieldGroup}>
-              <div className={styles.incomeLabelMb6}>Monto</div>
+              <div className={styles.fundAmountLabelRow}>
+                <div className={styles.incomeLabelMb6} style={{ marginBottom: 0 }}>Monto</div>
+                {activeSpaceId && !loadingPersonalAvailable && personalAvailable != null && (
+                  <div className={styles.fundAvailableTag}>Disponible: {fmt(personalAvailable)}</div>
+                )}
+              </div>
               <input
                 type="number" placeholder="$0" value={fundAmount}
                 onChange={e => setFundAmount(e.target.value)} autoFocus
                 className={styles.incomeInput}
               />
+              {(() => {
+                const numAmt = parseFloat(fundAmount) || 0
+                if (personalAvailable == null || numAmt <= 0) return null
+                const excede = numAmt > personalAvailable
+                if (excede) {
+                  return <div className={styles.fundExceedsError}>Excede tu disponible ({fmt(personalAvailable)})</div>
+                }
+                return <div className={styles.fundRemainingHint}>Te quedarán {fmt(personalAvailable - numAmt)} después de este aporte</div>
+              })()}
             </div>
             <div className={styles.incomeFieldGroupLast}>
               <div className={styles.incomeLabelMb6}>Nota (opcional)</div>
