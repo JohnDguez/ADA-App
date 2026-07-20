@@ -135,7 +135,7 @@ module.exports = async function handler(req, res) {
         // puede dejar residuos tipo 1340.9999999999998 en vez de 1341
         // exacto; comparando floats directo, eso hace fallar un ">="
         // que en pantalla (ya redondeado a 2 decimales) se ve idéntico.
-        if (Math.round(sumAll * 100) >= Math.round(newTotal * 100)) {
+        if (newTotal > 0 && Math.round(sumAll * 100) >= Math.round(newTotal * 100)) {
           const { error: paidErr } = await supabase.from('payments').update({ is_paid: true, paid_at: new Date().toISOString() }).eq('id', paymentId)
           if (paidErr) return res.status(500).json({ error: 'El monto se guardó, pero no se pudo marcar como pagado: ' + paidErr.message })
           settled = true
@@ -214,7 +214,7 @@ module.exports = async function handler(req, res) {
       }
 
       let settledFund = false
-      if (!payment.is_paid) {
+      if (!payment.is_paid && Number(payment.amount) > 0) {
         const totalCovered = sumContribs + newFundAmount
         if (Math.round(totalCovered * 100) >= Math.round(Number(payment.amount) * 100)) {
           const { error: paidErr } = await supabase.from('payments').update({ is_paid: true, paid_at: new Date().toISOString() }).eq('id', paymentId)
@@ -350,7 +350,7 @@ module.exports = async function handler(req, res) {
     let settled = false
     if (!payment.is_paid) {
       const sumAfter = sumAll - (existingContribution?.amount || 0) + numAmount
-      if (Math.round(sumAfter * 100) >= Math.round(Number(payment.amount) * 100)) {
+      if (Number(payment.amount) > 0 && Math.round(sumAfter * 100) >= Math.round(Number(payment.amount) * 100)) {
         const { error: paidErr } = await supabase.from('payments').update({ is_paid: true, paid_at: new Date().toISOString() }).eq('id', paymentId)
         if (paidErr) {
           // El abono ya quedó registrado y el reflejo ya existe — esto
