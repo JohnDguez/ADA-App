@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-import { MoreVertical, Check, Pencil, Trash2, Clock, ChevronDown, ChevronUp, RotateCcw, FastForward, DollarSign, Eye, Users } from 'lucide-react'
+import { MoreVertical, Check, Pencil, Trash2, Clock, ChevronDown, ChevronUp, RotateCcw, FastForward, DollarSign, Eye, Users, PiggyBank } from 'lucide-react'
 import { statusOf, daysDiff, dateOf, fmt, MONTHS_SHORT, periodLabel, periodCountLabel, RECUR_FREQ, installmentLabel } from '../lib/utils'
 import { showToast } from './Toast'
 import styles from './PayCard.module.css'
@@ -33,7 +33,7 @@ const LABEL_HOLD_MS = 450 // cuánto se queda "Pagado" + checkmark visible antes
 const EXIT_MS       = 320 // deslizado + desvanecido + colapso de espacio
 const ENTRY_MS      = 300 // "crecer" al aparecer una card nueva en la lista
 
-export function PayCard({ payment: p, cfg, onMarkPaid, onRequestVariableAmount, onConfirmVariablePaid, onMarkUnpaid, onCaptureAmount, onEdit, onAbonar, onSplit, onViewSource, onDelete, onPostpone, onAdvance, borderLeft, hideDate, hideDueLabel, railMode, permissions, initialLoad = true }) {
+export function PayCard({ payment: p, cfg, onMarkPaid, onRequestVariableAmount, onConfirmVariablePaid, onMarkUnpaid, onCaptureAmount, onEdit, onAbonar, onSplit, onPayFromFund, fundBalance, onViewSource, onDelete, onPostpone, onAdvance, borderLeft, hideDate, hideDueLabel, railMode, permissions, initialLoad = true }) {
   // Card de solo lectura — reflejo automático de una contribución a un
   // gasto de un Espacio Compartido (registrada por cualquier miembro desde
   // "Dividir entre miembros"). Nunca se captura a mano, así que no se puede
@@ -225,7 +225,8 @@ export function PayCard({ payment: p, cfg, onMarkPaid, onRequestVariableAmount, 
   // tener que encontrar la opción enterrada en el menú de 3 puntos.
   function openCheckMenuAt(target) {
     const rect = target.getBoundingClientRect()
-    const estimatedHeight = 2 * 38 + 8
+    const itemCount = (onPayFromFund && fundBalance > 0) ? 3 : 2
+    const estimatedHeight = itemCount * 38 + 8
     const BOTTOM_NAV_SAFE_AREA = 90
     setCheckMenuUpward(rect.bottom + estimatedHeight > window.innerHeight - BOTTOM_NAV_SAFE_AREA)
     setCheckMenuOpen(true)
@@ -381,6 +382,9 @@ export function PayCard({ payment: p, cfg, onMarkPaid, onRequestVariableAmount, 
           }}
         >
           <MenuItem icon={<Check size={14}/>} label="Pagar todo" onClick={() => { setCheckMenuOpen(false); handleMarkPaidClick() }} />
+          {onPayFromFund && fundBalance > 0 && (
+            <MenuItem icon={<PiggyBank size={14}/>} label="Fondo compartido" onClick={() => { setCheckMenuOpen(false); onPayFromFund(p) }} />
+          )}
           <MenuItem icon={<Users size={14}/>} label="Pago compartido" onClick={() => { setCheckMenuOpen(false); onSplit(p) }} />
         </div>
       )}

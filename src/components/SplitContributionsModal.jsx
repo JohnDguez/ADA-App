@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { Lock } from 'lucide-react'
 import { fmt } from '../lib/utils'
 import styles from './SplitContributionsModal.module.css'
 
@@ -10,7 +11,7 @@ import styles from './SplitContributionsModal.module.css'
 // todos de un jalón — el progreso mostrado es informativo, nunca bloquea.
 const PRESET_PERCENTAGES = [25, 50, 60, 75]
 
-export function SplitContributionsModal({ open, payment, spaceMembers, currentUserId, getContributions, registerContribution, onSetTotalAmount, onForceSettle, onClose }) {
+export function SplitContributionsModal({ open, payment, spaceMembers, currentUserId, getContributions, registerContribution, onSetTotalAmount, onForceSettle, fundBalance, onSetFundContribution, openedBecauseFundInsufficient, onClose }) {
   const [contributions, setContributions] = useState({}) // { [user_id]: amount }
   const [loading,  setLoading]  = useState(false)
   const [openId,   setOpenId]   = useState(null)
@@ -67,7 +68,8 @@ export function SplitContributionsModal({ open, payment, spaceMembers, currentUs
 
   const total = Number(payment.amount) || 0
   const needsTotal = payment.is_variable && total <= 0
-  const registrado = Object.values(contributions).reduce((s, v) => s + v, 0)
+  const fundAmount = Number(payment.fund_amount) || 0
+  const registrado = Object.values(contributions).reduce((s, v) => s + v, 0) + fundAmount
   const restan = total - registrado
   const done = !needsTotal && restan <= 0
 
@@ -76,6 +78,36 @@ export function SplitContributionsModal({ open, payment, spaceMembers, currentUs
     setOpenId(memberId)
     setDraft(contributions[memberId] != null ? String(contributions[memberId]) : '')
     setError('')
+  }
+
+  const FUND_ROW_ID = '__fund__'
+  function openFundRow() {
+    if (openId === FUND_ROW_ID) { setOpenId(null); return }
+    setOpenId(FUND_ROW_ID)
+    setDraft(fundAmount > 0 ? String(fundAmount) : '')
+    setError('')
+  }
+
+  async function handleSaveFund() {
+    const val = parseFloat(draft)
+    if (draft !== '' && (isNaN(val) || val < 0)) { setError('Ingresa un monto válido'); return }
+    const numVal = val || 0
+    // Mientras el pago sigue pendiente, no puede exceder ni lo que falta
+    // del pago ni lo que el Fondo en verdad tiene ahorrado — el servidor ya
+    // valida esto también, esto es solo para no hacer un viaje de más.
+    if (!payment.is_paid && numVal > 0) {
+      const availableForPayment = total - (registrado - fundAmount)
+      const cap = Math.min(availableForPayment, fundBalance + fundAmount)
+      if (Math.round(numVal * 100) > Math.round(cap * 100) + 1) {
+        setError(`No puedes exceder lo disponible (${fmt(Math.max(0, cap))})`)
+        return
+      }
+    }
+    setSaving(true)
+    const { error: err } = await onSetFundContribution(payment.id, numVal)
+    setSaving(false)
+    if (err) { setError(err.message || 'Error al guardar'); return }
+    setOpenId(null)
   }
 
   async function handleSave(memberId) {
@@ -125,6 +157,12 @@ export function SplitContributionsModal({ open, payment, spaceMembers, currentUs
 
         {error && <div className={styles.errorBox}>{error}</div>}
 
+        {openedBecauseFundInsufficient && (
+          <div className={styles.fundInsufficientNotice}>
+            El Fondo Compartido no alcanzaba para cubrir todo el pago — ya se aplicó lo máximo posible ({fmt(fundAmount)}). Completa el resto con la nómina de algún miembro.
+          </div>
+        )}
+
         {!loading && !needsTotal && (
           <div className={`${styles.progress} ${done ? styles.progressDone : ''}`}>
             <div className={styles.progressAmounts}>{fmt(registrado)} / {fmt(total)}</div>
@@ -136,6 +174,30 @@ export function SplitContributionsModal({ open, payment, spaceMembers, currentUs
           <>
             <label className="field-label">Miembros</label>
             <div className={styles.members}>
+              {onSetFundContribution && (
+                <div className={styles.memberCard}>
+                  <div
+                    onClick={() => (fundBalance > 0 || fundAmount > 0) && openFundRow()}
+                    className={`${styles.memberRow} ${fundBalance <= 0 && fundAmount <= 0 ? styles.memberRowLocked : ''}`}
+                  >
+                    <span className={styles.memberName}>
+                      Fondo Compartido
+                      {fundBalance <= 0 && fundAmount <= 0 && <Lock size={12} className={styles.fundLockIcon} />}
+                    </span>
+                    {fundAmount > 0
+                      ? <span className={styles.memberAmount}>{fmt(fundAmount)} <span className={styles.editLabel}>Editar</span></span>
+                      : fundBalance > 0
+                        ? <span className={styles.memberEmpty}>Sin registrar</span>
+                        : <span className={styles.memberEmpty}>Sin saldo</span>}
+                  </div>
+                  {openId === FUND_ROW_ID && (
+                    <div className={styles.editRow}>
+                      <input autoFocus type="number" value={draft} onChange={e => setDraft(e.target.value)} placeholder="0.00" onKeyDown={e => e.key === 'Enter' && handleSaveFund()} className="field-input" style={{ flex: 1 }} />
+                      <button onClick={handleSaveFund} disabled={saving} className="btn-primary" style={{ width: 'auto', padding: '0 16px' }}>Guardar</button>
+                    </div>
+                  )}
+                </div>
+              )}
               {spaceMembers.map(m => {
                 const isOpen = openId === m.user_id
                 const amount = contributions[m.user_id]
