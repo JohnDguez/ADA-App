@@ -78,7 +78,7 @@ export default function App() {
   // `can_delete`, `can_add_income`) — y `isRestricted` para que el resto
   // del código sepa si hace falta mostrar mensajes de permiso en absoluto
   // (evita comparar `role === 'owner'` por todos lados).
-  const FULL_PERMISSIONS = { can_add: true, can_edit: true, can_mark_paid: true, can_delete: true, can_add_income: true }
+  const FULL_PERMISSIONS = { can_add: true, can_edit: true, can_mark_paid: true, can_delete: true, can_add_income: true, can_add_funds: true }
   const spacePermissions = (!activeSpaceEntry || activeSpaceEntry.membership.role === 'owner')
     ? { ...FULL_PERMISSIONS, isRestricted: false }
     : {
@@ -87,6 +87,7 @@ export default function App() {
         can_mark_paid:  activeSpaceEntry.membership.can_mark_paid,
         can_delete:     activeSpaceEntry.membership.can_delete,
         can_add_income: activeSpaceEntry.membership.can_add_income,
+        can_add_funds:  activeSpaceEntry.membership.can_add_funds,
         isRestricted: true,
       }
 
