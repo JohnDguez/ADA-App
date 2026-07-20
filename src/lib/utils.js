@@ -6,7 +6,7 @@ export const WEEKDAYS_SHORT = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb']
 export const CATEGORIES = [
   'Servicios', 'Suscripciones', 'Créditos', 'Renta',
   'Seguros', 'Alimentación', 'Transporte', 'Medicina',
-  'Doctor', 'Mantenimiento', 'Otros',
+  'Doctor', 'Mantenimiento', 'Ahorro', 'Otros',
 ]
 
 export const RECUR_FREQ = {
@@ -27,6 +27,7 @@ const CAT_COLORS = {
   'Medicina':      'var(--cat-medicina)',
   'Doctor':        'var(--cat-doctor)',
   'Mantenimiento': 'var(--cat-mantenimiento)',
+  'Ahorro':        'var(--cat-ahorro)',
   'Otros':         'var(--cat-otros)',
 }
 const CUSTOM_CAT_PALETTE = [

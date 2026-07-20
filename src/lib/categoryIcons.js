@@ -142,6 +142,7 @@ export const DEFAULT_CATEGORY_ICONS = {
   'Medicina':      'Pill',
   'Doctor':        'Stethoscope',
   'Mantenimiento': 'Wrench',
+  'Ahorro':        'PiggyBank',
   'Otros':         'MoreHorizontal',
 }
 
