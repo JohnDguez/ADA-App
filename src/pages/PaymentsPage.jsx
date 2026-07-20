@@ -1234,6 +1234,11 @@ export function PaymentsPage({ payments, profile, spaceSwitcher, activeSpaceHead
                             entry.type === 'spend'     ? 'Gasto del espacio' :
                             'Aportación'
                           const Icon = entry.type === 'spend' ? ArrowDown : entry.type === 'reversal' ? ArrowUpLeft : entry.type === 'migration' ? PiggyBank : ArrowUp
+                          const typeColor =
+                            entry.type === 'migration' ? 'var(--cat-ahorro)' :
+                            entry.type === 'reversal'  ? 'var(--accent)' :
+                            entry.type === 'spend'     ? 'var(--text)' :
+                            'var(--paid)'
                           return (
                             <div key={entry.id} className={styles.extrasListItem}>
                               {d && (
@@ -1243,8 +1248,8 @@ export function PaymentsPage({ payments, profile, spaceSwitcher, activeSpaceHead
                                 </div>
                               )}
                               <div className={styles.extrasItemContent}>
-                                <div className={styles.extrasItemType}>
-                                  <Icon size={11} className={styles.fundEntryIcon} />
+                                <div className={styles.extrasItemType} style={{ color: typeColor }}>
+                                  <Icon size={11} color={typeColor} className={styles.fundEntryIcon} />
                                   {label}
                                 </div>
                                 {entry.note && <div className={styles.extrasItemNote}>{entry.note}</div>}
