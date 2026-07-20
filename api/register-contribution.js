@@ -35,9 +35,9 @@ module.exports = async function handler(req, res) {
   if (userError || !userData?.user) return res.status(401).json({ error: 'Token inválido' })
   const actorId = userData.user.id
 
-  const { paymentId, memberUserId, amount, payRemaining, setTotalAmount } = req.body || {}
+  const { paymentId, memberUserId, amount, payRemaining, setTotalAmount, unmarkPaid } = req.body || {}
   if (!paymentId) return res.status(400).json({ error: 'Faltan datos' })
-  if (setTotalAmount == null && (!memberUserId || (amount == null && !payRemaining))) {
+  if (setTotalAmount == null && !unmarkPaid && (!memberUserId || (amount == null && !payRemaining))) {
     return res.status(400).json({ error: 'Faltan datos' })
   }
 
@@ -54,11 +54,43 @@ module.exports = async function handler(req, res) {
     // Actor debe pertenecer al espacio del pago en cualquier caso.
     const { data: actorMembership } = await supabase
       .from('shared_space_members')
-      .select('id')
+      .select('id, role, can_mark_paid')
       .eq('space_id', payment.space_id)
       .eq('user_id', actorId)
       .maybeSingle()
     if (!actorMembership) return res.status(403).json({ error: 'No perteneces a este espacio' })
+
+    // ── Modo "desmarcar de pagados" — reversa por completo lo que dejó el
+    // pago al completarse: borra TODAS las contribuciones y sus reflejos en
+    // el Home de cada miembro involucrado (regresa el dinero a su
+    // remanente, como si nunca se hubiera abonado), y el pago ORIGINAL
+    // vuelve a pendiente (no se borra, solo se desmarca). Confirmado con
+    // Johnatan: es igual que "eliminar", solo que el pago del espacio se
+    // queda, no se destruye.
+    if (unmarkPaid) {
+      if (actorMembership.role !== 'owner' && !actorMembership.can_mark_paid) {
+        return res.status(403).json({ error: 'No tienes permiso para marcar pagos en este Espacio Compartido' })
+      }
+      if (!payment.is_paid) return res.json({ error: null, unmarked: false })
+
+      const { data: reflections } = await supabase
+        .from('payments')
+        .select('id')
+        .eq('source_payment_id', paymentId)
+        .eq('is_contribution_reflection', true)
+      const reflectionIds = (reflections || []).map(r => r.id)
+
+      const [unmarkResult, contribDeleteResult, reflDeleteResult] = await Promise.all([
+        supabase.from('payments').update({ is_paid: false, paid_at: null }).eq('id', paymentId),
+        supabase.from('payment_contributions').delete().eq('payment_id', paymentId),
+        reflectionIds.length ? supabase.from('payments').delete().in('id', reflectionIds) : Promise.resolve({ error: null }),
+      ])
+      if (unmarkResult.error) return res.status(500).json({ error: 'No se pudo desmarcar el pago: ' + unmarkResult.error.message })
+      if (contribDeleteResult.error || reflDeleteResult.error) {
+        return res.status(500).json({ error: 'El pago se desmarcó, pero no se pudo limpiar del todo lo abonado — revisa "Dividir entre miembros" manualmente.' })
+      }
+      return res.json({ error: null, unmarked: true })
+    }
 
     // ── Modo "fijar/editar el monto total" (pagos variables) — acción
     // independiente de registrar una contribución. Antes esto vivía en un
@@ -125,9 +157,49 @@ module.exports = async function handler(req, res) {
       return res.json({ error: null, deleted: true })
     }
 
+    // Si el pago YA estaba completo (pagado) y este abono lo desborda —
+    // típicamente porque se está agregando a un contribuyente nuevo a un
+    // pago que antes pagó alguien solo — se resta el sobrante de los DEMÁS
+    // contribuyentes ya existentes, a prorrata de lo que cada quien tenía
+    // puesto, en vez de pedirle a nadie que vuelva a escribir todo desde
+    // cero. Interpretación tentativa (así quedó con Johnatan, "puede ser")
+    // — si al probarlo se siente raro, es el primer lugar a ajustar.
+    let overflowAdjustments = []
+    if (payment.is_paid) {
+      const sumOthers = sumAll - (existingContribution?.amount || 0)
+      const sumAfterThis = sumOthers + numAmount
+      const overflow = Math.round((sumAfterThis - Number(payment.amount)) * 100) / 100
+      if (overflow > 0 && sumOthers > 0) {
+        const others = (allContribs || []).filter(r => r.user_id !== memberUserId)
+        let restante = overflow
+        others.forEach((o, i) => {
+          const isLast = i === others.length - 1
+          const share = Number(o.amount) / sumOthers
+          const reduccion = isLast ? restante : Math.round(overflow * share * 100) / 100
+          restante = Math.round((restante - reduccion) * 100) / 100
+          const nuevoMonto = Math.max(0, Math.round((Number(o.amount) - reduccion) * 100) / 100)
+          overflowAdjustments.push({ contributionId: o.id, userId: o.user_id, amount: nuevoMonto })
+        })
+      }
+    }
+
+    // Si hay ajustes por sobrante, sus reflejos también hay que actualizar
+    // — una consulta más para encontrarlos, solo cuando de verdad aplica.
+    let othersReflections = []
+    if (overflowAdjustments.length > 0) {
+      const { data: refls } = await supabase
+        .from('payments')
+        .select('id, user_id')
+        .eq('source_payment_id', paymentId)
+        .eq('is_contribution_reflection', true)
+        .in('user_id', overflowAdjustments.map(a => a.userId))
+      othersReflections = refls || []
+    }
+
     // Contribución y reflejo son filas independientes (tablas distintas) —
-    // se escriben en paralelo en vez de uno esperando al otro.
-    const [contribResult, reflResult] = await Promise.all([
+    // se escriben en paralelo en vez de uno esperando al otro. Los ajustes
+    // por sobrante (si los hay) van en la misma tanda.
+    const writes = [
       existingContribution
         ? supabase.from('payment_contributions').update({ amount: numAmount, updated_by: actorId, updated_at: new Date().toISOString() }).eq('id', existingContribution.id)
         : supabase.from('payment_contributions').insert({ payment_id: paymentId, user_id: memberUserId, amount: numAmount, updated_by: actorId }),
@@ -139,7 +211,16 @@ module.exports = async function handler(req, res) {
             is_variable: false, is_recurrent: false, postponed: false, paused: false,
             source_payment_id: paymentId, source_space_id: payment.space_id, is_contribution_reflection: true,
           }).select().single(),
-    ])
+    ]
+    for (const adj of overflowAdjustments) {
+      writes.push(supabase.from('payment_contributions').update({ amount: adj.amount }).eq('id', adj.contributionId))
+      const refl = othersReflections.find(r => r.user_id === adj.userId)
+      if (refl) writes.push(supabase.from('payments').update({ amount: adj.amount }).eq('id', refl.id))
+    }
+    const [contribResult, reflResult, ...adjustResults] = await Promise.all(writes)
+    if (adjustResults.some(r => r.error)) {
+      return res.status(500).json({ error: 'El abono se guardó, pero no se pudo ajustar completo a los demás contribuyentes — revisa "Dividir entre miembros".' })
+    }
     if (contribResult.error) return res.status(500).json({ error: 'No se pudo guardar el abono: ' + contribResult.error.message })
     if (reflResult.error)    return res.status(500).json({ error: 'El abono se guardó, pero no se pudo guardar el reflejo: ' + reflResult.error.message })
     const reflectionId = existingReflection ? existingReflection.id : reflResult.data?.id
