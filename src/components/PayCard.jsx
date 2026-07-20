@@ -69,6 +69,9 @@ export function PayCard({ payment: p, cfg, onMarkPaid, onRequestVariableAmount, 
   const [menuOpen, setMenuOpen] = useState(false)
   const [menuUpward, setMenuUpward] = useState(false)
   const menuRef = useRef(null)
+  const [checkMenuOpen,    setCheckMenuOpen]    = useState(false)
+  const [checkMenuUpward,  setCheckMenuUpward]  = useState(false)
+  const checkMenuRef = useRef(null)
 
   // Fases de la animación de "marcar como pagado":
   // idle → filling → (waitingModal solo si es variable) → labeled → exiting
@@ -131,7 +134,7 @@ export function PayCard({ payment: p, cfg, onMarkPaid, onRequestVariableAmount, 
   }
 
   async function handleMarkPaidClick(e) {
-    e.stopPropagation()
+    e?.stopPropagation()
     if (!canMarkPaid) { blocked('marcar pagos'); return }
     if (phase !== 'idle') return
     setPhase('filling')
@@ -199,7 +202,13 @@ export function PayCard({ payment: p, cfg, onMarkPaid, onRequestVariableAmount, 
     if (target) {
       const rect = target.getBoundingClientRect()
       const estimatedHeight = menuItemCount() * 38 + 8
-      setMenuUpward(rect.bottom + estimatedHeight > window.innerHeight)
+      // La barra de navegación inferior es `position: fixed` (bottom: 16px
+      // + ~64px de alto ≈ 90px) — sin restar ese espacio, la cuenta decía
+      // que el menú "cabía" contra el alto completo de la pantalla, aunque
+      // en la práctica la barra lo tapara. Bug real reportado por Johnatan
+      // (volvió a aparecer sin que la lógica en sí se hubiera roto).
+      const BOTTOM_NAV_SAFE_AREA = 90
+      setMenuUpward(rect.bottom + estimatedHeight > window.innerHeight - BOTTOM_NAV_SAFE_AREA)
     }
     setMenuOpen(true)
   }
@@ -209,6 +218,24 @@ export function PayCard({ payment: p, cfg, onMarkPaid, onRequestVariableAmount, 
     if (menuOpen) document.addEventListener('mousedown', handle)
     return () => document.removeEventListener('mousedown', handle)
   }, [menuOpen])
+
+  // Mini-menú del check en un pago PENDIENTE de un Espacio Compartido —
+  // "Pagar todo" (como ya funciona hoy) vs "Pago compartido" (abre
+  // Dividir). Existe para que la gente descubra que se puede dividir sin
+  // tener que encontrar la opción enterrada en el menú de 3 puntos.
+  function openCheckMenuAt(target) {
+    const rect = target.getBoundingClientRect()
+    const estimatedHeight = 2 * 38 + 8
+    const BOTTOM_NAV_SAFE_AREA = 90
+    setCheckMenuUpward(rect.bottom + estimatedHeight > window.innerHeight - BOTTOM_NAV_SAFE_AREA)
+    setCheckMenuOpen(true)
+  }
+
+  useEffect(() => {
+    function handle(e) { if (checkMenuRef.current && !checkMenuRef.current.contains(e.target)) setCheckMenuOpen(false) }
+    if (checkMenuOpen) document.addEventListener('mousedown', handle)
+    return () => document.removeEventListener('mousedown', handle)
+  }, [checkMenuOpen])
 
   const contentHidden = phase === 'waitingModal' || phase === 'labeled' || phase === 'exiting'
   const fillActive    = phase === 'filling' || phase === 'waitingModal' || phase === 'labeled' || phase === 'exiting'
@@ -280,14 +307,41 @@ export function PayCard({ payment: p, cfg, onMarkPaid, onRequestVariableAmount, 
           {/* Botones derecha */}
           <div className={styles.actionsSection}>
             {isPending && (
-              <button
-                onClick={handleMarkPaidClick}
-                disabled={phase !== 'idle'}
-                className={styles.markPaidButton}
-                style={{ background: canMarkPaid ? 'var(--paid)' : 'var(--border)' }}
-              >
-                <Check size={18} color={canMarkPaid ? 'var(--pay-icon)' : 'var(--muted)'} strokeWidth={2.5} />
-              </button>
+              <div style={{ position: 'relative' }}>
+                <button
+                  onClick={e => {
+                    e.stopPropagation()
+                    if (p.space_id && onSplit) {
+                      if (!canMarkPaid) { blocked('marcar pagos'); return }
+                      if (phase !== 'idle') return
+                      openCheckMenuAt(e.currentTarget)
+                      return
+                    }
+                    handleMarkPaidClick(e)
+                  }}
+                  disabled={phase !== 'idle'}
+                  className={styles.markPaidButton}
+                  style={{ background: canMarkPaid ? 'var(--paid)' : 'var(--border)' }}
+                >
+                  <Check size={18} color={canMarkPaid ? 'var(--pay-icon)' : 'var(--muted)'} strokeWidth={2.5} />
+                </button>
+                {checkMenuOpen && (
+                  <div
+                    ref={checkMenuRef}
+                    className={styles.contextMenu}
+                    style={{
+                      right: 0,
+                      top: checkMenuUpward ? 'auto' : '100%',
+                      bottom: checkMenuUpward ? '100%' : 'auto',
+                      marginTop: checkMenuUpward ? 0 : 4,
+                      marginBottom: checkMenuUpward ? 4 : 0,
+                    }}
+                  >
+                    <MenuItem icon={<Check size={14}/>} label="Pagar todo" onClick={() => { setCheckMenuOpen(false); handleMarkPaidClick() }} />
+                    <MenuItem icon={<Users size={14}/>} label="Pago compartido" onClick={() => { setCheckMenuOpen(false); onSplit(p) }} />
+                  </div>
+                )}
+              </div>
             )}
             {p.is_paid && (
               <div className={styles.paidIndicator}>
