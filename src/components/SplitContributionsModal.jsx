@@ -96,7 +96,7 @@ export function SplitContributionsModal({ open, payment, spaceMembers, currentUs
           <>
             <label className="field-label">Monto total a pagar</label>
             <div className={styles.editRow}>
-              <input type="number" value={totalDraft} onChange={e => setTotalDraft(e.target.value)} placeholder="0.00" onKeyDown={e => e.key === 'Enter' && handleSaveTotal()} className={`field-input ${styles.editInput}`} />
+              <input type="number" value={totalDraft} onChange={e => setTotalDraft(e.target.value)} placeholder="0.00" onKeyDown={e => e.key === 'Enter' && handleSaveTotal()} className="field-input" style={{ flex: 1 }} />
               <button onClick={handleSaveTotal} disabled={totalSaving} className={`btn-primary ${styles.saveButton}`}>Guardar</button>
             </div>
           </>
@@ -152,7 +152,7 @@ export function SplitContributionsModal({ open, payment, spaceMembers, currentUs
                           })}
                         </div>
                         <div className={styles.editRow}>
-                          <input autoFocus type="number" value={draft} onChange={e => setDraft(e.target.value)} placeholder="0.00" onKeyDown={e => e.key === 'Enter' && handleSave(m.user_id)} className={`field-input ${styles.editInput}`} />
+                          <input autoFocus type="number" value={draft} onChange={e => setDraft(e.target.value)} placeholder="0.00" onKeyDown={e => e.key === 'Enter' && handleSave(m.user_id)} className="field-input" style={{ flex: 1 }} />
                           <button onClick={() => handleSave(m.user_id)} disabled={saving} className={`btn-primary ${styles.saveButton}`}>Guardar</button>
                         </div>
                       </div>

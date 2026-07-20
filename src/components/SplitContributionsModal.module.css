@@ -177,10 +177,6 @@
   gap: 8px;
 }
 
-:global(.field-input).editInput {
-  flex: 1;
-}
-
 .saveButton {
   width: auto;
   padding: 0 16px;
