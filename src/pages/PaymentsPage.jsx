@@ -3,7 +3,7 @@ import { ChevronLeft, ChevronRight, MoreVertical, Plus, CircleDollarSign, Chevro
 import { PageHeader } from '../components/PageHeader'
 import { NewSharedSpacePanel } from '../components/NewSharedSpacePanel'
 import { EmptyState } from '../components/EmptyState'
-import { fmt, dateOf, dateToStr, MONTHS, MONTHS_SHORT, CATEGORIES, cobroPeriod, addDays, getCatColor } from '../lib/utils'
+import { fmt, dateOf, dateToStr, MONTHS, MONTHS_SHORT, CATEGORIES, cobroPeriod, addDays, getCatColor, RECUR_FREQ } from '../lib/utils'
 import { getCategoryIcon } from '../lib/categoryIcons'
 import { supabase } from '../lib/supabase'
 import { showToast } from '../components/Toast'
@@ -1221,7 +1221,7 @@ export function PaymentsPage({ payments, profile, spaceSwitcher, activeSpaceHead
                         <div className={styles.paymentCategoryRow}>
                           <span className={styles.paymentCategoryDot} style={{ background: getCatColor(p.category, profile.custom_categories, profile.category_colors) }} />
                           {p.category}
-                          {p.is_recurrent && <span className={styles.paymentRecurrentTag}>· Mensual</span>}
+                          {p.is_recurrent && <span className={styles.paymentRecurrentTag}>· {RECUR_FREQ[p.recur_freq] || 'Mensual'}</span>}
                           {p.is_contribution_reflection && <span className={styles.paymentRecurrentTag}>· Compartido</span>}
                         </div>
                       </div>
