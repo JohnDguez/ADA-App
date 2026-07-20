@@ -1,5 +1,75 @@
 const { createClient } = require('@supabase/supabase-js')
 
+// Reimplementación fiel de cobroPeriod()/today()/dateToStr()/addDays() de
+// lib/utils.js — mismo motivo que en migrate-shared-funds.js (este archivo
+// corre en Node/CommonJS, no comparte el bundle del cliente). Se necesita
+// aquí para poder validar el remanente PERSONAL de quien aporta, del lado
+// del servidor — nunca confiar solo en la validación del cliente.
+function today() {
+  const now = new Date()
+  return new Date(now.getFullYear(), now.getMonth(), now.getDate())
+}
+function dateToStr(d) {
+  const y = d.getFullYear(), m = String(d.getMonth() + 1).padStart(2, '0'), day = String(d.getDate()).padStart(2, '0')
+  return `${y}-${m}-${day}`
+}
+function addDays(date, n) { const d = new Date(date); d.setDate(d.getDate() + n); return d }
+
+function cobroPeriod(cfg) {
+  const t = today()
+  if (cfg.cobro_freq === 'weekly') {
+    const wd = cfg.cobro_weekday ?? 5; const td = t.getDay()
+    let diffNext = wd - td; if (diffNext <= 0) diffNext += 7
+    const nextCobro = addDays(t, diffNext); const prevCobro = addDays(nextCobro, -7)
+    return { start: prevCobro, end: addDays(nextCobro, -1) }
+  }
+  if (cfg.cobro_freq === 'biweekly') {
+    const d1 = cfg.cobro_day1 ?? 1; const d2 = cfg.cobro_day2 ?? 16
+    const [dayA, dayB] = d1 < d2 ? [d1, d2] : [d2, d1]
+    const y = t.getFullYear(); const m = t.getMonth()
+    const cobroDates = [
+      new Date(y, m - 1, dayA), new Date(y, m - 1, dayB),
+      new Date(y, m, dayA), new Date(y, m, dayB),
+      new Date(y, m + 1, dayA), new Date(y, m + 1, dayB),
+    ]
+    const past = cobroDates.filter(d => d <= t).sort((a, b) => b - a)
+    const future = cobroDates.filter(d => d > t).sort((a, b) => a - b)
+    const start = past[0] || new Date(y, m, dayA)
+    const nextCobro = future[0] || new Date(y, m + 1, dayA)
+    return { start, end: addDays(nextCobro, -1) }
+  }
+  if (cfg.cobro_freq === 'monthly') {
+    const d1 = cfg.cobro_day1 ?? 1; const y = t.getFullYear(); const m = t.getMonth()
+    const day = t.getDate()
+    let start, nextCobro
+    if (day >= d1) { start = new Date(y, m, d1); nextCobro = new Date(y, m + 1, d1) }
+    else { start = new Date(y, m - 1, d1); nextCobro = new Date(y, m, d1) }
+    return { start, end: addDays(nextCobro, -1) }
+  }
+  return { start: t, end: t }
+}
+
+async function getPersonalAvailable(supabase, userId) {
+  const { data: profile } = await supabase.from('profiles').select('*').eq('id', userId).maybeSingle()
+  if (!profile) return 0
+  const { start, end } = cobroPeriod(profile)
+  const periodStartStr = dateToStr(start)
+  const [{ data: incomes }, { data: paid }] = await Promise.all([
+    supabase.from('period_income').select('amount').is('space_id', null).eq('user_id', userId).eq('period_start', periodStartStr),
+    supabase.from('payments').select('amount, paid_at').is('space_id', null).eq('user_id', userId).eq('is_paid', true),
+  ])
+  const salario = profile.salary_enabled ? Number(profile.salary_amount || 0) : 0
+  const extras  = (incomes || []).reduce((s, r) => s + Number(r.amount), 0)
+  const gastado = (paid || [])
+    .filter(p => {
+      if (!p.paid_at) return false
+      const d = dateToStr(new Date(p.paid_at))
+      return d >= dateToStr(start) && d <= dateToStr(end)
+    })
+    .reduce((s, p) => s + Number(p.amount), 0)
+  return salario + extras - gastado
+}
+
 const supabase = createClient(
   process.env.VITE_SUPABASE_URL,
   process.env.SUPABASE_SERVICE_ROLE_KEY
@@ -79,6 +149,18 @@ module.exports = async function handler(req, res) {
     }
     const numAmount = Number(amount)
     if (!numAmount || numAmount <= 0) return res.status(400).json({ error: 'Ingresa un monto válido' })
+
+    // No puede aportar más de lo que en verdad tiene disponible en su
+    // remanente personal (nunca confiar solo en la validación del cliente)
+    // — confirmado con Johnatan: en personal sí puede estar en negativo,
+    // pero no puede APORTAR estando en negativo, ni exceder lo disponible.
+    const personalAvailable = await getPersonalAvailable(supabase, actorId)
+    if (personalAvailable <= 0) {
+      return res.status(400).json({ error: 'No puedes aportar — tu remanente personal está en negativo' })
+    }
+    if (Math.round(numAmount * 100) > Math.round(personalAvailable * 100)) {
+      return res.status(400).json({ error: `No puedes aportar más de lo que tienes disponible (${personalAvailable.toFixed(2)})` })
+    }
 
     const { data: reflection, error: reflErr } = await supabase.from('payments').insert({
       user_id: actorId, space_id: null, name: `Aportación a Fondo — ${space.name}`, category: 'Ahorro',
