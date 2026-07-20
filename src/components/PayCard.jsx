@@ -220,7 +220,7 @@ export function PayCard({ payment: p, cfg, onMarkPaid, onRequestVariableAmount, 
   }, [menuOpen])
 
   // Mini-menú del check en un pago PENDIENTE de un Espacio Compartido —
-  // "Pagar todo" (como ya funciona hoy) vs "Pago compartido" (abre
+  // "Pagar de mi nómina" (como ya funciona hoy) vs "Pago compartido" (abre
   // Dividir). Existe para que la gente descubra que se puede dividir sin
   // tener que encontrar la opción enterrada en el menú de 3 puntos.
   function openCheckMenuAt(target) {
@@ -366,7 +366,7 @@ export function PayCard({ payment: p, cfg, onMarkPaid, onRequestVariableAmount, 
         </div>
       )}
 
-      {/* Mini-menú del check ("Pagar todo" / "Pago compartido") — mismo
+      {/* Mini-menú del check ("Pagar de mi nómina" / "Pago compartido") — mismo
           motivo que el de arriba: vive en .cardOuter, no dentro de .card
           (que tiene overflow:hidden para la animación de pintado verde),
           para no recortarse. Bug real reportado por Johnatan con captura. */}
@@ -381,7 +381,7 @@ export function PayCard({ payment: p, cfg, onMarkPaid, onRequestVariableAmount, 
             marginBottom: checkMenuUpward ? 4 : 0,
           }}
         >
-          <MenuItem icon={<Check size={14}/>} label="Pagar todo" onClick={() => { setCheckMenuOpen(false); handleMarkPaidClick() }} />
+          <MenuItem icon={<Check size={14}/>} label="Pagar de mi nómina" onClick={() => { setCheckMenuOpen(false); handleMarkPaidClick() }} />
           {onPayFromFund && fundBalance > 0 && (
             <MenuItem icon={<PiggyBank size={14}/>} label="Fondo compartido" onClick={() => { setCheckMenuOpen(false); onPayFromFund(p) }} />
           )}
