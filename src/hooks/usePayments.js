@@ -86,6 +86,50 @@ export function usePayments(userId, activeSpaceId = null, activeSpaceName = null
     }
   }
 
+  // El check de la card, opción "Fondo compartido" — paga TODO lo que
+  // falte del pago desde el saldo del Fondo, solo si alcanza. Si no
+  // alcanza, el endpoint regresa error y quien llama (App.jsx) decide abrir
+  // "Dividir entre miembros" en su lugar, con un aviso — ver diseño
+  // confirmado con Johnatan (punto 3 de "cómo gastar del Fondo").
+  async function payFromFund(paymentId) {
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) return { error: { message: 'Sesión no encontrada' } }
+      const res = await fetch('/api/register-contribution', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
+        body: JSON.stringify({ paymentId, payRemainingFromFund: true }),
+      })
+      const result = await res.json()
+      if (!res.ok) return { error: result.error ? { message: result.error } : { message: 'Error al pagar desde el Fondo' } }
+      await fetchPayments()
+      return { error: null, ...result }
+    } catch (e) {
+      return { error: { message: 'Error de conexión al pagar desde el Fondo' } }
+    }
+  }
+
+  // La fila del Fondo dentro de "Dividir entre miembros" — a diferencia de
+  // `payFromFund` (todo o nada), aquí se fija un monto EXPLÍCITO (puede ser
+  // parcial, completado después con nómina de algún miembro).
+  async function setFundContribution(paymentId, amount) {
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) return { error: { message: 'Sesión no encontrada' } }
+      const res = await fetch('/api/register-contribution', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
+        body: JSON.stringify({ paymentId, fundAmount: amount }),
+      })
+      const result = await res.json()
+      if (!res.ok) return { error: result.error ? { message: result.error } : { message: 'Error al actualizar el Fondo' } }
+      await fetchPayments()
+      return { error: null, ...result }
+    } catch (e) {
+      return { error: { message: 'Error de conexión al actualizar el Fondo' } }
+    }
+  }
+
   // Fija/edita el monto total de un pago VARIABLE del espacio — antes esto
   // solo se podía hacer con "Agregar monto" (setEstimatedAmount), un camino
   // aparte que nunca revisaba si los abonos ya cubrían el total; ahora vive
@@ -1069,6 +1113,7 @@ export function usePayments(userId, activeSpaceId = null, activeSpaceName = null
     updatePayment, updateRecurrentName, updateRecurrentConfig,
     abonarInstallment,
     registerContribution, getContributions, payRemainingContribution, setContributionTotalAmount, unmarkSharedPayment, forceSettlePayment,
+    payFromFund, setFundContribution,
     markPaid, markUnpaid, setEstimatedAmount,
     postponePayment,
     pauseRecurrent, resumeRecurrent,
