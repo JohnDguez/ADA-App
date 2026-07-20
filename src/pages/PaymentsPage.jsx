@@ -1237,7 +1237,7 @@ export function PaymentsPage({ payments, profile, spaceSwitcher, activeSpaceHead
                           const typeColor =
                             entry.type === 'migration' ? 'var(--cat-ahorro)' :
                             entry.type === 'reversal'  ? 'var(--accent)' :
-                            entry.type === 'spend'     ? 'var(--impact-warning)' :
+                            entry.type === 'spend'     ? 'var(--danger)' :
                             'var(--paid)'
                           return (
                             <div key={entry.id} className={styles.extrasListItem}>
@@ -1248,7 +1248,7 @@ export function PaymentsPage({ payments, profile, spaceSwitcher, activeSpaceHead
                                 </div>
                               )}
                               <div className={styles.extrasItemContent}>
-                                <div className={styles.extrasItemType} style={{ color: typeColor }}>
+                                <div className={styles.extrasItemType}>
                                   <Icon size={11} color={typeColor} className={styles.fundEntryIcon} />
                                   {label}
                                 </div>

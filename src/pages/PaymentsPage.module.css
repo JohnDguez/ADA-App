@@ -1070,7 +1070,7 @@
 }
 
 .fundAmountSpend {
-  color: var(--impact-warning);
+  color: var(--danger);
 }
 
 .fundAmountPositive {
