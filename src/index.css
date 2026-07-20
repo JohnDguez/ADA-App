@@ -124,6 +124,7 @@
   --cat-medicina:      #E91E63;
   --cat-doctor:        #9C27B0;
   --cat-mantenimiento: #795548;
+  --cat-ahorro:        #16A085;
   /* Paleta para categorías personalizadas del usuario — mismos valores que
      --palette-11 a --palette-15 (consolidado: antes repetía el mismo hex a
      mano en 2 lugares distintos). */
