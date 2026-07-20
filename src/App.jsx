@@ -95,7 +95,7 @@ export default function App() {
     addPayment, addRecurrentPayment, addInstallmentPayment,
     updatePayment, updateRecurrentName, updateRecurrentConfig,
     abonarInstallment,
-    registerContribution, getContributions, payRemainingContribution, setContributionTotalAmount,
+    registerContribution, getContributions, payRemainingContribution, setContributionTotalAmount, unmarkSharedPayment,
     markPaid, markUnpaid, setEstimatedAmount,
     postponePayment,
     pauseRecurrent, resumeRecurrent,
@@ -379,6 +379,12 @@ export default function App() {
   }
   async function handleMarkUnpaid(id) {
     const payment = payments.find(p => p.id === id)
+    if (payment?.space_id) {
+      const { error } = await unmarkSharedPayment(id)
+      if (error) showToast(error.message || 'Error al desmarcar el pago')
+      else showToast(`${payment.name} marcado como no pagado`)
+      return
+    }
     const { error } = await markUnpaid(id)
     if (error) showToast(typeof error === 'string' ? error : 'Error al desmarcar el pago')
     else showToast(`${payment?.name || 'Pago'} marcado como no pagado`)
@@ -390,6 +396,12 @@ export default function App() {
   // PaymentsPage.jsx, que no tiene esta animación y sigue necesitando el
   // toast como única confirmación.
   async function handleMarkUnpaidAnimated(id) {
+    const payment = payments.find(p => p.id === id)
+    if (payment?.space_id) {
+      const { error } = await unmarkSharedPayment(id)
+      if (error) showToast(error.message || 'Error al desmarcar el pago')
+      return
+    }
     const { error } = await markUnpaid(id)
     if (error) showToast(typeof error === 'string' ? error : 'Error al desmarcar el pago')
   }
@@ -654,6 +666,7 @@ export default function App() {
           onUpdateProfile={updateProfile}
           onEdit={openEdit}
           onViewSource={handleViewSource}
+          onSplit={openSplitModal}
           onAdd={openAdd}
           onGoCategories={goToCategories}
         />
