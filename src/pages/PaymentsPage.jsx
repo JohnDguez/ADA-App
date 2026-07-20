@@ -572,7 +572,7 @@ export function PaymentsPage({ payments, profile, spaceSwitcher, activeSpaceHead
     .sort((a, b) => b.total - a.total)
 
   const showBalance = (profile?.salary_enabled && profile?.salary_amount > 0) || periodIncomes.length > 0
-  const noIncomeYet = !(profile?.salary_enabled && profile?.salary_amount > 0) && periodIncomes.length === 0
+  const noIncomeYet = !activeSpaceId && !(profile?.salary_enabled && profile?.salary_amount > 0) && periodIncomes.length === 0
 
   return (
     <div className={styles.pageRoot} onClick={() => setOpenMenu(null)}>
@@ -1131,7 +1131,7 @@ export function PaymentsPage({ payments, profile, spaceSwitcher, activeSpaceHead
             {/* Fondo Compartido — solo en espacio. Persistente, nunca se
                 reinicia por periodo (a diferencia de Ingresos Extras). */}
             {activeSpaceId && (
-              <div className={styles.extrasSection}>
+              <div className={`${styles.extrasSection} ${fundStyles.fundSectionWrapper}`}>
                 <div className={styles.extrasHeader}>
                   <div className={styles.extrasLabel}>Fondo Compartido</div>
                   {(spacePermissions?.can_add_funds || !spacePermissions?.isRestricted) && (

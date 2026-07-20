@@ -5,6 +5,11 @@
   margin-bottom: 10px;
 }
 
+.fundSectionWrapper {
+  margin-top: 16px;
+  margin-bottom: 16px;
+}
+
 .fundEntryIcon {
   margin-right: 4px;
   vertical-align: -1px;
