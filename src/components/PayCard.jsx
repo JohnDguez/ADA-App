@@ -307,41 +307,23 @@ export function PayCard({ payment: p, cfg, onMarkPaid, onRequestVariableAmount, 
           {/* Botones derecha */}
           <div className={styles.actionsSection}>
             {isPending && (
-              <div style={{ position: 'relative' }}>
-                <button
-                  onClick={e => {
-                    e.stopPropagation()
-                    if (p.space_id && onSplit) {
-                      if (!canMarkPaid) { blocked('marcar pagos'); return }
-                      if (phase !== 'idle') return
-                      openCheckMenuAt(e.currentTarget)
-                      return
-                    }
-                    handleMarkPaidClick(e)
-                  }}
-                  disabled={phase !== 'idle'}
-                  className={styles.markPaidButton}
-                  style={{ background: canMarkPaid ? 'var(--paid)' : 'var(--border)' }}
-                >
-                  <Check size={18} color={canMarkPaid ? 'var(--pay-icon)' : 'var(--muted)'} strokeWidth={2.5} />
-                </button>
-                {checkMenuOpen && (
-                  <div
-                    ref={checkMenuRef}
-                    className={styles.contextMenu}
-                    style={{
-                      right: 0,
-                      top: checkMenuUpward ? 'auto' : '100%',
-                      bottom: checkMenuUpward ? '100%' : 'auto',
-                      marginTop: checkMenuUpward ? 0 : 4,
-                      marginBottom: checkMenuUpward ? 4 : 0,
-                    }}
-                  >
-                    <MenuItem icon={<Check size={14}/>} label="Pagar todo" onClick={() => { setCheckMenuOpen(false); handleMarkPaidClick() }} />
-                    <MenuItem icon={<Users size={14}/>} label="Pago compartido" onClick={() => { setCheckMenuOpen(false); onSplit(p) }} />
-                  </div>
-                )}
-              </div>
+              <button
+                onClick={e => {
+                  e.stopPropagation()
+                  if (p.space_id && onSplit) {
+                    if (!canMarkPaid) { blocked('marcar pagos'); return }
+                    if (phase !== 'idle') return
+                    openCheckMenuAt(e.currentTarget)
+                    return
+                  }
+                  handleMarkPaidClick(e)
+                }}
+                disabled={phase !== 'idle'}
+                className={styles.markPaidButton}
+                style={{ background: canMarkPaid ? 'var(--paid)' : 'var(--border)' }}
+              >
+                <Check size={18} color={canMarkPaid ? 'var(--pay-icon)' : 'var(--muted)'} strokeWidth={2.5} />
+              </button>
             )}
             {p.is_paid && (
               <div className={styles.paidIndicator}>
@@ -380,6 +362,26 @@ export function PayCard({ payment: p, cfg, onMarkPaid, onRequestVariableAmount, 
           {isPending && p.space_id && onSplit && <MenuItem icon={<Users size={14}/>} label="Dividir entre miembros" onClick={() => { canMarkPaid ? onSplit(p) : blocked('registrar abonos'); setMenuOpen(false) }} />}
           {p.is_paid && <MenuItem icon={<RotateCcw size={14}/>} label="Marcar no pagado" onClick={() => { canMarkPaid ? onMarkUnpaid(p.id) : blocked('marcar pagos'); setMenuOpen(false) }} />}
           <MenuItem icon={<Trash2 size={14}/>} label="Eliminar" onClick={() => { canDelete ? onDelete(p.id) : blocked('eliminar pagos'); setMenuOpen(false) }} danger />
+        </div>
+      )}
+
+      {/* Mini-menú del check ("Pagar todo" / "Pago compartido") — mismo
+          motivo que el de arriba: vive en .cardOuter, no dentro de .card
+          (que tiene overflow:hidden para la animación de pintado verde),
+          para no recortarse. Bug real reportado por Johnatan con captura. */}
+      {checkMenuOpen && (
+        <div
+          ref={checkMenuRef}
+          className={styles.contextMenu}
+          style={{
+            top: checkMenuUpward ? 'auto' : '100%',
+            bottom: checkMenuUpward ? '100%' : 'auto',
+            marginTop: checkMenuUpward ? 0 : 4,
+            marginBottom: checkMenuUpward ? 4 : 0,
+          }}
+        >
+          <MenuItem icon={<Check size={14}/>} label="Pagar todo" onClick={() => { setCheckMenuOpen(false); handleMarkPaidClick() }} />
+          <MenuItem icon={<Users size={14}/>} label="Pago compartido" onClick={() => { setCheckMenuOpen(false); onSplit(p) }} />
         </div>
       )}
     </div>
