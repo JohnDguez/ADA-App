@@ -1,0 +1,23 @@
+.fundBalance {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 10px;
+}
+
+.fundEntryIcon {
+  margin-right: 4px;
+  vertical-align: -1px;
+}
+
+.fundAmountSpend {
+  color: var(--text);
+}
+
+.fundAmountPositive {
+  color: var(--paid);
+}
+
+.fundDeleteButton {
+  margin-left: 8px;
+}

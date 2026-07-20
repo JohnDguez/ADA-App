@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { ChevronLeft, ChevronRight, MoreVertical, Plus, CircleDollarSign, ChevronDown, ChevronUp, Pencil, RotateCcw, Trash2, Check, Eye, Users } from 'lucide-react'
+import { ChevronLeft, ChevronRight, MoreVertical, Plus, CircleDollarSign, ChevronDown, ChevronUp, Pencil, RotateCcw, Trash2, Check, Eye, Users, ArrowUp, ArrowDown, ArrowUpLeft, PiggyBank } from 'lucide-react'
 import { PageHeader } from '../components/PageHeader'
 import { NewSharedSpacePanel } from '../components/NewSharedSpacePanel'
 import { EmptyState } from '../components/EmptyState'
@@ -7,7 +7,9 @@ import { fmt, dateOf, dateToStr, MONTHS, MONTHS_SHORT, CATEGORIES, cobroPeriod, 
 import { getCategoryIcon } from '../lib/categoryIcons'
 import { supabase } from '../lib/supabase'
 import { showToast } from '../components/Toast'
+import { useSharedFund } from '../hooks/useSharedFund'
 import styles from './PaymentsPage.module.css'
+import fundStyles from './PaymentsPageFund.module.css'
 
 const INCOME_TYPES = ['Bono', 'Préstamo', 'Pago', 'Comisión', 'Otro']
 
@@ -118,6 +120,43 @@ export function PaymentsPage({ payments, profile, spaceSwitcher, activeSpaceHead
   const [editIncomeNote,       setEditIncomeNote]       = useState('')
   const [savingEditIncome,     setSavingEditIncome]     = useState(false)
   const [confirmDeleteIncomeId, setConfirmDeleteIncomeId] = useState(null)
+
+  // Fondo Compartido — solo aplica en modo espacio (activeSpaceId). En
+  // personal, esta sección ni se monta (el hook regresa lista vacía si
+  // spaceId es null, pero ni se llama fetchLedger en ese caso).
+  const sharedFund = useSharedFund(activeSpaceId)
+  const [fundExpanded,      setFundExpanded]      = useState(false)
+  const [addFundModal,      setAddFundModal]      = useState(false)
+  const [fundAmount,        setFundAmount]        = useState('')
+  const [fundNote,          setFundNote]          = useState('')
+  const [savingFund,        setSavingFund]        = useState(false)
+  const [manageFundModal,   setManageFundModal]   = useState(false)
+  const [confirmDeleteFundId, setConfirmDeleteFundId] = useState(null)
+  const [deletingFundId,    setDeletingFundId]    = useState(null)
+
+  useEffect(() => {
+    if (activeSpaceId) sharedFund.fetchLedger()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeSpaceId])
+
+  async function handleAddFund() {
+    const amount = parseFloat(fundAmount)
+    if (!amount || amount <= 0) return
+    setSavingFund(true)
+    const { error } = await sharedFund.addFunds(amount, fundNote.trim() || null)
+    setSavingFund(false)
+    if (error) { showToast(error.message || 'Error al aportar al Fondo'); return }
+    setAddFundModal(false); setFundAmount(''); setFundNote('')
+    showToast('Aportación registrada')
+  }
+
+  async function handleDeleteFundEntry(id) {
+    setDeletingFundId(id)
+    const { error } = await sharedFund.deleteFundEntry(id)
+    setDeletingFundId(null)
+    setConfirmDeleteFundId(null)
+    if (error) showToast(error.message || 'Error al eliminar')
+  }
 
   const paidPayments = payments.filter(p => p.is_paid)
 
@@ -823,6 +862,89 @@ export function PaymentsPage({ payments, profile, spaceSwitcher, activeSpaceHead
         </div>
       )}
 
+      {/* ── Modal Añadir fondos ── */}
+      {addFundModal && (
+        <div onClick={() => setAddFundModal(false)} className={styles.modalOverlayBottom}>
+          <div onClick={e => e.stopPropagation()} className={styles.modalPanelBottom}>
+            <div className={styles.manageModalTitle}>Añadir fondos</div>
+            <div className={styles.incomeFieldGroup}>
+              <div className={styles.incomeLabelMb6}>Monto</div>
+              <input
+                type="number" placeholder="$0" value={fundAmount}
+                onChange={e => setFundAmount(e.target.value)} autoFocus
+                className={styles.incomeInput}
+              />
+            </div>
+            <div className={styles.incomeFieldGroupLast}>
+              <div className={styles.incomeLabelMb6}>Nota (opcional)</div>
+              <input
+                type="text" placeholder="Ej. Ahorro de este mes" value={fundNote}
+                onChange={e => setFundNote(e.target.value)}
+                className={styles.incomeInput}
+              />
+            </div>
+            <button
+              onClick={handleAddFund}
+              disabled={savingFund || !fundAmount || parseFloat(fundAmount) <= 0}
+              className={styles.incomeSaveButton}
+            >
+              {savingFund ? 'Guardando…' : 'Aportar al Fondo'}
+            </button>
+            <button onClick={() => setAddFundModal(false)} className={styles.incomeCancelButton}>
+              Cancelar
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ── Modal Gestionar Fondo (eliminar una aportación equivocada) ── */}
+      {manageFundModal && (
+        <div
+          onClick={() => { setManageFundModal(false); setConfirmDeleteFundId(null) }}
+          className={styles.modalOverlayBottom}
+        >
+          <div onClick={e => e.stopPropagation()} className={`${styles.modalPanelBottom} ${styles.manageModalPanelExtra}`}>
+            <div className={styles.manageModalTitle}>Aportaciones al Fondo</div>
+            {sharedFund.ledger.filter(e => e.type === 'deposit').length === 0 ? (
+              <div className={styles.manageEmptyText}>Sin aportaciones registradas</div>
+            ) : (
+              <div className={styles.manageList}>
+                {sharedFund.ledger.filter(e => e.type === 'deposit').map(entry => (
+                  <div key={entry.id} className={styles.manageListItem}>
+                    {confirmDeleteFundId === entry.id ? (
+                      <div>
+                        <div className={styles.confirmDeleteText}>¿Eliminar esta aportación?</div>
+                        <div className={styles.confirmDeleteRow}>
+                          <button onClick={() => handleDeleteFundEntry(entry.id)} disabled={deletingFundId === entry.id} className={styles.confirmDeleteButton}>
+                            Sí, eliminar
+                          </button>
+                          <button onClick={() => setConfirmDeleteFundId(null)} className={styles.confirmDeleteCancelButton}>
+                            Cancelar
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className={styles.incomeRow}>
+                        <div>
+                          <div className={styles.incomeRowType}>Aportación{entry.note ? ` — ${entry.note}` : ''}</div>
+                        </div>
+                        <div className={styles.incomeRowActions}>
+                          <span className={styles.incomeRowAmount}>+{fmt(entry.amount)}</span>
+                          <Trash2 size={15} color="var(--danger)" className={styles.iconButtonCursor} onClick={() => setConfirmDeleteFundId(entry.id)} />
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+            <button onClick={() => { setManageFundModal(false); setConfirmDeleteFundId(null) }} className={styles.manageCloseButton}>
+              Cerrar
+            </button>
+          </div>
+        </div>
+      )}
+
       <PageHeader
         profile={profile}
         unreadCount={unreadCount}
@@ -945,8 +1067,11 @@ export function PaymentsPage({ payments, profile, spaceSwitcher, activeSpaceHead
               })}
             </div>
 
-            {/* Ingresos extras del periodo */}
-            {!loadingIncomes && periodIncomes.length > 0 && (() => {
+            {/* Ingresos extras del periodo — solo en personal. En un
+                espacio compartido, esta misma sección ahora es el Fondo
+                Compartido (ver abajo) — reemplaza por completo a
+                period_income para espacios, que era atada al periodo. */}
+            {!activeSpaceId && !loadingIncomes && periodIncomes.length > 0 && (() => {
               const totalInc = periodIncomes.reduce((a, i) => a + Number(i.amount), 0)
               return (
                 <div className={styles.extrasSection}>
@@ -999,6 +1124,78 @@ export function PaymentsPage({ payments, profile, spaceSwitcher, activeSpaceHead
                 </div>
               )
             })()}
+
+            {/* Fondo Compartido — solo en espacio. Persistente, nunca se
+                reinicia por periodo (a diferencia de Ingresos Extras). */}
+            {activeSpaceId && (
+              <div className={styles.extrasSection}>
+                <div className={styles.extrasHeader}>
+                  <div className={styles.extrasLabel}>Fondo Compartido</div>
+                  {(spacePermissions?.can_add_funds || !spacePermissions?.isRestricted) && (
+                    <button onClick={() => setAddFundModal(true)} className={styles.extrasEditButton}>
+                      <Plus size={11} strokeWidth={2.2} />
+                      Añadir fondos
+                    </button>
+                  )}
+                </div>
+
+                <div className={fundStyles.fundBalance}>{fmt(sharedFund.balance)}</div>
+
+                {sharedFund.ledger.length > 0 && (
+                  <>
+                    <button onClick={() => setFundExpanded(v => !v)} className={styles.extrasSummaryButton}>
+                      <div className={styles.extrasCheckIcon}>
+                        <Check size={10} color="var(--surface)" strokeWidth={3} />
+                      </div>
+                      <span className={styles.extrasSummaryText}>
+                        {sharedFund.ledger.length} movimiento{sharedFund.ledger.length !== 1 ? 's' : ''}
+                      </span>
+                      {fundExpanded ? <ChevronUp size={15} color="var(--text)" /> : <ChevronDown size={15} color="var(--text)" />}
+                    </button>
+
+                    {fundExpanded && (
+                      <div className={styles.extrasList}>
+                        {sharedFund.ledger.map(entry => {
+                          const d = entry.created_at ? new Date(entry.created_at) : null
+                          const isDeposit = entry.type === 'deposit'
+                          const label =
+                            entry.type === 'migration' ? 'Saldo inicial migrado' :
+                            entry.type === 'reversal'  ? 'Reversión' :
+                            entry.type === 'spend'     ? 'Gasto del espacio' :
+                            'Aportación'
+                          const Icon = entry.type === 'spend' ? ArrowDown : entry.type === 'reversal' ? ArrowUpLeft : entry.type === 'migration' ? PiggyBank : ArrowUp
+                          return (
+                            <div key={entry.id} className={styles.extrasListItem}>
+                              {d && (
+                                <div className={styles.extrasItemDate}>
+                                  <div className={styles.extrasItemDay}>{d.getDate()}</div>
+                                  <div className={styles.extrasItemMonth}>{MONTHS_SHORT[d.getMonth()]}</div>
+                                </div>
+                              )}
+                              <div className={styles.extrasItemContent}>
+                                <div className={styles.extrasItemType}>
+                                  <Icon size={11} className={fundStyles.fundEntryIcon} />
+                                  {label}
+                                </div>
+                                {entry.note && <div className={styles.extrasItemNote}>{entry.note}</div>}
+                              </div>
+                              <span className={`${styles.extrasItemAmount} ${entry.amount < 0 ? fundStyles.fundAmountSpend : fundStyles.fundAmountPositive}`}>
+                                {entry.amount < 0 ? '' : '+'}{fmt(entry.amount)}
+                              </span>
+                              {isDeposit && (
+                                <button onClick={() => setManageFundModal(true)} className={`${styles.extrasEditButton} ${fundStyles.fundDeleteButton}`}>
+                                  <Trash2 size={11} />
+                                </button>
+                              )}
+                            </div>
+                          )
+                        })}
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
+            )}
           </div>
         )}
 
