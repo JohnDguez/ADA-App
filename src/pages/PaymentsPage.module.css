@@ -1009,6 +1009,41 @@
   margin-top: 4px;
 }
 
+/* ── Parte 6b: Fondo Compartido (solo espacio compartido) — sección propia
+   de nivel superior, NO anidada en .balanceCard como .extrasSection (de ahí
+   sacaba su margen horizontal antes) — por eso tiene su propio padding
+   lateral. El divisor vive ABAJO (separa del resto de la página), no
+   arriba, a diferencia de .extrasSection. ──────────────────────────────── */
+.fundSection {
+  padding: 0 16px 16px;
+  margin-bottom: 16px;
+  border-bottom: 0.5px solid var(--border);
+}
+
+.fundBalance {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 10px;
+}
+
+.fundEntryIcon {
+  margin-right: 4px;
+  vertical-align: -1px;
+}
+
+.fundAmountSpend {
+  color: var(--text);
+}
+
+.fundAmountPositive {
+  color: var(--paid);
+}
+
+.fundDeleteButton {
+  margin-left: 8px;
+}
+
 /* ── Parte 6: wrappers estructurales sueltos ─────────────────────────────── */
 .pageRoot {
   padding-bottom: 120px;

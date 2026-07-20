@@ -9,7 +9,6 @@ import { supabase } from '../lib/supabase'
 import { showToast } from '../components/Toast'
 import { useSharedFund } from '../hooks/useSharedFund'
 import styles from './PaymentsPage.module.css'
-import fundStyles from './PaymentsPageFund.module.css'
 
 const INCOME_TYPES = ['Bono', 'Préstamo', 'Pago', 'Comisión', 'Otro']
 
@@ -974,7 +973,7 @@ export function PaymentsPage({ payments, profile, spaceSwitcher, activeSpaceHead
         <>
         {/* Zona de título con fondo diferente */}
         <div className={styles.titleSection}>
-          <div className={styles.titleSectionHeading}>Mis gastos e ingresos</div>
+          <div className={styles.titleSectionHeading}>Gastos e ingresos</div>
           <div className={styles.titleSectionSubtext}>Historial, análisis y balance de tus finanzas del periodo.</div>
         </div>
 
@@ -1129,11 +1128,14 @@ export function PaymentsPage({ payments, profile, spaceSwitcher, activeSpaceHead
         )}
 
             {/* Fondo Compartido — solo en espacio. Persistente, nunca se
-                reinicia por periodo (a diferencia de Ingresos Extras). */}
+                reinicia por periodo (a diferencia de Ingresos Extras).
+                Sección de nivel superior (como .paymentsSection), no
+                anidada en .balanceCard — de ahí .extrasSection sacaba su
+                margen horizontal, por eso este bug de ancho completo. */}
             {activeSpaceId && (
-              <div className={`${styles.extrasSection} ${fundStyles.fundSectionWrapper}`}>
-                <div className={styles.extrasHeader}>
-                  <div className={styles.extrasLabel}>Fondo Compartido</div>
+              <div className={styles.fundSection}>
+                <div className={styles.paymentsSectionHeader}>
+                  <div className={styles.paymentsSectionTitle}>Fondo compartido</div>
                   {(spacePermissions?.can_add_funds || !spacePermissions?.isRestricted) && (
                     <button onClick={() => setAddFundModal(true)} className={styles.extrasEditButton}>
                       <Plus size={11} strokeWidth={2.2} />
@@ -1142,7 +1144,7 @@ export function PaymentsPage({ payments, profile, spaceSwitcher, activeSpaceHead
                   )}
                 </div>
 
-                <div className={fundStyles.fundBalance}>{fmt(sharedFund.balance)}</div>
+                <div className={styles.fundBalance}>{fmt(sharedFund.balance)}</div>
 
                 {sharedFund.ledger.length > 0 && (
                   <>
@@ -1177,16 +1179,16 @@ export function PaymentsPage({ payments, profile, spaceSwitcher, activeSpaceHead
                               )}
                               <div className={styles.extrasItemContent}>
                                 <div className={styles.extrasItemType}>
-                                  <Icon size={11} className={fundStyles.fundEntryIcon} />
+                                  <Icon size={11} className={styles.fundEntryIcon} />
                                   {label}
                                 </div>
                                 {entry.note && <div className={styles.extrasItemNote}>{entry.note}</div>}
                               </div>
-                              <span className={`${styles.extrasItemAmount} ${entry.amount < 0 ? fundStyles.fundAmountSpend : fundStyles.fundAmountPositive}`}>
+                              <span className={`${styles.extrasItemAmount} ${entry.amount < 0 ? styles.fundAmountSpend : styles.fundAmountPositive}`}>
                                 {entry.amount < 0 ? '' : '+'}{fmt(entry.amount)}
                               </span>
                               {isDeposit && (
-                                <button onClick={() => setManageFundModal(true)} className={`${styles.extrasEditButton} ${fundStyles.fundDeleteButton}`}>
+                                <button onClick={() => setManageFundModal(true)} className={`${styles.extrasEditButton} ${styles.fundDeleteButton}`}>
                                   <Trash2 size={11} />
                                 </button>
                               )}
