@@ -132,15 +132,67 @@ export function PaymentsPage({ payments, profile, spaceSwitcher, activeSpaceHead
   const [manageFundModal,   setManageFundModal]   = useState(false)
   const [confirmDeleteFundId, setConfirmDeleteFundId] = useState(null)
   const [deletingFundId,    setDeletingFundId]    = useState(null)
+  // Remanente PERSONAL (nunca el del espacio) — se calcula aparte porque
+  // mientras se ve un espacio, `profile`/`paidPayments`/`periodIncomes` de
+  // este componente reflejan datos del ESPACIO, no de la cuenta personal
+  // del usuario. Se necesita para no dejar aportar más de lo que en verdad
+  // tiene disponible en su nómina (confirmado con Johnatan: aportar SÍ
+  // descuenta de ahí, así que no puede exceder lo que hay).
+  const [personalAvailable, setPersonalAvailable] = useState(null)
+  const [loadingPersonalAvailable, setLoadingPersonalAvailable] = useState(false)
 
   useEffect(() => {
     if (activeSpaceId) sharedFund.fetchLedger()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeSpaceId])
 
+  useEffect(() => {
+    if (!addFundModal || !activeSpaceId) return
+    setLoadingPersonalAvailable(true)
+    fetchPersonalAvailable().then(val => {
+      setPersonalAvailable(val)
+      setLoadingPersonalAvailable(false)
+    })
+  }, [addFundModal])
+
+  // Misma fórmula exacta que "Disponible Este Periodo" (arriba, líneas
+  // ~426-436) — salario + ingresos extra − gastos ya pagados del periodo —
+  // pero aplicada a los datos PERSONALES (space_id null), sin importar en
+  // qué espacio esté parado ahora mismo.
+  async function fetchPersonalAvailable() {
+    const { data: personalProfile } = await supabase.from('profiles').select('*').eq('id', profile.id).maybeSingle()
+    if (!personalProfile) return 0
+    const { start, end } = cobroPeriod(personalProfile)
+    const periodStartStr = dateToStr(start)
+    const [{ data: incomes }, { data: paid }] = await Promise.all([
+      supabase.from('period_income').select('amount').is('space_id', null).eq('user_id', profile.id).eq('period_start', periodStartStr),
+      supabase.from('payments').select('amount, paid_at').is('space_id', null).eq('user_id', profile.id).eq('is_paid', true),
+    ])
+    const salario = personalProfile.salary_enabled ? Number(personalProfile.salary_amount || 0) : 0
+    const extras  = (incomes || []).reduce((a, i) => a + Number(i.amount), 0)
+    const gastado = (paid || [])
+      .filter(p => {
+        if (!p.paid_at) return false
+        const d = dateOf(dateToStr(new Date(p.paid_at)))
+        return d >= start && d <= end
+      })
+      .reduce((a, p) => a + Number(p.amount), 0)
+    return salario + extras - gastado
+  }
+
   async function handleAddFund() {
     const amount = parseFloat(fundAmount)
     if (!amount || amount <= 0) return
+    if (personalAvailable != null) {
+      if (personalAvailable <= 0) {
+        showToast('No puedes aportar — tu remanente personal está en negativo')
+        return
+      }
+      if (amount > personalAvailable) {
+        showToast(`No puedes aportar más de lo que tienes disponible (${fmt(personalAvailable)})`)
+        return
+      }
+    }
     setSavingFund(true)
     const { error } = await sharedFund.addFunds(amount, fundNote.trim() || null)
     setSavingFund(false)
@@ -161,13 +213,13 @@ export function PaymentsPage({ payments, profile, spaceSwitcher, activeSpaceHead
 
   // ── Bloquear scroll cuando hay modal abierto ──────────────────────────────
   useEffect(() => {
-    if (incomeModal || remModal || manageIncomeModal) {
+    if (incomeModal || remModal || manageIncomeModal || addFundModal || manageFundModal) {
       document.body.classList.add('modal-open')
     } else {
       document.body.classList.remove('modal-open')
     }
     return () => document.body.classList.remove('modal-open')
-  }, [incomeModal, remModal, manageIncomeModal])
+  }, [incomeModal, remModal, manageIncomeModal, addFundModal, manageFundModal])
 
   // ── Cargar ingresos (se recarga con cualquier cambio de profile/espacio,
   // incluyendo cambios de config de cobro — el período de las consultas sí
@@ -863,9 +915,15 @@ export function PaymentsPage({ payments, profile, spaceSwitcher, activeSpaceHead
 
       {/* ── Modal Añadir fondos ── */}
       {addFundModal && (
-        <div onClick={() => setAddFundModal(false)} className={styles.modalOverlayBottom}>
+        <div onClick={() => { setAddFundModal(false); setPersonalAvailable(null) }} className={styles.modalOverlayBottom}>
           <div onClick={e => e.stopPropagation()} className={styles.modalPanelBottom}>
             <div className={styles.manageModalTitle}>Añadir fondos</div>
+            <div className={styles.fundInfoText}>
+              Este monto se descontará de tu remanente personal, como si fuera un gasto tuyo.
+              {activeSpaceId && !loadingPersonalAvailable && personalAvailable != null && (
+                <> Tienes <strong>{fmt(personalAvailable)}</strong> disponible este periodo.</>
+              )}
+            </div>
             <div className={styles.incomeFieldGroup}>
               <div className={styles.incomeLabelMb6}>Monto</div>
               <input
@@ -884,12 +942,15 @@ export function PaymentsPage({ payments, profile, spaceSwitcher, activeSpaceHead
             </div>
             <button
               onClick={handleAddFund}
-              disabled={savingFund || !fundAmount || parseFloat(fundAmount) <= 0}
+              disabled={
+                savingFund || !fundAmount || parseFloat(fundAmount) <= 0 ||
+                (personalAvailable != null && (personalAvailable <= 0 || parseFloat(fundAmount) > personalAvailable))
+              }
               className={styles.incomeSaveButton}
             >
               {savingFund ? 'Guardando…' : 'Aportar al Fondo'}
             </button>
-            <button onClick={() => setAddFundModal(false)} className={styles.incomeCancelButton}>
+            <button onClick={() => { setAddFundModal(false); setPersonalAvailable(null) }} className={styles.incomeCancelButton}>
               Cancelar
             </button>
           </div>
