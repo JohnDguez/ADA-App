@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useAuth } from './hooks/useAuth'
 import { usePayments } from './hooks/usePayments'
+import { useSharedFund } from './hooks/useSharedFund'
 import { useProfile } from './hooks/useProfile'
 import { useNotifications } from './hooks/useNotifications'
 import { AuthPage, ResetPasswordPage } from './pages/AuthPage'
@@ -97,6 +98,7 @@ export default function App() {
     updatePayment, updateRecurrentName, updateRecurrentConfig,
     abonarInstallment,
     registerContribution, getContributions, payRemainingContribution, setContributionTotalAmount, unmarkSharedPayment, forceSettlePayment,
+    payFromFund, setFundContribution,
     markPaid, markUnpaid, setEstimatedAmount,
     postponePayment,
     pauseRecurrent, resumeRecurrent,
@@ -106,6 +108,15 @@ export default function App() {
     refetch,
   } = usePayments(user?.id, paymentsSpaceId, activeSpaceEntry?.space?.name)
   const { profile, loading: profileLoading, updateProfile, uploadAvatar } = useProfile(user?.id)
+
+  // Fondo Compartido — a nivel de App (antes vivía solo dentro de
+  // PaymentsPage.jsx) para que también llegue al check de Home (tercera
+  // opción "Fondo compartido") y al modal de Dividir (fila del Fondo).
+  const sharedFund = useSharedFund(paymentsSpaceId)
+  useEffect(() => {
+    if (paymentsSpaceId) sharedFund.fetchLedger()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [paymentsSpaceId])
 
   // Se declara aquí (no arriba, junto a sharedSpaces) porque necesita
   // `profile` ya disponible — cada espacio (y Personal) puede tener su
@@ -150,7 +161,7 @@ export default function App() {
   const [varModal,       setVarModal]      = useState({ open: false, payment: null, resolver: null })
   const [estimateModal,  setEstimateModal] = useState({ open: false, payment: null })
   const [abonarModal,    setAbonarModal]   = useState({ open: false, payment: null })
-  const [splitModal,     setSplitModal]    = useState({ open: false, paymentId: null })
+  const [splitModal,     setSplitModal]    = useState({ open: false, paymentId: null, openedBecauseFundInsufficient: false })
   const [notifOpen,      setNotifOpen]     = useState(false)
   const [slideDir,       setSlideDir]      = useState('right')
   const [migrationModal, setMigrationModal] = useState(false)
@@ -378,7 +389,22 @@ export default function App() {
     else if (done) showToast('¡Terminaste todos los pagos!')
     else showToast(`Abono registrado — ${fmt(amount)}`)
   }
-  function openSplitModal(payment) { setSplitModal({ open: true, paymentId: payment.id }) }
+  function openSplitModal(payment) { setSplitModal({ open: true, paymentId: payment.id, openedBecauseFundInsufficient: false }) }
+
+  // Check de la card, opción "Fondo compartido" — paga todo lo que falte
+  // desde el saldo del Fondo. Si el Fondo no alcanza para cubrirlo por
+  // completo, en vez de un error seco se abre "Dividir entre miembros" con
+  // un aviso explicando por qué (diseño confirmado con Johnatan) — ahí ya
+  // se ve cuánto sí cubre el Fondo, y se completa con nómina de alguien.
+  async function handlePayFromFund(payment) {
+    const { error, insufficientFund } = await payFromFund(payment.id)
+    if (error) { showToast(error.message || 'Error al pagar desde el Fondo'); return }
+    if (insufficientFund) {
+      // El Fondo ya cubrió lo máximo posible (justo se aplicó) — se abre
+      // "Dividir entre miembros" con el aviso para completar con nómina.
+      setSplitModal({ open: true, paymentId: payment.id, openedBecauseFundInsufficient: true })
+    }
+  }
 
   // Card de reflejo (Home personal) → el ojo lleva de vuelta al espacio de
   // origen. Usa el atajo que ya existe (`switchSpace`) — no hace falta
@@ -656,6 +682,8 @@ export default function App() {
           onEdit={openEdit}
           onAbonar={openAbonarModal}
           onSplit={openSplitModal}
+          onPayFromFund={handlePayFromFund}
+          fundBalance={sharedFund.balance}
           onViewSource={handleViewSource}
           onDelete={handleDelete}
           onPostpone={handlePostpone}
@@ -691,6 +719,7 @@ export default function App() {
           onSplit={openSplitModal}
           onAdd={openAdd}
           onGoCategories={goToCategories}
+          sharedFund={sharedFund}
         />
       )}
       {tab === 'recurrents' && (
@@ -799,7 +828,10 @@ export default function App() {
         registerContribution={registerContribution}
         onSetTotalAmount={setContributionTotalAmount}
         onForceSettle={forceSettlePayment}
-        onClose={() => setSplitModal({ open: false, paymentId: null })}
+        fundBalance={sharedFund.balance}
+        onSetFundContribution={setFundContribution}
+        openedBecauseFundInsufficient={splitModal.openedBecauseFundInsufficient}
+        onClose={() => setSplitModal({ open: false, paymentId: null, openedBecauseFundInsufficient: false })}
       />
 
       <Coachmarks
