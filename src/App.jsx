@@ -813,6 +813,7 @@ export default function App() {
         payments={payments}
         profile={effectiveProfile}
         spacePermissions={spacePermissions}
+        isSharedSpace={!!paymentsSpaceId}
         customCategories={profile.custom_categories || []}
         onOpenPremium={() => setPremiumPageOpen(true)}
         onAddCategory={async (cat) => {
