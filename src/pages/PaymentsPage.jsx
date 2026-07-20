@@ -1254,7 +1254,15 @@ export function PaymentsPage({ payments, profile, spaceSwitcher, activeSpaceHead
                             // vez de hacia abajo (bug real: se veía cortado
                             // por el navbar en pagos cerca del fondo).
                             const estimatedHeight = (p.space_id && p.is_paid && !p.is_contribution_reflection) ? 178 : 140
-                            const openUpward = rect.bottom + estimatedHeight > window.innerHeight
+                            // El navbar inferior es `position: fixed`
+                            // (bottom: 16px + ~64px de alto ≈ 90px) — sin
+                            // restar ese espacio, la cuenta de abajo decía
+                            // que "cabía" contra el alto completo de la
+                            // pantalla aunque en la práctica el navbar lo
+                            // tapara (el comentario de arriba ya lo tenía
+                            // identificado, pero nunca se restó de verdad).
+                            const BOTTOM_NAV_SAFE_AREA = 90
+                            const openUpward = rect.bottom + estimatedHeight > window.innerHeight - BOTTOM_NAV_SAFE_AREA
                             setOpenMenu(openMenu?.id === p.id ? null : {
                               id: p.id,
                               top: openUpward ? undefined : rect.bottom + 4,
