@@ -1125,6 +1125,9 @@ export function PaymentsPage({ payments, profile, spaceSwitcher, activeSpaceHead
               )
             })()}
 
+          </div>
+        )}
+
             {/* Fondo Compartido — solo en espacio. Persistente, nunca se
                 reinicia por periodo (a diferencia de Ingresos Extras). */}
             {activeSpaceId && (
@@ -1196,8 +1199,6 @@ export function PaymentsPage({ payments, profile, spaceSwitcher, activeSpaceHead
                 )}
               </div>
             )}
-          </div>
-        )}
 
         {/* Chips de categoría */}
         <div data-coachmark="gastos-category-chips" className={styles.categoryChipsScroll}>
