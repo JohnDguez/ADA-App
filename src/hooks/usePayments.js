@@ -132,6 +132,30 @@ export function usePayments(userId, activeSpaceId = null, activeSpaceName = null
     }
   }
 
+  // Botón verde "Pagar" del modal de Dividir, cuando ya se juntó el 100%
+  // entre los miembros — confirmación explícita para marcar pagado sin
+  // tener que cerrar el modal e ir al check de la card. En la práctica el
+  // pago ya debería estar pagado (cada abono revisa esto solo), este
+  // endpoint también sirve de red de seguridad para el caso raro en que no
+  // se haya marcado.
+  async function forceSettlePayment(paymentId) {
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) return { error: { message: 'Sesión no encontrada' } }
+      const res = await fetch('/api/register-contribution', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
+        body: JSON.stringify({ paymentId, forceSettle: true }),
+      })
+      const result = await res.json()
+      if (!res.ok) return { error: result.error ? { message: result.error } : { message: 'Error al marcar como pagado' } }
+      await fetchPayments()
+      return { error: null, ...result }
+    } catch (e) {
+      return { error: { message: 'Error de conexión al marcar como pagado' } }
+    }
+  }
+
   // Lee las contribuciones ya registradas de un gasto compartido — lectura
   // directa con el cliente normal (la política de SELECT de
   // payment_contributions ya deja ver esto a cualquier miembro del
@@ -1044,7 +1068,7 @@ export function usePayments(userId, activeSpaceId = null, activeSpaceName = null
     addPayment, addRecurrentPayment, addInstallmentPayment,
     updatePayment, updateRecurrentName, updateRecurrentConfig,
     abonarInstallment,
-    registerContribution, getContributions, payRemainingContribution, setContributionTotalAmount, unmarkSharedPayment,
+    registerContribution, getContributions, payRemainingContribution, setContributionTotalAmount, unmarkSharedPayment, forceSettlePayment,
     markPaid, markUnpaid, setEstimatedAmount,
     postponePayment,
     pauseRecurrent, resumeRecurrent,
