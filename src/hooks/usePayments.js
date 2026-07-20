@@ -109,6 +109,29 @@ export function usePayments(userId, activeSpaceId = null, activeSpaceName = null
     }
   }
 
+  // Desmarca de "pagados" un gasto compartido — reversa por completo lo que
+  // dejó al completarse: borra TODAS las contribuciones y sus reflejos en
+  // el Home de cada miembro involucrado (les regresa ese dinero a su
+  // remanente), y el pago vuelve a pendiente (nunca se borra el pago en sí,
+  // eso es "Eliminar", una acción distinta). Confirmado con Johnatan.
+  async function unmarkSharedPayment(paymentId) {
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) return { error: { message: 'Sesión no encontrada' } }
+      const res = await fetch('/api/register-contribution', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
+        body: JSON.stringify({ paymentId, unmarkPaid: true }),
+      })
+      const result = await res.json()
+      if (!res.ok) return { error: result.error ? { message: result.error } : { message: 'Error al desmarcar el pago' } }
+      await fetchPayments()
+      return { error: null, ...result }
+    } catch (e) {
+      return { error: { message: 'Error de conexión al desmarcar el pago' } }
+    }
+  }
+
   // Lee las contribuciones ya registradas de un gasto compartido — lectura
   // directa con el cliente normal (la política de SELECT de
   // payment_contributions ya deja ver esto a cualquier miembro del
@@ -1021,7 +1044,7 @@ export function usePayments(userId, activeSpaceId = null, activeSpaceName = null
     addPayment, addRecurrentPayment, addInstallmentPayment,
     updatePayment, updateRecurrentName, updateRecurrentConfig,
     abonarInstallment,
-    registerContribution, getContributions, payRemainingContribution, setContributionTotalAmount,
+    registerContribution, getContributions, payRemainingContribution, setContributionTotalAmount, unmarkSharedPayment,
     markPaid, markUnpaid, setEstimatedAmount,
     postponePayment,
     pauseRecurrent, resumeRecurrent,
