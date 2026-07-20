@@ -35,9 +35,9 @@ module.exports = async function handler(req, res) {
   if (userError || !userData?.user) return res.status(401).json({ error: 'Token inválido' })
   const actorId = userData.user.id
 
-  const { paymentId, memberUserId, amount, payRemaining, setTotalAmount, unmarkPaid } = req.body || {}
+  const { paymentId, memberUserId, amount, payRemaining, setTotalAmount, unmarkPaid, forceSettle } = req.body || {}
   if (!paymentId) return res.status(400).json({ error: 'Faltan datos' })
-  if (setTotalAmount == null && !unmarkPaid && (!memberUserId || (amount == null && !payRemaining))) {
+  if (setTotalAmount == null && !unmarkPaid && !forceSettle && (!memberUserId || (amount == null && !payRemaining))) {
     return res.status(400).json({ error: 'Faltan datos' })
   }
 
@@ -90,6 +90,23 @@ module.exports = async function handler(req, res) {
         return res.status(500).json({ error: 'El pago se desmarcó, pero no se pudo limpiar del todo lo abonado — revisa "Dividir entre miembros" manualmente.' })
       }
       return res.json({ error: null, unmarked: true })
+    }
+
+    // ── Modo "forzar completado" — botón verde "Pagar" del modal, cuando
+    // ya se juntó el 100% entre los miembros. En la práctica el pago ya
+    // debería estar pagado (cada abono revisa esto automáticamente), este
+    // botón es la confirmación explícita + una red de seguridad para el
+    // caso raro en que, por lo que sea, no se haya marcado solo todavía.
+    if (forceSettle) {
+      if (payment.is_paid) return res.json({ error: null, settled: true })
+      const { data: allContribs } = await supabase.from('payment_contributions').select('amount').eq('payment_id', paymentId)
+      const sumAll2 = (allContribs || []).reduce((s, r) => s + Number(r.amount), 0)
+      if (Math.round(sumAll2 * 100) < Math.round(Number(payment.amount) * 100)) {
+        return res.status(400).json({ error: `Todavía faltan ${(Number(payment.amount) - sumAll2).toFixed(2)} por juntar` })
+      }
+      const { error: settleErr } = await supabase.from('payments').update({ is_paid: true, paid_at: new Date().toISOString() }).eq('id', paymentId)
+      if (settleErr) return res.status(500).json({ error: 'No se pudo marcar como pagado: ' + settleErr.message })
+      return res.json({ error: null, settled: true })
     }
 
     // ── Modo "fijar/editar el monto total" (pagos variables) — acción
@@ -145,6 +162,18 @@ module.exports = async function handler(req, res) {
       numAmount = Math.round(((existingContribution?.amount || 0) + Math.max(0, restante)) * 100) / 100
     } else {
       numAmount = Number(amount)
+      // Mientras el pago sigue PENDIENTE, nadie puede exceder lo que en
+      // verdad queda disponible — nunca confiar solo en la validación del
+      // cliente (SplitContributionsModal.jsx ya bloquea esto también, pero
+      // el servidor es la fuente de verdad). Si ya está pagado, sí se
+      // permite exceder — es la resta automática a los demás, ver abajo.
+      if (!payment.is_paid) {
+        const sumOthersNow = sumAll - (existingContribution?.amount || 0)
+        const available = Number(payment.amount) - sumOthersNow
+        if (Math.round(numAmount * 100) > Math.round(available * 100) + 1) {
+          return res.status(400).json({ error: `No puedes exceder lo disponible (${Math.max(0, available).toFixed(2)})` })
+        }
+      }
     }
 
     // Monto en 0 (o menos) = "quitar mi contribución" — se borra la
