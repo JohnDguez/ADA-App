@@ -35,16 +35,16 @@ module.exports = async function handler(req, res) {
   if (userError || !userData?.user) return res.status(401).json({ error: 'Token inválido' })
   const actorId = userData.user.id
 
-  const { paymentId, memberUserId, amount, payRemaining, setTotalAmount, unmarkPaid, forceSettle } = req.body || {}
+  const { paymentId, memberUserId, amount, payRemaining, setTotalAmount, unmarkPaid, forceSettle, payRemainingFromFund, fundAmount } = req.body || {}
   if (!paymentId) return res.status(400).json({ error: 'Faltan datos' })
-  if (setTotalAmount == null && !unmarkPaid && !forceSettle && (!memberUserId || (amount == null && !payRemaining))) {
+  if (setTotalAmount == null && !unmarkPaid && !forceSettle && !payRemainingFromFund && fundAmount == null && (!memberUserId || (amount == null && !payRemaining))) {
     return res.status(400).json({ error: 'Faltan datos' })
   }
 
   try {
     const { data: payment, error: paymentErr } = await supabase
       .from('payments')
-      .select('id, space_id, name, category, due_date, amount, is_paid')
+      .select('id, space_id, name, category, due_date, amount, is_paid, fund_amount')
       .eq('id', paymentId)
       .maybeSingle()
     if (paymentErr || !payment || !payment.space_id) {
@@ -80,11 +80,20 @@ module.exports = async function handler(req, res) {
         .eq('is_contribution_reflection', true)
       const reflectionIds = (reflections || []).map(r => r.id)
 
-      const [unmarkResult, contribDeleteResult, reflDeleteResult] = await Promise.all([
-        supabase.from('payments').update({ is_paid: false, paid_at: null }).eq('id', paymentId),
+      const writes = [
+        supabase.from('payments').update({ is_paid: false, paid_at: null, fund_amount: 0 }).eq('id', paymentId),
         supabase.from('payment_contributions').delete().eq('payment_id', paymentId),
         reflectionIds.length ? supabase.from('payments').delete().in('id', reflectionIds) : Promise.resolve({ error: null }),
-      ])
+      ]
+      // Si el Fondo cubrió parte (o todo) de este pago, esa parte también
+      // se le regresa al saldo — una fila de reversión en la bitácora.
+      if (Number(payment.fund_amount) > 0) {
+        writes.push(supabase.from('shared_fund_ledger').insert({
+          space_id: payment.space_id, user_id: actorId, amount: Number(payment.fund_amount),
+          type: 'reversal', payment_id: paymentId, note: `Se desmarcó "${payment.name}"`,
+        }))
+      }
+      const [unmarkResult, contribDeleteResult, reflDeleteResult] = await Promise.all(writes)
       if (unmarkResult.error) return res.status(500).json({ error: 'No se pudo desmarcar el pago: ' + unmarkResult.error.message })
       if (contribDeleteResult.error || reflDeleteResult.error) {
         return res.status(500).json({ error: 'El pago se desmarcó, pero no se pudo limpiar del todo lo abonado — revisa "Dividir entre miembros" manualmente.' })
@@ -133,6 +142,87 @@ module.exports = async function handler(req, res) {
         }
       }
       return res.json({ error: null, settled })
+    }
+
+    // ── Gastar del Fondo Compartido — 2 modos ───────────────────────────────
+    // `payRemainingFromFund`: el check de la card ("Fondo compartido") — paga
+    // TODO lo que falte del pago desde el Fondo, solo si el saldo alcanza.
+    // `fundAmount`: monto explícito (la fila del Fondo dentro de "Dividir
+    // entre miembros") — puede ser menor a lo que falta (abono parcial desde
+    // el Fondo, se completa con nómina de alguien más).
+    if (payRemainingFromFund || fundAmount != null) {
+      // Mismo permiso que pagar/abonar — cualquiera con can_mark_paid.
+      if (actorMembership.role !== 'owner' && !actorMembership.can_mark_paid) {
+        return res.status(403).json({ error: 'No tienes permiso para marcar pagos en este Espacio Compartido' })
+      }
+
+      const [{ data: allContribsForFund }, { data: fundLedgerRows }] = await Promise.all([
+        supabase.from('payment_contributions').select('amount').eq('payment_id', paymentId),
+        supabase.from('shared_fund_ledger').select('amount').eq('space_id', payment.space_id),
+      ])
+      const sumContribs  = (allContribsForFund || []).reduce((s, r) => s + Number(r.amount), 0)
+      const fundBalance  = (fundLedgerRows || []).reduce((s, r) => s + Number(r.amount), 0)
+      const currentFund  = Number(payment.fund_amount) || 0
+
+      let newFundAmount
+      let insufficientFund = false
+      if (payRemainingFromFund) {
+        const remaining = Number(payment.amount) - sumContribs - currentFund
+        const wanted = Math.max(0, remaining)
+        if (wanted > fundBalance) {
+          // No alcanza para cubrir todo — se aplica lo MÁXIMO posible (todo
+          // el saldo del Fondo) en vez de fallar sin tocar nada; el cliente
+          // abre "Dividir entre miembros" para completar con nómina de
+          // alguien (diseño confirmado con Johnatan).
+          newFundAmount = currentFund + Math.max(0, fundBalance)
+          insufficientFund = true
+        } else {
+          newFundAmount = currentFund + wanted
+        }
+      } else {
+        newFundAmount = Number(fundAmount)
+      }
+      if (newFundAmount < 0) newFundAmount = 0
+
+      const delta = Math.round((newFundAmount - currentFund) * 100) / 100
+
+      // Mientras el pago sigue PENDIENTE, no se puede exceder lo que falta
+      // (mismo criterio que ya aplica a los miembros) — si ya está pagado,
+      // esto no debería llamarse nunca desde la UI (el Fondo no aparece
+      // como opción para un pago ya completo), pero se deja la regla igual
+      // por seguridad.
+      if (!payment.is_paid) {
+        const available = Number(payment.amount) - sumContribs - currentFund
+        if (delta > 0 && Math.round(delta * 100) > Math.round(available * 100) + 1) {
+          return res.status(400).json({ error: `No puedes exceder lo disponible (${Math.max(0, available).toFixed(2)})` })
+        }
+      }
+      // El Fondo no puede cubrir más de lo que en verdad tiene ahorrado.
+      if (delta > 0 && Math.round(delta * 100) > Math.round(fundBalance * 100)) {
+        return res.status(400).json({ error: `El Fondo no tiene suficiente saldo (disponible: ${fundBalance.toFixed(2)})` })
+      }
+
+      const { error: fundAmtErr } = await supabase.from('payments').update({ fund_amount: newFundAmount }).eq('id', paymentId)
+      if (fundAmtErr) return res.status(500).json({ error: 'No se pudo actualizar el Fondo: ' + fundAmtErr.message })
+
+      if (Math.round(delta * 100) !== 0) {
+        const { error: ledgerErr } = await supabase.from('shared_fund_ledger').insert({
+          space_id: payment.space_id, user_id: actorId, amount: -delta, type: delta > 0 ? 'spend' : 'reversal',
+          payment_id: paymentId, note: payment.name,
+        })
+        if (ledgerErr) return res.status(500).json({ error: 'El monto se guardó, pero no se pudo registrar en la bitácora del Fondo: ' + ledgerErr.message })
+      }
+
+      let settledFund = false
+      if (!payment.is_paid) {
+        const totalCovered = sumContribs + newFundAmount
+        if (Math.round(totalCovered * 100) >= Math.round(Number(payment.amount) * 100)) {
+          const { error: paidErr } = await supabase.from('payments').update({ is_paid: true, paid_at: new Date().toISOString() }).eq('id', paymentId)
+          if (paidErr) return res.status(500).json({ error: 'Se descontó del Fondo, pero no se pudo marcar el gasto como pagado: ' + paidErr.message })
+          settledFund = true
+        }
+      }
+      return res.json({ error: null, settled: settledFund, fundAmount: newFundAmount, insufficientFund })
     }
 
     // Membresía del actor y del miembro destino, todas las contribuciones
