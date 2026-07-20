@@ -24,8 +24,6 @@ export function SettingsSharedSpacePage({ profile, user, sharedSpaces, onBack, s
   const [newDay1,     setNewDay1]     = useState(1)
   const [newDay2,     setNewDay2]     = useState(16)
   const [newWeekday,  setNewWeekday]  = useState(5)
-  const [newSalaryEnabled, setNewSalaryEnabled] = useState(false)
-  const [newSalaryAmount,  setNewSalaryAmount]  = useState('')
   const [createError, setCreateError] = useState('')
   const [createSaving,setCreateSaving]= useState(false)
 
@@ -40,8 +38,6 @@ export function SettingsSharedSpacePage({ profile, user, sharedSpaces, onBack, s
       cobroDay1: newFreq !== 'weekly' ? newDay1 : undefined,
       cobroDay2: newFreq === 'biweekly' ? newDay2 : undefined,
       cobroWeekday: newFreq === 'weekly' ? newWeekday : undefined,
-      salaryEnabled: newSalaryEnabled,
-      salaryAmount: newSalaryEnabled ? (parseFloat(newSalaryAmount) || 0) : null,
     })
     setCreateSaving(false)
     if (error) setCreateError(typeof error === 'string' ? error : 'No se pudo crear el espacio')
@@ -137,19 +133,6 @@ export function SettingsSharedSpacePage({ profile, user, sharedSpaces, onBack, s
                     onChangeFreq={setNewFreq} onChangeDay1={setNewDay1} onChangeDay2={setNewDay2} onChangeWeekday={setNewWeekday}
                   />
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer', marginBottom: newSalaryEnabled ? 10 : 14 }} onClick={() => setNewSalaryEnabled(v => !v)}>
-                  <div>
-                    <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)' }}>Ingreso por periodo</div>
-                    <div style={{ fontSize: 11, fontWeight: 400, color: 'var(--text)', marginTop: 1 }}>Opcional — además de los Ingresos Extras que cualquier invitado con permiso puede agregar</div>
-                  </div>
-                  <Toggle on={newSalaryEnabled} />
-                </div>
-                {newSalaryEnabled && (
-                  <div style={{ marginBottom: 14 }}>
-                    <label className="field-label">Monto</label>
-                    <input type="number" value={newSalaryAmount} onChange={e => setNewSalaryAmount(e.target.value)} placeholder="0.00" className="field-input" />
-                  </div>
-                )}
                 {createError && <div style={{ fontSize: 12, color: 'var(--danger)', marginBottom: 10 }}>{createError}</div>}
                 <button onClick={handleCreate} disabled={createSaving} className="btn-primary" style={{ marginBottom: 8, opacity: createSaving ? 0.7 : 1 }}>
                   {createSaving ? 'Creando…' : 'Crear'}
@@ -237,7 +220,6 @@ function OwnedSpacePanel({ entry, user, regenerateCode, updateMemberPermissions,
   const [expanded,      setExpanded]      = useState(false)
   const [copied,        setCopied]        = useState(false)
   const [regenerating,  setRegenerating]  = useState(false)
-  const [salaryAmount,  setSalaryAmount]  = useState(entry.space.salary_amount || '')
   const [nameInput,     setNameInput]     = useState(entry.space.name)
   const [dangerOpen,    setDangerOpen]    = useState(false)
   const [confirmExpel,  setConfirmExpel]  = useState(null)
@@ -260,17 +242,6 @@ function OwnedSpacePanel({ entry, user, regenerateCode, updateMemberPermissions,
     if (trimmed === entry.space.name) return
     await updateSpaceConfig(entry.space.id, { name: trimmed })
     showToast('Cambios guardados')
-  }
-
-  async function handleSalaryToggle() {
-    await updateSpaceConfig(entry.space.id, { salary_enabled: !entry.space.salary_enabled })
-  }
-
-  async function handleSalaryAmount() {
-    const val = parseFloat(salaryAmount)
-    if (isNaN(val)) { showToast('Ingresa un monto válido'); return }
-    await updateSpaceConfig(entry.space.id, { salary_amount: val })
-    showToast('Ingreso actualizado')
   }
 
   async function handleExpel(membershipId) {
@@ -388,25 +359,6 @@ function OwnedSpacePanel({ entry, user, regenerateCode, updateMemberPermissions,
               </div>
             </div>
 
-            <div style={{ padding: '13px 16px', borderBottom: entry.space.salary_enabled ? 'none' : '0.5px solid var(--border)' }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer' }} onClick={handleSalaryToggle}>
-                <div>
-                  <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)' }}>Ingreso por periodo</div>
-                  <div style={{ fontSize: 11, fontWeight: 400, color: 'var(--text)', marginTop: 1 }}>Opcional — además de los Ingresos Extras que cualquier invitado con permiso puede agregar</div>
-                </div>
-                <Toggle on={entry.space.salary_enabled} />
-              </div>
-            </div>
-            {entry.space.salary_enabled && (
-              <div style={{ padding: '0 16px 13px', borderBottom: '0.5px solid var(--border)' }}>
-                <label className="field-label">Monto</label>
-                <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
-                  <input type="number" value={salaryAmount} onChange={e => setSalaryAmount(e.target.value)} placeholder="0.00" className="field-input" style={{ flex: 1 }} />
-                  <button onClick={handleSalaryAmount} className="btn-primary" style={{ width: 'auto', padding: '0 16px' }}>Guardar</button>
-                </div>
-              </div>
-            )}
-
             {guestMembers.length > 0 && guestMembers.map((m) => {
               const initials = (m.profile?.name || 'Invitado').slice(0, 2).toUpperCase()
               const isConfirming = confirmExpel === m.id
@@ -450,7 +402,8 @@ function OwnedSpacePanel({ entry, user, regenerateCode, updateMemberPermissions,
                   <NotifToggle label="Editar pagos"          value={m.can_edit}       onChange={v => updateMemberPermissions(m.id, { can_edit: v })} />
                   <NotifToggle label="Marcar pagado/no pagado" value={m.can_mark_paid} onChange={v => updateMemberPermissions(m.id, { can_mark_paid: v })} />
                   <NotifToggle label="Eliminar pagos"        value={m.can_delete}     onChange={v => updateMemberPermissions(m.id, { can_delete: v })} />
-                  <NotifToggle label="Agregar ingresos extra" value={m.can_add_income} onChange={v => updateMemberPermissions(m.id, { can_add_income: v })} last />
+                  <NotifToggle label="Agregar ingresos extra" value={m.can_add_income} onChange={v => updateMemberPermissions(m.id, { can_add_income: v })} />
+                  <NotifToggle label="Añadir fondos al Fondo Compartido" value={m.can_add_funds} onChange={v => updateMemberPermissions(m.id, { can_add_funds: v })} last />
                 </div>
               )
             })}
