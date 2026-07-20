@@ -95,7 +95,7 @@ export default function App() {
     addPayment, addRecurrentPayment, addInstallmentPayment,
     updatePayment, updateRecurrentName, updateRecurrentConfig,
     abonarInstallment,
-    registerContribution, getContributions, payRemainingContribution, setContributionTotalAmount, unmarkSharedPayment,
+    registerContribution, getContributions, payRemainingContribution, setContributionTotalAmount, unmarkSharedPayment, forceSettlePayment,
     markPaid, markUnpaid, setEstimatedAmount,
     postponePayment,
     pauseRecurrent, resumeRecurrent,
@@ -776,6 +776,7 @@ export default function App() {
         getContributions={getContributions}
         registerContribution={registerContribution}
         onSetTotalAmount={setContributionTotalAmount}
+        onForceSettle={forceSettlePayment}
         onClose={() => setSplitModal({ open: false, paymentId: null })}
       />
 
