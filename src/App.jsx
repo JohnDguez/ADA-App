@@ -158,7 +158,7 @@ export default function App() {
   })
   const [modalOpen,      setModalOpen]     = useState(false)
   const [editPayment,    setEditPayment]   = useState(null)
-  const [varModal,       setVarModal]      = useState({ open: false, payment: null, resolver: null })
+  const [varModal,       setVarModal]      = useState({ open: false, payment: null, resolver: null, fundMode: false })
   const [estimateModal,  setEstimateModal] = useState({ open: false, payment: null })
   const [abonarModal,    setAbonarModal]   = useState({ open: false, payment: null })
   const [splitModal,     setSplitModal]    = useState({ open: false, paymentId: null, openedBecauseFundInsufficient: false })
@@ -363,9 +363,30 @@ export default function App() {
   async function handleVarConfirm(amount) {
     const payment  = varModal.payment
     const resolver = varModal.resolver
-    setVarModal({ open: false, payment: null, resolver: null })
+    const fundMode = varModal.fundMode
+    setVarModal({ open: false, payment: null, resolver: null, fundMode: false })
     if (resolver) { resolver(amount); return }
     if (!payment?.id) { showToast('Error: pago no encontrado'); return }
+    if (fundMode) {
+      // El monto recién capturado se vuelve el total fijo del pago (antes
+      // era $0/sin capturar) — sin esto, payFromFund compararía contra un
+      // total en $0 y lo marcaría "pagado" con $0 de inmediato (bug real
+      // reportado por Johnatan: un variable pagado con el Fondo se ponía
+      // en $0 y aparecía en pagados, sin pedir el monto en ningún momento).
+      const { error: totalErr } = await setContributionTotalAmount(payment.id, amount)
+      if (totalErr) { showToast(totalErr.message || 'Error al guardar el monto'); return }
+      const { error, insufficientFund } = await payFromFund(payment.id)
+      if (error) { showToast(error.message || 'Error al pagar desde el Fondo'); return }
+      if (insufficientFund) {
+        // Mismo flujo que un pago fijo: el Fondo ya cubrió lo máximo
+        // posible, se abre "Dividir entre miembros" para completar con
+        // nómina de alguien.
+        setSplitModal({ open: true, paymentId: payment.id, openedBecauseFundInsufficient: true })
+      } else {
+        showToast(`${payment.name} pagado desde el Fondo — ${fmt(amount)}`)
+      }
+      return
+    }
     const { error } = await markPaid(payment.id, amount)
     if (error) showToast('Error al registrar pago')
     else showToast(`${payment.name} registrado — ${fmt(amount)}`)
@@ -376,7 +397,7 @@ export default function App() {
   // PayCard revierta su animación en vez de quedarse esperando para siempre.
   function handleVarModalClose() {
     const resolver = varModal.resolver
-    setVarModal({ open: false, payment: null, resolver: null })
+    setVarModal({ open: false, payment: null, resolver: null, fundMode: false })
     if (resolver) resolver(null)
   }
   function openAbonarModal(payment) { setAbonarModal({ open: true, payment }) }
@@ -397,6 +418,10 @@ export default function App() {
   // un aviso explicando por qué (diseño confirmado con Johnatan) — ahí ya
   // se ve cuánto sí cubre el Fondo, y se completa con nómina de alguien.
   async function handlePayFromFund(payment) {
+    if (payment.is_variable && !(Number(payment.amount) > 0)) {
+      setVarModal({ open: true, payment, resolver: null, fundMode: true })
+      return
+    }
     const { error, insufficientFund } = await payFromFund(payment.id)
     if (error) { showToast(error.message || 'Error al pagar desde el Fondo'); return }
     if (insufficientFund) {
