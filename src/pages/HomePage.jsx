@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useId } from 'react'
+import { useState, useRef, useEffect, useId, useMemo } from 'react'
 import { ChevronDown, ChevronUp, Check, RotateCcw, Eye } from 'lucide-react'
 import { PayCard } from '../components/PayCard'
 import { PayRail } from '../components/PayRail'
@@ -147,84 +147,119 @@ export function HomePage({ payments, profile, spaceSwitcher, activeSpaceHeader, 
     localStorage.setItem('ada_show_next_period', String(next))
   }
 
-  const now         = new Date()
-  const { start, end } = cobroPeriod(profile)
-  const { start: nextStart, end: nextEnd } = nextCobroPeriod(profile)
+  // ───────────────────────────────────────────────────────────────────────
+  // CÁLCULOS DERIVADOS DE payments/profile — antes vivían sueltos en el
+  // cuerpo del componente y se recalculaban en CADA render (ej. al abrir el
+  // panel de notificaciones, cambiar de tarjeta Periodo/Mes con el swipe, o
+  // togglear "Próximo periodo"), aunque payments/profile no hubieran
+  // cambiado en absoluto — trabajo repetido de sobra en los momentos donde
+  // más se nota (animaciones, cambios de tab). Envueltos en useMemo (mismo
+  // patrón que ya usa RecurrentsPage.jsx con masters/filtered/byCategory):
+  // ahora solo se recalculan cuando `payments` o `profile` de verdad
+  // cambian (llega un pago nuevo, se marca uno pagado, cambia de espacio,
+  // llega un evento de Realtime, etc.), no en cada re-render por estado de
+  // UI ajeno a los datos. Sin cambios de fórmula ni de comportamiento
+  // visible — mismo resultado, solo se calcula menos veces.
+  const derived = useMemo(() => {
+    const now = new Date()
+    const { start, end } = cobroPeriod(profile)
+    const { start: nextStart, end: nextEnd } = nextCobroPeriod(profile)
 
-  const pagarEsteCobro = getPagarEsteCobro(payments, profile)
-  const vencidos   = pagarEsteCobro.filter(p => daysDiff(p.due_date) < 0).sort((a, b) => dateOf(a.due_date) - dateOf(b.due_date))
-  const delPeriodo = pagarEsteCobro.filter(p => daysDiff(p.due_date) >= 0).sort((a, b) => dateOf(a.due_date) - dateOf(b.due_date))
-  // Un variable YA con monto capturado (ej. "Agregar monto" con el recibo en
-  // mano) cuenta igual que uno fijo — ya se sabe cuánto va a costar. Solo el
-  // que sigue sin monto es el que de verdad está "por confirmar".
-  const pendingAmt = pagarEsteCobro.filter(p => !p.is_variable || p.amount > 0).reduce((a, p) => a + Number(p.amount), 0)
-  const pendingVariableCount = pagarEsteCobro.filter(p => p.is_variable && !p.amount).length
+    const pagarEsteCobro = getPagarEsteCobro(payments, profile)
+    const vencidos   = pagarEsteCobro.filter(p => daysDiff(p.due_date) < 0).sort((a, b) => dateOf(a.due_date) - dateOf(b.due_date))
+    const delPeriodo = pagarEsteCobro.filter(p => daysDiff(p.due_date) >= 0).sort((a, b) => dateOf(a.due_date) - dateOf(b.due_date))
+    // Un variable YA con monto capturado (ej. "Agregar monto" con el recibo en
+    // mano) cuenta igual que uno fijo — ya se sabe cuánto va a costar. Solo el
+    // que sigue sin monto es el que de verdad está "por confirmar".
+    const pendingAmt = pagarEsteCobro.filter(p => !p.is_variable || p.amount > 0).reduce((a, p) => a + Number(p.amount), 0)
+    const pendingVariableCount = pagarEsteCobro.filter(p => p.is_variable && !p.amount).length
 
-  // Pagos ya pagados dentro del periodo actual — mismo criterio que
-  // `gastosPeriodo`/`checkPeriodStart` en `PaymentsPage.jsx`: se filtra por
-  // `paid_at` (el dinero cuenta cuando sale del bolsillo), NO por `due_date`.
-  // Antes filtraba por due_date, lo que hacía que el total no coincidiera
-  // con "Disponible este periodo" — corregido para que ambas pantallas
-  // siempre cuadren, usando la misma fuente de verdad.
-  const pagadosEstePeriodo = payments
-    .filter(p => {
-      if (!p.is_paid || p.is_master || !p.paid_at) return false
-      const paidDate = dateOf(dateToStr(new Date(p.paid_at)))
-      return paidDate >= start && paidDate <= end
+    // Pagos ya pagados dentro del periodo actual — mismo criterio que
+    // `gastosPeriodo`/`checkPeriodStart` en `PaymentsPage.jsx`: se filtra por
+    // `paid_at` (el dinero cuenta cuando sale del bolsillo), NO por `due_date`.
+    // Antes filtraba por due_date, lo que hacía que el total no coincidiera
+    // con "Disponible este periodo" — corregido para que ambas pantallas
+    // siempre cuadren, usando la misma fuente de verdad.
+    const pagadosEstePeriodo = payments
+      .filter(p => {
+        if (!p.is_paid || p.is_master || !p.paid_at) return false
+        const paidDate = dateOf(dateToStr(new Date(p.paid_at)))
+        return paidDate >= start && paidDate <= end
+      })
+      .sort((a, b) => new Date(a.paid_at) - new Date(b.paid_at))
+    const pagadoMonto = pagadosEstePeriodo.reduce((a, p) => a + Number(p.amount), 0)
+    const totalConocido = pagadoMonto + pendingAmt
+    const pctPagado = totalConocido > 0 ? Math.round((pagadoMonto / totalConocido) * 100) : 0
+    const pagosFijosCount = pagarEsteCobro.filter(p => !p.is_variable || p.amount > 0).length + pagadosEstePeriodo.length
+    // Solo para el estado "sin pagos pendientes" (pagarEsteCobro vacío): antes
+    // no se mostraba nada de cuántos pagos hubo este periodo al marcarlos
+    // todos como pagados — Johnatan pidió que sí se muestre, separando fijos
+    // de variables (mismo criterio de "es variable" que el resto de la app).
+    const pagadosFijosEstePeriodo     = pagadosEstePeriodo.filter(p => !p.is_variable).length
+    const pagadosVariablesEstePeriodo = pagadosEstePeriodo.filter(p => p.is_variable).length
+
+    const thisMonth  = now.getMonth()
+    const thisYear   = now.getFullYear()
+    const paidThisMonth = payments.filter(p => {
+      if (!p.is_paid) return false
+      const d = dateOf(p.due_date)
+      return d.getMonth() === thisMonth && d.getFullYear() === thisYear
     })
-    .sort((a, b) => new Date(a.paid_at) - new Date(b.paid_at))
-  const pagadoMonto = pagadosEstePeriodo.reduce((a, p) => a + Number(p.amount), 0)
-  const totalConocido = pagadoMonto + pendingAmt
-  const pctPagado = totalConocido > 0 ? Math.round((pagadoMonto / totalConocido) * 100) : 0
-  const pagosFijosCount = pagarEsteCobro.filter(p => !p.is_variable || p.amount > 0).length + pagadosEstePeriodo.length
-  // Solo para el estado "sin pagos pendientes" (pagarEsteCobro vacío): antes
-  // no se mostraba nada de cuántos pagos hubo este periodo al marcarlos
-  // todos como pagados — Johnatan pidió que sí se muestre, separando fijos
-  // de variables (mismo criterio de "es variable" que el resto de la app).
-  const pagadosFijosEstePeriodo     = pagadosEstePeriodo.filter(p => !p.is_variable).length
-  const pagadosVariablesEstePeriodo = pagadosEstePeriodo.filter(p => p.is_variable).length
+    const variableThisMonth = paidThisMonth.filter(p => p.is_variable).length
+    // Igual que en el periodo — para el estado "sin pagos pendientes" de la
+    // tarjeta Mes, cuántos de los ya pagados fueron fijos vs variables.
+    const paidFixedThisMonth = paidThisMonth.length - variableThisMonth
+    const paidThisMonthAmt  = paidThisMonth.reduce((a, p) => a + Number(p.amount), 0)
+    const totalThisMonth = payments.filter(p => {
+      const d = dateOf(p.due_date)
+      return d.getMonth() === thisMonth && d.getFullYear() === thisYear && !p.paused
+    }).reduce((a, p) => a + Number(p.amount), 0)
+    const pendingThisMonthAmt = Math.max(totalThisMonth - paidThisMonthAmt, 0)
+    const pctPagadoMes = totalThisMonth > 0 ? Math.round((paidThisMonthAmt / totalThisMonth) * 100) : 0
 
-  const thisMonth  = now.getMonth()
-  const thisYear   = now.getFullYear()
-  const paidThisMonth = payments.filter(p => {
-    if (!p.is_paid) return false
-    const d = dateOf(p.due_date)
-    return d.getMonth() === thisMonth && d.getFullYear() === thisYear
-  })
-  const variableThisMonth = paidThisMonth.filter(p => p.is_variable).length
-  // Igual que en el periodo — para el estado "sin pagos pendientes" de la
-  // tarjeta Mes, cuántos de los ya pagados fueron fijos vs variables.
-  const paidFixedThisMonth = paidThisMonth.length - variableThisMonth
-  const paidThisMonthAmt  = paidThisMonth.reduce((a, p) => a + Number(p.amount), 0)
-  const totalThisMonth = payments.filter(p => {
-    const d = dateOf(p.due_date)
-    return d.getMonth() === thisMonth && d.getFullYear() === thisYear && !p.paused
-  }).reduce((a, p) => a + Number(p.amount), 0)
-  const pendingThisMonthAmt = Math.max(totalThisMonth - paidThisMonthAmt, 0)
-  const pctPagadoMes = totalThisMonth > 0 ? Math.round((paidThisMonthAmt / totalThisMonth) * 100) : 0
+    // Solo pagos DENTRO del próximo periodo (no todos los futuros)
+    const upcoming = payments.filter(p => {
+      if (p.is_paid || p.paused || p.postponed || p.is_master) return false
+      const d = dateOf(p.due_date)
+      return d >= nextStart && d <= nextEnd
+    }).sort((a, b) => dateOf(a.due_date) - dateOf(b.due_date))
 
-  // Solo pagos DENTRO del próximo periodo (no todos los futuros)
-  const upcoming = payments.filter(p => {
-    if (p.is_paid || p.paused || p.postponed || p.is_master) return false
-    const d = dateOf(p.due_date)
-    return d >= nextStart && d <= nextEnd
-  }).sort((a, b) => dateOf(a.due_date) - dateOf(b.due_date))
+    // Card 2 de la tarjeta de métricas — para usuarios con periodo de cobro
+    // Mensual, "Mes" mostraba exactamente el mismo rango que "Periodo"
+    // (redundante cuando el corte mensual es el día 1, ya que el periodo de
+    // cobro completo coincide con el mes calendario). Para ellos la pestaña
+    // pasa a llamarse "Próximo periodo" y muestra el periodo siguiente en vez de
+    // repetir el actual — mismo diseño de tarjeta/anillo, solo cambia la
+    // data. Como ese periodo aún no arranca, nada está "pagado" todavía: el
+    // anillo se queda vacío (0%) y la fila de pagado/pendiente se reemplaza
+    // por un solo total "programado" (decisión de Johnatan, para no mostrar
+    // un confuso "$0.00 pagado"). Mismo criterio de pago fijo/variable ya
+    // usado para `pendingAmt`/`pendingVariableCount` del periodo actual.
+    const isMonthly = profile.cobro_freq === 'monthly'
+    const nextMonthKnownTotal          = upcoming.filter(p => !p.is_variable || p.amount > 0).reduce((a, p) => a + Number(p.amount), 0)
+    const nextMonthFixedCount          = upcoming.filter(p => !p.is_variable || p.amount > 0).length
+    const nextMonthPendingVariableCount = upcoming.filter(p => p.is_variable && !p.amount).length
 
-  // Card 2 de la tarjeta de métricas — para usuarios con periodo de cobro
-  // Mensual, "Mes" mostraba exactamente el mismo rango que "Periodo"
-  // (redundante cuando el corte mensual es el día 1, ya que el periodo de
-  // cobro completo coincide con el mes calendario). Para ellos la pestaña
-  // pasa a llamarse "Próximo periodo" y muestra el periodo siguiente en vez de
-  // repetir el actual — mismo diseño de tarjeta/anillo, solo cambia la
-  // data. Como ese periodo aún no arranca, nada está "pagado" todavía: el
-  // anillo se queda vacío (0%) y la fila de pagado/pendiente se reemplaza
-  // por un solo total "programado" (decisión de Johnatan, para no mostrar
-  // un confuso "$0.00 pagado"). Mismo criterio de pago fijo/variable ya
-  // usado para `pendingAmt`/`pendingVariableCount` del periodo actual.
-  const isMonthly = profile.cobro_freq === 'monthly'
-  const nextMonthKnownTotal          = upcoming.filter(p => !p.is_variable || p.amount > 0).reduce((a, p) => a + Number(p.amount), 0)
-  const nextMonthFixedCount          = upcoming.filter(p => !p.is_variable || p.amount > 0).length
-  const nextMonthPendingVariableCount = upcoming.filter(p => p.is_variable && !p.amount).length
+    return {
+      start, end, nextStart, nextEnd,
+      pagarEsteCobro, vencidos, delPeriodo, pendingAmt, pendingVariableCount,
+      pagadosEstePeriodo, pagadoMonto, totalConocido, pctPagado, pagosFijosCount,
+      pagadosFijosEstePeriodo, pagadosVariablesEstePeriodo,
+      thisMonth, thisYear, paidThisMonth, variableThisMonth, paidFixedThisMonth,
+      paidThisMonthAmt, totalThisMonth, pendingThisMonthAmt, pctPagadoMes,
+      upcoming, isMonthly, nextMonthKnownTotal, nextMonthFixedCount, nextMonthPendingVariableCount,
+    }
+  }, [payments, profile])
+
+  const {
+    start, end, nextStart, nextEnd,
+    pagarEsteCobro, vencidos, delPeriodo, pendingAmt, pendingVariableCount,
+    pagadosEstePeriodo, pagadoMonto, totalConocido, pctPagado, pagosFijosCount,
+    pagadosFijosEstePeriodo, pagadosVariablesEstePeriodo,
+    thisMonth, thisYear, paidThisMonth, variableThisMonth, paidFixedThisMonth,
+    paidThisMonthAmt, totalThisMonth, pendingThisMonthAmt, pctPagadoMes,
+    upcoming, isMonthly, nextMonthKnownTotal, nextMonthFixedCount, nextMonthPendingVariableCount,
+  } = derived
 
   const handlers = { onMarkPaid, onRequestVariableAmount, onConfirmVariablePaid, onMarkUnpaid, onCaptureAmount, onEdit, onAbonar, onSplit, onPayFromFund, fundBalance, onDelete, onPostpone, onAdvance }
 
