@@ -148,6 +148,12 @@ export function useSharedSpaces(userId) {
       return { error: memberError }
     }
 
+    // Acción poco frecuente (máximo 1 vez por cuenta) — se deja el refetch
+    // completo bloqueante tal cual, sin optimismo: es más importante que el
+    // estado quede 100% correcto (membresía + lista de miembros ya
+    // cruzada con perfiles) que ganar unos ms aquí, a diferencia de
+    // updateMemberPermissions/leaveSpace/removeMember/regenerateCode/
+    // updateSpaceConfig de abajo, que sí se tocan seguido.
     await fetchSpaces()
     return { data: space, error: null }
   }
@@ -168,7 +174,19 @@ export function useSharedSpaces(userId) {
       if (error.code !== '23505') break
     }
     if (!updated) return { error: lastError }
-    await fetchSpaces()
+    // Actualización optimista — el nuevo código ya se ve en pantalla sin
+    // esperar el refetch completo (membresías+espacios, todos los
+    // miembros, sus perfiles). `updated` ya trae la fila real de
+    // `shared_spaces`, no hace falta reconsultar nada para pintarlo.
+    setSpaces(prev => prev.map(entry =>
+      entry.space.id === spaceId ? { ...entry, space: { ...entry.space, ...updated } } : entry
+    ))
+    // Ya NO se espera (`await`) el refetch aquí — la suscripción de
+    // Realtime de arriba (siempre activa, sin filtro) ya va a traer la
+    // versión real sola en cuanto llegue el evento de este mismo UPDATE;
+    // esperarlo también aquí duplicaba el trabajo. Se dispara en segundo
+    // plano solo como respaldo.
+    fetchSpaces()
     return { data: updated, error: null }
   }
 
@@ -185,8 +203,14 @@ export function useSharedSpaces(userId) {
       .update(updates)
       .eq('id', spaceId)
       .select().single()
-    if (!error) await fetchSpaces()
-    return { data, error }
+    if (error) return { data: null, error }
+    // Mismo criterio que regenerateCode — actualización optimista con lo
+    // que ya regresó la propia consulta, sin esperar un refetch completo.
+    setSpaces(prev => prev.map(entry =>
+      entry.space.id === spaceId ? { ...entry, space: { ...entry.space, ...data } } : entry
+    ))
+    fetchSpaces()
+    return { data, error: null }
   }
 
   // ─────────────────────────────────────────────────────────────────────────
@@ -209,6 +233,8 @@ export function useSharedSpaces(userId) {
       await fetchSpaces()
       return { error: error.message || 'Código inválido' }
     }
+    // Acción poco frecuente (unirse a un espacio) — se deja bloqueante a
+    // propósito, mismo criterio que createSpace.
     await fetchSpaces()
     return { data, error: null }
   }
@@ -216,30 +242,89 @@ export function useSharedSpaces(userId) {
   // Actualiza los permisos de UN invitado (el dueño los configura). `perms`
   // es un objeto parcial, ej. { can_delete: true }.
   async function updateMemberPermissions(memberId, perms) {
+    // Actualización optimista — el switch se mueve al instante en vez de
+    // esperar fetchSpaces() completo (3 consultas seguidas: membresías+
+    // espacios, todos los miembros, y sus perfiles). La misma fila puede
+    // vivir en 2 lugares del estado local: `entry.membership` (si es la
+    // fila PROPIA del usuario — ej. su propio toggle "Notificarme de
+    // cambios") y dentro de `entry.space.members` (la lista completa que
+    // ve el dueño para configurar a sus invitados) — se parchean los 2 por
+    // si acaso, sin asumir cuál aplica en cada llamada.
+    const previousSpaces = spaces
+    setSpaces(prev => prev.map(entry => {
+      const members = entry.space.members
+      const nextMembers = members ? members.map(m => m.id === memberId ? { ...m, ...perms } : m) : members
+      const nextMembership = entry.membership.id === memberId ? { ...entry.membership, ...perms } : entry.membership
+      if (nextMembers === members && nextMembership === entry.membership) return entry
+      return {
+        ...entry,
+        membership: nextMembership,
+        space: nextMembers === members ? entry.space : { ...entry.space, members: nextMembers },
+      }
+    }))
+
     const { data, error } = await supabase
       .from('shared_space_members')
       .update(perms)
       .eq('id', memberId)
       .select().single()
-    if (!error) await fetchSpaces()
-    return { data, error }
+
+    if (error) {
+      // Supabase rechazó el cambio (ej. RLS, el trigger de permisos
+      // granulares de v0.9.132) — revertir el optimismo para no dejar el
+      // switch mostrando algo que en realidad no se guardó.
+      setSpaces(previousSpaces)
+      return { data: null, error }
+    }
+
+    // Ya NO se espera (`await`) un fetchSpaces() completo aquí — el estado
+    // local ya quedó correcto de forma optimista, y la suscripción de
+    // Realtime de arriba (activa siempre, sin filtro) ya va a traer la
+    // versión real del servidor sola en cuanto llegue el evento de este
+    // mismo UPDATE. Esperarlo también aquí duplicaba el trabajo: cada
+    // click disparaba 2 refetches completos casi al mismo tiempo (este +
+    // el que llega por Realtime) — la causa real de que los switches
+    // tardaran segundos en responder. Se sigue llamando en segundo plano,
+    // sin bloquear el retorno, solo como respaldo si Realtime tardara o no
+    // estuviera habilitado para estas tablas.
+    fetchSpaces()
+    return { data, error: null }
   }
 
   // El invitado se sale por su cuenta, en cualquier momento — sus pagos ya
   // agregados se quedan en el espacio (no se tocan aquí, la fila de
   // `payments` no depende de `shared_space_members` para seguir existiendo).
   async function leaveSpace(membershipId) {
+    // Optimista — el espacio desaparece del switcher/lista de inmediato.
+    const previousSpaces = spaces
+    setSpaces(prev => prev.filter(entry => entry.membership.id !== membershipId))
+
     const { error } = await supabase.from('shared_space_members').delete().eq('id', membershipId)
-    if (!error) await fetchSpaces()
-    return { error }
+    if (error) { setSpaces(previousSpaces); return { error } }
+    // Mismo criterio que updateMemberPermissions — no bloquear el retorno
+    // esperando el refetch completo.
+    fetchSpaces()
+    return { error: null }
   }
 
   // El dueño saca a un invitado (mismo delete, la diferencia la resuelve RLS
   // según quién lo esté llamando).
   async function removeMember(membershipId) {
+    // Optimista — el invitado desaparece de "Permisos del invitado" de
+    // inmediato. A diferencia de leaveSpace, aquí NO se quita el `entry`
+    // completo (el espacio sigue siendo del dueño) — solo se filtra ese
+    // miembro de `entry.space.members`.
+    const previousSpaces = spaces
+    setSpaces(prev => prev.map(entry => {
+      const members = entry.space.members
+      if (!members || !members.some(m => m.id === membershipId)) return entry
+      return { ...entry, space: { ...entry.space, members: members.filter(m => m.id !== membershipId) } }
+    }))
+
     const { error } = await supabase.from('shared_space_members').delete().eq('id', membershipId)
-    if (!error) await fetchSpaces()
-    return { error }
+    if (error) { setSpaces(previousSpaces); return { error } }
+    fetchSpaces()
+    return { error: null }
   }
 
   // ─────────────────────────────────────────────────────────────────────────
@@ -255,6 +340,10 @@ export function useSharedSpaces(userId) {
     if (authError) return { error: 'Contraseña incorrecta' }
 
     const { error } = await supabase.from('shared_spaces').delete().eq('id', spaceId)
+    // Acción poco frecuente e irreversible — se deja el refetch bloqueante
+    // tal cual, mismo criterio que createSpace/redeemCode: aquí importa más
+    // la certeza de que el estado quedó reflejando el borrado real que
+    // ganar unos ms.
     if (!error) await fetchSpaces()
     return { error }
   }
