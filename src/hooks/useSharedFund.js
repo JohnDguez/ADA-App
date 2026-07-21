@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
 import { todayStr } from '../lib/utils'
 
@@ -54,6 +54,35 @@ export function useSharedFund(spaceId) {
     }
   }, [spaceId])
 
+  // ─────────────────────────────────────────────────────────────────────────
+  // TIEMPO REAL — mismo patrón que hooks/usePayments.js (suscripción a
+  // `payments` filtrada por space_id, ver v0.9.130): ante cualquier evento
+  // (INSERT/UPDATE/DELETE) en la bitácora de ESTE espacio, se vuelve a pedir
+  // todo con fetchLedger() en vez de aplicar el payload del evento a mano —
+  // menos eficiente que un diff exacto, pero evita reimplementar la
+  // migración automática y el cálculo de saldo a partir de eventos sueltos.
+  // Gap real corregido en esta sesión: `shared_fund_ledger` era la única
+  // tabla de Espacio Compartido sin su propia suscripción — se construyó en
+  // v0.9.212, después de que Realtime ya estaba armado para
+  // payments/period_income/shared_space_members (v0.9.130), y se quedó
+  // fuera por descuido. Sin esto, un aporte o gasto del Fondo hecho desde
+  // otra sesión (otro miembro, u otra pestaña) no se reflejaba hasta
+  // cambiar de espacio y volver, o recargar. El canal se cierra y se vuelve
+  // a abrir cada vez que cambia `spaceId` (cambiar de espacio, o volver a
+  // modo personal), igual que en usePayments.js.
+  useEffect(() => {
+    if (!spaceId) return
+    const channel = supabase
+      .channel(`shared-fund-${spaceId}`)
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'shared_fund_ledger', filter: `space_id=eq.${spaceId}` },
+        () => { fetchLedger() }
+      )
+      .subscribe()
+    return () => { supabase.removeChannel(channel) }
+  }, [spaceId, fetchLedger])
+
   async function addFunds(amount, note) {
     try {
       const { data: { session } } = await supabase.auth.getSession()
@@ -65,7 +94,15 @@ export function useSharedFund(spaceId) {
       })
       const result = await res.json()
       if (!res.ok) return { error: result.error ? { message: result.error } : { message: 'Error al aportar al Fondo' } }
-      await fetchLedger()
+      // Ya NO se espera (`await`) aquí un segundo viaje de red completo antes
+      // de regresar — el POST ya insertó la fila en Supabase, así que quien
+      // aporta ve su modal cerrar y el toast de inmediato, en vez de esperar
+      // la suma de 2 viajes de red seguidos. fetchLedger() se sigue llamando
+      // (en segundo plano, sin bloquear el `return`) para refrescar
+      // ledger/balance en cuanto termine — respaldo por si la suscripción de
+      // Realtime de arriba tarda un poco o no está habilitada todavía en
+      // Supabase (ver "Acciones pendientes fuera del código" en CONTEXT.md).
+      fetchLedger()
       return { error: null }
     } catch (e) {
       return { error: { message: 'Error de conexión al aportar al Fondo' } }
@@ -83,7 +120,9 @@ export function useSharedFund(spaceId) {
       })
       const result = await res.json()
       if (!res.ok) return { error: result.error ? { message: result.error } : { message: 'Error al eliminar' } }
-      await fetchLedger()
+      // Mismo criterio que en addFunds — no bloquear el retorno esperando
+      // el refetch completo.
+      fetchLedger()
       return { error: null }
     } catch (e) {
       return { error: { message: 'Error de conexión al eliminar' } }
