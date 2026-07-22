@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
-import { LogOut, Camera, Images, Crown, User, Tag, Calendar, Bell, SunMoon, HelpCircle, Users, MessageCircle } from 'lucide-react'
+import { createPortal } from 'react-dom'
+import { LogOut, Camera, Crown, User, Tag, Calendar, Bell, SunMoon, HelpCircle, Users, MessageCircle } from 'lucide-react'
 import { showToast } from '../components/Toast'
 import { supabase } from '../lib/supabase'
 import { APP_VERSION } from '../lib/patchNotes'
@@ -265,23 +266,44 @@ export function SettingsPage({ profile, user, onUpdate, onUploadAvatar, onDataDe
         {APP_NAME} v{APP_VERSION} — Alpha
       </div>
 
-      {/* Modal: elegir "Subir foto" o "Elegir avatar" */}
-      {avatarModal === 'choice' && (
+      {/* Modal: elegir "Subir foto" o "Elegir avatar" — 2 tarjetas con ícono
+          grande, lado a lado (pedido explícito de Johnatan, confirmado vía
+          mockup del Visualizer antes de escribir código). Se monta con
+          createPortal directo en <body> — el mismo fix que ya se usó en
+          SpaceSwitcher.jsx (v0.9.146): esta página vive dentro de un
+          contenedor que crea su propio contexto de apilamiento CSS, así que
+          ni un z-index alto le gana al BottomNav sin escapar de ese árbol. */}
+      {avatarModal === 'choice' && createPortal(
         <div onClick={e => e.target === e.currentTarget && setAvatarModal(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(2, 10, 31, 0.45)', zIndex: 200, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
           <div style={{ background: 'var(--surface)', borderRadius: '20px 20px 0 0', width: '100%', maxWidth: 420, padding: '20px 16px 32px', animation: 'modalSlideUp .3s cubic-bezier(0.25, 0.46, 0.45, 0.94) both' }}>
             <div style={{ width: 34, height: 4, background: 'var(--border)', borderRadius: 2, margin: '0 auto 16px' }} />
             <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--text)', marginBottom: 14 }}>Foto de perfil</div>
-            <Card>
-              <Row icon={Camera} label="Subir una foto" onClick={() => { setAvatarModal(null); fileRef.current?.click() }} />
-              <Row icon={Images} label="Elegir un avatar" onClick={() => setAvatarModal('gallery')} last />
-            </Card>
-            <button onClick={() => setAvatarModal(null)} className="btn-ghost" style={{ marginTop: 12 }}>Cancelar</button>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 16 }}>
+              <button
+                onClick={() => { setAvatarModal(null); fileRef.current?.click() }}
+                style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10, padding: '20px 8px', background: 'var(--bg)', border: '0.5px solid var(--border)', borderRadius: 8, cursor: 'pointer' }}>
+                <div style={{ width: 56, height: 56, borderRadius: '50%', background: 'var(--accent)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <Camera size={26} color="var(--surface)" />
+                </div>
+                <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)' }}>Subir foto</span>
+              </button>
+              <button
+                onClick={() => setAvatarModal('gallery')}
+                style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10, padding: '20px 8px', background: 'var(--bg)', border: '0.5px solid var(--border)', borderRadius: 8, cursor: 'pointer' }}>
+                <div style={{ width: 56, height: 56, borderRadius: '50%', overflow: 'hidden' }}>
+                  <img src="/avatars/hombre-1.webp" alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                </div>
+                <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)' }}>Elegir avatar</span>
+              </button>
+            </div>
+            <button onClick={() => setAvatarModal(null)} className="btn-ghost">Cancelar</button>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
-      {/* Modal: galería de 8 avatares preestablecidos */}
-      {avatarModal === 'gallery' && (
+      {/* Modal: galería de 8 avatares preestablecidos — mismo fix de createPortal */}
+      {avatarModal === 'gallery' && createPortal(
         <div onClick={e => e.target === e.currentTarget && setAvatarModal(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(2, 10, 31, 0.45)', zIndex: 200, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
           <div style={{ background: 'var(--surface)', borderRadius: '20px 20px 0 0', width: '100%', maxWidth: 420, padding: '20px 16px 32px', animation: 'modalSlideUp .3s cubic-bezier(0.25, 0.46, 0.45, 0.94) both' }}>
             <div style={{ width: 34, height: 4, background: 'var(--border)', borderRadius: 2, margin: '0 auto 16px' }} />
@@ -306,7 +328,8 @@ export function SettingsPage({ profile, user, onUpdate, onUploadAvatar, onDataDe
             </div>
             <button onClick={() => setAvatarModal(null)} className="btn-ghost">Cancelar</button>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   )
