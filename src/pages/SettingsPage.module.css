@@ -1,0 +1,257 @@
+.pageWrapper {
+  padding-bottom: 120px;
+  background: var(--bg);
+  min-height: 100vh;
+}
+
+.header {
+  padding: 52px 16px 20px;
+}
+
+.headerTitle {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+/* ── Avatar ──────────────────────────────────────────────────────────────── */
+.avatarSection {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.avatarWrapper {
+  position: relative;
+}
+
+.avatarImg {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.avatarImgPremium {
+  border: 2px solid var(--premium-gold);
+}
+
+.avatarInitials {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: var(--accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--surface);
+}
+
+.premiumCrownBadge {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--premium-gold);
+  color: var(--premium-gold-text);
+  border: 2px solid var(--surface);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cameraButton {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--surface);
+  border: 0.5px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.uploadingSpinner {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 2px solid var(--accent);
+  border-top-color: transparent;
+}
+
+.profileName {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text);
+  margin-top: 10px;
+}
+
+.profileEmail {
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--text);
+}
+
+.premiumPill {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background: var(--premium-gold);
+  color: var(--premium-gold-text);
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: var(--radius-full);
+  margin-top: 8px;
+}
+
+/* ── Sesión / versión ────────────────────────────────────────────────────── */
+.logoutButton {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 13px 14px;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.logoutText {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--danger);
+}
+
+.versionFooter {
+  text-align: center;
+  padding: 8px 0 24px;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text);
+  opacity: 0.4;
+}
+
+/* ── Modales de avatar (elección + galería) ─────────────────────────────── */
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(2, 10, 31, 0.45);
+  z-index: 200;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.modalPanel {
+  background: var(--surface);
+  border-radius: 20px 20px 0 0;
+  width: 100%;
+  max-width: 420px;
+  padding: 20px 16px 32px;
+  animation: modalSlideUp .3s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+}
+
+.modalHandle {
+  width: 34px;
+  height: 4px;
+  background: var(--border);
+  border-radius: 2px;
+  margin: 0 auto 16px;
+}
+
+.modalTitle {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 14px;
+}
+
+/* Modal de elección: 2 tarjetas lado a lado */
+.choiceGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.choiceCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 20px 8px;
+  background: var(--bg);
+  border: 0.5px solid var(--border);
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.choiceIconCircle {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: var(--accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.choiceThumbCircle {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  overflow: hidden;
+}
+
+.choiceThumbImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.choiceLabel {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+/* Modal de galería: cuadrícula 4×2 */
+.galleryGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.avatarOption {
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  padding: 0;
+  overflow: hidden;
+  cursor: pointer;
+  background: none;
+  border: 2px solid transparent;
+}
+
+.avatarOptionSelected {
+  border-color: var(--accent);
+}
+
+.avatarOptionImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}

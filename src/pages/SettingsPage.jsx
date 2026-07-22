@@ -13,6 +13,7 @@ import { SettingsCobroPage } from './settings/SettingsCobroPage'
 import { SettingsNotificationsPage } from './settings/SettingsNotificationsPage'
 import { SettingsAppearancePage } from './settings/SettingsAppearancePage'
 import { SettingsSharedSpacePage } from './settings/SettingsSharedSpacePage'
+import styles from './SettingsPage.module.css'
 
 const FREQ_LABEL = { weekly: 'Semanal', biweekly: 'Quincenal', monthly: 'Mensual' }
 const THEME_LABEL = { sistema: 'Sistema', light: 'Claro', dark: 'Oscuro' }
@@ -182,46 +183,34 @@ export function SettingsPage({ profile, user, onUpdate, onUploadAvatar, onDataDe
   }
 
   return (
-    <div className={slideClass} style={{ paddingBottom: 120, background: 'var(--bg)', minHeight: '100vh' }}>
-      <div style={{ padding: '52px 16px 20px' }}>
-        <div style={{ fontSize: 22, fontWeight: 700, color: 'var(--text)' }}>Perfil</div>
+    <div className={`${slideClass} ${styles.pageWrapper}`}>
+      <div className={styles.header}>
+        <div className={styles.headerTitle}>Perfil</div>
       </div>
 
       {/* Avatar */}
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: 24 }}>
-        <div style={{ position: 'relative' }}>
+      <div className={styles.avatarSection}>
+        <div className={styles.avatarWrapper}>
           {profile.avatar_url
-            ? <img src={profile.avatar_url} alt="avatar" style={{ width: 80, height: 80, borderRadius: '50%', objectFit: 'cover', border: profile.is_premium ? '2px solid var(--premium-gold)' : 'none' }} />
-            : <div style={{ width: 80, height: 80, borderRadius: '50%', background: 'var(--accent)', border: profile.is_premium ? '2px solid var(--premium-gold)' : 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28, fontWeight: 700, color: 'var(--surface)' }}>{initials}</div>
+            ? <img src={profile.avatar_url} alt="avatar" className={`${styles.avatarImg} ${profile.is_premium ? styles.avatarImgPremium : ''}`} />
+            : <div className={`${styles.avatarInitials} ${profile.is_premium ? styles.avatarImgPremium : ''}`}>{initials}</div>
           }
           {profile.is_premium && (
-            <div style={{
-              position: 'absolute', top: -2, right: -2,
-              width: 26, height: 26, borderRadius: '50%',
-              background: 'var(--premium-gold)', color: 'var(--premium-gold-text)',
-              border: '2px solid var(--surface)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-            }}>
+            <div className={styles.premiumCrownBadge}>
               <Crown size={14} fill="currentColor" />
             </div>
           )}
-          <button onClick={() => setAvatarModal('choice')} style={{ position: 'absolute', bottom: 0, right: 0, width: 28, height: 28, borderRadius: '50%', background: 'var(--surface)', border: '0.5px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+          <button onClick={() => setAvatarModal('choice')} className={styles.cameraButton}>
             {uploadingAvatar
-              ? <div style={{ width: 12, height: 12, borderRadius: '50%', border: '2px solid var(--accent)', borderTopColor: 'transparent' }} />
+              ? <div className={styles.uploadingSpinner} />
               : <Camera size={14} color="var(--text)" />}
           </button>
           <input ref={fileRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handleAvatarChange} />
         </div>
-        <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--text)', marginTop: 10 }}>{profile.name}</div>
-        <div style={{ fontSize: 13, fontWeight: 400, color: 'var(--text)' }}>{user?.email}</div>
+        <div className={styles.profileName}>{profile.name}</div>
+        <div className={styles.profileEmail}>{user?.email}</div>
         {profile.is_premium && (
-          <div style={{
-            display: 'flex', alignItems: 'center', gap: 5,
-            background: 'var(--premium-gold)', color: 'var(--premium-gold-text)',
-            fontSize: 11, fontWeight: 700,
-            padding: '4px 10px', borderRadius: 'var(--radius-full)',
-            marginTop: 8,
-          }}>
+          <div className={styles.premiumPill}>
             <Crown size={11} fill="currentColor" />
             Cuenta Premium
           </div>
@@ -255,14 +244,14 @@ export function SettingsPage({ profile, user, onUpdate, onUploadAvatar, onDataDe
 
       {/* Sesión */}
       <Card>
-        <button onClick={handleLogout} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '13px 14px', background: 'none', border: 'none', cursor: 'pointer' }}>
+        <button onClick={handleLogout} className={styles.logoutButton}>
           <LogOut size={16} color="var(--danger)" />
-          <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--danger)' }}>Cerrar sesión</span>
+          <span className={styles.logoutText}>Cerrar sesión</span>
         </button>
       </Card>
 
       {/* Versión */}
-      <div style={{ textAlign: 'center', padding: '8px 0 24px', fontSize: 11, fontWeight: 500, color: 'var(--text)', opacity: 0.4 }}>
+      <div className={styles.versionFooter}>
         {APP_NAME} v{APP_VERSION} — Alpha
       </div>
 
@@ -274,26 +263,22 @@ export function SettingsPage({ profile, user, onUpdate, onUploadAvatar, onDataDe
           contenedor que crea su propio contexto de apilamiento CSS, así que
           ni un z-index alto le gana al BottomNav sin escapar de ese árbol. */}
       {avatarModal === 'choice' && createPortal(
-        <div onClick={e => e.target === e.currentTarget && setAvatarModal(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(2, 10, 31, 0.45)', zIndex: 200, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
-          <div style={{ background: 'var(--surface)', borderRadius: '20px 20px 0 0', width: '100%', maxWidth: 420, padding: '20px 16px 32px', animation: 'modalSlideUp .3s cubic-bezier(0.25, 0.46, 0.45, 0.94) both' }}>
-            <div style={{ width: 34, height: 4, background: 'var(--border)', borderRadius: 2, margin: '0 auto 16px' }} />
-            <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--text)', marginBottom: 14 }}>Foto de perfil</div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 16 }}>
-              <button
-                onClick={() => { setAvatarModal(null); fileRef.current?.click() }}
-                style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10, padding: '20px 8px', background: 'var(--bg)', border: '0.5px solid var(--border)', borderRadius: 8, cursor: 'pointer' }}>
-                <div style={{ width: 56, height: 56, borderRadius: '50%', background: 'var(--accent)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div onClick={e => e.target === e.currentTarget && setAvatarModal(null)} className={styles.modalOverlay}>
+          <div className={styles.modalPanel}>
+            <div className={styles.modalHandle} />
+            <div className={styles.modalTitle}>Foto de perfil</div>
+            <div className={styles.choiceGrid}>
+              <button onClick={() => { setAvatarModal(null); fileRef.current?.click() }} className={styles.choiceCard}>
+                <div className={styles.choiceIconCircle}>
                   <Camera size={26} color="var(--surface)" />
                 </div>
-                <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)' }}>Subir foto</span>
+                <span className={styles.choiceLabel}>Subir foto</span>
               </button>
-              <button
-                onClick={() => setAvatarModal('gallery')}
-                style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10, padding: '20px 8px', background: 'var(--bg)', border: '0.5px solid var(--border)', borderRadius: 8, cursor: 'pointer' }}>
-                <div style={{ width: 56, height: 56, borderRadius: '50%', overflow: 'hidden' }}>
-                  <img src="/avatars/hombre-1.webp" alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+              <button onClick={() => setAvatarModal('gallery')} className={styles.choiceCard}>
+                <div className={styles.choiceThumbCircle}>
+                  <img src="/avatars/hombre-1.webp" alt="" className={styles.choiceThumbImg} />
                 </div>
-                <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)' }}>Elegir avatar</span>
+                <span className={styles.choiceLabel}>Elegir avatar</span>
               </button>
             </div>
             <button onClick={() => setAvatarModal(null)} className="btn-ghost">Cancelar</button>
@@ -304,24 +289,19 @@ export function SettingsPage({ profile, user, onUpdate, onUploadAvatar, onDataDe
 
       {/* Modal: galería de 8 avatares preestablecidos — mismo fix de createPortal */}
       {avatarModal === 'gallery' && createPortal(
-        <div onClick={e => e.target === e.currentTarget && setAvatarModal(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(2, 10, 31, 0.45)', zIndex: 200, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
-          <div style={{ background: 'var(--surface)', borderRadius: '20px 20px 0 0', width: '100%', maxWidth: 420, padding: '20px 16px 32px', animation: 'modalSlideUp .3s cubic-bezier(0.25, 0.46, 0.45, 0.94) both' }}>
-            <div style={{ width: 34, height: 4, background: 'var(--border)', borderRadius: 2, margin: '0 auto 16px' }} />
-            <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--text)', marginBottom: 14 }}>Elegir avatar</div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 20 }}>
+        <div onClick={e => e.target === e.currentTarget && setAvatarModal(null)} className={styles.modalOverlay}>
+          <div className={styles.modalPanel}>
+            <div className={styles.modalHandle} />
+            <div className={styles.modalTitle}>Elegir avatar</div>
+            <div className={styles.galleryGrid}>
               {PRESET_AVATARS.map(path => {
                 const selected = profile.avatar_url === path
                 return (
                   <button
                     key={path}
                     onClick={() => handleSelectPresetAvatar(path)}
-                    style={{
-                      width: '100%', aspectRatio: '1', borderRadius: '50%', padding: 0,
-                      overflow: 'hidden', cursor: 'pointer',
-                      background: 'none',
-                      border: selected ? '2px solid var(--accent)' : '2px solid transparent',
-                    }}>
-                    <img src={path} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                    className={`${styles.avatarOption} ${selected ? styles.avatarOptionSelected : ''}`}>
+                    <img src={path} alt="" className={styles.avatarOptionImg} />
                   </button>
                 )
               })}
