@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-import { LogOut, Camera, Crown, User, Tag, Calendar, Bell, SunMoon, HelpCircle, Users, MessageCircle } from 'lucide-react'
+import { LogOut, Camera, Images, Crown, User, Tag, Calendar, Bell, SunMoon, HelpCircle, Users, MessageCircle } from 'lucide-react'
 import { showToast } from '../components/Toast'
 import { supabase } from '../lib/supabase'
 import { APP_VERSION } from '../lib/patchNotes'
@@ -16,6 +16,21 @@ import { SettingsSharedSpacePage } from './settings/SettingsSharedSpacePage'
 const FREQ_LABEL = { weekly: 'Semanal', biweekly: 'Quincenal', monthly: 'Mensual' }
 const THEME_LABEL = { sistema: 'Sistema', light: 'Claro', dark: 'Oscuro' }
 
+// Galería de avatares preestablecidos — imágenes estáticas servidas desde
+// public/avatars/ (Vite/Vercel las expone tal cual, sin pasar por Supabase
+// Storage). Al elegir uno, simplemente se guarda su ruta en profiles.avatar_url,
+// igual que ya se hace con la URL pública de una foto subida.
+const PRESET_AVATARS = [
+  '/avatars/hombre-1.webp',
+  '/avatars/hombre-2.webp',
+  '/avatars/hombre-3.webp',
+  '/avatars/hombre-4.webp',
+  '/avatars/mujer-1.webp',
+  '/avatars/mujer-2.webp',
+  '/avatars/mujer-3.webp',
+  '/avatars/mujer-4.webp',
+]
+
 // Menú principal de "Perfil"/Ajustes. Cada renglón navega a su propia
 // sub-página (ver ./settings/). Antes todo esto vivía junto en un solo
 // scroll largo; se migró a este patrón de menú para que escale mejor
@@ -24,6 +39,7 @@ const THEME_LABEL = { sistema: 'Sistema', light: 'Claro', dark: 'Oscuro' }
 export function SettingsPage({ profile, user, onUpdate, onUploadAvatar, onDataDeleted, slideClass, theme, onThemeChange, onOpenPremium, sharedSpaces, initialSection, onConsumeInitialSection, returnTab, onReturnToTab }) {
   const [section, setSection] = useState(initialSection || null) // null | 'account' | 'categories' | 'cobro' | 'notifications' | 'appearance' | 'sharedspace'
   const [uploadingAvatar, setUploadingAvatar] = useState(false)
+  const [avatarModal, setAvatarModal] = useState(null) // null | 'choice' | 'gallery'
 
   // Si esta sección se abrió por un atajo directo (ej. "Editar" desde el
   // switcher de Espacio Compartido, con `returnTab` viniendo de App.jsx),
@@ -86,6 +102,14 @@ export function SettingsPage({ profile, user, onUpdate, onUploadAvatar, onDataDe
     }
   }, [])
 
+  // Mismo patrón usado en SettingsAccountPage.jsx: bloquea el scroll del
+  // fondo mientras cualquier modal de avatar está abierto.
+  useEffect(() => {
+    if (avatarModal) document.body.classList.add('modal-open')
+    else              document.body.classList.remove('modal-open')
+    return () => document.body.classList.remove('modal-open')
+  }, [avatarModal])
+
   function openSection(s) {
     shortcutReturnRef.current = null // navegación manual normal desde aquí en adelante
     window.history.pushState({ settingsSection: s }, '')
@@ -105,6 +129,16 @@ export function SettingsPage({ profile, user, onUpdate, onUploadAvatar, onDataDe
     setUploadingAvatar(false)
     if (error) showToast(error.message || 'Error al subir imagen')
     else showToast('Foto actualizada')
+  }
+
+  // Elegir uno de los 8 avatares preestablecidos: solo se guarda su ruta
+  // estática en profiles.avatar_url (onUpdate ya es el updateProfile()
+  // genérico del hook, no hace falta una función nueva en useProfile.js).
+  async function handleSelectPresetAvatar(path) {
+    setAvatarModal(null)
+    const { error } = await onUpdate({ avatar_url: path })
+    if (error) showToast(error.message || 'Error al actualizar avatar')
+    else showToast('Avatar actualizado')
   }
 
   // Marca feedback_submitted para que el popup del día 8 (App.jsx) no
@@ -170,7 +204,7 @@ export function SettingsPage({ profile, user, onUpdate, onUploadAvatar, onDataDe
               <Crown size={14} fill="currentColor" />
             </div>
           )}
-          <button onClick={() => fileRef.current?.click()} style={{ position: 'absolute', bottom: 0, right: 0, width: 28, height: 28, borderRadius: '50%', background: 'var(--surface)', border: '0.5px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+          <button onClick={() => setAvatarModal('choice')} style={{ position: 'absolute', bottom: 0, right: 0, width: 28, height: 28, borderRadius: '50%', background: 'var(--surface)', border: '0.5px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
             {uploadingAvatar
               ? <div style={{ width: 12, height: 12, borderRadius: '50%', border: '2px solid var(--accent)', borderTopColor: 'transparent' }} />
               : <Camera size={14} color="var(--text)" />}
@@ -230,6 +264,50 @@ export function SettingsPage({ profile, user, onUpdate, onUploadAvatar, onDataDe
       <div style={{ textAlign: 'center', padding: '8px 0 24px', fontSize: 11, fontWeight: 500, color: 'var(--text)', opacity: 0.4 }}>
         {APP_NAME} v{APP_VERSION} — Alpha
       </div>
+
+      {/* Modal: elegir "Subir foto" o "Elegir avatar" */}
+      {avatarModal === 'choice' && (
+        <div onClick={e => e.target === e.currentTarget && setAvatarModal(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(2, 10, 31, 0.45)', zIndex: 200, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
+          <div style={{ background: 'var(--surface)', borderRadius: '20px 20px 0 0', width: '100%', maxWidth: 420, padding: '20px 16px 32px', animation: 'modalSlideUp .3s cubic-bezier(0.25, 0.46, 0.45, 0.94) both' }}>
+            <div style={{ width: 34, height: 4, background: 'var(--border)', borderRadius: 2, margin: '0 auto 16px' }} />
+            <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--text)', marginBottom: 14 }}>Foto de perfil</div>
+            <Card>
+              <Row icon={Camera} label="Subir una foto" onClick={() => { setAvatarModal(null); fileRef.current?.click() }} />
+              <Row icon={Images} label="Elegir un avatar" onClick={() => setAvatarModal('gallery')} last />
+            </Card>
+            <button onClick={() => setAvatarModal(null)} className="btn-ghost" style={{ marginTop: 12 }}>Cancelar</button>
+          </div>
+        </div>
+      )}
+
+      {/* Modal: galería de 8 avatares preestablecidos */}
+      {avatarModal === 'gallery' && (
+        <div onClick={e => e.target === e.currentTarget && setAvatarModal(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(2, 10, 31, 0.45)', zIndex: 200, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
+          <div style={{ background: 'var(--surface)', borderRadius: '20px 20px 0 0', width: '100%', maxWidth: 420, padding: '20px 16px 32px', animation: 'modalSlideUp .3s cubic-bezier(0.25, 0.46, 0.45, 0.94) both' }}>
+            <div style={{ width: 34, height: 4, background: 'var(--border)', borderRadius: 2, margin: '0 auto 16px' }} />
+            <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--text)', marginBottom: 14 }}>Elegir avatar</div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 20 }}>
+              {PRESET_AVATARS.map(path => {
+                const selected = profile.avatar_url === path
+                return (
+                  <button
+                    key={path}
+                    onClick={() => handleSelectPresetAvatar(path)}
+                    style={{
+                      width: '100%', aspectRatio: '1', borderRadius: '50%', padding: 0,
+                      overflow: 'hidden', cursor: 'pointer',
+                      background: 'none',
+                      border: selected ? '2px solid var(--accent)' : '2px solid transparent',
+                    }}>
+                    <img src={path} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                  </button>
+                )
+              })}
+            </div>
+            <button onClick={() => setAvatarModal(null)} className="btn-ghost">Cancelar</button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
