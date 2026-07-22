@@ -1,0 +1,108 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  z-index: 1000;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.panel {
+  background: var(--surface);
+  border-radius: 20px 20px 0 0;
+  padding: 24px 20px 28px;
+  width: 100%;
+  max-width: 420px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  animation: modalSlideUp .32s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+}
+
+.handle {
+  width: 36px;
+  height: 4px;
+  background: var(--border);
+  border-radius: 2px;
+  margin-bottom: 20px;
+}
+
+.iconCircle {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: var(--bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 14px;
+}
+
+.premiumPill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--premium-gold);
+  color: var(--premium-gold-text);
+  font-size: 12.5px;
+  font-weight: 700;
+  padding: 7px 14px;
+  border-radius: var(--radius-full);
+  margin-bottom: 14px;
+}
+
+.title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text);
+  max-width: 280px;
+  margin-bottom: 8px;
+}
+
+.subtitle {
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--text);
+  line-height: 1.5;
+  max-width: 280px;
+  margin-bottom: 22px;
+}
+
+.ctaButton {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: var(--accent);
+  color: var(--surface);
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 13px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: 'DM Sans', sans-serif;
+}
+
+.hint {
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--text);
+  margin-top: 10px;
+}
+
+.remindButton {
+  width: 100%;
+  background: none;
+  border: none;
+  color: var(--accent);
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: underline;
+  padding: 16px 0 0;
+  cursor: pointer;
+  font-family: 'DM Sans', sans-serif;
+}

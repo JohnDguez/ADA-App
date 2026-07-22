@@ -14,7 +14,11 @@ export function SectionLabel({ children }) {
   return <div className={styles.sectionLabel}>{children}</div>
 }
 
-export function Row({ label, value, onClick, last, icon: Icon, iconColor }) {
+// `sub` (opcional): segunda línea chica debajo del label — usado por el
+// renglón de feedback en SettingsPage.jsx ("Danos tu feedback" / "Gana 3
+// meses de Premium gratis"). El resto de los usos de Row no la pasan y se
+// comportan exactamente igual que antes.
+export function Row({ label, sub, value, onClick, last, icon: Icon, iconColor }) {
   return (
     <div
       onClick={onClick}
@@ -22,7 +26,10 @@ export function Row({ label, value, onClick, last, icon: Icon, iconColor }) {
     >
       <div className={styles.rowLeft}>
         {Icon && <Icon size={16} color={iconColor || 'var(--text)'} />}
-        <span className={styles.rowLabel} style={iconColor ? { color: iconColor } : undefined}>{label}</span>
+        <div>
+          <span className={styles.rowLabel} style={iconColor ? { color: iconColor } : undefined}>{label}</span>
+          {sub && <div className={styles.rowSub} style={iconColor ? { color: iconColor } : undefined}>{sub}</div>}
+        </div>
       </div>
       <div className={styles.rowRight}>
         {value && <span className={styles.rowValue}>{value}</span>}
