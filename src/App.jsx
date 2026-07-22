@@ -18,6 +18,7 @@ import { InstallmentAbonarModal } from './components/InstallmentAbonarModal'
 import { SplitContributionsModal } from './components/SplitContributionsModal'
 import { RecurrentMigrationModal } from './components/RecurrentMigrationModal'
 import { PatchNotesModal } from './components/PatchNotesModal'
+import { FeedbackPromptModal } from './components/FeedbackPromptModal'
 import { PasswordSetupModal } from './components/PasswordSetupModal'
 import { PremiumPage } from './pages/PremiumPage'
 import { Toast, showToast } from './components/Toast'
@@ -29,6 +30,7 @@ import { useSpaceStats } from './hooks/useSpaceStats'
 import { SpaceSwitcher } from './components/SpaceSwitcher'
 import { ActiveSpaceHeader } from './components/ActiveSpaceHeader'
 import { APP_VERSION, PATCH_NOTES, isNewerVersion } from './lib/patchNotes'
+import { buildFeedbackUrl, FEEDBACK_PROMPT_AFTER_DAYS, FEEDBACK_REMIND_AFTER_DAYS } from './lib/feedback'
 
 function fmt(n) { return '$' + Number(n).toLocaleString('es-MX', { minimumFractionDigits: 0, maximumFractionDigits: 0 }) }
 
@@ -168,6 +170,7 @@ export default function App() {
   const [patchNotesOpen,   setPatchNotesOpen]   = useState(false)
   const [patchNotesToShow, setPatchNotesToShow] = useState([])
   const [premiumPageOpen, setPremiumPageOpen] = useState(false)
+  const [feedbackPromptOpen, setFeedbackPromptOpen] = useState(false)
   // OJO: este hook tiene que declararse ANTES de los `return` condicionales
   // de más abajo (authLoading/isRecovery/!user/onboarding/has_password) —
   // declararlo después de ellos (como pasó en la versión anterior) hace que
@@ -221,6 +224,23 @@ export default function App() {
     const unseen = PATCH_NOTES.filter(n => isNewerVersion(n.version, lastSeen))
     setPatchNotesToShow(unseen)
     setPatchNotesOpen(unseen.length > 0)
+  }, [user, profile, profileLoading])
+
+  // Popup de feedback alpha (ver components/FeedbackPromptModal.jsx): primera
+  // vez a los 8 días de creada la cuenta (user.created_at, de Supabase Auth);
+  // si el usuario elige "Recordarme en 3 días", se vuelve a evaluar contra
+  // profile.feedback_next_prompt_at. Deja de aparecer para siempre en cuanto
+  // profile.feedback_submitted es true (se marca al dar clic en "Dejar mi
+  // feedback", desde aquí o desde el botón de Perfil en SettingsPage.jsx).
+  useEffect(() => {
+    if (!user || !profile || profileLoading) return
+    if (profile.feedback_submitted) return
+    if (!user.created_at) return
+    const daysSinceSignup = (Date.now() - new Date(user.created_at).getTime()) / 86400000
+    if (daysSinceSignup < FEEDBACK_PROMPT_AFTER_DAYS) return
+    const nextPromptAt = profile.feedback_next_prompt_at ? new Date(profile.feedback_next_prompt_at).getTime() : 0
+    if (nextPromptAt > Date.now()) return
+    setFeedbackPromptOpen(true)
   }, [user, profile, profileLoading])
 
   // Pin de "espacio principal" (ActiveSpaceHeader.jsx): aplica el default
@@ -513,6 +533,17 @@ export default function App() {
   async function handleClosePatchNotes() {
     setPatchNotesOpen(false)
     await updateProfile({ last_seen_app_version: APP_VERSION })
+  }
+
+  async function handleFeedbackGiveFeedback() {
+    setFeedbackPromptOpen(false)
+    await updateProfile({ feedback_submitted: true })
+    window.open(buildFeedbackUrl(user?.email), '_blank')
+  }
+  async function handleFeedbackRemindLater() {
+    setFeedbackPromptOpen(false)
+    const next = new Date(Date.now() + FEEDBACK_REMIND_AFTER_DAYS * 24 * 60 * 60 * 1000)
+    await updateProfile({ feedback_next_prompt_at: next.toISOString() })
   }
 
   async function handlePauseRecurrent(masterId) {
@@ -876,6 +907,11 @@ export default function App() {
         open={patchNotesOpen}
         notes={patchNotesToShow}
         onClose={handleClosePatchNotes}
+      />
+      <FeedbackPromptModal
+        open={feedbackPromptOpen}
+        onGiveFeedback={handleFeedbackGiveFeedback}
+        onRemindLater={handleFeedbackRemindLater}
       />
       <Toast />
       {premiumPageOpen && <PremiumPage onClose={() => setPremiumPageOpen(false)} />}
