@@ -1,9 +1,10 @@
 import { useState, useRef, useEffect } from 'react'
-import { LogOut, Camera, Crown, User, Tag, Calendar, Bell, SunMoon, HelpCircle, Users } from 'lucide-react'
+import { LogOut, Camera, Crown, User, Tag, Calendar, Bell, SunMoon, HelpCircle, Users, MessageCircle } from 'lucide-react'
 import { showToast } from '../components/Toast'
 import { supabase } from '../lib/supabase'
 import { APP_VERSION } from '../lib/patchNotes'
 import { APP_NAME } from '../lib/constants'
+import { buildFeedbackUrl } from '../lib/feedback'
 import { Card, Row } from '../components/SettingsShared'
 import { SettingsAccountPage } from './settings/SettingsAccountPage'
 import { SettingsCategoriesPage } from './settings/SettingsCategoriesPage'
@@ -106,6 +107,14 @@ export function SettingsPage({ profile, user, onUpdate, onUploadAvatar, onDataDe
     else showToast('Foto actualizada')
   }
 
+  // Marca feedback_submitted para que el popup del día 8 (App.jsx) no
+  // vuelva a aparecer, y abre el formulario de Jotform con el correo del
+  // usuario precargado (campo oculto `email`, ver lib/feedback.js).
+  async function handleGiveFeedback() {
+    await onUpdate({ feedback_submitted: true })
+    window.open(buildFeedbackUrl(user?.email), '_blank')
+  }
+
   async function handleLogout() {
     sessionStorage.removeItem('ada_tab')
     sessionStorage.removeItem('ada_session')
@@ -186,6 +195,7 @@ export function SettingsPage({ profile, user, onUpdate, onUploadAvatar, onDataDe
 
       {/* Menú */}
       <Card>
+        <Row icon={MessageCircle} iconColor="var(--premium-gold)" label="Danos tu feedback" sub="Gana 3 meses de Premium gratis" onClick={handleGiveFeedback} />
         <Row icon={User}     label="Cuenta"                        onClick={() => openSection('account')} />
         <div data-coachmark="perfil-categorias-row">
           <Row icon={Tag}      label="Categorías"                    onClick={() => openSection('categories')} />
