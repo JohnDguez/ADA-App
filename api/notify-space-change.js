@@ -135,6 +135,7 @@ module.exports = async function handler(req, res) {
       .in('user_id', userIds)
 
     let sent = 0
+    const pushErrors = []
     for (const sub of (subs || [])) {
       try {
         await webpush.sendNotification(sub.subscription, JSON.stringify({
@@ -142,13 +143,25 @@ module.exports = async function handler(req, res) {
         }))
         sent++
       } catch (e) {
-        if (e.statusCode === 410) {
+        // Antes solo se manejaba 410 (expirada) — cualquier otro error se
+        // tragaba en silencio, sin loguear nada, así que un fallo real nunca
+        // se veía en ningún lado (ni en el toast, que aquí ni siquiera existe,
+        // ya que esto se llama fire-and-forget desde notifySpaceChange()).
+        // Ahora: (1) se loguea SIEMPRE el statusCode + body de la respuesta
+        // del servicio push, visible en los logs de Vercel de esta función;
+        // (2) se trata 404/403 igual que 410 — algunos servicios push
+        // regresan estos códigos en vez de 410 cuando la suscripción ya no
+        // es válida, y antes esa fila quedaba viva para siempre sin que
+        // nadie se enterara de que ya no servía.
+        console.error('Push falló para user_id', sub.user_id, '— statusCode:', e.statusCode, '— body:', e.body)
+        pushErrors.push({ user_id: sub.user_id, statusCode: e.statusCode })
+        if (e.statusCode === 410 || e.statusCode === 404 || e.statusCode === 403) {
           await supabase.from('push_subscriptions').delete().eq('user_id', sub.user_id)
         }
       }
     }
 
-    return res.json({ sent, notified: userIds.length })
+    return res.json({ sent, notified: userIds.length, pushErrors })
   } catch (e) {
     console.error(e)
     return res.status(500).json({ error: e.message })
