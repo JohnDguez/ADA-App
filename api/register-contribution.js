@@ -1,4 +1,13 @@
 const { createClient } = require('@supabase/supabase-js')
+const webpush = require('web-push')
+const { notifyUsers } = require('./_notifyLib')
+
+// Mismas 3 variables VAPID que ya usan notify-space-change.js / send-notifications.js.
+webpush.setVapidDetails(
+  process.env.VAPID_EMAIL,
+  process.env.VITE_VAPID_PUBLIC_KEY,
+  process.env.VAPID_PRIVATE_KEY
+)
 
 // Mismo patrón que notify-space-change.js / delete-account.js: el cliente
 // manda su propio JWT de sesión (no un secreto compartido), este endpoint
@@ -23,6 +32,26 @@ const supabase = createClient(
   process.env.VITE_SUPABASE_URL,
   process.env.SUPABASE_SERVICE_ROLE_KEY
 )
+
+// Helper para los 3 modos de este archivo que nunca avisaban nada
+// (unmarkPaid, setTotalAmount, gastar del Fondo — v0.9.236): resuelve el
+// nombre real del actor y la lista de los demás miembros del espacio, arma
+// el texto con `buildMessage(actorName)`, y manda in-app + push a TODOS,
+// siempre, sin filtrar por `notify_on_changes` — mismo criterio ya usado en
+// notify-space-change.js para eventos estructurales (confirmado con
+// Johnatan). El bloque de "abono normal" más abajo en este archivo (que sí
+// existía antes) se deja aparte, con su propio criterio de SÍ respetar el
+// toggle — no se le cambió el comportamiento en esta sesión.
+async function notifyAllSpaceMembers(spaceId, actorId, buildMessage) {
+  const [{ data: actorProfile }, { data: memberRows }] = await Promise.all([
+    supabase.from('profiles').select('name').eq('id', actorId).maybeSingle(),
+    supabase.from('shared_space_members').select('user_id').eq('space_id', spaceId).neq('user_id', actorId),
+  ])
+  const actorName = actorProfile?.name || 'Alguien'
+  const { title, body } = buildMessage(actorName)
+  const userIds = (memberRows || []).map(m => m.user_id)
+  await notifyUsers(supabase, webpush, { userIds, title, body, actorName })
+}
 
 module.exports = async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
@@ -98,6 +127,14 @@ module.exports = async function handler(req, res) {
       if (contribDeleteResult.error || reflDeleteResult.error) {
         return res.status(500).json({ error: 'El pago se desmarcó, pero no se pudo limpiar del todo lo abonado — revisa "Dividir entre miembros" manualmente.' })
       }
+      try {
+        await notifyAllSpaceMembers(payment.space_id, actorId, (actorName) => ({
+          title: `${actorName} desmarcó un pago`,
+          body: `${payment.name} volvió a pendiente`,
+        }))
+      } catch (e) {
+        // Silencioso a propósito — no debe tumbar la reversión real, que ya se guardó bien
+      }
       return res.json({ error: null, unmarked: true })
     }
 
@@ -140,6 +177,14 @@ module.exports = async function handler(req, res) {
           if (paidErr) return res.status(500).json({ error: 'El monto se guardó, pero no se pudo marcar como pagado: ' + paidErr.message })
           settled = true
         }
+      }
+      try {
+        await notifyAllSpaceMembers(payment.space_id, actorId, (actorName) => ({
+          title: `${actorName} fijó el monto de un pago variable`,
+          body: `${payment.name} — $${newTotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+        }))
+      } catch (e) {
+        // Silencioso a propósito
       }
       return res.json({ error: null, settled })
     }
@@ -220,6 +265,16 @@ module.exports = async function handler(req, res) {
           const { error: paidErr } = await supabase.from('payments').update({ is_paid: true, paid_at: new Date().toISOString() }).eq('id', paymentId)
           if (paidErr) return res.status(500).json({ error: 'Se descontó del Fondo, pero no se pudo marcar el gasto como pagado: ' + paidErr.message })
           settledFund = true
+        }
+      }
+      if (Math.round(delta * 100) > 0) {
+        try {
+          await notifyAllSpaceMembers(payment.space_id, actorId, (actorName) => ({
+            title: `${actorName} pagó con el Fondo Compartido`,
+            body: `${payment.name} — $${delta.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} desde el Fondo`,
+          }))
+        } catch (e) {
+          // Silencioso a propósito
         }
       }
       return res.json({ error: null, settled: settledFund, fundAmount: newFundAmount, insufficientFund })
@@ -383,12 +438,9 @@ module.exports = async function handler(req, res) {
     if (toNotify.length > 0) {
       const title = `${actorName} registró un abono`
       const body  = `${payment.name} — ${memberName} puso ${amountStr}`
-      await supabase.from('notifications').insert(
-        toNotify.map(m => ({
-          user_id: m.user_id, type: 'space_change', title, body, url: '/', read: false,
-          actor_name: actorName, space_name: spaceName,
-        }))
-      )
+      await notifyUsers(supabase, webpush, {
+        userIds: toNotify.map(m => m.user_id), title, body, actorName, spaceName,
+      })
     }
 
     return res.json({ error: null, reflectionPaymentId: reflectionId, settled })
