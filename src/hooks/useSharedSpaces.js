@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '../lib/supabase'
+import { notifySpaceChange } from '../lib/notifySpaceChange'
 
 // Genera un candidato de código de 6 dígitos (como string, para no perder
 // ceros a la izquierda — "003456" es válido).
@@ -210,6 +211,7 @@ export function useSharedSpaces(userId) {
       entry.space.id === spaceId ? { ...entry, space: { ...entry.space, ...data } } : entry
     ))
     fetchSpaces()
+    notifySpaceChange(spaceId, 'space_config_changed')
     return { data, error: null }
   }
 
@@ -236,12 +238,37 @@ export function useSharedSpaces(userId) {
     // Acción poco frecuente (unirse a un espacio) — se deja bloqueante a
     // propósito, mismo criterio que createSpace.
     await fetchSpaces()
+
+    // Avisar a TODOS los miembros existentes (dueño incluido) que alguien
+    // nuevo se unió — se busca el espacio por el CÓDIGO (no por lo que
+    // regrese el RPC, cuyo shape exacto no es seguro asumir) para tener el
+    // spaceId real sin depender de eso. Se llama DESPUÉS de unirse (no
+    // antes) porque el endpoint valida que el actor ya pertenezca al
+    // espacio — recién unido, esa validación ya pasa.
+    const { data: joinedSpace } = await supabase
+      .from('shared_spaces')
+      .select('id')
+      .eq('access_code', code)
+      .maybeSingle()
+    if (joinedSpace) notifySpaceChange(joinedSpace.id, 'joined')
+
     return { data, error: null }
   }
 
   // Actualiza los permisos de UN invitado (el dueño los configura). `perms`
   // es un objeto parcial, ej. { can_delete: true }.
   async function updateMemberPermissions(memberId, perms) {
+    // Se busca a quién pertenece este `memberId` y en qué espacio ANTES del
+    // update — se necesita para avisarle a ESA persona en particular que
+    // sus permisos cambiaron (no a todo el espacio, a nadie más le importa).
+    let targetUserId = null
+    let targetSpaceId = null
+    for (const entry of spaces) {
+      const m = entry.space.members?.find(mm => mm.id === memberId)
+      if (m) { targetUserId = m.user_id; targetSpaceId = entry.space.id; break }
+      if (entry.membership.id === memberId) { targetUserId = entry.membership.user_id; targetSpaceId = entry.space.id; break }
+    }
+
     // Actualización optimista — el switch se mueve al instante en vez de
     // esperar fetchSpaces() completo (3 consultas seguidas: membresías+
     // espacios, todos los miembros, y sus perfiles). La misma fila puede
@@ -288,6 +315,15 @@ export function useSharedSpaces(userId) {
     // sin bloquear el retorno, solo como respaldo si Realtime tardara o no
     // estuviera habilitado para estas tablas.
     fetchSpaces()
+
+    // Avisar SOLO a la persona afectada — no si es ella misma tocando su
+    // propio toggle "Notificarme de cambios" (no tiene sentido avisarle a
+    // alguien de algo que acaba de hacer él mismo).
+    const isOwnNotifyToggle = targetUserId === userId && Object.keys(perms).length === 1 && 'notify_on_changes' in perms
+    if (targetUserId && targetSpaceId && targetUserId !== userId && !isOwnNotifyToggle) {
+      notifySpaceChange(targetSpaceId, 'permissions_changed', { targetUserId })
+    }
+
     return { data, error: null }
   }
 
@@ -295,6 +331,14 @@ export function useSharedSpaces(userId) {
   // agregados se quedan en el espacio (no se tocan aquí, la fila de
   // `payments` no depende de `shared_space_members` para seguir existiendo).
   async function leaveSpace(membershipId) {
+    // Se necesita el spaceId ANTES de borrar — y el aviso también se manda
+    // ANTES (no después, a diferencia del resto de funciones de este
+    // archivo): notify-space-change.js valida que el actor pertenezca al
+    // espacio, y justo después de este delete ya no pertenecería.
+    const entry = spaces.find(e => e.membership.id === membershipId)
+    const spaceId = entry?.space?.id
+    if (spaceId) await notifySpaceChange(spaceId, 'left')
+
     // Optimista — el espacio desaparece del switcher/lista de inmediato.
     const previousSpaces = spaces
     setSpaces(prev => prev.filter(entry => entry.membership.id !== membershipId))
@@ -310,6 +354,18 @@ export function useSharedSpaces(userId) {
   // El dueño saca a un invitado (mismo delete, la diferencia la resuelve RLS
   // según quién lo esté llamando).
   async function removeMember(membershipId) {
+    // Capturar A QUIÉN se va a expulsar y en qué espacio ANTES de borrar —
+    // se necesita para el aviso directo a esa persona (su fila está a
+    // punto de desaparecer, y notify-space-change.js ya no podría
+    // encontrarla sola). A diferencia de leaveSpace, aquí SÍ se puede
+    // avisar DESPUÉS de borrar — el actor (el dueño) sigue siendo miembro,
+    // así que la validación del endpoint no se ve afectada.
+    let spaceId = null, removedUserId = null, removedUserName = null
+    for (const entry of spaces) {
+      const m = entry.space.members?.find(mm => mm.id === membershipId)
+      if (m) { spaceId = entry.space.id; removedUserId = m.user_id; removedUserName = m.profile?.name || null; break }
+    }
+
     // Optimista — el invitado desaparece de "Permisos del invitado" de
     // inmediato. A diferencia de leaveSpace, aquí NO se quita el `entry`
     // completo (el espacio sigue siendo del dueño) — solo se filtra ese
@@ -323,6 +379,9 @@ export function useSharedSpaces(userId) {
 
     const { error } = await supabase.from('shared_space_members').delete().eq('id', membershipId)
     if (error) { setSpaces(previousSpaces); return { error } }
+    if (spaceId && removedUserId) {
+      notifySpaceChange(spaceId, 'removed', { removedUserId, removedUserName })
+    }
     fetchSpaces()
     return { error: null }
   }
@@ -338,6 +397,14 @@ export function useSharedSpaces(userId) {
   async function deleteSpace(spaceId, userEmail, password) {
     const { error: authError } = await supabase.auth.signInWithPassword({ email: userEmail, password })
     if (authError) return { error: 'Contraseña incorrecta' }
+
+    // Avisar a los demás miembros ANTES de borrar — el `on delete cascade`
+    // de `payments.space_id`/`period_income.space_id` ya está confirmado
+    // (ver nota de arriba); es muy probable que `shared_space_members.
+    // space_id` también cascadee al borrar `shared_spaces` (si no, esas
+    // filas quedarían huérfanas para siempre) — así que se notifica ANTES,
+    // mientras la fila de cada miembro todavía existe para consultarla.
+    await notifySpaceChange(spaceId, 'space_deleted')
 
     const { error } = await supabase.from('shared_spaces').delete().eq('id', spaceId)
     // Acción poco frecuente e irreversible — se deja el refetch bloqueante
@@ -363,6 +430,10 @@ export function useSharedSpaces(userId) {
     if (paymentsError) return { error: paymentsError }
     const { error: incomeError } = await supabase.from('period_income').delete().eq('space_id', spaceId)
     if (incomeError) return { error: incomeError }
+    // A diferencia de deleteSpace, aquí no se toca `shared_space_members`
+    // para nada — se puede avisar después sin ningún riesgo de que la
+    // consulta de miembros ya no encuentre a nadie.
+    notifySpaceChange(spaceId, 'space_data_cleared')
     return { error: null }
   }
 

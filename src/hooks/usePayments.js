@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { supabase } from '../lib/supabase'
 import { nextPeriodDate, dateOf, dateToStr, todayStr, fmt } from '../lib/utils'
+import { notifySpaceChange as notifySpaceChangeShared } from '../lib/notifySpaceChange'
 
 // NOTA (Fase 5b): `activeSpaceName` ya no se usa dentro de este hook — el
 // endpoint `notify-space-change.js` ahora trae el nombre REAL del espacio
@@ -22,17 +23,7 @@ export function usePayments(userId, activeSpaceId = null, activeSpaceName = null
   // aquí solo se manda la acción y los datos del pago.
   async function notifySpaceChange(action, details = {}) {
     if (!activeSpaceId) return
-    try {
-      const { data: { session } } = await supabase.auth.getSession()
-      if (!session) return
-      await fetch('/api/notify-space-change', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
-        body: JSON.stringify({ spaceId: activeSpaceId, action, ...details }),
-      })
-    } catch (e) {
-      // Silencioso a propósito — ver nota arriba
-    }
+    await notifySpaceChangeShared(activeSpaceId, action, details)
   }
 
   // Registra/edita/quita la contribución de UN miembro a un gasto del
@@ -357,7 +348,7 @@ export function usePayments(userId, activeSpaceId = null, activeSpaceName = null
       .select().single()
     if (!error) {
       setPayments(prev => [...prev, data])
-      notifySpaceChange('added', { paymentName: data.name, amount: data.amount, paymentType: 'unico' })
+      notifySpaceChange('added', { paymentName: data.name, amount: data.amount, paymentType: 'unico', isVariable: data.is_variable })
     }
     return { data, error }
   }
@@ -591,7 +582,7 @@ export function usePayments(userId, activeSpaceId = null, activeSpaceName = null
     const { data: copiesData, error: copiesErr } = await supabase.from('payments').insert(copies).select()
     if (!copiesErr && copiesData) {
       setPayments(prev => [...prev, master, ...copiesData])
-      notifySpaceChange('added', { paymentName: name, amount: baseAmount, paymentType: 'recurrente', recurFreq: recur_freq })
+      notifySpaceChange('added', { paymentName: name, amount: baseAmount, paymentType: 'recurrente', recurFreq: recur_freq, isVariable: is_variable })
     }
     return { error: copiesErr }
   }
