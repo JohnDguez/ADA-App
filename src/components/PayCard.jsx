@@ -33,7 +33,7 @@ const LABEL_HOLD_MS = 450 // cuánto se queda "Pagado" + checkmark visible antes
 const EXIT_MS       = 320 // deslizado + desvanecido + colapso de espacio
 const ENTRY_MS      = 300 // "crecer" al aparecer una card nueva en la lista
 
-export function PayCard({ payment: p, cfg, onMarkPaid, onRequestVariableAmount, onConfirmVariablePaid, onMarkUnpaid, onCaptureAmount, onEdit, onAbonar, onSplit, onPayFromFund, fundBalance, onViewSource, onDelete, onPostpone, onAdvance, borderLeft, hideDate, hideDueLabel, railMode, permissions, initialLoad = true }) {
+export function PayCard({ payment: p, cfg, onMarkPaid, onRequestVariableAmount, onConfirmVariablePaid, onRequestNextPeriodConfirm, onMarkUnpaid, onCaptureAmount, onEdit, onAbonar, onSplit, onPayFromFund, fundBalance, onViewSource, onDelete, onPostpone, onAdvance, borderLeft, hideDate, hideDueLabel, railMode, permissions, initialLoad = true, confirmBeforePay }) {
   // Card de solo lectura — reflejo automático de una contribución a un
   // gasto de un Espacio Compartido (registrada por cualquier miembro desde
   // "Dividir entre miembros"). Nunca se captura a mano, así que no se puede
@@ -131,6 +131,33 @@ export function PayCard({ payment: p, cfg, onMarkPaid, onRequestVariableAmount, 
       el.style.maxHeight = '0px'
       el.style.marginBottom = '-8px'
     })
+  }
+
+  // Gate de confirmación para "Próximo periodo" — si esta card viene del
+  // riel de "Pagos del próximo periodo" (confirmBeforePay), antes de
+  // arrancar CUALQUIER camino de pago (nómina directa o el mini-menú de
+  // Espacio Compartido) se pide confirmación explícita, para prevenir que
+  // alguien pague por error un pago que en realidad vence hasta el
+  // siguiente periodo, confundido de qué switch tiene activo. Mismo patrón
+  // de Promise que ya usa onRequestVariableAmount — si se cancela, no pasa
+  // nada (ni animación, ni menú, ni guardado).
+  async function handleCheckButtonClick(e) {
+    e?.stopPropagation()
+    if (!canMarkPaid) { blocked('marcar pagos'); return }
+    if (phase !== 'idle') return
+    // Se captura ANTES del await — e.currentTarget se pone en null en
+    // cuanto el navegador termina de despachar el evento, y aquí seguiría
+    // haciendo falta después de esperar la respuesta del modal.
+    const targetEl = e?.currentTarget
+    if (confirmBeforePay && onRequestNextPeriodConfirm) {
+      const confirmed = await onRequestNextPeriodConfirm(p)
+      if (!confirmed) return
+    }
+    if (p.space_id && onSplit) {
+      openCheckMenuAt(targetEl)
+      return
+    }
+    handleMarkPaidClick(e)
   }
 
   async function handleMarkPaidClick(e) {
@@ -309,16 +336,7 @@ export function PayCard({ payment: p, cfg, onMarkPaid, onRequestVariableAmount, 
           <div className={styles.actionsSection}>
             {isPending && (
               <button
-                onClick={e => {
-                  e.stopPropagation()
-                  if (p.space_id && onSplit) {
-                    if (!canMarkPaid) { blocked('marcar pagos'); return }
-                    if (phase !== 'idle') return
-                    openCheckMenuAt(e.currentTarget)
-                    return
-                  }
-                  handleMarkPaidClick(e)
-                }}
+                onClick={handleCheckButtonClick}
                 disabled={phase !== 'idle'}
                 className={styles.markPaidButton}
                 style={{ background: canMarkPaid ? 'var(--paid)' : 'var(--border)' }}

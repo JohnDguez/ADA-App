@@ -18,7 +18,13 @@ import styles from './PayRail.module.css'
 // `dotColor`/`dotTextColor`: color del punto y su texto — se pasa una vez
 // por sección (Vencidos / Periodo actual / Próximo periodo), igual que
 // antes se pasaba `borderLeft` a cada `PayCard` de esa sección.
-export function PayRail({ payments, cfg, dotColor, dotTextColor, handlers, permissions }) {
+// `nextPeriodMode`: true solo cuando este riel es el de "Pagos del próximo
+// periodo" en HomePage.jsx — se reenvía a cada PayCard como
+// `confirmBeforePay`, para que el check pida confirmación antes de marcar
+// pagado un pago que en realidad vence hasta el periodo siguiente (previene
+// pagar por error algo del periodo equivocado si el usuario se confunde de
+// switch activo). No afecta a Vencidos/Pagos del periodo actual.
+export function PayRail({ payments, cfg, dotColor, dotTextColor, handlers, permissions, nextPeriodMode }) {
   // Detecta el primer render de ESTE riel — las cards que ya vienen desde
   // ahí no deben "crecer" al aparecer (se verían todas animando de golpe
   // al cargar la página). Solo las que se agregan DESPUÉS (un pago nuevo,
@@ -65,7 +71,7 @@ export function PayRail({ payments, cfg, dotColor, dotTextColor, handlers, permi
               </div>
               <div className={styles.dayItemsCol}>
                 {g.items.map(p => (
-                  <PayCard key={p.id} payment={p} cfg={cfg} {...handlers} permissions={permissions} railMode hideDate hideDueLabel initialLoad={initialLoad} />
+                  <PayCard key={p.id} payment={p} cfg={cfg} {...handlers} permissions={permissions} railMode hideDate hideDueLabel initialLoad={initialLoad} confirmBeforePay={nextPeriodMode} />
                 ))}
               </div>
             </div>
