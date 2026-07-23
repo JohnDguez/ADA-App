@@ -146,6 +146,32 @@ export function HomePage({ payments, profile, spaceSwitcher, activeSpaceHeader, 
   const [touchStartX,    setTouchStartX]    = useState(null)
   const [paidExpanded, setPaidExpanded] = useState(false)
 
+  // Slide sincronizado del contenido de abajo (colapsable/Vencidos/lista vs
+  // lista de "Próximo periodo") — mismo movimiento horizontal que ya usa
+  // la tarjeta de métricas (activeCard), pero el alto de cada bloque es muy
+  // distinto (1 pago vs 10), así que además del translateX se anima el
+  // ALTO real del panel activo (medido con ResizeObserver, no un valor fijo
+  // — así también reacciona si el contenido del panel activo cambia de
+  // tamaño solo, ej. al marcar un pago y que la card colapse su espacio).
+  // Ambos paneles quedan SIEMPRE montados (uno visible, el otro trasladado
+  // fuera de vista) para que el slide se vea continuo — costo consciente:
+  // el riel de "Próximo periodo" también se renderiza mientras se ve
+  // "Periodo actual", y viceversa (antes solo se montaba el que estuviera
+  // activo).
+  const actualPanelRef = useRef(null)
+  const nextPanelRef   = useRef(null)
+  const [swipeHeight, setSwipeHeight] = useState(null)
+
+  useEffect(() => {
+    const el = activeCard === 0 ? actualPanelRef.current : nextPanelRef.current
+    if (!el) return
+    const ro = new ResizeObserver(entries => {
+      for (const entry of entries) setSwipeHeight(entry.contentRect.height)
+    })
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [activeCard])
+
   // ───────────────────────────────────────────────────────────────────────
   // CÁLCULOS DERIVADOS DE payments/profile — antes vivían sueltos en el
   // cuerpo del componente y se recalculaban en CADA render (ej. al abrir el
@@ -394,16 +420,19 @@ export function HomePage({ payments, profile, spaceSwitcher, activeSpaceHeader, 
               debajo, con su propio toggle independiente
               (showNextPeriod/localStorage). Eso saturaba la pantalla (2
               periodos a la vez) y no dejaba claro de qué periodo era cada
-              pago. Ahora solo se ve un bloque: el que indique el switch.
-              "Periodo actual" conserva el orden de siempre (colapsable de
-              pagados → Vencidos → lista); "Próximo periodo" no muestra ni
-              el colapsable ni Vencidos (no aplica a futuro — nada puede
-              estar "vencido" ni "pagado" en un periodo que no ha
-              arrancado), solo su lista, con `nextPeriodMode` en el PayRail
-              para que el check de cada pago pida confirmación antes de
-              marcarlo pagado (ver ConfirmNextPeriodPayModal). */}
-          {activeCard === 0 ? (
-            <>
+              pago. Ahora solo se ve un bloque a la vez, con un slide
+              horizontal sincronizado con el swipe de la tarjeta de arriba
+              (ver swipeHeight/ResizeObserver arriba). "Periodo actual"
+              conserva el orden de siempre (colapsable de pagados → Vencidos
+              → lista, con "Pagos pendientes" como separador SOLO si hay
+              vencidos — sin título, "Vencidos" y la lista normal se verían
+              pegadas sin ninguna frontera visual); "Próximo periodo" no
+              muestra ni el colapsable ni Vencidos (no aplica a futuro),
+              solo su lista, con `nextPeriodMode` en el PayRail para que el
+              check de cada pago pida confirmación antes de marcarlo pagado
+              (ver ConfirmNextPeriodPayModal). */}
+          <div className={styles.contentSwipeWrap} style={{ height: swipeHeight != null ? swipeHeight : 'auto' }}>
+            <div ref={actualPanelRef} className={styles.contentPanel} style={{ transform: `translateX(${activeCard === 0 ? 0 : -100}%)` }}>
               {pagadosEstePeriodo.length > 0 && (
                 <div data-coachmark="home-paid-collapse" className={styles.paidCollapseWrapper}>
                   <PaidCollapse
@@ -425,27 +454,35 @@ export function HomePage({ payments, profile, spaceSwitcher, activeSpaceHeader, 
                 </div>
               )}
 
-              {/* Pagos del periodo (antes "Próximos a vencer" — se renombró
-                  porque puede haber pagos por vencer que en realidad son de
-                  OTRO periodo, y esta sección es específicamente la del
-                  periodo actual). Estado vacío tipo drop-zone (v0.9.176). */}
+              {/* Pagos del periodo (antes "Próximos a vencer"). Sin header
+                  propio (se quitó junto con el de "Próximo periodo" — el
+                  switch de arriba y la fecha de la tarjeta ya dicen de qué
+                  periodo se trata). PERO si hay Vencidos justo arriba,
+                  ambas listas usan la misma fila visual y se verían
+                  pegadas sin ninguna separación — "Pagos pendientes" solo
+                  aparece en ese caso, únicamente para separar los 2
+                  bloques; si no hay vencidos, la lista ya es autoexplicativa
+                  justo debajo del colapsable de pagados y no hace falta. */}
               <div data-coachmark="home-rail" className={styles.periodSection}>
-                <SectionHead left="Pagos del periodo" right={`Periodo ${periodRange(profile)}`} />
+                {vencidos.length > 0 && (
+                  <div className={styles.pendingSectionTitle}>Pagos pendientes</div>
+                )}
                 {delPeriodo.length === 0
                   ? <EmptyState title="Sin pagos pendientes para este periodo" subtitle="Toca aquí o el botón + de abajo para añadir uno" onClick={onAdd} />
                   : <PayRail payments={delPeriodo} cfg={profile} dotColor="var(--upcoming-border)" dotTextColor="var(--impact-warning-text)" handlers={handlers} permissions={spacePermissions} />
                 }
               </div>
-            </>
-          ) : (
-            <div data-coachmark="home-rail" className={styles.periodSection}>
-              <SectionHead left="Pagos del próximo periodo" right={nextPeriodRange(profile)} />
-              {upcoming.length === 0
-                ? <EmptyState title="Sin pagos registrados para el próximo periodo" subtitle="Toca aquí o el botón + de abajo para añadir uno" onClick={onAdd} />
-                : <PayRail payments={upcoming} cfg={profile} dotColor="var(--accent)" dotTextColor="var(--bg)" handlers={handlers} permissions={spacePermissions} nextPeriodMode />
-              }
             </div>
-          )}
+
+            <div ref={nextPanelRef} className={styles.contentPanel} style={{ transform: `translateX(${activeCard === 0 ? 100 : 0}%)` }}>
+              <div className={styles.periodSection}>
+                {upcoming.length === 0
+                  ? <EmptyState title="Sin pagos registrados para el próximo periodo" subtitle="Toca aquí o el botón + de abajo para añadir uno" onClick={onAdd} />
+                  : <PayRail payments={upcoming} cfg={profile} dotColor="var(--accent)" dotTextColor="var(--bg)" handlers={handlers} permissions={spacePermissions} nextPeriodMode />
+                }
+              </div>
+            </div>
+          </div>
         </div>
         </>
         )}
@@ -468,14 +505,9 @@ export function HomePage({ payments, profile, spaceSwitcher, activeSpaceHeader, 
   )
 }
 
-function SectionHead({ left, right }) {
-  return (
-    <div className={styles.sectionHead}>
-      <span className={styles.sectionHeadLeft}>{left}</span>
-      {right && <span className={styles.sectionHeadRight}>{right}</span>}
-    </div>
-  )
-}
+// (SectionHead se quitó — ya no se usa en ningún lado desde que se quitaron
+// los títulos "Pagos del periodo"/"Pagos del próximo periodo", redundantes
+// con el switch de arriba)
 
 // (Empty/EmptyState ahora vive en components/EmptyState.jsx — extraído en
 // v0.9.176 para poder reutilizarlo fuera de Home)
