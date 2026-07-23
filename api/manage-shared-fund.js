@@ -1,4 +1,29 @@
 const { createClient } = require('@supabase/supabase-js')
+const webpush = require('web-push')
+const { notifyUsers } = require('./_notifyLib')
+
+// Mismas 3 variables VAPID que ya usan notify-space-change.js /
+// register-contribution.js — este archivo nunca había notificado nada
+// (ni in-app ni push) desde que existe el Fondo Compartido (v0.9.212).
+webpush.setVapidDetails(
+  process.env.VAPID_EMAIL,
+  process.env.VITE_VAPID_PUBLIC_KEY,
+  process.env.VAPID_PRIVATE_KEY
+)
+
+// Avisa a los demás miembros del espacio (nombre real del actor resuelto
+// aquí) — siempre, sin filtrar por notify_on_changes, mismo criterio ya
+// usado para el resto de eventos estructurales agregados en v0.9.236.
+async function notifyAllSpaceMembers(spaceId, actorId, buildMessage) {
+  const [{ data: actorProfile }, { data: memberRows }] = await Promise.all([
+    supabase.from('profiles').select('name').eq('id', actorId).maybeSingle(),
+    supabase.from('shared_space_members').select('user_id').eq('space_id', spaceId).neq('user_id', actorId),
+  ])
+  const actorName = actorProfile?.name || 'Alguien'
+  const { title, body } = buildMessage(actorName)
+  const userIds = (memberRows || []).map(m => m.user_id)
+  await notifyUsers(supabase, webpush, { userIds, title, body, actorName })
+}
 
 // Reimplementación fiel de cobroPeriod()/today()/dateToStr()/addDays() de
 // lib/utils.js — mismo motivo que en migrate-shared-funds.js (este archivo
@@ -140,6 +165,23 @@ module.exports = async function handler(req, res) {
       if (entry.reflection_payment_id) {
         await supabase.from('payments').delete().eq('id', entry.reflection_payment_id)
       }
+      try {
+        const amountStr = '$' + Number(entry.amount).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+        // Si el dueño elimina la aportación de OTRO miembro (permiso
+        // can_delete), se aclara de quién era — si no, ambigüo ("eliminó
+        // una aportación", ¿la de quién?).
+        let depositorClause = ''
+        if (entry.user_id !== actorId) {
+          const { data: depositorProfile } = await supabase.from('profiles').select('name').eq('id', entry.user_id).maybeSingle()
+          depositorClause = ` de ${depositorProfile?.name || 'otro miembro'}`
+        }
+        await notifyAllSpaceMembers(spaceId, actorId, (actorName) => ({
+          title: `${actorName} eliminó una aportación al Fondo`,
+          body: `Se quitó ${amountStr}${depositorClause} del Fondo de ${space.name}`,
+        }))
+      } catch (e) {
+        // Silencioso a propósito
+      }
       return res.json({ error: null, deleted: true })
     }
 
@@ -177,6 +219,16 @@ module.exports = async function handler(req, res) {
     if (ledgerErr) {
       await supabase.from('payments').delete().eq('id', reflection.id)
       return res.status(500).json({ error: 'No se pudo aportar al Fondo: ' + ledgerErr.message })
+    }
+
+    try {
+      const amountStr = '$' + numAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+      await notifyAllSpaceMembers(spaceId, actorId, (actorName) => ({
+        title: `${actorName} aportó al Fondo Compartido`,
+        body: `+ ${amountStr} en ${space.name}`,
+      }))
+    } catch (e) {
+      // Silencioso a propósito
     }
 
     return res.json({ error: null, reflectionPaymentId: reflection.id })
