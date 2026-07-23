@@ -113,7 +113,7 @@ function HalfRing({ percent, width = 220, strokeWidth = 14 }) {
   )
 }
 
-export function HomePage({ payments, profile, spaceSwitcher, activeSpaceHeader, activeSpaceId, sharedSpaces, spacePermissions, onOpenPremium, onSpaceReady, onAdd, onMarkPaid, onRequestVariableAmount, onConfirmVariablePaid, onMarkUnpaid, onCaptureAmount, onEdit, onAbonar, onSplit, onPayFromFund, fundBalance, onViewSource, onDelete, onPostpone, onAdvance, onGoSettings, notifications, unreadCount, onMarkAsRead, onMarkAllAsRead, onDeleteNotif, onClearAllNotifs, slideClass }) {
+export function HomePage({ payments, profile, spaceSwitcher, activeSpaceHeader, activeSpaceId, sharedSpaces, spacePermissions, onOpenPremium, onSpaceReady, onAdd, onMarkPaid, onRequestVariableAmount, onConfirmVariablePaid, onRequestNextPeriodConfirm, onMarkUnpaid, onCaptureAmount, onEdit, onAbonar, onSplit, onPayFromFund, fundBalance, onViewSource, onDelete, onPostpone, onAdvance, onGoSettings, notifications, unreadCount, onMarkAsRead, onMarkAllAsRead, onDeleteNotif, onClearAllNotifs, slideClass }) {
   // Detecta un cambio REAL de espacio activo (no el primer montaje de la
   // página, que también dispararía un `key` remontado sin querer) — antes
   // se usaba `key={activeSpaceId}` para forzar el remontado del contenido,
@@ -134,18 +134,17 @@ export function HomePage({ payments, profile, spaceSwitcher, activeSpaceHeader, 
   }, [activeSpaceId])
 
   const [notifOpen,      setNotifOpen]      = useState(false)
+  // `activeCard` ya no solo controla qué tarjeta de métricas se ve (swipe
+  // Periodo actual/Próximo periodo) — desde esta sesión también decide qué
+  // se muestra DEBAJO (Vencidos, "X pagados", lista de pagos). El toggle
+  // independiente `showNextPeriod` (con su propio localStorage) se quitó
+  // por completo: antes permitía ver "Pagos del periodo" Y "Próximo
+  // periodo" apilados al mismo tiempo, lo cual saturaba la pantalla y no
+  // dejaba claro de qué periodo era cada pago — ahora solo se ve un bloque
+  // a la vez, el que indique el switch de arriba.
   const [activeCard,     setActiveCard]     = useState(0)
   const [touchStartX,    setTouchStartX]    = useState(null)
-  const [showNextPeriod, setShowNextPeriod] = useState(() =>
-    localStorage.getItem('ada_show_next_period') !== 'false'
-  )
   const [paidExpanded, setPaidExpanded] = useState(false)
-
-  function toggleNextPeriod() {
-    const next = !showNextPeriod
-    setShowNextPeriod(next)
-    localStorage.setItem('ada_show_next_period', String(next))
-  }
 
   // ───────────────────────────────────────────────────────────────────────
   // CÁLCULOS DERIVADOS DE payments/profile — antes vivían sueltos en el
@@ -161,7 +160,6 @@ export function HomePage({ payments, profile, spaceSwitcher, activeSpaceHeader, 
   // UI ajeno a los datos. Sin cambios de fórmula ni de comportamiento
   // visible — mismo resultado, solo se calcula menos veces.
   const derived = useMemo(() => {
-    const now = new Date()
     const { start, end } = cobroPeriod(profile)
     const { start: nextStart, end: nextEnd } = nextCobroPeriod(profile)
 
@@ -198,25 +196,6 @@ export function HomePage({ payments, profile, spaceSwitcher, activeSpaceHeader, 
     const pagadosFijosEstePeriodo     = pagadosEstePeriodo.filter(p => !p.is_variable).length
     const pagadosVariablesEstePeriodo = pagadosEstePeriodo.filter(p => p.is_variable).length
 
-    const thisMonth  = now.getMonth()
-    const thisYear   = now.getFullYear()
-    const paidThisMonth = payments.filter(p => {
-      if (!p.is_paid) return false
-      const d = dateOf(p.due_date)
-      return d.getMonth() === thisMonth && d.getFullYear() === thisYear
-    })
-    const variableThisMonth = paidThisMonth.filter(p => p.is_variable).length
-    // Igual que en el periodo — para el estado "sin pagos pendientes" de la
-    // tarjeta Mes, cuántos de los ya pagados fueron fijos vs variables.
-    const paidFixedThisMonth = paidThisMonth.length - variableThisMonth
-    const paidThisMonthAmt  = paidThisMonth.reduce((a, p) => a + Number(p.amount), 0)
-    const totalThisMonth = payments.filter(p => {
-      const d = dateOf(p.due_date)
-      return d.getMonth() === thisMonth && d.getFullYear() === thisYear && !p.paused
-    }).reduce((a, p) => a + Number(p.amount), 0)
-    const pendingThisMonthAmt = Math.max(totalThisMonth - paidThisMonthAmt, 0)
-    const pctPagadoMes = totalThisMonth > 0 ? Math.round((paidThisMonthAmt / totalThisMonth) * 100) : 0
-
     // Solo pagos DENTRO del próximo periodo (no todos los futuros)
     const upcoming = payments.filter(p => {
       if (p.is_paid || p.paused || p.postponed || p.is_master) return false
@@ -224,30 +203,27 @@ export function HomePage({ payments, profile, spaceSwitcher, activeSpaceHeader, 
       return d >= nextStart && d <= nextEnd
     }).sort((a, b) => dateOf(a.due_date) - dateOf(b.due_date))
 
-    // Card 2 de la tarjeta de métricas — para usuarios con periodo de cobro
-    // Mensual, "Mes" mostraba exactamente el mismo rango que "Periodo"
-    // (redundante cuando el corte mensual es el día 1, ya que el periodo de
-    // cobro completo coincide con el mes calendario). Para ellos la pestaña
-    // pasa a llamarse "Próximo periodo" y muestra el periodo siguiente en vez de
-    // repetir el actual — mismo diseño de tarjeta/anillo, solo cambia la
-    // data. Como ese periodo aún no arranca, nada está "pagado" todavía: el
-    // anillo se queda vacío (0%) y la fila de pagado/pendiente se reemplaza
-    // por un solo total "programado" (decisión de Johnatan, para no mostrar
-    // un confuso "$0.00 pagado"). Mismo criterio de pago fijo/variable ya
-    // usado para `pendingAmt`/`pendingVariableCount` del periodo actual.
-    const isMonthly = profile.cobro_freq === 'monthly'
-    const nextMonthKnownTotal          = upcoming.filter(p => !p.is_variable || p.amount > 0).reduce((a, p) => a + Number(p.amount), 0)
-    const nextMonthFixedCount          = upcoming.filter(p => !p.is_variable || p.amount > 0).length
-    const nextMonthPendingVariableCount = upcoming.filter(p => p.is_variable && !p.amount).length
+    // Card 2 de la tarjeta de métricas — antes mostraba "Mes actual"
+    // (totales del mes calendario) para periodo Semanal/Quincenal, y solo
+    // pasaba a "Próximo periodo" para Mensual. Unificado: ahora SIEMPRE es
+    // "Próximo periodo" para cualquier frecuencia (pedido explícito de
+    // Johnatan — el switch de arriba ahora también decide qué se muestra
+    // debajo, así que las 2 pestañas deben significar exactamente lo mismo
+    // sin importar la frecuencia de cobro). Como ese periodo aún no
+    // arranca, nada está "pagado" todavía: el anillo se queda vacío (0%) y
+    // no hay fila de pagado/pendiente, solo el total conocido. Mismo
+    // criterio de pago fijo/variable ya usado para
+    // `pendingAmt`/`pendingVariableCount` del periodo actual.
+    const nextPeriodKnownTotal          = upcoming.filter(p => !p.is_variable || p.amount > 0).reduce((a, p) => a + Number(p.amount), 0)
+    const nextPeriodFixedCount          = upcoming.filter(p => !p.is_variable || p.amount > 0).length
+    const nextPeriodPendingVariableCount = upcoming.filter(p => p.is_variable && !p.amount).length
 
     return {
       start, end, nextStart, nextEnd,
       pagarEsteCobro, vencidos, delPeriodo, pendingAmt, pendingVariableCount,
       pagadosEstePeriodo, pagadoMonto, totalConocido, pctPagado, pagosFijosCount,
       pagadosFijosEstePeriodo, pagadosVariablesEstePeriodo,
-      thisMonth, thisYear, paidThisMonth, variableThisMonth, paidFixedThisMonth,
-      paidThisMonthAmt, totalThisMonth, pendingThisMonthAmt, pctPagadoMes,
-      upcoming, isMonthly, nextMonthKnownTotal, nextMonthFixedCount, nextMonthPendingVariableCount,
+      upcoming, nextPeriodKnownTotal, nextPeriodFixedCount, nextPeriodPendingVariableCount,
     }
   }, [payments, profile])
 
@@ -256,12 +232,10 @@ export function HomePage({ payments, profile, spaceSwitcher, activeSpaceHeader, 
     pagarEsteCobro, vencidos, delPeriodo, pendingAmt, pendingVariableCount,
     pagadosEstePeriodo, pagadoMonto, totalConocido, pctPagado, pagosFijosCount,
     pagadosFijosEstePeriodo, pagadosVariablesEstePeriodo,
-    thisMonth, thisYear, paidThisMonth, variableThisMonth, paidFixedThisMonth,
-    paidThisMonthAmt, totalThisMonth, pendingThisMonthAmt, pctPagadoMes,
-    upcoming, isMonthly, nextMonthKnownTotal, nextMonthFixedCount, nextMonthPendingVariableCount,
+    upcoming, nextPeriodKnownTotal, nextPeriodFixedCount, nextPeriodPendingVariableCount,
   } = derived
 
-  const handlers = { onMarkPaid, onRequestVariableAmount, onConfirmVariablePaid, onMarkUnpaid, onCaptureAmount, onEdit, onAbonar, onSplit, onPayFromFund, fundBalance, onDelete, onPostpone, onAdvance }
+  const handlers = { onMarkPaid, onRequestVariableAmount, onConfirmVariablePaid, onRequestNextPeriodConfirm, onMarkUnpaid, onCaptureAmount, onEdit, onAbonar, onSplit, onPayFromFund, fundBalance, onDelete, onPostpone, onAdvance }
 
   return (
     <div className={styles.pageRoot}>
@@ -309,13 +283,13 @@ export function HomePage({ payments, profile, spaceSwitcher, activeSpaceHeader, 
               onClick={() => setActiveCard(0)}
               className={`${styles.tabButton} ${activeCard === 0 ? styles.tabButtonActive : ''}`}
             >
-              Periodo
+              Periodo actual
             </button>
             <button
               onClick={() => setActiveCard(1)}
               className={`${styles.tabButton} ${activeCard === 1 ? styles.tabButtonActive : ''}`}
             >
-              {isMonthly ? 'Próximo periodo' : 'Mes actual'}
+              Próximo periodo
             </button>
           </div>
 
@@ -384,61 +358,28 @@ export function HomePage({ payments, profile, spaceSwitcher, activeSpaceHeader, 
                 )}
               </div>
 
-              {/* Card 2 — Este mes / Próximo periodo. Mismo tratamiento visual
-                  que Card 1 en los 3 casos. */}
+              {/* Card 2 — Próximo periodo. Siempre esta data para cualquier
+                  frecuencia de cobro (antes solo para Mensual; Semanal/
+                  Quincenal mostraban "Mes actual" con totales del mes
+                  calendario — quitado por completo, ver useMemo de arriba).
+                  Mismo tratamiento visual que Card 1. Como este periodo aún
+                  no arranca, nada está "pagado" todavía: anillo vacío (0%),
+                  sin fila pagado/pendiente. */}
               <div className={styles.metricCard}>
-                {isMonthly ? (
-                  <>
-                    <div className={styles.dateBadge}>
-                      {nextPeriodRange(profile)}
-                    </div>
-                    <div className={styles.clearFloat} />
-                    <HalfRing percent={0} />
-                    <div className={styles.cardTitle}>Total del próximo periodo</div>
-                    <div className={styles.cardAmount}>{fmt(nextMonthKnownTotal)}</div>
-                    <div className={styles.cardMeta}>
-                      {nextMonthFixedCount} pago{nextMonthFixedCount !== 1 ? 's' : ''} fijo{nextMonthFixedCount !== 1 ? 's' : ''}
-                    </div>
-                    {nextMonthPendingVariableCount > 0 && (
-                      <div className={styles.cardVariableNote}>
-                        {nextMonthPendingVariableCount} pago{nextMonthPendingVariableCount !== 1 ? 's' : ''} variable{nextMonthPendingVariableCount !== 1 ? 's' : ''} por confirmar
-                      </div>
-                    )}
-                  </>
-                ) : pendingThisMonthAmt <= 0 ? (
-                  <>
-                    <div className={styles.dateBadge}>
-                      {MONTHS[thisMonth]} {thisYear}
-                    </div>
-                    <div className={styles.clearFloat} />
-                    <HalfRing percent={1} />
-                    <div className={styles.cardTitle}>Total de este mes</div>
-                    <div className={styles.cardAmount}>{fmt(paidThisMonthAmt)}</div>
-                    {(paidFixedThisMonth > 0 || variableThisMonth > 0) && (
-                      <div className={styles.cardMeta}>
-                        {paidFixedThisMonth} pago{paidFixedThisMonth !== 1 ? 's' : ''} fijo{paidFixedThisMonth !== 1 ? 's' : ''}
-                        {variableThisMonth > 0 && ` · ${variableThisMonth} variable${variableThisMonth !== 1 ? 's' : ''}`}
-                      </div>
-                    )}
-                  </>
-                ) : (
-                  <>
-                    <div className={styles.dateBadge}>
-                      {MONTHS[thisMonth]} {thisYear}
-                    </div>
-                    <div className={styles.clearFloat} />
-                    <HalfRing percent={pctPagadoMes / 100} />
-                    <div className={styles.cardPaidPendingRow}>
-                      <span className={styles.cardPaidText}>{fmt(paidThisMonthAmt)} pagado</span>
-                      <span className={styles.cardPendingText}>{fmt(pendingThisMonthAmt)} pendiente</span>
-                    </div>
-                    <div className={styles.cardTitle}>Total de este mes</div>
-                    <div className={styles.cardAmount}>{fmt(totalThisMonth)}</div>
-                    <div className={styles.cardMeta}>
-                      {paidThisMonth.length} pagado{paidThisMonth.length !== 1 ? 's' : ''}
-                      {variableThisMonth > 0 && ` · ${variableThisMonth} variable${variableThisMonth !== 1 ? 's' : ''}`}
-                    </div>
-                  </>
+                <div className={styles.dateBadge}>
+                  {nextPeriodRange(profile)}
+                </div>
+                <div className={styles.clearFloat} />
+                <HalfRing percent={0} />
+                <div className={styles.cardTitle}>Total del próximo periodo</div>
+                <div className={styles.cardAmount}>{fmt(nextPeriodKnownTotal)}</div>
+                <div className={styles.cardMeta}>
+                  {nextPeriodFixedCount} pago{nextPeriodFixedCount !== 1 ? 's' : ''} fijo{nextPeriodFixedCount !== 1 ? 's' : ''}
+                </div>
+                {nextPeriodPendingVariableCount > 0 && (
+                  <div className={styles.cardVariableNote}>
+                    {nextPeriodPendingVariableCount} pago{nextPeriodPendingVariableCount !== 1 ? 's' : ''} variable{nextPeriodPendingVariableCount !== 1 ? 's' : ''} por confirmar
+                  </div>
                 )}
               </div>
             </div>
@@ -447,86 +388,64 @@ export function HomePage({ payments, profile, spaceSwitcher, activeSpaceHeader, 
 
         <div className={styles.contentPadding}>
 
-          {/* Colapsable de pagados — justo debajo de la card de métricas */}
-          {pagadosEstePeriodo.length > 0 && (
-            <div data-coachmark="home-paid-collapse" className={styles.paidCollapseWrapper}>
-              <PaidCollapse
-                payments={pagadosEstePeriodo}
-                expanded={paidExpanded}
-                onToggle={() => setPaidExpanded(v => !v)}
-                onMarkUnpaid={onMarkUnpaid}
-                onViewSource={onViewSource}
-              />
-            </div>
-          )}
-
-          {/* Vencidos */}
-          {vencidos.length > 0 && (
-            <div className={styles.overdueSection}>
-              <div className={styles.overdueTitle}>
-                Vencidos
-              </div>
-              <PayRail payments={vencidos} cfg={profile} dotColor="var(--overdue-border)" dotTextColor="var(--overdue-text)" handlers={handlers} permissions={spacePermissions} />
-            </div>
-          )}
-
-          {/* Pagos del periodo (antes "Próximos a vencer" — se renombró porque
-              puede haber pagos por vencer que en realidad son de OTRO periodo,
-              y esta sección es específicamente la del periodo actual) */}
-          {/* v0.9.176 — un amigo de Johnatan probó la app sin ver el coach
-              mark y no encontró cómo agregar un pago desde una sección vacía.
-              El estado vacío ahora es un área tipo drop-zone (borde punteado,
-              tocable) que abre onAdd directo, inspirado en el patrón de Budge.
-              Cuando NO hay datos ni en este periodo ni en el próximo, la
-              sección "Próximo periodo" completa (header + toggle) se oculta y
-              esta única área cubre ambos casos — no tiene sentido un segundo
-              bloque vacío debajo del primero. En cuanto cualquiera de los dos
-              tenga datos, "Próximo periodo" vuelve a aparecer con su toggle. */}
-          {(() => {
-            const currentEmpty = delPeriodo.length === 0
-            const nextEmpty     = upcoming.length === 0
-            const mergeEmpty    = currentEmpty && nextEmpty
-
-            return (
-              <>
-                <div data-coachmark="home-rail" className={styles.periodSection}>
-                  <SectionHead left="Pagos del periodo" right={`Periodo ${periodRange(profile)}`} />
-
-                  {currentEmpty
-                    ? <EmptyState title="Sin pagos pendientes para este periodo" subtitle="Toca aquí o el botón + de abajo para añadir uno" onClick={onAdd} />
-                    : <PayRail payments={delPeriodo} cfg={profile} dotColor="var(--upcoming-border)" dotTextColor="var(--impact-warning-text)" handlers={handlers} permissions={spacePermissions} />
-                  }
+          {/* Todo lo de abajo ahora reacciona al mismo switch de arriba
+              (activeCard) — antes "Vencidos"/"Pagos del periodo" siempre se
+              mostraban y "Próximo periodo" era un bloque APARTE, apilado
+              debajo, con su propio toggle independiente
+              (showNextPeriod/localStorage). Eso saturaba la pantalla (2
+              periodos a la vez) y no dejaba claro de qué periodo era cada
+              pago. Ahora solo se ve un bloque: el que indique el switch.
+              "Periodo actual" conserva el orden de siempre (colapsable de
+              pagados → Vencidos → lista); "Próximo periodo" no muestra ni
+              el colapsable ni Vencidos (no aplica a futuro — nada puede
+              estar "vencido" ni "pagado" en un periodo que no ha
+              arrancado), solo su lista, con `nextPeriodMode` en el PayRail
+              para que el check de cada pago pida confirmación antes de
+              marcarlo pagado (ver ConfirmNextPeriodPayModal). */}
+          {activeCard === 0 ? (
+            <>
+              {pagadosEstePeriodo.length > 0 && (
+                <div data-coachmark="home-paid-collapse" className={styles.paidCollapseWrapper}>
+                  <PaidCollapse
+                    payments={pagadosEstePeriodo}
+                    expanded={paidExpanded}
+                    onToggle={() => setPaidExpanded(v => !v)}
+                    onMarkUnpaid={onMarkUnpaid}
+                    onViewSource={onViewSource}
+                  />
                 </div>
+              )}
 
-                {!mergeEmpty && (
-                  <>
-                    {/* Próximo periodo — toggle + filtro exacto al periodo */}
-                    <div className={styles.nextPeriodSection}>
-                      <div className={styles.nextPeriodHeader}>
-                        <span className={styles.nextPeriodLabel}>Próximo periodo</span>
-                        <div onClick={toggleNextPeriod} className={styles.toggleClickWrap}>
-                          <div className="toggle-track" style={{ background: showNextPeriod ? 'var(--accent)' : 'var(--border)' }}>
-                            <div className="toggle-thumb" style={{ left: showNextPeriod ? 19 : 3 }} />
-                          </div>
-                        </div>
-                      </div>
-                      <span className={styles.nextPeriodRangeText}>
-                        {nextPeriodRange(profile)}
-                      </span>
-                    </div>
+              {vencidos.length > 0 && (
+                <div className={styles.overdueSection}>
+                  <div className={styles.overdueTitle}>
+                    Vencidos
+                  </div>
+                  <PayRail payments={vencidos} cfg={profile} dotColor="var(--overdue-border)" dotTextColor="var(--overdue-text)" handlers={handlers} permissions={spacePermissions} />
+                </div>
+              )}
 
-                    {showNextPeriod && (
-                      nextEmpty
-                        ? <EmptyState title="Sin pagos registrados para el próximo periodo" subtitle="Toca aquí o el botón + de abajo para añadir uno" onClick={onAdd} />
-                        : <div className={styles.upcomingListWrapper}>
-                            <PayRail payments={upcoming} cfg={profile} dotColor="var(--accent)" dotTextColor="var(--bg)" handlers={handlers} permissions={spacePermissions} />
-                          </div>
-                    )}
-                  </>
-                )}
-              </>
-            )
-          })()}
+              {/* Pagos del periodo (antes "Próximos a vencer" — se renombró
+                  porque puede haber pagos por vencer que en realidad son de
+                  OTRO periodo, y esta sección es específicamente la del
+                  periodo actual). Estado vacío tipo drop-zone (v0.9.176). */}
+              <div data-coachmark="home-rail" className={styles.periodSection}>
+                <SectionHead left="Pagos del periodo" right={`Periodo ${periodRange(profile)}`} />
+                {delPeriodo.length === 0
+                  ? <EmptyState title="Sin pagos pendientes para este periodo" subtitle="Toca aquí o el botón + de abajo para añadir uno" onClick={onAdd} />
+                  : <PayRail payments={delPeriodo} cfg={profile} dotColor="var(--upcoming-border)" dotTextColor="var(--impact-warning-text)" handlers={handlers} permissions={spacePermissions} />
+                }
+              </div>
+            </>
+          ) : (
+            <div data-coachmark="home-rail" className={styles.periodSection}>
+              <SectionHead left="Pagos del próximo periodo" right={nextPeriodRange(profile)} />
+              {upcoming.length === 0
+                ? <EmptyState title="Sin pagos registrados para el próximo periodo" subtitle="Toca aquí o el botón + de abajo para añadir uno" onClick={onAdd} />
+                : <PayRail payments={upcoming} cfg={profile} dotColor="var(--accent)" dotTextColor="var(--bg)" handlers={handlers} permissions={spacePermissions} nextPeriodMode />
+              }
+            </div>
+          )}
         </div>
         </>
         )}
