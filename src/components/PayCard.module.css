@@ -218,8 +218,7 @@
 }
 
 .contextMenu {
-  position: absolute;
-  right: 0;
+  position: fixed;
   background: var(--menu-bg);
   border: 0.5px solid var(--border);
   border-radius: var(--radius-sm);

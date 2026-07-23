@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import { MoreVertical, Check, Pencil, Trash2, Clock, ChevronDown, ChevronUp, RotateCcw, FastForward, DollarSign, Eye, Users, PiggyBank } from 'lucide-react'
 import { statusOf, daysDiff, dateOf, fmt, MONTHS_SHORT, periodLabel, periodCountLabel, RECUR_FREQ, installmentLabel } from '../lib/utils'
 import { showToast } from './Toast'
@@ -67,11 +68,28 @@ export function PayCard({ payment: p, cfg, onMarkPaid, onRequestVariableAmount, 
   }
 
   const [menuOpen, setMenuOpen] = useState(false)
-  const [menuUpward, setMenuUpward] = useState(false)
   const menuRef = useRef(null)
+  // Los 2 menús flotantes (opciones y check) se renderizan vía portal
+  // directo a document.body (ver más abajo) — desde v0.9.234 dejaron de
+  // vivir dentro de .cardOuter porque un ancestro nuevo más arriba
+  // (.contentSwipeWrap, el slide de Periodo actual/Próximo periodo) tiene
+  // `overflow: hidden` y los recortaba al abrirse hacia arriba cerca del
+  // principio de la lista. `menuPos`/`checkMenuPos` guardan la posición en
+  // píxeles de viewport (position: fixed), calculada a partir del rect de
+  // `.cardOuter` en el momento de abrir — mismo criterio que antes lograba
+  // el CSS relativo (`top: 100%`/`bottom: 100%` de `.cardOuter`), solo que
+  // ahora hay que calcularlo a mano porque el menú ya no es descendiente
+  // de `.cardOuter` en el DOM real. `menuPortalRef` es un ref NUEVO, aparte
+  // de `menuRef` — `menuRef` sigue apuntando a `.cardOuter` (se necesita
+  // para medir su rect), pero ya no sirve para detectar clicks "afuera" del
+  // menú de opciones una vez portalizado (`.contains()` sigue el DOM real,
+  // no el árbol de React, así que un click DENTRO del menú portalizado ya
+  // no cuenta como estar dentro de `.cardOuter`).
+  const [menuPos, setMenuPos] = useState(null)
+  const menuPortalRef = useRef(null)
   const [checkMenuOpen,    setCheckMenuOpen]    = useState(false)
-  const [checkMenuUpward,  setCheckMenuUpward]  = useState(false)
   const checkMenuRef = useRef(null)
+  const [checkMenuPos, setCheckMenuPos] = useState(null)
 
   // Fases de la animación de "marcar como pagado":
   // idle → filling → (waitingModal solo si es variable) → labeled → exiting
@@ -145,16 +163,12 @@ export function PayCard({ payment: p, cfg, onMarkPaid, onRequestVariableAmount, 
     e?.stopPropagation()
     if (!canMarkPaid) { blocked('marcar pagos'); return }
     if (phase !== 'idle') return
-    // Se captura ANTES del await — e.currentTarget se pone en null en
-    // cuanto el navegador termina de despachar el evento, y aquí seguiría
-    // haciendo falta después de esperar la respuesta del modal.
-    const targetEl = e?.currentTarget
     if (confirmBeforePay && onRequestNextPeriodConfirm) {
       const confirmed = await onRequestNextPeriodConfirm(p)
       if (!confirmed) return
     }
     if (p.space_id && onSplit) {
-      openCheckMenuAt(targetEl)
+      openCheckMenuAt()
       return
     }
     handleMarkPaidClick(e)
@@ -225,23 +239,30 @@ export function PayCard({ payment: p, cfg, onMarkPaid, onRequestVariableAmount, 
     return count
   }
 
-  function openMenuAt(target) {
-    if (target) {
-      const rect = target.getBoundingClientRect()
-      const estimatedHeight = menuItemCount() * 38 + 8
-      // La barra de navegación inferior es `position: fixed` (bottom: 16px
-      // + ~64px de alto ≈ 90px) — sin restar ese espacio, la cuenta decía
-      // que el menú "cabía" contra el alto completo de la pantalla, aunque
-      // en la práctica la barra lo tapara. Bug real reportado por Johnatan
-      // (volvió a aparecer sin que la lógica en sí se hubiera roto).
-      const BOTTOM_NAV_SAFE_AREA = 90
-      setMenuUpward(rect.bottom + estimatedHeight > window.innerHeight - BOTTOM_NAV_SAFE_AREA)
-    }
+  function openMenuAt() {
+    const rect = menuRef.current.getBoundingClientRect()
+    const estimatedHeight = menuItemCount() * 38 + 8
+    // La barra de navegación inferior es `position: fixed` (bottom: 16px
+    // + ~64px de alto ≈ 90px) — sin restar ese espacio, la cuenta decía
+    // que el menú "cabía" contra el alto completo de la pantalla, aunque
+    // en la práctica la barra lo tapara. Bug real reportado por Johnatan
+    // (volvió a aparecer sin que la lógica en sí se hubiera roto).
+    const BOTTOM_NAV_SAFE_AREA = 90
+    const upward = rect.bottom + estimatedHeight > window.innerHeight - BOTTOM_NAV_SAFE_AREA
+    setMenuPos({
+      right: window.innerWidth - rect.right,
+      top: upward ? null : rect.bottom + 4,
+      bottom: upward ? window.innerHeight - rect.top + 4 : null,
+    })
     setMenuOpen(true)
   }
 
   useEffect(() => {
-    function handle(e) { if (menuRef.current && !menuRef.current.contains(e.target)) setMenuOpen(false) }
+    function handle(e) {
+      if (menuRef.current && menuRef.current.contains(e.target)) return
+      if (menuPortalRef.current && menuPortalRef.current.contains(e.target)) return
+      setMenuOpen(false)
+    }
     if (menuOpen) document.addEventListener('mousedown', handle)
     return () => document.removeEventListener('mousedown', handle)
   }, [menuOpen])
@@ -250,12 +271,17 @@ export function PayCard({ payment: p, cfg, onMarkPaid, onRequestVariableAmount, 
   // "Pagar de mi nómina" (como ya funciona hoy) vs "Pago compartido" (abre
   // Dividir). Existe para que la gente descubra que se puede dividir sin
   // tener que encontrar la opción enterrada en el menú de 3 puntos.
-  function openCheckMenuAt(target) {
-    const rect = target.getBoundingClientRect()
+  function openCheckMenuAt() {
+    const rect = menuRef.current.getBoundingClientRect()
     const itemCount = (onPayFromFund && fundBalance > 0) ? 3 : 2
     const estimatedHeight = itemCount * 38 + 8
     const BOTTOM_NAV_SAFE_AREA = 90
-    setCheckMenuUpward(rect.bottom + estimatedHeight > window.innerHeight - BOTTOM_NAV_SAFE_AREA)
+    const upward = rect.bottom + estimatedHeight > window.innerHeight - BOTTOM_NAV_SAFE_AREA
+    setCheckMenuPos({
+      right: window.innerWidth - rect.right,
+      top: upward ? null : rect.bottom + 4,
+      bottom: upward ? window.innerHeight - rect.top + 4 : null,
+    })
     setCheckMenuOpen(true)
   }
 
@@ -350,7 +376,7 @@ export function PayCard({ payment: p, cfg, onMarkPaid, onRequestVariableAmount, 
               </div>
             )}
             <button
-              onClick={e => { e.stopPropagation(); menuOpen ? setMenuOpen(false) : openMenuAt(e.currentTarget) }}
+              onClick={e => { e.stopPropagation(); menuOpen ? setMenuOpen(false) : openMenuAt() }}
               className={styles.menuTriggerButton}
             >
               <MoreVertical size={15} color="var(--text)" />
@@ -360,17 +386,25 @@ export function PayCard({ payment: p, cfg, onMarkPaid, onRequestVariableAmount, 
       </div>
       </div>
 
-      {/* Menú contextual — fuera de .cardWrapper (que tiene overflow:hidden
-          para la animación de colapso/crecimiento) para que no se recorte;
-          vive en .cardOuter, que solo posiciona, sin recortar nada. */}
-      {menuOpen && (
+      {/* Menú contextual — se renderiza vía portal directo a document.body
+          (ver menuPos arriba), NO como descendiente normal de .cardOuter.
+          Antes vivía dentro de .cardOuter (fuera de .cardWrapper, que tiene
+          overflow:hidden para la animación de colapso/crecimiento) y eso
+          bastaba — pero desde que existe .contentSwipeWrap (slide de
+          Periodo actual/Próximo periodo, con SU PROPIO overflow:hidden más
+          arriba en el árbol) ya no alcanza: cualquier ancestro con overflow
+          hidden en cualquier nivel lo recorta. Un portal es la única forma
+          de escapar de verdad, sin importar cuántos overflow:hidden haya
+          arriba. */}
+      {menuOpen && menuPos && createPortal(
         <div
+          ref={menuPortalRef}
           className={styles.contextMenu}
           style={{
-            top: menuUpward ? 'auto' : '100%',
-            bottom: menuUpward ? '100%' : 'auto',
-            marginTop: menuUpward ? 0 : 4,
-            marginBottom: menuUpward ? 4 : 0,
+            position: 'fixed',
+            right: menuPos.right,
+            top: menuPos.top != null ? menuPos.top : 'auto',
+            bottom: menuPos.bottom != null ? menuPos.bottom : 'auto',
           }}
         >
           {isPending && p.is_installment && onAbonar && <MenuItem icon={<DollarSign size={14}/>} label="Abonar" onClick={() => { canMarkPaid ? onAbonar(p) : blocked('registrar abonos'); setMenuOpen(false) }} />}
@@ -381,22 +415,22 @@ export function PayCard({ payment: p, cfg, onMarkPaid, onRequestVariableAmount, 
           {isPending && p.space_id && onSplit && <MenuItem icon={<Users size={14}/>} label="Dividir entre miembros" onClick={() => { canMarkPaid ? onSplit(p) : blocked('registrar abonos'); setMenuOpen(false) }} />}
           {p.is_paid && <MenuItem icon={<RotateCcw size={14}/>} label="Marcar no pagado" onClick={() => { canMarkPaid ? onMarkUnpaid(p.id) : blocked('marcar pagos'); setMenuOpen(false) }} />}
           <MenuItem icon={<Trash2 size={14}/>} label="Eliminar" onClick={() => { canDelete ? onDelete(p.id) : blocked('eliminar pagos'); setMenuOpen(false) }} danger />
-        </div>
+        </div>,
+        document.body
       )}
 
-      {/* Mini-menú del check ("Pagar de mi nómina" / "Pago compartido") — mismo
-          motivo que el de arriba: vive en .cardOuter, no dentro de .card
-          (que tiene overflow:hidden para la animación de pintado verde),
-          para no recortarse. Bug real reportado por Johnatan con captura. */}
-      {checkMenuOpen && (
+      {/* Mini-menú del check ("Pagar de mi nómina" / "Pago compartido") —
+          mismo motivo y misma solución que el de arriba: portal a
+          document.body, con posición en píxeles (checkMenuPos). */}
+      {checkMenuOpen && checkMenuPos && createPortal(
         <div
           ref={checkMenuRef}
           className={styles.contextMenu}
           style={{
-            top: checkMenuUpward ? 'auto' : '100%',
-            bottom: checkMenuUpward ? '100%' : 'auto',
-            marginTop: checkMenuUpward ? 0 : 4,
-            marginBottom: checkMenuUpward ? 4 : 0,
+            position: 'fixed',
+            right: checkMenuPos.right,
+            top: checkMenuPos.top != null ? checkMenuPos.top : 'auto',
+            bottom: checkMenuPos.bottom != null ? checkMenuPos.bottom : 'auto',
           }}
         >
           <MenuItem icon={<Check size={14}/>} label="Pagar de mi nómina" onClick={() => { setCheckMenuOpen(false); handleMarkPaidClick() }} />
@@ -404,7 +438,8 @@ export function PayCard({ payment: p, cfg, onMarkPaid, onRequestVariableAmount, 
             <MenuItem icon={<PiggyBank size={14}/>} label="Fondo compartido" onClick={() => { setCheckMenuOpen(false); onPayFromFund(p) }} />
           )}
           <MenuItem icon={<Users size={14}/>} label="Pago compartido" onClick={() => { setCheckMenuOpen(false); onSplit(p) }} />
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   )
