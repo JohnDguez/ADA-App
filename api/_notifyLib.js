@@ -18,11 +18,22 @@ async function sendPush(supabase, webpush, userIds, payload) {
     .select('user_id, subscription')
     .in('user_id', userIds)
 
+  // Tag único por notificación si quien llama no mandó uno explícito — el
+  // navegador usa `tag` para decidir si una notificación nueva REEMPLAZA a
+  // una anterior con el mismo tag, o si se apilan como entradas separadas.
+  // Antes esta función (y notify-space-change.js antes de ella) usaba un
+  // tag fijo ('space-change') para TODO — invisible mientras el push fallaba
+  // seguido (v0.9.234 y antes), pero en cuanto empezó a llegar de forma
+  // confiable, cualquier evento nuevo de un espacio (agregar, marcar
+  // pagado, desmarcar, alguien se une, etc.) reemplazaba silenciosamente
+  // al anterior sin leer, en vez de apilarse como notificaciones separadas.
+  const tag = payload.tag || `space-change-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
+
   let sent = 0
   const pushErrors = []
   for (const sub of (subs || [])) {
     try {
-      await webpush.sendNotification(sub.subscription, JSON.stringify(payload))
+      await webpush.sendNotification(sub.subscription, JSON.stringify({ ...payload, tag }))
       sent++
     } catch (e) {
       // Se loguea SIEMPRE (visible en los logs de la función en Vercel) — y
@@ -70,9 +81,12 @@ async function notifyUsers(supabase, webpush, { userIds, title, body, actorName 
   const pushErrors = []
   for (const sub of (subs || [])) {
     const m = messageFor(sub.user_id)
+    // Tag único por push — ver nota en sendPush() de arriba sobre por qué
+    // ya no se usa un tag fijo ('space-change') para todo.
+    const tag = `space-change-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
     try {
       await webpush.sendNotification(sub.subscription, JSON.stringify({
-        title: m.title, body: m.body, tag: 'space-change', urgent: false, url, icon: icon || undefined,
+        title: m.title, body: m.body, tag, urgent: false, url, icon: icon || undefined,
       }))
       sent++
     } catch (e) {
