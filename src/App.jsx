@@ -14,6 +14,7 @@ import { BottomNav } from './components/BottomNav'
 import { NotificationsPanel } from './components/NotificationsPanel'
 import { PaymentModal } from './components/PaymentModal'
 import { VariableAmountModal } from './components/VariableAmountModal'
+import { ConfirmNextPeriodPayModal } from './components/ConfirmNextPeriodPayModal'
 import { InstallmentAbonarModal } from './components/InstallmentAbonarModal'
 import { SplitContributionsModal } from './components/SplitContributionsModal'
 import { RecurrentMigrationModal } from './components/RecurrentMigrationModal'
@@ -161,6 +162,7 @@ export default function App() {
   const [modalOpen,      setModalOpen]     = useState(false)
   const [editPayment,    setEditPayment]   = useState(null)
   const [varModal,       setVarModal]      = useState({ open: false, payment: null, resolver: null, fundMode: false })
+  const [nextPeriodConfirm, setNextPeriodConfirm] = useState({ open: false, payment: null, resolver: null })
   const [estimateModal,  setEstimateModal] = useState({ open: false, payment: null })
   const [abonarModal,    setAbonarModal]   = useState({ open: false, payment: null })
   const [splitModal,     setSplitModal]    = useState({ open: false, paymentId: null, openedBecauseFundInsufficient: false })
@@ -419,6 +421,26 @@ export default function App() {
     const resolver = varModal.resolver
     setVarModal({ open: false, payment: null, resolver: null, fundMode: false })
     if (resolver) resolver(null)
+  }
+  // requestNextPeriodConfirm: usado por PayCard cuando la card viene del
+  // riel de "Pagos del próximo periodo" en Home — antes de arrancar
+  // cualquier camino de pago, resuelve una promesa con true/false según lo
+  // que decida el usuario en ConfirmNextPeriodPayModal. Mismo patrón que
+  // requestVariableAmount (Promise + resolver guardado en el estado).
+  function requestNextPeriodConfirm(payment) {
+    return new Promise(resolve => {
+      setNextPeriodConfirm({ open: true, payment, resolver: resolve })
+    })
+  }
+  function handleNextPeriodConfirmYes() {
+    const resolver = nextPeriodConfirm.resolver
+    setNextPeriodConfirm({ open: false, payment: null, resolver: null })
+    if (resolver) resolver(true)
+  }
+  function handleNextPeriodConfirmCancel() {
+    const resolver = nextPeriodConfirm.resolver
+    setNextPeriodConfirm({ open: false, payment: null, resolver: null })
+    if (resolver) resolver(false)
   }
   function openAbonarModal(payment) { setAbonarModal({ open: true, payment }) }
   async function handleAbonarConfirm(amount) {
@@ -733,6 +755,7 @@ export default function App() {
           onMarkPaid={handleMarkPaid}
           onRequestVariableAmount={requestVariableAmount}
           onConfirmVariablePaid={confirmVariablePaid}
+          onRequestNextPeriodConfirm={requestNextPeriodConfirm}
           onMarkUnpaid={handleMarkUnpaidAnimated}
           onCaptureAmount={openEstimateModal}
           onEdit={openEdit}
@@ -865,6 +888,13 @@ export default function App() {
         spacePermissions={spacePermissions}
         onConfirm={handleEstimateConfirm}
         onClose={() => setEstimateModal({ open: false, payment: null })}
+      />
+
+      <ConfirmNextPeriodPayModal
+        open={nextPeriodConfirm.open}
+        payment={nextPeriodConfirm.payment}
+        onConfirm={handleNextPeriodConfirmYes}
+        onCancel={handleNextPeriodConfirmCancel}
       />
 
       <InstallmentAbonarModal
