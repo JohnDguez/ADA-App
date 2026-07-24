@@ -3,12 +3,12 @@
   <img src="https://raw.githubusercontent.com/JohnDguez/ADA-App/main/public/Luna-Pay-logo-white.svg" alt="LunaPay" height="120" />
 
   # LunaPay
-  
-  **Track. Pay. Relax.**
-  
-  App personal de control de pagos y recordatorios financieros.
-  
-  ![Version](https://img.shields.io/badge/version-0.9.52-blue)
+
+  **No controles tus gastos. Controla tu quincena.**
+
+  App de control de pagos y recordatorios financieros, organizada por tu periodo de cobro — no por el mes calendario.
+
+  ![Version](https://img.shields.io/badge/version-0.9.183-blue)
   ![Status](https://img.shields.io/badge/status-Alpha-orange)
   ![Stack](https://img.shields.io/badge/stack-React%20%2B%20Supabase-green)
 
@@ -18,37 +18,52 @@
 
 ## ¿Qué es LunaPay?
 
-LunaPay es una PWA (Progressive Web App) de control financiero personal. Te ayuda a:
+LunaPay es una PWA (Progressive Web App) de control financiero personal, pensada para quien cobra semanal, quincenal o mensual — el trabajador "godín" mexicano, no el mes de calendario. Te ayuda a:
 
-- **Registrar** todos tus compromisos de pago
-- **Organizar** los pagos por tu periodo de cobro (semanal, quincenal o mensual)
-- **Recordar** qué tienes que pagar antes de que llegue tu próximo día de cobro
-- **Historial** de pagos con métricas mensuales
+- **Registrar** todos tus compromisos de pago (únicos, recurrentes, en parcialidades o de monto variable)
+- **Organizar** los pagos según tu periodo de cobro, no según el mes
+- **Ver de un vistazo** qué está vencido, qué falta por pagar este periodo, y qué se viene en el próximo
+- **Compartir cuentas** con tu pareja o roomie en un Espacio Compartido aparte de tu cuenta Personal
+- **Recibir avisos** push y dentro de la app antes de que algo se venza
 
 ---
 
 ## Características
 
 ### 💳 Tipos de pago
-- **Pago único** — un solo pago en una fecha específica
+- **Único** — un solo pago en una fecha específica
 - **Recurrente** — se repite automáticamente (semanal, quincenal, mensual, bimestral, trimestral, semestral o anual)
 - **Parcialidades** — N pagos del mismo compromiso, con fecha de inicio real
-- **Variable** — el monto cambia cada periodo
+- **Variable** — el monto cambia cada periodo (luz, agua, tarjeta de crédito); se captura en cuanto se sabe, sin afectar pagos pasados ni futuros de la misma serie
 
 ### 📅 Periodo de cobro inteligente
-La app organiza tus pagos según tu día de cobro. Te muestra qué tienes que cubrir antes del próximo cobro, separando claramente los vencidos, los urgentes y los próximos.
+La app organiza tus pagos según tu día de cobro (semanal, quincenal o mensual), no según el mes de calendario. Un switch en Inicio separa claramente **Periodo actual** (vencidos, pendientes y ya pagados) de **Próximo periodo** — sin mezclar los dos.
 
-### 🔔 Notificaciones push
-- Alerta de pagos vencidos
-- Recordatorio de pagos que vencen hoy
+### 👥 Espacios Compartidos
+Lleva las cuentas de la casa, la renta o el súper junto con tu pareja o roomie, en un espacio aparte de tu cuenta Personal:
+- El dueño invita con un código de 6 dígitos y decide qué puede hacer cada invitado — agregar pagos, editarlos, marcarlos como pagados, eliminarlos, o agregar ingresos extra, cada permiso por separado
+- **Fondo Compartido** — un ahorro común del espacio, del que se puede pagar directo o completar un pago junto con la nómina de alguien más
+- Divide un gasto entre los miembros del espacio, con abonos parciales de cada quien
+- Todo se sincroniza al instante entre quienes comparten el espacio, sin recargar la app
+- Notificaciones propias del espacio — quién agregó, pagó, aportó o cambió algo, con su foto y nombre reales
+
+### 🔔 Notificaciones
+- Alerta de pagos vencidos y recordatorio de los que vencen hoy
 - Aviso anticipado configurable (1, 2, 3, 5 o 7 días antes)
 - Resumen del día de cobro
 - Hora de notificación configurable por usuario
+- Notificaciones in-app y push (nativas del sistema) para todo lo anterior, más los eventos de Espacio Compartido
 
-### 📊 Historial
-- Gráfica de gasto mensual (últimos 3, 6 o 12 meses)
-- Filtro por nombre de pago
-- Total y promedio mensual
+### 🎨 Personalización
+- Categorías propias, con ícono y color a elegir (además de las 11 predefinidas)
+- Foto de perfil — sube la tuya o elige uno de los 8 avatares prediseñados
+- Tema claro, oscuro, o según el sistema
+
+### 👑 Premium
+Crea tu propio Espacio Compartido con periodo de cobro propio (sin Premium, puedes unirte a hasta 3 con un código). Planes mensual y anual.
+
+### 📱 PWA instalable
+Instálala en tu celular como una app nativa — ícono, splash screen y notificaciones push incluidos, sin pasar por ninguna tienda de aplicaciones.
 
 ---
 
@@ -57,11 +72,13 @@ La app organiza tus pagos según tu día de cobro. Te muestra qué tienes que cu
 | | Tecnología |
 |---|---|
 | **Frontend** | React 18 + Vite 5 |
-| **Base de datos** | Supabase (PostgreSQL) |
+| **Estilos** | CSS Variables + CSS Modules (DM Sans, Lucide React) |
+| **Base de datos** | Supabase (PostgreSQL + Row Level Security) |
 | **Autenticación** | Supabase Auth (Email + Google OAuth) |
 | **Storage** | Supabase Storage |
-| **Deploy** | Vercel |
-| **Push notifications** | Web Push API + VAPID |
+| **Deploy** | Vercel (serverless functions + auto-deploy desde `main`) |
+| **Push notifications** | Web Push API + VAPID + Service Worker |
+| **Automatización** | GitHub Actions (cron de recordatorios) |
 | **PWA** | Service Worker + Web App Manifest |
 
 ---
@@ -71,9 +88,10 @@ La app organiza tus pagos según tu día de cobro. Te muestra qué tienes que cu
 ```
 ├── public/          # Assets estáticos, Service Worker, manifest
 ├── api/             # Vercel serverless functions
+├── .github/         # GitHub Actions (cron de notificaciones)
 └── src/
     ├── components/  # Componentes reutilizables
-    ├── hooks/       # Custom hooks
+    ├── hooks/       # Custom hooks (datos, notificaciones, espacios compartidos, etc.)
     ├── lib/         # Cliente Supabase + utilidades
     └── pages/       # Páginas de la app
 ```
@@ -104,6 +122,8 @@ VITE_SUPABASE_URL=
 VITE_SUPABASE_ANON_KEY=
 VITE_VAPID_PUBLIC_KEY=
 ```
+
+> Las funciones serverless en `api/` (envío de push, notificaciones de Espacio Compartido) necesitan variables adicionales del lado del servidor (service role de Supabase, clave privada VAPID) configuradas directo en Vercel, no en este `.env`.
 
 ### Correr en local
 
