@@ -209,25 +209,9 @@
   transition: transform 0.32s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 
-/* ── HalfRing ─────────────────────────────────────────────────────────────── */
-.halfRingWrapper {
-  position: relative;
-  margin: 0 auto;
-}
-
-.halfRingPercentWrapper {
-  position: absolute;
-  top: 55%;
-  left: 0;
-  right: 0;
-  text-align: center;
-}
-
-.halfRingPercentText {
-  font-size: 26px;
-  font-weight: 700;
-  color: var(--text);
-}
+/* ── HalfRing ─────────────────────────────────────────────────────────────
+   Extraído a components/HalfRing.module.css en v0.9.249 — el componente
+   ahora vive en components/HalfRing.jsx, no aquí. */
 
 /* ── PaidCollapse ─────────────────────────────────────────────────────────── */
 .paidCollapseRoot {
