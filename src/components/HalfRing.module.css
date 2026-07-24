@@ -1,0 +1,18 @@
+.halfRingWrapper {
+  position: relative;
+  margin: 0 auto;
+}
+
+.halfRingPercentWrapper {
+  position: absolute;
+  top: 55%;
+  left: 0;
+  right: 0;
+  text-align: center;
+}
+
+.halfRingPercentText {
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--text);
+}
