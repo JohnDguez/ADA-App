@@ -55,7 +55,12 @@ async function sendPush(supabase, webpush, userIds, payload) {
 // cada endpoint, no de este módulo). `title`/`body` puede ser un string
 // (mismo texto para todos) o una función `(userId) => ({ title, body })`
 // para cuando cada receptor necesita un texto distinto (ej. la persona
-// expulsada de un espacio ve un texto distinto al resto).
+// expulsada de un espacio ve un texto distinto al resto). `icon` (la foto
+// del actor) se guarda en AMBOS lugares — como `actor_avatar_url` en la fila
+// de `notifications` (para `ActorAvatar` en `NotificationsPanel.jsx`) y como
+// `icon` en el payload del push nativo — antes solo se usaba para el push,
+// nunca se guardaba in-app (bug real, reportado por Johnatan con captura:
+// "Johnatan se unió al espacio" mostraba iniciales en vez de la foto).
 async function notifyUsers(supabase, webpush, { userIds, title, body, actorName = null, spaceName = null, url = '/', icon = null }) {
   const ids = [...new Set(userIds)].filter(Boolean)
   if (!ids.length) return { sent: 0, notified: 0, pushErrors: [] }
@@ -67,7 +72,7 @@ async function notifyUsers(supabase, webpush, { userIds, title, body, actorName 
       const m = messageFor(uid)
       return {
         user_id: uid, type: 'space_change', title: m.title, body: m.body, url, read: false,
-        actor_name: actorName, space_name: spaceName,
+        actor_name: actorName, space_name: spaceName, actor_avatar_url: icon,
       }
     })
   )

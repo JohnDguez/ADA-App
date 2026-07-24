@@ -165,7 +165,7 @@ module.exports = async function handler(req, res) {
         const title = `${actorName} se unió al espacio`
         const body  = `Ahora es parte de ${spaceName}`
         result = await notifyUsers(supabase, webpush, {
-          userIds: members.map(m => m.user_id), title, body, actorName, spaceName,
+          userIds: members.map(m => m.user_id), title, body, actorName, spaceName, icon: actorAvatarUrl,
         })
         break
       }
@@ -175,7 +175,7 @@ module.exports = async function handler(req, res) {
         const title = `${actorName} salió del espacio`
         const body  = `Ya no forma parte de ${spaceName}`
         result = await notifyUsers(supabase, webpush, {
-          userIds: members.map(m => m.user_id), title, body, actorName, spaceName,
+          userIds: members.map(m => m.user_id), title, body, actorName, spaceName, icon: actorAvatarUrl,
         })
         break
       }
@@ -198,7 +198,7 @@ module.exports = async function handler(req, res) {
 
         const userIds = [...members.map(m => m.user_id), removedUserId]
         result = await notifyUsers(supabase, webpush, {
-          userIds, title: messageFor, actorName, spaceName,
+          userIds, title: messageFor, actorName, spaceName, icon: actorAvatarUrl,
         })
         break
       }
@@ -211,7 +211,7 @@ module.exports = async function handler(req, res) {
         const title = `Tus permisos en ${spaceName} cambiaron`
         const body  = `${actorName} actualizó lo que puedes hacer en el espacio`
         result = await notifyUsers(supabase, webpush, {
-          userIds: [targetUserId], title, body, actorName, spaceName,
+          userIds: [targetUserId], title, body, actorName, spaceName, icon: actorAvatarUrl,
         })
         break
       }
@@ -224,7 +224,7 @@ module.exports = async function handler(req, res) {
         const title = `${actorName} actualizó la configuración de ${spaceName}`
         const body  = 'Revisa el periodo de cobro o el ingreso del espacio'
         result = await notifyUsers(supabase, webpush, {
-          userIds: members.map(m => m.user_id), title, body, actorName, spaceName,
+          userIds: members.map(m => m.user_id), title, body, actorName, spaceName, icon: actorAvatarUrl,
         })
         break
       }
@@ -238,7 +238,7 @@ module.exports = async function handler(req, res) {
         const title = `${spaceName} fue eliminado`
         const body  = `${actorName} eliminó este Espacio Compartido`
         result = await notifyUsers(supabase, webpush, {
-          userIds: members.map(m => m.user_id), title, body, actorName, spaceName,
+          userIds: members.map(m => m.user_id), title, body, actorName, spaceName, icon: actorAvatarUrl,
         })
         break
       }
@@ -249,7 +249,7 @@ module.exports = async function handler(req, res) {
         const title = `${actorName} reinició los datos de ${spaceName}`
         const body  = 'Se borró todo el historial de pagos e ingresos del espacio'
         result = await notifyUsers(supabase, webpush, {
-          userIds: members.map(m => m.user_id), title, body, actorName, spaceName,
+          userIds: members.map(m => m.user_id), title, body, actorName, spaceName, icon: actorAvatarUrl,
         })
         break
       }
