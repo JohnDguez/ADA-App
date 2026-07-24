@@ -231,11 +231,23 @@ export function usePayments(userId, activeSpaceId = null, activeSpaceName = null
         const ids = rows.map(p => p.id)
         const { data: contribRows } = await supabase
           .from('payment_contributions')
-          .select('payment_id, amount')
+          .select('payment_id, user_id, amount')
           .in('payment_id', ids)
         const sums = {}
-        for (const r of (contribRows || [])) sums[r.payment_id] = (sums[r.payment_id] || 0) + Number(r.amount)
-        rows = rows.map(p => ({ ...p, contributed_amount: sums[p.id] || 0 }))
+        // NUEVO: además de la suma (`contributed_amount`, ya existía — el
+        // progreso "$X/$Y" de una card pendiente), ahora también se agrupa
+        // por payment_id el detalle de QUIÉN puso cada abono
+        // (`contributors`) — lo usa `<PaidByStack>` para mostrar el
+        // avatar (o stack de avatares, si fueron varios) de quién pagó un
+        // gasto ya liquidado, en PaymentsPage.jsx y en el colapsable de
+        // pagados de HomePage.jsx.
+        const byPayment = {}
+        for (const r of (contribRows || [])) {
+          sums[r.payment_id] = (sums[r.payment_id] || 0) + Number(r.amount)
+          if (!byPayment[r.payment_id]) byPayment[r.payment_id] = []
+          byPayment[r.payment_id].push({ user_id: r.user_id, amount: Number(r.amount) })
+        }
+        rows = rows.map(p => ({ ...p, contributed_amount: sums[p.id] || 0, contributors: byPayment[p.id] || [] }))
       }
       setPayments(rows)
     }
