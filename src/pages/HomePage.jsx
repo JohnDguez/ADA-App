@@ -6,6 +6,7 @@ import { PageHeader } from '../components/PageHeader'
 import { NotificationsPanel } from '../components/NotificationsPanel'
 import { NewSharedSpacePanel } from '../components/NewSharedSpacePanel'
 import { EmptyState } from '../components/EmptyState'
+import { PaidByStack } from '../components/PaidByStack'
 import { fmt, cobroPeriod, nextCobroPeriod, getPagarEsteCobro, daysDiff, dateOf, dateToStr, MONTHS, MONTHS_SHORT } from '../lib/utils'
 import styles from './HomePage.module.css'
 
@@ -132,6 +133,14 @@ export function HomePage({ payments, profile, spaceSwitcher, activeSpaceHeader, 
       return () => clearTimeout(timer)
     }
   }, [activeSpaceId])
+
+  // Miembros del Espacio Compartido activo — mismo criterio que
+  // PaymentsPage.jsx. `activeSpaceId === 'new'` es el sentinel del panel de
+  // "crear espacio" (línea de abajo, `activeSpaceId === 'new'`), no un id
+  // real — se excluye a propósito para no intentar un `.find()` inútil.
+  const spaceMembers = (activeSpaceId && activeSpaceId !== 'new')
+    ? sharedSpaces?.spaces?.find(e => e.space?.id === activeSpaceId)?.space?.members || null
+    : null
 
   const [notifOpen,      setNotifOpen]      = useState(false)
   // `activeCard` ya no solo controla qué tarjeta de métricas se ve (swipe
@@ -441,6 +450,7 @@ export function HomePage({ payments, profile, spaceSwitcher, activeSpaceHeader, 
                     onToggle={() => setPaidExpanded(v => !v)}
                     onMarkUnpaid={onMarkUnpaid}
                     onViewSource={onViewSource}
+                    spaceMembers={spaceMembers}
                   />
                 </div>
               )}
@@ -528,7 +538,7 @@ const UNMARK_EXIT_MS = 320
 // dispara HASTA que la animación de salida terminó, nunca antes, para que
 // la fila nunca desaparezca del arreglo (y se desmonte) a la mitad de su
 // propia animación.
-function PaidCollapseItem({ p, onMarkUnpaid, onViewSource }) {
+function PaidCollapseItem({ p, onMarkUnpaid, onViewSource, spaceMembers }) {
   const [phase, setPhase] = useState('idle') // idle | filling | labeled | exiting
   const wrapperRef = useRef(null)
   const timers = useRef([])
@@ -586,7 +596,12 @@ function PaidCollapseItem({ p, onMarkUnpaid, onViewSource }) {
           </div>
           <div className={styles.paidCollapseInfo}>
             <div className={styles.paidCollapseName}>{p.name}</div>
-            <div className={styles.paidCollapseCategory}>{p.category}{p.is_contribution_reflection ? ' · Compartido' : ''}</div>
+            <div className={styles.paidCollapseCategory}>
+              {p.category}{p.is_contribution_reflection ? ' · Compartido' : ''}
+              {!p.is_contribution_reflection && (
+                <PaidByStack contributors={p.contributors} members={spaceMembers} size={18} inline />
+              )}
+            </div>
           </div>
           <span className={styles.paidCollapseAmount}>{fmt(p.amount)}</span>
           {p.is_contribution_reflection ? (
@@ -617,7 +632,7 @@ function PaidCollapseItem({ p, onMarkUnpaid, onViewSource }) {
 // atajo de conveniencia para deshacer/revisar sin salir de Home. Se calcula
 // con el mismo rango de fechas del periodo actual, así que se "reinicia"
 // solo en cuanto cambia de periodo, sin lógica extra de limpieza.
-function PaidCollapse({ payments, expanded, onToggle, onMarkUnpaid, onViewSource }) {
+function PaidCollapse({ payments, expanded, onToggle, onMarkUnpaid, onViewSource, spaceMembers }) {
   return (
     <div className={styles.paidCollapseRoot}>
       <button
@@ -638,7 +653,7 @@ function PaidCollapse({ payments, expanded, onToggle, onMarkUnpaid, onViewSource
         return (
           <div className={styles.paidCollapseList}>
             {sorted.map(p => (
-              <PaidCollapseItem key={p.id} p={p} onMarkUnpaid={onMarkUnpaid} onViewSource={onViewSource} />
+              <PaidCollapseItem key={p.id} p={p} onMarkUnpaid={onMarkUnpaid} onViewSource={onViewSource} spaceMembers={spaceMembers} />
             ))}
           </div>
         )

@@ -3,6 +3,7 @@ import { ChevronLeft, ChevronRight, MoreVertical, Plus, CircleDollarSign, Chevro
 import { PageHeader } from '../components/PageHeader'
 import { NewSharedSpacePanel } from '../components/NewSharedSpacePanel'
 import { EmptyState } from '../components/EmptyState'
+import { PaidByStack } from '../components/PaidByStack'
 import { fmt, dateOf, dateToStr, MONTHS, MONTHS_SHORT, CATEGORIES, cobroPeriod, addDays, getCatColor, RECUR_FREQ } from '../lib/utils'
 import { getCategoryIcon } from '../lib/categoryIcons'
 import { supabase } from '../lib/supabase'
@@ -80,6 +81,15 @@ export function PaymentsPage({ payments, profile, spaceSwitcher, activeSpaceHead
       return () => clearTimeout(timer)
     }
   }, [rawActiveSpaceId])
+
+  // Miembros del Espacio Compartido activo (con `.profile.name`/`.profile.avatar_url`
+  // ya resueltos por useSharedSpaces.js) — se usa para que <PaidByStack> pueda
+  // mostrar el avatar/nombre real de cada contribuyente de un gasto ya pagado.
+  // En Personal (`activeSpaceId` null) o mientras `sharedSpaces` no ha
+  // cargado, queda en `null` y <PaidByStack> simplemente no renderiza nada.
+  const spaceMembers = activeSpaceId
+    ? sharedSpaces?.spaces?.find(e => e.space?.id === activeSpaceId)?.space?.members || null
+    : null
 
   const now = new Date()
 
@@ -1494,6 +1504,9 @@ export function PaymentsPage({ payments, profile, spaceSwitcher, activeSpaceHead
                           {p.is_recurrent && <span className={styles.paymentRecurrentTag}>· {RECUR_FREQ[p.recur_freq] || 'Mensual'}</span>}
                           {p.is_contribution_reflection && <span className={styles.paymentRecurrentTag}>· Compartido</span>}
                         </div>
+                        {activeSpaceId && !p.is_contribution_reflection && (
+                          <PaidByStack contributors={p.contributors} members={spaceMembers} size={22} />
+                        )}
                       </div>
                       <div className={styles.paymentAmountBlock}>
                         <div className={styles.paymentAmount}>{fmt(p.amount)}</div>
