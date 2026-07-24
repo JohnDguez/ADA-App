@@ -4,6 +4,7 @@ import { PageHeader } from '../components/PageHeader'
 import { NewSharedSpacePanel } from '../components/NewSharedSpacePanel'
 import { EmptyState } from '../components/EmptyState'
 import { PaidByStack } from '../components/PaidByStack'
+import { Select } from '../components/Select'
 import { fmt, dateOf, dateToStr, MONTHS, MONTHS_SHORT, CATEGORIES, cobroPeriod, addDays, getCatColor, RECUR_FREQ } from '../lib/utils'
 import { getCategoryIcon } from '../lib/categoryIcons'
 import { supabase } from '../lib/supabase'
@@ -95,7 +96,6 @@ export function PaymentsPage({ payments, profile, spaceSwitcher, activeSpaceHead
 
   const [monthsBack,  setMonthsBack]  = useState(3)
   const [selectedCat, setSelectedCat] = useState(null)
-  const [catRange,    setCatRange]    = useState('periodo')
   const [viewMonth,   setViewMonth]   = useState(now.getMonth())
   const [viewYear,    setViewYear]    = useState(now.getFullYear())
   const [viewMode,    setViewMode]    = useState('periodo')  // 'mes' | 'periodo'
@@ -539,18 +539,16 @@ export function PaymentsPage({ payments, profile, spaceSwitcher, activeSpaceHead
 
   function getCatTotal(cat) {
     const d = p => p.paid_at ? new Date(p.paid_at) : dateOf(p.due_date)
-    if (catRange === 'mes') {
-      return paidPayments
-        .filter(p => p.category === cat && d(p).getMonth() === now.getMonth() && d(p).getFullYear() === now.getFullYear())
-        .reduce((a, p) => a + Number(p.amount), 0)
-    }
-    if (catRange === 'periodo') {
+    if (viewMode === 'periodo') {
       return gastosPeriodo
         .filter(p => p.category === cat)
         .reduce((a, p) => a + Number(p.amount), 0)
     }
+    // viewMode === 'mes' — mismo filtro que paidInMonth() (definida más abajo,
+    // en "Pagos realizados"), duplicado aquí a propósito para no depender del
+    // orden/hoisting entre las 2 secciones del componente.
     return paidPayments
-      .filter(p => p.category === cat && d(p).getFullYear() === now.getFullYear())
+      .filter(p => p.category === cat && d(p).getMonth() === viewMonth && d(p).getFullYear() === viewYear)
       .reduce((a, p) => a + Number(p.amount), 0)
   }
 
@@ -1376,15 +1374,57 @@ export function PaymentsPage({ payments, profile, spaceSwitcher, activeSpaceHead
           </div>
         </div>
 
+        {/* Filtro compartido — gobierna "Por Categoría" y "Pagos" a la vez.
+            Unificado en v0.9.250 (antes cada sección tenía su propio
+            filtro: Por Categoría con Periodo/Mes Actual/Año vía FilterChip,
+            Pagos con Periodo actual/Por mes) — Johnatan reportó que tener 2
+            controles casi idénticos, cada uno filtrando algo distinto, era
+            fácil de confundir (le pasó a él mismo, con más razón a alguien
+            nuevo en la app). Se quitó "Año" del todo (no tenía reemplazo
+            claro y una lista de pagos de un año completo sin paginación no
+            era buena idea). "Por mes" en Por Categoría ya NO está fijo al
+            mes calendario actual (antes `catRange === 'mes'` siempre usaba
+            `now`) — ahora usa el mes/año que se elija aquí, igual que
+            Pagos, confirmado con Johnatan. */}
+        <div className={styles.filtersWrapper}>
+          <div className={styles.viewModeRow}>
+            {[['periodo','Periodo actual'],['mes','Por mes']].map(([val, label]) => (
+              <button key={val} onClick={() => setViewMode(val)}
+                className={`${styles.viewModeButton} ${viewMode === val ? styles.viewModeButtonActive : ''}`}>
+                {label}
+              </button>
+            ))}
+          </div>
+          {viewMode === 'mes' && (
+            <div className={styles.monthYearRow}>
+              <div className={styles.monthYearGroup}>
+                <span className={styles.monthYearLabel}>Mes:</span>
+                <div className={styles.monthSelectBox}>
+                  <Select
+                    value={MONTHS[viewMonth]}
+                    onChange={name => setViewMonth(MONTHS.indexOf(name))}
+                    options={MONTHS}
+                  />
+                </div>
+              </div>
+              <div className={styles.monthYearGroup}>
+                <span className={styles.monthYearLabel}>Año:</span>
+                <div className={styles.yearSelectBox}>
+                  <Select
+                    value={String(viewYear)}
+                    onChange={y => setViewYear(Number(y))}
+                    options={availableYears.map(String)}
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
         {/* Por Categoría */}
         <div className={styles.categorySection}>
           <div className={styles.categorySectionTitle}>
             <span className={styles.categorySectionTitleText}>Por Categoría</span>
-          </div>
-          <div className={styles.categoryRangeRow}>
-            {[{ id: 'periodo', label: 'Periodo' }, { id: 'mes', label: 'Mes Actual' }, { id: 'año', label: 'Año' }].map(o => (
-              <FilterChip key={o.id} label={o.label} active={catRange === o.id} onClick={() => setCatRange(o.id)} />
-            ))}
           </div>
 
           {catData.length === 0 ? (
@@ -1431,42 +1471,10 @@ export function PaymentsPage({ payments, profile, spaceSwitcher, activeSpaceHead
         <div className={styles.paymentsSection}>
           <div className={styles.paymentsSectionHeader}>
             <span className={styles.paymentsSectionTitle}>Pagos</span>
-          </div>
-
-          {/* Filtros */}
-          <div className={styles.filtersWrapper}>
-            <div className={styles.filtersTopRow}>
-              <div className={styles.viewModeRow}>
-                {[['periodo','Periodo actual'],['mes','Por mes']].map(([val, label]) => (
-                  <button key={val} onClick={() => setViewMode(val)}
-                    className={`${styles.viewModeButton} ${viewMode === val ? styles.viewModeButtonActive : ''}`}>
-                    {label}
-                  </button>
-                ))}
-              </div>
-              {paidInView.length > 0 && (
-                <span className={styles.totalText}>
-                  Total: <strong className={styles.totalStrong}>{fmt(totalInView)}</strong>
-                </span>
-              )}
-            </div>
-            {viewMode === 'mes' && (
-              <div className={styles.monthYearRow}>
-                <div className={styles.monthYearGroup}>
-                  <span className={styles.monthYearLabel}>Mes:</span>
-                  <select value={viewMonth} onChange={e => setViewMonth(Number(e.target.value))}
-                    className={styles.monthYearSelect}>
-                    {MONTHS.map((m, i) => <option key={i} value={i}>{m}</option>)}
-                  </select>
-                </div>
-                <div className={styles.monthYearGroup}>
-                  <span className={styles.monthYearLabel}>Año:</span>
-                  <select value={viewYear} onChange={e => setViewYear(Number(e.target.value))}
-                    className={styles.monthYearSelect}>
-                    {availableYears.map(y => <option key={y} value={y}>{y}</option>)}
-                  </select>
-                </div>
-              </div>
+            {paidInView.length > 0 && (
+              <span className={styles.totalText}>
+                Total: <strong className={styles.totalStrong}>{fmt(totalInView)}</strong>
+              </span>
             )}
           </div>
 

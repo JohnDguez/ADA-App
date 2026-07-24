@@ -490,12 +490,6 @@
   color: var(--text);
 }
 
-.categoryRangeRow {
-  display: flex;
-  gap: 6px;
-  margin-bottom: 14px;
-}
-
 .categoryList {
   display: flex;
   flex-direction: column;
@@ -1139,16 +1133,10 @@
   margin-bottom: 12px;
 }
 
-.filtersTopRow {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 8px;
-}
-
 .viewModeRow {
   display: flex;
   gap: 6px;
+  margin-bottom: 8px;
 }
 
 .viewModeButton {
@@ -1198,16 +1186,26 @@
   color: var(--text);
 }
 
-.monthYearSelect {
-  padding: 5px 8px;
-  border-radius: 5px;
-  border: 0.5px solid var(--border);
-  background: var(--surface);
-  color: var(--text);
-  font-size: 12px;
-  font-family: 'DM Sans', sans-serif;
-  outline: none;
-  cursor: pointer;
+/* Cajas del <Select> de Mes/Año — antes un <select> nativo del navegador
+   (.monthYearSelect, quitada). Ancho fijo chico en vez del 100% que da
+   `field-input` por default (pensado para campos de formulario de ancho
+   completo), para que se vean como los selectores compactos que eran. */
+.monthSelectBox {
+  width: 128px;
+}
+
+.yearSelectBox {
+  width: 92px;
+}
+
+/* Johnatan reportó la flecha (chevron) del Select muy pegada al borde
+   derecho en estas cajas angostas — el padding de `field-input` ya existe,
+   pero aquí se ve más apretado por lo angosto del contenedor. Se agrega
+   padding extra solo en esta instancia (no en Select.module.css, para no
+   afectar los demás usos ya existentes de <Select> en PaymentModal.jsx). */
+.monthSelectBox :global(.field-input),
+.yearSelectBox :global(.field-input) {
+  padding-right: 14px;
 }
 
 /* ── Parte 6: Pagos realizados — lista ────────────────────────────────────── */
