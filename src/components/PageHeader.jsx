@@ -17,11 +17,15 @@ function nameFontSize(name) {
   return 13
 }
 
+// Nombres tal cual Johnatan los va a subir a public/ (mismo nombre que ya
+// usó al mandar las imágenes, solo con extensión .webp en vez de .png).
 const HEADER_IMAGES = {
-  amanecer: '/header-amanecer.png',
-  mediodia: '/header-mediodia.png',
-  atardecer: '/header-atardecer.png',
-  noche: '/header-noche.png',
+  amanecer_5_9:   '/amanecer_5_a_9.webp',
+  amanecer_9_12:  '/amanecer_9_a_12.webp',
+  tarde_12_5:     '/tarde_12_a_5.webp',
+  atardecer_5_7:  '/atardecer_5_a_7.webp',
+  anochecer_7_10: '/anochecer_7_a_10.webp',
+  noche_10_5:     '/noche_10_a_5.webp',
 }
 
 export function PageHeader({ profile, unreadCount, onOpenNotifs }) {
@@ -42,10 +46,22 @@ export function PageHeader({ profile, unreadCount, onOpenNotifs }) {
         />
       ))}
 
+      {/* Degradado oscuro/claro de izquierda a derecha — ANTES quemado en
+          cada imagen; ahora usa var(--bg) (el mismo color de fondo de la
+          página) para que en tema claro sea un degradado claro y en tema
+          oscuro sea oscuro, en vez de negro fijo siempre. */}
+      <div className={styles.gradientOverlay} />
+
       <div className={styles.contentRow}>
 
         {/* Avatar + saludo + nombre */}
         <div className={styles.avatarSection}>
+          {/* PENDIENTE (confirmado con Johnatan, fuera de esta entrega): el
+              anillo `rgba(255,255,255,0.3)` de abajo sigue fijo — con el
+              header ya adaptado al tema, en tema claro casi no se va a ver.
+              Falta `index.css` para agregar una variable propia
+              (ej. --header-avatar-ring) que sí reaccione al tema, en vez de
+              inventar un valor aquí sin verla. */}
           <div className={styles.avatarWrapper}>
             {profile?.avatar_url
               ? <img src={profile.avatar_url} alt="avatar" className={styles.avatarImg} style={{ border: `2px solid ${profile?.is_premium ? 'var(--premium-gold)' : 'rgba(255,255,255,0.3)'}` }} />

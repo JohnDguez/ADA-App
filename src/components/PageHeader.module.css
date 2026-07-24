@@ -19,6 +19,18 @@
   z-index: 0;
 }
 
+.gradientOverlay {
+  position: absolute;
+  inset: 0;
+  /* Antes era un degradado negro quemado directo en cada PNG. Ahora usa
+     var(--bg) (el mismo fondo de página que ya usa .premiumBadge para su
+     borde "recorte") — en tema claro sale un degradado claro, en tema
+     oscuro uno oscuro, en vez de negro fijo siempre. */
+  background: linear-gradient(to right, var(--bg) 0%, var(--bg) 30%, transparent 80%);
+  pointer-events: none;
+  z-index: 0;
+}
+
 .contentRow {
   position: relative;
   z-index: 1;
@@ -84,13 +96,13 @@
 .greetingText {
   font-size: 14px;
   font-weight: 400;
-  color: var(--header-text);
+  color: var(--text);
   line-height: 1.3;
 }
 
 .nameText {
   font-weight: 700;
-  color: var(--header-text);
+  color: var(--text);
   line-height: 1.2;
   word-break: break-word;
 }
