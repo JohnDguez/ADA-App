@@ -1,0 +1,76 @@
+.stack {
+  display: flex;
+  align-items: center;
+  margin-top: 6px;
+}
+
+.stackInline {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 6px;
+  vertical-align: middle;
+}
+
+.avatarButton {
+  border-radius: 50%;
+  border: 2px solid var(--surface);
+  background: var(--space-inactive-bg);
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.avatarImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.avatarInitial {
+  color: var(--space-inactive-text);
+  font-weight: 700;
+  line-height: 1;
+}
+
+.tooltipOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+}
+
+.tooltip {
+  position: fixed;
+  transform: translate(-50%, calc(-100% - 10px));
+  background: var(--menu-bg);
+  border-radius: 8px;
+  padding: 8px 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  z-index: 201;
+  white-space: nowrap;
+}
+
+.tooltipAvatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  overflow: hidden;
+  background: var(--space-inactive-bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.tooltipName {
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 600;
+}
