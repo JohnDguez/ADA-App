@@ -42,15 +42,19 @@ const supabase = createClient(
 // Johnatan). El bloque de "abono normal" más abajo en este archivo (que sí
 // existía antes) se deja aparte, con su propio criterio de SÍ respetar el
 // toggle — no se le cambió el comportamiento en esta sesión.
+// `avatar_url` se pide junto con `name` y se manda como `icon` — mismo fix
+// que manage-shared-fund.js (helper duplicado, mismo hueco por separado;
+// ver v0.9.239 para el bug original en notify-space-change.js).
 async function notifyAllSpaceMembers(spaceId, actorId, buildMessage) {
   const [{ data: actorProfile }, { data: memberRows }] = await Promise.all([
-    supabase.from('profiles').select('name').eq('id', actorId).maybeSingle(),
+    supabase.from('profiles').select('name, avatar_url').eq('id', actorId).maybeSingle(),
     supabase.from('shared_space_members').select('user_id').eq('space_id', spaceId).neq('user_id', actorId),
   ])
-  const actorName = actorProfile?.name || 'Alguien'
+  const actorName      = actorProfile?.name || 'Alguien'
+  const actorAvatarUrl = actorProfile?.avatar_url || null
   const { title, body } = buildMessage(actorName)
   const userIds = (memberRows || []).map(m => m.user_id)
-  await notifyUsers(supabase, webpush, { userIds, title, body, actorName })
+  await notifyUsers(supabase, webpush, { userIds, title, body, actorName, icon: actorAvatarUrl })
 }
 
 module.exports = async function handler(req, res) {
@@ -424,12 +428,13 @@ module.exports = async function handler(req, res) {
     // la contribución no se avisa a sí mismo. Las 3 consultas de abajo no
     // dependen entre sí, van en paralelo (antes eran 4 seguidas).
     const [{ data: actorProfile }, { data: memberProfile }, { data: spaceRow }, { data: toNotifyRows }] = await Promise.all([
-      supabase.from('profiles').select('name').eq('id', actorId).maybeSingle(),
+      supabase.from('profiles').select('name, avatar_url').eq('id', actorId).maybeSingle(),
       supabase.from('profiles').select('name').eq('id', memberUserId).maybeSingle(),
       supabase.from('shared_spaces').select('name').eq('id', payment.space_id).maybeSingle(),
       supabase.from('shared_space_members').select('user_id, notify_on_changes').eq('space_id', payment.space_id).neq('user_id', actorId),
     ])
-    const actorName  = actorProfile?.name || 'Alguien'
+    const actorName      = actorProfile?.name || 'Alguien'
+    const actorAvatarUrl = actorProfile?.avatar_url || null
     const memberName = memberProfile?.name || 'Un miembro'
     const spaceName  = spaceRow?.name || 'tu Espacio Compartido'
     const amountStr  = '$' + numAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
@@ -439,7 +444,7 @@ module.exports = async function handler(req, res) {
       const title = `${actorName} registró un abono`
       const body  = `${payment.name} — ${memberName} puso ${amountStr}`
       await notifyUsers(supabase, webpush, {
-        userIds: toNotify.map(m => m.user_id), title, body, actorName, spaceName,
+        userIds: toNotify.map(m => m.user_id), title, body, actorName, spaceName, icon: actorAvatarUrl,
       })
     }
 

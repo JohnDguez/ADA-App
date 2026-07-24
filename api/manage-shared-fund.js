@@ -14,15 +14,21 @@ webpush.setVapidDetails(
 // Avisa a los demás miembros del espacio (nombre real del actor resuelto
 // aquí) — siempre, sin filtrar por notify_on_changes, mismo criterio ya
 // usado para el resto de eventos estructurales agregados en v0.9.236.
+// `avatar_url` se pide junto con `name` y se manda como `icon` a
+// `notifyUsers()` — antes no se pedía, así que el avatar del actor nunca
+// llegaba a estas notificaciones in-app (bug reportado por Johnatan,
+// corregido en v0.9.239 para notify-space-change.js; este archivo tiene su
+// propio helper local, así que necesitaba el mismo fix por separado).
 async function notifyAllSpaceMembers(spaceId, actorId, buildMessage) {
   const [{ data: actorProfile }, { data: memberRows }] = await Promise.all([
-    supabase.from('profiles').select('name').eq('id', actorId).maybeSingle(),
+    supabase.from('profiles').select('name, avatar_url').eq('id', actorId).maybeSingle(),
     supabase.from('shared_space_members').select('user_id').eq('space_id', spaceId).neq('user_id', actorId),
   ])
-  const actorName = actorProfile?.name || 'Alguien'
+  const actorName      = actorProfile?.name || 'Alguien'
+  const actorAvatarUrl = actorProfile?.avatar_url || null
   const { title, body } = buildMessage(actorName)
   const userIds = (memberRows || []).map(m => m.user_id)
-  await notifyUsers(supabase, webpush, { userIds, title, body, actorName })
+  await notifyUsers(supabase, webpush, { userIds, title, body, actorName, icon: actorAvatarUrl })
 }
 
 // Reimplementación fiel de cobroPeriod()/today()/dateToStr()/addDays() de
