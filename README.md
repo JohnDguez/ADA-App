@@ -39,6 +39,12 @@ LunaPay es una PWA (Progressive Web App) de control financiero personal, pensada
 ### Periodo de cobro inteligente
 La app organiza tus pagos según tu día de cobro (semanal, quincenal o mensual), no según el mes de calendario. Un switch en Inicio separa claramente **Periodo actual** (vencidos, pendientes y ya pagados) de **Próximo periodo** — sin mezclar los dos.
 
+### Onboarding guiado
+Un asistente de 4 pasos recibe a cada usuario nuevo antes de entrar a la app: nombre, frecuencia y día de cobro, ingreso por periodo (opcional) y activación de notificaciones — todo editable después desde Ajustes.
+
+### Tutorial interactivo (coach marks)
+Un recorrido guiado, tipo spotlight, señala los controles clave la primera vez que se llega a cada pantalla (Inicio, Gastos, Recurrentes, Perfil, y al crear un pago nuevo). Se puede volver a ver en cualquier momento desde Ajustes → "Ver tutorial de nuevo".
+
 ### Espacios Compartidos
 Lleva las cuentas de la casa, la renta o el súper junto con tu pareja o roomie, en un espacio aparte de tu cuenta Personal:
 - El dueño invita con un código de 6 dígitos y decide qué puede hacer cada invitado — agregar pagos, editarlos, marcarlos como pagados, eliminarlos, o agregar ingresos extra, cada permiso por separado
