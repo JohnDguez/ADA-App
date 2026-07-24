@@ -1,6 +1,7 @@
 const { createClient } = require('@supabase/supabase-js')
 const webpush = require('web-push')
 const { notifyUsers } = require('./_notifyLib')
+const { ensureTwoAheadServer } = require('./_recurEnsureTwoAhead')
 
 // Mismas 3 variables VAPID que ya usan notify-space-change.js / send-notifications.js.
 webpush.setVapidDetails(
@@ -156,6 +157,10 @@ module.exports = async function handler(req, res) {
       }
       const { error: settleErr } = await supabase.from('payments').update({ is_paid: true, paid_at: new Date().toISOString() }).eq('id', paymentId)
       if (settleErr) return res.status(500).json({ error: 'No se pudo marcar como pagado: ' + settleErr.message })
+      // Best-effort: si el pago era la copia de un recurrente, asegurar que
+      // quede la siguiente copia en cola (ver _recurEnsureTwoAhead.js) — un
+      // fallo aquí no debe tumbar la respuesta, el pago ya se guardó bien.
+      try { await ensureTwoAheadServer(supabase, paymentId) } catch (e) { console.error('ensureTwoAheadServer (forceSettle):', e) }
       return res.json({ error: null, settled: true })
     }
 
@@ -180,6 +185,7 @@ module.exports = async function handler(req, res) {
           const { error: paidErr } = await supabase.from('payments').update({ is_paid: true, paid_at: new Date().toISOString() }).eq('id', paymentId)
           if (paidErr) return res.status(500).json({ error: 'El monto se guardó, pero no se pudo marcar como pagado: ' + paidErr.message })
           settled = true
+          try { await ensureTwoAheadServer(supabase, paymentId) } catch (e) { console.error('ensureTwoAheadServer (setTotalAmount):', e) }
         }
       }
       try {
@@ -269,6 +275,7 @@ module.exports = async function handler(req, res) {
           const { error: paidErr } = await supabase.from('payments').update({ is_paid: true, paid_at: new Date().toISOString() }).eq('id', paymentId)
           if (paidErr) return res.status(500).json({ error: 'Se descontó del Fondo, pero no se pudo marcar el gasto como pagado: ' + paidErr.message })
           settledFund = true
+          try { await ensureTwoAheadServer(supabase, paymentId) } catch (e) { console.error('ensureTwoAheadServer (fund):', e) }
         }
       }
       if (Math.round(delta * 100) > 0) {
@@ -420,6 +427,7 @@ module.exports = async function handler(req, res) {
           return res.status(500).json({ error: 'Se registró el abono, pero no se pudo marcar el gasto como pagado: ' + paidErr.message })
         }
         settled = true
+        try { await ensureTwoAheadServer(supabase, paymentId) } catch (e) { console.error('ensureTwoAheadServer (abono):', e) }
       }
     }
 
