@@ -145,7 +145,7 @@
 
 .notifSpaceName {
   font-weight: 600;
-  color: var(--space-inactive-text);
+  color: var(--text);
 }
 
 .notifActions {
