@@ -53,14 +53,33 @@
   overflow-y: auto;
 }
 
+/* Entrada suave del panel — antes aparecía de golpe (sin animación, el
+   `open && (<div>)` monta el elemento ya en su estado final). Con
+   `animation` (a diferencia de `transition`) el navegador la corre sola al
+   montarse, sin necesitar ningún truco de JS (doble render / requestAnimationFrame
+   para forzar un estado "antes"). Misma curva que el resto de la app
+   (modalSlideUp, activeHeaderEnter), duración corta porque es un panel
+   chico, no un modal de pantalla completa. */
+@keyframes selectPanelEnterDown {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes selectPanelEnterUp {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
 .panelDown {
   top: 100%;
   margin-top: 6px;
+  animation: selectPanelEnterDown .18s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
 }
 
 .panelUp {
   bottom: 100%;
   margin-bottom: 6px;
+  animation: selectPanelEnterUp .18s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
 }
 
 .option {
