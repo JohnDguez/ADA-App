@@ -41,14 +41,23 @@
 }
 
 .panel {
-  position: absolute;
-  left: 0;
-  right: 0;
+  /* v0.9.255 — position:fixed (antes absolute) porque el panel ahora se
+     porta a document.body (createPortal en Select.jsx), para que no lo
+     recorte el overflow de ningún contenedor ancestro (ej. el body
+     scrolleable de un modal) — mismo patrón que PayCard.jsx/PaidByStack.jsx.
+     left/width y top-o-bottom llegan inline desde JS, en coordenadas de
+     viewport (calculadas con getBoundingClientRect() del trigger). */
+  position: fixed;
   background: var(--menu-bg);
   border: 0.5px solid var(--border);
   border-radius: var(--radius-sm);
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
-  z-index: 60;
+  /* Alto por ser ahora hijo directo de <body> — puede convivir con el
+     overlay de cualquier modal (PaymentModal.jsx, etc.). Sin acceso a
+     index.css para confirmar si existe una variable de z-index ya
+     establecida para "por encima de todo" — si algún modal lo sigue
+     tapando, avisar para ajustar este valor o usar la variable correcta. */
+  z-index: 999;
   max-height: 240px;
   overflow-y: auto;
 }
@@ -87,8 +96,6 @@
 }
 
 .panelDown {
-  top: 100%;
-  margin-top: 6px;
   animation: selectPanelEnterDown .18s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
 }
 
@@ -101,8 +108,6 @@
 }
 
 .panelUp {
-  bottom: 100%;
-  margin-bottom: 6px;
   animation: selectPanelEnterUp .18s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
 }
 

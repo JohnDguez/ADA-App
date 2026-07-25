@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import { ChevronDown, Check } from 'lucide-react'
 import styles from './Select.module.css'
 
@@ -27,7 +28,18 @@ export function Select({ value, onChange, options, placeholder, renderIcon }) {
   // Mismo patrón que `PaidCollapseItemExiting` en HomePage.jsx/PayCard.jsx.
   const [closing, setClosing] = useState(false)
   const [dropUp, setDropUp] = useState(false)
+  // Bug real reportado por Johnatan (v0.9.255): dentro de un contenedor con
+  // overflow (ej. el body scrolleable de PaymentModal.jsx), el panel
+  // `position: absolute` se recortaba al abrir hacia arriba, aunque
+  // técnicamente "cupiera" — el ancestro con `overflow` no deja que nada se
+  // dibuje fuera de su propia caja, sin importar el z-index. Mismo problema
+  // que ya se resolvió en PayCard.jsx/PaidByStack.jsx: portar el panel a
+  // `document.body` con `position: fixed`, calculado a partir de
+  // `getBoundingClientRect()` del trigger — así ya no es descendiente del
+  // contenedor con overflow, y no hay nada que lo recorte.
+  const [panelPos, setPanelPos] = useState(null) // { left, width, top, bottom } en coordenadas de viewport
   const ref = useRef(null)
+  const panelRef = useRef(null)
   const closeTimerRef = useRef(null)
 
   useEffect(() => () => clearTimeout(closeTimerRef.current), [])
@@ -41,9 +53,27 @@ export function Select({ value, onChange, options, placeholder, renderIcon }) {
   }
 
   useEffect(() => {
-    function handle(e) { if (ref.current && !ref.current.contains(e.target)) closePanel() }
+    function handle(e) {
+      const inTrigger = ref.current && ref.current.contains(e.target)
+      const inPanel = panelRef.current && panelRef.current.contains(e.target)
+      if (!inTrigger && !inPanel) closePanel()
+    }
     if (open) document.addEventListener('mousedown', handle)
     return () => document.removeEventListener('mousedown', handle)
+  }, [open])
+
+  // El panel queda "pegado" a la posición del trigger tal como estaba al
+  // momento de abrir (coordenadas de viewport, calculadas una sola vez en
+  // toggleOpen) — si el usuario hace scroll de lo que sea que tenga
+  // debajo (el modal, la página), el panel se quedaría flotando en el
+  // lugar viejo en vez de seguir al trigger. Se cierra en vez de
+  // reposicionar en cada scroll — más simple, y es el comportamiento
+  // esperado de cualquier desplegable.
+  useEffect(() => {
+    if (!open) return
+    function handleScroll() { closePanel() }
+    window.addEventListener('scroll', handleScroll, true)
+    return () => window.removeEventListener('scroll', handleScroll, true)
   }, [open])
 
   function toggleOpen() {
@@ -59,6 +89,7 @@ export function Select({ value, onChange, options, placeholder, renderIcon }) {
       const spaceBelow = window.innerHeight - rect.bottom
       const spaceAbove = rect.top
       setDropUp(spaceAbove > spaceBelow)
+      setPanelPos({ left: rect.left, width: rect.width, top: rect.bottom, bottom: rect.top })
     }
     setOpen(true)
   }
@@ -79,8 +110,18 @@ export function Select({ value, onChange, options, placeholder, renderIcon }) {
         <ChevronDown size={16} color="var(--text)" className={`${styles.chevron} ${open ? styles.chevronOpen : ''}`} />
       </button>
 
-      {showPanel && (
-        <div className={`${styles.panel} ${dropUp ? styles.panelUp : styles.panelDown} ${closing ? styles.panelClosing : ''}`}>
+      {showPanel && panelPos && createPortal(
+        <div
+          ref={panelRef}
+          className={`${styles.panel} ${dropUp ? styles.panelUp : styles.panelDown} ${closing ? styles.panelClosing : ''}`}
+          style={{
+            left: panelPos.left,
+            width: panelPos.width,
+            ...(dropUp
+              ? { bottom: window.innerHeight - panelPos.bottom + 6 }
+              : { top: panelPos.top + 6 }),
+          }}
+        >
           {options.map(opt => {
             const isSel = opt === value
             return (
@@ -96,7 +137,8 @@ export function Select({ value, onChange, options, placeholder, renderIcon }) {
               </button>
             )
           })}
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   )
