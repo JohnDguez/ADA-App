@@ -53,11 +53,16 @@
   overflow-y: auto;
 }
 
-/* Entrada suave del panel — antes aparecía de golpe (sin animación, el
-   `open && (<div>)` monta el elemento ya en su estado final). Con
-   `animation` (a diferencia de `transition`) el navegador la corre sola al
-   montarse, sin necesitar ningún truco de JS (doble render / requestAnimationFrame
-   para forzar un estado "antes"). Misma curva que el resto de la app
+/* Entrada Y salida del panel (Regla 29 — toda animación de aparición
+   necesita las 2, nunca solo la de entrada). Antes aparecía de golpe (sin
+   animación, el `open && (<div>)` monta el elemento ya en su estado
+   final); ahora sale igual de golpe si no se mantiene montado durante el
+   cierre — por eso Select.jsx usa un estado `closing` con `setTimeout`
+   antes de desmontar. Con `animation` (a diferencia de `transition`) la de
+   ENTRADA corre sola al montarse, sin truco de JS; la de SALIDA sí
+   necesita que JS mantenga el elemento montado esos ms (ver
+   `PANEL_ANIM_MS` en Select.jsx, DEBE coincidir con la duración de abajo
+   — Regla 30, "JS/CSS timing sync"). Misma curva que el resto de la app
    (modalSlideUp, activeHeaderEnter), duración corta porque es un panel
    chico, no un modal de pantalla completa. */
 @keyframes selectPanelEnterDown {
@@ -70,16 +75,40 @@
   to   { opacity: 1; transform: translateY(0); }
 }
 
+/* Salida: reversa exacta de la entrada correspondiente. */
+@keyframes selectPanelExitDown {
+  from { opacity: 1; transform: translateY(0); }
+  to   { opacity: 0; transform: translateY(-6px); }
+}
+
+@keyframes selectPanelExitUp {
+  from { opacity: 1; transform: translateY(0); }
+  to   { opacity: 0; transform: translateY(6px); }
+}
+
 .panelDown {
   top: 100%;
   margin-top: 6px;
   animation: selectPanelEnterDown .18s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
 }
 
+/* .panelClosing sobreescribe la animación de .panelDown/.panelUp — 2
+   clases locales combinadas en el mismo elemento, no choca con la regla de
+   ":global(.x).claseLocal" (esa es solo para mezclar local+global). */
+.panelDown.panelClosing {
+  /* DEBE durar lo mismo que PANEL_ANIM_MS (180ms) en Select.jsx. */
+  animation: selectPanelExitDown .18s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+}
+
 .panelUp {
   bottom: 100%;
   margin-bottom: 6px;
   animation: selectPanelEnterUp .18s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+}
+
+.panelUp.panelClosing {
+  /* DEBE durar lo mismo que PANEL_ANIM_MS (180ms) en Select.jsx. */
+  animation: selectPanelExitUp .18s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
 }
 
 .option {

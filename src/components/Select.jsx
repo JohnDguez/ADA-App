@@ -2,6 +2,13 @@ import { useState, useRef, useEffect } from 'react'
 import { ChevronDown, Check } from 'lucide-react'
 import styles from './Select.module.css'
 
+// PANEL_ANIM_MS debe coincidir EXACTO con `animation-duration` de
+// `.panelDown`/`.panelUp` y `.panelClosing` en Select.module.css (Regla 30,
+// "JS/CSS timing sync") — si se desincronizan, el panel se desmonta antes
+// de que termine de desvanecerse (parpadeo) o se queda de más tras
+// terminar la animación.
+const PANEL_ANIM_MS = 180
+
 // Reemplaza el <select> nativo del sistema por un desplegable con el mismo
 // estilo del resto de la app (fondo oscuro, radius 5, highlight en
 // var(--accent) para lo seleccionado) — nada elaborado, solo que no rompa
@@ -12,18 +19,37 @@ import styles from './Select.module.css'
 // color, igual que en "Por Categoría" de Pagos).
 export function Select({ value, onChange, options, placeholder, renderIcon }) {
   const [open, setOpen] = useState(false)
+  // Regla 29 (confirmada por Johnatan, v0.9.254): toda animación de
+  // aparición necesita también su animación de salida — antes el panel
+  // entraba con fundido pero se cerraba de golpe (`{open && <div>}`,
+  // desmontaba instantáneo). `closing` mantiene el panel montado durante la
+  // animación de salida; se apaga solo al terminar el timeout de abajo.
+  // Mismo patrón que `PaidCollapseItemExiting` en HomePage.jsx/PayCard.jsx.
+  const [closing, setClosing] = useState(false)
   const [dropUp, setDropUp] = useState(false)
   const ref = useRef(null)
+  const closeTimerRef = useRef(null)
+
+  useEffect(() => () => clearTimeout(closeTimerRef.current), [])
+
+  function closePanel() {
+    if (!open) return
+    setOpen(false)
+    setClosing(true)
+    clearTimeout(closeTimerRef.current)
+    closeTimerRef.current = setTimeout(() => setClosing(false), PANEL_ANIM_MS)
+  }
 
   useEffect(() => {
-    function handle(e) { if (ref.current && !ref.current.contains(e.target)) setOpen(false) }
+    function handle(e) { if (ref.current && !ref.current.contains(e.target)) closePanel() }
     if (open) document.addEventListener('mousedown', handle)
     return () => document.removeEventListener('mousedown', handle)
   }, [open])
 
   function toggleOpen() {
-    if (!open && ref.current) {
-      // Regla nueva (v0.9.252, confirmada por Johnatan): el desplegable
+    if (open) { closePanel(); return }
+    if (ref.current) {
+      // Regla 28 (confirmada por Johnatan, v0.9.252): el desplegable
       // siempre abre hacia donde haya MÁS espacio disponible, comparando
       // arriba contra abajo — no un umbral fijo de "cabe o no cabe" como
       // antes (`spaceBelow < PANEL_HEIGHT`). Aplica a TODOS los <Select> de
@@ -34,8 +60,10 @@ export function Select({ value, onChange, options, placeholder, renderIcon }) {
       const spaceAbove = rect.top
       setDropUp(spaceAbove > spaceBelow)
     }
-    setOpen(v => !v)
+    setOpen(true)
   }
+
+  const showPanel = open || closing
 
   return (
     <div ref={ref} className={styles.wrapper}>
@@ -51,15 +79,15 @@ export function Select({ value, onChange, options, placeholder, renderIcon }) {
         <ChevronDown size={16} color="var(--text)" className={`${styles.chevron} ${open ? styles.chevronOpen : ''}`} />
       </button>
 
-      {open && (
-        <div className={`${styles.panel} ${dropUp ? styles.panelUp : styles.panelDown}`}>
+      {showPanel && (
+        <div className={`${styles.panel} ${dropUp ? styles.panelUp : styles.panelDown} ${closing ? styles.panelClosing : ''}`}>
           {options.map(opt => {
             const isSel = opt === value
             return (
               <button
                 type="button"
                 key={opt}
-                onClick={() => { onChange(opt); setOpen(false) }}
+                onClick={() => { onChange(opt); closePanel() }}
                 className={`${styles.option} ${isSel ? styles.optionSelected : ''}`}
               >
                 {renderIcon && renderIcon(opt)}
