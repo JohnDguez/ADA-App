@@ -1513,7 +1513,7 @@ export function PaymentsPage({ payments, profile, spaceSwitcher, activeSpaceHead
                           {p.is_contribution_reflection && <span className={styles.paymentRecurrentTag}>· Compartido</span>}
                         </div>
                         {activeSpaceId && !p.is_contribution_reflection && (
-                          <PaidByStack contributors={p.contributors} members={spaceMembers} size={22} />
+                          <PaidByStack contributors={p.contributors} members={spaceMembers} fundAmount={p.fund_amount || 0} size={22} />
                         )}
                       </div>
                       <div className={styles.paymentAmountBlock}>

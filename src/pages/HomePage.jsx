@@ -375,7 +375,7 @@ export function HomePage({ payments, profile, spaceSwitcher, activeSpaceHeader, 
                   <div className={styles.overdueTitle}>
                     Vencidos
                   </div>
-                  <PayRail payments={vencidos} cfg={profile} dotColor="var(--overdue-border)" dotTextColor="var(--overdue-text)" handlers={handlers} permissions={spacePermissions} />
+                  <PayRail payments={vencidos} cfg={profile} dotColor="var(--overdue-border)" dotTextColor="var(--overdue-text)" handlers={handlers} permissions={spacePermissions} spaceMembers={spaceMembers} />
                 </div>
               )}
 
@@ -394,7 +394,7 @@ export function HomePage({ payments, profile, spaceSwitcher, activeSpaceHeader, 
                 )}
                 {delPeriodo.length === 0
                   ? <EmptyState title="Sin pagos pendientes para este periodo" subtitle="Toca aquí o el botón + de abajo para añadir uno" onClick={onAdd} />
-                  : <PayRail payments={delPeriodo} cfg={profile} dotColor="var(--upcoming-border)" dotTextColor="var(--impact-warning-text)" handlers={handlers} permissions={spacePermissions} />
+                  : <PayRail payments={delPeriodo} cfg={profile} dotColor="var(--upcoming-border)" dotTextColor="var(--impact-warning-text)" handlers={handlers} permissions={spacePermissions} spaceMembers={spaceMembers} />
                 }
               </div>
             </div>
@@ -403,7 +403,7 @@ export function HomePage({ payments, profile, spaceSwitcher, activeSpaceHeader, 
               <div className={styles.periodSection}>
                 {upcoming.length === 0
                   ? <EmptyState title="Sin pagos registrados para el próximo periodo" subtitle="Toca aquí o el botón + de abajo para añadir uno" onClick={onAdd} />
-                  : <PayRail payments={upcoming} cfg={profile} dotColor="var(--accent)" dotTextColor="var(--bg)" handlers={handlers} permissions={spacePermissions} nextPeriodMode />
+                  : <PayRail payments={upcoming} cfg={profile} dotColor="var(--accent)" dotTextColor="var(--bg)" handlers={handlers} permissions={spacePermissions} nextPeriodMode spaceMembers={spaceMembers} />
                 }
               </div>
             </div>
@@ -514,7 +514,7 @@ function PaidCollapseItem({ p, onMarkUnpaid, onViewSource, spaceMembers }) {
             <div className={styles.paidCollapseCategory}>
               {p.category}{p.is_contribution_reflection ? ' · Compartido' : ''}
               {!p.is_contribution_reflection && (
-                <PaidByStack contributors={p.contributors} members={spaceMembers} size={18} inline />
+                <PaidByStack contributors={p.contributors} members={spaceMembers} fundAmount={p.fund_amount || 0} size={18} inline />
               )}
             </div>
           </div>
