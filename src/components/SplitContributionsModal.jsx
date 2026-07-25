@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Lock } from 'lucide-react'
+import { Lock, PiggyBank } from 'lucide-react'
 import { fmt } from '../lib/utils'
 import styles from './SplitContributionsModal.module.css'
 
@@ -180,9 +180,14 @@ export function SplitContributionsModal({ open, payment, spaceMembers, currentUs
                     onClick={() => (fundBalance > 0 || fundAmount > 0) && openFundRow()}
                     className={`${styles.memberRow} ${fundBalance <= 0 && fundAmount <= 0 ? styles.memberRowLocked : ''}`}
                   >
-                    <span className={styles.memberName}>
-                      Fondo Compartido
-                      {fundBalance <= 0 && fundAmount <= 0 && <Lock size={12} className={styles.fundLockIcon} />}
+                    <span className={styles.memberNameRow}>
+                      <span className={styles.fundAvatar}>
+                        <PiggyBank size={14} color="var(--surface)" strokeWidth={2} />
+                      </span>
+                      <span className={styles.memberName}>
+                        Fondo Compartido
+                        {fundBalance <= 0 && fundAmount <= 0 && <Lock size={12} className={styles.fundLockIcon} />}
+                      </span>
                     </span>
                     {fundAmount > 0
                       ? <span className={styles.memberAmount}>{fmt(fundAmount)} <span className={styles.editLabel}>Editar</span></span>
@@ -204,7 +209,16 @@ export function SplitContributionsModal({ open, payment, spaceMembers, currentUs
                 return (
                   <div key={m.user_id} className={styles.memberCard}>
                     <div onClick={() => openRow(m.user_id)} className={styles.memberRow}>
-                      <span className={styles.memberName}>{m.profile?.name || 'Miembro'}{m.user_id === currentUserId ? ' (tú)' : ''}</span>
+                      <span className={styles.memberNameRow}>
+                        <span className={styles.memberAvatar}>
+                          {m.profile?.avatar_url ? (
+                            <img src={m.profile.avatar_url} alt="" className={styles.memberAvatarImg} />
+                          ) : (
+                            <span className={styles.memberAvatarInitial}>{(m.profile?.name || '?').charAt(0).toUpperCase()}</span>
+                          )}
+                        </span>
+                        <span className={styles.memberName}>{m.profile?.name || 'Miembro'}{m.user_id === currentUserId ? ' (tú)' : ''}</span>
+                      </span>
                       {amount != null
                         ? <span className={styles.memberAmount}>{fmt(amount)} <span className={styles.editLabel}>Editar</span></span>
                         : <span className={styles.memberEmpty}>Sin registrar</span>}

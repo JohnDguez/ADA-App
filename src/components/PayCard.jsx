@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom'
 import { MoreVertical, Check, Pencil, Trash2, Clock, ChevronDown, ChevronUp, RotateCcw, FastForward, DollarSign, Eye, Users, PiggyBank } from 'lucide-react'
 import { statusOf, daysDiff, dateOf, fmt, MONTHS_SHORT, periodLabel, periodCountLabel, RECUR_FREQ, installmentLabel } from '../lib/utils'
 import { showToast } from './Toast'
+import { PaidByStack } from './PaidByStack'
 import styles from './PayCard.module.css'
 
 function statusInfo(p, cfg) {
@@ -34,7 +35,7 @@ const LABEL_HOLD_MS = 450 // cuánto se queda "Pagado" + checkmark visible antes
 const EXIT_MS       = 320 // deslizado + desvanecido + colapso de espacio
 const ENTRY_MS      = 300 // "crecer" al aparecer una card nueva en la lista
 
-export function PayCard({ payment: p, cfg, onMarkPaid, onRequestVariableAmount, onConfirmVariablePaid, onRequestNextPeriodConfirm, onMarkUnpaid, onCaptureAmount, onEdit, onAbonar, onSplit, onPayFromFund, fundBalance, onViewSource, onDelete, onPostpone, onAdvance, borderLeft, hideDate, hideDueLabel, railMode, permissions, initialLoad = true, confirmBeforePay }) {
+export function PayCard({ payment: p, cfg, onMarkPaid, onRequestVariableAmount, onConfirmVariablePaid, onRequestNextPeriodConfirm, onMarkUnpaid, onCaptureAmount, onEdit, onAbonar, onSplit, onPayFromFund, fundBalance, onViewSource, onDelete, onPostpone, onAdvance, borderLeft, hideDate, hideDueLabel, railMode, permissions, initialLoad = true, confirmBeforePay, spaceMembers }) {
   // Card de solo lectura — reflejo automático de una contribución a un
   // gasto de un Espacio Compartido (registrada por cualquier miembro desde
   // "Dividir entre miembros"). Nunca se captura a mano, así que no se puede
@@ -210,6 +211,12 @@ export function PayCard({ payment: p, cfg, onMarkPaid, onRequestVariableAmount, 
   const isPending = !p.is_paid && !p.postponed && !p.paused
   const freqLabel = p.is_recurrent && p.recur_freq && !p.is_installment ? RECUR_FREQ[p.recur_freq] : null
   const instLabel = p.is_installment ? `Pago ${p.current_installment}/${p.total_installments}` : null
+  // Fix real (v0.9.259, reportado por Johnatan): `contributed_amount` solo
+  // suma `payment_contributions` (abonos de miembros) — el Fondo Compartido
+  // NUNCA aparece ahí, vive en su propia columna `fund_amount` sobre
+  // `payments`. Antes de este fix, un gasto cubierto SOLO por el Fondo no
+  // mostraba ningún progreso en la card, aunque ya tuviera dinero puesto.
+  const registradoTotal = Number(p.contributed_amount || 0) + Number(p.fund_amount || 0)
 
   // Sin `permissions` (modo personal, o dueño del espacio) todo permitido.
   // "Editar"/"Agregar monto" abren un modal que ya se bloquea por su cuenta
@@ -323,10 +330,13 @@ export function PayCard({ payment: p, cfg, onMarkPaid, onRequestVariableAmount, 
               {p.name}
             </div>
             <div className={styles.subtitle}>
-              {p.space_id && isPending && p.contributed_amount > 0
-                ? `${fmt(p.contributed_amount)} / ${fmt(p.amount)}`
+              {p.space_id && isPending && registradoTotal > 0
+                ? `${fmt(registradoTotal)} / ${fmt(p.amount)}`
                 : hideDate ? p.category : `${p.category} · ${d.getDate()} ${MONTHS_SHORT[d.getMonth()]}`}
             </div>
+            {p.space_id && isPending && registradoTotal > 0 && (
+              <PaidByStack contributors={p.contributors} members={spaceMembers} fundAmount={p.fund_amount || 0} size={16} inline />
+            )}
             {freqLabel && (
               <div className={styles.freqLabel}>{freqLabel}</div>
             )}

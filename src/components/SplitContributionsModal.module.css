@@ -117,6 +117,56 @@
   color: var(--text);
 }
 
+/* Avatar de cada miembro (v0.9.259) — mismo criterio visual que
+   PaidByStack.jsx (foto o iniciales sobre var(--space-inactive-bg)), pero
+   sin stack/tooltip: aquí cada fila ya muestra el nombre como texto, el
+   avatar es solo decorativo, uno por fila, siempre visible. */
+.memberNameRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.memberAvatar {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  overflow: hidden;
+  background: var(--space-inactive-bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.memberAvatarImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.memberAvatarInitial {
+  color: var(--space-inactive-text);
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+/* Ícono del Fondo Compartido — no es una persona, mismo criterio de color
+   que .avatarButtonFund en PaidByStack.module.css (var(--accent), en vez
+   del gris de un avatar real). */
+.fundAvatar {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
 .memberAmount {
   font-size: 13px;
   font-weight: 600;

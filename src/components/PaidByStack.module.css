@@ -24,6 +24,16 @@
   flex-shrink: 0;
 }
 
+/* Fondo Compartido (v0.9.259) — no es una persona, se distingue con
+   var(--accent) en vez del gris de var(--space-inactive-bg) que usan los
+   avatares reales. */
+.avatarButtonFund {
+  background: var(--accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .avatarImg {
   width: 100%;
   height: 100%;

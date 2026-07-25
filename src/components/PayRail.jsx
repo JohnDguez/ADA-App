@@ -24,7 +24,7 @@ import styles from './PayRail.module.css'
 // pagado un pago que en realidad vence hasta el periodo siguiente (previene
 // pagar por error algo del periodo equivocado si el usuario se confunde de
 // switch activo). No afecta a Vencidos/Pagos del periodo actual.
-export function PayRail({ payments, cfg, dotColor, dotTextColor, handlers, permissions, nextPeriodMode }) {
+export function PayRail({ payments, cfg, dotColor, dotTextColor, handlers, permissions, nextPeriodMode, spaceMembers }) {
   // Detecta el primer render de ESTE riel — las cards que ya vienen desde
   // ahí no deben "crecer" al aparecer (se verían todas animando de golpe
   // al cargar la página). Solo las que se agregan DESPUÉS (un pago nuevo,
@@ -71,7 +71,7 @@ export function PayRail({ payments, cfg, dotColor, dotTextColor, handlers, permi
               </div>
               <div className={styles.dayItemsCol}>
                 {g.items.map(p => (
-                  <PayCard key={p.id} payment={p} cfg={cfg} {...handlers} permissions={permissions} railMode hideDate hideDueLabel initialLoad={initialLoad} confirmBeforePay={nextPeriodMode} />
+                  <PayCard key={p.id} payment={p} cfg={cfg} {...handlers} permissions={permissions} railMode hideDate hideDueLabel initialLoad={initialLoad} confirmBeforePay={nextPeriodMode} spaceMembers={spaceMembers} />
                 ))}
               </div>
             </div>
