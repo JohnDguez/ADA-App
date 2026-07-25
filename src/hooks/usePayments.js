@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { supabase } from '../lib/supabase'
-import { nextPeriodDate, dateOf, dateToStr, todayStr, fmt } from '../lib/utils'
+import { nextPeriodDate, dateOf, dateToStr, todayStr, fmt, cobroPeriod } from '../lib/utils'
 import { notifySpaceChange as notifySpaceChangeShared } from '../lib/notifySpaceChange'
 
 // NOTA (Fase 5b): `activeSpaceName` ya no se usa dentro de este hook — el
@@ -553,6 +553,42 @@ export function usePayments(userId, activeSpaceId = null, activeSpaceName = null
     const { data, error } = await supabase.from('payments').update(updates).eq('id', id).select().single()
     if (!error) setPayments(prev => prev.map(p => p.id === id ? { ...p, ...data } : p))
     return { data, error }
+  }
+
+  // Bug real encontrado por Johnatan (v0.9.258): el modal de remanente
+  // (PaymentsPage.jsx → checkPeriodStart/handleAddRemanente) calcula y
+  // "congela" un monto una sola vez, guardándolo como fila normal de
+  // `period_income` (siempre con `note: 'Remanente periodo anterior'` —
+  // ese texto exacto es el único marcador de origen que existe hoy, no hay
+  // columna `source` separada). Si DESPUÉS se edita la fecha de pago
+  // (`paid_at`) de un gasto para que caiga en ese mismo periodo (ej.
+  // corrigiendo la fecha real de un pago que se registró un día tarde), esa
+  // fila de remanente no se entera — se queda con un monto que ya no
+  // refleja la realidad. Esta función solo DETECTA el caso; no arregla
+  // nada sola ni sabe nada de "toasts" — usePayments.js es la capa de
+  // datos, quien llama (App.jsx → handleSave) decide cómo avisar.
+  async function checkPeriodIncomeConflict(profile, oldPaidAtIso, newPaidAtIso) {
+    if (!oldPaidAtIso || !newPaidAtIso || oldPaidAtIso === newPaidAtIso) return null
+
+    // Mismo criterio de fecha-local-segura que ya usa checkPeriodStart en
+    // PaymentsPage.jsx (Regla 22) — nunca comparar por el ISO string crudo.
+    const oldDate = dateOf(dateToStr(new Date(oldPaidAtIso)))
+    const newDate = dateOf(dateToStr(new Date(newPaidAtIso)))
+    const oldPeriod = cobroPeriod(profile, oldDate)
+    const newPeriod = cobroPeriod(profile, newDate)
+    if (dateToStr(oldPeriod.start) === dateToStr(newPeriod.start)) return null // mismo periodo, sin riesgo
+
+    // Mismo filtro exacto que checkPeriodStart al consultar period_income:
+    // por period_start + espacio activo (o `space_id is null` en Personal),
+    // SIN filtrar por user_id — el remanente en un Espacio Compartido es un
+    // cálculo compartido entre todos los miembros, no personal.
+    const newPeriodStartStr = dateToStr(newPeriod.start)
+    let query = supabase.from('period_income').select('amount, note').eq('period_start', newPeriodStartStr)
+    query = activeSpaceId ? query.eq('space_id', activeSpaceId) : query.is('space_id', null)
+    const { data } = await query
+
+    const remanenteRow = (data || []).find(r => r.note === 'Remanente periodo anterior')
+    return remanenteRow ? { amount: Number(remanenteRow.amount) } : null
   }
 
   // ─────────────────────────────────────────────────────────────────────────
@@ -1113,7 +1149,7 @@ export function usePayments(userId, activeSpaceId = null, activeSpaceName = null
   return {
     payments, loading,
     addPayment, addRecurrentPayment, addInstallmentPayment,
-    updatePayment, updateRecurrentName, updateRecurrentConfig,
+    updatePayment, updateRecurrentName, updateRecurrentConfig, checkPeriodIncomeConflict,
     abonarInstallment,
     registerContribution, getContributions, payRemainingContribution, setContributionTotalAmount, unmarkSharedPayment, forceSettlePayment,
     payFromFund, setFundContribution,
