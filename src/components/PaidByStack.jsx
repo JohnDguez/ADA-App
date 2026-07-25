@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef, useLayoutEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { PiggyBank } from 'lucide-react'
 import { fmt } from '../lib/utils'
@@ -36,6 +36,36 @@ import styles from './PaidByStack.module.css'
 //                  (ej. debajo de la categoría en PaymentsPage.jsx)
 export function PaidByStack({ contributors, members, fundAmount = 0, size = 24, inline = false }) {
   const [tooltip, setTooltip] = useState(null) // { entry, x, y } | null
+  const tooltipRef = useRef(null)
+
+  // Bug real reportado por Johnatan: el tooltip se centra (`transform:
+  // translateX(-50%)`) sobre el punto donde se tocó el avatar — si ese
+  // avatar está cerca del borde de la pantalla (ej. el stack angosto de
+  // PayCard.jsx, tamaño 16), la mitad del tooltip se sale del viewport y
+  // queda cortado/ilegible. Mismo criterio que ya usa Select.jsx para
+  // decidir si abre hacia arriba o abajo: medir el elemento real ya
+  // montado (`tooltipRef`) y corregir ANTES de que el navegador pinte
+  // (`useLayoutEffect`, no `useEffect` — evita el parpadeo de un frame en
+  // la posición sin corregir). Se muta `el.style.left` directo en vez de
+  // guardar la corrección en un estado nuevo de React — evita un
+  // re-render de más, y es seguro: React solo toca en el DOM las
+  // propiedades de `style` que de verdad cambiaron entre renders, así que
+  // no pisa este ajuste mientras `tooltip` no cambie.
+  //
+  // Este hook va ANTES del `return null` de abajo a propósito — las Reglas
+  // de Hooks de React exigen que se llamen siempre en el mismo orden en
+  // cada render, sin importar si el componente termina no renderizando
+  // nada (`contributors`/`members` vacíos y sin Fondo).
+  useLayoutEffect(() => {
+    if (!tooltip || !tooltipRef.current) return
+    const el = tooltipRef.current
+    const halfWidth = el.offsetWidth / 2
+    const margin = 8
+    let x = tooltip.x
+    if (x - halfWidth < margin) x = halfWidth + margin
+    else if (x + halfWidth > window.innerWidth - margin) x = window.innerWidth - halfWidth - margin
+    el.style.left = `${x}px`
+  }, [tooltip])
 
   const hasFund = fundAmount > 0
   if ((!contributors?.length || !members?.length) && !hasFund) return null
@@ -88,7 +118,7 @@ export function PaidByStack({ contributors, members, fundAmount = 0, size = 24, 
       {tooltip && createPortal(
         <>
           <div className={styles.tooltipOverlay} onClick={() => setTooltip(null)} />
-          <div className={styles.tooltip} style={{ left: tooltip.x, top: tooltip.y }}>
+          <div ref={tooltipRef} className={styles.tooltip} style={{ left: tooltip.x, top: tooltip.y }}>
             <div className={`${styles.tooltipAvatar} ${tooltip.entry.isFund ? styles.avatarButtonFund : ''}`}>
               {tooltip.entry.isFund ? (
                 <PiggyBank size={18} color="var(--surface)" strokeWidth={2} />
