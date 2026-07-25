@@ -98,7 +98,7 @@ export default function App() {
   const {
     payments, loading: paymentsLoading,
     addPayment, addRecurrentPayment, addInstallmentPayment,
-    updatePayment, updateRecurrentName, updateRecurrentConfig,
+    updatePayment, updateRecurrentName, updateRecurrentConfig, checkPeriodIncomeConflict,
     abonarInstallment,
     registerContribution, getContributions, payRemainingContribution, setContributionTotalAmount, unmarkSharedPayment, forceSettlePayment,
     payFromFund, setFundContribution,
@@ -608,7 +608,24 @@ export default function App() {
       }
       // Editar pago normal o parcialidad
       const { error } = await updatePayment(editPayment.id, data)
-      if (error) showToast('Error al guardar'); else showToast('Pago actualizado')
+      if (error) { showToast('Error al guardar') }
+      else {
+        showToast('Pago actualizado')
+        // Bug real reportado por Johnatan (v0.9.258): si la fecha de pago
+        // (paid_at) se edita y eso mueve el gasto hacia OTRO periodo, y ese
+        // periodo ya tiene un remanente agregado (PaymentsPage.jsx →
+        // "¡Quedó un remanente del periodo anterior!"), esa fila de
+        // period_income no se actualiza sola — se queda con un monto que
+        // ya no es correcto. No se corrige automático (cambiar el número a
+        // ciegas podría no ser lo que el usuario quiere), solo se avisa
+        // para que lo revise a mano desde "Ingresos Extras del Periodo".
+        if (data.paid_at && data.paid_at !== editPayment.paid_at) {
+          const conflict = await checkPeriodIncomeConflict(profile, editPayment.paid_at, data.paid_at)
+          if (conflict) {
+            showToast(`Ese periodo ya tiene un remanente de ${fmt(conflict.amount)} — revísalo en "Ingresos Extras del Periodo"`)
+          }
+        }
+      }
     } else {
       // Crear nuevo
       if (data.is_recurrent && !data.is_installment) {
