@@ -335,7 +335,7 @@ export function PayCard({ payment: p, cfg, onMarkPaid, onRequestVariableAmount, 
                 : hideDate ? p.category : `${p.category} · ${d.getDate()} ${MONTHS_SHORT[d.getMonth()]}`}
             </div>
             {p.space_id && isPending && registradoTotal > 0 && (
-              <PaidByStack contributors={p.contributors} members={spaceMembers} fundAmount={p.fund_amount || 0} size={16} inline />
+              <PaidByStack contributors={p.contributors} members={spaceMembers} fundAmount={p.fund_amount || 0} size={16} />
             )}
             {freqLabel && (
               <div className={styles.freqLabel}>{freqLabel}</div>
