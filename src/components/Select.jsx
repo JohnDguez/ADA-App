@@ -69,9 +69,20 @@ export function Select({ value, onChange, options, placeholder, renderIcon }) {
   // lugar viejo en vez de seguir al trigger. Se cierra en vez de
   // reposicionar en cada scroll — más simple, y es el comportamiento
   // esperado de cualquier desplegable.
+  //
+  // Bug real reportado por Johnatan (v0.9.256): el listener capturaba
+  // TAMBIÉN el scroll de la propia lista de opciones (`.panel` tiene
+  // `overflow-y: auto` para cuando hay muchas) — con `addEventListener(...,
+  // true)` en window, el evento 'scroll' (que no burbujea) sí se detecta
+  // en la fase de captura desde cualquier ancestro, panel incluido. El
+  // desplegable se cerraba solo al intentar scrollear sus propias
+  // opciones. Ahora ignora el scroll que ocurre DENTRO del panel.
   useEffect(() => {
     if (!open) return
-    function handleScroll() { closePanel() }
+    function handleScroll(e) {
+      if (panelRef.current && panelRef.current.contains(e.target)) return
+      closePanel()
+    }
     window.addEventListener('scroll', handleScroll, true)
     return () => window.removeEventListener('scroll', handleScroll, true)
   }, [open])
