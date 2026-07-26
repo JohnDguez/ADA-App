@@ -1,4 +1,4 @@
-import { useId, useState, useEffect } from 'react'
+import { useId, useState, useEffect, useRef } from 'react'
 import styles from './HalfRing.module.css'
 
 // Medio anillo tipo velocímetro — tercer rediseño de las tarjetas "Pagos de
@@ -7,11 +7,28 @@ import styles from './HalfRing.module.css'
 // referencia "Current balance" que trajo. El % se dibuja DENTRO del anillo,
 // centrado a 55% de la altura (no más arriba — Johnatan lo pidió más al
 // medio del hueco del arco). Track siempre semicírculo completo (180°, de
-// izquierda a derecha pasando por arriba); el arco de progreso anima de 0%
-// al valor real cada vez que el componente se monta (o cuando cambia
-// `percent`, ej. al cambiar de espacio) — mockup confirmado con Johnatan:
-// debe verse "llenarse" cada vez que se entra a la página, no aparecer ya
-// lleno de golpe.
+// izquierda a derecha pasando por arriba).
+//
+// v0.9.263 — REDISEÑO de la animación (bug real reportado por Johnatan):
+// antes, CUALQUIER cambio de `percent` reiniciaba el barrido desde 0% hasta
+// el valor nuevo — se sentía igual de "recién llegado" tanto si acababas de
+// marcar algo pagado (85%→90%, debería verse avanzar un poquito desde donde
+// ya iba) como si habías cambiado de espacio o de página (85% de un
+// espacio → 40% de otro, sin relación entre sí, no debería animarse un
+// cruce entre esos 2 números). Ahora la regla es:
+//   - Update en vivo (el componente sigue montado, cambia `percent`):
+//     anima SUAVE desde el valor que ya se estaba mostrando hacia el
+//     nuevo — nunca desde 0.
+//   - Montaje nuevo (React crea una instancia desde cero): arranca YA en
+//     el valor real, sin ningún barrido — un anillo que aparece
+//     representa un dato distinto por completo (otro espacio, otra
+//     pantalla), no una actualización en vivo de lo mismo.
+// El propio componente no puede saber por sí solo cuál de los 2 casos es
+// "cambiar de espacio" — eso lo decide quien lo usa, forzando un montaje
+// nuevo con `key` cuando corresponda (ver `key={activeSpaceId}` en
+// HomePage.jsx). Marcar pagado/no pagado NO cambia esa key, así que cae
+// solo en el primer caso (animar suave) sin necesitar ninguna lógica
+// especial aquí.
 //
 // Extraído de HomePage.jsx a su propio archivo (v0.9.249, antes vivía como
 // función interna) — Johnatan lo señaló al buscarlo para preguntar sobre el
@@ -28,15 +45,32 @@ export function HalfRing({ percent, width = 220, strokeWidth = 14 }) {
   // al MISMO degradado (el del que se definió primero).
   const gradId = useId()
 
-  const [animated, setAnimated] = useState(0)
+  // Arranca YA en `target` (no en 0) — así, un montaje nuevo (cambio de
+  // espacio, volver a Home) se ve completo de inmediato, sin barrido.
+  const [animated, setAnimated] = useState(target)
+  // Copia en ref del valor mostrado — se necesita leer el valor MÁS
+  // reciente dentro del efecto de abajo sin agregarlo como dependencia
+  // (si `animated` fuera dependencia, cada frame de su propia animación
+  // volvería a disparar el efecto — bucle infinito).
+  const animatedRef = useRef(target)
+  useEffect(() => { animatedRef.current = animated })
+  // Recuerda el último `target` ya procesado — si no cambió de verdad
+  // (el padre re-renderizó con el mismo percent), no hace nada.
+  const prevTargetRef = useRef(target)
+
   useEffect(() => {
+    if (prevTargetRef.current === target) return
+    const from = animatedRef.current
+    prevTargetRef.current = target
     let raf
     const t0 = performance.now()
     const duration = 900
     function frame(now) {
       const t = Math.min(1, (now - t0) / duration)
       const eased = 1 - Math.pow(1 - t, 3) // easeOutCubic
-      setAnimated(target * eased)
+      const val = from + (target - from) * eased
+      setAnimated(val)
+      animatedRef.current = val
       if (t < 1) raf = requestAnimationFrame(frame)
     }
     raf = requestAnimationFrame(frame)
