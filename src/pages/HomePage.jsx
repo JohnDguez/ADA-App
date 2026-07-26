@@ -272,7 +272,7 @@ export function HomePage({ payments, profile, spaceSwitcher, activeSpaceHeader, 
                       Periodo {periodRange(profile)}
                     </div>
                     <div className={styles.clearFloat} />
-                    <HalfRing percent={1} />
+                    <HalfRing key={activeSpaceId} percent={1} />
                     <div className={styles.cardTitle}>Total de este periodo</div>
                     <div className={styles.cardAmount}>{fmt(pagadoMonto)}</div>
                     {(pagadosFijosEstePeriodo > 0 || pagadosVariablesEstePeriodo > 0) && (
@@ -288,7 +288,7 @@ export function HomePage({ payments, profile, spaceSwitcher, activeSpaceHeader, 
                       Periodo {periodRange(profile)}
                     </div>
                     <div className={styles.clearFloat} />
-                    <HalfRing percent={pctPagado / 100} />
+                    <HalfRing key={activeSpaceId} percent={pctPagado / 100} />
                     <div className={styles.cardPaidPendingRow}>
                       <span className={styles.cardPaidText}>{fmt(pagadoMonto)} pagado</span>
                       <span className={styles.cardPendingText}>{fmt(pendingAmt)} pendiente</span>
@@ -320,7 +320,7 @@ export function HomePage({ payments, profile, spaceSwitcher, activeSpaceHeader, 
                   {nextPeriodRange(profile)}
                 </div>
                 <div className={styles.clearFloat} />
-                <HalfRing percent={0} />
+                <HalfRing key={activeSpaceId} percent={0} />
                 <div className={styles.cardTitle}>Total del próximo periodo</div>
                 <div className={styles.cardAmount}>{fmt(nextPeriodKnownTotal)}</div>
                 <div className={styles.cardMeta}>
