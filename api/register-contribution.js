@@ -151,7 +151,16 @@ module.exports = async function handler(req, res) {
     if (forceSettle) {
       if (payment.is_paid) return res.json({ error: null, settled: true })
       const { data: allContribs } = await supabase.from('payment_contributions').select('amount').eq('payment_id', paymentId)
-      const sumAll2 = (allContribs || []).reduce((s, r) => s + Number(r.amount), 0)
+      // Bug real reportado por Johnatan (v0.9.264): esta suma solo contaba
+      // `payment_contributions` (abonos de miembros), IGNORANDO por
+      // completo lo que ya hubiera puesto el Fondo Compartido
+      // (`payment.fund_amount`, columna aparte — mismo patrón de bug que
+      // ya se corrigió en PayCard.jsx v0.9.259, pero aquí del lado del
+      // servidor). Con Fondo + un miembro cubriendo el 100% entre los dos,
+      // "Pagar" rechazaba con "Todavía faltan $X por juntar" — un monto
+      // que ya estaba cubierto — y el pago se quedaba sin marcar, tanto
+      // en el modal como en la card.
+      const sumAll2 = (allContribs || []).reduce((s, r) => s + Number(r.amount), 0) + (Number(payment.fund_amount) || 0)
       if (Math.round(sumAll2 * 100) < Math.round(Number(payment.amount) * 100)) {
         return res.status(400).json({ error: `Todavía faltan ${(Number(payment.amount) - sumAll2).toFixed(2)} por juntar` })
       }
@@ -176,7 +185,8 @@ module.exports = async function handler(req, res) {
       let settled = false
       if (!payment.is_paid) {
         const { data: allContribs } = await supabase.from('payment_contributions').select('amount').eq('payment_id', paymentId)
-        const sumAll = (allContribs || []).reduce((s, r) => s + Number(r.amount), 0)
+        // Mismo fix que forceSettle (v0.9.264) — sumar también fund_amount.
+        const sumAll = (allContribs || []).reduce((s, r) => s + Number(r.amount), 0) + (Number(payment.fund_amount) || 0)
         // Comparación en centavos (enteros) — sumar/restar decimales en JS
         // puede dejar residuos tipo 1340.9999999999998 en vez de 1341
         // exacto; comparando floats directo, eso hace fallar un ">="
@@ -306,6 +316,14 @@ module.exports = async function handler(req, res) {
 
     const existingContribution = (allContribs || []).find(r => r.user_id === memberUserId) || null
     const sumAll = (allContribs || []).reduce((s, r) => s + Number(r.amount), 0)
+    // Bug real reportado por Johnatan (v0.9.264): `sumAll` (arriba) solo
+    // cuenta `payment_contributions` (abonos de miembros) — el Fondo
+    // Compartido vive en su propia columna (`payment.fund_amount`) y NUNCA
+    // aparecía en ninguno de los 3 cálculos de abajo, que asumían que
+    // `sumAll` por sí solo era "todo lo recaudado". Mismo patrón de bug ya
+    // corregido en PayCard.jsx (v0.9.259) y en forceSettle/setTotalAmount
+    // (arriba, v0.9.264) — aquí eran 3 lugares más de una sola vez.
+    const currentFundAmount = Number(payment.fund_amount) || 0
 
     let numAmount
     if (payRemaining) {
@@ -314,7 +332,7 @@ module.exports = async function handler(req, res) {
       // condiciones de carrera contra abonos casi simultáneos de otros
       // miembros) — se suma sobre lo que este miembro ya tenía puesto, no
       // lo reemplaza.
-      const restante = Number(payment.amount) - sumAll
+      const restante = Number(payment.amount) - sumAll - currentFundAmount
       numAmount = Math.round(((existingContribution?.amount || 0) + Math.max(0, restante)) * 100) / 100
     } else {
       numAmount = Number(amount)
@@ -325,7 +343,7 @@ module.exports = async function handler(req, res) {
       // permite exceder — es la resta automática a los demás, ver abajo.
       if (!payment.is_paid) {
         const sumOthersNow = sumAll - (existingContribution?.amount || 0)
-        const available = Number(payment.amount) - sumOthersNow
+        const available = Number(payment.amount) - sumOthersNow - currentFundAmount
         if (Math.round(numAmount * 100) > Math.round(available * 100) + 1) {
           return res.status(400).json({ error: `No puedes exceder lo disponible (${Math.max(0, available).toFixed(2)})` })
         }
@@ -415,7 +433,7 @@ module.exports = async function handler(req, res) {
     // las contribuciones desde cero con otra consulta.
     let settled = false
     if (!payment.is_paid) {
-      const sumAfter = sumAll - (existingContribution?.amount || 0) + numAmount
+      const sumAfter = sumAll - (existingContribution?.amount || 0) + numAmount + currentFundAmount
       if (Number(payment.amount) > 0 && Math.round(sumAfter * 100) >= Math.round(Number(payment.amount) * 100)) {
         const { error: paidErr } = await supabase.from('payments').update({ is_paid: true, paid_at: new Date().toISOString() }).eq('id', paymentId)
         if (paidErr) {
