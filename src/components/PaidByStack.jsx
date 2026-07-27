@@ -82,7 +82,7 @@ export function PaidByStack({ contributors, members, fundAmount = 0, size = 24, 
     if (seen.has(c.user_id)) continue
     seen.add(c.user_id)
     const member = members?.find(m => m.user_id === c.user_id)
-    entries.push({ userId: c.user_id, profile: member?.profile || null })
+    entries.push({ userId: c.user_id, profile: member?.profile || null, amount: c.amount })
   }
   if (!entries.length) return null
 
@@ -130,8 +130,18 @@ export function PaidByStack({ contributors, members, fundAmount = 0, size = 24, 
                 </span>
               )}
             </div>
-            <span className={styles.tooltipName}>
-              {tooltip.entry.isFund ? `Fondo Compartido · ${fmt(tooltip.entry.amount)}` : (tooltip.entry.profile?.name || 'Miembro del espacio')}
+            {/* v0.9.265 — antes el Fondo mostraba "Fondo Compartido · $500"
+                en una sola línea, y un miembro solo mostraba su nombre (sin
+                monto) — Johnatan pidió que ambos muestren cuánto aportaron,
+                pero con separación visual real (nombre en negrita, monto
+                abajo en peso regular — Regla 17: nunca un color apagado
+                para dar jerarquía, siempre tamaño/peso de fuente), no
+                pegado con un separador "·" en la misma línea. */}
+            <span className={styles.tooltipTextCol}>
+              <span className={styles.tooltipName}>
+                {tooltip.entry.isFund ? 'Fondo Compartido' : (tooltip.entry.profile?.name || 'Miembro del espacio')}
+              </span>
+              <span className={styles.tooltipAmount}>{fmt(tooltip.entry.amount)}</span>
             </span>
           </div>
         </>,

@@ -79,8 +79,20 @@
   flex-shrink: 0;
 }
 
+.tooltipTextCol {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
 .tooltipName {
   color: var(--text);
   font-size: 14px;
-  font-weight: 600;
+  font-weight: 700;
+}
+
+.tooltipAmount {
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 400;
 }
