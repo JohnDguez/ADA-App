@@ -119,8 +119,34 @@ export function HomePage({ payments, profile, spaceSwitcher, activeSpaceHeader, 
     // Un variable YA con monto capturado (ej. "Agregar monto" con el recibo en
     // mano) cuenta igual que uno fijo — ya se sabe cuánto va a costar. Solo el
     // que sigue sin monto es el que de verdad está "por confirmar".
-    const pendingAmt = pagarEsteCobro.filter(p => !p.is_variable || p.amount > 0).reduce((a, p) => a + Number(p.amount), 0)
+    // v0.9.284 — bug real reportado por Johnatan: un gasto de Espacio
+    // Compartido con abono PARCIAL (miembro vía "Dividir entre miembros" y/o
+    // Fondo Compartido) sigue con `is_paid: false` hasta juntar el 100%, pero
+    // ya tiene dinero real puesto — `pendingAmt` sumaba el monto COMPLETO del
+    // pago en vez de descontar lo ya cubierto (ej. "Bomba del tinaco" $1,350
+    // con $350 abonados seguía sumando $1,350 completos a "pendiente", en vez
+    // de $1,000). Mismo bug de fondo ya corregido antes en el progreso
+    // "$X/$Y" de `PayCard.jsx` (v0.9.259) y en los 4 cálculos de
+    // `api/register-contribution.js` (v0.9.264) — nunca se había corregido
+    // aquí, en el anillo/resumen de la card de métricas de Home.
+    // `coveredAmount()` replica exactamente la misma fórmula que
+    // `registradoTotal` en `PayCard.jsx` (mismo criterio en los 2 lugares).
+    // En modo Personal esto no cambia nada: `contributed_amount`/`fund_amount`
+    // solo existen en el pago dentro de un Espacio Compartido activo
+    // (`usePayments.js` → `fetchPayments()`), así que aquí siempre dan 0.
+    const coveredAmount = p => Number(p.contributed_amount || 0) + Number(p.fund_amount || 0)
+    const pendingAmt = pagarEsteCobro
+      .filter(p => !p.is_variable || p.amount > 0)
+      .reduce((a, p) => a + Math.max(0, Number(p.amount) - coveredAmount(p)), 0)
     const pendingVariableCount = pagarEsteCobro.filter(p => p.is_variable && !p.amount).length
+    // Lo ya cubierto de pagos AÚN pendientes (abonos de miembros y/o Fondo
+    // Compartido) sí es dinero real ya puesto — cuenta como progreso y se
+    // suma al lado "pagado" del anillo, para que pagado + pendiente sigan
+    // sumando exactamente el mismo total conocido de siempre (solo cambia la
+    // proporción entre ambos lados, nunca el total del periodo).
+    const coveredPendingAmt = pagarEsteCobro
+      .filter(p => !p.is_variable || p.amount > 0)
+      .reduce((a, p) => a + Math.min(Number(p.amount), coveredAmount(p)), 0)
 
     // Pagos ya pagados dentro del periodo actual — mismo criterio que
     // `gastosPeriodo`/`checkPeriodStart` en `PaymentsPage.jsx`: se filtra por
@@ -135,7 +161,7 @@ export function HomePage({ payments, profile, spaceSwitcher, activeSpaceHeader, 
         return paidDate >= start && paidDate <= end
       })
       .sort((a, b) => new Date(a.paid_at) - new Date(b.paid_at))
-    const pagadoMonto = pagadosEstePeriodo.reduce((a, p) => a + Number(p.amount), 0)
+    const pagadoMonto = pagadosEstePeriodo.reduce((a, p) => a + Number(p.amount), 0) + coveredPendingAmt
     const totalConocido = pagadoMonto + pendingAmt
     const pctPagado = totalConocido > 0 ? Math.round((pagadoMonto / totalConocido) * 100) : 0
     const pagosFijosCount = pagarEsteCobro.filter(p => !p.is_variable || p.amount > 0).length + pagadosEstePeriodo.length
