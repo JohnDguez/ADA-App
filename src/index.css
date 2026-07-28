@@ -145,6 +145,16 @@
   --premium-text:    #FFFFFF;
   --premium-gold:      #F5C242;
   --premium-gold-text: #1A1200;
+
+  /* ── Onboarding (fondo de color por paso) ─────────────────────────────────
+     Fijos, iguales en claro/oscuro (mismo criterio que --premium-*): cada
+     paso lleva el color sólido de fondo detrás de su ilustración 3D — si
+     reaccionaran al tema, perderían el contraste exacto con el arte que
+     Johnatan diseñó para cada paso. Confirmado por Johnatan (julio 2026). */
+  --onboarding-step1-bg: #5F85F4;
+  --onboarding-step2-bg: #EFC822;
+  --onboarding-step3-bg: #E09613;
+  --onboarding-step4-bg: #8BD130;
 }
 
 /* ── Tema oscuro manual ([data-theme="dark"] en <html>) ───────────────────── */
