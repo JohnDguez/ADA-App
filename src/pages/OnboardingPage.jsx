@@ -42,6 +42,7 @@ export function OnboardingPage({ userId, onDone }) {
   const [direction,      setDirection]      = useState('forward')
   const [exitingStep,    setExitingStep]    = useState(null)
   const [initial,        setInitial]        = useState(true)
+  const [transitionId,   setTransitionId]   = useState(0)
   const [name,           setName]           = useState('')
   const [nameError,      setNameError]      = useState('')
   const [cobroFreq,      setCobroFreq]      = useState('weekly')
@@ -81,6 +82,12 @@ export function OnboardingPage({ userId, onDone }) {
     setDirection(dir)
     setExitingStep(step)
     setStep(newStep)
+    setTransitionId(id => id + 1)
+    // El scroll debe arrancar arriba en cada paso — si el usuario se desplazó
+    // hacia abajo en un paso largo (ej. quincenal personalizado) y avanza,
+    // sin esto el paso nuevo entra con el scroll heredado del anterior y no
+    // se ve su parte de arriba (reportado por Johnatan).
+    window.scrollTo(0, 0)
     exitTimeoutRef.current = setTimeout(() => setExitingStep(null), STEP_TRANSITION_MS)
   }
 
@@ -353,11 +360,11 @@ export function OnboardingPage({ userId, onDone }) {
       {/* Contenido con animación de entrada/salida por paso (Regla 29) */}
       <div className={styles.viewport}>
         {exitingStep !== null && (
-          <div className={`${styles.panelWrap} ${styles.exiting} ${direction === 'forward' ? styles.exitToLeft : styles.exitToRight}`}>
+          <div key={`exit-${transitionId}`} className={`${styles.panelWrap} ${styles.exiting} ${direction === 'forward' ? styles.exitToLeft : styles.exitToRight}`}>
             {renderStep(exitingStep)}
           </div>
         )}
-        <div className={`${styles.panelWrap} ${!initial ? (direction === 'forward' ? styles.enterFromRight : styles.enterFromLeft) : ''}`}>
+        <div key={`enter-${transitionId}`} className={`${styles.panelWrap} ${!initial ? (direction === 'forward' ? styles.enterFromRight : styles.enterFromLeft) : ''}`}>
           {renderStep(step)}
         </div>
       </div>
