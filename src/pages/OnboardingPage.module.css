@@ -1,0 +1,331 @@
+.page {
+  min-height: 100vh;
+  background: var(--bg);
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Stepper ──────────────────────────────────────────────────────────────── */
+.stepper {
+  padding: 48px 24px 0;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+}
+
+.stepperItem {
+  display: flex;
+  align-items: flex-start;
+}
+
+.stepperDotCol {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.stepperDot {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background .2s;
+}
+
+.dotDone    { background: var(--paid); }
+.dotActive  { background: var(--accent); }
+.dotUpcoming { background: var(--border); }
+
+.stepperIcon {
+  color: var(--surface);
+}
+
+.dotUpcoming .stepperIcon {
+  color: var(--text);
+}
+
+.stepperLabel {
+  font-size: 9px;
+  font-weight: 400;
+  color: var(--text);
+  text-align: center;
+  max-width: 60px;
+}
+
+.stepperLabelActive {
+  font-weight: 600;
+  color: var(--accent);
+}
+
+.stepperLine {
+  width: 36px;
+  height: 1px;
+  background: var(--border);
+  margin: 0 4px;
+  margin-top: 15px;
+  transition: background .2s;
+}
+
+.lineDone {
+  background: var(--paid);
+}
+
+/* ── Viewport de pasos (contiene el panel que entra y el que sale) ──────────
+   Regla 29: toda animación de aparición necesita entrada Y salida. El panel
+   que sale se monta con position absolute encima del que entra (que sigue
+   en flujo normal, así el contenedor toma su altura), y se desmonta con
+   setTimeout en el JSX cuando termina su animación (Regla 30: el timeout
+   del JS y la duración de aquí deben coincidir EXACTO, ambas a 0.3s). */
+.viewport {
+  position: relative;
+  overflow-x: hidden;
+  flex: 1;
+}
+
+.panelWrap {
+  width: 100%;
+}
+
+.exiting {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+}
+
+@keyframes stepEnterFromRight {
+  from { transform: translateX(100%); opacity: 0; }
+  to   { transform: translateX(0);    opacity: 1; }
+}
+@keyframes stepEnterFromLeft {
+  from { transform: translateX(-100%); opacity: 0; }
+  to   { transform: translateX(0);     opacity: 1; }
+}
+@keyframes stepExitToLeft {
+  from { transform: translateX(0);     opacity: 1; }
+  to   { transform: translateX(-100%); opacity: 0; }
+}
+@keyframes stepExitToRight {
+  from { transform: translateX(0);    opacity: 1; }
+  to   { transform: translateX(100%); opacity: 0; }
+}
+
+.enterFromRight { animation: stepEnterFromRight 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) both; }
+.enterFromLeft  { animation: stepEnterFromLeft  0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) both; }
+.exitToLeft     { animation: stepExitToLeft      0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) both; }
+.exitToRight    { animation: stepExitToRight     0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) both; }
+
+/* ── Panel de un paso (ola + ilustración + título + formulario) ─────────────── */
+.stepPanel {
+  display: flex;
+  flex-direction: column;
+}
+
+.waveHeader {
+  position: relative;
+  height: 230px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.wave {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.illustration {
+  position: absolute;
+  top: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 190px;
+  height: 190px;
+  object-fit: contain;
+}
+
+.body {
+  flex: 1;
+  padding: 24px 24px 0;
+}
+
+.title {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 8px;
+}
+
+.desc {
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--text);
+  margin-bottom: 28px;
+}
+
+.errorText {
+  font-size: 12px;
+  color: var(--danger);
+}
+
+.hint {
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--text);
+  margin-top: 10px;
+}
+
+.section {
+  margin-top: 16px;
+}
+
+/* ── Chips (frecuencia / quincena / personalizado) ──────────────────────────── */
+.chipRow {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.chip {
+  padding: 10px 14px;
+  border-radius: 5px;
+  border: none;
+  background: var(--surface);
+  color: var(--text);
+  font-weight: 400;
+  font-size: 14px;
+  font-family: 'DM Sans', sans-serif;
+  cursor: pointer;
+  transition: background .15s, color .15s;
+}
+
+.chipFlex {
+  flex: 1;
+  text-align: center;
+}
+
+.presetChip {
+  font-size: 13px;
+  padding: 7px 14px;
+}
+
+.chipActive {
+  background: var(--accent);
+  color: var(--surface);
+  font-weight: 600;
+}
+
+.weekdayRow {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+
+.weekdayChip {
+  flex: 1;
+  min-width: 40px;
+  padding: 10px 4px;
+  font-size: 13px;
+  text-align: center;
+}
+
+.twoColRow {
+  display: flex;
+  gap: 10px;
+}
+
+.colField {
+  flex: 1;
+}
+
+.smallLabel {
+  display: block;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+
+.monthDayInput {
+  max-width: 120px;
+  margin-top: 8px;
+}
+
+/* ── Toggle (ingreso / notificaciones) ───────────────────────────────────────── */
+.toggleRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  background: var(--surface);
+  border-radius: var(--radius);
+  cursor: pointer;
+  margin-bottom: 16px;
+}
+
+.toggleLabel {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.toggleSub {
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--text);
+  margin-top: 2px;
+}
+
+.readyBanner {
+  margin-top: 12px;
+  padding: 12px 14px;
+  background: var(--paid-soft);
+  border-radius: var(--radius-sm);
+}
+
+.readyTitle {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--paid);
+}
+
+.readyText {
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--text);
+  margin-top: 2px;
+}
+
+/* ── Monto con prefijo de moneda ─────────────────────────────────────────────── */
+.amountWrap {
+  position: relative;
+}
+
+.currencyPrefix {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 15px;
+  color: var(--text);
+  pointer-events: none;
+}
+
+:global(.field-input).amountInput {
+  padding-left: 28px;
+}
+
+/* ── Botones ─────────────────────────────────────────────────────────────────── */
+.actions {
+  padding: 24px 24px 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}

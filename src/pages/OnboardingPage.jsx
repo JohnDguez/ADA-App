@@ -1,20 +1,35 @@
-import { useState } from 'react'
-import { Check, UserRound, CalendarDays, Banknote, Bell } from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
+import { UserRound, CalendarDays, Banknote, Bell } from 'lucide-react'
 import { WEEKDAYS, WEEKDAYS_SHORT } from '../lib/utils'
 import { supabase } from '../lib/supabase'
 import { usePushNotifications } from '../hooks/usePushNotifications'
+import styles from './OnboardingPage.module.css'
 
 const STEP_META = [
-  { label: 'Tu nombre',           Icon: UserRound   },
-  { label: 'Frecuencia de cobro', Icon: CalendarDays },
-  { label: 'Tu ingreso',          Icon: Banknote     },
-  { label: 'Notificaciones',      Icon: Bell         },
+  { label: 'Tu nombre',           Icon: UserRound,    bg: 'var(--onboarding-step1-bg)', illustration: '/onboarding-illustration-1.png' },
+  { label: 'Frecuencia de cobro', Icon: CalendarDays, bg: 'var(--onboarding-step2-bg)', illustration: '/onboarding-illustration-2.png' },
+  { label: 'Tu ingreso',          Icon: Banknote,     bg: 'var(--onboarding-step3-bg)', illustration: '/onboarding-illustration-3.png' },
+  { label: 'Notificaciones',      Icon: Bell,         bg: 'var(--onboarding-step4-bg)', illustration: '/onboarding-illustration-4.png' },
 ]
 
 const TOTAL_STEPS = STEP_META.length
 
+// La forma de la ola es la misma para los 4 pasos (solo cambia el color de
+// relleno, ver STEP_META[].bg) — medida a partir del fondo del paso 4 que
+// Johnatan compartió. Pendiente confirmar si los otros 3 pasos usan una
+// curva distinta.
+const WAVE_PATH = 'M0,210 C5,211 10,214 20,220 C30,231 38,245 45,256 C51,262 58,266 70,271 C78,272 88,273 100,274 C110,273 120,271 130,270 C138,268 148,267 160,267 C168,266 175,268 185,270 C193,274 200,277 210,284 C220,292 230,300 240,307 C248,311 255,315 265,318 C275,319 290,319 300,318 C310,316 320,315 330,314 C340,314 350,315 360,318 L377,319 L377,0 L0,0 Z'
+
+// Regla 30 (JS/CSS timing sync): este valor debe coincidir EXACTO con la
+// duración definida en OnboardingPage.module.css para .enterFromRight,
+// .enterFromLeft, .exitToLeft y .exitToRight (las 4 a 0.3s / 300ms).
+const STEP_TRANSITION_MS = 300
+
 export function OnboardingPage({ userId, onDone }) {
   const [step,           setStep]           = useState(1)
+  const [direction,      setDirection]      = useState('forward')
+  const [exitingStep,    setExitingStep]    = useState(null)
+  const [initial,        setInitial]        = useState(true)
   const [name,           setName]           = useState('')
   const [nameError,      setNameError]      = useState('')
   const [cobroFreq,      setCobroFreq]      = useState('weekly')
@@ -27,8 +42,9 @@ export function OnboardingPage({ userId, onDone }) {
   const [saving,         setSaving]         = useState(false)
 
   const { subscribe, subscribed } = usePushNotifications(userId)
+  const exitTimeoutRef = useRef(null)
 
-  const CurrentIcon = STEP_META[step - 1].Icon
+  useEffect(() => () => clearTimeout(exitTimeoutRef.current), [])
 
   async function handleFinish() {
     setSaving(true)
@@ -47,204 +63,270 @@ export function OnboardingPage({ userId, onDone }) {
     if (!error) onDone(data)
   }
 
-  async function nextStep() {
+  function goToStep(newStep, dir) {
+    clearTimeout(exitTimeoutRef.current)
+    setInitial(false)
+    setDirection(dir)
+    setExitingStep(step)
+    setStep(newStep)
+    exitTimeoutRef.current = setTimeout(() => setExitingStep(null), STEP_TRANSITION_MS)
+  }
+
+  function nextStep() {
     if (step === 1) {
       if (!name.trim()) { setNameError('Escribe tu nombre'); return }
       setNameError('')
     }
-    if (step < TOTAL_STEPS) setStep(s => s + 1)
+    if (step < TOTAL_STEPS) goToStep(step + 1, 'forward')
     else handleFinish()
   }
 
+  function prevStep() {
+    if (step > 1) goToStep(step - 1, 'backward')
+  }
+
+  function renderStep(n) {
+    const meta = STEP_META[n - 1]
+    return (
+      <div className={styles.stepPanel}>
+        <div className={styles.waveHeader} style={{ background: meta.bg }}>
+          <svg className={styles.wave} viewBox="0 0 377 340" preserveAspectRatio="none">
+            <path d={WAVE_PATH} style={{ fill: 'var(--bg)' }} />
+          </svg>
+          <img className={styles.illustration} src={meta.illustration} alt="" />
+        </div>
+
+        <div className={styles.body}>
+          {n === 1 && (
+            <>
+              <h2 className={styles.title}>¿Cómo te llamas?</h2>
+              <p className={styles.desc}>Ese nombre verás en tu perfil y ese lo verán los usuarios con quien tengas un espacio compartido.</p>
+              <label className="field-label">Tu nombre</label>
+              <input
+                autoFocus
+                className="field-input"
+                type="text"
+                value={name}
+                onChange={e => setName(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && nextStep()}
+                enterKeyHint="next"
+                placeholder="Ej. Johnatan"
+                style={{ marginBottom: nameError ? 6 : 0 }}
+              />
+              {nameError && <div className={styles.errorText}>{nameError}</div>}
+            </>
+          )}
+
+          {n === 2 && (
+            <>
+              <h2 className={styles.title}>¿Cuándo te pagan?</h2>
+              <p className={styles.desc}>Esto nos ayuda a mostrarte qué pagos cubrir con cada periodo.</p>
+
+              <label className="field-label">Frecuencia</label>
+              <div className={styles.chipRow}>
+                {[['weekly','Semanal'],['biweekly','Quincenal'],['monthly','Mensual']].map(([val, label]) => (
+                  <button
+                    key={val}
+                    onClick={() => setCobroFreq(val)}
+                    className={`${styles.chip} ${styles.chipFlex} ${cobroFreq === val ? styles.chipActive : ''}`}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+
+              {cobroFreq === 'weekly' && (
+                <div className={styles.section}>
+                  <label className="field-label">Día de la semana</label>
+                  <div className={styles.weekdayRow}>
+                    {WEEKDAYS_SHORT.map((d, i) => (
+                      <button
+                        key={i}
+                        onClick={() => setCobroWeekday(i)}
+                        className={`${styles.chip} ${styles.weekdayChip} ${cobroWeekday === i ? styles.chipActive : ''}`}
+                      >
+                        {d}
+                      </button>
+                    ))}
+                  </div>
+                  <div className={styles.hint}>
+                    Te avisaremos qué pagos cubrir antes de cada <strong>{WEEKDAYS[cobroWeekday].toLowerCase()}</strong>.
+                  </div>
+                </div>
+              )}
+
+              {cobroFreq === 'biweekly' && (
+                <div className={styles.section}>
+                  <label className="field-label">Días de quincena</label>
+                  <div className={styles.chipRow} style={{ marginBottom: biweeklyCustom ? 12 : 0 }}>
+                    {[{label:'1 y 16',d1:1,d2:16},{label:'13 y 28',d1:13,d2:28},{label:'15 y 30',d1:15,d2:30}].map(preset => {
+                      const active = !biweeklyCustom && cobroDay1 === preset.d1 && cobroDay2 === preset.d2
+                      return (
+                        <button
+                          key={preset.label}
+                          onClick={() => { setBiweeklyCustom(false); setCobroDay1(preset.d1); setCobroDay2(preset.d2) }}
+                          className={`${styles.chip} ${styles.presetChip} ${active ? styles.chipActive : ''}`}
+                        >
+                          {preset.label}
+                        </button>
+                      )
+                    })}
+                    <button
+                      onClick={() => setBiweeklyCustom(true)}
+                      className={`${styles.chip} ${styles.presetChip} ${biweeklyCustom ? styles.chipActive : ''}`}
+                    >
+                      Personalizado
+                    </button>
+                  </div>
+                  {biweeklyCustom && (
+                    <div className={styles.twoColRow}>
+                      <div className={styles.colField}>
+                        <label className={styles.smallLabel}>Día 1 (1–28)</label>
+                        <input
+                          type="number" min="1" max="28" value={cobroDay1 ?? ''}
+                          onChange={e => setCobroDay1(Math.min(28, Math.max(1, parseInt(e.target.value)||1)))}
+                          onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); document.getElementById('cobro-day2')?.focus() } }}
+                          enterKeyHint="next" placeholder="ej. 13" className="field-input"
+                        />
+                      </div>
+                      <div className={styles.colField}>
+                        <label className={styles.smallLabel}>Día 2 (1–31)</label>
+                        <input
+                          type="number" min="1" max="31" value={cobroDay2 ?? ''} id="cobro-day2"
+                          onChange={e => setCobroDay2(Math.min(31, Math.max(1, parseInt(e.target.value)||1)))}
+                          onKeyDown={e => e.key === 'Enter' && nextStep()}
+                          enterKeyHint="next" placeholder="ej. 28" className="field-input"
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {cobroFreq === 'monthly' && (
+                <div className={styles.section}>
+                  <label className="field-label">Día de cobro</label>
+                  <input
+                    type="number" min="1" max="31" value={cobroDay1 ?? ''}
+                    onChange={e => setCobroDay1(Math.min(31, Math.max(1, parseInt(e.target.value)||1)))}
+                    onKeyDown={e => e.key === 'Enter' && nextStep()}
+                    enterKeyHint="next" placeholder="ej. 5" className={`field-input ${styles.monthDayInput}`}
+                  />
+                  {cobroDay1 && <div className={styles.hint}>Tu periodo de cobro empieza el día <strong>{cobroDay1}</strong> de cada mes.</div>}
+                </div>
+              )}
+            </>
+          )}
+
+          {n === 3 && (
+            <>
+              <h2 className={styles.title}>¿Cuánto ganas por periodo?</h2>
+              <p className={styles.desc}>Opcional. Te ayuda a ver cuánto te queda libre después de tus pagos.</p>
+              <div onClick={() => setSalaryEnabled(v => !v)} className={styles.toggleRow}>
+                <div>
+                  <div className={styles.toggleLabel}>Activar ingreso por periodo</div>
+                  <div className={styles.toggleSub}>Puedes cambiarlo después en Perfil</div>
+                </div>
+                <div className="toggle-track" style={{ background: salaryEnabled ? 'var(--accent)' : 'var(--border)' }}>
+                  <div className="toggle-thumb" style={{ left: salaryEnabled ? 19 : 3 }} />
+                </div>
+              </div>
+              {salaryEnabled && (
+                <div>
+                  <label className="field-label">Monto por periodo</label>
+                  <div className={styles.amountWrap}>
+                    <span className={styles.currencyPrefix}>$</span>
+                    <input
+                      autoFocus type="number" value={salaryAmount}
+                      onChange={e => setSalaryAmount(e.target.value)}
+                      onKeyDown={e => e.key === 'Enter' && nextStep()}
+                      enterKeyHint="next" placeholder="0.00"
+                      className={`field-input ${styles.amountInput}`}
+                    />
+                  </div>
+                </div>
+              )}
+            </>
+          )}
+
+          {n === 4 && (
+            <>
+              <h2 className={styles.title}>¿Quieres recibir recordatorios?</h2>
+              <p className={styles.desc}>Te avisaremos cuando un pago esté por vencer o se haya vencido.</p>
+              <div
+                onClick={async () => { if (!subscribed) await subscribe() }}
+                className={styles.toggleRow}
+                style={{ cursor: subscribed ? 'default' : 'pointer' }}
+              >
+                <div>
+                  <div className={styles.toggleLabel}>
+                    {subscribed ? 'Notificaciones activadas' : 'Activar notificaciones'}
+                  </div>
+                  <div className={styles.toggleSub}>
+                    {subscribed ? 'Recibirás alertas de tus pagos' : 'Puedes activarlas después en Perfil'}
+                  </div>
+                </div>
+                <div className="toggle-track" style={{ background: subscribed ? 'var(--accent)' : 'var(--border)' }}>
+                  <div className="toggle-thumb" style={{ left: subscribed ? 19 : 3 }} />
+                </div>
+              </div>
+              {subscribed && (
+                <div className={styles.readyBanner}>
+                  <div className={styles.readyTitle}>¡Listo!</div>
+                  <div className={styles.readyText}>Puedes personalizar qué notificaciones recibir desde Perfil.</div>
+                </div>
+              )}
+            </>
+          )}
+        </div>
+      </div>
+    )
+  }
+
   return (
-    <div style={{ minHeight: '100vh', background: 'var(--bg)', display: 'flex', flexDirection: 'column' }}>
+    <div className={styles.page}>
 
       {/* Stepper */}
-      <div style={{ padding: '48px 24px 0', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        {STEP_META.map(({ label }, i) => {
+      <div className={styles.stepper}>
+        {STEP_META.map(({ label, Icon }, i) => {
           const s = i + 1
           const done   = s < step
           const active = s === step
           return (
-            <div key={s} style={{ display: 'flex', alignItems: 'center' }}>
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
-                <div style={{ width: 32, height: 32, borderRadius: '50%', background: done ? 'var(--paid)' : active ? 'var(--accent)' : 'var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'background .2s' }}>
-                  {done
-                    ? <Check size={16} color="#fff" strokeWidth={2.5} />
-                    : <span style={{ fontSize: 13, fontWeight: 700, color: active ? '#fff' : 'var(--text)' }}>{s}</span>
-                  }
+            <div key={s} className={styles.stepperItem}>
+              <div className={styles.stepperDotCol}>
+                <div className={`${styles.stepperDot} ${done ? styles.dotDone : active ? styles.dotActive : styles.dotUpcoming}`}>
+                  <Icon size={16} strokeWidth={2} className={styles.stepperIcon} />
                 </div>
-                <span style={{ fontSize: 9, fontWeight: active ? 600 : 400, color: active ? 'var(--accent)' : 'var(--text)', textAlign: 'center', maxWidth: 60 }}>{label}</span>
+                <span className={`${styles.stepperLabel} ${active ? styles.stepperLabelActive : ''}`}>{label}</span>
               </div>
               {i < TOTAL_STEPS - 1 && (
-                <div style={{ width: 36, height: 1, background: s < step ? 'var(--paid)' : 'var(--border)', margin: '0 4px', marginBottom: 18, transition: 'background .2s' }} />
+                <div className={`${styles.stepperLine} ${s < step ? styles.lineDone : ''}`} />
               )}
             </div>
           )
         })}
       </div>
 
-      {/* Contenido */}
-      <div style={{ flex: 1, padding: '32px 24px 0' }}>
-
-        {/* Ícono de sección */}
-        <div style={{ width: 56, height: 56, borderRadius: 16, background: 'var(--accent-soft)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 20 }}>
-          <CurrentIcon size={28} color="var(--accent)" strokeWidth={1.8} />
+      {/* Contenido con animación de entrada/salida por paso (Regla 29) */}
+      <div className={styles.viewport}>
+        {exitingStep !== null && (
+          <div className={`${styles.panelWrap} ${styles.exiting} ${direction === 'forward' ? styles.exitToLeft : styles.exitToRight}`}>
+            {renderStep(exitingStep)}
+          </div>
+        )}
+        <div className={`${styles.panelWrap} ${!initial ? (direction === 'forward' ? styles.enterFromRight : styles.enterFromLeft) : ''}`}>
+          {renderStep(step)}
         </div>
-
-        {/* Paso 1 — Nombre */}
-        {step === 1 && (
-          <div>
-            <h2 style={{ fontSize: 24, fontWeight: 700, color: 'var(--text)', marginBottom: 8 }}>¿Cómo te llamas?</h2>
-            <p style={{ fontSize: 14, fontWeight: 400, color: 'var(--text)', marginBottom: 28 }}>Así te saludaremos cada vez que abras la app.</p>
-            <label className="field-label">Tu nombre</label>
-            <input autoFocus className="field-input" type="text" value={name} onChange={e => setName(e.target.value)} onKeyDown={e => e.key === 'Enter' && nextStep()} enterKeyHint="next" placeholder="Ej. Johnatan" style={{ marginBottom: nameError ? 6 : 0 }} />
-            {nameError && <div style={{ fontSize: 12, color: 'var(--danger)' }}>{nameError}</div>}
-          </div>
-        )}
-
-        {/* Paso 2 — Frecuencia */}
-        {step === 2 && (
-          <div>
-            <h2 style={{ fontSize: 24, fontWeight: 700, color: 'var(--text)', marginBottom: 8 }}>¿Cuándo te pagan?</h2>
-            <p style={{ fontSize: 14, fontWeight: 400, color: 'var(--text)', marginBottom: 28 }}>Esto nos ayuda a mostrarte qué pagos cubrir con cada periodo.</p>
-
-            <label className="field-label">Frecuencia</label>
-            <div style={{ display: 'flex', gap: 8, marginBottom: 4 }}>
-              {[['weekly','Semanal'],['biweekly','Quincenal'],['monthly','Mensual']].map(([val, label]) => (
-                <button key={val} onClick={() => setCobroFreq(val)} style={{ flex: 1, padding: '10px 0', borderRadius: 5, border: 'none', background: cobroFreq === val ? 'var(--accent)' : 'var(--surface)', color: cobroFreq === val ? '#fff' : 'var(--text)', fontWeight: cobroFreq === val ? 600 : 400, fontSize: 14, fontFamily: 'DM Sans, sans-serif', cursor: 'pointer' }}>
-                  {label}
-                </button>
-              ))}
-            </div>
-
-            {/* Semanal */}
-            {cobroFreq === 'weekly' && (
-              <div style={{ marginTop: 16 }}>
-                <label className="field-label">Día de la semana</label>
-                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 8 }}>
-                  {WEEKDAYS_SHORT.map((d, i) => (
-                    <button key={i} onClick={() => setCobroWeekday(i)} style={{ flex: 1, minWidth: 40, padding: '10px 4px', borderRadius: 5, border: 'none', background: cobroWeekday === i ? 'var(--accent)' : 'var(--surface)', color: cobroWeekday === i ? '#fff' : 'var(--text)', fontWeight: cobroWeekday === i ? 600 : 400, fontSize: 13, fontFamily: 'DM Sans, sans-serif', cursor: 'pointer' }}>
-                      {d}
-                    </button>
-                  ))}
-                </div>
-                <div style={{ fontSize: 12, fontWeight: 400, color: 'var(--text)', marginTop: 10 }}>
-                  Te avisaremos qué pagos cubrir antes de cada <strong>{WEEKDAYS[cobroWeekday].toLowerCase()}</strong>.
-                </div>
-              </div>
-            )}
-
-            {/* Quincenal */}
-            {cobroFreq === 'biweekly' && (
-              <div style={{ marginTop: 16 }}>
-                <label className="field-label">Días de quincena</label>
-                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 8, marginBottom: biweeklyCustom ? 12 : 0 }}>
-                  {[{label:'1 y 16',d1:1,d2:16},{label:'13 y 28',d1:13,d2:28},{label:'15 y 30',d1:15,d2:30}].map(preset => {
-                    const active = !biweeklyCustom && cobroDay1 === preset.d1 && cobroDay2 === preset.d2
-                    return (
-                      <button key={preset.label} onClick={() => { setBiweeklyCustom(false); setCobroDay1(preset.d1); setCobroDay2(preset.d2) }}
-                        style={{ padding: '7px 14px', borderRadius: 5, border: 'none', background: active ? 'var(--accent)' : 'var(--surface)', color: active ? '#fff' : 'var(--text)', fontWeight: active ? 600 : 400, fontSize: 13, fontFamily: 'DM Sans, sans-serif', cursor: 'pointer' }}>
-                        {preset.label}
-                      </button>
-                    )
-                  })}
-                  <button onClick={() => setBiweeklyCustom(true)}
-                    style={{ padding: '7px 14px', borderRadius: 5, border: 'none', background: biweeklyCustom ? 'var(--accent)' : 'var(--surface)', color: biweeklyCustom ? '#fff' : 'var(--text)', fontWeight: biweeklyCustom ? 600 : 400, fontSize: 13, fontFamily: 'DM Sans, sans-serif', cursor: 'pointer' }}>
-                    Personalizado
-                  </button>
-                </div>
-                {biweeklyCustom && (
-                  <div style={{ display: 'flex', gap: 10 }}>
-                    <div style={{ flex: 1 }}>
-                      <label style={{ display: 'block', fontSize: 11, fontWeight: 500, color: 'var(--text)', marginBottom: 4 }}>Día 1 (1–28)</label>
-                      <input type="number" min="1" max="28" value={cobroDay1 ?? ''} onChange={e => setCobroDay1(Math.min(28, Math.max(1, parseInt(e.target.value)||1)))} onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); document.getElementById('cobro-day2')?.focus() } }} enterKeyHint="next" placeholder="ej. 13" className="field-input" />
-                    </div>
-                    <div style={{ flex: 1 }}>
-                      <label style={{ display: 'block', fontSize: 11, fontWeight: 500, color: 'var(--text)', marginBottom: 4 }}>Día 2 (1–31)</label>
-                      <input type="number" min="1" max="31" value={cobroDay2 ?? ''} id="cobro-day2" onChange={e => setCobroDay2(Math.min(31, Math.max(1, parseInt(e.target.value)||1)))} onKeyDown={e => e.key === 'Enter' && nextStep()} enterKeyHint="next" placeholder="ej. 28" className="field-input" />
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* Mensual */}
-            {cobroFreq === 'monthly' && (
-              <div style={{ marginTop: 16 }}>
-                <label className="field-label">Día de cobro</label>
-                <input type="number" min="1" max="31" value={cobroDay1 ?? ''} onChange={e => setCobroDay1(Math.min(31, Math.max(1, parseInt(e.target.value)||1)))} onKeyDown={e => e.key === 'Enter' && nextStep()} enterKeyHint="next" placeholder="ej. 5" className="field-input" style={{ maxWidth: 120, marginTop: 8 }} />
-                {cobroDay1 && <div style={{ fontSize: 12, fontWeight: 400, color: 'var(--text)', marginTop: 6 }}>Tu periodo de cobro empieza el día <strong>{cobroDay1}</strong> de cada mes.</div>}
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Paso 3 — Ingreso */}
-        {step === 3 && (
-          <div>
-            <h2 style={{ fontSize: 24, fontWeight: 700, color: 'var(--text)', marginBottom: 8 }}>¿Cuánto ganas por periodo?</h2>
-            <p style={{ fontSize: 14, fontWeight: 400, color: 'var(--text)', marginBottom: 28 }}>Opcional. Te ayuda a ver cuánto te queda libre después de tus pagos.</p>
-            <div onClick={() => setSalaryEnabled(v => !v)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px', background: 'var(--surface)', borderRadius: 'var(--radius)', cursor: 'pointer', marginBottom: 16 }}>
-              <div>
-                <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--text)' }}>Activar ingreso por periodo</div>
-                <div style={{ fontSize: 12, fontWeight: 400, color: 'var(--text)', marginTop: 2 }}>Puedes cambiarlo después en Ajustes</div>
-              </div>
-              <div className="toggle-track" style={{ background: salaryEnabled ? 'var(--accent)' : 'var(--border)' }}>
-                <div className="toggle-thumb" style={{ left: salaryEnabled ? 19 : 3 }} />
-              </div>
-            </div>
-            {salaryEnabled && (
-              <div>
-                <label className="field-label">Monto por periodo</label>
-                <input autoFocus type="number" value={salaryAmount} onChange={e => setSalaryAmount(e.target.value)} onKeyDown={e => e.key === 'Enter' && nextStep()} enterKeyHint="next" placeholder="0.00" className="field-input" />
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Paso 4 — Notificaciones */}
-        {step === 4 && (
-          <div>
-            <h2 style={{ fontSize: 24, fontWeight: 700, color: 'var(--text)', marginBottom: 8 }}>¿Quieres recibir recordatorios?</h2>
-            <p style={{ fontSize: 14, fontWeight: 400, color: 'var(--text)', marginBottom: 28 }}>Te avisaremos cuando un pago esté por vencer o se haya vencido.</p>
-            <div
-              onClick={async () => {
-                if (!subscribed) {
-                  await subscribe()
-                }
-              }}
-              style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px', background: 'var(--surface)', borderRadius: 'var(--radius)', cursor: subscribed ? 'default' : 'pointer' }}
-            >
-              <div>
-                <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--text)' }}>
-                  {subscribed ? 'Notificaciones activadas' : 'Activar notificaciones'}
-                </div>
-                <div style={{ fontSize: 12, fontWeight: 400, color: 'var(--text)', marginTop: 2 }}>
-                  {subscribed ? 'Recibirás alertas de tus pagos' : 'Puedes activarlas después en Ajustes'}
-                </div>
-              </div>
-              <div className="toggle-track" style={{ background: subscribed ? 'var(--accent)' : 'var(--border)' }}>
-                <div className="toggle-thumb" style={{ left: subscribed ? 19 : 3 }} />
-              </div>
-            </div>
-            {subscribed && (
-              <div style={{ marginTop: 12, padding: '12px 14px', background: 'var(--paid-soft)', borderRadius: 'var(--radius-sm)' }}>
-                <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--paid)' }}>¡Listo!</div>
-                <div style={{ fontSize: 12, fontWeight: 400, color: 'var(--text)', marginTop: 2 }}>Puedes personalizar qué notificaciones recibir desde Ajustes.</div>
-              </div>
-            )}
-          </div>
-        )}
       </div>
 
       {/* Botones */}
-      <div style={{ padding: '24px 24px 40px' }}>
-        <button onClick={nextStep} disabled={saving} className="btn-primary" style={{ marginBottom: 12 }}>
+      <div className={styles.actions}>
+        <button onClick={nextStep} disabled={saving} className="btn-primary">
           {saving ? 'Guardando…' : step < TOTAL_STEPS ? 'Continuar →' : '¡Comenzar!'}
         </button>
         {step > 1 && (
-          <button onClick={() => setStep(s => s - 1)} className="btn-ghost">Atrás</button>
+          <button onClick={prevStep} className="btn-ghost">Atrás</button>
         )}
       </div>
     </div>
