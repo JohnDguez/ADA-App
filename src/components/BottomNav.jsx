@@ -1,4 +1,4 @@
-import { Home, Wallet, CalendarClock, User, Plus } from 'lucide-react'
+import { Home, Wallet, CalendarClock, User, Plus, ChevronUp, GripHorizontal } from 'lucide-react'
 import styles from './BottomNav.module.css'
 
 const LEFT_TABS = [
@@ -10,25 +10,52 @@ const RIGHT_TABS = [
   { id: 'settings',   Icon: User },
 ]
 
-export function BottomNav({ active, onChange, onAdd }) {
+// `showGoalsTray`/`onOpenGoals` — franja de "Mis metas" (Fase 2 de Metas de
+// ahorro, ver CONTEXT.md), solo se pasa como true desde App.jsx cuando
+// tab === 'home'. Aditivo a propósito: sin estas props, el nav se ve y se
+// comporta EXACTAMENTE igual que antes en el resto de las pestañas — nunca
+// se tocó el diseño existente, solo se le agregó una fila opcional arriba.
+// El "+" se reposiciona un poco más arriba (`.addButtonRaised`) SOLO cuando
+// la franja está presente, para que asome hasta la mitad de sí mismo por
+// encima de la franja nueva (diseño aprobado por Johnatan tras iterar en
+// mockup) — en el resto de las pestañas conserva su posición de siempre.
+export function BottomNav({ active, onChange, onAdd, showGoalsTray = false, onOpenGoals }) {
   return (
-    <nav className={styles.nav}>
-      {LEFT_TABS.map(({ id, Icon }) => (
-        <TabBtn key={id} id={id} Icon={Icon} active={active === id} onChange={onChange} />
-      ))}
-
-      <div className={styles.addButtonWrapper}>
-        <button
-          onClick={onAdd}
-          className={styles.addButton}
+    <nav className={`${styles.nav} ${showGoalsTray ? styles.navWithTray : ''}`}>
+      {showGoalsTray && (
+        <div
+          className={styles.goalsRow}
+          onClick={onOpenGoals}
+          role="button"
+          tabIndex={0}
+          onKeyDown={e => e.key === 'Enter' && onOpenGoals()}
         >
-          <Plus size={26} color="var(--nav-icon)" strokeWidth={2.5} />
-        </button>
-      </div>
+          <div className={styles.goalsLabel}>
+            <ChevronUp size={13} color="rgba(255,255,255,0.65)" />
+            <span>Mis metas</span>
+          </div>
+          <GripHorizontal size={15} color="rgba(255,255,255,0.5)" />
+        </div>
+      )}
 
-      {RIGHT_TABS.map(({ id, Icon }) => (
-        <TabBtn key={id} id={id} Icon={Icon} active={active === id} onChange={onChange} />
-      ))}
+      <div className={styles.iconRow}>
+        {LEFT_TABS.map(({ id, Icon }) => (
+          <TabBtn key={id} id={id} Icon={Icon} active={active === id} onChange={onChange} />
+        ))}
+
+        <div className={styles.addButtonWrapper}>
+          <button
+            onClick={onAdd}
+            className={`${styles.addButton} ${showGoalsTray ? styles.addButtonRaised : ''}`}
+          >
+            <Plus size={26} color="var(--nav-icon)" strokeWidth={2.5} />
+          </button>
+        </div>
+
+        {RIGHT_TABS.map(({ id, Icon }) => (
+          <TabBtn key={id} id={id} Icon={Icon} active={active === id} onChange={onChange} />
+        ))}
+      </div>
     </nav>
   )
 }

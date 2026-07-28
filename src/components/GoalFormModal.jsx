@@ -1,0 +1,178 @@
+import { useState, useEffect, useRef } from 'react'
+import { Search, Check } from 'lucide-react'
+import { CATEGORY_ICON_GROUPS, getIconComponent } from '../lib/categoryIcons'
+import styles from './GoalFormModal.module.css'
+
+const PALETTE = Array.from({ length: 16 }, (_, i) => `var(--palette-${i + 1})`)
+const ANIM_MS = 320
+
+// Crear y editar una meta comparten el mismo formulario — `initial` viene
+// null para crear, o el objeto de la meta para editar (mismo criterio que
+// el resto de modales de edición de la app, ej. PaymentModal).
+export function GoalFormModal({ open, initial, onSave, onClose }) {
+  const [name, setName] = useState('')
+  const [notes, setNotes] = useState('')
+  const [icon, setIcon] = useState('PiggyBank')
+  const [color, setColor] = useState(PALETTE[0])
+  const [targetAmount, setTargetAmount] = useState('')
+  const [targetDate, setTargetDate] = useState('')
+  const [iconSearch, setIconSearch] = useState('')
+  const [error, setError] = useState('')
+  const [saving, setSaving] = useState(false)
+
+  const [closing, setClosing] = useState(false)
+  const wasOpenRef = useRef(open)
+  const closeTimerRef = useRef(null)
+  useEffect(() => () => clearTimeout(closeTimerRef.current), [])
+  useEffect(() => {
+    if (wasOpenRef.current && !open) {
+      setClosing(true)
+      clearTimeout(closeTimerRef.current)
+      closeTimerRef.current = setTimeout(() => setClosing(false), ANIM_MS)
+    }
+    wasOpenRef.current = open
+  }, [open])
+
+  useEffect(() => {
+    if (!open) return
+    setName(initial?.name || '')
+    setNotes(initial?.notes || '')
+    setIcon(initial?.icon || 'PiggyBank')
+    setColor(initial?.color || PALETTE[0])
+    setTargetAmount(initial?.target_amount != null ? String(initial.target_amount) : '')
+    setTargetDate(initial?.target_date || '')
+    setIconSearch('')
+    setError('')
+  }, [open, initial])
+
+  const showModal = open || closing
+  if (!showModal) return null
+
+  async function handleSave() {
+    if (!name.trim()) { setError('Ponle un nombre a tu meta'); return }
+    const amountVal = parseFloat(targetAmount)
+    if (!amountVal || amountVal <= 0) { setError('Ingresa cuánto quieres ahorrar'); return }
+    setSaving(true)
+    await onSave({ name, notes, icon, color, targetAmount: amountVal, targetDate: targetDate || null })
+    setSaving(false)
+  }
+
+  const search = iconSearch.trim().toLowerCase()
+  const filteredGroups = CATEGORY_ICON_GROUPS
+    .map(g => ({ ...g, icons: search ? g.icons.filter(i => i.label.toLowerCase().includes(search)) : g.icons }))
+    .filter(g => g.icons.length > 0)
+
+  return (
+    <div onClick={e => e.target === e.currentTarget && onClose()} className={`${styles.overlay} ${closing ? styles.overlayClosing : ''}`}>
+      <div className={`${styles.modal} ${closing ? styles.modalClosing : ''}`}>
+        <div className={styles.handle} />
+        <div className={styles.title}>{initial ? 'Editar meta' : 'Nueva meta'}</div>
+
+        <div className={styles.fieldGroup}>
+          <label className="field-label">Nombre</label>
+          <input
+            autoFocus
+            className={`field-input ${styles.inputMt}`}
+            value={name}
+            onChange={e => { setName(e.target.value); setError('') }}
+            placeholder="Ej. Comprar un PS5"
+          />
+        </div>
+
+        <div className={styles.fieldGroup}>
+          <label className="field-label">Notas (opcional)</label>
+          <textarea
+            className={`field-input ${styles.inputMt} ${styles.textarea}`}
+            value={notes}
+            onChange={e => setNotes(e.target.value)}
+            placeholder="Para qué es esta meta"
+          />
+        </div>
+
+        <div className={styles.fieldGroup}>
+          <label className="field-label">Ícono y color</label>
+          <div className={styles.searchWrapper}>
+            <div className={styles.searchIcon}><Search size={14} color="var(--text)" /></div>
+            <input
+              value={iconSearch}
+              onChange={e => setIconSearch(e.target.value)}
+              placeholder="Buscar ícono…"
+              className={`field-input ${styles.searchInput}`}
+            />
+          </div>
+          <div className={styles.iconGroupsContainer}>
+            {filteredGroups.map(group => (
+              <div key={group.label} className={styles.iconGroup}>
+                <div className={styles.iconGroupLabel}>{group.label}</div>
+                <div className={styles.iconGrid}>
+                  {group.icons.map(({ name: iconName, label }) => {
+                    const Icon = getIconComponent(iconName)
+                    const selected = icon === iconName
+                    return (
+                      <button
+                        key={iconName}
+                        type="button"
+                        title={label}
+                        onClick={() => setIcon(iconName)}
+                        className={`${styles.iconButton} ${selected ? styles.iconButtonSelected : ''}`}
+                      >
+                        <Icon size={16} color={selected ? 'var(--surface)' : 'var(--text)'} />
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+            ))}
+            {filteredGroups.length === 0 && (
+              <div className={styles.noResultsText}>Sin resultados para "{iconSearch}"</div>
+            )}
+          </div>
+          <div className={styles.colorGrid}>
+            {PALETTE.map(c => {
+              const selected = color === c
+              return (
+                <button
+                  key={c}
+                  type="button"
+                  onClick={() => setColor(c)}
+                  className={`${styles.colorSwatch} ${selected ? styles.colorSwatchSelected : ''}`}
+                  style={{ background: c }}
+                >
+                  {selected && <Check size={13} color="#fff" strokeWidth={3} />}
+                </button>
+              )
+            })}
+          </div>
+        </div>
+
+        <div className={styles.fieldGroup}>
+          <label className="field-label">Monto requerido</label>
+          <input
+            type="number"
+            className={`field-input ${styles.inputMt}`}
+            value={targetAmount}
+            onChange={e => { setTargetAmount(e.target.value); setError('') }}
+            placeholder="$0.00"
+          />
+        </div>
+
+        <div className={styles.fieldGroup}>
+          <label className="field-label">Fecha límite (opcional)</label>
+          <input
+            type="date"
+            className={`field-input ${styles.inputMt}`}
+            value={targetDate}
+            onChange={e => setTargetDate(e.target.value)}
+          />
+        </div>
+
+        {error && <div className={styles.errorText}>{error}</div>}
+
+        <button type="button" onClick={handleSave} disabled={saving} className={`btn-primary ${styles.saveButton}`}>
+          {saving ? 'Guardando…' : 'Guardar'}
+        </button>
+        <button type="button" onClick={onClose} className="btn-ghost">Cancelar</button>
+      </div>
+    </div>
+  )
+}

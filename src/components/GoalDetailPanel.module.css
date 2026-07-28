@@ -1,0 +1,247 @@
+.screen {
+  min-height: 100vh;
+  padding: 20px 16px 40px;
+  box-sizing: border-box;
+  animation: fadeIn .2s ease both;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.iconButton {
+  background: none;
+  border: none;
+  padding: 4px;
+  display: flex;
+  cursor: pointer;
+}
+
+.headerIcon {
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.headerTitle {
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--text);
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.menuWrapper {
+  position: relative;
+}
+
+.menu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 4px;
+  background: var(--menu-bg);
+  border: 0.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  min-width: 140px;
+  overflow: hidden;
+  z-index: 10;
+}
+
+.menuItem {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: none;
+  padding: 12px 14px;
+  font-size: 14px;
+  color: var(--text);
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.menuItemDanger {
+  color: var(--danger);
+}
+
+.ring {
+  width: 148px;
+  height: 148px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 10px;
+}
+
+.ringInner {
+  width: 110px;
+  height: 110px;
+  border-radius: 50%;
+  background: var(--bg);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+}
+
+.ringPercent {
+  font-size: 21px;
+  font-weight: 500;
+  color: var(--text);
+}
+
+.ringAmounts {
+  font-size: 11px;
+  color: var(--muted);
+  text-align: center;
+  padding: 0 8px;
+}
+
+.metaRow {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 4px;
+}
+
+.deadlineBadge {
+  font-size: 11.5px;
+  font-weight: 500;
+  color: var(--soon-color);
+  background: var(--warning-soft);
+  padding: 4px 10px;
+  border-radius: var(--radius-sm);
+}
+
+.deadlineOverdue {
+  color: var(--danger);
+  background: var(--danger-soft);
+}
+
+.createdAt {
+  text-align: center;
+  font-size: 11.5px;
+  color: var(--muted);
+  margin-bottom: 4px;
+}
+
+.notes {
+  text-align: center;
+  font-size: 13px;
+  color: var(--muted);
+  margin: 8px 20px 4px;
+}
+
+.buttonsRow {
+  display: flex;
+  gap: 10px;
+  margin: 18px 0 10px;
+}
+
+.actionBtn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 11px;
+  font-size: 13.5px;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.actionBtnGhost {
+  background: none;
+  color: var(--text);
+  border: 1px solid var(--border-mid);
+}
+
+.actionForm {
+  margin: 18px 0 10px;
+  background: var(--section-bg);
+  border-radius: var(--radius);
+  padding: 14px;
+}
+
+.actionInput {
+  margin-top: 6px;
+  margin-bottom: 12px;
+}
+
+.actionButtons {
+  display: flex;
+  gap: 10px;
+}
+
+.completeButton {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background: none;
+  color: var(--muted);
+  border: 1px solid var(--border-mid);
+  border-radius: var(--radius-sm);
+  padding: 11px;
+  font-size: 13px;
+  font-family: inherit;
+  cursor: pointer;
+  margin-bottom: 24px;
+}
+
+.historyTitle {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text);
+  margin-bottom: 8px;
+}
+
+.historyEmpty {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.historyList {
+  display: flex;
+  flex-direction: column;
+}
+
+.historyRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 0;
+  border-top: 0.5px solid var(--border);
+  font-size: 13px;
+  color: var(--text);
+}
+
+.historyLeft {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}

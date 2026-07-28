@@ -1,0 +1,236 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 500;
+  background: var(--bg);
+  animation: overlaySlideUp .3s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+  overflow-y: auto;
+}
+
+.overlayClosing {
+  animation: overlaySlideDown .28s cubic-bezier(0.4, 0, 1, 1) both;
+}
+
+@keyframes overlaySlideUp {
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0); }
+}
+
+@keyframes overlaySlideDown {
+  from { transform: translateY(0); }
+  to   { transform: translateY(100%); }
+}
+
+.screen {
+  position: relative;
+  min-height: 100vh;
+  padding: 20px 16px 110px;
+  box-sizing: border-box;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+.closeButton {
+  background: none;
+  border: none;
+  padding: 4px;
+  display: flex;
+  cursor: pointer;
+}
+
+.headerTitle {
+  font-size: 19px;
+  font-weight: 500;
+  color: var(--text);
+}
+
+.summaryRow {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.summaryBox {
+  flex: 1;
+  background: var(--section-bg);
+  border-radius: var(--radius);
+  padding: 12px 14px;
+}
+
+.summaryLabel {
+  font-size: 11px;
+  color: var(--muted);
+  margin-bottom: 4px;
+}
+
+.summaryValue {
+  font-size: 17px;
+  font-weight: 500;
+  color: var(--text);
+}
+
+.sortButton {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+  margin-bottom: 14px;
+  background: none;
+  border: none;
+  padding: 4px 2px;
+  font-size: 12.5px;
+  color: var(--muted);
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.card {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.cardWarning {
+  border-color: var(--soon-color);
+}
+
+.cardTop {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  gap: 10px;
+}
+
+.cardTitleGroup {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.cardIcon {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.cardName {
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cardTarget {
+  font-size: 14px;
+  color: var(--text);
+  flex-shrink: 0;
+}
+
+.cardStatsRow {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+
+.progressTrack {
+  height: 6px;
+  background: var(--border);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+  margin-bottom: 10px;
+}
+
+.progressFill {
+  height: 100%;
+  background: var(--paid);
+  border-radius: var(--radius-full);
+  transition: width .4s ease;
+}
+
+.cardBottomRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.daysBadge {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--soon-color);
+}
+
+.premiumBanner {
+  margin-top: 14px;
+  background: var(--premium-card-bg);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+}
+
+.premiumText {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--premium-text);
+  font-size: 12.5px;
+  margin-bottom: 10px;
+}
+
+.premiumButton {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--premium-gold);
+  color: var(--premium-gold-text);
+  border: none;
+  border-radius: var(--radius-full);
+  padding: 9px 16px;
+  font-size: 12.5px;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.fab {
+  position: absolute;
+  bottom: 24px;
+  right: 20px;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: var(--accent);
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 20px rgba(47, 140, 250, 0.45);
+  cursor: pointer;
+}

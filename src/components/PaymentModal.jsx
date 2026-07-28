@@ -10,7 +10,7 @@ import { Select } from './Select'
 import { DatePicker } from './DatePicker'
 import styles from './PaymentModal.module.css'
 
-export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelete, initial, payments, profile, spacePermissions, isSharedSpace = false, customCategories = [], onAddCategory, onOpenPremium }) {
+export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelete, initial, payments, profile, spacePermissions, isSharedSpace = false, customCategories = [], onAddCategory, onOpenPremium, personalGoalAportes = [] }) {
   const [mode,               setMode]               = useState('single')
   const [name,               setName]               = useState('')
   const [amount,             setAmount]             = useState('')
@@ -227,7 +227,7 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
         amount: parseFloat(amount),
         isRecurring: mode === 'recurrent',
         recurFreq,
-      }, periodIncomes)
+      }, periodIncomes, personalGoalAportes)
     : null
 
   if (isEditingInstallment) {
