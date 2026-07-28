@@ -1,15 +1,15 @@
 import { useEffect, useRef, useState } from 'react'
-import { UserRound, CalendarDays, Banknote, Bell, ArrowRight } from 'lucide-react'
+import { User, CalendarCheck, Wallet, BellRing, UserRound, ArrowRight } from 'lucide-react'
 import { WEEKDAYS, WEEKDAYS_SHORT } from '../lib/utils'
 import { supabase } from '../lib/supabase'
 import { usePushNotifications } from '../hooks/usePushNotifications'
 import styles from './OnboardingPage.module.css'
 
 const STEP_META = [
-  { label: 'Tu nombre',           Icon: UserRound,    bg: 'var(--onboarding-step1-bg)', illustration: '/onboarding-illustration-1.png' },
-  { label: 'Frecuencia de cobro', Icon: CalendarDays, bg: 'var(--onboarding-step2-bg)', illustration: '/onboarding-illustration-2.png' },
-  { label: 'Tu ingreso',          Icon: Banknote,     bg: 'var(--onboarding-step3-bg)', illustration: '/onboarding-illustration-3.png' },
-  { label: 'Notificaciones',      Icon: Bell,         bg: 'var(--onboarding-step4-bg)', illustration: '/onboarding-illustration-4.png' },
+  { label: 'Tu nombre',           Icon: User,          bg: 'var(--onboarding-step1-bg)', illustration: '/onboarding-illustration-1.png' },
+  { label: 'Frecuencia de cobro', Icon: CalendarCheck, bg: 'var(--onboarding-step2-bg)', illustration: '/onboarding-illustration-2.png' },
+  { label: 'Tu ingreso',          Icon: Wallet,        bg: 'var(--onboarding-step3-bg)', illustration: '/onboarding-illustration-3.png' },
+  { label: 'Notificaciones',      Icon: BellRing,      bg: 'var(--onboarding-step4-bg)', illustration: '/onboarding-illustration-4.png' },
 ]
 
 const TOTAL_STEPS = STEP_META.length

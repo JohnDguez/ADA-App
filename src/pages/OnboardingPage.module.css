@@ -32,11 +32,11 @@
    falta — basta con posicionarla baja dentro de la escena). */
 .illustration {
   position: absolute;
-  bottom: -30px;
+  bottom: -100px;
   left: 50%;
   transform: translateX(-50%);
-  width: 250px;
-  height: 250px;
+  width: 280px;
+  height: 280px;
   object-fit: contain;
   z-index: 2;
   pointer-events: none;
@@ -160,8 +160,8 @@
 }
 
 .title {
-  font-size: 30px;
-  font-weight: 700;
+  font-size: 36px;
+  font-weight: 800;
   color: var(--text);
   line-height: 1.15;
   margin-bottom: 10px;
