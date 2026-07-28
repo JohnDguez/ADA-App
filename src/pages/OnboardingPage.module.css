@@ -5,8 +5,23 @@
   flex-direction: column;
 }
 
+/* ── Escena fija (color del paso + ola + stepper) ────────────────────────────
+   A diferencia del panel de contenido, esto NO se desliza — solo recolorea
+   (transition) cuando cambia el paso, para que el color cubra desde arriba
+   de la pantalla, detrás del stepper incluido (antes vivía en una franja
+   aparte más abajo, dejando al stepper sobre el fondo gris normal — bug
+   reportado por Johnatan). */
+.scene {
+  position: relative;
+  height: 300px;
+  overflow: hidden;
+  flex-shrink: 0;
+  transition: background-color 0.3s ease;
+}
+
 /* ── Stepper ──────────────────────────────────────────────────────────────── */
 .stepper {
+  position: relative;
   padding: 48px 24px 0;
   display: flex;
   align-items: flex-start;
@@ -32,6 +47,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  border: 2px solid var(--onboarding-dot-ring);
   transition: background .2s;
 }
 
@@ -57,7 +73,6 @@
 
 .stepperLabelActive {
   font-weight: 600;
-  color: var(--accent);
 }
 
 .stepperLine {
@@ -124,13 +139,7 @@
   flex-direction: column;
 }
 
-.waveHeader {
-  position: relative;
-  height: 230px;
-  overflow: hidden;
-  flex-shrink: 0;
-}
-
+/* La ola vive dentro de .scene (fija) — ver arriba. */
 .wave {
   position: absolute;
   top: 0;
@@ -140,13 +149,20 @@
   display: block;
 }
 
+/* Ilustración: vive en el panel que SÍ se desliza (por eso cambia con cada
+   paso), pero se "monta" visualmente sobre la escena fija de arriba vía
+   margen negativo — así se ve como una sola composición, no 2 bloques
+   separados, aunque en el DOM sean elementos distintos. */
+.illustrationWrap {
+  display: flex;
+  justify-content: center;
+  margin-top: -190px;
+  pointer-events: none;
+}
+
 .illustration {
-  position: absolute;
-  top: 24px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 190px;
-  height: 190px;
+  width: 210px;
+  height: 210px;
   object-fit: contain;
 }
 

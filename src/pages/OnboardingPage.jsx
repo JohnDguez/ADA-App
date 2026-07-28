@@ -89,10 +89,7 @@ export function OnboardingPage({ userId, onDone }) {
     const meta = STEP_META[n - 1]
     return (
       <div className={styles.stepPanel}>
-        <div className={styles.waveHeader} style={{ background: meta.bg }}>
-          <svg className={styles.wave} viewBox="0 0 377 340" preserveAspectRatio="none">
-            <path d={WAVE_PATH} style={{ fill: 'var(--bg)' }} />
-          </svg>
+        <div className={styles.illustrationWrap}>
           <img className={styles.illustration} src={meta.illustration} alt="" />
         </div>
 
@@ -286,26 +283,36 @@ export function OnboardingPage({ userId, onDone }) {
   return (
     <div className={styles.page}>
 
-      {/* Stepper */}
-      <div className={styles.stepper}>
-        {STEP_META.map(({ label, Icon }, i) => {
-          const s = i + 1
-          const done   = s < step
-          const active = s === step
-          return (
-            <div key={s} className={styles.stepperItem}>
-              <div className={styles.stepperDotCol}>
-                <div className={`${styles.stepperDot} ${done ? styles.dotDone : active ? styles.dotActive : styles.dotUpcoming}`}>
-                  <Icon size={16} strokeWidth={2} className={styles.stepperIcon} />
+      {/* Escena fija: color de fondo del paso + ola + stepper. NO se desliza con
+          el contenido — solo recolorea (transition de CSS) cuando cambia el
+          paso, para que el color siga cubriendo detrás del stepper sin importar
+          en qué paso vaya. Solo la ilustración/título/formulario (renderStep)
+          viven dentro del panel que se desliza. */}
+      <div className={styles.scene} style={{ background: STEP_META[step - 1].bg }}>
+        <svg className={styles.wave} viewBox="0 0 377 340" preserveAspectRatio="none">
+          <path d={WAVE_PATH} style={{ fill: 'var(--bg)' }} />
+        </svg>
+
+        <div className={styles.stepper}>
+          {STEP_META.map(({ label, Icon }, i) => {
+            const s = i + 1
+            const done   = s < step
+            const active = s === step
+            return (
+              <div key={s} className={styles.stepperItem}>
+                <div className={styles.stepperDotCol}>
+                  <div className={`${styles.stepperDot} ${done ? styles.dotDone : active ? styles.dotActive : styles.dotUpcoming}`}>
+                    <Icon size={16} strokeWidth={2} className={styles.stepperIcon} />
+                  </div>
+                  <span className={`${styles.stepperLabel} ${active ? styles.stepperLabelActive : ''}`}>{label}</span>
                 </div>
-                <span className={`${styles.stepperLabel} ${active ? styles.stepperLabelActive : ''}`}>{label}</span>
+                {i < TOTAL_STEPS - 1 && (
+                  <div className={`${styles.stepperLine} ${s < step ? styles.lineDone : ''}`} />
+                )}
               </div>
-              {i < TOTAL_STEPS - 1 && (
-                <div className={`${styles.stepperLine} ${s < step ? styles.lineDone : ''}`} />
-              )}
-            </div>
-          )
-        })}
+            )
+          })}
+        </div>
       </div>
 
       {/* Contenido con animación de entrada/salida por paso (Regla 29) */}
