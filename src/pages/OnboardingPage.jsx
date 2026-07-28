@@ -207,6 +207,14 @@ export function OnboardingPage({ userId, onDone }) {
                       </div>
                     </div>
                   )}
+                  {cobroDay1 && cobroDay2 && (
+                    <div className={styles.hintCard}>
+                      <CalendarCheck size={18} className={styles.hintIcon} />
+                      <div>
+                        Te avisaremos qué pagos cubrir antes de los días <span className={styles.hintHighlight}>{cobroDay1}</span> y <span className={styles.hintHighlight}>{cobroDay2}</span> de cada mes.
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
 
