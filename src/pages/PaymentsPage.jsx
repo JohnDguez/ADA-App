@@ -68,7 +68,7 @@ function prevPeriod(profile) {
   return { start: t, end: prevEnd }
 }
 
-export function PaymentsPage({ payments, profile, spaceSwitcher, activeSpaceHeader, activeSpaceId = null, rawActiveSpaceId = null, sharedSpaces, spacePermissions, onOpenPremium, onSpaceReady, unreadCount, onOpenNotifs, onGoSettings, onMarkUnpaid, onDelete, onDeleteDirect, onUpdateProfile, onEdit, onViewSource, onSplit, onAdd, onGoCategories, sharedFund, slideClass }) {
+export function PaymentsPage({ payments, profile, spaceSwitcher, activeSpaceHeader, activeSpaceId = null, rawActiveSpaceId = null, sharedSpaces, spacePermissions, onOpenPremium, onSpaceReady, unreadCount, onOpenNotifs, onGoSettings, onMarkUnpaid, onDelete, onDeleteDirect, onUpdateProfile, onEdit, onViewSource, onSplit, onAdd, onGoCategories, sharedFund, slideClass, ensureMonthLoaded, oldestPaymentYear = null }) {
   // Mismo mecanismo que HomePage.jsx — ver ahí el porqué (evitar que la
   // animación de entrada se dispare también en un simple cambio de
   // pestaña, no solo en un cambio real de espacio).
@@ -99,6 +99,14 @@ export function PaymentsPage({ payments, profile, spaceSwitcher, activeSpaceHead
   const [viewMonth,   setViewMonth]   = useState(now.getMonth())
   const [viewYear,    setViewYear]    = useState(now.getFullYear())
   const [viewMode,    setViewMode]    = useState('periodo')  // 'mes' | 'periodo'
+
+  // Carga bajo demanda (v0.9.281): usePayments solo trae de entrada los
+  // pagados de los últimos 3 meses — al elegir un mes más viejo en "Por
+  // mes", se le pide al hook que amplíe su ventana de carga hasta cubrirlo
+  // (si ya lo cubre, no hace nada). Ver `ensureMonthLoaded` en usePayments.
+  useEffect(() => {
+    if (viewMode === 'mes' && ensureMonthLoaded) ensureMonthLoaded(viewMonth, viewYear)
+  }, [viewMode, viewMonth, viewYear, ensureMonthLoaded])
   const [openMenu,    setOpenMenu]    = useState(null)
 
   // Ingresos extras del periodo actual
@@ -560,10 +568,15 @@ export function PaymentsPage({ payments, profile, spaceSwitcher, activeSpaceHead
   const maxCat = Math.max(...catData.map(d => d.total), 1)
 
   // ── Pagos realizados ──────────────────────────────────────────────────────
-  const availableYears = [...new Set(paidPayments.map(p => {
-    const d = p.paid_at ? new Date(p.paid_at) : dateOf(p.due_date)
-    return d.getFullYear()
-  }))].sort((a, b) => b - a)
+  // v0.9.281: el selector de años ya no se arma a partir de los pagos
+  // CARGADOS (con la ventana de carga, los años viejos no están en memoria
+  // hasta pedirlos — y sin aparecer en el selector no habría forma de
+  // pedirlos). Ahora es el rango completo: del año actual hacia atrás hasta
+  // el año del registro más viejo del contexto (consulta ligera del hook).
+  const currentYear = now.getFullYear()
+  const oldestAvailableYear = oldestPaymentYear || currentYear
+  const availableYears = []
+  for (let y = currentYear; y >= oldestAvailableYear; y--) availableYears.push(y)
   if (!availableYears.includes(viewYear)) availableYears.unshift(viewYear)
 
   function paidInMonth(month, year) {
