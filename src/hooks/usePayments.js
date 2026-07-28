@@ -297,9 +297,25 @@ export function usePayments(userId, activeSpaceId = null, activeSpaceName = null
 
   useEffect(() => { fetchPayments() }, [fetchPayments])
 
-  // Reset de la ventana ampliada al cambiar de contexto (Personal ↔ espacio,
-  // o entre espacios) — cada contexto arranca con su ventana default.
-  useEffect(() => { setExtendedCutoff(null) }, [activeSpaceId])
+  // v0.9.284 — Al cambiar de contexto (Personal ↔ espacio, o entre
+  // espacios): limpiar los pagos del contexto anterior, volver a
+  // `loading: true` y resetear la ventana ampliada. Sin esto, `payments`
+  // conservaba los datos del contexto viejo mientras la consulta nueva
+  // viajaba (~200-400ms) y las páginas los pintaban mezclados por un
+  // instante — reportado por Johnatan probando Personal → Espacio
+  // Compartido. Se hace DURANTE EL RENDER (patrón oficial de React
+  // "adjusting state while rendering"), NO en un useEffect: los efectos
+  // corren después del paint, así que con useEffect igual se colaría 1
+  // frame con los datos viejos; ajustando el estado en render, React
+  // re-renderiza ANTES de pintar y no existe ni un solo frame mezclado.
+  const [prevCtx, setPrevCtx] = useState(() => `${userId}|${activeSpaceId}`)
+  const ctxKey = `${userId}|${activeSpaceId}`
+  if (prevCtx !== ctxKey) {
+    setPrevCtx(ctxKey)
+    setPayments([])
+    setLoading(true)
+    setExtendedCutoff(null)
+  }
 
   // Año más viejo del contexto activo (1 consulta ligera por contexto).
   useEffect(() => {
