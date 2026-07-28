@@ -13,7 +13,7 @@
    contenido del paso (título/formulario) cuando se avanza/retrocede. */
 .scene {
   position: relative;
-  height: 270px;
+  height: 290px;
   flex-shrink: 0;
 }
 
@@ -156,7 +156,7 @@
 
 .body {
   flex: 1;
-  padding: 40px 24px 0;
+  padding: 115px 24px 0;
 }
 
 .title {
