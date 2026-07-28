@@ -12,10 +12,10 @@ import styles from './OnboardingPage.module.css'
 // misma cantidad para no dejar un hueco vacío entre los dos (pedido
 // explícito de Johnatan).
 const STEP_META = [
-  { label: 'Tu nombre',           Icon: User,          bg: 'var(--onboarding-step1-bg)', illustration: '/onboarding-illustration-1.png', illustrationBottom: -65, bodyPaddingTop: 95 },
-  { label: 'Frecuencia de cobro', Icon: CalendarCheck, bg: 'var(--onboarding-step2-bg)', illustration: '/onboarding-illustration-2.png', illustrationBottom: -55, bodyPaddingTop: 70 },
+  { label: 'Tu nombre',           Icon: User,          bg: 'var(--onboarding-step1-bg)', illustration: '/onboarding-illustration-1.png', illustrationBottom: -65, bodyPaddingTop: 85 },
+  { label: 'Frecuencia de cobro', Icon: CalendarCheck, bg: 'var(--onboarding-step2-bg)', illustration: '/onboarding-illustration-2.png', illustrationBottom: -55, bodyPaddingTop: 60 },
   { label: 'Tu ingreso',          Icon: Wallet,        bg: 'var(--onboarding-step3-bg)', illustration: '/onboarding-illustration-3.png', illustrationBottom: -65, bodyPaddingTop: 85, illustrationSize: 270 },
-  { label: 'Notificaciones',      Icon: BellRing,      bg: 'var(--onboarding-step4-bg)', illustration: '/onboarding-illustration-4.png', illustrationBottom: -60, bodyPaddingTop: 75 },
+  { label: 'Notificaciones',      Icon: BellRing,      bg: 'var(--onboarding-step4-bg)', illustration: '/onboarding-illustration-4.png', illustrationBottom: -50, bodyPaddingTop: 60 },
 ]
 
 // Defaults (para cualquier paso que no traiga su propio override arriba).
