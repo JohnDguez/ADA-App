@@ -249,7 +249,7 @@ export function groupPayments(payments) {
 // pendiente que todavía vence este periodo (por `due_date`, igual que antes).
 // Periodo futuro: sueldo − lo pendiente que vence ese periodo (sin extras, sin
 // paid_at, porque ese periodo aún no ocurre).
-export function projectPeriodImpact(payments, profile, candidate, periodIncomes = []) {
+export function projectPeriodImpact(payments, profile, candidate, periodIncomes = [], goalAportes = []) {
   if (!candidate?.dueDate || candidate.isVariable) return []
 
   const salario = profile.salary_enabled ? Number(profile.salary_amount || 0) : 0
@@ -281,6 +281,20 @@ export function projectPeriodImpact(payments, profile, candidate, periodIncomes 
       .reduce((a, p) => a + Number(p.amount), 0)
   }
 
+  // Aportes a Metas de ahorro dentro del periodo — mismo criterio que
+  // `pagadoEn`, resta de Disponible porque es dinero comprometido (ver
+  // CONTEXT.md, Fase 2 de Metas). Solo se le pasa `goalAportes` real
+  // cuando el simulador corre en contexto personal (PaymentModal.jsx ya
+  // esconde este simulador por completo dentro de un Espacio Compartido).
+  function aportadoMetasEn(start, end) {
+    return goalAportes
+      .filter(a => {
+        const d = dateOf(dateToStr(new Date(a.created_at)))
+        return d >= start && d <= end
+      })
+      .reduce((a, tx) => a + Number(tx.amount), 0)
+  }
+
   const maxOcurrencias = candidate.isRecurring ? 2 : 1
   const results = []
   let d = dateOf(candidate.dueDate)
@@ -290,7 +304,7 @@ export function projectPeriodImpact(payments, profile, candidate, periodIncomes 
     const { comprometido, pendientesCount, variablesPendientes } = pendienteEn(p.start, p.end, esActual)
 
     const disponibleAntes = esActual
-      ? salario + extrasActual - pagadoEn(p.start, p.end) - comprometido
+      ? salario + extrasActual - pagadoEn(p.start, p.end) - comprometido - aportadoMetasEn(p.start, p.end)
       : salario - comprometido
     const disponibleDespues = disponibleAntes - Number(candidate.amount)
     results.push({ start: p.start, end: p.end, disponibleAntes, disponibleDespues, variablesPendientes, pendientesCount, pendientesMonto: comprometido })
