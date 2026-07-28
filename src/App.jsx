@@ -20,6 +20,7 @@ import { usePayments } from './hooks/usePayments'
 import { useSharedFund } from './hooks/useSharedFund'
 import { useGoals } from './hooks/useGoals'
 import { GoalsOverlay } from './components/GoalsOverlay'
+import { GoalsTray } from './components/GoalsTray'
 import { useProfile } from './hooks/useProfile'
 import { useNotifications } from './hooks/useNotifications'
 import { HomePage } from './pages/HomePage'
@@ -897,9 +898,11 @@ export default function App() {
         active={tab}
         onChange={t => changeTab(t)}
         onAdd={openAdd}
-        showGoalsTray={tab === 'home'}
-        onOpenGoals={() => setGoalsOverlayOpen(true)}
       />
+
+      {tab === 'home' && (
+        <GoalsTray onOpen={() => setGoalsOverlayOpen(true)} />
+      )}
 
       <GoalsOverlay
         open={goalsOverlayOpen}
