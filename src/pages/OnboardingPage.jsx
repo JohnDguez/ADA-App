@@ -5,22 +5,23 @@ import { supabase } from '../lib/supabase'
 import { usePushNotifications } from '../hooks/usePushNotifications'
 import styles from './OnboardingPage.module.css'
 
-// illustrationSize / illustrationBottom: mismos valores default para los 4
-// (los que ya se habían ajustado), pero cada paso puede sobreescribirlos —
-// no todas las ilustraciones tienen las mismas proporciones (unas quedan
-// bien más separadas de la píldora del stepper, otras se ven mejor más
-// pegadas), así que esto se ajusta paso por paso, no con un valor global.
+// illustrationSize / illustrationBottom / bodyPaddingTop: mismos defaults
+// para los 4 (los que ya se habían ajustado), pero cada paso puede
+// sobreescribirlos — no todas las ilustraciones tienen las mismas
+// proporciones, y cuando una ilustración sube, el título debe subir la
+// misma cantidad para no dejar un hueco vacío entre los dos (pedido
+// explícito de Johnatan).
 const STEP_META = [
-  { label: 'Tu nombre',           Icon: User,          bg: 'var(--onboarding-step1-bg)', illustration: '/onboarding-illustration-1.png' },
-  { label: 'Frecuencia de cobro', Icon: CalendarCheck, bg: 'var(--onboarding-step2-bg)', illustration: '/onboarding-illustration-2.png' },
-  { label: 'Tu ingreso',          Icon: Wallet,        bg: 'var(--onboarding-step3-bg)', illustration: '/onboarding-illustration-3.png' },
-  { label: 'Notificaciones',      Icon: BellRing,      bg: 'var(--onboarding-step4-bg)', illustration: '/onboarding-illustration-4.png' },
+  { label: 'Tu nombre',           Icon: User,          bg: 'var(--onboarding-step1-bg)', illustration: '/onboarding-illustration-1.png', illustrationBottom: -80, bodyPaddingTop: 115 },
+  { label: 'Frecuencia de cobro', Icon: CalendarCheck, bg: 'var(--onboarding-step2-bg)', illustration: '/onboarding-illustration-2.png', illustrationBottom: -75, bodyPaddingTop: 110 },
+  { label: 'Tu ingreso',          Icon: Wallet,        bg: 'var(--onboarding-step3-bg)', illustration: '/onboarding-illustration-3.png', illustrationBottom: -75, bodyPaddingTop: 110 },
+  { label: 'Notificaciones',      Icon: BellRing,      bg: 'var(--onboarding-step4-bg)', illustration: '/onboarding-illustration-4.png', illustrationBottom: -80, bodyPaddingTop: 115 },
 ]
 
-// Defaults (los valores ya confirmados para el paso 1) — se usan para
-// cualquier paso que no traiga su propio override en STEP_META.
+// Defaults (para cualquier paso que no traiga su propio override arriba).
 const DEFAULT_ILLUSTRATION_SIZE = 280
 const DEFAULT_ILLUSTRATION_BOTTOM = -100
+const DEFAULT_BODY_PADDING_TOP = 135
 
 const TOTAL_STEPS = STEP_META.length
 
@@ -116,7 +117,7 @@ export function OnboardingPage({ userId, onDone }) {
           />
         </div>
 
-        <div className={styles.body}>
+        <div className={styles.body} style={{ paddingTop: meta.bodyPaddingTop ?? DEFAULT_BODY_PADDING_TOP }}>
           {n === 1 && (
             <>
               <h2 className={styles.title}>¿Cuál es<br />tu nombre?</h2>
