@@ -5,12 +5,22 @@ import { supabase } from '../lib/supabase'
 import { usePushNotifications } from '../hooks/usePushNotifications'
 import styles from './OnboardingPage.module.css'
 
+// illustrationSize / illustrationBottom: mismos valores default para los 4
+// (los que ya se habían ajustado), pero cada paso puede sobreescribirlos —
+// no todas las ilustraciones tienen las mismas proporciones (unas quedan
+// bien más separadas de la píldora del stepper, otras se ven mejor más
+// pegadas), así que esto se ajusta paso por paso, no con un valor global.
 const STEP_META = [
   { label: 'Tu nombre',           Icon: User,          bg: 'var(--onboarding-step1-bg)', illustration: '/onboarding-illustration-1.png' },
   { label: 'Frecuencia de cobro', Icon: CalendarCheck, bg: 'var(--onboarding-step2-bg)', illustration: '/onboarding-illustration-2.png' },
   { label: 'Tu ingreso',          Icon: Wallet,        bg: 'var(--onboarding-step3-bg)', illustration: '/onboarding-illustration-3.png' },
   { label: 'Notificaciones',      Icon: BellRing,      bg: 'var(--onboarding-step4-bg)', illustration: '/onboarding-illustration-4.png' },
 ]
+
+// Defaults (los valores ya confirmados para el paso 1) — se usan para
+// cualquier paso que no traiga su propio override en STEP_META.
+const DEFAULT_ILLUSTRATION_SIZE = 280
+const DEFAULT_ILLUSTRATION_BOTTOM = -100
 
 const TOTAL_STEPS = STEP_META.length
 
@@ -94,7 +104,16 @@ export function OnboardingPage({ userId, onDone }) {
           <svg className={styles.wave} viewBox="0 0 300 110" preserveAspectRatio="none">
             <path d={WAVE_PATH} style={{ fill: 'var(--bg)' }} />
           </svg>
-          <img className={styles.illustration} src={meta.illustration} alt="" />
+          <img
+            className={styles.illustration}
+            src={meta.illustration}
+            alt=""
+            style={{
+              width: meta.illustrationSize ?? DEFAULT_ILLUSTRATION_SIZE,
+              height: meta.illustrationSize ?? DEFAULT_ILLUSTRATION_SIZE,
+              bottom: meta.illustrationBottom ?? DEFAULT_ILLUSTRATION_BOTTOM,
+            }}
+          />
         </div>
 
         <div className={styles.body}>
