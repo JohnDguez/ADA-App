@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react'
+import { memo, useState, useRef, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { MoreVertical, Check, Pencil, Trash2, Clock, ChevronDown, ChevronUp, RotateCcw, FastForward, DollarSign, Eye, Users, PiggyBank } from 'lucide-react'
 import { statusOf, daysDiff, dateOf, fmt, MONTHS_SHORT, periodLabel, periodCountLabel, RECUR_FREQ, installmentLabel } from '../lib/utils'
@@ -35,7 +35,7 @@ const LABEL_HOLD_MS = 450 // cuánto se queda "Pagado" + checkmark visible antes
 const EXIT_MS       = 320 // deslizado + desvanecido + colapso de espacio
 const ENTRY_MS      = 300 // "crecer" al aparecer una card nueva en la lista
 
-export function PayCard({ payment: p, cfg, onMarkPaid, onRequestVariableAmount, onConfirmVariablePaid, onRequestNextPeriodConfirm, onMarkUnpaid, onCaptureAmount, onEdit, onAbonar, onSplit, onPayFromFund, fundBalance, onViewSource, onDelete, onPostpone, onAdvance, borderLeft, hideDate, hideDueLabel, railMode, permissions, initialLoad = true, confirmBeforePay, spaceMembers }) {
+function PayCardImpl({ payment: p, cfg, onMarkPaid, onRequestVariableAmount, onConfirmVariablePaid, onRequestNextPeriodConfirm, onMarkUnpaid, onCaptureAmount, onEdit, onAbonar, onSplit, onPayFromFund, fundBalance, onViewSource, onDelete, onPostpone, onAdvance, borderLeft, hideDate, hideDueLabel, railMode, permissions, initialLoad = true, confirmBeforePay, spaceMembers }) {
   // Card de solo lectura — reflejo automático de una contribución a un
   // gasto de un Espacio Compartido (registrada por cualquier miembro desde
   // "Dividir entre miembros"). Nunca se captura a mano, así que no se puede
@@ -531,3 +531,14 @@ export function GroupCard({ group, cfg, onMarkPaid, onMarkUnpaid, onEdit, onDele
     </div>
   )
 }
+
+// v0.9.282 — React.memo: PayCard es el componente que más veces se repite
+// en pantalla (cada pago pendiente/vencido/próximo es una instancia). Sin
+// memo, CUALQUIER re-render de HomePage (swipe de tarjetas, abrir/cerrar el
+// colapsable de pagados, animaciones) re-renderizaba TODAS las cards aunque
+// sus props no hubieran cambiado. Con memo (comparación superficial
+// default), una card solo se re-renderiza si SU pago (u otra prop) cambió
+// de identidad. Requiere que quien la use no le pase objetos/funciones
+// recreados en cada render — ver el useMemo de `handlers` en HomePage.jsx
+// y el spread estable en PayRail.jsx (misma versión).
+export const PayCard = memo(PayCardImpl)

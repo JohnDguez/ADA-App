@@ -1,4 +1,4 @@
-import { useRef, useEffect } from 'react'
+import { useRef, useEffect, memo } from 'react'
 import { dateOf, MONTHS_SHORT } from '../lib/utils'
 import { PayCard } from './PayCard'
 import styles from './PayRail.module.css'
@@ -24,7 +24,7 @@ import styles from './PayRail.module.css'
 // pagado un pago que en realidad vence hasta el periodo siguiente (previene
 // pagar por error algo del periodo equivocado si el usuario se confunde de
 // switch activo). No afecta a Vencidos/Pagos del periodo actual.
-export function PayRail({ payments, cfg, dotColor, dotTextColor, handlers, permissions, nextPeriodMode, spaceMembers }) {
+function PayRailImpl({ payments, cfg, dotColor, dotTextColor, handlers, permissions, nextPeriodMode, spaceMembers }) {
   // Detecta el primer render de ESTE riel — las cards que ya vienen desde
   // ahí no deben "crecer" al aparecer (se verían todas animando de golpe
   // al cargar la página). Solo las que se agregan DESPUÉS (un pago nuevo,
@@ -81,3 +81,7 @@ export function PayRail({ payments, cfg, dotColor, dotTextColor, handlers, permi
     </div>
   )
 }
+
+// v0.9.282 — mismo criterio que PayCard (ver comentario ahí): el riel solo
+// se re-renderiza si su lista de pagos u otra prop cambió de identidad.
+export const PayRail = memo(PayRailImpl)
