@@ -12,10 +12,10 @@ import styles from './OnboardingPage.module.css'
 // misma cantidad para no dejar un hueco vacío entre los dos (pedido
 // explícito de Johnatan).
 const STEP_META = [
-  { label: 'Tu nombre',           Icon: User,          bg: 'var(--onboarding-step1-bg)', illustration: '/onboarding-illustration-1.png', illustrationBottom: -80, bodyPaddingTop: 115 },
-  { label: 'Frecuencia de cobro', Icon: CalendarCheck, bg: 'var(--onboarding-step2-bg)', illustration: '/onboarding-illustration-2.png', illustrationBottom: -75, bodyPaddingTop: 110 },
-  { label: 'Tu ingreso',          Icon: Wallet,        bg: 'var(--onboarding-step3-bg)', illustration: '/onboarding-illustration-3.png', illustrationBottom: -75, bodyPaddingTop: 110 },
-  { label: 'Notificaciones',      Icon: BellRing,      bg: 'var(--onboarding-step4-bg)', illustration: '/onboarding-illustration-4.png', illustrationBottom: -80, bodyPaddingTop: 115 },
+  { label: 'Tu nombre',           Icon: User,          bg: 'var(--onboarding-step1-bg)', illustration: '/onboarding-illustration-1.png', illustrationBottom: -75, bodyPaddingTop: 115 },
+  { label: 'Frecuencia de cobro', Icon: CalendarCheck, bg: 'var(--onboarding-step2-bg)', illustration: '/onboarding-illustration-2.png', illustrationBottom: -70, bodyPaddingTop: 100 },
+  { label: 'Tu ingreso',          Icon: Wallet,        bg: 'var(--onboarding-step3-bg)', illustration: '/onboarding-illustration-3.png', illustrationBottom: -75, bodyPaddingTop: 105, illustrationSize: 270 },
+  { label: 'Notificaciones',      Icon: BellRing,      bg: 'var(--onboarding-step4-bg)', illustration: '/onboarding-illustration-4.png', illustrationBottom: -75, bodyPaddingTop: 105 },
 ]
 
 // Defaults (para cualquier paso que no traiga su propio override arriba).
