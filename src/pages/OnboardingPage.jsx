@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { UserRound, CalendarDays, Banknote, Bell } from 'lucide-react'
+import { UserRound, CalendarDays, Banknote, Bell, ArrowRight } from 'lucide-react'
 import { WEEKDAYS, WEEKDAYS_SHORT } from '../lib/utils'
 import { supabase } from '../lib/supabase'
 import { usePushNotifications } from '../hooks/usePushNotifications'
@@ -103,17 +103,20 @@ export function OnboardingPage({ userId, onDone }) {
               <h2 className={styles.title}>¿Cuál es<br />tu nombre?</h2>
               <p className={styles.desc}>Ese nombre verás en tu perfil y ese lo verán los usuarios con quien tengas un espacio compartido.</p>
               <label className="field-label">Tu nombre</label>
-              <input
-                autoFocus
-                className="field-input"
-                type="text"
-                value={name}
-                onChange={e => setName(e.target.value)}
-                onKeyDown={e => e.key === 'Enter' && nextStep()}
-                enterKeyHint="next"
-                placeholder="Ej. Johnatan"
-                style={{ marginBottom: nameError ? 6 : 0 }}
-              />
+              <div className={styles.inputWithIcon}>
+                <UserRound size={18} className={styles.inputIcon} />
+                <input
+                  autoFocus
+                  className={`field-input ${styles.nameInput}`}
+                  type="text"
+                  value={name}
+                  onChange={e => setName(e.target.value)}
+                  onKeyDown={e => e.key === 'Enter' && nextStep()}
+                  enterKeyHint="next"
+                  placeholder="Ej. John Doe"
+                  style={{ marginBottom: nameError ? 6 : 0 }}
+                />
+              </div>
               {nameError && <div className={styles.errorText}>{nameError}</div>}
             </>
           )}
@@ -323,8 +326,12 @@ export function OnboardingPage({ userId, onDone }) {
 
       {/* Botones */}
       <div className={styles.actions}>
-        <button onClick={nextStep} disabled={saving} className="btn-primary">
-          {saving ? 'Guardando…' : step < TOTAL_STEPS ? 'Continuar →' : '¡Comenzar!'}
+        <button onClick={nextStep} disabled={saving} className={`btn-primary ${styles.continueBtn}`}>
+          {saving
+            ? 'Guardando…'
+            : step < TOTAL_STEPS
+              ? <>Continuar <ArrowRight size={17} strokeWidth={2.2} /></>
+              : '¡Comenzar!'}
         </button>
         {step > 1 && (
           <button onClick={prevStep} className="btn-ghost">Atrás</button>

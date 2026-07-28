@@ -13,7 +13,7 @@
    contenido del paso (título/formulario) cuando se avanza/retrocede. */
 .scene {
   position: relative;
-  height: 250px;
+  height: 270px;
   flex-shrink: 0;
 }
 
@@ -22,7 +22,7 @@
   bottom: 0;
   left: 0;
   width: 100%;
-  height: 90px;
+  height: 95px;
   display: block;
 }
 
@@ -32,11 +32,11 @@
    falta — basta con posicionarla baja dentro de la escena). */
 .illustration {
   position: absolute;
-  bottom: -20px;
+  bottom: -30px;
   left: 50%;
   transform: translateX(-50%);
-  width: 190px;
-  height: 190px;
+  width: 250px;
+  height: 250px;
   object-fit: contain;
   z-index: 2;
   pointer-events: none;
@@ -44,18 +44,19 @@
 
 /* ── Stepper — píldora blanca fija, flotando sobre la escena de color ─────────
    position absolute anclada arriba de todo (sobre .scene, sin deslizarse con
-   los pasos). Íconos unidos por líneas dentro de una sola cápsula. */
+   los pasos). Íconos unidos por líneas dentro de una sola cápsula. Padding
+   igual en los 4 lados (antes 6px/14px asimétrico, reportado por Johnatan). */
 .stepper {
   position: absolute;
   top: 16px;
-  left: 16px;
-  right: 16px;
+  left: 24px;
+  right: 24px;
   z-index: 5;
   display: flex;
   align-items: center;
   background: var(--surface);
   border-radius: var(--radius-full);
-  padding: 6px 14px;
+  padding: 10px;
 }
 
 .stepperItem {
@@ -155,11 +156,11 @@
 
 .body {
   flex: 1;
-  padding: 22px 24px 0;
+  padding: 40px 24px 0;
 }
 
 .title {
-  font-size: 24px;
+  font-size: 30px;
   font-weight: 700;
   color: var(--text);
   line-height: 1.15;
@@ -326,10 +327,35 @@
   padding-left: 28px;
 }
 
+/* ── Campo "Tu nombre" con ícono adentro ─────────────────────────────────────── */
+.inputWithIcon {
+  position: relative;
+}
+
+.inputIcon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--accent);
+  pointer-events: none;
+}
+
+:global(.field-input).nameInput {
+  padding-left: 34px;
+}
+
 /* ── Botones ─────────────────────────────────────────────────────────────────── */
 .actions {
   padding: 24px 24px 40px;
   display: flex;
   flex-direction: column;
   gap: 12px;
+}
+
+.continueBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
 }
