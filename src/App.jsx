@@ -771,6 +771,7 @@ export default function App() {
       {tab === 'home' && (
         <HomePage
           payments={visiblePayments}
+          dataLoading={paymentsLoading}
           profile={effectiveProfile}
           activeSpaceId={activeSpaceId}
           sharedSpaces={sharedSpaces}
@@ -808,6 +809,7 @@ export default function App() {
       {tab === 'payments' && (
         <PaymentsPage
           payments={visiblePayments}
+          dataLoading={paymentsLoading}
           slideClass={`page-slide-${slideDir}`}
           {...headerProps}
           activeSpaceId={paymentsSpaceId}
