@@ -179,11 +179,29 @@
   color: var(--danger);
 }
 
-.hint {
-  font-size: 12px;
+.hintCard {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  background: var(--section-bg);
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+  margin-top: 12px;
+  font-size: 13px;
   font-weight: 400;
   color: var(--text);
-  margin-top: 10px;
+  line-height: 1.4;
+}
+
+.hintIcon {
+  color: var(--accent);
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.hintHighlight {
+  color: var(--accent);
+  font-weight: 600;
 }
 
 .section {

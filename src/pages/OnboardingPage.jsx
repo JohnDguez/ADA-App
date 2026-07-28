@@ -153,8 +153,11 @@ export function OnboardingPage({ userId, onDone }) {
                       </button>
                     ))}
                   </div>
-                  <div className={styles.hint}>
-                    Te avisaremos qué pagos cubrir antes de cada <strong>{WEEKDAYS[cobroWeekday].toLowerCase()}</strong>.
+                  <div className={styles.hintCard}>
+                    <CalendarCheck size={18} className={styles.hintIcon} />
+                    <div>
+                      Te avisaremos qué pagos cubrir antes de cada <span className={styles.hintHighlight}>{WEEKDAYS[cobroWeekday].toLowerCase()}</span>.
+                    </div>
                   </div>
                 </div>
               )}
@@ -216,7 +219,14 @@ export function OnboardingPage({ userId, onDone }) {
                     onKeyDown={e => e.key === 'Enter' && nextStep()}
                     enterKeyHint="next" placeholder="ej. 5" className={`field-input ${styles.monthDayInput}`}
                   />
-                  {cobroDay1 && <div className={styles.hint}>Tu periodo de cobro empieza el día <strong>{cobroDay1}</strong> de cada mes.</div>}
+                  {cobroDay1 && (
+                    <div className={styles.hintCard}>
+                      <CalendarCheck size={18} className={styles.hintIcon} />
+                      <div>
+                        Tu periodo de cobro empieza el día <span className={styles.hintHighlight}>{cobroDay1}</span> de cada mes.
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
             </>
