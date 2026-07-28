@@ -185,7 +185,15 @@ export function HomePage({ payments, profile, spaceSwitcher, activeSpaceHeader, 
     upcoming, nextPeriodKnownTotal, nextPeriodFixedCount, nextPeriodPendingVariableCount,
   } = derived
 
-  const handlers = { onMarkPaid, onRequestVariableAmount, onConfirmVariablePaid, onRequestNextPeriodConfirm, onMarkUnpaid, onCaptureAmount, onEdit, onAbonar, onSplit, onPayFromFund, fundBalance, onDelete, onPostpone, onAdvance }
+  // v0.9.282 — antes este objeto se recreaba en CADA render de HomePage,
+  // rompiendo el React.memo de PayRail/PayCard (identidad nueva = re-render
+  // de todas las cards aunque nada hubiera cambiado). Con useMemo, mientras
+  // App.jsx pase las mismas referencias, los re-renders INTERNOS de HomePage
+  // (swipe, colapsables, animaciones) ya no tocan las cards.
+  const handlers = useMemo(
+    () => ({ onMarkPaid, onRequestVariableAmount, onConfirmVariablePaid, onRequestNextPeriodConfirm, onMarkUnpaid, onCaptureAmount, onEdit, onAbonar, onSplit, onPayFromFund, fundBalance, onDelete, onPostpone, onAdvance }),
+    [onMarkPaid, onRequestVariableAmount, onConfirmVariablePaid, onRequestNextPeriodConfirm, onMarkUnpaid, onCaptureAmount, onEdit, onAbonar, onSplit, onPayFromFund, fundBalance, onDelete, onPostpone, onAdvance]
+  )
 
   return (
     <div className={styles.pageRoot}>

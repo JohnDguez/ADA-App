@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useMemo } from 'react'
 import { ChevronLeft, ChevronRight, MoreVertical, Plus, CircleDollarSign, ChevronDown, ChevronUp, Pencil, RotateCcw, Trash2, Check, Eye, Users, ArrowUp, ArrowDown, ArrowUpLeft, PiggyBank } from 'lucide-react'
 import { PageHeader } from '../components/PageHeader'
 import { NewSharedSpacePanel } from '../components/NewSharedSpacePanel'
@@ -220,7 +220,12 @@ export function PaymentsPage({ payments, profile, spaceSwitcher, activeSpaceHead
     if (error) showToast(error.message || 'Error al eliminar')
   }
 
-  const paidPayments = payments.filter(p => p.is_paid)
+  // v0.9.282 — Memoización: este componente recalculaba TODAS sus listas
+  // derivadas (24 filter/sort en total) en CADA render — incluyendo cada
+  // tecla en un input de modal o cada cambio de estado menor. Cada bloque
+  // de cálculo se envuelve en useMemo con sus dependencias reales; solo se
+  // recalcula cuando cambian los datos de los que de verdad depende.
+  const paidPayments = useMemo(() => payments.filter(p => p.is_paid), [payments])
 
   // ── Bloquear scroll cuando hay modal abierto ──────────────────────────────
   useEffect(() => {
@@ -487,13 +492,16 @@ export function PaymentsPage({ payments, profile, spaceSwitcher, activeSpaceHead
 
   // ── Totales del periodo ───────────────────────────────────────────────────
   const { start: periodStart, end: periodEnd } = cobroPeriod(profile || {})
-  const gastosPeriodo = paidPayments.filter(p => {
+  const gastosPeriodo = useMemo(() => paidPayments.filter(p => {
     if (!p.paid_at) return false
     const paidDate = dateOf(dateToStr(new Date(p.paid_at)))
     return paidDate >= periodStart && paidDate <= periodEnd
-  })
-  const totalGastos  = gastosPeriodo.reduce((a, p) => a + Number(p.amount), 0)
-  const totalExtras  = periodIncomes.reduce((a, i) => a + Number(i.amount), 0)
+    // periodStart/periodEnd salen de cobroPeriod(profile) — objetos Date
+    // nuevos en cada render, así que la dependencia real es `profile`.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }), [paidPayments, profile])
+  const totalGastos  = useMemo(() => gastosPeriodo.reduce((a, p) => a + Number(p.amount), 0), [gastosPeriodo])
+  const totalExtras  = useMemo(() => periodIncomes.reduce((a, i) => a + Number(i.amount), 0), [periodIncomes])
   const salario      = profile?.salary_enabled ? Number(profile?.salary_amount || 0) : 0
   const ingresoTotal = salario + totalExtras
   const disponible   = ingresoTotal - totalGastos
@@ -509,8 +517,11 @@ export function PaymentsPage({ payments, profile, spaceSwitcher, activeSpaceHead
     return arr
   }
 
-  const chartMonths   = getMonthsArray(monthsBack)
-  const chartFiltered = selectedCat ? paidPayments.filter(p => p.category === selectedCat) : paidPayments
+  const chartMonths   = useMemo(() => getMonthsArray(monthsBack), [monthsBack])
+  const chartFiltered = useMemo(
+    () => selectedCat ? paidPayments.filter(p => p.category === selectedCat) : paidPayments,
+    [selectedCat, paidPayments]
+  )
 
   function chartTotalInMonth(month, year) {
     return chartFiltered
@@ -521,29 +532,40 @@ export function PaymentsPage({ payments, profile, spaceSwitcher, activeSpaceHead
       .reduce((a, p) => a + Number(p.amount), 0)
   }
 
-  const chartTotals   = chartMonths.map(m => chartTotalInMonth(m.month, m.year))
+  const chartTotals = useMemo(
+    () => chartMonths.map(m => chartTotalInMonth(m.month, m.year)),
+    // chartTotalInMonth se re-crea en cada render pero solo cierra sobre
+    // chartFiltered — esa es la dependencia real.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [chartMonths, chartFiltered]
+  )
   const maxChart      = Math.max(...chartTotals, 1)
   const grandTotal    = chartTotals.reduce((a, b) => a + b, 0)
   const nonZeroMonths = chartTotals.filter(t => t > 0).length
   const avgMonthly    = nonZeroMonths > 0 ? grandTotal / nonZeroMonths : 0
 
   // Categorías con gasto real dentro del rango de meses activo (3/6/12 meses)
-  const chartMonthKeys  = new Set(chartMonths.map(m => `${m.year}-${m.month}`))
-  const catsWithExpense = new Set(
-    paidPayments
-      .filter(p => {
-        const d = p.paid_at ? new Date(p.paid_at) : dateOf(p.due_date)
-        return chartMonthKeys.has(`${d.getFullYear()}-${d.getMonth()}`)
-      })
-      .map(p => p.category)
-  )
-  const visibleCats = [
-    ...CATEGORIES.filter(c => catsWithExpense.has(c)),
-    ...[...catsWithExpense].filter(c => !CATEGORIES.includes(c)),
-  ]
+  const visibleCats = useMemo(() => {
+    const chartMonthKeys  = new Set(chartMonths.map(m => `${m.year}-${m.month}`))
+    const catsWithExpense = new Set(
+      paidPayments
+        .filter(p => {
+          const d = p.paid_at ? new Date(p.paid_at) : dateOf(p.due_date)
+          return chartMonthKeys.has(`${d.getFullYear()}-${d.getMonth()}`)
+        })
+        .map(p => p.category)
+    )
+    return [
+      ...CATEGORIES.filter(c => catsWithExpense.has(c)),
+      ...[...catsWithExpense].filter(c => !CATEGORIES.includes(c)),
+    ]
+  }, [chartMonths, paidPayments])
 
   // ── Por categoría ─────────────────────────────────────────────────────────
-  const ALL_CATS = [...CATEGORIES, ...(profile.custom_categories || [])]
+  const ALL_CATS = useMemo(
+    () => [...CATEGORIES, ...(profile.custom_categories || [])],
+    [profile.custom_categories]
+  )
 
   function getCatTotal(cat) {
     const d = p => p.paid_at ? new Date(p.paid_at) : dateOf(p.due_date)
@@ -560,10 +582,15 @@ export function PaymentsPage({ payments, profile, spaceSwitcher, activeSpaceHead
       .reduce((a, p) => a + Number(p.amount), 0)
   }
 
-  const catData = ALL_CATS
+  const catData = useMemo(() => ALL_CATS
     .map(cat => ({ cat, total: getCatTotal(cat) }))
     .filter(d => d.total > 0)
-    .sort((a, b) => b.total - a.total)
+    .sort((a, b) => b.total - a.total),
+    // getCatTotal se re-crea en cada render pero solo cierra sobre estas
+    // dependencias (viewMode decide cuál de las 2 fuentes usa).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [ALL_CATS, gastosPeriodo, paidPayments, viewMode, viewMonth, viewYear]
+  )
 
   const maxCat = Math.max(...catData.map(d => d.total), 1)
 
@@ -586,7 +613,7 @@ export function PaymentsPage({ payments, profile, spaceSwitcher, activeSpaceHead
     })
   }
 
-  const paidInView = viewMode === 'periodo'
+  const paidInView = useMemo(() => viewMode === 'periodo'
     ? [...gastosPeriodo].sort((a, b) => {
         const da = a.paid_at ? new Date(a.paid_at) : dateOf(a.due_date)
         const db = b.paid_at ? new Date(b.paid_at) : dateOf(b.due_date)
@@ -596,8 +623,12 @@ export function PaymentsPage({ payments, profile, spaceSwitcher, activeSpaceHead
         const da = a.paid_at ? new Date(a.paid_at) : dateOf(a.due_date)
         const db = b.paid_at ? new Date(b.paid_at) : dateOf(b.due_date)
         return db - da
-      })
-  const totalInView = paidInView.reduce((a, p) => a + Number(p.amount), 0)
+      }),
+    // paidInMonth se re-crea en cada render pero solo cierra sobre paidPayments.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [viewMode, viewMonth, viewYear, gastosPeriodo, paidPayments]
+  )
+  const totalInView = useMemo(() => paidInView.reduce((a, p) => a + Number(p.amount), 0), [paidInView])
 
   const canMarkPaid = !spacePermissions || spacePermissions.can_mark_paid
   const canDelete   = !spacePermissions || spacePermissions.can_delete
@@ -628,13 +659,15 @@ export function PaymentsPage({ payments, profile, spaceSwitcher, activeSpaceHead
   }
 
   // Segmentos heatmap
-  const segmentos = ALL_CATS
+  const segmentos = useMemo(() => ALL_CATS
     .map(cat => ({
       cat,
       total: gastosPeriodo.filter(p => p.category === cat).reduce((a, p) => a + Number(p.amount), 0),
     }))
     .filter(s => s.total > 0)
-    .sort((a, b) => b.total - a.total)
+    .sort((a, b) => b.total - a.total),
+    [ALL_CATS, gastosPeriodo]
+  )
 
   const showBalance = (profile?.salary_enabled && profile?.salary_amount > 0) || periodIncomes.length > 0
   const noIncomeYet = !activeSpaceId && !(profile?.salary_enabled && profile?.salary_amount > 0) && periodIncomes.length === 0
