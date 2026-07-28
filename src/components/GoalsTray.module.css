@@ -1,0 +1,38 @@
+.tray {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  max-width: 420px;
+  margin: 0 auto;
+  height: 104px;
+  background: var(--nav-bg);
+  border-radius: 22px 22px 0 0;
+  /* Por debajo del nav (z-index: 100 en BottomNav.module.css) — el nav,
+     sin ningún cambio, flota encima/adentro de esta bandeja. */
+  z-index: 90;
+  box-sizing: border-box;
+  padding-top: 12px;
+  touch-action: none;
+  cursor: pointer;
+  transition: transform .15s ease;
+}
+
+.dragging {
+  transition: none;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+}
+
+.label {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.75);
+}
