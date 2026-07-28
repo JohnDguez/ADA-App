@@ -18,6 +18,8 @@ const PasswordSetupModal = lazy(() => import('./components/PasswordSetupModal').
 const PremiumPage = lazy(() => import('./pages/PremiumPage').then(m => ({ default: m.PremiumPage })))
 import { usePayments } from './hooks/usePayments'
 import { useSharedFund } from './hooks/useSharedFund'
+import { useGoals } from './hooks/useGoals'
+import { GoalsOverlay } from './components/GoalsOverlay'
 import { useProfile } from './hooks/useProfile'
 import { useNotifications } from './hooks/useNotifications'
 import { HomePage } from './pages/HomePage'
@@ -132,6 +134,22 @@ export default function App() {
     if (paymentsSpaceId) sharedFund.fetchLedger()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [paymentsSpaceId])
+
+  // Metas de ahorro — SIEMPRE con `profile` (personal), nunca
+  // `effectiveProfile`: son personales sin importar en qué Espacio
+  // Compartido esté parado el usuario (decisión confirmada, ver
+  // CONTEXT.md). `goalsOverlayOpen` vive aquí porque el disparador (la
+  // franja de "Mis metas") está en BottomNav.jsx, que es hermano de
+  // GoalsOverlay, no ancestro/descendiente.
+  const goalsData = useGoals(user?.id, profile)
+  const [goalsOverlayOpen, setGoalsOverlayOpen] = useState(false)
+  // Lista plana de aportes (solo tipo 'aporte'), la forma que esperan
+  // `projectPeriodImpact` (utils.js) y el cálculo de Disponible de
+  // PaymentsPage.jsx — se deriva una sola vez aquí para no repetir el
+  // flatMap/filter en cada lugar que lo necesita.
+  const personalGoalAportes = goalsData.goals
+    .flatMap(g => g.transactions)
+    .filter(t => t.type === 'aporte')
 
   // Se declara aquí (no arriba, junto a sharedSpaces) porque necesita
   // `profile` ya disponible — cada espacio (y Personal) puede tener su
@@ -832,6 +850,7 @@ export default function App() {
           ensureMonthLoaded={ensureMonthLoaded}
           oldestPaymentYear={oldestYear}
           sharedFund={sharedFund}
+          personalGoalAportes={personalGoalAportes}
         />
       )}
       {tab === 'recurrents' && (
@@ -878,6 +897,16 @@ export default function App() {
         active={tab}
         onChange={t => changeTab(t)}
         onAdd={openAdd}
+        showGoalsTray={tab === 'home'}
+        onOpenGoals={() => setGoalsOverlayOpen(true)}
+      />
+
+      <GoalsOverlay
+        open={goalsOverlayOpen}
+        goalsData={goalsData}
+        isPremium={!!profile.is_premium}
+        onClose={() => setGoalsOverlayOpen(false)}
+        onOpenPremium={() => { setGoalsOverlayOpen(false); setPremiumPageOpen(true) }}
       />
 
       <NotificationsPanel
@@ -904,6 +933,7 @@ export default function App() {
         spacePermissions={spacePermissions}
         isSharedSpace={!!paymentsSpaceId}
         customCategories={profile.custom_categories || []}
+        personalGoalAportes={personalGoalAportes}
         onOpenPremium={() => setPremiumPageOpen(true)}
         onAddCategory={async (cat) => {
           await updateProfile({ custom_categories: [...(profile.custom_categories || []), cat] })
