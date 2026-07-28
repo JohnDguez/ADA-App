@@ -11,5 +11,16 @@ export default defineConfig({
     // local ni afectar la velocidad de carga para los usuarios (los
     // navegadores solo piden el .map cuando alguien abre las DevTools).
     sourcemap: true,
+    rollupOptions: {
+      output: {
+        // Separa las dependencias (react, supabase, lucide) en su propio
+        // chunk "vendor": casi nunca cambian entre deploys, así el navegador
+        // las conserva en caché aunque el código de la app sí cambie —
+        // en cada deploy el usuario solo re-descarga el chunk de la app.
+        manualChunks(id) {
+          if (id.includes('node_modules')) return 'vendor'
+        },
+      },
+    },
   },
 })
