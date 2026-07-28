@@ -1,15 +1,28 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, lazy, Suspense } from 'react'
 import { useAuth } from './hooks/useAuth'
+
+// ── Code-splitting (v0.9.280) ─────────────────────────────────────────────
+// Estas pantallas se montan condicionalmente (nunca conviven con la app
+// principal en pantalla), así que se cargan como chunks aparte vía
+// React.lazy — su JS/CSS solo se descarga la primera vez que se necesitan,
+// en vez de venir todo en el bundle inicial. Los modales con prop `open`
+// (PaymentModal, VariableAmountModal, etc.) NO se tocaron: viven montados
+// siempre (su animación de salida depende de eso, Reglas 26/29), así que
+// hacerlos lazy no ahorraría nada. Los named exports se adaptan a default
+// en el .then() porque React.lazy solo acepta default exports.
+const AuthPage = lazy(() => import('./pages/AuthPage').then(m => ({ default: m.AuthPage })))
+const ResetPasswordPage = lazy(() => import('./pages/AuthPage').then(m => ({ default: m.ResetPasswordPage })))
+const OnboardingPage = lazy(() => import('./pages/OnboardingPage').then(m => ({ default: m.OnboardingPage })))
+const SettingsPage = lazy(() => import('./pages/SettingsPage').then(m => ({ default: m.SettingsPage })))
+const PasswordSetupModal = lazy(() => import('./components/PasswordSetupModal').then(m => ({ default: m.PasswordSetupModal })))
+const PremiumPage = lazy(() => import('./pages/PremiumPage').then(m => ({ default: m.PremiumPage })))
 import { usePayments } from './hooks/usePayments'
 import { useSharedFund } from './hooks/useSharedFund'
 import { useProfile } from './hooks/useProfile'
 import { useNotifications } from './hooks/useNotifications'
-import { AuthPage, ResetPasswordPage } from './pages/AuthPage'
-import { OnboardingPage } from './pages/OnboardingPage'
 import { HomePage } from './pages/HomePage'
 import { PaymentsPage } from './pages/PaymentsPage'
 import { RecurrentsPage } from './pages/RecurrentsPage'
-import { SettingsPage } from './pages/SettingsPage'
 import { BottomNav } from './components/BottomNav'
 import { NotificationsPanel } from './components/NotificationsPanel'
 import { PaymentModal } from './components/PaymentModal'
@@ -20,8 +33,6 @@ import { SplitContributionsModal } from './components/SplitContributionsModal'
 import { RecurrentMigrationModal } from './components/RecurrentMigrationModal'
 import { PatchNotesModal } from './components/PatchNotesModal'
 import { FeedbackPromptModal } from './components/FeedbackPromptModal'
-import { PasswordSetupModal } from './components/PasswordSetupModal'
-import { PremiumPage } from './pages/PremiumPage'
 import { Toast, showToast } from './components/Toast'
 import { SkeletonLoader } from './components/SkeletonLoader'
 import { Coachmarks } from './components/Coachmarks'
@@ -264,9 +275,9 @@ export default function App() {
   }, [profileLoading, sharedSpaces.loading, profile.default_space_id, sharedSpaces.spaces])
 
   if (authLoading || (user && profileLoading)) return <SkeletonLoader />
-  if (isRecovery) return <ResetPasswordPage onDone={() => setIsRecovery(false)} />
-  if (!user) return <AuthPage />
-  if (user && !profile.onboarding_completed) return <OnboardingPage userId={user.id} onDone={updateProfile} />
+  if (isRecovery) return <Suspense fallback={<SkeletonLoader />}><ResetPasswordPage onDone={() => setIsRecovery(false)} /></Suspense>
+  if (!user) return <Suspense fallback={<SkeletonLoader />}><AuthPage /></Suspense>
+  if (user && !profile.onboarding_completed) return <Suspense fallback={<SkeletonLoader />}><OnboardingPage userId={user.id} onDone={updateProfile} /></Suspense>
 
   // Usuarios de Google sin contraseña: necesitan una para poder confirmar
   // acciones sensibles (eliminar datos/cuenta) en SettingsPage. Bloquea el
@@ -274,7 +285,7 @@ export default function App() {
   // onboarding. onDone actualiza profile.has_password vía updateProfile (no
   // solo en Supabase) para que este chequeo no se repita en el mismo render.
   if (user && profile.onboarding_completed && !profile.has_password) {
-    return <PasswordSetupModal userId={user.id} onDone={() => updateProfile({ has_password: true })} />
+    return <Suspense fallback={<SkeletonLoader />}><PasswordSetupModal userId={user.id} onDone={() => updateProfile({ has_password: true })} /></Suspense>
   }
 
   const TAB_ORDER = ['home', 'payments', 'recurrents', 'settings']
@@ -838,6 +849,7 @@ export default function App() {
         />
       )}
       {tab === 'settings' && (
+        <Suspense fallback={null}>
         <SettingsPage
           profile={profile}
           user={user}
@@ -854,6 +866,7 @@ export default function App() {
           returnTab={settingsReturnTab}
           onReturnToTab={returnFromSettingsShortcut}
         />
+        </Suspense>
       )}
 
       <BottomNav
@@ -961,7 +974,7 @@ export default function App() {
         onRemindLater={handleFeedbackRemindLater}
       />
       <Toast />
-      {premiumPageOpen && <PremiumPage onClose={() => setPremiumPageOpen(false)} />}
+      {premiumPageOpen && <Suspense fallback={null}><PremiumPage onClose={() => setPremiumPageOpen(false)} /></Suspense>}
     </>
   )
 }

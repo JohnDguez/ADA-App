@@ -1,4 +1,7 @@
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&display=swap');
+/* DM Sans se carga desde index.html (<link> con preconnect) — no via @import,
+   que obliga al navegador a descargar y parsear este CSS completo antes de
+   siquiera PEDIR la fuente (cadena en serie que retrasa el primer texto).
+   Los pesos cargados (400;500;600;700;800) se mantienen ahí. */
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
