@@ -14,11 +14,12 @@ const STEP_META = [
 
 const TOTAL_STEPS = STEP_META.length
 
-// La forma de la ola es la misma para los 4 pasos (solo cambia el color de
-// relleno, ver STEP_META[].bg) — medida a partir del fondo del paso 4 que
-// Johnatan compartió. Pendiente confirmar si los otros 3 pasos usan una
-// curva distinta.
-const WAVE_PATH = 'M0,210 C5,211 10,214 20,220 C30,231 38,245 45,256 C51,262 58,266 70,271 C78,272 88,273 100,274 C110,273 120,271 130,270 C138,268 148,267 160,267 C168,266 175,268 185,270 C193,274 200,277 210,284 C220,292 230,300 240,307 C248,311 255,315 265,318 C275,319 290,319 300,318 C310,316 320,315 330,314 C340,314 350,315 360,318 L377,319 L377,0 L0,0 Z'
+// Onda inclinada (cae en diagonal de izquierda a derecha, con crestas y
+// valles marcados) — es el borde inferior del bloque de color de cada paso.
+// Misma forma para los 4 pasos, solo cambia el color de fondo detrás
+// (STEP_META[].bg). viewBox 300x110; el relleno es var(--bg) para que la
+// parte de abajo se funda con el fondo real de la app (claro u oscuro).
+const WAVE_PATH = 'M0,110 L0,20 C30,-4 60,36 95,38 C135,40 150,66 195,64 C238,62 255,92 300,80 L300,110 Z'
 
 // Regla 30 (JS/CSS timing sync): este valor debe coincidir EXACTO con la
 // duración definida en OnboardingPage.module.css para .enterFromRight,
@@ -89,14 +90,17 @@ export function OnboardingPage({ userId, onDone }) {
     const meta = STEP_META[n - 1]
     return (
       <div className={styles.stepPanel}>
-        <div className={styles.illustrationWrap}>
+        <div className={styles.scene} style={{ background: meta.bg }}>
+          <svg className={styles.wave} viewBox="0 0 300 110" preserveAspectRatio="none">
+            <path d={WAVE_PATH} style={{ fill: 'var(--bg)' }} />
+          </svg>
           <img className={styles.illustration} src={meta.illustration} alt="" />
         </div>
 
         <div className={styles.body}>
           {n === 1 && (
             <>
-              <h2 className={styles.title}>¿Cómo te llamas?</h2>
+              <h2 className={styles.title}>¿Cuál es<br />tu nombre?</h2>
               <p className={styles.desc}>Ese nombre verás en tu perfil y ese lo verán los usuarios con quien tengas un espacio compartido.</p>
               <label className="field-label">Tu nombre</label>
               <input
@@ -283,36 +287,26 @@ export function OnboardingPage({ userId, onDone }) {
   return (
     <div className={styles.page}>
 
-      {/* Escena fija: color de fondo del paso + ola + stepper. NO se desliza con
-          el contenido — solo recolorea (transition de CSS) cuando cambia el
-          paso, para que el color siga cubriendo detrás del stepper sin importar
-          en qué paso vaya. Solo la ilustración/título/formulario (renderStep)
-          viven dentro del panel que se desliza. */}
-      <div className={styles.scene} style={{ background: STEP_META[step - 1].bg }}>
-        <svg className={styles.wave} viewBox="0 0 377 340" preserveAspectRatio="none">
-          <path d={WAVE_PATH} style={{ fill: 'var(--bg)' }} />
-        </svg>
-
-        <div className={styles.stepper}>
-          {STEP_META.map(({ label, Icon }, i) => {
-            const s = i + 1
-            const done   = s < step
-            const active = s === step
-            return (
-              <div key={s} className={styles.stepperItem}>
-                <div className={styles.stepperDotCol}>
-                  <div className={`${styles.stepperDot} ${done ? styles.dotDone : active ? styles.dotActive : styles.dotUpcoming}`}>
-                    <Icon size={16} strokeWidth={2} className={styles.stepperIcon} />
-                  </div>
-                  <span className={`${styles.stepperLabel} ${active ? styles.stepperLabelActive : ''}`}>{label}</span>
-                </div>
-                {i < TOTAL_STEPS - 1 && (
-                  <div className={`${styles.stepperLine} ${s < step ? styles.lineDone : ''}`} />
-                )}
+      {/* Stepper — píldora fija flotando sobre la escena de color (que vive en
+          renderStep y se desliza por paso). El stepper NO se desliza: siempre
+          en la misma posición, solo cambian los colores de sus dots según el
+          paso activo. */}
+      <div className={styles.stepper}>
+        {STEP_META.map(({ label, Icon }, i) => {
+          const s = i + 1
+          const done   = s < step
+          const active = s === step
+          return (
+            <div key={s} className={styles.stepperItem}>
+              <div className={`${styles.stepperDot} ${done ? styles.dotDone : active ? styles.dotActive : styles.dotUpcoming}`}>
+                <Icon size={15} strokeWidth={2} className={styles.stepperIcon} />
               </div>
-            )
-          })}
-        </div>
+              {i < TOTAL_STEPS - 1 && (
+                <div className={`${styles.stepperLine} ${s < step ? styles.lineDone : ''}`} />
+              )}
+            </div>
+          )
+        })}
       </div>
 
       {/* Contenido con animación de entrada/salida por paso (Regla 29) */}
