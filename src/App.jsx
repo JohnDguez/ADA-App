@@ -120,6 +120,7 @@ export default function App() {
     deleteRecurrentFuture, deleteInstallmentFuture,
     migrateRecurrents,
     refetch,
+    ensureMonthLoaded, oldestYear,
   } = usePayments(user?.id, paymentsSpaceId, activeSpaceEntry?.space?.name)
   const { profile, loading: profileLoading, updateProfile, uploadAvatar } = useProfile(user?.id)
 
@@ -826,6 +827,8 @@ export default function App() {
           onSplit={openSplitModal}
           onAdd={openAdd}
           onGoCategories={goToCategories}
+          ensureMonthLoaded={ensureMonthLoaded}
+          oldestPaymentYear={oldestYear}
           sharedFund={sharedFund}
         />
       )}
