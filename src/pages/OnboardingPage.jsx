@@ -30,7 +30,7 @@ const TOTAL_STEPS = STEP_META.length
 // Misma forma para los 4 pasos, solo cambia el color de fondo detrás
 // (STEP_META[].bg). viewBox 300x110; el relleno es var(--bg) para que la
 // parte de abajo se funda con el fondo real de la app (claro u oscuro).
-const WAVE_PATH = 'M0,110 L0,20 C30,-4 60,36 95,38 C135,40 150,66 195,64 C238,62 255,92 300,80 L300,110 Z'
+const WAVE_PATH = 'M0,110 L0,20 C30,-19 60,38 95,38 C135,36 150,73 195,64 C238,58 255,101 300,80 L300,110 Z'
 
 // Regla 30 (JS/CSS timing sync): este valor debe coincidir EXACTO con la
 // duración definida en OnboardingPage.module.css para .enterFromRight,
