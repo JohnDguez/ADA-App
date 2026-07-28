@@ -68,7 +68,7 @@ function prevPeriod(profile) {
   return { start: t, end: prevEnd }
 }
 
-export function PaymentsPage({ payments, profile, spaceSwitcher, activeSpaceHeader, activeSpaceId = null, rawActiveSpaceId = null, sharedSpaces, spacePermissions, onOpenPremium, onSpaceReady, unreadCount, onOpenNotifs, onGoSettings, onMarkUnpaid, onDelete, onDeleteDirect, onUpdateProfile, onEdit, onViewSource, onSplit, onAdd, onGoCategories, sharedFund, slideClass, ensureMonthLoaded, oldestPaymentYear = null }) {
+export function PaymentsPage({ payments, dataLoading = false, profile, spaceSwitcher, activeSpaceHeader, activeSpaceId = null, rawActiveSpaceId = null, sharedSpaces, spacePermissions, onOpenPremium, onSpaceReady, unreadCount, onOpenNotifs, onGoSettings, onMarkUnpaid, onDelete, onDeleteDirect, onUpdateProfile, onEdit, onViewSource, onSplit, onAdd, onGoCategories, sharedFund, slideClass, ensureMonthLoaded, oldestPaymentYear = null }) {
   // Mismo mecanismo que HomePage.jsx — ver ahí el porqué (evitar que la
   // animación de entrada se dispare también en un simple cambio de
   // pestaña, no solo en un cambio real de espacio).
@@ -1474,7 +1474,9 @@ export function PaymentsPage({ payments, profile, spaceSwitcher, activeSpaceHead
           </div>
 
           {catData.length === 0 ? (
-            <EmptyState
+            /* dataLoading (v0.9.284): ver comentario en HomePage.jsx —
+               no flashear "Sin gastos" mientras el contexto nuevo carga. */
+            dataLoading ? null : <EmptyState
               title="Sin gastos registrados"
               subtitle="Toca aquí o el botón + de abajo para añadir uno"
               onClick={onAdd}
@@ -1525,7 +1527,7 @@ export function PaymentsPage({ payments, profile, spaceSwitcher, activeSpaceHead
           </div>
 
           {paidInView.length === 0 ? (
-            <EmptyState
+            dataLoading ? null : <EmptyState
               title={viewMode === 'periodo' ? 'Sin pagos realizados en el periodo actual' : `Sin pagos realizados en ${MONTHS[viewMonth]} ${viewYear}`}
               subtitle="Toca aquí o el botón + de abajo para añadir uno"
               onClick={onAdd}
