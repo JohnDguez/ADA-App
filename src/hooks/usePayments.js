@@ -12,6 +12,38 @@ import { notifySpaceChange as notifySpaceChangeShared } from '../lib/notifySpace
 export function usePayments(userId, activeSpaceId = null, activeSpaceName = null) {
   const [payments, setPayments] = useState([])
 
+  // ── Ventana de carga (v0.9.281) ──────────────────────────────────────────
+  // fetchPayments ya NO trae todo el historial: de entrada carga (a) todos
+  // los pendientes y masters sin importar fecha, y (b) los pagados de los
+  // últimos 3 meses (mes actual + 2 anteriores — cubre la gráfica "Gastos
+  // Mensuales" y los 2 filtros default de PaymentsPage). Los meses más
+  // viejos se cargan bajo demanda: cuando el usuario elige un mes anterior
+  // en "Por mes", `ensureMonthLoaded()` AMPLÍA la ventana (baja
+  // `extendedCutoff`) y el propio useEffect de fetchPayments re-consulta —
+  // así los refetch de Realtime siguen trayendo también lo ya ampliado,
+  // sin estado paralelo que se pueda desincronizar. La ventana solo crece
+  // (nunca se re-encoge en la sesión), y se resetea al cambiar de espacio.
+  const [extendedCutoff, setExtendedCutoff] = useState(null) // 'YYYY-MM-DD' | null
+
+  // Primer día del mes (hoy - 2 meses), MENOS 1 día de colchón: `paid_at`
+  // es un timestamp UTC — un pago hecho el día 1 a las 00:30 hora local de
+  // México (UTC-6) queda estampado el día anterior en UTC, y sin el colchón
+  // se excluiría por error. El filtrado exacto por mes lo hace el cliente
+  // (PaymentsPage) de todas formas; esta ventana solo acota la consulta.
+  function defaultCutoffStr() {
+    const now = new Date()
+    const first = new Date(now.getFullYear(), now.getMonth() - 2, 1)
+    first.setDate(first.getDate() - 1)
+    return dateToStr(first)
+  }
+
+  // Año del registro más viejo (pagado o no) del contexto activo — lo usa
+  // el selector de Año de PaymentsPage, que antes se armaba a partir de los
+  // pagos cargados (con la ventana, los años viejos desaparecerían del
+  // selector y no habría forma de pedirlos). Se consulta 1 sola vez por
+  // contexto (1 fila, solo `due_date`).
+  const [oldestYear, setOldestYear] = useState(null)
+
   // Aviso a los demás miembros del espacio compartido tras agregar (único,
   // recurrente o en parcialidades), marcar pagado, o eliminar un pago —
   // SOLO esas acciones (confirmado con Johnatan, para no saturar con
@@ -213,10 +245,19 @@ export function usePayments(userId, activeSpaceId = null, activeSpaceName = null
   // dejando 2 copias duplicadas con la misma fecha (y el mismo monto si el
   // master lo tenía mal guardado).
   const ensureTwoAheadInFlight = useRef(new Set())
+  // Timer del debounce de Realtime (ver la suscripción más abajo).
+  const realtimeDebounceRef = useRef(null)
 
   const fetchPayments = useCallback(async () => {
     if (!userId) return
+    const cutoff = extendedCutoff && extendedCutoff < defaultCutoffStr()
+      ? extendedCutoff
+      : defaultCutoffStr()
     let query = supabase.from('payments').select('*').order('due_date', { ascending: true })
+      // Ventana de carga (ver arriba): pendientes y masters siempre;
+      // `paid_at.is.null` es red de seguridad para cualquier fila pagada
+      // sin timestamp (PaymentsPage cae a `due_date` en esos casos).
+      .or(`is_paid.eq.false,is_master.eq.true,paid_at.is.null,paid_at.gte.${cutoff}`)
     query = activeSpaceId
       ? query.eq('space_id', activeSpaceId)
       : query.eq('user_id', userId).is('space_id', null)
@@ -252,9 +293,42 @@ export function usePayments(userId, activeSpaceId = null, activeSpaceName = null
       setPayments(rows)
     }
     setLoading(false)
-  }, [userId, activeSpaceId])
+  }, [userId, activeSpaceId, extendedCutoff])
 
   useEffect(() => { fetchPayments() }, [fetchPayments])
+
+  // Reset de la ventana ampliada al cambiar de contexto (Personal ↔ espacio,
+  // o entre espacios) — cada contexto arranca con su ventana default.
+  useEffect(() => { setExtendedCutoff(null) }, [activeSpaceId])
+
+  // Año más viejo del contexto activo (1 consulta ligera por contexto).
+  useEffect(() => {
+    if (!userId) return
+    let alive = true
+    ;(async () => {
+      let q = supabase.from('payments').select('due_date')
+        .order('due_date', { ascending: true }).limit(1)
+      q = activeSpaceId
+        ? q.eq('space_id', activeSpaceId)
+        : q.eq('user_id', userId).is('space_id', null)
+      const { data } = await q
+      if (alive) setOldestYear(data?.[0] ? dateOf(data[0].due_date).getFullYear() : null)
+    })()
+    return () => { alive = false }
+  }, [userId, activeSpaceId])
+
+  // Amplía la ventana para cubrir un mes solicitado en "Por mes" de
+  // PaymentsPage. Si el mes ya cae dentro de la ventana vigente, no hace
+  // nada. Mismo colchón de 1 día que defaultCutoffStr(), por la misma razón.
+  const ensureMonthLoaded = useCallback((month, year) => {
+    const first = new Date(year, month, 1)
+    first.setDate(first.getDate() - 1)
+    const wanted = dateToStr(first)
+    const current = extendedCutoff && extendedCutoff < defaultCutoffStr()
+      ? extendedCutoff
+      : defaultCutoffStr()
+    if (wanted < current) setExtendedCutoff(wanted)
+  }, [extendedCutoff])
 
   // ─────────────────────────────────────────────────────────────────────────
   // TIEMPO REAL — solo en modo Espacio Compartido. Los datos personales no
@@ -276,10 +350,21 @@ export function usePayments(userId, activeSpaceId = null, activeSpaceName = null
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'payments', filter: `space_id=eq.${activeSpaceId}` },
-        () => { fetchPayments() }
+        // Debounce (v0.9.281): una sola acción genera varios eventos en
+        // ráfaga (ej. markPaid de un recurrente = update + inserts de
+        // ensureTwoAhead) — sin esto, cada evento disparaba su PROPIO
+        // fetchPayments completo. Se colapsa la ráfaga en un solo refetch
+        // 300ms después del último evento.
+        () => {
+          clearTimeout(realtimeDebounceRef.current)
+          realtimeDebounceRef.current = setTimeout(() => { fetchPayments() }, 300)
+        }
       )
       .subscribe()
-    return () => { supabase.removeChannel(channel) }
+    return () => {
+      clearTimeout(realtimeDebounceRef.current)
+      supabase.removeChannel(channel)
+    }
   }, [activeSpaceId, fetchPayments])
 
   // ─────────────────────────────────────────────────────────────────────────
@@ -1160,5 +1245,6 @@ export function usePayments(userId, activeSpaceId = null, activeSpaceName = null
     deleteRecurrentFuture, deleteInstallmentFuture,
     migrateRecurrents,
     refetch: fetchPayments,
+    ensureMonthLoaded, oldestYear,
   }
 }

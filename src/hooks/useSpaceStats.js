@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { supabase } from '../lib/supabase'
 import { dateToStr, cobroPeriod } from '../lib/utils'
 
@@ -69,13 +69,27 @@ export function useSpaceStats(userId, personalConfig, spaces) {
   // de `space_id` a propósito, igual que la suscripción de membresías en
   // `useSharedSpaces.js` — aquí no hay un solo espacio de referencia, se
   // necesita saber de TODOS a la vez.
+  // Debounce (v0.9.281): sin filtro de space_id (a propósito, ver arriba),
+  // este canal recibe TODOS los eventos de `payments` visibles por RLS —
+  // incluyendo las ráfagas de una sola acción (markPaid de un recurrente =
+  // update + inserts de ensureTwoAhead). Cada fetchStats() son 2 consultas
+  // de conteo POR espacio; sin debounce, una ráfaga las repetía completas
+  // por cada evento. Se colapsa en un solo fetchStats 300ms después del
+  // último evento.
+  const debounceRef = useRef(null)
   useEffect(() => {
     if (!userId) return
     const channel = supabase
       .channel(`space-stats-${userId}`)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'payments' }, () => { fetchStats() })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'payments' }, () => {
+        clearTimeout(debounceRef.current)
+        debounceRef.current = setTimeout(() => { fetchStats() }, 300)
+      })
       .subscribe()
-    return () => { supabase.removeChannel(channel) }
+    return () => {
+      clearTimeout(debounceRef.current)
+      supabase.removeChannel(channel)
+    }
   }, [userId, fetchStats])
 
   return stats
