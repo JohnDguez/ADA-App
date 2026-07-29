@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-import { Plus, SlidersHorizontal, Crown, PiggyBank, X } from 'lucide-react'
+import { Plus, SlidersHorizontal, Crown, PiggyBank } from 'lucide-react'
 import { getIconComponent } from '../lib/categoryIcons'
 import { fmt } from '../lib/utils'
 import { EmptyState } from './EmptyState'
@@ -235,8 +235,8 @@ export function GoalsOverlay({ open, goalsData, isPremium, onClose, onOpenPremiu
 
           {!selectedGoal && (
             <div className={styles.actionRow}>
-              <button type="button" className={styles.closeBtn} onClick={onClose} aria-label="Cerrar Metas">
-                <X size={22} color="var(--text)" />
+              <button type="button" onClick={onClose} className={`btn-ghost ${styles.closeBtn}`} style={{ width: 'auto' }}>
+                Cerrar
               </button>
               <button type="button" className={styles.fab} onClick={handleAddClick} aria-label="Nueva meta">
                 <Plus size={24} color="#fff" />

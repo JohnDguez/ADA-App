@@ -35,7 +35,7 @@
 .sheet {
   width: 100%;
   max-width: 420px;
-  height: 75vh;
+  height: 85vh;
   background: var(--surface);
   border-radius: 20px 20px 0 0;
   display: flex;
@@ -98,22 +98,12 @@
   flex-shrink: 0;
   display: flex;
   align-items: center;
-  justify-content: flex-end;
   gap: 12px;
   padding: 14px 20px;
-  border-top: 1px solid var(--border);
 }
 
 .closeBtn {
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
-  background: var(--section-bg);
-  border: 1px solid var(--border-mid);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
+  flex: 1;
 }
 
 .screen {
