@@ -2,25 +2,40 @@
   /* 120px cubría solo el nav. La pastilla fija "Añadir meta" vive encima
      de él, así que hace falta más aire para que la última tarjeta no
      quede tapada. */
-  padding-bottom: 165px;
+  padding-bottom: 185px;
   background: var(--bg);
   min-height: 100vh;
+}
+
+/* Fila invisible que reproduce la caja del BottomNav (mismo ancho y
+   centrado) — sirve para que el 40% de la pastilla sea de la columna de
+   contenido y no del viewport, y para poder alinearla a la derecha de esa
+   columna en cualquier tamaño de pantalla. `pointer-events: none` para
+   que el espacio vacío de la fila no bloquee lo que hay debajo; la
+   pastilla lo reactiva. */
+.addPillRow {
+  position: fixed;
+  bottom: 120px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: calc(100% - 32px);
+  max-width: 388px;
+  display: flex;
+  justify-content: flex-end;
+  z-index: 95;
+  pointer-events: none;
 }
 
 /* EXCEPCIÓN DOCUMENTADA a la regla 13 (border radius 5px / pills solo en
    segmentados de 2 posiciones): botón de acción principal en pastilla,
    aprobado por Johnatan para esta pantalla — ver RULES.md.
-   `bottom: 94px` no es arbitrario: el "+" del BottomNav sobresale hacia
-   arriba con `translate(-50%, -72%)` y llega a ~85px del borde inferior,
-   así que la pastilla tiene que quedar por encima o se encimarían. */
+   Sube a 120px (antes 94px) porque a esa altura quedaba muy cerca del
+   nav y era fácil tocar el nav por error: el "+" del BottomNav sobresale
+   hacia arriba con `translate(-50%, -72%)` y llega a ~85px del borde. */
 .addPill {
-  position: fixed;
-  bottom: 94px;
-  left: 16px;
-  right: 16px;
-  max-width: 388px;
-  margin: 0 auto;
-  z-index: 95;
+  pointer-events: auto;
+  width: 40%;
+  min-width: 150px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -35,6 +50,7 @@
   font-family: inherit;
   cursor: pointer;
   box-shadow: 0 4px 16px rgba(47, 140, 250, 0.4);
+  white-space: nowrap;
 }
 
 .roundedContentWrapper {

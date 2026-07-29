@@ -172,10 +172,12 @@ export function GoalsPage({
       </div>
 
       {!selectedGoal && (
-        <button type="button" className={styles.addPill} onClick={handleAddClick}>
-          <Plus size={18} color="#fff" />
-          Añadir meta
-        </button>
+        <div className={styles.addPillRow}>
+          <button type="button" className={styles.addPill} onClick={handleAddClick}>
+            <Plus size={18} color="#fff" />
+            Añadir meta
+          </button>
+        </div>
       )}
 
       <GoalFormModal
