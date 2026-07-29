@@ -1,20 +1,17 @@
 import { useState, useRef } from 'react'
-import { ChevronUp, GripHorizontal } from 'lucide-react'
+import { ChevronUp } from 'lucide-react'
 import styles from './GoalsTray.module.css'
 
-// Umbral de arrastre (px) para soltar y abrir Metas — pedido explícito de
-// Johnatan: un gesto de arrastre real (seguir el dedo), no solo un toque
-// que dispara la animación. Se deja también un tap simple como respaldo
-// (si no hubo movimiento real), para no depender únicamente del gesto.
+// Umbral de arrastre (px) para soltar y abrir Metas — gesto de arrastre
+// real (sigue el dedo), con un tap simple de respaldo si no hubo
+// movimiento real (`movedRef`).
 const OPEN_THRESHOLD = 40
 const MAX_DRAG = 70
 
-// Vive FUERA de BottomNav.jsx a propósito (Johnatan fue explícito: "la
-// pestaña debe formar parte del Home, no es parte del navbar") — se
-// renderiza en App.jsx como hermano de <BottomNav>, solo cuando
-// tab === 'home'. Por eso NO se comparte fondo/silueta con el nav: es su
-// propia bandeja de ancho completo, anclada al borde inferior real de la
-// pantalla, con el nav (sin ningún cambio) flotando encima/adentro.
+// Vive FUERA de BottomNav.jsx a propósito — hermano de <BottomNav> en
+// App.jsx, solo en Home. Fondo del mismo color que la página (var(--bg)),
+// no azul del nav — la sombra hacia arriba es lo que la separa
+// visualmente del contenido, no un color distinto.
 export function GoalsTray({ onOpen }) {
   const [dragY, setDragY] = useState(0)
   const [dragging, setDragging] = useState(false)
@@ -52,10 +49,10 @@ export function GoalsTray({ onOpen }) {
     >
       <div className={styles.row}>
         <div className={styles.label}>
-          <ChevronUp size={13} color="rgba(255,255,255,0.65)" />
+          <ChevronUp size={13} color="var(--muted)" />
           <span>Mis metas</span>
         </div>
-        <GripHorizontal size={15} color="rgba(255,255,255,0.5)" />
+        <div className={styles.dragLine} />
       </div>
     </div>
   )

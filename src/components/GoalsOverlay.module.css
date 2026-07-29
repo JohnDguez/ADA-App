@@ -5,6 +5,7 @@
   background: var(--bg);
   animation: overlaySlideUp .3s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
   overflow-y: auto;
+  transition: transform .15s ease;
 }
 
 .overlayClosing {
@@ -21,26 +22,39 @@
   to   { transform: translateY(100%); }
 }
 
+/* Franja completa para cerrar deslizando hacia abajo — a propósito de
+   ancho completo (no un botoncito en una esquina), para que el usuario
+   pueda arrastrar desde donde le caiga el pulgar. */
+.dragStrip {
+  position: sticky;
+  top: 0;
+  padding: 14px 0 8px;
+  display: flex;
+  justify-content: center;
+  touch-action: none;
+  cursor: pointer;
+  background: var(--bg);
+  z-index: 1;
+}
+
+.dragHandle {
+  width: 36px;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--border-mid);
+}
+
 .screen {
   position: relative;
   min-height: 100vh;
-  padding: 20px 16px 110px;
+  padding: 0 16px 110px;
   box-sizing: border-box;
 }
 
 .header {
   display: flex;
   align-items: center;
-  gap: 10px;
   margin-bottom: 18px;
-}
-
-.closeButton {
-  background: none;
-  border: none;
-  padding: 4px;
-  display: flex;
-  cursor: pointer;
 }
 
 .headerTitle {

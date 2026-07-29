@@ -5,14 +5,17 @@
   bottom: 0;
   max-width: 420px;
   margin: 0 auto;
-  height: 104px;
-  background: var(--nav-bg);
+  height: 130px;
+  background: var(--bg);
   border-radius: 22px 22px 0 0;
-  /* Por debajo del nav (z-index: 100 en BottomNav.module.css) — el nav,
-     sin ningún cambio, flota encima/adentro de esta bandeja. */
+  /* La diferencia con el fondo la da la sombra, no el color — mismo
+     fondo que la página (var(--bg)), pedido explícito de Johnatan. */
+  box-shadow: 0 -6px 20px rgba(0, 0, 0, 0.12);
+  /* Por debajo del nav (z-index: 100 en BottomNav.module.css, sin
+     cambios) — el nav flota encima/adentro de esta bandeja. */
   z-index: 90;
   box-sizing: border-box;
-  padding-top: 12px;
+  padding-top: 14px;
   touch-action: none;
   cursor: pointer;
   transition: transform .15s ease;
@@ -34,5 +37,12 @@
   align-items: center;
   gap: 5px;
   font-size: 13px;
-  color: rgba(255, 255, 255, 0.75);
+  color: var(--text);
+}
+
+.dragLine {
+  width: 30px;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--border-mid);
 }

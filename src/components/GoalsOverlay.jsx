@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-import { ChevronDown, Plus, SlidersHorizontal, Crown, PiggyBank } from 'lucide-react'
+import { Plus, SlidersHorizontal, Crown, PiggyBank } from 'lucide-react'
 import { getIconComponent } from '../lib/categoryIcons'
 import { fmt } from '../lib/utils'
 import { EmptyState } from './EmptyState'
@@ -26,6 +26,10 @@ export function GoalsOverlay({ open, goalsData, isPremium, onClose, onOpenPremiu
   const [formOpen, setFormOpen] = useState(false)
   const [editingGoal, setEditingGoal] = useState(null)
   const [sortBy, setSortBy] = useState('monto')
+  const [dragCloseY, setDragCloseY] = useState(0)
+  const [dragClosing, setDragClosing] = useState(false)
+  const dragStartYRef = useRef(0)
+  const dragMovedRef = useRef(false)
 
   useEffect(() => () => clearTimeout(closeTimerRef.current), [])
 
@@ -66,6 +70,27 @@ export function GoalsOverlay({ open, goalsData, isPremium, onClose, onOpenPremiu
   const showOverlay = open || closing
   if (!showOverlay) return null
 
+  // Arrastrar hacia abajo desde la franja superior para cerrar — pedido
+  // explícito de Johnatan en vez de un botoncito aislado lejos del pulgar.
+  // Mismo criterio que GoalsTray.jsx: sigue el dedo con dragY, umbral para
+  // soltar y cerrar, y un tap simple de respaldo si no hubo arrastre real.
+  function startDragClose(y) {
+    dragStartYRef.current = y
+    dragMovedRef.current = false
+    setDragClosing(true)
+  }
+  function moveDragClose(y) {
+    const delta = y - dragStartYRef.current
+    if (Math.abs(delta) > 4) dragMovedRef.current = true
+    setDragCloseY(Math.max(0, Math.min(delta, 160)))
+  }
+  function endDragClose() {
+    setDragClosing(false)
+    if (dragCloseY >= 80) { onClose(); setDragCloseY(0); return }
+    if (!dragMovedRef.current) onClose()
+    setDragCloseY(0)
+  }
+
   const sortedGoals = [...activeGoals].sort((a, b) =>
     sortBy === 'nombre' ? a.name.localeCompare(b.name) : b.target_amount - a.target_amount
   )
@@ -105,13 +130,26 @@ export function GoalsOverlay({ open, goalsData, isPremium, onClose, onOpenPremiu
   }
 
   return (
-    <div className={`${styles.overlay} ${closing ? styles.overlayClosing : ''}`}>
+    <div
+      className={`${styles.overlay} ${closing ? styles.overlayClosing : ''}`}
+      style={dragCloseY ? { transform: `translateY(${dragCloseY}px)` } : undefined}
+    >
+      <div
+        className={styles.dragStrip}
+        onTouchStart={e => startDragClose(e.touches[0].clientY)}
+        onTouchMove={e => moveDragClose(e.touches[0].clientY)}
+        onTouchEnd={endDragClose}
+        role="button"
+        tabIndex={0}
+        onKeyDown={e => e.key === 'Enter' && onClose()}
+        aria-label="Cerrar Metas — desliza hacia abajo"
+      >
+        <div className={styles.dragHandle} />
+      </div>
+
       {!selectedGoal ? (
         <div className={styles.screen}>
           <div className={styles.header}>
-            <button onClick={onClose} className={styles.closeButton} aria-label="Cerrar Metas">
-              <ChevronDown size={22} color="var(--text)" />
-            </button>
             <div className={styles.headerTitle}>Metas</div>
           </div>
 
