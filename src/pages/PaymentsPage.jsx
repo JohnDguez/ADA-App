@@ -68,7 +68,7 @@ function prevPeriod(profile) {
   return { start: t, end: prevEnd }
 }
 
-export function PaymentsPage({ payments, dataLoading = false, profile, spaceSwitcher, activeSpaceHeader, activeSpaceId = null, rawActiveSpaceId = null, sharedSpaces, spacePermissions, onOpenPremium, onSpaceReady, unreadCount, onOpenNotifs, onGoSettings, onMarkUnpaid, onDelete, onDeleteDirect, onUpdateProfile, onEdit, onViewSource, onSplit, onAdd, onGoCategories, sharedFund, slideClass, ensureMonthLoaded, oldestPaymentYear = null, personalGoalAportes = [] }) {
+export function PaymentsPage({ payments, dataLoading = false, profile, spaceSwitcher, activeSpaceHeader, activeSpaceId = null, rawActiveSpaceId = null, sharedSpaces, spacePermissions, onOpenPremium, onSpaceReady, unreadCount, onOpenNotifs, onGoSettings, onMarkUnpaid, onDelete, onDeleteDirect, onUpdateProfile, onEdit, onViewSource, onSplit, onAdd, onGoCategories, sharedFund, slideClass, ensureMonthLoaded, oldestPaymentYear = null }) {
   // Mismo mecanismo que HomePage.jsx — ver ahí el porqué (evitar que la
   // animación de entrada se dispare también en un simple cambio de
   // pestaña, no solo en un cambio real de espacio).
@@ -166,19 +166,19 @@ export function PaymentsPage({ payments, dataLoading = false, profile, spaceSwit
     })
   }, [addFundModal])
 
-  // Misma fórmula exacta que "Disponible Este Periodo" (arriba, líneas
-  // ~426-436) — salario + ingresos extra − gastos ya pagados del periodo −
-  // aportes a Metas del periodo — pero aplicada a los datos PERSONALES
-  // (space_id null), sin importar en qué espacio esté parado ahora mismo.
+  // Misma fórmula exacta que "Disponible Este Periodo" (arriba) — salario +
+  // ingresos extra − gastos ya pagados del periodo — pero aplicada a los
+  // datos PERSONALES (space_id null), sin importar en qué espacio esté
+  // parado ahora mismo. Los aportes a Metas ya están adentro de "gastado":
+  // son pagos reales (categoría "Ahorro"), no un cálculo aparte.
   async function fetchPersonalAvailable() {
     const { data: personalProfile } = await supabase.from('profiles').select('*').eq('id', profile.id).maybeSingle()
     if (!personalProfile) return 0
     const { start, end } = cobroPeriod(personalProfile)
     const periodStartStr = dateToStr(start)
-    const [{ data: incomes }, { data: paid }, { data: goalTx }] = await Promise.all([
+    const [{ data: incomes }, { data: paid }] = await Promise.all([
       supabase.from('period_income').select('amount').is('space_id', null).eq('user_id', profile.id).eq('period_start', periodStartStr),
       supabase.from('payments').select('amount, paid_at').is('space_id', null).eq('user_id', profile.id).eq('is_paid', true),
-      supabase.from('goal_transactions').select('amount, created_at, type').eq('user_id', profile.id),
     ])
     const salario = personalProfile.salary_enabled ? Number(personalProfile.salary_amount || 0) : 0
     const extras  = (incomes || []).reduce((a, i) => a + Number(i.amount), 0)
@@ -189,14 +189,7 @@ export function PaymentsPage({ payments, dataLoading = false, profile, spaceSwit
         return d >= start && d <= end
       })
       .reduce((a, p) => a + Number(p.amount), 0)
-    const aportadoMetas = (goalTx || [])
-      .filter(t => t.type === 'aporte')
-      .filter(t => {
-        const d = dateOf(dateToStr(new Date(t.created_at)))
-        return d >= start && d <= end
-      })
-      .reduce((a, t) => a + Number(t.amount), 0)
-    return salario + extras - gastado - aportadoMetas
+    return salario + extras - gastado
   }
 
   async function handleAddFund() {
@@ -510,25 +503,10 @@ export function PaymentsPage({ payments, dataLoading = false, profile, spaceSwit
   }), [paidPayments, profile])
   const totalGastos  = useMemo(() => gastosPeriodo.reduce((a, p) => a + Number(p.amount), 0), [gastosPeriodo])
   const totalExtras  = useMemo(() => periodIncomes.reduce((a, i) => a + Number(i.amount), 0), [periodIncomes])
-  // Aportes a Metas de ahorro dentro del periodo actual — resta de
-  // Disponible igual que un gasto (es dinero comprometido), pero SOLO en
-  // contexto personal: Metas no existe dentro de un Espacio Compartido, así
-  // que si `activeSpaceId` trae valor, esta pantalla está mostrando los
-  // números del espacio y los aportes personales no deben tocarlos.
-  const totalMetasAportes = useMemo(() => {
-    if (activeSpaceId) return 0
-    return personalGoalAportes
-      .filter(a => {
-        const d = dateOf(dateToStr(new Date(a.created_at)))
-        return d >= periodStart && d <= periodEnd
-      })
-      .reduce((a, tx) => a + Number(tx.amount), 0)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [personalGoalAportes, activeSpaceId, profile])
   const salario      = profile?.salary_enabled ? Number(profile?.salary_amount || 0) : 0
   const ingresoTotal = salario + totalExtras
-  const disponible   = ingresoTotal - totalGastos - totalMetasAportes
-  const sobrePasado  = (totalGastos + totalMetasAportes) > ingresoTotal
+  const disponible   = ingresoTotal - totalGastos
+  const sobrePasado  = totalGastos > ingresoTotal
 
   // ── Gráfica ──────────────────────────────────────────────────────────────
   function getMonthsArray(n) {
@@ -1167,11 +1145,6 @@ export function PaymentsPage({ payments, dataLoading = false, profile, spaceSwit
                   {totalExtras > 0 && (
                     <div className={styles.balanceExtras}>
                       +{fmt(totalExtras)} extras
-                    </div>
-                  )}
-                  {totalMetasAportes > 0 && (
-                    <div className={styles.balanceMetasAportes}>
-                      -{fmt(totalMetasAportes)} en Metas
                     </div>
                   )}
                   {sobrePasado && (

@@ -170,12 +170,6 @@
   color: var(--paid);
 }
 
-.balanceMetasAportes {
-  font-size: 10px;
-  font-weight: 600;
-  color: var(--soon-color);
-}
-
 .balanceOverBudget {
   font-size: 10px;
   font-weight: 600;
