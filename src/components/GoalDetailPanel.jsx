@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { ChevronLeft, MoreVertical, ArrowUp, ArrowDown, Check, ArrowUpCircle, ArrowDownCircle } from 'lucide-react'
+import { useState, useEffect, useRef } from 'react'
+import { ChevronLeft, MoreVertical, ArrowUp, ArrowDown, Check, ArrowUpCircle, ArrowDownCircle, Pencil, Trash2 } from 'lucide-react'
 import { getIconComponent } from '../lib/categoryIcons'
 import { fmt, MONTHS_SHORT } from '../lib/utils'
 import { showToast } from './Toast'
@@ -17,6 +17,23 @@ export function GoalDetailPanel({ goal, onBack, onEdit, onAportar, onRetirar, on
   const [amount, setAmount] = useState('')
   const [saving, setSaving] = useState(false)
   const [deleteModalOpen, setDeleteModalOpen] = useState(false)
+  const menuRef = useRef(null)
+
+  // Cerrar el menú al tocar en cualquier otro lado — se escucha en
+  // `document` y no solo en el contenedor de la página, para que también
+  // se cierre tocando el header o el nav, no solo el contenido.
+  useEffect(() => {
+    if (!menuOpen) return
+    const handler = e => {
+      if (menuRef.current && !menuRef.current.contains(e.target)) setMenuOpen(false)
+    }
+    document.addEventListener('mousedown', handler)
+    document.addEventListener('touchstart', handler)
+    return () => {
+      document.removeEventListener('mousedown', handler)
+      document.removeEventListener('touchstart', handler)
+    }
+  }, [menuOpen])
 
   const Icon = getIconComponent(goal.icon)
 
@@ -51,14 +68,18 @@ export function GoalDetailPanel({ goal, onBack, onEdit, onAportar, onRetirar, on
           {Icon && <Icon size={15} color="#fff" />}
         </div>
         <div className={styles.headerTitle}>{goal.name}</div>
-        <div className={styles.menuWrapper}>
+        <div className={styles.menuWrapper} ref={menuRef}>
           <button type="button" onClick={() => setMenuOpen(o => !o)} className={styles.iconButton} aria-label="Más opciones">
             <MoreVertical size={20} color="var(--text)" />
           </button>
           {menuOpen && (
             <div className={styles.menu}>
-              <button type="button" onClick={() => { setMenuOpen(false); onEdit() }} className={styles.menuItem}>Editar</button>
-              <button type="button" onClick={() => { setMenuOpen(false); setDeleteModalOpen(true) }} className={`${styles.menuItem} ${styles.menuItemDanger}`}>Eliminar</button>
+              <button type="button" onClick={() => { setMenuOpen(false); onEdit() }} className={styles.menuItem}>
+                <span><Pencil size={14} /></span>Editar
+              </button>
+              <button type="button" onClick={() => { setMenuOpen(false); setDeleteModalOpen(true) }} className={`${styles.menuItem} ${styles.menuItemDanger}`}>
+                <span><Trash2 size={14} /></span>Eliminar
+              </button>
             </div>
           )}
         </div>
