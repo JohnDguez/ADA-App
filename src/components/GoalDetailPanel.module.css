@@ -1,5 +1,4 @@
 .screen {
-  min-height: 100vh;
   padding: 20px 16px 40px;
   box-sizing: border-box;
   animation: fadeIn .2s ease both;

@@ -46,7 +46,6 @@
 
 .screen {
   position: relative;
-  min-height: 100vh;
   padding: 0 16px 110px;
   box-sizing: border-box;
 }
@@ -234,7 +233,7 @@
 }
 
 .fab {
-  position: absolute;
+  position: fixed;
   bottom: 24px;
   right: 20px;
   width: 52px;
