@@ -151,6 +151,100 @@ async function collectReminders(scope, profile, todayStr, today) {
   return notifications
 }
 
+// Mismo formato de moneda que `fmt()` en lib/utils.js, replicado aquí
+// porque las funciones serverless no comparten código con el front.
+function money(n) {
+  const num = Number(n)
+  const sign = num < 0 ? '-' : ''
+  return sign + '$' + Math.abs(num).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+}
+
+// Suma los días a una fecha usando componentes LOCALES (regla 11), no
+// `toISOString()`. Ojo: el bloque de "pagos próximos" de arriba sí usa
+// `toISOString().split('T')[0]`, que para una fecha construida a las
+// 12:00 locales da el día correcto en toda América pero se corre un día
+// en zonas UTC+13 — queda anotado como deuda aparte, no se toca aquí
+// para no mezclar arreglos.
+function addDaysStr(dateStr, days) {
+  const d = new Date(dateStr + 'T12:00:00')
+  d.setDate(d.getDate() + days)
+  const y = d.getFullYear()
+  const m = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  return `${y}-${m}-${day}`
+}
+
+// Metas de ahorro cuya fecha límite ya entró en los últimos 7 días —
+// SOLO personal (las metas no existen dentro de un Espacio Compartido).
+// Se manda UNA SOLA VEZ por meta: la columna `deadline_notif_sent` se
+// marca aquí mismo en cuanto se arma el aviso, así el cron de la hora
+// siguiente ya no la vuelve a levantar.
+//
+// El abonado se calcula sumando `goal_transactions` (aporte suma, retiro
+// resta), igual que en useGoals.js — nunca hay un contador guardado.
+const GOAL_DEADLINE_DAYS = 7
+
+async function collectGoalDeadlineReminders(userId, todayStr) {
+  const limitStr = addDaysStr(todayStr, GOAL_DEADLINE_DAYS)
+
+  const { data: goals } = await supabase
+    .from('goals')
+    .select('id, name, target_amount, target_date')
+    .eq('user_id', userId)
+    .is('space_id', null)
+    .eq('is_completed', false)
+    .eq('deadline_notif_sent', false)
+    .not('target_date', 'is', null)
+    .gte('target_date', todayStr)
+    .lte('target_date', limitStr)
+
+  if (!goals || goals.length === 0) return []
+
+  const { data: txs } = await supabase
+    .from('goal_transactions')
+    .select('goal_id, amount, type')
+    .in('goal_id', goals.map(g => g.id))
+
+  const notifications = []
+  const notifiedIds = []
+
+  for (const goal of goals) {
+    const abonado = (txs || [])
+      .filter(t => t.goal_id === goal.id)
+      .reduce((sum, t) => sum + (t.type === 'aporte' ? Number(t.amount) : -Number(t.amount)), 0)
+    const falta = Number(goal.target_amount) - abonado
+
+    // Ya juntó lo necesario aunque no la haya marcado como hecha — no
+    // tiene caso apurarla.
+    if (falta <= 0) { notifiedIds.push(goal.id); continue }
+
+    const dias = Math.max(
+      Math.round((new Date(goal.target_date + 'T12:00:00') - new Date(todayStr + 'T12:00:00')) / 86400000),
+      0
+    )
+    const cuando = dias === 0 ? 'Hoy vence tu meta' : `Te quedan ${dias} día${dias > 1 ? 's' : ''}`
+
+    notifications.push({
+      type: 'goal_deadline',
+      title: `${cuando}: ${goal.name}`,
+      body: `Todavía te falta ${money(falta)} para completarla`,
+      // El tag debe ser único por notificación o el navegador reemplaza
+      // una con otra al apilarlas.
+      tag: `goal-deadline-${goal.id}`,
+      urgent: false,
+      url: '/',
+      space_name: null,
+    })
+    notifiedIds.push(goal.id)
+  }
+
+  if (notifiedIds.length > 0) {
+    await supabase.from('goals').update({ deadline_notif_sent: true }).in('id', notifiedIds)
+  }
+
+  return notifications
+}
+
 module.exports = async function handler(req, res) {
   const authHeader = req.headers.authorization
   if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
@@ -220,6 +314,15 @@ module.exports = async function handler(req, res) {
       }
 
       let notifications = await collectReminders({ type: 'personal', userId: sub.user_id }, profile, todayStr, today)
+
+      // Metas de ahorro con fecha límite cerca — solo personal, y una sola
+      // vez por meta (la función marca `deadline_notif_sent` al armar el
+      // aviso). No depende de ninguna preferencia de notificaciones porque
+      // no existe una columna para eso: dispara como máximo una vez en la
+      // vida de cada meta, así que no genera ruido repetido.
+      const goalNotifs = await collectGoalDeadlineReminders(sub.user_id, todayStr)
+      notifications = notifications.concat(goalNotifs)
+
       for (const space of spacesInfo) {
         const spaceNotifs = await collectReminders({ type: 'space', spaceId: space.id, spaceName: space.name }, profile, todayStr, today)
         notifications = notifications.concat(spaceNotifs)
