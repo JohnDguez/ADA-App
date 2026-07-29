@@ -19,8 +19,7 @@ const PremiumPage = lazy(() => import('./pages/PremiumPage').then(m => ({ defaul
 import { usePayments } from './hooks/usePayments'
 import { useSharedFund } from './hooks/useSharedFund'
 import { useGoals } from './hooks/useGoals'
-import { GoalsOverlay } from './components/GoalsOverlay'
-import { GoalsTray } from './components/GoalsTray'
+import { GoalsPage } from './pages/GoalsPage'
 import { useProfile } from './hooks/useProfile'
 import { useNotifications } from './hooks/useNotifications'
 import { HomePage } from './pages/HomePage'
@@ -138,12 +137,10 @@ export default function App() {
 
   // Metas de ahorro — SIEMPRE con `profile` (personal), nunca
   // `effectiveProfile`: son personales sin importar en qué Espacio
-  // Compartido esté parado el usuario (decisión confirmada, ver
-  // CONTEXT.md). `goalsOverlayOpen` vive aquí porque el disparador (la
-  // franja de "Mis metas") está en BottomNav.jsx, que es hermano de
-  // GoalsOverlay, no ancestro/descendiente.
-  const goalsData = useGoals(user?.id, profile)
-  const [goalsOverlayOpen, setGoalsOverlayOpen] = useState(false)
+  // Compartido esté parado el usuario. El tercer parámetro (`spaceId`) va
+  // fijo en null por ahora — está puesto desde ya para que el día que
+  // existan metas compartidas no haya que tocar este llamado.
+  const goalsData = useGoals(user?.id, profile, null)
 
   // Se declara aquí (no arriba, junto a sharedSpaces) porque necesita
   // `profile` ya disponible — cada espacio (y Personal) puede tener su
@@ -301,7 +298,10 @@ export default function App() {
     return <Suspense fallback={<SkeletonLoader />}><PasswordSetupModal userId={user.id} onDone={() => updateProfile({ has_password: true })} /></Suspense>
   }
 
-  const TAB_ORDER = ['home', 'payments', 'recurrents', 'settings']
+  // "settings" ya no es pestaña del nav (se abre desde el header), pero se
+  // deja en el orden porque `tab` sí toma ese valor al entrar a Ajustes y
+  // de aquí sale la dirección del deslizamiento.
+  const TAB_ORDER = ['home', 'payments', 'recurrents', 'goals', 'settings']
   const TAB_TO_COACHMARK_KEY = { home: 'home', payments: 'gastos', recurrents: 'recurrentes', settings: 'perfil' }
   const coachmarkScreenKey = modalOpen ? 'nuevo-pago' : (TAB_TO_COACHMARK_KEY[tab] || null)
   sessionStorage.setItem('ada_session', '1')
@@ -865,6 +865,16 @@ export default function App() {
           onAdd={openAdd}
         />
       )}
+      {tab === 'goals' && (
+        <GoalsPage
+          goalsData={goalsData}
+          isPremium={!!profile.is_premium}
+          activeSpaceId={activeSpaceId}
+          onOpenPremium={() => setPremiumPageOpen(true)}
+          slideClass={`page-slide-${slideDir}`}
+          {...headerProps}
+        />
+      )}
       {tab === 'settings' && (
         <Suspense fallback={null}>
         <SettingsPage
@@ -890,18 +900,6 @@ export default function App() {
         active={tab}
         onChange={t => changeTab(t)}
         onAdd={openAdd}
-      />
-
-      {tab === 'home' && (
-        <GoalsTray onOpen={() => setGoalsOverlayOpen(true)} />
-      )}
-
-      <GoalsOverlay
-        open={goalsOverlayOpen}
-        goalsData={goalsData}
-        isPremium={!!profile.is_premium}
-        onClose={() => setGoalsOverlayOpen(false)}
-        onOpenPremium={() => { setGoalsOverlayOpen(false); setPremiumPageOpen(true) }}
       />
 
       <NotificationsPanel
