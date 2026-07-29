@@ -192,13 +192,10 @@ export function GoalsOverlay({ open, goalsData, isPremium, onClose, onOpenPremiu
 
               {atFreeLimit && (
                 <div className={styles.premiumBanner}>
-                  <div className={styles.premiumText}>
-                    <Crown size={14} color="var(--premium-gold)" />
-                    <span>Obtén Premium para más metas a la vez</span>
-                  </div>
+                  <div className={styles.premiumTitle}>Obtén Premium para ahorrar en más de una meta a la vez</div>
+                  <div className={styles.premiumText}>Crea todas las que quieras — tu próximo viaje, un PS5, lo que se te ocurra — y ahorra para varias al mismo tiempo, en vez de quedarte solo con una activa.</div>
                   <button type="button" onClick={onOpenPremium} className={styles.premiumButton}>
-                    <Crown size={13} />
-                    Ver Premium
+                    <Crown size={16} fill="currentColor" /> Prueba Premium GRATIS 7 días
                   </button>
                 </div>
               )}
