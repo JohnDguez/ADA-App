@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-import { Plus, SlidersHorizontal, Crown, PiggyBank } from 'lucide-react'
+import { Plus, SlidersHorizontal, Crown, PiggyBank, X } from 'lucide-react'
 import { getIconComponent } from '../lib/categoryIcons'
 import { fmt } from '../lib/utils'
 import { EmptyState } from './EmptyState'
@@ -142,93 +142,109 @@ export function GoalsOverlay({ open, goalsData, isPremium, onClose, onOpenPremiu
   }
 
   return (
-    <div
-      className={`${styles.overlay} ${entering ? styles.overlayEntering : ''} ${closing ? styles.overlayClosing : ''}`}
-      style={dragCloseY ? { transform: `translateY(${dragCloseY}px)` } : undefined}
-    >
+    <>
       <div
-        className={styles.dragStrip}
-        onTouchStart={e => startDragClose(e.touches[0].clientY)}
-        onTouchMove={e => moveDragClose(e.touches[0].clientY)}
-        onTouchEnd={endDragClose}
-        role="button"
-        tabIndex={0}
-        onKeyDown={e => e.key === 'Enter' && onClose()}
-        aria-label="Cerrar Metas — desliza hacia abajo"
+        className={`${styles.backdrop} ${entering ? styles.backdropEntering : ''} ${closing ? styles.backdropClosing : ''}`}
+        onClick={e => e.target === e.currentTarget && onClose()}
       >
-        <div className={styles.dragHandle} />
-      </div>
-
-      {!selectedGoal ? (
-        <div className={styles.screen}>
-          <div className={styles.header}>
-            <div className={styles.headerTitle}>Metas</div>
+        <div
+          className={`${styles.sheet} ${entering ? styles.sheetEntering : ''} ${closing ? styles.sheetClosing : ''}`}
+          style={dragCloseY ? { transform: `translateY(${dragCloseY}px)` } : undefined}
+        >
+          <div
+            className={styles.dragStrip}
+            onTouchStart={e => startDragClose(e.touches[0].clientY)}
+            onTouchMove={e => moveDragClose(e.touches[0].clientY)}
+            onTouchEnd={endDragClose}
+            role="button"
+            tabIndex={0}
+            onKeyDown={e => e.key === 'Enter' && onClose()}
+            aria-label="Cerrar Metas — desliza hacia abajo"
+          >
+            <div className={styles.dragHandle} />
           </div>
 
-          {noGoalsAtAll ? (
-            <EmptyState
-              icon={PiggyBank}
-              title="Aún no tienes ninguna meta"
-              subtitle="Crea una para empezar a apartar dinero de tu nómina"
-              onClick={handleAddClick}
-            />
-          ) : (
-            <>
-              <div className={styles.summaryRow}>
-                <div className={styles.summaryBox}>
-                  <div className={styles.summaryLabel}>Total restante</div>
-                  <div className={styles.summaryValue}>{fmt(totalRestante)}</div>
+          <div className={styles.scrollArea}>
+            {!selectedGoal ? (
+              <div className={styles.screen}>
+                <div className={styles.header}>
+                  <div className={styles.headerTitle}>Metas</div>
                 </div>
-                <div className={styles.summaryBox}>
-                  <div className={styles.summaryLabel}>Metas cumplidas</div>
-                  <div className={styles.summaryValue}>{completedGoals.length}/{activeGoals.length + completedGoals.length}</div>
-                </div>
+
+                {noGoalsAtAll ? (
+                  <EmptyState
+                    icon={PiggyBank}
+                    title="Aún no tienes ninguna meta"
+                    subtitle="Crea una para empezar a apartar dinero de tu nómina"
+                    onClick={handleAddClick}
+                  />
+                ) : (
+                  <>
+                    <div className={styles.summaryRow}>
+                      <div className={styles.summaryBox}>
+                        <div className={styles.summaryLabel}>Total restante</div>
+                        <div className={styles.summaryValue}>{fmt(totalRestante)}</div>
+                      </div>
+                      <div className={styles.summaryBox}>
+                        <div className={styles.summaryLabel}>Metas cumplidas</div>
+                        <div className={styles.summaryValue}>{completedGoals.length}/{activeGoals.length + completedGoals.length}</div>
+                      </div>
+                    </div>
+
+                    {activeGoals.length > 1 && (
+                      <button
+                        type="button"
+                        className={styles.sortButton}
+                        onClick={() => setSortBy(s => (s === 'monto' ? 'nombre' : 'monto'))}
+                      >
+                        <SlidersHorizontal size={13} />
+                        Ordenar por {sortBy}
+                      </button>
+                    )}
+
+                    <div className={styles.list}>
+                      {sortedGoals.map(goal => (
+                        <GoalCard key={goal.id} goal={goal} onClick={() => setSelectedGoalId(goal.id)} />
+                      ))}
+                    </div>
+
+                    {atFreeLimit && (
+                      <div className={styles.premiumBanner}>
+                        <div className={styles.premiumTitle}>Obtén Premium para ahorrar en más de una meta a la vez</div>
+                        <div className={styles.premiumText}>Crea todas las que quieras — tu próximo viaje, una consola, lo que se te ocurra — y ahorra para varias al mismo tiempo, en vez de quedarte solo con una activa.</div>
+                        <button type="button" onClick={onOpenPremium} className={styles.premiumButton}>
+                          <Crown size={16} fill="currentColor" /> Prueba Premium GRATIS 7 días
+                        </button>
+                      </div>
+                    )}
+                  </>
+                )}
               </div>
+            ) : (
+              <GoalDetailPanel
+                goal={selectedGoal}
+                onBack={() => setSelectedGoalId(null)}
+                onEdit={() => openEdit(selectedGoal)}
+                onAportar={amount => aportar(selectedGoal.id, amount)}
+                onRetirar={amount => retirar(selectedGoal.id, amount, selectedGoal.name)}
+                onMarkCompleted={completed => markCompleted(selectedGoal.id, completed)}
+                onDelete={resolution => { deleteGoal(selectedGoal.id, resolution); setSelectedGoalId(null) }}
+              />
+            )}
+          </div>
 
-              {activeGoals.length > 1 && (
-                <button
-                  type="button"
-                  className={styles.sortButton}
-                  onClick={() => setSortBy(s => (s === 'monto' ? 'nombre' : 'monto'))}
-                >
-                  <SlidersHorizontal size={13} />
-                  Ordenar por {sortBy}
-                </button>
-              )}
-
-              <div className={styles.list}>
-                {sortedGoals.map(goal => (
-                  <GoalCard key={goal.id} goal={goal} onClick={() => setSelectedGoalId(goal.id)} />
-                ))}
-              </div>
-
-              {atFreeLimit && (
-                <div className={styles.premiumBanner}>
-                  <div className={styles.premiumTitle}>Obtén Premium para ahorrar en más de una meta a la vez</div>
-                  <div className={styles.premiumText}>Crea todas las que quieras — tu próximo viaje, una consola, lo que se te ocurra — y ahorra para varias al mismo tiempo, en vez de quedarte solo con una activa.</div>
-                  <button type="button" onClick={onOpenPremium} className={styles.premiumButton}>
-                    <Crown size={16} fill="currentColor" /> Prueba Premium GRATIS 7 días
-                  </button>
-                </div>
-              )}
-            </>
+          {!selectedGoal && (
+            <div className={styles.actionRow}>
+              <button type="button" className={styles.closeBtn} onClick={onClose} aria-label="Cerrar Metas">
+                <X size={22} color="var(--text)" />
+              </button>
+              <button type="button" className={styles.fab} onClick={handleAddClick} aria-label="Nueva meta">
+                <Plus size={24} color="#fff" />
+              </button>
+            </div>
           )}
-
-          <button type="button" className={styles.fab} onClick={handleAddClick} aria-label="Nueva meta">
-            <Plus size={24} color="#fff" />
-          </button>
         </div>
-      ) : (
-        <GoalDetailPanel
-          goal={selectedGoal}
-          onBack={() => setSelectedGoalId(null)}
-          onEdit={() => openEdit(selectedGoal)}
-          onAportar={amount => aportar(selectedGoal.id, amount)}
-          onRetirar={amount => retirar(selectedGoal.id, amount, selectedGoal.name)}
-          onMarkCompleted={completed => markCompleted(selectedGoal.id, completed)}
-          onDelete={resolution => { deleteGoal(selectedGoal.id, resolution); setSelectedGoalId(null) }}
-        />
-      )}
+      </div>
 
       <GoalFormModal
         open={formOpen}
@@ -236,7 +252,7 @@ export function GoalsOverlay({ open, goalsData, isPremium, onClose, onOpenPremiu
         onSave={handleFormSave}
         onClose={() => setFormOpen(false)}
       />
-    </div>
+    </>
   )
 }
 

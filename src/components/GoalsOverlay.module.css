@@ -1,30 +1,64 @@
-.overlay {
+.backdrop {
   position: fixed;
   inset: 0;
   z-index: 500;
-  background: var(--bg);
-  overflow-y: auto;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+/* Solo existen en el DOM el instante que dura la entrada/salida real (ver
+   GoalsOverlay.jsx) — nunca quedan pegadas de forma permanente, para que
+   un hermano montándose (ej. GoalFormModal al tocar "+") no pueda volver
+   a disparar la animación sin que `open` cambie de verdad. */
+.backdropEntering {
+  animation: backdropFadeIn .3s ease both;
+}
+
+.backdropClosing {
+  animation: backdropFadeOut .28s ease both;
+}
+
+@keyframes backdropFadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes backdropFadeOut {
+  from { opacity: 1; }
+  to   { opacity: 0; }
+}
+
+/* La "card" — 3/4 de la pantalla, esquinas de arriba redondeadas, como un
+   modal real en vez de una página completa (pedido de Johnatan). */
+.sheet {
+  width: 100%;
+  max-width: 420px;
+  height: 75vh;
+  background: var(--surface);
+  border-radius: 20px 20px 0 0;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
   transition: transform .15s ease;
 }
 
-/* Solo existe en el DOM el instante que dura la entrada real (ver
-   GoalsOverlay.jsx) — nunca queda pegada a .overlay de forma permanente,
-   para que un hermano montándose (ej. GoalFormModal al tocar "+") no
-   pueda volver a disparar la animación sin que `open` cambie de verdad. */
-.overlayEntering {
-  animation: overlaySlideUp .3s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+.sheetEntering {
+  animation: sheetSlideUp .3s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
 }
 
-.overlayClosing {
-  animation: overlaySlideDown .28s cubic-bezier(0.4, 0, 1, 1) both;
+.sheetClosing {
+  animation: sheetSlideDown .28s cubic-bezier(0.4, 0, 1, 1) both;
 }
 
-@keyframes overlaySlideUp {
+@keyframes sheetSlideUp {
   from { transform: translateY(100%); }
   to   { transform: translateY(0); }
 }
 
-@keyframes overlaySlideDown {
+@keyframes sheetSlideDown {
   from { transform: translateY(0); }
   to   { transform: translateY(100%); }
 }
@@ -33,15 +67,12 @@
    ancho completo (no un botoncito en una esquina), para que el usuario
    pueda arrastrar desde donde le caiga el pulgar. */
 .dragStrip {
-  position: sticky;
-  top: 0;
+  flex-shrink: 0;
   padding: 14px 0 8px;
   display: flex;
   justify-content: center;
   touch-action: none;
   cursor: pointer;
-  background: var(--bg);
-  z-index: 1;
 }
 
 .dragHandle {
@@ -51,9 +82,42 @@
   background: var(--border-mid);
 }
 
+/* Única zona que hace scroll dentro de la card — separada de la franja de
+   arriba y de actionRow de abajo, para que ninguno de los dos se mueva
+   con el contenido. */
+.scrollArea {
+  flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Fila fija abajo con el botón de cerrar junto al "+" — pedido explícito
+   de Johnatan: siempre visible (nunca se va con el scroll) y cerca del
+   pulgar, para no depender solo del gesto de arrastre de arriba. */
+.actionRow {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 14px 20px;
+  border-top: 1px solid var(--border);
+}
+
+.closeBtn {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--section-bg);
+  border: 1px solid var(--border-mid);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
 .screen {
-  position: relative;
-  padding: 0 16px 110px;
+  padding: 20px 16px;
   box-sizing: border-box;
 }
 
@@ -248,9 +312,6 @@
 }
 
 .fab {
-  position: fixed;
-  bottom: 24px;
-  right: 20px;
   width: 52px;
   height: 52px;
   border-radius: 50%;
