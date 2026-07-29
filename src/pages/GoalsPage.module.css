@@ -1,7 +1,40 @@
 .pageRoot {
-  padding-bottom: 120px;
+  /* 120px cubría solo el nav. La pastilla fija "Añadir meta" vive encima
+     de él, así que hace falta más aire para que la última tarjeta no
+     quede tapada. */
+  padding-bottom: 165px;
   background: var(--bg);
   min-height: 100vh;
+}
+
+/* EXCEPCIÓN DOCUMENTADA a la regla 13 (border radius 5px / pills solo en
+   segmentados de 2 posiciones): botón de acción principal en pastilla,
+   aprobado por Johnatan para esta pantalla — ver RULES.md.
+   `bottom: 94px` no es arbitrario: el "+" del BottomNav sobresale hacia
+   arriba con `translate(-50%, -72%)` y llega a ~85px del borde inferior,
+   así que la pastilla tiene que quedar por encima o se encimarían. */
+.addPill {
+  position: fixed;
+  bottom: 94px;
+  left: 16px;
+  right: 16px;
+  max-width: 388px;
+  margin: 0 auto;
+  z-index: 95;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 13px;
+  border: none;
+  border-radius: 999px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(47, 140, 250, 0.4);
 }
 
 .roundedContentWrapper {
@@ -28,19 +61,6 @@
   font-size: 19px;
   font-weight: 500;
   color: var(--text);
-}
-
-.headerAddBtn {
-  width: 38px;
-  height: 38px;
-  border-radius: 50%;
-  background: var(--accent);
-  border: none;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  flex-shrink: 0;
 }
 
 /* Aviso de que Metas es personal, solo cuando hay un Espacio Compartido

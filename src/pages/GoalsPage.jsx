@@ -100,9 +100,6 @@ export function GoalsPage({
             <div className={styles.screen}>
               <div className={styles.header}>
                 <div className={styles.headerTitle}>Metas</div>
-                <button type="button" className={styles.headerAddBtn} onClick={handleAddClick} aria-label="Nueva meta">
-                  <Plus size={22} color="#fff" />
-                </button>
               </div>
 
               {activeSpaceId && (
@@ -173,6 +170,13 @@ export function GoalsPage({
           )}
         </div>
       </div>
+
+      {!selectedGoal && (
+        <button type="button" className={styles.addPill} onClick={handleAddClick}>
+          <Plus size={18} color="#fff" />
+          Añadir meta
+        </button>
+      )}
 
       <GoalFormModal
         open={formOpen}
