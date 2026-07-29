@@ -144,13 +144,6 @@ export default function App() {
   // GoalsOverlay, no ancestro/descendiente.
   const goalsData = useGoals(user?.id, profile)
   const [goalsOverlayOpen, setGoalsOverlayOpen] = useState(false)
-  // Lista plana de aportes (solo tipo 'aporte'), la forma que esperan
-  // `projectPeriodImpact` (utils.js) y el cálculo de Disponible de
-  // PaymentsPage.jsx — se deriva una sola vez aquí para no repetir el
-  // flatMap/filter en cada lugar que lo necesita.
-  const personalGoalAportes = goalsData.goals
-    .flatMap(g => g.transactions)
-    .filter(t => t.type === 'aporte')
 
   // Se declara aquí (no arriba, junto a sharedSpaces) porque necesita
   // `profile` ya disponible — cada espacio (y Personal) puede tener su
@@ -851,7 +844,6 @@ export default function App() {
           ensureMonthLoaded={ensureMonthLoaded}
           oldestPaymentYear={oldestYear}
           sharedFund={sharedFund}
-          personalGoalAportes={personalGoalAportes}
         />
       )}
       {tab === 'recurrents' && (
@@ -936,7 +928,6 @@ export default function App() {
         spacePermissions={spacePermissions}
         isSharedSpace={!!paymentsSpaceId}
         customCategories={profile.custom_categories || []}
-        personalGoalAportes={personalGoalAportes}
         onOpenPremium={() => setPremiumPageOpen(true)}
         onAddCategory={async (cat) => {
           await updateProfile({ custom_categories: [...(profile.custom_categories || []), cat] })
