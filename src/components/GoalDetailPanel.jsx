@@ -53,7 +53,7 @@ export function GoalDetailPanel({ goal, onBack, onEdit, onAportar, onRetirar, on
         <div className={styles.headerTitle}>{goal.name}</div>
         <div className={styles.menuWrapper}>
           <button type="button" onClick={() => setMenuOpen(o => !o)} className={styles.iconButton} aria-label="Más opciones">
-            <MoreVertical size={20} color="var(--muted)" />
+            <MoreVertical size={20} color="var(--text)" />
           </button>
           {menuOpen && (
             <div className={styles.menu}>

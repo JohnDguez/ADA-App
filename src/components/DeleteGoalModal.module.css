@@ -42,7 +42,7 @@
 
 .description {
   font-size: 13.5px;
-  color: var(--muted);
+  color: var(--text);
   line-height: 1.4;
   margin-bottom: 6px;
 }

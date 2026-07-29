@@ -49,7 +49,7 @@ export function GoalsTray({ onOpen }) {
     >
       <div className={styles.row}>
         <div className={styles.label}>
-          <ChevronUp size={13} color="var(--muted)" />
+          <ChevronUp size={13} color="var(--text)" />
           <span>Mis metas</span>
         </div>
         <div className={styles.dragLine} />

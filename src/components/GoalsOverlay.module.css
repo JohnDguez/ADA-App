@@ -77,7 +77,7 @@
 
 .summaryLabel {
   font-size: 11px;
-  color: var(--muted);
+  color: var(--text);
   margin-bottom: 4px;
 }
 
@@ -97,7 +97,7 @@
   border: none;
   padding: 4px 2px;
   font-size: 12.5px;
-  color: var(--muted);
+  color: var(--text);
   cursor: pointer;
   font-family: inherit;
 }
@@ -168,7 +168,7 @@
   display: flex;
   justify-content: space-between;
   font-size: 12px;
-  color: var(--muted);
+  color: var(--text);
   margin-bottom: 6px;
 }
 
@@ -192,7 +192,7 @@
   align-items: center;
   justify-content: space-between;
   font-size: 12px;
-  color: var(--muted);
+  color: var(--text);
 }
 
 .daysBadge {
@@ -203,33 +203,41 @@
 
 .premiumBanner {
   margin-top: 14px;
-  background: var(--premium-card-bg);
+  background: var(--surface);
   border-radius: var(--radius);
-  padding: 14px 16px;
+  padding: 20px 16px;
+  text-align: center;
+}
+
+.premiumTitle {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 6px;
 }
 
 .premiumText {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  color: var(--premium-text);
-  font-size: 12.5px;
-  margin-bottom: 10px;
+  font-size: 12px;
+  color: var(--text);
+  margin-bottom: 14px;
 }
 
 .premiumButton {
   display: flex;
   align-items: center;
-  gap: 6px;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
   background: var(--premium-gold);
   color: var(--premium-gold-text);
   border: none;
-  border-radius: var(--radius-full);
-  padding: 9px 16px;
-  font-size: 12.5px;
+  border-radius: var(--radius-sm);
+  padding: 12px;
+  font-size: 14px;
   font-weight: 700;
   font-family: inherit;
   cursor: pointer;
+  box-sizing: border-box;
 }
 
 .fab {
