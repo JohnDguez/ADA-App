@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
-import { daysDiff, cobroPeriod, dateToStr } from '../lib/utils'
+import { daysDiff, cobroPeriod, dateToStr, todayStr } from '../lib/utils'
 
 // Metas de ahorro — personal únicamente en esta primera versión (sin
 // space_id, ver CONTEXT.md). El monto abonado de cada meta NUNCA se
@@ -85,13 +85,40 @@ export function useGoals(userId, profile) {
     return { data, error }
   }
 
-  async function aportar(goalId, amount) {
+  // Aportar crea DOS registros: el `goal_transactions` de siempre (para el
+  // progreso de la meta) Y un `payments` real, ya pagado, categoría
+  // "Ahorro" (una de las 11 categorías fijas — encaja perfecto para esto).
+  // Así el aporte aparece en Pagos, en su categoría, y resta de Disponible
+  // solo, usando el mismo `totalGastos` que ya suma cualquier pago pagado
+  // del periodo — nada de un cálculo aparte que el usuario no pueda ver
+  // (Johnatan lo notó: restaba del número pero no dejaba rastro visible).
+  async function aportar(goalId, amount, goalName) {
     if (!amount || amount <= 0) return { error: { message: 'Monto inválido' } }
-    const { error } = await supabase.from('goal_transactions').insert({
+    const { error: txError } = await supabase.from('goal_transactions').insert({
       goal_id: goalId, user_id: userId, amount, type: 'aporte',
     })
-    if (!error) fetchAll()
-    return { error }
+    if (txError) return { error: txError }
+
+    const { error: paymentError } = await supabase.from('payments').insert({
+      user_id: userId,
+      space_id: null,
+      name: `Aporte a meta: ${goalName}`,
+      amount,
+      category: 'Ahorro',
+      due_date: todayStr(),
+      is_variable: false,
+      is_recurrent: false,
+      recur_freq: null,
+      is_master: false,
+      parent_id: null,
+      is_paid: true,
+      paid_at: new Date().toISOString(),
+      postponed: false,
+      paused: false,
+      is_installment: false,
+    })
+    fetchAll()
+    return { error: paymentError || null }
   }
 
   // Retirar de una meta se comporta como un Ingreso Extra del periodo
