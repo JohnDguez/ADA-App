@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { AlertCircle, Clock, Bell, Trash2, CheckCheck, X } from 'lucide-react'
+import { AlertCircle, Clock, Bell, Trash2, CheckCheck, X, Goal } from 'lucide-react'
 import { MONTHS_SHORT } from '../lib/utils'
 import styles from './NotificationsPanel.module.css'
 
@@ -14,9 +14,10 @@ function timeAgo(dateStr) {
 }
 
 function NotifIcon({ type }) {
-  if (type === 'overdue')   return <AlertCircle size={16} color="var(--danger)" />
-  if (type === 'due_today') return <Clock size={16} color="var(--soon-color)" />
-  if (type === 'cobro_day') return <Bell size={16} color="var(--accent)" />
+  if (type === 'overdue')       return <AlertCircle size={16} color="var(--danger)" />
+  if (type === 'due_today')     return <Clock size={16} color="var(--soon-color)" />
+  if (type === 'cobro_day')     return <Bell size={16} color="var(--accent)" />
+  if (type === 'goal_deadline') return <Goal size={16} color="var(--soon-color)" />
   return <Bell size={16} color="var(--text)" />
 }
 
