@@ -1,4 +1,4 @@
-import { Bell, Crown } from 'lucide-react'
+import { Bell, Crown, Settings } from 'lucide-react'
 import { useTimeOfDay } from '../hooks/useTimeOfDay'
 import styles from './PageHeader.module.css'
 
@@ -28,7 +28,7 @@ const HEADER_IMAGES = {
   noche_10_5:     '/noche_10_a_5.webp',
 }
 
-export function PageHeader({ profile, unreadCount, onOpenNotifs }) {
+export function PageHeader({ profile, unreadCount, onOpenNotifs, onGoSettings }) {
   const initials = (profile?.name || 'U').slice(0, 2).toUpperCase()
   const timeOfDay = useTimeOfDay(profile?.timezone)
 
@@ -55,7 +55,18 @@ export function PageHeader({ profile, unreadCount, onOpenNotifs }) {
       <div className={styles.contentRow}>
 
         {/* Avatar + saludo + nombre */}
-        <div className={styles.avatarSection}>
+        {/* Todo el bloque lleva a Ajustes — atajo para quien lo intuya
+            (patrón estándar de tocar tu foto de perfil). El acceso
+            explícito y descubrible es el botón de engrane de la derecha,
+            por eso aquí NO va ningún indicador encima: el avatar se queda
+            limpio con su corona de Premium. */}
+        <div
+          className={styles.avatarSection}
+          onClick={onGoSettings}
+          role="button"
+          tabIndex={0}
+          onKeyDown={e => e.key === 'Enter' && onGoSettings && onGoSettings()}
+        >
           {/* PENDIENTE (confirmado con Johnatan, fuera de esta entrega): el
               anillo `rgba(255,255,255,0.3)` de abajo sigue fijo — con el
               header ya adaptado al tema, en tema claro casi no se va a ver.
@@ -81,17 +92,31 @@ export function PageHeader({ profile, unreadCount, onOpenNotifs }) {
           </div>
         </div>
 
-        {/* Campana — fondo sólido accent */}
-        <div className={styles.bellWrapper}>
+        {/* Acciones del header. El engrane va a la IZQUIERDA para que la
+            campana conserve la esquina, que es donde el usuario la busca.
+            Fondo sólido a propósito (nunca transparencias): detrás va la
+            ilustración de la escena, y con alpha el botón se perdería
+            según la hora del día. */}
+        <div className={styles.headerActions}>
           <button
-            onClick={onOpenNotifs}
-            className={styles.bellButton}
+            onClick={onGoSettings}
+            className={styles.settingsButton}
+            aria-label="Ajustes"
           >
-            <Bell size={18} color="var(--surface)" />
+            <Settings size={18} color="var(--text)" />
           </button>
-          {unreadCount > 0 && (
-            <div className={styles.unreadDot} />
-          )}
+
+          <div className={styles.bellWrapper}>
+            <button
+              onClick={onOpenNotifs}
+              className={styles.bellButton}
+            >
+              <Bell size={18} color="var(--surface)" />
+            </button>
+            {unreadCount > 0 && (
+              <div className={styles.unreadDot} />
+            )}
+          </div>
         </div>
 
       </div>

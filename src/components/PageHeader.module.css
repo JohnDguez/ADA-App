@@ -46,6 +46,7 @@
   gap: 12px;
   flex: 1;
   min-width: 0;
+  cursor: pointer;
 }
 
 .avatarWrapper {
@@ -107,9 +108,33 @@
   word-break: break-word;
 }
 
-.bellWrapper {
+.headerActions {
   flex-shrink: 0;
   margin-left: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Fondo y borde SÓLIDOS a propósito — detrás va la ilustración de la
+   escena y con transparencias el botón se perdería según la hora del día
+   (regla explícita de Johnatan). El tono apagado lo diferencia de la
+   campana, que es la acción principal y se queda con el accent. */
+.settingsButton {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: var(--surface);
+  border: 1px solid var(--border-mid);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.bellWrapper {
+  flex-shrink: 0;
   position: relative;
 }
 

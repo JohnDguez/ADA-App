@@ -1,13 +1,15 @@
-import { Home, Wallet, CalendarClock, User, Plus } from 'lucide-react'
+import { Home, Wallet, CalendarClock, Target, Plus } from 'lucide-react'
 import styles from './BottomNav.module.css'
 
+// "settings" salió del nav — Ajustes ahora se abre desde el header (botón
+// de engrane, o tocando el bloque del avatar), y ese lugar lo tomó Metas.
 const LEFT_TABS = [
   { id: 'home',     Icon: Home },
   { id: 'payments', Icon: Wallet },
 ]
 const RIGHT_TABS = [
   { id: 'recurrents', Icon: CalendarClock },
-  { id: 'settings',   Icon: User },
+  { id: 'goals',      Icon: Target },
 ]
 
 export function BottomNav({ active, onChange, onAdd }) {
