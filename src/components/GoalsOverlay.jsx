@@ -20,8 +20,10 @@ export function GoalsOverlay({ open, goalsData, isPremium, onClose, onOpenPremiu
   const { activeGoals, completedGoals, totalRestante, addGoal, updateGoal, aportar, retirar, markCompleted, deleteGoal } = goalsData
 
   const [closing, setClosing] = useState(false)
+  const [entering, setEntering] = useState(false)
   const wasOpenRef = useRef(open)
   const closeTimerRef = useRef(null)
+  const enterTimerRef = useRef(null)
   const [selectedGoalId, setSelectedGoalId] = useState(null)
   const [formOpen, setFormOpen] = useState(false)
   const [editingGoal, setEditingGoal] = useState(null)
@@ -31,13 +33,23 @@ export function GoalsOverlay({ open, goalsData, isPremium, onClose, onOpenPremiu
   const dragStartYRef = useRef(0)
   const dragMovedRef = useRef(false)
 
-  useEffect(() => () => clearTimeout(closeTimerRef.current), [])
+  useEffect(() => () => { clearTimeout(closeTimerRef.current); clearTimeout(enterTimerRef.current) }, [])
 
-  // Animación de salida (Regla 29) — mismo patrón que Select.jsx: al pasar
-  // de open=true a false, se queda montado `ANIM_MS` más para que la
-  // animación de salida del CSS alcance a correr, en vez de desaparecer de
-  // golpe.
+  // Entrada y salida (Regla 29) — la animación de entrada (`overlayEntering`)
+  // solo vive en el DOM el instante en que `open` pasa de false a true, no
+  // todo el tiempo que el overlay sigue abierto. Antes estaba pegada a la
+  // clase base `.overlay` de forma permanente — Johnatan reportó que al
+  // tocar "+" (que monta GoalFormModal como hermano nuevo, sin que `open`
+  // cambie) el navegador recalculaba estilos y volvía a "disparar" la
+  // animación de entrada. Con este patrón (mismo que `closing`/Select.jsx)
+  // la regla de animación deja de existir en el DOM en cuanto termina, así
+  // que no hay nada que un remount de un hermano pueda volver a activar.
   useEffect(() => {
+    if (!wasOpenRef.current && open) {
+      setEntering(true)
+      clearTimeout(enterTimerRef.current)
+      enterTimerRef.current = setTimeout(() => setEntering(false), ANIM_MS)
+    }
     if (wasOpenRef.current && !open) {
       setClosing(true)
       clearTimeout(closeTimerRef.current)
@@ -131,7 +143,7 @@ export function GoalsOverlay({ open, goalsData, isPremium, onClose, onOpenPremiu
 
   return (
     <div
-      className={`${styles.overlay} ${closing ? styles.overlayClosing : ''}`}
+      className={`${styles.overlay} ${entering ? styles.overlayEntering : ''} ${closing ? styles.overlayClosing : ''}`}
       style={dragCloseY ? { transform: `translateY(${dragCloseY}px)` } : undefined}
     >
       <div
