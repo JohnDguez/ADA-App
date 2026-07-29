@@ -1,11 +1,5 @@
 .pageRoot {
-  /* 120px alcanzaba para el nav original (~74px de alto + aire). En Home
-     el nav siempre crece por la franja de "Mis metas" (showGoalsTray es
-     true cada vez que HomePage está montado, van pegados al mismo
-     tab==='home') — sube a 150px para que la última fila de la lista no
-     quede tapada detrás. Bug real reportado por Johnatan viendo la app en
-     Vercel (v0.9.286). */
-  padding-bottom: 150px;
+  padding-bottom: 120px;
   background: var(--bg);
   min-height: 100vh;
 }
