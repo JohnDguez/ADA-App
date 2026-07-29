@@ -228,7 +228,7 @@ export function GoalsOverlay({ open, goalsData, isPremium, onClose, onOpenPremiu
                 goal={selectedGoal}
                 onBack={() => setSelectedGoalId(null)}
                 onEdit={() => openEdit(selectedGoal)}
-                onAportar={amount => aportar(selectedGoal.id, amount)}
+                onAportar={amount => aportar(selectedGoal.id, amount, selectedGoal.name)}
                 onRetirar={amount => retirar(selectedGoal.id, amount, selectedGoal.name)}
                 onMarkCompleted={completed => markCompleted(selectedGoal.id, completed)}
                 onDelete={resolution => { deleteGoal(selectedGoal.id, resolution); setSelectedGoalId(null) }}
