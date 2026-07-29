@@ -8,7 +8,12 @@ import { daysDiff, cobroPeriod, dateToStr, todayStr } from '../lib/utils'
 // (aporte suma, retiro resta) cada vez que se recalcula `goals`, mismo
 // criterio que useSharedFund.js usa para el balance del Fondo Compartido
 // — evita que un contador guardado se desincronice del historial real.
-export function useGoals(userId, profile) {
+// `spaceId` va fijo en null por ahora (metas personales). Está desde ya
+// en la firma y en las consultas para que el día que existan metas
+// compartidas no haya que tocar los llamados ni migrar filas: la columna
+// `space_id` ya existe en ambas tablas, siempre en null, igual que el
+// patrón que usan `payments` y `period_income`.
+export function useGoals(userId, profile, spaceId = null) {
   const [rawGoals, setRawGoals]     = useState([])
   const [transactions, setTransactions] = useState([])
   const [loading, setLoading]       = useState(true)
@@ -16,14 +21,24 @@ export function useGoals(userId, profile) {
   const fetchAll = useCallback(async () => {
     if (!userId) { setRawGoals([]); setTransactions([]); setLoading(false); return }
     setLoading(true)
+    // Filtro explícito por space_id (hoy siempre null = personales) en vez
+    // de implícito — así el día que haya metas compartidas solo cambia el
+    // valor que entra, no la consulta.
+    const goalsQuery = spaceId
+      ? supabase.from('goals').select('*').eq('space_id', spaceId)
+      : supabase.from('goals').select('*').eq('user_id', userId).is('space_id', null)
+    const txQuery = spaceId
+      ? supabase.from('goal_transactions').select('*').eq('space_id', spaceId)
+      : supabase.from('goal_transactions').select('*').eq('user_id', userId).is('space_id', null)
+
     const [{ data: goalsData }, { data: txData }] = await Promise.all([
-      supabase.from('goals').select('*').eq('user_id', userId).order('created_at', { ascending: false }),
-      supabase.from('goal_transactions').select('*').eq('user_id', userId),
+      goalsQuery.order('created_at', { ascending: false }),
+      txQuery,
     ])
     setRawGoals(goalsData || [])
     setTransactions(txData || [])
     setLoading(false)
-  }, [userId])
+  }, [userId, spaceId])
 
   useEffect(() => { fetchAll() }, [fetchAll])
 
@@ -68,6 +83,7 @@ export function useGoals(userId, profile) {
   async function addGoal({ name, notes, icon, color, targetAmount, targetDate }) {
     const { data, error } = await supabase.from('goals').insert({
       user_id: userId,
+      space_id: spaceId,
       name: name.trim(),
       notes: notes?.trim() || null,
       icon,
@@ -95,7 +111,7 @@ export function useGoals(userId, profile) {
   async function aportar(goalId, amount, goalName) {
     if (!amount || amount <= 0) return { error: { message: 'Monto inválido' } }
     const { error: txError } = await supabase.from('goal_transactions').insert({
-      goal_id: goalId, user_id: userId, amount, type: 'aporte',
+      goal_id: goalId, user_id: userId, space_id: spaceId, amount, type: 'aporte',
     })
     if (txError) return { error: txError }
 
@@ -130,7 +146,7 @@ export function useGoals(userId, profile) {
   async function retirar(goalId, amount, goalName) {
     if (!amount || amount <= 0) return { error: { message: 'Monto inválido' } }
     const { error: txError } = await supabase.from('goal_transactions').insert({
-      goal_id: goalId, user_id: userId, amount, type: 'retiro',
+      goal_id: goalId, user_id: userId, space_id: spaceId, amount, type: 'retiro',
     })
     if (txError) return { error: txError }
 
