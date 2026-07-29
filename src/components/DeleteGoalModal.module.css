@@ -17,12 +17,35 @@
   display: flex;
   flex-direction: column;
   gap: 10px;
+}
+
+/* Entrada y salida en clases temporales, nunca pegadas a la clase base
+   (regla 29 + evita que un re-render vuelva a disparar la animación). */
+.modalEntering {
   animation: slideUp .32s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+}
+
+.modalClosing {
+  animation: slideDown .3s cubic-bezier(0.4, 0, 1, 1) both;
+}
+
+.overlayClosing {
+  animation: overlayFadeOut .3s ease both;
 }
 
 @keyframes slideUp {
   from { transform: translateY(100%); }
   to   { transform: translateY(0); }
+}
+
+@keyframes slideDown {
+  from { transform: translateY(0); }
+  to   { transform: translateY(100%); }
+}
+
+@keyframes overlayFadeOut {
+  from { opacity: 1; }
+  to   { opacity: 0; }
 }
 
 .handle {

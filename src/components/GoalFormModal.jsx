@@ -22,10 +22,17 @@ export function GoalFormModal({ open, initial, onSave, onClose }) {
   const [saving, setSaving] = useState(false)
 
   const [closing, setClosing] = useState(false)
+  const [entering, setEntering] = useState(false)
   const wasOpenRef = useRef(open)
   const closeTimerRef = useRef(null)
-  useEffect(() => () => clearTimeout(closeTimerRef.current), [])
+  const enterTimerRef = useRef(null)
+  useEffect(() => () => { clearTimeout(closeTimerRef.current); clearTimeout(enterTimerRef.current) }, [])
   useEffect(() => {
+    if (!wasOpenRef.current && open) {
+      setEntering(true)
+      clearTimeout(enterTimerRef.current)
+      enterTimerRef.current = setTimeout(() => setEntering(false), ANIM_MS)
+    }
     if (wasOpenRef.current && !open) {
       setClosing(true)
       clearTimeout(closeTimerRef.current)
@@ -46,7 +53,15 @@ export function GoalFormModal({ open, initial, onSave, onClose }) {
     setError('')
   }, [open, initial])
 
-  const showModal = open || closing
+  // `wasOpenRef.current` cubre el frame que hay entre que `open` pasa a
+  // false y que el efecto de arriba alcanza a marcar `closing` (los
+  // efectos corren DESPUÉS del render). Sin él, en ese frame `showModal`
+  // daba false, el componente devolvía null y el DOM se destruía para
+  // volver a crearse al render siguiente — eso reiniciaba la animación
+  // (parpadeo en desktop) y re-montaba el input de nombre, así que su
+  // `autoFocus` se disparaba otra vez y abría el teclado en celular justo
+  // antes de cerrar. Bug reportado por Johnatan.
+  const showModal = open || closing || wasOpenRef.current
   if (!showModal) return null
 
   async function handleSave() {
@@ -65,7 +80,7 @@ export function GoalFormModal({ open, initial, onSave, onClose }) {
 
   return (
     <div onClick={e => e.target === e.currentTarget && onClose()} className={`${styles.overlay} ${closing ? styles.overlayClosing : ''}`}>
-      <div className={`${styles.modal} ${closing ? styles.modalClosing : ''}`}>
+      <div className={`${styles.modal} ${entering ? styles.modalEntering : ''} ${closing ? styles.modalClosing : ''}`}>
         <div className={styles.handle} />
         <div className={styles.title}>{initial ? 'Editar meta' : 'Nueva meta'}</div>
 
