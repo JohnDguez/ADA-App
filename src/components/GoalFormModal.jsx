@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { Search, Check } from 'lucide-react'
 import { CATEGORY_ICON_GROUPS, getIconComponent } from '../lib/categoryIcons'
+import { DatePicker } from './DatePicker'
 import styles from './GoalFormModal.module.css'
 
 const PALETTE = Array.from({ length: 16 }, (_, i) => `var(--palette-${i + 1})`)
@@ -158,12 +159,9 @@ export function GoalFormModal({ open, initial, onSave, onClose }) {
 
         <div className={styles.fieldGroup}>
           <label className="field-label">Fecha límite (opcional)</label>
-          <input
-            type="date"
-            className={`field-input ${styles.inputMt}`}
-            value={targetDate}
-            onChange={e => setTargetDate(e.target.value)}
-          />
+          <div className={styles.inputMt}>
+            <DatePicker value={targetDate} onChange={setTargetDate} placeholder="Sin fecha límite" />
+          </div>
         </div>
 
         {error && <div className={styles.errorText}>{error}</div>}
