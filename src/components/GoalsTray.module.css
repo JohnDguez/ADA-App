@@ -6,10 +6,15 @@
   max-width: 420px;
   margin: 0 auto;
   height: 130px;
-  background: var(--bg);
+  background: var(--surface);
   border-radius: 22px 22px 0 0;
-  /* La diferencia con el fondo la da la sombra, no el color — mismo
-     fondo que la página (var(--bg)), pedido explícito de Johnatan. */
+  /* var(--bg) + sombra (pedido original de Johnatan) se veía bien en
+     tema claro, pero una sombra negra es invisible sobre un fondo que ya
+     es casi negro en tema oscuro — la bandeja se confundía con el fondo
+     (reportado por Johnatan con captura). Fix: var(--surface), el mismo
+     patrón que ya usa el resto de la app para diferenciar una tarjeta del
+     fondo (sutil en claro, con contraste real en oscuro) — la sombra se
+     queda como refuerzo, ya no como único diferenciador. */
   box-shadow: 0 -6px 20px rgba(0, 0, 0, 0.12);
   /* Por debajo del nav (z-index: 100 en BottomNav.module.css, sin
      cambios) — el nav flota encima/adentro de esta bandeja. */
