@@ -1,4 +1,4 @@
-import { Home, Wallet, CalendarClock, Target, Plus } from 'lucide-react'
+import { Home, Wallet, CalendarClock, FlagTriangleRight, Plus } from 'lucide-react'
 import styles from './BottomNav.module.css'
 
 // "settings" salió del nav — Ajustes ahora se abre desde el header (botón
@@ -9,7 +9,7 @@ const LEFT_TABS = [
 ]
 const RIGHT_TABS = [
   { id: 'recurrents', Icon: CalendarClock },
-  { id: 'goals',      Icon: Target },
+  { id: 'goals',      Icon: FlagTriangleRight },
 ]
 
 export function BottomNav({ active, onChange, onAdd }) {
