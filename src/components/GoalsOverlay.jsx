@@ -169,6 +169,9 @@ export function GoalsOverlay({ open, goalsData, isPremium, onClose, onOpenPremiu
               <div className={styles.screen}>
                 <div className={styles.header}>
                   <div className={styles.headerTitle}>Metas</div>
+                  <button type="button" className={styles.headerAddBtn} onClick={handleAddClick} aria-label="Nueva meta">
+                    <Plus size={22} color="#fff" />
+                  </button>
                 </div>
 
                 {noGoalsAtAll ? (
@@ -237,9 +240,6 @@ export function GoalsOverlay({ open, goalsData, isPremium, onClose, onOpenPremiu
             <div className={styles.actionRow}>
               <button type="button" onClick={onClose} className={`btn-ghost ${styles.closeBtn}`} style={{ width: 'auto' }}>
                 Cerrar
-              </button>
-              <button type="button" className={styles.fab} onClick={handleAddClick} aria-label="Nueva meta">
-                <Plus size={24} color="#fff" />
               </button>
             </div>
           )}
