@@ -1169,6 +1169,11 @@ export function PaymentsPage({ payments, dataLoading = false, profile, spaceSwit
                       +{fmt(totalExtras)} extras
                     </div>
                   )}
+                  {totalMetasAportes > 0 && (
+                    <div className={styles.balanceMetasAportes}>
+                      -{fmt(totalMetasAportes)} en Metas
+                    </div>
+                  )}
                   {sobrePasado && (
                     <div className={styles.balanceOverBudget}>Presupuesto excedido</div>
                   )}
