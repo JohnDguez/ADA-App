@@ -101,12 +101,12 @@ async function collectReminders(scope, profile, todayStr, today) {
   // Pagos próximos
   if (profile.notif_upcoming !== false) {
     const daysAhead     = profile.notif_days_before ?? 3
-    const futureDate    = new Date(today)
-    futureDate.setDate(futureDate.getDate() + daysAhead)
-    const futureDateStr = futureDate.toISOString().split('T')[0]
-    const tomorrow      = new Date(today)
-    tomorrow.setDate(tomorrow.getDate() + 1)
-    const tomorrowStr   = tomorrow.toISOString().split('T')[0]
+    // `addDaysStr` usa componentes locales (regla 11). Antes esto hacía
+    // `new Date(...).toISOString().split('T')[0]`, que funciona mientras
+    // el servidor corra en UTC (como Vercel) pero se correría un día si
+    // corriera en UTC+13 — dependía de una suposición sobre el entorno.
+    const futureDateStr = addDaysStr(todayStr, daysAhead)
+    const tomorrowStr   = addDaysStr(todayStr, 1)
 
     const { data: upcoming } = await applyScope(
       supabase.from('payments').select('name, due_date').eq('is_paid', false).eq('paused', false).not('is_master', 'is', true)
@@ -159,12 +159,10 @@ function money(n) {
   return sign + '$' + Math.abs(num).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 }
 
-// Suma los días a una fecha usando componentes LOCALES (regla 11), no
-// `toISOString()`. Ojo: el bloque de "pagos próximos" de arriba sí usa
-// `toISOString().split('T')[0]`, que para una fecha construida a las
-// 12:00 locales da el día correcto en toda América pero se corre un día
-// en zonas UTC+13 — queda anotado como deuda aparte, no se toca aquí
-// para no mezclar arreglos.
+// Suma días a una fecha usando componentes LOCALES (regla 11), nunca
+// `toISOString()`. Se declara aquí abajo pero `collectReminders` (arriba)
+// también la usa: las declaraciones de función se elevan, así que no hay
+// problema de orden.
 function addDaysStr(dateStr, days) {
   const d = new Date(dateStr + 'T12:00:00')
   d.setDate(d.getDate() + days)
