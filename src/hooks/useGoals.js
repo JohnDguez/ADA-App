@@ -80,10 +80,37 @@ export function useGoals(userId, profile, spaceId = null) {
   const completedGoals = goals.filter(g => g.is_completed)
   const totalRestante  = activeGoals.reduce((s, g) => s + g.remaining, 0)
 
+  // ── Puente al endpoint de metas COMPARTIDAS ──────────────────────────
+  // Las metas personales siguen hablando directo con Supabase (abajo). Las
+  // del espacio pasan SIEMPRE por `api/manage-shared-goal.js`: ahí se
+  // validan los permisos del miembro y su disponible personal del lado del
+  // servidor, se crea/borra el pago reflejo, y se avisa a los demás — nada
+  // de eso se puede hacer con confianza desde el cliente.
+  async function callSharedApi(action, body) {
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) return { error: { message: 'Sesión no encontrada' } }
+      const res = await fetch('/api/manage-shared-goal', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
+        body: JSON.stringify({ action, spaceId, todayStr: todayStr(), ...body }),
+      })
+      const result = await res.json()
+      if (!res.ok) return { error: { message: result.error || 'Error en la operación' } }
+      fetchAll()
+      return { data: result, error: null }
+    } catch (e) {
+      return { error: { message: 'Error de conexión' } }
+    }
+  }
+
   async function addGoal({ name, notes, icon, color, targetAmount, targetDate }) {
+    if (spaceId) {
+      return callSharedApi('create', { payload: { name, notes, icon, color, targetAmount, targetDate } })
+    }
     const { data, error } = await supabase.from('goals').insert({
       user_id: userId,
-      space_id: spaceId,
+      space_id: null,
       name: name.trim(),
       notes: notes?.trim() || null,
       icon,
@@ -96,6 +123,18 @@ export function useGoals(userId, profile, spaceId = null) {
   }
 
   async function updateGoal(goalId, updates) {
+    if (spaceId) {
+      // El endpoint recibe el payload en camelCase y decide qué columnas
+      // tocar — no se le mandan updates crudos de Supabase.
+      return callSharedApi('update', {
+        goalId,
+        payload: {
+          name: updates.name, notes: updates.notes, icon: updates.icon, color: updates.color,
+          targetAmount: updates.target_amount, targetDate: updates.target_date,
+          isCompleted: updates.is_completed,
+        },
+      })
+    }
     const { data, error } = await supabase.from('goals').update(updates).eq('id', goalId).select().single()
     if (!error) fetchAll()
     return { data, error }
@@ -103,15 +142,17 @@ export function useGoals(userId, profile, spaceId = null) {
 
   // Aportar crea DOS registros: el `goal_transactions` de siempre (para el
   // progreso de la meta) Y un `payments` real, ya pagado, categoría
-  // "Ahorro" (una de las 11 categorías fijas — encaja perfecto para esto).
-  // Así el aporte aparece en Pagos, en su categoría, y resta de Disponible
-  // solo, usando el mismo `totalGastos` que ya suma cualquier pago pagado
-  // del periodo — nada de un cálculo aparte que el usuario no pueda ver
-  // (Johnatan lo notó: restaba del número pero no dejaba rastro visible).
+  // "Ahorro". Así el aporte aparece en Pagos, en su categoría, y resta de
+  // Disponible solo, usando el mismo `totalGastos` que ya suma cualquier
+  // pago pagado del periodo — nada de un cálculo aparte que el usuario no
+  // pueda ver. En una meta del espacio hace exactamente lo mismo, pero
+  // desde el endpoint y validando antes contra el disponible real.
   async function aportar(goalId, amount, goalName) {
     if (!amount || amount <= 0) return { error: { message: 'Monto inválido' } }
+    if (spaceId) return callSharedApi('contribute', { goalId, payload: { amount } })
+
     const { error: txError } = await supabase.from('goal_transactions').insert({
-      goal_id: goalId, user_id: userId, space_id: spaceId, amount, type: 'aporte',
+      goal_id: goalId, user_id: userId, space_id: null, amount, type: 'aporte',
     })
     if (txError) return { error: txError }
 
@@ -137,16 +178,18 @@ export function useGoals(userId, profile, spaceId = null) {
     return { error: paymentError || null }
   }
 
-  // Retirar de una meta se comporta como un Ingreso Extra del periodo
-  // ACTUAL (misma tabla period_income que usa PaymentsPage.jsx para
-  // "Ingresos Extras") — el dinero regresa a Disponible ahora, sin
-  // importar en qué periodo se hizo el aporte original. Personal
-  // únicamente (space_id null), consistente con el alcance de esta
-  // primera versión de Metas.
+  // Retirar se comporta como un Ingreso Extra del periodo ACTUAL (misma
+  // tabla `period_income` que usa PaymentsPage para "Ingresos Extras") —
+  // el dinero llega a Disponible ahora, sin importar en qué periodo se
+  // aportó. En una meta del espacio es el ÚNICO movimiento que manda
+  // dinero al bolsillo de quien lo pide sin importar quién lo aportó, por
+  // eso su permiso (`can_withdraw_goals`) entra apagado por defecto.
   async function retirar(goalId, amount, goalName) {
     if (!amount || amount <= 0) return { error: { message: 'Monto inválido' } }
+    if (spaceId) return callSharedApi('withdraw', { goalId, payload: { amount } })
+
     const { error: txError } = await supabase.from('goal_transactions').insert({
-      goal_id: goalId, user_id: userId, space_id: spaceId, amount, type: 'retiro',
+      goal_id: goalId, user_id: userId, space_id: null, amount, type: 'retiro',
     })
     if (txError) return { error: txError }
 
@@ -163,15 +206,26 @@ export function useGoals(userId, profile, spaceId = null) {
     return { error: incomeError || null }
   }
 
+  // Revertir una aportación — SOLO en metas compartidas. El dinero regresa
+  // a quien lo puso (el endpoint borra su pago reflejo), nunca a otro
+  // bolsillo. En las personales no tiene sentido: ahí el único aportante
+  // eres tú, y para eso está `retirar`.
+  async function revertirAporte(transactionId) {
+    if (!spaceId) return { error: { message: 'Solo aplica en metas compartidas' } }
+    return callSharedApi('revert', { payload: { transactionId } })
+  }
+
   async function markCompleted(goalId, completed = true) {
     return updateGoal(goalId, { is_completed: completed, completed_at: completed ? new Date().toISOString() : null })
   }
 
-  // `resolution`: 'return' regresa el abonado restante a Disponible (como
-  // un retiro total, periodo actual) antes de borrar; 'discard' borra
-  // directo, sin devolver nada — el usuario elige en el modal de
-  // confirmación, nunca se asume ninguna de las dos.
+  // `resolution`: 'return' devuelve lo aportado; 'discard' borra sin
+  // devolver nada — el usuario elige en el modal, nunca se asume. En una
+  // meta compartida, 'return' le regresa a CADA quien lo suyo (el endpoint
+  // borra todos los pagos reflejo), no todo a quien presionó el botón.
   async function deleteGoal(goalId, resolution) {
+    if (spaceId) return callSharedApi('delete', { goalId, payload: { resolution } })
+
     const goal = goals.find(g => g.id === goalId)
     if (resolution === 'return' && goal && goal.currentAmount > 0) {
       const { error } = await retirar(goalId, goal.currentAmount, goal.name)
@@ -185,7 +239,8 @@ export function useGoals(userId, profile, spaceId = null) {
   return {
     goals, activeGoals, completedGoals, totalRestante,
     loading,
-    addGoal, updateGoal, aportar, retirar, markCompleted, deleteGoal,
+    addGoal, updateGoal, aportar, retirar, revertirAporte, markCompleted, deleteGoal,
+    isShared: !!spaceId,
     refetch: fetchAll,
   }
 }
