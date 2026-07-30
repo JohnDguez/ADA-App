@@ -883,8 +883,8 @@ export default function App() {
           isPremium={!!profile.is_premium}
           activeSpaceId={paymentsSpaceId}
           rawActiveSpaceId={activeSpaceId}
-          activeSpaceName={activeSpaceEntry?.space?.name || null}
           spacePermissions={spacePermissions}
+          spaceMembers={activeSpaceEntry?.space?.members || []}
           spaceSwitcher={spaceSwitcherEl}
           activeSpaceHeader={activeSpaceHeaderEl}
           sharedSpaces={sharedSpaces}
