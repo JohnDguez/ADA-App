@@ -19,7 +19,7 @@ function fmtDate(iso) {
 // Johnatan: esconder el botón confunde más que bloquearlo con explicación).
 export function GoalDetailPanel({
   goal, onBack, onEdit, onAportar, onRetirar, onRevert, onMarkCompleted, onDelete,
-  isShared = false, canContribute = true, canWithdraw = true, canEdit = true, canDelete = true, currentUserId = null,
+  isShared = false, canContribute = true, canWithdraw = true, canEdit = true, canDelete = true, currentUserId = null, spaceMembers = [],
 }) {
   const [menuOpen, setMenuOpen] = useState(false)
   const [activeAction, setActiveAction] = useState(null) // null | 'aportar' | 'retirar'
@@ -180,11 +180,16 @@ export function GoalDetailPanel({
             // aportación.
             const isOwnTx = tx.user_id === currentUserId
             const canRevertThis = isShared && isAporte && (isOwnTx ? canContribute : canDelete)
+            const authorName = isShared
+              ? (isOwnTx ? 'Tú' : (spaceMembers.find(m => m.user_id === tx.user_id)?.profile?.name || 'Alguien'))
+              : null
             return (
               <div key={tx.id} className={styles.historyRow}>
                 <div className={styles.historyLeft}>
                   <TxIcon size={16} color={isAporte ? 'var(--paid)' : 'var(--soon-color)'} />
-                  <span>{isAporte ? 'Aporte' : 'Retiro'} · {fmtDate(tx.created_at)}</span>
+                  <span>
+                    {authorName ? `${authorName} ${isAporte ? 'aportó' : 'retiró'}` : (isAporte ? 'Aporte' : 'Retiro')} · {fmtDate(tx.created_at)}
+                  </span>
                 </div>
                 <div className={styles.historyRight}>
                   <span style={{ color: isAporte ? 'var(--paid)' : 'var(--soon-color)' }}>
