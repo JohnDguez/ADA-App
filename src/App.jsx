@@ -882,8 +882,13 @@ export default function App() {
           goalsData={goalsData}
           isPremium={!!profile.is_premium}
           activeSpaceId={paymentsSpaceId}
+          rawActiveSpaceId={activeSpaceId}
           activeSpaceName={activeSpaceEntry?.space?.name || null}
           spacePermissions={spacePermissions}
+          spaceSwitcher={spaceSwitcherEl}
+          activeSpaceHeader={activeSpaceHeaderEl}
+          sharedSpaces={sharedSpaces}
+          onSpaceReady={handleSpaceReady}
           onOpenPremium={() => setPremiumPageOpen(true)}
           slideClass={`page-slide-${slideDir}`}
           {...headerProps}
