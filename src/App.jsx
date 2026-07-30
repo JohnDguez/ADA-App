@@ -95,7 +95,10 @@ export default function App() {
   // `can_delete`, `can_add_income`) — y `isRestricted` para que el resto
   // del código sepa si hace falta mostrar mensajes de permiso en absoluto
   // (evita comparar `role === 'owner'` por todos lados).
-  const FULL_PERMISSIONS = { can_add: true, can_edit: true, can_mark_paid: true, can_delete: true, can_add_income: true, can_add_funds: true }
+  const FULL_PERMISSIONS = {
+    can_add: true, can_edit: true, can_mark_paid: true, can_delete: true, can_add_income: true, can_add_funds: true,
+    can_add_goals: true, can_edit_goals: true, can_delete_goals: true, can_contribute_goals: true, can_withdraw_goals: true,
+  }
   const spacePermissions = (!activeSpaceEntry || activeSpaceEntry.membership.role === 'owner')
     ? { ...FULL_PERMISSIONS, isRestricted: false }
     : {
@@ -105,6 +108,11 @@ export default function App() {
         can_delete:     activeSpaceEntry.membership.can_delete,
         can_add_income: activeSpaceEntry.membership.can_add_income,
         can_add_funds:  activeSpaceEntry.membership.can_add_funds,
+        can_add_goals:        activeSpaceEntry.membership.can_add_goals,
+        can_edit_goals:       activeSpaceEntry.membership.can_edit_goals,
+        can_delete_goals:     activeSpaceEntry.membership.can_delete_goals,
+        can_contribute_goals: activeSpaceEntry.membership.can_contribute_goals,
+        can_withdraw_goals:   activeSpaceEntry.membership.can_withdraw_goals,
         isRestricted: true,
       }
 
@@ -140,7 +148,11 @@ export default function App() {
   // Compartido esté parado el usuario. El tercer parámetro (`spaceId`) va
   // fijo en null por ahora — está puesto desde ya para que el día que
   // existan metas compartidas no haya que tocar este llamado.
-  const goalsData = useGoals(user?.id, profile, null)
+  // `paymentsSpaceId` (no `activeSpaceId` crudo) — ya resuelve el caso
+  // `activeSpaceId === 'new'` (a medio crear un espacio), igual que
+  // `usePayments`. Antes iba fijo en `null` (Fase 1, solo personal); ahora
+  // que existen las metas compartidas, cambia solo con el espacio activo.
+  const goalsData = useGoals(user?.id, profile, paymentsSpaceId)
 
   // Se declara aquí (no arriba, junto a sharedSpaces) porque necesita
   // `profile` ya disponible — cada espacio (y Personal) puede tener su
@@ -869,7 +881,9 @@ export default function App() {
         <GoalsPage
           goalsData={goalsData}
           isPremium={!!profile.is_premium}
-          activeSpaceId={activeSpaceId}
+          activeSpaceId={paymentsSpaceId}
+          activeSpaceName={activeSpaceEntry?.space?.name || null}
+          spacePermissions={spacePermissions}
           onOpenPremium={() => setPremiumPageOpen(true)}
           slideClass={`page-slide-${slideDir}`}
           {...headerProps}
