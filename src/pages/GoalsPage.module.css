@@ -142,15 +142,15 @@
   width: 100%;
   text-align: left;
   background: var(--surface);
-  border: 1px solid var(--border);
   border-radius: var(--radius);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   padding: 16px;
   font-family: inherit;
   cursor: pointer;
 }
 
 .cardWarning {
-  border-color: var(--soon-color);
+  box-shadow: 0 0 0 1.5px var(--soon-color), 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
 .cardTop {
