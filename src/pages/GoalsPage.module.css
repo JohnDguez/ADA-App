@@ -141,6 +141,7 @@
   width: 100%;
   text-align: left;
   background: var(--surface);
+  border: none;
   border-radius: var(--radius);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   padding: 16px;
@@ -219,8 +220,16 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 8px;
   font-size: 12px;
   color: var(--text);
+}
+
+.cardBottomLeft {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
 }
 
 .daysBadge {

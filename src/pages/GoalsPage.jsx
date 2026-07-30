@@ -5,6 +5,7 @@ import { EmptyState } from '../components/EmptyState'
 import { GoalDetailPanel } from '../components/GoalDetailPanel'
 import { GoalFormModal } from '../components/GoalFormModal'
 import { NewSharedSpacePanel } from '../components/NewSharedSpacePanel'
+import { PaidByStack } from '../components/PaidByStack'
 import { getIconComponent } from '../lib/categoryIcons'
 import { fmt } from '../lib/utils'
 import { showToast } from '../components/Toast'
@@ -25,8 +26,8 @@ import styles from './GoalsPage.module.css'
 // mismo objeto que ya usan Gastos/Recurrentes — `isRestricted: false`
 // cuando es personal o cuando el usuario es dueño del espacio.
 export function GoalsPage({
-  goalsData, profile, isPremium, activeSpaceId = null, rawActiveSpaceId = null, activeSpaceName = null,
-  spacePermissions, spaceSwitcher, activeSpaceHeader, sharedSpaces, onSpaceReady,
+  goalsData, profile, isPremium, activeSpaceId = null, rawActiveSpaceId = null,
+  spacePermissions, spaceMembers = [], spaceSwitcher, activeSpaceHeader, sharedSpaces, onSpaceReady,
   unreadCount, onOpenNotifs, onGoSettings, onOpenPremium, slideClass,
 }) {
   const { activeGoals, completedGoals, totalRestante, addGoal, updateGoal, aportar, retirar, revertirAporte, markCompleted, deleteGoal } = goalsData
@@ -137,7 +138,7 @@ export function GoalsPage({
           ) : !selectedGoal ? (
             <div className={styles.screen}>
               <div className={styles.header}>
-                <div className={styles.headerTitle}>{isShared ? `Metas — ${activeSpaceName}` : 'Metas'}</div>
+                <div className={styles.headerTitle}>Metas</div>
               </div>
 
               {noGoalsAtAll ? (
@@ -173,7 +174,7 @@ export function GoalsPage({
 
                   <div className={styles.list}>
                     {sortedGoals.map(goal => (
-                      <GoalCard key={goal.id} goal={goal} onClick={() => setSelectedGoalId(goal.id)} />
+                      <GoalCard key={goal.id} goal={goal} isShared={isShared} spaceMembers={spaceMembers} onClick={() => setSelectedGoalId(goal.id)} />
                     ))}
                   </div>
 
@@ -198,6 +199,7 @@ export function GoalsPage({
               canEdit={isShared ? !!spacePermissions?.can_edit_goals : true}
               canDelete={isShared ? !!spacePermissions?.can_delete_goals : true}
               currentUserId={profile.id}
+              spaceMembers={spaceMembers}
               onBack={() => setSelectedGoalId(null)}
               onEdit={() => openEdit(selectedGoal)}
               onAportar={amount => aportar(selectedGoal.id, amount, selectedGoal.name)}
@@ -230,8 +232,24 @@ export function GoalsPage({
   )
 }
 
-function GoalCard({ goal, onClick }) {
+function GoalCard({ goal, isShared, spaceMembers, onClick }) {
   const Icon = getIconComponent(goal.icon) || PiggyBank
+
+  // Contributors para PaidByStack: suma de aportes por user_id (los
+  // retiros no cuentan como "quién puso el dinero", solo los aportes) —
+  // mismo criterio que `payment.contributors` en usePayments.js.
+  const contributors = isShared
+    ? Object.values(
+        goal.transactions
+          .filter(t => t.type === 'aporte')
+          .reduce((acc, t) => {
+            acc[t.user_id] = acc[t.user_id] || { user_id: t.user_id, amount: 0 }
+            acc[t.user_id].amount += Number(t.amount)
+            return acc
+          }, {})
+      )
+    : []
+
   return (
     <button type="button" className={`${styles.card} ${goal.isNearDeadline || goal.isOverdue ? styles.cardWarning : ''}`} onClick={onClick}>
       <div className={styles.cardTop}>
@@ -251,9 +269,14 @@ function GoalCard({ goal, onClick }) {
         <div className={styles.progressFill} style={{ width: `${goal.percent}%` }} />
       </div>
       <div className={styles.cardBottomRow}>
-        <span>Queda: {fmt(goal.remaining)}</span>
-        {goal.isNearDeadline && <span className={styles.daysBadge}>Quedan {goal.daysRemaining} días</span>}
-        {goal.isOverdue && <span className={styles.daysBadge}>Fecha vencida</span>}
+        <div className={styles.cardBottomLeft}>
+          <span>Queda: {fmt(goal.remaining)}</span>
+          {goal.isNearDeadline && <span className={styles.daysBadge}>Quedan {goal.daysRemaining} días</span>}
+          {goal.isOverdue && <span className={styles.daysBadge}>Fecha vencida</span>}
+        </div>
+        {isShared && contributors.length > 0 && (
+          <PaidByStack contributors={contributors} members={spaceMembers} size={20} inline />
+        )}
       </div>
     </button>
   )
