@@ -3,6 +3,7 @@ import { ChevronLeft, ChevronDown, ChevronUp, Users, Copy, RefreshCw, LogOut, Tr
 import { Card, Row, NotifToggle, Toggle } from '../../components/SettingsShared'
 import { CobroPeriodFields } from '../../components/CobroPeriodFields'
 import { showToast } from '../../components/Toast'
+import styles from './SettingsSharedSpacePage.module.css'
 
 // Sub-página de Ajustes → "Espacio Compartido". Sirve para 2 casos a la vez,
 // para no duplicar el formulario de crear/unirse en otro lugar (ej. la
@@ -63,12 +64,12 @@ export function SettingsSharedSpacePage({ profile, user, sharedSpaces, onBack, s
   const canJoinMore   = guestEntries.length < 3
 
   return (
-    <div className={slideClass} style={{ paddingBottom: 120, background: 'var(--bg)', minHeight: '100vh' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '52px 16px 20px' }}>
-        <button onClick={onBack} style={{ width: 32, height: 32, borderRadius: '50%', background: 'none', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+    <div className={`${slideClass} ${styles.pageRoot}`}>
+      <div className={styles.header}>
+        <button onClick={onBack} className={styles.backButton}>
           <ChevronLeft size={20} color="var(--text)" />
         </button>
-        <div style={{ fontSize: 20, fontWeight: 700, color: 'var(--text)' }}>Espacio Compartido</div>
+        <div className={styles.headerTitle}>Espacio Compartido</div>
       </div>
 
       {/* ── Tu espacio (si eres dueño) ── */}
@@ -87,8 +88,8 @@ export function SettingsSharedSpacePage({ profile, user, sharedSpaces, onBack, s
 
       {/* ── Espacios donde te invitaron ── */}
       {guestEntries.length > 0 && (
-        <div style={{ margin: '0 16px 16px' }}>
-          <div style={{ padding: '0 2px 8px', fontSize: 11, fontWeight: 600, color: 'var(--text)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+        <div className={styles.guestWrapper}>
+          <div className={styles.sectionLabel}>
             Espacios donde te invitaron
           </div>
           {guestEntries.map(entry => (
@@ -105,36 +106,33 @@ export function SettingsSharedSpacePage({ profile, user, sharedSpaces, onBack, s
       {/* ── Crear (solo si es Premium y no tiene ya uno propio) ── */}
       {!ownedEntry && (
         <Card>
-          <div style={{ padding: 16 }}>
+          <div className={styles.cardPadding}>
             {!profile.is_premium ? (
               <>
-                <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--text)', marginBottom: 6, textAlign: 'center' }}>
+                <div className={styles.premiumTitle}>
                   Obtén Premium para crear un Espacio Compartido
                 </div>
-                <div style={{ fontSize: 12, color: 'var(--text)', textAlign: 'center', marginBottom: 14 }}>
+                <div className={styles.premiumDescription}>
                   Lleva el control de gastos con tu pareja, tus roomies, o quien tú quieras — hasta 2 personas más, en un espacio aparte de tu cuenta personal.
                 </div>
               </>
             ) : !creating ? (
-              <button
-                onClick={() => setCreating(true)}
-                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, width: '100%', padding: 12, borderRadius: 'var(--radius-sm)', border: 'none', background: 'var(--accent)', color: '#fff', fontSize: 14, fontWeight: 600, fontFamily: 'DM Sans, sans-serif', cursor: 'pointer' }}
-              >
+              <button onClick={() => setCreating(true)} className={styles.createSpaceButton}>
                 <Plus size={16} /> Crear Espacio Compartido
               </button>
             ) : (
               <>
                 <label className="field-label">Nombre del espacio</label>
-                <input className="field-input" value={newName} onChange={e => setNewName(e.target.value)} placeholder="Ej. Depa con Ale" style={{ marginBottom: 16 }} />
-                <label className="field-label" style={{ marginBottom: 8, display: 'block' }}>Periodo de cobro</label>
-                <div style={{ marginBottom: 16 }}>
+                <input className={`field-input ${styles.fieldMb16}`} value={newName} onChange={e => setNewName(e.target.value)} placeholder="Ej. Depa con Ale" />
+                <label className={`field-label ${styles.labelBlock}`}>Periodo de cobro</label>
+                <div className={styles.fieldMb16}>
                   <CobroPeriodFields
                     freq={newFreq} day1={newDay1} day2={newDay2} weekday={newWeekday}
                     onChangeFreq={setNewFreq} onChangeDay1={setNewDay1} onChangeDay2={setNewDay2} onChangeWeekday={setNewWeekday}
                   />
                 </div>
-                {createError && <div style={{ fontSize: 12, color: 'var(--danger)', marginBottom: 10 }}>{createError}</div>}
-                <button onClick={handleCreate} disabled={createSaving} className="btn-primary" style={{ marginBottom: 8, opacity: createSaving ? 0.7 : 1 }}>
+                {createError && <div className={styles.errorText}>{createError}</div>}
+                <button onClick={handleCreate} disabled={createSaving} className={`btn-primary ${styles.createConfirmMb} ${createSaving ? styles.savingOpacity : ''}`}>
                   {createSaving ? 'Creando…' : 'Crear'}
                 </button>
                 <button onClick={() => { setCreating(false); setCreateError('') }} className="btn-ghost">Cancelar</button>
@@ -147,23 +145,23 @@ export function SettingsSharedSpacePage({ profile, user, sharedSpaces, onBack, s
       {/* ── Unirse con código (si no ha llegado a 3) ── */}
       {canJoinMore ? (
         <Card>
-          <div style={{ padding: 16 }}>
-            <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)', marginBottom: 4 }}>Únete a un Espacio Compartido</div>
-            <div style={{ fontSize: 12, color: 'var(--text)', marginBottom: 12 }}>El código de acceso debe tener 6 dígitos. Debe proporcionarlo el creador del espacio.</div>
+          <div className={styles.cardPadding}>
+            <div className={styles.joinTitle}>Únete a un Espacio Compartido</div>
+            <div className={styles.joinDescription}>El código de acceso debe tener 6 dígitos. Debe proporcionarlo el creador del espacio.</div>
             <input
-              className="field-input" inputMode="numeric" maxLength={6}
+              className={`field-input ${styles.joinCodeInput}`} inputMode="numeric" maxLength={6}
               value={joinCode} onChange={e => setJoinCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
-              placeholder="000000" style={{ textAlign: 'center', fontSize: 20, letterSpacing: 4, marginBottom: 10 }}
+              placeholder="000000"
             />
-            {joinError && <div style={{ fontSize: 12, color: 'var(--danger)', marginBottom: 10 }}>{joinError}</div>}
-            <button onClick={handleJoin} disabled={joinSaving || joinCode.length !== 6} className="btn-primary" style={{ opacity: (joinSaving || joinCode.length !== 6) ? 0.6 : 1 }}>
+            {joinError && <div className={styles.errorText}>{joinError}</div>}
+            <button onClick={handleJoin} disabled={joinSaving || joinCode.length !== 6} className={`btn-primary ${(joinSaving || joinCode.length !== 6) ? styles.disabledOpacity : ''}`}>
               {joinSaving ? 'Uniendo…' : 'Unirme'}
             </button>
           </div>
         </Card>
       ) : (
         <Card>
-          <div style={{ padding: 16, textAlign: 'center', fontSize: 12, color: 'var(--text)' }}>
+          <div className={styles.joinMaxedCard}>
             Ya perteneces al máximo de 3 espacios compartidos como invitado.
           </div>
         </Card>
@@ -179,34 +177,31 @@ function GuestSpaceRow({ entry, onLeave, onToggleNotify }) {
   const [expanded, setExpanded] = useState(false)
 
   return (
-    <div style={{ marginBottom: 8 }}>
+    <div className={styles.guestRowMargin}>
       <button
         onClick={() => setExpanded(v => !v)}
-        style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '13px 14px', background: 'var(--surface)', border: '0.5px solid var(--border)', borderRadius: expanded ? '12px 12px 0 0' : 12, cursor: 'pointer' }}
+        className={`${styles.guestRowButton} ${expanded ? styles.guestRowButtonExpanded : ''}`}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+        <div className={styles.guestRowLeft}>
           <Users size={16} color="var(--text)" />
-          <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)' }}>{entry.space.name}</span>
+          <span className={styles.guestRowTitle}>{entry.space.name}</span>
         </div>
         {expanded ? <ChevronUp size={16} color="var(--text)" /> : <ChevronDown size={16} color="var(--text)" />}
       </button>
 
       {expanded && (
-        <div style={{ background: 'var(--surface)', border: '0.5px solid var(--border)', borderTop: 'none', borderRadius: '0 0 12px 12px', padding: '12px 14px' }}>
-          <div style={{ fontSize: 12, color: 'var(--text)', marginBottom: 12 }}>
+        <div className={styles.guestRowBody}>
+          <div className={styles.guestRowPeriod}>
             Periodo: {FREQ_LABEL[entry.space.cobro_freq] || entry.space.cobro_freq}
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer', marginBottom: 14 }} onClick={onToggleNotify}>
+          <div className={`${styles.notifyRow} ${styles.notifyRowMb}`} onClick={onToggleNotify}>
             <div>
-              <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)' }}>Notificarme de cambios</div>
-              <div style={{ fontSize: 11, fontWeight: 400, color: 'var(--text)', marginTop: 1 }}>Avisos cuando el dueño agregue, marque pagado, o elimine un pago aquí</div>
+              <div className={styles.notifyRowTitle}>Notificarme de cambios</div>
+              <div className={styles.notifyRowSubtitle}>Avisos cuando el dueño agregue, marque pagado, o elimine un pago aquí</div>
             </div>
             <Toggle on={entry.membership.notify_on_changes} />
           </div>
-          <button
-            onClick={onLeave}
-            style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '5px 10px', borderRadius: 5, border: '0.5px solid var(--danger)', background: 'none', color: 'var(--danger)', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'DM Sans, sans-serif' }}
-          >
+          <button onClick={onLeave} className={styles.smallDangerButton}>
             <LogOut size={12} /> Salir
           </button>
         </div>
@@ -288,21 +283,21 @@ function OwnedSpacePanel({ entry, user, regenerateCode, updateMemberPermissions,
 
   return (
     <>
-      <div style={{ margin: '0 16px 16px' }}>
+      <div className={styles.ownedWrapper}>
         <button
           onClick={() => setExpanded(v => !v)}
-          style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px', background: 'var(--surface)', border: '0.5px solid var(--border)', borderRadius: expanded ? 'var(--radius) var(--radius) 0 0' : 'var(--radius)', cursor: 'pointer' }}
+          className={`${styles.ownedHeaderButton} ${expanded ? styles.ownedHeaderButtonExpanded : ''}`}
         >
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <div className={styles.ownedHeaderLeft}>
             <Crown size={16} color="var(--premium-gold)" />
-            <span style={{ fontSize: 15, fontWeight: 700, color: 'var(--text)' }}>{entry.space.name}</span>
+            <span className={styles.ownedHeaderTitle}>{entry.space.name}</span>
           </div>
           {expanded ? <ChevronUp size={18} color="var(--text)" /> : <ChevronDown size={18} color="var(--text)" />}
         </button>
 
         {expanded && (
-          <div style={{ background: 'var(--surface)', border: '0.5px solid var(--border)', borderTop: 'none', borderRadius: '0 0 var(--radius) var(--radius)', overflow: 'hidden' }}>
-            <div style={{ padding: '14px 16px', borderBottom: '0.5px solid var(--border)' }}>
+          <div className={styles.ownedBody}>
+            <div className={styles.fieldRow}>
               <label className="field-label">Nombre del espacio</label>
               <input
                 className="field-input" value={nameInput}
@@ -312,8 +307,8 @@ function OwnedSpacePanel({ entry, user, regenerateCode, updateMemberPermissions,
               />
             </div>
 
-            <div style={{ padding: '14px 16px', borderBottom: '0.5px solid var(--border)' }}>
-              <label className="field-label" style={{ marginBottom: 8, display: 'block' }}>Periodo de cobro</label>
+            <div className={styles.fieldRow}>
+              <label className={`field-label ${styles.labelBlock}`}>Periodo de cobro</label>
               <CobroPeriodFields
                 freq={entry.space.cobro_freq}
                 day1={entry.space.cobro_day1}
@@ -326,34 +321,34 @@ function OwnedSpacePanel({ entry, user, regenerateCode, updateMemberPermissions,
               />
             </div>
 
-            <div style={{ padding: '14px 16px', borderBottom: '0.5px solid var(--border)' }}>
+            <div className={styles.fieldRow}>
               <label className="field-label">Código de acceso</label>
-              <div style={{ display: 'flex', gap: 8 }}>
-                <div style={{ flex: 1, padding: '10px 12px', borderRadius: 'var(--radius-sm)', border: '0.5px solid var(--border)', background: 'var(--bg)', fontSize: 20, fontWeight: 700, letterSpacing: 4, textAlign: 'center', color: 'var(--text)' }}>
+              <div className={styles.codeRow}>
+                <div className={styles.codeDisplay}>
                   {entry.space.access_code}
                 </div>
-                <button onClick={copyCode} style={{ width: 44, borderRadius: 'var(--radius-sm)', border: '0.5px solid var(--border)', background: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+                <button onClick={copyCode} className={styles.codeIconButton}>
                   <Copy size={16} color="var(--text)" />
                 </button>
-                <button onClick={handleRegenerate} disabled={regenerating} style={{ width: 44, borderRadius: 'var(--radius-sm)', border: '0.5px solid var(--border)', background: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', opacity: regenerating ? 0.6 : 1 }}>
+                <button onClick={handleRegenerate} disabled={regenerating} className={`${styles.codeIconButton} ${regenerating ? styles.disabledOpacity : ''}`}>
                   <RefreshCw size={16} color="var(--text)" />
                 </button>
               </div>
-              {copied && <div style={{ fontSize: 11, color: 'var(--paid)', marginTop: 4 }}>Copiado</div>}
+              {copied && <div className={styles.copiedText}>Copiado</div>}
               {(() => {
                 const remaining = 2 - guestMembers.length
                 if (remaining > 0) {
-                  return <div style={{ fontSize: 11, color: 'var(--text)', marginTop: 6 }}>Puedes invitar a {remaining} usuario{remaining !== 1 ? 's' : ''} más</div>
+                  return <div className={styles.inviteHintText}>Puedes invitar a {remaining} usuario{remaining !== 1 ? 's' : ''} más</div>
                 }
-                return <div style={{ fontSize: 11, color: 'var(--warning)', marginTop: 6 }}>Espacio lleno — expulsa a alguien para hacerle lugar a otra persona</div>
+                return <div className={styles.spaceFullText}>Espacio lleno — expulsa a alguien para hacerle lugar a otra persona</div>
               })()}
             </div>
 
-            <div style={{ padding: '13px 16px', borderBottom: '0.5px solid var(--border)' }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer' }} onClick={() => updateMemberPermissions(entry.membership.id, { notify_on_changes: !entry.membership.notify_on_changes })}>
+            <div className={styles.fieldRow}>
+              <div className={styles.notifyRow} onClick={() => updateMemberPermissions(entry.membership.id, { notify_on_changes: !entry.membership.notify_on_changes })}>
                 <div>
-                  <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)' }}>Notificarme de cambios</div>
-                  <div style={{ fontSize: 11, fontWeight: 400, color: 'var(--text)', marginTop: 1 }}>Avisos cuando tu invitado agregue, marque pagado, o elimine un pago aquí</div>
+                  <div className={styles.notifyRowTitle}>Notificarme de cambios</div>
+                  <div className={styles.notifyRowSubtitle}>Avisos cuando tu invitado agregue, marque pagado, o elimine un pago aquí</div>
                 </div>
                 <Toggle on={entry.membership.notify_on_changes} />
               </div>
@@ -363,34 +358,31 @@ function OwnedSpacePanel({ entry, user, regenerateCode, updateMemberPermissions,
               const initials = (m.profile?.name || 'Invitado').slice(0, 2).toUpperCase()
               const isConfirming = confirmExpel === m.id
               return (
-                <div key={m.id} style={{ borderBottom: '0.5px solid var(--border)' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '13px 16px 8px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <div key={m.id} className={styles.memberRow}>
+                  <div className={styles.memberRowTop}>
+                    <div className={styles.memberRowLeft}>
                       {m.profile?.avatar_url
-                        ? <img src={m.profile.avatar_url} alt="" style={{ width: 32, height: 32, borderRadius: '50%', objectFit: 'cover' }} />
-                        : <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'var(--accent)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, color: 'var(--surface)' }}>{initials}</div>
+                        ? <img src={m.profile.avatar_url} alt="" className={styles.memberAvatarImg} />
+                        : <div className={styles.memberAvatarFallback}>{initials}</div>
                       }
-                      <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)' }}>{m.profile?.name || 'Invitado'}</span>
+                      <span className={styles.memberName}>{m.profile?.name || 'Invitado'}</span>
                     </div>
-                    <button
-                      onClick={() => setConfirmExpel(m.id)}
-                      style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '5px 10px', borderRadius: 5, border: '0.5px solid var(--danger)', background: 'none', color: 'var(--danger)', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'DM Sans, sans-serif' }}
-                    >
+                    <button onClick={() => setConfirmExpel(m.id)} className={styles.smallDangerButton}>
                       <LogOut size={12} /> Expulsar
                     </button>
                   </div>
 
                   {isConfirming && (
-                    <div style={{ padding: '0 16px 12px' }}>
-                      <div style={{ background: 'var(--danger-soft)', borderRadius: 'var(--radius-sm)', padding: '10px 12px' }}>
-                        <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--danger)', marginBottom: 8 }}>
+                    <div className={styles.confirmBoxWrapper}>
+                      <div className={styles.confirmBoxInner}>
+                        <div className={styles.confirmBoxText}>
                           ¿Expulsar a {m.profile?.name || 'este invitado'}? Sus pagos ya agregados se quedan en el espacio.
                         </div>
-                        <div style={{ display: 'flex', gap: 8 }}>
-                          <button onClick={() => setConfirmExpel(null)} style={{ flex: 1, padding: '7px', borderRadius: 6, border: '0.5px solid var(--border)', background: 'var(--surface)', fontSize: 12, fontWeight: 600, color: 'var(--text)', cursor: 'pointer', fontFamily: 'DM Sans, sans-serif' }}>
+                        <div className={styles.confirmButtonsRow}>
+                          <button onClick={() => setConfirmExpel(null)} className={styles.confirmCancelButton}>
                             Cancelar
                           </button>
-                          <button onClick={() => handleExpel(m.id)} disabled={expelling} style={{ flex: 1, padding: '7px', borderRadius: 6, border: 'none', background: 'var(--danger)', fontSize: 12, fontWeight: 600, color: '#fff', cursor: 'pointer', fontFamily: 'DM Sans, sans-serif', opacity: expelling ? 0.7 : 1 }}>
+                          <button onClick={() => handleExpel(m.id)} disabled={expelling} className={`${styles.confirmDangerButton} ${expelling ? styles.savingOpacity : ''}`}>
                             {expelling ? 'Expulsando…' : 'Expulsar'}
                           </button>
                         </div>
@@ -408,22 +400,22 @@ function OwnedSpacePanel({ entry, user, regenerateCode, updateMemberPermissions,
               )
             })}
 
-            <div style={{ borderTop: '0.5px solid var(--border)' }}>
-              <button onClick={() => setConfirmClear(v => !v)} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '13px 16px', background: 'none', border: 'none', cursor: 'pointer' }}>
+            <div className={styles.dangerSectionWrapper}>
+              <button onClick={() => setConfirmClear(v => !v)} className={styles.dangerButtonRow}>
                 <Trash2 size={16} color="var(--danger)" />
-                <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--danger)' }}>Borrar todos los pagos e ingresos</span>
+                <span className={styles.dangerButtonText}>Borrar todos los pagos e ingresos</span>
               </button>
               {confirmClear && (
-                <div style={{ padding: '0 16px 14px' }}>
-                  <div style={{ background: 'var(--danger-soft)', borderRadius: 'var(--radius-sm)', padding: '10px 12px' }}>
-                    <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--danger)', marginBottom: 8 }}>
+                <div className={styles.confirmBoxWrapper}>
+                  <div className={styles.confirmBoxInner}>
+                    <div className={styles.confirmBoxText}>
                       Se borrarán TODOS los pagos e ingresos de "{entry.space.name}", sin poder deshacerlo. El espacio, el código y los miembros se quedan igual.
                     </div>
-                    <div style={{ display: 'flex', gap: 8 }}>
-                      <button onClick={() => setConfirmClear(false)} style={{ flex: 1, padding: '7px', borderRadius: 6, border: '0.5px solid var(--border)', background: 'var(--surface)', fontSize: 12, fontWeight: 600, color: 'var(--text)', cursor: 'pointer', fontFamily: 'DM Sans, sans-serif' }}>
+                    <div className={styles.confirmButtonsRow}>
+                      <button onClick={() => setConfirmClear(false)} className={styles.confirmCancelButton}>
                         Cancelar
                       </button>
-                      <button onClick={handleClearData} disabled={clearing} style={{ flex: 1, padding: '7px', borderRadius: 6, border: 'none', background: 'var(--danger)', fontSize: 12, fontWeight: 600, color: '#fff', cursor: 'pointer', fontFamily: 'DM Sans, sans-serif', opacity: clearing ? 0.7 : 1 }}>
+                      <button onClick={handleClearData} disabled={clearing} className={`${styles.confirmDangerButton} ${clearing ? styles.savingOpacity : ''}`}>
                         {clearing ? 'Borrando…' : 'Borrar todo'}
                       </button>
                     </div>
@@ -432,10 +424,10 @@ function OwnedSpacePanel({ entry, user, regenerateCode, updateMemberPermissions,
               )}
             </div>
 
-            <div style={{ borderTop: '0.5px solid var(--border)' }}>
-              <button onClick={() => { setDangerOpen(true); setDangerPassword(''); setDangerError('') }} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '13px 16px', background: 'none', border: 'none', cursor: 'pointer' }}>
+            <div className={styles.dangerSectionWrapper}>
+              <button onClick={() => { setDangerOpen(true); setDangerPassword(''); setDangerError('') }} className={styles.dangerButtonRow}>
                 <Trash2 size={16} color="var(--danger)" />
-                <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--danger)' }}>Eliminar Espacio Compartido</span>
+                <span className={styles.dangerButtonText}>Eliminar Espacio Compartido</span>
               </button>
             </div>
           </div>
@@ -443,24 +435,24 @@ function OwnedSpacePanel({ entry, user, regenerateCode, updateMemberPermissions,
       </div>
 
       {dangerOpen && (
-        <div onClick={e => e.target === e.currentTarget && setDangerOpen(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(2,10,31,0.45)', zIndex: 250, display: 'flex', alignItems: 'flex-end' }}>
-          <div style={{ background: 'var(--surface)', borderRadius: '16px 16px 0 0', width: '100%', padding: '24px 20px', animation: 'modalSlideUp .32s cubic-bezier(0.25, 0.46, 0.45, 0.94) both' }}>
-            <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--danger)', marginBottom: 6 }}>Eliminar Espacio Compartido</div>
-            <div style={{ fontSize: 13, color: 'var(--text)', marginBottom: 16 }}>
+        <div onClick={e => e.target === e.currentTarget && setDangerOpen(false)} className={styles.deleteModalOverlay}>
+          <div className={styles.deleteModalSheet}>
+            <div className={styles.deleteModalTitle}>Eliminar Espacio Compartido</div>
+            <div className={styles.deleteModalDescription}>
               Se borrará permanentemente para ti y para tu invitado — todos los pagos e ingresos del espacio, sin poder deshacerlo.
             </div>
-            <label className="field-label" style={{ marginBottom: 6, display: 'block' }}>Confirma con tu contraseña</label>
+            <label className={`field-label ${styles.labelBlock}`}>Confirma con tu contraseña</label>
             <input
-              type="password" className="field-input" value={dangerPassword}
+              type="password" className={`field-input ${styles.deleteModalPasswordInput}`} value={dangerPassword}
               onChange={e => setDangerPassword(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && handleDelete()}
-              placeholder="••••••••" style={{ marginBottom: 10 }}
+              placeholder="••••••••"
             />
-            {dangerError && <div style={{ fontSize: 12, color: 'var(--danger)', marginBottom: 10 }}>{dangerError}</div>}
+            {dangerError && <div className={styles.errorText}>{dangerError}</div>}
             <button
               onClick={handleDelete}
               disabled={dangerLoading || !dangerPassword}
-              style={{ width: '100%', padding: 12, background: 'var(--danger)', color: 'var(--surface)', border: 'none', borderRadius: 'var(--radius-sm)', fontSize: 14, fontWeight: 600, fontFamily: 'DM Sans, sans-serif', cursor: 'pointer', marginBottom: 8, opacity: dangerLoading || !dangerPassword ? 0.7 : 1 }}
+              className={`${styles.deleteModalConfirmButton} ${(dangerLoading || !dangerPassword) ? styles.savingOpacity : ''}`}
             >
               {dangerLoading ? 'Verificando…' : 'Eliminar espacio permanentemente'}
             </button>

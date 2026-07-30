@@ -1,0 +1,485 @@
+.pageRoot {
+  padding-bottom: 120px;
+  background: var(--bg);
+  min-height: 100vh;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 52px 16px 20px;
+}
+
+.backButton {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: none;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.headerTitle {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+/* EXCEPCIÓN DOCUMENTADA a la regla 16 (sin uppercase) — encabezados de
+   grupo dentro de Ajustes de Espacio Compartido (ej. "Espacios donde te
+   invitaron", y las secciones de permisos "Pagos y fondo"/"Metas" más
+   abajo). Aprobado por Johnatan — ver RULES.md. */
+.sectionLabel {
+  padding: 0 2px 8px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.guestWrapper {
+  margin: 0 16px 16px;
+}
+
+.cardPadding {
+  padding: 16px;
+}
+
+.premiumTitle {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 6px;
+  text-align: center;
+}
+
+.premiumDescription {
+  font-size: 12px;
+  color: var(--text);
+  text-align: center;
+  margin-bottom: 14px;
+}
+
+.createSpaceButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 12px;
+  border-radius: var(--radius-sm);
+  border: none;
+  background: var(--accent);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  font-family: 'DM Sans', sans-serif;
+  cursor: pointer;
+}
+
+.fieldMb16 {
+  margin-bottom: 16px;
+}
+
+.labelBlock {
+  margin-bottom: 8px;
+  display: block;
+}
+
+.errorText {
+  font-size: 12px;
+  color: var(--danger);
+  margin-bottom: 10px;
+}
+
+.savingOpacity {
+  opacity: 0.7;
+}
+
+.createConfirmMb {
+  margin-bottom: 8px;
+}
+
+.disabledOpacity {
+  opacity: 0.6;
+}
+
+.joinTitle {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+
+.joinDescription {
+  font-size: 12px;
+  color: var(--text);
+  margin-bottom: 12px;
+}
+
+.joinCodeInput {
+  text-align: center;
+  font-size: 20px;
+  letter-spacing: 4px;
+  margin-bottom: 10px;
+}
+
+.joinMaxedCard {
+  padding: 16px;
+  text-align: center;
+  font-size: 12px;
+  color: var(--text);
+}
+
+/* ── Fila plegable de un espacio donde te invitaron ─────────────────── */
+
+.guestRowMargin {
+  margin-bottom: 8px;
+}
+
+.guestRowButton {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 13px 14px;
+  background: var(--surface);
+  border: 0.5px solid var(--border);
+  border-radius: 12px;
+  cursor: pointer;
+}
+
+.guestRowButtonExpanded {
+  border-radius: 12px 12px 0 0;
+}
+
+.guestRowLeft {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.guestRowTitle {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.guestRowBody {
+  background: var(--surface);
+  border: 0.5px solid var(--border);
+  border-top: none;
+  border-radius: 0 0 12px 12px;
+  padding: 12px 14px;
+}
+
+.guestRowPeriod {
+  font-size: 12px;
+  color: var(--text);
+  margin-bottom: 12px;
+}
+
+.notifyRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+}
+
+.notifyRowMb {
+  margin-bottom: 14px;
+}
+
+.notifyRowTitle {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.notifyRowSubtitle {
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--text);
+  margin-top: 1px;
+}
+
+.smallDangerButton {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 10px;
+  border-radius: 5px;
+  border: 0.5px solid var(--danger);
+  background: none;
+  color: var(--danger);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: 'DM Sans', sans-serif;
+}
+
+/* ── Panel de administración del espacio propio ─────────────────────── */
+
+.ownedWrapper {
+  margin: 0 16px 16px;
+}
+
+.ownedHeaderButton {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  background: var(--surface);
+  border: 0.5px solid var(--border);
+  border-radius: var(--radius);
+  cursor: pointer;
+}
+
+.ownedHeaderButtonExpanded {
+  border-radius: var(--radius) var(--radius) 0 0;
+}
+
+.ownedHeaderLeft {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ownedHeaderTitle {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.ownedBody {
+  background: var(--surface);
+  border: 0.5px solid var(--border);
+  border-top: none;
+  border-radius: 0 0 var(--radius) var(--radius);
+  overflow: hidden;
+}
+
+.fieldRow {
+  padding: 14px 16px;
+  border-bottom: 0.5px solid var(--border);
+}
+
+.codeRow {
+  display: flex;
+  gap: 8px;
+}
+
+.codeDisplay {
+  flex: 1;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  border: 0.5px solid var(--border);
+  background: var(--bg);
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: 4px;
+  text-align: center;
+  color: var(--text);
+}
+
+.codeIconButton {
+  width: 44px;
+  border-radius: var(--radius-sm);
+  border: 0.5px solid var(--border);
+  background: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.copiedText {
+  font-size: 11px;
+  color: var(--paid);
+  margin-top: 4px;
+}
+
+.inviteHintText {
+  font-size: 11px;
+  color: var(--text);
+  margin-top: 6px;
+}
+
+.spaceFullText {
+  font-size: 11px;
+  color: var(--warning);
+  margin-top: 6px;
+}
+
+.memberRow {
+  border-bottom: 0.5px solid var(--border);
+}
+
+.memberRowTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 13px 16px 8px;
+}
+
+.memberRowLeft {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.memberAvatarImg {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.memberAvatarFallback {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--surface);
+}
+
+.memberName {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.confirmBoxWrapper {
+  padding: 0 16px 12px;
+}
+
+.confirmBoxInner {
+  background: var(--danger-soft);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+}
+
+.confirmBoxText {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--danger);
+  margin-bottom: 8px;
+}
+
+.confirmButtonsRow {
+  display: flex;
+  gap: 8px;
+}
+
+.confirmCancelButton {
+  flex: 1;
+  padding: 7px;
+  border-radius: 6px;
+  border: 0.5px solid var(--border);
+  background: var(--surface);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text);
+  cursor: pointer;
+  font-family: 'DM Sans', sans-serif;
+}
+
+.confirmDangerButton {
+  flex: 1;
+  padding: 7px;
+  border-radius: 6px;
+  border: none;
+  background: var(--danger);
+  font-size: 12px;
+  font-weight: 600;
+  color: #fff;
+  cursor: pointer;
+  font-family: 'DM Sans', sans-serif;
+}
+
+.dangerSectionWrapper {
+  border-top: 0.5px solid var(--border);
+}
+
+.dangerButtonRow {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 13px 16px;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.dangerButtonText {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--danger);
+}
+
+/* ── Modal de eliminar espacio ───────────────────────────────────────── */
+
+.deleteModalOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(2, 10, 31, 0.45);
+  z-index: 250;
+  display: flex;
+  align-items: flex-end;
+}
+
+.deleteModalSheet {
+  background: var(--surface);
+  border-radius: 16px 16px 0 0;
+  width: 100%;
+  padding: 24px 20px;
+  animation: modalSlideUp .32s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+}
+
+@keyframes modalSlideUp {
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0); }
+}
+
+.deleteModalTitle {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--danger);
+  margin-bottom: 6px;
+}
+
+.deleteModalDescription {
+  font-size: 13px;
+  color: var(--text);
+  margin-bottom: 16px;
+}
+
+.deleteModalPasswordInput {
+  margin-bottom: 10px;
+}
+
+.deleteModalConfirmButton {
+  width: 100%;
+  padding: 12px;
+  background: var(--danger);
+  color: var(--surface);
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  font-weight: 600;
+  font-family: 'DM Sans', sans-serif;
+  cursor: pointer;
+  margin-bottom: 8px;
+}
