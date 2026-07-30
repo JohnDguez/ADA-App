@@ -1,9 +1,10 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Plus, SlidersHorizontal, Crown, PiggyBank } from 'lucide-react'
 import { PageHeader } from '../components/PageHeader'
 import { EmptyState } from '../components/EmptyState'
 import { GoalDetailPanel } from '../components/GoalDetailPanel'
 import { GoalFormModal } from '../components/GoalFormModal'
+import { NewSharedSpacePanel } from '../components/NewSharedSpacePanel'
 import { getIconComponent } from '../lib/categoryIcons'
 import { fmt } from '../lib/utils'
 import { showToast } from '../components/Toast'
@@ -24,10 +25,26 @@ import styles from './GoalsPage.module.css'
 // mismo objeto que ya usan Gastos/Recurrentes — `isRestricted: false`
 // cuando es personal o cuando el usuario es dueño del espacio.
 export function GoalsPage({
-  goalsData, profile, isPremium, activeSpaceId = null, activeSpaceName = null,
-  spacePermissions, unreadCount, onOpenNotifs, onGoSettings, onOpenPremium, slideClass,
+  goalsData, profile, isPremium, activeSpaceId = null, rawActiveSpaceId = null, activeSpaceName = null,
+  spacePermissions, spaceSwitcher, activeSpaceHeader, sharedSpaces, onSpaceReady,
+  unreadCount, onOpenNotifs, onGoSettings, onOpenPremium, slideClass,
 }) {
   const { activeGoals, completedGoals, totalRestante, addGoal, updateGoal, aportar, retirar, revertirAporte, markCompleted, deleteGoal } = goalsData
+
+  // Mismo criterio que RecurrentsPage.jsx: la animación de entrada del
+  // contenido solo se dispara en un cambio REAL de espacio (comparado
+  // contra la referencia anterior), no en un simple cambio de pestaña que
+  // vuelve a montar esta página con el mismo espacio de siempre.
+  const prevSpaceRef = useRef(rawActiveSpaceId)
+  const [spaceJustChanged, setSpaceJustChanged] = useState(false)
+  useEffect(() => {
+    if (prevSpaceRef.current !== rawActiveSpaceId) {
+      setSpaceJustChanged(true)
+      prevSpaceRef.current = rawActiveSpaceId
+      const timer = setTimeout(() => setSpaceJustChanged(false), 300)
+      return () => clearTimeout(timer)
+    }
+  }, [rawActiveSpaceId])
 
   const [selectedGoalId, setSelectedGoalId] = useState(null)
   const [formOpen, setFormOpen] = useState(false)
@@ -101,8 +118,23 @@ export function GoalsPage({
       />
 
       <div className={styles.roundedContentWrapper}>
+        {spaceSwitcher}
+
+        {activeSpaceHeader}
+
         <div className={slideClass}>
-          {!selectedGoal ? (
+          <div className={spaceJustChanged ? 'content-slide-up' : ''}>
+          {rawActiveSpaceId === 'new' ? (
+            <div className={styles.newSpacePanelWrapper}>
+              <NewSharedSpacePanel
+                profile={profile}
+                sharedSpaces={sharedSpaces}
+                onOpenPremium={onOpenPremium}
+                onCreated={onSpaceReady}
+                onJoined={onSpaceReady}
+              />
+            </div>
+          ) : !selectedGoal ? (
             <div className={styles.screen}>
               <div className={styles.header}>
                 <div className={styles.headerTitle}>{isShared ? `Metas — ${activeSpaceName}` : 'Metas'}</div>
@@ -175,10 +207,11 @@ export function GoalsPage({
               onDelete={resolution => { deleteGoal(selectedGoal.id, resolution); setSelectedGoalId(null) }}
             />
           )}
+          </div>
         </div>
       </div>
 
-      {!selectedGoal && (
+      {!selectedGoal && rawActiveSpaceId !== 'new' && (
         <div className={styles.addPillRow}>
           <button type="button" className={`${styles.addPill} ${(!canAdd && !atFreeLimit) ? styles.addPillDisabled : ''}`} onClick={handleAddClick}>
             <Plus size={18} color="#fff" />

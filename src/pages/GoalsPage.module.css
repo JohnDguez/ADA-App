@@ -61,6 +61,10 @@
   z-index: 10;
 }
 
+.newSpacePanelWrapper {
+  margin-top: 16px;
+}
+
 .screen {
   padding: 20px 16px 0;
   box-sizing: border-box;
