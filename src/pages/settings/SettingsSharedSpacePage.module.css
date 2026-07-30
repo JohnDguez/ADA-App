@@ -137,6 +137,9 @@
 }
 
 /* ── Fila plegable de un espacio donde te invitaron ─────────────────── */
+/* Islas independientes (Regla 13.1): el botón de encabezado y el cuerpo
+   expandido, cada uno su propia tarjeta con sombra, sin borde, separadas
+   por espacio en vez de estar pegadas en una sola caja. */
 
 .guestRowMargin {
   margin-bottom: 8px;
@@ -149,13 +152,9 @@
   justify-content: space-between;
   padding: 13px 14px;
   background: var(--surface);
-  border: 0.5px solid var(--border);
   border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   cursor: pointer;
-}
-
-.guestRowButtonExpanded {
-  border-radius: 12px 12px 0 0;
 }
 
 .guestRowLeft {
@@ -172,10 +171,10 @@
 
 .guestRowBody {
   background: var(--surface);
-  border: 0.5px solid var(--border);
-  border-top: none;
-  border-radius: 0 0 12px 12px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   padding: 12px 14px;
+  margin-top: 8px;
 }
 
 .guestRowPeriod {
@@ -208,6 +207,9 @@
   margin-top: 1px;
 }
 
+/* Botón, no contenedor — el borde es lo que le da límite a un botón sin
+   relleno (mismo criterio que `btn-ghost` global). No entra en la Regla
+   13.1. */
 .smallDangerButton {
   display: flex;
   align-items: center;
@@ -236,13 +238,9 @@
   justify-content: space-between;
   padding: 14px 16px;
   background: var(--surface);
-  border: 0.5px solid var(--border);
   border-radius: var(--radius);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   cursor: pointer;
-}
-
-.ownedHeaderButtonExpanded {
-  border-radius: var(--radius) var(--radius) 0 0;
 }
 
 .ownedHeaderLeft {
@@ -257,12 +255,19 @@
   color: var(--text);
 }
 
-.ownedBody {
+/* Contenedor de las islas de abajo — sin fondo ni sombra propia, solo da
+   el espacio antes de la primera isla; cada isla adentro es su propia
+   tarjeta. */
+.islandStack {
+  margin-top: 10px;
+}
+
+.islandCard {
   background: var(--surface);
-  border: 0.5px solid var(--border);
-  border-top: none;
-  border-radius: 0 0 var(--radius) var(--radius);
+  border-radius: var(--radius);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   overflow: hidden;
+  margin-bottom: 12px;
 }
 
 .fieldRow {
@@ -270,16 +275,22 @@
   border-bottom: 0.5px solid var(--border);
 }
 
+.fieldRowLast {
+  border-bottom: none;
+}
+
 .codeRow {
   display: flex;
   gap: 8px;
 }
 
+/* Ya no lleva borde propio (Regla 13.1) — vive dentro de una isla que ya
+   tiene sombra; `var(--bg)` contra `var(--surface)` de la isla ya da
+   suficiente contraste sin necesitar un borde extra adentro. */
 .codeDisplay {
   flex: 1;
   padding: 10px 12px;
   border-radius: var(--radius-sm);
-  border: 0.5px solid var(--border);
   background: var(--bg);
   font-size: 20px;
   font-weight: 700;
@@ -291,8 +302,8 @@
 .codeIconButton {
   width: 44px;
   border-radius: var(--radius-sm);
-  border: 0.5px solid var(--border);
-  background: none;
+  border: none;
+  background: var(--bg);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -317,15 +328,11 @@
   margin-top: 6px;
 }
 
-.memberRow {
-  border-bottom: 0.5px solid var(--border);
-}
-
-.memberRowTop {
+.memberIslandHeader {
+  padding: 13px 16px 8px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 13px 16px 8px;
 }
 
 .memberRowLeft {
@@ -358,6 +365,16 @@
   font-size: 13px;
   font-weight: 600;
   color: var(--text);
+}
+
+.permGroupLabel {
+  padding: 10px 16px 6px;
+  font-size: 10.5px;
+  font-weight: 600;
+  color: var(--text);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  border-top: 0.5px solid var(--border);
 }
 
 .confirmBoxWrapper {
@@ -408,10 +425,6 @@
   font-family: 'DM Sans', sans-serif;
 }
 
-.dangerSectionWrapper {
-  border-top: 0.5px solid var(--border);
-}
-
 .dangerButtonRow {
   width: 100%;
   display: flex;
@@ -420,7 +433,12 @@
   padding: 13px 16px;
   background: none;
   border: none;
+  border-bottom: 0.5px solid var(--border);
   cursor: pointer;
+}
+
+.dangerButtonRowLast {
+  border-bottom: none;
 }
 
 .dangerButtonText {

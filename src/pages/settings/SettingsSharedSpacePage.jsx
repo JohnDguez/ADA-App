@@ -178,10 +178,7 @@ function GuestSpaceRow({ entry, onLeave, onToggleNotify }) {
 
   return (
     <div className={styles.guestRowMargin}>
-      <button
-        onClick={() => setExpanded(v => !v)}
-        className={`${styles.guestRowButton} ${expanded ? styles.guestRowButtonExpanded : ''}`}
-      >
+      <button onClick={() => setExpanded(v => !v)} className={styles.guestRowButton}>
         <div className={styles.guestRowLeft}>
           <Users size={16} color="var(--text)" />
           <span className={styles.guestRowTitle}>{entry.space.name}</span>
@@ -284,10 +281,7 @@ function OwnedSpacePanel({ entry, user, regenerateCode, updateMemberPermissions,
   return (
     <>
       <div className={styles.ownedWrapper}>
-        <button
-          onClick={() => setExpanded(v => !v)}
-          className={`${styles.ownedHeaderButton} ${expanded ? styles.ownedHeaderButtonExpanded : ''}`}
-        >
+        <button onClick={() => setExpanded(v => !v)} className={styles.ownedHeaderButton}>
           <div className={styles.ownedHeaderLeft}>
             <Crown size={16} color="var(--premium-gold)" />
             <span className={styles.ownedHeaderTitle}>{entry.space.name}</span>
@@ -296,70 +290,78 @@ function OwnedSpacePanel({ entry, user, regenerateCode, updateMemberPermissions,
         </button>
 
         {expanded && (
-          <div className={styles.ownedBody}>
-            <div className={styles.fieldRow}>
-              <label className="field-label">Nombre del espacio</label>
-              <input
-                className="field-input" value={nameInput}
-                onChange={e => setNameInput(e.target.value)}
-                onBlur={handleNameBlur}
-                onKeyDown={e => e.key === 'Enter' && e.target.blur()}
-              />
-            </div>
+          <div className={styles.islandStack}>
 
-            <div className={styles.fieldRow}>
-              <label className={`field-label ${styles.labelBlock}`}>Periodo de cobro</label>
-              <CobroPeriodFields
-                freq={entry.space.cobro_freq}
-                day1={entry.space.cobro_day1}
-                day2={entry.space.cobro_day2}
-                weekday={entry.space.cobro_weekday}
-                onChangeFreq={v => handleCobroChange({ cobro_freq: v })}
-                onChangeDay1={v => handleCobroChange({ cobro_day1: v })}
-                onChangeDay2={v => handleCobroChange({ cobro_day2: v })}
-                onChangeWeekday={v => handleCobroChange({ cobro_weekday: v })}
-              />
-            </div>
-
-            <div className={styles.fieldRow}>
-              <label className="field-label">Código de acceso</label>
-              <div className={styles.codeRow}>
-                <div className={styles.codeDisplay}>
-                  {entry.space.access_code}
-                </div>
-                <button onClick={copyCode} className={styles.codeIconButton}>
-                  <Copy size={16} color="var(--text)" />
-                </button>
-                <button onClick={handleRegenerate} disabled={regenerating} className={`${styles.codeIconButton} ${regenerating ? styles.disabledOpacity : ''}`}>
-                  <RefreshCw size={16} color="var(--text)" />
-                </button>
+            {/* ── Isla: configuración del espacio ── */}
+            <div className={styles.islandCard}>
+              <div className={styles.fieldRow}>
+                <label className="field-label">Nombre del espacio</label>
+                <input
+                  className="field-input" value={nameInput}
+                  onChange={e => setNameInput(e.target.value)}
+                  onBlur={handleNameBlur}
+                  onKeyDown={e => e.key === 'Enter' && e.target.blur()}
+                />
               </div>
-              {copied && <div className={styles.copiedText}>Copiado</div>}
-              {(() => {
-                const remaining = 2 - guestMembers.length
-                if (remaining > 0) {
-                  return <div className={styles.inviteHintText}>Puedes invitar a {remaining} usuario{remaining !== 1 ? 's' : ''} más</div>
-                }
-                return <div className={styles.spaceFullText}>Espacio lleno — expulsa a alguien para hacerle lugar a otra persona</div>
-              })()}
-            </div>
 
-            <div className={styles.fieldRow}>
-              <div className={styles.notifyRow} onClick={() => updateMemberPermissions(entry.membership.id, { notify_on_changes: !entry.membership.notify_on_changes })}>
-                <div>
-                  <div className={styles.notifyRowTitle}>Notificarme de cambios</div>
-                  <div className={styles.notifyRowSubtitle}>Avisos cuando tu invitado agregue, marque pagado, o elimine un pago aquí</div>
+              <div className={styles.fieldRow}>
+                <label className={`field-label ${styles.labelBlock}`}>Periodo de cobro</label>
+                <CobroPeriodFields
+                  freq={entry.space.cobro_freq}
+                  day1={entry.space.cobro_day1}
+                  day2={entry.space.cobro_day2}
+                  weekday={entry.space.cobro_weekday}
+                  onChangeFreq={v => handleCobroChange({ cobro_freq: v })}
+                  onChangeDay1={v => handleCobroChange({ cobro_day1: v })}
+                  onChangeDay2={v => handleCobroChange({ cobro_day2: v })}
+                  onChangeWeekday={v => handleCobroChange({ cobro_weekday: v })}
+                />
+              </div>
+
+              <div className={`${styles.fieldRow} ${styles.fieldRowLast}`}>
+                <label className="field-label">Código de acceso</label>
+                <div className={styles.codeRow}>
+                  <div className={styles.codeDisplay}>
+                    {entry.space.access_code}
+                  </div>
+                  <button onClick={copyCode} className={styles.codeIconButton}>
+                    <Copy size={16} color="var(--text)" />
+                  </button>
+                  <button onClick={handleRegenerate} disabled={regenerating} className={`${styles.codeIconButton} ${regenerating ? styles.disabledOpacity : ''}`}>
+                    <RefreshCw size={16} color="var(--text)" />
+                  </button>
                 </div>
-                <Toggle on={entry.membership.notify_on_changes} />
+                {copied && <div className={styles.copiedText}>Copiado</div>}
+                {(() => {
+                  const remaining = 2 - guestMembers.length
+                  if (remaining > 0) {
+                    return <div className={styles.inviteHintText}>Puedes invitar a {remaining} usuario{remaining !== 1 ? 's' : ''} más</div>
+                  }
+                  return <div className={styles.spaceFullText}>Espacio lleno — expulsa a alguien para hacerle lugar a otra persona</div>
+                })()}
               </div>
             </div>
 
+            {/* ── Isla: notificaciones del dueño ── */}
+            <div className={styles.islandCard}>
+              <div className={`${styles.fieldRow} ${styles.fieldRowLast}`}>
+                <div className={styles.notifyRow} onClick={() => updateMemberPermissions(entry.membership.id, { notify_on_changes: !entry.membership.notify_on_changes })}>
+                  <div>
+                    <div className={styles.notifyRowTitle}>Notificarme de cambios</div>
+                    <div className={styles.notifyRowSubtitle}>Avisos cuando tu invitado agregue, marque pagado, o elimine un pago aquí</div>
+                  </div>
+                  <Toggle on={entry.membership.notify_on_changes} />
+                </div>
+              </div>
+            </div>
+
+            {/* ── Isla por cada invitado ── */}
             {guestMembers.length > 0 && guestMembers.map((m) => {
               const initials = (m.profile?.name || 'Invitado').slice(0, 2).toUpperCase()
               const isConfirming = confirmExpel === m.id
               return (
-                <div key={m.id} className={styles.memberRow}>
-                  <div className={styles.memberRowTop}>
+                <div key={m.id} className={styles.islandCard}>
+                  <div className={styles.memberIslandHeader}>
                     <div className={styles.memberRowLeft}>
                       {m.profile?.avatar_url
                         ? <img src={m.profile.avatar_url} alt="" className={styles.memberAvatarImg} />
@@ -390,17 +392,32 @@ function OwnedSpacePanel({ entry, user, regenerateCode, updateMemberPermissions,
                     </div>
                   )}
 
+                  <div className={styles.permGroupLabel}>Pagos y fondo</div>
                   <NotifToggle label="Agregar pagos"        value={m.can_add}        onChange={v => updateMemberPermissions(m.id, { can_add: v })} />
                   <NotifToggle label="Editar pagos"          value={m.can_edit}       onChange={v => updateMemberPermissions(m.id, { can_edit: v })} />
                   <NotifToggle label="Marcar pagado/no pagado" value={m.can_mark_paid} onChange={v => updateMemberPermissions(m.id, { can_mark_paid: v })} />
                   <NotifToggle label="Eliminar pagos"        value={m.can_delete}     onChange={v => updateMemberPermissions(m.id, { can_delete: v })} />
                   <NotifToggle label="Agregar ingresos extra" value={m.can_add_income} onChange={v => updateMemberPermissions(m.id, { can_add_income: v })} />
-                  <NotifToggle label="Añadir fondos al Fondo Compartido" value={m.can_add_funds} onChange={v => updateMemberPermissions(m.id, { can_add_funds: v })} last />
+                  <NotifToggle label="Añadir fondos al Fondo Compartido" value={m.can_add_funds} onChange={v => updateMemberPermissions(m.id, { can_add_funds: v })} />
+
+                  <div className={styles.permGroupLabel}>Metas</div>
+                  <NotifToggle label="Crear metas"    value={m.can_add_goals}        onChange={v => updateMemberPermissions(m.id, { can_add_goals: v })} />
+                  <NotifToggle label="Editar metas"   value={m.can_edit_goals}       onChange={v => updateMemberPermissions(m.id, { can_edit_goals: v })} />
+                  <NotifToggle label="Eliminar metas" value={m.can_delete_goals}     onChange={v => updateMemberPermissions(m.id, { can_delete_goals: v })} />
+                  <NotifToggle label="Aportar a metas" value={m.can_contribute_goals} onChange={v => updateMemberPermissions(m.id, { can_contribute_goals: v })} />
+                  <NotifToggle
+                    label="Retirar de metas"
+                    sub="Puede sacar dinero que aportaron otros miembros"
+                    value={m.can_withdraw_goals}
+                    onChange={v => updateMemberPermissions(m.id, { can_withdraw_goals: v })}
+                    last
+                  />
                 </div>
               )
             })}
 
-            <div className={styles.dangerSectionWrapper}>
+            {/* ── Isla: zona de peligro ── */}
+            <div className={styles.islandCard}>
               <button onClick={() => setConfirmClear(v => !v)} className={styles.dangerButtonRow}>
                 <Trash2 size={16} color="var(--danger)" />
                 <span className={styles.dangerButtonText}>Borrar todos los pagos e ingresos</span>
@@ -422,14 +439,13 @@ function OwnedSpacePanel({ entry, user, regenerateCode, updateMemberPermissions,
                   </div>
                 </div>
               )}
-            </div>
 
-            <div className={styles.dangerSectionWrapper}>
-              <button onClick={() => { setDangerOpen(true); setDangerPassword(''); setDangerError('') }} className={styles.dangerButtonRow}>
+              <button onClick={() => { setDangerOpen(true); setDangerPassword(''); setDangerError('') }} className={`${styles.dangerButtonRow} ${styles.dangerButtonRowLast}`}>
                 <Trash2 size={16} color="var(--danger)" />
                 <span className={styles.dangerButtonText}>Eliminar Espacio Compartido</span>
               </button>
             </div>
+
           </div>
         )}
       </div>
