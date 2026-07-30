@@ -79,16 +79,11 @@
   color: var(--text);
 }
 
-/* Aviso de que Metas es personal, solo cuando hay un Espacio Compartido
-   activo — sin él, el usuario podría creer que está viendo las metas del
-   espacio (que todavía no existen). */
-.personalNote {
-  font-size: 12.5px;
-  color: var(--text);
-  background: var(--section-bg);
-  border-radius: var(--radius-sm);
-  padding: 10px 12px;
-  margin-bottom: 16px;
+/* Pastilla atenuada cuando falta el permiso para crear — se queda
+   visible y explica el motivo al tocarla, en vez de esconderse (mismo
+   criterio que "Retirar" bloqueado en el detalle). */
+.addPillDisabled {
+  opacity: 0.5;
 }
 
 .summaryRow {

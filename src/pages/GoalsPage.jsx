@@ -6,6 +6,7 @@ import { GoalDetailPanel } from '../components/GoalDetailPanel'
 import { GoalFormModal } from '../components/GoalFormModal'
 import { getIconComponent } from '../lib/categoryIcons'
 import { fmt } from '../lib/utils'
+import { showToast } from '../components/Toast'
 import styles from './GoalsPage.module.css'
 
 // Metas de ahorro — página propia del nav (antes era un overlay que se
@@ -15,17 +16,18 @@ import styles from './GoalsPage.module.css'
 // propia — de la transición se encarga `slideClass`, igual que en el
 // resto de las páginas.
 //
-// SIEMPRE muestra las metas PERSONALES, sin importar si el usuario está
-// parado en un Espacio Compartido (mismo criterio que Ajustes: es tuyo, no
-// del espacio). Por eso no lleva `spaceSwitcher` ni `activeSpaceHeader`, y
-// cuando hay un espacio activo se avisa explícitamente para que no haya
-// duda de qué está viendo. Las metas compartidas son una función aparte,
-// pendiente — el schema ya quedó preparado con `space_id`.
+// Sigue al espacio activo, igual que Gastos/Recurrentes (`useGoals` recibe
+// `paymentsSpaceId` desde App.jsx) — antes esta pestaña era la única
+// inconsistente (siempre personal sin importar el espacio), justo lo que
+// originó retomar las metas compartidas. `spacePermissions` trae también
+// los 5 permisos de Metas (`can_add_goals`/etc., ver RULES.md/CONTEXT.md),
+// mismo objeto que ya usan Gastos/Recurrentes — `isRestricted: false`
+// cuando es personal o cuando el usuario es dueño del espacio.
 export function GoalsPage({
-  goalsData, profile, isPremium, activeSpaceId = null,
-  unreadCount, onOpenNotifs, onGoSettings, onOpenPremium, slideClass,
+  goalsData, profile, isPremium, activeSpaceId = null, activeSpaceName = null,
+  spacePermissions, unreadCount, onOpenNotifs, onGoSettings, onOpenPremium, slideClass,
 }) {
-  const { activeGoals, completedGoals, totalRestante, addGoal, updateGoal, aportar, retirar, markCompleted, deleteGoal } = goalsData
+  const { activeGoals, completedGoals, totalRestante, addGoal, updateGoal, aportar, retirar, revertirAporte, markCompleted, deleteGoal } = goalsData
 
   const [selectedGoalId, setSelectedGoalId] = useState(null)
   const [formOpen, setFormOpen] = useState(false)
@@ -53,13 +55,17 @@ export function GoalsPage({
   const selectedGoal = selectedGoalId
     ? [...activeGoals, ...completedGoals].find(g => g.id === selectedGoalId)
     : null
-  // Freemium: 1 meta activa a la vez gratis — las completadas no cuentan
-  // contra el límite.
-  const atFreeLimit = !isPremium && activeGoals.length >= 1
+  const isShared = !!activeSpaceId
+  // Freemium (1 gratis) solo aplica en Personal — en un espacio ya es
+  // ilimitado (el espacio ya es Premium, decisión ya tomada). En un
+  // espacio, lo que sí limita es el permiso `can_add_goals`.
+  const atFreeLimit = !isShared && !isPremium && activeGoals.length >= 1
+  const canAdd = isShared ? !!spacePermissions?.can_add_goals : true
   const noGoalsAtAll = activeGoals.length === 0 && completedGoals.length === 0
 
   function handleAddClick() {
     if (atFreeLimit) { onOpenPremium(); return }
+    if (!canAdd) { showToast('No tienes permiso para crear metas en este espacio'); return }
     setEditingGoal(null)
     setFormOpen(true)
   }
@@ -99,14 +105,8 @@ export function GoalsPage({
           {!selectedGoal ? (
             <div className={styles.screen}>
               <div className={styles.header}>
-                <div className={styles.headerTitle}>Metas</div>
+                <div className={styles.headerTitle}>{isShared ? `Metas — ${activeSpaceName}` : 'Metas'}</div>
               </div>
-
-              {activeSpaceId && (
-                <div className={styles.personalNote}>
-                  Tus metas son personales — no cambian con el espacio compartido.
-                </div>
-              )}
 
               {noGoalsAtAll ? (
                 <EmptyState
@@ -160,10 +160,17 @@ export function GoalsPage({
           ) : (
             <GoalDetailPanel
               goal={selectedGoal}
+              isShared={isShared}
+              canContribute={isShared ? !!spacePermissions?.can_contribute_goals : true}
+              canWithdraw={isShared ? !!spacePermissions?.can_withdraw_goals : true}
+              canEdit={isShared ? !!spacePermissions?.can_edit_goals : true}
+              canDelete={isShared ? !!spacePermissions?.can_delete_goals : true}
+              currentUserId={profile.id}
               onBack={() => setSelectedGoalId(null)}
               onEdit={() => openEdit(selectedGoal)}
               onAportar={amount => aportar(selectedGoal.id, amount, selectedGoal.name)}
               onRetirar={amount => retirar(selectedGoal.id, amount, selectedGoal.name)}
+              onRevert={transactionId => revertirAporte(transactionId)}
               onMarkCompleted={completed => markCompleted(selectedGoal.id, completed)}
               onDelete={resolution => { deleteGoal(selectedGoal.id, resolution); setSelectedGoalId(null) }}
             />
@@ -173,7 +180,7 @@ export function GoalsPage({
 
       {!selectedGoal && (
         <div className={styles.addPillRow}>
-          <button type="button" className={styles.addPill} onClick={handleAddClick}>
+          <button type="button" className={`${styles.addPill} ${(!canAdd && !atFreeLimit) ? styles.addPillDisabled : ''}`} onClick={handleAddClick}>
             <Plus size={18} color="#fff" />
             Añadir meta
           </button>
