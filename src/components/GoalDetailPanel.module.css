@@ -158,6 +158,16 @@
   margin: 18px 0 10px;
 }
 
+.actionBtnBlocked {
+  opacity: 0.5;
+}
+
+.blockedHint {
+  font-size: 11.5px;
+  color: var(--text);
+  margin-bottom: 20px;
+}
+
 .actionBtn {
   flex: 1;
   display: flex;
@@ -246,4 +256,18 @@
   display: flex;
   align-items: center;
   gap: 8px;
+}
+
+.historyRight {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.revertButton {
+  background: none;
+  border: none;
+  padding: 2px;
+  display: flex;
+  cursor: pointer;
 }

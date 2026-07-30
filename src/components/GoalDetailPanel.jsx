@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { ChevronLeft, MoreVertical, ArrowUp, ArrowDown, Check, ArrowUpCircle, ArrowDownCircle, Pencil, Trash2 } from 'lucide-react'
+import { ChevronLeft, MoreVertical, ArrowUp, ArrowDown, Check, ArrowUpCircle, ArrowDownCircle, Pencil, Trash2, RotateCcw } from 'lucide-react'
 import { getIconComponent } from '../lib/categoryIcons'
 import { fmt, MONTHS_SHORT } from '../lib/utils'
 import { showToast } from './Toast'
@@ -11,7 +11,16 @@ function fmtDate(iso) {
   return `${d.getDate()} ${MONTHS_SHORT[d.getMonth()]} ${d.getFullYear()}`
 }
 
-export function GoalDetailPanel({ goal, onBack, onEdit, onAportar, onRetirar, onMarkCompleted, onDelete }) {
+// `isShared`/`can*`/`currentUserId`/`onRevert` solo importan en una meta de
+// Espacio Compartido — en personal siempre llegan con sus defaults (todo
+// permitido, `onRevert` no se usa porque ahí "Retirar" ya cumple ese rol).
+// "Retirar" y "Aportar" NUNCA se esconden por falta de permiso — se
+// quedan visibles pero avisan el motivo al tocarlos (decisión de
+// Johnatan: esconder el botón confunde más que bloquearlo con explicación).
+export function GoalDetailPanel({
+  goal, onBack, onEdit, onAportar, onRetirar, onRevert, onMarkCompleted, onDelete,
+  isShared = false, canContribute = true, canWithdraw = true, canEdit = true, canDelete = true, currentUserId = null,
+}) {
   const [menuOpen, setMenuOpen] = useState(false)
   const [activeAction, setActiveAction] = useState(null) // null | 'aportar' | 'retirar'
   const [amount, setAmount] = useState('')
@@ -36,8 +45,11 @@ export function GoalDetailPanel({ goal, onBack, onEdit, onAportar, onRetirar, on
   }, [menuOpen])
 
   const Icon = getIconComponent(goal.icon)
+  const showMenu = canEdit || canDelete
 
   function openAction(type) {
+    if (type === 'aportar' && !canContribute) { showToast('No tienes permiso para aportar a metas en este espacio'); return }
+    if (type === 'retirar' && !canWithdraw) { showToast('No tienes permiso para retirar de las metas en este espacio'); return }
     setActiveAction(type)
     setAmount('')
     setMenuOpen(false)
@@ -58,6 +70,12 @@ export function GoalDetailPanel({ goal, onBack, onEdit, onAportar, onRetirar, on
     setActiveAction(null)
   }
 
+  async function handleRevert(tx) {
+    const { error } = await onRevert(tx.id)
+    if (error) { showToast(error.message || 'No se pudo revertir'); return }
+    showToast('Aporte revertido')
+  }
+
   return (
     <div className={styles.screen}>
       <div className={styles.header}>
@@ -68,21 +86,27 @@ export function GoalDetailPanel({ goal, onBack, onEdit, onAportar, onRetirar, on
           {Icon && <Icon size={15} color="#fff" />}
         </div>
         <div className={styles.headerTitle}>{goal.name}</div>
-        <div className={styles.menuWrapper} ref={menuRef}>
-          <button type="button" onClick={() => setMenuOpen(o => !o)} className={styles.iconButton} aria-label="Más opciones">
-            <MoreVertical size={20} color="var(--text)" />
-          </button>
-          {menuOpen && (
-            <div className={styles.menu}>
-              <button type="button" onClick={() => { setMenuOpen(false); onEdit() }} className={styles.menuItem}>
-                <span><Pencil size={14} /></span>Editar
-              </button>
-              <button type="button" onClick={() => { setMenuOpen(false); setDeleteModalOpen(true) }} className={`${styles.menuItem} ${styles.menuItemDanger}`}>
-                <span><Trash2 size={14} /></span>Eliminar
-              </button>
-            </div>
-          )}
-        </div>
+        {showMenu && (
+          <div className={styles.menuWrapper} ref={menuRef}>
+            <button type="button" onClick={() => setMenuOpen(o => !o)} className={styles.iconButton} aria-label="Más opciones">
+              <MoreVertical size={20} color="var(--text)" />
+            </button>
+            {menuOpen && (
+              <div className={styles.menu}>
+                {canEdit && (
+                  <button type="button" onClick={() => { setMenuOpen(false); onEdit() }} className={styles.menuItem}>
+                    <span><Pencil size={14} /></span>Editar
+                  </button>
+                )}
+                {canDelete && (
+                  <button type="button" onClick={() => { setMenuOpen(false); setDeleteModalOpen(true) }} className={`${styles.menuItem} ${styles.menuItemDanger}`}>
+                    <span><Trash2 size={14} /></span>Eliminar
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       <div className={styles.ring} style={{ background: `conic-gradient(var(--paid) 0% ${goal.percent}%, var(--border) ${goal.percent}% 100%)` }}>
@@ -123,15 +147,18 @@ export function GoalDetailPanel({ goal, onBack, onEdit, onAportar, onRetirar, on
         </div>
       ) : (
         <div className={styles.buttonsRow}>
-          <button type="button" onClick={() => openAction('aportar')} className={styles.actionBtn}>
+          <button type="button" onClick={() => openAction('aportar')} className={`${styles.actionBtn} ${!canContribute ? styles.actionBtnBlocked : ''}`}>
             <ArrowUp size={16} />
             Aportar
           </button>
-          <button type="button" onClick={() => openAction('retirar')} className={`${styles.actionBtn} ${styles.actionBtnGhost}`}>
+          <button type="button" onClick={() => openAction('retirar')} className={`${styles.actionBtn} ${styles.actionBtnGhost} ${!canWithdraw ? styles.actionBtnBlocked : ''}`}>
             <ArrowDown size={16} />
             Retirar
           </button>
         </div>
+      )}
+      {isShared && !canWithdraw && !activeAction && (
+        <div className={styles.blockedHint}>Retirar está desactivado — pídele el permiso al dueño del espacio.</div>
       )}
 
       <button type="button" onClick={() => onMarkCompleted(!goal.is_completed)} className={styles.completeButton}>
@@ -147,15 +174,28 @@ export function GoalDetailPanel({ goal, onBack, onEdit, onAportar, onRetirar, on
           {goal.transactions.map(tx => {
             const isAporte = tx.type === 'aporte'
             const TxIcon = isAporte ? ArrowUpCircle : ArrowDownCircle
+            // Revertir un aporte propio necesita el mismo permiso con el
+            // que se aportó; el de alguien más necesita poder eliminar —
+            // mismo criterio que ya usa el Fondo Compartido al borrar una
+            // aportación.
+            const isOwnTx = tx.user_id === currentUserId
+            const canRevertThis = isShared && isAporte && (isOwnTx ? canContribute : canDelete)
             return (
               <div key={tx.id} className={styles.historyRow}>
                 <div className={styles.historyLeft}>
                   <TxIcon size={16} color={isAporte ? 'var(--paid)' : 'var(--soon-color)'} />
                   <span>{isAporte ? 'Aporte' : 'Retiro'} · {fmtDate(tx.created_at)}</span>
                 </div>
-                <span style={{ color: isAporte ? 'var(--paid)' : 'var(--soon-color)' }}>
-                  {isAporte ? '+' : '-'}{fmt(tx.amount)}
-                </span>
+                <div className={styles.historyRight}>
+                  <span style={{ color: isAporte ? 'var(--paid)' : 'var(--soon-color)' }}>
+                    {isAporte ? '+' : '-'}{fmt(tx.amount)}
+                  </span>
+                  {canRevertThis && (
+                    <button type="button" onClick={() => handleRevert(tx)} className={styles.revertButton} aria-label="Revertir aporte">
+                      <RotateCcw size={15} color="var(--text)" />
+                    </button>
+                  )}
+                </div>
               </div>
             )
           })}

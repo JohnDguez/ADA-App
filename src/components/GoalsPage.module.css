@@ -1,0 +1,265 @@
+.pageRoot {
+  /* 120px cubría solo el nav. La pastilla fija "Añadir meta" vive encima
+     de él, así que hace falta más aire para que la última tarjeta no
+     quede tapada. */
+  padding-bottom: 185px;
+  background: var(--bg);
+  min-height: 100vh;
+}
+
+/* Fila invisible que reproduce la caja del BottomNav (mismo ancho y
+   centrado) — sirve para que el 40% de la pastilla sea de la columna de
+   contenido y no del viewport, y para poder alinearla a la derecha de esa
+   columna en cualquier tamaño de pantalla. `pointer-events: none` para
+   que el espacio vacío de la fila no bloquee lo que hay debajo; la
+   pastilla lo reactiva. */
+.addPillRow {
+  position: fixed;
+  bottom: 120px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: calc(100% - 32px);
+  max-width: 388px;
+  display: flex;
+  justify-content: flex-end;
+  z-index: 95;
+  pointer-events: none;
+}
+
+/* EXCEPCIÓN DOCUMENTADA a la regla 13 (border radius 5px / pills solo en
+   segmentados de 2 posiciones): botón de acción principal en pastilla,
+   aprobado por Johnatan para esta pantalla — ver RULES.md.
+   Sube a 120px (antes 94px) porque a esa altura quedaba muy cerca del
+   nav y era fácil tocar el nav por error: el "+" del BottomNav sobresale
+   hacia arriba con `translate(-50%, -72%)` y llega a ~85px del borde. */
+.addPill {
+  pointer-events: auto;
+  width: 40%;
+  min-width: 150px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 13px;
+  border: none;
+  border-radius: 999px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(47, 140, 250, 0.4);
+  white-space: nowrap;
+}
+
+.roundedContentWrapper {
+  background: var(--bg);
+  border-radius: 24px 24px 0 0;
+  margin-top: -24px;
+  position: relative;
+  z-index: 10;
+}
+
+.screen {
+  padding: 20px 16px 0;
+  box-sizing: border-box;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 18px;
+}
+
+.headerTitle {
+  font-size: 19px;
+  font-weight: 500;
+  color: var(--text);
+}
+
+/* Pastilla atenuada cuando falta el permiso para crear — se queda
+   visible y explica el motivo al tocarla, en vez de esconderse (mismo
+   criterio que "Retirar" bloqueado en el detalle). */
+.addPillDisabled {
+  opacity: 0.5;
+}
+
+.summaryRow {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.summaryBox {
+  flex: 1;
+  background: var(--section-bg);
+  border-radius: var(--radius);
+  padding: 12px 14px;
+}
+
+.summaryLabel {
+  font-size: 11px;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+
+.summaryValue {
+  font-size: 17px;
+  font-weight: 500;
+  color: var(--text);
+}
+
+.sortButton {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+  margin-bottom: 14px;
+  background: none;
+  border: none;
+  padding: 4px 2px;
+  font-size: 12.5px;
+  color: var(--text);
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.card {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: var(--surface);
+  border-radius: var(--radius);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  padding: 16px;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.cardWarning {
+  box-shadow: 0 0 0 1.5px var(--soon-color), 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.cardTop {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  gap: 10px;
+}
+
+.cardTitleGroup {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.cardIcon {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.cardName {
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cardTarget {
+  font-size: 14px;
+  color: var(--text);
+  flex-shrink: 0;
+}
+
+.cardStatsRow {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: var(--text);
+  margin-bottom: 6px;
+}
+
+.progressTrack {
+  height: 6px;
+  background: var(--border);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+  margin-bottom: 10px;
+}
+
+.progressFill {
+  height: 100%;
+  background: var(--paid);
+  border-radius: var(--radius-full);
+  transition: width .4s ease;
+}
+
+.cardBottomRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 12px;
+  color: var(--text);
+}
+
+.daysBadge {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--soon-color);
+}
+
+.premiumBanner {
+  margin-top: 14px;
+  background: var(--surface);
+  border-radius: var(--radius);
+  padding: 20px 16px;
+  text-align: center;
+}
+
+.premiumTitle {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 6px;
+}
+
+.premiumText {
+  font-size: 12px;
+  color: var(--text);
+  margin-bottom: 14px;
+}
+
+.premiumButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  background: var(--premium-gold);
+  color: var(--premium-gold-text);
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 12px;
+  font-size: 14px;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  box-sizing: border-box;
+}
