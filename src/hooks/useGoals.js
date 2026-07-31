@@ -246,7 +246,12 @@ export function useGoals(userId, profile, spaceId = null) {
     if (completed && !spaceId) {
       const goal = goals.find(g => g.id === goalId)
       if (goal && goal.remaining > 0) {
-        if (profile?.salary_enabled) {
+        // Mismo criterio ya usado en pages/PaymentsPage.jsx para decidir
+        // si el usuario "tiene ingreso": `salary_enabled` Y un monto
+        // capturado (> 0) — no basta con el interruptor activado sin
+        // ningún monto.
+        const hasIncome = !!(profile?.salary_enabled && Number(profile?.salary_amount) > 0)
+        if (hasIncome) {
           const { error } = await aportar(goalId, goal.remaining, goal.name)
           if (error) return { error }
         } else {
