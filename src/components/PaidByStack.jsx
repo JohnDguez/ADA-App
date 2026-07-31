@@ -92,6 +92,25 @@ export function PaidByStack({ contributors, members, fundAmount = 0, size = 24, 
     setTooltip({ entry, x: rect.left + rect.width / 2, y: rect.top })
   }
 
+  // Bug real reportado por Johnatan: al tocar fuera del tooltip para
+  // cerrarlo (en cualquier parte de la pantalla), se abrían de golpe los
+  // detalles de la meta/pago sobre el que estaba parado el stack — sin
+  // importar que el click ni siquiera cayera sobre esa card. Causa: el
+  // overlay/tooltip se renderizan con `createPortal` a `document.body`,
+  // así que en el DOM real quedan FUERA de cualquier card — pero React
+  // hace bubbling de eventos según el árbol de REACT, no el DOM real, y
+  // en el árbol de React este overlay sigue siendo descendiente de quien
+  // renderizó `<PaidByStack>` (la card). Sin cortar la propagación aquí,
+  // el click en el overlay burbujeaba hacia arriba hasta el `onClick` de
+  // la card contenedora, abriéndola. Fix: `stopPropagation()` en el click
+  // del overlay Y del propio tooltip (por si el toque cae directo sobre
+  // el texto/avatar visible del tooltip, que está por encima del
+  // overlay).
+  function closeTooltip(e) {
+    e.stopPropagation()
+    setTooltip(null)
+  }
+
   return (
     <div className={inline ? styles.stackInline : styles.stack}>
       {entries.map((entry, i) => (
@@ -117,8 +136,8 @@ export function PaidByStack({ contributors, members, fundAmount = 0, size = 24, 
 
       {tooltip && createPortal(
         <>
-          <div className={styles.tooltipOverlay} onClick={() => setTooltip(null)} />
-          <div ref={tooltipRef} className={styles.tooltip} style={{ left: tooltip.x, top: tooltip.y }}>
+          <div className={styles.tooltipOverlay} onClick={closeTooltip} />
+          <div ref={tooltipRef} className={styles.tooltip} style={{ left: tooltip.x, top: tooltip.y }} onClick={e => e.stopPropagation()}>
             <div className={`${styles.tooltipAvatar} ${tooltip.entry.isFund ? styles.avatarButtonFund : ''}`}>
               {tooltip.entry.isFund ? (
                 <PiggyBank size={18} color="var(--surface)" strokeWidth={2} />
