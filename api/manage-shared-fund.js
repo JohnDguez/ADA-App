@@ -198,16 +198,25 @@ module.exports = async function handler(req, res) {
     const numAmount = Number(amount)
     if (!numAmount || numAmount <= 0) return res.status(400).json({ error: 'Ingresa un monto válido' })
 
-    // No puede aportar más de lo que en verdad tiene disponible en su
-    // remanente personal (nunca confiar solo en la validación del cliente)
-    // — confirmado con Johnatan: en personal sí puede estar en negativo,
-    // pero no puede APORTAR estando en negativo, ni exceder lo disponible.
-    const personalAvailable = await getPersonalAvailable(supabase, actorId)
-    if (personalAvailable <= 0) {
-      return res.status(400).json({ error: 'No puedes aportar — tu remanente personal está en negativo' })
-    }
-    if (Math.round(numAmount * 100) > Math.round(personalAvailable * 100)) {
-      return res.status(400).json({ error: `No puedes aportar más de lo que tienes disponible (${personalAvailable.toFixed(2)})` })
+    // La validación de "disponible suficiente" SOLO aplica si el usuario
+    // activó su ingreso por periodo (mismo criterio ya usado en
+    // pages/PaymentsPage.jsx para decidir si mostrar el balance:
+    // `salary_enabled && salary_amount > 0`) — sin ingreso no hay
+    // disponible real contra qué validar, y bloquear de todos modos le
+    // impedía a alguien que solo lleva registro de gastos (sin capturar
+    // sueldo) aportar al Fondo. La acción se aprueba siempre en ese caso;
+    // el pago reflejo se sigue registrando igual (es un gasto real, solo
+    // que sin tope contra qué medirlo).
+    const { data: actorProfileRow } = await supabase.from('profiles').select('salary_enabled, salary_amount').eq('id', actorId).maybeSingle()
+    const actorHasIncome = !!(actorProfileRow?.salary_enabled && Number(actorProfileRow?.salary_amount) > 0)
+    if (actorHasIncome) {
+      const personalAvailable = await getPersonalAvailable(supabase, actorId)
+      if (personalAvailable <= 0) {
+        return res.status(400).json({ error: 'No puedes aportar — tu remanente personal está en negativo' })
+      }
+      if (Math.round(numAmount * 100) > Math.round(personalAvailable * 100)) {
+        return res.status(400).json({ error: `No puedes aportar más de lo que tienes disponible (${personalAvailable.toFixed(2)})` })
+      }
     }
 
     const { data: reflection, error: reflErr } = await supabase.from('payments').insert({

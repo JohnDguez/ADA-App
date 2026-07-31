@@ -117,6 +117,16 @@ async function goalBalance(goalId) {
   return (txs || []).reduce((s, t) => s + (t.type === 'aporte' ? Number(t.amount) : -Number(t.amount)), 0)
 }
 
+// La validación de "disponible suficiente" SOLO aplica si el usuario
+// activó su ingreso por periodo Y capturó un monto — mismo criterio ya
+// usado en pages/PaymentsPage.jsx (`salary_enabled && salary_amount > 0`)
+// para decidir si mostrar el balance. Sin ingreso no hay disponible real
+// contra qué medir, así que la acción se aprueba siempre en ese caso.
+async function actorHasIncome(userId) {
+  const { data: profile } = await supabase.from('profiles').select('salary_enabled, salary_amount').eq('id', userId).maybeSingle()
+  return !!(profile?.salary_enabled && Number(profile?.salary_amount) > 0)
+}
+
 module.exports = async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
 
@@ -213,8 +223,7 @@ module.exports = async function handler(req, res) {
         const currentAmount = await goalBalance(goal.id)
         const remaining = Number(goal.target_amount) - currentAmount
         if (remaining > 0.001) {
-          const { data: actorProfile } = await supabase.from('profiles').select('salary_enabled').eq('id', actorId).maybeSingle()
-          if (actorProfile?.salary_enabled) {
+          if (await actorHasIncome(actorId)) {
             const personalAvailable = await getPersonalAvailable(actorId)
             if (Math.round(remaining * 100) > Math.round(personalAvailable * 100)) {
               return res.status(400).json({ error: `No puedes completar la meta — te faltan ${money(remaining)} y tu disponible es ${money(personalAvailable)}` })
@@ -279,12 +288,19 @@ module.exports = async function handler(req, res) {
       const amount = Number(payload?.amount)
       if (!amount || amount <= 0) return res.status(400).json({ error: 'Monto inválido' })
 
-      const personalAvailable = await getPersonalAvailable(actorId)
-      if (personalAvailable <= 0) {
-        return res.status(400).json({ error: 'No puedes aportar — tu disponible personal está en negativo' })
-      }
-      if (Math.round(amount * 100) > Math.round(personalAvailable * 100)) {
-        return res.status(400).json({ error: `No puedes aportar más de lo que tienes disponible (${money(personalAvailable)})` })
+      // La validación de "disponible suficiente" SOLO aplica si el actor
+      // tiene el ingreso por periodo activado (ver `actorHasIncome`) — sin
+      // ingreso, la acción se aprueba siempre; el pago reflejo se sigue
+      // registrando igual, es un gasto real, solo que sin tope contra qué
+      // medirlo.
+      if (await actorHasIncome(actorId)) {
+        const personalAvailable = await getPersonalAvailable(actorId)
+        if (personalAvailable <= 0) {
+          return res.status(400).json({ error: 'No puedes aportar — tu disponible personal está en negativo' })
+        }
+        if (Math.round(amount * 100) > Math.round(personalAvailable * 100)) {
+          return res.status(400).json({ error: `No puedes aportar más de lo que tienes disponible (${money(personalAvailable)})` })
+        }
       }
 
       const { data: reflection, error: reflErr } = await supabase.from('payments').insert({
