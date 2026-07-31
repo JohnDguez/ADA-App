@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { Plus, SlidersHorizontal, Crown, PiggyBank } from 'lucide-react'
+import { Plus, SlidersHorizontal, Crown, PiggyBank, Target, Check } from 'lucide-react'
 import { PageHeader } from '../components/PageHeader'
 import { EmptyState } from '../components/EmptyState'
 import { GoalDetailPanel } from '../components/GoalDetailPanel'
@@ -7,9 +7,14 @@ import { GoalFormModal } from '../components/GoalFormModal'
 import { NewSharedSpacePanel } from '../components/NewSharedSpacePanel'
 import { PaidByStack } from '../components/PaidByStack'
 import { getIconComponent } from '../lib/categoryIcons'
-import { fmt } from '../lib/utils'
+import { fmt, MONTHS_SHORT } from '../lib/utils'
 import { showToast } from '../components/Toast'
 import styles from './GoalsPage.module.css'
+
+function fmtDate(iso) {
+  const d = new Date(iso)
+  return `${d.getDate()} ${MONTHS_SHORT[d.getMonth()]} ${d.getFullYear()}`
+}
 
 // Metas de ahorro — página propia del nav (antes era un overlay que se
 // abría desde una bandeja en Home, ver HISTORIAL.md). Al ser una pestaña,
@@ -25,6 +30,11 @@ import styles from './GoalsPage.module.css'
 // los 5 permisos de Metas (`can_add_goals`/etc., ver RULES.md/CONTEXT.md),
 // mismo objeto que ya usan Gastos/Recurrentes — `isRestricted: false`
 // cuando es personal o cuando el usuario es dueño del espacio.
+//
+// NUEVO (v0.9.317): switch "Activas"/"Cumplidas" — antes una meta
+// cumplida desaparecía de la vista sin forma de revisarla o reabrirla.
+// Reutiliza EXACTO el patrón de HomePage.jsx (tabTrack/tabThumb/tabButton,
+// pastilla 999px, misma curva de animación) — ver GoalsPage.module.css.
 export function GoalsPage({
   goalsData, profile, isPremium, activeSpaceId = null, rawActiveSpaceId = null,
   spacePermissions, spaceMembers = [], spaceSwitcher, activeSpaceHeader, sharedSpaces, onSpaceReady,
@@ -51,6 +61,8 @@ export function GoalsPage({
   const [formOpen, setFormOpen] = useState(false)
   const [editingGoal, setEditingGoal] = useState(null)
   const [sortBy, setSortBy] = useState('monto')
+  // 'activas' | 'cumplidas' — default 'activas'
+  const [goalsView, setGoalsView] = useState('activas')
 
   // Botón/gesto "atrás" del teléfono — solo se intercepta cuando hay algo
   // "adentro" que cerrar (el form o el detalle). Si está en la lista, se
@@ -161,31 +173,82 @@ export function GoalsPage({
                     </div>
                   </div>
 
-                  {activeGoals.length > 1 && (
+                  {/* Switch "Activas"/"Cumplidas" — mismo patrón exacto que
+                      el de HomePage.jsx ("Periodo actual"/"Próximo
+                      periodo"): track + thumb deslizante, pastilla 999px. */}
+                  <div className={styles.tabTrack}>
+                    <div
+                      className={styles.tabThumb}
+                      style={{ transform: `translateX(${goalsView === 'cumplidas' ? 100 : 0}%)` }}
+                    />
                     <button
                       type="button"
-                      className={styles.sortButton}
-                      onClick={() => setSortBy(s => (s === 'monto' ? 'nombre' : 'monto'))}
+                      onClick={() => setGoalsView('activas')}
+                      className={`${styles.tabButton} ${goalsView === 'activas' ? styles.tabButtonActive : ''}`}
                     >
-                      <SlidersHorizontal size={13} />
-                      Ordenar por {sortBy}
+                      Activas
                     </button>
-                  )}
-
-                  <div className={styles.list}>
-                    {sortedGoals.map(goal => (
-                      <GoalCard key={goal.id} goal={goal} isShared={isShared} spaceMembers={spaceMembers} onClick={() => setSelectedGoalId(goal.id)} />
-                    ))}
+                    <button
+                      type="button"
+                      onClick={() => setGoalsView('cumplidas')}
+                      className={`${styles.tabButton} ${goalsView === 'cumplidas' ? styles.tabButtonActive : ''}`}
+                    >
+                      Cumplidas
+                    </button>
                   </div>
 
-                  {atFreeLimit && (
-                    <div className={styles.premiumBanner}>
-                      <div className={styles.premiumTitle}>Obtén Premium para ahorrar en más de una meta a la vez</div>
-                      <div className={styles.premiumText}>Crea todas las que quieras — tu próximo viaje, una consola, lo que se te ocurra — y ahorra para varias al mismo tiempo, en vez de quedarte solo con una activa.</div>
-                      <button type="button" onClick={onOpenPremium} className={styles.premiumButton}>
-                        <Crown size={16} fill="currentColor" /> Prueba Premium GRATIS 7 días
-                      </button>
-                    </div>
+                  {goalsView === 'activas' ? (
+                    <>
+                      {activeGoals.length > 1 && (
+                        <button
+                          type="button"
+                          className={styles.sortButton}
+                          onClick={() => setSortBy(s => (s === 'monto' ? 'nombre' : 'monto'))}
+                        >
+                          <SlidersHorizontal size={13} />
+                          Ordenar por {sortBy}
+                        </button>
+                      )}
+
+                      {activeGoals.length === 0 ? (
+                        <EmptyState
+                          icon={PiggyBank}
+                          title="No tienes metas activas"
+                          subtitle="Crea una nueva o revisa tus metas cumplidas"
+                          onClick={handleAddClick}
+                        />
+                      ) : (
+                        <div className={styles.list}>
+                          {sortedGoals.map(goal => (
+                            <GoalCard key={goal.id} goal={goal} isShared={isShared} spaceMembers={spaceMembers} onClick={() => setSelectedGoalId(goal.id)} />
+                          ))}
+                        </div>
+                      )}
+
+                      {atFreeLimit && (
+                        <div className={styles.premiumBanner}>
+                          <div className={styles.premiumTitle}>Obtén Premium para ahorrar en más de una meta a la vez</div>
+                          <div className={styles.premiumText}>Crea todas las que quieras — tu próximo viaje, una consola, lo que se te ocurra — y ahorra para varias al mismo tiempo, en vez de quedarte solo con una activa.</div>
+                          <button type="button" onClick={onOpenPremium} className={styles.premiumButton}>
+                            <Crown size={16} fill="currentColor" /> Prueba Premium GRATIS 7 días
+                          </button>
+                        </div>
+                      )}
+                    </>
+                  ) : (
+                    completedGoals.length === 0 ? (
+                      <EmptyState
+                        icon={Target}
+                        title="Aún no hay metas cumplidas"
+                        subtitle="Cuando completes una meta aparecerá aquí."
+                      />
+                    ) : (
+                      <div className={styles.list}>
+                        {completedGoals.map(goal => (
+                          <GoalCard key={goal.id} goal={goal} isShared={isShared} spaceMembers={spaceMembers} onClick={() => setSelectedGoalId(goal.id)} />
+                        ))}
+                      </div>
+                    )
                   )}
                 </>
               )}
@@ -234,6 +297,12 @@ export function GoalsPage({
 
 function GoalCard({ goal, isShared, spaceMembers, onClick }) {
   const Icon = getIconComponent(goal.icon) || PiggyBank
+  const isCompleted = goal.is_completed
+  // Una meta cumplida siempre se muestra al 100% en la barra — puede
+  // haberse marcado como hecha antes de llegar al monto real (el usuario
+  // puso el restante de su bolsillo, ver GoalDetailPanel.jsx), pero visualmente
+  // ya está completa.
+  const displayPercent = isCompleted ? 100 : goal.percent
 
   // Contributors para PaidByStack: suma de aportes por user_id (los
   // retiros no cuentan como "quién puso el dinero", solo los aportes) —
@@ -263,21 +332,28 @@ function GoalCard({ goal, isShared, spaceMembers, onClick }) {
       </div>
       <div className={styles.cardStatsRow}>
         <span>{fmt(goal.currentAmount)} abonado</span>
-        <span>{goal.percent}%</span>
+        <span>{displayPercent}%</span>
       </div>
       <div className={styles.progressTrack}>
-        <div className={styles.progressFill} style={{ width: `${goal.percent}%` }} />
+        <div className={styles.progressFill} style={{ width: `${displayPercent}%` }} />
       </div>
-      <div className={styles.cardBottomRow}>
-        <div className={styles.cardBottomLeft}>
-          <span>Queda: {fmt(goal.remaining)}</span>
-          {goal.isNearDeadline && <span className={styles.daysBadge}>Quedan {goal.daysRemaining} días</span>}
-          {goal.isOverdue && <span className={styles.daysBadge}>Fecha vencida</span>}
+      {isCompleted ? (
+        <div className={styles.cardBottomRow}>
+          <span className={styles.completedText}>Cumplida el {fmtDate(goal.completed_at)} · {fmt(goal.currentAmount)} ahorrados</span>
+          <Check size={16} className={styles.completedCheck} color="var(--paid)" />
         </div>
-        {isShared && contributors.length > 0 && (
-          <PaidByStack contributors={contributors} members={spaceMembers} size={20} inline />
-        )}
-      </div>
+      ) : (
+        <div className={styles.cardBottomRow}>
+          <div className={styles.cardBottomLeft}>
+            <span>Queda: {fmt(goal.remaining)}</span>
+            {goal.isNearDeadline && <span className={styles.daysBadge}>Quedan {goal.daysRemaining} días</span>}
+            {goal.isOverdue && <span className={styles.daysBadge}>Fecha vencida</span>}
+          </div>
+          {isShared && contributors.length > 0 && (
+            <PaidByStack contributors={contributors} members={spaceMembers} size={20} inline />
+          )}
+        </div>
+      )}
     </button>
   )
 }

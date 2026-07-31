@@ -84,8 +84,8 @@
 }
 
 /* Pastilla atenuada cuando falta el permiso para crear — se queda
-   visible y explica el motivo al tocarla, en vez de esconderse (mismo
-   criterio que "Retirar" bloqueado en el detalle). */
+   visible y explica el motivo al tocarla (mismo criterio que "Retirar"
+   bloqueado en el detalle). */
 .addPillDisabled {
   opacity: 0.5;
 }
@@ -113,6 +113,54 @@
   font-size: 17px;
   font-weight: 500;
   color: var(--text);
+}
+
+/* ── Switch "Activas"/"Cumplidas" ─────────────────────────────────────────
+   NUEVO (v0.9.317). Reutiliza EXACTO el patrón ya establecido en
+   HomePage.module.css (.tabTrack/.tabThumb/.tabButton/.tabButtonActive)
+   para el switch "Periodo actual"/"Próximo periodo" — track + thumb
+   deslizante real, pastilla 999px (Regla 13, excepción ya documentada
+   para segmentados de 2 posiciones), misma curva/duración de animación. */
+.tabTrack {
+  position: relative;
+  display: flex;
+  background: var(--section-bg);
+  border-radius: 999px;
+  padding: 4px;
+  margin-bottom: 16px;
+  user-select: none;
+}
+
+.tabThumb {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  width: calc(50% - 4px);
+  height: calc(100% - 8px);
+  background: var(--accent);
+  border-radius: 999px;
+  transition: transform .25s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.tabButton {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  text-align: center;
+  padding: 10px 0;
+  border: none;
+  background: transparent;
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 400;
+  font-family: 'DM Sans', sans-serif;
+  cursor: pointer;
+  transition: color .2s;
+}
+
+.tabButtonActive {
+  color: var(--surface);
+  font-weight: 500;
 }
 
 .sortButton {
@@ -236,6 +284,20 @@
   font-size: 11px;
   font-weight: 500;
   color: var(--soon-color);
+}
+
+/* NUEVO (v0.9.317) — fila inferior de una card en la vista "Cumplidas",
+   reemplaza a .cardBottomLeft/daysBadge de una card activa. */
+.completedText {
+  font-size: 12px;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.completedCheck {
+  flex-shrink: 0;
 }
 
 .premiumBanner {
