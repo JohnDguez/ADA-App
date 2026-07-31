@@ -199,6 +199,52 @@ module.exports = async function handler(req, res) {
         updates.completed_at = p.isCompleted ? new Date().toISOString() : null
       }
 
+      // Completar ANTES de llegar al monto significa que el actor puso el
+      // restante de su bolsillo — automático, no se pregunta nada. Si su
+      // perfil PERSONAL tiene el ingreso por periodo activado, ese
+      // restante se descuenta de su nómina (mismo pago reflejo que
+      // "Aportar", validado contra su disponible real); si no lo tiene
+      // activado, no hay de dónde descontarlo — se completa el MONTO
+      // igual (no solo la barra), con un `goal_transaction` sin ningún
+      // pago real de por medio. Corre ANTES del `update` para que el
+      // abonado ya refleje el monto completo en cuanto la meta pase a
+      // cumplida.
+      if (p.isCompleted === true && !goal.is_completed) {
+        const currentAmount = await goalBalance(goal.id)
+        const remaining = Number(goal.target_amount) - currentAmount
+        if (remaining > 0.001) {
+          const { data: actorProfile } = await supabase.from('profiles').select('salary_enabled').eq('id', actorId).maybeSingle()
+          if (actorProfile?.salary_enabled) {
+            const personalAvailable = await getPersonalAvailable(actorId)
+            if (Math.round(remaining * 100) > Math.round(personalAvailable * 100)) {
+              return res.status(400).json({ error: `No puedes completar la meta — te faltan ${money(remaining)} y tu disponible es ${money(personalAvailable)}` })
+            }
+            const { data: reflection, error: reflErr } = await supabase.from('payments').insert({
+              user_id: actorId, space_id: null,
+              name: `Aporte a meta — ${goal.name}`, category: 'Ahorro',
+              amount: remaining, due_date: todayStr || dateToStr(today()),
+              is_paid: true, paid_at: new Date().toISOString(),
+              is_variable: false, is_recurrent: false, postponed: false, paused: false,
+              source_space_id: spaceId, is_contribution_reflection: true,
+            }).select().single()
+            if (reflErr) return res.status(500).json({ error: 'No se pudo registrar el aporte restante: ' + reflErr.message })
+            const { error: txErr } = await supabase.from('goal_transactions').insert({
+              goal_id: goal.id, user_id: actorId, space_id: spaceId,
+              amount: remaining, type: 'aporte', reflection_payment_id: reflection.id,
+            })
+            if (txErr) {
+              await supabase.from('payments').delete().eq('id', reflection.id)
+              return res.status(500).json({ error: 'No se pudo completar la meta: ' + txErr.message })
+            }
+          } else {
+            const { error: txErr } = await supabase.from('goal_transactions').insert({
+              goal_id: goal.id, user_id: actorId, space_id: spaceId, amount: remaining, type: 'aporte',
+            })
+            if (txErr) return res.status(500).json({ error: 'No se pudo completar la meta: ' + txErr.message })
+          }
+        }
+      }
+
       const { data: updated, error } = await supabase
         .from('goals').update(updates).eq('id', goal.id).select().single()
       if (error) return res.status(500).json({ error: 'No se pudo actualizar: ' + error.message })
