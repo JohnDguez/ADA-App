@@ -305,19 +305,21 @@ function GoalCard({ goal, isShared, spaceMembers, onClick }) {
   // ya está completa.
   const displayPercent = isCompleted ? 100 : goal.percent
 
-  // Contributors para PaidByStack: suma de aportes por user_id (los
-  // retiros no cuentan como "quién puso el dinero", solo los aportes) —
-  // mismo criterio que `payment.contributors` en usePayments.js.
+  // Contributors para PaidByStack: NETO por user_id — aporte suma, retiro
+  // resta (bug real reportado por Johnatan: alguien que aportó $700 y
+  // luego retiró $200 de eso mismo seguía apareciendo con $700 puestos,
+  // cuando en realidad solo tiene $500 netos abonados). Se filtran los
+  // netos en 0 o negativos — si alguien retiró todo lo que había puesto,
+  // ya no debe aparecer como aportante.
   const contributors = isShared
     ? Object.values(
         goal.transactions
-          .filter(t => t.type === 'aporte')
           .reduce((acc, t) => {
             acc[t.user_id] = acc[t.user_id] || { user_id: t.user_id, amount: 0 }
-            acc[t.user_id].amount += Number(t.amount)
+            acc[t.user_id].amount += t.type === 'aporte' ? Number(t.amount) : -Number(t.amount)
             return acc
           }, {})
-      )
+      ).filter(c => c.amount > 0)
     : []
 
   return (
