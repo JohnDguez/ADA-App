@@ -20,17 +20,13 @@ function fmtDate(iso) {
 export function GoalDetailPanel({
   goal, onBack, onEdit, onAportar, onRetirar, onRevert, onMarkCompleted, onDelete,
   isShared = false, canContribute = true, canWithdraw = true, canEdit = true, canDelete = true, currentUserId = null, spaceMembers = [],
+  hasIncome = true,
 }) {
   const [menuOpen, setMenuOpen] = useState(false)
   const [activeAction, setActiveAction] = useState(null) // null | 'aportar' | 'retirar'
   const [amount, setAmount] = useState('')
   const [saving, setSaving] = useState(false)
   const [deleteModalOpen, setDeleteModalOpen] = useState(false)
-  // NUEVO (v0.9.317): al marcar como hecha una meta que todavía no llega
-  // al monto, se le pregunta al usuario si quiere aportar el restante de
-  // su nómina (ya que si la marca como cumplida antes de tiempo, es
-  // porque puso esa diferencia de su bolsillo) o dejarla como está.
-  const [completeConfirmOpen, setCompleteConfirmOpen] = useState(false)
   const [completing, setCompleting] = useState(false)
   const menuRef = useRef(null)
 
@@ -82,27 +78,27 @@ export function GoalDetailPanel({
     showToast('Aporte revertido')
   }
 
-  // "Marcar como hecha" — si todavía falta dinero por abonar, se pregunta
-  // antes de completar (nunca se asume). Si ya no falta nada (remaining
-  // <= 0), completa directo, igual que antes.
-  function handleMarkComplete() {
-    if (goal.remaining > 0) { setCompleteConfirmOpen(true); return }
-    onMarkCompleted(true)
-  }
-
-  async function confirmComplete(addRemaining) {
+  // "Marcar como hecha" — completar antes de llegar al monto es
+  // automático (no se pregunta): `onMarkCompleted` ya resuelve, según el
+  // ingreso por periodo del usuario, si el restante sale de su nómina
+  // (aporte real) o si solo se registra el monto sin pago (ver
+  // useGoals.js/manage-shared-goal.js). Aquí solo se informa el
+  // resultado con un toast.
+  async function handleMarkComplete() {
+    const goalRemaining = goal.remaining
     setCompleting(true)
-    if (addRemaining) {
-      const { error } = await onAportar(goal.remaining)
-      if (error) {
-        setCompleting(false)
-        showToast(error.message || 'No se pudo aportar el restante')
-        return
-      }
-    }
-    await onMarkCompleted(true)
+    const { error } = await onMarkCompleted(true)
     setCompleting(false)
-    setCompleteConfirmOpen(false)
+    if (error) { showToast(error.message || 'No se pudo completar la meta'); return }
+    if (goalRemaining > 0) {
+      showToast(
+        hasIncome
+          ? `Meta completada — se aportaron ${fmt(goalRemaining)} de tu nómina`
+          : 'Meta completada — sin ingreso activo no se descontó nada, solo se registró el monto'
+      )
+    } else {
+      showToast('¡Meta completada!')
+    }
   }
 
   return (
@@ -198,30 +194,15 @@ export function GoalDetailPanel({
         <div className={styles.blockedHint}>Retirar está desactivado — pídele el permiso al dueño del espacio.</div>
       )}
 
-      {/* "Marcar como hecha"/confirmación de restante — solo para metas
-          activas. Una meta ya cumplida se reabre desde el menú (arriba),
-          no desde aquí, para no tener 2 formas de hacer lo mismo. */}
+      {/* "Marcar como hecha" — solo para metas activas. Una meta ya
+          cumplida se reabre desde el menú (arriba), no desde aquí, para
+          no tener 2 formas de hacer lo mismo. Completar con dinero
+          restante es automático, ver handleMarkComplete. */}
       {!goal.is_completed && (
-        completeConfirmOpen ? (
-          <div className={styles.actionForm}>
-            <div className={styles.completeConfirmText}>
-              Te faltan {fmt(goal.remaining)} para llegar a la meta. ¿Los aportas de tu nómina para completarla, o la marcas como cumplida tal como está?
-            </div>
-            <div className={styles.actionButtons}>
-              <button type="button" onClick={() => confirmComplete(false)} disabled={completing} className="btn-ghost">
-                Marcar sin aportar
-              </button>
-              <button type="button" onClick={() => confirmComplete(true)} disabled={completing} className="btn-primary" style={{ width: 'auto' }}>
-                {completing ? 'Guardando...' : `Aportar ${fmt(goal.remaining)} y completar`}
-              </button>
-            </div>
-          </div>
-        ) : (
-          <button type="button" onClick={handleMarkComplete} className={styles.completeButton}>
-            <Check size={15} />
-            Marcar como hecha
-          </button>
-        )
+        <button type="button" onClick={handleMarkComplete} disabled={completing} className={styles.completeButton}>
+          <Check size={15} />
+          {completing ? 'Completando...' : 'Marcar como hecha'}
+        </button>
       )}
 
       <div className={styles.historyTitle}>Historial</div>
