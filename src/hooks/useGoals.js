@@ -228,7 +228,35 @@ export function useGoals(userId, profile, spaceId = null) {
     return callSharedApi('revert', { payload: { transactionId } })
   }
 
+  // Completar una meta ANTES de llegar al monto significa que el usuario
+  // puso el restante de su bolsillo — nunca queda "abonado $1,200 de
+  // $12,000" marcado como cumplida sin más. Regla de Johnatan, AUTOMÁTICA
+  // (no se le pregunta nada): si tiene el ingreso por periodo activado
+  // (`profile.salary_enabled`), ese restante se descuenta de su nómina —
+  // un aporte real, el mismo `aportar()` de siempre, sale de su
+  // disponible y aparece en Pagos. Si NO lo tiene activado, no hay de
+  // dónde descontarlo — se completa el MONTO igual (no solo la barra),
+  // registrando el movimiento en `goal_transactions` sin ningún pago real
+  // de por medio (nada que descontar de un disponible que no existe). En
+  // una meta COMPARTIDA esta misma lógica vive en el servidor
+  // (`api/manage-shared-goal.js`, acción 'update') porque el pago reflejo
+  // necesita el service role — aquí solo se manda `isCompleted` y el
+  // endpoint decide con el perfil personal de quien completa.
   async function markCompleted(goalId, completed = true) {
+    if (completed && !spaceId) {
+      const goal = goals.find(g => g.id === goalId)
+      if (goal && goal.remaining > 0) {
+        if (profile?.salary_enabled) {
+          const { error } = await aportar(goalId, goal.remaining, goal.name)
+          if (error) return { error }
+        } else {
+          const { error: txError } = await supabase.from('goal_transactions').insert({
+            goal_id: goalId, user_id: userId, space_id: null, amount: goal.remaining, type: 'aporte',
+          })
+          if (txError) return { error: txError }
+        }
+      }
+    }
     return updateGoal(goalId, { is_completed: completed, completed_at: completed ? new Date().toISOString() : null })
   }
 
