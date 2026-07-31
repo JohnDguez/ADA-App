@@ -239,7 +239,6 @@
   padding: 14px 16px;
   background: var(--surface);
   border-radius: var(--radius);
-  border: none;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   cursor: pointer;
 }
