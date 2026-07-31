@@ -309,7 +309,24 @@ export function HomePage({ payments, dataLoading = false, profile, spaceSwitcher
                       Periodo {periodRange(profile)}
                     </div>
                     <div className={styles.clearFloat} />
-                    <HalfRing key={activeSpaceId} percent={1} />
+                    {/* NUEVO (v0.9.323) — bug real reportado por Johnatan: al
+                        recargar, `payments` viene vacío A PROPÓSITO mientras
+                        `dataLoading` está en true (v0.9.284) — eso disparaba
+                        esta misma rama (`pagarEsteCobro.length === 0`,
+                        "todo pagado") mostrando 100% como si fuera un dato
+                        real. En cuanto los pagos de verdad llegaban y sí
+                        había algo pendiente, el código cambiaba a la otra
+                        rama (percent real) con el MISMO key — React reusa
+                        la misma instancia de HalfRing en vez de montar una
+                        nueva, así que animaba el salto 100%→real como si
+                        fuera una actualización en vivo (por diseño del
+                        propio componente). El key ahora incluye
+                        `dataLoading`: al pasar a false fuerza un montaje
+                        NUEVO, que arranca directo en el valor correcto sin
+                        ningún barrido (mismo criterio ya documentado en
+                        HalfRing.jsx) — la animación suave se queda solo
+                        para cuando de verdad marcas algo pagado en vivo. */}
+                    <HalfRing key={dataLoading ? 'loading' : activeSpaceId} percent={1} />
                     <div className={styles.cardTitle}>Total de este periodo</div>
                     <div className={styles.cardAmount}>{fmt(pagadoMonto)}</div>
                     {(pagadosFijosEstePeriodo > 0 || pagadosVariablesEstePeriodo > 0) && (
@@ -325,7 +342,7 @@ export function HomePage({ payments, dataLoading = false, profile, spaceSwitcher
                       Periodo {periodRange(profile)}
                     </div>
                     <div className={styles.clearFloat} />
-                    <HalfRing key={activeSpaceId} percent={pctPagado / 100} />
+                    <HalfRing key={dataLoading ? 'loading' : activeSpaceId} percent={pctPagado / 100} />
                     <div className={styles.cardPaidPendingRow}>
                       <span className={styles.cardPaidText}>{fmt(pagadoMonto)} pagado</span>
                       <span className={styles.cardPendingText}>{fmt(pendingAmt)} pendiente</span>
@@ -357,7 +374,7 @@ export function HomePage({ payments, dataLoading = false, profile, spaceSwitcher
                   {nextPeriodRange(profile)}
                 </div>
                 <div className={styles.clearFloat} />
-                <HalfRing key={activeSpaceId} percent={0} />
+                <HalfRing key={dataLoading ? 'loading' : activeSpaceId} percent={0} />
                 <div className={styles.cardTitle}>Total del próximo periodo</div>
                 <div className={styles.cardAmount}>{fmt(nextPeriodKnownTotal)}</div>
                 <div className={styles.cardMeta}>
