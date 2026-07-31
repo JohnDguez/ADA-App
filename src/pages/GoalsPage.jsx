@@ -340,8 +340,12 @@ function GoalCard({ goal, isShared, spaceMembers, onClick }) {
       </div>
       {isCompleted ? (
         <div className={styles.cardBottomRow}>
-          <span className={styles.completedText}>Cumplida el {fmtDate(goal.completed_at)} · {fmt(goal.currentAmount)} ahorrados</span>
-          <Check size={16} className={styles.completedCheck} color="var(--paid)" />
+          <span className={styles.completedText}>Cumplida el {fmtDate(goal.completed_at)}</span>
+          {isShared && contributors.length > 0 ? (
+            <PaidByStack contributors={contributors} members={spaceMembers} size={20} inline />
+          ) : (
+            <Check size={16} className={styles.completedCheck} color="var(--paid)" />
+          )}
         </div>
       ) : (
         <div className={styles.cardBottomRow}>
