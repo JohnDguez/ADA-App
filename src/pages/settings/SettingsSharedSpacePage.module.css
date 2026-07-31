@@ -243,10 +243,6 @@
   cursor: pointer;
 }
 
-button{
-  border: none;
-}
-
 .ownedHeaderLeft {
   display: flex;
   align-items: center;
