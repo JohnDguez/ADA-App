@@ -45,15 +45,28 @@ export function useGoals(userId, profile, spaceId = null) {
   // Tiempo real — mismo patrón que useSharedFund.js: ante cualquier evento
   // en cualquiera de las dos tablas, se vuelve a pedir todo con fetchAll()
   // en vez de aplicar el payload a mano.
+  //
+  // Bug real reportado por Johnatan: el filtro estaba fijo en
+  // `user_id=eq.${userId}` sin importar el contexto — en una meta
+  // COMPARTIDA eso significa que la suscripción de un miembro nunca se
+  // entera de lo que hace OTRO miembro (su `user_id` no es el mío, el
+  // filtro no deja pasar el evento), así que solo veías tus propios
+  // cambios reflejarse solo hasta cambiar de pestaña y volver. Con
+  // `spaceId` (compartida) el filtro debe ser por `space_id`, igual que ya
+  // hace `useSharedFund.js` — cualquier miembro dispara el evento para
+  // todos. Sin `spaceId` (personal) se queda como estaba: por `user_id`,
+  // que ahí sí es correcto porque cada quien solo tiene sus propias filas.
   useEffect(() => {
     if (!userId) return
+    const filterColumn = spaceId ? 'space_id' : 'user_id'
+    const filterValue  = spaceId || userId
     const channel = supabase
-      .channel(`goals-${userId}`)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'goals', filter: `user_id=eq.${userId}` }, () => fetchAll())
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'goal_transactions', filter: `user_id=eq.${userId}` }, () => fetchAll())
+      .channel(`goals-${spaceId || userId}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'goals', filter: `${filterColumn}=eq.${filterValue}` }, () => fetchAll())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'goal_transactions', filter: `${filterColumn}=eq.${filterValue}` }, () => fetchAll())
       .subscribe()
     return () => { supabase.removeChannel(channel) }
-  }, [userId, fetchAll])
+  }, [userId, spaceId, fetchAll])
 
   // `goals` enriquecido — cada meta trae ya calculado lo que la UI
   // necesita (abonado, %, días restantes), para no repetir esta cuenta
