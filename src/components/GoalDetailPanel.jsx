@@ -26,6 +26,12 @@ export function GoalDetailPanel({
   const [amount, setAmount] = useState('')
   const [saving, setSaving] = useState(false)
   const [deleteModalOpen, setDeleteModalOpen] = useState(false)
+  // NUEVO (v0.9.317): al marcar como hecha una meta que todavía no llega
+  // al monto, se le pregunta al usuario si quiere aportar el restante de
+  // su nómina (ya que si la marca como cumplida antes de tiempo, es
+  // porque puso esa diferencia de su bolsillo) o dejarla como está.
+  const [completeConfirmOpen, setCompleteConfirmOpen] = useState(false)
+  const [completing, setCompleting] = useState(false)
   const menuRef = useRef(null)
 
   // Cerrar el menú al tocar en cualquier otro lado — se escucha en
@@ -76,6 +82,29 @@ export function GoalDetailPanel({
     showToast('Aporte revertido')
   }
 
+  // "Marcar como hecha" — si todavía falta dinero por abonar, se pregunta
+  // antes de completar (nunca se asume). Si ya no falta nada (remaining
+  // <= 0), completa directo, igual que antes.
+  function handleMarkComplete() {
+    if (goal.remaining > 0) { setCompleteConfirmOpen(true); return }
+    onMarkCompleted(true)
+  }
+
+  async function confirmComplete(addRemaining) {
+    setCompleting(true)
+    if (addRemaining) {
+      const { error } = await onAportar(goal.remaining)
+      if (error) {
+        setCompleting(false)
+        showToast(error.message || 'No se pudo aportar el restante')
+        return
+      }
+    }
+    await onMarkCompleted(true)
+    setCompleting(false)
+    setCompleteConfirmOpen(false)
+  }
+
   return (
     <div className={styles.screen}>
       <div className={styles.header}>
@@ -93,10 +122,18 @@ export function GoalDetailPanel({
             </button>
             {menuOpen && (
               <div className={styles.menu}>
-                {canEdit && (
-                  <button type="button" onClick={() => { setMenuOpen(false); onEdit() }} className={styles.menuItem}>
-                    <span><Pencil size={14} /></span>Editar
-                  </button>
+                {goal.is_completed ? (
+                  canEdit && (
+                    <button type="button" onClick={() => { setMenuOpen(false); onMarkCompleted(false) }} className={styles.menuItem}>
+                      <span><RotateCcw size={14} /></span>Reabrir
+                    </button>
+                  )
+                ) : (
+                  canEdit && (
+                    <button type="button" onClick={() => { setMenuOpen(false); onEdit() }} className={styles.menuItem}>
+                      <span><Pencil size={14} /></span>Editar
+                    </button>
+                  )
                 )}
                 {canDelete && (
                   <button type="button" onClick={() => { setMenuOpen(false); setDeleteModalOpen(true) }} className={`${styles.menuItem} ${styles.menuItemDanger}`}>
@@ -161,10 +198,31 @@ export function GoalDetailPanel({
         <div className={styles.blockedHint}>Retirar está desactivado — pídele el permiso al dueño del espacio.</div>
       )}
 
-      <button type="button" onClick={() => onMarkCompleted(!goal.is_completed)} className={styles.completeButton}>
-        <Check size={15} />
-        {goal.is_completed ? 'Marcar como pendiente' : 'Marcar como hecha'}
-      </button>
+      {/* "Marcar como hecha"/confirmación de restante — solo para metas
+          activas. Una meta ya cumplida se reabre desde el menú (arriba),
+          no desde aquí, para no tener 2 formas de hacer lo mismo. */}
+      {!goal.is_completed && (
+        completeConfirmOpen ? (
+          <div className={styles.actionForm}>
+            <div className={styles.completeConfirmText}>
+              Te faltan {fmt(goal.remaining)} para llegar a la meta. ¿Los aportas de tu nómina para completarla, o la marcas como cumplida tal como está?
+            </div>
+            <div className={styles.actionButtons}>
+              <button type="button" onClick={() => confirmComplete(false)} disabled={completing} className="btn-ghost">
+                Marcar sin aportar
+              </button>
+              <button type="button" onClick={() => confirmComplete(true)} disabled={completing} className="btn-primary" style={{ width: 'auto' }}>
+                {completing ? 'Guardando...' : `Aportar ${fmt(goal.remaining)} y completar`}
+              </button>
+            </div>
+          </div>
+        ) : (
+          <button type="button" onClick={handleMarkComplete} className={styles.completeButton}>
+            <Check size={15} />
+            Marcar como hecha
+          </button>
+        )
+      )}
 
       <div className={styles.historyTitle}>Historial</div>
       {goal.transactions.length === 0 ? (

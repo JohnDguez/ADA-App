@@ -203,6 +203,15 @@
   margin-bottom: 12px;
 }
 
+/* NUEVO (v0.9.317) — texto de confirmación al marcar como hecha una meta
+   que todavía no llega al monto (¿aportar el restante o dejarla así?),
+   dentro del mismo .actionForm reutilizado. */
+.completeConfirmText {
+  font-size: 13px;
+  color: var(--text);
+  margin-bottom: 14px;
+}
+
 .actionButtons {
   display: flex;
   gap: 10px;
