@@ -178,6 +178,9 @@ module.exports = async function handler(req, res) {
     }
 
     // ── Editar ───────────────────────────────────────────────────────────
+    // Reabrir una meta (isCompleted: false) también pasa por aquí — usa
+    // el mismo permiso que Editar (can_edit_goals), ya que técnicamente
+    // es una edición del estado de la meta, no una acción aparte.
     if (action === 'update') {
       if (!can('can_edit_goals')) return res.status(403).json({ error: 'No tienes permiso para editar metas' })
       const { goal, error: loadErr } = await loadGoal()
@@ -200,12 +203,18 @@ module.exports = async function handler(req, res) {
         .from('goals').update(updates).eq('id', goal.id).select().single()
       if (error) return res.status(500).json({ error: 'No se pudo actualizar: ' + error.message })
 
-      // Solo se avisa al cumplirla — editar el nombre o el ícono no le
-      // importa a nadie más y llenaría de ruido las notificaciones.
+      // Solo se avisa al cumplirla o al reabrirla — editar el nombre o el
+      // ícono no le importa a nadie más y llenaría de ruido las
+      // notificaciones.
       if (p.isCompleted === true && !goal.is_completed) {
         await notifyAllSpaceMembers(spaceId, actorId, name => ({
           title: `Meta cumplida en ${space.name}`,
           body: `${name} marcó "${updated.name}" como cumplida`,
+        }))
+      } else if (p.isCompleted === false && goal.is_completed) {
+        await notifyAllSpaceMembers(spaceId, actorId, name => ({
+          title: `Meta reabierta en ${space.name}`,
+          body: `${name} reabrió "${updated.name}"`,
         }))
       }
       return res.json({ goal: updated })
