@@ -119,8 +119,31 @@ export function HomePage({ payments, dataLoading = false, profile, spaceSwitcher
     // Un variable YA con monto capturado (ej. "Agregar monto" con el recibo en
     // mano) cuenta igual que uno fijo — ya se sabe cuánto va a costar. Solo el
     // que sigue sin monto es el que de verdad está "por confirmar".
-    const pendingAmt = pagarEsteCobro.filter(p => !p.is_variable || p.amount > 0).reduce((a, p) => a + Number(p.amount), 0)
+    //
+    // NUEVO (v0.9.322) — bug real reportado por Johnatan: un gasto de
+    // Espacio Compartido con abonos parciales de miembros/Fondo
+    // (`contributed_amount`/`fund_amount`, ver usePayments.js →
+    // fetchPayments) que sigue PENDIENTE (ej. un vencido arrastrado de un
+    // periodo anterior con $350 ya abonados de $1,700) contaba su monto
+    // COMPLETO como pendiente — el anillo/"% pagado" nunca se enteraba de
+    // ese dinero ya puesto. `yaCubierto()` topa contributed+fund contra el
+    // monto total (nunca debería excederlo, pero por seguridad). Se resta
+    // de `pendingAmt` y se suma a `pagadoMonto` (más abajo) — el TOTAL
+    // (`totalConocido = pagadoMonto + pendingAmt`) no cambia, solo se
+    // corrige la división entre pagado/pendiente (Opción A, confirmada con
+    // Johnatan: el total del periodo no debe cambiar solo por un abono
+    // parcial — mismo criterio que ya aplica cuando un pago se marca
+    // COMPLETO, que tampoco altera el total, solo lo mueve de columna).
+    // Fuera de un Espacio Compartido `contributed_amount`/`fund_amount`
+    // nunca existen en el payment (solo se calculan con `activeSpaceId`),
+    // así que esto no toca en nada los pagos personales.
+    function yaCubierto(p) {
+      return Math.min(Number(p.contributed_amount || 0) + Number(p.fund_amount || 0), Number(p.amount))
+    }
+    const pendingFijos = pagarEsteCobro.filter(p => !p.is_variable || p.amount > 0)
+    const pendingAmt = pendingFijos.reduce((a, p) => a + (Number(p.amount) - yaCubierto(p)), 0)
     const pendingVariableCount = pagarEsteCobro.filter(p => p.is_variable && !p.amount).length
+    const pagadoParcialPendientes = pendingFijos.reduce((a, p) => a + yaCubierto(p), 0)
 
     // Pagos ya pagados dentro del periodo actual — mismo criterio que
     // `gastosPeriodo`/`checkPeriodStart` en `PaymentsPage.jsx`: se filtra por
@@ -135,7 +158,13 @@ export function HomePage({ payments, dataLoading = false, profile, spaceSwitcher
         return paidDate >= start && paidDate <= end
       })
       .sort((a, b) => new Date(a.paid_at) - new Date(b.paid_at))
-    const pagadoMonto = pagadosEstePeriodo.reduce((a, p) => a + Number(p.amount), 0)
+    // El aporte parcial de un pago que TODAVÍA está pendiente (arriba) se
+    // suma aquí — una vez que ese pago se marca 100% pagado, sale por
+    // completo de `pagarEsteCobro` (getPagarEsteCobro ya excluye
+    // `is_paid`) y pasa a contarse íntegro vía `pagadosEstePeriodo` (sin
+    // relación con este bloque) — nunca se cuentan las 2 cosas a la vez
+    // para el mismo pago, así que no hay doble conteo posible.
+    const pagadoMonto = pagadosEstePeriodo.reduce((a, p) => a + Number(p.amount), 0) + pagadoParcialPendientes
     const totalConocido = pagadoMonto + pendingAmt
     const pctPagado = totalConocido > 0 ? Math.round((pagadoMonto / totalConocido) * 100) : 0
     const pagosFijosCount = pagarEsteCobro.filter(p => !p.is_variable || p.amount > 0).length + pagadosEstePeriodo.length
