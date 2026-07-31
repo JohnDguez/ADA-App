@@ -263,6 +263,7 @@ export function GoalsPage({
               canDelete={isShared ? !!spacePermissions?.can_delete_goals : true}
               currentUserId={profile.id}
               spaceMembers={spaceMembers}
+              hasIncome={!!profile?.salary_enabled}
               onBack={() => setSelectedGoalId(null)}
               onEdit={() => openEdit(selectedGoal)}
               onAportar={amount => aportar(selectedGoal.id, amount, selectedGoal.name)}
