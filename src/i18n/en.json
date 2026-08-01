@@ -229,5 +229,102 @@
     "markedUnpaid": "Marked as unpaid",
     "shared": "Shared",
     "viewInSharedSpace": "View in shared space"
+  },
+  "paymentsPage": {
+    "title": "Expenses and income",
+    "subtitle": "History, analysis, and balance of your period's finances.",
+    "noIncomeText": "Log an income for this period to see how much you have left",
+    "addIncome": "Add income",
+    "availableThisPeriod": "Available This Period",
+    "overBudget": "Over budget",
+    "extrasSuffix": "extras",
+    "extrasTitle": "Extra Income This Period",
+    "incomeCount_one": "{{count}} income",
+    "incomeCount_other": "{{count}} incomes",
+    "sharedFund": "Shared fund",
+    "addFunds": "Add funds",
+    "movementCount_one": "{{count}} movement",
+    "movementCount_other": "{{count}} movements",
+    "allFilter": "All",
+    "totalMonths": "Total {{count}} months",
+    "monthlyAverage": "Monthly average",
+    "monthsChip_one": "{{count}} month",
+    "monthsChip_other": "{{count}} months",
+    "monthlyExpenses": "Monthly Expenses",
+    "byMonth": "By month",
+    "monthLabel": "Month:",
+    "yearLabel": "Year:",
+    "byCategory": "By Category",
+    "noExpensesTitle": "No expenses recorded",
+    "customizeCategories": "Customize categories",
+    "paymentsTitle": "Payments",
+    "total": "Total:",
+    "noPaymentsCurrentPeriod": "No payments made in the current period",
+    "noPaymentsInMonth": "No payments made in {{month}} {{year}}",
+    "variable": "Variable",
+    "menuEdit": "Edit",
+    "menuSplit": "Split among members",
+    "menuMarkUnpaid": "Mark as unpaid",
+    "menuDelete": "Delete",
+    "confirmDeletePaymentHistory": "Delete this payment from history?",
+    "confirmDeleteYes": "Yes, delete",
+    "noteOptional": "Note (optional)",
+    "blockedAction": "You're not allowed to {{action}} in this Shared Space.",
+    "actionMarkPayments": "mark payments",
+    "actionDeletePayments": "delete payments",
+    "actionRegisterContributions": "log contributions",
+    "remanente": {
+      "title": "There's leftover from the previous period!",
+      "question": "Want to add it to this period?",
+      "confirm": "Yes, add to period",
+      "no": "No",
+      "customToggle": "Add custom amount",
+      "customPlaceholder": "Custom amount",
+      "add": "Add"
+    },
+    "incomeModal": {
+      "title": "Add Extra Income",
+      "typeLabel": "Type",
+      "amountLabel": "Amount",
+      "notePlaceholder": "e.g. Productivity bonus",
+      "saving": "Saving...",
+      "save": "Save income"
+    },
+    "manageIncomeModal": {
+      "title": "Extra Income for the Period",
+      "empty": "No extra income this period",
+      "saving": "Saving...",
+      "confirmDelete": "Delete this income?"
+    },
+    "addFundModal": {
+      "title": "Add funds",
+      "info": "This amount will be deducted from your personal remainder, as if it were your own expense.",
+      "available": "Available: {{amount}}",
+      "exceeds": "Exceeds what you have available ({{amount}})",
+      "remaining": "You'll have {{amount}} left after this contribution",
+      "notePlaceholder": "e.g. This month's savings",
+      "saving": "Saving…",
+      "save": "Contribute to Fund",
+      "toast": {
+        "negativeAvailable": "You can't contribute — your personal remainder is negative",
+        "exceedsAvailable": "You can't contribute more than what you have available ({{amount}})",
+        "error": "Error contributing to Fund",
+        "success": "Contribution recorded"
+      }
+    },
+    "manageFundModal": {
+      "title": "Fund Contributions",
+      "empty": "No contributions recorded",
+      "confirmDelete": "Delete this contribution?",
+      "entryTypes": {
+        "migration": "Migrated initial balance",
+        "reversal": "Reversal",
+        "spend": "Space expense",
+        "deposit": "Contribution"
+      },
+      "toast": {
+        "deleteError": "Error deleting"
+      }
+    }
   }
 }

@@ -229,5 +229,102 @@
     "markedUnpaid": "Marcado como no pagado",
     "shared": "Compartido",
     "viewInSharedSpace": "Ver en el espacio compartido"
+  },
+  "paymentsPage": {
+    "title": "Gastos e ingresos",
+    "subtitle": "Historial, análisis y balance de tus finanzas del periodo.",
+    "noIncomeText": "Registra un ingreso de este periodo para ver cuánto te queda disponible",
+    "addIncome": "Añadir ingreso",
+    "availableThisPeriod": "Disponible Este Periodo",
+    "overBudget": "Presupuesto excedido",
+    "extrasSuffix": "extras",
+    "extrasTitle": "Ingresos Extras Este Periodo",
+    "incomeCount_one": "{{count}} ingreso",
+    "incomeCount_other": "{{count}} ingresos",
+    "sharedFund": "Fondo compartido",
+    "addFunds": "Añadir fondos",
+    "movementCount_one": "{{count}} movimiento",
+    "movementCount_other": "{{count}} movimientos",
+    "allFilter": "Todos",
+    "totalMonths": "Total {{count}} meses",
+    "monthlyAverage": "Promedio mensual",
+    "monthsChip_one": "{{count}} mes",
+    "monthsChip_other": "{{count}} meses",
+    "monthlyExpenses": "Gastos Mensuales",
+    "byMonth": "Por mes",
+    "monthLabel": "Mes:",
+    "yearLabel": "Año:",
+    "byCategory": "Por Categoría",
+    "noExpensesTitle": "Sin gastos registrados",
+    "customizeCategories": "Personalizar categorías",
+    "paymentsTitle": "Pagos",
+    "total": "Total:",
+    "noPaymentsCurrentPeriod": "Sin pagos realizados en el periodo actual",
+    "noPaymentsInMonth": "Sin pagos realizados en {{month}} {{year}}",
+    "variable": "Variable",
+    "menuEdit": "Editar",
+    "menuSplit": "Dividir entre miembros",
+    "menuMarkUnpaid": "Marcar como no pagado",
+    "menuDelete": "Eliminar",
+    "confirmDeletePaymentHistory": "¿Eliminar este pago del historial?",
+    "confirmDeleteYes": "Sí, eliminar",
+    "noteOptional": "Nota (opcional)",
+    "blockedAction": "No tienes permitido {{action}} en este Espacio Compartido.",
+    "actionMarkPayments": "marcar pagos",
+    "actionDeletePayments": "eliminar pagos",
+    "actionRegisterContributions": "registrar abonos",
+    "remanente": {
+      "title": "¡Quedó un remanente del periodo anterior!",
+      "question": "¿Quieres añadirlo a este periodo?",
+      "confirm": "Sí, añadir al periodo",
+      "no": "No",
+      "customToggle": "Añadir monto personalizado",
+      "customPlaceholder": "Monto personalizado",
+      "add": "Añadir"
+    },
+    "incomeModal": {
+      "title": "Añadir Ingreso Extra",
+      "typeLabel": "Tipo",
+      "amountLabel": "Monto",
+      "notePlaceholder": "Ej. Bono de productividad",
+      "saving": "Guardando...",
+      "save": "Guardar ingreso"
+    },
+    "manageIncomeModal": {
+      "title": "Ingresos Extras del Periodo",
+      "empty": "Sin ingresos extras este periodo",
+      "saving": "Guardando...",
+      "confirmDelete": "¿Eliminar este ingreso?"
+    },
+    "addFundModal": {
+      "title": "Añadir fondos",
+      "info": "Este monto se descontará de tu remanente personal, como si fuera un gasto tuyo.",
+      "available": "Disponible: {{amount}}",
+      "exceeds": "Excede tu disponible ({{amount}})",
+      "remaining": "Te quedarán {{amount}} después de este aporte",
+      "notePlaceholder": "Ej. Ahorro de este mes",
+      "saving": "Guardando…",
+      "save": "Aportar al Fondo",
+      "toast": {
+        "negativeAvailable": "No puedes aportar — tu remanente personal está en negativo",
+        "exceedsAvailable": "No puedes aportar más de lo que tienes disponible ({{amount}})",
+        "error": "Error al aportar al Fondo",
+        "success": "Aportación registrada"
+      }
+    },
+    "manageFundModal": {
+      "title": "Aportaciones al Fondo",
+      "empty": "Sin aportaciones registradas",
+      "confirmDelete": "¿Eliminar esta aportación?",
+      "entryTypes": {
+        "migration": "Saldo inicial migrado",
+        "reversal": "Reversión",
+        "spend": "Gasto del espacio",
+        "deposit": "Aportación"
+      },
+      "toast": {
+        "deleteError": "Error al eliminar"
+      }
+    }
   }
 }
