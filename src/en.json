@@ -6,5 +6,11 @@
     "accept": "Accept",
     "close": "Close",
     "edit": "Edit"
+  },
+  "confirmClose": {
+    "title": "Discard changes",
+    "description": "You have unsaved information. If you close it, you'll lose it.",
+    "discard": "Discard",
+    "keepEditing": "Keep editing"
   }
 }
