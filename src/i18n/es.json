@@ -12,5 +12,222 @@
     "description": "Tienes información sin guardar. Si cierras la perderás.",
     "discard": "Descartar",
     "keepEditing": "Seguir editando"
+  },
+  "frequency": {
+    "weekly": "Semanal",
+    "biweekly": "Quincenal",
+    "monthly": "Mensual"
+  },
+  "theme": {
+    "system": "Sistema",
+    "light": "Claro",
+    "dark": "Oscuro"
+  },
+  "settingsPage": {
+    "title": "Perfil",
+    "feedbackLabel": "Danos tu feedback",
+    "feedbackSub": "Gana 3 meses de Premium gratis",
+    "menu": {
+      "account": "Cuenta",
+      "categories": "Categorías",
+      "cobro": "Periodo de cobro e ingresos",
+      "notifications": "Notificaciones",
+      "appearance": "Apariencia",
+      "sharedSpace": "Espacio Compartido",
+      "getPremium": "Obtener Premium"
+    },
+    "premiumBadge": "Cuenta Premium",
+    "tutorialAgain": "Ver tutorial de nuevo",
+    "logout": "Cerrar sesión",
+    "versionSuffix": "Alpha",
+    "avatarModal": {
+      "title": "Foto de perfil",
+      "upload": "Subir foto",
+      "chooseAvatar": "Elegir avatar"
+    },
+    "galleryModal": {
+      "title": "Elegir avatar"
+    },
+    "toast": {
+      "uploadError": "Error al subir imagen",
+      "photoUpdated": "Foto actualizada",
+      "avatarUpdateError": "Error al actualizar avatar",
+      "avatarUpdated": "Avatar actualizado"
+    }
+  },
+  "settingsAccount": {
+    "title": "Cuenta",
+    "row": {
+      "name": "Nombre",
+      "account": "Cuenta",
+      "google": "Google",
+      "email": "Correo",
+      "password": "Contraseña",
+      "language": "Idioma"
+    },
+    "dangerZone": {
+      "label": "Zona de peligro",
+      "deleteDataTitle": "Eliminar todos mis datos",
+      "deleteDataSubtitle": "Borra todos tus pagos e ingresos. Tu cuenta se mantiene.",
+      "deleteAccountTitle": "Eliminar mi cuenta",
+      "deleteAccountSubtitle": "Elimina tu cuenta y todos tus datos permanentemente."
+    },
+    "dangerModal": {
+      "titleData": "Eliminar todos los datos",
+      "titleAccount": "Eliminar cuenta",
+      "descriptionData": "Esta acción eliminará todos tus pagos e ingresos permanentemente. Tu cuenta se mantendrá activa. Esta acción no se puede deshacer.",
+      "descriptionAccount": "Esta acción eliminará tu cuenta y todos tus datos permanentemente. No podrás recuperarlos. Esta acción no se puede deshacer.",
+      "confirmLabel": "Confirma con tu contraseña",
+      "verifying": "Verificando…",
+      "deleteDataButton": "Eliminar todos mis datos",
+      "deleteAccountButton": "Eliminar mi cuenta"
+    },
+    "editModal": {
+      "titleName": "Editar nombre",
+      "titleEmail": "Cambiar correo",
+      "titlePassword": "Cambiar contraseña",
+      "resetLinkSent": "Te enviamos un enlace a {{email}}",
+      "nameLabel": "Nombre",
+      "emailLabel": "Nuevo correo",
+      "currentPasswordLabel": "Contraseña actual",
+      "forgotPassword": "¿Olvidaste tu contraseña?",
+      "newPasswordLabel": "Nueva contraseña",
+      "confirmPasswordLabel": "Confirmar nueva contraseña",
+      "requirementLength": "Mínimo 8 caracteres",
+      "requirementUppercase": "Al menos una mayúscula",
+      "requirementNumber": "Al menos un número",
+      "requirementSymbol": "Al menos un símbolo especial (!@#$...)",
+      "passwordMismatch": "Las contraseñas no coinciden",
+      "saving": "Guardando…"
+    },
+    "languageModal": {
+      "title": "Idioma",
+      "system": "Sistema",
+      "spanish": "Español",
+      "english": "English"
+    },
+    "toast": {
+      "emptyName": "Escribe un nombre",
+      "emptyEmail": "Escribe un correo",
+      "nameUpdated": "Nombre actualizado",
+      "emailUpdated": "Correo actualizado — revisa tu bandeja",
+      "currentPasswordRequired": "Ingresa tu contraseña actual",
+      "passwordRequirementsNotMet": "La nueva contraseña no cumple los requisitos",
+      "passwordUpdated": "Contraseña actualizada",
+      "wrongCurrentPassword": "Contraseña actual incorrecta",
+      "confirmPasswordRequired": "Ingresa tu contraseña para confirmar",
+      "wrongPassword": "Contraseña incorrecta",
+      "deleteDataError": "Error al eliminar los datos",
+      "allDataDeleted": "Todos tus datos han sido eliminados",
+      "deleteAccountError": "Error al eliminar la cuenta",
+      "languageUpdated": "Idioma actualizado"
+    }
+  },
+  "settingsCobro": {
+    "title": "Periodo de cobro e ingresos",
+    "periodSection": "Periodo de cobro",
+    "frequencyLabel": "Frecuencia",
+    "payDayLabel": "Día de cobro",
+    "payDaysLabel": "Días de cobro",
+    "otherOption": "Otro",
+    "day1Label": "Día 1 (1–31)",
+    "day2Label": "Día 2 (1–31)",
+    "day1Placeholder": "ej. 13",
+    "day2Placeholder": "ej. 28",
+    "monthlyPlaceholder": "ej. 5",
+    "monthlyHelperPrefix": "Tu periodo de cobro empieza el día",
+    "monthlyHelperSuffix": "de cada mes.",
+    "currencyLabel": "Moneda",
+    "incomeSection": "Ingreso por periodo",
+    "incomeLabel": "Ingreso por periodo",
+    "incomeSubtitle": "Activa para ver alertas de presupuesto",
+    "amountLabel": "Monto",
+    "toast": {
+      "invalidAmount": "Ingresa un monto válido",
+      "salaryUpdated": "Salario actualizado"
+    },
+    "dayPair": "{{d1}} y {{d2}}"
+  },
+  "settingsNotifications": {
+    "title": "Notificaciones",
+    "activeLabel": "Notificaciones activas",
+    "enableLabel": "Activar notificaciones",
+    "activeSubtitle": "Recibes alertas en este dispositivo",
+    "enableSubtitle": "Recibe recordatorios de pagos",
+    "notificationHour": "Hora de notificación",
+    "overdueLabel": "Pagos vencidos",
+    "overdueSub": "Cuando un pago no se cubrió a tiempo",
+    "dueTodayLabel": "Vencen hoy",
+    "dueTodaySub": "Pagos que llegan a su fecha límite hoy",
+    "upcomingLabel": "Próximos pagos",
+    "upcomingSub": "Recordatorio días antes del vencimiento",
+    "daysBeforeLabel": "Días de anticipación",
+    "payDayLabel": "Día de cobro",
+    "payDaySub": "Resumen de pagos pendientes al cobrar",
+    "toast": {
+      "disabled": "Notificaciones desactivadas",
+      "permissionDenied": "Permiso denegado — actívalo en ajustes del navegador",
+      "enableError": "Error al activar notificaciones",
+      "enabled": "Notificaciones activadas"
+    }
+  },
+  "settingsAppearance": {
+    "title": "Apariencia"
+  },
+  "settingsCategories": {
+    "title": "Categorías",
+    "addModalTitleEdit": "Editar categoría",
+    "addModalTitleNew": "Agregar categoría",
+    "nameLabel": "Nombre",
+    "namePlaceholder": "ej. Gimnasio",
+    "nameReadonlyHelper": "Las categorías por defecto no se pueden renombrar, para no afectar pagos ya registrados.",
+    "iconLabel": "Ícono",
+    "iconSearchPlaceholder": "Buscar ícono…",
+    "noIconResults": "Sin resultados para \"{{search}}\"",
+    "colorLabel": "Color",
+    "saving": "Guardando…",
+    "deleteConfirmPrefix": "¿Eliminar",
+    "deleteConfirmSuffix": "? Los pagos ya registrados con esta categoría se reasignarán a \"Otros\".",
+    "deleting": "Eliminando…",
+    "toast": {
+      "emptyName": "Escribe un nombre",
+      "duplicateName": "Ya existe una categoría con ese nombre",
+      "renamedPrefix": "Categoría renombrada a",
+      "addedSuffix": "agregada",
+      "updated": "Categoría actualizada",
+      "deletedPrefix": "Categoría",
+      "deletedSuffix": "eliminada"
+    }
+  },
+  "homePage": {
+    "tabs": {
+      "currentPeriod": "Periodo actual",
+      "nextPeriod": "Próximo periodo"
+    },
+    "periodPrefix": "Periodo",
+    "totalThisPeriod": "Total de este periodo",
+    "totalNextPeriod": "Total del próximo periodo",
+    "paidLabel": "{{amount}} pagado",
+    "pendingLabel": "{{amount}} pendiente",
+    "fixedPayment_one": "{{count}} pago fijo",
+    "fixedPayment_other": "{{count}} pagos fijos",
+    "variableCount_one": "{{count}} variable",
+    "variableCount_other": "{{count}} variables",
+    "overduePayment_one": "{{count}} pago vencido",
+    "overduePayment_other": "{{count}} pagos vencidos",
+    "variablePendingConfirm_one": "{{count}} pago variable por confirmar",
+    "variablePendingConfirm_other": "{{count}} pagos variables por confirmar",
+    "paidCount_one": "{{count}} pagado",
+    "paidCount_other": "{{count}} pagados",
+    "overdueTitle": "Vencidos",
+    "pendingSectionTitle": "Pagos pendientes",
+    "emptyState": {
+      "currentPeriodTitle": "Sin pagos pendientes para este periodo",
+      "nextPeriodTitle": "Sin pagos registrados para el próximo periodo",
+      "subtitle": "Toca aquí o el botón + de abajo para añadir uno"
+    },
+    "markedUnpaid": "Marcado como no pagado",
+    "shared": "Compartido",
+    "viewInSharedSpace": "Ver en el espacio compartido"
   }
 }

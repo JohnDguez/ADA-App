@@ -12,5 +12,222 @@
     "description": "You have unsaved information. If you close it, you'll lose it.",
     "discard": "Discard",
     "keepEditing": "Keep editing"
+  },
+  "frequency": {
+    "weekly": "Weekly",
+    "biweekly": "Biweekly",
+    "monthly": "Monthly"
+  },
+  "theme": {
+    "system": "System",
+    "light": "Light",
+    "dark": "Dark"
+  },
+  "settingsPage": {
+    "title": "Profile",
+    "feedbackLabel": "Give us your feedback",
+    "feedbackSub": "Get 3 months of Premium free",
+    "menu": {
+      "account": "Account",
+      "categories": "Categories",
+      "cobro": "Pay period and income",
+      "notifications": "Notifications",
+      "appearance": "Appearance",
+      "sharedSpace": "Shared Space",
+      "getPremium": "Get Premium"
+    },
+    "premiumBadge": "Premium Account",
+    "tutorialAgain": "View tutorial again",
+    "logout": "Log out",
+    "versionSuffix": "Alpha",
+    "avatarModal": {
+      "title": "Profile photo",
+      "upload": "Upload photo",
+      "chooseAvatar": "Choose avatar"
+    },
+    "galleryModal": {
+      "title": "Choose avatar"
+    },
+    "toast": {
+      "uploadError": "Error uploading image",
+      "photoUpdated": "Photo updated",
+      "avatarUpdateError": "Error updating avatar",
+      "avatarUpdated": "Avatar updated"
+    }
+  },
+  "settingsAccount": {
+    "title": "Account",
+    "row": {
+      "name": "Name",
+      "account": "Account",
+      "google": "Google",
+      "email": "Email",
+      "password": "Password",
+      "language": "Language"
+    },
+    "dangerZone": {
+      "label": "Danger zone",
+      "deleteDataTitle": "Delete all my data",
+      "deleteDataSubtitle": "Erases all your payments and income. Your account stays active.",
+      "deleteAccountTitle": "Delete my account",
+      "deleteAccountSubtitle": "Permanently deletes your account and all your data."
+    },
+    "dangerModal": {
+      "titleData": "Delete all data",
+      "titleAccount": "Delete account",
+      "descriptionData": "This will permanently delete all your payments and income. Your account will stay active. This action can't be undone.",
+      "descriptionAccount": "This will permanently delete your account and all your data. You won't be able to recover it. This action can't be undone.",
+      "confirmLabel": "Confirm with your password",
+      "verifying": "Verifying…",
+      "deleteDataButton": "Delete all my data",
+      "deleteAccountButton": "Delete my account"
+    },
+    "editModal": {
+      "titleName": "Edit name",
+      "titleEmail": "Change email",
+      "titlePassword": "Change password",
+      "resetLinkSent": "We sent a link to {{email}}",
+      "nameLabel": "Name",
+      "emailLabel": "New email",
+      "currentPasswordLabel": "Current password",
+      "forgotPassword": "Forgot your password?",
+      "newPasswordLabel": "New password",
+      "confirmPasswordLabel": "Confirm new password",
+      "requirementLength": "At least 8 characters",
+      "requirementUppercase": "At least one uppercase letter",
+      "requirementNumber": "At least one number",
+      "requirementSymbol": "At least one special symbol (!@#$...)",
+      "passwordMismatch": "Passwords don't match",
+      "saving": "Saving…"
+    },
+    "languageModal": {
+      "title": "Language",
+      "system": "System",
+      "spanish": "Español",
+      "english": "English"
+    },
+    "toast": {
+      "emptyName": "Enter a name",
+      "emptyEmail": "Enter an email",
+      "nameUpdated": "Name updated",
+      "emailUpdated": "Email updated — check your inbox",
+      "currentPasswordRequired": "Enter your current password",
+      "passwordRequirementsNotMet": "The new password doesn't meet the requirements",
+      "passwordUpdated": "Password updated",
+      "wrongCurrentPassword": "Current password is incorrect",
+      "confirmPasswordRequired": "Enter your password to confirm",
+      "wrongPassword": "Incorrect password",
+      "deleteDataError": "Error deleting data",
+      "allDataDeleted": "All your data has been deleted",
+      "deleteAccountError": "Error deleting account",
+      "languageUpdated": "Language updated"
+    }
+  },
+  "settingsCobro": {
+    "title": "Pay period and income",
+    "periodSection": "Pay period",
+    "frequencyLabel": "Frequency",
+    "payDayLabel": "Pay day",
+    "payDaysLabel": "Pay days",
+    "otherOption": "Other",
+    "day1Label": "Day 1 (1–31)",
+    "day2Label": "Day 2 (1–31)",
+    "day1Placeholder": "e.g. 13",
+    "day2Placeholder": "e.g. 28",
+    "monthlyPlaceholder": "e.g. 5",
+    "monthlyHelperPrefix": "Your pay period starts on day",
+    "monthlyHelperSuffix": "of each month.",
+    "currencyLabel": "Currency",
+    "incomeSection": "Income per period",
+    "incomeLabel": "Income per period",
+    "incomeSubtitle": "Turn on to see budget alerts",
+    "amountLabel": "Amount",
+    "toast": {
+      "invalidAmount": "Enter a valid amount",
+      "salaryUpdated": "Salary updated"
+    },
+    "dayPair": "{{d1}} and {{d2}}"
+  },
+  "settingsNotifications": {
+    "title": "Notifications",
+    "activeLabel": "Notifications on",
+    "enableLabel": "Enable notifications",
+    "activeSubtitle": "You'll get alerts on this device",
+    "enableSubtitle": "Get payment reminders",
+    "notificationHour": "Notification time",
+    "overdueLabel": "Overdue payments",
+    "overdueSub": "When a payment wasn't covered on time",
+    "dueTodayLabel": "Due today",
+    "dueTodaySub": "Payments reaching their due date today",
+    "upcomingLabel": "Upcoming payments",
+    "upcomingSub": "Reminder days before the due date",
+    "daysBeforeLabel": "Days in advance",
+    "payDayLabel": "Pay day",
+    "payDaySub": "Summary of pending payments on payday",
+    "toast": {
+      "disabled": "Notifications disabled",
+      "permissionDenied": "Permission denied — enable it in your browser settings",
+      "enableError": "Error enabling notifications",
+      "enabled": "Notifications enabled"
+    }
+  },
+  "settingsAppearance": {
+    "title": "Appearance"
+  },
+  "settingsCategories": {
+    "title": "Categories",
+    "addModalTitleEdit": "Edit category",
+    "addModalTitleNew": "Add category",
+    "nameLabel": "Name",
+    "namePlaceholder": "e.g. Gym",
+    "nameReadonlyHelper": "Default categories can't be renamed, to avoid affecting already recorded payments.",
+    "iconLabel": "Icon",
+    "iconSearchPlaceholder": "Search icon…",
+    "noIconResults": "No results for \"{{search}}\"",
+    "colorLabel": "Color",
+    "saving": "Saving…",
+    "deleteConfirmPrefix": "Delete",
+    "deleteConfirmSuffix": "? Payments already recorded with this category will be reassigned to \"Otros\".",
+    "deleting": "Deleting…",
+    "toast": {
+      "emptyName": "Enter a name",
+      "duplicateName": "A category with that name already exists",
+      "renamedPrefix": "Category renamed to",
+      "addedSuffix": "added",
+      "updated": "Category updated",
+      "deletedPrefix": "Category",
+      "deletedSuffix": "deleted"
+    }
+  },
+  "homePage": {
+    "tabs": {
+      "currentPeriod": "Current period",
+      "nextPeriod": "Next period"
+    },
+    "periodPrefix": "Period",
+    "totalThisPeriod": "Total for this period",
+    "totalNextPeriod": "Total for next period",
+    "paidLabel": "{{amount}} paid",
+    "pendingLabel": "{{amount}} pending",
+    "fixedPayment_one": "{{count}} fixed payment",
+    "fixedPayment_other": "{{count}} fixed payments",
+    "variableCount_one": "{{count}} variable",
+    "variableCount_other": "{{count}} variable",
+    "overduePayment_one": "{{count}} overdue payment",
+    "overduePayment_other": "{{count}} overdue payments",
+    "variablePendingConfirm_one": "{{count}} variable payment to confirm",
+    "variablePendingConfirm_other": "{{count}} variable payments to confirm",
+    "paidCount_one": "{{count}} paid",
+    "paidCount_other": "{{count}} paid",
+    "overdueTitle": "Overdue",
+    "pendingSectionTitle": "Pending payments",
+    "emptyState": {
+      "currentPeriodTitle": "No pending payments for this period",
+      "nextPeriodTitle": "No payments recorded for the next period",
+      "subtitle": "Tap here or the + button below to add one"
+    },
+    "markedUnpaid": "Marked as unpaid",
+    "shared": "Shared",
+    "viewInSharedSpace": "View in shared space"
   }
 }
