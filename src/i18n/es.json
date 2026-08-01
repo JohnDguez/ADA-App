@@ -1,0 +1,16 @@
+{
+  "buttons": {
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "delete": "Eliminar",
+    "accept": "Aceptar",
+    "close": "Cerrar",
+    "edit": "Editar"
+  },
+  "confirmClose": {
+    "title": "Descartar cambios",
+    "description": "Tienes información sin guardar. Si cierras la perderás.",
+    "discard": "Descartar",
+    "keepEditing": "Seguir editando"
+  }
+}
