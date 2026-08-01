@@ -1,4 +1,5 @@
 import { useState, useMemo, useRef, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Pause, Play, Trash2, Search, ChevronDown, CreditCard, Pencil, MoreVertical } from 'lucide-react'
 import { EmptyState } from '../components/EmptyState'
 import { PageHeader } from '../components/PageHeader'
@@ -17,6 +18,7 @@ function FilterChip({ label, active, onClick }) {
 }
 
 export function RecurrentsPage({ payments, profile, spaceSwitcher, activeSpaceHeader, activeSpaceId = null, sharedSpaces, spacePermissions, onOpenPremium, onSpaceReady, unreadCount, onOpenNotifs, onGoSettings, onPause, onResume, onDelete, onEdit, onAdd, slideClass }) {
+  const { t } = useTranslation()
   // Mismo mecanismo que HomePage.jsx — ver ahí el porqué (evitar que la
   // animación de entrada se dispare también en un simple cambio de
   // pestaña, no solo en un cambio real de espacio).
@@ -41,7 +43,7 @@ export function RecurrentsPage({ payments, profile, spaceSwitcher, activeSpaceHe
   const canEdit   = !spacePermissions || spacePermissions.can_edit
   const canDelete = !spacePermissions || spacePermissions.can_delete
   function blocked(action) {
-    showToast(`No tienes permitido ${action} en este Espacio Compartido.`)
+    showToast(t('paymentsPage.blockedAction', { action }))
   }
 
   // Masters: registros raíz de cada pago recurrente
@@ -118,8 +120,8 @@ export function RecurrentsPage({ payments, profile, spaceSwitcher, activeSpaceHe
             if (!master) return null
             return (
               <>
-                <MenuItem icon={<Pencil size={14} />} label="Editar" onClick={() => { onEdit && onEdit(master); setOpenMenu(null) }} />
-                <MenuItem icon={<Trash2 size={14} />} label="Eliminar" onClick={() => { canDelete ? setConfirmDelete(master.id) : blocked('eliminar pagos'); setOpenMenu(null) }} danger />
+                <MenuItem icon={<Pencil size={14} />} label={t('buttons.edit')} onClick={() => { onEdit && onEdit(master); setOpenMenu(null) }} />
+                <MenuItem icon={<Trash2 size={14} />} label={t('buttons.delete')} onClick={() => { canDelete ? setConfirmDelete(master.id) : blocked(t('paymentsPage.actionDeletePayments')); setOpenMenu(null) }} danger />
               </>
             )
           })()}
@@ -148,8 +150,8 @@ export function RecurrentsPage({ payments, profile, spaceSwitcher, activeSpaceHe
           <>
           {/* Zona título */}
           <div className={styles.titleSection}>
-            <div className={styles.titleHeading}>Gastos recurrentes</div>
-            <div className={styles.titleSubtext}>Gestiona tus pagos fijos y variables.</div>
+            <div className={styles.titleHeading}>{t('recurrentsPage.title')}</div>
+            <div className={styles.titleSubtext}>{t('recurrentsPage.subtitle')}</div>
           </div>
 
 
@@ -159,32 +161,32 @@ export function RecurrentsPage({ payments, profile, spaceSwitcher, activeSpaceHe
               <div className={styles.searchIcon}>
                 <Search size={15} color="var(--text)" />
               </div>
-              <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Buscar por nombre o categoría..." className={`field-input ${styles.searchInput}`} />
+              <input value={search} onChange={e => setSearch(e.target.value)} placeholder={t('recurrentsPage.searchPlaceholder')} className={`field-input ${styles.searchInput}`} />
             </div>
           </div>
 
           {/* Resumen */}
           <div data-coachmark="recurrentes-stats" className={styles.statsCard}>
             <div className={styles.statsBlockBordered}>
-              <div className={styles.statsLabel}>Activos</div>
+              <div className={styles.statsLabel}>{t('recurrentsPage.activeLabel')}</div>
               <div className={styles.statsValue}>{activeMasters.length}</div>
-              <div className={styles.statsSubtext}>{pausedMasters.length} pausados</div>
+              <div className={styles.statsSubtext}>{t('recurrentsPage.pausedCount', { count: pausedMasters.length })}</div>
             </div>
             <div className={styles.statsBlockPadded}>
-              <div className={styles.statsLabel}>Suma mensual</div>
+              <div className={styles.statsLabel}>{t('recurrentsPage.monthlySum')}</div>
               <div className={styles.statsValue}>{fmt(totalMensual)}</div>
-              <div className={styles.statsSubtext}>pagos mensuales</div>
+              <div className={styles.statsSubtext}>{t('recurrentsPage.monthlyPaymentsLabel')}</div>
             </div>
           </div>
 
           {/* Filtros */}
           <div className={styles.filterRow}>
-            {[['todos','Todos'],['activos','Activos'],['pausados','Pausados']].map(([val, label]) => (
+            {[['todos',t('recurrentsPage.filters.all')],['activos',t('recurrentsPage.filters.active')],['pausados',t('recurrentsPage.filters.paused')]].map(([val, label]) => (
               <FilterChip key={val} label={label} active={filterStatus === val} onClick={() => setFilterStatus(val)} />
             ))}
           </div>
           <div data-coachmark="recurrentes-filtro-tipo" className={styles.filterRowLast}>
-            {[['todos','Todos'],['recurrentes','Recurrentes'],['parcialidades','Parcialidades']].map(([val, label]) => (
+            {[['todos',t('recurrentsPage.filters.all')],['recurrentes',t('recurrentsPage.filters.recurrent')],['parcialidades',t('recurrentsPage.filters.installments')]].map(([val, label]) => (
               <FilterChip key={val} label={label} active={filterType === val} onClick={() => setFilterType(val)} />
             ))}
           </div>
@@ -196,11 +198,11 @@ export function RecurrentsPage({ payments, profile, spaceSwitcher, activeSpaceHe
                 <div className={styles.noResultsBlock}>
                   <CreditCard size={32} color="var(--border)" className={styles.noResultsIcon} />
                   <div className={styles.noResultsText}>
-                    Sin resultados para tu búsqueda
+                    {t('recurrentsPage.noResultsForSearch')}
                   </div>
                 </div>
               ) : (
-                <EmptyState title="Sin gastos recurrentes registrados" subtitle="Toca aquí o el botón + de abajo para añadir uno" onClick={onAdd} />
+                <EmptyState title={t('recurrentsPage.noRecurrentsTitle')} subtitle={t('homePage.emptyState.subtitle')} onClick={onAdd} />
               )
             ) : byCategory.map(([cat, catMasters]) => {
               const isOpen   = !!expandedCats[cat]
@@ -224,8 +226,8 @@ export function RecurrentsPage({ payments, profile, spaceSwitcher, activeSpaceHe
                     <div className={styles.categoryInfo}>
                       <div className={styles.categoryName}>{cat}</div>
                       <div className={styles.categoryMeta}>
-                        {catMasters.length} pago{catMasters.length !== 1 ? 's' : ''}
-                        {catTotal > 0 && ` · ${fmt(catTotal)}/mes`}
+                        {t('recurrentsPage.paymentCount', { count: catMasters.length })}
+                        {catTotal > 0 && ` · ${fmt(catTotal)}${t('recurrentsPage.perMonthSuffix')}`}
                       </div>
                     </div>
                     <div className={`${styles.categoryChevron} ${isOpen ? styles.categoryChevronOpen : ''}`}>
@@ -249,25 +251,25 @@ export function RecurrentsPage({ payments, profile, spaceSwitcher, activeSpaceHe
                               <div className={styles.masterNameRow}>
                                 {master.name}
                                 {master.is_variable && (
-                                  <span className={styles.variableBadge}>Variable</span>
+                                  <span className={styles.variableBadge}>{t('paymentsPage.variable')}</span>
                                 )}
                               </div>
                               <div className={styles.masterFreqRow}>
                                 {RECUR_FREQ[master.recur_freq] || master.recur_freq}
-                                {!(master.is_installment || master.total_installments > 0) && paid > 0 && ` · ${paid} realizado${paid !== 1 ? 's' : ''}`}
+                                {!(master.is_installment || master.total_installments > 0) && paid > 0 && ` · ${t('recurrentsPage.completedCount', { count: paid })}`}
                               </div>
                               {!master.paused && next && !(master.is_installment || master.total_installments > 0) && (
                                 <div className={styles.masterNextDate}>
-                                  Próximo: {formatNextDate(next.due_date)}
+                                  {t('recurrentsPage.nextDate', { date: formatNextDate(next.due_date) })}
                                 </div>
                               )}
                               {!master.paused && next && (master.is_installment || master.total_installments > 0) && (
                                 <div className={styles.masterNextDate}>
-                                  Pago {next.current_installment} de {master.total_installments}
+                                  {t('recurrentsPage.installmentProgress', { current: next.current_installment, total: master.total_installments })}
                                 </div>
                               )}
                               {master.paused && (
-                                <div className={styles.masterPausedText}>Pausado</div>
+                                <div className={styles.masterPausedText}>{t('recurrentsPage.paused')}</div>
                               )}
                             </div>
 
@@ -281,7 +283,7 @@ export function RecurrentsPage({ payments, profile, spaceSwitcher, activeSpaceHe
                             {/* Botones */}
                             <div className={styles.masterActionsRow}>
                               <ActionBtn
-                                onClick={() => canEdit ? (master.paused ? onResume(master.id) : onPause(master.id)) : blocked(master.paused ? 'reactivar pagos' : 'pausar pagos')}
+                                onClick={() => canEdit ? (master.paused ? onResume(master.id) : onPause(master.id)) : blocked(master.paused ? t('recurrentsPage.actionResume') : t('recurrentsPage.actionPause'))}
                                 color={!canEdit ? 'var(--border)' : master.paused ? 'var(--paid)' : 'var(--warning)'}
                               >
                                 {master.paused
@@ -318,14 +320,14 @@ export function RecurrentsPage({ payments, profile, spaceSwitcher, activeSpaceHe
                           {isConfirming && (
                             <div className={`${styles.deleteConfirmPanel} ${isLast ? styles.deleteConfirmPanelNoBorder : ''}`}>
                               <div className={styles.deleteConfirmText}>
-                                ¿Eliminar "{master.name}"? Los pagos ya realizados se conservarán.
+                                {t('recurrentsPage.deleteConfirm', { name: master.name })}
                               </div>
                               <div className={styles.deleteConfirmRow}>
                                 <button onClick={() => setConfirmDelete(null)} className={styles.deleteCancelButton}>
-                                  Cancelar
+                                  {t('buttons.cancel')}
                                 </button>
                                 <button onClick={() => { onDelete && onDelete(master.id, master); setConfirmDelete(null) }} className={styles.deleteConfirmButton}>
-                                  Eliminar
+                                  {t('buttons.delete')}
                                 </button>
                               </div>
                             </div>
