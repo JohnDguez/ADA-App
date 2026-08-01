@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useMemo } from 'react'
+import { useTranslation } from 'react-i18next'
 import { ChevronLeft, ChevronRight, MoreVertical, Plus, CircleDollarSign, ChevronDown, ChevronUp, Pencil, RotateCcw, Trash2, Check, Eye, Users, ArrowUp, ArrowDown, ArrowUpLeft, PiggyBank } from 'lucide-react'
 import { PageHeader } from '../components/PageHeader'
 import { NewSharedSpacePanel } from '../components/NewSharedSpacePanel'
@@ -69,6 +70,7 @@ function prevPeriod(profile) {
 }
 
 export function PaymentsPage({ payments, dataLoading = false, profile, spaceSwitcher, activeSpaceHeader, activeSpaceId = null, rawActiveSpaceId = null, sharedSpaces, spacePermissions, onOpenPremium, onSpaceReady, unreadCount, onOpenNotifs, onGoSettings, onMarkUnpaid, onDelete, onDeleteDirect, onUpdateProfile, onEdit, onViewSource, onSplit, onAdd, onGoCategories, sharedFund, slideClass, ensureMonthLoaded, oldestPaymentYear = null }) {
+  const { t } = useTranslation()
   // Mismo mecanismo que HomePage.jsx — ver ahí el porqué (evitar que la
   // animación de entrada se dispare también en un simple cambio de
   // pestaña, no solo en un cambio real de espacio).
@@ -197,20 +199,20 @@ export function PaymentsPage({ payments, dataLoading = false, profile, spaceSwit
     if (!amount || amount <= 0) return
     if (personalAvailable != null) {
       if (personalAvailable <= 0) {
-        showToast('No puedes aportar — tu remanente personal está en negativo')
+        showToast(t('paymentsPage.addFundModal.toast.negativeAvailable'))
         return
       }
       if (amount > personalAvailable) {
-        showToast(`No puedes aportar más de lo que tienes disponible (${fmt(personalAvailable)})`)
+        showToast(t('paymentsPage.addFundModal.toast.exceedsAvailable', { amount: fmt(personalAvailable) }))
         return
       }
     }
     setSavingFund(true)
     const { error } = await sharedFund.addFunds(amount, fundNote.trim() || null)
     setSavingFund(false)
-    if (error) { showToast(error.message || 'Error al aportar al Fondo'); return }
+    if (error) { showToast(error.message || t('paymentsPage.addFundModal.toast.error')); return }
     setAddFundModal(false); setFundAmount(''); setFundNote('')
-    showToast('Aportación registrada')
+    showToast(t('paymentsPage.addFundModal.toast.success'))
   }
 
   async function handleDeleteFundEntry(id) {
@@ -218,7 +220,7 @@ export function PaymentsPage({ payments, dataLoading = false, profile, spaceSwit
     const { error } = await sharedFund.deleteFundEntry(id)
     setDeletingFundId(null)
     setConfirmDeleteFundId(null)
-    if (error) showToast(error.message || 'Error al eliminar')
+    if (error) showToast(error.message || t('paymentsPage.manageFundModal.toast.deleteError'))
   }
 
   // v0.9.282 — Memoización: este componente recalculaba TODAS sus listas
@@ -634,27 +636,27 @@ export function PaymentsPage({ payments, dataLoading = false, profile, spaceSwit
   const canMarkPaid = !spacePermissions || spacePermissions.can_mark_paid
   const canDelete   = !spacePermissions || spacePermissions.can_delete
   function blocked(action) {
-    showToast(`No tienes permitido ${action} en este Espacio Compartido.`)
+    showToast(t('paymentsPage.blockedAction', { action }))
   }
 
   function handleMenuAction(action, payment) {
     setOpenMenu(null)
     if (action === 'edit') onEdit && onEdit(payment)
     if (action === 'unpaid') {
-      if (!canMarkPaid) { blocked('marcar pagos'); return }
+      if (!canMarkPaid) { blocked(t('paymentsPage.actionMarkPayments')); return }
       onMarkUnpaid && onMarkUnpaid(payment.id)
     }
     if (action === 'delete') {
-      if (!canDelete) { blocked('eliminar pagos'); return }
+      if (!canDelete) { blocked(t('paymentsPage.actionDeletePayments')); return }
       if (payment.is_paid) {
-        if (!window.confirm('¿Eliminar este pago del historial?')) return
+        if (!window.confirm(t('paymentsPage.confirmDeletePaymentHistory'))) return
         onDeleteDirect && onDeleteDirect(payment.id)
       } else {
         onDelete && onDelete(payment.id, payment)
       }
     }
     if (action === 'split') {
-      if (!canMarkPaid) { blocked('registrar abonos'); return }
+      if (!canMarkPaid) { blocked(t('paymentsPage.actionRegisterContributions')); return }
       onSplit && onSplit(payment)
     }
   }
@@ -688,12 +690,12 @@ export function PaymentsPage({ payments, dataLoading = false, profile, spaceSwit
             if (!p) return null
             return (
               <>
-                <MenuItem icon={<Pencil size={14} />} label="Editar" onClick={() => handleMenuAction('edit', p)} />
+                <MenuItem icon={<Pencil size={14} />} label={t('paymentsPage.menuEdit')} onClick={() => handleMenuAction('edit', p)} />
                 {p.space_id && p.is_paid && !p.is_contribution_reflection && (
-                  <MenuItem icon={<Users size={14} />} label="Dividir entre miembros" onClick={() => handleMenuAction('split', p)} />
+                  <MenuItem icon={<Users size={14} />} label={t('paymentsPage.menuSplit')} onClick={() => handleMenuAction('split', p)} />
                 )}
-                <MenuItem icon={<RotateCcw size={14} />} label="Marcar como no pagado" onClick={() => handleMenuAction('unpaid', p)} />
-                <MenuItem icon={<Trash2 size={14} />} label="Eliminar" onClick={() => handleMenuAction('delete', p)} danger />
+                <MenuItem icon={<RotateCcw size={14} />} label={t('paymentsPage.menuMarkUnpaid')} onClick={() => handleMenuAction('unpaid', p)} />
+                <MenuItem icon={<Trash2 size={14} />} label={t('paymentsPage.menuDelete')} onClick={() => handleMenuAction('delete', p)} danger />
               </>
             )
           })()}
@@ -715,13 +717,13 @@ export function PaymentsPage({ payments, dataLoading = false, profile, spaceSwit
                 <CircleDollarSign size={36} color="var(--paid)" strokeWidth={1.8} className={styles.remanenteIcon} />
               </div>
               <div className={styles.remanenteTitle}>
-                ¡Quedó un remanente del periodo anterior!
+                {t('paymentsPage.remanente.title')}
               </div>
               <div className={styles.remanenteAmount}>
                 {fmt(remAmount)}
               </div>
               <div className={styles.remanenteQuestion}>
-                ¿Quieres añadirlo a este periodo?
+                {t('paymentsPage.remanente.question')}
               </div>
             </div>
 
@@ -731,13 +733,13 @@ export function PaymentsPage({ payments, dataLoading = false, profile, spaceSwit
                 disabled={savingRem}
                 className={styles.remanenteConfirmButton}
               >
-                Sí, añadir al periodo
+                {t('paymentsPage.remanente.confirm')}
               </button>
               <button
                 onClick={() => { setRemModal(false); setRemCustomOpen(false) }}
                 className={styles.remanenteCancelButton}
               >
-                No
+                {t('paymentsPage.remanente.no')}
               </button>
             </div>
 
@@ -747,14 +749,14 @@ export function PaymentsPage({ payments, dataLoading = false, profile, spaceSwit
               className={styles.remanenteCustomToggle}
             >
               {remCustomOpen ? <ChevronUp size={15} /> : <ChevronDown size={15} />}
-              Añadir monto personalizado
+              {t('paymentsPage.remanente.customToggle')}
             </button>
 
             {remCustomOpen && (
               <div className={styles.remanenteCustomRow}>
                 <input
                   type="number"
-                  placeholder="Monto personalizado"
+                  placeholder={t('paymentsPage.remanente.customPlaceholder')}
                   value={remCustomAmount}
                   onChange={e => setRemCustomAmount(e.target.value)}
                   className={styles.remanenteCustomInput}
@@ -768,7 +770,7 @@ export function PaymentsPage({ payments, dataLoading = false, profile, spaceSwit
                   className={styles.remanenteCustomButton}
                   style={{ opacity: savingRem ? 0.6 : 1 }}
                 >
-                  Añadir
+                  {t('paymentsPage.remanente.add')}
                 </button>
               </div>
             )}
@@ -787,20 +789,20 @@ export function PaymentsPage({ payments, dataLoading = false, profile, spaceSwit
             className={styles.modalPanelBottom}
           >
             <div className={styles.incomeModalTitle}>
-              Añadir Ingreso Extra
+              {t('paymentsPage.incomeModal.title')}
             </div>
 
             {/* Tipo */}
             <div className={styles.incomeFieldGroup}>
-              <div className={styles.incomeLabelMb8}>Tipo</div>
+              <div className={styles.incomeLabelMb8}>{t('paymentsPage.incomeModal.typeLabel')}</div>
               <div className={styles.incomeTypeRow}>
-                {INCOME_TYPES.map(t => (
+                {INCOME_TYPES.map(t2 => (
                   <button
-                    key={t}
-                    onClick={() => setIncomeType(t)}
-                    className={`${styles.incomeTypeButton} ${incomeType === t ? styles.incomeTypeButtonActive : ''}`}
+                    key={t2}
+                    onClick={() => setIncomeType(t2)}
+                    className={`${styles.incomeTypeButton} ${incomeType === t2 ? styles.incomeTypeButtonActive : ''}`}
                   >
-                    {t}
+                    {t2}
                   </button>
                 ))}
               </div>
@@ -808,7 +810,7 @@ export function PaymentsPage({ payments, dataLoading = false, profile, spaceSwit
 
             {/* Monto */}
             <div className={styles.incomeFieldGroup}>
-              <div className={styles.incomeLabelMb6}>Monto</div>
+              <div className={styles.incomeLabelMb6}>{t('paymentsPage.incomeModal.amountLabel')}</div>
               <input
                 type="number"
                 placeholder="$0"
@@ -821,10 +823,10 @@ export function PaymentsPage({ payments, dataLoading = false, profile, spaceSwit
 
             {/* Nota opcional */}
             <div className={styles.incomeFieldGroupLast}>
-              <div className={styles.incomeLabelMb6}>Nota (opcional)</div>
+              <div className={styles.incomeLabelMb6}>{t('paymentsPage.noteOptional')}</div>
               <input
                 type="text"
-                placeholder="Ej. Bono de productividad"
+                placeholder={t('paymentsPage.incomeModal.notePlaceholder')}
                 value={incomeNote}
                 onChange={e => setIncomeNote(e.target.value)}
                 className={styles.incomeInput}
@@ -836,13 +838,13 @@ export function PaymentsPage({ payments, dataLoading = false, profile, spaceSwit
               disabled={savingIncome || !incomeAmount || parseFloat(incomeAmount) <= 0}
               className={styles.incomeSaveButton}
             >
-              {savingIncome ? 'Guardando...' : 'Guardar ingreso'}
+              {savingIncome ? t('paymentsPage.incomeModal.saving') : t('paymentsPage.incomeModal.save')}
             </button>
             <button
               onClick={() => setIncomeModal(false)}
               className={styles.incomeCancelButton}
             >
-              Cancelar
+              {t('buttons.cancel')}
             </button>
           </div>
         </div>
@@ -859,12 +861,12 @@ export function PaymentsPage({ payments, dataLoading = false, profile, spaceSwit
             className={`${styles.modalPanelBottom} ${styles.manageModalPanelExtra}`}
           >
             <div className={styles.manageModalTitle}>
-              Ingresos Extras del Periodo
+              {t('paymentsPage.manageIncomeModal.title')}
             </div>
 
             {periodIncomes.length === 0 ? (
               <div className={styles.manageEmptyText}>
-                Sin ingresos extras este periodo
+                {t('paymentsPage.manageIncomeModal.empty')}
               </div>
             ) : (
               <div className={styles.manageList}>
@@ -873,13 +875,13 @@ export function PaymentsPage({ payments, dataLoading = false, profile, spaceSwit
                     {editingIncomeId === inc.id ? (
                       <>
                         <div className={styles.editTypeRow}>
-                          {INCOME_TYPES.map(t => (
+                          {INCOME_TYPES.map(t2 => (
                             <button
-                              key={t}
-                              onClick={() => setEditIncomeType(t)}
-                              className={`${styles.editTypeButton} ${editIncomeType === t ? styles.editTypeButtonActive : ''}`}
+                              key={t2}
+                              onClick={() => setEditIncomeType(t2)}
+                              className={`${styles.editTypeButton} ${editIncomeType === t2 ? styles.editTypeButtonActive : ''}`}
                             >
-                              {t}
+                              {t2}
                             </button>
                           ))}
                         </div>
@@ -892,7 +894,7 @@ export function PaymentsPage({ payments, dataLoading = false, profile, spaceSwit
                         />
                         <input
                           type="text"
-                          placeholder="Nota (opcional)"
+                          placeholder={t('paymentsPage.noteOptional')}
                           value={editIncomeNote}
                           onChange={e => setEditIncomeNote(e.target.value)}
                           className={styles.editInputMb10}
@@ -903,33 +905,33 @@ export function PaymentsPage({ payments, dataLoading = false, profile, spaceSwit
                             disabled={savingEditIncome || !editIncomeAmount || parseFloat(editIncomeAmount) <= 0}
                             className={styles.editSaveButton}
                           >
-                            {savingEditIncome ? 'Guardando...' : 'Guardar'}
+                            {savingEditIncome ? t('paymentsPage.manageIncomeModal.saving') : t('buttons.save')}
                           </button>
                           <button
                             onClick={cancelEditIncome}
                             className={styles.editCancelButton}
                           >
-                            Cancelar
+                            {t('buttons.cancel')}
                           </button>
                         </div>
                       </>
                     ) : confirmDeleteIncomeId === inc.id ? (
                       <div>
                         <div className={styles.confirmDeleteText}>
-                          ¿Eliminar este ingreso?
+                          {t('paymentsPage.manageIncomeModal.confirmDelete')}
                         </div>
                         <div className={styles.confirmDeleteRow}>
                           <button
                             onClick={() => handleDeleteIncome(inc.id)}
                             className={styles.confirmDeleteButton}
                           >
-                            Sí, eliminar
+                            {t('paymentsPage.confirmDeleteYes')}
                           </button>
                           <button
                             onClick={() => setConfirmDeleteIncomeId(null)}
                             className={styles.confirmDeleteCancelButton}
                           >
-                            Cancelar
+                            {t('buttons.cancel')}
                           </button>
                         </div>
                       </div>
@@ -955,7 +957,7 @@ export function PaymentsPage({ payments, dataLoading = false, profile, spaceSwit
               onClick={() => { setManageIncomeModal(false); cancelEditIncome(); setConfirmDeleteIncomeId(null) }}
               className={styles.manageCloseButton}
             >
-              Cerrar
+              {t('buttons.close')}
             </button>
           </div>
         </div>
@@ -965,15 +967,15 @@ export function PaymentsPage({ payments, dataLoading = false, profile, spaceSwit
       {addFundModal && (
         <div onClick={() => { setAddFundModal(false); setPersonalAvailable(null) }} className={styles.modalOverlayBottom}>
           <div onClick={e => e.stopPropagation()} className={styles.modalPanelBottom}>
-            <div className={styles.manageModalTitle}>Añadir fondos</div>
+            <div className={styles.manageModalTitle}>{t('paymentsPage.addFundModal.title')}</div>
             <div className={styles.fundInfoText}>
-              Este monto se descontará de tu remanente personal, como si fuera un gasto tuyo.
+              {t('paymentsPage.addFundModal.info')}
             </div>
             <div className={styles.incomeFieldGroup}>
               <div className={styles.fundAmountLabelRow}>
-                <div className={styles.incomeLabelMb6} style={{ marginBottom: 0 }}>Monto</div>
+                <div className={styles.incomeLabelMb6} style={{ marginBottom: 0 }}>{t('paymentsPage.incomeModal.amountLabel')}</div>
                 {activeSpaceId && !loadingPersonalAvailable && personalAvailable != null && (
-                  <div className={styles.fundAvailableTag}>Disponible: {fmt(personalAvailable)}</div>
+                  <div className={styles.fundAvailableTag}>{t('paymentsPage.addFundModal.available', { amount: fmt(personalAvailable) })}</div>
                 )}
               </div>
               <input
@@ -986,15 +988,15 @@ export function PaymentsPage({ payments, dataLoading = false, profile, spaceSwit
                 if (personalAvailable == null || numAmt <= 0) return null
                 const excede = numAmt > personalAvailable
                 if (excede) {
-                  return <div className={styles.fundExceedsError}>Excede tu disponible ({fmt(personalAvailable)})</div>
+                  return <div className={styles.fundExceedsError}>{t('paymentsPage.addFundModal.exceeds', { amount: fmt(personalAvailable) })}</div>
                 }
-                return <div className={styles.fundRemainingHint}>Te quedarán {fmt(personalAvailable - numAmt)} después de este aporte</div>
+                return <div className={styles.fundRemainingHint}>{t('paymentsPage.addFundModal.remaining', { amount: fmt(personalAvailable - numAmt) })}</div>
               })()}
             </div>
             <div className={styles.incomeFieldGroupLast}>
-              <div className={styles.incomeLabelMb6}>Nota (opcional)</div>
+              <div className={styles.incomeLabelMb6}>{t('paymentsPage.noteOptional')}</div>
               <input
-                type="text" placeholder="Ej. Ahorro de este mes" value={fundNote}
+                type="text" placeholder={t('paymentsPage.addFundModal.notePlaceholder')} value={fundNote}
                 onChange={e => setFundNote(e.target.value)}
                 className={styles.incomeInput}
               />
@@ -1007,10 +1009,10 @@ export function PaymentsPage({ payments, dataLoading = false, profile, spaceSwit
               }
               className={styles.incomeSaveButton}
             >
-              {savingFund ? 'Guardando…' : 'Aportar al Fondo'}
+              {savingFund ? t('paymentsPage.addFundModal.saving') : t('paymentsPage.addFundModal.save')}
             </button>
             <button onClick={() => { setAddFundModal(false); setPersonalAvailable(null) }} className={styles.incomeCancelButton}>
-              Cancelar
+              {t('buttons.cancel')}
             </button>
           </div>
         </div>
@@ -1023,29 +1025,29 @@ export function PaymentsPage({ payments, dataLoading = false, profile, spaceSwit
           className={styles.modalOverlayBottom}
         >
           <div onClick={e => e.stopPropagation()} className={`${styles.modalPanelBottom} ${styles.manageModalPanelExtra}`}>
-            <div className={styles.manageModalTitle}>Aportaciones al Fondo</div>
+            <div className={styles.manageModalTitle}>{t('paymentsPage.manageFundModal.title')}</div>
             {sharedFund.ledger.filter(e => e.type === 'deposit').length === 0 ? (
-              <div className={styles.manageEmptyText}>Sin aportaciones registradas</div>
+              <div className={styles.manageEmptyText}>{t('paymentsPage.manageFundModal.empty')}</div>
             ) : (
               <div className={styles.manageList}>
                 {sharedFund.ledger.filter(e => e.type === 'deposit').map(entry => (
                   <div key={entry.id} className={styles.manageListItem}>
                     {confirmDeleteFundId === entry.id ? (
                       <div>
-                        <div className={styles.confirmDeleteText}>¿Eliminar esta aportación?</div>
+                        <div className={styles.confirmDeleteText}>{t('paymentsPage.manageFundModal.confirmDelete')}</div>
                         <div className={styles.confirmDeleteRow}>
                           <button onClick={() => handleDeleteFundEntry(entry.id)} disabled={deletingFundId === entry.id} className={styles.confirmDeleteButton}>
-                            Sí, eliminar
+                            {t('paymentsPage.confirmDeleteYes')}
                           </button>
                           <button onClick={() => setConfirmDeleteFundId(null)} className={styles.confirmDeleteCancelButton}>
-                            Cancelar
+                            {t('buttons.cancel')}
                           </button>
                         </div>
                       </div>
                     ) : (
                       <div className={styles.incomeRow}>
                         <div>
-                          <div className={styles.incomeRowType}>Aportación{entry.note ? ` — ${entry.note}` : ''}</div>
+                          <div className={styles.incomeRowType}>{t('paymentsPage.manageFundModal.entryTypes.deposit')}{entry.note ? ` — ${entry.note}` : ''}</div>
                         </div>
                         <div className={styles.incomeRowActions}>
                           <span className={styles.incomeRowAmount}>+{fmt(entry.amount)}</span>
@@ -1058,7 +1060,7 @@ export function PaymentsPage({ payments, dataLoading = false, profile, spaceSwit
               </div>
             )}
             <button onClick={() => { setManageFundModal(false); setConfirmDeleteFundId(null) }} className={styles.manageCloseButton}>
-              Cerrar
+              {t('buttons.close')}
             </button>
           </div>
         </div>
@@ -1093,8 +1095,8 @@ export function PaymentsPage({ payments, dataLoading = false, profile, spaceSwit
         <>
         {/* Zona de título con fondo diferente */}
         <div className={styles.titleSection}>
-          <div className={styles.titleSectionHeading}>Gastos e ingresos</div>
-          <div className={styles.titleSectionSubtext}>Historial, análisis y balance de tus finanzas del periodo.</div>
+          <div className={styles.titleSectionHeading}>{t('paymentsPage.title')}</div>
+          <div className={styles.titleSectionSubtext}>{t('paymentsPage.subtitle')}</div>
         </div>
 
 
@@ -1103,7 +1105,7 @@ export function PaymentsPage({ payments, dataLoading = false, profile, spaceSwit
         {noIncomeYet && (
           <div data-coachmark="gastos-disponible-card" className={styles.noIncomeCard}>
             <div className={styles.noIncomeText}>
-              Registra un ingreso de este periodo para ver cuánto te queda disponible
+              {t('paymentsPage.noIncomeText')}
             </div>
             <button
               data-coachmark="gastos-add-income-button"
@@ -1111,7 +1113,7 @@ export function PaymentsPage({ payments, dataLoading = false, profile, spaceSwit
               className={styles.noIncomeButton}
             >
               <Plus size={18} strokeWidth={2.2} />
-              Añadir ingreso
+              {t('paymentsPage.addIncome')}
             </button>
           </div>
         )}
@@ -1123,7 +1125,7 @@ export function PaymentsPage({ payments, dataLoading = false, profile, spaceSwit
             {/* Cabecera con botón Añadir ingreso */}
             <div className={styles.balanceHeader}>
               <div>
-                <div className={styles.balanceLabel}>Disponible Este Periodo</div>
+                <div className={styles.balanceLabel}>{t('paymentsPage.availableThisPeriod')}</div>
                 <div className={styles.balanceAmount} style={{ color: sobrePasado ? 'var(--danger)' : 'var(--paid)' }}>
                   {sobrePasado ? '-' : ''}{fmt(Math.abs(disponible))}
                 </div>
@@ -1136,7 +1138,7 @@ export function PaymentsPage({ payments, dataLoading = false, profile, spaceSwit
                   className={styles.addIncomeButtonSmall}
                 >
                   <Plus size={13} strokeWidth={2.2} />
-                  Añadir ingreso
+                  {t('paymentsPage.addIncome')}
                 </button>
                 <div className={styles.balanceSubtext}>
                   <div className={styles.balanceSubtextMain}>
@@ -1144,11 +1146,11 @@ export function PaymentsPage({ payments, dataLoading = false, profile, spaceSwit
                   </div>
                   {totalExtras > 0 && (
                     <div className={styles.balanceExtras}>
-                      +{fmt(totalExtras)} extras
+                      +{fmt(totalExtras)} {t('paymentsPage.extrasSuffix')}
                     </div>
                   )}
                   {sobrePasado && (
-                    <div className={styles.balanceOverBudget}>Presupuesto excedido</div>
+                    <div className={styles.balanceOverBudget}>{t('paymentsPage.overBudget')}</div>
                   )}
                 </div>
               </div>
@@ -1195,13 +1197,13 @@ export function PaymentsPage({ payments, dataLoading = false, profile, spaceSwit
               return (
                 <div className={styles.extrasSection}>
                   <div className={styles.extrasHeader}>
-                    <div className={styles.extrasLabel}>Ingresos Extras Este Periodo</div>
+                    <div className={styles.extrasLabel}>{t('paymentsPage.extrasTitle')}</div>
                     <button
                       onClick={() => setManageIncomeModal(true)}
                       className={styles.extrasEditButton}
                     >
                       <Pencil size={11} strokeWidth={2.2} />
-                      Editar
+                      {t('buttons.edit')}
                     </button>
                   </div>
 
@@ -1213,7 +1215,7 @@ export function PaymentsPage({ payments, dataLoading = false, profile, spaceSwit
                       <Check size={10} color="var(--surface)" strokeWidth={3} />
                     </div>
                     <span className={styles.extrasSummaryText}>
-                      {periodIncomes.length} ingreso{periodIncomes.length !== 1 ? 's' : ''} · +{fmt(totalInc)}
+                      {t('paymentsPage.incomeCount', { count: periodIncomes.length })} · +{fmt(totalInc)}
                     </span>
                     {incomesExpanded ? <ChevronUp size={15} color="var(--text)" /> : <ChevronDown size={15} color="var(--text)" />}
                   </button>
@@ -1255,11 +1257,11 @@ export function PaymentsPage({ payments, dataLoading = false, profile, spaceSwit
             {activeSpaceId && (
               <div className={styles.fundSection}>
                 <div className={styles.paymentsSectionHeader}>
-                  <div className={styles.paymentsSectionTitle}>Fondo compartido</div>
+                  <div className={styles.paymentsSectionTitle}>{t('paymentsPage.sharedFund')}</div>
                   {(spacePermissions?.can_add_funds || !spacePermissions?.isRestricted) && (
                     <button onClick={() => setAddFundModal(true)} className={styles.extrasEditButton}>
                       <Plus size={11} strokeWidth={2.2} />
-                      Añadir fondos
+                      {t('paymentsPage.addFunds')}
                     </button>
                   )}
                 </div>
@@ -1273,7 +1275,7 @@ export function PaymentsPage({ payments, dataLoading = false, profile, spaceSwit
                         <Check size={10} color="var(--surface)" strokeWidth={3} />
                       </div>
                       <span className={styles.extrasSummaryText}>
-                        {sharedFund.ledger.length} movimiento{sharedFund.ledger.length !== 1 ? 's' : ''}
+                        {t('paymentsPage.movementCount', { count: sharedFund.ledger.length })}
                       </span>
                       {fundExpanded ? <ChevronUp size={15} color="var(--text)" /> : <ChevronDown size={15} color="var(--text)" />}
                     </button>
@@ -1284,10 +1286,10 @@ export function PaymentsPage({ payments, dataLoading = false, profile, spaceSwit
                           const d = entry.created_at ? new Date(entry.created_at) : null
                           const isDeposit = entry.type === 'deposit'
                           const label =
-                            entry.type === 'migration' ? 'Saldo inicial migrado' :
-                            entry.type === 'reversal'  ? 'Reversión' :
-                            entry.type === 'spend'     ? 'Gasto del espacio' :
-                            'Aportación'
+                            entry.type === 'migration' ? t('paymentsPage.manageFundModal.entryTypes.migration') :
+                            entry.type === 'reversal'  ? t('paymentsPage.manageFundModal.entryTypes.reversal') :
+                            entry.type === 'spend'     ? t('paymentsPage.manageFundModal.entryTypes.spend') :
+                            t('paymentsPage.manageFundModal.entryTypes.deposit')
                           const Icon = entry.type === 'spend' ? ArrowDown : entry.type === 'reversal' ? ArrowUpLeft : entry.type === 'migration' ? PiggyBank : ArrowUp
                           const typeColor =
                             entry.type === 'migration' ? 'var(--cat-ahorro)' :
@@ -1329,7 +1331,7 @@ export function PaymentsPage({ payments, dataLoading = false, profile, spaceSwit
 
         {/* Chips de categoría */}
         <div data-coachmark="gastos-category-chips" className={styles.categoryChipsScroll}>
-          <FilterChip label="Todos" active={!selectedCat} onClick={() => setSelectedCat(null)} />
+          <FilterChip label={t('paymentsPage.allFilter')} active={!selectedCat} onClick={() => setSelectedCat(null)} />
           {visibleCats.map(c => (
             <FilterChip
               key={c}
@@ -1346,14 +1348,14 @@ export function PaymentsPage({ payments, dataLoading = false, profile, spaceSwit
         <div className={styles.statsCard}>
           <div className={styles.statsBlockWide}>
             <div className={styles.statsLabel}>
-              Total {monthsBack} meses
+              {t('paymentsPage.totalMonths', { count: monthsBack })}
             </div>
             <div className={styles.statsValueLarge}>{fmt(grandTotal)}</div>
           </div>
           <div className={styles.statsDivider} />
           <div className={styles.statsBlock}>
             <div className={styles.statsLabel}>
-              Promedio mensual
+              {t('paymentsPage.monthlyAverage')}
             </div>
             <div className={styles.statsValue}>{fmt(Math.round(avgMonthly))}</div>
           </div>
@@ -1362,14 +1364,14 @@ export function PaymentsPage({ payments, dataLoading = false, profile, spaceSwit
         {/* Selector de rango */}
         <div className={styles.rangeSelectorRow}>
           {[3, 6, 12].map(n => (
-            <FilterChip key={n} label={`${n} meses`} active={monthsBack === n} onClick={() => { setMonthsBack(n); setSelectedCat(null) }} />
+            <FilterChip key={n} label={t('paymentsPage.monthsChip', { count: n })} active={monthsBack === n} onClick={() => { setMonthsBack(n); setSelectedCat(null) }} />
           ))}
         </div>
 
         {/* Gráfica */}
         <div data-coachmark="gastos-monthly-chart" className={styles.chartCard}>
           <div className={styles.chartTitle}>
-            Gastos Mensuales
+            {t('paymentsPage.monthlyExpenses')}
           </div>
           {/* Labels de monto arriba */}
           <div className={styles.chartLabelsRow}>
@@ -1435,7 +1437,7 @@ export function PaymentsPage({ payments, dataLoading = false, profile, spaceSwit
             Pagos, confirmado con Johnatan. */}
         <div className={styles.filtersWrapper}>
           <div className={styles.viewModeRow}>
-            {[['periodo','Periodo actual'],['mes','Por mes']].map(([val, label]) => (
+            {[['periodo',t('homePage.tabs.currentPeriod')],['mes',t('paymentsPage.byMonth')]].map(([val, label]) => (
               <button key={val} onClick={() => setViewMode(val)}
                 className={`${styles.viewModeButton} ${viewMode === val ? styles.viewModeButtonActive : ''}`}>
                 {label}
@@ -1445,7 +1447,7 @@ export function PaymentsPage({ payments, dataLoading = false, profile, spaceSwit
           {viewMode === 'mes' && (
             <div className={styles.monthYearRow}>
               <div className={styles.monthYearGroup}>
-                <span className={styles.monthYearLabel}>Mes:</span>
+                <span className={styles.monthYearLabel}>{t('paymentsPage.monthLabel')}</span>
                 <div className={styles.monthSelectBox}>
                   <Select
                     value={MONTHS[viewMonth]}
@@ -1455,7 +1457,7 @@ export function PaymentsPage({ payments, dataLoading = false, profile, spaceSwit
                 </div>
               </div>
               <div className={styles.monthYearGroup}>
-                <span className={styles.monthYearLabel}>Año:</span>
+                <span className={styles.monthYearLabel}>{t('paymentsPage.yearLabel')}</span>
                 <div className={styles.yearSelectBox}>
                   <Select
                     value={String(viewYear)}
@@ -1471,17 +1473,17 @@ export function PaymentsPage({ payments, dataLoading = false, profile, spaceSwit
         {/* Por Categoría */}
         <div className={styles.categorySection}>
           <div className={styles.categorySectionTitle}>
-            <span className={styles.categorySectionTitleText}>Por Categoría</span>
+            <span className={styles.categorySectionTitleText}>{t('paymentsPage.byCategory')}</span>
           </div>
 
           {catData.length === 0 ? (
             /* dataLoading (v0.9.284): ver comentario en HomePage.jsx —
                no flashear "Sin gastos" mientras el contexto nuevo carga. */
             dataLoading ? null : <EmptyState
-              title="Sin gastos registrados"
-              subtitle="Toca aquí o el botón + de abajo para añadir uno"
+              title={t('paymentsPage.noExpensesTitle')}
+              subtitle={t('homePage.emptyState.subtitle')}
               onClick={onAdd}
-              secondaryLabel="Personalizar categorías"
+              secondaryLabel={t('paymentsPage.customizeCategories')}
               onSecondaryClick={onGoCategories}
             />
           ) : (
@@ -1519,18 +1521,18 @@ export function PaymentsPage({ payments, dataLoading = false, profile, spaceSwit
         {/* ── Pagos realizados ── */}
         <div className={styles.paymentsSection}>
           <div className={styles.paymentsSectionHeader}>
-            <span className={styles.paymentsSectionTitle}>Pagos</span>
+            <span className={styles.paymentsSectionTitle}>{t('paymentsPage.paymentsTitle')}</span>
             {paidInView.length > 0 && (
               <span className={styles.totalText}>
-                Total: <strong className={styles.totalStrong}>{fmt(totalInView)}</strong>
+                {t('paymentsPage.total')} <strong className={styles.totalStrong}>{fmt(totalInView)}</strong>
               </span>
             )}
           </div>
 
           {paidInView.length === 0 ? (
             dataLoading ? null : <EmptyState
-              title={viewMode === 'periodo' ? 'Sin pagos realizados en el periodo actual' : `Sin pagos realizados en ${MONTHS[viewMonth]} ${viewYear}`}
-              subtitle="Toca aquí o el botón + de abajo para añadir uno"
+              title={viewMode === 'periodo' ? t('paymentsPage.noPaymentsCurrentPeriod') : t('paymentsPage.noPaymentsInMonth', { month: MONTHS[viewMonth], year: viewYear })}
+              subtitle={t('homePage.emptyState.subtitle')}
               onClick={onAdd}
             />
           ) : (
@@ -1558,8 +1560,8 @@ export function PaymentsPage({ payments, dataLoading = false, profile, spaceSwit
                         <div className={styles.paymentCategoryRow}>
                           <span className={styles.paymentCategoryDot} style={{ background: getCatColor(p.category, profile.custom_categories, profile.category_colors) }} />
                           {p.category}
-                          {p.is_recurrent && <span className={styles.paymentRecurrentTag}>· {RECUR_FREQ[p.recur_freq] || 'Mensual'}</span>}
-                          {p.is_contribution_reflection && <span className={styles.paymentRecurrentTag}>· Compartido</span>}
+                          {p.is_recurrent && <span className={styles.paymentRecurrentTag}>· {RECUR_FREQ[p.recur_freq] || t('frequency.monthly')}</span>}
+                          {p.is_contribution_reflection && <span className={styles.paymentRecurrentTag}>· {t('homePage.shared')}</span>}
                         </div>
                         {activeSpaceId && !p.is_contribution_reflection && (
                           <PaidByStack contributors={p.contributors} members={spaceMembers} fundAmount={p.fund_amount || 0} size={22} />
@@ -1569,7 +1571,7 @@ export function PaymentsPage({ payments, dataLoading = false, profile, spaceSwit
                         <div className={styles.paymentAmount}>{fmt(p.amount)}</div>
                         {p.is_variable && (
                           <span className={styles.variableBadge}>
-                            Variable
+                            {t('paymentsPage.variable')}
                           </span>
                         )}
                       </div>
@@ -1577,7 +1579,7 @@ export function PaymentsPage({ payments, dataLoading = false, profile, spaceSwit
                         {p.is_contribution_reflection ? (
                           <button
                             onClick={e => { e.stopPropagation(); onViewSource && onViewSource(p) }}
-                            aria-label="Ver en el espacio compartido"
+                            aria-label={t('homePage.viewInSharedSpace')}
                             className={styles.paymentMenuButton}
                           >
                             <Eye size={16} color="var(--text)" strokeWidth={1.8} />
