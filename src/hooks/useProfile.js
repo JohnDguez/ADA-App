@@ -16,6 +16,7 @@ const DEFAULT_PROFILE = {
   default_space_id: null,
   category_icons: {},
   category_colors: {},
+  language: 'system',
 }
 
 export function useProfile(userId) {
