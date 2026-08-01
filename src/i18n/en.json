@@ -326,5 +326,35 @@
         "deleteError": "Error deleting"
       }
     }
+  },
+  "recurrentsPage": {
+    "title": "Recurring expenses",
+    "subtitle": "Manage your fixed and variable payments.",
+    "searchPlaceholder": "Search by name or category...",
+    "activeLabel": "Active",
+    "pausedCount_one": "{{count}} paused",
+    "pausedCount_other": "{{count}} paused",
+    "monthlySum": "Monthly total",
+    "monthlyPaymentsLabel": "monthly payments",
+    "filters": {
+      "all": "All",
+      "active": "Active",
+      "paused": "Paused",
+      "recurrent": "Recurring",
+      "installments": "Installments"
+    },
+    "noResultsForSearch": "No results for your search",
+    "noRecurrentsTitle": "No recurring expenses recorded",
+    "paymentCount_one": "{{count}} payment",
+    "paymentCount_other": "{{count}} payments",
+    "perMonthSuffix": "/mo",
+    "completedCount_one": "{{count}} completed",
+    "completedCount_other": "{{count}} completed",
+    "nextDate": "Next: {{date}}",
+    "installmentProgress": "Payment {{current}} of {{total}}",
+    "paused": "Paused",
+    "actionResume": "resume payments",
+    "actionPause": "pause payments",
+    "deleteConfirm": "Delete \"{{name}}\"? Payments already made will be kept."
   }
 }

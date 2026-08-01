@@ -326,5 +326,35 @@
         "deleteError": "Error al eliminar"
       }
     }
+  },
+  "recurrentsPage": {
+    "title": "Gastos recurrentes",
+    "subtitle": "Gestiona tus pagos fijos y variables.",
+    "searchPlaceholder": "Buscar por nombre o categoría...",
+    "activeLabel": "Activos",
+    "pausedCount_one": "{{count}} pausado",
+    "pausedCount_other": "{{count}} pausados",
+    "monthlySum": "Suma mensual",
+    "monthlyPaymentsLabel": "pagos mensuales",
+    "filters": {
+      "all": "Todos",
+      "active": "Activos",
+      "paused": "Pausados",
+      "recurrent": "Recurrentes",
+      "installments": "Parcialidades"
+    },
+    "noResultsForSearch": "Sin resultados para tu búsqueda",
+    "noRecurrentsTitle": "Sin gastos recurrentes registrados",
+    "paymentCount_one": "{{count}} pago",
+    "paymentCount_other": "{{count}} pagos",
+    "perMonthSuffix": "/mes",
+    "completedCount_one": "{{count}} realizado",
+    "completedCount_other": "{{count}} realizados",
+    "nextDate": "Próximo: {{date}}",
+    "installmentProgress": "Pago {{current}} de {{total}}",
+    "paused": "Pausado",
+    "actionResume": "reactivar pagos",
+    "actionPause": "pausar pagos",
+    "deleteConfirm": "¿Eliminar \"{{name}}\"? Los pagos ya realizados se conservarán."
   }
 }
