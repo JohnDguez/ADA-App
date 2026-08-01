@@ -1,16 +1,19 @@
 import { useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { supabase } from '../../lib/supabase'
-import { ChevronLeft, ChevronRight, AlertTriangle, Eye, EyeOff } from 'lucide-react'
+import { ChevronLeft, ChevronRight, AlertTriangle, Eye, EyeOff, Check } from 'lucide-react'
 import { showToast } from '../../components/Toast'
 import { passwordRequirements, isPasswordStrong } from '../../components/PasswordSetupModal'
 import { RequirementRow } from '../../components/RequirementRow'
 import { Card, Row, SectionLabel } from '../../components/SettingsShared'
+import i18n, { resolveLanguage, LANGUAGE_STORAGE_KEY } from '../../i18n'
 import styles from './SettingsAccountPage.module.css'
 
-// Sub-página "Cuenta" dentro de Ajustes: Nombre, Correo/Google, Contraseña, y
-// la zona de peligro (Eliminar mis datos / Eliminar mi cuenta). Antes vivía
-// todo esto mezclado directo en SettingsPage.jsx.
+// Sub-página "Cuenta" dentro de Ajustes: Nombre, Correo/Google, Contraseña,
+// Idioma, y la zona de peligro (Eliminar mis datos / Eliminar mi cuenta).
+// Antes vivía todo esto (menos Idioma) mezclado directo en SettingsPage.jsx.
 export function SettingsAccountPage({ profile, user, onUpdate, onDataDeleted, onBack, slideClass }) {
+  const { t } = useTranslation()
   const [editSection, setEditSection] = useState(null)
   const [fieldVal,    setFieldVal]    = useState('')
   const [fieldVal2,   setFieldVal2]   = useState('')
@@ -33,6 +36,18 @@ export function SettingsAccountPage({ profile, user, onUpdate, onDataDeleted, on
   const newPassReqs   = passwordRequirements(fieldVal)
   const newPassStrong = isPasswordStrong(fieldVal)
   const newPassMatch  = fieldVal && fieldVal2 && fieldVal === fieldVal2
+
+  // Idioma: 'system' | 'es' | 'en' — vive en profiles.language (columna
+  // agregada por Johnatan vía migración manual, ver
+  // profiles_language_migration.sql entregado aparte). Mientras el
+  // profile no la traiga (undefined), se asume 'system' — mismo default
+  // que usa useProfile.js.
+  const currentLanguage = profile.language || 'system'
+  const LANGUAGE_OPTIONS = [
+    { id: 'system', label: t('settingsAccount.languageModal.system') },
+    { id: 'es',     label: t('settingsAccount.languageModal.spanish') },
+    { id: 'en',     label: t('settingsAccount.languageModal.english') },
+  ]
 
   useEffect(() => {
     if (dangerModal || editSection) document.body.classList.add('modal-open')
@@ -57,22 +72,22 @@ export function SettingsAccountPage({ profile, user, onUpdate, onDataDeleted, on
   async function handleEditSave() {
     setEditError(''); setSaving(true)
     if (editSection === 'name') {
-      if (!fieldVal.trim()) { setEditError('Escribe un nombre'); setSaving(false); return }
-      await onUpdate({ name: fieldVal.trim() }); showToast('Nombre actualizado')
+      if (!fieldVal.trim()) { setEditError(t('settingsAccount.toast.emptyName')); setSaving(false); return }
+      await onUpdate({ name: fieldVal.trim() }); showToast(t('settingsAccount.toast.nameUpdated'))
     } else if (editSection === 'email') {
-      if (!fieldVal.trim()) { setEditError('Escribe un correo'); setSaving(false); return }
+      if (!fieldVal.trim()) { setEditError(t('settingsAccount.toast.emptyEmail')); setSaving(false); return }
       const { error } = await supabase.auth.updateUser({ email: fieldVal.trim() })
       if (error) { setEditError(error.message); setSaving(false); return }
-      showToast('Correo actualizado — revisa tu bandeja')
+      showToast(t('settingsAccount.toast.emailUpdated'))
     } else if (editSection === 'password') {
-      if (!fieldVal3) { setEditError('Ingresa tu contraseña actual'); setSaving(false); return }
-      if (!newPassStrong) { setEditError('La nueva contraseña no cumple los requisitos'); setSaving(false); return }
-      if (!newPassMatch)  { setEditError('Las contraseñas no coinciden'); setSaving(false); return }
+      if (!fieldVal3) { setEditError(t('settingsAccount.toast.currentPasswordRequired')); setSaving(false); return }
+      if (!newPassStrong) { setEditError(t('settingsAccount.toast.passwordRequirementsNotMet')); setSaving(false); return }
+      if (!newPassMatch)  { setEditError(t('settingsAccount.editModal.passwordMismatch')); setSaving(false); return }
       const valid = await verifyCurrentPassword(fieldVal3)
-      if (!valid) { setEditError('Contraseña actual incorrecta'); setSaving(false); return }
+      if (!valid) { setEditError(t('settingsAccount.toast.wrongCurrentPassword')); setSaving(false); return }
       const { error } = await supabase.auth.updateUser({ password: fieldVal })
       if (error) { setEditError(error.message); setSaving(false); return }
-      showToast('Contraseña actualizada')
+      showToast(t('settingsAccount.toast.passwordUpdated'))
     }
     setSaving(false); setEditSection(null)
   }
@@ -82,29 +97,42 @@ export function SettingsAccountPage({ profile, user, onUpdate, onDataDeleted, on
     setForgotSent(true)
   }
 
+  // Idioma: aplica de inmediato al tocar una opción (sin botón "Guardar"
+  // aparte, mismo patrón mockeado y confirmado con Johnatan) — guarda en
+  // profiles.language, en localStorage (cache de arranque que ya lee
+  // src/i18n/index.js) y cambia el idioma activo de i18next en el momento.
+  async function handleLanguageSelect(langId) {
+    localStorage.setItem(LANGUAGE_STORAGE_KEY, langId)
+    i18n.changeLanguage(resolveLanguage(langId))
+    setEditSection(null)
+    const { error } = await onUpdate({ language: langId })
+    if (error) showToast(error.message || t('settingsAccount.toast.wrongPassword'))
+    else showToast(t('settingsAccount.toast.languageUpdated'))
+  }
+
   async function handleDeleteData() {
     setDangerError('')
-    if (!dangerPassword) { setDangerError('Ingresa tu contraseña para confirmar'); return }
+    if (!dangerPassword) { setDangerError(t('settingsAccount.toast.confirmPasswordRequired')); return }
     setDangerLoading(true)
     const valid = await verifyCurrentPassword(dangerPassword)
-    if (!valid) { setDangerError('Contraseña incorrecta'); setDangerLoading(false); return }
+    if (!valid) { setDangerError(t('settingsAccount.toast.wrongPassword')); setDangerLoading(false); return }
     const [paymentsRes, incomeRes] = await Promise.all([
       supabase.from('payments').delete().eq('user_id', user.id),
       supabase.from('period_income').delete().eq('user_id', user.id),
     ])
     setDangerLoading(false)
-    if (paymentsRes.error || incomeRes.error) { setDangerError('Error al eliminar los datos'); return }
+    if (paymentsRes.error || incomeRes.error) { setDangerError(t('settingsAccount.toast.deleteDataError')); return }
     setDangerModal(null); setDangerPassword('')
     onDataDeleted && onDataDeleted()
-    showToast('Todos tus datos han sido eliminados')
+    showToast(t('settingsAccount.toast.allDataDeleted'))
   }
 
   async function handleDeleteAccount() {
     setDangerError('')
-    if (!dangerPassword) { setDangerError('Ingresa tu contraseña para confirmar'); return }
+    if (!dangerPassword) { setDangerError(t('settingsAccount.toast.confirmPasswordRequired')); return }
     setDangerLoading(true)
     const valid = await verifyCurrentPassword(dangerPassword)
-    if (!valid) { setDangerError('Contraseña incorrecta'); setDangerLoading(false); return }
+    if (!valid) { setDangerError(t('settingsAccount.toast.wrongPassword')); setDangerLoading(false); return }
     await Promise.all([
       supabase.from('payments').delete().eq('user_id', user.id),
       supabase.from('notifications').delete().eq('user_id', user.id),
@@ -118,7 +146,7 @@ export function SettingsAccountPage({ profile, user, onUpdate, onDataDeleted, on
       body: JSON.stringify({ userId: user.id }),
     })
     setDangerLoading(false)
-    if (!res.ok) { setDangerError('Error al eliminar la cuenta'); return }
+    if (!res.ok) { setDangerError(t('settingsAccount.toast.deleteAccountError')); return }
     sessionStorage.removeItem('ada_tab')
     sessionStorage.removeItem('ada_session')
     sessionStorage.removeItem('ada_user_id')
@@ -132,36 +160,42 @@ export function SettingsAccountPage({ profile, user, onUpdate, onDataDeleted, on
           <button onClick={onBack} className={styles.backButton}>
             <ChevronLeft size={18} color="var(--text)" />
           </button>
-          <div className={styles.headerTitle}>Cuenta</div>
+          <div className={styles.headerTitle}>{t('settingsAccount.title')}</div>
         </div>
 
         <Card>
-          <Row label="Nombre" value={profile.name} onClick={() => openEdit('name')} />
+          <Row label={t('settingsAccount.row.name')} value={profile.name} onClick={() => openEdit('name')} />
           {isGoogle
             ? <>
-                <Row label="Cuenta" value="Google" />
-                <Row label="Contraseña" value="••••••••" onClick={() => openEdit('password')} last />
+                <Row label={t('settingsAccount.row.account')} value={t('settingsAccount.row.google')} />
+                <Row label={t('settingsAccount.row.password')} value="••••••••" onClick={() => openEdit('password')} />
               </>
             : <>
-                <Row label="Correo" value={user?.email} onClick={() => openEdit('email')} />
-                <Row label="Contraseña" value="••••••••" onClick={() => openEdit('password')} last />
+                <Row label={t('settingsAccount.row.email')} value={user?.email} onClick={() => openEdit('email')} />
+                <Row label={t('settingsAccount.row.password')} value="••••••••" onClick={() => openEdit('password')} />
               </>
           }
+          <Row
+            label={t('settingsAccount.row.language')}
+            value={LANGUAGE_OPTIONS.find(o => o.id === currentLanguage)?.label}
+            onClick={() => setEditSection('language')}
+            last
+          />
         </Card>
 
-        <SectionLabel>Zona de peligro</SectionLabel>
+        <SectionLabel>{t('settingsAccount.dangerZone.label')}</SectionLabel>
         <Card>
           <button onClick={() => { setDangerModal('data'); setDangerPassword(''); setDangerError('') }} className={styles.dangerButton}>
             <div className={styles.dangerButtonText}>
-              <div className={styles.dangerButtonTitle}>Eliminar todos mis datos</div>
-              <div className={styles.dangerButtonSubtitle}>Borra todos tus pagos e ingresos. Tu cuenta se mantiene.</div>
+              <div className={styles.dangerButtonTitle}>{t('settingsAccount.dangerZone.deleteDataTitle')}</div>
+              <div className={styles.dangerButtonSubtitle}>{t('settingsAccount.dangerZone.deleteDataSubtitle')}</div>
             </div>
             <ChevronRight size={14} color="var(--danger)" />
           </button>
           <button onClick={() => { setDangerModal('account'); setDangerPassword(''); setDangerError('') }} className={styles.dangerButtonLast}>
             <div className={styles.dangerButtonText}>
-              <div className={styles.dangerButtonTitle}>Eliminar mi cuenta</div>
-              <div className={styles.dangerButtonSubtitle}>Elimina tu cuenta y todos tus datos permanentemente.</div>
+              <div className={styles.dangerButtonTitle}>{t('settingsAccount.dangerZone.deleteAccountTitle')}</div>
+              <div className={styles.dangerButtonSubtitle}>{t('settingsAccount.dangerZone.deleteAccountSubtitle')}</div>
             </div>
             <ChevronRight size={14} color="var(--danger)" />
           </button>
@@ -176,12 +210,12 @@ export function SettingsAccountPage({ profile, user, onUpdate, onDataDeleted, on
               <AlertTriangle size={22} color="var(--danger)" />
             </div>
             <div className={styles.dangerTitle}>
-              {dangerModal === 'data' ? 'Eliminar todos los datos' : 'Eliminar cuenta'}
+              {dangerModal === 'data' ? t('settingsAccount.dangerModal.titleData') : t('settingsAccount.dangerModal.titleAccount')}
             </div>
             <div className={styles.dangerDescription}>
               {dangerModal === 'data'
-                ? 'Esta acción eliminará todos tus pagos e ingresos permanentemente. Tu cuenta se mantendrá activa. Esta acción no se puede deshacer.'
-                : 'Esta acción eliminará tu cuenta y todos tus datos permanentemente. No podrás recuperarlos. Esta acción no se puede deshacer.'
+                ? t('settingsAccount.dangerModal.descriptionData')
+                : t('settingsAccount.dangerModal.descriptionAccount')
               }
             </div>
             {dangerError && (
@@ -189,7 +223,7 @@ export function SettingsAccountPage({ profile, user, onUpdate, onDataDeleted, on
                 {dangerError}
               </div>
             )}
-            <label className={`field-label ${styles.label}`}>Confirma con tu contraseña</label>
+            <label className={`field-label ${styles.label}`}>{t('settingsAccount.dangerModal.confirmLabel')}</label>
             <div className={styles.inputWrapperSpaced}>
               <input
                 autoFocus
@@ -208,9 +242,9 @@ export function SettingsAccountPage({ profile, user, onUpdate, onDataDeleted, on
               onClick={dangerModal === 'data' ? handleDeleteData : handleDeleteAccount}
               disabled={dangerLoading || !dangerPassword}
               className={styles.deleteConfirmButton}>
-              {dangerLoading ? 'Verificando…' : dangerModal === 'data' ? 'Eliminar todos mis datos' : 'Eliminar mi cuenta'}
+              {dangerLoading ? t('settingsAccount.dangerModal.verifying') : dangerModal === 'data' ? t('settingsAccount.dangerModal.deleteDataButton') : t('settingsAccount.dangerModal.deleteAccountButton')}
             </button>
-            <button onClick={() => { setDangerModal(null); setDangerPassword('') }} className="btn-ghost">Cancelar</button>
+            <button onClick={() => { setDangerModal(null); setDangerPassword('') }} className="btn-ghost">{t('buttons.cancel')}</button>
           </div>
         </div>
       )}
@@ -220,29 +254,32 @@ export function SettingsAccountPage({ profile, user, onUpdate, onDataDeleted, on
           <div className={styles.modalPanel}>
             <div className={styles.handle} />
             <div className={styles.editTitle}>
-              {editSection === 'name' ? 'Editar nombre' : editSection === 'email' ? 'Cambiar correo' : 'Cambiar contraseña'}
+              {editSection === 'name' ? t('settingsAccount.editModal.titleName')
+                : editSection === 'email' ? t('settingsAccount.editModal.titleEmail')
+                : editSection === 'language' ? t('settingsAccount.languageModal.title')
+                : t('settingsAccount.editModal.titlePassword')}
             </div>
 
             {editError  && <div className={styles.errorBox}>{editError}</div>}
-            {forgotSent && <div className={styles.successBox}>Te enviamos un enlace a {user?.email}</div>}
+            {forgotSent && <div className={styles.successBox}>{t('settingsAccount.editModal.resetLinkSent', { email: user?.email })}</div>}
 
             {editSection === 'name' && (
               <div className={styles.fieldGroup}>
-                <label className="field-label">Nombre</label>
+                <label className="field-label">{t('settingsAccount.editModal.nameLabel')}</label>
                 <input autoFocus className="field-input" value={fieldVal} onChange={e => setFieldVal(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleEditSave()} />
               </div>
             )}
 
             {editSection === 'email' && (
               <div className={styles.fieldGroup}>
-                <label className="field-label">Nuevo correo</label>
+                <label className="field-label">{t('settingsAccount.editModal.emailLabel')}</label>
                 <input autoFocus className="field-input" type="email" value={fieldVal} onChange={e => setFieldVal(e.target.value)} />
               </div>
             )}
 
             {editSection === 'password' && (<>
               <div className={styles.fieldGroupSm}>
-                <label className="field-label">Contraseña actual</label>
+                <label className="field-label">{t('settingsAccount.editModal.currentPasswordLabel')}</label>
                 <div className={styles.inputWrapper}>
                   <input autoFocus className={`field-input ${styles.inputWithToggle}`} type={showPass3 ? 'text' : 'password'} value={fieldVal3} onChange={e => setFieldVal3(e.target.value)} placeholder="••••••••" />
                   <button type="button" onClick={() => setShowPass3(v => !v)} className={styles.toggleVisibilityButton}>
@@ -250,12 +287,12 @@ export function SettingsAccountPage({ profile, user, onUpdate, onDataDeleted, on
                   </button>
                 </div>
                 <button onClick={handleForgotPassword} className={styles.forgotPasswordLink}>
-                  ¿Olvidaste tu contraseña?
+                  {t('settingsAccount.editModal.forgotPassword')}
                 </button>
               </div>
 
               <div className={styles.fieldGroupXs}>
-                <label className="field-label">Nueva contraseña</label>
+                <label className="field-label">{t('settingsAccount.editModal.newPasswordLabel')}</label>
                 <div className={styles.inputWrapper}>
                   <input className={`field-input ${styles.inputWithToggle}`} type={showPass ? 'text' : 'password'} value={fieldVal} onChange={e => setFieldVal(e.target.value)} placeholder="••••••••" />
                   <button type="button" onClick={() => setShowPass(v => !v)} className={styles.toggleVisibilityButton}>
@@ -266,29 +303,46 @@ export function SettingsAccountPage({ profile, user, onUpdate, onDataDeleted, on
 
               {fieldVal.length > 0 && (
                 <div className={styles.requirementsBox}>
-                  <RequirementRow met={newPassReqs.length}    label="Mínimo 8 caracteres" />
-                  <RequirementRow met={newPassReqs.uppercase} label="Al menos una mayúscula" />
-                  <RequirementRow met={newPassReqs.number}    label="Al menos un número" />
-                  <RequirementRow met={newPassReqs.symbol}    label="Al menos un símbolo especial (!@#$...)" />
+                  <RequirementRow met={newPassReqs.length}    label={t('settingsAccount.editModal.requirementLength')} />
+                  <RequirementRow met={newPassReqs.uppercase} label={t('settingsAccount.editModal.requirementUppercase')} />
+                  <RequirementRow met={newPassReqs.number}    label={t('settingsAccount.editModal.requirementNumber')} />
+                  <RequirementRow met={newPassReqs.symbol}    label={t('settingsAccount.editModal.requirementSymbol')} />
                 </div>
               )}
 
               <div className={styles.fieldGroup}>
-                <label className="field-label">Confirmar nueva contraseña</label>
+                <label className="field-label">{t('settingsAccount.editModal.confirmPasswordLabel')}</label>
                 <div className={styles.inputWrapper}>
                   <input className={`field-input ${styles.inputWithToggle} ${fieldVal2 && !newPassMatch ? styles.inputError : ''}`} type={showPass2 ? 'text' : 'password'} value={fieldVal2} onChange={e => setFieldVal2(e.target.value)} placeholder="••••••••" />
                   <button type="button" onClick={() => setShowPass2(v => !v)} className={styles.toggleVisibilityButton}>
                     {showPass2 ? <EyeOff size={16} color="var(--text)" /> : <Eye size={16} color="var(--text)" />}
                   </button>
                 </div>
-                {fieldVal2 && !newPassMatch && <div className={styles.matchError}>Las contraseñas no coinciden</div>}
+                {fieldVal2 && !newPassMatch && <div className={styles.matchError}>{t('settingsAccount.editModal.passwordMismatch')}</div>}
               </div>
             </>)}
 
-            <button onClick={handleEditSave} disabled={saving} className={`btn-primary ${styles.saveButton}`}>
-              {saving ? 'Guardando…' : 'Guardar'}
-            </button>
-            <button onClick={() => setEditSection(null)} className="btn-ghost">Cancelar</button>
+            {editSection === 'language' && (
+              <div className={styles.fieldGroup}>
+                {LANGUAGE_OPTIONS.map((opt, i) => (
+                  <div
+                    key={opt.id}
+                    onClick={() => handleLanguageSelect(opt.id)}
+                    className={`${styles.languageOptionRow} ${i === LANGUAGE_OPTIONS.length - 1 ? styles.languageOptionRowLast : ''}`}
+                  >
+                    <span className={styles.languageOptionLabel}>{opt.label}</span>
+                    {currentLanguage === opt.id && <Check size={18} color="var(--accent)" />}
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {editSection !== 'language' && (
+              <button onClick={handleEditSave} disabled={saving} className={`btn-primary ${styles.saveButton}`}>
+                {saving ? t('settingsAccount.editModal.saving') : t('buttons.save')}
+              </button>
+            )}
+            <button onClick={() => setEditSection(null)} className="btn-ghost">{t('buttons.cancel')}</button>
           </div>
         </div>
       )}

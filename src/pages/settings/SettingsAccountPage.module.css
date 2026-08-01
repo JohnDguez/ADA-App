@@ -250,6 +250,24 @@
   padding: 0;
 }
 
+.languageOptionRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 2px;
+  border-bottom: 0.5px solid var(--border);
+  cursor: pointer;
+}
+
+.languageOptionRowLast {
+  border-bottom: none;
+}
+
+.languageOptionLabel {
+  font-size: 14px;
+  color: var(--text);
+}
+
 .requirementsBox {
   background: var(--bg);
   border-radius: var(--radius-sm);

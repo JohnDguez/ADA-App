@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { ChevronLeft, Plus, Check, Search, Trash2 } from 'lucide-react'
 import { CATEGORIES, getCatColor } from '../../lib/utils'
 import { CATEGORY_ICON_GROUPS, getCategoryIcon, getIconComponent } from '../../lib/categoryIcons'
@@ -15,7 +16,16 @@ const PALETTE = Array.from({ length: 16 }, (_, i) => `var(--palette-${i + 1})`)
 // de solo lectura, para no desincronizar pagos ya registrados en pantallas
 // que no viven en este archivo). Las personalizadas sí permiten renombrar,
 // y ese cambio se propaga a los pagos existentes con ese nombre.
+//
+// NOTA i18n: los NOMBRES de las 11 categorías fijas (CATEGORIES, de
+// lib/utils.js) y "Otros" NO se traducen — decisión ya tomada y cerrada
+// con Johnatan (v0.9.150, "se quedan bloqueadas para siempre"): son el
+// valor literal guardado en payments.category, usado para filtrar/hacer
+// match en toda la app. Traducirlos requeriría desacoplar el nombre
+// visible del valor guardado — cambio de arquitectura aparte, no de esta
+// pasada de extracción de texto.
 export function SettingsCategoriesPage({ profile, onUpdate, onBack, slideClass }) {
+  const { t } = useTranslation()
   const [modalOpen,   setModalOpen]   = useState(false)
   const [editingCat,  setEditingCat]  = useState(null) // { name, isCustom } | null (null = agregar nueva)
   const [formName,    setFormName]    = useState('')
@@ -59,7 +69,7 @@ export function SettingsCategoriesPage({ profile, onUpdate, onBack, slideClass }
 
   async function handleSave() {
     const trimmed = formName.trim()
-    if (!trimmed) { setNameError('Escribe un nombre'); return }
+    if (!trimmed) { setNameError(t('settingsCategories.toast.emptyName')); return }
 
     const oldName  = editingCat?.name
     const isNew    = !editingCat
@@ -67,7 +77,7 @@ export function SettingsCategoriesPage({ profile, onUpdate, onBack, slideClass }
 
     const others = [...CATEGORIES, ...customCats].filter(c => c !== oldName)
     if (others.some(c => c.toLowerCase() === trimmed.toLowerCase())) {
-      setNameError('Ya existe una categoría con ese nombre'); return
+      setNameError(t('settingsCategories.toast.duplicateName')); return
     }
 
     setSaving(true)
@@ -90,11 +100,11 @@ export function SettingsCategoriesPage({ profile, onUpdate, onBack, slideClass }
 
     if (isRename) {
       await supabase.from('payments').update({ category: trimmed }).eq('user_id', profile.id).eq('category', oldName)
-      showToast(`Categoría renombrada a "${trimmed}"`)
+      showToast(`${t('settingsCategories.toast.renamedPrefix')} "${trimmed}"`)
     } else if (isNew) {
-      showToast(`Categoría "${trimmed}" agregada`)
+      showToast(`"${trimmed}" ${t('settingsCategories.toast.addedSuffix')}`)
     } else {
-      showToast('Categoría actualizada')
+      showToast(t('settingsCategories.toast.updated'))
     }
 
     setSaving(false)
@@ -115,7 +125,7 @@ export function SettingsCategoriesPage({ profile, onUpdate, onBack, slideClass }
     await onUpdate({ custom_categories: newCustom, category_icons: newIcons, category_colors: newColors })
     await supabase.from('payments').update({ category: 'Otros' }).eq('user_id', profile.id).eq('category', cat)
 
-    showToast(`Categoría "${cat}" eliminada`)
+    showToast(`${t('settingsCategories.toast.deletedPrefix')} "${cat}" ${t('settingsCategories.toast.deletedSuffix')}`)
     setConfirmDeleteCat(null)
     setDeleting(false)
   }
@@ -152,14 +162,14 @@ export function SettingsCategoriesPage({ profile, onUpdate, onBack, slideClass }
         {isConfirming && (
           <div className={`${styles.confirmPanel} ${last ? styles.confirmPanelNoBorder : ''}`}>
             <div className={styles.confirmText}>
-              ¿Eliminar "{cat}"? Los pagos ya registrados con esta categoría se reasignarán a "Otros".
+              {t('settingsCategories.deleteConfirmPrefix')} "{cat}"{t('settingsCategories.deleteConfirmSuffix')}
             </div>
             <div className={styles.confirmButtonsRow}>
               <button onClick={() => setConfirmDeleteCat(null)} className={styles.confirmCancelButton}>
-                Cancelar
+                {t('buttons.cancel')}
               </button>
               <button onClick={() => handleDeleteCategory(cat)} disabled={deleting} className={styles.confirmDeleteButton}>
-                {deleting ? 'Eliminando…' : 'Eliminar'}
+                {deleting ? t('settingsCategories.deleting') : t('buttons.delete')}
               </button>
             </div>
           </div>
@@ -181,7 +191,7 @@ export function SettingsCategoriesPage({ profile, onUpdate, onBack, slideClass }
             <button onClick={onBack} className={styles.backButton}>
               <ChevronLeft size={18} color="var(--text)" />
             </button>
-            <div className={styles.headerTitle}>Categorías</div>
+            <div className={styles.headerTitle}>{t('settingsCategories.title')}</div>
           </div>
           <button onClick={openAdd} className={styles.addButton}>
             <Plus size={18} color="var(--surface)" />
@@ -200,17 +210,17 @@ export function SettingsCategoriesPage({ profile, onUpdate, onBack, slideClass }
           <div className={styles.modalPanel}>
             <div className={styles.handle} />
             <div className={styles.modalTitle}>
-              {editingCat ? 'Editar categoría' : 'Agregar categoría'}
+              {editingCat ? t('settingsCategories.addModalTitleEdit') : t('settingsCategories.addModalTitleNew')}
             </div>
 
             {/* Nombre */}
             <div className={styles.fieldGroup}>
-              <label className="field-label">Nombre</label>
+              <label className="field-label">{t('settingsCategories.nameLabel')}</label>
               {editingCat && !editingCat.isCustom ? (
                 <>
                   <div className={`field-input ${styles.readonlyField}`}>{formName}</div>
                   <div className={styles.helperText}>
-                    Las categorías por defecto no se pueden renombrar, para no afectar pagos ya registrados.
+                    {t('settingsCategories.nameReadonlyHelper')}
                   </div>
                 </>
               ) : (
@@ -219,7 +229,7 @@ export function SettingsCategoriesPage({ profile, onUpdate, onBack, slideClass }
                   className={`field-input ${styles.inputMt4}`}
                   value={formName}
                   onChange={e => { setFormName(e.target.value); setNameError('') }}
-                  placeholder="ej. Gimnasio"
+                  placeholder={t('settingsCategories.namePlaceholder')}
                 />
               )}
               {nameError && <div className={styles.errorText}>{nameError}</div>}
@@ -227,7 +237,7 @@ export function SettingsCategoriesPage({ profile, onUpdate, onBack, slideClass }
 
             {/* Ícono */}
             <div className={styles.fieldGroup}>
-              <label className={`field-label ${styles.label}`}>Ícono</label>
+              <label className={`field-label ${styles.label}`}>{t('settingsCategories.iconLabel')}</label>
               <div className={styles.searchWrapper}>
                 <div className={styles.searchIcon}>
                   <Search size={14} color="var(--text)" />
@@ -235,7 +245,7 @@ export function SettingsCategoriesPage({ profile, onUpdate, onBack, slideClass }
                 <input
                   value={iconSearch}
                   onChange={e => setIconSearch(e.target.value)}
-                  placeholder="Buscar ícono…"
+                  placeholder={t('settingsCategories.iconSearchPlaceholder')}
                   className={`field-input ${styles.searchInput}`}
                 />
               </div>
@@ -265,14 +275,14 @@ export function SettingsCategoriesPage({ profile, onUpdate, onBack, slideClass }
                   </div>
                 ))}
                 {filteredGroups.length === 0 && (
-                  <div className={styles.noResultsText}>Sin resultados para "{iconSearch}"</div>
+                  <div className={styles.noResultsText}>{t('settingsCategories.noIconResults', { search: iconSearch })}</div>
                 )}
               </div>
             </div>
 
             {/* Color */}
             <div className={styles.colorFieldGroup}>
-              <label className={`field-label ${styles.label}`}>Color</label>
+              <label className={`field-label ${styles.label}`}>{t('settingsCategories.colorLabel')}</label>
               <div className={styles.colorGrid}>
                 {PALETTE.map(color => {
                   const selected = formColor === color
@@ -291,9 +301,9 @@ export function SettingsCategoriesPage({ profile, onUpdate, onBack, slideClass }
             </div>
 
             <button onClick={handleSave} disabled={saving} className={`btn-primary ${styles.saveButton}`}>
-              {saving ? 'Guardando…' : 'Guardar'}
+              {saving ? t('settingsCategories.saving') : t('buttons.save')}
             </button>
-            <button onClick={() => setModalOpen(false)} className="btn-ghost">Cancelar</button>
+            <button onClick={() => setModalOpen(false)} className="btn-ghost">{t('buttons.cancel')}</button>
           </div>
         </div>
       )}
