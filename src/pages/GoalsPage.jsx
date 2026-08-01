@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Plus, SlidersHorizontal, Crown, PiggyBank, Target, Check } from 'lucide-react'
 import { PageHeader } from '../components/PageHeader'
 import { EmptyState } from '../components/EmptyState'
@@ -40,6 +41,7 @@ export function GoalsPage({
   spacePermissions, spaceMembers = [], spaceSwitcher, activeSpaceHeader, sharedSpaces, onSpaceReady,
   unreadCount, onOpenNotifs, onGoSettings, onOpenPremium, slideClass,
 }) {
+  const { t } = useTranslation()
   const { activeGoals, completedGoals, totalRestante, addGoal, updateGoal, aportar, retirar, revertirAporte, markCompleted, deleteGoal } = goalsData
 
   // Mismo criterio que RecurrentsPage.jsx: la animación de entrada del
@@ -95,7 +97,7 @@ export function GoalsPage({
 
   function handleAddClick() {
     if (atFreeLimit) { onOpenPremium(); return }
-    if (!canAdd) { showToast('No tienes permiso para crear metas en este espacio'); return }
+    if (!canAdd) { showToast(t('goalsPage.toast.noPermissionAdd')); return }
     setEditingGoal(null)
     setFormOpen(true)
   }
@@ -150,25 +152,25 @@ export function GoalsPage({
           ) : !selectedGoal ? (
             <div className={styles.screen}>
               <div className={styles.header}>
-                <div className={styles.headerTitle}>Metas</div>
+                <div className={styles.headerTitle}>{t('goalsPage.title')}</div>
               </div>
 
               {noGoalsAtAll ? (
                 <EmptyState
                   icon={PiggyBank}
-                  title="Aún no tienes ninguna meta"
-                  subtitle="Crea una para empezar a apartar dinero de tu nómina"
+                  title={t('goalsPage.noGoalsAtAllTitle')}
+                  subtitle={t('goalsPage.noGoalsAtAllSubtitle')}
                   onClick={handleAddClick}
                 />
               ) : (
                 <>
                   <div className={styles.summaryRow}>
                     <div className={styles.summaryBox}>
-                      <div className={styles.summaryLabel}>Total restante</div>
+                      <div className={styles.summaryLabel}>{t('goalsPage.totalRemaining')}</div>
                       <div className={styles.summaryValue}>{fmt(totalRestante)}</div>
                     </div>
                     <div className={styles.summaryBox}>
-                      <div className={styles.summaryLabel}>Metas cumplidas</div>
+                      <div className={styles.summaryLabel}>{t('goalsPage.goalsCompleted')}</div>
                       <div className={styles.summaryValue}>{completedGoals.length}/{activeGoals.length + completedGoals.length}</div>
                     </div>
                   </div>
@@ -186,14 +188,14 @@ export function GoalsPage({
                       onClick={() => setGoalsView('activas')}
                       className={`${styles.tabButton} ${goalsView === 'activas' ? styles.tabButtonActive : ''}`}
                     >
-                      Activas
+                      {t('goalsPage.tabs.active')}
                     </button>
                     <button
                       type="button"
                       onClick={() => setGoalsView('cumplidas')}
                       className={`${styles.tabButton} ${goalsView === 'cumplidas' ? styles.tabButtonActive : ''}`}
                     >
-                      Cumplidas
+                      {t('goalsPage.tabs.completed')}
                     </button>
                   </div>
 
@@ -206,15 +208,15 @@ export function GoalsPage({
                           onClick={() => setSortBy(s => (s === 'monto' ? 'nombre' : 'monto'))}
                         >
                           <SlidersHorizontal size={13} />
-                          Ordenar por {sortBy}
+                          {t('goalsPage.sortBy', { criteria: t(`goalsPage.sortCriteria.${sortBy}`) })}
                         </button>
                       )}
 
                       {activeGoals.length === 0 ? (
                         <EmptyState
                           icon={PiggyBank}
-                          title="No tienes metas activas"
-                          subtitle="Crea una nueva o revisa tus metas cumplidas"
+                          title={t('goalsPage.noActiveGoalsTitle')}
+                          subtitle={t('goalsPage.noActiveGoalsSubtitle')}
                           onClick={handleAddClick}
                         />
                       ) : (
@@ -227,10 +229,10 @@ export function GoalsPage({
 
                       {atFreeLimit && (
                         <div className={styles.premiumBanner}>
-                          <div className={styles.premiumTitle}>Obtén Premium para ahorrar en más de una meta a la vez</div>
-                          <div className={styles.premiumText}>Crea todas las que quieras — tu próximo viaje, una consola, lo que se te ocurra — y ahorra para varias al mismo tiempo, en vez de quedarte solo con una activa.</div>
+                          <div className={styles.premiumTitle}>{t('goalsPage.premiumBanner.title')}</div>
+                          <div className={styles.premiumText}>{t('goalsPage.premiumBanner.text')}</div>
                           <button type="button" onClick={onOpenPremium} className={styles.premiumButton}>
-                            <Crown size={16} fill="currentColor" /> Prueba Premium GRATIS 7 días
+                            <Crown size={16} fill="currentColor" /> {t('goalsPage.premiumBanner.button')}
                           </button>
                         </div>
                       )}
@@ -239,8 +241,8 @@ export function GoalsPage({
                     completedGoals.length === 0 ? (
                       <EmptyState
                         icon={Target}
-                        title="Aún no hay metas cumplidas"
-                        subtitle="Cuando completes una meta aparecerá aquí."
+                        title={t('goalsPage.noCompletedGoalsTitle')}
+                        subtitle={t('goalsPage.noCompletedGoalsSubtitle')}
                       />
                     ) : (
                       <div className={styles.list}>
@@ -281,7 +283,7 @@ export function GoalsPage({
         <div className={styles.addPillRow}>
           <button type="button" className={`${styles.addPill} ${(!canAdd && !atFreeLimit) ? styles.addPillDisabled : ''}`} onClick={handleAddClick}>
             <Plus size={18} color="#fff" />
-            Añadir meta
+            {t('goalsPage.addGoal')}
           </button>
         </div>
       )}
@@ -297,6 +299,7 @@ export function GoalsPage({
 }
 
 function GoalCard({ goal, isShared, spaceMembers, onClick }) {
+  const { t } = useTranslation()
   const Icon = getIconComponent(goal.icon) || PiggyBank
   const isCompleted = goal.is_completed
   // Una meta cumplida siempre se muestra al 100% en la barra — puede
@@ -334,7 +337,7 @@ function GoalCard({ goal, isShared, spaceMembers, onClick }) {
         <span className={styles.cardTarget}>{fmt(goal.target_amount)}</span>
       </div>
       <div className={styles.cardStatsRow}>
-        <span>{fmt(goal.currentAmount)} abonado</span>
+        <span>{t('goalsPage.card.deposited', { amount: fmt(goal.currentAmount) })}</span>
         <span>{displayPercent}%</span>
       </div>
       <div className={styles.progressTrack}>
@@ -342,7 +345,7 @@ function GoalCard({ goal, isShared, spaceMembers, onClick }) {
       </div>
       {isCompleted ? (
         <div className={styles.cardBottomRow}>
-          <span className={styles.completedText}>Cumplida el {fmtDate(goal.completed_at)}</span>
+          <span className={styles.completedText}>{t('goalsPage.card.completedOn', { date: fmtDate(goal.completed_at) })}</span>
           {isShared && contributors.length > 0 ? (
             <PaidByStack contributors={contributors} members={spaceMembers} size={20} inline />
           ) : (
@@ -352,9 +355,9 @@ function GoalCard({ goal, isShared, spaceMembers, onClick }) {
       ) : (
         <div className={styles.cardBottomRow}>
           <div className={styles.cardBottomLeft}>
-            <span>Queda: {fmt(goal.remaining)}</span>
-            {goal.isNearDeadline && <span className={styles.daysBadge}>Quedan {goal.daysRemaining} días</span>}
-            {goal.isOverdue && <span className={styles.daysBadge}>Fecha vencida</span>}
+            <span>{t('goalsPage.card.remaining', { amount: fmt(goal.remaining) })}</span>
+            {goal.isNearDeadline && <span className={styles.daysBadge}>{t('goalsPage.card.daysRemaining', { count: goal.daysRemaining })}</span>}
+            {goal.isOverdue && <span className={styles.daysBadge}>{t('goalsPage.card.overdue')}</span>}
           </div>
           {isShared && contributors.length > 0 && (
             <PaidByStack contributors={contributors} members={spaceMembers} size={20} inline />
