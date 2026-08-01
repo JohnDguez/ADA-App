@@ -4,7 +4,7 @@ import es from './es.json'
 import en from './en.json'
 
 const SUPPORTED_LANGUAGES = ['es', 'en']
-const STORAGE_KEY = 'ada_language'
+export const LANGUAGE_STORAGE_KEY = 'ada_language'
 
 function resolveSystemLanguage() {
   const navLang = (navigator.language || 'es').slice(0, 2).toLowerCase()
@@ -18,7 +18,7 @@ export function resolveLanguage(preference) {
   return SUPPORTED_LANGUAGES.includes(preference) ? preference : resolveSystemLanguage()
 }
 
-const storedPreference = localStorage.getItem(STORAGE_KEY) || 'system'
+const storedPreference = localStorage.getItem(LANGUAGE_STORAGE_KEY) || 'system'
 
 i18n.use(initReactI18next).init({
   resources: {
