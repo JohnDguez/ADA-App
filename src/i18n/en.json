@@ -356,5 +356,42 @@
     "actionResume": "resume payments",
     "actionPause": "pause payments",
     "deleteConfirm": "Delete \"{{name}}\"? Payments already made will be kept."
+  },
+  "goalsPage": {
+    "title": "Goals",
+    "noGoalsAtAllTitle": "You don't have any goals yet",
+    "noGoalsAtAllSubtitle": "Create one to start setting money aside from your income",
+    "totalRemaining": "Total remaining",
+    "goalsCompleted": "Goals completed",
+    "tabs": {
+      "active": "Active",
+      "completed": "Completed"
+    },
+    "sortBy": "Sort by {{criteria}}",
+    "sortCriteria": {
+      "monto": "amount",
+      "nombre": "name"
+    },
+    "noActiveGoalsTitle": "You have no active goals",
+    "noActiveGoalsSubtitle": "Create a new one or check your completed goals",
+    "noCompletedGoalsTitle": "No completed goals yet",
+    "noCompletedGoalsSubtitle": "It'll show up here once you complete a goal.",
+    "premiumBanner": {
+      "title": "Get Premium to save toward more than one goal at a time",
+      "text": "Create as many as you want — your next trip, a console, whatever comes to mind — and save for several at once, instead of only having one active.",
+      "button": "Try Premium FREE for 7 days"
+    },
+    "addGoal": "Add goal",
+    "toast": {
+      "noPermissionAdd": "You don't have permission to create goals in this space"
+    },
+    "card": {
+      "deposited": "{{amount}} deposited",
+      "completedOn": "Completed on {{date}}",
+      "remaining": "Remaining: {{amount}}",
+      "daysRemaining_one": "{{count}} day left",
+      "daysRemaining_other": "{{count}} days left",
+      "overdue": "Past due date"
+    }
   }
 }

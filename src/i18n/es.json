@@ -356,5 +356,42 @@
     "actionResume": "reactivar pagos",
     "actionPause": "pausar pagos",
     "deleteConfirm": "¿Eliminar \"{{name}}\"? Los pagos ya realizados se conservarán."
+  },
+  "goalsPage": {
+    "title": "Metas",
+    "noGoalsAtAllTitle": "Aún no tienes ninguna meta",
+    "noGoalsAtAllSubtitle": "Crea una para empezar a apartar dinero de tu nómina",
+    "totalRemaining": "Total restante",
+    "goalsCompleted": "Metas cumplidas",
+    "tabs": {
+      "active": "Activas",
+      "completed": "Cumplidas"
+    },
+    "sortBy": "Ordenar por {{criteria}}",
+    "sortCriteria": {
+      "monto": "monto",
+      "nombre": "nombre"
+    },
+    "noActiveGoalsTitle": "No tienes metas activas",
+    "noActiveGoalsSubtitle": "Crea una nueva o revisa tus metas cumplidas",
+    "noCompletedGoalsTitle": "Aún no hay metas cumplidas",
+    "noCompletedGoalsSubtitle": "Cuando completes una meta aparecerá aquí.",
+    "premiumBanner": {
+      "title": "Obtén Premium para ahorrar en más de una meta a la vez",
+      "text": "Crea todas las que quieras — tu próximo viaje, una consola, lo que se te ocurra — y ahorra para varias al mismo tiempo, en vez de quedarte solo con una activa.",
+      "button": "Prueba Premium GRATIS 7 días"
+    },
+    "addGoal": "Añadir meta",
+    "toast": {
+      "noPermissionAdd": "No tienes permiso para crear metas en este espacio"
+    },
+    "card": {
+      "deposited": "{{amount}} abonado",
+      "completedOn": "Cumplida el {{date}}",
+      "remaining": "Queda: {{amount}}",
+      "daysRemaining_one": "Queda {{count}} día",
+      "daysRemaining_other": "Quedan {{count}} días",
+      "overdue": "Fecha vencida"
+    }
   }
 }
