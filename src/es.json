@@ -1,0 +1,10 @@
+{
+  "buttons": {
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "delete": "Eliminar",
+    "accept": "Aceptar",
+    "close": "Cerrar",
+    "edit": "Editar"
+  }
+}
