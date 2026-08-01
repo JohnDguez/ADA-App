@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useMemo } from 'react'
+import { useTranslation } from 'react-i18next'
 import { ChevronDown, ChevronUp, Check, RotateCcw, Eye } from 'lucide-react'
 import { PayCard } from '../components/PayCard'
 import { PayRail } from '../components/PayRail'
@@ -30,6 +31,7 @@ function nextPeriodRange(cfg) {
 // el fix del degradado a porcentajes bajos.
 
 export function HomePage({ payments, dataLoading = false, profile, spaceSwitcher, activeSpaceHeader, activeSpaceId, sharedSpaces, spacePermissions, onOpenPremium, onSpaceReady, onAdd, onMarkPaid, onRequestVariableAmount, onConfirmVariablePaid, onRequestNextPeriodConfirm, onMarkUnpaid, onCaptureAmount, onEdit, onAbonar, onSplit, onPayFromFund, fundBalance, onViewSource, onDelete, onPostpone, onAdvance, onGoSettings, notifications, unreadCount, onMarkAsRead, onMarkAllAsRead, onDeleteNotif, onClearAllNotifs, slideClass }) {
+  const { t } = useTranslation()
   // Detecta un cambio REAL de espacio activo (no el primer montaje de la
   // página, que también dispararía un `key` remontado sin querer) — antes
   // se usaba `key={activeSpaceId}` para forzar el remontado del contenido,
@@ -270,13 +272,13 @@ export function HomePage({ payments, dataLoading = false, profile, spaceSwitcher
               onClick={() => setActiveCard(0)}
               className={`${styles.tabButton} ${activeCard === 0 ? styles.tabButtonActive : ''}`}
             >
-              Periodo actual
+              {t('homePage.tabs.currentPeriod')}
             </button>
             <button
               onClick={() => setActiveCard(1)}
               className={`${styles.tabButton} ${activeCard === 1 ? styles.tabButtonActive : ''}`}
             >
-              Próximo periodo
+              {t('homePage.tabs.nextPeriod')}
             </button>
           </div>
 
@@ -306,7 +308,7 @@ export function HomePage({ payments, dataLoading = false, profile, spaceSwitcher
                 {pagarEsteCobro.length === 0 ? (
                   <>
                     <div className={styles.dateBadge}>
-                      Periodo {periodRange(profile)}
+                      {t('homePage.periodPrefix')} {periodRange(profile)}
                     </div>
                     <div className={styles.clearFloat} />
                     {/* NUEVO (v0.9.323) — bug real reportado por Johnatan: al
@@ -327,35 +329,35 @@ export function HomePage({ payments, dataLoading = false, profile, spaceSwitcher
                         HalfRing.jsx) — la animación suave se queda solo
                         para cuando de verdad marcas algo pagado en vivo. */}
                     <HalfRing key={dataLoading ? 'loading' : activeSpaceId} percent={1} />
-                    <div className={styles.cardTitle}>Total de este periodo</div>
+                    <div className={styles.cardTitle}>{t('homePage.totalThisPeriod')}</div>
                     <div className={styles.cardAmount}>{fmt(pagadoMonto)}</div>
                     {(pagadosFijosEstePeriodo > 0 || pagadosVariablesEstePeriodo > 0) && (
                       <div className={styles.cardMeta}>
-                        {pagadosFijosEstePeriodo} pago{pagadosFijosEstePeriodo !== 1 ? 's' : ''} fijo{pagadosFijosEstePeriodo !== 1 ? 's' : ''}
-                        {pagadosVariablesEstePeriodo > 0 && ` · ${pagadosVariablesEstePeriodo} variable${pagadosVariablesEstePeriodo !== 1 ? 's' : ''}`}
+                        {t('homePage.fixedPayment', { count: pagadosFijosEstePeriodo })}
+                        {pagadosVariablesEstePeriodo > 0 && ` · ${t('homePage.variableCount', { count: pagadosVariablesEstePeriodo })}`}
                       </div>
                     )}
                   </>
                 ) : (
                   <>
                     <div className={styles.dateBadge}>
-                      Periodo {periodRange(profile)}
+                      {t('homePage.periodPrefix')} {periodRange(profile)}
                     </div>
                     <div className={styles.clearFloat} />
                     <HalfRing key={dataLoading ? 'loading' : activeSpaceId} percent={pctPagado / 100} />
                     <div className={styles.cardPaidPendingRow}>
-                      <span className={styles.cardPaidText}>{fmt(pagadoMonto)} pagado</span>
-                      <span className={styles.cardPendingText}>{fmt(pendingAmt)} pendiente</span>
+                      <span className={styles.cardPaidText}>{t('homePage.paidLabel', { amount: fmt(pagadoMonto) })}</span>
+                      <span className={styles.cardPendingText}>{t('homePage.pendingLabel', { amount: fmt(pendingAmt) })}</span>
                     </div>
-                    <div className={styles.cardTitle}>Total de este periodo</div>
+                    <div className={styles.cardTitle}>{t('homePage.totalThisPeriod')}</div>
                     <div className={styles.cardAmount}>{fmt(totalConocido)}</div>
                     <div className={styles.cardMeta}>
-                      {pagosFijosCount} pago{pagosFijosCount !== 1 ? 's' : ''} fijo{pagosFijosCount !== 1 ? 's' : ''}
-                      {vencidos.length > 0 && <span className={styles.cardMetaDanger}> · {vencidos.length} pago{vencidos.length !== 1 ? 's' : ''} vencido{vencidos.length !== 1 ? 's' : ''}</span>}
+                      {t('homePage.fixedPayment', { count: pagosFijosCount })}
+                      {vencidos.length > 0 && <span className={styles.cardMetaDanger}> · {t('homePage.overduePayment', { count: vencidos.length })}</span>}
                     </div>
                     {pendingVariableCount > 0 && (
                       <div className={styles.cardVariableNote}>
-                        {pendingVariableCount} pago{pendingVariableCount !== 1 ? 's' : ''} variable{pendingVariableCount !== 1 ? 's' : ''} por confirmar
+                        {t('homePage.variablePendingConfirm', { count: pendingVariableCount })}
                       </div>
                     )}
                   </>
@@ -375,14 +377,14 @@ export function HomePage({ payments, dataLoading = false, profile, spaceSwitcher
                 </div>
                 <div className={styles.clearFloat} />
                 <HalfRing key={dataLoading ? 'loading' : activeSpaceId} percent={0} />
-                <div className={styles.cardTitle}>Total del próximo periodo</div>
+                <div className={styles.cardTitle}>{t('homePage.totalNextPeriod')}</div>
                 <div className={styles.cardAmount}>{fmt(nextPeriodKnownTotal)}</div>
                 <div className={styles.cardMeta}>
-                  {nextPeriodFixedCount} pago{nextPeriodFixedCount !== 1 ? 's' : ''} fijo{nextPeriodFixedCount !== 1 ? 's' : ''}
+                  {t('homePage.fixedPayment', { count: nextPeriodFixedCount })}
                 </div>
                 {nextPeriodPendingVariableCount > 0 && (
                   <div className={styles.cardVariableNote}>
-                    {nextPeriodPendingVariableCount} pago{nextPeriodPendingVariableCount !== 1 ? 's' : ''} variable{nextPeriodPendingVariableCount !== 1 ? 's' : ''} por confirmar
+                    {t('homePage.variablePendingConfirm', { count: nextPeriodPendingVariableCount })}
                   </div>
                 )}
               </div>
@@ -427,7 +429,7 @@ export function HomePage({ payments, dataLoading = false, profile, spaceSwitcher
               {vencidos.length > 0 && (
                 <div className={styles.overdueSection}>
                   <div className={styles.overdueTitle}>
-                    Vencidos
+                    {t('homePage.overdueTitle')}
                   </div>
                   <PayRail payments={vencidos} cfg={profile} dotColor="var(--overdue-border)" dotTextColor="var(--overdue-text)" handlers={handlers} permissions={spacePermissions} spaceMembers={spaceMembers} />
                 </div>
@@ -444,7 +446,7 @@ export function HomePage({ payments, dataLoading = false, profile, spaceSwitcher
                   justo debajo del colapsable de pagados y no hace falta. */}
               <div data-coachmark="home-rail" className={styles.periodSection}>
                 {vencidos.length > 0 && (
-                  <div className={styles.pendingSectionTitle}>Pagos pendientes</div>
+                  <div className={styles.pendingSectionTitle}>{t('homePage.pendingSectionTitle')}</div>
                 )}
                 {delPeriodo.length === 0
                   /* dataLoading (v0.9.284): mientras el contexto nuevo carga,
@@ -453,7 +455,7 @@ export function HomePage({ payments, dataLoading = false, profile, spaceSwitcher
                      hueco en blanco esos ms y el contenido real entra con su
                      animación de siempre. Mismo criterio en el otro EmptyState
                      de abajo y en los 2 de PaymentsPage. */
-                  ? (dataLoading ? null : <EmptyState title="Sin pagos pendientes para este periodo" subtitle="Toca aquí o el botón + de abajo para añadir uno" onClick={onAdd} />)
+                  ? (dataLoading ? null : <EmptyState title={t('homePage.emptyState.currentPeriodTitle')} subtitle={t('homePage.emptyState.subtitle')} onClick={onAdd} />)
                   : <PayRail payments={delPeriodo} cfg={profile} dotColor="var(--upcoming-border)" dotTextColor="var(--impact-warning-text)" handlers={handlers} permissions={spacePermissions} spaceMembers={spaceMembers} />
                 }
               </div>
@@ -462,7 +464,7 @@ export function HomePage({ payments, dataLoading = false, profile, spaceSwitcher
             <div ref={nextPanelRef} className={styles.contentPanel} style={{ transform: `translateX(${activeCard === 0 ? 100 : 0}%)` }}>
               <div className={styles.periodSection}>
                 {upcoming.length === 0
-                  ? (dataLoading ? null : <EmptyState title="Sin pagos registrados para el próximo periodo" subtitle="Toca aquí o el botón + de abajo para añadir uno" onClick={onAdd} />)
+                  ? (dataLoading ? null : <EmptyState title={t('homePage.emptyState.nextPeriodTitle')} subtitle={t('homePage.emptyState.subtitle')} onClick={onAdd} />)
                   : <PayRail payments={upcoming} cfg={profile} dotColor="var(--accent)" dotTextColor="var(--bg)" handlers={handlers} permissions={spacePermissions} nextPeriodMode spaceMembers={spaceMembers} />
                 }
               </div>
@@ -514,6 +516,7 @@ const UNMARK_EXIT_MS = 320
 // la fila nunca desaparezca del arreglo (y se desmonte) a la mitad de su
 // propia animación.
 function PaidCollapseItem({ p, onMarkUnpaid, onViewSource, spaceMembers }) {
+  const { t } = useTranslation()
   const [phase, setPhase] = useState('idle') // idle | filling | labeled | exiting
   const wrapperRef = useRef(null)
   const timers = useRef([])
@@ -562,7 +565,7 @@ function PaidCollapseItem({ p, onMarkUnpaid, onViewSource, spaceMembers }) {
       <div className={`${styles.paidCollapseItem} ${phase === 'exiting' ? styles.paidCollapseItemExiting : ''}`}>
         <div className={`${styles.paidUnmarkFill} ${fillActive ? styles.paidUnmarkFillActive : ''}`} />
         <div className={`${styles.paidUnmarkLabel} ${phase === 'labeled' || phase === 'exiting' ? styles.paidUnmarkLabelVisible : ''}`}>
-          Marcado como no pagado
+          {t('homePage.markedUnpaid')}
         </div>
         <div className={`${styles.paidCollapseItemRow} ${contentHidden ? styles.paidCollapseItemRowHidden : ''}`}>
           <div className={styles.paidCollapseDate}>
@@ -572,7 +575,7 @@ function PaidCollapseItem({ p, onMarkUnpaid, onViewSource, spaceMembers }) {
           <div className={styles.paidCollapseInfo}>
             <div className={styles.paidCollapseName}>{p.name}</div>
             <div className={styles.paidCollapseCategory}>
-              {p.category}{p.is_contribution_reflection ? ' · Compartido' : ''}
+              {p.category}{p.is_contribution_reflection ? ` · ${t('homePage.shared')}` : ''}
               {!p.is_contribution_reflection && (
                 <PaidByStack contributors={p.contributors} members={spaceMembers} fundAmount={p.fund_amount || 0} size={18} inline />
               )}
@@ -582,7 +585,7 @@ function PaidCollapseItem({ p, onMarkUnpaid, onViewSource, spaceMembers }) {
           {p.is_contribution_reflection ? (
             <button
               onClick={e => { e.stopPropagation(); onViewSource && onViewSource(p) }}
-              aria-label="Ver en el espacio compartido"
+              aria-label={t('homePage.viewInSharedSpace')}
               className={styles.paidCollapseUndoButton}
             >
               <Eye size={11} color="var(--text)" />
@@ -608,6 +611,7 @@ function PaidCollapseItem({ p, onMarkUnpaid, onViewSource, spaceMembers }) {
 // con el mismo rango de fechas del periodo actual, así que se "reinicia"
 // solo en cuanto cambia de periodo, sin lógica extra de limpieza.
 function PaidCollapse({ payments, expanded, onToggle, onMarkUnpaid, onViewSource, spaceMembers }) {
+  const { t } = useTranslation()
   return (
     <div className={styles.paidCollapseRoot}>
       <button
@@ -618,7 +622,7 @@ function PaidCollapse({ payments, expanded, onToggle, onMarkUnpaid, onViewSource
           <Check size={11} color="var(--pay-icon)" strokeWidth={3} />
         </div>
         <span className={styles.paidCollapseSummaryText}>
-          {payments.length} pagado{payments.length !== 1 ? 's' : ''}
+          {t('homePage.paidCount', { count: payments.length })}
         </span>
         {expanded ? <ChevronUp size={15} color="var(--text)" /> : <ChevronDown size={15} color="var(--text)" />}
       </button>

@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { createPortal } from 'react-dom'
 import { LogOut, Camera, Crown, User, Tag, Calendar, Bell, SunMoon, HelpCircle, Users, MessageCircle } from 'lucide-react'
 import { showToast } from '../components/Toast'
@@ -14,9 +15,6 @@ import { SettingsNotificationsPage } from './settings/SettingsNotificationsPage'
 import { SettingsAppearancePage } from './settings/SettingsAppearancePage'
 import { SettingsSharedSpacePage } from './settings/SettingsSharedSpacePage'
 import styles from './SettingsPage.module.css'
-
-const FREQ_LABEL = { weekly: 'Semanal', biweekly: 'Quincenal', monthly: 'Mensual' }
-const THEME_LABEL = { sistema: 'Sistema', light: 'Claro', dark: 'Oscuro' }
 
 // Galería de avatares preestablecidos — imágenes estáticas servidas desde
 // public/avatars/ (Vite/Vercel las expone tal cual, sin pasar por Supabase
@@ -39,6 +37,9 @@ const PRESET_AVATARS = [
 // (Categorías, y lo que venga después, no compiten por espacio con todo
 // lo demás).
 export function SettingsPage({ profile, user, onUpdate, onUploadAvatar, onDataDeleted, slideClass, theme, onThemeChange, onOpenPremium, sharedSpaces, initialSection, onConsumeInitialSection, returnTab, onReturnToTab }) {
+  const { t } = useTranslation()
+  const FREQ_LABEL  = { weekly: t('frequency.weekly'), biweekly: t('frequency.biweekly'), monthly: t('frequency.monthly') }
+  const THEME_LABEL = { sistema: t('theme.system'), light: t('theme.light'), dark: t('theme.dark') }
   const [section, setSection] = useState(initialSection || null) // null | 'account' | 'categories' | 'cobro' | 'notifications' | 'appearance' | 'sharedspace'
   const [uploadingAvatar, setUploadingAvatar] = useState(false)
   const [avatarModal, setAvatarModal] = useState(null) // null | 'choice' | 'gallery'
@@ -129,8 +130,8 @@ export function SettingsPage({ profile, user, onUpdate, onUploadAvatar, onDataDe
     setUploadingAvatar(true)
     const { error } = await onUploadAvatar(file)
     setUploadingAvatar(false)
-    if (error) showToast(error.message || 'Error al subir imagen')
-    else showToast('Foto actualizada')
+    if (error) showToast(error.message || t('settingsPage.toast.uploadError'))
+    else showToast(t('settingsPage.toast.photoUpdated'))
   }
 
   // Elegir uno de los 8 avatares preestablecidos: solo se guarda su ruta
@@ -139,8 +140,8 @@ export function SettingsPage({ profile, user, onUpdate, onUploadAvatar, onDataDe
   async function handleSelectPresetAvatar(path) {
     setAvatarModal(null)
     const { error } = await onUpdate({ avatar_url: path })
-    if (error) showToast(error.message || 'Error al actualizar avatar')
-    else showToast('Avatar actualizado')
+    if (error) showToast(error.message || t('settingsPage.toast.avatarUpdateError'))
+    else showToast(t('settingsPage.toast.avatarUpdated'))
   }
 
   // Marca feedback_submitted para que el popup del día 8 (App.jsx) no
@@ -185,7 +186,7 @@ export function SettingsPage({ profile, user, onUpdate, onUploadAvatar, onDataDe
   return (
     <div className={`${slideClass} ${styles.pageWrapper}`}>
       <div className={styles.header}>
-        <div className={styles.headerTitle}>Perfil</div>
+        <div className={styles.headerTitle}>{t('settingsPage.title')}</div>
       </div>
 
       {/* Avatar */}
@@ -212,47 +213,47 @@ export function SettingsPage({ profile, user, onUpdate, onUploadAvatar, onDataDe
         {profile.is_premium && (
           <div className={styles.premiumPill}>
             <Crown size={11} fill="currentColor" />
-            Cuenta Premium
+            {t('settingsPage.premiumBadge')}
           </div>
         )}
       </div>
 
       {/* Menú */}
       <Card>
-        <Row icon={MessageCircle} iconColor="var(--premium-gold)" label="Danos tu feedback" sub="Gana 3 meses de Premium gratis" onClick={handleGiveFeedback} />
-        <Row icon={User}     label="Cuenta"                        onClick={() => openSection('account')} />
+        <Row icon={MessageCircle} iconColor="var(--premium-gold)" label={t('settingsPage.feedbackLabel')} sub={t('settingsPage.feedbackSub')} onClick={handleGiveFeedback} />
+        <Row icon={User}     label={t('settingsPage.menu.account')}                        onClick={() => openSection('account')} />
         <div data-coachmark="perfil-categorias-row">
-          <Row icon={Tag}      label="Categorías"                    onClick={() => openSection('categories')} />
+          <Row icon={Tag}      label={t('settingsPage.menu.categories')}                    onClick={() => openSection('categories')} />
         </div>
         <div data-coachmark="perfil-cobro-row">
-          <Row icon={Calendar} label="Periodo de cobro e ingresos"    value={FREQ_LABEL[profile.cobro_freq] || ''} onClick={() => openSection('cobro')} />
+          <Row icon={Calendar} label={t('settingsPage.menu.cobro')}    value={FREQ_LABEL[profile.cobro_freq] || ''} onClick={() => openSection('cobro')} />
         </div>
         <div data-coachmark="perfil-notificaciones-row">
-          <Row icon={Bell}     label="Notificaciones"                 onClick={() => openSection('notifications')} />
+          <Row icon={Bell}     label={t('settingsPage.menu.notifications')}                 onClick={() => openSection('notifications')} />
         </div>
-        <Row icon={SunMoon}  label="Apariencia"                    value={THEME_LABEL[theme] || ''} onClick={() => openSection('appearance')} />
-        <Row icon={Users}    label="Espacio Compartido"            onClick={() => openSection('sharedspace')} last={profile.is_premium} />
+        <Row icon={SunMoon}  label={t('settingsPage.menu.appearance')}                    value={THEME_LABEL[theme] || ''} onClick={() => openSection('appearance')} />
+        <Row icon={Users}    label={t('settingsPage.menu.sharedSpace')}            onClick={() => openSection('sharedspace')} last={profile.is_premium} />
         {!profile.is_premium && (
-          <Row icon={Crown} iconColor="var(--premium-gold)" label="Obtener Premium" onClick={onOpenPremium} last />
+          <Row icon={Crown} iconColor="var(--premium-gold)" label={t('settingsPage.menu.getPremium')} onClick={onOpenPremium} last />
         )}
       </Card>
 
       {/* Ayuda */}
       <Card>
-        <Row icon={HelpCircle} label="Ver tutorial de nuevo" onClick={() => onUpdate({ coachmarks_seen: {} })} last />
+        <Row icon={HelpCircle} label={t('settingsPage.tutorialAgain')} onClick={() => onUpdate({ coachmarks_seen: {} })} last />
       </Card>
 
       {/* Sesión */}
       <Card>
         <button onClick={handleLogout} className={styles.logoutButton}>
           <LogOut size={16} color="var(--danger)" />
-          <span className={styles.logoutText}>Cerrar sesión</span>
+          <span className={styles.logoutText}>{t('settingsPage.logout')}</span>
         </button>
       </Card>
 
       {/* Versión */}
       <div className={styles.versionFooter}>
-        {APP_NAME} v{APP_VERSION} — Alpha
+        {APP_NAME} v{APP_VERSION} — {t('settingsPage.versionSuffix')}
       </div>
 
       {/* Modal: elegir "Subir foto" o "Elegir avatar" — 2 tarjetas con ícono
@@ -266,22 +267,22 @@ export function SettingsPage({ profile, user, onUpdate, onUploadAvatar, onDataDe
         <div onClick={e => e.target === e.currentTarget && setAvatarModal(null)} className={styles.modalOverlay}>
           <div className={styles.modalPanel}>
             <div className={styles.modalHandle} />
-            <div className={styles.modalTitle}>Foto de perfil</div>
+            <div className={styles.modalTitle}>{t('settingsPage.avatarModal.title')}</div>
             <div className={styles.choiceGrid}>
               <button onClick={() => { setAvatarModal(null); fileRef.current?.click() }} className={styles.choiceCard}>
                 <div className={styles.choiceIconCircle}>
                   <Camera size={26} color="var(--surface)" />
                 </div>
-                <span className={styles.choiceLabel}>Subir foto</span>
+                <span className={styles.choiceLabel}>{t('settingsPage.avatarModal.upload')}</span>
               </button>
               <button onClick={() => setAvatarModal('gallery')} className={styles.choiceCard}>
                 <div className={styles.choiceThumbCircle}>
                   <img src="/avatars/hombre-1.webp" alt="" className={styles.choiceThumbImg} />
                 </div>
-                <span className={styles.choiceLabel}>Elegir avatar</span>
+                <span className={styles.choiceLabel}>{t('settingsPage.avatarModal.chooseAvatar')}</span>
               </button>
             </div>
-            <button onClick={() => setAvatarModal(null)} className="btn-ghost">Cancelar</button>
+            <button onClick={() => setAvatarModal(null)} className="btn-ghost">{t('buttons.cancel')}</button>
           </div>
         </div>,
         document.body
@@ -292,7 +293,7 @@ export function SettingsPage({ profile, user, onUpdate, onUploadAvatar, onDataDe
         <div onClick={e => e.target === e.currentTarget && setAvatarModal(null)} className={styles.modalOverlay}>
           <div className={styles.modalPanel}>
             <div className={styles.modalHandle} />
-            <div className={styles.modalTitle}>Elegir avatar</div>
+            <div className={styles.modalTitle}>{t('settingsPage.galleryModal.title')}</div>
             <div className={styles.galleryGrid}>
               {PRESET_AVATARS.map(path => {
                 const selected = profile.avatar_url === path
@@ -306,7 +307,7 @@ export function SettingsPage({ profile, user, onUpdate, onUploadAvatar, onDataDe
                 )
               })}
             </div>
-            <button onClick={() => setAvatarModal(null)} className="btn-ghost">Cancelar</button>
+            <button onClick={() => setAvatarModal(null)} className="btn-ghost">{t('buttons.cancel')}</button>
           </div>
         </div>,
         document.body
