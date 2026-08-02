@@ -1,4 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
+import i18n from '../i18n'
 import { Plus, UserRound, Crown, UsersRound } from 'lucide-react'
 import styles from './SpaceSwitcher.module.css'
 
@@ -20,6 +22,7 @@ import styles from './SpaceSwitcher.module.css'
 // siempre al final — mismo orden confirmado en el boceto original de
 // Johnatan.
 export function SpaceSwitcher({ spaces, activeSpaceId, onSwitch, profile, stats = {} }) {
+  const { t } = useTranslation()
   // Detecta cuándo cambia el espacio activo y guarda por 300ms cuál era el
   // de antes (para animarlo cambiando de color hacia su tono de "asoma",
   // ver `colorsSettled` abajo) y cuál es el nuevo (para animarlo
@@ -66,13 +69,13 @@ export function SpaceSwitcher({ spaces, activeSpaceId, onSwitch, profile, stats 
   const canAddMore   = (profile.is_premium && !ownedEntry) || guestEntries.length < 3
 
   const spaceItems = [...spaces]
-    .sort((a, b) => a.space.name.localeCompare(b.space.name, 'es'))
+    .sort((a, b) => a.space.name.localeCompare(b.space.name, i18n.language))
     .map(s => ({ id: s.space.id, kind: 'space', name: s.space.name, entry: s }))
 
   const allItems = [
-    ...(canAddMore ? [{ id: 'new', kind: 'new', name: 'Nuevo espacio compartido' }] : []),
+    ...(canAddMore ? [{ id: 'new', kind: 'new', name: t('activeSpaceHeader.newSpaceName') }] : []),
     ...spaceItems,
-    { id: null, kind: 'personal', name: 'Personal' },
+    { id: null, kind: 'personal', name: t('activeSpaceHeader.personalName') },
   ]
 
   const frontItem = allItems.find(it => it.id === activeSpaceId) || allItems.find(it => it.kind === 'personal')
@@ -108,8 +111,8 @@ export function SpaceSwitcher({ spaces, activeSpaceId, onSwitch, profile, stats 
   function statFor(item) {
     const s = stats[item.id ?? 'personal']
     if (!s) return null
-    if (s.pending === 0) return 'Sin pagos pendientes'
-    return `${s.pending} pago${s.pending !== 1 ? 's' : ''} pendiente${s.pending !== 1 ? 's' : ''}` + (s.overdue > 0 ? ` · ${s.overdue} vencido${s.overdue !== 1 ? 's' : ''}` : '')
+    if (s.pending === 0) return t('spaceSwitcher.noPending')
+    return t('spaceSwitcher.pendingCount', { count: s.pending }) + (s.overdue > 0 ? ` · ${t('homePage.overduePayment', { count: s.overdue })}` : '')
   }
 
   // Ícono diferenciador junto al nombre — solo para Personal y espacios
