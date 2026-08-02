@@ -480,5 +480,121 @@
     "confirmPlaceholder": "Repeat your password",
     "notStrong": "The password doesn't meet all the requirements",
     "submit": "Create password"
+  },
+  "authPage": {
+    "tabs": {
+      "login": "Log in",
+      "register": "Sign up"
+    },
+    "forgotTitle": "Recover password",
+    "forgotSubtitle": "We'll send you a link to reset your password.",
+    "emailLabel": "Email",
+    "emailPlaceholder": "you@email.com",
+    "passwordLabel": "Password",
+    "accessCodeLabel": "Access code",
+    "accessCodePlaceholder": "Enter your code",
+    "termsPrefix": "I have read and accept the",
+    "termsLink": "Terms and Conditions",
+    "termsSuffix": "of use",
+    "submit": {
+      "loading": "Loading…",
+      "login": "Log in",
+      "register": "Create account",
+      "forgot": "Send link"
+    },
+    "forgotPasswordLink": "Forgot your password?",
+    "backToLogin": "Back to login",
+    "orContinueWith": "or continue with",
+    "google": {
+      "connecting": "Connecting…",
+      "termsNote": "By continuing with Google you accept our"
+    },
+    "errors": {
+      "emptyEmail": "Enter your email",
+      "resetEmailError": "Couldn't send the email. Check the address.",
+      "resetEmailSent": "Check your email — we sent you the link to reset your password.",
+      "emptyFields": "Fill in all fields",
+      "termsRequired": "You must accept the Terms and Conditions to continue",
+      "passwordNotStrongRegister": "The password doesn't meet all the security requirements",
+      "emptyAccessCode": "Enter your access code",
+      "invalidAccessCode": "Invalid or inactive access code",
+      "accountCreated": "Account created! Check your email to confirm.",
+      "wrongCredentials": "Incorrect email or password"
+    }
+  },
+  "resetPasswordPage": {
+    "title": "New password",
+    "subtitle": "Choose a secure password for your account.",
+    "newPasswordLabel": "New password",
+    "newPasswordPlaceholder": "At least 8 characters",
+    "saving": "Saving…",
+    "submit": "Save password"
+  },
+  "termsModal": {
+    "title": "Terms and Conditions",
+    "lastUpdated": "Last updated: June 2026",
+    "intro": "Welcome to {{appName}}. By creating an account, you agree to these Terms and Conditions of use. Please read them carefully before continuing.",
+    "section1Title": "1. Service description",
+    "section1Text": "{{appName}} is a personal payment and financial commitment tracking app. Its purpose is to help you organize and remember your payments according to your pay period. {{appName}} is not a financial institution, doesn't manage real money, doesn't make transfers, and has no access to your bank accounts.",
+    "section2Title": "2. Registration and account",
+    "section2Text": "To use {{appName}} you must create an account with a valid email or through your Google account. You're responsible for keeping your access credentials confidential. You must be over 18 years old to register.",
+    "section3Title": "3. Acceptable use",
+    "section3Text": "You agree to use {{appName}} only for personal, lawful purposes. It is prohibited to use the app for fraudulent activities, impersonation, or attempts to compromise the system's security.",
+    "section4Title": "4. Privacy and data",
+    "section4Text": "The data you enter into {{appName}} (name, payments, amounts) is stored securely on Supabase servers. We don't sell or share your personal information with third parties for commercial purposes. You can delete your account and your data at any time from Settings.",
+    "section5Title": "5. Push notifications",
+    "section5Text": "If you turn on notifications, {{appName}} will send alerts related to your recorded payments. You can turn them off at any time from Settings or from your device's settings.",
+    "section6Title": "6. Limitation of liability",
+    "section6Text": "{{appName}} is a personal support tool. We don't guarantee that using the app will prevent late payments, late fees, or other financial consequences. The user is solely responsible for their financial decisions.",
+    "section7Title": "7. Service availability",
+    "section7Text": "We strive to keep the service available at all times, but we don't guarantee uninterrupted availability. We may perform maintenance or updates without prior notice.",
+    "section8Title": "8. Modifications",
+    "section8Text": "We reserve the right to modify these terms at any time. We'll notify you of significant changes through the app. Continued use of {{appName}} after changes implies your acceptance.",
+    "section9Title": "9. Cancellation",
+    "section9Text": "You can stop using {{appName}} and delete your account at any time. We reserve the right to suspend accounts that violate these terms.",
+    "section10Title": "10. Contact",
+    "section10Text": "If you have questions about these terms, you can contact us through the channels available in the app.",
+    "closing": "By creating your account, you confirm that you have read and accept these Terms and Conditions."
+  },
+  "onboardingPage": {
+    "step1": {
+      "titleLine1": "What's",
+      "titleLine2": "your name?",
+      "desc": "This is the name you'll see on your profile, and the one other members will see in a shared space with you.",
+      "nameLabel": "Your name",
+      "namePlaceholder": "e.g. John Doe",
+      "nameError": "Enter your name"
+    },
+    "step2": {
+      "title": "When do you get paid?",
+      "desc": "This helps us show you which payments to cover each period.",
+      "weekdayLabel": "Day of the week",
+      "weekdayHint": "We'll remind you which payments to cover before every {{weekday}}.",
+      "biweeklyDaysLabel": "Biweekly pay days",
+      "custom": "Custom",
+      "day1Label28": "Day 1 (1–28)",
+      "day2Label31": "Day 2 (1–31)",
+      "biweeklyHint": "We'll remind you which payments to cover before days {{d1}} and {{d2}} of each month."
+    },
+    "step3": {
+      "title": "How much do you earn per period?",
+      "desc": "Optional. Helps you see how much you have left after your payments.",
+      "toggleLabel": "Turn on income per period",
+      "toggleSub": "You can change this later in Profile",
+      "amountLabel": "Amount per period"
+    },
+    "step4": {
+      "title": "Want to get reminders?",
+      "desc": "We'll let you know when a payment is about to be due or overdue.",
+      "enabledLabel": "Notifications on",
+      "disabledLabel": "Turn on notifications",
+      "enabledSub": "You'll get alerts for your payments",
+      "disabledSub": "You can turn them on later in Profile",
+      "readyTitle": "All set!",
+      "readyText": "You can customize which notifications to receive from Profile."
+    },
+    "continue": "Continue",
+    "start": "Get started!",
+    "back": "Back"
   }
 }

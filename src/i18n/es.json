@@ -480,5 +480,121 @@
     "confirmPlaceholder": "Repite tu contraseña",
     "notStrong": "La contraseña no cumple todos los requisitos",
     "submit": "Crear contraseña"
+  },
+  "authPage": {
+    "tabs": {
+      "login": "Iniciar sesión",
+      "register": "Registrarse"
+    },
+    "forgotTitle": "Recuperar contraseña",
+    "forgotSubtitle": "Te enviaremos un enlace para restablecer tu contraseña.",
+    "emailLabel": "Correo electrónico",
+    "emailPlaceholder": "tu@correo.com",
+    "passwordLabel": "Contraseña",
+    "accessCodeLabel": "Código de acceso",
+    "accessCodePlaceholder": "Ingresa tu código",
+    "termsPrefix": "He leído y acepto los",
+    "termsLink": "Términos y Condiciones",
+    "termsSuffix": "de uso",
+    "submit": {
+      "loading": "Cargando…",
+      "login": "Iniciar sesión",
+      "register": "Crear cuenta",
+      "forgot": "Enviar enlace"
+    },
+    "forgotPasswordLink": "¿Olvidaste tu contraseña?",
+    "backToLogin": "Volver al inicio de sesión",
+    "orContinueWith": "o continúa con",
+    "google": {
+      "connecting": "Conectando…",
+      "termsNote": "Al continuar con Google aceptas nuestros"
+    },
+    "errors": {
+      "emptyEmail": "Ingresa tu correo electrónico",
+      "resetEmailError": "No se pudo enviar el correo. Verifica la dirección.",
+      "resetEmailSent": "Revisa tu correo — te enviamos el enlace para restablecer tu contraseña.",
+      "emptyFields": "Completa todos los campos",
+      "termsRequired": "Debes aceptar los Términos y Condiciones para continuar",
+      "passwordNotStrongRegister": "La contraseña no cumple todos los requisitos de seguridad",
+      "emptyAccessCode": "Ingresa tu código de acceso",
+      "invalidAccessCode": "Código de acceso inválido o inactivo",
+      "accountCreated": "¡Cuenta creada! Revisa tu correo para confirmar.",
+      "wrongCredentials": "Correo o contraseña incorrectos"
+    }
+  },
+  "resetPasswordPage": {
+    "title": "Nueva contraseña",
+    "subtitle": "Elige una contraseña segura para tu cuenta.",
+    "newPasswordLabel": "Nueva contraseña",
+    "newPasswordPlaceholder": "Mínimo 8 caracteres",
+    "saving": "Guardando…",
+    "submit": "Guardar contraseña"
+  },
+  "termsModal": {
+    "title": "Términos y Condiciones",
+    "lastUpdated": "Última actualización: junio de 2026",
+    "intro": "Bienvenido a {{appName}}. Al crear una cuenta, aceptas los presentes Términos y Condiciones de uso. Por favor léelos cuidadosamente antes de continuar.",
+    "section1Title": "1. Descripción del servicio",
+    "section1Text": "{{appName}} es una aplicación de seguimiento personal de pagos y compromisos financieros. Su propósito es ayudarte a organizar y recordar tus pagos según tu periodo de cobro. {{appName}} no es una institución financiera, no gestiona dinero real, no realiza transferencias y no tiene acceso a tus cuentas bancarias.",
+    "section2Title": "2. Registro y cuenta",
+    "section2Text": "Para usar {{appName}} debes crear una cuenta con un correo electrónico válido o mediante tu cuenta de Google. Eres responsable de mantener la confidencialidad de tus credenciales de acceso. Debes ser mayor de 18 años para registrarte.",
+    "section3Title": "3. Uso aceptable",
+    "section3Text": "Te comprometes a usar {{appName}} únicamente para fines personales y lícitos. Queda prohibido usar la aplicación para actividades fraudulentas, suplantar identidades, o intentar vulnerar la seguridad del sistema.",
+    "section4Title": "4. Privacidad y datos",
+    "section4Text": "Los datos que ingresas en {{appName}} (nombre, pagos, montos) se almacenan de forma segura en servidores de Supabase. No vendemos ni compartimos tu información personal con terceros con fines comerciales. Puedes eliminar tu cuenta y tus datos en cualquier momento desde Ajustes.",
+    "section5Title": "5. Notificaciones push",
+    "section5Text": "Si activas las notificaciones, {{appName}} enviará alertas relacionadas con tus pagos registrados. Puedes desactivarlas en cualquier momento desde Ajustes o desde la configuración de tu dispositivo.",
+    "section6Title": "6. Limitación de responsabilidad",
+    "section6Text": "{{appName}} es una herramienta de apoyo personal. No garantizamos que el uso de la aplicación prevenga pagos tardíos, cargos por mora u otras consecuencias financieras. El usuario es el único responsable de sus decisiones financieras.",
+    "section7Title": "7. Disponibilidad del servicio",
+    "section7Text": "Nos esforzamos por mantener el servicio disponible en todo momento, pero no garantizamos disponibilidad ininterrumpida. Podemos realizar mantenimientos o actualizaciones sin previo aviso.",
+    "section8Title": "8. Modificaciones",
+    "section8Text": "Nos reservamos el derecho de modificar estos términos en cualquier momento. Te notificaremos de cambios significativos a través de la aplicación. El uso continuado de {{appName}} tras los cambios implica tu aceptación.",
+    "section9Title": "9. Cancelación",
+    "section9Text": "Puedes dejar de usar {{appName}} y eliminar tu cuenta en cualquier momento. Nos reservamos el derecho de suspender cuentas que violen estos términos.",
+    "section10Title": "10. Contacto",
+    "section10Text": "Si tienes dudas sobre estos términos, puedes contactarnos a través de los canales disponibles en la aplicación.",
+    "closing": "Al crear tu cuenta, confirmas que has leído y aceptas estos Términos y Condiciones."
+  },
+  "onboardingPage": {
+    "step1": {
+      "titleLine1": "¿Cuál es",
+      "titleLine2": "tu nombre?",
+      "desc": "Ese nombre verás en tu perfil y ese lo verán los usuarios con quien tengas un espacio compartido.",
+      "nameLabel": "Tu nombre",
+      "namePlaceholder": "Ej. John Doe",
+      "nameError": "Escribe tu nombre"
+    },
+    "step2": {
+      "title": "¿Cuándo te pagan?",
+      "desc": "Esto nos ayuda a mostrarte qué pagos cubrir con cada periodo.",
+      "weekdayLabel": "Día de la semana",
+      "weekdayHint": "Te avisaremos qué pagos cubrir antes de cada {{weekday}}.",
+      "biweeklyDaysLabel": "Días de quincena",
+      "custom": "Personalizado",
+      "day1Label28": "Día 1 (1–28)",
+      "day2Label31": "Día 2 (1–31)",
+      "biweeklyHint": "Te avisaremos qué pagos cubrir antes de los días {{d1}} y {{d2}} de cada mes."
+    },
+    "step3": {
+      "title": "¿Cuánto ganas por periodo?",
+      "desc": "Opcional. Te ayuda a ver cuánto te queda libre después de tus pagos.",
+      "toggleLabel": "Activar ingreso por periodo",
+      "toggleSub": "Puedes cambiarlo después en Perfil",
+      "amountLabel": "Monto por periodo"
+    },
+    "step4": {
+      "title": "¿Quieres recibir recordatorios?",
+      "desc": "Te avisaremos cuando un pago esté por vencer o se haya vencido.",
+      "enabledLabel": "Notificaciones activadas",
+      "disabledLabel": "Activar notificaciones",
+      "enabledSub": "Recibirás alertas de tus pagos",
+      "disabledSub": "Puedes activarlas después en Perfil",
+      "readyTitle": "¡Listo!",
+      "readyText": "Puedes personalizar qué notificaciones recibir desde Perfil."
+    },
+    "continue": "Continuar",
+    "start": "¡Comenzar!",
+    "back": "Atrás"
   }
 }
