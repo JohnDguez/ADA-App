@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useLayoutEffect } from 'react'
-import { COACHMARK_STEPS } from '../lib/coachmarkSteps'
+import { useTranslation } from 'react-i18next'
+import { getCoachmarkSteps } from '../lib/coachmarkSteps'
 import styles from './Coachmarks.module.css'
 
 // Motor de coach marks: dado un `screenKey` (home, gastos, recurrentes,
@@ -39,6 +40,7 @@ function ensurePulseStyleInjected() {
 const SETTLE_DELAY = 320
 
 export function Coachmarks({ screenKey, profile, onUpdateProfile }) {
+  const { t } = useTranslation()
   const [stepIndex, setStepIndex] = useState(0)
   const [rect, setRect] = useState(null)
   const rafRef = useRef(null)
@@ -47,7 +49,7 @@ export function Coachmarks({ screenKey, profile, onUpdateProfile }) {
   const actionLockRef = useRef(false)
 
   const seen  = profile?.coachmarks_seen || {}
-  const steps = screenKey ? COACHMARK_STEPS[screenKey] : null
+  const steps = screenKey ? getCoachmarkSteps()[screenKey] : null
   const alreadySeen = !screenKey || !steps || seen[screenKey]
 
   useEffect(() => { ensurePulseStyleInjected() }, [])
@@ -231,7 +233,7 @@ export function Coachmarks({ screenKey, profile, onUpdateProfile }) {
           onClick={skipAll}
           className={styles.skipButton}
         >
-          Saltar tutorial
+          {t('coachmarks.skipTutorial')}
         </button>
 
         <div className={styles.title}>{step.title}</div>
@@ -249,14 +251,14 @@ export function Coachmarks({ screenKey, profile, onUpdateProfile }) {
                 onClick={goBack}
                 className={styles.backButton}
               >
-                Atrás
+                {t('onboardingPage.back')}
               </button>
             )}
             <button
               onClick={goNext}
               className={styles.nextButton}
             >
-              {isLast ? 'Entendido' : 'Siguiente'}
+              {isLast ? t('recurrentMigrationModal.understood') : t('coachmarks.next')}
             </button>
           </div>
         </div>

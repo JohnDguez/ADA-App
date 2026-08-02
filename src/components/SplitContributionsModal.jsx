@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Lock, PiggyBank } from 'lucide-react'
 import { fmt } from '../lib/utils'
 import styles from './SplitContributionsModal.module.css'
@@ -12,6 +13,7 @@ import styles from './SplitContributionsModal.module.css'
 const PRESET_PERCENTAGES = [25, 50, 60, 75]
 
 export function SplitContributionsModal({ open, payment, spaceMembers, currentUserId, getContributions, registerContribution, onSetTotalAmount, onForceSettle, fundBalance, onSetFundContribution, openedBecauseFundInsufficient, onClose }) {
+  const { t } = useTranslation()
   const [contributions, setContributions] = useState({}) // { [user_id]: amount }
   const [loading,  setLoading]  = useState(false)
   const [openId,   setOpenId]   = useState(null)
@@ -50,11 +52,11 @@ export function SplitContributionsModal({ open, payment, spaceMembers, currentUs
 
   async function handleSaveTotal() {
     const val = parseFloat(totalDraft)
-    if (isNaN(val) || val <= 0) { setError('Ingresa un monto válido'); return }
+    if (isNaN(val) || val <= 0) { setError(t('settingsCobro.toast.invalidAmount')); return }
     setTotalSaving(true)
     const { error: err } = await onSetTotalAmount(payment.id, val)
     setTotalSaving(false)
-    if (err) { setError(err.message || 'Error al guardar el monto'); return }
+    if (err) { setError(err.message || t('splitContributionsModal.saveTotalError')); return }
     setError('')
   }
 
@@ -62,7 +64,7 @@ export function SplitContributionsModal({ open, payment, spaceMembers, currentUs
     setSettling(true)
     const { error: err } = await onForceSettle(payment.id)
     setSettling(false)
-    if (err) { setError(err.message || 'Error al marcar como pagado'); return }
+    if (err) { setError(err.message || t('splitContributionsModal.settleError')); return }
     onClose()
   }
 
@@ -90,7 +92,7 @@ export function SplitContributionsModal({ open, payment, spaceMembers, currentUs
 
   async function handleSaveFund() {
     const val = parseFloat(draft)
-    if (draft !== '' && (isNaN(val) || val < 0)) { setError('Ingresa un monto válido'); return }
+    if (draft !== '' && (isNaN(val) || val < 0)) { setError(t('settingsCobro.toast.invalidAmount')); return }
     const numVal = val || 0
     // Mientras el pago sigue pendiente, no puede exceder ni lo que falta
     // del pago ni lo que el Fondo en verdad tiene ahorrado — el servidor ya
@@ -99,20 +101,20 @@ export function SplitContributionsModal({ open, payment, spaceMembers, currentUs
       const availableForPayment = total - (registrado - fundAmount)
       const cap = Math.min(availableForPayment, fundBalance + fundAmount)
       if (Math.round(numVal * 100) > Math.round(cap * 100) + 1) {
-        setError(`No puedes exceder lo disponible (${fmt(Math.max(0, cap))})`)
+        setError(t('splitContributionsModal.exceedsAvailable', { amount: fmt(Math.max(0, cap)) }))
         return
       }
     }
     setSaving(true)
     const { error: err } = await onSetFundContribution(payment.id, numVal)
     setSaving(false)
-    if (err) { setError(err.message || 'Error al guardar'); return }
+    if (err) { setError(err.message || t('splitContributionsModal.saveError')); return }
     setOpenId(null)
   }
 
   async function handleSave(memberId) {
     const val = parseFloat(draft)
-    if (draft !== '' && (isNaN(val) || val < 0)) { setError('Ingresa un monto válido'); return }
+    if (draft !== '' && (isNaN(val) || val < 0)) { setError(t('settingsCobro.toast.invalidAmount')); return }
     // Mientras el pago sigue PENDIENTE, nadie puede poner más de lo que en
     // verdad queda disponible — si ya está pagado (se está agregando un
     // contribuyente nuevo a uno ya completo), sí se permite exceder: el
@@ -121,14 +123,14 @@ export function SplitContributionsModal({ open, payment, spaceMembers, currentUs
     if (!payment.is_paid && val > 0) {
       const available = total - (registrado - (contributions[memberId] || 0))
       if (Math.round(val * 100) > Math.round(available * 100) + 1) {
-        setError(`No puedes exceder lo disponible (${fmt(Math.max(0, available))})`)
+        setError(t('splitContributionsModal.exceedsAvailable', { amount: fmt(Math.max(0, available)) }))
         return
       }
     }
     setSaving(true)
     const { error: err } = await registerContribution(payment.id, memberId, val || 0)
     setSaving(false)
-    if (err) { setError(err.message || 'Error al guardar'); return }
+    if (err) { setError(err.message || t('splitContributionsModal.saveError')); return }
     setContributions(prev => {
       const next = { ...prev }
       if (!val || val <= 0) delete next[memberId]
@@ -142,15 +144,15 @@ export function SplitContributionsModal({ open, payment, spaceMembers, currentUs
     <div onClick={e => e.target === e.currentTarget && onClose()} className={styles.overlay}>
       <div className={styles.modal}>
         <div className={styles.handle} />
-        <div className={styles.title}>Dividir entre miembros</div>
+        <div className={styles.title}>{t('paymentsPage.menuSplit')}</div>
         <div className={styles.description}>{payment.name}</div>
 
         {payment.is_variable && (
           <>
-            <label className="field-label">Monto total a pagar</label>
+            <label className="field-label">{t('paymentModal.totalAmountToPay')}</label>
             <div className={styles.editRow}>
               <input type="number" value={totalDraft} onChange={e => setTotalDraft(e.target.value)} placeholder="0.00" onKeyDown={e => e.key === 'Enter' && handleSaveTotal()} className="field-input" style={{ flex: 1 }} />
-              <button onClick={handleSaveTotal} disabled={totalSaving} className="btn-primary" style={{ width: 'auto', padding: '0 16px' }}>Guardar</button>
+              <button onClick={handleSaveTotal} disabled={totalSaving} className="btn-primary" style={{ width: 'auto', padding: '0 16px' }}>{t('buttons.save')}</button>
             </div>
           </>
         )}
@@ -159,20 +161,20 @@ export function SplitContributionsModal({ open, payment, spaceMembers, currentUs
 
         {openedBecauseFundInsufficient && (
           <div className={styles.fundInsufficientNotice}>
-            El Fondo Compartido no alcanzaba para cubrir todo el pago — ya se aplicó lo máximo posible ({fmt(fundAmount)}). Completa el resto con la nómina de algún miembro.
+            {t('splitContributionsModal.fundInsufficientNotice', { amount: fmt(fundAmount) })}
           </div>
         )}
 
         {!loading && !needsTotal && (
           <div className={`${styles.progress} ${done ? styles.progressDone : ''}`}>
             <div className={styles.progressAmounts}>{fmt(registrado)} / {fmt(total)}</div>
-            <div className={styles.progressStatus}>{done ? 'Completo' : `Restan: ${fmt(restan)}`}</div>
+            <div className={styles.progressStatus}>{done ? t('splitContributionsModal.complete') : t('splitContributionsModal.remaining', { amount: fmt(restan) })}</div>
           </div>
         )}
 
         {!needsTotal && (
           <>
-            <label className="field-label">Miembros</label>
+            <label className="field-label">{t('splitContributionsModal.membersLabel')}</label>
             <div className={styles.members}>
               {onSetFundContribution && (
                 <div className={styles.memberCard}>
@@ -185,20 +187,20 @@ export function SplitContributionsModal({ open, payment, spaceMembers, currentUs
                         <PiggyBank size={14} color="var(--surface)" strokeWidth={2} />
                       </span>
                       <span className={styles.memberName}>
-                        Fondo Compartido
+                        {t('splitContributionsModal.sharedFundName')}
                         {fundBalance <= 0 && fundAmount <= 0 && <Lock size={12} className={styles.fundLockIcon} />}
                       </span>
                     </span>
                     {fundAmount > 0
-                      ? <span className={styles.memberAmount}>{fmt(fundAmount)} <span className={styles.editLabel}>Editar</span></span>
+                      ? <span className={styles.memberAmount}>{fmt(fundAmount)} <span className={styles.editLabel}>{t('buttons.edit')}</span></span>
                       : fundBalance > 0
-                        ? <span className={styles.memberEmpty}>Sin registrar</span>
-                        : <span className={styles.memberEmpty}>Sin saldo</span>}
+                        ? <span className={styles.memberEmpty}>{t('splitContributionsModal.notRegistered')}</span>
+                        : <span className={styles.memberEmpty}>{t('splitContributionsModal.noBalance')}</span>}
                   </div>
                   {openId === FUND_ROW_ID && (
                     <div className={styles.editRow}>
                       <input autoFocus type="number" value={draft} onChange={e => setDraft(e.target.value)} placeholder="0.00" onKeyDown={e => e.key === 'Enter' && handleSaveFund()} className="field-input" style={{ flex: 1 }} />
-                      <button onClick={handleSaveFund} disabled={saving} className="btn-primary" style={{ width: 'auto', padding: '0 16px' }}>Guardar</button>
+                      <button onClick={handleSaveFund} disabled={saving} className="btn-primary" style={{ width: 'auto', padding: '0 16px' }}>{t('buttons.save')}</button>
                     </div>
                   )}
                 </div>
@@ -217,11 +219,11 @@ export function SplitContributionsModal({ open, payment, spaceMembers, currentUs
                             <span className={styles.memberAvatarInitial}>{(m.profile?.name || '?').charAt(0).toUpperCase()}</span>
                           )}
                         </span>
-                        <span className={styles.memberName}>{m.profile?.name || 'Miembro'}{m.user_id === currentUserId ? ' (tú)' : ''}</span>
+                        <span className={styles.memberName}>{m.profile?.name || t('splitContributionsModal.memberFallback')}{m.user_id === currentUserId ? t('splitContributionsModal.youSuffix') : ''}</span>
                       </span>
                       {amount != null
-                        ? <span className={styles.memberAmount}>{fmt(amount)} <span className={styles.editLabel}>Editar</span></span>
-                        : <span className={styles.memberEmpty}>Sin registrar</span>}
+                        ? <span className={styles.memberAmount}>{fmt(amount)} <span className={styles.editLabel}>{t('buttons.edit')}</span></span>
+                        : <span className={styles.memberEmpty}>{t('splitContributionsModal.notRegistered')}</span>}
                     </div>
                     {isOpen && (
                       <div>
@@ -229,7 +231,7 @@ export function SplitContributionsModal({ open, payment, spaceMembers, currentUs
                             sobre lo que resta — pero se bloquean los que se
                             pasarían de lo que en verdad queda disponible,
                             contando lo que ya pusieron los demás miembros. */}
-                        <div className={styles.availableHint}>Disponible: {fmt(Math.max(0, total - (registrado - (amount || 0))))} de {fmt(total)}</div>
+                        <div className={styles.availableHint}>{t('splitContributionsModal.availableHint', { available: fmt(Math.max(0, total - (registrado - (amount || 0)))), total: fmt(total) })}</div>
                         <div className={styles.presetRow}>
                           {PRESET_PERCENTAGES.map(pct => {
                             const presetAmt = Math.round(total * pct) / 100
@@ -250,7 +252,7 @@ export function SplitContributionsModal({ open, payment, spaceMembers, currentUs
                         </div>
                         <div className={styles.editRow}>
                           <input autoFocus type="number" value={draft} onChange={e => setDraft(e.target.value)} placeholder="0.00" onKeyDown={e => e.key === 'Enter' && handleSave(m.user_id)} className="field-input" style={{ flex: 1 }} />
-                          <button onClick={() => handleSave(m.user_id)} disabled={saving} className="btn-primary" style={{ width: 'auto', padding: '0 16px' }}>Guardar</button>
+                          <button onClick={() => handleSave(m.user_id)} disabled={saving} className="btn-primary" style={{ width: 'auto', padding: '0 16px' }}>{t('buttons.save')}</button>
                         </div>
                       </div>
                     )}
@@ -263,10 +265,10 @@ export function SplitContributionsModal({ open, payment, spaceMembers, currentUs
 
         {done && !payment.is_paid && (
           <button onClick={handlePagar} disabled={settling} className={styles.payButton}>
-            {settling ? 'Marcando…' : 'Pagar'}
+            {settling ? t('splitContributionsModal.marking') : t('splitContributionsModal.pay')}
           </button>
         )}
-        <button onClick={onClose} className="btn-ghost">Cerrar</button>
+        <button onClick={onClose} className="btn-ghost">{t('buttons.close')}</button>
       </div>
     </div>
   )
