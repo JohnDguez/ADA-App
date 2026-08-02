@@ -44,6 +44,16 @@ export const RECUR_FREQ = {
 export const RECUR_FREQ_COMMON = ['weekly', 'biweekly', 'monthly']
 export const RECUR_FREQ_EXTRA  = ['bimonthly', 'quarterly', 'semiannual', 'annual']
 
+// getFrequencyLabel() — mismo patrón que getCategoryLabel(): RECUR_FREQ
+// arriba se queda tal cual (sus KEYS ya son ids neutrales en inglés
+// —'weekly', 'biweekly', etc.— que es lo que se guarda en
+// payments.recur_freq; el objeto en sí no se guarda en la base de datos,
+// solo se usaba para mostrar el texto). Esta función traduce ese texto
+// mostrado sin tocar el id guardado.
+export function getFrequencyLabel(freq) {
+  return RECUR_FREQ[freq] ? i18n.t(`frequency.${freq}`) : freq
+}
+
 const CAT_COLORS = {
   'Servicios':     'var(--cat-servicios)',
   'Suscripciones': 'var(--cat-suscripciones)',
