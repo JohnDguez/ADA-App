@@ -6,7 +6,7 @@ import { NewSharedSpacePanel } from '../components/NewSharedSpacePanel'
 import { EmptyState } from '../components/EmptyState'
 import { PaidByStack } from '../components/PaidByStack'
 import { Select } from '../components/Select'
-import { fmt, dateOf, dateToStr, MONTHS, MONTHS_SHORT, CATEGORIES, cobroPeriod, addDays, getCatColor, getCategoryLabel, RECUR_FREQ } from '../lib/utils'
+import { fmt, dateOf, dateToStr, getMonths, getMonthsShort, CATEGORIES, cobroPeriod, addDays, getCatColor, getCategoryLabel, RECUR_FREQ, getFrequencyLabel } from '../lib/utils'
 import { getCategoryIcon } from '../lib/categoryIcons'
 import { supabase } from '../lib/supabase'
 import { showToast } from '../components/Toast'
@@ -1229,7 +1229,7 @@ export function PaymentsPage({ payments, dataLoading = false, profile, spaceSwit
                             {d && (
                               <div className={styles.extrasItemDate}>
                                 <div className={styles.extrasItemDay}>{d.getDate()}</div>
-                                <div className={styles.extrasItemMonth}>{MONTHS_SHORT[d.getMonth()]}</div>
+                                <div className={styles.extrasItemMonth}>{getMonthsShort()[d.getMonth()]}</div>
                               </div>
                             )}
                             <div className={styles.extrasItemContent}>
@@ -1301,7 +1301,7 @@ export function PaymentsPage({ payments, dataLoading = false, profile, spaceSwit
                               {d && (
                                 <div className={styles.extrasItemDate}>
                                   <div className={styles.extrasItemDay}>{d.getDate()}</div>
-                                  <div className={styles.extrasItemMonth}>{MONTHS_SHORT[d.getMonth()]}</div>
+                                  <div className={styles.extrasItemMonth}>{getMonthsShort()[d.getMonth()]}</div>
                                 </div>
                               )}
                               <div className={styles.extrasItemContent}>
@@ -1416,7 +1416,7 @@ export function PaymentsPage({ payments, dataLoading = false, profile, spaceSwit
               const barColor  = selectedCat ? getCatColor(selectedCat, profile.custom_categories, profile.category_colors) : 'var(--accent)'
               return (
                 <div key={i} className={styles.chartMonthLabel} style={{ fontWeight: isCurrent ? 700 : 500, color: isCurrent ? barColor : 'var(--text)' }}>
-                  {MONTHS_SHORT[m.month]}
+                  {getMonthsShort()[m.month]}
                 </div>
               )
             })}
@@ -1450,9 +1450,9 @@ export function PaymentsPage({ payments, dataLoading = false, profile, spaceSwit
                 <span className={styles.monthYearLabel}>{t('paymentsPage.monthLabel')}</span>
                 <div className={styles.monthSelectBox}>
                   <Select
-                    value={MONTHS[viewMonth]}
-                    onChange={name => setViewMonth(MONTHS.indexOf(name))}
-                    options={MONTHS}
+                    value={getMonths()[viewMonth]}
+                    onChange={name => setViewMonth(getMonths().indexOf(name))}
+                    options={getMonths()}
                   />
                 </div>
               </div>
@@ -1531,7 +1531,7 @@ export function PaymentsPage({ payments, dataLoading = false, profile, spaceSwit
 
           {paidInView.length === 0 ? (
             dataLoading ? null : <EmptyState
-              title={viewMode === 'periodo' ? t('paymentsPage.noPaymentsCurrentPeriod') : t('paymentsPage.noPaymentsInMonth', { month: MONTHS[viewMonth], year: viewYear })}
+              title={viewMode === 'periodo' ? t('paymentsPage.noPaymentsCurrentPeriod') : t('paymentsPage.noPaymentsInMonth', { month: getMonths()[viewMonth], year: viewYear })}
               subtitle={t('homePage.emptyState.subtitle')}
               onClick={onAdd}
             />
@@ -1545,7 +1545,7 @@ export function PaymentsPage({ payments, dataLoading = false, profile, spaceSwit
                     <div key={p.id} className={`${styles.paymentRow} ${isLast ? styles.paymentRowLast : ''}`}>
                       <div className={styles.paymentDate}>
                         <div className={styles.paymentDateDay}>{paidDate.getDate()}</div>
-                        <div className={styles.paymentDateMonth}>{MONTHS_SHORT[paidDate.getMonth()]}</div>
+                        <div className={styles.paymentDateMonth}>{getMonthsShort()[paidDate.getMonth()]}</div>
                       </div>
                       <div className={styles.paymentDivider} />
                       <div className={styles.paymentInfo}>
@@ -1560,7 +1560,7 @@ export function PaymentsPage({ payments, dataLoading = false, profile, spaceSwit
                         <div className={styles.paymentCategoryRow}>
                           <span className={styles.paymentCategoryDot} style={{ background: getCatColor(p.category, profile.custom_categories, profile.category_colors) }} />
                           {getCategoryLabel(p.category)}
-                          {p.is_recurrent && <span className={styles.paymentRecurrentTag}>· {RECUR_FREQ[p.recur_freq] || t('frequency.monthly')}</span>}
+                          {p.is_recurrent && <span className={styles.paymentRecurrentTag}>· {getFrequencyLabel(p.recur_freq) || t('frequency.monthly')}</span>}
                           {p.is_contribution_reflection && <span className={styles.paymentRecurrentTag}>· {t('homePage.shared')}</span>}
                         </div>
                         {activeSpaceId && !p.is_contribution_reflection && (

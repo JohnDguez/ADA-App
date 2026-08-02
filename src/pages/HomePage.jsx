@@ -9,21 +9,23 @@ import { NewSharedSpacePanel } from '../components/NewSharedSpacePanel'
 import { EmptyState } from '../components/EmptyState'
 import { PaidByStack } from '../components/PaidByStack'
 import { HalfRing } from '../components/HalfRing'
-import { fmt, cobroPeriod, nextCobroPeriod, getPagarEsteCobro, daysDiff, dateOf, dateToStr, MONTHS, MONTHS_SHORT, getCategoryLabel } from '../lib/utils'
+import { fmt, cobroPeriod, nextCobroPeriod, getPagarEsteCobro, daysDiff, dateOf, dateToStr, getMonths, getMonthsShort, getCategoryLabel } from '../lib/utils'
 import styles from './HomePage.module.css'
 
 function periodRange(cfg) {
   const { start, end } = cobroPeriod(cfg)
+  const months = getMonths(), monthsShort = getMonthsShort()
   const sameMonth = start.getMonth() === end.getMonth()
-  if (sameMonth) return `${start.getDate()} – ${end.getDate()} ${MONTHS[end.getMonth()]}`
-  return `${start.getDate()} ${MONTHS_SHORT[start.getMonth()]} – ${end.getDate()} ${MONTHS[end.getMonth()]}`
+  if (sameMonth) return `${start.getDate()} – ${end.getDate()} ${months[end.getMonth()]}`
+  return `${start.getDate()} ${monthsShort[start.getMonth()]} – ${end.getDate()} ${months[end.getMonth()]}`
 }
 
 function nextPeriodRange(cfg) {
   const { start, end } = nextCobroPeriod(cfg)
+  const months = getMonths(), monthsShort = getMonthsShort()
   const sameMonth = start.getMonth() === end.getMonth()
-  if (sameMonth) return `${start.getDate()} – ${end.getDate()} ${MONTHS[end.getMonth()]}`
-  return `${start.getDate()} ${MONTHS_SHORT[start.getMonth()]} – ${end.getDate()} ${MONTHS[end.getMonth()]}`
+  if (sameMonth) return `${start.getDate()} – ${end.getDate()} ${months[end.getMonth()]}`
+  return `${start.getDate()} ${monthsShort[start.getMonth()]} – ${end.getDate()} ${months[end.getMonth()]}`
 }
 
 // HalfRing — extraído a components/HalfRing.jsx en v0.9.249 (antes vivía
@@ -570,7 +572,7 @@ function PaidCollapseItem({ p, onMarkUnpaid, onViewSource, spaceMembers }) {
         <div className={`${styles.paidCollapseItemRow} ${contentHidden ? styles.paidCollapseItemRowHidden : ''}`}>
           <div className={styles.paidCollapseDate}>
             <div className={styles.paidCollapseDay}>{pd.getDate()}</div>
-            <div className={styles.paidCollapseMonth}>{MONTHS_SHORT[pd.getMonth()]}</div>
+            <div className={styles.paidCollapseMonth}>{getMonthsShort()[pd.getMonth()]}</div>
           </div>
           <div className={styles.paidCollapseInfo}>
             <div className={styles.paidCollapseName}>{p.name}</div>

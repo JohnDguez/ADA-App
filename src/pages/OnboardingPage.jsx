@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import i18n from '../i18n'
 import { User, CalendarCheck, Wallet, BellRing, UserRound, ArrowRight } from 'lucide-react'
-import { WEEKDAYS, WEEKDAYS_SHORT } from '../lib/utils'
+import { getWeekdays, getWeekdaysShort } from '../lib/utils'
 import { supabase } from '../lib/supabase'
 import { usePushNotifications } from '../hooks/usePushNotifications'
 import styles from './OnboardingPage.module.css'
@@ -172,7 +173,7 @@ export function OnboardingPage({ userId, onDone }) {
                 <div className={styles.section}>
                   <label className="field-label">{t('onboardingPage.step2.weekdayLabel')}</label>
                   <div className={styles.weekdayRow}>
-                    {WEEKDAYS_SHORT.map((d, i) => (
+                    {getWeekdaysShort().map((d, i) => (
                       <button
                         key={i}
                         onClick={() => setCobroWeekday(i)}
@@ -185,7 +186,7 @@ export function OnboardingPage({ userId, onDone }) {
                   <div className={styles.hintCard}>
                     <CalendarCheck size={18} className={styles.hintIcon} />
                     <div>
-                      {t('onboardingPage.step2.weekdayHint', { weekday: WEEKDAYS[cobroWeekday].toLowerCase() })}
+                      {t('onboardingPage.step2.weekdayHint', { weekday: i18n.language === 'en' ? getWeekdays()[cobroWeekday] : getWeekdays()[cobroWeekday].toLowerCase() })}
                     </div>
                   </div>
                 </div>

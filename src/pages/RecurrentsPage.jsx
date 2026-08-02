@@ -4,7 +4,7 @@ import { Pause, Play, Trash2, Search, ChevronDown, CreditCard, Pencil, MoreVerti
 import { EmptyState } from '../components/EmptyState'
 import { PageHeader } from '../components/PageHeader'
 import { NewSharedSpacePanel } from '../components/NewSharedSpacePanel'
-import { fmt, RECUR_FREQ, getFrequencyLabel, dateOf, MONTHS_SHORT, getCatColor, getCategoryLabel } from '../lib/utils'
+import { fmt, RECUR_FREQ, getFrequencyLabel, dateOf, getMonthsShort, getCatColor, getCategoryLabel } from '../lib/utils'
 import { getCategoryIcon } from '../lib/categoryIcons'
 import { showToast } from '../components/Toast'
 import styles from './RecurrentsPage.module.css'
@@ -101,7 +101,7 @@ export function RecurrentsPage({ payments, profile, spaceSwitcher, activeSpaceHe
   function formatNextDate(due_date) {
     if (!due_date) return null
     const d = dateOf(due_date)
-    return `${d.getDate()} ${MONTHS_SHORT[d.getMonth()]}`
+    return `${d.getDate()} ${getMonthsShort()[d.getMonth()]}`
   }
 
   return (
