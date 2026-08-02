@@ -711,5 +711,43 @@
       "savePayment": "Guardar pago"
     },
     "deletePayment": "Eliminar pago"
+  },
+  "pageHeader": {
+    "greetingMorning": "¡Buenos días!",
+    "greetingAfternoon": "¡Buenas tardes!",
+    "greetingEvening": "¡Buenas noches!",
+    "settingsAriaLabel": "Ajustes"
+  },
+  "activeSpaceHeader": {
+    "newSpaceName": "Nuevo espacio compartido",
+    "personalName": "Personal",
+    "pinAriaLabelOn": "Quitar como pestaña principal",
+    "pinAriaLabelOff": "Marcar como pestaña principal",
+    "menuLeave": "Salir del espacio",
+    "errors": {
+      "passwordRequired": "Ingresa tu contraseña para confirmar",
+      "wrongPassword": "Contraseña incorrecta",
+      "leaveError": "No se pudo salir del espacio"
+    },
+    "deleteModal": {
+      "title": "Eliminar Espacio Compartido",
+      "description": "Se borrará permanentemente para ti y para tu invitado — todos los pagos e ingresos del espacio, sin poder deshacerlo.",
+      "confirmButton": "Eliminar espacio permanentemente"
+    },
+    "leaveModal": {
+      "title": "Salir del Espacio Compartido",
+      "description": "Dejarás de pertenecer a \"{{name}}\". Tus pagos ya agregados se quedan en el espacio para el dueño.",
+      "leaving": "Saliendo…",
+      "confirmButton": "Salir del espacio"
+    }
+  },
+  "notificationsPanel": {
+    "title": "Notificaciones",
+    "markAllRead": "Marcar todas como leídas",
+    "deleteAll": "Eliminar todas",
+    "empty": "Sin notificaciones",
+    "timeNow": "ahora",
+    "timeMinutes": "hace {{count}} min",
+    "timeHours": "hace {{count}} h"
   }
 }

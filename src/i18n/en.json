@@ -711,5 +711,43 @@
       "savePayment": "Save payment"
     },
     "deletePayment": "Delete payment"
+  },
+  "pageHeader": {
+    "greetingMorning": "Good morning!",
+    "greetingAfternoon": "Good afternoon!",
+    "greetingEvening": "Good evening!",
+    "settingsAriaLabel": "Settings"
+  },
+  "activeSpaceHeader": {
+    "newSpaceName": "New shared space",
+    "personalName": "Personal",
+    "pinAriaLabelOn": "Remove as main tab",
+    "pinAriaLabelOff": "Set as main tab",
+    "menuLeave": "Leave space",
+    "errors": {
+      "passwordRequired": "Enter your password to confirm",
+      "wrongPassword": "Incorrect password",
+      "leaveError": "Couldn't leave the space"
+    },
+    "deleteModal": {
+      "title": "Delete Shared Space",
+      "description": "This will be permanently deleted for you and your guest — all payments and income in the space, with no way to undo it.",
+      "confirmButton": "Permanently delete space"
+    },
+    "leaveModal": {
+      "title": "Leave Shared Space",
+      "description": "You'll stop belonging to \"{{name}}\". Payments you already added will stay in the space for the owner.",
+      "leaving": "Leaving…",
+      "confirmButton": "Leave space"
+    }
+  },
+  "notificationsPanel": {
+    "title": "Notifications",
+    "markAllRead": "Mark all as read",
+    "deleteAll": "Delete all",
+    "empty": "No notifications",
+    "timeNow": "now",
+    "timeMinutes": "{{count}} min ago",
+    "timeHours": "{{count}} h ago"
   }
 }
