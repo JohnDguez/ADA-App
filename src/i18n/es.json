@@ -930,5 +930,101 @@
     "noPending": "Sin pagos pendientes",
     "pendingCount_one": "{{count}} pago pendiente",
     "pendingCount_other": "{{count}} pagos pendientes"
+  },
+  "coachmarks": {
+    "skipTutorial": "Saltar tutorial",
+    "next": "Siguiente",
+    "home": {
+      "metricCard": {
+        "title": "Tu quincena de un vistazo",
+        "text": "Aquí ves cuánto tienes que pagar este periodo. Toca \"Periodo\" o \"Mes\" para cambiar la vista."
+      },
+      "addButton": {
+        "title": "Agrega tu primer pago",
+        "text": "Todo empieza aquí — desde este botón registras cualquier gasto, sea único, recurrente o a meses."
+      },
+      "rail": {
+        "title": "La línea de tu quincena",
+        "text": "Cada punto es un pago. El color te dice si ya venció, si vence este periodo, o si es del próximo."
+      },
+      "paidCollapse": {
+        "title": "Lo que ya pagaste",
+        "text": "Se guarda aquí, colapsado, para no estorbar — pero puedes revisarlo o deshacerlo cuando quieras."
+      }
+    },
+    "nuevoPago": {
+      "tabs": {
+        "title": "3 formas de registrar un pago",
+        "text": "\"Único\" es un gasto de una sola vez. \"Recurrente\" se repite cada semana/quincena/mes. \"Parcialidades\" es para pagos a meses con un número fijo de cuotas."
+      },
+      "category": {
+        "title": "Elige o crea una categoría",
+        "text": "Cada categoría trae su propio ícono y color — puedes personalizarlos después desde Ajustes."
+      },
+      "variable": {
+        "title": "¿El monto cambia cada vez?",
+        "text": "Actívalo para pagos como luz o agua, donde no sabes el monto exacto hasta que llega el recibo."
+      }
+    },
+    "gastos": {
+      "disponible": {
+        "title": "Lo que te queda disponible",
+        "text": "Aquí verás cuánto te queda este periodo, calculado con tu salario (si lo configuraste) más los ingresos extra que registres."
+      },
+      "addIncome": {
+        "title": "Registra tus ingresos",
+        "text": "¿Freelance, un bono, o sobró algo del periodo pasado? Añádelo aquí para que el disponible sea exacto."
+      },
+      "categoryChips": {
+        "title": "Filtra por categoría",
+        "text": "Toca cualquiera para ver solo esos gastos en la gráfica de abajo."
+      },
+      "monthlyChart": {
+        "title": "Tu tendencia mensual",
+        "text": "Compara cuánto has gastado mes a mes — útil para detectar patrones."
+      }
+    },
+    "recurrentes": {
+      "stats": {
+        "title": "Tus pagos activos, de un vistazo",
+        "text": "Aquí ves cuántos recurrentes tienes activos o pausados, y cuánto suman al mes."
+      },
+      "filtroTipo": {
+        "title": "Recurrentes vs. Parcialidades",
+        "text": "Un recurrente no tiene fecha final (como Netflix). Una parcialidad sí — un número fijo de pagos, como un celular a 12 meses."
+      }
+    },
+    "perfil": {
+      "cobro": {
+        "title": "Configura tu quincena",
+        "text": "Aquí defines cada cuándo te pagan — semanal, quincenal o mensual — para que la app organice todo alrededor de eso."
+      },
+      "categorias": {
+        "title": "Haz tuyas las categorías",
+        "text": "Cambia el ícono y color de cualquier categoría, o crea las tuyas propias."
+      },
+      "notificaciones": {
+        "title": "No se te vaya a pasar un pago",
+        "text": "Activa los recordatorios para que la app te avise antes de que venza cada pago."
+      }
+    }
+  },
+  "splitContributionsModal": {
+    "saveTotalError": "Error al guardar el monto",
+    "settleError": "Error al marcar como pagado",
+    "fundInsufficientNotice": "El Fondo Compartido no alcanzaba para cubrir todo el pago — ya se aplicó lo máximo posible ({{amount}}). Completa el resto con la nómina de algún miembro.",
+    "complete": "Completo",
+    "remaining": "Restan: {{amount}}",
+    "membersLabel": "Miembros",
+    "sharedFundName": "Fondo Compartido",
+    "notRegistered": "Sin registrar",
+    "noBalance": "Sin saldo",
+    "exceedsAvailable": "No puedes exceder lo disponible ({{amount}})",
+    "saveError": "Error al guardar",
+    "memberFallback": "Miembro",
+    "youSuffix": " (tú)",
+    "availableHint": "Disponible: {{available}} de {{total}}",
+    "marking": "Marcando…",
+    "pay": "Pagar"
   }
 }

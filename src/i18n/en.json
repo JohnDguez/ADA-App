@@ -930,5 +930,101 @@
     "noPending": "No pending payments",
     "pendingCount_one": "{{count}} pending payment",
     "pendingCount_other": "{{count}} pending payments"
+  },
+  "coachmarks": {
+    "skipTutorial": "Skip tutorial",
+    "next": "Next",
+    "home": {
+      "metricCard": {
+        "title": "Your pay period at a glance",
+        "text": "See how much you need to pay this period. Tap \"Period\" or \"Month\" to change the view."
+      },
+      "addButton": {
+        "title": "Add your first payment",
+        "text": "Everything starts here — from this button you log any expense, one-time, recurring, or in installments."
+      },
+      "rail": {
+        "title": "Your pay period timeline",
+        "text": "Each dot is a payment. The color tells you if it's overdue, due this period, or due next period."
+      },
+      "paidCollapse": {
+        "title": "What you've already paid",
+        "text": "It's saved here, collapsed, to stay out of your way — but you can check it or undo it anytime."
+      }
+    },
+    "nuevoPago": {
+      "tabs": {
+        "title": "3 ways to log a payment",
+        "text": "\"One-time\" is a single expense. \"Recurring\" repeats every week/two weeks/month. \"Installments\" is for payments split into a fixed number of payments."
+      },
+      "category": {
+        "title": "Choose or create a category",
+        "text": "Each category has its own icon and color — you can customize them later from Settings."
+      },
+      "variable": {
+        "title": "Does the amount change every time?",
+        "text": "Turn this on for payments like electricity or water, where you don't know the exact amount until the bill arrives."
+      }
+    },
+    "gastos": {
+      "disponible": {
+        "title": "What you have available",
+        "text": "See how much you have left this period, based on your income (if set up) plus any extra income you log."
+      },
+      "addIncome": {
+        "title": "Log your income",
+        "text": "Freelance work, a bonus, or leftover from last period? Add it here so your available amount is accurate."
+      },
+      "categoryChips": {
+        "title": "Filter by category",
+        "text": "Tap any of these to see only those expenses in the chart below."
+      },
+      "monthlyChart": {
+        "title": "Your monthly trend",
+        "text": "Compare how much you've spent month to month — useful for spotting patterns."
+      }
+    },
+    "recurrentes": {
+      "stats": {
+        "title": "Your active payments, at a glance",
+        "text": "See how many recurring payments you have active or paused, and how much they add up to per month."
+      },
+      "filtroTipo": {
+        "title": "Recurring vs. Installments",
+        "text": "A recurring payment has no end date (like Netflix). An installment does — a fixed number of payments, like a phone paid over 12 months."
+      }
+    },
+    "perfil": {
+      "cobro": {
+        "title": "Set up your pay period",
+        "text": "Define how often you get paid — weekly, biweekly, or monthly — so the app organizes everything around it."
+      },
+      "categorias": {
+        "title": "Make categories your own",
+        "text": "Change the icon and color of any category, or create your own."
+      },
+      "notificaciones": {
+        "title": "Never miss a payment",
+        "text": "Turn on reminders so the app lets you know before each payment is due."
+      }
+    }
+  },
+  "splitContributionsModal": {
+    "saveTotalError": "Error saving the amount",
+    "settleError": "Error marking as paid",
+    "fundInsufficientNotice": "The Shared Fund couldn't cover the whole payment — the maximum possible was already applied ({{amount}}). Cover the rest from a member's income.",
+    "complete": "Complete",
+    "remaining": "Remaining: {{amount}}",
+    "membersLabel": "Members",
+    "sharedFundName": "Shared Fund",
+    "notRegistered": "Not logged",
+    "noBalance": "No balance",
+    "exceedsAvailable": "You can't exceed what's available ({{amount}})",
+    "saveError": "Error saving",
+    "memberFallback": "Member",
+    "youSuffix": " (you)",
+    "availableHint": "Available: {{available}} of {{total}}",
+    "marking": "Marking…",
+    "pay": "Pay"
   }
 }
