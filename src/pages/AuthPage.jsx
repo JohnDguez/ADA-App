@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { supabase } from '../lib/supabase'
 import { Eye, EyeOff, Lock, Mail, KeyRound, X, Check } from 'lucide-react'
 import { passwordRequirements, isPasswordStrong } from '../components/PasswordSetupModal'
@@ -7,6 +8,7 @@ import { APP_NAME } from '../lib/constants'
 
 // ── Modal de Términos y Condiciones ──────────────────────────────────────────
 function TermsModal({ onClose }) {
+  const { t } = useTranslation()
   return (
     <div
       onClick={e => e.target === e.currentTarget && onClose()}
@@ -14,28 +16,28 @@ function TermsModal({ onClose }) {
     >
       <div style={{ background: 'var(--surface)', borderRadius: '20px 20px 0 0', width: '100%', maxWidth: 420, maxHeight: '85vh', display: 'flex', flexDirection: 'column' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', borderBottom: '0.5px solid var(--border)', flexShrink: 0 }}>
-          <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--text)' }}>Términos y Condiciones</div>
+          <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--text)' }}>{t('termsModal.title')}</div>
           <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', padding: 4 }}>
             <X size={20} color="var(--text)" />
           </button>
         </div>
         <div style={{ overflowY: 'auto', padding: '20px', flex: 1, lineHeight: 1.7, fontSize: 13, color: 'var(--text)' }}>
-          <p style={{ marginBottom: 16 }}>Última actualización: junio de 2026</p>
-          <p style={{ marginBottom: 16 }}>Bienvenido a <strong>{APP_NAME}</strong>. Al crear una cuenta, aceptas los presentes Términos y Condiciones de uso. Por favor léelos cuidadosamente antes de continuar.</p>
-          <Section title="1. Descripción del servicio">{APP_NAME} es una aplicación de seguimiento personal de pagos y compromisos financieros. Su propósito es ayudarte a organizar y recordar tus pagos según tu periodo de cobro. {APP_NAME} no es una institución financiera, no gestiona dinero real, no realiza transferencias y no tiene acceso a tus cuentas bancarias.</Section>
-          <Section title="2. Registro y cuenta">Para usar {APP_NAME} debes crear una cuenta con un correo electrónico válido o mediante tu cuenta de Google. Eres responsable de mantener la confidencialidad de tus credenciales de acceso. Debes ser mayor de 18 años para registrarte.</Section>
-          <Section title="3. Uso aceptable">Te comprometes a usar {APP_NAME} únicamente para fines personales y lícitos. Queda prohibido usar la aplicación para actividades fraudulentas, suplantar identidades, o intentar vulnerar la seguridad del sistema.</Section>
-          <Section title="4. Privacidad y datos">Los datos que ingresas en {APP_NAME} (nombre, pagos, montos) se almacenan de forma segura en servidores de Supabase. No vendemos ni compartimos tu información personal con terceros con fines comerciales. Puedes eliminar tu cuenta y tus datos en cualquier momento desde Ajustes.</Section>
-          <Section title="5. Notificaciones push">Si activas las notificaciones, {APP_NAME} enviará alertas relacionadas con tus pagos registrados. Puedes desactivarlas en cualquier momento desde Ajustes o desde la configuración de tu dispositivo.</Section>
-          <Section title="6. Limitación de responsabilidad">{APP_NAME} es una herramienta de apoyo personal. No garantizamos que el uso de la aplicación prevenga pagos tardíos, cargos por mora u otras consecuencias financieras. El usuario es el único responsable de sus decisiones financieras.</Section>
-          <Section title="7. Disponibilidad del servicio">Nos esforzamos por mantener el servicio disponible en todo momento, pero no garantizamos disponibilidad ininterrumpida. Podemos realizar mantenimientos o actualizaciones sin previo aviso.</Section>
-          <Section title="8. Modificaciones">Nos reservamos el derecho de modificar estos términos en cualquier momento. Te notificaremos de cambios significativos a través de la aplicación. El uso continuado de {APP_NAME} tras los cambios implica tu aceptación.</Section>
-          <Section title="9. Cancelación">Puedes dejar de usar {APP_NAME} y eliminar tu cuenta en cualquier momento. Nos reservamos el derecho de suspender cuentas que violen estos términos.</Section>
-          <Section title="10. Contacto">Si tienes dudas sobre estos términos, puedes contactarnos a través de los canales disponibles en la aplicación.</Section>
-          <p style={{ marginTop: 16, fontWeight: 600 }}>Al crear tu cuenta, confirmas que has leído y aceptas estos Términos y Condiciones.</p>
+          <p style={{ marginBottom: 16 }}>{t('termsModal.lastUpdated')}</p>
+          <p style={{ marginBottom: 16 }}>{t('termsModal.intro', { appName: APP_NAME })}</p>
+          <Section title={t('termsModal.section1Title')}>{t('termsModal.section1Text', { appName: APP_NAME })}</Section>
+          <Section title={t('termsModal.section2Title')}>{t('termsModal.section2Text', { appName: APP_NAME })}</Section>
+          <Section title={t('termsModal.section3Title')}>{t('termsModal.section3Text', { appName: APP_NAME })}</Section>
+          <Section title={t('termsModal.section4Title')}>{t('termsModal.section4Text', { appName: APP_NAME })}</Section>
+          <Section title={t('termsModal.section5Title')}>{t('termsModal.section5Text', { appName: APP_NAME })}</Section>
+          <Section title={t('termsModal.section6Title')}>{t('termsModal.section6Text', { appName: APP_NAME })}</Section>
+          <Section title={t('termsModal.section7Title')}>{t('termsModal.section7Text', { appName: APP_NAME })}</Section>
+          <Section title={t('termsModal.section8Title')}>{t('termsModal.section8Text', { appName: APP_NAME })}</Section>
+          <Section title={t('termsModal.section9Title')}>{t('termsModal.section9Text', { appName: APP_NAME })}</Section>
+          <Section title={t('termsModal.section10Title')}>{t('termsModal.section10Text', { appName: APP_NAME })}</Section>
+          <p style={{ marginTop: 16, fontWeight: 600 }}>{t('termsModal.closing')}</p>
         </div>
         <div style={{ padding: '14px 20px', borderTop: '0.5px solid var(--border)', flexShrink: 0 }}>
-          <button onClick={onClose} className="btn-primary">Entendido</button>
+          <button onClick={onClose} className="btn-primary">{t('recurrentMigrationModal.understood')}</button>
         </div>
       </div>
     </div>
@@ -73,6 +75,7 @@ function RequirementRow({ met, label }) {
 
 // ── Reset Password ────────────────────────────────────────────────────────────
 export function ResetPasswordPage({ onDone }) {
+  const { t } = useTranslation()
   const [newPassword, setNewPassword] = useState('')
   const [confirm,     setConfirm]     = useState('')
   const [showNew,     setShowNew]     = useState(false)
@@ -86,8 +89,8 @@ export function ResetPasswordPage({ onDone }) {
 
   async function handleUpdate() {
     setError('')
-    if (!strong) { setError('La contraseña no cumple todos los requisitos'); return }
-    if (!match)  { setError('Las contraseñas no coinciden'); return }
+    if (!strong) { setError(t('passwordSetupModal.notStrong')); return }
+    if (!match)  { setError(t('settingsAccount.editModal.passwordMismatch')); return }
     setLoading(true)
     const hashParams   = new URLSearchParams(window.location.hash.slice(1))
     const accessToken  = hashParams.get('access_token')
@@ -105,30 +108,30 @@ export function ResetPasswordPage({ onDone }) {
     <div style={{ minHeight: '100vh', background: 'var(--bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 24px' }}>
       <div style={{ width: '100%', maxWidth: 360 }}>
         <Logo />
-        <div style={{ fontSize: 22, fontWeight: 700, color: 'var(--text)', marginBottom: 6 }}>Nueva contraseña</div>
-        <div style={{ fontSize: 14, color: 'var(--text)', marginBottom: 24 }}>Elige una contraseña segura para tu cuenta.</div>
+        <div style={{ fontSize: 22, fontWeight: 700, color: 'var(--text)', marginBottom: 6 }}>{t('resetPasswordPage.title')}</div>
+        <div style={{ fontSize: 14, color: 'var(--text)', marginBottom: 24 }}>{t('resetPasswordPage.subtitle')}</div>
         {error && <div style={{ background: 'var(--danger-soft)', border: '0.5px solid var(--danger-border)', borderRadius: 'var(--radius-sm)', padding: '10px 12px', fontSize: 13, color: 'var(--danger)', marginBottom: 16 }}>{error}</div>}
-        <Field label="Nueva contraseña">
+        <Field label={t('resetPasswordPage.newPasswordLabel')}>
           <FieldIcon><Lock size={15} color="var(--text)" /></FieldIcon>
-          <input className="field-input" style={{ paddingLeft: 40, paddingRight: 40 }} type={showNew ? 'text' : 'password'} value={newPassword} onChange={e => setNewPassword(e.target.value)} placeholder="Mínimo 8 caracteres" />
+          <input className="field-input" style={{ paddingLeft: 40, paddingRight: 40 }} type={showNew ? 'text' : 'password'} value={newPassword} onChange={e => setNewPassword(e.target.value)} placeholder={t('resetPasswordPage.newPasswordPlaceholder')} />
           <EyeBtn show={showNew} onToggle={() => setShowNew(v => !v)} />
         </Field>
         {newPassword.length > 0 && (
           <div style={{ background: 'var(--bg)', borderRadius: 'var(--radius-sm)', padding: '10px 12px', marginBottom: 14, border: '0.5px solid var(--border)' }}>
-            <RequirementRow met={reqs.length}    label="Mínimo 8 caracteres" />
-            <RequirementRow met={reqs.uppercase} label="Al menos una mayúscula" />
-            <RequirementRow met={reqs.number}    label="Al menos un número" />
-            <RequirementRow met={reqs.symbol}    label="Al menos un símbolo especial (!@#$...)" />
+            <RequirementRow met={reqs.length}    label={t('settingsAccount.editModal.requirementLength')} />
+            <RequirementRow met={reqs.uppercase} label={t('settingsAccount.editModal.requirementUppercase')} />
+            <RequirementRow met={reqs.number}    label={t('settingsAccount.editModal.requirementNumber')} />
+            <RequirementRow met={reqs.symbol}    label={t('settingsAccount.editModal.requirementSymbol')} />
           </div>
         )}
-        <Field label="Confirmar contraseña">
+        <Field label={t('passwordSetupModal.confirmLabel')}>
           <FieldIcon><Lock size={15} color="var(--text)" /></FieldIcon>
-          <input className="field-input" style={{ paddingLeft: 40, paddingRight: 40, borderColor: confirm && !match ? 'var(--danger)' : undefined }} type={showConfirm ? 'text' : 'password'} value={confirm} onChange={e => setConfirm(e.target.value)} placeholder="Repite tu contraseña" onKeyDown={e => e.key === 'Enter' && handleUpdate()} />
+          <input className="field-input" style={{ paddingLeft: 40, paddingRight: 40, borderColor: confirm && !match ? 'var(--danger)' : undefined }} type={showConfirm ? 'text' : 'password'} value={confirm} onChange={e => setConfirm(e.target.value)} placeholder={t('passwordSetupModal.confirmPlaceholder')} onKeyDown={e => e.key === 'Enter' && handleUpdate()} />
           <EyeBtn show={showConfirm} onToggle={() => setShowConfirm(v => !v)} />
-          {confirm && !match && <div style={{ fontSize: 11, color: 'var(--danger)', marginTop: 4 }}>Las contraseñas no coinciden</div>}
+          {confirm && !match && <div style={{ fontSize: 11, color: 'var(--danger)', marginTop: 4 }}>{t('settingsAccount.editModal.passwordMismatch')}</div>}
         </Field>
         <button onClick={handleUpdate} disabled={loading || !strong || !match} className="btn-primary" style={{ marginTop: 8, opacity: loading || !strong || !match ? 0.6 : 1 }}>
-          {loading ? 'Guardando…' : 'Guardar contraseña'}
+          {loading ? t('resetPasswordPage.saving') : t('resetPasswordPage.submit')}
         </button>
       </div>
     </div>
@@ -137,6 +140,7 @@ export function ResetPasswordPage({ onDone }) {
 
 // ── Auth Page ─────────────────────────────────────────────────────────────────
 export function AuthPage() {
+  const { t } = useTranslation()
   const [mode,          setMode]          = useState('login')
   const [email,         setEmail]         = useState('')
   const [password,      setPassword]      = useState('')
@@ -165,21 +169,21 @@ export function AuthPage() {
     setError(''); setSuccess('')
 
     if (mode === 'forgot') {
-      if (!email) { setError('Ingresa tu correo electrónico'); return }
+      if (!email) { setError(t('authPage.errors.emptyEmail')); return }
       setLoading(true)
       const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin })
-      if (error) setError('No se pudo enviar el correo. Verifica la dirección.')
-      else setSuccess('Revisa tu correo — te enviamos el enlace para restablecer tu contraseña.')
+      if (error) setError(t('authPage.errors.resetEmailError'))
+      else setSuccess(t('authPage.errors.resetEmailSent'))
       setLoading(false); return
     }
 
-    if (!email || !password) { setError('Completa todos los campos'); return }
+    if (!email || !password) { setError(t('authPage.errors.emptyFields')); return }
 
     if (mode === 'register') {
-      if (!termsAccepted) { setError('Debes aceptar los Términos y Condiciones para continuar'); return }
-      if (!strong) { setError('La contraseña no cumple todos los requisitos de seguridad'); return }
-      if (!match)  { setError('Las contraseñas no coinciden'); return }
-      if (!accessCode.trim()) { setError('Ingresa tu código de acceso'); return }
+      if (!termsAccepted) { setError(t('authPage.errors.termsRequired')); return }
+      if (!strong) { setError(t('authPage.errors.passwordNotStrongRegister')); return }
+      if (!match)  { setError(t('settingsAccount.editModal.passwordMismatch')); return }
+      if (!accessCode.trim()) { setError(t('authPage.errors.emptyAccessCode')); return }
       setLoading(true)
       // FIX v0.9.15: se cambia .select('id') por .select('code') — la tabla
       // access_codes no tiene columna `id`, solo `code`, `created_at` y `active`.
@@ -190,16 +194,16 @@ export function AuthPage() {
         .eq('code', accessCode.trim().toUpperCase())
         .eq('active', true)
         .single()
-      if (!codeData) { setError('Código de acceso inválido o inactivo'); setLoading(false); return }
+      if (!codeData) { setError(t('authPage.errors.invalidAccessCode')); setLoading(false); return }
       const { error } = await supabase.auth.signUp({ email, password })
       if (error) setError(error.message)
-      else setSuccess('¡Cuenta creada! Revisa tu correo para confirmar.')
+      else setSuccess(t('authPage.errors.accountCreated'))
       setLoading(false); return
     }
 
     setLoading(true)
     const { error } = await supabase.auth.signInWithPassword({ email, password })
-    if (error) setError('Correo o contraseña incorrectos')
+    if (error) setError(t('authPage.errors.wrongCredentials'))
     setLoading(false)
   }
 
@@ -210,7 +214,7 @@ export function AuthPage() {
 
         {mode !== 'forgot' && (
           <div style={{ display: 'flex', background: 'var(--surface)', borderRadius: 10, padding: 3, marginBottom: 24, border: '0.5px solid var(--border)' }}>
-            {[['login','Iniciar sesión'],['register','Registrarse']].map(([m, label]) => (
+            {[['login',t('authPage.tabs.login')],['register',t('authPage.tabs.register')]].map(([m, label]) => (
               <button key={m} onClick={() => { setMode(m); setError(''); setSuccess('') }} style={{ flex: 1, padding: '9px 0', borderRadius: 8, border: 'none', background: mode === m ? 'var(--accent)' : 'transparent', color: mode === m ? '#fff' : 'var(--text)', fontWeight: mode === m ? 600 : 400, fontSize: 14, fontFamily: 'DM Sans, sans-serif', cursor: 'pointer', transition: 'background .15s' }}>
                 {label}
               </button>
@@ -220,21 +224,21 @@ export function AuthPage() {
 
         {mode === 'forgot' && (
           <div style={{ marginBottom: 20 }}>
-            <div style={{ fontSize: 20, fontWeight: 700, color: 'var(--text)', marginBottom: 6 }}>Recuperar contraseña</div>
-            <div style={{ fontSize: 14, color: 'var(--text)' }}>Te enviaremos un enlace para restablecer tu contraseña.</div>
+            <div style={{ fontSize: 20, fontWeight: 700, color: 'var(--text)', marginBottom: 6 }}>{t('authPage.forgotTitle')}</div>
+            <div style={{ fontSize: 14, color: 'var(--text)' }}>{t('authPage.forgotSubtitle')}</div>
           </div>
         )}
 
         {error   && <div style={{ background: 'var(--danger-soft)', border: '0.5px solid var(--danger-border)', borderRadius: 'var(--radius-sm)', padding: '10px 12px', fontSize: 13, color: 'var(--danger)', marginBottom: 16 }}>{error}</div>}
         {success && <div style={{ background: 'var(--paid-soft)',   border: '0.5px solid var(--paid-border)',   borderRadius: 'var(--radius-sm)', padding: '10px 12px', fontSize: 13, color: 'var(--paid)',   marginBottom: 16 }}>{success}</div>}
 
-        <Field label="Correo electrónico">
+        <Field label={t('authPage.emailLabel')}>
           <FieldIcon><Mail size={15} color="var(--text)" /></FieldIcon>
-          <input autoFocus className="field-input" style={{ paddingLeft: 40 }} type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="tu@correo.com" onKeyDown={e => e.key === 'Enter' && handleSubmit()} enterKeyHint="next" />
+          <input autoFocus className="field-input" style={{ paddingLeft: 40 }} type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder={t('authPage.emailPlaceholder')} onKeyDown={e => e.key === 'Enter' && handleSubmit()} enterKeyHint="next" />
         </Field>
 
         {mode !== 'forgot' && (
-          <Field label="Contraseña">
+          <Field label={t('authPage.passwordLabel')}>
             <FieldIcon><Lock size={15} color="var(--text)" /></FieldIcon>
             <input className="field-input" style={{ paddingLeft: 40, paddingRight: 40 }} type={showPass ? 'text' : 'password'} value={password} onChange={e => setPassword(e.target.value)} placeholder="••••••••" onKeyDown={e => e.key === 'Enter' && handleSubmit()} enterKeyHint={mode === 'register' ? 'next' : 'done'} />
             <EyeBtn show={showPass} onToggle={() => setShowPass(v => !v)} />
@@ -244,23 +248,23 @@ export function AuthPage() {
         {/* Requisitos de contraseña — solo en registro */}
         {mode === 'register' && password.length > 0 && (
           <div style={{ background: 'var(--surface)', borderRadius: 'var(--radius-sm)', padding: '10px 12px', marginBottom: 14, border: '0.5px solid var(--border)' }}>
-            <RequirementRow met={reqs.length}    label="Mínimo 8 caracteres" />
-            <RequirementRow met={reqs.uppercase} label="Al menos una mayúscula" />
-            <RequirementRow met={reqs.number}    label="Al menos un número" />
-            <RequirementRow met={reqs.symbol}    label="Al menos un símbolo especial (!@#$...)" />
+            <RequirementRow met={reqs.length}    label={t('settingsAccount.editModal.requirementLength')} />
+            <RequirementRow met={reqs.uppercase} label={t('settingsAccount.editModal.requirementUppercase')} />
+            <RequirementRow met={reqs.number}    label={t('settingsAccount.editModal.requirementNumber')} />
+            <RequirementRow met={reqs.symbol}    label={t('settingsAccount.editModal.requirementSymbol')} />
           </div>
         )}
 
         {mode === 'register' && (<>
-          <Field label="Confirmar contraseña">
+          <Field label={t('passwordSetupModal.confirmLabel')}>
             <FieldIcon><Lock size={15} color="var(--text)" /></FieldIcon>
-            <input className="field-input" style={{ paddingLeft: 40, paddingRight: 40, borderColor: confirm && !match ? 'var(--danger)' : undefined }} type={showConfirm ? 'text' : 'password'} value={confirm} onChange={e => setConfirm(e.target.value)} placeholder="Repite tu contraseña" enterKeyHint="next" />
+            <input className="field-input" style={{ paddingLeft: 40, paddingRight: 40, borderColor: confirm && !match ? 'var(--danger)' : undefined }} type={showConfirm ? 'text' : 'password'} value={confirm} onChange={e => setConfirm(e.target.value)} placeholder={t('passwordSetupModal.confirmPlaceholder')} enterKeyHint="next" />
             <EyeBtn show={showConfirm} onToggle={() => setShowConfirm(v => !v)} />
-            {confirm && !match && <div style={{ fontSize: 11, color: 'var(--danger)', marginTop: 4 }}>Las contraseñas no coinciden</div>}
+            {confirm && !match && <div style={{ fontSize: 11, color: 'var(--danger)', marginTop: 4 }}>{t('settingsAccount.editModal.passwordMismatch')}</div>}
           </Field>
-          <Field label="Código de acceso">
+          <Field label={t('authPage.accessCodeLabel')}>
             <FieldIcon><KeyRound size={15} color="var(--text)" /></FieldIcon>
-            <input className="field-input" style={{ paddingLeft: 40 }} type="text" value={accessCode} onChange={e => setAccessCode(e.target.value)} placeholder="Ingresa tu código" onKeyDown={e => e.key === 'Enter' && handleSubmit()} enterKeyHint="done" />
+            <input className="field-input" style={{ paddingLeft: 40 }} type="text" value={accessCode} onChange={e => setAccessCode(e.target.value)} placeholder={t('authPage.accessCodePlaceholder')} onKeyDown={e => e.key === 'Enter' && handleSubmit()} enterKeyHint="done" />
           </Field>
 
           {/* Checkbox de términos */}
@@ -273,45 +277,45 @@ export function AuthPage() {
               )}
             </div>
             <div style={{ fontSize: 13, color: 'var(--text)', lineHeight: 1.5 }}>
-              He leído y acepto los{' '}
+              {t('authPage.termsPrefix')}{' '}
               <span onClick={e => { e.stopPropagation(); setShowTerms(true) }} style={{ color: 'var(--accent)', fontWeight: 600, textDecoration: 'underline', cursor: 'pointer' }}>
-                Términos y Condiciones
+                {t('authPage.termsLink')}
               </span>
-              {' '}de uso
+              {' '}{t('authPage.termsSuffix')}
             </div>
           </div>
         </>)}
 
         <button onClick={handleSubmit} disabled={loading} className="btn-primary" style={{ marginBottom: 12 }}>
-          {loading ? 'Cargando…' : mode === 'login' ? 'Iniciar sesión' : mode === 'register' ? 'Crear cuenta' : 'Enviar enlace'}
+          {loading ? t('authPage.submit.loading') : mode === 'login' ? t('authPage.submit.login') : mode === 'register' ? t('authPage.submit.register') : t('authPage.submit.forgot')}
         </button>
 
         {mode === 'login' && (
           <button onClick={() => { setMode('forgot'); setError(''); setSuccess('') }} style={{ background: 'none', border: 'none', fontSize: 13, color: 'var(--accent)', cursor: 'pointer', display: 'block', margin: '0 auto 16px', fontFamily: 'DM Sans, sans-serif' }}>
-            ¿Olvidaste tu contraseña?
+            {t('authPage.forgotPasswordLink')}
           </button>
         )}
         {mode === 'forgot' && (
           <button onClick={() => { setMode('login'); setError(''); setSuccess('') }} style={{ background: 'none', border: 'none', fontSize: 13, color: 'var(--accent)', cursor: 'pointer', display: 'block', margin: '0 auto 16px', fontFamily: 'DM Sans, sans-serif' }}>
-            Volver al inicio de sesión
+            {t('authPage.backToLogin')}
           </button>
         )}
 
         {mode !== 'forgot' && (<>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '4px 0 16px' }}>
             <div style={{ flex: 1, height: '0.5px', background: 'var(--border)' }} />
-            <span style={{ fontSize: 12, color: 'var(--text)' }}>o continúa con</span>
+            <span style={{ fontSize: 12, color: 'var(--text)' }}>{t('authPage.orContinueWith')}</span>
             <div style={{ flex: 1, height: '0.5px', background: 'var(--border)' }} />
           </div>
           <button onClick={handleGoogle} disabled={googleLoading} style={{ width: '100%', padding: '11px', background: 'var(--surface)', border: '0.5px solid var(--border)', borderRadius: 'var(--radius-sm)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, fontSize: 14, fontWeight: 500, color: 'var(--text)', fontFamily: 'DM Sans, sans-serif', cursor: 'pointer' }}>
             <GoogleIcon />
-            {googleLoading ? 'Conectando…' : 'Google'}
+            {googleLoading ? t('authPage.google.connecting') : 'Google'}
           </button>
           {mode === 'register' && (
             <div style={{ fontSize: 11, color: 'var(--text)', textAlign: 'center', marginTop: 10 }}>
-              Al continuar con Google aceptas nuestros{' '}
+              {t('authPage.google.termsNote')}{' '}
               <span onClick={() => setShowTerms(true)} style={{ color: 'var(--accent)', cursor: 'pointer', textDecoration: 'underline' }}>
-                Términos y Condiciones
+                {t('authPage.termsLink')}
               </span>
             </div>
           )}

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { User, CalendarCheck, Wallet, BellRing, UserRound, ArrowRight } from 'lucide-react'
 import { WEEKDAYS, WEEKDAYS_SHORT } from '../lib/utils'
 import { supabase } from '../lib/supabase'
@@ -38,6 +39,7 @@ const WAVE_PATH = 'M0,110 L0,20 C30,-19 60,38 95,38 C135,36 150,73 195,64 C238,5
 const STEP_TRANSITION_MS = 300
 
 export function OnboardingPage({ userId, onDone }) {
+  const { t } = useTranslation()
   const [step,           setStep]           = useState(1)
   const [direction,      setDirection]      = useState('forward')
   const [exitingStep,    setExitingStep]    = useState(null)
@@ -93,7 +95,7 @@ export function OnboardingPage({ userId, onDone }) {
 
   function nextStep() {
     if (step === 1) {
-      if (!name.trim()) { setNameError('Escribe tu nombre'); return }
+      if (!name.trim()) { setNameError(t('onboardingPage.step1.nameError')); return }
       setNameError('')
     }
     if (step < TOTAL_STEPS) goToStep(step + 1, 'forward')
@@ -127,9 +129,9 @@ export function OnboardingPage({ userId, onDone }) {
         <div className={styles.body} style={{ paddingTop: meta.bodyPaddingTop ?? DEFAULT_BODY_PADDING_TOP }}>
           {n === 1 && (
             <>
-              <h2 className={styles.title}>¿Cuál es<br />tu nombre?</h2>
-              <p className={styles.desc}>Ese nombre verás en tu perfil y ese lo verán los usuarios con quien tengas un espacio compartido.</p>
-              <label className="field-label">Tu nombre</label>
+              <h2 className={styles.title}>{t('onboardingPage.step1.titleLine1')}<br />{t('onboardingPage.step1.titleLine2')}</h2>
+              <p className={styles.desc}>{t('onboardingPage.step1.desc')}</p>
+              <label className="field-label">{t('onboardingPage.step1.nameLabel')}</label>
               <div className={styles.inputWithIcon}>
                 <UserRound size={18} className={styles.inputIcon} />
                 <input
@@ -140,7 +142,7 @@ export function OnboardingPage({ userId, onDone }) {
                   onChange={e => setName(e.target.value)}
                   onKeyDown={e => e.key === 'Enter' && nextStep()}
                   enterKeyHint="next"
-                  placeholder="Ej. John Doe"
+                  placeholder={t('onboardingPage.step1.namePlaceholder')}
                   style={{ marginBottom: nameError ? 6 : 0 }}
                 />
               </div>
@@ -150,12 +152,12 @@ export function OnboardingPage({ userId, onDone }) {
 
           {n === 2 && (
             <>
-              <h2 className={styles.title}>¿Cuándo te pagan?</h2>
-              <p className={styles.desc}>Esto nos ayuda a mostrarte qué pagos cubrir con cada periodo.</p>
+              <h2 className={styles.title}>{t('onboardingPage.step2.title')}</h2>
+              <p className={styles.desc}>{t('onboardingPage.step2.desc')}</p>
 
-              <label className="field-label">Frecuencia</label>
+              <label className="field-label">{t('settingsCobro.frequencyLabel')}</label>
               <div className={styles.chipRow}>
-                {[['weekly','Semanal'],['biweekly','Quincenal'],['monthly','Mensual']].map(([val, label]) => (
+                {[['weekly',t('frequency.weekly')],['biweekly',t('frequency.biweekly')],['monthly',t('frequency.monthly')]].map(([val, label]) => (
                   <button
                     key={val}
                     onClick={() => setCobroFreq(val)}
@@ -168,7 +170,7 @@ export function OnboardingPage({ userId, onDone }) {
 
               {cobroFreq === 'weekly' && (
                 <div className={styles.section}>
-                  <label className="field-label">Día de la semana</label>
+                  <label className="field-label">{t('onboardingPage.step2.weekdayLabel')}</label>
                   <div className={styles.weekdayRow}>
                     {WEEKDAYS_SHORT.map((d, i) => (
                       <button
@@ -183,7 +185,7 @@ export function OnboardingPage({ userId, onDone }) {
                   <div className={styles.hintCard}>
                     <CalendarCheck size={18} className={styles.hintIcon} />
                     <div>
-                      Te avisaremos qué pagos cubrir antes de cada <span className={styles.hintHighlight}>{WEEKDAYS[cobroWeekday].toLowerCase()}</span>.
+                      {t('onboardingPage.step2.weekdayHint', { weekday: WEEKDAYS[cobroWeekday].toLowerCase() })}
                     </div>
                   </div>
                 </div>
@@ -191,17 +193,17 @@ export function OnboardingPage({ userId, onDone }) {
 
               {cobroFreq === 'biweekly' && (
                 <div className={styles.section}>
-                  <label className="field-label">Días de quincena</label>
+                  <label className="field-label">{t('onboardingPage.step2.biweeklyDaysLabel')}</label>
                   <div className={styles.chipRow} style={{ marginBottom: biweeklyCustom ? 12 : 0 }}>
-                    {[{label:'1 y 16',d1:1,d2:16},{label:'13 y 28',d1:13,d2:28},{label:'15 y 30',d1:15,d2:30}].map(preset => {
+                    {[{d1:1,d2:16},{d1:13,d2:28},{d1:15,d2:30}].map(preset => {
                       const active = !biweeklyCustom && cobroDay1 === preset.d1 && cobroDay2 === preset.d2
                       return (
                         <button
-                          key={preset.label}
+                          key={`${preset.d1}-${preset.d2}`}
                           onClick={() => { setBiweeklyCustom(false); setCobroDay1(preset.d1); setCobroDay2(preset.d2) }}
                           className={`${styles.chip} ${styles.presetChip} ${active ? styles.chipActive : ''}`}
                         >
-                          {preset.label}
+                          {t('settingsCobro.dayPair', { d1: preset.d1, d2: preset.d2 })}
                         </button>
                       )
                     })}
@@ -209,27 +211,27 @@ export function OnboardingPage({ userId, onDone }) {
                       onClick={() => setBiweeklyCustom(true)}
                       className={`${styles.chip} ${styles.presetChip} ${biweeklyCustom ? styles.chipActive : ''}`}
                     >
-                      Personalizado
+                      {t('onboardingPage.step2.custom')}
                     </button>
                   </div>
                   {biweeklyCustom && (
                     <div className={styles.twoColRow}>
                       <div className={styles.colField}>
-                        <label className={styles.smallLabel}>Día 1 (1–28)</label>
+                        <label className={styles.smallLabel}>{t('onboardingPage.step2.day1Label28')}</label>
                         <input
                           type="number" min="1" max="28" value={cobroDay1 ?? ''}
                           onChange={e => setCobroDay1(Math.min(28, Math.max(1, parseInt(e.target.value)||1)))}
                           onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); document.getElementById('cobro-day2')?.focus() } }}
-                          enterKeyHint="next" placeholder="ej. 13" className="field-input"
+                          enterKeyHint="next" placeholder={t('settingsCobro.day1Placeholder')} className="field-input"
                         />
                       </div>
                       <div className={styles.colField}>
-                        <label className={styles.smallLabel}>Día 2 (1–31)</label>
+                        <label className={styles.smallLabel}>{t('onboardingPage.step2.day2Label31')}</label>
                         <input
                           type="number" min="1" max="31" value={cobroDay2 ?? ''} id="cobro-day2"
                           onChange={e => setCobroDay2(Math.min(31, Math.max(1, parseInt(e.target.value)||1)))}
                           onKeyDown={e => e.key === 'Enter' && nextStep()}
-                          enterKeyHint="next" placeholder="ej. 28" className="field-input"
+                          enterKeyHint="next" placeholder={t('settingsCobro.day2Placeholder')} className="field-input"
                         />
                       </div>
                     </div>
@@ -238,7 +240,7 @@ export function OnboardingPage({ userId, onDone }) {
                     <div className={styles.hintCard}>
                       <CalendarCheck size={18} className={styles.hintIcon} />
                       <div>
-                        Te avisaremos qué pagos cubrir antes de los días <span className={styles.hintHighlight}>{cobroDay1}</span> y <span className={styles.hintHighlight}>{cobroDay2}</span> de cada mes.
+                        {t('onboardingPage.step2.biweeklyHint', { d1: cobroDay1, d2: cobroDay2 })}
                       </div>
                     </div>
                   )}
@@ -247,18 +249,18 @@ export function OnboardingPage({ userId, onDone }) {
 
               {cobroFreq === 'monthly' && (
                 <div className={styles.section}>
-                  <label className="field-label">Día de cobro</label>
+                  <label className="field-label">{t('settingsCobro.payDayLabel')}</label>
                   <input
                     type="number" min="1" max="31" value={cobroDay1 ?? ''}
                     onChange={e => setCobroDay1(Math.min(31, Math.max(1, parseInt(e.target.value)||1)))}
                     onKeyDown={e => e.key === 'Enter' && nextStep()}
-                    enterKeyHint="next" placeholder="ej. 5" className={`field-input ${styles.monthDayInput}`}
+                    enterKeyHint="next" placeholder={t('settingsCobro.monthlyPlaceholder')} className={`field-input ${styles.monthDayInput}`}
                   />
                   {cobroDay1 && (
                     <div className={styles.hintCard}>
                       <CalendarCheck size={18} className={styles.hintIcon} />
                       <div>
-                        Tu periodo de cobro empieza el día <span className={styles.hintHighlight}>{cobroDay1}</span> de cada mes.
+                        {t('settingsCobro.monthlyHelperPrefix')} <span className={styles.hintHighlight}>{cobroDay1}</span> {t('settingsCobro.monthlyHelperSuffix')}
                       </div>
                     </div>
                   )}
@@ -269,12 +271,12 @@ export function OnboardingPage({ userId, onDone }) {
 
           {n === 3 && (
             <>
-              <h2 className={styles.title}>¿Cuánto ganas por periodo?</h2>
-              <p className={styles.desc}>Opcional. Te ayuda a ver cuánto te queda libre después de tus pagos.</p>
+              <h2 className={styles.title}>{t('onboardingPage.step3.title')}</h2>
+              <p className={styles.desc}>{t('onboardingPage.step3.desc')}</p>
               <div onClick={() => setSalaryEnabled(v => !v)} className={styles.toggleRow}>
                 <div>
-                  <div className={styles.toggleLabel}>Activar ingreso por periodo</div>
-                  <div className={styles.toggleSub}>Puedes cambiarlo después en Perfil</div>
+                  <div className={styles.toggleLabel}>{t('onboardingPage.step3.toggleLabel')}</div>
+                  <div className={styles.toggleSub}>{t('onboardingPage.step3.toggleSub')}</div>
                 </div>
                 <div className="toggle-track" style={{ background: salaryEnabled ? 'var(--accent)' : 'var(--border)' }}>
                   <div className="toggle-thumb" style={{ left: salaryEnabled ? 19 : 3 }} />
@@ -282,7 +284,7 @@ export function OnboardingPage({ userId, onDone }) {
               </div>
               {salaryEnabled && (
                 <div>
-                  <label className="field-label">Monto por periodo</label>
+                  <label className="field-label">{t('onboardingPage.step3.amountLabel')}</label>
                   <div className={styles.amountWrap}>
                     <span className={styles.currencyPrefix}>$</span>
                     <input
@@ -300,8 +302,8 @@ export function OnboardingPage({ userId, onDone }) {
 
           {n === 4 && (
             <>
-              <h2 className={styles.title}>¿Quieres recibir recordatorios?</h2>
-              <p className={styles.desc}>Te avisaremos cuando un pago esté por vencer o se haya vencido.</p>
+              <h2 className={styles.title}>{t('onboardingPage.step4.title')}</h2>
+              <p className={styles.desc}>{t('onboardingPage.step4.desc')}</p>
               <div
                 onClick={async () => { if (!subscribed) await subscribe() }}
                 className={styles.toggleRow}
@@ -309,10 +311,10 @@ export function OnboardingPage({ userId, onDone }) {
               >
                 <div>
                   <div className={styles.toggleLabel}>
-                    {subscribed ? 'Notificaciones activadas' : 'Activar notificaciones'}
+                    {subscribed ? t('onboardingPage.step4.enabledLabel') : t('onboardingPage.step4.disabledLabel')}
                   </div>
                   <div className={styles.toggleSub}>
-                    {subscribed ? 'Recibirás alertas de tus pagos' : 'Puedes activarlas después en Perfil'}
+                    {subscribed ? t('onboardingPage.step4.enabledSub') : t('onboardingPage.step4.disabledSub')}
                   </div>
                 </div>
                 <div className="toggle-track" style={{ background: subscribed ? 'var(--accent)' : 'var(--border)' }}>
@@ -321,8 +323,8 @@ export function OnboardingPage({ userId, onDone }) {
               </div>
               {subscribed && (
                 <div className={styles.readyBanner}>
-                  <div className={styles.readyTitle}>¡Listo!</div>
-                  <div className={styles.readyText}>Puedes personalizar qué notificaciones recibir desde Perfil.</div>
+                  <div className={styles.readyTitle}>{t('onboardingPage.step4.readyTitle')}</div>
+                  <div className={styles.readyText}>{t('onboardingPage.step4.readyText')}</div>
                 </div>
               )}
             </>
@@ -373,13 +375,13 @@ export function OnboardingPage({ userId, onDone }) {
       <div className={styles.actions}>
         <button onClick={nextStep} disabled={saving} className={`btn-primary ${styles.continueBtn}`}>
           {saving
-            ? 'Guardando…'
+            ? t('settingsCategories.saving')
             : step < TOTAL_STEPS
-              ? <>Continuar <ArrowRight size={17} strokeWidth={2.2} /></>
-              : '¡Comenzar!'}
+              ? <>{t('onboardingPage.continue')} <ArrowRight size={17} strokeWidth={2.2} /></>
+              : t('onboardingPage.start')}
         </button>
         {step > 1 && (
-          <button onClick={prevStep} className="btn-ghost">Atrás</button>
+          <button onClick={prevStep} className="btn-ghost">{t('onboardingPage.back')}</button>
         )}
       </div>
     </div>
