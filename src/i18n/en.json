@@ -901,5 +901,34 @@
     "joinCodeLengthError": "The code must be 6 digits",
     "joinCodeInvalid": "Invalid code",
     "maxJoined": "You're already in the maximum of 3 shared spaces as a guest."
+  },
+  "premiumPage": {
+    "title": "Get Premium",
+    "subtitle": "Unlock every feature and take your finances to the next level.",
+    "benefits": {
+      "noAdsTitle": "No more ads",
+      "noAdsDesc": "Track your spending without interruptions.",
+      "exportTitle": "Export your reports",
+      "exportDesc": "Download your expenses in CSV and PDF.",
+      "simulatorTitle": "Simulate your finances",
+      "simulatorDesc": "See how your expenses will affect future periods.",
+      "sharedTitle": "Shared account",
+      "sharedDesc": "Link your account with your partner or roommate and track expenses together."
+    },
+    "choosePlan": "Choose your plan",
+    "monthly": "Monthly",
+    "monthlyPriceSuffix": "MXN / month",
+    "mostPopular": "Most popular",
+    "annual": "Annual",
+    "annualPriceSuffix": "MXN / year",
+    "referralCta": "Invite 3 friends and get 2 months FREE",
+    "restrictionsApply": "Restrictions apply.",
+    "cancelAnytime": "Cancel anytime. No hidden fees.",
+    "restorePurchases": "Restore purchases."
+  },
+  "spaceSwitcher": {
+    "noPending": "No pending payments",
+    "pendingCount_one": "{{count}} pending payment",
+    "pendingCount_other": "{{count}} pending payments"
   }
 }

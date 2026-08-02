@@ -901,5 +901,34 @@
     "joinCodeLengthError": "El código debe tener 6 dígitos",
     "joinCodeInvalid": "Código inválido",
     "maxJoined": "Ya perteneces al máximo de 3 espacios compartidos como invitado."
+  },
+  "premiumPage": {
+    "title": "Obtén Premium",
+    "subtitle": "Desbloquea todas las funciones y lleva tus finanzas al siguiente nivel.",
+    "benefits": {
+      "noAdsTitle": "No más anuncios",
+      "noAdsDesc": "Lleva el control de tus gastos sin interrupciones.",
+      "exportTitle": "Exporta tus informes",
+      "exportDesc": "Descarga en formatos CSV y PDF tus gastos.",
+      "simulatorTitle": "Simula tus finanzas",
+      "simulatorDesc": "Mira como afectarán tus gastos en futuros periodos.",
+      "sharedTitle": "Cuenta compartida",
+      "sharedDesc": "Vincula tu cuenta con tu pareja o roomie y lleven el control de sus gastos juntos."
+    },
+    "choosePlan": "Elige tu plan",
+    "monthly": "Mensual",
+    "monthlyPriceSuffix": "MXN / mes",
+    "mostPopular": "Más popular",
+    "annual": "Anual",
+    "annualPriceSuffix": "MXN / año",
+    "referralCta": "Invita 3 amigos y obtén 2 meses GRATIS",
+    "restrictionsApply": "Aplican restricciones.",
+    "cancelAnytime": "Cancela cuando quieras. Sin cargos ocultos.",
+    "restorePurchases": "Restaurar compras."
+  },
+  "spaceSwitcher": {
+    "noPending": "Sin pagos pendientes",
+    "pendingCount_one": "{{count}} pago pendiente",
+    "pendingCount_other": "{{count}} pagos pendientes"
   }
 }
