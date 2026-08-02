@@ -749,5 +749,62 @@
     "timeNow": "now",
     "timeMinutes": "{{count}} min ago",
     "timeHours": "{{count}} h ago"
+  },
+  "frequencyPicker": {
+    "fewerOptions": "Fewer options",
+    "moreOptions": "More options"
+  },
+  "categories": {
+    "servicios": "Utilities",
+    "suscripciones": "Subscriptions",
+    "creditos": "Credit payments",
+    "renta": "Rent",
+    "seguros": "Insurance",
+    "alimentacion": "Food",
+    "transporte": "Transportation",
+    "medicina": "Medicine",
+    "doctor": "Doctor",
+    "mantenimiento": "Maintenance",
+    "ahorro": "Savings",
+    "otros": "Other"
+  },
+  "select": {
+    "placeholder": "Select"
+  },
+  "payCard": {
+    "status": {
+      "postponed": "Postponed",
+      "paid": "Paid",
+      "paused": "Paused",
+      "overdueYesterday": "Due yesterday",
+      "overdueDays_one": "{{count}} day overdue",
+      "overdueDays_other": "{{count}} days overdue",
+      "dueToday": "Due today",
+      "dueTomorrow": "Due tomorrow",
+      "dueInDays_one": "Due in {{count}} day",
+      "dueInDays_other": "Due in {{count}} days",
+      "pending": "Pending",
+      "overdue": "Overdue"
+    },
+    "allPaymentsDone": "You finished all payments!",
+    "addAmount": "Add amount",
+    "editAmount": "Edit amount",
+    "variableTag": "Variable payment",
+    "menu": {
+      "contribute": "Contribute",
+      "postpone": "Postpone",
+      "advance": "Advance payment",
+      "markUnpaid": "Mark unpaid",
+      "payFromPayroll": "Pay from my income",
+      "sharedPayment": "Shared payment"
+    },
+    "actions": {
+      "postponePayments": "postpone payments",
+      "advancePayments": "advance payments"
+    },
+    "group": {
+      "installmentsCount": "{{paid}}/{{total}} payments",
+      "paidCount": "paid"
+    }
   }
 }

@@ -749,5 +749,62 @@
     "timeNow": "ahora",
     "timeMinutes": "hace {{count}} min",
     "timeHours": "hace {{count}} h"
+  },
+  "frequencyPicker": {
+    "fewerOptions": "Menos opciones",
+    "moreOptions": "Más opciones"
+  },
+  "categories": {
+    "servicios": "Servicios",
+    "suscripciones": "Suscripciones",
+    "creditos": "Créditos",
+    "renta": "Renta",
+    "seguros": "Seguros",
+    "alimentacion": "Alimentación",
+    "transporte": "Transporte",
+    "medicina": "Medicina",
+    "doctor": "Doctor",
+    "mantenimiento": "Mantenimiento",
+    "ahorro": "Ahorro",
+    "otros": "Otros"
+  },
+  "select": {
+    "placeholder": "Selecciona"
+  },
+  "payCard": {
+    "status": {
+      "postponed": "Pospuesto",
+      "paid": "Pagado",
+      "paused": "Pausado",
+      "overdueYesterday": "Venció ayer",
+      "overdueDays_one": "Venció hace {{count}} día",
+      "overdueDays_other": "Venció hace {{count}} días",
+      "dueToday": "Vence hoy",
+      "dueTomorrow": "Vence mañana",
+      "dueInDays_one": "Vence en {{count}} día",
+      "dueInDays_other": "Vence en {{count}} días",
+      "pending": "Pendiente",
+      "overdue": "Vencido"
+    },
+    "allPaymentsDone": "¡Terminaste todos los pagos!",
+    "addAmount": "Agregar monto",
+    "editAmount": "Editar monto",
+    "variableTag": "Pago variable",
+    "menu": {
+      "contribute": "Abonar",
+      "postpone": "Posponer",
+      "advance": "Adelantar pago",
+      "markUnpaid": "Marcar no pagado",
+      "payFromPayroll": "Pagar de mi nómina",
+      "sharedPayment": "Pago compartido"
+    },
+    "actions": {
+      "postponePayments": "posponer pagos",
+      "advancePayments": "adelantar pagos"
+    },
+    "group": {
+      "installmentsCount": "{{paid}}/{{total}} pagos",
+      "paidCount": "pagadas"
+    }
   }
 }
