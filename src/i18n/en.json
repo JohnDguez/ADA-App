@@ -393,5 +393,60 @@
       "daysRemaining_other": "{{count}} days left",
       "overdue": "Past due date"
     }
+  },
+  "goalDetailPanel": {
+    "back": "Back",
+    "moreOptions": "More options",
+    "reopen": "Reopen",
+    "createdOn": "Created on {{date}}",
+    "amountToContribute": "Amount to contribute",
+    "amountToWithdraw": "Amount to withdraw",
+    "confirm": "Confirm",
+    "contribute": "Contribute",
+    "withdraw": "Withdraw",
+    "withdrawBlockedHint": "Withdrawing is turned off — ask the space owner for permission.",
+    "completing": "Completing...",
+    "markComplete": "Mark as done",
+    "historyTitle": "History",
+    "historyEmpty": "No activity on this goal yet.",
+    "you": "You",
+    "someone": "Someone",
+    "contributedVerb": "contributed",
+    "withdrewVerb": "withdrew",
+    "contributionLabel": "Contribution",
+    "withdrawalLabel": "Withdrawal",
+    "revertAria": "Revert contribution",
+    "saving": "Saving...",
+    "toast": {
+      "noPermissionContribute": "You don't have permission to contribute to goals in this space",
+      "noPermissionWithdraw": "You don't have permission to withdraw from goals in this space",
+      "invalidAmount": "Enter a valid amount",
+      "exceedsDeposited": "You can't withdraw more than what's deposited ({{amount}})",
+      "saveError": "Error saving",
+      "contributed": "Contribution recorded",
+      "withdrawn": "Withdrawal recorded — it's now in your Available",
+      "revertError": "Couldn't revert",
+      "reverted": "Contribution reverted",
+      "completeError": "Couldn't complete the goal",
+      "completedWithIncome": "Goal completed — {{amount}} was contributed from your income",
+      "completedNoIncome": "Goal completed — with no active income, nothing was deducted, only the amount was recorded",
+      "completed": "Goal completed!"
+    }
+  },
+  "goalFormModal": {
+    "titleEdit": "Edit goal",
+    "titleNew": "New goal",
+    "nameLabel": "Name",
+    "namePlaceholder": "e.g. Buy a PS5",
+    "notesLabel": "Notes (optional)",
+    "notesPlaceholder": "What this goal is for",
+    "iconColorLabel": "Icon and color",
+    "amountLabel": "Target amount",
+    "deadlineLabel": "Deadline (optional)",
+    "deadlinePlaceholder": "No deadline",
+    "errors": {
+      "emptyName": "Give your goal a name",
+      "invalidAmount": "Enter how much you want to save"
+    }
   }
 }

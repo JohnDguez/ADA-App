@@ -393,5 +393,60 @@
       "daysRemaining_other": "Quedan {{count}} días",
       "overdue": "Fecha vencida"
     }
+  },
+  "goalDetailPanel": {
+    "back": "Regresar",
+    "moreOptions": "Más opciones",
+    "reopen": "Reabrir",
+    "createdOn": "Creada el {{date}}",
+    "amountToContribute": "Monto a aportar",
+    "amountToWithdraw": "Monto a retirar",
+    "confirm": "Confirmar",
+    "contribute": "Aportar",
+    "withdraw": "Retirar",
+    "withdrawBlockedHint": "Retirar está desactivado — pídele el permiso al dueño del espacio.",
+    "completing": "Completando...",
+    "markComplete": "Marcar como hecha",
+    "historyTitle": "Historial",
+    "historyEmpty": "Todavía no hay movimientos en esta meta.",
+    "you": "Tú",
+    "someone": "Alguien",
+    "contributedVerb": "aportó",
+    "withdrewVerb": "retiró",
+    "contributionLabel": "Aporte",
+    "withdrawalLabel": "Retiro",
+    "revertAria": "Revertir aporte",
+    "saving": "Guardando...",
+    "toast": {
+      "noPermissionContribute": "No tienes permiso para aportar a metas en este espacio",
+      "noPermissionWithdraw": "No tienes permiso para retirar de las metas en este espacio",
+      "invalidAmount": "Ingresa un monto válido",
+      "exceedsDeposited": "No puedes retirar más de lo abonado ({{amount}})",
+      "saveError": "Error al guardar",
+      "contributed": "Aporte registrado",
+      "withdrawn": "Retiro registrado — ya está en tu Disponible",
+      "revertError": "No se pudo revertir",
+      "reverted": "Aporte revertido",
+      "completeError": "No se pudo completar la meta",
+      "completedWithIncome": "Meta completada — se aportaron {{amount}} de tu nómina",
+      "completedNoIncome": "Meta completada — sin ingreso activo no se descontó nada, solo se registró el monto",
+      "completed": "¡Meta completada!"
+    }
+  },
+  "goalFormModal": {
+    "titleEdit": "Editar meta",
+    "titleNew": "Nueva meta",
+    "nameLabel": "Nombre",
+    "namePlaceholder": "Ej. Comprar un PS5",
+    "notesLabel": "Notas (opcional)",
+    "notesPlaceholder": "Para qué es esta meta",
+    "iconColorLabel": "Ícono y color",
+    "amountLabel": "Monto requerido",
+    "deadlineLabel": "Fecha límite (opcional)",
+    "deadlinePlaceholder": "Sin fecha límite",
+    "errors": {
+      "emptyName": "Ponle un nombre a tu meta",
+      "invalidAmount": "Ingresa cuánto quieres ahorrar"
+    }
   }
 }
