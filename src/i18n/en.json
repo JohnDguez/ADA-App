@@ -810,5 +810,38 @@
       "installmentsCount": "{{paid}}/{{total}} payments",
       "paidCount": "paid"
     }
+  },
+  "dates": {
+    "weekAbbrev": "Wk",
+    "biweekAbbrev": "2Wk",
+    "units": {
+      "week_one": "week",
+      "week_other": "weeks",
+      "biweek_one": "two-week period",
+      "biweek_other": "two-week periods",
+      "bimonthly_one": "two-month period",
+      "bimonthly_other": "two-month periods",
+      "quarterly_one": "quarter",
+      "quarterly_other": "quarters",
+      "semiannual_one": "half-year",
+      "semiannual_other": "half-years",
+      "annual_one": "year",
+      "annual_other": "years",
+      "monthly_one": "month",
+      "monthly_other": "months"
+    }
+  },
+  "confirmNextPeriodPayModal": {
+    "title": "Mark as paid?",
+    "descriptionPrefix": "is due on {{month}} {{day}}, during the",
+    "nextPeriodPhrase": "next period",
+    "descriptionSuffix": "Are you sure you want to mark it as paid now?",
+    "confirm": "Yes, mark as paid"
+  },
+  "cobroPeriodFields": {
+    "monthlyHelperPrefix": "The period starts on day"
+  },
+  "datePicker": {
+    "selectPlaceholder": "Select a date"
   }
 }

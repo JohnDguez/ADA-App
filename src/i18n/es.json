@@ -810,5 +810,38 @@
       "installmentsCount": "{{paid}}/{{total}} pagos",
       "paidCount": "pagadas"
     }
+  },
+  "dates": {
+    "weekAbbrev": "Sem",
+    "biweekAbbrev": "Qna",
+    "units": {
+      "week_one": "semana",
+      "week_other": "semanas",
+      "biweek_one": "quincena",
+      "biweek_other": "quincenas",
+      "bimonthly_one": "bimestre",
+      "bimonthly_other": "bimestres",
+      "quarterly_one": "trimestre",
+      "quarterly_other": "trimestres",
+      "semiannual_one": "semestre",
+      "semiannual_other": "semestres",
+      "annual_one": "año",
+      "annual_other": "años",
+      "monthly_one": "mes",
+      "monthly_other": "meses"
+    }
+  },
+  "confirmNextPeriodPayModal": {
+    "title": "¿Marcar como pagado?",
+    "descriptionPrefix": "vence el {{day}} de {{month}}, dentro del",
+    "nextPeriodPhrase": "próximo periodo",
+    "descriptionSuffix": "¿Seguro que quieres marcarlo como pagado ahora?",
+    "confirm": "Sí, marcar pagado"
+  },
+  "cobroPeriodFields": {
+    "monthlyHelperPrefix": "El periodo empieza el día"
+  },
+  "datePicker": {
+    "selectPlaceholder": "Selecciona una fecha"
   }
 }
