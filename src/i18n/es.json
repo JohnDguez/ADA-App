@@ -16,7 +16,11 @@
   "frequency": {
     "weekly": "Semanal",
     "biweekly": "Quincenal",
-    "monthly": "Mensual"
+    "monthly": "Mensual",
+    "bimonthly": "Bimestral",
+    "quarterly": "Trimestral",
+    "semiannual": "Semestral",
+    "annual": "Anual"
   },
   "theme": {
     "system": "Sistema",
