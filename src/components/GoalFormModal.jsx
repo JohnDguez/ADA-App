@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Search, Check } from 'lucide-react'
 import { CATEGORY_ICON_GROUPS, getIconComponent } from '../lib/categoryIcons'
 import { DatePicker } from './DatePicker'
@@ -11,6 +12,7 @@ const ANIM_MS = 320
 // null para crear, o el objeto de la meta para editar (mismo criterio que
 // el resto de modales de edición de la app, ej. PaymentModal).
 export function GoalFormModal({ open, initial, onSave, onClose }) {
+  const { t } = useTranslation()
   const [name, setName] = useState('')
   const [notes, setNotes] = useState('')
   const [icon, setIcon] = useState('PiggyBank')
@@ -65,9 +67,9 @@ export function GoalFormModal({ open, initial, onSave, onClose }) {
   if (!showModal) return null
 
   async function handleSave() {
-    if (!name.trim()) { setError('Ponle un nombre a tu meta'); return }
+    if (!name.trim()) { setError(t('goalFormModal.errors.emptyName')); return }
     const amountVal = parseFloat(targetAmount)
-    if (!amountVal || amountVal <= 0) { setError('Ingresa cuánto quieres ahorrar'); return }
+    if (!amountVal || amountVal <= 0) { setError(t('goalFormModal.errors.invalidAmount')); return }
     setSaving(true)
     await onSave({ name, notes, icon, color, targetAmount: amountVal, targetDate: targetDate || null })
     setSaving(false)
@@ -82,37 +84,37 @@ export function GoalFormModal({ open, initial, onSave, onClose }) {
     <div onClick={e => e.target === e.currentTarget && onClose()} className={`${styles.overlay} ${closing ? styles.overlayClosing : ''}`}>
       <div className={`${styles.modal} ${entering ? styles.modalEntering : ''} ${closing ? styles.modalClosing : ''}`}>
         <div className={styles.handle} />
-        <div className={styles.title}>{initial ? 'Editar meta' : 'Nueva meta'}</div>
+        <div className={styles.title}>{initial ? t('goalFormModal.titleEdit') : t('goalFormModal.titleNew')}</div>
 
         <div className={styles.fieldGroup}>
-          <label className="field-label">Nombre</label>
+          <label className="field-label">{t('goalFormModal.nameLabel')}</label>
           <input
             autoFocus
             className={`field-input ${styles.inputMt}`}
             value={name}
             onChange={e => { setName(e.target.value); setError('') }}
-            placeholder="Ej. Comprar un PS5"
+            placeholder={t('goalFormModal.namePlaceholder')}
           />
         </div>
 
         <div className={styles.fieldGroup}>
-          <label className="field-label">Notas (opcional)</label>
+          <label className="field-label">{t('goalFormModal.notesLabel')}</label>
           <textarea
             className={`field-input ${styles.inputMt} ${styles.textarea}`}
             value={notes}
             onChange={e => setNotes(e.target.value)}
-            placeholder="Para qué es esta meta"
+            placeholder={t('goalFormModal.notesPlaceholder')}
           />
         </div>
 
         <div className={styles.fieldGroup}>
-          <label className="field-label">Ícono y color</label>
+          <label className="field-label">{t('goalFormModal.iconColorLabel')}</label>
           <div className={styles.searchWrapper}>
             <div className={styles.searchIcon}><Search size={14} color="var(--text)" /></div>
             <input
               value={iconSearch}
               onChange={e => setIconSearch(e.target.value)}
-              placeholder="Buscar ícono…"
+              placeholder={t('settingsCategories.iconSearchPlaceholder')}
               className={`field-input ${styles.searchInput}`}
             />
           </div>
@@ -140,7 +142,7 @@ export function GoalFormModal({ open, initial, onSave, onClose }) {
               </div>
             ))}
             {filteredGroups.length === 0 && (
-              <div className={styles.noResultsText}>Sin resultados para "{iconSearch}"</div>
+              <div className={styles.noResultsText}>{t('settingsCategories.noIconResults', { search: iconSearch })}</div>
             )}
           </div>
           <div className={styles.colorGrid}>
@@ -162,7 +164,7 @@ export function GoalFormModal({ open, initial, onSave, onClose }) {
         </div>
 
         <div className={styles.fieldGroup}>
-          <label className="field-label">Monto requerido</label>
+          <label className="field-label">{t('goalFormModal.amountLabel')}</label>
           <input
             type="number"
             className={`field-input ${styles.inputMt}`}
@@ -173,18 +175,18 @@ export function GoalFormModal({ open, initial, onSave, onClose }) {
         </div>
 
         <div className={styles.fieldGroup}>
-          <label className="field-label">Fecha límite (opcional)</label>
+          <label className="field-label">{t('goalFormModal.deadlineLabel')}</label>
           <div className={styles.inputMt}>
-            <DatePicker value={targetDate} onChange={setTargetDate} placeholder="Sin fecha límite" />
+            <DatePicker value={targetDate} onChange={setTargetDate} placeholder={t('goalFormModal.deadlinePlaceholder')} />
           </div>
         </div>
 
         {error && <div className={styles.errorText}>{error}</div>}
 
         <button type="button" onClick={handleSave} disabled={saving} className={`btn-primary ${styles.saveButton}`}>
-          {saving ? 'Guardando…' : 'Guardar'}
+          {saving ? t('settingsCategories.saving') : t('buttons.save')}
         </button>
-        <button type="button" onClick={onClose} className="btn-ghost">Cancelar</button>
+        <button type="button" onClick={onClose} className="btn-ghost">{t('buttons.cancel')}</button>
       </div>
     </div>
   )

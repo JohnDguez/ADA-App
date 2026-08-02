@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import { useTranslation } from 'react-i18next'
 import { ChevronLeft, MoreVertical, ArrowUp, ArrowDown, Check, ArrowUpCircle, ArrowDownCircle, Pencil, Trash2, RotateCcw } from 'lucide-react'
 import { getIconComponent } from '../lib/categoryIcons'
 import { fmt, MONTHS_SHORT } from '../lib/utils'
@@ -22,6 +23,7 @@ export function GoalDetailPanel({
   isShared = false, canContribute = true, canWithdraw = true, canEdit = true, canDelete = true, currentUserId = null, spaceMembers = [],
   hasIncome = true,
 }) {
+  const { t } = useTranslation()
   const [menuOpen, setMenuOpen] = useState(false)
   const [activeAction, setActiveAction] = useState(null) // null | 'aportar' | 'retirar'
   const [amount, setAmount] = useState('')
@@ -50,8 +52,8 @@ export function GoalDetailPanel({
   const showMenu = canEdit || canDelete
 
   function openAction(type) {
-    if (type === 'aportar' && !canContribute) { showToast('No tienes permiso para aportar a metas en este espacio'); return }
-    if (type === 'retirar' && !canWithdraw) { showToast('No tienes permiso para retirar de las metas en este espacio'); return }
+    if (type === 'aportar' && !canContribute) { showToast(t('goalDetailPanel.toast.noPermissionContribute')); return }
+    if (type === 'retirar' && !canWithdraw) { showToast(t('goalDetailPanel.toast.noPermissionWithdraw')); return }
     setActiveAction(type)
     setAmount('')
     setMenuOpen(false)
@@ -59,23 +61,23 @@ export function GoalDetailPanel({
 
   async function confirmAction() {
     const val = parseFloat(amount)
-    if (!val || val <= 0) { showToast('Ingresa un monto válido'); return }
+    if (!val || val <= 0) { showToast(t('goalDetailPanel.toast.invalidAmount')); return }
     if (activeAction === 'retirar' && val > goal.currentAmount) {
-      showToast(`No puedes retirar más de lo abonado (${fmt(goal.currentAmount)})`)
+      showToast(t('goalDetailPanel.toast.exceedsDeposited', { amount: fmt(goal.currentAmount) }))
       return
     }
     setSaving(true)
     const { error } = activeAction === 'aportar' ? await onAportar(val) : await onRetirar(val)
     setSaving(false)
-    if (error) { showToast(error.message || 'Error al guardar'); return }
-    showToast(activeAction === 'aportar' ? 'Aporte registrado' : 'Retiro registrado — ya está en tu Disponible')
+    if (error) { showToast(error.message || t('goalDetailPanel.toast.saveError')); return }
+    showToast(activeAction === 'aportar' ? t('goalDetailPanel.toast.contributed') : t('goalDetailPanel.toast.withdrawn'))
     setActiveAction(null)
   }
 
   async function handleRevert(tx) {
     const { error } = await onRevert(tx.id)
-    if (error) { showToast(error.message || 'No se pudo revertir'); return }
-    showToast('Aporte revertido')
+    if (error) { showToast(error.message || t('goalDetailPanel.toast.revertError')); return }
+    showToast(t('goalDetailPanel.toast.reverted'))
   }
 
   // "Marcar como hecha" — completar antes de llegar al monto es
@@ -89,22 +91,22 @@ export function GoalDetailPanel({
     setCompleting(true)
     const { error } = await onMarkCompleted(true)
     setCompleting(false)
-    if (error) { showToast(error.message || 'No se pudo completar la meta'); return }
+    if (error) { showToast(error.message || t('goalDetailPanel.toast.completeError')); return }
     if (goalRemaining > 0) {
       showToast(
         hasIncome
-          ? `Meta completada — se aportaron ${fmt(goalRemaining)} de tu nómina`
-          : 'Meta completada — sin ingreso activo no se descontó nada, solo se registró el monto'
+          ? t('goalDetailPanel.toast.completedWithIncome', { amount: fmt(goalRemaining) })
+          : t('goalDetailPanel.toast.completedNoIncome')
       )
     } else {
-      showToast('¡Meta completada!')
+      showToast(t('goalDetailPanel.toast.completed'))
     }
   }
 
   return (
     <div className={styles.screen}>
       <div className={styles.header}>
-        <button type="button" onClick={onBack} className={styles.iconButton} aria-label="Regresar">
+        <button type="button" onClick={onBack} className={styles.iconButton} aria-label={t('goalDetailPanel.back')}>
           <ChevronLeft size={22} color="var(--text)" />
         </button>
         <div className={styles.headerIcon} style={{ background: goal.color }}>
@@ -113,7 +115,7 @@ export function GoalDetailPanel({
         <div className={styles.headerTitle}>{goal.name}</div>
         {showMenu && (
           <div className={styles.menuWrapper} ref={menuRef}>
-            <button type="button" onClick={() => setMenuOpen(o => !o)} className={styles.iconButton} aria-label="Más opciones">
+            <button type="button" onClick={() => setMenuOpen(o => !o)} className={styles.iconButton} aria-label={t('goalDetailPanel.moreOptions')}>
               <MoreVertical size={20} color="var(--text)" />
             </button>
             {menuOpen && (
@@ -121,19 +123,19 @@ export function GoalDetailPanel({
                 {goal.is_completed ? (
                   canEdit && (
                     <button type="button" onClick={() => { setMenuOpen(false); onMarkCompleted(false) }} className={styles.menuItem}>
-                      <span><RotateCcw size={14} /></span>Reabrir
+                      <span><RotateCcw size={14} /></span>{t('goalDetailPanel.reopen')}
                     </button>
                   )
                 ) : (
                   canEdit && (
                     <button type="button" onClick={() => { setMenuOpen(false); onEdit() }} className={styles.menuItem}>
-                      <span><Pencil size={14} /></span>Editar
+                      <span><Pencil size={14} /></span>{t('buttons.edit')}
                     </button>
                   )
                 )}
                 {canDelete && (
                   <button type="button" onClick={() => { setMenuOpen(false); setDeleteModalOpen(true) }} className={`${styles.menuItem} ${styles.menuItemDanger}`}>
-                    <span><Trash2 size={14} /></span>Eliminar
+                    <span><Trash2 size={14} /></span>{t('buttons.delete')}
                   </button>
                 )}
               </div>
@@ -152,16 +154,16 @@ export function GoalDetailPanel({
       <div className={styles.metaRow}>
         {goal.target_date && (
           <span className={`${styles.deadlineBadge} ${goal.isOverdue ? styles.deadlineOverdue : ''}`}>
-            {goal.isOverdue ? 'Fecha vencida' : `Quedan ${goal.daysRemaining} días`}
+            {goal.isOverdue ? t('goalsPage.card.overdue') : t('goalsPage.card.daysRemaining', { count: goal.daysRemaining })}
           </span>
         )}
       </div>
-      <div className={styles.createdAt}>Creada el {fmtDate(goal.created_at)}</div>
+      <div className={styles.createdAt}>{t('goalDetailPanel.createdOn', { date: fmtDate(goal.created_at) })}</div>
       {goal.notes && <div className={styles.notes}>{goal.notes}</div>}
 
       {activeAction ? (
         <div className={styles.actionForm}>
-          <label className="field-label">{activeAction === 'aportar' ? 'Monto a aportar' : 'Monto a retirar'}</label>
+          <label className="field-label">{activeAction === 'aportar' ? t('goalDetailPanel.amountToContribute') : t('goalDetailPanel.amountToWithdraw')}</label>
           <input
             autoFocus
             type="number"
@@ -172,9 +174,9 @@ export function GoalDetailPanel({
             className={`field-input ${styles.actionInput}`}
           />
           <div className={styles.actionButtons}>
-            <button type="button" onClick={() => setActiveAction(null)} className="btn-ghost">Cancelar</button>
+            <button type="button" onClick={() => setActiveAction(null)} className="btn-ghost">{t('buttons.cancel')}</button>
             <button type="button" onClick={confirmAction} disabled={saving} className="btn-primary" style={{ width: 'auto' }}>
-              {saving ? 'Guardando...' : 'Confirmar'}
+              {saving ? t('goalDetailPanel.saving') : t('goalDetailPanel.confirm')}
             </button>
           </div>
         </div>
@@ -182,16 +184,16 @@ export function GoalDetailPanel({
         <div className={styles.buttonsRow}>
           <button type="button" onClick={() => openAction('aportar')} className={`${styles.actionBtn} ${!canContribute ? styles.actionBtnBlocked : ''}`}>
             <ArrowUp size={16} />
-            Aportar
+            {t('goalDetailPanel.contribute')}
           </button>
           <button type="button" onClick={() => openAction('retirar')} className={`${styles.actionBtn} ${styles.actionBtnGhost} ${!canWithdraw ? styles.actionBtnBlocked : ''}`}>
             <ArrowDown size={16} />
-            Retirar
+            {t('goalDetailPanel.withdraw')}
           </button>
         </div>
       )}
       {isShared && !canWithdraw && !activeAction && (
-        <div className={styles.blockedHint}>Retirar está desactivado — pídele el permiso al dueño del espacio.</div>
+        <div className={styles.blockedHint}>{t('goalDetailPanel.withdrawBlockedHint')}</div>
       )}
 
       {/* "Marcar como hecha" — solo para metas activas. Una meta ya
@@ -201,13 +203,13 @@ export function GoalDetailPanel({
       {!goal.is_completed && (
         <button type="button" onClick={handleMarkComplete} disabled={completing} className={styles.completeButton}>
           <Check size={15} />
-          {completing ? 'Completando...' : 'Marcar como hecha'}
+          {completing ? t('goalDetailPanel.completing') : t('goalDetailPanel.markComplete')}
         </button>
       )}
 
-      <div className={styles.historyTitle}>Historial</div>
+      <div className={styles.historyTitle}>{t('goalDetailPanel.historyTitle')}</div>
       {goal.transactions.length === 0 ? (
-        <div className={styles.historyEmpty}>Todavía no hay movimientos en esta meta.</div>
+        <div className={styles.historyEmpty}>{t('goalDetailPanel.historyEmpty')}</div>
       ) : (
         <div className={styles.historyList}>
           {goal.transactions.map(tx => {
@@ -220,14 +222,14 @@ export function GoalDetailPanel({
             const isOwnTx = tx.user_id === currentUserId
             const canRevertThis = isShared && isAporte && (isOwnTx ? canContribute : canDelete)
             const authorName = isShared
-              ? (isOwnTx ? 'Tú' : (spaceMembers.find(m => m.user_id === tx.user_id)?.profile?.name || 'Alguien'))
+              ? (isOwnTx ? t('goalDetailPanel.you') : (spaceMembers.find(m => m.user_id === tx.user_id)?.profile?.name || t('goalDetailPanel.someone')))
               : null
             return (
               <div key={tx.id} className={styles.historyRow}>
                 <div className={styles.historyLeft}>
                   <TxIcon size={16} color={isAporte ? 'var(--paid)' : 'var(--soon-color)'} />
                   <span>
-                    {authorName ? `${authorName} ${isAporte ? 'aportó' : 'retiró'}` : (isAporte ? 'Aporte' : 'Retiro')} · {fmtDate(tx.created_at)}
+                    {authorName ? `${authorName} ${isAporte ? t('goalDetailPanel.contributedVerb') : t('goalDetailPanel.withdrewVerb')}` : (isAporte ? t('goalDetailPanel.contributionLabel') : t('goalDetailPanel.withdrawalLabel'))} · {fmtDate(tx.created_at)}
                   </span>
                 </div>
                 <div className={styles.historyRight}>
@@ -235,7 +237,7 @@ export function GoalDetailPanel({
                     {isAporte ? '+' : '-'}{fmt(tx.amount)}
                   </span>
                   {canRevertThis && (
-                    <button type="button" onClick={() => handleRevert(tx)} className={styles.revertButton} aria-label="Revertir aporte">
+                    <button type="button" onClick={() => handleRevert(tx)} className={styles.revertButton} aria-label={t('goalDetailPanel.revertAria')}>
                       <RotateCcw size={15} color="var(--text)" />
                     </button>
                   )}
