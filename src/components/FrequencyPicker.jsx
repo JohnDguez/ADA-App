@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ChevronDown, ChevronUp } from 'lucide-react'
-import { RECUR_FREQ, RECUR_FREQ_COMMON, RECUR_FREQ_EXTRA } from '../lib/utils'
+import { RECUR_FREQ_COMMON, RECUR_FREQ_EXTRA, getFrequencyLabel } from '../lib/utils'
 import styles from './FrequencyPicker.module.css'
 
 export function FrequencyPicker({ value, onChange }) {
@@ -12,7 +12,7 @@ export function FrequencyPicker({ value, onChange }) {
     const active = value === freq
     return (
       <button onClick={() => onChange(freq)} className={`${styles.pill} ${active ? styles.pillActive : ''}`}>
-        {RECUR_FREQ[freq]}
+        {getFrequencyLabel(freq)}
       </button>
     )
   }

@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next'
 import i18n from '../i18n'
 import { createPortal } from 'react-dom'
 import { MoreVertical, Check, Pencil, Trash2, Clock, ChevronDown, ChevronUp, RotateCcw, FastForward, DollarSign, Eye, Users, PiggyBank } from 'lucide-react'
-import { statusOf, daysDiff, dateOf, fmt, MONTHS_SHORT, periodLabel, periodCountLabel, RECUR_FREQ, installmentLabel, getCategoryLabel } from '../lib/utils'
+import { statusOf, daysDiff, dateOf, fmt, MONTHS_SHORT, periodLabel, periodCountLabel, RECUR_FREQ, getFrequencyLabel, installmentLabel, getCategoryLabel } from '../lib/utils'
 import { showToast } from './Toast'
 import { PaidByStack } from './PaidByStack'
 import styles from './PayCard.module.css'
@@ -217,7 +217,7 @@ function PayCardImpl({ payment: p, cfg, onMarkPaid, onRequestVariableAmount, onC
   const showLabel = !hideDueLabel || STATUS_LABELS_ALWAYS_VISIBLE.includes(info.status)
   const d         = dateOf(p.due_date)
   const isPending = !p.is_paid && !p.postponed && !p.paused
-  const freqLabel = p.is_recurrent && p.recur_freq && !p.is_installment ? RECUR_FREQ[p.recur_freq] : null
+  const freqLabel = p.is_recurrent && p.recur_freq && !p.is_installment ? getFrequencyLabel(p.recur_freq) : null
   const instLabel = p.is_installment ? `Pago ${p.current_installment}/${p.total_installments}` : null
   // Fix real (v0.9.259, reportado por Johnatan): `contributed_amount` solo
   // suma `payment_contributions` (abonos de miembros) — el Fondo Compartido
@@ -478,7 +478,7 @@ export function GroupCard({ group, cfg, onMarkPaid, onMarkUnpaid, onEdit, onDele
   const paidItems = allItems.filter(p => p.is_paid)
   const totalPaid = paidItems.reduce((a, p) => a + Number(p.amount), 0)
   const freq      = group.recur_freq || 'monthly'
-  const freqLabel = RECUR_FREQ[freq] || ''
+  const freqLabel = getFrequencyLabel(freq)
   const isPending = !group.is_paid && !group.postponed && !group.paused
   const countLabel = group.is_installment
     ? t('payCard.group.installmentsCount', { paid: paidItems.length, total: group.total_installments })
