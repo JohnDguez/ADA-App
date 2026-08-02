@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ChevronLeft } from 'lucide-react'
-import { WEEKDAYS_SHORT } from '../../lib/utils'
+import { getWeekdaysShort } from '../../lib/utils'
 import { showToast } from '../../components/Toast'
 import { Card, SectionLabel, Row, Toggle } from '../../components/SettingsShared'
 import styles from './SettingsCobroPage.module.css'
@@ -62,7 +62,7 @@ export function SettingsCobroPage({ profile, onUpdate, onBack, slideClass }) {
           <div className={styles.subSection}>
             <div className={styles.subLabelMb8}>{t('settingsCobro.payDayLabel')}</div>
             <div className={styles.weekdayRow}>
-              {WEEKDAYS_SHORT.map((day, i) => (
+              {getWeekdaysShort().map((day, i) => (
                 <button key={i} onClick={() => handleWeekday(i)}
                   className={`${styles.weekdayButton} ${profile.cobro_weekday === i ? styles.weekdayButtonActive : ''}`}>
                   {day}
