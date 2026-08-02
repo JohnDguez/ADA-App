@@ -1,3 +1,5 @@
+import i18n from '../i18n'
+
 // Contenido de los coach marks — un arreglo de pasos por pantalla/modal.
 // Separado del motor (components/Coachmarks.jsx) para que editar el texto
 // de un paso no implique tocar la lógica del componente.
@@ -10,12 +12,21 @@
 // Las keys de este objeto son las mismas que usa App.jsx para decidir qué
 // secuencia mostrar (mapeadas desde `tab`, o 'nuevo-pago' cuando se abre
 // PaymentModal) y las mismas que se guardan en profile.coachmarks_seen.
-export const COACHMARK_STEPS = {
+//
+// getCoachmarkSteps() en vez de un objeto exportado directo — mismo motivo
+// que getMonths()/getCategoryLabel() en lib/utils.js: un objeto a nivel de
+// módulo se evalúa UNA sola vez al importar el archivo, capturando
+// cualquier texto de i18n.t() con el idioma que estuviera activo en ese
+// momento y sin enterarse nunca de un cambio posterior. Como función, se
+// recalcula fresco cada vez que Coachmarks.jsx la llama (en cada render).
+export function getCoachmarkSteps() {
+  const t = i18n.t.bind(i18n)
+  return {
   home: [
     {
       target: 'home-metric-card',
-      title: 'Tu quincena de un vistazo',
-      text: 'Aquí ves cuánto tienes que pagar este periodo. Toca "Periodo" o "Mes" para cambiar la vista.',
+      title: t('coachmarks.home.metricCard.title'),
+      text: t('coachmarks.home.metricCard.text'),
       placement: 'bottom',
     },
     // El botón "+" vive en BottomNav.jsx, que no tengo en esta sesión, así
@@ -29,20 +40,20 @@ export const COACHMARK_STEPS = {
     {
       target: 'home-add-button',
       fallbackSelector: '.lucide-plus',
-      title: 'Agrega tu primer pago',
-      text: 'Todo empieza aquí — desde este botón registras cualquier gasto, sea único, recurrente o a meses.',
+      title: t('coachmarks.home.addButton.title'),
+      text: t('coachmarks.home.addButton.text'),
       placement: 'top',
     },
     {
       target: 'home-rail',
-      title: 'La línea de tu quincena',
-      text: 'Cada punto es un pago. El color te dice si ya venció, si vence este periodo, o si es del próximo.',
+      title: t('coachmarks.home.rail.title'),
+      text: t('coachmarks.home.rail.text'),
       placement: 'top',
     },
     {
       target: 'home-paid-collapse',
-      title: 'Lo que ya pagaste',
-      text: 'Se guarda aquí, colapsado, para no estorbar — pero puedes revisarlo o deshacerlo cuando quieras.',
+      title: t('coachmarks.home.paidCollapse.title'),
+      text: t('coachmarks.home.paidCollapse.text'),
       placement: 'bottom',
     },
     // Pendiente: paso señalando el bottom nav — falta BottomNav.jsx en esta
@@ -54,20 +65,20 @@ export const COACHMARK_STEPS = {
   'nuevo-pago': [
     {
       target: 'modal-payment-type-tabs',
-      title: '3 formas de registrar un pago',
-      text: '"Único" es un gasto de una sola vez. "Recurrente" se repite cada semana/quincena/mes. "Parcialidades" es para pagos a meses con un número fijo de cuotas.',
+      title: t('coachmarks.nuevoPago.tabs.title'),
+      text: t('coachmarks.nuevoPago.tabs.text'),
       placement: 'bottom',
     },
     {
       target: 'modal-category-field',
-      title: 'Elige o crea una categoría',
-      text: 'Cada categoría trae su propio ícono y color — puedes personalizarlos después desde Ajustes.',
+      title: t('coachmarks.nuevoPago.category.title'),
+      text: t('coachmarks.nuevoPago.category.text'),
       placement: 'bottom',
     },
     {
       target: 'modal-variable-toggle',
-      title: '¿El monto cambia cada vez?',
-      text: 'Actívalo para pagos como luz o agua, donde no sabes el monto exacto hasta que llega el recibo.',
+      title: t('coachmarks.nuevoPago.variable.title'),
+      text: t('coachmarks.nuevoPago.variable.text'),
       placement: 'bottom',
     },
   ],
@@ -75,26 +86,26 @@ export const COACHMARK_STEPS = {
   gastos: [
     {
       target: 'gastos-disponible-card',
-      title: 'Lo que te queda disponible',
-      text: 'Aquí verás cuánto te queda este periodo, calculado con tu salario (si lo configuraste) más los ingresos extra que registres.',
+      title: t('coachmarks.gastos.disponible.title'),
+      text: t('coachmarks.gastos.disponible.text'),
       placement: 'bottom',
     },
     {
       target: 'gastos-add-income-button',
-      title: 'Registra tus ingresos',
-      text: '¿Freelance, un bono, o sobró algo del periodo pasado? Añádelo aquí para que el disponible sea exacto.',
+      title: t('coachmarks.gastos.addIncome.title'),
+      text: t('coachmarks.gastos.addIncome.text'),
       placement: 'bottom',
     },
     {
       target: 'gastos-category-chips',
-      title: 'Filtra por categoría',
-      text: 'Toca cualquiera para ver solo esos gastos en la gráfica de abajo.',
+      title: t('coachmarks.gastos.categoryChips.title'),
+      text: t('coachmarks.gastos.categoryChips.text'),
       placement: 'bottom',
     },
     {
       target: 'gastos-monthly-chart',
-      title: 'Tu tendencia mensual',
-      text: 'Compara cuánto has gastado mes a mes — útil para detectar patrones.',
+      title: t('coachmarks.gastos.monthlyChart.title'),
+      text: t('coachmarks.gastos.monthlyChart.text'),
       placement: 'top',
     },
   ],
@@ -102,14 +113,14 @@ export const COACHMARK_STEPS = {
   recurrentes: [
     {
       target: 'recurrentes-stats',
-      title: 'Tus pagos activos, de un vistazo',
-      text: 'Aquí ves cuántos recurrentes tienes activos o pausados, y cuánto suman al mes.',
+      title: t('coachmarks.recurrentes.stats.title'),
+      text: t('coachmarks.recurrentes.stats.text'),
       placement: 'bottom',
     },
     {
       target: 'recurrentes-filtro-tipo',
-      title: 'Recurrentes vs. Parcialidades',
-      text: 'Un recurrente no tiene fecha final (como Netflix). Una parcialidad sí — un número fijo de pagos, como un celular a 12 meses.',
+      title: t('coachmarks.recurrentes.filtroTipo.title'),
+      text: t('coachmarks.recurrentes.filtroTipo.text'),
       placement: 'bottom',
     },
   ],
@@ -117,21 +128,22 @@ export const COACHMARK_STEPS = {
   perfil: [
     {
       target: 'perfil-cobro-row',
-      title: 'Configura tu quincena',
-      text: 'Aquí defines cada cuándo te pagan — semanal, quincenal o mensual — para que la app organice todo alrededor de eso.',
+      title: t('coachmarks.perfil.cobro.title'),
+      text: t('coachmarks.perfil.cobro.text'),
       placement: 'bottom',
     },
     {
       target: 'perfil-categorias-row',
-      title: 'Haz tuyas las categorías',
-      text: 'Cambia el ícono y color de cualquier categoría, o crea las tuyas propias.',
+      title: t('coachmarks.perfil.categorias.title'),
+      text: t('coachmarks.perfil.categorias.text'),
       placement: 'bottom',
     },
     {
       target: 'perfil-notificaciones-row',
-      title: 'No se te vaya a pasar un pago',
-      text: 'Activa los recordatorios para que la app te avise antes de que venza cada pago.',
+      title: t('coachmarks.perfil.notificaciones.title'),
+      text: t('coachmarks.perfil.notificaciones.text'),
       placement: 'bottom',
     },
   ],
+  }
 }
