@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { createPortal } from 'react-dom'
 import { MoreVertical, Pencil, Trash2, LogOut, Pin, UserRound, Crown, UsersRound } from 'lucide-react'
 import styles from './ActiveSpaceHeader.module.css'
@@ -16,6 +17,7 @@ import styles from './ActiveSpaceHeader.module.css'
 // primero dentro de su propio contenedor de contenido — no dentro de
 // SpaceSwitcher.jsx, que ahora solo dibuja las tarjetas que asoman.
 export function ActiveSpaceHeader({ activeSpaceId, sharedSpaces, onManage, onSwitch, deleteSpace, leaveSpace, user, defaultSpaceId, onSetDefault }) {
+  const { t } = useTranslation()
   const [menuOpen,       setMenuOpen]       = useState(false)
   const [menuPos,        setMenuPos]        = useState(null) // { top, bottom, right } en coordenadas de pantalla
   const [dangerOpen,     setDangerOpen]     = useState(false)
@@ -49,7 +51,7 @@ export function ActiveSpaceHeader({ activeSpaceId, sharedSpaces, onManage, onSwi
   // switcher, sin menú de 3 puntos (isRealSpace ya da false, no hace falta
   // guardia extra) y con la misma animación de entrada que cualquier otro
   // espacio.
-  const name = activeSpaceId === 'new' ? 'Nuevo espacio compartido' : (entry ? entry.space.name : 'Personal')
+  const name = activeSpaceId === 'new' ? t('activeSpaceHeader.newSpaceName') : (entry ? entry.space.name : t('activeSpaceHeader.personalName'))
 
   // Pin de "espacio principal": qué pestaña ver por default al abrir/recargar
   // la app. "Nuevo espacio compartido" no es un espacio real ni Personal —
@@ -77,18 +79,18 @@ export function ActiveSpaceHeader({ activeSpaceId, sharedSpaces, onManage, onSwi
 
   async function handleDeleteOrLeave() {
     if (isOwner) {
-      if (!dangerPassword) { setDangerError('Ingresa tu contraseña para confirmar'); return }
+      if (!dangerPassword) { setDangerError(t('activeSpaceHeader.errors.passwordRequired')); return }
       setDangerLoading(true)
       setDangerError('')
       const { error } = await deleteSpace(entry.space.id, user?.email, dangerPassword)
       setDangerLoading(false)
-      if (error) setDangerError(typeof error === 'string' ? error : 'Contraseña incorrecta')
+      if (error) setDangerError(typeof error === 'string' ? error : t('activeSpaceHeader.errors.wrongPassword'))
       else { setDangerOpen(false); setDangerPassword(''); onSwitch(null) }
     } else {
       setDangerLoading(true)
       const { error } = await leaveSpace(entry.membership.id)
       setDangerLoading(false)
-      if (error) setDangerError('No se pudo salir del espacio')
+      if (error) setDangerError(t('activeSpaceHeader.errors.leaveError'))
       else { setDangerOpen(false); onSwitch(null) }
     }
   }
@@ -106,7 +108,7 @@ export function ActiveSpaceHeader({ activeSpaceId, sharedSpaces, onManage, onSwi
         <button
           onClick={handleTogglePin}
           className={styles.pinButton}
-          aria-label={isPinned ? 'Quitar como pestaña principal' : 'Marcar como pestaña principal'}
+          aria-label={isPinned ? t('activeSpaceHeader.pinAriaLabelOn') : t('activeSpaceHeader.pinAriaLabelOff')}
         >
           <Pin size={18} color={isPinned ? 'var(--accent)' : 'var(--text)'} fill={isPinned ? 'var(--accent)' : 'none'} />
         </button>
@@ -149,21 +151,21 @@ export function ActiveSpaceHeader({ activeSpaceId, sharedSpaces, onManage, onSwi
                   onClick={() => { setMenuOpen(false); onManage() }}
                   className={`${styles.menuItem} ${styles.menuItemBordered}`}
                 >
-                  <Pencil size={14} /> Editar
+                  <Pencil size={14} /> {t('buttons.edit')}
                 </button>
                 {isOwner ? (
                   <button
                     onClick={openDanger}
                     className={`${styles.menuItem} ${styles.menuItemDanger}`}
                   >
-                    <Trash2 size={14} /> Eliminar
+                    <Trash2 size={14} /> {t('buttons.delete')}
                   </button>
                 ) : (
                   <button
                     onClick={openDanger}
                     className={`${styles.menuItem} ${styles.menuItemDanger}`}
                   >
-                    <LogOut size={14} /> Salir del espacio
+                    <LogOut size={14} /> {t('activeSpaceHeader.menuLeave')}
                   </button>
                 )}
               </div>
@@ -182,11 +184,11 @@ export function ActiveSpaceHeader({ activeSpaceId, sharedSpaces, onManage, onSwi
           <div className={styles.dangerPanel}>
             {isOwner ? (
               <>
-                <div className={styles.dangerTitle}>Eliminar Espacio Compartido</div>
+                <div className={styles.dangerTitle}>{t('activeSpaceHeader.deleteModal.title')}</div>
                 <div className={styles.dangerDescription}>
-                  Se borrará permanentemente para ti y para tu invitado — todos los pagos e ingresos del espacio, sin poder deshacerlo.
+                  {t('activeSpaceHeader.deleteModal.description')}
                 </div>
-                <label className={`field-label ${styles.label}`}>Confirma con tu contraseña</label>
+                <label className={`field-label ${styles.label}`}>{t('settingsAccount.dangerModal.confirmLabel')}</label>
                 <input
                   type="password" className={`field-input ${styles.passwordInput}`} value={dangerPassword}
                   onChange={e => setDangerPassword(e.target.value)}
@@ -199,14 +201,14 @@ export function ActiveSpaceHeader({ activeSpaceId, sharedSpaces, onManage, onSwi
                   disabled={dangerLoading || !dangerPassword}
                   className={styles.confirmButton}
                 >
-                  {dangerLoading ? 'Verificando…' : 'Eliminar espacio permanentemente'}
+                  {dangerLoading ? t('settingsAccount.dangerModal.verifying') : t('activeSpaceHeader.deleteModal.confirmButton')}
                 </button>
               </>
             ) : (
               <>
-                <div className={styles.dangerTitle}>Salir del Espacio Compartido</div>
+                <div className={styles.dangerTitle}>{t('activeSpaceHeader.leaveModal.title')}</div>
                 <div className={styles.dangerDescription}>
-                  Dejarás de pertenecer a "{name}". Tus pagos ya agregados se quedan en el espacio para el dueño.
+                  {t('activeSpaceHeader.leaveModal.description', { name })}
                 </div>
                 {dangerError && <div className={styles.errorText}>{dangerError}</div>}
                 <button
@@ -214,11 +216,11 @@ export function ActiveSpaceHeader({ activeSpaceId, sharedSpaces, onManage, onSwi
                   disabled={dangerLoading}
                   className={styles.confirmButton}
                 >
-                  {dangerLoading ? 'Saliendo…' : 'Salir del espacio'}
+                  {dangerLoading ? t('activeSpaceHeader.leaveModal.leaving') : t('activeSpaceHeader.leaveModal.confirmButton')}
                 </button>
               </>
             )}
-            <button onClick={() => setDangerOpen(false)} className="btn-ghost">Cancelar</button>
+            <button onClick={() => setDangerOpen(false)} className="btn-ghost">{t('buttons.cancel')}</button>
           </div>
         </div>,
         document.body

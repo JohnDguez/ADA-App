@@ -1,15 +1,19 @@
 import { useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
+import i18n from '../i18n'
 import { AlertCircle, Clock, Bell, Trash2, CheckCheck, X, Goal } from 'lucide-react'
 import { MONTHS_SHORT } from '../lib/utils'
 import styles from './NotificationsPanel.module.css'
 
+// timeAgo() no es un componente — usa el singleton i18n.t() directo, mismo
+// criterio que greeting() en PageHeader.jsx.
 function timeAgo(dateStr) {
   const now  = new Date()
   const date = new Date(dateStr)
   const diff = Math.floor((now - date) / 1000)
-  if (diff < 60)    return 'ahora'
-  if (diff < 3600)  return `hace ${Math.floor(diff / 60)} min`
-  if (diff < 86400) return `hace ${Math.floor(diff / 3600)} h`
+  if (diff < 60)    return i18n.t('notificationsPanel.timeNow')
+  if (diff < 3600)  return i18n.t('notificationsPanel.timeMinutes', { count: Math.floor(diff / 60) })
+  if (diff < 86400) return i18n.t('notificationsPanel.timeHours', { count: Math.floor(diff / 3600) })
   return `${date.getDate()} ${MONTHS_SHORT[date.getMonth()]}`
 }
 
@@ -34,6 +38,7 @@ function ActorAvatar({ name, avatarUrl }) {
 }
 
 export function NotificationsPanel({ open, onClose, notifications, unreadCount, onMarkAsRead, onMarkAllAsRead, onDelete, onClearAll, onNavigate }) {
+  const { t } = useTranslation()
 
   // Bloquear scroll del body mientras el panel está abierto
   useEffect(() => {
@@ -54,19 +59,19 @@ export function NotificationsPanel({ open, onClose, notifications, unreadCount, 
         {/* Header */}
         <div className={styles.header}>
           <div className={styles.headerLeft}>
-            <span className={styles.headerTitle}>Notificaciones</span>
+            <span className={styles.headerTitle}>{t('notificationsPanel.title')}</span>
             {unreadCount > 0 && (
               <div className={styles.unreadBadge}>{unreadCount}</div>
             )}
           </div>
           <div className={styles.headerActions}>
             {unreadCount > 0 && (
-              <button onClick={onMarkAllAsRead} title="Marcar todas como leídas" className={styles.iconButton}>
+              <button onClick={onMarkAllAsRead} title={t('notificationsPanel.markAllRead')} className={styles.iconButton}>
                 <CheckCheck size={14} color="var(--accent)" />
               </button>
             )}
             {notifications.length > 0 && (
-              <button onClick={onClearAll} title="Eliminar todas" className={styles.iconButton}>
+              <button onClick={onClearAll} title={t('notificationsPanel.deleteAll')} className={styles.iconButton}>
                 <Trash2 size={14} color="var(--text)" />
               </button>
             )}
@@ -81,7 +86,7 @@ export function NotificationsPanel({ open, onClose, notifications, unreadCount, 
           {notifications.length === 0 ? (
             <div className={styles.emptyState}>
               <Bell size={28} color="var(--border)" className={styles.emptyIcon} />
-              <div className={styles.emptyText}>Sin notificaciones</div>
+              <div className={styles.emptyText}>{t('notificationsPanel.empty')}</div>
             </div>
           ) : (
             notifications.map(n => (

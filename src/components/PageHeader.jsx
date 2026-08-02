@@ -1,12 +1,17 @@
+import { useTranslation } from 'react-i18next'
+import i18n from '../i18n'
 import { Bell, Crown, Settings } from 'lucide-react'
 import { useTimeOfDay } from '../hooks/useTimeOfDay'
 import styles from './PageHeader.module.css'
 
+// `greeting()` no es un componente — no puede usar el hook `useTranslation()`.
+// Usa el singleton `i18n.t()` directo (mismo objeto que ya inicializa
+// src/i18n/index.js), consistente con el resto de la app.
 function greeting() {
   const h = new Date().getHours()
-  if (h < 12) return '¡Buenos días!'
-  if (h < 19) return '¡Buenas tardes!'
-  return '¡Buenas noches!'
+  if (h < 12) return i18n.t('pageHeader.greetingMorning')
+  if (h < 19) return i18n.t('pageHeader.greetingAfternoon')
+  return i18n.t('pageHeader.greetingEvening')
 }
 
 function nameFontSize(name) {
@@ -29,6 +34,7 @@ const HEADER_IMAGES = {
 }
 
 export function PageHeader({ profile, unreadCount, onOpenNotifs, onGoSettings }) {
+  const { t } = useTranslation()
   const initials = (profile?.name || 'U').slice(0, 2).toUpperCase()
   const timeOfDay = useTimeOfDay(profile?.timezone)
 
@@ -101,7 +107,7 @@ export function PageHeader({ profile, unreadCount, onOpenNotifs, onGoSettings })
           <button
             onClick={onGoSettings}
             className={styles.settingsButton}
-            aria-label="Ajustes"
+            aria-label={t('pageHeader.settingsAriaLabel')}
           >
             <Settings size={18} color="var(--text)" />
           </button>
