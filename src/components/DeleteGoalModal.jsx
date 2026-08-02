@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import { useTranslation } from 'react-i18next'
 import { fmt } from '../lib/utils'
 import styles from './DeleteGoalModal.module.css'
 
@@ -8,6 +9,7 @@ const ANIM_MS = 320
 // La resolución del dinero abonado SIEMPRE la elige el usuario aquí —
 // nunca se asume 'return' ni 'discard' desde ningún otro lugar del código.
 export function DeleteGoalModal({ open, goal, onCancel, onConfirm }) {
+  const { t } = useTranslation()
   // Entrada Y salida (regla 29). El `wasOpenRef.current` de `showModal`
   // cubre el frame entre que `open` pasa a false y que el efecto marca
   // `closing` (los efectos corren DESPUÉS del render) — sin él, el DOM se
@@ -53,30 +55,30 @@ export function DeleteGoalModal({ open, goal, onCancel, onConfirm }) {
     >
       <div className={`${styles.modal} ${entering ? styles.modalEntering : ''} ${closing ? styles.modalClosing : ''}`}>
         <div className={styles.handle} />
-        <div className={styles.title}>Eliminar "{shownGoal.name}"</div>
+        <div className={styles.title}>{t('deleteGoalModal.title', { name: shownGoal.name })}</div>
 
         {hasMoney ? (
           <>
             <div className={styles.description}>
-              Llevas {fmt(shownGoal.currentAmount)} abonado en esta meta. ¿Qué quieres hacer con ese dinero?
+              {t('deleteGoalModal.descriptionWithMoney', { amount: fmt(shownGoal.currentAmount) })}
             </div>
             <button type="button" onClick={() => onConfirm('return')} className="btn-primary">
-              Regresar a Disponible y eliminar
+              {t('deleteGoalModal.returnAndDelete')}
             </button>
             <button type="button" onClick={() => onConfirm('discard')} className="btn-danger">
-              Eliminar sin regresar el dinero
+              {t('deleteGoalModal.discardAndDelete')}
             </button>
           </>
         ) : (
           <>
-            <div className={styles.description}>Esta acción no se puede deshacer.</div>
+            <div className={styles.description}>{t('deleteGoalModal.descriptionNoMoney')}</div>
             <button type="button" onClick={() => onConfirm('discard')} className="btn-danger">
-              Eliminar
+              {t('buttons.delete')}
             </button>
           </>
         )}
 
-        <button type="button" onClick={onCancel} className="btn-ghost">Cancelar</button>
+        <button type="button" onClick={onCancel} className="btn-ghost">{t('buttons.cancel')}</button>
       </div>
     </div>
   )

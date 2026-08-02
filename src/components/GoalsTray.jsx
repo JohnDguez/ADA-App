@@ -1,4 +1,5 @@
 import { useState, useRef } from 'react'
+import { useTranslation } from 'react-i18next'
 import { ChevronUp } from 'lucide-react'
 import styles from './GoalsTray.module.css'
 
@@ -13,6 +14,7 @@ const MAX_DRAG = 70
 // no azul del nav — la sombra hacia arriba es lo que la separa
 // visualmente del contenido, no un color distinto.
 export function GoalsTray({ onOpen }) {
+  const { t } = useTranslation()
   const [dragY, setDragY] = useState(0)
   const [dragging, setDragging] = useState(false)
   const startYRef = useRef(0)
@@ -45,12 +47,12 @@ export function GoalsTray({ onOpen }) {
       role="button"
       tabIndex={0}
       onKeyDown={e => e.key === 'Enter' && onOpen()}
-      aria-label="Mis metas — desliza hacia arriba para abrir"
+      aria-label={t('goalsTray.ariaLabel')}
     >
       <div className={styles.row}>
         <div className={styles.label}>
           <ChevronUp size={13} color="var(--text)" />
-          <span>Mis metas</span>
+          <span>{t('goalsTray.label')}</span>
         </div>
         <div className={styles.dragLine} />
       </div>

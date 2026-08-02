@@ -1,7 +1,9 @@
+import { useTranslation } from 'react-i18next'
 import { Sparkles } from 'lucide-react'
 import styles from './PatchNotesModal.module.css'
 
 export function PatchNotesModal({ open, notes, onClose }) {
+  const { t } = useTranslation()
   if (!open || !notes || notes.length === 0) return null
 
   return (
@@ -15,7 +17,7 @@ export function PatchNotesModal({ open, notes, onClose }) {
       >
         <div className={styles.header}>
           <Sparkles size={22} color="var(--accent)" strokeWidth={2} />
-          <div className={styles.headerTitle}>Novedades</div>
+          <div className={styles.headerTitle}>{t('patchNotesModal.title')}</div>
         </div>
 
         <div className={styles.notesList}>
@@ -37,7 +39,7 @@ export function PatchNotesModal({ open, notes, onClose }) {
           onClick={onClose}
           className={styles.closeButton}
         >
-          Entendido
+          {t('recurrentMigrationModal.understood')}
         </button>
       </div>
     </div>

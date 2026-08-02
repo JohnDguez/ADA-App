@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { Crown } from 'lucide-react'
 import styles from './PremiumLock.module.css'
 
@@ -12,11 +13,12 @@ export function PremiumLock({
   label,
   icon: Icon,
   message,
-  ctaText = 'Prueba Premium GRATIS 7 días',
-  finePrint = 'Solo para nuevos usuarios. Al finalizar la prueba $50 MXN al mes.',
+  ctaText,
+  finePrint,
   onUpgradeClick,
   children,
 }) {
+  const { t } = useTranslation()
   if (isPremium) return children
 
   return (
@@ -43,11 +45,11 @@ export function PremiumLock({
             className={styles.ctaButton}
           >
             <Crown size={16} />
-            {ctaText}
+            {ctaText || t('goalsPage.premiumBanner.button')}
           </button>
 
           <div className={styles.finePrint}>
-            {finePrint}
+            {finePrint || t('premiumLock.finePrint')}
           </div>
         </div>
       </div>
