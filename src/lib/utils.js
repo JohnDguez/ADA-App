@@ -1,3 +1,5 @@
+import i18n from '../i18n'
+
 export const MONTHS       = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre']
 export const MONTHS_SHORT = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic']
 export const WEEKDAYS     = ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado']
@@ -8,6 +10,32 @@ export const CATEGORIES = [
   'Seguros', 'Alimentación', 'Transporte', 'Medicina',
   'Doctor', 'Mantenimiento', 'Ahorro', 'Otros',
 ]
+
+// Mapa del valor guardado (español, canónico, el que vive en
+// payments.category / period_income y en todos los CAT_COLORS/íconos de
+// abajo) → la llave de traducción en src/i18n/es.json|en.json → categories.*.
+// El valor guardado NUNCA cambia con el idioma — solo lo que se le muestra
+// al usuario. Las categorías personalizadas (custom_categories) no pasan
+// por aquí: no están en este mapa, así que getCategoryLabel() las regresa
+// tal cual — es el nombre que el usuario mismo escribió, no hay nada que
+// traducir (decisión con Johnatan: "esas el usuario no toca su nombre" es
+// justo lo que hace posible traducir las fijas sin romper nada).
+const CATEGORY_I18N_KEYS = {
+  'Servicios': 'servicios', 'Suscripciones': 'suscripciones', 'Créditos': 'creditos', 'Renta': 'renta',
+  'Seguros': 'seguros', 'Alimentación': 'alimentacion', 'Transporte': 'transporte', 'Medicina': 'medicina',
+  'Doctor': 'doctor', 'Mantenimiento': 'mantenimiento', 'Ahorro': 'ahorro', 'Otros': 'otros',
+}
+
+// getCategoryLabel() no es un componente — usa el singleton i18n.t(), mismo
+// criterio que greeting() en PageHeader.jsx y timeAgo() en
+// NotificationsPanel.jsx. Se llama siempre desde dentro de componentes que
+// ya usan useTranslation() para otro texto, así que ya se re-renderizan
+// solos al cambiar de idioma — esta función solo necesita leer el idioma
+// activo en el momento del render, no suscribirse a nada por su cuenta.
+export function getCategoryLabel(cat) {
+  const key = CATEGORY_I18N_KEYS[cat]
+  return key ? i18n.t(`categories.${key}`) : cat
+}
 
 export const RECUR_FREQ = {
   weekly: 'Semanal', biweekly: 'Quincenal', monthly: 'Mensual',
@@ -116,7 +144,7 @@ export function periodCountLabel(count, freq) {
 }
 export function installmentLabel(p) {
   if (!p.is_installment) return null
-  return `Pago ${p.current_installment}/${p.total_installments}`
+  return i18n.t('paymentModal.editInstallment.badge', { current: p.current_installment, total: p.total_installments })
 }
 
 // `refDate` es opcional: si no se pasa, usa hoy (comportamiento de siempre).
