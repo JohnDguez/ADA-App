@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import i18n from '../../i18n'
 import { ChevronLeft, Plus, Check, Search, Trash2 } from 'lucide-react'
-import { CATEGORIES, getCatColor } from '../../lib/utils'
+import { CATEGORIES, getCatColor, getCategoryLabel } from '../../lib/utils'
 import { CATEGORY_ICON_GROUPS, getCategoryIcon, getIconComponent } from '../../lib/categoryIcons'
 import { showToast } from '../../components/Toast'
 import { supabase } from '../../lib/supabase'
@@ -44,12 +45,19 @@ export function SettingsCategoriesPage({ profile, onUpdate, onBack, slideClass }
   // Listado combinado (fijas + personalizadas) en orden alfabético — antes
   // se dibujaban en 2 bloques separados (fijas primero, personalizadas
   // después) sin ningún encabezado visual que las distinguiera, lo que
-  // hacía más lento encontrar una categoría específica. localeCompare con
-  // locale 'es' para que acentos/ñ ordenen de forma natural.
+  // hacía más lento encontrar una categoría específica. Ordena por el
+  // NOMBRE MOSTRADO (traducido para las fijas, tal cual para las
+  // personalizadas) — no por el valor guardado — para que en inglés no se
+  // vea alfabetizado según el español. i18n.language en vez de 'es' fijo,
+  // mismo motivo.
   const sortedCats = [
     ...CATEGORIES.map(cat => ({ name: cat, isCustom: false })),
     ...customCats.map(cat => ({ name: cat, isCustom: true })),
-  ].sort((a, b) => a.name.localeCompare(b.name, 'es'))
+  ].sort((a, b) => {
+    const labelA = a.isCustom ? a.name : getCategoryLabel(a.name)
+    const labelB = b.isCustom ? b.name : getCategoryLabel(b.name)
+    return labelA.localeCompare(labelB, i18n.language)
+  })
 
   function openEdit(cat, isCustom) {
     setEditingCat({ name: cat, isCustom })
@@ -148,7 +156,7 @@ export function SettingsCategoriesPage({ profile, onUpdate, onBack, slideClass }
               : <span className={styles.fallbackDot} />
             }
           </div>
-          <span className={styles.categoryLabel}>{cat}</span>
+          <span className={styles.categoryLabel}>{isCustom ? cat : getCategoryLabel(cat)}</span>
           {isCustom && (
             <button
               onClick={e => { e.stopPropagation(); setConfirmDeleteCat(prev => prev === cat ? null : cat) }}
@@ -218,7 +226,7 @@ export function SettingsCategoriesPage({ profile, onUpdate, onBack, slideClass }
               <label className="field-label">{t('settingsCategories.nameLabel')}</label>
               {editingCat && !editingCat.isCustom ? (
                 <>
-                  <div className={`field-input ${styles.readonlyField}`}>{formName}</div>
+                  <div className={`field-input ${styles.readonlyField}`}>{getCategoryLabel(formName)}</div>
                   <div className={styles.helperText}>
                     {t('settingsCategories.nameReadonlyHelper')}
                   </div>
