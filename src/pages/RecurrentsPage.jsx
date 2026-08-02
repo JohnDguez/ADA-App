@@ -4,7 +4,7 @@ import { Pause, Play, Trash2, Search, ChevronDown, CreditCard, Pencil, MoreVerti
 import { EmptyState } from '../components/EmptyState'
 import { PageHeader } from '../components/PageHeader'
 import { NewSharedSpacePanel } from '../components/NewSharedSpacePanel'
-import { fmt, RECUR_FREQ, dateOf, MONTHS_SHORT, getCatColor } from '../lib/utils'
+import { fmt, RECUR_FREQ, dateOf, MONTHS_SHORT, getCatColor, getCategoryLabel } from '../lib/utils'
 import { getCategoryIcon } from '../lib/categoryIcons'
 import { showToast } from '../components/Toast'
 import styles from './RecurrentsPage.module.css'
@@ -224,7 +224,7 @@ export function RecurrentsPage({ payments, profile, spaceSwitcher, activeSpaceHe
                       }
                     </div>
                     <div className={styles.categoryInfo}>
-                      <div className={styles.categoryName}>{cat}</div>
+                      <div className={styles.categoryName}>{getCategoryLabel(cat)}</div>
                       <div className={styles.categoryMeta}>
                         {t('recurrentsPage.paymentCount', { count: catMasters.length })}
                         {catTotal > 0 && ` · ${fmt(catTotal)}${t('recurrentsPage.perMonthSuffix')}`}

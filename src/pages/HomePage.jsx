@@ -9,7 +9,7 @@ import { NewSharedSpacePanel } from '../components/NewSharedSpacePanel'
 import { EmptyState } from '../components/EmptyState'
 import { PaidByStack } from '../components/PaidByStack'
 import { HalfRing } from '../components/HalfRing'
-import { fmt, cobroPeriod, nextCobroPeriod, getPagarEsteCobro, daysDiff, dateOf, dateToStr, MONTHS, MONTHS_SHORT } from '../lib/utils'
+import { fmt, cobroPeriod, nextCobroPeriod, getPagarEsteCobro, daysDiff, dateOf, dateToStr, MONTHS, MONTHS_SHORT, getCategoryLabel } from '../lib/utils'
 import styles from './HomePage.module.css'
 
 function periodRange(cfg) {
@@ -575,7 +575,7 @@ function PaidCollapseItem({ p, onMarkUnpaid, onViewSource, spaceMembers }) {
           <div className={styles.paidCollapseInfo}>
             <div className={styles.paidCollapseName}>{p.name}</div>
             <div className={styles.paidCollapseCategory}>
-              {p.category}{p.is_contribution_reflection ? ` · ${t('homePage.shared')}` : ''}
+              {getCategoryLabel(p.category)}{p.is_contribution_reflection ? ` · ${t('homePage.shared')}` : ''}
               {!p.is_contribution_reflection && (
                 <PaidByStack contributors={p.contributors} members={spaceMembers} fundAmount={p.fund_amount || 0} size={18} inline />
               )}

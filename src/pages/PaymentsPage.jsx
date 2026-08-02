@@ -6,7 +6,7 @@ import { NewSharedSpacePanel } from '../components/NewSharedSpacePanel'
 import { EmptyState } from '../components/EmptyState'
 import { PaidByStack } from '../components/PaidByStack'
 import { Select } from '../components/Select'
-import { fmt, dateOf, dateToStr, MONTHS, MONTHS_SHORT, CATEGORIES, cobroPeriod, addDays, getCatColor, RECUR_FREQ } from '../lib/utils'
+import { fmt, dateOf, dateToStr, MONTHS, MONTHS_SHORT, CATEGORIES, cobroPeriod, addDays, getCatColor, getCategoryLabel, RECUR_FREQ } from '../lib/utils'
 import { getCategoryIcon } from '../lib/categoryIcons'
 import { supabase } from '../lib/supabase'
 import { showToast } from '../components/Toast'
@@ -1335,7 +1335,7 @@ export function PaymentsPage({ payments, dataLoading = false, profile, spaceSwit
           {visibleCats.map(c => (
             <FilterChip
               key={c}
-              label={c}
+              label={getCategoryLabel(c)}
               active={selectedCat === c}
               onClick={() => setSelectedCat(selectedCat === c ? null : c)}
               icon={getCategoryIcon(c, profile.category_icons)}
@@ -1501,7 +1501,7 @@ export function PaymentsPage({ payments, dataLoading = false, profile, spaceSwit
                     </div>
                     <div className={styles.categoryListContent}>
                       <div className={styles.categoryListRow}>
-                        <span className={styles.categoryListName}>{cat}</span>
+                        <span className={styles.categoryListName}>{getCategoryLabel(cat)}</span>
                         <span className={styles.categoryListAmount}>{fmt(total)}</span>
                       </div>
                       <div className={styles.categoryProgressTrack}>
@@ -1559,7 +1559,7 @@ export function PaymentsPage({ payments, dataLoading = false, profile, spaceSwit
                         </div>
                         <div className={styles.paymentCategoryRow}>
                           <span className={styles.paymentCategoryDot} style={{ background: getCatColor(p.category, profile.custom_categories, profile.category_colors) }} />
-                          {p.category}
+                          {getCategoryLabel(p.category)}
                           {p.is_recurrent && <span className={styles.paymentRecurrentTag}>· {RECUR_FREQ[p.recur_freq] || t('frequency.monthly')}</span>}
                           {p.is_contribution_reflection && <span className={styles.paymentRecurrentTag}>· {t('homePage.shared')}</span>}
                         </div>
