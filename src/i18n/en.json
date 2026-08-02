@@ -843,5 +843,30 @@
   },
   "datePicker": {
     "selectPlaceholder": "Select a date"
+  },
+  "feedbackPromptModal": {
+    "premiumPill": "Get 3 months of Premium free",
+    "title": "Tell us how the app's been working for you",
+    "subtitle": "Your feedback matters to us.",
+    "cta": "Give my feedback",
+    "hint": "An external form will open in a new tab.",
+    "remindLater": "Remind me in 3 days"
+  },
+  "patchNotesModal": {
+    "title": "What's new"
+  },
+  "premiumLock": {
+    "finePrint": "Only for new users. After the trial, $50 MXN per month."
+  },
+  "goalsTray": {
+    "label": "My goals",
+    "ariaLabel": "My goals — swipe up to open"
+  },
+  "deleteGoalModal": {
+    "title": "Delete \"{{name}}\"",
+    "descriptionWithMoney": "You have {{amount}} saved toward this goal. What do you want to do with that money?",
+    "returnAndDelete": "Return to Available and delete",
+    "discardAndDelete": "Delete without returning the money",
+    "descriptionNoMoney": "This action can't be undone."
   }
 }

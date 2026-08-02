@@ -843,5 +843,30 @@
   },
   "datePicker": {
     "selectPlaceholder": "Selecciona una fecha"
+  },
+  "feedbackPromptModal": {
+    "premiumPill": "Obtén 3 meses de Premium gratis",
+    "title": "Cuéntanos cómo te ha ido con la app",
+    "subtitle": "Tus comentarios son importantes para nosotros.",
+    "cta": "Dejar mi feedback",
+    "hint": "Se abrirá un formulario externo en una pestaña nueva.",
+    "remindLater": "Recordarme en 3 días"
+  },
+  "patchNotesModal": {
+    "title": "Novedades"
+  },
+  "premiumLock": {
+    "finePrint": "Solo para nuevos usuarios. Al finalizar la prueba $50 MXN al mes."
+  },
+  "goalsTray": {
+    "label": "Mis metas",
+    "ariaLabel": "Mis metas — desliza hacia arriba para abrir"
+  },
+  "deleteGoalModal": {
+    "title": "Eliminar \"{{name}}\"",
+    "descriptionWithMoney": "Llevas {{amount}} abonado en esta meta. ¿Qué quieres hacer con ese dinero?",
+    "returnAndDelete": "Regresar a Disponible y eliminar",
+    "discardAndDelete": "Eliminar sin regresar el dinero",
+    "descriptionNoMoney": "Esta acción no se puede deshacer."
   }
 }
