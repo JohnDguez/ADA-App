@@ -326,7 +326,8 @@
         "deleteError": "Error al eliminar"
       }
     },
-    "actionEditPayments": "editar pagos"
+    "actionEditPayments": "editar pagos",
+    "actionAddPayments": "añadir pagos"
   },
   "recurrentsPage": {
     "title": "Gastos recurrentes",
@@ -596,5 +597,119 @@
     "continue": "Continuar",
     "start": "¡Comenzar!",
     "back": "Atrás"
+  },
+  "paymentModal": {
+    "nameError": "Escribe el nombre del pago",
+    "duplicateNameError": "Ya existe un pago activo con el nombre \"{{name}}\"",
+    "installment": {
+      "totalAmountError": "Agrega el monto total a pagar",
+      "countError": "Agrega el número de pagos",
+      "minError": "El mínimo es 2 pagos",
+      "startExceedsTotal": "El pago inicial no puede ser mayor al total",
+      "firstDateError": "Selecciona la fecha del primer pago"
+    },
+    "amountOrVariableError": "Agrega el monto o marca como variable",
+    "dueDateError": "Selecciona la fecha de vencimiento",
+    "editInstallment": {
+      "title": "Editar parcialidades",
+      "badge": "Pago {{current}}/{{total}}",
+      "amountError": "Ingresa el monto por pago",
+      "totalBelowCurrentError": "El total no puede ser menor al pago actual ({{current}})",
+      "nextDateError": "Selecciona la fecha del próximo pago",
+      "remainingHelper_one": "Queda {{count}} pago por cubrir",
+      "remainingHelper_other": "Quedan {{count}} pagos por cubrir",
+      "saveButton": "Guardar cambios",
+      "cancelInstallments": "Cancelar parcialidades"
+    },
+    "fields": {
+      "name": "Nombre",
+      "category": "Categoría",
+      "addCategory": "+ Agregar",
+      "categoryNamePlaceholder": "Nombre de la categoría",
+      "add": "Añadir",
+      "amountPerPayment": "Monto por pago",
+      "totalPayments": "Total de pagos",
+      "totalPaymentsPlaceholder": "Ej. 20",
+      "nextPaymentDate": "Fecha del próximo pago"
+    },
+    "tabs": {
+      "single": "Pago único",
+      "recurrent": "Recurrente",
+      "installment": "Parcialidades"
+    },
+    "title": {
+      "reactivate": "Reactivar pago recurrente",
+      "editRecurrent": "Editar pago recurrente",
+      "edit": "Editar pago",
+      "installment": "Pago en parcialidades",
+      "recurrent": "Pago recurrente",
+      "new": "Nuevo pago"
+    },
+    "installmentInfoBanner": "Los pagos se generan uno a uno. Al marcar cada pago como pagado, el siguiente aparece automáticamente.",
+    "namePlaceholder": "Ej. Netflix, Renta, Luz…",
+    "variableToggleLabel": "Pago variable",
+    "variableToggleSub": "El monto cambia cada vez que pagas",
+    "amountLabel": "Monto",
+    "totalAmountToPay": "Monto total a pagar",
+    "totalAmountPlaceholder": "Ej. 5000",
+    "numPayments": "Número de pagos",
+    "numPaymentsPlaceholder": "Ej. 10",
+    "startFromLabel": "Empezar desde el pago #",
+    "autoMarkedHelper": "Los pagos 1 al {{n}} se marcarán como pagados automáticamente.",
+    "summary": {
+      "title": "Resumen",
+      "willPay": "Pagarás",
+      "paymentsOf": "{{count}} pagos de ${{amount}}",
+      "every": "uno cada",
+      "frequency": {
+        "weekly": "semana",
+        "biweekly": "quincena",
+        "monthly": "mes",
+        "bimonthly": "2 meses",
+        "quarterly": "3 meses",
+        "semiannual": "6 meses",
+        "annual": "año"
+      },
+      "nextPayment": "Tu próximo pago es el {{day}} de {{month}}",
+      "remainingTotal": "Total restante a pagar: ${{amount}}"
+    },
+    "firstPaymentDate": "Fecha del primer pago",
+    "dueDate": "Fecha de vencimiento",
+    "alreadyPaidToggle": "Ya lo pagué",
+    "paidDateLabel": "Fecha en que pagaste",
+    "dueDayLabel": "Día de vencimiento",
+    "nextLabel": "Próximo: {{date}}",
+    "biweeklyBaseDateLabel": "Fecha base de inicio (quincenal)",
+    "nextDueLabel": "Próximo vencimiento: {{date}}",
+    "recurrentNote": "Se generará un nuevo pago automáticamente cada {{interval}}.",
+    "recurrentIntervals": {
+      "weekly": "7 días",
+      "biweekly": "14 días",
+      "monthly": "mes"
+    },
+    "impact": {
+      "label": "Impacto en tus finanzas",
+      "message": "Descubre como este nuevo gasto impacta en tus finanzas de ese periodo",
+      "warning": "¡Cuidado! Puede alterar tus finanzas",
+      "ok": "Todo bien",
+      "periodLabel": "Periodo {{range}}.",
+      "currentlyAvailable": "Disponible actualmente {{amount}} MXN",
+      "pendingCount_one": "{{count}} pago pendiente {{amount}}",
+      "pendingCount_other": "{{count}} pagos pendientes {{amount}}",
+      "variableCount_one": "{{count}} pago variable",
+      "variableCount_other": "{{count}} pagos variables",
+      "variableCountUncounted_one": "{{count}} pago variable sin contar",
+      "variableCountUncounted_other": "{{count}} pagos variables sin contar",
+      "nextPeriodAvailable": "Disponible en el siguiente periodo",
+      "salaryHint": "Configura tu sueldo en Ajustes para ver tu disponible completo."
+    },
+    "save": {
+      "reactivate": "Reactivar",
+      "saveChanges": "Guardar cambios",
+      "createPayments": "Crear pagos",
+      "saveAsPaid": "Guardar como pagado",
+      "savePayment": "Guardar pago"
+    },
+    "deletePayment": "Eliminar pago"
   }
 }

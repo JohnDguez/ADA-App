@@ -326,7 +326,8 @@
         "deleteError": "Error deleting"
       }
     },
-    "actionEditPayments": "edit payments"
+    "actionEditPayments": "edit payments",
+    "actionAddPayments": "add payments"
   },
   "recurrentsPage": {
     "title": "Recurring expenses",
@@ -596,5 +597,119 @@
     "continue": "Continue",
     "start": "Get started!",
     "back": "Back"
+  },
+  "paymentModal": {
+    "nameError": "Enter the payment's name",
+    "duplicateNameError": "There's already an active payment named \"{{name}}\"",
+    "installment": {
+      "totalAmountError": "Add the total amount to pay",
+      "countError": "Add the number of payments",
+      "minError": "The minimum is 2 payments",
+      "startExceedsTotal": "The starting payment can't be greater than the total",
+      "firstDateError": "Select the first payment's date"
+    },
+    "amountOrVariableError": "Add the amount or mark it as variable",
+    "dueDateError": "Select the due date",
+    "editInstallment": {
+      "title": "Edit installments",
+      "badge": "Payment {{current}}/{{total}}",
+      "amountError": "Enter the amount per payment",
+      "totalBelowCurrentError": "The total can't be less than the current payment ({{current}})",
+      "nextDateError": "Select the next payment's date",
+      "remainingHelper_one": "{{count}} payment left to cover",
+      "remainingHelper_other": "{{count}} payments left to cover",
+      "saveButton": "Save changes",
+      "cancelInstallments": "Cancel installments"
+    },
+    "fields": {
+      "name": "Name",
+      "category": "Category",
+      "addCategory": "+ Add",
+      "categoryNamePlaceholder": "Category name",
+      "add": "Add",
+      "amountPerPayment": "Amount per payment",
+      "totalPayments": "Total payments",
+      "totalPaymentsPlaceholder": "e.g. 20",
+      "nextPaymentDate": "Next payment date"
+    },
+    "tabs": {
+      "single": "One-time",
+      "recurrent": "Recurring",
+      "installment": "Installments"
+    },
+    "title": {
+      "reactivate": "Reactivate recurring payment",
+      "editRecurrent": "Edit recurring payment",
+      "edit": "Edit payment",
+      "installment": "Installment payment",
+      "recurrent": "Recurring payment",
+      "new": "New payment"
+    },
+    "installmentInfoBanner": "Payments are generated one at a time. Once you mark each one as paid, the next one appears automatically.",
+    "namePlaceholder": "e.g. Netflix, Rent, Electricity…",
+    "variableToggleLabel": "Variable payment",
+    "variableToggleSub": "The amount changes each time you pay",
+    "amountLabel": "Amount",
+    "totalAmountToPay": "Total amount to pay",
+    "totalAmountPlaceholder": "e.g. 5000",
+    "numPayments": "Number of payments",
+    "numPaymentsPlaceholder": "e.g. 10",
+    "startFromLabel": "Start from payment #",
+    "autoMarkedHelper": "Payments 1 through {{n}} will be marked as paid automatically.",
+    "summary": {
+      "title": "Summary",
+      "willPay": "You'll pay",
+      "paymentsOf": "{{count}} payments of ${{amount}}",
+      "every": "one every",
+      "frequency": {
+        "weekly": "week",
+        "biweekly": "two weeks",
+        "monthly": "month",
+        "bimonthly": "2 months",
+        "quarterly": "3 months",
+        "semiannual": "6 months",
+        "annual": "year"
+      },
+      "nextPayment": "Your next payment is on {{day}} {{month}}",
+      "remainingTotal": "Remaining total to pay: ${{amount}}"
+    },
+    "firstPaymentDate": "First payment date",
+    "dueDate": "Due date",
+    "alreadyPaidToggle": "Already paid it",
+    "paidDateLabel": "Date you paid",
+    "dueDayLabel": "Due day",
+    "nextLabel": "Next: {{date}}",
+    "biweeklyBaseDateLabel": "Starting base date (biweekly)",
+    "nextDueLabel": "Next due date: {{date}}",
+    "recurrentNote": "A new payment will be generated automatically every {{interval}}.",
+    "recurrentIntervals": {
+      "weekly": "7 days",
+      "biweekly": "14 days",
+      "monthly": "month"
+    },
+    "impact": {
+      "label": "Impact on your finances",
+      "message": "See how this new expense impacts your finances for that period",
+      "warning": "Careful! This could affect your finances",
+      "ok": "All good",
+      "periodLabel": "Period {{range}}.",
+      "currentlyAvailable": "Currently available {{amount}} MXN",
+      "pendingCount_one": "{{count}} pending payment {{amount}}",
+      "pendingCount_other": "{{count}} pending payments {{amount}}",
+      "variableCount_one": "{{count}} variable payment",
+      "variableCount_other": "{{count}} variable payments",
+      "variableCountUncounted_one": "{{count}} variable payment not counted",
+      "variableCountUncounted_other": "{{count}} variable payments not counted",
+      "nextPeriodAvailable": "Available in the next period",
+      "salaryHint": "Set up your income in Settings to see your full available amount."
+    },
+    "save": {
+      "reactivate": "Reactivate",
+      "saveChanges": "Save changes",
+      "createPayments": "Create payments",
+      "saveAsPaid": "Save as paid",
+      "savePayment": "Save payment"
+    },
+    "deletePayment": "Delete payment"
   }
 }
