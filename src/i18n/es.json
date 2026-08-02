@@ -868,5 +868,38 @@
     "returnAndDelete": "Regresar a Disponible y eliminar",
     "discardAndDelete": "Eliminar sin regresar el dinero",
     "descriptionNoMoney": "Esta acción no se puede deshacer."
+  },
+  "installmentAbonarModal": {
+    "title": "Abonar",
+    "badge": "Pago {{current}} de {{total}}",
+    "referenceAmount": "Monto de referencia",
+    "totalDebt": "Total de la deuda",
+    "amountLabel": "Cuánto vas a abonar",
+    "amountError": "Ingresa cuánto vas a abonar",
+    "paymentPlan": "Plan de pagos",
+    "confirmButton": "Confirmar abono",
+    "remainingPending": "Quedarán {{amount}} pendientes en este pago.",
+    "planAdjusts": "El plan se ajusta de {{oldTotal}} a {{newTotal}} pagos en total."
+  },
+  "newSharedSpacePanel": {
+    "premiumCtaTitle": "Obtén Premium para crear un Espacio Compartido",
+    "premiumCtaText": "Lleva el control de gastos con tu pareja, tus roomies, o quien tú quieras — hasta 2 personas más, en un espacio aparte de tu cuenta personal.",
+    "createTitle": "Crear Espacio Compartido",
+    "spaceNameLabel": "Nombre del espacio",
+    "spaceNamePlaceholder": "Ej. Depa con Ale",
+    "incomeToggleSub": "Opcional — además de los Ingresos Extras que cualquier invitado con permiso puede agregar",
+    "creating": "Creando…",
+    "create": "Crear",
+    "nameRequiredError": "Ponle un nombre al espacio",
+    "createGenericError": "No se pudo crear el espacio",
+    "ownedText": "Ya eres dueño de un Espacio Compartido — solo puedes tener uno propio.",
+    "joinTitle": "Únete a un Espacio Compartido",
+    "joinText_one": "Puedes unirte a {{count}} espacio compartido más. El código de acceso debe tener 6 dígitos — debe proporcionarlo el creador del espacio.",
+    "joinText_other": "Puedes unirte a {{count}} espacios compartidos más. El código de acceso debe tener 6 dígitos — debe proporcionarlo el creador del espacio.",
+    "joining": "Uniendo…",
+    "join": "Unirme",
+    "joinCodeLengthError": "El código debe tener 6 dígitos",
+    "joinCodeInvalid": "Código inválido",
+    "maxJoined": "Ya perteneces al máximo de 3 espacios compartidos como invitado."
   }
 }

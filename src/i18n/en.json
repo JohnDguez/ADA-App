@@ -868,5 +868,38 @@
     "returnAndDelete": "Return to Available and delete",
     "discardAndDelete": "Delete without returning the money",
     "descriptionNoMoney": "This action can't be undone."
+  },
+  "installmentAbonarModal": {
+    "title": "Contribute",
+    "badge": "Payment {{current}} of {{total}}",
+    "referenceAmount": "Reference amount",
+    "totalDebt": "Total debt",
+    "amountLabel": "How much are you contributing",
+    "amountError": "Enter how much you're contributing",
+    "paymentPlan": "Payment plan",
+    "confirmButton": "Confirm contribution",
+    "remainingPending": "{{amount}} will remain pending on this payment.",
+    "planAdjusts": "The plan adjusts from {{oldTotal}} to {{newTotal}} total payments."
+  },
+  "newSharedSpacePanel": {
+    "premiumCtaTitle": "Get Premium to create a Shared Space",
+    "premiumCtaText": "Track expenses with your partner, roommates, or anyone you want — up to 2 more people, in a space separate from your personal account.",
+    "createTitle": "Create Shared Space",
+    "spaceNameLabel": "Space name",
+    "spaceNamePlaceholder": "e.g. Apartment with Alex",
+    "incomeToggleSub": "Optional — in addition to the Extra Income any guest with permission can add",
+    "creating": "Creating…",
+    "create": "Create",
+    "nameRequiredError": "Give the space a name",
+    "createGenericError": "Couldn't create the space",
+    "ownedText": "You already own a Shared Space — you can only have one of your own.",
+    "joinTitle": "Join a Shared Space",
+    "joinText_one": "You can join {{count}} more shared space. The access code must be 6 digits — the space's creator must give it to you.",
+    "joinText_other": "You can join {{count}} more shared spaces. The access code must be 6 digits — the space's creator must give it to you.",
+    "joining": "Joining…",
+    "join": "Join",
+    "joinCodeLengthError": "The code must be 6 digits",
+    "joinCodeInvalid": "Invalid code",
+    "maxJoined": "You're already in the maximum of 3 shared spaces as a guest."
   }
 }
