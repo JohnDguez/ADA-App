@@ -2,14 +2,14 @@ import { useState, useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ChevronLeft, MoreVertical, ArrowUp, ArrowDown, Check, ArrowUpCircle, ArrowDownCircle, Pencil, Trash2, RotateCcw } from 'lucide-react'
 import { getIconComponent } from '../lib/categoryIcons'
-import { fmt, MONTHS_SHORT } from '../lib/utils'
+import { fmt, getMonthsShort } from '../lib/utils'
 import { showToast } from './Toast'
 import { DeleteGoalModal } from './DeleteGoalModal'
 import styles from './GoalDetailPanel.module.css'
 
 function fmtDate(iso) {
   const d = new Date(iso)
-  return `${d.getDate()} ${MONTHS_SHORT[d.getMonth()]} ${d.getFullYear()}`
+  return `${d.getDate()} ${getMonthsShort()[d.getMonth()]} ${d.getFullYear()}`
 }
 
 // `isShared`/`can*`/`currentUserId`/`onRevert` solo importan en una meta de

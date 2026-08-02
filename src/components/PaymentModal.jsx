@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
+import i18n from '../i18n'
 import { Wallet, AlertTriangle, Repeat, Check } from 'lucide-react'
-import { CATEGORIES, RECUR_FREQ, WEEKDAYS_SHORT, MONTHS, MONTHS_SHORT, nextWeekdayDate, nextBiweeklyFromDate, nextPeriodDate, cobroPeriod, fmt, nameExistsActive, projectPeriodImpact, getCatColor, getCategoryLabel, dateToStr, todayStr } from '../lib/utils'
+import { CATEGORIES, RECUR_FREQ, WEEKDAYS_SHORT, getWeekdaysShort, MONTHS, getMonths, MONTHS_SHORT, getMonthsShort, intlLocale, nextWeekdayDate, nextBiweeklyFromDate, nextPeriodDate, cobroPeriod, fmt, nameExistsActive, projectPeriodImpact, getCatColor, getCategoryLabel, dateToStr, todayStr } from '../lib/utils'
 import { getCategoryIcon } from '../lib/categoryIcons'
 import { supabase } from '../lib/supabase'
 import { ConfirmCloseModal } from './ConfirmCloseModal'
@@ -444,7 +445,7 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
                       {t('paymentModal.summary.willPay')} <strong>{t('paymentModal.summary.paymentsOf', { count: numPayments, amount: perPayment.toLocaleString('es-MX') })}</strong>, {t('paymentModal.summary.every')}{' '}
                       {t(`paymentModal.summary.frequency.${recurFreq}`)}.
                       {nextDate && (
-                        <> {t('paymentModal.summary.nextPayment', { day: nextDate.getDate(), month: MONTHS[nextDate.getMonth()].toLowerCase() })}.</>
+                        <> {t('paymentModal.summary.nextPayment', { day: nextDate.getDate(), month: i18n.language === 'en' ? getMonths()[nextDate.getMonth()] : getMonths()[nextDate.getMonth()].toLowerCase() })}.</>
                       )}
                       {startNum > 1 && (
                         <> {t('paymentModal.summary.remainingTotal', { amount: ((numPayments - startNum + 1) * perPayment).toLocaleString('es-MX') })}.</>
@@ -491,12 +492,12 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
           {showWeekdayPicker && (
             <Field label={t('paymentModal.dueDayLabel')}>
               <div className={styles.weekdayRow}>
-                {WEEKDAYS_SHORT.map((d, i) => (
+                {getWeekdaysShort().map((d, i) => (
                   <button key={i} onClick={() => setWeekday(i)} className={`${styles.weekdayButton} ${weekday === i ? styles.weekdayButtonActive : ''}`}>{d}</button>
                 ))}
               </div>
               <div className={styles.helperTextMt6}>
-                {t('paymentModal.nextLabel', { date: nextWeekdayDate(weekday).toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric', month: 'long' }) })}
+                {t('paymentModal.nextLabel', { date: nextWeekdayDate(weekday).toLocaleDateString(intlLocale(), { weekday: 'long', day: 'numeric', month: 'long' }) })}
               </div>
             </Field>
           )}
@@ -504,7 +505,7 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
           {showBiweeklyPicker && (
             <Field label={t('paymentModal.biweeklyBaseDateLabel')}>
               <DatePicker value={biweeklyDate} onChange={setBiweeklyDate} />
-              {nextBiDate && <div className={styles.helperTextMt6}>{t('paymentModal.nextDueLabel', { date: nextBiDate.toLocaleDateString('es-MX', { day: 'numeric', month: 'long' }) })}</div>}
+              {nextBiDate && <div className={styles.helperTextMt6}>{t('paymentModal.nextDueLabel', { date: nextBiDate.toLocaleDateString(intlLocale(), { day: 'numeric', month: 'long' }) })}</div>}
             </Field>
           )}
 
@@ -605,9 +606,10 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
 }
 
 function rangeLabel(start, end) {
+  const monthsShort = getMonthsShort()
   const sameMonth = start.getMonth() === end.getMonth()
-  if (sameMonth) return `${start.getDate()}–${end.getDate()} ${MONTHS_SHORT[end.getMonth()]}`
-  return `${start.getDate()} ${MONTHS_SHORT[start.getMonth()]} – ${end.getDate()} ${MONTHS_SHORT[end.getMonth()]}`
+  if (sameMonth) return `${start.getDate()}–${end.getDate()} ${monthsShort[end.getMonth()]}`
+  return `${start.getDate()} ${monthsShort[start.getMonth()]} – ${end.getDate()} ${monthsShort[end.getMonth()]}`
 }
 
 function Field({ label, children }) {

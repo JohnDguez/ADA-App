@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next'
 import i18n from '../i18n'
 import { createPortal } from 'react-dom'
 import { MoreVertical, Check, Pencil, Trash2, Clock, ChevronDown, ChevronUp, RotateCcw, FastForward, DollarSign, Eye, Users, PiggyBank } from 'lucide-react'
-import { statusOf, daysDiff, dateOf, fmt, MONTHS_SHORT, periodLabel, periodCountLabel, RECUR_FREQ, getFrequencyLabel, installmentLabel, getCategoryLabel } from '../lib/utils'
+import { statusOf, daysDiff, dateOf, fmt, MONTHS_SHORT, getMonthsShort, periodLabel, periodCountLabel, RECUR_FREQ, getFrequencyLabel, installmentLabel, getCategoryLabel } from '../lib/utils'
 import { showToast } from './Toast'
 import { PaidByStack } from './PaidByStack'
 import styles from './PayCard.module.css'
@@ -340,7 +340,7 @@ function PayCardImpl({ payment: p, cfg, onMarkPaid, onRequestVariableAmount, onC
             <div className={styles.subtitle}>
               {p.space_id && isPending && registradoTotal > 0
                 ? `${fmt(registradoTotal)} / ${fmt(p.amount)}`
-                : hideDate ? getCategoryLabel(p.category) : `${getCategoryLabel(p.category)} · ${d.getDate()} ${MONTHS_SHORT[d.getMonth()]}`}
+                : hideDate ? getCategoryLabel(p.category) : `${getCategoryLabel(p.category)} · ${d.getDate()} ${getMonthsShort()[d.getMonth()]}`}
             </div>
             {p.space_id && isPending && registradoTotal > 0 && (
               <PaidByStack contributors={p.contributors} members={spaceMembers} fundAmount={p.fund_amount || 0} size={16} />

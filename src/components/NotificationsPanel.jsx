@@ -2,7 +2,7 @@ import { useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import i18n from '../i18n'
 import { AlertCircle, Clock, Bell, Trash2, CheckCheck, X, Goal } from 'lucide-react'
-import { MONTHS_SHORT } from '../lib/utils'
+import { getMonthsShort } from '../lib/utils'
 import styles from './NotificationsPanel.module.css'
 
 // timeAgo() no es un componente — usa el singleton i18n.t() directo, mismo
@@ -14,7 +14,7 @@ function timeAgo(dateStr) {
   if (diff < 60)    return i18n.t('notificationsPanel.timeNow')
   if (diff < 3600)  return i18n.t('notificationsPanel.timeMinutes', { count: Math.floor(diff / 60) })
   if (diff < 86400) return i18n.t('notificationsPanel.timeHours', { count: Math.floor(diff / 3600) })
-  return `${date.getDate()} ${MONTHS_SHORT[date.getMonth()]}`
+  return `${date.getDate()} ${getMonthsShort()[date.getMonth()]}`
 }
 
 function NotifIcon({ type }) {

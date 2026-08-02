@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Calendar, ChevronLeft, ChevronRight, ChevronUp, ChevronDown } from 'lucide-react'
-import { MONTHS, MONTHS_SHORT, WEEKDAYS_SHORT, dateOf, addMonths } from '../lib/utils'
+import { getMonths, getMonthsShort, getWeekdaysShort, dateOf, addMonths } from '../lib/utils'
 import styles from './DatePicker.module.css'
 
 function toStr(d) {
@@ -21,6 +22,7 @@ const PANEL_HEIGHT = 300
 // calendario ahora es grande y en var(--accent) — antes era el diminuto
 // ícono gris que trae el navegador por defecto, casi invisible.
 export function DatePicker({ value, onChange, placeholder }) {
+  const { t } = useTranslation()
   const [open, setOpen] = useState(false)
   const [dropUp, setDropUp] = useState(false)
   const [mode, setMode] = useState('days') // 'days' | 'monthYear'
@@ -69,7 +71,7 @@ export function DatePicker({ value, onChange, placeholder }) {
 
   const label = selected
     ? `${String(selected.getDate()).padStart(2, '0')}/${String(selected.getMonth() + 1).padStart(2, '0')}/${selected.getFullYear()}`
-    : (placeholder || 'Selecciona una fecha')
+    : (placeholder || t('datePicker.selectPlaceholder'))
 
   return (
     <div ref={ref} className={styles.wrapper}>
@@ -95,7 +97,7 @@ export function DatePicker({ value, onChange, placeholder }) {
                   onClick={() => setMode('monthYear')}
                   className={styles.monthYearButton}
                 >
-                  <span className={styles.monthYearLabel}>{MONTHS[month]} {year}</span>
+                  <span className={styles.monthYearLabel}>{getMonths()[month]} {year}</span>
                   <ChevronDown size={13} color="var(--text)" />
                 </button>
                 <button type="button" onClick={() => setViewDate(addMonths(viewDate, 1))} className={styles.navArrowButton}>
@@ -103,7 +105,7 @@ export function DatePicker({ value, onChange, placeholder }) {
                 </button>
               </div>
               <div className={styles.weekdaysRow}>
-                {WEEKDAYS_SHORT.map((w, i) => (
+                {getWeekdaysShort().map((w, i) => (
                   <div key={w + i} className={styles.weekdayCell}>{w[0]}</div>
                 ))}
               </div>

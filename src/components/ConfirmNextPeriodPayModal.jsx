@@ -1,4 +1,5 @@
-import { dateOf, MONTHS } from '../lib/utils'
+import { useTranslation } from 'react-i18next'
+import { dateOf, getMonths } from '../lib/utils'
 import styles from './ConfirmNextPeriodPayModal.module.css'
 
 // Confirmación antes de marcar como pagado un pago que en realidad vence en
@@ -13,18 +14,19 @@ import styles from './ConfirmNextPeriodPayModal.module.css'
 // ningún dato capturado que se pueda perder al cancelar, solo una pregunta
 // de sí/no.
 export function ConfirmNextPeriodPayModal({ open, payment, onConfirm, onCancel }) {
+  const { t } = useTranslation()
   if (!open || !payment) return null
   const d = dateOf(payment.due_date)
 
   return (
     <div onClick={e => e.target === e.currentTarget && onCancel()} className={styles.overlay}>
       <div className={styles.modal}>
-        <div className={styles.title}>¿Marcar como pagado?</div>
+        <div className={styles.title}>{t('confirmNextPeriodPayModal.title')}</div>
         <div className={styles.description}>
-          <strong>{payment.name}</strong> vence el {d.getDate()} de {MONTHS[d.getMonth()]}, dentro del <strong>próximo periodo</strong>. ¿Seguro que quieres marcarlo como pagado ahora?
+          <strong>{payment.name}</strong> {t('confirmNextPeriodPayModal.descriptionPrefix', { day: d.getDate(), month: getMonths()[d.getMonth()] })} <strong>{t('confirmNextPeriodPayModal.nextPeriodPhrase')}</strong>. {t('confirmNextPeriodPayModal.descriptionSuffix')}
         </div>
-        <button onClick={onConfirm} className={`btn-primary ${styles.confirmButton}`}>Sí, marcar pagado</button>
-        <button onClick={onCancel} className="btn-ghost">Cancelar</button>
+        <button onClick={onConfirm} className={`btn-primary ${styles.confirmButton}`}>{t('confirmNextPeriodPayModal.confirm')}</button>
+        <button onClick={onCancel} className="btn-ghost">{t('buttons.cancel')}</button>
       </div>
     </div>
   )

@@ -1,5 +1,6 @@
 import { useRef, useEffect, memo } from 'react'
-import { dateOf, MONTHS_SHORT } from '../lib/utils'
+import { useTranslation } from 'react-i18next'
+import { dateOf, getMonthsShort } from '../lib/utils'
 import { PayCard } from './PayCard'
 import styles from './PayRail.module.css'
 
@@ -25,6 +26,12 @@ import styles from './PayRail.module.css'
 // pagar por error algo del periodo equivocado si el usuario se confunde de
 // switch activo). No afecta a Vencidos/Pagos del periodo actual.
 function PayRailImpl({ payments, cfg, dotColor, dotTextColor, handlers, permissions, nextPeriodMode, spaceMembers }) {
+  // Se llama el hook aunque no se use t() directo abajo — es lo que hace
+  // que este componente memoizado se re-renderice al cambiar de idioma
+  // (el label de mes de abajo usa getMonthsShort(), no t(), así que sin
+  // esta suscripción se quedaría con el mes en el idioma viejo hasta que
+  // algún otro prop cambiara de identidad).
+  useTranslation()
   // Detecta el primer render de ESTE riel — las cards que ya vienen desde
   // ahí no deben "crecer" al aparecer (se verían todas animando de golpe
   // al cargar la página). Solo las que se agregan DESPUÉS (un pago nuevo,
@@ -61,7 +68,7 @@ function PayRailImpl({ payments, cfg, dotColor, dotTextColor, handlers, permissi
             {showMonth && (
               <div className={gi === 0 ? styles.monthLabelWrapperFirst : styles.monthLabelWrapper}>
                 <span className={styles.monthLabelText}>
-                  {MONTHS_SHORT[month]}
+                  {getMonthsShort()[month]}
                 </span>
               </div>
             )}

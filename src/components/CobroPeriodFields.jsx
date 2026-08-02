@@ -1,11 +1,12 @@
 import { useState } from 'react'
-import { WEEKDAYS_SHORT } from '../lib/utils'
+import { useTranslation } from 'react-i18next'
+import { getWeekdaysShort } from '../lib/utils'
 import styles from './CobroPeriodFields.module.css'
 
 const BIWEEKLY_PRESETS = [
-  { label: '1 y 16',  d1: 1,  d2: 16 },
-  { label: '13 y 28', d1: 13, d2: 28 },
-  { label: '15 y 30', d1: 15, d2: 30 },
+  { d1: 1,  d2: 16 },
+  { d1: 13, d2: 28 },
+  { d1: 15, d2: 30 },
 ]
 
 // Mismos campos de periodo de cobro que la cuenta personal
@@ -18,6 +19,7 @@ const BIWEEKLY_PRESETS = [
 // personalizados) — mismo patrón que el original, es solo un tema de qué
 // inputs mostrar, no del valor en sí.
 export function CobroPeriodFields({ freq, day1, day2, weekday, onChangeFreq, onChangeDay1, onChangeDay2, onChangeWeekday, showCurrency = true }) {
+  const { t } = useTranslation()
   const isPresetBiweekly = BIWEEKLY_PRESETS.some(p => p.d1 === (day1 ?? 1) && p.d2 === (day2 ?? 16))
   const [forceCustom, setForceCustom] = useState(!isPresetBiweekly)
   const showCustomBiweekly = forceCustom || !isPresetBiweekly
@@ -25,9 +27,9 @@ export function CobroPeriodFields({ freq, day1, day2, weekday, onChangeFreq, onC
   return (
     <div>
       <div className={styles.fieldGroup}>
-        <div className={styles.subLabelMb10}>Frecuencia</div>
+        <div className={styles.subLabelMb10}>{t('settingsCobro.frequencyLabel')}</div>
         <div className={styles.pillRow}>
-          {[['weekly', 'Semanal'], ['biweekly', 'Quincenal'], ['monthly', 'Mensual']].map(([val, label]) => (
+          {[['weekly', t('frequency.weekly')], ['biweekly', t('frequency.biweekly')], ['monthly', t('frequency.monthly')]].map(([val, label]) => (
             <button key={val} type="button" onClick={() => onChangeFreq(val)}
               className={`${styles.pill} ${freq === val ? styles.pillActive : ''}`}>
               {label}
@@ -38,9 +40,9 @@ export function CobroPeriodFields({ freq, day1, day2, weekday, onChangeFreq, onC
 
       {freq === 'weekly' && (
         <div className={styles.fieldGroup}>
-          <div className={styles.subLabelMb8}>Día de cobro</div>
+          <div className={styles.subLabelMb8}>{t('settingsCobro.payDayLabel')}</div>
           <div className={styles.weekdayRow}>
-            {WEEKDAYS_SHORT.map((day, i) => (
+            {getWeekdaysShort().map((day, i) => (
               <button key={i} type="button" onClick={() => onChangeWeekday(i)}
                 className={`${styles.weekdayButton} ${weekday === i ? styles.weekdayButtonActive : ''}`}>
                 {day}
@@ -52,28 +54,28 @@ export function CobroPeriodFields({ freq, day1, day2, weekday, onChangeFreq, onC
 
       {freq === 'biweekly' && (
         <div className={styles.fieldGroup}>
-          <div className={styles.subLabelMb8}>Días de cobro</div>
+          <div className={styles.subLabelMb8}>{t('settingsCobro.payDaysLabel')}</div>
           <div className={styles.presetsRow}>
             {BIWEEKLY_PRESETS.map(p => (
-              <button key={p.label} type="button" onClick={() => { onChangeDay1(p.d1); onChangeDay2(p.d2); setForceCustom(false) }}
+              <button key={`${p.d1}-${p.d2}`} type="button" onClick={() => { onChangeDay1(p.d1); onChangeDay2(p.d2); setForceCustom(false) }}
                 className={`${styles.presetButton} ${!showCustomBiweekly && day1 === p.d1 && day2 === p.d2 ? styles.presetButtonActive : ''}`}>
-                {p.label}
+                {t('settingsCobro.dayPair', { d1: p.d1, d2: p.d2 })}
               </button>
             ))}
             <button type="button" onClick={() => setForceCustom(true)}
               className={`${styles.presetButton} ${showCustomBiweekly ? styles.presetButtonActive : ''}`}>
-              Otro
+              {t('settingsCobro.otherOption')}
             </button>
           </div>
           {showCustomBiweekly && (
             <div className={styles.customDaysRow}>
               <div className={styles.customDayField}>
-                <label className={styles.customDayLabel}>Día 1 (1–31)</label>
-                <input type="number" min="1" max="31" defaultValue={day1 ?? ''} onBlur={e => { const v = Math.min(31, Math.max(1, parseInt(e.target.value) || 1)); e.target.value = v; onChangeDay1(v) }} placeholder="ej. 13" className="field-input" />
+                <label className={styles.customDayLabel}>{t('settingsCobro.day1Label')}</label>
+                <input type="number" min="1" max="31" defaultValue={day1 ?? ''} onBlur={e => { const v = Math.min(31, Math.max(1, parseInt(e.target.value) || 1)); e.target.value = v; onChangeDay1(v) }} placeholder={t('settingsCobro.day1Placeholder')} className="field-input" />
               </div>
               <div className={styles.customDayField}>
-                <label className={styles.customDayLabel}>Día 2 (1–31)</label>
-                <input type="number" min="1" max="31" defaultValue={day2 ?? ''} onBlur={e => { const v = Math.min(31, Math.max(1, parseInt(e.target.value) || 1)); e.target.value = v; onChangeDay2(v) }} placeholder="ej. 28" className="field-input" />
+                <label className={styles.customDayLabel}>{t('settingsCobro.day2Label')}</label>
+                <input type="number" min="1" max="31" defaultValue={day2 ?? ''} onBlur={e => { const v = Math.min(31, Math.max(1, parseInt(e.target.value) || 1)); e.target.value = v; onChangeDay2(v) }} placeholder={t('settingsCobro.day2Placeholder')} className="field-input" />
               </div>
             </div>
           )}
@@ -82,11 +84,11 @@ export function CobroPeriodFields({ freq, day1, day2, weekday, onChangeFreq, onC
 
       {freq === 'monthly' && (
         <div className={styles.fieldGroup}>
-          <div className={styles.subLabelMb8}>Día de cobro</div>
-          <input type="number" min="1" max="31" defaultValue={day1 ?? 1} onBlur={e => onChangeDay1(Math.min(31, Math.max(1, parseInt(e.target.value) || 1)))} placeholder="ej. 5" className={`field-input ${styles.monthlyDayInput}`} />
+          <div className={styles.subLabelMb8}>{t('settingsCobro.payDayLabel')}</div>
+          <input type="number" min="1" max="31" defaultValue={day1 ?? 1} onBlur={e => onChangeDay1(Math.min(31, Math.max(1, parseInt(e.target.value) || 1)))} placeholder={t('settingsCobro.monthlyPlaceholder')} className={`field-input ${styles.monthlyDayInput}`} />
           {day1 && (
             <div className={styles.monthlyHelperText}>
-              El periodo empieza el día <strong>{day1}</strong> de cada mes.
+              {t('cobroPeriodFields.monthlyHelperPrefix')} <strong>{day1}</strong> {t('settingsCobro.monthlyHelperSuffix')}
             </div>
           )}
         </div>
@@ -94,7 +96,7 @@ export function CobroPeriodFields({ freq, day1, day2, weekday, onChangeFreq, onC
 
       {showCurrency && (
         <div className={styles.currencyRow}>
-          <span className={styles.currencyLabel}>Moneda</span>
+          <span className={styles.currencyLabel}>{t('settingsCobro.currencyLabel')}</span>
           <span className={styles.currencyValue}>MXN $</span>
         </div>
       )}
