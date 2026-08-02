@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useMemo } from 'react'
+import { useTranslation } from 'react-i18next'
 import { fmt } from '../lib/utils'
 import { ConfirmCloseModal } from './ConfirmCloseModal'
 import styles from './InstallmentAbonarModal.module.css'
@@ -12,6 +13,7 @@ import styles from './InstallmentAbonarModal.module.css'
 // recorta cuántos pagos faltan hacia adelante, contra el total fijo
 // (`master.total_amount`) — nunca se redistribuye entre otras copias.
 export function InstallmentAbonarModal({ open, payment, payments, spacePermissions, onConfirm, onClose }) {
+  const { t } = useTranslation()
   const [amount, setAmount] = useState('')
   const [error, setError] = useState('')
   const [confirmClose, setConfirmClose] = useState(false)
@@ -51,7 +53,7 @@ export function InstallmentAbonarModal({ open, payment, payments, spacePermissio
 
   function handleConfirm() {
     const val = parseFloat(amount)
-    if (!val || isNaN(val) || val <= 0) { setError('Ingresa cuánto vas a abonar'); return }
+    if (!val || isNaN(val) || val <= 0) { setError(t('installmentAbonarModal.amountError')); return }
     onConfirm(val)
   }
 
@@ -75,13 +77,13 @@ export function InstallmentAbonarModal({ open, payment, payments, spacePermissio
 
   if (abonadoNum > 0 && abonadoNum < Number(payment.amount)) {
     const resto = Number(payment.amount) - abonadoNum
-    previewText = `Quedarán ${fmt(resto)} pendientes en este pago.`
+    previewText = t('installmentAbonarModal.remainingPending', { amount: fmt(resto) })
     pills.push({ n: payment.current_installment, amt: resto, state: 'parcial' })
     for (let i = payment.current_installment + 1; i <= master.total_installments; i++) pills.push({ n: i, amt: montoRef, state: 'futuro' })
   } else if (abonadoNum > 0) {
     const restanteTotal = pendienteAntes - abonadoNum
     if (restanteTotal <= 0) {
-      previewText = '¡Terminaste todos los pagos!'
+      previewText = t('payCard.allPaymentsDone')
       previewClass = styles.previewSuccess
       pills.push({ n: payment.current_installment, amt: abonadoNum, state: 'ultimo' })
       badgeTotal = payment.current_installment
@@ -94,7 +96,7 @@ export function InstallmentAbonarModal({ open, payment, payments, spacePermissio
       pills.push({ n: newTotal, amt: restoUltimo, state: 'futuro-ultimo' })
       badgeTotal = newTotal
       if (newTotal < master.total_installments) {
-        previewText = `El plan se ajusta de ${master.total_installments} a ${newTotal} pagos en total.`
+        previewText = t('installmentAbonarModal.planAdjusts', { oldTotal: master.total_installments, newTotal })
         previewClass = styles.previewAccent
       }
     }
@@ -106,36 +108,36 @@ export function InstallmentAbonarModal({ open, payment, payments, spacePermissio
         <div className={styles.modal}>
           <div className={styles.handle} />
           <div className={styles.headerRow}>
-            <span className={styles.title}>Abonar</span>
-            <span className={styles.badge}>Pago {payment.current_installment} de {badgeTotal}</span>
+            <span className={styles.title}>{t('installmentAbonarModal.title')}</span>
+            <span className={styles.badge}>{t('installmentAbonarModal.badge', { current: payment.current_installment, total: badgeTotal })}</span>
           </div>
           <div className={styles.description}>{payment.name}</div>
 
           <div className={styles.refRow}>
-            <span>Monto de referencia</span>
+            <span>{t('installmentAbonarModal.referenceAmount')}</span>
             <span className={styles.refAmount}>{fmt(montoRef)}</span>
           </div>
           <div className={`${styles.refRow} ${styles.refRowNoTop}`}>
-            <span>Total de la deuda</span>
+            <span>{t('installmentAbonarModal.totalDebt')}</span>
             <span className={styles.refAmount}>{fmt(totalPagadoConAbono)} / {fmt(totalAmount)}</span>
           </div>
 
           {!allowed && (
             <div className={styles.warningBox}>
-              No tienes permitido registrar abonos en este Espacio Compartido.
+              {t('paymentsPage.blockedAction', { action: t('paymentsPage.actionRegisterContributions') })}
             </div>
           )}
           {error && <div className={styles.errorBox}>{error}</div>}
 
           <div className={`${styles.formWrapper} ${!allowed ? styles.formDisabled : ''}`}>
-            <label className="field-label">Cuánto vas a abonar</label>
+            <label className="field-label">{t('installmentAbonarModal.amountLabel')}</label>
             <input autoFocus type="number" value={amount} onChange={e => setAmount(e.target.value)} placeholder="0.00" onKeyDown={e => e.key === 'Enter' && handleConfirm()} className={`field-input ${styles.input}`} />
 
             {previewText && <div className={`${styles.preview} ${previewClass}`}>{previewText}</div>}
 
             {pills.length > 0 && (
               <>
-                <label className="field-label">Plan de pagos</label>
+                <label className="field-label">{t('installmentAbonarModal.paymentPlan')}</label>
                 <div className={styles.plan}>
                   {pills.map(p => (
                     <div key={p.n} className={`${styles.pill} ${styles['pill_' + p.state]}`}>
@@ -147,9 +149,9 @@ export function InstallmentAbonarModal({ open, payment, payments, spacePermissio
               </>
             )}
 
-            <button onClick={handleConfirm} disabled={!allowed} className={`btn-primary ${styles.confirmButton}`}>Confirmar abono</button>
+            <button onClick={handleConfirm} disabled={!allowed} className={`btn-primary ${styles.confirmButton}`}>{t('installmentAbonarModal.confirmButton')}</button>
           </div>
-          <button onClick={requestClose} className="btn-ghost">Cancelar</button>
+          <button onClick={requestClose} className="btn-ghost">{t('buttons.cancel')}</button>
         </div>
       </div>
       <ConfirmCloseModal open={confirmClose} onConfirm={() => { setConfirmClose(false); onClose() }} onCancel={() => setConfirmClose(false)} />

@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Crown } from 'lucide-react'
 import { CobroPeriodFields } from './CobroPeriodFields'
 import { Toggle } from './SettingsShared'
@@ -13,6 +14,7 @@ import styles from './NewSharedSpacePanel.module.css'
 // espacio de sobra; (2) el mensaje de "únete con código" dice cuántos
 // espacios más puede unirse (dinámico), no solo un tope fijo de 3.
 export function NewSharedSpacePanel({ profile, sharedSpaces, onOpenPremium, onCreated, onJoined }) {
+  const { t } = useTranslation()
   const { spaces, createSpace, redeemCode } = sharedSpaces
   const ownedEntry   = spaces.find(s => s.membership.role === 'owner')
   const guestEntries = spaces.filter(s => s.membership.role === 'guest')
@@ -30,7 +32,7 @@ export function NewSharedSpacePanel({ profile, sharedSpaces, onOpenPremium, onCr
   const [createSaving,setCreateSaving]= useState(false)
 
   async function handleCreate() {
-    if (!newName.trim()) { setCreateError('Ponle un nombre al espacio'); return }
+    if (!newName.trim()) { setCreateError(t('newSharedSpacePanel.nameRequiredError')); return }
     setCreateSaving(true)
     setCreateError('')
     const { data, error } = await createSpace({
@@ -44,7 +46,7 @@ export function NewSharedSpacePanel({ profile, sharedSpaces, onOpenPremium, onCr
       salaryAmount: newSalaryEnabled ? (parseFloat(newSalaryAmount) || 0) : null,
     })
     setCreateSaving(false)
-    if (error) setCreateError(typeof error === 'string' ? error : 'No se pudo crear el espacio')
+    if (error) setCreateError(typeof error === 'string' ? error : t('newSharedSpacePanel.createGenericError'))
     else { setNewName(''); onCreated && data?.id && onCreated(data.id) }
   }
 
@@ -54,12 +56,12 @@ export function NewSharedSpacePanel({ profile, sharedSpaces, onOpenPremium, onCr
   const [joinSaving, setJoinSaving] = useState(false)
 
   async function handleJoin() {
-    if (joinCode.trim().length !== 6) { setJoinError('El código debe tener 6 dígitos'); return }
+    if (joinCode.trim().length !== 6) { setJoinError(t('newSharedSpacePanel.joinCodeLengthError')); return }
     setJoinSaving(true)
     setJoinError('')
     const { data, error } = await redeemCode(joinCode.trim())
     setJoinSaving(false)
-    if (error) setJoinError(typeof error === 'string' ? error : 'Código inválido')
+    if (error) setJoinError(typeof error === 'string' ? error : t('newSharedSpacePanel.joinCodeInvalid'))
     else { setJoinCode(''); onJoined && data?.space_id && onJoined(data.space_id) }
   }
 
@@ -69,16 +71,16 @@ export function NewSharedSpacePanel({ profile, sharedSpaces, onOpenPremium, onCr
       {!profile.is_premium && (
         <div className={styles.card}>
           <div className={styles.premiumCtaTitle}>
-            Obtén Premium para crear un Espacio Compartido
+            {t('newSharedSpacePanel.premiumCtaTitle')}
           </div>
           <div className={styles.premiumCtaText}>
-            Lleva el control de gastos con tu pareja, tus roomies, o quien tú quieras — hasta 2 personas más, en un espacio aparte de tu cuenta personal.
+            {t('newSharedSpacePanel.premiumCtaText')}
           </div>
           <button
             onClick={onOpenPremium}
             className={styles.premiumButton}
           >
-            <Crown size={16} fill="currentColor" /> Prueba Premium GRATIS 7 días
+            <Crown size={16} fill="currentColor" /> {t('goalsPage.premiumBanner.button')}
           </button>
         </div>
       )}
@@ -86,10 +88,10 @@ export function NewSharedSpacePanel({ profile, sharedSpaces, onOpenPremium, onCr
       {/* Escenario 2: Premium sin espacio propio — formulario directo */}
       {profile.is_premium && !ownedEntry && (
         <div className={styles.createCard}>
-          <div className={styles.createTitle}>Crear Espacio Compartido</div>
-          <label className="field-label">Nombre del espacio</label>
-          <input className={`field-input ${styles.fieldGroupMb16}`} value={newName} onChange={e => setNewName(e.target.value)} placeholder="Ej. Depa con Ale" />
-          <label className={`field-label ${styles.fieldLabelSpaced}`}>Periodo de cobro</label>
+          <div className={styles.createTitle}>{t('newSharedSpacePanel.createTitle')}</div>
+          <label className="field-label">{t('newSharedSpacePanel.spaceNameLabel')}</label>
+          <input className={`field-input ${styles.fieldGroupMb16}`} value={newName} onChange={e => setNewName(e.target.value)} placeholder={t('newSharedSpacePanel.spaceNamePlaceholder')} />
+          <label className={`field-label ${styles.fieldLabelSpaced}`}>{t('settingsCobro.periodSection')}</label>
           <div className={styles.fieldGroupMb16}>
             <CobroPeriodFields
               freq={newFreq} day1={newDay1} day2={newDay2} weekday={newWeekday}
@@ -99,21 +101,21 @@ export function NewSharedSpacePanel({ profile, sharedSpaces, onOpenPremium, onCr
 
           <div className={`${styles.toggleRow} ${newSalaryEnabled ? styles.toggleRowMb10 : styles.toggleRowMb14}`} onClick={() => setNewSalaryEnabled(v => !v)}>
             <div>
-              <div className={styles.toggleTitle}>Ingreso por periodo</div>
-              <div className={styles.toggleSubtitle}>Opcional — además de los Ingresos Extras que cualquier invitado con permiso puede agregar</div>
+              <div className={styles.toggleTitle}>{t('settingsCobro.incomeLabel')}</div>
+              <div className={styles.toggleSubtitle}>{t('newSharedSpacePanel.incomeToggleSub')}</div>
             </div>
             <Toggle on={newSalaryEnabled} />
           </div>
           {newSalaryEnabled && (
             <div className={styles.fieldGroupMb14}>
-              <label className="field-label">Monto</label>
+              <label className="field-label">{t('paymentModal.amountLabel')}</label>
               <input type="number" value={newSalaryAmount} onChange={e => setNewSalaryAmount(e.target.value)} placeholder="0.00" className="field-input" />
             </div>
           )}
 
           {createError && <div className={styles.errorText}>{createError}</div>}
           <button onClick={handleCreate} disabled={createSaving} className="btn-primary" style={{ opacity: createSaving ? 0.7 : 1 }}>
-            {createSaving ? 'Creando…' : 'Crear'}
+            {createSaving ? t('newSharedSpacePanel.creating') : t('newSharedSpacePanel.create')}
           </button>
         </div>
       )}
@@ -122,7 +124,7 @@ export function NewSharedSpacePanel({ profile, sharedSpaces, onOpenPremium, onCr
       {profile.is_premium && ownedEntry && (
         <div className={styles.ownedCard}>
           <div className={styles.ownedText}>
-            Ya eres dueño de un Espacio Compartido — solo puedes tener uno propio.
+            {t('newSharedSpacePanel.ownedText')}
           </div>
         </div>
       )}
@@ -130,9 +132,9 @@ export function NewSharedSpacePanel({ profile, sharedSpaces, onOpenPremium, onCr
       {/* Unirse con código — siempre visible, para los 3 escenarios */}
       {slotsLeft > 0 ? (
         <div className={styles.joinCard}>
-          <div className={styles.joinTitle}>Únete a un Espacio Compartido</div>
+          <div className={styles.joinTitle}>{t('newSharedSpacePanel.joinTitle')}</div>
           <div className={styles.joinText}>
-            Puedes unirte a {slotsLeft} espacio{slotsLeft !== 1 ? 's' : ''} compartido{slotsLeft !== 1 ? 's' : ''} más. El código de acceso debe tener 6 dígitos — debe proporcionarlo el creador del espacio.
+            {t('newSharedSpacePanel.joinText', { count: slotsLeft })}
           </div>
           <input
             className={`field-input ${styles.joinCodeInput}`} inputMode="numeric" maxLength={6}
@@ -141,12 +143,12 @@ export function NewSharedSpacePanel({ profile, sharedSpaces, onOpenPremium, onCr
           />
           {joinError && <div className={styles.errorText}>{joinError}</div>}
           <button onClick={handleJoin} disabled={joinSaving || joinCode.length !== 6} className="btn-primary">
-            {joinSaving ? 'Uniendo…' : 'Unirme'}
+            {joinSaving ? t('newSharedSpacePanel.joining') : t('newSharedSpacePanel.join')}
           </button>
         </div>
       ) : (
         <div className={styles.maxJoinedCard}>
-          Ya perteneces al máximo de 3 espacios compartidos como invitado.
+          {t('newSharedSpacePanel.maxJoined')}
         </div>
       )}
     </div>
