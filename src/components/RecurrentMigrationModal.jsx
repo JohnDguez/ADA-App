@@ -1,7 +1,9 @@
+import { useTranslation } from 'react-i18next'
 import { RefreshCw, AlertTriangle, Check } from 'lucide-react'
 import styles from './RecurrentMigrationModal.module.css'
 
 export function RecurrentMigrationModal({ open, onClose }) {
+  const { t } = useTranslation()
   if (!open) return null
 
   return (
@@ -16,18 +18,18 @@ export function RecurrentMigrationModal({ open, onClose }) {
         </div>
 
         <div className={styles.title}>
-          Mejora en pagos recurrentes
+          {t('recurrentMigrationModal.title')}
         </div>
         <div className={styles.description}>
-          Actualizamos cómo funcionan los pagos recurrentes para hacerlos más inteligentes y editables.
+          {t('recurrentMigrationModal.description')}
         </div>
 
         {/* Beneficios */}
         <div className={styles.benefitsList}>
           {[
-            'Los pagos se generan automáticamente periodo a periodo',
-            'Ahora puedes editar nombre, monto y fechas en cualquier momento',
-            'Siempre verás el pago actual y el siguiente en tu lista',
+            t('recurrentMigrationModal.benefit1'),
+            t('recurrentMigrationModal.benefit2'),
+            t('recurrentMigrationModal.benefit3'),
           ].map((text, i) => (
             <div key={i} className={styles.benefitItem}>
               <div className={styles.checkCircle}>
@@ -43,15 +45,15 @@ export function RecurrentMigrationModal({ open, onClose }) {
           <div className={styles.warningContent}>
             <AlertTriangle size={15} color="var(--warning)" className={styles.warningIcon} />
             <div>
-              <div className={styles.warningTitle}>Cambio temporal visible</div>
+              <div className={styles.warningTitle}>{t('recurrentMigrationModal.warningTitle')}</div>
               <div className={styles.warningText}>
-                Es posible que notes algunos ajustes en cómo se muestran tus pagos recurrentes mientras el sistema migra los datos. Tus pagos ya realizados están protegidos y no serán eliminados.
+                {t('recurrentMigrationModal.warningText')}
               </div>
             </div>
           </div>
         </div>
 
-        <button onClick={onClose} className="btn-primary">Entendido</button>
+        <button onClick={onClose} className="btn-primary">{t('recurrentMigrationModal.understood')}</button>
       </div>
     </div>
   )

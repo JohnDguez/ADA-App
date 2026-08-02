@@ -1,8 +1,10 @@
 import { useState, useEffect, useRef } from 'react'
+import { useTranslation } from 'react-i18next'
 import { ConfirmCloseModal } from './ConfirmCloseModal'
 import styles from './VariableAmountModal.module.css'
 
 export function VariableAmountModal({ open, payment, mode = 'pay', spacePermissions, onConfirm, onClose }) {
+  const { t } = useTranslation()
   const [amount, setAmount] = useState('')
   const [error, setError] = useState('')
   const [confirmClose, setConfirmClose] = useState(false)
@@ -44,7 +46,7 @@ export function VariableAmountModal({ open, payment, mode = 'pay', spacePermissi
 
   function handleConfirm() {
     const val = parseFloat(amount)
-    if (!val || isNaN(val) || val <= 0) { setError(mode === 'estimate' ? 'Ingresa el monto a pagar' : 'Ingresa el monto que pagaste'); return }
+    if (!val || isNaN(val) || val <= 0) { setError(mode === 'estimate' ? t('variableAmountModal.errorEstimate') : t('variableAmountModal.errorPay')); return }
     onConfirm(val)
   }
 
@@ -55,23 +57,23 @@ export function VariableAmountModal({ open, payment, mode = 'pay', spacePermissi
       <div onClick={e => e.target === e.currentTarget && requestClose()} className={styles.overlay}>
         <div className={styles.modal}>
           <div className={styles.title}>
-            {mode === 'estimate' ? 'Monto a pagar' : 'Registrar pago'}
+            {mode === 'estimate' ? t('variableAmountModal.titleEstimate') : t('variableAmountModal.titlePay')}
           </div>
           <div className={styles.description}>
-            {payment.name} — {mode === 'estimate' ? 'ingresa el monto que vas a pagar' : 'ingresa el monto que pagaste'}
+            {payment.name} — {mode === 'estimate' ? t('variableAmountModal.descriptionEstimate') : t('variableAmountModal.descriptionPay')}
           </div>
           {!allowed && (
             <div className={styles.warningBox}>
-              No tienes permitido {mode === 'estimate' ? 'editar' : 'marcar'} pagos en este Espacio Compartido.
+              {t('paymentsPage.blockedAction', { action: mode === 'estimate' ? t('paymentsPage.actionEditPayments') : t('paymentsPage.actionMarkPayments') })}
             </div>
           )}
           {error && <div className={styles.errorBox}>{error}</div>}
           <div className={`${styles.formWrapper} ${!allowed ? styles.formDisabled : ''}`}>
-            <label className="field-label">{mode === 'estimate' ? 'Monto' : 'Monto pagado'}</label>
+            <label className="field-label">{mode === 'estimate' ? t('variableAmountModal.amountLabelEstimate') : t('variableAmountModal.amountLabelPay')}</label>
             <input autoFocus type="number" value={amount} onChange={e => setAmount(e.target.value)} placeholder="0.00" onKeyDown={e => e.key === 'Enter' && handleConfirm()} className={`field-input ${styles.input}`} />
-            <button onClick={handleConfirm} disabled={!allowed} className={`btn-primary ${styles.confirmButton}`}>{mode === 'estimate' ? 'Guardar monto' : 'Confirmar pago'}</button>
+            <button onClick={handleConfirm} disabled={!allowed} className={`btn-primary ${styles.confirmButton}`}>{mode === 'estimate' ? t('variableAmountModal.saveEstimate') : t('variableAmountModal.savePay')}</button>
           </div>
-          <button onClick={requestClose} className="btn-ghost">Cancelar</button>
+          <button onClick={requestClose} className="btn-ghost">{t('buttons.cancel')}</button>
         </div>
       </div>
       <ConfirmCloseModal open={confirmClose} onConfirm={() => { setConfirmClose(false); onClose() }} onCancel={() => setConfirmClose(false)} />

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Lock, Eye, EyeOff } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { RequirementRow } from './RequirementRow'
@@ -21,6 +22,7 @@ export function isPasswordStrong(pwd) {
 
 // ── Modal de configuración de contraseña (Google users) ──────────────────────
 export function PasswordSetupModal({ userId, onDone }) {
+  const { t } = useTranslation()
   const [password, setPassword] = useState('')
   const [confirm,  setConfirm]  = useState('')
   const [showPass, setShowPass] = useState(false)
@@ -39,8 +41,8 @@ export function PasswordSetupModal({ userId, onDone }) {
 
   async function handleSave() {
     setError('')
-    if (!strong) { setError('La contraseña no cumple todos los requisitos'); return }
-    if (!match)  { setError('Las contraseñas no coinciden'); return }
+    if (!strong) { setError(t('passwordSetupModal.notStrong')); return }
+    if (!match)  { setError(t('settingsAccount.editModal.passwordMismatch')); return }
 
     setLoading(true)
     const { error: updErr } = await supabase.auth.updateUser({ password })
@@ -57,10 +59,10 @@ export function PasswordSetupModal({ userId, onDone }) {
         {/* Encabezado */}
         <div className={styles.header}>
           <div className={styles.headerTitle}>
-            Crea una contraseña
+            {t('passwordSetupModal.title')}
           </div>
           <div className={styles.headerDescription}>
-            Para mantener tu cuenta segura necesitas una contraseña. La usarás para confirmar acciones importantes como eliminar datos.
+            {t('passwordSetupModal.description')}
           </div>
         </div>
 
@@ -73,7 +75,7 @@ export function PasswordSetupModal({ userId, onDone }) {
         {/* Campo contraseña */}
         <div className={styles.passwordField}>
           <label className={styles.fieldLabel}>
-            Contraseña
+            {t('passwordSetupModal.passwordLabel')}
           </label>
           <div className={styles.inputWrapper}>
             <div className={styles.inputIconLeft}>
@@ -96,17 +98,17 @@ export function PasswordSetupModal({ userId, onDone }) {
         {/* Requisitos */}
         {password.length > 0 && (
           <div className={styles.requirementsBox}>
-            <RequirementRow met={reqs.length}    label="Mínimo 8 caracteres" />
-            <RequirementRow met={reqs.uppercase} label="Al menos una mayúscula" />
-            <RequirementRow met={reqs.number}    label="Al menos un número" />
-            <RequirementRow met={reqs.symbol}    label="Al menos un símbolo especial (!@#$...)" />
+            <RequirementRow met={reqs.length}    label={t('settingsAccount.editModal.requirementLength')} />
+            <RequirementRow met={reqs.uppercase} label={t('settingsAccount.editModal.requirementUppercase')} />
+            <RequirementRow met={reqs.number}    label={t('settingsAccount.editModal.requirementNumber')} />
+            <RequirementRow met={reqs.symbol}    label={t('settingsAccount.editModal.requirementSymbol')} />
           </div>
         )}
 
         {/* Campo confirmar */}
         <div className={styles.confirmField}>
           <label className={styles.fieldLabel}>
-            Confirmar contraseña
+            {t('passwordSetupModal.confirmLabel')}
           </label>
           <div className={styles.inputWrapper}>
             <div className={styles.inputIconLeft}>
@@ -116,7 +118,7 @@ export function PasswordSetupModal({ userId, onDone }) {
               type={showConf ? 'text' : 'password'}
               value={confirm}
               onChange={e => setConfirm(e.target.value)}
-              placeholder="Repite tu contraseña"
+              placeholder={t('passwordSetupModal.confirmPlaceholder')}
               className={`field-input ${styles.input} ${confirm && !match ? styles.inputError : ''}`}
               onKeyDown={e => e.key === 'Enter' && handleSave()}
             />
@@ -125,7 +127,7 @@ export function PasswordSetupModal({ userId, onDone }) {
             </button>
           </div>
           {confirm && !match && (
-            <div className={styles.matchError}>Las contraseñas no coinciden</div>
+            <div className={styles.matchError}>{t('settingsAccount.editModal.passwordMismatch')}</div>
           )}
         </div>
 
@@ -134,7 +136,7 @@ export function PasswordSetupModal({ userId, onDone }) {
           disabled={loading || !strong || !match}
           className="btn-primary"
         >
-          {loading ? 'Guardando…' : 'Crear contraseña'}
+          {loading ? t('settingsCategories.saving') : t('passwordSetupModal.submit')}
         </button>
       </div>
     </div>
