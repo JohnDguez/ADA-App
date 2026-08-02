@@ -325,7 +325,8 @@
       "toast": {
         "deleteError": "Error al eliminar"
       }
-    }
+    },
+    "actionEditPayments": "editar pagos"
   },
   "recurrentsPage": {
     "title": "Gastos recurrentes",
@@ -448,5 +449,36 @@
       "emptyName": "Ponle un nombre a tu meta",
       "invalidAmount": "Ingresa cuánto quieres ahorrar"
     }
+  },
+  "variableAmountModal": {
+    "titleEstimate": "Monto a pagar",
+    "titlePay": "Registrar pago",
+    "descriptionEstimate": "ingresa el monto que vas a pagar",
+    "descriptionPay": "ingresa el monto que pagaste",
+    "amountLabelEstimate": "Monto",
+    "amountLabelPay": "Monto pagado",
+    "errorEstimate": "Ingresa el monto a pagar",
+    "errorPay": "Ingresa el monto que pagaste",
+    "saveEstimate": "Guardar monto",
+    "savePay": "Confirmar pago"
+  },
+  "recurrentMigrationModal": {
+    "title": "Mejora en pagos recurrentes",
+    "description": "Actualizamos cómo funcionan los pagos recurrentes para hacerlos más inteligentes y editables.",
+    "benefit1": "Los pagos se generan automáticamente periodo a periodo",
+    "benefit2": "Ahora puedes editar nombre, monto y fechas en cualquier momento",
+    "benefit3": "Siempre verás el pago actual y el siguiente en tu lista",
+    "warningTitle": "Cambio temporal visible",
+    "warningText": "Es posible que notes algunos ajustes en cómo se muestran tus pagos recurrentes mientras el sistema migra los datos. Tus pagos ya realizados están protegidos y no serán eliminados.",
+    "understood": "Entendido"
+  },
+  "passwordSetupModal": {
+    "title": "Crea una contraseña",
+    "description": "Para mantener tu cuenta segura necesitas una contraseña. La usarás para confirmar acciones importantes como eliminar datos.",
+    "passwordLabel": "Contraseña",
+    "confirmLabel": "Confirmar contraseña",
+    "confirmPlaceholder": "Repite tu contraseña",
+    "notStrong": "La contraseña no cumple todos los requisitos",
+    "submit": "Crear contraseña"
   }
 }

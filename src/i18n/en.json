@@ -325,7 +325,8 @@
       "toast": {
         "deleteError": "Error deleting"
       }
-    }
+    },
+    "actionEditPayments": "edit payments"
   },
   "recurrentsPage": {
     "title": "Recurring expenses",
@@ -448,5 +449,36 @@
       "emptyName": "Give your goal a name",
       "invalidAmount": "Enter how much you want to save"
     }
+  },
+  "variableAmountModal": {
+    "titleEstimate": "Amount to pay",
+    "titlePay": "Log payment",
+    "descriptionEstimate": "enter the amount you're going to pay",
+    "descriptionPay": "enter the amount you paid",
+    "amountLabelEstimate": "Amount",
+    "amountLabelPay": "Amount paid",
+    "errorEstimate": "Enter the amount to pay",
+    "errorPay": "Enter the amount you paid",
+    "saveEstimate": "Save amount",
+    "savePay": "Confirm payment"
+  },
+  "recurrentMigrationModal": {
+    "title": "Recurring payments improvement",
+    "description": "We updated how recurring payments work to make them smarter and editable.",
+    "benefit1": "Payments are generated automatically period after period",
+    "benefit2": "Now you can edit the name, amount, and dates at any time",
+    "benefit3": "You'll always see the current payment and the next one in your list",
+    "warningTitle": "Temporary visible change",
+    "warningText": "You might notice some adjustments in how your recurring payments are displayed while the system migrates the data. Payments you've already made are protected and won't be deleted.",
+    "understood": "Got it"
+  },
+  "passwordSetupModal": {
+    "title": "Create a password",
+    "description": "To keep your account secure you need a password. You'll use it to confirm important actions like deleting data.",
+    "passwordLabel": "Password",
+    "confirmLabel": "Confirm password",
+    "confirmPlaceholder": "Repeat your password",
+    "notStrong": "The password doesn't meet all the requirements",
+    "submit": "Create password"
   }
 }
