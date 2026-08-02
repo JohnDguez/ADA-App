@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Wallet, AlertTriangle, Repeat, Check } from 'lucide-react'
-import { CATEGORIES, RECUR_FREQ, WEEKDAYS_SHORT, MONTHS_SHORT, nextWeekdayDate, nextBiweeklyFromDate, nextPeriodDate, cobroPeriod, fmt, nameExistsActive, projectPeriodImpact, getCatColor, dateToStr, todayStr } from '../lib/utils'
+import { CATEGORIES, RECUR_FREQ, WEEKDAYS_SHORT, MONTHS, MONTHS_SHORT, nextWeekdayDate, nextBiweeklyFromDate, nextPeriodDate, cobroPeriod, fmt, nameExistsActive, projectPeriodImpact, getCatColor, dateToStr, todayStr } from '../lib/utils'
 import { getCategoryIcon } from '../lib/categoryIcons'
 import { supabase } from '../lib/supabase'
 import { ConfirmCloseModal } from './ConfirmCloseModal'
@@ -11,6 +12,7 @@ import { DatePicker } from './DatePicker'
 import styles from './PaymentModal.module.css'
 
 export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelete, initial, payments, profile, spacePermissions, isSharedSpace = false, customCategories = [], onAddCategory, onOpenPremium }) {
+  const { t } = useTranslation()
   const [mode,               setMode]               = useState('single')
   const [name,               setName]               = useState('')
   const [amount,             setAmount]             = useState('')
@@ -42,7 +44,7 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
   const canWrite  = !spacePermissions || (initial ? spacePermissions.can_edit : spacePermissions.can_add)
   const canDelete = !spacePermissions || spacePermissions.can_delete
   const lockedMessage = !canWrite
-    ? `No tienes permitido ${initial ? 'editar' : 'añadir'} pagos en este Espacio Compartido.`
+    ? t('paymentsPage.blockedAction', { action: initial ? t('paymentsPage.actionEditPayments') : t('paymentsPage.actionAddPayments') })
     : null
 
   useEffect(() => {
@@ -126,30 +128,30 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
   async function handleSave() {
     if (!canWrite) return
     setError('')
-    if (!name.trim()) { setError('Escribe el nombre del pago'); return }
+    if (!name.trim()) { setError(t('paymentModal.nameError')); return }
     const checkName = initial?.name || null
     if (nameExistsActive(payments || [], name, checkName)) {
-      setError(`Ya existe un pago activo con el nombre "${name.trim()}"`); return
+      setError(t('paymentModal.duplicateNameError', { name: name.trim() })); return
     }
     if (mode === 'installment') {
       const totalAmt = parseFloat(totalAmount)
-      if (!totalAmount || isNaN(totalAmt) || totalAmt <= 0) { setError('Agrega el monto total a pagar'); return }
-      if (!totalInstallments || isNaN(parseInt(totalInstallments))) { setError('Agrega el número de pagos'); return }
+      if (!totalAmount || isNaN(totalAmt) || totalAmt <= 0) { setError(t('paymentModal.installment.totalAmountError')); return }
+      if (!totalInstallments || isNaN(parseInt(totalInstallments))) { setError(t('paymentModal.installment.countError')); return }
       const total = parseInt(totalInstallments)
-      if (total < 2) { setError('El mínimo es 2 pagos'); return }
+      if (total < 2) { setError(t('paymentModal.installment.minError')); return }
       const start = parseInt(startFrom) || 1
-      if (start > total) { setError('El pago inicial no puede ser mayor al total'); return }
-      if (!dueDate) { setError('Selecciona la fecha del primer pago'); return }
+      if (start > total) { setError(t('paymentModal.installment.startExceedsTotal')); return }
+      if (!dueDate) { setError(t('paymentModal.installment.firstDateError')); return }
       const amountPerPayment = Math.round((totalAmt / total) * 100) / 100
       setSaving(true)
       await onSaveInstallment({ name: name.trim(), amount: amountPerPayment, totalAmount: totalAmt, totalInstallments: total, startFrom: start, recurFreq, category, firstDate: dueDate })
       setSaving(false); onClose(); return
     }
-    if (!isVariable && (!amount || isNaN(parseFloat(amount)))) { setError('Agrega el monto o marca como variable'); return }
+    if (!isVariable && (!amount || isNaN(parseFloat(amount)))) { setError(t('paymentModal.amountOrVariableError')); return }
     let finalDate = dueDate
     if (mode === 'recurrent' && recurFreq === 'weekly')    finalDate = dateToStr(nextWeekdayDate(weekday))
     if (mode === 'recurrent' && recurFreq === 'biweekly')  finalDate = biweeklyDate ? dateToStr(nextBiweeklyFromDate(biweeklyDate)) : dueDate
-    if (!finalDate) { setError('Selecciona la fecha de vencimiento'); return }
+    if (!finalDate) { setError(t('paymentModal.dueDateError')); return }
     setSaving(true)
     const payload = {
       name: name.trim(),
@@ -234,13 +236,13 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
     async function handleEditInstallment() {
       if (!canWrite) return
       setError('')
-      if (!name.trim()) { setError('Escribe el nombre del pago'); return }
-      if (!amount || isNaN(parseFloat(amount)) || parseFloat(amount) <= 0) { setError('Ingresa el monto por pago'); return }
+      if (!name.trim()) { setError(t('paymentModal.nameError')); return }
+      if (!amount || isNaN(parseFloat(amount)) || parseFloat(amount) <= 0) { setError(t('paymentModal.editInstallment.amountError')); return }
       const total = parseInt(totalInstallments)
       if (!total || total < initial.current_installment) {
-        setError(`El total no puede ser menor al pago actual (${initial.current_installment})`); return
+        setError(t('paymentModal.editInstallment.totalBelowCurrentError', { current: initial.current_installment })); return
       }
-      if (!dueDate) { setError('Selecciona la fecha del próximo pago'); return }
+      if (!dueDate) { setError(t('paymentModal.editInstallment.nextDateError')); return }
       setSaving(true)
       await onSave({
         name: name.trim(),
@@ -261,9 +263,9 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
 
             {/* Contexto */}
             <div className={styles.installmentHeaderRow}>
-              <div className={styles.installmentHeaderTitle}>Editar parcialidades</div>
+              <div className={styles.installmentHeaderTitle}>{t('paymentModal.editInstallment.title')}</div>
               <div className={styles.installmentBadge}>
-                Pago {initial.current_installment}/{initial.total_installments}
+                {t('paymentModal.editInstallment.badge', { current: initial.current_installment, total: initial.total_installments })}
               </div>
             </div>
 
@@ -271,56 +273,59 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
             {lockedMessage && <div className={styles.warningBox}>{lockedMessage}</div>}
 
             <div className={canWrite ? styles.formWrapper : styles.formDisabled}>
-            <Field label="Nombre">
+            <Field label={t('paymentModal.fields.name')}>
               <input className="field-input" type="text" value={name} onChange={e => setName(e.target.value)} />
             </Field>
 
             <div className={styles.fieldGroup}>
               <div className={styles.categoryHeaderRow}>
-                <label className="field-label">Categoría</label>
+                <label className="field-label">{t('paymentModal.fields.category')}</label>
                 <button type="button" onClick={() => { setAddingCategory(true); setNewCategoryName('') }}
                   className={styles.addCategoryButton}>
-                  + Agregar
+                  {t('paymentModal.fields.addCategory')}
                 </button>
               </div>
               <Select value={category} onChange={setCategory} options={allCategories} renderIcon={renderCategoryIcon} />
               {addingCategory && (
                 <div className={styles.addCategoryRow}>
-                  <input autoFocus className={`field-input ${styles.addCategoryInput}`} placeholder="Nombre de la categoría" value={newCategoryName}
+                  <input autoFocus className={`field-input ${styles.addCategoryInput}`} placeholder={t('paymentModal.fields.categoryNamePlaceholder')} value={newCategoryName}
                     onChange={e => setNewCategoryName(e.target.value)}
                     onKeyDown={e => { if (e.key === 'Enter' && newCategoryName.trim()) handleAddCategory(); if (e.key === 'Escape') setAddingCategory(false) }} />
                   <button type="button" onClick={handleAddCategory} disabled={!newCategoryName.trim()}
                     className={styles.addCategorySubmitButton}>
-                    Añadir
+                    {t('paymentModal.fields.add')}
                   </button>
                 </div>
               )}
             </div>
 
-            <Field label="Monto por pago">
+            <Field label={t('paymentModal.fields.amountPerPayment')}>
               <input className="field-input" type="number" value={amount} onChange={e => setAmount(e.target.value)} placeholder="0.00" />
             </Field>
 
-            <Field label="Total de pagos">
-              <input className="field-input" type="number" value={totalInstallments} onChange={e => setTotalInstallments(e.target.value)} placeholder="Ej. 20" min={initial.current_installment} />
+            <Field label={t('paymentModal.fields.totalPayments')}>
+              <input className="field-input" type="number" value={totalInstallments} onChange={e => setTotalInstallments(e.target.value)} placeholder={t('paymentModal.fields.totalPaymentsPlaceholder')} min={initial.current_installment} />
               <div className={styles.helperText}>
-                Quedan {Math.max(0, parseInt(totalInstallments) - initial.current_installment + 1) || '—'} pagos por cubrir
+                {(() => {
+                  const remaining = Math.max(0, parseInt(totalInstallments) - initial.current_installment + 1)
+                  return isNaN(remaining) ? '—' : t('paymentModal.editInstallment.remainingHelper', { count: remaining })
+                })()}
               </div>
             </Field>
 
             <FrequencyPicker value={recurFreq} onChange={setRecurFreq} />
 
-            <Field label="Fecha del próximo pago">
+            <Field label={t('paymentModal.fields.nextPaymentDate')}>
               <DatePicker value={dueDate} onChange={setDueDate} />
             </Field>
             </div>
 
             <button onClick={handleEditInstallment} disabled={saving || !canWrite} className={`btn-primary ${styles.saveButtonSpacing}`} style={{ opacity: (saving || !canWrite) ? 0.7 : 1 }}>
-              {saving ? 'Guardando…' : 'Guardar cambios'}
+              {saving ? t('settingsCategories.saving') : t('paymentModal.editInstallment.saveButton')}
             </button>
-            <button onClick={onClose} className={`btn-ghost ${styles.cancelButtonSpacing}`}>Cancelar</button>
+            <button onClick={onClose} className={`btn-ghost ${styles.cancelButtonSpacing}`}>{t('buttons.cancel')}</button>
             <button onClick={() => { onDelete(initial.id, initial); onClose() }} disabled={!canDelete} className={`btn-danger ${styles.deleteButtonSpacing}`} style={{ opacity: canDelete ? 1 : 0.5 }}>
-              Cancelar parcialidades
+              {t('paymentModal.editInstallment.cancelInstallments')}
             </button>
           </div>
         </div>
@@ -336,19 +341,19 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
 
           {!initial && (
             <div data-coachmark="modal-payment-type-tabs" className={styles.paymentTypeTabs}>
-              {[['single','Pago único'],['recurrent','Recurrente'],['installment','Parcialidades']].map(([m, label]) => (
+              {[['single',t('paymentModal.tabs.single')],['recurrent',t('paymentModal.tabs.recurrent')],['installment',t('paymentModal.tabs.installment')]].map(([m, label]) => (
                 <button key={m} onClick={() => setMode(m)} className={`${styles.paymentTypeTab} ${mode === m ? styles.paymentTypeTabActive : ''}`}>{label}</button>
               ))}
             </div>
           )}
 
           <div className={styles.modalTitle}>
-            {initial?.is_master && initial?.paused ? 'Reactivar pago recurrente' : initial?.is_master ? 'Editar pago recurrente' : initial ? 'Editar pago' : mode === 'installment' ? 'Pago en parcialidades' : mode === 'recurrent' ? 'Pago recurrente' : 'Nuevo pago'}
+            {initial?.is_master && initial?.paused ? t('paymentModal.title.reactivate') : initial?.is_master ? t('paymentModal.title.editRecurrent') : initial ? t('paymentModal.title.edit') : mode === 'installment' ? t('paymentModal.title.installment') : mode === 'recurrent' ? t('paymentModal.title.recurrent') : t('paymentModal.title.new')}
           </div>
 
           {mode === 'installment' && !initial && (
             <div className={styles.infoBanner}>
-              Los pagos se generan uno a uno. Al marcar cada pago como pagado, el siguiente aparece automáticamente.
+              {t('paymentModal.installmentInfoBanner')}
             </div>
           )}
 
@@ -356,16 +361,16 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
           {lockedMessage && <div className={styles.warningBox}>{lockedMessage}</div>}
 
           <div className={canWrite ? styles.formWrapper : styles.formDisabled}>
-          <Field label="Nombre">
-            <input autoFocus={!initial} className="field-input" type="text" value={name} onChange={e => setName(e.target.value)} placeholder="Ej. Netflix, Renta, Luz…" />
+          <Field label={t('paymentModal.fields.name')}>
+            <input autoFocus={!initial} className="field-input" type="text" value={name} onChange={e => setName(e.target.value)} placeholder={t('paymentModal.namePlaceholder')} />
           </Field>
 
           <div className={styles.fieldGroup}>
             <div className={styles.categoryHeaderRow}>
-              <label className="field-label">Categoría</label>
+              <label className="field-label">{t('paymentModal.fields.category')}</label>
               <button type="button" onClick={() => { setAddingCategory(true); setNewCategoryName('') }}
                 className={styles.addCategoryButton}>
-                + Agregar
+                {t('paymentModal.fields.addCategory')}
               </button>
             </div>
             <div data-coachmark="modal-category-field">
@@ -373,12 +378,12 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
             </div>
             {addingCategory && (
               <div className={styles.addCategoryRow}>
-                <input autoFocus className={`field-input ${styles.addCategoryInput}`} placeholder="Nombre de la categoría" value={newCategoryName}
+                <input autoFocus className={`field-input ${styles.addCategoryInput}`} placeholder={t('paymentModal.fields.categoryNamePlaceholder')} value={newCategoryName}
                   onChange={e => setNewCategoryName(e.target.value)}
                   onKeyDown={e => { if (e.key === 'Enter' && newCategoryName.trim()) handleAddCategory(); if (e.key === 'Escape') setAddingCategory(false) }} />
                 <button type="button" onClick={handleAddCategory} disabled={!newCategoryName.trim()}
                   className={styles.addCategorySubmitButton}>
-                  Añadir
+                  {t('paymentModal.fields.add')}
                 </button>
               </div>
             )}
@@ -386,12 +391,12 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
 
           {mode !== 'installment' && (
             <div data-coachmark="modal-variable-toggle">
-              <Toggle label="Pago variable" sub="El monto cambia cada vez que pagas" value={isVariable} onChange={setIsVariable} />
+              <Toggle label={t('paymentModal.variableToggleLabel')} sub={t('paymentModal.variableToggleSub')} value={isVariable} onChange={setIsVariable} />
             </div>
           )}
 
           {!isVariable && mode !== 'installment' && (
-            <Field label="Monto">
+            <Field label={t('paymentModal.amountLabel')}>
               <input className="field-input" type="number" value={amount} onChange={e => setAmount(e.target.value)} placeholder="0.00" />
             </Field>
           )}
@@ -414,27 +419,27 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
             }
             return (
               <>
-                <Field label="Monto total a pagar">
-                  <input className="field-input" type="number" value={totalAmount} onChange={e => setTotalAmount(e.target.value)} placeholder="Ej. 5000" min="0" enterKeyHint="next" />
+                <Field label={t('paymentModal.totalAmountToPay')}>
+                  <input className="field-input" type="number" value={totalAmount} onChange={e => setTotalAmount(e.target.value)} placeholder={t('paymentModal.totalAmountPlaceholder')} min="0" enterKeyHint="next" />
                 </Field>
-                <Field label="Número de pagos">
-                  <input className="field-input" type="number" value={totalInstallments} onChange={e => setTotalInstallments(e.target.value)} placeholder="Ej. 10" min="2" enterKeyHint="next" />
+                <Field label={t('paymentModal.numPayments')}>
+                  <input className="field-input" type="number" value={totalInstallments} onChange={e => setTotalInstallments(e.target.value)} placeholder={t('paymentModal.numPaymentsPlaceholder')} min="2" enterKeyHint="next" />
                 </Field>
-                <Field label="Empezar desde el pago #">
+                <Field label={t('paymentModal.startFromLabel')}>
                   <input className="field-input" type="number" value={startFrom} onChange={e => setStartFrom(e.target.value)} placeholder="1" min="1" enterKeyHint="next" />
-                  {startNum > 1 && <div className={styles.helperText}>Los pagos 1 al {startNum - 1} se marcarán como pagados automáticamente.</div>}
+                  {startNum > 1 && <div className={styles.helperText}>{t('paymentModal.autoMarkedHelper', { n: startNum - 1 })}</div>}
                 </Field>
                 {totalAmt > 0 && numPayments >= 2 && (
                   <div className={styles.summaryBox}>
-                    <div className={styles.summaryTitle}>Resumen</div>
+                    <div className={styles.summaryTitle}>{t('paymentModal.summary.title')}</div>
                     <div className={styles.summaryText}>
-                      Pagarás <strong>{numPayments} pagos de ${perPayment.toLocaleString('es-MX')}</strong>, uno cada{' '}
-                      {recurFreq === 'weekly' ? 'semana' : recurFreq === 'biweekly' ? 'quincena' : recurFreq === 'monthly' ? 'mes' : recurFreq === 'bimonthly' ? '2 meses' : recurFreq === 'quarterly' ? '3 meses' : recurFreq === 'semiannual' ? '6 meses' : 'año'}.
+                      {t('paymentModal.summary.willPay')} <strong>{t('paymentModal.summary.paymentsOf', { count: numPayments, amount: perPayment.toLocaleString('es-MX') })}</strong>, {t('paymentModal.summary.every')}{' '}
+                      {t(`paymentModal.summary.frequency.${recurFreq}`)}.
                       {nextDate && (
-                        <> Tu próximo pago es el <strong>{nextDate.getDate()} de {['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'][nextDate.getMonth()]}</strong>.</>
+                        <> {t('paymentModal.summary.nextPayment', { day: nextDate.getDate(), month: MONTHS[nextDate.getMonth()].toLowerCase() })}.</>
                       )}
                       {startNum > 1 && (
-                        <> Total restante a pagar: <strong>${((numPayments - startNum + 1) * perPayment).toLocaleString('es-MX')}</strong>.</>
+                        <> {t('paymentModal.summary.remainingTotal', { amount: ((numPayments - startNum + 1) * perPayment).toLocaleString('es-MX') })}.</>
                       )}
                     </div>
                   </div>
@@ -451,13 +456,13 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
             <div className={styles.fieldGroup}>
               <div className={styles.categoryHeaderRow}>
                 <label className={`field-label ${styles.dueDateLabelNoMargin}`}>
-                  {mode === 'installment' ? 'Fecha del primer pago' : 'Fecha de vencimiento'}
+                  {mode === 'installment' ? t('paymentModal.firstPaymentDate') : t('paymentModal.dueDate')}
                 </label>
                 {mode === 'single' && !initial && !isVariable && !isSharedSpace && (
                   <div onClick={() => setAlreadyPaid(v => !v)}
                     className={styles.alreadyPaidToggle}>
                     <span className={styles.alreadyPaidLabel} style={{ color: alreadyPaid ? 'var(--paid)' : 'var(--text)' }}>
-                      Ya lo pagué
+                      {t('paymentModal.alreadyPaidToggle')}
                     </span>
                     <div className="toggle-track" style={{ background: alreadyPaid ? 'var(--paid)' : 'var(--border)' }}>
                       <div className="toggle-thumb" style={{ left: alreadyPaid ? 19 : 3 }} />
@@ -470,34 +475,34 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
           )}
 
           {mode === 'single' && initial && initial.is_paid && (
-            <Field label="Fecha en que pagaste">
+            <Field label={t('paymentModal.paidDateLabel')}>
               <DatePicker value={paidAt} onChange={setPaidAt} />
             </Field>
           )}
 
           {showWeekdayPicker && (
-            <Field label="Día de vencimiento">
+            <Field label={t('paymentModal.dueDayLabel')}>
               <div className={styles.weekdayRow}>
                 {WEEKDAYS_SHORT.map((d, i) => (
                   <button key={i} onClick={() => setWeekday(i)} className={`${styles.weekdayButton} ${weekday === i ? styles.weekdayButtonActive : ''}`}>{d}</button>
                 ))}
               </div>
               <div className={styles.helperTextMt6}>
-                Próximo: {nextWeekdayDate(weekday).toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric', month: 'long' })}
+                {t('paymentModal.nextLabel', { date: nextWeekdayDate(weekday).toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric', month: 'long' }) })}
               </div>
             </Field>
           )}
 
           {showBiweeklyPicker && (
-            <Field label="Fecha base de inicio (quincenal)">
+            <Field label={t('paymentModal.biweeklyBaseDateLabel')}>
               <DatePicker value={biweeklyDate} onChange={setBiweeklyDate} />
-              {nextBiDate && <div className={styles.helperTextMt6}>Próximo vencimiento: {nextBiDate.toLocaleDateString('es-MX', { day: 'numeric', month: 'long' })}</div>}
+              {nextBiDate && <div className={styles.helperTextMt6}>{t('paymentModal.nextDueLabel', { date: nextBiDate.toLocaleDateString('es-MX', { day: 'numeric', month: 'long' }) })}</div>}
             </Field>
           )}
 
           {mode === 'recurrent' && (
             <div className={styles.recurrentNote}>
-              Se generará un nuevo pago automáticamente cada {recurFreq === 'weekly' ? '7 días' : recurFreq === 'biweekly' ? '14 días' : 'mes'}.
+              {t('paymentModal.recurrentNote', { interval: t(`paymentModal.recurrentIntervals.${recurFreq === 'weekly' ? 'weekly' : recurFreq === 'biweekly' ? 'biweekly' : 'monthly'}`) })}
             </div>
           )}
           </div>
@@ -510,35 +515,35 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
             return (
               <PremiumLock
                 isPremium={profile?.is_premium}
-                label="Impacto en tus finanzas"
+                label={t('paymentModal.impact.label')}
                 icon={Wallet}
-                message="Descubre como este nuevo gasto impacta en tus finanzas de ese periodo"
+                message={t('paymentModal.impact.message')}
                 onUpgradeClick={onOpenPremium}
               >
               <div className={styles.impactWrapper}>
                 <div className={styles.impactLabel}>
                   <Wallet size={14} />
-                  Impacto en tus finanzas
+                  {t('paymentModal.impact.label')}
                 </div>
                 <div className={styles.impactCard}>
                   <div className={styles.impactPeriodBox} style={{ borderColor: colorEstado }}>
                     <div className={styles.impactStatusRow}>
                       {esNegativo ? <AlertTriangle size={15} color={colorEstado} className={styles.impactStatusIcon} /> : <Check size={15} color={colorEstado} className={styles.impactStatusIcon} />}
                       <div className={styles.impactStatusText} style={{ color: colorEstado }}>
-                        <div>{esNegativo ? '¡Cuidado! Puede alterar tus finanzas' : 'Todo bien'}</div>
-                        <div>Periodo {rangeLabel(first.start, first.end)}.</div>
+                        <div>{esNegativo ? t('paymentModal.impact.warning') : t('paymentModal.impact.ok')}</div>
+                        <div>{t('paymentModal.impact.periodLabel', { range: rangeLabel(first.start, first.end) })}</div>
                       </div>
                     </div>
                     <div className={styles.impactAmount} style={{ color: colorEstado }}>
                       {fmt(first.disponibleDespues)}
                     </div>
                     <div className={styles.impactDetails}>
-                      <div>Disponible actualmente {fmt(first.disponibleAntes)} MXN</div>
+                      <div>{t('paymentModal.impact.currentlyAvailable', { amount: fmt(first.disponibleAntes) })}</div>
                       {(first.pendientesCount > 0 || first.variablesPendientes > 0) && (
                         <div>
-                          {first.pendientesCount > 0 && `${first.pendientesCount} pago${first.pendientesCount > 1 ? 's' : ''} pendiente${first.pendientesCount > 1 ? 's' : ''} ${fmt(first.pendientesMonto)}`}
+                          {first.pendientesCount > 0 && t('paymentModal.impact.pendingCount', { count: first.pendientesCount, amount: fmt(first.pendientesMonto) })}
                           {first.pendientesCount > 0 && first.variablesPendientes > 0 && ' + '}
-                          {first.variablesPendientes > 0 && `${first.variablesPendientes} pago${first.variablesPendientes > 1 ? 's' : ''} variable${first.variablesPendientes > 1 ? 's' : ''}`}
+                          {first.variablesPendientes > 0 && t('paymentModal.impact.variableCount', { count: first.variablesPendientes })}
                         </div>
                       )}
                     </div>
@@ -550,7 +555,7 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
                         <div className={styles.impactSecondLeft}>
                           <Repeat size={13} color="var(--text)" className={styles.impactSecondIcon} />
                           <div className={styles.impactSecondText}>
-                            <div>Disponible en el siguiente periodo</div>
+                            <div>{t('paymentModal.impact.nextPeriodAvailable')}</div>
                             <div>{rangeLabel(second.start, second.end)}.</div>
                           </div>
                         </div>
@@ -558,9 +563,9 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
                       </div>
                       {(second.pendientesCount > 0 || second.variablesPendientes > 0) && (
                         <div className={styles.impactSecondDetails}>
-                          {second.pendientesCount > 0 && `${second.pendientesCount} pago${second.pendientesCount > 1 ? 's' : ''} pendiente${second.pendientesCount > 1 ? 's' : ''} ${fmt(second.pendientesMonto)}`}
+                          {second.pendientesCount > 0 && t('paymentModal.impact.pendingCount', { count: second.pendientesCount, amount: fmt(second.pendientesMonto) })}
                           {second.pendientesCount > 0 && second.variablesPendientes > 0 && ' + '}
-                          {second.variablesPendientes > 0 && `${second.variablesPendientes} pago${second.variablesPendientes > 1 ? 's' : ''} variable${second.variablesPendientes > 1 ? 's' : ''} sin contar`}
+                          {second.variablesPendientes > 0 && t('paymentModal.impact.variableCountUncounted', { count: second.variablesPendientes })}
                         </div>
                       )}
                     </div>
@@ -568,7 +573,7 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
 
                   {!profile.salary_enabled && (
                     <div className={styles.impactSalaryHint}>
-                      Configura tu sueldo en Ajustes para ver tu disponible completo.
+                      {t('paymentModal.impact.salaryHint')}
                     </div>
                   )}
                 </div>
@@ -578,11 +583,11 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
           })()}
 
           <button onClick={handleSave} disabled={saving || !canWrite} className={`btn-primary ${styles.saveButtonSpacing}`} style={{ opacity: (saving || !canWrite) ? 0.7 : 1 }}>
-            {saving ? 'Guardando…' : initial?.is_master && initial?.paused ? 'Reactivar' : initial ? 'Guardar cambios' : mode === 'installment' ? 'Crear pagos' : alreadyPaid ? 'Guardar como pagado' : 'Guardar pago'}
+            {saving ? t('settingsCategories.saving') : initial?.is_master && initial?.paused ? t('paymentModal.save.reactivate') : initial ? t('paymentModal.save.saveChanges') : mode === 'installment' ? t('paymentModal.save.createPayments') : alreadyPaid ? t('paymentModal.save.saveAsPaid') : t('paymentModal.save.savePayment')}
           </button>
-          <button onClick={requestClose} className={`btn-ghost ${styles.cancelButtonSpacing}`}>Cancelar</button>
+          <button onClick={requestClose} className={`btn-ghost ${styles.cancelButtonSpacing}`}>{t('buttons.cancel')}</button>
           {initial && !isEditingInstallment && (
-            <button onClick={() => { onDelete(initial.id); onClose() }} disabled={!canDelete} className={`btn-danger ${styles.deleteButtonSpacing}`} style={{ opacity: canDelete ? 1 : 0.5 }}>Eliminar pago</button>
+            <button onClick={() => { onDelete(initial.id); onClose() }} disabled={!canDelete} className={`btn-danger ${styles.deleteButtonSpacing}`} style={{ opacity: canDelete ? 1 : 0.5 }}>{t('paymentModal.deletePayment')}</button>
           )}
         </div>
       </div>
