@@ -1,9 +1,11 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { ChevronDown, ChevronUp } from 'lucide-react'
 import { RECUR_FREQ, RECUR_FREQ_COMMON, RECUR_FREQ_EXTRA } from '../lib/utils'
 import styles from './FrequencyPicker.module.css'
 
 export function FrequencyPicker({ value, onChange }) {
+  const { t } = useTranslation()
   const [showExtra, setShowExtra] = useState(RECUR_FREQ_EXTRA.includes(value))
 
   function Pill({ freq }) {
@@ -17,7 +19,7 @@ export function FrequencyPicker({ value, onChange }) {
 
   return (
     <div className={styles.wrapper}>
-      <label className={`field-label ${styles.label}`}>Frecuencia</label>
+      <label className={`field-label ${styles.label}`}>{t('settingsCobro.frequencyLabel')}</label>
       <div className={styles.pillGroup}>
         {RECUR_FREQ_COMMON.map(f => <Pill key={f} freq={f} />)}
       </div>
@@ -28,7 +30,7 @@ export function FrequencyPicker({ value, onChange }) {
       )}
       <button onClick={() => setShowExtra(v => !v)} className={styles.toggleButton}>
         {showExtra ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
-        {showExtra ? 'Menos opciones' : 'Más opciones'}
+        {showExtra ? t('frequencyPicker.fewerOptions') : t('frequencyPicker.moreOptions')}
       </button>
     </div>
   )

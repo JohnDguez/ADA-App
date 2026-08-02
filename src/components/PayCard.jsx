@@ -1,25 +1,32 @@
 import { memo, useState, useRef, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
+import i18n from '../i18n'
 import { createPortal } from 'react-dom'
 import { MoreVertical, Check, Pencil, Trash2, Clock, ChevronDown, ChevronUp, RotateCcw, FastForward, DollarSign, Eye, Users, PiggyBank } from 'lucide-react'
-import { statusOf, daysDiff, dateOf, fmt, MONTHS_SHORT, periodLabel, periodCountLabel, RECUR_FREQ, installmentLabel } from '../lib/utils'
+import { statusOf, daysDiff, dateOf, fmt, MONTHS_SHORT, periodLabel, periodCountLabel, RECUR_FREQ, installmentLabel, getCategoryLabel } from '../lib/utils'
 import { showToast } from './Toast'
 import { PaidByStack } from './PaidByStack'
 import styles from './PayCard.module.css'
 
+// statusInfo() no es un componente — usa el singleton i18n.t(), mismo
+// criterio que greeting()/timeAgo()/getCategoryLabel() en otros archivos.
+// Se llama siempre desde dentro de PayCardImpl, que ya usa useTranslation()
+// para el resto de su texto, así que ya se re-renderiza solo al cambiar de
+// idioma.
 function statusInfo(p, cfg) {
   const s = statusOf(p, cfg)
-  if (s === 'postponed') return { label: 'Pospuesto', color: 'var(--text)', status: s }
-  if (s === 'paid')      return { label: p.is_installment ? installmentLabel(p) + ' ✓' : 'Pagado', color: 'var(--paid)', status: s }
-  if (s === 'paused')    return { label: 'Pausado', color: 'var(--text)', status: s }
+  if (s === 'postponed') return { label: i18n.t('payCard.status.postponed'), color: 'var(--text)', status: s }
+  if (s === 'paid')      return { label: p.is_installment ? installmentLabel(p) + ' ✓' : i18n.t('payCard.status.paid'), color: 'var(--paid)', status: s }
+  if (s === 'paused')    return { label: i18n.t('payCard.status.paused'), color: 'var(--text)', status: s }
   const d = daysDiff(p.due_date)
-  if (s === 'overdue') return { label: d === -1 ? 'Venció ayer' : `Venció hace ${Math.abs(d)} días`, color: 'var(--danger)', status: s }
+  if (s === 'overdue') return { label: d === -1 ? i18n.t('payCard.status.overdueYesterday') : i18n.t('payCard.status.overdueDays', { count: Math.abs(d) }), color: 'var(--danger)', status: s }
   if (s === 'cobro') {
-    if (d < 0) return { label: `Venció hace ${Math.abs(d)} días`, color: 'var(--danger)', status: s }
-    return { label: d === 0 ? 'Vence hoy' : `Vence en ${d} día${d !== 1 ? 's' : ''}`, color: 'var(--soon-color)', status: s }
+    if (d < 0) return { label: i18n.t('payCard.status.overdueDays', { count: Math.abs(d) }), color: 'var(--danger)', status: s }
+    return { label: d === 0 ? i18n.t('payCard.status.dueToday') : i18n.t('payCard.status.dueInDays', { count: d }), color: 'var(--soon-color)', status: s }
   }
-  if (d === 0) return { label: 'Vence hoy',     color: 'var(--soon-color)', status: s }
-  if (d === 1) return { label: 'Vence mañana',  color: 'var(--soon-color)', status: s }
-  return { label: `Vence en ${d} días`, color: 'var(--accent)', status: s }
+  if (d === 0) return { label: i18n.t('payCard.status.dueToday'),    color: 'var(--soon-color)', status: s }
+  if (d === 1) return { label: i18n.t('payCard.status.dueTomorrow'), color: 'var(--soon-color)', status: s }
+  return { label: i18n.t('payCard.status.dueInDays', { count: d }), color: 'var(--accent)', status: s }
 }
 
 // Estados cuyo texto NO depende de la cuenta regresiva de vencimiento (el
@@ -36,6 +43,7 @@ const EXIT_MS       = 320 // deslizado + desvanecido + colapso de espacio
 const ENTRY_MS      = 300 // "crecer" al aparecer una card nueva en la lista
 
 function PayCardImpl({ payment: p, cfg, onMarkPaid, onRequestVariableAmount, onConfirmVariablePaid, onRequestNextPeriodConfirm, onMarkUnpaid, onCaptureAmount, onEdit, onAbonar, onSplit, onPayFromFund, fundBalance, onViewSource, onDelete, onPostpone, onAdvance, borderLeft, hideDate, hideDueLabel, railMode, permissions, initialLoad = true, confirmBeforePay, spaceMembers }) {
+  const { t } = useTranslation()
   // Card de solo lectura — reflejo automático de una contribución a un
   // gasto de un Espacio Compartido (registrada por cualquier miembro desde
   // "Dividir entre miembros"). Nunca se captura a mano, así que no se puede
@@ -54,10 +62,10 @@ function PayCardImpl({ payment: p, cfg, onMarkPaid, onRequestVariableAmount, onC
               </div>
               <div className={styles.amountSection}>
                 <span className={styles.amountText}>{fmt(p.amount)}</span>
-                <span className={styles.statusLabel} style={{ color: 'var(--paid)' }}>Pagado</span>
+                <span className={styles.statusLabel} style={{ color: 'var(--paid)' }}>{t('payCard.status.paid')}</span>
               </div>
               <div className={styles.actionsSection}>
-                <button onClick={() => onViewSource && onViewSource(p)} aria-label="Ver en el espacio compartido" className={styles.menuTriggerButton}>
+                <button onClick={() => onViewSource && onViewSource(p)} aria-label={t('homePage.viewInSharedSpace')} className={styles.menuTriggerButton}>
                   <Eye size={14} color="var(--text)" style={{ opacity: 0.6 }} />
                 </button>
               </div>
@@ -162,7 +170,7 @@ function PayCardImpl({ payment: p, cfg, onMarkPaid, onRequestVariableAmount, onC
   // nada (ni animación, ni menú, ni guardado).
   async function handleCheckButtonClick(e) {
     e?.stopPropagation()
-    if (!canMarkPaid) { blocked('marcar pagos'); return }
+    if (!canMarkPaid) { blocked(t('paymentsPage.actionMarkPayments')); return }
     if (phase !== 'idle') return
     if (confirmBeforePay && onRequestNextPeriodConfirm) {
       const confirmed = await onRequestNextPeriodConfirm(p)
@@ -177,7 +185,7 @@ function PayCardImpl({ payment: p, cfg, onMarkPaid, onRequestVariableAmount, onC
 
   async function handleMarkPaidClick(e) {
     e?.stopPropagation()
-    if (!canMarkPaid) { blocked('marcar pagos'); return }
+    if (!canMarkPaid) { blocked(t('paymentsPage.actionMarkPayments')); return }
     if (phase !== 'idle') return
     setPhase('filling')
     after(FILL_MS, async () => {
@@ -227,7 +235,7 @@ function PayCardImpl({ payment: p, cfg, onMarkPaid, onRequestVariableAmount, onC
   const canEdit     = !permissions || permissions.can_edit
   const canDelete   = !permissions || permissions.can_delete
   function blocked(action) {
-    showToast(`No tienes permitido ${action} en este Espacio Compartido.`)
+    showToast(t('paymentsPage.blockedAction', { action }))
   }
 
   // El menú tiene entre 2 y 5 ítems según el tipo de pago — se calcula
@@ -310,7 +318,7 @@ function PayCardImpl({ payment: p, cfg, onMarkPaid, onRequestVariableAmount, onC
       >
         <div className={`${styles.fillLayer} ${fillActive ? styles.fillLayerActive : ''}`} />
         <div className={`${styles.fillLabel} ${phase === 'labeled' || phase === 'exiting' ? styles.fillLabelVisible : ''}`}>
-          <span>{p.is_installment && p.current_installment === p.total_installments ? '¡Terminaste todos los pagos!' : 'Pagado'}</span>
+          <span>{p.is_installment && p.current_installment === p.total_installments ? t('payCard.allPaymentsDone') : t('payCard.status.paid')}</span>
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
             <path
               className={`${styles.checkPath} ${phase === 'labeled' || phase === 'exiting' ? styles.checkPathDrawn : ''}`}
@@ -332,7 +340,7 @@ function PayCardImpl({ payment: p, cfg, onMarkPaid, onRequestVariableAmount, onC
             <div className={styles.subtitle}>
               {p.space_id && isPending && registradoTotal > 0
                 ? `${fmt(registradoTotal)} / ${fmt(p.amount)}`
-                : hideDate ? p.category : `${p.category} · ${d.getDate()} ${MONTHS_SHORT[d.getMonth()]}`}
+                : hideDate ? getCategoryLabel(p.category) : `${getCategoryLabel(p.category)} · ${d.getDate()} ${MONTHS_SHORT[d.getMonth()]}`}
             </div>
             {p.space_id && isPending && registradoTotal > 0 && (
               <PaidByStack contributors={p.contributors} members={spaceMembers} fundAmount={p.fund_amount || 0} size={16} />
@@ -353,14 +361,14 @@ function PayCardImpl({ payment: p, cfg, onMarkPaid, onRequestVariableAmount, onC
                   onClick={e => { e.stopPropagation(); onCaptureAmount && onCaptureAmount(p) }}
                   className={styles.captureButton}
                 >
-                  <DollarSign size={12} strokeWidth={2.5} /> Agregar monto
+                  <DollarSign size={12} strokeWidth={2.5} /> {t('payCard.addAmount')}
                 </button>
-                <span className={styles.variableTag}>Pago variable</span>
+                <span className={styles.variableTag}>{t('payCard.variableTag')}</span>
               </div>
             ) : p.is_variable && !p.is_paid ? (
               <div className={styles.variableGroupTight}>
                 <div className={styles.amountText}>{fmt(p.amount)}</div>
-                <span className={styles.variableTag}>Pago variable</span>
+                <span className={styles.variableTag}>{t('payCard.variableTag')}</span>
               </div>
             ) : (
               <div className={styles.amountText}>{fmt(p.amount)}</div>
@@ -417,14 +425,14 @@ function PayCardImpl({ payment: p, cfg, onMarkPaid, onRequestVariableAmount, onC
             bottom: menuPos.bottom != null ? menuPos.bottom : 'auto',
           }}
         >
-          {isPending && p.is_installment && onAbonar && <MenuItem icon={<DollarSign size={14}/>} label="Abonar" onClick={() => { canMarkPaid ? onAbonar(p) : blocked('registrar abonos'); setMenuOpen(false) }} />}
-          {isPending && !p.is_installment && <MenuItem icon={<Pencil size={14}/>} label="Editar" onClick={() => { onEdit(p); setMenuOpen(false) }} />}
-          {isPending && p.is_variable && onCaptureAmount && <MenuItem icon={<DollarSign size={14}/>} label={p.amount ? 'Editar monto' : 'Agregar monto'} onClick={() => { onCaptureAmount(p); setMenuOpen(false) }} />}
-          {isPending && p.is_recurrent && !p.is_installment && <MenuItem icon={<Clock size={14}/>} label="Posponer" onClick={() => { canEdit ? onPostpone(p) : blocked('posponer pagos'); setMenuOpen(false) }} />}
-          {isPending && p.is_installment && onAdvance && <MenuItem icon={<FastForward size={14}/>} label="Adelantar pago" onClick={() => { canEdit ? onAdvance(p) : blocked('adelantar pagos'); setMenuOpen(false) }} />}
-          {isPending && p.space_id && onSplit && <MenuItem icon={<Users size={14}/>} label="Dividir entre miembros" onClick={() => { canMarkPaid ? onSplit(p) : blocked('registrar abonos'); setMenuOpen(false) }} />}
-          {p.is_paid && <MenuItem icon={<RotateCcw size={14}/>} label="Marcar no pagado" onClick={() => { canMarkPaid ? onMarkUnpaid(p.id) : blocked('marcar pagos'); setMenuOpen(false) }} />}
-          <MenuItem icon={<Trash2 size={14}/>} label="Eliminar" onClick={() => { canDelete ? onDelete(p.id) : blocked('eliminar pagos'); setMenuOpen(false) }} danger />
+          {isPending && p.is_installment && onAbonar && <MenuItem icon={<DollarSign size={14}/>} label={t('payCard.menu.contribute')} onClick={() => { canMarkPaid ? onAbonar(p) : blocked(t('paymentsPage.actionRegisterContributions')); setMenuOpen(false) }} />}
+          {isPending && !p.is_installment && <MenuItem icon={<Pencil size={14}/>} label={t('buttons.edit')} onClick={() => { onEdit(p); setMenuOpen(false) }} />}
+          {isPending && p.is_variable && onCaptureAmount && <MenuItem icon={<DollarSign size={14}/>} label={p.amount ? t('payCard.editAmount') : t('payCard.addAmount')} onClick={() => { onCaptureAmount(p); setMenuOpen(false) }} />}
+          {isPending && p.is_recurrent && !p.is_installment && <MenuItem icon={<Clock size={14}/>} label={t('payCard.menu.postpone')} onClick={() => { canEdit ? onPostpone(p) : blocked(t('payCard.actions.postponePayments')); setMenuOpen(false) }} />}
+          {isPending && p.is_installment && onAdvance && <MenuItem icon={<FastForward size={14}/>} label={t('payCard.menu.advance')} onClick={() => { canEdit ? onAdvance(p) : blocked(t('payCard.actions.advancePayments')); setMenuOpen(false) }} />}
+          {isPending && p.space_id && onSplit && <MenuItem icon={<Users size={14}/>} label={t('paymentsPage.menuSplit')} onClick={() => { canMarkPaid ? onSplit(p) : blocked(t('paymentsPage.actionRegisterContributions')); setMenuOpen(false) }} />}
+          {p.is_paid && <MenuItem icon={<RotateCcw size={14}/>} label={t('payCard.menu.markUnpaid')} onClick={() => { canMarkPaid ? onMarkUnpaid(p.id) : blocked(t('paymentsPage.actionMarkPayments')); setMenuOpen(false) }} />}
+          <MenuItem icon={<Trash2 size={14}/>} label={t('buttons.delete')} onClick={() => { canDelete ? onDelete(p.id) : blocked(t('paymentsPage.actionDeletePayments')); setMenuOpen(false) }} danger />
         </div>,
         document.body
       )}
@@ -443,11 +451,11 @@ function PayCardImpl({ payment: p, cfg, onMarkPaid, onRequestVariableAmount, onC
             bottom: checkMenuPos.bottom != null ? checkMenuPos.bottom : 'auto',
           }}
         >
-          <MenuItem icon={<Check size={14}/>} label="Pagar de mi nómina" onClick={() => { setCheckMenuOpen(false); handleMarkPaidClick() }} />
+          <MenuItem icon={<Check size={14}/>} label={t('payCard.menu.payFromPayroll')} onClick={() => { setCheckMenuOpen(false); handleMarkPaidClick() }} />
           {onPayFromFund && fundBalance > 0 && (
-            <MenuItem icon={<PiggyBank size={14}/>} label="Fondo compartido" onClick={() => { setCheckMenuOpen(false); onPayFromFund(p) }} />
+            <MenuItem icon={<PiggyBank size={14}/>} label={t('paymentsPage.sharedFund')} onClick={() => { setCheckMenuOpen(false); onPayFromFund(p) }} />
           )}
-          <MenuItem icon={<Users size={14}/>} label="Pago compartido" onClick={() => { setCheckMenuOpen(false); onSplit(p) }} />
+          <MenuItem icon={<Users size={14}/>} label={t('payCard.menu.sharedPayment')} onClick={() => { setCheckMenuOpen(false); onSplit(p) }} />
         </div>,
         document.body
       )}
@@ -464,6 +472,7 @@ function MenuItem({ icon, label, onClick, danger }) {
 }
 
 export function GroupCard({ group, cfg, onMarkPaid, onMarkUnpaid, onEdit, onDelete, onPostpone, onAdvance }) {
+  const { t } = useTranslation()
   const [expanded, setExpanded] = useState(false)
   const allItems  = [group, ...group._children]
   const paidItems = allItems.filter(p => p.is_paid)
@@ -472,8 +481,8 @@ export function GroupCard({ group, cfg, onMarkPaid, onMarkUnpaid, onEdit, onDele
   const freqLabel = RECUR_FREQ[freq] || ''
   const isPending = !group.is_paid && !group.postponed && !group.paused
   const countLabel = group.is_installment
-    ? `${paidItems.length}/${group.total_installments} pagos`
-    : periodCountLabel(paidItems.length, freq) + ' pagadas'
+    ? t('payCard.group.installmentsCount', { paid: paidItems.length, total: group.total_installments })
+    : periodCountLabel(paidItems.length, freq) + ' ' + t('payCard.group.paidCount')
 
   return (
     <div className={styles.groupCard}>
@@ -504,9 +513,9 @@ export function GroupCard({ group, cfg, onMarkPaid, onMarkUnpaid, onEdit, onDele
             const overdue  = daysDiff(p.due_date) < 0 && !p.is_paid
             const isPend   = !p.is_paid && !p.postponed
             const isLast   = i === allItems.length - 1
-            const instLabel = p.is_installment ? `Pago ${p.current_installment}/${p.total_installments}` : periodLabel(p.due_date, freq)
+            const instLabel = p.is_installment ? t('paymentModal.editInstallment.badge', { current: p.current_installment, total: p.total_installments }) : periodLabel(p.due_date, freq)
             const bColor   = p.is_paid ? 'var(--paid)' : p.postponed ? 'var(--muted)' : overdue ? 'var(--danger)' : 'var(--soon-color)'
-            const bLabel   = p.is_paid ? 'Pagado' : p.postponed ? 'Pospuesto' : overdue ? 'Vencido' : 'Pendiente'
+            const bLabel   = p.is_paid ? t('payCard.status.paid') : p.postponed ? t('payCard.status.postponed') : overdue ? t('payCard.status.overdue') : t('payCard.status.pending')
             return (
               <div key={p.id} className={`${styles.groupItemRow} ${!isLast ? styles.groupItemRowBordered : ''}`}>
                 <div className={styles.groupItemDot} style={{ background: overdue ? 'var(--danger)' : p.is_paid ? 'var(--border-mid)' : 'var(--paid)' }} />

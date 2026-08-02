@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { createPortal } from 'react-dom'
 import { ChevronDown, Check } from 'lucide-react'
 import styles from './Select.module.css'
@@ -19,6 +20,7 @@ const PANEL_ANIM_MS = 180
 // opción (usado para categorías, donde cada una trae su ícono en su propio
 // color, igual que en "Por Categoría" de Pagos).
 export function Select({ value, onChange, options, placeholder, renderIcon }) {
+  const { t } = useTranslation()
   const [open, setOpen] = useState(false)
   // Regla 29 (confirmada por Johnatan, v0.9.254): toda animación de
   // aparición necesita también su animación de salida — antes el panel
@@ -107,6 +109,16 @@ export function Select({ value, onChange, options, placeholder, renderIcon }) {
 
   const showPanel = open || closing
 
+  // Cada opción puede ser un string plano (mismo valor = mismo label, como
+  // ya usaban los selects de mes/año/hora) o un objeto {value, label} —
+  // este último es el que necesitan las categorías fijas ahora que su
+  // nombre visible se traduce pero el valor guardado se queda igual
+  // siempre en español (ver getCategoryLabel() en lib/utils.js). Los demás
+  // <Select> de la app no se tocan, siguen mandando strings.
+  function optValue(opt) { return typeof opt === 'object' ? opt.value : opt }
+  function optLabel(opt) { return typeof opt === 'object' ? opt.label : opt }
+  const selectedLabel = value != null ? optLabel(options.find(o => optValue(o) === value) ?? value) : null
+
   return (
     <div ref={ref} className={styles.wrapper}>
       <button
@@ -116,7 +128,7 @@ export function Select({ value, onChange, options, placeholder, renderIcon }) {
       >
         <span className={styles.triggerContent}>
           {renderIcon && value && renderIcon(value)}
-          <span className={`${styles.triggerText} ${value ? styles.triggerTextFilled : styles.triggerTextPlaceholder}`}>{value || placeholder || 'Selecciona'}</span>
+          <span className={`${styles.triggerText} ${value ? styles.triggerTextFilled : styles.triggerTextPlaceholder}`}>{selectedLabel || placeholder || t('select.placeholder')}</span>
         </span>
         <ChevronDown size={16} color="var(--text)" className={`${styles.chevron} ${open ? styles.chevronOpen : ''}`} />
       </button>
@@ -134,16 +146,17 @@ export function Select({ value, onChange, options, placeholder, renderIcon }) {
           }}
         >
           {options.map(opt => {
-            const isSel = opt === value
+            const ov = optValue(opt)
+            const isSel = ov === value
             return (
               <button
                 type="button"
-                key={opt}
-                onClick={() => { onChange(opt); closePanel() }}
+                key={ov}
+                onClick={() => { onChange(ov); closePanel() }}
                 className={`${styles.option} ${isSel ? styles.optionSelected : ''}`}
               >
-                {renderIcon && renderIcon(opt)}
-                <span className={styles.optionText}>{opt}</span>
+                {renderIcon && renderIcon(ov)}
+                <span className={styles.optionText}>{optLabel(opt)}</span>
                 {isSel && <Check size={14} color="var(--surface)" className={styles.checkIcon} />}
               </button>
             )

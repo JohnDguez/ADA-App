@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Wallet, AlertTriangle, Repeat, Check } from 'lucide-react'
-import { CATEGORIES, RECUR_FREQ, WEEKDAYS_SHORT, MONTHS, MONTHS_SHORT, nextWeekdayDate, nextBiweeklyFromDate, nextPeriodDate, cobroPeriod, fmt, nameExistsActive, projectPeriodImpact, getCatColor, dateToStr, todayStr } from '../lib/utils'
+import { CATEGORIES, RECUR_FREQ, WEEKDAYS_SHORT, MONTHS, MONTHS_SHORT, nextWeekdayDate, nextBiweeklyFromDate, nextPeriodDate, cobroPeriod, fmt, nameExistsActive, projectPeriodImpact, getCatColor, getCategoryLabel, dateToStr, todayStr } from '../lib/utils'
 import { getCategoryIcon } from '../lib/categoryIcons'
 import { supabase } from '../lib/supabase'
 import { ConfirmCloseModal } from './ConfirmCloseModal'
@@ -178,7 +178,15 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
     setSaving(false); onClose()
   }
 
-  const allCategories = [...CATEGORIES, ...customCategories]
+  // Las fijas van como {value, label}: value es el canónico en español que
+  // se guarda siempre (getCatColor/getCategoryIcon/CATEGORIES siguen
+  // funcionando igual, comparan contra ese mismo valor); label es el
+  // nombre traducido que ve el usuario, vía getCategoryLabel() de
+  // lib/utils.js. Las personalizadas se quedan como string plano — son el
+  // texto que el usuario mismo escribió, no hay nada que traducir (mismo
+  // criterio ya aplicado en SettingsCategoriesPage.jsx). Select.jsx ya
+  // soporta ambos formatos mezclados en el mismo arreglo.
+  const allCategories = [...CATEGORIES.map(c => ({ value: c, label: getCategoryLabel(c) })), ...customCategories]
 
   // Ícono + color de cada categoría, mismo criterio que "Por Categoría" en
   // PaymentsPage.jsx — cuadro de color con el ícono elegido por el usuario
