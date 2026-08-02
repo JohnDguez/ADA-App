@@ -1,14 +1,5 @@
+import { useTranslation } from 'react-i18next'
 import { X, Crown, ShieldCheck } from 'lucide-react'
-
-// Imágenes subidas manualmente a /public por Johnatan (no son íconos Lucide —
-// ilustraciones a color propias de la marca). Si cambian de nombre, solo hay
-// que actualizar esta lista.
-const BENEFITS = [
-  { icon: '/premium-icon-no-ads.png',   title: 'No más anuncios',      desc: 'Lleva el control de tus gastos sin interrupciones.' },
-  { icon: '/premium-icon-export.png',   title: 'Exporta tus informes', desc: 'Descarga en formatos CSV y PDF tus gastos.' },
-  { icon: '/premium-icon-simulator.png',title: 'Simula tus finanzas',  desc: 'Mira como afectarán tus gastos en futuros periodos.' },
-  { icon: '/premium-icon-shared.png',   title: 'Cuenta compartida',    desc: 'Vincula tu cuenta con tu pareja o roomie y lleven el control de sus gastos juntos.' },
-]
 
 // Página completa (no un tab del nav, no un bottom-sheet) con los beneficios
 // y precios de Premium. Se abre como overlay a pantalla completa desde
@@ -16,6 +7,20 @@ const BENEFITS = [
 // cobros ni invitaciones todavía, solo son visuales (onClick vacío), igual
 // que el resto de la estructura de premium.
 export function PremiumPage({ onClose }) {
+  const { t } = useTranslation()
+
+  // Imágenes subidas manualmente a /public por Johnatan (no son íconos Lucide —
+  // ilustraciones a color propias de la marca). Si cambian de nombre, solo hay
+  // que actualizar esta lista. Movido adentro del componente (antes vivía a
+  // nivel de módulo) porque ahora title/desc necesitan t(), que solo se puede
+  // llamar dentro de un componente.
+  const BENEFITS = [
+    { icon: '/premium-icon-no-ads.png',    title: t('premiumPage.benefits.noAdsTitle'),      desc: t('premiumPage.benefits.noAdsDesc') },
+    { icon: '/premium-icon-export.png',    title: t('premiumPage.benefits.exportTitle'),     desc: t('premiumPage.benefits.exportDesc') },
+    { icon: '/premium-icon-simulator.png', title: t('premiumPage.benefits.simulatorTitle'),  desc: t('premiumPage.benefits.simulatorDesc') },
+    { icon: '/premium-icon-shared.png',    title: t('premiumPage.benefits.sharedTitle'),     desc: t('premiumPage.benefits.sharedDesc') },
+  ]
+
   return (
     <div style={{
       position: 'fixed', inset: 0, zIndex: 600,
@@ -57,9 +62,9 @@ export function PremiumPage({ onClose }) {
       <div style={{ maxWidth: 420, margin: '0 auto', padding: '24px 20px 40px' }}>
 
         <div style={{ textAlign: 'center' }}>
-          <div style={{ fontSize: 24, fontWeight: 700, color: 'var(--text)' }}>Obtén Premium</div>
+          <div style={{ fontSize: 24, fontWeight: 700, color: 'var(--text)' }}>{t('premiumPage.title')}</div>
           <div style={{ fontSize: 13.5, fontWeight: 400, color: 'var(--text)', opacity: 0.8, marginTop: 6, lineHeight: 1.5 }}>
-            Desbloquea todas las funciones y lleva tus finanzas al siguiente nivel.
+            {t('premiumPage.subtitle')}
           </div>
         </div>
 
@@ -81,14 +86,14 @@ export function PremiumPage({ onClose }) {
 
         {/* Planes */}
         <div style={{ fontSize: 17, fontWeight: 700, color: 'var(--text)', marginTop: 28, marginBottom: 12 }}>
-          Elige tu plan
+          {t('premiumPage.choosePlan')}
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           <div className="card" style={{ padding: 16 }}>
-            <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)' }}>Mensual</div>
+            <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)' }}>{t('premiumPage.monthly')}</div>
             <div style={{ fontSize: 26, fontWeight: 700, color: 'var(--text)', marginTop: 4 }}>
-              $50 <span style={{ fontSize: 13, fontWeight: 500 }}>MXN / mes</span>
+              $50 <span style={{ fontSize: 13, fontWeight: 500 }}>{t('premiumPage.monthlyPriceSuffix')}</span>
             </div>
           </div>
 
@@ -100,11 +105,11 @@ export function PremiumPage({ onClose }) {
               fontSize: 10.5, fontWeight: 700,
               padding: '3px 10px', borderRadius: 'var(--radius-full)',
             }}>
-              ★ Más popular
+              ★ {t('premiumPage.mostPopular')}
             </div>
-            <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)' }}>Anual</div>
+            <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)' }}>{t('premiumPage.annual')}</div>
             <div style={{ fontSize: 26, fontWeight: 700, color: 'var(--text)', marginTop: 4 }}>
-              $500 <span style={{ fontSize: 13, fontWeight: 500 }}>MXN / año</span>
+              $500 <span style={{ fontSize: 13, fontWeight: 500 }}>{t('premiumPage.annualPriceSuffix')}</span>
             </div>
           </div>
         </div>
@@ -119,7 +124,7 @@ export function PremiumPage({ onClose }) {
           }}
         >
           <Crown size={16} />
-          Prueba Premium GRATIS 7 días
+          {t('goalsPage.premiumBanner.button')}
         </button>
 
         {/* Referidos — visual únicamente, sin lógica todavía (pendiente para el lanzamiento) */}
@@ -128,21 +133,21 @@ export function PremiumPage({ onClose }) {
           className="btn-primary"
           style={{ marginTop: 10, background: 'var(--accent)', color: 'var(--premium-text)' }}
         >
-          Invita 3 amigos y obtén 2 meses GRATIS
+          {t('premiumPage.referralCta')}
         </button>
 
         {/* Letra pequeña */}
         <div style={{ textAlign: 'center', marginTop: 16 }}>
           <div style={{ fontSize: 10.5, fontWeight: 400, color: 'var(--text)', opacity: 0.7, lineHeight: 1.6 }}>
-            Aplican restricciones.<br />
-            Solo para nuevos usuarios. Al finalizar la prueba $50 MXN al mes.
+            {t('premiumPage.restrictionsApply')}<br />
+            {t('premiumLock.finePrint')}
           </div>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5, marginTop: 10, fontSize: 11.5, fontWeight: 500, color: 'var(--text)' }}>
             <ShieldCheck size={13} color="var(--paid)" />
-            Cancela cuando quieras. Sin cargos ocultos.
+            {t('premiumPage.cancelAnytime')}
           </div>
           <div style={{ fontSize: 10.5, fontWeight: 400, color: 'var(--text)', opacity: 0.6, marginTop: 10 }}>
-            Restaurar compras. <span style={{ color: 'var(--accent)', opacity: 1, cursor: 'pointer' }}>Términos y Condiciones</span>
+            {t('premiumPage.restorePurchases')} <span style={{ color: 'var(--accent)', opacity: 1, cursor: 'pointer' }}>{t('authPage.termsLink')}</span>
           </div>
         </div>
 
