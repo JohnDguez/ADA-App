@@ -1,9 +1,61 @@
 import i18n from '../i18n'
 
+// Arreglos crudos en español — YA NO se usan para mostrar texto en ningún
+// lado (ver getMonths()/getMonthsShort()/getWeekdays()/getWeekdaysShort()
+// abajo, que son lo que hay que usar en su lugar). Se quedan exportados
+// solo porque algunos lugares del código los usaban para su LONGITUD
+// (ej. WEEKDAYS_SHORT.length) o para iterar sin importar el idioma — nunca
+// para imprimir directo en pantalla.
 export const MONTHS       = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre']
 export const MONTHS_SHORT = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic']
 export const WEEKDAYS     = ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado']
 export const WEEKDAYS_SHORT = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb']
+
+// Nombres de meses/días localizados vía Intl.DateTimeFormat, en vez de los
+// arreglos fijos en español de arriba — resuelve el pendiente señalado
+// desde la Fase 2 del selector de idioma. El ÍNDICE de cada arreglo se
+// mantiene igual siempre (0=enero..11=diciembre para meses, 0=domingo..
+// 6=sábado para días) porque así es como los indexa el resto del código
+// (`date.getMonth()`/`date.getDay()`, que JS siempre devuelve en ese orden
+// sin importar el locale) — no hay que reordenar nada, solo traducir la
+// etiqueta en cada posición. Se recalculan en cada llamada (barato, 7-12
+// iteraciones) en vez de cachear, para que reflejen el idioma activo en
+// el momento sin tener que invalidar ningún caché al cambiarlo.
+//
+// El locale de Intl es más específico que el idioma de i18next ('es'/'en')
+// — se mapea a 'es-MX'/'en-US' para nombres consistentes con el resto de
+// la app (fechas ya se formatean con 'es-MX' en varios lados). Español
+// viene en minúsculas de Intl ('domingo', 'enero') — se capitaliza para
+// calzar con el estilo que ya tenía la app; inglés ya viene capitalizado
+// (no le hace nada distinto, cap() es no-op ahí).
+function cap(s) { return s.charAt(0).toUpperCase() + s.slice(1) }
+export function intlLocale() { return i18n.language === 'en' ? 'en-US' : 'es-MX' }
+
+function buildWeekdayNames(format) {
+  const locale = intlLocale()
+  const arr = []
+  for (let i = 0; i < 7; i++) {
+    // 1 de enero de 2023 (UTC) fue domingo — arranca la semana en domingo,
+    // que es el índice 0 de date.getDay() en cualquier locale.
+    const d = new Date(Date.UTC(2023, 0, 1 + i))
+    arr.push(cap(new Intl.DateTimeFormat(locale, { weekday: format, timeZone: 'UTC' }).format(d)))
+  }
+  return arr
+}
+function buildMonthNames(format) {
+  const locale = intlLocale()
+  const arr = []
+  for (let i = 0; i < 12; i++) {
+    const d = new Date(Date.UTC(2023, i, 1))
+    arr.push(cap(new Intl.DateTimeFormat(locale, { month: format, timeZone: 'UTC' }).format(d)))
+  }
+  return arr
+}
+
+export function getWeekdays()      { return buildWeekdayNames('long') }
+export function getWeekdaysShort() { return buildWeekdayNames('short') }
+export function getMonths()        { return buildMonthNames('long') }
+export function getMonthsShort()   { return buildMonthNames('short') }
 
 export const CATEGORIES = [
   'Servicios', 'Suscripciones', 'Créditos', 'Renta',
@@ -139,18 +191,20 @@ export function nextBiweeklyFromDate(dateStr) {
 }
 export function periodLabel(dateStr, freq) {
   const d = dateOf(dateStr)
-  if (freq === 'weekly')   return `Sem ${d.getDate()} ${MONTHS_SHORT[d.getMonth()]}`
-  if (freq === 'biweekly') return `Qna ${d.getDate()} ${MONTHS_SHORT[d.getMonth()]}`
-  return `${MONTHS_SHORT[d.getMonth()]} ${d.getFullYear()}`
+  const monthsShort = getMonthsShort()
+  if (freq === 'weekly')   return `${i18n.t('dates.weekAbbrev')} ${d.getDate()} ${monthsShort[d.getMonth()]}`
+  if (freq === 'biweekly') return `${i18n.t('dates.biweekAbbrev')} ${d.getDate()} ${monthsShort[d.getMonth()]}`
+  return `${monthsShort[d.getMonth()]} ${d.getFullYear()}`
 }
 export function periodCountLabel(count, freq) {
-  if (freq === 'weekly')    return `${count} semana${count !== 1 ? 's' : ''}`
-  if (freq === 'biweekly')  return `${count} quincena${count !== 1 ? 's' : ''}`
-  if (freq === 'bimonthly') return `${count} bimestre${count !== 1 ? 's' : ''}`
-  if (freq === 'quarterly') return `${count} trimestre${count !== 1 ? 's' : ''}`
-  if (freq === 'semiannual')return `${count} semestre${count !== 1 ? 's' : ''}`
-  if (freq === 'annual')    return `${count} año${count !== 1 ? 's' : ''}`
-  return `${count} mes${count !== 1 ? 'es' : ''}`
+  const unitKey =
+    freq === 'weekly'     ? 'week' :
+    freq === 'biweekly'   ? 'biweek' :
+    freq === 'bimonthly'  ? 'bimonthly' :
+    freq === 'quarterly'  ? 'quarterly' :
+    freq === 'semiannual' ? 'semiannual' :
+    freq === 'annual'     ? 'annual' : 'monthly'
+  return `${count} ${i18n.t(`dates.units.${unitKey}`, { count })}`
 }
 export function installmentLabel(p) {
   if (!p.is_installment) return null
