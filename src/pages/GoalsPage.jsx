@@ -8,13 +8,13 @@ import { GoalFormModal } from '../components/GoalFormModal'
 import { NewSharedSpacePanel } from '../components/NewSharedSpacePanel'
 import { PaidByStack } from '../components/PaidByStack'
 import { getIconComponent } from '../lib/categoryIcons'
-import { fmt, MONTHS_SHORT } from '../lib/utils'
+import { fmt, getMonthsShort } from '../lib/utils'
 import { showToast } from '../components/Toast'
 import styles from './GoalsPage.module.css'
 
 function fmtDate(iso) {
   const d = new Date(iso)
-  return `${d.getDate()} ${MONTHS_SHORT[d.getMonth()]} ${d.getFullYear()}`
+  return `${d.getDate()} ${getMonthsShort()[d.getMonth()]} ${d.getFullYear()}`
 }
 
 // Metas de ahorro — página propia del nav (antes era un overlay que se
