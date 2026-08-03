@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, lazy, Suspense } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useAuth } from './hooks/useAuth'
 
 // ── Code-splitting (v0.9.280) ─────────────────────────────────────────────
@@ -49,6 +50,7 @@ import { buildFeedbackUrl, FEEDBACK_PROMPT_AFTER_DAYS, FEEDBACK_REMIND_AFTER_DAY
 function fmt(n) { return '$' + Number(n).toLocaleString('es-MX', { minimumFractionDigits: 0, maximumFractionDigits: 0 }) }
 
 export default function App() {
+  const { t } = useTranslation()
   const { user, loading: authLoading, isRecovery, setIsRecovery } = useAuth()
 
   // Espacio activo: null = personal (default). Persistido igual que `tab`,
@@ -356,7 +358,7 @@ export default function App() {
     // total fijo y el plan se mantengan consistentes igual que un abono.
     if (payment.is_installment) {
       const { error } = await abonarInstallment(payment.id, Number(payment.amount))
-      if (error) showToast('Error al marcar como pagado')
+      if (error) showToast(t('app.toast.markPaidError'))
       return
     }
     // Gasto de un Espacio Compartido: el check paga "lo que falta" en vez
@@ -374,11 +376,11 @@ export default function App() {
         return
       }
       const { error } = await payRemainingContribution(payment.id)
-      if (error) showToast(error.message || 'Error al marcar como pagado')
+      if (error) showToast(error.message || t('app.toast.markPaidError'))
       return
     }
     const { error } = await markPaid(payment.id)
-    if (error) showToast('Error al marcar como pagado')
+    if (error) showToast(t('app.toast.markPaidError'))
   }
   // requestVariableAmount: usado por PayCard (Home) cuando el pago es
   // variable — abre el mismo modal de siempre, pero en vez de guardar el
@@ -409,14 +411,14 @@ export default function App() {
       // sin esto, registerContribution compararía contra un total en $0.
       if (!(Number(payment.amount) > 0)) {
         const { error: totalErr } = await setContributionTotalAmount(payment.id, amount)
-        if (totalErr) { showToast(totalErr.message || 'Error al registrar pago'); return }
+        if (totalErr) { showToast(totalErr.message || t('app.toast.registerPaymentError')); return }
       }
       const { error } = await registerContribution(payment.id, user?.id, amount)
-      if (error) showToast(error.message || 'Error al registrar pago')
+      if (error) showToast(error.message || t('app.toast.registerPaymentError'))
       return
     }
     const { error } = await markPaid(payment.id, amount)
-    if (error) showToast('Error al registrar pago')
+    if (error) showToast(t('app.toast.registerPaymentError'))
   }
   async function handleVarConfirm(amount) {
     const payment  = varModal.payment
@@ -424,7 +426,7 @@ export default function App() {
     const fundMode = varModal.fundMode
     setVarModal({ open: false, payment: null, resolver: null, fundMode: false })
     if (resolver) { resolver(amount); return }
-    if (!payment?.id) { showToast('Error: pago no encontrado'); return }
+    if (!payment?.id) { showToast(t('app.toast.paymentNotFoundError')); return }
     if (fundMode) {
       // El monto recién capturado se vuelve el total fijo del pago (antes
       // era $0/sin capturar) — sin esto, payFromFund compararía contra un
@@ -432,22 +434,22 @@ export default function App() {
       // reportado por Johnatan: un variable pagado con el Fondo se ponía
       // en $0 y aparecía en pagados, sin pedir el monto en ningún momento).
       const { error: totalErr } = await setContributionTotalAmount(payment.id, amount)
-      if (totalErr) { showToast(totalErr.message || 'Error al guardar el monto'); return }
+      if (totalErr) { showToast(totalErr.message || t('app.toast.saveAmountError')); return }
       const { error, insufficientFund } = await payFromFund(payment.id)
-      if (error) { showToast(error.message || 'Error al pagar desde el Fondo'); return }
+      if (error) { showToast(error.message || t('app.toast.payFromFundError')); return }
       if (insufficientFund) {
         // Mismo flujo que un pago fijo: el Fondo ya cubrió lo máximo
         // posible, se abre "Dividir entre miembros" para completar con
         // nómina de alguien.
         setSplitModal({ open: true, paymentId: payment.id, openedBecauseFundInsufficient: true })
       } else {
-        showToast(`${payment.name} pagado desde el Fondo — ${fmt(amount)}`)
+        showToast(t('app.toast.paidFromFund', { name: payment.name, amount: fmt(amount) }))
       }
       return
     }
     const { error } = await markPaid(payment.id, amount)
-    if (error) showToast('Error al registrar pago')
-    else showToast(`${payment.name} registrado — ${fmt(amount)}`)
+    if (error) showToast(t('app.toast.registerPaymentError'))
+    else showToast(t('app.toast.registered', { name: payment.name, amount: fmt(amount) }))
   }
   // handleVarModalClose: reemplaza el onClose inline de VariableAmountModal
   // (varModal) — si el modal se abrió vía requestVariableAmount (resolver
@@ -482,11 +484,11 @@ export default function App() {
   async function handleAbonarConfirm(amount) {
     const payment = abonarModal.payment
     setAbonarModal({ open: false, payment: null })
-    if (!payment?.id) { showToast('Error: pago no encontrado'); return }
+    if (!payment?.id) { showToast(t('app.toast.paymentNotFoundError')); return }
     const { error, done } = await abonarInstallment(payment.id, amount)
-    if (error) showToast(typeof error === 'string' ? error : (error.message || 'Error al registrar el abono'))
-    else if (done) showToast('¡Terminaste todos los pagos!')
-    else showToast(`Abono registrado — ${fmt(amount)}`)
+    if (error) showToast(typeof error === 'string' ? error : (error.message || t('app.toast.registerContributionError')))
+    else if (done) showToast(t('payCard.allPaymentsDone'))
+    else showToast(t('app.toast.contributionRegistered', { amount: fmt(amount) }))
   }
   function openSplitModal(payment) { setSplitModal({ open: true, paymentId: payment.id, openedBecauseFundInsufficient: false }) }
 
@@ -501,7 +503,7 @@ export default function App() {
       return
     }
     const { error, insufficientFund } = await payFromFund(payment.id)
-    if (error) { showToast(error.message || 'Error al pagar desde el Fondo'); return }
+    if (error) { showToast(error.message || t('app.toast.payFromFundError')); return }
     if (insufficientFund) {
       // El Fondo ya cubrió lo máximo posible (justo se aplicó) — se abre
       // "Dividir entre miembros" con el aviso para completar con nómina.
@@ -523,22 +525,22 @@ export default function App() {
   async function handleEstimateConfirm(amount) {
     const payment = estimateModal.payment
     setEstimateModal({ open: false, payment: null })
-    if (!payment?.id) { showToast('Error: pago no encontrado'); return }
+    if (!payment?.id) { showToast(t('app.toast.paymentNotFoundError')); return }
     const { error } = await setEstimatedAmount(payment.id, amount)
-    if (error) showToast('Error al guardar el monto')
-    else showToast(`Monto guardado para ${payment.name} — ${fmt(amount)}`)
+    if (error) showToast(t('app.toast.saveAmountError'))
+    else showToast(t('app.toast.amountSavedFor', { name: payment.name, amount: fmt(amount) }))
   }
   async function handleMarkUnpaid(id) {
     const payment = payments.find(p => p.id === id)
     if (payment?.space_id) {
       const { error } = await unmarkSharedPayment(id)
-      if (error) showToast(error.message || 'Error al desmarcar el pago')
-      else showToast(`${payment.name} marcado como no pagado`)
+      if (error) showToast(error.message || t('app.toast.unmarkError'))
+      else showToast(t('app.toast.markedUnpaid', { name: payment.name }))
       return
     }
     const { error } = await markUnpaid(id)
-    if (error) showToast(typeof error === 'string' ? error : 'Error al desmarcar el pago')
-    else showToast(`${payment?.name || 'Pago'} marcado como no pagado`)
+    if (error) showToast(typeof error === 'string' ? error : t('app.toast.unmarkError'))
+    else showToast(t('app.toast.markedUnpaid', { name: payment?.name || t('app.toast.fallbackPaymentName') }))
   }
   // handleMarkUnpaidAnimated: usado por PaidCollapseItem (Home) al terminar
   // su propia animación de "desmarcar" (pintado amarillo + "Marcado como no
@@ -550,42 +552,42 @@ export default function App() {
     const payment = payments.find(p => p.id === id)
     if (payment?.space_id) {
       const { error } = await unmarkSharedPayment(id)
-      if (error) showToast(error.message || 'Error al desmarcar el pago')
+      if (error) showToast(error.message || t('app.toast.unmarkError'))
       return
     }
     const { error } = await markUnpaid(id)
-    if (error) showToast(typeof error === 'string' ? error : 'Error al desmarcar el pago')
+    if (error) showToast(typeof error === 'string' ? error : t('app.toast.unmarkError'))
   }
   async function handlePostpone(payment) {
     const { error } = await postponePayment(payment)
-    if (error) showToast('Error al posponer')
-    else showToast(`${payment.name} pospuesto`)
+    if (error) showToast(t('app.toast.postponeError'))
+    else showToast(t('app.toast.postponed', { name: payment.name }))
   }
   async function handleAdvance(payment) {
     const { error } = await updatePayment(payment.id, { postponed: false })
-    if (error) showToast('Error')
-    else showToast('Pago regresado al periodo actual')
+    if (error) showToast(t('app.toast.genericError'))
+    else showToast(t('app.toast.returnedToCurrentPeriod'))
   }
   async function handleDelete(id, payment) {
     if (payment?.is_master) {
-      if (!window.confirm(`¿Eliminar el pago recurrente "${payment.name}"?\nLos pagos ya realizados se conservarán en el historial.`)) return
+      if (!window.confirm(t('app.confirm.deleteRecurrent', { name: payment.name }))) return
       await deleteRecurrent(payment.id)
     } else if (payment?.is_recurrent && !payment?.is_installment && payment?.parent_id) {
-      if (!window.confirm(`¿Eliminar el pago recurrente "${payment.name}"?\nLos pagos ya realizados se conservarán en el historial.`)) return
+      if (!window.confirm(t('app.confirm.deleteRecurrent', { name: payment.name }))) return
       await deleteRecurrent(payment.parent_id)
     } else if (payment?.is_installment && payment?.parent_id) {
       // Copia de parcialidad con master → eliminar via deleteRecurrent
-      if (!window.confirm(`¿Cancelar las parcialidades restantes de "${payment.name}"?\nLos pagos ya realizados se conservarán en el historial.`)) return
+      if (!window.confirm(t('app.confirm.cancelInstallments', { name: payment.name }))) return
       await deleteRecurrent(payment.parent_id)
     } else if (payment?.is_installment) {
       // Parcialidad sin master (sistema antiguo, fallback)
-      if (!window.confirm(`¿Cancelar las parcialidades restantes de "${payment.name}"?`)) return
+      if (!window.confirm(t('app.confirm.cancelInstallmentsNoHistory', { name: payment.name }))) return
       await deleteInstallmentFuture(payment.name)
     } else {
-      if (!window.confirm('¿Eliminar este pago?')) return
+      if (!window.confirm(t('app.confirm.deleteThisPayment'))) return
       await deletePayment(id)
     }
-    showToast('Pago eliminado')
+    showToast(t('app.toast.paymentDeleted'))
   }
 
   async function handleClosePatchNotes() {
@@ -607,7 +609,7 @@ export default function App() {
   async function handlePauseRecurrent(masterId) {
     const master = payments.find(p => p.id === masterId)
     await pauseRecurrent(masterId)
-    showToast(`${master?.name || 'Pago'} pausado`)
+    showToast(t('app.toast.paused', { name: master?.name || t('app.toast.fallbackPaymentName') }))
   }
   async function handleResumeRecurrent(masterId) {
     const master = payments.find(p => p.id === masterId)
@@ -627,7 +629,7 @@ export default function App() {
             is_variable: data.is_variable ?? editPayment.is_variable,
             firstDate:   data.due_date    || editPayment.due_date,
           })
-          if (error) showToast('Error al reactivar'); else showToast(`${editPayment.name} reactivado`)
+          if (error) showToast(t('app.toast.reactivateError')); else showToast(t('app.toast.reactivated', { name: editPayment.name }))
         } else {
           // Editar master activo
           const { error } = await updateRecurrentConfig(editPayment.id, {
@@ -638,15 +640,15 @@ export default function App() {
             is_variable: data.is_variable ?? editPayment.is_variable,
             firstDate:   data.due_date    || editPayment.due_date,
           })
-          if (error) showToast('Error al guardar'); else showToast('Pago actualizado')
+          if (error) showToast(t('app.toast.saveError')); else showToast(t('app.toast.paymentUpdated'))
         }
         return
       }
       // Editar pago normal o parcialidad
       const { error } = await updatePayment(editPayment.id, data)
-      if (error) { showToast('Error al guardar') }
+      if (error) { showToast(t('app.toast.saveError')) }
       else {
-        showToast('Pago actualizado')
+        showToast(t('app.toast.paymentUpdated'))
         // Bug real reportado por Johnatan (v0.9.258): si la fecha de pago
         // (paid_at) se edita y eso mueve el gasto hacia OTRO periodo, y ese
         // periodo ya tiene un remanente agregado (PaymentsPage.jsx →
@@ -658,7 +660,7 @@ export default function App() {
         if (data.paid_at && data.paid_at !== editPayment.paid_at) {
           const conflict = await checkPeriodIncomeConflict(profile, editPayment.paid_at, data.paid_at)
           if (conflict) {
-            showToast(`Ese periodo ya tiene un remanente de ${fmt(conflict.amount)} — revísalo en "Ingresos Extras del Periodo"`)
+            showToast(t('app.toast.remanenteConflict', { amount: fmt(conflict.amount) }))
           }
         }
       }
@@ -673,18 +675,18 @@ export default function App() {
           is_variable: data.is_variable || false,
           firstDate:   data.due_date,
         })
-        if (error) showToast('Error al guardar'); else showToast(`${data.name} agregado`)
+        if (error) showToast(t('app.toast.saveError')); else showToast(t('app.toast.added', { name: data.name }))
       } else {
         const { error } = await addPayment(data)
-        if (error) showToast('Error al guardar'); else showToast('Pago agregado')
+        if (error) showToast(t('app.toast.saveError')); else showToast(t('app.toast.paymentAdded'))
       }
     }
   }
 
   async function handleSaveInstallment(data) {
     const { error } = await addInstallmentPayment(data)
-    if (error) showToast('Error al guardar')
-    else showToast(`Pago ${data.startFrom || 1} de ${data.totalInstallments} creado`)
+    if (error) showToast(t('app.toast.saveError'))
+    else showToast(t('app.toast.installmentCreated', { current: data.startFrom || 1, total: data.totalInstallments }))
   }
 
   // Cambia de tab de forma centralizada — antes cada disparador (BottomNav,
@@ -781,12 +783,12 @@ export default function App() {
   // espacio compartido activo.
   async function handleSetDefaultSpace(spaceId) {
     const { error } = await updateProfile({ default_space_id: spaceId })
-    if (error) { showToast('Error al guardar tu pestaña principal'); return }
+    if (error) { showToast(t('app.toast.setDefaultTabError')); return }
     if (spaceId === null) {
-      showToast('Personal es tu pestaña principal')
+      showToast(t('app.toast.defaultTabSet', { name: t('activeSpaceHeader.personalName') }))
     } else {
       const entry = sharedSpaces.spaces.find(s => s.space.id === spaceId)
-      showToast(`"${entry?.space?.name || 'Espacio'}" es tu pestaña principal`)
+      showToast(t('app.toast.defaultTabSet', { name: entry?.space?.name || t('app.toast.fallbackSpaceName') }))
     }
   }
 
@@ -846,7 +848,7 @@ export default function App() {
           activeSpaceHeader={activeSpaceHeaderEl}
           onMarkUnpaid={handleMarkUnpaid}
           onDelete={handleDelete}
-          onDeleteDirect={async (id) => { await deletePayment(id); showToast('Pago eliminado') }}
+          onDeleteDirect={async (id) => { await deletePayment(id); showToast(t('app.toast.paymentDeleted')) }}
           onUpdateProfile={updateProfile}
           onEdit={openEdit}
           onViewSource={handleViewSource}
