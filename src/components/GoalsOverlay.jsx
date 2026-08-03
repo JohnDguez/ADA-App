@@ -1,4 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
+import i18n from '../i18n'
 import { Plus, SlidersHorizontal, Crown, PiggyBank } from 'lucide-react'
 import { getIconComponent } from '../lib/categoryIcons'
 import { fmt } from '../lib/utils'
@@ -17,6 +19,7 @@ const ANIM_MS = 280
 // navegación lista/detalle y el modal de crear/editar, para no ensuciar
 // App.jsx con estados que solo le importan a Metas.
 export function GoalsOverlay({ open, goalsData, isPremium, onClose, onOpenPremium }) {
+  const { t } = useTranslation()
   const { activeGoals, completedGoals, totalRestante, addGoal, updateGoal, aportar, retirar, markCompleted, deleteGoal } = goalsData
 
   const [closing, setClosing] = useState(false)
@@ -104,7 +107,7 @@ export function GoalsOverlay({ open, goalsData, isPremium, onClose, onOpenPremiu
   }
 
   const sortedGoals = [...activeGoals].sort((a, b) =>
-    sortBy === 'nombre' ? a.name.localeCompare(b.name) : b.target_amount - a.target_amount
+    sortBy === 'nombre' ? a.name.localeCompare(b.name, i18n.language) : b.target_amount - a.target_amount
   )
   const selectedGoal = selectedGoalId
     ? [...activeGoals, ...completedGoals].find(g => g.id === selectedGoalId)
@@ -159,7 +162,7 @@ export function GoalsOverlay({ open, goalsData, isPremium, onClose, onOpenPremiu
             role="button"
             tabIndex={0}
             onKeyDown={e => e.key === 'Enter' && onClose()}
-            aria-label="Cerrar Metas — desliza hacia abajo"
+            aria-label={t('goalsOverlay.closeAriaLabel')}
           >
             <div className={styles.dragHandle} />
           </div>
@@ -168,8 +171,8 @@ export function GoalsOverlay({ open, goalsData, isPremium, onClose, onOpenPremiu
             {!selectedGoal ? (
               <div className={styles.screen}>
                 <div className={styles.header}>
-                  <div className={styles.headerTitle}>Metas</div>
-                  <button type="button" className={styles.headerAddBtn} onClick={handleAddClick} aria-label="Nueva meta">
+                  <div className={styles.headerTitle}>{t('goalsPage.title')}</div>
+                  <button type="button" className={styles.headerAddBtn} onClick={handleAddClick} aria-label={t('goalsOverlay.newGoalAriaLabel')}>
                     <Plus size={22} color="#fff" />
                   </button>
                 </div>
@@ -177,19 +180,19 @@ export function GoalsOverlay({ open, goalsData, isPremium, onClose, onOpenPremiu
                 {noGoalsAtAll ? (
                   <EmptyState
                     icon={PiggyBank}
-                    title="Aún no tienes ninguna meta"
-                    subtitle="Crea una para empezar a apartar dinero de tu nómina"
+                    title={t('goalsPage.noGoalsAtAllTitle')}
+                    subtitle={t('goalsPage.noGoalsAtAllSubtitle')}
                     onClick={handleAddClick}
                   />
                 ) : (
                   <>
                     <div className={styles.summaryRow}>
                       <div className={styles.summaryBox}>
-                        <div className={styles.summaryLabel}>Total restante</div>
+                        <div className={styles.summaryLabel}>{t('goalsPage.totalRemaining')}</div>
                         <div className={styles.summaryValue}>{fmt(totalRestante)}</div>
                       </div>
                       <div className={styles.summaryBox}>
-                        <div className={styles.summaryLabel}>Metas cumplidas</div>
+                        <div className={styles.summaryLabel}>{t('goalsPage.goalsCompleted')}</div>
                         <div className={styles.summaryValue}>{completedGoals.length}/{activeGoals.length + completedGoals.length}</div>
                       </div>
                     </div>
@@ -201,7 +204,7 @@ export function GoalsOverlay({ open, goalsData, isPremium, onClose, onOpenPremiu
                         onClick={() => setSortBy(s => (s === 'monto' ? 'nombre' : 'monto'))}
                       >
                         <SlidersHorizontal size={13} />
-                        Ordenar por {sortBy}
+                        {t('goalsPage.sortBy', { criteria: t(`goalsPage.sortCriteria.${sortBy}`) })}
                       </button>
                     )}
 
@@ -213,10 +216,10 @@ export function GoalsOverlay({ open, goalsData, isPremium, onClose, onOpenPremiu
 
                     {atFreeLimit && (
                       <div className={styles.premiumBanner}>
-                        <div className={styles.premiumTitle}>Obtén Premium para ahorrar en más de una meta a la vez</div>
-                        <div className={styles.premiumText}>Crea todas las que quieras — tu próximo viaje, una consola, lo que se te ocurra — y ahorra para varias al mismo tiempo, en vez de quedarte solo con una activa.</div>
+                        <div className={styles.premiumTitle}>{t('goalsPage.premiumBanner.title')}</div>
+                        <div className={styles.premiumText}>{t('goalsPage.premiumBanner.text')}</div>
                         <button type="button" onClick={onOpenPremium} className={styles.premiumButton}>
-                          <Crown size={16} fill="currentColor" /> Prueba Premium GRATIS 7 días
+                          <Crown size={16} fill="currentColor" /> {t('goalsPage.premiumBanner.button')}
                         </button>
                       </div>
                     )}
@@ -239,7 +242,7 @@ export function GoalsOverlay({ open, goalsData, isPremium, onClose, onOpenPremiu
           {!selectedGoal && (
             <div className={styles.actionRow}>
               <button type="button" onClick={onClose} className={`btn-ghost ${styles.closeBtn}`} style={{ width: 'auto' }}>
-                Cerrar
+                {t('buttons.close')}
               </button>
             </div>
           )}
@@ -257,6 +260,7 @@ export function GoalsOverlay({ open, goalsData, isPremium, onClose, onOpenPremiu
 }
 
 function GoalCard({ goal, onClick }) {
+  const { t } = useTranslation()
   const Icon = getIconComponent(goal.icon) || PiggyBank
   return (
     <button type="button" className={`${styles.card} ${goal.isNearDeadline || goal.isOverdue ? styles.cardWarning : ''}`} onClick={onClick}>
@@ -270,16 +274,16 @@ function GoalCard({ goal, onClick }) {
         <span className={styles.cardTarget}>{fmt(goal.target_amount)}</span>
       </div>
       <div className={styles.cardStatsRow}>
-        <span>{fmt(goal.currentAmount)} abonado</span>
+        <span>{t('goalsPage.card.deposited', { amount: fmt(goal.currentAmount) })}</span>
         <span>{goal.percent}%</span>
       </div>
       <div className={styles.progressTrack}>
         <div className={styles.progressFill} style={{ width: `${goal.percent}%` }} />
       </div>
       <div className={styles.cardBottomRow}>
-        <span>Queda: {fmt(goal.remaining)}</span>
-        {goal.isNearDeadline && <span className={styles.daysBadge}>Quedan {goal.daysRemaining} días</span>}
-        {goal.isOverdue && <span className={styles.daysBadge}>Fecha vencida</span>}
+        <span>{t('goalsPage.card.remaining', { amount: fmt(goal.remaining) })}</span>
+        {goal.isNearDeadline && <span className={styles.daysBadge}>{t('goalsPage.card.daysRemaining', { count: goal.daysRemaining })}</span>}
+        {goal.isOverdue && <span className={styles.daysBadge}>{t('goalsPage.card.overdue')}</span>}
       </div>
     </button>
   )
