@@ -1113,5 +1113,52 @@
       "cancelInstallments": "Cancel the remaining installments of \"{{name}}\"?\nPayments already made will be kept in the history.",
       "cancelInstallmentsNoHistory": "Cancel the remaining installments of \"{{name}}\"?"
     }
+  },
+  "patchNotes": {
+    "v0_9_183": {
+      "item0": "New: pin your main tab. Tap the pin icon next to Personal or a Shared Space's name so it's the first thing you see every time you open or reload the app."
+    },
+    "v0_9_135": {
+      "item0": "New: Shared Space — track household expenses, rent, or groceries with your partner or roommate, in a space separate from your Personal account.",
+      "item1": "If you're Premium, you can create your own Shared Space (with its own pay period) and invite someone with a 6-digit code.",
+      "item2": "Without needing Premium, you can join up to 3 Shared Spaces with a code someone shares with you.",
+      "item3": "The owner decides what each guest can do inside the space: add payments, edit them, mark them as paid, delete them, or add extra income — each permission is turned on separately.",
+      "item4": "Everything syncs instantly between everyone sharing the space, with no need to reload the app.",
+      "item5": "Switch between your Personal account and your Shared Spaces from the new stacked selector, above Home, Expenses, and Recurring."
+    },
+    "v0_9_88": {
+      "item0": "New: on a pending variable payment (like electricity or water) you can now jot down the amount as soon as you know it — from the options menu, \"Add amount\". It's saved ready for when you confirm the payment, without affecting past or future payments in that same series."
+    },
+    "v0_9_71": {
+      "item0": "Settings is now organized into a menu — Account, Categories, Pay Period and Income, Notifications, and Appearance, each on its own screen.",
+      "item1": "New: customize your categories with your own icons and colors, and create your own from Settings → Categories."
+    },
+    "v0_9_51": {
+      "item0": "We've evolved! We're now LunaPay — same control over your pay period, new name and logo."
+    },
+    "v0_9_48": {
+      "item0": "Amounts now always show 2 decimals, useful for card payments or other exact amounts."
+    },
+    "v0_9_37": {
+      "item0": "Fixed: the what's-new notice no longer shows up every time you open the app."
+    },
+    "v0_9_36": {
+      "item0": "Menus and popups now enter with a smooth animation from the bottom."
+    },
+    "v0_9_34": {
+      "item0": "You can now edit or delete an extra income you already logged, from the \"Edit\" button next to \"Extra Income This Period\"."
+    },
+    "v0_9_33": {
+      "item0": "Fixed: the home card now correctly recognizes pending variable payments instead of marking them as \"nothing pending\"."
+    },
+    "v0_9_32": {
+      "item0": "Fixed: notifications no longer arrive repeated every hour — they respect the time you set again."
+    },
+    "v0_9_31": {
+      "item0": "You can now edit the date you paid a one-time payment, from the edit screen."
+    },
+    "v0_9_30": {
+      "item0": "New animated background on the home screen that changes with the time of day."
+    }
   }
 }

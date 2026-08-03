@@ -1113,5 +1113,52 @@
       "cancelInstallments": "¿Cancelar las parcialidades restantes de \"{{name}}\"?\nLos pagos ya realizados se conservarán en el historial.",
       "cancelInstallmentsNoHistory": "¿Cancelar las parcialidades restantes de \"{{name}}\"?"
     }
+  },
+  "patchNotes": {
+    "v0_9_183": {
+      "item0": "Nuevo: fija tu pestaña principal. Toca el ícono de pin junto al nombre de Personal o de un Espacio Compartido para que esa sea la primera que veas cada vez que abras o recargues la app."
+    },
+    "v0_9_135": {
+      "item0": "Nuevo: Espacio Compartido — lleva las cuentas de la casa, la renta o el súper junto con tu pareja o roomie, en un espacio aparte de tu cuenta Personal.",
+      "item1": "Si eres Premium, puedes crear tu propio Espacio Compartido (con su propio periodo de cobro) e invitar a alguien con un código de 6 dígitos.",
+      "item2": "Sin necesidad de Premium, puedes unirte hasta a 3 Espacios Compartidos con el código que te compartan.",
+      "item3": "El dueño decide qué puede hacer cada invitado dentro del espacio: agregar pagos, editarlos, marcarlos como pagados, eliminarlos, o agregar ingresos extra — cada permiso se activa por separado.",
+      "item4": "Todo se sincroniza al instante entre quienes comparten el espacio, sin necesidad de recargar la app.",
+      "item5": "Cambia entre tu cuenta Personal y tus Espacios Compartidos desde el nuevo selector apilado, arriba de Inicio, Gastos y Recurrentes."
+    },
+    "v0_9_88": {
+      "item0": "Nuevo: en un pago variable pendiente (como luz o agua) ahora puedes anotar el monto en cuanto lo sepas — desde el menú de opciones, \"Agregar monto\". Se guarda listo para cuando confirmes el pago, sin afectar pagos pasados ni futuros de esa misma serie."
+    },
+    "v0_9_71": {
+      "item0": "Ajustes ahora está organizado en un menú — Cuenta, Categorías, Periodo de cobro e ingresos, Notificaciones y Apariencia, cada uno en su propia pantalla.",
+      "item1": "Nuevo: personaliza tus categorías con íconos y colores propios, y crea las tuyas desde Ajustes → Categorías."
+    },
+    "v0_9_51": {
+      "item0": "¡Evolucionamos! Ahora somos LunaPay — mismo control de tu quincena, nuevo nombre y logo."
+    },
+    "v0_9_48": {
+      "item0": "Los montos ahora muestran siempre 2 decimales, útil para pagos con tarjeta u otros montos exactos."
+    },
+    "v0_9_37": {
+      "item0": "Corregido: el aviso de novedades ya no vuelve a aparecer cada vez que abres la app."
+    },
+    "v0_9_36": {
+      "item0": "Los menús y ventanas emergentes ahora entran con una animación suave desde abajo."
+    },
+    "v0_9_34": {
+      "item0": "Ahora puedes editar o eliminar un ingreso extra ya registrado, desde el botón \"Editar\" junto a \"Ingresos Extras Este Periodo\"."
+    },
+    "v0_9_33": {
+      "item0": "Corregido: la tarjeta de inicio ya reconoce correctamente los pagos variables pendientes en vez de marcarlos como \"sin pendientes\"."
+    },
+    "v0_9_32": {
+      "item0": "Corregido: las notificaciones ya no llegan repetidas cada hora — vuelven a respetar la hora que configuraste."
+    },
+    "v0_9_31": {
+      "item0": "Ahora puedes editar la fecha en que pagaste un pago único, desde la pantalla de edición."
+    },
+    "v0_9_30": {
+      "item0": "Nuevo fondo animado en la pantalla de inicio, que cambia según la hora del día."
+    }
   }
 }
