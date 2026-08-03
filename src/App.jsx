@@ -44,13 +44,13 @@ import { useSharedSpaces } from './hooks/useSharedSpaces'
 import { useSpaceStats } from './hooks/useSpaceStats'
 import { SpaceSwitcher } from './components/SpaceSwitcher'
 import { ActiveSpaceHeader } from './components/ActiveSpaceHeader'
-import { APP_VERSION, PATCH_NOTES, isNewerVersion } from './lib/patchNotes'
+import { APP_VERSION, getPatchNotes, isNewerVersion } from './lib/patchNotes'
 import { buildFeedbackUrl, FEEDBACK_PROMPT_AFTER_DAYS, FEEDBACK_REMIND_AFTER_DAYS } from './lib/feedback'
 
 function fmt(n) { return '$' + Number(n).toLocaleString('es-MX', { minimumFractionDigits: 0, maximumFractionDigits: 0 }) }
 
 export default function App() {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const { user, loading: authLoading, isRecovery, setIsRecovery } = useAuth()
 
   // Espacio activo: null = personal (default). Persistido igual que `tab`,
@@ -255,13 +255,20 @@ export default function App() {
   // useProfile() inicializa `profile` con DEFAULT_PROFILE (sin last_seen_app_version)
   // mientras trae los datos reales; evaluar antes de eso hacía que el modal se
   // abriera en cada apertura de la app, sin importar lo que ya se hubiera guardado.
+  //
+  // i18n.language en las dependencias: getPatchNotes() arma su texto con
+  // i18n.t() en el momento en que se llama — sin este dependency, si el
+  // usuario cambia de idioma ANTES de cerrar este modal (ya calculado en el
+  // idioma viejo), el contenido se quedaría pegado en el idioma con el que
+  // abrió la sesión hasta la próxima vez que alguna otra dependencia cambiara.
   useEffect(() => {
     if (!user || !profile || profileLoading) return
     const lastSeen = profile.last_seen_app_version
-    const unseen = PATCH_NOTES.filter(n => isNewerVersion(n.version, lastSeen))
+    const unseen = getPatchNotes().filter(n => isNewerVersion(n.version, lastSeen))
     setPatchNotesToShow(unseen)
     setPatchNotesOpen(unseen.length > 0)
-  }, [user, profile, profileLoading])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, profile, profileLoading, i18n.language])
 
   // Popup de feedback alpha (ver components/FeedbackPromptModal.jsx): primera
   // vez a los 8 días de creada la cuenta (user.created_at, de Supabase Auth);
