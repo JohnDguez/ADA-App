@@ -1073,5 +1073,45 @@
     "clearing": "Borrando…",
     "clearAll": "Borrar todo",
     "deleteSpaceButton": "Eliminar Espacio Compartido"
+  },
+  "app": {
+    "toast": {
+      "markPaidError": "Error al marcar como pagado",
+      "registerPaymentError": "Error al registrar pago",
+      "paymentNotFoundError": "Error: pago no encontrado",
+      "saveAmountError": "Error al guardar el monto",
+      "payFromFundError": "Error al pagar desde el Fondo",
+      "paidFromFund": "{{name}} pagado desde el Fondo — {{amount}}",
+      "registered": "{{name}} registrado — {{amount}}",
+      "registerContributionError": "Error al registrar el abono",
+      "contributionRegistered": "Abono registrado — {{amount}}",
+      "amountSavedFor": "Monto guardado para {{name}} — {{amount}}",
+      "unmarkError": "Error al desmarcar el pago",
+      "markedUnpaid": "{{name}} marcado como no pagado",
+      "postponeError": "Error al posponer",
+      "postponed": "{{name}} pospuesto",
+      "genericError": "Error",
+      "returnedToCurrentPeriod": "Pago regresado al periodo actual",
+      "paymentDeleted": "Pago eliminado",
+      "reactivateError": "Error al reactivar",
+      "reactivated": "{{name}} reactivado",
+      "saveError": "Error al guardar",
+      "paymentUpdated": "Pago actualizado",
+      "added": "{{name}} agregado",
+      "paymentAdded": "Pago agregado",
+      "installmentCreated": "Pago {{current}} de {{total}} creado",
+      "remanenteConflict": "Ese periodo ya tiene un remanente de {{amount}} — revísalo en \"Ingresos Extras del Periodo\"",
+      "paused": "{{name}} pausado",
+      "setDefaultTabError": "Error al guardar tu pestaña principal",
+      "defaultTabSet": "\"{{name}}\" es tu pestaña principal",
+      "fallbackPaymentName": "Pago",
+      "fallbackSpaceName": "Espacio"
+    },
+    "confirm": {
+      "deleteThisPayment": "¿Eliminar este pago?",
+      "deleteRecurrent": "¿Eliminar el pago recurrente \"{{name}}\"?\nLos pagos ya realizados se conservarán en el historial.",
+      "cancelInstallments": "¿Cancelar las parcialidades restantes de \"{{name}}\"?\nLos pagos ya realizados se conservarán en el historial.",
+      "cancelInstallmentsNoHistory": "¿Cancelar las parcialidades restantes de \"{{name}}\"?"
+    }
   }
 }

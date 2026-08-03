@@ -1073,5 +1073,45 @@
     "clearing": "Deleting…",
     "clearAll": "Delete all",
     "deleteSpaceButton": "Delete Shared Space"
+  },
+  "app": {
+    "toast": {
+      "markPaidError": "Error marking as paid",
+      "registerPaymentError": "Error logging payment",
+      "paymentNotFoundError": "Error: payment not found",
+      "saveAmountError": "Error saving the amount",
+      "payFromFundError": "Error paying from the Fund",
+      "paidFromFund": "{{name}} paid from the Fund — {{amount}}",
+      "registered": "{{name}} logged — {{amount}}",
+      "registerContributionError": "Error logging the contribution",
+      "contributionRegistered": "Contribution logged — {{amount}}",
+      "amountSavedFor": "Amount saved for {{name}} — {{amount}}",
+      "unmarkError": "Error unmarking the payment",
+      "markedUnpaid": "{{name}} marked as unpaid",
+      "postponeError": "Error postponing",
+      "postponed": "{{name}} postponed",
+      "genericError": "Error",
+      "returnedToCurrentPeriod": "Payment returned to the current period",
+      "paymentDeleted": "Payment deleted",
+      "reactivateError": "Error reactivating",
+      "reactivated": "{{name}} reactivated",
+      "saveError": "Error saving",
+      "paymentUpdated": "Payment updated",
+      "added": "{{name}} added",
+      "paymentAdded": "Payment added",
+      "installmentCreated": "Payment {{current}} of {{total}} created",
+      "remanenteConflict": "That period already has a leftover of {{amount}} — check it in \"Extra Income for the Period\"",
+      "paused": "{{name}} paused",
+      "setDefaultTabError": "Error saving your main tab",
+      "defaultTabSet": "\"{{name}}\" is your main tab",
+      "fallbackPaymentName": "Payment",
+      "fallbackSpaceName": "Space"
+    },
+    "confirm": {
+      "deleteThisPayment": "Delete this payment?",
+      "deleteRecurrent": "Delete the recurring payment \"{{name}}\"?\nPayments already made will be kept in the history.",
+      "cancelInstallments": "Cancel the remaining installments of \"{{name}}\"?\nPayments already made will be kept in the history.",
+      "cancelInstallmentsNoHistory": "Cancel the remaining installments of \"{{name}}\"?"
+    }
   }
 }
