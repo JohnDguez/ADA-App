@@ -937,7 +937,7 @@
     "home": {
       "metricCard": {
         "title": "Your pay period at a glance",
-        "text": "See how much you need to pay this period. Tap \"Period\" or \"Month\" to change the view."
+        "text": "See how much you need to pay this period. Tap \"Current period\" or \"Next period\" to change the view."
       },
       "addButton": {
         "title": "Add your first payment",
@@ -1018,8 +1018,8 @@
     },
     "metas": {
       "resumen": {
-        "title": "How much is left, how many you’ve hit",
-        "text": "See the total left to save across all your active goals, and how many you’ve already completed."
+        "title": "This is how you track your goals",
+        "text": "See the total left to save across your goals, and how many you’ve already completed."
       },
       "tabs": {
         "title": "Active vs. completed",

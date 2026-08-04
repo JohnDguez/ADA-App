@@ -937,7 +937,7 @@
     "home": {
       "metricCard": {
         "title": "Tu periodo de un vistazo",
-        "text": "Aquí ves cuánto tienes que pagar este periodo. Toca \"Periodo\" o \"Mes\" para cambiar la vista."
+        "text": "Aquí ves cuánto tienes que pagar este periodo. Toca \"Periodo actual\" o \"Próximo periodo\" para cambiar la vista."
       },
       "addButton": {
         "title": "Agrega tu primer pago",
@@ -1018,8 +1018,8 @@
     },
     "metas": {
       "resumen": {
-        "title": "Cuánto te falta, cuántas ya cumpliste",
-        "text": "Aquí ves el total que te falta abonar en todas tus metas activas, y cuántas ya completaste."
+        "title": "Así llevas el control de tus metas",
+        "text": "Aquí verás cuánto te falta ahorrar en total y cuántas metas ya has cumplido."
       },
       "tabs": {
         "title": "Activas vs. cumplidas",
