@@ -31,17 +31,15 @@ export function getCoachmarkSteps() {
       text: t('coachmarks.home.metricCard.text'),
       placement: 'bottom',
     },
-    // El botón "+" vive en BottomNav.jsx, que no tengo en esta sesión, así
-    // que no puedo agregarle un data-coachmark directamente. En vez de
-    // quitar el paso (es de los más importantes), se ancla por una vía
-    // alterna: fallbackSelector. Lucide genera automáticamente la clase
-    // `lucide-plus` en el SVG de cualquier ícono <Plus/>, así que se ubica
-    // por ahí y se sube al <button> o <a> más cercano para resaltar el
-    // botón completo, no solo el ícono. Si algún día se sube BottomNav.jsx
-    // y se le agrega el atributo real, `target` tomaría prioridad sola.
+    // v0.9.347: ya no depende del fallback — BottomNav.jsx ahora trae el
+    // atributo data-coachmark real. Antes usaba fallbackSelector: '.lucide-
+    // plus' (Lucide genera esa clase en cualquier ícono <Plus/>), pero eso
+    // causaba un bug real: SpaceSwitcher.jsx también usa un ícono Plus (en
+    // la tarjeta "Nuevo espacio compartido") y, al buscar con
+    // document.querySelector, el fallback agarraba el PRIMERO que
+    // encontraba en el DOM — que a veces era ese, no el botón del nav.
     {
       target: 'home-add-button',
-      fallbackSelector: '.lucide-plus',
       title: t('coachmarks.home.addButton.title'),
       text: t('coachmarks.home.addButton.text'),
       placement: 'top',
