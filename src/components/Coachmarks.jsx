@@ -38,6 +38,7 @@ export function Coachmarks({ screenKey, profile, onUpdateProfile }) {
   const [stepIndex, setStepIndex] = useState(0)
   const [rect, setRect] = useState(null)
   const rafRef = useRef(null)
+  const trackRafRef = useRef(null)
   const settleTimerRef = useRef(null)
   const bubbleRef = useRef(null)
   const actionLockRef = useRef(false)
@@ -89,6 +90,21 @@ export function Coachmarks({ screenKey, profile, onUpdateProfile }) {
   // medir — y antes de bloquear el scroll de fondo (el bloqueo se activa
   // solo una vez que ya hay `rect`, así el scrollIntoView todavía puede
   // mover la página con normalidad).
+  //
+  // Una vez encontrado, NO se mide una sola vez y ya — se sigue midiendo en
+  // cada frame mientras el paso siga activo (loop `track()` de abajo).
+  // Antes SÍ se medía una sola vez y se dejaba fijo: si la app seguía
+  // cargando datos (ej. el HalfRing de HomePage pasa de esqueleto a
+  // contenido real, o cualquier otra sección todavía se está acomodando)
+  // DESPUÉS de SETTLE_DELAY, el layout real se movía por debajo pero el
+  // spotlight se quedaba congelado en la posición vieja — reportado por
+  // Johnatan con captura (el hueco terminaba cubriendo la mitad de la
+  // pantalla, sin relación con ningún elemento real). Un delay fijo más
+  // largo no lo arregla de raíz — en una conexión lenta cualquier número
+  // fijo eventualmente se queda corto; medir en cada frame se autocorrige
+  // solo, sin importar cuánto tarde la carga. El costo es mínimo (un
+  // getBoundingClientRect por frame, solo mientras el coach mark está
+  // visible) y solo dispara un re-render cuando el rect real cambió.
   useEffect(() => {
     if (alreadySeen) { setRect(null); return }
     const step = steps[stepIndex]
@@ -97,6 +113,7 @@ export function Coachmarks({ screenKey, profile, onUpdateProfile }) {
     setRect(null) // oculta mientras se reubica, evita mostrar el rect del paso anterior
     let attempts = 0
     let measureTimer = null
+    let lastRect = null
     // Busca primero por data-coachmark; si el paso trae `fallbackSelector`
     // (casos donde no se pudo agregar el atributo real, ej. el botón "+"
     // dentro de BottomNav.jsx) y no hay match, intenta por ahí — y sube al
@@ -111,16 +128,42 @@ export function Coachmarks({ screenKey, profile, onUpdateProfile }) {
       }
       return null
     }
+    function rectsDiffer(a, b) {
+      if (!a || !b) return true
+      return a.top !== b.top || a.left !== b.left || a.width !== b.width || a.height !== b.height
+    }
+    // Loop de seguimiento continuo — corre mientras el paso siga activo.
+    // Si el elemento desaparece del DOM a medio tour (ej. el usuario mismo
+    // interactuó con la app detrás, o algo se re-renderizó), simplemente
+    // deja de actualizar con el último rect conocido en vez de tronar.
+    function track() {
+      const el = findElement()
+      if (el) {
+        const r = el.getBoundingClientRect()
+        if (rectsDiffer(r, lastRect)) {
+          lastRect = r
+          setRect(r)
+        }
+      }
+      trackRafRef.current = requestAnimationFrame(track)
+    }
     function locate() {
       const el = findElement()
       if (el) {
         const r = el.getBoundingClientRect()
         const fitsInView = r.top >= 60 && r.bottom <= window.innerHeight - 60
         if (fitsInView) {
+          lastRect = r
           setRect(r)
+          trackRafRef.current = requestAnimationFrame(track)
         } else {
           el.scrollIntoView({ behavior: 'smooth', block: 'center' })
-          measureTimer = setTimeout(() => setRect(el.getBoundingClientRect()), 380)
+          measureTimer = setTimeout(() => {
+            const r2 = el.getBoundingClientRect()
+            lastRect = r2
+            setRect(r2)
+            trackRafRef.current = requestAnimationFrame(track)
+          }, 380)
         }
       } else if (attempts < 12) {
         attempts += 1
@@ -137,6 +180,7 @@ export function Coachmarks({ screenKey, profile, onUpdateProfile }) {
       clearTimeout(settleTimerRef.current)
       clearTimeout(measureTimer)
       if (rafRef.current) cancelAnimationFrame(rafRef.current)
+      if (trackRafRef.current) cancelAnimationFrame(trackRafRef.current)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [screenKey, stepIndex, alreadySeen])
