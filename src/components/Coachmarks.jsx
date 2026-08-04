@@ -218,20 +218,26 @@ export function Coachmarks({ screenKey, profile, onUpdateProfile }) {
   const holeRight = rect.right + PADDING
 
   // Las 4 franjas son rectas — sin esto, cada esquina del hueco se veía
-  // "mordida" en diagonal (reportado por Johnatan con captura): el borde
-  // del spotlight es redondeado (RADIUS, mismo valor que .spotlight en
-  // Coachmarks.module.css) pero las franjas no siguen esa curva, dejando
-  // un triángulo oscuro de más justo en cada esquina. Se tapa con 4
-  // parches pequeños (uno por esquina), cada uno un cuadrado de
-  // RADIUS×RADIUS con un radial-gradient que "muerde" un cuarto de círculo
-  // exactamente en la esquina interior — mismo radio que el borde
-  // redondeado, así que la curva calza perfecto.
+  // cuadrada (reportado por Johnatan, 2 veces: la primera corrección tenía
+  // los 4 parches posicionados AFUERA del rectángulo del hueco, pegados a
+  // las franjas, en vez de DENTRO de él — así no tocaban para nada el área
+  // que en verdad necesitaba redondearse). El borde del spotlight es
+  // redondeado (RADIUS, mismo valor que .spotlight en
+  // Coachmarks.module.css) pero el rectángulo del hueco es recto — sin
+  // esto, el contenido de fondo se ve completo hasta la esquina cuadrada,
+  // por fuera de donde el borde redondeado ya dejó de cubrir. Se oscurece
+  // con 4 parches pequeños, ahora sí DENTRO de las 4 esquinas del hueco,
+  // cada uno un cuadrado de RADIUS×RADIUS con un radial-gradient que dejan
+  // transparente (parte real del hueco) solo el cuarto de círculo más
+  // cercano a la esquina interior — mismo radio que el borde redondeado,
+  // así la curva calza perfecto y el resto del cuadradito (la esquina
+  // exterior recta del rectángulo) se oscurece igual que las franjas.
   const RADIUS = 10
   const corners = [
-    { top: holeTop - RADIUS, left: holeLeft - RADIUS, pos: '100% 100%' }, // superior-izquierda
-    { top: holeTop - RADIUS, left: holeRight,          pos: '0% 100%' },  // superior-derecha
-    { top: holeBottom,       left: holeLeft - RADIUS,  pos: '100% 0%' },  // inferior-izquierda
-    { top: holeBottom,       left: holeRight,          pos: '0% 0%' },    // inferior-derecha
+    { top: holeTop, left: holeLeft, pos: '100% 100%' },              // superior-izquierda
+    { top: holeTop, left: holeRight - RADIUS, pos: '0% 100%' },       // superior-derecha
+    { top: holeBottom - RADIUS, left: holeLeft, pos: '100% 0%' },     // inferior-izquierda
+    { top: holeBottom - RADIUS, left: holeRight - RADIUS, pos: '0% 0%' }, // inferior-derecha
   ]
 
   return (
