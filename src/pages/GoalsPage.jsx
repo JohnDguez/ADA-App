@@ -155,13 +155,23 @@ export function GoalsPage({
                 <div className={styles.headerTitle}>{t('goalsPage.title')}</div>
               </div>
 
+              {/* data-coachmark="metas-resumen" también en el EmptyState de
+                  abajo (mismo patrón que gastos-disponible-card en
+                  PaymentsPage.jsx) — un usuario nuevo con cero metas nunca
+                  llega a este summaryRow real (noGoalsAtAll cae en el
+                  EmptyState de arriba), así que sin el dual-tag el primer
+                  paso del tour de "metas" nunca encontraba dónde anclar y
+                  saltaba directo hasta el último paso (reportado por
+                  Johnatan, v0.9.348). */}
               {noGoalsAtAll ? (
-                <EmptyState
-                  icon={PiggyBank}
-                  title={t('goalsPage.noGoalsAtAllTitle')}
-                  subtitle={t('goalsPage.noGoalsAtAllSubtitle')}
-                  onClick={handleAddClick}
-                />
+                <div data-coachmark="metas-resumen">
+                  <EmptyState
+                    icon={PiggyBank}
+                    title={t('goalsPage.noGoalsAtAllTitle')}
+                    subtitle={t('goalsPage.noGoalsAtAllSubtitle')}
+                    onClick={handleAddClick}
+                  />
+                </div>
               ) : (
                 <>
                   <div data-coachmark="metas-resumen" className={styles.summaryRow}>
