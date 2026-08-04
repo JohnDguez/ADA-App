@@ -14,10 +14,16 @@ import styles from './Coachmarks.module.css'
 // elemento que se quiere señalar.
 //
 // El spotlight es un div transparente posicionado exactamente sobre el
-// elemento, con box-shadow: '0 0 0 9999px rgba(...)' — el truco clásico de
-// crear un "agujero" iluminado sin necesitar SVG ni máscaras. Lleva borde
-// en var(--accent) y una animación de pulso (definida abajo, inyectada una
-// sola vez) para que quede clarísimo hacia dónde mirar.
+// elemento, con borde en var(--accent) y una animación de pulso en el
+// anillo. El oscurecido del resto de la pantalla vive en un div .overlay
+// aparte (ver más abajo) — antes se hacía con el mismo truco de
+// box-shadow: '0 0 0 9999px rgba(...)' sobre el propio spotlight, pero eso
+// dependía de que ningún ancestro en el árbol tuviera transform/filter (lo
+// que crea un containing block nuevo para position:fixed y puede recortar
+// un box-shadow de spread gigante) — reportado por Johnatan como "no se
+// oscurece el resto de la pantalla" en tema claro. Un div de overlay
+// explícito con position:fixed + inset:0 no depende de ningún spread
+// gigante, así que es más robusto sin importar qué ancestro exista.
 const PULSE_STYLE_ID = 'coachmark-pulse-style'
 function ensurePulseStyleInjected() {
   if (document.getElementById(PULSE_STYLE_ID)) return
@@ -25,9 +31,9 @@ function ensurePulseStyleInjected() {
   style.id = PULSE_STYLE_ID
   style.textContent = `
     @keyframes coachmarkPulse {
-      0%   { box-shadow: 0 0 0 0 rgba(59,158,255,0.55), 0 0 0 9999px rgba(2,10,31,0.92); }
-      70%  { box-shadow: 0 0 0 10px rgba(59,158,255,0), 0 0 0 9999px rgba(2,10,31,0.92); }
-      100% { box-shadow: 0 0 0 0 rgba(59,158,255,0), 0 0 0 9999px rgba(2,10,31,0.92); }
+      0%   { box-shadow: 0 0 0 0 rgba(59,158,255,0.55); }
+      70%  { box-shadow: 0 0 0 10px rgba(59,158,255,0); }
+      100% { box-shadow: 0 0 0 0 rgba(59,158,255,0); }
     }
   `
   document.head.appendChild(style)
@@ -212,6 +218,7 @@ export function Coachmarks({ screenKey, profile, onUpdateProfile }) {
 
   return (
     <>
+      <div className={styles.overlay} />
       <div
         className={styles.spotlight}
         style={{

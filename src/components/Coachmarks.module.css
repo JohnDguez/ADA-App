@@ -1,3 +1,15 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(2, 10, 31, 0.92);
+  z-index: 399;
+  /* pointer-events queda en 'auto' (default) a propósito — bloquea clics
+     de fondo mientras el tutorial está activo, para que el usuario no
+     pueda distraerse interactuando con la app real detrás. Antes, con el
+     truco de box-shadow sobre .spotlight (pointer-events: none), los
+     clics SÍ pasaban a la app de fondo. */
+}
+
 .spotlight {
   position: fixed;
   border-radius: 10px;
