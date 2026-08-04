@@ -127,7 +127,7 @@ export function SpaceSwitcher({ spaces, activeSpaceId, onSwitch, profile, stats 
   if (renderList.length === 0) return null
 
   return (
-    <div className={styles.switcherContainer}>
+    <div data-coachmark="home-space-switcher" className={styles.switcherContainer}>
       {renderList.map((item, i) => {
         const isFirst    = i === 0
         const isEntering = animIds && item.id === animIds.outgoingId

@@ -105,6 +105,7 @@ export function PageHeader({ profile, unreadCount, onOpenNotifs, onGoSettings })
             según la hora del día. */}
         <div className={styles.headerActions}>
           <button
+            data-coachmark="home-settings-gear"
             onClick={onGoSettings}
             className={styles.settingsButton}
             aria-label={t('pageHeader.settingsAriaLabel')}
