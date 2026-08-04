@@ -164,7 +164,7 @@ export function GoalsPage({
                 />
               ) : (
                 <>
-                  <div className={styles.summaryRow}>
+                  <div data-coachmark="metas-resumen" className={styles.summaryRow}>
                     <div className={styles.summaryBox}>
                       <div className={styles.summaryLabel}>{t('goalsPage.totalRemaining')}</div>
                       <div className={styles.summaryValue}>{fmt(totalRestante)}</div>
@@ -178,7 +178,7 @@ export function GoalsPage({
                   {/* Switch "Activas"/"Cumplidas" — mismo patrón exacto que
                       el de HomePage.jsx ("Periodo actual"/"Próximo
                       periodo"): track + thumb deslizante, pastilla 999px. */}
-                  <div className={styles.tabTrack}>
+                  <div data-coachmark="metas-tabs" className={styles.tabTrack}>
                     <div
                       className={styles.tabThumb}
                       style={{ transform: `translateX(${goalsView === 'cumplidas' ? 100 : 0}%)` }}
@@ -220,7 +220,7 @@ export function GoalsPage({
                           onClick={handleAddClick}
                         />
                       ) : (
-                        <div className={styles.list}>
+                        <div data-coachmark="metas-lista" className={styles.list}>
                           {sortedGoals.map(goal => (
                             <GoalCard key={goal.id} goal={goal} isShared={isShared} spaceMembers={spaceMembers} onClick={() => setSelectedGoalId(goal.id)} />
                           ))}
@@ -280,7 +280,7 @@ export function GoalsPage({
       </div>
 
       {!selectedGoal && rawActiveSpaceId !== 'new' && (
-        <div className={styles.addPillRow}>
+        <div data-coachmark="metas-add-pill" className={styles.addPillRow}>
           <button type="button" className={`${styles.addPill} ${(!canAdd && !atFreeLimit) ? styles.addPillDisabled : ''}`} onClick={handleAddClick}>
             <Plus size={18} color="#fff" />
             {t('goalsPage.addGoal')}
