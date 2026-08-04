@@ -1,3 +1,11 @@
+.overlayCorner {
+  position: fixed;
+  width: 10px;
+  height: 10px;
+  z-index: 399;
+  pointer-events: none;
+}
+
 .overlayBand {
   position: fixed;
   background: rgba(2, 10, 31, 0.92);

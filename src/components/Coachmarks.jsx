@@ -231,12 +231,36 @@ export function Coachmarks({ screenKey, profile, onUpdateProfile }) {
   const holeBottom = rect.bottom + PADDING
   const holeRight = rect.right + PADDING
 
+  // Las 4 franjas son rectas — sin esto, cada esquina del hueco se veía
+  // "mordida" en diagonal (reportado por Johnatan con captura): el borde
+  // del spotlight es redondeado (RADIUS, mismo valor que .spotlight en
+  // Coachmarks.module.css) pero las franjas no siguen esa curva, dejando
+  // un triángulo oscuro de más justo en cada esquina. Se tapa con 4
+  // parches pequeños (uno por esquina), cada uno un cuadrado de
+  // RADIUS×RADIUS con un radial-gradient que "muerde" un cuarto de círculo
+  // exactamente en la esquina interior — mismo radio que el borde
+  // redondeado, así que la curva calza perfecto.
+  const RADIUS = 10
+  const corners = [
+    { top: holeTop - RADIUS, left: holeLeft - RADIUS, pos: '100% 100%' }, // superior-izquierda
+    { top: holeTop - RADIUS, left: holeRight,          pos: '0% 100%' },  // superior-derecha
+    { top: holeBottom,       left: holeLeft - RADIUS,  pos: '100% 0%' },  // inferior-izquierda
+    { top: holeBottom,       left: holeRight,          pos: '0% 0%' },    // inferior-derecha
+  ]
+
   return (
     <>
       <div className={styles.overlayBand} style={{ top: 0, left: 0, right: 0, height: Math.max(0, holeTop) }} />
       <div className={styles.overlayBand} style={{ top: holeBottom, left: 0, right: 0, bottom: 0 }} />
       <div className={styles.overlayBand} style={{ top: holeTop, left: 0, width: Math.max(0, holeLeft), height: holeBottom - holeTop }} />
       <div className={styles.overlayBand} style={{ top: holeTop, left: holeRight, right: 0, height: holeBottom - holeTop }} />
+      {corners.map((c, i) => (
+        <div
+          key={i}
+          className={styles.overlayCorner}
+          style={{ top: c.top, left: c.left, background: `radial-gradient(circle at ${c.pos}, transparent ${RADIUS - 0.5}px, rgba(2,10,31,0.92) ${RADIUS}px)` }}
+        />
+      ))}
       <div
         className={styles.spotlight}
         style={{
