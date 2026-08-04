@@ -936,7 +936,7 @@
     "next": "Siguiente",
     "home": {
       "metricCard": {
-        "title": "Tu quincena de un vistazo",
+        "title": "Tu periodo de un vistazo",
         "text": "Aquí ves cuánto tienes que pagar este periodo. Toca \"Periodo\" o \"Mes\" para cambiar la vista."
       },
       "addButton": {
@@ -944,8 +944,8 @@
         "text": "Todo empieza aquí — desde este botón registras cualquier gasto, sea único, recurrente o a meses."
       },
       "rail": {
-        "title": "La línea de tu quincena",
-        "text": "Cada punto es un pago. El color te dice si ya venció, si vence este periodo, o si es del próximo."
+        "title": "Aquí verás tus pagos",
+        "text": "De un vistazo sabrás cuáles ya vencieron, cuáles vencen este periodo, y cuáles siguen pendientes."
       },
       "paidCollapse": {
         "title": "Lo que ya pagaste",
@@ -1004,7 +1004,7 @@
     },
     "perfil": {
       "cobro": {
-        "title": "Configura tu quincena",
+        "title": "Configura tu periodo de cobro",
         "text": "Aquí defines cada cuándo te pagan — semanal, quincenal o mensual — para que la app organice todo alrededor de eso."
       },
       "categorias": {

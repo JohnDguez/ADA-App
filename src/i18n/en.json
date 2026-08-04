@@ -944,8 +944,8 @@
         "text": "Everything starts here — from this button you log any expense, one-time, recurring, or in installments."
       },
       "rail": {
-        "title": "Your pay period timeline",
-        "text": "Each dot is a payment. The color tells you if it's overdue, due this period, or due next period."
+        "title": "See all your payments here",
+        "text": "At a glance, you'll know which ones are overdue, which are due this period, and which are still pending."
       },
       "paidCollapse": {
         "title": "What you've already paid",
