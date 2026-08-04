@@ -323,7 +323,7 @@ export default function App() {
   // deja en el orden porque `tab` sí toma ese valor al entrar a Ajustes y
   // de aquí sale la dirección del deslizamiento.
   const TAB_ORDER = ['home', 'payments', 'recurrents', 'goals', 'settings']
-  const TAB_TO_COACHMARK_KEY = { home: 'home', payments: 'gastos', recurrents: 'recurrentes', settings: 'perfil' }
+  const TAB_TO_COACHMARK_KEY = { home: 'home', payments: 'gastos', recurrents: 'recurrentes', goals: 'metas', settings: 'perfil' }
   const coachmarkScreenKey = modalOpen ? 'nuevo-pago' : (TAB_TO_COACHMARK_KEY[tab] || null)
   sessionStorage.setItem('ada_session', '1')
 
