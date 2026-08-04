@@ -10,8 +10,10 @@ import i18n from '../i18n'
 // - `placement`: 'top' | 'bottom' — de qué lado del elemento aparece la burbuja
 //
 // Las keys de este objeto son las mismas que usa App.jsx para decidir qué
-// secuencia mostrar (mapeadas desde `tab`, o 'nuevo-pago' cuando se abre
-// PaymentModal) y las mismas que se guardan en profile.coachmarks_seen.
+// secuencia mostrar (mapeadas desde `tab` vía TAB_TO_COACHMARK_KEY, o
+// 'nuevo-pago' cuando se abre PaymentModal) y las mismas que se guardan en
+// profile.coachmarks_seen. screenKeys vigentes: home, nuevo-pago, gastos,
+// recurrentes, perfil, metas (agregada v0.9.346, GoalsPage.jsx).
 //
 // getCoachmarkSteps() en vez de un objeto exportado directo — mismo motivo
 // que getMonths()/getCategoryLabel() en lib/utils.js: un objeto a nivel de
@@ -54,6 +56,24 @@ export function getCoachmarkSteps() {
       target: 'home-paid-collapse',
       title: t('coachmarks.home.paidCollapse.title'),
       text: t('coachmarks.home.paidCollapse.text'),
+      placement: 'bottom',
+    },
+    // 2 pasos agregados (v0.9.346) — cierran el pendiente abierto desde
+    // v0.9.303 cuando Metas entró al nav y Ajustes salió: nunca se había
+    // señalado ni el switcher de espacios ni el nuevo acceso a Ajustes vía
+    // el engrane del header. Van al FINAL a propósito (decisión de
+    // Johnatan) — más rápido y menos intrusivo que reordenar toda la
+    // secuencia para respetar el orden visual real de arriba hacia abajo.
+    {
+      target: 'home-space-switcher',
+      title: t('coachmarks.home.spaceSwitcher.title'),
+      text: t('coachmarks.home.spaceSwitcher.text'),
+      placement: 'bottom',
+    },
+    {
+      target: 'home-settings-gear',
+      title: t('coachmarks.home.settingsGear.title'),
+      text: t('coachmarks.home.settingsGear.text'),
       placement: 'bottom',
     },
     // Pendiente: paso señalando el bottom nav — falta BottomNav.jsx en esta
@@ -143,6 +163,37 @@ export function getCoachmarkSteps() {
       title: t('coachmarks.perfil.notificaciones.title'),
       text: t('coachmarks.perfil.notificaciones.text'),
       placement: 'bottom',
+    },
+  ],
+
+  // Secuencia nueva (v0.9.346) — GoalsPage.jsx nunca tuvo tour, desde que
+  // Metas se volvió pestaña propia del nav en v0.9.303. Orden de arriba
+  // hacia abajo: resumen → switch Activas/Cumplidas → una tarjeta de meta
+  // → pastilla "Añadir meta".
+  metas: [
+    {
+      target: 'metas-resumen',
+      title: t('coachmarks.metas.resumen.title'),
+      text: t('coachmarks.metas.resumen.text'),
+      placement: 'bottom',
+    },
+    {
+      target: 'metas-tabs',
+      title: t('coachmarks.metas.tabs.title'),
+      text: t('coachmarks.metas.tabs.text'),
+      placement: 'bottom',
+    },
+    {
+      target: 'metas-lista',
+      title: t('coachmarks.metas.lista.title'),
+      text: t('coachmarks.metas.lista.text'),
+      placement: 'top',
+    },
+    {
+      target: 'metas-add-pill',
+      title: t('coachmarks.metas.addPill.title'),
+      text: t('coachmarks.metas.addPill.text'),
+      placement: 'top',
     },
   ],
   }
