@@ -950,6 +950,14 @@
       "paidCollapse": {
         "title": "What you've already paid",
         "text": "It's saved here, collapsed, to stay out of your way — but you can check it or undo it anytime."
+      },
+      "spaceSwitcher": {
+        "title": "Switch spaces anytime",
+        "text": "Swipe here to move between your Personal account and your Shared Spaces, or tap \"New Shared Space\" to create one or join with a code."
+      },
+      "settingsGear": {
+        "title": "Your whole profile, one tap away",
+        "text": "From here you can open Settings: your account, categories, pay period, notifications, and appearance."
       }
     },
     "nuevoPago": {
@@ -1006,6 +1014,24 @@
       "notificaciones": {
         "title": "Never miss a payment",
         "text": "Turn on reminders so the app lets you know before each payment is due."
+      }
+    },
+    "metas": {
+      "resumen": {
+        "title": "How much is left, how many you’ve hit",
+        "text": "See the total left to save across all your active goals, and how many you’ve already completed."
+      },
+      "tabs": {
+        "title": "Active vs. completed",
+        "text": "Switch between goals you’re still saving toward and the ones you’ve already finished."
+      },
+      "lista": {
+        "title": "Tap any goal",
+        "text": "Open it to contribute, withdraw, edit it, or mark it as completed."
+      },
+      "addPill": {
+        "title": "Create your first goal",
+        "text": "Give it a name, a target amount, and, if you want, a deadline — that’s all it takes to start."
       }
     }
   },

@@ -950,6 +950,14 @@
       "paidCollapse": {
         "title": "Lo que ya pagaste",
         "text": "Se guarda aquí, colapsado, para no estorbar — pero puedes revisarlo o deshacerlo cuando quieras."
+      },
+      "spaceSwitcher": {
+        "title": "Cambia de espacio cuando quieras",
+        "text": "Desliza aquí para moverte entre tu cuenta Personal y tus Espacios Compartidos, o toca \"Nuevo espacio compartido\" para crear uno o unirte con un código."
+      },
+      "settingsGear": {
+        "title": "Todo tu perfil, a un toque",
+        "text": "Desde aquí entras a Ajustes: tu cuenta, categorías, periodo de cobro, notificaciones y apariencia."
       }
     },
     "nuevoPago": {
@@ -1006,6 +1014,24 @@
       "notificaciones": {
         "title": "No se te vaya a pasar un pago",
         "text": "Activa los recordatorios para que la app te avise antes de que venza cada pago."
+      }
+    },
+    "metas": {
+      "resumen": {
+        "title": "Cuánto te falta, cuántas ya cumpliste",
+        "text": "Aquí ves el total que te falta abonar en todas tus metas activas, y cuántas ya completaste."
+      },
+      "tabs": {
+        "title": "Activas vs. cumplidas",
+        "text": "Cambia entre las metas en las que sigues ahorrando y las que ya terminaste."
+      },
+      "lista": {
+        "title": "Toca cualquier meta",
+        "text": "Entra para aportar, retirar, editarla o marcarla como cumplida."
+      },
+      "addPill": {
+        "title": "Crea tu primera meta",
+        "text": "Dale nombre, monto objetivo y, si quieres, una fecha límite — desde aquí empieza todo."
       }
     }
   },
