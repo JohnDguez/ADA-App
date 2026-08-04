@@ -21,6 +21,7 @@ export function BottomNav({ active, onChange, onAdd }) {
 
       <div className={styles.addButtonWrapper}>
         <button
+          data-coachmark="home-add-button"
           onClick={onAdd}
           className={styles.addButton}
         >
