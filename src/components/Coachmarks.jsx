@@ -216,9 +216,27 @@ export function Coachmarks({ screenKey, profile, onUpdateProfile }) {
   const isLast = stepIndex === steps.length - 1
   const PADDING = 6
 
+  // El área "agujereada" (sin oscurecer) es exactamente el rect del
+  // spotlight, con el mismo PADDING que ya usa el propio spotlight. En vez
+  // de un solo div de overlay cubriendo TODA la pantalla (lo que oscurecía
+  // también el elemento que se supone debe verse resaltado — reportado por
+  // Johnatan), son 4 franjas alrededor del hueco: arriba, abajo, izquierda
+  // y derecha. Ninguna franja cubre el área del hueco, así que no hace
+  // falta ningún truco de box-shadow/clip-path — el elemento resaltado
+  // queda genuinamente sin nada encima, tal como se ve en el resto de la
+  // pantalla real, solo que iluminado por contraste con las 4 franjas
+  // oscuras alrededor.
+  const holeTop = rect.top - PADDING
+  const holeLeft = rect.left - PADDING
+  const holeBottom = rect.bottom + PADDING
+  const holeRight = rect.right + PADDING
+
   return (
     <>
-      <div className={styles.overlay} />
+      <div className={styles.overlayBand} style={{ top: 0, left: 0, right: 0, height: Math.max(0, holeTop) }} />
+      <div className={styles.overlayBand} style={{ top: holeBottom, left: 0, right: 0, bottom: 0 }} />
+      <div className={styles.overlayBand} style={{ top: holeTop, left: 0, width: Math.max(0, holeLeft), height: holeBottom - holeTop }} />
+      <div className={styles.overlayBand} style={{ top: holeTop, left: holeRight, right: 0, height: holeBottom - holeTop }} />
       <div
         className={styles.spotlight}
         style={{
