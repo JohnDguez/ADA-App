@@ -1,3 +1,21 @@
+/* Definido AQUÍ (no inyectado desde JS como antes) a propósito: CSS
+   Modules renombra cualquier identificador usado en `animation:` dentro de
+   este archivo (ej. .spotlight de abajo lo referencia como
+   "coachmarkPulse", pero termina compilado como algo como
+   "_coachmarkPulse_1fd1c_1"). Si el @keyframes vive en un <style> inyectado
+   por JS con el nombre literal sin ese renombrado, nunca coincide con la
+   referencia ya renombrada en el CSS compilado — la animación queda sin
+   ningún @keyframes real al que engancharse, y el pulso simplemente nunca
+   se ve (bug real, preexistente desde que se construyó el componente,
+   nunca antes detectado — reportado por Johnatan v0.9.351). Al definir el
+   @keyframes en el MISMO archivo .module.css, Vite renombra ambos (la
+   declaración y la referencia) de forma consistente, así que sí calzan. */
+@keyframes coachmarkPulse {
+  0%   { box-shadow: 0 0 0 0 rgba(59,158,255,0.55); }
+  70%  { box-shadow: 0 0 0 10px rgba(59,158,255,0); }
+  100% { box-shadow: 0 0 0 0 rgba(59,158,255,0); }
+}
+
 .overlayCorner {
   position: fixed;
   width: 10px;

@@ -15,29 +15,17 @@ import styles from './Coachmarks.module.css'
 //
 // El spotlight es un div transparente posicionado exactamente sobre el
 // elemento, con borde en var(--accent) y una animación de pulso en el
-// anillo. El oscurecido del resto de la pantalla vive en un div .overlay
-// aparte (ver más abajo) — antes se hacía con el mismo truco de
-// box-shadow: '0 0 0 9999px rgba(...)' sobre el propio spotlight, pero eso
-// dependía de que ningún ancestro en el árbol tuviera transform/filter (lo
-// que crea un containing block nuevo para position:fixed y puede recortar
-// un box-shadow de spread gigante) — reportado por Johnatan como "no se
-// oscurece el resto de la pantalla" en tema claro. Un div de overlay
-// explícito con position:fixed + inset:0 no depende de ningún spread
-// gigante, así que es más robusto sin importar qué ancestro exista.
-const PULSE_STYLE_ID = 'coachmark-pulse-style'
-function ensurePulseStyleInjected() {
-  if (document.getElementById(PULSE_STYLE_ID)) return
-  const style = document.createElement('style')
-  style.id = PULSE_STYLE_ID
-  style.textContent = `
-    @keyframes coachmarkPulse {
-      0%   { box-shadow: 0 0 0 0 rgba(59,158,255,0.55); }
-      70%  { box-shadow: 0 0 0 10px rgba(59,158,255,0); }
-      100% { box-shadow: 0 0 0 0 rgba(59,158,255,0); }
-    }
-  `
-  document.head.appendChild(style)
-}
+// anillo (@keyframes coachmarkPulse, definido directo en
+// Coachmarks.module.css — ver nota ahí sobre por qué NO se inyecta desde
+// JS). El oscurecido del resto de la pantalla vive en las 4 franjas
+// .overlayBand + 4 parches .overlayCorner (ver más abajo) — antes se hacía
+// con el mismo truco de box-shadow: '0 0 0 9999px rgba(...)' sobre el
+// propio spotlight, pero eso dependía de que ningún ancestro en el árbol
+// tuviera transform/filter (lo que crea un containing block nuevo para
+// position:fixed y puede recortar un box-shadow de spread gigante) —
+// reportado por Johnatan como "no se oscurece el resto de la pantalla" en
+// tema claro. Las franjas + parches son más robustas sin importar qué
+// ancestro exista.
 
 // Tiempo que se espera antes de la primera medición — le da tiempo a
 // animaciones de entrada (modales con modalSlideUp, transición de pantalla)
@@ -57,8 +45,6 @@ export function Coachmarks({ screenKey, profile, onUpdateProfile }) {
   const seen  = profile?.coachmarks_seen || {}
   const steps = screenKey ? getCoachmarkSteps()[screenKey] : null
   const alreadySeen = !screenKey || !steps || seen[screenKey]
-
-  useEffect(() => { ensurePulseStyleInjected() }, [])
 
   // Reinicia al primer paso cada vez que cambia de pantalla, O cada vez que
   // se vuelve a activar en la MISMA pantalla (ej. "Ver tutorial de nuevo"
