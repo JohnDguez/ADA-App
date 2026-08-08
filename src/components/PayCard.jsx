@@ -383,6 +383,7 @@ function PayCardImpl({ payment: p, cfg, onMarkPaid, onRequestVariableAmount, onC
                 onClick={handleCheckButtonClick}
                 disabled={phase !== 'idle'}
                 className={styles.markPaidButton}
+                aria-label={t('payCard.markPaidAriaLabel')}
                 style={{ background: canMarkPaid ? 'var(--paid)' : 'var(--border)' }}
               >
                 <Check size={18} color={canMarkPaid ? 'var(--pay-icon)' : 'var(--muted)'} strokeWidth={2.5} />
@@ -396,6 +397,7 @@ function PayCardImpl({ payment: p, cfg, onMarkPaid, onRequestVariableAmount, onC
             <button
               onClick={e => { e.stopPropagation(); menuOpen ? setMenuOpen(false) : openMenuAt() }}
               className={styles.menuTriggerButton}
+              aria-label={t('payCard.menuTriggerAriaLabel')}
             >
               <MoreVertical size={15} color="var(--text)" />
             </button>
