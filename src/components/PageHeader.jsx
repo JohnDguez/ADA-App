@@ -148,6 +148,7 @@ export function PageHeader({ profile, unreadCount, onOpenNotifs, onGoSettings })
             <button
               onClick={onOpenNotifs}
               className={styles.bellButton}
+              aria-label={t('pageHeader.notificationsAriaLabel')}
             >
               <Bell size={18} color="var(--surface)" />
             </button>
