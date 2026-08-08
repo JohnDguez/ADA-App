@@ -801,6 +801,11 @@ export default function App() {
 
   return (
     <>
+      {/* Landmark <main> — hallazgo de Lighthouse (Accessibility), el
+          documento no tenía ninguno. Envuelve solo el contenido real de
+          cada pestaña; BottomNav/paneles/modales quedan fuera a propósito
+          (son navegación y overlays, no contenido principal). */}
+      <main>
       {tab === 'home' && (
         <HomePage
           payments={visiblePayments}
@@ -923,6 +928,7 @@ export default function App() {
         />
         </Suspense>
       )}
+      </main>
 
       <BottomNav
         active={tab}
