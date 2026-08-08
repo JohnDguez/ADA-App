@@ -817,7 +817,9 @@
     "group": {
       "installmentsCount": "{{paid}}/{{total}} payments",
       "paidCount": "paid"
-    }
+    },
+    "markPaidAriaLabel": "Mark as paid",
+    "menuTriggerAriaLabel": "More options"
   },
   "dates": {
     "weekAbbrev": "Wk",

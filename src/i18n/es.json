@@ -817,7 +817,9 @@
     "group": {
       "installmentsCount": "{{paid}}/{{total}} pagos",
       "paidCount": "pagadas"
-    }
+    },
+    "markPaidAriaLabel": "Marcar como pagado",
+    "menuTriggerAriaLabel": "Más opciones"
   },
   "dates": {
     "weekAbbrev": "Sem",
