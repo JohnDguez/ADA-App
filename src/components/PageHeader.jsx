@@ -1,8 +1,15 @@
+import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import i18n from '../i18n'
 import { Bell, Crown, Settings } from 'lucide-react'
 import { useTimeOfDay } from '../hooks/useTimeOfDay'
 import styles from './PageHeader.module.css'
+
+// Cuánto esperar tras el primer render antes de precargar las 5 franjas
+// que no se están mostrando — tiempo de sobra para que el LCP inicial ya
+// haya pasado, sin arriesgar el crossfade (useTimeOfDay recalcula cada
+// 60s, así que 3s de margen nunca alcanza a notarse en la práctica).
+const PRELOAD_DELAY_MS = 3000
 
 // `greeting()` no es un componente — no puede usar el hook `useTranslation()`.
 // Usa el singleton `i18n.t()` directo (mismo objeto que ya inicializa
@@ -38,17 +45,41 @@ export function PageHeader({ profile, unreadCount, onOpenNotifs, onGoSettings })
   const initials = (profile?.name || 'U').slice(0, 2).toUpperCase()
   const timeOfDay = useTimeOfDay(profile?.timezone)
 
+  // Rendimiento (v0.9.356): antes se montaban las 6 franjas desde el primer
+  // render, así que el navegador descargaba las 6 aunque solo se viera 1 —
+  // pesaba directo sobre el LCP (detectado en auditoría Lighthouse,
+  // "Improve image delivery"). Ahora solo se monta la franja activa al
+  // arrancar; el resto se agrega en segundo plano tras PRELOAD_DELAY_MS,
+  // para que el crossfade siga funcionando sin competir por ancho de banda
+  // en la carga inicial.
+  const [mountedKeys, setMountedKeys] = useState(() => [timeOfDay])
+
+  useEffect(() => {
+    // Si la franja activa cambia antes de que termine el precargado (caso
+    // raro, ver PRELOAD_DELAY_MS), asegura que esté montada de inmediato.
+    setMountedKeys(prev => (prev.includes(timeOfDay) ? prev : [...prev, timeOfDay]))
+  }, [timeOfDay])
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setMountedKeys(Object.keys(HEADER_IMAGES))
+    }, PRELOAD_DELAY_MS)
+    return () => clearTimeout(timer)
+  }, [])
+
   return (
     <div className={styles.headerRoot}>
 
-      {/* Fondo pixel art con crossfade según franja horaria */}
-      {Object.entries(HEADER_IMAGES).map(([key, src]) => (
+      {/* Fondo pixel art con crossfade según franja horaria — solo las
+          franjas en mountedKeys están en el DOM, ver comentario arriba. */}
+      {mountedKeys.map(key => (
         <img
           key={key}
-          src={src}
+          src={HEADER_IMAGES[key]}
           alt=""
           className={styles.bgImage}
           style={{ opacity: timeOfDay === key ? 1 : 0 }}
+          fetchPriority={timeOfDay === key ? 'high' : 'low'}
         />
       ))}
 
