@@ -720,7 +720,15 @@
     "greetingMorning": "Good morning!",
     "greetingAfternoon": "Good afternoon!",
     "greetingEvening": "Good evening!",
-    "settingsAriaLabel": "Settings"
+    "settingsAriaLabel": "Settings",
+    "notificationsAriaLabel": "Notifications"
+  },
+  "bottomNav": {
+    "home": "Home",
+    "payments": "Payments",
+    "recurrents": "Recurring",
+    "goals": "Goals",
+    "add": "Add payment"
   },
   "activeSpaceHeader": {
     "newSpaceName": "New shared space",
