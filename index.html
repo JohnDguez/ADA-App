@@ -9,12 +9,72 @@
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="LunaPay" />
+
+    <!-- Rendimiento (v0.9.360): precarga la imagen del header correspondiente
+         a la hora ACTUAL antes que cualquier otro recurso — resuelve el
+         hallazgo de Lighthouse "LCP request discovery" (la imagen es el
+         elemento LCP de Home, pero al no existir SSR, index.html llega vacío
+         y el navegador no la "ve" hasta que React monta y decide cuál de las
+         6 franjas mostrar — con este script el navegador la descubre y
+         empieza a bajarla de inmediato, en paralelo al resto de la carga).
+         Usa la hora LOCAL del dispositivo (Date().getHours()), no el
+         timezone guardado en el perfil (profile.timezone) — ese solo se
+         conoce tras cargar la sesión de Supabase, imposible en este punto.
+         En el caso raro de que el usuario tenga un timezone de perfil
+         distinto al de su dispositivo, esta precarga sería para la franja
+         equivocada — no rompe nada (React sigue decidiendo la franja real
+         con su propia lógica en PageHeader.jsx), solo se pierde el beneficio
+         de la precarga esa vez. Mismos rangos que RANGES en
+         hooks/useTimeOfDay.js — si esos rangos cambian, actualizar aquí
+         también. -->
+    <script>
+      (function () {
+        var RANGES = [
+          { key: 'amanecer_5_a_9',   from: 5,  to: 9  },
+          { key: 'amanecer_9_a_12',  from: 9,  to: 12 },
+          { key: 'tarde_12_a_5',     from: 12, to: 17 },
+          { key: 'atardecer_5_a_7',  from: 17, to: 19 },
+          { key: 'anochecer_7_a_10', from: 19, to: 22 },
+          { key: 'noche_10_a_5',     from: 22, to: 29 },
+        ]
+        var hour = new Date().getHours()
+        var h = hour < 5 ? hour + 24 : hour
+        var match = null
+        for (var i = 0; i < RANGES.length; i++) {
+          if (h >= RANGES[i].from && h < RANGES[i].to) { match = RANGES[i]; break }
+        }
+        var key = match ? match.key : 'noche_10_a_5'
+        var link = document.createElement('link')
+        link.rel = 'preload'
+        link.as = 'image'
+        link.href = '/' + key + '.webp'
+        link.fetchPriority = 'high'
+        document.head.appendChild(link)
+      })()
+    </script>
+
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="apple-touch-icon" href="/favicon.svg" />
     <link rel="manifest" href="/manifest.json" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" />
+    <!-- Rendimiento (v0.9.360): antes era un <link rel="stylesheet"> normal,
+         que Lighthouse marcaba como "render-blocking request" (retrasaba el
+         primer pintado ~600ms combinado con el CSS del bundle). Patrón
+         estándar preload+onload: el navegador descarga el CSS con prioridad
+         alta (as="style") pero SIN bloquear el render mientras llega; en
+         cuanto termina, el onload lo convierte en stylesheet real. El
+         <noscript> de abajo es el fallback si el usuario tiene JS
+         deshabilitado (caso ínfimo en una PWA, pero sin costo mantenerlo). -->
+    <link
+      rel="preload"
+      as="style"
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap"
+      onload="this.onload=null;this.rel='stylesheet'"
+    />
+    <noscript>
+      <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" />
+    </noscript>
     <title>LunaPay</title>
     <!-- Aplicar tema antes de que React hidrate para evitar flash (FOUC) -->
     <script>
