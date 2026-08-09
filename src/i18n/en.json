@@ -331,7 +331,8 @@
       }
     },
     "actionEditPayments": "edit payments",
-    "actionAddPayments": "add payments"
+    "actionAddPayments": "add payments",
+    "menuAriaLabel": "More options"
   },
   "recurrentsPage": {
     "title": "Recurring expenses",
@@ -361,7 +362,8 @@
     "paused": "Paused",
     "actionResume": "resume payments",
     "actionPause": "pause payments",
-    "deleteConfirm": "Delete \"{{name}}\"? Payments already made will be kept."
+    "deleteConfirm": "Delete \"{{name}}\"? Payments already made will be kept.",
+    "menuAriaLabel": "More options"
   },
   "goalsPage": {
     "title": "Goals",

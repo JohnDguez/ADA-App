@@ -331,7 +331,8 @@
       }
     },
     "actionEditPayments": "editar pagos",
-    "actionAddPayments": "añadir pagos"
+    "actionAddPayments": "añadir pagos",
+    "menuAriaLabel": "Más opciones"
   },
   "recurrentsPage": {
     "title": "Gastos recurrentes",
@@ -361,7 +362,8 @@
     "paused": "Pausado",
     "actionResume": "reactivar pagos",
     "actionPause": "pausar pagos",
-    "deleteConfirm": "¿Eliminar \"{{name}}\"? Los pagos ya realizados se conservarán."
+    "deleteConfirm": "¿Eliminar \"{{name}}\"? Los pagos ya realizados se conservarán.",
+    "menuAriaLabel": "Más opciones"
   },
   "goalsPage": {
     "title": "Metas",
