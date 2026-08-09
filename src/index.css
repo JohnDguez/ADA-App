@@ -91,10 +91,15 @@
      --label-variable (prestado de la etiqueta "Variable" de pagos) — muy
      chillantes y sin relación semántica real con lo que representan.
      Variables propias, tono apagado para no competir visualmente con el
-     contenido de abajo. */
+     contenido de abajo.
+     Accesibilidad (v0.9.359): --space-inactive-bg bajó de #6884A9 a #5A779E
+     (misma tonalidad, -9% luminosidad) — el original daba 3.84:1 de
+     contraste contra el texto blanco encima, bajo el mínimo AA de 4.5:1
+     para texto normal (hallazgo Lighthouse). --space-new-bg no se tocó,
+     ya pasaba (5.28:1). */
   --space-new-bg:       #2F6E5C;
   --space-new-text:     #E1F5EE;
-  --space-inactive-bg:  #6884A9;
+  --space-inactive-bg:  #5A779E;
   --space-inactive-text: #FFFFFF;
   --space-personal-bg:   #47576B;
   --space-personal-text: #FFFFFF;
@@ -208,10 +213,16 @@
 
   /* Switcher de Espacio Compartido — ver nota en :root. Tono ligeramente
      más claro que en el tema claro, mismo criterio que --label-variable
-     (más luminosidad para contrastar contra el fondo oscuro). */
-  --space-new-bg:       #3D8B73;
+     (más luminosidad para contrastar contra el fondo oscuro).
+     Accesibilidad (v0.9.359): ambas bajaron de luminosidad (#3D8B73→
+     #357964, #7A95B8→#5677A2, misma tonalidad) — el original daba 3.60:1
+     y 3.08:1 contra su texto respectivo, bajo el mínimo AA 4.5:1
+     (hallazgo Lighthouse). Mismo cambio replicado en el bloque
+     @media (prefers-color-scheme: dark) más abajo, que siempre se
+     mantiene en espejo de este. */
+  --space-new-bg:       #357964;
   --space-new-text:     #E1F5EE;
-  --space-inactive-bg:  #7A95B8;
+  --space-inactive-bg:  #5677A2;
   --space-inactive-text: #FFFFFF;
   --space-personal-bg:   #566B85;
   --space-personal-text: #FFFFFF;
@@ -255,9 +266,9 @@
     --upcoming-border: #FAAC2F;
     --soon-color:      #FE7600;
     --menu-bg:         #242837;
-    --space-new-bg:       #3D8B73;
+    --space-new-bg:       #357964;
     --space-new-text:     #E1F5EE;
-    --space-inactive-bg:  #7A95B8;
+    --space-inactive-bg:  #5677A2;
     --space-inactive-text: #FFFFFF;
     --space-personal-bg:   #566B85;
     --space-personal-text: #FFFFFF;
