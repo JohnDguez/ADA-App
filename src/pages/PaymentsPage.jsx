@@ -1613,6 +1613,7 @@ export function PaymentsPage({ payments, dataLoading = false, profile, spaceSwit
                             })
                           }}
                           className={styles.paymentMenuButton}
+                          aria-label={t('paymentsPage.menuAriaLabel')}
                         >
                           <MoreVertical size={16} color="var(--text)" strokeWidth={1.8} />
                         </button>

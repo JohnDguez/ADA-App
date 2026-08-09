@@ -285,6 +285,7 @@ export function RecurrentsPage({ payments, profile, spaceSwitcher, activeSpaceHe
                               <ActionBtn
                                 onClick={() => canEdit ? (master.paused ? onResume(master.id) : onPause(master.id)) : blocked(master.paused ? t('recurrentsPage.actionResume') : t('recurrentsPage.actionPause'))}
                                 color={!canEdit ? 'var(--border)' : master.paused ? 'var(--paid)' : 'var(--warning)'}
+                                label={master.paused ? t('recurrentsPage.actionResume') : t('recurrentsPage.actionPause')}
                               >
                                 {master.paused
                                   ? <Play size={13} color={canEdit ? 'var(--surface)' : 'var(--muted)'} />
@@ -310,6 +311,7 @@ export function RecurrentsPage({ payments, profile, spaceSwitcher, activeSpaceHe
                                   })
                                 }}
                                 className={styles.masterMenuButton}
+                                aria-label={t('recurrentsPage.menuAriaLabel')}
                               >
                                 <MoreVertical size={16} color="var(--text)" />
                               </button>
@@ -352,9 +354,9 @@ export function RecurrentsPage({ payments, profile, spaceSwitcher, activeSpaceHe
   )
 }
 
-function ActionBtn({ onClick, color, children }) {
+function ActionBtn({ onClick, color, children, label }) {
   return (
-    <button onClick={onClick} className={styles.actionBtn} style={{ background: color }}>
+    <button onClick={onClick} className={styles.actionBtn} style={{ background: color }} aria-label={label}>
       {children}
     </button>
   )
