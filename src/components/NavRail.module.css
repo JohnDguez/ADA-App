@@ -1,0 +1,224 @@
+/* Oculto por default (mobile) — solo aparece desde 768px (Regla 42),
+   reemplazando a BottomNav (ver BottomNav.module.css → display:none ahí). */
+.rail {
+  display: none;
+}
+
+@media (min-width: 768px) {
+  .rail {
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    width: 72px;
+    background: var(--nav-bg);
+    z-index: 100;
+    overflow: hidden;
+    transition: width .25s ease;
+  }
+
+  .rail[data-expanded="true"] {
+    width: 240px;
+  }
+}
+
+/* ── Bloque de perfil ──────────────────────────────────────────────────── */
+
+.profileBlock {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.heroSection {
+  position: relative;
+  height: 120px;
+  overflow: hidden;
+}
+
+.heroImage {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: opacity 1.5s ease;
+  pointer-events: none;
+}
+
+.heroOverlay {
+  position: absolute;
+  inset: 0;
+  /* Degradado de abajo hacia arriba con var(--nav-bg) — mismo criterio que
+     .gradientOverlay de PageHeader.module.css (Regla 18: nunca gradiente
+     CSS "decorativo" nuevo, este reutiliza el mismo color sólido del riel
+     para fundir la imagen con el bloque de tabs de abajo). */
+  background: linear-gradient(to bottom, transparent 40%, var(--nav-bg) 100%);
+  pointer-events: none;
+}
+
+.avatarSection {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 12px;
+  cursor: pointer;
+  min-width: 0;
+}
+
+.avatarWrapper {
+  flex-shrink: 0;
+  position: relative;
+}
+
+.avatarImg {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.avatarFallback {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--surface);
+}
+
+.premiumBadge {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  width: 17px;
+  height: 17px;
+  border-radius: 50%;
+  background: var(--premium-gold);
+  color: var(--premium-gold-text);
+  border: 2px solid var(--nav-bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.textCol {
+  min-width: 0;
+  flex: 1;
+}
+
+.greetingText {
+  font-size: 11px;
+  font-weight: 400;
+  color: rgba(255, 255, 255, 0.7);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.nameText {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--nav-icon);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ── Tabs principales ──────────────────────────────────────────────────── */
+
+.navItems {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 16px 8px;
+  flex: 1;
+  overflow-y: auto;
+}
+
+.railButton {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px;
+  border: none;
+  background: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background .2s;
+  min-width: 0;
+}
+
+.railButton[data-active="true"] {
+  background: linear-gradient(180deg, rgba(255,255,255,0.25) 0%, rgba(255,255,255,0) 100%);
+}
+
+.iconWrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.badgeDot {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--danger);
+  border: 1.5px solid var(--nav-bg);
+}
+
+.railButtonLabel {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--nav-icon);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ── Notificaciones + configuración + toggle, fijas al fondo ─────────────
+   Mismo lugar colapsado o expandido (Regla 43) — es el mismo .railButton
+   reutilizado, así que ya hereda esa propiedad sin código extra. */
+
+.bottomActions {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px;
+  flex-shrink: 0;
+  border-top: none; /* Regla 13.1: sin bordes en contenedores */
+}
+
+.toggleButton {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px;
+  border: none;
+  background: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background .2s;
+}
+
+.toggleButton:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.toggleLabel {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--nav-icon);
+  white-space: nowrap;
+}
