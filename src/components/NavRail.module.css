@@ -61,9 +61,10 @@
 .avatarSection {
   position: relative;
   display: flex;
+  flex-direction: column;
   align-items: center;
   gap: 10px;
-  padding: 14px 12px;
+  padding: 18px 12px;
   cursor: pointer;
   min-width: 0;
 }
@@ -78,6 +79,7 @@
   height: 44px;
   border-radius: 50%;
   object-fit: cover;
+  transition: width .25s ease, height .25s ease;
 }
 
 .avatarFallback {
@@ -91,6 +93,7 @@
   font-size: 15px;
   font-weight: 700;
   color: var(--surface);
+  transition: width .25s ease, height .25s ease;
 }
 
 .premiumBadge {
@@ -109,26 +112,52 @@
 }
 
 .textCol {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  width: 100%;
   min-width: 0;
-  flex: 1;
 }
 
 .greetingText {
   font-size: 11px;
   font-weight: 400;
   color: rgba(255, 255, 255, 0.7);
+  text-align: center;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  max-width: 100%;
 }
 
 .nameText {
   font-size: 14px;
   font-weight: 700;
   color: var(--nav-icon);
+  text-align: center;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+/* Perfil expandido (Regla 43/44 — ajuste tras feedback visual de
+   Johnatan sobre v0.9.361): avatar más grande y foto+saludo+nombre
+   centrados en columna, en vez de fila con avatar chico a la izquierda. */
+.rail[data-expanded="true"] .avatarImg,
+.rail[data-expanded="true"] .avatarFallback {
+  width: 64px;
+  height: 64px;
+}
+
+.rail[data-expanded="true"] .avatarFallback {
+  font-size: 20px;
+}
+
+.rail[data-expanded="true"] .premiumBadge {
+  width: 20px;
+  height: 20px;
 }
 
 /* ── Tabs principales ──────────────────────────────────────────────────── */
@@ -145,6 +174,7 @@
 .railButton {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 12px;
   padding: 10px;
   border: none;
@@ -157,6 +187,14 @@
 
 .railButton[data-active="true"] {
   background: linear-gradient(180deg, rgba(255,255,255,0.25) 0%, rgba(255,255,255,0) 100%);
+}
+
+/* Expandido: ícono+etiqueta vuelven a alinearse a la izquierda (como ya
+   se veía bien) — el centrado de arriba es solo para el estado colapsado,
+   donde el botón únicamente tiene el ícono como hijo. */
+.rail[data-expanded="true"] .railButton,
+.rail[data-expanded="true"] .toggleButton {
+  justify-content: flex-start;
 }
 
 .iconWrapper {
@@ -203,6 +241,7 @@
 .toggleButton {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 12px;
   padding: 10px;
   border: none;
