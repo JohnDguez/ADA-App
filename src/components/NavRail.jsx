@@ -55,16 +55,18 @@ export function NavRail({ active, onChange, profile, unreadCount, onOpenNotifs, 
           tabIndex={0}
           onKeyDown={e => e.key === 'Enter' && onGoSettings && onGoSettings()}
         >
-          <div className={styles.avatarWrapper}>
-            {profile?.avatar_url
-              ? <img src={profile.avatar_url} alt="avatar" className={styles.avatarImg} style={{ border: `2px solid ${profile?.is_premium ? 'var(--premium-gold)' : 'rgba(255,255,255,0.3)'}` }} />
-              : <div className={styles.avatarFallback} style={{ border: `2px solid ${profile?.is_premium ? 'var(--premium-gold)' : 'rgba(255,255,255,0.3)'}` }}>{initials}</div>
-            }
-            {profile?.is_premium && (
-              <div className={styles.premiumBadge}>
-                <Crown size={10} fill="currentColor" />
-              </div>
-            )}
+          <div className={styles.avatarRing}>
+            <div className={styles.avatarWrapper}>
+              {profile?.avatar_url
+                ? <img src={profile.avatar_url} alt="avatar" className={styles.avatarImg} style={{ border: `2px solid ${profile?.is_premium ? 'var(--premium-gold)' : 'rgba(255,255,255,0.3)'}` }} />
+                : <div className={styles.avatarFallback} style={{ border: `2px solid ${profile?.is_premium ? 'var(--premium-gold)' : 'rgba(255,255,255,0.3)'}` }}>{initials}</div>
+              }
+              {profile?.is_premium && (
+                <div className={styles.premiumBadge}>
+                  <Crown size={10} fill="currentColor" />
+                </div>
+              )}
+            </div>
           </div>
 
           {expanded && (

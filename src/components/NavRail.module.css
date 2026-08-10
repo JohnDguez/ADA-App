@@ -74,6 +74,18 @@
   position: relative;
 }
 
+/* Anillo "corte" — mismo azul del riel (var(--nav-bg), igual que el fondo
+   del cuerpo bajo el header) separando la foto de la portada cuando se
+   traslapan (Regla 44 — ajuste tras feedback visual de Johnatan sobre
+   v0.9.362, mockup confirmado antes de este código). En colapsado no hay
+   portada detrás, así que el padding extra es invisible (mismo color que
+   el fondo del riel). */
+.avatarRing {
+  background: var(--nav-bg);
+  border-radius: 50%;
+  padding: 4px;
+}
+
 .avatarImg {
   width: 44px;
   height: 44px;
@@ -158,6 +170,20 @@
 .rail[data-expanded="true"] .premiumBadge {
   width: 20px;
   height: 20px;
+}
+
+/* v0.9.363 — la foto queda a mitad entre la portada y el cuerpo del
+   riel: -36px sube el anillo (72px de diámetro con el padding de
+   .avatarRing) exactamente la mitad de su alto, para que la otra mitad
+   se quede traslapando la portada (mockup confirmado por Johnatan antes
+   de este código). padding-top en 0 porque el traslape ya cubre ese
+   espacio — sin esto, quedaría un hueco doble arriba del avatar. */
+.rail[data-expanded="true"] .avatarSection {
+  padding-top: 0;
+}
+
+.rail[data-expanded="true"] .avatarRing {
+  margin-top: -36px;
 }
 
 /* ── Tabs principales ──────────────────────────────────────────────────── */
