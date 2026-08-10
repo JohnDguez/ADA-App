@@ -27,6 +27,8 @@ import { HomePage } from './pages/HomePage'
 import { PaymentsPage } from './pages/PaymentsPage'
 import { RecurrentsPage } from './pages/RecurrentsPage'
 import { BottomNav } from './components/BottomNav'
+import { NavRail } from './components/NavRail'
+import { RailFab } from './components/RailFab'
 import { NotificationsPanel } from './components/NotificationsPanel'
 import { PaymentModal } from './components/PaymentModal'
 import { VariableAmountModal } from './components/VariableAmountModal'
@@ -935,6 +937,21 @@ export default function App() {
         onChange={t => changeTab(t)}
         onAdd={openAdd}
       />
+
+      {/* Adaptación tablet/desktop (Regla 43): a partir de 768px, NavRail
+          reemplaza a BottomNav (que se oculta vía CSS, ver
+          BottomNav.module.css) — ambos quedan montados para no complicar
+          el árbol con matchMedia en JS, cada uno se muestra/oculta por
+          media query. El "+" sale del riel como FAB independiente. */}
+      <NavRail
+        active={tab}
+        onChange={t => changeTab(t)}
+        profile={effectiveProfile}
+        unreadCount={unreadCount}
+        onOpenNotifs={() => setNotifOpen(true)}
+        onGoSettings={() => changeTab('settings')}
+      />
+      <RailFab onAdd={openAdd} />
 
       <NotificationsPanel
         open={notifOpen}
