@@ -1,17 +1,14 @@
 import { useTranslation } from 'react-i18next'
-import { Home, Wallet, CalendarClock, Goal, Plus } from 'lucide-react'
+import { Plus } from 'lucide-react'
+import { NAV_ITEMS } from '../lib/constants'
 import styles from './BottomNav.module.css'
 
 // "settings" salió del nav — Ajustes ahora se abre desde el header (botón
 // de engrane, o tocando el bloque del avatar), y ese lugar lo tomó Metas.
-const LEFT_TABS = [
-  { id: 'home',     Icon: Home,     labelKey: 'bottomNav.home' },
-  { id: 'payments', Icon: Wallet,   labelKey: 'bottomNav.payments' },
-]
-const RIGHT_TABS = [
-  { id: 'recurrents', Icon: CalendarClock, labelKey: 'bottomNav.recurrents' },
-  { id: 'goals',      Icon: Goal,          labelKey: 'bottomNav.goals' },
-]
+// LEFT_TABS/RIGHT_TABS ya no se declaran aquí — se derivan de NAV_ITEMS
+// (lib/constants.js), fuente única compartida con NavRail.jsx (Regla 43).
+const LEFT_TABS = NAV_ITEMS.slice(0, 2)
+const RIGHT_TABS = NAV_ITEMS.slice(2)
 
 export function BottomNav({ active, onChange, onAdd }) {
   const { t } = useTranslation()

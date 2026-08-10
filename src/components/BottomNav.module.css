@@ -54,3 +54,11 @@
   position: relative;
   z-index: 2;
 }
+
+/* Adaptación tablet/desktop (Regla 42/43): a partir de 768px, BottomNav
+   se reemplaza por NavRail.jsx — nunca conviven los dos a la vez. */
+@media (min-width: 768px) {
+  .nav {
+    display: none;
+  }
+}

@@ -1,20 +1,15 @@
-import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import i18n from '../i18n'
 import { Bell, Crown, Settings } from 'lucide-react'
-import { useTimeOfDay } from '../hooks/useTimeOfDay'
+import { useHeaderBackground, HEADER_IMAGES } from '../hooks/useHeaderBackground'
 import styles from './PageHeader.module.css'
-
-// Cuánto esperar tras el primer render antes de precargar las 5 franjas
-// que no se están mostrando — tiempo de sobra para que el LCP inicial ya
-// haya pasado, sin arriesgar el crossfade (useTimeOfDay recalcula cada
-// 60s, así que 3s de margen nunca alcanza a notarse en la práctica).
-const PRELOAD_DELAY_MS = 3000
 
 // `greeting()` no es un componente — no puede usar el hook `useTranslation()`.
 // Usa el singleton `i18n.t()` directo (mismo objeto que ya inicializa
 // src/i18n/index.js), consistente con el resto de la app.
-function greeting() {
+// Exportada (adaptación tablet/desktop): NavRail.jsx la reutiliza para el
+// saludo del bloque de perfil expandido — mismo texto, una sola fuente.
+export function greeting() {
   const h = new Date().getHours()
   if (h < 12) return i18n.t('pageHeader.greetingMorning')
   if (h < 19) return i18n.t('pageHeader.greetingAfternoon')
@@ -29,49 +24,21 @@ function nameFontSize(name) {
   return 13
 }
 
-// Nombres tal cual Johnatan los va a subir a public/ (mismo nombre que ya
-// usó al mandar las imágenes, solo con extensión .webp en vez de .png).
-const HEADER_IMAGES = {
-  amanecer_5_9:   '/amanecer_5_a_9.webp',
-  amanecer_9_12:  '/amanecer_9_a_12.webp',
-  tarde_12_5:     '/tarde_12_a_5.webp',
-  atardecer_5_7:  '/atardecer_5_a_7.webp',
-  anochecer_7_10: '/anochecer_7_a_10.webp',
-  noche_10_5:     '/noche_10_a_5.webp',
-}
-
 export function PageHeader({ profile, unreadCount, onOpenNotifs, onGoSettings }) {
   const { t } = useTranslation()
   const initials = (profile?.name || 'U').slice(0, 2).toUpperCase()
-  const timeOfDay = useTimeOfDay(profile?.timezone)
 
-  // Rendimiento (v0.9.356): antes se montaban las 6 franjas desde el primer
-  // render, así que el navegador descargaba las 6 aunque solo se viera 1 —
-  // pesaba directo sobre el LCP (detectado en auditoría Lighthouse,
-  // "Improve image delivery"). Ahora solo se monta la franja activa al
-  // arrancar; el resto se agrega en segundo plano tras PRELOAD_DELAY_MS,
-  // para que el crossfade siga funcionando sin competir por ancho de banda
-  // en la carga inicial.
-  const [mountedKeys, setMountedKeys] = useState(() => [timeOfDay])
-
-  useEffect(() => {
-    // Si la franja activa cambia antes de que termine el precargado (caso
-    // raro, ver PRELOAD_DELAY_MS), asegura que esté montada de inmediato.
-    setMountedKeys(prev => (prev.includes(timeOfDay) ? prev : [...prev, timeOfDay]))
-  }, [timeOfDay])
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setMountedKeys(Object.keys(HEADER_IMAGES))
-    }, PRELOAD_DELAY_MS)
-    return () => clearTimeout(timer)
-  }, [])
+  // Franja horaria + qué imágenes están montadas para el crossfade — sale
+  // de useHeaderBackground.js (compartido con NavRail.jsx, Regla 44) en
+  // vez de calcularse aquí; mismo comportamiento de antes (precarga
+  // diferida incluida), solo se movió el cálculo.
+  const { timeOfDay, mountedKeys } = useHeaderBackground(profile?.timezone)
 
   return (
     <div className={styles.headerRoot}>
 
       {/* Fondo pixel art con crossfade según franja horaria — solo las
-          franjas en mountedKeys están en el DOM, ver comentario arriba. */}
+          franjas en mountedKeys están en el DOM, ver useHeaderBackground.js. */}
       {mountedKeys.map(key => (
         <img
           key={key}
