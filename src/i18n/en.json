@@ -732,6 +732,10 @@
     "goals": "Goals",
     "add": "Add payment"
   },
+  "navRail": {
+    "expand": "Expand menu",
+    "collapse": "Collapse menu"
+  },
   "activeSpaceHeader": {
     "newSpaceName": "New shared space",
     "personalName": "Personal",

@@ -732,6 +732,10 @@
     "goals": "Metas",
     "add": "Agregar pago"
   },
+  "navRail": {
+    "expand": "Expandir menú",
+    "collapse": "Colapsar menú"
+  },
   "activeSpaceHeader": {
     "newSpaceName": "Nuevo espacio compartido",
     "personalName": "Personal",
