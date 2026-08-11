@@ -25,7 +25,7 @@ import styles from './PayRail.module.css'
 // pagado un pago que en realidad vence hasta el periodo siguiente (previene
 // pagar por error algo del periodo equivocado si el usuario se confunde de
 // switch activo). No afecta a Vencidos/Pagos del periodo actual.
-function PayRailImpl({ payments, cfg, dotColor, dotTextColor, handlers, permissions, nextPeriodMode, spaceMembers }) {
+function PayRailImpl({ payments, cfg, dotColor, dotTextColor, handlers, permissions, nextPeriodMode, spaceMembers, onSelect, selectedId }) {
   // Se llama el hook aunque no se use t() directo abajo — es lo que hace
   // que este componente memoizado se re-renderice al cambiar de idioma
   // (el label de mes de abajo usa getMonthsShort(), no t(), así que sin
@@ -78,7 +78,7 @@ function PayRailImpl({ payments, cfg, dotColor, dotTextColor, handlers, permissi
               </div>
               <div className={styles.dayItemsCol}>
                 {g.items.map(p => (
-                  <PayCard key={p.id} payment={p} cfg={cfg} {...handlers} permissions={permissions} railMode hideDate hideDueLabel initialLoad={initialLoad} confirmBeforePay={nextPeriodMode} spaceMembers={spaceMembers} />
+                  <PayCard key={p.id} payment={p} cfg={cfg} {...handlers} permissions={permissions} railMode hideDate hideDueLabel initialLoad={initialLoad} confirmBeforePay={nextPeriodMode} spaceMembers={spaceMembers} onSelect={onSelect} selected={selectedId === p.id} />
                 ))}
               </div>
             </div>
