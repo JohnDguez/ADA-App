@@ -484,3 +484,73 @@
     display: none;
   }
 }
+
+/* ── v0.9.373 — Home a todo el ancho, textos/íconos más grandes ──────────
+   Se quitó el maestro-detalle (pedido de Johnatan: "le roba pantalla a lo
+   importante") — .masterDetailGrid/.masterColumn/.detailColumn ya no
+   existen aquí. En fase de pruebas en tablet: se deja estirar a todo el
+   ancho disponible sin tope — cuando pase a probarse en desktop real, ver
+   si hace falta un max-width (decisión pendiente, delegada por Johnatan).
+
+   El escalado de tamaños aplica a lo que es controlable por CSS (texto,
+   padding, dimensiones de contenedores) — los íconos de Lucide dentro de
+   PayCard.jsx/HalfRing.jsx usan `size={N}` en JS, no CSS, así que sus
+   glyphs se quedan en su tamaño de mobile en esta entrega; escalarlos
+   también implicaría pasar un tamaño distinto por prop según el ancho de
+   pantalla, cambio más grande que no entró en esta pasada. */
+@media (min-width: 768px) {
+  .roundedContentWrapper {
+    padding: 28px 24px 0;
+  }
+
+  .metricCard {
+    padding: 20px 24px;
+  }
+
+  .cardTitle {
+    font-size: 15px;
+  }
+
+  .cardAmount {
+    font-size: 38px;
+  }
+
+  .cardMeta {
+    font-size: 14px;
+  }
+
+  .cardPaidText,
+  .cardPendingText {
+    font-size: 13px;
+  }
+
+  .dateBadge {
+    font-size: 13px;
+  }
+
+  /* HalfRing dibuja su SVG con dimensiones fijas por prop (no CSS) — se
+     escala completo (dibujo + "81%" que va adentro) con transform, en vez
+     de tocar HalfRing.jsx. Seguro aquí porque cada instancia vive sola
+     dentro de su propia tarjeta con espacio de sobra alrededor — a
+     diferencia de aplicar esto a una lista de tarjetas apiladas (PayCard),
+     donde el transform no empuja a los vecinos y se verían encimadas. */
+  .ringScale {
+    display: flex;
+    justify-content: center;
+    transform: scale(1.15);
+    transform-origin: center;
+    margin-bottom: 10px;
+  }
+
+  .overdueTitle {
+    font-size: 15px;
+  }
+
+  .paidCollapseSummaryText {
+    font-size: 15px;
+  }
+
+  .paidCollapseToggle {
+    padding: 14px 16px;
+  }
+}
