@@ -1,5 +1,7 @@
 .panelRoot {
   padding: 1.25rem;
+  position: sticky;
+  top: 16px;
 }
 
 .categorySquare {
