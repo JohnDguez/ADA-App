@@ -1207,5 +1207,11 @@
     "title": "Something went wrong",
     "message": "LunaPay ran into an unexpected error and couldn't continue. Reload the app to pick up where you left off.",
     "reload": "Reload"
+  },
+  "payDetailPanel": {
+    "emptyTitle": "Select a payment",
+    "emptySubtitle": "You'll see each payment's details here",
+    "paidOn": "Paid on",
+    "frequency": "Frequency"
   }
 }

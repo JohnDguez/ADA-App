@@ -1207,5 +1207,11 @@
     "title": "Algo salió mal",
     "message": "LunaPay encontró un error inesperado y no pudo continuar. Recarga la app para seguir donde te quedaste.",
     "reload": "Recargar"
+  },
+  "payDetailPanel": {
+    "emptyTitle": "Selecciona un pago",
+    "emptySubtitle": "Aquí verás el detalle de cada pago",
+    "paidOn": "Pagado el",
+    "frequency": "Frecuencia"
   }
 }
