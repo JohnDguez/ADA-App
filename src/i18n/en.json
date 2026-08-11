@@ -1202,5 +1202,10 @@
     "v0_9_30": {
       "item0": "New animated background on the home screen that changes with the time of day."
     }
+  },
+  "errorBoundary": {
+    "title": "Something went wrong",
+    "message": "LunaPay ran into an unexpected error and couldn't continue. Reload the app to pick up where you left off.",
+    "reload": "Reload"
   }
 }

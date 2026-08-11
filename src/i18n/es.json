@@ -1202,5 +1202,10 @@
     "v0_9_30": {
       "item0": "Nuevo fondo animado en la pantalla de inicio, que cambia según la hora del día."
     }
+  },
+  "errorBoundary": {
+    "title": "Algo salió mal",
+    "message": "LunaPay encontró un error inesperado y no pudo continuar. Recarga la app para seguir donde te quedaste.",
+    "reload": "Recargar"
   }
 }
