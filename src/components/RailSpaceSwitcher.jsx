@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next'
 import i18n from '../i18n'
-import { Plus, UserRound, Crown, UsersRound } from 'lucide-react'
+import { Plus, UserRound, Crown, UsersRound, ChevronDown } from 'lucide-react'
 import styles from './RailSpaceSwitcher.module.css'
 
 /**
@@ -43,21 +43,35 @@ export function RailSpaceSwitcher({ spaces, activeSpaceId, onSwitch, profile, ex
     // Colapsado: solo el ícono del espacio activo — tocarlo expande el
     // riel para poder elegir (no hay espacio para una lista de nombres
     // en 72px, mismo criterio que los tabs de navegación sin etiqueta).
+    // data-coachmark AQUÍ (no en la lista expandida de abajo): el riel
+    // arranca colapsado por defecto (Regla 49), así que este es el
+    // elemento que un usuario nuevo realmente ve primero — el coach mark
+    // "home-space-switcher" (coachmarkSteps.js) ya existía apuntando a
+    // esto mismo pero se había quedado en el wrapper de la lista
+    // expandida, que no existe en el DOM hasta que alguien ya sabe
+    // expandir el riel — nunca encontraba su objetivo.
     const activeItem = allItems.find(it => it.id === activeSpaceId) || allItems.find(it => it.kind === 'personal')
     const ActiveIcon = iconFor(activeItem)
     return (
-      <button
-        className={styles.collapsedBadge}
-        onClick={onRequestExpand}
-        aria-label={activeItem.name}
-      >
-        <ActiveIcon size={14} strokeWidth={2} />
-      </button>
+      <>
+        <button
+          data-coachmark="home-space-switcher"
+          className={styles.collapsedBadge}
+          onClick={onRequestExpand}
+          aria-label={activeItem.name}
+        >
+          <ActiveIcon size={14} strokeWidth={2} />
+          <span className={styles.collapsedChevron}>
+            <ChevronDown size={9} strokeWidth={2.5} />
+          </span>
+        </button>
+        <div className={styles.divider} />
+      </>
     )
   }
 
   return (
-    <div data-coachmark="home-space-switcher" className={styles.list}>
+    <div className={styles.list}>
       <p className={styles.sectionLabel}>{t('spaceSwitcher.railLabel')}</p>
       {allItems.map(item => {
         const Icon = iconFor(item)

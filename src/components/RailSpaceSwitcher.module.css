@@ -1,15 +1,42 @@
 .collapsedBadge {
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.15);
-  border: none;
+  position: relative;
+  width: 30px;
+  height: 30px;
+  border-radius: 9px;
+  background: rgba(255, 255, 255, 0.16);
+  border: 1px solid rgba(255, 255, 255, 0.4);
   display: flex;
   align-items: center;
   justify-content: center;
   color: var(--nav-icon);
   cursor: pointer;
-  margin: 4px auto 0;
+  margin: 6px auto 0;
+}
+
+/* Chevron superpuesto — señal de "esto se puede desplegar", distingue el
+   badge de un ícono de nav plano a simple vista (feedback de Johnatan:
+   "es poco intuitivo", se confundía con el resto de íconos del riel). */
+.collapsedChevron {
+  position: absolute;
+  bottom: -4px;
+  right: -4px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--nav-bg);
+  border: 1.5px solid rgba(255, 255, 255, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--nav-icon);
+  pointer-events: none;
+}
+
+.divider {
+  width: 20px;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.2);
+  margin: 8px auto 2px;
 }
 
 .list {

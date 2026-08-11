@@ -1,4 +1,5 @@
 import { useTranslation } from 'react-i18next'
+import { useEffect, useRef } from 'react'
 import { Bell, Crown, Settings, ChevronLeft, ChevronRight } from 'lucide-react'
 import { NAV_ITEMS } from '../lib/constants'
 import { useHeaderBackground, HEADER_IMAGES } from '../hooks/useHeaderBackground'
@@ -32,6 +33,27 @@ export function NavRail({ active, onChange, profile, unreadCount, onOpenNotifs, 
   const { t } = useTranslation()
   const [expanded, setExpanded] = useRailExpanded()
   const initials = (profile?.name || 'U').slice(0, 2).toUpperCase()
+  const railRef = useRef(null)
+
+  // v0.9.368 — clic fuera del riel lo colapsa, para que expandido no se
+  // quede tapando contenido más de lo necesario (pedido explícito de
+  // Johnatan). "mousedown" en vez de "click": dispara ANTES de que el
+  // clic termine de procesarse — si el usuario abrió el riel con un clic
+  // y luego hace otro clic afuera, este listener ya está montado a
+  // tiempo de detectarlo (con "click" + el mismo evento que expande
+  // podría alcanzar a colapsarlo de inmediato en algún borde raro de
+  // orden de listeners). Solo se registra mientras `expanded` es true —
+  // nada escuchando de más cuando el riel ya está colapsado.
+  useEffect(() => {
+    if (!expanded) return
+    function handleOutsideClick(e) {
+      if (railRef.current && !railRef.current.contains(e.target)) {
+        setExpanded(false)
+      }
+    }
+    document.addEventListener('mousedown', handleOutsideClick)
+    return () => document.removeEventListener('mousedown', handleOutsideClick)
+  }, [expanded, setExpanded])
 
   // Mismo cálculo/crossfade que PageHeader.jsx — solo se pinta cuando el
   // riel está expandido (ver .heroSection abajo), pero el hook corre
@@ -39,7 +61,7 @@ export function NavRail({ active, onChange, profile, unreadCount, onOpenNotifs, 
   const { timeOfDay, mountedKeys } = useHeaderBackground(profile?.timezone)
 
   return (
-    <aside className={styles.rail} data-expanded={expanded}>
+    <aside ref={railRef} className={styles.rail} data-expanded={expanded}>
 
       {/* Bloque de perfil — foto siempre visible; portada/hero solo si
           expandido (Regla 44, nunca gradiente CSS — Regla 18). */}
