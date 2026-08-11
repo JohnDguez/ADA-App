@@ -945,7 +945,8 @@
   "spaceSwitcher": {
     "noPending": "Sin pagos pendientes",
     "pendingCount_one": "{{count}} pago pendiente",
-    "pendingCount_other": "{{count}} pagos pendientes"
+    "pendingCount_other": "{{count}} pagos pendientes",
+    "railLabel": "Espacios"
   },
   "coachmarks": {
     "skipTutorial": "Saltar tutorial",
