@@ -9,8 +9,6 @@ import { NewSharedSpacePanel } from '../components/NewSharedSpacePanel'
 import { EmptyState } from '../components/EmptyState'
 import { PaidByStack } from '../components/PaidByStack'
 import { HalfRing } from '../components/HalfRing'
-import { PayDetailPanel } from '../components/PayDetailPanel'
-import { StickyPanel } from '../components/StickyPanel'
 import { fmt, cobroPeriod, nextCobroPeriod, getPagarEsteCobro, daysDiff, dateOf, dateToStr, getMonths, getMonthsShort, getCategoryLabel } from '../lib/utils'
 import styles from './HomePage.module.css'
 
@@ -75,20 +73,6 @@ export function HomePage({ payments, dataLoading = false, profile, spaceSwitcher
   const [activeCard,     setActiveCard]     = useState(0)
   const [touchStartX,    setTouchStartX]    = useState(null)
   const [paidExpanded, setPaidExpanded] = useState(false)
-
-  // Selección del maestro-detalle (Regla 45, tablet/desktop) — vive local
-  // en HomePage porque la página se desmonta al cambiar de tab
-  // (`{tab === 'home' && <HomePage .../>}` en App.jsx), así que arranca en
-  // null cada vez que se entra a Inicio, sin lógica de reseteo extra.
-  // Sin efecto visible en mobile (el panel de detalle ni se monta ahí,
-  // ver el render más abajo) — pero el estado en sí se mantiene siempre
-  // activo, sin gate de ancho de pantalla, para no complicar el código
-  // con detección de breakpoint en JS (mismo criterio que NavRail/
-  // BottomNav: el breakpoint lo decide el CSS, no un matchMedia).
-  const [selectedPaymentId, setSelectedPaymentId] = useState(null)
-  // v0.9.372 — ref del maestro, marca dónde "se suelta" el panel de
-  // detalle (StickyPanel.jsx, sustituto manual de position:sticky).
-  const masterColumnRef = useRef(null)
 
   // Slide sincronizado del contenido de abajo (colapsable/Vencidos/lista vs
   // lista de "Próximo periodo") — mismo movimiento horizontal que ya usa
@@ -234,29 +218,6 @@ export function HomePage({ payments, dataLoading = false, profile, spaceSwitcher
     upcoming, nextPeriodKnownTotal, nextPeriodFixedCount, nextPeriodPendingVariableCount,
   } = derived
 
-  // Preselección + reselección automática del maestro-detalle (Regla 45:
-  // "al entrar, se preselecciona el pendiente/vencido más urgente" — nunca
-  // arranca vacío si hay algo que mostrar). El mismo efecto cubre 2 casos
-  // con una sola condición: primer render (selectedPaymentId arranca en
-  // null, "no existe" es cierto trivialmente) Y cuando el pago
-  // seleccionado deja de existir en `payments` (se marcó pagado, se
-  // eliminó, etc.) — en ambos casos se re-elige el más urgente disponible.
-  // Orden de prioridad: vencido > pendiente del periodo > pagado más
-  // reciente (si ya no queda nada pendiente) > próximo periodo — mismo
-  // criterio de urgencia que ya usa la tarjeta de métricas de arriba.
-  useEffect(() => {
-    if (selectedPaymentId && payments.some(p => p.id === selectedPaymentId)) return
-    const fallback = vencidos[0] || delPeriodo[0]
-      || (pagadosEstePeriodo.length > 0 ? pagadosEstePeriodo[pagadosEstePeriodo.length - 1] : null)
-      || upcoming[0] || null
-    setSelectedPaymentId(fallback ? fallback.id : null)
-  }, [payments, vencidos, delPeriodo, pagadosEstePeriodo, upcoming, selectedPaymentId])
-
-  const selectedPayment = useMemo(
-    () => payments.find(p => p.id === selectedPaymentId) || null,
-    [payments, selectedPaymentId]
-  )
-
   // v0.9.282 — antes este objeto se recreaba en CADA render de HomePage,
   // rompiendo el React.memo de PayRail/PayCard (identidad nueva = re-render
   // de todas las cards aunque nada hubiera cambiado). Con useMemo, mientras
@@ -284,14 +245,16 @@ export function HomePage({ payments, dataLoading = false, profile, spaceSwitcher
         />
       </div>
 
-      {/* Maestro-detalle (Regla 45) — en mobile es transparente: una sola
-          columna, .detailColumn ni se muestra (CSS, HomePage.module.css).
-          Desde 768px, 2 columnas: la izquierda es exactamente el Home de
-          siempre sin quitar nada; la derecha es el panel fijo del pago
-          seleccionado. */}
-      <div className={styles.masterDetailGrid}>
-      <div className={styles.masterColumn} ref={masterColumnRef}>
+      {/* v0.9.373 — sin maestro-detalle: se quitó a pedido de Johnatan
+          ("le roba pantalla a lo importante") — desde 768px, Home vuelve
+          a una sola columna a todo el ancho disponible, con textos/
+          íconos más grandes en vez de solo contenedores estirados (ver
+          HomePage.module.css). `.masterDetailGrid`/`.detailColumn`/
+          `PayDetailPanel`/`StickyPanel` dejaron de usarse aquí — los
+          archivos se quedan en el repo sin uso (mismo criterio que
+          SpaceSwitcher.jsx), por si Metas los reaprovecha más adelante. */}
       <div className={styles.roundedContentWrapper}>
+
         <div className={styles.spaceSwitcherMobileWrap}>{spaceSwitcher}</div>
 
         {activeSpaceHeader}
@@ -384,7 +347,7 @@ export function HomePage({ payments, dataLoading = false, profile, spaceSwitcher
                         ningún barrido (mismo criterio ya documentado en
                         HalfRing.jsx) — la animación suave se queda solo
                         para cuando de verdad marcas algo pagado en vivo. */}
-                    <HalfRing key={dataLoading ? 'loading' : activeSpaceId} percent={1} />
+                    <div className={styles.ringScale}><HalfRing key={dataLoading ? 'loading' : activeSpaceId} percent={1} /></div>
                     <div className={styles.cardTitle}>{t('homePage.totalThisPeriod')}</div>
                     <div className={styles.cardAmount}>{fmt(pagadoMonto)}</div>
                     {(pagadosFijosEstePeriodo > 0 || pagadosVariablesEstePeriodo > 0) && (
@@ -400,7 +363,7 @@ export function HomePage({ payments, dataLoading = false, profile, spaceSwitcher
                       {t('homePage.periodPrefix')} {periodRange(profile)}
                     </div>
                     <div className={styles.clearFloat} />
-                    <HalfRing key={dataLoading ? 'loading' : activeSpaceId} percent={pctPagado / 100} />
+                    <div className={styles.ringScale}><HalfRing key={dataLoading ? 'loading' : activeSpaceId} percent={pctPagado / 100} /></div>
                     <div className={styles.cardPaidPendingRow}>
                       <span className={styles.cardPaidText}>{t('homePage.paidLabel', { amount: fmt(pagadoMonto) })}</span>
                       <span className={styles.cardPendingText}>{t('homePage.pendingLabel', { amount: fmt(pendingAmt) })}</span>
@@ -432,7 +395,7 @@ export function HomePage({ payments, dataLoading = false, profile, spaceSwitcher
                   {nextPeriodRange(profile)}
                 </div>
                 <div className={styles.clearFloat} />
-                <HalfRing key={dataLoading ? 'loading' : activeSpaceId} percent={0} />
+                <div className={styles.ringScale}><HalfRing key={dataLoading ? 'loading' : activeSpaceId} percent={0} /></div>
                 <div className={styles.cardTitle}>{t('homePage.totalNextPeriod')}</div>
                 <div className={styles.cardAmount}>{fmt(nextPeriodKnownTotal)}</div>
                 <div className={styles.cardMeta}>
@@ -478,8 +441,6 @@ export function HomePage({ payments, dataLoading = false, profile, spaceSwitcher
                     onMarkUnpaid={onMarkUnpaid}
                     onViewSource={onViewSource}
                     spaceMembers={spaceMembers}
-                    onSelect={setSelectedPaymentId}
-                    selectedId={selectedPaymentId}
                   />
                 </div>
               )}
@@ -489,7 +450,7 @@ export function HomePage({ payments, dataLoading = false, profile, spaceSwitcher
                   <div className={styles.overdueTitle}>
                     {t('homePage.overdueTitle')}
                   </div>
-                  <PayRail payments={vencidos} cfg={profile} dotColor="var(--overdue-border)" dotTextColor="var(--overdue-text)" handlers={handlers} permissions={spacePermissions} spaceMembers={spaceMembers} onSelect={setSelectedPaymentId} selectedId={selectedPaymentId} />
+                  <PayRail payments={vencidos} cfg={profile} dotColor="var(--overdue-border)" dotTextColor="var(--overdue-text)" handlers={handlers} permissions={spacePermissions} spaceMembers={spaceMembers} />
                 </div>
               )}
 
@@ -514,7 +475,7 @@ export function HomePage({ payments, dataLoading = false, profile, spaceSwitcher
                      animación de siempre. Mismo criterio en el otro EmptyState
                      de abajo y en los 2 de PaymentsPage. */
                   ? (dataLoading ? null : <EmptyState title={t('homePage.emptyState.currentPeriodTitle')} subtitle={t('homePage.emptyState.subtitle')} onClick={onAdd} />)
-                  : <PayRail payments={delPeriodo} cfg={profile} dotColor="var(--upcoming-border)" dotTextColor="var(--impact-warning-text)" handlers={handlers} permissions={spacePermissions} spaceMembers={spaceMembers} onSelect={setSelectedPaymentId} selectedId={selectedPaymentId} />
+                  : <PayRail payments={delPeriodo} cfg={profile} dotColor="var(--upcoming-border)" dotTextColor="var(--impact-warning-text)" handlers={handlers} permissions={spacePermissions} spaceMembers={spaceMembers} />
                 }
               </div>
             </div>
@@ -523,7 +484,7 @@ export function HomePage({ payments, dataLoading = false, profile, spaceSwitcher
               <div className={styles.periodSection}>
                 {upcoming.length === 0
                   ? (dataLoading ? null : <EmptyState title={t('homePage.emptyState.nextPeriodTitle')} subtitle={t('homePage.emptyState.subtitle')} onClick={onAdd} />)
-                  : <PayRail payments={upcoming} cfg={profile} dotColor="var(--accent)" dotTextColor="var(--bg)" handlers={handlers} permissions={spacePermissions} nextPeriodMode spaceMembers={spaceMembers} onSelect={setSelectedPaymentId} selectedId={selectedPaymentId} />
+                  : <PayRail payments={upcoming} cfg={profile} dotColor="var(--accent)" dotTextColor="var(--bg)" handlers={handlers} permissions={spacePermissions} nextPeriodMode spaceMembers={spaceMembers} />
                 }
               </div>
             </div>
@@ -533,27 +494,6 @@ export function HomePage({ payments, dataLoading = false, profile, spaceSwitcher
         )}
         </div>
         </div>
-      </div>
-      </div>
-
-      <div className={styles.detailColumn}>
-        <StickyPanel boundaryRef={masterColumnRef}>
-          <PayDetailPanel
-            payment={selectedPayment}
-            profile={profile}
-            permissions={spacePermissions}
-            spaceMembers={spaceMembers}
-            onMarkPaid={onMarkPaid}
-            onRequestVariableAmount={onRequestVariableAmount}
-            onConfirmVariablePaid={onConfirmVariablePaid}
-            onCaptureAmount={onCaptureAmount}
-            onMarkUnpaid={onMarkUnpaid}
-            onEdit={onEdit}
-            onDelete={onDelete}
-            onViewSource={onViewSource}
-          />
-        </StickyPanel>
-      </div>
       </div>
 
       <NotificationsPanel
