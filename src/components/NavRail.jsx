@@ -55,6 +55,32 @@ export function NavRail({ active, onChange, profile, unreadCount, onOpenNotifs, 
     return () => document.removeEventListener('mousedown', handleOutsideClick)
   }, [expanded, setExpanded])
 
+  // v0.9.373 — el riel se colapsa solo en 3 casos más, además del clic
+  // afuera (v0.9.368): al hacer scroll fuera del riel, al elegir una
+  // página, y al elegir un espacio — EXCEPTO al abrir notificaciones
+  // (pedido explícito de Johnatan, "para que no tape información" +
+  // "excepto en notificaciones"). El scroll del propio riel (su lista de
+  // tabs/espacios, con overflow-y:auto propio) no dispara este listener
+  // — solo escucha el scroll real de la página (window), que es un
+  // contenedor distinto sin relación de ancestro/descendiente con el
+  // scroll interno del riel.
+  useEffect(() => {
+    if (!expanded) return
+    function handleScroll() { setExpanded(false) }
+    window.addEventListener('scroll', handleScroll, { passive: true })
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [expanded, setExpanded])
+
+  function handleChangeTab(id) {
+    onChange(id)
+    setExpanded(false)
+  }
+
+  function handleSwitchSpace(id) {
+    onSwitchSpace(id)
+    setExpanded(false)
+  }
+
   // Mismo cálculo/crossfade que PageHeader.jsx — solo se pinta cuando el
   // riel está expandido (ver .heroSection abajo), pero el hook corre
   // siempre para que la franja ya esté lista al expandir, sin salto.
@@ -62,6 +88,17 @@ export function NavRail({ active, onChange, profile, unreadCount, onOpenNotifs, 
 
   return (
     <aside ref={railRef} className={styles.rail} data-expanded={expanded}>
+
+      {/* Franja con el ícono de la app — SOLO colapsado (pedido de
+          Johnatan: "al expandirse se quitará el ícono"). favicon.svg ya
+          trae su propio fondo oscuro con degradado de marca integrado
+          (asset existente, no un gradiente nuevo de UI — Regla 18 solo
+          restringe gradientes creados en componentes). */}
+      {!expanded && (
+        <div className={styles.logoStrip}>
+          <img src="/favicon.svg" alt="" className={styles.logoIcon} />
+        </div>
+      )}
 
       {/* Bloque de perfil — foto siempre visible; portada/hero solo si
           expandido (Regla 44, nunca gradiente CSS — Regla 18). */}
@@ -83,10 +120,10 @@ export function NavRail({ active, onChange, profile, unreadCount, onOpenNotifs, 
 
         <div
           className={styles.avatarSection}
-          onClick={onGoSettings}
+          onClick={() => { onGoSettings(); setExpanded(false) }}
           role="button"
           tabIndex={0}
-          onKeyDown={e => e.key === 'Enter' && onGoSettings && onGoSettings()}
+          onKeyDown={e => e.key === 'Enter' && onGoSettings && (onGoSettings(), setExpanded(false))}
         >
           <div className={styles.avatarRing}>
             <div className={styles.avatarWrapper}>
@@ -114,7 +151,7 @@ export function NavRail({ active, onChange, profile, unreadCount, onOpenNotifs, 
       <RailSpaceSwitcher
         spaces={spaces}
         activeSpaceId={activeSpaceId}
-        onSwitch={onSwitchSpace}
+        onSwitch={handleSwitchSpace}
         profile={spaceSwitcherProfile}
         expanded={expanded}
         onRequestExpand={() => setExpanded(true)}
@@ -129,13 +166,15 @@ export function NavRail({ active, onChange, profile, unreadCount, onOpenNotifs, 
             label={t(labelKey)}
             expanded={expanded}
             active={active === id}
-            onClick={() => onChange(id)}
+            onClick={() => handleChangeTab(id)}
           />
         ))}
       </nav>
 
       {/* Notificaciones + configuración, fijas al fondo — mismo lugar
-          colapsado o expandido (Regla 43). */}
+          colapsado o expandido (Regla 43). Notificaciones NO colapsa el
+          riel (excepción explícita de Johnatan) — settings sí, mismo
+          criterio que elegir una página. */}
       <div className={styles.bottomActions}>
         <RailButton
           Icon={Bell}
@@ -148,7 +187,7 @@ export function NavRail({ active, onChange, profile, unreadCount, onOpenNotifs, 
           Icon={Settings}
           label={t('pageHeader.settingsAriaLabel')}
           expanded={expanded}
-          onClick={onGoSettings}
+          onClick={() => { onGoSettings(); setExpanded(false) }}
         />
 
         <button

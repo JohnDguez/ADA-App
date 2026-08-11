@@ -33,6 +33,23 @@
   }
 }
 
+/* ── Franja del logo — solo colapsado (Regla 43/49) ──────────────────── */
+
+.logoStrip {
+  height: 44px;
+  background: var(--text);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.logoIcon {
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
+}
+
 /* ── Bloque de perfil ──────────────────────────────────────────────────── */
 
 .profileBlock {

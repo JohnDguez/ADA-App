@@ -415,3 +415,39 @@
   justify-content: center;
   cursor: pointer;
 }
+
+/* v0.9.373 — texto/dimensiones más grandes desde 768px (adaptación
+   tablet/desktop, pedido de Johnatan: "aplica a todo, siempre y cuando
+   no se deforme ni se vea exagerado" — escala moderada, no duplicada).
+   Los íconos de Lucide dentro de este componente usan `size={N}` por
+   prop en JS, no CSS — se quedan en su tamaño de mobile en esta entrega
+   (ver nota igual en HomePage.module.css). */
+@media (min-width: 768px) {
+  .name {
+    font-size: 16px;
+  }
+
+  .subtitle,
+  .freqLabel,
+  .instLabel {
+    font-size: 13px;
+  }
+
+  .amountText {
+    font-size: 19px;
+  }
+
+  .infoSection {
+    padding: 13px 10px 13px 14px;
+  }
+
+  .amountSection {
+    padding: 13px 10px;
+  }
+
+  .markPaidButton,
+  .paidIndicator {
+    width: 46px;
+    height: 46px;
+  }
+}
