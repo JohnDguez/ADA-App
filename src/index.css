@@ -315,6 +315,24 @@ html, body {
     margin: 0;
     margin-left: 72px;
   }
+
+  /* v0.9.370 — causa real (probable) de que position:sticky nunca
+     funcionó en el panel de detalle de Home (v0.9.365/368/369): tanto
+     html/body como #root tienen overflow-x:hidden (arriba, para contener
+     el translateX de .page-slide-left/right — sin tocar, sigue haciendo
+     falta en mobile). Por la spec de CSS, cuando UN eje es "hidden" y el
+     otro no se especifica, el navegador convierte el otro eje
+     IMPLÍCITAMENTE a "auto" — eso vuelve a html/body/#root contenedores
+     de scroll técnicos (aunque nunca necesiten desplazarse internamente,
+     porque ninguno tiene una altura fija más corta que su contenido), y
+     ahí es donde position:sticky pierde la referencia correcta al scroll
+     real de la página. Se neutraliza SOLO desde 768px, sin quitarlo de
+     mobile (Regla 42) — volviendo overflow-x explícitamente "visible" en
+     los 3 para que ningún eje quede desparejo y no se dispare la
+     conversión implícita. */
+  html, body, #root {
+    overflow-x: visible;
+  }
 }
 
 button { cursor: pointer; font-family: 'DM Sans', sans-serif; border: none; }
