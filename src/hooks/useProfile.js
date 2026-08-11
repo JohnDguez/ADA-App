@@ -19,6 +19,25 @@ const DEFAULT_PROFILE = {
   language: 'system',
 }
 
+// Columnas jsonb/array que la app siempre trata como objeto/arreglo iterable
+// (Object.keys, indexOf, spread, etc.) en varios componentes — nunca deben
+// llegar a esos consumidores como `null`. DEFAULT_PROFILE ya cubre el caso
+// `undefined` (columna ausente en el select), pero un valor `null` explícito
+// en la fila de Supabase SOBREESCRIBE el default en el spread `{ ...DEFAULT_PROFILE,
+// ...data }` sin este saneo — causa real de un crash en Gastos/Recurrentes
+// (getCategoryIcon/getCatColor reciben `categoryIcons=null` y truenan en
+// `categoryIcons[cat]`, sin Error Boundary antes de esta sesión eso dejaba la
+// app en blanco). Ver HISTORIAL.md para el detalle completo del bug.
+function sanitizeProfile(data) {
+  return {
+    ...data,
+    custom_categories: data.custom_categories ?? DEFAULT_PROFILE.custom_categories,
+    category_icons: data.category_icons ?? DEFAULT_PROFILE.category_icons,
+    category_colors: data.category_colors ?? DEFAULT_PROFILE.category_colors,
+    coachmarks_seen: data.coachmarks_seen ?? {},
+  }
+}
+
 export function useProfile(userId) {
   const [profile, setProfile] = useState(DEFAULT_PROFILE)
   const [loading, setLoading] = useState(true)
@@ -27,7 +46,7 @@ export function useProfile(userId) {
     if (!userId) return
     const { data, error } = await supabase
       .from('profiles').select('*').eq('id', userId).single()
-    if (!error && data) setProfile({ ...DEFAULT_PROFILE, ...data })
+    if (!error && data) setProfile({ ...DEFAULT_PROFILE, ...sanitizeProfile(data) })
     setLoading(false)
   }, [userId])
 
@@ -36,7 +55,7 @@ export function useProfile(userId) {
   async function updateProfile(updates) {
     const { data, error } = await supabase
       .from('profiles').update(updates).eq('id', userId).select().single()
-    if (!error) setProfile(prev => ({ ...prev, ...data }))
+    if (!error) setProfile(prev => ({ ...prev, ...sanitizeProfile(data) }))
     return { data, error }
   }
 
