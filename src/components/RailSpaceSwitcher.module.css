@@ -29,6 +29,7 @@
   align-items: center;
   justify-content: center;
   color: var(--nav-icon);
+  line-height: 0;
   pointer-events: none;
 }
 
