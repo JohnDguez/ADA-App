@@ -381,3 +381,60 @@
   cursor: pointer;
   flex-shrink: 0;
 }
+
+/* ── Adaptación tablet/desktop (Regla 45) ─────────────────────────────── */
+
+/* PageHeader se oculta desde 768px — NavRail.jsx ya cubre avatar, saludo,
+   notificaciones y configuración (Regla 43/44); mostrarlo también sería
+   duplicar esa misma info. Solo aplica en Home (ver HomePage.jsx). */
+@media (min-width: 768px) {
+  .pageHeaderWrapper {
+    display: none;
+  }
+}
+
+/* En mobile es transparente: 1 columna, sin grid, .detailColumn oculta.
+   Desde 768px: 2 columnas — maestro (Home de siempre, mismo ancho de
+   siempre para no romper ningún cálculo/estilo existente) + detalle
+   (panel fijo, Regla 45). */
+.masterDetailGrid {
+  display: block;
+}
+
+.masterColumn {
+  width: 100%;
+}
+
+.detailColumn {
+  display: none;
+}
+
+@media (min-width: 768px) {
+  .masterDetailGrid {
+    display: grid;
+    grid-template-columns: minmax(0, 420px) minmax(280px, 360px);
+    gap: 24px;
+    align-items: start;
+    padding: 24px 24px 24px 0;
+    max-width: 900px;
+  }
+
+  .detailColumn {
+    display: block;
+  }
+}
+
+/* Estado seleccionado de una fila del colapsable "X pagados" — mismo
+   criterio que .cardSelected en PayCard.module.css (fondo + borde
+   var(--accent), Regla 45), solo visible desde 768px (Regla 42, mobile
+   no se toca). Props opcionales — sin onSelect, ningún cambio visible. */
+.paidCollapseItemSelectable {
+  cursor: pointer;
+}
+
+@media (min-width: 768px) {
+  .paidCollapseItemSelected {
+    background: var(--accent-soft);
+    border: 2px solid var(--accent);
+  }
+}
