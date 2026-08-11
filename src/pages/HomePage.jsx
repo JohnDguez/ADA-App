@@ -10,6 +10,7 @@ import { EmptyState } from '../components/EmptyState'
 import { PaidByStack } from '../components/PaidByStack'
 import { HalfRing } from '../components/HalfRing'
 import { PayDetailPanel } from '../components/PayDetailPanel'
+import { StickyPanel } from '../components/StickyPanel'
 import { fmt, cobroPeriod, nextCobroPeriod, getPagarEsteCobro, daysDiff, dateOf, dateToStr, getMonths, getMonthsShort, getCategoryLabel } from '../lib/utils'
 import styles from './HomePage.module.css'
 
@@ -85,6 +86,9 @@ export function HomePage({ payments, dataLoading = false, profile, spaceSwitcher
   // con detección de breakpoint en JS (mismo criterio que NavRail/
   // BottomNav: el breakpoint lo decide el CSS, no un matchMedia).
   const [selectedPaymentId, setSelectedPaymentId] = useState(null)
+  // v0.9.372 — ref del maestro, marca dónde "se suelta" el panel de
+  // detalle (StickyPanel.jsx, sustituto manual de position:sticky).
+  const masterColumnRef = useRef(null)
 
   // Slide sincronizado del contenido de abajo (colapsable/Vencidos/lista vs
   // lista de "Próximo periodo") — mismo movimiento horizontal que ya usa
@@ -286,7 +290,7 @@ export function HomePage({ payments, dataLoading = false, profile, spaceSwitcher
           siempre sin quitar nada; la derecha es el panel fijo del pago
           seleccionado. */}
       <div className={styles.masterDetailGrid}>
-      <div className={styles.masterColumn}>
+      <div className={styles.masterColumn} ref={masterColumnRef}>
       <div className={styles.roundedContentWrapper}>
         <div className={styles.spaceSwitcherMobileWrap}>{spaceSwitcher}</div>
 
@@ -533,20 +537,22 @@ export function HomePage({ payments, dataLoading = false, profile, spaceSwitcher
       </div>
 
       <div className={styles.detailColumn}>
-        <PayDetailPanel
-          payment={selectedPayment}
-          profile={profile}
-          permissions={spacePermissions}
-          spaceMembers={spaceMembers}
-          onMarkPaid={onMarkPaid}
-          onRequestVariableAmount={onRequestVariableAmount}
-          onConfirmVariablePaid={onConfirmVariablePaid}
-          onCaptureAmount={onCaptureAmount}
-          onMarkUnpaid={onMarkUnpaid}
-          onEdit={onEdit}
-          onDelete={onDelete}
-          onViewSource={onViewSource}
-        />
+        <StickyPanel boundaryRef={masterColumnRef}>
+          <PayDetailPanel
+            payment={selectedPayment}
+            profile={profile}
+            permissions={spacePermissions}
+            spaceMembers={spaceMembers}
+            onMarkPaid={onMarkPaid}
+            onRequestVariableAmount={onRequestVariableAmount}
+            onConfirmVariablePaid={onConfirmVariablePaid}
+            onCaptureAmount={onCaptureAmount}
+            onMarkUnpaid={onMarkUnpaid}
+            onEdit={onEdit}
+            onDelete={onDelete}
+            onViewSource={onViewSource}
+          />
+        </StickyPanel>
       </div>
       </div>
 
