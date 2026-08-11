@@ -433,17 +433,12 @@
     grid-template-columns: minmax(0, 1fr) minmax(260px, 320px);
     background: var(--bg);
     border-radius: 12px;
-    /* v0.9.368 quitó overflow:hidden aquí (rompía position:sticky) — pero
-       el sticky SIGUIÓ sin funcionar en la práctica al probarlo (posible
-       ancestro adicional con scroll propio, ver #root/html/body en
-       index.css). v0.9.369 — decisión de Johnatan: en vez de seguir
-       cazando la causa exacta, se abandona el sticky por completo y se
-       vuelve al comportamiento anterior — el panel de detalle sube/baja
-       con el scroll normal de la página, sin quedar fijo ni estirarse
-       para ocupar toda la altura del maestro (`align-items: start`,
-       cada columna a la altura de su propio contenido). Esto reabre el
-       espacio vacío gris debajo del panel cuando el maestro es más alto
-       — ya documentado como pendiente para después. */
+    /* v0.9.370 — position:sticky del panel de detalle por FIN funciona
+       (ver index.css, causa real: html/body/#root convertían overflow-y
+       implícitamente a "auto" por tener overflow-x:hidden sin el otro
+       eje especificado). align-items:start se queda iaual que v0.9.369
+       — cada columna a su propia altura, el maestro se lleva el espacio
+       sobrante y el detalle no se estira de más. */
     align-items: start;
     max-width: 1000px;
     margin: 24px 24px 24px 0;
@@ -458,6 +453,17 @@
        queda cuadrado, es donde está el divisor con el maestro, no una
        esquina visible del contenedor. */
     border-radius: 0 12px 12px 0;
+  }
+
+  /* v0.9.370 — index.css quitó overflow-x:hidden de html/body/#root
+     desde este breakpoint (liberaba position:sticky del panel de
+     detalle) — pero .masterColumn todavía necesita contener el
+     translateX de .page-slide-left/right (la transición al cambiar de
+     tab) para no abrir scroll horizontal. Se re-contiene aquí, en vez de
+     en #root: .masterColumn es HERMANO de .detailColumn (no ancestro),
+     así que este overflow-x no interfiere con su sticky. */
+  .masterColumn {
+    overflow-x: hidden;
   }
 }
 
