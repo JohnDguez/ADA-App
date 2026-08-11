@@ -1,0 +1,102 @@
+.panelRoot {
+  background: var(--surface);
+  border-radius: 12px;
+  padding: 1.25rem;
+  position: sticky;
+  top: 16px;
+}
+
+.categorySquare {
+  width: 44px;
+  height: 44px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 12px;
+}
+
+.categoryDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--text);
+}
+
+.name {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 2px;
+}
+
+.amount {
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.paidBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 10px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--paid);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.progressRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 10px;
+}
+
+.progressText {
+  font-size: 13px;
+  color: var(--text);
+  font-weight: 600;
+}
+
+.fieldsList {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 20px 0;
+}
+
+.fieldRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.fieldLabel {
+  font-size: 13px;
+  color: var(--text);
+  font-weight: 400;
+}
+
+.fieldValue {
+  font-size: 13px;
+  color: var(--text);
+  font-weight: 600;
+}
+
+.actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.actions button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+}

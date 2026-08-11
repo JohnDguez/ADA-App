@@ -22,6 +22,23 @@
   opacity: 0;
 }
 
+/* Selección para el maestro-detalle de tablet/desktop (Regla 45) — el
+   cursor de "seleccionable" es inofensivo en mobile (touch no tiene
+   cursor), pero el fondo/borde de "seleccionado" SOLO debe verse desde
+   768px: en mobile no existe panel de detalle que justifique resaltar
+   una card (Regla 42, mobile no se toca). `onSelect`/`selected` son
+   props opcionales — páginas que no las pasan no ven ningún cambio. */
+.cardSelectable {
+  cursor: pointer;
+}
+
+@media (min-width: 768px) {
+  .cardSelected {
+    background: var(--accent-soft);
+    border: 2px solid var(--accent);
+  }
+}
+
 /* Capa de pintado verde (izquierda a derecha) al marcar como pagado */
 .fillLayer {
   position: absolute;

@@ -42,7 +42,7 @@ const LABEL_HOLD_MS = 450 // cuánto se queda "Pagado" + checkmark visible antes
 const EXIT_MS       = 320 // deslizado + desvanecido + colapso de espacio
 const ENTRY_MS      = 300 // "crecer" al aparecer una card nueva en la lista
 
-function PayCardImpl({ payment: p, cfg, onMarkPaid, onRequestVariableAmount, onConfirmVariablePaid, onRequestNextPeriodConfirm, onMarkUnpaid, onCaptureAmount, onEdit, onAbonar, onSplit, onPayFromFund, fundBalance, onViewSource, onDelete, onPostpone, onAdvance, borderLeft, hideDate, hideDueLabel, railMode, permissions, initialLoad = true, confirmBeforePay, spaceMembers }) {
+function PayCardImpl({ payment: p, cfg, onMarkPaid, onRequestVariableAmount, onConfirmVariablePaid, onRequestNextPeriodConfirm, onMarkUnpaid, onCaptureAmount, onEdit, onAbonar, onSplit, onPayFromFund, fundBalance, onViewSource, onDelete, onPostpone, onAdvance, borderLeft, hideDate, hideDueLabel, railMode, permissions, initialLoad = true, confirmBeforePay, spaceMembers, onSelect, selected }) {
   const { t } = useTranslation()
   // Card de solo lectura — reflejo automático de una contribución a un
   // gasto de un Espacio Compartido (registrada por cualquier miembro desde
@@ -55,7 +55,11 @@ function PayCardImpl({ payment: p, cfg, onMarkPaid, onRequestVariableAmount, onC
     return (
       <div className={styles.cardOuter}>
         <div className={styles.cardWrapper}>
-          <div className={styles.card} style={{ borderLeft: `5px solid ${borderLeft || 'var(--border)'}` }}>
+          <div
+            onClick={onSelect ? () => onSelect(p.id) : undefined}
+            className={`${styles.card} ${onSelect ? styles.cardSelectable : ''} ${selected ? styles.cardSelected : ''}`}
+            style={{ borderLeft: `5px solid ${borderLeft || 'var(--border)'}` }}
+          >
             <div className={styles.cardContentRow}>
               <div className={styles.infoSection}>
                 <div className={styles.name}>{p.name}</div>
@@ -313,7 +317,8 @@ function PayCardImpl({ payment: p, cfg, onMarkPaid, onRequestVariableAmount, onC
     <div ref={menuRef} className={styles.cardOuter}>
       <div ref={wrapperRef} className={styles.cardWrapper}>
       <div
-        className={`${styles.card} ${phase === 'exiting' ? styles.cardExiting : ''}`}
+        onClick={onSelect ? () => onSelect(p.id) : undefined}
+        className={`${styles.card} ${phase === 'exiting' ? styles.cardExiting : ''} ${onSelect ? styles.cardSelectable : ''} ${selected ? styles.cardSelected : ''}`}
         style={{ borderLeft: railMode ? 'none' : `5px solid ${borderLeft || 'var(--border)'}` }}
       >
         <div className={`${styles.fillLayer} ${fillActive ? styles.fillLayerActive : ''}`} />
