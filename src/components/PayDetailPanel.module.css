@@ -1,6 +1,4 @@
 .panelRoot {
-  background: var(--surface);
-  border-radius: 12px;
   padding: 1.25rem;
   position: sticky;
   top: 16px;
