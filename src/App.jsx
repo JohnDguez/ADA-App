@@ -23,6 +23,8 @@ import { useGoals } from './hooks/useGoals'
 import { GoalsPage } from './pages/GoalsPage'
 import { useProfile } from './hooks/useProfile'
 import { useNotifications } from './hooks/useNotifications'
+import { useSpaceStats } from './hooks/useSpaceStats'
+import { SpaceSwitcher } from './components/SpaceSwitcher'
 import { HomePage } from './pages/HomePage'
 import { PaymentsPage } from './pages/PaymentsPage'
 import { RecurrentsPage } from './pages/RecurrentsPage'
@@ -156,12 +158,16 @@ export default function App() {
   // que existen las metas compartidas, cambia solo con el espacio activo.
   const goalsData = useGoals(user?.id, profile, paymentsSpaceId)
 
-  // v0.9.367 — useSpaceStats() se quitó de aquí: solo alimentaba el
-  // `stats` de SpaceSwitcher.jsx, que ya no se usa (el switcher se movió
-  // al riel, RailSpaceSwitcher.jsx, que no muestra ese resumen — no entra
-  // cómodo ni expandido). Dejarlo calculado sin consumidor solo hubiera
-  // seguido disparando sus queries de Supabase por espacio sin ningún
-  // propósito.
+  // v0.9.369 — RESTAURADO: se había quitado en v0.9.367 asumiendo que
+  // RailSpaceSwitcher.jsx (dentro de NavRail.jsx) lo reemplazaba del
+  // todo, pero NavRail está oculto en mobile (Regla 43) — eso dejaba a
+  // los usuarios de mobile sin ninguna forma de cambiar de espacio. Se
+  // declara aquí (no arriba, junto a sharedSpaces) porque necesita
+  // `profile` ya disponible — cada espacio (y Personal) puede tener su
+  // PROPIO periodo de cobro, así que el hook necesita la configuración
+  // completa de cada uno, no solo su id, para saber qué cuenta como
+  // "periodo actual" en cada caso.
+  const spaceStats = useSpaceStats(user?.id, profile, sharedSpaces.spaces)
   const { notifications, unreadCount, markAsRead, markAllAsRead, deleteNotification, clearAll } = useNotifications(user?.id)
   const { theme, setTheme } = useTheme()
 
@@ -745,9 +751,18 @@ export default function App() {
   const visiblePayments = payments.filter(p => !p.is_master)
 
   // v0.9.367 — el switcher de espacios se movió al riel (NavRail.jsx,
-  // RailSpaceSwitcher.jsx) — este bloque ya no se usa, SpaceSwitcher.jsx
-  // se queda sin uso en el árbol de componentes (el archivo no se borró
-  // por si hace falta consultar el patrón de stack animado más adelante).
+  // v0.9.369 — RESTAURADO para mobile (ver nota arriba de useSpaceStats).
+  // Las 4 páginas lo ocultan vía CSS desde 768px (`.spaceSwitcherMobileWrap`
+  // en cada *.module.css) — desde ahí ya lo cubre RailSpaceSwitcher.jsx.
+  const spaceSwitcherEl = (
+    <SpaceSwitcher
+      spaces={sharedSpaces.spaces}
+      activeSpaceId={activeSpaceId}
+      onSwitch={switchSpace}
+      profile={profile}
+      stats={spaceStats}
+    />
+  )
 
   // Encabezado del espacio activo — antes era parte de SpaceSwitcher, ver
   // nota en ActiveSpaceHeader.jsx. Antes se excluía por completo cuando la
@@ -806,6 +821,7 @@ export default function App() {
           spacePermissions={spacePermissions}
           onOpenPremium={() => setPremiumPageOpen(true)}
           onSpaceReady={handleSpaceReady}
+          spaceSwitcher={spaceSwitcherEl}
           activeSpaceHeader={activeSpaceHeaderEl}
           onAdd={openAdd}
           slideClass={`page-slide-${slideDir}`}
@@ -845,6 +861,7 @@ export default function App() {
           spacePermissions={spacePermissions}
           onOpenPremium={() => setPremiumPageOpen(true)}
           onSpaceReady={handleSpaceReady}
+          spaceSwitcher={spaceSwitcherEl}
           activeSpaceHeader={activeSpaceHeaderEl}
           onMarkUnpaid={handleMarkUnpaid}
           onDelete={handleDelete}
@@ -870,6 +887,7 @@ export default function App() {
           spacePermissions={spacePermissions}
           onOpenPremium={() => setPremiumPageOpen(true)}
           onSpaceReady={handleSpaceReady}
+          spaceSwitcher={spaceSwitcherEl}
           activeSpaceHeader={activeSpaceHeaderEl}
           onPause={handlePauseRecurrent}
           onResume={handleResumeRecurrent}
@@ -886,6 +904,7 @@ export default function App() {
           rawActiveSpaceId={activeSpaceId}
           spacePermissions={spacePermissions}
           spaceMembers={activeSpaceEntry?.space?.members || []}
+          spaceSwitcher={spaceSwitcherEl}
           activeSpaceHeader={activeSpaceHeaderEl}
           sharedSpaces={sharedSpaces}
           onSpaceReady={handleSpaceReady}
