@@ -393,69 +393,24 @@
   }
 }
 
-/* En mobile es transparente: 1 columna, sin grid, .detailColumn oculta.
-   Desde 768px: UNA sola superficie compartida (Regla 45, rediseño tras
-   feedback de Johnatan: "el lateral resalta más que lo principal" y
-   "parece todo separado" — antes eran 2 tarjetas con gap, ahora es un
-   solo contenedor con un divisor delgado, mismo criterio que el mockup
-   de Visualizer que confirmó). Maestro más ancho (`1fr`, se lleva el
-   espacio sobrante), detalle más angosto y con menos peso visual — sin
-   fondo propio elevado, solo el color de fondo que le da esta misma
-   superficie compartida (var(--surface), blanco liso, sin sombra ni
-   radio propio — eso ahora vive en PayDetailPanel.module.css). */
-.masterDetailGrid {
-  display: block;
-}
-
-.masterColumn {
-  width: 100%;
-}
-
-.detailColumn {
-  display: none;
-}
-
+/* En mobile no aplica — desde 768px, Home es una sola columna a todo el
+   ancho (v0.9.373, se quitó el maestro-detalle: "le roba pantalla a lo
+   importante"). PageHeader ya no aporta el fondo grande arriba (se oculta
+   en este breakpoint, ver arriba) — sin esto, el "colchón" gris que
+   roundedContentWrapper reserva para asomar debajo del header
+   (margin-top negativo + border-radius solo arriba) se queda huérfano,
+   sin nada que tapar, y se ve como un corte raro. Mobile no se toca —
+   esto vive dentro del propio @media. */
 @media (min-width: 768px) {
-  /* PageHeader ya no aporta el fondo grande arriba (se oculta en este
-     breakpoint, ver arriba) — sin esto, el "colchón" gris que
-     roundedContentWrapper reserva para asomar debajo del header
-     (margin-top negativo + border-radius solo arriba) se queda huérfano,
-     sin nada que tapar, y se ve como un corte raro. Mobile no se toca —
-     esto vive dentro del propio @media. */
   .roundedContentWrapper {
     background: transparent;
     margin-top: 0;
     border-radius: 0;
-  }
-
-  .masterDetailGrid {
-    display: grid;
-    /* v0.9.371 — 70/30 explícito (pedido de Johnatan), con piso mínimo en
-       ambos para que nunca lleguen a aplastarse en viewports angostos
-       (Regla del maestro-detalle, mismo principio que ya evitó el bug de
-       texto cortado de sesiones anteriores). Ya NO es una superficie
-       compartida — cada columna vuelve a ser su propia tarjeta (ver
-       .detailColumn abajo, con sus 4 esquinas), separadas por gap en vez
-       de un divisor de borde. */
-    grid-template-columns: minmax(0, 7fr) minmax(240px, 3fr);
-    gap: 20px;
-    align-items: start;
-    max-width: 1100px;
-    margin: 24px 24px 24px 0;
-  }
-
-  .detailColumn {
-    display: block;
-  }
-
-  /* v0.9.370 — index.css quitó overflow-x:hidden de html/body/#root
-     desde este breakpoint (liberaba position:sticky del panel de
-     detalle) — pero .masterColumn todavía necesita contener el
-     translateX de .page-slide-left/right (la transición al cambiar de
-     tab) para no abrir scroll horizontal. Se re-contiene aquí, en vez de
-     en #root: .masterColumn es HERMANO de .detailColumn (no ancestro),
-     así que este overflow-x no interfiere con su sticky. */
-  .masterColumn {
+    /* v0.9.373 quitó .masterColumn (contenía el translateX de
+       .page-slide-left/right, la transición al cambiar de tab) al
+       eliminar el maestro-detalle — ese contenido vive ahora directo
+       aquí, así que la contención se mueve a este mismo elemento para no
+       reabrir un scroll horizontal momentáneo durante la animación. */
     overflow-x: hidden;
   }
 }
