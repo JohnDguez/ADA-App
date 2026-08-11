@@ -98,3 +98,12 @@
   gap: 8px;
   width: 100%;
 }
+
+/* .btn-ghost (global, index.css) usa var(--muted) por defecto — nunca
+   para jerarquía de texto (Regla de diseño). Se sobreescribe SOLO el
+   color aquí, sin tocar la clase global (se usa en más lugares de la
+   app) — mismo criterio de especificidad que ya usa el resto del
+   proyecto: :global(.clase-global).claseLocal. */
+:global(.btn-ghost).ghostAction {
+  color: var(--text);
+}

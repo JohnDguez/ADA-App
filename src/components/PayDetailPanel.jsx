@@ -112,7 +112,7 @@ export function PayDetailPanel({ payment, profile, permissions, spaceMembers, on
         ) : p.is_paid ? (
           <button
             onClick={() => canMarkPaid ? onMarkUnpaid(p.id) : blocked(t('paymentsPage.actionMarkPayments'))}
-            className="btn-ghost"
+            className={`btn-ghost ${styles.ghostAction}`}
             style={{ opacity: canMarkPaid ? 1 : 0.5 }}
           >
             <RotateCcw size={16} /> {t('payCard.menu.markUnpaid')}
@@ -130,7 +130,7 @@ export function PayDetailPanel({ payment, profile, permissions, spaceMembers, on
                 </button>
               )
             )}
-            <button onClick={() => onEdit(p)} className="btn-ghost">
+            <button onClick={() => onEdit(p)} className={`btn-ghost ${styles.ghostAction}`}>
               <Pencil size={16} /> {t('buttons.edit')}
             </button>
             <button
