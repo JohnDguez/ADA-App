@@ -38,7 +38,7 @@ function fmtDate(iso) {
 // pastilla 999px, misma curva de animación) — ver GoalsPage.module.css.
 export function GoalsPage({
   goalsData, profile, isPremium, activeSpaceId = null, rawActiveSpaceId = null,
-  spacePermissions, spaceMembers = [], spaceSwitcher, activeSpaceHeader, sharedSpaces, onSpaceReady,
+  spacePermissions, spaceMembers = [], activeSpaceHeader, sharedSpaces, onSpaceReady,
   unreadCount, onOpenNotifs, onGoSettings, onOpenPremium, slideClass,
 }) {
   const { t } = useTranslation()
@@ -133,8 +133,6 @@ export function GoalsPage({
       />
 
       <div className={styles.roundedContentWrapper}>
-        {spaceSwitcher}
-
         {activeSpaceHeader}
 
         <div className={slideClass}>

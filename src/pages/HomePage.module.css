@@ -394,9 +394,15 @@
 }
 
 /* En mobile es transparente: 1 columna, sin grid, .detailColumn oculta.
-   Desde 768px: 2 columnas — maestro (Home de siempre, mismo ancho de
-   siempre para no romper ningún cálculo/estilo existente) + detalle
-   (panel fijo, Regla 45). */
+   Desde 768px: UNA sola superficie compartida (Regla 45, rediseño tras
+   feedback de Johnatan: "el lateral resalta más que lo principal" y
+   "parece todo separado" — antes eran 2 tarjetas con gap, ahora es un
+   solo contenedor con un divisor delgado, mismo criterio que el mockup
+   de Visualizer que confirmó). Maestro más ancho (`1fr`, se lleva el
+   espacio sobrante), detalle más angosto y con menos peso visual — sin
+   fondo propio elevado, solo el color de fondo que le da esta misma
+   superficie compartida (var(--surface), blanco liso, sin sombra ni
+   radio propio — eso ahora vive en PayDetailPanel.module.css). */
 .masterDetailGrid {
   display: block;
 }
@@ -410,17 +416,32 @@
 }
 
 @media (min-width: 768px) {
+  /* PageHeader ya no aporta el fondo grande arriba (se oculta en este
+     breakpoint, ver arriba) — sin esto, el "colchón" gris que
+     roundedContentWrapper reserva para asomar debajo del header
+     (margin-top negativo + border-radius solo arriba) se queda huérfano,
+     sin nada que tapar, y se ve como un corte raro. Mobile no se toca —
+     esto vive dentro del propio @media. */
+  .roundedContentWrapper {
+    background: transparent;
+    margin-top: 0;
+    border-radius: 0;
+  }
+
   .masterDetailGrid {
     display: grid;
-    grid-template-columns: minmax(0, 420px) minmax(280px, 360px);
-    gap: 24px;
-    align-items: start;
-    padding: 24px 24px 24px 0;
-    max-width: 900px;
+    grid-template-columns: minmax(0, 1fr) minmax(260px, 320px);
+    background: var(--bg);
+    border-radius: 12px;
+    overflow: hidden;
+    max-width: 1000px;
+    margin: 24px 24px 24px 0;
   }
 
   .detailColumn {
     display: block;
+    background: var(--surface);
+    border-left: 0.5px solid var(--border);
   }
 }
 
