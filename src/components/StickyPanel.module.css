@@ -1,0 +1,15 @@
+.outer {
+  position: relative;
+  min-width: 0;
+}
+
+.content {
+  background: var(--surface);
+  border-radius: 12px;
+}
+
+.contentFixed {
+  position: fixed;
+  z-index: 50;
+  box-shadow: 0 8px 24px rgba(2, 10, 31, 0.12);
+}
