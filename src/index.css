@@ -17,11 +17,6 @@
 
 /* ── Tema claro (default) ─────────────────────────────────────────────────── */
 :root {
-  /* Adaptación tablet/desktop — default antes de que useRailExpanded.js
-     lo sobreescriba en su primer render (72px = riel colapsado, Regla
-     43/49). Solo se lee en el @media(min-width:768px) de #root arriba. */
-  --rail-width: 72px;
-
   --bg: #F2F2F2;
   --surface: #FFFFFF;
   --border: #E4E2DC;
@@ -303,20 +298,22 @@ html, body {
    crecer: en mobile #root se queda centrado a 420px sin importar el
    ancho de pantalla, así que un layout de 2 columnas simplemente no
    tiene espacio. Desde 768px, #root deja de centrarse y en cambio ocupa
-   todo el ancho disponible DESPUÉS del riel (NavRail.jsx, fijo a la
-   izquierda) — el ancho máximo interno de cada pantalla lo decide cada
-   página por su cuenta (Home en esta entrega, el resto conforme se
-   adapten), no un límite global aquí.
-   --rail-width la actualiza useRailExpanded.js (72px colapsado / 240px
-   expandido) — la transición aquí calza con la del propio riel
-   (NavRail.module.css, .25s ease) para que el contenido se deslice junto
-   con él en vez de saltar. */
+   todo el ancho disponible DESPUÉS del riel — el ancho máximo interno de
+   cada pantalla lo decide cada página por su cuenta (Home en esta
+   entrega, el resto conforme se adapten), no un límite global aquí.
+   v0.9.366 — margin-left FIJO a 72px (el ancho colapsado), sin importar
+   si el riel está expandido: NavRail.jsx expandido a 240px se SOBREPONE
+   al contenido (position:fixed + z-index + sombra) en vez de empujarlo.
+   Antes esto usaba una variable --rail-width sincronizada por JS que
+   crecía a 240px al expandir, empujando #root y aplastando el contenido
+   en viewports angostos (bug real reportado en la práctica) — decisión
+   de Johnatan: "el usuario sabe si lo expande o no", el contenido nunca
+   debe reflowearse por eso. */
 @media (min-width: 768px) {
   #root {
     max-width: none;
     margin: 0;
-    margin-left: var(--rail-width, 72px);
-    transition: margin-left .25s ease;
+    margin-left: 72px;
   }
 }
 

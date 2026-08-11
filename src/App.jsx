@@ -43,8 +43,6 @@ import { SkeletonLoader } from './components/SkeletonLoader'
 import { Coachmarks } from './components/Coachmarks'
 import { useTheme } from './hooks/useTheme'
 import { useSharedSpaces } from './hooks/useSharedSpaces'
-import { useSpaceStats } from './hooks/useSpaceStats'
-import { SpaceSwitcher } from './components/SpaceSwitcher'
 import { ActiveSpaceHeader } from './components/ActiveSpaceHeader'
 import { APP_VERSION, getPatchNotes, isNewerVersion } from './lib/patchNotes'
 import { buildFeedbackUrl, FEEDBACK_PROMPT_AFTER_DAYS, FEEDBACK_REMIND_AFTER_DAYS } from './lib/feedback'
@@ -158,12 +156,12 @@ export default function App() {
   // que existen las metas compartidas, cambia solo con el espacio activo.
   const goalsData = useGoals(user?.id, profile, paymentsSpaceId)
 
-  // Se declara aquí (no arriba, junto a sharedSpaces) porque necesita
-  // `profile` ya disponible — cada espacio (y Personal) puede tener su
-  // PROPIO periodo de cobro, así que el hook necesita la configuración
-  // completa de cada uno, no solo su id, para saber qué cuenta como
-  // "periodo actual" en cada caso.
-  const spaceStats = useSpaceStats(user?.id, profile, sharedSpaces.spaces)
+  // v0.9.367 — useSpaceStats() se quitó de aquí: solo alimentaba el
+  // `stats` de SpaceSwitcher.jsx, que ya no se usa (el switcher se movió
+  // al riel, RailSpaceSwitcher.jsx, que no muestra ese resumen — no entra
+  // cómodo ni expandido). Dejarlo calculado sin consumidor solo hubiera
+  // seguido disparando sus queries de Supabase por espacio sin ningún
+  // propósito.
   const { notifications, unreadCount, markAsRead, markAllAsRead, deleteNotification, clearAll } = useNotifications(user?.id)
   const { theme, setTheme } = useTheme()
 
@@ -746,20 +744,10 @@ export default function App() {
   // Pagos que se muestran en Home/Pagos: excluir masters (is_master: true)
   const visiblePayments = payments.filter(p => !p.is_master)
 
-  // Un solo switcher, reusado en las 3 pestañas (antes se repetía idéntico
-  // 3 veces) — ya trae las props nuevas del rediseño: `stats` (resumen
-  // mini de pendientes/vencidos por espacio), `user` (para confirmar con
-  // contraseña al eliminar) y `deleteSpace`/`leaveSpace` (acciones del menú
-  // de 3 puntitos en la tarjeta activa).
-  const spaceSwitcherEl = (
-    <SpaceSwitcher
-      spaces={sharedSpaces.spaces}
-      activeSpaceId={activeSpaceId}
-      onSwitch={switchSpace}
-      profile={profile}
-      stats={spaceStats}
-    />
-  )
+  // v0.9.367 — el switcher de espacios se movió al riel (NavRail.jsx,
+  // RailSpaceSwitcher.jsx) — este bloque ya no se usa, SpaceSwitcher.jsx
+  // se queda sin uso en el árbol de componentes (el archivo no se borró
+  // por si hace falta consultar el patrón de stack animado más adelante).
 
   // Encabezado del espacio activo — antes era parte de SpaceSwitcher, ver
   // nota en ActiveSpaceHeader.jsx. Antes se excluía por completo cuando la
@@ -818,7 +806,6 @@ export default function App() {
           spacePermissions={spacePermissions}
           onOpenPremium={() => setPremiumPageOpen(true)}
           onSpaceReady={handleSpaceReady}
-          spaceSwitcher={spaceSwitcherEl}
           activeSpaceHeader={activeSpaceHeaderEl}
           onAdd={openAdd}
           slideClass={`page-slide-${slideDir}`}
@@ -858,7 +845,6 @@ export default function App() {
           spacePermissions={spacePermissions}
           onOpenPremium={() => setPremiumPageOpen(true)}
           onSpaceReady={handleSpaceReady}
-          spaceSwitcher={spaceSwitcherEl}
           activeSpaceHeader={activeSpaceHeaderEl}
           onMarkUnpaid={handleMarkUnpaid}
           onDelete={handleDelete}
@@ -884,7 +870,6 @@ export default function App() {
           spacePermissions={spacePermissions}
           onOpenPremium={() => setPremiumPageOpen(true)}
           onSpaceReady={handleSpaceReady}
-          spaceSwitcher={spaceSwitcherEl}
           activeSpaceHeader={activeSpaceHeaderEl}
           onPause={handlePauseRecurrent}
           onResume={handleResumeRecurrent}
@@ -901,7 +886,6 @@ export default function App() {
           rawActiveSpaceId={activeSpaceId}
           spacePermissions={spacePermissions}
           spaceMembers={activeSpaceEntry?.space?.members || []}
-          spaceSwitcher={spaceSwitcherEl}
           activeSpaceHeader={activeSpaceHeaderEl}
           sharedSpaces={sharedSpaces}
           onSpaceReady={handleSpaceReady}
@@ -950,6 +934,10 @@ export default function App() {
         unreadCount={unreadCount}
         onOpenNotifs={() => setNotifOpen(true)}
         onGoSettings={() => changeTab('settings')}
+        spaces={sharedSpaces.spaces}
+        activeSpaceId={activeSpaceId}
+        onSwitchSpace={switchSpace}
+        spaceSwitcherProfile={profile}
       />
       <RailFab onAdd={openAdd} />
 
