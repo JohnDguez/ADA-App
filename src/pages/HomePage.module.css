@@ -433,13 +433,18 @@
     grid-template-columns: minmax(0, 1fr) minmax(260px, 320px);
     background: var(--bg);
     border-radius: 12px;
-    /* SIN overflow:hidden — se tuvo aquí para recortar las esquinas
-       redondeadas, pero cualquier overflow distinto de "visible" en un
-       ancestro rompe position:sticky (el panel de detalle deja de
-       "stickearse" al hacer scroll, Regla descubierta al probar en vivo:
-       "la columna de detalles se ve cortada"). El padding interno de
-       .roundedContentWrapper/.panelRoot ya evita que algo llegue exacto
-       al borde, así que las esquinas se siguen viendo bien sin recortar. */
+    /* v0.9.368 quitó overflow:hidden aquí (rompía position:sticky) — pero
+       el sticky SIGUIÓ sin funcionar en la práctica al probarlo (posible
+       ancestro adicional con scroll propio, ver #root/html/body en
+       index.css). v0.9.369 — decisión de Johnatan: en vez de seguir
+       cazando la causa exacta, se abandona el sticky por completo y se
+       vuelve al comportamiento anterior — el panel de detalle sube/baja
+       con el scroll normal de la página, sin quedar fijo ni estirarse
+       para ocupar toda la altura del maestro (`align-items: start`,
+       cada columna a la altura de su propio contenido). Esto reabre el
+       espacio vacío gris debajo del panel cuando el maestro es más alto
+       — ya documentado como pendiente para después. */
+    align-items: start;
     max-width: 1000px;
     margin: 24px 24px 24px 0;
   }
