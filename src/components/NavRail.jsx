@@ -4,6 +4,7 @@ import { NAV_ITEMS } from '../lib/constants'
 import { useHeaderBackground, HEADER_IMAGES } from '../hooks/useHeaderBackground'
 import { useRailExpanded } from '../hooks/useRailExpanded'
 import { greeting } from './PageHeader'
+import { RailSpaceSwitcher } from './RailSpaceSwitcher'
 import styles from './NavRail.module.css'
 
 /**
@@ -16,8 +17,18 @@ import styles from './NavRail.module.css'
  * Foto de perfil arriba siempre; expandido gana portada/hero reutilizando
  * useHeaderBackground (Regla 44). Notificaciones + configuración fijas al
  * fondo, mismo lugar colapsado/expandido.
+ *
+ * v0.9.367 — el switcher de espacios (antes tarjetas apiladas arriba del
+ * contenido de cada página, SpaceSwitcher.jsx) se movió aquí: es un
+ * concepto global (se arma una sola vez en App.jsx y se usaba en las 4
+ * páginas principales), igual que el resto de lo que ya vive en el riel.
+ * `spaceSwitcherProfile` es un prop aparte de `profile` — este último es
+ * `effectiveProfile` (para avatar/saludo, ver App.jsx), pero el switcher
+ * necesita el profile REAL de la persona (`profile.is_premium` decide
+ * cuántos espacios más puede agregar, sin importar en qué espacio esté
+ * parada ahora mismo).
  */
-export function NavRail({ active, onChange, profile, unreadCount, onOpenNotifs, onGoSettings }) {
+export function NavRail({ active, onChange, profile, unreadCount, onOpenNotifs, onGoSettings, spaces, activeSpaceId, onSwitchSpace, spaceSwitcherProfile }) {
   const { t } = useTranslation()
   const [expanded, setExpanded] = useRailExpanded()
   const initials = (profile?.name || 'U').slice(0, 2).toUpperCase()
@@ -77,6 +88,15 @@ export function NavRail({ active, onChange, profile, unreadCount, onOpenNotifs, 
           )}
         </div>
       </div>
+
+      <RailSpaceSwitcher
+        spaces={spaces}
+        activeSpaceId={activeSpaceId}
+        onSwitch={onSwitchSpace}
+        profile={spaceSwitcherProfile}
+        expanded={expanded}
+        onRequestExpand={() => setExpanded(true)}
+      />
 
       {/* Tabs principales — mismo orden que BottomNav (NAV_ITEMS). */}
       <nav className={styles.navItems}>

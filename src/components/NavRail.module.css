@@ -12,6 +12,10 @@
     top: 0;
     left: 0;
     height: 100vh;
+    height: 100dvh; /* iOS/iPadOS Safari: 100vh no descuenta la barra de
+      direcciones, el riel queda más alto que el viewport visible y se
+      corta abajo. 100dvh sí — navegadores que no lo soportan ignoran esta
+      línea y se quedan con el 100vh de arriba como fallback. */
     width: 72px;
     background: var(--nav-bg);
     z-index: 100;
@@ -21,6 +25,11 @@
 
   .rail[data-expanded="true"] {
     width: 240px;
+    /* v0.9.366 — el riel expandido se SOBREPONE al contenido en vez de
+       empujarlo (index.css, #root ya no le hace espacio) — esta sombra
+       refuerza que está flotando encima, no que forma parte del mismo
+       plano que el contenido de abajo. */
+    box-shadow: 8px 0 24px rgba(2, 10, 31, 0.18);
   }
 }
 
