@@ -433,7 +433,13 @@
     grid-template-columns: minmax(0, 1fr) minmax(260px, 320px);
     background: var(--bg);
     border-radius: 12px;
-    overflow: hidden;
+    /* SIN overflow:hidden — se tuvo aquí para recortar las esquinas
+       redondeadas, pero cualquier overflow distinto de "visible" en un
+       ancestro rompe position:sticky (el panel de detalle deja de
+       "stickearse" al hacer scroll, Regla descubierta al probar en vivo:
+       "la columna de detalles se ve cortada"). El padding interno de
+       .roundedContentWrapper/.panelRoot ya evita que algo llegue exacto
+       al borde, así que las esquinas se siguen viendo bien sin recortar. */
     max-width: 1000px;
     margin: 24px 24px 24px 0;
   }
@@ -442,6 +448,11 @@
     display: block;
     background: var(--surface);
     border-left: 0.5px solid var(--border);
+    /* Solo el lado derecho — coincide con las esquinas exteriores de
+       .masterDetailGrid (arriba/abajo a la derecha). El izquierdo se
+       queda cuadrado, es donde está el divisor con el maestro, no una
+       esquina visible del contenedor. */
+    border-radius: 0 12px 12px 0;
   }
 }
 
@@ -457,5 +468,15 @@
   .paidCollapseItemSelected {
     background: var(--accent-soft);
     border: 2px solid var(--accent);
+  }
+}
+
+/* v0.9.369 — SpaceSwitcher.jsx (tarjetas apiladas) sigue siendo la forma
+   de cambiar de espacio EN MOBILE — solo se oculta desde 768px, donde ya
+   lo cubre RailSpaceSwitcher.jsx dentro de NavRail.jsx (Regla 43). Sin
+   este wrapper se vería duplicado: una vez aquí, otra vez en el riel. */
+@media (min-width: 768px) {
+  .spaceSwitcherMobileWrap {
+    display: none;
   }
 }

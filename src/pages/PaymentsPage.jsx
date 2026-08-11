@@ -69,7 +69,7 @@ function prevPeriod(profile) {
   return { start: t, end: prevEnd }
 }
 
-export function PaymentsPage({ payments, dataLoading = false, profile, activeSpaceHeader, activeSpaceId = null, rawActiveSpaceId = null, sharedSpaces, spacePermissions, onOpenPremium, onSpaceReady, unreadCount, onOpenNotifs, onGoSettings, onMarkUnpaid, onDelete, onDeleteDirect, onUpdateProfile, onEdit, onViewSource, onSplit, onAdd, onGoCategories, sharedFund, slideClass, ensureMonthLoaded, oldestPaymentYear = null }) {
+export function PaymentsPage({ payments, dataLoading = false, profile, spaceSwitcher, activeSpaceHeader, activeSpaceId = null, rawActiveSpaceId = null, sharedSpaces, spacePermissions, onOpenPremium, onSpaceReady, unreadCount, onOpenNotifs, onGoSettings, onMarkUnpaid, onDelete, onDeleteDirect, onUpdateProfile, onEdit, onViewSource, onSplit, onAdd, onGoCategories, sharedFund, slideClass, ensureMonthLoaded, oldestPaymentYear = null }) {
   const { t } = useTranslation()
   // Mismo mecanismo que HomePage.jsx — ver ahí el porqué (evitar que la
   // animación de entrada se dispare también en un simple cambio de
@@ -1074,6 +1074,8 @@ export function PaymentsPage({ payments, dataLoading = false, profile, activeSpa
       />
 
       <div className={styles.roundedContentWrapper}>
+        <div className={styles.spaceSwitcherMobileWrap}>{spaceSwitcher}</div>
+
         {activeSpaceHeader}
 
         <div className={slideClass}>

@@ -1332,3 +1332,13 @@
   cursor: pointer;
   border-radius: 4px;
 }
+
+/* v0.9.369 — SpaceSwitcher.jsx (tarjetas apiladas) sigue siendo la forma
+   de cambiar de espacio EN MOBILE — solo se oculta desde 768px, donde ya
+   lo cubre RailSpaceSwitcher.jsx dentro de NavRail.jsx (Regla 43). Sin
+   este wrapper se vería duplicado: una vez aquí, otra vez en el riel. */
+@media (min-width: 768px) {
+  .spaceSwitcherMobileWrap {
+    display: none;
+  }
+}

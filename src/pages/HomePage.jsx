@@ -33,7 +33,7 @@ function nextPeriodRange(cfg) {
 // aquí como función interna). Ver ese archivo para el detalle de diseño y
 // el fix del degradado a porcentajes bajos.
 
-export function HomePage({ payments, dataLoading = false, profile, activeSpaceHeader, activeSpaceId, sharedSpaces, spacePermissions, onOpenPremium, onSpaceReady, onAdd, onMarkPaid, onRequestVariableAmount, onConfirmVariablePaid, onRequestNextPeriodConfirm, onMarkUnpaid, onCaptureAmount, onEdit, onAbonar, onSplit, onPayFromFund, fundBalance, onViewSource, onDelete, onPostpone, onAdvance, onGoSettings, notifications, unreadCount, onMarkAsRead, onMarkAllAsRead, onDeleteNotif, onClearAllNotifs, slideClass }) {
+export function HomePage({ payments, dataLoading = false, profile, spaceSwitcher, activeSpaceHeader, activeSpaceId, sharedSpaces, spacePermissions, onOpenPremium, onSpaceReady, onAdd, onMarkPaid, onRequestVariableAmount, onConfirmVariablePaid, onRequestNextPeriodConfirm, onMarkUnpaid, onCaptureAmount, onEdit, onAbonar, onSplit, onPayFromFund, fundBalance, onViewSource, onDelete, onPostpone, onAdvance, onGoSettings, notifications, unreadCount, onMarkAsRead, onMarkAllAsRead, onDeleteNotif, onClearAllNotifs, slideClass }) {
   const { t } = useTranslation()
   // Detecta un cambio REAL de espacio activo (no el primer montaje de la
   // página, que también dispararía un `key` remontado sin querer) — antes
@@ -288,6 +288,8 @@ export function HomePage({ payments, dataLoading = false, profile, activeSpaceHe
       <div className={styles.masterDetailGrid}>
       <div className={styles.masterColumn}>
       <div className={styles.roundedContentWrapper}>
+        <div className={styles.spaceSwitcherMobileWrap}>{spaceSwitcher}</div>
+
         {activeSpaceHeader}
 
         <div className={slideClass}>
