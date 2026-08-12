@@ -10,6 +10,7 @@ import { fmt, dateOf, dateToStr, getMonths, getMonthsShort, CATEGORIES, cobroPer
 import { getCategoryIcon } from '../lib/categoryIcons'
 import { supabase } from '../lib/supabase'
 import { showToast } from '../components/Toast'
+import AmountInput from '../components/AmountInput'
 import styles from './PaymentsPage.module.css'
 
 const INCOME_TYPES = ['Bono', 'Préstamo', 'Pago', 'Comisión', 'Otro']
@@ -754,8 +755,7 @@ export function PaymentsPage({ payments, dataLoading = false, profile, spaceSwit
 
             {remCustomOpen && (
               <div className={styles.remanenteCustomRow}>
-                <input
-                  type="number"
+                <AmountInput
                   placeholder={t('paymentsPage.remanente.customPlaceholder')}
                   value={remCustomAmount}
                   onChange={e => setRemCustomAmount(e.target.value)}
@@ -811,8 +811,7 @@ export function PaymentsPage({ payments, dataLoading = false, profile, spaceSwit
             {/* Monto */}
             <div className={styles.incomeFieldGroup}>
               <div className={styles.incomeLabelMb6}>{t('paymentsPage.incomeModal.amountLabel')}</div>
-              <input
-                type="number"
+              <AmountInput
                 placeholder="$0"
                 value={incomeAmount}
                 onChange={e => setIncomeAmount(e.target.value)}
@@ -885,8 +884,7 @@ export function PaymentsPage({ payments, dataLoading = false, profile, spaceSwit
                             </button>
                           ))}
                         </div>
-                        <input
-                          type="number"
+                        <AmountInput
                           placeholder="$0"
                           value={editIncomeAmount}
                           onChange={e => setEditIncomeAmount(e.target.value)}
@@ -978,8 +976,8 @@ export function PaymentsPage({ payments, dataLoading = false, profile, spaceSwit
                   <div className={styles.fundAvailableTag}>{t('paymentsPage.addFundModal.available', { amount: fmt(personalAvailable) })}</div>
                 )}
               </div>
-              <input
-                type="number" placeholder="$0" value={fundAmount}
+              <AmountInput
+                placeholder="$0" value={fundAmount}
                 onChange={e => setFundAmount(e.target.value)} autoFocus
                 className={styles.incomeInput}
               />

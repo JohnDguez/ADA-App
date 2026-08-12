@@ -5,6 +5,7 @@ import { User, CalendarCheck, Wallet, BellRing, UserRound, ArrowRight } from 'lu
 import { getWeekdays, getWeekdaysShort } from '../lib/utils'
 import { supabase } from '../lib/supabase'
 import { usePushNotifications } from '../hooks/usePushNotifications'
+import AmountInput from '../components/AmountInput'
 import styles from './OnboardingPage.module.css'
 
 // illustrationSize / illustrationBottom / bodyPaddingTop: mismos defaults
@@ -288,8 +289,8 @@ export function OnboardingPage({ userId, onDone }) {
                   <label className="field-label">{t('onboardingPage.step3.amountLabel')}</label>
                   <div className={styles.amountWrap}>
                     <span className={styles.currencyPrefix}>$</span>
-                    <input
-                      autoFocus type="number" value={salaryAmount}
+                    <AmountInput
+                      autoFocus value={salaryAmount}
                       onChange={e => setSalaryAmount(e.target.value)}
                       onKeyDown={e => e.key === 'Enter' && nextStep()}
                       enterKeyHint="next" placeholder="0.00"
