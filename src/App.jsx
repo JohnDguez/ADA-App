@@ -90,6 +90,16 @@ export default function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [paymentsSpaceId, sharedSpaces.loading, activeSpaceEntry])
 
+  // Si App montó bien, la app está sana — se limpia la bandera de
+  // "ya intenté recargar por un chunk desincronizado" (ErrorBoundary.jsx).
+  // Sin esto, un usuario que sufrió el auto-reload una vez en una sesión
+  // (pestaña) ya no recibiría el reintento automático si el problema vuelve
+  // a pasar más adelante en esa misma sesión — se quedaría solo con el
+  // botón manual.
+  useEffect(() => {
+    sessionStorage.removeItem('lunapay-chunk-reload-attempted')
+  }, [])
+
   // Permisos efectivos en el contexto activo — un solo lugar de donde todo
   // lo demás (modal de pago, tarjetas, menús) lee qué puede hacer el
   // usuario, en vez de repetir esta lógica en cada archivo. Personal y el
