@@ -944,8 +944,10 @@
   },
   "spaceSwitcher": {
     "noPending": "No pending payments",
-    "pendingCount_one": "{{count}} pending payment",
-    "pendingCount_other": "{{count}} pending payments",
+    "pendingCount_one": "{{count}} pending",
+    "pendingCount_other": "{{count}} pending",
+    "overdueCount_one": "{{count}} overdue",
+    "overdueCount_other": "{{count}} overdue",
     "railLabel": "Spaces"
   },
   "coachmarks": {

@@ -944,8 +944,10 @@
   },
   "spaceSwitcher": {
     "noPending": "Sin pagos pendientes",
-    "pendingCount_one": "{{count}} pago pendiente",
-    "pendingCount_other": "{{count}} pagos pendientes",
+    "pendingCount_one": "{{count}} pendiente",
+    "pendingCount_other": "{{count}} pendientes",
+    "overdueCount_one": "{{count}} vencido",
+    "overdueCount_other": "{{count}} vencidos",
     "railLabel": "Espacios"
   },
   "coachmarks": {
