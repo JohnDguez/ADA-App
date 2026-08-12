@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { Search, Check } from 'lucide-react'
 import { CATEGORY_ICON_GROUPS, getIconComponent } from '../lib/categoryIcons'
 import { DatePicker } from './DatePicker'
+import AmountInput from './AmountInput'
 import styles from './GoalFormModal.module.css'
 
 const PALETTE = Array.from({ length: 16 }, (_, i) => `var(--palette-${i + 1})`)
@@ -165,8 +166,7 @@ export function GoalFormModal({ open, initial, onSave, onClose }) {
 
         <div className={styles.fieldGroup}>
           <label className="field-label">{t('goalFormModal.amountLabel')}</label>
-          <input
-            type="number"
+          <AmountInput
             className={`field-input ${styles.inputMt}`}
             value={targetAmount}
             onChange={e => { setTargetAmount(e.target.value); setError('') }}

@@ -5,6 +5,7 @@ import { getIconComponent } from '../lib/categoryIcons'
 import { fmt, getMonthsShort } from '../lib/utils'
 import { showToast } from './Toast'
 import { DeleteGoalModal } from './DeleteGoalModal'
+import AmountInput from './AmountInput'
 import styles from './GoalDetailPanel.module.css'
 
 function fmtDate(iso) {
@@ -164,9 +165,8 @@ export function GoalDetailPanel({
       {activeAction ? (
         <div className={styles.actionForm}>
           <label className="field-label">{activeAction === 'aportar' ? t('goalDetailPanel.amountToContribute') : t('goalDetailPanel.amountToWithdraw')}</label>
-          <input
+          <AmountInput
             autoFocus
-            type="number"
             value={amount}
             onChange={e => setAmount(e.target.value)}
             placeholder="0.00"

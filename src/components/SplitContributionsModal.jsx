@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Lock, PiggyBank } from 'lucide-react'
 import { fmt } from '../lib/utils'
+import AmountInput from './AmountInput'
 import styles from './SplitContributionsModal.module.css'
 
 // Registro de "quién puso cuánto" en un gasto del Espacio Compartido —
@@ -151,7 +152,7 @@ export function SplitContributionsModal({ open, payment, spaceMembers, currentUs
           <>
             <label className="field-label">{t('paymentModal.totalAmountToPay')}</label>
             <div className={styles.editRow}>
-              <input type="number" value={totalDraft} onChange={e => setTotalDraft(e.target.value)} placeholder="0.00" onKeyDown={e => e.key === 'Enter' && handleSaveTotal()} className="field-input" style={{ flex: 1 }} />
+              <AmountInput value={totalDraft} onChange={e => setTotalDraft(e.target.value)} placeholder="0.00" onKeyDown={e => e.key === 'Enter' && handleSaveTotal()} className="field-input" style={{ flex: 1 }} />
               <button onClick={handleSaveTotal} disabled={totalSaving} className="btn-primary" style={{ width: 'auto', padding: '0 16px' }}>{t('buttons.save')}</button>
             </div>
           </>
@@ -199,7 +200,7 @@ export function SplitContributionsModal({ open, payment, spaceMembers, currentUs
                   </div>
                   {openId === FUND_ROW_ID && (
                     <div className={styles.editRow}>
-                      <input autoFocus type="number" value={draft} onChange={e => setDraft(e.target.value)} placeholder="0.00" onKeyDown={e => e.key === 'Enter' && handleSaveFund()} className="field-input" style={{ flex: 1 }} />
+                      <AmountInput autoFocus value={draft} onChange={e => setDraft(e.target.value)} placeholder="0.00" onKeyDown={e => e.key === 'Enter' && handleSaveFund()} className="field-input" style={{ flex: 1 }} />
                       <button onClick={handleSaveFund} disabled={saving} className="btn-primary" style={{ width: 'auto', padding: '0 16px' }}>{t('buttons.save')}</button>
                     </div>
                   )}
@@ -251,7 +252,7 @@ export function SplitContributionsModal({ open, payment, spaceMembers, currentUs
                           })}
                         </div>
                         <div className={styles.editRow}>
-                          <input autoFocus type="number" value={draft} onChange={e => setDraft(e.target.value)} placeholder="0.00" onKeyDown={e => e.key === 'Enter' && handleSave(m.user_id)} className="field-input" style={{ flex: 1 }} />
+                          <AmountInput autoFocus value={draft} onChange={e => setDraft(e.target.value)} placeholder="0.00" onKeyDown={e => e.key === 'Enter' && handleSave(m.user_id)} className="field-input" style={{ flex: 1 }} />
                           <button onClick={() => handleSave(m.user_id)} disabled={saving} className="btn-primary" style={{ width: 'auto', padding: '0 16px' }}>{t('buttons.save')}</button>
                         </div>
                       </div>

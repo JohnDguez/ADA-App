@@ -10,6 +10,7 @@ import { FrequencyPicker } from './FrequencyPicker'
 import { PremiumLock } from './PremiumLock'
 import { Select } from './Select'
 import { DatePicker } from './DatePicker'
+import AmountInput from './AmountInput'
 import styles from './PaymentModal.module.css'
 
 export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelete, initial, payments, profile, spacePermissions, isSharedSpace = false, customCategories = [], onAddCategory, onOpenPremium }) {
@@ -309,7 +310,7 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
             </div>
 
             <Field label={t('paymentModal.fields.amountPerPayment')}>
-              <input className="field-input" type="number" value={amount} onChange={e => setAmount(e.target.value)} placeholder="0.00" />
+              <AmountInput className="field-input" value={amount} onChange={e => setAmount(e.target.value)} placeholder="0.00" />
             </Field>
 
             <Field label={t('paymentModal.fields.totalPayments')}>
@@ -406,7 +407,7 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
 
           {!isVariable && mode !== 'installment' && (
             <Field label={t('paymentModal.amountLabel')}>
-              <input className="field-input" type="number" value={amount} onChange={e => setAmount(e.target.value)} placeholder="0.00" />
+              <AmountInput className="field-input" value={amount} onChange={e => setAmount(e.target.value)} placeholder="0.00" />
             </Field>
           )}
 
@@ -429,7 +430,7 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
             return (
               <>
                 <Field label={t('paymentModal.totalAmountToPay')}>
-                  <input className="field-input" type="number" value={totalAmount} onChange={e => setTotalAmount(e.target.value)} placeholder={t('paymentModal.totalAmountPlaceholder')} min="0" enterKeyHint="next" />
+                  <AmountInput className="field-input" value={totalAmount} onChange={e => setTotalAmount(e.target.value)} placeholder={t('paymentModal.totalAmountPlaceholder')} enterKeyHint="next" />
                 </Field>
                 <Field label={t('paymentModal.numPayments')}>
                   <input className="field-input" type="number" value={totalInstallments} onChange={e => setTotalInstallments(e.target.value)} placeholder={t('paymentModal.numPaymentsPlaceholder')} min="2" enterKeyHint="next" />

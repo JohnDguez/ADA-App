@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { Crown } from 'lucide-react'
 import { CobroPeriodFields } from './CobroPeriodFields'
 import { Toggle } from './SettingsShared'
+import AmountInput from './AmountInput'
 import styles from './NewSharedSpacePanel.module.css'
 
 // Panel que reemplaza el contenido normal de Inicio/Gastos/Recurrentes
@@ -109,7 +110,7 @@ export function NewSharedSpacePanel({ profile, sharedSpaces, onOpenPremium, onCr
           {newSalaryEnabled && (
             <div className={styles.fieldGroupMb14}>
               <label className="field-label">{t('paymentModal.amountLabel')}</label>
-              <input type="number" value={newSalaryAmount} onChange={e => setNewSalaryAmount(e.target.value)} placeholder="0.00" className="field-input" />
+              <AmountInput value={newSalaryAmount} onChange={e => setNewSalaryAmount(e.target.value)} placeholder="0.00" className="field-input" />
             </div>
           )}
 

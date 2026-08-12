@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ConfirmCloseModal } from './ConfirmCloseModal'
+import AmountInput from './AmountInput'
 import styles from './VariableAmountModal.module.css'
 
 export function VariableAmountModal({ open, payment, mode = 'pay', spacePermissions, onConfirm, onClose }) {
@@ -70,7 +71,7 @@ export function VariableAmountModal({ open, payment, mode = 'pay', spacePermissi
           {error && <div className={styles.errorBox}>{error}</div>}
           <div className={`${styles.formWrapper} ${!allowed ? styles.formDisabled : ''}`}>
             <label className="field-label">{mode === 'estimate' ? t('variableAmountModal.amountLabelEstimate') : t('variableAmountModal.amountLabelPay')}</label>
-            <input autoFocus type="number" value={amount} onChange={e => setAmount(e.target.value)} placeholder="0.00" onKeyDown={e => e.key === 'Enter' && handleConfirm()} className={`field-input ${styles.input}`} />
+            <AmountInput autoFocus value={amount} onChange={e => setAmount(e.target.value)} placeholder="0.00" onKeyDown={e => e.key === 'Enter' && handleConfirm()} className={`field-input ${styles.input}`} />
             <button onClick={handleConfirm} disabled={!allowed} className={`btn-primary ${styles.confirmButton}`}>{mode === 'estimate' ? t('variableAmountModal.saveEstimate') : t('variableAmountModal.savePay')}</button>
           </div>
           <button onClick={requestClose} className="btn-ghost">{t('buttons.cancel')}</button>

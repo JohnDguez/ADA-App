@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { fmt } from '../lib/utils'
 import { ConfirmCloseModal } from './ConfirmCloseModal'
+import AmountInput from './AmountInput'
 import styles from './InstallmentAbonarModal.module.css'
 
 // Reemplaza el flujo de "Editar" para una copia individual de parcialidad —
@@ -131,7 +132,7 @@ export function InstallmentAbonarModal({ open, payment, payments, spacePermissio
 
           <div className={`${styles.formWrapper} ${!allowed ? styles.formDisabled : ''}`}>
             <label className="field-label">{t('installmentAbonarModal.amountLabel')}</label>
-            <input autoFocus type="number" value={amount} onChange={e => setAmount(e.target.value)} placeholder="0.00" onKeyDown={e => e.key === 'Enter' && handleConfirm()} className={`field-input ${styles.input}`} />
+            <AmountInput autoFocus value={amount} onChange={e => setAmount(e.target.value)} placeholder="0.00" onKeyDown={e => e.key === 'Enter' && handleConfirm()} className={`field-input ${styles.input}`} />
 
             {previewText && <div className={`${styles.preview} ${previewClass}`}>{previewText}</div>}
 
