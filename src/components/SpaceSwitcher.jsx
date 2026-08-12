@@ -112,7 +112,7 @@ export function SpaceSwitcher({ spaces, activeSpaceId, onSwitch, profile, stats 
     const s = stats[item.id ?? 'personal']
     if (!s) return null
     if (s.pending === 0) return t('spaceSwitcher.noPending')
-    return t('spaceSwitcher.pendingCount', { count: s.pending }) + (s.overdue > 0 ? ` · ${t('homePage.overduePayment', { count: s.overdue })}` : '')
+    return t('spaceSwitcher.pendingCount', { count: s.pending }) + (s.overdue > 0 ? ` · ${t('spaceSwitcher.overdueCount', { count: s.overdue })}` : '')
   }
 
   // Ícono diferenciador junto al nombre — solo para Personal y espacios
