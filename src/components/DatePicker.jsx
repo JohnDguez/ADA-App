@@ -144,7 +144,7 @@ export function DatePicker({ value, onChange, placeholder }) {
                 </button>
               </div>
               <div className={styles.monthsGrid}>
-                {MONTHS_SHORT.map((m, i) => {
+                {getMonthsShort().map((m, i) => {
                   const isSel = i === month
                   return (
                     <button
