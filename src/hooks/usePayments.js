@@ -768,38 +768,52 @@ export function usePayments(userId, activeSpaceId = null, activeSpaceName = null
       }
     }
 
-    // Eliminar copias pendientes
-    const pendingIds = payments.filter(p => p.parent_id === masterId && !p.is_paid).map(p => p.id)
-    if (pendingIds.length > 0) {
-      const { data, error } = await supabase.from('payments').delete().in('id', pendingIds).select()
-      if (error || !data || data.length !== pendingIds.length) {
+    // Actualizar copias pendientes EN SU LUGAR — nunca borrar y recrear.
+    // Antes esto borraba TODAS las pendientes y creaba 2 nuevas en blanco;
+    // si alguna tenía una aportación registrada en `payment_contributions`
+    // (Espacio Compartido, "Dividir entre miembros"), esa fila quedaba
+    // huérfana o se perdía al borrarse el pago al que apuntaba — bug real
+    // reportado por Johnatan (agosto 2026, ver CONTEXT.md). Actualizar el
+    // mismo `id` conserva la referencia intacta. `due_date` NO se toca —
+    // un cambio de frecuencia solo aplica a copias futuras, nunca reordena
+    // las fechas ya asignadas a las pendientes existentes.
+    const pendingCopies = payments.filter(p => p.parent_id === masterId && !p.is_paid)
+    const copyAmount = is_variable ? 0 : amount
+    const pendingUpdates = { name, amount: copyAmount, category, is_variable }
+    let updatedPendingData = []
+    if (pendingCopies.length > 0) {
+      const { data, error } = await supabase.from('payments').update(pendingUpdates).in('id', pendingCopies.map(p => p.id)).select()
+      if (error || !data || data.length !== pendingCopies.length) {
         return { error: error || { message: 'No tienes permiso para editar este recurrente en este espacio.' } }
       }
+      updatedPendingData = data
     }
 
-    // Crear 2 nuevas copias con la nueva configuración
-    const date2 = dateToStr(nextPeriodDate(firstDate, recur_freq))
-    const copyAmount = is_variable ? 0 : amount
-    const copies = [
-      { user_id: userId, space_id: activeSpaceId, name, amount: copyAmount, category, is_variable, is_recurrent: true, recur_freq,
+    // Si no queda NINGUNA pendiente (caso raro: la última se acaba de
+    // pagar y ensureTwoAhead todavía no corrió), se crea al menos 1 para
+    // no dejar el recurrente sin ninguna copia en cola.
+    let newlyCreated = []
+    if (pendingCopies.length === 0) {
+      const { data: created } = await supabase.from('payments').insert({
+        user_id: userId, space_id: activeSpaceId, name, amount: copyAmount, category, is_variable, is_recurrent: true, recur_freq,
         is_master: false, parent_id: masterId, due_date: firstDate,
-        is_paid: false, paid_at: null, postponed: false, paused: false, is_installment: false },
-      { user_id: userId, space_id: activeSpaceId, name, amount: copyAmount, category, is_variable, is_recurrent: true, recur_freq,
-        is_master: false, parent_id: masterId, due_date: date2,
-        is_paid: false, paid_at: null, postponed: false, paused: false, is_installment: false },
-    ]
-    const { data: copiesData, error } = await supabase.from('payments').insert(copies).select()
+        is_paid: false, paid_at: null, postponed: false, paused: false, is_installment: false,
+      }).select()
+      if (created) newlyCreated = created
+    }
 
     setPayments(prev => {
       let next = prev.map(p => {
         if (p.id === masterId) return { ...p, ...masterUpdates }
         if (paidCopyIds.includes(p.id)) return { ...p, name }
+        const updated = updatedPendingData.find(u => u.id === p.id)
+        if (updated) return { ...p, ...updated }
         return p
-      }).filter(p => !pendingIds.includes(p.id))
-      if (copiesData) next = [...next, ...copiesData]
+      })
+      if (newlyCreated.length) next = [...next, ...newlyCreated]
       return next
     })
-    return { error }
+    return { error: null }
   }
 
   // ─────────────────────────────────────────────────────────────────────────
