@@ -131,6 +131,80 @@
   margin-top: 6px;
 }
 
+/* ── Rama "Editar solo esta copia" (recurrente, no master, no parcialidad) ── */
+.editCopySubtitle {
+  font-size: 12px;
+  color: var(--muted);
+  margin-bottom: 14px;
+}
+
+.editCopyBanner {
+  background: var(--accent-soft);
+  border: 0.5px solid var(--accent-border);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  margin-bottom: 16px;
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+}
+
+.editCopyBannerIcon {
+  color: var(--accent);
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.editCopyBannerContent {
+  flex: 1;
+}
+
+.editCopyBannerText {
+  font-size: 12px;
+  color: var(--text);
+  line-height: 1.5;
+}
+
+.editMasterButton {
+  margin-top: 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: var(--radius-sm);
+  border: none;
+  background: var(--accent);
+  color: var(--surface);
+  font-size: 12px;
+  font-weight: 600;
+  font-family: 'DM Sans', sans-serif;
+  cursor: pointer;
+}
+
+.lockedFieldRow2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.lockedFieldValue {
+  width: 100%;
+  padding: 10px 12px;
+  border: 0.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  background: var(--bg);
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.lockedFieldIcon {
+  color: var(--muted);
+  flex-shrink: 0;
+}
+
 /* ── Rama "Editar parcialidades" ─────────────────────────────────────────── */
 .installmentHeaderRow {
   display: flex;

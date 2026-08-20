@@ -1,8 +1,8 @@
 import { useState, useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import i18n from '../i18n'
-import { Wallet, AlertTriangle, Repeat, Check } from 'lucide-react'
-import { CATEGORIES, RECUR_FREQ, WEEKDAYS_SHORT, getWeekdaysShort, MONTHS, getMonths, MONTHS_SHORT, getMonthsShort, intlLocale, nextWeekdayDate, nextBiweeklyFromDate, nextPeriodDate, cobroPeriod, fmt, nameExistsActive, projectPeriodImpact, getCatColor, getCategoryLabel, dateToStr, todayStr } from '../lib/utils'
+import { Wallet, AlertTriangle, Repeat, Check, Info, Lock } from 'lucide-react'
+import { CATEGORIES, RECUR_FREQ, WEEKDAYS_SHORT, getWeekdaysShort, MONTHS, getMonths, MONTHS_SHORT, getMonthsShort, intlLocale, nextWeekdayDate, nextBiweeklyFromDate, nextPeriodDate, cobroPeriod, fmt, nameExistsActive, projectPeriodImpact, getCatColor, getCategoryLabel, getFrequencyLabel, dateToStr, todayStr } from '../lib/utils'
 import { getCategoryIcon } from '../lib/categoryIcons'
 import { supabase } from '../lib/supabase'
 import { ConfirmCloseModal } from './ConfirmCloseModal'
@@ -13,7 +13,7 @@ import { DatePicker } from './DatePicker'
 import AmountInput from './AmountInput'
 import styles from './PaymentModal.module.css'
 
-export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelete, initial, payments, profile, spacePermissions, isSharedSpace = false, customCategories = [], onAddCategory, onOpenPremium }) {
+export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelete, onEditMaster, initial, payments, profile, spacePermissions, isSharedSpace = false, customCategories = [], onAddCategory, onOpenPremium }) {
   const { t } = useTranslation()
   const [mode,               setMode]               = useState('single')
   const [name,               setName]               = useState('')
@@ -37,6 +37,14 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
   const [periodIncomes,      setPeriodIncomes]      = useState([])
 
   const isEditingInstallment = !!(initial?.is_installment)
+  // Copia puntual de un recurrente (no el master, no una parcialidad) —
+  // aquí solo se deja editar el monto; nombre/categoría/frecuencia/fecha
+  // pertenecen a la plantilla y se editan desde ahí (botón "Editar
+  // recurrente completo" más abajo, vía onEditMaster). Antes App.jsx
+  // redirigía este caso en silencio a editar el master completo, lo que
+  // terminaba borrando aportaciones ya registradas en copias pendientes
+  // (bug real, agosto 2026) — ver nota en App.jsx → openEdit().
+  const isEditingRecurrentCopy = !!(initial?.is_recurrent && !initial?.is_master && !initial?.is_installment)
 
   // Crear (sin `initial`) necesita can_add; editar cualquier campo (con
   // `initial`, incluyendo editar parcialidades) necesita can_edit — mismo
@@ -343,6 +351,74 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
     )
   }
 
+  if (isEditingRecurrentCopy) {
+    async function handleSaveCopyAmount() {
+      if (!canWrite) return
+      setError('')
+      if (!amount || isNaN(parseFloat(amount)) || parseFloat(amount) <= 0) { setError(t('paymentModal.editCopy.amountError')); return }
+      setSaving(true)
+      // Payload mínimo a propósito — solo `amount`. No se reenvían
+      // name/category/due_date/recur_freq (aunque el state los traiga
+      // cargados desde `initial`) para que quede claro en el historial
+      // de red/DB que esta acción toca únicamente el monto de esta copia.
+      await onSave({ amount: parseFloat(amount) })
+      setSaving(false); onClose()
+    }
+
+    const master = payments?.find(p => p.id === initial.parent_id)
+
+    return (
+      <>
+        <div onClick={e => e.target === e.currentTarget && onClose()} className={styles.overlay}>
+          <div className={styles.panel}>
+            <div className={styles.handle} />
+
+            <div className={styles.modalTitle}>{t('paymentModal.editCopy.title')}</div>
+            <div className={styles.editCopySubtitle}>
+              {initial.name} · {t('paymentModal.editCopy.dueDate', { date: formatDueDate(initial.due_date) })}
+            </div>
+
+            {error && <div className={styles.errorBox}>{error}</div>}
+            {lockedMessage && <div className={styles.warningBox}>{lockedMessage}</div>}
+
+            <div className={styles.editCopyBanner}>
+              <Info size={16} className={styles.editCopyBannerIcon} />
+              <div className={styles.editCopyBannerContent}>
+                <div className={styles.editCopyBannerText}>{t('paymentModal.editCopy.banner')}</div>
+                {master && (
+                  <button type="button" onClick={() => onEditMaster && onEditMaster(master)} className={styles.editMasterButton}>
+                    <Repeat size={13} /> {t('paymentModal.editCopy.editMasterButton')}
+                  </button>
+                )}
+              </div>
+            </div>
+
+            <LockedField label={t('paymentModal.fields.name')} value={initial.name} />
+            <div className={styles.lockedFieldRow2}>
+              <LockedField label={t('paymentModal.fields.category')} value={getCategoryLabel(initial.category)} />
+              <LockedField label={t('settingsCobro.frequencyLabel')} value={getFrequencyLabel(initial.recur_freq)} />
+            </div>
+            <LockedField label={t('paymentModal.dueDate')} value={formatDueDate(initial.due_date)} />
+
+            <div className={canWrite ? styles.formWrapper : styles.formDisabled}>
+              <Field label={t('paymentModal.amountLabel')}>
+                <AmountInput className="field-input" value={amount} onChange={e => setAmount(e.target.value)} placeholder="0.00" />
+              </Field>
+            </div>
+
+            <button onClick={handleSaveCopyAmount} disabled={saving || !canWrite} className={`btn-primary ${styles.saveButtonSpacing}`} style={{ opacity: (saving || !canWrite) ? 0.7 : 1 }}>
+              {saving ? t('settingsCategories.saving') : t('paymentModal.save.saveChanges')}
+            </button>
+            <button onClick={onClose} className={`btn-ghost ${styles.cancelButtonSpacing}`}>{t('buttons.cancel')}</button>
+            <button onClick={() => { onDelete(initial.id); onClose() }} disabled={!canDelete} className={`btn-danger ${styles.deleteButtonSpacing}`} style={{ opacity: canDelete ? 1 : 0.5 }}>
+              {t('paymentModal.deletePayment')}
+            </button>
+          </div>
+        </div>
+      </>
+    )
+  }
+
   return (
     <>
       <div onClick={e => e.target === e.currentTarget && requestClose()} className={styles.overlay}>
@@ -603,6 +679,24 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
       </div>
       <ConfirmCloseModal open={confirmClose} onConfirm={() => { setConfirmClose(false); onClose() }} onCancel={() => setConfirmClose(false)} />
     </>
+  )
+}
+
+function formatDueDate(dueDateStr) {
+  if (!dueDateStr) return '—'
+  const d = new Date(dueDateStr + 'T12:00:00')
+  return d.toLocaleDateString(intlLocale(), { day: 'numeric', month: 'long', year: 'numeric' })
+}
+
+function LockedField({ label, value }) {
+  return (
+    <div className={styles.fieldGroup}>
+      <label className="field-label">{label}</label>
+      <div className={styles.lockedFieldValue}>
+        <span>{value}</span>
+        <Lock size={14} className={styles.lockedFieldIcon} />
+      </div>
+    </div>
   )
 }
 
