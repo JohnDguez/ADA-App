@@ -1209,7 +1209,8 @@
   "errorBoundary": {
     "title": "Something went wrong",
     "message": "LunaPay ran into an unexpected error and couldn't continue. Reload the app to pick up where you left off.",
-    "reload": "Reload"
+    "reload": "Reload",
+    "signOut": "Sign out and retry"
   },
   "payDetailPanel": {
     "emptyTitle": "Select a payment",

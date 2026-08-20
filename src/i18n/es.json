@@ -1209,7 +1209,8 @@
   "errorBoundary": {
     "title": "Algo salió mal",
     "message": "LunaPay encontró un error inesperado y no pudo continuar. Recarga la app para seguir donde te quedaste.",
-    "reload": "Recargar"
+    "reload": "Recargar",
+    "signOut": "Cerrar sesión y reintentar"
   },
   "payDetailPanel": {
     "emptyTitle": "Selecciona un pago",
