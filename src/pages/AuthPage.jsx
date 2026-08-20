@@ -166,6 +166,7 @@ export function AuthPage() {
   // (ver comentario en googleAuth.js sobre por qué el truco de "botón oculto
   // + click simulado" NO funciona, corregido en v0.9.381).
   const rawNonceRef = useRef('')
+  const googleSucceededRef = useRef(false) // true en cuanto llega un credential real — cancela cualquier respaldo pendiente
   const [googleReady, setGoogleReady] = useState(false)
 
   useEffect(() => {
@@ -186,6 +187,7 @@ export function AuthPage() {
         nonce: hashedNonce,
         use_fedcm_for_prompt: true,
         callback: async (response) => {
+          googleSucceededRef.current = true
           setGoogleLoading(true)
           const { error } = await supabase.auth.signInWithIdToken({
             provider: 'google',
@@ -207,21 +209,30 @@ export function AuthPage() {
   function handleGoogle() {
     if (!googleReady) return
     setGoogleLoading(true)
+    googleSucceededRef.current = false
 
     let settled = false
     function fallbackToRedirect() {
-      if (settled) return
+      // Si ya llegó un credential real (el usuario completó el selector de
+      // Google mientras el timeout esperaba), NUNCA se dispara el respaldo
+      // — evita la doble pantalla (selector chico + página vieja de Supabase
+      // encimados) que causaba el timeout corto de v0.9.383.
+      if (settled || googleSucceededRef.current) return
       settled = true
       supabase.auth
         .signInWithOAuth({ provider: 'google', options: { redirectTo: window.location.origin } })
         .finally(() => setGoogleLoading(false))
     }
 
-    // Salvaguarda (v0.9.383): si Google no confirma en un plazo corto que
-    // mostró el prompt (ej. FedCM bloqueado por el navegador, sin ningún
-    // aviso claro al respecto), no dejamos el botón colgado en "Connecting..."
-    // esperando a que el usuario haga algo más — se cae al respaldo solo.
-    const fallbackTimeout = setTimeout(fallbackToRedirect, 2500)
+    // Salvaguarda (v0.9.383, plazo corregido en v0.9.384): si Google no
+    // confirma NUNCA que mostró el prompt (ej. FedCM bloqueado por el
+    // navegador), no dejamos el botón colgado en "Connecting..." para
+    // siempre — cae al respaldo solo. Plazo generoso a propósito: un
+    // usuario normal tarda varios segundos en fijarse en el selector y
+    // elegir su cuenta — un plazo corto (2.5s probado en v0.9.383) competía
+    // con ese tiempo normal y disparaba el respaldo ENCIMA del selector que
+    // sí estaba funcionando, mostrando las dos pantallas a la vez.
+    const fallbackTimeout = setTimeout(fallbackToRedirect, 8000)
 
     window.google.accounts.id.prompt((notification) => {
       // DIAGNÓSTICO TEMPORAL (v0.9.382) — para saber la razón exacta por la
