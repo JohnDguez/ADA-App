@@ -224,15 +224,18 @@ export function AuthPage() {
         .finally(() => setGoogleLoading(false))
     }
 
-    // Salvaguarda (v0.9.383, plazo corregido en v0.9.384): si Google no
-    // confirma NUNCA que mostró el prompt (ej. FedCM bloqueado por el
-    // navegador), no dejamos el botón colgado en "Connecting..." para
+    // Salvaguarda (v0.9.383, plazo corregido en v0.9.384 y v0.9.385): si
+    // Google no confirma NUNCA que mostró el prompt (ej. FedCM bloqueado por
+    // el navegador), no dejamos el botón colgado en "Connecting..." para
     // siempre — cae al respaldo solo. Plazo generoso a propósito: un
-    // usuario normal tarda varios segundos en fijarse en el selector y
-    // elegir su cuenta — un plazo corto (2.5s probado en v0.9.383) competía
-    // con ese tiempo normal y disparaba el respaldo ENCIMA del selector que
-    // sí estaba funcionando, mostrando las dos pantallas a la vez.
-    const fallbackTimeout = setTimeout(fallbackToRedirect, 8000)
+    // usuario normal tarda varios segundos en fijarse en el selector,
+    // elegir su cuenta, y que la cuenta termine de cargar — un plazo corto
+    // (2.5s en v0.9.383, 8s en v0.9.384, ambos insuficientes en pruebas
+    // reales) competía con ese tiempo normal y disparaba el respaldo
+    // ENCIMA del selector que sí estaba funcionando, mostrando las dos
+    // pantallas a la vez. 15s confirmado por Johnatan tras ver el corte
+    // de pantalla ocurrir en pleno "cargando la cuenta".
+    const fallbackTimeout = setTimeout(fallbackToRedirect, 15000)
 
     window.google.accounts.id.prompt((notification) => {
       // DIAGNÓSTICO TEMPORAL (v0.9.382) — para saber la razón exacta por la
