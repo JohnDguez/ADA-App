@@ -134,7 +134,7 @@ export function PayDetailPanel({ payment, profile, permissions, spaceMembers, on
               <Pencil size={16} /> {t('buttons.edit')}
             </button>
             <button
-              onClick={() => canDelete ? onDelete(p.id) : blocked(t('paymentsPage.actionDeletePayments'))}
+              onClick={() => canDelete ? onDelete(p.id, p) : blocked(t('paymentsPage.actionDeletePayments'))}
               className="btn-danger"
               style={{ opacity: canDelete ? 1 : 0.5 }}
             >

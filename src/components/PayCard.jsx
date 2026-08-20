@@ -439,7 +439,7 @@ function PayCardImpl({ payment: p, cfg, onMarkPaid, onRequestVariableAmount, onC
           {isPending && p.is_installment && onAdvance && <MenuItem icon={<FastForward size={14}/>} label={t('payCard.menu.advance')} onClick={() => { canEdit ? onAdvance(p) : blocked(t('payCard.actions.advancePayments')); setMenuOpen(false) }} />}
           {isPending && p.space_id && onSplit && <MenuItem icon={<Users size={14}/>} label={t('paymentsPage.menuSplit')} onClick={() => { canMarkPaid ? onSplit(p) : blocked(t('paymentsPage.actionRegisterContributions')); setMenuOpen(false) }} />}
           {p.is_paid && <MenuItem icon={<RotateCcw size={14}/>} label={t('payCard.menu.markUnpaid')} onClick={() => { canMarkPaid ? onMarkUnpaid(p.id) : blocked(t('paymentsPage.actionMarkPayments')); setMenuOpen(false) }} />}
-          <MenuItem icon={<Trash2 size={14}/>} label={t('buttons.delete')} onClick={() => { canDelete ? onDelete(p.id) : blocked(t('paymentsPage.actionDeletePayments')); setMenuOpen(false) }} danger />
+          <MenuItem icon={<Trash2 size={14}/>} label={t('buttons.delete')} onClick={() => { canDelete ? onDelete(p.id, p) : blocked(t('paymentsPage.actionDeletePayments')); setMenuOpen(false) }} danger />
         </div>,
         document.body
       )}

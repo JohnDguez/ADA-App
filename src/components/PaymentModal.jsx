@@ -410,9 +410,6 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
               {saving ? t('settingsCategories.saving') : t('paymentModal.save.saveChanges')}
             </button>
             <button onClick={onClose} className={`btn-ghost ${styles.cancelButtonSpacing}`}>{t('buttons.cancel')}</button>
-            <button onClick={() => { onDelete(initial.id); onClose() }} disabled={!canDelete} className={`btn-danger ${styles.deleteButtonSpacing}`} style={{ opacity: canDelete ? 1 : 0.5 }}>
-              {t('paymentModal.deletePayment')}
-            </button>
           </div>
         </div>
       </>
@@ -673,7 +670,7 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
           </button>
           <button onClick={requestClose} className={`btn-ghost ${styles.cancelButtonSpacing}`}>{t('buttons.cancel')}</button>
           {initial && !isEditingInstallment && (
-            <button onClick={() => { onDelete(initial.id); onClose() }} disabled={!canDelete} className={`btn-danger ${styles.deleteButtonSpacing}`} style={{ opacity: canDelete ? 1 : 0.5 }}>{t('paymentModal.deletePayment')}</button>
+            <button onClick={() => { onDelete(initial.id, initial); onClose() }} disabled={!canDelete} className={`btn-danger ${styles.deleteButtonSpacing}`} style={{ opacity: canDelete ? 1 : 0.5 }}>{t('paymentModal.deletePayment')}</button>
           )}
         </div>
       </div>
