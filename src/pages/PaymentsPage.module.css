@@ -1342,3 +1342,135 @@
     display: none;
   }
 }
+
+/* ── v0.9.376 — Gastos en tablet/desktop (Regla 47) ──────────────────────
+   En mobile todo es transparente (sin grid, sin cambios de columnas —
+   ver clases base arriba, sin tocar). Desde 768px:
+   - Franja superior ancho completo: balance/heatmap/chips + fondo
+     compartido (sin cambios, ya eran de ancho completo).
+   - Fila de 2 columnas: izquierda = chips de categoría + stats + selector
+     de rango + gráfica; derecha = filtro compartido + "Por categoría",
+     agrupados en un solo StickyPanel (ya estaban uno junto al otro en el
+     DOM — agruparlos no reordena nada en mobile).
+   - Franja inferior ancho completo: lista de pagos en formato fila/tabla,
+     con encabezados de columna. */
+
+.gastosGrid {
+  display: block;
+}
+
+.chartColumn,
+.categoryColumn {
+  width: 100%;
+}
+
+@media (min-width: 768px) {
+  .gastosGrid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(220px, 300px);
+    gap: 20px;
+    align-items: start;
+    margin-bottom: 16px;
+  }
+
+  .filtersWrapper {
+    padding: 16px 16px 0;
+  }
+
+  /* Estado activo de "Por categoría" — mismo criterio que .cardSelected
+     de PayCard.module.css (fondo + borde var(--accent)), ahora que la
+     lista sí es clickeable (antes solo los chips de arriba filtraban). */
+  .categoryListItem {
+    cursor: pointer;
+    padding: 6px 8px;
+    margin: 0 -8px;
+    border-radius: 8px;
+  }
+
+  .categoryListItemActive {
+    background: var(--accent-soft);
+    border: 2px solid var(--accent);
+    margin: 0 -8px;
+    padding: 4px 6px;
+  }
+}
+
+/* ── Chip cuadrado de categoría en la lista de pagos (Regla 47) ──────────
+   Mismo patrón que categoryIconSquare de PaymentModal.jsx — CSS Modules
+   es por archivo, así que se replica aquí en vez de importarse (mismo
+   criterio ya usado en otras pantallas para este mismo chip). Oculto por
+   defecto — mobile se queda con el puntito de color de siempre. */
+.categoryChipSquare {
+  display: none;
+  width: 22px;
+  height: 22px;
+  border-radius: 5px;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+@media (min-width: 768px) {
+  .categoryChipSquare {
+    display: flex;
+  }
+
+  .paymentCategoryDot {
+    display: none;
+  }
+
+  /* ── Lista de pagos → formato fila/tabla ──────────────────────────────
+     .paymentInfo pasa a display:contents: sus hijos (.paymentNameRow,
+     .paymentCategoryRow) se vuelven celdas DIRECTAS del grid de
+     .paymentRow, en vez de quedar apiladas dentro de un solo bloque
+     (que es como se ven en mobile, sin tocar). .paymentContributors
+     (envuelve a PaidByStack, pagos compartidos) se fija a la misma
+     columna que el nombre — sin esto, al "aplanarse" .paymentInfo
+     terminaría cayendo en una columna propia y descuadrando el resto. */
+  .paymentsListHeader {
+    display: grid;
+    grid-template-columns: 50px 1fr 150px 100px 32px;
+    gap: 12px;
+    padding: 0 14px 8px;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text);
+    text-transform: uppercase;
+    border-bottom: 0.5px solid var(--border);
+    margin-bottom: 4px;
+  }
+
+  .paymentsListHeaderAmount {
+    text-align: right;
+  }
+
+  .paymentRow {
+    display: grid;
+    grid-template-columns: 50px 1fr 150px 100px 32px;
+    gap: 12px;
+  }
+
+  .paymentDivider {
+    display: none;
+  }
+
+  .paymentInfo {
+    display: contents;
+  }
+
+  .paymentContributors {
+    grid-column: 2;
+  }
+
+  .paymentCategoryRow {
+    grid-column: 3;
+  }
+
+  .paymentAmountBlock {
+    grid-column: 4;
+  }
+
+  .paymentMenuWrapper {
+    grid-column: 5;
+  }
+}

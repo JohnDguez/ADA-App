@@ -6,6 +6,7 @@ import { NewSharedSpacePanel } from '../components/NewSharedSpacePanel'
 import { EmptyState } from '../components/EmptyState'
 import { PaidByStack } from '../components/PaidByStack'
 import { Select } from '../components/Select'
+import { StickyPanel } from '../components/StickyPanel'
 import { fmt, dateOf, dateToStr, getMonths, getMonthsShort, CATEGORIES, cobroPeriod, addDays, getCatColor, getCategoryLabel, RECUR_FREQ, getFrequencyLabel } from '../lib/utils'
 import { getCategoryIcon } from '../lib/categoryIcons'
 import { supabase } from '../lib/supabase'
@@ -76,6 +77,11 @@ export function PaymentsPage({ payments, dataLoading = false, profile, spaceSwit
   // animación de entrada se dispare también en un simple cambio de
   // pestaña, no solo en un cambio real de espacio).
   const prevSpaceRef = useRef(rawActiveSpaceId)
+  // v0.9.376 — ref de la columna del gráfico, marca dónde "se suelta" el
+  // panel de "Por categoría" (StickyPanel.jsx, reutilizado tal cual del
+  // trabajo de Home — ver CONTEXT.md, quedó sin uso ahí tras revertir el
+  // maestro-detalle).
+  const chartColumnRef = useRef(null)
   const [spaceJustChanged, setSpaceJustChanged] = useState(false)
   useEffect(() => {
     if (prevSpaceRef.current !== rawActiveSpaceId) {
@@ -1327,6 +1333,13 @@ export function PaymentsPage({ payments, dataLoading = false, profile, spaceSwit
               </div>
             )}
 
+        {/* v0.9.376 — columna izquierda del grid de escritorio (Regla 47):
+            chips de categoría, stats, selector de rango y gráfica. En
+            mobile es transparente (sin grid, ver PaymentsPage.module.css) —
+            el orden del DOM no cambió nada, solo se agrupó visualmente. */}
+        <div className={styles.gastosGrid}>
+        <div className={styles.chartColumn} ref={chartColumnRef}>
+
         {/* Chips de categoría */}
         <div data-coachmark="gastos-category-chips" className={styles.categoryChipsScroll}>
           <FilterChip label={t('paymentsPage.allFilter')} active={!selectedCat} onClick={() => setSelectedCat(null)} />
@@ -1421,6 +1434,18 @@ export function PaymentsPage({ payments, dataLoading = false, profile, spaceSwit
           </div>
         </div>
 
+        </div>
+
+        {/* Columna derecha (Regla 47): el filtro compartido queda agrupado
+            con "Por categoría" adentro del mismo StickyPanel — ya estaban
+            uno junto al otro en el DOM, así que agruparlos no reordena
+            nada (mobile sin tocar). StickyPanel.jsx es el mismo componente
+            de Home (quedó sin uso tras revertir su maestro-detalle, ver
+            CONTEXT.md) — se reaprovecha tal cual en vez de arriesgar
+            position:sticky nativo otra vez. */}
+        <div className={styles.categoryColumn}>
+        <StickyPanel boundaryRef={chartColumnRef}>
+
         {/* Filtro compartido — gobierna "Por Categoría" y "Pagos" a la vez.
             Unificado en v0.9.250 (antes cada sección tenía su propio
             filtro: Por Categoría con Periodo/Mes Actual/Año vía FilterChip,
@@ -1490,7 +1515,11 @@ export function PaymentsPage({ payments, dataLoading = false, profile, spaceSwit
                 const catColor = getCatColor(cat, profile.custom_categories, profile.category_colors)
                 const CatIcon  = getCategoryIcon(cat, profile.category_icons)
                 return (
-                  <div key={cat} className={styles.categoryListItem}>
+                  <div
+                    key={cat}
+                    onClick={() => setSelectedCat(selectedCat === cat ? null : cat)}
+                    className={`${styles.categoryListItem} ${selectedCat === cat ? styles.categoryListItemActive : ''}`}
+                  >
                     <div className={styles.categoryListIconWrapper} style={{ background: catColor }}>
                       {CatIcon
                         ? <CatIcon size={19} color="var(--text)" strokeWidth={2} />
@@ -1516,6 +1545,10 @@ export function PaymentsPage({ payments, dataLoading = false, profile, spaceSwit
           )}
         </div>
 
+        </StickyPanel>
+        </div>
+        </div>
+
         {/* ── Pagos realizados ── */}
         <div className={styles.paymentsSection}>
           <div className={styles.paymentsSectionHeader}>
@@ -1535,6 +1568,16 @@ export function PaymentsPage({ payments, dataLoading = false, profile, spaceSwit
             />
           ) : (
             <>
+              {/* Encabezados de columna — solo desde 768px (Regla 47,
+                  formato fila/tabla). En mobile no se muestran (CSS). */}
+              <div className={styles.paymentsListHeader}>
+                <span>{t('paymentsPage.columnDate')}</span>
+                <span>{t('paymentsPage.columnName')}</span>
+                <span>{t('paymentsPage.columnCategory')}</span>
+                <span className={styles.paymentsListHeaderAmount}>{t('paymentsPage.columnAmount')}</span>
+                <span></span>
+              </div>
+
               <div className={styles.paymentsList}>
                 {paidInView.map((p, i) => {
                   const paidDate = p.paid_at ? new Date(p.paid_at) : dateOf(p.due_date)
@@ -1556,13 +1599,27 @@ export function PaymentsPage({ payments, dataLoading = false, profile, spaceSwit
                           )}
                         </div>
                         <div className={styles.paymentCategoryRow}>
+                          {/* v0.9.376 — chip cuadrado desde 768px (Regla 47,
+                              mismo patrón que categoryIconSquare de
+                              PaymentModal.jsx: fondo sólido + ícono blanco);
+                              el punto de color se queda tal cual en mobile
+                              (CSS oculta uno u otro según el ancho, ver
+                              PaymentsPage.module.css). */}
+                          <span className={styles.categoryChipSquare} style={{ background: getCatColor(p.category, profile.custom_categories, profile.category_colors) }}>
+                            {(() => {
+                              const RowCatIcon = getCategoryIcon(p.category, profile.category_icons)
+                              return RowCatIcon ? <RowCatIcon size={12} color="var(--text)" strokeWidth={2} /> : null
+                            })()}
+                          </span>
                           <span className={styles.paymentCategoryDot} style={{ background: getCatColor(p.category, profile.custom_categories, profile.category_colors) }} />
                           {getCategoryLabel(p.category)}
                           {p.is_recurrent && <span className={styles.paymentRecurrentTag}>· {getFrequencyLabel(p.recur_freq) || t('frequency.monthly')}</span>}
                           {p.is_contribution_reflection && <span className={styles.paymentRecurrentTag}>· {t('homePage.shared')}</span>}
                         </div>
                         {activeSpaceId && !p.is_contribution_reflection && (
-                          <PaidByStack contributors={p.contributors} members={spaceMembers} fundAmount={p.fund_amount || 0} size={22} />
+                          <div className={styles.paymentContributors}>
+                            <PaidByStack contributors={p.contributors} members={spaceMembers} fundAmount={p.fund_amount || 0} size={22} />
+                          </div>
                         )}
                       </div>
                       <div className={styles.paymentAmountBlock}>
