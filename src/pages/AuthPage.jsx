@@ -161,12 +161,11 @@ export function AuthPage() {
   const match  = password && confirm && password === confirm
 
   // ── Google Identity Services (GIS) — ver src/lib/googleAuth.js ────────────
-  // El botón oficial de Google se renderiza OCULTO dentro de hiddenGoogleBtnRef;
-  // handleGoogle() (llamado desde el botón custom de abajo) le hace click por
-  // JS. La UI no cambia — solo cambia que la petición sale desde el dominio
-  // de la app en vez de pasar por Supabase.
-  const hiddenGoogleBtnRef = useRef(null)
-  const rawNonceRef        = useRef('')
+  // google.accounts.id.prompt() se llama DIRECTO desde el onClick real del
+  // botón custom — dispara FedCM sin pasar por ningún botón/iframe oculto
+  // (ver comentario en googleAuth.js sobre por qué el truco de "botón oculto
+  // + click simulado" NO funciona, corregido en v0.9.381).
+  const rawNonceRef = useRef('')
   const [googleReady, setGoogleReady] = useState(false)
 
   useEffect(() => {
@@ -198,9 +197,6 @@ export function AuthPage() {
         },
       })
 
-      if (hiddenGoogleBtnRef.current) {
-        window.google.accounts.id.renderButton(hiddenGoogleBtnRef.current, { type: 'standard' })
-      }
       setGoogleReady(true)
     }
 
@@ -210,10 +206,18 @@ export function AuthPage() {
 
   function handleGoogle() {
     if (!googleReady) return
-    // El botón real de Google vive oculto en hiddenGoogleBtnRef — se le
-    // hace click por JS para disparar el flujo (incluye FedCM) sin cambiar
-    // el botón visible de la UI.
-    hiddenGoogleBtnRef.current?.querySelector('div[role="button"]')?.click()
+    setGoogleLoading(true)
+    window.google.accounts.id.prompt((notification) => {
+      // Google decidió NO mostrar el prompt (enfriamiento tras cierres
+      // repetidos, navegador sin soporte de FedCM, etc.) — caso raro pero
+      // real, con respaldo al flujo anterior en vez de dejar el botón sin
+      // reaccionar.
+      if (notification.isNotDisplayed?.() || notification.isSkippedMoment?.()) {
+        supabase.auth
+          .signInWithOAuth({ provider: 'google', options: { redirectTo: window.location.origin } })
+          .finally(() => setGoogleLoading(false))
+      }
+    })
   }
 
   async function handleSubmit() {
@@ -358,8 +362,6 @@ export function AuthPage() {
             <span style={{ fontSize: 12, color: 'var(--text)' }}>{t('authPage.orContinueWith')}</span>
             <div style={{ flex: 1, height: '0.5px', background: 'var(--border)' }} />
           </div>
-          {/* Botón real de Google, oculto — recibe el click simulado desde handleGoogle() */}
-          <div ref={hiddenGoogleBtnRef} style={{ position: 'absolute', width: 1, height: 1, overflow: 'hidden', opacity: 0, pointerEvents: 'none' }} />
           <button onClick={handleGoogle} disabled={googleLoading || !googleReady} style={{ width: '100%', padding: '11px', background: 'var(--surface)', border: '0.5px solid var(--border)', borderRadius: 'var(--radius-sm)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, fontSize: 14, fontWeight: 500, color: 'var(--text)', fontFamily: 'DM Sans, sans-serif', cursor: 'pointer', opacity: googleReady ? 1 : 0.6 }}>
             <GoogleIcon />
             {googleLoading ? t('authPage.google.connecting') : 'Google'}
