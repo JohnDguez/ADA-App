@@ -31,6 +31,23 @@
 // (ej. sin internet) — solo se reintenta automático UNA vez por sesión de
 // pestaña; si vuelve a pasar, se muestra la pantalla normal con el botón.
 // La bandera se limpia en App.jsx al montar con éxito (ver ese archivo).
+// EXCEPCIÓN 2 (NUEVO — sesión huérfana): si una cuenta se elimina desde el
+// dashboard de Supabase directamente (no desde Ajustes → Eliminar cuenta de
+// la propia app, que sí limpia todo del lado del cliente antes), el
+// navegador de esa persona se queda con un token de sesión guardado
+// localmente que ya no corresponde a ningún usuario real. Ese token puede
+// seguir viéndose "válido" (no expiró todavía) y la app intenta usarlo para
+// pedir datos que ya no existen — dependiendo de dónde truene eso, puede
+// caer aquí como error de render, y ni "Recargar" ni borrar caché/cookies
+// del navegador lo arreglan siempre, porque supabase-js guarda la sesión en
+// su PROPIA llave de localStorage (`sb-<project>-auth-token`), separada de
+// las cookies normales del sitio. `btn.signOutButton` limpia esa sesión
+// directo con supabase.auth.signOut() (que también borra esa llave de
+// localStorage) antes de recargar — a diferencia del botón "Recargar" de
+// arriba, este SIEMPRE debería sacar a la persona de un estado de sesión
+// roto y mandarla a la pantalla de login limpia.
+import { supabase } from '../lib/supabase'
+
 const CHUNK_ERROR_PATTERN = /fetch dynamically imported module|dynamically imported module|loading chunk|chunkloaderror/i
 const SESSION_FLAG = 'lunapay-chunk-reload-attempted'
 
@@ -40,7 +57,7 @@ function isChunkLoadError(error) {
 }
 
 import { Component } from 'react'
-import { RefreshCw } from 'lucide-react'
+import { RefreshCw, LogOut } from 'lucide-react'
 import i18n from '../i18n'
 import styles from './ErrorBoundary.module.css'
 
@@ -67,6 +84,20 @@ export class ErrorBoundary extends Component {
     window.location.reload()
   }
 
+  handleSignOut = async () => {
+    // signOut({ scope: 'local' }): borra la sesión guardada en ESTE
+    // dispositivo sin necesitar llamar al servidor (si la cuenta ya no
+    // existe, un signOut normal podría fallar tratando de invalidar algo
+    // que Supabase ya no reconoce). try/catch de todos modos por si acaso —
+    // pase lo que pase con la llamada, siempre recargamos.
+    try {
+      await supabase.auth.signOut({ scope: 'local' })
+    } catch (e) {
+      console.error('Error al cerrar sesión desde ErrorBoundary:', e)
+    }
+    window.location.reload()
+  }
+
   render() {
     if (!this.state.hasError) return this.props.children
 
@@ -78,6 +109,10 @@ export class ErrorBoundary extends Component {
           <button className={styles.reloadButton} onClick={this.handleReload}>
             <RefreshCw size={18} strokeWidth={2} />
             {i18n.t('errorBoundary.reload')}
+          </button>
+          <button className={styles.signOutButton} onClick={this.handleSignOut}>
+            <LogOut size={16} strokeWidth={2} />
+            {i18n.t('errorBoundary.signOut')}
           </button>
         </div>
       </div>
