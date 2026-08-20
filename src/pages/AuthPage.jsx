@@ -1,10 +1,11 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { supabase } from '../lib/supabase'
 import { Eye, EyeOff, Lock, Mail, KeyRound, X, Check } from 'lucide-react'
 import { passwordRequirements, isPasswordStrong } from '../components/PasswordSetupModal'
 import Logo from '../components/Logo'
 import { APP_NAME } from '../lib/constants'
+import { loadGoogleIdentityScript, generateNonce } from '../lib/googleAuth'
 
 // ── Modal de Términos y Condiciones ──────────────────────────────────────────
 function TermsModal({ onClose }) {
@@ -159,10 +160,60 @@ export function AuthPage() {
   const strong = isPasswordStrong(password)
   const match  = password && confirm && password === confirm
 
-  async function handleGoogle() {
-    setGoogleLoading(true)
-    await supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: window.location.origin } })
-    setGoogleLoading(false)
+  // ── Google Identity Services (GIS) — ver src/lib/googleAuth.js ────────────
+  // El botón oficial de Google se renderiza OCULTO dentro de hiddenGoogleBtnRef;
+  // handleGoogle() (llamado desde el botón custom de abajo) le hace click por
+  // JS. La UI no cambia — solo cambia que la petición sale desde el dominio
+  // de la app en vez de pasar por Supabase.
+  const hiddenGoogleBtnRef = useRef(null)
+  const rawNonceRef        = useRef('')
+  const [googleReady, setGoogleReady] = useState(false)
+
+  useEffect(() => {
+    let cancelled = false
+
+    async function initGoogle() {
+      const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID
+      if (!clientId) { console.error('Falta VITE_GOOGLE_CLIENT_ID'); return }
+
+      await loadGoogleIdentityScript()
+      if (cancelled) return
+
+      const { rawNonce, hashedNonce } = await generateNonce()
+      rawNonceRef.current = rawNonce
+
+      window.google.accounts.id.initialize({
+        client_id: clientId,
+        nonce: hashedNonce,
+        use_fedcm_for_prompt: true,
+        callback: async (response) => {
+          setGoogleLoading(true)
+          const { error } = await supabase.auth.signInWithIdToken({
+            provider: 'google',
+            token: response.credential,
+            nonce: rawNonceRef.current,
+          })
+          if (error) setError(t('authPage.errors.wrongCredentials'))
+          setGoogleLoading(false)
+        },
+      })
+
+      if (hiddenGoogleBtnRef.current) {
+        window.google.accounts.id.renderButton(hiddenGoogleBtnRef.current, { type: 'standard' })
+      }
+      setGoogleReady(true)
+    }
+
+    initGoogle()
+    return () => { cancelled = true }
+  }, [])
+
+  function handleGoogle() {
+    if (!googleReady) return
+    // El botón real de Google vive oculto en hiddenGoogleBtnRef — se le
+    // hace click por JS para disparar el flujo (incluye FedCM) sin cambiar
+    // el botón visible de la UI.
+    hiddenGoogleBtnRef.current?.querySelector('div[role="button"]')?.click()
   }
 
   async function handleSubmit() {
@@ -307,7 +358,9 @@ export function AuthPage() {
             <span style={{ fontSize: 12, color: 'var(--text)' }}>{t('authPage.orContinueWith')}</span>
             <div style={{ flex: 1, height: '0.5px', background: 'var(--border)' }} />
           </div>
-          <button onClick={handleGoogle} disabled={googleLoading} style={{ width: '100%', padding: '11px', background: 'var(--surface)', border: '0.5px solid var(--border)', borderRadius: 'var(--radius-sm)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, fontSize: 14, fontWeight: 500, color: 'var(--text)', fontFamily: 'DM Sans, sans-serif', cursor: 'pointer' }}>
+          {/* Botón real de Google, oculto — recibe el click simulado desde handleGoogle() */}
+          <div ref={hiddenGoogleBtnRef} style={{ position: 'absolute', width: 1, height: 1, overflow: 'hidden', opacity: 0, pointerEvents: 'none' }} />
+          <button onClick={handleGoogle} disabled={googleLoading || !googleReady} style={{ width: '100%', padding: '11px', background: 'var(--surface)', border: '0.5px solid var(--border)', borderRadius: 'var(--radius-sm)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, fontSize: 14, fontWeight: 500, color: 'var(--text)', fontFamily: 'DM Sans, sans-serif', cursor: 'pointer', opacity: googleReady ? 1 : 0.6 }}>
             <GoogleIcon />
             {googleLoading ? t('authPage.google.connecting') : 'Google'}
           </button>
