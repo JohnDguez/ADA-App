@@ -352,14 +352,21 @@ export default function App() {
   }
 
   function openAdd()   { setEditPayment(null); setModalOpen(true) }
-  function openEdit(p) {
-    // Si es una copia de recurrente, editar el master
-    if (p.is_recurrent && !p.is_master && p.parent_id && !p.is_installment) {
-      const master = payments.find(m => m.id === p.parent_id)
-      if (master) { setEditPayment(master); setModalOpen(true); return }
-    }
-    setEditPayment(p); setModalOpen(true)
-  }
+  // Antes redirigía en silencio al master cuando `p` era una copia de un
+  // recurrente — el usuario pensaba que editaba solo esa copia y en
+  // realidad reconfiguraba la plantilla completa (bug real reportado por
+  // Johnatan, agosto 2026: editar el monto de una copia vencida terminó
+  // cambiando el master, y updateRecurrentConfig() borraba copias
+  // pendientes con aportaciones ya registradas). Ahora `openEdit` siempre
+  // edita el registro que se le pasa tal cual — PaymentModal.jsx detecta
+  // si es una copia de recurrente (`isEditingRecurrentCopy`) y solo deja
+  // editable el monto, con un botón propio para ir a editar el master
+  // explícitamente (`onEditMaster`, ver abajo).
+  function openEdit(p) { setEditPayment(p); setModalOpen(true) }
+  // Editar el master explícitamente — usado por PaymentModal.jsx cuando
+  // el usuario, estando en la vista de "editar solo esta copia", pulsa
+  // "Editar recurrente completo".
+  function openEditMaster(master) { setEditPayment(master) }
 
   // handleMarkPaid: usado por PayCard (Home) al terminar su animación de
   // pintado en pagos fijos — ya no muestra un toast de éxito, el "Pagado"
@@ -988,6 +995,7 @@ export default function App() {
         onSave={handleSave}
         onSaveInstallment={handleSaveInstallment}
         onDelete={handleDelete}
+        onEditMaster={openEditMaster}
         initial={editPayment}
         payments={payments}
         profile={effectiveProfile}
