@@ -207,6 +207,22 @@ export function AuthPage() {
   function handleGoogle() {
     if (!googleReady) return
     setGoogleLoading(true)
+
+    let settled = false
+    function fallbackToRedirect() {
+      if (settled) return
+      settled = true
+      supabase.auth
+        .signInWithOAuth({ provider: 'google', options: { redirectTo: window.location.origin } })
+        .finally(() => setGoogleLoading(false))
+    }
+
+    // Salvaguarda (v0.9.383): si Google no confirma en un plazo corto que
+    // mostró el prompt (ej. FedCM bloqueado por el navegador, sin ningún
+    // aviso claro al respecto), no dejamos el botón colgado en "Connecting..."
+    // esperando a que el usuario haga algo más — se cae al respaldo solo.
+    const fallbackTimeout = setTimeout(fallbackToRedirect, 2500)
+
     window.google.accounts.id.prompt((notification) => {
       // DIAGNÓSTICO TEMPORAL (v0.9.382) — para saber la razón exacta por la
       // que Google decide no mostrar el prompt de FedCM, en vez de seguir
@@ -219,14 +235,19 @@ export function AuthPage() {
         console.warn('[Google FedCM] prompt cerrado por el usuario, razón:', notification.getDismissedReason?.())
       }
 
-      // Google decidió NO mostrar el prompt (enfriamiento tras cierres
-      // repetidos, navegador sin soporte de FedCM, etc.) — caso raro pero
-      // real, con respaldo al flujo anterior en vez de dejar el botón sin
-      // reaccionar.
       if (notification.isNotDisplayed?.() || notification.isSkippedMoment?.()) {
-        supabase.auth
-          .signInWithOAuth({ provider: 'google', options: { redirectTo: window.location.origin } })
-          .finally(() => setGoogleLoading(false))
+        clearTimeout(fallbackTimeout)
+        fallbackToRedirect()
+      } else if (notification.isDismissedMoment?.()) {
+        // El usuario cerró el selector a propósito (ej. tecla Esc, click
+        // afuera) — no forzamos el respaldo, solo liberamos el botón.
+        clearTimeout(fallbackTimeout)
+        settled = true
+        setGoogleLoading(false)
+      } else {
+        // Se mostró correctamente — el resultado real (éxito o cancelación
+        // de cuenta) llega por separado al callback del initialize().
+        clearTimeout(fallbackTimeout)
       }
     })
   }
