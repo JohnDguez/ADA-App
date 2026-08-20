@@ -5,9 +5,14 @@
 // (my.luna-pay.app) y Supabase solo valida el id_token por debajo con
 // supabase.auth.signInWithIdToken().
 //
-// El botón oficial de Google se renderiza OCULTO (fuera de pantalla) y se
-// dispara con un click simulado desde el botón custom de AuthPage.jsx — así
-// la UI no cambia nada visualmente, solo cambia qué pasa por debajo.
+// IMPORTANTE (corregido en v0.9.381): el botón que renderiza
+// google.accounts.id.renderButton() vive dentro de un <iframe> — un click
+// simulado por JS sobre un botón oculto NO llega a tocarlo (limitación de
+// seguridad del navegador ante iframes de otro origen, documentada por
+// Google). Por eso el botón custom de AuthPage.jsx llama directo a
+// google.accounts.id.prompt() en el onClick real del usuario — ese SÍ
+// dispara FedCM sin pasar por ningún iframe oculto, porque es un gesto de
+// click genuino.
 
 const GIS_SCRIPT_SRC = 'https://accounts.google.com/gsi/client'
 
