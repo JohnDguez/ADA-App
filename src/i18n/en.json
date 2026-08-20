@@ -602,7 +602,8 @@
     },
     "continue": "Continue",
     "start": "Get started!",
-    "back": "Back"
+    "back": "Back",
+    "finishError": "We couldn't save your profile. Check your connection and try again."
   },
   "paymentModal": {
     "nameError": "Enter the payment's name",
