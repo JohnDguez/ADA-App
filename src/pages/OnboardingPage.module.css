@@ -374,3 +374,11 @@
   justify-content: center;
   gap: 8px;
 }
+
+.finishError {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--danger);
+  text-align: center;
+}

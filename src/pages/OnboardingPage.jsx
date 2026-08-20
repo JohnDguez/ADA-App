@@ -57,6 +57,7 @@ export function OnboardingPage({ userId, onDone }) {
   const [salaryEnabled,  setSalaryEnabled]  = useState(false)
   const [salaryAmount,   setSalaryAmount]   = useState('')
   const [saving,         setSaving]         = useState(false)
+  const [finishError,    setFinishError]    = useState('')
 
   const { subscribe, subscribed } = usePushNotifications(userId)
   const exitTimeoutRef = useRef(null)
@@ -65,6 +66,7 @@ export function OnboardingPage({ userId, onDone }) {
 
   async function handleFinish() {
     setSaving(true)
+    setFinishError('')
     const updates = {
       name: name.trim(),
       cobro_freq:    cobroFreq,
@@ -75,9 +77,26 @@ export function OnboardingPage({ userId, onDone }) {
       salary_amount:  salaryEnabled ? (parseFloat(salaryAmount) || 0) : 0,
       onboarding_completed: true,
     }
-    const { data, error } = await supabase.from('profiles').update(updates).eq('id', userId).select().single()
+    // FIX (agosto 2026): antes era `.update(updates).eq('id', userId)` — si
+    // por lo que sea no existía YA una fila en `profiles` para este userId
+    // (ej. el trigger de Supabase que crea el perfil al registrarse no
+    // corrió, o la fila se perdió), un UPDATE no encuentra nada que
+    // actualizar, `.single()` truena con "no rows returned", y como este
+    // catch no existía, el onboarding fallaba en silencio: no navegaba a
+    // ningún lado, no mostraba ningún error, y la persona se quedaba
+    // atorada reintentando sin saber por qué (reportado por una usuaria vía
+    // Johnatan: "me saca y que vuelva a iniciar" — no la sacaba en realidad,
+    // simplemente el onboarding nunca se completaba y no había forma de
+    // saberlo). `.upsert(..., { onConflict: 'id' })` es auto-reparable: crea
+    // la fila si no existía, o la actualiza si ya existía — de cualquier
+    // forma el onboarding SIEMPRE puede terminar.
+    const { data, error } = await supabase
+      .from('profiles')
+      .upsert({ id: userId, ...updates }, { onConflict: 'id' })
+      .select().single()
     setSaving(false)
     if (!error) onDone(data)
+    else setFinishError(t('onboardingPage.finishError'))
   }
 
   function goToStep(newStep, dir) {
@@ -375,6 +394,7 @@ export function OnboardingPage({ userId, onDone }) {
 
       {/* Botones */}
       <div className={styles.actions}>
+        {finishError && <p className={styles.finishError}>{finishError}</p>}
         <button onClick={nextStep} disabled={saving} className={`btn-primary ${styles.continueBtn}`}>
           {saving
             ? t('settingsCategories.saving')
