@@ -332,7 +332,11 @@
     },
     "actionEditPayments": "editar pagos",
     "actionAddPayments": "añadir pagos",
-    "menuAriaLabel": "Más opciones"
+    "menuAriaLabel": "Más opciones",
+    "columnDate": "Fecha",
+    "columnName": "Nombre",
+    "columnCategory": "Categoría",
+    "columnAmount": "Monto"
   },
   "recurrentsPage": {
     "title": "Gastos recurrentes",

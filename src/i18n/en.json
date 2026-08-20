@@ -332,7 +332,11 @@
     },
     "actionEditPayments": "edit payments",
     "actionAddPayments": "add payments",
-    "menuAriaLabel": "More options"
+    "menuAriaLabel": "More options",
+    "columnDate": "Date",
+    "columnName": "Name",
+    "columnCategory": "Category",
+    "columnAmount": "Amount"
   },
   "recurrentsPage": {
     "title": "Recurring expenses",
