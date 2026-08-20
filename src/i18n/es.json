@@ -716,7 +716,14 @@
       "saveAsPaid": "Guardar como pagado",
       "savePayment": "Guardar pago"
     },
-    "deletePayment": "Eliminar pago"
+    "deletePayment": "Eliminar pago",
+    "editCopy": {
+      "title": "Editar pago",
+      "dueDate": "vence {{date}}",
+      "banner": "Aquí solo puedes ajustar el monto de este pago. Para cambiar nombre, frecuencia, fecha o categoría, edita el recurrente completo.",
+      "editMasterButton": "Editar recurrente",
+      "amountError": "Ingresa un monto válido"
+    }
   },
   "pageHeader": {
     "greetingMorning": "¡Buenos días!",

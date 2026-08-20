@@ -716,7 +716,14 @@
       "saveAsPaid": "Save as paid",
       "savePayment": "Save payment"
     },
-    "deletePayment": "Delete payment"
+    "deletePayment": "Delete payment",
+    "editCopy": {
+      "title": "Edit payment",
+      "dueDate": "due {{date}}",
+      "banner": "You can only adjust the amount of this payment here. To change the name, frequency, date, or category, edit the full recurring payment.",
+      "editMasterButton": "Edit recurring payment",
+      "amountError": "Enter a valid amount"
+    }
   },
   "pageHeader": {
     "greetingMorning": "Good morning!",
