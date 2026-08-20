@@ -238,17 +238,6 @@ export function AuthPage() {
     const fallbackTimeout = setTimeout(fallbackToRedirect, 15000)
 
     window.google.accounts.id.prompt((notification) => {
-      // DIAGNÓSTICO TEMPORAL (v0.9.382) — para saber la razón exacta por la
-      // que Google decide no mostrar el prompt de FedCM, en vez de seguir
-      // adivinando. Quitar una vez confirmada la causa real.
-      if (notification.isNotDisplayed?.()) {
-        console.warn('[Google FedCM] prompt no mostrado, razón:', notification.getNotDisplayedReason?.())
-      } else if (notification.isSkippedMoment?.()) {
-        console.warn('[Google FedCM] prompt saltado, razón:', notification.getSkippedReason?.())
-      } else if (notification.isDismissedMoment?.()) {
-        console.warn('[Google FedCM] prompt cerrado por el usuario, razón:', notification.getDismissedReason?.())
-      }
-
       if (notification.isNotDisplayed?.() || notification.isSkippedMoment?.()) {
         clearTimeout(fallbackTimeout)
         fallbackToRedirect()
