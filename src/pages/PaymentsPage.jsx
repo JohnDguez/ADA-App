@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo } from 'react'
+import { useState, useEffect, useRef, useMemo, useLayoutEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ChevronLeft, ChevronRight, MoreVertical, Plus, CircleDollarSign, ChevronDown, ChevronUp, Pencil, RotateCcw, Trash2, Check, Eye, Users, ArrowUp, ArrowDown, ArrowUpLeft, PiggyBank } from 'lucide-react'
 import { PageHeader } from '../components/PageHeader'
@@ -6,7 +6,6 @@ import { NewSharedSpacePanel } from '../components/NewSharedSpacePanel'
 import { EmptyState } from '../components/EmptyState'
 import { PaidByStack } from '../components/PaidByStack'
 import { Select } from '../components/Select'
-import { StickyPanel } from '../components/StickyPanel'
 import { fmt, dateOf, dateToStr, getMonths, getMonthsShort, CATEGORIES, cobroPeriod, addDays, getCatColor, getCategoryLabel, RECUR_FREQ, getFrequencyLabel } from '../lib/utils'
 import { getCategoryIcon } from '../lib/categoryIcons'
 import { supabase } from '../lib/supabase'
@@ -77,11 +76,24 @@ export function PaymentsPage({ payments, dataLoading = false, profile, spaceSwit
   // animación de entrada se dispare también en un simple cambio de
   // pestaña, no solo en un cambio real de espacio).
   const prevSpaceRef = useRef(rawActiveSpaceId)
-  // v0.9.376 — ref de la columna del gráfico, marca dónde "se suelta" el
-  // panel de "Por categoría" (StickyPanel.jsx, reutilizado tal cual del
-  // trabajo de Home — ver CONTEXT.md, quedó sin uso ahí tras revertir el
-  // maestro-detalle).
+  // v0.9.388 — reemplaza el StickyPanel de v0.9.387: Johnatan pidió que
+  // "Por categoría" NO siga el scroll de la página, solo que iguale su
+  // altura a la del gráfico (con scroll interno propio para ver todas las
+  // categorías) — más simple que un sticky, así que se mide directo con
+  // ResizeObserver en vez de reusar StickyPanel.jsx (ese sigue disponible
+  // para cuando sí haga falta seguir el scroll, ver Home).
   const chartColumnRef = useRef(null)
+  const [chartHeight, setChartHeight] = useState(null)
+
+  useLayoutEffect(() => {
+    const el = chartColumnRef.current
+    if (!el) return
+    const observer = new ResizeObserver(entries => {
+      setChartHeight(entries[0].contentRect.height)
+    })
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [])
   const [spaceJustChanged, setSpaceJustChanged] = useState(false)
   useEffect(() => {
     if (prevSpaceRef.current !== rawActiveSpaceId) {
@@ -1070,12 +1082,18 @@ export function PaymentsPage({ payments, dataLoading = false, profile, spaceSwit
         </div>
       )}
 
-      <PageHeader
-        profile={profile}
-        unreadCount={unreadCount}
-        onOpenNotifs={onOpenNotifs}
-        onGoSettings={onGoSettings}
-      />
+      {/* v0.9.388 — mismo tratamiento que HomePage.jsx (v0.9.365): oculto
+          desde 768px, ahí ya lo cubre NavRail.jsx (avatar, saludo,
+          notificaciones, configuración — Regla 43/44). Se me había
+          quedado sin aplicar aquí en la entrega anterior. */}
+      <div className={styles.pageHeaderWrapper}>
+        <PageHeader
+          profile={profile}
+          unreadCount={unreadCount}
+          onOpenNotifs={onOpenNotifs}
+          onGoSettings={onGoSettings}
+        />
+      </div>
 
       <div className={styles.roundedContentWrapper}>
         <div className={styles.spaceSwitcherMobileWrap}>{spaceSwitcher}</div>
@@ -1437,14 +1455,13 @@ export function PaymentsPage({ payments, dataLoading = false, profile, spaceSwit
         </div>
 
         {/* Columna derecha (Regla 47): el filtro compartido queda agrupado
-            con "Por categoría" adentro del mismo StickyPanel — ya estaban
-            uno junto al otro en el DOM, así que agruparlos no reordena
-            nada (mobile sin tocar). StickyPanel.jsx es el mismo componente
-            de Home (quedó sin uso tras revertir su maestro-detalle, ver
-            CONTEXT.md) — se reaprovecha tal cual en vez de arriesgar
-            position:sticky nativo otra vez. */}
-        <div className={styles.categoryColumn}>
-        <StickyPanel boundaryRef={chartColumnRef}>
+            con "Por categoría" — ya estaban uno junto al otro en el DOM,
+            así que agruparlos no reordena nada (mobile sin tocar).
+            v0.9.388 — altura igualada a la de .chartColumn (medida con
+            ResizeObserver arriba), con scroll interno propio en la lista
+            de categorías (Regla: evitar una lista larga con hueco blanco
+            debajo del gráfico). */}
+        <div className={styles.categoryColumn} style={chartHeight ? { height: chartHeight } : undefined}>
 
         {/* Filtro compartido — gobierna "Por Categoría" y "Pagos" a la vez.
             Unificado en v0.9.250 (antes cada sección tenía su propio
@@ -1545,7 +1562,6 @@ export function PaymentsPage({ payments, dataLoading = false, profile, spaceSwit
           )}
         </div>
 
-        </StickyPanel>
         </div>
         </div>
 

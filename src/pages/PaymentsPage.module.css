@@ -1474,3 +1474,60 @@
     grid-column: 5;
   }
 }
+
+/* ── v0.9.388 — 4 ajustes tras revisión en vivo del maestro-detalle ────── */
+
+/* (4) Header oculto desde 768px — mismo criterio que HomePage.jsx
+   (v0.9.365): NavRail.jsx ya cubre avatar/saludo/notificaciones/config.
+   Se me había quedado sin aplicar aquí la sesión pasada. */
+@media (min-width: 768px) {
+  .pageHeaderWrapper {
+    display: none;
+  }
+
+  /* PageHeader ya no aporta el fondo grande arriba — mismo fix que
+     HomePage.module.css, sin esto el "colchón" de roundedContentWrapper
+     queda huérfano. */
+  .roundedContentWrapper {
+    background: transparent;
+    margin-top: 0;
+    border-radius: 0;
+  }
+}
+
+/* (2) Chips de categoría arriba, OCULTOS desde 768px — quedaban
+   redundantes ahora que "Por categoría" (columna derecha) ya es
+   clickeable y hace lo mismo (feedback: "siguen apareciendo... como en
+   el modo móvil"). El estado `selectedCat` que estos chips manejaban
+   sigue intacto — solo cambia quién lo controla en desktop. */
+@media (min-width: 768px) {
+  .categoryChipsScroll {
+    display: none;
+  }
+}
+
+/* (1) "Por categoría" iguala su altura a la del gráfico (medida con
+   ResizeObserver en PaymentsPage.jsx, aplicada como inline style) en vez
+   de crecer con la lista completa — evita una lista larga con hueco
+   blanco debajo del gráfico (feedback explícito). Scroll interno propio
+   en la lista misma; el filtro compartido de arriba se queda fijo. */
+@media (min-width: 768px) {
+  .categoryColumn {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .categorySection {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+  }
+
+  .categoryList {
+    flex: 1;
+    overflow-y: auto;
+    min-height: 0;
+  }
+}
