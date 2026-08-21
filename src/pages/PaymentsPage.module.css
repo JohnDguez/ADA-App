@@ -1494,10 +1494,13 @@
 
   /* Más compacto que el tamaño de mobile ("las categorías son
      enormes") — 36px de ícono se ve bien a lo ancho de un teléfono
-     completo, pero sobredimensionado en una columna de ~40% del ancho. */
+     completo, pero sobredimensionado en una columna de ~40% del ancho.
+     v0.9.398 — de vuelta a overflow-y:auto (scroll interno real) sobre
+     la base ya simplificada de alto fijo (v0.9.397) — Johnatan pidió
+     scroll otra vez en vez de recortar sin más. */
   .categoryList {
     flex: 1;
-    overflow: hidden;
+    overflow-y: auto;
     min-height: 0;
     gap: 8px;
   }
