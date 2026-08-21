@@ -1360,17 +1360,27 @@
   }
 }
 
-/* ── v0.9.376 — Gastos en tablet/desktop (Regla 47) ──────────────────────
-   En mobile todo es transparente (sin grid, sin cambios de columnas —
-   ver clases base arriba, sin tocar). Desde 768px:
+/* ── v0.9.395 — Gastos en tablet/desktop, versión final confirmada por
+   mockup (varias rondas de ida y vuelta — Johnatan armó su propio
+   wireframe para la proporción/gaps, luego pidió deshacer la fusión de
+   tarjetas de v0.9.394: los 3 contenedores de la izquierda (stats,
+   selector de rango, gráfica) se quedan SEPARADOS como siempre estuvieron
+   — el wireframe anterior solo definía el grid, no fusionar tarjetas.
+   Estructura final:
    - Franja superior ancho completo: balance/heatmap/chips + fondo
-     compartido (sin cambios, ya eran de ancho completo).
-   - Fila de 2 columnas: izquierda = chips de categoría + stats + selector
-     de rango + gráfica; derecha = filtro compartido + "Por categoría",
-     agrupados en un solo StickyPanel (ya estaban uno junto al otro en el
-     DOM — agruparlos no reordena nada en mobile).
+     compartido (sin cambios).
+   - Fila de 2 columnas, 60/40, gap 16px: izquierda = 3 tarjetas
+     separadas (stats, selector de rango, gráfica) en su propio flex
+     column con gap; derecha = fila del toggle Periodo actual/Por mes
+     FUERA de la tarjeta (mismo estilo suelto que el selector de rango de
+     la izquierda) + la tarjeta "Por categoría" — esta última con
+     `flex: 1` para llenar el resto de la columna (misma altura total que
+     la izquierda, por `align-items: stretch` en el grid), y
+     `overflow: hidden` en el contenedor de la tarjeta + `overflow-y:
+     auto` SOLO en la lista interna — si hay muchas categorías, scrollea
+     adentro sin que nada se salga de las esquinas redondeadas.
    - Franja inferior ancho completo: lista de pagos en formato fila/tabla,
-     con encabezados de columna. */
+     sin encabezados de columna (v0.9.392). */
 
 .gastosGrid {
   display: block;
@@ -1384,32 +1394,89 @@
 @media (min-width: 768px) {
   .gastosGrid {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(220px, 300px);
-    gap: 20px;
-    align-items: start;
+    grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+    gap: 16px;
+    align-items: stretch;
     margin-bottom: 16px;
-    /* v0.9.390 — el clásico problema de CSS Grid: minmax(0, ...) en el
-       TRACK no alcanza si el hijo (.chartColumn/.categoryColumn) no
-       también declara min-width:0 — por default los bloques tienen
-       min-width:auto, así que contenido interno con ancho mínimo grande
-       puede forzar que la columna crezca más de lo que el grid le
-       permite, empujando toda la fila y abriendo scroll horizontal en
-       la página entera (bug real reportado: "está pegada a la izquierda
-       y se sale"). */
     overflow-x: hidden;
   }
 
-  .chartColumn,
-  .categoryColumn {
+  /* Wrappers puramente estructurales — SIN fondo propio (a diferencia de
+     v0.9.394): cada tarjeta de adentro mantiene el suyo. */
+  .chartColumn {
     min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
   }
 
-  .filtersWrapper {
-    /* .categoryColumn ya aporta el padding (16px, tarjeta nueva) — sin
-       esto quedaba doble padding horizontal aquí, desalineado con
-       .categorySection debajo. */
+  .categoryColumn {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  /* Las 3 tarjetas de la izquierda mantienen su propio fondo/padding —
+     solo se les quita el margen horizontal de 16px (pensado para mobile,
+     de ancho completo) y el margin-bottom (el gap del wrapper ya separa). */
+  .statsCard {
+    margin: 0;
+  }
+
+  .rangeSelectorRow {
     padding: 0;
-    margin-bottom: 12px;
+  }
+
+  .chartCard {
+    margin: 0;
+  }
+
+  /* Gráfica un poco más grande en tablet/desktop — 80px se sentía chica
+     en la columna del 60%, la primera vez que se mockeó completo. */
+  .chartBarsRow {
+    height: 150px;
+  }
+
+  /* El toggle Periodo actual/Por mes queda SUELTO, fuera de la tarjeta —
+     mismo criterio visual que .rangeSelectorRow a la izquierda. */
+  .filtersWrapper {
+    padding: 0;
+  }
+
+  /* "Por categoría" — la tarjeta en sí, con flex:1 para llenar el resto
+     de la columna (misma altura total que la izquierda). overflow:hidden
+     aquí (no en .categoryList) para que nada se salga de las esquinas
+     redondeadas si el scroll interno de la lista se activa. */
+  .categorySection {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    background: var(--surface);
+    border-radius: var(--radius);
+    padding: 16px;
+    overflow: hidden;
+  }
+
+  /* La lista interna es la que de verdad scrollea — más compacta que el
+     tamaño de mobile ("las categorías son enormes"): 36px de ícono se ve
+     bien a lo ancho de un teléfono completo, pero sobredimensionado en
+     una columna de ~40% del ancho. */
+  .categoryList {
+    flex: 1;
+    overflow-y: auto;
+    min-height: 0;
+    gap: 8px;
+  }
+
+  .categoryListIconWrapper {
+    width: 28px;
+    height: 28px;
+  }
+
+  .categoryProgressTrack {
+    height: 4px;
   }
 
   /* Estado activo de "Por categoría" — mismo criterio que .cardSelected
@@ -1462,11 +1529,9 @@
      (envuelve a PaidByStack, pagos compartidos) se fija a la misma
      columna que el nombre — sin esto, al "aplanarse" .paymentInfo
      terminaría cayendo en una columna propia y descuadrando el resto.
-     v0.9.392 — se quitaron los encabezados de columna (Fecha/Nombre/
-     Categoría/Monto): pedido explícito de Johnatan, se sentían de más
-     sobre cada fila ya autoexplicativa. Las columnas siguen alineadas
-     entre sí vía el mismo grid-template-columns en .paymentRow, solo sin
-     el rótulo de texto arriba. */
+     Sin encabezados de columna (Fecha/Nombre/Categoría/Monto) — se
+     quitaron en v0.9.392, se sentían de más sobre cada fila ya
+     autoexplicativa. */
   .paymentRow {
     display: grid;
     grid-template-columns: 50px 1fr 150px 100px 32px;
@@ -1498,11 +1563,8 @@
   }
 }
 
-/* ── v0.9.388 — 4 ajustes tras revisión en vivo del maestro-detalle ────── */
-
-/* (4) Header oculto desde 768px — mismo criterio que HomePage.jsx
-   (v0.9.365): NavRail.jsx ya cubre avatar/saludo/notificaciones/config.
-   Se me había quedado sin aplicar aquí la sesión pasada. */
+/* Header oculto desde 768px — mismo criterio que HomePage.jsx (v0.9.365):
+   NavRail.jsx ya cubre avatar/saludo/notificaciones/config. */
 @media (min-width: 768px) {
   .pageHeaderWrapper {
     display: none;
@@ -1510,14 +1572,12 @@
 
   /* PageHeader ya no aporta el fondo grande arriba — mismo fix que
      HomePage.module.css, sin esto el "colchón" de roundedContentWrapper
-     queda huérfano. */
+     queda huérfano. Mismo padding-top que HomePage.module.css
+     (28px 24px 0) y mismo tope de 80vw centrado (v0.9.391). */
   .roundedContentWrapper {
     background: transparent;
     margin-top: 0;
     border-radius: 0;
-    /* v0.9.392 — mismo padding-top que HomePage.module.css (28px 24px 0)
-       — se me había quedado sin copiar aquí, por eso "Personal" (el
-       badge del espacio activo) quedaba pegado arriba sin aire. */
     padding: 28px 24px 0;
     max-width: 80vw;
     margin-left: auto;
@@ -1525,71 +1585,12 @@
   }
 }
 
-/* (2) Chips de categoría arriba, OCULTOS desde 768px — quedaban
-   redundantes ahora que "Por categoría" (columna derecha) ya es
-   clickeable y hace lo mismo (feedback: "siguen apareciendo... como en
-   el modo móvil"). El estado `selectedCat` que estos chips manejaban
-   sigue intacto — solo cambia quién lo controla en desktop. */
+/* Chips de categoría arriba, OCULTOS desde 768px — quedaban redundantes
+   ahora que "Por categoría" (columna derecha) ya es clickeable y hace lo
+   mismo. El estado `selectedCat` que estos chips manejaban sigue intacto
+   — solo cambia quién lo controla en desktop. */
 @media (min-width: 768px) {
   .categoryChipsScroll {
     display: none;
-  }
-}
-
-/* (1) "Por categoría" iguala su altura a la del gráfico (medida con
-   ResizeObserver en PaymentsPage.jsx, aplicada como inline style) en vez
-   de crecer con la lista completa — evita una lista larga con hueco
-   blanco debajo del gráfico (feedback explícito). Scroll interno propio
-   en la lista misma; el filtro compartido de arriba se queda fijo. */
-/* (1) "Por categoría" con un tope de altura razonable (aprox. lo que mide
-   la columna del gráfico: stats + selector + gráfica) + scroll interno —
-   v0.9.390 reemplazó el ResizeObserver de v0.9.388 (la medición no
-   siempre coincidía con la altura real, quedando desalineado) por un
-   valor fijo — menos exacto pixel por pixel, pero confiable. Ajustar
-   este número si con más/menos meses seleccionados (rangeSelectorRow)
-   la altura real del gráfico cambia mucho y se nota el desfase. */
-@media (min-width: 768px) {
-  .categoryColumn {
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-    background: var(--surface);
-    border-radius: var(--radius);
-    padding: 16px;
-    /* Con los ítems más compactos de esta misma entrega, 6-8 categorías
-       ya caben sin necesitar el scroll interno casi nunca — el tope se
-       queda como red de seguridad para espacios con muchas más
-       categorías, no como el mecanismo principal de ajuste. */
-    max-height: 420px;
-  }
-
-  .categorySection {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    min-height: 0;
-    /* Ya lo aporta .categoryColumn (padding: 16px) — sin esto quedaría
-       padding doble (el propio, de mobile, más el de la tarjeta nueva). */
-    padding: 0;
-  }
-
-  .categoryList {
-    flex: 1;
-    overflow-y: auto;
-    min-height: 0;
-    /* v0.9.392 — más compacto que el tamaño de mobile (Regla: "las
-       categorías son enormes"): 36px de ícono se siente bien a lo ancho
-       de un teléfono completo, pero se ve sobredimensionado en una
-       columna angosta de ~300px con 6-8 categorías. */
-    gap: 8px;
-  }
-
-  .categoryListIconWrapper {
-    width: 28px;
-    height: 28px;
-  }
-
-  .categoryProgressTrack {
-    height: 4px;
   }
 }
