@@ -1371,6 +1371,20 @@
     gap: 20px;
     align-items: start;
     margin-bottom: 16px;
+    /* v0.9.390 — el clásico problema de CSS Grid: minmax(0, ...) en el
+       TRACK no alcanza si el hijo (.chartColumn/.categoryColumn) no
+       también declara min-width:0 — por default los bloques tienen
+       min-width:auto, así que contenido interno con ancho mínimo grande
+       puede forzar que la columna crezca más de lo que el grid le
+       permite, empujando toda la fila y abriendo scroll horizontal en
+       la página entera (bug real reportado: "está pegada a la izquierda
+       y se sale"). */
+    overflow-x: hidden;
+  }
+
+  .chartColumn,
+  .categoryColumn {
+    min-width: 0;
   }
 
   .filtersWrapper {
@@ -1515,6 +1529,13 @@
    de crecer con la lista completa — evita una lista larga con hueco
    blanco debajo del gráfico (feedback explícito). Scroll interno propio
    en la lista misma; el filtro compartido de arriba se queda fijo. */
+/* (1) "Por categoría" con un tope de altura razonable (aprox. lo que mide
+   la columna del gráfico: stats + selector + gráfica) + scroll interno —
+   v0.9.390 reemplazó el ResizeObserver de v0.9.388 (la medición no
+   siempre coincidía con la altura real, quedando desalineado) por un
+   valor fijo — menos exacto pixel por pixel, pero confiable. Ajustar
+   este número si con más/menos meses seleccionados (rangeSelectorRow)
+   la altura real del gráfico cambia mucho y se nota el desfase. */
 @media (min-width: 768px) {
   .categoryColumn {
     display: flex;
@@ -1523,6 +1544,7 @@
     background: var(--surface);
     border-radius: var(--radius);
     padding: 16px;
+    max-height: 460px;
   }
 
   .categorySection {

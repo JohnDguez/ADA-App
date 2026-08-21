@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo, useLayoutEffect } from 'react'
+import { useState, useEffect, useRef, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ChevronLeft, ChevronRight, MoreVertical, Plus, CircleDollarSign, ChevronDown, ChevronUp, Pencil, RotateCcw, Trash2, Check, Eye, Users, ArrowUp, ArrowDown, ArrowUpLeft, PiggyBank } from 'lucide-react'
 import { PageHeader } from '../components/PageHeader'
@@ -76,24 +76,6 @@ export function PaymentsPage({ payments, dataLoading = false, profile, spaceSwit
   // animación de entrada se dispare también en un simple cambio de
   // pestaña, no solo en un cambio real de espacio).
   const prevSpaceRef = useRef(rawActiveSpaceId)
-  // v0.9.388 — reemplaza el StickyPanel de v0.9.387: Johnatan pidió que
-  // "Por categoría" NO siga el scroll de la página, solo que iguale su
-  // altura a la del gráfico (con scroll interno propio para ver todas las
-  // categorías) — más simple que un sticky, así que se mide directo con
-  // ResizeObserver en vez de reusar StickyPanel.jsx (ese sigue disponible
-  // para cuando sí haga falta seguir el scroll, ver Home).
-  const chartColumnRef = useRef(null)
-  const [chartHeight, setChartHeight] = useState(null)
-
-  useLayoutEffect(() => {
-    const el = chartColumnRef.current
-    if (!el) return
-    const observer = new ResizeObserver(entries => {
-      setChartHeight(entries[0].contentRect.height)
-    })
-    observer.observe(el)
-    return () => observer.disconnect()
-  }, [])
   const [spaceJustChanged, setSpaceJustChanged] = useState(false)
   useEffect(() => {
     if (prevSpaceRef.current !== rawActiveSpaceId) {
@@ -1356,7 +1338,7 @@ export function PaymentsPage({ payments, dataLoading = false, profile, spaceSwit
             mobile es transparente (sin grid, ver PaymentsPage.module.css) —
             el orden del DOM no cambió nada, solo se agrupó visualmente. */}
         <div className={styles.gastosGrid}>
-        <div className={styles.chartColumn} ref={chartColumnRef}>
+        <div className={styles.chartColumn}>
 
         {/* Chips de categoría */}
         <div data-coachmark="gastos-category-chips" className={styles.categoryChipsScroll}>
@@ -1457,11 +1439,13 @@ export function PaymentsPage({ payments, dataLoading = false, profile, spaceSwit
         {/* Columna derecha (Regla 47): el filtro compartido queda agrupado
             con "Por categoría" — ya estaban uno junto al otro en el DOM,
             así que agruparlos no reordena nada (mobile sin tocar).
-            v0.9.388 — altura igualada a la de .chartColumn (medida con
-            ResizeObserver arriba), con scroll interno propio en la lista
-            de categorías (Regla: evitar una lista larga con hueco blanco
-            debajo del gráfico). */}
-        <div className={styles.categoryColumn} style={chartHeight ? { height: chartHeight } : undefined}>
+            v0.9.390 — se quitó el ResizeObserver de v0.9.388 (la altura
+            medida no siempre coincidía con la real del gráfico, quedando
+            desalineado) — en su lugar, un max-height fijo razonable en
+            .categoryColumn (CSS, PaymentsPage.module.css) con scroll
+            interno propio en la lista — menos preciso pixel por pixel,
+            pero confiable, sin depender de timing de medición. */}
+        <div className={styles.categoryColumn}>
 
         {/* Filtro compartido — gobierna "Por Categoría" y "Pagos" a la vez.
             Unificado en v0.9.250 (antes cada sección tenía su propio
