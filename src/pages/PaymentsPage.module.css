@@ -372,10 +372,20 @@
 
 .statsBlockWide {
   flex: 1.6;
+  /* v0.9.393 — mismo problema que ya se había arreglado en el grid
+     exterior (.chartColumn/.categoryColumn, v0.9.390): un hijo flex sin
+     min-width:0 no se encoge más allá del ancho natural de su contenido
+     (el default es min-width:auto), así que en columnas angostas
+     ".statsCard" se desbordaba hacia la columna de al lado — como esa
+     columna ya tiene fondo propio (v0.9.389) y se pinta después en el
+     DOM, tapaba visualmente el texto desbordado ("$12,904.0" cortado a
+     la mitad — bug real reportado con captura). */
+  min-width: 0;
 }
 
 .statsBlock {
   flex: 1;
+  min-width: 0;
 }
 
 .statsLabel {
@@ -390,6 +400,10 @@
   font-weight: 700;
   color: var(--text);
   line-height: 1.1;
+  /* Trunca con "…" en vez de desbordar, si de verdad no cabe. */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .statsValue {
@@ -397,6 +411,9 @@
   font-weight: 700;
   color: var(--text);
   line-height: 1.1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .statsDivider {
