@@ -1429,11 +1429,14 @@
   }
 
   .balanceCard {
-    margin: 0 0 16px;
+    /* v0.9.403 — 16px (heredado de mobile) se sentía apretado comparado
+       con el resto de espaciados de la página en desktop (24-28px) —
+       bug real señalado con captura ("sigo viendo pegado"). */
+    margin: 0 0 24px;
   }
 
   .fundSection {
-    margin: 0 0 16px;
+    margin: 0 0 24px;
   }
 
   .statsCard {
