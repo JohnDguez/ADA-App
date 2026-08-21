@@ -1396,6 +1396,7 @@
     display: grid;
     grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
     gap: 16px;
+    margin-top: 16px;
     margin-bottom: 16px;
     overflow-x: hidden;
   }
@@ -1425,15 +1426,18 @@
      solo se les quita el margen horizontal de 16px (pensado para mobile,
      de ancho completo) y el margin-bottom (el gap del wrapper ya separa). */
   .titleSection {
-    padding: 0;
+    padding: 16px 0 18px;
   }
 
   .balanceCard {
-    margin: 0;
+    /* v0.9.403 — 16px (heredado de mobile) se sentía apretado comparado
+       con el resto de espaciados de la página en desktop (24-28px) —
+       bug real señalado con captura ("sigo viendo pegado"). */
+    margin: 0 0 24px;
   }
 
   .fundSection {
-    margin: 0;
+    margin: 0 0 24px;
   }
 
   .statsCard {
