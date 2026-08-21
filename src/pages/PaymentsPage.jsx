@@ -1568,16 +1568,6 @@ export function PaymentsPage({ payments, dataLoading = false, profile, spaceSwit
             />
           ) : (
             <>
-              {/* Encabezados de columna — solo desde 768px (Regla 47,
-                  formato fila/tabla). En mobile no se muestran (CSS). */}
-              <div className={styles.paymentsListHeader}>
-                <span>{t('paymentsPage.columnDate')}</span>
-                <span>{t('paymentsPage.columnName')}</span>
-                <span>{t('paymentsPage.columnCategory')}</span>
-                <span className={styles.paymentsListHeaderAmount}>{t('paymentsPage.columnAmount')}</span>
-                <span></span>
-              </div>
-
               <div className={styles.paymentsList}>
                 {paidInView.map((p, i) => {
                   const paidDate = p.paid_at ? new Date(p.paid_at) : dateOf(p.due_date)

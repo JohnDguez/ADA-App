@@ -1444,24 +1444,12 @@
      (que es como se ven en mobile, sin tocar). .paymentContributors
      (envuelve a PaidByStack, pagos compartidos) se fija a la misma
      columna que el nombre — sin esto, al "aplanarse" .paymentInfo
-     terminaría cayendo en una columna propia y descuadrando el resto. */
-  .paymentsListHeader {
-    display: grid;
-    grid-template-columns: 50px 1fr 150px 100px 32px;
-    gap: 12px;
-    padding: 0 14px 8px;
-    font-size: 11px;
-    font-weight: 600;
-    color: var(--text);
-    text-transform: uppercase;
-    border-bottom: 0.5px solid var(--border);
-    margin-bottom: 4px;
-  }
-
-  .paymentsListHeaderAmount {
-    text-align: right;
-  }
-
+     terminaría cayendo en una columna propia y descuadrando el resto.
+     v0.9.392 — se quitaron los encabezados de columna (Fecha/Nombre/
+     Categoría/Monto): pedido explícito de Johnatan, se sentían de más
+     sobre cada fila ya autoexplicativa. Las columnas siguen alineadas
+     entre sí vía el mismo grid-template-columns en .paymentRow, solo sin
+     el rótulo de texto arriba. */
   .paymentRow {
     display: grid;
     grid-template-columns: 50px 1fr 150px 100px 32px;
@@ -1510,15 +1498,10 @@
     background: transparent;
     margin-top: 0;
     border-radius: 0;
-    /* v0.9.391 — Home ya tenía este tope (HomePage.module.css,
-       .contentPadding) pero nunca se trajo aquí — quedó como pregunta
-       abierta sin confirmar (ver CONTEXT.md). Johnatan confirmó que sí
-       aplica a Gastos también: sin esto, todo el contenido intentaba
-       ocupar el 100% del ancho disponible después del riel, en vez de
-       quedar centrado con aire a los lados. Se aplica a
-       .roundedContentWrapper directo (envuelve TODO el contenido de
-       Gastos) — a diferencia de Home, donde .contentPadding solo envolvía
-       una parte específica de la página, no el total. */
+    /* v0.9.392 — mismo padding-top que HomePage.module.css (28px 24px 0)
+       — se me había quedado sin copiar aquí, por eso "Personal" (el
+       badge del espacio activo) quedaba pegado arriba sin aire. */
+    padding: 28px 24px 0;
     max-width: 80vw;
     margin-left: auto;
     margin-right: auto;
@@ -1556,7 +1539,11 @@
     background: var(--surface);
     border-radius: var(--radius);
     padding: 16px;
-    max-height: 460px;
+    /* Con los ítems más compactos de esta misma entrega, 6-8 categorías
+       ya caben sin necesitar el scroll interno casi nunca — el tope se
+       queda como red de seguridad para espacios con muchas más
+       categorías, no como el mecanismo principal de ajuste. */
+    max-height: 420px;
   }
 
   .categorySection {
@@ -1573,5 +1560,19 @@
     flex: 1;
     overflow-y: auto;
     min-height: 0;
+    /* v0.9.392 — más compacto que el tamaño de mobile (Regla: "las
+       categorías son enormes"): 36px de ícono se siente bien a lo ancho
+       de un teléfono completo, pero se ve sobredimensionado en una
+       columna angosta de ~300px con 6-8 categorías. */
+    gap: 8px;
+  }
+
+  .categoryListIconWrapper {
+    width: 28px;
+    height: 28px;
+  }
+
+  .categoryProgressTrack {
+    height: 4px;
   }
 }
