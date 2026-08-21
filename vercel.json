@@ -1,4 +1,17 @@
 {
+  "redirects": [
+    {
+      "source": "/(.*)",
+      "has": [
+        {
+          "type": "host",
+          "value": "ada-app-phi.vercel.app"
+        }
+      ],
+      "destination": "https://my.luna-pay.app/$1",
+      "permanent": true
+    }
+  ],
   "headers": [
     {
       "source": "/",
@@ -20,4 +33,3 @@
     }
   ]
 }
-
