@@ -1510,6 +1510,18 @@
     background: transparent;
     margin-top: 0;
     border-radius: 0;
+    /* v0.9.391 — Home ya tenía este tope (HomePage.module.css,
+       .contentPadding) pero nunca se trajo aquí — quedó como pregunta
+       abierta sin confirmar (ver CONTEXT.md). Johnatan confirmó que sí
+       aplica a Gastos también: sin esto, todo el contenido intentaba
+       ocupar el 100% del ancho disponible después del riel, en vez de
+       quedar centrado con aire a los lados. Se aplica a
+       .roundedContentWrapper directo (envuelve TODO el contenido de
+       Gastos) — a diferencia de Home, donde .contentPadding solo envolvía
+       una parte específica de la página, no el total. */
+    max-width: 80vw;
+    margin-left: auto;
+    margin-right: auto;
   }
 }
 
