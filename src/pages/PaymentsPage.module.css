@@ -1396,29 +1396,17 @@
     display: grid;
     grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
     gap: 16px;
-    /* v0.9.396 — REVERTIDO de align-items:stretch sin altura definida:
-       stretch solo hace crecer el lado más CORTO para igualar al más
-       alto — nunca al revés. Con muchas categorías, el lado de
-       categorías simplemente ganaba (crecía sin tope, arrastrando a la
-       gráfica con espacio vacío invisible detrás) en vez de toparse y
-       scrollear como se pidió. Con una altura FIJA en el propio grid,
-       stretch sí obliga a AMBOS lados a esa altura exacta — .chartCard
-       usa flex:1 para llenar lo que sobre (evita tener que calcular el
-       número exacto), y .categorySection ya tenía flex:1 + scroll
-       interno, que ahora sí topa de verdad. */
-    height: 420px;
     margin-bottom: 16px;
     overflow-x: hidden;
   }
 
-  /* Wrappers puramente estructurales — SIN fondo propio (a diferencia de
-     v0.9.394): cada tarjeta de adentro mantiene el suyo. */
+  /* Wrappers puramente estructurales — SIN fondo propio: cada tarjeta de
+     adentro mantiene el suyo. */
   .chartColumn {
     min-width: 0;
     display: flex;
     flex-direction: column;
     gap: 12px;
-    height: 100%;
   }
 
   .categoryColumn {
@@ -1426,7 +1414,6 @@
     display: flex;
     flex-direction: column;
     gap: 12px;
-    height: 100%;
   }
 
   /* Las 3 tarjetas de la izquierda mantienen su propio fondo/padding —
@@ -1453,21 +1440,21 @@
     padding: 0;
   }
 
+  /* v0.9.397 — REVERTIDO el encadenado de flex:1/height:100% en varios
+     niveles (v0.9.396) — demasiado fráril, terminaba comportándose de
+     forma rara en la práctica. En su lugar: alto FIJO directo en las 2
+     tarjetas que de verdad importan (.chartCard y .categorySection), sin
+     depender de que la altura se propague correctamente por 3-4 niveles
+     de contenedores. Los números salen de sumar el alto real de
+     statsCard + rangeSelectorRow + gaps de cada columna, para que ambas
+     terminen a la misma altura total aproximada. */
   .chartCard {
     margin: 0;
-    /* Llena lo que sobre de los 420px del grid, en vez de necesitar
-       calcular el número exacto — .chartBarsRow abajo hace lo mismo un
-       nivel más adentro, para que las barras aprovechen ese espacio en
-       vez de quedarse en 150px fijos con hueco después. */
-    flex: 1;
+    height: 260px;
     display: flex;
     flex-direction: column;
-    min-height: 0;
   }
 
-  /* Antes 150px fijo — ahora flex:1 (llena el espacio real disponible,
-     ver .chartCard arriba) en vez de un número fijo que podía dejar o
-     quitar espacio de más según el contenido del resto de la columna. */
   .chartBarsRow {
     flex: 1;
     height: auto;
@@ -1490,28 +1477,27 @@
     margin-bottom: 0;
   }
 
-  /* "Por categoría" — la tarjeta en sí, con flex:1 para llenar el resto
-     de la columna (misma altura total que la izquierda). overflow:hidden
-     aquí (no en .categoryList) para que nada se salga de las esquinas
-     redondeadas si el scroll interno de la lista se activa. */
+  /* "Por categoría" — alto FIJO directo (mismo criterio que .chartCard
+     arriba, sin encadenar flex a través de .categoryColumn). Si hay más
+     categorías de las que caben, se recortan sin scroll — decisión
+     explícita de Johnatan ("overflow hidden a la lista de categorías",
+     no scroll). */
   .categorySection {
-    flex: 1;
+    height: 338px;
     display: flex;
     flex-direction: column;
-    min-height: 0;
     background: var(--surface);
     border-radius: var(--radius);
     padding: 16px;
     overflow: hidden;
   }
 
-  /* La lista interna es la que de verdad scrollea — más compacta que el
-     tamaño de mobile ("las categorías son enormes"): 36px de ícono se ve
-     bien a lo ancho de un teléfono completo, pero sobredimensionado en
-     una columna de ~40% del ancho. */
+  /* Más compacto que el tamaño de mobile ("las categorías son
+     enormes") — 36px de ícono se ve bien a lo ancho de un teléfono
+     completo, pero sobredimensionado en una columna de ~40% del ancho. */
   .categoryList {
     flex: 1;
-    overflow-y: auto;
+    overflow: hidden;
     min-height: 0;
     gap: 8px;
   }
