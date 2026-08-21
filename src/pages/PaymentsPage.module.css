@@ -1461,19 +1461,28 @@
   }
 
   /* El toggle Periodo actual/Por mes queda SUELTO, fuera de la tarjeta —
-     mismo criterio visual que .rangeSelectorRow a la izquierda. */
+     mismo criterio visual que .rangeSelectorRow a la izquierda.
+     v0.9.399 — min-height fijo (reserva espacio para las 2 filas
+     posibles: el toggle solo, o toggle + selector de mes/año) SIEMPRE,
+     se muestre o no la segunda fila. Sin esto, al cambiar a "Por mes" el
+     selector de mes/año hacía crecer .filtersWrapper, pero .categorySection
+     de abajo tiene un alto FIJO que no se ajusta — todo el layout se
+     desalineaba (bug real reportado: "todo se rompe"). display:flex en
+     columna con gap, en vez de depender del margin-bottom de cada hijo
+     (que además no daba el espacio correcto entre las 2 filas cuando
+     ambas se muestran). */
   .filtersWrapper {
     padding: 0;
-    /* Sin esto, se sumaba al gap:12px de .categoryColumn (24px en total)
-       — el doble que el gap entre .rangeSelectorRow y .chartCard del
-       lado izquierdo (bug real señalado con captura). */
     margin-bottom: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-height: 76px;
   }
 
   .viewModeRow {
-    /* Mismo motivo — es el último hijo de .filtersWrapper cuando
-       viewMode es "periodo" (el default), y su margin-bottom se sumaba
-       de más. */
+    /* El gap del padre ya separa — sin esto quedaría espacio doble
+       cuando también se muestra .monthYearRow. */
     margin-bottom: 0;
   }
 
@@ -1501,6 +1510,7 @@
   .categoryList {
     flex: 1;
     overflow-y: auto;
+    overflow-x: hidden;
     min-height: 0;
     gap: 8px;
   }
@@ -1516,18 +1526,24 @@
 
   /* Estado activo de "Por categoría" — mismo criterio que .cardSelected
      de PayCard.module.css (fondo + borde var(--accent)), ahora que la
-     lista sí es clickeable (antes solo los chips de arriba filtraban). */
+     lista sí es clickeable (antes solo los chips de arriba filtraban).
+     v0.9.399 — SIN margen negativo (a diferencia del primer intento):
+     dentro de .categoryList, que ahora tiene scroll (overflow-y:auto),
+     un margin negativo hace que la fila técnicamente se extienda más
+     allá del ancho del contenedor — eso abre scroll HORIZONTAL de más
+     (bug real reportado) y el borde activo se veía cortado justo en el
+     borde de scroll. Ahora la fila se queda dentro de su propio ancho
+     siempre; el padding sigue compensando el borde de 2px (6-2=4,
+     8-2=6) para que no salte de tamaño al activarse. */
   .categoryListItem {
     cursor: pointer;
     padding: 6px 8px;
-    margin: 0 -8px;
     border-radius: 8px;
   }
 
   .categoryListItemActive {
     background: var(--accent-soft);
     border: 2px solid var(--accent);
-    margin: 0 -8px;
     padding: 4px 6px;
   }
 }
@@ -1614,7 +1630,7 @@
     margin-top: 0;
     border-radius: 0;
     padding: 28px 24px 0;
-    max-width: 80vw;
+    max-width: 90vw;
     margin-left: auto;
     margin-right: auto;
   }
