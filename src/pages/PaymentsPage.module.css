@@ -1424,8 +1424,24 @@
   /* Las 3 tarjetas de la izquierda mantienen su propio fondo/padding —
      solo se les quita el margen horizontal de 16px (pensado para mobile,
      de ancho completo) y el margin-bottom (el gap del wrapper ya separa). */
+  .titleSection {
+    padding: 0;
+  }
+
+  .balanceCard {
+    margin: 0;
+  }
+
+  .fundSection {
+    margin: 0;
+  }
+
   .statsCard {
     margin: 0;
+  }
+
+  .paymentsSection {
+    padding: 0;
   }
 
   /* "Promedio mensual" seguía cortándose con "…" en el ancho angosto de
@@ -1468,6 +1484,26 @@
   .filtersWrapper {
     padding: 0;
     margin-bottom: 0;
+  }
+
+  /* Mes/Año lado a lado (mobile) no cabían en el 40% de columna — 2
+     anchos fijos (128px + 92px) más sus etiquetas nunca iban a entrar
+     ahí, se cortaban contra el borde (bug real señalado con captura).
+     Apilados en vez de forzarlos a caber en una sola fila — cada uno a
+     lo ancho disponible, sin adivinar otro número. */
+  .monthYearRow {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+
+  .monthYearGroup {
+    justify-content: space-between;
+  }
+
+  .monthSelectBox,
+  .yearSelectBox {
+    width: 140px;
   }
 
   .categorySection {
