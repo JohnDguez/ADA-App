@@ -1401,7 +1401,11 @@
   }
 
   /* Wrappers puramente estructurales — SIN fondo propio: cada tarjeta de
-     adentro mantiene el suyo. */
+     adentro mantiene el suyo. .chartColumn crece a su alto NATURAL (sin
+     número fijo) — es la fuente de verdad que mide PaymentsPage.jsx con
+     ResizeObserver (chartColumnRef); .categoryColumn recibe esa medida
+     por `style` inline (ver JSX), así que su altura de aquí en más
+     depende de la altura REAL del gráfico, no de una adivinanza. */
   .chartColumn {
     min-width: 0;
     display: flex;
@@ -1414,6 +1418,7 @@
     display: flex;
     flex-direction: column;
     gap: 12px;
+    overflow: hidden;
   }
 
   /* Las 3 tarjetas de la izquierda mantienen su propio fondo/padding —
@@ -1440,61 +1445,36 @@
     padding: 0;
   }
 
-  /* v0.9.397 — REVERTIDO el encadenado de flex:1/height:100% en varios
-     niveles (v0.9.396) — demasiado fráril, terminaba comportándose de
-     forma rara en la práctica. En su lugar: alto FIJO directo en las 2
-     tarjetas que de verdad importan (.chartCard y .categorySection), sin
-     depender de que la altura se propague correctamente por 3-4 niveles
-     de contenedores. Los números salen de sumar el alto real de
-     statsCard + rangeSelectorRow + gaps de cada columna, para que ambas
-     terminen a la misma altura total aproximada. */
   .chartCard {
     margin: 0;
-    height: 260px;
-    display: flex;
-    flex-direction: column;
   }
 
+  /* Gráfica más grande en tablet/desktop — 80px (tamaño de mobile) se
+     sentía chica en la columna del 60%. */
   .chartBarsRow {
-    flex: 1;
-    height: auto;
+    height: 150px;
   }
 
-  /* El toggle Periodo actual/Por mes queda SUELTO, fuera de la tarjeta —
-     mismo criterio visual que .rangeSelectorRow a la izquierda.
-     v0.9.399 — min-height fijo (reserva espacio para las 2 filas
-     posibles: el toggle solo, o toggle + selector de mes/año) SIEMPRE,
-     se muestre o no la segunda fila. Sin esto, al cambiar a "Por mes" el
-     selector de mes/año hacía crecer .filtersWrapper, pero .categorySection
-     de abajo tiene un alto FIJO que no se ajusta — todo el layout se
-     desalineaba (bug real reportado: "todo se rompe"). display:flex en
-     columna con gap, en vez de depender del margin-bottom de cada hijo
-     (que además no daba el espacio correcto entre las 2 filas cuando
-     ambas se muestran). */
+  /* v0.9.400 — REVERTIDOS los 3 intentos con números fijos (v0.9.397/
+     398/399): .filtersWrapper cambia de alto real según el modo (1 fila
+     en "Periodo actual" ≈ 30px, 2 filas en "Por mes" ≈ 76px), y ningún
+     número fijo/reservado acertaba en los 2 casos a la vez — en uno
+     sobraba espacio, en el otro faltaba. Esta vez se mide de verdad con
+     ResizeObserver (PaymentsPage.jsx) en vez de adivinar: .categoryColumn
+     recibe la altura REAL de .chartColumn por `style`, y .categorySection
+     usa flex:1 para llenar lo que sobre después de .filtersWrapper —
+     funciona igual sea cual sea el alto real de .filtersWrapper en ese
+     momento, sin necesitar reservar nada de antemano. */
   .filtersWrapper {
     padding: 0;
     margin-bottom: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    min-height: 76px;
   }
 
-  .viewModeRow {
-    /* El gap del padre ya separa — sin esto quedaría espacio doble
-       cuando también se muestra .monthYearRow. */
-    margin-bottom: 0;
-  }
-
-  /* "Por categoría" — alto FIJO directo (mismo criterio que .chartCard
-     arriba, sin encadenar flex a través de .categoryColumn). Si hay más
-     categorías de las que caben, se recortan sin scroll — decisión
-     explícita de Johnatan ("overflow hidden a la lista de categorías",
-     no scroll). */
   .categorySection {
-    height: 338px;
+    flex: 1;
     display: flex;
     flex-direction: column;
+    min-height: 0;
     background: var(--surface);
     border-radius: var(--radius);
     padding: 16px;
@@ -1503,10 +1483,7 @@
 
   /* Más compacto que el tamaño de mobile ("las categorías son
      enormes") — 36px de ícono se ve bien a lo ancho de un teléfono
-     completo, pero sobredimensionado en una columna de ~40% del ancho.
-     v0.9.398 — de vuelta a overflow-y:auto (scroll interno real) sobre
-     la base ya simplificada de alto fijo (v0.9.397) — Johnatan pidió
-     scroll otra vez en vez de recortar sin más. */
+     completo, pero sobredimensionado en una columna de ~40% del ancho. */
   .categoryList {
     flex: 1;
     overflow-y: auto;
