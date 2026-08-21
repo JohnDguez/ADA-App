@@ -1,0 +1,1660 @@
+/* ══════════════════════════════════════════════════════════════════════
+   PaymentsPage.module.css
+   Migración incremental por partes — ver CONTEXT.md para el orden completo.
+   Parte 1: menú contextual flotante, MenuItem, FilterChip.
+   ══════════════════════════════════════════════════════════════════════ */
+
+/* ── Parte 1: Menú contextual flotante ──────────────────────────────────── */
+.contextMenu {
+  position: fixed;
+  z-index: 999;
+  background: var(--menu-bg);
+  border: 0.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  min-width: 180px;
+  overflow: hidden;
+}
+
+/* ── Parte 1: MenuItem ───────────────────────────────────────────────────── */
+.menuItem {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  background: none;
+  border: none;
+  border-bottom: 0.5px solid var(--bg);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text);
+  font-family: 'DM Sans', sans-serif;
+  cursor: pointer;
+  text-align: left;
+}
+
+.menuItemDanger {
+  color: var(--danger);
+}
+
+/* ── Parte 1: FilterChip ─────────────────────────────────────────────────── */
+.filterChip {
+  padding: 6px 14px;
+  border-radius: 5px;
+  border: 0.5px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 500;
+  font-family: 'DM Sans', sans-serif;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: background .15s, color .15s;
+}
+
+.filterChipActive {
+  border: none;
+  background: var(--accent);
+  color: var(--surface);
+  font-weight: 700;
+}
+
+/* ── Parte 2: CTA "sin ingreso capturado todavía" ───────────────────────── */
+.noIncomeCard {
+  margin: 0 16px 16px;
+  background: var(--surface);
+  border-radius: var(--radius);
+  padding: 20px 16px;
+  text-align: center;
+}
+
+.noIncomeText {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text);
+  margin-bottom: 14px;
+}
+
+.noIncomeButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 14px;
+  border-radius: var(--radius-sm);
+  border: none;
+  background: var(--accent);
+  color: var(--surface);
+  font-size: 15px;
+  font-weight: 600;
+  font-family: 'DM Sans', sans-serif;
+  cursor: pointer;
+}
+
+/* ── Parte 2: Card de balance del periodo ───────────────────────────────── */
+.balanceCard {
+  margin: 0 16px 16px;
+  background: var(--surface);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+}
+
+.balanceHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 12px;
+}
+
+.balanceLabel {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 15px;
+}
+
+.balanceAmount {
+  font-size: 26px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.balanceActions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+}
+
+.addIncomeButtonSmall {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 10px;
+  border-radius: 5px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: 'DM Sans', sans-serif;
+  flex-shrink: 0;
+}
+
+.balanceSubtext {
+  text-align: right;
+}
+
+.balanceSubtextMain {
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--text);
+}
+
+.balanceSubtextFaded {
+  font-weight: 400;
+}
+
+.balanceExtras {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--paid);
+}
+
+.balanceOverBudget {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--danger);
+}
+
+.heatmapBar {
+  height: 12px;
+  border-radius: 6px;
+  overflow: hidden;
+  display: flex;
+  background: var(--border);
+  margin-bottom: 10px;
+}
+
+.heatmapSegment {
+  height: 100%;
+  flex-shrink: 0;
+  transition: width .4s ease;
+}
+
+.categoryChipsRow {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.categoryChip {
+  padding: 3px 10px;
+  border-radius: 5px;
+  font-size: 11px;
+  font-weight: 500;
+  background: var(--section-bg-soft);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.categoryChipDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+/* ── Parte 2: Ingresos extras (dentro de la card de balance) ────────────── */
+.extrasSection {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 0.5px solid var(--border);
+}
+
+.extrasHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.extrasLabel {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.extrasEditButton {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  border-radius: 5px;
+  border: none;
+  background: transparent;
+  color: var(--accent);
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: 'DM Sans', sans-serif;
+}
+
+.extrasSummaryButton {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--section-bg-soft);
+  border: none;
+  border-radius: 8px;
+  padding: 8px 10px;
+  cursor: pointer;
+}
+
+.extrasCheckIcon {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--paid);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.extrasSummaryText {
+  flex: 1;
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--text);
+  text-align: left;
+}
+
+.extrasList {
+  margin-top: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.extrasListItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--section-bg-soft);
+  border-radius: 8px;
+  padding: 9px 12px;
+}
+
+.extrasItemDate {
+  width: 26px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.extrasItemDay {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  line-height: 1.1;
+}
+
+.extrasItemMonth {
+  font-size: 9px;
+  font-weight: 500;
+  color: var(--text);
+  text-transform: uppercase;
+}
+
+.extrasItemContent {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.extrasItemType {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.extrasItemNote {
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.extrasItemAmount {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--paid);
+  flex-shrink: 0;
+}
+
+/* ── Parte 2: Chips de categoría (scroll horizontal), stats, gráfica ────── */
+.categoryChipsScroll {
+  padding: 0 16px 15px;
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.statsCard {
+  margin: 0 16px 12px;
+  background: var(--surface);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.statsBlockWide {
+  flex: 1.6;
+  /* v0.9.393 — mismo problema que ya se había arreglado en el grid
+     exterior (.chartColumn/.categoryColumn, v0.9.390): un hijo flex sin
+     min-width:0 no se encoge más allá del ancho natural de su contenido
+     (el default es min-width:auto), así que en columnas angostas
+     ".statsCard" se desbordaba hacia la columna de al lado — como esa
+     columna ya tiene fondo propio (v0.9.389) y se pinta después en el
+     DOM, tapaba visualmente el texto desbordado ("$12,904.0" cortado a
+     la mitad — bug real reportado con captura). */
+  min-width: 0;
+}
+
+.statsBlock {
+  flex: 1;
+  min-width: 0;
+}
+
+.statsLabel {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+
+.statsValueLarge {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1.1;
+  /* Trunca con "…" en vez de desbordar, si de verdad no cabe. */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.statsValue {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1.1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.statsDivider {
+  width: 1px;
+  height: 40px;
+  background: var(--border);
+  flex-shrink: 0;
+}
+
+.rangeSelectorRow {
+  padding: 0 16px 10px;
+  display: flex;
+  gap: 6px;
+}
+
+.chartCard {
+  margin: 0 16px 20px;
+  background: var(--surface);
+  border-radius: var(--radius);
+  padding: 16px 14px;
+}
+
+.chartTitle {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 14px;
+}
+
+.chartLabelsRow {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 4px;
+  height: 16px;
+}
+
+.chartLabelCell {
+  flex: 1;
+  text-align: center;
+}
+
+.chartLabelAmount {
+  font-size: 9px;
+  font-weight: 700;
+}
+
+.chartBarsRow {
+  display: flex;
+  align-items: flex-end;
+  gap: 6px;
+  height: 80px;
+}
+
+.chartBarCell {
+  flex: 1;
+  height: 100%;
+  display: flex;
+  align-items: flex-end;
+}
+
+.chartBar {
+  width: 100%;
+  border-radius: 3px 3px 0 0;
+  transition: height .3s;
+}
+
+.chartMonthLabelsRow {
+  display: flex;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.chartMonthLabel {
+  flex: 1;
+  text-align: center;
+  font-size: 9px;
+}
+
+/* ── Parte 3: Por Categoría ──────────────────────────────────────────────── */
+.categorySection {
+  padding: 0 16px 20px;
+}
+
+.categorySectionTitle {
+  margin-bottom: 10px;
+}
+
+.categorySectionTitleText {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.categoryList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.categoryListItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.categoryListIconWrapper {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.categoryListFallbackDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--text);
+}
+
+.categoryListContent {
+  flex: 1;
+  min-width: 0;
+}
+
+.categoryListRow {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 5px;
+}
+
+.categoryListName {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text);
+}
+
+.categoryListAmount {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.categoryProgressTrack {
+  height: 6px;
+  background: var(--border);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+}
+
+.categoryProgressFill {
+  height: 100%;
+  border-radius: var(--radius-full);
+  transition: width .4s ease;
+}
+
+/* ── Parte 4: overlay/panel compartidos por los modales "bottom sheet" ──── */
+.modalOverlayBottom {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  z-index: 1000;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.modalPanelBottom {
+  background: var(--surface);
+  border-radius: 20px 20px 0 0;
+  padding: 24px 20px 32px;
+  width: 100%;
+  max-width: 420px;
+  animation: modalSlideUp .32s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+}
+
+/* ── Parte 4: Modal Remanente ────────────────────────────────────────────── */
+.remanenteHeader {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.remanenteIconWrapper {
+  font-size: 28px;
+  margin-bottom: 8px;
+}
+
+.remanenteIcon {
+  display: block;
+  margin: 0 auto 8px;
+}
+
+.remanenteTitle {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 6px;
+}
+
+.remanenteAmount {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--paid);
+  margin-bottom: 6px;
+}
+
+.remanenteQuestion {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text);
+}
+
+.remanenteActionsRow {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.remanenteConfirmButton {
+  flex: 1;
+  padding: 12px;
+  background: var(--accent);
+  color: var(--surface);
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.remanenteConfirmButton:disabled {
+  opacity: 0.6;
+}
+
+.remanenteCancelButton {
+  flex: 1;
+  padding: 12px;
+  background: none;
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.remanenteCustomToggle {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px;
+  background: none;
+  border: none;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  cursor: pointer;
+}
+
+.remanenteCustomRow {
+  margin-top: 10px;
+  display: flex;
+  gap: 8px;
+}
+
+.remanenteCustomInput {
+  flex: 1;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text);
+  background: var(--bg);
+  outline: none;
+  font-family: 'DM Sans', sans-serif;
+}
+
+.remanenteCustomButton {
+  padding: 10px 16px;
+  background: var(--accent);
+  color: var(--surface);
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* ── Parte 4: Modal Añadir Ingreso ───────────────────────────────────────── */
+.incomeModalTitle {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 20px;
+}
+
+.incomeFieldGroup {
+  margin-bottom: 16px;
+}
+
+.incomeFieldGroupLast {
+  margin-bottom: 20px;
+}
+
+.incomeLabelMb8 {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 8px;
+}
+
+.incomeLabelMb6 {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 6px;
+}
+
+.incomeTypeRow {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.incomeTypeButton {
+  padding: 7px 14px;
+  border-radius: 5px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: 'DM Sans', sans-serif;
+}
+
+.incomeTypeButtonActive {
+  border: none;
+  background: var(--accent);
+  color: var(--surface);
+  font-weight: 700;
+}
+
+.incomeInput {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text);
+  background: var(--bg);
+  outline: none;
+  font-family: 'DM Sans', sans-serif;
+}
+
+.incomeSaveButton {
+  width: 100%;
+  padding: 12px;
+  background: var(--accent);
+  color: var(--surface);
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: 'DM Sans', sans-serif;
+  margin-bottom: 8px;
+}
+
+.incomeSaveButton:disabled {
+  opacity: 0.6;
+}
+
+.incomeCancelButton {
+  width: 100%;
+  padding: 10px;
+  background: none;
+  color: var(--text);
+  border: 0.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: 'DM Sans', sans-serif;
+}
+
+/* ── Parte 5: Modal Gestionar Ingresos Extras ────────────────────────────── */
+.manageModalPanelExtra {
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.manageModalTitle {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 16px;
+}
+
+.manageEmptyText {
+  text-align: center;
+  padding: 20px 0;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text);
+}
+
+.manageList {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.manageListItem {
+  border: 0.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 12px;
+}
+
+.editTypeRow {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+
+.editTypeButton {
+  padding: 6px 12px;
+  border-radius: 5px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: 'DM Sans', sans-serif;
+}
+
+.editTypeButtonActive {
+  border: none;
+  background: var(--accent);
+  color: var(--surface);
+  font-weight: 700;
+}
+
+.editInput {
+  width: 100%;
+  padding: 9px 11px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text);
+  background: var(--bg);
+  outline: none;
+  font-family: 'DM Sans', sans-serif;
+  margin-bottom: 8px;
+}
+
+.editInputMb10 {
+  width: 100%;
+  padding: 9px 11px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text);
+  background: var(--bg);
+  outline: none;
+  font-family: 'DM Sans', sans-serif;
+  margin-bottom: 10px;
+}
+
+.editActionsRow {
+  display: flex;
+  gap: 8px;
+}
+
+.editSaveButton {
+  flex: 1;
+  padding: 9px;
+  background: var(--accent);
+  color: var(--surface);
+  border: none;
+  border-radius: 5px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: 'DM Sans', sans-serif;
+}
+
+.editSaveButton:disabled {
+  opacity: 0.6;
+}
+
+.editCancelButton {
+  flex: 1;
+  padding: 9px;
+  background: none;
+  color: var(--text);
+  border: 0.5px solid var(--border);
+  border-radius: 5px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: 'DM Sans', sans-serif;
+}
+
+.confirmDeleteText {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 10px;
+}
+
+.confirmDeleteRow {
+  display: flex;
+  gap: 8px;
+}
+
+.confirmDeleteButton {
+  flex: 1;
+  padding: 9px;
+  background: var(--danger);
+  color: var(--surface);
+  border: none;
+  border-radius: 5px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: 'DM Sans', sans-serif;
+}
+
+.confirmDeleteCancelButton {
+  flex: 1;
+  padding: 9px;
+  background: none;
+  color: var(--text);
+  border: 0.5px solid var(--border);
+  border-radius: 5px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: 'DM Sans', sans-serif;
+}
+
+.incomeRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.incomeRowType {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.incomeRowNote {
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--text);
+  margin-top: 2px;
+}
+
+.incomeRowActions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.incomeRowAmount {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--paid);
+}
+
+.iconButtonCursor {
+  cursor: pointer;
+}
+
+.manageCloseButton {
+  width: 100%;
+  padding: 10px;
+  background: none;
+  color: var(--text);
+  border: 0.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: 'DM Sans', sans-serif;
+  margin-top: 4px;
+}
+
+/* ── Parte 6b: Fondo Compartido (solo espacio compartido) — card propia,
+   mismo patrón visual que .balanceCard (fondo diferenciador + esquinas
+   redondeadas) en vez de solo texto con un divisor — el fondo ya separa
+   visualmente del título/subtítulo de arriba, no hace falta borde. ────── */
+.fundSection {
+  margin: 0 16px 16px;
+  background: var(--surface);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+}
+
+.fundBalance {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 10px;
+}
+
+.fundInfoText {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text);
+  opacity: 0.7;
+  margin-bottom: 14px;
+  line-height: 1.5;
+}
+
+.fundAmountLabelRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+.fundAvailableTag {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--accent);
+}
+
+.fundExceedsError {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--danger);
+  margin-top: 6px;
+}
+
+.fundRemainingHint {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text);
+  opacity: 0.7;
+  margin-top: 6px;
+}
+
+.fundEntryIcon {
+  margin-right: 4px;
+  vertical-align: -1px;
+}
+
+.fundAmountSpend {
+  color: var(--danger);
+}
+
+.fundAmountPositive {
+  color: var(--paid);
+}
+
+.fundDeleteButton {
+  margin-left: 8px;
+}
+
+/* ── Parte 6: wrappers estructurales sueltos ─────────────────────────────── */
+.pageRoot {
+  padding-bottom: 120px;
+  background: var(--bg);
+  min-height: 100vh;
+}
+
+.roundedContentWrapper {
+  background: var(--bg);
+  border-radius: 24px 24px 0 0;
+  margin-top: -24px;
+  position: relative;
+  z-index: 10;
+}
+
+.newSpacePanelWrapper {
+  margin-top: 16px;
+}
+
+.titleSection {
+  padding: 16px 16px 18px;
+}
+
+.titleSectionHeading {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.titleSectionSubtext {
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--text);
+  margin-top: 4px;
+}
+
+/* ── Parte 6: Pagos realizados — filtros ─────────────────────────────────── */
+.paymentsSection {
+  padding: 0 16px;
+}
+
+.paymentsSectionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.paymentsSectionTitle {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.filtersWrapper {
+  padding: 0 16px;
+  margin-bottom: 12px;
+}
+
+.viewModeRow {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.viewModeButton {
+  padding: 6px 14px;
+  border-radius: 5px;
+  border: 0.5px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  font-weight: 400;
+  font-size: 12px;
+  font-family: 'DM Sans', sans-serif;
+  cursor: pointer;
+}
+
+.viewModeButtonActive {
+  border: none;
+  background: var(--accent);
+  color: var(--surface);
+  font-weight: 600;
+}
+
+.totalText {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text);
+}
+
+.totalStrong {
+  font-weight: 700;
+}
+
+.monthYearRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.monthYearGroup {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.monthYearLabel {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text);
+}
+
+/* Cajas del <Select> de Mes/Año — antes un <select> nativo del navegador
+   (.monthYearSelect, quitada). Ancho fijo chico en vez del 100% que da
+   `field-input` por default (pensado para campos de formulario de ancho
+   completo), para que se vean como los selectores compactos que eran. */
+.monthSelectBox {
+  width: 128px;
+}
+
+.yearSelectBox {
+  width: 92px;
+}
+
+/* Johnatan reportó la flecha (chevron) del Select muy pegada al borde
+   derecho en estas cajas angostas — el padding de `field-input` ya existe,
+   pero aquí se ve más apretado por lo angosto del contenedor. Se agrega
+   padding extra solo en esta instancia (no en Select.module.css, para no
+   afectar los demás usos ya existentes de <Select> en PaymentModal.jsx). */
+.monthSelectBox :global(.field-input),
+.yearSelectBox :global(.field-input) {
+  padding-right: 14px;
+}
+
+/* ── Parte 6: Pagos realizados — lista ────────────────────────────────────── */
+.paymentsList {
+  background: var(--surface);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.paymentRow {
+  display: flex;
+  align-items: center;
+  padding: 10px 14px;
+  border-bottom: 0.5px solid var(--bg);
+  border-left: 4px solid var(--paid);
+  gap: 10px;
+  position: relative;
+}
+
+.paymentRowLast {
+  border-bottom: none;
+}
+
+.paymentDate {
+  text-align: center;
+  min-width: 28px;
+  flex-shrink: 0;
+}
+
+.paymentDateDay {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1;
+}
+
+.paymentDateMonth {
+  font-size: 9px;
+  font-weight: 600;
+  color: var(--text);
+  text-transform: uppercase;
+}
+
+.paymentDivider {
+  width: 1px;
+  height: 28px;
+  background: var(--border);
+  flex-shrink: 0;
+}
+
+.paymentInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+.paymentNameRow {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.paymentInstallment {
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--text);
+}
+
+.paymentCategoryRow {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.paymentCategoryDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+.paymentRecurrentTag {
+  font-weight: 400;
+}
+
+.paymentAmountBlock {
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.paymentAmount {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.variableBadge {
+  font-size: 9px;
+  background: var(--label-variable);
+  color: var(--surface);
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-weight: 600;
+}
+
+.paymentMenuWrapper {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.paymentMenuButton {
+  background: none;
+  border: none;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+/* v0.9.369 — SpaceSwitcher.jsx (tarjetas apiladas) sigue siendo la forma
+   de cambiar de espacio EN MOBILE — solo se oculta desde 768px, donde ya
+   lo cubre RailSpaceSwitcher.jsx dentro de NavRail.jsx (Regla 43). Sin
+   este wrapper se vería duplicado: una vez aquí, otra vez en el riel. */
+@media (min-width: 768px) {
+  .spaceSwitcherMobileWrap {
+    display: none;
+  }
+}
+
+/* ── v0.9.395 — Gastos en tablet/desktop, versión final confirmada por
+   mockup (varias rondas de ida y vuelta — Johnatan armó su propio
+   wireframe para la proporción/gaps, luego pidió deshacer la fusión de
+   tarjetas de v0.9.394: los 3 contenedores de la izquierda (stats,
+   selector de rango, gráfica) se quedan SEPARADOS como siempre estuvieron
+   — el wireframe anterior solo definía el grid, no fusionar tarjetas.
+   Estructura final:
+   - Franja superior ancho completo: balance/heatmap/chips + fondo
+     compartido (sin cambios).
+   - Fila de 2 columnas, 60/40, gap 16px: izquierda = 3 tarjetas
+     separadas (stats, selector de rango, gráfica) en su propio flex
+     column con gap; derecha = fila del toggle Periodo actual/Por mes
+     FUERA de la tarjeta (mismo estilo suelto que el selector de rango de
+     la izquierda) + la tarjeta "Por categoría" — esta última con
+     `flex: 1` para llenar el resto de la columna (misma altura total que
+     la izquierda, por `align-items: stretch` en el grid), y
+     `overflow: hidden` en el contenedor de la tarjeta + `overflow-y:
+     auto` SOLO en la lista interna — si hay muchas categorías, scrollea
+     adentro sin que nada se salga de las esquinas redondeadas.
+   - Franja inferior ancho completo: lista de pagos en formato fila/tabla,
+     sin encabezados de columna (v0.9.392). */
+
+.gastosGrid {
+  display: block;
+}
+
+.chartColumn,
+.categoryColumn {
+  width: 100%;
+}
+
+@media (min-width: 768px) {
+  .gastosGrid {
+    display: grid;
+    grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+    gap: 16px;
+    margin-bottom: 16px;
+    overflow-x: hidden;
+  }
+
+  /* Wrappers puramente estructurales — SIN fondo propio: cada tarjeta de
+     adentro mantiene el suyo. .chartColumn crece a su alto NATURAL (sin
+     número fijo) — es la fuente de verdad que mide PaymentsPage.jsx con
+     ResizeObserver (chartColumnRef); .categoryColumn recibe esa medida
+     por `style` inline (ver JSX), así que su altura de aquí en más
+     depende de la altura REAL del gráfico, no de una adivinanza. */
+  .chartColumn {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .categoryColumn {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    overflow: hidden;
+  }
+
+  /* Las 3 tarjetas de la izquierda mantienen su propio fondo/padding —
+     solo se les quita el margen horizontal de 16px (pensado para mobile,
+     de ancho completo) y el margin-bottom (el gap del wrapper ya separa). */
+  .titleSection {
+    padding: 16px 0 18px;
+  }
+
+  .balanceCard {
+    margin: 0 0 16px;
+  }
+
+  .fundSection {
+    margin: 0 0 16px;
+  }
+
+  .statsCard {
+    margin: 0;
+  }
+
+  .paymentsSection {
+    padding: 0;
+  }
+
+  /* "Promedio mensual" seguía cortándose con "…" en el ancho angosto de
+     768px (bug real señalado con captura, aun con min-width:0 de
+     v0.9.393) — el tamaño de mobile (28px/20px) ya no cabe cómodo en la
+     columna del 60% a ese ancho. Reducido para que ambos números quepan
+     completos sin depender del respaldo de "…". */
+  .statsValueLarge {
+    font-size: 19px;
+  }
+
+  .statsValue {
+    font-size: 15px;
+  }
+
+  .rangeSelectorRow {
+    padding: 0;
+  }
+
+  .chartCard {
+    margin: 0;
+  }
+
+  /* Gráfica más grande en tablet/desktop — 80px (tamaño de mobile) se
+     sentía chica en la columna del 60%. */
+  .chartBarsRow {
+    height: 150px;
+  }
+
+  /* v0.9.400 — REVERTIDOS los 3 intentos con números fijos (v0.9.397/
+     398/399): .filtersWrapper cambia de alto real según el modo (1 fila
+     en "Periodo actual" ≈ 30px, 2 filas en "Por mes" ≈ 76px), y ningún
+     número fijo/reservado acertaba en los 2 casos a la vez — en uno
+     sobraba espacio, en el otro faltaba. Esta vez se mide de verdad con
+     ResizeObserver (PaymentsPage.jsx) en vez de adivinar: .categoryColumn
+     recibe la altura REAL de .chartColumn por `style`, y .categorySection
+     usa flex:1 para llenar lo que sobre después de .filtersWrapper —
+     funciona igual sea cual sea el alto real de .filtersWrapper en ese
+     momento, sin necesitar reservar nada de antemano. */
+  .filtersWrapper {
+    padding: 0;
+    margin-bottom: 0;
+  }
+
+  /* Mes/Año lado a lado (mobile) no cabían en el 40% de columna — 2
+     anchos fijos (128px + 92px) más sus etiquetas nunca iban a entrar
+     ahí, se cortaban contra el borde (bug real señalado con captura).
+     Apilados en vez de forzarlos a caber en una sola fila — cada uno a
+     lo ancho disponible, sin adivinar otro número. */
+  .monthYearRow {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+
+  .monthYearGroup {
+    justify-content: space-between;
+  }
+
+  .monthSelectBox,
+  .yearSelectBox {
+    width: 140px;
+  }
+
+  .categorySection {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    background: var(--surface);
+    border-radius: var(--radius);
+    padding: 16px;
+    overflow: hidden;
+  }
+
+  /* Más compacto que el tamaño de mobile ("las categorías son
+     enormes") — 36px de ícono se ve bien a lo ancho de un teléfono
+     completo, pero sobredimensionado en una columna de ~40% del ancho. */
+  .categoryList {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    min-height: 0;
+    gap: 8px;
+  }
+
+  .categoryListIconWrapper {
+    width: 28px;
+    height: 28px;
+  }
+
+  .categoryProgressTrack {
+    height: 4px;
+  }
+
+  /* Estado activo de "Por categoría" — mismo criterio que .cardSelected
+     de PayCard.module.css (fondo + borde var(--accent)), ahora que la
+     lista sí es clickeable (antes solo los chips de arriba filtraban).
+     v0.9.399 — SIN margen negativo (a diferencia del primer intento):
+     dentro de .categoryList, que ahora tiene scroll (overflow-y:auto),
+     un margin negativo hace que la fila técnicamente se extienda más
+     allá del ancho del contenedor — eso abre scroll HORIZONTAL de más
+     (bug real reportado) y el borde activo se veía cortado justo en el
+     borde de scroll. Ahora la fila se queda dentro de su propio ancho
+     siempre; el padding sigue compensando el borde de 2px (6-2=4,
+     8-2=6) para que no salte de tamaño al activarse. */
+  .categoryListItem {
+    cursor: pointer;
+    padding: 6px 8px;
+    border-radius: 8px;
+  }
+
+  .categoryListItemActive {
+    background: var(--accent-soft);
+    border: 2px solid var(--accent);
+    padding: 4px 6px;
+  }
+}
+
+/* ── Chip cuadrado de categoría en la lista de pagos (Regla 47) ──────────
+   Mismo patrón que categoryIconSquare de PaymentModal.jsx — CSS Modules
+   es por archivo, así que se replica aquí en vez de importarse (mismo
+   criterio ya usado en otras pantallas para este mismo chip). Oculto por
+   defecto — mobile se queda con el puntito de color de siempre. */
+.categoryChipSquare {
+  display: none;
+  width: 22px;
+  height: 22px;
+  border-radius: 5px;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+@media (min-width: 768px) {
+  .categoryChipSquare {
+    display: flex;
+  }
+
+  .paymentCategoryDot {
+    display: none;
+  }
+
+  /* ── Lista de pagos → formato fila/tabla ──────────────────────────────
+     .paymentInfo pasa a display:contents: sus hijos (.paymentNameRow,
+     .paymentCategoryRow) se vuelven celdas DIRECTAS del grid de
+     .paymentRow, en vez de quedar apiladas dentro de un solo bloque
+     (que es como se ven en mobile, sin tocar). .paymentContributors
+     (envuelve a PaidByStack, pagos compartidos) se fija a la misma
+     columna que el nombre — sin esto, al "aplanarse" .paymentInfo
+     terminaría cayendo en una columna propia y descuadrando el resto.
+     Sin encabezados de columna (Fecha/Nombre/Categoría/Monto) — se
+     quitaron en v0.9.392, se sentían de más sobre cada fila ya
+     autoexplicativa. */
+  .paymentRow {
+    display: grid;
+    grid-template-columns: 50px 1fr 150px 100px 32px;
+    gap: 12px;
+  }
+
+  .paymentDivider {
+    display: none;
+  }
+
+  .paymentInfo {
+    display: contents;
+  }
+
+  .paymentContributors {
+    grid-column: 2;
+  }
+
+  .paymentCategoryRow {
+    grid-column: 3;
+  }
+
+  .paymentAmountBlock {
+    grid-column: 4;
+  }
+
+  .paymentMenuWrapper {
+    grid-column: 5;
+  }
+}
+
+/* Header oculto desde 768px — mismo criterio que HomePage.jsx (v0.9.365):
+   NavRail.jsx ya cubre avatar/saludo/notificaciones/config. */
+@media (min-width: 768px) {
+  .pageHeaderWrapper {
+    display: none;
+  }
+
+  /* PageHeader ya no aporta el fondo grande arriba — mismo fix que
+     HomePage.module.css, sin esto el "colchón" de roundedContentWrapper
+     queda huérfano. Mismo padding-top que HomePage.module.css
+     (28px 24px 0) y mismo tope de 80vw centrado (v0.9.391). */
+  .roundedContentWrapper {
+    background: transparent;
+    margin-top: 0;
+    border-radius: 0;
+    padding: 28px 24px 0;
+    max-width: 90vw;
+    margin-left: auto;
+    margin-right: auto;
+  }
+}
+
+/* Chips de categoría arriba, OCULTOS desde 768px — quedaban redundantes
+   ahora que "Por categoría" (columna derecha) ya es clickeable y hace lo
+   mismo. El estado `selectedCat` que estos chips manejaban sigue intacto
+   — solo cambia quién lo controla en desktop. */
+@media (min-width: 768px) {
+  .categoryChipsScroll {
+    display: none;
+  }
+}
