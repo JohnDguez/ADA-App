@@ -1374,7 +1374,11 @@
   }
 
   .filtersWrapper {
-    padding: 16px 16px 0;
+    /* .categoryColumn ya aporta el padding (16px, tarjeta nueva) — sin
+       esto quedaba doble padding horizontal aquí, desalineado con
+       .categorySection debajo. */
+    padding: 0;
+    margin-bottom: 12px;
   }
 
   /* Estado activo de "Por categoría" — mismo criterio que .cardSelected
@@ -1516,6 +1520,9 @@
     display: flex;
     flex-direction: column;
     overflow: hidden;
+    background: var(--surface);
+    border-radius: var(--radius);
+    padding: 16px;
   }
 
   .categorySection {
@@ -1523,6 +1530,9 @@
     display: flex;
     flex-direction: column;
     min-height: 0;
+    /* Ya lo aporta .categoryColumn (padding: 16px) — sin esto quedaría
+       padding doble (el propio, de mobile, más el de la tarjeta nueva). */
+    padding: 0;
   }
 
   .categoryList {
