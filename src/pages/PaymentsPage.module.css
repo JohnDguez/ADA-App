@@ -1396,7 +1396,17 @@
     display: grid;
     grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
     gap: 16px;
-    align-items: stretch;
+    /* v0.9.396 — REVERTIDO de align-items:stretch sin altura definida:
+       stretch solo hace crecer el lado más CORTO para igualar al más
+       alto — nunca al revés. Con muchas categorías, el lado de
+       categorías simplemente ganaba (crecía sin tope, arrastrando a la
+       gráfica con espacio vacío invisible detrás) en vez de toparse y
+       scrollear como se pidió. Con una altura FIJA en el propio grid,
+       stretch sí obliga a AMBOS lados a esa altura exacta — .chartCard
+       usa flex:1 para llenar lo que sobre (evita tener que calcular el
+       número exacto), y .categorySection ya tenía flex:1 + scroll
+       interno, que ahora sí topa de verdad. */
+    height: 420px;
     margin-bottom: 16px;
     overflow-x: hidden;
   }
@@ -1408,6 +1418,7 @@
     display: flex;
     flex-direction: column;
     gap: 12px;
+    height: 100%;
   }
 
   .categoryColumn {
@@ -1415,6 +1426,7 @@
     display: flex;
     flex-direction: column;
     gap: 12px;
+    height: 100%;
   }
 
   /* Las 3 tarjetas de la izquierda mantienen su propio fondo/padding —
@@ -1424,24 +1436,58 @@
     margin: 0;
   }
 
+  /* "Promedio mensual" seguía cortándose con "…" en el ancho angosto de
+     768px (bug real señalado con captura, aun con min-width:0 de
+     v0.9.393) — el tamaño de mobile (28px/20px) ya no cabe cómodo en la
+     columna del 60% a ese ancho. Reducido para que ambos números quepan
+     completos sin depender del respaldo de "…". */
+  .statsValueLarge {
+    font-size: 19px;
+  }
+
+  .statsValue {
+    font-size: 15px;
+  }
+
   .rangeSelectorRow {
     padding: 0;
   }
 
   .chartCard {
     margin: 0;
+    /* Llena lo que sobre de los 420px del grid, en vez de necesitar
+       calcular el número exacto — .chartBarsRow abajo hace lo mismo un
+       nivel más adentro, para que las barras aprovechen ese espacio en
+       vez de quedarse en 150px fijos con hueco después. */
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
   }
 
-  /* Gráfica un poco más grande en tablet/desktop — 80px se sentía chica
-     en la columna del 60%, la primera vez que se mockeó completo. */
+  /* Antes 150px fijo — ahora flex:1 (llena el espacio real disponible,
+     ver .chartCard arriba) en vez de un número fijo que podía dejar o
+     quitar espacio de más según el contenido del resto de la columna. */
   .chartBarsRow {
-    height: 150px;
+    flex: 1;
+    height: auto;
   }
 
   /* El toggle Periodo actual/Por mes queda SUELTO, fuera de la tarjeta —
      mismo criterio visual que .rangeSelectorRow a la izquierda. */
   .filtersWrapper {
     padding: 0;
+    /* Sin esto, se sumaba al gap:12px de .categoryColumn (24px en total)
+       — el doble que el gap entre .rangeSelectorRow y .chartCard del
+       lado izquierdo (bug real señalado con captura). */
+    margin-bottom: 0;
+  }
+
+  .viewModeRow {
+    /* Mismo motivo — es el último hijo de .filtersWrapper cuando
+       viewMode es "periodo" (el default), y su margin-bottom se sumaba
+       de más. */
+    margin-bottom: 0;
   }
 
   /* "Por categoría" — la tarjeta en sí, con flex:1 para llenar el resto
