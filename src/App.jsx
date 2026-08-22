@@ -798,6 +798,7 @@ export default function App() {
       user={user}
       defaultSpaceId={profile.default_space_id ?? null}
       onSetDefault={handleSetDefaultSpace}
+      profile={profile}
     />
   )
 
