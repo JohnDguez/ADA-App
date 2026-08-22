@@ -1,13 +1,32 @@
+import { useState, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
-import { X, Crown, ShieldCheck } from 'lucide-react'
+import { X, Crown, ShieldCheck, ArrowLeft } from 'lucide-react'
+import { loadStripe } from '@stripe/stripe-js'
+import { EmbeddedCheckoutProvider, EmbeddedCheckout } from '@stripe/react-stripe-js'
+import { supabase } from '../lib/supabase'
+import styles from './PremiumPage.module.css'
+
+// Módulo, no dentro del componente — loadStripe() cachea la promesa
+// internamente, pero de todas formas no tiene sentido recrearla en cada
+// render (mismo patrón que la doc oficial de Stripe recomienda).
+const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY)
 
 // Página completa (no un tab del nav, no un bottom-sheet) con los beneficios
 // y precios de Premium. Se abre como overlay a pantalla completa desde
-// App.jsx — el botón de "Elige tu plan" y el banner de referidos NO hacen
-// cobros ni invitaciones todavía, solo son visuales (onClick vacío), igual
-// que el resto de la estructura de premium.
+// App.jsx. NUEVO (esta sesión): las tarjetas de plan son seleccionables, hay
+// un checkbox obligatorio de aceptación de cobro recurrente, y el CTA monta
+// el Embedded Checkout de Stripe (api/create-checkout-session.js) en el
+// mismo espacio — antes el botón no hacía nada (onClick vacío). El banner de
+// referidos sigue siendo solo visual, sin lógica (pendiente real aparte).
 export function PremiumPage({ onClose }) {
   const { t } = useTranslation()
+
+  const [selectedPlan, setSelectedPlan] = useState('annual') // 'monthly' | 'annual'
+  const [termsAccepted, setTermsAccepted] = useState(false)
+  const [checkoutOpen, setCheckoutOpen] = useState(false)
+  const [clientSecret, setClientSecret] = useState(null)
+  // 'idle' (mostrando el checkout) | 'loading' | 'error'
+  const [checkoutState, setCheckoutState] = useState('idle')
 
   // Imágenes subidas manualmente a /public por Johnatan (no son íconos Lucide —
   // ilustraciones a color propias de la marca). Si cambian de nombre, solo hay
@@ -20,6 +39,47 @@ export function PremiumPage({ onClose }) {
     { icon: '/premium-icon-simulator.png', title: t('premiumPage.benefits.simulatorTitle'),  desc: t('premiumPage.benefits.simulatorDesc') },
     { icon: '/premium-icon-shared.png',    title: t('premiumPage.benefits.sharedTitle'),     desc: t('premiumPage.benefits.sharedDesc') },
   ]
+
+  // Pide el client_secret a create-checkout-session.js y abre el checkout
+  // embebido en el mismo espacio de las tarjetas (nunca redirige fuera de la
+  // app — ui_mode: 'embedded' + redirect_on_completion: 'never' del lado del
+  // servidor). `is_premium` real lo activa el webhook de Stripe, no esta
+  // función — este flujo solo se encarga de mostrar el formulario de pago.
+  async function startCheckout() {
+    if (!termsAccepted) return
+    setCheckoutOpen(true)
+    setCheckoutState('loading')
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) { setCheckoutState('error'); return }
+      const res = await fetch('/api/create-checkout-session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
+        body: JSON.stringify({ plan: selectedPlan }),
+      })
+      const result = await res.json()
+      if (!res.ok || !result.clientSecret) { setCheckoutState('error'); return }
+      setClientSecret(result.clientSecret)
+      setCheckoutState('idle')
+    } catch (e) {
+      setCheckoutState('error')
+    }
+  }
+
+  function backToPlans() {
+    setCheckoutOpen(false)
+    setClientSecret(null)
+    setCheckoutState('idle')
+  }
+
+  // El `onComplete` de @stripe/react-stripe-js es quien cierra la UI del
+  // checkout — el webhook (checkout.session.completed → stripe-webhook.js)
+  // es quien de verdad activa `is_premium` en Supabase, por separado. Cierra
+  // PremiumPage entera: el usuario ya terminó de pagar, no tiene nada más
+  // que hacer aquí.
+  const checkoutOptions = useMemo(() => (
+    clientSecret ? { clientSecret, onComplete: onClose } : null
+  ), [clientSecret, onClose])
 
   return (
     <div style={{
@@ -84,57 +144,106 @@ export function PremiumPage({ onClose }) {
           ))}
         </div>
 
-        {/* Planes */}
-        <div style={{ fontSize: 17, fontWeight: 700, color: 'var(--text)', marginTop: 28, marginBottom: 12 }}>
-          {t('premiumPage.choosePlan')}
-        </div>
-
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          <div className="card" style={{ padding: 16 }}>
-            <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)' }}>{t('premiumPage.monthly')}</div>
-            <div style={{ fontSize: 26, fontWeight: 700, color: 'var(--text)', marginTop: 4 }}>
-              $50 <span style={{ fontSize: 13, fontWeight: 500 }}>{t('premiumPage.monthlyPriceSuffix')}</span>
+        {/* Planes + checkbox de términos + CTA — ocultos mientras el checkout
+            embebido está abierto, para no competir por espacio/atención */}
+        {!checkoutOpen && (
+          <>
+            <div style={{ fontSize: 17, fontWeight: 700, color: 'var(--text)', marginTop: 28, marginBottom: 12 }}>
+              {t('premiumPage.choosePlan')}
             </div>
+
+            <div className={styles.plansWrap}>
+              <button
+                type="button"
+                onClick={() => setSelectedPlan('monthly')}
+                className={`card ${styles.planCard} ${selectedPlan === 'monthly' ? styles.planCardActive : ''}`}
+              >
+                <div className={styles.planName}>{t('premiumPage.monthly')}</div>
+                <div className={styles.planPrice}>
+                  $50 <span className={styles.planPriceSuffix}>{t('premiumPage.monthlyPriceSuffix')}</span>
+                </div>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setSelectedPlan('annual')}
+                className={`card ${styles.planCard} ${selectedPlan === 'annual' ? styles.planCardActive : ''}`}
+              >
+                <div className={styles.popularBadge}>★ {t('premiumPage.mostPopular')}</div>
+                <div className={styles.planName}>{t('premiumPage.annual')}</div>
+                <div className={styles.planPrice}>
+                  $500 <span className={styles.planPriceSuffix}>{t('premiumPage.annualPriceSuffix')}</span>
+                </div>
+              </button>
+            </div>
+
+            <label className={styles.termsRow}>
+              <input
+                type="checkbox"
+                className={styles.termsCheckbox}
+                checked={termsAccepted}
+                onChange={e => setTermsAccepted(e.target.checked)}
+              />
+              <span className={styles.termsText}>{t('premiumPage.termsAccept')}</span>
+            </label>
+
+            <button
+              onClick={startCheckout}
+              disabled={!termsAccepted}
+              className={`btn-primary ${styles.ctaButton}`}
+              style={{
+                marginTop: 14, background: 'var(--premium-gold)', color: 'var(--premium-gold-text)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+              }}
+            >
+              <Crown size={16} />
+              {t('premiumPage.continueWithPlan', { plan: t(`premiumPage.${selectedPlan}`) })}
+            </button>
+          </>
+        )}
+
+        {/* Checkout embebido — el formulario real de Stripe se monta dentro
+            de .checkoutBox, sin salir nunca de esta página */}
+        {checkoutOpen && (
+          <div className={styles.checkoutBox}>
+            <button type="button" onClick={backToPlans} className={styles.backLink}>
+              <ArrowLeft size={14} />
+              {t('premiumPage.backToPlans')}
+            </button>
+
+            {checkoutState === 'loading' && (
+              <div className={styles.checkoutStatus}>{t('premiumPage.checkoutLoading')}</div>
+            )}
+
+            {checkoutState === 'error' && (
+              <div className={styles.checkoutStatus}>
+                {t('premiumPage.checkoutError')}
+                <div style={{ marginTop: 12 }}>
+                  <button type="button" onClick={startCheckout} className="btn-primary">
+                    {t('premiumPage.checkoutRetry')}
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {checkoutState === 'idle' && clientSecret && (
+              <EmbeddedCheckoutProvider stripe={stripePromise} options={checkoutOptions}>
+                <EmbeddedCheckout />
+              </EmbeddedCheckoutProvider>
+            )}
           </div>
-
-          <div className="card" style={{ padding: 16, position: 'relative', borderColor: 'var(--premium-gold)', borderWidth: 1.5 }}>
-            <div style={{
-              position: 'absolute', top: -10, left: 14,
-              display: 'flex', alignItems: 'center', gap: 4,
-              background: 'var(--premium-gold)', color: 'var(--premium-gold-text)',
-              fontSize: 10.5, fontWeight: 700,
-              padding: '3px 10px', borderRadius: 'var(--radius-full)',
-            }}>
-              ★ {t('premiumPage.mostPopular')}
-            </div>
-            <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)' }}>{t('premiumPage.annual')}</div>
-            <div style={{ fontSize: 26, fontWeight: 700, color: 'var(--text)', marginTop: 4 }}>
-              $500 <span style={{ fontSize: 13, fontWeight: 500 }}>{t('premiumPage.annualPriceSuffix')}</span>
-            </div>
-          </div>
-        </div>
-
-        {/* CTA */}
-        <button
-          onClick={() => {}}
-          className="btn-primary"
-          style={{
-            marginTop: 20, background: 'var(--premium-gold)', color: 'var(--premium-gold-text)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-          }}
-        >
-          <Crown size={16} />
-          {t('goalsPage.premiumBanner.button')}
-        </button>
+        )}
 
         {/* Referidos — visual únicamente, sin lógica todavía (pendiente para el lanzamiento) */}
-        <button
-          onClick={() => {}}
-          className="btn-primary"
-          style={{ marginTop: 10, background: 'var(--accent)', color: 'var(--premium-text)' }}
-        >
-          {t('premiumPage.referralCta')}
-        </button>
+        {!checkoutOpen && (
+          <button
+            onClick={() => {}}
+            className="btn-primary"
+            style={{ marginTop: 10, background: 'var(--accent)', color: 'var(--premium-text)' }}
+          >
+            {t('premiumPage.referralCta')}
+          </button>
+        )}
 
         {/* Letra pequeña */}
         <div style={{ textAlign: 'center', marginTop: 16 }}>
