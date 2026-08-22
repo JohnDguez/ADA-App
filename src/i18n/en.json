@@ -953,6 +953,7 @@
     "termsAccept": "I agree to be charged the selected plan amount on a recurring basis until I cancel, per the Terms and Conditions.",
     "backToPlans": "Back to plans",
     "checkoutLoading": "Loading payment form…",
+    "checkoutConfirming": "Confirming your payment…",
     "checkoutError": "Couldn't load the payment form. Try again.",
     "checkoutRetry": "Retry",
     "referralCta": "Invite 3 friends and get 2 months FREE",

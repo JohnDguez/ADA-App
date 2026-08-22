@@ -953,6 +953,7 @@
     "termsAccept": "Acepto que se me cobre de forma recurrente el monto del plan seleccionado hasta que cancele, de acuerdo con los Términos y Condiciones.",
     "backToPlans": "Regresar a los planes",
     "checkoutLoading": "Cargando formulario de pago…",
+    "checkoutConfirming": "Confirmando tu pago…",
     "checkoutError": "No se pudo cargar el formulario de pago. Intenta de nuevo.",
     "checkoutRetry": "Reintentar",
     "referralCta": "Invita 3 amigos y obtén 2 meses GRATIS",
