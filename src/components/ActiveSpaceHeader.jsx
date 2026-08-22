@@ -73,6 +73,19 @@ export function ActiveSpaceHeader({ activeSpaceId, sharedSpaces, onManage, onSwi
     }
   }, [activeSpaceId])
 
+  // v0.9.416 — el `onClick` del ítem de la lista ya llamaba
+  // `setSpaceListOpen(false)` antes de `onSwitch(...)`, pero Johnatan
+  // confirmó en vivo que a veces el desplegable se quedaba abierto tras
+  // cambiar de espacio (posible carrera con el re-render del padre al
+  // procesar `activeSpaceId` nuevo). Reforzado aquí, sin depender de ese
+  // único camino: se cierra SIEMPRE que `activeSpaceId` cambie de verdad,
+  // sin importar por qué vía se cambió (esta lista, el riel, o cualquier
+  // otro lugar futuro) — mismo `useEffect` de arriba serviría, pero se
+  // separa para no mezclar 2 responsabilidades distintas en un solo efecto.
+  useEffect(() => {
+    setSpaceListOpen(false)
+  }, [activeSpaceId])
+
   const entry       = (activeSpaceId && activeSpaceId !== 'new') ? sharedSpaces.spaces.find(s => s.space.id === activeSpaceId) : null
   const isRealSpace = !!entry
   const isOwner     = isRealSpace && entry.membership.role === 'owner'
