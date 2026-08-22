@@ -38,6 +38,7 @@
       "notifications": "Notifications",
       "appearance": "Appearance",
       "sharedSpace": "Shared Space",
+      "subscription": "My subscription",
       "getPremium": "Get Premium"
     },
     "premiumBadge": "Premium Account",
@@ -57,6 +58,36 @@
       "photoUpdated": "Photo updated",
       "avatarUpdateError": "Error updating avatar",
       "avatarUpdated": "Avatar updated"
+    }
+  },
+  "settingsSubscription": {
+    "title": "My subscription",
+    "loading": "Loading your subscription…",
+    "noSubscription": "We couldn't find a subscription linked to your account.",
+    "currentPlan": "Current plan",
+    "renewsOn": "Renews on {{date}}",
+    "willCancelOn": "Will cancel on {{date}}. You keep Premium until then.",
+    "switchTo": "Switch to {{plan}} plan",
+    "cancelButton": "Cancel subscription",
+    "reactivateButton": "Reactivate subscription",
+    "processing": "Processing…",
+    "keepButton": "No, keep it",
+    "pendingCancelText": "Your subscription will cancel on {{date}}. You keep Premium until then.",
+    "cancelModal": {
+      "title": "Cancel subscription",
+      "description": "You keep Premium until {{date}}. After that you'll lose access, but you can reactivate before then if you change your mind.",
+      "confirm": "Yes, cancel"
+    },
+    "switchModal": {
+      "title": "Switch to {{plan}} plan",
+      "description": "The prorated adjustment is applied to your next invoice — you won't be charged or refunded right away.",
+      "confirm": "Yes, switch plan"
+    },
+    "toast": {
+      "canceled": "Your subscription will cancel at the end of the current period",
+      "reactivated": "Your subscription was reactivated",
+      "planChanged": "Your plan was updated",
+      "genericError": "Couldn't complete the action. Try again."
     }
   },
   "settingsAccount": {

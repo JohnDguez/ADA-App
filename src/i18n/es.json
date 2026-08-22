@@ -38,6 +38,7 @@
       "notifications": "Notificaciones",
       "appearance": "Apariencia",
       "sharedSpace": "Espacio Compartido",
+      "subscription": "Mi suscripción",
       "getPremium": "Obtener Premium"
     },
     "premiumBadge": "Cuenta Premium",
@@ -57,6 +58,36 @@
       "photoUpdated": "Foto actualizada",
       "avatarUpdateError": "Error al actualizar avatar",
       "avatarUpdated": "Avatar actualizado"
+    }
+  },
+  "settingsSubscription": {
+    "title": "Mi suscripción",
+    "loading": "Cargando tu suscripción…",
+    "noSubscription": "No encontramos una suscripción asociada a tu cuenta.",
+    "currentPlan": "Plan actual",
+    "renewsOn": "Se renueva el {{date}}",
+    "willCancelOn": "Se cancelará el {{date}}. Conservas Premium hasta esa fecha.",
+    "switchTo": "Cambiar a plan {{plan}}",
+    "cancelButton": "Cancelar suscripción",
+    "reactivateButton": "Reactivar suscripción",
+    "processing": "Procesando…",
+    "keepButton": "No, mantener",
+    "pendingCancelText": "Tu suscripción se cancelará el {{date}}. Conservas Premium hasta esa fecha.",
+    "cancelModal": {
+      "title": "Cancelar suscripción",
+      "description": "Conservas Premium hasta el {{date}}. Después de esa fecha perderás acceso, pero puedes reactivar antes si cambias de opinión.",
+      "confirm": "Sí, cancelar"
+    },
+    "switchModal": {
+      "title": "Cambiar a plan {{plan}}",
+      "description": "El ajuste se refleja prorrateado en tu siguiente factura — no se te cobra ni se te reembolsa de inmediato.",
+      "confirm": "Sí, cambiar de plan"
+    },
+    "toast": {
+      "canceled": "Tu suscripción se cancelará al final del periodo actual",
+      "reactivated": "Tu suscripción fue reactivada",
+      "planChanged": "Tu plan fue actualizado",
+      "genericError": "No se pudo completar la acción. Intenta de nuevo."
     }
   },
   "settingsAccount": {
