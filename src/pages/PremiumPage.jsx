@@ -18,14 +18,16 @@ const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY)
 // el Embedded Checkout de Stripe (api/create-checkout-session.js) en el
 // mismo espacio — antes el botón no hacía nada (onClick vacío). El banner de
 // referidos sigue siendo solo visual, sin lógica (pendiente real aparte).
-export function PremiumPage({ onClose }) {
+export function PremiumPage({ onClose, refreshProfile }) {
   const { t } = useTranslation()
 
   const [selectedPlan, setSelectedPlan] = useState('annual') // 'monthly' | 'annual'
   const [termsAccepted, setTermsAccepted] = useState(false)
   const [checkoutOpen, setCheckoutOpen] = useState(false)
   const [clientSecret, setClientSecret] = useState(null)
-  // 'idle' (mostrando el checkout) | 'loading' | 'error'
+  // 'idle' (mostrando el checkout) | 'loading' | 'error' | 'confirming' (pago
+  // terminado del lado de Stripe, esperando a que el webhook actualice
+  // is_premium en Supabase)
   const [checkoutState, setCheckoutState] = useState('idle')
 
   // Imágenes subidas manualmente a /public por Johnatan (no son íconos Lucide —
@@ -72,14 +74,34 @@ export function PremiumPage({ onClose }) {
     setCheckoutState('idle')
   }
 
-  // El `onComplete` de @stripe/react-stripe-js es quien cierra la UI del
-  // checkout — el webhook (checkout.session.completed → stripe-webhook.js)
-  // es quien de verdad activa `is_premium` en Supabase, por separado. Cierra
-  // PremiumPage entera: el usuario ya terminó de pagar, no tiene nada más
-  // que hacer aquí.
+  // Stripe confirma el pago en el momento (`onComplete` del SDK), pero
+  // stripe-webhook.js —quien de verdad activa is_premium en Supabase— corre
+  // por separado, server-a-server, con algo de latencia propia. Sin esto,
+  // la app cerraba la página al instante con `profile` todavía en memoria
+  // desde ANTES del pago (is_premium: false) — el usuario no veía la corona
+  // hasta recargar manualmente (bug real reportado por Johnatan). Reintenta
+  // unas cuantas veces antes de rendirse — si el webhook tarda más de eso,
+  // el usuario lo verá de todas formas la próxima vez que la app recargue.
+  async function confirmAndClose() {
+    setCheckoutState('confirming')
+    for (let i = 0; i < 6; i++) {
+      const data = await refreshProfile?.()
+      if (data?.is_premium) break
+      await new Promise(r => setTimeout(r, 1500))
+    }
+    onClose()
+  }
+
+  // El `onComplete` de @stripe/react-stripe-js dispara cuando Stripe termina
+  // de procesar el pago — confirmAndClose() espera a que el webhook active
+  // is_premium antes de cerrar, en vez de cerrar de inmediato con el perfil
+  // viejo todavía en memoria.
   const checkoutOptions = useMemo(() => (
-    clientSecret ? { clientSecret, onComplete: onClose } : null
-  ), [clientSecret, onClose])
+    clientSecret ? { clientSecret, onComplete: confirmAndClose } : null
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- solo debe
+    // recrearse cuando cambia clientSecret; confirmAndClose cierra sobre
+    // refreshProfile/onClose (props), no hace falta recomputar por eso.
+  ), [clientSecret])
 
   return (
     <div style={{
@@ -213,6 +235,10 @@ export function PremiumPage({ onClose }) {
 
             {checkoutState === 'loading' && (
               <div className={styles.checkoutStatus}>{t('premiumPage.checkoutLoading')}</div>
+            )}
+
+            {checkoutState === 'confirming' && (
+              <div className={styles.checkoutStatus}>{t('premiumPage.checkoutConfirming')}</div>
             )}
 
             {checkoutState === 'error' && (
