@@ -14,6 +14,7 @@ import { SettingsCobroPage } from './settings/SettingsCobroPage'
 import { SettingsNotificationsPage } from './settings/SettingsNotificationsPage'
 import { SettingsAppearancePage } from './settings/SettingsAppearancePage'
 import { SettingsSharedSpacePage } from './settings/SettingsSharedSpacePage'
+import { SettingsSubscriptionPage } from './settings/SettingsSubscriptionPage'
 import styles from './SettingsPage.module.css'
 
 // Galería de avatares preestablecidos — imágenes estáticas servidas desde
@@ -40,7 +41,7 @@ export function SettingsPage({ profile, user, onUpdate, onUploadAvatar, onDataDe
   const { t } = useTranslation()
   const FREQ_LABEL  = { weekly: t('frequency.weekly'), biweekly: t('frequency.biweekly'), monthly: t('frequency.monthly') }
   const THEME_LABEL = { sistema: t('theme.system'), light: t('theme.light'), dark: t('theme.dark') }
-  const [section, setSection] = useState(initialSection || null) // null | 'account' | 'categories' | 'cobro' | 'notifications' | 'appearance' | 'sharedspace'
+  const [section, setSection] = useState(initialSection || null) // null | 'account' | 'categories' | 'cobro' | 'notifications' | 'appearance' | 'sharedspace' | 'subscription'
   const [uploadingAvatar, setUploadingAvatar] = useState(false)
   const [avatarModal, setAvatarModal] = useState(null) // null | 'choice' | 'gallery'
 
@@ -182,6 +183,9 @@ export function SettingsPage({ profile, user, onUpdate, onUploadAvatar, onDataDe
   if (section === 'sharedspace') {
     return <SettingsSharedSpacePage profile={profile} user={user} sharedSpaces={sharedSpaces} onBack={back} slideClass={slideClass} />
   }
+  if (section === 'subscription') {
+    return <SettingsSubscriptionPage onBack={back} slideClass={slideClass} />
+  }
 
   return (
     <div className={`${slideClass} ${styles.pageWrapper}`}>
@@ -232,10 +236,11 @@ export function SettingsPage({ profile, user, onUpdate, onUploadAvatar, onDataDe
           <Row icon={Bell}     label={t('settingsPage.menu.notifications')}                 onClick={() => openSection('notifications')} />
         </div>
         <Row icon={SunMoon}  label={t('settingsPage.menu.appearance')}                    value={THEME_LABEL[theme] || ''} onClick={() => openSection('appearance')} />
-        <Row icon={Users}    label={t('settingsPage.menu.sharedSpace')}            onClick={() => openSection('sharedspace')} last={profile.is_premium} />
-        {!profile.is_premium && (
-          <Row icon={Crown} iconColor="var(--premium-gold)" label={t('settingsPage.menu.getPremium')} onClick={onOpenPremium} last />
-        )}
+        <Row icon={Users}    label={t('settingsPage.menu.sharedSpace')}            onClick={() => openSection('sharedspace')} />
+        {profile.is_premium
+          ? <Row icon={Crown} iconColor="var(--premium-gold)" label={t('settingsPage.menu.subscription')} onClick={() => openSection('subscription')} last />
+          : <Row icon={Crown} iconColor="var(--premium-gold)" label={t('settingsPage.menu.getPremium')} onClick={onOpenPremium} last />
+        }
       </Card>
 
       {/* Ayuda */}
