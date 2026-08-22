@@ -1,7 +1,8 @@
 import { useState, useRef, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
+import i18n from '../i18n'
 import { createPortal } from 'react-dom'
-import { MoreVertical, Pencil, Trash2, LogOut, Pin, UserRound, Crown, UsersRound } from 'lucide-react'
+import { MoreVertical, Pencil, Trash2, LogOut, Pin, UserRound, Crown, UsersRound, ChevronDown, ChevronUp, Plus } from 'lucide-react'
 import styles from './ActiveSpaceHeader.module.css'
 
 // Encabezado del espacio activo — antes vivía DENTRO de SpaceSwitcher.jsx
@@ -16,7 +17,7 @@ import styles from './ActiveSpaceHeader.module.css'
 // Cada página (HomePage/PaymentsPage/RecurrentsPage) lo dibuja como lo
 // primero dentro de su propio contenedor de contenido — no dentro de
 // SpaceSwitcher.jsx, que ahora solo dibuja las tarjetas que asoman.
-export function ActiveSpaceHeader({ activeSpaceId, sharedSpaces, onManage, onSwitch, deleteSpace, leaveSpace, user, defaultSpaceId, onSetDefault }) {
+export function ActiveSpaceHeader({ activeSpaceId, sharedSpaces, onManage, onSwitch, deleteSpace, leaveSpace, user, defaultSpaceId, onSetDefault, profile }) {
   const { t } = useTranslation()
   const [menuOpen,       setMenuOpen]       = useState(false)
   const [menuPos,        setMenuPos]        = useState(null) // { top, bottom, right } en coordenadas de pantalla
@@ -24,6 +25,15 @@ export function ActiveSpaceHeader({ activeSpaceId, sharedSpaces, onManage, onSwi
   const [dangerPassword, setDangerPassword] = useState('')
   const [dangerError,    setDangerError]    = useState('')
   const [dangerLoading,  setDangerLoading]  = useState(false)
+  // v0.9.413 — desplegable de espacios en tablet/desktop (Regla 43-ish,
+  // convive con RailSpaceSwitcher.jsx del riel — ambas son formas
+  // válidas de cambiar de espacio, decisión explícita de Johnatan). La
+  // "isla" entera (fondo, nombre, chevron) es clickeable para
+  // expandir/colapsar — EXCEPTO pin y "..." (stopPropagation en ambos).
+  // Mismo patrón de posicionamiento por portal que ya usa el menú "...".
+  const [spaceListOpen, setSpaceListOpen] = useState(false)
+  const [spaceListPos,  setSpaceListPos]  = useState(null)
+  const headerRowRef = useRef(null)
 
   // Detecta un cambio REAL de espacio activo para animar la entrada del
   // encabezado (nombre + fondo) deslizándose de abajo hacia arriba con
@@ -66,9 +76,46 @@ export function ActiveSpaceHeader({ activeSpaceId, sharedSpaces, onManage, onSwi
   // en el switcher, ya se distingue por estar en su propio panel).
   const HeaderIcon = isNewPanel ? null : (isRealSpace ? (isOwner ? Crown : UsersRound) : UserRound)
   const isPinned   = (defaultSpaceId ?? null) === currentId
-  function handleTogglePin() {
+  function handleTogglePin(e) {
+    e.stopPropagation()
     onSetDefault(isPinned ? null : currentId)
   }
+
+  // Lista del desplegable — mismos datos/íconos que RailSpaceSwitcher.jsx
+  // (Crown = dueño, UsersRound = invitado, UserRound = Personal), pero SIN
+  // el espacio activo (ya vive arriba, en el encabezado — no se repite).
+  const ownedEntry   = sharedSpaces.spaces.find(s => s.membership.role === 'owner')
+  const guestEntries = sharedSpaces.spaces.filter(s => s.membership.role === 'guest')
+  const canAddMore   = (profile?.is_premium && !ownedEntry) || guestEntries.length < 3
+
+  const otherSpaceItems = [...sharedSpaces.spaces]
+    .filter(s => s.space.id !== currentId)
+    .sort((a, b) => a.space.name.localeCompare(b.space.name, i18n.language))
+    .map(s => ({ id: s.space.id, kind: 'space', name: s.space.name, entry: s }))
+
+  const dropdownItems = [
+    ...(currentId !== null ? [{ id: null, kind: 'personal', name: t('activeSpaceHeader.personalName') }] : []),
+    ...otherSpaceItems,
+    ...(canAddMore ? [{ id: 'new', kind: 'new', name: t('activeSpaceHeader.newSpaceName') }] : []),
+  ]
+
+  function itemIcon(item) {
+    if (item.kind === 'personal') return UserRound
+    if (item.kind === 'new') return Plus
+    return item.entry.membership.role === 'owner' ? Crown : UsersRound
+  }
+
+  function handleToggleSpaceList(e) {
+    if (isNewPanel) return
+    if (!spaceListOpen) {
+      setMenuOpen(false) // exclusividad — nunca los 2 flotantes a la vez
+      const rect = headerRowRef.current.getBoundingClientRect()
+      setSpaceListPos({ top: rect.bottom + 6, left: rect.left, width: rect.width })
+    }
+    setSpaceListOpen(v => !v)
+  }
+
+  const ChevronIcon = spaceListOpen ? ChevronUp : ChevronDown
 
   function openDanger() {
     setMenuOpen(false)
@@ -97,7 +144,11 @@ export function ActiveSpaceHeader({ activeSpaceId, sharedSpaces, onManage, onSwi
 
   return (
     <div className={styles.headerRoot} style={{ animation: entering ? 'activeHeaderEnter .3s cubic-bezier(0.25, 0.46, 0.45, 0.94) both' : 'none' }}>
-      <div className={styles.headerRow}>
+      <div
+        ref={headerRowRef}
+        onClick={handleToggleSpaceList}
+        className={`${styles.headerRow} ${!isNewPanel ? styles.headerRowClickable : ''} ${spaceListOpen ? styles.headerRowExpanded : ''}`}
+      >
       <span className={styles.headerName}>
         {HeaderIcon && <HeaderIcon size={15} color="var(--text)" strokeWidth={2} />}
         {name}
@@ -118,6 +169,7 @@ export function ActiveSpaceHeader({ activeSpaceId, sharedSpaces, onManage, onSwi
           <button
             onClick={e => {
               e.stopPropagation()
+              setSpaceListOpen(false) // exclusividad — nunca los 2 flotantes a la vez
               if (!menuOpen) {
                 // Mismo criterio que ya usaba SpaceSwitcher.jsx: 2 ítems fijos
                 // (~90px) — si no caben debajo antes del final de la
@@ -174,7 +226,45 @@ export function ActiveSpaceHeader({ activeSpaceId, sharedSpaces, onManage, onSwi
           )}
         </div>
       )}
+
+      {/* Chevron al final de todo — después de pin y "...", para que se
+          sienta que envuelve el encabezado completo (pedido explícito de
+          Johnatan, mockup confirmado antes de código). */}
+      <ChevronIcon size={16} color="var(--text)" strokeWidth={2} />
       </div>
+      )}
+
+      {/* Desplegable de espacios — misma mecánica de portal que el menú
+          "..." de arriba: flota ENCIMA del contenido de la página en vez
+          de empujarlo (pedido explícito). Una sola caja continua con el
+          encabezado (sin separación visual, mismo criterio que "X
+          pagados" en HomePage.jsx) — el encabezado real está fuera de
+          este portal (headerRow, arriba), así que aquí solo van las
+          filas de la lista, ancladas justo debajo. */}
+      {spaceListOpen && spaceListPos && createPortal(
+        <>
+          <div onClick={() => setSpaceListOpen(false)} className={styles.spaceDropdownOverlay} />
+          <div
+            onClick={e => e.stopPropagation()}
+            className={styles.spaceDropdownPanel}
+            style={{ top: spaceListPos.top, left: spaceListPos.left, width: spaceListPos.width }}
+          >
+            {dropdownItems.map(item => {
+              const ItemIcon = itemIcon(item)
+              return (
+                <button
+                  key={item.id ?? 'personal'}
+                  onClick={() => { setSpaceListOpen(false); onSwitch(item.kind === 'new' ? 'new' : item.id) }}
+                  className={styles.spaceDropdownItem}
+                >
+                  <ItemIcon size={15} strokeWidth={2} />
+                  <span>{item.name}</span>
+                </button>
+              )
+            })}
+          </div>
+        </>,
+        document.body
       )}
 
       {/* Portal — mismo motivo que el resto de los modales de esta función:

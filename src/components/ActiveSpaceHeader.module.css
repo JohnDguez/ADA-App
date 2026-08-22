@@ -151,3 +151,76 @@
 .confirmButton:disabled {
   opacity: 0.7;
 }
+
+/* ── v0.9.413 — desplegable de espacios en tablet/desktop ────────────────
+   Mobile no se toca — el encabezado se queda exactamente como siempre
+   (fila plana, sin fondo propio, border-bottom). Desde 768px se vuelve
+   una "isla": fondo propio distinto del fondo general (var(--surface)),
+   8px de radio (Regla 13 — NUNCA pill, ese caso no está en la lista de
+   excepciones), clickeable en toda su superficie para expandir/colapsar
+   el desplegable de espacios (convive con RailSpaceSwitcher.jsx del
+   riel — ambas formas de cambiar de espacio son válidas). */
+@media (min-width: 768px) {
+  /* .headerRoot traía margin-top:-14px + border-radius pensado para
+     "asomar" bajo el header de mobile (SpaceSwitcher.jsx/PageHeader
+     arriba) — huérfano en desktop (mismo problema ya resuelto en
+     .roundedContentWrapper de las 4 páginas), jalaba la isla nueva hacia
+     arriba, encimándola con la tarjeta de arriba. */
+  .headerRoot {
+    background: transparent;
+    border-radius: 0;
+    margin-top: 0;
+  }
+
+  .headerRowClickable {
+    cursor: pointer;
+    background: var(--surface);
+    border-bottom: none;
+    border-radius: 8px;
+    /* SIN margen horizontal — .roundedContentWrapper de cada página ya
+       aporta ese padding lateral; agregar otro aquí lo hubiera duplicado
+       (mismo bug ya cazado varias veces en Gastos esta sesión). Solo
+       espacio abajo, antes del contenido que sigue. */
+    margin: 0 0 16px;
+    padding: 9px 10px 9px 14px;
+  }
+
+  /* Cuando el desplegable está abierto, las esquinas de abajo se aplanan
+     para que se vea continua con el panel de la lista, que arranca justo
+     pegado (mismo criterio que "X pagados" — una sola caja, sin costura). */
+  .headerRowExpanded {
+    border-radius: 8px 8px 0 0;
+  }
+}
+
+.spaceDropdownOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9997;
+}
+
+.spaceDropdownPanel {
+  position: fixed;
+  z-index: 9998;
+  background: var(--surface);
+  border-radius: 0 0 8px 8px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  overflow: hidden;
+}
+
+.spaceDropdownItem {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  background: none;
+  border: none;
+  border-top: 0.5px solid var(--border);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text);
+  font-family: 'DM Sans', sans-serif;
+  cursor: pointer;
+  text-align: left;
+}
