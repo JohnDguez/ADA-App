@@ -34,6 +34,28 @@ export function ActiveSpaceHeader({ activeSpaceId, sharedSpaces, onManage, onSwi
   const [spaceListOpen, setSpaceListOpen] = useState(false)
   const [spaceListPos,  setSpaceListPos]  = useState(null)
   const headerRowRef = useRef(null)
+  // v0.9.415 — REEMPLAZA el overlay transparente de v0.9.413 (no cerraba
+  // de verdad, confirmado en vivo por Johnatan) por el MISMO patrón de
+  // "clic afuera cierra" ya probado y funcionando en NavRail.jsx
+  // (v0.9.368): listener de `mousedown` en `document`, en vez de un
+  // `<div>` fantasma cubriendo toda la pantalla cuyo z-index/orden de
+  // renderizado con el portal no se comportaba como se esperaba.
+  const spacePanelRef = useRef(null)
+
+  useEffect(() => {
+    if (!spaceListOpen) return
+    function handleOutsideClick(e) {
+      // Clic en la isla misma: la deja a su propio onClick (toggle) —
+      // no cerrar aquí también, o se abriría y cerraría en el mismo clic.
+      if (headerRowRef.current && headerRowRef.current.contains(e.target)) return
+      // Clic en una fila de la lista: su propio onClick ya cierra y
+      // cambia de espacio — no interferir.
+      if (spacePanelRef.current && spacePanelRef.current.contains(e.target)) return
+      setSpaceListOpen(false)
+    }
+    document.addEventListener('mousedown', handleOutsideClick)
+    return () => document.removeEventListener('mousedown', handleOutsideClick)
+  }, [spaceListOpen])
 
   // Detecta un cambio REAL de espacio activo para animar la entrada del
   // encabezado (nombre + fondo) deslizándose de abajo hacia arriba con
@@ -240,30 +262,29 @@ export function ActiveSpaceHeader({ activeSpaceId, sharedSpaces, onManage, onSwi
           encabezado (sin separación visual, mismo criterio que "X
           pagados" en HomePage.jsx) — el encabezado real está fuera de
           este portal (headerRow, arriba), así que aquí solo van las
-          filas de la lista, ancladas justo debajo. */}
+          filas de la lista, ancladas justo debajo. v0.9.415 — sin el
+          overlay transparente (no cerraba de forma confiable); el cierre
+          ahora corre por el listener de `mousedown` de arriba. */}
       {spaceListOpen && spaceListPos && createPortal(
-        <>
-          <div onClick={() => setSpaceListOpen(false)} className={styles.spaceDropdownOverlay} />
-          <div
-            onClick={e => e.stopPropagation()}
-            className={styles.spaceDropdownPanel}
-            style={{ top: spaceListPos.top, left: spaceListPos.left, width: spaceListPos.width }}
-          >
-            {dropdownItems.map(item => {
-              const ItemIcon = itemIcon(item)
-              return (
-                <button
-                  key={item.id ?? 'personal'}
-                  onClick={() => { setSpaceListOpen(false); onSwitch(item.kind === 'new' ? 'new' : item.id) }}
-                  className={styles.spaceDropdownItem}
-                >
-                  <ItemIcon size={15} strokeWidth={2} />
-                  <span>{item.name}</span>
-                </button>
-              )
-            })}
-          </div>
-        </>,
+        <div
+          ref={spacePanelRef}
+          className={styles.spaceDropdownPanel}
+          style={{ top: spaceListPos.top, left: spaceListPos.left, width: spaceListPos.width }}
+        >
+          {dropdownItems.map(item => {
+            const ItemIcon = itemIcon(item)
+            return (
+              <button
+                key={item.id ?? 'personal'}
+                onClick={() => { setSpaceListOpen(false); onSwitch(item.kind === 'new' ? 'new' : item.id) }}
+                className={styles.spaceDropdownItem}
+              >
+                <ItemIcon size={15} strokeWidth={2} />
+                <span>{item.name}</span>
+              </button>
+            )
+          })}
+        </div>,
         document.body
       )}
 
