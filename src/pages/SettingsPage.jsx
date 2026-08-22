@@ -224,7 +224,7 @@ export function SettingsPage({ profile, user, onUpdate, onUploadAvatar, onDataDe
 
       {/* Menú */}
       <Card>
-        <Row icon={MessageCircle} iconColor="var(--premium-gold)" label={t('settingsPage.feedbackLabel')} sub={t('settingsPage.feedbackSub')} onClick={handleGiveFeedback} />
+        <Row icon={MessageCircle} label={t('settingsPage.feedbackLabel')} sub={t('settingsPage.feedbackSub')} onClick={handleGiveFeedback} />
         <Row icon={User}     label={t('settingsPage.menu.account')}                        onClick={() => openSection('account')} />
         <div data-coachmark="perfil-categorias-row">
           <Row icon={Tag}      label={t('settingsPage.menu.categories')}                    onClick={() => openSection('categories')} />
@@ -238,8 +238,8 @@ export function SettingsPage({ profile, user, onUpdate, onUploadAvatar, onDataDe
         <Row icon={SunMoon}  label={t('settingsPage.menu.appearance')}                    value={THEME_LABEL[theme] || ''} onClick={() => openSection('appearance')} />
         <Row icon={Users}    label={t('settingsPage.menu.sharedSpace')}            onClick={() => openSection('sharedspace')} />
         {profile.is_premium
-          ? <Row icon={Crown} iconColor="var(--premium-gold)" label={t('settingsPage.menu.subscription')} onClick={() => openSection('subscription')} last />
-          : <Row icon={Crown} iconColor="var(--premium-gold)" label={t('settingsPage.menu.getPremium')} onClick={onOpenPremium} last />
+          ? <Row icon={Crown} filled label={t('settingsPage.menu.subscription')} onClick={() => openSection('subscription')} last />
+          : <Row icon={Crown} filled label={t('settingsPage.menu.getPremium')} onClick={onOpenPremium} last />
         }
       </Card>
 
