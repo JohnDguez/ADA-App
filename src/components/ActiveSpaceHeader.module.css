@@ -182,7 +182,13 @@
        (mismo bug ya cazado varias veces en Gastos esta sesión). Solo
        espacio abajo, antes del contenido que sigue. */
     margin: 0 0 16px;
-    padding: 9px 10px 9px 14px;
+    /* Más alto que un botón normal — se siente a escala de "header" de
+       página, no de un control suelto (pedido explícito). */
+    padding: 16px 14px 16px 18px;
+  }
+
+  .headerRowClickable .headerName {
+    font-size: 16px;
   }
 
   /* Cuando el desplegable está abierto, las esquinas de abajo se aplanan
