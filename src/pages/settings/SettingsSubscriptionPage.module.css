@@ -1,0 +1,153 @@
+.pageWrapper {
+  padding-bottom: 120px;
+  background: var(--bg);
+  min-height: 100vh;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 52px 16px 20px;
+}
+
+.backButton {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--surface);
+  border: 0.5px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.headerTitle {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.statusText {
+  padding: 20px 14px;
+  text-align: center;
+  font-size: 13px;
+  color: var(--text);
+  opacity: 0.8;
+}
+
+.planCard {
+  padding: 14px;
+}
+
+.planCardTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.planCardLabel {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.planBadge {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--premium-gold);
+  color: var(--premium-gold-text);
+  font-size: 10.5px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: var(--radius-full);
+}
+
+.planAmount {
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--text);
+  margin-top: 8px;
+}
+
+.planAmountSuffix {
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.renewLine {
+  font-size: 12px;
+  color: var(--text);
+  opacity: 0.7;
+  margin-top: 6px;
+}
+
+.actionsWrap {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 0 16px 12px;
+}
+
+.switchButton {
+  width: 100%;
+  padding: 12px;
+  background: var(--surface);
+  color: var(--accent);
+  border: 0.5px solid var(--accent-border);
+  border-radius: var(--radius-sm);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.pendingBox {
+  padding: 14px;
+  text-align: center;
+}
+
+.pendingText {
+  font-size: 12.5px;
+  color: var(--text);
+  line-height: 1.5;
+  margin-bottom: 12px;
+}
+
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 700;
+  padding: 0 24px;
+}
+
+.modal {
+  width: 100%;
+  max-width: 320px;
+  background: var(--surface);
+  border-radius: var(--radius);
+  padding: 20px;
+  text-align: center;
+}
+
+.modalTitle {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 8px;
+}
+
+.modalDesc {
+  font-size: 12.5px;
+  color: var(--text);
+  opacity: 0.8;
+  line-height: 1.5;
+  margin-bottom: 16px;
+}
