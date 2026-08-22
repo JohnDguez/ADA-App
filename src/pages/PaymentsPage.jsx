@@ -85,14 +85,24 @@ export function PaymentsPage({ payments, dataLoading = false, profile, spaceSwit
   // lo que sobre después de .filtersWrapper, sea cual sea su alto real
   // en ese momento — funciona igual en los 2 modos sin necesitar
   // reservar nada de antemano.
+  // v0.9.405 — CORREGIDO un bug real que rompía MOBILE: se aplicaba con
+  // `style` inline de React, y los estilos inline NUNCA respetan
+  // `@media` — ese alto forzado (calculado a partir del ancho de
+  // desktop) se seguía aplicando también en mobile, donde .categoryColumn
+  // debe fluir en su alto natural sin ninguna restricción. Encimaba
+  // "Pagos" con "Por categoría" (bug real reportado con captura). Ahora
+  // se fija como variable CSS por ref en vez de `style` — la regla que
+  // la CONSUME vive dentro de @media(min-width:768px) en el CSS, así que
+  // en mobile no tiene ningún efecto aunque JS siga calculando el valor.
   const chartColumnRef = useRef(null)
-  const [chartHeight, setChartHeight] = useState(null)
+  const categoryColumnRef = useRef(null)
 
   useLayoutEffect(() => {
     const el = chartColumnRef.current
-    if (!el) return
+    const target = categoryColumnRef.current
+    if (!el || !target) return
     const observer = new ResizeObserver(entries => {
-      setChartHeight(entries[0].contentRect.height)
+      target.style.setProperty('--chart-height', `${entries[0].contentRect.height}px`)
     })
     observer.observe(el)
     return () => observer.disconnect()
@@ -1466,7 +1476,7 @@ export function PaymentsPage({ payments, dataLoading = false, profile, spaceSwit
             .categoryColumn (CSS, PaymentsPage.module.css) con scroll
             interno propio en la lista — menos preciso pixel por pixel,
             pero confiable, sin depender de timing de medición. */}
-        <div className={styles.categoryColumn} style={chartHeight ? { height: chartHeight } : undefined}>
+        <div className={styles.categoryColumn} ref={categoryColumnRef}>
 
         {/* Filtro compartido — gobierna "Por Categoría" y "Pagos" a la vez.
             Unificado en v0.9.250 (antes cada sección tenía su propio

@@ -1420,6 +1420,12 @@
     flex-direction: column;
     gap: 12px;
     overflow: hidden;
+    /* v0.9.405 — la variable la fija PaymentsPage.jsx por ref (no `style`
+       inline, que ignora @media) — esta regla, y por lo tanto la altura
+       forzada, solo existe aquí, dentro de @media(min-width:768px). En
+       mobile, aunque JS calcule --chart-height igual, no hay ninguna
+       regla que la lea, así que no tiene ningún efecto. */
+    height: var(--chart-height, auto);
   }
 
   /* Las 3 tarjetas de la izquierda mantienen su propio fondo/padding —
