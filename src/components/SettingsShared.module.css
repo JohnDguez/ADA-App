@@ -31,6 +31,10 @@
   cursor: pointer;
 }
 
+.rowFilled {
+  background: var(--premium-gold);
+}
+
 .rowLeft {
   display: flex;
   align-items: center;

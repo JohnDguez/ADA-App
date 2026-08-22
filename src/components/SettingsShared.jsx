@@ -14,26 +14,31 @@ export function SectionLabel({ children }) {
   return <div className={styles.sectionLabel}>{children}</div>
 }
 
-// `sub` (opcional): segunda línea chica debajo del label — usado por el
-// renglón de feedback en SettingsPage.jsx ("Danos tu feedback" / "Gana 3
-// meses de Premium gratis"). El resto de los usos de Row no la pasan y se
-// comportan exactamente igual que antes.
-export function Row({ label, sub, value, onClick, last, icon: Icon, iconColor }) {
+// `filled` (opcional, NUEVO): fondo sólido var(--premium-gold) de borde a
+// borde + texto/ícono/chevron SIEMPRE en var(--premium-gold-text) — ambas
+// variables ya son fijas sin importar el tema (ver index.css, bloque
+// --premium-*), así que el contraste queda garantizado en claro y oscuro sin
+// tocar nada más. Cuando `filled` es true, ignora `iconColor` por completo
+// (dejaría de tener sentido combinarlos). Usado solo por el renglón
+// "Mi suscripción"/"Obtener Premium" de SettingsPage.jsx — nunca junto con
+// `iconColor` en el mismo renglón.
+export function Row({ label, sub, value, onClick, last, icon: Icon, iconColor, filled }) {
+  const color = filled ? 'var(--premium-gold-text)' : (iconColor || 'var(--text)')
   return (
     <div
       onClick={onClick}
-      className={`${styles.row} ${last ? styles.rowLast : ''} ${onClick ? styles.rowClickable : ''}`}
+      className={`${styles.row} ${last ? styles.rowLast : ''} ${onClick ? styles.rowClickable : ''} ${filled ? styles.rowFilled : ''}`}
     >
       <div className={styles.rowLeft}>
-        {Icon && <Icon size={16} color={iconColor || 'var(--text)'} />}
+        {Icon && <Icon size={16} color={color} />}
         <div>
-          <span className={styles.rowLabel} style={iconColor ? { color: iconColor } : undefined}>{label}</span>
-          {sub && <div className={styles.rowSub} style={iconColor ? { color: iconColor } : undefined}>{sub}</div>}
+          <span className={styles.rowLabel} style={filled || iconColor ? { color } : undefined}>{label}</span>
+          {sub && <div className={styles.rowSub} style={filled || iconColor ? { color } : undefined}>{sub}</div>}
         </div>
       </div>
       <div className={styles.rowRight}>
-        {value && <span className={styles.rowValue}>{value}</span>}
-        {onClick && <ChevronRight size={14} color={iconColor || 'var(--text)'} />}
+        {value && <span className={styles.rowValue} style={filled ? { color } : undefined}>{value}</span>}
+        {onClick && <ChevronRight size={14} color={color} />}
       </div>
     </div>
   )
