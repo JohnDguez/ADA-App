@@ -146,7 +146,7 @@ export default function App() {
     refetch,
     ensureMonthLoaded, oldestYear,
   } = usePayments(user?.id, paymentsSpaceId, activeSpaceEntry?.space?.name)
-  const { profile, loading: profileLoading, updateProfile, uploadAvatar } = useProfile(user?.id)
+  const { profile, loading: profileLoading, updateProfile, uploadAvatar, fetchProfile } = useProfile(user?.id)
 
   // Fondo Compartido — a nivel de App (antes vivía solo dentro de
   // PaymentsPage.jsx) para que también llegue al check de Home (tercera
@@ -1077,7 +1077,7 @@ export default function App() {
         onRemindLater={handleFeedbackRemindLater}
       />
       <Toast />
-      {premiumPageOpen && <Suspense fallback={null}><PremiumPage onClose={() => setPremiumPageOpen(false)} /></Suspense>}
+      {premiumPageOpen && <Suspense fallback={null}><PremiumPage onClose={() => setPremiumPageOpen(false)} refreshProfile={fetchProfile} /></Suspense>}
     </>
   )
 }
