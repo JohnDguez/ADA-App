@@ -43,11 +43,16 @@ export function useProfile(userId) {
   const [loading, setLoading] = useState(true)
 
   const fetchProfile = useCallback(async () => {
-    if (!userId) return
+    if (!userId) return null
     const { data, error } = await supabase
       .from('profiles').select('*').eq('id', userId).single()
     if (!error && data) setProfile({ ...DEFAULT_PROFILE, ...sanitizeProfile(data) })
     setLoading(false)
+    // Devuelve la fila cruda (no el estado ya mezclado con DEFAULT_PROFILE) —
+    // quien llame y necesite un valor fresco de inmediato (ej. PremiumPage
+    // esperando a que el webhook de Stripe actualice is_premium) puede
+    // revisarlo sin depender de un re-render para leer el nuevo `profile`.
+    return data || null
   }, [userId])
 
   useEffect(() => { fetchProfile() }, [fetchProfile])
