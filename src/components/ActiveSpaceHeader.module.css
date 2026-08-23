@@ -29,6 +29,20 @@
   gap: 4px;
 }
 
+/* v0.9.418 — el chevron es parte de la isla clickeable, un concepto
+   exclusivo de tablet/desktop desde que se agregó (v0.9.413) — se me
+   había pasado ocultarlo en mobile, donde no aplica (ahí no hay ninguna
+   isla ni desplegable, el encabezado sigue plano como siempre). */
+.chevronIcon {
+  display: none;
+}
+
+@media (min-width: 768px) {
+  .chevronIcon {
+    display: inline-flex;
+  }
+}
+
 .menuWrapper {
   position: relative;
 }
@@ -172,8 +186,14 @@
     margin-top: 0;
   }
 
-  .headerRowClickable {
-    cursor: pointer;
+  /* v0.9.417 — SEPARADO en 2 clases: antes .headerRowClickable mezclaba
+     "se ve como isla" con "es interactiva", y como esta clase solo se
+     aplicaba cuando !isNewPanel, en "Nuevo espacio compartido" la isla
+     desaparecía por completo (perdía fondo/padding, no solo el cursor y
+     el clic) — bug real reportado con captura. Ahora .headerRowIsland
+     (apariencia) aplica SIEMPRE en desktop; .headerRowClickable (cursor)
+     solo cuando de verdad se puede interactuar. */
+  .headerRowIsland {
     background: var(--surface);
     border-bottom: none;
     border-radius: 8px;
@@ -187,7 +207,11 @@
     padding: 16px 14px 16px 18px;
   }
 
-  .headerRowClickable .headerName {
+  .headerRowClickable {
+    cursor: pointer;
+  }
+
+  .headerRowIsland .headerName {
     font-size: 16px;
   }
 

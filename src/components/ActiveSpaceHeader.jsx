@@ -128,10 +128,16 @@ export function ActiveSpaceHeader({ activeSpaceId, sharedSpaces, onManage, onSwi
     .sort((a, b) => a.space.name.localeCompare(b.space.name, i18n.language))
     .map(s => ({ id: s.space.id, kind: 'space', name: s.space.name, entry: s }))
 
+  // "Personal" se excluye solo cuando de verdad estás parado en Personal
+  // (currentId===null Y no es el panel de "Nuevo espacio") — currentId
+  // también es null en isNewPanel (no hay espacio real activo todavía),
+  // pero ahí SÍ debe verse Personal como opción para cambiar.
+  const onPersonal = !isNewPanel && currentId === null
   const dropdownItems = [
-    ...(currentId !== null ? [{ id: null, kind: 'personal', name: t('activeSpaceHeader.personalName') }] : []),
+    ...(!onPersonal ? [{ id: null, kind: 'personal', name: t('activeSpaceHeader.personalName') }] : []),
     ...otherSpaceItems,
-    ...(canAddMore ? [{ id: 'new', kind: 'new', name: t('activeSpaceHeader.newSpaceName') }] : []),
+    // "Nuevo espacio compartido" no se ofrece si ya estás ahí mismo.
+    ...(canAddMore && !isNewPanel ? [{ id: 'new', kind: 'new', name: t('activeSpaceHeader.newSpaceName') }] : []),
   ]
 
   function itemIcon(item) {
@@ -141,7 +147,6 @@ export function ActiveSpaceHeader({ activeSpaceId, sharedSpaces, onManage, onSwi
   }
 
   function handleToggleSpaceList(e) {
-    if (isNewPanel) return
     if (!spaceListOpen) {
       setMenuOpen(false) // exclusividad — nunca los 2 flotantes a la vez
       const rect = headerRowRef.current.getBoundingClientRect()
@@ -182,15 +187,16 @@ export function ActiveSpaceHeader({ activeSpaceId, sharedSpaces, onManage, onSwi
       <div
         ref={headerRowRef}
         onClick={handleToggleSpaceList}
-        className={`${styles.headerRow} ${!isNewPanel ? styles.headerRowClickable : ''} ${spaceListOpen ? styles.headerRowExpanded : ''}`}
+        className={`${styles.headerRow} ${styles.headerRowIsland} ${styles.headerRowClickable} ${spaceListOpen ? styles.headerRowExpanded : ''}`}
       >
       <span className={styles.headerName}>
         {HeaderIcon && <HeaderIcon size={15} color="var(--text)" strokeWidth={2} />}
         {name}
       </span>
 
-      {!isNewPanel && (
       <div className={styles.headerActions}>
+        {!isNewPanel && (
+        <>
         <button
           onClick={handleTogglePin}
           className={styles.pinButton}
@@ -261,13 +267,15 @@ export function ActiveSpaceHeader({ activeSpaceId, sharedSpaces, onManage, onSwi
           )}
         </div>
       )}
+        </>
+        )}
 
-      {/* Chevron al final de todo — después de pin y "...", para que se
-          sienta que envuelve el encabezado completo (pedido explícito de
-          Johnatan, mockup confirmado antes de código). */}
-      <ChevronIcon size={16} color="var(--text)" strokeWidth={2} />
+      {/* Chevron al final de todo — después de pin y "..." (si se
+          muestran; en "Nuevo espacio compartido" no aplican, pero el
+          chevron SÍ, porque ahí también se puede cambiar de espacio —
+          para que se sienta que envuelve el encabezado completo. */}
+      <ChevronIcon size={16} color="var(--text)" strokeWidth={2} className={styles.chevronIcon} />
       </div>
-      )}
 
       {/* Desplegable de espacios — misma mecánica de portal que el menú
           "..." de arriba: flota ENCIMA del contenido de la página en vez
