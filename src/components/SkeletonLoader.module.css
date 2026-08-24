@@ -5,14 +5,18 @@
 }
 
 .header {
-  /* Antes #020A1F fijo — se veía "roto" en tema claro (siempre oscuro sin
-     importar el tema activo). Ahora usa var(--nav-bg): el mismo azul de
-     marca que ya usa BottomNav/NavRail, fijo en ambos temas (index.css no
-     lo hace variar) — se ve intencional en cualquier tema, no como un bug,
-     y mantiene el recorte redondeado de `.roundedWrapper` visible contra
-     var(--bg) de abajo (que si el header usara var(--bg) tal cual, se
-     perdería por completo — mismo tono, sin contraste). */
-  background: var(--nav-bg);
+  /* Antes #020A1F fijo (se veía oscuro sin importar el tema). Se probó
+     var(--nav-bg) (azul de marca) en la ronda anterior, pero introducía
+     COLOR real a un esqueleto que siempre había sido monocromático (gris
+     neutro, sin importar qué tan colorido vaya a ser el contenido real) —
+     Johnatan lo notó con captura y tiene razón: un esqueleto no debe
+     "adelantar" el color de marca, solo la forma. Ahora usa
+     var(--section-bg): gris puro en tema claro (#D9D9D9), gris oscuro
+     neutro en tema oscuro (#1E2130, de la misma familia que --bg/--border
+     del resto del esqueleto, no un color nuevo) — mantiene el contraste
+     que necesita el recorte redondeado de `.roundedWrapper` contra
+     var(--bg) de abajo, en los 2 temas, sin dejar de ser monocromático. */
+  background: var(--section-bg);
   height: 140px;
   display: flex;
   align-items: center;
@@ -62,10 +66,14 @@
 }
 
 .bellButtonSkel {
+  /* Antes var(--accent) (azul) — mismo problema que el header: un
+     esqueleto no debe mostrar el color real del botón (que además solo se
+     confirma cuando el perfil carga), solo su forma. Gris neutro, misma
+     familia que .settingsButtonSkel de al lado. */
   width: 40px;
   height: 40px;
   border-radius: 12px;
-  background: var(--accent);
+  background: var(--border-mid);
   flex-shrink: 0;
 }
 
