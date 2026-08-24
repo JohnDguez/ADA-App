@@ -10,6 +10,7 @@ import { PaidByStack } from '../components/PaidByStack'
 import { getIconComponent } from '../lib/categoryIcons'
 import { fmt, getMonthsShort } from '../lib/utils'
 import { showToast } from '../components/Toast'
+import { GoalCardSkeleton } from '../components/SkeletonLoader'
 import styles from './GoalsPage.module.css'
 
 function fmtDate(iso) {
@@ -42,7 +43,7 @@ export function GoalsPage({
   unreadCount, onOpenNotifs, onGoSettings, onOpenPremium, slideClass,
 }) {
   const { t } = useTranslation()
-  const { activeGoals, completedGoals, totalRestante, addGoal, updateGoal, aportar, retirar, revertirAporte, markCompleted, deleteGoal } = goalsData
+  const { activeGoals, completedGoals, totalRestante, loading: goalsLoading, addGoal, updateGoal, aportar, retirar, revertirAporte, markCompleted, deleteGoal } = goalsData
 
   // Mismo criterio que RecurrentsPage.jsx: la animación de entrada del
   // contenido solo se dispara en un cambio REAL de espacio (comparado
@@ -163,7 +164,17 @@ export function GoalsPage({
                   paso del tour de "metas" nunca encontraba dónde anclar y
                   saltaba directo hasta el último paso (reportado por
                   Johnatan, v0.9.348). */}
-              {noGoalsAtAll ? (
+              {goalsLoading ? (
+                /* Fase 1 del sistema de carga por sección (agosto 2026):
+                   `useGoals` inicializa `activeGoals`/`completedGoals`
+                   vacíos a propósito mientras carga — sin este branch,
+                   `noGoalsAtAll` caería en true y mostraría "Sin metas"
+                   como si fuera un dato real. Se muestra el esqueleto de
+                   tarjetas en su lugar, antes de evaluar `noGoalsAtAll`. */
+                <div data-coachmark="metas-resumen">
+                  <GoalCardSkeleton count={2} />
+                </div>
+              ) : noGoalsAtAll ? (
                 <div data-coachmark="metas-resumen">
                   <EmptyState
                     icon={PiggyBank}
