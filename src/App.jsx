@@ -898,6 +898,7 @@ export default function App() {
       {tab === 'recurrents' && (
         <RecurrentsPage
           payments={payments}
+          dataLoading={paymentsLoading}
           slideClass={`page-slide-${slideDir}`}
           {...headerProps}
           activeSpaceId={activeSpaceId}
