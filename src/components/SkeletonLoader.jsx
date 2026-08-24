@@ -13,12 +13,41 @@
 // que ya no existen en la pantalla real.
 import styles from './SkeletonLoader.module.css'
 
-function Bone({ w, h, r, dark, style }) {
+// `Bone` y `RailSkeleton` se exportan (antes solo vivían aquí, para el
+// gate de pantalla completa de App.jsx) — Fase 1 del sistema de carga por
+// sección (agosto 2026): cualquier pantalla puede pedir el mismo bone o el
+// mismo esqueleto de riel para reemplazar un hueco en blanco durante
+// `dataLoading`, en vez de inventar su propia versión. Ver HomePage.jsx
+// para el primer uso real.
+export function Bone({ w, h, r, dark, style }) {
   return (
     <div
       className={dark ? 'skeleton-bone-dark' : 'skeleton-bone'}
       style={{ width: w, height: h, borderRadius: r ?? 6, flexShrink: 0, ...style }}
     />
+  )
+}
+
+// Esqueleto de un riel de pagos (mismas clases que ya usaba el gate de
+// pantalla completa, `.railWrapper`/`.railLine`/`.railItem`/`.railItemCard`)
+// — reutilizable en cualquier lista que hoy muestre un hueco en blanco
+// mientras `dataLoading` es true (HomePage, PaymentsPage, etc.).
+// `count`: cuántas filas fantasma mostrar (por defecto 3, mismo criterio
+// visual que ya traía el gate de pantalla completa).
+export function RailSkeleton({ count = 3 }) {
+  return (
+    <div className={styles.railWrapper}>
+      <div className={styles.railLine} />
+      {Array.from({ length: count }).map((_, i) => (
+        <div key={i} className={styles.railItem}>
+          <Bone w={24} h={24} r="50%" />
+          <div className={styles.railItemCard}>
+            <Bone w="55%" h={13} r={4} />
+            <Bone w="30%" h={10} r={4} />
+          </div>
+        </div>
+      ))}
+    </div>
   )
 }
 
