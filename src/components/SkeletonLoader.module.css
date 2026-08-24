@@ -173,3 +173,60 @@
   justify-content: space-around;
   padding: 0 16px;
 }
+
+/* ── Piezas nuevas (agosto 2026) — sistema de carga por sección, PaymentsPage ── */
+.categoryListSkelWrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.categoryListSkelItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.categoryListSkelContent {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.categoryListSkelRow {
+  display: flex;
+  justify-content: space-between;
+}
+
+.paymentRowSkelWrapper {
+  display: flex;
+  flex-direction: column;
+}
+
+.paymentRowSkelItem {
+  display: flex;
+  align-items: center;
+  padding: 10px 14px;
+  border-bottom: 0.5px solid var(--bg);
+  gap: 10px;
+}
+
+.paymentRowSkelDate {
+  text-align: center;
+  min-width: 28px;
+  flex-shrink: 0;
+}
+
+.paymentRowSkelDivider {
+  width: 1px;
+  height: 28px;
+  background: var(--border);
+  flex-shrink: 0;
+}
+
+.paymentRowSkelInfo {
+  flex: 1;
+  min-width: 0;
+}

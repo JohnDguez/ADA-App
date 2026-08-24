@@ -51,6 +51,53 @@ export function RailSkeleton({ count = 3 }) {
   )
 }
 
+// Esqueleto de "Por categoría" (mismo layout que `.categoryListItem` de
+// PaymentsPage: ícono cuadrado + nombre/monto + barra de progreso) — usado
+// mientras `dataLoading` es true, en vez del hueco en blanco que había
+// antes en esa sección.
+export function CategoryListSkeleton({ count = 4 }) {
+  return (
+    <div className={styles.categoryListSkelWrapper}>
+      {Array.from({ length: count }).map((_, i) => (
+        <div key={i} className={styles.categoryListSkelItem}>
+          <Bone w={36} h={36} r={8} />
+          <div className={styles.categoryListSkelContent}>
+            <div className={styles.categoryListSkelRow}>
+              <Bone w={90} h={13} r={4} />
+              <Bone w={50} h={13} r={4} />
+            </div>
+            <Bone w="100%" h={6} r={999} />
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+// Esqueleto de una fila de "Pagos realizados" (mismo layout que
+// `.paymentRow` de PaymentsPage: fecha + divisor + nombre/categoría +
+// monto) — reemplaza el hueco en blanco de esa lista durante `dataLoading`.
+export function PaymentRowSkeleton({ count = 4 }) {
+  return (
+    <div className={styles.paymentRowSkelWrapper}>
+      {Array.from({ length: count }).map((_, i) => (
+        <div key={i} className={styles.paymentRowSkelItem}>
+          <div className={styles.paymentRowSkelDate}>
+            <Bone w={20} h={16} r={4} />
+            <Bone w={24} h={8} r={3} style={{ marginTop: 4 }} />
+          </div>
+          <div className={styles.paymentRowSkelDivider} />
+          <div className={styles.paymentRowSkelInfo}>
+            <Bone w="60%" h={13} r={4} />
+            <Bone w="35%" h={11} r={4} style={{ marginTop: 6 }} />
+          </div>
+          <Bone w={54} h={14} r={4} />
+        </div>
+      ))}
+    </div>
+  )
+}
+
 export function SkeletonLoader() {
   return (
     <div className={styles.pageRoot}>
