@@ -10,6 +10,7 @@ import { fmt, dateOf, dateToStr, getMonths, getMonthsShort, CATEGORIES, cobroPer
 import { getCategoryIcon } from '../lib/categoryIcons'
 import { supabase } from '../lib/supabase'
 import { showToast } from '../components/Toast'
+import { CategoryListSkeleton, PaymentRowSkeleton } from '../components/SkeletonLoader'
 import AmountInput from '../components/AmountInput'
 import styles from './PaymentsPage.module.css'
 
@@ -1532,9 +1533,12 @@ export function PaymentsPage({ payments, dataLoading = false, profile, spaceSwit
           </div>
 
           {catData.length === 0 ? (
-            /* dataLoading (v0.9.284): ver comentario en HomePage.jsx —
-               no flashear "Sin gastos" mientras el contexto nuevo carga. */
-            dataLoading ? null : <EmptyState
+            /* Fase 1 del sistema de carga por sección (agosto 2026): antes
+               este hueco quedaba en blanco (`null`) mientras `dataLoading`
+               era true, para no flashear "Sin gastos" siendo mentira — ahora
+               se llena con `CategoryListSkeleton`, nunca con el hueco vacío
+               ni con datos del espacio anterior. */
+            dataLoading ? <CategoryListSkeleton count={4} /> : <EmptyState
               title={t('paymentsPage.noExpensesTitle')}
               subtitle={t('homePage.emptyState.subtitle')}
               onClick={onAdd}
@@ -1592,7 +1596,7 @@ export function PaymentsPage({ payments, dataLoading = false, profile, spaceSwit
           </div>
 
           {paidInView.length === 0 ? (
-            dataLoading ? null : <EmptyState
+            dataLoading ? <PaymentRowSkeleton count={4} /> : <EmptyState
               title={viewMode === 'periodo' ? t('paymentsPage.noPaymentsCurrentPeriod') : t('paymentsPage.noPaymentsInMonth', { month: getMonths()[viewMonth], year: viewYear })}
               subtitle={t('homePage.emptyState.subtitle')}
               onClick={onAdd}
