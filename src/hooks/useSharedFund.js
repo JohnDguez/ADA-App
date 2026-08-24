@@ -13,6 +13,23 @@ export function useSharedFund(spaceId) {
 
   const balance = ledger.reduce((s, r) => s + Number(r.amount), 0)
 
+  // Sistema de carga por sección (agosto 2026) — mismo patrón que
+  // usePayments.js (v0.9.284): al cambiar de espacio, el saldo/bitácora
+  // del espacio ANTERIOR se limpiaba solo si el nuevo `spaceId` era falsy
+  // (`!spaceId` dentro de `fetchLedger`, caso "volver a Personal") — entre
+  // dos espacios compartidos reales (A → B) el saldo de A se quedaba en
+  // pantalla mientras la consulta de B viajaba, mostrando un dato que ya
+  // no correspondía al espacio activo. Se ajusta el estado DURANTE EL
+  // RENDER (no en un useEffect) para que no exista ni un solo frame con el
+  // saldo del espacio viejo — PaymentsPage/HomePage deben usar `loading`
+  // para mostrar su propio esqueleto mientras tanto, nunca el saldo viejo.
+  const [prevSpaceId, setPrevSpaceId] = useState(spaceId)
+  if (prevSpaceId !== spaceId) {
+    setPrevSpaceId(spaceId)
+    setLedger([])
+    setLoading(!!spaceId)
+  }
+
   const fetchLedger = useCallback(async () => {
     if (!spaceId) { setLedger([]); return }
     setLoading(true)
