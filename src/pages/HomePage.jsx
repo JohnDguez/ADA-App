@@ -9,6 +9,7 @@ import { NewSharedSpacePanel } from '../components/NewSharedSpacePanel'
 import { EmptyState } from '../components/EmptyState'
 import { PaidByStack } from '../components/PaidByStack'
 import { HalfRing } from '../components/HalfRing'
+import { Bone, RailSkeleton } from '../components/SkeletonLoader'
 import { fmt, cobroPeriod, nextCobroPeriod, getPagarEsteCobro, daysDiff, dateOf, dateToStr, getMonths, getMonthsShort, getCategoryLabel } from '../lib/utils'
 import styles from './HomePage.module.css'
 
@@ -324,30 +325,43 @@ export function HomePage({ payments, dataLoading = false, profile, spaceSwitcher
                   variables — info administrativa, no directamente ligada
                   al anillo, por eso va después). */}
               <div className={styles.metricCard}>
-                {pagarEsteCobro.length === 0 ? (
+                <div className={styles.dateBadge}>
+                  {t('homePage.periodPrefix')} {periodRange(profile)}
+                </div>
+                <div className={styles.clearFloat} />
+                {/* NUEVO (v0.9.323) — bug real reportado por Johnatan: al
+                    recargar, `payments` viene vacío A PROPÓSITO mientras
+                    `dataLoading` está en true (v0.9.284) — eso disparaba
+                    la rama de "todo pagado" mostrando 100% como si fuera un
+                    dato real. El key incluye `dataLoading`: al pasar a
+                    false fuerza un montaje NUEVO, que arranca directo en el
+                    valor correcto sin ningún barrido (mismo criterio ya
+                    documentado en HalfRing.jsx) — la animación suave se
+                    queda solo para cuando de verdad marcas algo pagado en
+                    vivo. */}
+                <div className={styles.ringScale}><HalfRing key={dataLoading ? 'loading' : activeSpaceId} percent={dataLoading || pagarEsteCobro.length === 0 ? 1 : pctPagado / 100} /></div>
+                {/* Fase 1 del sistema de carga por sección (agosto 2026):
+                    mientras `dataLoading` es true, ni el monto ni el
+                    "pagado/pendiente" muestran un número real (sería
+                    engañoso — $0 o "100% pagado" no son ciertos, solo
+                    faltan por llegar) — se reemplazan por bones, nunca por
+                    el dato del espacio anterior ni por un hueco vacío. */}
+                {dataLoading ? (
                   <>
-                    <div className={styles.dateBadge}>
-                      {t('homePage.periodPrefix')} {periodRange(profile)}
+                    <div className={styles.cardPaidPendingRow}>
+                      <Bone w={70} h={11} r={4} />
+                      <Bone w={70} h={11} r={4} />
                     </div>
-                    <div className={styles.clearFloat} />
-                    {/* NUEVO (v0.9.323) — bug real reportado por Johnatan: al
-                        recargar, `payments` viene vacío A PROPÓSITO mientras
-                        `dataLoading` está en true (v0.9.284) — eso disparaba
-                        esta misma rama (`pagarEsteCobro.length === 0`,
-                        "todo pagado") mostrando 100% como si fuera un dato
-                        real. En cuanto los pagos de verdad llegaban y sí
-                        había algo pendiente, el código cambiaba a la otra
-                        rama (percent real) con el MISMO key — React reusa
-                        la misma instancia de HalfRing en vez de montar una
-                        nueva, así que animaba el salto 100%→real como si
-                        fuera una actualización en vivo (por diseño del
-                        propio componente). El key ahora incluye
-                        `dataLoading`: al pasar a false fuerza un montaje
-                        NUEVO, que arranca directo en el valor correcto sin
-                        ningún barrido (mismo criterio ya documentado en
-                        HalfRing.jsx) — la animación suave se queda solo
-                        para cuando de verdad marcas algo pagado en vivo. */}
-                    <div className={styles.ringScale}><HalfRing key={dataLoading ? 'loading' : activeSpaceId} percent={1} /></div>
+                    <div className={styles.cardTitle}>{t('homePage.totalThisPeriod')}</div>
+                    <div className={styles.cardAmount} style={{ display: 'flex', justifyContent: 'center' }}>
+                      <Bone w={110} h={26} r={4} />
+                    </div>
+                    <div className={styles.cardMeta} style={{ display: 'flex', justifyContent: 'center' }}>
+                      <Bone w={130} h={11} r={4} />
+                    </div>
+                  </>
+                ) : pagarEsteCobro.length === 0 ? (
+                  <>
                     <div className={styles.cardTitle}>{t('homePage.totalThisPeriod')}</div>
                     <div className={styles.cardAmount}>{fmt(pagadoMonto)}</div>
                     {(pagadosFijosEstePeriodo > 0 || pagadosVariablesEstePeriodo > 0) && (
@@ -359,11 +373,6 @@ export function HomePage({ payments, dataLoading = false, profile, spaceSwitcher
                   </>
                 ) : (
                   <>
-                    <div className={styles.dateBadge}>
-                      {t('homePage.periodPrefix')} {periodRange(profile)}
-                    </div>
-                    <div className={styles.clearFloat} />
-                    <div className={styles.ringScale}><HalfRing key={dataLoading ? 'loading' : activeSpaceId} percent={pctPagado / 100} /></div>
                     <div className={styles.cardPaidPendingRow}>
                       <span className={styles.cardPaidText}>{t('homePage.paidLabel', { amount: fmt(pagadoMonto) })}</span>
                       <span className={styles.cardPendingText}>{t('homePage.pendingLabel', { amount: fmt(pendingAmt) })}</span>
@@ -396,15 +405,29 @@ export function HomePage({ payments, dataLoading = false, profile, spaceSwitcher
                 </div>
                 <div className={styles.clearFloat} />
                 <div className={styles.ringScale}><HalfRing key={dataLoading ? 'loading' : activeSpaceId} percent={0} /></div>
-                <div className={styles.cardTitle}>{t('homePage.totalNextPeriod')}</div>
-                <div className={styles.cardAmount}>{fmt(nextPeriodKnownTotal)}</div>
-                <div className={styles.cardMeta}>
-                  {t('homePage.fixedPayment', { count: nextPeriodFixedCount })}
-                </div>
-                {nextPeriodPendingVariableCount > 0 && (
-                  <div className={styles.cardVariableNote}>
-                    {t('homePage.variablePendingConfirm', { count: nextPeriodPendingVariableCount })}
-                  </div>
+                {dataLoading ? (
+                  <>
+                    <div className={styles.cardTitle}>{t('homePage.totalNextPeriod')}</div>
+                    <div className={styles.cardAmount} style={{ display: 'flex', justifyContent: 'center' }}>
+                      <Bone w={110} h={26} r={4} />
+                    </div>
+                    <div className={styles.cardMeta} style={{ display: 'flex', justifyContent: 'center' }}>
+                      <Bone w={130} h={11} r={4} />
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className={styles.cardTitle}>{t('homePage.totalNextPeriod')}</div>
+                    <div className={styles.cardAmount}>{fmt(nextPeriodKnownTotal)}</div>
+                    <div className={styles.cardMeta}>
+                      {t('homePage.fixedPayment', { count: nextPeriodFixedCount })}
+                    </div>
+                    {nextPeriodPendingVariableCount > 0 && (
+                      <div className={styles.cardVariableNote}>
+                        {t('homePage.variablePendingConfirm', { count: nextPeriodPendingVariableCount })}
+                      </div>
+                    )}
+                  </>
                 )}
               </div>
             </div>
@@ -468,13 +491,14 @@ export function HomePage({ payments, dataLoading = false, profile, spaceSwitcher
                   <div className={styles.pendingSectionTitle}>{t('homePage.pendingSectionTitle')}</div>
                 )}
                 {delPeriodo.length === 0
-                  /* dataLoading (v0.9.284): mientras el contexto nuevo carga,
-                     payments viene vacío a propósito — mostrar el EmptyState
-                     aquí flashearía "Sin pagos" siendo mentira; se deja el
-                     hueco en blanco esos ms y el contenido real entra con su
-                     animación de siempre. Mismo criterio en el otro EmptyState
-                     de abajo y en los 2 de PaymentsPage. */
-                  ? (dataLoading ? null : <EmptyState title={t('homePage.emptyState.currentPeriodTitle')} subtitle={t('homePage.emptyState.subtitle')} onClick={onAdd} />)
+                  /* Fase 1 del sistema de carga por sección (agosto 2026):
+                     mientras `dataLoading` es true, `payments` viene vacío a
+                     propósito — antes se dejaba un hueco en blanco (`null`)
+                     para no mentir "Sin pagos"; ahora ese hueco se llena con
+                     `RailSkeleton` (mismas piezas del gate de arranque),
+                     nunca con datos del espacio anterior. Mismo criterio en
+                     el otro caso de abajo y en los 2 de PaymentsPage. */
+                  ? (dataLoading ? <RailSkeleton count={3} /> : <EmptyState title={t('homePage.emptyState.currentPeriodTitle')} subtitle={t('homePage.emptyState.subtitle')} onClick={onAdd} />)
                   : <PayRail payments={delPeriodo} cfg={profile} dotColor="var(--upcoming-border)" dotTextColor="var(--impact-warning-text)" handlers={handlers} permissions={spacePermissions} spaceMembers={spaceMembers} />
                 }
               </div>
@@ -483,7 +507,7 @@ export function HomePage({ payments, dataLoading = false, profile, spaceSwitcher
             <div ref={nextPanelRef} className={styles.contentPanel} style={{ transform: `translateX(${activeCard === 0 ? 100 : 0}%)` }}>
               <div className={styles.periodSection}>
                 {upcoming.length === 0
-                  ? (dataLoading ? null : <EmptyState title={t('homePage.emptyState.nextPeriodTitle')} subtitle={t('homePage.emptyState.subtitle')} onClick={onAdd} />)
+                  ? (dataLoading ? <RailSkeleton count={2} /> : <EmptyState title={t('homePage.emptyState.nextPeriodTitle')} subtitle={t('homePage.emptyState.subtitle')} onClick={onAdd} />)
                   : <PayRail payments={upcoming} cfg={profile} dotColor="var(--accent)" dotTextColor="var(--bg)" handlers={handlers} permissions={spacePermissions} nextPeriodMode spaceMembers={spaceMembers} />
                 }
               </div>
