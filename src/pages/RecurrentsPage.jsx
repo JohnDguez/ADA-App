@@ -7,6 +7,7 @@ import { NewSharedSpacePanel } from '../components/NewSharedSpacePanel'
 import { fmt, RECUR_FREQ, getFrequencyLabel, dateOf, getMonthsShort, getCatColor, getCategoryLabel } from '../lib/utils'
 import { getCategoryIcon } from '../lib/categoryIcons'
 import { showToast } from '../components/Toast'
+import { StatsCardSkeleton, CategoryAccordionSkeleton } from '../components/SkeletonLoader'
 import styles from './RecurrentsPage.module.css'
 
 function FilterChip({ label, active, onClick }) {
@@ -17,7 +18,7 @@ function FilterChip({ label, active, onClick }) {
   )
 }
 
-export function RecurrentsPage({ payments, profile, spaceSwitcher, activeSpaceHeader, activeSpaceId = null, sharedSpaces, spacePermissions, onOpenPremium, onSpaceReady, unreadCount, onOpenNotifs, onGoSettings, onPause, onResume, onDelete, onEdit, onAdd, slideClass }) {
+export function RecurrentsPage({ payments, dataLoading = false, profile, spaceSwitcher, activeSpaceHeader, activeSpaceId = null, sharedSpaces, spacePermissions, onOpenPremium, onSpaceReady, unreadCount, onOpenNotifs, onGoSettings, onPause, onResume, onDelete, onEdit, onAdd, slideClass }) {
   const { t } = useTranslation()
   // Mismo mecanismo que HomePage.jsx — ver ahí el porqué (evitar que la
   // animación de entrada se dispare también en un simple cambio de
@@ -166,18 +167,24 @@ export function RecurrentsPage({ payments, profile, spaceSwitcher, activeSpaceHe
           </div>
 
           {/* Resumen */}
-          <div data-coachmark="recurrentes-stats" className={styles.statsCard}>
-            <div className={styles.statsBlockBordered}>
-              <div className={styles.statsLabel}>{t('recurrentsPage.activeLabel')}</div>
-              <div className={styles.statsValue}>{activeMasters.length}</div>
-              <div className={styles.statsSubtext}>{t('recurrentsPage.pausedCount', { count: pausedMasters.length })}</div>
+          {dataLoading ? (
+            <div data-coachmark="recurrentes-stats" style={{ margin: '0 16px 14px' }}>
+              <StatsCardSkeleton />
             </div>
-            <div className={styles.statsBlockPadded}>
-              <div className={styles.statsLabel}>{t('recurrentsPage.monthlySum')}</div>
-              <div className={styles.statsValue}>{fmt(totalMensual)}</div>
-              <div className={styles.statsSubtext}>{t('recurrentsPage.monthlyPaymentsLabel')}</div>
+          ) : (
+            <div data-coachmark="recurrentes-stats" className={styles.statsCard}>
+              <div className={styles.statsBlockBordered}>
+                <div className={styles.statsLabel}>{t('recurrentsPage.activeLabel')}</div>
+                <div className={styles.statsValue}>{activeMasters.length}</div>
+                <div className={styles.statsSubtext}>{t('recurrentsPage.pausedCount', { count: pausedMasters.length })}</div>
+              </div>
+              <div className={styles.statsBlockPadded}>
+                <div className={styles.statsLabel}>{t('recurrentsPage.monthlySum')}</div>
+                <div className={styles.statsValue}>{fmt(totalMensual)}</div>
+                <div className={styles.statsSubtext}>{t('recurrentsPage.monthlyPaymentsLabel')}</div>
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Filtros */}
           <div className={styles.filterRow}>
@@ -193,7 +200,15 @@ export function RecurrentsPage({ payments, profile, spaceSwitcher, activeSpaceHe
 
           {/* Lista por categoría */}
           <div className={styles.categoryListWrapper}>
-            {byCategory.length === 0 ? (
+            {dataLoading ? (
+              /* Fase 1 del sistema de carga por sección (agosto 2026):
+                 antes, con `payments` vacío a propósito durante la carga,
+                 `byCategory` quedaba en 0 y se mostraba el EmptyState real
+                 ("Sin recurrentes") como si fuera un dato cierto — ahora se
+                 muestra el esqueleto del acordeón mientras `dataLoading` es
+                 true, nunca el EmptyState prematuro ni el hueco vacío. */
+              <CategoryAccordionSkeleton count={3} />
+            ) : byCategory.length === 0 ? (
               search ? (
                 <div className={styles.noResultsBlock}>
                   <CreditCard size={32} color="var(--border)" className={styles.noResultsIcon} />
