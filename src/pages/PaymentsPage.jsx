@@ -10,7 +10,7 @@ import { fmt, dateOf, dateToStr, getMonths, getMonthsShort, CATEGORIES, cobroPer
 import { getCategoryIcon } from '../lib/categoryIcons'
 import { supabase } from '../lib/supabase'
 import { showToast } from '../components/Toast'
-import { CategoryListSkeleton, PaymentRowSkeleton } from '../components/SkeletonLoader'
+import { CategoryListSkeleton, PaymentRowSkeleton, Bone } from '../components/SkeletonLoader'
 import AmountInput from '../components/AmountInput'
 import styles from './PaymentsPage.module.css'
 
@@ -1162,12 +1162,24 @@ export function PaymentsPage({ payments, dataLoading = false, profile, spaceSwit
             <div className={styles.balanceHeader}>
               <div>
                 <div className={styles.balanceLabel}>{t('paymentsPage.availableThisPeriod')}</div>
-                <div className={styles.balanceAmount} style={{ color: sobrePasado ? 'var(--danger)' : 'var(--paid)' }}>
-                  {sobrePasado ? '-' : ''}{fmt(Math.abs(disponible))}
-                </div>
+                {/* Fase 1 del sistema de carga por sección (agosto 2026):
+                    `disponible`/`totalGastos`/`sobrePasado` dependen de
+                    `payments` (via `gastosPeriodo`), vacío a propósito
+                    durante `dataLoading` — sin este branch se veía "todo tu
+                    sueldo disponible" un instante, como si nada se hubiera
+                    gastado. Se reemplaza por un bone, nunca por el número
+                    real a medias. */}
+                {dataLoading ? (
+                  <Bone w={110} h={26} r={4} />
+                ) : (
+                  <div className={styles.balanceAmount} style={{ color: sobrePasado ? 'var(--danger)' : 'var(--paid)' }}>
+                    {sobrePasado ? '-' : ''}{fmt(Math.abs(disponible))}
+                  </div>
+                )}
               </div>
               <div className={styles.balanceActions}>
-                {/* Botón discreto Añadir ingreso */}
+                {/* Botón discreto Añadir ingreso — no depende de `payments`,
+                    se queda tal cual durante la carga. */}
                 <button
                   data-coachmark="gastos-add-income-button"
                   onClick={() => setIncomeModal(true)}
@@ -1176,53 +1188,71 @@ export function PaymentsPage({ payments, dataLoading = false, profile, spaceSwit
                   <Plus size={13} strokeWidth={2.2} />
                   {t('paymentsPage.addIncome')}
                 </button>
-                <div className={styles.balanceSubtext}>
-                  <div className={styles.balanceSubtextMain}>
-                    {fmt(totalGastos)} <span className={styles.balanceSubtextFaded}>/ {fmt(ingresoTotal)}</span>
-                  </div>
-                  {totalExtras > 0 && (
-                    <div className={styles.balanceExtras}>
-                      +{fmt(totalExtras)} {t('paymentsPage.extrasSuffix')}
+                {dataLoading ? (
+                  <Bone w={90} h={11} r={4} />
+                ) : (
+                  <div className={styles.balanceSubtext}>
+                    <div className={styles.balanceSubtextMain}>
+                      {fmt(totalGastos)} <span className={styles.balanceSubtextFaded}>/ {fmt(ingresoTotal)}</span>
                     </div>
-                  )}
-                  {sobrePasado && (
-                    <div className={styles.balanceOverBudget}>{t('paymentsPage.overBudget')}</div>
-                  )}
-                </div>
+                    {totalExtras > 0 && (
+                      <div className={styles.balanceExtras}>
+                        +{fmt(totalExtras)} {t('paymentsPage.extrasSuffix')}
+                      </div>
+                    )}
+                    {sobrePasado && (
+                      <div className={styles.balanceOverBudget}>{t('paymentsPage.overBudget')}</div>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
 
-            {/* Barra heatmap segmentada */}
-            <div className={styles.heatmapBar}>
-              {segmentos.map(({ cat, total }) => (
-                <div
-                  key={cat}
-                  className={styles.heatmapSegment}
-                  style={{
-                    width: `${Math.min((total / ingresoTotal) * 100, 100)}%`,
-                    background: getCatColor(cat, profile.custom_categories, profile.category_colors),
-                  }}
-                  title={`${cat}: ${fmt(total)}`}
-                />
-              ))}
-            </div>
+            {/* Barra heatmap segmentada — `segmentos` también depende de
+                `gastosPeriodo`; durante la carga se reemplaza por una barra
+                gris neutra en vez de una barra vacía (0 gastos aparentes). */}
+            {dataLoading ? (
+              <Bone w="100%" h={12} r={6} style={{ marginBottom: 10 }} />
+            ) : (
+              <div className={styles.heatmapBar}>
+                {segmentos.map(({ cat, total }) => (
+                  <div
+                    key={cat}
+                    className={styles.heatmapSegment}
+                    style={{
+                      width: `${Math.min((total / ingresoTotal) * 100, 100)}%`,
+                      background: getCatColor(cat, profile.custom_categories, profile.category_colors),
+                    }}
+                    title={`${cat}: ${fmt(total)}`}
+                  />
+                ))}
+              </div>
+            )}
 
             {/* Chips de categoría */}
-            <div className={styles.categoryChipsRow}>
-              {segmentos.map(({ cat, total }) => {
-                const catColor = getCatColor(cat, profile.custom_categories, profile.category_colors)
-                const CatIcon  = getCategoryIcon(cat, profile.category_icons)
-                return (
-                  <div key={cat} className={styles.categoryChip} style={{ color: catColor }}>
-                    {CatIcon
-                      ? <CatIcon size={12} color={catColor} strokeWidth={2} />
-                      : <span className={styles.categoryChipDot} style={{ background: catColor }} />
-                    }
-                    {cat} {fmt(total)}
-                  </div>
-                )
-              })}
-            </div>
+            {dataLoading ? (
+              <div className={styles.categoryChipsRow}>
+                <Bone w={64} h={20} r={5} />
+                <Bone w={82} h={20} r={5} />
+                <Bone w={54} h={20} r={5} />
+              </div>
+            ) : (
+              <div className={styles.categoryChipsRow}>
+                {segmentos.map(({ cat, total }) => {
+                  const catColor = getCatColor(cat, profile.custom_categories, profile.category_colors)
+                  const CatIcon  = getCategoryIcon(cat, profile.category_icons)
+                  return (
+                    <div key={cat} className={styles.categoryChip} style={{ color: catColor }}>
+                      {CatIcon
+                        ? <CatIcon size={12} color={catColor} strokeWidth={2} />
+                        : <span className={styles.categoryChipDot} style={{ background: catColor }} />
+                      }
+                      {cat} {fmt(total)}
+                    </div>
+                  )
+                })}
+              </div>
+            )}
 
             {/* Ingresos extras del periodo — solo en personal. En un
                 espacio compartido, esta misma sección ahora es el Fondo
@@ -1302,9 +1332,18 @@ export function PaymentsPage({ payments, dataLoading = false, profile, spaceSwit
                   )}
                 </div>
 
-                <div className={styles.fundBalance}>{fmt(sharedFund.balance)}</div>
+                {/* `sharedFund.balance` viene de una fuente propia
+                    (`useSharedFund`, no `payments`) — con su propio
+                    `loading` desde este mismo cambio (ver useSharedFund.js),
+                    para no mostrar el saldo del espacio anterior mientras
+                    llega el nuevo. */}
+                {sharedFund.loading ? (
+                  <Bone w={100} h={22} r={4} />
+                ) : (
+                  <div className={styles.fundBalance}>{fmt(sharedFund.balance)}</div>
+                )}
 
-                {sharedFund.ledger.length > 0 && (
+                {!sharedFund.loading && sharedFund.ledger.length > 0 && (
                   <>
                     <button onClick={() => setFundExpanded(v => !v)} className={styles.extrasSummaryButton}>
                       <div className={styles.extrasCheckIcon}>
@@ -1387,20 +1426,22 @@ export function PaymentsPage({ payments, dataLoading = false, profile, spaceSwit
           ))}
         </div>
 
-        {/* Stats */}
+        {/* Stats — grandTotal/avgMonthly dependen de `paidPayments`, vacío a
+            propósito durante `dataLoading` (mismo criterio que balanceCard
+            de arriba). */}
         <div className={styles.statsCard}>
           <div className={styles.statsBlockWide}>
             <div className={styles.statsLabel}>
               {t('paymentsPage.totalMonths', { count: monthsBack })}
             </div>
-            <div className={styles.statsValueLarge}>{fmt(grandTotal)}</div>
+            {dataLoading ? <Bone w={90} h={28} r={4} /> : <div className={styles.statsValueLarge}>{fmt(grandTotal)}</div>}
           </div>
           <div className={styles.statsDivider} />
           <div className={styles.statsBlock}>
             <div className={styles.statsLabel}>
               {t('paymentsPage.monthlyAverage')}
             </div>
-            <div className={styles.statsValue}>{fmt(Math.round(avgMonthly))}</div>
+            {dataLoading ? <Bone w={60} h={20} r={4} /> : <div className={styles.statsValue}>{fmt(Math.round(avgMonthly))}</div>}
           </div>
         </div>
 
@@ -1411,7 +1452,9 @@ export function PaymentsPage({ payments, dataLoading = false, profile, spaceSwit
           ))}
         </div>
 
-        {/* Gráfica */}
+        {/* Gráfica — `chartTotals` depende de `paidPayments`; durante la
+            carga las barras muestran alturas neutras (no datos reales) en
+            vez de una gráfica plana en $0 que luego "salta" al valor real. */}
         <div data-coachmark="gastos-monthly-chart" className={styles.chartCard}>
           <div className={styles.chartTitle}>
             {t('paymentsPage.monthlyExpenses')}
@@ -1424,7 +1467,9 @@ export function PaymentsPage({ payments, dataLoading = false, profile, spaceSwit
               const barColor  = selectedCat ? getCatColor(selectedCat, profile.custom_categories, profile.category_colors) : 'var(--accent)'
               return (
                 <div key={i} className={styles.chartLabelCell}>
-                  {total > 0 && (
+                  {dataLoading ? (
+                    <Bone w={22} h={9} r={3} style={{ margin: '0 auto' }} />
+                  ) : total > 0 && (
                     <div className={styles.chartLabelAmount} style={{ color: isCurrent ? barColor : 'var(--text)' }}>
                       {fmt(total)}
                     </div>
@@ -1440,19 +1485,29 @@ export function PaymentsPage({ payments, dataLoading = false, profile, spaceSwit
               const heightPct = (total / maxChart) * 100
               const isCurrent = m.month === now.getMonth() && m.year === now.getFullYear()
               const barColor  = selectedCat ? getCatColor(selectedCat, profile.custom_categories, profile.category_colors) : 'var(--accent)'
+              // Alturas neutras fijas mientras carga (no derivadas de
+              // `total`, que sería $0 a propósito) — solo varían un poco
+              // entre barras para que se lea como gráfica, no como una
+              // fila plana.
+              const skelHeights = [45, 65, 30, 55, 40, 70, 35, 50, 60, 25, 48, 38]
               return (
                 <div key={i} className={styles.chartBarCell}>
-                  <div className={styles.chartBar} style={{
-                    height: `${Math.max(heightPct, total > 0 ? 3 : 0)}%`,
-                    background: isCurrent ? barColor : (selectedCat ? barColor : 'var(--accent-border)'),
-                    opacity: isCurrent ? 1 : (selectedCat ? 0.45 : 1),
-                    minHeight: total > 0 ? 3 : 0,
-                  }} />
+                  {dataLoading ? (
+                    <Bone w="100%" h={`${skelHeights[i % skelHeights.length]}%`} r="3px 3px 0 0" style={{ minHeight: 0 }} />
+                  ) : (
+                    <div className={styles.chartBar} style={{
+                      height: `${Math.max(heightPct, total > 0 ? 3 : 0)}%`,
+                      background: isCurrent ? barColor : (selectedCat ? barColor : 'var(--accent-border)'),
+                      opacity: isCurrent ? 1 : (selectedCat ? 0.45 : 1),
+                      minHeight: total > 0 ? 3 : 0,
+                    }} />
+                  )}
                 </div>
               )
             })}
           </div>
-          {/* Labels de mes abajo */}
+          {/* Labels de mes abajo — `chartMonths` solo depende de
+              `monthsBack`, no de `payments`; se muestran siempre reales. */}
           <div className={styles.chartMonthLabelsRow}>
             {chartMonths.map((m, i) => {
               const isCurrent = m.month === now.getMonth() && m.year === now.getFullYear()
