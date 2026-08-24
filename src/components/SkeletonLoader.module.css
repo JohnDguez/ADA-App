@@ -5,7 +5,14 @@
 }
 
 .header {
-  background: #020A1F;
+  /* Antes #020A1F fijo — se veía "roto" en tema claro (siempre oscuro sin
+     importar el tema activo). Ahora usa var(--nav-bg): el mismo azul de
+     marca que ya usa BottomNav/NavRail, fijo en ambos temas (index.css no
+     lo hace variar) — se ve intencional en cualquier tema, no como un bug,
+     y mantiene el recorte redondeado de `.roundedWrapper` visible contra
+     var(--bg) de abajo (que si el header usara var(--bg) tal cual, se
+     perdería por completo — mismo tono, sin contraste). */
+  background: var(--nav-bg);
   height: 140px;
   display: flex;
   align-items: center;
@@ -29,6 +36,37 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
+}
+
+/* ── Botones del header (agosto 2026) — antes solo había UN bone genérico
+     representando "la campana"; PageHeader.jsx real tiene 2 botones
+     (engrane + campana, ver headerActions). Estos NO llevan shimmer: a
+     diferencia del avatar/saludo/nombre (que sí dependen del perfil sin
+     cargar todavía), estos 2 botones son chrome fijo — su color y tamaño
+     no cambian una vez que el perfil llega, así que mostrarlos ya
+     "resueltos" es más preciso que animarlos como si fueran datos en
+     camino. */
+.headerActionsSkel {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.settingsButtonSkel {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: var(--surface);
+  border: 1px solid var(--border-mid);
+  flex-shrink: 0;
+}
+
+.bellButtonSkel {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: var(--accent);
+  flex-shrink: 0;
 }
 
 .roundedWrapper {

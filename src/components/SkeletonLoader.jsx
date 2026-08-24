@@ -178,8 +178,12 @@ export function SkeletonLoader() {
             </div>
           </div>
 
-          {/* Campana */}
-          <Bone w={40} h={40} r={12} dark />
+          {/* Engrane + campana — 2 botones reales (antes solo se
+              representaba 1), mismo orden y tamaño que PageHeader.jsx. */}
+          <div className={styles.headerActionsSkel}>
+            <div className={styles.settingsButtonSkel} />
+            <div className={styles.bellButtonSkel} />
+          </div>
         </div>
       </div>
 
