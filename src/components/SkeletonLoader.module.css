@@ -230,3 +230,56 @@
   flex: 1;
   min-width: 0;
 }
+
+/* ── Piezas nuevas (agosto 2026) — sistema de carga por sección, RecurrentsPage ── */
+.statsCardSkelWrapper {
+  display: flex;
+  background: var(--surface);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  gap: 14px;
+}
+
+.statsCardSkelBlock {
+  flex: 1;
+}
+
+.categoryAccordionSkelWrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.categoryAccordionSkelItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--surface);
+  border-radius: var(--radius);
+  padding: 14px;
+  min-height: 58px;
+}
+
+.categoryAccordionSkelContent {
+  flex: 1;
+  min-width: 0;
+}
+
+/* ── Piezas nuevas (agosto 2026) — sistema de carga por sección, GoalsPage ── */
+.goalCardSkelWrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.goalCardSkelItem {
+  background: var(--surface);
+  border-radius: var(--radius);
+  padding: 16px;
+}
+
+.goalCardSkelTop {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}

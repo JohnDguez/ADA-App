@@ -98,6 +98,69 @@ export function PaymentRowSkeleton({ count = 4 }) {
   )
 }
 
+// Esqueleto de la tarjeta de stats (2 bloques lado a lado — usada en
+// Recurrentes hoy, reutilizable en cualquier pantalla con el mismo layout).
+export function StatsCardSkeleton() {
+  return (
+    <div className={styles.statsCardSkelWrapper}>
+      <div className={styles.statsCardSkelBlock}>
+        <Bone w={60} h={10} r={3} />
+        <Bone w={40} h={22} r={4} style={{ marginTop: 5 }} />
+        <Bone w={70} h={11} r={4} style={{ marginTop: 4 }} />
+      </div>
+      <div className={styles.statsCardSkelBlock}>
+        <Bone w={80} h={10} r={3} />
+        <Bone w={70} h={22} r={4} style={{ marginTop: 5 }} />
+        <Bone w={90} h={11} r={4} style={{ marginTop: 4 }} />
+      </div>
+    </div>
+  )
+}
+
+// Esqueleto de un acordeón de categoría cerrado (mismo layout que
+// `.categoryHeader` de RecurrentsPage: ícono redondo + nombre/meta + hueco
+// del chevron) — usado mientras `dataLoading` es true, en vez del hueco en
+// blanco/EmptyState prematuro que había antes en esa lista.
+export function CategoryAccordionSkeleton({ count = 3 }) {
+  return (
+    <div className={styles.categoryAccordionSkelWrapper}>
+      {Array.from({ length: count }).map((_, i) => (
+        <div key={i} className={styles.categoryAccordionSkelItem}>
+          <Bone w={36} h={36} r={8} />
+          <div className={styles.categoryAccordionSkelContent}>
+            <Bone w={110} h={14} r={4} />
+            <Bone w={80} h={11} r={4} style={{ marginTop: 5 }} />
+          </div>
+          <Bone w={18} h={18} r={4} />
+        </div>
+      ))}
+    </div>
+  )
+}
+
+// Esqueleto de una tarjeta de meta (mismo layout que `.card`/`GoalCard` de
+// GoalsPage: ícono + nombre/monto meta, barra de progreso, fila inferior) —
+// usado mientras `goalsData.loading` es true, en vez del EmptyState "Sin
+// metas" prematuro que se mostraría con `activeGoals`/`completedGoals`
+// vacíos a propósito durante la carga.
+export function GoalCardSkeleton({ count = 2 }) {
+  return (
+    <div className={styles.goalCardSkelWrapper}>
+      {Array.from({ length: count }).map((_, i) => (
+        <div key={i} className={styles.goalCardSkelItem}>
+          <div className={styles.goalCardSkelTop}>
+            <Bone w={36} h={36} r={8} />
+            <Bone w={110} h={15} r={4} />
+            <Bone w={60} h={14} r={4} style={{ marginLeft: 'auto' }} />
+          </div>
+          <Bone w="100%" h={6} r={999} style={{ marginTop: 12 }} />
+          <Bone w={130} h={12} r={4} style={{ marginTop: 10 }} />
+        </div>
+      ))}
+    </div>
+  )
+}
+
 export function SkeletonLoader() {
   return (
     <div className={styles.pageRoot}>
