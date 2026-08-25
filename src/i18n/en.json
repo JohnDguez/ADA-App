@@ -1316,7 +1316,6 @@
       "balance": "Balance",
       "categoryChart": "Expenses by category",
       "categoryChartContinued": "Expenses by category (continued)",
-      "monthlyChart": "Expenses by month",
       "expenseList": "Expense list",
       "memberSpending": "Spending by member",
       "colType": "Type",
@@ -1328,7 +1327,10 @@
       "withdrawals": "Withdrawals",
       "colGoal": "Goal",
       "fund": "Shared fund",
-      "generate": "Generate PDF"
+      "generate": "Generate PDF",
+      "trendChart": "Expenses and income by month",
+      "pending": "Pending",
+      "reportTitle": "Financial report"
     },
     "salaryType": "Salary"
   }
