@@ -361,12 +361,26 @@ function drawTrendChart(doc, x, y, width, series, labels) {
     doc.text(text, cx, cy, { align: 'center' })
   }
 
+  // Monto rotulado con fondo blanco detrás (v0.9.433). Ahora además: si los
+  // 2 puntos (Ingresos/Gastos) de un mismo punto en X quedan muy cerca en
+  // altura, sus 2 etiquetas se separan a la fuerza (simétrico alrededor del
+  // punto medio) — antes cada una solo se offsetaba respecto a SU propio
+  // punto, así que 2 líneas casi pegadas seguían produciendo 2 etiquetas
+  // casi pegadas entre sí (visto en captura de Johnatan).
+  const MIN_LABEL_GAP = 5 // mm entre los centros de las 2 etiquetas
   if (showLabels) {
-    for (const c of ingresosCoords) {
-      if (c.value > 0) drawAmountLabel(moneyCompact(c.value), c.x, c.y - 1.8)
-    }
-    for (const c of gastosCoords) {
-      if (c.value > 0) drawAmountLabel(moneyCompact(c.value), c.x, c.y + 3.8)
+    for (let i = 0; i < points.length; i++) {
+      const ing = ingresosCoords[i]
+      const gas = gastosCoords[i]
+      let ingLabelY = ing.y - 1.8
+      let gasLabelY = gas.y + 3.8
+      if (ing.value > 0 && gas.value > 0 && (gasLabelY - ingLabelY) < MIN_LABEL_GAP) {
+        const mid = (ingLabelY + gasLabelY) / 2
+        ingLabelY = mid - MIN_LABEL_GAP / 2
+        gasLabelY = mid + MIN_LABEL_GAP / 2
+      }
+      if (ing.value > 0) drawAmountLabel(moneyCompact(ing.value), ing.x, ingLabelY)
+      if (gas.value > 0) drawAmountLabel(moneyCompact(gas.value), gas.x, gasLabelY)
     }
   }
 
