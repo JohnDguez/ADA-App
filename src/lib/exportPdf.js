@@ -139,10 +139,20 @@ function money(n) {
   return '$' + Math.abs(num).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 }
 
+// Montos abreviados SOLO para las etiquetas de la gráfica de tendencia —
+// bug real detectado (confundía a Johnatan): para montos MENORES a $1,000,
+// esta función caía de regreso a money() (que SÍ lleva centavos desde el
+// ajuste de decimales), produciendo cosas como "$860.00" mezcladas con
+// "$4.9k" en la misma gráfica — dos formatos distintos, y encima con 2
+// montos reales pero DIFERENTES (Ingresos vs Gastos de la misma semana)
+// tan pegados que se leían como si fueran el mismo dato mal calculado.
+// Ahora los montos chicos también van redondos, sin centavos — la
+// precisión de centavos vive en los KPI/tablas, no en las etiquetas de la
+// gráfica.
 function moneyCompact(n) {
   const num = Number(n) || 0
   if (num >= 1000) return '$' + (num / 1000).toLocaleString('es-MX', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + 'k'
-  return money(num)
+  return '$' + Math.round(Math.abs(num)).toLocaleString('es-MX')
 }
 
 // Si no queda suficiente alto en la página actual, agrega una nueva y
