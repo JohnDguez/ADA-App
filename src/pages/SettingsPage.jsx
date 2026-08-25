@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { createPortal } from 'react-dom'
-import { LogOut, Camera, Crown, User, Tag, Calendar, Bell, SunMoon, HelpCircle, Users, MessageCircle } from 'lucide-react'
+import { LogOut, Camera, Crown, User, Tag, Calendar, Bell, SunMoon, HelpCircle, Users, MessageCircle, Download } from 'lucide-react'
 import { showToast } from '../components/Toast'
 import { supabase } from '../lib/supabase'
 import { APP_VERSION } from '../lib/patchNotes'
@@ -15,6 +15,7 @@ import { SettingsNotificationsPage } from './settings/SettingsNotificationsPage'
 import { SettingsAppearancePage } from './settings/SettingsAppearancePage'
 import { SettingsSharedSpacePage } from './settings/SettingsSharedSpacePage'
 import { SettingsSubscriptionPage } from './settings/SettingsSubscriptionPage'
+import { SettingsExportPage } from './settings/SettingsExportPage'
 import styles from './SettingsPage.module.css'
 
 // Galería de avatares preestablecidos — imágenes estáticas servidas desde
@@ -41,7 +42,7 @@ export function SettingsPage({ profile, user, onUpdate, onUploadAvatar, onDataDe
   const { t } = useTranslation()
   const FREQ_LABEL  = { weekly: t('frequency.weekly'), biweekly: t('frequency.biweekly'), monthly: t('frequency.monthly') }
   const THEME_LABEL = { sistema: t('theme.system'), light: t('theme.light'), dark: t('theme.dark') }
-  const [section, setSection] = useState(initialSection || null) // null | 'account' | 'categories' | 'cobro' | 'notifications' | 'appearance' | 'sharedspace' | 'subscription'
+  const [section, setSection] = useState(initialSection || null) // null | 'account' | 'categories' | 'cobro' | 'notifications' | 'appearance' | 'sharedspace' | 'subscription' | 'export'
   const [uploadingAvatar, setUploadingAvatar] = useState(false)
   const [avatarModal, setAvatarModal] = useState(null) // null | 'choice' | 'gallery'
 
@@ -186,6 +187,9 @@ export function SettingsPage({ profile, user, onUpdate, onUploadAvatar, onDataDe
   if (section === 'subscription') {
     return <SettingsSubscriptionPage onBack={back} slideClass={slideClass} />
   }
+  if (section === 'export') {
+    return <SettingsExportPage profile={profile} sharedSpaces={sharedSpaces} onOpenPremium={onOpenPremium} onBack={back} slideClass={slideClass} />
+  }
 
   return (
     <div className={`${slideClass} ${styles.pageWrapper}`}>
@@ -237,6 +241,7 @@ export function SettingsPage({ profile, user, onUpdate, onUploadAvatar, onDataDe
         </div>
         <Row icon={SunMoon}  label={t('settingsPage.menu.appearance')}                    value={THEME_LABEL[theme] || ''} onClick={() => openSection('appearance')} />
         <Row icon={Users}    label={t('settingsPage.menu.sharedSpace')}            onClick={() => openSection('sharedspace')} />
+        <Row icon={Download} label={t('settingsPage.menu.export')}                 onClick={() => openSection('export')} />
         {profile.is_premium
           ? <Row icon={Crown} filled label={t('settingsPage.menu.subscription')} onClick={() => openSection('subscription')} last />
           : <Row icon={Crown} filled label={t('settingsPage.menu.getPremium')} onClick={onOpenPremium} last />
