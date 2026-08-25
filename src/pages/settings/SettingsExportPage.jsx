@@ -454,15 +454,32 @@ export function SettingsExportPage({ profile, sharedSpaces, onOpenPremium, onBac
   // "canceladas" se descarta a propósito (decidido con Johnatan: una meta
   // borrada no deja ningún rastro en la base de datos, no hay dato real
   // que mostrar sin inventar o cambiar el schema).
+  // Bug real reportado por Johnatan: esta función siempre traía las metas
+  // PERSONALES, sin importar el espacio elegido en el filtro — mi
+  // suposición inicial (revisando solo `useGoals.js`) fue que "Metas
+  // compartidas" no existía todavía (Fase 2 pendiente, según una nota
+  // vieja de CONTEXT.md). Esa nota estaba desactualizada: SÍ existe, vía
+  // `api/manage-shared-goal.js` (que ya escribe `goals`/`goal_transactions`
+  // con `space_id` real). Corregido con el mismo criterio de filtro que ya
+  // usa `useGoals.js` (`filterColumn = spaceId ? 'space_id' : 'user_id'`):
+  // en un Espacio Compartido, las transacciones pueden venir de CUALQUIER
+  // miembro, así que ahí no se filtra por `user_id`, solo por `space_id`.
   async function fetchGoalsData() {
-    const { data: allGoals } = await supabase.from('goals').select('*').eq('user_id', profile.id).is('space_id', null)
+    const isShared = space !== 'personal'
+    const goalsQuery = isShared
+      ? supabase.from('goals').select('*').eq('space_id', space)
+      : supabase.from('goals').select('*').eq('user_id', profile.id).is('space_id', null)
+    const { data: allGoals } = await goalsQuery
     const goalNameById = {}
     for (const g of (allGoals || [])) goalNameById[g.id] = g.name
 
     const created = (allGoals || []).filter(g => g.created_at && dateToStr(new Date(g.created_at)) >= from && dateToStr(new Date(g.created_at)) <= to)
     const completed = (allGoals || []).filter(g => g.is_completed && g.completed_at && dateToStr(new Date(g.completed_at)) >= from && dateToStr(new Date(g.completed_at)) <= to)
 
-    const { data: allTx } = await supabase.from('goal_transactions').select('*').eq('user_id', profile.id).is('space_id', null)
+    const txQuery = isShared
+      ? supabase.from('goal_transactions').select('*').eq('space_id', space)
+      : supabase.from('goal_transactions').select('*').eq('user_id', profile.id).is('space_id', null)
+    const { data: allTx } = await txQuery
     const inRange = (allTx || []).filter(tx => tx.created_at && dateToStr(new Date(tx.created_at)) >= from && dateToStr(new Date(tx.created_at)) <= to)
 
     return {
