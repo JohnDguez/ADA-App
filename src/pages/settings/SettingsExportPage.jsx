@@ -1,11 +1,11 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
-import { ChevronLeft, Receipt, Wallet, Download } from 'lucide-react'
+import { ChevronLeft, Receipt, Wallet, Download, FileSpreadsheet } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import { PremiumLock } from '../../components/PremiumLock'
 import { Select } from '../../components/Select'
 import { DatePicker } from '../../components/DatePicker'
-import { dateToStr, todayStr, dateOf, fmt, getCategoryLabel } from '../../lib/utils'
+import { dateToStr, todayStr, dateOf, fmt, getCategoryLabel, cobroPeriod, addDays, today } from '../../lib/utils'
 import { buildCsv, downloadCsv } from '../../lib/exportCsv'
 import styles from './SettingsExportPage.module.css'
 
@@ -27,6 +27,50 @@ export function SettingsExportPage({ profile, sharedSpaces, onOpenPremium, onBac
   const [space, setSpace]   = useState('personal') // 'personal' | id de shared_spaces
   const [from, setFrom]     = useState(() => dateToStr(new Date(new Date().getFullYear(), new Date().getMonth(), 1)))
   const [to, setTo]         = useState(() => todayStr())
+  const [activeShortcut, setActiveShortcut] = useState(null) // null = rango personalizado
+
+  // Accesos rápidos de rango de fechas (Regla 8, mockup confirmado). Cada
+  // uno calcula from/to y marca su propio chip como activo; tocar un
+  // DatePicker manualmente después (handleFromChange/handleToChange)
+  // limpia `activeShortcut` — deja de ser "un acceso rápido" y pasa a ser
+  // un rango personalizado, sin ningún chip resaltado.
+  const SHORTCUTS = [
+    { key: 'currentPeriod',  label: t('settingsExport.shortcuts.currentPeriod') },
+    { key: 'previousPeriod', label: t('settingsExport.shortcuts.previousPeriod') },
+    { key: 'currentMonth',   label: t('settingsExport.shortcuts.currentMonth') },
+    { key: 'last3Months',    label: t('settingsExport.shortcuts.last3Months') },
+    { key: 'last6Months',    label: t('settingsExport.shortcuts.last6Months') },
+  ]
+
+  function applyShortcut(key) {
+    const now = new Date()
+    let f, tt
+    if (key === 'currentPeriod') {
+      const { start, end } = cobroPeriod(profile)
+      f = dateToStr(start)
+      tt = dateToStr(end < today() ? end : today())
+    } else if (key === 'previousPeriod') {
+      const current = cobroPeriod(profile)
+      const { start, end } = cobroPeriod(profile, addDays(current.start, -1))
+      f = dateToStr(start)
+      tt = dateToStr(end)
+    } else if (key === 'currentMonth') {
+      f = dateToStr(new Date(now.getFullYear(), now.getMonth(), 1))
+      tt = todayStr()
+    } else if (key === 'last3Months') {
+      f = dateToStr(new Date(now.getFullYear(), now.getMonth() - 2, 1))
+      tt = todayStr()
+    } else if (key === 'last6Months') {
+      f = dateToStr(new Date(now.getFullYear(), now.getMonth() - 5, 1))
+      tt = todayStr()
+    }
+    setFrom(f)
+    setTo(tt)
+    setActiveShortcut(key)
+  }
+
+  function handleFromChange(v) { setFrom(v); setActiveShortcut(null) }
+  function handleToChange(v)   { setTo(v);   setActiveShortcut(null) }
 
   const [counts, setCounts]   = useState(null) // { gastos, ingresos } | null mientras carga
   const [counting, setCounting] = useState(false)
@@ -202,7 +246,14 @@ export function SettingsExportPage({ profile, sharedSpaces, onOpenPremium, onBac
         <button onClick={onBack} className={styles.backButton}>
           <ChevronLeft size={18} color="var(--text)" />
         </button>
-        <div className={styles.headerTitle}>{t('settingsExport.title')}</div>
+      </div>
+
+      <div className={styles.hero}>
+        <div className={styles.heroIconCircle}>
+          <FileSpreadsheet size={26} color="var(--accent)" />
+        </div>
+        <div className={styles.heroTitle}>{t('settingsExport.title')}</div>
+        <p className={styles.heroDesc}>{t('settingsExport.intro')}</p>
       </div>
 
       <PremiumLock
@@ -211,8 +262,6 @@ export function SettingsExportPage({ profile, sharedSpaces, onOpenPremium, onBac
         onUpgradeClick={onOpenPremium}
       >
         <div className={styles.content}>
-          <p className={styles.intro}>{t('settingsExport.intro')}</p>
-
           <div className={styles.fieldGroup}>
             <div className="field-label">{t('settingsExport.dataToInclude')}</div>
             <div className={styles.chipRow}>
@@ -237,19 +286,37 @@ export function SettingsExportPage({ profile, sharedSpaces, onOpenPremium, onBac
 
           <div className={styles.fieldGroup}>
             <div className="field-label">{t('settingsExport.spaceLabel')}</div>
-            <Select value={space} onChange={setSpace} options={spaceOptions} />
+            <div className={styles.fieldSurface}>
+              <Select value={space} onChange={setSpace} options={spaceOptions} />
+            </div>
           </div>
 
           <div className={styles.fieldGroup}>
             <div className="field-label">{t('settingsExport.dateRange')}</div>
+            <div className={styles.shortcutRow}>
+              {SHORTCUTS.map(s => (
+                <button
+                  key={s.key}
+                  type="button"
+                  onClick={() => applyShortcut(s.key)}
+                  className={`${styles.shortcutChip} ${activeShortcut === s.key ? styles.shortcutChipActive : ''}`}
+                >
+                  {s.label}
+                </button>
+              ))}
+            </div>
             <div className={styles.dateRow}>
               <div className={styles.dateCol}>
                 <div className={styles.dateSubLabel}>{t('settingsExport.from')}</div>
-                <DatePicker value={from} onChange={setFrom} />
+                <div className={styles.fieldSurface}>
+                  <DatePicker value={from} onChange={handleFromChange} />
+                </div>
               </div>
               <div className={styles.dateCol}>
                 <div className={styles.dateSubLabel}>{t('settingsExport.to')}</div>
-                <DatePicker value={to} onChange={setTo} />
+                <div className={styles.fieldSurface}>
+                  <DatePicker value={to} onChange={handleToChange} />
+                </div>
               </div>
             </div>
           </div>

@@ -7,8 +7,7 @@
 .header {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 52px 16px 20px;
+  padding: 52px 16px 0;
 }
 
 .backButton {
@@ -24,21 +23,76 @@
   flex-shrink: 0;
 }
 
-.headerTitle {
-  font-size: 20px;
+.hero {
+  text-align: center;
+  padding: 12px 24px 24px;
+}
+
+.heroIconCircle {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: var(--accent-soft);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 12px;
+}
+
+.heroTitle {
+  font-size: 19px;
   font-weight: 700;
   color: var(--text);
+  margin-bottom: 6px;
+}
+
+.heroDesc {
+  font-size: 13px;
+  color: var(--text);
+  max-width: 280px;
+  margin: 0 auto;
 }
 
 .content {
   padding: 0 16px;
 }
 
-.intro {
-  font-size: 13px;
-  color: var(--text);
-  margin: 0 0 20px;
+/* Sobreescribe field-input (global, mismo fondo que la página) SOLO en
+   esta pantalla — Regla 20, por descendencia en vez de misma-clase porque
+   Select.jsx/DatePicker.jsx no exponen una prop de className propia para
+   combinar ambas clases en un solo elemento. La especificidad de 2 clases
+   (.fieldSurface .field-input) ya gana sin necesitar !important. */
+.fieldSurface :global(.field-input) {
+  background: var(--surface);
+  border: none;
 }
+
+.shortcutRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.shortcutChip {
+  padding: 6px 12px;
+  border-radius: 5px;
+  border: 0.5px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.shortcutChipActive {
+  border: none;
+  background: var(--accent);
+  color: var(--surface);
+  font-weight: 700;
+}
+
 
 .fieldGroup {
   margin-bottom: 20px;
@@ -88,7 +142,6 @@
 .countCard {
   background: var(--surface);
   border-radius: 5px;
-  border: 0.5px solid var(--border);
   padding: 12px 14px;
   display: flex;
   justify-content: space-between;
