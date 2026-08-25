@@ -352,8 +352,9 @@ export function SettingsExportPage({ profile, sharedSpaces, onOpenPremium, onBac
       ingresos: ingresosByMonth[key] || 0,
     }))
     const firstActive = monthPoints.findIndex(p => p.gastos > 0 || p.ingresos > 0)
+    const shownMonthKeys = firstActive > 0 ? monthKeys.slice(firstActive) : monthKeys
     if (firstActive > 0) monthPoints = monthPoints.slice(firstActive)
-    if (monthPoints.length >= 3) return { granularity: 'month', points: monthPoints }
+    if (monthPoints.length >= 3) return { granularity: 'month', points: monthPoints, rangeStart: `${shownMonthKeys[0]}-01` }
 
     // 2) Por SEMANA, sobre el tramo real de actividad (primera fecha con
     // movimiento encontrada arriba, hasta `to`).
@@ -372,7 +373,7 @@ export function SettingsExportPage({ profile, sharedSpaces, onOpenPremium, onBac
       const d = dateOf(key)
       return { label: `${d.getDate()} ${MONTHS_SHORT[d.getMonth()]}`, gastos: gastosByWeek[key] || 0, ingresos: ingresosByWeek[key] || 0 }
     })
-    if (weekPoints.length >= 3) return { granularity: 'week', points: weekPoints }
+    if (weekPoints.length >= 3) return { granularity: 'week', points: weekPoints, rangeStart: weekStart }
 
     // 3) Por DÍA — última red de seguridad, tramo de actividad muy corto.
     const gastosByDay = bucketTotals(gastos, d => d)
@@ -389,6 +390,7 @@ export function SettingsExportPage({ profile, sharedSpaces, onOpenPremium, onBac
         const d = dateOf(key)
         return { label: `${d.getDate()} ${MONTHS_SHORT[d.getMonth()]}`, gastos: gastosByDay[key] || 0, ingresos: ingresosByDay[key] || 0 }
       }),
+      rangeStart: dayKeys[0],
     }
   }
 
@@ -570,6 +572,16 @@ export function SettingsExportPage({ profile, sharedSpaces, onOpenPremium, onBac
     const goalsData = includeGoals ? await fetchGoalsData() : null
     const spaceLabel = space === 'personal' ? t('settingsExport.space.personal') : (selectedSpaceEntry?.space.name || '')
 
+    // Gráfica de tendencia — SIEMPRE independiente del filtro (ver
+    // buildTrendSeries arriba), solo se calcula si hay algo que graficar.
+    // Se calcula ANTES del objeto labels para poder armar el subtítulo con
+    // el rango REAL que cubre (Johnatan: "no sé cuál es el correcto ni cómo
+    // se calcula" al ver un número distinto entre el KPI, que sí respeta el
+    // filtro elegido, y un mes de la gráfica, que mira su propia ventana de
+    // hasta 12 meses independiente — dejarlo explícito en el subtítulo
+    // resuelve la confusión sin tener que unificar ambos criterios).
+    const series = (includeGastos || includeIngresos) ? await buildTrendSeries(to) : null
+
     const labels = {
       reportTitle: t('settingsExport.pdf.reportTitle'),
       ingresos: t('settingsExport.income'),
@@ -579,7 +591,9 @@ export function SettingsExportPage({ profile, sharedSpaces, onOpenPremium, onBac
       subCategoryChart: t('settingsExport.pdf.subCategoryChart'),
       categoryChartContinued: t('settingsExport.pdf.categoryChartContinued'),
       trendChart: t('settingsExport.pdf.trendChart'),
-      subTrendChart: t('settingsExport.pdf.subTrendChart'),
+      subTrendChart: series
+        ? `${t('settingsExport.pdf.subTrendChart')} (${formatDateLabel(series.rangeStart)} – ${formatDateLabel(to)})`
+        : t('settingsExport.pdf.subTrendChart'),
       expenseList: t('settingsExport.pdf.expenseList'),
       subExpenseList: t('settingsExport.pdf.subExpenseList'),
       colDate: t('settingsExport.csv.date'),
@@ -605,10 +619,6 @@ export function SettingsExportPage({ profile, sharedSpaces, onOpenPremium, onBac
       colGoal: t('settingsExport.pdf.colGoal'),
       fund: t('settingsExport.pdf.fund'),
     }
-
-    // Gráfica de tendencia — SIEMPRE independiente del filtro (ver
-    // buildTrendSeries arriba), solo se calcula si hay algo que graficar.
-    const series = (includeGastos || includeIngresos) ? await buildTrendSeries(to) : null
 
     const doc = await generateReportPdf({
       spaceLabel,
