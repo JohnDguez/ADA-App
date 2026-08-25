@@ -131,9 +131,12 @@ function drawAvatar(doc, dataUrl, name, x, y, size) {
 }
 
 // ── Utilidades de formato/paginado ──────────────────────────────────────
+// Montos con decimales SIEMPRE (pedido explícito de Johnatan) — salvo
+// moneyCompact(), que es solo para las etiquetas de la gráfica y se queda
+// abreviada ($12.0k).
 function money(n) {
   const num = Number(n) || 0
-  return '$' + Math.abs(num).toLocaleString('es-MX', { minimumFractionDigits: 0, maximumFractionDigits: 0 })
+  return '$' + Math.abs(num).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 }
 
 function moneyCompact(n) {
@@ -154,16 +157,26 @@ function ensureSpace(doc, y, neededHeight) {
   return y
 }
 
-function sectionTitle(doc, text, x, y) {
+function sectionTitle(doc, text, x, y, subtitle) {
   doc.setFontSize(11)
   doc.setTextColor(...COLOR_DARK)
   doc.setFont(undefined, 'bold')
   doc.text(text, x, y)
   doc.setFont(undefined, 'normal')
-  return y + 6
+  y += 4.5
+  if (subtitle) {
+    doc.setFontSize(7.5)
+    doc.setTextColor(...COLOR_MUTED)
+    doc.text(subtitle, x, y)
+    y += 4
+  }
+  return y + 1.5
 }
 
-// ── Encabezado — logo/texto arriba, título general grande debajo ───────
+// ── Encabezado — logo a la izquierda; a la derecha, el ESPACIO arriba
+// (más prominente) y el rango de fechas debajo (más chico, mudo); título
+// general grande abajo de todo, con espacio de sobra respecto al logo
+// (Johnatan: "el logo queda pegado, casi arriba, del título").
 function drawHeader(doc, logo, spaceLabel, fromLabel, toLabel, reportTitle) {
   let y = MARGIN
   if (logo) {
@@ -177,11 +190,17 @@ function drawHeader(doc, logo, spaceLabel, fromLabel, toLabel, reportTitle) {
     doc.text('LunaPay', MARGIN, y + 3)
     doc.setFont(undefined, 'normal')
   }
-  doc.setFontSize(8)
-  doc.setTextColor(...COLOR_MUTED)
-  doc.text(`${spaceLabel} · ${fromLabel} — ${toLabel}`, PAGE_W - MARGIN, y + 2, { align: 'right' })
 
-  y += 9
+  doc.setFontSize(9.5)
+  doc.setTextColor(...COLOR_DARK)
+  doc.setFont(undefined, 'bold')
+  doc.text(spaceLabel, PAGE_W - MARGIN, y + 1, { align: 'right' })
+  doc.setFont(undefined, 'normal')
+  doc.setFontSize(7.5)
+  doc.setTextColor(...COLOR_MUTED)
+  doc.text(`${fromLabel} — ${toLabel}`, PAGE_W - MARGIN, y + 6, { align: 'right' })
+
+  y += 18 // antes +9 — más espacio respecto al logo para que el título no se vea pegado
   doc.setFontSize(17)
   doc.setTextColor(...COLOR_DARK)
   doc.setFont(undefined, 'bold')
@@ -242,7 +261,7 @@ function drawCategoriesAndTrend(doc, y, { categories, series, labels }) {
   // drawRemainingCategories).
   let shownCategories = []
   if (categories.length > 0) {
-    leftY = sectionTitle(doc, labels.categoryChart, leftX, leftY)
+    leftY = sectionTitle(doc, labels.categoryChart, leftX, leftY, labels.subCategoryChart)
     const maxAmount = categories[0].amount
     const rowH = 6
     const availableRows = Math.max(0, Math.floor((PAGE_H - MARGIN - leftY) / rowH))
@@ -262,7 +281,7 @@ function drawCategoriesAndTrend(doc, y, { categories, series, labels }) {
   }
 
   if (series) {
-    rightY = sectionTitle(doc, labels.trendChart, rightX, rightY)
+    rightY = sectionTitle(doc, labels.trendChart, rightX, rightY, labels.subTrendChart)
     rightY = drawTrendChart(doc, rightX, rightY, colW, series, labels)
   }
 
@@ -282,7 +301,7 @@ function drawCategoriesAndTrend(doc, y, { categories, series, labels }) {
 function drawTrendChart(doc, x, y, width, series, labels) {
   const { points } = series
   const chartH = 34
-  const labelPad = 8 // espacio reservado arriba/abajo para los montos rotulados
+  const labelPad = 9 // espacio reservado arriba/abajo para los montos rotulados
   const top = y + labelPad
   const bottom = top + chartH
   const maxAmount = Math.max(...points.map(p => Math.max(p.gastos, p.ingresos)), 1)
@@ -314,15 +333,23 @@ function drawTrendChart(doc, x, y, width, series, labels) {
   drawLine(ingresosCoords, COLOR_GREEN)
   drawLine(gastosCoords, COLOR_ACCENT)
 
+  // Montos rotulados por punto (pedido explícito de Johnatan) — pero
+  // NUNCA en $0: una racha de meses/semanas sin movimiento se ve como una
+  // fila de "$0" amontonada contra el eje X (justo el problema real que
+  // reportó, ver captura); omitir esas etiquetas no pierde información
+  // real (ya se ve la línea plana en $0) y elimina el amontonamiento de
+  // raíz, en vez de solo separarlas un poco más.
   if (showLabels) {
     doc.setFontSize(6)
     for (const c of ingresosCoords) {
+      if (c.value <= 0) continue
       doc.setTextColor(...COLOR_DARK)
-      doc.text(moneyCompact(c.value), c.x, c.y - 2.5, { align: 'center' })
+      doc.text(moneyCompact(c.value), c.x, c.y - 3.2, { align: 'center' })
     }
     for (const c of gastosCoords) {
+      if (c.value <= 0) continue
       doc.setTextColor(...COLOR_DARK)
-      doc.text(moneyCompact(c.value), c.x, c.y + 4.5, { align: 'center' })
+      doc.text(moneyCompact(c.value), c.x, c.y + 5.2, { align: 'center' })
     }
   }
 
@@ -332,12 +359,12 @@ function drawTrendChart(doc, x, y, width, series, labels) {
   const labelEvery = Math.max(1, Math.ceil(points.length / 8)) // con muchos puntos (30 días), solo 1 de cada N para no amontonar
   points.forEach((p, i) => {
     if (i % labelEvery === 0 || i === points.length - 1) {
-      doc.text(p.label, x + stepX * i, bottom + 5, { align: 'center' })
+      doc.text(p.label, x + stepX * i, bottom + 6, { align: 'center' })
     }
   })
 
   // Leyenda
-  const legendY = bottom + 10
+  const legendY = bottom + 12
   doc.setFillColor(...COLOR_GREEN)
   doc.circle(x + 2, legendY - 1, 1.2, 'F')
   doc.setFontSize(7)
@@ -382,7 +409,7 @@ function drawRemainingCategories(doc, y, categories, labels) {
 // sigue sin pagarse. Formato D M A en toda la tabla.
 function drawExpenseList(doc, y, { rows, contributorsByRow, isSharedSpace, labels, autoTableFn }) {
   y = ensureSpace(doc, y, 14)
-  y = sectionTitle(doc, labels.expenseList, MARGIN, y)
+  y = sectionTitle(doc, labels.expenseList, MARGIN, y, labels.subExpenseList)
 
   const head = isSharedSpace
     ? [[labels.colPaid, labels.colName, labels.colCategory, labels.colAmount, labels.colContributors]]
@@ -406,7 +433,7 @@ function drawExpenseList(doc, y, { rows, contributorsByRow, isSharedSpace, label
     styles: { fontSize: 7.5, textColor: COLOR_DARK, cellPadding: 1.6, minCellHeight: isSharedSpace ? 8 : 5 },
     headStyles: { fillColor: COLOR_LIGHT, textColor: COLOR_MUTED, fontStyle: 'bold' },
     alternateRowStyles: { fillColor: [249, 249, 249] },
-    columnStyles: isSharedSpace ? { 3: { halign: 'right' }, 4: { cellWidth: 45 } } : { 3: { halign: 'right' } },
+    columnStyles: isSharedSpace ? { 3: { halign: 'right', cellWidth: 22 }, 4: { cellWidth: 45 } } : { 3: { halign: 'right', cellWidth: 22 } },
     didDrawCell(data) {
       if (!isSharedSpace || data.section !== 'body' || data.column.index !== contributorsColIndex) return
       const contributors = contributorsByRow[data.row.index] || []
@@ -429,7 +456,7 @@ function drawExpenseList(doc, y, { rows, contributorsByRow, isSharedSpace, label
 function drawMemberSpending(doc, y, memberTotals, labels) {
   if (memberTotals.length === 0) return y
   y = ensureSpace(doc, y, 14)
-  y = sectionTitle(doc, labels.memberSpending, MARGIN, y)
+  y = sectionTitle(doc, labels.memberSpending, MARGIN, y, labels.subMemberSpending)
   const maxAmount = Math.max(...memberTotals.map(m => m.total), 1)
   const rowH = 10
 
@@ -456,7 +483,7 @@ function drawMemberSpending(doc, y, memberTotals, labels) {
 function drawIncomeTable(doc, y, incomes, labels, autoTableFn) {
   if (incomes.length === 0) return y
   y = ensureSpace(doc, y, 14)
-  y = sectionTitle(doc, labels.ingresos, MARGIN, y)
+  y = sectionTitle(doc, labels.ingresos, MARGIN, y, labels.subIncome)
   autoTableFn(doc, {
     startY: y,
     head: [[labels.colDate, labels.colType, labels.colNote, labels.colAmount]],
@@ -466,7 +493,7 @@ function drawIncomeTable(doc, y, incomes, labels, autoTableFn) {
     styles: { fontSize: 7.5, textColor: COLOR_DARK, cellPadding: 1.6 },
     headStyles: { fillColor: COLOR_LIGHT, textColor: COLOR_MUTED, fontStyle: 'bold' },
     alternateRowStyles: { fillColor: [249, 249, 249] },
-    columnStyles: { 3: { halign: 'right' } },
+    columnStyles: { 3: { halign: 'right', cellWidth: 24 } },
   })
   return doc.lastAutoTable.finalY + 8
 }
@@ -474,7 +501,7 @@ function drawIncomeTable(doc, y, incomes, labels, autoTableFn) {
 // ── Metas (resumen + abonos + retiros) ──────────────────────────────────
 function drawGoalsSection(doc, y, goals, labels, autoTableFn) {
   y = ensureSpace(doc, y, 14)
-  y = sectionTitle(doc, labels.goalsTitle, MARGIN, y)
+  y = sectionTitle(doc, labels.goalsTitle, MARGIN, y, labels.subGoals)
 
   doc.setFontSize(8)
   doc.setTextColor(...COLOR_MUTED)
@@ -496,7 +523,7 @@ function drawGoalsSection(doc, y, goals, labels, autoTableFn) {
       theme: 'plain',
       styles: { fontSize: 7.5, textColor: COLOR_DARK, cellPadding: 1.6 },
       headStyles: { fillColor: COLOR_LIGHT, textColor: COLOR_MUTED, fontStyle: 'bold' },
-      columnStyles: { 2: { halign: 'right' } },
+      columnStyles: { 2: { halign: 'right', cellWidth: 24 } },
     })
     y = doc.lastAutoTable.finalY + 8
   }
@@ -515,7 +542,7 @@ function drawGoalsSection(doc, y, goals, labels, autoTableFn) {
       theme: 'plain',
       styles: { fontSize: 7.5, textColor: COLOR_DARK, cellPadding: 1.6 },
       headStyles: { fillColor: COLOR_LIGHT, textColor: COLOR_MUTED, fontStyle: 'bold' },
-      columnStyles: { 2: { halign: 'right' } },
+      columnStyles: { 2: { halign: 'right', cellWidth: 24 } },
     })
     y = doc.lastAutoTable.finalY + 8
   }
