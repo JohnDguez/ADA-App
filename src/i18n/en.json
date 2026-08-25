@@ -1310,6 +1310,25 @@
       "currentMonth": "Current month",
       "last3Months": "Last 3 months",
       "last6Months": "Last 6 months"
+    },
+    "format": "Format",
+    "pdf": {
+      "balance": "Balance",
+      "categoryChart": "Expenses by category",
+      "categoryChartContinued": "Expenses by category (continued)",
+      "monthlyChart": "Expenses by month",
+      "expenseList": "Expense list",
+      "memberSpending": "Spending by member",
+      "colType": "Type",
+      "colNote": "Note",
+      "goalsTitle": "Goals",
+      "created": "Created",
+      "completed": "Completed",
+      "contributions": "Contributions",
+      "withdrawals": "Withdrawals",
+      "colGoal": "Goal",
+      "fund": "Shared fund",
+      "generate": "Generate PDF"
     }
   }
 }
