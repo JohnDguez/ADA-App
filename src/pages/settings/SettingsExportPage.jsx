@@ -1,6 +1,13 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ChevronLeft, Receipt, Wallet, Download, FileSpreadsheet, FileText, Target } from 'lucide-react'
+// Ícono del encabezado (solo este) vía Phosphor Icons, peso "duotone" — Lucide
+// se siente muy plano para un ícono ancla de página completa (pedido de
+// Johnatan); el resto de la app se queda 100% en lucide-react, sin cambios.
+// Import DIRECTO al archivo del ícono (no el barrel `@phosphor-icons/react`)
+// para garantizar que el bundle final solo incluya este ícono, no los 9,000+
+// del paquete completo (58MB en disco sin tree-shaking).
+import { FileXls } from '@phosphor-icons/react/dist/csr/FileXls'
 import { supabase } from '../../lib/supabase'
 import { PremiumLock } from '../../components/PremiumLock'
 import { Select } from '../../components/Select'
@@ -672,16 +679,19 @@ export function SettingsExportPage({ profile, sharedSpaces, onOpenPremium, onBac
 
   return (
     <div className={`${slideClass} ${styles.pageWrapper}`}>
+      <div className={styles.glow} />
+
       <div className={styles.header}>
         <button onClick={onBack} className={styles.backButton}>
           <ChevronLeft size={18} color="var(--text)" />
         </button>
+        <div className={styles.heroIconCircle}>
+          <FileXls size={26} weight="duotone" color="var(--accent)" />
+        </div>
+        <div className={styles.headerSpacer} />
       </div>
 
       <div className={styles.hero}>
-        <div className={styles.heroIconCircle}>
-          <FileSpreadsheet size={26} color="var(--accent)" />
-        </div>
         <div className={styles.heroTitle}>{t('settingsExport.title')}</div>
         <p className={styles.heroDesc}>{t('settingsExport.intro')}</p>
       </div>

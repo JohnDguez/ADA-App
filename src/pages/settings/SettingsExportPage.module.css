@@ -2,11 +2,32 @@
   padding-bottom: 120px;
   background: var(--bg);
   min-height: 100vh;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Resplandor azul tenue arriba de la pantalla (pedido de Johnatan, "se ve
+   muy simple") — usa var(--accent), no un color nuevo. Detrás de todo el
+   contenido (z-index 0), el header/hero van con z-index 1 para quedar
+   encima. */
+.glow {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 220px;
+  background: radial-gradient(circle at 50% -10%, color-mix(in srgb, var(--accent) 35%, transparent), transparent 70%);
+  pointer-events: none;
+  z-index: 0;
 }
 
 .header {
-  display: flex;
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: 36px 1fr 36px;
   align-items: center;
+  gap: 12px;
   padding: 52px 16px 0;
 }
 
@@ -23,7 +44,16 @@
   flex-shrink: 0;
 }
 
+/* Columna vacía del grid, mismo ancho que .backButton — así la columna
+   central (1fr) centra el ícono de verdad en la pantalla, sin que el
+   botón de regreso lo empuje hacia la derecha. */
+.headerSpacer {
+  width: 36px;
+}
+
 .hero {
+  position: relative;
+  z-index: 1;
   text-align: center;
   padding: 12px 24px 24px;
 }
@@ -36,7 +66,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  margin: 0 auto 12px;
+  justify-self: center;
 }
 
 .heroTitle {
