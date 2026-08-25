@@ -49,6 +49,7 @@ export function SettingsExportPage({ profile, sharedSpaces, onOpenPremium, onBac
     { key: 'currentMonth',   label: t('settingsExport.shortcuts.currentMonth') },
     { key: 'last3Months',    label: t('settingsExport.shortcuts.last3Months') },
     { key: 'last6Months',    label: t('settingsExport.shortcuts.last6Months') },
+    { key: 'allTime',        label: t('settingsExport.shortcuts.allTime') },
   ]
 
   function applyShortcut(key) {
@@ -71,6 +72,15 @@ export function SettingsExportPage({ profile, sharedSpaces, onOpenPremium, onBac
       tt = todayStr()
     } else if (key === 'last6Months') {
       f = dateToStr(new Date(now.getFullYear(), now.getMonth() - 5, 1))
+      tt = todayStr()
+    } else if (key === 'allTime') {
+      // "Todo el historial" — desde que se abrió la cuenta (Personal) o se
+      // creó el espacio (Compartido), mismo dato que ya usa la gráfica de
+      // tendencia del PDF para topar su ventana de 12 meses. Si esa fecha
+      // no viene disponible (columna created_at ausente/no seleccionada),
+      // respaldo seguro: 5 años atrás — nunca deja el campo vacío.
+      const createdRaw = space === 'personal' ? profile.created_at : selectedSpaceEntry?.space.created_at
+      f = createdRaw ? dateToStr(new Date(createdRaw)) : dateToStr(new Date(now.getFullYear() - 5, now.getMonth(), now.getDate()))
       tt = todayStr()
     }
     setFrom(f)
