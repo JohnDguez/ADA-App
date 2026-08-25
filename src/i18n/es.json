@@ -1271,7 +1271,7 @@
   },
   "settingsExport": {
     "title": "Exportar datos",
-    "intro": "Descarga tus registros en un archivo CSV, listo para abrir en Excel o Google Sheets.",
+    "intro": "Descarga un archivo CSV con tus registros, o genera un reporte PDF con gráficas y resumen.",
     "dataToInclude": "Datos a incluir",
     "expenses": "Gastos",
     "income": "Ingresos",

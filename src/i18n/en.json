@@ -1271,7 +1271,7 @@
   },
   "settingsExport": {
     "title": "Export data",
-    "intro": "Download your records as a CSV file, ready to open in Excel or Google Sheets.",
+    "intro": "Download a CSV file with your records, or generate a PDF report with charts and a summary.",
     "dataToInclude": "Data to include",
     "expenses": "Expenses",
     "income": "Income",
