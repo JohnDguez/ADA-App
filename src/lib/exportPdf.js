@@ -16,16 +16,37 @@
 // oscuro de la app, NUNCA los colores de --bg/--text del tema oscuro):
 const COLOR_DARK   = [2, 10, 31]     // texto/números — SIEMPRE este color, nunca verde/azul (pedido explícito de Johnatan)
 const COLOR_MUTED  = [90, 95, 110]
-const COLOR_ACCENT = [47, 140, 250]  // var(--accent) tema claro — barras y acentos de color SÍ se conservan
-const COLOR_GREEN  = [15, 209, 67]   // var(--paid) — punto de acento de "Ingresos"
+const COLOR_ACCENT = [47, 140, 250]  // var(--accent) tema claro — barras/línea de Gastos, SÍ se conservan a color
+const COLOR_GREEN  = [15, 209, 67]   // var(--paid) — línea/acento de Ingresos
+const COLOR_PURPLE = [107, 79, 224]  // acento de Balance — 3er color para diferenciar los 3 KPIs entre sí
 const COLOR_LIGHT  = [242, 242, 242] // var(--bg) tema claro — fondo de tarjetas/barras vacías
 const COLOR_WHITE  = [255, 255, 255]
 const COLOR_LINE   = [229, 229, 229]
+// Tintes muy claros de cada acento, para el fondo de las tarjetas KPI
+// (Johnatan: "diferenciadoras" — cada una con su propio tono, no el mismo
+// gris para las 3).
+const TINT_GREEN  = [234, 247, 238]
+const TINT_ACCENT = [234, 241, 254]
+const TINT_PURPLE = [242, 240, 251]
 
 const MARGIN = 15 // mm
 const PAGE_W = 215.9 // carta
 const PAGE_H = 279.4
 const CONTENT_W = PAGE_W - MARGIN * 2
+
+// Meses en español, formato corto — mismo array que MONTHS_SHORT de
+// lib/utils.js, duplicado aquí a propósito: este módulo se mantiene sin
+// dependencias de otros archivos de la app (mismo criterio que
+// exportCsv.js), y es un arreglo literal que no cambia.
+const MONTHS_SHORT = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic']
+
+// Formato de fecha D M A pedido por Johnatan (ej. "19 jul 2026") — todas
+// las fechas del reporte (listado de gastos, ingresos, metas) pasan por
+// aquí en vez de mostrarse en ISO crudo (YYYY-MM-DD).
+function formatShortDate(isoStr) {
+  const [y, m, d] = isoStr.split('-').map(Number)
+  return `${d} ${MONTHS_SHORT[m - 1]} ${y}`
+}
 
 // ── Helpers de imagen ───────────────────────────────────────────────────
 function loadImage(url) {
@@ -142,60 +163,77 @@ function sectionTitle(doc, text, x, y) {
   return y + 6
 }
 
-// ── Encabezado (se repite en cada página nueva de contenido propio) ─────
-function drawHeader(doc, logo, spaceLabel, fromLabel, toLabel) {
+// ── Encabezado — logo/texto arriba, título general grande debajo ───────
+function drawHeader(doc, logo, spaceLabel, fromLabel, toLabel, reportTitle) {
   let y = MARGIN
   if (logo) {
-    const h = 8
+    const h = 7
     const w = h * logo.ratio
     doc.addImage(logo.dataUrl, 'PNG', MARGIN, y - 2, w, h)
   } else {
-    doc.setFontSize(14)
+    doc.setFontSize(12)
     doc.setTextColor(...COLOR_DARK)
     doc.setFont(undefined, 'bold')
-    doc.text('LunaPay', MARGIN, y + 4)
+    doc.text('LunaPay', MARGIN, y + 3)
     doc.setFont(undefined, 'normal')
   }
   doc.setFontSize(8)
   doc.setTextColor(...COLOR_MUTED)
-  doc.text(`${spaceLabel} · ${fromLabel} — ${toLabel}`, PAGE_W - MARGIN, y + 3, { align: 'right' })
+  doc.text(`${spaceLabel} · ${fromLabel} — ${toLabel}`, PAGE_W - MARGIN, y + 2, { align: 'right' })
+
+  y += 9
+  doc.setFontSize(17)
+  doc.setTextColor(...COLOR_DARK)
+  doc.setFont(undefined, 'bold')
+  doc.text(reportTitle, MARGIN, y)
+  doc.setFont(undefined, 'normal')
+
+  y += 5
   doc.setDrawColor(...COLOR_LINE)
-  doc.line(MARGIN, y + 8, PAGE_W - MARGIN, y + 8)
-  return y + 16
+  doc.line(MARGIN, y, PAGE_W - MARGIN, y)
+  return y + 10
 }
 
-// ── Página 1: resumen + gastos por categoría + gastos por mes ───────────
-function drawSummaryAndCharts(doc, y, { totals, categories, months, labels }) {
+// ── KPIs — SIEMPRE de ancho completo, uno al lado del otro, cada uno con
+// su propio tinte/acento para diferenciarse entre sí (pedido explícito de
+// Johnatan). El NÚMERO siempre en COLOR_DARK — nunca verde/azul/morado,
+// eso solo va en el acento decorativo de la tarjeta.
+function drawKpiRow(doc, y, totals, labels) {
+  const cards = []
+  if (totals.ingresos !== null) cards.push({ label: labels.ingresos, value: totals.ingresos, accent: COLOR_GREEN, tint: TINT_GREEN })
+  if (totals.gastos !== null) cards.push({ label: labels.gastos, value: totals.gastos, accent: COLOR_ACCENT, tint: TINT_ACCENT })
+  if (totals.ingresos !== null && totals.gastos !== null) cards.push({ label: labels.balance, value: totals.ingresos - totals.gastos, accent: COLOR_PURPLE, tint: TINT_PURPLE })
+  if (cards.length === 0) return y
+
+  const gap = 6
+  const cardW = (CONTENT_W - gap * (cards.length - 1)) / cards.length
+  const cardH = 18
+  let x = MARGIN
+  for (const card of cards) {
+    doc.setFillColor(...card.tint)
+    doc.roundedRect(x, y, cardW, cardH, 2, 2, 'F')
+    doc.setFillColor(...card.accent)
+    doc.roundedRect(x, y, 1.6, cardH, 0.8, 0.8, 'F')
+    doc.setFontSize(8.5)
+    doc.setTextColor(...COLOR_MUTED)
+    doc.text(card.label, x + 6, y + 7)
+    doc.setFontSize(13)
+    doc.setTextColor(...COLOR_DARK)
+    doc.setFont(undefined, 'bold')
+    doc.text(money(card.value), x + 6, y + 14)
+    doc.setFont(undefined, 'normal')
+    x += cardW + gap
+  }
+  return y + cardH + 10
+}
+
+// ── Categorías (izquierda) + gráfica de tendencia (derecha) ─────────────
+function drawCategoriesAndTrend(doc, y, { categories, series, labels }) {
   const colW = (CONTENT_W - 10) / 2
   const leftX = MARGIN
   const rightX = MARGIN + colW + 10
   let leftY = y
   let rightY = y
-
-  // Resumen — puntos de acento SÍ llevan color (verde Ingresos, azul
-  // Gastos/Balance); el monto en sí siempre en COLOR_DARK, pedido
-  // explícito de Johnatan ("los números sin verdes ni azules").
-  const cards = []
-  if (totals.ingresos !== null) cards.push({ label: labels.ingresos, value: totals.ingresos, dot: COLOR_GREEN })
-  if (totals.gastos !== null) cards.push({ label: labels.gastos, value: totals.gastos, dot: COLOR_ACCENT })
-  if (totals.ingresos !== null && totals.gastos !== null) cards.push({ label: labels.balance, value: totals.ingresos - totals.gastos, dot: COLOR_ACCENT })
-
-  for (const card of cards) {
-    doc.setFillColor(...COLOR_LIGHT)
-    doc.roundedRect(leftX, leftY, colW, 10, 1.5, 1.5, 'F')
-    doc.setFillColor(...card.dot)
-    doc.circle(leftX + 4, leftY + 5, 1.3, 'F')
-    doc.setFontSize(8)
-    doc.setTextColor(...COLOR_MUTED)
-    doc.text(card.label, leftX + 8, leftY + 4)
-    doc.setFontSize(11)
-    doc.setTextColor(...COLOR_DARK)
-    doc.setFont(undefined, 'bold')
-    doc.text(money(card.value), leftX + 8, leftY + 8.5)
-    doc.setFont(undefined, 'normal')
-    leftY += 12
-  }
-  leftY += 4
 
   // Gastos por categoría — TODAS, ordenadas de mayor a menor, sin recorte
   // (Johnatan: "eso de +N categorías más aquí no aplica, no podrán
@@ -223,34 +261,94 @@ function drawSummaryAndCharts(doc, y, { totals, categories, months, labels }) {
     }
   }
 
-  // Gastos por mes — barras con el TOTAL de cada mes rotulado arriba
-  // (pedido explícito de Johnatan).
-  if (months.length > 0) {
-    rightY = sectionTitle(doc, labels.monthlyChart, rightX, rightY)
-    const chartH = 32
-    const maxAmount = Math.max(...months.map(m => m.amount), 1)
-    const barW = Math.min(14, (colW - (months.length - 1) * 4) / months.length)
-    const gap = months.length > 1 ? (colW - barW * months.length) / (months.length - 1) : 0
-    let bx = rightX
-    for (const m of months) {
-      const h = (m.amount / maxAmount) * chartH
-      doc.setFontSize(6.5)
-      doc.setTextColor(...COLOR_DARK)
-      doc.text(moneyCompact(m.amount), bx + barW / 2, rightY + (chartH - h) - 1.5, { align: 'center' })
-      doc.setFillColor(...COLOR_ACCENT)
-      doc.rect(bx, rightY + (chartH - h), barW, h, 'F')
-      doc.setFontSize(6.5)
-      doc.setTextColor(...COLOR_MUTED)
-      doc.text(m.label, bx + barW / 2, rightY + chartH + 4, { align: 'center' })
-      bx += barW + gap
-    }
-    rightY += chartH + 8
+  if (series) {
+    rightY = sectionTitle(doc, labels.trendChart, rightX, rightY)
+    rightY = drawTrendChart(doc, rightX, rightY, colW, series, labels)
   }
 
   return {
     nextY: Math.max(leftY, rightY) + 4,
     remainingCategories: categories.slice(shownCategories.length),
   }
+}
+
+// Gráfica de línea combinada (Gastos + Ingresos) — SIEMPRE independiente
+// del filtro de fechas del reporte (ver buildTrendSeries() en
+// SettingsExportPage.jsx: mira hasta 12 meses atrás desde `to`, se adapta
+// solo a semana/día si hay poca actividad para no verse como una línea
+// plana de 1-2 puntos). Con puntos + monto rotulado en cada uno (pedido
+// explícito de Johnatan) — Ingresos arriba de su punto, Gastos abajo, para
+// que no se encimen los textos.
+function drawTrendChart(doc, x, y, width, series, labels) {
+  const { points } = series
+  const chartH = 34
+  const labelPad = 8 // espacio reservado arriba/abajo para los montos rotulados
+  const top = y + labelPad
+  const bottom = top + chartH
+  const maxAmount = Math.max(...points.map(p => Math.max(p.gastos, p.ingresos)), 1)
+  const stepX = points.length > 1 ? width / (points.length - 1) : 0
+  const showLabels = points.length <= 14 // con más puntos (ej. 30 días) el texto ya no cabe sin encimarse
+
+  function plot(key) {
+    return points.map((p, i) => ({
+      x: x + stepX * i,
+      y: bottom - (p[key] / maxAmount) * chartH,
+      value: p[key],
+    }))
+  }
+
+  function drawLine(coords, color) {
+    doc.setDrawColor(...color)
+    doc.setLineWidth(0.6)
+    for (let i = 0; i < coords.length - 1; i++) {
+      doc.line(coords[i].x, coords[i].y, coords[i + 1].x, coords[i + 1].y)
+    }
+    for (const c of coords) {
+      doc.setFillColor(...color)
+      doc.circle(c.x, c.y, 1.1, 'F')
+    }
+  }
+
+  const ingresosCoords = plot('ingresos')
+  const gastosCoords = plot('gastos')
+  drawLine(ingresosCoords, COLOR_GREEN)
+  drawLine(gastosCoords, COLOR_ACCENT)
+
+  if (showLabels) {
+    doc.setFontSize(6)
+    for (const c of ingresosCoords) {
+      doc.setTextColor(...COLOR_DARK)
+      doc.text(moneyCompact(c.value), c.x, c.y - 2.5, { align: 'center' })
+    }
+    for (const c of gastosCoords) {
+      doc.setTextColor(...COLOR_DARK)
+      doc.text(moneyCompact(c.value), c.x, c.y + 4.5, { align: 'center' })
+    }
+  }
+
+  // Eje X — mismo criterio de "cabe o no cabe" que las etiquetas de monto.
+  doc.setFontSize(6.5)
+  doc.setTextColor(...COLOR_MUTED)
+  const labelEvery = Math.max(1, Math.ceil(points.length / 8)) // con muchos puntos (30 días), solo 1 de cada N para no amontonar
+  points.forEach((p, i) => {
+    if (i % labelEvery === 0 || i === points.length - 1) {
+      doc.text(p.label, x + stepX * i, bottom + 5, { align: 'center' })
+    }
+  })
+
+  // Leyenda
+  const legendY = bottom + 10
+  doc.setFillColor(...COLOR_GREEN)
+  doc.circle(x + 2, legendY - 1, 1.2, 'F')
+  doc.setFontSize(7)
+  doc.setTextColor(...COLOR_MUTED)
+  doc.text(labels.ingresos, x + 5, legendY)
+  const gastosLegendX = x + 5 + doc.getTextWidth(labels.ingresos) + 6
+  doc.setFillColor(...COLOR_ACCENT)
+  doc.circle(gastosLegendX, legendY - 1, 1.2, 'F')
+  doc.text(labels.gastos, gastosLegendX + 3, legendY)
+
+  return legendY + 4
 }
 
 // Continuación de categorías que no cupieron en la columna de la página 1
@@ -278,17 +376,26 @@ function drawRemainingCategories(doc, y, categories, labels) {
 }
 
 // ── Listado de gastos (tabla completa, con aportantes si aplica) ────────
+// "Pagado" es ahora la ÚNICA columna de fecha (antes había "Fecha" +
+// "Pagado" Sí/No por separado — Johnatan: "no entiendo la funcionalidad de
+// poner Sí o No"): muestra la fecha real en que se pagó, o "Pendiente" si
+// sigue sin pagarse. Formato D M A en toda la tabla.
 function drawExpenseList(doc, y, { rows, contributorsByRow, isSharedSpace, labels, autoTableFn }) {
   y = ensureSpace(doc, y, 14)
   y = sectionTitle(doc, labels.expenseList, MARGIN, y)
 
   const head = isSharedSpace
-    ? [[labels.colDate, labels.colName, labels.colCategory, labels.colAmount, labels.colPaid, labels.colContributors]]
-    : [[labels.colDate, labels.colName, labels.colCategory, labels.colAmount, labels.colPaid]]
+    ? [[labels.colPaid, labels.colName, labels.colCategory, labels.colAmount, labels.colContributors]]
+    : [[labels.colPaid, labels.colName, labels.colCategory, labels.colAmount]]
 
-  const body = rows.map(r => isSharedSpace
-    ? [r.date, r.name, r.category, money(r.amount), r.paid ? labels.yes : labels.no, '']
-    : [r.date, r.name, r.category, money(r.amount), r.paid ? labels.yes : labels.no])
+  const body = rows.map(r => {
+    const paidCell = r.paidDate ? formatShortDate(r.paidDate) : labels.pending
+    return isSharedSpace
+      ? [paidCell, r.name, r.category, money(r.amount), '']
+      : [paidCell, r.name, r.category, money(r.amount)]
+  })
+
+  const contributorsColIndex = isSharedSpace ? 4 : null
 
   autoTableFn(doc, {
     startY: y,
@@ -299,11 +406,9 @@ function drawExpenseList(doc, y, { rows, contributorsByRow, isSharedSpace, label
     styles: { fontSize: 7.5, textColor: COLOR_DARK, cellPadding: 1.6, minCellHeight: isSharedSpace ? 8 : 5 },
     headStyles: { fillColor: COLOR_LIGHT, textColor: COLOR_MUTED, fontStyle: 'bold' },
     alternateRowStyles: { fillColor: [249, 249, 249] },
-    columnStyles: isSharedSpace ? { 3: { halign: 'right' }, 5: { cellWidth: 45 } } : { 3: { halign: 'right' } },
+    columnStyles: isSharedSpace ? { 3: { halign: 'right' }, 4: { cellWidth: 45 } } : { 3: { halign: 'right' } },
     didDrawCell(data) {
-      if (!isSharedSpace || data.section !== 'body') return
-      const isAportantesCol = data.column.index === 5
-      if (!isAportantesCol) return
+      if (!isSharedSpace || data.section !== 'body' || data.column.index !== contributorsColIndex) return
       const contributors = contributorsByRow[data.row.index] || []
       let cx = data.cell.x + 1
       const cy = data.cell.y + data.cell.height / 2 - 2
@@ -355,7 +460,7 @@ function drawIncomeTable(doc, y, incomes, labels, autoTableFn) {
   autoTableFn(doc, {
     startY: y,
     head: [[labels.colDate, labels.colType, labels.colNote, labels.colAmount]],
-    body: incomes.map(i => [i.date, i.type, i.note || '', money(i.amount)]),
+    body: incomes.map(i => [formatShortDate(i.date), i.type, i.note || '', money(i.amount)]),
     margin: { left: MARGIN, right: MARGIN },
     theme: 'plain',
     styles: { fontSize: 7.5, textColor: COLOR_DARK, cellPadding: 1.6 },
@@ -386,7 +491,7 @@ function drawGoalsSection(doc, y, goals, labels, autoTableFn) {
     autoTableFn(doc, {
       startY: y,
       head: [[labels.colDate, labels.colGoal, labels.colAmount]],
-      body: goals.aportes.map(a => [a.date, a.goalName, money(a.amount)]),
+      body: goals.aportes.map(a => [formatShortDate(a.date), a.goalName, money(a.amount)]),
       margin: { left: MARGIN, right: MARGIN },
       theme: 'plain',
       styles: { fontSize: 7.5, textColor: COLOR_DARK, cellPadding: 1.6 },
@@ -405,7 +510,7 @@ function drawGoalsSection(doc, y, goals, labels, autoTableFn) {
     autoTableFn(doc, {
       startY: y,
       head: [[labels.colDate, labels.colGoal, labels.colAmount]],
-      body: goals.retiros.map(r => [r.date, r.goalName, money(r.amount)]),
+      body: goals.retiros.map(r => [formatShortDate(r.date), r.goalName, money(r.amount)]),
       margin: { left: MARGIN, right: MARGIN },
       theme: 'plain',
       styles: { fontSize: 7.5, textColor: COLOR_DARK, cellPadding: 1.6 },
@@ -434,7 +539,7 @@ function drawPageNumbers(doc) {
 // a Supabase, cruce de nombres/avatares) — esta función solo dibuja.
 export async function generateReportPdf({
   spaceLabel, fromLabel, toLabel, isSharedSpace,
-  totals, categories, months,
+  totals, categories, series, // series: { granularity: 'month'|'week'|'day', points: [{label, gastos, ingresos}] } | null
   expenseRows, expenseContributors, // expenseContributors[i] = [{userId, name, avatarUrl, amount}]
   memberTotals, // [{ userId, name, avatarUrl, total }]
   incomes,
@@ -465,9 +570,10 @@ export async function generateReportPdf({
 
   const logo = await loadLogoDataUrl('/LunaPay_logo_horizontal_dark.png')
 
-  let y = drawHeader(doc, logo, spaceLabel, fromLabel, toLabel)
+  let y = drawHeader(doc, logo, spaceLabel, fromLabel, toLabel, labels.reportTitle)
+  y = drawKpiRow(doc, y, totals, labels)
 
-  const { nextY, remainingCategories } = drawSummaryAndCharts(doc, y, { totals, categories, months, labels })
+  const { nextY, remainingCategories } = drawCategoriesAndTrend(doc, y, { categories, series, labels })
   y = nextY
   y = drawRemainingCategories(doc, y, remainingCategories, labels)
 
