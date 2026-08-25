@@ -39,7 +39,8 @@
       "appearance": "Appearance",
       "sharedSpace": "Shared Space",
       "subscription": "My subscription",
-      "getPremium": "Get Premium"
+      "getPremium": "Get Premium",
+      "export": "Export data"
     },
     "premiumBadge": "Premium Account",
     "tutorialAgain": "View tutorial again",
@@ -1267,5 +1268,41 @@
     "emptySubtitle": "You'll see each payment's details here",
     "paidOn": "Paid on",
     "frequency": "Frequency"
+  },
+  "settingsExport": {
+    "title": "Export data",
+    "intro": "Download your records as a CSV file, ready to open in Excel or Google Sheets.",
+    "dataToInclude": "Data to include",
+    "expenses": "Expenses",
+    "income": "Income",
+    "spaceLabel": "Space",
+    "space": {
+      "personal": "Personal"
+    },
+    "dateRange": "Date range",
+    "from": "From",
+    "to": "To",
+    "recordsFound": "Records found",
+    "downloadCsv": "Download CSV",
+    "downloading": "Downloading…",
+    "premiumMessage": "Exporting your data is a Premium feature.",
+    "unknownMember": "Member",
+    "csv": {
+      "date": "Date",
+      "recordType": "Record type",
+      "concept": "Concept",
+      "category": "Category",
+      "amount": "Amount",
+      "paid": "Paid",
+      "amountType": "Amount type",
+      "space": "Space",
+      "contributors": "Contributors",
+      "expenseType": "Expense",
+      "incomeType": "Income",
+      "yes": "Yes",
+      "no": "No",
+      "variable": "Variable",
+      "fixed": "Fixed"
+    }
   }
 }

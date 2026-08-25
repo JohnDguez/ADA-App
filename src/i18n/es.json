@@ -39,7 +39,8 @@
       "appearance": "Apariencia",
       "sharedSpace": "Espacio Compartido",
       "subscription": "Mi suscripción",
-      "getPremium": "Obtener Premium"
+      "getPremium": "Obtener Premium",
+      "export": "Exportar datos"
     },
     "premiumBadge": "Cuenta Premium",
     "tutorialAgain": "Ver tutorial de nuevo",
@@ -1267,5 +1268,41 @@
     "emptySubtitle": "Aquí verás el detalle de cada pago",
     "paidOn": "Pagado el",
     "frequency": "Frecuencia"
+  },
+  "settingsExport": {
+    "title": "Exportar datos",
+    "intro": "Descarga tus registros en un archivo CSV, listo para abrir en Excel o Google Sheets.",
+    "dataToInclude": "Datos a incluir",
+    "expenses": "Gastos",
+    "income": "Ingresos",
+    "spaceLabel": "Espacio",
+    "space": {
+      "personal": "Personal"
+    },
+    "dateRange": "Rango de fechas",
+    "from": "Desde",
+    "to": "Hasta",
+    "recordsFound": "Registros encontrados",
+    "downloadCsv": "Descargar CSV",
+    "downloading": "Descargando…",
+    "premiumMessage": "Exportar tus datos es una función Premium.",
+    "unknownMember": "Miembro",
+    "csv": {
+      "date": "Fecha",
+      "recordType": "Tipo de registro",
+      "concept": "Concepto",
+      "category": "Categoría",
+      "amount": "Monto",
+      "paid": "Pagado",
+      "amountType": "Tipo de monto",
+      "space": "Espacio",
+      "contributors": "Aportantes",
+      "expenseType": "Gasto",
+      "incomeType": "Ingreso",
+      "yes": "Sí",
+      "no": "No",
+      "variable": "Variable",
+      "fixed": "Fijo"
+    }
   }
 }
