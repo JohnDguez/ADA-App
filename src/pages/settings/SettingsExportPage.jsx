@@ -150,17 +150,18 @@ export function SettingsExportPage({ profile, sharedSpaces, onOpenPremium, onBac
   // Exportar se quedaba corto — bug real reportado por Johnatan tras
   // probar el reporte.
   //
-  // Enumera el inicio de cada periodo de cobro que cae en el rango, mismo
-  // criterio de filtro que ya usa period_income (`period_start` entre
-  // `from` y `to`, ambos inclusive) — así el salario sintético convive sin
-  // pisarse con los ingresos reales.
-  function enumeratePeriodStartsInRange() {
+  // Enumera el inicio de cada periodo de cobro que cae en [rangeFrom,
+  // rangeTo] (por defecto el rango elegido en el filtro, pero la gráfica de
+  // tendencia usa su propia ventana de 12 meses independiente — ver
+  // fetchChartSeriesData() más abajo). Mismo criterio de filtro que ya usa
+  // period_income (`period_start` entre ambos, inclusive).
+  function enumeratePeriodStartsInRange(rangeFrom = from, rangeTo = to) {
     if (!['weekly', 'biweekly', 'monthly'].includes(profile.cobro_freq)) return []
     const starts = []
-    let p = cobroPeriod(profile, dateOf(from))
-    if (dateToStr(p.start) < from) p = cobroPeriod(profile, p.nextCobro) // el periodo que contiene `from` puede empezar antes del rango — ese no cuenta, solo el siguiente
+    let p = cobroPeriod(profile, dateOf(rangeFrom))
+    if (dateToStr(p.start) < rangeFrom) p = cobroPeriod(profile, p.nextCobro) // el periodo que contiene rangeFrom puede empezar antes del rango — ese no cuenta, solo el siguiente
     let guard = 0
-    while (dateToStr(p.start) <= to && guard < 200) {
+    while (dateToStr(p.start) <= rangeTo && guard < 400) {
       starts.push(dateToStr(p.start))
       p = cobroPeriod(profile, p.nextCobro)
       guard++
@@ -232,20 +233,122 @@ export function SettingsExportPage({ profile, sharedSpaces, onOpenPremium, onBac
     return Object.entries(byCat).map(([label, amount]) => ({ label, amount })).sort((a, b) => b.amount - a.amount)
   }
 
-  // Gastos por mes, en orden cronológico — usa la fecha EFECTIVA (mismo
-  // criterio que effectiveDateStr) para que un pago marcado como pagado
-  // fuera de su mes de vencimiento caiga en el mes real en que se pagó.
-  function buildMonthlyBreakdown(gastos) {
-    const byMonth = {}
-    for (const p of gastos) {
-      const d = p.paid_at ? new Date(p.paid_at) : dateOf(p.due_date)
-      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
-      byMonth[key] = (byMonth[key] || 0) + Number(p.amount)
+  // ── Gráfica de tendencia (Gastos + Ingresos) — SIEMPRE independiente del
+  // filtro de fechas del resto del reporte (pedido explícito de Johnatan:
+  // "aunque solo se hayan seleccionado los últimos 3 meses"). Siempre
+  // termina en `to`, mira hasta 12 meses atrás, y se adapta sola para
+  // nunca verse "fea" con poca actividad:
+  //   1) Intenta por MES, recortando los meses vacíos del inicio (cuenta
+  //      nueva con pocos meses de historial no debe verse con 9 meses en
+  //      cero antes de la actividad real).
+  //   2) Si eso deja menos de 3 puntos, cambia a por SEMANA sobre el mismo
+  //      tramo real de actividad.
+  //   3) Si sigue habiendo menos de 3, cambia a por DÍA.
+  // Nunca usa `from`/`to` del filtro para su ventana — solo `to` como ancla.
+  function chartWindowStart(toStr) {
+    const t = dateOf(toStr)
+    return dateToStr(new Date(t.getFullYear(), t.getMonth() - 11, 1))
+  }
+
+  async function fetchChartSeriesData(toStr) {
+    const windowStart = chartWindowStart(toStr)
+    const bufferedStart = dateToStr(new Date(dateOf(windowStart).getTime() - 86400000))
+    const bufferedEnd = dateToStr(new Date(dateOf(toStr).getTime() + 86400000))
+
+    let gq = supabase.from('payments').select('due_date, paid_at, amount').eq('is_master', false)
+      .gte('due_date', bufferedStart).lte('due_date', bufferedEnd)
+    gq = space === 'personal' ? gq.eq('user_id', profile.id).is('space_id', null) : gq.eq('space_id', space)
+    const { data: gastosRaw } = await gq
+    const gastos = (gastosRaw || [])
+      .map(p => ({ date: p.paid_at ? dateToStr(new Date(p.paid_at)) : p.due_date, amount: Number(p.amount) }))
+      .filter(p => p.date >= windowStart && p.date <= toStr)
+
+    let iq = supabase.from('period_income').select('period_start, amount')
+      .gte('period_start', windowStart).lte('period_start', toStr)
+    iq = space === 'personal' ? iq.eq('user_id', profile.id).is('space_id', null) : iq.eq('space_id', space)
+    const { data: ingresosRaw } = await iq
+    const ingresosReal = (ingresosRaw || []).map(i => ({ date: i.period_start, amount: Number(i.amount) }))
+    const salaryRows = (space === 'personal' && profile.salary_enabled && Number(profile.salary_amount))
+      ? enumeratePeriodStartsInRange(windowStart, toStr).map(ps => ({ date: ps, amount: Number(profile.salary_amount) }))
+      : []
+
+    return { gastos, ingresos: [...ingresosReal, ...salaryRows], windowStart }
+  }
+
+  function mondayOf(dateStr) {
+    const d = dateOf(dateStr)
+    const isoDay = d.getDay() === 0 ? 7 : d.getDay() // domingo=0 -> 7, para que la semana empiece en lunes
+    return dateToStr(addDays(d, -(isoDay - 1)))
+  }
+
+  function bucketTotals(rows, keyFn) {
+    const map = {}
+    for (const r of rows) map[keyFn(r.date)] = (map[keyFn(r.date)] || 0) + r.amount
+    return map
+  }
+
+  function buildChartSeries(gastos, ingresos, windowStart, toStr) {
+    if (gastos.length === 0 && ingresos.length === 0) return null
+
+    // 1) Por MES — 12 buckets fijos, recortando los vacíos del inicio.
+    const monthKeys = []
+    let cursor = dateOf(windowStart)
+    const toD = dateOf(toStr)
+    while (cursor <= toD) {
+      monthKeys.push(`${cursor.getFullYear()}-${String(cursor.getMonth() + 1).padStart(2, '0')}`)
+      cursor = new Date(cursor.getFullYear(), cursor.getMonth() + 1, 1)
     }
-    return Object.entries(byMonth).sort(([a], [b]) => a < b ? -1 : 1).map(([key, amount]) => {
-      const monthIdx = Number(key.split('-')[1]) - 1
-      return { label: MONTHS_SHORT[monthIdx], amount }
+    const gastosByMonth = bucketTotals(gastos, d => d.slice(0, 7))
+    const ingresosByMonth = bucketTotals(ingresos, d => d.slice(0, 7))
+    let monthPoints = monthKeys.map(key => ({
+      label: MONTHS_SHORT[Number(key.split('-')[1]) - 1],
+      gastos: gastosByMonth[key] || 0,
+      ingresos: ingresosByMonth[key] || 0,
+    }))
+    const firstActive = monthPoints.findIndex(p => p.gastos > 0 || p.ingresos > 0)
+    if (firstActive > 0) monthPoints = monthPoints.slice(firstActive)
+    if (monthPoints.length >= 3) return { granularity: 'month', points: monthPoints }
+
+    // 2) Por SEMANA, sobre el tramo real de actividad (primera fecha con
+    // movimiento encontrada arriba, hasta `to`).
+    const allDates = [...gastos.map(g => g.date), ...ingresos.map(i => i.date)].sort()
+    const activityStart = allDates[0] || windowStart
+    const weekStart = mondayOf(activityStart)
+    const gastosByWeek = bucketTotals(gastos, d => mondayOf(d))
+    const ingresosByWeek = bucketTotals(ingresos, d => mondayOf(d))
+    const weekKeys = []
+    let wCursor = dateOf(weekStart)
+    while (wCursor <= toD) {
+      weekKeys.push(dateToStr(wCursor))
+      wCursor = addDays(wCursor, 7)
+    }
+    const weekPoints = weekKeys.map(key => {
+      const d = dateOf(key)
+      return { label: `${d.getDate()} ${MONTHS_SHORT[d.getMonth()]}`, gastos: gastosByWeek[key] || 0, ingresos: ingresosByWeek[key] || 0 }
     })
+    if (weekPoints.length >= 3) return { granularity: 'week', points: weekPoints }
+
+    // 3) Por DÍA — última red de seguridad, tramo de actividad muy corto.
+    const gastosByDay = bucketTotals(gastos, d => d)
+    const ingresosByDay = bucketTotals(ingresos, d => d)
+    const dayKeys = []
+    let dCursor = dateOf(activityStart)
+    while (dCursor <= toD) {
+      dayKeys.push(dateToStr(dCursor))
+      dCursor = addDays(dCursor, 1)
+    }
+    return {
+      granularity: 'day',
+      points: dayKeys.map(key => {
+        const d = dateOf(key)
+        return { label: `${d.getDate()} ${MONTHS_SHORT[d.getMonth()]}`, gastos: gastosByDay[key] || 0, ingresos: ingresosByDay[key] || 0 }
+      }),
+    }
+  }
+
+  async function buildTrendSeries(toStr) {
+    const { gastos, ingresos, windowStart } = await fetchChartSeriesData(toStr)
+    return buildChartSeries(gastos, ingresos, windowStart, toStr)
   }
 
   // Atribución completa de "quién gastó cuánto" en un Espacio Compartido
@@ -422,18 +525,20 @@ export function SettingsExportPage({ profile, sharedSpaces, onOpenPremium, onBac
     const spaceLabel = space === 'personal' ? t('settingsExport.space.personal') : (selectedSpaceEntry?.space.name || '')
 
     const labels = {
+      reportTitle: t('settingsExport.pdf.reportTitle'),
       ingresos: t('settingsExport.income'),
       gastos: t('settingsExport.expenses'),
       balance: t('settingsExport.pdf.balance'),
       categoryChart: t('settingsExport.pdf.categoryChart'),
       categoryChartContinued: t('settingsExport.pdf.categoryChartContinued'),
-      monthlyChart: t('settingsExport.pdf.monthlyChart'),
+      trendChart: t('settingsExport.pdf.trendChart'),
       expenseList: t('settingsExport.pdf.expenseList'),
       colDate: t('settingsExport.csv.date'),
       colName: t('settingsExport.csv.concept'),
       colCategory: t('settingsExport.csv.category'),
       colAmount: t('settingsExport.csv.amount'),
       colPaid: t('settingsExport.csv.paid'),
+      pending: t('settingsExport.pdf.pending'),
       colContributors: t('settingsExport.csv.contributors'),
       yes: t('settingsExport.csv.yes'),
       no: t('settingsExport.csv.no'),
@@ -449,6 +554,10 @@ export function SettingsExportPage({ profile, sharedSpaces, onOpenPremium, onBac
       fund: t('settingsExport.pdf.fund'),
     }
 
+    // Gráfica de tendencia — SIEMPRE independiente del filtro (ver
+    // buildTrendSeries arriba), solo se calcula si hay algo que graficar.
+    const series = (includeGastos || includeIngresos) ? await buildTrendSeries(to) : null
+
     const doc = await generateReportPdf({
       spaceLabel,
       fromLabel: formatDateLabel(from),
@@ -456,9 +565,13 @@ export function SettingsExportPage({ profile, sharedSpaces, onOpenPremium, onBac
       isSharedSpace,
       totals,
       categories: includeGastos ? buildCategoryBreakdown(gastos) : [],
-      months: includeGastos ? buildMonthlyBreakdown(gastos) : [],
+      series,
       expenseRows: gastos.map(p => ({
-        date: effectiveDateStr(p), name: p.name, category: getCategoryLabel(p.category), amount: p.amount, paid: p.is_paid,
+        // "Pagado" ahora es la ÚNICA columna de fecha (Johnatan: el Sí/No
+        // no se entendía) — la fecha real en que se pagó, o null si sigue
+        // pendiente (exportPdf.js dibuja "Pendiente" en ese caso).
+        paidDate: p.is_paid ? dateToStr(new Date(p.paid_at)) : null,
+        name: p.name, category: getCategoryLabel(p.category), amount: p.amount,
       })),
       expenseContributors: contributorsByRow,
       memberTotals,
