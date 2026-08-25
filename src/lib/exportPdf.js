@@ -149,6 +149,19 @@ function money(n) {
   return '$' + Math.abs(num).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 }
 
+// money() siempre quita el signo a propósito — el resto de los montos del
+// reporte (gastos, ingresos, aportes, montos de tabla) son cantidades que
+// nunca deberían ser negativas por naturaleza, así que Math.abs() es una
+// protección segura ahí. El ÚNICO monto del reporte que sí puede ser
+// negativo de verdad es el Balance (Ingresos − Gastos) — bug real
+// reportado por Johnatan: se mostraba "$33,043.89" en vez de
+// "-$33,043.89" cuando gastó más de lo que ingresó, viéndose como si el
+// balance fuera positivo. Este formateador SOLO se usa para esa tarjeta.
+function moneySigned(n) {
+  const num = Number(n) || 0
+  return (num < 0 ? '-' : '') + money(num)
+}
+
 // Montos abreviados SOLO para las etiquetas de la gráfica de tendencia —
 // bug real detectado (confundía a Johnatan): para montos MENORES a $1,000,
 // esta función caía de regreso a money() (que SÍ lleva centavos desde el
@@ -241,7 +254,7 @@ function drawKpiRow(doc, y, totals, labels) {
   const cards = []
   if (totals.ingresos !== null) cards.push({ label: labels.ingresos, value: totals.ingresos, accent: COLOR_GREEN, tint: TINT_GREEN })
   if (totals.gastos !== null) cards.push({ label: labels.gastos, value: totals.gastos, accent: COLOR_ACCENT, tint: TINT_ACCENT })
-  if (totals.ingresos !== null && totals.gastos !== null) cards.push({ label: labels.balance, value: totals.ingresos - totals.gastos, accent: COLOR_PURPLE, tint: TINT_PURPLE })
+  if (totals.ingresos !== null && totals.gastos !== null) cards.push({ label: labels.balance, value: totals.ingresos - totals.gastos, accent: COLOR_PURPLE, tint: TINT_PURPLE, isBalance: true })
   if (cards.length === 0) return y
 
   const gap = 6
@@ -259,7 +272,7 @@ function drawKpiRow(doc, y, totals, labels) {
     doc.setFontSize(13)
     doc.setTextColor(...COLOR_DARK)
     doc.setFont(undefined, 'bold')
-    doc.text(money(card.value), x + 6, y + 14)
+    doc.text(card.isBalance ? moneySigned(card.value) : money(card.value), x + 6, y + 14)
     doc.setFont(undefined, 'normal')
     x += cardW + gap
   }
