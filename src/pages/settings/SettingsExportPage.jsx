@@ -1,29 +1,31 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
-import { ChevronLeft, Receipt, Wallet, Download, FileSpreadsheet } from 'lucide-react'
+import { ChevronLeft, Receipt, Wallet, Download, FileSpreadsheet, FileText, Target } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import { PremiumLock } from '../../components/PremiumLock'
 import { Select } from '../../components/Select'
 import { DatePicker } from '../../components/DatePicker'
-import { dateToStr, todayStr, dateOf, fmt, getCategoryLabel, cobroPeriod, addDays, today } from '../../lib/utils'
+import { dateToStr, todayStr, dateOf, fmt, getCategoryLabel, cobroPeriod, addDays, today, MONTHS_SHORT } from '../../lib/utils'
 import { buildCsv, downloadCsv } from '../../lib/exportCsv'
+import { generateReportPdf } from '../../lib/exportPdf'
 import styles from './SettingsExportPage.module.css'
 
-// Sub-página "Exportar datos" — Fase 1 del módulo de Reportes (ver
+// Sub-página "Exportar datos" — Fases 1 y 2 del módulo de Reportes (ver
 // CONTEXT.md, pendiente "Rediseño de PremiumPage.jsx"). Deja elegir qué
 // incluir (Gastos/Ingresos), de qué espacio, y un rango de fechas libre;
-// descarga un CSV con exactamente esos registros. Función Premium completa
-// — todo el contenido va envuelto en <PremiumLock>, mismo patrón que el
-// simulador de PaymentModal.jsx.
-//
-// Fase 2 (reporte PDF con gráficas y Metas) queda fuera de este archivo a
-// propósito — es un proyecto aparte, con su propia sesión de mockup.
+// descarga un CSV con exactamente esos registros, o genera un reporte PDF
+// (tamaño carta, 2 columnas en la página de resumen) con gráficas y,
+// opcionalmente, una sección de Metas. Función Premium completa — todo el
+// contenido va envuelto en <PremiumLock>, mismo patrón que el simulador de
+// PaymentModal.jsx.
 export function SettingsExportPage({ profile, sharedSpaces, onOpenPremium, onBack, slideClass }) {
   const { t } = useTranslation()
   const { spaces } = sharedSpaces
 
+  const [format, setFormat] = useState('csv') // 'csv' | 'pdf'
   const [includeGastos, setIncludeGastos]     = useState(true)
   const [includeIngresos, setIncludeIngresos] = useState(true)
+  const [includeGoals, setIncludeGoals]       = useState(false) // solo aplica a PDF — Metas siempre es personal (ver CONTEXT.md), independiente del espacio elegido aquí
   const [space, setSpace]   = useState('personal') // 'personal' | id de shared_spaces
   const [from, setFrom]     = useState(() => dateToStr(new Date(new Date().getFullYear(), new Date().getMonth(), 1)))
   const [to, setTo]         = useState(() => todayStr())
@@ -165,6 +167,118 @@ export function SettingsExportPage({ profile, sharedSpaces, onOpenPremium, onBac
     return map
   }
 
+  // Mapa user_id → avatar_url, mismo cruce manual que memberName() de arriba.
+  function memberAvatar(userId) {
+    const member = selectedSpaceEntry?.space.members?.find(m => m.user_id === userId)
+    return member?.profile?.avatar_url || null
+  }
+
+  // Gastos por categoría, TODAS (sin recorte — Johnatan: "no podrán
+  // desplegarlo"), ordenadas de mayor a menor monto.
+  function buildCategoryBreakdown(gastos) {
+    const byCat = {}
+    for (const p of gastos) {
+      const label = getCategoryLabel(p.category)
+      byCat[label] = (byCat[label] || 0) + Number(p.amount)
+    }
+    return Object.entries(byCat).map(([label, amount]) => ({ label, amount })).sort((a, b) => b.amount - a.amount)
+  }
+
+  // Gastos por mes, en orden cronológico — usa la fecha EFECTIVA (mismo
+  // criterio que effectiveDateStr) para que un pago marcado como pagado
+  // fuera de su mes de vencimiento caiga en el mes real en que se pagó.
+  function buildMonthlyBreakdown(gastos) {
+    const byMonth = {}
+    for (const p of gastos) {
+      const d = p.paid_at ? new Date(p.paid_at) : dateOf(p.due_date)
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
+      byMonth[key] = (byMonth[key] || 0) + Number(p.amount)
+    }
+    return Object.entries(byMonth).sort(([a], [b]) => a < b ? -1 : 1).map(([key, amount]) => {
+      const monthIdx = Number(key.split('-')[1]) - 1
+      return { label: MONTHS_SHORT[monthIdx], amount }
+    })
+  }
+
+  // Atribución completa de "quién gastó cuánto" en un Espacio Compartido
+  // (decidido con Johnatan): un gasto dividido explícitamente
+  // ("Dividir entre miembros") reparte su monto según payment_contributions;
+  // lo que cubrió el Fondo Compartido (payments.fund_amount) se atribuye a
+  // "Fondo Compartido" como su propia entrada; el RESTO de un gasto que no
+  // se dividió (el caso más común) se atribuye a quien lo registró
+  // (payments.user_id) — la única fuente de "quién pagó" que existe para
+  // ese caso, ya que la app no guarda un registro más fino. Entre las 3
+  // partes, cada gasto queda 100% atribuido, así que "Gasto por miembro"
+  // siempre suma exactamente el total de Gastos del rango.
+  async function computeSharedAttribution(gastos) {
+    if (space === 'personal' || gastos.length === 0) {
+      return { contributorsByRow: [], memberTotals: [] }
+    }
+    const { data: contribData } = await supabase
+      .from('payment_contributions')
+      .select('payment_id, user_id, amount')
+      .in('payment_id', gastos.map(p => p.id))
+
+    const contribByPayment = {}
+    for (const c of (contribData || [])) {
+      if (!contribByPayment[c.payment_id]) contribByPayment[c.payment_id] = []
+      contribByPayment[c.payment_id].push(c)
+    }
+
+    const contributorsByRow = gastos.map(p => (contribByPayment[p.id] || []).map(c => ({
+      userId: c.user_id, name: memberName(c.user_id), avatarUrl: memberAvatar(c.user_id), amount: Number(c.amount),
+    })))
+
+    const totals = {} // user_id → monto ; llave especial '__fund__'
+    for (const p of gastos) {
+      const list = contribByPayment[p.id] || []
+      const sumContrib = list.reduce((s, c) => s + Number(c.amount), 0)
+      const fund = Number(p.fund_amount) || 0
+      for (const c of list) totals[c.user_id] = (totals[c.user_id] || 0) + Number(c.amount)
+      if (fund > 0) totals.__fund__ = (totals.__fund__ || 0) + fund
+      const remainder = Number(p.amount) - sumContrib - fund
+      if (remainder > 0.005) totals[p.user_id] = (totals[p.user_id] || 0) + remainder
+    }
+
+    const memberTotals = Object.entries(totals)
+      .map(([userId, total]) => userId === '__fund__'
+        ? { userId, name: t('settingsExport.pdf.fund'), avatarUrl: null, total }
+        : { userId, name: memberName(userId), avatarUrl: memberAvatar(userId), total })
+      .sort((a, b) => b.total - a.total)
+
+    return { contributorsByRow, memberTotals }
+  }
+
+  // Metas SIEMPRE personales (ver CONTEXT.md) — independiente del espacio
+  // elegido arriba para Gastos/Ingresos. Creadas/Cumplidas por fecha
+  // (created_at/completed_at); Abonos/Retiros vía goal_transactions,
+  // "canceladas" se descarta a propósito (decidido con Johnatan: una meta
+  // borrada no deja ningún rastro en la base de datos, no hay dato real
+  // que mostrar sin inventar o cambiar el schema).
+  async function fetchGoalsData() {
+    const { data: allGoals } = await supabase.from('goals').select('*').eq('user_id', profile.id).is('space_id', null)
+    const goalNameById = {}
+    for (const g of (allGoals || [])) goalNameById[g.id] = g.name
+
+    const created = (allGoals || []).filter(g => g.created_at && dateToStr(new Date(g.created_at)) >= from && dateToStr(new Date(g.created_at)) <= to)
+    const completed = (allGoals || []).filter(g => g.is_completed && g.completed_at && dateToStr(new Date(g.completed_at)) >= from && dateToStr(new Date(g.completed_at)) <= to)
+
+    const { data: allTx } = await supabase.from('goal_transactions').select('*').eq('user_id', profile.id).is('space_id', null)
+    const inRange = (allTx || []).filter(tx => tx.created_at && dateToStr(new Date(tx.created_at)) >= from && dateToStr(new Date(tx.created_at)) <= to)
+
+    return {
+      created,
+      completed,
+      aportes: inRange.filter(tx => tx.type === 'aporte').map(tx => ({ date: dateToStr(new Date(tx.created_at)), goalName: goalNameById[tx.goal_id] || '—', amount: tx.amount })),
+      retiros: inRange.filter(tx => tx.type === 'retiro').map(tx => ({ date: dateToStr(new Date(tx.created_at)), goalName: goalNameById[tx.goal_id] || '—', amount: tx.amount })),
+    }
+  }
+
+  function formatDateLabel(str) {
+    const d = dateOf(str)
+    return `${d.getDate()} ${MONTHS_SHORT[d.getMonth()].toLowerCase()} ${d.getFullYear()}`
+  }
+
   // Recalcula el contador de "registros encontrados" cada vez que cambia
   // algún filtro — con debounce (Regla 35) para no disparar una consulta
   // por cada tecla/clic mientras el usuario todavía está ajustando fechas.
@@ -183,7 +297,7 @@ export function SettingsExportPage({ profile, sharedSpaces, onOpenPremium, onBac
     return () => clearTimeout(debounceRef.current)
   }, [includeGastos, includeIngresos, fetchGastos, fetchIngresos])
 
-  async function handleDownload() {
+  async function handleDownloadCsv() {
     if (!includeGastos && !includeIngresos) return
     setDownloading(true)
 
@@ -237,8 +351,84 @@ export function SettingsExportPage({ profile, sharedSpaces, onOpenPremium, onBac
     setDownloading(false)
   }
 
+  // Fase 2 — reporte PDF. Junta exactamente los mismos filtros que el CSV
+  // (Gastos/Ingresos, Espacio, rango) más Metas si se activó, resuelve
+  // nombres/avatares de contribuyentes, y delega el dibujo completo a
+  // `generateReportPdf()` (lib/exportPdf.js) — esta función solo junta
+  // datos, nunca dibuja nada directamente.
+  async function handleGeneratePdf() {
+    if (!includeGastos && !includeIngresos && !includeGoals) return
+    setDownloading(true)
+
+    const gastos = includeGastos ? await fetchGastos() : []
+    const ingresosRaw = includeIngresos ? await fetchIngresos() : []
+    const isSharedSpace = space !== 'personal'
+
+    const totals = {
+      ingresos: includeIngresos ? ingresosRaw.reduce((s, i) => s + Number(i.amount), 0) : null,
+      gastos: includeGastos ? gastos.reduce((s, p) => s + Number(p.amount), 0) : null,
+    }
+
+    const { contributorsByRow, memberTotals } = isSharedSpace ? await computeSharedAttribution(gastos) : { contributorsByRow: [], memberTotals: [] }
+    const goalsData = includeGoals ? await fetchGoalsData() : null
+    const spaceLabel = space === 'personal' ? t('settingsExport.space.personal') : (selectedSpaceEntry?.space.name || '')
+
+    const labels = {
+      ingresos: t('settingsExport.income'),
+      gastos: t('settingsExport.expenses'),
+      balance: t('settingsExport.pdf.balance'),
+      categoryChart: t('settingsExport.pdf.categoryChart'),
+      categoryChartContinued: t('settingsExport.pdf.categoryChartContinued'),
+      monthlyChart: t('settingsExport.pdf.monthlyChart'),
+      expenseList: t('settingsExport.pdf.expenseList'),
+      colDate: t('settingsExport.csv.date'),
+      colName: t('settingsExport.csv.concept'),
+      colCategory: t('settingsExport.csv.category'),
+      colAmount: t('settingsExport.csv.amount'),
+      colPaid: t('settingsExport.csv.paid'),
+      colContributors: t('settingsExport.csv.contributors'),
+      yes: t('settingsExport.csv.yes'),
+      no: t('settingsExport.csv.no'),
+      memberSpending: t('settingsExport.pdf.memberSpending'),
+      colType: t('settingsExport.pdf.colType'),
+      colNote: t('settingsExport.pdf.colNote'),
+      goalsTitle: t('settingsExport.pdf.goalsTitle'),
+      created: t('settingsExport.pdf.created'),
+      completed: t('settingsExport.pdf.completed'),
+      contributions: t('settingsExport.pdf.contributions'),
+      withdrawals: t('settingsExport.pdf.withdrawals'),
+      colGoal: t('settingsExport.pdf.colGoal'),
+      fund: t('settingsExport.pdf.fund'),
+    }
+
+    const doc = await generateReportPdf({
+      spaceLabel,
+      fromLabel: formatDateLabel(from),
+      toLabel: formatDateLabel(to),
+      isSharedSpace,
+      totals,
+      categories: includeGastos ? buildCategoryBreakdown(gastos) : [],
+      months: includeGastos ? buildMonthlyBreakdown(gastos) : [],
+      expenseRows: gastos.map(p => ({
+        date: effectiveDateStr(p), name: p.name, category: getCategoryLabel(p.category), amount: p.amount, paid: p.is_paid,
+      })),
+      expenseContributors: contributorsByRow,
+      memberTotals,
+      incomes: ingresosRaw.map(i => ({ date: i.period_start, type: i.type, note: i.note, amount: i.amount })),
+      goals: goalsData,
+      labels,
+    })
+    doc.save(`lunapay-reporte-${from}_a_${to}.pdf`)
+    setDownloading(false)
+  }
+
+  function handleGenerate() {
+    return format === 'csv' ? handleDownloadCsv() : handleGeneratePdf()
+  }
+
+
   const total = counts ? counts.gastos + counts.ingresos : null
-  const noneSelected = !includeGastos && !includeIngresos
+  const noneSelected = !includeGastos && !includeIngresos && !(format === 'pdf' && includeGoals)
 
   return (
     <div className={`${slideClass} ${styles.pageWrapper}`}>
@@ -263,6 +453,28 @@ export function SettingsExportPage({ profile, sharedSpaces, onOpenPremium, onBac
       >
         <div className={styles.content}>
           <div className={styles.fieldGroup}>
+            <div className="field-label">{t('settingsExport.format')}</div>
+            <div className={styles.chipRow}>
+              <button
+                type="button"
+                onClick={() => setFormat('csv')}
+                className={`${styles.chip} ${format === 'csv' ? styles.chipActive : ''}`}
+              >
+                <FileText size={18} />
+                <span>CSV</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setFormat('pdf')}
+                className={`${styles.chip} ${format === 'pdf' ? styles.chipActive : ''}`}
+              >
+                <FileSpreadsheet size={18} />
+                <span>PDF</span>
+              </button>
+            </div>
+          </div>
+
+          <div className={styles.fieldGroup}>
             <div className="field-label">{t('settingsExport.dataToInclude')}</div>
             <div className={styles.chipRow}>
               <button
@@ -281,6 +493,16 @@ export function SettingsExportPage({ profile, sharedSpaces, onOpenPremium, onBac
                 <Wallet size={18} />
                 <span>{t('settingsExport.income')}</span>
               </button>
+              {format === 'pdf' && (
+                <button
+                  type="button"
+                  onClick={() => setIncludeGoals(v => !v)}
+                  className={`${styles.chip} ${includeGoals ? styles.chipActive : ''}`}
+                >
+                  <Target size={18} />
+                  <span>{t('settingsExport.pdf.goalsTitle')}</span>
+                </button>
+              )}
             </div>
           </div>
 
@@ -327,12 +549,14 @@ export function SettingsExportPage({ profile, sharedSpaces, onOpenPremium, onBac
           </div>
 
           <button
-            onClick={handleDownload}
-            disabled={noneSelected || downloading || counting || total === 0}
+            onClick={handleGenerate}
+            disabled={noneSelected || downloading || counting || (format === 'csv' && total === 0)}
             className={styles.downloadButton}
           >
             <Download size={16} />
-            {downloading ? t('settingsExport.downloading') : t('settingsExport.downloadCsv')}
+            {downloading
+              ? t('settingsExport.downloading')
+              : format === 'csv' ? t('settingsExport.downloadCsv') : t('settingsExport.pdf.generate')}
           </button>
         </div>
       </PremiumLock>
