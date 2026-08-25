@@ -307,6 +307,19 @@ function drawTrendChart(doc, x, y, width, series, labels) {
   const maxAmount = Math.max(...points.map(p => Math.max(p.gastos, p.ingresos)), 1)
   const stepX = points.length > 1 ? width / (points.length - 1) : 0
   const showLabels = points.length <= 14 // con más puntos (ej. 30 días) el texto ya no cabe sin encimarse
+  const labelEvery = Math.max(1, Math.ceil(points.length / 8)) // con muchos puntos (30 días), solo 1 de cada N para no amontonar
+
+  // Cuadrícula tenue de referencia (una línea vertical por mes/punto
+  // marcado en el eje X) — pedido de Johnatan para ubicar a qué mes
+  // pertenece cada monto. Se dibuja ANTES que las líneas/puntos/montos,
+  // para quedar siempre detrás.
+  doc.setDrawColor(235, 235, 235)
+  doc.setLineWidth(0.2)
+  points.forEach((p, i) => {
+    if (i % labelEvery === 0 || i === points.length - 1) {
+      doc.line(x + stepX * i, top, x + stepX * i, bottom)
+    }
+  })
 
   function plot(key) {
     return points.map((p, i) => ({
@@ -333,30 +346,33 @@ function drawTrendChart(doc, x, y, width, series, labels) {
   drawLine(ingresosCoords, COLOR_GREEN)
   drawLine(gastosCoords, COLOR_ACCENT)
 
-  // Montos rotulados por punto (pedido explícito de Johnatan) — pero
+  // Monto rotulado con fondo blanco detrás (pedido de Johnatan: "para no
+  // complicarnos la vida" con la posición exacta — un fondo blanco lo hace
+  // legible sin importar si cae encima de una línea o de otra etiqueta).
   // NUNCA en $0: una racha de meses/semanas sin movimiento se ve como una
-  // fila de "$0" amontonada contra el eje X (justo el problema real que
-  // reportó, ver captura); omitir esas etiquetas no pierde información
-  // real (ya se ve la línea plana en $0) y elimina el amontonamiento de
-  // raíz, en vez de solo separarlas un poco más.
-  if (showLabels) {
+  // fila de "$0" amontonada contra el eje X; omitir esas etiquetas no
+  // pierde información real (ya se ve la línea plana en $0).
+  function drawAmountLabel(text, cx, cy) {
     doc.setFontSize(6)
+    const w = doc.getTextWidth(text)
+    doc.setFillColor(...COLOR_WHITE)
+    doc.rect(cx - w / 2 - 0.8, cy - 2.4, w + 1.6, 3.1, 'F')
+    doc.setTextColor(...COLOR_DARK)
+    doc.text(text, cx, cy, { align: 'center' })
+  }
+
+  if (showLabels) {
     for (const c of ingresosCoords) {
-      if (c.value <= 0) continue
-      doc.setTextColor(...COLOR_DARK)
-      doc.text(moneyCompact(c.value), c.x, c.y - 3.2, { align: 'center' })
+      if (c.value > 0) drawAmountLabel(moneyCompact(c.value), c.x, c.y - 1.8)
     }
     for (const c of gastosCoords) {
-      if (c.value <= 0) continue
-      doc.setTextColor(...COLOR_DARK)
-      doc.text(moneyCompact(c.value), c.x, c.y + 5.2, { align: 'center' })
+      if (c.value > 0) drawAmountLabel(moneyCompact(c.value), c.x, c.y + 3.8)
     }
   }
 
   // Eje X — mismo criterio de "cabe o no cabe" que las etiquetas de monto.
   doc.setFontSize(6.5)
   doc.setTextColor(...COLOR_MUTED)
-  const labelEvery = Math.max(1, Math.ceil(points.length / 8)) // con muchos puntos (30 días), solo 1 de cada N para no amontonar
   points.forEach((p, i) => {
     if (i % labelEvery === 0 || i === points.length - 1) {
       doc.text(p.label, x + stepX * i, bottom + 6, { align: 'center' })
