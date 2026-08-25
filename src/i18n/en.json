@@ -1330,8 +1330,15 @@
       "generate": "Generate PDF",
       "trendChart": "Expenses and income by month",
       "pending": "Pending",
-      "reportTitle": "Financial report"
+      "reportTitle": "Financial report",
+      "subCategoryChart": "Sorted from highest to lowest spending",
+      "subTrendChart": "Comparison of the recent months with activity",
+      "subExpenseList": "Detail of every expense in the chosen range",
+      "subMemberSpending": "How much each person has put in",
+      "subIncome": "All income recorded in the chosen range",
+      "subGoals": "Summary of your savings goals in the chosen range"
     },
-    "salaryType": "Salary"
+    "salaryType": "Salary",
+    "fundDepositType": "Fund contribution"
   }
 }

@@ -1330,8 +1330,15 @@
       "generate": "Generar PDF",
       "trendChart": "Gastos e ingresos por mes",
       "pending": "Pendiente",
-      "reportTitle": "Reporte financiero"
+      "reportTitle": "Reporte financiero",
+      "subCategoryChart": "Ordenado de mayor a menor gasto",
+      "subTrendChart": "Comparativo de los meses con actividad reciente",
+      "subExpenseList": "Detalle de cada gasto en el rango elegido",
+      "subMemberSpending": "Cuánto ha puesto cada quien",
+      "subIncome": "Todos los ingresos registrados en el rango elegido",
+      "subGoals": "Resumen de tus metas de ahorro en el rango elegido"
     },
-    "salaryType": "Nómina"
+    "salaryType": "Nómina",
+    "fundDepositType": "Aportación al Fondo"
   }
 }
