@@ -1303,6 +1303,13 @@
       "no": "No",
       "variable": "Variable",
       "fixed": "Fixed"
+    },
+    "shortcuts": {
+      "currentPeriod": "Current period",
+      "previousPeriod": "Previous period",
+      "currentMonth": "Current month",
+      "last3Months": "Last 3 months",
+      "last6Months": "Last 6 months"
     }
   }
 }
