@@ -1329,6 +1329,7 @@
       "colGoal": "Goal",
       "fund": "Shared fund",
       "generate": "Generate PDF"
-    }
+    },
+    "salaryType": "Salary"
   }
 }

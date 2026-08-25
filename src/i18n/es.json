@@ -1329,6 +1329,7 @@
       "colGoal": "Meta",
       "fund": "Fondo Compartido",
       "generate": "Generar PDF"
-    }
+    },
+    "salaryType": "Nómina"
   }
 }
