@@ -371,12 +371,17 @@ function drawTrendChart(doc, x, y, width, series, labels) {
     doc.text(text, cx, cy, { align: 'center' })
   }
 
-  // Monto rotulado con fondo blanco detrás (v0.9.433). Ahora además: si los
-  // 2 puntos (Ingresos/Gastos) de un mismo punto en X quedan muy cerca en
-  // altura, sus 2 etiquetas se separan a la fuerza (simétrico alrededor del
-  // punto medio) — antes cada una solo se offsetaba respecto a SU propio
-  // punto, así que 2 líneas casi pegadas seguían produciendo 2 etiquetas
-  // casi pegadas entre sí (visto en captura de Johnatan).
+  // Monto rotulado con fondo blanco detrás (v0.9.433). Si los 2 puntos
+  // (Ingresos/Gastos) de un mismo punto en X quedan muy cerca en altura,
+  // sus 2 etiquetas se separan a la fuerza (v0.9.434) — pero SIEMPRE
+  // respetando cuál de los 2 PUNTOS está realmente más arriba en la
+  // gráfica ese punto en X (bug real encontrado por Johnatan con zoom: la
+  // versión anterior asumía "Ingresos siempre arriba, Gastos siempre
+  // abajo" sin importar cuál línea estuviera de verdad más alta esa
+  // semana — así, cuando Gastos > Ingresos, su etiqueta terminaba
+  // empujada hacia abajo, quedando literalmente sobre la línea de
+  // Ingresos, y viceversa. Ahora se compara la posición Y real de cada
+  // punto antes de decidir cuál etiqueta va arriba).
   const MIN_LABEL_GAP = 5 // mm entre los centros de las 2 etiquetas
   if (showLabels) {
     for (let i = 0; i < points.length; i++) {
@@ -384,10 +389,16 @@ function drawTrendChart(doc, x, y, width, series, labels) {
       const gas = gastosCoords[i]
       let ingLabelY = ing.y - 1.8
       let gasLabelY = gas.y + 3.8
-      if (ing.value > 0 && gas.value > 0 && (gasLabelY - ingLabelY) < MIN_LABEL_GAP) {
-        const mid = (ingLabelY + gasLabelY) / 2
-        ingLabelY = mid - MIN_LABEL_GAP / 2
-        gasLabelY = mid + MIN_LABEL_GAP / 2
+      if (ing.value > 0 && gas.value > 0) {
+        const ingIsHigher = ing.y <= gas.y // menor y = más arriba en la página
+        let topY = ingIsHigher ? ingLabelY : gasLabelY
+        let botY = ingIsHigher ? gasLabelY : ingLabelY
+        if (botY - topY < MIN_LABEL_GAP) {
+          const mid = (topY + botY) / 2
+          topY = mid - MIN_LABEL_GAP / 2
+          botY = mid + MIN_LABEL_GAP / 2
+        }
+        if (ingIsHigher) { ingLabelY = topY; gasLabelY = botY } else { ingLabelY = botY; gasLabelY = topY }
       }
       if (ing.value > 0) drawAmountLabel(moneyCompact(ing.value), ing.x, ingLabelY)
       if (gas.value > 0) drawAmountLabel(moneyCompact(gas.value), gas.x, gasLabelY)
