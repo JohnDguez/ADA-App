@@ -180,12 +180,42 @@ export function SettingsExportPage({ profile, sharedSpaces, onOpenPremium, onBac
     }))
   }
 
+  // Aportaciones reales al Fondo Compartido del espacio — bug real
+  // reportado por Johnatan: cuando alguien aporta al Fondo, el servidor
+  // (api/manage-shared-fund.js) SÍ guarda la fila real en
+  // `shared_fund_ledger` (type='deposit'), pero TAMBIÉN crea un "pago
+  // reflejo" en el espacio PERSONAL del que aportó (categoría Ahorro,
+  // gasto) para que su disponible baje — Exportar solo miraba
+  // `period_income`, nunca `shared_fund_ledger`, así que el aporte real
+  // AL ESPACIO nunca aparecía como ingreso de ese espacio (el reflejo
+  // tampoco cuenta, porque vive en el espacio Personal de quien aportó,
+  // no en este). Solo cuentan los depósitos (`type='deposit'`) — un
+  // retiro del Fondo para pagar un gasto NO es ingreso, ya está reflejado
+  // en `fund_amount` del pago correspondiente.
+  async function fetchFundDeposits(rangeFrom, rangeTo) {
+    if (space === 'personal') return []
+    const bufferedStart = new Date(dateOf(rangeFrom).getTime() - 86400000).toISOString()
+    const bufferedEnd = new Date(dateOf(rangeTo).getTime() + 2 * 86400000).toISOString() // +2 días de colchón: created_at es timestamp completo, no solo fecha
+    const { data, error } = await supabase
+      .from('shared_fund_ledger')
+      .select('created_at, amount, note')
+      .eq('space_id', space)
+      .eq('type', 'deposit')
+      .gte('created_at', bufferedStart)
+      .lte('created_at', bufferedEnd)
+    if (error || !data) return []
+    return data
+      .map(d => ({ period_start: dateToStr(new Date(d.created_at)), type: t('settingsExport.fundDepositType'), note: d.note, amount: Number(d.amount) }))
+      .filter(d => d.period_start >= rangeFrom && d.period_start <= rangeTo)
+  }
+
   // Fuente única de "ingresos" para el contador, el CSV y el PDF — combina
-  // period_income real + el salario sintético, ordenados por periodo.
+  // period_income real + el salario sintético (Personal) o las
+  // aportaciones al Fondo (Compartido), ordenados por periodo.
   const fetchAllIngresos = useCallback(async () => {
     const rows = await fetchIngresos()
-    const salaryRows = buildSalaryRows()
-    return [...rows, ...salaryRows].sort((a, b) => a.period_start < b.period_start ? -1 : a.period_start > b.period_start ? 1 : 0)
+    const extraRows = space === 'personal' ? buildSalaryRows() : await fetchFundDeposits(from, to)
+    return [...rows, ...extraRows].sort((a, b) => a.period_start < b.period_start ? -1 : a.period_start > b.period_start ? 1 : 0)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fetchIngresos, space, from, to, profile.salary_enabled, profile.salary_amount, profile.cobro_freq, profile.cobro_day1, profile.cobro_day2, profile.cobro_weekday])
 
@@ -245,9 +275,23 @@ export function SettingsExportPage({ profile, sharedSpaces, onOpenPremium, onBac
   //      tramo real de actividad.
   //   3) Si sigue habiendo menos de 3, cambia a por DÍA.
   // Nunca usa `from`/`to` del filtro para su ventana — solo `to` como ancla.
+  // La ventana de 12 meses nunca debe mirar más atrás de cuando la cuenta
+  // (Personal) o el espacio (Compartido) empezó a existir — bug real
+  // reportado por Johnatan: sin este tope, "Mes actual" como filtro
+  // mostraba ingresos de meses en los que la cuenta ni siquiera existía
+  // todavía (period_income/nómina sintética de ANTES de que el usuario se
+  // registrara nunca deberían existir, pero la ventana natural de 12 meses
+  // los "pedía" igual, mostrando ceros hacia atrás sin ningún punto de
+  // referencia real de cuándo arrancó la cuenta).
   function chartWindowStart(toStr) {
     const t = dateOf(toStr)
-    return dateToStr(new Date(t.getFullYear(), t.getMonth() - 11, 1))
+    const natural = new Date(t.getFullYear(), t.getMonth() - 11, 1)
+    const createdRaw = space === 'personal' ? profile.created_at : selectedSpaceEntry?.space.created_at
+    if (createdRaw) {
+      const created = dateOf(dateToStr(new Date(createdRaw)))
+      if (created > natural) return dateToStr(created)
+    }
+    return dateToStr(natural)
   }
 
   async function fetchChartSeriesData(toStr) {
@@ -268,11 +312,13 @@ export function SettingsExportPage({ profile, sharedSpaces, onOpenPremium, onBac
     iq = space === 'personal' ? iq.eq('user_id', profile.id).is('space_id', null) : iq.eq('space_id', space)
     const { data: ingresosRaw } = await iq
     const ingresosReal = (ingresosRaw || []).map(i => ({ date: i.period_start, amount: Number(i.amount) }))
-    const salaryRows = (space === 'personal' && profile.salary_enabled && Number(profile.salary_amount))
-      ? enumeratePeriodStartsInRange(windowStart, toStr).map(ps => ({ date: ps, amount: Number(profile.salary_amount) }))
-      : []
+    const extraRows = space === 'personal'
+      ? ((profile.salary_enabled && Number(profile.salary_amount))
+          ? enumeratePeriodStartsInRange(windowStart, toStr).map(ps => ({ date: ps, amount: Number(profile.salary_amount) }))
+          : [])
+      : (await fetchFundDeposits(windowStart, toStr)).map(d => ({ date: d.period_start, amount: d.amount }))
 
-    return { gastos, ingresos: [...ingresosReal, ...salaryRows], windowStart }
+    return { gastos, ingresos: [...ingresosReal, ...extraRows], windowStart }
   }
 
   function mondayOf(dateStr) {
@@ -530,9 +576,12 @@ export function SettingsExportPage({ profile, sharedSpaces, onOpenPremium, onBac
       gastos: t('settingsExport.expenses'),
       balance: t('settingsExport.pdf.balance'),
       categoryChart: t('settingsExport.pdf.categoryChart'),
+      subCategoryChart: t('settingsExport.pdf.subCategoryChart'),
       categoryChartContinued: t('settingsExport.pdf.categoryChartContinued'),
       trendChart: t('settingsExport.pdf.trendChart'),
+      subTrendChart: t('settingsExport.pdf.subTrendChart'),
       expenseList: t('settingsExport.pdf.expenseList'),
+      subExpenseList: t('settingsExport.pdf.subExpenseList'),
       colDate: t('settingsExport.csv.date'),
       colName: t('settingsExport.csv.concept'),
       colCategory: t('settingsExport.csv.category'),
@@ -543,9 +592,12 @@ export function SettingsExportPage({ profile, sharedSpaces, onOpenPremium, onBac
       yes: t('settingsExport.csv.yes'),
       no: t('settingsExport.csv.no'),
       memberSpending: t('settingsExport.pdf.memberSpending'),
+      subMemberSpending: t('settingsExport.pdf.subMemberSpending'),
       colType: t('settingsExport.pdf.colType'),
       colNote: t('settingsExport.pdf.colNote'),
+      subIncome: t('settingsExport.pdf.subIncome'),
       goalsTitle: t('settingsExport.pdf.goalsTitle'),
+      subGoals: t('settingsExport.pdf.subGoals'),
       created: t('settingsExport.pdf.created'),
       completed: t('settingsExport.pdf.completed'),
       contributions: t('settingsExport.pdf.contributions'),
