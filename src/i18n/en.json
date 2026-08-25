@@ -1309,7 +1309,8 @@
       "previousPeriod": "Previous period",
       "currentMonth": "Current month",
       "last3Months": "Last 3 months",
-      "last6Months": "Last 6 months"
+      "last6Months": "Last 6 months",
+      "allTime": "All time"
     },
     "format": "Format",
     "pdf": {
