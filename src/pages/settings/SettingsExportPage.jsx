@@ -125,9 +125,11 @@ export function SettingsExportPage({ profile, sharedSpaces, onOpenPremium, onBac
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [space, from, to, profile.id])
 
-  // Trae los ingresos del rango — period_income no tiene fecha exacta de
-  // registro, solo `period_start` (primer día del periodo al que
-  // pertenece), así que el filtro es directo por esa columna.
+  // Trae los ingresos EXTRA capturados a mano del rango (bonos, etc.) —
+  // period_income no tiene fecha exacta de registro, solo `period_start`
+  // (primer día del periodo al que pertenece), así que el filtro es
+  // directo por esa columna. IMPORTANTE: esto NO incluye el salario/nómina
+  // fijo del usuario — ver fetchAllIngresos() más abajo.
   const fetchIngresos = useCallback(async () => {
     let query = supabase.from('period_income').select('*')
       .gte('period_start', from).lte('period_start', to)
@@ -139,6 +141,52 @@ export function SettingsExportPage({ profile, sharedSpaces, onOpenPremium, onBac
     return (!error && data) ? data : []
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [space, from, to, profile.id])
+
+  // El salario/nómina periódico NO vive en `period_income` — vive como un
+  // valor fijo en el perfil (`salary_enabled`/`salary_amount`), aplicado
+  // automáticamente cada periodo (ver "Disponible Este Periodo" en
+  // PaymentsPage.jsx: `salario + extras - gastado`). `period_income` solo
+  // guarda los ingresos EXTRA capturados a mano. Sin esto, "Ingresos" en
+  // Exportar se quedaba corto — bug real reportado por Johnatan tras
+  // probar el reporte.
+  //
+  // Enumera el inicio de cada periodo de cobro que cae en el rango, mismo
+  // criterio de filtro que ya usa period_income (`period_start` entre
+  // `from` y `to`, ambos inclusive) — así el salario sintético convive sin
+  // pisarse con los ingresos reales.
+  function enumeratePeriodStartsInRange() {
+    if (!['weekly', 'biweekly', 'monthly'].includes(profile.cobro_freq)) return []
+    const starts = []
+    let p = cobroPeriod(profile, dateOf(from))
+    if (dateToStr(p.start) < from) p = cobroPeriod(profile, p.nextCobro) // el periodo que contiene `from` puede empezar antes del rango — ese no cuenta, solo el siguiente
+    let guard = 0
+    while (dateToStr(p.start) <= to && guard < 200) {
+      starts.push(dateToStr(p.start))
+      p = cobroPeriod(profile, p.nextCobro)
+      guard++
+    }
+    return starts
+  }
+
+  // Solo aplica a Personal — el salario es un dato individual del perfil;
+  // para un Espacio Compartido no existe forma de saber el salario de
+  // otros miembros (ni la propia app lo usa así), ahí solo cuentan los
+  // ingresos que de verdad se registraron contra ese espacio.
+  function buildSalaryRows() {
+    if (space !== 'personal' || !profile.salary_enabled || !Number(profile.salary_amount)) return []
+    return enumeratePeriodStartsInRange().map(periodStart => ({
+      period_start: periodStart, type: t('settingsExport.salaryType'), note: null, amount: Number(profile.salary_amount),
+    }))
+  }
+
+  // Fuente única de "ingresos" para el contador, el CSV y el PDF — combina
+  // period_income real + el salario sintético, ordenados por periodo.
+  const fetchAllIngresos = useCallback(async () => {
+    const rows = await fetchIngresos()
+    const salaryRows = buildSalaryRows()
+    return [...rows, ...salaryRows].sort((a, b) => a.period_start < b.period_start ? -1 : a.period_start > b.period_start ? 1 : 0)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fetchIngresos, space, from, to, profile.salary_enabled, profile.salary_amount, profile.cobro_freq, profile.cobro_day1, profile.cobro_day2, profile.cobro_weekday])
 
   // Mapa user_id → nombre, para resolver quién aportó en un gasto de
   // Espacio Compartido (payment_contributions solo trae el user_id, no el
@@ -289,13 +337,13 @@ export function SettingsExportPage({ profile, sharedSpaces, onOpenPremium, onBac
     debounceRef.current = setTimeout(async () => {
       const [gastos, ingresos] = await Promise.all([
         includeGastos ? fetchGastos() : Promise.resolve([]),
-        includeIngresos ? fetchIngresos() : Promise.resolve([]),
+        includeIngresos ? fetchAllIngresos() : Promise.resolve([]),
       ])
       setCounts({ gastos: gastos.length, ingresos: ingresos.length })
       setCounting(false)
     }, 300)
     return () => clearTimeout(debounceRef.current)
-  }, [includeGastos, includeIngresos, fetchGastos, fetchIngresos])
+  }, [includeGastos, includeIngresos, fetchGastos, fetchAllIngresos])
 
   async function handleDownloadCsv() {
     if (!includeGastos && !includeIngresos) return
@@ -328,7 +376,7 @@ export function SettingsExportPage({ profile, sharedSpaces, onOpenPremium, onBac
     }
 
     if (includeIngresos) {
-      const ingresos = await fetchIngresos()
+      const ingresos = await fetchAllIngresos()
       for (const inc of ingresos) {
         rows.push([
           inc.period_start,
@@ -361,7 +409,7 @@ export function SettingsExportPage({ profile, sharedSpaces, onOpenPremium, onBac
     setDownloading(true)
 
     const gastos = includeGastos ? await fetchGastos() : []
-    const ingresosRaw = includeIngresos ? await fetchIngresos() : []
+    const ingresosRaw = includeIngresos ? await fetchAllIngresos() : []
     const isSharedSpace = space !== 'personal'
 
     const totals = {
