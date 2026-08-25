@@ -48,6 +48,16 @@ function formatShortDate(isoStr) {
   return `${d} ${MONTHS_SHORT[m - 1]} ${y}`
 }
 
+// Convierte un timestamp completo (ej. g.created_at/g.completed_at,
+// "2026-07-20T14:32:00.000Z") a solo fecha en LOCAL (Regla 22) — necesario
+// porque formatShortDate() espera una fecha plana "YYYY-MM-DD", no un
+// timestamp con hora.
+function dateOnly(isoTimestamp) {
+  const d = new Date(isoTimestamp)
+  const y = d.getFullYear(), m = String(d.getMonth() + 1).padStart(2, '0'), day = String(d.getDate()).padStart(2, '0')
+  return `${y}-${m}-${day}`
+}
+
 // ── Helpers de imagen ───────────────────────────────────────────────────
 function loadImage(url) {
   return new Promise((resolve, reject) => {
@@ -554,11 +564,46 @@ function drawGoalsSection(doc, y, goals, labels, autoTableFn) {
   y = ensureSpace(doc, y, 14)
   y = sectionTitle(doc, labels.goalsTitle, MARGIN, y, labels.subGoals)
 
-  doc.setFontSize(8)
-  doc.setTextColor(...COLOR_MUTED)
-  doc.text(`${labels.created}: ${goals.created.length}`, MARGIN, y)
-  doc.text(`${labels.completed}: ${goals.completed.length}`, MARGIN + 45, y)
-  y += 8
+  // Antes solo mostraba "Creadas: N / Cumplidas: N" — Johnatan: "debería
+  // mostrar cuáles son". Ahora, si hay al menos 1, se lista con nombre,
+  // monto objetivo y fecha (mismo patrón de tabla que Abonos/Retiros).
+  if (goals.created.length > 0) {
+    y = ensureSpace(doc, y, 14)
+    doc.setFontSize(9)
+    doc.setTextColor(...COLOR_DARK)
+    doc.text(`${labels.created} (${goals.created.length})`, MARGIN, y)
+    y += 4
+    autoTableFn(doc, {
+      startY: y,
+      head: [[labels.colGoal, labels.colDate, labels.colAmount]],
+      body: goals.created.map(g => [g.name, formatShortDate(dateOnly(g.created_at)), money(g.target_amount)]),
+      margin: { left: MARGIN, right: MARGIN },
+      theme: 'plain',
+      styles: { fontSize: 7.5, textColor: COLOR_DARK, cellPadding: 1.6 },
+      headStyles: { fillColor: COLOR_LIGHT, textColor: COLOR_MUTED, fontStyle: 'bold' },
+      columnStyles: { 2: { halign: 'right', cellWidth: 24 } },
+    })
+    y = doc.lastAutoTable.finalY + 8
+  }
+
+  if (goals.completed.length > 0) {
+    y = ensureSpace(doc, y, 14)
+    doc.setFontSize(9)
+    doc.setTextColor(...COLOR_DARK)
+    doc.text(`${labels.completed} (${goals.completed.length})`, MARGIN, y)
+    y += 4
+    autoTableFn(doc, {
+      startY: y,
+      head: [[labels.colGoal, labels.colDate, labels.colAmount]],
+      body: goals.completed.map(g => [g.name, formatShortDate(dateOnly(g.completed_at)), money(g.target_amount)]),
+      margin: { left: MARGIN, right: MARGIN },
+      theme: 'plain',
+      styles: { fontSize: 7.5, textColor: COLOR_DARK, cellPadding: 1.6 },
+      headStyles: { fillColor: COLOR_LIGHT, textColor: COLOR_MUTED, fontStyle: 'bold' },
+      columnStyles: { 2: { halign: 'right', cellWidth: 24 } },
+    })
+    y = doc.lastAutoTable.finalY + 8
+  }
 
   if (goals.aportes.length > 0) {
     y = ensureSpace(doc, y, 14)
