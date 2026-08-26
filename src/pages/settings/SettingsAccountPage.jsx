@@ -1,7 +1,11 @@
 import { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { supabase } from '../../lib/supabase'
-import { ChevronLeft, ChevronRight, AlertTriangle, Eye, EyeOff, Check } from 'lucide-react'
+import { ChevronRight, AlertTriangle, Eye, EyeOff, Check } from 'lucide-react'
+// Ícono del encabezado vía Phosphor Icons (mismo patrón que SettingsExportPage.jsx,
+// v0.9.442-445) — import directo al archivo del ícono para tree-shaking real.
+import { UserCircle } from '@phosphor-icons/react/dist/csr/UserCircle'
+import { PageHero } from '../../components/PageHero'
 import { showToast } from '../../components/Toast'
 import { passwordRequirements, isPasswordStrong } from '../../components/PasswordSetupModal'
 import { RequirementRow } from '../../components/RequirementRow'
@@ -156,12 +160,12 @@ export function SettingsAccountPage({ profile, user, onUpdate, onDataDeleted, on
   return (
     <>
       <div className={`${slideClass} ${styles.pageWrapper}`}>
-        <div className={styles.header}>
-          <button onClick={onBack} className={styles.backButton}>
-            <ChevronLeft size={18} color="var(--text)" />
-          </button>
-          <div className={styles.headerTitle}>{t('settingsAccount.title')}</div>
-        </div>
+        <PageHero
+          icon={UserCircle}
+          title={t('settingsAccount.title')}
+          description={t('settingsAccount.description')}
+          onBack={onBack}
+        />
 
         <Card>
           <Row label={t('settingsAccount.row.name')} value={profile.name} onClick={() => openEdit('name')} />
