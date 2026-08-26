@@ -1,0 +1,86 @@
+/* Resplandor azul tenue arriba de la pantalla — usa var(--accent), no un
+   color nuevo. Detrás de todo el contenido (z-index 0); el contenedor
+   padre (`.pageWrapper` de cada página que use <PageHero>) debe tener
+   `position: relative; overflow: hidden;` para que quede contenido. */
+.glow {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 220px;
+  background: radial-gradient(circle at 50% -10%, color-mix(in srgb, var(--accent) 35%, transparent), transparent 70%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.header {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: 36px 1fr 36px;
+  align-items: center;
+  gap: 12px;
+  /* 32px — EXCEPCIÓN intencional a los 52px que usan las sub-páginas de
+     Ajustes con título en línea junto al botón (ver CONTEXT.md). Este
+     layout de "hero" centrado siente el mismo espacio como más vacío. */
+  padding: 32px 16px 0;
+}
+
+.backButton {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--surface);
+  border: 0.5px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+/* Columna vacía del grid, mismo ancho que .backButton — así la columna
+   central (1fr) centra el ícono de verdad en la pantalla, sin que el
+   botón de regreso lo empuje hacia la derecha. */
+.headerSpacer {
+  width: 36px;
+}
+
+.hero {
+  position: relative;
+  z-index: 1;
+  text-align: center;
+  padding: 12px 24px 24px;
+}
+
+.heroIconCircle {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  /* var(--accent-soft) solo (un tinte muy sutil) casi desaparecía en tema
+     oscuro — la capa secundaria de un ícono duotone de Phosphor ya viene a
+     20% de opacidad fija dentro del propio SVG, así que el círculo
+     necesita su propia definición, no depender del contraste del ícono.
+     Mezcla de --accent real (no solo el tinte) + borde, visible en los
+     2 temas sin verse plano contra el fondo. */
+  background: color-mix(in srgb, var(--accent) 18%, var(--surface));
+  border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  justify-self: center;
+}
+
+.heroTitle {
+  font-size: 19px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 6px;
+}
+
+.heroDesc {
+  font-size: 13px;
+  color: var(--text);
+  max-width: 280px;
+  margin: 0 auto;
+}
