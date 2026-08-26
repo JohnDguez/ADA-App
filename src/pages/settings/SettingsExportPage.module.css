@@ -28,7 +28,7 @@
   grid-template-columns: 36px 1fr 36px;
   align-items: center;
   gap: 12px;
-  padding: 52px 16px 0;
+  padding: 28px 16px 0;
 }
 
 .backButton {
@@ -62,7 +62,14 @@
   width: 56px;
   height: 56px;
   border-radius: 50%;
-  background: var(--accent-soft);
+  /* var(--accent-soft) solo (un tinte muy sutil) casi desaparecía en tema
+     oscuro — la capa secundaria del ícono duotone de Phosphor ya viene a
+     20% de opacidad fija dentro del propio SVG, así que el círculo
+     necesita su propia definición, no depender del contraste del ícono.
+     Mezcla de --accent real (no solo el tinte) + borde, visible en los
+     2 temas sin verse plano contra el fondo. */
+  background: color-mix(in srgb, var(--accent) 18%, var(--surface));
+  border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
   display: flex;
   align-items: center;
   justify-content: center;
