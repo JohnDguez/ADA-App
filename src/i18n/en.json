@@ -93,6 +93,7 @@
   },
   "settingsAccount": {
     "title": "Account",
+    "description": "Update your personal information, protect access to your account, or delete it if you no longer need it.",
     "row": {
       "name": "Name",
       "account": "Account",

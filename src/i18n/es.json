@@ -93,6 +93,7 @@
   },
   "settingsAccount": {
     "title": "Cuenta",
+    "description": "Actualiza tu información personal, protege el acceso a tu cuenta, o elimínala si ya no la necesitas.",
     "row": {
       "name": "Nombre",
       "account": "Cuenta",
