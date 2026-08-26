@@ -115,6 +115,18 @@ export function SettingsPage({ profile, user, onUpdate, onUploadAvatar, onDataDe
     return () => document.body.classList.remove('modal-open')
   }, [avatarModal])
 
+  // Bug real reportado por Johnatan: al abrir una sub-página (ej. "Exportar
+  // datos", hasta abajo del menú), se quedaba con el scroll que traía el
+  // menú principal — mostrando la sub-página ya desplazada en vez de desde
+  // arriba, como cualquier otra pantalla. Nada resetea el scroll al cambiar
+  // de `section`, y como el swap es un simple cambio de estado (no una
+  // navegación de verdad), el navegador no lo hace solo. Afecta a
+  // cualquier sub-página alcanzada con el menú ya scrolleado — más notorio
+  // en Exportar por estar hasta abajo, pero el fix aplica parejo a todas.
+  useEffect(() => {
+    window.scrollTo(0, 0)
+  }, [section])
+
   function openSection(s) {
     shortcutReturnRef.current = null // navegación manual normal desde aquí en adelante
     window.history.pushState({ settingsSection: s }, '')
