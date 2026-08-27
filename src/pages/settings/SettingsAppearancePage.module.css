@@ -2,58 +2,127 @@
   padding-bottom: 120px;
   background: var(--bg);
   min-height: 100vh;
-}
-
-.header {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 52px 16px 20px;
-}
-
-.backButton {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  background: var(--surface);
-  border: 0.5px solid var(--border);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  flex-shrink: 0;
-}
-
-.headerTitle {
-  font-size: 20px;
-  font-weight: 700;
-  color: var(--text);
+  position: relative;
+  overflow: hidden;
 }
 
 .section {
   padding: 13px 14px;
 }
 
-.pillRow {
+.themeGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.themeCard {
   display: flex;
-  gap: 6px;
-}
-
-.pill {
-  flex: 1;
-  padding: 8px 0;
-  border-radius: 5px;
-  border: none;
-  background: var(--bg);
-  color: var(--text);
-  font-weight: 400;
-  font-size: 13px;
-  font-family: 'DM Sans', sans-serif;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 6px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--surface);
   cursor: pointer;
+  font-family: 'DM Sans', sans-serif;
 }
 
-.pillActive {
-  background: var(--accent);
-  color: var(--surface);
+.themeCardActive {
+  border: 1.5px solid var(--accent);
+}
+
+.themeCardLabel {
+  font-size: 11px;
   font-weight: 600;
+  color: var(--text);
+}
+
+.themeCardLabelActive {
+  color: var(--accent);
+}
+
+/* ── Esqueletos de vista previa por tema ──────────────────────────────────
+   EXCEPCIÓN DOCUMENTADA a la Regla 11 (no colores hardcodeados): estas
+   tarjetas existen precisamente para mostrar cómo se ve CADA tema, sin
+   importar cuál esté activo en este momento — por diseño, la tarjeta
+   "Claro" siempre debe verse clara y la de "Oscuro" siempre oscura, así
+   que sus colores NO pueden depender de var(--bg)/var(--text) (esas
+   cambian con el tema activo, lo que arruinaría la vista previa). Los
+   valores son literales de los mismos temas reales de la app (ver
+   index.css: light bg #F2F2F2/surface #FFFFFF/border-mid #C8C5BE/accent
+   #2F8CFA; dark bg #0F1117/surface #1A1D27/border-mid #3A3D4E/accent
+   #3B9EFF) — no colores inventados. */
+.skeletonPreview {
+  width: 100%;
+  height: 56px;
+  border-radius: 5px;
+  position: relative;
+}
+
+.skeletonBarLeft {
+  position: absolute;
+  top: 6px;
+  left: 5px;
+  width: 24px;
+  height: 3px;
+  border-radius: 2px;
+}
+
+.skeletonBarRight {
+  position: absolute;
+  top: 6px;
+  right: 5px;
+  width: 12px;
+  height: 3px;
+  border-radius: 2px;
+}
+
+.skeletonAccentBar {
+  position: absolute;
+  bottom: 6px;
+  left: 5px;
+  right: 5px;
+  height: 10px;
+  border-radius: 2px;
+}
+
+.skeleton_light {
+  background: #F2F2F2;
+}
+.skeleton_light .skeletonBarLeft,
+.skeleton_light .skeletonBarRight {
+  background: #C8C5BE;
+}
+.skeleton_light .skeletonAccentBar {
+  background: #2F8CFA;
+}
+
+.skeleton_dark {
+  background: #0F1117;
+}
+.skeleton_dark .skeletonBarLeft,
+.skeleton_dark .skeletonBarRight {
+  background: #3A3D4E;
+}
+.skeleton_dark .skeletonAccentBar {
+  background: #3B9EFF;
+}
+
+/* "Sistema" — mitad clara / mitad oscura, para representar visualmente
+   que se adapta solo al dispositivo. Cada barra toma el tono muted de SU
+   mitad (izquierda = claro, derecha = oscuro), mismo criterio que las
+   otras 2 tarjetas. */
+.skeleton_sistema {
+  background: linear-gradient(135deg, #F2F2F2 50%, #0F1117 50%);
+}
+.skeleton_sistema .skeletonBarLeft {
+  background: #C8C5BE;
+}
+.skeleton_sistema .skeletonBarRight {
+  background: #3A3D4E;
+}
+.skeleton_sistema .skeletonAccentBar {
+  background: #2F8CFA;
 }
