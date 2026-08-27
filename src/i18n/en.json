@@ -211,7 +211,8 @@
     }
   },
   "settingsAppearance": {
-    "title": "Appearance"
+    "title": "Appearance",
+    "description": "Choose how LunaPay looks on your device."
   },
   "settingsCategories": {
     "title": "Categories",
