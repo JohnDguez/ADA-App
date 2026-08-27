@@ -204,11 +204,6 @@ export function SettingsCategoriesPage({ profile, onUpdate, onBack, slideClass }
           title={t('settingsCategories.title')}
           description={t('settingsCategories.description')}
           onBack={onBack}
-          action={
-            <button onClick={openAdd} className={styles.addButton}>
-              <Plus size={18} color="var(--surface)" />
-            </button>
-          }
         />
 
         <Card>
@@ -216,6 +211,20 @@ export function SettingsCategoriesPage({ profile, onUpdate, onBack, slideClass }
             <CategoryRow key={c.name} cat={c.name} isCustom={c.isCustom} last={i === sortedCats.length - 1} />
           ))}
         </Card>
+      </div>
+
+      {/* Pastilla flotante "Agregar categoría" — mismo patrón ya aprobado
+          en GoalsPage.jsx ("Añadir meta"), pedido explícito de Johnatan:
+          el botón + vivía solo en el encabezado, obligando a hacer scroll
+          hasta arriba para agregar una categoría nueva si la lista es
+          larga. EXCEPCIÓN DOCUMENTADA a la Regla 13 (radius 5px / pills
+          solo en segmentados de 2 posiciones) — ver RULES.md, ya aprobada
+          para este mismo tipo de botón en Metas. */}
+      <div className={styles.addPillRow}>
+        <button type="button" onClick={openAdd} className={styles.addPill}>
+          <Plus size={18} color="#fff" />
+          {t('settingsCategories.addButton')}
+        </button>
       </div>
 
       {modalOpen && (
