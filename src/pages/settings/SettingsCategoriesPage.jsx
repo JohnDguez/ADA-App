@@ -1,7 +1,11 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import i18n from '../../i18n'
-import { ChevronLeft, Plus, Check, Search, Trash2 } from 'lucide-react'
+import { Plus, Check, Search, Trash2, Pencil } from 'lucide-react'
+// Ícono del encabezado vía Phosphor Icons (mismo patrón que Exportar/Cuenta,
+// v0.9.442-446) — import directo al archivo del ícono para tree-shaking real.
+import { Tag } from '@phosphor-icons/react/dist/csr/Tag'
+import { PageHero } from '../../components/PageHero'
 import { CATEGORIES, getCatColor, getCategoryLabel } from '../../lib/utils'
 import { CATEGORY_ICON_GROUPS, getCategoryIcon, getIconComponent } from '../../lib/categoryIcons'
 import { showToast } from '../../components/Toast'
@@ -157,6 +161,7 @@ export function SettingsCategoriesPage({ profile, onUpdate, onBack, slideClass }
             }
           </div>
           <span className={styles.categoryLabel}>{isCustom ? cat : getCategoryLabel(cat)}</span>
+          <Pencil size={16} color="var(--text)" className={styles.editIcon} />
           {isCustom && (
             <button
               onClick={e => { e.stopPropagation(); setConfirmDeleteCat(prev => prev === cat ? null : cat) }}
@@ -194,17 +199,17 @@ export function SettingsCategoriesPage({ profile, onUpdate, onBack, slideClass }
   return (
     <>
       <div className={`${slideClass} ${styles.pageWrapper}`}>
-        <div className={styles.header}>
-          <div className={styles.headerLeft}>
-            <button onClick={onBack} className={styles.backButton}>
-              <ChevronLeft size={18} color="var(--text)" />
+        <PageHero
+          icon={Tag}
+          title={t('settingsCategories.title')}
+          description={t('settingsCategories.description')}
+          onBack={onBack}
+          action={
+            <button onClick={openAdd} className={styles.addButton}>
+              <Plus size={18} color="var(--surface)" />
             </button>
-            <div className={styles.headerTitle}>{t('settingsCategories.title')}</div>
-          </div>
-          <button onClick={openAdd} className={styles.addButton}>
-            <Plus size={18} color="var(--surface)" />
-          </button>
-        </div>
+          }
+        />
 
         <Card>
           {sortedCats.map((c, i) => (
