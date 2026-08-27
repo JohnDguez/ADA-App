@@ -213,6 +213,7 @@
   },
   "settingsCategories": {
     "title": "Categories",
+    "description": "Customize the icon and color of your categories, or create your own.",
     "addModalTitleEdit": "Edit category",
     "addModalTitleNew": "Add category",
     "nameLabel": "Name",
