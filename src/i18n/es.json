@@ -236,7 +236,8 @@
       "updated": "Categoría actualizada",
       "deletedPrefix": "Categoría",
       "deletedSuffix": "eliminada"
-    }
+    },
+    "addButton": "Agregar categoría"
   },
   "homePage": {
     "tabs": {

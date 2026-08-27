@@ -236,7 +236,8 @@
       "updated": "Category updated",
       "deletedPrefix": "Category",
       "deletedSuffix": "deleted"
-    }
+    },
+    "addButton": "Add category"
   },
   "homePage": {
     "tabs": {
