@@ -6,93 +6,116 @@
   overflow: hidden;
 }
 
-.section {
-  padding: 13px 14px;
+/* ── Carrusel ──────────────────────────────────────────────────────────────
+   scroll-snap nativo — sin librería nueva. El padding lateral del track es
+   lo que deja "asomar" las tarjetas vecinas (en vez de puntos de
+   paginación, que Johnatan pidió evitar): cada tarjeta ocupa
+   `calc(100% - 2*peek - 2*gap)`, así que el resto del ancho lo llenan los
+   bordes de las tarjetas de al lado, ya reales — no cajas simuladas. */
+.carousel {
+  display: flex;
+  gap: 10px;
+  padding: 0 34px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.carousel::-webkit-scrollbar {
+  display: none;
 }
 
-.themeGrid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 8px;
-}
-
-.themeCard {
+.carouselCard {
+  flex: 0 0 calc(100% - 68px);
+  scroll-snap-align: center;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
-  padding: 10px 6px;
-  border-radius: 8px;
+  gap: 14px;
+  padding: 18px 14px;
+  border-radius: 14px;
   border: 1px solid var(--border);
   background: var(--surface);
-  cursor: pointer;
-  font-family: 'DM Sans', sans-serif;
 }
 
-.themeCardActive {
-  border: 1.5px solid var(--accent);
+.carouselCardActive {
+  border: 2px solid var(--accent);
 }
 
-.themeCardLabel {
-  font-size: 11px;
-  font-weight: 600;
+.carouselCardLabel {
+  font-size: 16px;
+  font-weight: 700;
   color: var(--text);
 }
 
-.themeCardLabelActive {
+.carouselCardLabelActive {
   color: var(--accent);
 }
 
-/* ── Esqueletos de vista previa por tema ──────────────────────────────────
-   EXCEPCIÓN DOCUMENTADA a la Regla 11 (no colores hardcodeados): estas
-   tarjetas existen precisamente para mostrar cómo se ve CADA tema, sin
-   importar cuál esté activo en este momento — por diseño, la tarjeta
-   "Claro" siempre debe verse clara y la de "Oscuro" siempre oscura, así
-   que sus colores NO pueden depender de var(--bg)/var(--text) (esas
-   cambian con el tema activo, lo que arruinaría la vista previa). Los
-   valores son literales de los mismos temas reales de la app (ver
-   index.css: light bg #F2F2F2/surface #FFFFFF/border-mid #C8C5BE/accent
-   #2F8CFA; dark bg #0F1117/surface #1A1D27/border-mid #3A3D4E/accent
-   #3B9EFF) — no colores inventados. */
+.swipeHint {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 14px 0 24px;
+  font-size: 12px;
+  color: var(--text);
+  opacity: 0.6;
+}
+
+/* ── Esqueleto tipo teléfono dentro de cada tarjeta ───────────────────────
+   EXCEPCIÓN DOCUMENTADA a la Regla 11 (no colores hardcodeados): esta
+   tarjeta existe precisamente para mostrar cómo se ve CADA tema, sin
+   importar cuál esté activo en este momento — por diseño, la de "Claro"
+   siempre debe verse clara y la de "Oscuro" siempre oscura, así que sus
+   colores NO pueden depender de var(--bg)/var(--text) (esas cambian con
+   el tema activo, lo que arruinaría la vista previa). Los valores son
+   literales de los mismos temas reales de la app (ver index.css: light
+   bg #F2F2F2/border-mid #C8C5BE/accent #2F8CFA; dark bg #0F1117/border-mid
+   #3A3D4E/accent #3B9EFF) — no colores inventados. */
 .skeletonPreview {
   width: 100%;
-  height: 56px;
-  border-radius: 5px;
+  max-width: 160px;
+  aspect-ratio: 9 / 17;
+  border-radius: 14px;
   position: relative;
+  padding: 12px;
+  box-sizing: border-box;
 }
 
 .skeletonBarLeft {
-  position: absolute;
-  top: 6px;
-  left: 5px;
-  width: 24px;
-  height: 3px;
-  border-radius: 2px;
+  width: 36%;
+  height: 6px;
+  border-radius: 3px;
+  margin-bottom: 6px;
 }
 
 .skeletonBarRight {
-  position: absolute;
-  top: 6px;
-  right: 5px;
-  width: 12px;
-  height: 3px;
-  border-radius: 2px;
+  width: 20%;
+  height: 6px;
+  border-radius: 3px;
+  margin-bottom: 18px;
 }
 
 .skeletonAccentBar {
-  position: absolute;
-  bottom: 6px;
-  left: 5px;
-  right: 5px;
-  height: 10px;
-  border-radius: 2px;
+  width: 100%;
+  height: 18px;
+  border-radius: 4px;
+  margin-bottom: 8px;
+}
+
+.skeletonMutedBar {
+  width: 70%;
+  height: 9px;
+  border-radius: 3px;
 }
 
 .skeleton_light {
   background: #F2F2F2;
 }
 .skeleton_light .skeletonBarLeft,
-.skeleton_light .skeletonBarRight {
+.skeleton_light .skeletonBarRight,
+.skeleton_light .skeletonMutedBar {
   background: #C8C5BE;
 }
 .skeleton_light .skeletonAccentBar {
@@ -103,7 +126,8 @@
   background: #0F1117;
 }
 .skeleton_dark .skeletonBarLeft,
-.skeleton_dark .skeletonBarRight {
+.skeleton_dark .skeletonBarRight,
+.skeleton_dark .skeletonMutedBar {
   background: #3A3D4E;
 }
 .skeleton_dark .skeletonAccentBar {
@@ -115,14 +139,15 @@
    mitad (izquierda = claro, derecha = oscuro), mismo criterio que las
    otras 2 tarjetas. */
 .skeleton_sistema {
-  background: linear-gradient(135deg, #F2F2F2 50%, #0F1117 50%);
+  background: linear-gradient(160deg, #F2F2F2 50%, #0F1117 50%);
 }
-.skeleton_sistema .skeletonBarLeft {
-  background: #C8C5BE;
-}
+.skeleton_sistema .skeletonBarLeft,
 .skeleton_sistema .skeletonBarRight {
-  background: #3A3D4E;
+  background: #C8C5BE;
 }
 .skeleton_sistema .skeletonAccentBar {
   background: #2F8CFA;
+}
+.skeleton_sistema .skeletonMutedBar {
+  background: #3A3D4E;
 }
