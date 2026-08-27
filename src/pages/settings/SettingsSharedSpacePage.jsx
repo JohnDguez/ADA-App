@@ -1,6 +1,10 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { ChevronLeft, ChevronDown, ChevronUp, Users, Copy, RefreshCw, LogOut, Trash2, Crown, Plus } from 'lucide-react'
+import { ChevronDown, ChevronUp, Users, Copy, RefreshCw, LogOut, Trash2, Crown, Plus } from 'lucide-react'
+// Ícono del encabezado vía Phosphor Icons (mismo patrón que las demás
+// sub-páginas ya migradas, v0.9.442-454) — import directo para tree-shaking real.
+import { UsersThree } from '@phosphor-icons/react/dist/csr/UsersThree'
+import { PageHero } from '../../components/PageHero'
 import { Card, Row, NotifToggle, Toggle } from '../../components/SettingsShared'
 import { CobroPeriodFields } from '../../components/CobroPeriodFields'
 import { showToast } from '../../components/Toast'
@@ -68,12 +72,12 @@ export function SettingsSharedSpacePage({ profile, user, sharedSpaces, onBack, s
 
   return (
     <div className={`${slideClass} ${styles.pageRoot}`}>
-      <div className={styles.header}>
-        <button onClick={onBack} className={styles.backButton}>
-          <ChevronLeft size={20} color="var(--text)" />
-        </button>
-        <div className={styles.headerTitle}>{t('settingsSharedSpacePage.title')}</div>
-      </div>
+      <PageHero
+        icon={UsersThree}
+        title={t('settingsSharedSpacePage.title')}
+        description={t('settingsSharedSpacePage.description')}
+        onBack={onBack}
+      />
 
       {/* ── Tu espacio (si eres dueño) ── */}
       {ownedEntry && (
