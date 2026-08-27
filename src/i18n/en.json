@@ -188,6 +188,7 @@
   },
   "settingsNotifications": {
     "title": "Notifications",
+    "description": "Decide when and what we notify you about, so you never miss a payment.",
     "activeLabel": "Notifications on",
     "enableLabel": "Enable notifications",
     "activeSubtitle": "You'll get alerts on this device",

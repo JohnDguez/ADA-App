@@ -188,6 +188,7 @@
   },
   "settingsNotifications": {
     "title": "Notificaciones",
+    "description": "Decide cuándo y de qué te avisamos, para que nunca se te pase un pago.",
     "activeLabel": "Notificaciones activas",
     "enableLabel": "Activar notificaciones",
     "activeSubtitle": "Recibes alertas en este dispositivo",
