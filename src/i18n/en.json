@@ -63,6 +63,7 @@
   },
   "settingsSubscription": {
     "title": "My subscription",
+    "description": "View your plan, switch plans, or cancel your Premium subscription.",
     "loading": "Loading your subscription…",
     "noSubscription": "We couldn't find a subscription linked to your account.",
     "currentPlan": "Current plan",

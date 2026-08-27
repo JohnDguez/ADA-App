@@ -63,6 +63,7 @@
   },
   "settingsSubscription": {
     "title": "Mi suscripción",
+    "description": "Consulta tu plan, cambia de plan, o cancela tu suscripción Premium.",
     "loading": "Cargando tu suscripción…",
     "noSubscription": "No encontramos una suscripción asociada a tu cuenta.",
     "currentPlan": "Plan actual",
