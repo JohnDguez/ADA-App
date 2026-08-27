@@ -18,17 +18,24 @@ import styles from './PageHero.module.css'
 // del grid cuando la página necesita una acción ahí (ej. "Categorías" con
 // su botón de agregar). Si no se pasa, esa columna se queda vacía como
 // antes, solo para mantener el ícono centrado de verdad.
-export function PageHero({ icon: Icon, title, description, onBack, weight = 'duotone', action = null }) {
+//
+// `accentColor`: color opcional para el resplandor Y el ícono/círculo
+// JUNTOS (agosto 2026, pedido para "Mi suscripción" — resplandor dorado en
+// vez del azul de acento estándar). Se controlan juntos a propósito, no
+// por separado: un resplandor dorado con ícono azul se vería inconsistente.
+// Por defecto `var(--accent)` (el azul de siempre, sin cambios en el resto
+// de páginas).
+export function PageHero({ icon: Icon, title, description, onBack, weight = 'duotone', action = null, accentColor = 'var(--accent)' }) {
   return (
     <>
-      <div className={styles.glow} />
+      <div className={styles.glow} style={{ '--pageHeroAccent': accentColor }} />
 
       <div className={styles.header}>
         <button onClick={onBack} className={styles.backButton}>
           <ChevronLeft size={18} color="var(--text)" />
         </button>
-        <div className={styles.heroIconCircle}>
-          <Icon size={26} weight={weight} color="var(--accent)" />
+        <div className={styles.heroIconCircle} style={{ '--pageHeroAccent': accentColor }}>
+          <Icon size={26} weight={weight} color={accentColor} />
         </div>
         {action || <div className={styles.headerSpacer} />}
       </div>

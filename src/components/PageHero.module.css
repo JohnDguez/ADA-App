@@ -1,14 +1,16 @@
-/* Resplandor azul tenue arriba de la pantalla — usa var(--accent), no un
-   color nuevo. Detrás de todo el contenido (z-index 0); el contenedor
-   padre (`.pageWrapper` de cada página que use <PageHero>) debe tener
-   `position: relative; overflow: hidden;` para que quede contenido. */
+/* Resplandor tenue arriba de la pantalla — usa --pageHeroAccent (con
+   var(--accent) de respaldo si la página no pasa `accentColor`, que es el
+   caso normal en 6 de las 7 páginas migradas). Detrás de todo el
+   contenido (z-index 0); el contenedor padre (`.pageWrapper` de cada
+   página que use <PageHero>) debe tener `position: relative;
+   overflow: hidden;` para que quede contenido. */
 .glow {
   position: absolute;
   top: 0;
   left: 0;
   right: 0;
   height: 220px;
-  background: radial-gradient(circle at 50% -10%, color-mix(in srgb, var(--accent) 35%, transparent), transparent 70%);
+  background: radial-gradient(circle at 50% -10%, color-mix(in srgb, var(--pageHeroAccent, var(--accent)) 35%, transparent), transparent 70%);
   pointer-events: none;
   z-index: 0;
 }
@@ -61,10 +63,10 @@
      oscuro — la capa secundaria de un ícono duotone de Phosphor ya viene a
      20% de opacidad fija dentro del propio SVG, así que el círculo
      necesita su propia definición, no depender del contraste del ícono.
-     Mezcla de --accent real (no solo el tinte) + borde, visible en los
-     2 temas sin verse plano contra el fondo. */
-  background: color-mix(in srgb, var(--accent) 18%, var(--surface));
-  border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
+     Mezcla de --pageHeroAccent real (var(--accent) de respaldo) + borde,
+     visible en los 2 temas sin verse plano contra el fondo. */
+  background: color-mix(in srgb, var(--pageHeroAccent, var(--accent)) 18%, var(--surface));
+  border: 1px solid color-mix(in srgb, var(--pageHeroAccent, var(--accent)) 30%, transparent);
   display: flex;
   align-items: center;
   justify-content: center;
