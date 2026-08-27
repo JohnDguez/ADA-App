@@ -1,6 +1,9 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { ChevronLeft } from 'lucide-react'
+// Ícono del encabezado vía Phosphor Icons (mismo patrón que las demás
+// sub-páginas ya migradas, v0.9.442-447) — import directo para tree-shaking real.
+import { Wallet } from '@phosphor-icons/react/dist/csr/Wallet'
+import { PageHero } from '../../components/PageHero'
 import { getWeekdaysShort } from '../../lib/utils'
 import { showToast } from '../../components/Toast'
 import { Card, SectionLabel, Row, Toggle } from '../../components/SettingsShared'
@@ -37,12 +40,12 @@ export function SettingsCobroPage({ profile, onUpdate, onBack, slideClass }) {
 
   return (
     <div className={`${slideClass} ${styles.pageWrapper}`}>
-      <div className={styles.header}>
-        <button onClick={onBack} className={styles.backButton}>
-          <ChevronLeft size={18} color="var(--text)" />
-        </button>
-        <div className={styles.headerTitle}>{t('settingsCobro.title')}</div>
-      </div>
+      <PageHero
+        icon={Wallet}
+        title={t('settingsCobro.title')}
+        description={t('settingsCobro.description')}
+        onBack={onBack}
+      />
 
       {/* Periodo de cobro */}
       <SectionLabel>{t('settingsCobro.periodSection')}</SectionLabel>
