@@ -1,6 +1,10 @@
 import { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
-import { ChevronLeft, Crown } from 'lucide-react'
+import { Crown } from 'lucide-react'
+// Ícono del encabezado vía Phosphor Icons (mismo patrón que las demás
+// sub-páginas ya migradas, v0.9.442-455) — import directo para tree-shaking real.
+import { Crown as CrownDuotone } from '@phosphor-icons/react/dist/csr/Crown'
+import { PageHero } from '../../components/PageHero'
 import { supabase } from '../../lib/supabase'
 import { fmt } from '../../lib/utils'
 import { showToast } from '../../components/Toast'
@@ -73,12 +77,13 @@ export function SettingsSubscriptionPage({ onBack, slideClass }) {
 
   return (
     <div className={`${slideClass} ${styles.pageWrapper}`}>
-      <div className={styles.header}>
-        <button onClick={onBack} className={styles.backButton}>
-          <ChevronLeft size={18} color="var(--text)" />
-        </button>
-        <div className={styles.headerTitle}>{t('settingsSubscription.title')}</div>
-      </div>
+      <PageHero
+        icon={CrownDuotone}
+        title={t('settingsSubscription.title')}
+        description={t('settingsSubscription.description')}
+        onBack={onBack}
+        accentColor="var(--premium-gold)"
+      />
 
       {subscription === undefined && (
         <Card><div className={styles.statusText}>{t('settingsSubscription.loading')}</div></Card>
