@@ -1136,7 +1136,7 @@
   },
   "settingsSharedSpacePage": {
     "title": "Espacio Compartido",
-    "description": "Administra tus finanzas en pareja o con quien compartas gastos.",
+    "description": "Crea un espacio, únete con un código, o administra miembros y permisos del que ya tienes.",
     "invitedSpacesLabel": "Espacios donde te invitaron",
     "joinDescription": "El código de acceso debe tener 6 dígitos. Debe proporcionarlo el creador del espacio.",
     "period": "Periodo: {{freq}}",

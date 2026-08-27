@@ -1136,7 +1136,7 @@
   },
   "settingsSharedSpacePage": {
     "title": "Shared Space",
-    "description": "Manage your finances with your partner or anyone you share expenses with.",
+    "description": "Create a space, join with a code, or manage members and permissions of the one you already have.",
     "invitedSpacesLabel": "Spaces you were invited to",
     "joinDescription": "The access code must be 6 digits. The space's creator must give it to you.",
     "period": "Period: {{freq}}",
