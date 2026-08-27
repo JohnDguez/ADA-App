@@ -205,9 +205,14 @@ export function SettingsPage({ profile, user, onUpdate, onUploadAvatar, onDataDe
 
   return (
     <div className={`${slideClass} ${styles.pageWrapper}`}>
-      <div className={styles.header}>
-        <div className={styles.headerTitle}>{t('settingsPage.title')}</div>
-      </div>
+      {/* Resplandor — azul de acento en cuenta normal, dorado premium si
+          profile.is_premium (pedido de Johnatan, mismo criterio que la
+          prop accentColor de PageHero.jsx, pero esta pantalla no usa
+          PageHero: no tiene botón de regreso, es la raíz del tab). */}
+      <div
+        className={styles.glow}
+        style={{ '--settingsGlowAccent': profile.is_premium ? 'var(--premium-gold)' : 'var(--accent)' }}
+      />
 
       {/* Avatar */}
       <div className={styles.avatarSection}>

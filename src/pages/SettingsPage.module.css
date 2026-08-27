@@ -2,23 +2,36 @@
   padding-bottom: 120px;
   background: var(--bg);
   min-height: 100vh;
+  position: relative;
+  overflow: hidden;
 }
 
-.header {
-  padding: 52px 16px 20px;
-}
-
-.headerTitle {
-  font-size: 22px;
-  font-weight: 700;
-  color: var(--text);
+/* Resplandor — mismo criterio que PageHero.jsx (color-mix + var propia),
+   pero esta pantalla no usa <PageHero> (no tiene botón de regreso, es la
+   raíz del tab de Ajustes) — se implementa aquí directo, con su propia
+   variable (--settingsGlowAccent) en vez de reusar --pageHeroAccent, para
+   no acoplar esta pantalla al componente compartido sin necesitarlo. */
+.glow {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 220px;
+  background: radial-gradient(circle at 50% -10%, color-mix(in srgb, var(--settingsGlowAccent, var(--accent)) 35%, transparent), transparent 70%);
+  pointer-events: none;
+  z-index: 0;
 }
 
 /* ── Avatar ──────────────────────────────────────────────────────────────── */
 .avatarSection {
+  position: relative;
+  z-index: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
+  /* 32px arriba — mismo estándar que el resto de sub-páginas de Ajustes ya
+     migradas a PageHero; antes este espacio lo daba el .header quitado. */
+  padding-top: 32px;
   margin-bottom: 24px;
 }
 
