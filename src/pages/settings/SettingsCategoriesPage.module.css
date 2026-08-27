@@ -31,17 +31,15 @@
    ("Añadir meta"), ver RULES.md. */
 .addPill {
   pointer-events: auto;
-  width: 60%;
-  min-width: 190px;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  padding: 13px;
+  padding: 13px 22px;
   border: none;
   border-radius: 999px;
   background: var(--accent);
-  color: #fff;
+  color: var(--surface);
   font-size: 14px;
   font-weight: 500;
   font-family: inherit;
