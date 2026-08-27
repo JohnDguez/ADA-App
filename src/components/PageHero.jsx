@@ -12,7 +12,13 @@ import styles from './PageHero.module.css'
 // elemento ya renderizado — este componente le pone tamaño/peso/color.
 // Pensado para íconos "duotone" de Phosphor, pero acepta cualquier
 // componente de ícono con props `size`/`color` (Lucide también funciona).
-export function PageHero({ icon: Icon, title, description, onBack, weight = 'duotone' }) {
+//
+// `action`: elemento opcional (ej. un botón "+") para la esquina derecha
+// del renglón del encabezado, junto al ícono — reemplaza la columna vacía
+// del grid cuando la página necesita una acción ahí (ej. "Categorías" con
+// su botón de agregar). Si no se pasa, esa columna se queda vacía como
+// antes, solo para mantener el ícono centrado de verdad.
+export function PageHero({ icon: Icon, title, description, onBack, weight = 'duotone', action = null }) {
   return (
     <>
       <div className={styles.glow} />
@@ -24,7 +30,7 @@ export function PageHero({ icon: Icon, title, description, onBack, weight = 'duo
         <div className={styles.heroIconCircle}>
           <Icon size={26} weight={weight} color="var(--accent)" />
         </div>
-        <div className={styles.headerSpacer} />
+        {action || <div className={styles.headerSpacer} />}
       </div>
 
       <div className={styles.hero}>
