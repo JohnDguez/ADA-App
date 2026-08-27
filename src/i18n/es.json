@@ -162,6 +162,7 @@
   },
   "settingsCobro": {
     "title": "Periodo de cobro e ingresos",
+    "description": "Define cada cuándo te pagan y cuánto ganas, para que tu disponible sea exacto.",
     "periodSection": "Periodo de cobro",
     "frequencyLabel": "Frecuencia",
     "payDayLabel": "Día de cobro",

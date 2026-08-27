@@ -162,6 +162,7 @@
   },
   "settingsCobro": {
     "title": "Pay period and income",
+    "description": "Set how often you get paid and how much you earn, so your available balance is accurate.",
     "periodSection": "Pay period",
     "frequencyLabel": "Frequency",
     "payDayLabel": "Pay day",
