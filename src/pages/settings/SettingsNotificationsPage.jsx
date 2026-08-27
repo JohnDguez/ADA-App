@@ -1,5 +1,9 @@
 import { useTranslation } from 'react-i18next'
-import { ChevronLeft, Bell, BellOff } from 'lucide-react'
+import { Bell, BellOff } from 'lucide-react'
+// Ícono del encabezado vía Phosphor Icons (mismo patrón que las demás
+// sub-páginas ya migradas, v0.9.442-448) — import directo para tree-shaking real.
+import { Bell as BellDuotone } from '@phosphor-icons/react/dist/csr/Bell'
+import { PageHero } from '../../components/PageHero'
 import { usePushNotifications } from '../../hooks/usePushNotifications'
 import { showToast } from '../../components/Toast'
 import { Card, Toggle, NotifToggle } from '../../components/SettingsShared'
@@ -33,12 +37,12 @@ export function SettingsNotificationsPage({ profile, user, onUpdate, onBack, sli
 
   return (
     <div className={`${slideClass} ${styles.pageWrapper}`}>
-      <div className={styles.header}>
-        <button onClick={onBack} className={styles.backButton}>
-          <ChevronLeft size={18} color="var(--text)" />
-        </button>
-        <div className={styles.headerTitle}>{t('settingsNotifications.title')}</div>
-      </div>
+      <PageHero
+        icon={BellDuotone}
+        title={t('settingsNotifications.title')}
+        description={t('settingsNotifications.description')}
+        onBack={onBack}
+      />
 
       <Card>
         <div className={styles.subSection}>

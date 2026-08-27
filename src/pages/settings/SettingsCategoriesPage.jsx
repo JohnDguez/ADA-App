@@ -222,7 +222,7 @@ export function SettingsCategoriesPage({ profile, onUpdate, onBack, slideClass }
           para este mismo tipo de botón en Metas. */}
       <div className={styles.addPillRow}>
         <button type="button" onClick={openAdd} className={styles.addPill}>
-          <Plus size={18} color="#fff" />
+          <Plus size={18} color="var(--surface)" />
           {t('settingsCategories.addButton')}
         </button>
       </div>
