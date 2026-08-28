@@ -1209,7 +1209,8 @@
       "setDefaultTabError": "Error al guardar tu pestaña principal",
       "defaultTabSet": "\"{{name}}\" es tu pestaña principal",
       "fallbackPaymentName": "Pago",
-      "fallbackSpaceName": "Espacio"
+      "fallbackSpaceName": "Espacio",
+      "fetchPaymentsError": "No se pudieron cargar tus pagos. Revisa tu conexión."
     },
     "confirm": {
       "deleteThisPayment": "¿Eliminar este pago?",

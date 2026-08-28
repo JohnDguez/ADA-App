@@ -1209,7 +1209,8 @@
       "setDefaultTabError": "Error saving your main tab",
       "defaultTabSet": "\"{{name}}\" is your main tab",
       "fallbackPaymentName": "Payment",
-      "fallbackSpaceName": "Space"
+      "fallbackSpaceName": "Space",
+      "fetchPaymentsError": "Couldn't load your payments. Check your connection."
     },
     "confirm": {
       "deleteThisPayment": "Delete this payment?",
