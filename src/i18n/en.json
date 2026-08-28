@@ -955,7 +955,6 @@
     "createTitle": "Create Shared Space",
     "spaceNameLabel": "Space name",
     "spaceNamePlaceholder": "e.g. Apartment with Alex",
-    "incomeToggleSub": "Optional — in addition to the Extra Income any guest with permission can add",
     "creating": "Creating…",
     "create": "Create",
     "nameRequiredError": "Give the space a name",

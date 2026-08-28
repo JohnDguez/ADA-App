@@ -955,7 +955,6 @@
     "createTitle": "Crear Espacio Compartido",
     "spaceNameLabel": "Nombre del espacio",
     "spaceNamePlaceholder": "Ej. Depa con Ale",
-    "incomeToggleSub": "Opcional — además de los Ingresos Extras que cualquier invitado con permiso puede agregar",
     "creating": "Creando…",
     "create": "Crear",
     "nameRequiredError": "Ponle un nombre al espacio",
