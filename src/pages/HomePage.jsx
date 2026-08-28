@@ -468,7 +468,24 @@ export function HomePage({ payments, dataLoading = false, profile, spaceSwitcher
                 </div>
               )}
 
-              {vencidos.length > 0 && (
+              {/* Bug real corregido (agosto 2026): esta sección era la única
+                  de las 3 (Vencidos / Pagos del periodo / Próximo periodo)
+                  que no trataba `dataLoading` — mientras `payments` venía
+                  vacío a propósito durante la carga (cambio de espacio, o
+                  el reintento silencioso de `fetchPayments`, ver
+                  usePayments.js), `vencidos.length` caía en 0 y la sección
+                  entera desaparecía sin ningún esqueleto, en vez de avisar
+                  que seguía cargando. Mismo patrón que las otras 2: RailSkeleton
+                  mientras dataLoading, contenido real (o nada, si de verdad
+                  no hay vencidos) una vez que carga. */}
+              {dataLoading ? (
+                <div className={styles.overdueSection}>
+                  <div className={styles.overdueTitle}>
+                    {t('homePage.overdueTitle')}
+                  </div>
+                  <RailSkeleton count={2} />
+                </div>
+              ) : vencidos.length > 0 && (
                 <div className={styles.overdueSection}>
                   <div className={styles.overdueTitle}>
                     {t('homePage.overdueTitle')}
@@ -487,7 +504,7 @@ export function HomePage({ payments, dataLoading = false, profile, spaceSwitcher
                   bloques; si no hay vencidos, la lista ya es autoexplicativa
                   justo debajo del colapsable de pagados y no hace falta. */}
               <div data-coachmark="home-rail" className={styles.periodSection}>
-                {vencidos.length > 0 && (
+                {(dataLoading || vencidos.length > 0) && (
                   <div className={styles.pendingSectionTitle}>{t('homePage.pendingSectionTitle')}</div>
                 )}
                 {delPeriodo.length === 0
