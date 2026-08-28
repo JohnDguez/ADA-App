@@ -2,8 +2,6 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Crown } from 'lucide-react'
 import { CobroPeriodFields } from './CobroPeriodFields'
-import { Toggle } from './SettingsShared'
-import AmountInput from './AmountInput'
 import styles from './NewSharedSpacePanel.module.css'
 
 // Panel que reemplaza el contenido normal de Inicio/Gastos/Recurrentes
@@ -27,8 +25,6 @@ export function NewSharedSpacePanel({ profile, sharedSpaces, onOpenPremium, onCr
   const [newDay1,     setNewDay1]     = useState(1)
   const [newDay2,     setNewDay2]     = useState(16)
   const [newWeekday,  setNewWeekday]  = useState(5)
-  const [newSalaryEnabled, setNewSalaryEnabled] = useState(false)
-  const [newSalaryAmount,  setNewSalaryAmount]  = useState('')
   const [createError, setCreateError] = useState('')
   const [createSaving,setCreateSaving]= useState(false)
 
@@ -43,8 +39,6 @@ export function NewSharedSpacePanel({ profile, sharedSpaces, onOpenPremium, onCr
       cobroDay1: newFreq !== 'weekly' ? newDay1 : undefined,
       cobroDay2: newFreq === 'biweekly' ? newDay2 : undefined,
       cobroWeekday: newFreq === 'weekly' ? newWeekday : undefined,
-      salaryEnabled: newSalaryEnabled,
-      salaryAmount: newSalaryEnabled ? (parseFloat(newSalaryAmount) || 0) : null,
     })
     setCreateSaving(false)
     if (error) setCreateError(typeof error === 'string' ? error : t('newSharedSpacePanel.createGenericError'))
@@ -99,20 +93,6 @@ export function NewSharedSpacePanel({ profile, sharedSpaces, onOpenPremium, onCr
               onChangeFreq={setNewFreq} onChangeDay1={setNewDay1} onChangeDay2={setNewDay2} onChangeWeekday={setNewWeekday}
             />
           </div>
-
-          <div className={`${styles.toggleRow} ${newSalaryEnabled ? styles.toggleRowMb10 : styles.toggleRowMb14}`} onClick={() => setNewSalaryEnabled(v => !v)}>
-            <div>
-              <div className={styles.toggleTitle}>{t('settingsCobro.incomeLabel')}</div>
-              <div className={styles.toggleSubtitle}>{t('newSharedSpacePanel.incomeToggleSub')}</div>
-            </div>
-            <Toggle on={newSalaryEnabled} />
-          </div>
-          {newSalaryEnabled && (
-            <div className={styles.fieldGroupMb14}>
-              <label className="field-label">{t('paymentModal.amountLabel')}</label>
-              <AmountInput value={newSalaryAmount} onChange={e => setNewSalaryAmount(e.target.value)} placeholder="0.00" className="field-input" />
-            </div>
-          )}
 
           {createError && <div className={styles.errorText}>{createError}</div>}
           <button onClick={handleCreate} disabled={createSaving} className="btn-primary" style={{ opacity: createSaving ? 0.7 : 1 }}>

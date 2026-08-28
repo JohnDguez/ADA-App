@@ -58,41 +58,9 @@
   margin-bottom: 16px;
 }
 
-.fieldGroupMb14 {
-  margin-bottom: 14px;
-}
-
 .fieldLabelSpaced {
   margin-bottom: 8px;
   display: block;
-}
-
-.toggleRow {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  cursor: pointer;
-}
-
-.toggleRowMb10 {
-  margin-bottom: 10px;
-}
-
-.toggleRowMb14 {
-  margin-bottom: 14px;
-}
-
-.toggleTitle {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--text);
-}
-
-.toggleSubtitle {
-  font-size: 11px;
-  font-weight: 400;
-  color: var(--text);
-  margin-top: 1px;
 }
 
 .errorText {
