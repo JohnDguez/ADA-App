@@ -2,6 +2,8 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { supabase } from '../lib/supabase'
 import { nextPeriodDate, dateOf, dateToStr, todayStr, fmt, cobroPeriod } from '../lib/utils'
 import { notifySpaceChange as notifySpaceChangeShared } from '../lib/notifySpaceChange'
+import { showToast } from '../components/Toast'
+import i18n from '../i18n'
 
 // NOTA (Fase 5b): `activeSpaceName` ya no se usa dentro de este hook — el
 // endpoint `notify-space-change.js` ahora trae el nombre REAL del espacio
@@ -248,51 +250,87 @@ export function usePayments(userId, activeSpaceId = null, activeSpaceName = null
   // Timer del debounce de Realtime (ver la suscripción más abajo).
   const realtimeDebounceRef = useRef(null)
 
-  const fetchPayments = useCallback(async () => {
-    if (!userId) return
-    const cutoff = extendedCutoff && extendedCutoff < defaultCutoffStr()
-      ? extendedCutoff
-      : defaultCutoffStr()
+  // Arma la consulta desde cero — se necesita una construcción NUEVA en cada
+  // intento del reintento de abajo (ver comentario), en vez de reusar un
+  // único query builder ya armado.
+  function buildPaymentsQuery(cutoff) {
     let query = supabase.from('payments').select('*').order('due_date', { ascending: true })
       // Ventana de carga (ver arriba): pendientes y masters siempre;
       // `paid_at.is.null` es red de seguridad para cualquier fila pagada
       // sin timestamp (PaymentsPage cae a `due_date` en esos casos).
       .or(`is_paid.eq.false,is_master.eq.true,paid_at.is.null,paid_at.gte.${cutoff}`)
-    query = activeSpaceId
+    return activeSpaceId
       ? query.eq('space_id', activeSpaceId)
       : query.eq('user_id', userId).is('space_id', null)
-    const { data, error } = await query
-    if (!error) {
-      let rows = data || []
-      // Progreso de "Dividir entre miembros" — solo aplica dentro de un
-      // Espacio Compartido. Se trae aparte (no es un embed automático de
-      // PostgREST) y se suma por payment_id, para poder mostrar "$X / $Y"
-      // en la card mientras el gasto sigue pendiente (ver PayCard.jsx).
-      if (activeSpaceId && rows.length > 0) {
-        const ids = rows.map(p => p.id)
-        const { data: contribRows } = await supabase
-          .from('payment_contributions')
-          .select('payment_id, user_id, amount')
-          .in('payment_id', ids)
-        const sums = {}
-        // NUEVO: además de la suma (`contributed_amount`, ya existía — el
-        // progreso "$X/$Y" de una card pendiente), ahora también se agrupa
-        // por payment_id el detalle de QUIÉN puso cada abono
-        // (`contributors`) — lo usa `<PaidByStack>` para mostrar el
-        // avatar (o stack de avatares, si fueron varios) de quién pagó un
-        // gasto ya liquidado, en PaymentsPage.jsx y en el colapsable de
-        // pagados de HomePage.jsx.
-        const byPayment = {}
-        for (const r of (contribRows || [])) {
-          sums[r.payment_id] = (sums[r.payment_id] || 0) + Number(r.amount)
-          if (!byPayment[r.payment_id]) byPayment[r.payment_id] = []
-          byPayment[r.payment_id].push({ user_id: r.user_id, amount: Number(r.amount) })
+  }
+
+  // Bug real (agosto 2026, reportado por Johnatan): un error transitorio de
+  // red/Supabase en esta consulta (blip normal, token a punto de refrescar,
+  // timeout) se tragaba en silencio — el `if (!error)` de abajo se saltaba
+  // por completo, `setPayments(rows)` nunca corría, y `payments` se quedaba
+  // en `[]` (vacío por el reset de contexto de la línea de abajo,
+  // `if (prevCtx !== ctxKey)`) mientras `loading` sí pasaba a `false` de
+  // todas formas — indistinguible de "no tienes pagos". Nada volvía a
+  // intentarlo ni avisaba: la única forma de recuperarse era recargar la
+  // app (instancia nueva del hook) o cambiar de espacio (dispara el mismo
+  // reset + un fetch nuevo, otro intento). Fix: hasta 3 intentos en total
+  // (300ms/900ms de espera entre cada uno) antes de darse por vencido —
+  // los 2 primeros en silencio (blip normal de red, se resuelve solo); si
+  // el 3ro también falla, recién ahí se avisa con un toast, para no dejar
+  // a Johnatan viendo "0 pendientes" sin explicación. `payments`/`loading`
+  // no cambian entre reintentos — solo al final, éxito o fracaso definitivo.
+  const fetchPayments = useCallback(async () => {
+    if (!userId) return
+    const cutoff = extendedCutoff && extendedCutoff < defaultCutoffStr()
+      ? extendedCutoff
+      : defaultCutoffStr()
+
+    let lastError = null
+    for (let attempt = 0; attempt < 3; attempt++) {
+      try {
+        const { data, error } = await buildPaymentsQuery(cutoff)
+        if (error) throw error
+        let rows = data || []
+        // Progreso de "Dividir entre miembros" — solo aplica dentro de un
+        // Espacio Compartido. Se trae aparte (no es un embed automático de
+        // PostgREST) y se suma por payment_id, para poder mostrar "$X / $Y"
+        // en la card mientras el gasto sigue pendiente (ver PayCard.jsx).
+        if (activeSpaceId && rows.length > 0) {
+          const ids = rows.map(p => p.id)
+          const { data: contribRows, error: contribError } = await supabase
+            .from('payment_contributions')
+            .select('payment_id, user_id, amount')
+            .in('payment_id', ids)
+          if (contribError) throw contribError
+          const sums = {}
+          // NUEVO: además de la suma (`contributed_amount`, ya existía — el
+          // progreso "$X/$Y" de una card pendiente), ahora también se agrupa
+          // por payment_id el detalle de QUIÉN puso cada abono
+          // (`contributors`) — lo usa `<PaidByStack>` para mostrar el
+          // avatar (o stack de avatares, si fueron varios) de quién pagó un
+          // gasto ya liquidado, en PaymentsPage.jsx y en el colapsable de
+          // pagados de HomePage.jsx.
+          const byPayment = {}
+          for (const r of (contribRows || [])) {
+            sums[r.payment_id] = (sums[r.payment_id] || 0) + Number(r.amount)
+            if (!byPayment[r.payment_id]) byPayment[r.payment_id] = []
+            byPayment[r.payment_id].push({ user_id: r.user_id, amount: Number(r.amount) })
+          }
+          rows = rows.map(p => ({ ...p, contributed_amount: sums[p.id] || 0, contributors: byPayment[p.id] || [] }))
         }
-        rows = rows.map(p => ({ ...p, contributed_amount: sums[p.id] || 0, contributors: byPayment[p.id] || [] }))
+        setPayments(rows)
+        setLoading(false)
+        return
+      } catch (e) {
+        lastError = e
+        if (attempt < 2) await new Promise(r => setTimeout(r, 300 * (attempt + 1)))
       }
-      setPayments(rows)
     }
+    // Los 3 intentos fallaron — se corta el loading (para no dejar el
+    // esqueleto de carga girando para siempre) y recién aquí se avisa.
+    console.error('usePayments: fetchPayments falló tras 3 intentos', lastError)
     setLoading(false)
+    showToast(i18n.t('app.toast.fetchPaymentsError'))
   }, [userId, activeSpaceId, extendedCutoff])
 
   useEffect(() => { fetchPayments() }, [fetchPayments])
