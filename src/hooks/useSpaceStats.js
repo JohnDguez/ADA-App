@@ -17,6 +17,23 @@ import { dateToStr, cobroPeriod } from '../lib/utils'
 // `cobro_day1`/`cobro_day2`/`cobro_weekday`), no solo su id, para calcular
 // el rango de fechas correcto por separado.
 //
+// v0.9.462 — segundo bug real, encontrado por Johnatan comparando el
+// resumen del switcher ("Personal: 4 pendientes · 1 vencido") contra la
+// lista real de Personal (6 pagos fijos, 2 vencidos). Causa: `pendingQ`/
+// `overdueQ` llevaban `.gte('due_date', startStr)`, acotando el conteo al
+// rango del periodo actual por AMBOS lados — pero un vencido puede tener
+// `due_date` de ANTES de que empezara el periodo (ej. un pago del periodo
+// pasado que nunca se marcó pagado), y ese `gte` lo excluía de la cuenta,
+// tanto de pendientes como de vencidos. `getPagarEsteCobro()` (lib/utils.js,
+// la función real que arma la lista que ve HomePage.jsx) nunca tuvo ese
+// límite inferior a propósito — solo filtra `due_date <= end`, precisamente
+// para "arrastrar" vencidos de periodos anteriores (ver CONTEXT.md: "pendiente
+// que vence este periodo, incluye vencidos de antes"). Este hook se había
+// desalineado de esa regla al acotar también por `startStr`. Fix: se quita
+// el `gte('due_date', startStr)` de las 2 consultas — el único límite que
+// debe existir es el superior (`endStr`, para no contar pagos del PRÓXIMO
+// periodo), igual que `getPagarEsteCobro()`.
+//
 // `personalConfig`: el `profile` del usuario (su propio periodo de cobro).
 // `spaces`: el arreglo `spaces` de `useSharedSpaces` (cada uno trae su
 // config de cobro en `s.space`).
@@ -34,17 +51,16 @@ export function useSpaceStats(userId, personalConfig, spaces) {
     const entries = await Promise.all(targets.map(async ({ key, spaceId, cfg }) => {
       if (!cfg) return [key, { pending: 0, overdue: 0 }]
 
-      const { start, end } = cobroPeriod(cfg)
-      const startStr = dateToStr(start)
+      const { end } = cobroPeriod(cfg)
       const endStr   = dateToStr(end)
       const today    = dateToStr(new Date())
 
       let pendingQ = supabase.from('payments').select('id', { count: 'exact', head: true })
         .eq('is_paid', false).eq('is_master', false)
-        .gte('due_date', startStr).lte('due_date', endStr)
+        .lte('due_date', endStr)
       let overdueQ = supabase.from('payments').select('id', { count: 'exact', head: true })
         .eq('is_paid', false).eq('is_master', false)
-        .gte('due_date', startStr).lte('due_date', endStr).lt('due_date', today)
+        .lte('due_date', endStr).lt('due_date', today)
 
       if (spaceId) {
         pendingQ = pendingQ.eq('space_id', spaceId)
@@ -94,4 +110,3 @@ export function useSpaceStats(userId, personalConfig, spaces) {
 
   return stats
 }
-
