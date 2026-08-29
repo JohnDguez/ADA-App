@@ -409,6 +409,18 @@
     "deleteConfirm": "Delete \"{{name}}\"? Payments already made will be kept.",
     "menuAriaLabel": "More options"
   },
+  "recurrentDetailPanel": {
+    "paidLabel": "Paid",
+    "nextLabel": "Next",
+    "completedLabel": "Completed",
+    "paidSuffix": "paid",
+    "referenceAmount": "{{amount}} reference",
+    "historyEmpty": "No payments recorded yet.",
+    "paymentNumber": "Payment {{num}}",
+    "amountAdjusted": "Amount adjusted",
+    "menuPause": "Pause",
+    "menuResume": "Resume"
+  },
   "goalsPage": {
     "title": "Goals",
     "noGoalsAtAllTitle": "You don't have any goals yet",

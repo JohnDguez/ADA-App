@@ -409,6 +409,18 @@
     "deleteConfirm": "¿Eliminar \"{{name}}\"? Los pagos ya realizados se conservarán.",
     "menuAriaLabel": "Más opciones"
   },
+  "recurrentDetailPanel": {
+    "paidLabel": "Pagado",
+    "nextLabel": "Próximo",
+    "completedLabel": "Completados",
+    "paidSuffix": "pagados",
+    "referenceAmount": "{{amount}} de referencia",
+    "historyEmpty": "Todavía no hay pagos registrados.",
+    "paymentNumber": "Pago {{num}}",
+    "amountAdjusted": "Monto ajustado",
+    "menuPause": "Pausar",
+    "menuResume": "Reactivar"
+  },
   "goalsPage": {
     "title": "Metas",
     "noGoalsAtAllTitle": "Aún no tienes ninguna meta",
