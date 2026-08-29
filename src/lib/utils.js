@@ -211,6 +211,25 @@ export function installmentLabel(p) {
   return i18n.t('paymentModal.editInstallment.badge', { current: p.current_installment, total: p.total_installments })
 }
 
+// Mensaje de confirmación correcto según el tipo de pago que se va a
+// eliminar — mismo criterio EXACTO que la rama de borrado real en
+// App.jsx (`performDelete`): un master se borra completo, una copia de
+// recurrente o de parcialidad con master cancela la serie completa (con
+// aviso de que el historial se conserva), una parcialidad sin master
+// (sistema viejo) no tiene ese aviso porque no hay historial que
+// preservar, y cualquier otro caso es un pago único. Centralizado aquí
+// (patrón singleton i18n, mismo criterio que installmentLabel/
+// getCategoryLabel) para que cada pantalla con su propio modal de
+// confirmación (PayCard.jsx, PaymentModal.jsx, PaymentsPage.jsx) muestre
+// el texto correcto sin duplicar esta misma rama 3 veces.
+export function getDeleteConfirmMessage(payment) {
+  if (payment?.is_master) return i18n.t('app.confirm.deleteRecurrent', { name: payment.name })
+  if (payment?.is_recurrent && !payment?.is_installment && payment?.parent_id) return i18n.t('app.confirm.deleteRecurrent', { name: payment.name })
+  if (payment?.is_installment && payment?.parent_id) return i18n.t('app.confirm.cancelInstallments', { name: payment.name })
+  if (payment?.is_installment) return i18n.t('app.confirm.cancelInstallmentsNoHistory', { name: payment.name })
+  return i18n.t('app.confirm.deleteThisPayment')
+}
+
 // `refDate` es opcional: si no se pasa, usa hoy (comportamiento de siempre).
 // Si se pasa, retorna el periodo de cobro que CONTIENE esa fecha — esto es lo
 // que permite ubicar en qué periodo cae el vencimiento de un pago futuro,
