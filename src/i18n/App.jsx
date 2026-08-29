@@ -1,0 +1,1098 @@
+import { useState, useEffect, useRef, lazy, Suspense } from 'react'
+import { useTranslation } from 'react-i18next'
+import { useAuth } from './hooks/useAuth'
+
+// ── Code-splitting (v0.9.280) ─────────────────────────────────────────────
+// Estas pantallas se montan condicionalmente (nunca conviven con la app
+// principal en pantalla), así que se cargan como chunks aparte vía
+// React.lazy — su JS/CSS solo se descarga la primera vez que se necesitan,
+// en vez de venir todo en el bundle inicial. Los modales con prop `open`
+// (PaymentModal, VariableAmountModal, etc.) NO se tocaron: viven montados
+// siempre (su animación de salida depende de eso, Reglas 26/29), así que
+// hacerlos lazy no ahorraría nada. Los named exports se adaptan a default
+// en el .then() porque React.lazy solo acepta default exports.
+const AuthPage = lazy(() => import('./pages/AuthPage').then(m => ({ default: m.AuthPage })))
+const ResetPasswordPage = lazy(() => import('./pages/AuthPage').then(m => ({ default: m.ResetPasswordPage })))
+const OnboardingPage = lazy(() => import('./pages/OnboardingPage').then(m => ({ default: m.OnboardingPage })))
+const SettingsPage = lazy(() => import('./pages/SettingsPage').then(m => ({ default: m.SettingsPage })))
+const PasswordSetupModal = lazy(() => import('./components/PasswordSetupModal').then(m => ({ default: m.PasswordSetupModal })))
+const PremiumPage = lazy(() => import('./pages/PremiumPage').then(m => ({ default: m.PremiumPage })))
+import { usePayments } from './hooks/usePayments'
+import { useSharedFund } from './hooks/useSharedFund'
+import { useGoals } from './hooks/useGoals'
+import { GoalsPage } from './pages/GoalsPage'
+import { useProfile } from './hooks/useProfile'
+import { useNotifications } from './hooks/useNotifications'
+import { useSpaceStats } from './hooks/useSpaceStats'
+import { SpaceSwitcher } from './components/SpaceSwitcher'
+import { HomePage } from './pages/HomePage'
+import { PaymentsPage } from './pages/PaymentsPage'
+import { RecurrentsPage } from './pages/RecurrentsPage'
+import { BottomNav } from './components/BottomNav'
+import { NavRail } from './components/NavRail'
+import { RailFab } from './components/RailFab'
+import { NotificationsPanel } from './components/NotificationsPanel'
+import { PaymentModal } from './components/PaymentModal'
+import { VariableAmountModal } from './components/VariableAmountModal'
+import { ConfirmNextPeriodPayModal } from './components/ConfirmNextPeriodPayModal'
+import { InstallmentAbonarModal } from './components/InstallmentAbonarModal'
+import { SplitContributionsModal } from './components/SplitContributionsModal'
+import { RecurrentMigrationModal } from './components/RecurrentMigrationModal'
+import { PatchNotesModal } from './components/PatchNotesModal'
+import { FeedbackPromptModal } from './components/FeedbackPromptModal'
+import { Toast, showToast } from './components/Toast'
+import { SkeletonLoader } from './components/SkeletonLoader'
+import { Coachmarks } from './components/Coachmarks'
+import { useTheme } from './hooks/useTheme'
+import { useSharedSpaces } from './hooks/useSharedSpaces'
+import { ActiveSpaceHeader } from './components/ActiveSpaceHeader'
+import { APP_VERSION, getPatchNotes, isNewerVersion } from './lib/patchNotes'
+import { buildFeedbackUrl, FEEDBACK_PROMPT_AFTER_DAYS, FEEDBACK_REMIND_AFTER_DAYS } from './lib/feedback'
+
+function fmt(n) { return '$' + Number(n).toLocaleString('es-MX', { minimumFractionDigits: 0, maximumFractionDigits: 0 }) }
+
+export default function App() {
+  const { t, i18n } = useTranslation()
+  const { user, loading: authLoading, isRecovery, setIsRecovery } = useAuth()
+
+  // Espacio activo: null = personal (default). Persistido igual que `tab`,
+  // para que no se resetee a Personal cada vez que se recarga la app.
+  // OJO: esto tiene que declararse ANTES de usePayments(), porque
+  // usePayments necesita `activeSpaceId` — declararlo después causaba
+  // "Cannot access 'activeSpaceId' before initialization" (TDZ de `const`).
+  const [activeSpaceId, setActiveSpaceId] = useState(() => sessionStorage.getItem('ada_active_space') || null)
+  function switchSpace(spaceId) {
+    setActiveSpaceId(spaceId)
+    if (spaceId && spaceId !== 'new') sessionStorage.setItem('ada_active_space', spaceId)
+    else sessionStorage.removeItem('ada_active_space')
+    window.scrollTo(0, 0)
+  }
+  const sharedSpaces = useSharedSpaces(user?.id)
+  // La tarjeta "Nuevo espacio compartido" no es un espacio real — mientras
+  // está activa, se trata como personal para efectos de qué pagos/periodo
+  // consultar (usePayments, effectiveProfile), porque la página no muestra
+  // esos datos de todas formas (muestra el panel de crear/unirse). Sin este
+  // desvío, `activeSpaceId === 'new'` se mandaría tal cual a Supabase como
+  // si fuera un UUID de espacio real, y fallaría la consulta.
+  const paymentsSpaceId = (activeSpaceId && activeSpaceId !== 'new') ? activeSpaceId : null
+  const activeSpaceEntry = paymentsSpaceId ? sharedSpaces.spaces.find(s => s.space.id === paymentsSpaceId) : null
+
+  // Red de seguridad: si `activeSpaceId` quedó apuntando a un espacio que
+  // ya no existe entre los del usuario (ej. lo sacaron del espacio
+  // mientras lo tenía activo, o `sessionStorage` se "filtró" de una cuenta
+  // anterior en el mismo navegador — ver fix en SpaceSwitcher.jsx y
+  // handleLogout de SettingsPage.jsx), se resetea solo a Personal en
+  // cuanto termine de cargar la lista real de espacios — en vez de dejar
+  // un id huérfano rondando que rompía el switcher.
+  useEffect(() => {
+    if (!paymentsSpaceId || sharedSpaces.loading) return
+    if (!activeSpaceEntry) switchSpace(null)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [paymentsSpaceId, sharedSpaces.loading, activeSpaceEntry])
+
+  // Si App montó bien, la app está sana — se limpia la bandera de
+  // "ya intenté recargar por un chunk desincronizado" (ErrorBoundary.jsx).
+  // Sin esto, un usuario que sufrió el auto-reload una vez en una sesión
+  // (pestaña) ya no recibiría el reintento automático si el problema vuelve
+  // a pasar más adelante en esa misma sesión — se quedaría solo con el
+  // botón manual.
+  useEffect(() => {
+    sessionStorage.removeItem('lunapay-chunk-reload-attempted')
+  }, [])
+
+  // Permisos efectivos en el contexto activo — un solo lugar de donde todo
+  // lo demás (modal de pago, tarjetas, menús) lee qué puede hacer el
+  // usuario, en vez de repetir esta lógica en cada archivo. Personal y el
+  // dueño de un espacio siempre pueden todo; un invitado solo lo que el
+  // dueño le haya activado en `shared_space_members`. Mismas 5 llaves que
+  // ya usa la base de datos (`can_add`, `can_edit`, `can_mark_paid`,
+  // `can_delete`, `can_add_income`) — y `isRestricted` para que el resto
+  // del código sepa si hace falta mostrar mensajes de permiso en absoluto
+  // (evita comparar `role === 'owner'` por todos lados).
+  const FULL_PERMISSIONS = {
+    can_add: true, can_edit: true, can_mark_paid: true, can_delete: true, can_add_income: true, can_add_funds: true,
+    can_add_goals: true, can_edit_goals: true, can_delete_goals: true, can_contribute_goals: true, can_withdraw_goals: true,
+  }
+  const spacePermissions = (!activeSpaceEntry || activeSpaceEntry.membership.role === 'owner')
+    ? { ...FULL_PERMISSIONS, isRestricted: false }
+    : {
+        can_add:        activeSpaceEntry.membership.can_add,
+        can_edit:       activeSpaceEntry.membership.can_edit,
+        can_mark_paid:  activeSpaceEntry.membership.can_mark_paid,
+        can_delete:     activeSpaceEntry.membership.can_delete,
+        can_add_income: activeSpaceEntry.membership.can_add_income,
+        can_add_funds:  activeSpaceEntry.membership.can_add_funds,
+        can_add_goals:        activeSpaceEntry.membership.can_add_goals,
+        can_edit_goals:       activeSpaceEntry.membership.can_edit_goals,
+        can_delete_goals:     activeSpaceEntry.membership.can_delete_goals,
+        can_contribute_goals: activeSpaceEntry.membership.can_contribute_goals,
+        can_withdraw_goals:   activeSpaceEntry.membership.can_withdraw_goals,
+        isRestricted: true,
+      }
+
+  const {
+    payments, loading: paymentsLoading,
+    addPayment, addRecurrentPayment, addInstallmentPayment,
+    updatePayment, updateRecurrentName, updateRecurrentConfig, checkPeriodIncomeConflict,
+    abonarInstallment,
+    registerContribution, getContributions, payRemainingContribution, setContributionTotalAmount, unmarkSharedPayment, forceSettlePayment,
+    payFromFund, setFundContribution,
+    markPaid, markUnpaid, setEstimatedAmount,
+    postponePayment,
+    pauseRecurrent, resumeRecurrent,
+    deletePayment, deleteRecurrent,
+    deleteRecurrentFuture, deleteInstallmentFuture,
+    migrateRecurrents,
+    refetch,
+    ensureMonthLoaded, oldestYear,
+  } = usePayments(user?.id, paymentsSpaceId, activeSpaceEntry?.space?.name)
+  const { profile, loading: profileLoading, updateProfile, uploadAvatar, fetchProfile } = useProfile(user?.id)
+
+  // Fondo Compartido — a nivel de App (antes vivía solo dentro de
+  // PaymentsPage.jsx) para que también llegue al check de Home (tercera
+  // opción "Fondo compartido") y al modal de Dividir (fila del Fondo).
+  const sharedFund = useSharedFund(paymentsSpaceId)
+  useEffect(() => {
+    if (paymentsSpaceId) sharedFund.fetchLedger()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [paymentsSpaceId])
+
+  // Metas de ahorro — SIEMPRE con `profile` (personal), nunca
+  // `effectiveProfile`: son personales sin importar en qué Espacio
+  // Compartido esté parado el usuario. El tercer parámetro (`spaceId`) va
+  // fijo en null por ahora — está puesto desde ya para que el día que
+  // existan metas compartidas no haya que tocar este llamado.
+  // `paymentsSpaceId` (no `activeSpaceId` crudo) — ya resuelve el caso
+  // `activeSpaceId === 'new'` (a medio crear un espacio), igual que
+  // `usePayments`. Antes iba fijo en `null` (Fase 1, solo personal); ahora
+  // que existen las metas compartidas, cambia solo con el espacio activo.
+  const goalsData = useGoals(user?.id, profile, paymentsSpaceId)
+
+  // v0.9.369 — RESTAURADO: se había quitado en v0.9.367 asumiendo que
+  // RailSpaceSwitcher.jsx (dentro de NavRail.jsx) lo reemplazaba del
+  // todo, pero NavRail está oculto en mobile (Regla 43) — eso dejaba a
+  // los usuarios de mobile sin ninguna forma de cambiar de espacio. Se
+  // declara aquí (no arriba, junto a sharedSpaces) porque necesita
+  // `profile` ya disponible — cada espacio (y Personal) puede tener su
+  // PROPIO periodo de cobro, así que el hook necesita la configuración
+  // completa de cada uno, no solo su id, para saber qué cuenta como
+  // "periodo actual" en cada caso.
+  const spaceStats = useSpaceStats(user?.id, profile, sharedSpaces.spaces)
+  const { notifications, unreadCount, markAsRead, markAllAsRead, deleteNotification, clearAll } = useNotifications(user?.id)
+  const { theme, setTheme } = useTheme()
+
+  // "Perfil efectivo": en modo espacio, el periodo de cobro y el ingreso
+  // por periodo cambian a los del espacio (tiene los suyos propios,
+  // independientes de los de cada quien) — el nombre y la foto del header
+  // NUNCA cambian, siempre son los del usuario real, sin importar el modo
+  // activo (confirmado explícitamente por Johnatan). El resto del perfil
+  // (categorías, avatar) se queda igual, no se construyó un sistema de
+  // categorías aparte por espacio en esta pasada.
+  //
+  // Ingreso por periodo: antes se forzaba false/0 para cualquier espacio
+  // compartido (un espacio nunca podía tener ingreso fijo, solo los
+  // "Ingresos Extras" manuales vía period_income) — ahora el dueño puede
+  // configurar un ingreso fijo igual que en la cuenta personal (Fase 5,
+  // columnas `salary_enabled`/`salary_amount` en shared_spaces).
+  const effectiveProfile = activeSpaceEntry
+    ? {
+        ...profile,
+        cobro_freq: activeSpaceEntry.space.cobro_freq,
+        cobro_day1: activeSpaceEntry.space.cobro_day1,
+        cobro_day2: activeSpaceEntry.space.cobro_day2,
+        cobro_weekday: activeSpaceEntry.space.cobro_weekday,
+        salary_enabled: activeSpaceEntry.space.salary_enabled || false,
+        salary_amount: activeSpaceEntry.space.salary_amount || 0,
+      }
+    : profile
+
+  const [tab,            setTab]           = useState(() => {
+    const hasActiveSession = sessionStorage.getItem('ada_session')
+    return hasActiveSession ? (sessionStorage.getItem('ada_tab') || 'home') : 'home'
+  })
+  const [modalOpen,      setModalOpen]     = useState(false)
+  const [editPayment,    setEditPayment]   = useState(null)
+  const [varModal,       setVarModal]      = useState({ open: false, payment: null, resolver: null, fundMode: false })
+  const [nextPeriodConfirm, setNextPeriodConfirm] = useState({ open: false, payment: null, resolver: null })
+  const [estimateModal,  setEstimateModal] = useState({ open: false, payment: null })
+  const [abonarModal,    setAbonarModal]   = useState({ open: false, payment: null })
+  const [splitModal,     setSplitModal]    = useState({ open: false, paymentId: null, openedBecauseFundInsufficient: false })
+  const [notifOpen,      setNotifOpen]     = useState(false)
+  const [slideDir,       setSlideDir]      = useState('right')
+  const [migrationModal, setMigrationModal] = useState(false)
+  const [patchNotesOpen,   setPatchNotesOpen]   = useState(false)
+  const [patchNotesToShow, setPatchNotesToShow] = useState([])
+  const [premiumPageOpen, setPremiumPageOpen] = useState(false)
+  const [feedbackPromptOpen, setFeedbackPromptOpen] = useState(false)
+  // OJO: este hook tiene que declararse ANTES de los `return` condicionales
+  // de más abajo (authLoading/isRecovery/!user/onboarding/has_password) —
+  // declararlo después de ellos (como pasó en la versión anterior) hace que
+  // este useState NO se ejecute mientras esas condiciones cortan el render
+  // temprano (ej. en la pantalla de login, antes de iniciar sesión), pero SÍ
+  // se ejecute una vez que el usuario ya pasó todas esas condiciones — un
+  // mismo componente montado no puede cambiar su número de hooks entre
+  // renders, y esa inconsistencia es la causa real del "Minified React error
+  // #310" que quedó sin diagnosticar en v0.9.124 (pantalla en blanco justo
+  // después de iniciar sesión, sin navbar ni contenido)
+  const [settingsInitialSection, setSettingsInitialSection] = useState(null)
+  // Tab de origen cuando se entra a una sección de Ajustes por un atajo
+  // directo (ej. "Editar" desde el switcher de Espacio Compartido) — el
+  // PRIMER "atrás" desde ahí debe regresar a este tab, no al menú
+  // principal de Ajustes (una pantalla por la que el usuario nunca pasó a
+  // propósito). Se limpia sola en cuanto se usa, o si el usuario navega
+  // manualmente dentro de Ajustes (`SettingsPage.jsx` la ignora en ese caso).
+  const [settingsReturnTab, setSettingsReturnTab] = useState(null)
+
+  const migrationRan = useRef(false)
+
+  // Migración: crea masters para recurrentes y parcialidades sin sistema nuevo
+  // Corre cada vez que haya datos sin migrar (no bloquea por migrationRan si hay installlments pendientes)
+  useEffect(() => {
+    if (!user || !payments.length) return
+    if (paymentsSpaceId) return // un espacio compartido es nuevo, nunca tiene datos viejos sin migrar
+    const hasOldInstallments = payments.some(p => (p.is_installment || (p.current_installment > 0 && p.total_installments > 0)) && !p.is_master && !p.parent_id)
+    // Permitir re-ejecución si quedan parcialidades sin migrar
+    if (migrationRan.current && !hasOldInstallments) return
+    migrationRan.current = true
+
+    const hasOldRecurrents = payments.some(p => p.is_recurrent && !p.is_master && !p.parent_id && !p.is_installment)
+
+    if (hasOldRecurrents || hasOldInstallments) {
+      migrateRecurrents()
+      if (!localStorage.getItem('ada_recurrent_v2_seen')) {
+        setMigrationModal(true)
+      }
+    }
+  }, [user, payments, paymentsSpaceId])
+
+  // Modal de Novedades: se muestra una vez por usuario, acumulando todo lo curado
+  // desde la última versión que vio hasta APP_VERSION actual.
+  // IMPORTANTE: esperar a que `profile` termine de cargar (profileLoading === false).
+  // useProfile() inicializa `profile` con DEFAULT_PROFILE (sin last_seen_app_version)
+  // mientras trae los datos reales; evaluar antes de eso hacía que el modal se
+  // abriera en cada apertura de la app, sin importar lo que ya se hubiera guardado.
+  //
+  // i18n.language en las dependencias: getPatchNotes() arma su texto con
+  // i18n.t() en el momento en que se llama — sin este dependency, si el
+  // usuario cambia de idioma ANTES de cerrar este modal (ya calculado en el
+  // idioma viejo), el contenido se quedaría pegado en el idioma con el que
+  // abrió la sesión hasta la próxima vez que alguna otra dependencia cambiara.
+  useEffect(() => {
+    if (!user || !profile || profileLoading) return
+    const lastSeen = profile.last_seen_app_version
+    const unseen = getPatchNotes().filter(n => isNewerVersion(n.version, lastSeen))
+    setPatchNotesToShow(unseen)
+    setPatchNotesOpen(unseen.length > 0)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, profile, profileLoading, i18n.language])
+
+  // Popup de feedback alpha (ver components/FeedbackPromptModal.jsx): primera
+  // vez a los 8 días de creada la cuenta (user.created_at, de Supabase Auth);
+  // si el usuario elige "Recordarme en 3 días", se vuelve a evaluar contra
+  // profile.feedback_next_prompt_at. Deja de aparecer para siempre en cuanto
+  // profile.feedback_submitted es true (se marca al dar clic en "Dejar mi
+  // feedback", desde aquí o desde el botón de Perfil en SettingsPage.jsx).
+  useEffect(() => {
+    if (!user || !profile || profileLoading) return
+    if (profile.feedback_submitted) return
+    if (!user.created_at) return
+    const daysSinceSignup = (Date.now() - new Date(user.created_at).getTime()) / 86400000
+    if (daysSinceSignup < FEEDBACK_PROMPT_AFTER_DAYS) return
+    const nextPromptAt = profile.feedback_next_prompt_at ? new Date(profile.feedback_next_prompt_at).getTime() : 0
+    if (nextPromptAt > Date.now()) return
+    setFeedbackPromptOpen(true)
+  }, [user, profile, profileLoading])
+
+  // Pin de "espacio principal" (ActiveSpaceHeader.jsx): aplica el default
+  // guardado en profiles.default_space_id al abrir o recargar la app — pero
+  // solo si esta sesión del navegador no traía ya un espacio activo propio
+  // (sessionStorage), para no pisar un cambio de pestaña que el usuario
+  // acaba de hacer sin recargar. Corre una sola vez por carga, guardado con
+  // un ref (no un estado — no necesita re-render propio, solo evitar que se
+  // repita en cada cambio de profile/sharedSpaces).
+  const appliedDefaultSpaceRef = useRef(false)
+  useEffect(() => {
+    if (appliedDefaultSpaceRef.current) return
+    if (profileLoading || sharedSpaces.loading) return
+    appliedDefaultSpaceRef.current = true
+    if (sessionStorage.getItem('ada_active_space')) return
+    const defId = profile.default_space_id
+    if (defId && sharedSpaces.spaces.some(s => s.space.id === defId)) switchSpace(defId)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [profileLoading, sharedSpaces.loading, profile.default_space_id, sharedSpaces.spaces])
+
+  if (authLoading || (user && profileLoading)) return <SkeletonLoader />
+  if (isRecovery) return <Suspense fallback={<SkeletonLoader />}><ResetPasswordPage onDone={() => setIsRecovery(false)} /></Suspense>
+  if (!user) return <Suspense fallback={<SkeletonLoader />}><AuthPage /></Suspense>
+  if (user && !profile.onboarding_completed) return <Suspense fallback={<SkeletonLoader />}><OnboardingPage userId={user.id} onDone={updateProfile} /></Suspense>
+
+  // Usuarios de Google sin contraseña: necesitan una para poder confirmar
+  // acciones sensibles (eliminar datos/cuenta) en SettingsPage. Bloquea el
+  // resto de la app hasta que la configuren — igual de prioritario que el
+  // onboarding. onDone actualiza profile.has_password vía updateProfile (no
+  // solo en Supabase) para que este chequeo no se repita en el mismo render.
+  if (user && profile.onboarding_completed && !profile.has_password) {
+    return <Suspense fallback={<SkeletonLoader />}><PasswordSetupModal userId={user.id} onDone={() => updateProfile({ has_password: true })} /></Suspense>
+  }
+
+  // "settings" ya no es pestaña del nav (se abre desde el header), pero se
+  // deja en el orden porque `tab` sí toma ese valor al entrar a Ajustes y
+  // de aquí sale la dirección del deslizamiento.
+  const TAB_ORDER = ['home', 'payments', 'recurrents', 'goals', 'settings']
+  const TAB_TO_COACHMARK_KEY = { home: 'home', payments: 'gastos', recurrents: 'recurrentes', goals: 'metas', settings: 'perfil' }
+  const coachmarkScreenKey = modalOpen ? 'nuevo-pago' : (TAB_TO_COACHMARK_KEY[tab] || null)
+  sessionStorage.setItem('ada_session', '1')
+
+  const storedUserId = sessionStorage.getItem('ada_user_id')
+  if (storedUserId && storedUserId !== user.id) {
+    sessionStorage.setItem('ada_tab', 'home')
+    sessionStorage.setItem('ada_user_id', user.id)
+  } else if (!storedUserId) {
+    sessionStorage.setItem('ada_user_id', user.id)
+  }
+
+  function openAdd()   { setEditPayment(null); setModalOpen(true) }
+  // Antes redirigía en silencio al master cuando `p` era una copia de un
+  // recurrente — el usuario pensaba que editaba solo esa copia y en
+  // realidad reconfiguraba la plantilla completa (bug real reportado por
+  // Johnatan, agosto 2026: editar el monto de una copia vencida terminó
+  // cambiando el master, y updateRecurrentConfig() borraba copias
+  // pendientes con aportaciones ya registradas). Ahora `openEdit` siempre
+  // edita el registro que se le pasa tal cual — PaymentModal.jsx detecta
+  // si es una copia de recurrente (`isEditingRecurrentCopy`) y solo deja
+  // editable el monto, con un botón propio para ir a editar el master
+  // explícitamente (`onEditMaster`, ver abajo).
+  function openEdit(p) { setEditPayment(p); setModalOpen(true) }
+  // Editar el master explícitamente — usado por PaymentModal.jsx cuando
+  // el usuario, estando en la vista de "editar solo esta copia", pulsa
+  // "Editar recurrente completo".
+  function openEditMaster(master) { setEditPayment(master) }
+
+  // handleMarkPaid: usado por PayCard (Home) al terminar su animación de
+  // pintado en pagos fijos — ya no muestra un toast de éxito, el "Pagado"
+  // ahora vive dentro de la propia card animada; el toast de error se
+  // conserva. También sigue siendo el punto de entrada de flujos SIN
+  // animación (ej. GroupCard en RecurrentsPage): ahí un pago variable
+  // sigue abriendo el modal directo, sin resolver, igual que siempre.
+  async function handleMarkPaid(payment) {
+    // BUG real corregido: antes `is_variable` se revisaba primero SIEMPRE,
+    // así que un pago variable de un Espacio Compartido caía al modal viejo
+    // (`VariableAmountModal` → `confirmVariablePaid`), que nunca pasa por
+    // `registerContribution` — nunca reparte, nunca genera el reflejo en el
+    // Home de quien pagó, nunca revisa si ya se completó. Un variable
+    // personal (sin `space_id`) se queda exactamente igual que siempre.
+    if (payment.is_variable && !payment.space_id) { setVarModal({ open: true, payment, resolver: null }); return }
+    // Parcialidad: el check paga directo el monto de referencia de ESTE
+    // pago (sin abrir el modal de Abonar — eso vive solo en el menú de 3
+    // puntos) pasando por la misma lógica de abonarInstallment, para que el
+    // total fijo y el plan se mantengan consistentes igual que un abono.
+    if (payment.is_installment) {
+      const { error } = await abonarInstallment(payment.id, Number(payment.amount))
+      if (error) showToast(t('app.toast.markPaidError'))
+      return
+    }
+    // Gasto de un Espacio Compartido: el check paga "lo que falta" en vez
+    // del monto completo — puede que ya tenga abonos de otros miembros
+    // registrados vía "Dividir entre miembros". El servidor calcula el
+    // faltante real (ver register-contribution.js, modo payRemaining), no
+    // el cliente, para evitar condiciones de carrera.
+    if (payment.space_id) {
+      // Variable sin monto todavía capturado — no hay "lo que falta" que
+      // calcular sin saber el total primero. Se abre "Dividir" directo
+      // (ahí mismo se puede fijar el monto, ver SplitContributionsModal),
+      // en vez del modal viejo de "Agregar monto".
+      if (payment.is_variable && !(Number(payment.amount) > 0)) {
+        openSplitModal(payment)
+        return
+      }
+      const { error } = await payRemainingContribution(payment.id)
+      if (error) showToast(error.message || t('app.toast.markPaidError'))
+      return
+    }
+    const { error } = await markPaid(payment.id)
+    if (error) showToast(t('app.toast.markPaidError'))
+  }
+  // requestVariableAmount: usado por PayCard (Home) cuando el pago es
+  // variable — abre el mismo modal de siempre, pero en vez de guardar el
+  // pago de inmediato, resuelve una promesa con el monto capturado (o
+  // `null` si se cancela) para que PayCard decida cómo continuar su
+  // animación (mostrar "Pagado" y salir, o revertir el pintado).
+  function requestVariableAmount(payment) {
+    return new Promise(resolve => {
+      setVarModal({ open: true, payment, resolver: resolve })
+    })
+  }
+  // confirmVariablePaid: el guardado real de un pago variable animado —
+  // PayCard lo llama hasta que su propia animación de salida terminó, para
+  // que la card (ya invisible) no salte al actualizarse la lista.
+  // BUG real encontrado (v0.9.208): esta función SIEMPRE llamaba `markPaid`
+  // directo, sin importar `payment.space_id` — así que el check de un pago
+  // VARIABLE compartido nunca pasaba por el sistema de abonos (nunca
+  // repartía, nunca generaba el reflejo, nunca revisaba "¿ya se
+  // completó?"). Los fixes anteriores (v0.9.199 y siguientes) solo tocaron
+  // `handleMarkPaid`/`payRemainingContribution` — la ruta de los NO
+  // variables — este camino paralelo (variable) se quedó sin tocar hasta
+  // ahora, que se conectó con el mini-menú del check ("Pagar todo").
+  async function confirmVariablePaid(payment, amount) {
+    if (payment.space_id) {
+      // Si este variable compartido todavía no tenía monto capturado, el
+      // que se acaba de capturar aquí se vuelve el total fijo Y la
+      // contribución completa de quien tocó "Pagar todo", de un jalón —
+      // sin esto, registerContribution compararía contra un total en $0.
+      if (!(Number(payment.amount) > 0)) {
+        const { error: totalErr } = await setContributionTotalAmount(payment.id, amount)
+        if (totalErr) { showToast(totalErr.message || t('app.toast.registerPaymentError')); return }
+      }
+      const { error } = await registerContribution(payment.id, user?.id, amount)
+      if (error) showToast(error.message || t('app.toast.registerPaymentError'))
+      return
+    }
+    const { error } = await markPaid(payment.id, amount)
+    if (error) showToast(t('app.toast.registerPaymentError'))
+  }
+  async function handleVarConfirm(amount) {
+    const payment  = varModal.payment
+    const resolver = varModal.resolver
+    const fundMode = varModal.fundMode
+    setVarModal({ open: false, payment: null, resolver: null, fundMode: false })
+    if (resolver) { resolver(amount); return }
+    if (!payment?.id) { showToast(t('app.toast.paymentNotFoundError')); return }
+    if (fundMode) {
+      // El monto recién capturado se vuelve el total fijo del pago (antes
+      // era $0/sin capturar) — sin esto, payFromFund compararía contra un
+      // total en $0 y lo marcaría "pagado" con $0 de inmediato (bug real
+      // reportado por Johnatan: un variable pagado con el Fondo se ponía
+      // en $0 y aparecía en pagados, sin pedir el monto en ningún momento).
+      const { error: totalErr } = await setContributionTotalAmount(payment.id, amount)
+      if (totalErr) { showToast(totalErr.message || t('app.toast.saveAmountError')); return }
+      const { error, insufficientFund } = await payFromFund(payment.id)
+      if (error) { showToast(error.message || t('app.toast.payFromFundError')); return }
+      if (insufficientFund) {
+        // Mismo flujo que un pago fijo: el Fondo ya cubrió lo máximo
+        // posible, se abre "Dividir entre miembros" para completar con
+        // nómina de alguien.
+        setSplitModal({ open: true, paymentId: payment.id, openedBecauseFundInsufficient: true })
+      } else {
+        showToast(t('app.toast.paidFromFund', { name: payment.name, amount: fmt(amount) }))
+      }
+      return
+    }
+    const { error } = await markPaid(payment.id, amount)
+    if (error) showToast(t('app.toast.registerPaymentError'))
+    else showToast(t('app.toast.registered', { name: payment.name, amount: fmt(amount) }))
+  }
+  // handleVarModalClose: reemplaza el onClose inline de VariableAmountModal
+  // (varModal) — si el modal se abrió vía requestVariableAmount (resolver
+  // presente), cancelar debe resolver la promesa con `null` para que
+  // PayCard revierta su animación en vez de quedarse esperando para siempre.
+  function handleVarModalClose() {
+    const resolver = varModal.resolver
+    setVarModal({ open: false, payment: null, resolver: null, fundMode: false })
+    if (resolver) resolver(null)
+  }
+  // requestNextPeriodConfirm: usado por PayCard cuando la card viene del
+  // riel de "Pagos del próximo periodo" en Home — antes de arrancar
+  // cualquier camino de pago, resuelve una promesa con true/false según lo
+  // que decida el usuario en ConfirmNextPeriodPayModal. Mismo patrón que
+  // requestVariableAmount (Promise + resolver guardado en el estado).
+  function requestNextPeriodConfirm(payment) {
+    return new Promise(resolve => {
+      setNextPeriodConfirm({ open: true, payment, resolver: resolve })
+    })
+  }
+  function handleNextPeriodConfirmYes() {
+    const resolver = nextPeriodConfirm.resolver
+    setNextPeriodConfirm({ open: false, payment: null, resolver: null })
+    if (resolver) resolver(true)
+  }
+  function handleNextPeriodConfirmCancel() {
+    const resolver = nextPeriodConfirm.resolver
+    setNextPeriodConfirm({ open: false, payment: null, resolver: null })
+    if (resolver) resolver(false)
+  }
+  function openAbonarModal(payment) { setAbonarModal({ open: true, payment }) }
+  async function handleAbonarConfirm(amount) {
+    const payment = abonarModal.payment
+    setAbonarModal({ open: false, payment: null })
+    if (!payment?.id) { showToast(t('app.toast.paymentNotFoundError')); return }
+    const { error, done } = await abonarInstallment(payment.id, amount)
+    if (error) showToast(typeof error === 'string' ? error : (error.message || t('app.toast.registerContributionError')))
+    else if (done) showToast(t('payCard.allPaymentsDone'))
+    else showToast(t('app.toast.contributionRegistered', { amount: fmt(amount) }))
+  }
+  function openSplitModal(payment) { setSplitModal({ open: true, paymentId: payment.id, openedBecauseFundInsufficient: false }) }
+
+  // Check de la card, opción "Fondo compartido" — paga todo lo que falte
+  // desde el saldo del Fondo. Si el Fondo no alcanza para cubrirlo por
+  // completo, en vez de un error seco se abre "Dividir entre miembros" con
+  // un aviso explicando por qué (diseño confirmado con Johnatan) — ahí ya
+  // se ve cuánto sí cubre el Fondo, y se completa con nómina de alguien.
+  async function handlePayFromFund(payment) {
+    if (payment.is_variable && !(Number(payment.amount) > 0)) {
+      setVarModal({ open: true, payment, resolver: null, fundMode: true })
+      return
+    }
+    const { error, insufficientFund } = await payFromFund(payment.id)
+    if (error) { showToast(error.message || t('app.toast.payFromFundError')); return }
+    if (insufficientFund) {
+      // El Fondo ya cubrió lo máximo posible (justo se aplicó) — se abre
+      // "Dividir entre miembros" con el aviso para completar con nómina.
+      setSplitModal({ open: true, paymentId: payment.id, openedBecauseFundInsufficient: true })
+    }
+  }
+
+  // Card de reflejo (Home personal) → el ojo lleva de vuelta al espacio de
+  // origen. Usa el atajo que ya existe (`switchSpace`) — no hace falta
+  // resaltar el pago original en esta primera versión, con entrar al
+  // espacio correcto basta.
+  function handleViewSource(payment) {
+    if (!payment?.source_space_id) return
+    switchSpace(payment.source_space_id)
+    changeTab('home')
+  }
+
+  function openEstimateModal(payment) { setEstimateModal({ open: true, payment }) }
+  async function handleEstimateConfirm(amount) {
+    const payment = estimateModal.payment
+    setEstimateModal({ open: false, payment: null })
+    if (!payment?.id) { showToast(t('app.toast.paymentNotFoundError')); return }
+    const { error } = await setEstimatedAmount(payment.id, amount)
+    if (error) showToast(t('app.toast.saveAmountError'))
+    else showToast(t('app.toast.amountSavedFor', { name: payment.name, amount: fmt(amount) }))
+  }
+  async function handleMarkUnpaid(id) {
+    const payment = payments.find(p => p.id === id)
+    if (payment?.space_id) {
+      const { error } = await unmarkSharedPayment(id)
+      if (error) showToast(error.message || t('app.toast.unmarkError'))
+      else showToast(t('app.toast.markedUnpaid', { name: payment.name }))
+      return
+    }
+    const { error } = await markUnpaid(id)
+    if (error) showToast(typeof error === 'string' ? error : t('app.toast.unmarkError'))
+    else showToast(t('app.toast.markedUnpaid', { name: payment?.name || t('app.toast.fallbackPaymentName') }))
+  }
+  // handleMarkUnpaidAnimated: usado por PaidCollapseItem (Home) al terminar
+  // su propia animación de "desmarcar" (pintado amarillo + "Marcado como no
+  // pagado" + salida) — sin toast de éxito, el mensaje ya vivió dentro de
+  // la fila. `handleMarkUnpaid` (arriba) se conserva intacto para
+  // PaymentsPage.jsx, que no tiene esta animación y sigue necesitando el
+  // toast como única confirmación.
+  async function handleMarkUnpaidAnimated(id) {
+    const payment = payments.find(p => p.id === id)
+    if (payment?.space_id) {
+      const { error } = await unmarkSharedPayment(id)
+      if (error) showToast(error.message || t('app.toast.unmarkError'))
+      return
+    }
+    const { error } = await markUnpaid(id)
+    if (error) showToast(typeof error === 'string' ? error : t('app.toast.unmarkError'))
+  }
+  async function handlePostpone(payment) {
+    const { error } = await postponePayment(payment)
+    if (error) showToast(t('app.toast.postponeError'))
+    else showToast(t('app.toast.postponed', { name: payment.name }))
+  }
+  async function handleAdvance(payment) {
+    const { error } = await updatePayment(payment.id, { postponed: false })
+    if (error) showToast(t('app.toast.genericError'))
+    else showToast(t('app.toast.returnedToCurrentPeriod'))
+  }
+  // `performDelete`: la única función de borrado real ahora — elige la
+  // función correcta según el tipo de pago (master/copia de recurrente/
+  // parcialidad con o sin master/pago único) + toast de éxito, sin pedir
+  // NINGUNA confirmación aquí — esa responsabilidad es 100% de cada
+  // pantalla que la llama (su propia UI: `ConfirmDeleteModal.jsx` en
+  // PayCard.jsx/PaymentModal.jsx/PaymentsPage.jsx, o el panel inline
+  // propio de RecurrentsPage.jsx/RecurrentDetailPanel.jsx). Antes existía
+  // también `handleDelete`, que hacía su propio `window.confirm()` nativo
+  // antes de llamar a esto — se quitó por completo (bug real reportado
+  // por Johnatan: ninguna pantalla debe depender del alert nativo del
+  // navegador, cada una necesita su propia UI; con `handleDelete` de
+  // por medio, pantallas que YA tenían su propia confirmación en la app
+  // — como RecurrentsPage.jsx — terminaban pidiendo confirmación DOS
+  // veces con el mismo texto). `handleDeleteDirect` es el único punto de
+  // entrada expuesto a los componentes ahora.
+  async function performDelete(id, payment) {
+    if (payment?.is_master) {
+      await deleteRecurrent(payment.id)
+    } else if (payment?.is_recurrent && !payment?.is_installment && payment?.parent_id) {
+      await deleteRecurrent(payment.parent_id)
+    } else if (payment?.is_installment && payment?.parent_id) {
+      // Copia de parcialidad con master → eliminar via deleteRecurrent
+      await deleteRecurrent(payment.parent_id)
+    } else if (payment?.is_installment) {
+      // Parcialidad sin master (sistema antiguo, fallback)
+      await deleteInstallmentFuture(payment.name)
+    } else {
+      await deletePayment(id)
+    }
+    showToast(t('app.toast.paymentDeleted'))
+  }
+  async function handleDeleteDirect(id, payment) {
+    await performDelete(id, payment)
+  }
+
+  async function handleClosePatchNotes() {
+    setPatchNotesOpen(false)
+    await updateProfile({ last_seen_app_version: APP_VERSION })
+  }
+
+  async function handleFeedbackGiveFeedback() {
+    setFeedbackPromptOpen(false)
+    await updateProfile({ feedback_submitted: true })
+    window.open(buildFeedbackUrl(user?.email), '_blank')
+  }
+  async function handleFeedbackRemindLater() {
+    setFeedbackPromptOpen(false)
+    const next = new Date(Date.now() + FEEDBACK_REMIND_AFTER_DAYS * 24 * 60 * 60 * 1000)
+    await updateProfile({ feedback_next_prompt_at: next.toISOString() })
+  }
+
+  async function handlePauseRecurrent(masterId) {
+    const master = payments.find(p => p.id === masterId)
+    await pauseRecurrent(masterId)
+    showToast(t('app.toast.paused', { name: master?.name || t('app.toast.fallbackPaymentName') }))
+  }
+  async function handleResumeRecurrent(masterId) {
+    const master = payments.find(p => p.id === masterId)
+    if (master) { setEditPayment(master); setModalOpen(true) }
+  }
+
+  async function handleSave(data) {
+    if (editPayment) {
+      if (editPayment.is_master) {
+        if (editPayment.paused) {
+          // Reactivar desde pausa: crear 2 nuevas copias con nueva config
+          const { error } = await resumeRecurrent(editPayment.id, {
+            name:        data.name        || editPayment.name,
+            amount:      data.amount      ?? editPayment.amount,
+            recur_freq:  data.recur_freq  || editPayment.recur_freq,
+            category:    data.category    || editPayment.category,
+            is_variable: data.is_variable ?? editPayment.is_variable,
+            firstDate:   data.due_date    || editPayment.due_date,
+          })
+          if (error) showToast(t('app.toast.reactivateError')); else showToast(t('app.toast.reactivated', { name: editPayment.name }))
+        } else {
+          // Editar master activo
+          const { error } = await updateRecurrentConfig(editPayment.id, {
+            name:        data.name        || editPayment.name,
+            amount:      data.amount      ?? editPayment.amount,
+            recur_freq:  data.recur_freq  || editPayment.recur_freq,
+            category:    data.category    || editPayment.category,
+            is_variable: data.is_variable ?? editPayment.is_variable,
+            firstDate:   data.due_date    || editPayment.due_date,
+          })
+          if (error) showToast(t('app.toast.saveError')); else showToast(t('app.toast.paymentUpdated'))
+        }
+        return
+      }
+      // Editar pago normal o parcialidad
+      const { error } = await updatePayment(editPayment.id, data)
+      if (error) { showToast(t('app.toast.saveError')) }
+      else {
+        showToast(t('app.toast.paymentUpdated'))
+        // Bug real reportado por Johnatan (v0.9.258): si la fecha de pago
+        // (paid_at) se edita y eso mueve el gasto hacia OTRO periodo, y ese
+        // periodo ya tiene un remanente agregado (PaymentsPage.jsx →
+        // "¡Quedó un remanente del periodo anterior!"), esa fila de
+        // period_income no se actualiza sola — se queda con un monto que
+        // ya no es correcto. No se corrige automático (cambiar el número a
+        // ciegas podría no ser lo que el usuario quiere), solo se avisa
+        // para que lo revise a mano desde "Ingresos Extras del Periodo".
+        if (data.paid_at && data.paid_at !== editPayment.paid_at) {
+          const conflict = await checkPeriodIncomeConflict(profile, editPayment.paid_at, data.paid_at)
+          if (conflict) {
+            showToast(t('app.toast.remanenteConflict', { amount: fmt(conflict.amount) }))
+          }
+        }
+      }
+    } else {
+      // Crear nuevo
+      if (data.is_recurrent && !data.is_installment) {
+        const { error } = await addRecurrentPayment({
+          name:        data.name,
+          amount:      data.amount,
+          category:    data.category,
+          recur_freq:  data.recur_freq,
+          is_variable: data.is_variable || false,
+          firstDate:   data.due_date,
+        })
+        if (error) showToast(t('app.toast.saveError')); else showToast(t('app.toast.added', { name: data.name }))
+      } else {
+        const { error } = await addPayment(data)
+        if (error) showToast(t('app.toast.saveError')); else showToast(t('app.toast.paymentAdded'))
+      }
+    }
+  }
+
+  async function handleSaveInstallment(data) {
+    const { error } = await addInstallmentPayment(data)
+    if (error) showToast(t('app.toast.saveError'))
+    else showToast(t('app.toast.installmentCreated', { current: data.startFrom || 1, total: data.totalInstallments }))
+  }
+
+  // Cambia de tab de forma centralizada — antes cada disparador (BottomNav,
+  // headerProps, el atajo de Espacio Compartido, el regreso de Ajustes, el
+  // onGoSettings propio de HomePage) repetía el mismo cálculo de dirección +
+  // setTab + sessionStorage por su cuenta.
+  function changeTab(newTab) {
+    if (newTab === tab) return
+    const fromIdx = TAB_ORDER.indexOf(tab)
+    const toIdx   = TAB_ORDER.indexOf(newTab)
+    const dir = toIdx >= fromIdx ? 'right' : 'left'
+    setSlideDir(dir)
+    setTab(newTab)
+    sessionStorage.setItem('ada_tab', newTab)
+    window.scrollTo(0, 0)
+  }
+
+  function goToSharedSpaceSettings() {
+    setSettingsReturnTab(tab)
+    setSettingsInitialSection('sharedspace')
+    changeTab('settings')
+  }
+
+  // Mismo atajo que goToSharedSpaceSettings, apuntando a Categorías — para
+  // el link "Personalizar categorías" del EmptyState en PaymentsPage →
+  // "Por Categoría" (v0.9.179).
+  function goToCategories() {
+    setSettingsReturnTab(tab)
+    setSettingsInitialSection('categories')
+    changeTab('settings')
+  }
+
+  // SettingsPage.jsx llama esto cuando el usuario presiona "atrás" justo
+  // después de entrar por un atajo (ej. "Editar" desde el switcher) — en
+  // vez de mostrar el menú principal de Ajustes, regresa directo al tab
+  // donde estaba antes de tocar el atajo.
+  function returnFromSettingsShortcut(returnTab) {
+    changeTab(returnTab)
+    setSettingsReturnTab(null)
+  }
+
+  const headerProps = {
+    profile: effectiveProfile, unreadCount,
+    onOpenNotifs: () => setNotifOpen(true),
+    onGoSettings: () => changeTab('settings'),
+  }
+
+  // Pagos que se muestran en Home/Pagos: excluir masters (is_master: true)
+  const visiblePayments = payments.filter(p => !p.is_master)
+
+  // v0.9.367 — el switcher de espacios se movió al riel (NavRail.jsx,
+  // v0.9.369 — RESTAURADO para mobile (ver nota arriba de useSpaceStats).
+  // Las 4 páginas lo ocultan vía CSS desde 768px (`.spaceSwitcherMobileWrap`
+  // en cada *.module.css) — desde ahí ya lo cubre RailSpaceSwitcher.jsx.
+  const spaceSwitcherEl = (
+    <SpaceSwitcher
+      spaces={sharedSpaces.spaces}
+      activeSpaceId={activeSpaceId}
+      onSwitch={switchSpace}
+      profile={profile}
+      stats={spaceStats}
+    />
+  )
+
+  // Encabezado del espacio activo — antes era parte de SpaceSwitcher, ver
+  // nota en ActiveSpaceHeader.jsx. Antes se excluía por completo cuando la
+  // tarjeta "Nuevo espacio compartido" estaba activa (se asumía que
+  // NewSharedSpacePanel.jsx ya traía su propio título — no era cierto, el
+  // panel nunca dibujaba ninguno). Ahora ActiveSpaceHeader.jsx también
+  // sabe mostrar "Nuevo espacio compartido" como nombre en ese caso.
+  const activeSpaceHeaderEl = (
+    <ActiveSpaceHeader
+      activeSpaceId={activeSpaceId}
+      sharedSpaces={sharedSpaces}
+      onManage={goToSharedSpaceSettings}
+      onSwitch={switchSpace}
+      deleteSpace={sharedSpaces.deleteSpace}
+      leaveSpace={sharedSpaces.leaveSpace}
+      user={user}
+      defaultSpaceId={profile.default_space_id ?? null}
+      onSetDefault={handleSetDefaultSpace}
+      profile={profile}
+    />
+  )
+
+  // Al crear o unirse a un espacio desde el panel "Nuevo espacio
+  // compartido", aterriza directo en ese espacio en vez de dejar al
+  // usuario parado en la tarjeta "Nuevo" (que ya no aplicaría, pues ya
+  // pertenece a él).
+  function handleSpaceReady(spaceId) { switchSpace(spaceId) }
+
+  // Pin de "espacio principal" — llamado desde el botón de pin de
+  // ActiveSpaceHeader.jsx. spaceId es null para Personal, o el id real del
+  // espacio compartido activo.
+  async function handleSetDefaultSpace(spaceId) {
+    const { error } = await updateProfile({ default_space_id: spaceId })
+    if (error) { showToast(t('app.toast.setDefaultTabError')); return }
+    if (spaceId === null) {
+      showToast(t('app.toast.defaultTabSet', { name: t('activeSpaceHeader.personalName') }))
+    } else {
+      const entry = sharedSpaces.spaces.find(s => s.space.id === spaceId)
+      showToast(t('app.toast.defaultTabSet', { name: entry?.space?.name || t('app.toast.fallbackSpaceName') }))
+    }
+  }
+
+  return (
+    <>
+      {/* Landmark <main> — hallazgo de Lighthouse (Accessibility), el
+          documento no tenía ninguno. Envuelve solo el contenido real de
+          cada pestaña; BottomNav/paneles/modales quedan fuera a propósito
+          (son navegación y overlays, no contenido principal). */}
+      <main>
+      {tab === 'home' && (
+        <HomePage
+          payments={visiblePayments}
+          dataLoading={paymentsLoading}
+          profile={effectiveProfile}
+          activeSpaceId={activeSpaceId}
+          sharedSpaces={sharedSpaces}
+          spacePermissions={spacePermissions}
+          onOpenPremium={() => setPremiumPageOpen(true)}
+          onSpaceReady={handleSpaceReady}
+          spaceSwitcher={spaceSwitcherEl}
+          activeSpaceHeader={activeSpaceHeaderEl}
+          onAdd={openAdd}
+          slideClass={`page-slide-${slideDir}`}
+          onMarkPaid={handleMarkPaid}
+          onRequestVariableAmount={requestVariableAmount}
+          onConfirmVariablePaid={confirmVariablePaid}
+          onRequestNextPeriodConfirm={requestNextPeriodConfirm}
+          onMarkUnpaid={handleMarkUnpaidAnimated}
+          onCaptureAmount={openEstimateModal}
+          onEdit={openEdit}
+          onAbonar={openAbonarModal}
+          onSplit={openSplitModal}
+          onPayFromFund={handlePayFromFund}
+          fundBalance={sharedFund.balance}
+          onViewSource={handleViewSource}
+          onDelete={handleDeleteDirect}
+          onPostpone={handlePostpone}
+          onAdvance={handleAdvance}
+          onGoSettings={() => changeTab('settings')}
+          notifications={notifications}
+          unreadCount={unreadCount}
+          onMarkAsRead={markAsRead}
+          onMarkAllAsRead={markAllAsRead}
+          onDeleteNotif={deleteNotification}
+          onClearAllNotifs={clearAll}
+        />
+      )}
+      {tab === 'payments' && (
+        <PaymentsPage
+          payments={visiblePayments}
+          dataLoading={paymentsLoading}
+          slideClass={`page-slide-${slideDir}`}
+          {...headerProps}
+          activeSpaceId={paymentsSpaceId}
+          rawActiveSpaceId={activeSpaceId}
+          sharedSpaces={sharedSpaces}
+          spacePermissions={spacePermissions}
+          onOpenPremium={() => setPremiumPageOpen(true)}
+          onSpaceReady={handleSpaceReady}
+          spaceSwitcher={spaceSwitcherEl}
+          activeSpaceHeader={activeSpaceHeaderEl}
+          onMarkUnpaid={handleMarkUnpaid}
+          onDelete={handleDeleteDirect}
+          onDeleteDirect={async (id) => { await deletePayment(id); showToast(t('app.toast.paymentDeleted')) }}
+          onUpdateProfile={updateProfile}
+          onEdit={openEdit}
+          onViewSource={handleViewSource}
+          onSplit={openSplitModal}
+          onAdd={openAdd}
+          onGoCategories={goToCategories}
+          ensureMonthLoaded={ensureMonthLoaded}
+          oldestPaymentYear={oldestYear}
+          sharedFund={sharedFund}
+        />
+      )}
+      {tab === 'recurrents' && (
+        <RecurrentsPage
+          payments={payments}
+          dataLoading={paymentsLoading}
+          slideClass={`page-slide-${slideDir}`}
+          {...headerProps}
+          activeSpaceId={activeSpaceId}
+          sharedSpaces={sharedSpaces}
+          spacePermissions={spacePermissions}
+          onOpenPremium={() => setPremiumPageOpen(true)}
+          onSpaceReady={handleSpaceReady}
+          spaceSwitcher={spaceSwitcherEl}
+          activeSpaceHeader={activeSpaceHeaderEl}
+          onPause={handlePauseRecurrent}
+          onResume={handleResumeRecurrent}
+          onDelete={handleDeleteDirect}
+          onEdit={openEdit}
+          onAdd={openAdd}
+        />
+      )}
+      {tab === 'goals' && (
+        <GoalsPage
+          goalsData={goalsData}
+          isPremium={!!profile.is_premium}
+          activeSpaceId={paymentsSpaceId}
+          rawActiveSpaceId={activeSpaceId}
+          spacePermissions={spacePermissions}
+          spaceMembers={activeSpaceEntry?.space?.members || []}
+          spaceSwitcher={spaceSwitcherEl}
+          activeSpaceHeader={activeSpaceHeaderEl}
+          sharedSpaces={sharedSpaces}
+          onSpaceReady={handleSpaceReady}
+          onOpenPremium={() => setPremiumPageOpen(true)}
+          slideClass={`page-slide-${slideDir}`}
+          {...headerProps}
+        />
+      )}
+      {tab === 'settings' && (
+        <Suspense fallback={null}>
+        <SettingsPage
+          profile={profile}
+          user={user}
+          onUpdate={updateProfile}
+          onUploadAvatar={uploadAvatar}
+          onDataDeleted={() => { refetch() }}
+          slideClass={`page-slide-${slideDir}`}
+          theme={theme}
+          onThemeChange={setTheme}
+          onOpenPremium={() => setPremiumPageOpen(true)}
+          sharedSpaces={sharedSpaces}
+          initialSection={settingsInitialSection}
+          onConsumeInitialSection={() => setSettingsInitialSection(null)}
+          returnTab={settingsReturnTab}
+          onReturnToTab={returnFromSettingsShortcut}
+        />
+        </Suspense>
+      )}
+      </main>
+
+      <BottomNav
+        active={tab}
+        onChange={t => changeTab(t)}
+        onAdd={openAdd}
+      />
+
+      {/* Adaptación tablet/desktop (Regla 43): a partir de 768px, NavRail
+          reemplaza a BottomNav (que se oculta vía CSS, ver
+          BottomNav.module.css) — ambos quedan montados para no complicar
+          el árbol con matchMedia en JS, cada uno se muestra/oculta por
+          media query. El "+" sale del riel como FAB independiente. */}
+      <NavRail
+        active={tab}
+        onChange={t => changeTab(t)}
+        profile={effectiveProfile}
+        unreadCount={unreadCount}
+        onOpenNotifs={() => setNotifOpen(true)}
+        onGoSettings={() => changeTab('settings')}
+        spaces={sharedSpaces.spaces}
+        activeSpaceId={activeSpaceId}
+        onSwitchSpace={switchSpace}
+        spaceSwitcherProfile={profile}
+      />
+      <RailFab onAdd={openAdd} />
+
+      <NotificationsPanel
+        open={notifOpen}
+        onClose={() => setNotifOpen(false)}
+        notifications={notifications}
+        unreadCount={unreadCount}
+        onMarkAsRead={markAsRead}
+        onMarkAllAsRead={markAllAsRead}
+        onDelete={deleteNotification}
+        onClearAll={clearAll}
+        onNavigate={() => window.scrollTo(0, 0)}
+      />
+
+      <PaymentModal
+        open={modalOpen}
+        onClose={() => { setModalOpen(false); setEditPayment(null) }}
+        onSave={handleSave}
+        onSaveInstallment={handleSaveInstallment}
+        onDelete={handleDeleteDirect}
+        onEditMaster={openEditMaster}
+        initial={editPayment}
+        payments={payments}
+        profile={effectiveProfile}
+        spacePermissions={spacePermissions}
+        isSharedSpace={!!paymentsSpaceId}
+        customCategories={profile.custom_categories || []}
+        onOpenPremium={() => setPremiumPageOpen(true)}
+        onAddCategory={async (cat) => {
+          await updateProfile({ custom_categories: [...(profile.custom_categories || []), cat] })
+        }}
+      />
+      <VariableAmountModal
+        open={varModal.open}
+        payment={varModal.payment}
+        spacePermissions={spacePermissions}
+        onConfirm={handleVarConfirm}
+        onClose={handleVarModalClose}
+      />
+      <VariableAmountModal
+        open={estimateModal.open}
+        payment={estimateModal.payment}
+        mode="estimate"
+        spacePermissions={spacePermissions}
+        onConfirm={handleEstimateConfirm}
+        onClose={() => setEstimateModal({ open: false, payment: null })}
+      />
+
+      <ConfirmNextPeriodPayModal
+        open={nextPeriodConfirm.open}
+        payment={nextPeriodConfirm.payment}
+        onConfirm={handleNextPeriodConfirmYes}
+        onCancel={handleNextPeriodConfirmCancel}
+      />
+
+      <InstallmentAbonarModal
+        open={abonarModal.open}
+        payment={abonarModal.payment}
+        payments={payments}
+        spacePermissions={spacePermissions}
+        onConfirm={handleAbonarConfirm}
+        onClose={() => setAbonarModal({ open: false, payment: null })}
+      />
+
+      <SplitContributionsModal
+        open={splitModal.open}
+        payment={payments.find(p => p.id === splitModal.paymentId) || null}
+        spaceMembers={activeSpaceEntry?.space?.members || []}
+        currentUserId={user?.id}
+        getContributions={getContributions}
+        registerContribution={registerContribution}
+        onSetTotalAmount={setContributionTotalAmount}
+        onForceSettle={forceSettlePayment}
+        fundBalance={sharedFund.balance}
+        onSetFundContribution={setFundContribution}
+        openedBecauseFundInsufficient={splitModal.openedBecauseFundInsufficient}
+        onClose={() => setSplitModal({ open: false, paymentId: null, openedBecauseFundInsufficient: false })}
+      />
+
+      <Coachmarks
+        screenKey={coachmarkScreenKey}
+        profile={profile}
+        onUpdateProfile={updateProfile}
+      />
+      <RecurrentMigrationModal
+        open={migrationModal}
+        onClose={() => {
+          localStorage.setItem('ada_recurrent_v2_seen', '1')
+          setMigrationModal(false)
+        }}
+      />
+      <PatchNotesModal
+        open={patchNotesOpen}
+        notes={patchNotesToShow}
+        onClose={handleClosePatchNotes}
+      />
+      <FeedbackPromptModal
+        open={feedbackPromptOpen}
+        onGiveFeedback={handleFeedbackGiveFeedback}
+        onRemindLater={handleFeedbackRemindLater}
+      />
+      <Toast />
+      {premiumPageOpen && <Suspense fallback={null}><PremiumPage onClose={() => setPremiumPageOpen(false)} refreshProfile={fetchProfile} /></Suspense>}
+    </>
+  )
+}
