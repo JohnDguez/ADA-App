@@ -3,9 +3,10 @@ import { useTranslation } from 'react-i18next'
 import i18n from '../i18n'
 import { createPortal } from 'react-dom'
 import { MoreVertical, Check, Pencil, Trash2, Clock, ChevronDown, ChevronUp, RotateCcw, FastForward, DollarSign, Eye, Users, PiggyBank } from 'lucide-react'
-import { statusOf, daysDiff, dateOf, fmt, MONTHS_SHORT, getMonthsShort, periodLabel, periodCountLabel, RECUR_FREQ, getFrequencyLabel, installmentLabel, getCategoryLabel } from '../lib/utils'
+import { statusOf, daysDiff, dateOf, fmt, MONTHS_SHORT, getMonthsShort, periodLabel, periodCountLabel, RECUR_FREQ, getFrequencyLabel, installmentLabel, getCategoryLabel, getDeleteConfirmMessage } from '../lib/utils'
 import { showToast } from './Toast'
 import { PaidByStack } from './PaidByStack'
+import { ConfirmDeleteModal } from './ConfirmDeleteModal'
 import styles from './PayCard.module.css'
 
 // statusInfo() no es un componente — usa el singleton i18n.t(), mismo
@@ -81,6 +82,7 @@ function PayCardImpl({ payment: p, cfg, onMarkPaid, onRequestVariableAmount, onC
   }
 
   const [menuOpen, setMenuOpen] = useState(false)
+  const [confirmDelete, setConfirmDelete] = useState(false)
   const menuRef = useRef(null)
   // Los 2 menús flotantes (opciones y check) se renderizan vía portal
   // directo a document.body (ver más abajo) — desde v0.9.234 dejaron de
@@ -439,7 +441,7 @@ function PayCardImpl({ payment: p, cfg, onMarkPaid, onRequestVariableAmount, onC
           {isPending && p.is_installment && onAdvance && <MenuItem icon={<FastForward size={14}/>} label={t('payCard.menu.advance')} onClick={() => { canEdit ? onAdvance(p) : blocked(t('payCard.actions.advancePayments')); setMenuOpen(false) }} />}
           {isPending && p.space_id && onSplit && <MenuItem icon={<Users size={14}/>} label={t('paymentsPage.menuSplit')} onClick={() => { canMarkPaid ? onSplit(p) : blocked(t('paymentsPage.actionRegisterContributions')); setMenuOpen(false) }} />}
           {p.is_paid && <MenuItem icon={<RotateCcw size={14}/>} label={t('payCard.menu.markUnpaid')} onClick={() => { canMarkPaid ? onMarkUnpaid(p.id) : blocked(t('paymentsPage.actionMarkPayments')); setMenuOpen(false) }} />}
-          <MenuItem icon={<Trash2 size={14}/>} label={t('buttons.delete')} onClick={() => { canDelete ? onDelete(p.id, p) : blocked(t('paymentsPage.actionDeletePayments')); setMenuOpen(false) }} danger />
+          <MenuItem icon={<Trash2 size={14}/>} label={t('buttons.delete')} onClick={() => { canDelete ? setConfirmDelete(true) : blocked(t('paymentsPage.actionDeletePayments')); setMenuOpen(false) }} danger />
         </div>,
         document.body
       )}
@@ -464,6 +466,22 @@ function PayCardImpl({ payment: p, cfg, onMarkPaid, onRequestVariableAmount, onC
           )}
           <MenuItem icon={<Users size={14}/>} label={t('payCard.menu.sharedPayment')} onClick={() => { setCheckMenuOpen(false); onSplit(p) }} />
         </div>,
+        document.body
+      )}
+
+      {/* Confirmación de borrado — portal a document.body por el mismo
+          motivo que los menús de arriba (ancestros con overflow:hidden/
+          transform, ej. .contentSwipeWrap, recortarían o desalinearían un
+          overlay position:fixed normal). Reemplaza el confirm() nativo del
+          navegador que disparaba App.jsx al recibir onDelete — bug real
+          reportado por Johnatan, ver ConfirmDeleteModal.jsx. */}
+      {confirmDelete && createPortal(
+        <ConfirmDeleteModal
+          open={confirmDelete}
+          message={getDeleteConfirmMessage(p)}
+          onConfirm={() => { setConfirmDelete(false); onDelete(p.id, p) }}
+          onCancel={() => setConfirmDelete(false)}
+        />,
         document.body
       )}
     </div>

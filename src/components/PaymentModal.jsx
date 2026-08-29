@@ -2,10 +2,11 @@ import { useState, useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import i18n from '../i18n'
 import { Wallet, AlertTriangle, Repeat, Check, Info, Lock } from 'lucide-react'
-import { CATEGORIES, RECUR_FREQ, WEEKDAYS_SHORT, getWeekdaysShort, MONTHS, getMonths, MONTHS_SHORT, getMonthsShort, intlLocale, nextWeekdayDate, nextBiweeklyFromDate, nextPeriodDate, cobroPeriod, fmt, nameExistsActive, projectPeriodImpact, getCatColor, getCategoryLabel, getFrequencyLabel, dateToStr, todayStr } from '../lib/utils'
+import { CATEGORIES, RECUR_FREQ, WEEKDAYS_SHORT, getWeekdaysShort, MONTHS, getMonths, MONTHS_SHORT, getMonthsShort, intlLocale, nextWeekdayDate, nextBiweeklyFromDate, nextPeriodDate, cobroPeriod, fmt, nameExistsActive, projectPeriodImpact, getCatColor, getCategoryLabel, getFrequencyLabel, dateToStr, todayStr, getDeleteConfirmMessage } from '../lib/utils'
 import { getCategoryIcon } from '../lib/categoryIcons'
 import { supabase } from '../lib/supabase'
 import { ConfirmCloseModal } from './ConfirmCloseModal'
+import { ConfirmDeleteModal } from './ConfirmDeleteModal'
 import { FrequencyPicker } from './FrequencyPicker'
 import { PremiumLock } from './PremiumLock'
 import { Select } from './Select'
@@ -30,6 +31,7 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
   const [saving,             setSaving]             = useState(false)
   const [error,              setError]              = useState('')
   const [confirmClose,       setConfirmClose]       = useState(false)
+  const [confirmDelete,      setConfirmDelete]      = useState(false)
   const [alreadyPaid,        setAlreadyPaid]        = useState(false)
   const [paidAt,             setPaidAt]             = useState('')
   const [addingCategory,     setAddingCategory]     = useState(false)
@@ -342,11 +344,17 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
               {saving ? t('settingsCategories.saving') : t('paymentModal.editInstallment.saveButton')}
             </button>
             <button onClick={onClose} className={`btn-ghost ${styles.cancelButtonSpacing}`}>{t('buttons.cancel')}</button>
-            <button onClick={() => { onDelete(initial.id, initial); onClose() }} disabled={!canDelete} className={`btn-danger ${styles.deleteButtonSpacing}`} style={{ opacity: canDelete ? 1 : 0.5 }}>
+            <button onClick={() => setConfirmDelete(true)} disabled={!canDelete} className={`btn-danger ${styles.deleteButtonSpacing}`} style={{ opacity: canDelete ? 1 : 0.5 }}>
               {t('paymentModal.editInstallment.cancelInstallments')}
             </button>
           </div>
         </div>
+        <ConfirmDeleteModal
+          open={confirmDelete}
+          message={getDeleteConfirmMessage(initial)}
+          onConfirm={() => { setConfirmDelete(false); onDelete(initial.id, initial); onClose() }}
+          onCancel={() => setConfirmDelete(false)}
+        />
       </>
     )
   }
@@ -670,11 +678,17 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
           </button>
           <button onClick={requestClose} className={`btn-ghost ${styles.cancelButtonSpacing}`}>{t('buttons.cancel')}</button>
           {initial && !isEditingInstallment && (
-            <button onClick={() => { onDelete(initial.id, initial); onClose() }} disabled={!canDelete} className={`btn-danger ${styles.deleteButtonSpacing}`} style={{ opacity: canDelete ? 1 : 0.5 }}>{t('paymentModal.deletePayment')}</button>
+            <button onClick={() => setConfirmDelete(true)} disabled={!canDelete} className={`btn-danger ${styles.deleteButtonSpacing}`} style={{ opacity: canDelete ? 1 : 0.5 }}>{t('paymentModal.deletePayment')}</button>
           )}
         </div>
       </div>
       <ConfirmCloseModal open={confirmClose} onConfirm={() => { setConfirmClose(false); onClose() }} onCancel={() => setConfirmClose(false)} />
+      <ConfirmDeleteModal
+        open={confirmDelete}
+        message={initial ? getDeleteConfirmMessage(initial) : ''}
+        onConfirm={() => { setConfirmDelete(false); onDelete(initial.id, initial); onClose() }}
+        onCancel={() => setConfirmDelete(false)}
+      />
     </>
   )
 }
