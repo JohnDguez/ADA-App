@@ -4,6 +4,7 @@ import { Pause, Play, Trash2, Search, ChevronDown, CreditCard, Pencil, MoreVerti
 import { EmptyState } from '../components/EmptyState'
 import { PageHeader } from '../components/PageHeader'
 import { NewSharedSpacePanel } from '../components/NewSharedSpacePanel'
+import { RecurrentDetailPanel } from '../components/RecurrentDetailPanel'
 import { fmt, RECUR_FREQ, getFrequencyLabel, dateOf, getMonthsShort, getCatColor, getCategoryLabel } from '../lib/utils'
 import { getCategoryIcon } from '../lib/categoryIcons'
 import { showToast } from '../components/Toast'
@@ -34,12 +35,13 @@ export function RecurrentsPage({ payments, dataLoading = false, profile, spaceSw
     }
   }, [activeSpaceId])
 
-  const [search,        setSearch]        = useState('')
-  const [filterStatus,  setFilterStatus]  = useState('todos')
-  const [filterType,    setFilterType]    = useState('todos')
-  const [expandedCats,  setExpandedCats]  = useState({})
-  const [confirmDelete, setConfirmDelete] = useState(null)
-  const [openMenu,      setOpenMenu]      = useState(null)
+  const [search,          setSearch]          = useState('')
+  const [filterStatus,    setFilterStatus]    = useState('todos')
+  const [filterType,      setFilterType]      = useState('todos')
+  const [expandedCats,    setExpandedCats]    = useState({})
+  const [confirmDelete,   setConfirmDelete]   = useState(null)
+  const [openMenu,        setOpenMenu]        = useState(null)
+  const [selectedMasterId, setSelectedMasterId] = useState(null)
 
   const canEdit   = !spacePermissions || spacePermissions.can_edit
   const canDelete = !spacePermissions || spacePermissions.can_delete
@@ -51,6 +53,19 @@ export function RecurrentsPage({ payments, dataLoading = false, profile, spaceSw
   const masters = useMemo(() =>
     payments.filter(p => p.is_master)
   , [payments])
+
+  const selectedMaster = selectedMasterId ? masters.find(m => m.id === selectedMasterId) || null : null
+
+  // Botón/gesto "atrás" del teléfono — solo se intercepta cuando hay un
+  // detalle abierto (mismo patrón que GoalsPage.jsx). Si estamos en la
+  // lista, se deja pasar para que el botón haga lo de siempre.
+  useEffect(() => {
+    if (!selectedMasterId) return
+    const handler = () => setSelectedMasterId(null)
+    window.history.pushState(null, '', window.location.href)
+    window.addEventListener('popstate', handler)
+    return () => window.removeEventListener('popstate', handler)
+  }, [selectedMasterId])
 
   // Copias pendientes del siguiente periodo (sin master)
   function getNextDue(masterId) {
@@ -147,6 +162,20 @@ export function RecurrentsPage({ payments, dataLoading = false, profile, spaceSw
                 onJoined={onSpaceReady}
               />
             </div>
+          ) : selectedMaster ? (
+            <RecurrentDetailPanel
+              master={selectedMaster}
+              payments={payments}
+              profile={profile}
+              canEdit={canEdit}
+              canDelete={canDelete}
+              blocked={blocked}
+              onBack={() => setSelectedMasterId(null)}
+              onEdit={() => onEdit && onEdit(selectedMaster)}
+              onPause={() => onPause(selectedMaster.id)}
+              onResume={() => onResume(selectedMaster.id)}
+              onDelete={() => { onDelete && onDelete(selectedMaster.id, selectedMaster); setSelectedMasterId(null) }}
+            />
           ) : (
           <>
           {/* Zona título */}
@@ -260,7 +289,10 @@ export function RecurrentsPage({ payments, dataLoading = false, profile, spaceSw
 
                       return (
                         <div key={master.id}>
-                          <div className={`${styles.masterRow} ${isLast && !isConfirming ? styles.masterRowNoBorder : ''}`}>
+                          <div
+                            onClick={() => setSelectedMasterId(master.id)}
+                            className={`${styles.masterRow} ${styles.masterRowClickable} ${isLast && !isConfirming ? styles.masterRowNoBorder : ''}`}
+                          >
                             {/* Info */}
                             <div className={styles.masterInfo}>
                               <div className={styles.masterNameRow}>
@@ -298,7 +330,10 @@ export function RecurrentsPage({ payments, dataLoading = false, profile, spaceSw
                             {/* Botones */}
                             <div className={styles.masterActionsRow}>
                               <ActionBtn
-                                onClick={() => canEdit ? (master.paused ? onResume(master.id) : onPause(master.id)) : blocked(master.paused ? t('recurrentsPage.actionResume') : t('recurrentsPage.actionPause'))}
+                                onClick={e => {
+                                  e.stopPropagation()
+                                  canEdit ? (master.paused ? onResume(master.id) : onPause(master.id)) : blocked(master.paused ? t('recurrentsPage.actionResume') : t('recurrentsPage.actionPause'))
+                                }}
                                 color={!canEdit ? 'var(--border)' : master.paused ? 'var(--paid)' : 'var(--warning)'}
                                 label={master.paused ? t('recurrentsPage.actionResume') : t('recurrentsPage.actionPause')}
                               >
