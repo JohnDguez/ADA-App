@@ -598,26 +598,47 @@ export default function App() {
     if (error) showToast(t('app.toast.genericError'))
     else showToast(t('app.toast.returnedToCurrentPeriod'))
   }
-  async function handleDelete(id, payment) {
+  // `performDelete`: la ejecución real (elegir la función de borrado
+  // correcta según el tipo de pago + toast de éxito), sin pedir NINGUNA
+  // confirmación — la comparten `handleDelete` (que sí confirma, para
+  // callers sin UI propia de confirmación, ej. PayCard/PaymentModal) y
+  // `handleDeleteDirect` (para callers que YA confirmaron con su propio
+  // panel en la app, ej. RecurrentsPage.jsx/RecurrentDetailPanel.jsx —
+  // antes de esto, tocar "Eliminar" ahí mostraba el panel de confirmación
+  // propio Y LUEGO el confirm() nativo del navegador con el mismo texto,
+  // doble confirmación redundante reportada por Johnatan).
+  async function performDelete(id, payment) {
     if (payment?.is_master) {
-      if (!window.confirm(t('app.confirm.deleteRecurrent', { name: payment.name }))) return
       await deleteRecurrent(payment.id)
     } else if (payment?.is_recurrent && !payment?.is_installment && payment?.parent_id) {
-      if (!window.confirm(t('app.confirm.deleteRecurrent', { name: payment.name }))) return
       await deleteRecurrent(payment.parent_id)
     } else if (payment?.is_installment && payment?.parent_id) {
       // Copia de parcialidad con master → eliminar via deleteRecurrent
-      if (!window.confirm(t('app.confirm.cancelInstallments', { name: payment.name }))) return
       await deleteRecurrent(payment.parent_id)
     } else if (payment?.is_installment) {
       // Parcialidad sin master (sistema antiguo, fallback)
-      if (!window.confirm(t('app.confirm.cancelInstallmentsNoHistory', { name: payment.name }))) return
       await deleteInstallmentFuture(payment.name)
     } else {
-      if (!window.confirm(t('app.confirm.deleteThisPayment'))) return
       await deletePayment(id)
     }
     showToast(t('app.toast.paymentDeleted'))
+  }
+  async function handleDelete(id, payment) {
+    if (payment?.is_master) {
+      if (!window.confirm(t('app.confirm.deleteRecurrent', { name: payment.name }))) return
+    } else if (payment?.is_recurrent && !payment?.is_installment && payment?.parent_id) {
+      if (!window.confirm(t('app.confirm.deleteRecurrent', { name: payment.name }))) return
+    } else if (payment?.is_installment && payment?.parent_id) {
+      if (!window.confirm(t('app.confirm.cancelInstallments', { name: payment.name }))) return
+    } else if (payment?.is_installment) {
+      if (!window.confirm(t('app.confirm.cancelInstallmentsNoHistory', { name: payment.name }))) return
+    } else {
+      if (!window.confirm(t('app.confirm.deleteThisPayment'))) return
+    }
+    await performDelete(id, payment)
+  }
+  async function handleDeleteDirect(id, payment) {
+    await performDelete(id, payment)
   }
 
   async function handleClosePatchNotes() {
@@ -910,7 +931,7 @@ export default function App() {
           activeSpaceHeader={activeSpaceHeaderEl}
           onPause={handlePauseRecurrent}
           onResume={handleResumeRecurrent}
-          onDelete={handleDelete}
+          onDelete={handleDeleteDirect}
           onEdit={openEdit}
           onAdd={openAdd}
         />
