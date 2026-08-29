@@ -1,0 +1,296 @@
+.screen {
+  padding: 20px 16px 40px;
+  box-sizing: border-box;
+  animation: fadeIn .2s ease both;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.iconButton {
+  background: none;
+  border: none;
+  padding: 4px;
+  display: flex;
+  cursor: pointer;
+}
+
+.headerIcon {
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.headerIconFallback {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--text);
+}
+
+.headerTitle {
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--text);
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.menuWrapper {
+  position: relative;
+}
+
+.menu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 4px;
+  background: var(--menu-bg);
+  border-radius: var(--radius-sm);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  min-width: 180px;
+  overflow: hidden;
+  z-index: 10;
+}
+
+.menuItem {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  background: none;
+  border: none;
+  border-bottom: 0.5px solid var(--bg);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text);
+  font-family: 'DM Sans', sans-serif;
+  cursor: pointer;
+  text-align: left;
+}
+
+.menuItemDanger {
+  color: var(--danger);
+}
+
+/* ── Parcialidad: anillo de progreso ─────────────────────────────────────── */
+.ring {
+  width: 128px;
+  height: 128px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 10px;
+}
+
+.ringInner {
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  background: var(--bg);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+}
+
+.ringPercent {
+  font-size: 19px;
+  font-weight: 500;
+  color: var(--text);
+}
+
+.ringSub {
+  font-size: 11px;
+  color: var(--text);
+}
+
+/* ── Recurrente: monto grande ────────────────────────────────────────────── */
+.bigAmount {
+  text-align: center;
+  font-size: 26px;
+  font-weight: 500;
+  color: var(--text);
+  margin-bottom: 2px;
+}
+
+.subtext {
+  text-align: center;
+  font-size: 13px;
+  color: var(--text);
+  margin-bottom: 18px;
+}
+
+.variableBadge {
+  font-size: 9px;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: var(--label-variable);
+  color: var(--surface);
+  margin-left: 6px;
+  vertical-align: middle;
+}
+
+/* ── Tarjetas de estadísticas ─────────────────────────────────────────────── */
+.statsRow {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 22px;
+}
+
+.statBox {
+  flex: 1;
+  background: var(--section-bg);
+  border-radius: var(--radius-sm);
+  padding: 10px;
+  text-align: center;
+}
+
+.statLabel {
+  font-size: 11px;
+  color: var(--text);
+  margin-bottom: 2px;
+}
+
+.statValue {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.statValueMuted {
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--text);
+}
+
+.statValueMutedBig {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text);
+}
+
+.statValueAccent {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--accent);
+}
+
+/* ── Historial ────────────────────────────────────────────────────────────── */
+.historyTitle {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text);
+  margin-bottom: 8px;
+}
+
+.historyEmpty {
+  font-size: 13px;
+  color: var(--text);
+}
+
+.historyList {
+  display: flex;
+  flex-direction: column;
+}
+
+.historyRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 0;
+  border-top: 0.5px solid var(--border);
+}
+
+.historyIcon {
+  flex-shrink: 0;
+}
+
+.historyInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+.historyDate {
+  font-size: 13px;
+  color: var(--text);
+}
+
+.historyNote {
+  font-size: 11px;
+  color: var(--text);
+  margin-top: 1px;
+}
+
+.historyAmount {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  flex-shrink: 0;
+}
+
+/* ── Confirmación de borrado (mismo patrón visual que RecurrentsPage.jsx) ──── */
+.deleteConfirmPanel {
+  margin-top: 16px;
+  padding: 10px 14px;
+  background: var(--danger-soft);
+  border-radius: var(--radius-sm);
+}
+
+.deleteConfirmText {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--danger);
+  margin-bottom: 8px;
+}
+
+.deleteConfirmRow {
+  display: flex;
+  gap: 8px;
+}
+
+.deleteCancelButton {
+  flex: 1;
+  padding: 7px;
+  border-radius: 6px;
+  border: 0.5px solid var(--border);
+  background: var(--surface);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text);
+  cursor: pointer;
+  font-family: 'DM Sans', sans-serif;
+}
+
+.deleteConfirmButton {
+  flex: 1;
+  padding: 7px;
+  border-radius: 6px;
+  border: none;
+  background: var(--danger);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--surface);
+  cursor: pointer;
+  font-family: 'DM Sans', sans-serif;
+}
