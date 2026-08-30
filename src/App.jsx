@@ -598,15 +598,21 @@ export default function App() {
     if (error) showToast(t('app.toast.genericError'))
     else showToast(t('app.toast.returnedToCurrentPeriod'))
   }
-  // `performDelete`: la ejecución real (elegir la función de borrado
-  // correcta según el tipo de pago + toast de éxito), sin pedir NINGUNA
-  // confirmación — la comparten `handleDelete` (que sí confirma, para
-  // callers sin UI propia de confirmación, ej. PayCard/PaymentModal) y
-  // `handleDeleteDirect` (para callers que YA confirmaron con su propio
-  // panel en la app, ej. RecurrentsPage.jsx/RecurrentDetailPanel.jsx —
-  // antes de esto, tocar "Eliminar" ahí mostraba el panel de confirmación
-  // propio Y LUEGO el confirm() nativo del navegador con el mismo texto,
-  // doble confirmación redundante reportada por Johnatan).
+  // `performDelete`: la única función de borrado real ahora — elige la
+  // función correcta según el tipo de pago (master/copia de recurrente/
+  // parcialidad con o sin master/pago único) + toast de éxito, sin pedir
+  // NINGUNA confirmación aquí — esa responsabilidad es 100% de cada
+  // pantalla que la llama (su propia UI: `ConfirmDeleteModal.jsx` en
+  // PayCard.jsx/PaymentModal.jsx/PaymentsPage.jsx, o el panel inline
+  // propio de RecurrentsPage.jsx/RecurrentDetailPanel.jsx). Antes existía
+  // también `handleDelete`, que hacía su propio `window.confirm()` nativo
+  // antes de llamar a esto — se quitó por completo (bug real reportado
+  // por Johnatan: ninguna pantalla debe depender del alert nativo del
+  // navegador, cada una necesita su propia UI; con `handleDelete` de
+  // por medio, pantallas que YA tenían su propia confirmación en la app
+  // — como RecurrentsPage.jsx — terminaban pidiendo confirmación DOS
+  // veces con el mismo texto). `handleDeleteDirect` es el único punto de
+  // entrada expuesto a los componentes ahora.
   async function performDelete(id, payment) {
     if (payment?.is_master) {
       await deleteRecurrent(payment.id)
@@ -622,20 +628,6 @@ export default function App() {
       await deletePayment(id)
     }
     showToast(t('app.toast.paymentDeleted'))
-  }
-  async function handleDelete(id, payment) {
-    if (payment?.is_master) {
-      if (!window.confirm(t('app.confirm.deleteRecurrent', { name: payment.name }))) return
-    } else if (payment?.is_recurrent && !payment?.is_installment && payment?.parent_id) {
-      if (!window.confirm(t('app.confirm.deleteRecurrent', { name: payment.name }))) return
-    } else if (payment?.is_installment && payment?.parent_id) {
-      if (!window.confirm(t('app.confirm.cancelInstallments', { name: payment.name }))) return
-    } else if (payment?.is_installment) {
-      if (!window.confirm(t('app.confirm.cancelInstallmentsNoHistory', { name: payment.name }))) return
-    } else {
-      if (!window.confirm(t('app.confirm.deleteThisPayment'))) return
-    }
-    await performDelete(id, payment)
   }
   async function handleDeleteDirect(id, payment) {
     await performDelete(id, payment)
@@ -876,7 +868,7 @@ export default function App() {
           onPayFromFund={handlePayFromFund}
           fundBalance={sharedFund.balance}
           onViewSource={handleViewSource}
-          onDelete={handleDelete}
+          onDelete={handleDeleteDirect}
           onPostpone={handlePostpone}
           onAdvance={handleAdvance}
           onGoSettings={() => changeTab('settings')}
@@ -903,7 +895,7 @@ export default function App() {
           spaceSwitcher={spaceSwitcherEl}
           activeSpaceHeader={activeSpaceHeaderEl}
           onMarkUnpaid={handleMarkUnpaid}
-          onDelete={handleDelete}
+          onDelete={handleDeleteDirect}
           onDeleteDirect={async (id) => { await deletePayment(id); showToast(t('app.toast.paymentDeleted')) }}
           onUpdateProfile={updateProfile}
           onEdit={openEdit}
@@ -1017,7 +1009,7 @@ export default function App() {
         onClose={() => { setModalOpen(false); setEditPayment(null) }}
         onSave={handleSave}
         onSaveInstallment={handleSaveInstallment}
-        onDelete={handleDelete}
+        onDelete={handleDeleteDirect}
         onEditMaster={openEditMaster}
         initial={editPayment}
         payments={payments}
