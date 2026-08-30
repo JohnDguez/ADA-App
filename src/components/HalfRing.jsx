@@ -34,21 +34,37 @@ import styles from './HalfRing.module.css'
 // función interna) — Johnatan lo señaló al buscarlo para preguntar sobre el
 // degradado y no lo encontró como componente aparte.
 export function HalfRing({ percent, width = 220, strokeWidth = 14 }) {
-  const r  = (width - strokeWidth) / 2
-  const cx = width / 2
-  const cy = r + strokeWidth / 2
   // "Bolita luna" (agosto 2026) — Johnatan pidió agrandarla para que se
   // pareciera más al isotipo del logo de LunaPay (antes 0.65×, apenas más
-  // grande que el grosor de la línea). Confirmado 1.15× vía mockup del
-  // Visualizer (Regla 8) entre 3 opciones (0.65/1.0/1.35×).
-  // `height` YA NO se calcula sobre `strokeWidth/2` — con una bolita más
-  // grande que el grosor de la línea, en las puntas del arco (0%/100%,
-  // donde queda exactamente a la altura del centro vertical) se salía
-  // cortada por el borde inferior del SVG. Ahora depende del tamaño real
-  // de la bolita, así que no hay que volver a tocar esto si el
-  // multiplicador cambia otra vez.
-  const dotRadius = strokeWidth * 1.15
-  const height = cy + dotRadius + 2
+  // grande que el grosor de la línea). Confirmado 1.0× vía mockup del
+  // Visualizer (Regla 8) — se probó 1.15× primero, pero se veía demasiado
+  // grande una vez implementado, además de un bug real: se veía "cortada"
+  // en el lado izquierdo del arco.
+  //
+  // Esa segunda parte tenía una causa de fondo que no era solo cuestión
+  // de tamaño: `r` (el radio del arco) y `cx`/`cy` (su centro) se
+  // calculaban dejando un margen de solo `strokeWidth/2` en TODOS los
+  // lados — suficiente para la propia línea (su punta redonda no sobresale
+  // más que eso), pero la bolita SIEMPRE fue más grande que ese margen
+  // (incluso el 0.65× original: radio 9.1 contra un margen de solo 7 —
+  // apenas 2px de más, invisible). Al pasar a un multiplicador más grande
+  // ese excedente creció lo suficiente para notarse: en el extremo
+  // izquierdo del arco (0%), la bolita se salía por la orilla del SVG y se
+  // veía cortada a la mitad. El fix anterior (v0.9.470) solo corrigió el
+  // recorte de ABAJO (el cálculo de `height`) sin tocar los lados — por
+  // eso el de la izquierda seguía pasando.
+  // Ahora el margen real (`pad`) se calcula sobre el tamaño de la bolita,
+  // no de la línea, y el radio del arco (`r`) se ENCOGE lo necesario para
+  // dejarle ese espacio en los 4 lados dentro del mismo `width`/`height`
+  // de siempre (no se agranda el lienzo — así no afecta el layout de
+  // quien usa este componente). Con esto ya no importa qué multiplicador
+  // se use después: nunca se vuelve a cortar contra ningún borde.
+  const dotRadius = strokeWidth * 1.0
+  const pad = Math.max(strokeWidth / 2, dotRadius)
+  const r  = width / 2 - pad
+  const cx = width / 2
+  const cy = r + pad
+  const height = cy + pad + 2
   const target = Math.max(0, Math.min(1, percent))
   // Id único del degradado — hacen falta 2 HalfRing en el DOM a la vez
   // (tarjetas Periodo y Mes, una fuera de vista por el swipe), y los ids de
