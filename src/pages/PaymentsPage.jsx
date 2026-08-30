@@ -6,10 +6,11 @@ import { NewSharedSpacePanel } from '../components/NewSharedSpacePanel'
 import { EmptyState } from '../components/EmptyState'
 import { PaidByStack } from '../components/PaidByStack'
 import { Select } from '../components/Select'
-import { fmt, dateOf, dateToStr, getMonths, getMonthsShort, CATEGORIES, cobroPeriod, addDays, getCatColor, getCategoryLabel, RECUR_FREQ, getFrequencyLabel } from '../lib/utils'
+import { fmt, dateOf, dateToStr, getMonths, getMonthsShort, CATEGORIES, cobroPeriod, addDays, getCatColor, getCategoryLabel, RECUR_FREQ, getFrequencyLabel, getDeleteConfirmMessage } from '../lib/utils'
 import { getCategoryIcon } from '../lib/categoryIcons'
 import { supabase } from '../lib/supabase'
 import { showToast } from '../components/Toast'
+import { ConfirmDeleteModal } from '../components/ConfirmDeleteModal'
 import { CategoryListSkeleton, PaymentRowSkeleton, Bone } from '../components/SkeletonLoader'
 import AmountInput from '../components/AmountInput'
 import styles from './PaymentsPage.module.css'
@@ -143,6 +144,10 @@ export function PaymentsPage({ payments, dataLoading = false, profile, spaceSwit
     if (viewMode === 'mes' && ensureMonthLoaded) ensureMonthLoaded(viewMonth, viewYear)
   }, [viewMode, viewMonth, viewYear, ensureMonthLoaded])
   const [openMenu,    setOpenMenu]    = useState(null)
+  // { payment, direct } | null — `direct` distingue el caso "ya pagado, se
+  // borra directo con deletePayment" (onDeleteDirect) del genérico que
+  // decide App.jsx según el tipo de pago (onDelete/handleDeleteDirect).
+  const [confirmDeleteTarget, setConfirmDeleteTarget] = useState(null)
 
   // Ingresos extras del periodo actual
   const [periodIncomes,    setPeriodIncomes]    = useState([])
@@ -681,12 +686,7 @@ export function PaymentsPage({ payments, dataLoading = false, profile, spaceSwit
     }
     if (action === 'delete') {
       if (!canDelete) { blocked(t('paymentsPage.actionDeletePayments')); return }
-      if (payment.is_paid) {
-        if (!window.confirm(t('paymentsPage.confirmDeletePaymentHistory'))) return
-        onDeleteDirect && onDeleteDirect(payment.id)
-      } else {
-        onDelete && onDelete(payment.id, payment)
-      }
+      setConfirmDeleteTarget({ payment, direct: !!payment.is_paid })
     }
     if (action === 'split') {
       if (!canMarkPaid) { blocked(t('paymentsPage.actionRegisterContributions')); return }
@@ -1766,6 +1766,18 @@ export function PaymentsPage({ payments, dataLoading = false, profile, spaceSwit
         </div>
         </div>
       </div>
+
+      <ConfirmDeleteModal
+        open={!!confirmDeleteTarget}
+        message={confirmDeleteTarget ? (confirmDeleteTarget.direct ? t('paymentsPage.confirmDeletePaymentHistory') : getDeleteConfirmMessage(confirmDeleteTarget.payment)) : ''}
+        onConfirm={() => {
+          const target = confirmDeleteTarget
+          setConfirmDeleteTarget(null)
+          if (!target) return
+          target.direct ? (onDeleteDirect && onDeleteDirect(target.payment.id)) : (onDelete && onDelete(target.payment.id, target.payment))
+        }}
+        onCancel={() => setConfirmDeleteTarget(null)}
+      />
     </div>
   )
 }
