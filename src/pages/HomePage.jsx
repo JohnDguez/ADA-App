@@ -329,17 +329,32 @@ export function HomePage({ payments, dataLoading = false, profile, spaceSwitcher
                   {t('homePage.periodPrefix')} {periodRange(profile)}
                 </div>
                 <div className={styles.clearFloat} />
-                {/* NUEVO (v0.9.323) — bug real reportado por Johnatan: al
+                {/* v0.9.323 (histórico) — bug real reportado por Johnatan: al
                     recargar, `payments` viene vacío A PROPÓSITO mientras
                     `dataLoading` está en true (v0.9.284) — eso disparaba
                     la rama de "todo pagado" mostrando 100% como si fuera un
-                    dato real. El key incluye `dataLoading`: al pasar a
-                    false fuerza un montaje NUEVO, que arranca directo en el
-                    valor correcto sin ningún barrido (mismo criterio ya
-                    documentado en HalfRing.jsx) — la animación suave se
-                    queda solo para cuando de verdad marcas algo pagado en
-                    vivo. */}
-                <div className={styles.ringScale}><HalfRing key={dataLoading ? 'loading' : activeSpaceId} percent={dataLoading || pagarEsteCobro.length === 0 ? 1 : pctPagado / 100} /></div>
+                    dato real. La solución de ese entonces fue meter
+                    `dataLoading` en el `key` del anillo: al pasar a false
+                    forzaba un montaje NUEVO, saltando directo al valor
+                    correcto SIN barrido — evitaba animar desde un número
+                    que en ese momento se sentía "falso".
+                    NUEVO (agosto 2026) — Johnatan pidió lo contrario: que
+                    el salto de "cargando" a los datos reales SÍ se vea
+                    animado, no de golpe. El 100% durante la carga ya no es
+                    un dato real calculado por accidente (como en v0.9.323)
+                    sino un placeholder explícito e intencional (ver el
+                    `percent` de abajo: `dataLoading ... ? 1 : ...`), así
+                    que animar DESDE ahí hacia el valor real ya no es
+                    engañoso — es la misma "actualización en vivo" que ya
+                    sabe animar HalfRing.jsx por sí solo. El fix es quitar
+                    `dataLoading` del `key` — se deja SOLO `activeSpaceId`,
+                    para que cambiar de espacio siga forzando un montaje
+                    nuevo sin barrido (esa regla no cambió, un espacio
+                    distinto sigue siendo un dato sin relación con el
+                    anterior), pero cargar datos del MISMO espacio ya no
+                    remonta el componente — sigue siendo la misma instancia,
+                    así que el % anima suave de 100% al valor real solo. */}
+                <div className={styles.ringScale}><HalfRing key={activeSpaceId} percent={dataLoading || pagarEsteCobro.length === 0 ? 1 : pctPagado / 100} /></div>
                 {/* Fase 1 del sistema de carga por sección (agosto 2026):
                     mientras `dataLoading` es true, ni el monto ni el
                     "pagado/pendiente" muestran un número real (sería
@@ -404,7 +419,7 @@ export function HomePage({ payments, dataLoading = false, profile, spaceSwitcher
                   {nextPeriodRange(profile)}
                 </div>
                 <div className={styles.clearFloat} />
-                <div className={styles.ringScale}><HalfRing key={dataLoading ? 'loading' : activeSpaceId} percent={0} /></div>
+                <div className={styles.ringScale}><HalfRing key={activeSpaceId} percent={0} /></div>
                 {dataLoading ? (
                   <>
                     <div className={styles.cardTitle}>{t('homePage.totalNextPeriod')}</div>
