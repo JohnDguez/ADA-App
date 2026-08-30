@@ -37,7 +37,18 @@ export function HalfRing({ percent, width = 220, strokeWidth = 14 }) {
   const r  = (width - strokeWidth) / 2
   const cx = width / 2
   const cy = r + strokeWidth / 2
-  const height = cy + strokeWidth / 2 + 2
+  // "Bolita luna" (agosto 2026) — Johnatan pidió agrandarla para que se
+  // pareciera más al isotipo del logo de LunaPay (antes 0.65×, apenas más
+  // grande que el grosor de la línea). Confirmado 1.15× vía mockup del
+  // Visualizer (Regla 8) entre 3 opciones (0.65/1.0/1.35×).
+  // `height` YA NO se calcula sobre `strokeWidth/2` — con una bolita más
+  // grande que el grosor de la línea, en las puntas del arco (0%/100%,
+  // donde queda exactamente a la altura del centro vertical) se salía
+  // cortada por el borde inferior del SVG. Ahora depende del tamaño real
+  // de la bolita, así que no hay que volver a tocar esto si el
+  // multiplicador cambia otra vez.
+  const dotRadius = strokeWidth * 1.15
+  const height = cy + dotRadius + 2
   const target = Math.max(0, Math.min(1, percent))
   // Id único del degradado — hacen falta 2 HalfRing en el DOM a la vez
   // (tarjetas Periodo y Mes, una fuera de vista por el swipe), y los ids de
@@ -136,7 +147,7 @@ export function HalfRing({ percent, width = 220, strokeWidth = 14 }) {
         {/* Bolita del isotipo — el borde del color de fondo de la tarjeta
             (var(--surface)) es lo que la hace verse "cortada" de la línea,
             en vez de un hueco angular (mockup confirmado con Johnatan). */}
-        <circle cx={dotPoint.x} cy={dotPoint.y} r={strokeWidth * 0.65} fill="var(--accent)" stroke="var(--surface)" strokeWidth={3} />
+        <circle cx={dotPoint.x} cy={dotPoint.y} r={dotRadius} fill="var(--accent)" stroke="var(--surface)" strokeWidth={3} />
       </svg>
       <div className={styles.halfRingPercentWrapper}>
         <span className={styles.halfRingPercentText}>{Math.round(animated * 100)}%</span>
