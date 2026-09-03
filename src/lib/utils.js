@@ -303,14 +303,18 @@ export function isTodayCobro(cfg)  { return nextCobroDate(cfg).getTime() === tod
 export function getPagarEsteCobro(payments, cfg) {
   const { end } = cobroPeriod(cfg)
   return payments.filter(p => {
-    if (p.is_paid || p.paused || p.is_master) return false
+    if (p.is_paid || p.is_postponed || p.paused || p.is_master) return false
     return dateOf(p.due_date) <= end
   })
 }
 
 export function statusOf(p, cfg) {
   if (p.paused)    return 'paused'
-  if (p.postponed) return 'postponed'
+  // `p.postponed` (columna vieja, sistema de pagos únicos hoy inalcanzable
+  // desde la UI) y `p.is_postponed` (columna nueva, agosto 2026, la que de
+  // verdad se usa) significan lo mismo para quien ve la app — mismo status
+  // y mismo texto ("Pospuesto") para ambas, sin duplicar nada.
+  if (p.postponed || p.is_postponed) return 'postponed'
   if (p.is_paid)   return 'paid'
   const d = daysDiff(p.due_date)
   if (d < 0) return 'overdue'
@@ -367,7 +371,7 @@ export function projectPeriodImpact(payments, profile, candidate, periodIncomes 
   const cur = cobroPeriod(profile)
   const extrasActual = periodIncomes.reduce((a, inc) => a + Number(inc.amount || 0), 0)
 
-  const pendientes = payments.filter(p => !p.is_paid && !p.paused && !p.is_master)
+  const pendientes = payments.filter(p => !p.is_paid && !p.is_postponed && !p.paused && !p.is_master)
   const pagados    = payments.filter(p => p.is_paid && !p.is_master)
 
   function pendienteEn(start, end, includeOverdue) {
