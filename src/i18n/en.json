@@ -271,6 +271,7 @@
       "subtitle": "Tap here or the + button below to add one"
     },
     "markedUnpaid": "Marked as unpaid",
+    "unpostponed": "Returned to pending",
     "shared": "Shared",
     "viewInSharedSpace": "View in shared space"
   },
