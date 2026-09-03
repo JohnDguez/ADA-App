@@ -68,9 +68,12 @@ export function RecurrentsPage({ payments, dataLoading = false, profile, spaceSw
   }, [selectedMasterId])
 
   // Copias pendientes del siguiente periodo (sin master)
+  // `!p.is_postponed` (agosto 2026) — sin esto, una copia recién pospuesta
+  // se seguía mostrando como "próxima" (con una fecha ya pasada), en vez de
+  // que la app muestre la copia real que sigue en la cola.
   function getNextDue(masterId) {
     return payments
-      .filter(p => p.parent_id === masterId && !p.is_paid && !p.is_master)
+      .filter(p => p.parent_id === masterId && !p.is_paid && !p.is_postponed && !p.is_master)
       .sort((a, b) => dateOf(a.due_date) - dateOf(b.due_date))[0] || null
   }
 
