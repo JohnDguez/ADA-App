@@ -490,7 +490,10 @@ function drawExpenseList(doc, y, { rows, contributorsByRow, isSharedSpace, label
     : [[labels.colPaid, labels.colName, labels.colCategory, labels.colAmount]]
 
   const body = rows.map(r => {
-    const paidCell = r.paidDate ? formatShortDate(r.paidDate) : labels.pending
+    // `r.postponed` (agosto 2026) — sin esto, un pago pospuesto también
+    // caía en `paidDate: null` y se dibujaba "Pendiente" (labels.pending),
+    // que ya no es cierto — se resolvió, solo no se descontó del total.
+    const paidCell = r.paidDate ? formatShortDate(r.paidDate) : r.postponed ? labels.postponed : labels.pending
     return isSharedSpace
       ? [paidCell, r.name, r.category, money(r.amount), '']
       : [paidCell, r.name, r.category, money(r.amount)]
