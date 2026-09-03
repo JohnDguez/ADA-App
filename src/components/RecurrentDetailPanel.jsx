@@ -57,11 +57,16 @@ export function RecurrentDetailPanel({
   // criterio que la lista de RecurrentsPage.jsx y el filtro de tipo).
   const isInstallment = master.is_installment || master.total_installments > 0
   const children = payments.filter(p => p.parent_id === master.id)
+  // `|| p.is_postponed` (agosto 2026, Fase 2) — un pospuesto se sigue
+  // viendo en el historial (con su etiqueta, ver el render más abajo),
+  // igual que en HomePage.jsx/PaymentsPage.jsx — pero su monto se excluye
+  // de `paidSum` (no cuenta como gasto real). `nextChild` SÍ lo excluye
+  // por completo — ya se resolvió, no debe mostrarse como "el próximo".
   const paidChildren = children
-    .filter(p => p.is_paid)
+    .filter(p => p.is_paid || p.is_postponed)
     .sort((a, b) => new Date(b.paid_at || b.due_date) - new Date(a.paid_at || a.due_date))
   const nextChild = children
-    .filter(p => !p.is_paid)
+    .filter(p => !p.is_paid && !p.is_postponed)
     .sort((a, b) => dateOf(a.due_date) - dateOf(b.due_date))[0] || null
   const paidCount = paidChildren.length
 
@@ -74,7 +79,9 @@ export function RecurrentDetailPanel({
   // parcialidad no tiene total_amount (viejas de antes de v0.9.193), se
   // calcula contra el monto de referencia × total de pagos.
   const totalAmount = master.total_amount != null ? Number(master.total_amount) : Number(master.amount) * totalInstallments
-  const paidSum = paidChildren.reduce((s, p) => s + Number(p.amount), 0)
+  // `.filter(p => !p.is_postponed)` — mismo criterio que toda la app: un
+  // pospuesto aparece en el historial pero no debe sumar como gasto real.
+  const paidSum = paidChildren.filter(p => !p.is_postponed).reduce((s, p) => s + Number(p.amount), 0)
 
   function handlePauseToggle() {
     setMenuOpen(false)
@@ -181,18 +188,27 @@ export function RecurrentDetailPanel({
       ) : (
         <div className={styles.historyList}>
           {paidChildren.map(p => {
-            const isAdjusted = isInstallment && Number(p.amount) !== Number(master.amount)
+            const isAdjusted = isInstallment && !p.is_postponed && Number(p.amount) !== Number(master.amount)
             return (
               <div key={p.id} className={styles.historyRow}>
-                <Check size={16} color="var(--paid)" className={styles.historyIcon} />
+                <Check size={16} color={p.is_postponed ? 'var(--soon-color)' : 'var(--paid)'} className={styles.historyIcon} />
                 <div className={styles.historyInfo}>
                   <div className={styles.historyDate}>
                     {isInstallment && p.current_installment ? `${t('recurrentDetailPanel.paymentNumber', { num: p.current_installment })} · ` : ''}
                     {fmtDateFull(p.paid_at || p.due_date)}
                   </div>
-                  {isAdjusted && <div className={styles.historyNote}>{t('recurrentDetailPanel.amountAdjusted')}</div>}
+                  {/* Pospuesto (agosto 2026, Fase 2) — mismo criterio que
+                      PaidCollapseItem en HomePage.jsx: reemplaza la nota de
+                      ajuste por la etiqueta cuando aplica (nunca las 2 a la
+                      vez — un pospuesto no puede tener isAdjusted, ver
+                      arriba). */}
+                  {p.is_postponed ? (
+                    <div className={styles.historyNote}>{t('payCard.status.postponed')}</div>
+                  ) : isAdjusted && (
+                    <div className={styles.historyNote}>{t('recurrentDetailPanel.amountAdjusted')}</div>
+                  )}
                 </div>
-                <div className={styles.historyAmount}>{fmt(p.amount)}</div>
+                <div className={`${styles.historyAmount} ${p.is_postponed ? styles.historyAmountMuted : ''}`}>{fmt(p.amount)}</div>
               </div>
             )
           })}

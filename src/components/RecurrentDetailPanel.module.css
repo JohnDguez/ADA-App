@@ -249,6 +249,10 @@
   flex-shrink: 0;
 }
 
+.historyAmountMuted {
+  color: var(--muted);
+}
+
 /* ── Confirmación de borrado (mismo patrón visual que RecurrentsPage.jsx) ──── */
 .deleteConfirmPanel {
   margin-top: 16px;
