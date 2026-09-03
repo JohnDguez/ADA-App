@@ -274,7 +274,9 @@ export function SettingsExportPage({ profile, sharedSpaces, onOpenPremium, onBac
   // desplegarlo"), ordenadas de mayor a menor monto.
   function buildCategoryBreakdown(gastos) {
     const byCat = {}
+    // `!p.is_postponed` — mismo criterio que totals.gastos: no debe sumar.
     for (const p of gastos) {
+      if (p.is_postponed) continue
       const label = getCategoryLabel(p.category)
       byCat[label] = (byCat[label] || 0) + Number(p.amount)
     }
@@ -317,11 +319,15 @@ export function SettingsExportPage({ profile, sharedSpaces, onOpenPremium, onBac
     const bufferedStart = dateToStr(new Date(dateOf(windowStart).getTime() - 86400000))
     const bufferedEnd = dateToStr(new Date(dateOf(toStr).getTime() + 86400000))
 
-    let gq = supabase.from('payments').select('due_date, paid_at, amount').eq('is_master', false)
+    let gq = supabase.from('payments').select('due_date, paid_at, amount, is_postponed').eq('is_master', false)
       .gte('due_date', bufferedStart).lte('due_date', bufferedEnd)
     gq = space === 'personal' ? gq.eq('user_id', profile.id).is('space_id', null) : gq.eq('space_id', space)
     const { data: gastosRaw } = await gq
+    // `.filter(p => !p.is_postponed)` (agosto 2026) — un pospuesto no debe
+    // sumar en la gráfica de tendencia, mismo criterio que el resto de la
+    // app (ver totals.gastos más abajo).
     const gastos = (gastosRaw || [])
+      .filter(p => !p.is_postponed)
       .map(p => ({ date: p.paid_at ? dateToStr(new Date(p.paid_at)) : p.due_date, amount: Number(p.amount) }))
       .filter(p => p.date >= windowStart && p.date <= toStr)
 
@@ -553,7 +559,7 @@ export function SettingsExportPage({ profile, sharedSpaces, onOpenPremium, onBac
           p.name,
           getCategoryLabel(p.category),
           fmt(p.amount),
-          p.is_paid ? t('settingsExport.csv.yes') : t('settingsExport.csv.no'),
+          p.is_paid ? t('settingsExport.csv.yes') : p.is_postponed ? t('payCard.status.postponed') : t('settingsExport.csv.no'),
           p.is_variable ? t('settingsExport.csv.variable') : t('settingsExport.csv.fixed'),
           spaceLabel,
           contribMap[p.id] || '',
@@ -598,9 +604,13 @@ export function SettingsExportPage({ profile, sharedSpaces, onOpenPremium, onBac
     const ingresosRaw = includeIngresos ? await fetchAllIngresos() : []
     const isSharedSpace = space !== 'personal'
 
+    // `.filter(p => !p.is_postponed)` — un pospuesto sigue apareciendo como
+    // renglón en el reporte (con su etiqueta, ver más abajo), pero no debe
+    // sumar al total de "Gastos" — mismo criterio que HomePage.jsx/
+    // PaymentsPage.jsx (Fase 1, v0.9.472).
     const totals = {
       ingresos: includeIngresos ? ingresosRaw.reduce((s, i) => s + Number(i.amount), 0) : null,
-      gastos: includeGastos ? gastos.reduce((s, p) => s + Number(p.amount), 0) : null,
+      gastos: includeGastos ? gastos.filter(p => !p.is_postponed).reduce((s, p) => s + Number(p.amount), 0) : null,
     }
 
     const { contributorsByRow, memberTotals } = isSharedSpace ? await computeSharedAttribution(gastos) : { contributorsByRow: [], memberTotals: [] }
@@ -637,6 +647,7 @@ export function SettingsExportPage({ profile, sharedSpaces, onOpenPremium, onBac
       colAmount: t('settingsExport.csv.amount'),
       colPaid: t('settingsExport.csv.paid'),
       pending: t('settingsExport.pdf.pending'),
+      postponed: t('payCard.status.postponed'),
       colContributors: t('settingsExport.csv.contributors'),
       yes: t('settingsExport.csv.yes'),
       no: t('settingsExport.csv.no'),
@@ -667,7 +678,12 @@ export function SettingsExportPage({ profile, sharedSpaces, onOpenPremium, onBac
         // "Pagado" ahora es la ÚNICA columna de fecha (Johnatan: el Sí/No
         // no se entendía) — la fecha real en que se pagó, o null si sigue
         // pendiente (exportPdf.js dibuja "Pendiente" en ese caso).
+        // `postponed` (agosto 2026) — sin esto, un pago pospuesto también
+        // caía en `paidDate: null` y se dibujaba "Pendiente", que ya no es
+        // cierto (se resolvió, solo no se descontó). exportPdf.js dibuja
+        // "Pospuesto" en su lugar cuando este flag viene en true.
         paidDate: p.is_paid ? dateToStr(new Date(p.paid_at)) : null,
+        postponed: !!p.is_postponed,
         name: p.name, category: getCategoryLabel(p.category), amount: p.amount,
       })),
       expenseContributors: contributorsByRow,
