@@ -740,7 +740,21 @@ function PaidCollapse({ payments, expanded, onToggle, onMarkUnpaid, onViewSource
       </button>
 
       {expanded && (() => {
-        const sorted = [...payments].sort((a, b) => new Date(b.paid_at) - new Date(a.paid_at))
+        // Bug real reportado por Johnatan con captura: un pago pospuesto
+        // (is_postponed:true, sin paid_at) siempre caía hasta el fondo de
+        // la lista sin importar su fecha real. Causa: este `sort` es un
+        // SEGUNDO ordenamiento, independiente del que ya hace
+        // `pagadosEstePeriodo` más arriba (que sí tenía el respaldo a
+        // due_date) — este usaba `p.paid_at` directo, y `new Date(null)`
+        // da el 1 de enero de 1970, así que en orden descendente CUALQUIER
+        // pospuesto quedaba siempre al final, sin importar qué tan
+        // reciente fuera su due_date. Mismo respaldo que ya usa el resto
+        // de la app: si no hay paid_at (pospuesto), se usa due_date.
+        const sorted = [...payments].sort((a, b) => {
+          const da = a.paid_at ? new Date(a.paid_at) : dateOf(a.due_date)
+          const db = b.paid_at ? new Date(b.paid_at) : dateOf(b.due_date)
+          return db - da
+        })
         return (
           <div className={styles.paidCollapseList}>
             {sorted.map(p => (
