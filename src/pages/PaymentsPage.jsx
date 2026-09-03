@@ -266,7 +266,14 @@ export function PaymentsPage({ payments, dataLoading = false, profile, spaceSwit
   // tecla en un input de modal o cada cambio de estado menor. Cada bloque
   // de cálculo se envuelve en useMemo con sus dependencias reales; solo se
   // recalcula cuando cambian los datos de los que de verdad depende.
-  const paidPayments = useMemo(() => payments.filter(p => p.is_paid), [payments])
+  // `|| p.is_postponed` (agosto 2026) — un pospuesto no se marca is_paid,
+  // pero sí debe seguir viéndose aquí (con su etiqueta, ver el render más
+  // abajo) en vez de desaparecer de la vista. Su monto se excluye
+  // explícitamente en cada suma de dinero que depende de esta lista
+  // (totalGastos, segmentos por categoría, totalInView, gastosPrev) — no
+  // en este filtro base, para no tener que duplicarlo en cada uno de forma
+  // inconsistente.
+  const paidPayments = useMemo(() => payments.filter(p => p.is_paid || p.is_postponed), [payments])
 
   // ── Bloquear scroll cuando hay modal abierto ──────────────────────────────
   useEffect(() => {
@@ -384,11 +391,19 @@ export function PaymentsPage({ payments, dataLoading = false, profile, spaceSwit
     // Calcular remanente del periodo anterior
     const prev = prevPeriod(profile)
     const gastosPrev = paidPayments.filter(p => {
-      if (!p.paid_at) return false
-      const paidDate = dateOf(dateToStr(new Date(p.paid_at)))
-      return paidDate >= prev.start && paidDate <= prev.end
+      if (p.is_paid && p.paid_at) {
+        const paidDate = dateOf(dateToStr(new Date(p.paid_at)))
+        return paidDate >= prev.start && paidDate <= prev.end
+      }
+      if (p.is_postponed) {
+        const d = dateOf(p.due_date)
+        return d >= prev.start && d <= prev.end
+      }
+      return false
     })
-    const totalGastosPrev = gastosPrev.reduce((a, p) => a + Number(p.amount), 0)
+    // `.filter(p => !p.is_postponed)` — mismo criterio que totalGastos: un
+    // pospuesto no debe restar del remanente calculado.
+    const totalGastosPrev = gastosPrev.filter(p => !p.is_postponed).reduce((a, p) => a + Number(p.amount), 0)
     // Sin `|| 0` esto rompía para usuarios sin salario fijo: profile.salary_amount
     // llega null/undefined y Number(undefined) da NaN, no 0 — arrastraba NaN a
     // todo el cálculo del remanente y nunca mostraba el aviso.
@@ -534,14 +549,22 @@ export function PaymentsPage({ payments, dataLoading = false, profile, spaceSwit
   // ── Totales del periodo ───────────────────────────────────────────────────
   const { start: periodStart, end: periodEnd } = cobroPeriod(profile || {})
   const gastosPeriodo = useMemo(() => paidPayments.filter(p => {
-    if (!p.paid_at) return false
-    const paidDate = dateOf(dateToStr(new Date(p.paid_at)))
-    return paidDate >= periodStart && paidDate <= periodEnd
+    if (p.is_paid && p.paid_at) {
+      const paidDate = dateOf(dateToStr(new Date(p.paid_at)))
+      return paidDate >= periodStart && paidDate <= periodEnd
+    }
+    if (p.is_postponed) {
+      const d = dateOf(p.due_date)
+      return d >= periodStart && d <= periodEnd
+    }
+    return false
     // periodStart/periodEnd salen de cobroPeriod(profile) — objetos Date
     // nuevos en cada render, así que la dependencia real es `profile`.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }), [paidPayments, profile])
-  const totalGastos  = useMemo(() => gastosPeriodo.reduce((a, p) => a + Number(p.amount), 0), [gastosPeriodo])
+  // `.filter(p => !p.is_postponed)` — no debe sumar al total de gastos ni
+  // descontarse de la nómina (pedido explícito de Johnatan).
+  const totalGastos  = useMemo(() => gastosPeriodo.filter(p => !p.is_postponed).reduce((a, p) => a + Number(p.amount), 0), [gastosPeriodo])
   const totalExtras  = useMemo(() => periodIncomes.reduce((a, i) => a + Number(i.amount), 0), [periodIncomes])
   const salario      = profile?.salary_enabled ? Number(profile?.salary_amount || 0) : 0
   const ingresoTotal = salario + totalExtras
@@ -669,7 +692,8 @@ export function PaymentsPage({ payments, dataLoading = false, profile, spaceSwit
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [viewMode, viewMonth, viewYear, gastosPeriodo, paidPayments]
   )
-  const totalInView = useMemo(() => paidInView.reduce((a, p) => a + Number(p.amount), 0), [paidInView])
+  // `.filter(p => !p.is_postponed)` — mismo criterio que totalGastos.
+  const totalInView = useMemo(() => paidInView.filter(p => !p.is_postponed).reduce((a, p) => a + Number(p.amount), 0), [paidInView])
 
   const canMarkPaid = !spacePermissions || spacePermissions.can_mark_paid
   const canDelete   = !spacePermissions || spacePermissions.can_delete
@@ -698,7 +722,7 @@ export function PaymentsPage({ payments, dataLoading = false, profile, spaceSwit
   const segmentos = useMemo(() => ALL_CATS
     .map(cat => ({
       cat,
-      total: gastosPeriodo.filter(p => p.category === cat).reduce((a, p) => a + Number(p.amount), 0),
+      total: gastosPeriodo.filter(p => p.category === cat && !p.is_postponed).reduce((a, p) => a + Number(p.amount), 0),
     }))
     .filter(s => s.total > 0)
     .sort((a, b) => b.total - a.total),
@@ -1679,22 +1703,32 @@ export function PaymentsPage({ payments, dataLoading = false, profile, spaceSwit
                           )}
                         </div>
                         <div className={styles.paymentCategoryRow}>
-                          {/* v0.9.376 — chip cuadrado desde 768px (Regla 47,
-                              mismo patrón que categoryIconSquare de
-                              PaymentModal.jsx: fondo sólido + ícono blanco);
-                              el punto de color se queda tal cual en mobile
-                              (CSS oculta uno u otro según el ancho, ver
-                              PaymentsPage.module.css). */}
-                          <span className={styles.categoryChipSquare} style={{ background: getCatColor(p.category, profile.custom_categories, profile.category_colors) }}>
-                            {(() => {
-                              const RowCatIcon = getCategoryIcon(p.category, profile.category_icons)
-                              return RowCatIcon ? <RowCatIcon size={12} color="var(--text)" strokeWidth={2} /> : null
-                            })()}
-                          </span>
-                          <span className={styles.paymentCategoryDot} style={{ background: getCatColor(p.category, profile.custom_categories, profile.category_colors) }} />
-                          {getCategoryLabel(p.category)}
-                          {p.is_recurrent && <span className={styles.paymentRecurrentTag}>· {getFrequencyLabel(p.recur_freq) || t('frequency.monthly')}</span>}
-                          {p.is_contribution_reflection && <span className={styles.paymentRecurrentTag}>· {t('homePage.shared')}</span>}
+                          {/* Pospuesto (agosto 2026) — mismo criterio que
+                              PaidCollapseItem en HomePage.jsx: reemplaza la
+                              categoría por la etiqueta, nunca las 2 a la
+                              vez. Mockup confirmado con Johnatan (Regla 8). */}
+                          {p.is_postponed ? (
+                            <span className={styles.paymentPostponedTag}>{t('payCard.status.postponed')}</span>
+                          ) : (
+                            <>
+                              {/* v0.9.376 — chip cuadrado desde 768px (Regla 47,
+                                  mismo patrón que categoryIconSquare de
+                                  PaymentModal.jsx: fondo sólido + ícono blanco);
+                                  el punto de color se queda tal cual en mobile
+                                  (CSS oculta uno u otro según el ancho, ver
+                                  PaymentsPage.module.css). */}
+                              <span className={styles.categoryChipSquare} style={{ background: getCatColor(p.category, profile.custom_categories, profile.category_colors) }}>
+                                {(() => {
+                                  const RowCatIcon = getCategoryIcon(p.category, profile.category_icons)
+                                  return RowCatIcon ? <RowCatIcon size={12} color="var(--text)" strokeWidth={2} /> : null
+                                })()}
+                              </span>
+                              <span className={styles.paymentCategoryDot} style={{ background: getCatColor(p.category, profile.custom_categories, profile.category_colors) }} />
+                              {getCategoryLabel(p.category)}
+                              {p.is_recurrent && <span className={styles.paymentRecurrentTag}>· {getFrequencyLabel(p.recur_freq) || t('frequency.monthly')}</span>}
+                              {p.is_contribution_reflection && <span className={styles.paymentRecurrentTag}>· {t('homePage.shared')}</span>}
+                            </>
+                          )}
                         </div>
                         {activeSpaceId && !p.is_contribution_reflection && (
                           <div className={styles.paymentContributors}>
@@ -1703,7 +1737,7 @@ export function PaymentsPage({ payments, dataLoading = false, profile, spaceSwit
                         )}
                       </div>
                       <div className={styles.paymentAmountBlock}>
-                        <div className={styles.paymentAmount}>{fmt(p.amount)}</div>
+                        <div className={`${styles.paymentAmount} ${p.is_postponed ? styles.paymentAmountMuted : ''}`}>{fmt(p.amount)}</div>
                         {p.is_variable && (
                           <span className={styles.variableBadge}>
                             {t('paymentsPage.variable')}

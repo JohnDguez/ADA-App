@@ -156,20 +156,41 @@ export function HomePage({ payments, dataLoading = false, profile, spaceSwitcher
     // Antes filtraba por due_date, lo que hacía que el total no coincidiera
     // con "Disponible este periodo" — corregido para que ambas pantallas
     // siempre cuadren, usando la misma fuente de verdad.
+    // NUEVO (agosto 2026) — un pago "pospuesto" (is_postponed:true) no tiene
+    // paid_at (nunca se marcó pagado de verdad), así que se incluye aquí
+    // también, usando due_date en su lugar, para que siga apareciendo (con
+    // su etiqueta "Pospuesto", ver PaidCollapseItem más abajo) en vez de
+    // desaparecer de la vista por completo. Su monto NO se suma en
+    // `pagadoMonto` (ver abajo) — aparece, pero no cuenta como gasto real.
     const pagadosEstePeriodo = payments
       .filter(p => {
-        if (!p.is_paid || p.is_master || !p.paid_at) return false
-        const paidDate = dateOf(dateToStr(new Date(p.paid_at)))
-        return paidDate >= start && paidDate <= end
+        if (p.is_master) return false
+        if (p.is_paid && p.paid_at) {
+          const paidDate = dateOf(dateToStr(new Date(p.paid_at)))
+          return paidDate >= start && paidDate <= end
+        }
+        if (p.is_postponed) {
+          const d = dateOf(p.due_date)
+          return d >= start && d <= end
+        }
+        return false
       })
-      .sort((a, b) => new Date(a.paid_at) - new Date(b.paid_at))
+      .sort((a, b) => {
+        const da = a.paid_at ? new Date(a.paid_at) : dateOf(a.due_date)
+        const db = b.paid_at ? new Date(b.paid_at) : dateOf(b.due_date)
+        return da - db
+      })
     // El aporte parcial de un pago que TODAVÍA está pendiente (arriba) se
     // suma aquí — una vez que ese pago se marca 100% pagado, sale por
     // completo de `pagarEsteCobro` (getPagarEsteCobro ya excluye
     // `is_paid`) y pasa a contarse íntegro vía `pagadosEstePeriodo` (sin
     // relación con este bloque) — nunca se cuentan las 2 cosas a la vez
     // para el mismo pago, así que no hay doble conteo posible.
-    const pagadoMonto = pagadosEstePeriodo.reduce((a, p) => a + Number(p.amount), 0) + pagadoParcialPendientes
+    // `.filter(p => !p.is_postponed)` — un pospuesto aparece en la lista de
+    // arriba pero NO debe sumar a lo pagado ni al total del periodo (pedido
+    // explícito de Johnatan: "que no sume el total... ni se descuente de
+    // la nómina del usuario").
+    const pagadoMonto = pagadosEstePeriodo.filter(p => !p.is_postponed).reduce((a, p) => a + Number(p.amount), 0) + pagadoParcialPendientes
     const totalConocido = pagadoMonto + pendingAmt
     const pctPagado = totalConocido > 0 ? Math.round((pagadoMonto / totalConocido) * 100) : 0
     const pagosFijosCount = pagarEsteCobro.filter(p => !p.is_variable || p.amount > 0).length + pagadosEstePeriodo.length
@@ -182,7 +203,7 @@ export function HomePage({ payments, dataLoading = false, profile, spaceSwitcher
 
     // Solo pagos DENTRO del próximo periodo (no todos los futuros)
     const upcoming = payments.filter(p => {
-      if (p.is_paid || p.paused || p.postponed || p.is_master) return false
+      if (p.is_paid || p.paused || p.postponed || p.is_postponed || p.is_master) return false
       const d = dateOf(p.due_date)
       return d >= nextStart && d <= nextEnd
     }).sort((a, b) => dateOf(a.due_date) - dateOf(b.due_date))
@@ -633,7 +654,9 @@ function PaidCollapseItem({ p, onMarkUnpaid, onViewSource, spaceMembers, onSelec
 
   const contentHidden = phase === 'labeled' || phase === 'exiting'
   const fillActive    = phase === 'filling' || phase === 'labeled' || phase === 'exiting'
-  const pd = new Date(p.paid_at)
+  // Un pospuesto no tiene paid_at (nunca se marcó pagado de verdad) — se
+  // usa due_date en su lugar, mismo respaldo que el resto de la app.
+  const pd = new Date(p.paid_at || p.due_date)
 
   return (
     <div ref={wrapperRef} className={styles.paidCollapseItemWrapper}>
@@ -643,7 +666,7 @@ function PaidCollapseItem({ p, onMarkUnpaid, onViewSource, spaceMembers, onSelec
       >
         <div className={`${styles.paidUnmarkFill} ${fillActive ? styles.paidUnmarkFillActive : ''}`} />
         <div className={`${styles.paidUnmarkLabel} ${phase === 'labeled' || phase === 'exiting' ? styles.paidUnmarkLabelVisible : ''}`}>
-          {t('homePage.markedUnpaid')}
+          {t(p.is_postponed ? 'homePage.unpostponed' : 'homePage.markedUnpaid')}
         </div>
         <div className={`${styles.paidCollapseItemRow} ${contentHidden ? styles.paidCollapseItemRowHidden : ''}`}>
           <div className={styles.paidCollapseDate}>
@@ -653,13 +676,24 @@ function PaidCollapseItem({ p, onMarkUnpaid, onViewSource, spaceMembers, onSelec
           <div className={styles.paidCollapseInfo}>
             <div className={styles.paidCollapseName}>{p.name}</div>
             <div className={styles.paidCollapseCategory}>
-              {getCategoryLabel(p.category)}{p.is_contribution_reflection ? ` · ${t('homePage.shared')}` : ''}
-              {!p.is_contribution_reflection && (
-                <PaidByStack contributors={p.contributors} members={spaceMembers} fundAmount={p.fund_amount || 0} size={18} inline />
+              {/* Pospuesto (agosto 2026) — reemplaza la categoría por la
+                  etiqueta, mismo criterio que instLabel/freqLabel en
+                  PayCard.jsx (un pago solo muestra UNA línea de contexto
+                  aquí, nunca las 2 a la vez). Mockup confirmado con
+                  Johnatan antes de código (Regla 8). */}
+              {p.is_postponed ? (
+                <span className={styles.paidCollapsePostponedTag}>{t('payCard.status.postponed')}</span>
+              ) : (
+                <>
+                  {getCategoryLabel(p.category)}{p.is_contribution_reflection ? ` · ${t('homePage.shared')}` : ''}
+                  {!p.is_contribution_reflection && (
+                    <PaidByStack contributors={p.contributors} members={spaceMembers} fundAmount={p.fund_amount || 0} size={18} inline />
+                  )}
+                </>
               )}
             </div>
           </div>
-          <span className={styles.paidCollapseAmount}>{fmt(p.amount)}</span>
+          <span className={`${styles.paidCollapseAmount} ${p.is_postponed ? styles.paidCollapseAmountMuted : ''}`}>{fmt(p.amount)}</span>
           {p.is_contribution_reflection ? (
             <button
               onClick={e => { e.stopPropagation(); onViewSource && onViewSource(p) }}
