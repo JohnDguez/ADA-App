@@ -59,13 +59,19 @@ function applyScope(query, scope) {
 // "scope" (personal, o un espacio compartido puntual) — mismas reglas de
 // negocio de siempre (profile.notif_overdue/due_today/upcoming/cobro_day),
 // aplicadas por igual sin importar el origen del pago.
+//
+// `.eq('is_postponed', false)` en las 4 consultas (agosto 2026, Fase 2 de
+// "Posponer con no descuento") — sin esto, un pago pospuesto (is_paid:false,
+// is_postponed:true) seguía disparando "vencido"/"vence hoy"/"próximo"/
+// "día de cobro" como si nunca se hubiera resuelto, ya que estas consultas
+// solo miraban is_paid. Ver CONTEXT.md → tabla de columnas de `payments`.
 async function collectReminders(scope, profile, todayStr, today) {
   const notifications = []
 
   // Pagos vencidos
   if (profile.notif_overdue !== false) {
     const { data: overdue } = await applyScope(
-      supabase.from('payments').select('name').eq('is_paid', false).eq('paused', false).not('is_master', 'is', true).lt('due_date', todayStr),
+      supabase.from('payments').select('name').eq('is_paid', false).eq('is_postponed', false).eq('paused', false).not('is_master', 'is', true).lt('due_date', todayStr),
       scope
     )
     if (overdue && overdue.length > 0) {
@@ -82,7 +88,7 @@ async function collectReminders(scope, profile, todayStr, today) {
   // Pagos que vencen hoy
   if (profile.notif_due_today !== false) {
     const { data: dueToday } = await applyScope(
-      supabase.from('payments').select('name').eq('is_paid', false).eq('paused', false).not('is_master', 'is', true).eq('due_date', todayStr),
+      supabase.from('payments').select('name').eq('is_paid', false).eq('is_postponed', false).eq('paused', false).not('is_master', 'is', true).eq('due_date', todayStr),
       scope
     )
     if (dueToday && dueToday.length > 0) {
@@ -109,7 +115,7 @@ async function collectReminders(scope, profile, todayStr, today) {
     const tomorrowStr   = addDaysStr(todayStr, 1)
 
     const { data: upcoming } = await applyScope(
-      supabase.from('payments').select('name, due_date').eq('is_paid', false).eq('paused', false).not('is_master', 'is', true)
+      supabase.from('payments').select('name, due_date').eq('is_paid', false).eq('is_postponed', false).eq('paused', false).not('is_master', 'is', true)
         .gte('due_date', tomorrowStr).lte('due_date', futureDateStr),
       scope
     )
@@ -133,7 +139,7 @@ async function collectReminders(scope, profile, todayStr, today) {
     const dayOfWeek = today.getDay()
     if (dayOfWeek === (profile.cobro_weekday ?? 5)) {
       const { data: pendingToday } = await applyScope(
-        supabase.from('payments').select('name, amount').eq('is_paid', false).eq('paused', false).not('is_master', 'is', true).lte('due_date', todayStr),
+        supabase.from('payments').select('name, amount').eq('is_paid', false).eq('is_postponed', false).eq('paused', false).not('is_master', 'is', true).lte('due_date', todayStr),
         scope
       )
       if (pendingToday && pendingToday.length > 0) {
