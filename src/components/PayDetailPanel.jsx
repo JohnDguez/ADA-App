@@ -40,7 +40,7 @@ export function PayDetailPanel({ payment, profile, permissions, spaceMembers, on
   function blocked(action) { showToast(t('paymentsPage.blockedAction', { action })) }
 
   const isReflection   = p.is_contribution_reflection
-  const isPending      = !p.is_paid && !p.postponed && !p.paused
+  const isPending      = !p.is_paid && !p.postponed && !p.is_postponed && !p.paused
   const needsAmount    = isPending && p.is_variable && !p.amount
   const catColor       = getCatColor(p.category, profile?.custom_categories || [], profile?.category_colors)
   const CatIcon         = getCategoryIcon(p.category, profile?.category_icons)

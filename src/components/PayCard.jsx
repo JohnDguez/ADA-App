@@ -222,7 +222,7 @@ function PayCardImpl({ payment: p, cfg, onMarkPaid, onRequestVariableAmount, onC
   const info      = statusInfo(p, cfg)
   const showLabel = !hideDueLabel || STATUS_LABELS_ALWAYS_VISIBLE.includes(info.status)
   const d         = dateOf(p.due_date)
-  const isPending = !p.is_paid && !p.postponed && !p.paused
+  const isPending = !p.is_paid && !p.postponed && !p.is_postponed && !p.paused
   const freqLabel = p.is_recurrent && p.recur_freq && !p.is_installment ? getFrequencyLabel(p.recur_freq) : null
   const instLabel = p.is_installment ? `Pago ${p.current_installment}/${p.total_installments}` : null
   // Fix real (v0.9.259, reportado por Johnatan): `contributed_amount` solo
@@ -504,7 +504,7 @@ export function GroupCard({ group, cfg, onMarkPaid, onMarkUnpaid, onEdit, onDele
   const totalPaid = paidItems.reduce((a, p) => a + Number(p.amount), 0)
   const freq      = group.recur_freq || 'monthly'
   const freqLabel = getFrequencyLabel(freq)
-  const isPending = !group.is_paid && !group.postponed && !group.paused
+  const isPending = !group.is_paid && !group.postponed && !group.is_postponed && !group.paused
   const countLabel = group.is_installment
     ? t('payCard.group.installmentsCount', { paid: paidItems.length, total: group.total_installments })
     : periodCountLabel(paidItems.length, freq) + ' ' + t('payCard.group.paidCount')
@@ -536,11 +536,11 @@ export function GroupCard({ group, cfg, onMarkPaid, onMarkUnpaid, onEdit, onDele
         <div className={styles.groupExpandedList}>
           {allItems.map((p, i) => {
             const overdue  = daysDiff(p.due_date) < 0 && !p.is_paid
-            const isPend   = !p.is_paid && !p.postponed
+            const isPend   = !p.is_paid && !p.postponed && !p.is_postponed
             const isLast   = i === allItems.length - 1
             const instLabel = p.is_installment ? t('paymentModal.editInstallment.badge', { current: p.current_installment, total: p.total_installments }) : periodLabel(p.due_date, freq)
-            const bColor   = p.is_paid ? 'var(--paid)' : p.postponed ? 'var(--muted)' : overdue ? 'var(--danger)' : 'var(--soon-color)'
-            const bLabel   = p.is_paid ? t('payCard.status.paid') : p.postponed ? t('payCard.status.postponed') : overdue ? t('payCard.status.overdue') : t('payCard.status.pending')
+            const bColor   = p.is_paid ? 'var(--paid)' : (p.postponed || p.is_postponed) ? 'var(--muted)' : overdue ? 'var(--danger)' : 'var(--soon-color)'
+            const bLabel   = p.is_paid ? t('payCard.status.paid') : (p.postponed || p.is_postponed) ? t('payCard.status.postponed') : overdue ? t('payCard.status.overdue') : t('payCard.status.pending')
             return (
               <div key={p.id} className={`${styles.groupItemRow} ${!isLast ? styles.groupItemRowBordered : ''}`}>
                 <div className={styles.groupItemDot} style={{ background: overdue ? 'var(--danger)' : p.is_paid ? 'var(--border-mid)' : 'var(--paid)' }} />
