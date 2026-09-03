@@ -55,11 +55,14 @@ export function useSpaceStats(userId, personalConfig, spaces) {
       const endStr   = dateToStr(end)
       const today    = dateToStr(new Date())
 
+      // `.eq('is_postponed', false)` (agosto 2026) — un pospuesto ya se
+      // resolvió, no debe inflar el contador de pendientes/vencidos del
+      // switcher. Mismo criterio que el resto de la app (ver CONTEXT.md).
       let pendingQ = supabase.from('payments').select('id', { count: 'exact', head: true })
-        .eq('is_paid', false).eq('is_master', false)
+        .eq('is_paid', false).eq('is_postponed', false).eq('is_master', false)
         .lte('due_date', endStr)
       let overdueQ = supabase.from('payments').select('id', { count: 'exact', head: true })
-        .eq('is_paid', false).eq('is_master', false)
+        .eq('is_paid', false).eq('is_postponed', false).eq('is_master', false)
         .lte('due_date', endStr).lt('due_date', today)
 
       if (spaceId) {

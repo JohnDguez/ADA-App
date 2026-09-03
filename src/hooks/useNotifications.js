@@ -60,7 +60,10 @@ export function useNotifications(userId) {
     const toInsert = []
 
     // Pagos vencidos
-    const overdue = payments.filter(p => !p.is_paid && !p.paused && p.due_date < todayStr)
+    // `!p.is_postponed` (agosto 2026) — un pospuesto ya se resolvió, no debe
+    // generar notificación de vencido. Ver api/send-notifications.js para
+    // el mismo fix del lado del cron.
+    const overdue = payments.filter(p => !p.is_paid && !p.is_postponed && !p.paused && p.due_date < todayStr)
     if (overdue.length > 0) {
       toInsert.push({
         user_id: userId,
@@ -72,7 +75,8 @@ export function useNotifications(userId) {
     }
 
     // Pagos que vencen hoy
-    const dueToday = payments.filter(p => !p.is_paid && !p.paused && p.due_date === todayStr)
+    // `!p.is_postponed` — mismo criterio que el filtro de vencidos arriba.
+    const dueToday = payments.filter(p => !p.is_paid && !p.is_postponed && !p.paused && p.due_date === todayStr)
     if (dueToday.length > 0) {
       dueToday.forEach(p => {
         toInsert.push({

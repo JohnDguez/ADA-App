@@ -184,6 +184,7 @@ export function useGoals(userId, profile, spaceId = null) {
       is_paid: true,
       paid_at: new Date().toISOString(),
       postponed: false,
+      is_postponed: false,
       paused: false,
       is_installment: false,
     })
