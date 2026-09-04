@@ -482,6 +482,7 @@ export function usePayments(userId, activeSpaceId = null, activeSpaceName = null
           paid_at:      null,
           postponed:    false,
           is_postponed: false,
+          postponed_at: null,
           paused:       false,
           is_installment: false,
         })
@@ -529,6 +530,7 @@ export function usePayments(userId, activeSpaceId = null, activeSpaceName = null
       paid_at:             null,
       postponed:           false,
       is_postponed: false,
+      postponed_at: null,
       paused:              false,
       is_installment:      true,
       current_installment: from,
@@ -550,7 +552,7 @@ export function usePayments(userId, activeSpaceId = null, activeSpaceName = null
       user_id: userId, space_id: activeSpaceId, name, amount, category,
       is_variable: false, is_recurrent: true, recur_freq: recurFreq,
       is_master: false, parent_id: master.id, due_date: c.due_date,
-      is_paid: false, paid_at: null, postponed: false, is_postponed: false, paused: false,
+      is_paid: false, paid_at: null, postponed: false, is_postponed: false, postponed_at: null, paused: false,
       is_installment: true,
       current_installment: c.current_installment,
       total_installments: totalInstallments,
@@ -685,7 +687,7 @@ export function usePayments(userId, activeSpaceId = null, activeSpaceName = null
       const { data: next } = await supabase.from('payments').insert({
         user_id: userId, space_id: activeSpaceId, name: master.name, amount: amt,
         due_date: lastDate, category: master.category, is_variable: false, is_recurrent: true,
-        recur_freq: master.recur_freq, is_paid: false, paid_at: null, postponed: false, is_postponed: false, paused: false,
+        recur_freq: master.recur_freq, is_paid: false, paid_at: null, postponed: false, is_postponed: false, postponed_at: null, paused: false,
         is_master: false, parent_id: master.id, is_installment: true, current_installment: nextNum,
         total_installments: newTotal,
       }).select().single()
@@ -758,6 +760,7 @@ export function usePayments(userId, activeSpaceId = null, activeSpaceName = null
       paid_at:      null,
       postponed:    false,
       is_postponed: false,
+      postponed_at: null,
       paused:       false,
       is_installment: false,
     }).select().single()
@@ -769,10 +772,10 @@ export function usePayments(userId, activeSpaceId = null, activeSpaceName = null
     const copies = [
       { user_id: userId, space_id: activeSpaceId, name, amount: baseAmount, category, is_variable, is_recurrent: true, recur_freq,
         is_master: false, parent_id: master.id, due_date: firstDate,
-        is_paid: false, paid_at: null, postponed: false, is_postponed: false, paused: false, is_installment: false },
+        is_paid: false, paid_at: null, postponed: false, is_postponed: false, postponed_at: null, paused: false, is_installment: false },
       { user_id: userId, space_id: activeSpaceId, name, amount: baseAmount, category, is_variable, is_recurrent: true, recur_freq,
         is_master: false, parent_id: master.id, due_date: date2,
-        is_paid: false, paid_at: null, postponed: false, is_postponed: false, paused: false, is_installment: false },
+        is_paid: false, paid_at: null, postponed: false, is_postponed: false, postponed_at: null, paused: false, is_installment: false },
     ]
     const { data: copiesData, error: copiesErr } = await supabase.from('payments').insert(copies).select()
     if (!copiesErr && copiesData) {
@@ -843,7 +846,7 @@ export function usePayments(userId, activeSpaceId = null, activeSpaceName = null
       const { data: created } = await supabase.from('payments').insert({
         user_id: userId, space_id: activeSpaceId, name, amount: copyAmount, category, is_variable, is_recurrent: true, recur_freq,
         is_master: false, parent_id: masterId, due_date: firstDate,
-        is_paid: false, paid_at: null, postponed: false, is_postponed: false, paused: false, is_installment: false,
+        is_paid: false, paid_at: null, postponed: false, is_postponed: false, postponed_at: null, paused: false, is_installment: false,
       }).select()
       if (created) newlyCreated = created
     }
@@ -919,6 +922,7 @@ export function usePayments(userId, activeSpaceId = null, activeSpaceName = null
             paid_at:             null,
             postponed:           false,
             is_postponed: false,
+            postponed_at: null,
             paused:              false,
             is_master:           false,
             parent_id:           payment.parent_id,
@@ -945,7 +949,7 @@ export function usePayments(userId, activeSpaceId = null, activeSpaceName = null
     // verdad estaba pagado, es el comportamiento de siempre. Nunca los 2 a
     // la vez en la práctica (son mutuamente excluyentes por diseño).
     const updates = payment.is_postponed
-      ? { is_postponed: false }
+      ? { is_postponed: false, postponed_at: null }
       : { is_paid: false, paid_at: null }
     // Si es un pago variable, además de desmarcarlo se le quita el monto
     // que se le había capturado al pagarlo — vuelve a su estado "Pago
@@ -1030,6 +1034,13 @@ export function usePayments(userId, activeSpaceId = null, activeSpaceName = null
     // una por una). Reversible: `markUnpaid()` ya distingue este caso y
     // reusa el mismo botón de "deshacer" que cualquier pago pagado.
     //
+    // `postponed_at` (agosto 2026, fix reportado por Johnatan): equivalente
+    // de `paid_at` pero para esta acción — sin esto, la app mostraba/
+    // ordenaba estos pagos por `due_date` (la fecha ORIGINAL de
+    // vencimiento) como si fuera la fecha de la acción, confuso (un pago
+    // con due_date de hace días, pospuesto HOY, se veía fechado hace días).
+    // Se limpia a null en markUnpaid() al deshacer, igual que paid_at.
+    //
     // OJO — existe una columna VIEJA `postponed` (sin `is_`), de un sistema
     // anterior de pagos únicos hoy inalcanzable desde la UI (el menú
     // "Posponer" solo aparece para recurrentes). Nombre parecido a propósito
@@ -1037,7 +1048,7 @@ export function usePayments(userId, activeSpaceId = null, activeSpaceName = null
     // CONTEXT.md para no confundirlas; esta función NUNCA debe tocar esa
     // columna vieja en esta rama.
     if (payment.is_recurrent && !payment.is_installment && payment.parent_id) {
-      const { data, error } = await supabase.from('payments').update({ is_postponed: true }).eq('id', payment.id).select().single()
+      const { data, error } = await supabase.from('payments').update({ is_postponed: true, postponed_at: new Date().toISOString() }).eq('id', payment.id).select().single()
       if (error || !data) {
         return { error: error || { message: 'No tienes permiso para posponer este pago en este espacio.' } }
       }
@@ -1067,6 +1078,7 @@ export function usePayments(userId, activeSpaceId = null, activeSpaceName = null
       is_paid:      false,
       postponed:    false,
       is_postponed: false,
+      postponed_at: null,
       paused:       false,
       is_master:    false,
       parent_id:    null,
@@ -1115,10 +1127,10 @@ export function usePayments(userId, activeSpaceId = null, activeSpaceName = null
     const copies = [
       { user_id: userId, space_id: activeSpaceId, name, amount: copyAmount, category, is_variable, is_recurrent: true, recur_freq,
         is_master: false, parent_id: masterId, due_date: firstDate,
-        is_paid: false, paid_at: null, postponed: false, is_postponed: false, paused: false, is_installment: false },
+        is_paid: false, paid_at: null, postponed: false, is_postponed: false, postponed_at: null, paused: false, is_installment: false },
       { user_id: userId, space_id: activeSpaceId, name, amount: copyAmount, category, is_variable, is_recurrent: true, recur_freq,
         is_master: false, parent_id: masterId, due_date: date2,
-        is_paid: false, paid_at: null, postponed: false, is_postponed: false, paused: false, is_installment: false },
+        is_paid: false, paid_at: null, postponed: false, is_postponed: false, postponed_at: null, paused: false, is_installment: false },
     ]
     const { data: copiesData, error } = await supabase.from('payments').insert(copies).select()
     if (!error && copiesData) {
@@ -1247,6 +1259,7 @@ export function usePayments(userId, activeSpaceId = null, activeSpaceName = null
         paid_at:      null,
         postponed:    false,
         is_postponed: false,
+        postponed_at: null,
         paused:       sample.paused || false,
         is_installment: false,
       }).select().single()
@@ -1318,6 +1331,7 @@ export function usePayments(userId, activeSpaceId = null, activeSpaceName = null
         paid_at:             null,
         postponed:           false,
         is_postponed: false,
+        postponed_at: null,
         paused:              sample.paused || false,
         is_installment:      true,
         current_installment: sample.current_installment,
