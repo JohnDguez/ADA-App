@@ -395,8 +395,10 @@ export function PaymentsPage({ payments, dataLoading = false, profile, spaceSwit
         const paidDate = dateOf(dateToStr(new Date(p.paid_at)))
         return paidDate >= prev.start && paidDate <= prev.end
       }
+      // `p.postponed_at` (agosto 2026, fix reportado por Johnatan) — fecha
+      // REAL de la acción, no `due_date` (la fecha original de vencimiento).
       if (p.is_postponed) {
-        const d = dateOf(p.due_date)
+        const d = dateOf(dateToStr(new Date(p.postponed_at || p.due_date)))
         return d >= prev.start && d <= prev.end
       }
       return false
@@ -553,8 +555,9 @@ export function PaymentsPage({ payments, dataLoading = false, profile, spaceSwit
       const paidDate = dateOf(dateToStr(new Date(p.paid_at)))
       return paidDate >= periodStart && paidDate <= periodEnd
     }
+    // `p.postponed_at` — fecha real de la acción, no `due_date`.
     if (p.is_postponed) {
-      const d = dateOf(p.due_date)
+      const d = dateOf(dateToStr(new Date(p.postponed_at || p.due_date)))
       return d >= periodStart && d <= periodEnd
     }
     return false
@@ -588,9 +591,15 @@ export function PaymentsPage({ payments, dataLoading = false, profile, spaceSwit
   )
 
   function chartTotalInMonth(month, year) {
+    // `!p.is_postponed` (fix real, encontrado al revisar a fondo tras el
+    // reporte de Johnatan sobre `postponed_at`) — esta gráfica mensual
+    // sumaba TODO lo que trae `paidPayments` sin excluir pospuestos, cosa
+    // que sí se hizo en `totalGastos`/`totalInView`/etc. pero se pasó por
+    // alto aquí. `postponed_at` en vez de `due_date` para el bucket de mes.
     return chartFiltered
       .filter(p => {
-        const d = p.paid_at ? new Date(p.paid_at) : dateOf(p.due_date)
+        if (p.is_postponed) return false
+        const d = p.paid_at ? new Date(p.paid_at) : new Date(p.postponed_at || p.due_date)
         return d.getMonth() === month && d.getFullYear() === year
       })
       .reduce((a, p) => a + Number(p.amount), 0)
@@ -614,7 +623,8 @@ export function PaymentsPage({ payments, dataLoading = false, profile, spaceSwit
     const catsWithExpense = new Set(
       paidPayments
         .filter(p => {
-          const d = p.paid_at ? new Date(p.paid_at) : dateOf(p.due_date)
+          if (p.is_postponed) return false
+          const d = p.paid_at ? new Date(p.paid_at) : new Date(p.postponed_at || p.due_date)
           return chartMonthKeys.has(`${d.getFullYear()}-${d.getMonth()}`)
         })
         .map(p => p.category)
@@ -631,18 +641,24 @@ export function PaymentsPage({ payments, dataLoading = false, profile, spaceSwit
     [profile.custom_categories]
   )
 
+  // `!p.is_postponed` en las 2 ramas (fix real, encontrado al revisar a
+  // fondo tras el reporte de Johnatan sobre `postponed_at`) — esta función
+  // alimenta `catData`, la lista real "Por Categoría" que se ve en
+  // pantalla (con barras de progreso) — `segmentos` (la barra heatmap
+  // segmentada, más abajo) sí había quedado bien excluida desde la Fase 1,
+  // pero esta, que es la que en realidad se ve más, se pasó por alto.
   function getCatTotal(cat) {
-    const d = p => p.paid_at ? new Date(p.paid_at) : dateOf(p.due_date)
+    const d = p => p.paid_at ? new Date(p.paid_at) : new Date(p.postponed_at || p.due_date)
     if (viewMode === 'periodo') {
       return gastosPeriodo
-        .filter(p => p.category === cat)
+        .filter(p => p.category === cat && !p.is_postponed)
         .reduce((a, p) => a + Number(p.amount), 0)
     }
     // viewMode === 'mes' — mismo filtro que paidInMonth() (definida más abajo,
     // en "Pagos realizados"), duplicado aquí a propósito para no depender del
     // orden/hoisting entre las 2 secciones del componente.
     return paidPayments
-      .filter(p => p.category === cat && d(p).getMonth() === viewMonth && d(p).getFullYear() === viewYear)
+      .filter(p => p.category === cat && !p.is_postponed && d(p).getMonth() === viewMonth && d(p).getFullYear() === viewYear)
       .reduce((a, p) => a + Number(p.amount), 0)
   }
 
@@ -672,20 +688,20 @@ export function PaymentsPage({ payments, dataLoading = false, profile, spaceSwit
 
   function paidInMonth(month, year) {
     return paidPayments.filter(p => {
-      const d = p.paid_at ? new Date(p.paid_at) : dateOf(p.due_date)
+      const d = p.paid_at ? new Date(p.paid_at) : new Date(p.postponed_at || p.due_date)
       return d.getMonth() === month && d.getFullYear() === year
     })
   }
 
   const paidInView = useMemo(() => viewMode === 'periodo'
     ? [...gastosPeriodo].sort((a, b) => {
-        const da = a.paid_at ? new Date(a.paid_at) : dateOf(a.due_date)
-        const db = b.paid_at ? new Date(b.paid_at) : dateOf(b.due_date)
+        const da = a.paid_at ? new Date(a.paid_at) : new Date(a.postponed_at || a.due_date)
+        const db = b.paid_at ? new Date(b.paid_at) : new Date(b.postponed_at || b.due_date)
         return db - da
       })
     : paidInMonth(viewMonth, viewYear).sort((a, b) => {
-        const da = a.paid_at ? new Date(a.paid_at) : dateOf(a.due_date)
-        const db = b.paid_at ? new Date(b.paid_at) : dateOf(b.due_date)
+        const da = a.paid_at ? new Date(a.paid_at) : new Date(a.postponed_at || a.due_date)
+        const db = b.paid_at ? new Date(b.paid_at) : new Date(b.postponed_at || b.due_date)
         return db - da
       }),
     // paidInMonth se re-crea en cada render pero solo cierra sobre paidPayments.
@@ -1684,7 +1700,10 @@ export function PaymentsPage({ payments, dataLoading = false, profile, spaceSwit
             <>
               <div className={styles.paymentsList}>
                 {paidInView.map((p, i) => {
-                  const paidDate = p.paid_at ? new Date(p.paid_at) : dateOf(p.due_date)
+                  // Un pospuesto no tiene paid_at — se usa postponed_at
+                  // (fecha real en que se pospuso), con due_date como
+                  // último respaldo si por algo faltara.
+                  const paidDate = p.paid_at ? new Date(p.paid_at) : new Date(p.postponed_at || p.due_date)
                   const isLast   = i === paidInView.length - 1
                   return (
                     <div key={p.id} className={`${styles.paymentRow} ${isLast ? styles.paymentRowLast : ''}`}>

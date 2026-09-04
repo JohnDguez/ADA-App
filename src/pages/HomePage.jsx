@@ -169,15 +169,20 @@ export function HomePage({ payments, dataLoading = false, profile, spaceSwitcher
           const paidDate = dateOf(dateToStr(new Date(p.paid_at)))
           return paidDate >= start && paidDate <= end
         }
+        // `p.postponed_at` (agosto 2026, fix reportado por Johnatan) — la
+        // fecha REAL en que se pospuso, no `due_date` (la fecha original de
+        // vencimiento, que ya no tiene relación con cuándo se hizo la
+        // acción). Respaldo a due_date solo por si acaso (nunca debería
+        // faltar, se graba siempre al posponer).
         if (p.is_postponed) {
-          const d = dateOf(p.due_date)
+          const d = dateOf(dateToStr(new Date(p.postponed_at || p.due_date)))
           return d >= start && d <= end
         }
         return false
       })
       .sort((a, b) => {
-        const da = a.paid_at ? new Date(a.paid_at) : dateOf(a.due_date)
-        const db = b.paid_at ? new Date(b.paid_at) : dateOf(b.due_date)
+        const da = a.paid_at ? new Date(a.paid_at) : new Date(a.postponed_at || a.due_date)
+        const db = b.paid_at ? new Date(b.paid_at) : new Date(b.postponed_at || b.due_date)
         return da - db
       })
     // El aporte parcial de un pago que TODAVÍA está pendiente (arriba) se
@@ -655,8 +660,9 @@ function PaidCollapseItem({ p, onMarkUnpaid, onViewSource, spaceMembers, onSelec
   const contentHidden = phase === 'labeled' || phase === 'exiting'
   const fillActive    = phase === 'filling' || phase === 'labeled' || phase === 'exiting'
   // Un pospuesto no tiene paid_at (nunca se marcó pagado de verdad) — se
-  // usa due_date en su lugar, mismo respaldo que el resto de la app.
-  const pd = new Date(p.paid_at || p.due_date)
+  // usa postponed_at (fecha real en que se pospuso), con due_date como
+  // último respaldo si por algo faltara.
+  const pd = new Date(p.paid_at || p.postponed_at || p.due_date)
 
   return (
     <div ref={wrapperRef} className={styles.paidCollapseItemWrapper}>
@@ -744,15 +750,14 @@ function PaidCollapse({ payments, expanded, onToggle, onMarkUnpaid, onViewSource
         // (is_postponed:true, sin paid_at) siempre caía hasta el fondo de
         // la lista sin importar su fecha real. Causa: este `sort` es un
         // SEGUNDO ordenamiento, independiente del que ya hace
-        // `pagadosEstePeriodo` más arriba (que sí tenía el respaldo a
-        // due_date) — este usaba `p.paid_at` directo, y `new Date(null)`
-        // da el 1 de enero de 1970, así que en orden descendente CUALQUIER
-        // pospuesto quedaba siempre al final, sin importar qué tan
-        // reciente fuera su due_date. Mismo respaldo que ya usa el resto
-        // de la app: si no hay paid_at (pospuesto), se usa due_date.
+        // `pagadosEstePeriodo` más arriba — este usaba `p.paid_at` directo,
+        // y `new Date(null)` da el 1 de enero de 1970, así que en orden
+        // descendente CUALQUIER pospuesto quedaba siempre al final. Se usa
+        // `postponed_at` (fecha real de la acción), con due_date como
+        // último respaldo.
         const sorted = [...payments].sort((a, b) => {
-          const da = a.paid_at ? new Date(a.paid_at) : dateOf(a.due_date)
-          const db = b.paid_at ? new Date(b.paid_at) : dateOf(b.due_date)
+          const da = a.paid_at ? new Date(a.paid_at) : new Date(a.postponed_at || a.due_date)
+          const db = b.paid_at ? new Date(b.paid_at) : new Date(b.postponed_at || b.due_date)
           return db - da
         })
         return (
