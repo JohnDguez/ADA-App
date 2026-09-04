@@ -64,7 +64,7 @@ export function RecurrentDetailPanel({
   // por completo — ya se resolvió, no debe mostrarse como "el próximo".
   const paidChildren = children
     .filter(p => p.is_paid || p.is_postponed)
-    .sort((a, b) => new Date(b.paid_at || b.due_date) - new Date(a.paid_at || a.due_date))
+    .sort((a, b) => new Date(b.paid_at || b.postponed_at || b.due_date) - new Date(a.paid_at || a.postponed_at || a.due_date))
   const nextChild = children
     .filter(p => !p.is_paid && !p.is_postponed)
     .sort((a, b) => dateOf(a.due_date) - dateOf(b.due_date))[0] || null
@@ -195,7 +195,7 @@ export function RecurrentDetailPanel({
                 <div className={styles.historyInfo}>
                   <div className={styles.historyDate}>
                     {isInstallment && p.current_installment ? `${t('recurrentDetailPanel.paymentNumber', { num: p.current_installment })} · ` : ''}
-                    {fmtDateFull(p.paid_at || p.due_date)}
+                    {fmtDateFull(p.paid_at || p.postponed_at || p.due_date)}
                   </div>
                   {/* Pospuesto (agosto 2026, Fase 2) — mismo criterio que
                       PaidCollapseItem en HomePage.jsx: reemplaza la nota de
