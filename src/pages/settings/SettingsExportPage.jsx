@@ -114,7 +114,11 @@ export function SettingsExportPage({ profile, sharedSpaces, onOpenPremium, onBac
   // se pagó, es paid_at; si no, due_date. `dateToStr(new Date(paid_at))`
   // convierte el timestamp a fecha LOCAL (Regla 22), nunca UTC directo.
   function effectiveDateStr(p) {
-    return p.paid_at ? dateToStr(new Date(p.paid_at)) : p.due_date
+    if (p.paid_at) return dateToStr(new Date(p.paid_at))
+    // `p.postponed_at` (agosto 2026, fix reportado por Johnatan) — fecha
+    // real de la acción, no `due_date` (la fecha original de vencimiento).
+    if (p.is_postponed) return dateToStr(new Date(p.postponed_at || p.due_date))
+    return p.due_date
   }
 
   // Trae los gastos que caen en el rango — consulta amplia por due_date
