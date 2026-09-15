@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useCallback, useEffect, useRef } from 'react'
 import { supabase } from '../lib/supabase'
 import { daysDiff, cobroPeriod, dateToStr, todayStr } from '../lib/utils'
 
@@ -13,10 +13,35 @@ import { daysDiff, cobroPeriod, dateToStr, todayStr } from '../lib/utils'
 // compartidas no haya que tocar los llamados ni migrar filas: la columna
 // `space_id` ya existe en ambas tablas, siempre en null, igual que el
 // patrón que usan `payments` y `period_income`.
-export function useGoals(userId, profile, spaceId = null) {
+export function useGoals(userId, profile, spaceId = null, onPaymentsChanged = null) {
   const [rawGoals, setRawGoals]     = useState([])
   const [transactions, setTransactions] = useState([])
   const [loading, setLoading]       = useState(true)
+
+  // ── Aviso a usePayments.js cuando este hook escribe en `payments` ───────
+  // `aportar()` escribe el pago reflejo DIRECTO en la tabla `payments`,
+  // pero la lista de pagos de la app vive en `usePayments.js` — dos hooks
+  // que no se hablan entre sí. En un Espacio Compartido eso lo tapaba el
+  // canal de Realtime de `usePayments`; en Personal NO hay canal a
+  // propósito (nadie más ve esos datos, ver la nota de Realtime en
+  // `usePayments.js`), así que el aviso tiene que ser EXPLÍCITO o el
+  // abono no aparece en Gastos ni descuenta de Disponible hasta recargar
+  // la app por completo — bug real reportado por Johnatan (septiembre
+  // 2026): la meta subía a 2% pero el gasto de $554 no salía por ningún
+  // lado hasta refrescar.
+  //
+  // `onPaymentsChanged` es el `refetch` que ya expone `usePayments`,
+  // pasado desde `App.jsx` (mismo patrón que el `onDataDeleted` de
+  // SettingsPage, que ya hacía exactamente esto). Se guarda en un ref y se
+  // actualiza en cada render para llamar SIEMPRE a la versión vigente sin
+  // meterla como dependencia de ningún useCallback/useEffect de aquí — su
+  // identidad cambia cuando `fetchPayments` se re-crea, y eso volvería a
+  // suscribir el canal de Realtime de metas sin necesidad.
+  const onPaymentsChangedRef = useRef(onPaymentsChanged)
+  onPaymentsChangedRef.current = onPaymentsChanged
+  function notifyPaymentsChanged() {
+    if (typeof onPaymentsChangedRef.current === 'function') onPaymentsChangedRef.current()
+  }
 
   const fetchAll = useCallback(async () => {
     if (!userId) { setRawGoals([]); setTransactions([]); setLoading(false); return }
@@ -188,6 +213,9 @@ export function useGoals(userId, profile, spaceId = null) {
       paused: false,
       is_installment: false,
     })
+    // Solo si el pago reflejo entró de verdad: si falló, no hay nada nuevo
+    // que traer y un refetch de más solo esconde el error.
+    if (!paymentError) notifyPaymentsChanged()
     fetchAll()
     return { error: paymentError || null }
   }
