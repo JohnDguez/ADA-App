@@ -166,7 +166,12 @@ export default function App() {
   // `activeSpaceId === 'new'` (a medio crear un espacio), igual que
   // `usePayments`. Antes iba fijo en `null` (Fase 1, solo personal); ahora
   // que existen las metas compartidas, cambia solo con el espacio activo.
-  const goalsData = useGoals(user?.id, profile, paymentsSpaceId)
+  // Cuarto parámetro (`refetch` de usePayments) — `aportar()` escribe el
+  // pago reflejo directo en `payments`, y en Personal no hay Realtime que
+  // avise a `usePayments` (a propósito, ver la nota ahí): sin esto el
+  // abono no aparecía en Gastos hasta recargar la app. Mismo patrón que el
+  // `onDataDeleted={() => { refetch() }}` de SettingsPage, más abajo.
+  const goalsData = useGoals(user?.id, profile, paymentsSpaceId, refetch)
 
   // v0.9.369 — RESTAURADO: se había quitado en v0.9.367 asumiendo que
   // RailSpaceSwitcher.jsx (dentro de NavRail.jsx) lo reemplazaba del
