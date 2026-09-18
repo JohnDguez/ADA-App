@@ -17,6 +17,26 @@ import styles from './PaymentsPage.module.css'
 
 const INCOME_TYPES = ['Bono', 'Préstamo', 'Pago', 'Comisión', 'Otro']
 
+// Monto abreviado para las etiquetas de la gráfica mensual ($8.7k) — con 6 o
+// 12 meses en pantalla cada celda mide ~1/6 o ~1/12 del ancho de la tarjeta, y
+// el monto completo de `fmt()` se desborda por encima de las celdas vecinas
+// (bug visual reportado por Johnatan con 12 meses). Vive aquí y no en
+// `lib/utils.js` a propósito: abreviar solo se vale donde el número exacto no
+// es el dato — la barra ya comunica la proporción y el total exacto sigue
+// arriba en "Total N meses". El resto de la app se queda con `fmt()`.
+// Separador decimal de `es-MX` (punto), mismo criterio de locale que `fmt()`.
+function fmtChartAmount(n) {
+  const num  = Math.abs(Number(n))
+  const sign = Number(n) < 0 ? '-' : ''
+  // Umbrales 999.5/999,500 en vez de 1,000/1,000,000: el redondeo a 1 decimal
+  // de abajo convierte 999.6 en "1", así que con el corte en 1,000 exacto ese
+  // monto se quedaría en la rama sin abreviar y se leería "$1,000" (más largo
+  // que "$1k", justo lo que se quiere evitar).
+  if (num >= 999500) return `${sign}$${(num / 1000000).toLocaleString('es-MX', { maximumFractionDigits: 1 })}M`
+  if (num >= 999.5)  return `${sign}$${(num / 1000).toLocaleString('es-MX', { maximumFractionDigits: 1 })}k`
+  return `${sign}$${num.toLocaleString('es-MX', { maximumFractionDigits: 0 })}`
+}
+
 // ── Helpers de periodo anterior ───────────────────────────────────────────────
 function prevPeriod(profile) {
   const { start } = cobroPeriod(profile)
@@ -1548,7 +1568,9 @@ export function PaymentsPage({ payments, dataLoading = false, profile, spaceSwit
                     <Bone w={22} h={9} r={3} style={{ margin: '0 auto' }} />
                   ) : total > 0 && (
                     <div className={styles.chartLabelAmount} style={{ color: isCurrent ? barColor : 'var(--text)' }}>
-                      {fmt(total)}
+                      {/* 3 meses caben completos; de 6 en adelante se abrevia
+                          (ver `fmtChartAmount` arriba). */}
+                      {monthsBack >= 6 ? fmtChartAmount(total) : fmt(total)}
                     </div>
                   )}
                 </div>
