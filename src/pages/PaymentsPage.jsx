@@ -307,11 +307,27 @@ export function PaymentsPage({ payments, dataLoading = false, profile, spaceSwit
   // tarde, sin relación con el periodo real. Se usa `profile?.id` (no
   // cambia al editar campos del mismo perfil) en vez de `profile` completo,
   // así este chequeo solo corre cuando de verdad cambia de perfil/espacio.
+  //
+  // `dataLoading` en la condición y en las dependencias (septiembre 2026) —
+  // bug real reportado por Johnatan: el remanente le salió igual a su
+  // nómina completa, como si el periodo anterior no hubiera tenido ni un
+  // gasto. `checkPeriodStart()` calcula `gastosPrev` leyendo `paidPayments`
+  // (derivado del prop `payments`), pero corría en cuanto llegaba el
+  // PERFIL, sin esperar a que `usePayments` terminara su consulta — en un
+  // arranque en frío que cae directo en esta pestaña, `payments` todavía es
+  // `[]` y el cálculo da `salario + extras − 0`. Es una carrera, por eso
+  // funcionaba bien casi siempre (al entrar a Gastos desde otra pestaña los
+  // pagos ya estaban cargados) y falló justo al abrir la app aquí.
+  // Peor aún, el resultado se CONGELA: la función escribe
+  // `last_seen_period_start` antes de mostrar el modal, así que el número
+  // equivocado no se vuelve a calcular nunca. Esperar a `dataLoading` es
+  // suficiente y no cambia nada más: el efecto simplemente corre un
+  // instante después, cuando ya hay datos reales contra los que restar.
   useEffect(() => {
-    if (!profile) return
+    if (!profile || dataLoading) return
     checkPeriodStart()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [profile?.id, activeSpaceId])
+  }, [profile?.id, activeSpaceId, dataLoading])
 
   // ── Tiempo real (Ingresos Extras) — solo en modo Espacio Compartido ──────
   // Mismo criterio que la suscripción de `payments` en `usePayments.js`: se
@@ -585,6 +601,27 @@ export function PaymentsPage({ payments, dataLoading = false, profile, spaceSwit
   }
 
   const chartMonths   = useMemo(() => getMonthsArray(monthsBack), [monthsBack])
+
+  // Carga bajo demanda de los meses viejos de la GRÁFICA (Regla 33) — bug
+  // real reportado por Johnatan (septiembre 2026): elegir 6 o 12 meses
+  // mostraba siempre los mismos 3 con datos y el resto en $0, aun teniendo
+  // 4 meses de uso real. La causa no estaba en la gráfica sino en la
+  // ventana de carga de `usePayments.js`: `fetchPayments()` solo trae los
+  // pagados de los últimos 3 meses (`defaultCutoffStr()`), y hasta ahora el
+  // único que pedía ampliarla era el modo "Por mes" (efecto de más arriba)
+  // — el selector 3/6/12 nunca avisaba, así que los meses de más se
+  // dibujaban con datos que nadie había traído.
+  // Se amplía la MISMA ventana que ya usa "Por mes" (nunca un estado
+  // paralelo): basta pedir el mes más viejo del rango, porque la ventana es
+  // continua desde esa fecha hasta hoy. `ensureMonthLoaded` ignora la
+  // petición si ese mes ya está cubierto, así que volver de 12 a 3 meses no
+  // dispara ninguna consulta extra (la ventana ya ampliada se conserva, es
+  // el comportamiento que ya tenía "Por mes").
+  useEffect(() => {
+    const oldest = chartMonths[0]
+    if (oldest && ensureMonthLoaded) ensureMonthLoaded(oldest.month, oldest.year)
+  }, [chartMonths, ensureMonthLoaded])
+
   const chartFiltered = useMemo(
     () => selectedCat ? paidPayments.filter(p => p.category === selectedCat) : paidPayments,
     [selectedCat, paidPayments]
