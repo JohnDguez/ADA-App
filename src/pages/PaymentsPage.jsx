@@ -1556,32 +1556,18 @@ export function PaymentsPage({ payments, dataLoading = false, profile, spaceSwit
           <div className={styles.chartTitle}>
             {t('paymentsPage.monthlyExpenses')}
           </div>
-          {/* Labels de monto arriba */}
-          <div className={styles.chartLabelsRow}>
-            {chartMonths.map((m, i) => {
-              const total     = chartTotals[i]
-              const isCurrent = m.month === now.getMonth() && m.year === now.getFullYear()
-              const barColor  = selectedCat ? getCatColor(selectedCat, profile.custom_categories, profile.category_colors) : 'var(--accent)'
-              return (
-                <div key={i} className={styles.chartLabelCell}>
-                  {dataLoading ? (
-                    <Bone w={22} h={9} r={3} style={{ margin: '0 auto' }} />
-                  ) : total > 0 && (
-                    <div className={styles.chartLabelAmount} style={{ color: isCurrent ? barColor : 'var(--text)' }}>
-                      {/* 3 meses caben completos; de 6 en adelante se abrevia
-                          (ver `fmtChartAmount` arriba). */}
-                      {monthsBack >= 6 ? fmtChartAmount(total) : fmt(total)}
-                    </div>
-                  )}
-                </div>
-              )
-            })}
-          </div>
-          {/* Barras */}
+          {/* Barras — la etiqueta de monto vive DENTRO de cada celda, justo
+              encima de su barra (antes era una fila aparte pegada al techo
+              de la tarjeta, así que un monto chico quedaba flotando lejos de
+              su barra y costaba relacionarlos). Pedido de Johnatan con
+              referencia visual propia. La altura de la barra descuenta
+              `--chart-label-space` (definido en el CSS, distinto por
+              breakpoint) para que la barra más alta + su etiqueta sigan
+              cabiendo dentro del alto de la fila. */}
           <div className={styles.chartBarsRow}>
             {chartMonths.map((m, i) => {
               const total     = chartTotals[i]
-              const heightPct = (total / maxChart) * 100
+              const heightPct = Math.max((total / maxChart) * 100, total > 0 ? 3 : 0)
               const isCurrent = m.month === now.getMonth() && m.year === now.getFullYear()
               const barColor  = selectedCat ? getCatColor(selectedCat, profile.custom_categories, profile.category_colors) : 'var(--accent)'
               // Alturas neutras fijas mientras carga (no derivadas de
@@ -1594,12 +1580,21 @@ export function PaymentsPage({ payments, dataLoading = false, profile, spaceSwit
                   {dataLoading ? (
                     <Bone w="100%" h={`${skelHeights[i % skelHeights.length]}%`} r="3px 3px 0 0" style={{ minHeight: 0 }} />
                   ) : (
-                    <div className={styles.chartBar} style={{
-                      height: `${Math.max(heightPct, total > 0 ? 3 : 0)}%`,
-                      background: isCurrent ? barColor : (selectedCat ? barColor : 'var(--accent-border)'),
-                      opacity: isCurrent ? 1 : (selectedCat ? 0.45 : 1),
-                      minHeight: total > 0 ? 3 : 0,
-                    }} />
+                    <>
+                      {total > 0 && (
+                        <div className={styles.chartLabelAmount} style={{ color: isCurrent ? barColor : 'var(--text)' }}>
+                          {/* 3 meses caben completos; de 6 en adelante se abrevia
+                              (ver `fmtChartAmount` arriba). */}
+                          {monthsBack >= 6 ? fmtChartAmount(total) : fmt(total)}
+                        </div>
+                      )}
+                      <div className={styles.chartBar} style={{
+                        height: `calc((100% - var(--chart-label-space)) * ${(heightPct / 100).toFixed(4)})`,
+                        background: isCurrent ? barColor : (selectedCat ? barColor : 'var(--accent-border)'),
+                        opacity: isCurrent ? 1 : (selectedCat ? 0.45 : 1),
+                        minHeight: total > 0 ? 3 : 0,
+                      }} />
+                    </>
                   )}
                 </div>
               )

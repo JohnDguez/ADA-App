@@ -430,6 +430,12 @@
 }
 
 .chartCard {
+  /* Alto reservado para la etiqueta de monto que ahora vive encima de cada
+     barra (ver .chartBarCell) — la altura inline de la barra lo descuenta
+     con calc(), así que la barra más alta y su etiqueta siempre caben
+     dentro de .chartBarsRow. Se sube por breakpoint junto con el tamaño de
+     letra de la etiqueta. */
+  --chart-label-space: 18px;
   margin: 0 16px 20px;
   background: var(--surface);
   border-radius: var(--radius);
@@ -443,21 +449,12 @@
   margin-bottom: 14px;
 }
 
-.chartLabelsRow {
-  display: flex;
-  gap: 6px;
-  margin-bottom: 4px;
-  height: 16px;
-}
-
-.chartLabelCell {
-  flex: 1;
-  text-align: center;
-}
-
 .chartLabelAmount {
   font-size: 9px;
   font-weight: 700;
+  line-height: 1;
+  margin-bottom: 4px;
+  white-space: nowrap;
 }
 
 .chartBarsRow {
@@ -471,7 +468,9 @@
   flex: 1;
   height: 100%;
   display: flex;
-  align-items: flex-end;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: center;
 }
 
 .chartBar {
@@ -1677,4 +1676,100 @@
   .categoryChipsScroll {
     display: none;
   }
+}
+
+/* ── Escala de desktop (≥1200px) — septiembre 2026 ────────────────────────
+   Johnatan reportó que en desktop la página se sigue leyendo con la
+   tipografía de un teléfono: "se ven súper pequeñas y son incómodas de
+   leer". Es real — hasta ahora el único breakpoint del archivo era 768px, y
+   ahí solo cambia el LAYOUT (2 columnas, fila/tabla), nunca la escala del
+   texto.
+
+   Por qué un breakpoint NUEVO en 1200px y no agrandar el de 768px: entre
+   768 y ~1199 estamos en tablet, donde el contenido ya vive en columnas de
+   60/40 — ese ancho es MÁS angosto que el de mobile a ancho completo, y por
+   eso v0.9.387-404 tuvo que REDUCIR ahí varios tamaños (stats a 19/15px,
+   ícono de categoría a 28px) después de que los números se cortaran con
+   "…". Agrandar a partir de 768 volvería a romper exactamente eso. A partir
+   de 1200px las columnas ya son anchas de verdad y la escala sí cabe.
+
+   Criterio: subir ~25-30% lo que el usuario LEE (montos, nombres, fechas,
+   categorías) y lo que toca (chips, filas), sin tocar la estructura del
+   grid ni ningún color — es puro tamaño. Prueba de esta escala en Gastos
+   antes de decidir si se replica en el resto de las pantallas. */
+@media (min-width: 1200px) {
+  /* Encabezado de la página */
+  .titleSectionHeading { font-size: 28px; }
+  .titleSectionSubtext { font-size: 15px; }
+  .paymentsSectionTitle { font-size: 19px; }
+  .categorySectionTitleText { font-size: 19px; }
+
+  /* Balance del periodo */
+  .balanceLabel { font-size: 12px; }
+  .balanceAmount { font-size: 36px; }
+  .balanceSubtextMain,
+  .balanceExtras,
+  .balanceOverBudget { font-size: 13px; }
+  .addIncomeButtonSmall { font-size: 14px; }
+  .extrasLabel { font-size: 12px; }
+  .extrasEditButton { font-size: 13px; }
+  .extrasSummaryText { font-size: 14px; }
+  .extrasItemDay,
+  .extrasItemType,
+  .extrasItemAmount { font-size: 15px; }
+  .extrasItemNote { font-size: 13px; }
+  .extrasItemMonth { font-size: 11px; }
+
+  /* Fondo Compartido */
+  .fundBalance { font-size: 28px; }
+  .fundInfoText,
+  .fundExceedsError,
+  .fundRemainingHint { font-size: 14px; }
+  .fundAvailableTag { font-size: 13px; }
+
+  /* Totales — suben respecto al 19/15px de tablet, que se había reducido a
+     propósito por el ancho de la columna del 60% a 768px (ver ese bloque).
+     Sin llegar al 28/20px de mobile: ahí el bloque ocupa el ancho completo
+     del teléfono. */
+  .statsLabel { font-size: 12px; }
+  .statsValueLarge { font-size: 26px; }
+  .statsValue { font-size: 19px; }
+
+  /* Gráfica — más alta y con etiquetas legibles; `--chart-label-space` sube
+     junto con el tamaño de letra de la etiqueta (ver .chartCard). */
+  .chartCard { --chart-label-space: 26px; }
+  .chartTitle { font-size: 16px; }
+  .chartBarsRow { height: 190px; }
+  .chartLabelAmount { font-size: 13px; }
+  .chartMonthLabel { font-size: 13px; }
+
+  /* Por categoría — el ícono vuelve a crecer (28px es el tamaño compacto de
+     tablet, no un tope de diseño). El alto de la tarjeta lo sigue midiendo
+     el ResizeObserver contra la gráfica, así que se ajusta solo. */
+  .categoryListIconWrapper { width: 34px; height: 34px; }
+  .categoryListName,
+  .categoryListAmount { font-size: 15px; }
+  .categoryProgressTrack { height: 6px; }
+
+  /* Filtros y controles */
+  .filterChip,
+  .viewModeButton,
+  .totalText,
+  .monthYearLabel { font-size: 14px; }
+
+  /* Lista de pagos — el grid crece junto con el texto para que ninguna
+     columna quede apretada al subir el tamaño de letra. */
+  .paymentRow {
+    grid-template-columns: 64px 1fr 180px 130px 40px;
+    gap: 16px;
+  }
+  .paymentDateDay { font-size: 17px; }
+  .paymentDateMonth { font-size: 11px; }
+  .paymentNameRow { font-size: 16px; }
+  .paymentCategoryRow { font-size: 14px; }
+  .paymentAmount { font-size: 17px; }
+  .paymentInstallment { font-size: 12px; }
+  .paymentPostponedTag { font-size: 13px; }
+  .variableBadge { font-size: 11px; }
+  .categoryChipSquare { width: 26px; height: 26px; }
 }
