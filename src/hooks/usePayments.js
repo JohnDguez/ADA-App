@@ -511,8 +511,17 @@ export function usePayments(userId, activeSpaceId = null, activeSpaceName = null
     return { data, error }
   }
 
-  async function addInstallmentPayment({ name, amount, totalAmount, totalInstallments, startFrom, recurFreq, category, firstDate }) {
+  async function addInstallmentPayment({ name, amount, totalAmount, totalInstallments, startFrom, recurFreq, category, firstDate, backfillAsExpense = true }) {
     const from = startFrom || 1
+
+    // `firstDate` es la fecha del pago #1 del plan (así lo pide el formulario).
+    // Fecha de cada pago i = firstDate + (i-1) periodos. Antes el primer
+    // pendiente (#from) se creaba CON la fecha del pago #1 — empezar desde
+    // el #9 dejaba el #9 fechado meses atrás, vencido de entrada, aunque el
+    // resumen del formulario anunciaba la fecha correcta.
+    const installmentDates = [firstDate]
+    for (let i = 1; i <= from; i++) installmentDates.push(dateToStr(nextPeriodDate(installmentDates[i - 1], recurFreq)))
+    const dateOfInstallment = n => installmentDates[n - 1]
 
     // Crear master (template raíz de la parcialidad)
     const { data: master, error: masterErr } = await supabase.from('payments').insert({
@@ -541,11 +550,10 @@ export function usePayments(userId, activeSpaceId = null, activeSpaceName = null
 
     // Crear hasta 2 copias (misma lógica que recurrentes, pero con límite)
     const copiesToInsert = [
-      { current_installment: from, due_date: firstDate }
+      { current_installment: from, due_date: dateOfInstallment(from) }
     ]
     if (from + 1 <= totalInstallments) {
-      const date2 = dateToStr(nextPeriodDate(firstDate, recurFreq))
-      copiesToInsert.push({ current_installment: from + 1, due_date: date2 })
+      copiesToInsert.push({ current_installment: from + 1, due_date: dateOfInstallment(from + 1) })
     }
 
     const installCopies = copiesToInsert.map(c => ({
@@ -556,14 +564,40 @@ export function usePayments(userId, activeSpaceId = null, activeSpaceName = null
       is_installment: true,
       current_installment: c.current_installment,
       total_installments: totalInstallments,
+      // Explícito: se insertan en el mismo arreglo que los pagos anteriores,
+      // y en un insert múltiple la llave que falta viaja como NULL, no como
+      // el DEFAULT de la columna.
+      is_history_only: false,
     }))
 
-    const { data: copiesData, error } = await supabase.from('payments').insert(installCopies).select()
+    // Pagos anteriores (1…from-1), ya pagados, cada uno con su fecha. Antes
+    // no se creaban (el formulario decía "se marcarán como pagados" pero
+    // nunca pasaba). Con `backfillAsExpense` en false van marcados
+    // `is_history_only`: se ven solo en el historial del master y NO cuentan
+    // como gasto en ningún lado — para quien ya los tenía registrados.
+    // `paid_at` a mediodía local de su fecha, para que caigan en el día
+    // correcto sin importar la zona horaria (Regla 22).
+    const previousRows = []
+    for (let n = 1; n < from; n++) {
+      const d = dateOf(dateOfInstallment(n)); d.setHours(12, 0, 0, 0)
+      previousRows.push({
+        user_id: userId, space_id: activeSpaceId, name, amount, category,
+        is_variable: false, is_recurrent: true, recur_freq: recurFreq,
+        is_master: false, parent_id: master.id, due_date: dateOfInstallment(n),
+        is_paid: true, paid_at: d.toISOString(), postponed: false, is_postponed: false, postponed_at: null, paused: false,
+        is_installment: true,
+        current_installment: n,
+        total_installments: totalInstallments,
+        is_history_only: !backfillAsExpense,
+      })
+    }
+
+    const { data: copiesData, error } = await supabase.from('payments').insert([...previousRows, ...installCopies]).select()
     if (!error && copiesData) {
       setPayments(prev => [...prev, master, ...copiesData])
       notifySpaceChange('added', { paymentName: name, amount, paymentType: 'parcialidades', totalInstallments })
     }
-    return { data: copiesData?.[0], error }
+    return { data: copiesData?.find(c => !c.is_paid) || copiesData?.[0], error }
   }
 
   // ─────────────────────────────────────────────────────────────────────────
