@@ -797,7 +797,10 @@ export default function App() {
   }
 
   // Pagos que se muestran en Home/Pagos: excluir masters (is_master: true)
-  const visiblePayments = payments.filter(p => !p.is_master)
+  // y los pagos "solo historial" de una parcialidad (is_history_only,
+  // septiembre 2026) — esos solo existen en el detalle del master
+  // (RecurrentsPage recibe `payments` completo), nunca como gasto.
+  const visiblePayments = payments.filter(p => !p.is_master && !p.is_history_only)
 
   // v0.9.367 — el switcher de espacios se movió al riel (NavRail.jsx,
   // v0.9.369 — RESTAURADO para mobile (ver nota arriba de useSpaceStats).
