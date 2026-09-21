@@ -211,6 +211,37 @@ export function installmentLabel(p) {
   return i18n.t('paymentModal.editInstallment.badge', { current: p.current_installment, total: p.total_installments })
 }
 
+// Parcialidad: cuántos pagos del plan la app NUNCA registró como fila. Pasa
+// cuando se crea con "Empezar desde el pago N" (N > 1 — los anteriores se
+// pagaron fuera de la app y addInstallmentPayment no los inserta) y en
+// parcialidades migradas desde antes del modelo master/copy. Esos pagos SÍ
+// están pagados — sin contarlos, el progreso sale corto y abonarInstallment()
+// cree que falta más dinero del real y alarga el plan solo (bug real de
+// Johnatan, septiembre 2026: "Celular" pasó de 20 a 22 pagos sin tocarlo).
+// Se toma el número más bajo entre todas sus copias (pagadas o pendientes).
+export function installmentUntrackedCount(master, payments) {
+  if (!master) return 0
+  const nums = (payments || [])
+    .filter(p => p.parent_id === master.id && !p.is_master && Number(p.current_installment) > 0)
+    .map(p => Number(p.current_installment))
+  const first = nums.length ? Math.min(...nums) : (Number(master.current_installment) || 1)
+  return Math.max(0, first - 1)
+}
+
+// Parcialidad: número del pago en curso. El `current_installment` del MASTER
+// no sirve para esto — se fija una sola vez al crearlo/migrarlo y nunca
+// avanza. Se toma la copia pendiente más baja; si no queda ninguna, el
+// siguiente a la última copia pagada.
+export function installmentCurrentNumber(master, payments) {
+  if (!master) return 1
+  const children = (payments || []).filter(p => p.parent_id === master.id && !p.is_master && Number(p.current_installment) > 0)
+  const pendingNums = children.filter(p => !p.is_paid && !p.is_postponed).map(p => Number(p.current_installment))
+  if (pendingNums.length) return Math.min(...pendingNums)
+  const paidNums = children.filter(p => p.is_paid || p.is_postponed).map(p => Number(p.current_installment))
+  if (paidNums.length) return Math.max(...paidNums) + 1
+  return installmentUntrackedCount(master, payments) + 1
+}
+
 // Mensaje de confirmación correcto según el tipo de pago que se va a
 // eliminar — mismo criterio EXACTO que la rama de borrado real en
 // App.jsx (`performDelete`): un master se borra completo, una copia de
