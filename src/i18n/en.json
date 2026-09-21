@@ -420,7 +420,8 @@
     "paymentNumber": "Payment {{num}}",
     "amountAdjusted": "Amount adjusted",
     "menuPause": "Pause",
-    "menuResume": "Resume"
+    "menuResume": "Resume",
+    "historyOnly": "History only"
   },
   "goalsPage": {
     "title": "Goals",
@@ -719,7 +720,6 @@
     "numPayments": "Number of payments",
     "numPaymentsPlaceholder": "e.g. 10",
     "startFromLabel": "Start from payment #",
-    "autoMarkedHelper": "Payments 1 through {{n}} will be marked as paid automatically.",
     "summary": {
       "title": "Summary",
       "willPay": "You'll pay",
@@ -781,6 +781,11 @@
       "banner": "You can only adjust the amount of this payment here. To change the name, frequency, date, or category, edit the full recurring payment.",
       "editMasterButton": "Edit recurring payment",
       "amountError": "Enter a valid amount"
+    },
+    "backfill": {
+      "label": "Log previous payments as expenses",
+      "helperOn": "Payments 1 through {{n}} are logged with their dates and count in Expenses and your reports.",
+      "helperOff": "Payments 1 through {{n}} will only show in this installment plan's history, without adding to your expenses. Use it if you already logged them."
     }
   },
   "pageHeader": {

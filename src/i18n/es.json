@@ -420,7 +420,8 @@
     "paymentNumber": "Pago {{num}}",
     "amountAdjusted": "Monto ajustado",
     "menuPause": "Pausar",
-    "menuResume": "Reactivar"
+    "menuResume": "Reactivar",
+    "historyOnly": "Solo historial"
   },
   "goalsPage": {
     "title": "Metas",
@@ -719,7 +720,6 @@
     "numPayments": "Número de pagos",
     "numPaymentsPlaceholder": "Ej. 10",
     "startFromLabel": "Empezar desde el pago #",
-    "autoMarkedHelper": "Los pagos 1 al {{n}} se marcarán como pagados automáticamente.",
     "summary": {
       "title": "Resumen",
       "willPay": "Pagarás",
@@ -781,6 +781,11 @@
       "banner": "Aquí solo puedes ajustar el monto de este pago. Para cambiar nombre, frecuencia, fecha o categoría, edita el recurrente completo.",
       "editMasterButton": "Editar recurrente",
       "amountError": "Ingresa un monto válido"
+    },
+    "backfill": {
+      "label": "Registrar pagos anteriores como gastos",
+      "helperOn": "Los pagos 1 al {{n}} se registran con su fecha y cuentan en Gastos y en tus reportes.",
+      "helperOff": "Los pagos 1 al {{n}} solo aparecerán en el historial de esta parcialidad, sin sumar a tus gastos. Úsalo si ya los tenías registrados."
     }
   },
   "pageHeader": {
