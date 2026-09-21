@@ -28,6 +28,10 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
   const [totalInstallments,  setTotalInstallments]  = useState('')
   const [startFrom,          setStartFrom]          = useState('1')
   const [totalAmount,        setTotalAmount]        = useState('')
+  // Parcialidad que empieza en el pago N > 1: ¿los pagos 1…N-1 se registran
+  // como gastos reales (default) o solo en el historial del master? Ver
+  // addInstallmentPayment() en usePayments.js.
+  const [backfillAsExpense,  setBackfillAsExpense]  = useState(true)
   const [saving,             setSaving]             = useState(false)
   const [error,              setError]              = useState('')
   const [confirmClose,       setConfirmClose]       = useState(false)
@@ -119,6 +123,7 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
       setMode(initial.is_installment ? 'installment' : initial.is_recurrent ? 'recurrent' : 'single')
       setTotalInstallments(initial.total_installments || '')
       setStartFrom('1')
+      setBackfillAsExpense(true)
       setAlreadyPaid(!!initial.is_paid)
       setPaidAt(initial.paid_at ? dateToStr(new Date(initial.paid_at)) : todayStr())
     } else {
@@ -128,6 +133,7 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
       setCategory('Servicios'); setIsVariable(false)
       setRecurFreq('monthly'); setWeekday(5)
       setMode('single'); setTotalInstallments(''); setStartFrom('1'); setTotalAmount('')
+      setBackfillAsExpense(true)
       setAlreadyPaid(false)
       setPaidAt('')
     }
@@ -172,7 +178,7 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
       if (!dueDate) { setError(t('paymentModal.installment.firstDateError')); return }
       const amountPerPayment = Math.round((totalAmt / total) * 100) / 100
       setSaving(true)
-      await onSaveInstallment({ name: name.trim(), amount: amountPerPayment, totalAmount: totalAmt, totalInstallments: total, startFrom: start, recurFreq, category, firstDate: dueDate })
+      await onSaveInstallment({ name: name.trim(), amount: amountPerPayment, totalAmount: totalAmt, totalInstallments: total, startFrom: start, recurFreq, category, firstDate: dueDate, backfillAsExpense })
       setSaving(false); onClose(); return
     }
     if (!isVariable && (!amount || isNaN(parseFloat(amount)))) { setError(t('paymentModal.amountOrVariableError')); return }
@@ -260,7 +266,7 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
     && !!amount && !isNaN(parseFloat(amount)) && parseFloat(amount) > 0 && !!previewDueDate
 
   const impactPreview = showImpactPreview
-    ? projectPeriodImpact(payments || [], profile, {
+    ? projectPeriodImpact((payments || []).filter(p => !p.is_history_only), profile, {
         dueDate: previewDueDate,
         amount: parseFloat(amount),
         isRecurring: mode === 'recurrent',
@@ -534,8 +540,15 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
                 </Field>
                 <Field label={t('paymentModal.startFromLabel')}>
                   <input className="field-input" type="number" value={startFrom} onChange={e => setStartFrom(e.target.value)} placeholder="1" min="1" enterKeyHint="next" />
-                  {startNum > 1 && <div className={styles.helperText}>{t('paymentModal.autoMarkedHelper', { n: startNum - 1 })}</div>}
                 </Field>
+                {startNum > 1 && (
+                  <Toggle
+                    label={t('paymentModal.backfill.label')}
+                    sub={t(backfillAsExpense ? 'paymentModal.backfill.helperOn' : 'paymentModal.backfill.helperOff', { n: startNum - 1 })}
+                    value={backfillAsExpense}
+                    onChange={setBackfillAsExpense}
+                  />
+                )}
                 {totalAmt > 0 && numPayments >= 2 && (
                   <div className={styles.summaryBox}>
                     <div className={styles.summaryTitle}>{t('paymentModal.summary.title')}</div>

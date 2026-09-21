@@ -211,6 +211,11 @@ export function RecurrentDetailPanel({
                       arriba). */}
                   {p.is_postponed ? (
                     <div className={styles.historyNote}>{t('payCard.status.postponed')}</div>
+                  ) : p.is_history_only ? (
+                    // Pago anterior registrado solo para este historial
+                    // (parcialidad empezada en el pago N > 1, switch apagado
+                    // al crearla) — no cuenta como gasto en ningún otro lado.
+                    <div className={styles.historyNote}>{t('recurrentDetailPanel.historyOnly')}</div>
                   ) : isAdjusted && (
                     <div className={styles.historyNote}>{t('recurrentDetailPanel.amountAdjusted')}</div>
                   )}
