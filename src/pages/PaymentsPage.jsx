@@ -238,7 +238,7 @@ export function PaymentsPage({ payments, dataLoading = false, profile, spaceSwit
     const periodStartStr = dateToStr(start)
     const [{ data: incomes }, { data: paid }] = await Promise.all([
       supabase.from('period_income').select('amount').is('space_id', null).eq('user_id', profile.id).eq('period_start', periodStartStr),
-      supabase.from('payments').select('amount, paid_at').is('space_id', null).eq('user_id', profile.id).eq('is_paid', true),
+      supabase.from('payments').select('amount, paid_at').is('space_id', null).eq('user_id', profile.id).eq('is_paid', true).eq('is_history_only', false),
     ])
     const salario = personalProfile.salary_enabled ? Number(personalProfile.salary_amount || 0) : 0
     const extras  = (incomes || []).reduce((a, i) => a + Number(i.amount), 0)
