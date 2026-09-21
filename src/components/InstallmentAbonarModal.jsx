@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
-import { fmt } from '../lib/utils'
+import { fmt, installmentUntrackedCount } from '../lib/utils'
 import { ConfirmCloseModal } from './ConfirmCloseModal'
 import AmountInput from './AmountInput'
 import styles from './InstallmentAbonarModal.module.css'
@@ -62,9 +62,13 @@ export function InstallmentAbonarModal({ open, payment, payments, spacePermissio
 
   const montoRef = Number(master.amount)
   const totalAmount = master.total_amount != null ? Number(master.total_amount) : montoRef * master.total_installments
+  // Mismo cálculo que abonarInstallment() (usePayments.js) — incluye los
+  // pagos anteriores que nunca se registraron como fila, o la vista previa
+  // anunciaría un plan más largo que el real.
   const paidBefore = (payments || [])
     .filter(p => p.parent_id === master.id && p.is_paid)
     .reduce((s, p) => s + Number(p.amount), 0)
+    + installmentUntrackedCount(master, payments) * montoRef
   const pendienteAntes = totalAmount - paidBefore
 
   const abonadoNum = parseFloat(amount) || 0

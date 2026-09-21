@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ChevronLeft, MoreVertical, Pencil, Pause, Play, Trash2, Check } from 'lucide-react'
 import { getCategoryIcon } from '../lib/categoryIcons'
-import { fmt, dateOf, getFrequencyLabel, getCategoryLabel, getCatColor, getMonthsShort } from '../lib/utils'
+import { fmt, dateOf, getFrequencyLabel, getCategoryLabel, getCatColor, getMonthsShort, installmentUntrackedCount } from '../lib/utils'
 import styles from './RecurrentDetailPanel.module.css'
 
 function fmtDateFull(value) {
@@ -73,8 +73,14 @@ export function RecurrentDetailPanel({
   const CatIcon  = getCategoryIcon(master.category, profile.category_icons)
   const catColor = getCatColor(master.category, profile.custom_categories, profile.category_colors)
 
+  // Parcialidad: los pagos anteriores al primero que la app registró como
+  // fila ("Empezar desde el pago N", o parcialidades migradas) también
+  // están pagados — sin contarlos, "Celular" mostraba 6/22 yendo en el 9.
+  // Su monto se toma como el de referencia (no hay fila con el monto real).
+  const untrackedCount    = isInstallment ? installmentUntrackedCount(master, payments) : 0
+  const installmentsPaid  = paidCount + untrackedCount
   const totalInstallments = master.total_installments
-  const percent = totalInstallments ? Math.round((paidCount / totalInstallments) * 100) : 0
+  const percent = totalInstallments ? Math.round((installmentsPaid / totalInstallments) * 100) : 0
   // Mismo fallback que InstallmentAbonarModal.jsx/abonarInstallment: si esta
   // parcialidad no tiene total_amount (viejas de antes de v0.9.193), se
   // calcula contra el monto de referencia × total de pagos.
@@ -82,6 +88,7 @@ export function RecurrentDetailPanel({
   // `.filter(p => !p.is_postponed)` — mismo criterio que toda la app: un
   // pospuesto aparece en el historial pero no debe sumar como gasto real.
   const paidSum = paidChildren.filter(p => !p.is_postponed).reduce((s, p) => s + Number(p.amount), 0)
+    + untrackedCount * Number(master.amount)
 
   function handlePauseToggle() {
     setMenuOpen(false)
@@ -130,7 +137,7 @@ export function RecurrentDetailPanel({
         <>
           <div className={styles.ring} style={{ background: `conic-gradient(var(--accent) 0% ${percent}%, var(--border) ${percent}% 100%)` }}>
             <div className={styles.ringInner}>
-              <div className={styles.ringPercent}>{paidCount}/{totalInstallments}</div>
+              <div className={styles.ringPercent}>{installmentsPaid}/{totalInstallments}</div>
               <div className={styles.ringSub}>{t('recurrentDetailPanel.paidSuffix')}</div>
             </div>
           </div>

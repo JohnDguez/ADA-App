@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import i18n from '../i18n'
 import { Wallet, AlertTriangle, Repeat, Check, Info, Lock } from 'lucide-react'
-import { CATEGORIES, RECUR_FREQ, WEEKDAYS_SHORT, getWeekdaysShort, MONTHS, getMonths, MONTHS_SHORT, getMonthsShort, intlLocale, nextWeekdayDate, nextBiweeklyFromDate, nextPeriodDate, cobroPeriod, fmt, nameExistsActive, projectPeriodImpact, getCatColor, getCategoryLabel, getFrequencyLabel, dateToStr, todayStr, getDeleteConfirmMessage } from '../lib/utils'
+import { CATEGORIES, RECUR_FREQ, WEEKDAYS_SHORT, getWeekdaysShort, MONTHS, getMonths, MONTHS_SHORT, getMonthsShort, intlLocale, nextWeekdayDate, nextBiweeklyFromDate, nextPeriodDate, cobroPeriod, fmt, nameExistsActive, projectPeriodImpact, getCatColor, getCategoryLabel, getFrequencyLabel, dateToStr, todayStr, getDeleteConfirmMessage, installmentCurrentNumber } from '../lib/utils'
 import { getCategoryIcon } from '../lib/categoryIcons'
 import { supabase } from '../lib/supabase'
 import { ConfirmCloseModal } from './ConfirmCloseModal'
@@ -39,6 +39,12 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
   const [periodIncomes,      setPeriodIncomes]      = useState([])
 
   const isEditingInstallment = !!(initial?.is_installment)
+  // Número del pago en curso. En una COPIA es su propio current_installment;
+  // en el MASTER ese campo se fija al crearlo y nunca avanza ("Celular"
+  // mostraba "Pago 3/22" yendo en el 9), así que se deriva de sus copias.
+  const installmentCurrent = isEditingInstallment
+    ? (initial.is_master ? installmentCurrentNumber(initial, payments) : initial.current_installment)
+    : null
   // Copia puntual de un recurrente (no el master, no una parcialidad) —
   // aquí solo se deja editar el monto; nombre/categoría/frecuencia/fecha
   // pertenecen a la plantilla y se editan desde ahí (botón "Editar
@@ -95,8 +101,18 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
     if (initial) {
       setName(initial.name || '')
       setAmount(initial.amount || '')
-      setDueDate(initial.due_date || todayStr())
-      setBiweeklyDate(initial.due_date || todayStr())
+      // Master de parcialidad: su due_date es la fecha del pago #1 del plan,
+      // no la del próximo — "Próxima fecha de pago" arranca en la copia
+      // pendiente más cercana (si no, al guardar se reacomodarían todas las
+      // fechas pendientes hacia esa fecha vieja).
+      const nextInstallmentCopy = initial.is_master && initial.is_installment
+        ? (payments || [])
+            .filter(p => p.parent_id === initial.id && !p.is_paid && !p.is_postponed)
+            .sort((a, b) => a.current_installment - b.current_installment)[0]
+        : null
+      const initialDue = nextInstallmentCopy?.due_date || initial.due_date || todayStr()
+      setDueDate(initialDue)
+      setBiweeklyDate(initialDue)
       setCategory(initial.category || 'Servicios')
       setIsVariable(initial.is_variable || false)
       setRecurFreq(initial.recur_freq || 'monthly')
@@ -259,8 +275,8 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
       if (!name.trim()) { setError(t('paymentModal.nameError')); return }
       if (!amount || isNaN(parseFloat(amount)) || parseFloat(amount) <= 0) { setError(t('paymentModal.editInstallment.amountError')); return }
       const total = parseInt(totalInstallments)
-      if (!total || total < initial.current_installment) {
-        setError(t('paymentModal.editInstallment.totalBelowCurrentError', { current: initial.current_installment })); return
+      if (!total || total < installmentCurrent) {
+        setError(t('paymentModal.editInstallment.totalBelowCurrentError', { current: installmentCurrent })); return
       }
       if (!dueDate) { setError(t('paymentModal.editInstallment.nextDateError')); return }
       setSaving(true)
@@ -285,7 +301,7 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
             <div className={styles.installmentHeaderRow}>
               <div className={styles.installmentHeaderTitle}>{t('paymentModal.editInstallment.title')}</div>
               <div className={styles.installmentBadge}>
-                {t('paymentModal.editInstallment.badge', { current: initial.current_installment, total: initial.total_installments })}
+                {t('paymentModal.editInstallment.badge', { current: installmentCurrent, total: initial.total_installments })}
               </div>
             </div>
 
@@ -324,10 +340,10 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
             </Field>
 
             <Field label={t('paymentModal.fields.totalPayments')}>
-              <input className="field-input" type="number" value={totalInstallments} onChange={e => setTotalInstallments(e.target.value)} placeholder={t('paymentModal.fields.totalPaymentsPlaceholder')} min={initial.current_installment} />
+              <input className="field-input" type="number" value={totalInstallments} onChange={e => setTotalInstallments(e.target.value)} placeholder={t('paymentModal.fields.totalPaymentsPlaceholder')} min={installmentCurrent} />
               <div className={styles.helperText}>
                 {(() => {
-                  const remaining = Math.max(0, parseInt(totalInstallments) - initial.current_installment + 1)
+                  const remaining = Math.max(0, parseInt(totalInstallments) - installmentCurrent + 1)
                   return isNaN(remaining) ? '—' : t('paymentModal.editInstallment.remainingHelper', { count: remaining })
                 })()}
               </div>
