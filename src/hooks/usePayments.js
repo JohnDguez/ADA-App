@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { supabase } from '../lib/supabase'
-import { nextPeriodDate, dateOf, dateToStr, todayStr, fmt, cobroPeriod } from '../lib/utils'
+import { nextPeriodDate, dateOf, dateToStr, todayStr, fmt, cobroPeriod, installmentUntrackedCount } from '../lib/utils'
 import { notifySpaceChange as notifySpaceChangeShared } from '../lib/notifySpaceChange'
 import { showToast } from '../components/Toast'
 import i18n from '../i18n'
@@ -601,9 +601,15 @@ export function usePayments(userId, activeSpaceId = null, activeSpaceName = null
 
     // ── Abono que liquida esta copia (con posible sobrante) ────────────────
     const sobra        = abonado - Number(copy.amount)
+    // `+ untracked × montoRef` (septiembre 2026): los pagos que la app nunca
+    // registró como fila (anteriores a "Empezar desde el pago N") también
+    // están pagados. Sin sumarlos, `pendienteAntes` salía inflado y cada
+    // check recalculaba un plan más largo — así "Celular" (20 pagos,
+    // empezado en el #3) terminó en 22. Ver installmentUntrackedCount().
     const paidBefore    = payments
       .filter(p => p.parent_id === master.id && p.is_paid)
       .reduce((s, p) => s + Number(p.amount), 0)
+      + installmentUntrackedCount(master, payments) * montoRef
     const pendienteAntes = totalAmount - paidBefore // incluye este pago
     const restanteTotal  = pendienteAntes - Number(copy.amount) - sobra // = pendienteAntes - abonado
 
@@ -860,6 +866,135 @@ export function usePayments(userId, activeSpaceId = null, activeSpaceName = null
         return p
       })
       if (newlyCreated.length) next = [...next, ...newlyCreated]
+      return next
+    })
+    return { error: null }
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // EDITAR EL MASTER DE UNA PARCIALIDAD (septiembre 2026)
+  // ─────────────────────────────────────────────────────────────────────────
+  // Antes, editar el master de una parcialidad caía en updateRecurrentConfig()
+  // (pensada para recurrentes), que no conoce `total_installments`,
+  // `total_amount` ni la fecha del próximo pago — el modal decía "guardado"
+  // pero el total de pagos nunca cambiaba (bug real de Johnatan, "Celular").
+  //
+  // Reglas:
+  // - Nombre/categoría/frecuencia: master + todas las copias (pagadas incluidas
+  //   solo el nombre, mismo criterio que recurrentes).
+  // - Monto por pago: master + copias pendientes que seguían en el monto de
+  //   referencia viejo. Una copia con monto ajustado (abono parcial, o el
+  //   último pago recortado por abonarInstallment) conserva el suyo.
+  // - Total de pagos: se borran las pendientes que ya no caben, todas las
+  //   copias (pagadas y pendientes) reciben el nuevo total para que las
+  //   etiquetas "Pago N/Total" cuadren en cualquier pantalla, y se asegura la
+  //   cola de 2 pendientes si el total creció.
+  // - `total_amount` se recalcula: lo ya pagado (copias pagadas + pagos
+  //   anteriores nunca registrados como fila) + lo pendiente real + los pagos
+  //   que todavía no existen como fila × el monto nuevo.
+  // - Fecha del próximo pago: si cambió (o cambió la frecuencia), la primera
+  //   pendiente toma esa fecha y las siguientes se encadenan desde ahí.
+  async function updateInstallmentConfig(masterId, { name, amount, category, recur_freq, total_installments, firstDate }) {
+    const master = payments.find(p => p.id === masterId)
+    if (!master) return { error: { message: 'Parcialidad no encontrada' } }
+    const noPermission = { message: 'No tienes permiso para editar esta parcialidad en este espacio.' }
+
+    const oldRef    = Number(master.amount)
+    const newRef    = Number(amount)
+    const newTotal  = parseInt(total_installments)
+    const children  = payments.filter(p => p.parent_id === masterId && !p.is_master)
+    const paidCopies = children.filter(p => p.is_paid || p.is_postponed)
+    let pending     = children
+      .filter(p => !p.is_paid && !p.is_postponed)
+      .sort((a, b) => a.current_installment - b.current_installment)
+
+    // 1) Borrar pendientes que ya no caben en el nuevo total
+    const toDelete = pending.filter(p => p.current_installment > newTotal)
+    if (toDelete.length > 0) {
+      const ids = toDelete.map(p => p.id)
+      const { data, error } = await supabase.from('payments').delete().in('id', ids).select()
+      if (error || !data || data.length !== ids.length) return { error: error || noPermission }
+      pending = pending.filter(p => !ids.includes(p.id))
+    }
+
+    // 2) Actualizar pendientes que se quedan (una por una: monto y fecha
+    //    pueden ser distintos en cada una)
+    const firstPending = pending[0]
+    const rechainDates = !!firstPending && !!firstDate &&
+      (firstDate !== firstPending.due_date || recur_freq !== master.recur_freq)
+    let chainDate = firstDate
+    const updatedPending = []
+    for (let i = 0; i < pending.length; i++) {
+      const p = pending[i]
+      const upd = { name, category, recur_freq, total_installments: newTotal }
+      if (Number(p.amount) === oldRef) upd.amount = newRef
+      if (rechainDates) {
+        if (i > 0) chainDate = dateToStr(nextPeriodDate(chainDate, recur_freq))
+        upd.due_date = chainDate
+      }
+      const { data, error } = await supabase.from('payments').update(upd).eq('id', p.id).select()
+      if (error || !data || data.length === 0) return { error: error || noPermission }
+      updatedPending.push(data[0])
+    }
+
+    // 3) Copias pagadas: nombre (si cambió) y nuevo total
+    const paidIds = paidCopies.map(p => p.id)
+    if (paidIds.length > 0) {
+      const paidUpd = { total_installments: newTotal }
+      if (name !== master.name) paidUpd.name = name
+      const { data, error } = await supabase.from('payments').update(paidUpd).in('id', paidIds).select()
+      if (error || !data || data.length !== paidIds.length) return { error: error || noPermission }
+    }
+
+    // 4) Completar la cola a 2 pendientes si el total creció
+    const created = []
+    const existingNums = [...paidCopies, ...updatedPending].map(p => Number(p.current_installment))
+    let lastNum  = existingNums.length ? Math.max(...existingNums) : installmentUntrackedCount(master, payments)
+    let lastDate = updatedPending.length
+      ? updatedPending[updatedPending.length - 1].due_date
+      : (firstDate || [...paidCopies].sort((a, b) => dateOf(b.due_date) - dateOf(a.due_date))[0]?.due_date || todayStr())
+    // Sin pendientes, la fecha del formulario ES la del próximo pago — el
+    // primero que se cree la usa tal cual, sin avanzar un periodo.
+    let useDateAsIs = updatedPending.length === 0 && !!firstDate
+    for (let i = updatedPending.length; i < 2; i++) {
+      const nextNum = lastNum + 1
+      if (nextNum > newTotal) break
+      const due = useDateAsIs ? lastDate : dateToStr(nextPeriodDate(lastDate, recur_freq))
+      useDateAsIs = false
+      const { data, error } = await supabase.from('payments').insert({
+        user_id: userId, space_id: activeSpaceId, name, amount: newRef,
+        due_date: due, category, is_variable: false, is_recurrent: true,
+        recur_freq, is_paid: false, paid_at: null, postponed: false, is_postponed: false, postponed_at: null, paused: false,
+        is_master: false, parent_id: masterId, is_installment: true, current_installment: nextNum,
+        total_installments: newTotal,
+      }).select()
+      if (error || !data || data.length === 0) return { error: error || noPermission }
+      created.push(data[0])
+      lastNum = nextNum; lastDate = due
+    }
+
+    // 5) Master, con el total en dinero recalculado
+    const allPending   = [...updatedPending, ...created]
+    const paidSum      = paidCopies.filter(p => p.is_paid).reduce((s, p) => s + Number(p.amount), 0)
+      + installmentUntrackedCount(master, payments) * oldRef
+    const pendingSum   = allPending.reduce((s, p) => s + Number(p.amount), 0)
+    const highestRow   = Math.max(lastNum, ...allPending.map(p => Number(p.current_installment)))
+    const notYetRows   = Math.max(0, newTotal - highestRow)
+    const totalAmount  = Math.round((paidSum + pendingSum + notYetRows * newRef) * 100) / 100
+    const masterUpdates = { name, amount: newRef, category, recur_freq, total_installments: newTotal, total_amount: totalAmount }
+    const { data: masterData, error: masterError } = await supabase.from('payments').update(masterUpdates).eq('id', masterId).select()
+    if (masterError || !masterData || masterData.length === 0) return { error: masterError || noPermission }
+
+    const deletedIds = toDelete.map(p => p.id)
+    setPayments(prev => {
+      let next = prev.filter(p => !deletedIds.includes(p.id)).map(p => {
+        if (p.id === masterId) return { ...p, ...masterData[0] }
+        const up = updatedPending.find(u => u.id === p.id)
+        if (up) return { ...p, ...up }
+        if (paidIds.includes(p.id)) return { ...p, total_installments: newTotal, ...(name !== master.name ? { name } : {}) }
+        return p
+      })
+      if (created.length) next = [...next, ...created]
       return next
     })
     return { error: null }
@@ -1355,7 +1490,7 @@ export function usePayments(userId, activeSpaceId = null, activeSpaceName = null
   return {
     payments, loading,
     addPayment, addRecurrentPayment, addInstallmentPayment,
-    updatePayment, updateRecurrentName, updateRecurrentConfig, checkPeriodIncomeConflict,
+    updatePayment, updateRecurrentName, updateRecurrentConfig, updateInstallmentConfig, checkPeriodIncomeConflict,
     abonarInstallment,
     registerContribution, getContributions, payRemainingContribution, setContributionTotalAmount, unmarkSharedPayment, forceSettlePayment,
     payFromFund, setFundContribution,
