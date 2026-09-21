@@ -133,7 +133,7 @@ export default function App() {
   const {
     payments, loading: paymentsLoading,
     addPayment, addRecurrentPayment, addInstallmentPayment,
-    updatePayment, updateRecurrentName, updateRecurrentConfig, checkPeriodIncomeConflict,
+    updatePayment, updateRecurrentName, updateRecurrentConfig, updateInstallmentConfig, checkPeriodIncomeConflict,
     abonarInstallment,
     registerContribution, getContributions, payRemainingContribution, setContributionTotalAmount, unmarkSharedPayment, forceSettlePayment,
     payFromFund, setFundContribution,
@@ -678,6 +678,20 @@ export default function App() {
             firstDate:   data.due_date    || editPayment.due_date,
           })
           if (error) showToast(t('app.toast.reactivateError')); else showToast(t('app.toast.reactivated', { name: editPayment.name }))
+        } else if (editPayment.is_installment) {
+          // Editar master de una parcialidad — antes caía en
+          // updateRecurrentConfig(), que ignora total de pagos, total en
+          // dinero y fecha del próximo pago (el modal decía "guardado" pero
+          // el total nunca cambiaba — bug real de Johnatan, sept 2026).
+          const { error } = await updateInstallmentConfig(editPayment.id, {
+            name:               data.name        || editPayment.name,
+            amount:             data.amount      ?? editPayment.amount,
+            category:           data.category    || editPayment.category,
+            recur_freq:         data.recur_freq  || editPayment.recur_freq,
+            total_installments: data.total_installments ?? editPayment.total_installments,
+            firstDate:          data.due_date    || null,
+          })
+          if (error) showToast(t('app.toast.saveError')); else showToast(t('app.toast.paymentUpdated'))
         } else {
           // Editar master activo
           const { error } = await updateRecurrentConfig(editPayment.id, {
