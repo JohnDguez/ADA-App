@@ -87,7 +87,7 @@ async function getPersonalAvailable(supabase, userId) {
   const periodStartStr = dateToStr(start)
   const [{ data: incomes }, { data: paid }] = await Promise.all([
     supabase.from('period_income').select('amount').is('space_id', null).eq('user_id', userId).eq('period_start', periodStartStr),
-    supabase.from('payments').select('amount, paid_at').is('space_id', null).eq('user_id', userId).eq('is_paid', true),
+    supabase.from('payments').select('amount, paid_at').is('space_id', null).eq('user_id', userId).eq('is_paid', true).eq('is_history_only', false),
   ])
   const salario = profile.salary_enabled ? Number(profile.salary_amount || 0) : 0
   const extras  = (incomes || []).reduce((s, r) => s + Number(r.amount), 0)
