@@ -131,7 +131,9 @@ export function SettingsExportPage({ profile, sharedSpaces, onOpenPremium, onBac
     const fromBuffered = dateToStr(new Date(dateOf(from).getTime() - 86400000))
     const toBuffered   = dateToStr(new Date(dateOf(to).getTime() + 86400000))
 
-    let query = supabase.from('payments').select('*').eq('is_master', false)
+    // `is_history_only` (sept 2026): pagos anteriores de una parcialidad
+    // registrados solo para el historial del master — nunca son gasto.
+    let query = supabase.from('payments').select('*').eq('is_master', false).eq('is_history_only', false)
       .gte('due_date', fromBuffered).lte('due_date', toBuffered)
     query = space === 'personal'
       ? query.eq('user_id', profile.id).is('space_id', null)
@@ -323,7 +325,7 @@ export function SettingsExportPage({ profile, sharedSpaces, onOpenPremium, onBac
     const bufferedStart = dateToStr(new Date(dateOf(windowStart).getTime() - 86400000))
     const bufferedEnd = dateToStr(new Date(dateOf(toStr).getTime() + 86400000))
 
-    let gq = supabase.from('payments').select('due_date, paid_at, amount, is_postponed').eq('is_master', false)
+    let gq = supabase.from('payments').select('due_date, paid_at, amount, is_postponed').eq('is_master', false).eq('is_history_only', false)
       .gte('due_date', bufferedStart).lte('due_date', bufferedEnd)
     gq = space === 'personal' ? gq.eq('user_id', profile.id).is('space_id', null) : gq.eq('space_id', space)
     const { data: gastosRaw } = await gq
