@@ -38,6 +38,7 @@ import { NavRail } from './components/NavRail'
 import { RailFab } from './components/RailFab'
 import { NotificationsPanel } from './components/NotificationsPanel'
 import { PaymentModal } from './components/PaymentModal'
+import { ChangeMethodModal } from './components/ChangeMethodModal'
 import { VariableAmountModal } from './components/VariableAmountModal'
 import { ConfirmNextPeriodPayModal } from './components/ConfirmNextPeriodPayModal'
 import { InstallmentAbonarModal } from './components/InstallmentAbonarModal'
@@ -344,6 +345,8 @@ export default function App() {
   // #310" que quedó sin diagnosticar en v0.9.124 (pantalla en blanco justo
   // después de iniciar sesión, sin navbar ni contenido)
   const [settingsInitialSection, setSettingsInitialSection] = useState(null)
+  // "Cambiar método de pago" (v0.9.487) — afecta solo a ESE pago.
+  const [changeMethodPayment, setChangeMethodPayment] = useState(null)
   // Tab de origen cuando se entra a una sección de Ajustes por un atajo
   // directo (ej. "Editar" desde el switcher de Espacio Compartido) — el
   // PRIMER "atrás" desde ahí debe regresar a este tab, no al menú
@@ -807,6 +810,9 @@ export default function App() {
             firstDate:   data.due_date    || edited.due_date,
             // Parcialidad (fix v0.9.481): el formulario también trae el total
             total_installments: data.total_installments ?? edited.total_installments,
+            // Método de pago (v0.9.487): se propaga al master y a sus pendientes
+            payment_method_id: data.payment_method_id,
+            payment_method_kind: data.payment_method_kind,
           }).then(settle(t('app.toast.reactivated', { name: edited.name }), t('app.toast.reactivateError')))
         } else if (edited.is_installment) {
           // Editar master de una parcialidad — updateInstallmentConfig()
@@ -819,6 +825,8 @@ export default function App() {
             recur_freq:         data.recur_freq  || edited.recur_freq,
             total_installments: data.total_installments ?? edited.total_installments,
             firstDate:          data.due_date    || null,
+            payment_method_id:   data.payment_method_id,
+            payment_method_kind: data.payment_method_kind,
           }).then(settle(t('app.toast.paymentUpdated'), t('app.toast.saveError')))
         } else {
           // Editar master activo
@@ -829,6 +837,8 @@ export default function App() {
             category:    data.category    || edited.category,
             is_variable: data.is_variable ?? edited.is_variable,
             firstDate:   data.due_date    || edited.due_date,
+            payment_method_id:   data.payment_method_id,
+            payment_method_kind: data.payment_method_kind,
           }).then(settle(t('app.toast.paymentUpdated'), t('app.toast.saveError')))
         }
         return
@@ -874,6 +884,8 @@ export default function App() {
           recur_freq:  data.recur_freq,
           is_variable: data.is_variable || false,
           firstDate:   data.due_date,
+          payment_method_id:   data.payment_method_id ?? null,
+          payment_method_kind: data.payment_method_kind || 'cash',
         }).then(settle(t('app.toast.added', { name: data.name })))
       } else {
         addPayment(data).then(settle(t('app.toast.paymentAdded')))
@@ -1033,6 +1045,8 @@ export default function App() {
           onPostpone={handlePostpone}
           onAdvance={handleAdvance}
           onGoSettings={() => changeTab('settings')}
+          paymentMethodsList={paymentMethods.methods}
+          onChangeMethod={setChangeMethodPayment}
           notifications={allNotifications}
           unreadCount={allUnreadCount}
           onMarkAsRead={handleNotifMarkAsRead}
@@ -1047,6 +1061,7 @@ export default function App() {
           payments={visiblePayments}
           dataLoading={paymentsLoading}
           periodIncome={periodIncome}
+          paymentMethodsList={paymentMethods.methods}
           slideClass={`page-slide-${slideDir}`}
           {...headerProps}
           activeSpaceId={paymentsSpaceId}
@@ -1168,6 +1183,20 @@ export default function App() {
         onNavigate={handleNotifNavigate}
       />
 
+      <ChangeMethodModal
+        open={!!changeMethodPayment}
+        payment={changeMethodPayment}
+        methods={paymentMethods.methods}
+        onSave={(payment, fields) => {
+          setChangeMethodPayment(null)
+          updatePayment(payment.id, fields).then(({ error, reverted, busy }) => {
+            if (reverted || busy) return
+            showToast(error ? t('app.toast.saveError') : t('app.toast.paymentUpdated'))
+          })
+        }}
+        onClose={() => setChangeMethodPayment(null)}
+      />
+
       <PaymentModal
         open={modalOpen}
         onClose={() => { setModalOpen(false); setEditPayment(null) }}
@@ -1180,6 +1209,7 @@ export default function App() {
         profile={effectiveProfile}
         spacePermissions={spacePermissions}
         isSharedSpace={!!paymentsSpaceId}
+        paymentMethods={paymentMethods}
         customCategories={profile.custom_categories || []}
         onOpenPremium={() => setPremiumPageOpen(true)}
         onAddCategory={async (cat) => {
