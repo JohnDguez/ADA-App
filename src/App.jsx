@@ -203,7 +203,8 @@ export default function App() {
       payment_name: payment.name,
       payment_id: payment.id,
       space_id: payment.space_id || null,
-      tab: (payment.is_paid || payment.is_postponed) ? 'payments' : 'home',
+      // Master (fase 3, v0.9.481) → Recurrentes, donde vive su fila.
+      tab: payment.is_master ? 'recurrents' : (payment.is_paid || payment.is_postponed) ? 'payments' : 'home',
     })
   }
   // Se reasigna en cada render (es un ref dentro del hook, no provoca
@@ -676,13 +677,14 @@ export default function App() {
   // veces con el mismo texto). `handleDeleteDirect` es el único punto de
   // entrada expuesto a los componentes ahora.
   async function performDelete(id, payment) {
-    if (payment?.is_master) {
-      await deleteRecurrent(payment.id)
-    } else if (payment?.is_recurrent && !payment?.is_installment && payment?.parent_id) {
-      await deleteRecurrent(payment.parent_id)
-    } else if (payment?.is_installment && payment?.parent_id) {
-      // Copia de parcialidad con master → eliminar via deleteRecurrent
-      await deleteRecurrent(payment.parent_id)
+    // Masters y copias → deleteRecurrent (paquete optimista, fase 3
+    // v0.9.481): si falla, todo reaparece y handleSyncError ya avisó.
+    const masterId = payment?.is_master ? payment.id
+      : (payment?.parent_id && (payment?.is_installment || payment?.is_recurrent)) ? payment.parent_id
+      : null
+    if (masterId) {
+      const { reverted, busy } = await deleteRecurrent(masterId)
+      if (reverted || busy) return
     } else if (payment?.is_installment) {
       // Parcialidad sin master (sistema antiguo, fallback)
       await deleteInstallmentFuture(payment.name)
@@ -716,7 +718,11 @@ export default function App() {
 
   async function handlePauseRecurrent(masterId) {
     const master = payments.find(p => p.id === masterId)
-    await pauseRecurrent(masterId)
+    // Optimista (fase 3, v0.9.481): la pausa se ve al instante; el aviso de
+    // "pausado" sale al confirmar. Si falla, handleSyncError ya avisó.
+    const { error, reverted, busy } = await pauseRecurrent(masterId)
+    if (reverted || busy) return
+    if (error) { showToast(t('app.toast.genericError')); return }
     showToast(t('app.toast.paused', { name: master?.name || t('app.toast.fallbackPaymentName') }))
   }
   async function handleResumeRecurrent(masterId) {
@@ -727,42 +733,49 @@ export default function App() {
   async function handleSave(data) {
     if (editPayment) {
       if (editPayment.is_master) {
-        if (editPayment.paused) {
-          // Reactivar desde pausa: crear 2 nuevas copias con nueva config
-          const { error } = await resumeRecurrent(editPayment.id, {
-            name:        data.name        || editPayment.name,
-            amount:      data.amount      ?? editPayment.amount,
-            recur_freq:  data.recur_freq  || editPayment.recur_freq,
-            category:    data.category    || editPayment.category,
-            is_variable: data.is_variable ?? editPayment.is_variable,
-            firstDate:   data.due_date    || editPayment.due_date,
-          })
-          if (error) showToast(t('app.toast.reactivateError')); else showToast(t('app.toast.reactivated', { name: editPayment.name }))
-        } else if (editPayment.is_installment) {
-          // Editar master de una parcialidad — antes caía en
-          // updateRecurrentConfig(), que ignora total de pagos, total en
-          // dinero y fecha del próximo pago (el modal decía "guardado" pero
-          // el total nunca cambiaba — bug real de Johnatan, sept 2026).
-          const { error } = await updateInstallmentConfig(editPayment.id, {
-            name:               data.name        || editPayment.name,
-            amount:             data.amount      ?? editPayment.amount,
-            category:           data.category    || editPayment.category,
-            recur_freq:         data.recur_freq  || editPayment.recur_freq,
-            total_installments: data.total_installments ?? editPayment.total_installments,
+        // Masters — paquetes optimistas (fase 3, v0.9.481): NO se espera al
+        // servidor, el modal cierra al instante y Recurrentes/Inicio ya
+        // muestran el cambio. El aviso de éxito sale al confirmar; si falla,
+        // handleSyncError revierte todo el paquete y avisa.
+        const edited = editPayment
+        const settle = (successMsg, errorMsg) => ({ error, reverted, busy }) => {
+          if (reverted || busy) return
+          showToast(error ? errorMsg : successMsg)
+        }
+        if (edited.paused) {
+          // Reactivar desde pausa, con la config del formulario
+          resumeRecurrent(edited.id, {
+            name:        data.name        || edited.name,
+            amount:      data.amount      ?? edited.amount,
+            recur_freq:  data.recur_freq  || edited.recur_freq,
+            category:    data.category    || edited.category,
+            is_variable: data.is_variable ?? edited.is_variable,
+            firstDate:   data.due_date    || edited.due_date,
+            // Parcialidad (fix v0.9.481): el formulario también trae el total
+            total_installments: data.total_installments ?? edited.total_installments,
+          }).then(settle(t('app.toast.reactivated', { name: edited.name }), t('app.toast.reactivateError')))
+        } else if (edited.is_installment) {
+          // Editar master de una parcialidad — updateInstallmentConfig()
+          // (NO updateRecurrentConfig, que ignora total de pagos, total en
+          // dinero y fecha del próximo pago — bug real de Johnatan, v0.9.478).
+          updateInstallmentConfig(edited.id, {
+            name:               data.name        || edited.name,
+            amount:             data.amount      ?? edited.amount,
+            category:           data.category    || edited.category,
+            recur_freq:         data.recur_freq  || edited.recur_freq,
+            total_installments: data.total_installments ?? edited.total_installments,
             firstDate:          data.due_date    || null,
-          })
-          if (error) showToast(t('app.toast.saveError')); else showToast(t('app.toast.paymentUpdated'))
+          }).then(settle(t('app.toast.paymentUpdated'), t('app.toast.saveError')))
         } else {
           // Editar master activo
-          const { error } = await updateRecurrentConfig(editPayment.id, {
-            name:        data.name        || editPayment.name,
-            amount:      data.amount      ?? editPayment.amount,
-            recur_freq:  data.recur_freq  || editPayment.recur_freq,
-            category:    data.category    || editPayment.category,
-            is_variable: data.is_variable ?? editPayment.is_variable,
-            firstDate:   data.due_date    || editPayment.due_date,
-          })
-          if (error) showToast(t('app.toast.saveError')); else showToast(t('app.toast.paymentUpdated'))
+          updateRecurrentConfig(edited.id, {
+            name:        data.name        || edited.name,
+            amount:      data.amount      ?? edited.amount,
+            recur_freq:  data.recur_freq  || edited.recur_freq,
+            category:    data.category    || edited.category,
+            is_variable: data.is_variable ?? edited.is_variable,
+            firstDate:   data.due_date    || edited.due_date,
+          }).then(settle(t('app.toast.paymentUpdated'), t('app.toast.saveError')))
         }
         return
       }
