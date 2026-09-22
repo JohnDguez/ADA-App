@@ -24,6 +24,7 @@ import { GoalsPage } from './pages/GoalsPage'
 import { useProfile } from './hooks/useProfile'
 import { useNotifications } from './hooks/useNotifications'
 import { useLocalNotifications, isLocalNotification } from './hooks/useLocalNotifications'
+import { usePeriodIncome } from './hooks/usePeriodIncome'
 import { highlightPaymentWhenVisible } from './lib/highlightPayment'
 import { useSpaceStats } from './hooks/useSpaceStats'
 import { SpaceSwitcher } from './components/SpaceSwitcher'
@@ -175,7 +176,11 @@ export default function App() {
   // abono no aparecía en Gastos hasta recargar la app. Mismo patrón que el
   // `onDataDeleted={() => { refetch() }}` de SettingsPage, más abajo.
   // 5º parámetro (v0.9.483): fallos de metas optimistas — ver handleGoalSyncError.
-  const goalsData = useGoals(user?.id, profile, paymentsSpaceId, refetch, handleGoalSyncError)
+  // 4º parámetro: se llama cuando una acción de meta ya confirmada movió
+  // dinero — refresca pagos (aporte = gasto) y, desde v0.9.484, también los
+  // ingresos extras (retiro = ingreso), que ahora viven en usePeriodIncome.
+  function handleGoalMoneyChanged() { refetch(); periodIncome.refetch() }
+  const goalsData = useGoals(user?.id, profile, paymentsSpaceId, handleGoalMoneyChanged, handleGoalSyncError)
 
   // v0.9.369 — RESTAURADO: se había quitado en v0.9.367 asumiendo que
   // RailSpaceSwitcher.jsx (dentro de NavRail.jsx) lo reemplazaba del
@@ -202,7 +207,8 @@ export default function App() {
       type: 'sync_error',
       action,
       payment_name: payment.name,
-      payment_id: payment.id,
+      // Crear (v0.9.484): la fila ya no existe tras revertir — nada que resaltar.
+      payment_id: action === 'create' ? null : payment.id,
       space_id: payment.space_id || null,
       // Master (fase 3, v0.9.481) → Recurrentes, donde vive su fila.
       tab: payment.is_master ? 'recurrents' : (payment.is_paid || payment.is_postponed) ? 'payments' : 'home',
@@ -221,6 +227,12 @@ export default function App() {
       space_id: paymentsSpaceId || null,
       tab: 'goals',
     })
+  }
+  // Ingresos extras (v0.9.484): aviso + notificación que lleva a Gastos.
+  function handleIncomeSyncError({ name, action }) {
+    const label = name || t('app.toast.fallbackIncomeName')
+    showToast(t(`sync.body.${action}`, { name: label }))
+    localNotifs.add({ type: 'sync_error', action, payment_name: label, space_id: paymentsSpaceId || null, tab: 'payments' })
   }
   // Se reasigna en cada render (es un ref dentro del hook, no provoca
   // renders) para que el aviso siempre use el `t`/estado más reciente.
@@ -277,6 +289,10 @@ export default function App() {
         salary_amount: activeSpaceEntry.space.salary_amount || 0,
       }
     : profile
+
+  // Ingresos Extras del periodo (v0.9.484) — a nivel de App para que
+  // persistan entre pestañas y sean optimistas (ver usePeriodIncome.js).
+  const periodIncome = usePeriodIncome(user?.id, effectiveProfile, paymentsSpaceId, handleIncomeSyncError)
 
   const [tab,            setTab]           = useState(() => {
     const hasActiveSession = sessionStorage.getItem('ada_session')
@@ -821,28 +837,36 @@ export default function App() {
         }
       })
     } else {
-      // Crear nuevo
+      // Crear nuevo — optimista (v0.9.484): NO se espera al servidor, el
+      // modal cierra al instante y el pago ya aparece (con el ícono de
+      // sincronizando). El aviso de éxito sale al confirmar; si falla,
+      // handleSyncError lo quita y avisa.
+      const settle = successMsg => ({ error, reverted, busy }) => {
+        if (reverted || busy) return
+        showToast(error ? t('app.toast.saveError') : successMsg)
+      }
       if (data.is_recurrent && !data.is_installment) {
-        const { error } = await addRecurrentPayment({
+        addRecurrentPayment({
           name:        data.name,
           amount:      data.amount,
           category:    data.category,
           recur_freq:  data.recur_freq,
           is_variable: data.is_variable || false,
           firstDate:   data.due_date,
-        })
-        if (error) showToast(t('app.toast.saveError')); else showToast(t('app.toast.added', { name: data.name }))
+        }).then(settle(t('app.toast.added', { name: data.name })))
       } else {
-        const { error } = await addPayment(data)
-        if (error) showToast(t('app.toast.saveError')); else showToast(t('app.toast.paymentAdded'))
+        addPayment(data).then(settle(t('app.toast.paymentAdded')))
       }
     }
   }
 
-  async function handleSaveInstallment(data) {
-    const { error } = await addInstallmentPayment(data)
-    if (error) showToast(t('app.toast.saveError'))
-    else showToast(t('app.toast.installmentCreated', { current: data.startFrom || 1, total: data.totalInstallments }))
+  function handleSaveInstallment(data) {
+    // Optimista (v0.9.484) — mismo criterio que crear en handleSave.
+    addInstallmentPayment(data).then(({ error, reverted, busy }) => {
+      if (reverted || busy) return
+      if (error) showToast(t('app.toast.saveError'))
+      else showToast(t('app.toast.installmentCreated', { current: data.startFrom || 1, total: data.totalInstallments }))
+    })
   }
 
   // Cambia de tab de forma centralizada — antes cada disparador (BottomNav,
@@ -1001,6 +1025,7 @@ export default function App() {
         <PaymentsPage
           payments={visiblePayments}
           dataLoading={paymentsLoading}
+          periodIncome={periodIncome}
           slideClass={`page-slide-${slideDir}`}
           {...headerProps}
           activeSpaceId={paymentsSpaceId}
