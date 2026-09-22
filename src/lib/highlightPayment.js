@@ -15,7 +15,9 @@ const TIMEOUT_MS = 3000
 export function highlightPaymentWhenVisible(paymentId) {
   if (!paymentId) return
   const started = Date.now()
-  const selector = `[data-payment-id="${typeof CSS !== 'undefined' && CSS.escape ? CSS.escape(paymentId) : paymentId}"]`
+  // v0.9.483: también tarjetas de Metas (`data-goal-id`) — mismo resalte.
+  const escaped = typeof CSS !== 'undefined' && CSS.escape ? CSS.escape(String(paymentId)) : paymentId
+  const selector = `[data-payment-id="${escaped}"], [data-goal-id="${escaped}"]`
 
   function attempt() {
     const el = Array.from(document.querySelectorAll(selector)).find(e => e.getClientRects().length > 0)
