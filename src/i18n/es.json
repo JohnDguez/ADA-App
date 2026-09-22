@@ -40,7 +40,8 @@
       "sharedSpace": "Espacio Compartido",
       "subscription": "Mi suscripción",
       "getPremium": "Obtener Premium",
-      "export": "Exportar datos"
+      "export": "Exportar datos",
+      "cards": "Mis tarjetas"
     },
     "premiumBadge": "Cuenta Premium",
     "tutorialAgain": "Ver tutorial de nuevo",
@@ -859,7 +860,9 @@
     "otros": "Otros"
   },
   "select": {
-    "placeholder": "Selecciona"
+    "placeholder": "Selecciona",
+    "searchPlaceholder": "Buscar",
+    "noResults": "Sin resultados"
   },
   "payCard": {
     "status": {
@@ -1395,7 +1398,76 @@
       "create": "{{name}} no se creó. No se hicieron cambios.",
       "incomeCreate": "El ingreso {{name}} no se registró. No se hicieron cambios.",
       "incomeUpdate": "Los cambios del ingreso {{name}} no se guardaron. No se hicieron cambios.",
-      "incomeDelete": "El ingreso {{name}} no se eliminó. No se hicieron cambios."
+      "incomeDelete": "El ingreso {{name}} no se eliminó. No se hicieron cambios.",
+      "cardCreate": "La tarjeta {{name}} no se guardó. No se hicieron cambios.",
+      "cardUpdate": "Los cambios de {{name}} no se guardaron. No se hicieron cambios.",
+      "cardDelete": "{{name}} no se eliminó. No se hicieron cambios."
+    }
+  },
+  "cards": {
+    "title": "Mis tarjetas",
+    "description": "Registra tus tarjetas para identificar de dónde sale tu dinero.",
+    "disclaimer": {
+      "title": "Solo para organizar tus gastos",
+      "text": "Tus tarjetas no son formas de pago y LunaPay no tiene acceso a tus cuentas ni a tus datos bancarios. Solo sirven para que identifiques con qué pagaste y organices mejor tus gastos."
+    },
+    "kind": {
+      "credit": "Crédito",
+      "debit": "Débito"
+    },
+    "network": {
+      "visa": "Visa",
+      "mastercard": "Mastercard",
+      "amex": "Amex"
+    },
+    "bankGroups": {
+      "banks": "Bancos",
+      "digital": "Bancos digitales",
+      "stores": "Tiendas departamentales",
+      "other": "Otro"
+    },
+    "otherBank": "Otro banco",
+    "fallbackName": "tu tarjeta",
+    "cutAndDue": "Corte día {{cut}} · Límite día {{due}}",
+    "addButton": "Agregar tarjeta",
+    "empty": {
+      "creditTitle": "Aún no tienes tarjetas de crédito",
+      "debitTitle": "Aún no tienes tarjetas de débito",
+      "subtitle": "Toca para agregar una"
+    },
+    "deleteTitle": "Eliminar tarjeta",
+    "deleteMessage": "Se eliminará {{name}} de Mis tarjetas.",
+    "form": {
+      "titleNew": "Nueva tarjeta",
+      "titleEdit": "Editar tarjeta",
+      "kindLocked": "El tipo de tarjeta no se puede cambiar después de registrarla.",
+      "bank": "Banco",
+      "bankPlaceholder": "Elige tu banco",
+      "alias": "Alias",
+      "aliasPlaceholder": "Ej. Nómina",
+      "last4": "Últimos 4",
+      "aliasHelper": "El alias y los últimos 4 dígitos son opcionales; te ayudan a distinguir dos tarjetas del mismo banco.",
+      "network": "Red",
+      "form": "Tipo",
+      "physical": "Física",
+      "digital": "Digital",
+      "days": "Corte y límite de pago",
+      "debitNote": "Las tarjetas de débito no llevan saldo ni fechas: solo suman lo que marques pagado con ellas.",
+      "saveNew": "Guardar tarjeta",
+      "saveEdit": "Guardar cambios"
+    },
+    "errors": {
+      "bank": "Elige el banco de tu tarjeta.",
+      "days": "Elige el día de corte y el día límite de pago.",
+      "last4": "Los últimos 4 deben ser 4 números."
+    },
+    "picker": {
+      "cutLabel": "Día de corte",
+      "dueLabel": "Día límite de pago",
+      "hint": "Corta el {{cut}} · pagas a más tardar el {{due}} ({{days}} días)",
+      "nextMonth": "El límite cae en el mes siguiente al corte.",
+      "sameDay": "El límite no puede ser el mismo día del corte.",
+      "help": "Arrastra cualquiera de los dos marcadores, toca un día para mover el que está seleccionado arriba, o escríbelo."
     }
   }
 }

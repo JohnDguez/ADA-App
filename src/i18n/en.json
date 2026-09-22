@@ -40,7 +40,8 @@
       "sharedSpace": "Shared Space",
       "subscription": "My subscription",
       "getPremium": "Get Premium",
-      "export": "Export data"
+      "export": "Export data",
+      "cards": "My cards"
     },
     "premiumBadge": "Premium Account",
     "tutorialAgain": "View tutorial again",
@@ -859,7 +860,9 @@
     "otros": "Other"
   },
   "select": {
-    "placeholder": "Select"
+    "placeholder": "Select",
+    "searchPlaceholder": "Search",
+    "noResults": "No results"
   },
   "payCard": {
     "status": {
@@ -1395,7 +1398,76 @@
       "create": "{{name}} wasn't created. Nothing was changed.",
       "incomeCreate": "The income {{name}} wasn't recorded. Nothing was changed.",
       "incomeUpdate": "Your changes to the income {{name}} weren't saved. Nothing was changed.",
-      "incomeDelete": "The income {{name}} wasn't deleted. Nothing was changed."
+      "incomeDelete": "The income {{name}} wasn't deleted. Nothing was changed.",
+      "cardCreate": "The card {{name}} wasn't saved. Nothing was changed.",
+      "cardUpdate": "Your changes to {{name}} weren't saved. Nothing was changed.",
+      "cardDelete": "{{name}} wasn't deleted. Nothing was changed."
+    }
+  },
+  "cards": {
+    "title": "My cards",
+    "description": "Add your cards to see where your money goes.",
+    "disclaimer": {
+      "title": "Only to organize your spending",
+      "text": "Your cards are not payment methods and LunaPay has no access to your accounts or banking data. They only help you identify what you paid with and organize your spending better."
+    },
+    "kind": {
+      "credit": "Credit",
+      "debit": "Debit"
+    },
+    "network": {
+      "visa": "Visa",
+      "mastercard": "Mastercard",
+      "amex": "Amex"
+    },
+    "bankGroups": {
+      "banks": "Banks",
+      "digital": "Digital banks",
+      "stores": "Department stores",
+      "other": "Other"
+    },
+    "otherBank": "Other bank",
+    "fallbackName": "your card",
+    "cutAndDue": "Closing day {{cut}} · Due day {{due}}",
+    "addButton": "Add card",
+    "empty": {
+      "creditTitle": "No credit cards yet",
+      "debitTitle": "No debit cards yet",
+      "subtitle": "Tap to add one"
+    },
+    "deleteTitle": "Delete card",
+    "deleteMessage": "{{name}} will be removed from My cards.",
+    "form": {
+      "titleNew": "New card",
+      "titleEdit": "Edit card",
+      "kindLocked": "The card type can't be changed after it's added.",
+      "bank": "Bank",
+      "bankPlaceholder": "Choose your bank",
+      "alias": "Nickname",
+      "aliasPlaceholder": "E.g. Payroll",
+      "last4": "Last 4",
+      "aliasHelper": "Nickname and last 4 digits are optional; they help you tell apart two cards from the same bank.",
+      "network": "Network",
+      "form": "Type",
+      "physical": "Physical",
+      "digital": "Digital",
+      "days": "Closing and due date",
+      "debitNote": "Debit cards have no balance or dates: they only add up what you mark as paid with them.",
+      "saveNew": "Save card",
+      "saveEdit": "Save changes"
+    },
+    "errors": {
+      "bank": "Choose your card's bank.",
+      "days": "Choose the closing day and the due day.",
+      "last4": "Last 4 must be 4 numbers."
+    },
+    "picker": {
+      "cutLabel": "Closing day",
+      "dueLabel": "Due day",
+      "hint": "Closes on {{cut}} · pay by {{due}} ({{days}} days)",
+      "nextMonth": "The due date falls in the month after closing.",
+      "sameDay": "The due day can't be the same as the closing day.",
+      "help": "Drag either marker, tap a day to move the one selected above, or type it."
     }
   }
 }
