@@ -14,6 +14,34 @@ import i18n from '../i18n'
 export function usePayments(userId, activeSpaceId = null, activeSpaceName = null) {
   const [payments, setPayments] = useState([])
 
+  // ── Actualización optimista (septiembre 2026, v0.9.480) ──────────────────
+  // Marcar pagado/no pagado, posponer, editar y borrar UN pago cambian la
+  // pantalla al instante y confirman con Supabase detrás. Mientras tanto la
+  // fila lleva `_syncing: true` (solo en memoria, nunca viaja a la base) y
+  // la UI muestra un ícono girando en vez de sus acciones.
+  // `pendingOpsRef`: cambios todavía sin confirmar, por id de pago. Un
+  // refetch (Realtime de un espacio compartido, u otro hook que llame
+  // `refetch`) que llegue a medio camino los vuelve a aplicar encima de lo
+  // que traiga el servidor — sin esto la fila "brincaría" de regreso a su
+  // estado viejo y luego otra vez al nuevo.
+  const pendingOpsRef = useRef(new Map()) // id -> { patch } | { deleted: true }
+  // Quién se entera de un fallo definitivo (App.jsx: aviso + notificación
+  // local). Ref, no estado — se reasigna en cada render de App sin provocar
+  // renders aquí.
+  const syncErrorHandlerRef = useRef(null)
+  function setSyncErrorHandler(fn) { syncErrorHandlerRef.current = fn }
+
+  function applyPendingOps(rows) {
+    const ops = pendingOpsRef.current
+    if (ops.size === 0) return rows
+    return rows
+      .filter(r => !ops.get(r.id)?.deleted)
+      .map(r => {
+        const op = ops.get(r.id)
+        return op?.patch ? { ...r, ...op.patch, _syncing: true } : r
+      })
+  }
+
   // ── Ventana de carga (v0.9.281) ──────────────────────────────────────────
   // fetchPayments ya NO trae todo el historial: de entrada carga (a) todos
   // los pendientes y masters sin importar fecha, y (b) los pagados de los
@@ -318,7 +346,7 @@ export function usePayments(userId, activeSpaceId = null, activeSpaceName = null
           }
           rows = rows.map(p => ({ ...p, contributed_amount: sums[p.id] || 0, contributors: byPayment[p.id] || [] }))
         }
-        setPayments(rows)
+        setPayments(applyPendingOps(rows))
         setLoading(false)
         return
       } catch (e) {
@@ -424,6 +452,65 @@ export function usePayments(userId, activeSpaceId = null, activeSpaceName = null
   // ─────────────────────────────────────────────────────────────────────────
   // HELPERS INTERNOS
   // ─────────────────────────────────────────────────────────────────────────
+
+  // Reintenta SOLO fallos de red (el error de supabase-js llega sin `code`):
+  // un rechazo real del servidor (RLS, fila inexistente — `PGRST116`, o
+  // nuestro propio `NO_ROWS`) no va a cambiar reintentando. Mismo criterio
+  // de 3 intentos y esperas de 300/600ms que fetchPayments().
+  async function withRetry(fn) {
+    let res
+    for (let attempt = 0; attempt < 3; attempt++) {
+      try { res = await fn() } catch (e) { res = { error: e } }
+      if (!res?.error || res.error.code) return res
+      if (attempt < 2) await new Promise(r => setTimeout(r, 300 * (attempt + 1)))
+    }
+    return res
+  }
+
+  function stripSync(p) {
+    if (!p || !('_syncing' in p)) return p
+    const { _syncing, ...rest } = p
+    return rest
+  }
+
+  // Aplica un cambio a UN pago al instante y lo confirma con el servidor.
+  // - `patch`: campos que cambian (o `deleted: true` para quitarlo).
+  // - `commit`: la escritura real; debe regresar `{ data, error }`.
+  // - `action`: para el aviso si falla ('markPaid' | 'markUnpaid' |
+  //   'postpone' | 'update' | 'delete').
+  // Si el servidor confirma, la fila toma lo que regresó y pierde
+  // `_syncing`. Si falla (tras reintentos), la fila vuelve EXACTAMENTE a como
+  // estaba — solo esa fila, nunca el arreglo completo, para no pisar otros
+  // cambios que hayan pasado mientras tanto — y se avisa vía
+  // `syncErrorHandlerRef`. Un pago que ya está sincronizando no acepta otra
+  // acción (la UI de todas formas las deshabilita).
+  async function runOptimistic({ id, patch, deleted = false, action, commit }) {
+    const before = payments.find(p => p.id === id)
+    if (!before) return { error: { message: 'Pago no encontrado', code: 'NOT_FOUND' } }
+    if (pendingOpsRef.current.has(id)) return { error: { message: 'Sincronizando', code: 'BUSY' }, busy: true }
+
+    const original = stripSync(before)
+    pendingOpsRef.current.set(id, deleted ? { deleted: true } : { patch })
+    setPayments(prev => deleted
+      ? prev.filter(p => p.id !== id)
+      : prev.map(p => p.id === id ? { ...p, ...patch, _syncing: true } : p))
+
+    const res = await withRetry(commit)
+    pendingOpsRef.current.delete(id)
+
+    if (res?.error) {
+      setPayments(prev => prev.some(p => p.id === id)
+        ? prev.map(p => p.id === id ? original : p)
+        : [...prev, original])
+      syncErrorHandlerRef.current?.({ payment: original, action, error: res.error })
+      return { error: res.error, reverted: true }
+    }
+    if (!deleted) {
+      const serverRow = Array.isArray(res.data) ? res.data[0] : res.data
+      setPayments(prev => prev.map(p => p.id === id ? stripSync({ ...p, ...(serverRow || {}) }) : p))
+    }
+    return { data: res.data, error: null }
+  }
 
   // Asegura siempre 2 copias pendientes en cola para un master dado
   async function ensureTwoAhead(masterId, currentPayments) {
@@ -737,10 +824,14 @@ export function usePayments(userId, activeSpaceId = null, activeSpaceName = null
     return { error: null, done: false }
   }
 
+  // Optimista (v0.9.480) — ver runOptimistic(). La usan editar un pago
+  // único/una copia, "Regresar al periodo actual" y otros ajustes de UNA
+  // fila; nunca cambios de varias filas (esos tienen su propia función).
   async function updatePayment(id, updates) {
-    const { data, error } = await supabase.from('payments').update(updates).eq('id', id).select().single()
-    if (!error) setPayments(prev => prev.map(p => p.id === id ? { ...p, ...data } : p))
-    return { data, error }
+    return runOptimistic({
+      id, patch: updates, action: 'update',
+      commit: () => supabase.from('payments').update(updates).eq('id', id).select().single(),
+    })
   }
 
   // Bug real encontrado por Johnatan (v0.9.258): el modal de remanente
@@ -1042,10 +1133,17 @@ export function usePayments(userId, activeSpaceId = null, activeSpaceName = null
     const updates = { is_paid: true, paid_at: new Date().toISOString() }
     if (amount !== undefined) updates.amount = amount
 
-    const { data, error } = await supabase.from('payments').update(updates).eq('id', id).select().single()
+    // Optimista (v0.9.480): el pago pasa a pagados al instante. Lo que sigue
+    // (rellenar la cola de 2 pendientes) corre ya confirmado, en segundo
+    // plano, y va AGREGANDO copias con `setPayments(prev => …)` — nunca
+    // reemplaza el arreglo completo, para no pisar otros cambios optimistas.
+    const opResult = await runOptimistic({
+      id, patch: updates, action: 'markPaid',
+      commit: () => supabase.from('payments').update(updates).eq('id', id).select().single(),
+    })
+    const { data, error } = opResult
     if (!error) {
       const updatedPayments = payments.map(p => p.id === id ? { ...p, ...data } : p)
-      setPayments(updatedPayments)
       notifySpaceChange('marked_paid', { paymentName: data.name })
 
       // Recurrente: asegurar siempre 2 pendientes en cola
@@ -1103,7 +1201,9 @@ export function usePayments(userId, activeSpaceId = null, activeSpaceName = null
         }
       }
     }
-    return { data, error }
+    // Se regresa tal cual (incluye `reverted`/`busy`) para que App.jsx no
+    // duplique el aviso de un fallo que handleSyncError ya mostró.
+    return opResult
   }
 
   async function markUnpaid(id) {
@@ -1125,12 +1225,13 @@ export function usePayments(userId, activeSpaceId = null, activeSpaceName = null
     // variable" sin cifra fija, como estaba antes de pagarse.
     if (!payment.is_postponed && payment.is_variable) updates.amount = 0
 
-    const { data, error } = await supabase
-      .from('payments')
-      .update(updates)
-      .match({ id })
-      .select().single()
-    if (error || !data) return { error }
+    // Optimista (v0.9.480) — ver runOptimistic(). La limpieza de la cola de
+    // abajo corre ya confirmada, en segundo plano.
+    const { data, error } = await runOptimistic({
+      id, patch: updates, action: 'markUnpaid',
+      commit: () => supabase.from('payments').update(updates).match({ id }).select().single(),
+    })
+    if (error || !data) return { error, reverted: !!error }
 
     let updatedPayments = payments.map(p => p.id === id ? { ...p, ...data } : p)
 
@@ -1160,12 +1261,11 @@ export function usePayments(userId, activeSpaceId = null, activeSpaceName = null
           // vez de 2 hasta el siguiente refetch/Realtime); es preferible a
           // aplicar en el estado local un borrado que RLS pudo no aplicar.
         } else {
-          updatedPayments = updatedPayments.filter(p => !removeIds.includes(p.id))
+          setPayments(prev => prev.filter(p => !removeIds.includes(p.id)))
         }
       }
     }
 
-    setPayments(updatedPayments)
     return { error: null }
   }
 
@@ -1217,12 +1317,16 @@ export function usePayments(userId, activeSpaceId = null, activeSpaceName = null
     // CONTEXT.md para no confundirlas; esta función NUNCA debe tocar esa
     // columna vieja en esta rama.
     if (payment.is_recurrent && !payment.is_installment && payment.parent_id) {
-      const { data, error } = await supabase.from('payments').update({ is_postponed: true, postponed_at: new Date().toISOString() }).eq('id', payment.id).select().single()
+      // Optimista (v0.9.480) — ver runOptimistic().
+      const postponeUpdates = { is_postponed: true, postponed_at: new Date().toISOString() }
+      const { data, error } = await runOptimistic({
+        id: payment.id, patch: postponeUpdates, action: 'postpone',
+        commit: () => supabase.from('payments').update(postponeUpdates).eq('id', payment.id).select().single(),
+      })
       if (error || !data) {
-        return { error: error || { message: 'No tienes permiso para posponer este pago en este espacio.' } }
+        return { error: error || { message: 'No tienes permiso para posponer este pago en este espacio.' }, reverted: !!error }
       }
       const updatedPayments = payments.map(p => p.id === payment.id ? { ...p, ...data } : p)
-      setPayments(updatedPayments)
       // Asegurar 2 en cola — mismo mecanismo que markPaid, ahora que
       // ensureTwoAheadImpl también excluye is_postponed de su conteo de
       // "pendientes" (ver ahí).
@@ -1324,14 +1428,24 @@ export function usePayments(userId, activeSpaceId = null, activeSpaceName = null
   // aplicando el cambio en el estado local como si hubiera funcionado, para
   // luego "revertirse solo" en el siguiente refetch (bug real encontrado
   // por Johnatan probando permisos de invitado, v0.9.129).
+  // Optimista (v0.9.480) — el pago desaparece al instante; si el servidor
+  // lo rechaza, reaparece (ver runOptimistic()). 0 filas borradas = RLS lo
+  // bloqueó en silencio: se reporta con `code: 'NO_ROWS'` para que
+  // withRetry() no lo reintente.
   async function deletePayment(id) {
     const payment = payments.find(p => p.id === id)
-    const { data, error } = await supabase.from('payments').delete().eq('id', id).select()
-    if (error) return { error }
-    if (!data || data.length === 0) {
-      return { error: { message: 'No tienes permiso para eliminar este pago en este espacio.' } }
-    }
-    setPayments(prev => prev.filter(p => p.id !== id))
+    const res = await runOptimistic({
+      id, deleted: true, action: 'delete',
+      commit: async () => {
+        const r = await supabase.from('payments').delete().eq('id', id).select()
+        if (r.error) return r
+        if (!r.data || r.data.length === 0) {
+          return { error: { message: 'No tienes permiso para eliminar este pago en este espacio.', code: 'NO_ROWS' } }
+        }
+        return r
+      },
+    })
+    if (res.error) return res
     if (payment) notifySpaceChange('deleted', { paymentName: payment.name })
     return { error: null }
   }
@@ -1525,6 +1639,7 @@ export function usePayments(userId, activeSpaceId = null, activeSpaceName = null
     payments, loading,
     addPayment, addRecurrentPayment, addInstallmentPayment,
     updatePayment, updateRecurrentName, updateRecurrentConfig, updateInstallmentConfig, checkPeriodIncomeConflict,
+    setSyncErrorHandler,
     abonarInstallment,
     registerContribution, getContributions, payRemainingContribution, setContributionTotalAmount, unmarkSharedPayment, forceSettlePayment,
     payFromFund, setFundContribution,
