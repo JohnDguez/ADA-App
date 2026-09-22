@@ -378,7 +378,9 @@
     "columnDate": "Date",
     "columnName": "Name",
     "columnCategory": "Category",
-    "columnAmount": "Amount"
+    "columnAmount": "Amount",
+    "byMethod": "By payment method",
+    "creditNote": "Credit didn't lower your available balance: it leaves when you pay the statement."
   },
   "recurrentsPage": {
     "title": "Recurring expenses",
@@ -1469,5 +1471,16 @@
       "sameDay": "The due day can't be the same as the closing day.",
       "help": "Drag either marker, tap a day to move the one selected above, or type it."
     }
+  },
+  "paymentMethod": {
+    "label": "Paid with",
+    "cash": "Cash",
+    "groupCash": "No card",
+    "creditNote": "It counts in Expenses and its category, but doesn't lower your available balance: that money leaves when you pay the statement.",
+    "changeAction": "Change payment method",
+    "changeTitle": "What was it paid with?",
+    "deletedCredit": "Deleted credit card",
+    "deletedDebit": "Deleted debit card",
+    "deletedCard": "Deleted card"
   }
 }

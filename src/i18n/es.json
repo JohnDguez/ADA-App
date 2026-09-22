@@ -378,7 +378,9 @@
     "columnDate": "Fecha",
     "columnName": "Nombre",
     "columnCategory": "Categoría",
-    "columnAmount": "Monto"
+    "columnAmount": "Monto",
+    "byMethod": "Por método de pago",
+    "creditNote": "El crédito no bajó tu disponible: sale cuando pagas el estado de cuenta."
   },
   "recurrentsPage": {
     "title": "Gastos recurrentes",
@@ -1469,5 +1471,16 @@
       "sameDay": "El límite no puede ser el mismo día del corte.",
       "help": "Arrastra cualquiera de los dos marcadores, toca un día para mover el que está seleccionado arriba, o escríbelo."
     }
+  },
+  "paymentMethod": {
+    "label": "Se paga con",
+    "cash": "Efectivo",
+    "groupCash": "Sin tarjeta",
+    "creditNote": "Cuenta en Gastos y en su categoría, pero no baja tu disponible: ese dinero sale cuando pagas el estado de cuenta.",
+    "changeAction": "Cambiar método de pago",
+    "changeTitle": "¿Con qué se pagó?",
+    "deletedCredit": "Tarjeta de crédito eliminada",
+    "deletedDebit": "Tarjeta de débito eliminada",
+    "deletedCard": "Tarjeta eliminada"
   }
 }
