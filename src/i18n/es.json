@@ -1230,7 +1230,8 @@
       "defaultTabSet": "\"{{name}}\" es tu pestaña principal",
       "fallbackPaymentName": "Pago",
       "fallbackSpaceName": "Espacio",
-      "fetchPaymentsError": "No se pudieron cargar tus pagos. Revisa tu conexión."
+      "fetchPaymentsError": "No se pudieron cargar tus pagos. Revisa tu conexión.",
+      "fallbackIncomeName": "ingreso extra"
     },
     "confirm": {
       "deleteThisPayment": "¿Eliminar este pago?",
@@ -1390,7 +1391,11 @@
       "goalAportar": "El aporte a {{name}} no se registró. No se hicieron cambios.",
       "goalRetirar": "El retiro de {{name}} no se registró. No se hicieron cambios.",
       "goalComplete": "La meta {{name}} no se marcó como cumplida. No se hicieron cambios.",
-      "goalDelete": "La meta {{name}} no se eliminó. No se hicieron cambios."
+      "goalDelete": "La meta {{name}} no se eliminó. No se hicieron cambios.",
+      "create": "{{name}} no se creó. No se hicieron cambios.",
+      "incomeCreate": "El ingreso {{name}} no se registró. No se hicieron cambios.",
+      "incomeUpdate": "Los cambios del ingreso {{name}} no se guardaron. No se hicieron cambios.",
+      "incomeDelete": "El ingreso {{name}} no se eliminó. No se hicieron cambios."
     }
   }
 }

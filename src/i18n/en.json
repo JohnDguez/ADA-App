@@ -1230,7 +1230,8 @@
       "defaultTabSet": "\"{{name}}\" is your main tab",
       "fallbackPaymentName": "Payment",
       "fallbackSpaceName": "Space",
-      "fetchPaymentsError": "Couldn't load your payments. Check your connection."
+      "fetchPaymentsError": "Couldn't load your payments. Check your connection.",
+      "fallbackIncomeName": "extra income"
     },
     "confirm": {
       "deleteThisPayment": "Delete this payment?",
@@ -1390,7 +1391,11 @@
       "goalAportar": "The contribution to {{name}} wasn't recorded. Nothing was changed.",
       "goalRetirar": "The withdrawal from {{name}} wasn't recorded. Nothing was changed.",
       "goalComplete": "The goal {{name}} wasn't marked as completed. Nothing was changed.",
-      "goalDelete": "The goal {{name}} wasn't deleted. Nothing was changed."
+      "goalDelete": "The goal {{name}} wasn't deleted. Nothing was changed.",
+      "create": "{{name}} wasn't created. Nothing was changed.",
+      "incomeCreate": "The income {{name}} wasn't recorded. Nothing was changed.",
+      "incomeUpdate": "Your changes to the income {{name}} weren't saved. Nothing was changed.",
+      "incomeDelete": "The income {{name}} wasn't deleted. Nothing was changed."
     }
   }
 }
