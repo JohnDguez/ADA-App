@@ -1466,7 +1466,11 @@ export function usePayments(userId, activeSpaceId = null, activeSpaceName = null
     const removeIds   = children.filter(p => !keepHistory.includes(p)).map(p => p.id)
     return runOptimisticBatch({
       subjectId: masterId, action: 'deleteMaster',
-      updates: keepHistory.map(p => ({ id: p.id, fields: { parent_id: null } })),
+      // `is_recurrent: false` (fix v0.9.488): el historial que se queda ya
+      // no pertenece a ninguna serie — como fila suelta "recurrente" la
+      // migración automática lo volvía a convertir en master (ver
+      // migrateRecurrents). Se queda como un pago normal ya pagado.
+      updates: keepHistory.map(p => ({ id: p.id, fields: { parent_id: null, is_recurrent: false } })),
       deletes: [...removeIds, masterId],
     })
   }
@@ -1497,9 +1501,20 @@ export function usePayments(userId, activeSpaceId = null, activeSpaceName = null
   // MIGRACIÓN: crea masters para recurrentes existentes sin is_master
   // ─────────────────────────────────────────────────────────────────────────
   async function migrateRecurrents() {
-    // Recurrentes sin master (parent_id = null, is_master = false/null)
+    // Recurrentes sin master (parent_id = null, is_master = false/null).
+    //
+    // FIX v0.9.488 (bug reportado por Johnatan): se excluyen los YA
+    // RESUELTOS (pagados o pospuestos). Al borrar un master, sus pagos
+    // pagados se desconectan a propósito para que sigan en el historial
+    // (parent_id = null) — y esta migración los tomaba como "recurrentes
+    // viejos sin master": les creaba un master NUEVO y ACTIVO con sus 2
+    // pendientes. Resultado: masters duplicados que reaparecían al
+    // recargar, ya no pausados, y pagos vencidos que no existían.
+    // Un recurrente legacy de verdad siempre tiene al menos una fila
+    // pendiente; el historial nunca necesita master.
     const orphaned = payments.filter(p =>
-      p.is_recurrent && !p.is_master && !p.parent_id && !p.is_installment
+      p.is_recurrent && !p.is_master && !p.parent_id && !p.is_installment &&
+      !p.is_paid && !p.is_postponed
     )
     if (!orphaned.length) return false
 
