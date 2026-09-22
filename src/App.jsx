@@ -23,6 +23,8 @@ import { useGoals } from './hooks/useGoals'
 import { GoalsPage } from './pages/GoalsPage'
 import { useProfile } from './hooks/useProfile'
 import { useNotifications } from './hooks/useNotifications'
+import { useLocalNotifications, isLocalNotification } from './hooks/useLocalNotifications'
+import { highlightPaymentWhenVisible } from './lib/highlightPayment'
 import { useSpaceStats } from './hooks/useSpaceStats'
 import { SpaceSwitcher } from './components/SpaceSwitcher'
 import { HomePage } from './pages/HomePage'
@@ -134,6 +136,7 @@ export default function App() {
     payments, loading: paymentsLoading,
     addPayment, addRecurrentPayment, addInstallmentPayment,
     updatePayment, updateRecurrentName, updateRecurrentConfig, updateInstallmentConfig, checkPeriodIncomeConflict,
+    setSyncErrorHandler,
     abonarInstallment,
     registerContribution, getContributions, payRemainingContribution, setContributionTotalAmount, unmarkSharedPayment, forceSettlePayment,
     payFromFund, setFundContribution,
@@ -184,6 +187,54 @@ export default function App() {
   // "periodo actual" en cada caso.
   const spaceStats = useSpaceStats(user?.id, profile, sharedSpaces.spaces)
   const { notifications, unreadCount, markAsRead, markAllAsRead, deleteNotification, clearAll } = useNotifications(user?.id)
+
+  // ── Actualización optimista: fallos definitivos (v0.9.480) ──────────────
+  // usePayments.js revierte la fila y avisa aquí. Aviso inmediato (el
+  // usuario casi siempre sigue en la pantalla) + notificación LOCAL (ver
+  // useLocalNotifications.js) que al tocarla lleva al pago. Destino: si tras
+  // revertir el pago quedó pagado/pospuesto vive en Gastos; si quedó
+  // pendiente, en Inicio.
+  const localNotifs = useLocalNotifications(user?.id)
+  function handleSyncError({ payment, action }) {
+    showToast(t(`sync.body.${action}`, { name: payment.name }))
+    localNotifs.add({
+      type: 'sync_error',
+      action,
+      payment_name: payment.name,
+      payment_id: payment.id,
+      space_id: payment.space_id || null,
+      tab: (payment.is_paid || payment.is_postponed) ? 'payments' : 'home',
+    })
+  }
+  // Se reasigna en cada render (es un ref dentro del hook, no provoca
+  // renders) para que el aviso siempre use el `t`/estado más reciente.
+  setSyncErrorHandler(handleSyncError)
+
+  // Panel de notificaciones: las de Supabase + las locales, por fecha. Las
+  // locales se traducen aquí (guardan acción y nombre, no texto armado).
+  const localNotifItems = localNotifs.items.map(n => ({
+    ...n,
+    title: t('sync.notifTitle'),
+    body: t(`sync.body.${n.action}`, { name: n.payment_name }),
+    space_name: n.space_id ? (sharedSpaces.spaces.find(e => e.space.id === n.space_id)?.space?.name || null) : null,
+  }))
+  const allNotifications = [...localNotifItems, ...notifications]
+    .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+  const allUnreadCount = unreadCount + localNotifs.unreadCount
+  function handleNotifMarkAsRead(id)  { isLocalNotification(id) ? localNotifs.markAsRead(id) : markAsRead(id) }
+  function handleNotifMarkAllAsRead() { localNotifs.markAllAsRead(); markAllAsRead() }
+  function handleNotifDelete(id)      { isLocalNotification(id) ? localNotifs.remove(id) : deleteNotification(id) }
+  function handleNotifClearAll()      { localNotifs.clear(); clearAll() }
+  // Tocar una notificación: las de error de sincronización llevan al pago
+  // (cambiando de espacio si hace falta) y lo resaltan; las demás se quedan
+  // con el comportamiento de siempre.
+  function handleNotifNavigate(n) {
+    if (n?.type !== 'sync_error') { window.scrollTo(0, 0); return }
+    const targetSpace = n.space_id || null
+    if (paymentsSpaceId !== targetSpace) switchSpace(targetSpace)
+    changeTab(n.tab || 'home')
+    highlightPaymentWhenVisible(n.payment_id)
+  }
   const { theme, setTheme } = useTheme()
 
   // "Perfil efectivo": en modo espacio, el periodo de cobro y el ingreso
@@ -414,8 +465,10 @@ export default function App() {
       if (error) showToast(error.message || t('app.toast.markPaidError'))
       return
     }
-    const { error } = await markPaid(payment.id)
-    if (error) showToast(t('app.toast.markPaidError'))
+    // `reverted`/`busy` (v0.9.480): el fallo ya se avisó desde
+    // handleSyncError, o el pago todavía estaba sincronizando otra acción.
+    const { error, reverted, busy } = await markPaid(payment.id)
+    if (error && !reverted && !busy) showToast(t('app.toast.markPaidError'))
   }
   // requestVariableAmount: usado por PayCard (Home) cuando el pago es
   // variable — abre el mismo modal de siempre, pero en vez de guardar el
@@ -452,8 +505,8 @@ export default function App() {
       if (error) showToast(error.message || t('app.toast.registerPaymentError'))
       return
     }
-    const { error } = await markPaid(payment.id, amount)
-    if (error) showToast(t('app.toast.registerPaymentError'))
+    const { error, reverted, busy } = await markPaid(payment.id, amount)
+    if (error && !reverted && !busy) showToast(t('app.toast.registerPaymentError'))
   }
   async function handleVarConfirm(amount) {
     const payment  = varModal.payment
@@ -482,7 +535,8 @@ export default function App() {
       }
       return
     }
-    const { error } = await markPaid(payment.id, amount)
+    const { error, reverted, busy } = await markPaid(payment.id, amount)
+    if (reverted || busy) return
     if (error) showToast(t('app.toast.registerPaymentError'))
     else showToast(t('app.toast.registered', { name: payment.name, amount: fmt(amount) }))
   }
@@ -573,7 +627,8 @@ export default function App() {
       else showToast(t('app.toast.markedUnpaid', { name: payment.name }))
       return
     }
-    const { error } = await markUnpaid(id)
+    const { error, reverted, busy } = await markUnpaid(id)
+    if (reverted || busy) return
     if (error) showToast(typeof error === 'string' ? error : t('app.toast.unmarkError'))
     else showToast(t('app.toast.markedUnpaid', { name: payment?.name || t('app.toast.fallbackPaymentName') }))
   }
@@ -590,16 +645,18 @@ export default function App() {
       if (error) showToast(error.message || t('app.toast.unmarkError'))
       return
     }
-    const { error } = await markUnpaid(id)
-    if (error) showToast(typeof error === 'string' ? error : t('app.toast.unmarkError'))
+    const { error, reverted, busy } = await markUnpaid(id)
+    if (error && !reverted && !busy) showToast(typeof error === 'string' ? error : t('app.toast.unmarkError'))
   }
   async function handlePostpone(payment) {
-    const { error } = await postponePayment(payment)
+    const { error, reverted, busy } = await postponePayment(payment)
+    if (reverted || busy) return
     if (error) showToast(t('app.toast.postponeError'))
     else showToast(t('app.toast.postponed', { name: payment.name }))
   }
   async function handleAdvance(payment) {
-    const { error } = await updatePayment(payment.id, { postponed: false })
+    const { error, reverted, busy } = await updatePayment(payment.id, { postponed: false })
+    if (reverted || busy) return
     if (error) showToast(t('app.toast.genericError'))
     else showToast(t('app.toast.returnedToCurrentPeriod'))
   }
@@ -630,7 +687,10 @@ export default function App() {
       // Parcialidad sin master (sistema antiguo, fallback)
       await deleteInstallmentFuture(payment.name)
     } else {
-      await deletePayment(id)
+      // Optimista (v0.9.480): si el servidor lo rechaza, el pago reaparece
+      // y handleSyncError ya avisó — no mostrar "eliminado".
+      const { reverted, busy } = await deletePayment(id)
+      if (reverted || busy) return
     }
     showToast(t('app.toast.paymentDeleted'))
   }
@@ -706,10 +766,14 @@ export default function App() {
         }
         return
       }
-      // Editar pago normal o parcialidad
-      const { error } = await updatePayment(editPayment.id, data)
-      if (error) { showToast(t('app.toast.saveError')) }
-      else {
+      // Editar pago normal o copia — optimista (v0.9.480): NO se espera al
+      // servidor, así PaymentModal cierra al instante y la tarjeta ya
+      // muestra el cambio (con el ícono de sincronizando). El resultado se
+      // resuelve detrás; si falla, handleSyncError revierte y avisa.
+      const edited = editPayment
+      updatePayment(edited.id, data).then(async ({ error, reverted, busy }) => {
+        if (reverted || busy) return
+        if (error) { showToast(t('app.toast.saveError')); return }
         showToast(t('app.toast.paymentUpdated'))
         // Bug real reportado por Johnatan (v0.9.258): si la fecha de pago
         // (paid_at) se edita y eso mueve el gasto hacia OTRO periodo, y ese
@@ -719,13 +783,13 @@ export default function App() {
         // ya no es correcto. No se corrige automático (cambiar el número a
         // ciegas podría no ser lo que el usuario quiere), solo se avisa
         // para que lo revise a mano desde "Ingresos Extras del Periodo".
-        if (data.paid_at && data.paid_at !== editPayment.paid_at) {
-          const conflict = await checkPeriodIncomeConflict(profile, editPayment.paid_at, data.paid_at)
+        if (data.paid_at && data.paid_at !== edited.paid_at) {
+          const conflict = await checkPeriodIncomeConflict(profile, edited.paid_at, data.paid_at)
           if (conflict) {
             showToast(t('app.toast.remanenteConflict', { amount: fmt(conflict.amount) }))
           }
         }
-      }
+      })
     } else {
       // Crear nuevo
       if (data.is_recurrent && !data.is_installment) {
@@ -791,7 +855,7 @@ export default function App() {
   }
 
   const headerProps = {
-    profile: effectiveProfile, unreadCount,
+    profile: effectiveProfile, unreadCount: allUnreadCount,
     onOpenNotifs: () => setNotifOpen(true),
     onGoSettings: () => changeTab('settings'),
   }
@@ -894,12 +958,13 @@ export default function App() {
           onPostpone={handlePostpone}
           onAdvance={handleAdvance}
           onGoSettings={() => changeTab('settings')}
-          notifications={notifications}
-          unreadCount={unreadCount}
-          onMarkAsRead={markAsRead}
-          onMarkAllAsRead={markAllAsRead}
-          onDeleteNotif={deleteNotification}
-          onClearAllNotifs={clearAll}
+          notifications={allNotifications}
+          unreadCount={allUnreadCount}
+          onMarkAsRead={handleNotifMarkAsRead}
+          onMarkAllAsRead={handleNotifMarkAllAsRead}
+          onDeleteNotif={handleNotifDelete}
+          onNavigateNotif={handleNotifNavigate}
+          onClearAllNotifs={handleNotifClearAll}
         />
       )}
       {tab === 'payments' && (
@@ -918,7 +983,7 @@ export default function App() {
           activeSpaceHeader={activeSpaceHeaderEl}
           onMarkUnpaid={handleMarkUnpaid}
           onDelete={handleDeleteDirect}
-          onDeleteDirect={async (id) => { await deletePayment(id); showToast(t('app.toast.paymentDeleted')) }}
+          onDeleteDirect={async (id) => { const { reverted, busy } = await deletePayment(id); if (!reverted && !busy) showToast(t('app.toast.paymentDeleted')) }}
           onUpdateProfile={updateProfile}
           onEdit={openEdit}
           onViewSource={handleViewSource}
@@ -1004,7 +1069,7 @@ export default function App() {
         active={tab}
         onChange={t => changeTab(t)}
         profile={effectiveProfile}
-        unreadCount={unreadCount}
+        unreadCount={allUnreadCount}
         onOpenNotifs={() => setNotifOpen(true)}
         onGoSettings={() => changeTab('settings')}
         spaces={sharedSpaces.spaces}
@@ -1017,13 +1082,13 @@ export default function App() {
       <NotificationsPanel
         open={notifOpen}
         onClose={() => setNotifOpen(false)}
-        notifications={notifications}
-        unreadCount={unreadCount}
-        onMarkAsRead={markAsRead}
-        onMarkAllAsRead={markAllAsRead}
-        onDelete={deleteNotification}
-        onClearAll={clearAll}
-        onNavigate={() => window.scrollTo(0, 0)}
+        notifications={allNotifications}
+        unreadCount={allUnreadCount}
+        onMarkAsRead={handleNotifMarkAsRead}
+        onMarkAllAsRead={handleNotifMarkAllAsRead}
+        onDelete={handleNotifDelete}
+        onClearAll={handleNotifClearAll}
+        onNavigate={handleNotifNavigate}
       />
 
       <PaymentModal
