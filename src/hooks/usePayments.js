@@ -548,7 +548,7 @@ export function usePayments(userId, activeSpaceId = null, activeSpaceName = null
     }
   }
 
-  async function runOptimisticBatch({ subjectId, action, updates = [], deletes = [], inserts = [] }) {
+  async function runOptimisticBatch({ subjectId, subject: subjectOverride, action, updates = [], deletes = [], inserts = [] }) {
     const affected = [...updates.map(u => u.id), ...deletes]
     if (affected.some(id => pendingOpsRef.current.has(id))) {
       return { error: { message: 'Sincronizando', code: 'BUSY' }, busy: true }
@@ -558,7 +558,9 @@ export function usePayments(userId, activeSpaceId = null, activeSpaceName = null
       const row = payments.find(p => p.id === id)
       if (row) originals.set(id, stripSync(row))
     }
-    const subject = originals.get(subjectId) || stripSync(payments.find(p => p.id === subjectId))
+    // `subject` explícito (v0.9.484) para crear: la fila todavía no existe en
+    // `payments`, así que no hay de dónde buscarla por id.
+    const subject = subjectOverride || originals.get(subjectId) || stripSync(payments.find(p => p.id === subjectId))
 
     const updById = new Map(updates.map(u => [u.id, u.fields]))
     const delSet  = new Set(deletes)
@@ -678,15 +680,16 @@ export function usePayments(userId, activeSpaceId = null, activeSpaceName = null
   // PAGOS ÚNICOS Y PARCIALIDADES (sin cambios en su lógica core)
   // ─────────────────────────────────────────────────────────────────────────
 
+  // Crear — optimista (v0.9.484): la fila aparece al instante con id generado
+  // en la app (el mismo que tendrá en la base) y se confirma vía
+  // runOptimisticBatch. Si falla, desaparece y handleSyncError avisa.
   async function addPayment(payment) {
-    const { data, error } = await supabase.from('payments')
-      .insert({ ...payment, user_id: userId, space_id: activeSpaceId, is_master: false })
-      .select().single()
-    if (!error) {
-      setPayments(prev => [...prev, data])
-      notifySpaceChange('added', { paymentName: data.name, amount: data.amount, paymentType: 'unico', isVariable: data.is_variable })
+    const row = { ...payment, id: newId(), user_id: userId, space_id: activeSpaceId, is_master: false }
+    const res = await runOptimisticBatch({ subject: row, action: 'create', inserts: [row] })
+    if (!res.error) {
+      notifySpaceChange('added', { paymentName: row.name, amount: row.amount, paymentType: 'unico', isVariable: row.is_variable })
     }
-    return { data, error }
+    return { ...res, data: res.error ? null : row }
   }
 
   async function addInstallmentPayment({ name, amount, totalAmount, totalInstallments, startFrom, recurFreq, category, firstDate, backfillAsExpense = true }) {
@@ -702,7 +705,11 @@ export function usePayments(userId, activeSpaceId = null, activeSpaceName = null
     const dateOfInstallment = n => installmentDates[n - 1]
 
     // Crear master (template raíz de la parcialidad)
-    const { data: master, error: masterErr } = await supabase.from('payments').insert({
+    // Optimista + todo-o-nada (v0.9.484): master, pagos anteriores y copias
+    // pendientes en UN paquete (runOptimisticBatch). Antes eran 2 inserts
+    // sueltos — si el segundo fallaba, quedaba un master sin copias.
+    const masterRow = {
+      id:                  newId(),
       user_id:             userId,
       space_id:            activeSpaceId,
       name, amount, category,
@@ -716,273 +723,66 @@ export function usePayments(userId, activeSpaceId = null, activeSpaceName = null
       is_paid:             false,
       paid_at:             null,
       postponed:           false,
-      is_postponed: false,
-      postponed_at: null,
+      is_postponed:        false,
+      postponed_at:        null,
       paused:              false,
       is_installment:      true,
       current_installment: from,
       total_installments:  totalInstallments,
-    }).select().single()
-
-    if (masterErr) return { error: masterErr }
-
-    // Crear hasta 2 copias (misma lógica que recurrentes, pero con límite)
-    const copiesToInsert = [
-      { current_installment: from, due_date: dateOfInstallment(from) }
-    ]
-    if (from + 1 <= totalInstallments) {
-      copiesToInsert.push({ current_installment: from + 1, due_date: dateOfInstallment(from + 1) })
+      is_history_only:     false,
     }
 
-    const installCopies = copiesToInsert.map(c => ({
-      user_id: userId, space_id: activeSpaceId, name, amount, category,
-      is_variable: false, is_recurrent: true, recur_freq: recurFreq,
-      is_master: false, parent_id: master.id, due_date: c.due_date,
-      is_paid: false, paid_at: null, postponed: false, is_postponed: false, postponed_at: null, paused: false,
-      is_installment: true,
-      current_installment: c.current_installment,
-      total_installments: totalInstallments,
-      // Explícito: se insertan en el mismo arreglo que los pagos anteriores,
-      // y en un insert múltiple la llave que falta viaja como NULL, no como
-      // el DEFAULT de la columna.
-      is_history_only: false,
-    }))
+    const copyBase = {
+      name, amount, category, is_variable: false, recur_freq: recurFreq,
+      parent_id: masterRow.id, is_installment: true, total_installments: totalInstallments,
+    }
+    const pendingRows = [newCopyRow({ ...copyBase, current_installment: from, due_date: dateOfInstallment(from) })]
+    if (from + 1 <= totalInstallments) {
+      pendingRows.push(newCopyRow({ ...copyBase, current_installment: from + 1, due_date: dateOfInstallment(from + 1) }))
+    }
 
-    // Pagos anteriores (1…from-1), ya pagados, cada uno con su fecha. Antes
-    // no se creaban (el formulario decía "se marcarán como pagados" pero
-    // nunca pasaba). Con `backfillAsExpense` en false van marcados
-    // `is_history_only`: se ven solo en el historial del master y NO cuentan
-    // como gasto en ningún lado — para quien ya los tenía registrados.
-    // `paid_at` a mediodía local de su fecha, para que caigan en el día
-    // correcto sin importar la zona horaria (Regla 22).
+    // Pagos anteriores (1…from-1), ya pagados, cada uno con su fecha (v0.9.479).
+    // Con `backfillAsExpense` en false van marcados `is_history_only`: se ven
+    // solo en el historial del master y NO cuentan como gasto en ningún lado.
+    // `paid_at` a mediodía local de su fecha (Regla 22).
     const previousRows = []
     for (let n = 1; n < from; n++) {
       const d = dateOf(dateOfInstallment(n)); d.setHours(12, 0, 0, 0)
-      previousRows.push({
-        user_id: userId, space_id: activeSpaceId, name, amount, category,
-        is_variable: false, is_recurrent: true, recur_freq: recurFreq,
-        is_master: false, parent_id: master.id, due_date: dateOfInstallment(n),
-        is_paid: true, paid_at: d.toISOString(), postponed: false, is_postponed: false, postponed_at: null, paused: false,
-        is_installment: true,
-        current_installment: n,
-        total_installments: totalInstallments,
-        is_history_only: !backfillAsExpense,
-      })
-    }
-
-    const { data: copiesData, error } = await supabase.from('payments').insert([...previousRows, ...installCopies]).select()
-    if (!error && copiesData) {
-      setPayments(prev => [...prev, master, ...copiesData])
-      notifySpaceChange('added', { paymentName: name, amount, paymentType: 'parcialidades', totalInstallments })
-    }
-    return { data: copiesData?.find(c => !c.is_paid) || copiesData?.[0], error }
-  }
-
-  // ─────────────────────────────────────────────────────────────────────────
-  // ABONAR A UNA PARCIALIDAD (reemplaza "editar" para copias individuales)
-  // ─────────────────────────────────────────────────────────────────────────
-  // Regla confirmada con Johnatan:
-  // - Si el abono es MENOR al monto pendiente de ESTE pago: no lo liquida, no
-  //   genera nada nuevo, no toca el total_installments — solo reduce el monto
-  //   pendiente de esta misma copia. Sigue su cronología normal (vencidos, etc).
-  // - Si el abono es IGUAL o MAYOR: liquida este pago, y el sobrante (si lo
-  //   hay) se descuenta del total fijo (`master.total_amount`) — recortando
-  //   cuántos pagos faltan hacia adelante. Si el sobrante cubre todo lo que
-  //   resta, la parcialidad se da por completa: se borran las copias
-  //   pendientes que ya no hacen falta y `total_installments` se ajusta al
-  //   número de este pago.
-  // Paquete optimista (v0.9.483) — ver runOptimisticBatch(). Antes eran
-  // hasta 6 escrituras sueltas, sin conteo de filas, y esperaba al servidor.
-  //
-  // FIX v0.9.483 (hallazgo (b) de v0.9.478): un abono PARCIAL solo reducía
-  // el monto de la copia — ese dinero no quedaba registrado como pagado en
-  // ningún lado (ni Gastos, ni historial, ni reportes), y al liquidar
-  // después el resto se volvía a contar como pendiente, alargando el plan.
-  // Ahora el abono se registra como su PROPIO pago pagado (mismo número de
-  // pago que la copia — así lo reconoce RecurrentDetailPanel como "Abono")
-  // y la copia baja lo abonado. Mismo criterio al liquidar con sobrante: el
-  // registro pagado guarda lo que de verdad se pagó (`amount: abonado`), no
-  // el monto de la copia — antes el sobrante reducía el plan pero no
-  // aparecía como gasto en ningún lado.
-  async function abonarInstallment(copyId, abonado) {
-    const copy = payments.find(p => p.id === copyId)
-    if (!copy || !copy.parent_id) return { error: { message: 'Pago no encontrado' } }
-    const master = payments.find(p => p.id === copy.parent_id)
-    if (!master) return { error: { message: 'Parcialidad no encontrada' } }
-
-    const montoRef    = Number(master.amount)
-    const totalAmount = master.total_amount != null ? Number(master.total_amount) : montoRef * master.total_installments
-    const nowIso      = new Date().toISOString()
-
-    // ── Abono parcial: registro pagado propio + la copia baja lo abonado ──
-    if (abonado < Number(copy.amount)) {
-      const nuevoMonto = Math.round((Number(copy.amount) - abonado) * 100) / 100
-      const abonoRow = newCopyRow({
-        name: copy.name, amount: abonado, due_date: copy.due_date, category: copy.category,
-        is_variable: false, recur_freq: copy.recur_freq, parent_id: master.id,
-        is_installment: true, current_installment: copy.current_installment,
-        total_installments: copy.total_installments,
-        is_paid: true, paid_at: nowIso,
-      })
-      const res = await runOptimisticBatch({
-        subjectId: copyId, action: 'abonar',
-        updates: [{ id: copyId, fields: { amount: nuevoMonto } }],
-        inserts: [abonoRow],
-      })
-      if (!res.error) notifySpaceChange('marked_paid', { paymentName: copy.name })
-      return { ...res, done: false }
-    }
-
-    // ── Abono que liquida esta copia (con posible sobrante) ────────────────
-    // `paidBefore` suma TODOS los registros pagados (incluye abonos parciales
-    // previos a este mismo pago) + los pagos que nunca tuvieron fila
-    // (installmentUntrackedCount, v0.9.478).
-    const children = payments.filter(p => p.parent_id === master.id && !p.is_master)
-    const paidBefore = children.filter(p => p.is_paid).reduce((s, p) => s + Number(p.amount), 0)
-      + installmentUntrackedCount(master, payments) * montoRef
-    const restanteTotal = Math.round((totalAmount - paidBefore - abonado) * 100) / 100
-
-    const updates = [{ id: copyId, fields: { is_paid: true, paid_at: nowIso, amount: abonado } }]
-    const deletes = []
-    const inserts = []
-    const otherPending = children
-      .filter(p => p.id !== copyId && !p.is_paid && !p.is_postponed)
-      .sort((a, b) => a.current_installment - b.current_installment)
-
-    if (restanteTotal <= 0) {
-      // Plan completo — este pago fue el último.
-      otherPending.forEach(p => deletes.push(p.id))
-      updates.push({ id: master.id, fields: { total_installments: copy.current_installment } })
-      const res = await runOptimisticBatch({ subjectId: copyId, action: 'abonar', updates, deletes })
-      if (!res.error) notifySpaceChange('marked_paid', { paymentName: copy.name })
-      return { ...res, done: !res.error }
-    }
-
-    // Todavía queda plan por delante — cuántos pagos faltan y cuánto el último.
-    const faltan      = Math.ceil(restanteTotal / montoRef)
-    const newTotal    = copy.current_installment + faltan
-    const montoUltimo = Math.round((restanteTotal - (faltan - 1) * montoRef) * 100) / 100
-
-    const keep = []
-    otherPending.forEach(p => {
-      if (p.current_installment > newTotal) { deletes.push(p.id); return }
-      const fields = { total_installments: newTotal }
-      if (p.current_installment === newTotal) fields.amount = montoUltimo
-      updates.push({ id: p.id, fields })
-      keep.push({ ...p, ...fields })
-    })
-    updates.push({ id: master.id, fields: { total_installments: newTotal } })
-
-    // Cola de 2 pendientes (monto de referencia salvo el nuevo último pago)
-    let lastNum  = keep.length ? keep[keep.length - 1].current_installment : copy.current_installment
-    let lastDate = keep.length ? keep[keep.length - 1].due_date : copy.due_date
-    for (let i = keep.length; i < 2; i++) {
-      const nextNum = lastNum + 1
-      if (nextNum > newTotal) break
-      lastDate = dateToStr(nextPeriodDate(lastDate, master.recur_freq || 'monthly'))
-      lastNum  = nextNum
-      inserts.push(newCopyRow({
-        name: master.name, amount: nextNum === newTotal ? montoUltimo : montoRef,
-        due_date: lastDate, category: master.category, is_variable: false, recur_freq: master.recur_freq,
-        parent_id: master.id, is_installment: true, current_installment: nextNum, total_installments: newTotal,
+      previousRows.push(newCopyRow({
+        ...copyBase, current_installment: n, due_date: dateOfInstallment(n),
+        is_paid: true, paid_at: d.toISOString(), is_history_only: !backfillAsExpense,
       }))
     }
 
-    const res = await runOptimisticBatch({ subjectId: copyId, action: 'abonar', updates, deletes, inserts })
-    if (!res.error) notifySpaceChange('marked_paid', { paymentName: copy.name })
-    return { ...res, done: false }
-  }
-
-  // Optimista (v0.9.480) — ver runOptimistic(). La usan editar un pago
-  // único/una copia, "Regresar al periodo actual" y otros ajustes de UNA
-  // fila; nunca cambios de varias filas (esos tienen su propia función).
-  async function updatePayment(id, updates) {
-    return runOptimistic({
-      id, patch: updates, action: 'update',
-      commit: () => supabase.from('payments').update(updates).eq('id', id).select().single(),
+    const res = await runOptimisticBatch({
+      subject: masterRow, action: 'create',
+      inserts: [masterRow, ...previousRows, ...pendingRows],
     })
+    if (!res.error) notifySpaceChange('added', { paymentName: name, amount, paymentType: 'parcialidades', totalInstallments })
+    return { ...res, data: res.error ? null : pendingRows[0] }
   }
 
-  // Bug real encontrado por Johnatan (v0.9.258): el modal de remanente
-  // (PaymentsPage.jsx → checkPeriodStart/handleAddRemanente) calcula y
-  // "congela" un monto una sola vez, guardándolo como fila normal de
-  // `period_income` (siempre con `note: 'Remanente periodo anterior'` —
-  // ese texto exacto es el único marcador de origen que existe hoy, no hay
-  // columna `source` separada). Si DESPUÉS se edita la fecha de pago
-  // (`paid_at`) de un gasto para que caiga en ese mismo periodo (ej.
-  // corrigiendo la fecha real de un pago que se registró un día tarde), esa
-  // fila de remanente no se entera — se queda con un monto que ya no
-  // refleja la realidad. Esta función solo DETECTA el caso; no arregla
-  // nada sola ni sabe nada de "toasts" — usePayments.js es la capa de
-  // datos, quien llama (App.jsx → handleSave) decide cómo avisar.
-  async function checkPeriodIncomeConflict(profile, oldPaidAtIso, newPaidAtIso) {
-    if (!oldPaidAtIso || !newPaidAtIso || oldPaidAtIso === newPaidAtIso) return null
-
-    // Mismo criterio de fecha-local-segura que ya usa checkPeriodStart en
-    // PaymentsPage.jsx (Regla 22) — nunca comparar por el ISO string crudo.
-    const oldDate = dateOf(dateToStr(new Date(oldPaidAtIso)))
-    const newDate = dateOf(dateToStr(new Date(newPaidAtIso)))
-    const oldPeriod = cobroPeriod(profile, oldDate)
-    const newPeriod = cobroPeriod(profile, newDate)
-    if (dateToStr(oldPeriod.start) === dateToStr(newPeriod.start)) return null // mismo periodo, sin riesgo
-
-    // Mismo filtro exacto que checkPeriodStart al consultar period_income:
-    // por period_start + espacio activo (o `space_id is null` en Personal),
-    // SIN filtrar por user_id — el remanente en un Espacio Compartido es un
-    // cálculo compartido entre todos los miembros, no personal.
-    const newPeriodStartStr = dateToStr(newPeriod.start)
-    let query = supabase.from('period_income').select('amount, note').eq('period_start', newPeriodStartStr)
-    query = activeSpaceId ? query.eq('space_id', activeSpaceId) : query.is('space_id', null)
-    const { data } = await query
-
-    const remanenteRow = (data || []).find(r => r.note === 'Remanente periodo anterior')
-    return remanenteRow ? { amount: Number(remanenteRow.amount) } : null
-  }
-
-  // ─────────────────────────────────────────────────────────────────────────
-  // NUEVO SISTEMA DE RECURRENTES
-  // ─────────────────────────────────────────────────────────────────────────
-
-  // Crea un master + 2 copias de periodo
+  // Optimista + todo-o-nada (v0.9.484): master + 2 copias en un paquete.
   async function addRecurrentPayment({ name, amount, category, recur_freq, is_variable, firstDate }) {
     const baseAmount = is_variable ? 0 : amount
-    // 1. Crear el master (template, no aparece en Home/Pagos)
-    const { data: master, error: masterErr } = await supabase.from('payments').insert({
-      user_id:      userId,
-      space_id:     activeSpaceId,
+    // Master: template, no aparece en Home/Pagos. `due_date` guarda la fecha
+    // del primer cobro como referencia.
+    const masterRow = {
+      id: newId(), user_id: userId, space_id: activeSpaceId,
       name, amount: baseAmount, category, is_variable,
-      is_recurrent: true,
-      recur_freq,
-      is_master:    true,
-      parent_id:    null,
-      due_date:     firstDate, // se guarda como referencia del primer cobro
-      is_paid:      false,
-      paid_at:      null,
-      postponed:    false,
-      is_postponed: false,
-      postponed_at: null,
-      paused:       false,
-      is_installment: false,
-    }).select().single()
-
-    if (masterErr) return { error: masterErr }
-
-    // 2. Crear copias de periodo 1 y periodo 2
-    const date2 = dateToStr(nextPeriodDate(firstDate, recur_freq))
-    const copies = [
-      { user_id: userId, space_id: activeSpaceId, name, amount: baseAmount, category, is_variable, is_recurrent: true, recur_freq,
-        is_master: false, parent_id: master.id, due_date: firstDate,
-        is_paid: false, paid_at: null, postponed: false, is_postponed: false, postponed_at: null, paused: false, is_installment: false },
-      { user_id: userId, space_id: activeSpaceId, name, amount: baseAmount, category, is_variable, is_recurrent: true, recur_freq,
-        is_master: false, parent_id: master.id, due_date: date2,
-        is_paid: false, paid_at: null, postponed: false, is_postponed: false, postponed_at: null, paused: false, is_installment: false },
-    ]
-    const { data: copiesData, error: copiesErr } = await supabase.from('payments').insert(copies).select()
-    if (!copiesErr && copiesData) {
-      setPayments(prev => [...prev, master, ...copiesData])
-      notifySpaceChange('added', { paymentName: name, amount: baseAmount, paymentType: 'recurrente', recurFreq: recur_freq, isVariable: is_variable })
+      is_recurrent: true, recur_freq, is_master: true, parent_id: null,
+      due_date: firstDate, is_paid: false, paid_at: null,
+      postponed: false, is_postponed: false, postponed_at: null, paused: false,
+      is_installment: false, is_history_only: false,
     }
-    return { error: copiesErr }
+    const base = { name, amount: baseAmount, category, is_variable, recur_freq, parent_id: masterRow.id, is_installment: false }
+    const date2 = dateToStr(nextPeriodDate(firstDate, recur_freq))
+    const res = await runOptimisticBatch({
+      subject: masterRow, action: 'create',
+      inserts: [masterRow, newCopyRow({ ...base, due_date: firstDate }), newCopyRow({ ...base, due_date: date2 })],
+    })
+    if (!res.error) notifySpaceChange('added', { paymentName: name, amount: baseAmount, paymentType: 'recurrente', recurFreq: recur_freq, isVariable: is_variable })
+    return res
   }
 
   // Editar solo el nombre (afecta a todos: master, pagados y pendientes)

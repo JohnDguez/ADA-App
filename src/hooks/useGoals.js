@@ -408,9 +408,13 @@ export function useGoals(userId, profile, spaceId = null, onPaymentsChanged = nu
 
     // Optimista + todo-o-nada (v0.9.483) — movimiento + ingreso extra.
     const { serverOps, txInsert } = retiroOps(goalId, amount, goalName)
+    // v0.9.484: el retiro crea un ingreso extra, y los ingresos ahora viven
+    // en usePeriodIncome (App.jsx) — `notifyPaymentsChanged` también los
+    // refresca (ver handleGoalMoneyChanged).
     return runGoalBatch({
       goalId, goalName, action: 'goalRetirar', serverOps,
       local: { txInserts: [txInsert] },
+      afterConfirm: notifyPaymentsChanged,
     })
   }
 
@@ -492,6 +496,7 @@ export function useGoals(userId, profile, spaceId = null, onPaymentsChanged = nu
     return runGoalBatch({
       goalId, goalName: goal?.name, action: 'goalDelete', serverOps,
       local: { goalDeletes: [goalId] },
+      afterConfirm: serverOps.length > 1 ? notifyPaymentsChanged : undefined,
     })
   }
 
