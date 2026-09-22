@@ -1,5 +1,8 @@
 import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '../lib/supabase'
+import { showToast } from '../components/Toast'
+import i18n from '../i18n'
+import { withRetry } from '../lib/withRetry'
 
 const DEFAULT_PROFILE = {
   name: '',
@@ -57,11 +60,34 @@ export function useProfile(userId) {
 
   useEffect(() => { fetchProfile() }, [fetchProfile])
 
+  // Optimista (v0.9.482): antes esperaba a Supabase antes de tocar el
+  // estado — cada switch de Ajustes (Ingreso por periodo, tipos de
+  // notificación, hora, categorías, idioma…) tardaba lo que tardara la red
+  // en moverse (reportado por Johnatan). Ahora el cambio se aplica al
+  // instante, se confirma detrás (hasta 3 intentos SOLO ante fallos de red —
+  // error sin `code`, mismo criterio que usePayments.js), y si falla se
+  // revierte y se avisa. La reversión solo toca las llaves de ESTA llamada
+  // y solo si nadie más las cambió mientras tanto (2 toques rápidos al
+  // mismo switch no se pisan).
   async function updateProfile(updates) {
-    const { data, error } = await supabase
-      .from('profiles').update(updates).eq('id', userId).select().single()
-    if (!error) setProfile(prev => ({ ...prev, ...sanitizeProfile(data) }))
-    return { data, error }
+    const before = profile
+    setProfile(prev => ({ ...prev, ...updates }))
+
+    const res = await withRetry(() => supabase.from('profiles').update(updates).eq('id', userId).select().single())
+
+    if (res.error) {
+      setProfile(prev => {
+        const next = { ...prev }
+        for (const k of Object.keys(updates)) {
+          if (prev[k] === updates[k]) next[k] = before[k]
+        }
+        return next
+      })
+      showToast(i18n.t('app.toast.saveError'))
+      return { data: null, error: res.error }
+    }
+    setProfile(prev => ({ ...prev, ...sanitizeProfile(res.data) }))
+    return { data: res.data, error: null }
   }
 
   async function uploadAvatar(file) {
