@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useMemo, useLayoutEffect } from 'react'
 import { useTranslation } from 'react-i18next'
-import { ChevronLeft, ChevronRight, MoreVertical, Plus, CircleDollarSign, ChevronDown, ChevronUp, Pencil, RotateCcw, Trash2, Check, Eye, Users, ArrowUp, ArrowDown, ArrowUpLeft, PiggyBank } from 'lucide-react'
+import { ChevronLeft, ChevronRight, MoreVertical, Plus, CircleDollarSign, ChevronDown, ChevronUp, Pencil, RotateCcw, Trash2, Check, Eye, Users, ArrowUp, ArrowDown, ArrowUpLeft, PiggyBank, Loader2 } from 'lucide-react'
 import { PageHeader } from '../components/PageHeader'
 import { NewSharedSpacePanel } from '../components/NewSharedSpacePanel'
 import { EmptyState } from '../components/EmptyState'
@@ -1760,7 +1760,7 @@ export function PaymentsPage({ payments, dataLoading = false, profile, spaceSwit
                   const paidDate = p.paid_at ? new Date(p.paid_at) : new Date(p.postponed_at || p.due_date)
                   const isLast   = i === paidInView.length - 1
                   return (
-                    <div key={p.id} className={`${styles.paymentRow} ${isLast ? styles.paymentRowLast : ''}`}>
+                    <div key={p.id} data-payment-id={p.id} className={`${styles.paymentRow} ${isLast ? styles.paymentRowLast : ''}`}>
                       <div className={styles.paymentDate}>
                         <div className={styles.paymentDateDay}>{paidDate.getDate()}</div>
                         <div className={styles.paymentDateMonth}>{getMonthsShort()[paidDate.getMonth()]}</div>
@@ -1825,6 +1825,11 @@ export function PaymentsPage({ payments, dataLoading = false, profile, spaceSwit
                             className={styles.paymentMenuButton}
                           >
                             <Eye size={16} color="var(--text)" strokeWidth={1.8} />
+                          </button>
+                        ) : p._syncing ? (
+                          // Sincronizando (v0.9.480) — ver PayCard.jsx.
+                          <button type="button" disabled className={styles.paymentMenuButton} aria-label={t('sync.syncing')}>
+                            <span className="sync-spinner"><Loader2 size={16} color="var(--text)" strokeWidth={1.8} /></span>
                           </button>
                         ) : (
                         <button

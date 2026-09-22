@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
-import { ChevronDown, ChevronUp, Check, RotateCcw, Eye } from 'lucide-react'
+import { ChevronDown, ChevronUp, Check, RotateCcw, Eye, Loader2 } from 'lucide-react'
 import { PayCard } from '../components/PayCard'
 import { PayRail } from '../components/PayRail'
 import { PageHeader } from '../components/PageHeader'
@@ -33,7 +33,7 @@ function nextPeriodRange(cfg) {
 // aquí como función interna). Ver ese archivo para el detalle de diseño y
 // el fix del degradado a porcentajes bajos.
 
-export function HomePage({ payments, dataLoading = false, profile, spaceSwitcher, activeSpaceHeader, activeSpaceId, sharedSpaces, spacePermissions, onOpenPremium, onSpaceReady, onAdd, onMarkPaid, onRequestVariableAmount, onConfirmVariablePaid, onRequestNextPeriodConfirm, onMarkUnpaid, onCaptureAmount, onEdit, onAbonar, onSplit, onPayFromFund, fundBalance, onViewSource, onDelete, onPostpone, onAdvance, onGoSettings, notifications, unreadCount, onMarkAsRead, onMarkAllAsRead, onDeleteNotif, onClearAllNotifs, slideClass }) {
+export function HomePage({ payments, dataLoading = false, profile, spaceSwitcher, activeSpaceHeader, activeSpaceId, sharedSpaces, spacePermissions, onOpenPremium, onSpaceReady, onAdd, onMarkPaid, onRequestVariableAmount, onConfirmVariablePaid, onRequestNextPeriodConfirm, onMarkUnpaid, onCaptureAmount, onEdit, onAbonar, onSplit, onPayFromFund, fundBalance, onViewSource, onDelete, onPostpone, onAdvance, onGoSettings, notifications, unreadCount, onMarkAsRead, onMarkAllAsRead, onDeleteNotif, onClearAllNotifs, onNavigateNotif, slideClass }) {
   const { t } = useTranslation()
   // Detecta un cambio REAL de espacio activo (no el primer montaje de la
   // página, que también dispararía un `key` remontado sin querer) — antes
@@ -587,7 +587,7 @@ export function HomePage({ payments, dataLoading = false, profile, spaceSwitcher
         onMarkAllAsRead={onMarkAllAsRead}
         onDelete={onDeleteNotif}
         onClearAll={onClearAllNotifs}
-        onNavigate={() => window.scrollTo(0, 0)}
+        onNavigate={onNavigateNotif || (() => window.scrollTo(0, 0))}
       />
     </div>
   )
@@ -667,6 +667,7 @@ function PaidCollapseItem({ p, onMarkUnpaid, onViewSource, spaceMembers, onSelec
   return (
     <div ref={wrapperRef} className={styles.paidCollapseItemWrapper}>
       <div
+        data-payment-id={p.id}
         onClick={onSelect ? () => onSelect(p.id) : undefined}
         className={`${styles.paidCollapseItem} ${phase === 'exiting' ? styles.paidCollapseItemExiting : ''} ${onSelect ? styles.paidCollapseItemSelectable : ''} ${selected ? styles.paidCollapseItemSelected : ''}`}
       >
@@ -707,6 +708,11 @@ function PaidCollapseItem({ p, onMarkUnpaid, onViewSource, spaceMembers, onSelec
               className={styles.paidCollapseUndoButton}
             >
               <Eye size={11} color="var(--text)" />
+            </button>
+          ) : p._syncing ? (
+            // Sincronizando (v0.9.480) — ver PayCard.jsx, mismo criterio.
+            <button type="button" disabled className={styles.paidCollapseUndoButton} aria-label={t('sync.syncing')}>
+              <span className="sync-spinner"><Loader2 size={11} color="var(--text)" /></span>
             </button>
           ) : (
             <button
