@@ -618,3 +618,52 @@ body.modal-open {
 .payment-highlight {
   animation: paymentHighlight 2s ease both;
 }
+
+/* ── Tarjetas (v0.9.486) ───────────────────────────────────────────────────
+   Color de cada institución para la tarjeta visual (CreditCardVisual.jsx).
+   Son colores de marca, iguales en tema claro y oscuro — por eso viven en
+   un :root propio y no se redefinen en los bloques de tema. El catálogo
+   (nombre, grupo, qué variable usa) está en src/lib/cardCatalog.js.
+   Aproximados al color oficial de cada banco; ajustar aquí si alguno no
+   coincide. `--bank-card-text-dark` es para fondos claros (BanCoppel). */
+:root {
+  --bank-card-text:      #FFFFFF;
+  --bank-card-text-dark: #1A1A1A;
+  --bank-bbva: #072146;
+  --bank-santander: #D7191E;
+  --bank-banorte: #C8102E;
+  --bank-banamex: #0A4F99;
+  --bank-hsbc: #A3000F;
+  --bank-scotiabank: #B5121B;
+  --bank-inbursa: #123A6B;
+  --bank-azteca: #00843D;
+  --bank-bancoppel: #F5C400;
+  --bank-banregio: #FF6B00;
+  --bank-banbajio: #5C2D91;
+  --bank-afirme: #00529B;
+  --bank-multiva: #003A70;
+  --bank-mifel: #00457C;
+  --bank-bienestar: #9D2449;
+  --bank-invex: #E4002B;
+  --bank-monex: #1D3C6E;
+  --bank-intercam: #003865;
+  --bank-nu: #820AD1;
+  --bank-hey: #1B1B1B;
+  --bank-mercadopago: #00A6E1;
+  --bank-spin: #E30613;
+  --bank-klar: #2B2B2B;
+  --bank-stori: #00B3A7;
+  --bank-openbank: #E3004F;
+  --bank-uala: #3E6BFD;
+  --bank-plata: #5E5E5E;
+  --bank-albo: #1F6FFF;
+  --bank-vexi: #FF4F5A;
+  --bank-rappicard: #FF441F;
+  --bank-bankaool: #009FE3;
+  --bank-liverpool: #E10098;
+  --bank-palacio: #1A1A1A;
+  --bank-sears: #0B3D91;
+  --bank-suburbia: #EC008C;
+  --bank-coppel: #004C97;
+  --bank-otro: #3C4250;
+}

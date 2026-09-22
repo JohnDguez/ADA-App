@@ -25,6 +25,8 @@ import { useProfile } from './hooks/useProfile'
 import { useNotifications } from './hooks/useNotifications'
 import { useLocalNotifications, isLocalNotification } from './hooks/useLocalNotifications'
 import { usePeriodIncome } from './hooks/usePeriodIncome'
+import { usePaymentMethods } from './hooks/usePaymentMethods'
+import { getBank } from './lib/cardCatalog'
 import { highlightPaymentWhenVisible } from './lib/highlightPayment'
 import { useSpaceStats } from './hooks/useSpaceStats'
 import { SpaceSwitcher } from './components/SpaceSwitcher'
@@ -234,6 +236,14 @@ export default function App() {
     showToast(t(`sync.body.${action}`, { name: label }))
     localNotifs.add({ type: 'sync_error', action, payment_name: label, space_id: paymentsSpaceId || null, tab: 'payments' })
   }
+  // Mis tarjetas (v0.9.486): aviso + notificación que lleva a Ajustes →
+  // Mis tarjetas.
+  function handleCardSyncError({ method, action }) {
+    const bankName = method ? getBank(method.bank).name : ''
+    const label = [bankName, method?.alias].filter(Boolean).join(' ') || t('cards.fallbackName')
+    showToast(t(`sync.body.${action}`, { name: label }))
+    localNotifs.add({ type: 'sync_error', action, payment_name: label, tab: 'settings', settings_section: 'cards' })
+  }
   // Se reasigna en cada render (es un ref dentro del hook, no provoca
   // renders) para que el aviso siempre use el `t`/estado más reciente.
   setSyncErrorHandler(handleSyncError)
@@ -258,6 +268,13 @@ export default function App() {
   // con el comportamiento de siempre.
   function handleNotifNavigate(n) {
     if (n?.type !== 'sync_error') { window.scrollTo(0, 0); return }
+    // Ajustes → sección (v0.9.486, Mis tarjetas): las tarjetas no son de
+    // ningún espacio — no se cambia de espacio para llegar a ellas.
+    if (n.settings_section) {
+      setSettingsInitialSection(n.settings_section)
+      changeTab(n.tab || 'settings')
+      return
+    }
     const targetSpace = n.space_id || null
     if (paymentsSpaceId !== targetSpace) switchSpace(targetSpace)
     changeTab(n.tab || 'home')
@@ -293,6 +310,10 @@ export default function App() {
   // Ingresos Extras del periodo (v0.9.484) — a nivel de App para que
   // persistan entre pestañas y sean optimistas (ver usePeriodIncome.js).
   const periodIncome = usePeriodIncome(user?.id, effectiveProfile, paymentsSpaceId, handleIncomeSyncError)
+
+  // Mis tarjetas (v0.9.486, entrega A) — a nivel de App porque en la
+  // entrega B también las usará el formulario de pagos.
+  const paymentMethods = usePaymentMethods(user?.id, handleCardSyncError)
 
   const [tab,            setTab]           = useState(() => {
     const hasActiveSession = sessionStorage.getItem('ada_session')
@@ -1100,6 +1121,7 @@ export default function App() {
           onThemeChange={setTheme}
           onOpenPremium={() => setPremiumPageOpen(true)}
           sharedSpaces={sharedSpaces}
+          paymentMethods={paymentMethods}
           initialSection={settingsInitialSection}
           onConsumeInitialSection={() => setSettingsInitialSection(null)}
           returnTab={settingsReturnTab}
