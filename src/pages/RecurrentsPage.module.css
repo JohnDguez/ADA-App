@@ -312,6 +312,13 @@
   flex-shrink: 0;
 }
 
+/* Sincronizando (fase 3, v0.9.481) — el master espera confirmación del
+   servidor; el botón se atenúa y no responde. */
+.actionBtn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
 .masterMenuButton {
   width: 32px;
   height: 32px;

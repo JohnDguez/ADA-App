@@ -1,6 +1,6 @@
 import { useState, useMemo, useRef, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Pause, Play, Trash2, Search, ChevronDown, CreditCard, Pencil, MoreVertical } from 'lucide-react'
+import { Pause, Play, Trash2, Search, ChevronDown, CreditCard, Pencil, MoreVertical, Loader2 } from 'lucide-react'
 import { EmptyState } from '../components/EmptyState'
 import { PageHeader } from '../components/PageHeader'
 import { NewSharedSpacePanel } from '../components/NewSharedSpacePanel'
@@ -293,6 +293,7 @@ export function RecurrentsPage({ payments, dataLoading = false, profile, spaceSw
                       return (
                         <div key={master.id}>
                           <div
+                            data-payment-id={master.id}
                             onClick={() => setSelectedMasterId(master.id)}
                             className={`${styles.masterRow} ${styles.masterRowClickable} ${isLast && !isConfirming ? styles.masterRowNoBorder : ''}`}
                           >
@@ -332,7 +333,12 @@ export function RecurrentsPage({ payments, dataLoading = false, profile, spaceSw
 
                             {/* Botones */}
                             <div className={styles.masterActionsRow}>
+                              {/* `_syncing` (fase 3, v0.9.481): el paquete de este
+                                  master todavía no se confirma — pausar/reactivar
+                                  se atenúa y el menú se cambia por el ícono
+                                  girando (mismo criterio que PayCard.jsx). */}
                               <ActionBtn
+                                disabled={master._syncing}
                                 onClick={e => {
                                   e.stopPropagation()
                                   canEdit ? (master.paused ? onResume(master.id) : onPause(master.id)) : blocked(master.paused ? t('recurrentsPage.actionResume') : t('recurrentsPage.actionPause'))
@@ -345,6 +351,11 @@ export function RecurrentsPage({ payments, dataLoading = false, profile, spaceSw
                                   : <Pause size={13} color={canEdit ? 'var(--surface)' : 'var(--muted)'} />
                                 }
                               </ActionBtn>
+                              {master._syncing ? (
+                                <button type="button" disabled onClick={e => e.stopPropagation()} className={styles.masterMenuButton} aria-label={t('sync.syncing')}>
+                                  <span className="sync-spinner"><Loader2 size={16} color="var(--text)" /></span>
+                                </button>
+                              ) : (
                               <button
                                 onClick={e => {
                                   e.stopPropagation()
@@ -368,6 +379,7 @@ export function RecurrentsPage({ payments, dataLoading = false, profile, spaceSw
                               >
                                 <MoreVertical size={16} color="var(--text)" />
                               </button>
+                              )}
                             </div>
                           </div>
 
@@ -407,9 +419,9 @@ export function RecurrentsPage({ payments, dataLoading = false, profile, spaceSw
   )
 }
 
-function ActionBtn({ onClick, color, children, label }) {
+function ActionBtn({ onClick, color, children, label, disabled = false }) {
   return (
-    <button onClick={onClick} className={styles.actionBtn} style={{ background: color }} aria-label={label}>
+    <button onClick={onClick} disabled={disabled} className={styles.actionBtn} style={{ background: color }} aria-label={label}>
       {children}
     </button>
   )
