@@ -536,6 +536,16 @@ export function usePayments(userId, activeSpaceId = null, activeSpaceName = null
         })
   }
 
+  // Método de pago (v0.9.487): toda copia nueva HEREDA el método de su
+  // master (o del pago del que sale). `cash` = efectivo, que es el default
+  // de la columna y el de todo lo que ya existía.
+  function methodFields(src) {
+    return {
+      payment_method_id: src?.payment_method_id ?? null,
+      payment_method_kind: src?.payment_method_kind || 'cash',
+    }
+  }
+
   // Copia nueva de un recurrente/parcialidad con todos los campos que
   // siempre llevan — `fields` pone lo propio de cada caso.
   function newCopyRow(fields) {
@@ -544,6 +554,7 @@ export function usePayments(userId, activeSpaceId = null, activeSpaceName = null
       is_recurrent: true, is_master: false, is_paid: false, paid_at: null,
       postponed: false, is_postponed: false, postponed_at: null, paused: false,
       is_history_only: false,
+      payment_method_id: null, payment_method_kind: 'cash',
       ...fields,
     }
   }
@@ -665,6 +676,7 @@ export function usePayments(userId, activeSpaceId = null, activeSpaceName = null
           postponed_at: null,
           paused:       false,
           is_installment: false,
+          ...methodFields(master),
         })
       }
     }
@@ -692,7 +704,7 @@ export function usePayments(userId, activeSpaceId = null, activeSpaceName = null
     return { ...res, data: res.error ? null : row }
   }
 
-  async function addInstallmentPayment({ name, amount, totalAmount, totalInstallments, startFrom, recurFreq, category, firstDate, backfillAsExpense = true }) {
+  async function addInstallmentPayment({ name, amount, totalAmount, totalInstallments, startFrom, recurFreq, category, firstDate, backfillAsExpense = true, payment_method_id = null, payment_method_kind = 'cash' }) {
     const from = startFrom || 1
 
     // `firstDate` es la fecha del pago #1 del plan (así lo pide el formulario).
@@ -730,11 +742,13 @@ export function usePayments(userId, activeSpaceId = null, activeSpaceName = null
       current_installment: from,
       total_installments:  totalInstallments,
       is_history_only:     false,
+      payment_method_id, payment_method_kind,
     }
 
     const copyBase = {
       name, amount, category, is_variable: false, recur_freq: recurFreq,
       parent_id: masterRow.id, is_installment: true, total_installments: totalInstallments,
+      payment_method_id, payment_method_kind,
     }
     const pendingRows = [newCopyRow({ ...copyBase, current_installment: from, due_date: dateOfInstallment(from) })]
     if (from + 1 <= totalInstallments) {
@@ -799,6 +813,7 @@ export function usePayments(userId, activeSpaceId = null, activeSpaceName = null
         is_installment: true, current_installment: copy.current_installment,
         total_installments: copy.total_installments,
         is_paid: true, paid_at: nowIso,
+        ...methodFields(copy),
       })
       const res = await runOptimisticBatch({
         subjectId: copyId, action: 'abonar',
@@ -861,6 +876,7 @@ export function usePayments(userId, activeSpaceId = null, activeSpaceName = null
         name: master.name, amount: nextNum === newTotal ? montoUltimo : montoRef,
         due_date: lastDate, category: master.category, is_variable: false, recur_freq: master.recur_freq,
         parent_id: master.id, is_installment: true, current_installment: nextNum, total_installments: newTotal,
+        ...methodFields(master),
       }))
     }
 
@@ -920,7 +936,7 @@ export function usePayments(userId, activeSpaceId = null, activeSpaceName = null
   // ─────────────────────────────────────────────────────────────────────────
 
   // Optimista + todo-o-nada (v0.9.484): master + 2 copias en un paquete.
-  async function addRecurrentPayment({ name, amount, category, recur_freq, is_variable, firstDate }) {
+  async function addRecurrentPayment({ name, amount, category, recur_freq, is_variable, firstDate, payment_method_id = null, payment_method_kind = 'cash' }) {
     const baseAmount = is_variable ? 0 : amount
     // Master: template, no aparece en Home/Pagos. `due_date` guarda la fecha
     // del primer cobro como referencia.
@@ -931,8 +947,9 @@ export function usePayments(userId, activeSpaceId = null, activeSpaceName = null
       due_date: firstDate, is_paid: false, paid_at: null,
       postponed: false, is_postponed: false, postponed_at: null, paused: false,
       is_installment: false, is_history_only: false,
+      payment_method_id, payment_method_kind,
     }
-    const base = { name, amount: baseAmount, category, is_variable, recur_freq, parent_id: masterRow.id, is_installment: false }
+    const base = { name, amount: baseAmount, category, is_variable, recur_freq, parent_id: masterRow.id, is_installment: false, payment_method_id, payment_method_kind }
     const date2 = dateToStr(nextPeriodDate(firstDate, recur_freq))
     const res = await runOptimisticBatch({
       subject: masterRow, action: 'create',
@@ -962,7 +979,7 @@ export function usePayments(userId, activeSpaceId = null, activeSpaceName = null
   // aplica a copias futuras. FIX v0.9.481: un pago POSPUESTO ya se resolvió —
   // antes caía con las pendientes (`!is_paid`) y recibía monto/categoría
   // nuevos; ahora es historial igual que uno pagado (solo cambia el nombre).
-  async function updateRecurrentConfig(masterId, { name, amount, recur_freq, category, is_variable, firstDate }) {
+  async function updateRecurrentConfig(masterId, { name, amount, recur_freq, category, is_variable, firstDate, payment_method_id, payment_method_kind }) {
     const master = payments.find(p => p.id === masterId)
     if (!master) return { error: 'Master no encontrado' }
 
@@ -971,14 +988,19 @@ export function usePayments(userId, activeSpaceId = null, activeSpaceName = null
     const pending    = children.filter(p => !p.is_paid && !p.is_postponed)
     const copyAmount = is_variable ? 0 : amount
 
-    const updates = [{ id: masterId, fields: { name, amount, recur_freq, category, is_variable } }]
+    // El método de pago (v0.9.487) viaja al master y a las PENDIENTES; las
+    // pagadas conservan con qué se pagaron de verdad.
+    const method = payment_method_kind !== undefined
+      ? { payment_method_id: payment_method_id ?? null, payment_method_kind: payment_method_kind || 'cash' }
+      : {}
+    const updates = [{ id: masterId, fields: { name, amount, recur_freq, category, is_variable, ...method } }]
     if (name !== master.name) history.forEach(p => updates.push({ id: p.id, fields: { name } }))
-    pending.forEach(p => updates.push({ id: p.id, fields: { name, amount: copyAmount, category, is_variable } }))
+    pending.forEach(p => updates.push({ id: p.id, fields: { name, amount: copyAmount, category, is_variable, ...method } }))
 
     // Si no queda NINGUNA pendiente (caso raro: la última se acaba de pagar
     // y ensureTwoAhead todavía no corrió), se crea al menos 1.
     const inserts = pending.length === 0
-      ? [newCopyRow({ name, amount: copyAmount, category, is_variable, recur_freq, parent_id: masterId, due_date: firstDate, is_installment: false })]
+      ? [newCopyRow({ name, amount: copyAmount, category, is_variable, recur_freq, parent_id: masterId, due_date: firstDate, is_installment: false, ...methodFields({ ...master, ...method }) })]
       : []
 
     return runOptimisticBatch({ subjectId: masterId, action: 'updateMaster', updates, inserts })
@@ -1011,7 +1033,7 @@ export function usePayments(userId, activeSpaceId = null, activeSpaceName = null
   // y resumeRecurrent() al reactivar una parcialidad pausada (fix v0.9.481:
   // antes reactivarla creaba copias de recurrente normal, sin número de
   // pago). `extraMaster` agrega campos al master (ej. `paused: false`).
-  function buildInstallmentPlan(masterId, { name, amount, category, recur_freq, total_installments, firstDate }, extraMaster = {}) {
+  function buildInstallmentPlan(masterId, { name, amount, category, recur_freq, total_installments, firstDate, payment_method_id, payment_method_kind }, extraMaster = {}) {
     const master = payments.find(p => p.id === masterId)
     if (!master) return null
 
@@ -1023,6 +1045,12 @@ export function usePayments(userId, activeSpaceId = null, activeSpaceName = null
     const allPending = children
       .filter(p => !p.is_paid && !p.is_postponed)
       .sort((a, b) => a.current_installment - b.current_installment)
+
+    // Método de pago (v0.9.487): al master y a las pendientes; las pagadas
+    // conservan con qué se pagaron.
+    const method = payment_method_kind !== undefined
+      ? { payment_method_id: payment_method_id ?? null, payment_method_kind: payment_method_kind || 'cash' }
+      : {}
 
     const updates = []
     // 1) Pendientes que ya no caben en el nuevo total
@@ -1037,7 +1065,7 @@ export function usePayments(userId, activeSpaceId = null, activeSpaceName = null
     let chainDate = firstDate
     const resultingPending = []
     pending.forEach((p, i) => {
-      const upd = { name, category, recur_freq, total_installments: newTotal }
+      const upd = { name, category, recur_freq, total_installments: newTotal, ...method }
       if (Number(p.amount) === oldRef) upd.amount = newRef
       if (rechainDates) {
         if (i > 0) chainDate = dateToStr(nextPeriodDate(chainDate, recur_freq))
@@ -1072,6 +1100,7 @@ export function usePayments(userId, activeSpaceId = null, activeSpaceName = null
       inserts.push(newCopyRow({
         name, amount: newRef, due_date: due, category, is_variable: false, recur_freq,
         parent_id: masterId, is_installment: true, current_installment: nextNum, total_installments: newTotal,
+        ...methodFields({ ...master, ...method }),
       }))
       lastNum = nextNum; lastDate = due
     }
@@ -1088,7 +1117,7 @@ export function usePayments(userId, activeSpaceId = null, activeSpaceName = null
     const totalAmount = Math.round((paidSum + pendingSum + notYetRows * newRef) * 100) / 100
     updates.unshift({
       id: masterId,
-      fields: { name, amount: newRef, category, recur_freq, total_installments: newTotal, total_amount: totalAmount, ...extraMaster },
+      fields: { name, amount: newRef, category, recur_freq, total_installments: newTotal, total_amount: totalAmount, ...method, ...extraMaster },
     })
 
     return { updates, deletes, inserts }
@@ -1173,6 +1202,7 @@ export function usePayments(userId, activeSpaceId = null, activeSpaceName = null
             is_installment:      true,
             current_installment: nextNum,
             total_installments:  payment.total_installments,
+            ...methodFields(payment),
           }).select().single()
           if (next) setPayments(prev => [...prev, next])
         }
@@ -1325,6 +1355,7 @@ export function usePayments(userId, activeSpaceId = null, activeSpaceName = null
       category:     payment.category,
       is_variable:  payment.is_variable,
       is_recurrent: false,
+      ...methodFields(payment),
       is_paid:      false,
       postponed:    false,
       is_postponed: false,
@@ -1358,13 +1389,13 @@ export function usePayments(userId, activeSpaceId = null, activeSpaceName = null
   // de pago), y la parcialidad dejaba de comportarse como tal. Ahora usa el
   // mismo plan que editarla (buildInstallmentPlan), con `paused: false`: las
   // copias siguen la numeración y respetan el total.
-  async function resumeRecurrent(masterId, { name, amount, recur_freq, category, is_variable, firstDate, total_installments }) {
+  async function resumeRecurrent(masterId, { name, amount, recur_freq, category, is_variable, firstDate, total_installments, payment_method_id, payment_method_kind }) {
     const master = payments.find(p => p.id === masterId)
     if (!master) return { error: 'Master no encontrado' }
 
     if (master.is_installment) {
       const plan = buildInstallmentPlan(masterId, {
-        name, amount, category, recur_freq, firstDate,
+        name, amount, category, recur_freq, firstDate, payment_method_id, payment_method_kind,
         total_installments: total_installments ?? master.total_installments,
       }, { paused: false })
       return runOptimisticBatch({ subjectId: masterId, action: 'resume', ...plan })
@@ -1372,10 +1403,13 @@ export function usePayments(userId, activeSpaceId = null, activeSpaceName = null
 
     const copyAmount = is_variable ? 0 : amount
     const date2 = dateToStr(nextPeriodDate(firstDate, recur_freq))
-    const base = { name, amount: copyAmount, category, is_variable, recur_freq, parent_id: masterId, is_installment: false }
+    const method = payment_method_kind !== undefined
+      ? { payment_method_id: payment_method_id ?? null, payment_method_kind: payment_method_kind || 'cash' }
+      : methodFields(master)
+    const base = { name, amount: copyAmount, category, is_variable, recur_freq, parent_id: masterId, is_installment: false, ...method }
     return runOptimisticBatch({
       subjectId: masterId, action: 'resume',
-      updates: [{ id: masterId, fields: { paused: false, name, amount, recur_freq, category, is_variable } }],
+      updates: [{ id: masterId, fields: { paused: false, name, amount, recur_freq, category, is_variable, ...method } }],
       inserts: [newCopyRow({ ...base, due_date: firstDate }), newCopyRow({ ...base, due_date: date2 })],
     })
   }
@@ -1492,6 +1526,7 @@ export function usePayments(userId, activeSpaceId = null, activeSpaceName = null
         recur_freq:   sample.recur_freq,
         is_master:    true,
         parent_id:    null,
+        ...methodFields(sample),
         due_date:     sample.due_date, // fecha de referencia
         is_paid:      false,
         paid_at:      null,
