@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Bell, BellOff } from 'lucide-react'
 // Ícono del encabezado vía Phosphor Icons (mismo patrón que las demás
@@ -24,15 +25,25 @@ export function SettingsNotificationsPage({ profile, user, onUpdate, onBack, sli
   const { t } = useTranslation()
   const { subscribed, subscribe, unsubscribe } = usePushNotifications(user?.id)
 
+  // `pushTarget` (v0.9.482): el switch se mueve al instante hacia donde se
+  // pidió, en vez de esperar a que termine todo el proceso (registrar el
+  // service worker, el permiso del navegador, guardar la suscripción) —
+  // eso puede tardar segundos. Al terminar vuelve a mostrar el estado real:
+  // si falló o se negó el permiso, regresa solo.
+  const [pushTarget, setPushTarget] = useState(null)
   async function handlePushToggle() {
+    if (pushTarget !== null) return
     if (subscribed) {
+      setPushTarget(false)
       await unsubscribe(); showToast(t('settingsNotifications.toast.disabled'))
     } else {
+      setPushTarget(true)
       const { error } = await subscribe()
       if (error === 'Permiso denegado') showToast(t('settingsNotifications.toast.permissionDenied'))
       else if (error) showToast(t('settingsNotifications.toast.enableError'))
       else showToast(t('settingsNotifications.toast.enabled'))
     }
+    setPushTarget(null)
   }
 
   return (
@@ -56,7 +67,7 @@ export function SettingsNotificationsPage({ profile, user, onUpdate, onBack, sli
                 </div>
               </div>
             </div>
-            <Toggle on={subscribed} />
+            <Toggle on={pushTarget ?? subscribed} />
           </div>
         </div>
 
