@@ -174,7 +174,8 @@ export default function App() {
   // avise a `usePayments` (a propósito, ver la nota ahí): sin esto el
   // abono no aparecía en Gastos hasta recargar la app. Mismo patrón que el
   // `onDataDeleted={() => { refetch() }}` de SettingsPage, más abajo.
-  const goalsData = useGoals(user?.id, profile, paymentsSpaceId, refetch)
+  // 5º parámetro (v0.9.483): fallos de metas optimistas — ver handleGoalSyncError.
+  const goalsData = useGoals(user?.id, profile, paymentsSpaceId, refetch, handleGoalSyncError)
 
   // v0.9.369 — RESTAURADO: se había quitado en v0.9.367 asumiendo que
   // RailSpaceSwitcher.jsx (dentro de NavRail.jsx) lo reemplazaba del
@@ -207,6 +208,20 @@ export default function App() {
       tab: payment.is_master ? 'recurrents' : (payment.is_paid || payment.is_postponed) ? 'payments' : 'home',
     })
   }
+  // Metas (v0.9.483): mismo aviso + notificación local, pero lleva a Metas
+  // y resalta la tarjeta (`data-goal-id`).
+  function handleGoalSyncError({ goal, action }) {
+    const name = goal?.name || t('app.toast.fallbackPaymentName')
+    showToast(t(`sync.body.${action}`, { name }))
+    localNotifs.add({
+      type: 'sync_error',
+      action,
+      payment_name: name,
+      goal_id: action === 'goalCreate' ? null : goal?.id,
+      space_id: paymentsSpaceId || null,
+      tab: 'goals',
+    })
+  }
   // Se reasigna en cada render (es un ref dentro del hook, no provoca
   // renders) para que el aviso siempre use el `t`/estado más reciente.
   setSyncErrorHandler(handleSyncError)
@@ -234,7 +249,7 @@ export default function App() {
     const targetSpace = n.space_id || null
     if (paymentsSpaceId !== targetSpace) switchSpace(targetSpace)
     changeTab(n.tab || 'home')
-    highlightPaymentWhenVisible(n.payment_id)
+    highlightPaymentWhenVisible(n.payment_id || n.goal_id)
   }
   const { theme, setTheme } = useTheme()
 
@@ -444,8 +459,9 @@ export default function App() {
     // puntos) pasando por la misma lógica de abonarInstallment, para que el
     // total fijo y el plan se mantengan consistentes igual que un abono.
     if (payment.is_installment) {
-      const { error } = await abonarInstallment(payment.id, Number(payment.amount))
-      if (error) showToast(t('app.toast.markPaidError'))
+      // Paquete optimista (v0.9.483): con `reverted`/`busy` el aviso ya salió.
+      const { error, reverted, busy } = await abonarInstallment(payment.id, Number(payment.amount))
+      if (error && !reverted && !busy) showToast(t('app.toast.markPaidError'))
       return
     }
     // Gasto de un Espacio Compartido: el check paga "lo que falta" en vez
@@ -575,7 +591,8 @@ export default function App() {
     const payment = abonarModal.payment
     setAbonarModal({ open: false, payment: null })
     if (!payment?.id) { showToast(t('app.toast.paymentNotFoundError')); return }
-    const { error, done } = await abonarInstallment(payment.id, amount)
+    const { error, done, reverted, busy } = await abonarInstallment(payment.id, amount)
+    if (reverted || busy) return
     if (error) showToast(typeof error === 'string' ? error : (error.message || t('app.toast.registerContributionError')))
     else if (done) showToast(t('payCard.allPaymentsDone'))
     else showToast(t('app.toast.contributionRegistered', { amount: fmt(amount) }))
