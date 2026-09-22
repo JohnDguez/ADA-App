@@ -1,0 +1,53 @@
+/* Segmentado con fondo deslizante (v0.9.486). Regla 13: pill permitido
+   aquí (segmentados). */
+.seg {
+  position: relative;
+  display: flex;
+  background: var(--bg);
+  border-radius: var(--radius-full);
+  padding: 3px;
+}
+
+.segDisabled {
+  opacity: 0.6;
+}
+
+.segThumb {
+  position: absolute;
+  top: 3px;
+  bottom: 3px;
+  left: var(--seg-left);
+  width: var(--seg-width);
+  border-radius: var(--radius-full);
+  background: var(--accent);
+  transition: left .3s cubic-bezier(0.22, 1, 0.36, 1), width .3s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.segOption {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 6px;
+  border: none;
+  background: none;
+  border-radius: var(--radius-full);
+  font-size: 13px;
+  font-family: 'DM Sans', sans-serif;
+  color: var(--text);
+  cursor: pointer;
+  transition: color .25s ease;
+}
+
+.segOption:disabled {
+  cursor: default;
+}
+
+.segOptionOn {
+  color: var(--surface);
+  font-weight: 600;
+}
+

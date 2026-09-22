@@ -13,13 +13,15 @@ import styles from './ConfirmDeleteModal.module.css'
 // propia UI de confirmación. RecurrentsPage.jsx/RecurrentDetailPanel.jsx
 // ya tenían la suya propia (panel inline, no este modal centrado) desde
 // antes — se quedan igual, no las duplica este componente.
-export function ConfirmDeleteModal({ open, message, onConfirm, onCancel }) {
+// `title` opcional (v0.9.486, Mis tarjetas): por defecto sigue siendo
+// "Eliminar pago", como en todos los usos que ya existían.
+export function ConfirmDeleteModal({ open, title, message, onConfirm, onCancel }) {
   const { t } = useTranslation()
   if (!open) return null
   return (
     <div className={styles.overlay}>
       <div className={styles.modal}>
-        <div className={styles.title}>{t('paymentModal.deletePayment')}</div>
+        <div className={styles.title}>{title || t('paymentModal.deletePayment')}</div>
         <div className={styles.description}>{message}</div>
         <button type="button" onClick={onConfirm} className={styles.discardButton}>{t('buttons.delete')}</button>
         <button type="button" onClick={onCancel} className={styles.cancelButton}>{t('buttons.cancel')}</button>

@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { createPortal } from 'react-dom'
-import { ChevronDown, Check } from 'lucide-react'
+import { ChevronDown, Check, Search } from 'lucide-react'
 import styles from './Select.module.css'
 
 // PANEL_ANIM_MS debe coincidir EXACTO con `animation-duration` de
@@ -19,9 +19,20 @@ const PANEL_ANIM_MS = 180
 // `renderIcon(option)` es opcional: si se pasa, antepone ese nodo a cada
 // opción (usado para categorías, donde cada una trae su ícono en su propio
 // color, igual que en "Por Categoría" de Pagos).
-export function Select({ value, onChange, options, placeholder, renderIcon }) {
+// v0.9.486 — dos opciones nuevas, apagadas por defecto (los <Select> que ya
+// existían no cambian en nada):
+// - `searchable`: casilla de búsqueda arriba del panel, filtra por etiqueta
+//   (sin distinguir acentos ni mayúsculas). Usado en el banco de Mis
+//   tarjetas (37 instituciones).
+// - opciones con `group` + prop `groupLabels` ({ id: 'Etiqueta' }): dibuja
+//   un encabezado cada vez que cambia el grupo.
+export function Select({ value, onChange, options, placeholder, renderIcon, searchable = false, groupLabels = null }) {
   const { t } = useTranslation()
   const [open, setOpen] = useState(false)
+  const [query, setQuery] = useState('')
+  // Con el buscador enfocado, abrir el teclado del celular puede disparar
+  // un 'scroll' de la ventana — no debe cerrar el panel (ver handleScroll).
+  const searchFocusedRef = useRef(false)
   // Regla 29 (confirmada por Johnatan, v0.9.254): toda animación de
   // aparición necesita también su animación de salida — antes el panel
   // entraba con fundido pero se cerraba de golpe (`{open && <div>}`,
@@ -82,6 +93,7 @@ export function Select({ value, onChange, options, placeholder, renderIcon }) {
   useEffect(() => {
     if (!open) return
     function handleScroll(e) {
+      if (searchFocusedRef.current) return
       if (panelRef.current && panelRef.current.contains(e.target)) return
       closePanel()
     }
@@ -104,6 +116,7 @@ export function Select({ value, onChange, options, placeholder, renderIcon }) {
       setDropUp(spaceAbove > spaceBelow)
       setPanelPos({ left: rect.left, width: rect.width, top: rect.bottom, bottom: rect.top })
     }
+    setQuery('')
     setOpen(true)
   }
 
@@ -118,6 +131,9 @@ export function Select({ value, onChange, options, placeholder, renderIcon }) {
   function optValue(opt) { return typeof opt === 'object' ? opt.value : opt }
   function optLabel(opt) { return typeof opt === 'object' ? opt.label : opt }
   const selectedLabel = value != null ? optLabel(options.find(o => optValue(o) === value) ?? value) : null
+  const normalize = str => String(str).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
+  const q = normalize(query.trim())
+  const visibleOptions = searchable && q ? options.filter(o => normalize(optLabel(o)).includes(q)) : options
 
   return (
     <div ref={ref} className={styles.wrapper}>
@@ -145,22 +161,44 @@ export function Select({ value, onChange, options, placeholder, renderIcon }) {
               : { top: panelPos.top + 6 }),
           }}
         >
-          {options.map(opt => {
+          {searchable && (
+            <div className={styles.searchRow}>
+              <Search size={14} color="var(--text)" />
+              <input
+                autoFocus
+                value={query}
+                onChange={e => setQuery(e.target.value)}
+                onFocus={() => { searchFocusedRef.current = true }}
+                onBlur={() => { searchFocusedRef.current = false }}
+                placeholder={t('select.searchPlaceholder')}
+                className={styles.searchInput}
+              />
+            </div>
+          )}
+          {visibleOptions.map((opt, i) => {
             const ov = optValue(opt)
             const isSel = ov === value
+            const group = typeof opt === 'object' ? opt.group : null
+            const prevGroup = i > 0 && typeof visibleOptions[i - 1] === 'object' ? visibleOptions[i - 1].group : null
+            const showGroup = groupLabels && group && group !== prevGroup
             return (
-              <button
-                type="button"
-                key={ov}
-                onClick={() => { onChange(ov); closePanel() }}
-                className={`${styles.option} ${isSel ? styles.optionSelected : ''}`}
-              >
-                {renderIcon && renderIcon(ov)}
-                <span className={styles.optionText}>{optLabel(opt)}</span>
-                {isSel && <Check size={14} color="var(--surface)" className={styles.checkIcon} />}
-              </button>
+              <div key={ov}>
+                {showGroup && <div className={styles.groupLabel}>{groupLabels[group]}</div>}
+                <button
+                  type="button"
+                  onClick={() => { onChange(ov); closePanel() }}
+                  className={`${styles.option} ${isSel ? styles.optionSelected : ''}`}
+                >
+                  {renderIcon && renderIcon(ov)}
+                  <span className={styles.optionText}>{optLabel(opt)}</span>
+                  {isSel && <Check size={14} color="var(--surface)" className={styles.checkIcon} />}
+                </button>
+              </div>
             )
           })}
+          {searchable && visibleOptions.length === 0 && (
+            <div className={styles.noResults}>{t('select.noResults')}</div>
+          )}
         </div>,
         document.body
       )}

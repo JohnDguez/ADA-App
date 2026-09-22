@@ -1,0 +1,113 @@
+/* Tarjeta visual (v0.9.486). Proporción real de una tarjeta (ISO 7810:
+   85.6 × 53.98 mm ≈ 1.586). `--card-color` llega por la prop style con la
+   variable del banco (`var(--bank-<id>)`, ver index.css). */
+.card {
+  position: relative;
+  aspect-ratio: 1.586 / 1;
+  border-radius: 14px;
+  padding: 16px;
+  box-sizing: border-box;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  background-color: var(--card-color);
+  color: var(--bank-card-text);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.28);
+  transition: background-color .45s ease, color .45s ease;
+  user-select: none;
+}
+
+.darkText {
+  color: var(--bank-card-text-dark);
+}
+
+/* Degradado encima del color base — como capa, para que el cambio de
+   banco (background-color) sí se anime. */
+.card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.06), rgba(0, 0, 0, 0.22));
+  pointer-events: none;
+}
+
+/* Brillo circular decorativo */
+.card::after {
+  content: '';
+  position: absolute;
+  right: -30%;
+  top: -40%;
+  width: 90%;
+  height: 140%;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.08);
+  pointer-events: none;
+}
+
+.top,
+.bottom {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.top { align-items: flex-start; }
+.bottom { align-items: flex-end; }
+
+.names { min-width: 0; }
+
+.bankName {
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.alias {
+  font-size: 12px;
+  opacity: 0.85;
+  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.chip {
+  width: 34px;
+  height: 26px;
+  flex-shrink: 0;
+  border-radius: 5px;
+  background: linear-gradient(135deg, rgba(255, 236, 170, 0.95), rgba(190, 150, 62, 0.95));
+}
+
+.badge {
+  flex-shrink: 0;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 3px 7px;
+  border-radius: 5px;
+  background: rgba(255, 255, 255, 0.22);
+}
+
+.number {
+  position: relative;
+  z-index: 1;
+  font-size: 15px;
+  letter-spacing: 0.16em;
+  opacity: 0.92;
+  min-height: 20px;
+}
+
+.meta {
+  font-size: 11px;
+  opacity: 0.88;
+}
+
+.network {
+  flex-shrink: 0;
+}
