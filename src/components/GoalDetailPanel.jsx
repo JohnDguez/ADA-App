@@ -67,11 +67,25 @@ export function GoalDetailPanel({
       showToast(t('goalDetailPanel.toast.exceedsDeposited', { amount: fmt(goal.currentAmount) }))
       return
     }
+    const action = activeAction
+    const successMsg = action === 'aportar' ? t('goalDetailPanel.toast.contributed') : t('goalDetailPanel.toast.withdrawn')
+    const pending = action === 'aportar' ? onAportar(val) : onRetirar(val)
+    // Personal (v0.9.483): optimista — el panel cierra al instante y el
+    // progreso ya se ve; el aviso de éxito sale al confirmar. Con
+    // `reverted`/`busy` el aviso de error ya lo dio App.jsx.
+    if (!isShared) {
+      setActiveAction(null)
+      pending.then(({ error, reverted, busy }) => {
+        if (reverted || busy) return
+        showToast(error ? (error.message || t('goalDetailPanel.toast.saveError')) : successMsg)
+      })
+      return
+    }
     setSaving(true)
-    const { error } = activeAction === 'aportar' ? await onAportar(val) : await onRetirar(val)
+    const { error } = await pending
     setSaving(false)
     if (error) { showToast(error.message || t('goalDetailPanel.toast.saveError')); return }
-    showToast(activeAction === 'aportar' ? t('goalDetailPanel.toast.contributed') : t('goalDetailPanel.toast.withdrawn'))
+    showToast(successMsg)
     setActiveAction(null)
   }
 
@@ -89,10 +103,18 @@ export function GoalDetailPanel({
   // resultado con un toast.
   async function handleMarkComplete() {
     const goalRemaining = goal.remaining
-    setCompleting(true)
-    const { error } = await onMarkCompleted(true)
-    setCompleting(false)
-    if (error) { showToast(error.message || t('goalDetailPanel.toast.completeError')); return }
+    // Personal (v0.9.483): optimista — sin estado de "completando"; la meta
+    // ya se ve cumplida y el aviso sale al confirmar.
+    if (!isShared) {
+      const { error, reverted, busy } = await onMarkCompleted(true)
+      if (reverted || busy) return
+      if (error) { showToast(error.message || t('goalDetailPanel.toast.completeError')); return }
+    } else {
+      setCompleting(true)
+      const { error } = await onMarkCompleted(true)
+      setCompleting(false)
+      if (error) { showToast(error.message || t('goalDetailPanel.toast.completeError')); return }
+    }
     if (goalRemaining > 0) {
       showToast(
         hasIncome

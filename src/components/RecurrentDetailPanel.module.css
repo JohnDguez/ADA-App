@@ -196,6 +196,13 @@
   color: var(--accent);
 }
 
+/* Lo ya abonado al próximo pago de una parcialidad (v0.9.483) */
+.statSub {
+  font-size: 11px;
+  color: var(--text);
+  margin-top: 2px;
+}
+
 /* ── Historial ────────────────────────────────────────────────────────────── */
 .historyTitle {
   font-size: 14px;
