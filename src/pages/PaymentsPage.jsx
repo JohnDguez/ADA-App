@@ -6,6 +6,7 @@ import { NewSharedSpacePanel } from '../components/NewSharedSpacePanel'
 import { EmptyState } from '../components/EmptyState'
 import { PaidByStack } from '../components/PaidByStack'
 import { Select } from '../components/Select'
+import { getBank, bankColorVar } from '../lib/cardCatalog'
 import { fmt, dateOf, dateToStr, getMonths, getMonthsShort, CATEGORIES, cobroPeriod, addDays, getCatColor, getCategoryLabel, RECUR_FREQ, getFrequencyLabel, getDeleteConfirmMessage } from '../lib/utils'
 import { getCategoryIcon } from '../lib/categoryIcons'
 import { supabase } from '../lib/supabase'
@@ -92,7 +93,40 @@ function prevPeriod(profile) {
   return { start: t, end: prevEnd }
 }
 
-export function PaymentsPage({ payments, dataLoading = false, periodIncome, profile, spaceSwitcher, activeSpaceHeader, activeSpaceId = null, rawActiveSpaceId = null, sharedSpaces, spacePermissions, onOpenPremium, onSpaceReady, unreadCount, onOpenNotifs, onGoSettings, onMarkUnpaid, onDelete, onDeleteDirect, onUpdateProfile, onEdit, onViewSource, onSplit, onAdd, onGoCategories, sharedFund, slideClass, ensureMonthLoaded, oldestPaymentYear = null }) {
+// Fila de "Por método de pago" (v0.9.487): monto, barra proporcional y,
+// si hay más de una tarjeta de ese tipo, el desglose por tarjeta.
+function MethodRow({ label, amount, total, barClass, cards = [], note = null }) {
+  const { t } = useTranslation()
+  if (!amount) return null
+  const pct = total > 0 ? Math.round((amount / total) * 100) : 0
+  return (
+    <div className={styles.methodRow}>
+      <div className={styles.methodRowTop}>
+        <span className={styles.methodRowLabel}>{label}</span>
+        <span className={styles.methodRowAmount}>{fmt(amount)}</span>
+      </div>
+      <div className={styles.methodBarTrack}>
+        <span className={`${styles.methodBarFill} ${barClass}`} style={{ '--method-pct': `${pct}%` }} />
+      </div>
+      {cards.length > 1 && (
+        <div className={styles.methodCards}>
+          {cards.map(({ id, total: cardTotal, card }) => (
+            <div key={id} className={styles.methodCardRow}>
+              <span className={styles.methodSwatch} style={{ '--swatch-color': card ? bankColorVar(card.bank) : 'var(--border-mid)' }} />
+              <span className={styles.methodCardName}>
+                {card ? `${getBank(card.bank).name}${card.alias ? ` ${card.alias}` : ''}` : t('paymentMethod.deletedCard')}
+              </span>
+              <span className={styles.methodCardAmount}>{fmt(cardTotal)}</span>
+            </div>
+          ))}
+        </div>
+      )}
+      {note && <div className={styles.methodNote}>{note}</div>}
+    </div>
+  )
+}
+
+export function PaymentsPage({ payments, dataLoading = false, periodIncome, paymentMethodsList = [], profile, spaceSwitcher, activeSpaceHeader, activeSpaceId = null, rawActiveSpaceId = null, sharedSpaces, spacePermissions, onOpenPremium, onSpaceReady, unreadCount, onOpenNotifs, onGoSettings, onMarkUnpaid, onDelete, onDeleteDirect, onUpdateProfile, onEdit, onViewSource, onSplit, onAdd, onGoCategories, sharedFund, slideClass, ensureMonthLoaded, oldestPaymentYear = null }) {
   const { t } = useTranslation()
   // Mismo mecanismo que HomePage.jsx — ver ahí el porqué (evitar que la
   // animación de entrada se dispare también en un simple cambio de
@@ -241,7 +275,7 @@ export function PaymentsPage({ payments, dataLoading = false, periodIncome, prof
     const periodStartStr = dateToStr(start)
     const [{ data: incomes }, { data: paid }] = await Promise.all([
       supabase.from('period_income').select('amount').is('space_id', null).eq('user_id', profile.id).eq('period_start', periodStartStr),
-      supabase.from('payments').select('amount, paid_at').is('space_id', null).eq('user_id', profile.id).eq('is_paid', true).eq('is_history_only', false),
+      supabase.from('payments').select('amount, paid_at').is('space_id', null).eq('user_id', profile.id).eq('is_paid', true).eq('is_history_only', false).neq('payment_method_kind', 'credit'),
     ])
     const salario = personalProfile.salary_enabled ? Number(personalProfile.salary_amount || 0) : 0
     const extras  = (incomes || []).reduce((a, i) => a + Number(i.amount), 0)
@@ -393,7 +427,9 @@ export function PaymentsPage({ payments, dataLoading = false, periodIncome, prof
     })
     // `.filter(p => !p.is_postponed)` — mismo criterio que totalGastos: un
     // pospuesto no debe restar del remanente calculado.
-    const totalGastosPrev = gastosPrev.filter(p => !p.is_postponed).reduce((a, p) => a + Number(p.amount), 0)
+    // Igual que el disponible (v0.9.487): lo pagado con crédito no salió
+    // del dinero de ese periodo, así que no reduce su remanente.
+    const totalGastosPrev = gastosPrev.filter(p => !p.is_postponed && p.payment_method_kind !== 'credit').reduce((a, p) => a + Number(p.amount), 0)
     // Sin `|| 0` esto rompía para usuarios sin salario fijo: profile.salary_amount
     // llega null/undefined y Number(undefined) da NaN, no 0 — arrastraba NaN a
     // todo el cálculo del remanente y nunca mostraba el aviso.
@@ -508,7 +544,12 @@ export function PaymentsPage({ payments, dataLoading = false, periodIncome, prof
   }), [paidPayments, profile])
   // `.filter(p => !p.is_postponed)` — no debe sumar al total de gastos ni
   // descontarse de la nómina (pedido explícito de Johnatan).
-  const totalGastos  = useMemo(() => gastosPeriodo.filter(p => !p.is_postponed).reduce((a, p) => a + Number(p.amount), 0), [gastosPeriodo])
+  // `payment_method_kind !== 'credit'` (v0.9.487): lo pagado con tarjeta de
+  // CRÉDITO sí es gasto y sí cuenta por categoría, pero no baja el
+  // disponible — ese dinero sale cuando se paga el estado de cuenta.
+  const gastosDelDisponible = useMemo(() => gastosPeriodo.filter(p => !p.is_postponed && p.payment_method_kind !== 'credit'), [gastosPeriodo])
+  const totalGastos  = useMemo(() => gastosDelDisponible.reduce((a, p) => a + Number(p.amount), 0), [gastosDelDisponible])
+  const totalCredito = useMemo(() => gastosPeriodo.filter(p => !p.is_postponed && p.payment_method_kind === 'credit').reduce((a, p) => a + Number(p.amount), 0), [gastosPeriodo])
   const totalExtras  = useMemo(() => periodIncomes.reduce((a, i) => a + Number(i.amount), 0), [periodIncomes])
   const salario      = profile?.salary_enabled ? Number(profile?.salary_amount || 0) : 0
   const ingresoTotal = salario + totalExtras
@@ -671,6 +712,30 @@ export function PaymentsPage({ payments, dataLoading = false, periodIncome, prof
     [viewMode, viewMonth, viewYear, gastosPeriodo, paidPayments]
   )
   // `.filter(p => !p.is_postponed)` — mismo criterio que totalGastos.
+  // ── Por método de pago (v0.9.487) ───────────────────────────────────────
+  // Respeta el filtro de arriba (periodo actual / mes), igual que "Por
+  // categoría". Un pago sin tarjeta es Efectivo; si la tarjeta se eliminó,
+  // el pago conserva su tipo y se agrupa ahí sin nombre de banco.
+  const methodData = useMemo(() => {
+    const resolved = paidInView.filter(p => !p.is_postponed)
+    const sum = arr => arr.reduce((a, p) => a + Number(p.amount), 0)
+    const byKind = kind => resolved.filter(p => (p.payment_method_kind || 'cash') === kind)
+    const cards = kind => {
+      const groups = new Map()
+      byKind(kind).forEach(p => {
+        const key = p.payment_method_id || 'deleted'
+        groups.set(key, (groups.get(key) || 0) + Number(p.amount))
+      })
+      return [...groups.entries()]
+        .map(([id, total]) => ({ id, total, card: paymentMethodsList.find(m => m.id === id) || null }))
+        .sort((a, b) => b.total - a.total)
+    }
+    const cash = sum(byKind('cash'))
+    const debit = sum(byKind('debit'))
+    const credit = sum(byKind('credit'))
+    return { cash, debit, credit, total: cash + debit + credit, debitCards: cards('debit'), creditCards: cards('credit') }
+  }, [paidInView, paymentMethodsList])
+
   const totalInView = useMemo(() => paidInView.filter(p => !p.is_postponed).reduce((a, p) => a + Number(p.amount), 0), [paidInView])
 
   const canMarkPaid = !spacePermissions || spacePermissions.can_mark_paid
@@ -1638,6 +1703,34 @@ export function PaymentsPage({ payments, dataLoading = false, periodIncome, prof
             </div>
           )}
         </div>
+
+        {/* ── Por método de pago (v0.9.487) ── */}
+        {methodData.total > 0 && (
+          <div className={styles.methodSection}>
+            <div className={styles.methodSectionTitle}>{t('paymentsPage.byMethod')}</div>
+            <MethodRow
+              label={t('paymentMethod.cash')}
+              amount={methodData.cash}
+              total={methodData.total}
+              barClass={styles.methodBarCash}
+            />
+            <MethodRow
+              label={t('cards.kind.debit')}
+              amount={methodData.debit}
+              total={methodData.total}
+              barClass={styles.methodBarDebit}
+              cards={methodData.debitCards}
+            />
+            <MethodRow
+              label={t('cards.kind.credit')}
+              amount={methodData.credit}
+              total={methodData.total}
+              barClass={styles.methodBarCredit}
+              cards={methodData.creditCards}
+              note={methodData.credit > 0 ? t('paymentsPage.creditNote') : null}
+            />
+          </div>
+        )}
 
         </div>
         </div>

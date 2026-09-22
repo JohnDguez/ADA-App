@@ -1773,3 +1773,107 @@
   .variableBadge { font-size: 11px; }
   .categoryChipSquare { width: 26px; height: 26px; }
 }
+
+/* ── Por método de pago (v0.9.487) ──────────────────────────────────────── */
+.methodSection {
+  margin-top: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.methodSectionTitle {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.methodRow {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.methodRowTop {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.methodRowLabel {
+  font-size: 13px;
+  color: var(--text);
+}
+
+.methodRowAmount {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.methodBarTrack {
+  height: 6px;
+  border-radius: 3px;
+  background: var(--section-bg-soft);
+  overflow: hidden;
+}
+
+/* La barra crece desde 0 al entrar (entrada y salida con el propio
+   desmontaje de la sección, Regla 29). */
+.methodBarFill {
+  display: block;
+  height: 100%;
+  width: var(--method-pct);
+  border-radius: 3px;
+  animation: methodBarGrow .5s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes methodBarGrow {
+  from { width: 0; }
+  to   { width: var(--method-pct); }
+}
+
+.methodBarCash   { background: var(--paid); }
+.methodBarDebit  { background: var(--accent); }
+.methodBarCredit { background: var(--soon-color); }
+
+.methodCards {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 2px;
+}
+
+.methodCardRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--text);
+}
+
+.methodSwatch {
+  width: 16px;
+  height: 11px;
+  border-radius: 2px;
+  flex-shrink: 0;
+  background: var(--swatch-color);
+}
+
+.methodCardName {
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.methodCardAmount {
+  flex-shrink: 0;
+}
+
+.methodNote {
+  font-size: 11px;
+  color: var(--text);
+}
