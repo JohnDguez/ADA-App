@@ -1368,5 +1368,16 @@
     },
     "salaryType": "Salary",
     "fundDepositType": "Fund contribution"
+  },
+  "sync": {
+    "syncing": "Syncing",
+    "notifTitle": "A change couldn't be saved",
+    "body": {
+      "markPaid": "{{name}} wasn't marked as paid. Nothing was changed.",
+      "markUnpaid": "{{name}} wasn't marked as unpaid. Nothing was changed.",
+      "postpone": "{{name}} wasn't postponed. Nothing was changed.",
+      "update": "Your changes to {{name}} weren't saved. Nothing was changed.",
+      "delete": "{{name}} wasn't deleted. Nothing was changed."
+    }
   }
 }
