@@ -421,7 +421,9 @@
     "amountAdjusted": "Monto ajustado",
     "menuPause": "Pausar",
     "menuResume": "Reactivar",
-    "historyOnly": "Solo historial"
+    "historyOnly": "Solo historial",
+    "abono": "Abono",
+    "alreadyAbonado": "Ya abonaste {{amount}}"
   },
   "goalsPage": {
     "title": "Metas",
@@ -1381,7 +1383,14 @@
       "updateMaster": "Los cambios de {{name}} no se guardaron. No se hicieron cambios.",
       "pause": "{{name}} no se pausó. No se hicieron cambios.",
       "resume": "{{name}} no se reactivó. No se hicieron cambios.",
-      "deleteMaster": "{{name}} no se eliminó. No se hicieron cambios."
+      "deleteMaster": "{{name}} no se eliminó. No se hicieron cambios.",
+      "abonar": "El abono a {{name}} no se registró. No se hicieron cambios.",
+      "goalCreate": "La meta {{name}} no se creó. No se hicieron cambios.",
+      "goalUpdate": "Los cambios de la meta {{name}} no se guardaron. No se hicieron cambios.",
+      "goalAportar": "El aporte a {{name}} no se registró. No se hicieron cambios.",
+      "goalRetirar": "El retiro de {{name}} no se registró. No se hicieron cambios.",
+      "goalComplete": "La meta {{name}} no se marcó como cumplida. No se hicieron cambios.",
+      "goalDelete": "La meta {{name}} no se eliminó. No se hicieron cambios."
     }
   }
 }

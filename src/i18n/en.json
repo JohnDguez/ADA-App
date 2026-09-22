@@ -421,7 +421,9 @@
     "amountAdjusted": "Amount adjusted",
     "menuPause": "Pause",
     "menuResume": "Resume",
-    "historyOnly": "History only"
+    "historyOnly": "History only",
+    "abono": "Partial payment",
+    "alreadyAbonado": "Already paid {{amount}}"
   },
   "goalsPage": {
     "title": "Goals",
@@ -1381,7 +1383,14 @@
       "updateMaster": "Your changes to {{name}} weren't saved. Nothing was changed.",
       "pause": "{{name}} wasn't paused. Nothing was changed.",
       "resume": "{{name}} wasn't resumed. Nothing was changed.",
-      "deleteMaster": "{{name}} wasn't deleted. Nothing was changed."
+      "deleteMaster": "{{name}} wasn't deleted. Nothing was changed.",
+      "abonar": "The partial payment to {{name}} wasn't recorded. Nothing was changed.",
+      "goalCreate": "The goal {{name}} wasn't created. Nothing was changed.",
+      "goalUpdate": "Your changes to the goal {{name}} weren't saved. Nothing was changed.",
+      "goalAportar": "The contribution to {{name}} wasn't recorded. Nothing was changed.",
+      "goalRetirar": "The withdrawal from {{name}} wasn't recorded. Nothing was changed.",
+      "goalComplete": "The goal {{name}} wasn't marked as completed. Nothing was changed.",
+      "goalDelete": "The goal {{name}} wasn't deleted. Nothing was changed."
     }
   }
 }
