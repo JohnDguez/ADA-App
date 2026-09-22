@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import i18n from '../i18n'
-import { AlertCircle, Clock, Bell, Trash2, CheckCheck, X, Goal } from 'lucide-react'
+import { AlertCircle, Clock, Bell, Trash2, CheckCheck, X, Goal, AlertTriangle } from 'lucide-react'
 import { getMonthsShort } from '../lib/utils'
 import styles from './NotificationsPanel.module.css'
 
@@ -22,6 +22,9 @@ function NotifIcon({ type }) {
   if (type === 'due_today')     return <Clock size={16} color="var(--soon-color)" />
   if (type === 'cobro_day')     return <Bell size={16} color="var(--accent)" />
   if (type === 'goal_deadline') return <Goal size={16} color="var(--soon-color)" />
+  // Error de sincronización (v0.9.480) — notificación LOCAL, ver
+  // useLocalNotifications.js. Al tocarla, App.jsx lleva al pago.
+  if (type === 'sync_error')    return <AlertTriangle size={16} color="var(--danger)" />
   return <Bell size={16} color="var(--text)" />
 }
 
@@ -92,7 +95,7 @@ export function NotificationsPanel({ open, onClose, notifications, unreadCount, 
             notifications.map(n => (
               <div
                 key={n.id}
-                onClick={() => { onMarkAsRead(n.id); onNavigate(n.url); onClose() }}
+                onClick={() => { onMarkAsRead(n.id); onNavigate(n); onClose() }}
                 className={`${styles.notifRow} ${!n.read ? styles.notifRowUnread : ''}`}
               >
                 <div className={styles.notifIconWrapper}>

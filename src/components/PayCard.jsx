@@ -2,7 +2,7 @@ import { memo, useState, useRef, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import i18n from '../i18n'
 import { createPortal } from 'react-dom'
-import { MoreVertical, Check, Pencil, Trash2, Clock, ChevronDown, ChevronUp, RotateCcw, FastForward, DollarSign, Eye, Users, PiggyBank } from 'lucide-react'
+import { MoreVertical, Check, Pencil, Trash2, Clock, ChevronDown, ChevronUp, RotateCcw, FastForward, DollarSign, Eye, Users, PiggyBank, Loader2 } from 'lucide-react'
 import { statusOf, daysDiff, dateOf, fmt, MONTHS_SHORT, getMonthsShort, periodLabel, periodCountLabel, RECUR_FREQ, getFrequencyLabel, installmentLabel, getCategoryLabel, getDeleteConfirmMessage } from '../lib/utils'
 import { showToast } from './Toast'
 import { PaidByStack } from './PaidByStack'
@@ -319,6 +319,7 @@ function PayCardImpl({ payment: p, cfg, onMarkPaid, onRequestVariableAmount, onC
     <div ref={menuRef} className={styles.cardOuter}>
       <div ref={wrapperRef} className={styles.cardWrapper}>
       <div
+        data-payment-id={p.id}
         onClick={onSelect ? () => onSelect(p.id) : undefined}
         className={`${styles.card} ${phase === 'exiting' ? styles.cardExiting : ''} ${onSelect ? styles.cardSelectable : ''} ${selected ? styles.cardSelected : ''}`}
         style={{ borderLeft: railMode ? 'none' : `5px solid ${borderLeft || 'var(--border)'}` }}
@@ -388,7 +389,7 @@ function PayCardImpl({ payment: p, cfg, onMarkPaid, onRequestVariableAmount, onC
             {isPending && (
               <button
                 onClick={handleCheckButtonClick}
-                disabled={phase !== 'idle'}
+                disabled={phase !== 'idle' || p._syncing}
                 className={styles.markPaidButton}
                 aria-label={t('payCard.markPaidAriaLabel')}
                 style={{ background: canMarkPaid ? 'var(--paid)' : 'var(--border)' }}
@@ -401,13 +402,24 @@ function PayCardImpl({ payment: p, cfg, onMarkPaid, onRequestVariableAmount, onC
                 <Check size={18} color="var(--pay-icon)" strokeWidth={2.5} />
               </div>
             )}
-            <button
-              onClick={e => { e.stopPropagation(); menuOpen ? setMenuOpen(false) : openMenuAt() }}
-              className={styles.menuTriggerButton}
-              aria-label={t('payCard.menuTriggerAriaLabel')}
-            >
-              <MoreVertical size={15} color="var(--text)" />
-            </button>
+            {/* `_syncing` (v0.9.480): el servidor todavía no confirma el
+                último cambio de este pago (usePayments.js → runOptimistic)
+                — el menú se cambia por el ícono girando y el check se
+                deshabilita, para no encimar otra acción sobre la misma
+                fila. Mismo botón, mismo tamaño: nada brinca al confirmar. */}
+            {p._syncing ? (
+              <button type="button" disabled className={styles.menuTriggerButton} aria-label={t('sync.syncing')}>
+                <span className="sync-spinner"><Loader2 size={15} color="var(--text)" /></span>
+              </button>
+            ) : (
+              <button
+                onClick={e => { e.stopPropagation(); menuOpen ? setMenuOpen(false) : openMenuAt() }}
+                className={styles.menuTriggerButton}
+                aria-label={t('payCard.menuTriggerAriaLabel')}
+              >
+                <MoreVertical size={15} color="var(--text)" />
+              </button>
+            )}
           </div>
         </div>
       </div>
