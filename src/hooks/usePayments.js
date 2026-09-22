@@ -25,6 +25,10 @@ export function usePayments(userId, activeSpaceId = null, activeSpaceName = null
   // que traiga el servidor — sin esto la fila "brincaría" de regreso a su
   // estado viejo y luego otra vez al nuevo.
   const pendingOpsRef = useRef(new Map()) // id -> { patch } | { deleted: true }
+  // Filas NUEVAS de un paquete (fase 3, v0.9.481 — ver runOptimisticBatch)
+  // todavía sin confirmar: un refetch a medio camino no las trae, así que
+  // applyPendingOps() las vuelve a agregar.
+  const pendingInsertsRef = useRef(new Map()) // id -> fila
   // Quién se entera de un fallo definitivo (App.jsx: aviso + notificación
   // local). Ref, no estado — se reasigna en cada render de App sin provocar
   // renders aquí.
@@ -33,13 +37,17 @@ export function usePayments(userId, activeSpaceId = null, activeSpaceName = null
 
   function applyPendingOps(rows) {
     const ops = pendingOpsRef.current
-    if (ops.size === 0) return rows
-    return rows
+    const ins = pendingInsertsRef.current
+    if (ops.size === 0 && ins.size === 0) return rows
+    const patched = rows
       .filter(r => !ops.get(r.id)?.deleted)
       .map(r => {
         const op = ops.get(r.id)
         return op?.patch ? { ...r, ...op.patch, _syncing: true } : r
       })
+    const present = new Set(patched.map(r => r.id))
+    const missing = [...ins.values()].filter(r => !present.has(r.id))
+    return missing.length ? [...patched, ...missing] : patched
   }
 
   // ── Ventana de carga (v0.9.281) ──────────────────────────────────────────
@@ -512,6 +520,100 @@ export function usePayments(userId, activeSpaceId = null, activeSpaceName = null
     return { data: res.data, error: null }
   }
 
+  // ── Paquetes de varias filas (fase 3, v0.9.481) ─────────────────────────
+  // Editar/pausar/reactivar/borrar un MASTER toca varias filas. Antes eran
+  // 2-4 escrituras seguidas — si una fallaba a la mitad, el master quedaba a
+  // medias (ej. copias pagadas ya desconectadas pero el master sin borrar).
+  // Ahora cada operación ARMA el paquete completo aquí (la lógica sigue en
+  // JS) y la función SQL `apply_payment_batch` lo aplica en UNA transacción:
+  // si cualquier paso falla (RLS, fila que ya no existe, conteo distinto),
+  // Postgres deshace todo solo. Por eso revertir la pantalla completa es
+  // seguro: la base nunca queda a medias.
+  // - `updates`: [{ id, fields }] · `deletes`: [id] · `inserts`: filas
+  //   COMPLETAS con `id` generado aquí (newId) — así la fila optimista y la
+  //   del servidor son la misma, sin ids temporales que reconciliar.
+  // - `op_id` (un uuid por paquete, el mismo en cada reintento): la función
+  //   lo registra en `payment_batch_log`; si un reintento llega después de
+  //   que el primer intento SÍ se aplicó (se perdió la respuesta), responde
+  //   `already_applied` sin aplicar nada dos veces.
+  // - `subjectId`: el master — a quién nombra el aviso si falla, y a dónde
+  //   lleva la notificación.
+  function newId() {
+    return (typeof crypto !== 'undefined' && crypto.randomUUID)
+      ? crypto.randomUUID()
+      : 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+          const r = Math.random() * 16 | 0
+          return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16)
+        })
+  }
+
+  // Copia nueva de un recurrente/parcialidad con todos los campos que
+  // siempre llevan — `fields` pone lo propio de cada caso.
+  function newCopyRow(fields) {
+    return {
+      id: newId(), user_id: userId, space_id: activeSpaceId,
+      is_recurrent: true, is_master: false, is_paid: false, paid_at: null,
+      postponed: false, is_postponed: false, postponed_at: null, paused: false,
+      is_history_only: false,
+      ...fields,
+    }
+  }
+
+  async function runOptimisticBatch({ subjectId, action, updates = [], deletes = [], inserts = [] }) {
+    const affected = [...updates.map(u => u.id), ...deletes]
+    if (affected.some(id => pendingOpsRef.current.has(id))) {
+      return { error: { message: 'Sincronizando', code: 'BUSY' }, busy: true }
+    }
+    const originals = new Map()
+    for (const id of affected) {
+      const row = payments.find(p => p.id === id)
+      if (row) originals.set(id, stripSync(row))
+    }
+    const subject = originals.get(subjectId) || stripSync(payments.find(p => p.id === subjectId))
+
+    const updById = new Map(updates.map(u => [u.id, u.fields]))
+    const delSet  = new Set(deletes)
+    const insRows = inserts.map(r => ({ ...r, _syncing: true }))
+    const insIds  = new Set(insRows.map(r => r.id))
+    updates.forEach(u => pendingOpsRef.current.set(u.id, { patch: u.fields }))
+    deletes.forEach(id => pendingOpsRef.current.set(id, { deleted: true }))
+    insRows.forEach(r => pendingInsertsRef.current.set(r.id, r))
+
+    setPayments(prev => [
+      ...prev
+        .filter(p => !delSet.has(p.id))
+        .map(p => updById.has(p.id) ? { ...p, ...updById.get(p.id), _syncing: true } : p),
+      ...insRows,
+    ])
+
+    const opId = newId()
+    const res = await withRetry(() => supabase.rpc('apply_payment_batch', {
+      p_op_id: opId, p_updates: updates, p_deletes: deletes, p_inserts: inserts,
+    }))
+    affected.forEach(id => pendingOpsRef.current.delete(id))
+    insIds.forEach(id => pendingInsertsRef.current.delete(id))
+
+    if (res?.error) {
+      setPayments(prev => {
+        const present  = new Set(prev.map(p => p.id))
+        const restored = prev.filter(p => !insIds.has(p.id)).map(p => originals.get(p.id) || p)
+        const missing  = [...originals.values()].filter(p => !present.has(p.id))
+        return [...restored, ...missing]
+      })
+      syncErrorHandlerRef.current?.({ payment: subject, action, error: res.error })
+      return { error: res.error, reverted: true }
+    }
+
+    // Confirmado: las filas tocadas pierden `_syncing` y las nuevas toman lo
+    // que regresó el servidor (defaults como `created_at`). Si fue un
+    // reintento ya aplicado (`already_applied`), `inserted` viene vacío y
+    // las filas optimistas — mismos ids — se quedan tal cual.
+    const serverInserted = new Map((res.data?.inserted || []).map(r => [r.id, r]))
+    const touched = new Set([...updById.keys(), ...insIds])
+    setPayments(prev => prev.map(p => touched.has(p.id) ? stripSync({ ...p, ...(serverInserted.get(p.id) || {}) }) : p))
+    return { error: null }
+  }
+
   // Asegura siempre 2 copias pendientes en cola para un master dado
   async function ensureTwoAhead(masterId, currentPayments) {
     if (ensureTwoAheadInFlight.current.has(masterId)) return []
@@ -928,72 +1030,34 @@ export function usePayments(userId, activeSpaceId = null, activeSpaceName = null
   }
 
   // Editar configuración completa (master + elimina pendientes y recrea con nueva config)
+  // Paquete optimista (fase 3, v0.9.481) — ver runOptimisticBatch().
+  // Copias pendientes se actualizan EN SU LUGAR, nunca borrar y recrear (si
+  // alguna tenía una aportación en `payment_contributions` — Espacio
+  // Compartido, "Dividir entre miembros" — se perdería la referencia; bug
+  // real de agosto 2026). `due_date` NO se toca: un cambio de frecuencia solo
+  // aplica a copias futuras. FIX v0.9.481: un pago POSPUESTO ya se resolvió —
+  // antes caía con las pendientes (`!is_paid`) y recibía monto/categoría
+  // nuevos; ahora es historial igual que uno pagado (solo cambia el nombre).
   async function updateRecurrentConfig(masterId, { name, amount, recur_freq, category, is_variable, firstDate }) {
     const master = payments.find(p => p.id === masterId)
     if (!master) return { error: 'Master no encontrado' }
 
-    // Actualizar master
-    const masterUpdates = { name, amount, recur_freq, category, is_variable }
-    const { data: masterData, error: masterError } = await supabase.from('payments').update(masterUpdates).eq('id', masterId).select()
-    if (masterError || !masterData || masterData.length === 0) {
-      return { error: masterError || { message: 'No tienes permiso para editar este recurrente en este espacio.' } }
-    }
-
-    // Si el nombre cambió, actualizar también las copias pagadas
-    const paidCopyIds = payments.filter(p => p.parent_id === masterId && p.is_paid).map(p => p.id)
-    if (name !== master.name && paidCopyIds.length > 0) {
-      const { data, error } = await supabase.from('payments').update({ name }).in('id', paidCopyIds).select()
-      if (error || !data || data.length !== paidCopyIds.length) {
-        return { error: error || { message: 'No tienes permiso para editar este recurrente en este espacio.' } }
-      }
-    }
-
-    // Actualizar copias pendientes EN SU LUGAR — nunca borrar y recrear.
-    // Antes esto borraba TODAS las pendientes y creaba 2 nuevas en blanco;
-    // si alguna tenía una aportación registrada en `payment_contributions`
-    // (Espacio Compartido, "Dividir entre miembros"), esa fila quedaba
-    // huérfana o se perdía al borrarse el pago al que apuntaba — bug real
-    // reportado por Johnatan (agosto 2026, ver CONTEXT.md). Actualizar el
-    // mismo `id` conserva la referencia intacta. `due_date` NO se toca —
-    // un cambio de frecuencia solo aplica a copias futuras, nunca reordena
-    // las fechas ya asignadas a las pendientes existentes.
-    const pendingCopies = payments.filter(p => p.parent_id === masterId && !p.is_paid)
+    const children   = payments.filter(p => p.parent_id === masterId && !p.is_master)
+    const history    = children.filter(p => p.is_paid || p.is_postponed)
+    const pending    = children.filter(p => !p.is_paid && !p.is_postponed)
     const copyAmount = is_variable ? 0 : amount
-    const pendingUpdates = { name, amount: copyAmount, category, is_variable }
-    let updatedPendingData = []
-    if (pendingCopies.length > 0) {
-      const { data, error } = await supabase.from('payments').update(pendingUpdates).in('id', pendingCopies.map(p => p.id)).select()
-      if (error || !data || data.length !== pendingCopies.length) {
-        return { error: error || { message: 'No tienes permiso para editar este recurrente en este espacio.' } }
-      }
-      updatedPendingData = data
-    }
 
-    // Si no queda NINGUNA pendiente (caso raro: la última se acaba de
-    // pagar y ensureTwoAhead todavía no corrió), se crea al menos 1 para
-    // no dejar el recurrente sin ninguna copia en cola.
-    let newlyCreated = []
-    if (pendingCopies.length === 0) {
-      const { data: created } = await supabase.from('payments').insert({
-        user_id: userId, space_id: activeSpaceId, name, amount: copyAmount, category, is_variable, is_recurrent: true, recur_freq,
-        is_master: false, parent_id: masterId, due_date: firstDate,
-        is_paid: false, paid_at: null, postponed: false, is_postponed: false, postponed_at: null, paused: false, is_installment: false,
-      }).select()
-      if (created) newlyCreated = created
-    }
+    const updates = [{ id: masterId, fields: { name, amount, recur_freq, category, is_variable } }]
+    if (name !== master.name) history.forEach(p => updates.push({ id: p.id, fields: { name } }))
+    pending.forEach(p => updates.push({ id: p.id, fields: { name, amount: copyAmount, category, is_variable } }))
 
-    setPayments(prev => {
-      let next = prev.map(p => {
-        if (p.id === masterId) return { ...p, ...masterUpdates }
-        if (paidCopyIds.includes(p.id)) return { ...p, name }
-        const updated = updatedPendingData.find(u => u.id === p.id)
-        if (updated) return { ...p, ...updated }
-        return p
-      })
-      if (newlyCreated.length) next = [...next, ...newlyCreated]
-      return next
-    })
-    return { error: null }
+    // Si no queda NINGUNA pendiente (caso raro: la última se acaba de pagar
+    // y ensureTwoAhead todavía no corrió), se crea al menos 1.
+    const inserts = pending.length === 0
+      ? [newCopyRow({ name, amount: copyAmount, category, is_variable, recur_freq, parent_id: masterId, due_date: firstDate, is_installment: false })]
+      : []
+
+    return runOptimisticBatch({ subjectId: masterId, action: 'updateMaster', updates, inserts })
   }
 
   // ─────────────────────────────────────────────────────────────────────────
@@ -1019,110 +1083,99 @@ export function usePayments(userId, activeSpaceId = null, activeSpaceName = null
   //   que todavía no existen como fila × el monto nuevo.
   // - Fecha del próximo pago: si cambió (o cambió la frecuencia), la primera
   //   pendiente toma esa fecha y las siguientes se encadenan desde ahí.
-  async function updateInstallmentConfig(masterId, { name, amount, category, recur_freq, total_installments, firstDate }) {
+  // Arma el paquete (sin escribir nada) — lo usan updateInstallmentConfig()
+  // y resumeRecurrent() al reactivar una parcialidad pausada (fix v0.9.481:
+  // antes reactivarla creaba copias de recurrente normal, sin número de
+  // pago). `extraMaster` agrega campos al master (ej. `paused: false`).
+  function buildInstallmentPlan(masterId, { name, amount, category, recur_freq, total_installments, firstDate }, extraMaster = {}) {
     const master = payments.find(p => p.id === masterId)
-    if (!master) return { error: { message: 'Parcialidad no encontrada' } }
-    const noPermission = { message: 'No tienes permiso para editar esta parcialidad en este espacio.' }
+    if (!master) return null
 
-    const oldRef    = Number(master.amount)
-    const newRef    = Number(amount)
-    const newTotal  = parseInt(total_installments)
-    const children  = payments.filter(p => p.parent_id === masterId && !p.is_master)
+    const oldRef     = Number(master.amount)
+    const newRef     = Number(amount)
+    const newTotal   = parseInt(total_installments)
+    const children   = payments.filter(p => p.parent_id === masterId && !p.is_master)
     const paidCopies = children.filter(p => p.is_paid || p.is_postponed)
-    let pending     = children
+    const allPending = children
       .filter(p => !p.is_paid && !p.is_postponed)
       .sort((a, b) => a.current_installment - b.current_installment)
 
-    // 1) Borrar pendientes que ya no caben en el nuevo total
-    const toDelete = pending.filter(p => p.current_installment > newTotal)
-    if (toDelete.length > 0) {
-      const ids = toDelete.map(p => p.id)
-      const { data, error } = await supabase.from('payments').delete().in('id', ids).select()
-      if (error || !data || data.length !== ids.length) return { error: error || noPermission }
-      pending = pending.filter(p => !ids.includes(p.id))
-    }
+    const updates = []
+    // 1) Pendientes que ya no caben en el nuevo total
+    const deletes = allPending.filter(p => p.current_installment > newTotal).map(p => p.id)
+    const pending = allPending.filter(p => p.current_installment <= newTotal)
 
-    // 2) Actualizar pendientes que se quedan (una por una: monto y fecha
-    //    pueden ser distintos en cada una)
+    // 2) Pendientes que se quedan — monto y fecha pueden ser distintos en
+    //    cada una. Se calcula la fila resultante para las sumas de abajo.
     const firstPending = pending[0]
     const rechainDates = !!firstPending && !!firstDate &&
       (firstDate !== firstPending.due_date || recur_freq !== master.recur_freq)
     let chainDate = firstDate
-    const updatedPending = []
-    for (let i = 0; i < pending.length; i++) {
-      const p = pending[i]
+    const resultingPending = []
+    pending.forEach((p, i) => {
       const upd = { name, category, recur_freq, total_installments: newTotal }
       if (Number(p.amount) === oldRef) upd.amount = newRef
       if (rechainDates) {
         if (i > 0) chainDate = dateToStr(nextPeriodDate(chainDate, recur_freq))
         upd.due_date = chainDate
       }
-      const { data, error } = await supabase.from('payments').update(upd).eq('id', p.id).select()
-      if (error || !data || data.length === 0) return { error: error || noPermission }
-      updatedPending.push(data[0])
-    }
+      updates.push({ id: p.id, fields: upd })
+      resultingPending.push({ ...p, ...upd })
+    })
 
-    // 3) Copias pagadas: nombre (si cambió) y nuevo total
-    const paidIds = paidCopies.map(p => p.id)
-    if (paidIds.length > 0) {
-      const paidUpd = { total_installments: newTotal }
-      if (name !== master.name) paidUpd.name = name
-      const { data, error } = await supabase.from('payments').update(paidUpd).in('id', paidIds).select()
-      if (error || !data || data.length !== paidIds.length) return { error: error || noPermission }
-    }
+    // 3) Copias pagadas/pospuestas: nombre (si cambió) y nuevo total
+    paidCopies.forEach(p => updates.push({
+      id: p.id,
+      fields: { total_installments: newTotal, ...(name !== master.name ? { name } : {}) },
+    }))
 
-    // 4) Completar la cola a 2 pendientes si el total creció
-    const created = []
-    const existingNums = [...paidCopies, ...updatedPending].map(p => Number(p.current_installment))
+    // 4) Completar la cola a 2 pendientes si el total creció (o si no queda
+    //    ninguna, como al reactivar)
+    const inserts = []
+    const existingNums = [...paidCopies, ...resultingPending].map(p => Number(p.current_installment))
     let lastNum  = existingNums.length ? Math.max(...existingNums) : installmentUntrackedCount(master, payments)
-    let lastDate = updatedPending.length
-      ? updatedPending[updatedPending.length - 1].due_date
+    let lastDate = resultingPending.length
+      ? resultingPending[resultingPending.length - 1].due_date
       : (firstDate || [...paidCopies].sort((a, b) => dateOf(b.due_date) - dateOf(a.due_date))[0]?.due_date || todayStr())
     // Sin pendientes, la fecha del formulario ES la del próximo pago — el
     // primero que se cree la usa tal cual, sin avanzar un periodo.
-    let useDateAsIs = updatedPending.length === 0 && !!firstDate
-    for (let i = updatedPending.length; i < 2; i++) {
+    let useDateAsIs = resultingPending.length === 0 && !!firstDate
+    for (let i = resultingPending.length; i < 2; i++) {
       const nextNum = lastNum + 1
       if (nextNum > newTotal) break
       const due = useDateAsIs ? lastDate : dateToStr(nextPeriodDate(lastDate, recur_freq))
       useDateAsIs = false
-      const { data, error } = await supabase.from('payments').insert({
-        user_id: userId, space_id: activeSpaceId, name, amount: newRef,
-        due_date: due, category, is_variable: false, is_recurrent: true,
-        recur_freq, is_paid: false, paid_at: null, postponed: false, is_postponed: false, postponed_at: null, paused: false,
-        is_master: false, parent_id: masterId, is_installment: true, current_installment: nextNum,
-        total_installments: newTotal,
-      }).select()
-      if (error || !data || data.length === 0) return { error: error || noPermission }
-      created.push(data[0])
+      inserts.push(newCopyRow({
+        name, amount: newRef, due_date: due, category, is_variable: false, recur_freq,
+        parent_id: masterId, is_installment: true, current_installment: nextNum, total_installments: newTotal,
+      }))
       lastNum = nextNum; lastDate = due
     }
 
-    // 5) Master, con el total en dinero recalculado
-    const allPending   = [...updatedPending, ...created]
-    const paidSum      = paidCopies.filter(p => p.is_paid).reduce((s, p) => s + Number(p.amount), 0)
+    // 5) Master, con el total en dinero recalculado: lo ya pagado (copias +
+    //    pagos que nunca tuvieron fila) + lo pendiente + lo que todavía no
+    //    existe como fila × el monto nuevo.
+    const queued      = [...resultingPending, ...inserts]
+    const paidSum     = paidCopies.filter(p => p.is_paid).reduce((s, p) => s + Number(p.amount), 0)
       + installmentUntrackedCount(master, payments) * oldRef
-    const pendingSum   = allPending.reduce((s, p) => s + Number(p.amount), 0)
-    const highestRow   = Math.max(lastNum, ...allPending.map(p => Number(p.current_installment)))
-    const notYetRows   = Math.max(0, newTotal - highestRow)
-    const totalAmount  = Math.round((paidSum + pendingSum + notYetRows * newRef) * 100) / 100
-    const masterUpdates = { name, amount: newRef, category, recur_freq, total_installments: newTotal, total_amount: totalAmount }
-    const { data: masterData, error: masterError } = await supabase.from('payments').update(masterUpdates).eq('id', masterId).select()
-    if (masterError || !masterData || masterData.length === 0) return { error: masterError || noPermission }
-
-    const deletedIds = toDelete.map(p => p.id)
-    setPayments(prev => {
-      let next = prev.filter(p => !deletedIds.includes(p.id)).map(p => {
-        if (p.id === masterId) return { ...p, ...masterData[0] }
-        const up = updatedPending.find(u => u.id === p.id)
-        if (up) return { ...p, ...up }
-        if (paidIds.includes(p.id)) return { ...p, total_installments: newTotal, ...(name !== master.name ? { name } : {}) }
-        return p
-      })
-      if (created.length) next = [...next, ...created]
-      return next
+    const pendingSum  = queued.reduce((s, p) => s + Number(p.amount), 0)
+    const highestRow  = Math.max(lastNum, ...queued.map(p => Number(p.current_installment)))
+    const notYetRows  = Math.max(0, newTotal - highestRow)
+    const totalAmount = Math.round((paidSum + pendingSum + notYetRows * newRef) * 100) / 100
+    updates.unshift({
+      id: masterId,
+      fields: { name, amount: newRef, category, recur_freq, total_installments: newTotal, total_amount: totalAmount, ...extraMaster },
     })
-    return { error: null }
+
+    return { updates, deletes, inserts }
+  }
+
+  // Paquete optimista (fase 3, v0.9.481) — reglas del plan en
+  // buildInstallmentPlan(), aplicado vía runOptimisticBatch().
+  async function updateInstallmentConfig(masterId, config) {
+    const plan = buildInstallmentPlan(masterId, config)
+    if (!plan) return { error: { message: 'Parcialidad no encontrada' } }
+    return runOptimisticBatch({ subjectId: masterId, action: 'updateMaster', ...plan })
   }
 
   // ─────────────────────────────────────────────────────────────────────────
@@ -1363,56 +1416,44 @@ export function usePayments(userId, activeSpaceId = null, activeSpaceName = null
   // ─────────────────────────────────────────────────────────────────────────
   // PAUSAR / REACTIVAR
   // ─────────────────────────────────────────────────────────────────────────
+  // Paquete optimista (fase 3, v0.9.481). FIX v0.9.481: antes borraba
+  // también los POSPUESTOS (caían en `!is_paid`) — son historial, se quedan.
   async function pauseRecurrent(masterId) {
-    // Marcar master como pausado
-    const { data: masterData, error: masterError } = await supabase.from('payments').update({ paused: true }).eq('id', masterId).select()
-    if (masterError || !masterData || masterData.length === 0) {
-      return { error: masterError || { message: 'No tienes permiso para pausar este recurrente en este espacio.' } }
-    }
-    // Eliminar todas las copias pendientes
-    const pendingIds = payments.filter(p => p.parent_id === masterId && !p.is_paid).map(p => p.id)
-    if (pendingIds.length > 0) {
-      const { data, error } = await supabase.from('payments').delete().in('id', pendingIds).select()
-      if (error || !data || data.length !== pendingIds.length) {
-        return { error: error || { message: 'No tienes permiso para pausar este recurrente en este espacio.' } }
-      }
-    }
-    setPayments(prev => prev
-      .map(p => p.id === masterId ? { ...p, paused: true } : p)
-      .filter(p => !pendingIds.includes(p.id))
-    )
-    return { error: null }
+    const pendingIds = payments
+      .filter(p => p.parent_id === masterId && !p.is_master && !p.is_paid && !p.is_postponed)
+      .map(p => p.id)
+    return runOptimisticBatch({
+      subjectId: masterId, action: 'pause',
+      updates: [{ id: masterId, fields: { paused: true } }],
+      deletes: pendingIds,
+    })
   }
 
-  async function resumeRecurrent(masterId, { name, amount, recur_freq, category, is_variable, firstDate }) {
+  // Paquete optimista (fase 3, v0.9.481). Parcialidad: FIX v0.9.481 — antes
+  // creaba 2 copias de recurrente normal (`is_installment: false`, sin número
+  // de pago), y la parcialidad dejaba de comportarse como tal. Ahora usa el
+  // mismo plan que editarla (buildInstallmentPlan), con `paused: false`: las
+  // copias siguen la numeración y respetan el total.
+  async function resumeRecurrent(masterId, { name, amount, recur_freq, category, is_variable, firstDate, total_installments }) {
     const master = payments.find(p => p.id === masterId)
     if (!master) return { error: 'Master no encontrado' }
 
-    const masterUpdates = { paused: false, name, amount, recur_freq, category, is_variable }
-    const { data: masterData, error: masterError } = await supabase.from('payments').update(masterUpdates).eq('id', masterId).select()
-    if (masterError || !masterData || masterData.length === 0) {
-      return { error: masterError || { message: 'No tienes permiso para reactivar este recurrente en este espacio.' } }
+    if (master.is_installment) {
+      const plan = buildInstallmentPlan(masterId, {
+        name, amount, category, recur_freq, firstDate,
+        total_installments: total_installments ?? master.total_installments,
+      }, { paused: false })
+      return runOptimisticBatch({ subjectId: masterId, action: 'resume', ...plan })
     }
 
-    // Crear 2 nuevas copias
-    const date2 = dateToStr(nextPeriodDate(firstDate, recur_freq))
     const copyAmount = is_variable ? 0 : amount
-    const copies = [
-      { user_id: userId, space_id: activeSpaceId, name, amount: copyAmount, category, is_variable, is_recurrent: true, recur_freq,
-        is_master: false, parent_id: masterId, due_date: firstDate,
-        is_paid: false, paid_at: null, postponed: false, is_postponed: false, postponed_at: null, paused: false, is_installment: false },
-      { user_id: userId, space_id: activeSpaceId, name, amount: copyAmount, category, is_variable, is_recurrent: true, recur_freq,
-        is_master: false, parent_id: masterId, due_date: date2,
-        is_paid: false, paid_at: null, postponed: false, is_postponed: false, postponed_at: null, paused: false, is_installment: false },
-    ]
-    const { data: copiesData, error } = await supabase.from('payments').insert(copies).select()
-    if (!error && copiesData) {
-      setPayments(prev => [
-        ...prev.map(p => p.id === masterId ? { ...p, ...masterUpdates } : p),
-        ...copiesData,
-      ])
-    }
-    return { error }
+    const date2 = dateToStr(nextPeriodDate(firstDate, recur_freq))
+    const base = { name, amount: copyAmount, category, is_variable, recur_freq, parent_id: masterId, is_installment: false }
+    return runOptimisticBatch({
+      subjectId: masterId, action: 'resume',
+      updates: [{ id: masterId, fields: { paused: false, name, amount, recur_freq, category, is_variable } }],
+      inserts: [newCopyRow({ ...base, due_date: firstDate }), newCopyRow({ ...base, due_date: date2 })],
+    })
   }
 
   // ─────────────────────────────────────────────────────────────────────────
@@ -1451,35 +1492,25 @@ export function usePayments(userId, activeSpaceId = null, activeSpaceName = null
   }
 
   // Elimina el master + copias pendientes, congela las pagadas
+  // Paquete optimista (fase 3, v0.9.481): el master desaparece al instante.
+  // - Pagadas y POSPUESTAS: se desconectan (`parent_id: null`) y quedan en
+  //   el historial. FIX v0.9.481: antes los pospuestos se BORRABAN (caían
+  //   en `!is_paid`) y se perdían del historial.
+  // - `is_history_only` (pagos anteriores de una parcialidad, v0.9.479): se
+  //   borran — solo existían para el historial de este master; sin él
+  //   quedarían invisibles en todas partes.
+  // - Pendientes y el master: se borran.
+  // Todo en una transacción: si RLS bloquea cualquier paso, no se aplica
+  // nada (antes podía quedar con las pagadas desconectadas y el master vivo).
   async function deleteRecurrent(masterId) {
-    // Desconectar copias pagadas (quitan su parent_id para que queden en historial)
-    const paidIds = payments.filter(p => p.parent_id === masterId && p.is_paid).map(p => p.id)
-    if (paidIds.length > 0) {
-      const { data, error } = await supabase.from('payments').update({ parent_id: null }).in('id', paidIds).select()
-      if (error || !data || data.length !== paidIds.length) {
-        return { error: error || { message: 'No tienes permiso para eliminar este recurrente en este espacio.' } }
-      }
-    }
-    // Eliminar copias pendientes
-    const pendingIds = payments.filter(p => p.parent_id === masterId && !p.is_paid).map(p => p.id)
-    if (pendingIds.length > 0) {
-      const { data, error } = await supabase.from('payments').delete().in('id', pendingIds).select()
-      if (error || !data || data.length !== pendingIds.length) {
-        return { error: error || { message: 'No tienes permiso para eliminar este recurrente en este espacio.' } }
-      }
-    }
-    // Eliminar el master
-    const { data: masterData, error: masterError } = await supabase.from('payments').delete().eq('id', masterId).select()
-    if (masterError || !masterData || masterData.length === 0) {
-      return { error: masterError || { message: 'No tienes permiso para eliminar este recurrente en este espacio.' } }
-    }
-
-    setPayments(prev => prev
-      .filter(p => p.id !== masterId)
-      .filter(p => !pendingIds.includes(p.id))
-      .map(p => paidIds.includes(p.id) ? { ...p, parent_id: null } : p)
-    )
-    return { error: null }
+    const children    = payments.filter(p => p.parent_id === masterId && !p.is_master)
+    const keepHistory = children.filter(p => (p.is_paid || p.is_postponed) && !p.is_history_only)
+    const removeIds   = children.filter(p => !keepHistory.includes(p)).map(p => p.id)
+    return runOptimisticBatch({
+      subjectId: masterId, action: 'deleteMaster',
+      updates: keepHistory.map(p => ({ id: p.id, fields: { parent_id: null } })),
+      deletes: [...removeIds, masterId],
+    })
   }
 
   async function deleteRecurrentFuture(name) {
