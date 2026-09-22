@@ -102,7 +102,7 @@ module.exports = async function handler(req, res) {
 
     const [{ data: incomes }, { data: paidPayments }] = await Promise.all([
       supabase.from('period_income').select('amount').eq('space_id', spaceId).eq('period_start', periodStartStr),
-      supabase.from('payments').select('amount, paid_at').eq('space_id', spaceId).eq('is_paid', true).eq('is_history_only', false),
+      supabase.from('payments').select('amount, paid_at').eq('space_id', spaceId).eq('is_paid', true).eq('is_history_only', false).neq('payment_method_kind', 'credit'),
     ])
 
     const salario = space.salary_enabled ? Number(space.salary_amount || 0) : 0
