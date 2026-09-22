@@ -35,6 +35,10 @@ export function CardDayRangePicker({ cutDay, dueDay, onChange }) {
   const { t } = useTranslation()
   const [active, setActive] = useState('cut')
   const [dragging, setDragging] = useState(null)
+  // Punto donde empezó el toque y si ya se movió: sirve para NO cambiar el
+  // día cuando el usuario solo estaba haciendo scroll de la página con el
+  // dedo encima del calendario (bug reportado por Johnatan).
+  const pressRef = useRef(null)
   const [cutText, setCutText] = useState(String(cutDay || ''))
   const [dueText, setDueText] = useState(String(dueDay || ''))
   const gridRef = useRef(null)
@@ -53,33 +57,60 @@ export function CardDayRangePicker({ cutDay, dueDay, onChange }) {
     return cutDay < dueDay ? d >= cutDay && d <= dueDay : d >= cutDay || d <= dueDay
   }
 
+  // `closest`: bajo el dedo casi siempre queda un hijo de la celda (el
+  // número o la píldora), no la celda con `data-day` — por eso antes el
+  // arrastre no arrancaba nunca (bug reportado por Johnatan).
   function dayAt(x, y) {
-    const el = document.elementFromPoint(x, y)
-    const d = el?.dataset?.day
-    return d ? Number(d) : null
+    const cell = document.elementFromPoint(x, y)?.closest?.('[data-day]')
+    return cell ? Number(cell.dataset.day) : null
   }
+
+  // Arrastre SOLO desde un marcador (la píldora del corte o del límite);
+  // esas celdas llevan `touch-action: none` para que el navegador no
+  // convierta el gesto en scroll. En cualquier otro día el gesto empieza
+  // como un toque: el cambio se aplica al SOLTAR, y solo si el dedo casi
+  // no se movió — así deslizar para hacer scroll ya no cambia la fecha.
+  const TAP_SLOP = 10 // px
 
   function handlePointerDown(e) {
     const d = dayAt(e.clientX, e.clientY)
     if (!d) return
+    pressRef.current = { day: d, x: e.clientX, y: e.clientY, moved: false }
     if (d === cutDay || d === dueDay) {
       const which = d === cutDay ? 'cut' : 'due'
       setDragging(which)
       setActive(which)
-      gridRef.current?.setPointerCapture(e.pointerId)
-      return
+      e.currentTarget.setPointerCapture?.(e.pointerId)
     }
-    setDay(active, d)
-    if (active === 'cut') setActive('due')
   }
 
   function handlePointerMove(e) {
+    const press = pressRef.current
+    if (press && !press.moved) {
+      if (Math.abs(e.clientX - press.x) > TAP_SLOP || Math.abs(e.clientY - press.y) > TAP_SLOP) press.moved = true
+    }
     if (!dragging) return
     const d = dayAt(e.clientX, e.clientY)
     if (d) setDay(dragging, d)
   }
 
-  function endDrag() { setDragging(null) }
+  function handlePointerUp(e) {
+    const press = pressRef.current
+    pressRef.current = null
+    if (dragging) { setDragging(null); return }
+    // Toque simple sobre un día que no es marcador
+    if (!press || press.moved) return
+    const d = dayAt(e.clientX, e.clientY) || press.day
+    if (!d) return
+    setDay(active, d)
+    if (active === 'cut') setActive('due')
+  }
+
+  // El navegador se quedó con el gesto (scroll): no se cambia nada.
+  function handlePointerCancel() {
+    pressRef.current = null
+    setDragging(null)
+  }
 
   function handleType(which, raw) {
     const clean = raw.replace(/\D/g, '').slice(0, 2)
@@ -141,8 +172,8 @@ export function CardDayRangePicker({ cutDay, dueDay, onChange }) {
         className={styles.grid}
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
-        onPointerUp={endDrag}
-        onPointerCancel={endDrag}
+        onPointerUp={handlePointerUp}
+        onPointerCancel={handlePointerCancel}
       >
         {days.map(d => {
           const col = (d - 1) % 7

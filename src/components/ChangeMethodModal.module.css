@@ -1,0 +1,75 @@
+/* "Cambiar método de pago" (v0.9.487) — mismas curvas y duraciones que
+   CardFormModal (ANIM_MS = 320 en el .jsx, Regla 30). */
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(2, 10, 31, 0.5);
+  z-index: 550;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.overlayClosing {
+  animation: changeMethodOverlayOut .3s ease both;
+}
+
+@keyframes changeMethodOverlayOut {
+  from { opacity: 1; }
+  to   { opacity: 0; }
+}
+
+.modal {
+  background: var(--surface);
+  border-radius: 20px 20px 0 0;
+  width: 100%;
+  max-width: 420px;
+  padding: 20px 16px 32px;
+  box-sizing: border-box;
+}
+
+.modalEntering {
+  animation: changeMethodUp .32s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+}
+
+.modalClosing {
+  animation: changeMethodDown .28s cubic-bezier(0.4, 0, 1, 1) both;
+}
+
+@keyframes changeMethodUp {
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0); }
+}
+
+@keyframes changeMethodDown {
+  from { transform: translateY(0); }
+  to   { transform: translateY(100%); }
+}
+
+.handle {
+  width: 34px;
+  height: 4px;
+  background: var(--border);
+  border-radius: 2px;
+  margin: 0 auto 16px;
+}
+
+.title {
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--text);
+}
+
+.subtitle {
+  font-size: 13px;
+  color: var(--text);
+  margin: 2px 0 16px;
+}
+
+.field {
+  margin-bottom: 20px;
+}
+
+:global(.btn-ghost).cancel {
+  margin-top: 8px;
+}

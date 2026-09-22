@@ -10,11 +10,12 @@ import { ConfirmDeleteModal } from './ConfirmDeleteModal'
 import { FrequencyPicker } from './FrequencyPicker'
 import { PremiumLock } from './PremiumLock'
 import { Select } from './Select'
+import { PaymentMethodField } from './PaymentMethodField'
 import { DatePicker } from './DatePicker'
 import AmountInput from './AmountInput'
 import styles from './PaymentModal.module.css'
 
-export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelete, onEditMaster, initial, payments, profile, spacePermissions, isSharedSpace = false, customCategories = [], onAddCategory, onOpenPremium }) {
+export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelete, onEditMaster, initial, payments, profile, spacePermissions, isSharedSpace = false, customCategories = [], onAddCategory, onOpenPremium, paymentMethods = null }) {
   const { t } = useTranslation()
   const [mode,               setMode]               = useState('single')
   const [name,               setName]               = useState('')
@@ -32,6 +33,10 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
   // como gastos reales (default) o solo en el historial del master? Ver
   // addInstallmentPayment() en usePayments.js.
   const [backfillAsExpense,  setBackfillAsExpense]  = useState(true)
+  // "Se paga con" (v0.9.487): id de la tarjeta, o null = Efectivo. Default
+  // SIEMPRE Efectivo (pedido de Johnatan). Las tarjetas son personales, así
+  // que el campo no aparece en un Espacio Compartido.
+  const [methodId, setMethodId] = useState(null)
   const [saving,             setSaving]             = useState(false)
   const [error,              setError]              = useState('')
   const [confirmClose,       setConfirmClose]       = useState(false)
@@ -144,6 +149,7 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
       setTotalInstallments(initial.total_installments || '')
       setStartFrom('1')
       setBackfillAsExpense(true)
+      setMethodId(initial.payment_method_id || null)
       setAlreadyPaid(!!initial.is_paid)
       setPaidAt(initial.paid_at ? dateToStr(new Date(initial.paid_at)) : todayStr())
     } else {
@@ -154,6 +160,7 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
       setRecurFreq('monthly'); setWeekday(5)
       setMode('single'); setTotalInstallments(''); setStartFrom('1'); setTotalAmount('')
       setBackfillAsExpense(true)
+      setMethodId(null)
       setAlreadyPaid(false)
       setPaidAt('')
     }
@@ -179,6 +186,18 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
 
   const monthBasedFreqs = ['monthly', 'bimonthly', 'quarterly', 'semiannual', 'annual']
 
+  // Solo se manda el método cuando el campo está visible (personal y con
+  // el hook disponible): en un Espacio Compartido no debe tocarse nunca.
+  const methodsAvailable = !isSharedSpace && !!paymentMethods
+  function methodPayload() {
+    if (!methodsAvailable) return {}
+    const card = paymentMethods.methods.find(m => m.id === methodId)
+    return {
+      payment_method_id: card ? card.id : null,
+      payment_method_kind: card ? card.kind : 'cash',
+    }
+  }
+
   async function handleSave() {
     if (!canWrite) return
     setError('')
@@ -198,7 +217,7 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
       if (!dueDate) { setError(t('paymentModal.installment.firstDateError')); return }
       const amountPerPayment = Math.round((totalAmt / total) * 100) / 100
       setSaving(true)
-      await onSaveInstallment({ name: name.trim(), amount: amountPerPayment, totalAmount: totalAmt, totalInstallments: total, startFrom: start, recurFreq, category, firstDate: dueDate, backfillAsExpense })
+      await onSaveInstallment({ name: name.trim(), amount: amountPerPayment, totalAmount: totalAmt, totalInstallments: total, startFrom: start, recurFreq, category, firstDate: dueDate, backfillAsExpense, ...methodPayload() })
       setSaving(false); onClose(); return
     }
     if (!isVariable && (!amount || isNaN(parseFloat(amount)))) { setError(t('paymentModal.amountOrVariableError')); return }
@@ -216,6 +235,7 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
       is_recurrent: mode === 'recurrent',
       recur_freq: mode === 'recurrent' ? recurFreq : null,
       is_installment: false,
+      ...methodPayload(),
     }
     // Solo tocar is_paid/paid_at cuando corresponde:
     // - Pago nuevo: refleja el toggle "Ya lo pagué"
@@ -286,9 +306,13 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
     && !!amount && !isNaN(parseFloat(amount)) && parseFloat(amount) > 0 && !!previewDueDate
 
   const impactPreview = showImpactPreview
-    ? projectPeriodImpact((payments || []).filter(p => !p.is_history_only), profile, {
+    // `payment_method_kind !== 'credit'` (v0.9.487): el crédito no baja el
+    // disponible del periodo, así que tampoco entra al simulador.
+    ? projectPeriodImpact((payments || []).filter(p => !p.is_history_only && p.payment_method_kind !== 'credit'), profile, {
         dueDate: previewDueDate,
-        amount: parseFloat(amount),
+        // Si este pago va con tarjeta de crédito, no mueve el disponible
+        // del periodo (v0.9.487): su impacto simulado es 0.
+        amount: methodPayload().payment_method_kind === 'credit' ? 0 : parseFloat(amount),
         isRecurring: mode === 'recurrent',
         recurFreq,
       }, periodIncomes)
@@ -313,6 +337,7 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
         category,
         recur_freq: recurFreq,
         due_date: dueDate,
+        ...methodPayload(),
       })
       setSaving(false); onClose()
     }
@@ -360,6 +385,12 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
                 </div>
               )}
             </div>
+
+            {methodsAvailable && (
+              <div className={styles.fieldGroup}>
+                <PaymentMethodField methods={paymentMethods.methods} value={methodId} onChange={setMethodId} />
+              </div>
+            )}
 
             <Field label={t('paymentModal.fields.amountPerPayment')}>
               <AmountInput className="field-input" value={amount} onChange={e => setAmount(e.target.value)} placeholder="0.00" />
@@ -521,6 +552,12 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
               </div>
             )}
           </div>
+
+          {methodsAvailable && (
+            <div className={styles.fieldGroup}>
+              <PaymentMethodField methods={paymentMethods.methods} value={methodId} onChange={setMethodId} />
+            </div>
+          )}
 
           {mode !== 'installment' && (
             <div data-coachmark="modal-variable-toggle">

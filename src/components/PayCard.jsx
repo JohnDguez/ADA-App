@@ -2,10 +2,11 @@ import { memo, useState, useRef, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import i18n from '../i18n'
 import { createPortal } from 'react-dom'
-import { MoreVertical, Check, Pencil, Trash2, Clock, ChevronDown, ChevronUp, RotateCcw, FastForward, DollarSign, Eye, Users, PiggyBank, Loader2 } from 'lucide-react'
+import { MoreVertical, Check, Pencil, Trash2, Clock, ChevronDown, ChevronUp, RotateCcw, FastForward, DollarSign, Eye, Users, PiggyBank, Loader2, CreditCard } from 'lucide-react'
 import { statusOf, daysDiff, dateOf, fmt, MONTHS_SHORT, getMonthsShort, periodLabel, periodCountLabel, RECUR_FREQ, getFrequencyLabel, installmentLabel, getCategoryLabel, getDeleteConfirmMessage } from '../lib/utils'
 import { showToast } from './Toast'
 import { PaidByStack } from './PaidByStack'
+import { getBank, bankColorVar } from '../lib/cardCatalog'
 import { ConfirmDeleteModal } from './ConfirmDeleteModal'
 import styles from './PayCard.module.css'
 
@@ -43,7 +44,7 @@ const LABEL_HOLD_MS = 450 // cuánto se queda "Pagado" + checkmark visible antes
 const EXIT_MS       = 320 // deslizado + desvanecido + colapso de espacio
 const ENTRY_MS      = 300 // "crecer" al aparecer una card nueva en la lista
 
-function PayCardImpl({ payment: p, cfg, onMarkPaid, onRequestVariableAmount, onConfirmVariablePaid, onRequestNextPeriodConfirm, onMarkUnpaid, onCaptureAmount, onEdit, onAbonar, onSplit, onPayFromFund, fundBalance, onViewSource, onDelete, onPostpone, onAdvance, borderLeft, hideDate, hideDueLabel, railMode, permissions, initialLoad = true, confirmBeforePay, spaceMembers, onSelect, selected }) {
+function PayCardImpl({ payment: p, cfg, paymentMethodsList = [], onChangeMethod, onMarkPaid, onRequestVariableAmount, onConfirmVariablePaid, onRequestNextPeriodConfirm, onMarkUnpaid, onCaptureAmount, onEdit, onAbonar, onSplit, onPayFromFund, fundBalance, onViewSource, onDelete, onPostpone, onAdvance, borderLeft, hideDate, hideDueLabel, railMode, permissions, initialLoad = true, confirmBeforePay, spaceMembers, onSelect, selected }) {
   const { t } = useTranslation()
   // Card de solo lectura — reflejo automático de una contribución a un
   // gasto de un Espacio Compartido (registrada por cualquier miembro desde
@@ -222,6 +223,9 @@ function PayCardImpl({ payment: p, cfg, onMarkPaid, onRequestVariableAmount, onC
   const info      = statusInfo(p, cfg)
   const showLabel = !hideDueLabel || STATUS_LABELS_ALWAYS_VISIBLE.includes(info.status)
   const d         = dateOf(p.due_date)
+  // Tarjeta con la que se paga (v0.9.487); null = efectivo, o tarjeta
+  // eliminada (el pago conserva su tipo, ver payments_method.sql).
+  const paymentMethod = p.payment_method_id ? paymentMethodsList.find(m => m.id === p.payment_method_id) : null
   const isPending = !p.is_paid && !p.postponed && !p.is_postponed && !p.paused
   const freqLabel = p.is_recurrent && p.recur_freq && !p.is_installment ? getFrequencyLabel(p.recur_freq) : null
   const instLabel = p.is_installment ? `Pago ${p.current_installment}/${p.total_installments}` : null
@@ -359,6 +363,15 @@ function PayCardImpl({ payment: p, cfg, onMarkPaid, onRequestVariableAmount, onC
             {instLabel && (
               <div className={styles.instLabel}>{instLabel}</div>
             )}
+            {/* Método de pago (v0.9.487): solo cuando NO es efectivo. */}
+            {p.payment_method_kind && p.payment_method_kind !== 'cash' && (
+              <div className={styles.methodLabel}>
+                <span className={styles.methodSwatch} style={{ '--swatch-color': paymentMethod ? bankColorVar(paymentMethod.bank) : 'var(--border-mid)' }} />
+                {paymentMethod
+                  ? `${getBank(paymentMethod.bank).id === 'otro' ? t('cards.otherBank') : getBank(paymentMethod.bank).name}${paymentMethod.alias ? ` ${paymentMethod.alias}` : ''}`
+                  : t(p.payment_method_kind === 'credit' ? 'paymentMethod.deletedCredit' : 'paymentMethod.deletedDebit')}
+              </div>
+            )}
           </div>
 
           {/* Monto + estado */}
@@ -452,6 +465,9 @@ function PayCardImpl({ payment: p, cfg, onMarkPaid, onRequestVariableAmount, onC
           {isPending && p.is_recurrent && !p.is_installment && <MenuItem icon={<Clock size={14}/>} label={t('payCard.menu.postpone')} onClick={() => { canEdit ? onPostpone(p) : blocked(t('payCard.actions.postponePayments')); setMenuOpen(false) }} />}
           {isPending && p.is_installment && onAdvance && <MenuItem icon={<FastForward size={14}/>} label={t('payCard.menu.advance')} onClick={() => { canEdit ? onAdvance(p) : blocked(t('payCard.actions.advancePayments')); setMenuOpen(false) }} />}
           {isPending && p.space_id && onSplit && <MenuItem icon={<Users size={14}/>} label={t('paymentsPage.menuSplit')} onClick={() => { canMarkPaid ? onSplit(p) : blocked(t('paymentsPage.actionRegisterContributions')); setMenuOpen(false) }} />}
+          {/* Cambiar método (v0.9.487): solo en pagos personales — las
+              tarjetas no se comparten en un Espacio Compartido. */}
+          {onChangeMethod && !p.space_id && <MenuItem icon={<CreditCard size={14}/>} label={t('paymentMethod.changeAction')} onClick={() => { onChangeMethod(p); setMenuOpen(false) }} />}
           {p.is_paid && <MenuItem icon={<RotateCcw size={14}/>} label={t('payCard.menu.markUnpaid')} onClick={() => { canMarkPaid ? onMarkUnpaid(p.id) : blocked(t('paymentsPage.actionMarkPayments')); setMenuOpen(false) }} />}
           <MenuItem icon={<Trash2 size={14}/>} label={t('buttons.delete')} onClick={() => { canDelete ? setConfirmDelete(true) : blocked(t('paymentsPage.actionDeletePayments')); setMenuOpen(false) }} danger />
         </div>,

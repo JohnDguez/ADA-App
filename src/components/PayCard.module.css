@@ -451,3 +451,21 @@
     height: 46px;
   }
 }
+
+/* Método de pago (v0.9.487) — miniatura del color del banco + nombre. */
+.methodLabel {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 3px;
+  font-size: 11px;
+  color: var(--text);
+}
+
+.methodSwatch {
+  width: 16px;
+  height: 11px;
+  border-radius: 2px;
+  flex-shrink: 0;
+  background: var(--swatch-color);
+}

@@ -62,7 +62,11 @@
   display: grid;
   grid-template-columns: repeat(7, 1fr);
   row-gap: 6px;
-  touch-action: none;
+  /* `pan-y` (no `none`): el scroll vertical con el dedo sobre el
+     calendario sigue funcionando — con `none` la página se quedaba
+     trabada (reportado por Johnatan). El arrastre de los marcadores se
+     habilita solo en sus propias celdas (.cut/.due, abajo). */
+  touch-action: pan-y;
   user-select: none;
   -webkit-user-select: none;
 }
@@ -109,6 +113,13 @@
   z-index: -1;
   animation: markerPop .25s cubic-bezier(0.22, 1, 0.36, 1) both;
   transition: transform .15s ease;
+}
+
+/* Solo las celdas con marcador bloquean el gesto del navegador: ahí el
+   arrastre es intencional. */
+.cut,
+.due {
+  touch-action: none;
 }
 
 .cut .marker { background: var(--accent); }
