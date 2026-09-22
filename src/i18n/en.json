@@ -1377,7 +1377,11 @@
       "markUnpaid": "{{name}} wasn't marked as unpaid. Nothing was changed.",
       "postpone": "{{name}} wasn't postponed. Nothing was changed.",
       "update": "Your changes to {{name}} weren't saved. Nothing was changed.",
-      "delete": "{{name}} wasn't deleted. Nothing was changed."
+      "delete": "{{name}} wasn't deleted. Nothing was changed.",
+      "updateMaster": "Your changes to {{name}} weren't saved. Nothing was changed.",
+      "pause": "{{name}} wasn't paused. Nothing was changed.",
+      "resume": "{{name}} wasn't resumed. Nothing was changed.",
+      "deleteMaster": "{{name}} wasn't deleted. Nothing was changed."
     }
   }
 }

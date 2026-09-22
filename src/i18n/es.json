@@ -1377,7 +1377,11 @@
       "markUnpaid": "{{name}} no se desmarcó como pagado. No se hicieron cambios.",
       "postpone": "{{name}} no se pospuso. No se hicieron cambios.",
       "update": "Los cambios de {{name}} no se guardaron. No se hicieron cambios.",
-      "delete": "{{name}} no se eliminó. No se hicieron cambios."
+      "delete": "{{name}} no se eliminó. No se hicieron cambios.",
+      "updateMaster": "Los cambios de {{name}} no se guardaron. No se hicieron cambios.",
+      "pause": "{{name}} no se pausó. No se hicieron cambios.",
+      "resume": "{{name}} no se reactivó. No se hicieron cambios.",
+      "deleteMaster": "{{name}} no se eliminó. No se hicieron cambios."
     }
   }
 }
