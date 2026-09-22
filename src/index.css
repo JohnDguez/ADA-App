@@ -593,3 +593,28 @@ body.modal-open {
   0%, 100% { transform: translateX(-50%) translateY(0); }
   50%      { transform: translateX(-50%) translateY(-10px); }
 }
+
+/* ── Actualización optimista (v0.9.480) ─────────────────────────────────
+   `.sync-spinner`: ícono girando que reemplaza las acciones de un pago
+   mientras el servidor confirma un cambio (PayCard, PaidCollapseItem de
+   HomePage, filas de Gastos). Clase global porque la comparten 3 módulos.
+   `.payment-highlight`: resalte temporal al llegar a un pago desde una
+   notificación de error (lib/highlightPayment.js). Anillo INTERIOR
+   (inset) — un anillo exterior lo recortaría cualquier contenedor con
+   overflow:hidden (.cardWrapper, .contentSwipeWrap). Entrada y salida en
+   el mismo keyframe (Regla 29). */
+@keyframes syncSpin {
+  to { transform: rotate(360deg); }
+}
+.sync-spinner {
+  display: inline-flex;
+  animation: syncSpin 1s linear infinite;
+}
+@keyframes paymentHighlight {
+  0%       { box-shadow: inset 0 0 0 0 transparent; }
+  15%, 75% { box-shadow: inset 0 0 0 2px var(--accent); }
+  100%     { box-shadow: inset 0 0 0 0 transparent; }
+}
+.payment-highlight {
+  animation: paymentHighlight 2s ease both;
+}
