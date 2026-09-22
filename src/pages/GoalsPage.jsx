@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Plus, SlidersHorizontal, Crown, PiggyBank, Target, Check } from 'lucide-react'
+import { Plus, SlidersHorizontal, Crown, PiggyBank, Target, Check, Loader2 } from 'lucide-react'
 import { PageHeader } from '../components/PageHeader'
 import { EmptyState } from '../components/EmptyState'
 import { GoalDetailPanel } from '../components/GoalDetailPanel'
@@ -108,7 +108,26 @@ export function GoalsPage({
     setFormOpen(true)
   }
 
+  // Personal (v0.9.483): el cambio ya se ve al instante (useGoals optimista),
+  // así que el formulario cierra sin esperar al servidor. Compartida: espera
+  // al endpoint, como siempre.
   async function handleFormSave(values) {
+    if (!isShared) {
+      if (editingGoal) {
+        updateGoal(editingGoal.id, {
+          name: values.name.trim(),
+          notes: values.notes?.trim() || null,
+          icon: values.icon,
+          color: values.color,
+          target_amount: values.targetAmount,
+          target_date: values.targetDate || null,
+        })
+      } else {
+        addGoal(values)
+      }
+      setFormOpen(false)
+      return
+    }
     if (editingGoal) {
       await updateGoal(editingGoal.id, {
         name: values.name.trim(),
@@ -347,7 +366,7 @@ function GoalCard({ goal, isShared, spaceMembers, onClick }) {
     : []
 
   return (
-    <button type="button" className={`${styles.card} ${goal.isNearDeadline || goal.isOverdue ? styles.cardWarning : ''}`} onClick={onClick}>
+    <button type="button" data-goal-id={goal.id} className={`${styles.card} ${goal.isNearDeadline || goal.isOverdue ? styles.cardWarning : ''}`} onClick={onClick}>
       <div className={styles.cardTop}>
         <div className={styles.cardTitleGroup}>
           <div className={styles.cardIcon} style={{ background: goal.color }}>
@@ -355,7 +374,13 @@ function GoalCard({ goal, isShared, spaceMembers, onClick }) {
           </div>
           <span className={styles.cardName}>{goal.name}</span>
         </div>
-        <span className={styles.cardTarget}>{fmt(goal.target_amount)}</span>
+        <span className={styles.cardTargetGroup}>
+          <span className={styles.cardTarget}>{fmt(goal.target_amount)}</span>
+          {/* Sincronizando (v0.9.483) — ver useGoals.js */}
+          {goal._syncing && (
+            <span className="sync-spinner" aria-label={t('sync.syncing')}><Loader2 size={14} color="var(--text)" /></span>
+          )}
+        </span>
       </div>
       <div className={styles.cardStatsRow}>
         <span>{t('goalsPage.card.deposited', { amount: fmt(goal.currentAmount) })}</span>

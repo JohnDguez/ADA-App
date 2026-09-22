@@ -241,6 +241,14 @@
   flex-shrink: 0;
 }
 
+/* Monto objetivo + ícono de sincronizando (v0.9.483) */
+.cardTargetGroup {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
 .cardStatsRow {
   display: flex;
   justify-content: space-between;
