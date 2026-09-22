@@ -762,6 +762,163 @@ export function usePayments(userId, activeSpaceId = null, activeSpaceName = null
     return { ...res, data: res.error ? null : pendingRows[0] }
   }
 
+  // v0.9.485 — abonarInstallment, updatePayment y checkPeriodIncomeConflict
+  // RESTAURADAS tal cual de v0.9.483: la reescritura de addInstallmentPayment
+  // en v0.9.484 las borró por accidente (el recorte abarcó de más) y la app
+  // tronaba en producción con "updatePayment is not defined".
+
+  // Paquete optimista (v0.9.483) — ver runOptimisticBatch(). Antes eran
+  // hasta 6 escrituras sueltas, sin conteo de filas, y esperaba al servidor.
+  //
+  // FIX v0.9.483 (hallazgo (b) de v0.9.478): un abono PARCIAL solo reducía
+  // el monto de la copia — ese dinero no quedaba registrado como pagado en
+  // ningún lado (ni Gastos, ni historial, ni reportes), y al liquidar
+  // después el resto se volvía a contar como pendiente, alargando el plan.
+  // Ahora el abono se registra como su PROPIO pago pagado (mismo número de
+  // pago que la copia — así lo reconoce RecurrentDetailPanel como "Abono")
+  // y la copia baja lo abonado. Mismo criterio al liquidar con sobrante: el
+  // registro pagado guarda lo que de verdad se pagó (`amount: abonado`), no
+  // el monto de la copia — antes el sobrante reducía el plan pero no
+  // aparecía como gasto en ningún lado.
+  async function abonarInstallment(copyId, abonado) {
+    const copy = payments.find(p => p.id === copyId)
+    if (!copy || !copy.parent_id) return { error: { message: 'Pago no encontrado' } }
+    const master = payments.find(p => p.id === copy.parent_id)
+    if (!master) return { error: { message: 'Parcialidad no encontrada' } }
+
+    const montoRef    = Number(master.amount)
+    const totalAmount = master.total_amount != null ? Number(master.total_amount) : montoRef * master.total_installments
+    const nowIso      = new Date().toISOString()
+
+    // ── Abono parcial: registro pagado propio + la copia baja lo abonado ──
+    if (abonado < Number(copy.amount)) {
+      const nuevoMonto = Math.round((Number(copy.amount) - abonado) * 100) / 100
+      const abonoRow = newCopyRow({
+        name: copy.name, amount: abonado, due_date: copy.due_date, category: copy.category,
+        is_variable: false, recur_freq: copy.recur_freq, parent_id: master.id,
+        is_installment: true, current_installment: copy.current_installment,
+        total_installments: copy.total_installments,
+        is_paid: true, paid_at: nowIso,
+      })
+      const res = await runOptimisticBatch({
+        subjectId: copyId, action: 'abonar',
+        updates: [{ id: copyId, fields: { amount: nuevoMonto } }],
+        inserts: [abonoRow],
+      })
+      if (!res.error) notifySpaceChange('marked_paid', { paymentName: copy.name })
+      return { ...res, done: false }
+    }
+
+    // ── Abono que liquida esta copia (con posible sobrante) ────────────────
+    // `paidBefore` suma TODOS los registros pagados (incluye abonos parciales
+    // previos a este mismo pago) + los pagos que nunca tuvieron fila
+    // (installmentUntrackedCount, v0.9.478).
+    const children = payments.filter(p => p.parent_id === master.id && !p.is_master)
+    const paidBefore = children.filter(p => p.is_paid).reduce((s, p) => s + Number(p.amount), 0)
+      + installmentUntrackedCount(master, payments) * montoRef
+    const restanteTotal = Math.round((totalAmount - paidBefore - abonado) * 100) / 100
+
+    const updates = [{ id: copyId, fields: { is_paid: true, paid_at: nowIso, amount: abonado } }]
+    const deletes = []
+    const inserts = []
+    const otherPending = children
+      .filter(p => p.id !== copyId && !p.is_paid && !p.is_postponed)
+      .sort((a, b) => a.current_installment - b.current_installment)
+
+    if (restanteTotal <= 0) {
+      // Plan completo — este pago fue el último.
+      otherPending.forEach(p => deletes.push(p.id))
+      updates.push({ id: master.id, fields: { total_installments: copy.current_installment } })
+      const res = await runOptimisticBatch({ subjectId: copyId, action: 'abonar', updates, deletes })
+      if (!res.error) notifySpaceChange('marked_paid', { paymentName: copy.name })
+      return { ...res, done: !res.error }
+    }
+
+    // Todavía queda plan por delante — cuántos pagos faltan y cuánto el último.
+    const faltan      = Math.ceil(restanteTotal / montoRef)
+    const newTotal    = copy.current_installment + faltan
+    const montoUltimo = Math.round((restanteTotal - (faltan - 1) * montoRef) * 100) / 100
+
+    const keep = []
+    otherPending.forEach(p => {
+      if (p.current_installment > newTotal) { deletes.push(p.id); return }
+      const fields = { total_installments: newTotal }
+      if (p.current_installment === newTotal) fields.amount = montoUltimo
+      updates.push({ id: p.id, fields })
+      keep.push({ ...p, ...fields })
+    })
+    updates.push({ id: master.id, fields: { total_installments: newTotal } })
+
+    // Cola de 2 pendientes (monto de referencia salvo el nuevo último pago)
+    let lastNum  = keep.length ? keep[keep.length - 1].current_installment : copy.current_installment
+    let lastDate = keep.length ? keep[keep.length - 1].due_date : copy.due_date
+    for (let i = keep.length; i < 2; i++) {
+      const nextNum = lastNum + 1
+      if (nextNum > newTotal) break
+      lastDate = dateToStr(nextPeriodDate(lastDate, master.recur_freq || 'monthly'))
+      lastNum  = nextNum
+      inserts.push(newCopyRow({
+        name: master.name, amount: nextNum === newTotal ? montoUltimo : montoRef,
+        due_date: lastDate, category: master.category, is_variable: false, recur_freq: master.recur_freq,
+        parent_id: master.id, is_installment: true, current_installment: nextNum, total_installments: newTotal,
+      }))
+    }
+
+    const res = await runOptimisticBatch({ subjectId: copyId, action: 'abonar', updates, deletes, inserts })
+    if (!res.error) notifySpaceChange('marked_paid', { paymentName: copy.name })
+    return { ...res, done: false }
+  }
+
+  // Optimista (v0.9.480) — ver runOptimistic(). La usan editar un pago
+  // único/una copia, "Regresar al periodo actual" y otros ajustes de UNA
+  // fila; nunca cambios de varias filas (esos tienen su propia función).
+  async function updatePayment(id, updates) {
+    return runOptimistic({
+      id, patch: updates, action: 'update',
+      commit: () => supabase.from('payments').update(updates).eq('id', id).select().single(),
+    })
+  }
+
+  // Bug real encontrado por Johnatan (v0.9.258): el modal de remanente
+  // (PaymentsPage.jsx → checkPeriodStart/handleAddRemanente) calcula y
+  // "congela" un monto una sola vez, guardándolo como fila normal de
+  // `period_income` (siempre con `note: 'Remanente periodo anterior'` —
+  // ese texto exacto es el único marcador de origen que existe hoy, no hay
+  // columna `source` separada). Si DESPUÉS se edita la fecha de pago
+  // (`paid_at`) de un gasto para que caiga en ese mismo periodo (ej.
+  // corrigiendo la fecha real de un pago que se registró un día tarde), esa
+  // fila de remanente no se entera — se queda con un monto que ya no
+  // refleja la realidad. Esta función solo DETECTA el caso; no arregla
+  // nada sola ni sabe nada de "toasts" — usePayments.js es la capa de
+  // datos, quien llama (App.jsx → handleSave) decide cómo avisar.
+  async function checkPeriodIncomeConflict(profile, oldPaidAtIso, newPaidAtIso) {
+    if (!oldPaidAtIso || !newPaidAtIso || oldPaidAtIso === newPaidAtIso) return null
+
+    // Mismo criterio de fecha-local-segura que ya usa checkPeriodStart en
+    // PaymentsPage.jsx (Regla 22) — nunca comparar por el ISO string crudo.
+    const oldDate = dateOf(dateToStr(new Date(oldPaidAtIso)))
+    const newDate = dateOf(dateToStr(new Date(newPaidAtIso)))
+    const oldPeriod = cobroPeriod(profile, oldDate)
+    const newPeriod = cobroPeriod(profile, newDate)
+    if (dateToStr(oldPeriod.start) === dateToStr(newPeriod.start)) return null // mismo periodo, sin riesgo
+
+    // Mismo filtro exacto que checkPeriodStart al consultar period_income:
+    // por period_start + espacio activo (o `space_id is null` en Personal),
+    // SIN filtrar por user_id — el remanente en un Espacio Compartido es un
+    // cálculo compartido entre todos los miembros, no personal.
+    const newPeriodStartStr = dateToStr(newPeriod.start)
+    let query = supabase.from('period_income').select('amount, note').eq('period_start', newPeriodStartStr)
+    query = activeSpaceId ? query.eq('space_id', activeSpaceId) : query.is('space_id', null)
+    const { data } = await query
+
+    const remanenteRow = (data || []).find(r => r.note === 'Remanente periodo anterior')
+    return remanenteRow ? { amount: Number(remanenteRow.amount) } : null
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // NUEVO SISTEMA DE RECURRENTES
+  // ─────────────────────────────────────────────────────────────────────────
+
   // Optimista + todo-o-nada (v0.9.484): master + 2 copias en un paquete.
   async function addRecurrentPayment({ name, amount, category, recur_freq, is_variable, firstDate }) {
     const baseAmount = is_variable ? 0 : amount
