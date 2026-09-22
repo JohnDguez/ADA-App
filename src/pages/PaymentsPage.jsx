@@ -92,7 +92,7 @@ function prevPeriod(profile) {
   return { start: t, end: prevEnd }
 }
 
-export function PaymentsPage({ payments, dataLoading = false, profile, spaceSwitcher, activeSpaceHeader, activeSpaceId = null, rawActiveSpaceId = null, sharedSpaces, spacePermissions, onOpenPremium, onSpaceReady, unreadCount, onOpenNotifs, onGoSettings, onMarkUnpaid, onDelete, onDeleteDirect, onUpdateProfile, onEdit, onViewSource, onSplit, onAdd, onGoCategories, sharedFund, slideClass, ensureMonthLoaded, oldestPaymentYear = null }) {
+export function PaymentsPage({ payments, dataLoading = false, periodIncome, profile, spaceSwitcher, activeSpaceHeader, activeSpaceId = null, rawActiveSpaceId = null, sharedSpaces, spacePermissions, onOpenPremium, onSpaceReady, unreadCount, onOpenNotifs, onGoSettings, onMarkUnpaid, onDelete, onDeleteDirect, onUpdateProfile, onEdit, onViewSource, onSplit, onAdd, onGoCategories, sharedFund, slideClass, ensureMonthLoaded, oldestPaymentYear = null }) {
   const { t } = useTranslation()
   // Mismo mecanismo que HomePage.jsx — ver ahí el porqué (evitar que la
   // animación de entrada se dispare también en un simple cambio de
@@ -170,9 +170,12 @@ export function PaymentsPage({ payments, dataLoading = false, profile, spaceSwit
   const [confirmDeleteTarget, setConfirmDeleteTarget] = useState(null)
 
   // Ingresos extras del periodo actual
-  const [periodIncomes,    setPeriodIncomes]    = useState([])
+  // Ingresos Extras (v0.9.484): viven en App.jsx (`usePeriodIncome`) —
+  // persisten entre pestañas y son optimistas. `incomesLoaded` evita mostrar
+  // el disponible sin los extras (salía negativo un instante).
+  const periodIncomes = periodIncome?.incomes || []
+  const incomesLoaded = periodIncome?.loaded ?? false
   const [incomesExpanded,  setIncomesExpanded]  = useState(false)
-  const [loadingIncomes,   setLoadingIncomes]   = useState(true)
 
   // Modal agregar ingreso
   const [incomeModal,      setIncomeModal]      = useState(false)
@@ -305,14 +308,6 @@ export function PaymentsPage({ payments, dataLoading = false, profile, spaceSwit
     return () => document.body.classList.remove('modal-open')
   }, [incomeModal, remModal, manageIncomeModal, addFundModal, manageFundModal])
 
-  // ── Cargar ingresos (se recarga con cualquier cambio de profile/espacio,
-  // incluyendo cambios de config de cobro — el período de las consultas sí
-  // debe reflejarlos siempre) ────────────────────────────────────────────────
-  useEffect(() => {
-    if (!profile) return
-    loadIncomes()
-  }, [profile, activeSpaceId])
-
   // ── Verificar inicio de periodo — SOLO al abrir la página o cambiar de
   // espacio activo, nunca en cada edición de perfil. Bug real (Johnatan,
   // v0.9.182): antes esto vivía en el mismo efecto que loadIncomes, con
@@ -348,49 +343,6 @@ export function PaymentsPage({ payments, dataLoading = false, profile, spaceSwit
     checkPeriodStart()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [profile?.id, activeSpaceId, dataLoading])
-
-  // ── Tiempo real (Ingresos Extras) — solo en modo Espacio Compartido ──────
-  // Mismo criterio que la suscripción de `payments` en `usePayments.js`: se
-  // activa solo con `activeSpaceId`, y ante cualquier cambio simplemente
-  // vuelve a pedir la lista completa (`loadIncomes()`) en vez de aplicar el
-  // payload del evento a mano — más simple y menos propenso a bugs.
-  useEffect(() => {
-    if (!activeSpaceId) return
-    const channel = supabase
-      .channel(`period-income-space-${activeSpaceId}`)
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'period_income', filter: `space_id=eq.${activeSpaceId}` },
-        () => { loadIncomes() }
-      )
-      .subscribe()
-    return () => { supabase.removeChannel(channel) }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeSpaceId])
-
-  async function loadIncomes() {
-    setLoadingIncomes(true)
-    const { start } = cobroPeriod(profile)
-    const periodStartStr = dateToStr(start)
-
-    // Antes esta consulta solo filtraba por `period_start` — como RLS deja
-    // ver tanto los ingresos personales propios (space_id null) como los del
-    // espacio compartido del que se es miembro, sin este filtro se mezclaban
-    // ambos en la misma lista (ej. el remanente personal se colaba en la
-    // vista de un Espacio Compartido). `space_id` es null para personal, o
-    // el id del espacio activo — `.is()` en vez de `.eq()` para el caso null,
-    // porque PostgREST no interpreta `.eq('space_id', null)` como "IS NULL".
-    let query = supabase
-      .from('period_income')
-      .select('*')
-      .eq('period_start', periodStartStr)
-    query = activeSpaceId ? query.eq('space_id', activeSpaceId) : query.is('space_id', null)
-
-    const { data } = await query.order('created_at', { ascending: false })
-
-    setPeriodIncomes(data || [])
-    setLoadingIncomes(false)
-  }
 
   async function checkPeriodStart() {
     const { start } = cobroPeriod(profile)
@@ -488,31 +440,16 @@ export function PaymentsPage({ payments, dataLoading = false, profile, spaceSwit
     }
   }
 
-  async function handleAddIncome() {
+  // Optimista (v0.9.484): el ingreso aparece y el modal cierra al instante;
+  // si el servidor lo rechaza, desaparece y App.jsx avisa.
+  function handleAddIncome() {
     const amount = parseFloat(incomeAmount)
     if (!amount || amount <= 0) return
-    setSavingIncome(true)
-
-    const { start } = cobroPeriod(profile)
-    const periodStartStr = dateToStr(start)
-
-    const { error } = await supabase.from('period_income').insert({
-      user_id: profile.id,
-      space_id: activeSpaceId,
-      period_start: periodStartStr,
-      amount,
-      type: incomeType,
-      note: incomeNote.trim() || null,
-    })
-
-    if (!error) {
-      await loadIncomes()
-      setIncomeModal(false)
-      setIncomeAmount('')
-      setIncomeNote('')
-      setIncomeType('Bono')
-    }
-    setSavingIncome(false)
+    periodIncome.addIncome({ amount, type: incomeType, note: incomeNote.trim() || null })
+    setIncomeModal(false)
+    setIncomeAmount('')
+    setIncomeNote('')
+    setIncomeType('Bono')
   }
 
   function startEditIncome(inc) {
@@ -530,56 +467,24 @@ export function PaymentsPage({ payments, dataLoading = false, profile, spaceSwit
     setEditIncomeNote('')
   }
 
-  async function handleUpdateIncome(id) {
+  // Optimistas (v0.9.484) — ver usePeriodIncome.js. Un rechazo del servidor
+  // (ej. RLS: invitado sin can_add_income) ya no se pierde en silencio: el
+  // cambio se revierte y App.jsx avisa.
+  function handleUpdateIncome(id) {
     const amount = parseFloat(editIncomeAmount)
     if (!amount || amount <= 0) return
-    setSavingEditIncome(true)
-
-    // Mismo bug de fondo que en usePayments.js (ver nota ahí): sin
-    // `.select()` de vuelta, un UPDATE bloqueado por RLS (invitado sin
-    // can_add_income) regresa éxito con 0 filas afectadas, no un error —
-    // y `loadIncomes()` volvía a traer el valor real sin cambios, dando la
-    // sensación de que "no se guardó nada" sin ninguna pista de por qué.
-    const { data, error } = await supabase.from('period_income').update({
-      type: editIncomeType,
-      amount,
-      note: editIncomeNote.trim() || null,
-    }).eq('id', id).select()
-
-    if (!error && data && data.length > 0) {
-      await loadIncomes()
-      cancelEditIncome()
-    }
-    setSavingEditIncome(false)
+    periodIncome.updateIncome(id, { type: editIncomeType, amount, note: editIncomeNote.trim() || null })
+    cancelEditIncome()
   }
 
-  async function handleDeleteIncome(id) {
-    const { data, error } = await supabase.from('period_income').delete().eq('id', id).select()
-    // Si RLS bloqueó el borrado (0 filas), no cerramos el modal de
-    // confirmación ni tocamos el estado local — ver nota en
-    // handleUpdateIncome sobre por qué hace falta este chequeo.
-    if (error || !data || data.length === 0) return
-    await loadIncomes()
+  function handleDeleteIncome(id) {
+    periodIncome.deleteIncome(id)
     setConfirmDeleteIncomeId(null)
     if (editingIncomeId === id) cancelEditIncome()
   }
 
-  async function handleAddRemanente(amount) {
-    setSavingRem(true)
-    const { start } = cobroPeriod(profile)
-    const periodStartStr = dateToStr(start)
-
-    await supabase.from('period_income').insert({
-      user_id: profile.id,
-      space_id: activeSpaceId,
-      period_start: periodStartStr,
-      amount,
-      type: 'Otro',
-      note: 'Remanente periodo anterior',
-    })
-
-    await loadIncomes()
-    setSavingRem(false)
+  function handleAddRemanente(amount) {
+    periodIncome.addIncome({ amount, type: 'Otro', note: 'Remanente periodo anterior' })
     setRemModal(false)
     setRemCustomOpen(false)
   }
@@ -802,8 +707,12 @@ export function PaymentsPage({ payments, dataLoading = false, profile, spaceSwit
     [ALL_CATS, gastosPeriodo]
   )
 
-  const showBalance = (profile?.salary_enabled && profile?.salary_amount > 0) || periodIncomes.length > 0
-  const noIncomeYet = !activeSpaceId && !(profile?.salary_enabled && profile?.salary_amount > 0) && periodIncomes.length === 0
+  // `!incomesLoaded` (v0.9.484): mientras no se sabe si hay extras, se deja
+  // la tarjeta de balance (en esqueleto) en vez de anunciar "sin ingreso".
+  // Balance del periodo: esqueleto hasta tener pagos Y extras (v0.9.484).
+  const balanceLoading = dataLoading || !incomesLoaded
+  const showBalance = (profile?.salary_enabled && profile?.salary_amount > 0) || periodIncomes.length > 0 || !incomesLoaded
+  const noIncomeYet = incomesLoaded && !activeSpaceId && !(profile?.salary_enabled && profile?.salary_amount > 0) && periodIncomes.length === 0
 
   return (
     <div className={styles.pageRoot} onClick={() => setOpenMenu(null)}>
@@ -1266,7 +1175,7 @@ export function PaymentsPage({ payments, dataLoading = false, profile, spaceSwit
                     sueldo disponible" un instante, como si nada se hubiera
                     gastado. Se reemplaza por un bone, nunca por el número
                     real a medias. */}
-                {dataLoading ? (
+                {balanceLoading ? (
                   <Bone w={110} h={26} r={4} />
                 ) : (
                   <div className={styles.balanceAmount} style={{ color: sobrePasado ? 'var(--danger)' : 'var(--paid)' }}>
@@ -1285,7 +1194,7 @@ export function PaymentsPage({ payments, dataLoading = false, profile, spaceSwit
                   <Plus size={13} strokeWidth={2.2} />
                   {t('paymentsPage.addIncome')}
                 </button>
-                {dataLoading ? (
+                {balanceLoading ? (
                   <Bone w={90} h={11} r={4} />
                 ) : (
                   <div className={styles.balanceSubtext}>
@@ -1308,7 +1217,7 @@ export function PaymentsPage({ payments, dataLoading = false, profile, spaceSwit
             {/* Barra heatmap segmentada — `segmentos` también depende de
                 `gastosPeriodo`; durante la carga se reemplaza por una barra
                 gris neutra en vez de una barra vacía (0 gastos aparentes). */}
-            {dataLoading ? (
+            {balanceLoading ? (
               <Bone w="100%" h={12} r={6} style={{ marginBottom: 10 }} />
             ) : (
               <div className={styles.heatmapBar}>
@@ -1327,7 +1236,7 @@ export function PaymentsPage({ payments, dataLoading = false, profile, spaceSwit
             )}
 
             {/* Chips de categoría */}
-            {dataLoading ? (
+            {balanceLoading ? (
               <div className={styles.categoryChipsRow}>
                 <Bone w={64} h={20} r={5} />
                 <Bone w={82} h={20} r={5} />
@@ -1355,7 +1264,7 @@ export function PaymentsPage({ payments, dataLoading = false, profile, spaceSwit
                 espacio compartido, esta misma sección ahora es el Fondo
                 Compartido (ver abajo) — reemplaza por completo a
                 period_income para espacios, que era atada al periodo. */}
-            {!activeSpaceId && !loadingIncomes && periodIncomes.length > 0 && (() => {
+            {!activeSpaceId && incomesLoaded && periodIncomes.length > 0 && (() => {
               const totalInc = periodIncomes.reduce((a, i) => a + Number(i.amount), 0)
               return (
                 <div className={styles.extrasSection}>
