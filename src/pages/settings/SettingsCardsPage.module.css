@@ -1,0 +1,175 @@
+/* Mis tarjetas (v0.9.486). */
+.pageWrapper {
+  /* Aire para que la última tarjeta no quede bajo el botón flotante + nav
+     (mismo criterio que SettingsCategoriesPage). */
+  padding-bottom: 185px;
+  background: var(--bg);
+  min-height: 100vh;
+  position: relative;
+  overflow: hidden;
+}
+
+.content {
+  position: relative;
+  padding: 0 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* ── Aviso: no son formas de pago ───────────────────────────────────────── */
+.disclaimer {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  background: var(--accent-soft);
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+  animation: cardsFadeUp .4s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.disclaimerIcon {
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.disclaimerTitle {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 2px;
+}
+
+.disclaimerText {
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--text);
+}
+
+@keyframes cardsFadeUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.empty {
+  animation: cardsFadeUp .35s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* ── Pila ───────────────────────────────────────────────────────────────── */
+/* Todo lo que se mueve (altura, posición, escala, botones) usa la misma
+   curva, para que el reacomodo se vea como un solo movimiento. */
+.stack {
+  position: relative;
+  height: var(--stack-height);
+  transition: height .45s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.stackCard {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: var(--card-top);
+  z-index: var(--card-z);
+  transform: scale(var(--card-scale));
+  transform-origin: top center;
+  cursor: pointer;
+  border-radius: 14px;
+  outline: none;
+  transition: top .45s cubic-bezier(0.22, 1, 0.36, 1), transform .45s cubic-bezier(0.22, 1, 0.36, 1);
+  animation: stackCardIn .5s cubic-bezier(0.22, 1, 0.36, 1) var(--enter-delay) both;
+}
+
+.stackCard:focus-visible {
+  box-shadow: 0 0 0 2px var(--accent);
+}
+
+@keyframes stackCardIn {
+  from { opacity: 0; translate: 0 24px; }
+  to   { opacity: 1; translate: 0 0; }
+}
+
+.cardSync {
+  position: absolute;
+  top: 10px;
+  right: 50px;
+  z-index: 2;
+}
+
+/* Botones de la tarjeta abierta: siempre montados, entran y salen con
+   fundido + desplazamiento (Regla 29). */
+.actions {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: var(--actions-top);
+  z-index: 60;
+  display: flex;
+  gap: 8px;
+  opacity: 0;
+  transform: translateY(-8px);
+  pointer-events: none;
+  transition: opacity .25s ease, transform .35s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.actionsOpen {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+  transition-delay: .12s;
+}
+
+.actionButton {
+  flex: 1;
+  padding: 10px 8px;
+  border: none;
+  border-radius: 5px;
+  background: var(--surface);
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 500;
+  font-family: 'DM Sans', sans-serif;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.actionButton:disabled {
+  cursor: default;
+  opacity: 0.6;
+}
+
+.actionDanger {
+  color: var(--danger);
+}
+
+/* ── Botón flotante (excepción documentada a la Regla 13) ──────────────── */
+.addPillRow {
+  position: fixed;
+  bottom: 120px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: calc(100% - 32px);
+  max-width: 388px;
+  display: flex;
+  justify-content: flex-end;
+  z-index: 95;
+  pointer-events: none;
+}
+
+.addPill {
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 13px 22px;
+  border: none;
+  border-radius: 999px;
+  background: var(--accent);
+  color: var(--surface);
+  font-size: 14px;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(47, 140, 250, 0.4);
+  white-space: nowrap;
+}
