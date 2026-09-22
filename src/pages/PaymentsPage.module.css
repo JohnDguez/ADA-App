@@ -1776,16 +1776,22 @@
 
 /* ── Por método de pago (v0.9.487) ──────────────────────────────────────── */
 .methodSection {
-  margin-top: 18px;
+  /* Mismo margen lateral que .categorySection (v0.9.489): sin él, la
+     sección y sus barras iban de borde a borde de la pantalla mientras
+     "Por categoría" sí respetaba el margen (reportado por Johnatan). */
+  padding: 0 16px 20px;
   display: flex;
   flex-direction: column;
   gap: 14px;
 }
 
+/* Mismo tamaño/peso que .categorySectionTitleText, para que las dos
+   secciones se lean como hermanas. */
 .methodSectionTitle {
-  font-size: 13px;
-  font-weight: 600;
+  font-size: 15px;
+  font-weight: 700;
   color: var(--text);
+  margin-bottom: -4px;
 }
 
 .methodRow {
