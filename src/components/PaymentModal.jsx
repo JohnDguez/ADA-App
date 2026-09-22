@@ -114,7 +114,27 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
             .filter(p => p.parent_id === initial.id && !p.is_paid && !p.is_postponed)
             .sort((a, b) => a.current_installment - b.current_installment)[0]
         : null
-      const initialDue = nextInstallmentCopy?.due_date || initial.due_date || todayStr()
+      let initialDue = nextInstallmentCopy?.due_date || initial.due_date || todayStr()
+      // Reactivar un master PAUSADO (fase 3, v0.9.481): no tiene copias
+      // pendientes, y su due_date es la fecha del PRIMER pago del plan — como
+      // fecha sugerida dejaba las copias nuevas vencidas de entrada si se
+      // pausó hace tiempo. Ahora se sugiere la fecha que le toca: en una
+      // parcialidad, la del pago en curso (pago #1 + N-1 periodos); en un
+      // recurrente, la primera de su calendario que no haya pasado. Si aun
+      // así cae en el pasado, hoy. El usuario la puede cambiar.
+      if (initial.is_master && initial.paused && initial.due_date) {
+        const freq = initial.recur_freq || 'monthly'
+        let d = initial.due_date
+        if (initial.is_installment) {
+          const n = installmentCurrentNumber(initial, payments)
+          for (let i = 1; i < n; i++) d = dateToStr(nextPeriodDate(d, freq))
+        } else {
+          // Tope de vueltas como red de seguridad (una frecuencia desconocida
+          // que no avanzara la fecha no debe congelar el modal).
+          for (let i = 0; i < 1000 && d < todayStr(); i++) d = dateToStr(nextPeriodDate(d, freq))
+        }
+        initialDue = d < todayStr() ? todayStr() : d
+      }
       setDueDate(initialDue)
       setBiweeklyDate(initialDue)
       setCategory(initial.category || 'Servicios')
