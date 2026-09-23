@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { ChevronDown, ChevronUp, Check, RotateCcw, Eye, Loader2 } from 'lucide-react'
 import { PayCard } from '../components/PayCard'
 import { PayRail } from '../components/PayRail'
+import { getBank, bankColorVar } from '../lib/cardCatalog'
 import { PageHeader } from '../components/PageHeader'
 import { NotificationsPanel } from '../components/NotificationsPanel'
 import { NewSharedSpacePanel } from '../components/NewSharedSpacePanel'
@@ -505,6 +506,7 @@ export function HomePage({ payments, dataLoading = false, profile, spaceSwitcher
                     onMarkUnpaid={onMarkUnpaid}
                     onViewSource={onViewSource}
                     spaceMembers={spaceMembers}
+                    paymentMethodsList={paymentMethodsList}
                   />
                 </div>
               )}
@@ -616,7 +618,7 @@ const UNMARK_EXIT_MS = 320
 // dispara HASTA que la animación de salida terminó, nunca antes, para que
 // la fila nunca desaparezca del arreglo (y se desmonte) a la mitad de su
 // propia animación.
-function PaidCollapseItem({ p, onMarkUnpaid, onViewSource, spaceMembers, onSelect, selected }) {
+function PaidCollapseItem({ p, onMarkUnpaid, onViewSource, spaceMembers, onSelect, selected, paymentMethodsList = [] }) {
   const { t } = useTranslation()
   const [phase, setPhase] = useState('idle') // idle | filling | labeled | exiting
   const wrapperRef = useRef(null)
@@ -699,6 +701,19 @@ function PaidCollapseItem({ p, onMarkUnpaid, onViewSource, spaceMembers, onSelec
                 </>
               )}
             </div>
+            {/* Método de pago (v0.9.492) — mismo hueco que faltaba en
+                Gastos; aquí es la vista colapsada de "pagados" de Inicio. */}
+            {!p.is_postponed && p.payment_method_kind && p.payment_method_kind !== 'cash' && (() => {
+              const card = paymentMethodsList.find(m => m.id === p.payment_method_id)
+              return (
+                <div className={styles.paidCollapseMethod}>
+                  <span className={styles.methodSwatch} style={{ '--swatch-color': card ? bankColorVar(card.bank) : 'var(--border-mid)' }} />
+                  {card
+                    ? `${getBank(card.bank).id === 'otro' ? t('cards.otherBank') : getBank(card.bank).name}${card.alias ? ` ${card.alias}` : ''}`
+                    : t(p.payment_method_kind === 'credit' ? 'paymentMethod.deletedCredit' : 'paymentMethod.deletedDebit')}
+                </div>
+              )
+            })()}
           </div>
           <span className={`${styles.paidCollapseAmount} ${p.is_postponed ? styles.paidCollapseAmountMuted : ''}`}>{fmt(p.amount)}</span>
           {p.is_contribution_reflection ? (
@@ -734,7 +749,7 @@ function PaidCollapseItem({ p, onMarkUnpaid, onViewSource, spaceMembers, onSelec
 // atajo de conveniencia para deshacer/revisar sin salir de Home. Se calcula
 // con el mismo rango de fechas del periodo actual, así que se "reinicia"
 // solo en cuanto cambia de periodo, sin lógica extra de limpieza.
-function PaidCollapse({ payments, expanded, onToggle, onMarkUnpaid, onViewSource, spaceMembers, onSelect, selectedId }) {
+function PaidCollapse({ payments, expanded, onToggle, onMarkUnpaid, onViewSource, spaceMembers, onSelect, selectedId, paymentMethodsList = [] }) {
   const { t } = useTranslation()
   return (
     <div className={styles.paidCollapseRoot}>
@@ -769,7 +784,7 @@ function PaidCollapse({ payments, expanded, onToggle, onMarkUnpaid, onViewSource
         return (
           <div className={styles.paidCollapseList}>
             {sorted.map(p => (
-              <PaidCollapseItem key={p.id} p={p} onMarkUnpaid={onMarkUnpaid} onViewSource={onViewSource} spaceMembers={spaceMembers} onSelect={onSelect} selected={selectedId === p.id} />
+              <PaidCollapseItem key={p.id} p={p} onMarkUnpaid={onMarkUnpaid} onViewSource={onViewSource} spaceMembers={spaceMembers} onSelect={onSelect} selected={selectedId === p.id} paymentMethodsList={paymentMethodsList} />
             ))}
           </div>
         )

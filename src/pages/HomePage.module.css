@@ -519,3 +519,22 @@
     padding: 14px 16px;
   }
 }
+
+/* Método de pago en la lista colapsada de pagados (v0.9.492) — mismo
+   tamaño/estilo que en PayCard.jsx / PaymentsPage.jsx. */
+.paidCollapseMethod {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 2px;
+  font-size: 11px;
+  color: var(--text);
+}
+
+.methodSwatch {
+  width: 16px;
+  height: 11px;
+  border-radius: 2px;
+  flex-shrink: 0;
+  background: var(--swatch-color);
+}

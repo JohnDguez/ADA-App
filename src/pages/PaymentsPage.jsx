@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useMemo, useLayoutEffect } from 'react'
 import { useTranslation } from 'react-i18next'
-import { ChevronLeft, ChevronRight, MoreVertical, Plus, CircleDollarSign, ChevronDown, ChevronUp, Pencil, RotateCcw, Trash2, Check, Eye, Users, ArrowUp, ArrowDown, ArrowUpLeft, PiggyBank, Loader2 } from 'lucide-react'
+import { ChevronLeft, ChevronRight, MoreVertical, Plus, CircleDollarSign, ChevronDown, ChevronUp, Pencil, RotateCcw, Trash2, Check, Eye, Users, ArrowUp, ArrowDown, ArrowUpLeft, PiggyBank, Loader2, CreditCard } from 'lucide-react'
 import { PageHeader } from '../components/PageHeader'
 import { NewSharedSpacePanel } from '../components/NewSharedSpacePanel'
 import { EmptyState } from '../components/EmptyState'
@@ -126,7 +126,7 @@ function MethodRow({ label, amount, total, barClass, cards = [], note = null }) 
   )
 }
 
-export function PaymentsPage({ payments, dataLoading = false, periodIncome, paymentMethodsList = [], profile, spaceSwitcher, activeSpaceHeader, activeSpaceId = null, rawActiveSpaceId = null, sharedSpaces, spacePermissions, onOpenPremium, onSpaceReady, unreadCount, onOpenNotifs, onGoSettings, onMarkUnpaid, onDelete, onDeleteDirect, onUpdateProfile, onEdit, onViewSource, onSplit, onAdd, onGoCategories, sharedFund, slideClass, ensureMonthLoaded, oldestPaymentYear = null }) {
+export function PaymentsPage({ payments, dataLoading = false, periodIncome, paymentMethodsList = [], onChangeMethod, profile, spaceSwitcher, activeSpaceHeader, activeSpaceId = null, rawActiveSpaceId = null, sharedSpaces, spacePermissions, onOpenPremium, onSpaceReady, unreadCount, onOpenNotifs, onGoSettings, onMarkUnpaid, onDelete, onDeleteDirect, onUpdateProfile, onEdit, onViewSource, onSplit, onAdd, onGoCategories, sharedFund, slideClass, ensureMonthLoaded, oldestPaymentYear = null }) {
   const { t } = useTranslation()
   // Mismo mecanismo que HomePage.jsx — ver ahí el porqué (evitar que la
   // animación de entrada se dispare también en un simple cambio de
@@ -759,6 +759,16 @@ export function PaymentsPage({ payments, dataLoading = false, periodIncome, paym
       if (!canMarkPaid) { blocked(t('paymentsPage.actionRegisterContributions')); return }
       onSplit && onSplit(payment)
     }
+    // "Cambiar método de pago" (FIX v0.9.493): faltaba en este menú —
+    // solo existía en el de PayCard.jsx, que es un componente DISTINTO
+    // (pendientes en Inicio); la lista de "Pagos realizados" de Gastos
+    // tiene su propio menú aparte, sin esta opción, desde la entrega B.
+    // Sin candado de permisos: solo aparece en pagos PERSONALES
+    // (!p.space_id, abajo), donde `spacePermissions` no aplica — mismo
+    // criterio que PayCard.jsx.
+    if (action === 'changeMethod') {
+      onChangeMethod && onChangeMethod(payment)
+    }
   }
 
   // Segmentos heatmap
@@ -797,6 +807,11 @@ export function PaymentsPage({ payments, dataLoading = false, periodIncome, paym
                 <MenuItem icon={<Pencil size={14} />} label={t('paymentsPage.menuEdit')} onClick={() => handleMenuAction('edit', p)} />
                 {p.space_id && p.is_paid && !p.is_contribution_reflection && (
                   <MenuItem icon={<Users size={14} />} label={t('paymentsPage.menuSplit')} onClick={() => handleMenuAction('split', p)} />
+                )}
+                {/* Personal solamente — las tarjetas no se comparten en un
+                    Espacio Compartido (mismo criterio que PayCard.jsx). */}
+                {!p.space_id && onChangeMethod && (
+                  <MenuItem icon={<CreditCard size={14} />} label={t('paymentMethod.changeAction')} onClick={() => handleMenuAction('changeMethod', p)} />
                 )}
                 <MenuItem icon={<RotateCcw size={14} />} label={t('paymentsPage.menuMarkUnpaid')} onClick={() => handleMenuAction('unpaid', p)} />
                 <MenuItem icon={<Trash2 size={14} />} label={t('paymentsPage.menuDelete')} onClick={() => handleMenuAction('delete', p)} danger />
@@ -1805,6 +1820,22 @@ export function PaymentsPage({ payments, dataLoading = false, periodIncome, paym
                             </>
                           )}
                         </div>
+                        {/* Método de pago (v0.9.492) — ya se guardaba desde
+                            la entrega B, pero esta fila — la que realmente
+                            se ve en Gastos → "Pagos realizados" — nunca la
+                            mostraba. Solo `PayCard.jsx` (pendientes en
+                            Inicio) la tenía. Se oculta en efectivo. */}
+                        {p.payment_method_kind && p.payment_method_kind !== 'cash' && (() => {
+                          const card = paymentMethodsList.find(m => m.id === p.payment_method_id)
+                          return (
+                            <div className={styles.paymentMethodRow}>
+                              <span className={styles.methodSwatch} style={{ '--swatch-color': card ? bankColorVar(card.bank) : 'var(--border-mid)' }} />
+                              {card
+                                ? `${getBank(card.bank).id === 'otro' ? t('cards.otherBank') : getBank(card.bank).name}${card.alias ? ` ${card.alias}` : ''}`
+                                : t(p.payment_method_kind === 'credit' ? 'paymentMethod.deletedCredit' : 'paymentMethod.deletedDebit')}
+                            </div>
+                          )
+                        })()}
                         {activeSpaceId && !p.is_contribution_reflection && (
                           <div className={styles.paymentContributors}>
                             <PaidByStack contributors={p.contributors} members={spaceMembers} fundAmount={p.fund_amount || 0} size={22} />
