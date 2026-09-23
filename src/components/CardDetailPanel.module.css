@@ -1,0 +1,218 @@
+/* Detalle de una tarjeta (v0.9.495). Header/menú: mismas clases y valores
+   que RecurrentDetailPanel.module.css, para que las pantallas de detalle
+   de la app se sientan iguales entre sí. */
+.screen {
+  padding: 20px 16px 40px;
+  box-sizing: border-box;
+  animation: fadeIn .2s ease both;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.iconButton {
+  background: none;
+  border: none;
+  padding: 4px;
+  display: flex;
+  cursor: pointer;
+}
+
+.headerTitle {
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--text);
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.menuWrapper {
+  position: relative;
+}
+
+.menu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 4px;
+  background: var(--menu-bg);
+  border-radius: var(--radius-sm);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  min-width: 160px;
+  overflow: hidden;
+  z-index: 10;
+}
+
+.menuItem {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  background: none;
+  border: none;
+  border-bottom: 0.5px solid var(--bg);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text);
+  font-family: 'DM Sans', sans-serif;
+  cursor: pointer;
+  text-align: left;
+}
+
+.menuItemDanger {
+  color: var(--danger);
+}
+
+/* ── Tarjeta y totales ────────────────────────────────────────────────── */
+.preview {
+  margin-bottom: 16px;
+}
+
+.pill {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--surface-1);
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+  font-size: 13px;
+  color: var(--text);
+  margin-bottom: 10px;
+}
+
+.pillAmount {
+  font-size: 18px;
+  font-weight: 700;
+}
+
+/* ── Filtros — mismos valores que .viewModeRow/.monthYearRow de
+   PaymentsPage.module.css, para que se vean idénticos. ─────────────────── */
+.filtersWrapper {
+  margin: 16px 0 8px;
+}
+
+.viewModeRow {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.viewModeButton {
+  padding: 6px 14px;
+  border-radius: 5px;
+  border: 0.5px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  font-weight: 400;
+  font-size: 12px;
+  font-family: 'DM Sans', sans-serif;
+  cursor: pointer;
+}
+
+.viewModeButtonActive {
+  border: none;
+  background: var(--accent);
+  color: var(--surface);
+  font-weight: 600;
+}
+
+.monthYearRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.monthYearGroup {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.monthYearLabel {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text);
+}
+
+/* ── Historial ────────────────────────────────────────────────────────── */
+.historyList {
+  margin-top: 8px;
+}
+
+.empty {
+  font-size: 13px;
+  color: var(--text);
+  padding: 16px 0;
+  text-align: center;
+}
+
+.monthLabel {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text);
+  margin: 14px 0 4px;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 0;
+  border-bottom: 0.5px solid var(--border);
+}
+
+.row:last-child {
+  border-bottom: none;
+}
+
+.rowDate {
+  width: 30px;
+  text-align: center;
+  font-size: 11px;
+  color: var(--text);
+  flex-shrink: 0;
+}
+
+.rowDate b {
+  display: block;
+  font-size: 15px;
+  color: var(--text);
+}
+
+.rowMain {
+  flex: 1;
+  min-width: 0;
+}
+
+.rowName {
+  font-size: 14px;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.rowCat {
+  font-size: 11px;
+  color: var(--text);
+}
+
+.rowAmount {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+  flex-shrink: 0;
+}
