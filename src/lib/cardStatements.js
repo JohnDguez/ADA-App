@@ -1,5 +1,19 @@
 import { dateOf, dateToStr } from './utils'
 
+// FIX v0.9.491 (bug real reportado por Johnatan: "Spent this cycle: $0.00"
+// tras marcar un gasto pagado con la tarjeta): `dateOf()` espera una fecha
+// PURA 'YYYY-MM-DD' — `paid_at` y `created_at` son timestamps con hora
+// completa ('2026-09-22T15:30:00.000Z'). Pasárselos directo rompía el
+// split('-') (el día se cortaba a la mitad de la hora) y la fecha salía
+// inválida, así que TODAS las comparaciones de fecha fallaban en
+// silencio — ningún gasto entraba jamás a ningún ciclo. Mismo patrón que
+// ya usa el resto de la app para timestamps (HomePage.jsx, PaymentsPage.jsx):
+// pasar primero por `new Date()` y `dateToStr()` para quedarse con el día
+// en hora LOCAL (Regla 11), y solo entonces `dateOf()`.
+function dateOfTimestamp(ts) {
+  return dateOf(dateToStr(new Date(ts)))
+}
+
 // Entrega C de Tarjetas (v0.9.490) — genera los estados de cuenta
 // automáticos de una tarjeta de crédito. Función PURA (sin Supabase):
 // toma el estado de la tarjeta y sus pagos, regresa qué estados de cuenta
@@ -50,16 +64,18 @@ function nextOccurrenceAfter(day, after) {
 // una necesita su propia cuenta). `creditPayments`: mismo filtro que en
 // computeMissingStatements (solo esta tarjeta, is_paid, kind='credit').
 export function currentCycleSpend(card, creditPayments) {
-  const cycleStart = dateOf(card.last_statement_cut || card.created_at)
+  const cycleStart = card.last_statement_cut ? dateOf(card.last_statement_cut) : dateOfTimestamp(card.created_at)
   return creditPayments
-    .filter(p => dateOf(p.paid_at || p.due_date) > cycleStart)
+    .filter(p => (p.paid_at ? dateOfTimestamp(p.paid_at) : dateOf(p.due_date)) > cycleStart)
     .reduce((s, p) => s + Number(p.amount), 0)
 }
 
 export function computeMissingStatements(card, creditPayments, todayDate) {
   if (!card.cut_day || !card.due_day) return []
   const cycles = []
-  let cursor = card.last_statement_cut ? dateOf(card.last_statement_cut) : dateOf(card.created_at)
+  // `last_statement_cut` es un `date` puro (sin hora) — `dateOf()` directo
+  // está bien ahí; `created_at` SÍ es timestamp.
+  let cursor = card.last_statement_cut ? dateOf(card.last_statement_cut) : dateOfTimestamp(card.created_at)
   let carryLeft = Number(card.carry_over) || 0
   let firstCycle = true
   let guard = 0 // red de seguridad: nunca más de 60 ciclos en una sola pasada
@@ -72,7 +88,7 @@ export function computeMissingStatements(card, creditPayments, todayDate) {
 
     const spend = creditPayments
       .filter(p => {
-        const paidDate = dateOf(p.paid_at || p.due_date)
+        const paidDate = p.paid_at ? dateOfTimestamp(p.paid_at) : dateOf(p.due_date)
         return paidDate > cycleStart && paidDate <= cycleEnd
       })
       .reduce((s, p) => s + Number(p.amount), 0)
