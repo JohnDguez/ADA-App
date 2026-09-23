@@ -1136,6 +1136,7 @@ export default function App() {
           dataLoading={paymentsLoading}
           periodIncome={periodIncome}
           paymentMethodsList={paymentMethods.methods}
+          onChangeMethod={setChangeMethodPayment}
           slideClass={`page-slide-${slideDir}`}
           {...headerProps}
           activeSpaceId={paymentsSpaceId}
