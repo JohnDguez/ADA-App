@@ -11,6 +11,8 @@ import { SegmentedControl } from '../../components/SegmentedControl'
 import { ConfirmDeleteModal } from '../../components/ConfirmDeleteModal'
 import { EmptyState } from '../../components/EmptyState'
 import { getBank } from '../../lib/cardCatalog'
+import { currentCycleSpend } from '../../lib/cardStatements'
+import { fmt } from '../../lib/utils'
 import styles from './SettingsCardsPage.module.css'
 
 // Mis tarjetas (v0.9.486, entrega A — mockups confirmados con Johnatan).
@@ -28,7 +30,7 @@ const OPEN_GAP = 62    // espacio bajo la tarjeta abierta para los botones
 const BELOW_PEEK = 18  // lo que asoma cada tarjeta bajo la abierta
 const BELOW_SCALE = 0.94
 
-function CardStack({ cards, onEdit, onDelete }) {
+function CardStack({ cards, onEdit, onDelete, personalPayments }) {
   const { t } = useTranslation()
   const wrapRef = useRef(null)
   const [width, setWidth] = useState(0)
@@ -89,7 +91,22 @@ function CardStack({ cards, onEdit, onDelete }) {
           }}
           aria-label={getBank(c.bank).name}
         >
-          <CreditCardVisual card={c} />
+          <CreditCardVisual
+            card={c}
+            cycleSpendLabel={
+              // Gastado en este corte (entrega C): solo créditos — cada
+              // tarjeta tiene su propio corte, así que cada una lleva su
+              // propia cuenta. `personalPayments === null` (viendo un
+              // Espacio Compartido) → no se muestra un número incorrecto.
+              c.kind === 'credit' && personalPayments
+                ? t('cards.cycleSpend', {
+                    amount: fmt(currentCycleSpend(c, personalPayments.filter(p =>
+                      p.payment_method_id === c.id && p.payment_method_kind === 'credit' && p.is_paid
+                    ))),
+                  })
+                : null
+            }
+          />
           {c._syncing && (
             <span className={`sync-spinner ${styles.cardSync}`} aria-label={t('sync.syncing')}>
               <Loader2 size={14} color="var(--surface)" />
@@ -116,7 +133,7 @@ function CardStack({ cards, onEdit, onDelete }) {
   )
 }
 
-export function SettingsCardsPage({ paymentMethods, onBack, slideClass }) {
+export function SettingsCardsPage({ paymentMethods, personalPayments = null, onBack, slideClass }) {
   const { t } = useTranslation()
   const [kind, setKind] = useState('credit')
   const [formOpen, setFormOpen] = useState(false)
@@ -174,6 +191,18 @@ export function SettingsCardsPage({ paymentMethods, onBack, slideClass }) {
             ]}
           />
 
+          {/* "Por pagar en crédito" (entrega C): suma de los estados de
+              cuenta YA GENERADOS y sin liquidar — no lo gastado en el ciclo
+              en curso, que todavía no se cobra. */}
+          {kind === 'credit' && personalPayments && (
+            <div className={styles.totalPill}>
+              <span>{t('cards.pendingCreditTotal')}</span>
+              <span className={styles.totalPillAmount}>
+                {fmt(personalPayments.filter(p => p.is_card_statement && !p.is_paid).reduce((s, p) => s + Number(p.amount), 0))}
+              </span>
+            </div>
+          )}
+
           {loaded && cards.length === 0 ? (
             <div className={styles.empty}>
               <EmptyState
@@ -185,7 +214,7 @@ export function SettingsCardsPage({ paymentMethods, onBack, slideClass }) {
             </div>
           ) : (
             // `key` por tipo: al cambiar de pila, la nueva entra escalonada.
-            <CardStack key={kind} cards={cards} onEdit={openEdit} onDelete={setDeleting} />
+            <CardStack key={kind} cards={cards} onEdit={openEdit} onDelete={setDeleting} personalPayments={personalPayments} />
           )}
         </div>
       </div>

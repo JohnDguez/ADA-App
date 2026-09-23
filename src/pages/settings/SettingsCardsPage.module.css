@@ -173,3 +173,19 @@
   box-shadow: 0 4px 16px rgba(47, 140, 250, 0.4);
   white-space: nowrap;
 }
+
+.totalPill {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--surface-1);
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+  font-size: 13px;
+  color: var(--text);
+  animation: cardsFadeUp .35s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.totalPillAmount {
+  font-weight: 600;
+}
