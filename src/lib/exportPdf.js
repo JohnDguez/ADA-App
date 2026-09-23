@@ -679,6 +679,7 @@ function drawPageNumbers(doc) {
 export async function generateReportPdf({
   spaceLabel, fromLabel, toLabel, isSharedSpace,
   totals, categories, series, // series: { granularity: 'month'|'week'|'day', points: [{label, gastos, ingresos}] } | null
+  methods = null, // [{label, amount}] Efectivo/Débito/Crédito, o null en Espacio Compartido (entrega C, v0.9.490)
   expenseRows, expenseContributors, // expenseContributors[i] = [{userId, name, avatarUrl, amount}]
   memberTotals, // [{ userId, name, avatarUrl, total }]
   incomes,
