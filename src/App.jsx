@@ -26,6 +26,8 @@ import { useNotifications } from './hooks/useNotifications'
 import { useLocalNotifications, isLocalNotification } from './hooks/useLocalNotifications'
 import { usePeriodIncome } from './hooks/usePeriodIncome'
 import { usePaymentMethods } from './hooks/usePaymentMethods'
+import { computeMissingStatements } from './lib/cardStatements'
+import { today } from './lib/utils'
 import { getBank } from './lib/cardCatalog'
 import { highlightPaymentWhenVisible } from './lib/highlightPayment'
 import { useSpaceStats } from './hooks/useSpaceStats'
@@ -316,6 +318,60 @@ export default function App() {
   // entrega B también las usará el formulario de pagos.
   const paymentMethods = usePaymentMethods(user?.id, handleCardSyncError)
 
+  // ── Estados de cuenta automáticos (entrega C, v0.9.490) ─────────────────
+  // Al cargar Personal (las tarjetas son personales — nunca se generan
+  // viendo un Espacio Compartido, porque ahí `payments` no trae los gastos
+  // personales), revisa cada tarjeta de crédito y crea el pago "Pago
+  // tarjeta X" de cualquier corte que ya haya pasado y no se hubiera
+  // facturado. Corre una vez por carga completa de datos — igual que
+  // `migrateRecurrents`/`ensureTwoAhead` dentro de `usePayments.js`, pero
+  // aquí porque necesita `paymentMethods`, que vive en otro hook — y no de
+  // nuevo hasta que cambien los datos, gracias al candado `generatingRef`
+  // más la idempotencia real de `last_statement_cut` (un segundo intento
+  // mientras el primero sigue en curso no encuentra nada que generar).
+  const generatingRef = useRef(false)
+  useEffect(() => {
+    if (paymentsSpaceId !== null) return // solo Personal
+    if (paymentsLoading || !paymentMethods.loaded) return
+    if (generatingRef.current) return
+    const dueCards = paymentMethods.credit.filter(c => c.cut_day && c.due_day && !c._syncing)
+    if (dueCards.length === 0) return
+
+    generatingRef.current = true
+    ;(async () => {
+      for (const card of dueCards) {
+        const creditPayments = payments.filter(p =>
+          p.payment_method_id === card.id && p.payment_method_kind === 'credit' && p.is_paid
+        )
+        const cycles = computeMissingStatements(card, creditPayments, today())
+        // En orden cronológico: cada ciclo depende de que el anterior ya
+        // haya movido `last_statement_cut` (si no, el próximo cálculo del
+        // ciclo siguiente partiría del mismo punto de nuevo).
+        for (const cycle of cycles) {
+          const bankName = getBank(card.bank).id === 'otro' ? t('cards.otherBank') : getBank(card.bank).name
+          const label = [bankName, card.alias].filter(Boolean).join(' ')
+          const { error } = await addPayment({
+            name: t('cards.statementPaymentName', { name: label }),
+            amount: cycle.amount,
+            category: 'Créditos',
+            due_date: cycle.dueDate,
+            is_variable: false,
+            is_card_statement: true,
+            card_statement_for: card.id,
+            payment_method_id: null,
+            payment_method_kind: 'cash',
+          })
+          if (error) break // no se pudo crear — se reintenta en la próxima carga
+          await paymentMethods.updateStatementFields(card.id, {
+            last_statement_cut: cycle.cycleEnd,
+            carry_over: cycle.carryConsumed ? 0 : card.carry_over,
+          })
+        }
+      }
+      generatingRef.current = false
+    })()
+  }, [paymentsSpaceId, paymentsLoading, paymentMethods.loaded, paymentMethods.credit, payments])
+
   const [tab,            setTab]           = useState(() => {
     const hasActiveSession = sessionStorage.getItem('ada_session')
     return hasActiveSession ? (sessionStorage.getItem('ada_tab') || 'home') : 'home'
@@ -562,6 +618,23 @@ export default function App() {
       if (error) showToast(error.message || t('app.toast.registerPaymentError'))
       return
     }
+    // Estado de cuenta de tarjeta (v0.9.490): el acarreo se calcula contra
+    // el monto ORIGINAL (lo que se debía antes de que el usuario editara
+    // el monto en el modal) — `payment.amount` en este punto es justo ese
+    // original, porque nada lo ha tocado todavía.
+    if (payment.is_card_statement) {
+      const originalDue = Number(payment.amount)
+      const { error, reverted, busy } = await markPaid(payment.id, amount)
+      if (reverted || busy) return
+      if (error) { showToast(t('app.toast.registerPaymentError')); return }
+      const shortfall = Math.round((originalDue - amount) * 100) / 100
+      if (shortfall !== 0 && payment.card_statement_for) {
+        const card = paymentMethods.methods.find(m => m.id === payment.card_statement_for)
+        if (card) paymentMethods.updateStatementFields(card.id, { carry_over: Math.round((Number(card.carry_over) + shortfall) * 100) / 100 })
+      }
+      showToast(t('app.toast.registered', { name: payment.name, amount: fmt(amount) }))
+      return
+    }
     const { error, reverted, busy } = await markPaid(payment.id, amount)
     if (error && !reverted && !busy) showToast(t('app.toast.registerPaymentError'))
   }
@@ -592,6 +665,7 @@ export default function App() {
       }
       return
     }
+    if (payment.is_card_statement) { confirmVariablePaid(payment, amount); return }
     const { error, reverted, busy } = await markPaid(payment.id, amount)
     if (reverted || busy) return
     if (error) showToast(t('app.toast.registerPaymentError'))
@@ -1137,6 +1211,11 @@ export default function App() {
           onOpenPremium={() => setPremiumPageOpen(true)}
           sharedSpaces={sharedSpaces}
           paymentMethods={paymentMethods}
+          // Entrega C (v0.9.490): "gastado en este corte" y "Por pagar en
+          // crédito" en Mis tarjetas necesitan los pagos PERSONALES. Si el
+          // usuario está viendo un Espacio Compartido, `payments` trae los
+          // de ESE espacio — se manda null en vez de un número equivocado.
+          personalPayments={paymentsSpaceId === null ? payments : null}
           initialSection={settingsInitialSection}
           onConsumeInitialSection={() => setSettingsInitialSection(null)}
           returnTab={settingsReturnTab}
