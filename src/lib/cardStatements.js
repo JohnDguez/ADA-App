@@ -14,6 +14,22 @@ function dateOfTimestamp(ts) {
   return dateOf(dateToStr(new Date(ts)))
 }
 
+// FIX v0.9.493 (bug real reportado por Johnatan: "Spent this cycle: $0.00"
+// aun con el fix anterior aplicado — dio con el caso porque probó todo el
+// mismo día). Las ventanas de ciclo son (cycleStart, cycleEnd] — el
+// arranque SIEMPRE excluyente, correcto cuando `cycleStart` es un corte
+// real ya facturado (ese día quedó dentro del ciclo ANTERIOR). Pero para
+// la tarjeta que NUNCA se ha facturado, `cycleStart` se armaba con el
+// mismo día en que se dio de alta la tarjeta — así, cualquier gasto
+// pagado ESE MISMO día (el caso más común al recién crear una tarjeta y
+// probarla) quedaba excluido: "hoy" no es "> hoy". Se resta un día para
+// que el día de alta SÍ cuente en su propio primer ciclo.
+function dayBefore(d) {
+  const r = new Date(d)
+  r.setDate(r.getDate() - 1)
+  return r
+}
+
 // Entrega C de Tarjetas (v0.9.490) — genera los estados de cuenta
 // automáticos de una tarjeta de crédito. Función PURA (sin Supabase):
 // toma el estado de la tarjeta y sus pagos, regresa qué estados de cuenta
@@ -64,7 +80,7 @@ function nextOccurrenceAfter(day, after) {
 // una necesita su propia cuenta). `creditPayments`: mismo filtro que en
 // computeMissingStatements (solo esta tarjeta, is_paid, kind='credit').
 export function currentCycleSpend(card, creditPayments) {
-  const cycleStart = card.last_statement_cut ? dateOf(card.last_statement_cut) : dateOfTimestamp(card.created_at)
+  const cycleStart = card.last_statement_cut ? dateOf(card.last_statement_cut) : dayBefore(dateOfTimestamp(card.created_at))
   return creditPayments
     .filter(p => (p.paid_at ? dateOfTimestamp(p.paid_at) : dateOf(p.due_date)) > cycleStart)
     .reduce((s, p) => s + Number(p.amount), 0)
@@ -75,7 +91,7 @@ export function computeMissingStatements(card, creditPayments, todayDate) {
   const cycles = []
   // `last_statement_cut` es un `date` puro (sin hora) — `dateOf()` directo
   // está bien ahí; `created_at` SÍ es timestamp.
-  let cursor = card.last_statement_cut ? dateOf(card.last_statement_cut) : dateOfTimestamp(card.created_at)
+  let cursor = card.last_statement_cut ? dateOf(card.last_statement_cut) : dayBefore(dateOfTimestamp(card.created_at))
   let carryLeft = Number(card.carry_over) || 0
   let firstCycle = true
   let guard = 0 // red de seguridad: nunca más de 60 ciclos en una sola pasada
