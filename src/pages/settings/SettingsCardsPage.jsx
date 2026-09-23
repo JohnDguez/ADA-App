@@ -1,4 +1,4 @@
-import { useState, useRef, useLayoutEffect, useEffect } from 'react'
+import { useState, useRef, useLayoutEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Plus, ShieldCheck, Loader2 } from 'lucide-react'
 // Import DIRECTO al archivo del ícono (no el barrel) — mismo criterio que
@@ -7,6 +7,7 @@ import { CreditCard } from '@phosphor-icons/react/dist/csr/CreditCard'
 import { PageHero } from '../../components/PageHero'
 import { CreditCardVisual } from '../../components/CreditCardVisual'
 import { CardFormModal } from '../../components/CardFormModal'
+import { CardDetailPanel } from '../../components/CardDetailPanel'
 import { SegmentedControl } from '../../components/SegmentedControl'
 import { ConfirmDeleteModal } from '../../components/ConfirmDeleteModal'
 import { EmptyState } from '../../components/EmptyState'
@@ -15,26 +16,23 @@ import { currentCycleSpend } from '../../lib/cardStatements'
 import { fmt } from '../../lib/utils'
 import styles from './SettingsCardsPage.module.css'
 
-// Mis tarjetas (v0.9.486, entrega A — mockups confirmados con Johnatan).
+// Mis tarjetas (v0.9.486, entrega A). Actualizado en v0.9.495 (mockups
+// confirmados con Johnatan): tocar una tarjeta ya NO la abre en la propia
+// pila — navega DIRECTO a `CardDetailPanel.jsx`, con su historial
+// filtrable y Editar/Eliminar en el menú de 3 puntos de esa pantalla.
 // - Aviso fijo arriba: NO son formas de pago y la app no tiene acceso a
 //   ninguna cuenta; solo sirven para identificar y organizar gastos.
-// - Dos pilas separadas (Crédito / Débito), cada una estilo cartera.
-// - Tocar una tarjeta la sube hasta arriba, con Editar/Eliminar/Cerrar
-//   JUSTO debajo; las demás se encogen y se acomodan abajo (antes, en el
-//   mockup, los botones quedaban tapados por las tarjetas de atrás).
+// - Dos pilas separadas (Crédito / Débito), cada una estilo cartera —
+//   ahora de solo lectura/navegación, sin estado "abierta".
 // Todo animado con entrada y salida (Regla 29): entrada escalonada de las
-// tarjetas, reacomodo de la pila, botones con fundido.
+// tarjetas al cambiar de pila.
 
-const PEEK = 58        // lo que asoma cada tarjeta en la pila cerrada
-const OPEN_GAP = 62    // espacio bajo la tarjeta abierta para los botones
-const BELOW_PEEK = 18  // lo que asoma cada tarjeta bajo la abierta
-const BELOW_SCALE = 0.94
+const PEEK = 58 // lo que asoma cada tarjeta en la pila
 
-function CardStack({ cards, onEdit, onDelete, personalPayments }) {
+function CardStack({ cards, onSelect, personalPayments }) {
   const { t } = useTranslation()
   const wrapRef = useRef(null)
   const [width, setWidth] = useState(0)
-  const [openId, setOpenId] = useState(null)
 
   useLayoutEffect(() => {
     const el = wrapRef.current
@@ -46,30 +44,8 @@ function CardStack({ cards, onEdit, onDelete, personalPayments }) {
     return () => ro.disconnect()
   }, [])
 
-  // Si la tarjeta abierta desaparece (borrada), la pila se cierra.
-  useEffect(() => {
-    if (openId && !cards.some(c => c.id === openId)) setOpenId(null)
-  }, [cards, openId])
-
   const H = width / 1.586
-  const openIdx = cards.findIndex(c => c.id === openId)
-  const isOpen = openIdx >= 0
-  const n = cards.length
-
-  let height = 0
-  const positions = cards.map((c, i) => {
-    if (!isOpen) return { top: i * PEEK, z: i, scale: 1 }
-    if (i === openIdx) return { top: 0, z: 50, scale: 1 }
-    const k = i < openIdx ? i : i - 1
-    return { top: H + OPEN_GAP + k * BELOW_PEEK, z: 10 + k, scale: BELOW_SCALE }
-  })
-  if (n > 0) {
-    height = isOpen
-      ? (n > 1 ? H + OPEN_GAP + (n - 2) * BELOW_PEEK + H * BELOW_SCALE : H + OPEN_GAP)
-      : (n - 1) * PEEK + H
-  }
-
-  const openCard = isOpen ? cards[openIdx] : null
+  const height = cards.length > 0 ? (cards.length - 1) * PEEK + H : 0
 
   return (
     <div ref={wrapRef} className={styles.stack} style={{ '--stack-height': `${height}px` }}>
@@ -80,13 +56,13 @@ function CardStack({ cards, onEdit, onDelete, personalPayments }) {
           role="button"
           tabIndex={0}
           key={c.id}
-          onClick={() => setOpenId(openId === c.id ? null : c.id)}
-          onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setOpenId(openId === c.id ? null : c.id) } }}
+          onClick={() => onSelect(c)}
+          onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onSelect(c) } }}
           className={styles.stackCard}
           style={{
-            '--card-top': `${positions[i].top}px`,
-            '--card-z': positions[i].z,
-            '--card-scale': positions[i].scale,
+            '--card-top': `${i * PEEK}px`,
+            '--card-z': i,
+            '--card-scale': 1,
             '--enter-delay': `${i * 70}ms`,
           }}
           aria-label={getBank(c.bank).name}
@@ -114,21 +90,6 @@ function CardStack({ cards, onEdit, onDelete, personalPayments }) {
           )}
         </div>
       ))}
-
-      <div
-        className={`${styles.actions} ${isOpen ? styles.actionsOpen : ''}`}
-        style={{ '--actions-top': `${H + 12}px` }}
-      >
-        <button type="button" className={styles.actionButton} disabled={!openCard || openCard._syncing} onClick={() => openCard && onEdit(openCard)}>
-          {t('buttons.edit')}
-        </button>
-        <button type="button" className={`${styles.actionButton} ${styles.actionDanger}`} disabled={!openCard || openCard._syncing} onClick={() => openCard && onDelete(openCard)}>
-          {t('buttons.delete')}
-        </button>
-        <button type="button" className={styles.actionButton} onClick={() => setOpenId(null)}>
-          {t('buttons.close')}
-        </button>
-      </div>
     </div>
   )
 }
@@ -139,9 +100,11 @@ export function SettingsCardsPage({ paymentMethods, personalPayments = null, onB
   const [formOpen, setFormOpen] = useState(false)
   const [editing, setEditing] = useState(null)
   const [deleting, setDeleting] = useState(null)
+  const [selectedId, setSelectedId] = useState(null)
 
   const { credit, debit, loaded, addMethod, updateMethod, deleteMethod } = paymentMethods
   const cards = kind === 'credit' ? credit : debit
+  const selectedCard = selectedId ? paymentMethods.methods.find(m => m.id === selectedId) || null : null
 
   function openAdd() { setEditing(null); setFormOpen(true) }
   function openEdit(card) { setEditing(card); setFormOpen(true) }
@@ -156,12 +119,38 @@ export function SettingsCardsPage({ paymentMethods, personalPayments = null, onB
 
   function confirmDelete() {
     if (deleting) deleteMethod(deleting.id)
+    if (selectedId === deleting?.id) setSelectedId(null)
     setDeleting(null)
   }
 
   const deletingName = deleting
     ? [getBank(deleting.bank).id === 'otro' ? t('cards.otherBank') : getBank(deleting.bank).name, deleting.alias].filter(Boolean).join(' ')
     : ''
+
+  if (selectedCard) {
+    return (
+      <>
+        <div className={`${slideClass} ${styles.pageWrapper}`}>
+          <CardDetailPanel
+            card={selectedCard}
+            payments={personalPayments}
+            onBack={() => setSelectedId(null)}
+            onEdit={() => openEdit(selectedCard)}
+            onDelete={() => setDeleting(selectedCard)}
+          />
+        </div>
+
+        <CardFormModal open={formOpen} initial={editing} onSave={handleSave} onClose={() => setFormOpen(false)} />
+        <ConfirmDeleteModal
+          open={!!deleting}
+          title={t('cards.deleteTitle')}
+          message={t('cards.deleteMessage', { name: deletingName })}
+          onConfirm={confirmDelete}
+          onCancel={() => setDeleting(null)}
+        />
+      </>
+    )
+  }
 
   return (
     <>
@@ -214,7 +203,7 @@ export function SettingsCardsPage({ paymentMethods, personalPayments = null, onB
             </div>
           ) : (
             // `key` por tipo: al cambiar de pila, la nueva entra escalonada.
-            <CardStack key={kind} cards={cards} onEdit={openEdit} onDelete={setDeleting} personalPayments={personalPayments} />
+            <CardStack key={kind} cards={cards} onSelect={c => setSelectedId(c.id)} personalPayments={personalPayments} />
           )}
         </div>
       </div>
