@@ -174,11 +174,15 @@
   white-space: nowrap;
 }
 
+/* FIX (reportado por Johnatan): `--surface-1` no existe en el sistema de
+   colores real (ver la nota equivalente en CardDetailPanel.module.css) —
+   sin fondo válido, el texto se sentía "flotando". `var(--surface)` es la
+   variable real de una superficie elevada. */
 .totalPill {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: var(--surface-1);
+  background: var(--surface);
   border-radius: var(--radius-sm);
   padding: 12px 14px;
   font-size: 13px;
