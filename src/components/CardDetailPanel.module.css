@@ -81,11 +81,18 @@
   margin-bottom: 16px;
 }
 
+/* FIX (reportado por Johnatan): `--surface-1` no existe en el sistema de
+   colores real (index.css) — venía de los nombres de marcador de posición
+   de los mockups del Visualizer, nunca verificados contra las variables
+   reales. Sin fondo válido, quedaba transparente y el texto se sentía
+   "flotando" sobre la página. `var(--surface)` es la variable real que
+   usa toda la app para una superficie elevada (ver .card en
+   SettingsShared.module.css). */
 .pill {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: var(--surface-1);
+  background: var(--surface);
   border-radius: var(--radius-sm);
   padding: 12px 14px;
   font-size: 13px;

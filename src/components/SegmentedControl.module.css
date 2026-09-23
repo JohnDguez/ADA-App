@@ -1,9 +1,14 @@
 /* Segmentado con fondo deslizante (v0.9.486). Regla 13: pill permitido
    aquí (segmentados). */
+/* FIX (reportado por Johnatan): el track usaba `var(--bg)`, el MISMO color
+   de fondo de la página — el control entero se fundía con lo que está
+   detrás y la opción no seleccionada quedaba como texto flotando, sin
+   ninguna envolvente visible. `var(--surface)` contrasta con `--bg` en los
+   dos temas y hace que el track se lea como un solo control. */
 .seg {
   position: relative;
   display: flex;
-  background: var(--bg);
+  background: var(--surface);
   border-radius: var(--radius-full);
   padding: 3px;
 }
