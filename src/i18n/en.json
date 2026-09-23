@@ -1480,7 +1480,11 @@
     "statementPaymentName": "{{name}} card payment",
     "statementBadge": "Card statement",
     "cycleSpend": "Spent this cycle: {{amount}}",
-    "pendingCreditTotal": "Owed on credit"
+    "pendingCreditTotal": "Owed on credit",
+    "detail": {
+      "paidWithCard": "Paid with this card",
+      "noHistory": "No payments in this period"
+    }
   },
   "paymentMethod": {
     "label": "Paid with",

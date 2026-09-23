@@ -1480,7 +1480,11 @@
     "statementPaymentName": "Pago tarjeta {{name}}",
     "statementBadge": "Estado de cuenta",
     "cycleSpend": "Gastado en este corte: {{amount}}",
-    "pendingCreditTotal": "Por pagar en crédito"
+    "pendingCreditTotal": "Por pagar en crédito",
+    "detail": {
+      "paidWithCard": "Pagado con esta tarjeta",
+      "noHistory": "Sin pagos en este periodo"
+    }
   },
   "paymentMethod": {
     "label": "Se paga con",
