@@ -438,11 +438,19 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
       setError('')
       if (!amount || isNaN(parseFloat(amount)) || parseFloat(amount) <= 0) { setError(t('paymentModal.editCopy.amountError')); return }
       setSaving(true)
-      // Payload mínimo a propósito — solo `amount`. No se reenvían
-      // name/category/due_date/recur_freq (aunque el state los traiga
-      // cargados desde `initial`) para que quede claro en el historial
-      // de red/DB que esta acción toca únicamente el monto de esta copia.
-      await onSave({ amount: parseFloat(amount) })
+      // Payload de ESTA copia únicamente — nunca name/category/due_date/
+      // recur_freq (esos son de toda la serie, se editan desde el master).
+      // v0.9.494 (pedido de Johnatan, mockup confirmado): además del
+      // monto, esta copia también puede ajustar CUÁNDO se pagó y CON QUÉ
+      // se pagó — "Fecha de pago" solo tiene sentido si ya está pagada
+      // (una pendiente aún no tiene una que corregir). Un cambio de
+      // `paid_at` puede mover el gasto a otro periodo; App.jsx ya revisa
+      // el remanente afectado con el mismo criterio que la edición normal
+      // (checkPeriodIncomeConflict, v0.9.258).
+      const payload = { amount: parseFloat(amount) }
+      if (initial.is_paid) payload.paid_at = paidAt ? new Date(paidAt + 'T12:00:00').toISOString() : initial.paid_at
+      if (methodsAvailable) Object.assign(payload, methodPayload())
+      await onSave(payload)
       setSaving(false); onClose()
     }
 
@@ -485,6 +493,21 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
               <Field label={t('paymentModal.amountLabel')}>
                 <AmountInput className="field-input" value={amount} onChange={e => setAmount(e.target.value)} placeholder="0.00" />
               </Field>
+              {/* Fecha de pago (v0.9.494) — solo si esta copia YA está
+                  pagada; una pendiente no tiene una que corregir todavía. */}
+              {initial.is_paid && (
+                <Field label={t('paymentModal.paidDateLabel')}>
+                  <DatePicker value={paidAt} onChange={setPaidAt} />
+                </Field>
+              )}
+              {/* Se paga con (v0.9.494) — mismo campo que el resto del
+                  formulario; oculto en Espacio Compartido. Sin `Field`:
+                  `PaymentMethodField` ya trae su propio label. */}
+              {methodsAvailable && (
+                <div className={styles.fieldGroup}>
+                  <PaymentMethodField methods={paymentMethods.methods} value={methodId} onChange={setMethodId} />
+                </div>
+              )}
             </div>
 
             <button onClick={handleSaveCopyAmount} disabled={saving || !canWrite} className={`btn-primary ${styles.saveButtonSpacing}`} style={{ opacity: (saving || !canWrite) ? 0.7 : 1 }}>
