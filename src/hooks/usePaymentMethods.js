@@ -144,12 +144,22 @@ export function usePaymentMethods(userId, onSyncError = null) {
     return run({ op: 'delete', id, action: 'cardDelete' })
   }
 
+  // Entrega C (v0.9.490) — SOLO para el sistema de estados de cuenta
+  // (cardStatements.js / App.jsx): actualiza `carry_over` y/o
+  // `last_statement_cut`. Nunca pasa por `clean()` (esos campos no son del
+  // formulario de usuario) y NO cuenta como "edición" de la tarjeta a
+  // ojos del usuario, pero usa el mismo camino optimista + `apply_batch`
+  // que el resto del hook, así que un fallo se revierte y avisa igual.
+  function updateStatementFields(id, fields) {
+    return run({ op: 'update', id, fields, action: 'cardStatementUpdate' })
+  }
+
   return {
     methods,
     credit: methods.filter(m => m.kind === 'credit'),
     debit: methods.filter(m => m.kind === 'debit'),
     loaded,
-    addMethod, updateMethod, deleteMethod,
+    addMethod, updateMethod, deleteMethod, updateStatementFields,
     refetch: fetchMethods,
   }
 }
