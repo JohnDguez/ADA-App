@@ -16,6 +16,7 @@ import { DatePicker } from '../../components/DatePicker'
 import { dateToStr, todayStr, dateOf, fmt, getCategoryLabel, cobroPeriod, addDays, today, MONTHS_SHORT } from '../../lib/utils'
 import { buildCsv, downloadCsv } from '../../lib/exportCsv'
 import { generateReportPdf } from '../../lib/exportPdf'
+import { getBank } from '../../lib/cardCatalog'
 import styles from './SettingsExportPage.module.css'
 
 // Sub-página "Exportar datos" — Fases 1 y 2 del módulo de Reportes (ver
@@ -278,6 +279,20 @@ export function SettingsExportPage({ profile, sharedSpaces, onOpenPremium, onBac
 
   // Gastos por categoría, TODAS (sin recorte — Johnatan: "no podrán
   // desplegarlo"), ordenadas de mayor a menor monto.
+  function buildMethodBreakdown(gastos) {
+    const sums = { cash: 0, debit: 0, credit: 0 }
+    for (const p of gastos) {
+      if (p.is_postponed) continue
+      const kind = p.payment_method_kind || 'cash'
+      sums[kind] = (sums[kind] || 0) + Number(p.amount)
+    }
+    return [
+      { label: t('paymentMethod.cash'), amount: sums.cash },
+      { label: t('cards.kind.debit'), amount: sums.debit },
+      { label: t('cards.kind.credit'), amount: sums.credit },
+    ]
+  }
+
   function buildCategoryBreakdown(gastos) {
     const byCat = {}
     // `!p.is_postponed` — mismo criterio que totals.gastos: no debe sumar.
@@ -543,6 +558,37 @@ export function SettingsExportPage({ profile, sharedSpaces, onOpenPremium, onBac
     return () => clearTimeout(debounceRef.current)
   }, [includeGastos, includeIngresos, fetchGastos, fetchAllIngresos])
 
+  // "Método de pago" (entrega C, v0.9.490) — CSV y PDF. Solo tiene sentido
+  // en Personal: las tarjetas no existen en un Espacio Compartido, así que
+  // ahí todo pago es Efectivo por definición (nunca se muestra la columna).
+  const methodFilters = [
+    { value: 'all', label: t('settingsExport.method.all') },
+    { value: 'cash', label: t('paymentMethod.cash') },
+    { value: 'debit', label: t('cards.kind.debit') },
+    { value: 'credit', label: t('cards.kind.credit') },
+  ]
+  const [methodFilter, setMethodFilter] = useState('all')
+  // Tarjetas del usuario, para traducir `payment_method_id` a un nombre en
+  // el CSV/PDF — se cargan una sola vez (no cambian durante una sesión de
+  // exportar) y se resumen en un mapa por id.
+  const [cardsById, setCardsById] = useState({})
+  useEffect(() => {
+    let alive = true
+    supabase.from('payment_methods').select('id, bank, alias').then(({ data }) => {
+      if (alive && data) setCardsById(Object.fromEntries(data.map(c => [c.id, c])))
+    })
+    return () => { alive = false }
+  }, [])
+
+  function methodLabel(p) {
+    const kind = p.payment_method_kind || 'cash'
+    if (kind === 'cash') return t('paymentMethod.cash')
+    const card = cardsById[p.payment_method_id]
+    if (!card) return t(kind === 'credit' ? 'paymentMethod.deletedCredit' : 'paymentMethod.deletedDebit')
+    const bank = getBank(card.bank)
+    return [bank.id === 'otro' ? t('cards.otherBank') : bank.name, card.alias].filter(Boolean).join(' ')
+  }
+
   async function handleDownloadCsv() {
     if (!includeGastos && !includeIngresos) return
     setDownloading(true)
@@ -551,12 +597,18 @@ export function SettingsExportPage({ profile, sharedSpaces, onOpenPremium, onBac
       t('settingsExport.csv.date'), t('settingsExport.csv.recordType'), t('settingsExport.csv.concept'),
       t('settingsExport.csv.category'), t('settingsExport.csv.amount'), t('settingsExport.csv.paid'),
       t('settingsExport.csv.amountType'), t('settingsExport.csv.space'), t('settingsExport.csv.contributors'),
+      // Columna nueva (entrega C, v0.9.490) — solo con datos en Personal;
+      // en un Espacio Compartido queda vacía en cada fila (arriba).
+      t('settingsExport.csv.paymentMethod'),
     ]
     const rows = []
     const spaceLabel = space === 'personal' ? t('settingsExport.space.personal') : (selectedSpaceEntry?.space.name || '')
 
     if (includeGastos) {
-      const gastos = await fetchGastos()
+      let gastos = await fetchGastos()
+      if (space === 'personal' && methodFilter !== 'all') {
+        gastos = gastos.filter(p => (p.payment_method_kind || 'cash') === methodFilter)
+      }
       const contribMap = await contributionsTextByPaymentId(gastos.map(p => p.id))
       for (const p of gastos) {
         rows.push([
@@ -569,6 +621,7 @@ export function SettingsExportPage({ profile, sharedSpaces, onOpenPremium, onBac
           p.is_variable ? t('settingsExport.csv.variable') : t('settingsExport.csv.fixed'),
           spaceLabel,
           contribMap[p.id] || '',
+          space === 'personal' ? methodLabel(p) : '',
         ])
       }
     }
@@ -585,6 +638,7 @@ export function SettingsExportPage({ profile, sharedSpaces, onOpenPremium, onBac
           '',
           '',
           spaceLabel,
+          '',
           '',
         ])
       }
@@ -606,7 +660,10 @@ export function SettingsExportPage({ profile, sharedSpaces, onOpenPremium, onBac
     if (!includeGastos && !includeIngresos && !includeGoals) return
     setDownloading(true)
 
-    const gastos = includeGastos ? await fetchGastos() : []
+    let gastos = includeGastos ? await fetchGastos() : []
+    if (space === 'personal' && methodFilter !== 'all') {
+      gastos = gastos.filter(p => (p.payment_method_kind || 'cash') === methodFilter)
+    }
     const ingresosRaw = includeIngresos ? await fetchAllIngresos() : []
     const isSharedSpace = space !== 'personal'
 
@@ -639,6 +696,7 @@ export function SettingsExportPage({ profile, sharedSpaces, onOpenPremium, onBac
       gastos: t('settingsExport.expenses'),
       balance: t('settingsExport.pdf.balance'),
       categoryChart: t('settingsExport.pdf.categoryChart'),
+      methodChart: t('settingsExport.pdf.methodChart'),
       subCategoryChart: t('settingsExport.pdf.subCategoryChart'),
       categoryChartContinued: t('settingsExport.pdf.categoryChartContinued'),
       trendChart: t('settingsExport.pdf.trendChart'),
@@ -679,6 +737,10 @@ export function SettingsExportPage({ profile, sharedSpaces, onOpenPremium, onBac
       isSharedSpace,
       totals,
       categories: includeGastos ? buildCategoryBreakdown(gastos) : [],
+      // Por método de pago (entrega C, v0.9.490) — solo Personal; en un
+      // Espacio Compartido las tarjetas no aplican, se manda null y
+      // exportPdf.js omite la sección entera.
+      methods: (includeGastos && space === 'personal') ? buildMethodBreakdown(gastos) : null,
       series,
       expenseRows: gastos.map(p => ({
         // "Pagado" ahora es la ÚNICA columna de fecha (Johnatan: el Sí/No
@@ -778,6 +840,15 @@ export function SettingsExportPage({ profile, sharedSpaces, onOpenPremium, onBac
               )}
             </div>
           </div>
+
+          {/* Método de pago (entrega C, v0.9.490) — solo Personal: en un
+              Espacio Compartido las tarjetas no aplican. */}
+          {space === 'personal' && includeGastos && (
+            <div className={styles.fieldGroup}>
+              <div className="field-label">{t('settingsExport.method.label')}</div>
+              <Select value={methodFilter} onChange={setMethodFilter} options={methodFilters} />
+            </div>
+          )}
 
           <div className={styles.fieldGroup}>
             <div className="field-label">{t('settingsExport.spaceLabel')}</div>
