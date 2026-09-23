@@ -1337,7 +1337,8 @@
       "yes": "Sí",
       "no": "No",
       "variable": "Variable",
-      "fixed": "Fijo"
+      "fixed": "Fijo",
+      "paymentMethod": "Método de pago"
     },
     "shortcuts": {
       "currentPeriod": "Periodo actual",
@@ -1372,10 +1373,15 @@
       "subExpenseList": "Detalle de cada gasto en el rango elegido",
       "subMemberSpending": "Cuánto ha puesto cada quien",
       "subIncome": "Todos los ingresos registrados en el rango elegido",
-      "subGoals": "Resumen de tus metas de ahorro en el rango elegido"
+      "subGoals": "Resumen de tus metas de ahorro en el rango elegido",
+      "methodChart": "Por método de pago"
     },
     "salaryType": "Nómina",
-    "fundDepositType": "Aportación al Fondo"
+    "fundDepositType": "Aportación al Fondo",
+    "method": {
+      "label": "Método de pago",
+      "all": "Todos"
+    }
   },
   "sync": {
     "syncing": "Sincronizando",
@@ -1470,7 +1476,11 @@
       "nextMonth": "El límite cae en el mes siguiente al corte.",
       "sameDay": "El límite no puede ser el mismo día del corte.",
       "help": "Arrastra cualquiera de los dos marcadores, toca un día para mover el que está seleccionado arriba, o escríbelo."
-    }
+    },
+    "statementPaymentName": "Pago tarjeta {{name}}",
+    "statementBadge": "Estado de cuenta",
+    "cycleSpend": "Gastado en este corte: {{amount}}",
+    "pendingCreditTotal": "Por pagar en crédito"
   },
   "paymentMethod": {
     "label": "Se paga con",

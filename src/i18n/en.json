@@ -1337,7 +1337,8 @@
       "yes": "Yes",
       "no": "No",
       "variable": "Variable",
-      "fixed": "Fixed"
+      "fixed": "Fixed",
+      "paymentMethod": "Payment method"
     },
     "shortcuts": {
       "currentPeriod": "Current period",
@@ -1372,10 +1373,15 @@
       "subExpenseList": "Detail of every expense in the chosen range",
       "subMemberSpending": "How much each person has put in",
       "subIncome": "All income recorded in the chosen range",
-      "subGoals": "Summary of your savings goals in the chosen range"
+      "subGoals": "Summary of your savings goals in the chosen range",
+      "methodChart": "By payment method"
     },
     "salaryType": "Salary",
-    "fundDepositType": "Fund contribution"
+    "fundDepositType": "Fund contribution",
+    "method": {
+      "label": "Payment method",
+      "all": "All"
+    }
   },
   "sync": {
     "syncing": "Syncing",
@@ -1470,7 +1476,11 @@
       "nextMonth": "The due date falls in the month after closing.",
       "sameDay": "The due day can't be the same as the closing day.",
       "help": "Drag either marker, tap a day to move the one selected above, or type it."
-    }
+    },
+    "statementPaymentName": "{{name}} card payment",
+    "statementBadge": "Card statement",
+    "cycleSpend": "Spent this cycle: {{amount}}",
+    "pendingCreditTotal": "Owed on credit"
   },
   "paymentMethod": {
     "label": "Paid with",
