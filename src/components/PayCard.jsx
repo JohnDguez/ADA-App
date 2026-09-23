@@ -196,7 +196,12 @@ function PayCardImpl({ payment: p, cfg, paymentMethodsList = [], onChangeMethod,
     if (phase !== 'idle') return
     setPhase('filling')
     after(FILL_MS, async () => {
-      if (p.is_variable) {
+      // Estado de cuenta de tarjeta (v0.9.490): reutiliza el MISMO modal de
+      // monto que un pago variable — ya precarga `payment.amount` (aquí, lo
+      // debido), y editarlo hacia abajo o hacia arriba es justo cómo se
+      // registra un pago parcial o de más (App.jsx → confirmVariablePaid
+      // calcula el acarreo contra el monto original).
+      if (p.is_variable || p.is_card_statement) {
         setPhase('waitingModal')
         const amount = await onRequestVariableAmount(p)
         if (amount == null) {
@@ -226,6 +231,11 @@ function PayCardImpl({ payment: p, cfg, paymentMethodsList = [], onChangeMethod,
   // Tarjeta con la que se paga (v0.9.487); null = efectivo, o tarjeta
   // eliminada (el pago conserva su tipo, ver payments_method.sql).
   const paymentMethod = p.payment_method_id ? paymentMethodsList.find(m => m.id === p.payment_method_id) : null
+  // Estado de cuenta (v0.9.490): distinto de "con qué se pagó" — aquí
+  // importa A QUÉ TARJETA le pertenece la factura (`card_statement_for`),
+  // que sigue siendo la misma incluso si esto se paga en efectivo.
+  const statementCard = p.is_card_statement && p.card_statement_for
+    ? paymentMethodsList.find(m => m.id === p.card_statement_for) : null
   const isPending = !p.is_paid && !p.postponed && !p.is_postponed && !p.paused
   const freqLabel = p.is_recurrent && p.recur_freq && !p.is_installment ? getFrequencyLabel(p.recur_freq) : null
   const instLabel = p.is_installment ? `Pago ${p.current_installment}/${p.total_installments}` : null
@@ -364,6 +374,12 @@ function PayCardImpl({ payment: p, cfg, paymentMethodsList = [], onChangeMethod,
               <div className={styles.instLabel}>{instLabel}</div>
             )}
             {/* Método de pago (v0.9.487): solo cuando NO es efectivo. */}
+            {statementCard && (
+              <div className={styles.methodLabel}>
+                <span className={styles.methodSwatch} style={{ '--swatch-color': bankColorVar(statementCard.bank) }} />
+                {t('cards.statementBadge')}
+              </div>
+            )}
             {p.payment_method_kind && p.payment_method_kind !== 'cash' && (
               <div className={styles.methodLabel}>
                 <span className={styles.methodSwatch} style={{ '--swatch-color': paymentMethod ? bankColorVar(paymentMethod.bank) : 'var(--border-mid)' }} />

@@ -111,3 +111,15 @@
 .network {
   flex-shrink: 0;
 }
+
+/* Gastado en este corte (entrega C, v0.9.490) — dentro del flujo normal de
+   la tarjeta, no superpuesto: nunca choca con el número ni con la red. */
+.cycleChip {
+  position: relative;
+  z-index: 1;
+  align-self: flex-start;
+  background: rgba(255, 255, 255, 0.16);
+  border-radius: 6px;
+  padding: 4px 8px;
+  font-size: 11px;
+}

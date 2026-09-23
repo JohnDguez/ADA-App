@@ -9,7 +9,11 @@ import styles from './CreditCardVisual.module.css'
 // banco (transition de background-color; el degradado es una capa encima,
 // así el cambio de color sí se anima). Nunca muestra un número completo:
 // solo los últimos 4 dígitos, si el usuario los dio.
-export function CreditCardVisual({ card, className = '' }) {
+// `cycleSpendLabel` (opcional, entrega C v0.9.490): texto ya formateado
+// ("Gastado en este corte: $X") que se muestra dentro del layout normal
+// de la tarjeta, entre el número y la fila de abajo — nunca superpuesto,
+// para no chocar con el ícono de red ni la info de corte/límite.
+export function CreditCardVisual({ card, className = '', cycleSpendLabel = null }) {
   const { t } = useTranslation()
   const bank = getBank(card.bank)
   const isCredit = card.kind === 'credit'
@@ -31,6 +35,8 @@ export function CreditCardVisual({ card, className = '' }) {
       </div>
 
       <div className={styles.number}>{card.last4 ? `•••• ${card.last4}` : ''}</div>
+
+      {cycleSpendLabel && <div className={styles.cycleChip}>{cycleSpendLabel}</div>}
 
       <div className={styles.bottom}>
         <span className={styles.meta}>
