@@ -26,8 +26,8 @@ import { useNotifications } from './hooks/useNotifications'
 import { useLocalNotifications, isLocalNotification } from './hooks/useLocalNotifications'
 import { usePeriodIncome } from './hooks/usePeriodIncome'
 import { usePaymentMethods } from './hooks/usePaymentMethods'
-import { computeMissingStatements } from './lib/cardStatements'
-import { today } from './lib/utils'
+import { computeMissingStatements, currentCycleSpend } from './lib/cardStatements'
+import { today, todayStr } from './lib/utils'
 import { getBank } from './lib/cardCatalog'
 import { highlightPaymentWhenVisible } from './lib/highlightPayment'
 import { useSpaceStats } from './hooks/useSpaceStats'
@@ -41,6 +41,7 @@ import { RailFab } from './components/RailFab'
 import { NotificationsPanel } from './components/NotificationsPanel'
 import { PaymentModal } from './components/PaymentModal'
 import { ChangeMethodModal } from './components/ChangeMethodModal'
+import { PayCardNowModal } from './components/PayCardNowModal'
 import { VariableAmountModal } from './components/VariableAmountModal'
 import { ConfirmNextPeriodPayModal } from './components/ConfirmNextPeriodPayModal'
 import { InstallmentAbonarModal } from './components/InstallmentAbonarModal'
@@ -239,6 +240,62 @@ export default function App() {
     showToast(t(`sync.body.${action}`, { name: label }))
     localNotifs.add({ type: 'sync_error', action, payment_name: label, space_id: paymentsSpaceId || null, tab: 'payments' })
   }
+  // Entrega C+ (v0.9.497, pedido de Johnatan: "como vas a dejar eso
+  // pendiente, estamos por lanzar"): cualquier pago que representa dinero
+  // A FAVOR de una tarjeta de crédito (el estado de cuenta automático, o
+  // un abono manual — ambos con `card_statement_for` puesto) puede editarse,
+  // desmarcarse o borrarse DESPUÉS de estar pagado, como cualquier pago
+  // normal. Si eso pasa, el crédito que ya se le había aplicado a la
+  // tarjeta (`carry_over`) tiene que ajustarse — si no, la tarjeta se
+  // queda con un crédito fantasma (o una deuda fantasma) que no
+  // corresponde a ningún pago real. `delta` es lo que hay que SUMAR a
+  // `carry_over` (positivo = ahora se debe más / se aplicó menos crédito
+  // que antes; negativo = se aplicó más). El pago-al-instante de un
+  // estado de cuenta (unpaid→paid vía `confirmVariablePaid`) ya calcula su
+  // propio ajuste por separado — esto cubre SOLO lo que pasa DESPUÉS de
+  // ese momento (edición posterior, desmarcar, borrar).
+  // "Pagar ahora" (v0.9.497): crea un pago normal ya pagado, con la
+  // fecha de hoy, categoría "Créditos" y `card_statement_for` apuntando a
+  // esta tarjeta (así se identifica como "crédito a favor" en su
+  // historial y en `adjustCardCarryOver` de arriba si luego se edita o se
+  // borra). `payment_method_id`/`kind`: Efectivo o Débito — nunca crédito,
+  // el modal ya excluye esa opción. Optimista: se crea al instante
+  // (`addPayment`) y, si tuvo éxito, se descuenta de `carry_over` — dos
+  // escrituras secuenciales, mismo criterio ya aceptado que la generación
+  // automática de estados de cuenta (v0.9.490).
+  async function handlePayCardNow(card, { amount, methodId }) {
+    const debitCard = methodId ? paymentMethods.methods.find(m => m.id === methodId) : null
+    const bankLabel = getBank(card.bank).id === 'otro' ? t('cards.otherBank') : getBank(card.bank).name
+    const label = [bankLabel, card.alias].filter(Boolean).join(' ')
+    const row = {
+      name: t('cards.earlyPaymentName', { name: label }),
+      amount,
+      category: 'Créditos',
+      due_date: todayStr(),
+      is_variable: false,
+      is_recurrent: false,
+      is_installment: false,
+      is_card_statement: false,
+      card_statement_for: card.id,
+      payment_method_id: debitCard ? debitCard.id : null,
+      payment_method_kind: debitCard ? 'debit' : 'cash',
+      is_paid: true,
+      paid_at: new Date().toISOString(),
+    }
+    setPayCardNowCard(null)
+    const { error } = await addPayment(row)
+    if (error) { showToast(t('app.toast.saveError')); return }
+    adjustCardCarryOver(card.id, -amount)
+    showToast(t('cards.payNow.success', { name: label, amount: fmt(amount) }))
+  }
+
+  function adjustCardCarryOver(cardId, delta) {
+    if (!cardId || !delta) return
+    const card = paymentMethods.methods.find(m => m.id === cardId)
+    if (!card) return
+    paymentMethods.updateStatementFields(cardId, { carry_over: Math.round((Number(card.carry_over) + delta) * 100) / 100 })
+  }
+
   // Mis tarjetas (v0.9.486): aviso + notificación que lleva a Ajustes →
   // Mis tarjetas.
   function handleCardSyncError({ method, action }) {
@@ -403,6 +460,9 @@ export default function App() {
   const [settingsInitialSection, setSettingsInitialSection] = useState(null)
   // "Cambiar método de pago" (v0.9.487) — afecta solo a ESE pago.
   const [changeMethodPayment, setChangeMethodPayment] = useState(null)
+  // "Pagar ahora" (v0.9.497) — adelantar el pago de una tarjeta de
+  // crédito antes de su corte.
+  const [payCardNowCard, setPayCardNowCard] = useState(null)
   // Tab de origen cuando se entra a una sección de Ajustes por un atajo
   // directo (ej. "Editar" desde el switcher de Espacio Compartido) — el
   // PRIMER "atrás" desde ahí debe regresar a este tab, no al menú
@@ -761,6 +821,11 @@ export default function App() {
     }
     const { error, reverted, busy } = await markUnpaid(id)
     if (reverted || busy) return
+    // Ajuste de crédito (v0.9.497): desmarcar como pagado un estado de
+    // cuenta/abono ya pagado deshace TODO el crédito que había aplicado.
+    if (!error && payment?.card_statement_for && payment.is_paid) {
+      adjustCardCarryOver(payment.card_statement_for, Number(payment.amount))
+    }
     if (error) showToast(typeof error === 'string' ? error : t('app.toast.unmarkError'))
     else showToast(t('app.toast.markedUnpaid', { name: payment?.name || t('app.toast.fallbackPaymentName') }))
   }
@@ -778,7 +843,12 @@ export default function App() {
       return
     }
     const { error, reverted, busy } = await markUnpaid(id)
-    if (error && !reverted && !busy) showToast(typeof error === 'string' ? error : t('app.toast.unmarkError'))
+    if (reverted || busy) return
+    // Ajuste de crédito (v0.9.497) — mismo criterio que handleMarkUnpaid.
+    if (!error && payment?.card_statement_for && payment.is_paid) {
+      adjustCardCarryOver(payment.card_statement_for, Number(payment.amount))
+    }
+    if (error) showToast(typeof error === 'string' ? error : t('app.toast.unmarkError'))
   }
   async function handlePostpone(payment) {
     const { error, reverted, busy } = await postponePayment(payment)
@@ -824,6 +894,11 @@ export default function App() {
       // y handleSyncError ya avisó — no mostrar "eliminado".
       const { reverted, busy } = await deletePayment(id)
       if (reverted || busy) return
+      // Ajuste de crédito (v0.9.497): borrar un estado de cuenta/abono ya
+      // pagado deshace el crédito que había aplicado a esa tarjeta.
+      if (payment?.card_statement_for && payment.is_paid) {
+        adjustCardCarryOver(payment.card_statement_for, Number(payment.amount))
+      }
     }
     showToast(t('app.toast.paymentDeleted'))
   }
@@ -926,6 +1001,14 @@ export default function App() {
         if (reverted || busy) return
         if (error) { showToast(t('app.toast.saveError')); return }
         showToast(t('app.toast.paymentUpdated'))
+        // Ajuste de crédito (v0.9.497): edité el monto de un pago YA pagado
+        // que representa crédito a favor de una tarjeta (estado de cuenta
+        // o abono manual) — el crédito aplicado tenía que ser el monto
+        // viejo; ahora es el nuevo. Delta = viejo - nuevo.
+        if (edited.card_statement_for && edited.is_paid && data.amount !== undefined) {
+          const delta = Math.round((Number(edited.amount) - Number(data.amount)) * 100) / 100
+          adjustCardCarryOver(edited.card_statement_for, delta)
+        }
         // Bug real reportado por Johnatan (v0.9.258): si la fecha de pago
         // (paid_at) se edita y eso mueve el gasto hacia OTRO periodo, y ese
         // periodo ya tiene un remanente agregado (PaymentsPage.jsx →
@@ -1217,6 +1300,7 @@ export default function App() {
           // usuario está viendo un Espacio Compartido, `payments` trae los
           // de ESE espacio — se manda null en vez de un número equivocado.
           personalPayments={paymentsSpaceId === null ? payments : null}
+          onPayCardNow={setPayCardNowCard}
           initialSection={settingsInitialSection}
           onConsumeInitialSection={() => setSettingsInitialSection(null)}
           returnTab={settingsReturnTab}
@@ -1275,6 +1359,19 @@ export default function App() {
           })
         }}
         onClose={() => setChangeMethodPayment(null)}
+      />
+
+      <PayCardNowModal
+        open={!!payCardNowCard}
+        card={payCardNowCard}
+        cycleSpend={payCardNowCard && paymentsSpaceId === null
+          ? currentCycleSpend(payCardNowCard, payments.filter(p =>
+              p.payment_method_id === payCardNowCard.id && p.payment_method_kind === 'credit' && p.is_paid
+            ))
+          : 0}
+        methods={paymentMethods.methods}
+        onSave={fields => handlePayCardNow(payCardNowCard, fields)}
+        onClose={() => setPayCardNowCard(null)}
       />
 
       <PaymentModal
