@@ -80,7 +80,7 @@ function nextOccurrenceAfter(day, after) {
 // una necesita su propia cuenta). `creditPayments`: mismo filtro que en
 // computeMissingStatements (solo esta tarjeta, is_paid, kind='credit').
 // Lo ya abonado a esta tarjeta ANTES del corte, dentro del ciclo en curso
-// (v0.9.497, \"Pagar ahora\") — mismo criterio de ventana que
+// (v0.9.497, "Pagar ahora") — mismo criterio de ventana que
 // currentCycleSpend(). `abonoPayments`: pagos con `card_statement_for` ===
 // card.id, `is_card_statement` false (para no contar el estado de cuenta
 // automático, que es una cosa distinta) y `is_paid` true.
@@ -134,4 +134,17 @@ export function computeMissingStatements(card, creditPayments, todayDate) {
     cursor = cycleEnd
   }
   return cycles
+}
+
+// Lo que REALMENTE se debe en el ciclo en curso (v0.9.501, pedido de
+// Johnatan: mostrar gasto y abono por separado obligaba al usuario a
+// restar mentalmente). Un solo número, nunca negativo — si el abono
+// supera lo gastado, se debe $0 (el sobrante ya vive como crédito a favor
+// para el siguiente corte, vía `payment_methods.carry_over`). Centralizado
+// aquí para que la tarjeta (lista y detalle) y la pastilla del detalle
+// usen exactamente el mismo cálculo.
+export function currentPeriodOwed(card, creditPayments, abonoPayments) {
+  const spend = currentCycleSpend(card, creditPayments)
+  const abonos = currentCycleAbonos(card, abonoPayments)
+  return Math.max(0, Math.round((spend - abonos) * 100) / 100)
 }
