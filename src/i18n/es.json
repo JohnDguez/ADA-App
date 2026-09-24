@@ -1483,7 +1483,23 @@
     "pendingCreditTotal": "Por pagar en crédito",
     "detail": {
       "paidWithCard": "Pagado con esta tarjeta",
-      "noHistory": "Sin pagos en este periodo"
+      "noHistory": "Sin pagos en este periodo",
+      "abono": "Abono"
+    },
+    "alreadyAbonado": "Ya abonaste {{amount}}",
+    "earlyPaymentName": "Abono a {{name}}",
+    "payNow": {
+      "button": "Pagar ahora",
+      "title": "Pagar {{name}} ahora",
+      "subtitle": "Llevas {{amount}} gastados en este corte.",
+      "subtitleZero": "Aún no llevas gastos en este corte. Puedes adelantar un pago de todos modos.",
+      "amountLabel": "Monto a pagar",
+      "amountError": "Escribe un monto mayor a $0.",
+      "noteFull": "Pagas todo lo gastado hasta hoy. Si no vuelves a usar la tarjeta antes del corte, no se genera ningún estado de cuenta.",
+      "notePartial": "Pagas una parte. El corte solo te cobrará los {{amount}} restantes, más lo que gastes de aquí a esa fecha.",
+      "noteOver": "Pagas de más — el excedente se resta de tu siguiente estado de cuenta.",
+      "confirm": "Confirmar pago",
+      "success": "Pagaste {{amount}} a {{name}}"
     }
   },
   "paymentMethod": {

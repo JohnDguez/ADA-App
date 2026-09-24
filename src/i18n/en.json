@@ -1483,7 +1483,23 @@
     "pendingCreditTotal": "Owed on credit",
     "detail": {
       "paidWithCard": "Paid with this card",
-      "noHistory": "No payments in this period"
+      "noHistory": "No payments in this period",
+      "abono": "Payment"
+    },
+    "alreadyAbonado": "Already paid {{amount}}",
+    "earlyPaymentName": "Payment to {{name}}",
+    "payNow": {
+      "button": "Pay now",
+      "title": "Pay {{name}} now",
+      "subtitle": "You've spent {{amount}} this cycle.",
+      "subtitleZero": "You haven't spent anything this cycle yet. You can still make an early payment.",
+      "amountLabel": "Amount to pay",
+      "amountError": "Enter an amount greater than $0.",
+      "noteFull": "You're paying everything spent so far. If you don't use the card again before the closing date, no statement will be generated.",
+      "notePartial": "You're paying part of it. The closing date will only bill the remaining {{amount}}, plus anything you spend before then.",
+      "noteOver": "You're paying more than owed — the extra will be subtracted from your next statement.",
+      "confirm": "Confirm payment",
+      "success": "You paid {{amount}} to {{name}}"
     }
   },
   "paymentMethod": {
