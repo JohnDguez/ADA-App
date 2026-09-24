@@ -79,6 +79,18 @@ function nextOccurrenceAfter(day, after) {
 // (pedido de Johnatan: como los cortes no coinciden entre tarjetas, cada
 // una necesita su propia cuenta). `creditPayments`: mismo filtro que en
 // computeMissingStatements (solo esta tarjeta, is_paid, kind='credit').
+// Lo ya abonado a esta tarjeta ANTES del corte, dentro del ciclo en curso
+// (v0.9.497, \"Pagar ahora\") — mismo criterio de ventana que
+// currentCycleSpend(). `abonoPayments`: pagos con `card_statement_for` ===
+// card.id, `is_card_statement` false (para no contar el estado de cuenta
+// automático, que es una cosa distinta) y `is_paid` true.
+export function currentCycleAbonos(card, abonoPayments) {
+  const cycleStart = card.last_statement_cut ? dateOf(card.last_statement_cut) : dayBefore(dateOfTimestamp(card.created_at))
+  return abonoPayments
+    .filter(p => dateOfTimestamp(p.paid_at) > cycleStart)
+    .reduce((s, p) => s + Number(p.amount), 0)
+}
+
 export function currentCycleSpend(card, creditPayments) {
   const cycleStart = card.last_statement_cut ? dateOf(card.last_statement_cut) : dayBefore(dateOfTimestamp(card.created_at))
   return creditPayments
