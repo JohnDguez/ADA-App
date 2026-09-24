@@ -12,7 +12,7 @@ import { SegmentedControl } from '../../components/SegmentedControl'
 import { ConfirmDeleteModal } from '../../components/ConfirmDeleteModal'
 import { EmptyState } from '../../components/EmptyState'
 import { getBank } from '../../lib/cardCatalog'
-import { currentCycleSpend } from '../../lib/cardStatements'
+import { currentCycleSpend, currentCycleAbonos } from '../../lib/cardStatements'
 import { fmt } from '../../lib/utils'
 import styles from './SettingsCardsPage.module.css'
 
@@ -75,11 +75,23 @@ function CardStack({ cards, onSelect, personalPayments }) {
               // propia cuenta. `personalPayments === null` (viendo un
               // Espacio Compartido) → no se muestra un número incorrecto.
               c.kind === 'credit' && personalPayments
-                ? t('cards.cycleSpend', {
-                    amount: fmt(currentCycleSpend(c, personalPayments.filter(p =>
-                      p.payment_method_id === c.id && p.payment_method_kind === 'credit' && p.is_paid
-                    ))),
-                  })
+                ? [
+                    t('cards.cycleSpend', {
+                      amount: fmt(currentCycleSpend(c, personalPayments.filter(p =>
+                        p.payment_method_id === c.id && p.payment_method_kind === 'credit' && p.is_paid
+                      ))),
+                    }),
+                    // "Ya abonaste" (v0.9.497, "Pagar ahora") — segunda
+                    // línea del mismo chip, solo si ya se adelantó algo en
+                    // este ciclo. `.cycleChip` usa `white-space: pre-line`
+                    // (CreditCardVisual.module.css) para partir en 2 líneas.
+                    (() => {
+                      const abonado = currentCycleAbonos(c, personalPayments.filter(p =>
+                        p.card_statement_for === c.id && !p.is_card_statement && p.is_paid
+                      ))
+                      return abonado > 0 ? t('cards.alreadyAbonado', { amount: fmt(abonado) }) : null
+                    })(),
+                  ].filter(Boolean).join('\n')
                 : null
             }
           />
@@ -94,7 +106,7 @@ function CardStack({ cards, onSelect, personalPayments }) {
   )
 }
 
-export function SettingsCardsPage({ paymentMethods, personalPayments = null, onBack, slideClass }) {
+export function SettingsCardsPage({ paymentMethods, personalPayments = null, onPayCardNow, onBack, slideClass }) {
   const { t } = useTranslation()
   const [kind, setKind] = useState('credit')
   const [formOpen, setFormOpen] = useState(false)
@@ -137,6 +149,7 @@ export function SettingsCardsPage({ paymentMethods, personalPayments = null, onB
             onBack={() => setSelectedId(null)}
             onEdit={() => openEdit(selectedCard)}
             onDelete={() => setDeleting(selectedCard)}
+            onPayNow={onPayCardNow}
           />
         </div>
 
