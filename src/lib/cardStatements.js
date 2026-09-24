@@ -148,3 +148,28 @@ export function currentPeriodOwed(card, creditPayments, abonoPayments) {
   const abonos = currentCycleAbonos(card, abonoPayments)
   return Math.max(0, Math.round((spend - abonos) * 100) / 100)
 }
+
+// Lo ya facturado y sin pagar (estados de cuenta generados, pendientes) —
+// no incluye el ciclo en curso, que todavía no se convierte en un pago.
+export function pendingStatementsTotal(cardId, payments) {
+  return payments
+    .filter(p => p.card_statement_for === cardId && p.is_card_statement && !p.is_paid)
+    .reduce((s, p) => s + Number(p.amount), 0)
+}
+
+// "Por pagar" real de una tarjeta de crédito (v0.9.502, pedido de
+// Johnatan: mostrar "Por pagar en crédito" y "Debes en este periodo" como
+// 2 números aparte se sentía como la misma información repetida). Un solo
+// total: lo ya facturado y sin pagar, MÁS lo que llevas en el ciclo en
+// curso (que todavía no se factura). `payments`: TODOS los pagos
+// personales — esta función filtra internamente lo que necesita de cada
+// tipo, así que no hace falta pre-filtrar antes de llamarla.
+export function totalOwedOnCard(card, payments) {
+  const pending = pendingStatementsTotal(card.id, payments)
+  const period = currentPeriodOwed(
+    card,
+    payments.filter(p => p.payment_method_id === card.id && p.payment_method_kind === 'credit' && p.is_paid),
+    payments.filter(p => p.card_statement_for === card.id && !p.is_card_statement && p.is_paid)
+  )
+  return Math.round((pending + period) * 100) / 100
+}
