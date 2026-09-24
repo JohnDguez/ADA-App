@@ -12,7 +12,7 @@ import { SegmentedControl } from '../../components/SegmentedControl'
 import { ConfirmDeleteModal } from '../../components/ConfirmDeleteModal'
 import { EmptyState } from '../../components/EmptyState'
 import { getBank } from '../../lib/cardCatalog'
-import { currentCycleSpend, currentCycleAbonos } from '../../lib/cardStatements'
+import { currentPeriodOwed } from '../../lib/cardStatements'
 import { fmt } from '../../lib/utils'
 import styles from './SettingsCardsPage.module.css'
 
@@ -70,28 +70,21 @@ function CardStack({ cards, onSelect, personalPayments }) {
           <CreditCardVisual
             card={c}
             cycleSpendLabel={
-              // Gastado en este corte (entrega C): solo créditos — cada
-              // tarjeta tiene su propio corte, así que cada una lleva su
-              // propia cuenta. `personalPayments === null` (viendo un
-              // Espacio Compartido) → no se muestra un número incorrecto.
+              // FIX v0.9.502 (reportado por Johnatan): mostrar "Gastado en
+              // este corte" + "Ya abonaste" por separado obligaba al
+              // usuario a restar mentalmente cuánto debe de verdad. Mismo
+              // criterio ya aplicado en CardDetailPanel.jsx: un solo
+              // número, la deuda real del ciclo. `personalPayments ===
+              // null` (viendo un Espacio Compartido) → no se muestra un
+              // número incorrecto.
               c.kind === 'credit' && personalPayments
-                ? [
-                    t('cards.cycleSpend', {
-                      amount: fmt(currentCycleSpend(c, personalPayments.filter(p =>
-                        p.payment_method_id === c.id && p.payment_method_kind === 'credit' && p.is_paid
-                      ))),
-                    }),
-                    // "Ya abonaste" (v0.9.497, "Pagar ahora") — segunda
-                    // línea del mismo chip, solo si ya se adelantó algo en
-                    // este ciclo. `.cycleChip` usa `white-space: pre-line`
-                    // (CreditCardVisual.module.css) para partir en 2 líneas.
-                    (() => {
-                      const abonado = currentCycleAbonos(c, personalPayments.filter(p =>
-                        p.card_statement_for === c.id && !p.is_card_statement && p.is_paid
-                      ))
-                      return abonado > 0 ? t('cards.alreadyAbonado', { amount: fmt(abonado) }) : null
-                    })(),
-                  ].filter(Boolean).join('\n')
+                ? t('cards.owedThisPeriodChip', {
+                    amount: fmt(currentPeriodOwed(
+                      c,
+                      personalPayments.filter(p => p.payment_method_id === c.id && p.payment_method_kind === 'credit' && p.is_paid),
+                      personalPayments.filter(p => p.card_statement_for === c.id && !p.is_card_statement && p.is_paid)
+                    )),
+                  })
                 : null
             }
           />
