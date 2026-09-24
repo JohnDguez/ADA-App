@@ -4,7 +4,7 @@ import { ChevronLeft, MoreVertical, Pencil, Trash2, Loader2 } from 'lucide-react
 import { CreditCardVisual } from './CreditCardVisual'
 import { Select } from './Select'
 import { getCategoryLabel, fmt, getMonths, getMonthsShort } from '../lib/utils'
-import { currentCycleSpend, currentCycleAbonos } from '../lib/cardStatements'
+import { currentCycleSpend, currentCycleAbonos, currentPeriodOwed } from '../lib/cardStatements'
 import styles from './CardDetailPanel.module.css'
 
 // Detalle de una tarjeta (v0.9.495, mockups confirmados con Johnatan).
@@ -54,27 +54,37 @@ export function CardDetailPanel({ card, payments, onBack, onEdit, onDelete, onPa
   for (let y = now.getFullYear(); y >= oldestYear; y--) availableYears.push(y)
   if (!availableYears.includes(viewYear)) availableYears.unshift(viewYear)
 
-  // \"Periodo actual\" aquí es el CICLO de esta tarjeta (desde su último
+  // "Periodo actual" aquí es el CICLO de esta tarjeta (desde su último
   // corte, o desde que se dio de alta si nunca se ha facturado) — no el
   // periodo de nómina del usuario, que es un concepto distinto. Reutiliza
-  // el mismo criterio de ventana que \"Gastado en este corte\"
+  // el mismo criterio de ventana que "Gastado en este corte"
   // (cardStatements.js), aplicado a TODOS los pagos de la tarjeta, no solo
   // los de crédito.
   const cycleStart = card.kind === 'credit'
     ? (card.last_statement_cut ? new Date(card.last_statement_cut) : new Date(card.created_at))
     : null
 
-  // Lo gastado en el ciclo en curso — antes se calculaba solo dentro del
-  // JSX del chip; ahora también lo necesita "Debes en este periodo" (abajo).
+  // Lo gastado en el ciclo en curso.
   const cycleSpend = card.kind === 'credit'
     ? currentCycleSpend(card, cardPayments.filter(p => p.payment_method_id === card.id && p.payment_method_kind === 'credit' && p.is_paid))
     : 0
 
-  // Lo ya adelantado en el ciclo en curso (v0.9.497, "Pagar ahora") — se
-  // muestra junto a "Gastado en este corte" en la propia tarjeta.
+  // Lo ya adelantado en el ciclo en curso (v0.9.497, "Pagar ahora").
   const cycleAbonos = card.kind === 'credit'
     ? currentCycleAbonos(card, cardPayments.filter(p => p.card_statement_for === card.id && !p.is_card_statement && p.is_paid))
     : 0
+
+  // "Debes en este periodo" (v0.9.500-501, pedido de Johnatan): UN solo
+  // numero, sin que el usuario tenga que restar gasto menos abono a mano
+  // -- ni en la propia tarjeta (el chip, en el JSX de mas abajo) ni en la
+  // pastilla. Siempre es la deuda del CICLO EN CURSO, sin importar el
+  // filtro Periodo actual/Por mes. Solo aplica a credito (debito no
+  // acumula deuda, el dinero ya salio al pagar).
+  const owedThisPeriod = currentPeriodOwed(
+    card,
+    cardPayments.filter(p => p.payment_method_id === card.id && p.payment_method_kind === 'credit' && p.is_paid),
+    cardPayments.filter(p => p.card_statement_for === card.id && !p.is_card_statement && p.is_paid)
+  )
 
   const inView = useMemo(() => {
     const resolved = cardPayments.filter(p => p.is_paid)
@@ -82,7 +92,7 @@ export function CardDetailPanel({ card, payments, onBack, onEdit, onDelete, onPa
     if (viewMode === 'periodo' && cycleStart) {
       filtered = resolved.filter(p => new Date(p.paid_at || p.due_date) > cycleStart)
     } else if (viewMode === 'periodo') {
-      // Débito no tiene ciclo — \"Periodo actual\" cae de vuelta al mes de calendario en curso.
+      // Debito no tiene ciclo -- "Periodo actual" cae de vuelta al mes de calendario en curso.
       filtered = resolved.filter(p => {
         const d = new Date(p.paid_at || p.due_date)
         return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear()
@@ -98,23 +108,15 @@ export function CardDetailPanel({ card, payments, onBack, onEdit, onDelete, onPa
   }, [cardPayments, viewMode, viewMonth, viewYear])
 
   // FIX v0.9.499 (reportado por Johnatan): sumaba TODO el historial sin
-  // distinguir dirección, así que un abono ("Pagar ahora", v0.9.497) se
+  // distinguir direccion, asi que un abono ("Pagar ahora", v0.9.497) se
   // sumaba junto con las compras. "Pagado con esta tarjeta" es solo lo
-  // GASTADO CON la tarjeta (`payment_method_id === card.id`), nunca lo
-  // abonado A la tarjeta (`card_statement_for === card.id`).
-  const spentInView = inView.filter(p => !p.is_postponed && p.payment_method_id === card.id).reduce((s, p) => s + Number(p.amount), 0)
-  // "Debes en este periodo" (v0.9.500, pedido de Johnatan): mostrar gasto y
-  // abono por separado obligaba al usuario a restar mentalmente para saber
-  // cuánto debe de verdad. Solo tiene sentido como DEUDA en el CICLO EN
-  // CURSO de una tarjeta de CRÉDITO — reutiliza `cycleSpend`/`cycleAbonos`
-  // ya calculados arriba. En "Por mes", o para débito (que no acumula
-  // deuda, el dinero ya salió al pagar), se muestra el total gastado tal
-  // cual: un mes de calendario puede cruzar dos cortes, así que "lo que
-  // debes de ese mes" no es un concepto real — el detalle completo sigue
-  // disponible en la lista de abajo para quien quiera desglosarlo.
+  // GASTADO CON la tarjeta (payment_method_id === card.id), nunca lo
+  // abonado A la tarjeta (card_statement_for === card.id).
+  // FIX v0.9.501 (reportado por Johnatan): esta pastilla SIEMPRE es el
+  // total gastado, sin importar el filtro -- "You owe this period" es una
+  // pastilla APARTE, no un reemplazo (ver showOwedThisPeriod mas abajo).
+  const total = inView.filter(p => !p.is_postponed && p.payment_method_id === card.id).reduce((s, p) => s + Number(p.amount), 0)
   const showOwedThisPeriod = card.kind === 'credit' && viewMode === 'periodo'
-  const owedThisPeriod = Math.max(0, Math.round((cycleSpend - cycleAbonos) * 100) / 100)
-  const total = showOwedThisPeriod ? owedThisPeriod : spentInView
   const owedOnCredit = card.kind === 'credit'
     ? cardPayments.filter(p => p.is_card_statement && !p.is_paid).reduce((s, p) => s + Number(p.amount), 0)
     : null
@@ -164,13 +166,14 @@ export function CardDetailPanel({ card, payments, onBack, onEdit, onDelete, onPa
         <CreditCardVisual
           card={card}
           cycleSpendLabel={
-            // FIX (v0.9.497): esta línea faltaba por completo en el
-            // detalle — solo se veía en la lista de Mis tarjetas.
+            // FIX v0.9.502 (reportado por Johnatan): antes mostraba
+            // "Gastado en este corte" + "Ya abonaste" en 2 líneas, y el
+            // usuario tenía que restarlas a mano para saber cuánto debe
+            // de verdad. Ahora un solo número: lo que realmente se debe.
+            // El detalle completo (gastos y abonos por separado) sigue
+            // disponible en el historial de abajo para quien lo quiera.
             card.kind === 'credit'
-              ? [
-                  t('cards.cycleSpend', { amount: fmt(cycleSpend) }),
-                  cycleAbonos > 0 ? t('cards.alreadyAbonado', { amount: fmt(cycleAbonos) }) : null,
-                ].filter(Boolean).join('\n')
+              ? t('cards.owedThisPeriodChip', { amount: fmt(owedThisPeriod) })
               : null
           }
         />
@@ -188,8 +191,16 @@ export function CardDetailPanel({ card, payments, onBack, onEdit, onDelete, onPa
           <b>{fmt(owedOnCredit)}</b>
         </div>
       )}
+      {/* "You owe this period" (v0.9.502): pastilla APARTE de "Paid with
+          this card" — no un reemplazo (fix del mismo reporte de arriba). */}
+      {showOwedThisPeriod && (
+        <div className={styles.pill}>
+          <span>{t('cards.detail.owedThisPeriod')}</span>
+          <span className={styles.pillAmount}>{fmt(owedThisPeriod)}</span>
+        </div>
+      )}
       <div className={styles.pill}>
-        <span>{t(showOwedThisPeriod ? 'cards.detail.owedThisPeriod' : 'cards.detail.paidWithCard')}</span>
+        <span>{t('cards.detail.paidWithCard')}</span>
         <span className={styles.pillAmount}>{fmt(total)}</span>
       </div>
 
