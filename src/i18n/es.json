@@ -1484,7 +1484,8 @@
     "detail": {
       "paidWithCard": "Pagado con esta tarjeta",
       "noHistory": "Sin pagos en este periodo",
-      "abono": "Abono"
+      "abono": "Abono",
+      "owedThisPeriod": "Debes en este periodo"
     },
     "alreadyAbonado": "Ya abonaste {{amount}}",
     "earlyPaymentName": "Abono a {{name}}",
