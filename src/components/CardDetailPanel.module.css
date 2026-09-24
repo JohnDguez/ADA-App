@@ -233,17 +233,12 @@
 
 /* "Pagar ahora" (v0.9.497) — mismo look que un botón secundario ya usado
    en la app (fondo de superficie, sin el peso de btn-primary). */
+/* FIX v0.9.500 (reportado por Johnatan: "se pierde entre las otras cards
+   que son solo informativas"): antes tenía fondo de superficie con texto
+   de acento — se veía igual que las pastillas informativas de abajo, sin
+   distinguirse como una acción. Ahora usa la clase global `.btn-primary`
+   (fondo de acento sólido, mismo botón que el resto de la app) — esta
+   clase local solo aporta el espaciado que sí es propio de este lugar. */
 .payNowButton {
-  width: 100%;
-  padding: 12px;
-  border: none;
-  border-radius: var(--radius-sm);
-  background: var(--surface);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-  color: var(--accent);
-  font-size: 14px;
-  font-weight: 600;
-  font-family: 'DM Sans', sans-serif;
-  cursor: pointer;
   margin-bottom: 10px;
 }

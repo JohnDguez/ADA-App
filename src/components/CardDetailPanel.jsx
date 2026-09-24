@@ -64,6 +64,12 @@ export function CardDetailPanel({ card, payments, onBack, onEdit, onDelete, onPa
     ? (card.last_statement_cut ? new Date(card.last_statement_cut) : new Date(card.created_at))
     : null
 
+  // Lo gastado en el ciclo en curso — antes se calculaba solo dentro del
+  // JSX del chip; ahora también lo necesita "Debes en este periodo" (abajo).
+  const cycleSpend = card.kind === 'credit'
+    ? currentCycleSpend(card, cardPayments.filter(p => p.payment_method_id === card.id && p.payment_method_kind === 'credit' && p.is_paid))
+    : 0
+
   // Lo ya adelantado en el ciclo en curso (v0.9.497, "Pagar ahora") — se
   // muestra junto a "Gastado en este corte" en la propia tarjeta.
   const cycleAbonos = card.kind === 'credit'
@@ -91,7 +97,24 @@ export function CardDetailPanel({ card, payments, onBack, onEdit, onDelete, onPa
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cardPayments, viewMode, viewMonth, viewYear])
 
-  const total = inView.filter(p => !p.is_postponed).reduce((s, p) => s + Number(p.amount), 0)
+  // FIX v0.9.499 (reportado por Johnatan): sumaba TODO el historial sin
+  // distinguir dirección, así que un abono ("Pagar ahora", v0.9.497) se
+  // sumaba junto con las compras. "Pagado con esta tarjeta" es solo lo
+  // GASTADO CON la tarjeta (`payment_method_id === card.id`), nunca lo
+  // abonado A la tarjeta (`card_statement_for === card.id`).
+  const spentInView = inView.filter(p => !p.is_postponed && p.payment_method_id === card.id).reduce((s, p) => s + Number(p.amount), 0)
+  // "Debes en este periodo" (v0.9.500, pedido de Johnatan): mostrar gasto y
+  // abono por separado obligaba al usuario a restar mentalmente para saber
+  // cuánto debe de verdad. Solo tiene sentido como DEUDA en el CICLO EN
+  // CURSO de una tarjeta de CRÉDITO — reutiliza `cycleSpend`/`cycleAbonos`
+  // ya calculados arriba. En "Por mes", o para débito (que no acumula
+  // deuda, el dinero ya salió al pagar), se muestra el total gastado tal
+  // cual: un mes de calendario puede cruzar dos cortes, así que "lo que
+  // debes de ese mes" no es un concepto real — el detalle completo sigue
+  // disponible en la lista de abajo para quien quiera desglosarlo.
+  const showOwedThisPeriod = card.kind === 'credit' && viewMode === 'periodo'
+  const owedThisPeriod = Math.max(0, Math.round((cycleSpend - cycleAbonos) * 100) / 100)
+  const total = showOwedThisPeriod ? owedThisPeriod : spentInView
   const owedOnCredit = card.kind === 'credit'
     ? cardPayments.filter(p => p.is_card_statement && !p.is_paid).reduce((s, p) => s + Number(p.amount), 0)
     : null
@@ -145,7 +168,7 @@ export function CardDetailPanel({ card, payments, onBack, onEdit, onDelete, onPa
             // detalle — solo se veía en la lista de Mis tarjetas.
             card.kind === 'credit'
               ? [
-                  t('cards.cycleSpend', { amount: fmt(currentCycleSpend(card, cardPayments.filter(p => p.payment_method_id === card.id && p.payment_method_kind === 'credit' && p.is_paid))) }),
+                  t('cards.cycleSpend', { amount: fmt(cycleSpend) }),
                   cycleAbonos > 0 ? t('cards.alreadyAbonado', { amount: fmt(cycleAbonos) }) : null,
                 ].filter(Boolean).join('\n')
               : null
@@ -154,7 +177,7 @@ export function CardDetailPanel({ card, payments, onBack, onEdit, onDelete, onPa
       </div>
 
       {card.kind === 'credit' && onPayNow && (
-        <button type="button" onClick={() => onPayNow(card)} className={styles.payNowButton}>
+        <button type="button" onClick={() => onPayNow(card)} className={`btn-primary ${styles.payNowButton}`}>
           {t('cards.payNow.button')}
         </button>
       )}
@@ -166,7 +189,7 @@ export function CardDetailPanel({ card, payments, onBack, onEdit, onDelete, onPa
         </div>
       )}
       <div className={styles.pill}>
-        <span>{t('cards.detail.paidWithCard')}</span>
+        <span>{t(showOwedThisPeriod ? 'cards.detail.owedThisPeriod' : 'cards.detail.paidWithCard')}</span>
         <span className={styles.pillAmount}>{fmt(total)}</span>
       </div>
 
