@@ -1,0 +1,1519 @@
+{
+  "buttons": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "accept": "Accept",
+    "close": "Close",
+    "edit": "Edit"
+  },
+  "confirmClose": {
+    "title": "Discard changes",
+    "description": "You have unsaved information. If you close it, you'll lose it.",
+    "discard": "Discard",
+    "keepEditing": "Keep editing"
+  },
+  "frequency": {
+    "weekly": "Weekly",
+    "biweekly": "Biweekly",
+    "monthly": "Monthly",
+    "bimonthly": "Bimonthly",
+    "quarterly": "Quarterly",
+    "semiannual": "Semiannual",
+    "annual": "Annual"
+  },
+  "theme": {
+    "system": "System",
+    "light": "Light",
+    "dark": "Dark"
+  },
+  "settingsPage": {
+    "title": "Profile",
+    "feedbackLabel": "Give us your feedback",
+    "feedbackSub": "Get 3 months of Premium free",
+    "menu": {
+      "account": "Account",
+      "categories": "Categories",
+      "cobro": "Pay period and income",
+      "notifications": "Notifications",
+      "appearance": "Appearance",
+      "sharedSpace": "Shared Space",
+      "subscription": "My subscription",
+      "getPremium": "Get Premium",
+      "export": "Export data",
+      "cards": "My cards"
+    },
+    "premiumBadge": "Premium Account",
+    "tutorialAgain": "View tutorial again",
+    "logout": "Log out",
+    "versionSuffix": "Alpha",
+    "avatarModal": {
+      "title": "Profile photo",
+      "upload": "Upload photo",
+      "chooseAvatar": "Choose avatar"
+    },
+    "galleryModal": {
+      "title": "Choose avatar"
+    },
+    "toast": {
+      "uploadError": "Error uploading image",
+      "photoUpdated": "Photo updated",
+      "avatarUpdateError": "Error updating avatar",
+      "avatarUpdated": "Avatar updated"
+    }
+  },
+  "settingsSubscription": {
+    "title": "My subscription",
+    "description": "View your plan, switch plans, or cancel your Premium subscription.",
+    "loading": "Loading your subscription…",
+    "noSubscription": "We couldn't find a subscription linked to your account.",
+    "currentPlan": "Current plan",
+    "renewsOn": "Renews on {{date}}",
+    "willCancelOn": "Will cancel on {{date}}. You keep Premium until then.",
+    "switchTo": "Switch to {{plan}} plan",
+    "cancelButton": "Cancel subscription",
+    "reactivateButton": "Reactivate subscription",
+    "processing": "Processing…",
+    "keepButton": "No, keep it",
+    "pendingCancelText": "Your subscription will cancel on {{date}}. You keep Premium until then.",
+    "cancelModal": {
+      "title": "Cancel subscription",
+      "description": "You keep Premium until {{date}}. After that you'll lose access, but you can reactivate before then if you change your mind.",
+      "confirm": "Yes, cancel"
+    },
+    "switchModal": {
+      "title": "Switch to {{plan}} plan",
+      "description": "The prorated adjustment is applied to your next invoice — you won't be charged or refunded right away.",
+      "confirm": "Yes, switch plan"
+    },
+    "toast": {
+      "canceled": "Your subscription will cancel at the end of the current period",
+      "reactivated": "Your subscription was reactivated",
+      "planChanged": "Your plan was updated",
+      "genericError": "Couldn't complete the action. Try again."
+    }
+  },
+  "settingsAccount": {
+    "title": "Account",
+    "description": "Update your personal information, protect access to your account, or delete it if you no longer need it.",
+    "row": {
+      "name": "Name",
+      "account": "Account",
+      "google": "Google",
+      "email": "Email",
+      "password": "Password",
+      "language": "Language"
+    },
+    "dangerZone": {
+      "label": "Danger zone",
+      "deleteDataTitle": "Delete all my data",
+      "deleteDataSubtitle": "Erases all your payments and income. Your account stays active.",
+      "deleteAccountTitle": "Delete my account",
+      "deleteAccountSubtitle": "Permanently deletes your account and all your data."
+    },
+    "dangerModal": {
+      "titleData": "Delete all data",
+      "titleAccount": "Delete account",
+      "descriptionData": "This will permanently delete all your payments and income. Your account will stay active. This action can't be undone.",
+      "descriptionAccount": "This will permanently delete your account and all your data. You won't be able to recover it. This action can't be undone.",
+      "confirmLabel": "Confirm with your password",
+      "verifying": "Verifying…",
+      "deleteDataButton": "Delete all my data",
+      "deleteAccountButton": "Delete my account"
+    },
+    "editModal": {
+      "titleName": "Edit name",
+      "titleEmail": "Change email",
+      "titlePassword": "Change password",
+      "resetLinkSent": "We sent a link to {{email}}",
+      "nameLabel": "Name",
+      "emailLabel": "New email",
+      "currentPasswordLabel": "Current password",
+      "forgotPassword": "Forgot your password?",
+      "newPasswordLabel": "New password",
+      "confirmPasswordLabel": "Confirm new password",
+      "requirementLength": "At least 8 characters",
+      "requirementUppercase": "At least one uppercase letter",
+      "requirementNumber": "At least one number",
+      "requirementSymbol": "At least one special symbol (!@#$...)",
+      "passwordMismatch": "Passwords don't match",
+      "saving": "Saving…"
+    },
+    "languageModal": {
+      "title": "Language",
+      "system": "System",
+      "spanish": "Español",
+      "english": "English"
+    },
+    "toast": {
+      "emptyName": "Enter a name",
+      "emptyEmail": "Enter an email",
+      "nameUpdated": "Name updated",
+      "emailUpdated": "Email updated — check your inbox",
+      "currentPasswordRequired": "Enter your current password",
+      "passwordRequirementsNotMet": "The new password doesn't meet the requirements",
+      "passwordUpdated": "Password updated",
+      "wrongCurrentPassword": "Current password is incorrect",
+      "confirmPasswordRequired": "Enter your password to confirm",
+      "wrongPassword": "Incorrect password",
+      "deleteDataError": "Error deleting data",
+      "allDataDeleted": "All your data has been deleted",
+      "deleteAccountError": "Error deleting account",
+      "languageUpdated": "Language updated"
+    }
+  },
+  "settingsCobro": {
+    "title": "Pay period and income",
+    "description": "Set how often you get paid and how much you earn, so your available balance is accurate.",
+    "periodSection": "Pay period",
+    "frequencyLabel": "Frequency",
+    "payDayLabel": "Pay day",
+    "payDaysLabel": "Pay days",
+    "otherOption": "Other",
+    "day1Label": "Day 1 (1–31)",
+    "day2Label": "Day 2 (1–31)",
+    "day1Placeholder": "e.g. 13",
+    "day2Placeholder": "e.g. 28",
+    "monthlyPlaceholder": "e.g. 5",
+    "monthlyHelperPrefix": "Your pay period starts on day",
+    "monthlyHelperSuffix": "of each month.",
+    "currencyLabel": "Currency",
+    "incomeSection": "Income per period",
+    "incomeLabel": "Income per period",
+    "incomeSubtitle": "Turn on to see budget alerts",
+    "amountLabel": "Amount",
+    "toast": {
+      "invalidAmount": "Enter a valid amount",
+      "salaryUpdated": "Salary updated"
+    },
+    "dayPair": "{{d1}} and {{d2}}"
+  },
+  "settingsNotifications": {
+    "title": "Notifications",
+    "description": "Decide when and what we notify you about, so you never miss a payment.",
+    "activeLabel": "Notifications on",
+    "enableLabel": "Enable notifications",
+    "activeSubtitle": "You'll get alerts on this device",
+    "enableSubtitle": "Get payment reminders",
+    "notificationHour": "Notification time",
+    "overdueLabel": "Overdue payments",
+    "overdueSub": "When a payment wasn't covered on time",
+    "dueTodayLabel": "Due today",
+    "dueTodaySub": "Payments reaching their due date today",
+    "upcomingLabel": "Upcoming payments",
+    "upcomingSub": "Reminder days before the due date",
+    "daysBeforeLabel": "Days in advance",
+    "payDayLabel": "Pay day",
+    "payDaySub": "Summary of pending payments on payday",
+    "toast": {
+      "disabled": "Notifications disabled",
+      "permissionDenied": "Permission denied — enable it in your browser settings",
+      "enableError": "Error enabling notifications",
+      "enabled": "Notifications enabled"
+    }
+  },
+  "settingsAppearance": {
+    "title": "Appearance",
+    "description": "Choose how LunaPay looks on your device.",
+    "swipeHint": "Swipe to change"
+  },
+  "settingsCategories": {
+    "title": "Categories",
+    "description": "Customize the icon and color of your categories, or create your own.",
+    "addModalTitleEdit": "Edit category",
+    "addModalTitleNew": "Add category",
+    "nameLabel": "Name",
+    "namePlaceholder": "e.g. Gym",
+    "nameReadonlyHelper": "Default categories can't be renamed, to avoid affecting already recorded payments.",
+    "iconLabel": "Icon",
+    "iconSearchPlaceholder": "Search icon…",
+    "noIconResults": "No results for \"{{search}}\"",
+    "colorLabel": "Color",
+    "saving": "Saving…",
+    "deleteConfirmPrefix": "Delete",
+    "deleteConfirmSuffix": "? Payments already recorded with this category will be reassigned to \"Otros\".",
+    "deleting": "Deleting…",
+    "toast": {
+      "emptyName": "Enter a name",
+      "duplicateName": "A category with that name already exists",
+      "renamedPrefix": "Category renamed to",
+      "addedSuffix": "added",
+      "updated": "Category updated",
+      "deletedPrefix": "Category",
+      "deletedSuffix": "deleted"
+    },
+    "addButton": "Add category"
+  },
+  "homePage": {
+    "tabs": {
+      "currentPeriod": "Current period",
+      "nextPeriod": "Next period"
+    },
+    "periodPrefix": "Period",
+    "totalThisPeriod": "Total for this period",
+    "totalNextPeriod": "Total for next period",
+    "paidLabel": "{{amount}} paid",
+    "pendingLabel": "{{amount}} pending",
+    "fixedPayment_one": "{{count}} fixed payment",
+    "fixedPayment_other": "{{count}} fixed payments",
+    "variableCount_one": "{{count}} variable",
+    "variableCount_other": "{{count}} variable",
+    "overduePayment_one": "{{count}} overdue payment",
+    "overduePayment_other": "{{count}} overdue payments",
+    "variablePendingConfirm_one": "{{count}} variable payment to confirm",
+    "variablePendingConfirm_other": "{{count}} variable payments to confirm",
+    "paidCount_one": "{{count}} paid",
+    "paidCount_other": "{{count}} paid",
+    "overdueTitle": "Overdue",
+    "pendingSectionTitle": "Pending payments",
+    "emptyState": {
+      "currentPeriodTitle": "No pending payments for this period",
+      "nextPeriodTitle": "No payments recorded for the next period",
+      "subtitle": "Tap here or the + button below to add one"
+    },
+    "markedUnpaid": "Marked as unpaid",
+    "unpostponed": "Returned to pending",
+    "shared": "Shared",
+    "viewInSharedSpace": "View in shared space"
+  },
+  "paymentsPage": {
+    "title": "Expenses and income",
+    "subtitle": "History, analysis, and balance of your period's finances.",
+    "noIncomeText": "Log an income for this period to see how much you have left",
+    "addIncome": "Add income",
+    "availableThisPeriod": "Available This Period",
+    "overBudget": "Over budget",
+    "extrasSuffix": "extras",
+    "extrasTitle": "Extra Income This Period",
+    "incomeCount_one": "{{count}} income",
+    "incomeCount_other": "{{count}} incomes",
+    "sharedFund": "Shared fund",
+    "addFunds": "Add funds",
+    "movementCount_one": "{{count}} movement",
+    "movementCount_other": "{{count}} movements",
+    "allFilter": "All",
+    "totalMonths": "Total {{count}} months",
+    "monthlyAverage": "Monthly average",
+    "monthsChip_one": "{{count}} month",
+    "monthsChip_other": "{{count}} months",
+    "monthlyExpenses": "Monthly Expenses",
+    "byMonth": "By month",
+    "monthLabel": "Month:",
+    "yearLabel": "Year:",
+    "byCategory": "By Category",
+    "noExpensesTitle": "No expenses recorded",
+    "customizeCategories": "Customize categories",
+    "paymentsTitle": "Payments",
+    "total": "Total:",
+    "noPaymentsCurrentPeriod": "No payments made in the current period",
+    "noPaymentsInMonth": "No payments made in {{month}} {{year}}",
+    "variable": "Variable",
+    "menuEdit": "Edit",
+    "menuSplit": "Split among members",
+    "menuMarkUnpaid": "Mark as unpaid",
+    "menuDelete": "Delete",
+    "confirmDeletePaymentHistory": "Delete this payment from history?",
+    "confirmDeleteYes": "Yes, delete",
+    "noteOptional": "Note (optional)",
+    "blockedAction": "You're not allowed to {{action}} in this Shared Space.",
+    "actionMarkPayments": "mark payments",
+    "actionDeletePayments": "delete payments",
+    "actionRegisterContributions": "log contributions",
+    "remanente": {
+      "title": "There's leftover from the previous period!",
+      "question": "Want to add it to this period?",
+      "confirm": "Yes, add to period",
+      "no": "No",
+      "customToggle": "Add custom amount",
+      "customPlaceholder": "Custom amount",
+      "add": "Add"
+    },
+    "incomeModal": {
+      "title": "Add Extra Income",
+      "typeLabel": "Type",
+      "amountLabel": "Amount",
+      "notePlaceholder": "e.g. Productivity bonus",
+      "saving": "Saving...",
+      "save": "Save income"
+    },
+    "manageIncomeModal": {
+      "title": "Extra Income for the Period",
+      "empty": "No extra income this period",
+      "saving": "Saving...",
+      "confirmDelete": "Delete this income?"
+    },
+    "addFundModal": {
+      "title": "Add funds",
+      "info": "This amount will be deducted from your personal remainder, as if it were your own expense.",
+      "available": "Available: {{amount}}",
+      "exceeds": "Exceeds what you have available ({{amount}})",
+      "remaining": "You'll have {{amount}} left after this contribution",
+      "notePlaceholder": "e.g. This month's savings",
+      "saving": "Saving…",
+      "save": "Contribute to Fund",
+      "toast": {
+        "negativeAvailable": "You can't contribute — your personal remainder is negative",
+        "exceedsAvailable": "You can't contribute more than what you have available ({{amount}})",
+        "error": "Error contributing to Fund",
+        "success": "Contribution recorded"
+      }
+    },
+    "manageFundModal": {
+      "title": "Fund Contributions",
+      "empty": "No contributions recorded",
+      "confirmDelete": "Delete this contribution?",
+      "entryTypes": {
+        "migration": "Migrated initial balance",
+        "reversal": "Reversal",
+        "spend": "Space expense",
+        "deposit": "Contribution"
+      },
+      "toast": {
+        "deleteError": "Error deleting"
+      }
+    },
+    "actionEditPayments": "edit payments",
+    "actionAddPayments": "add payments",
+    "menuAriaLabel": "More options",
+    "columnDate": "Date",
+    "columnName": "Name",
+    "columnCategory": "Category",
+    "columnAmount": "Amount",
+    "byMethod": "By payment method",
+    "creditNote": "Credit didn't lower your available balance: it leaves when you pay the statement."
+  },
+  "recurrentsPage": {
+    "title": "Recurring expenses",
+    "subtitle": "Manage your fixed and variable payments.",
+    "searchPlaceholder": "Search by name or category...",
+    "activeLabel": "Active",
+    "pausedCount_one": "{{count}} paused",
+    "pausedCount_other": "{{count}} paused",
+    "monthlySum": "Monthly total",
+    "monthlyPaymentsLabel": "monthly payments",
+    "filters": {
+      "all": "All",
+      "active": "Active",
+      "paused": "Paused",
+      "recurrent": "Recurring",
+      "installments": "Installments"
+    },
+    "noResultsForSearch": "No results for your search",
+    "noRecurrentsTitle": "No recurring expenses recorded",
+    "paymentCount_one": "{{count}} payment",
+    "paymentCount_other": "{{count}} payments",
+    "perMonthSuffix": "/mo",
+    "completedCount_one": "{{count}} completed",
+    "completedCount_other": "{{count}} completed",
+    "nextDate": "Next: {{date}}",
+    "installmentProgress": "Payment {{current}} of {{total}}",
+    "paused": "Paused",
+    "actionResume": "resume payments",
+    "actionPause": "pause payments",
+    "deleteConfirm": "Delete \"{{name}}\"? Payments already made will be kept.",
+    "menuAriaLabel": "More options"
+  },
+  "recurrentDetailPanel": {
+    "paidLabel": "Paid",
+    "nextLabel": "Next",
+    "completedLabel": "Completed",
+    "paidSuffix": "paid",
+    "referenceAmount": "{{amount}} reference",
+    "historyEmpty": "No payments recorded yet.",
+    "paymentNumber": "Payment {{num}}",
+    "amountAdjusted": "Amount adjusted",
+    "menuPause": "Pause",
+    "menuResume": "Resume",
+    "historyOnly": "History only",
+    "abono": "Partial payment",
+    "alreadyAbonado": "Already paid {{amount}}"
+  },
+  "goalsPage": {
+    "title": "Goals",
+    "noGoalsAtAllTitle": "You don't have any goals yet",
+    "noGoalsAtAllSubtitle": "Create one to start setting money aside from your income",
+    "totalRemaining": "Total remaining",
+    "goalsCompleted": "Goals completed",
+    "tabs": {
+      "active": "Active",
+      "completed": "Completed"
+    },
+    "sortBy": "Sort by {{criteria}}",
+    "sortCriteria": {
+      "monto": "amount",
+      "nombre": "name"
+    },
+    "noActiveGoalsTitle": "You have no active goals",
+    "noActiveGoalsSubtitle": "Create a new one or check your completed goals",
+    "noCompletedGoalsTitle": "No completed goals yet",
+    "noCompletedGoalsSubtitle": "It'll show up here once you complete a goal.",
+    "premiumBanner": {
+      "title": "Get Premium to save toward more than one goal at a time",
+      "text": "Create as many as you want — your next trip, a console, whatever comes to mind — and save for several at once, instead of only having one active.",
+      "button": "Try Premium FREE for 7 days"
+    },
+    "addGoal": "Add goal",
+    "toast": {
+      "noPermissionAdd": "You don't have permission to create goals in this space"
+    },
+    "card": {
+      "deposited": "{{amount}} deposited",
+      "completedOn": "Completed on {{date}}",
+      "remaining": "Remaining: {{amount}}",
+      "daysRemaining_one": "{{count}} day left",
+      "daysRemaining_other": "{{count}} days left",
+      "overdue": "Past due date"
+    }
+  },
+  "goalDetailPanel": {
+    "back": "Back",
+    "moreOptions": "More options",
+    "reopen": "Reopen",
+    "createdOn": "Created on {{date}}",
+    "amountToContribute": "Amount to contribute",
+    "amountToWithdraw": "Amount to withdraw",
+    "confirm": "Confirm",
+    "contribute": "Contribute",
+    "withdraw": "Withdraw",
+    "withdrawBlockedHint": "Withdrawing is turned off — ask the space owner for permission.",
+    "completing": "Completing...",
+    "markComplete": "Mark as done",
+    "historyTitle": "History",
+    "historyEmpty": "No activity on this goal yet.",
+    "you": "You",
+    "someone": "Someone",
+    "contributedVerb": "contributed",
+    "withdrewVerb": "withdrew",
+    "contributionLabel": "Contribution",
+    "withdrawalLabel": "Withdrawal",
+    "revertAria": "Revert contribution",
+    "saving": "Saving...",
+    "toast": {
+      "noPermissionContribute": "You don't have permission to contribute to goals in this space",
+      "noPermissionWithdraw": "You don't have permission to withdraw from goals in this space",
+      "invalidAmount": "Enter a valid amount",
+      "exceedsDeposited": "You can't withdraw more than what's deposited ({{amount}})",
+      "saveError": "Error saving",
+      "contributed": "Contribution recorded",
+      "withdrawn": "Withdrawal recorded — it's now in your Available",
+      "revertError": "Couldn't revert",
+      "reverted": "Contribution reverted",
+      "completeError": "Couldn't complete the goal",
+      "completedWithIncome": "Goal completed — {{amount}} was contributed from your income",
+      "completedNoIncome": "Goal completed — with no active income, nothing was deducted, only the amount was recorded",
+      "completed": "Goal completed!"
+    }
+  },
+  "goalFormModal": {
+    "titleEdit": "Edit goal",
+    "titleNew": "New goal",
+    "nameLabel": "Name",
+    "namePlaceholder": "e.g. Buy a PS5",
+    "notesLabel": "Notes (optional)",
+    "notesPlaceholder": "What this goal is for",
+    "iconColorLabel": "Icon and color",
+    "amountLabel": "Target amount",
+    "deadlineLabel": "Deadline (optional)",
+    "deadlinePlaceholder": "No deadline",
+    "errors": {
+      "emptyName": "Give your goal a name",
+      "invalidAmount": "Enter how much you want to save"
+    }
+  },
+  "variableAmountModal": {
+    "titleEstimate": "Amount to pay",
+    "titlePay": "Log payment",
+    "descriptionEstimate": "enter the amount you're going to pay",
+    "descriptionPay": "enter the amount you paid",
+    "amountLabelEstimate": "Amount",
+    "amountLabelPay": "Amount paid",
+    "errorEstimate": "Enter the amount to pay",
+    "errorPay": "Enter the amount you paid",
+    "saveEstimate": "Save amount",
+    "savePay": "Confirm payment"
+  },
+  "recurrentMigrationModal": {
+    "title": "Recurring payments improvement",
+    "description": "We updated how recurring payments work to make them smarter and editable.",
+    "benefit1": "Payments are generated automatically period after period",
+    "benefit2": "Now you can edit the name, amount, and dates at any time",
+    "benefit3": "You'll always see the current payment and the next one in your list",
+    "warningTitle": "Temporary visible change",
+    "warningText": "You might notice some adjustments in how your recurring payments are displayed while the system migrates the data. Payments you've already made are protected and won't be deleted.",
+    "understood": "Got it"
+  },
+  "passwordSetupModal": {
+    "title": "Create a password",
+    "description": "To keep your account secure you need a password. You'll use it to confirm important actions like deleting data.",
+    "passwordLabel": "Password",
+    "confirmLabel": "Confirm password",
+    "confirmPlaceholder": "Repeat your password",
+    "notStrong": "The password doesn't meet all the requirements",
+    "submit": "Create password"
+  },
+  "authPage": {
+    "tabs": {
+      "login": "Log in",
+      "register": "Sign up"
+    },
+    "forgotTitle": "Recover password",
+    "forgotSubtitle": "We'll send you a link to reset your password.",
+    "emailLabel": "Email",
+    "emailPlaceholder": "you@email.com",
+    "passwordLabel": "Password",
+    "accessCodeLabel": "Access code",
+    "accessCodePlaceholder": "Enter your code",
+    "termsPrefix": "I have read and accept the",
+    "termsLink": "Terms and Conditions",
+    "termsSuffix": "of use",
+    "submit": {
+      "loading": "Loading…",
+      "login": "Log in",
+      "register": "Create account",
+      "forgot": "Send link"
+    },
+    "forgotPasswordLink": "Forgot your password?",
+    "backToLogin": "Back to login",
+    "orContinueWith": "or continue with",
+    "google": {
+      "connecting": "Connecting…",
+      "termsNote": "By continuing with Google you accept our"
+    },
+    "errors": {
+      "emptyEmail": "Enter your email",
+      "resetEmailError": "Couldn't send the email. Check the address.",
+      "resetEmailSent": "Check your email — we sent you the link to reset your password.",
+      "emptyFields": "Fill in all fields",
+      "termsRequired": "You must accept the Terms and Conditions to continue",
+      "passwordNotStrongRegister": "The password doesn't meet all the security requirements",
+      "emptyAccessCode": "Enter your access code",
+      "invalidAccessCode": "Invalid or inactive access code",
+      "accountCreated": "Account created! Check your email to confirm.",
+      "wrongCredentials": "Incorrect email or password"
+    }
+  },
+  "resetPasswordPage": {
+    "title": "New password",
+    "subtitle": "Choose a secure password for your account.",
+    "newPasswordLabel": "New password",
+    "newPasswordPlaceholder": "At least 8 characters",
+    "saving": "Saving…",
+    "submit": "Save password"
+  },
+  "termsModal": {
+    "title": "Terms and Conditions",
+    "lastUpdated": "Last updated: June 2026",
+    "intro": "Welcome to {{appName}}. By creating an account, you agree to these Terms and Conditions of use. Please read them carefully before continuing.",
+    "section1Title": "1. Service description",
+    "section1Text": "{{appName}} is a personal payment and financial commitment tracking app. Its purpose is to help you organize and remember your payments according to your pay period. {{appName}} is not a financial institution, doesn't manage real money, doesn't make transfers, and has no access to your bank accounts.",
+    "section2Title": "2. Registration and account",
+    "section2Text": "To use {{appName}} you must create an account with a valid email or through your Google account. You're responsible for keeping your access credentials confidential. You must be over 18 years old to register.",
+    "section3Title": "3. Acceptable use",
+    "section3Text": "You agree to use {{appName}} only for personal, lawful purposes. It is prohibited to use the app for fraudulent activities, impersonation, or attempts to compromise the system's security.",
+    "section4Title": "4. Privacy and data",
+    "section4Text": "The data you enter into {{appName}} (name, payments, amounts) is stored securely on Supabase servers. We don't sell or share your personal information with third parties for commercial purposes. You can delete your account and your data at any time from Settings.",
+    "section5Title": "5. Push notifications",
+    "section5Text": "If you turn on notifications, {{appName}} will send alerts related to your recorded payments. You can turn them off at any time from Settings or from your device's settings.",
+    "section6Title": "6. Limitation of liability",
+    "section6Text": "{{appName}} is a personal support tool. We don't guarantee that using the app will prevent late payments, late fees, or other financial consequences. The user is solely responsible for their financial decisions.",
+    "section7Title": "7. Service availability",
+    "section7Text": "We strive to keep the service available at all times, but we don't guarantee uninterrupted availability. We may perform maintenance or updates without prior notice.",
+    "section8Title": "8. Modifications",
+    "section8Text": "We reserve the right to modify these terms at any time. We'll notify you of significant changes through the app. Continued use of {{appName}} after changes implies your acceptance.",
+    "section9Title": "9. Cancellation",
+    "section9Text": "You can stop using {{appName}} and delete your account at any time. We reserve the right to suspend accounts that violate these terms.",
+    "section10Title": "10. Contact",
+    "section10Text": "If you have questions about these terms, you can contact us through the channels available in the app.",
+    "closing": "By creating your account, you confirm that you have read and accept these Terms and Conditions."
+  },
+  "onboardingPage": {
+    "step1": {
+      "titleLine1": "What's",
+      "titleLine2": "your name?",
+      "desc": "This is the name you'll see on your profile, and the one other members will see in a shared space with you.",
+      "nameLabel": "Your name",
+      "namePlaceholder": "e.g. John Doe",
+      "nameError": "Enter your name"
+    },
+    "step2": {
+      "title": "When do you get paid?",
+      "desc": "This helps us show you which payments to cover each period.",
+      "weekdayLabel": "Day of the week",
+      "weekdayHint": "We'll remind you which payments to cover before every {{weekday}}.",
+      "biweeklyDaysLabel": "Biweekly pay days",
+      "custom": "Custom",
+      "day1Label28": "Day 1 (1–28)",
+      "day2Label31": "Day 2 (1–31)",
+      "biweeklyHint": "We'll remind you which payments to cover before days {{d1}} and {{d2}} of each month."
+    },
+    "step3": {
+      "title": "How much do you earn per period?",
+      "desc": "Optional. Helps you see how much you have left after your payments.",
+      "toggleLabel": "Turn on income per period",
+      "toggleSub": "You can change this later in Profile",
+      "amountLabel": "Amount per period"
+    },
+    "step4": {
+      "title": "Want to get reminders?",
+      "desc": "We'll let you know when a payment is about to be due or overdue.",
+      "enabledLabel": "Notifications on",
+      "disabledLabel": "Turn on notifications",
+      "enabledSub": "You'll get alerts for your payments",
+      "disabledSub": "You can turn them on later in Profile",
+      "readyTitle": "All set!",
+      "readyText": "You can customize which notifications to receive from Profile."
+    },
+    "continue": "Continue",
+    "start": "Get started!",
+    "back": "Back",
+    "finishError": "We couldn't save your profile. Check your connection and try again."
+  },
+  "paymentModal": {
+    "nameError": "Enter the payment's name",
+    "duplicateNameError": "There's already an active payment named \"{{name}}\"",
+    "installment": {
+      "totalAmountError": "Add the total amount to pay",
+      "countError": "Add the number of payments",
+      "minError": "The minimum is 2 payments",
+      "startExceedsTotal": "The starting payment can't be greater than the total",
+      "firstDateError": "Select the first payment's date"
+    },
+    "amountOrVariableError": "Add the amount or mark it as variable",
+    "dueDateError": "Select the due date",
+    "editInstallment": {
+      "title": "Edit installments",
+      "badge": "Payment {{current}}/{{total}}",
+      "amountError": "Enter the amount per payment",
+      "totalBelowCurrentError": "The total can't be less than the current payment ({{current}})",
+      "nextDateError": "Select the next payment's date",
+      "remainingHelper_one": "{{count}} payment left to cover",
+      "remainingHelper_other": "{{count}} payments left to cover",
+      "saveButton": "Save changes",
+      "cancelInstallments": "Cancel installments"
+    },
+    "fields": {
+      "name": "Name",
+      "category": "Category",
+      "addCategory": "+ Add",
+      "categoryNamePlaceholder": "Category name",
+      "add": "Add",
+      "amountPerPayment": "Amount per payment",
+      "totalPayments": "Total payments",
+      "totalPaymentsPlaceholder": "e.g. 20",
+      "nextPaymentDate": "Next payment date"
+    },
+    "tabs": {
+      "single": "One-time",
+      "recurrent": "Recurring",
+      "installment": "Installments"
+    },
+    "title": {
+      "reactivate": "Reactivate recurring payment",
+      "editRecurrent": "Edit recurring payment",
+      "edit": "Edit payment",
+      "installment": "Installment payment",
+      "recurrent": "Recurring payment",
+      "new": "New payment"
+    },
+    "installmentInfoBanner": "Payments are generated one at a time. Once you mark each one as paid, the next one appears automatically.",
+    "namePlaceholder": "e.g. Netflix, Rent, Electricity…",
+    "variableToggleLabel": "Variable payment",
+    "variableToggleSub": "The amount changes each time you pay",
+    "amountLabel": "Amount",
+    "totalAmountToPay": "Total amount to pay",
+    "totalAmountPlaceholder": "e.g. 5000",
+    "numPayments": "Number of payments",
+    "numPaymentsPlaceholder": "e.g. 10",
+    "startFromLabel": "Start from payment #",
+    "summary": {
+      "title": "Summary",
+      "willPay": "You'll pay",
+      "paymentsOf": "{{count}} payments of ${{amount}}",
+      "every": "one every",
+      "frequency": {
+        "weekly": "week",
+        "biweekly": "two weeks",
+        "monthly": "month",
+        "bimonthly": "2 months",
+        "quarterly": "3 months",
+        "semiannual": "6 months",
+        "annual": "year"
+      },
+      "nextPayment": "Your next payment is on {{day}} {{month}}",
+      "remainingTotal": "Remaining total to pay: ${{amount}}"
+    },
+    "firstPaymentDate": "First payment date",
+    "dueDate": "Due date",
+    "alreadyPaidToggle": "Already paid it",
+    "paidDateLabel": "Date you paid",
+    "dueDayLabel": "Due day",
+    "nextLabel": "Next: {{date}}",
+    "biweeklyBaseDateLabel": "Starting base date (biweekly)",
+    "nextDueLabel": "Next due date: {{date}}",
+    "recurrentNote": "A new payment will be generated automatically every {{interval}}.",
+    "recurrentIntervals": {
+      "weekly": "7 days",
+      "biweekly": "14 days",
+      "monthly": "month"
+    },
+    "impact": {
+      "label": "Impact on your finances",
+      "message": "See how this new expense impacts your finances for that period",
+      "warning": "Careful! This could affect your finances",
+      "ok": "All good",
+      "periodLabel": "Period {{range}}.",
+      "currentlyAvailable": "Currently available {{amount}} MXN",
+      "pendingCount_one": "{{count}} pending payment {{amount}}",
+      "pendingCount_other": "{{count}} pending payments {{amount}}",
+      "variableCount_one": "{{count}} variable payment",
+      "variableCount_other": "{{count}} variable payments",
+      "variableCountUncounted_one": "{{count}} variable payment not counted",
+      "variableCountUncounted_other": "{{count}} variable payments not counted",
+      "nextPeriodAvailable": "Available in the next period",
+      "salaryHint": "Set up your income in Settings to see your full available amount."
+    },
+    "save": {
+      "reactivate": "Reactivate",
+      "saveChanges": "Save changes",
+      "createPayments": "Create payments",
+      "saveAsPaid": "Save as paid",
+      "savePayment": "Save payment"
+    },
+    "deletePayment": "Delete payment",
+    "editCopy": {
+      "title": "Edit payment",
+      "dueDate": "due {{date}}",
+      "banner": "You can only adjust the amount of this payment here. To change the name, frequency, date, or category, edit the full recurring payment.",
+      "editMasterButton": "Edit recurring payment",
+      "amountError": "Enter a valid amount"
+    },
+    "backfill": {
+      "label": "Log previous payments as expenses",
+      "helperOn": "Payments 1 through {{n}} are logged with their dates and count in Expenses and your reports.",
+      "helperOff": "Payments 1 through {{n}} will only show in this installment plan's history, without adding to your expenses. Use it if you already logged them."
+    }
+  },
+  "pageHeader": {
+    "greetingMorning": "Good morning!",
+    "greetingAfternoon": "Good afternoon!",
+    "greetingEvening": "Good evening!",
+    "settingsAriaLabel": "Settings",
+    "notificationsAriaLabel": "Notifications"
+  },
+  "bottomNav": {
+    "home": "Home",
+    "payments": "Payments",
+    "recurrents": "Recurring",
+    "goals": "Goals",
+    "add": "Add payment"
+  },
+  "navRail": {
+    "expand": "Expand menu",
+    "collapse": "Collapse menu"
+  },
+  "activeSpaceHeader": {
+    "newSpaceName": "New shared space",
+    "personalName": "Personal",
+    "pinAriaLabelOn": "Remove as main tab",
+    "pinAriaLabelOff": "Set as main tab",
+    "menuLeave": "Leave space",
+    "errors": {
+      "passwordRequired": "Enter your password to confirm",
+      "wrongPassword": "Incorrect password",
+      "leaveError": "Couldn't leave the space"
+    },
+    "deleteModal": {
+      "title": "Delete Shared Space",
+      "description": "This will be permanently deleted for you and your guest — all payments and income in the space, with no way to undo it.",
+      "confirmButton": "Permanently delete space"
+    },
+    "leaveModal": {
+      "title": "Leave Shared Space",
+      "description": "You'll stop belonging to \"{{name}}\". Payments you already added will stay in the space for the owner.",
+      "leaving": "Leaving…",
+      "confirmButton": "Leave space"
+    }
+  },
+  "notificationsPanel": {
+    "title": "Notifications",
+    "markAllRead": "Mark all as read",
+    "deleteAll": "Delete all",
+    "empty": "No notifications",
+    "timeNow": "now",
+    "timeMinutes": "{{count}} min ago",
+    "timeHours": "{{count}} h ago"
+  },
+  "frequencyPicker": {
+    "fewerOptions": "Fewer options",
+    "moreOptions": "More options"
+  },
+  "categories": {
+    "servicios": "Utilities",
+    "suscripciones": "Subscriptions",
+    "creditos": "Credit payments",
+    "renta": "Rent",
+    "seguros": "Insurance",
+    "alimentacion": "Food",
+    "transporte": "Transportation",
+    "medicina": "Medicine",
+    "doctor": "Doctor",
+    "mantenimiento": "Maintenance",
+    "ahorro": "Savings",
+    "otros": "Other"
+  },
+  "select": {
+    "placeholder": "Select",
+    "searchPlaceholder": "Search",
+    "noResults": "No results"
+  },
+  "payCard": {
+    "status": {
+      "postponed": "Postponed",
+      "paid": "Paid",
+      "paused": "Paused",
+      "overdueYesterday": "Due yesterday",
+      "overdueDays_one": "{{count}} day overdue",
+      "overdueDays_other": "{{count}} days overdue",
+      "dueToday": "Due today",
+      "dueTomorrow": "Due tomorrow",
+      "dueInDays_one": "Due in {{count}} day",
+      "dueInDays_other": "Due in {{count}} days",
+      "pending": "Pending",
+      "overdue": "Overdue"
+    },
+    "allPaymentsDone": "You finished all payments!",
+    "addAmount": "Add amount",
+    "editAmount": "Edit amount",
+    "variableTag": "Variable payment",
+    "menu": {
+      "contribute": "Contribute",
+      "postpone": "Postpone",
+      "advance": "Advance payment",
+      "markUnpaid": "Mark unpaid",
+      "payFromPayroll": "Pay from my income",
+      "sharedPayment": "Shared payment"
+    },
+    "actions": {
+      "postponePayments": "postpone payments",
+      "advancePayments": "advance payments"
+    },
+    "group": {
+      "installmentsCount": "{{paid}}/{{total}} payments",
+      "paidCount": "paid"
+    },
+    "markPaidAriaLabel": "Mark as paid",
+    "menuTriggerAriaLabel": "More options"
+  },
+  "dates": {
+    "weekAbbrev": "Wk",
+    "biweekAbbrev": "2Wk",
+    "units": {
+      "week_one": "week",
+      "week_other": "weeks",
+      "biweek_one": "two-week period",
+      "biweek_other": "two-week periods",
+      "bimonthly_one": "two-month period",
+      "bimonthly_other": "two-month periods",
+      "quarterly_one": "quarter",
+      "quarterly_other": "quarters",
+      "semiannual_one": "half-year",
+      "semiannual_other": "half-years",
+      "annual_one": "year",
+      "annual_other": "years",
+      "monthly_one": "month",
+      "monthly_other": "months"
+    }
+  },
+  "confirmNextPeriodPayModal": {
+    "title": "Mark as paid?",
+    "descriptionPrefix": "is due on {{month}} {{day}}, during the",
+    "nextPeriodPhrase": "next period",
+    "descriptionSuffix": "Are you sure you want to mark it as paid now?",
+    "confirm": "Yes, mark as paid"
+  },
+  "cobroPeriodFields": {
+    "monthlyHelperPrefix": "The period starts on day"
+  },
+  "datePicker": {
+    "selectPlaceholder": "Select a date"
+  },
+  "feedbackPromptModal": {
+    "premiumPill": "Get 3 months of Premium free",
+    "title": "Tell us how the app's been working for you",
+    "subtitle": "Your feedback matters to us.",
+    "cta": "Give my feedback",
+    "hint": "An external form will open in a new tab.",
+    "remindLater": "Remind me in 3 days"
+  },
+  "patchNotesModal": {
+    "title": "What's new"
+  },
+  "premiumLock": {
+    "finePrint": "Only for new users. After the trial, $50 MXN per month."
+  },
+  "goalsTray": {
+    "label": "My goals",
+    "ariaLabel": "My goals — swipe up to open"
+  },
+  "deleteGoalModal": {
+    "title": "Delete \"{{name}}\"",
+    "descriptionWithMoney": "You have {{amount}} saved toward this goal. What do you want to do with that money?",
+    "returnAndDelete": "Return to Available and delete",
+    "discardAndDelete": "Delete without returning the money",
+    "descriptionNoMoney": "This action can't be undone."
+  },
+  "installmentAbonarModal": {
+    "title": "Contribute",
+    "badge": "Payment {{current}} of {{total}}",
+    "referenceAmount": "Reference amount",
+    "totalDebt": "Total debt",
+    "amountLabel": "How much are you contributing",
+    "amountError": "Enter how much you're contributing",
+    "paymentPlan": "Payment plan",
+    "confirmButton": "Confirm contribution",
+    "remainingPending": "{{amount}} will remain pending on this payment.",
+    "planAdjusts": "The plan adjusts from {{oldTotal}} to {{newTotal}} total payments."
+  },
+  "newSharedSpacePanel": {
+    "premiumCtaTitle": "Get Premium to create a Shared Space",
+    "premiumCtaText": "Track expenses with your partner, roommates, or anyone you want — up to 2 more people, in a space separate from your personal account.",
+    "createTitle": "Create Shared Space",
+    "spaceNameLabel": "Space name",
+    "spaceNamePlaceholder": "e.g. Apartment with Alex",
+    "creating": "Creating…",
+    "create": "Create",
+    "nameRequiredError": "Give the space a name",
+    "createGenericError": "Couldn't create the space",
+    "ownedText": "You already own a Shared Space — you can only have one of your own.",
+    "joinTitle": "Join a Shared Space",
+    "joinText_one": "You can join {{count}} more shared space. The access code must be 6 digits — the space's creator must give it to you.",
+    "joinText_other": "You can join {{count}} more shared spaces. The access code must be 6 digits — the space's creator must give it to you.",
+    "joining": "Joining…",
+    "join": "Join",
+    "joinCodeLengthError": "The code must be 6 digits",
+    "joinCodeInvalid": "Invalid code",
+    "maxJoined": "You're already in the maximum of 3 shared spaces as a guest."
+  },
+  "premiumPage": {
+    "title": "Get Premium",
+    "subtitle": "Unlock every feature and take your finances to the next level.",
+    "benefits": {
+      "noAdsTitle": "No more ads",
+      "noAdsDesc": "Track your spending without interruptions.",
+      "exportTitle": "Export your reports",
+      "exportDesc": "Download your expenses in CSV and PDF.",
+      "simulatorTitle": "Simulate your finances",
+      "simulatorDesc": "See how your expenses will affect future periods.",
+      "sharedTitle": "Shared account",
+      "sharedDesc": "Link your account with your partner or roommate and track expenses together."
+    },
+    "choosePlan": "Choose your plan",
+    "monthly": "Monthly",
+    "monthlyPriceSuffix": "MXN / month",
+    "mostPopular": "Most popular",
+    "annual": "Annual",
+    "annualPriceSuffix": "MXN / year",
+    "continueWithPlan": "Continue with {{plan}} plan",
+    "termsAccept": "I agree to be charged the selected plan amount on a recurring basis until I cancel, per the Terms and Conditions.",
+    "backToPlans": "Back to plans",
+    "checkoutLoading": "Loading payment form…",
+    "checkoutConfirming": "Confirming your payment…",
+    "checkoutError": "Couldn't load the payment form. Try again.",
+    "checkoutRetry": "Retry",
+    "referralCta": "Invite 3 friends and get 2 months FREE",
+    "restrictionsApply": "Restrictions apply.",
+    "cancelAnytime": "Cancel anytime. No hidden fees.",
+    "restorePurchases": "Restore purchases."
+  },
+  "spaceSwitcher": {
+    "noPending": "No pending payments",
+    "pendingCount_one": "{{count}} pending",
+    "pendingCount_other": "{{count}} pending",
+    "overdueCount_one": "{{count}} overdue",
+    "overdueCount_other": "{{count}} overdue",
+    "railLabel": "Spaces"
+  },
+  "coachmarks": {
+    "skipTutorial": "Skip tutorial",
+    "next": "Next",
+    "home": {
+      "metricCard": {
+        "title": "Your pay period at a glance",
+        "text": "See how much you need to pay this period. Tap \"Current period\" or \"Next period\" to change the view."
+      },
+      "addButton": {
+        "title": "Add your first payment",
+        "text": "Everything starts here — from this button you log any expense, one-time, recurring, or in installments."
+      },
+      "rail": {
+        "title": "See all your payments here",
+        "text": "At a glance, you'll know which ones are overdue, which are due this period, and which are still pending."
+      },
+      "paidCollapse": {
+        "title": "What you've already paid",
+        "text": "It's saved here, collapsed, to stay out of your way — but you can check it or undo it anytime."
+      },
+      "spaceSwitcher": {
+        "title": "Switch spaces anytime",
+        "text": "Tap here to see your Personal account and your Shared Spaces, or to create a new one with a code."
+      },
+      "settingsGear": {
+        "title": "Your whole profile, one tap away",
+        "text": "From here you can open Settings: your account, categories, pay period, notifications, and appearance."
+      }
+    },
+    "nuevoPago": {
+      "tabs": {
+        "title": "3 ways to log a payment",
+        "text": "\"One-time\" is a single expense. \"Recurring\" repeats every week/two weeks/month. \"Installments\" is for payments split into a fixed number of payments."
+      },
+      "category": {
+        "title": "Choose or create a category",
+        "text": "Each category has its own icon and color — you can customize them later from Settings."
+      },
+      "variable": {
+        "title": "Does the amount change every time?",
+        "text": "Turn this on for payments like electricity or water, where you don't know the exact amount until the bill arrives."
+      }
+    },
+    "gastos": {
+      "disponible": {
+        "title": "What you have available",
+        "text": "See how much you have left this period, based on your income (if set up) plus any extra income you log."
+      },
+      "addIncome": {
+        "title": "Log your income",
+        "text": "Freelance work, a bonus, or leftover from last period? Add it here so your available amount is accurate."
+      },
+      "categoryChips": {
+        "title": "Filter by category",
+        "text": "Tap any of these to see only those expenses in the chart below."
+      },
+      "monthlyChart": {
+        "title": "Your monthly trend",
+        "text": "Compare how much you've spent month to month — useful for spotting patterns."
+      }
+    },
+    "recurrentes": {
+      "stats": {
+        "title": "Your active payments, at a glance",
+        "text": "See how many recurring payments you have active or paused, and how much they add up to per month."
+      },
+      "filtroTipo": {
+        "title": "Recurring vs. Installments",
+        "text": "A recurring payment has no end date (like Netflix). An installment does — a fixed number of payments, like a phone paid over 12 months."
+      }
+    },
+    "perfil": {
+      "cobro": {
+        "title": "Set up your pay period",
+        "text": "Define how often you get paid — weekly, biweekly, or monthly — so the app organizes everything around it."
+      },
+      "categorias": {
+        "title": "Make categories your own",
+        "text": "Change the icon and color of any category, or create your own."
+      },
+      "notificaciones": {
+        "title": "Never miss a payment",
+        "text": "Turn on reminders so the app lets you know before each payment is due."
+      }
+    },
+    "metas": {
+      "resumen": {
+        "title": "This is how you track your goals",
+        "text": "See the total left to save across your goals, and how many you’ve already completed."
+      },
+      "tabs": {
+        "title": "Active vs. completed",
+        "text": "Switch between goals you’re still saving toward and the ones you’ve already finished."
+      },
+      "lista": {
+        "title": "Tap any goal",
+        "text": "Open it to contribute, withdraw, edit it, or mark it as completed."
+      },
+      "addPill": {
+        "title": "Create your first goal",
+        "text": "Give it a name, a target amount, and, if you want, a deadline — that’s all it takes to start."
+      }
+    }
+  },
+  "splitContributionsModal": {
+    "saveTotalError": "Error saving the amount",
+    "settleError": "Error marking as paid",
+    "fundInsufficientNotice": "The Shared Fund couldn't cover the whole payment — the maximum possible was already applied ({{amount}}). Cover the rest from a member's income.",
+    "complete": "Complete",
+    "remaining": "Remaining: {{amount}}",
+    "membersLabel": "Members",
+    "sharedFundName": "Shared Fund",
+    "notRegistered": "Not logged",
+    "noBalance": "No balance",
+    "exceedsAvailable": "You can't exceed what's available ({{amount}})",
+    "saveError": "Error saving",
+    "memberFallback": "Member",
+    "youSuffix": " (you)",
+    "availableHint": "Available: {{available}} of {{total}}",
+    "marking": "Marking…",
+    "pay": "Pay"
+  },
+  "goalsOverlay": {
+    "newGoalAriaLabel": "New goal",
+    "closeAriaLabel": "Close Goals — swipe down"
+  },
+  "settingsSharedSpacePage": {
+    "title": "Shared Space",
+    "description": "Create a space, join with a code, or manage members and permissions of the one you already have.",
+    "invitedSpacesLabel": "Spaces you were invited to",
+    "joinDescription": "The access code must be 6 digits. The space's creator must give it to you.",
+    "period": "Period: {{freq}}",
+    "notifyMeLabel": "Notify me of changes",
+    "notifyMeSubGuest": "Alerts when the owner adds, marks paid, or deletes a payment here",
+    "notifyMeSubOwner": "Alerts when your guest adds, marks paid, or deletes a payment here",
+    "leave": "Leave",
+    "changesSaved": "Changes saved",
+    "expelError": "Couldn't remove the guest",
+    "expelSuccess": "Guest removed",
+    "clearDataError": "Couldn't delete the data",
+    "clearDataSuccess": "Space's payments and income deleted",
+    "accessCodeLabel": "Access code",
+    "copied": "Copied",
+    "inviteHint_one": "You can invite {{count}} more user",
+    "inviteHint_other": "You can invite {{count}} more users",
+    "spaceFullText": "Space is full — remove someone to make room for another person",
+    "guestFallback": "Guest",
+    "expel": "Remove",
+    "expelling": "Removing…",
+    "confirmExpel": "Remove {{name}}? Their payments already added will stay in the space.",
+    "permGroupPayments": "Payments and fund",
+    "permAdd": "Add payments",
+    "permEdit": "Edit payments",
+    "permMarkPaid": "Mark paid/unpaid",
+    "permDelete": "Delete payments",
+    "permAddIncome": "Add extra income",
+    "permAddFunds": "Add funds to the Shared Fund",
+    "permGroupGoals": "Goals",
+    "permAddGoals": "Create goals",
+    "permEditGoals": "Edit goals",
+    "permDeleteGoals": "Delete goals",
+    "permContributeGoals": "Contribute to goals",
+    "permWithdrawGoals": "Withdraw from goals",
+    "permWithdrawGoalsSub": "Can take out money other members contributed",
+    "clearDataButton": "Delete all payments and income",
+    "confirmClearText": "ALL payments and income from \"{{name}}\" will be deleted, with no way to undo it. The space, code, and members stay the same.",
+    "clearing": "Deleting…",
+    "clearAll": "Delete all",
+    "deleteSpaceButton": "Delete Shared Space"
+  },
+  "app": {
+    "toast": {
+      "markPaidError": "Error marking as paid",
+      "registerPaymentError": "Error logging payment",
+      "paymentNotFoundError": "Error: payment not found",
+      "saveAmountError": "Error saving the amount",
+      "payFromFundError": "Error paying from the Fund",
+      "paidFromFund": "{{name}} paid from the Fund — {{amount}}",
+      "registered": "{{name}} logged — {{amount}}",
+      "registerContributionError": "Error logging the contribution",
+      "contributionRegistered": "Contribution logged — {{amount}}",
+      "amountSavedFor": "Amount saved for {{name}} — {{amount}}",
+      "unmarkError": "Error unmarking the payment",
+      "markedUnpaid": "{{name}} marked as unpaid",
+      "postponeError": "Error postponing",
+      "postponed": "{{name}} postponed",
+      "genericError": "Error",
+      "returnedToCurrentPeriod": "Payment returned to the current period",
+      "paymentDeleted": "Payment deleted",
+      "reactivateError": "Error reactivating",
+      "reactivated": "{{name}} reactivated",
+      "saveError": "Error saving",
+      "paymentUpdated": "Payment updated",
+      "added": "{{name}} added",
+      "paymentAdded": "Payment added",
+      "installmentCreated": "Payment {{current}} of {{total}} created",
+      "remanenteConflict": "That period already has a leftover of {{amount}} — check it in \"Extra Income for the Period\"",
+      "paused": "{{name}} paused",
+      "setDefaultTabError": "Error saving your main tab",
+      "defaultTabSet": "\"{{name}}\" is your main tab",
+      "fallbackPaymentName": "Payment",
+      "fallbackSpaceName": "Space",
+      "fetchPaymentsError": "Couldn't load your payments. Check your connection.",
+      "fallbackIncomeName": "extra income"
+    },
+    "confirm": {
+      "deleteThisPayment": "Delete this payment?",
+      "deleteRecurrent": "Delete the recurring payment \"{{name}}\"?\nPayments already made will be kept in the history.",
+      "cancelInstallments": "Cancel the remaining installments of \"{{name}}\"?\nPayments already made will be kept in the history.",
+      "cancelInstallmentsNoHistory": "Cancel the remaining installments of \"{{name}}\"?"
+    }
+  },
+  "patchNotes": {
+    "v0_9_183": {
+      "item0": "New: pin your main tab. Tap the pin icon next to Personal or a Shared Space's name so it's the first thing you see every time you open or reload the app."
+    },
+    "v0_9_135": {
+      "item0": "New: Shared Space — track household expenses, rent, or groceries with your partner or roommate, in a space separate from your Personal account.",
+      "item1": "If you're Premium, you can create your own Shared Space (with its own pay period) and invite someone with a 6-digit code.",
+      "item2": "Without needing Premium, you can join up to 3 Shared Spaces with a code someone shares with you.",
+      "item3": "The owner decides what each guest can do inside the space: add payments, edit them, mark them as paid, delete them, or add extra income — each permission is turned on separately.",
+      "item4": "Everything syncs instantly between everyone sharing the space, with no need to reload the app.",
+      "item5": "Switch between your Personal account and your Shared Spaces from the new stacked selector, above Home, Expenses, and Recurring."
+    },
+    "v0_9_88": {
+      "item0": "New: on a pending variable payment (like electricity or water) you can now jot down the amount as soon as you know it — from the options menu, \"Add amount\". It's saved ready for when you confirm the payment, without affecting past or future payments in that same series."
+    },
+    "v0_9_71": {
+      "item0": "Settings is now organized into a menu — Account, Categories, Pay Period and Income, Notifications, and Appearance, each on its own screen.",
+      "item1": "New: customize your categories with your own icons and colors, and create your own from Settings → Categories."
+    },
+    "v0_9_51": {
+      "item0": "We've evolved! We're now LunaPay — same control over your pay period, new name and logo."
+    },
+    "v0_9_48": {
+      "item0": "Amounts now always show 2 decimals, useful for card payments or other exact amounts."
+    },
+    "v0_9_37": {
+      "item0": "Fixed: the what's-new notice no longer shows up every time you open the app."
+    },
+    "v0_9_36": {
+      "item0": "Menus and popups now enter with a smooth animation from the bottom."
+    },
+    "v0_9_34": {
+      "item0": "You can now edit or delete an extra income you already logged, from the \"Edit\" button next to \"Extra Income This Period\"."
+    },
+    "v0_9_33": {
+      "item0": "Fixed: the home card now correctly recognizes pending variable payments instead of marking them as \"nothing pending\"."
+    },
+    "v0_9_32": {
+      "item0": "Fixed: notifications no longer arrive repeated every hour — they respect the time you set again."
+    },
+    "v0_9_31": {
+      "item0": "You can now edit the date you paid a one-time payment, from the edit screen."
+    },
+    "v0_9_30": {
+      "item0": "New animated background on the home screen that changes with the time of day."
+    }
+  },
+  "errorBoundary": {
+    "title": "Something went wrong",
+    "message": "LunaPay ran into an unexpected error and couldn't continue. Reload the app to pick up where you left off.",
+    "reload": "Reload",
+    "signOut": "Sign out and retry"
+  },
+  "payDetailPanel": {
+    "emptyTitle": "Select a payment",
+    "emptySubtitle": "You'll see each payment's details here",
+    "paidOn": "Paid on",
+    "frequency": "Frequency"
+  },
+  "settingsExport": {
+    "title": "Export data",
+    "intro": "Download a CSV file with your records, or generate a PDF report with charts and a summary.",
+    "dataToInclude": "Data to include",
+    "expenses": "Expenses",
+    "income": "Income",
+    "spaceLabel": "Space",
+    "space": {
+      "personal": "Personal"
+    },
+    "dateRange": "Date range",
+    "from": "From",
+    "to": "To",
+    "recordsFound": "Records found",
+    "downloadCsv": "Download CSV",
+    "downloading": "Downloading…",
+    "premiumMessage": "Exporting your data is a Premium feature.",
+    "unknownMember": "Member",
+    "csv": {
+      "date": "Date",
+      "recordType": "Record type",
+      "concept": "Concept",
+      "category": "Category",
+      "amount": "Amount",
+      "paid": "Paid",
+      "amountType": "Amount type",
+      "space": "Space",
+      "contributors": "Contributors",
+      "expenseType": "Expense",
+      "incomeType": "Income",
+      "yes": "Yes",
+      "no": "No",
+      "variable": "Variable",
+      "fixed": "Fixed",
+      "paymentMethod": "Payment method"
+    },
+    "shortcuts": {
+      "currentPeriod": "Current period",
+      "previousPeriod": "Previous period",
+      "currentMonth": "Current month",
+      "last3Months": "Last 3 months",
+      "last6Months": "Last 6 months",
+      "allTime": "All time"
+    },
+    "format": "Format",
+    "pdf": {
+      "balance": "Balance",
+      "categoryChart": "Expenses by category",
+      "categoryChartContinued": "Expenses by category (continued)",
+      "expenseList": "Expense list",
+      "memberSpending": "Spending by member",
+      "colType": "Type",
+      "colNote": "Note",
+      "goalsTitle": "Goals",
+      "created": "Created",
+      "completed": "Completed",
+      "contributions": "Contributions",
+      "withdrawals": "Withdrawals",
+      "colGoal": "Goal",
+      "fund": "Shared fund",
+      "generate": "Generate PDF",
+      "trendChart": "Expenses and income by month",
+      "pending": "Pending",
+      "reportTitle": "Financial report",
+      "subCategoryChart": "Sorted from highest to lowest spending",
+      "subTrendChart": "Comparison of the recent months with activity",
+      "subExpenseList": "Detail of every expense in the chosen range",
+      "subMemberSpending": "How much each person has put in",
+      "subIncome": "All income recorded in the chosen range",
+      "subGoals": "Summary of your savings goals in the chosen range",
+      "methodChart": "By payment method"
+    },
+    "salaryType": "Salary",
+    "fundDepositType": "Fund contribution",
+    "method": {
+      "label": "Payment method",
+      "all": "All"
+    }
+  },
+  "sync": {
+    "syncing": "Syncing",
+    "notifTitle": "A change couldn't be saved",
+    "body": {
+      "markPaid": "{{name}} wasn't marked as paid. Nothing was changed.",
+      "markUnpaid": "{{name}} wasn't marked as unpaid. Nothing was changed.",
+      "postpone": "{{name}} wasn't postponed. Nothing was changed.",
+      "update": "Your changes to {{name}} weren't saved. Nothing was changed.",
+      "delete": "{{name}} wasn't deleted. Nothing was changed.",
+      "updateMaster": "Your changes to {{name}} weren't saved. Nothing was changed.",
+      "pause": "{{name}} wasn't paused. Nothing was changed.",
+      "resume": "{{name}} wasn't resumed. Nothing was changed.",
+      "deleteMaster": "{{name}} wasn't deleted. Nothing was changed.",
+      "abonar": "The partial payment to {{name}} wasn't recorded. Nothing was changed.",
+      "goalCreate": "The goal {{name}} wasn't created. Nothing was changed.",
+      "goalUpdate": "Your changes to the goal {{name}} weren't saved. Nothing was changed.",
+      "goalAportar": "The contribution to {{name}} wasn't recorded. Nothing was changed.",
+      "goalRetirar": "The withdrawal from {{name}} wasn't recorded. Nothing was changed.",
+      "goalComplete": "The goal {{name}} wasn't marked as completed. Nothing was changed.",
+      "goalDelete": "The goal {{name}} wasn't deleted. Nothing was changed.",
+      "create": "{{name}} wasn't created. Nothing was changed.",
+      "incomeCreate": "The income {{name}} wasn't recorded. Nothing was changed.",
+      "incomeUpdate": "Your changes to the income {{name}} weren't saved. Nothing was changed.",
+      "incomeDelete": "The income {{name}} wasn't deleted. Nothing was changed.",
+      "cardCreate": "The card {{name}} wasn't saved. Nothing was changed.",
+      "cardUpdate": "Your changes to {{name}} weren't saved. Nothing was changed.",
+      "cardDelete": "{{name}} wasn't deleted. Nothing was changed."
+    }
+  },
+  "cards": {
+    "title": "My cards",
+    "description": "Add your cards to see where your money goes.",
+    "disclaimer": {
+      "title": "Only to organize your spending",
+      "text": "Your cards are not payment methods and LunaPay has no access to your accounts or banking data. They only help you identify what you paid with and organize your spending better."
+    },
+    "kind": {
+      "credit": "Credit",
+      "debit": "Debit"
+    },
+    "network": {
+      "visa": "Visa",
+      "mastercard": "Mastercard",
+      "amex": "Amex"
+    },
+    "bankGroups": {
+      "banks": "Banks",
+      "digital": "Digital banks",
+      "stores": "Department stores",
+      "other": "Other"
+    },
+    "otherBank": "Other bank",
+    "fallbackName": "your card",
+    "cutAndDue": "Closing day {{cut}} · Due day {{due}}",
+    "addButton": "Add card",
+    "empty": {
+      "creditTitle": "No credit cards yet",
+      "debitTitle": "No debit cards yet",
+      "subtitle": "Tap to add one"
+    },
+    "deleteTitle": "Delete card",
+    "deleteMessage": "{{name}} will be removed from My cards.",
+    "form": {
+      "titleNew": "New card",
+      "titleEdit": "Edit card",
+      "kindLocked": "The card type can't be changed after it's added.",
+      "bank": "Bank",
+      "bankPlaceholder": "Choose your bank",
+      "alias": "Nickname",
+      "aliasPlaceholder": "E.g. Payroll",
+      "last4": "Last 4",
+      "aliasHelper": "Nickname and last 4 digits are optional; they help you tell apart two cards from the same bank.",
+      "network": "Network",
+      "form": "Type",
+      "physical": "Physical",
+      "digital": "Digital",
+      "days": "Closing and due date",
+      "debitNote": "Debit cards have no balance or dates: they only add up what you mark as paid with them.",
+      "saveNew": "Save card",
+      "saveEdit": "Save changes"
+    },
+    "errors": {
+      "bank": "Choose your card's bank.",
+      "days": "Choose the closing day and the due day.",
+      "last4": "Last 4 must be 4 numbers."
+    },
+    "picker": {
+      "cutLabel": "Closing day",
+      "dueLabel": "Due day",
+      "hint": "Closes on {{cut}} · pay by {{due}} ({{days}} days)",
+      "nextMonth": "The due date falls in the month after closing.",
+      "sameDay": "The due day can't be the same as the closing day.",
+      "help": "Drag either marker, tap a day to move the one selected above, or type it."
+    },
+    "statementPaymentName": "{{name}} card payment",
+    "statementBadge": "Card statement",
+    "cycleSpend": "Spent this cycle: {{amount}}",
+    "pendingCreditTotal": "Owed",
+    "detail": {
+      "paidWithCard": "Paid with this card",
+      "noHistory": "No payments in this period",
+      "abono": "Payment",
+      "owedThisPeriod": "You owe this period"
+    },
+    "alreadyAbonado": "Already paid {{amount}}",
+    "earlyPaymentName": "Payment to {{name}}",
+    "payNow": {
+      "button": "Pay now",
+      "title": "Pay {{name}} now",
+      "subtitle": "You've spent {{amount}} this cycle.",
+      "subtitleZero": "You haven't spent anything this cycle yet. You can still make an early payment.",
+      "amountLabel": "Amount to pay",
+      "amountError": "Enter an amount greater than $0.",
+      "noteFull": "You're paying everything spent so far. If you don't use the card again before the closing date, no statement will be generated.",
+      "notePartial": "You're paying part of it. The closing date will only bill the remaining {{amount}}, plus anything you spend before then.",
+      "noteOver": "You're paying more than owed — the extra will be subtracted from your next statement.",
+      "confirm": "Confirm payment",
+      "success": "You paid {{amount}} to {{name}}"
+    },
+    "owedThisPeriodChip": "You owe this period: {{amount}}",
+    "owedChip": "Owed: {{amount}}"
+  },
+  "paymentMethod": {
+    "label": "Paid with",
+    "cash": "Cash",
+    "groupCash": "No card",
+    "creditNote": "It counts in Expenses and its category, but doesn't lower your available balance: that money leaves when you pay the statement.",
+    "changeAction": "Change payment method",
+    "changeTitle": "What was it paid with?",
+    "deletedCredit": "Deleted credit card",
+    "deletedDebit": "Deleted debit card",
+    "deletedCard": "Deleted card"
+  }
+}
