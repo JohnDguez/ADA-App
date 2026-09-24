@@ -4,7 +4,7 @@ import { ChevronLeft, MoreVertical, Pencil, Trash2, Loader2 } from 'lucide-react
 import { CreditCardVisual } from './CreditCardVisual'
 import { Select } from './Select'
 import { getCategoryLabel, fmt, getMonths, getMonthsShort } from '../lib/utils'
-import { currentCycleSpend, currentCycleAbonos, currentPeriodOwed } from '../lib/cardStatements'
+import { totalOwedOnCard } from '../lib/cardStatements'
 import styles from './CardDetailPanel.module.css'
 
 // Detalle de una tarjeta (v0.9.495, mockups confirmados con Johnatan).
@@ -64,27 +64,17 @@ export function CardDetailPanel({ card, payments, onBack, onEdit, onDelete, onPa
     ? (card.last_statement_cut ? new Date(card.last_statement_cut) : new Date(card.created_at))
     : null
 
-  // Lo gastado en el ciclo en curso.
-  const cycleSpend = card.kind === 'credit'
-    ? currentCycleSpend(card, cardPayments.filter(p => p.payment_method_id === card.id && p.payment_method_kind === 'credit' && p.is_paid))
-    : 0
-
-  // Lo ya adelantado en el ciclo en curso (v0.9.497, "Pagar ahora").
-  const cycleAbonos = card.kind === 'credit'
-    ? currentCycleAbonos(card, cardPayments.filter(p => p.card_statement_for === card.id && !p.is_card_statement && p.is_paid))
-    : 0
-
-  // "Debes en este periodo" (v0.9.500-501, pedido de Johnatan): UN solo
-  // numero, sin que el usuario tenga que restar gasto menos abono a mano
-  // -- ni en la propia tarjeta (el chip, en el JSX de mas abajo) ni en la
-  // pastilla. Siempre es la deuda del CICLO EN CURSO, sin importar el
-  // filtro Periodo actual/Por mes. Solo aplica a credito (debito no
-  // acumula deuda, el dinero ya salio al pagar).
-  const owedThisPeriod = currentPeriodOwed(
-    card,
-    cardPayments.filter(p => p.payment_method_id === card.id && p.payment_method_kind === 'credit' && p.is_paid),
-    cardPayments.filter(p => p.card_statement_for === card.id && !p.is_card_statement && p.is_paid)
-  )
+  // "Por pagar" (v0.9.502, pedido de Johnatan): antes eran 2 pastillas
+  // aparte ("Por pagar en crédito" y "Debes en este periodo") que el
+  // usuario percibía como la misma información repetida, y encima se
+  // duplicaba una tercera vez en el chip de la propia tarjeta. Ahora es
+  // UN solo número: lo ya facturado y sin pagar, más lo que llevas en el
+  // ciclo en curso (`totalOwedOnCard`, cardStatements.js). El chip de la
+  // tarjeta se quita por completo en esta pantalla — la pastilla de abajo
+  // es la única fuente de esa cifra. "Debes" se evita a propósito (pedido
+  // de Johnatan: se siente informal); se usa "Por pagar", como en las
+  // apps de bancos.
+  const totalOwed = card.kind === 'credit' ? totalOwedOnCard(card, cardPayments) : 0
 
   const inView = useMemo(() => {
     const resolved = cardPayments.filter(p => p.is_paid)
@@ -111,15 +101,10 @@ export function CardDetailPanel({ card, payments, onBack, onEdit, onDelete, onPa
   // distinguir direccion, asi que un abono ("Pagar ahora", v0.9.497) se
   // sumaba junto con las compras. "Pagado con esta tarjeta" es solo lo
   // GASTADO CON la tarjeta (payment_method_id === card.id), nunca lo
-  // abonado A la tarjeta (card_statement_for === card.id).
-  // FIX v0.9.501 (reportado por Johnatan): esta pastilla SIEMPRE es el
-  // total gastado, sin importar el filtro -- "You owe this period" es una
-  // pastilla APARTE, no un reemplazo (ver showOwedThisPeriod mas abajo).
+  // abonado A la tarjeta (card_statement_for === card.id). Esta pastilla
+  // sigue siendo SIEMPRE el total gastado, sin importar el filtro
+  // (v0.9.501) — "Por pagar" (arriba) es la deuda real, otra cosa.
   const total = inView.filter(p => !p.is_postponed && p.payment_method_id === card.id).reduce((s, p) => s + Number(p.amount), 0)
-  const showOwedThisPeriod = card.kind === 'credit' && viewMode === 'periodo'
-  const owedOnCredit = card.kind === 'credit'
-    ? cardPayments.filter(p => p.is_card_statement && !p.is_paid).reduce((s, p) => s + Number(p.amount), 0)
-    : null
 
   const groups = useMemo(() => {
     const byMonth = new Map()
@@ -163,20 +148,12 @@ export function CardDetailPanel({ card, payments, onBack, onEdit, onDelete, onPa
       </div>
 
       <div className={styles.preview}>
-        <CreditCardVisual
-          card={card}
-          cycleSpendLabel={
-            // FIX v0.9.502 (reportado por Johnatan): antes mostraba
-            // "Gastado en este corte" + "Ya abonaste" en 2 líneas, y el
-            // usuario tenía que restarlas a mano para saber cuánto debe
-            // de verdad. Ahora un solo número: lo que realmente se debe.
-            // El detalle completo (gastos y abonos por separado) sigue
-            // disponible en el historial de abajo para quien lo quiera.
-            card.kind === 'credit'
-              ? t('cards.owedThisPeriodChip', { amount: fmt(owedThisPeriod) })
-              : null
-          }
-        />
+        {/* FIX v0.9.502 (reportado por Johnatan): el chip repetía la misma
+            cifra que ya muestra la pastilla "Por pagar" de abajo — se
+            quita por completo en esta pantalla. La lista de Mis tarjetas
+            sí conserva su propio chip (ahí es la única fuente de esa
+            cifra, sin pastillas alrededor). */}
+        <CreditCardVisual card={card} />
       </div>
 
       {card.kind === 'credit' && onPayNow && (
@@ -185,18 +162,14 @@ export function CardDetailPanel({ card, payments, onBack, onEdit, onDelete, onPa
         </button>
       )}
 
+      {/* "Por pagar" (v0.9.502): antes eran 2 pastillas ("Por pagar en
+          crédito" + "Debes en este periodo") que se sentían como la misma
+          información repetida — ahora es una sola, con el total
+          consolidado (`totalOwedOnCard`, arriba). */}
       {card.kind === 'credit' && (
         <div className={styles.pill}>
           <span>{t('cards.pendingCreditTotal')}</span>
-          <b>{fmt(owedOnCredit)}</b>
-        </div>
-      )}
-      {/* "You owe this period" (v0.9.502): pastilla APARTE de "Paid with
-          this card" — no un reemplazo (fix del mismo reporte de arriba). */}
-      {showOwedThisPeriod && (
-        <div className={styles.pill}>
-          <span>{t('cards.detail.owedThisPeriod')}</span>
-          <span className={styles.pillAmount}>{fmt(owedThisPeriod)}</span>
+          <span className={styles.pillAmount}>{fmt(totalOwed)}</span>
         </div>
       )}
       <div className={styles.pill}>
