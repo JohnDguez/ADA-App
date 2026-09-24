@@ -4,6 +4,7 @@ import { ChevronLeft, MoreVertical, Pencil, Trash2, Loader2 } from 'lucide-react
 import { CreditCardVisual } from './CreditCardVisual'
 import { Select } from './Select'
 import { getCategoryLabel, fmt, getMonths, getMonthsShort } from '../lib/utils'
+import { currentCycleSpend, currentCycleAbonos } from '../lib/cardStatements'
 import styles from './CardDetailPanel.module.css'
 
 // Detalle de una tarjeta (v0.9.495, mockups confirmados con Johnatan).
@@ -20,7 +21,7 @@ import styles from './CardDetailPanel.module.css'
 //   — normalmente pagados en efectivo, por eso NO califican como
 //   `payment_method_id === card.id`; se identifican aparte).
 // Los pospuestos no cuentan en el total, mismo criterio que Gastos.
-export function CardDetailPanel({ card, payments, onBack, onEdit, onDelete, canEdit = true, canDelete = true, blocked }) {
+export function CardDetailPanel({ card, payments, onBack, onEdit, onDelete, onPayNow, canEdit = true, canDelete = true, blocked }) {
   const { t } = useTranslation()
   const [menuOpen, setMenuOpen] = useState(false)
   const menuRef = useRef(null)
@@ -62,6 +63,12 @@ export function CardDetailPanel({ card, payments, onBack, onEdit, onDelete, canE
   const cycleStart = card.kind === 'credit'
     ? (card.last_statement_cut ? new Date(card.last_statement_cut) : new Date(card.created_at))
     : null
+
+  // Lo ya adelantado en el ciclo en curso (v0.9.497, "Pagar ahora") — se
+  // muestra junto a "Gastado en este corte" en la propia tarjeta.
+  const cycleAbonos = card.kind === 'credit'
+    ? currentCycleAbonos(card, cardPayments.filter(p => p.card_statement_for === card.id && !p.is_card_statement && p.is_paid))
+    : 0
 
   const inView = useMemo(() => {
     const resolved = cardPayments.filter(p => p.is_paid)
@@ -131,8 +138,26 @@ export function CardDetailPanel({ card, payments, onBack, onEdit, onDelete, canE
       </div>
 
       <div className={styles.preview}>
-        <CreditCardVisual card={card} />
+        <CreditCardVisual
+          card={card}
+          cycleSpendLabel={
+            // FIX (v0.9.497): esta línea faltaba por completo en el
+            // detalle — solo se veía en la lista de Mis tarjetas.
+            card.kind === 'credit'
+              ? [
+                  t('cards.cycleSpend', { amount: fmt(currentCycleSpend(card, cardPayments.filter(p => p.payment_method_id === card.id && p.payment_method_kind === 'credit' && p.is_paid))) }),
+                  cycleAbonos > 0 ? t('cards.alreadyAbonado', { amount: fmt(cycleAbonos) }) : null,
+                ].filter(Boolean).join('\n')
+              : null
+          }
+        />
       </div>
+
+      {card.kind === 'credit' && onPayNow && (
+        <button type="button" onClick={() => onPayNow(card)} className={styles.payNowButton}>
+          {t('cards.payNow.button')}
+        </button>
+      )}
 
       {card.kind === 'credit' && (
         <div className={styles.pill}>
@@ -177,6 +202,20 @@ export function CardDetailPanel({ card, payments, onBack, onEdit, onDelete, canE
             <div className={styles.monthLabel}>{g.label}</div>
             {g.rows.map(p => {
               const d = new Date(p.paid_at || p.due_date)
+              // Estilo "como los bancos" (v0.9.497, pedido de Johnatan):
+              // un ingreso es dinero que REDUCE lo que debes en esta
+              // tarjeta — el estado de cuenta automático o un abono manual
+              // (`card_statement_for === card.id`). Un gasto es una compra
+              // hecha CON la tarjeta (`payment_method_id === card.id`).
+              // Para débito, que no tiene estados de cuenta ni abonos,
+              // todo cae del lado de gasto — mismo criterio, sin
+              // necesidad de un caso especial.
+              const isIncome = p.card_statement_for === card.id
+              const label = p.is_card_statement
+                ? t('cards.statementBadge')
+                : isIncome
+                  ? t('cards.detail.abono')
+                  : getCategoryLabel(p.category)
               return (
                 <div key={p.id} className={styles.row}>
                   <div className={styles.rowDate}>
@@ -186,11 +225,13 @@ export function CardDetailPanel({ card, payments, onBack, onEdit, onDelete, canE
                   <div className={styles.rowMain}>
                     <div className={styles.rowName}>{p.name}</div>
                     <div className={styles.rowCat}>
-                      {p.is_card_statement ? t('cards.statementBadge') : getCategoryLabel(p.category)}
+                      {label}
                       {p.is_postponed && ` · ${t('payCard.status.postponed')}`}
                     </div>
                   </div>
-                  <div className={styles.rowAmount}>{fmt(p.amount)}</div>
+                  <div className={`${styles.rowAmount} ${isIncome ? styles.rowAmountIncome : ''}`}>
+                    {isIncome ? '+' : '−'}{fmt(p.amount)}
+                  </div>
                 </div>
               )
             })}

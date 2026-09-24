@@ -223,3 +223,27 @@
   color: var(--text);
   flex-shrink: 0;
 }
+
+/* Ingreso (v0.9.497, "como los bancos"): dinero que reduce lo que debes —
+   estado de cuenta o abono manual. Reutiliza el verde ya usado para
+   pagados en el resto de la app (var(--paid)), sin inventar un color. */
+.rowAmountIncome {
+  color: var(--paid);
+}
+
+/* "Pagar ahora" (v0.9.497) — mismo look que un botón secundario ya usado
+   en la app (fondo de superficie, sin el peso de btn-primary). */
+.payNowButton {
+  width: 100%;
+  padding: 12px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  color: var(--accent);
+  font-size: 14px;
+  font-weight: 600;
+  font-family: 'DM Sans', sans-serif;
+  cursor: pointer;
+  margin-bottom: 10px;
+}

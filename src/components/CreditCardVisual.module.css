@@ -113,7 +113,10 @@
 }
 
 /* Gastado en este corte (entrega C, v0.9.490) — dentro del flujo normal de
-   la tarjeta, no superpuesto: nunca choca con el número ni con la red. */
+   la tarjeta, no superpuesto: nunca choca con el número ni con la red.
+   `white-space: pre-line` (v0.9.497): "Ya abonaste" puede venir como
+   segunda línea del mismo string, separada por \n — ver
+   SettingsCardsPage.jsx / CardDetailPanel.jsx. */
 .cycleChip {
   position: relative;
   z-index: 1;
@@ -122,4 +125,5 @@
   border-radius: 6px;
   padding: 4px 8px;
   font-size: 11px;
+  white-space: pre-line;
 }
