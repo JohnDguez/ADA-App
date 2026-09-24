@@ -1501,7 +1501,8 @@
       "noteOver": "Pagas de más — el excedente se resta de tu siguiente estado de cuenta.",
       "confirm": "Confirmar pago",
       "success": "Pagaste {{amount}} a {{name}}"
-    }
+    },
+    "owedThisPeriodChip": "Debes este periodo: {{amount}}"
   },
   "paymentMethod": {
     "label": "Se paga con",

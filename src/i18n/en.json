@@ -1501,7 +1501,8 @@
       "noteOver": "You're paying more than owed — the extra will be subtracted from your next statement.",
       "confirm": "Confirm payment",
       "success": "You paid {{amount}} to {{name}}"
-    }
+    },
+    "owedThisPeriodChip": "You owe this period: {{amount}}"
   },
   "paymentMethod": {
     "label": "Paid with",
