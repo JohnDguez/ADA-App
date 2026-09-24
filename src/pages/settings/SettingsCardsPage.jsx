@@ -12,7 +12,7 @@ import { SegmentedControl } from '../../components/SegmentedControl'
 import { ConfirmDeleteModal } from '../../components/ConfirmDeleteModal'
 import { EmptyState } from '../../components/EmptyState'
 import { getBank } from '../../lib/cardCatalog'
-import { currentPeriodOwed } from '../../lib/cardStatements'
+import { totalOwedOnCard } from '../../lib/cardStatements'
 import { fmt } from '../../lib/utils'
 import styles from './SettingsCardsPage.module.css'
 
@@ -70,21 +70,14 @@ function CardStack({ cards, onSelect, personalPayments }) {
           <CreditCardVisual
             card={c}
             cycleSpendLabel={
-              // FIX v0.9.502 (reportado por Johnatan): mostrar "Gastado en
-              // este corte" + "Ya abonaste" por separado obligaba al
-              // usuario a restar mentalmente cuánto debe de verdad. Mismo
-              // criterio ya aplicado en CardDetailPanel.jsx: un solo
-              // número, la deuda real del ciclo. `personalPayments ===
-              // null` (viendo un Espacio Compartido) → no se muestra un
-              // número incorrecto.
+              // FIX v0.9.502 (reportado por Johnatan: "Debes" es muy
+              // informal, y ya no es solo la deuda del ciclo — es el
+              // mismo total consolidado que la pastilla "Por pagar" del
+              // detalle, `totalOwedOnCard`). `personalPayments === null`
+              // (viendo un Espacio Compartido) → no se muestra un número
+              // incorrecto.
               c.kind === 'credit' && personalPayments
-                ? t('cards.owedThisPeriodChip', {
-                    amount: fmt(currentPeriodOwed(
-                      c,
-                      personalPayments.filter(p => p.payment_method_id === c.id && p.payment_method_kind === 'credit' && p.is_paid),
-                      personalPayments.filter(p => p.card_statement_for === c.id && !p.is_card_statement && p.is_paid)
-                    )),
-                  })
+                ? t('cards.owedChip', { amount: fmt(totalOwedOnCard(c, personalPayments)) })
                 : null
             }
           />
@@ -186,14 +179,15 @@ export function SettingsCardsPage({ paymentMethods, personalPayments = null, onP
             ]}
           />
 
-          {/* "Por pagar en crédito" (entrega C): suma de los estados de
-              cuenta YA GENERADOS y sin liquidar — no lo gastado en el ciclo
-              en curso, que todavía no se cobra. */}
+          {/* "Por pagar" (v0.9.502, pedido de Johnatan): antes solo sumaba
+              los estados de cuenta YA generados — ahora, igual que la
+              pastilla del detalle, suma también el ciclo en curso de cada
+              tarjeta (`totalOwedOnCard`, una por tarjeta y luego sumadas). */}
           {kind === 'credit' && personalPayments && (
             <div className={styles.totalPill}>
               <span>{t('cards.pendingCreditTotal')}</span>
               <span className={styles.totalPillAmount}>
-                {fmt(personalPayments.filter(p => p.is_card_statement && !p.is_paid).reduce((s, p) => s + Number(p.amount), 0))}
+                {fmt(credit.reduce((s, c) => s + totalOwedOnCard(c, personalPayments), 0))}
               </span>
             </div>
           )}
