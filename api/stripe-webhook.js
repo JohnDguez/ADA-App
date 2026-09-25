@@ -38,10 +38,19 @@ function readRawBody(req) {
 // `customer.subscription.deleted` — es permanente a propósito: define si
 // la próxima vez que abra PremiumPage sigue calificando para la prueba
 // gratis de 7 días (solo la primera suscripción de su vida la trae).
-async function setPremiumByCustomer(customerId, { isPremium, subscriptionId, status, markSubscribed }) {
+// `trialEndsAt` (v0.9.508, recordatorio "tu prueba termina en 2 días"):
+// fecha en que termina el trial, calculada de `subscription.trial_end`
+// (Unix, UTC) — se guarda para que send-notifications.js la compare en un
+// cron diario SIN llamarle a Stripe por cada usuario en trial (mismo
+// motivo por el que ese archivo nunca consulta otra API para sus
+// recordatorios, todo vive ya en Supabase). No se limpia al salir del
+// trial — el cron solo la mira cuando `stripe_subscription_status` sigue
+// siendo 'trialing', así que un valor viejo nunca dispara nada por error.
+async function setPremiumByCustomer(customerId, { isPremium, subscriptionId, status, markSubscribed, trialEndsAt }) {
   const updates = { is_premium: isPremium, stripe_subscription_status: status ?? null }
   if (subscriptionId !== undefined) updates.stripe_subscription_id = subscriptionId
   if (markSubscribed) updates.has_subscribed_before = true
+  if (trialEndsAt !== undefined) updates.trial_ends_at = trialEndsAt
 
   const { data, error } = await supabase
     .from('profiles')
@@ -50,6 +59,16 @@ async function setPremiumByCustomer(customerId, { isPremium, subscriptionId, sta
     .select('id')
   if (error) throw error
   return data
+}
+
+// Unix seconds (segundos desde epoch, como los da Stripe en
+// `subscription.trial_end`) → fecha 'YYYY-MM-DD' en UTC. Deliberadamente
+// UTC y no hora local del usuario (a diferencia de `due_date` de pagos,
+// Regla 11): `trial_end` es un instante absoluto fijado por Stripe, no un
+// día civil elegido por el usuario, así que no hay una "zona horaria
+// correcta" más obvia que UTC para partirlo en fecha.
+function trialEndDateStr(unixSeconds) {
+  return new Date(unixSeconds * 1000).toISOString().split('T')[0]
 }
 
 module.exports = async function handler(req, res) {
@@ -78,6 +97,7 @@ module.exports = async function handler(req, res) {
             subscriptionId: subscription.id,
             status: subscription.status,
             markSubscribed: true,
+            trialEndsAt: subscription.trial_end ? trialEndDateStr(subscription.trial_end) : undefined,
           })
         }
         break
@@ -94,6 +114,7 @@ module.exports = async function handler(req, res) {
           isPremium: !revoke,
           subscriptionId: subscription.id,
           status: subscription.status,
+          trialEndsAt: subscription.trial_end ? trialEndDateStr(subscription.trial_end) : undefined,
         })
         break
       }

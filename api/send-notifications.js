@@ -249,6 +249,33 @@ async function collectGoalDeadlineReminders(userId, todayStr) {
   return notifications
 }
 
+// Prueba gratis de 7 días (v0.9.508) — aviso único "tu prueba termina en 2
+// días", mismo patrón que collectGoalDeadlineReminders de arriba: se manda
+// UNA SOLA VEZ (columna `trial_reminder_sent`, marcada aquí mismo) para que
+// el cron de la hora siguiente no la vuelva a levantar. Depende de
+// `trial_ends_at`/`stripe_subscription_status` que guarda stripe-webhook.js
+// (v0.9.506/508) — nunca llama a Stripe, todo sale de `profiles`. Sin monto
+// en el mensaje a propósito: `profiles` no guarda qué plan (Mensual/Anual)
+// eligió, solo el status de la suscripción — de agregar el precio, habría
+// que guardar también el price_id o el plan.
+const TRIAL_REMINDER_DAYS_BEFORE = 2
+
+function collectTrialReminder(profile, todayStr) {
+  if (profile.stripe_subscription_status !== 'trialing') return null
+  if (!profile.trial_ends_at || profile.trial_reminder_sent) return null
+  if (profile.trial_ends_at !== addDaysStr(todayStr, TRIAL_REMINDER_DAYS_BEFORE)) return null
+
+  return {
+    type: 'trial_ending',
+    title: 'Tu prueba de Premium termina en 2 días',
+    body: 'Después de eso se activará el cobro normal de tu plan. Puedes cancelar cuando quieras desde Ajustes.',
+    tag: 'trial-ending',
+    urgent: false,
+    url: '/',
+    space_name: null,
+  }
+}
+
 module.exports = async function handler(req, res) {
   const authHeader = req.headers.authorization
   if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
@@ -268,7 +295,7 @@ module.exports = async function handler(req, res) {
     const userIds = subs.map(s => s.user_id)
     const { data: profiles, error: profilesError } = await supabase
       .from('profiles')
-      .select('id, notif_cobro_day, notif_due_today, notif_upcoming, notif_overdue, notif_days_before, notif_hour, timezone, cobro_freq, cobro_weekday, notif_last_sent')
+      .select('id, notif_cobro_day, notif_due_today, notif_upcoming, notif_overdue, notif_days_before, notif_hour, timezone, cobro_freq, cobro_weekday, notif_last_sent, stripe_subscription_status, trial_ends_at, trial_reminder_sent')
       .in('id', userIds)
 
     if (profilesError) return res.status(500).json({ error: profilesError.message })
@@ -326,6 +353,16 @@ module.exports = async function handler(req, res) {
       // vida de cada meta, así que no genera ruido repetido.
       const goalNotifs = await collectGoalDeadlineReminders(sub.user_id, todayStr)
       notifications = notifications.concat(goalNotifs)
+
+      // Prueba de 7 días — aviso único de "termina en 2 días" (v0.9.508).
+      // No depende de ninguna preferencia de notificaciones (mismo criterio
+      // que las metas arriba): es un aviso de una sola vez en la vida de
+      // cada trial, no ruido repetido que el usuario necesite poder apagar.
+      const trialNotif = collectTrialReminder(profile, todayStr)
+      if (trialNotif) {
+        notifications.push(trialNotif)
+        await supabase.from('profiles').update({ trial_reminder_sent: true }).eq('id', profile.id)
+      }
 
       for (const space of spacesInfo) {
         const spaceNotifs = await collectReminders({ type: 'space', spaceId: space.id, spaceName: space.name }, profile, todayStr, today)
