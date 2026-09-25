@@ -150,6 +150,7 @@ export function GoalsPage({
         unreadCount={unreadCount}
         onOpenNotifs={onOpenNotifs}
         onGoSettings={onGoSettings}
+        onOpenPremium={onOpenPremium}
       />
 
       <div className={styles.roundedContentWrapper}>

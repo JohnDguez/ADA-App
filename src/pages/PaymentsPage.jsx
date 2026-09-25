@@ -1192,6 +1192,7 @@ export function PaymentsPage({ payments, dataLoading = false, periodIncome, paym
           unreadCount={unreadCount}
           onOpenNotifs={onOpenNotifs}
           onGoSettings={onGoSettings}
+          onOpenPremium={onOpenPremium}
         />
       </div>
 

@@ -270,6 +270,7 @@ export function HomePage({ payments, dataLoading = false, profile, spaceSwitcher
           unreadCount={unreadCount}
           onOpenNotifs={() => setNotifOpen(true)}
           onGoSettings={onGoSettings}
+          onOpenPremium={onOpenPremium}
         />
       </div>
 

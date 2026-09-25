@@ -125,7 +125,7 @@ export function RecurrentsPage({ payments, dataLoading = false, profile, spaceSw
 
   return (
     <div className={styles.pageRoot} onClick={() => setOpenMenu(null)}>
-      <PageHeader profile={profile} unreadCount={unreadCount} onOpenNotifs={onOpenNotifs} onGoSettings={onGoSettings} />
+      <PageHeader profile={profile} unreadCount={unreadCount} onOpenNotifs={onOpenNotifs} onGoSettings={onGoSettings} onOpenPremium={onOpenPremium} />
 
       {/* Menú contextual flotante */}
       {openMenu && (
