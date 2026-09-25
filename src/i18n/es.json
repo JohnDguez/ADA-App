@@ -624,7 +624,8 @@
     "section9Text": "Puedes dejar de usar {{appName}} y eliminar tu cuenta en cualquier momento. Nos reservamos el derecho de suspender cuentas que violen estos términos.",
     "section10Title": "10. Contacto",
     "section10Text": "Si tienes dudas sobre estos términos, puedes contactarnos a través de los canales disponibles en la aplicación.",
-    "closing": "Al crear tu cuenta, confirmas que has leído y aceptas estos Términos y Condiciones."
+    "closing": "Al crear tu cuenta, confirmas que has leído y aceptas estos Términos y Condiciones.",
+    "viewFullVersion": "Ver la versión completa y actualizada →"
   },
   "onboardingPage": {
     "step1": {

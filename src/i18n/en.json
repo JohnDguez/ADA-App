@@ -624,7 +624,8 @@
     "section9Text": "You can stop using {{appName}} and delete your account at any time. We reserve the right to suspend accounts that violate these terms.",
     "section10Title": "10. Contact",
     "section10Text": "If you have questions about these terms, you can contact us through the channels available in the app.",
-    "closing": "By creating your account, you confirm that you have read and accept these Terms and Conditions."
+    "closing": "By creating your account, you confirm that you have read and accept these Terms and Conditions.",
+    "viewFullVersion": "View the full, up-to-date version →"
   },
   "onboardingPage": {
     "step1": {
