@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Aviso de Privacidad — LunaPay</title>
+<meta name="robots" content="index, follow">
+<link rel="icon" href="/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #F2F2F2;
+    --surface: #FFFFFF;
+    --border: #E4E2DC;
+    --text: #020A1F;
+    --muted: #696969;
+    --accent: #2F8CFA;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: 'DM Sans', system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.65;
+  }
+  .wrap { max-width: 720px; margin: 0 auto; padding: 32px 20px 80px; }
+  header { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 24px; }
+  header img { height: 32px; }
+  h1 { font-size: 24px; font-weight: 800; margin: 24px 0 4px; }
+  .updated { color: var(--muted); font-size: 13px; margin-bottom: 24px; }
+  .card { background: var(--surface); border-radius: 16px; padding: 28px 24px; margin-bottom: 16px; }
+  h2 { font-size: 16px; font-weight: 700; margin: 0 0 10px; color: var(--text); }
+  p, li { font-size: 14.5px; color: var(--text); }
+  ul { padding-left: 20px; margin: 8px 0; }
+  li { margin-bottom: 6px; }
+  a { color: var(--accent); text-decoration: none; font-weight: 600; }
+  a:hover { text-decoration: underline; }
+  .notice {
+    background: #FFF8E6; border: 1px solid #F0DDA0; border-radius: 12px;
+    padding: 14px 16px; font-size: 13px; color: #6B5300; margin-bottom: 24px;
+  }
+  footer { text-align: center; color: var(--muted); font-size: 12.5px; margin-top: 32px; }
+
+  /* Selector de idioma — pill de 2 posiciones (Regla 13: único caso, junto
+     al FAB principal de una pantalla, donde un pill es válido en LunaPay). */
+  .langToggle {
+    display: flex; background: var(--border); border-radius: 20px; padding: 3px;
+    flex-shrink: 0;
+  }
+  .langBtn {
+    border: none; background: none; font-family: inherit; font-size: 12.5px;
+    font-weight: 700; color: var(--muted); padding: 5px 12px; border-radius: 20px;
+    cursor: pointer;
+  }
+  .langBtn.active { background: var(--surface); color: var(--accent); }
+
+  [data-lang-content="en"] { display: none; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <img src="/Luna-Pay-logo.svg" alt="LunaPay">
+    <div class="langToggle">
+      <button type="button" class="langBtn" data-lang-btn="es" onclick="setLang('es')">ES</button>
+      <button type="button" class="langBtn" data-lang-btn="en" onclick="setLang('en')">EN</button>
+    </div>
+  </header>
+
+  <!-- ══════════════════════════ ESPAÑOL ══════════════════════════ -->
+  <div data-lang-content="es">
+
+  <h1>Aviso de Privacidad</h1>
+  <p class="updated">Última actualización: septiembre de 2026</p>
+
+  <div class="notice">
+    Este documento fue redactado con apoyo de IA a partir de lo que la aplicación realmente hace, como base de trabajo — no sustituye la revisión de un abogado especializado en protección de datos antes de publicarse.
+  </div>
+
+  <div class="card">
+    <h2>1. Responsable del tratamiento de tus datos personales</h2>
+    <p>
+      <strong>Johnatan Domínguez</strong>, con domicilio en Culiacán, Sinaloa, México
+      (en adelante, "LunaPay", "nosotros"), es responsable del tratamiento de tus datos
+      personales conforme a la Ley Federal de Protección de Datos Personales en Posesión de
+      los Particulares (LFPDPPP) de México.
+    </p>
+  </div>
+
+  <div class="card">
+    <h2>2. Datos personales que recabamos</h2>
+    <p>Recabamos los siguientes datos, dependiendo de cómo uses la aplicación:</p>
+    <ul>
+      <li><strong>Datos de identificación y contacto:</strong> nombre y correo electrónico, al crear tu cuenta.</li>
+      <li><strong>Datos de acceso:</strong> tu contraseña (almacenada cifrada, nunca en texto plano) o, si eliges iniciar sesión con Google, el identificador que Google nos comparte para autenticarte — nunca vemos tu contraseña de Google.</li>
+      <li><strong>Datos financieros que tú mismo registras:</strong> tus pagos, ingresos, metas de ahorro, montos, categorías y periodo de cobro. <strong>LunaPay no se conecta a tu banco ni a tus cuentas bancarias</strong> — es una herramienta de seguimiento personal, no un agregador financiero; todo lo que ves ahí es lo que tú mismo capturaste.</li>
+      <li><strong>Datos de pago de tu suscripción:</strong> si contratas Premium, tu tarjeta la procesa directamente Stripe, nuestro procesador de pagos — <strong>LunaPay nunca almacena el número completo de tu tarjeta</strong>.</li>
+      <li><strong>Datos de Espacio Compartido:</strong> si creas o te unes a un Espacio Compartido, tu nombre, tus pagos y tus ingresos dentro de ese espacio son visibles para los demás miembros de ese mismo espacio — nunca fuera de él.</li>
+      <li><strong>Datos técnicos:</strong> un identificador de tu dispositivo para poder enviarte notificaciones push (si las activas), tu zona horaria y tu idioma preferido.</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h2>3. Finalidades del tratamiento</h2>
+    <p><strong>Finalidades necesarias para darte el servicio que pediste:</strong></p>
+    <ul>
+      <li>Crear y administrar tu cuenta.</li>
+      <li>Mostrar, organizar y calcular tus pagos según tu periodo de cobro.</li>
+      <li>Procesar el cobro de tu suscripción Premium, cuando aplique.</li>
+      <li>Enviarte las notificaciones que tú mismo actives (pagos próximos, vencidos, etc.).</li>
+      <li>Hacer funcionar los Espacios Compartidos a los que pertenezcas.</li>
+      <li>Brindarte soporte cuando lo solicites.</li>
+    </ul>
+    <p><strong>Finalidades secundarias (puedes oponerte sin que afecte el uso del servicio):</strong></p>
+    <ul>
+      <li>Generar estadísticas agregadas y anónimas para mejorar la aplicación.</li>
+    </ul>
+    <p>
+      Si no deseas que tus datos se usen para las finalidades secundarias, puedes
+      indicárnoslo escribiendo a <a href="mailto:support@luna-pay.app">support@luna-pay.app</a>.
+    </p>
+  </div>
+
+  <div class="card">
+    <h2>4. Transferencia de datos a terceros</h2>
+    <p>Para poder operar, LunaPay comparte cierta información con los siguientes proveedores, únicamente para que puedan prestarnos el servicio que ofrecen (nunca con fines comerciales propios de ellos):</p>
+    <ul>
+      <li><strong>Supabase</strong> — aloja nuestra base de datos e infraestructura.</li>
+      <li><strong>Stripe</strong> — procesa el cobro de tu suscripción Premium.</li>
+      <li><strong>Google</strong> — solo si eliges iniciar sesión con tu cuenta de Google.</li>
+      <li><strong>Nuestro proveedor de notificaciones push</strong> — solo si activas las notificaciones.</li>
+    </ul>
+    <p><strong>No vendemos ni rentamos tus datos personales a terceros con fines publicitarios.</strong></p>
+  </div>
+
+  <div class="card">
+    <h2>5. Uso de tecnologías de rastreo</h2>
+    <p>
+      LunaPay usa almacenamiento local de tu navegador (<em>localStorage</em>) únicamente para
+      recordar preferencias tuyas dentro de la app, como el tema claro/oscuro o el idioma —
+      nunca para rastrearte fuera de la aplicación ni para fines publicitarios de terceros.
+    </p>
+  </div>
+
+  <div class="card">
+    <h2>6. Derechos ARCO</h2>
+    <p>
+      Tienes derecho a Acceder, Rectificar, Cancelar u Oponerte (derechos ARCO) al tratamiento
+      de tus datos personales, así como a revocar el consentimiento que nos hayas otorgado.
+    </p>
+    <p>Puedes ejercerlos de 2 formas:</p>
+    <ul>
+      <li>Directamente desde la app: en Ajustes puedes editar tus datos o eliminar tu cuenta y toda tu información en cualquier momento.</li>
+      <li>Escribiendo a <a href="mailto:support@luna-pay.app">support@luna-pay.app</a>, indicando tu nombre, el derecho que deseas ejercer y una copia de una identificación que confirme quién eres. Responderemos en un plazo máximo de 20 días hábiles, conforme a la LFPDPPP.</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h2>7. Menores de edad</h2>
+    <p>
+      LunaPay está dirigido a personas mayores de 18 años. No recabamos deliberadamente datos
+      de menores de edad.
+    </p>
+  </div>
+
+  <div class="card">
+    <h2>8. Seguridad de tus datos</h2>
+    <p>
+      Aplicamos medidas de seguridad administrativas y técnicas razonables para proteger tu
+      información contra pérdida, uso indebido o acceso no autorizado, incluyendo cifrado de
+      contraseñas y comunicación cifrada (HTTPS) entre tu dispositivo y nuestros servidores.
+    </p>
+  </div>
+
+  <div class="card">
+    <h2>9. Cambios a este aviso de privacidad</h2>
+    <p>
+      Podemos actualizar este aviso de privacidad de tiempo en tiempo. Si hacemos cambios
+      importantes, te lo notificaremos dentro de la aplicación. La fecha de "última
+      actualización" al inicio de este documento siempre refleja la versión vigente.
+    </p>
+  </div>
+
+  <div class="card">
+    <h2>10. Contacto</h2>
+    <p>
+      Si tienes dudas sobre este aviso de privacidad o sobre el tratamiento de tus datos,
+      escríbenos a <a href="mailto:support@luna-pay.app">support@luna-pay.app</a>.
+    </p>
+  </div>
+
+  <footer>
+    LunaPay · <a href="/terminos.html">Términos y Condiciones</a>
+  </footer>
+
+  </div>
+
+  <!-- ══════════════════════════ ENGLISH ══════════════════════════ -->
+  <div data-lang-content="en">
+
+  <h1>Privacy Notice</h1>
+  <p class="updated">Last updated: September 2026</p>
+
+  <div class="notice">
+    This document was drafted with AI assistance based on what the app actually does, as a
+    working draft — it does not replace review by a qualified data-privacy lawyer before
+    publishing.
+  </div>
+
+  <div class="card">
+    <h2>1. Who is responsible for your personal data</h2>
+    <p>
+      <strong>Johnatan Domínguez</strong>, based in Culiacán, Sinaloa, Mexico (referred to as
+      "LunaPay", "we", or "us"), is responsible for the processing of your personal data under
+      Mexico's Federal Law on the Protection of Personal Data Held by Private Parties (LFPDPPP).
+    </p>
+  </div>
+
+  <div class="card">
+    <h2>2. Personal data we collect</h2>
+    <p>Depending on how you use the app, we collect:</p>
+    <ul>
+      <li><strong>Identification and contact data:</strong> your name and email address, when you create an account.</li>
+      <li><strong>Login data:</strong> your password (stored encrypted, never in plain text) or, if you choose Google Sign-In, the identifier Google shares with us to authenticate you — we never see your Google password.</li>
+      <li><strong>Financial data you enter yourself:</strong> your payments, income, savings goals, amounts, categories, and pay period. <strong>LunaPay does not connect to your bank or bank accounts</strong> — it's a personal tracking tool, not a financial aggregator; everything you see there is what you entered yourself.</li>
+      <li><strong>Subscription payment data:</strong> if you subscribe to Premium, your card is processed directly by Stripe, our payment processor — <strong>LunaPay never stores your full card number</strong>.</li>
+      <li><strong>Shared Space data:</strong> if you create or join a Shared Space, your name, and your payments and income within that space, are visible to the other members of that same space — never outside it.</li>
+      <li><strong>Technical data:</strong> a device identifier so we can send you push notifications (if you enable them), your timezone, and your preferred language.</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h2>3. Purposes of processing</h2>
+    <p><strong>Purposes necessary to provide the service you requested:</strong></p>
+    <ul>
+      <li>Create and manage your account.</li>
+      <li>Show, organize, and calculate your payments according to your pay period.</li>
+      <li>Process your Premium subscription charge, when applicable.</li>
+      <li>Send you the notifications you enable (upcoming or overdue payments, etc.).</li>
+      <li>Operate the Shared Spaces you belong to.</li>
+      <li>Provide support when you request it.</li>
+    </ul>
+    <p><strong>Secondary purposes (you may opt out without affecting the service):</strong></p>
+    <ul>
+      <li>Generate aggregated, anonymous statistics to improve the app.</li>
+    </ul>
+    <p>
+      If you don't want your data used for these secondary purposes, let us know at
+      <a href="mailto:support@luna-pay.app">support@luna-pay.app</a>.
+    </p>
+  </div>
+
+  <div class="card">
+    <h2>4. Data shared with third parties</h2>
+    <p>To operate, LunaPay shares certain information with the following providers, solely so they can provide us the service they offer (never for their own commercial purposes):</p>
+    <ul>
+      <li><strong>Supabase</strong> — hosts our database and infrastructure.</li>
+      <li><strong>Stripe</strong> — processes your Premium subscription charge.</li>
+      <li><strong>Google</strong> — only if you choose to sign in with your Google account.</li>
+      <li><strong>Our push notification provider</strong> — only if you enable notifications.</li>
+    </ul>
+    <p><strong>We do not sell or rent your personal data to third parties for advertising purposes.</strong></p>
+  </div>
+
+  <div class="card">
+    <h2>5. Use of tracking technologies</h2>
+    <p>
+      LunaPay uses your browser's local storage (<em>localStorage</em>) only to remember your
+      preferences within the app, such as light/dark theme or language — never to track you
+      outside the app or for third-party advertising purposes.
+    </p>
+  </div>
+
+  <div class="card">
+    <h2>6. Your rights (access, rectify, cancel, object)</h2>
+    <p>
+      Under Mexican law, you have the right to access, rectify, cancel, or object to the
+      processing of your personal data, and to revoke any consent you've given us.
+    </p>
+    <p>You can exercise these rights in 2 ways:</p>
+    <ul>
+      <li>Directly in the app: in Settings, you can edit your data or delete your account and all your information at any time.</li>
+      <li>By emailing <a href="mailto:support@luna-pay.app">support@luna-pay.app</a>, including your name, the right you wish to exercise, and a copy of an ID confirming who you are. We will respond within a maximum of 20 business days, as required by the LFPDPPP.</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h2>7. Minors</h2>
+    <p>
+      LunaPay is intended for people 18 years of age or older. We do not knowingly collect data
+      from minors.
+    </p>
+  </div>
+
+  <div class="card">
+    <h2>8. Security of your data</h2>
+    <p>
+      We apply reasonable administrative and technical security measures to protect your
+      information against loss, misuse, or unauthorized access, including password encryption
+      and encrypted communication (HTTPS) between your device and our servers.
+    </p>
+  </div>
+
+  <div class="card">
+    <h2>9. Changes to this privacy notice</h2>
+    <p>
+      We may update this privacy notice from time to time. If we make significant changes,
+      we'll notify you within the app. The "last updated" date at the top of this document
+      always reflects the current version.
+    </p>
+  </div>
+
+  <div class="card">
+    <h2>10. Contact</h2>
+    <p>
+      If you have questions about this privacy notice or how we handle your data, write to us
+      at <a href="mailto:support@luna-pay.app">support@luna-pay.app</a>.
+    </p>
+  </div>
+
+  <footer>
+    LunaPay · <a href="/terminos.html">Terms and Conditions</a>
+  </footer>
+
+  </div>
+
+</div>
+
+<script>
+  function setLang(lang) {
+    document.querySelectorAll('[data-lang-content]').forEach(function (el) {
+      el.style.display = el.getAttribute('data-lang-content') === lang ? '' : 'none';
+    });
+    document.querySelectorAll('[data-lang-btn]').forEach(function (btn) {
+      btn.classList.toggle('active', btn.getAttribute('data-lang-btn') === lang);
+    });
+    document.documentElement.lang = lang;
+    document.title = lang === 'en' ? 'Privacy Notice — LunaPay' : 'Aviso de Privacidad — LunaPay';
+    try { localStorage.setItem('lunapay-legal-lang', lang); } catch (e) {}
+  }
+
+  (function () {
+    var saved = null;
+    try { saved = localStorage.getItem('lunapay-legal-lang'); } catch (e) {}
+    var lang = saved || (navigator.language && navigator.language.toLowerCase().indexOf('en') === 0 ? 'en' : 'es');
+    setLang(lang);
+  })();
+</script>
+</body>
+</html>

@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Términos y Condiciones — LunaPay</title>
+<meta name="robots" content="index, follow">
+<link rel="icon" href="/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #F2F2F2;
+    --surface: #FFFFFF;
+    --border: #E4E2DC;
+    --text: #020A1F;
+    --muted: #696969;
+    --accent: #2F8CFA;
+    --gold: #F5C242;
+    --gold-text: #1A1200;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: 'DM Sans', system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.65;
+  }
+  .wrap { max-width: 720px; margin: 0 auto; padding: 32px 20px 80px; }
+  header { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 24px; }
+  header img { height: 32px; }
+  h1 { font-size: 24px; font-weight: 800; margin: 24px 0 4px; }
+  .updated { color: var(--muted); font-size: 13px; margin-bottom: 24px; }
+  .card { background: var(--surface); border-radius: 16px; padding: 28px 24px; margin-bottom: 16px; }
+  h2 { font-size: 16px; font-weight: 700; margin: 0 0 10px; color: var(--text); }
+  p, li { font-size: 14.5px; color: var(--text); }
+  ul { padding-left: 20px; margin: 8px 0; }
+  li { margin-bottom: 6px; }
+  a { color: var(--accent); text-decoration: none; font-weight: 600; }
+  a:hover { text-decoration: underline; }
+  .notice {
+    background: #FFF8E6; border: 1px solid #F0DDA0; border-radius: 12px;
+    padding: 14px 16px; font-size: 13px; color: #6B5300; margin-bottom: 24px;
+  }
+  .badge {
+    display: inline-block; background: var(--gold); color: var(--gold-text);
+    font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 8px; margin-left: 6px;
+  }
+  footer { text-align: center; color: var(--muted); font-size: 12.5px; margin-top: 32px; }
+
+  /* Selector de idioma — pill de 2 posiciones (Regla 13). */
+  .langToggle {
+    display: flex; background: var(--border); border-radius: 20px; padding: 3px;
+    flex-shrink: 0;
+  }
+  .langBtn {
+    border: none; background: none; font-family: inherit; font-size: 12.5px;
+    font-weight: 700; color: var(--muted); padding: 5px 12px; border-radius: 20px;
+    cursor: pointer;
+  }
+  .langBtn.active { background: var(--surface); color: var(--accent); }
+
+  [data-lang-content="en"] { display: none; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <img src="/Luna-Pay-logo.svg" alt="LunaPay">
+    <div class="langToggle">
+      <button type="button" class="langBtn" data-lang-btn="es" onclick="setLang('es')">ES</button>
+      <button type="button" class="langBtn" data-lang-btn="en" onclick="setLang('en')">EN</button>
+    </div>
+  </header>
+
+  <!-- ══════════════════════════ ESPAÑOL ══════════════════════════ -->
+  <div data-lang-content="es">
+
+  <h1>Términos y Condiciones</h1>
+  <p class="updated">Última actualización: septiembre de 2026</p>
+
+  <div class="notice">
+    Este documento fue redactado con apoyo de IA a partir de cómo funciona realmente la
+    aplicación, como base de trabajo — no sustituye la revisión de un abogado antes de
+    publicarse, especialmente en la parte de cobros y cancelaciones.
+  </div>
+
+  <div class="card">
+    <h2>1. Descripción del servicio</h2>
+    <p>
+      LunaPay es una aplicación de seguimiento personal de pagos y compromisos financieros.
+      Su propósito es ayudarte a organizar y recordar tus pagos según tu periodo de cobro.
+      LunaPay no es una institución financiera, no gestiona dinero real, no realiza
+      transferencias bancarias y no tiene acceso a tus cuentas bancarias.
+    </p>
+  </div>
+
+  <div class="card">
+    <h2>2. Registro y cuenta</h2>
+    <p>
+      Para usar LunaPay debes crear una cuenta con un correo electrónico válido o mediante tu
+      cuenta de Google. Eres responsable de mantener la confidencialidad de tus credenciales
+      de acceso y de toda actividad que ocurra en tu cuenta. Debes ser mayor de 18 años para
+      registrarte.
+    </p>
+  </div>
+
+  <div class="card">
+    <h2>3. Uso aceptable</h2>
+    <p>
+      Te comprometes a usar LunaPay únicamente para fines personales y lícitos. Queda
+      prohibido usar la aplicación para actividades fraudulentas, suplantar identidades, o
+      intentar vulnerar la seguridad del sistema.
+    </p>
+  </div>
+
+  <div class="card">
+    <h2>4. Privacidad y datos</h2>
+    <p>
+      El tratamiento de tus datos personales se describe a detalle en nuestro
+      <a href="/privacidad.html">Aviso de Privacidad</a>, que forma parte de estos Términos.
+      En resumen: tus datos se almacenan de forma segura, no los vendemos a terceros, y puedes
+      eliminar tu cuenta y toda tu información en cualquier momento desde Ajustes.
+    </p>
+  </div>
+
+  <div class="card">
+    <h2>5. Notificaciones push</h2>
+    <p>
+      Si activas las notificaciones, LunaPay enviará alertas relacionadas con tus pagos
+      registrados y, si aplica, con tu suscripción Premium. Puedes desactivarlas en cualquier
+      momento desde Ajustes o desde la configuración de tu dispositivo.
+    </p>
+  </div>
+
+  <div class="card">
+    <h2>6. Suscripción Premium, cobros y cancelación <span class="badge">Premium</span></h2>
+    <p>LunaPay ofrece funciones adicionales mediante una suscripción de pago ("Premium"), con 2 planes disponibles (mensual y anual, precios visibles dentro de la app antes de contratar).</p>
+    <ul>
+      <li><strong>Prueba gratis:</strong> si nunca has tenido una suscripción Premium antes, tu primera suscripción incluye 7 días de prueba gratuita. Necesitamos una tarjeta válida para activarla, pero no se te cobra nada durante esos 7 días.</li>
+      <li><strong>Cobro automático:</strong> al terminar la prueba (o de inmediato, si ya usaste tu prueba anteriormente), se te cobrará de forma recurrente el monto del plan que elegiste, hasta que canceles.</li>
+      <li><strong>Cancelación:</strong> puedes cancelar en cualquier momento desde "Mi suscripción" en Ajustes. La cancelación no es inmediata en el sentido de quitarte el acceso al instante — conservas las funciones Premium hasta el final del periodo ya pagado (o de la prueba, si cancelas durante ella), y no se te vuelve a cobrar después.</li>
+      <li><strong>Cambio de plan:</strong> puedes cambiar entre el plan mensual y el anual desde el mismo lugar; el ajuste de precio se prorratea automáticamente en tu siguiente factura.</li>
+      <li><strong>Procesamiento de pagos:</strong> los cobros los procesa Stripe, nuestro proveedor de pagos. LunaPay nunca almacena el número completo de tu tarjeta.</li>
+      <li><strong>Reembolsos:</strong> salvo que la ley aplicable indique lo contrario, los periodos ya cobrados no son reembolsables; puedes cancelar para evitar cobros futuros.</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h2>7. Espacios Compartidos</h2>
+    <p>
+      LunaPay te permite crear o unirte a un "Espacio Compartido" para llevar el control de
+      gastos junto a otra persona (por ejemplo, tu pareja o un roomie).
+    </p>
+    <ul>
+      <li>Al unirte a un Espacio Compartido, tu nombre y los pagos/ingresos que registres dentro de ese espacio son visibles para los demás miembros del mismo espacio.</li>
+      <li>El dueño del espacio puede configurar los permisos de cada miembro invitado y puede eliminar el espacio por completo, lo cual borra también los pagos e ingresos asociados a ese espacio.</li>
+      <li>Cualquier miembro puede salir del espacio en cualquier momento.</li>
+      <li>Crear tu propio Espacio Compartido es una función Premium; unirte a uno que otra persona ya creó no requiere Premium.</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h2>8. Limitación de responsabilidad</h2>
+    <p>
+      LunaPay es una herramienta de apoyo personal. No garantizamos que el uso de la
+      aplicación prevenga pagos tardíos, cargos por mora u otras consecuencias financieras. El
+      usuario es el único responsable de sus decisiones financieras y de la exactitud de los
+      datos que registra.
+    </p>
+  </div>
+
+  <div class="card">
+    <h2>9. Disponibilidad del servicio</h2>
+    <p>
+      Nos esforzamos por mantener el servicio disponible en todo momento, pero no garantizamos
+      disponibilidad ininterrumpida. Podemos realizar mantenimientos o actualizaciones sin
+      previo aviso.
+    </p>
+  </div>
+
+  <div class="card">
+    <h2>10. Modificaciones a estos términos</h2>
+    <p>
+      Nos reservamos el derecho de modificar estos términos en cualquier momento. Te
+      notificaremos de cambios significativos a través de la aplicación. El uso continuado de
+      LunaPay tras los cambios implica tu aceptación.
+    </p>
+  </div>
+
+  <div class="card">
+    <h2>11. Cancelación de cuenta</h2>
+    <p>
+      Puedes dejar de usar LunaPay y eliminar tu cuenta en cualquier momento desde Ajustes.
+      Nos reservamos el derecho de suspender cuentas que violen estos términos. Si tienes una
+      suscripción Premium activa, te recomendamos cancelarla antes de eliminar tu cuenta.
+    </p>
+  </div>
+
+  <div class="card">
+    <h2>12. Ley aplicable y jurisdicción</h2>
+    <p>
+      Estos Términos se rigen por las leyes de los Estados Unidos Mexicanos. Cualquier
+      controversia se someterá a los tribunales competentes de Culiacán, Sinaloa, renunciando a
+      cualquier otro fuero que pudiera corresponder por razón de domicilio presente o futuro.
+    </p>
+  </div>
+
+  <div class="card">
+    <h2>13. Contacto</h2>
+    <p>
+      Si tienes dudas sobre estos términos, escríbenos a
+      <a href="mailto:support@luna-pay.app">support@luna-pay.app</a>.
+    </p>
+  </div>
+
+  <p style="font-weight: 600; text-align: center; margin-top: 24px;">
+    Al crear tu cuenta, confirmas que has leído y aceptas estos Términos y Condiciones y nuestro
+    <a href="/privacidad.html">Aviso de Privacidad</a>.
+  </p>
+
+  <footer>
+    LunaPay · <a href="/privacidad.html">Aviso de Privacidad</a>
+  </footer>
+
+  </div>
+
+  <!-- ══════════════════════════ ENGLISH ══════════════════════════ -->
+  <div data-lang-content="en">
+
+  <h1>Terms and Conditions</h1>
+  <p class="updated">Last updated: September 2026</p>
+
+  <div class="notice">
+    This document was drafted with AI assistance based on how the app actually works, as a
+    working draft — it does not replace review by a lawyer before publishing, especially the
+    billing and cancellation section.
+  </div>
+
+  <div class="card">
+    <h2>1. Description of the service</h2>
+    <p>
+      LunaPay is a personal expense and bill-tracking app. Its purpose is to help you organize
+      and remember your payments according to your pay period. LunaPay is not a financial
+      institution, does not hold or move real money, does not make bank transfers, and has no
+      access to your bank accounts.
+    </p>
+  </div>
+
+  <div class="card">
+    <h2>2. Registration and account</h2>
+    <p>
+      To use LunaPay you must create an account with a valid email address or through your
+      Google account. You're responsible for keeping your login credentials confidential and
+      for any activity on your account. You must be 18 or older to register.
+    </p>
+  </div>
+
+  <div class="card">
+    <h2>3. Acceptable use</h2>
+    <p>
+      You agree to use LunaPay only for personal, lawful purposes. Using the app for fraud,
+      impersonation, or attempting to compromise the system's security is prohibited.
+    </p>
+  </div>
+
+  <div class="card">
+    <h2>4. Privacy and data</h2>
+    <p>
+      How we handle your personal data is described in detail in our
+      <a href="/privacidad.html">Privacy Notice</a>, which is part of these Terms. In short:
+      your data is stored securely, we don't sell it to third parties, and you can delete your
+      account and all your data at any time from Settings.
+    </p>
+  </div>
+
+  <div class="card">
+    <h2>5. Push notifications</h2>
+    <p>
+      If you enable notifications, LunaPay will send alerts related to your recorded payments
+      and, when applicable, your Premium subscription. You can turn them off anytime from
+      Settings or from your device's own settings.
+    </p>
+  </div>
+
+  <div class="card">
+    <h2>6. Premium subscription, billing, and cancellation <span class="badge">Premium</span></h2>
+    <p>LunaPay offers additional features through a paid subscription ("Premium"), with 2 plans available (monthly and annual, prices shown in the app before you subscribe).</p>
+    <ul>
+      <li><strong>Free trial:</strong> if you've never had a Premium subscription before, your first subscription includes a 7-day free trial. We need a valid card to activate it, but you won't be charged during those 7 days.</li>
+      <li><strong>Automatic billing:</strong> once the trial ends (or immediately, if you've already used your trial before), you'll be charged the selected plan's amount on a recurring basis until you cancel.</li>
+      <li><strong>Cancellation:</strong> you can cancel anytime from "My Subscription" in Settings. Cancellation doesn't remove access instantly — you keep Premium features until the end of the period you already paid for (or the trial, if you cancel during it), and you won't be charged again after that.</li>
+      <li><strong>Changing plans:</strong> you can switch between the monthly and annual plan from the same place; the price adjustment is prorated automatically on your next invoice.</li>
+      <li><strong>Payment processing:</strong> charges are processed by Stripe, our payment provider. LunaPay never stores your full card number.</li>
+      <li><strong>Refunds:</strong> unless applicable law says otherwise, periods already billed are non-refundable; you can cancel to avoid future charges.</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h2>7. Shared Spaces</h2>
+    <p>
+      LunaPay lets you create or join a "Shared Space" to track expenses together with someone
+      else (for example, your partner or a roommate).
+    </p>
+    <ul>
+      <li>Once you join a Shared Space, your name and the payments/income you record within that space are visible to the other members of that same space.</li>
+      <li>The space owner can configure each invited member's permissions and can delete the space entirely, which also deletes the payments and income tied to that space.</li>
+      <li>Any member can leave the space at any time.</li>
+      <li>Creating your own Shared Space is a Premium feature; joining one someone else already created does not require Premium.</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h2>8. Limitation of liability</h2>
+    <p>
+      LunaPay is a personal support tool. We don't guarantee that using the app will prevent
+      late payments, late fees, or other financial consequences. You are solely responsible
+      for your own financial decisions and for the accuracy of the data you enter.
+    </p>
+  </div>
+
+  <div class="card">
+    <h2>9. Service availability</h2>
+    <p>
+      We work to keep the service available at all times, but we don't guarantee uninterrupted
+      availability. We may perform maintenance or updates without prior notice.
+    </p>
+  </div>
+
+  <div class="card">
+    <h2>10. Changes to these terms</h2>
+    <p>
+      We reserve the right to modify these terms at any time. We'll notify you of significant
+      changes within the app. Continuing to use LunaPay after changes take effect means you
+      accept them.
+    </p>
+  </div>
+
+  <div class="card">
+    <h2>11. Account cancellation</h2>
+    <p>
+      You can stop using LunaPay and delete your account at any time from Settings. We reserve
+      the right to suspend accounts that violate these terms. If you have an active Premium
+      subscription, we recommend cancelling it before deleting your account.
+    </p>
+  </div>
+
+  <div class="card">
+    <h2>12. Governing law and jurisdiction</h2>
+    <p>
+      These Terms are governed by the laws of the United Mexican States. Any dispute will be
+      submitted to the competent courts of Culiacán, Sinaloa, waiving any other jurisdiction
+      that might apply due to present or future domicile.
+    </p>
+  </div>
+
+  <div class="card">
+    <h2>13. Contact</h2>
+    <p>
+      If you have questions about these terms, write to us at
+      <a href="mailto:support@luna-pay.app">support@luna-pay.app</a>.
+    </p>
+  </div>
+
+  <p style="font-weight: 600; text-align: center; margin-top: 24px;">
+    By creating your account, you confirm that you've read and accept these Terms and
+    Conditions and our <a href="/privacidad.html">Privacy Notice</a>.
+  </p>
+
+  <footer>
+    LunaPay · <a href="/privacidad.html">Privacy Notice</a>
+  </footer>
+
+  </div>
+
+</div>
+
+<script>
+  function setLang(lang) {
+    document.querySelectorAll('[data-lang-content]').forEach(function (el) {
+      el.style.display = el.getAttribute('data-lang-content') === lang ? '' : 'none';
+    });
+    document.querySelectorAll('[data-lang-btn]').forEach(function (btn) {
+      btn.classList.toggle('active', btn.getAttribute('data-lang-btn') === lang);
+    });
+    document.documentElement.lang = lang;
+    document.title = lang === 'en' ? 'Terms and Conditions — LunaPay' : 'Términos y Condiciones — LunaPay';
+    try { localStorage.setItem('lunapay-legal-lang', lang); } catch (e) {}
+  }
+
+  (function () {
+    var saved = null;
+    try { saved = localStorage.getItem('lunapay-legal-lang'); } catch (e) {}
+    var lang = saved || (navigator.language && navigator.language.toLowerCase().indexOf('en') === 0 ? 'en' : 'es');
+    setLang(lang);
+  })();
+</script>
+</body>
+</html>
