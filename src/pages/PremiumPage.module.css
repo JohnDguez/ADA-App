@@ -9,6 +9,30 @@
    ("Sin gradientes"), documentada ahí, solo para este hero. A diferencia
    del resto de --premium-*, este SÍ tiene un valor distinto por tema (ver
    index.css) — pedido explícito de Johnatan. */
+/* Entrada y salida (Regla 29) — fade simple, mismo criterio que el resto de
+   "pantallas empujadas a pantalla completa" de la app (GoalDetailPanel.jsx/
+   RecurrentDetailPanel.jsx usan el mismo `fadeIn .2s ease`); aquí además con
+   su contraparte de salida, que a esos 2 les falta (fuera de alcance de
+   este cambio arreglarlos, no se tocaron). Duración en `ANIM_MS`
+   (PremiumPage.jsx, Regla 30). */
+.entering {
+  animation: pageFadeIn 0.2s ease both;
+}
+
+.closing {
+  animation: pageFadeOut 0.2s ease both;
+}
+
+@keyframes pageFadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes pageFadeOut {
+  from { opacity: 1; }
+  to   { opacity: 0; }
+}
+
 .hero {
   position: relative;
   padding: 48px 20px 40px;

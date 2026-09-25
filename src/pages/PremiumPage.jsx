@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { X, Crown, ShieldCheck, ArrowLeft } from 'lucide-react'
 import { Crown as CrownDuotone } from '@phosphor-icons/react/dist/csr/Crown'
@@ -25,6 +25,11 @@ const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY)
 // y son 2 usos independientes que no necesitan compartir una fuente.
 const WAVE_PATH = 'M0,110 L0,20 C30,-19 60,38 95,38 C135,36 150,73 195,64 C238,58 255,101 300,80 L300,110 Z'
 
+// Debe coincidir con la duración de `.entering`/`.closing` en el .module.css
+// (Regla 30, "JS/CSS timing sync") — mismo patrón que ANIM_MS en
+// GoalsOverlay.jsx.
+const ANIM_MS = 200
+
 // Página completa (no un tab del nav, no un bottom-sheet) con los beneficios
 // y precios de Premium. Se abre como overlay a pantalla completa desde
 // App.jsx. Las tarjetas de plan son seleccionables, hay un checkbox
@@ -44,6 +49,30 @@ export function PremiumPage({ profile, onClose, refreshProfile }) {
   // create-checkout-session.js (misma columna, dos lugares distintos por
   // diseño: aquí es solo texto, allá es dinero de verdad).
   const trialEligible = !profile?.has_subscribed_before
+
+  // Entrada y salida (Regla 29) — antes esta pantalla aparecía y
+  // desaparecía de golpe: App.jsx la monta/desmonta condicionalmente
+  // (`{premiumPageOpen && <PremiumPage .../>}`), así que a diferencia de
+  // GoalsOverlay.jsx (siempre montada, prop `open` controla la animación)
+  // aquí no hay forma de animar la SALIDA desde afuera — para cuando
+  // App.jsx la desmonta, ya no existe en el DOM. Solución: `handleClose()`
+  // intercepta el cierre, dispara la animación de salida (`closing`), y
+  // solo llama al `onClose` real de App.jsx (el que de verdad la desmonta)
+  // después de que termina — App.jsx no necesita saber nada de esto.
+  const [entering, setEntering] = useState(true)
+  const [closing, setClosing] = useState(false)
+  const closeTimerRef = useRef(null)
+  const enterTimerRef = useRef(null)
+
+  useEffect(() => {
+    enterTimerRef.current = setTimeout(() => setEntering(false), ANIM_MS)
+    return () => { clearTimeout(enterTimerRef.current); clearTimeout(closeTimerRef.current) }
+  }, [])
+
+  function handleClose() {
+    setClosing(true)
+    closeTimerRef.current = setTimeout(onClose, ANIM_MS)
+  }
 
   const [selectedPlan, setSelectedPlan] = useState('annual') // 'monthly' | 'annual'
   const [termsAccepted, setTermsAccepted] = useState(false)
@@ -123,7 +152,7 @@ export function PremiumPage({ profile, onClose, refreshProfile }) {
       if (data?.is_premium) break
       await new Promise(r => setTimeout(r, 1500))
     }
-    onClose()
+    handleClose()
   }
 
   // El `onComplete` de @stripe/react-stripe-js dispara cuando Stripe termina
@@ -138,10 +167,13 @@ export function PremiumPage({ profile, onClose, refreshProfile }) {
   ), [clientSecret])
 
   return (
-    <div style={{
-      position: 'fixed', inset: 0, zIndex: 600,
-      background: 'var(--bg)', overflowY: 'auto',
-    }}>
+    <div
+      className={`${entering ? styles.entering : ''} ${closing ? styles.closing : ''}`}
+      style={{
+        position: 'fixed', inset: 0, zIndex: 600,
+        background: 'var(--bg)', overflowY: 'auto',
+      }}
+    >
 
       {/* Hero — v0.9.505: antes eran 2 <img> a /premium-hero-bg.png y
           /premium-hero-crown.png que NUNCA existieron en el repo (hero
@@ -164,7 +196,7 @@ export function PremiumPage({ profile, onClose, refreshProfile }) {
         <Sparkle weight="fill" size={16} className={`${styles.heroSparkle} ${styles.heroSparkle1}`} aria-hidden="true" />
         <Sparkle weight="fill" size={11} className={`${styles.heroSparkle} ${styles.heroSparkle2}`} aria-hidden="true" />
         <Sparkle weight="fill" size={9}  className={`${styles.heroSparkle} ${styles.heroSparkle3}`} aria-hidden="true" />
-        <button onClick={onClose} className={styles.heroCloseButton}>
+        <button onClick={handleClose} className={styles.heroCloseButton}>
           <X size={18} color="#fff" />
         </button>
         <div className={styles.heroCrownWrap}>
