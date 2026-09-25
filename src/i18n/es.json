@@ -1000,14 +1000,16 @@
     "title": "Obtén Premium",
     "subtitle": "Desbloquea todas las funciones y lleva tus finanzas al siguiente nivel.",
     "benefits": {
-      "noAdsTitle": "No más anuncios",
-      "noAdsDesc": "Lleva el control de tus gastos sin interrupciones.",
-      "exportTitle": "Exporta tus informes",
-      "exportDesc": "Descarga en formatos CSV y PDF tus gastos.",
       "simulatorTitle": "Simula tus finanzas",
-      "simulatorDesc": "Mira como afectarán tus gastos en futuros periodos.",
-      "sharedTitle": "Cuenta compartida",
-      "sharedDesc": "Vincula tu cuenta con tu pareja o roomie y lleven el control de sus gastos juntos."
+      "simulatorDesc": "Mira cómo un gasto o ingreso afectará tu periodo actual y los siguientes, antes de confirmarlo.",
+      "sharedTitle": "Crea tu Espacio Compartido",
+      "sharedDesc": "Administra gastos junto a tu pareja o roomies en un espacio propio.",
+      "pdfTitle": "Exporta reportes en PDF",
+      "pdfDesc": "Genera reportes de tus gastos listos para imprimir o compartir.",
+      "csvTitle": "Exporta tus datos en CSV",
+      "csvDesc": "Descarga toda tu información para analizarla donde quieras.",
+      "goalsTitle": "Metas sin límite",
+      "goalsDesc": "Crea todas las metas de ahorro que quieras, sin quedarte en solo una."
     },
     "choosePlan": "Elige tu plan",
     "monthly": "Mensual",

@@ -1000,14 +1000,16 @@
     "title": "Get Premium",
     "subtitle": "Unlock every feature and take your finances to the next level.",
     "benefits": {
-      "noAdsTitle": "No more ads",
-      "noAdsDesc": "Track your spending without interruptions.",
-      "exportTitle": "Export your reports",
-      "exportDesc": "Download your expenses in CSV and PDF.",
       "simulatorTitle": "Simulate your finances",
-      "simulatorDesc": "See how your expenses will affect future periods.",
-      "sharedTitle": "Shared account",
-      "sharedDesc": "Link your account with your partner or roommate and track expenses together."
+      "simulatorDesc": "See how an expense or income will affect your current and future periods before confirming it.",
+      "sharedTitle": "Create your Shared Space",
+      "sharedDesc": "Manage expenses together with your partner or roommates in your own space.",
+      "pdfTitle": "Export PDF reports",
+      "pdfDesc": "Generate expense reports ready to print or share.",
+      "csvTitle": "Export your data as CSV",
+      "csvDesc": "Download all your data to analyze it anywhere.",
+      "goalsTitle": "Unlimited goals",
+      "goalsDesc": "Create as many savings goals as you want, not just one."
     },
     "choosePlan": "Choose your plan",
     "monthly": "Monthly",
