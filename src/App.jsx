@@ -60,6 +60,11 @@ import { buildFeedbackUrl, FEEDBACK_PROMPT_AFTER_DAYS, FEEDBACK_REMIND_AFTER_DAY
 
 function fmt(n) { return '$' + Number(n).toLocaleString('es-MX', { minimumFractionDigits: 0, maximumFractionDigits: 0 }) }
 
+// "Obtener Premium" automático (v0.9.504) — fecha (todayStr()) de la última
+// vez que se mostró/cerró, por dispositivo (localStorage, no Supabase —
+// mismo criterio que tema/riel, Regla 49).
+const PREMIUM_PROMPT_STORAGE_KEY = 'lunapay-premium-prompt-shown'
+
 export default function App() {
   const { t, i18n } = useTranslation()
   const { user, loading: authLoading, isRecovery, setIsRecovery } = useAuth()
@@ -471,6 +476,18 @@ export default function App() {
   // manualmente dentro de Ajustes (`SettingsPage.jsx` la ignora en ese caso).
   const [settingsReturnTab, setSettingsReturnTab] = useState(null)
 
+  // "Obtener Premium" automático (v0.9.504) — 1 vez al día hasta que el
+  // usuario sea premium. No es estado porque no necesita re-render propio:
+  // solo distingue, en el momento de CERRAR, si el PremiumPage que se está
+  // cerrando lo abrió el usuario (botón del header, Ajustes, etc. — cierre
+  // normal) o el disparo automático (cierre debe mandar a Inicio).
+  const autoPremiumPromptRef = useRef(false)
+  // Evita que el efecto de abajo dispare más de una vez por carga de la
+  // app (podría re-evaluarse si cambia alguna de sus dependencias antes de
+  // que el usuario cierre la pantalla) — una vez que decide mostrarla (o
+  // decide que hoy no toca), no se vuelve a evaluar en este montaje.
+  const autoPremiumCheckedRef = useRef(false)
+
   const migrationRan = useRef(false)
 
   // Migración: crea masters para recurrentes y parcialidades sin sistema nuevo
@@ -530,6 +547,27 @@ export default function App() {
     if (nextPromptAt > Date.now()) return
     setFeedbackPromptOpen(true)
   }, [user, profile, profileLoading])
+
+  // "Obtener Premium" automático — 1 vez al día, hasta que el usuario sea
+  // premium (pedido de Johnatan). Empieza a aparecer solo una vez que el
+  // usuario ya pasó onboarding Y el tutorial inicial (coach marks de Home,
+  // la primera secuencia que ve cualquier usuario nuevo apenas entra) —
+  // nunca en la primera sesión. Se marca "mostrada hoy" en localStorage en
+  // el momento de ABRIRSE (no al cerrarse): así, si el usuario la cierra y
+  // reabre la app el mismo día, no vuelve a aparecer; al día siguiente
+  // (fecha distinta) sí, hasta que profile.is_premium sea true.
+  useEffect(() => {
+    if (autoPremiumCheckedRef.current) return
+    if (!user || profileLoading) return
+    if (!profile.onboarding_completed) return
+    if (!profile.coachmarks_seen?.home) return
+    if (profile.is_premium) return
+    autoPremiumCheckedRef.current = true
+    if (localStorage.getItem(PREMIUM_PROMPT_STORAGE_KEY) === todayStr()) return
+    localStorage.setItem(PREMIUM_PROMPT_STORAGE_KEY, todayStr())
+    autoPremiumPromptRef.current = true
+    setPremiumPageOpen(true)
+  }, [user, profileLoading, profile.onboarding_completed, profile.coachmarks_seen, profile.is_premium])
 
   // Pin de "espacio principal" (ActiveSpaceHeader.jsx): aplica el default
   // guardado en profiles.default_space_id al abrir o recargar la app — pero
@@ -1074,6 +1112,26 @@ export default function App() {
     window.scrollTo(0, 0)
   }
 
+  // Abre PremiumPage — `auto` distingue el disparo automático diario (ver
+  // efecto arriba) de una apertura normal del usuario (botón del header,
+  // Ajustes, límite de Metas, etc.), para que closePremiumPage() sepa si
+  // el cierre debe mandar a Inicio o comportarse como siempre.
+  function openPremiumPage(auto = false) {
+    autoPremiumPromptRef.current = auto
+    setPremiumPageOpen(true)
+  }
+
+  // Cerrar la pantalla automática manda a Inicio (pedido explícito de
+  // Johnatan: "no a la de settings"); cerrar una abierta manualmente se
+  // queda donde estaba, como siempre.
+  function closePremiumPage() {
+    setPremiumPageOpen(false)
+    if (autoPremiumPromptRef.current) {
+      autoPremiumPromptRef.current = false
+      changeTab('home')
+    }
+  }
+
   function goToSharedSpaceSettings() {
     setSettingsReturnTab(tab)
     setSettingsInitialSection('sharedspace')
@@ -1180,7 +1238,7 @@ export default function App() {
           activeSpaceId={activeSpaceId}
           sharedSpaces={sharedSpaces}
           spacePermissions={spacePermissions}
-          onOpenPremium={() => setPremiumPageOpen(true)}
+          onOpenPremium={() => openPremiumPage(false)}
           onSpaceReady={handleSpaceReady}
           spaceSwitcher={spaceSwitcherEl}
           activeSpaceHeader={activeSpaceHeaderEl}
@@ -1226,7 +1284,7 @@ export default function App() {
           rawActiveSpaceId={activeSpaceId}
           sharedSpaces={sharedSpaces}
           spacePermissions={spacePermissions}
-          onOpenPremium={() => setPremiumPageOpen(true)}
+          onOpenPremium={() => openPremiumPage(false)}
           onSpaceReady={handleSpaceReady}
           spaceSwitcher={spaceSwitcherEl}
           activeSpaceHeader={activeSpaceHeaderEl}
@@ -1253,7 +1311,7 @@ export default function App() {
           activeSpaceId={activeSpaceId}
           sharedSpaces={sharedSpaces}
           spacePermissions={spacePermissions}
-          onOpenPremium={() => setPremiumPageOpen(true)}
+          onOpenPremium={() => openPremiumPage(false)}
           onSpaceReady={handleSpaceReady}
           spaceSwitcher={spaceSwitcherEl}
           activeSpaceHeader={activeSpaceHeaderEl}
@@ -1276,7 +1334,7 @@ export default function App() {
           activeSpaceHeader={activeSpaceHeaderEl}
           sharedSpaces={sharedSpaces}
           onSpaceReady={handleSpaceReady}
-          onOpenPremium={() => setPremiumPageOpen(true)}
+          onOpenPremium={() => openPremiumPage(false)}
           slideClass={`page-slide-${slideDir}`}
           {...headerProps}
         />
@@ -1292,7 +1350,7 @@ export default function App() {
           slideClass={`page-slide-${slideDir}`}
           theme={theme}
           onThemeChange={setTheme}
-          onOpenPremium={() => setPremiumPageOpen(true)}
+          onOpenPremium={() => openPremiumPage(false)}
           sharedSpaces={sharedSpaces}
           paymentMethods={paymentMethods}
           // Entrega C (v0.9.490): "gastado en este corte" y "Por pagar en
@@ -1388,7 +1446,7 @@ export default function App() {
         isSharedSpace={!!paymentsSpaceId}
         paymentMethods={paymentMethods}
         customCategories={profile.custom_categories || []}
-        onOpenPremium={() => setPremiumPageOpen(true)}
+        onOpenPremium={() => openPremiumPage(false)}
         onAddCategory={async (cat) => {
           await updateProfile({ custom_categories: [...(profile.custom_categories || []), cat] })
         }}
@@ -1463,7 +1521,7 @@ export default function App() {
         onRemindLater={handleFeedbackRemindLater}
       />
       <Toast />
-      {premiumPageOpen && <Suspense fallback={null}><PremiumPage onClose={() => setPremiumPageOpen(false)} refreshProfile={fetchProfile} /></Suspense>}
+      {premiumPageOpen && <Suspense fallback={null}><PremiumPage onClose={closePremiumPage} refreshProfile={fetchProfile} /></Suspense>}
     </>
   )
 }
