@@ -36,6 +36,11 @@ function TermsModal({ onClose }) {
           <Section title={t('termsModal.section9Title')}>{t('termsModal.section9Text', { appName: APP_NAME })}</Section>
           <Section title={t('termsModal.section10Title')}>{t('termsModal.section10Text', { appName: APP_NAME })}</Section>
           <p style={{ marginTop: 16, fontWeight: 600 }}>{t('termsModal.closing')}</p>
+          <p style={{ marginTop: 16 }}>
+            <a href="/terminos.html" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--accent)', fontWeight: 600 }}>
+              {t('termsModal.viewFullVersion')}
+            </a>
+          </p>
         </div>
         <div style={{ padding: '14px 20px', borderTop: '0.5px solid var(--border)', flexShrink: 0 }}>
           <button onClick={onClose} className="btn-primary">{t('recurrentMigrationModal.understood')}</button>

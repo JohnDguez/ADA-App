@@ -350,7 +350,7 @@ export function PremiumPage({ profile, onClose, refreshProfile }) {
             {t('premiumPage.cancelAnytime')}
           </div>
           <div style={{ fontSize: 10.5, fontWeight: 400, color: 'var(--text)', opacity: 0.6, marginTop: 10 }}>
-            {t('premiumPage.restorePurchases')} <span style={{ color: 'var(--accent)', opacity: 1, cursor: 'pointer' }}>{t('authPage.termsLink')}</span>
+            {t('premiumPage.restorePurchases')} <a href="/terminos.html" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--accent)', opacity: 1 }}>{t('authPage.termsLink')}</a>
           </div>
         </div>
 
