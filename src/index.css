@@ -154,6 +154,18 @@
   --premium-gold:      #F5C242;
   --premium-gold-text: #1A1200;
 
+  /* Hero de PremiumPage.jsx (v0.9.505) — ÚNICA excepción a "sin
+     transparencias/fijo sin importar el tema" dentro del bloque Premium:
+     Johnatan pidió explícitamente que el degradado SÍ cambiara de tono
+     entre claro y oscuro (a diferencia de --premium-card-bg/--premium-text
+     de arriba, que son fijos a propósito). También es la excepción
+     documentada a la Regla 18 ("Sin gradientes") — ver RULES.md. Valores
+     de tema oscuro en el bloque [data-theme="dark"] más abajo. */
+  --premium-hero-bg:          radial-gradient(circle at 50% 20%, #F5C242 0%, #E0902A 45%, #A85D1A 85%);
+  --premium-hero-glow:        radial-gradient(circle, rgba(255, 255, 255, 0.45) 0%, rgba(255, 255, 255, 0) 70%);
+  --premium-hero-crown-bg:    linear-gradient(145deg, #FFFFFF 0%, #F5C242 100%);
+  --premium-hero-crown-shadow: rgba(168, 93, 26, 0.35);
+
   /* ── Onboarding (fondo de color por paso) ─────────────────────────────────
      Fijos, iguales en claro/oscuro (mismo criterio que --premium-*): cada
      paso lleva el color sólido de fondo detrás de su ilustración 3D — si
@@ -226,6 +238,12 @@
   --space-inactive-text: #FFFFFF;
   --space-personal-bg:   #566B85;
   --space-personal-text: #FFFFFF;
+
+  /* Hero de PremiumPage.jsx (v0.9.505) — ver nota en :root. */
+  --premium-hero-bg:          radial-gradient(circle at 50% 20%, #6D4A12 0%, #241708 45%, #0B1220 85%);
+  --premium-hero-glow:        radial-gradient(circle, rgba(245, 194, 66, 0.55) 0%, rgba(245, 194, 66, 0) 70%);
+  --premium-hero-crown-bg:    linear-gradient(145deg, #F5C242 0%, #C98A1F 100%);
+  --premium-hero-crown-shadow: rgba(245, 194, 66, 0.35);
 }
 
 /* ── Tema oscuro automático (preferencia del sistema) ─────────────────────── */
@@ -272,6 +290,14 @@
     --space-inactive-text: #FFFFFF;
     --space-personal-bg:   #566B85;
     --space-personal-text: #FFFFFF;
+
+    /* Hero de PremiumPage.jsx (v0.9.505) — espejo del bloque manual
+       [data-theme="dark"] de arriba, mismo criterio que el resto de este
+       bloque (comentario en :root). */
+    --premium-hero-bg:          radial-gradient(circle at 50% 20%, #6D4A12 0%, #241708 45%, #0B1220 85%);
+    --premium-hero-glow:        radial-gradient(circle, rgba(245, 194, 66, 0.55) 0%, rgba(245, 194, 66, 0) 70%);
+    --premium-hero-crown-bg:    linear-gradient(145deg, #F5C242 0%, #C98A1F 100%);
+    --premium-hero-crown-shadow: rgba(245, 194, 66, 0.35);
   }
 }
 
