@@ -8,6 +8,14 @@
   overflow: hidden;
 }
 
+/* Con el botón "Obtener Premium" (v0.9.504) hay una línea más debajo del
+   nombre — sin este alto extra, .headerRoot (altura fija + overflow:hidden)
+   la recortaría. Se queda en 140px para quien ya es premium (sin botón),
+   sin tocar esa altura base. */
+.headerRootWithPremium {
+  height: 172px;
+}
+
 .bgImage {
   position: absolute;
   inset: 0;
@@ -106,6 +114,78 @@
   color: var(--text);
   line-height: 1.2;
   word-break: break-word;
+}
+
+/* CTA "Obtener Premium" — nuevo (v0.9.504). Fondo SÓLIDO var(--premium-gold)
+   (Johnatan: "no uses transparencias, debe llamar la atención") y texto/
+   ícono en var(--premium-gold-text), el mismo par fijo que ya usa toda la
+   UI de Premium (PremiumLock.jsx, PremiumPage.jsx) — NUNCA var(--text)
+   aquí: es el único color de texto legible sobre este dorado en los 2
+   temas, así que no debe reaccionar al tema. Radio 8px (Regla 13, badges).
+   margin-top propio: es lo único que empuja hacia abajo, saludo/nombre de
+   arriba no se tocan. */
+.getPremiumButton {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 8px;
+  padding: 5px 10px;
+  border: none;
+  border-radius: 8px;
+  background: var(--premium-gold);
+  cursor: pointer;
+  animation: getPremiumPulse 2.4s ease-out infinite;
+}
+
+.getPremiumText {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--premium-gold-text);
+  white-space: nowrap;
+}
+
+.getPremiumCrown {
+  color: var(--premium-gold-text);
+  flex-shrink: 0;
+  animation: getPremiumCrownFloat 2s ease-in-out infinite;
+}
+
+.getPremiumSparkleTop,
+.getPremiumSparkleBottom {
+  position: absolute;
+  color: var(--premium-gold-text);
+  opacity: 0;
+}
+
+.getPremiumSparkleTop {
+  top: -5px;
+  right: 8px;
+  animation: getPremiumSparkle 2.4s ease-in-out infinite;
+}
+
+.getPremiumSparkleBottom {
+  bottom: -4px;
+  left: 16px;
+  animation: getPremiumSparkle 2.4s ease-in-out 0.8s infinite;
+}
+
+/* Anillo de pulso — mismo criterio de "llamativo sin gradiente" (Regla 18):
+   box-shadow expandiéndose, nunca degradado. */
+@keyframes getPremiumPulse {
+  0%   { box-shadow: 0 0 0 0 rgba(245, 194, 66, 0.55); }
+  70%  { box-shadow: 0 0 0 8px rgba(245, 194, 66, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(245, 194, 66, 0); }
+}
+
+@keyframes getPremiumCrownFloat {
+  0%, 100% { transform: translateY(0) rotate(-4deg); }
+  50%      { transform: translateY(-2px) rotate(4deg); }
+}
+
+@keyframes getPremiumSparkle {
+  0%, 100% { opacity: 0; transform: scale(0.5); }
+  50%      { opacity: 1; transform: scale(1); }
 }
 
 .headerActions {

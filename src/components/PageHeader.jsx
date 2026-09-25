@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next'
 import i18n from '../i18n'
-import { Bell, Crown, Settings } from 'lucide-react'
+import { Bell, Crown, Settings, Sparkles } from 'lucide-react'
 import { useHeaderBackground, HEADER_IMAGES } from '../hooks/useHeaderBackground'
 import styles from './PageHeader.module.css'
 
@@ -24,7 +24,7 @@ function nameFontSize(name) {
   return 13
 }
 
-export function PageHeader({ profile, unreadCount, onOpenNotifs, onGoSettings }) {
+export function PageHeader({ profile, unreadCount, onOpenNotifs, onGoSettings, onOpenPremium }) {
   const { t } = useTranslation()
   const initials = (profile?.name || 'U').slice(0, 2).toUpperCase()
 
@@ -35,7 +35,7 @@ export function PageHeader({ profile, unreadCount, onOpenNotifs, onGoSettings })
   const { timeOfDay, mountedKeys } = useHeaderBackground(profile?.timezone)
 
   return (
-    <div className={styles.headerRoot}>
+    <div className={`${styles.headerRoot} ${!profile?.is_premium ? styles.headerRootWithPremium : ''}`}>
 
       {/* Fondo pixel art con crossfade según franja horaria — solo las
           franjas en mountedKeys están en el DOM, ver useHeaderBackground.js. */}
@@ -93,6 +93,27 @@ export function PageHeader({ profile, unreadCount, onOpenNotifs, onGoSettings })
             <div className={styles.nameText} style={{ fontSize: nameFontSize(profile?.name) }}>
               {profile?.name || ''}
             </div>
+            {/* CTA "Obtener Premium" — elemento NUEVO y aparte, no toca el
+                tamaño/posición de saludo/nombre de arriba (solo agrega
+                espacio debajo, vía su propio margin-top). Solo visible sin
+                Premium; quien ya lo tiene conserva la corona de la esquina
+                del avatar sin este botón (Regla: no reusar el mismo
+                indicador para dos cosas distintas). stopPropagation: este
+                bloque completo abre Ajustes al tocarse (onGoSettings) —
+                este botón debe abrir Premium en su lugar, no los dos. */}
+            {!profile?.is_premium && (
+              <button
+                type="button"
+                onClick={e => { e.stopPropagation(); onOpenPremium && onOpenPremium() }}
+                className={styles.getPremiumButton}
+                aria-label={t('pageHeader.getPremiumAriaLabel')}
+              >
+                <Sparkles size={8} className={styles.getPremiumSparkleTop} aria-hidden="true" />
+                <Sparkles size={7} className={styles.getPremiumSparkleBottom} aria-hidden="true" />
+                <Crown size={13} className={styles.getPremiumCrown} fill="currentColor" aria-hidden="true" />
+                <span className={styles.getPremiumText}>{t('pageHeader.getPremiumButton')}</span>
+              </button>
+            )}
           </div>
         </div>
 
