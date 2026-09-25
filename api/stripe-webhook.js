@@ -29,9 +29,19 @@ function readRawBody(req) {
 // nunca del `user_id` que pudiera venir en el body, siempre resuelto contra
 // `stripe_customer_id` ya guardado (create-checkout-session.js lo guarda al
 // crear el customer) o, como respaldo, contra `metadata.supabase_user_id`.
-async function setPremiumByCustomer(customerId, { isPremium, subscriptionId, status }) {
+// `markSubscribed` (v0.9.506, prueba de 7 días): true SOLO desde
+// `checkout.session.completed` — es la señal de "esta persona de verdad
+// llegó a tener una suscripción", no solo "abrió el formulario de pago"
+// (eso ya pasa desde antes, al crear el customer en
+// create-checkout-session.js, y no debe contar). Una vez en `true` nunca
+// se vuelve a poner en `false` en ningún otro evento — ni aquí ni en
+// `customer.subscription.deleted` — es permanente a propósito: define si
+// la próxima vez que abra PremiumPage sigue calificando para la prueba
+// gratis de 7 días (solo la primera suscripción de su vida la trae).
+async function setPremiumByCustomer(customerId, { isPremium, subscriptionId, status, markSubscribed }) {
   const updates = { is_premium: isPremium, stripe_subscription_status: status ?? null }
   if (subscriptionId !== undefined) updates.stripe_subscription_id = subscriptionId
+  if (markSubscribed) updates.has_subscribed_before = true
 
   const { data, error } = await supabase
     .from('profiles')
@@ -67,6 +77,7 @@ module.exports = async function handler(req, res) {
             isPremium: ['active', 'trialing'].includes(subscription.status),
             subscriptionId: subscription.id,
             status: subscription.status,
+            markSubscribed: true,
           })
         }
         break

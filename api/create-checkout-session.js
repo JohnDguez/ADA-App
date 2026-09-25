@@ -40,7 +40,7 @@ module.exports = async function handler(req, res) {
     // customers duplicados en Stripe cada vez que alguien abre PremiumPage.
     const { data: profile, error: profileErr } = await supabase
       .from('profiles')
-      .select('stripe_customer_id')
+      .select('stripe_customer_id, has_subscribed_before')
       .eq('id', user.id)
       .maybeSingle()
     if (profileErr) return res.status(500).json({ error: 'No se pudo leer el perfil' })
@@ -55,6 +55,16 @@ module.exports = async function handler(req, res) {
       await supabase.from('profiles').update({ stripe_customer_id: customerId }).eq('id', user.id)
     }
 
+    // Prueba gratis de 7 días (v0.9.506) — SOLO para quien nunca ha tenido
+    // una suscripción real (`has_subscribed_before`, marcada por
+    // stripe-webhook.js la primera vez, nunca se revierte). Aplica igual
+    // sin importar el plan elegido — al día 8, Stripe cobra el precio del
+    // plan seleccionado automáticamente, sin acción extra de este archivo.
+    const subscriptionData = { metadata: { supabase_user_id: user.id } }
+    if (!profile?.has_subscribed_before) {
+      subscriptionData.trial_period_days = 7
+    }
+
     // ui_mode: 'embedded' + redirect_on_completion: 'never' — el formulario
     // se monta DENTRO de PremiumPage (Embedded Checkout, confirmado con
     // Johnatan), nunca redirige a Stripe ni fuera de la app. El cliente
@@ -67,7 +77,7 @@ module.exports = async function handler(req, res) {
       line_items: [{ price: priceId, quantity: 1 }],
       redirect_on_completion: 'never',
       metadata: { supabase_user_id: user.id },
-      subscription_data: { metadata: { supabase_user_id: user.id } },
+      subscription_data: subscriptionData,
     })
 
     return res.status(200).json({ clientSecret: session.client_secret })
