@@ -1027,7 +1027,10 @@
     "referralCta": "Invita 3 amigos y obtén 2 meses GRATIS",
     "restrictionsApply": "Aplican restricciones.",
     "cancelAnytime": "Cancela cuando quieras. Sin cargos ocultos.",
-    "restorePurchases": "Restaurar compras."
+    "restorePurchases": "Restaurar compras.",
+    "startTrial": "Iniciar prueba gratis de 7 días",
+    "termsAcceptTrial": "Acepto que, al terminar mi prueba gratis de 7 días, se me cobre de forma recurrente el monto del plan seleccionado hasta que cancele, de acuerdo con los Términos y Condiciones.",
+    "trialFinePrint": "Solo para usuarios que nunca se han suscrito antes. Al terminar la prueba de 7 días, se cobrará {{price}} {{suffix}}."
   },
   "spaceSwitcher": {
     "noPending": "Sin pagos pendientes",

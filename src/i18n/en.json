@@ -1027,7 +1027,10 @@
     "referralCta": "Invite 3 friends and get 2 months FREE",
     "restrictionsApply": "Restrictions apply.",
     "cancelAnytime": "Cancel anytime. No hidden fees.",
-    "restorePurchases": "Restore purchases."
+    "restorePurchases": "Restore purchases.",
+    "startTrial": "Start your free 7-day trial",
+    "termsAcceptTrial": "I agree that, once my free 7-day trial ends, I will be charged the selected plan's amount on a recurring basis until I cancel, per the Terms and Conditions.",
+    "trialFinePrint": "Only for users who have never subscribed before. Once the 7-day trial ends, {{price}} {{suffix}} will be charged."
   },
   "spaceSwitcher": {
     "noPending": "No pending payments",
