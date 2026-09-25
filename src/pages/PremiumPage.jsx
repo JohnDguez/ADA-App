@@ -1,6 +1,13 @@
 import { useState, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { X, Crown, ShieldCheck, ArrowLeft } from 'lucide-react'
+import { Crown as CrownDuotone } from '@phosphor-icons/react/dist/csr/Crown'
+import { Sparkle } from '@phosphor-icons/react/dist/csr/Sparkle'
+import { FilePdf } from '@phosphor-icons/react/dist/csr/FilePdf'
+import { FileCsv } from '@phosphor-icons/react/dist/csr/FileCsv'
+import { ChartLineUp } from '@phosphor-icons/react/dist/csr/ChartLineUp'
+import { UsersThree } from '@phosphor-icons/react/dist/csr/UsersThree'
+import { Target } from '@phosphor-icons/react/dist/csr/Target'
 import { loadStripe } from '@stripe/stripe-js'
 import { EmbeddedCheckoutProvider, EmbeddedCheckout } from '@stripe/react-stripe-js'
 import { supabase } from '../lib/supabase'
@@ -11,13 +18,21 @@ import styles from './PremiumPage.module.css'
 // render (mismo patrón que la doc oficial de Stripe recomienda).
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY)
 
+// Misma curva que el borde inferior de cada "escena" de OnboardingPage.jsx
+// (WAVE_PATH ahí) — pedido explícito de Johnatan: "una onda como en los
+// fondos del onboarding" para el borde inferior del hero de Premium.
+// Duplicada a propósito (no extraída a lib/utils): es solo un string SVG,
+// y son 2 usos independientes que no necesitan compartir una fuente.
+const WAVE_PATH = 'M0,110 L0,20 C30,-19 60,38 95,38 C135,36 150,73 195,64 C238,58 255,101 300,80 L300,110 Z'
+
 // Página completa (no un tab del nav, no un bottom-sheet) con los beneficios
 // y precios de Premium. Se abre como overlay a pantalla completa desde
-// App.jsx. NUEVO (esta sesión): las tarjetas de plan son seleccionables, hay
-// un checkbox obligatorio de aceptación de cobro recurrente, y el CTA monta
-// el Embedded Checkout de Stripe (api/create-checkout-session.js) en el
-// mismo espacio — antes el botón no hacía nada (onClick vacío). El banner de
-// referidos sigue siendo solo visual, sin lógica (pendiente real aparte).
+// App.jsx. Las tarjetas de plan son seleccionables, hay un checkbox
+// obligatorio de aceptación de cobro recurrente, y el CTA monta el Embedded
+// Checkout de Stripe (api/create-checkout-session.js) en el mismo espacio.
+// v0.9.505: rediseño de hero (degradado, ver comentario más abajo) y
+// beneficios (íconos Phosphor, copy corregido); banner de referidos
+// quitado (no tenía lógica real, ver HISTORIAL).
 export function PremiumPage({ onClose, refreshProfile }) {
   const { t } = useTranslation()
 
@@ -30,16 +45,26 @@ export function PremiumPage({ onClose, refreshProfile }) {
   // is_premium en Supabase)
   const [checkoutState, setCheckoutState] = useState('idle')
 
-  // Imágenes subidas manualmente a /public por Johnatan (no son íconos Lucide —
-  // ilustraciones a color propias de la marca). Si cambian de nombre, solo hay
-  // que actualizar esta lista. Movido adentro del componente (antes vivía a
-  // nivel de módulo) porque ahora title/desc necesitan t(), que solo se puede
-  // llamar dentro de un componente.
+  // v0.9.505 — auditoría de beneficios (pedido de Johnatan: "revisar esa
+  // lista de lo que de verdad obtienes con premium"): "No más anuncios" NO
+  // aplica — no existe ningún sistema de anuncios en la app (confirmado con
+  // grep, cero resultados), quitado. "Exportar" se separó en PDF y CSV (son
+  // 2 formatos reales distintos en SettingsExportPage.jsx). Se agregó
+  // "Metas sin límite" — beneficio real que faltaba (GoalsPage.jsx/
+  // GoalsOverlay.jsx: gratis limita a 1 meta activa, `atFreeLimit`) y no
+  // estaba anunciado en ningún lado. "Espacio Compartido" reescrito: no se
+  // "comparte la cuenta", se CREA un espacio compartido propio
+  // (SettingsSharedSpacePage.jsx: `canCreateMore = profile.is_premium`).
+  // Iconos ahora de Phosphor (antes 4 imágenes PNG subidas a mano que
+  // NUNCA llegaron a existir en el repo — confirmado con
+  // `git log --all --diff-filter=A`, de ahí el ícono de "imagen rota"
+  // idéntico en las 4 tarjetas).
   const BENEFITS = [
-    { icon: '/premium-icon-no-ads.png',    title: t('premiumPage.benefits.noAdsTitle'),      desc: t('premiumPage.benefits.noAdsDesc') },
-    { icon: '/premium-icon-export.png',    title: t('premiumPage.benefits.exportTitle'),     desc: t('premiumPage.benefits.exportDesc') },
-    { icon: '/premium-icon-simulator.png', title: t('premiumPage.benefits.simulatorTitle'),  desc: t('premiumPage.benefits.simulatorDesc') },
-    { icon: '/premium-icon-shared.png',    title: t('premiumPage.benefits.sharedTitle'),     desc: t('premiumPage.benefits.sharedDesc') },
+    { icon: FilePdf,     title: t('premiumPage.benefits.pdfTitle'),       desc: t('premiumPage.benefits.pdfDesc') },
+    { icon: FileCsv,     title: t('premiumPage.benefits.csvTitle'),       desc: t('premiumPage.benefits.csvDesc') },
+    { icon: ChartLineUp, title: t('premiumPage.benefits.simulatorTitle'), desc: t('premiumPage.benefits.simulatorDesc') },
+    { icon: UsersThree,  title: t('premiumPage.benefits.sharedTitle'),    desc: t('premiumPage.benefits.sharedDesc') },
+    { icon: Target,      title: t('premiumPage.benefits.goalsTitle'),     desc: t('premiumPage.benefits.goalsDesc') },
   ]
 
   // Pide el client_secret a create-checkout-session.js y abre el checkout
@@ -109,58 +134,54 @@ export function PremiumPage({ onClose, refreshProfile }) {
       background: 'var(--bg)', overflowY: 'auto',
     }}>
 
-      {/* Hero: fondo (imagen subida por Johnatan, degradado) + corona
-          sobrepuesta (imagen separada, transparente, mitad afuera/adentro
-          del fondo) con flotación suave */}
-      <div style={{ position: 'relative', marginTop: 44 }}>
-        <img
-          src="/premium-hero-bg.png"
-          alt=""
-          style={{ width: '100%', display: 'block', borderRadius: '0 0 28px 28px', objectFit: 'cover' }}
-        />
-        <img
-          src="/premium-hero-crown.png"
-          alt=""
-          style={{
-            position: 'absolute', top: -44, left: '50%',
-            width: 150, transform: 'translateX(-50%)',
-            animation: 'premiumCrownFloat 3.2s ease-in-out infinite',
-          }}
-        />
-        <button
-          onClick={onClose}
-          style={{
-            position: 'absolute', top: 16, left: 16,
-            width: 36, height: 36, borderRadius: '50%',
-            background: 'rgba(0,0,0,0.35)', border: 'none',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            cursor: 'pointer',
-          }}
-        >
+      {/* Hero — v0.9.505: antes eran 2 <img> a /premium-hero-bg.png y
+          /premium-hero-crown.png que NUNCA existieron en el repo (hero
+          vacío en producción, confirmado con git log). Ahora degradado
+          radial vía var(--premium-hero-bg) — EXCEPCIÓN NUEVA Y
+          DOCUMENTADA a la Regla 18 ("Sin gradientes"), solo para este
+          hero, pedido explícito de Johnatan ("algo más llamativo y
+          sorprendente, con degradados"). El degradado SÍ reacciona al
+          tema (--premium-hero-bg tiene su propio valor en claro y en
+          oscuro, ver index.css) — a diferencia del resto del tratamiento
+          Premium (--premium-card-bg, --premium-text), que es fijo a
+          propósito: aquí Johnatan pidió explícitamente que el tono
+          cambiara con el tema. Onda inferior: misma curva (WAVE_PATH,
+          arriba) que el borde de cada escena de OnboardingPage.jsx —
+          pedido explícito ("una onda como en los fondos del
+          onboarding") — rellena con var(--bg), así se funde con el
+          cuerpo de la página de abajo en cualquiera de los 2 temas. */}
+      <div className={styles.hero}>
+        <div className={styles.heroGlow} aria-hidden="true" />
+        <Sparkle weight="fill" size={16} className={`${styles.heroSparkle} ${styles.heroSparkle1}`} aria-hidden="true" />
+        <Sparkle weight="fill" size={11} className={`${styles.heroSparkle} ${styles.heroSparkle2}`} aria-hidden="true" />
+        <Sparkle weight="fill" size={9}  className={`${styles.heroSparkle} ${styles.heroSparkle3}`} aria-hidden="true" />
+        <button onClick={onClose} className={styles.heroCloseButton}>
           <X size={18} color="#fff" />
         </button>
+        <div className={styles.heroCrownWrap}>
+          <CrownDuotone size={34} weight="duotone" color="var(--premium-gold-text)" />
+        </div>
+        <div className={styles.heroTitle}>{t('premiumPage.title')}</div>
+        <div className={styles.heroSubtitle}>{t('premiumPage.subtitle')}</div>
+        <svg className={styles.heroWave} viewBox="0 0 300 110" preserveAspectRatio="none" aria-hidden="true">
+          <path d={WAVE_PATH} style={{ fill: 'var(--bg)' }} />
+        </svg>
       </div>
 
-      <div style={{ maxWidth: 420, margin: '0 auto', padding: '24px 20px 40px' }}>
+      <div style={{ maxWidth: 420, margin: '0 auto', padding: '20px 20px 40px' }}>
 
-        <div style={{ textAlign: 'center' }}>
-          <div style={{ fontSize: 24, fontWeight: 700, color: 'var(--text)' }}>{t('premiumPage.title')}</div>
-          <div style={{ fontSize: 13.5, fontWeight: 400, color: 'var(--text)', opacity: 0.8, marginTop: 6, lineHeight: 1.5 }}>
-            {t('premiumPage.subtitle')}
-          </div>
-        </div>
-
-        {/* Beneficios */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 24 }}>
+        {/* Beneficios — tarjetas sobre var(--surface) (antes var(--accent)
+            sólido de borde a borde; Johnatan: "no se lee bien el texto") +
+            chip circular dorado con el ícono, coherente con el hero. */}
+        <div className={styles.benefitsList}>
           {BENEFITS.map(b => (
-            <div key={b.title} style={{
-              display: 'flex', alignItems: 'center', gap: 12,
-              background: 'var(--accent)', borderRadius: 'var(--radius)', padding: 12,
-            }}>
-              <img src={b.icon} alt="" style={{ width: 44, height: 44, borderRadius: 'var(--radius-sm)', flexShrink: 0, objectFit: 'cover' }} />
+            <div key={b.title} className={styles.benefitCard}>
+              <div className={styles.benefitIconChip}>
+                <b.icon size={18} weight="duotone" color="var(--premium-gold-text)" />
+              </div>
               <div>
-                <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--premium-text)' }}>{b.title}</div>
-                <div style={{ fontSize: 12, fontWeight: 400, color: 'var(--premium-text)', opacity: 0.85, marginTop: 2, lineHeight: 1.4 }}>{b.desc}</div>
+                <div className={styles.benefitTitle}>{b.title}</div>
+                <div className={styles.benefitDesc}>{b.desc}</div>
               </div>
             </div>
           ))}
@@ -260,16 +281,10 @@ export function PremiumPage({ onClose, refreshProfile }) {
           </div>
         )}
 
-        {/* Referidos — visual únicamente, sin lógica todavía (pendiente para el lanzamiento) */}
-        {!checkoutOpen && (
-          <button
-            onClick={() => {}}
-            className="btn-primary"
-            style={{ marginTop: 10, background: 'var(--accent)', color: 'var(--premium-text)' }}
-          >
-            {t('premiumPage.referralCta')}
-          </button>
-        )}
+        {/* Referidos — quitado en v0.9.505 (pedido de Johnatan): no tenía
+            lógica real (`onClick={() => {}}`), un CTA de "invita amigos"
+            que no hace nada al tocarlo se siente roto. Vuelve a agregarse
+            cuando exista el sistema real de referidos. */}
 
         {/* Letra pequeña */}
         <div style={{ textAlign: 'center', marginTop: 16 }}>

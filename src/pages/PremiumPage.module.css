@@ -1,8 +1,161 @@
 /* Solo las clases nuevas de esta sesión (selección de plan, checkbox de
-   términos, contenedor del checkout embebido). El resto de PremiumPage.jsx
-   sigue con estilos inline a propósito — archivo excluido de la migración a
-   CSS Modules desde antes de esta sesión (ver CONTEXT.md), fuera de alcance
-   de este cambio. */
+   términos, contenedor del checkout embebido, hero y beneficios de
+   v0.9.505). El resto de PremiumPage.jsx sigue con estilos inline a
+   propósito — archivo excluido de la migración a CSS Modules desde antes
+   de esta sesión (ver CONTEXT.md), fuera de alcance de este cambio. */
+
+/* ── Hero (v0.9.505) ──────────────────────────────────────────────────────
+   Degradado vía var(--premium-hero-bg) — EXCEPCIÓN NUEVA a la Regla 18
+   ("Sin gradientes"), documentada ahí, solo para este hero. A diferencia
+   del resto de --premium-*, este SÍ tiene un valor distinto por tema (ver
+   index.css) — pedido explícito de Johnatan. */
+.hero {
+  position: relative;
+  padding: 48px 20px 40px;
+  text-align: center;
+  overflow: hidden;
+  background: var(--premium-hero-bg);
+}
+
+.heroGlow {
+  position: absolute;
+  top: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 170px;
+  height: 170px;
+  border-radius: 50%;
+  background: var(--premium-hero-glow);
+  animation: heroGlowPulse 3s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.heroCloseButton {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.35);
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.heroCrownWrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 84px;
+  height: 84px;
+  border-radius: 50%;
+  background: var(--premium-hero-crown-bg);
+  box-shadow: 0 8px 24px var(--premium-hero-crown-shadow);
+  animation: heroCrownFloat 3s ease-in-out infinite;
+}
+
+.heroTitle {
+  margin-top: 16px;
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--premium-text);
+  position: relative;
+}
+
+.heroSubtitle {
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--premium-text);
+  opacity: 0.9;
+  margin-top: 6px;
+  line-height: 1.5;
+  position: relative;
+}
+
+/* Onda inferior — misma curva que cada "escena" de OnboardingPage.jsx
+   (WAVE_PATH, definida en PremiumPage.jsx), pedido explícito de Johnatan.
+   Rellena con var(--bg): funde el hero con el cuerpo de la página. */
+.heroWave {
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  width: 100%;
+  height: 42px;
+  display: block;
+}
+
+.heroSparkle {
+  position: absolute;
+  color: var(--premium-gold);
+}
+
+.heroSparkle1 { top: 24px;  right: 48px; animation: heroSparkle 2.6s ease-in-out infinite; }
+.heroSparkle2 { top: 70px;  left: 40px;  animation: heroSparkle 2.6s ease-in-out 0.6s infinite; }
+.heroSparkle3 { top: 110px; right: 80px; animation: heroSparkle 2.6s ease-in-out 1.2s infinite; }
+
+@keyframes heroGlowPulse {
+  0%, 100% { opacity: 0.6;  transform: translateX(-50%) scale(1); }
+  50%      { opacity: 0.9;  transform: translateX(-50%) scale(1.08); }
+}
+
+@keyframes heroCrownFloat {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-8px); }
+}
+
+@keyframes heroSparkle {
+  0%, 100% { opacity: 0;   transform: scale(0.4) rotate(0deg); }
+  50%      { opacity: 1;   transform: scale(1) rotate(15deg); }
+}
+
+/* ── Beneficios (v0.9.505) ────────────────────────────────────────────────
+   Antes: bloque sólido var(--accent) de borde a borde — Johnatan: "no se
+   lee bien el texto". Ahora: misma superficie que cualquier .card de la
+   app (var(--surface), Regla de contraste normal en los 2 temas) + chip
+   circular dorado con el ícono, coherente con el hero. */
+.benefitsList {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.benefitCard {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--surface);
+  border-radius: var(--radius);
+  padding: 12px;
+}
+
+.benefitIconChip {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: var(--premium-gold);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.benefitTitle {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.benefitDesc {
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--muted);
+  margin-top: 2px;
+  line-height: 1.4;
+}
 
 .plansWrap {
   display: flex;
