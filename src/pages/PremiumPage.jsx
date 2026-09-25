@@ -33,8 +33,17 @@ const WAVE_PATH = 'M0,110 L0,20 C30,-19 60,38 95,38 C135,36 150,73 195,64 C238,5
 // v0.9.505: rediseño de hero (degradado, ver comentario más abajo) y
 // beneficios (íconos Phosphor, copy corregido); banner de referidos
 // quitado (no tenía lógica real, ver HISTORIAL).
-export function PremiumPage({ onClose, refreshProfile }) {
+export function PremiumPage({ profile, onClose, refreshProfile }) {
   const { t } = useTranslation()
+
+  // Prueba gratis de 7 días (v0.9.506) — SOLO para quien nunca ha tenido una
+  // suscripción real (`profiles.has_subscribed_before`, marcada por
+  // stripe-webhook.js la primera vez que hay un `checkout.session.completed`,
+  // nunca se revierte — ni al cancelar). Decide qué copy mostrar aquí; la
+  // decisión real de si Stripe aplica el trial vive en
+  // create-checkout-session.js (misma columna, dos lugares distintos por
+  // diseño: aquí es solo texto, allá es dinero de verdad).
+  const trialEligible = !profile?.has_subscribed_before
 
   const [selectedPlan, setSelectedPlan] = useState('annual') // 'monthly' | 'annual'
   const [termsAccepted, setTermsAccepted] = useState(false)
@@ -227,7 +236,9 @@ export function PremiumPage({ onClose, refreshProfile }) {
                 checked={termsAccepted}
                 onChange={e => setTermsAccepted(e.target.checked)}
               />
-              <span className={styles.termsText}>{t('premiumPage.termsAccept')}</span>
+              <span className={styles.termsText}>
+                {trialEligible ? t('premiumPage.termsAcceptTrial') : t('premiumPage.termsAccept')}
+              </span>
             </label>
 
             <button
@@ -240,7 +251,7 @@ export function PremiumPage({ onClose, refreshProfile }) {
               }}
             >
               <Crown size={16} />
-              {t('premiumPage.continueWithPlan', { plan: t(`premiumPage.${selectedPlan}`) })}
+              {trialEligible ? t('premiumPage.startTrial') : t('premiumPage.continueWithPlan', { plan: t(`premiumPage.${selectedPlan}`) })}
             </button>
           </>
         )}
@@ -286,11 +297,21 @@ export function PremiumPage({ onClose, refreshProfile }) {
             que no hace nada al tocarlo se siente roto. Vuelve a agregarse
             cuando exista el sistema real de referidos. */}
 
-        {/* Letra pequeña */}
+        {/* Letra pequeña — la mención de la prueba de 7 días (v0.9.506) solo
+            aparece para quien de verdad califica (trialEligible); quien ya
+            se suscribió antes no la ve, porque no aplica para él. Precio
+            dinámico según el plan elegido — antes decía "$50 MXN al mes"
+            fijo aunque el usuario hubiera elegido Anual. */}
         <div style={{ textAlign: 'center', marginTop: 16 }}>
           <div style={{ fontSize: 10.5, fontWeight: 400, color: 'var(--text)', opacity: 0.7, lineHeight: 1.6 }}>
-            {t('premiumPage.restrictionsApply')}<br />
-            {t('premiumLock.finePrint')}
+            {t('premiumPage.restrictionsApply')}
+            {trialEligible && (<>
+              <br />
+              {t('premiumPage.trialFinePrint', {
+                price: selectedPlan === 'annual' ? '$500' : '$50',
+                suffix: t(`premiumPage.${selectedPlan}PriceSuffix`),
+              })}
+            </>)}
           </div>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5, marginTop: 10, fontSize: 11.5, fontWeight: 500, color: 'var(--text)' }}>
             <ShieldCheck size={13} color="var(--paid)" />
