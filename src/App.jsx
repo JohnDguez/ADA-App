@@ -1521,7 +1521,7 @@ export default function App() {
         onRemindLater={handleFeedbackRemindLater}
       />
       <Toast />
-      {premiumPageOpen && <Suspense fallback={null}><PremiumPage onClose={closePremiumPage} refreshProfile={fetchProfile} /></Suspense>}
+      {premiumPageOpen && <Suspense fallback={null}><PremiumPage profile={profile} onClose={closePremiumPage} refreshProfile={fetchProfile} /></Suspense>}
     </>
   )
 }
