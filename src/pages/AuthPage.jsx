@@ -320,9 +320,12 @@ export function AuthPage() {
   // pública del dominio). Solución acordada con Johnatan: explicar la app
   // aquí mismo, con 2 botones que llevan al formulario real — en vez de una
   // página estática aparte, para no duplicar contenido en 2 lugares.
-  // Mismo patrón de "escena de color sólido + onda inferior" que ya usan
-  // OnboardingPage.jsx y el hero de PremiumPage.jsx (ninguna excepción
-  // nueva a la Regla 18: aquí NO hay degradado, es var(--accent) sólido).
+  // Mismo patrón de "escena + onda inferior" que ya usan OnboardingPage.jsx
+  // y el hero de PremiumPage.jsx. v0.9.515: el fondo sólido var(--accent)
+  // del primer intento se reemplazó por la ilustración propia de Johnatan
+  // (`public/login-header.svg`) a pedido suyo ("de fondo quisiera este"),
+  // y el resplandor detrás del logo (`--auth-hero-logo-glow`) es una
+  // segunda excepción documentada a la Regla 18 — ver index.css/RULES.md.
   if (mode === 'landing') {
     const FEATURES = [
       { icon: CalendarClock, bg: 'var(--accent-soft)', color: 'var(--accent)', title: t('authPage.landing.feature1Title'), desc: t('authPage.landing.feature1Desc') },
@@ -331,16 +334,44 @@ export function AuthPage() {
     ]
     return (
       <div style={{ minHeight: '100vh', background: 'var(--bg)', display: 'flex', flexDirection: 'column' }}>
-        <style>{`
-          @keyframes authLandingLogoFloat { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
-        `}</style>
 
-        <div style={{ position: 'relative', background: 'var(--accent)', padding: '56px 24px 64px', textAlign: 'center', overflow: 'hidden' }}>
-          <img
-            src="/Luna-Pay-logo-white.svg"
-            alt={APP_NAME}
-            style={{ height: 34, animation: 'authLandingLogoFloat 3s ease-in-out infinite' }}
-          />
+        {/* Fondo: ilustración propia de Johnatan (login-header.svg, escena
+            nocturna azul) en vez del solsido var(--accent) anterior —
+            "de fondo quisiera este" (v0.9.515). Sin animación en el logo
+            ("quitale el movimiento"): el <style>/@keyframes de antes se quitó
+            por completo, el logo ahora es estático. */}
+        <div style={{
+          position: 'relative',
+          backgroundImage: 'url(/login-header.svg)',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          padding: '72px 24px 70px',
+          textAlign: 'center',
+          overflow: 'hidden',
+        }}>
+          {/* Logo 3 veces más grande que antes (34px → 102px) y con un
+              resplandor blanco difuminado detrás en vez de un cuadro blanco
+              sólido — "no quiero un cuadro blanco para el logo, quiero algun
+              resplandor blanco o algo asi". --auth-hero-logo-glow documentada
+              en index.css como excepción a la Regla 18. */}
+          <div style={{ position: 'relative', display: 'inline-block' }}>
+            <div style={{
+              position: 'absolute',
+              top: '50%',
+              left: '50%',
+              transform: 'translate(-50%, -50%)',
+              width: 260,
+              height: 260,
+              background: 'var(--auth-hero-logo-glow)',
+              filter: 'blur(4px)',
+              pointerEvents: 'none',
+            }} />
+            <img
+              src="/Luna-Pay-logo-white.svg"
+              alt={APP_NAME}
+              style={{ position: 'relative', height: 102, display: 'block' }}
+            />
+          </div>
           <div style={{ fontSize: 22, fontWeight: 800, color: '#fff', lineHeight: 1.3, marginTop: 20 }}>
             {t('authPage.landing.titleLine1')}<br />{t('authPage.landing.titleLine2')}
           </div>
