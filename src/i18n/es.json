@@ -590,6 +590,22 @@
       "invalidAccessCode": "Código de acceso inválido o inactivo",
       "accountCreated": "¡Cuenta creada! Revisa tu correo para confirmar.",
       "wrongCredentials": "Correo o contraseña incorrectos"
+    },
+    "landing": {
+      "titleLine1": "Organiza tus pagos,",
+      "titleLine2": "quincena a quincena",
+      "subtitle": "Sin conectarse a tu banco, sin complicarse.",
+      "feature1Title": "Pagos y recordatorios",
+      "feature1Desc": "Fijos, variables, recurrentes o en parcialidades.",
+      "feature2Title": "Espacios Compartidos",
+      "feature2Desc": "Lleva las cuentas junto a tu pareja o roomies.",
+      "feature3Title": "Metas de ahorro",
+      "feature3Desc": "Ponte objetivos y sigue tu avance real.",
+      "createAccount": "Crear cuenta",
+      "login": "Iniciar sesión",
+      "privacy": "Privacidad",
+      "terms": "Términos",
+      "backAriaLabel": "Regresar"
     }
   },
   "resetPasswordPage": {

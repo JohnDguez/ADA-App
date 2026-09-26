@@ -590,6 +590,22 @@
       "invalidAccessCode": "Invalid or inactive access code",
       "accountCreated": "Account created! Check your email to confirm.",
       "wrongCredentials": "Incorrect email or password"
+    },
+    "landing": {
+      "titleLine1": "Organize your bills,",
+      "titleLine2": "pay period by pay period",
+      "subtitle": "No bank connection needed, no hassle.",
+      "feature1Title": "Bills and reminders",
+      "feature1Desc": "Fixed, variable, recurring, or in installments.",
+      "feature2Title": "Shared Spaces",
+      "feature2Desc": "Track expenses together with your partner or roommates.",
+      "feature3Title": "Savings goals",
+      "feature3Desc": "Set targets and track your real progress.",
+      "createAccount": "Create account",
+      "login": "Log in",
+      "privacy": "Privacy",
+      "terms": "Terms",
+      "backAriaLabel": "Go back"
     }
   },
   "resetPasswordPage": {
