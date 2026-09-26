@@ -1,6 +1,11 @@
 const webpush = require('web-push')
 const { createClient } = require('@supabase/supabase-js')
 const { notifyUsers } = require('./_notifyLib')
+const {
+  paymentTitleText, paymentBodyText, joinedText, leftText,
+  removedBroadcastText, removedTargetText, permissionsChangedText,
+  spaceConfigChangedText, spaceDeletedText, spaceDataClearedText,
+} = require('./_notifyText')
 
 // Mismas 3 variables de entorno que ya usa send-notifications.js — no hace
 // falta agregar ninguna nueva.
@@ -25,8 +30,6 @@ function fmt(n) {
   return `${sign}$${abs}`
 }
 
-const FREQ_LABEL = { weekly: 'semanal', biweekly: 'quincenal', monthly: 'mensual' }
-
 // ─────────────────────────────────────────────────────────────────────────
 // Acciones de PAGOS (ya existían desde la Fase 5/5b) — estas SÍ respetan el
 // toggle "Notificarme de cambios" (`notify_on_changes`) de cada quien, sin
@@ -35,45 +38,6 @@ const FREQ_LABEL = { weekly: 'semanal', biweekly: 'quincenal', monthly: 'mensual
 // que Johnatan confirmó que deben llegarle a todos SIEMPRE, sin importar ese
 // toggle (ver tabla de la sesión), así que viven fuera de este set.
 const TOGGLE_GATED_ACTIONS = new Set(['added', 'marked_paid', 'deleted'])
-
-// Arma el título ("Johnatan agregó un pago único") — SIEMPRE con el nombre
-// real del actor, sacado de `profiles` del lado del servidor (nunca del
-// texto que mande el navegador, para que nadie pueda hacerse pasar por otro
-// miembro del espacio). Solo aplica a las 3 acciones de pagos — las nuevas
-// (miembros/espacio/Fondo) arman su texto directo en el switch de abajo,
-// ya que cada una tiene su propia forma/audiencia.
-function buildPaymentTitle(actorName, action, paymentType) {
-  if (action === 'added') {
-    if (paymentType === 'recurrente')     return `${actorName} agregó un pago recurrente`
-    if (paymentType === 'parcialidades')  return `${actorName} agregó un pago en parcialidades`
-    return `${actorName} agregó un pago único`
-  }
-  if (action === 'marked_paid') return `${actorName} marcó un pago como pagado`
-  if (action === 'deleted')     return `${actorName} eliminó un pago`
-  return `${actorName} hizo un cambio`
-}
-
-function buildPaymentBody({ action, paymentName, amount, paymentType, recurFreq, totalInstallments, isVariable }) {
-  if (action === 'added') {
-    // Un pago variable recién creado siempre entra con amount = 0 (se
-    // captura después, "Agregar monto" o "Dividir entre miembros") — antes
-    // esto se formateaba igual que cualquier monto y salía "$0.00", que es
-    // engañoso (parece que el gasto de verdad vale $0). isVariable nunca se
-    // mandaba desde el cliente hasta v0.9.235.
-    const amountStr = (isVariable && !(Number(amount) > 0)) ? 'Monto variable' : fmt(amount)
-    if (paymentType === 'recurrente') {
-      const freq = FREQ_LABEL[recurFreq] || 'mensual'
-      return `${paymentName} — ${amountStr} ${freq}`
-    }
-    if (paymentType === 'parcialidades') {
-      return `${paymentName} — ${totalInstallments || ''} pagos de ${amountStr}`
-    }
-    return `${paymentName} — ${amountStr}`
-  }
-  if (action === 'marked_paid') return `${paymentName} ya fue pagado`
-  if (action === 'deleted')     return `${paymentName} se eliminó del espacio`
-  return paymentName
-}
 
 // A diferencia de send-notifications.js (que corre por cron con un secreto
 // compartido, CRON_SECRET), este endpoint lo llama la app directo desde el
@@ -149,11 +113,13 @@ module.exports = async function handler(req, res) {
       case 'added':
       case 'marked_paid':
       case 'deleted': {
-        const title = buildPaymentTitle(actorName, action, paymentType)
-        const body  = buildPaymentBody({ action, paymentName, amount, paymentType, recurFreq, totalInstallments, isVariable })
+        const title = (uid, lang) => ({
+          title: paymentTitleText(lang, actorName, action, paymentType),
+          body: paymentBodyText(lang, { action, paymentName, amount, paymentType, recurFreq, totalInstallments, isVariable, fmt }),
+        })
         const userIds = members.filter(m => m.notify_on_changes).map(m => m.user_id)
         result = await notifyUsers(supabase, webpush, {
-          userIds, title, body, actorName, spaceName, icon: actorAvatarUrl,
+          userIds, title, actorName, spaceName, icon: actorAvatarUrl,
         })
         break
       }
@@ -162,20 +128,18 @@ module.exports = async function handler(req, res) {
       // demás miembros (dueño incluido), siempre, sin importar su toggle
       // (confirmado explícitamente con Johnatan).
       case 'joined': {
-        const title = `${actorName} se unió al espacio`
-        const body  = `Ahora es parte de ${spaceName}`
+        const title = (uid, lang) => joinedText(lang, actorName, spaceName)
         result = await notifyUsers(supabase, webpush, {
-          userIds: members.map(m => m.user_id), title, body, actorName, spaceName, icon: actorAvatarUrl,
+          userIds: members.map(m => m.user_id), title, actorName, spaceName, icon: actorAvatarUrl,
         })
         break
       }
 
       // ── Un miembro se sale por su cuenta — avisa a los demás, siempre.
       case 'left': {
-        const title = `${actorName} salió del espacio`
-        const body  = `Ya no forma parte de ${spaceName}`
+        const title = (uid, lang) => leftText(lang, actorName, spaceName)
         result = await notifyUsers(supabase, webpush, {
-          userIds: members.map(m => m.user_id), title, body, actorName, spaceName, icon: actorAvatarUrl,
+          userIds: members.map(m => m.user_id), title, actorName, spaceName, icon: actorAvatarUrl,
         })
         break
       }
@@ -187,18 +151,14 @@ module.exports = async function handler(req, res) {
       // Ambos siempre, sin importar el toggle — confirmado con Johnatan.
       case 'removed': {
         if (!removedUserId) return res.status(400).json({ error: 'Falta removedUserId' })
-        const broadcastTitle = `${actorName} eliminó a ${removedUserName || 'un miembro'} del espacio`
-        const broadcastBody  = spaceName
-        const targetTitle = `Fuiste eliminado de ${spaceName}`
-        const targetBody  = `${actorName} te quitó del espacio`
 
-        const messageFor = (uid) => uid === removedUserId
-          ? { title: targetTitle, body: targetBody }
-          : { title: broadcastTitle, body: broadcastBody }
+        const title = (uid, lang) => uid === removedUserId
+          ? removedTargetText(lang, actorName, spaceName)
+          : removedBroadcastText(lang, actorName, removedUserName, spaceName)
 
         const userIds = [...members.map(m => m.user_id), removedUserId]
         result = await notifyUsers(supabase, webpush, {
-          userIds, title: messageFor, actorName, spaceName, icon: actorAvatarUrl,
+          userIds, title, actorName, spaceName, icon: actorAvatarUrl,
         })
         break
       }
@@ -208,10 +168,9 @@ module.exports = async function handler(req, res) {
       // demás). Siempre, sin importar el toggle.
       case 'permissions_changed': {
         if (!targetUserId) return res.status(400).json({ error: 'Falta targetUserId' })
-        const title = `Tus permisos en ${spaceName} cambiaron`
-        const body  = `${actorName} actualizó lo que puedes hacer en el espacio`
+        const title = (uid, lang) => permissionsChangedText(lang, actorName, spaceName)
         result = await notifyUsers(supabase, webpush, {
-          userIds: [targetUserId], title, body, actorName, spaceName, icon: actorAvatarUrl,
+          userIds: [targetUserId], title, actorName, spaceName, icon: actorAvatarUrl,
         })
         break
       }
@@ -221,10 +180,9 @@ module.exports = async function handler(req, res) {
       // sin desglosar qué campo cambió — evita tener que diffear el objeto
       // completo de `shared_spaces` solo para un aviso.
       case 'space_config_changed': {
-        const title = `${actorName} actualizó la configuración de ${spaceName}`
-        const body  = 'Revisa el periodo de cobro o el ingreso del espacio'
+        const title = (uid, lang) => spaceConfigChangedText(lang, actorName, spaceName)
         result = await notifyUsers(supabase, webpush, {
-          userIds: members.map(m => m.user_id), title, body, actorName, spaceName, icon: actorAvatarUrl,
+          userIds: members.map(m => m.user_id), title, actorName, spaceName, icon: actorAvatarUrl,
         })
         break
       }
@@ -235,10 +193,9 @@ module.exports = async function handler(req, res) {
       // members`), así que `members` de arriba todavía trae a todos.
       // Siempre, sin importar el toggle — confirmado con Johnatan.
       case 'space_deleted': {
-        const title = `${spaceName} fue eliminado`
-        const body  = `${actorName} eliminó este Espacio Compartido`
+        const title = (uid, lang) => spaceDeletedText(lang, actorName, spaceName)
         result = await notifyUsers(supabase, webpush, {
-          userIds: members.map(m => m.user_id), title, body, actorName, spaceName, icon: actorAvatarUrl,
+          userIds: members.map(m => m.user_id), title, actorName, spaceName, icon: actorAvatarUrl,
         })
         break
       }
@@ -246,10 +203,9 @@ module.exports = async function handler(req, res) {
       // ── El dueño borra solo el historial (pagos e ingresos), el espacio
       // y sus miembros se quedan intactos — avisa a los demás, siempre.
       case 'space_data_cleared': {
-        const title = `${actorName} reinició los datos de ${spaceName}`
-        const body  = 'Se borró todo el historial de pagos e ingresos del espacio'
+        const title = (uid, lang) => spaceDataClearedText(lang, actorName, spaceName)
         result = await notifyUsers(supabase, webpush, {
-          userIds: members.map(m => m.user_id), title, body, actorName, spaceName, icon: actorAvatarUrl,
+          userIds: members.map(m => m.user_id), title, actorName, spaceName, icon: actorAvatarUrl,
         })
         break
       }

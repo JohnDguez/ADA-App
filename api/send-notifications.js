@@ -1,5 +1,8 @@
 const webpush = require('web-push')
 const { createClient } = require('@supabase/supabase-js')
+const {
+  resolveLang, overdueText, dueTodayText, upcomingText, cobroDayText, goalDeadlineText, trialEndingText,
+} = require('./_notifyText')
 
 webpush.setVapidDetails(
   process.env.VAPID_EMAIL,
@@ -65,7 +68,7 @@ function applyScope(query, scope) {
 // is_postponed:true) seguía disparando "vencido"/"vence hoy"/"próximo"/
 // "día de cobro" como si nunca se hubiera resuelto, ya que estas consultas
 // solo miraban is_paid. Ver CONTEXT.md → tabla de columnas de `payments`.
-async function collectReminders(scope, profile, todayStr, today) {
+async function collectReminders(scope, profile, todayStr, today, lang) {
   const notifications = []
 
   // Pagos vencidos
@@ -75,10 +78,9 @@ async function collectReminders(scope, profile, todayStr, today) {
       scope
     )
     if (overdue && overdue.length > 0) {
+      const { title, body } = overdueText(lang, overdue.length, overdue.map(p => p.name).join(', '))
       notifications.push({
-        type: 'overdue',
-        title: `${overdue.length} pago${overdue.length > 1 ? 's' : ''} vencido${overdue.length > 1 ? 's' : ''}`,
-        body: overdue.map(p => p.name).join(', '),
+        type: 'overdue', title, body,
         tag: `overdue${scope.spaceId ? '-' + scope.spaceId : ''}`, urgent: true, url: '/',
         space_name: scope.spaceName || null,
       })
@@ -93,10 +95,9 @@ async function collectReminders(scope, profile, todayStr, today) {
     )
     if (dueToday && dueToday.length > 0) {
       dueToday.forEach(p => {
+        const { title, body } = dueTodayText(lang, p.name)
         notifications.push({
-          type: 'due_today',
-          title: `${p.name} vence hoy`,
-          body: 'No olvides hacer el pago y registrarlo',
+          type: 'due_today', title, body,
           tag: `due-today-${p.name}${scope.spaceId ? '-' + scope.spaceId : ''}`, urgent: false, url: '/',
           space_name: scope.spaceName || null,
         })
@@ -120,10 +121,9 @@ async function collectReminders(scope, profile, todayStr, today) {
       scope
     )
     if (upcoming && upcoming.length > 0) {
+      const { title, body } = upcomingText(lang, upcoming.length, upcoming.map(p => p.name).join(', '))
       notifications.push({
-        type: 'upcoming',
-        title: `${upcoming.length} pago${upcoming.length > 1 ? 's' : ''} próximo${upcoming.length > 1 ? 's' : ''}`,
-        body: `${upcoming.map(p => p.name).join(', ')} — vence${upcoming.length > 1 ? 'n' : ''} pronto`,
+        type: 'upcoming', title, body,
         tag: `upcoming${scope.spaceId ? '-' + scope.spaceId : ''}`, urgent: false, url: '/',
         space_name: scope.spaceName || null,
       })
@@ -143,10 +143,9 @@ async function collectReminders(scope, profile, todayStr, today) {
         scope
       )
       if (pendingToday && pendingToday.length > 0) {
+        const { title, body } = cobroDayText(lang, pendingToday.length)
         notifications.push({
-          type: 'cobro_day',
-          title: `Hoy es tu día de cobro`,
-          body: `Tienes ${pendingToday.length} pago${pendingToday.length > 1 ? 's' : ''} pendiente${pendingToday.length > 1 ? 's' : ''} por cubrir`,
+          type: 'cobro_day', title, body,
           tag: 'cobro-day', urgent: false, url: '/',
           space_name: null,
         })
@@ -188,7 +187,7 @@ function addDaysStr(dateStr, days) {
 // resta), igual que en useGoals.js — nunca hay un contador guardado.
 const GOAL_DEADLINE_DAYS = 7
 
-async function collectGoalDeadlineReminders(userId, todayStr) {
+async function collectGoalDeadlineReminders(userId, todayStr, lang) {
   const limitStr = addDaysStr(todayStr, GOAL_DEADLINE_DAYS)
 
   const { data: goals } = await supabase
@@ -226,12 +225,10 @@ async function collectGoalDeadlineReminders(userId, todayStr) {
       Math.round((new Date(goal.target_date + 'T12:00:00') - new Date(todayStr + 'T12:00:00')) / 86400000),
       0
     )
-    const cuando = dias === 0 ? 'Hoy vence tu meta' : `Te quedan ${dias} día${dias > 1 ? 's' : ''}`
+    const { title, body } = goalDeadlineText(lang, goal.name, dias, money(falta))
 
     notifications.push({
-      type: 'goal_deadline',
-      title: `${cuando}: ${goal.name}`,
-      body: `Todavía te falta ${money(falta)} para completarla`,
+      type: 'goal_deadline', title, body,
       // El tag debe ser único por notificación o el navegador reemplaza
       // una con otra al apilarlas.
       tag: `goal-deadline-${goal.id}`,
@@ -260,15 +257,14 @@ async function collectGoalDeadlineReminders(userId, todayStr) {
 // que guardar también el price_id o el plan.
 const TRIAL_REMINDER_DAYS_BEFORE = 2
 
-function collectTrialReminder(profile, todayStr) {
+function collectTrialReminder(profile, todayStr, lang) {
   if (profile.stripe_subscription_status !== 'trialing') return null
   if (!profile.trial_ends_at || profile.trial_reminder_sent) return null
   if (profile.trial_ends_at !== addDaysStr(todayStr, TRIAL_REMINDER_DAYS_BEFORE)) return null
 
+  const { title, body } = trialEndingText(lang)
   return {
-    type: 'trial_ending',
-    title: 'Tu prueba de Premium termina en 2 días',
-    body: 'Después de eso se activará el cobro normal de tu plan. Puedes cancelar cuando quieras desde Ajustes.',
+    type: 'trial_ending', title, body,
     tag: 'trial-ending',
     urgent: false,
     url: '/',
@@ -295,7 +291,7 @@ module.exports = async function handler(req, res) {
     const userIds = subs.map(s => s.user_id)
     const { data: profiles, error: profilesError } = await supabase
       .from('profiles')
-      .select('id, notif_cobro_day, notif_due_today, notif_upcoming, notif_overdue, notif_days_before, notif_hour, timezone, cobro_freq, cobro_weekday, notif_last_sent, stripe_subscription_status, trial_ends_at, trial_reminder_sent')
+      .select('id, notif_cobro_day, notif_due_today, notif_upcoming, notif_overdue, notif_days_before, notif_hour, timezone, cobro_freq, cobro_weekday, notif_last_sent, stripe_subscription_status, trial_ends_at, trial_reminder_sent, language')
       .in('id', userIds)
 
     if (profilesError) return res.status(500).json({ error: profilesError.message })
@@ -312,6 +308,7 @@ module.exports = async function handler(req, res) {
 
       const timezone  = profile.timezone || 'America/Mazatlan'
       const notifHour = profile.notif_hour ?? 8
+      const lang      = resolveLang(profile.language)
       const todayStr  = getLocalDateStr(timezone)
 
       if (!force) {
@@ -344,28 +341,28 @@ module.exports = async function handler(req, res) {
         spacesInfo = spaces || []
       }
 
-      let notifications = await collectReminders({ type: 'personal', userId: sub.user_id }, profile, todayStr, today)
+      let notifications = await collectReminders({ type: 'personal', userId: sub.user_id }, profile, todayStr, today, lang)
 
       // Metas de ahorro con fecha límite cerca — solo personal, y una sola
       // vez por meta (la función marca `deadline_notif_sent` al armar el
       // aviso). No depende de ninguna preferencia de notificaciones porque
       // no existe una columna para eso: dispara como máximo una vez en la
       // vida de cada meta, así que no genera ruido repetido.
-      const goalNotifs = await collectGoalDeadlineReminders(sub.user_id, todayStr)
+      const goalNotifs = await collectGoalDeadlineReminders(sub.user_id, todayStr, lang)
       notifications = notifications.concat(goalNotifs)
 
       // Prueba de 7 días — aviso único de "termina en 2 días" (v0.9.508).
       // No depende de ninguna preferencia de notificaciones (mismo criterio
       // que las metas arriba): es un aviso de una sola vez en la vida de
       // cada trial, no ruido repetido que el usuario necesite poder apagar.
-      const trialNotif = collectTrialReminder(profile, todayStr)
+      const trialNotif = collectTrialReminder(profile, todayStr, lang)
       if (trialNotif) {
         notifications.push(trialNotif)
         await supabase.from('profiles').update({ trial_reminder_sent: true }).eq('id', profile.id)
       }
 
       for (const space of spacesInfo) {
-        const spaceNotifs = await collectReminders({ type: 'space', spaceId: space.id, spaceName: space.name }, profile, todayStr, today)
+        const spaceNotifs = await collectReminders({ type: 'space', spaceId: space.id, spaceName: space.name }, profile, todayStr, today, lang)
         notifications = notifications.concat(spaceNotifs)
       }
 

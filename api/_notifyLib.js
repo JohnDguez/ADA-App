@@ -11,6 +11,8 @@
 // con guión bajo, que quedan disponibles para importar pero nunca se
 // exponen como endpoint aparte.
 
+const { resolveLang } = require('./_notifyText')
+
 async function sendPush(supabase, webpush, userIds, payload) {
   if (!userIds.length) return { sent: 0, pushErrors: [] }
   const { data: subs } = await supabase
@@ -53,19 +55,31 @@ async function sendPush(supabase, webpush, userIds, payload) {
 // Manda in-app + push a una lista de user_ids — quien llama ya decidió a
 // quién le toca (aplicar o no el filtro `notify_on_changes` es decisión de
 // cada endpoint, no de este módulo). `title`/`body` puede ser un string
-// (mismo texto para todos) o una función `(userId) => ({ title, body })`
-// para cuando cada receptor necesita un texto distinto (ej. la persona
-// expulsada de un espacio ve un texto distinto al resto). `icon` (la foto
-// del actor) se guarda en AMBOS lugares — como `actor_avatar_url` en la fila
-// de `notifications` (para `ActorAvatar` en `NotificationsPanel.jsx`) y como
-// `icon` en el payload del push nativo — antes solo se usaba para el push,
-// nunca se guardaba in-app (bug real, reportado por Johnatan con captura:
-// "Johnatan se unió al espacio" mostraba iniciales en vez de la foto).
+// (mismo texto para todos) o una función `(userId, lang) => ({ title, body })`
+// para cuando cada receptor necesita un texto distinto — ej. la persona
+// expulsada de un espacio ve un texto distinto al resto, o (v0.9.512) cada
+// quien ve el aviso en SU propio idioma (`profiles.language`), ya que los
+// miembros de un mismo Espacio Compartido pueden tener idiomas distintos.
+// `icon` (la foto del actor) se guarda en AMBOS lugares — como
+// `actor_avatar_url` en la fila de `notifications` (para `ActorAvatar` en
+// `NotificationsPanel.jsx`) y como `icon` en el payload del push nativo —
+// antes solo se usaba para el push, nunca se guardaba in-app (bug real,
+// reportado por Johnatan con captura: "Johnatan se unió al espacio" mostraba
+// iniciales en vez de la foto).
 async function notifyUsers(supabase, webpush, { userIds, title, body, actorName = null, spaceName = null, url = '/', icon = null }) {
   const ids = [...new Set(userIds)].filter(Boolean)
   if (!ids.length) return { sent: 0, notified: 0, pushErrors: [] }
 
-  const messageFor = (uid) => (typeof title === 'function' ? title(uid) : { title, body })
+  // v0.9.512 — un solo select extra por llamada, nunca uno por destinatario.
+  // Si `title` es un string plano (nadie lo usa ya tras v0.9.512, pero se
+  // deja por compatibilidad) el idioma de cada quien ni se necesita.
+  let langMap = {}
+  if (typeof title === 'function') {
+    const { data: langRows } = await supabase.from('profiles').select('id, language').in('id', ids)
+    for (const row of (langRows || [])) langMap[row.id] = resolveLang(row.language)
+  }
+
+  const messageFor = (uid) => (typeof title === 'function' ? title(uid, langMap[uid] || 'es') : { title, body })
 
   await supabase.from('notifications').insert(
     ids.map(uid => {

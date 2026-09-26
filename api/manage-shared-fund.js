@@ -1,6 +1,7 @@
 const { createClient } = require('@supabase/supabase-js')
 const webpush = require('web-push')
 const { notifyUsers } = require('./_notifyLib')
+const { fundContributionText, fundContributionDeletedText } = require('./_notifyText')
 
 // Mismas 3 variables VAPID que ya usan notify-space-change.js /
 // register-contribution.js — este archivo nunca había notificado nada
@@ -26,9 +27,9 @@ async function notifyAllSpaceMembers(spaceId, actorId, buildMessage) {
   ])
   const actorName      = actorProfile?.name || 'Alguien'
   const actorAvatarUrl = actorProfile?.avatar_url || null
-  const { title, body } = buildMessage(actorName)
+  const title = (uid, lang) => buildMessage(actorName, lang)
   const userIds = (memberRows || []).map(m => m.user_id)
-  await notifyUsers(supabase, webpush, { userIds, title, body, actorName, icon: actorAvatarUrl })
+  await notifyUsers(supabase, webpush, { userIds, title, actorName, icon: actorAvatarUrl })
 }
 
 // Reimplementación fiel de cobroPeriod()/today()/dateToStr()/addDays() de
@@ -174,17 +175,22 @@ module.exports = async function handler(req, res) {
       try {
         const amountStr = '$' + Number(entry.amount).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
         // Si el dueño elimina la aportación de OTRO miembro (permiso
-        // can_delete), se aclara de quién era — si no, ambigüo ("eliminó
-        // una aportación", ¿la de quién?).
-        let depositorClause = ''
+        // can_delete), se aclara de quién era — si no, ambiguo ("eliminó
+        // una aportación", ¿la de quién?). El fallback genérico ("otro
+        // miembro"/"another member") se resuelve DENTRO del callback de
+        // notifyAllSpaceMembers porque ahí sí se conoce el idioma de cada
+        // destinatario — aquí solo se sabe si aplica o no la aclaración.
+        let depositorName = null
         if (entry.user_id !== actorId) {
           const { data: depositorProfile } = await supabase.from('profiles').select('name').eq('id', entry.user_id).maybeSingle()
-          depositorClause = ` de ${depositorProfile?.name || 'otro miembro'}`
+          depositorName = depositorProfile?.name || '__fallback__'
         }
-        await notifyAllSpaceMembers(spaceId, actorId, (actorName) => ({
-          title: `${actorName} eliminó una aportación al Fondo`,
-          body: `Se quitó ${amountStr}${depositorClause} del Fondo de ${space.name}`,
-        }))
+        await notifyAllSpaceMembers(spaceId, actorId, (actorName, lang) => {
+          const resolvedDepositorName = depositorName === '__fallback__'
+            ? (lang === 'en' ? 'another member' : 'otro miembro')
+            : depositorName
+          return fundContributionDeletedText(lang, actorName, amountStr, resolvedDepositorName, space.name)
+        })
       } catch (e) {
         // Silencioso a propósito
       }
@@ -238,10 +244,9 @@ module.exports = async function handler(req, res) {
 
     try {
       const amountStr = '$' + numAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-      await notifyAllSpaceMembers(spaceId, actorId, (actorName) => ({
-        title: `${actorName} aportó al Fondo Compartido`,
-        body: `+ ${amountStr} en ${space.name}`,
-      }))
+      await notifyAllSpaceMembers(spaceId, actorId, (actorName, lang) =>
+        fundContributionText(lang, actorName, amountStr, space.name)
+      )
     } catch (e) {
       // Silencioso a propósito
     }

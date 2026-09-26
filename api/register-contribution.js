@@ -2,6 +2,9 @@ const { createClient } = require('@supabase/supabase-js')
 const webpush = require('web-push')
 const { notifyUsers } = require('./_notifyLib')
 const { ensureTwoAheadServer } = require('./_recurEnsureTwoAhead')
+const {
+  paymentUnmarkedText, variableAmountSetText, paidWithFundText, contributionRegisteredText,
+} = require('./_notifyText')
 
 // Mismas 3 variables VAPID que ya usan notify-space-change.js / send-notifications.js.
 webpush.setVapidDetails(
@@ -53,9 +56,9 @@ async function notifyAllSpaceMembers(spaceId, actorId, buildMessage) {
   ])
   const actorName      = actorProfile?.name || 'Alguien'
   const actorAvatarUrl = actorProfile?.avatar_url || null
-  const { title, body } = buildMessage(actorName)
+  const title = (uid, lang) => buildMessage(actorName, lang)
   const userIds = (memberRows || []).map(m => m.user_id)
-  await notifyUsers(supabase, webpush, { userIds, title, body, actorName, icon: actorAvatarUrl })
+  await notifyUsers(supabase, webpush, { userIds, title, actorName, icon: actorAvatarUrl })
 }
 
 module.exports = async function handler(req, res) {
@@ -133,10 +136,9 @@ module.exports = async function handler(req, res) {
         return res.status(500).json({ error: 'El pago se desmarcó, pero no se pudo limpiar del todo lo abonado — revisa "Dividir entre miembros" manualmente.' })
       }
       try {
-        await notifyAllSpaceMembers(payment.space_id, actorId, (actorName) => ({
-          title: `${actorName} desmarcó un pago`,
-          body: `${payment.name} volvió a pendiente`,
-        }))
+        await notifyAllSpaceMembers(payment.space_id, actorId, (actorName, lang) =>
+          paymentUnmarkedText(lang, actorName, payment.name)
+        )
       } catch (e) {
         // Silencioso a propósito — no debe tumbar la reversión real, que ya se guardó bien
       }
@@ -199,10 +201,10 @@ module.exports = async function handler(req, res) {
         }
       }
       try {
-        await notifyAllSpaceMembers(payment.space_id, actorId, (actorName) => ({
-          title: `${actorName} fijó el monto de un pago variable`,
-          body: `${payment.name} — $${newTotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
-        }))
+        const newTotalStr = '$' + newTotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+        await notifyAllSpaceMembers(payment.space_id, actorId, (actorName, lang) =>
+          variableAmountSetText(lang, actorName, payment.name, newTotalStr)
+        )
       } catch (e) {
         // Silencioso a propósito
       }
@@ -290,10 +292,10 @@ module.exports = async function handler(req, res) {
       }
       if (Math.round(delta * 100) > 0) {
         try {
-          await notifyAllSpaceMembers(payment.space_id, actorId, (actorName) => ({
-            title: `${actorName} pagó con el Fondo Compartido`,
-            body: `${payment.name} — $${delta.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} desde el Fondo`,
-          }))
+          const deltaStr = '$' + delta.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+          await notifyAllSpaceMembers(payment.space_id, actorId, (actorName, lang) =>
+            paidWithFundText(lang, actorName, payment.name, deltaStr)
+          )
         } catch (e) {
           // Silencioso a propósito
         }
@@ -467,10 +469,9 @@ module.exports = async function handler(req, res) {
     const toNotify = (toNotifyRows || []).filter(m => m.notify_on_changes)
 
     if (toNotify.length > 0) {
-      const title = `${actorName} registró un abono`
-      const body  = `${payment.name} — ${memberName} puso ${amountStr}`
+      const title = (uid, lang) => contributionRegisteredText(lang, actorName, payment.name, memberName, amountStr)
       await notifyUsers(supabase, webpush, {
-        userIds: toNotify.map(m => m.user_id), title, body, actorName, spaceName, icon: actorAvatarUrl,
+        userIds: toNotify.map(m => m.user_id), title, actorName, spaceName, icon: actorAvatarUrl,
       })
     }
 
