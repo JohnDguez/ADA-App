@@ -1,7 +1,16 @@
 import { useState, useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { supabase } from '../lib/supabase'
-import { Eye, EyeOff, Lock, Mail, KeyRound, X, Check, ArrowLeft, CalendarClock, Users, Target } from 'lucide-react'
+import { Eye, EyeOff, Lock, Mail, KeyRound, X, Check, ArrowLeft } from 'lucide-react'
+// Íconos de las 3 tarjetas de beneficio de la pantalla de bienvenida — antes
+// Lucide (CalendarClock/Users/Target), cambiados a Phosphor en v0.9.516
+// ("se me hacen mas bonitos", pedido explícito de Johnatan) — mismos
+// imports por subruta y mismo weight="duotone" que ya usa PremiumPage.jsx
+// para sus tarjetas de beneficio (UsersThree/Target incluso son el mismo
+// ícono conceptual reutilizado ahí para Espacios Compartidos/Metas).
+import { CalendarCheck } from '@phosphor-icons/react/dist/csr/CalendarCheck'
+import { UsersThree } from '@phosphor-icons/react/dist/csr/UsersThree'
+import { Target } from '@phosphor-icons/react/dist/csr/Target'
 import { passwordRequirements, isPasswordStrong } from '../components/PasswordSetupModal'
 import Logo from '../components/Logo'
 import { APP_NAME } from '../lib/constants'
@@ -323,72 +332,84 @@ export function AuthPage() {
   // Mismo patrón de "escena + onda inferior" que ya usan OnboardingPage.jsx
   // y el hero de PremiumPage.jsx. v0.9.515: el fondo sólido var(--accent)
   // del primer intento se reemplazó por la ilustración propia de Johnatan
-  // (`public/login-header.svg`) a pedido suyo ("de fondo quisiera este"),
-  // y el resplandor detrás del logo (`--auth-hero-logo-glow`) es una
-  // segunda excepción documentada a la Regla 18 — ver index.css/RULES.md.
+  // (`public/login-header.svg`). v0.9.516 — 3 correcciones sobre esa
+  // entrega: (1) se quitó el resplandor blanco del logo (`--auth-hero-logo-glow`,
+  // Johnatan: "peleaba mucho con el texto") y en su lugar se oscurece la
+  // imagen completa con `--auth-hero-overlay`, así el logo/texto en blanco
+  // siempre contrastan sin competir con la ilustración de fondo — Regla 18
+  // queda con las mismas 2 excepciones de antes (Premium), ninguna nueva.
+  // (2) Layout reescrito de "bottom bar `position: fixed` + padding inferior
+  // fijo de repuesto en el scroll" a un flex column de 3 franjas
+  // (hero / contenido flex:1 con scroll propio / bottom bar) DENTRO de un
+  // contenedor de altura exacta (`height: 100vh`, no `minHeight` — con
+  // minHeight el contenedor podía crecer más que la pantalla y el bottom
+  // bar fijo tapaba la última tarjeta, que es justo el bug que reportó
+  // Johnatan). Así el bottom bar SIEMPRE se ve completo y el scroll nunca
+  // se tapa, sin adivinar cuántos px de padding hacen falta. (3) Íconos de
+  // Phosphor (`weight="duotone"`) en vez de Lucide — "se me hacen mas
+  // bonitos", mismo criterio ya usado en PremiumPage.jsx.
   if (mode === 'landing') {
     const FEATURES = [
-      { icon: CalendarClock, bg: 'var(--accent-soft)', color: 'var(--accent)', title: t('authPage.landing.feature1Title'), desc: t('authPage.landing.feature1Desc') },
-      { icon: Users,         bg: 'var(--premium-gold)', color: 'var(--premium-gold-text)', title: t('authPage.landing.feature2Title'), desc: t('authPage.landing.feature2Desc') },
+      { icon: CalendarCheck, bg: 'var(--accent-soft)', color: 'var(--accent)', title: t('authPage.landing.feature1Title'), desc: t('authPage.landing.feature1Desc') },
+      { icon: UsersThree,    bg: 'var(--premium-gold)', color: 'var(--premium-gold-text)', title: t('authPage.landing.feature2Title'), desc: t('authPage.landing.feature2Desc') },
       { icon: Target,        bg: 'var(--accent-soft)', color: 'var(--accent)', title: t('authPage.landing.feature3Title'), desc: t('authPage.landing.feature3Desc') },
     ]
     return (
-      <div style={{ minHeight: '100vh', background: 'var(--bg)', display: 'flex', flexDirection: 'column' }}>
+      <div style={{ height: '100vh', background: 'var(--bg)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
 
         {/* Fondo: ilustración propia de Johnatan (login-header.svg, escena
-            nocturna azul) en vez del solsido var(--accent) anterior —
-            "de fondo quisiera este" (v0.9.515). Sin animación en el logo
-            ("quitale el movimiento"): el <style>/@keyframes de antes se quitó
-            por completo, el logo ahora es estático. */}
+            nocturna azul). Sin animación en el logo ("quitale el
+            movimiento"). `flexShrink: 0`: nunca se encoge, es de las 3
+            franjas fijas del layout (ver comentario de arriba). */}
         <div style={{
           position: 'relative',
           backgroundImage: 'url(/login-header.svg)',
           backgroundSize: 'cover',
           backgroundPosition: 'center',
-          padding: '72px 24px 70px',
+          padding: '56px 24px 64px',
           textAlign: 'center',
           overflow: 'hidden',
+          flexShrink: 0,
         }}>
-          {/* Logo 3 veces más grande que antes (34px → 102px) y con un
-              resplandor blanco difuminado detrás en vez de un cuadro blanco
-              sólido — "no quiero un cuadro blanco para el logo, quiero algun
-              resplandor blanco o algo asi". --auth-hero-logo-glow documentada
-              en index.css como excepción a la Regla 18. */}
-          <div style={{ position: 'relative', display: 'inline-block' }}>
-            <div style={{
-              position: 'absolute',
-              top: '50%',
-              left: '50%',
-              transform: 'translate(-50%, -50%)',
-              width: 260,
-              height: 260,
-              background: 'var(--auth-hero-logo-glow)',
-              filter: 'blur(4px)',
-              pointerEvents: 'none',
-            }} />
+          {/* Capa oscura sobre la ilustración — "oscurece un poco la
+              imagen, que se vea de fondo, ahorita pelea mucho con el
+              texto" (v0.9.516). Reemplaza al resplandor blanco de v0.9.515
+              (quitado por completo). --auth-hero-overlay documentada en
+              index.css. */}
+          <div style={{ position: 'absolute', inset: 0, background: 'var(--auth-hero-overlay)' }} />
+
+          <div style={{ position: 'relative' }}>
+            {/* Logo 3 veces más grande que el original (34px → 102px),
+                sin animación ni resplandor detrás. */}
             <img
               src="/Luna-Pay-logo-white.svg"
               alt={APP_NAME}
-              style={{ position: 'relative', height: 102, display: 'block' }}
+              style={{ height: 102, display: 'block', margin: '0 auto' }}
             />
+            <div style={{ fontSize: 22, fontWeight: 800, color: '#fff', lineHeight: 1.3, marginTop: 20 }}>
+              {t('authPage.landing.titleLine1')}<br />{t('authPage.landing.titleLine2')}
+            </div>
+            <div style={{ fontSize: 13, color: '#fff', opacity: 0.9, lineHeight: 1.5, marginTop: 8, maxWidth: 290, marginLeft: 'auto', marginRight: 'auto' }}>
+              {t('authPage.landing.subtitle')}
+            </div>
           </div>
-          <div style={{ fontSize: 22, fontWeight: 800, color: '#fff', lineHeight: 1.3, marginTop: 20 }}>
-            {t('authPage.landing.titleLine1')}<br />{t('authPage.landing.titleLine2')}
-          </div>
-          <div style={{ fontSize: 13, color: '#fff', opacity: 0.9, lineHeight: 1.5, marginTop: 8, maxWidth: 290, marginLeft: 'auto', marginRight: 'auto' }}>
-            {t('authPage.landing.subtitle')}
-          </div>
+
           <svg viewBox="0 0 300 110" preserveAspectRatio="none" style={{ position: 'absolute', bottom: -1, left: 0, width: '100%', height: 50, display: 'block' }}>
             <path d={WAVE_PATH} fill="var(--bg)" />
           </svg>
         </div>
 
-        <div style={{ flex: 1, overflowY: 'auto', padding: '16px 24px 160px' }}>
+        {/* Única franja con scroll propio (flex: 1 + overflowY: auto) —
+            ocupa exactamente el espacio entre el hero y el bottom bar, así
+            que la última tarjeta siempre queda completa y visible al
+            llegar al fondo del scroll (antes se tapaba con el bottom bar
+            `position: fixed`). */}
+        <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', padding: '16px 24px' }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginTop: 8 }}>
             {FEATURES.map(f => (
               <div key={f.title} style={{ background: 'var(--surface)', borderRadius: 16, padding: 16, display: 'flex', alignItems: 'center', gap: 14, boxShadow: '0 1px 3px rgba(2,10,31,0.06)' }}>
                 <div style={{ width: 44, height: 44, borderRadius: 12, background: f.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                  <f.icon size={20} color={f.color} />
+                  <f.icon size={20} weight="duotone" color={f.color} />
                 </div>
                 <div>
                   <div style={{ fontSize: 14.5, fontWeight: 700, color: 'var(--text)' }}>{f.title}</div>
@@ -399,7 +420,10 @@ export function AuthPage() {
           </div>
         </div>
 
-        <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, background: 'var(--bg)', borderTop: '1px solid var(--border)', padding: '18px 24px 24px', display: 'flex', flexDirection: 'column', gap: 10, maxWidth: 420, margin: '0 auto' }}>
+        {/* Bottom bar en flujo normal (ya NO `position: fixed`) — franja
+            fija de abajo del layout de 3, `flexShrink: 0` para no perder
+            alto aunque la franja de scroll se comprima. */}
+        <div style={{ flexShrink: 0, width: '100%', maxWidth: 420, margin: '0 auto', background: 'var(--bg)', borderTop: '1px solid var(--border)', padding: '14px 24px 20px', display: 'flex', flexDirection: 'column', gap: 10 }}>
           <button onClick={() => setMode('register')} className="btn-primary" style={{ fontSize: 15 }}>
             {t('authPage.landing.createAccount')}
           </button>
