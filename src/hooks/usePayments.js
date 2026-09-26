@@ -975,10 +975,16 @@ export function usePayments(userId, activeSpaceId = null, activeSpaceName = null
   // Copias pendientes se actualizan EN SU LUGAR, nunca borrar y recrear (si
   // alguna tenía una aportación en `payment_contributions` — Espacio
   // Compartido, "Dividir entre miembros" — se perdería la referencia; bug
-  // real de agosto 2026). `due_date` NO se toca: un cambio de frecuencia solo
-  // aplica a copias futuras. FIX v0.9.481: un pago POSPUESTO ya se resolvió —
+  // real de agosto 2026). FIX v0.9.481: un pago POSPUESTO ya se resolvió —
   // antes caía con las pendientes (`!is_paid`) y recibía monto/categoría
   // nuevos; ahora es historial igual que uno pagado (solo cambia el nombre).
+  // FIX septiembre 2026 (bug real reportado por Johnatan): `firstDate` SÍ
+  // reencadena la fecha de las pendientes cuando de verdad cambia — antes se
+  // ignoraba por completo (salvo el caso rarísimo de 0 pendientes), así que
+  // el campo "Fecha de vencimiento" del modal se veía editable pero guardar
+  // no la cambiaba. Ver `rechainDates` abajo, mismo patrón que
+  // buildInstallmentPlan() ya usa para parcialidades. Pagadas/pospuestas
+  // nunca se tocan.
   async function updateRecurrentConfig(masterId, { name, amount, recur_freq, category, is_variable, firstDate, payment_method_id, payment_method_kind }) {
     const master = payments.find(p => p.id === masterId)
     if (!master) return { error: 'Master no encontrado' }
@@ -986,6 +992,7 @@ export function usePayments(userId, activeSpaceId = null, activeSpaceName = null
     const children   = payments.filter(p => p.parent_id === masterId && !p.is_master)
     const history    = children.filter(p => p.is_paid || p.is_postponed)
     const pending    = children.filter(p => !p.is_paid && !p.is_postponed)
+      .sort((a, b) => dateOf(a.due_date) - dateOf(b.due_date))
     const copyAmount = is_variable ? 0 : amount
 
     // El método de pago (v0.9.487) viaja al master y a las PENDIENTES; las
@@ -995,7 +1002,26 @@ export function usePayments(userId, activeSpaceId = null, activeSpaceName = null
       : {}
     const updates = [{ id: masterId, fields: { name, amount, recur_freq, category, is_variable, ...method } }]
     if (name !== master.name) history.forEach(p => updates.push({ id: p.id, fields: { name } }))
-    pending.forEach(p => updates.push({ id: p.id, fields: { name, amount: copyAmount, category, is_variable, ...method } }))
+
+    // Reencadenar la fecha de las pendientes cuando de verdad cambia — fix
+    // septiembre 2026 (bug real reportado por Johnatan): antes `firstDate`
+    // se ignoraba por completo salvo que no quedara NINGUNA pendiente (caso
+    // rarísimo), así que el campo "Fecha de vencimiento" del modal se veía
+    // editable pero guardar no la cambiaba. Mismo patrón que ya usa
+    // buildInstallmentPlan() para parcialidades: la primera pendiente toma
+    // `firstDate` tal cual, las siguientes se encadenan sumando un periodo
+    // desde ahí. Pagadas/pospuestas (`history`, arriba) nunca se tocan.
+    const rechainDates = pending.length > 0 && !!firstDate &&
+      (firstDate !== pending[0].due_date || recur_freq !== master.recur_freq)
+    let chainDate = firstDate
+    pending.forEach((p, i) => {
+      const fields = { name, amount: copyAmount, category, is_variable, ...method }
+      if (rechainDates) {
+        if (i > 0) chainDate = dateToStr(nextPeriodDate(chainDate, recur_freq))
+        fields.due_date = chainDate
+      }
+      updates.push({ id: p.id, fields })
+    })
 
     // Si no queda NINGUNA pendiente (caso raro: la última se acaba de pagar
     // y ensureTwoAhead todavía no corrió), se crea al menos 1.
