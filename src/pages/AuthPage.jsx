@@ -178,6 +178,50 @@ export function AuthPage() {
   const [termsAccepted, setTermsAccepted] = useState(false)
   const [showTerms,     setShowTerms]     = useState(false)
 
+  // ── Entrada/salida de la pantalla de bienvenida ↔ formulario (Regla 29) ───
+  // v0.9.517 fusionó landing y el formulario real en 1 sola pantalla
+  // permanente, pero eso hizo que el cambio de contenido se sintiera de
+  // golpe (Johnatan: "volviste a hacer que aparezca de golpe todo").
+  // `visibleMode` es lo que en verdad está pintado en pantalla — se queda
+  // atrás de `mode` (el objetivo real) mientras dura la animación, así el
+  // contenido VIEJO sigue renderizado (con su fade de salida) el tiempo
+  // exacto antes de cambiar al nuevo (con su fade de entrada). ANIM_MS es
+  // la ÚNICA fuente de la duración — se inyecta tal cual en el `animation`
+  // inline de abajo, así JS y CSS nunca pueden desincronizarse (Regla 30).
+  // El fade completo (salida+entrada) solo aplica al cruce 'landing' ↔
+  // formulario — cambiar entre login/registro/olvidé-contraseña adentro
+  // del formulario no lo dispara, para no re-animar todo el panel por un
+  // simple cambio de tab (ese cambio ya tiene su propio movimiento: el
+  // thumb deslizante del switch de abajo).
+  const [visibleMode,   setVisibleMode]   = useState(mode)
+  const [contentPhase,  setContentPhase]  = useState('idle') // 'idle' | 'exit' | 'enter'
+  const ANIM_MS = 220
+
+  useEffect(() => {
+    if (mode === visibleMode) return
+    const wasForm = visibleMode !== 'landing'
+    const isForm  = mode !== 'landing'
+    if (wasForm === isForm) { setVisibleMode(mode); return } // cambio interno, sin fade
+    setContentPhase('exit')
+    const exitTimer = setTimeout(() => {
+      setVisibleMode(mode)
+      setContentPhase('enter')
+    }, ANIM_MS)
+    return () => clearTimeout(exitTimer)
+  }, [mode])
+
+  useEffect(() => {
+    if (contentPhase !== 'enter') return
+    const enterTimer = setTimeout(() => setContentPhase('idle'), ANIM_MS)
+    return () => clearTimeout(enterTimer)
+  }, [contentPhase])
+
+  const fadeStyle = contentPhase === 'exit'
+    ? { animation: `authContentExit ${ANIM_MS}ms ease forwards` }
+    : contentPhase === 'enter'
+    ? { animation: `authContentEnter ${ANIM_MS}ms ease forwards` }
+    : {}
+
   const reqs   = passwordRequirements(password)
   const strong = isPasswordStrong(password)
   const match  = password && confirm && password === confirm
@@ -332,7 +376,7 @@ export function AuthPage() {
   // que ahora el bottom bar es EXCLUSIVO de 'landing' — el formulario
   // real trae su botón de enviar dentro del contenido con scroll, igual
   // que cualquier otro formulario de la app (PaymentModal, etc.).
-  const showForm = mode !== 'landing'
+  const showForm = visibleMode !== 'landing'
   const FEATURES = [
     { icon: CalendarCheck, bg: 'var(--accent-soft)', color: 'var(--accent)', title: t('authPage.landing.feature1Title'), desc: t('authPage.landing.feature1Desc') },
     { icon: UsersThree,    bg: 'var(--premium-gold)', color: 'var(--premium-gold-text)', title: t('authPage.landing.feature2Title'), desc: t('authPage.landing.feature2Desc') },
@@ -341,6 +385,10 @@ export function AuthPage() {
 
   return (
     <div style={{ height: '100vh', background: 'var(--bg)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+      <style>{`
+        @keyframes authContentEnter { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes authContentExit  { from { opacity: 1; transform: translateY(0); } to { opacity: 0; transform: translateY(-10px); } }
+      `}</style>
 
       {/* Hero permanente (nunca se desmonta al cambiar `mode`) — ilustración
           propia de Johnatan (login-header.svg), logo y onda inferior. Es
@@ -363,15 +411,17 @@ export function AuthPage() {
 
         {/* Flecha de regreso a 'landing' — solo con el formulario real
             (no en 'forgot', que ya trae su propio link "volver a inicio de
-            sesión" más abajo). Color fijo #fff a propósito, igual que el
-            resto del texto del hero — el fondo siempre es la misma
-            ilustración oscura, sin reaccionar al tema de la app. */}
-        {(mode === 'login' || mode === 'register') && (
+            sesión" más abajo). Color fijo #fff y fondo translúcido fijo
+            (`--auth-hero-back-btn-bg`, v0.9.518 — "agrega un fondo
+            trasparentoso... para que resalte mas") a propósito, igual que
+            el resto del hero — el fondo siempre es la misma ilustración
+            oscura, sin reaccionar al tema de la app. */}
+        {(visibleMode === 'login' || visibleMode === 'register') && (
           <button
             type="button"
             onClick={() => { setMode('landing'); setError(''); setSuccess('') }}
             aria-label={t('authPage.landing.backAriaLabel')}
-            style={{ position: 'absolute', top: 16, left: 16, zIndex: 1, background: 'none', border: 'none', cursor: 'pointer', display: 'flex', padding: 6 }}
+            style={{ ...fadeStyle, position: 'absolute', top: 16, left: 16, zIndex: 1, width: 36, height: 36, borderRadius: '50%', background: 'var(--auth-hero-back-btn-bg)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
           >
             <ArrowLeft size={20} color="#fff" />
           </button>
@@ -388,14 +438,16 @@ export function AuthPage() {
           {/* Titular/subtítulo solo en 'landing' — con el formulario real
               el hero se queda solo con el logo, para dejar más espacio a
               los campos. */}
-          {!showForm && (<>
-            <div style={{ fontSize: 22, fontWeight: 800, color: '#fff', lineHeight: 1.3, marginTop: 20 }}>
-              {t('authPage.landing.titleLine1')}<br />{t('authPage.landing.titleLine2')}
+          {!showForm && (
+            <div style={fadeStyle}>
+              <div style={{ fontSize: 22, fontWeight: 800, color: '#fff', lineHeight: 1.3, marginTop: 20 }}>
+                {t('authPage.landing.titleLine1')}<br />{t('authPage.landing.titleLine2')}
+              </div>
+              <div style={{ fontSize: 13, color: '#fff', opacity: 0.9, lineHeight: 1.5, marginTop: 8, maxWidth: 290, marginLeft: 'auto', marginRight: 'auto' }}>
+                {t('authPage.landing.subtitle')}
+              </div>
             </div>
-            <div style={{ fontSize: 13, color: '#fff', opacity: 0.9, lineHeight: 1.5, marginTop: 8, maxWidth: 290, marginLeft: 'auto', marginRight: 'auto' }}>
-              {t('authPage.landing.subtitle')}
-            </div>
-          </>)}
+          )}
         </div>
 
         <svg viewBox="0 0 300 110" preserveAspectRatio="none" style={{ position: 'absolute', bottom: -1, left: 0, width: '100%', height: 50, display: 'block' }}>
@@ -407,10 +459,12 @@ export function AuthPage() {
           ocupa exactamente el espacio entre el hero y lo que venga abajo
           (bottom bar en 'landing', nada en el formulario real), así que
           nunca se tapa contenido (fix del bug de v0.9.516). Cambia de
-          contenido según `mode`, sin desmontar el hero de arriba. */}
+          contenido según `visibleMode`, sin desmontar el hero de arriba;
+          el contenido interior lleva `fadeStyle` (entrada/salida, Regla 29
+          — v0.9.518, antes este cruce no tenía ninguna animación). */}
       <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', padding: showForm ? '20px 24px' : '16px 24px' }}>
         {!showForm ? (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginTop: 8 }}>
+          <div style={{ ...fadeStyle, display: 'flex', flexDirection: 'column', gap: 12, marginTop: 8 }}>
             {FEATURES.map(f => (
               <div key={f.title} style={{ background: 'var(--surface)', borderRadius: 16, padding: 16, display: 'flex', alignItems: 'center', gap: 14, boxShadow: '0 1px 3px rgba(2,10,31,0.06)' }}>
                 <div style={{ width: 44, height: 44, borderRadius: 12, background: f.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
@@ -424,18 +478,38 @@ export function AuthPage() {
             ))}
           </div>
         ) : (
-          <div style={{ maxWidth: 360, margin: '0 auto' }}>
-            {mode !== 'forgot' && (
-              <div style={{ display: 'flex', background: 'var(--surface)', borderRadius: 10, padding: 3, marginBottom: 24, border: '0.5px solid var(--border)' }}>
+          <div style={{ ...fadeStyle, maxWidth: 360, margin: '0 auto' }}>
+            {/* Switch Iniciar sesión/Registrarse — mismo patrón "track +
+                thumb deslizante" que ya usa HomePage.jsx para sus tabs de
+                Periodo/Mes (.tabTrack/.tabThumb/.tabButton), en vez de 2
+                botones que solo cambiaban de color de golpe — pedido
+                explícito de Johnatan ("como estan los switchers de la
+                app... con un movimiento suave entre cada elemento").
+                AuthPage.jsx no tiene CSS module propio, así que se
+                reproduce inline con los mismos valores (pill, thumb
+                var(--accent) con transition de transform). */}
+            {visibleMode !== 'forgot' && (
+              <div style={{ position: 'relative', display: 'flex', background: 'var(--section-bg)', borderRadius: 999, padding: 4, marginBottom: 24 }}>
+                <div style={{
+                  position: 'absolute',
+                  top: 4,
+                  left: 4,
+                  width: 'calc(50% - 4px)',
+                  height: 'calc(100% - 8px)',
+                  background: 'var(--accent)',
+                  borderRadius: 999,
+                  transform: `translateX(${visibleMode === 'register' ? '100%' : '0%'})`,
+                  transition: 'transform .25s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+                }} />
                 {[['login',t('authPage.tabs.login')],['register',t('authPage.tabs.register')]].map(([m, label]) => (
-                  <button key={m} onClick={() => { setMode(m); setError(''); setSuccess('') }} style={{ flex: 1, padding: '9px 0', borderRadius: 8, border: 'none', background: mode === m ? 'var(--accent)' : 'transparent', color: mode === m ? '#fff' : 'var(--text)', fontWeight: mode === m ? 600 : 400, fontSize: 14, fontFamily: 'DM Sans, sans-serif', cursor: 'pointer', transition: 'background .15s' }}>
+                  <button key={m} onClick={() => { setMode(m); setError(''); setSuccess('') }} style={{ position: 'relative', zIndex: 1, flex: 1, textAlign: 'center', padding: '10px 0', borderRadius: 999, border: 'none', background: 'transparent', color: visibleMode === m ? 'var(--surface)' : 'var(--text)', fontWeight: visibleMode === m ? 600 : 400, fontSize: 14, fontFamily: 'DM Sans, sans-serif', cursor: 'pointer', transition: 'color .2s' }}>
                     {label}
                   </button>
                 ))}
               </div>
             )}
 
-            {mode === 'forgot' && (
+            {visibleMode === 'forgot' && (
               <div style={{ marginBottom: 20 }}>
                 <div style={{ fontSize: 20, fontWeight: 700, color: 'var(--text)', marginBottom: 6 }}>{t('authPage.forgotTitle')}</div>
                 <div style={{ fontSize: 14, color: 'var(--text)' }}>{t('authPage.forgotSubtitle')}</div>
@@ -450,16 +524,16 @@ export function AuthPage() {
               <input autoFocus className="field-input" style={{ paddingLeft: 40 }} type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder={t('authPage.emailPlaceholder')} onKeyDown={e => e.key === 'Enter' && handleSubmit()} enterKeyHint="next" />
             </Field>
 
-            {mode !== 'forgot' && (
+            {visibleMode !== 'forgot' && (
               <Field label={t('authPage.passwordLabel')}>
                 <FieldIcon><Lock size={15} color="var(--text)" /></FieldIcon>
-                <input className="field-input" style={{ paddingLeft: 40, paddingRight: 40 }} type={showPass ? 'text' : 'password'} value={password} onChange={e => setPassword(e.target.value)} placeholder="••••••••" onKeyDown={e => e.key === 'Enter' && handleSubmit()} enterKeyHint={mode === 'register' ? 'next' : 'done'} />
+                <input className="field-input" style={{ paddingLeft: 40, paddingRight: 40 }} type={showPass ? 'text' : 'password'} value={password} onChange={e => setPassword(e.target.value)} placeholder="••••••••" onKeyDown={e => e.key === 'Enter' && handleSubmit()} enterKeyHint={visibleMode === 'register' ? 'next' : 'done'} />
                 <EyeBtn show={showPass} onToggle={() => setShowPass(v => !v)} />
               </Field>
             )}
 
             {/* Requisitos de contraseña — solo en registro */}
-            {mode === 'register' && password.length > 0 && (
+            {visibleMode === 'register' && password.length > 0 && (
               <div style={{ background: 'var(--surface)', borderRadius: 'var(--radius-sm)', padding: '10px 12px', marginBottom: 14, border: '0.5px solid var(--border)' }}>
                 <RequirementRow met={reqs.length}    label={t('settingsAccount.editModal.requirementLength')} />
                 <RequirementRow met={reqs.uppercase} label={t('settingsAccount.editModal.requirementUppercase')} />
@@ -468,7 +542,7 @@ export function AuthPage() {
               </div>
             )}
 
-            {mode === 'register' && (<>
+            {visibleMode === 'register' && (<>
               <Field label={t('passwordSetupModal.confirmLabel')}>
                 <FieldIcon><Lock size={15} color="var(--text)" /></FieldIcon>
                 <input className="field-input" style={{ paddingLeft: 40, paddingRight: 40, borderColor: confirm && !match ? 'var(--danger)' : undefined }} type={showConfirm ? 'text' : 'password'} value={confirm} onChange={e => setConfirm(e.target.value)} placeholder={t('passwordSetupModal.confirmPlaceholder')} enterKeyHint="next" />
@@ -500,21 +574,21 @@ export function AuthPage() {
             </>)}
 
             <button onClick={handleSubmit} disabled={loading} className="btn-primary" style={{ marginBottom: 12 }}>
-              {loading ? t('authPage.submit.loading') : mode === 'login' ? t('authPage.submit.login') : mode === 'register' ? t('authPage.submit.register') : t('authPage.submit.forgot')}
+              {loading ? t('authPage.submit.loading') : visibleMode === 'login' ? t('authPage.submit.login') : visibleMode === 'register' ? t('authPage.submit.register') : t('authPage.submit.forgot')}
             </button>
 
-            {mode === 'login' && (
+            {visibleMode === 'login' && (
               <button onClick={() => { setMode('forgot'); setError(''); setSuccess('') }} style={{ background: 'none', border: 'none', fontSize: 13, color: 'var(--accent)', cursor: 'pointer', display: 'block', margin: '0 auto 16px', fontFamily: 'DM Sans, sans-serif' }}>
                 {t('authPage.forgotPasswordLink')}
               </button>
             )}
-            {mode === 'forgot' && (
+            {visibleMode === 'forgot' && (
               <button onClick={() => { setMode('login'); setError(''); setSuccess('') }} style={{ background: 'none', border: 'none', fontSize: 13, color: 'var(--accent)', cursor: 'pointer', display: 'block', margin: '0 auto 16px', fontFamily: 'DM Sans, sans-serif' }}>
                 {t('authPage.backToLogin')}
               </button>
             )}
 
-            {mode !== 'forgot' && (<>
+            {visibleMode !== 'forgot' && (<>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '4px 0 16px' }}>
                 <div style={{ flex: 1, height: '0.5px', background: 'var(--border)' }} />
                 <span style={{ fontSize: 12, color: 'var(--text)' }}>{t('authPage.orContinueWith')}</span>
@@ -524,7 +598,7 @@ export function AuthPage() {
                 <GoogleIcon />
                 {googleLoading ? t('authPage.google.connecting') : 'Google'}
               </button>
-              {mode === 'register' && (
+              {visibleMode === 'register' && (
                 <div style={{ fontSize: 11, color: 'var(--text)', textAlign: 'center', marginTop: 10 }}>
                   {t('authPage.google.termsNote')}{' '}
                   <span onClick={() => setShowTerms(true)} style={{ color: 'var(--accent)', cursor: 'pointer', textDecoration: 'underline' }}>
@@ -542,7 +616,7 @@ export function AuthPage() {
           contenido con scroll de arriba, así que no necesita una franja
           fija aparte. */}
       {!showForm && (
-        <div style={{ flexShrink: 0, width: '100%', maxWidth: 420, margin: '0 auto', background: 'var(--bg)', borderTop: '1px solid var(--border)', padding: '14px 24px 20px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+        <div style={{ ...fadeStyle, flexShrink: 0, width: '100%', maxWidth: 420, margin: '0 auto', background: 'var(--bg)', borderTop: '1px solid var(--border)', padding: '14px 24px 20px', display: 'flex', flexDirection: 'column', gap: 10 }}>
           <button onClick={() => setMode('register')} className="btn-primary" style={{ fontSize: 15 }}>
             {t('authPage.landing.createAccount')}
           </button>
