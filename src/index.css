@@ -177,6 +177,17 @@
      fondo del hero es la misma ilustración siempre, no una variable de tema. */
   --auth-hero-overlay: rgba(3, 12, 26, 0.4);
 
+  /* Fondo translúcido de la flecha de regreso sobre ese mismo hero (v0.9.518)
+     — Johnatan: "agrega un fondo trasparentoso a la flecha... para que
+     resalte mas y el usuario la pueda ver". Nota a propósito: esto es lo
+     opuesto al criterio de PageHeader.jsx (fondo SÓLIDO en sus botones
+     sobre imagen, nunca transparencia) — ahí la imagen cambia de tono por
+     hora del día y una alpha se perdería; aquí el fondo es una sola
+     ilustración fija y Johnatan pidió transparencia explícitamente para
+     ESTE botón en concreto, no es un cambio de criterio general. Fijo (no
+     cambia entre claro/oscuro), mismo motivo que --auth-hero-overlay. */
+  --auth-hero-back-btn-bg: rgba(255, 255, 255, 0.18);
+
   /* ── Onboarding (fondo de color por paso) ─────────────────────────────────
      Fijos, iguales en claro/oscuro (mismo criterio que --premium-*): cada
      paso lleva el color sólido de fondo detrás de su ilustración 3D — si
