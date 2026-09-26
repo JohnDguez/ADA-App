@@ -1,11 +1,19 @@
 import { useState, useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { supabase } from '../lib/supabase'
-import { Eye, EyeOff, Lock, Mail, KeyRound, X, Check } from 'lucide-react'
+import { Eye, EyeOff, Lock, Mail, KeyRound, X, Check, ArrowLeft, CalendarClock, Users, Target } from 'lucide-react'
 import { passwordRequirements, isPasswordStrong } from '../components/PasswordSetupModal'
 import Logo from '../components/Logo'
 import { APP_NAME } from '../lib/constants'
 import { loadGoogleIdentityScript, generateNonce } from '../lib/googleAuth'
+
+// Misma curva que el borde inferior de cada "escena" de OnboardingPage.jsx y
+// del hero de PremiumPage.jsx (WAVE_PATH ahí) — pedido explícito de
+// Johnatan de reutilizar ese mismo patrón para la pantalla de bienvenida
+// (v0.9.514). Duplicada a propósito, mismo criterio ya documentado en
+// PremiumPage.jsx: es solo un string SVG, no vale la pena una fuente
+// compartida para 3 usos.
+const WAVE_PATH = 'M0,110 L0,20 C30,-19 60,38 95,38 C135,36 150,73 195,64 C238,58 255,101 300,80 L300,110 Z'
 
 // ── Modal de Términos y Condiciones ──────────────────────────────────────────
 function TermsModal({ onClose }) {
@@ -147,7 +155,7 @@ export function ResetPasswordPage({ onDone }) {
 // ── Auth Page ─────────────────────────────────────────────────────────────────
 export function AuthPage() {
   const { t } = useTranslation()
-  const [mode,          setMode]          = useState('login')
+  const [mode,          setMode]          = useState('landing')
   const [email,         setEmail]         = useState('')
   const [password,      setPassword]      = useState('')
   const [confirm,       setConfirm]       = useState('')
@@ -302,9 +310,97 @@ export function AuthPage() {
     setLoading(false)
   }
 
+  // Pantalla de bienvenida (v0.9.514) — antes `mode` arrancaba directo en
+  // 'login', así que quien entraba a my.luna-pay.app/ sin sesión veía SOLO
+  // un formulario de credenciales, sin nada que explicara qué es LunaPay.
+  // Google marcó esto como problema real al verificar la marca de OAuth
+  // ("tu página principal está protegida por una página de acceso" / "no
+  // se explica el propósito de la app") — confirmado revisando el código
+  // (App.jsx: `if (!user) return <AuthPage/>`, esta pantalla ES la raíz
+  // pública del dominio). Solución acordada con Johnatan: explicar la app
+  // aquí mismo, con 2 botones que llevan al formulario real — en vez de una
+  // página estática aparte, para no duplicar contenido en 2 lugares.
+  // Mismo patrón de "escena de color sólido + onda inferior" que ya usan
+  // OnboardingPage.jsx y el hero de PremiumPage.jsx (ninguna excepción
+  // nueva a la Regla 18: aquí NO hay degradado, es var(--accent) sólido).
+  if (mode === 'landing') {
+    const FEATURES = [
+      { icon: CalendarClock, bg: 'var(--accent-soft)', color: 'var(--accent)', title: t('authPage.landing.feature1Title'), desc: t('authPage.landing.feature1Desc') },
+      { icon: Users,         bg: 'var(--premium-gold)', color: 'var(--premium-gold-text)', title: t('authPage.landing.feature2Title'), desc: t('authPage.landing.feature2Desc') },
+      { icon: Target,        bg: 'var(--accent-soft)', color: 'var(--accent)', title: t('authPage.landing.feature3Title'), desc: t('authPage.landing.feature3Desc') },
+    ]
+    return (
+      <div style={{ minHeight: '100vh', background: 'var(--bg)', display: 'flex', flexDirection: 'column' }}>
+        <style>{`
+          @keyframes authLandingLogoFloat { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+        `}</style>
+
+        <div style={{ position: 'relative', background: 'var(--accent)', padding: '56px 24px 64px', textAlign: 'center', overflow: 'hidden' }}>
+          <img
+            src="/Luna-Pay-logo-white.svg"
+            alt={APP_NAME}
+            style={{ height: 34, animation: 'authLandingLogoFloat 3s ease-in-out infinite' }}
+          />
+          <div style={{ fontSize: 22, fontWeight: 800, color: '#fff', lineHeight: 1.3, marginTop: 20 }}>
+            {t('authPage.landing.titleLine1')}<br />{t('authPage.landing.titleLine2')}
+          </div>
+          <div style={{ fontSize: 13, color: '#fff', opacity: 0.9, lineHeight: 1.5, marginTop: 8, maxWidth: 290, marginLeft: 'auto', marginRight: 'auto' }}>
+            {t('authPage.landing.subtitle')}
+          </div>
+          <svg viewBox="0 0 300 110" preserveAspectRatio="none" style={{ position: 'absolute', bottom: -1, left: 0, width: '100%', height: 50, display: 'block' }}>
+            <path d={WAVE_PATH} fill="var(--bg)" />
+          </svg>
+        </div>
+
+        <div style={{ flex: 1, overflowY: 'auto', padding: '16px 24px 160px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginTop: 8 }}>
+            {FEATURES.map(f => (
+              <div key={f.title} style={{ background: 'var(--surface)', borderRadius: 16, padding: 16, display: 'flex', alignItems: 'center', gap: 14, boxShadow: '0 1px 3px rgba(2,10,31,0.06)' }}>
+                <div style={{ width: 44, height: 44, borderRadius: 12, background: f.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <f.icon size={20} color={f.color} />
+                </div>
+                <div>
+                  <div style={{ fontSize: 14.5, fontWeight: 700, color: 'var(--text)' }}>{f.title}</div>
+                  <div style={{ fontSize: 12, color: 'var(--muted)', marginTop: 2 }}>{f.desc}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, background: 'var(--bg)', borderTop: '1px solid var(--border)', padding: '18px 24px 24px', display: 'flex', flexDirection: 'column', gap: 10, maxWidth: 420, margin: '0 auto' }}>
+          <button onClick={() => setMode('register')} className="btn-primary" style={{ fontSize: 15 }}>
+            {t('authPage.landing.createAccount')}
+          </button>
+          <button
+            onClick={() => setMode('login')}
+            style={{ width: '100%', padding: 14, borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-mid)', background: 'var(--surface)', color: 'var(--text)', fontWeight: 600, fontSize: 15, fontFamily: 'DM Sans, sans-serif', cursor: 'pointer' }}
+          >
+            {t('authPage.landing.login')}
+          </button>
+          <div style={{ textAlign: 'center', fontSize: 11, color: 'var(--muted)', marginTop: 4 }}>
+            <a href="/privacidad.html" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--accent)', fontWeight: 600 }}>{t('authPage.landing.privacy')}</a>
+            {' · '}
+            <a href="/terminos.html" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--accent)', fontWeight: 600 }}>{t('authPage.landing.terms')}</a>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div style={{ minHeight: '100vh', background: 'var(--bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 24px' }}>
       <div style={{ width: '100%', maxWidth: 360 }}>
+        {mode !== 'forgot' && (
+          <button
+            type="button"
+            onClick={() => { setMode('landing'); setError(''); setSuccess('') }}
+            aria-label={t('authPage.landing.backAriaLabel')}
+            style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', padding: 0, marginBottom: 12 }}
+          >
+            <ArrowLeft size={20} color="var(--text)" />
+          </button>
+        )}
         <Logo />
 
         {mode !== 'forgot' && (
