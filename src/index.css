@@ -166,6 +166,16 @@
   --premium-hero-crown-bg:    linear-gradient(145deg, #FFFFFF 0%, #F5C242 100%);
   --premium-hero-crown-shadow: rgba(168, 93, 26, 0.35);
 
+  /* Hero de la pantalla de bienvenida de AuthPage.jsx (v0.9.515) — resplandor
+     blanco detrás del logo para que no se pierda contra el fondo (Johnatan:
+     "no quiero un cuadro blanco para el logo, quiero algun resplandor blanco
+     o algo asi"). Segunda excepción documentada a la Regla 18 ("Sin
+     gradientes"), mismo criterio que --premium-hero-glow. Fijo (no cambia
+     entre claro/oscuro): el fondo del hero es la ilustración
+     `login-header.svg` (siempre la misma escena nocturna), no una variable
+     de tema — por eso este resplandor tampoco reacciona al tema de la app. */
+  --auth-hero-logo-glow: radial-gradient(circle, rgba(255, 255, 255, 0.85) 0%, rgba(255, 255, 255, 0) 70%);
+
   /* ── Onboarding (fondo de color por paso) ─────────────────────────────────
      Fijos, iguales en claro/oscuro (mismo criterio que --premium-*): cada
      paso lleva el color sólido de fondo detrás de su ilustración 3D — si
