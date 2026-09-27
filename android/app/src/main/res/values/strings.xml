@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">LunaPay</string>
+    <string name="title_activity_main">LunaPay</string>
+    <string name="package_name">app.luna_pay.mobile</string>
+    <string name="custom_url_scheme">app.luna_pay.mobile</string>
+</resources>
