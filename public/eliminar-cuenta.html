@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Eliminar cuenta — LunaPay</title>
+<meta name="robots" content="index, follow">
+<link rel="icon" href="/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #F2F2F2;
+    --surface: #FFFFFF;
+    --border: #E4E2DC;
+    --text: #020A1F;
+    --muted: #696969;
+    --accent: #2F8CFA;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: 'DM Sans', system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.65;
+  }
+  .wrap { max-width: 720px; margin: 0 auto; padding: 32px 20px 80px; }
+  header { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 24px; }
+  header img { height: 32px; }
+  h1 { font-size: 24px; font-weight: 800; margin: 24px 0 4px; }
+  .updated { color: var(--muted); font-size: 13px; margin-bottom: 24px; }
+  .card { background: var(--surface); border-radius: 16px; padding: 28px 24px; margin-bottom: 16px; }
+  h2 { font-size: 16px; font-weight: 700; margin: 0 0 10px; color: var(--text); }
+  p, li { font-size: 14.5px; color: var(--text); }
+  ol, ul { padding-left: 20px; margin: 8px 0; }
+  li { margin-bottom: 6px; }
+  a { color: var(--accent); text-decoration: none; font-weight: 600; }
+  a:hover { text-decoration: underline; }
+  .notice {
+    background: #FFF8E6; border: 1px solid #F0DDA0; border-radius: 12px;
+    padding: 14px 16px; font-size: 13px; color: #6B5300; margin-bottom: 24px;
+  }
+  footer { text-align: center; color: var(--muted); font-size: 12.5px; margin-top: 32px; }
+
+  .langToggle {
+    display: flex; background: var(--border); border-radius: 20px; padding: 3px;
+    flex-shrink: 0;
+  }
+  .langBtn {
+    border: none; background: none; font-family: inherit; font-size: 12.5px;
+    font-weight: 700; color: var(--muted); padding: 5px 12px; border-radius: 20px;
+    cursor: pointer;
+  }
+  .langBtn.active { background: var(--surface); color: var(--accent); }
+
+  [data-lang-content="en"] { display: none; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <img src="/Luna-Pay-logo.svg" alt="LunaPay">
+    <div class="langToggle">
+      <button type="button" class="langBtn" data-lang-btn="es" onclick="setLang('es')">ES</button>
+      <button type="button" class="langBtn" data-lang-btn="en" onclick="setLang('en')">EN</button>
+    </div>
+  </header>
+
+  <!-- ══════════════════════════ ESPAÑOL ══════════════════════════ -->
+  <div data-lang-content="es">
+
+  <h1>Eliminar tu cuenta</h1>
+  <p class="updated">Última actualización: septiembre de 2026</p>
+
+  <div class="notice">
+    Esta página explica cómo eliminar tu cuenta de LunaPay y qué sucede con tus datos al hacerlo, conforme lo requiere Google Play para apps con inicio de sesión.
+  </div>
+
+  <div class="card">
+    <h2>1. Cómo eliminar tu cuenta desde la app</h2>
+    <p>Puedes eliminar tu cuenta de LunaPay en cualquier momento, directamente desde la aplicación, sin necesidad de contactar a soporte:</p>
+    <ol>
+      <li>Abre LunaPay e inicia sesión con tu cuenta.</li>
+      <li>Ve a <strong>Ajustes → Cuenta</strong>.</li>
+      <li>Baja hasta la sección <strong>"Zona de peligro"</strong>.</li>
+      <li>Toca <strong>"Eliminar mi cuenta"</strong>.</li>
+      <li>Confirma tu contraseña actual cuando se te solicite (verificación de seguridad).</li>
+      <li>Confirma la eliminación. La cuenta y los datos asociados se borran de inmediato — esta acción no se puede deshacer.</li>
+    </ol>
+    <p>Si iniciaste sesión con Google y nunca configuraste una contraseña, la app te pedirá crear una antes de poder confirmar esta acción (medida de seguridad adicional).</p>
+  </div>
+
+  <div class="card">
+    <h2>2. Qué datos se eliminan</h2>
+    <p>Al eliminar tu cuenta, se borran de forma permanente:</p>
+    <ul>
+      <li>Tu cuenta de inicio de sesión (correo/autenticación)</li>
+      <li>Tu perfil (nombre, foto, preferencias, configuración)</li>
+      <li>Todos tus pagos, gastos, recurrentes y parcialidades registrados</li>
+      <li>Tus ingresos por periodo registrados</li>
+      <li>Tus notificaciones dentro de la app</li>
+      <li>Tus suscripciones a notificaciones push</li>
+    </ul>
+    <p>Nada de esta información permanece asociada a ti después de completar el proceso.</p>
+  </div>
+
+  <div class="card">
+    <h2>3. Eliminar solo tus datos, sin borrar la cuenta</h2>
+    <p>Si prefieres mantener tu cuenta pero borrar tu historial financiero para empezar de cero, LunaPay también ofrece <strong>"Eliminar mis datos"</strong> en la misma sección de Ajustes → Cuenta → Zona de peligro. Esta opción borra tus pagos e ingresos registrados, pero conserva tu cuenta, tu perfil y tu inicio de sesión.</p>
+  </div>
+
+  <div class="card">
+    <h2>4. Datos que procesa un tercero (pagos)</h2>
+    <p>Si tienes o tuviste una suscripción Premium pagada con tarjeta, la información de tu método de pago la procesa y conserva <strong>Stripe</strong>, nuestro procesador de pagos, conforme a sus propias políticas — LunaPay nunca almacena directamente los datos completos de tu tarjeta. Eliminar tu cuenta de LunaPay no elimina por sí solo un historial de facturación que Stripe conserve por obligaciones fiscales/contables; si quieres información sobre esos registros, contáctanos con el correo de abajo.</p>
+  </div>
+
+  <div class="card">
+    <h2>5. ¿Tienes problemas para eliminar tu cuenta desde la app?</h2>
+    <p>Escríbenos a <a href="mailto:support@luna-pay.app">support@luna-pay.app</a> y con gusto te ayudamos a eliminar tu cuenta y tus datos manualmente.</p>
+  </div>
+
+  <footer>
+    LunaPay · <a href="/privacidad.html">Aviso de Privacidad</a> · <a href="/terminos.html">Términos y Condiciones</a>
+  </footer>
+
+  </div>
+
+  <!-- ══════════════════════════ ENGLISH ══════════════════════════ -->
+  <div data-lang-content="en">
+
+  <h1>Deleting your account</h1>
+  <p class="updated">Last updated: September 2026</p>
+
+  <div class="notice">
+    This page explains how to delete your LunaPay account and what happens to your data when you do, as required by Google Play for apps with sign-in.
+  </div>
+
+  <div class="card">
+    <h2>1. How to delete your account from the app</h2>
+    <p>You can delete your LunaPay account at any time, directly from the app, without needing to contact support:</p>
+    <ol>
+      <li>Open LunaPay and sign in to your account.</li>
+      <li>Go to <strong>Settings → Account</strong>.</li>
+      <li>Scroll down to the <strong>"Danger zone"</strong> section.</li>
+      <li>Tap <strong>"Delete my account"</strong>.</li>
+      <li>Confirm your current password when prompted (security verification).</li>
+      <li>Confirm the deletion. Your account and associated data are deleted immediately — this action cannot be undone.</li>
+    </ol>
+    <p>If you signed in with Google and never set a password, the app will ask you to create one before you can confirm this action (additional security measure).</p>
+  </div>
+
+  <div class="card">
+    <h2>2. What data is deleted</h2>
+    <p>When you delete your account, the following is permanently deleted:</p>
+    <ul>
+      <li>Your sign-in account (email/authentication)</li>
+      <li>Your profile (name, photo, preferences, settings)</li>
+      <li>All your recorded payments, expenses, recurring charges, and installment plans</li>
+      <li>Your recorded period income</li>
+      <li>Your in-app notifications</li>
+      <li>Your push notification subscriptions</li>
+    </ul>
+    <p>None of this information remains associated with you after the process is complete.</p>
+  </div>
+
+  <div class="card">
+    <h2>3. Deleting only your data, without deleting your account</h2>
+    <p>If you'd rather keep your account but clear your financial history to start fresh, LunaPay also offers <strong>"Delete my data"</strong> in the same Settings → Account → Danger zone section. This option deletes your recorded payments and income, but keeps your account, profile, and sign-in.</p>
+  </div>
+
+  <div class="card">
+    <h2>4. Data processed by a third party (payments)</h2>
+    <p>If you have or had a Premium subscription paid by card, your payment method information is processed and retained by <strong>Stripe</strong>, our payment processor, under its own policies — LunaPay never stores your full card details directly. Deleting your LunaPay account does not by itself delete a billing history Stripe retains for tax/accounting obligations; if you want information about those records, contact us at the email below.</p>
+  </div>
+
+  <div class="card">
+    <h2>5. Having trouble deleting your account from the app?</h2>
+    <p>Email us at <a href="mailto:support@luna-pay.app">support@luna-pay.app</a> and we'll gladly help you delete your account and data manually.</p>
+  </div>
+
+  <footer>
+    LunaPay · <a href="/privacidad.html">Privacy Notice</a> · <a href="/terminos.html">Terms and Conditions</a>
+  </footer>
+
+  </div>
+
+</div>
+
+<script>
+  function setLang(lang) {
+    document.querySelectorAll('[data-lang-content]').forEach(function (el) {
+      el.style.display = el.getAttribute('data-lang-content') === lang ? 'block' : 'none';
+    });
+    document.querySelectorAll('[data-lang-btn]').forEach(function (btn) {
+      btn.classList.toggle('active', btn.getAttribute('data-lang-btn') === lang);
+    });
+    document.documentElement.lang = lang;
+    document.title = lang === 'en' ? 'Delete account — LunaPay' : 'Eliminar cuenta — LunaPay';
+    try { localStorage.setItem('lunapay-legal-lang', lang); } catch (e) {}
+  }
+
+  (function () {
+    var saved = null;
+    try { saved = localStorage.getItem('lunapay-legal-lang'); } catch (e) {}
+    var lang = saved || (navigator.language && navigator.language.toLowerCase().indexOf('en') === 0 ? 'en' : 'es');
+    setLang(lang);
+  })();
+</script>
+</body>
+</html>
