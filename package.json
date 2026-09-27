@@ -17,6 +17,7 @@
     "@stripe/react-stripe-js": "^2.9.0",
     "@stripe/stripe-js": "^4.10.0",
     "@supabase/supabase-js": "^2.45.0",
+    "cordova-plugin-purchase": "^13.12.1",
     "i18next": "^26.3.6",
     "jspdf": "^4.2.1",
     "jspdf-autotable": "^5.0.8",

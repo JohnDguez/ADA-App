@@ -1045,6 +1045,10 @@
     "restrictionsApply": "Aplican restricciones.",
     "cancelAnytime": "Cancela cuando quieras. Sin cargos ocultos.",
     "restorePurchases": "Restaurar compras.",
+    "restoringPurchases": "Restaurando tus compras…",
+    "restoreSuccess": "¡Listo! Tu Premium ya está activo.",
+    "restoreEmpty": "No encontramos compras que restaurar en esta cuenta de Google.",
+    "restoreError": "No se pudieron restaurar tus compras. Intenta de nuevo.",
     "startTrial": "Iniciar prueba gratis de 7 días",
     "termsAcceptTrial": "Acepto que, al terminar mi prueba gratis de 7 días, se me cobre de forma recurrente el monto del plan seleccionado hasta que cancele, de acuerdo con los Términos y Condiciones.",
     "trialFinePrint": "Solo para usuarios que nunca se han suscrito antes. Al terminar la prueba de 7 días, se cobrará {{price}} {{suffix}}."

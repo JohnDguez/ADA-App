@@ -296,3 +296,24 @@
   opacity: 0.8;
   padding: 24px 0;
 }
+
+/* Restaurar compras (Google Play Billing, Android) — NUEVO (v0.9.525).
+   Mismo criterio que .backLink: botón real, sin apariencia de botón,
+   heredando tipografía del texto que lo rodea (footer de restricciones). */
+.restoreLink {
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  font: inherit;
+  font-size: inherit;
+  font-weight: inherit;
+  color: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.restoreLink:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
