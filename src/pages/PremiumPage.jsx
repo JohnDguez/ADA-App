@@ -11,6 +11,7 @@ import { Target } from '@phosphor-icons/react/dist/csr/Target'
 import { loadStripe } from '@stripe/stripe-js'
 import { EmbeddedCheckoutProvider, EmbeddedCheckout } from '@stripe/react-stripe-js'
 import { supabase } from '../lib/supabase'
+import { isAndroidBilling, restorePurchases } from '../lib/playBilling'
 import styles from './PremiumPage.module.css'
 
 // Módulo, no dentro del componente — loadStripe() cachea la promesa
@@ -82,6 +83,37 @@ export function PremiumPage({ profile, onClose, refreshProfile }) {
   // terminado del lado de Stripe, esperando a que el webhook actualice
   // is_premium en Supabase)
   const [checkoutState, setCheckoutState] = useState('idle')
+
+  // Restaurar compras (Google Play Billing, Android/Capacitor) — NUEVO
+  // (v0.9.525). Solo aplica dentro de la app empaquetada de Android — en
+  // web/PWA el cobro es por Stripe, que ya tiene gestión completa de
+  // suscripción en SettingsSubscriptionPage.jsx (ver CONTEXT.md). Se
+  // calcula una sola vez al montar (la plataforma no cambia en vivo).
+  const isAndroid = useMemo(() => isAndroidBilling(), [])
+  // 'idle' | 'restoring' | 'success' | 'empty' | 'error'
+  const [restoreState, setRestoreState] = useState('idle')
+
+  // Válido directo contra la Google Play Developer API en el mismo request
+  // (api/verify-play-purchase.js) — a diferencia del cobro por Stripe
+  // (async vía webhook, ver confirmAndClose()), aquí la respuesta del
+  // servidor ya trae el resultado final, así que un solo refreshProfile()
+  // basta, sin necesidad de reintentar en bucle.
+  async function handleRestorePurchases() {
+    setRestoreState('restoring')
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) { setRestoreState('error'); return }
+      const { restored } = await restorePurchases(session.access_token)
+      if (restored > 0) {
+        await refreshProfile?.()
+        setRestoreState('success')
+      } else {
+        setRestoreState('empty')
+      }
+    } catch (e) {
+      setRestoreState('error')
+    }
+  }
 
   // v0.9.505 — auditoría de beneficios (pedido de Johnatan: "revisar esa
   // lista de lo que de verdad obtienes con premium"): "No más anuncios" NO
@@ -350,8 +382,36 @@ export function PremiumPage({ profile, onClose, refreshProfile }) {
             {t('premiumPage.cancelAnytime')}
           </div>
           <div style={{ fontSize: 10.5, fontWeight: 400, color: 'var(--text)', opacity: 0.6, marginTop: 10 }}>
-            {t('premiumPage.restorePurchases')} <a href="/terminos.html" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--accent)', opacity: 1 }}>{t('authPage.termsLink')}</a>
+            {/* "Restaurar compras" solo tiene sentido en la app de Android
+                (Google Play Billing) — en web/PWA el cobro es por Stripe,
+                que ya tiene su propia pantalla de gestión de suscripción
+                (SettingsSubscriptionPage.jsx), así que ahí este texto no se
+                muestra en vez de quedarse como enlace muerto (v0.9.525). */}
+            {isAndroid && (
+              <button
+                type="button"
+                onClick={handleRestorePurchases}
+                disabled={restoreState === 'restoring'}
+                className={styles.restoreLink}
+              >
+                {t('premiumPage.restorePurchases')}
+              </button>
+            )}{isAndroid && ' '}
+            <a href="/terminos.html" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--accent)', opacity: 1 }}>{t('authPage.termsLink')}</a>
           </div>
+          {isAndroid && restoreState !== 'idle' && (
+            <div
+              style={{
+                fontSize: 10.5, fontWeight: 500, textAlign: 'center', marginTop: 6,
+                color: restoreState === 'error' ? 'var(--danger)' : 'var(--text)',
+              }}
+            >
+              {restoreState === 'restoring' && t('premiumPage.restoringPurchases')}
+              {restoreState === 'success' && t('premiumPage.restoreSuccess')}
+              {restoreState === 'empty' && t('premiumPage.restoreEmpty')}
+              {restoreState === 'error' && t('premiumPage.restoreError')}
+            </div>
+          )}
         </div>
 
       </div>
