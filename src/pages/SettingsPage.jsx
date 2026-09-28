@@ -198,7 +198,7 @@ export function SettingsPage({ profile, user, onUpdate, onUploadAvatar, onDataDe
     return <SettingsSharedSpacePage profile={profile} user={user} sharedSpaces={sharedSpaces} onBack={back} slideClass={slideClass} />
   }
   if (section === 'subscription') {
-    return <SettingsSubscriptionPage onBack={back} slideClass={slideClass} />
+    return <SettingsSubscriptionPage profile={profile} onOpenPremium={onOpenPremium} onBack={back} slideClass={slideClass} />
   }
   if (section === 'cards') {
     return <SettingsCardsPage paymentMethods={paymentMethods} personalPayments={personalPayments} onPayCardNow={onPayCardNow} onBack={back} slideClass={slideClass} />

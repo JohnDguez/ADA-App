@@ -12,6 +12,7 @@ import { loadStripe } from '@stripe/stripe-js'
 import { EmbeddedCheckoutProvider, EmbeddedCheckout } from '@stripe/react-stripe-js'
 import { supabase } from '../lib/supabase'
 import { isAndroidBilling, restorePurchases } from '../lib/playBilling'
+import { getPremiumSource } from '../lib/utils'
 import styles from './PremiumPage.module.css'
 
 // Módulo, no dentro del componente — loadStripe() cachea la promesa
@@ -92,6 +93,30 @@ export function PremiumPage({ profile, onClose, refreshProfile }) {
   const isAndroid = useMemo(() => isAndroidBilling(), [])
   // 'idle' | 'restoring' | 'success' | 'empty' | 'error'
   const [restoreState, setRestoreState] = useState('idle')
+
+  // NUEVO (v0.9.526) — arquitectura dual (Stripe web + Google Play Billing
+  // Android, v0.9.525): esta pantalla SIEMPRE ofrecía comprar, sin importar
+  // si el usuario YA era Premium por la otra plataforma (riesgo real de
+  // doble cobro) o si Johnatan lo activó a mano desde Supabase.
+  // getPremiumSource(profile) (lib/utils.js, misma fuente de verdad que
+  // SettingsSubscriptionPage.jsx) decide qué banner mostrar y si se oculta
+  // el flujo de compra:
+  // - isSamePlatform  → ya es Premium por la MISMA plataforma en la que está
+  //                     ahorita (ej. Stripe en la web) — no tiene sentido
+  //                     ofrecerle comprar otra vez; se oculta el flujo.
+  // - isOtherPlatform → ya es Premium pero por la OTRA plataforma (ej. pagó
+  //                     en la app con Google Play y ahora ve esto en la
+  //                     web) — se avisa dónde se gestiona esa suscripción,
+  //                     se oculta el flujo (evita el doble cobro).
+  // - isAdminGranted  → Johnatan activó Premium a mano, no hay ninguna
+  //                     suscripción real — se avisa, pero el flujo de
+  //                     compra se muestra igual (puede apoyar el proyecto).
+  const premiumSource = useMemo(() => getPremiumSource(profile), [profile])
+  const currentPlatform = isAndroid ? 'google_play' : 'stripe'
+  const isOtherPlatform = (premiumSource === 'stripe' || premiumSource === 'google_play') && premiumSource !== currentPlatform
+  const isSamePlatform = (premiumSource === 'stripe' || premiumSource === 'google_play') && premiumSource === currentPlatform
+  const isAdminGranted = premiumSource === 'admin'
+  const hidePurchaseFlow = isOtherPlatform || isSamePlatform
 
   // Válido directo contra la Google Play Developer API en el mismo request
   // (api/verify-play-purchase.js) — a diferencia del cobro por Stripe
@@ -260,9 +285,37 @@ export function PremiumPage({ profile, onClose, refreshProfile }) {
           ))}
         </div>
 
+        {/* NUEVO (v0.9.526) — avisos de origen de suscripción, ver comentario
+            de premiumSource/isOtherPlatform/isSamePlatform/isAdminGranted
+            arriba. Los 3 son mutuamente excluyentes (getPremiumSource solo
+            devuelve un valor). */}
+        {isSamePlatform && (
+          <div className={styles.sourceBanner}>
+            {t('premiumPage.alreadyPremiumSamePlatform')}
+          </div>
+        )}
+
+        {isOtherPlatform && (
+          <div className={styles.sourceBanner}>
+            {premiumSource === 'stripe'
+              ? t('premiumPage.alreadyPremiumViaStripe')
+              : t('premiumPage.alreadyPremiumViaGooglePlay')}
+          </div>
+        )}
+
+        {isAdminGranted && (
+          <div className={styles.sourceBanner}>
+            {t('premiumPage.adminGrantedBanner')}
+          </div>
+        )}
+
         {/* Planes + checkbox de términos + CTA — ocultos mientras el checkout
-            embebido está abierto, para no competir por espacio/atención */}
-        {!checkoutOpen && (
+            embebido está abierto (para no competir por espacio/atención) o
+            cuando ya hay una suscripción real activa en esta misma
+            plataforma o en la otra (v0.9.526, evita ofrecer un segundo
+            cobro) — sí se muestran si es 'admin' (puede apoyar el proyecto
+            con un pago real) o si no es Premium ('none'). */}
+        {!checkoutOpen && !hidePurchaseFlow && (
           <>
             <div style={{ fontSize: 17, fontWeight: 700, color: 'var(--text)', marginTop: 28, marginBottom: 12 }}>
               {t('premiumPage.choosePlan')}

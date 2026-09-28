@@ -6,7 +6,8 @@ import { Crown } from 'lucide-react'
 import { Crown as CrownDuotone } from '@phosphor-icons/react/dist/csr/Crown'
 import { PageHero } from '../../components/PageHero'
 import { supabase } from '../../lib/supabase'
-import { fmt } from '../../lib/utils'
+import { fmt, getPremiumSource } from '../../lib/utils'
+import { ANDROID_PACKAGE_NAME } from '../../lib/constants'
 import { showToast } from '../../components/Toast'
 import { Card } from '../../components/SettingsShared'
 import styles from './SettingsSubscriptionPage.module.css'
@@ -17,8 +18,28 @@ import styles from './SettingsSubscriptionPage.module.css'
 // siempre pide el estado fresco a api/get-subscription.js (Stripe es la
 // fuente de verdad de plan/fecha de renovación/cancelación pendiente, no
 // hay columnas de eso en `profiles`).
-export function SettingsSubscriptionPage({ onBack, slideClass }) {
+//
+// NUEVO (v0.9.526) — arquitectura dual (Stripe web + Google Play Billing
+// Android, v0.9.525) rompía este supuesto: esta pantalla SIEMPRE llamaba a
+// Stripe, sin importar de dónde viniera la suscripción real. Un usuario que
+// pagó por Play Billing veía "sin suscripción" (o un error) aquí, aunque sí
+// fuera Premium. `getPremiumSource(profile)` (lib/utils.js, compartida con
+// PremiumPage.jsx) decide qué mostrar ANTES de tocar la red:
+// - 'stripe'      → comportamiento de siempre, sin cambios (llama a Stripe).
+// - 'google_play' → nunca llama a Stripe — esa suscripción NO se puede
+//                   gestionar desde aquí, Google no lo permite; se muestra
+//                   un link directo a la Play Store.
+// - 'admin'       → Johnatan activó Premium a mano desde Supabase, no hay
+//                   ninguna suscripción real que gestionar/cancelar — se
+//                   ofrece "Ver planes" (onOpenPremium) por si el usuario
+//                   quiere apoyar el proyecto de verdad.
+// - 'none'        → no debería llegar aquí (el menú de Ajustes solo enseña
+//                   este renglón si profile.is_premium), pero por si acaso
+//                   se comporta como "sin suscripción", igual que antes.
+export function SettingsSubscriptionPage({ profile, onOpenPremium, onBack, slideClass }) {
   const { t, i18n } = useTranslation()
+
+  const premiumSource = getPremiumSource(profile)
 
   const [subscription, setSubscription] = useState(undefined) // undefined = cargando, null = sin suscripción
   const [confirmModal, setConfirmModal] = useState(null) // null | 'cancel' | 'switch'
@@ -42,7 +63,18 @@ export function SettingsSubscriptionPage({ onBack, slideClass }) {
     }
   }
 
-  useEffect(() => { loadSubscription() }, [])
+  useEffect(() => {
+    // Solo tiene sentido preguntarle a Stripe cuando la suscripción real es
+    // de Stripe — para 'google_play'/'admin'/'none' no hay nada que pedir.
+    if (premiumSource === 'stripe') loadSubscription()
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- premiumSource
+    // se deriva de `profile`, que no cambia de fuente de suscripción en
+    // vivo dentro de la misma sesión; correr esto solo al montar es
+    // suficiente (mismo criterio que el efecto original).
+  }, [])
+
+  const playStoreUrl = `https://play.google.com/store/account/subscriptions?package=${ANDROID_PACKAGE_NAME}`
+    + (profile?.google_play_product_id ? `&sku=${profile.google_play_product_id}` : '')
 
   async function runAction(action, extra) {
     setActionLoading(true)
@@ -85,11 +117,55 @@ export function SettingsSubscriptionPage({ onBack, slideClass }) {
         accentColor="var(--premium-gold)"
       />
 
-      {subscription === undefined && (
+      {/* NUEVO (v0.9.526) — Google Play Billing: nunca se llama a Stripe,
+          nunca se muestra "sin suscripción" ni cancelar/cambiar de plan de
+          aquí — Google no permite gestionar una suscripción de Play Billing
+          desde fuera de la Play Store. Se enlaza directo a la pantalla de
+          suscripciones de la Play Store (con ?sku= cuando se conoce el
+          producto, para llevar al usuario directo a ESA suscripción). */}
+      {premiumSource === 'google_play' && (
+        <Card>
+          <div className={styles.statusText}>{t('settingsSubscription.managedByGooglePlay')}</div>
+          <a
+            href={playStoreUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="btn-primary"
+            style={{ display: 'block', textAlign: 'center', marginTop: 12, textDecoration: 'none' }}
+          >
+            {t('settingsSubscription.openPlayStore')}
+          </a>
+        </Card>
+      )}
+
+      {/* NUEVO (v0.9.526) — Premium activado a mano por Johnatan desde
+          Supabase: no hay ninguna suscripción real (ni Stripe ni Play
+          Billing) que mostrar o gestionar. Se ofrece "Ver planes" para
+          quien de todas formas quiera apoyar el proyecto con un pago real —
+          abre PremiumPage (mismo flujo que "Obtener Premium" del menú). */}
+      {premiumSource === 'admin' && (
+        <Card>
+          <div className={styles.statusText}>{t('settingsSubscription.adminGranted')}</div>
+          {onOpenPremium && (
+            <button onClick={onOpenPremium} className="btn-primary" style={{ marginTop: 12 }}>
+              {t('settingsSubscription.viewPlans')}
+            </button>
+          )}
+        </Card>
+      )}
+
+      {/* 'none' — no debería llegar aquí en el flujo normal (el menú de
+          Ajustes solo muestra este renglón si profile.is_premium), pero por
+          si acaso se comporta igual que "sin suscripción" de siempre. */}
+      {premiumSource === 'none' && (
+        <Card><div className={styles.statusText}>{t('settingsSubscription.noSubscription')}</div></Card>
+      )}
+
+      {premiumSource === 'stripe' && subscription === undefined && (
         <Card><div className={styles.statusText}>{t('settingsSubscription.loading')}</div></Card>
       )}
 
-      {subscription === null && (
+      {premiumSource === 'stripe' && subscription === null && (
         <Card><div className={styles.statusText}>{t('settingsSubscription.noSubscription')}</div></Card>
       )}
 

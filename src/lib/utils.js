@@ -457,3 +457,26 @@ export function nameExistsActive(payments, name, excludeName = null) {
   if (excludeName && excludeName.trim().toLowerCase() === lower) return false
   return payments.some(p => p.name.toLowerCase() === lower && !p.is_paid && (p.is_recurrent || p.is_installment))
 }
+
+// NUEVO (v0.9.526) — de dónde viene el Premium de un usuario. Compartido
+// entre PremiumPage.jsx (para no ofrecer comprar de nuevo si ya hay una
+// suscripción real activa en la OTRA plataforma) y
+// SettingsSubscriptionPage.jsx (para no llamar a Stripe si la suscripción
+// real vive en Google Play, o viceversa) — misma lógica en los 2 lugares,
+// una sola fuente de verdad (Regla 44).
+// 'none'        → profile.is_premium es false.
+// 'stripe'      → suscripción real de Stripe (subscription_platform +
+//                 stripe_subscription_id, ambos puestos por
+//                 api/stripe-webhook.js).
+// 'google_play' → suscripción real de Google Play Billing
+//                 (subscription_platform + google_play_purchase_token,
+//                 puestos por api/verify-play-purchase.js).
+// 'admin'       → is_premium es true pero no hay ningún ID de suscripción
+//                 real de ninguna plataforma — Johnatan lo activó a mano
+//                 desde el Table Editor de Supabase.
+export function getPremiumSource(profile) {
+  if (!profile?.is_premium) return 'none'
+  if (profile.subscription_platform === 'stripe' && profile.stripe_subscription_id) return 'stripe'
+  if (profile.subscription_platform === 'google_play' && profile.google_play_purchase_token) return 'google_play'
+  return 'admin'
+}
