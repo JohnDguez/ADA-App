@@ -614,7 +614,8 @@
     "newPasswordLabel": "Nueva contraseña",
     "newPasswordPlaceholder": "Mínimo 8 caracteres",
     "saving": "Guardando…",
-    "submit": "Guardar contraseña"
+    "submit": "Guardar contraseña",
+    "cancelLink": "Cancelar y cerrar sesión"
   },
   "termsModal": {
     "title": "Términos y Condiciones",

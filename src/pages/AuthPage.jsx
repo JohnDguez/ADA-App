@@ -128,6 +128,17 @@ export function ResetPasswordPage({ onDone }) {
     else { window.location.hash = ''; onDone() }
   }
 
+  // Salida de emergencia: si alguien abrió el link de recovery sin querer
+  // (o cambió de opinión), no debe quedar atrapado en esta pantalla sin más
+  // opción que poner una contraseña nueva — cierra la sesión temporal que
+  // el link ya había dejado activa y regresa al login.
+  async function handleCancel() {
+    setLoading(true)
+    await supabase.auth.signOut()
+    setLoading(false)
+    onDone()
+  }
+
   return (
     <div style={{ minHeight: '100vh', background: 'var(--bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 24px' }}>
       <div style={{ width: '100%', maxWidth: 360 }}>
@@ -156,6 +167,9 @@ export function ResetPasswordPage({ onDone }) {
         </Field>
         <button onClick={handleUpdate} disabled={loading || !strong || !match} className="btn-primary" style={{ marginTop: 8, opacity: loading || !strong || !match ? 0.6 : 1 }}>
           {loading ? t('resetPasswordPage.saving') : t('resetPasswordPage.submit')}
+        </button>
+        <button onClick={handleCancel} disabled={loading} style={{ display: 'block', margin: '16px auto 0', background: 'none', border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 600, color: 'var(--muted)' }}>
+          {t('resetPasswordPage.cancelLink')}
         </button>
       </div>
     </div>

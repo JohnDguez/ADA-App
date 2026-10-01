@@ -614,7 +614,8 @@
     "newPasswordLabel": "New password",
     "newPasswordPlaceholder": "At least 8 characters",
     "saving": "Saving…",
-    "submit": "Save password"
+    "submit": "Save password",
+    "cancelLink": "Cancel and sign out"
   },
   "termsModal": {
     "title": "Terms and Conditions",
