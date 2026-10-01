@@ -127,6 +127,23 @@ export function useAuth() {
         setLoading(false)
         return
       }
+      // SIGNED_OUT se tiene que procesar SIEMPRE, incluso durante una
+      // recuperación en curso — es justo lo que dispara handleCancel() en
+      // ResetPasswordPage. Antes, mientras isRecoveryRef seguía en true (el
+      // signOut() dispara este evento ANTES de que ResetPasswordPage llame a
+      // onDone()/setIsRecovery(false)), este bloque se saltaba por completo:
+      // `user` se quedaba con la sesión vieja, así que al terminar
+      // setIsRecovery(false) la app veía isRecovery:false + user todavía
+      // puesto y entraba directo a la cuenta — justo el bug que "Cancelar"
+      // debía evitar (hallazgo de Johnatan, v0.9.531 parte 2).
+      if (event === 'SIGNED_OUT') {
+        try { localStorage.removeItem(RECOVERY_KEY) } catch { /* noop */ }
+        isRecoveryRef.current = false
+        setIsRecoveryState(false)
+        setUser(null)
+        setLoading(false)
+        return
+      }
       if (!isRecoveryRef.current) {
         setUser(session?.user ?? null)
         syncGoogleAvatar(session?.user)
