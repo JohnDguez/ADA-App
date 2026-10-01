@@ -12,7 +12,20 @@
           "package_name": "app.luna_pay.mobile"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "346081073696-h960udoj25gpnmdd3upp9d2c7t6ttcee.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "app.luna_pay.mobile",
+            "certificate_hash": "10c5b983e0a049204c6b4a6326d3aeb49878a8b9"
+          }
+        },
+        {
+          "client_id": "346081073696-dlvgeo372p8qb8tisdgt19a78apvurc5.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyDHUw5xT2L6ckk-07E54FI8X7JRgMaHO5U"
@@ -20,7 +33,12 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "346081073696-dlvgeo372p8qb8tisdgt19a78apvurc5.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }
