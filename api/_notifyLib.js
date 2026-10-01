@@ -12,6 +12,7 @@
 // exponen como endpoint aparte.
 
 const { resolveLang } = require('./_notifyText')
+const { sendFcm } = require('./_fcm')
 
 async function sendPush(supabase, webpush, userIds, payload) {
   if (!userIds.length) return { sent: 0, pushErrors: [] }
@@ -114,6 +115,41 @@ async function notifyUsers(supabase, webpush, { userIds, title, body, actorName 
       if (e.statusCode === 410 || e.statusCode === 404 || e.statusCode === 403) {
         await supabase.from('push_subscriptions').delete().eq('user_id', sub.user_id)
       }
+    }
+  }
+
+  // Android (app Capacitor) — mismo evento, canal de entrega FCM en vez de
+  // Web Push (ver api/_fcm.js). Un usuario puede tener fila en
+  // `push_subscriptions` (si alguna vez usó la PWA en navegador) Y en
+  // `fcm_tokens` (la app Android) a la vez — ambas se mandan sin pisarse,
+  // cada dispositivo decide si muestra una o dos notificaciones, igual que
+  // cualquier app que el usuario tenga instalada en más de un lugar.
+  const { data: fcmRows } = await supabase
+    .from('fcm_tokens')
+    .select('user_id, token')
+    .in('user_id', ids)
+
+  if (fcmRows && fcmRows.length > 0) {
+    // Mismo texto para todos cuando `title` es función y los destinatarios
+    // comparten idioma no está garantizado — se manda un request de FCM por
+    // texto distinto en vez de asumir que todos ven lo mismo (igual que el
+    // bucle de Web Push de arriba, que ya itera uno por uno por el mismo
+    // motivo).
+    const byMessage = new Map() // JSON del mensaje -> tokens
+    for (const row of fcmRows) {
+      const m = messageFor(row.user_id)
+      const key = JSON.stringify(m)
+      if (!byMessage.has(key)) byMessage.set(key, { m, tokens: [] })
+      byMessage.get(key).tokens.push(row.token)
+    }
+    const invalidTokens = []
+    for (const { m, tokens } of byMessage.values()) {
+      const result = await sendFcm(tokens, { title: m.title, body: m.body, url, tag: 'space-change' })
+      sent += result.sent
+      invalidTokens.push(...result.invalidTokens)
+    }
+    if (invalidTokens.length > 0) {
+      await supabase.from('fcm_tokens').delete().in('token', invalidTokens)
     }
   }
 

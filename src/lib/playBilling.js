@@ -77,6 +77,68 @@ async function verifyWithBackend({ purchaseToken, productId, accessToken }) {
   return result // { isPremium, plan, subscriptionState }
 }
 
+// Dispara una compra NUEVA de Google Play Billing para el plan indicado —
+// contraparte de restorePurchases() (esa es para una compra que YA existía
+// en la cuenta de Google). NUEVO — cierra el hueco real encontrado al
+// probar en vivo (v0.9.527): PremiumPage.jsx llamaba SIEMPRE a Stripe
+// (startCheckout), incluso dentro de la app de Android — el checkout
+// embebido de Stripe no carga en el WebView empaquetado ("Couldn't load
+// the payment form") y, más grave, viola la política de Google Play (ver
+// CONTEXT.md, "Google exige Play Billing para cualquier suscripción
+// vendida DENTRO de una app distribuida por Play Store"). Toma la oferta
+// del producto tal cual la devuelve Google (incluye la prueba de 7 días
+// cuando el usuario todavía califica para ella — Google decide eso solo,
+// no hace falta pedir un offerId específico) y la ordena.
+export async function purchasePremium(plan, accessToken) {
+  if (!isAndroidBilling()) {
+    throw new Error('La compra por Google Play solo aplica en la app de Android')
+  }
+  const store = ensureStoreInitialized()
+  if (!store) {
+    throw new Error('El sistema de compras de Google Play no está disponible')
+  }
+  const { Platform } = window.CdvPurchase
+  const productId = PLAY_PRODUCT_IDS[plan]
+  const product = store.get(productId, Platform.GOOGLE_PLAY)
+  const offer = product?.getOffer()
+  if (!offer) {
+    throw new Error('No se encontró el plan seleccionado en Google Play')
+  }
+
+  return new Promise((resolve, reject) => {
+    let settled = false
+    function cleanup() {
+      if (typeof store.off === 'function') { store.off(onApproved); store.off(onError) }
+    }
+    const onApproved = async (transaction) => {
+      // El store puede tener más de una transacción viva (ej. una compra
+      // vieja sin terminar) — nos quedamos solo con la del producto que
+      // este usuario acaba de ordenar, cualquier otra la ignora este
+      // listener puntual (restorePurchases() ya se encarga de las demás).
+      if (settled || transaction.products?.[0]?.id !== productId) return
+      settled = true
+      cleanup()
+      try {
+        const purchaseToken = transaction.transactionId || transaction.purchaseId
+        const result = await verifyWithBackend({ purchaseToken, productId, accessToken })
+        transaction.finish()
+        resolve(result)
+      } catch (e) {
+        reject(e)
+      }
+    }
+    const onError = (err) => {
+      if (settled) return
+      settled = true
+      cleanup()
+      reject(new Error(err?.message || 'No se pudo completar la compra'))
+    }
+    store.when().approved(onApproved)
+    store.when().error(onError)
+    store.order(offer).catch(onError)
+  })
+}
+
 // Dispara store.restorePurchases() y recolecta, SOLO durante esta llamada,
 // las transacciones que resulten aprobadas (compras activas encontradas en
 // la cuenta de Google del dispositivo) — cada una se manda a

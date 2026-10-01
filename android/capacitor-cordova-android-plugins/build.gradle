@@ -46,7 +46,8 @@ dependencies {
     implementation "androidx.appcompat:appcompat:$androidxAppCompatVersion"
     implementation "org.apache.cordova:framework:$cordovaAndroidVersion"
     // SUB-PROJECT DEPENDENCIES START
-
+    implementation "com.android.billingclient:billing:9.0.0"
+    implementation "androidx.core:core:1.9.0"
     // SUB-PROJECT DEPENDENCIES END
 }
 

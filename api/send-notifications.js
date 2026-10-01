@@ -3,6 +3,7 @@ const { createClient } = require('@supabase/supabase-js')
 const {
   resolveLang, overdueText, dueTodayText, upcomingText, cobroDayText, goalDeadlineText, trialEndingText,
 } = require('./_notifyText')
+const { sendFcm } = require('./_fcm')
 
 webpush.setVapidDetails(
   process.env.VAPID_EMAIL,
@@ -281,14 +282,36 @@ module.exports = async function handler(req, res) {
   try {
     const force = req.query.force === 'true'
 
+    // 2 canales de entrega posibles por usuario, nunca excluyentes entre sí:
+    // `push_subscriptions` (Web Push/VAPID — PWA instalada en navegador) y
+    // `fcm_tokens` (Firebase Cloud Messaging — app Android empaquetada con
+    // Capacitor, ver api/_fcm.js). Antes esta consulta solo traía
+    // push_subscriptions, así que un usuario SOLO con token FCM (el caso
+    // normal de alguien que nunca abrió la PWA en el navegador, solo la app
+    // de Play Store) quedaba completamente fuera del cron — ni se le
+    // evaluaba si le tocaba notificación ese día.
     const { data: subs, error: subsError } = await supabase
       .from('push_subscriptions')
       .select('user_id, subscription')
-
     if (subsError) return res.status(500).json({ error: subsError.message })
-    if (!subs || subs.length === 0) return res.json({ sent: 0, users: 0 })
 
-    const userIds = subs.map(s => s.user_id)
+    const { data: fcmRows, error: fcmError } = await supabase
+      .from('fcm_tokens')
+      .select('user_id, token')
+    if (fcmError) return res.status(500).json({ error: fcmError.message })
+
+    const subsByUser = {}
+    for (const s of (subs || [])) subsByUser[s.user_id] = s.subscription
+
+    const fcmByUser = {}
+    for (const r of (fcmRows || [])) {
+      if (!fcmByUser[r.user_id]) fcmByUser[r.user_id] = []
+      fcmByUser[r.user_id].push(r.token)
+    }
+
+    const userIds = [...new Set([...(subs || []).map(s => s.user_id), ...(fcmRows || []).map(r => r.user_id)])]
+    if (userIds.length === 0) return res.json({ sent: 0, users: 0 })
+
     const { data: profiles, error: profilesError } = await supabase
       .from('profiles')
       .select('id, notif_cobro_day, notif_due_today, notif_upcoming, notif_overdue, notif_days_before, notif_hour, timezone, cobro_freq, cobro_weekday, notif_last_sent, stripe_subscription_status, trial_ends_at, trial_reminder_sent, language')
@@ -301,9 +324,10 @@ module.exports = async function handler(req, res) {
 
     let sent = 0
     let skipped = 0
+    const invalidFcmTokens = []
 
-    for (const sub of subs) {
-      const profile = profileMap[sub.user_id]
+    for (const userId of userIds) {
+      const profile = profileMap[userId]
       if (!profile) { skipped++; continue }
 
       const timezone  = profile.timezone || 'America/Mazatlan'
@@ -332,7 +356,7 @@ module.exports = async function handler(req, res) {
       const { data: memberships } = await supabase
         .from('shared_space_members')
         .select('space_id')
-        .eq('user_id', sub.user_id)
+        .eq('user_id', userId)
 
       const spaceIds = (memberships || []).map(m => m.space_id)
       let spacesInfo = []
@@ -341,14 +365,14 @@ module.exports = async function handler(req, res) {
         spacesInfo = spaces || []
       }
 
-      let notifications = await collectReminders({ type: 'personal', userId: sub.user_id }, profile, todayStr, today, lang)
+      let notifications = await collectReminders({ type: 'personal', userId }, profile, todayStr, today, lang)
 
       // Metas de ahorro con fecha límite cerca — solo personal, y una sola
       // vez por meta (la función marca `deadline_notif_sent` al armar el
       // aviso). No depende de ninguna preferencia de notificaciones porque
       // no existe una columna para eso: dispara como máximo una vez en la
       // vida de cada meta, así que no genera ruido repetido.
-      const goalNotifs = await collectGoalDeadlineReminders(sub.user_id, todayStr, lang)
+      const goalNotifs = await collectGoalDeadlineReminders(userId, todayStr, lang)
       notifications = notifications.concat(goalNotifs)
 
       // Prueba de 7 días — aviso único de "termina en 2 días" (v0.9.508).
@@ -378,7 +402,7 @@ module.exports = async function handler(req, res) {
       // Fase 5b).
       await supabase.from('notifications').insert(
         notifications.map(n => ({
-          user_id: sub.user_id,
+          user_id: userId,
           type:    n.type,
           title:   n.title,
           body:    n.body,
@@ -390,24 +414,44 @@ module.exports = async function handler(req, res) {
 
       // Enviar push — se le agrega el nombre del espacio al cuerpo del
       // mensaje nativo del sistema (no hay una segunda línea ahí como en el
-      // panel in-app, así que se anexa directo al texto)
+      // panel in-app, así que se anexa directo al texto). Cada usuario puede
+      // tener los 2 canales a la vez (PWA en navegador Y app Android) — se
+      // mandan ambos sin pisarse, cada uno independiente del otro.
+      const webPushSub = subsByUser[userId]
+      const fcmTokens = fcmByUser[userId] || []
+
       for (const notif of notifications) {
-        try {
-          const pushBody = notif.space_name ? `${notif.body} · ${notif.space_name}` : notif.body
-          await webpush.sendNotification(sub.subscription, JSON.stringify({
-            title: notif.title, body: pushBody,
-            tag: notif.tag, urgent: notif.urgent, url: notif.url,
-          }))
-          sent++
-        } catch (e) {
-          if (e.statusCode === 410) {
-            await supabase.from('push_subscriptions').delete().eq('user_id', sub.user_id)
+        const pushBody = notif.space_name ? `${notif.body} · ${notif.space_name}` : notif.body
+
+        if (webPushSub) {
+          try {
+            await webpush.sendNotification(webPushSub, JSON.stringify({
+              title: notif.title, body: pushBody,
+              tag: notif.tag, urgent: notif.urgent, url: notif.url,
+            }))
+            sent++
+          } catch (e) {
+            if (e.statusCode === 410) {
+              await supabase.from('push_subscriptions').delete().eq('user_id', userId)
+            }
           }
+        }
+
+        if (fcmTokens.length > 0) {
+          const result = await sendFcm(fcmTokens, {
+            title: notif.title, body: pushBody, url: notif.url, tag: notif.tag,
+          })
+          sent += result.sent
+          invalidFcmTokens.push(...result.invalidTokens)
         }
       }
     }
 
-    return res.json({ sent, users: subs.length, skipped })
+    if (invalidFcmTokens.length > 0) {
+      await supabase.from('fcm_tokens').delete().in('token', invalidFcmTokens)
+    }
+
+    return res.json({ sent, users: userIds.length, skipped })
   } catch (e) {
     console.error(e)
     return res.status(500).json({ error: e.message })

@@ -565,8 +565,6 @@
     "emailLabel": "Correo electrónico",
     "emailPlaceholder": "tu@correo.com",
     "passwordLabel": "Contraseña",
-    "accessCodeLabel": "Código de acceso",
-    "accessCodePlaceholder": "Ingresa tu código",
     "termsPrefix": "He leído y acepto los",
     "termsLink": "Términos y Condiciones",
     "termsSuffix": "de uso",
@@ -578,7 +576,7 @@
     },
     "forgotPasswordLink": "¿Olvidaste tu contraseña?",
     "backToLogin": "Volver al inicio de sesión",
-    "orContinueWith": "o continúa con",
+    "orEmailLabel": "o con tu correo",
     "google": {
       "connecting": "Conectando…",
       "termsNote": "Al continuar con Google aceptas nuestros"
@@ -590,8 +588,6 @@
       "emptyFields": "Completa todos los campos",
       "termsRequired": "Debes aceptar los Términos y Condiciones para continuar",
       "passwordNotStrongRegister": "La contraseña no cumple todos los requisitos de seguridad",
-      "emptyAccessCode": "Ingresa tu código de acceso",
-      "invalidAccessCode": "Código de acceso inválido o inactivo",
       "accountCreated": "¡Cuenta creada! Revisa tu correo para confirmar.",
       "wrongCredentials": "Correo o contraseña incorrectos"
     },
@@ -1045,6 +1041,8 @@
     "checkoutConfirming": "Confirmando tu pago…",
     "checkoutError": "No se pudo cargar el formulario de pago. Intenta de nuevo.",
     "checkoutRetry": "Reintentar",
+    "androidPurchaseProcessing": "Procesando tu compra…",
+    "androidPurchaseError": "No se pudo completar la compra. Intenta de nuevo.",
     "referralCta": "Invita 3 amigos y obtén 2 meses GRATIS",
     "restrictionsApply": "Aplican restricciones.",
     "cancelAnytime": "Cancela cuando quieras. Sin cargos ocultos.",

@@ -11,7 +11,7 @@ import { Target } from '@phosphor-icons/react/dist/csr/Target'
 import { loadStripe } from '@stripe/stripe-js'
 import { EmbeddedCheckoutProvider, EmbeddedCheckout } from '@stripe/react-stripe-js'
 import { supabase } from '../lib/supabase'
-import { isAndroidBilling, restorePurchases } from '../lib/playBilling'
+import { isAndroidBilling, restorePurchases, purchasePremium } from '../lib/playBilling'
 import { getPremiumSource } from '../lib/utils'
 import styles from './PremiumPage.module.css'
 
@@ -93,6 +93,9 @@ export function PremiumPage({ profile, onClose, refreshProfile }) {
   const isAndroid = useMemo(() => isAndroidBilling(), [])
   // 'idle' | 'restoring' | 'success' | 'empty' | 'error'
   const [restoreState, setRestoreState] = useState('idle')
+  // Compra NUEVA por Google Play Billing (Android) — separada de
+  // checkoutState (ese es 100% Stripe/web). 'idle' | 'processing' | 'error'
+  const [androidPurchaseState, setAndroidPurchaseState] = useState('idle')
 
   // NUEVO (v0.9.526) — arquitectura dual (Stripe web + Google Play Billing
   // Android, v0.9.525): esta pantalla SIEMPRE ofrecía comprar, sin importar
@@ -185,6 +188,26 @@ export function PremiumPage({ profile, onClose, refreshProfile }) {
       setCheckoutState('idle')
     } catch (e) {
       setCheckoutState('error')
+    }
+  }
+
+  // Contraparte Android de startCheckout() — NUEVO (v0.9.527, ver
+  // playBilling.js para el motivo completo: Stripe no aplica dentro de la
+  // app de Android). Google muestra su propia hoja de compra nativa (fuera
+  // del control de esta pantalla) — aquí solo se espera el resultado y se
+  // refresca el perfil, sin montar ningún checkoutBox.
+  async function startAndroidPurchase() {
+    if (!termsAccepted) return
+    setAndroidPurchaseState('processing')
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) { setAndroidPurchaseState('error'); return }
+      await purchasePremium(selectedPlan, session.access_token)
+      await refreshProfile?.()
+      setAndroidPurchaseState('idle')
+      handleClose()
+    } catch (e) {
+      setAndroidPurchaseState('error')
     }
   }
 
@@ -359,8 +382,8 @@ export function PremiumPage({ profile, onClose, refreshProfile }) {
             </label>
 
             <button
-              onClick={startCheckout}
-              disabled={!termsAccepted}
+              onClick={isAndroid ? startAndroidPurchase : startCheckout}
+              disabled={!termsAccepted || androidPurchaseState === 'processing'}
               className={`btn-primary ${styles.ctaButton}`}
               style={{
                 marginTop: 14, background: 'var(--premium-gold)', color: 'var(--premium-gold-text)',
@@ -368,14 +391,31 @@ export function PremiumPage({ profile, onClose, refreshProfile }) {
               }}
             >
               <Crown size={16} />
-              {trialEligible ? t('premiumPage.startTrial') : t('premiumPage.continueWithPlan', { plan: t(`premiumPage.${selectedPlan}`) })}
+              {androidPurchaseState === 'processing'
+                ? t('premiumPage.androidPurchaseProcessing')
+                : (trialEligible ? t('premiumPage.startTrial') : t('premiumPage.continueWithPlan', { plan: t(`premiumPage.${selectedPlan}`) }))}
             </button>
+
+            {/* Android no abre ningún checkoutBox (Google muestra su propia
+                hoja de compra nativa) — solo un mensaje de error inline con
+                reintento, si algo falla antes/después de esa hoja. */}
+            {isAndroid && androidPurchaseState === 'error' && (
+              <div className={styles.checkoutStatus} style={{ marginTop: 10 }}>
+                {t('premiumPage.androidPurchaseError')}
+                <div style={{ marginTop: 12 }}>
+                  <button type="button" onClick={startAndroidPurchase} className="btn-primary">
+                    {t('premiumPage.checkoutRetry')}
+                  </button>
+                </div>
+              </div>
+            )}
           </>
         )}
 
-        {/* Checkout embebido — el formulario real de Stripe se monta dentro
-            de .checkoutBox, sin salir nunca de esta página */}
-        {checkoutOpen && (
+        {/* Checkout embebido de Stripe — SOLO web/PWA (nunca en Android, ver
+            startAndroidPurchase()); el formulario real se monta dentro de
+            .checkoutBox, sin salir nunca de esta página */}
+        {!isAndroid && checkoutOpen && (
           <div className={styles.checkoutBox}>
             <button type="button" onClick={backToPlans} className={styles.backLink}>
               <ArrowLeft size={14} />

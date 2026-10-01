@@ -565,8 +565,6 @@
     "emailLabel": "Email",
     "emailPlaceholder": "you@email.com",
     "passwordLabel": "Password",
-    "accessCodeLabel": "Access code",
-    "accessCodePlaceholder": "Enter your code",
     "termsPrefix": "I have read and accept the",
     "termsLink": "Terms and Conditions",
     "termsSuffix": "of use",
@@ -578,7 +576,7 @@
     },
     "forgotPasswordLink": "Forgot your password?",
     "backToLogin": "Back to login",
-    "orContinueWith": "or continue with",
+    "orEmailLabel": "or with your email",
     "google": {
       "connecting": "Connecting…",
       "termsNote": "By continuing with Google you accept our"
@@ -590,8 +588,6 @@
       "emptyFields": "Fill in all fields",
       "termsRequired": "You must accept the Terms and Conditions to continue",
       "passwordNotStrongRegister": "The password doesn't meet all the security requirements",
-      "emptyAccessCode": "Enter your access code",
-      "invalidAccessCode": "Invalid or inactive access code",
       "accountCreated": "Account created! Check your email to confirm.",
       "wrongCredentials": "Incorrect email or password"
     },
@@ -1045,6 +1041,8 @@
     "checkoutConfirming": "Confirming your payment…",
     "checkoutError": "Couldn't load the payment form. Try again.",
     "checkoutRetry": "Retry",
+    "androidPurchaseProcessing": "Processing your purchase…",
+    "androidPurchaseError": "Couldn't complete the purchase. Try again.",
     "referralCta": "Invite 3 friends and get 2 months FREE",
     "restrictionsApply": "Restrictions apply.",
     "cancelAnytime": "Cancel anytime. No hidden fees.",

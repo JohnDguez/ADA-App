@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { supabase } from '../lib/supabase'
-import { Eye, EyeOff, Lock, Mail, KeyRound, X, Check, ArrowLeft } from 'lucide-react'
+import { Eye, EyeOff, Lock, Mail, X, Check, ArrowLeft } from 'lucide-react'
 // Íconos de las 3 tarjetas de beneficio de la pantalla de bienvenida — antes
 // Lucide (CalendarClock/Users/Target), cambiados a Phosphor en v0.9.516
 // ("se me hacen mas bonitos", pedido explícito de Johnatan) — mismos
@@ -15,6 +15,7 @@ import { passwordRequirements, isPasswordStrong } from '../components/PasswordSe
 import Logo from '../components/Logo'
 import { APP_NAME } from '../lib/constants'
 import { loadGoogleIdentityScript, generateNonce } from '../lib/googleAuth'
+import { isNativeAndroid, signInWithGoogleNative } from '../lib/nativeGoogleAuth'
 
 // Misma curva que el borde inferior de cada "escena" de OnboardingPage.jsx y
 // del hero de PremiumPage.jsx (WAVE_PATH ahí) — pedido explícito de
@@ -168,7 +169,6 @@ export function AuthPage() {
   const [email,         setEmail]         = useState('')
   const [password,      setPassword]      = useState('')
   const [confirm,       setConfirm]       = useState('')
-  const [accessCode,    setAccessCode]    = useState('')
   const [showPass,      setShowPass]      = useState(false)
   const [showConfirm,   setShowConfirm]   = useState(false)
   const [loading,       setLoading]       = useState(false)
@@ -238,6 +238,13 @@ export function AuthPage() {
   useEffect(() => {
     let cancelled = false
 
+    // En Android nativo el flujo es @capacitor-firebase/authentication (ver
+    // handleGoogle() más abajo) — GIS es un script pensado para navegador y
+    // nunca completa el selector dentro del WebView de Capacitor (ver
+    // nativeGoogleAuth.js), así que ni siquiera se carga ahí: el botón queda
+    // listo de inmediato, sin esperar ningún script externo.
+    if (isNativeAndroid()) { setGoogleReady(true); return }
+
     async function initGoogle() {
       const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID
       if (!clientId) { console.error('Falta VITE_GOOGLE_CLIENT_ID'); return }
@@ -274,6 +281,20 @@ export function AuthPage() {
 
   function handleGoogle() {
     if (!googleReady) return
+
+    // Android nativo — selector de cuentas del SISTEMA (Credential Manager
+    // vía @capacitor-firebase/authentication), nada de FedCM/GIS/fallback a
+    // redirect (esos 3 son soluciones al mismo problema que este flujo evita
+    // por completo). Ver nativeGoogleAuth.js para el detalle y lo pendiente
+    // de configurar en Firebase antes de que esto funcione de verdad.
+    if (isNativeAndroid()) {
+      setGoogleLoading(true)
+      signInWithGoogleNative()
+        .catch(() => setError(t('authPage.errors.wrongCredentials')))
+        .finally(() => setGoogleLoading(false))
+      return
+    }
+
     setGoogleLoading(true)
     googleSucceededRef.current = false
 
@@ -339,18 +360,11 @@ export function AuthPage() {
       if (!termsAccepted) { setError(t('authPage.errors.termsRequired')); return }
       if (!strong) { setError(t('authPage.errors.passwordNotStrongRegister')); return }
       if (!match)  { setError(t('settingsAccount.editModal.passwordMismatch')); return }
-      if (!accessCode.trim()) { setError(t('authPage.errors.emptyAccessCode')); return }
       setLoading(true)
-      // FIX v0.9.15: se cambia .select('id') por .select('code') — la tabla
-      // access_codes no tiene columna `id`, solo `code`, `created_at` y `active`.
-      // Supabase devolvía error 400 → data null → "código inválido" aunque existiera.
-      const { data: codeData } = await supabase
-        .from('access_codes')
-        .select('code')
-        .eq('code', accessCode.trim().toUpperCase())
-        .eq('active', true)
-        .single()
-      if (!codeData) { setError(t('authPage.errors.invalidAccessCode')); setLoading(false); return }
+      // Código de acceso ELIMINADO (octubre 2026, pedido explícito de
+      // Johnatan) — ya no es requisito para registrarse. La tabla
+      // `access_codes` se queda en Supabase sin uso por ahora (no se borró),
+      // ver CONTEXT.md.
       const { error } = await supabase.auth.signUp({ email, password })
       if (error) setError(error.message)
       else setSuccess(t('authPage.errors.accountCreated'))
@@ -509,6 +523,37 @@ export function AuthPage() {
               </div>
             )}
 
+            {/* Botón de Google ARRIBA del formulario de correo/contraseña
+                (octubre 2026, pedido explícito de Johnatan: "para que lo
+                vea mejor el usuario") — antes vivía hasta abajo, después
+                del botón de enviar. Mismo botón/lógica de siempre
+                (handleGoogle, bifurcado en nativeGoogleAuth.js para
+                Android), solo cambió su posición en el layout. El texto
+                del divisor se invirtió (antes "o continúa con" ANTES de
+                Google, ahora "o con tu correo" DESPUÉS de Google, separando
+                hacia el formulario de abajo) — mismo criterio semántico,
+                nueva clave de i18n (`orEmailLabel`) en vez de reutilizar
+                `orContinueWith` con el sentido invertido. */}
+            {visibleMode !== 'forgot' && (<>
+              <button onClick={handleGoogle} disabled={googleLoading || !googleReady} style={{ width: '100%', padding: '11px', background: 'var(--surface)', border: '0.5px solid var(--border)', borderRadius: 'var(--radius-sm)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, fontSize: 14, fontWeight: 500, color: 'var(--text)', fontFamily: 'DM Sans, sans-serif', cursor: 'pointer', opacity: googleReady ? 1 : 0.6 }}>
+                <GoogleIcon />
+                {googleLoading ? t('authPage.google.connecting') : 'Google'}
+              </button>
+              {visibleMode === 'register' && (
+                <div style={{ fontSize: 11, color: 'var(--text)', textAlign: 'center', marginTop: 10 }}>
+                  {t('authPage.google.termsNote')}{' '}
+                  <span onClick={() => setShowTerms(true)} style={{ color: 'var(--accent)', cursor: 'pointer', textDecoration: 'underline' }}>
+                    {t('authPage.termsLink')}
+                  </span>
+                </div>
+              )}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '16px 0 20px' }}>
+                <div style={{ flex: 1, height: '0.5px', background: 'var(--border)' }} />
+                <span style={{ fontSize: 12, color: 'var(--text)' }}>{t('authPage.orEmailLabel')}</span>
+                <div style={{ flex: 1, height: '0.5px', background: 'var(--border)' }} />
+              </div>
+            </>)}
+
             {visibleMode === 'forgot' && (
               <div style={{ marginBottom: 20 }}>
                 <div style={{ fontSize: 20, fontWeight: 700, color: 'var(--text)', marginBottom: 6 }}>{t('authPage.forgotTitle')}</div>
@@ -549,11 +594,6 @@ export function AuthPage() {
                 <EyeBtn show={showConfirm} onToggle={() => setShowConfirm(v => !v)} />
                 {confirm && !match && <div style={{ fontSize: 11, color: 'var(--danger)', marginTop: 4 }}>{t('settingsAccount.editModal.passwordMismatch')}</div>}
               </Field>
-              <Field label={t('authPage.accessCodeLabel')}>
-                <FieldIcon><KeyRound size={15} color="var(--text)" /></FieldIcon>
-                <input className="field-input" style={{ paddingLeft: 40 }} type="text" value={accessCode} onChange={e => setAccessCode(e.target.value)} placeholder={t('authPage.accessCodePlaceholder')} onKeyDown={e => e.key === 'Enter' && handleSubmit()} enterKeyHint="done" />
-              </Field>
-
               {/* Checkbox de términos */}
               <div onClick={() => setTermsAccepted(v => !v)} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, marginBottom: 20, cursor: 'pointer' }}>
                 <div style={{ width: 18, height: 18, borderRadius: 4, flexShrink: 0, marginTop: 1, border: termsAccepted ? 'none' : '1.5px solid var(--border)', background: termsAccepted ? 'var(--accent)' : 'var(--surface)', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'background .15s' }}>
@@ -588,25 +628,6 @@ export function AuthPage() {
               </button>
             )}
 
-            {visibleMode !== 'forgot' && (<>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '4px 0 16px' }}>
-                <div style={{ flex: 1, height: '0.5px', background: 'var(--border)' }} />
-                <span style={{ fontSize: 12, color: 'var(--text)' }}>{t('authPage.orContinueWith')}</span>
-                <div style={{ flex: 1, height: '0.5px', background: 'var(--border)' }} />
-              </div>
-              <button onClick={handleGoogle} disabled={googleLoading || !googleReady} style={{ width: '100%', padding: '11px', background: 'var(--surface)', border: '0.5px solid var(--border)', borderRadius: 'var(--radius-sm)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, fontSize: 14, fontWeight: 500, color: 'var(--text)', fontFamily: 'DM Sans, sans-serif', cursor: 'pointer', opacity: googleReady ? 1 : 0.6 }}>
-                <GoogleIcon />
-                {googleLoading ? t('authPage.google.connecting') : 'Google'}
-              </button>
-              {visibleMode === 'register' && (
-                <div style={{ fontSize: 11, color: 'var(--text)', textAlign: 'center', marginTop: 10 }}>
-                  {t('authPage.google.termsNote')}{' '}
-                  <span onClick={() => setShowTerms(true)} style={{ color: 'var(--accent)', cursor: 'pointer', textDecoration: 'underline' }}>
-                    {t('authPage.termsLink')}
-                  </span>
-                </div>
-              )}
-            </>)}
           </div>
         )}
       </div>
