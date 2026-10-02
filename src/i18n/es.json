@@ -590,7 +590,8 @@
       "passwordNotStrongRegister": "La contraseña no cumple todos los requisitos de seguridad",
       "accountCreated": "¡Cuenta creada! Revisa tu correo para confirmar.",
       "wrongCredentials": "Correo o contraseña incorrectos",
-      "emailNotConfirmed": "Todavía no confirmas tu correo. Revisa tu bandeja de entrada y haz clic en el enlace que te enviamos."
+      "emailNotConfirmed": "Todavía no confirmas tu correo. Revisa tu bandeja de entrada y haz clic en el enlace que te enviamos.",
+      "googleFailed": "No se pudo iniciar sesión con Google. Intenta de nuevo o usa tu correo y contraseña."
     },
     "landing": {
       "titleLine1": "Organiza tus pagos,",

@@ -590,7 +590,8 @@
       "passwordNotStrongRegister": "The password doesn't meet all the security requirements",
       "accountCreated": "Account created! Check your email to confirm.",
       "wrongCredentials": "Incorrect email or password",
-      "emailNotConfirmed": "You haven't confirmed your email yet. Check your inbox and click the link we sent you."
+      "emailNotConfirmed": "You haven't confirmed your email yet. Check your inbox and click the link we sent you.",
+      "googleFailed": "Couldn't sign in with Google. Try again or use your email and password."
     },
     "landing": {
       "titleLine1": "Organize your bills,",

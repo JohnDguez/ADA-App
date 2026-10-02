@@ -304,7 +304,17 @@ export function AuthPage() {
     if (isNativeAndroid()) {
       setGoogleLoading(true)
       signInWithGoogleNative()
-        .catch(() => setError(t('authPage.errors.wrongCredentials')))
+        .catch((err) => {
+          // "Correo o contraseña incorrectos" no aplica aquí — este flujo no
+          // usa contraseña, y mostrarlo confunde más de lo que ayuda (visto
+          // en la primera prueba real de Johnatan). Mensaje propio para
+          // Google + el error real a consola (visible en Logcat/Android
+          // Studio con la app corriendo por USB) para poder diagnosticar la
+          // causa real: credencial no configurada en Firebase/Supabase,
+          // SHA-1 que no coincide, usuario cancela el selector, etc.
+          console.error('[Google Sign-In nativo]', err)
+          setError(t('authPage.errors.googleFailed'))
+        })
         .finally(() => setGoogleLoading(false))
       return
     }
