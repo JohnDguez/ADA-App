@@ -1,11 +1,14 @@
 const { JWT } = require('google-auth-library')
 
-// Helper compartido entre api/verify-play-purchase.js (verificación directa,
-// disparada por el cliente tras una compra/restauración) y
-// api/play-rtdn-webhook.js (verificación disparada por Google vía Real-Time
-// Developer Notifications cuando algo cambia FUERA de la app — cancelación,
-// pausa, reactivación, etc.) — mismo patrón que _fcm.js/_notifyLib.js
-// (prefijo `_` = no es un endpoint, Regla 44: no duplicar lógica).
+// Helper compartido dentro de api/verify-play-purchase.js, entre su rama
+// handleVerify (verificación directa, disparada por el cliente tras una
+// compra/restauración) y su rama handleRtdn (verificación disparada por
+// Google vía Real-Time Developer Notifications cuando algo cambia FUERA de
+// la app — cancelación, pausa, reactivación, etc.; vivía en su propio
+// archivo `play-rtdn-webhook.js` hasta que el límite de 12 Serverless
+// Functions del plan Hobby de Vercel obligó a fusionarlo ahí, octubre 2026)
+// — mismo patrón que _fcm.js/_notifyLib.js (prefijo `_` = no es un
+// endpoint, Regla 44: no duplicar lógica).
 
 const PACKAGE_NAME = process.env.GOOGLE_PLAY_PACKAGE_NAME || 'app.luna_pay.mobile'
 
