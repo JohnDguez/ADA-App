@@ -131,6 +131,14 @@ export async function purchasePremium(plan, accessToken) {
       if (settled) return
       settled = true
       cleanup()
+      // Mismo criterio que nativeGoogleAuth.js (v0.9.536): loggear el error
+      // REAL de Google Play antes de envolverlo en un mensaje genérico — sin
+      // esto, "Couldn't complete the purchase" no dice si la causa es un
+      // producto no encontrado/no aprobado en Play Console, el comprador de
+      // prueba sin acceso a ese track, "item already owned", o algo más.
+      // Visible en Logcat/Android Studio (tag `Capacitor/Console`) o en
+      // remote debugging (chrome://inspect) con el dispositivo conectado.
+      console.error('[Google Play Billing] Error de compra:', err?.code, err?.message, err)
       reject(new Error(err?.message || 'No se pudo completar la compra'))
     }
     store.when().approved(onApproved)
@@ -184,7 +192,11 @@ export async function restorePurchases(accessToken) {
       } catch (e) {
         // Se ignora esta compra puntual (ej. ya no vigente en Google) y se
         // sigue con el resto — un error aislado no debe reportarse como
-        // fallo total de la restauración.
+        // fallo total de la restauración. Sí se loggea (mismo criterio que
+        // onError de purchasePremium más arriba) para poder ver, por
+        // ejemplo, si lo que está fallando en realidad es la llamada al
+        // backend (verify-play-purchase.js) y no la restauración en sí.
+        console.error('[Google Play Billing] Error verificando una compra durante restorePurchases:', purchaseToken, e?.message, e)
       }
     }
     return { restored: restoredCount, result: lastResult }

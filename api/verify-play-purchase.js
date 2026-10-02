@@ -1,5 +1,5 @@
 const { createClient } = require('@supabase/supabase-js')
-const { JWT } = require('google-auth-library')
+const { PLAN_BY_PRODUCT_ID, ACTIVE_STATES, fetchSubscriptionState } = require('./_playBilling')
 
 // Mismo patrón que create-checkout-session.js/manage-subscription.js: el
 // cliente manda su propio JWT de sesión, este endpoint lo valida con el
@@ -9,44 +9,14 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY
 )
 
-// appId real de capacitor.config.ts — mismo valor, no debe desincronizarse.
-const PACKAGE_NAME = process.env.GOOGLE_PLAY_PACKAGE_NAME || 'app.luna_pay.mobile'
-
-// Mismos 2 IDs que src/lib/playBilling.js (PLAY_PRODUCT_IDS) — si cambian
-// allá, cambian aquí en el mismo movimiento.
-const PLAN_BY_PRODUCT_ID = {
-  premium_mensual: 'monthly',
-  premium_anual: 'annual',
-}
-
 // Credencial de cuenta de servicio de Google Cloud con acceso a la Google
 // Play Developer API (Play Console → Usuarios y permisos → invitar la
 // cuenta de servicio con acceso a "Pedidos y suscripciones financieras").
 // Se guarda en Vercel como el JSON completo de la clave, en una sola línea
-// (`GOOGLE_SERVICE_ACCOUNT_KEY`) — PENDIENTE, Johnatan la agrega antes de
-// que este endpoint funcione (ver "Acciones pendientes fuera del código").
-function getServiceAccountClient() {
-  const raw = process.env.GOOGLE_SERVICE_ACCOUNT_KEY
-  if (!raw) throw new Error('Falta configurar GOOGLE_SERVICE_ACCOUNT_KEY en el servidor')
-  let credentials
-  try {
-    credentials = JSON.parse(raw)
-  } catch (e) {
-    throw new Error('GOOGLE_SERVICE_ACCOUNT_KEY no es un JSON válido')
-  }
-  return new JWT({
-    email: credentials.client_email,
-    key: credentials.private_key,
-    scopes: ['https://www.googleapis.com/auth/androidpublisher'],
-  })
-}
-
-// Google Play Developer API v3 — endpoint `subscriptionsv2`, el vigente
-// (reemplaza a `purchases.subscriptions.get`, v1, marcado como legado para
-// suscripciones nuevas). `subscriptionState` real: ACTIVE/IN_GRACE_PERIOD
-// cuentan como Premium vigente; el resto (CANCELED sin gracia, EXPIRED,
-// PAUSED, ON_HOLD, etc.) no.
-const ACTIVE_STATES = ['SUBSCRIPTION_STATE_ACTIVE', 'SUBSCRIPTION_STATE_IN_GRACE_PERIOD']
+// (`GOOGLE_SERVICE_ACCOUNT_KEY`) — ya configurada (ver CONTEXT.md). Lógica
+// de verificación movida a `_playBilling.js` (octubre 2026) — compartida
+// ahora con `play-rtdn-webhook.js`, que necesita la misma llamada cuando
+// algo cambia FUERA de la app.
 
 module.exports = async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
@@ -68,10 +38,7 @@ module.exports = async function handler(req, res) {
   if (!plan) return res.status(400).json({ error: 'Producto de Play Billing desconocido' })
 
   try {
-    const client = getServiceAccountClient()
-    const url = `https://androidpublisher.googleapis.com/androidpublisher/v3/applications/${PACKAGE_NAME}/purchases/subscriptionsv2/tokens/${purchaseToken}`
-    const { data: subscription } = await client.request({ url })
-
+    const subscription = await fetchSubscriptionState(purchaseToken)
     const state = subscription?.subscriptionState
     const isActive = ACTIVE_STATES.includes(state)
 

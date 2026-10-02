@@ -139,6 +139,12 @@ export function PremiumPage({ profile, onClose, refreshProfile }) {
         setRestoreState('empty')
       }
     } catch (e) {
+      // Mismo criterio que startAndroidPurchase() más abajo y que
+      // nativeGoogleAuth.js (v0.9.536): loggear el error real antes de
+      // mostrar el mensaje genérico — "Couldn't restore your purchases" no
+      // dice si Google Play no encontró ninguna compra, si falló la
+      // llamada al backend, o algo más.
+      console.error('[Google Play Billing] Error en restorePurchases:', e?.message, e)
       setRestoreState('error')
     }
   }
@@ -207,6 +213,12 @@ export function PremiumPage({ profile, onClose, refreshProfile }) {
       setAndroidPurchaseState('idle')
       handleClose()
     } catch (e) {
+      // Mismo criterio que handleRestorePurchases() arriba y que
+      // nativeGoogleAuth.js (v0.9.536): loggear el error real — "Couldn't
+      // complete the purchase" no dice la causa real (producto no
+      // encontrado, oferta no disponible, falló la verificación en el
+      // backend, etc.).
+      console.error('[Google Play Billing] Error en startAndroidPurchase:', e?.message, e)
       setAndroidPurchaseState('error')
     }
   }
