@@ -387,7 +387,21 @@ export function AuthPage() {
 
     setLoading(true)
     const { error } = await supabase.auth.signInWithPassword({ email, password })
-    if (error) setError(t('authPage.errors.wrongCredentials'))
+    if (error) {
+      // Desde que se activó "Confirm email" en Supabase (octubre 2026,
+      // pedido de Johnatan tras notar que un correo inventado podía
+      // registrarse y entrar sin confirmar nada), un login con una cuenta
+      // que todavía no confirmó su correo también llega aquí como error —
+      // antes se mostraba el mismo "Correo o contraseña incorrectos" de
+      // siempre, lo cual es falso en este caso (la contraseña sí es
+      // correcta) y no le dice al usuario qué hacer. Supabase identifica
+      // este caso con error.code === 'email_not_confirmed' (supabase-js
+      // 2.42+); se revisa también error.message por si acaso, para no
+      // depender de un solo campo.
+      const isUnconfirmed = error.code === 'email_not_confirmed' ||
+        /email not confirmed/i.test(error.message || '')
+      setError(isUnconfirmed ? t('authPage.errors.emailNotConfirmed') : t('authPage.errors.wrongCredentials'))
+    }
     setLoading(false)
   }
 

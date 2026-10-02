@@ -589,7 +589,8 @@
       "termsRequired": "You must accept the Terms and Conditions to continue",
       "passwordNotStrongRegister": "The password doesn't meet all the security requirements",
       "accountCreated": "Account created! Check your email to confirm.",
-      "wrongCredentials": "Incorrect email or password"
+      "wrongCredentials": "Incorrect email or password",
+      "emailNotConfirmed": "You haven't confirmed your email yet. Check your inbox and click the link we sent you."
     },
     "landing": {
       "titleLine1": "Organize your bills,",

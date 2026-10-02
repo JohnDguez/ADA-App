@@ -589,7 +589,8 @@
       "termsRequired": "Debes aceptar los Términos y Condiciones para continuar",
       "passwordNotStrongRegister": "La contraseña no cumple todos los requisitos de seguridad",
       "accountCreated": "¡Cuenta creada! Revisa tu correo para confirmar.",
-      "wrongCredentials": "Correo o contraseña incorrectos"
+      "wrongCredentials": "Correo o contraseña incorrectos",
+      "emailNotConfirmed": "Todavía no confirmas tu correo. Revisa tu bandeja de entrada y haz clic en el enlace que te enviamos."
     },
     "landing": {
       "titleLine1": "Organiza tus pagos,",
