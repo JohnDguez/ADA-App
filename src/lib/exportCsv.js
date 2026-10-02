@@ -3,6 +3,8 @@
 // Sin librería externa: un CSV no necesita más que escapar comillas/comas/
 // saltos de línea y armar las filas separadas por coma.
 
+import { saveOrShareBlob } from './nativeExport'
+
 // Escapa un valor para una celda CSV: si trae coma, comilla o salto de
 // línea, se envuelve en comillas dobles (duplicando cualquier comilla
 // interna, regla estándar de CSV). `null`/`undefined` se vuelven celda
@@ -21,18 +23,16 @@ export function buildCsv(headers, rows) {
   return lines.join('\n')
 }
 
-// Dispara la descarga real vía Blob + link temporal. El BOM (\uFEFF) al
-// inicio es necesario para que Excel en Windows detecte UTF-8 solo —
-// sin él, asume Latin-1 y los acentos/ñ del archivo salen corruptos al
-// abrirlo, aunque el archivo en sí esté codificado bien.
-export function downloadCsv(filename, csvString) {
-  const blob = new Blob(['\uFEFF' + csvString], { type: 'text/csv;charset=utf-8;' })
-  const url = URL.createObjectURL(blob)
-  const link = document.createElement('a')
-  link.href = url
-  link.download = filename
-  document.body.appendChild(link)
-  link.click()
-  document.body.removeChild(link)
-  URL.revokeObjectURL(url)
+// Dispara la descarga real (web/PWA) o guarda+comparte (Android nativo, ver
+// nativeExport.js — octubre 2026: el truco de Blob + link temporal de abajo
+// nunca funcionó dentro del WebView de Capacitor, por eso "Descargar CSV"
+// no hacía nada en la app instalada). El BOM al inicio del Blob es
+// necesario para que Excel en Windows detecte UTF-8 solo — sin él, asume
+// Latin-1 y los acentos/ñ del archivo salen corruptos al abrirlo, aunque
+// el archivo en sí esté codificado bien. Ahora es async — el caller debe
+// hacer `await` (y envolver en try/catch: puede lanzar, ver nativeExport.js).
+export async function downloadCsv(filename, csvString) {
+  const BOM = '﻿'
+  const blob = new Blob([BOM + csvString], { type: 'text/csv;charset=utf-8;' })
+  await saveOrShareBlob(filename, blob, 'text/csv')
 }

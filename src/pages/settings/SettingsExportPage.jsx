@@ -16,7 +16,9 @@ import { DatePicker } from '../../components/DatePicker'
 import { dateToStr, todayStr, dateOf, fmt, getCategoryLabel, cobroPeriod, addDays, today, MONTHS_SHORT } from '../../lib/utils'
 import { buildCsv, downloadCsv } from '../../lib/exportCsv'
 import { generateReportPdf } from '../../lib/exportPdf'
+import { saveOrShareBlob } from '../../lib/nativeExport'
 import { getBank } from '../../lib/cardCatalog'
+import { showToast } from '../../components/Toast'
 import styles from './SettingsExportPage.module.css'
 
 // Sub-página "Exportar datos" — Fases 1 y 2 del módulo de Reportes (ver
@@ -592,7 +594,22 @@ export function SettingsExportPage({ profile, sharedSpaces, onOpenPremium, onBac
   async function handleDownloadCsv() {
     if (!includeGastos && !includeIngresos) return
     setDownloading(true)
+    try {
+      await doDownloadCsv()
+    } catch (e) {
+      // Antes, un error aquí (ej. el usuario cancela la hoja de compartir
+      // en Android, o `Filesystem`/`Share` fallan — ver nativeExport.js)
+      // dejaba el botón pegado en "Generando..." para siempre, porque
+      // `setDownloading(false)` de abajo nunca llegaba a correr. Mismo
+      // criterio ya aplicado a Google Play Billing (v0.9.541): loggear el
+      // error real y avisar al usuario en vez de quedar en silencio.
+      console.error('[Exportar datos] Error generando CSV:', e)
+      showToast(t('settingsExport.toast.exportError'))
+    }
+    setDownloading(false)
+  }
 
+  async function doDownloadCsv() {
     const headers = [
       t('settingsExport.csv.date'), t('settingsExport.csv.recordType'), t('settingsExport.csv.concept'),
       t('settingsExport.csv.category'), t('settingsExport.csv.amount'), t('settingsExport.csv.paid'),
@@ -647,8 +664,7 @@ export function SettingsExportPage({ profile, sharedSpaces, onOpenPremium, onBac
     rows.sort((a, b) => a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0)
 
     const csv = buildCsv(headers, rows)
-    downloadCsv(`lunapay-export-${from}_a_${to}.csv`, csv)
-    setDownloading(false)
+    await downloadCsv(`lunapay-export-${from}_a_${to}.csv`, csv)
   }
 
   // Fase 2 — reporte PDF. Junta exactamente los mismos filtros que el CSV
@@ -659,7 +675,19 @@ export function SettingsExportPage({ profile, sharedSpaces, onOpenPremium, onBac
   async function handleGeneratePdf() {
     if (!includeGastos && !includeIngresos && !includeGoals) return
     setDownloading(true)
+    try {
+      await doGeneratePdf()
+    } catch (e) {
+      // Mismo criterio que handleDownloadCsv() arriba — nunca dejar el
+      // botón pegado en "Generando..." por un error sin atrapar, y avisar
+      // en vez de fallar en silencio.
+      console.error('[Exportar datos] Error generando PDF:', e)
+      showToast(t('settingsExport.toast.exportError'))
+    }
+    setDownloading(false)
+  }
 
+  async function doGeneratePdf() {
     let gastos = includeGastos ? await fetchGastos() : []
     if (space === 'personal' && methodFilter !== 'all') {
       gastos = gastos.filter(p => (p.payment_method_kind || 'cash') === methodFilter)
@@ -760,8 +788,13 @@ export function SettingsExportPage({ profile, sharedSpaces, onOpenPremium, onBac
       goals: goalsData,
       labels,
     })
-    doc.save(`lunapay-reporte-${from}_a_${to}.pdf`)
-    setDownloading(false)
+    // `doc.save(...)` (antes) dispara el mismo truco de Blob + `<a
+    // download>` que `downloadCsv()` — nunca funcionó dentro del WebView
+    // de Capacitor (ver nativeExport.js). `doc.output('blob')` saca el PDF
+    // ya armado como Blob sin tocar el DOM, y `saveOrShareBlob()` decide
+    // cómo entregarlo según la plataforma.
+    const blob = doc.output('blob')
+    await saveOrShareBlob(`lunapay-reporte-${from}_a_${to}.pdf`, blob, 'application/pdf')
   }
 
   function handleGenerate() {

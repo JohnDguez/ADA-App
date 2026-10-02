@@ -1357,6 +1357,9 @@
     "recordsFound": "Records found",
     "downloadCsv": "Download CSV",
     "downloading": "Downloading…",
+    "toast": {
+      "exportError": "Couldn't generate the file. Try again."
+    },
     "premiumMessage": "Exporting your data is a Premium feature.",
     "unknownMember": "Member",
     "csv": {

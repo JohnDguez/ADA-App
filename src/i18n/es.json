@@ -1357,6 +1357,9 @@
     "recordsFound": "Registros encontrados",
     "downloadCsv": "Descargar CSV",
     "downloading": "Descargando…",
+    "toast": {
+      "exportError": "No se pudo generar el archivo. Intenta de nuevo."
+    },
     "premiumMessage": "Exportar tus datos es una función Premium.",
     "unknownMember": "Miembro",
     "csv": {
