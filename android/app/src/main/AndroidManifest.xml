@@ -43,4 +43,16 @@
     <!-- Permissions -->
 
     <uses-permission android:name="android.permission.INTERNET" />
+
+    <!-- Push notifications (FCM) — OBLIGATORIO desde Android 13 (API 33):
+         sin esta declaración en el manifest, PushNotifications.requestPermissions()
+         del lado de JS (ver usePushNotifications.js → subscribeNative()) ni
+         siquiera puede mostrar el diálogo del sistema — Android solo permite
+         pedir en tiempo de ejecución un permiso que la app ya declaró aquí;
+         sin la declaración, la petición regresa denegada de inmediato, sin
+         diálogo, y la app queda sin poder mostrar notificaciones aunque el
+         token de FCM se registre bien. targetSdkVersion de este proyecto es
+         36 (ver android/variables.gradle), muy por encima del mínimo (33)
+         donde este permiso se volvió obligatorio. -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 </manifest>
