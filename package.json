@@ -32,6 +32,7 @@
     "simple-icons": "^16.32.0"
   },
   "devDependencies": {
+    "@capacitor/assets": "^3.0.5",
     "@capacitor/cli": "^8.5.2",
     "@vitejs/plugin-react": "^4.3.1",
     "vite": "^5.3.1"

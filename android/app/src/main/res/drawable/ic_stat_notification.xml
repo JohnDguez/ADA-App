@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Ícono de notificaciones push (barra de estado de Android) — silueta blanca
+     sobre transparente (requisito del sistema desde API 21), trazado a partir
+     de la marca de luna de public/favicon.svg, el logo real de LunaPay. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="204.6"
+    android:viewportHeight="204.6">
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M166.17,76.77c-3.45,5.83 -9.13,10.19 -15.86,11.89c1.23,4.34 1.91,8.91 1.91,13.64c0,27.53 -22.39,49.92 -49.92,49.92s-49.92,-22.39 -49.92,-49.92s22.39,-49.92 49.92,-49.92c6.06,0 11.87,1.09 17.24,3.07c2.2,-6.53 6.93,-11.89 13.04,-14.9c-9.14,-4.5 -19.42,-7.03 -30.28,-7.03c-37.93,0 -68.79,30.86 -68.79,68.79s30.86,68.79 68.79,68.79s68.79,-30.86 68.79,-68.79c0,-9.02 -1.75,-17.63 -4.91,-25.53z" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M143.97,63.67m-17.92,0a17.92,17.92 0,1 1,35.84 0a17.92,17.92 0,1 1,-35.84 0" />
+</vector>

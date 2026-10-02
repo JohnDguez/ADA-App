@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Color de acento de LunaPay (variable CSS "accent" en light mode,
+         src/index.css) — usado por Android para tintar el ícono de las
+         notificaciones push (la silueta blanca de ic_stat_notification.xml)
+         en la barra de estado y el área expandida de la notificación. -->
+    <color name="notification_accent">#2F8CFA</color>
+</resources>
