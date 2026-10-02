@@ -14,6 +14,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "346081073696-b7j0m9rh4mqus46h7k25pjeibm6so55e.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "app.luna_pay.mobile",
+            "certificate_hash": "7317b760001383f50fd2e4beb0ecb66b9a7ea803"
+          }
+        },
+        {
           "client_id": "346081073696-h960udoj25gpnmdd3upp9d2c7t6ttcee.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
