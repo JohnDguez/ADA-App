@@ -131,26 +131,51 @@ export function SettingsAccountPage({ profile, user, onUpdate, onDataDeleted, on
     showToast(t('settingsAccount.toast.allDataDeleted'))
   }
 
+  // Bug real reportado por Johnatan (octubre 2026): borrar la cuenta desde
+  // la app no la borraba de verdad — se podía seguir iniciando sesión
+  // después. Esta función borraba payments/notifications/push_subscriptions/
+  // period_income AQUÍ MISMO, sin checar error, ANTES de llamar al endpoint
+  // — y el endpoint (api/delete-account.js) nunca tocaba goals/
+  // goal_transactions/payment_methods/payment_contributions/
+  // shared_space_members, así que `auth.admin.deleteUser()` fallaba ahí por
+  // una fila huérfana que sí hacía referencia al usuario. Resultado: los
+  // datos y el perfil ya se habían borrado, pero la cuenta de auth.users
+  // seguía viva — el login seguía funcionando.
+  //
+  // Fix: TODO el borrado (datos propios + perfil + cuenta de auth) ahora
+  // vive en un solo lugar, el servidor (ver api/delete-account.js), checado
+  // paso por paso. Aquí ya no se borra nada por cuenta propia — si el
+  // servidor falla, no se tocó ni un dato y se puede reintentar sin miedo a
+  // dejar la cuenta a medias; solo tras un 200 real se limpia la sesión.
   async function handleDeleteAccount() {
     setDangerError('')
     if (!dangerPassword) { setDangerError(t('settingsAccount.toast.confirmPasswordRequired')); return }
     setDangerLoading(true)
     const valid = await verifyCurrentPassword(dangerPassword)
     if (!valid) { setDangerError(t('settingsAccount.toast.wrongPassword')); setDangerLoading(false); return }
-    await Promise.all([
-      supabase.from('payments').delete().eq('user_id', user.id),
-      supabase.from('notifications').delete().eq('user_id', user.id),
-      supabase.from('push_subscriptions').delete().eq('user_id', user.id),
-      supabase.from('period_income').delete().eq('user_id', user.id),
-    ])
-    const { data: { session } } = await supabase.auth.getSession()
-    const res = await fetch('/api/delete-account', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` },
-      body: JSON.stringify({ userId: user.id }),
-    })
+
+    let res
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      res = await fetch('/api/delete-account', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session?.access_token}` },
+        body: JSON.stringify({ userId: user.id }),
+      })
+    } catch (e) {
+      console.error('[handleDeleteAccount] Error de conexión llamando a /api/delete-account:', e)
+      setDangerLoading(false)
+      setDangerError(t('settingsAccount.toast.deleteAccountError'))
+      return
+    }
+
     setDangerLoading(false)
-    if (!res.ok) { setDangerError(t('settingsAccount.toast.deleteAccountError')); return }
+    if (!res.ok) {
+      const body = await res.json().catch(() => null)
+      console.error('[handleDeleteAccount] El servidor no pudo borrar la cuenta:', body?.error || res.status)
+      setDangerError(t('settingsAccount.toast.deleteAccountError'))
+      return
+    }
     sessionStorage.removeItem('ada_tab')
     sessionStorage.removeItem('ada_session')
     sessionStorage.removeItem('ada_user_id')
