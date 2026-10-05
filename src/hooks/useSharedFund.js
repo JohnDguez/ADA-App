@@ -1,6 +1,8 @@
 import { useState, useCallback, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
 import { todayStr } from '../lib/utils'
+import { apiUrl } from '../lib/apiUrl'
+import i18n from '../i18n'
 
 // Fondo Compartido — bitácora persistente (nunca se reinicia por periodo,
 // a diferencia de period_income). Este hook vive aparte de usePayments.js
@@ -50,7 +52,7 @@ export function useSharedFund(spaceId) {
       try {
         const { data: { session } } = await supabase.auth.getSession()
         if (!session) return
-        const res = await fetch('/api/migrate-shared-funds', {
+        const res = await fetch(apiUrl('/api/migrate-shared-funds'), {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
           body: JSON.stringify({ spaceId }),
@@ -103,14 +105,14 @@ export function useSharedFund(spaceId) {
   async function addFunds(amount, note) {
     try {
       const { data: { session } } = await supabase.auth.getSession()
-      if (!session) return { error: { message: 'Sesión no encontrada' } }
-      const res = await fetch('/api/manage-shared-fund', {
+      if (!session) return { error: { message: i18n.t('apiErrors.sessionNotFound') } }
+      const res = await fetch(apiUrl('/api/manage-shared-fund'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
         body: JSON.stringify({ spaceId, amount, note, todayStr: todayStr() }),
       })
       const result = await res.json()
-      if (!res.ok) return { error: result.error ? { message: result.error } : { message: 'Error al aportar al Fondo' } }
+      if (!res.ok) return { error: result.error ? { message: result.error } : { message: i18n.t('apiErrors.addFundsFailed') } }
       // Ya NO se espera (`await`) aquí un segundo viaje de red completo antes
       // de regresar — el POST ya insertó la fila en Supabase, así que quien
       // aporta ve su modal cerrar y el toast de inmediato, en vez de esperar
@@ -122,27 +124,27 @@ export function useSharedFund(spaceId) {
       fetchLedger()
       return { error: null }
     } catch (e) {
-      return { error: { message: 'Error de conexión al aportar al Fondo' } }
+      return { error: { message: i18n.t('apiErrors.addFundsConnectionError') } }
     }
   }
 
   async function deleteFundEntry(ledgerId) {
     try {
       const { data: { session } } = await supabase.auth.getSession()
-      if (!session) return { error: { message: 'Sesión no encontrada' } }
-      const res = await fetch('/api/manage-shared-fund', {
+      if (!session) return { error: { message: i18n.t('apiErrors.sessionNotFound') } }
+      const res = await fetch(apiUrl('/api/manage-shared-fund'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
         body: JSON.stringify({ spaceId, deleteLedgerId: ledgerId }),
       })
       const result = await res.json()
-      if (!res.ok) return { error: result.error ? { message: result.error } : { message: 'Error al eliminar' } }
+      if (!res.ok) return { error: result.error ? { message: result.error } : { message: i18n.t('apiErrors.deleteFundEntryFailed') } }
       // Mismo criterio que en addFunds — no bloquear el retorno esperando
       // el refetch completo.
       fetchLedger()
       return { error: null }
     } catch (e) {
-      return { error: { message: 'Error de conexión al eliminar' } }
+      return { error: { message: i18n.t('apiErrors.deleteFundEntryConnectionError') } }
     }
   }
 

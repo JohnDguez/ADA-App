@@ -8,6 +8,7 @@ import { PageHero } from '../../components/PageHero'
 import { supabase } from '../../lib/supabase'
 import { fmt, getPremiumSource } from '../../lib/utils'
 import { ANDROID_PACKAGE_NAME } from '../../lib/constants'
+import { apiUrl } from '../../lib/apiUrl'
 import { showToast } from '../../components/Toast'
 import { Card } from '../../components/SettingsShared'
 import styles from './SettingsSubscriptionPage.module.css'
@@ -55,7 +56,7 @@ export function SettingsSubscriptionPage({ profile, onOpenPremium, onBack, slide
     try {
       const headers = await authHeaders()
       if (!headers) { setSubscription(null); return }
-      const res = await fetch('/api/get-subscription', { headers })
+      const res = await fetch(apiUrl('/api/get-subscription'), { headers })
       const result = await res.json()
       setSubscription(res.ok ? result.subscription : null)
     } catch (e) {
@@ -81,7 +82,7 @@ export function SettingsSubscriptionPage({ profile, onOpenPremium, onBack, slide
     try {
       const headers = await authHeaders()
       if (!headers) { showToast(t('settingsSubscription.toast.genericError')); return }
-      const res = await fetch('/api/manage-subscription', {
+      const res = await fetch(apiUrl('/api/manage-subscription'), {
         method: 'POST',
         headers,
         body: JSON.stringify({ action, ...extra }),

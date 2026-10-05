@@ -2,6 +2,7 @@ import { useState, useCallback, useEffect, useRef } from 'react'
 import { supabase } from '../lib/supabase'
 import { daysDiff, cobroPeriod, dateToStr, todayStr } from '../lib/utils'
 import { withRetry } from '../lib/withRetry'
+import { apiUrl } from '../lib/apiUrl'
 
 // Metas de ahorro — personal únicamente en esta primera versión (sin
 // space_id, ver CONTEXT.md). El monto abonado de cada meta NUNCA se
@@ -257,7 +258,7 @@ export function useGoals(userId, profile, spaceId = null, onPaymentsChanged = nu
     try {
       const { data: { session } } = await supabase.auth.getSession()
       if (!session) return { error: { message: 'Sesión no encontrada' } }
-      const res = await fetch('/api/manage-shared-goal', {
+      const res = await fetch(apiUrl('/api/manage-shared-goal'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
         body: JSON.stringify({ action, spaceId, todayStr: todayStr(), ...body }),

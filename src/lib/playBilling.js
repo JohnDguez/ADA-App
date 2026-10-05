@@ -20,6 +20,8 @@
 // de verdad usa el plugin). Probar contra un build real de
 // `npx cap sync android` + Android Studio antes de dar esto por cerrado.
 
+import { apiUrl } from './apiUrl'
+
 // IDs de producto — DEBEN coincidir EXACTAMENTE con los que Johnatan haya
 // creado en Play Console para los 2 productos de suscripción espejo
 // (Mensual/Anual, ver CONTEXT.md). Si los IDs reales son distintos a estos,
@@ -67,7 +69,7 @@ function ensureStoreInitialized() {
 // Developer API antes de tocar profiles.is_premium — mismo patrón de Bearer
 // token de sesión que api/create-checkout-session.js/manage-subscription.js.
 async function verifyWithBackend({ purchaseToken, productId, accessToken }) {
-  const res = await fetch('/api/verify-play-purchase', {
+  const res = await fetch(apiUrl('/api/verify-play-purchase'), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${accessToken}` },
     body: JSON.stringify({ purchaseToken, productId }),

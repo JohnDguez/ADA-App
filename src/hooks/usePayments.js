@@ -4,6 +4,7 @@ import { nextPeriodDate, dateOf, dateToStr, todayStr, fmt, cobroPeriod, installm
 import { notifySpaceChange as notifySpaceChangeShared } from '../lib/notifySpaceChange'
 import { showToast } from '../components/Toast'
 import { withRetry } from '../lib/withRetry'
+import { apiUrl } from '../lib/apiUrl'
 import i18n from '../i18n'
 
 // NOTA (Fase 5b): `activeSpaceName` ya no se usa dentro de este hook — el
@@ -108,18 +109,18 @@ export function usePayments(userId, activeSpaceId = null, activeSpaceName = null
   async function registerContribution(paymentId, memberUserId, amount) {
     try {
       const { data: { session } } = await supabase.auth.getSession()
-      if (!session) return { error: { message: 'Sesión no encontrada' } }
-      const res = await fetch('/api/register-contribution', {
+      if (!session) return { error: { message: i18n.t('apiErrors.sessionNotFound') } }
+      const res = await fetch(apiUrl('/api/register-contribution'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
         body: JSON.stringify({ paymentId, memberUserId, amount }),
       })
       const result = await res.json()
-      if (!res.ok) return { error: result.error ? { message: result.error } : { message: 'Error al registrar el abono' } }
+      if (!res.ok) return { error: result.error ? { message: result.error } : { message: i18n.t('apiErrors.registerContributionFailed') } }
       await fetchPayments()
       return { error: null, ...result }
     } catch (e) {
-      return { error: { message: 'Error de conexión al registrar el abono' } }
+      return { error: { message: i18n.t('apiErrors.registerContributionConnectionError') } }
     }
   }
 
@@ -133,18 +134,18 @@ export function usePayments(userId, activeSpaceId = null, activeSpaceName = null
   async function payRemainingContribution(paymentId) {
     try {
       const { data: { session } } = await supabase.auth.getSession()
-      if (!session) return { error: { message: 'Sesión no encontrada' } }
-      const res = await fetch('/api/register-contribution', {
+      if (!session) return { error: { message: i18n.t('apiErrors.sessionNotFound') } }
+      const res = await fetch(apiUrl('/api/register-contribution'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
         body: JSON.stringify({ paymentId, memberUserId: userId, payRemaining: true }),
       })
       const result = await res.json()
-      if (!res.ok) return { error: result.error ? { message: result.error } : { message: 'Error al marcar como pagado' } }
+      if (!res.ok) return { error: result.error ? { message: result.error } : { message: i18n.t('apiErrors.markPaidFailed') } }
       await fetchPayments()
       return { error: null, ...result }
     } catch (e) {
-      return { error: { message: 'Error de conexión al marcar como pagado' } }
+      return { error: { message: i18n.t('apiErrors.markPaidConnectionError') } }
     }
   }
 
@@ -156,18 +157,18 @@ export function usePayments(userId, activeSpaceId = null, activeSpaceName = null
   async function payFromFund(paymentId) {
     try {
       const { data: { session } } = await supabase.auth.getSession()
-      if (!session) return { error: { message: 'Sesión no encontrada' } }
-      const res = await fetch('/api/register-contribution', {
+      if (!session) return { error: { message: i18n.t('apiErrors.sessionNotFound') } }
+      const res = await fetch(apiUrl('/api/register-contribution'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
         body: JSON.stringify({ paymentId, payRemainingFromFund: true }),
       })
       const result = await res.json()
-      if (!res.ok) return { error: result.error ? { message: result.error } : { message: 'Error al pagar desde el Fondo' } }
+      if (!res.ok) return { error: result.error ? { message: result.error } : { message: i18n.t('apiErrors.payFromFundFailed') } }
       await fetchPayments()
       return { error: null, ...result }
     } catch (e) {
-      return { error: { message: 'Error de conexión al pagar desde el Fondo' } }
+      return { error: { message: i18n.t('apiErrors.payFromFundConnectionError') } }
     }
   }
 
@@ -177,18 +178,18 @@ export function usePayments(userId, activeSpaceId = null, activeSpaceName = null
   async function setFundContribution(paymentId, amount) {
     try {
       const { data: { session } } = await supabase.auth.getSession()
-      if (!session) return { error: { message: 'Sesión no encontrada' } }
-      const res = await fetch('/api/register-contribution', {
+      if (!session) return { error: { message: i18n.t('apiErrors.sessionNotFound') } }
+      const res = await fetch(apiUrl('/api/register-contribution'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
         body: JSON.stringify({ paymentId, fundAmount: amount }),
       })
       const result = await res.json()
-      if (!res.ok) return { error: result.error ? { message: result.error } : { message: 'Error al actualizar el Fondo' } }
+      if (!res.ok) return { error: result.error ? { message: result.error } : { message: i18n.t('apiErrors.updateFundFailed') } }
       await fetchPayments()
       return { error: null, ...result }
     } catch (e) {
-      return { error: { message: 'Error de conexión al actualizar el Fondo' } }
+      return { error: { message: i18n.t('apiErrors.updateFundConnectionError') } }
     }
   }
 
@@ -200,18 +201,18 @@ export function usePayments(userId, activeSpaceId = null, activeSpaceName = null
   async function setContributionTotalAmount(paymentId, amount) {
     try {
       const { data: { session } } = await supabase.auth.getSession()
-      if (!session) return { error: { message: 'Sesión no encontrada' } }
-      const res = await fetch('/api/register-contribution', {
+      if (!session) return { error: { message: i18n.t('apiErrors.sessionNotFound') } }
+      const res = await fetch(apiUrl('/api/register-contribution'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
         body: JSON.stringify({ paymentId, setTotalAmount: amount }),
       })
       const result = await res.json()
-      if (!res.ok) return { error: result.error ? { message: result.error } : { message: 'Error al guardar el monto' } }
+      if (!res.ok) return { error: result.error ? { message: result.error } : { message: i18n.t('apiErrors.saveAmountFailed') } }
       await fetchPayments()
       return { error: null, ...result }
     } catch (e) {
-      return { error: { message: 'Error de conexión al guardar el monto' } }
+      return { error: { message: i18n.t('apiErrors.saveAmountConnectionError') } }
     }
   }
 
@@ -223,18 +224,18 @@ export function usePayments(userId, activeSpaceId = null, activeSpaceName = null
   async function unmarkSharedPayment(paymentId) {
     try {
       const { data: { session } } = await supabase.auth.getSession()
-      if (!session) return { error: { message: 'Sesión no encontrada' } }
-      const res = await fetch('/api/register-contribution', {
+      if (!session) return { error: { message: i18n.t('apiErrors.sessionNotFound') } }
+      const res = await fetch(apiUrl('/api/register-contribution'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
         body: JSON.stringify({ paymentId, unmarkPaid: true }),
       })
       const result = await res.json()
-      if (!res.ok) return { error: result.error ? { message: result.error } : { message: 'Error al desmarcar el pago' } }
+      if (!res.ok) return { error: result.error ? { message: result.error } : { message: i18n.t('apiErrors.unmarkPaymentFailed') } }
       await fetchPayments()
       return { error: null, ...result }
     } catch (e) {
-      return { error: { message: 'Error de conexión al desmarcar el pago' } }
+      return { error: { message: i18n.t('apiErrors.unmarkPaymentConnectionError') } }
     }
   }
 
@@ -247,18 +248,18 @@ export function usePayments(userId, activeSpaceId = null, activeSpaceName = null
   async function forceSettlePayment(paymentId) {
     try {
       const { data: { session } } = await supabase.auth.getSession()
-      if (!session) return { error: { message: 'Sesión no encontrada' } }
-      const res = await fetch('/api/register-contribution', {
+      if (!session) return { error: { message: i18n.t('apiErrors.sessionNotFound') } }
+      const res = await fetch(apiUrl('/api/register-contribution'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
         body: JSON.stringify({ paymentId, forceSettle: true }),
       })
       const result = await res.json()
-      if (!res.ok) return { error: result.error ? { message: result.error } : { message: 'Error al marcar como pagado' } }
+      if (!res.ok) return { error: result.error ? { message: result.error } : { message: i18n.t('apiErrors.markPaidFailed') } }
       await fetchPayments()
       return { error: null, ...result }
     } catch (e) {
-      return { error: { message: 'Error de conexión al marcar como pagado' } }
+      return { error: { message: i18n.t('apiErrors.markPaidConnectionError') } }
     }
   }
 

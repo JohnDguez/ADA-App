@@ -1555,5 +1555,24 @@
     "deletedCredit": "Deleted credit card",
     "deletedDebit": "Deleted debit card",
     "deletedCard": "Deleted card"
+  },
+  "apiErrors": {
+    "sessionNotFound": "Session not found",
+    "registerContributionFailed": "Couldn't register the payment",
+    "registerContributionConnectionError": "Connection error registering the payment",
+    "markPaidFailed": "Couldn't mark as paid",
+    "markPaidConnectionError": "Connection error marking as paid",
+    "payFromFundFailed": "Couldn't pay from the Fund",
+    "payFromFundConnectionError": "Connection error paying from the Fund",
+    "updateFundFailed": "Couldn't update the Fund",
+    "updateFundConnectionError": "Connection error updating the Fund",
+    "saveAmountFailed": "Couldn't save the amount",
+    "saveAmountConnectionError": "Connection error saving the amount",
+    "unmarkPaymentFailed": "Couldn't unmark the payment",
+    "unmarkPaymentConnectionError": "Connection error unmarking the payment",
+    "addFundsFailed": "Couldn't add to the Fund",
+    "addFundsConnectionError": "Connection error adding to the Fund",
+    "deleteFundEntryFailed": "Couldn't delete",
+    "deleteFundEntryConnectionError": "Connection error deleting"
   }
 }

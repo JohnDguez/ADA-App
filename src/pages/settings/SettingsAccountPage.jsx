@@ -11,6 +11,7 @@ import { passwordRequirements, isPasswordStrong } from '../../components/Passwor
 import { RequirementRow } from '../../components/RequirementRow'
 import { Card, Row, SectionLabel } from '../../components/SettingsShared'
 import i18n, { resolveLanguage, LANGUAGE_STORAGE_KEY } from '../../i18n'
+import { apiUrl } from '../../lib/apiUrl'
 import styles from './SettingsAccountPage.module.css'
 
 // Sub-página "Cuenta" dentro de Ajustes: Nombre, Correo/Google, Contraseña,
@@ -157,7 +158,7 @@ export function SettingsAccountPage({ profile, user, onUpdate, onDataDeleted, on
     let res
     try {
       const { data: { session } } = await supabase.auth.getSession()
-      res = await fetch('/api/delete-account', {
+      res = await fetch(apiUrl('/api/delete-account'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session?.access_token}` },
         body: JSON.stringify({ userId: user.id }),

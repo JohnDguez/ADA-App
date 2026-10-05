@@ -13,6 +13,7 @@ import { EmbeddedCheckoutProvider, EmbeddedCheckout } from '@stripe/react-stripe
 import { supabase } from '../lib/supabase'
 import { isAndroidBilling, restorePurchases, purchasePremium } from '../lib/playBilling'
 import { getPremiumSource } from '../lib/utils'
+import { apiUrl } from '../lib/apiUrl'
 import styles from './PremiumPage.module.css'
 
 // Módulo, no dentro del componente — loadStripe() cachea la promesa
@@ -183,7 +184,7 @@ export function PremiumPage({ profile, onClose, refreshProfile }) {
     try {
       const { data: { session } } = await supabase.auth.getSession()
       if (!session) { setCheckoutState('error'); return }
-      const res = await fetch('/api/create-checkout-session', {
+      const res = await fetch(apiUrl('/api/create-checkout-session'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
         body: JSON.stringify({ plan: selectedPlan }),

@@ -1555,5 +1555,24 @@
     "deletedCredit": "Tarjeta de crédito eliminada",
     "deletedDebit": "Tarjeta de débito eliminada",
     "deletedCard": "Tarjeta eliminada"
+  },
+  "apiErrors": {
+    "sessionNotFound": "Sesión no encontrada",
+    "registerContributionFailed": "Error al registrar el abono",
+    "registerContributionConnectionError": "Error de conexión al registrar el abono",
+    "markPaidFailed": "Error al marcar como pagado",
+    "markPaidConnectionError": "Error de conexión al marcar como pagado",
+    "payFromFundFailed": "Error al pagar desde el Fondo",
+    "payFromFundConnectionError": "Error de conexión al pagar desde el Fondo",
+    "updateFundFailed": "Error al actualizar el Fondo",
+    "updateFundConnectionError": "Error de conexión al actualizar el Fondo",
+    "saveAmountFailed": "Error al guardar el monto",
+    "saveAmountConnectionError": "Error de conexión al guardar el monto",
+    "unmarkPaymentFailed": "Error al desmarcar el pago",
+    "unmarkPaymentConnectionError": "Error de conexión al desmarcar el pago",
+    "addFundsFailed": "Error al aportar al Fondo",
+    "addFundsConnectionError": "Error de conexión al aportar al Fondo",
+    "deleteFundEntryFailed": "Error al eliminar",
+    "deleteFundEntryConnectionError": "Error de conexión al eliminar"
   }
 }

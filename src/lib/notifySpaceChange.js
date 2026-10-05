@@ -1,4 +1,5 @@
 import { supabase } from './supabase'
+import { apiUrl } from './apiUrl'
 
 // Antes esta función vivía solo dentro de hooks/usePayments.js (Fase 5,
 // v0.9.148) — se extrae aquí en v0.9.236 porque hooks/useSharedSpaces.js
@@ -17,7 +18,7 @@ export async function notifySpaceChange(spaceId, action, details = {}) {
   try {
     const { data: { session } } = await supabase.auth.getSession()
     if (!session) return
-    await fetch('/api/notify-space-change', {
+    await fetch(apiUrl('/api/notify-space-change'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
       body: JSON.stringify({ spaceId, action, ...details }),
