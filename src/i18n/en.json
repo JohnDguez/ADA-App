@@ -1557,6 +1557,8 @@
     "deletedCard": "Deleted card"
   },
   "apiErrors": {
+    "operationFailed": "Operation failed",
+    "connectionError": "Connection error",
     "sessionNotFound": "Session not found",
     "registerContributionFailed": "Couldn't register the payment",
     "registerContributionConnectionError": "Connection error registering the payment",

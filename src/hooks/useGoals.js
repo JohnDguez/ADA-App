@@ -3,6 +3,7 @@ import { supabase } from '../lib/supabase'
 import { daysDiff, cobroPeriod, dateToStr, todayStr } from '../lib/utils'
 import { withRetry } from '../lib/withRetry'
 import { apiUrl } from '../lib/apiUrl'
+import i18n from '../i18n'
 
 // Metas de ahorro — personal únicamente en esta primera versión (sin
 // space_id, ver CONTEXT.md). El monto abonado de cada meta NUNCA se
@@ -257,18 +258,18 @@ export function useGoals(userId, profile, spaceId = null, onPaymentsChanged = nu
     if (goalId) markSyncing(goalId, true)
     try {
       const { data: { session } } = await supabase.auth.getSession()
-      if (!session) return { error: { message: 'Sesión no encontrada' } }
+      if (!session) return { error: { message: i18n.t('apiErrors.sessionNotFound') } }
       const res = await fetch(apiUrl('/api/manage-shared-goal'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
         body: JSON.stringify({ action, spaceId, todayStr: todayStr(), ...body }),
       })
       const result = await res.json()
-      if (!res.ok) return { error: { message: result.error || 'Error en la operación' } }
+      if (!res.ok) return { error: { message: result.error || i18n.t('apiErrors.operationFailed') } }
       await fetchAll({ silent: true })
       return { data: result, error: null }
     } catch (e) {
-      return { error: { message: 'Error de conexión' } }
+      return { error: { message: i18n.t('apiErrors.connectionError') } }
     } finally {
       if (goalId) markSyncing(goalId, false)
     }

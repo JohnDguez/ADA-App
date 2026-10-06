@@ -1557,6 +1557,8 @@
     "deletedCard": "Tarjeta eliminada"
   },
   "apiErrors": {
+    "operationFailed": "Error en la operación",
+    "connectionError": "Error de conexión",
     "sessionNotFound": "Sesión no encontrada",
     "registerContributionFailed": "Error al registrar el abono",
     "registerContributionConnectionError": "Error de conexión al registrar el abono",

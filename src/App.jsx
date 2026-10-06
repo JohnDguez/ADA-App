@@ -894,11 +894,12 @@ export default function App() {
     if (error) showToast(t('app.toast.postponeError'))
     else showToast(t('app.toast.postponed', { name: payment.name }))
   }
+  // "Adelantar pago" (parcialidades): paga esta parcialidad ahora, por la
+  // misma ruta que el check (handleMarkPaid → abonarInstallment). Antes
+  // escribía la columna vieja `postponed: false` (sin efecto) y avisaba
+  // "regresado al periodo actual" — nunca adelantaba nada (v0.9.545).
   async function handleAdvance(payment) {
-    const { error, reverted, busy } = await updatePayment(payment.id, { postponed: false })
-    if (reverted || busy) return
-    if (error) showToast(t('app.toast.genericError'))
-    else showToast(t('app.toast.returnedToCurrentPeriod'))
+    await handleMarkPaid(payment)
   }
   // `performDelete`: la única función de borrado real ahora — elige la
   // función correcta según el tipo de pago (master/copia de recurrente/
