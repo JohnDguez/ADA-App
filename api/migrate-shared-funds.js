@@ -1,4 +1,5 @@
 const { createClient } = require('@supabase/supabase-js')
+const applyCors = require('./_cors')
 
 // Reimplementación fiel de cobroPeriod()/today()/dateToStr()/dateOf() de
 // lib/utils.js — este endpoint corre en Node (CommonJS), no comparte el
@@ -55,6 +56,7 @@ const supabase = createClient(
 )
 
 module.exports = async function handler(req, res) {
+  if (applyCors(req, res)) return
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
 
   const token = req.headers.authorization?.replace('Bearer ', '')

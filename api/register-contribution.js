@@ -1,4 +1,5 @@
 const { createClient } = require('@supabase/supabase-js')
+const applyCors = require('./_cors')
 const webpush = require('web-push')
 const { notifyUsers } = require('./_notifyLib')
 const { ensureTwoAheadServer } = require('./_recurEnsureTwoAhead')
@@ -62,6 +63,7 @@ async function notifyAllSpaceMembers(spaceId, actorId, buildMessage) {
 }
 
 module.exports = async function handler(req, res) {
+  if (applyCors(req, res)) return
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
 
   const authHeader = req.headers.authorization

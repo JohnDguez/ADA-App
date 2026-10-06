@@ -1,5 +1,6 @@
 const webpush = require('web-push')
 const { createClient } = require('@supabase/supabase-js')
+const applyCors = require('./_cors')
 const { notifyUsers } = require('./_notifyLib')
 const {
   paymentTitleText, paymentBodyText, joinedText, leftText,
@@ -45,6 +46,7 @@ const TOGGLE_GATED_ACTIONS = new Set(['added', 'marked_paid', 'deleted'])
 // se autentica distinto: valida el propio JWT de sesión del usuario (el
 // mismo token que ya usa el cliente de Supabase), no un secreto compartido.
 module.exports = async function handler(req, res) {
+  if (applyCors(req, res)) return
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
 
   const authHeader = req.headers.authorization

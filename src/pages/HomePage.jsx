@@ -669,7 +669,16 @@ function PaidCollapseItem({ p, onMarkUnpaid, onViewSource, spaceMembers, onSelec
             el.style.marginBottom = '-6px'
           })
         }
-        after(UNMARK_EXIT_MS, () => onMarkUnpaid(p.id))
+        after(UNMARK_EXIT_MS, async () => {
+          const result = await onMarkUnpaid(p.id)
+          // Si el guardado falló, la fila vuelve a su lugar (antes se quedaba
+          // colapsada a 0 de alto: parecía desmarcada pero seguía pagada).
+          if (result?.failed) {
+            const node = wrapperRef.current
+            if (node) { node.style.maxHeight = ''; node.style.marginBottom = '' }
+            setPhase('idle')
+          }
+        })
       })
     })
   }

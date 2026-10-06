@@ -1,4 +1,5 @@
 const { createClient } = require('@supabase/supabase-js')
+const applyCors = require('./_cors')
 const { PLAN_BY_PRODUCT_ID, ACTIVE_STATES, fetchSubscriptionState } = require('./_playBilling')
 
 // Mismo patrón que create-checkout-session.js/manage-subscription.js: el
@@ -227,6 +228,7 @@ async function handleRtdn(req, res) {
 }
 
 module.exports = async function handler(req, res) {
+  if (applyCors(req, res)) return
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
   if (req.query?.rtdn === '1') return handleRtdn(req, res)
   return handleVerify(req, res)

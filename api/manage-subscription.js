@@ -1,4 +1,5 @@
 const { createClient } = require('@supabase/supabase-js')
+const applyCors = require('./_cors')
 const Stripe = require('stripe')
 
 const stripe = Stripe(process.env.STRIPE_SECRET_KEY)
@@ -30,6 +31,7 @@ function serializeSubscription(subscription) {
 }
 
 module.exports = async function handler(req, res) {
+  if (applyCors(req, res)) return
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
 
   const authHeader = req.headers.authorization

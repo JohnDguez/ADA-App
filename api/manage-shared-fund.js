@@ -1,4 +1,5 @@
 const { createClient } = require('@supabase/supabase-js')
+const applyCors = require('./_cors')
 const webpush = require('web-push')
 const { notifyUsers } = require('./_notifyLib')
 const { fundContributionText, fundContributionDeletedText } = require('./_notifyText')
@@ -113,6 +114,7 @@ const supabase = createClient(
 // `shared_fund_ledger` no tiene políticas de escritura para el usuario
 // normal a propósito (ver sql_fondo_compartido.sql).
 module.exports = async function handler(req, res) {
+  if (applyCors(req, res)) return
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
 
   const token = req.headers.authorization?.replace('Bearer ', '')

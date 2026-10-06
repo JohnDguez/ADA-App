@@ -930,16 +930,17 @@ export default function App() {
     const payment = payments.find(p => p.id === id)
     if (payment?.space_id) {
       const { error } = await unmarkSharedPayment(id)
-      if (error) showToast(error.message || t('app.toast.unmarkError'))
-      return
+      if (error) { showToast(error.message || t('app.toast.unmarkError')); return { failed: true } }
+      return { failed: false }
     }
     const { error, reverted, busy } = await markUnpaid(id)
-    if (reverted || busy) return
+    if (reverted || busy) return { failed: true }
     // Ajuste de crédito (v0.9.497) — mismo criterio que handleMarkUnpaid.
     if (!error && payment?.card_statement_for && payment.is_paid) {
       adjustCardCarryOver(payment.card_statement_for, Number(payment.amount))
     }
-    if (error) showToast(typeof error === 'string' ? error : t('app.toast.unmarkError'))
+    if (error) { showToast(typeof error === 'string' ? error : t('app.toast.unmarkError')); return { failed: true } }
+    return { failed: false }
   }
   async function handlePostpone(payment) {
     const { error, reverted, busy } = await postponePayment(payment)
