@@ -403,7 +403,7 @@ export default function App() {
     if (!user?.id) return
     const { data, error } = await supabase.from('payments').select('*')
       .eq('user_id', user.id).is('space_id', null)
-      .or('payment_method_kind.eq.credit,card_statement_for.not.is.null,is_card_statement.eq.true')
+      .or('payment_method_id.not.is.null,card_statement_for.not.is.null,is_card_statement.eq.true')
     if (!error) setSpaceCardPayments(data || [])
   }
   useEffect(() => {
