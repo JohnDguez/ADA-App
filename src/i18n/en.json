@@ -1579,5 +1579,42 @@
     "addFundsConnectionError": "Connection error adding to the Fund",
     "deleteFundEntryFailed": "Couldn't delete",
     "deleteFundEntryConnectionError": "Connection error deleting"
+  },
+  "luna": {
+    "when": {
+      "today": "today",
+      "tomorrow": "tomorrow",
+      "inDays_one": "in {{count}} day",
+      "inDays_other": "in {{count}} days"
+    },
+    "nextPayment": "Next: {{name}}, {{when}}",
+    "progress": "{{done}} of {{total}} payments",
+    "happy": {
+      "title": "You're on track!"
+    },
+    "attentive": {
+      "titleToday": "{{name}} is due today",
+      "titleTomorrow": "{{name}} is due tomorrow",
+      "subMore_one": "And {{count}} more payment this week",
+      "subMore_other": "And {{count}} more payments this week",
+      "subNone": "Luna is keeping an eye on your payments"
+    },
+    "worried": {
+      "title_one": "{{count}} overdue payment",
+      "title_other": "{{count}} overdue payments",
+      "sub": "Luna needs you"
+    },
+    "celebrating": {
+      "title": "Period complete!",
+      "sub": "You paid everything. Great job!"
+    },
+    "sleeping": {
+      "title": "All calm",
+      "sub": "Luna is resting. Next: {{name}}, {{when}}"
+    },
+    "waving": {
+      "title": "Hi, I'm Luna!",
+      "sub": "Add your payments to get started"
+    }
   }
 }

@@ -86,6 +86,19 @@
   --soon-color:       #FE7600;
   --menu-bg:          #F5F5F2;
 
+  /* Franja de Luna (LunaStrip.jsx) — estado "dormida" (noche). Es oscura en
+     AMBOS temas a propósito (es la única pose nocturna), por eso solo se
+     definen aquí en :root y no se repiten en los bloques de tema oscuro:
+     heredan igual. Los demás estados de Luna reusan --accent-soft,
+     --paid-border, --warning-border, etc., que sí cambian por tema. */
+  --luna-night-1:       #0F1117;
+  --luna-night-2:       #1A2B40;
+  --luna-night-3:       #1E3A5C;
+  --luna-night-text:    #E8EAF0;
+  --luna-night-surface: #1A1D27;
+  --luna-night-track:   #2A2D3A;
+  --luna-night-accent:  #3B9EFF;
+
   /* Switcher de Espacio Compartido — tarjetas que asoman (no la activa).
      Antes reutilizaban --paid (verde saturado, pensado para "pagado") y
      --label-variable (prestado de la etiqueta "Variable" de pagos) — muy

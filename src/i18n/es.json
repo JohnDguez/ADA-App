@@ -1579,5 +1579,42 @@
     "addFundsConnectionError": "Error de conexión al aportar al Fondo",
     "deleteFundEntryFailed": "Error al eliminar",
     "deleteFundEntryConnectionError": "Error de conexión al eliminar"
+  },
+  "luna": {
+    "when": {
+      "today": "hoy",
+      "tomorrow": "mañana",
+      "inDays_one": "en {{count}} día",
+      "inDays_other": "en {{count}} días"
+    },
+    "nextPayment": "Próximo: {{name}}, {{when}}",
+    "progress": "{{done}} de {{total}} pagos",
+    "happy": {
+      "title": "¡Vas al corriente!"
+    },
+    "attentive": {
+      "titleToday": "Hoy vence {{name}}",
+      "titleTomorrow": "Mañana vence {{name}}",
+      "subMore_one": "Y {{count}} pago más esta semana",
+      "subMore_other": "Y {{count}} pagos más esta semana",
+      "subNone": "Luna vigila tus pagos"
+    },
+    "worried": {
+      "title_one": "{{count}} pago vencido",
+      "title_other": "{{count}} pagos vencidos",
+      "sub": "Luna te necesita"
+    },
+    "celebrating": {
+      "title": "¡Periodo completado!",
+      "sub": "Pagaste todo. ¡Buen trabajo!"
+    },
+    "sleeping": {
+      "title": "Todo en calma",
+      "sub": "Luna descansa. Próximo: {{name}}, {{when}}"
+    },
+    "waving": {
+      "title": "¡Hola, soy Luna!",
+      "sub": "Agrega tus pagos para empezar"
+    }
   }
 }

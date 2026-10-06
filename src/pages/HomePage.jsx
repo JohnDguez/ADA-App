@@ -10,7 +10,9 @@ import { NewSharedSpacePanel } from '../components/NewSharedSpacePanel'
 import { EmptyState } from '../components/EmptyState'
 import { PaidByStack } from '../components/PaidByStack'
 import { HalfRing } from '../components/HalfRing'
+import { LunaStrip } from '../components/LunaStrip'
 import { Bone, RailSkeleton } from '../components/SkeletonLoader'
+import { getLunaState } from '../lib/lunaState'
 import { fmt, cobroPeriod, nextCobroPeriod, getPagarEsteCobro, daysDiff, dateOf, dateToStr, getMonths, getMonthsShort, getCategoryLabel } from '../lib/utils'
 import styles from './HomePage.module.css'
 
@@ -246,6 +248,12 @@ export function HomePage({ payments, dataLoading = false, profile, spaceSwitcher
     upcoming, nextPeriodKnownTotal, nextPeriodFixedCount, nextPeriodPendingVariableCount,
   } = derived
 
+  // Estado de Luna (franja arriba de las tarjetas de periodo). Cálculo
+  // trivial sobre listas ya memoizadas en `derived` (Regla 37) — no necesita
+  // useMemo propio, y así la hora (estado "dormida") se lee fresca en cada
+  // render en vez de quedarse congelada hasta que cambien los pagos.
+  const lunaState = getLunaState({ pagarEsteCobro, vencidos, delPeriodo, pagadosEstePeriodo })
+
   // v0.9.282 — antes este objeto se recreaba en CADA render de HomePage,
   // rompiendo el React.memo de PayRail/PayCard (identidad nueva = re-render
   // de todas las cards aunque nada hubiera cambiado). Con useMemo, mientras
@@ -303,6 +311,12 @@ export function HomePage({ payments, dataLoading = false, profile, spaceSwitcher
           </div>
         ) : (
         <>
+        {/* Franja de Luna — encima de las tarjetas de periodo, nunca en
+            lugar de ellas (mockup confirmado con Johnatan, octubre 2026).
+            Fuera de `metricCardSection` a propósito: ese contenedor lleva el
+            coachmark `home-metric-card`, y Luna no debe ensanchar su resaltado. */}
+        <LunaStrip lunaState={lunaState} loading={dataLoading} />
+
         {/* Tabs Periodo / Mes — switch deslizante real (track + thumb que se
             mueve), no 2 botones que solo cambian de color. Excepción
             consciente a "border-radius: 5 en todo" (mockup confirmado con
