@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Textos del widget de Luna. Espejo de `luna.*` en src/i18n/es.json.
+         Este archivo (values/) es el español; values-en/ trae el inglés.
+         El widget sigue el idioma del TELÉFONO (no el que se elija dentro de la app). -->
+    <string name="luna_widget_label">LunaPay</string>
+    <string name="luna_widget_description">Luna te muestra el estado de tus pagos de un vistazo</string>
+
+    <string name="luna_when_today">hoy</string>
+    <string name="luna_when_tomorrow">mañana</string>
+    <plurals name="luna_when_in_days">
+        <item quantity="one">en %d día</item>
+        <item quantity="other">en %d días</item>
+    </plurals>
+    <string name="luna_next_payment">Próximo: %1$s, %2$s</string>
+    <string name="luna_progress">%1$d de %2$d pagos</string>
+
+    <string name="luna_happy_title">¡Vas al corriente!</string>
+    <string name="luna_attentive_title_today">Hoy vence %1$s</string>
+    <string name="luna_attentive_title_tomorrow">Mañana vence %1$s</string>
+    <plurals name="luna_attentive_sub_more">
+        <item quantity="one">Y %d pago más esta semana</item>
+        <item quantity="other">Y %d pagos más esta semana</item>
+    </plurals>
+    <string name="luna_attentive_sub_none">Luna vigila tus pagos</string>
+    <plurals name="luna_worried_title">
+        <item quantity="one">%d pago vencido</item>
+        <item quantity="other">%d pagos vencidos</item>
+    </plurals>
+    <string name="luna_worried_sub">Luna te necesita. Toca para verlos</string>
+    <string name="luna_celebrating_title">¡Periodo completado!</string>
+    <string name="luna_celebrating_sub">Pagaste todo. ¡Buen trabajo!</string>
+    <string name="luna_sleeping_title">Todo en calma</string>
+    <string name="luna_sleeping_sub">Luna descansa. Próximo: %1$s, %2$s</string>
+    <string name="luna_waving_title">¡Hola, soy Luna!</string>
+    <string name="luna_waving_sub">Agrega tus pagos para empezar</string>
+    <string name="luna_waving_sub_open">Abre LunaPay para empezar</string>
+
+    <!-- Estados de ausencia (solo del widget) -->
+    <string name="luna_dusty_title">Luna te extraña</string>
+    <plurals name="luna_dusty_sub">
+        <item quantity="one">Hace %d día que no abres la app</item>
+        <item quantity="other">Hace %d días que no abres la app</item>
+    </plurals>
+    <string name="luna_away_title">Luna salió a pasear</string>
+    <string name="luna_away_sub">Vuelve pronto. Tus pagos te esperan</string>
+</resources>

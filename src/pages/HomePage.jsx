@@ -13,6 +13,7 @@ import { HalfRing } from '../components/HalfRing'
 import { LunaStrip } from '../components/LunaStrip'
 import { Bone, RailSkeleton } from '../components/SkeletonLoader'
 import { getLunaState } from '../lib/lunaState'
+import { syncLunaWidget } from '../lib/lunaWidget'
 import { fmt, cobroPeriod, nextCobroPeriod, getPagarEsteCobro, daysDiff, dateOf, dateToStr, getMonths, getMonthsShort, getCategoryLabel } from '../lib/utils'
 import styles from './HomePage.module.css'
 
@@ -253,6 +254,16 @@ export function HomePage({ payments, dataLoading = false, profile, spaceSwitcher
   // useMemo propio, y así la hora (estado "dormida") se lee fresca en cada
   // render en vez de quedarse congelada hasta que cambien los pagos.
   const lunaState = getLunaState({ pagarEsteCobro, vencidos, delPeriodo, pagadosEstePeriodo })
+
+  // Widget de Luna en la pantalla de inicio de Android: se le manda la "foto"
+  // de los pagos de PERSONAL cada vez que cambian (marcar pagado, pago nuevo,
+  // etc.). Con un espacio compartido activo no se manda nada — el widget no
+  // mezcla datos de espacios, y sigue mostrando lo último de Personal.
+  // No-op fuera de la app nativa (ver lib/lunaWidget.js).
+  useEffect(() => {
+    if (dataLoading || activeSpaceId) return
+    syncLunaWidget({ done: lunaState.done, pending: pagarEsteCobro })
+  }, [dataLoading, activeSpaceId, lunaState.done, pagarEsteCobro])
 
   // v0.9.282 — antes este objeto se recreaba en CADA render de HomePage,
   // rompiendo el React.memo de PayRail/PayCard (identidad nueva = re-render

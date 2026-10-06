@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Widget texts in English. Mirrors `luna.*` in src/i18n/en.json. -->
+    <string name="luna_widget_label">LunaPay</string>
+    <string name="luna_widget_description">Luna shows your payments status at a glance</string>
+
+    <string name="luna_when_today">today</string>
+    <string name="luna_when_tomorrow">tomorrow</string>
+    <plurals name="luna_when_in_days">
+        <item quantity="one">in %d day</item>
+        <item quantity="other">in %d days</item>
+    </plurals>
+    <string name="luna_next_payment">Next: %1$s, %2$s</string>
+    <string name="luna_progress">%1$d of %2$d payments</string>
+
+    <string name="luna_happy_title">You\'re on track!</string>
+    <string name="luna_attentive_title_today">%1$s is due today</string>
+    <string name="luna_attentive_title_tomorrow">%1$s is due tomorrow</string>
+    <plurals name="luna_attentive_sub_more">
+        <item quantity="one">And %d more payment this week</item>
+        <item quantity="other">And %d more payments this week</item>
+    </plurals>
+    <string name="luna_attentive_sub_none">Luna is keeping an eye on your payments</string>
+    <plurals name="luna_worried_title">
+        <item quantity="one">%d overdue payment</item>
+        <item quantity="other">%d overdue payments</item>
+    </plurals>
+    <string name="luna_worried_sub">Luna needs you. Tap to see them</string>
+    <string name="luna_celebrating_title">Period complete!</string>
+    <string name="luna_celebrating_sub">You paid everything. Great job!</string>
+    <string name="luna_sleeping_title">All calm</string>
+    <string name="luna_sleeping_sub">Luna is resting. Next: %1$s, %2$s</string>
+    <string name="luna_waving_title">Hi, I\'m Luna!</string>
+    <string name="luna_waving_sub">Add your payments to get started</string>
+    <string name="luna_waving_sub_open">Open LunaPay to get started</string>
+
+    <string name="luna_dusty_title">Luna misses you</string>
+    <plurals name="luna_dusty_sub">
+        <item quantity="one">You haven\'t opened the app in %d day</item>
+        <item quantity="other">You haven\'t opened the app in %d days</item>
+    </plurals>
+    <string name="luna_away_title">Luna went for a walk</string>
+    <string name="luna_away_sub">Back soon. Your payments are waiting</string>
+</resources>

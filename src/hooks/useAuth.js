@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { supabase } from '../lib/supabase'
+import { clearLunaWidget } from '../lib/lunaWidget'
 
 // Si el usuario tiene Google vinculado a su cuenta y aún no tiene avatar_url
 // guardado, lo toma de los datos que Google ya comparte (una sola vez).
@@ -140,6 +141,7 @@ export function useAuth() {
         try { localStorage.removeItem(RECOVERY_KEY) } catch { /* noop */ }
         isRecoveryRef.current = false
         setIsRecoveryState(false)
+        clearLunaWidget() // el widget de Android no debe seguir mostrando pagos de esta cuenta
         setUser(null)
         setLoading(false)
         return

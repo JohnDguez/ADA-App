@@ -16,6 +16,12 @@ import { daysDiff } from './utils'
 //   5. sleeping    → de noche (22:00–5:59) y sin nada urgente
 //   6. happy       → todo en orden
 //
+// OJO: el widget de Android tiene su propio puerto a Java de esta misma regla
+// (android/.../LunaWidgetState.java), que además agrega 2 estados de "ausencia"
+// (telarañas a los 3 días sin abrir la app, "salió a pasear" a los 7) que
+// NO existen aquí a propósito: con la app abierta no tiene sentido mostrarlos.
+// Si cambia la regla en uno, cambiarla en el otro.
+//
 // `hour` es parámetro (default: hora local ahora) para poder probar la
 // lógica sin depender del reloj real. Hora local, nunca UTC (Regla 22).
 export const LUNA_NIGHT_FROM = 22

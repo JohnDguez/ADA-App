@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Widget 4x2 de Luna. updatePeriodMillis = 30 min (mínimo que respeta Android);
+     además se redibuja al abrir la app, al cambiar la fecha/hora y cuando la
+     app manda una foto nueva de los pagos. -->
+<appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
+    android:description="@string/luna_widget_description"
+    android:initialLayout="@layout/luna_widget_4x2"
+    android:minHeight="110dp"
+    android:minWidth="250dp"
+    android:previewImage="@drawable/luna_happy"
+    android:resizeMode="none"
+    android:targetCellHeight="2"
+    android:targetCellWidth="4"
+    android:updatePeriodMillis="1800000"
+    android:widgetCategory="home_screen" />

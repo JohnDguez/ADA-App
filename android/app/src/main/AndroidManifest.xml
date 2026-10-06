@@ -28,6 +28,24 @@
             <meta-data android:name="android.support.FILE_PROVIDER_PATHS" android:resource="@xml/file_paths" />
         </provider>
 
+        <!-- Widget 4x2 de Luna (pantalla de inicio). El sistema lo redibuja solo
+             (xml/luna_widget_info.xml) y, además, al cambiar fecha/hora/zona
+             horaria — ver LunaWidgetProvider.java. -->
+        <receiver
+            android:name=".LunaWidgetProvider"
+            android:exported="true"
+            android:label="@string/luna_widget_label">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+                <action android:name="android.intent.action.DATE_CHANGED" />
+                <action android:name="android.intent.action.TIME_SET" />
+                <action android:name="android.intent.action.TIMEZONE_CHANGED" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/luna_widget_info" />
+        </receiver>
+
         <!-- Ícono y color por default para las notificaciones de Firebase Cloud
              Messaging (silueta blanca requerida por Android — ver
              res/drawable/ic_stat_notification.xml). Sin esto, FCM cae al ícono

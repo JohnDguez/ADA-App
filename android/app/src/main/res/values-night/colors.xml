@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Colores del widget de Luna: espejo de las variables CSS de src/index.css
+         (Regla: nada de colores sueltos — si cambia un token allá, cambiarlo
+         aquí). Tema OSCURO del teléfono (equivalente a [data-theme="dark"] en index.css). -->
+    <color name="luna_text">#E8EAF0</color>
+    <color name="luna_ring_bg">#1A1D27</color>
+    <color name="luna_ring_track">#2A2D3A</color>
+    <color name="luna_ring">#3B9EFF</color>
+    <color name="luna_ring_danger">#F04361</color>
+    <color name="luna_ring_idle">#9AA3B5</color>
+    <color name="luna_accent_soft">#1A2B40</color>
+    <color name="luna_accent_border">#1E3A5C</color>
+    <color name="luna_paid_soft">#0D2B18</color>
+    <color name="luna_paid_border">#0F4020</color>
+    <color name="luna_warning_soft">#2D2208</color>
+    <color name="luna_warning_border">#3D2E0A</color>
+    <color name="luna_danger_soft">#2D1219</color>
+    <color name="luna_danger_border">#4A1A22</color>
+    <color name="luna_idle_1">#1A1D27</color>
+    <color name="luna_idle_2">#2A2D3A</color>
+    <color name="luna_idle_3">#343848</color>
+</resources>

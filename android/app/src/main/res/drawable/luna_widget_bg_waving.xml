@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Fondo del widget de Luna, estado "waving" (degradado 135° como LunaStrip.module.css).
+     Colores en values/colors.xml (+ values-night para el tema oscuro). -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+    <gradient
+        android:angle="315"
+        android:startColor="@color/luna_accent_soft"
+        android:endColor="@color/luna_accent_border" />
+    <corners android:radius="24dp" />
+</shape>
