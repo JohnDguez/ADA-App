@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
-import { ChevronLeft, MoreVertical, Pencil, Trash2, Loader2 } from 'lucide-react'
+import { ChevronLeft, MoreVertical, Pencil, Trash2, Loader2, Users } from 'lucide-react'
 import { CreditCardVisual } from './CreditCardVisual'
 import { Select } from './Select'
 import { getCategoryLabel, fmt, getMonths, getMonthsShort } from '../lib/utils'
@@ -21,7 +21,7 @@ import styles from './CardDetailPanel.module.css'
 //   — normalmente pagados en efectivo, por eso NO califican como
 //   `payment_method_id === card.id`; se identifican aparte).
 // Los pospuestos no cuentan en el total, mismo criterio que Gastos.
-export function CardDetailPanel({ card, payments, onBack, onEdit, onDelete, onPayNow, canEdit = true, canDelete = true, blocked }) {
+export function CardDetailPanel({ card, payments, onBack, onEdit, onDelete, onPayNow, spaceNames = {}, canEdit = true, canDelete = true, blocked }) {
   const { t } = useTranslation()
   const [menuOpen, setMenuOpen] = useState(false)
   const menuRef = useRef(null)
@@ -235,6 +235,14 @@ export function CardDetailPanel({ card, payments, onBack, onEdit, onDelete, onPa
                       {label}
                       {p.is_postponed && ` · ${t('payCard.status.postponed')}`}
                     </div>
+                    {/* Solo los pagos hechos en un Espacio Compartido (su reflejo
+                        personal trae `source_space_id`); los personales no llevan marca. */}
+                    {p.source_space_id && (
+                      <div className={styles.spaceTag}>
+                        <Users size={11} />
+                        <span>{spaceNames[p.source_space_id] || t('cards.detail.sharedSpaceFallback')}</span>
+                      </div>
+                    )}
                   </div>
                   <div className={`${styles.rowAmount} ${isIncome ? styles.rowAmountIncome : ''}`}>
                     {isIncome ? '+' : '−'}{fmt(p.amount)}

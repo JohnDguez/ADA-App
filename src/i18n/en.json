@@ -1523,6 +1523,7 @@
     "pendingCreditTotal": "Owed",
     "detail": {
       "paidWithCard": "Paid with this card",
+      "sharedSpaceFallback": "Shared space",
       "noHistory": "No payments in this period",
       "abono": "Payment",
       "owedThisPeriod": "You owe this period"

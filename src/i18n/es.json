@@ -1523,6 +1523,7 @@
     "pendingCreditTotal": "Por pagar",
     "detail": {
       "paidWithCard": "Pagado con esta tarjeta",
+      "sharedSpaceFallback": "Espacio compartido",
       "noHistory": "Sin pagos en este periodo",
       "abono": "Abono",
       "owedThisPeriod": "Debes en este periodo"

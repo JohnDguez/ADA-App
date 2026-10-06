@@ -217,6 +217,26 @@
   color: var(--text);
 }
 
+.spaceTag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 3px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  font-size: 10px;
+  color: var(--accent);
+  max-width: 100%;
+}
+
+.spaceTag span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .rowAmount {
   font-size: 14px;
   font-weight: 600;

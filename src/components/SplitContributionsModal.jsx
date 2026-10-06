@@ -265,7 +265,7 @@ export function SplitContributionsModal({ open, payment, spaceMembers, currentUs
                           })}
                         </div>
                         {m.user_id === currentUserId && paymentMethods.length > 0 && (
-                          <div style={{ marginBottom: 10 }}>
+                          <div style={{ padding: '0 12px', marginBottom: 10 }}>
                             <PaymentMethodField methods={paymentMethods} value={methodDraft} onChange={id => { setMethodDraft(id); setMethodTouched(true) }} />
                           </div>
                         )}

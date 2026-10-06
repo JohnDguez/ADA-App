@@ -92,7 +92,7 @@ function CardStack({ cards, onSelect, personalPayments }) {
   )
 }
 
-export function SettingsCardsPage({ paymentMethods, personalPayments = null, onPayCardNow, onBack, slideClass }) {
+export function SettingsCardsPage({ paymentMethods, personalPayments = null, sharedSpaces = null, onPayCardNow, onBack, slideClass }) {
   const { t } = useTranslation()
   const [kind, setKind] = useState('credit')
   const [formOpen, setFormOpen] = useState(false)
@@ -132,6 +132,7 @@ export function SettingsCardsPage({ paymentMethods, personalPayments = null, onP
           <CardDetailPanel
             card={selectedCard}
             payments={personalPayments}
+            spaceNames={Object.fromEntries((sharedSpaces?.spaces || []).map(s => [s.space.id, s.space.name]))}
             onBack={() => setSelectedId(null)}
             onEdit={() => openEdit(selectedCard)}
             onDelete={() => setDeleting(selectedCard)}
