@@ -8,9 +8,10 @@
 
   App de control de pagos y recordatorios financieros, organizada por tu periodo de cobro — no por el mes calendario.
 
-  ![Version](https://img.shields.io/badge/version-0.9.183-blue)
+  ![Version](https://img.shields.io/badge/version-0.9.555-blue)
   ![Status](https://img.shields.io/badge/status-Alpha-orange)
   ![Stack](https://img.shields.io/badge/stack-React%20%2B%20Supabase-green)
+  ![Android](https://img.shields.io/badge/Android-Capacitor-3DDC84)
 
 </div>
 
@@ -18,13 +19,38 @@
 
 ## ¿Qué es LunaPay?
 
-LunaPay es una PWA (Progressive Web App) de control financiero personal, pensada para quien cobra semanal, quincenal o mensual — el trabajador "godín" mexicano, no el mes de calendario. Te ayuda a:
+LunaPay es una PWA (Progressive Web App) —y también app de Android— de control financiero personal, pensada para quien cobra semanal, quincenal o mensual — el trabajador "godín" mexicano, no el mes de calendario. Te ayuda a:
 
 - **Registrar** todos tus compromisos de pago (únicos, recurrentes, en parcialidades o de monto variable)
 - **Organizar** los pagos según tu periodo de cobro, no según el mes
 - **Ver de un vistazo** qué está vencido, qué falta por pagar este periodo, y qué se viene en el próximo
 - **Compartir cuentas** con tu pareja o roomie en un Espacio Compartido aparte de tu cuenta Personal
 - **Recibir avisos** push y dentro de la app antes de que algo se venza
+
+---
+
+## Conoce a Luna
+
+Luna es la mascota de LunaPay: una golden retriever que te dice cómo van tus pagos antes de que leas un solo número. Aparece en una franja arriba de las tarjetas de Inicio y cambia de pose según el estado del periodo:
+
+<div align="center">
+<table>
+  <tr>
+    <td align="center"><img src="https://raw.githubusercontent.com/JohnDguez/ADA-App/main/public/luna/luna_happy.webp" height="110" alt="Luna feliz" /><br/><sub><b>Al corriente</b></sub></td>
+    <td align="center"><img src="https://raw.githubusercontent.com/JohnDguez/ADA-App/main/public/luna/luna_attentive.webp" height="110" alt="Luna atenta" /><br/><sub><b>Algo vence hoy o mañana</b></sub></td>
+    <td align="center"><img src="https://raw.githubusercontent.com/JohnDguez/ADA-App/main/public/luna/luna_worried.webp" height="110" alt="Luna preocupada" /><br/><sub><b>Pagos vencidos</b></sub></td>
+    <td align="center"><img src="https://raw.githubusercontent.com/JohnDguez/ADA-App/main/public/luna/luna_celebrating.webp" height="110" alt="Luna celebrando" /><br/><sub><b>Periodo completado</b></sub></td>
+  </tr>
+  <tr>
+    <td align="center"><img src="https://raw.githubusercontent.com/JohnDguez/ADA-App/main/public/luna/luna_sleeping.webp" height="80" alt="Luna dormida" /><br/><sub><b>De noche, sin pendientes</b></sub></td>
+    <td align="center"><img src="https://raw.githubusercontent.com/JohnDguez/ADA-App/main/public/luna/luna_waving.webp" height="110" alt="Luna saludando" /><br/><sub><b>Bienvenida</b></sub></td>
+    <td align="center"><img src="https://raw.githubusercontent.com/JohnDguez/ADA-App/main/public/luna/luna_dusty.webp" height="80" alt="Luna con telarañas" /><br/><sub><b>Días sin abrir la app</b></sub></td>
+    <td align="center"><img src="https://raw.githubusercontent.com/JohnDguez/ADA-App/main/public/luna/luna_away.webp" height="80" alt="Camita vacía de Luna" /><br/><sub><b>Luna salió a pasear</b></sub></td>
+  </tr>
+</table>
+</div>
+
+Junto a Luna, un mini anillo muestra cuántos pagos llevas del periodo. En el **widget de Android** (en desarrollo) Luna llega a la pantalla de inicio del teléfono, y ahí sí se pone dramática: si pasan 3 días sin abrir la app se llena de telarañas, y a los 7 días deja la camita vacía y sale a pasear.
 
 ---
 
@@ -66,10 +92,21 @@ Lleva las cuentas de la casa, la renta o el súper junto con tu pareja o roomie,
 - Tema claro, oscuro, o según el sistema
 
 ### Premium
-Crea tu propio Espacio Compartido con periodo de cobro propio (sin Premium, puedes unirte a hasta 3 con un código). Planes mensual y anual.
+Crea tu propio Espacio Compartido con periodo de cobro propio (sin Premium, puedes unirte a hasta 3 con un código). Planes mensual y anual, con Stripe en la web y Google Play Billing en la app de Android.
+
+### Tarjetas, metas y exportación
+- **Mis tarjetas** — tus tarjetas de crédito y débito, con sus estados de cuenta y pagos
+- **Metas compartidas** y Fondo Compartido dentro de un Espacio
+- **Exportar tus datos** en CSV o PDF
+
+### Español e inglés
+Toda la app está en español e inglés (i18next), incluidas las notificaciones.
 
 ### PWA instalable
 Instálala en tu celular como una app nativa — ícono, splash screen y notificaciones push incluidos, sin pasar por ninguna tienda de aplicaciones.
+
+### App de Android
+Además de la PWA, LunaPay tiene app nativa de Android (Capacitor), hoy en prueba cerrada en Google Play. Trae login de Google nativo, notificaciones push por FCM, compra de Premium con Google Play Billing, exportación de archivos con la hoja de compartir del sistema y, en camino, el widget de Luna para la pantalla de inicio.
 
 ---
 
@@ -80,10 +117,13 @@ Instálala en tu celular como una app nativa — ícono, splash screen y notific
 | **Frontend** | React 18 + Vite 5 |
 | **Estilos** | CSS Variables + CSS Modules (DM Sans, Lucide React) |
 | **Base de datos** | Supabase (PostgreSQL + Row Level Security) |
-| **Autenticación** | Supabase Auth (Email + Google OAuth) |
+| **Autenticación** | Supabase Auth (Email + Google OAuth; Google nativo en Android vía Firebase Authentication) |
 | **Storage** | Supabase Storage |
 | **Deploy** | Vercel (serverless functions + auto-deploy desde `main`) |
-| **Push notifications** | Web Push API + VAPID + Service Worker |
+| **Push notifications** | Web Push API + VAPID + Service Worker (web) · Firebase Cloud Messaging (Android) |
+| **App nativa** | Capacitor 8 (Android) + widget nativo en Java |
+| **Pagos de Premium** | Stripe (web) · Google Play Billing (Android) |
+| **Idiomas** | i18next (español / inglés) |
 | **Automatización** | GitHub Actions (cron de recordatorios) |
 | **PWA** | Service Worker + Web App Manifest |
 
@@ -92,13 +132,15 @@ Instálala en tu celular como una app nativa — ícono, splash screen y notific
 ## Estructura del proyecto
 
 ```
-├── public/          # Assets estáticos, Service Worker, manifest
+├── public/          # Assets estáticos, Service Worker, manifest, imágenes de Luna (public/luna)
 ├── api/             # Vercel serverless functions
+├── android/         # Proyecto nativo de Android (Capacitor) + widget de Luna
 ├── .github/         # GitHub Actions (cron de notificaciones)
 └── src/
     ├── components/  # Componentes reutilizables
     ├── hooks/       # Custom hooks (datos, notificaciones, espacios compartidos, etc.)
-    ├── lib/         # Cliente Supabase + utilidades
+    ├── i18n/        # Traducciones (es.json / en.json)
+    ├── lib/         # Cliente Supabase + utilidades (incl. el estado de Luna)
     └── pages/       # Páginas de la app
 ```
 
@@ -136,6 +178,15 @@ VITE_VAPID_PUBLIC_KEY=
 ```bash
 npm run dev
 ```
+
+### App de Android
+
+```bash
+npm run build
+npm run cap:sync   # copia la web al proyecto nativo
+```
+
+Después abre la carpeta `android/` en Android Studio y córrela en un teléfono o emulador. La app de Android lleva dentro una copia de la web, así que cada cambio de la web necesita un build nuevo para llegar a los teléfonos. Requiere tu propio `google-services.json` de Firebase en `android/app/`.
 
 > Para documentación técnica detallada ver `CONTEXT.md`
 
