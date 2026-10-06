@@ -26,6 +26,7 @@ import { useNotifications } from './hooks/useNotifications'
 import { useLocalNotifications, isLocalNotification } from './hooks/useLocalNotifications'
 import { usePeriodIncome } from './hooks/usePeriodIncome'
 import { usePaymentMethods } from './hooks/usePaymentMethods'
+import { supabase } from './lib/supabase'
 import { computeMissingStatements, currentCycleSpend } from './lib/cardStatements'
 import { today, todayStr } from './lib/utils'
 import { getBank } from './lib/cardCatalog'
@@ -288,7 +289,15 @@ export default function App() {
       paid_at: new Date().toISOString(),
     }
     setPayCardNowCard(null)
-    const { error } = await addPayment(row)
+    // Con un Espacio Compartido activo, `addPayment` lo crearía EN el
+    // espacio — el pago a una tarjeta es siempre personal (v0.9.546).
+    let error
+    if (paymentsSpaceId) {
+      ;({ error } = await supabase.from('payments').insert({ ...row, user_id: user.id, space_id: null }))
+      if (!error) loadSpaceCardPayments()
+    } else {
+      ;({ error } = await addPayment(row))
+    }
     if (error) { showToast(t('app.toast.saveError')); return }
     adjustCardCarryOver(card.id, -amount)
     showToast(t('cards.payNow.success', { name: label, amount: fmt(amount) }))
@@ -379,6 +388,27 @@ export default function App() {
   // Mis tarjetas (v0.9.486, entrega A) — a nivel de App porque en la
   // entrega B también las usará el formulario de pagos.
   const paymentMethods = usePaymentMethods(user?.id, handleCardSyncError)
+
+  // Pagos PERSONALES ligados a tarjetas (v0.9.546). Las tarjetas son siempre
+  // personales: "Mis tarjetas" y "Pagar ahora" no pueden depender del espacio
+  // activo. En Personal se usa `payments` tal cual; con un Espacio Compartido
+  // activo, `payments` trae los de ESE espacio, así que se pide aparte lo que
+  // hace falta para calcular lo adeudado (pagos con tarjeta de crédito y
+  // estados de cuenta, siempre con `space_id` null).
+  const [spaceCardPayments, setSpaceCardPayments] = useState(null)
+  async function loadSpaceCardPayments() {
+    if (!user?.id) return
+    const { data, error } = await supabase.from('payments').select('*')
+      .eq('user_id', user.id).is('space_id', null)
+      .or('payment_method_kind.eq.credit,card_statement_for.not.is.null,is_card_statement.eq.true')
+    if (!error) setSpaceCardPayments(data || [])
+  }
+  useEffect(() => {
+    if (!user?.id || paymentsSpaceId === null) { setSpaceCardPayments(null); return }
+    loadSpaceCardPayments()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id, paymentsSpaceId])
+  const cardPayments = paymentsSpaceId === null ? payments : spaceCardPayments
 
   // ── Estados de cuenta automáticos (entrega C, v0.9.490) ─────────────────
   // Al cargar Personal (las tarjetas son personales — nunca se generan
@@ -1358,7 +1388,7 @@ export default function App() {
           // crédito" en Mis tarjetas necesitan los pagos PERSONALES. Si el
           // usuario está viendo un Espacio Compartido, `payments` trae los
           // de ESE espacio — se manda null en vez de un número equivocado.
-          personalPayments={paymentsSpaceId === null ? payments : null}
+          personalPayments={cardPayments}
           onPayCardNow={setPayCardNowCard}
           initialSection={settingsInitialSection}
           onConsumeInitialSection={() => setSettingsInitialSection(null)}
@@ -1423,8 +1453,8 @@ export default function App() {
       <PayCardNowModal
         open={!!payCardNowCard}
         card={payCardNowCard}
-        cycleSpend={payCardNowCard && paymentsSpaceId === null
-          ? currentCycleSpend(payCardNowCard, payments.filter(p =>
+        cycleSpend={payCardNowCard && cardPayments
+          ? currentCycleSpend(payCardNowCard, cardPayments.filter(p =>
               p.payment_method_id === payCardNowCard.id && p.payment_method_kind === 'credit' && p.is_paid
             ))
           : 0}
