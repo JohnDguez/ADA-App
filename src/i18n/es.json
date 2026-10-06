@@ -1552,6 +1552,8 @@
     "creditNote": "Cuenta en Gastos y en su categoría, pero no baja tu disponible: ese dinero sale cuando pagas el estado de cuenta.",
     "changeAction": "Cambiar método de pago",
     "changeTitle": "¿Con qué se pagó?",
+    "payTitle": "¿Con qué pagaste?",
+    "payConfirm": "Pagar",
     "deletedCredit": "Tarjeta de crédito eliminada",
     "deletedDebit": "Tarjeta de débito eliminada",
     "deletedCard": "Tarjeta eliminada"

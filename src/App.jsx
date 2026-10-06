@@ -664,6 +664,32 @@ export default function App() {
   // "Editar recurrente completo".
   function openEditMaster(master) { setEditPayment(master) }
 
+  // Pagar tu parte de un gasto compartido (v0.9.547): si tienes tarjetas, se
+  // pregunta con cuál (solo las tuyas — son personales). Sin tarjetas se
+  // registra directo como Efectivo. `sharedPay` = { payment, amount? }:
+  // sin `amount` paga "lo que falta"; con `amount` registra ese monto
+  // (pago variable).
+  const [sharedPay, setSharedPay] = useState(null)
+  function askMethodThenPay(payment, amount = null) {
+    if (paymentMethods.methods.length === 0) { runSharedPay({ payment, amount }, null); return }
+    // Objeto estable (no se recrea en cada render) para que el modal no
+    // reinicie la tarjeta elegida.
+    setSharedPay({ payment, amount, modalPayment: { ...payment, payment_method_id: null } })
+  }
+  async function runSharedPay({ payment, amount }, methodId) {
+    if (amount == null) {
+      const { error } = await payRemainingContribution(payment.id, methodId)
+      if (error) showToast(error.message || t('app.toast.markPaidError'))
+      return
+    }
+    if (!(Number(payment.amount) > 0)) {
+      const { error: totalErr } = await setContributionTotalAmount(payment.id, amount)
+      if (totalErr) { showToast(totalErr.message || t('app.toast.registerPaymentError')); return }
+    }
+    const { error } = await registerContribution(payment.id, user?.id, amount, methodId)
+    if (error) showToast(error.message || t('app.toast.registerPaymentError'))
+  }
+
   // handleMarkPaid: usado por PayCard (Home) al terminar su animación de
   // pintado en pagos fijos — ya no muestra un toast de éxito, el "Pagado"
   // ahora vive dentro de la propia card animada; el toast de error se
@@ -682,7 +708,9 @@ export default function App() {
     // pago (sin abrir el modal de Abonar — eso vive solo en el menú de 3
     // puntos) pasando por la misma lógica de abonarInstallment, para que el
     // total fijo y el plan se mantengan consistentes igual que un abono.
-    if (payment.is_installment) {
+    // Una parcialidad de un Espacio Compartido se paga como cualquier gasto
+    // compartido (abonos entre miembros, v0.9.547) — sigue más abajo.
+    if (payment.is_installment && !payment.space_id) {
       // Paquete optimista (v0.9.483): con `reverted`/`busy` el aviso ya salió.
       const { error, reverted, busy } = await abonarInstallment(payment.id, Number(payment.amount))
       if (error && !reverted && !busy) showToast(t('app.toast.markPaidError'))
@@ -702,8 +730,7 @@ export default function App() {
         openSplitModal(payment)
         return
       }
-      const { error } = await payRemainingContribution(payment.id)
-      if (error) showToast(error.message || t('app.toast.markPaidError'))
+      askMethodThenPay(payment)
       return
     }
     // `reverted`/`busy` (v0.9.480): el fallo ya se avisó desde
@@ -736,14 +763,8 @@ export default function App() {
     if (payment.space_id) {
       // Si este variable compartido todavía no tenía monto capturado, el
       // que se acaba de capturar aquí se vuelve el total fijo Y la
-      // contribución completa de quien tocó "Pagar todo", de un jalón —
-      // sin esto, registerContribution compararía contra un total en $0.
-      if (!(Number(payment.amount) > 0)) {
-        const { error: totalErr } = await setContributionTotalAmount(payment.id, amount)
-        if (totalErr) { showToast(totalErr.message || t('app.toast.registerPaymentError')); return }
-      }
-      const { error } = await registerContribution(payment.id, user?.id, amount)
-      if (error) showToast(error.message || t('app.toast.registerPaymentError'))
+      // contribución completa de quien tocó "Pagar todo" (ver runSharedPay).
+      askMethodThenPay(payment, amount)
       return
     }
     // Estado de cuenta de tarjeta (v0.9.490): el acarreo se calcula contra
@@ -1450,6 +1471,20 @@ export default function App() {
         onClose={() => setChangeMethodPayment(null)}
       />
 
+      <ChangeMethodModal
+        open={!!sharedPay}
+        payment={sharedPay?.modalPayment || null}
+        methods={paymentMethods.methods}
+        title={t('paymentMethod.payTitle')}
+        confirmLabel={t('paymentMethod.payConfirm')}
+        onSave={(payment, fields) => {
+          const pending = sharedPay
+          setSharedPay(null)
+          if (pending) runSharedPay(pending, fields.payment_method_id)
+        }}
+        onClose={() => setSharedPay(null)}
+      />
+
       <PayCardNowModal
         open={!!payCardNowCard}
         card={payCardNowCard}
@@ -1526,6 +1561,7 @@ export default function App() {
         fundBalance={sharedFund.balance}
         onSetFundContribution={setFundContribution}
         openedBecauseFundInsufficient={splitModal.openedBecauseFundInsufficient}
+        paymentMethods={paymentMethods.methods}
         onClose={() => setSplitModal({ open: false, paymentId: null, openedBecauseFundInsufficient: false })}
       />
 

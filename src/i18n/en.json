@@ -1552,6 +1552,8 @@
     "creditNote": "It counts in Expenses and its category, but doesn't lower your available balance: that money leaves when you pay the statement.",
     "changeAction": "Change payment method",
     "changeTitle": "What was it paid with?",
+    "payTitle": "What did you pay with?",
+    "payConfirm": "Pay",
     "deletedCredit": "Deleted credit card",
     "deletedDebit": "Deleted debit card",
     "deletedCard": "Deleted card"

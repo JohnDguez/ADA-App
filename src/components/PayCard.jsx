@@ -475,7 +475,7 @@ function PayCardImpl({ payment: p, cfg, paymentMethodsList = [], onChangeMethod,
             bottom: menuPos.bottom != null ? menuPos.bottom : 'auto',
           }}
         >
-          {isPending && p.is_installment && onAbonar && <MenuItem icon={<DollarSign size={14}/>} label={t('payCard.menu.contribute')} onClick={() => { canMarkPaid ? onAbonar(p) : blocked(t('paymentsPage.actionRegisterContributions')); setMenuOpen(false) }} />}
+          {isPending && p.is_installment && !p.space_id && onAbonar && <MenuItem icon={<DollarSign size={14}/>} label={t('payCard.menu.contribute')} onClick={() => { canMarkPaid ? onAbonar(p) : blocked(t('paymentsPage.actionRegisterContributions')); setMenuOpen(false) }} />}
           {isPending && !p.is_installment && <MenuItem icon={<Pencil size={14}/>} label={t('buttons.edit')} onClick={() => { onEdit(p); setMenuOpen(false) }} />}
           {isPending && p.is_variable && onCaptureAmount && <MenuItem icon={<DollarSign size={14}/>} label={p.amount ? t('payCard.editAmount') : t('payCard.addAmount')} onClick={() => { onCaptureAmount(p); setMenuOpen(false) }} />}
           {isPending && p.is_recurrent && !p.is_installment && <MenuItem icon={<Clock size={14}/>} label={t('payCard.menu.postpone')} onClick={() => { canEdit ? onPostpone(p) : blocked(t('payCard.actions.postponePayments')); setMenuOpen(false) }} />}

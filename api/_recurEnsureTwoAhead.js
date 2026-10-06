@@ -59,9 +59,18 @@ function nextPeriodDate(date, freq) {
 async function ensureTwoAheadServer(supabase, paidPaymentId) {
   const { data: paidCopy } = await supabase
     .from('payments')
-    .select('id, parent_id, is_recurrent, is_master')
+    .select('id, parent_id, is_recurrent, is_master, is_installment')
     .eq('id', paidPaymentId)
     .maybeSingle()
+
+  // Parcialidad de un Espacio Compartido (v0.9.547): al completarse una
+  // copia, se mantiene la cola de 2 pendientes hasta llegar a
+  // `total_installments` del master. Sin recorte por sobrepago (cada
+  // parcialidad compartida se cubre por completo entre los miembros).
+  if (paidCopy && paidCopy.is_installment && !paidCopy.is_master && paidCopy.parent_id) {
+    await ensureTwoAheadInstallments(supabase, paidCopy.parent_id)
+    return
+  }
 
   // Solo aplica a la copia de un recurrente (no a un pago único, ni al
   // master, ni a una parcialidad — las parcialidades ya tienen su propio
@@ -128,4 +137,50 @@ async function ensureTwoAheadServer(supabase, paidPaymentId) {
   }
 }
 
-module.exports = { ensureTwoAheadServer }
+async function ensureTwoAheadInstallments(supabase, masterId) {
+  const { data: master } = await supabase
+    .from('payments')
+    .select('id, name, category, amount, total_amount, total_installments, recur_freq, paused, user_id, space_id')
+    .eq('id', masterId)
+    .maybeSingle()
+  if (!master || master.paused) return
+  const total = Number(master.total_installments) || 0
+  if (!total) return
+
+  const { data: allCopies } = await supabase
+    .from('payments')
+    .select('id, due_date, is_paid, is_postponed, current_installment')
+    .eq('parent_id', masterId)
+    .eq('is_master', false)
+  const copies = allCopies || []
+  const pending = copies.filter(p => !p.is_paid && !p.is_postponed)
+  if (pending.length >= 2) return
+
+  const byNumber = [...copies].sort((a, b) => Number(b.current_installment) - Number(a.current_installment))
+  if (!byNumber.length) return
+  let lastNum  = Number(byNumber[0].current_installment)
+  let lastDate = byNumber[0].due_date
+  const montoRef = Number(master.amount)
+  const montoUltimo = master.total_amount != null
+    ? Math.round((Number(master.total_amount) - (total - 1) * montoRef) * 100) / 100
+    : montoRef
+
+  const toCreate = []
+  for (let i = pending.length; i < 2; i++) {
+    const nextNum = lastNum + 1
+    if (nextNum > total) break
+    lastDate = dateToStr(nextPeriodDate(lastDate, master.recur_freq || 'monthly'))
+    lastNum = nextNum
+    toCreate.push({
+      user_id: master.user_id, space_id: master.space_id, name: master.name,
+      amount: nextNum === total && montoUltimo > 0 ? montoUltimo : montoRef,
+      due_date: lastDate, category: master.category, is_variable: false,
+      is_recurrent: true, recur_freq: master.recur_freq, is_master: false, parent_id: masterId,
+      is_paid: false, paid_at: null, postponed: false, paused: false,
+      is_installment: true, current_installment: nextNum, total_installments: total,
+    })
+  }
+  if (toCreate.length > 0) await supabase.from('payments').insert(toCreate)
+}
+
+module.exports = { ensureTwoAheadServer, ensureTwoAheadInstallments }

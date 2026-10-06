@@ -223,6 +223,15 @@ function contributionRegisteredText(lang, actorName, paymentName, memberName, am
   return { title: `${actorName} registró un abono`, body: `${paymentName} — ${memberName} puso ${amountStr}` }
 }
 
+// Aviso propio para el miembro cuyo abono registró OTRA persona (v0.9.547):
+// su reflejo se creó en Efectivo — puede cambiar el método desde Pagados.
+function contributionForYouText(lang, actorName, paymentName, amountStr) {
+  if (lang === 'en') {
+    return { title: `${actorName} recorded ${amountStr} on your behalf`, body: `${paymentName} — deducted from your income as Cash. You can change the payment method from Paid.` }
+  }
+  return { title: `${actorName} registró ${amountStr} a tu nombre`, body: `${paymentName} — se descontó de tu ingreso como Efectivo. Puedes cambiar el método de pago desde Pagados.` }
+}
+
 module.exports = {
   resolveLang,
   overdueText, dueTodayText, upcomingText, cobroDayText, goalDeadlineText, trialEndingText,
@@ -230,5 +239,5 @@ module.exports = {
   joinedText, leftText, removedBroadcastText, removedTargetText,
   permissionsChangedText, spaceConfigChangedText, spaceDeletedText, spaceDataClearedText,
   fundContributionText, fundContributionDeletedText,
-  paymentUnmarkedText, variableAmountSetText, paidWithFundText, contributionRegisteredText,
+  paymentUnmarkedText, variableAmountSetText, paidWithFundText, contributionRegisteredText, contributionForYouText,
 }

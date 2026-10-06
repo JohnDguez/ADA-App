@@ -3,7 +3,7 @@ const webpush = require('web-push')
 const { notifyUsers } = require('./_notifyLib')
 const { ensureTwoAheadServer } = require('./_recurEnsureTwoAhead')
 const {
-  paymentUnmarkedText, variableAmountSetText, paidWithFundText, contributionRegisteredText,
+  paymentUnmarkedText, variableAmountSetText, paidWithFundText, contributionRegisteredText, contributionForYouText,
 } = require('./_notifyText')
 
 // Mismas 3 variables VAPID que ya usan notify-space-change.js / send-notifications.js.
@@ -72,7 +72,7 @@ module.exports = async function handler(req, res) {
   if (userError || !userData?.user) return res.status(401).json({ error: 'Token inválido' })
   const actorId = userData.user.id
 
-  const { paymentId, memberUserId, amount, payRemaining, setTotalAmount, unmarkPaid, forceSettle, payRemainingFromFund, fundAmount } = req.body || {}
+  const { paymentId, memberUserId, amount, payRemaining, setTotalAmount, unmarkPaid, forceSettle, payRemainingFromFund, fundAmount, methodId } = req.body || {}
   if (!paymentId) return res.status(400).json({ error: 'Faltan datos' })
   if (setTotalAmount == null && !unmarkPaid && !forceSettle && !payRemainingFromFund && fundAmount == null && (!memberUserId || (amount == null && !payRemaining))) {
     return res.status(400).json({ error: 'Faltan datos' })
@@ -81,7 +81,7 @@ module.exports = async function handler(req, res) {
   try {
     const { data: payment, error: paymentErr } = await supabase
       .from('payments')
-      .select('id, space_id, name, category, due_date, amount, is_paid, fund_amount')
+      .select('id, space_id, name, category, due_date, amount, is_paid, fund_amount, is_installment, parent_id')
       .eq('id', paymentId)
       .maybeSingle()
     if (paymentErr || !payment || !payment.space_id) {
@@ -134,6 +134,18 @@ module.exports = async function handler(req, res) {
       if (unmarkResult.error) return res.status(500).json({ error: 'No se pudo desmarcar el pago: ' + unmarkResult.error.message })
       if (contribDeleteResult.error || reflDeleteResult.error) {
         return res.status(500).json({ error: 'El pago se desmarcó, pero no se pudo limpiar del todo lo abonado — revisa "Dividir entre miembros" manualmente.' })
+      }
+      // Parcialidad compartida desmarcada: la cola ya había avanzado, así que
+      // se quitan las copias pendientes sobrantes (quedan 2, como en Personal).
+      if (payment.is_installment && payment.parent_id) {
+        try {
+          const { data: sib } = await supabase.from('payments')
+            .select('id, current_installment, fund_amount')
+            .eq('parent_id', payment.parent_id).eq('is_master', false).eq('is_paid', false)
+          const pend = (sib || []).sort((a, b) => Number(a.current_installment) - Number(b.current_installment))
+          const extras = pend.slice(2).filter(r => !(Number(r.fund_amount) > 0))
+          if (extras.length) await supabase.from('payments').delete().in('id', extras.map(r => r.id))
+        } catch (e) { console.error('limpiar copias sobrantes (parcialidad):', e) }
       }
       try {
         await notifyAllSpaceMembers(payment.space_id, actorId, (actorName, lang) =>
@@ -327,6 +339,22 @@ module.exports = async function handler(req, res) {
     // (arriba, v0.9.264) — aquí eran 3 lugares más de una sola vez.
     const currentFundAmount = Number(payment.fund_amount) || 0
 
+    // Método de pago (v0.9.547). Las tarjetas son personales: SOLO se acepta
+    // `methodId` cuando el miembro destino es quien llama, y se valida que
+    // la tarjeta sea suya. `undefined` = no tocar el método del reflejo;
+    // `null` = Efectivo. Al registrar la parte de OTRO miembro, su reflejo
+    // se crea en Efectivo y él lo cambia desde Pagados.
+    let methodFields = null
+    if (methodId !== undefined && memberUserId === actorId) {
+      if (methodId === null) {
+        methodFields = { payment_method_id: null, payment_method_kind: 'cash' }
+      } else {
+        const { data: card } = await supabase.from('payment_methods').select('id, kind').eq('id', methodId).eq('user_id', actorId).maybeSingle()
+        if (!card) return res.status(400).json({ error: 'Método de pago no válido' })
+        methodFields = { payment_method_id: card.id, payment_method_kind: card.kind }
+      }
+    }
+
     let numAmount
     if (payRemaining) {
       // El check de la card: calcular el faltante REAL en este momento
@@ -409,12 +437,13 @@ module.exports = async function handler(req, res) {
         ? supabase.from('payment_contributions').update({ amount: numAmount, updated_by: actorId, updated_at: new Date().toISOString() }).eq('id', existingContribution.id)
         : supabase.from('payment_contributions').insert({ payment_id: paymentId, user_id: memberUserId, amount: numAmount, updated_by: actorId }),
       existingReflection
-        ? supabase.from('payments').update({ amount: numAmount }).eq('id', existingReflection.id).select().single()
+        ? supabase.from('payments').update({ amount: numAmount, ...(methodFields || {}) }).eq('id', existingReflection.id).select().single()
         : supabase.from('payments').insert({
             user_id: memberUserId, space_id: null, name: payment.name, category: payment.category,
             amount: numAmount, due_date: payment.due_date, is_paid: true, paid_at: new Date().toISOString(),
             is_variable: false, is_recurrent: false, postponed: false, paused: false,
             source_payment_id: paymentId, source_space_id: payment.space_id, is_contribution_reflection: true,
+            ...(methodFields || {}),
           }).select().single(),
     ]
     for (const adj of overflowAdjustments) {
@@ -467,11 +496,22 @@ module.exports = async function handler(req, res) {
     const spaceName  = spaceRow?.name || 'tu Espacio Compartido'
     const amountStr  = '$' + numAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
     const toNotify = (toNotifyRows || []).filter(m => m.notify_on_changes)
+    // Si alguien registró la parte de OTRO miembro, a ese miembro no le llega
+    // el aviso genérico sino uno propio: se le descontó de su ingreso en
+    // Efectivo y puede cambiar el método desde Pagados (v0.9.547).
+    const forYou = actorId !== memberUserId ? toNotify.find(m => m.user_id === memberUserId) : null
+    const general = forYou ? toNotify.filter(m => m.user_id !== memberUserId) : toNotify
 
-    if (toNotify.length > 0) {
+    if (general.length > 0) {
       const title = (uid, lang) => contributionRegisteredText(lang, actorName, payment.name, memberName, amountStr)
       await notifyUsers(supabase, webpush, {
-        userIds: toNotify.map(m => m.user_id), title, actorName, spaceName, icon: actorAvatarUrl,
+        userIds: general.map(m => m.user_id), title, actorName, spaceName, icon: actorAvatarUrl,
+      })
+    }
+    if (forYou) {
+      const title = (uid, lang) => contributionForYouText(lang, actorName, payment.name, amountStr)
+      await notifyUsers(supabase, webpush, {
+        userIds: [memberUserId], title, actorName, spaceName, icon: actorAvatarUrl,
       })
     }
 

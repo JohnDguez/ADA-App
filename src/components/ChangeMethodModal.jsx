@@ -10,7 +10,7 @@ import styles from './ChangeMethodModal.module.css'
 // animadas; ANIM_MS debe coincidir con el CSS (Regla 30).
 const ANIM_MS = 320
 
-export function ChangeMethodModal({ open, payment, methods, onSave, onClose }) {
+export function ChangeMethodModal({ open, payment, methods, onSave, onClose, title, confirmLabel }) {
   const { t } = useTranslation()
   const [methodId, setMethodId] = useState(null)
   const [closing, setClosing] = useState(false)
@@ -53,12 +53,12 @@ export function ChangeMethodModal({ open, payment, methods, onSave, onClose }) {
     <div onClick={e => e.target === e.currentTarget && onClose()} className={`${styles.overlay} ${closing ? styles.overlayClosing : ''}`}>
       <div className={`${styles.modal} ${entering ? styles.modalEntering : ''} ${closing ? styles.modalClosing : ''}`}>
         <div className={styles.handle} />
-        <div className={styles.title}>{t('paymentMethod.changeTitle')}</div>
+        <div className={styles.title}>{title || t('paymentMethod.changeTitle')}</div>
         <div className={styles.subtitle}>{payment.name}</div>
         <div className={styles.field}>
           <PaymentMethodField methods={methods} value={methodId} onChange={setMethodId} />
         </div>
-        <button type="button" onClick={handleSave} className="btn-primary">{t('buttons.save')}</button>
+        <button type="button" onClick={handleSave} className="btn-primary">{confirmLabel || t('buttons.save')}</button>
         <button type="button" onClick={onClose} className={`btn-ghost ${styles.cancel}`}>{t('buttons.cancel')}</button>
       </div>
     </div>,

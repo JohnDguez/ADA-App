@@ -106,14 +106,14 @@ export function usePayments(userId, activeSpaceId = null, activeSpaceName = null
   // Siempre refresca — un abono puede completar el total y marcar pagado el
   // gasto ORIGINAL (visible en el espacio activo), no solo crear el reflejo
   // en la cuenta de quien contribuyó.
-  async function registerContribution(paymentId, memberUserId, amount) {
+  async function registerContribution(paymentId, memberUserId, amount, methodId) {
     try {
       const { data: { session } } = await supabase.auth.getSession()
       if (!session) return { error: { message: i18n.t('apiErrors.sessionNotFound') } }
       const res = await fetch(apiUrl('/api/register-contribution'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
-        body: JSON.stringify({ paymentId, memberUserId, amount }),
+        body: JSON.stringify({ paymentId, memberUserId, amount, methodId }),
       })
       const result = await res.json()
       if (!res.ok) return { error: result.error ? { message: result.error } : { message: i18n.t('apiErrors.registerContributionFailed') } }
@@ -131,14 +131,14 @@ export function usePayments(userId, activeSpaceId = null, activeSpaceName = null
   // el servidor calcula el faltante real al momento (nunca el monto
   // completo desde cero), evitando condiciones de carrera contra abonos de
   // otros miembros que pudieran llegar casi al mismo tiempo.
-  async function payRemainingContribution(paymentId) {
+  async function payRemainingContribution(paymentId, methodId) {
     try {
       const { data: { session } } = await supabase.auth.getSession()
       if (!session) return { error: { message: i18n.t('apiErrors.sessionNotFound') } }
       const res = await fetch(apiUrl('/api/register-contribution'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
-        body: JSON.stringify({ paymentId, memberUserId: userId, payRemaining: true }),
+        body: JSON.stringify({ paymentId, memberUserId: userId, payRemaining: true, methodId }),
       })
       const result = await res.json()
       if (!res.ok) return { error: result.error ? { message: result.error } : { message: i18n.t('apiErrors.markPaidFailed') } }

@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { Lock, PiggyBank } from 'lucide-react'
 import { fmt } from '../lib/utils'
 import AmountInput from './AmountInput'
+import { PaymentMethodField } from './PaymentMethodField'
 import styles from './SplitContributionsModal.module.css'
 
 // Registro de "quién puso cuánto" en un gasto del Espacio Compartido —
@@ -13,8 +14,13 @@ import styles from './SplitContributionsModal.module.css'
 // todos de un jalón — el progreso mostrado es informativo, nunca bloquea.
 const PRESET_PERCENTAGES = [25, 50, 60, 75]
 
-export function SplitContributionsModal({ open, payment, spaceMembers, currentUserId, getContributions, registerContribution, onSetTotalAmount, onForceSettle, fundBalance, onSetFundContribution, openedBecauseFundInsufficient, onClose }) {
+export function SplitContributionsModal({ open, payment, spaceMembers, currentUserId, getContributions, registerContribution, onSetTotalAmount, onForceSettle, fundBalance, onSetFundContribution, openedBecauseFundInsufficient, paymentMethods = [], onClose }) {
   const { t } = useTranslation()
+  // Método de pago de MI parte (v0.9.547): solo se muestra en mi propia fila
+  // y solo con mis tarjetas. `methodTouched` evita pisar el método ya
+  // guardado al editar solo el monto.
+  const [methodDraft, setMethodDraft] = useState(null)
+  const [methodTouched, setMethodTouched] = useState(false)
   const [contributions, setContributions] = useState({}) // { [user_id]: amount }
   const [loading,  setLoading]  = useState(false)
   const [openId,   setOpenId]   = useState(null)
@@ -79,6 +85,8 @@ export function SplitContributionsModal({ open, payment, spaceMembers, currentUs
   function openRow(memberId) {
     if (openId === memberId) { setOpenId(null); return }
     setOpenId(memberId)
+    setMethodDraft(null)
+    setMethodTouched(false)
     setDraft(contributions[memberId] != null ? String(contributions[memberId]) : '')
     setError('')
   }
@@ -129,7 +137,12 @@ export function SplitContributionsModal({ open, payment, spaceMembers, currentUs
       }
     }
     setSaving(true)
-    const { error: err } = await registerContribution(payment.id, memberId, val || 0)
+    const { error: err } = await registerContribution(
+      payment.id, memberId, val || 0,
+      memberId === currentUserId && paymentMethods.length > 0
+        ? (methodTouched ? methodDraft : (contributions[memberId] == null ? null : undefined))
+        : undefined
+    )
     setSaving(false)
     if (err) { setError(err.message || t('splitContributionsModal.saveError')); return }
     setContributions(prev => {
@@ -251,6 +264,11 @@ export function SplitContributionsModal({ open, payment, spaceMembers, currentUs
                             )
                           })}
                         </div>
+                        {m.user_id === currentUserId && paymentMethods.length > 0 && (
+                          <div style={{ marginBottom: 10 }}>
+                            <PaymentMethodField methods={paymentMethods} value={methodDraft} onChange={id => { setMethodDraft(id); setMethodTouched(true) }} />
+                          </div>
+                        )}
                         <div className={styles.editRow}>
                           <AmountInput autoFocus value={draft} onChange={e => setDraft(e.target.value)} placeholder="0.00" onKeyDown={e => e.key === 'Enter' && handleSave(m.user_id)} className="field-input" style={{ flex: 1 }} />
                           <button onClick={() => handleSave(m.user_id)} disabled={saving} className="btn-primary" style={{ width: 'auto', padding: '0 16px' }}>{t('buttons.save')}</button>
