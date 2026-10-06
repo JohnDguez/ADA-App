@@ -97,6 +97,9 @@ export function PremiumPage({ profile, onClose, refreshProfile }) {
   // Compra NUEVA por Google Play Billing (Android) — separada de
   // checkoutState (ese es 100% Stripe/web). 'idle' | 'processing' | 'error'
   const [androidPurchaseState, setAndroidPurchaseState] = useState('idle')
+  // Detalle técnico del último error de compra (código + mensaje reales de
+  // Google Play) — visible en pantalla para diagnosticar sin Logcat.
+  const [androidPurchaseDetail, setAndroidPurchaseDetail] = useState('')
 
   // NUEVO (v0.9.526) — arquitectura dual (Stripe web + Google Play Billing
   // Android, v0.9.525): esta pantalla SIEMPRE ofrecía comprar, sin importar
@@ -206,6 +209,7 @@ export function PremiumPage({ profile, onClose, refreshProfile }) {
   async function startAndroidPurchase() {
     if (!termsAccepted) return
     setAndroidPurchaseState('processing')
+    setAndroidPurchaseDetail('')
     try {
       const { data: { session } } = await supabase.auth.getSession()
       if (!session) { setAndroidPurchaseState('error'); return }
@@ -220,6 +224,7 @@ export function PremiumPage({ profile, onClose, refreshProfile }) {
       // encontrado, oferta no disponible, falló la verificación en el
       // backend, etc.).
       console.error('[Google Play Billing] Error en startAndroidPurchase:', e?.message, e)
+      setAndroidPurchaseDetail([e?.code, e?.message].filter(Boolean).join(' · '))
       setAndroidPurchaseState('error')
     }
   }
@@ -415,6 +420,11 @@ export function PremiumPage({ profile, onClose, refreshProfile }) {
             {isAndroid && androidPurchaseState === 'error' && (
               <div className={styles.checkoutStatus} style={{ marginTop: 10 }}>
                 {t('premiumPage.androidPurchaseError')}
+                {androidPurchaseDetail && (
+                  <div style={{ marginTop: 8, fontSize: 11, opacity: 0.7, wordBreak: 'break-word' }}>
+                    {androidPurchaseDetail}
+                  </div>
+                )}
                 <div style={{ marginTop: 12 }}>
                   <button type="button" onClick={startAndroidPurchase} className="btn-primary">
                     {t('premiumPage.checkoutRetry')}

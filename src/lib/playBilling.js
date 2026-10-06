@@ -141,7 +141,9 @@ export async function purchasePremium(plan, accessToken) {
       // Visible en Logcat/Android Studio (tag `Capacitor/Console`) o en
       // remote debugging (chrome://inspect) con el dispositivo conectado.
       console.error('[Google Play Billing] Error de compra:', err?.code, err?.message, err)
-      reject(new Error(err?.message || 'No se pudo completar la compra'))
+      const wrapped = new Error(err?.message || 'No se pudo completar la compra')
+      wrapped.code = err?.code
+      reject(wrapped)
     }
     store.when().approved(onApproved)
     store.when().error(onError)

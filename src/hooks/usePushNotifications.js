@@ -146,9 +146,17 @@ export function usePushNotifications(userId) {
       setPermission(perm.receive === 'granted' ? 'granted' : 'denied')
       if (perm.receive !== 'granted') { setLoading(false); return { error: 'Permiso denegado' } }
 
+      // Se limpian listeners previos (un intento fallido anterior dejaba
+      // listeners colgados) y se pone un tope de tiempo: si FCM nunca
+      // responde, antes el switch quedaba esperando sin error visible.
+      await PushNotifications.removeAllListeners()
       const token = await new Promise((resolve, reject) => {
-        PushNotifications.addListener('registration', (t) => resolve(t.value))
-        PushNotifications.addListener('registrationError', (err) => reject(err))
+        const timer = setTimeout(() => reject(new Error('FCM: sin respuesta (timeout 15s)')), 15000)
+        PushNotifications.addListener('registration', (t) => { clearTimeout(timer); resolve(t.value) })
+        PushNotifications.addListener('registrationError', (err) => {
+          clearTimeout(timer)
+          reject(new Error('FCM: ' + (err?.error || err?.message || JSON.stringify(err))))
+        })
         PushNotifications.register()
       })
 
@@ -160,9 +168,10 @@ export function usePushNotifications(userId) {
       const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone
       await supabase.from('profiles').update({ timezone: userTimezone }).eq('id', userId)
 
+      if (error) console.error('Native subscribe: fcm_tokens upsert', error)
       if (!error) setSubscribed(true)
       setLoading(false)
-      return { error }
+      return { error: error ? 'DB: ' + (error.message || error.code) : null }
     } catch (e) {
       console.error('Native subscribe error:', e)
       setLoading(false)

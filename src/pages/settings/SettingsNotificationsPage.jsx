@@ -40,7 +40,7 @@ export function SettingsNotificationsPage({ profile, user, onUpdate, onBack, sli
       setPushTarget(true)
       const { error } = await subscribe()
       if (error === 'Permiso denegado') showToast(t('settingsNotifications.toast.permissionDenied'))
-      else if (error) showToast(t('settingsNotifications.toast.enableError'))
+      else if (error) showToast(t('settingsNotifications.toast.enableError') + (typeof error === 'string' ? ` (${error})` : ''))
       else showToast(t('settingsNotifications.toast.enabled'))
     }
     setPushTarget(null)
