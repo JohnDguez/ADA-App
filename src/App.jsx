@@ -395,6 +395,9 @@ export default function App() {
   // activo, `payments` trae los de ESE espacio, así que se pide aparte lo que
   // hace falta para calcular lo adeudado (pagos con tarjeta de crédito y
   // estados de cuenta, siempre con `space_id` null).
+  // Pagar tu parte de un gasto compartido (v0.9.547) — ver askMethodThenPay().
+  // Los hooks van ANTES de los return anticipados (Regla de hooks, React #310).
+  const [sharedPay, setSharedPay] = useState(null)
   const [spaceCardPayments, setSpaceCardPayments] = useState(null)
   async function loadSpaceCardPayments() {
     if (!user?.id) return
@@ -669,7 +672,6 @@ export default function App() {
   // registra directo como Efectivo. `sharedPay` = { payment, amount? }:
   // sin `amount` paga "lo que falta"; con `amount` registra ese monto
   // (pago variable).
-  const [sharedPay, setSharedPay] = useState(null)
   function askMethodThenPay(payment, amount = null) {
     if (paymentMethods.methods.length === 0) { runSharedPay({ payment, amount }, null); return }
     // Objeto estable (no se recrea en cada render) para que el modal no
