@@ -244,12 +244,10 @@ export function PaymentsPage({ payments, dataLoading = false, periodIncome, paym
   const [fundExpanded,      setFundExpanded]      = useState(false)
   const [addFundModal,      setAddFundModal]      = useState(false)
   const [fundAmount,        setFundAmount]        = useState('')
-  // "Se paga con" al añadir fondos (efectivo o tarjeta propia). Crédito no baja
-  // el disponible, así que con crédito no aplica el tope contra el disponible.
+  // "Se paga con" al añadir fondos (efectivo o tarjeta de débito propia; sin
+  // crédito, que no baja el disponible).
   const [fundMethodId,      setFundMethodId]      = useState(null)
   const [fundCardFormOpen,  setFundCardFormOpen]  = useState(false)
-  const fundMethod = paymentMethods?.methods.find(m => m.id === fundMethodId) || null
-  const fundIsCredit = fundMethod?.kind === 'credit'
   useEffect(() => { if (!addFundModal) setFundMethodId(null) }, [addFundModal])
   const [fundNote,          setFundNote]          = useState('')
   const [savingFund,        setSavingFund]        = useState(false)
@@ -303,7 +301,7 @@ export function PaymentsPage({ payments, dataLoading = false, periodIncome, paym
   async function handleAddFund() {
     const amount = parseFloat(fundAmount)
     if (!amount || amount <= 0) return
-    if (personalAvailable != null && !fundIsCredit) {
+    if (personalAvailable != null) {
       if (personalAvailable <= 0) {
         showToast(t('paymentsPage.addFundModal.toast.negativeAvailable'))
         return
@@ -1112,7 +1110,7 @@ export function PaymentsPage({ payments, dataLoading = false, periodIncome, paym
               />
               {(() => {
                 const numAmt = parseFloat(fundAmount) || 0
-                if (personalAvailable == null || numAmt <= 0 || fundIsCredit) return null
+                if (personalAvailable == null || numAmt <= 0) return null
                 const excede = numAmt > personalAvailable
                 if (excede) {
                   return <div className={styles.fundExceedsError}>{t('paymentsPage.addFundModal.exceeds', { amount: fmt(personalAvailable) })}</div>
@@ -1127,6 +1125,7 @@ export function PaymentsPage({ payments, dataLoading = false, periodIncome, paym
                   value={fundMethodId}
                   onChange={setFundMethodId}
                   onAddCard={() => setFundCardFormOpen(true)}
+                  allowCredit={false}
                 />
               </div>
             )}
@@ -1142,7 +1141,7 @@ export function PaymentsPage({ payments, dataLoading = false, periodIncome, paym
               onClick={handleAddFund}
               disabled={
                 savingFund || !fundAmount || parseFloat(fundAmount) <= 0 ||
-                (personalAvailable != null && !fundIsCredit && (personalAvailable <= 0 || parseFloat(fundAmount) > personalAvailable))
+                (personalAvailable != null && (personalAvailable <= 0 || parseFloat(fundAmount) > personalAvailable))
               }
               className={styles.incomeSaveButton}
             >
@@ -1157,6 +1156,7 @@ export function PaymentsPage({ payments, dataLoading = false, periodIncome, paym
                 onClose={() => setFundCardFormOpen(false)}
                 paymentMethods={paymentMethods}
                 onAdded={setFundMethodId}
+                selectableKinds={['debit']}
               />
             )}
           </div>

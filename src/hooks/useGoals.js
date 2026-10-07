@@ -387,6 +387,9 @@ export function useGoals(userId, profile, spaceId = null, onPaymentsChanged = nu
   // desde el endpoint y validando antes contra el disponible real.
   async function aportar(goalId, amount, goalName, method = null) {
     if (!amount || amount <= 0) return { error: { message: 'Monto inválido' } }
+    // Un aporte es dinero apartado: tiene que salir del disponible, y el crédito
+    // no lo baja. La lista ya no ofrece crédito; esto es la red de seguridad.
+    if (method?.kind === 'credit') return { error: { message: 'Los aportes no se pueden pagar con tarjeta de crédito' } }
     if (spaceId) return callSharedApi('contribute', { goalId, payload: { amount, methodId: method?.id ?? null } })
 
     // Optimista + todo-o-nada (v0.9.483): antes eran 2 escrituras sueltas —

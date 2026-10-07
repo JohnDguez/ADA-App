@@ -209,6 +209,7 @@ export function GoalDetailPanel({
                 value={methodId}
                 onChange={setMethodId}
                 onAddCard={() => setCardFormOpen(true)}
+                allowCredit={false}
               />
             </div>
           )}
@@ -299,6 +300,7 @@ export function GoalDetailPanel({
           onClose={() => setCardFormOpen(false)}
           paymentMethods={paymentMethods}
           onAdded={setMethodId}
+          selectableKinds={['debit']}
         />
       )}
     </div>

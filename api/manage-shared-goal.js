@@ -292,13 +292,13 @@ module.exports = async function handler(req, res) {
 
       // Método de pago del aporte (v0.9.568). Las tarjetas son personales:
       // se valida que la tarjeta sea de quien aporta. `methodId` null o
-      // ausente = Efectivo. Una tarjeta de CRÉDITO cuenta como gasto pero
-      // nunca baja el disponible (mismo criterio que getPersonalAvailable),
-      // así que con crédito no aplica el tope contra el disponible.
+      // ausente = Efectivo. Crédito NO se acepta aquí (v0.9.569): no baja el
+      // disponible, y un aporte (dinero apartado) tiene que salir de él.
       let methodFields = { payment_method_id: null, payment_method_kind: 'cash' }
       if (payload?.methodId) {
         const { data: card } = await supabase.from('payment_methods').select('id, kind').eq('id', payload.methodId).eq('user_id', actorId).maybeSingle()
         if (!card) return res.status(400).json({ error: 'Método de pago no válido' })
+        if (card.kind === 'credit') return res.status(400).json({ error: 'Los aportes no se pueden pagar con tarjeta de crédito' })
         methodFields = { payment_method_id: card.id, payment_method_kind: card.kind }
       }
 
@@ -307,7 +307,7 @@ module.exports = async function handler(req, res) {
       // ingreso, la acción se aprueba siempre; el pago reflejo se sigue
       // registrando igual, es un gasto real, solo que sin tope contra qué
       // medirlo.
-      if (methodFields.payment_method_kind !== 'credit' && await actorHasIncome(actorId)) {
+      if (await actorHasIncome(actorId)) {
         const personalAvailable = await getPersonalAvailable(actorId)
         if (personalAvailable <= 0) {
           return res.status(400).json({ error: 'No puedes aportar — tu disponible personal está en negativo' })

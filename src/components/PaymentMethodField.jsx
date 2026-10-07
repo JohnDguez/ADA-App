@@ -17,10 +17,13 @@ export function cardLabel(card, t) {
   return [name, card.alias, card.last4 ? `•••• ${card.last4}` : null].filter(Boolean).join(' · ')
 }
 
-export function PaymentMethodField({ methods, value, onChange, label, onAddCard = null }) {
+// `allowCredit={false}`: sin tarjetas de crédito en la lista (aportar a metas y
+// al Fondo Compartido — crédito no baja el disponible, así que el progreso
+// y el disponible dejarían de cuadrar).
+export function PaymentMethodField({ methods, value, onChange, label, onAddCard = null, allowCredit = true }) {
   const { t } = useTranslation()
   const debit = methods.filter(m => m.kind === 'debit')
-  const credit = methods.filter(m => m.kind === 'credit')
+  const credit = allowCredit ? methods.filter(m => m.kind === 'credit') : []
 
   const options = [
     { value: CASH_VALUE, label: t('paymentMethod.cash'), group: 'cash' },

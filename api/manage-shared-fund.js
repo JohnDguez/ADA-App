@@ -220,17 +220,17 @@ module.exports = async function handler(req, res) {
 
     // Método de pago de la aportación (v0.9.568). Las tarjetas son
     // personales: se valida que sea de quien aporta. `methodId` null o
-    // ausente = Efectivo. Crédito cuenta como gasto pero nunca baja el
-    // disponible (mismo criterio que getPersonalAvailable), así que con
-    // crédito no aplica el tope contra el disponible.
+    // ausente = Efectivo. Crédito NO se acepta (v0.9.569): no baja el
+    // disponible, y una aportación al Fondo tiene que salir de él.
     let methodFields = { payment_method_id: null, payment_method_kind: 'cash' }
     if (methodId) {
       const { data: card } = await supabase.from('payment_methods').select('id, kind').eq('id', methodId).eq('user_id', actorId).maybeSingle()
       if (!card) return res.status(400).json({ error: 'Método de pago no válido' })
+      if (card.kind === 'credit') return res.status(400).json({ error: 'Las aportaciones no se pueden pagar con tarjeta de crédito' })
       methodFields = { payment_method_id: card.id, payment_method_kind: card.kind }
     }
 
-    if (actorHasIncome && methodFields.payment_method_kind !== 'credit') {
+    if (actorHasIncome) {
       const personalAvailable = await getPersonalAvailable(supabase, actorId)
       if (personalAvailable <= 0) {
         return res.status(400).json({ error: 'No puedes aportar — tu remanente personal está en negativo' })
