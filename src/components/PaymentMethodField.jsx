@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next'
-import { Wallet } from 'lucide-react'
+import { Wallet, CreditCard, Plus } from 'lucide-react'
 import { Select } from './Select'
 import { getBank, bankColorVar } from '../lib/cardCatalog'
 import styles from './PaymentMethodField.module.css'
@@ -17,7 +17,7 @@ export function cardLabel(card, t) {
   return [name, card.alias, card.last4 ? `•••• ${card.last4}` : null].filter(Boolean).join(' · ')
 }
 
-export function PaymentMethodField({ methods, value, onChange, label }) {
+export function PaymentMethodField({ methods, value, onChange, label, onAddCard = null }) {
   const { t } = useTranslation()
   const debit = methods.filter(m => m.kind === 'debit')
   const credit = methods.filter(m => m.kind === 'credit')
@@ -44,13 +44,32 @@ export function PaymentMethodField({ methods, value, onChange, label }) {
   return (
     <>
       <label className="field-label">{label || t('paymentMethod.label')}</label>
-      <Select
-        value={value || CASH_VALUE}
-        onChange={id => onChange(id === CASH_VALUE ? null : id)}
-        options={options}
-        groupLabels={groupLabels}
-        renderIcon={renderIcon}
-      />
+      <div className={styles.row}>
+        <div className={styles.selectWrap}>
+          <Select
+            value={value || CASH_VALUE}
+            onChange={id => onChange(id === CASH_VALUE ? null : id)}
+            options={options}
+            groupLabels={groupLabels}
+            renderIcon={renderIcon}
+          />
+        </div>
+        {/* Registrar una tarjeta sin salir del formulario (onAddCard abre
+            CardFormModal encima; al guardar, el formulario conserva sus datos
+            y deja la tarjeta nueva seleccionada). */}
+        {onAddCard && (
+          <button
+            type="button"
+            onClick={onAddCard}
+            className={styles.addButton}
+            aria-label={t('paymentMethod.addCard')}
+            title={t('paymentMethod.addCard')}
+          >
+            <CreditCard size={18} color="var(--accent)" />
+            <Plus size={11} strokeWidth={3} color="var(--accent)" className={styles.addBadge} />
+          </button>
+        )}
+      </div>
       {selected?.kind === 'credit' && (
         <div className={styles.note}>{t('paymentMethod.creditNote')}</div>
       )}

@@ -1554,6 +1554,7 @@
     "owedChip": "Owed: {{amount}}"
   },
   "paymentMethod": {
+    "addCard": "Add card",
     "label": "Paid with",
     "cash": "Cash",
     "groupCash": "No card",

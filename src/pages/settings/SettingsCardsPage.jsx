@@ -15,7 +15,7 @@ import { getBank } from '../../lib/cardCatalog'
 import { totalOwedOnCard } from '../../lib/cardStatements'
 import { fmt } from '../../lib/utils'
 import styles from './SettingsCardsPage.module.css'
-import { markBackHandled } from '../../lib/backNav'
+import { markBackHandled, wasBackHandled } from '../../lib/backNav'
 
 // Mis tarjetas (v0.9.486, entrega A). Actualizado en v0.9.495 (mockups
 // confirmados con Johnatan): tocar una tarjeta ya NO la abre en la propia
@@ -109,7 +109,15 @@ export function SettingsCardsPage({ paymentMethods, personalPayments = null, sha
   const detailOpen = !!selectedId
   useEffect(() => {
     if (!detailOpen) return
-    const handler = () => { markBackHandled(); setSelectedId(null) }
+    // Se decide un instante después: si el formulario de editar (CardFormModal,
+    // abierto encima del detalle) ya atendió este "atrás", el detalle se queda.
+    const handler = () => {
+      setTimeout(() => {
+        if (wasBackHandled()) return
+        markBackHandled()
+        setSelectedId(null)
+      }, 0)
+    }
     window.history.pushState(null, '', window.location.href)
     window.addEventListener('popstate', handler)
     return () => window.removeEventListener('popstate', handler)

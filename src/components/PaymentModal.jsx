@@ -14,7 +14,8 @@ import { PaymentMethodField } from './PaymentMethodField'
 import { DatePicker } from './DatePicker'
 import AmountInput from './AmountInput'
 import styles from './PaymentModal.module.css'
-import { markBackHandled } from '../lib/backNav'
+import { markBackHandled, wasBackHandled } from '../lib/backNav'
+import { CardFormModal } from './CardFormModal'
 
 export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelete, onEditMaster, initial, payments, profile, spacePermissions, isSharedSpace = false, customCategories = [], onAddCategory, onOpenPremium, paymentMethods = null }) {
   const { t } = useTranslation()
@@ -171,9 +172,14 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
   useEffect(() => {
     if (!open) return
     const handler = () => {
-      markBackHandled()
-      if (dirtyRef.current) setConfirmClose(true)
-      else onClose()
+      // Se decide un instante después: si CardFormModal (abierto encima para
+      // "Añadir tarjeta") ya atendió este "atrás", este modal no se cierra.
+      setTimeout(() => {
+        if (wasBackHandled()) return
+        markBackHandled()
+        if (dirtyRef.current) setConfirmClose(true)
+        else onClose()
+      }, 0)
     }
     window.history.pushState(null, '', window.location.href)
     window.addEventListener('popstate', handler)
@@ -191,6 +197,20 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
   // Solo se manda el método cuando el campo está visible (personal y con
   // el hook disponible): en un Espacio Compartido no debe tocarse nunca.
   const methodsAvailable = !isSharedSpace && !!paymentMethods
+
+  // "Añadir tarjeta" desde el campo "Se paga con": CardFormModal se abre
+  // ENCIMA de este modal (que sigue montado, así que no se pierde nada de lo
+  // ya capturado). Al guardar se deja seleccionada la tarjeta nueva. Se
+  // espera a que el servidor confirme para usar el id real (el temporal
+  // `tmp-…` no sirve como payment_method_id); mientras tanto la tarjeta ya
+  // aparece en la lista por la actualización optimista.
+  const [cardFormOpen, setCardFormOpen] = useState(false)
+  async function handleCardSaved(data) {
+    setCardFormOpen(false)
+    const res = await paymentMethods.addMethod(data)
+    if (!res?.error && res?.id) setMethodId(res.id)
+  }
+  const openAddCard = () => setCardFormOpen(true)
   function methodPayload() {
     if (!methodsAvailable) return {}
     const card = paymentMethods.methods.find(m => m.id === methodId)
@@ -390,7 +410,7 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
 
             {methodsAvailable && (
               <div className={styles.fieldGroup}>
-                <PaymentMethodField methods={paymentMethods.methods} value={methodId} onChange={setMethodId} />
+                <PaymentMethodField methods={paymentMethods.methods} value={methodId} onChange={setMethodId} onAddCard={openAddCard} />
               </div>
             )}
 
@@ -507,7 +527,7 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
                   `PaymentMethodField` ya trae su propio label. */}
               {methodsAvailable && (
                 <div className={styles.fieldGroup}>
-                  <PaymentMethodField methods={paymentMethods.methods} value={methodId} onChange={setMethodId} />
+                  <PaymentMethodField methods={paymentMethods.methods} value={methodId} onChange={setMethodId} onAddCard={openAddCard} />
                 </div>
               )}
             </div>
@@ -580,7 +600,7 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
 
           {methodsAvailable && (
             <div className={styles.fieldGroup}>
-              <PaymentMethodField methods={paymentMethods.methods} value={methodId} onChange={setMethodId} />
+              <PaymentMethodField methods={paymentMethods.methods} value={methodId} onChange={setMethodId} onAddCard={openAddCard} />
             </div>
           )}
 
@@ -794,6 +814,9 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
         </div>
       </div>
       <ConfirmCloseModal open={confirmClose} onConfirm={() => { setConfirmClose(false); onClose() }} onCancel={() => setConfirmClose(false)} />
+      {methodsAvailable && (
+        <CardFormModal open={cardFormOpen} initial={null} onSave={handleCardSaved} onClose={() => setCardFormOpen(false)} />
+      )}
       <ConfirmDeleteModal
         open={confirmDelete}
         message={initial ? getDeleteConfirmMessage(initial) : ''}

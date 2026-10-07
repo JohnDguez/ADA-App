@@ -1554,6 +1554,7 @@
     "owedChip": "Por pagar: {{amount}}"
   },
   "paymentMethod": {
+    "addCard": "Añadir tarjeta",
     "label": "Se paga con",
     "cash": "Efectivo",
     "groupCash": "Sin tarjeta",

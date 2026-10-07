@@ -16,3 +16,41 @@
   color: var(--text);
   margin-top: 6px;
 }
+
+/* Selector + botón "Añadir tarjeta" en la misma fila */
+.row {
+  display: flex;
+  align-items: stretch;
+  gap: 8px;
+}
+
+.selectWrap {
+  flex: 1;
+  min-width: 0;
+}
+
+.addButton {
+  position: relative;
+  flex-shrink: 0;
+  width: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg);
+  border: 0.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: border-color .15s;
+}
+
+.addButton:hover,
+.addButton:focus-visible {
+  border-color: var(--accent);
+  outline: none;
+}
+
+.addBadge {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+}

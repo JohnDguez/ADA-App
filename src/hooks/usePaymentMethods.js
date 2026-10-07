@@ -100,6 +100,9 @@ export function usePaymentMethods(userId, onSyncError = null) {
       // fila — se pide la lista real para cambiar el id temporal.
       if (serverRow) setMethods(prev => prev.map(m => m.id === tempId ? serverRow : m))
       else fetchMethods()
+      // `id` real de la tarjeta recién creada (null si el servidor no la
+      // devolvió) — PaymentModal lo usa para dejarla seleccionada.
+      return { error: null, id: serverRow?.id ?? null }
     } else if (op === 'update') {
       setMethods(prev => prev.map(m => {
         if (String(m.id) !== key) return m

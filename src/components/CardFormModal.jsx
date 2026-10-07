@@ -8,6 +8,7 @@ import { CardDayRangePicker } from './CardDayRangePicker'
 import { Select } from './Select'
 import { SegmentedControl as Segmented } from './SegmentedControl'
 import styles from './CardFormModal.module.css'
+import { markBackHandled } from '../lib/backNav'
 
 // Alta/edición de una tarjeta (v0.9.486, mockups confirmados con Johnatan).
 // Arriba, la tarjeta en vivo: cambia de color con el banco, muestra alias,
@@ -42,6 +43,18 @@ export function CardFormModal({ open, initial, onSave, onClose }) {
       closeTimerRef.current = setTimeout(() => setClosing(false), ANIM_MS)
     }
     wasOpenRef.current = open
+  }, [open])
+
+  // "Atrás" del teléfono cierra el formulario (sin esto, cuando se abre
+  // encima de otro modal —ej. "Añadir tarjeta" desde Nuevo pago— el "atrás"
+  // cerraba el modal de abajo y se perdían los datos).
+  useEffect(() => {
+    if (!open) return
+    const handler = () => { markBackHandled(); onClose() }
+    window.history.pushState(null, '', window.location.href)
+    window.addEventListener('popstate', handler)
+    return () => window.removeEventListener('popstate', handler)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open])
 
   useEffect(() => {
