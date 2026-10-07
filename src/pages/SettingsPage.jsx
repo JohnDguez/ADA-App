@@ -18,6 +18,7 @@ import { SettingsSubscriptionPage } from './settings/SettingsSubscriptionPage'
 import { SettingsExportPage } from './settings/SettingsExportPage'
 import { SettingsCardsPage } from './settings/SettingsCardsPage'
 import styles from './SettingsPage.module.css'
+import { AvatarImg } from '../components/AvatarImg'
 
 // Galería de avatares preestablecidos — imágenes estáticas servidas desde
 // public/avatars/ (Vite/Vercel las expone tal cual, sin pasar por Supabase
@@ -221,10 +222,12 @@ export function SettingsPage({ profile, user, onUpdate, onUploadAvatar, onDataDe
       {/* Avatar */}
       <div className={styles.avatarSection}>
         <div className={styles.avatarWrapper}>
-          {profile.avatar_url
-            ? <img src={profile.avatar_url} alt="avatar" className={`${styles.avatarImg} ${profile.is_premium ? styles.avatarImgPremium : ''}`} />
-            : <div className={`${styles.avatarInitials} ${profile.is_premium ? styles.avatarImgPremium : ''}`}>{initials}</div>
-          }
+          <AvatarImg
+            src={profile.avatar_url}
+            alt="avatar"
+            className={`${styles.avatarImg} ${profile.is_premium ? styles.avatarImgPremium : ''}`}
+            fallback={<div className={`${styles.avatarInitials} ${profile.is_premium ? styles.avatarImgPremium : ''}`}>{initials}</div>}
+          />
           {profile.is_premium && (
             <div className={styles.premiumCrownBadge}>
               <Crown size={14} fill="currentColor" />

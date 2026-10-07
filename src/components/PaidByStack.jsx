@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom'
 import { PiggyBank } from 'lucide-react'
 import { fmt } from '../lib/utils'
 import styles from './PaidByStack.module.css'
+import { AvatarImg } from './AvatarImg'
 
 // "Pagado por" — muestra el avatar de quién pagó (o va abonando) un gasto de
 // un Espacio Compartido. Si un solo miembro puso el 100%, un avatar suelto;
@@ -124,12 +125,16 @@ export function PaidByStack({ contributors, members, fundAmount = 0, size = 24, 
         >
           {entry.isFund ? (
             <PiggyBank size={Math.round(size * 0.55)} color="var(--surface)" strokeWidth={2} />
-          ) : entry.profile?.avatar_url ? (
-            <img src={entry.profile.avatar_url} alt="" className={styles.avatarImg} />
           ) : (
-            <span className={styles.avatarInitial} style={{ fontSize: Math.round(size * 0.42) }}>
-              {(entry.profile?.name || '?').charAt(0).toUpperCase()}
-            </span>
+            <AvatarImg
+              src={entry.profile?.avatar_url}
+              className={styles.avatarImg}
+              fallback={
+                <span className={styles.avatarInitial} style={{ fontSize: Math.round(size * 0.42) }}>
+                  {(entry.profile?.name || '?').charAt(0).toUpperCase()}
+                </span>
+              }
+            />
           )}
         </button>
       ))}
@@ -141,12 +146,16 @@ export function PaidByStack({ contributors, members, fundAmount = 0, size = 24, 
             <div className={`${styles.tooltipAvatar} ${tooltip.entry.isFund ? styles.avatarButtonFund : ''}`}>
               {tooltip.entry.isFund ? (
                 <PiggyBank size={18} color="var(--surface)" strokeWidth={2} />
-              ) : tooltip.entry.profile?.avatar_url ? (
-                <img src={tooltip.entry.profile.avatar_url} alt="" className={styles.avatarImg} />
               ) : (
-                <span className={styles.avatarInitial} style={{ fontSize: 15 }}>
-                  {(tooltip.entry.profile?.name || '?').charAt(0).toUpperCase()}
-                </span>
+                <AvatarImg
+                  src={tooltip.entry.profile?.avatar_url}
+                  className={styles.avatarImg}
+                  fallback={
+                    <span className={styles.avatarInitial} style={{ fontSize: 15 }}>
+                      {(tooltip.entry.profile?.name || '?').charAt(0).toUpperCase()}
+                    </span>
+                  }
+                />
               )}
             </div>
             {/* v0.9.265 — antes el Fondo mostraba "Fondo Compartido · $500"

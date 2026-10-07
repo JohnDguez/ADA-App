@@ -10,6 +10,7 @@ import { CobroPeriodFields } from '../../components/CobroPeriodFields'
 import { showToast } from '../../components/Toast'
 import { getFrequencyLabel } from '../../lib/utils'
 import styles from './SettingsSharedSpacePage.module.css'
+import { AvatarImg } from '../../components/AvatarImg'
 
 // Sub-página de Ajustes → "Espacio Compartido". Sirve para 2 casos a la vez,
 // para no duplicar el formulario de crear/unirse en otro lugar (ej. la
@@ -370,10 +371,11 @@ function OwnedSpacePanel({ entry, user, regenerateCode, updateMemberPermissions,
                 <div key={m.id} className={styles.islandCard}>
                   <div className={styles.memberIslandHeader}>
                     <div className={styles.memberRowLeft}>
-                      {m.profile?.avatar_url
-                        ? <img src={m.profile.avatar_url} alt="" className={styles.memberAvatarImg} />
-                        : <div className={styles.memberAvatarFallback}>{initials}</div>
-                      }
+                      <AvatarImg
+                        src={m.profile?.avatar_url}
+                        className={styles.memberAvatarImg}
+                        fallback={<div className={styles.memberAvatarFallback}>{initials}</div>}
+                      />
                       <span className={styles.memberName}>{m.profile?.name || t('settingsSharedSpacePage.guestFallback')}</span>
                     </div>
                     <button onClick={() => setConfirmExpel(m.id)} className={styles.smallDangerButton}>

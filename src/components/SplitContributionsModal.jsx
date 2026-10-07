@@ -5,6 +5,7 @@ import { fmt } from '../lib/utils'
 import AmountInput from './AmountInput'
 import { PaymentMethodField } from './PaymentMethodField'
 import styles from './SplitContributionsModal.module.css'
+import { AvatarImg } from './AvatarImg'
 
 // Registro de "quién puso cuánto" en un gasto del Espacio Compartido —
 // deliberadamente NO es un split planeado de antemano (montos fijos por
@@ -227,11 +228,11 @@ export function SplitContributionsModal({ open, payment, spaceMembers, currentUs
                     <div onClick={() => openRow(m.user_id)} className={styles.memberRow}>
                       <span className={styles.memberNameRow}>
                         <span className={styles.memberAvatar}>
-                          {m.profile?.avatar_url ? (
-                            <img src={m.profile.avatar_url} alt="" className={styles.memberAvatarImg} />
-                          ) : (
-                            <span className={styles.memberAvatarInitial}>{(m.profile?.name || '?').charAt(0).toUpperCase()}</span>
-                          )}
+                          <AvatarImg
+                            src={m.profile?.avatar_url}
+                            className={styles.memberAvatarImg}
+                            fallback={<span className={styles.memberAvatarInitial}>{(m.profile?.name || '?').charAt(0).toUpperCase()}</span>}
+                          />
                         </span>
                         <span className={styles.memberName}>{m.profile?.name || t('splitContributionsModal.memberFallback')}{m.user_id === currentUserId ? t('splitContributionsModal.youSuffix') : ''}</span>
                       </span>

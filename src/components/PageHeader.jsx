@@ -3,6 +3,7 @@ import i18n from '../i18n'
 import { Bell, Crown, Settings, Sparkles } from 'lucide-react'
 import { useHeaderBackground, HEADER_IMAGES } from '../hooks/useHeaderBackground'
 import styles from './PageHeader.module.css'
+import { AvatarImg } from './AvatarImg'
 
 // `greeting()` no es un componente — no puede usar el hook `useTranslation()`.
 // Usa el singleton `i18n.t()` directo (mismo objeto que ya inicializa
@@ -78,10 +79,13 @@ export function PageHeader({ profile, unreadCount, onOpenNotifs, onGoSettings, o
               (ej. --header-avatar-ring) que sí reaccione al tema, en vez de
               inventar un valor aquí sin verla. */}
           <div className={styles.avatarWrapper}>
-            {profile?.avatar_url
-              ? <img src={profile.avatar_url} alt="avatar" className={styles.avatarImg} style={{ border: `2px solid ${profile?.is_premium ? 'var(--premium-gold)' : 'rgba(255,255,255,0.3)'}` }} />
-              : <div className={styles.avatarFallback} style={{ border: `2px solid ${profile?.is_premium ? 'var(--premium-gold)' : 'rgba(255,255,255,0.3)'}` }}>{initials}</div>
-            }
+            <AvatarImg
+              src={profile?.avatar_url}
+              alt="avatar"
+              className={styles.avatarImg}
+              style={{ border: `2px solid ${profile?.is_premium ? 'var(--premium-gold)' : 'rgba(255,255,255,0.3)'}` }}
+              fallback={<div className={styles.avatarFallback} style={{ border: `2px solid ${profile?.is_premium ? 'var(--premium-gold)' : 'rgba(255,255,255,0.3)'}` }}>{initials}</div>}
+            />
             {profile?.is_premium && (
               <div className={styles.premiumBadge}>
                 <Crown size={11} fill="currentColor" />

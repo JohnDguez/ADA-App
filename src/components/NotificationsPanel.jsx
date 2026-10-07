@@ -4,6 +4,7 @@ import i18n from '../i18n'
 import { AlertCircle, Clock, Bell, Trash2, CheckCheck, X, Goal, AlertTriangle, Crown } from 'lucide-react'
 import { getMonthsShort } from '../lib/utils'
 import styles from './NotificationsPanel.module.css'
+import { AvatarImg } from './AvatarImg'
 
 // timeAgo() no es un componente — usa el singleton i18n.t() directo, mismo
 // criterio que greeting() en PageHeader.jsx.
@@ -32,14 +33,13 @@ function NotifIcon({ type }) {
 }
 
 function ActorAvatar({ name, avatarUrl }) {
-  if (avatarUrl) {
-    return <img src={avatarUrl} alt="" className={styles.avatarImg} />
-  }
   const initial = (name || '?').charAt(0).toUpperCase()
   return (
-    <div className={styles.avatarFallback}>
-      {initial}
-    </div>
+    <AvatarImg
+      src={avatarUrl}
+      className={styles.avatarImg}
+      fallback={<div className={styles.avatarFallback}>{initial}</div>}
+    />
   )
 }
 

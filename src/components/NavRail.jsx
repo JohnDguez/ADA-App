@@ -4,6 +4,7 @@ import { Bell, Crown, Settings, ChevronLeft, ChevronRight } from 'lucide-react'
 import { NAV_ITEMS } from '../lib/constants'
 import { useHeaderBackground, HEADER_IMAGES } from '../hooks/useHeaderBackground'
 import { useRailExpanded } from '../hooks/useRailExpanded'
+import { AvatarImg } from './AvatarImg'
 import { greeting } from './PageHeader'
 import { RailSpaceSwitcher } from './RailSpaceSwitcher'
 import styles from './NavRail.module.css'
@@ -127,10 +128,13 @@ export function NavRail({ active, onChange, profile, unreadCount, onOpenNotifs, 
         >
           <div className={styles.avatarRing}>
             <div className={styles.avatarWrapper}>
-              {profile?.avatar_url
-                ? <img src={profile.avatar_url} alt="avatar" className={styles.avatarImg} style={{ border: `2px solid ${profile?.is_premium ? 'var(--premium-gold)' : 'rgba(255,255,255,0.3)'}` }} />
-                : <div className={styles.avatarFallback} style={{ border: `2px solid ${profile?.is_premium ? 'var(--premium-gold)' : 'rgba(255,255,255,0.3)'}` }}>{initials}</div>
-              }
+              <AvatarImg
+                src={profile?.avatar_url}
+                alt="avatar"
+                className={styles.avatarImg}
+                style={{ border: `2px solid ${profile?.is_premium ? 'var(--premium-gold)' : 'rgba(255,255,255,0.3)'}` }}
+                fallback={<div className={styles.avatarFallback} style={{ border: `2px solid ${profile?.is_premium ? 'var(--premium-gold)' : 'rgba(255,255,255,0.3)'}` }}>{initials}</div>}
+              />
               {profile?.is_premium && (
                 <div className={styles.premiumBadge}>
                   <Crown size={10} fill="currentColor" />
