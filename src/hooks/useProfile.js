@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '../lib/supabase'
 import { showToast } from '../components/Toast'
-import i18n from '../i18n'
+import i18n, { resolveLanguage, LANGUAGE_STORAGE_KEY } from '../i18n'
 import { withRetry } from '../lib/withRetry'
 
 const DEFAULT_PROFILE = {
@@ -49,7 +49,17 @@ export function useProfile(userId) {
     if (!userId) return null
     const { data, error } = await supabase
       .from('profiles').select('*').eq('id', userId).single()
-    if (!error && data) setProfile({ ...DEFAULT_PROFILE, ...sanitizeProfile(data) })
+    if (!error && data) {
+      setProfile({ ...DEFAULT_PROFILE, ...sanitizeProfile(data) })
+      // El idioma vive en la cuenta (profiles.language) y es la fuente de
+      // verdad: el arranque usa el cache local (localStorage) para no
+      // parpadear, pero si en otro dispositivo se cambió el idioma, aquí se
+      // alinea este dispositivo con lo guardado en la cuenta.
+      const pref = data.language || 'system'
+      try { localStorage.setItem(LANGUAGE_STORAGE_KEY, pref) } catch { /* sin storage */ }
+      const target = resolveLanguage(pref)
+      if (i18n.language !== target) i18n.changeLanguage(target)
+    }
     setLoading(false)
     // Devuelve la fila cruda (no el estado ya mezclado con DEFAULT_PROFILE) —
     // quien llame y necesite un valor fresco de inmediato (ej. PremiumPage
