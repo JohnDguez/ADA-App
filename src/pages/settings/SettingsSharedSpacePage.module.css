@@ -27,6 +27,45 @@
   padding: 16px;
 }
 
+.premiumBlock {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 18px 14px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--premium-gold);
+  background: color-mix(in srgb, var(--premium-gold) 12%, var(--surface));
+}
+
+.premiumIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--premium-gold);
+  color: var(--premium-gold-text);
+  margin-bottom: 10px;
+}
+
+.premiumButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 12px;
+  border-radius: var(--radius-sm);
+  border: none;
+  background: var(--premium-gold);
+  color: var(--premium-gold-text);
+  font-size: 14px;
+  font-weight: 700;
+  font-family: 'DM Sans', sans-serif;
+  cursor: pointer;
+}
+
 .premiumTitle {
   font-size: 15px;
   font-weight: 700;

@@ -285,7 +285,7 @@ export function PremiumPage({ profile, onClose, refreshProfile }) {
           sorprendente, con degradados"). El degradado SÍ reacciona al
           tema (--premium-hero-bg tiene su propio valor en claro y en
           oscuro, ver index.css) — a diferencia del resto del tratamiento
-          Premium (--premium-card-bg, --premium-text), que es fijo a
+          Premium (--premium-text), que es fijo a
           propósito: aquí Johnatan pidió explícitamente que el tono
           cambiara con el tema. Onda inferior: misma curva (WAVE_PATH,
           arriba) que el borde de cada escena de OnboardingPage.jsx —

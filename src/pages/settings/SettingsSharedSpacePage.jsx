@@ -19,7 +19,7 @@ import { AvatarImg } from '../../components/AvatarImg'
 //   (solo Premium, máximo 1 propio) y/o unirse con código.
 // - Si ya pertenece a alguno: panel de administración (si es dueño) y/o
 //   lista de espacios donde es invitado (con opción de salirse).
-export function SettingsSharedSpacePage({ profile, user, sharedSpaces, onBack, slideClass }) {
+export function SettingsSharedSpacePage({ profile, user, sharedSpaces, onBack, onOpenPremium, slideClass }) {
   const { t } = useTranslation()
   const { spaces, createSpace, regenerateCode, redeemCode, updateMemberPermissions, updateSpaceConfig, leaveSpace, removeMember, deleteSpace, clearSpaceData } = sharedSpaces
 
@@ -116,14 +116,18 @@ export function SettingsSharedSpacePage({ profile, user, sharedSpaces, onBack, s
         <Card>
           <div className={styles.cardPadding}>
             {!profile.is_premium ? (
-              <>
+              <div className={styles.premiumBlock}>
+                <div className={styles.premiumIcon}><Crown size={22} /></div>
                 <div className={styles.premiumTitle}>
                   {t('newSharedSpacePanel.premiumCtaTitle')}
                 </div>
                 <div className={styles.premiumDescription}>
                   {t('newSharedSpacePanel.premiumCtaText')}
                 </div>
-              </>
+                <button onClick={onOpenPremium} className={styles.premiumButton}>
+                  <Crown size={16} /> {t('goalsPage.premiumBanner.button')}
+                </button>
+              </div>
             ) : !creating ? (
               <button onClick={() => setCreating(true)} className={styles.createSpaceButton}>
                 <Plus size={16} /> {t('newSharedSpacePanel.createTitle')}

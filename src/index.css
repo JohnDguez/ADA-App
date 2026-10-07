@@ -155,14 +155,12 @@
   --cat-custom-4: var(--palette-14);
   --cat-custom-5: var(--palette-15);
 
-  /* ── Premium (candado de funciones premium) ───────────────────────────────
-     Tratamiento visual fijo, intencionalmente igual en light y dark: la
-     tarjeta bloqueada siempre es oscura con texto blanco, sin importar el
-     tema activo de la app (mismo criterio que --impact-warning-text, que
-     tampoco depende del tema). Reutilizado por cualquier función detrás de
-     is_premium. */
-  --premium-card-bg: #0B1220;
-  --premium-overlay: rgba(11, 18, 32, 0.85);
+  /* ── Premium ──────────────────────────────────────────────────────────────
+     El candado de funciones premium (PremiumLock.jsx) ya NO tiene colores
+     propios (v0.9.570): usa --surface/--text del tema, así que se adapta a
+     claro y oscuro (antes era siempre oscuro y desentonaba en el tema
+     claro). Quedan fijos a propósito el dorado y el texto blanco del hero de
+     PremiumPage.jsx, que va sobre un degradado dorado. */
   --premium-text:    #FFFFFF;
   --premium-gold:      #F5C242;
   --premium-gold-text: #1A1200;
@@ -170,8 +168,8 @@
   /* Hero de PremiumPage.jsx (v0.9.505) — ÚNICA excepción a "sin
      transparencias/fijo sin importar el tema" dentro del bloque Premium:
      Johnatan pidió explícitamente que el degradado SÍ cambiara de tono
-     entre claro y oscuro (a diferencia de --premium-card-bg/--premium-text
-     de arriba, que son fijos a propósito). También es la excepción
+     entre claro y oscuro (a diferencia de --premium-text de arriba,
+     que es fijo a propósito). También es la excepción
      documentada a la Regla 18 ("Sin gradientes") — ver RULES.md. Valores
      de tema oscuro en el bloque [data-theme="dark"] más abajo. */
   --premium-hero-bg:          radial-gradient(circle at 50% 20%, #F5C242 0%, #E0902A 45%, #A85D1A 85%);

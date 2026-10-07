@@ -208,7 +208,7 @@ export function SettingsPage({ profile, user, onUpdate, onUploadAvatar, onDataDe
     return <SettingsAppearancePage theme={theme} onThemeChange={onThemeChange} onBack={back} slideClass={slideClass} />
   }
   if (section === 'sharedspace') {
-    return <SettingsSharedSpacePage profile={profile} user={user} sharedSpaces={sharedSpaces} onBack={back} slideClass={slideClass} />
+    return <SettingsSharedSpacePage profile={profile} user={user} sharedSpaces={sharedSpaces} onBack={back} slideClass={slideClass} onOpenPremium={onOpenPremium} />
   }
   if (section === 'subscription') {
     return <SettingsSubscriptionPage profile={profile} onOpenPremium={onOpenPremium} onBack={back} slideClass={slideClass} />

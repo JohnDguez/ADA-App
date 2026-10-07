@@ -17,7 +17,10 @@
   position: relative;
   overflow: hidden;
   border-radius: var(--radius);
-  background: var(--premium-card-bg);
+  /* Sigue el tema (v0.9.570): antes era siempre oscuro (#0B1220) y en el tema
+     claro desentonaba. El contenido borroso de fondo ya usa los tokens del
+     tema; el velo es la superficie del tema con 88% de opacidad. */
+  background: var(--surface);
   padding-top: 14px;
 }
 
@@ -30,7 +33,7 @@
 .overlay {
   position: absolute;
   inset: 0;
-  background: var(--premium-overlay);
+  background: color-mix(in srgb, var(--surface) 88%, transparent);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -41,7 +44,7 @@
 }
 
 .message {
-  color: var(--premium-text);
+  color: var(--text);
   font-size: 15px;
   font-weight: 500;
   line-height: 1.4;
@@ -64,7 +67,7 @@
 }
 
 .finePrint {
-  color: var(--premium-text);
+  color: var(--text);
   font-size: 10.5px;
   font-weight: 400;
   opacity: 0.75;
