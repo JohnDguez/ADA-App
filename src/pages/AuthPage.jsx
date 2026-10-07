@@ -313,7 +313,11 @@ export function AuthPage() {
           // causa real: credencial no configurada en Firebase/Supabase,
           // SHA-1 que no coincide, usuario cancela el selector, etc.
           console.error('[Google Sign-In nativo]', err)
-          setError(t('authPage.errors.googleFailed'))
+          // Detalle técnico visible en pantalla: en un build de Play (release)
+          // Capacitor no manda la consola a Logcat, así que sin esto no hay
+          // forma de ver la causa real.
+          const detail = [err?.code, err?.message].filter(Boolean).join(' · ')
+          setError(t('authPage.errors.googleFailed') + (detail ? ` (${detail})` : ''))
         })
         .finally(() => setGoogleLoading(false))
       return
