@@ -33,8 +33,7 @@
   align-items: center;
   padding: 18px 14px;
   border-radius: var(--radius-sm);
-  border: 1px solid var(--premium-gold);
-  background: color-mix(in srgb, var(--premium-gold) 12%, var(--surface));
+  background: color-mix(in srgb, var(--premium-gold) 16%, var(--surface));
 }
 
 .premiumIcon {
