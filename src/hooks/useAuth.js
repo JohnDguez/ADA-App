@@ -77,7 +77,7 @@ export function useAuth() {
 
           if (!error && data.session) {
             // Limpiar el hash de la URL
-            window.history.replaceState(null, '', window.location.pathname)
+            window.history.replaceState(window.history.state, '', window.location.pathname)
             try { localStorage.setItem(RECOVERY_KEY, '1') } catch { /* noop */ }
             isRecoveryRef.current = true
             setUser(data.session.user)

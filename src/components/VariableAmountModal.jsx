@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { ConfirmCloseModal } from './ConfirmCloseModal'
 import AmountInput from './AmountInput'
 import styles from './VariableAmountModal.module.css'
+import { markBackHandled } from '../lib/backNav'
 
 export function VariableAmountModal({ open, payment, mode = 'pay', spacePermissions, onConfirm, onClose }) {
   const { t } = useTranslation()
@@ -35,6 +36,7 @@ export function VariableAmountModal({ open, payment, mode = 'pay', spacePermissi
   useEffect(() => {
     if (!open) return
     const handler = () => {
+      markBackHandled()
       if (amountRef.current) setConfirmClose(true)
       else onClose()
     }

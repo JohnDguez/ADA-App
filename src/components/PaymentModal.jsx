@@ -14,6 +14,7 @@ import { PaymentMethodField } from './PaymentMethodField'
 import { DatePicker } from './DatePicker'
 import AmountInput from './AmountInput'
 import styles from './PaymentModal.module.css'
+import { markBackHandled } from '../lib/backNav'
 
 export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelete, onEditMaster, initial, payments, profile, spacePermissions, isSharedSpace = false, customCategories = [], onAddCategory, onOpenPremium, paymentMethods = null }) {
   const { t } = useTranslation()
@@ -170,6 +171,7 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
   useEffect(() => {
     if (!open) return
     const handler = () => {
+      markBackHandled()
       if (dirtyRef.current) setConfirmClose(true)
       else onClose()
     }

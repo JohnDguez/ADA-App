@@ -18,6 +18,7 @@ import { SettingsSubscriptionPage } from './settings/SettingsSubscriptionPage'
 import { SettingsExportPage } from './settings/SettingsExportPage'
 import { SettingsCardsPage } from './settings/SettingsCardsPage'
 import styles from './SettingsPage.module.css'
+import { markBackHandled } from '../lib/backNav'
 import { AvatarImg } from '../components/AvatarImg'
 
 // Galería de avatares preestablecidos — imágenes estáticas servidas desde
@@ -62,7 +63,7 @@ export function SettingsPage({ profile, user, onUpdate, onUploadAvatar, onDataDe
   // regresar a ella si el usuario navega y vuelve a entrar a Ajustes.
   useEffect(() => {
     if (initialSection) {
-      window.history.pushState({ settingsSection: initialSection }, '')
+      window.history.pushState({ settingsSection: initialSection, lunaTab: 'settings' }, '')
       setSection(initialSection)
       shortcutReturnRef.current = returnTab || null
       onConsumeInitialSection?.()
@@ -83,6 +84,7 @@ export function SettingsPage({ profile, user, onUpdate, onUploadAvatar, onDataDe
 
   useEffect(() => {
     function handlePopState() {
+      markBackHandled()
       if (shortcutReturnRef.current) {
         const returnTo = shortcutReturnRef.current
         shortcutReturnRef.current = null
@@ -101,11 +103,10 @@ export function SettingsPage({ profile, user, onUpdate, onUploadAvatar, onDataDe
     window.addEventListener('popstate', handlePopState)
     return () => {
       window.removeEventListener('popstate', handlePopState)
-      // Si el componente se desmonta (ej. el usuario cambió de tab con el
-      // bottom nav) mientras había una sub-página abierta, la entrada que
-      // empujamos queda "colgada" en el historial. La consumimos aquí para
-      // que un "atrás" posterior desde otro tab no regrese aquí por sorpresa.
-      if (sectionRef.current) window.history.back()
+      // Antes, al desmontarse con una sub-página abierta, aquí se hacía un
+      // `history.back()` para consumir su entrada. Ya no: ahora el historial
+      // lleva los tabs visitados, y cambiar de tab desde una sub-página
+      // reemplaza esa entrada (ver pushTabEntry en lib/backNav.js).
     }
   }, [])
 
@@ -131,7 +132,7 @@ export function SettingsPage({ profile, user, onUpdate, onUploadAvatar, onDataDe
 
   function openSection(s) {
     shortcutReturnRef.current = null // navegación manual normal desde aquí en adelante
-    window.history.pushState({ settingsSection: s }, '')
+    window.history.pushState({ settingsSection: s, lunaTab: 'settings' }, '')
     setSection(s)
   }
 

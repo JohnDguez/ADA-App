@@ -8,6 +8,7 @@ import { EmptyState } from './EmptyState'
 import { GoalDetailPanel } from './GoalDetailPanel'
 import { GoalFormModal } from './GoalFormModal'
 import styles from './GoalsOverlay.module.css'
+import { markBackHandled } from '../lib/backNav'
 
 // Debe coincidir con la duración de `.overlayClosing` en el .module.css
 // (Regla 30, "JS/CSS timing sync") — mismo patrón que PANEL_ANIM_MS en
@@ -73,6 +74,7 @@ export function GoalsOverlay({ open, goalsData, isPremium, onClose, onOpenPremiu
   useEffect(() => {
     if (!open) return
     const handler = () => {
+      markBackHandled()
       if (formOpen) { setFormOpen(false); return }
       if (selectedGoalId) { setSelectedGoalId(null); return }
       onClose()

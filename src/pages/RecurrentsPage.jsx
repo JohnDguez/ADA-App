@@ -10,6 +10,8 @@ import { getCategoryIcon } from '../lib/categoryIcons'
 import { showToast } from '../components/Toast'
 import { StatsCardSkeleton, CategoryAccordionSkeleton } from '../components/SkeletonLoader'
 import styles from './RecurrentsPage.module.css'
+import { markBackHandled } from '../lib/backNav'
+import { useScrollTop } from '../hooks/useScrollTop'
 
 function FilterChip({ label, active, onClick }) {
   return (
@@ -42,6 +44,7 @@ export function RecurrentsPage({ payments, dataLoading = false, profile, spaceSw
   const [confirmDelete,   setConfirmDelete]   = useState(null)
   const [openMenu,        setOpenMenu]        = useState(null)
   const [selectedMasterId, setSelectedMasterId] = useState(null)
+  useScrollTop(selectedMasterId)
 
   const canEdit   = !spacePermissions || spacePermissions.can_edit
   const canDelete = !spacePermissions || spacePermissions.can_delete
@@ -61,7 +64,7 @@ export function RecurrentsPage({ payments, dataLoading = false, profile, spaceSw
   // lista, se deja pasar para que el botón haga lo de siempre.
   useEffect(() => {
     if (!selectedMasterId) return
-    const handler = () => setSelectedMasterId(null)
+    const handler = () => { markBackHandled(); setSelectedMasterId(null) }
     window.history.pushState(null, '', window.location.href)
     window.addEventListener('popstate', handler)
     return () => window.removeEventListener('popstate', handler)

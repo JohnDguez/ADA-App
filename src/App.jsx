@@ -1,6 +1,9 @@
 import { useState, useEffect, useRef, lazy, Suspense } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from './hooks/useAuth'
+import { Capacitor } from '@capacitor/core'
+import { App as CapacitorApp } from '@capacitor/app'
+import { initBackNavigation, pushTabEntry, useBackClose } from './lib/backNav'
 
 // ── Code-splitting (v0.9.280) ─────────────────────────────────────────────
 // Estas pantallas se montan condicionalmente (nunca conviven con la app
@@ -49,6 +52,7 @@ import { InstallmentAbonarModal } from './components/InstallmentAbonarModal'
 import { SplitContributionsModal } from './components/SplitContributionsModal'
 import { RecurrentMigrationModal } from './components/RecurrentMigrationModal'
 import { PatchNotesModal } from './components/PatchNotesModal'
+import { ConfirmExitModal } from './components/ConfirmExitModal'
 import { FeedbackPromptModal } from './components/FeedbackPromptModal'
 import { Toast, showToast } from './components/Toast'
 import { SkeletonLoader } from './components/SkeletonLoader'
@@ -508,6 +512,63 @@ export default function App() {
   // propósito). Se limpia sola en cuanto se usa, o si el usuario navega
   // manualmente dentro de Ajustes (`SettingsPage.jsx` la ignora en ese caso).
   const [settingsReturnTab, setSettingsReturnTab] = useState(null)
+
+  // ── Botón "atrás" (teléfono y PWA) ────────────────────────────────────
+  // Recorre en orden inverso los tabs visitados desde que se abrió la app
+  // y, al llegar a la primera pantalla, pide confirmar antes de cerrar.
+  // Ver src/lib/backNav.js. Declarado ANTES de los return condicionales
+  // (mismo motivo que el resto de hooks de aquí: no cambiar el número de
+  // hooks entre renders).
+  const [exitConfirmOpen, setExitConfirmOpen] = useState(false)
+  const tabRef = useRef(tab)
+  tabRef.current = tab
+  const exitOpenRef = useRef(false)
+  exitOpenRef.current = exitConfirmOpen
+  const applyTabRef = useRef(null)
+  const navReady = !!user && !authLoading && !profileLoading && !!profile?.onboarding_completed
+  const navReadyRef = useRef(false)
+  navReadyRef.current = navReady
+
+  useEffect(() => {
+    if (!navReady) return
+    const cleanup = initBackNavigation({
+      getTab: () => tabRef.current,
+      goToTab: (newTab) => applyTabRef.current?.(newTab),
+      onRootReached: () => setExitConfirmOpen(true),
+    })
+    let sub = null
+    if (Capacitor.isNativePlatform()) {
+      // Con un listener propio, Capacitor deja de cerrar la app por su
+      // cuenta: aquí se decide. Con historial → retrocede; sin él → confirma.
+      CapacitorApp.addListener('backButton', ({ canGoBack }) => {
+        if (exitOpenRef.current) { cancelExit(); return }
+        if (canGoBack) window.history.back()
+        else setExitConfirmOpen(true)
+      }).then(h => { sub = h })
+    }
+    return () => { cleanup(); sub?.remove() }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [navReady])
+
+  // "Quedarme": se vuelve a abrir una entrada de tab encima de la raíz para
+  // que el siguiente "atrás" vuelva a pedir confirmación.
+  function cancelExit() {
+    setExitConfirmOpen(false)
+    window.history.pushState({ lunaTab: tabRef.current }, '')
+  }
+  function confirmExit() {
+    if (Capacitor.isNativePlatform()) { CapacitorApp.exitApp(); return }
+    // PWA / navegador: una página no puede cerrarse a sí misma de forma
+    // fiable. Se intenta; si sigue aquí, estamos sobre la entrada raíz del
+    // historial, así que el siguiente "atrás" del sistema ya sale de verdad.
+    setExitConfirmOpen(false)
+    try { window.close() } catch { /* noop */ }
+    setTimeout(() => showToast(t('confirmExit.pressBack')), 300)
+  }
+
+  // Notificaciones y Premium se abren encima de un tab: "atrás" las cierra.
+  useBackClose(notifOpen, () => setNotifOpen(false))
+  useBackClose(premiumPageOpen, closePremiumPage)
 
   // "Obtener Premium" automático (v0.9.504) — 1 vez al día hasta que el
   // usuario sea premium. No es estado porque no necesita re-render propio:
@@ -1156,15 +1217,26 @@ export default function App() {
   // headerProps, el atajo de Espacio Compartido, el regreso de Ajustes, el
   // onGoSettings propio de HomePage) repetía el mismo cálculo de dirección +
   // setTab + sessionStorage por su cuenta.
-  function changeTab(newTab) {
-    if (newTab === tab) return
-    const fromIdx = TAB_ORDER.indexOf(tab)
+  // `applyTab` solo cambia la pantalla; `changeTab` además registra el
+  // paso en el historial (para que "atrás" regrese aquí). El propio "atrás"
+  // usa applyTab (vía applyTabRef) porque el historial ya se movió solo.
+  function applyTab(newTab) {
+    if (newTab === tabRef.current) return
+    const fromIdx = TAB_ORDER.indexOf(tabRef.current)
     const toIdx   = TAB_ORDER.indexOf(newTab)
     const dir = toIdx >= fromIdx ? 'right' : 'left'
     setSlideDir(dir)
     setTab(newTab)
+    tabRef.current = newTab
     sessionStorage.setItem('ada_tab', newTab)
     window.scrollTo(0, 0)
+  }
+  applyTabRef.current = applyTab
+
+  function changeTab(newTab) {
+    if (newTab === tab) return
+    if (navReadyRef.current) pushTabEntry(newTab)
+    applyTab(newTab)
   }
 
   // Abre PremiumPage — `auto` distingue el disparo automático diario (ver
@@ -1207,8 +1279,12 @@ export default function App() {
   // vez de mostrar el menú principal de Ajustes, regresa directo al tab
   // donde estaba antes de tocar el atajo.
   function returnFromSettingsShortcut(returnTab) {
-    changeTab(returnTab)
     setSettingsReturnTab(null)
+    // El atajo dejó el historial como [..., returnTab, settings]: un "atrás"
+    // más regresa al tab de origen (applyTab lo aplica por popstate) sin
+    // apilar una entrada nueva. Sin historial utilizable, cambio normal.
+    if (navReadyRef.current && window.history.state?.lunaTab === 'settings') window.history.back()
+    else changeTab(returnTab)
   }
 
   const headerProps = {
@@ -1590,6 +1666,7 @@ export default function App() {
         onGiveFeedback={handleFeedbackGiveFeedback}
         onRemindLater={handleFeedbackRemindLater}
       />
+      <ConfirmExitModal open={exitConfirmOpen} onConfirm={confirmExit} onCancel={cancelExit} />
       <Toast />
       {premiumPageOpen && <Suspense fallback={null}><PremiumPage profile={profile} onClose={closePremiumPage} refreshProfile={fetchProfile} /></Suspense>}
     </>

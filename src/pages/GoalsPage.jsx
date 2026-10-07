@@ -12,6 +12,8 @@ import { fmt, getMonthsShort } from '../lib/utils'
 import { showToast } from '../components/Toast'
 import { GoalCardSkeleton } from '../components/SkeletonLoader'
 import styles from './GoalsPage.module.css'
+import { markBackHandled } from '../lib/backNav'
+import { useScrollTop } from '../hooks/useScrollTop'
 
 function fmtDate(iso) {
   const d = new Date(iso)
@@ -62,6 +64,7 @@ export function GoalsPage({
 
   const [selectedGoalId, setSelectedGoalId] = useState(null)
   const [formOpen, setFormOpen] = useState(false)
+  useScrollTop(selectedGoalId, formOpen)
   const [editingGoal, setEditingGoal] = useState(null)
   const [sortBy, setSortBy] = useState('monto')
   // 'activas' | 'cumplidas' — default 'activas'
@@ -74,6 +77,7 @@ export function GoalsPage({
   useEffect(() => {
     if (!formOpen && !selectedGoalId) return
     const handler = () => {
+      markBackHandled()
       if (formOpen) { setFormOpen(false); return }
       setSelectedGoalId(null)
     }

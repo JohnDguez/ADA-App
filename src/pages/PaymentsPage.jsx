@@ -15,6 +15,7 @@ import { ConfirmDeleteModal } from '../components/ConfirmDeleteModal'
 import { CategoryListSkeleton, PaymentRowSkeleton, Bone } from '../components/SkeletonLoader'
 import AmountInput from '../components/AmountInput'
 import styles from './PaymentsPage.module.css'
+import { useScrollTop } from '../hooks/useScrollTop'
 
 const INCOME_TYPES = ['Bono', 'Préstamo', 'Pago', 'Comisión', 'Otro']
 
@@ -186,6 +187,7 @@ export function PaymentsPage({ payments, dataLoading = false, periodIncome, paym
 
   const [monthsBack,  setMonthsBack]  = useState(3)
   const [selectedCat, setSelectedCat] = useState(null)
+  useScrollTop(selectedCat)
   const [viewMonth,   setViewMonth]   = useState(now.getMonth())
   const [viewYear,    setViewYear]    = useState(now.getFullYear())
   const [viewMode,    setViewMode]    = useState('periodo')  // 'mes' | 'periodo'

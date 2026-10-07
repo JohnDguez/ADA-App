@@ -4,6 +4,7 @@ import { fmt, installmentUntrackedCount } from '../lib/utils'
 import { ConfirmCloseModal } from './ConfirmCloseModal'
 import AmountInput from './AmountInput'
 import styles from './InstallmentAbonarModal.module.css'
+import { markBackHandled } from '../lib/backNav'
 
 // Reemplaza el flujo de "Editar" para una copia individual de parcialidad —
 // nombre/monto de referencia/total de pagos ahora solo se editan desde el
@@ -42,6 +43,7 @@ export function InstallmentAbonarModal({ open, payment, payments, spacePermissio
   useEffect(() => {
     if (!open) return
     const handler = () => {
+      markBackHandled()
       if (amountRef.current) setConfirmClose(true)
       else onClose()
     }

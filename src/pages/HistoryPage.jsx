@@ -1,8 +1,10 @@
 import { useState } from 'react'
 import { fmt, dateOf, MONTHS, MONTHS_SHORT } from '../lib/utils'
+import { useScrollTop } from '../hooks/useScrollTop'
 
 export function HistoryPage({ payments }) {
   const [selectedName, setSelectedName] = useState(null)
+  useScrollTop(selectedName)
   const [monthsBack, setMonthsBack] = useState(6)
   const now = new Date()
 

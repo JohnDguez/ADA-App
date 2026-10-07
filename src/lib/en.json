@@ -13,6 +13,13 @@
     "discard": "Discard",
     "keepEditing": "Keep editing"
   },
+  "confirmExit": {
+    "title": "Close LunaPay?",
+    "description": "You're on the first screen. If you leave, the app will close.",
+    "exit": "Close the app",
+    "stay": "Stay",
+    "pressBack": "Press back once more to exit"
+  },
   "frequency": {
     "weekly": "Weekly",
     "biweekly": "Biweekly",
