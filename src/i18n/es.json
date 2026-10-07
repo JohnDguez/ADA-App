@@ -9,9 +9,9 @@
   },
   "confirmExit": {
     "title": "¿Cerrar LunaPay?",
-    "description": "Ya estás en la primera pantalla. Si sales, la app se cerrará.",
-    "exit": "Cerrar la app",
-    "stay": "Quedarme",
+    "description": "Se cerrará la app.",
+    "exit": "Cerrar",
+    "stay": "Cancelar",
     "pressBack": "Presiona atrás una vez más para salir"
   },
   "confirmClose": {

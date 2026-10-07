@@ -1,4 +1,4 @@
-import { useState, useRef, useLayoutEffect } from 'react'
+import { useState, useEffect, useRef, useLayoutEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Plus, ShieldCheck, Loader2 } from 'lucide-react'
 // Import DIRECTO al archivo del ícono (no el barrel) — mismo criterio que
@@ -15,6 +15,7 @@ import { getBank } from '../../lib/cardCatalog'
 import { totalOwedOnCard } from '../../lib/cardStatements'
 import { fmt } from '../../lib/utils'
 import styles from './SettingsCardsPage.module.css'
+import { markBackHandled } from '../../lib/backNav'
 
 // Mis tarjetas (v0.9.486, entrega A). Actualizado en v0.9.495 (mockups
 // confirmados con Johnatan): tocar una tarjeta ya NO la abre en la propia
@@ -100,6 +101,20 @@ export function SettingsCardsPage({ paymentMethods, personalPayments = null, sha
   const [deleting, setDeleting] = useState(null)
   const [selectedId, setSelectedId] = useState(null)
 
+  // El detalle de una tarjeta es una pantalla propia: abrirlo empuja una
+  // entrada al historial para que "atrás" (botón del teléfono o el de la
+  // pantalla) regrese a la lista de tarjetas y no al menú de Ajustes. El
+  // botón de la pantalla también pasa por history.back() para consumir la
+  // entrada (mismo patrón que SettingsPage.jsx).
+  const detailOpen = !!selectedId
+  useEffect(() => {
+    if (!detailOpen) return
+    const handler = () => { markBackHandled(); setSelectedId(null) }
+    window.history.pushState(null, '', window.location.href)
+    window.addEventListener('popstate', handler)
+    return () => window.removeEventListener('popstate', handler)
+  }, [detailOpen])
+
   const { credit, debit, loaded, addMethod, updateMethod, deleteMethod } = paymentMethods
   const cards = kind === 'credit' ? credit : debit
   const selectedCard = selectedId ? paymentMethods.methods.find(m => m.id === selectedId) || null : null
@@ -117,7 +132,7 @@ export function SettingsCardsPage({ paymentMethods, personalPayments = null, sha
 
   function confirmDelete() {
     if (deleting) deleteMethod(deleting.id)
-    if (selectedId === deleting?.id) setSelectedId(null)
+    if (selectedId === deleting?.id) window.history.back()
     setDeleting(null)
   }
 
@@ -133,7 +148,7 @@ export function SettingsCardsPage({ paymentMethods, personalPayments = null, sha
             card={selectedCard}
             payments={personalPayments}
             spaceNames={Object.fromEntries((sharedSpaces?.spaces || []).map(s => [s.space.id, s.space.name]))}
-            onBack={() => setSelectedId(null)}
+            onBack={() => window.history.back()}
             onEdit={() => openEdit(selectedCard)}
             onDelete={() => setDeleting(selectedCard)}
             onPayNow={onPayCardNow}

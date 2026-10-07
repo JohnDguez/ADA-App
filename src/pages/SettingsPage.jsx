@@ -18,7 +18,7 @@ import { SettingsSubscriptionPage } from './settings/SettingsSubscriptionPage'
 import { SettingsExportPage } from './settings/SettingsExportPage'
 import { SettingsCardsPage } from './settings/SettingsCardsPage'
 import styles from './SettingsPage.module.css'
-import { markBackHandled } from '../lib/backNav'
+import { markBackHandled, wasBackHandled } from '../lib/backNav'
 import { AvatarImg } from '../components/AvatarImg'
 
 // Galería de avatares preestablecidos — imágenes estáticas servidas desde
@@ -84,6 +84,17 @@ export function SettingsPage({ profile, user, onUpdate, onUploadAvatar, onDataDe
 
   useEffect(() => {
     function handlePopState() {
+      // Se decide un instante después: si una sub-pantalla con su propio
+      // "atrás" (ej. el detalle de una tarjeta) ya atendió este mismo
+      // popstate, Ajustes no debe cerrar además su sección — antes lo hacía
+      // y "atrás" desde el detalle de una tarjeta caía al menú de Ajustes en
+      // vez de a la lista de tarjetas.
+      setTimeout(() => {
+        if (wasBackHandled()) return
+        handle()
+      }, 0)
+    }
+    function handle() {
       markBackHandled()
       if (shortcutReturnRef.current) {
         const returnTo = shortcutReturnRef.current

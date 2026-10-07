@@ -23,6 +23,7 @@ import { useEffect, useRef } from 'react'
 // se salta sola para que el usuario no tenga que dar "atrás" de más.
 let backHandled = false
 export function markBackHandled() { backHandled = true }
+export function wasBackHandled() { return backHandled }
 
 export function initBackNavigation({ getTab, goToTab, onRootReached }) {
   try { window.history.scrollRestoration = 'manual' } catch { /* noop */ }
