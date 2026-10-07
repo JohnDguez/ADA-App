@@ -7,6 +7,13 @@
     "close": "Close",
     "edit": "Edit"
   },
+  "confirmExit": {
+    "title": "Close LunaPay?",
+    "description": "You're on the first screen. If you leave, the app will close.",
+    "exit": "Close the app",
+    "stay": "Stay",
+    "pressBack": "Press back once more to exit"
+  },
   "confirmClose": {
     "title": "Discard changes",
     "description": "You have unsaved information. If you close it, you'll lose it.",

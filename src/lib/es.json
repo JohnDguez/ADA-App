@@ -13,13 +13,6 @@
     "discard": "Descartar",
     "keepEditing": "Seguir editando"
   },
-  "confirmExit": {
-    "title": "¿Cerrar LunaPay?",
-    "description": "Ya estás en la primera pantalla. Si sales, la app se cerrará.",
-    "exit": "Cerrar la app",
-    "stay": "Quedarme",
-    "pressBack": "Presiona atrás una vez más para salir"
-  },
   "frequency": {
     "weekly": "Semanal",
     "biweekly": "Quincenal",
