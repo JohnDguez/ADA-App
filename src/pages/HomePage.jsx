@@ -38,7 +38,7 @@ function nextPeriodRange(cfg) {
 // el fix del degradado a porcentajes bajos.
 
 export function HomePage({ payments, dataLoading = false, profile, spaceSwitcher, activeSpaceHeader, activeSpaceId, sharedSpaces, spacePermissions, onOpenPremium, onSpaceReady, onAdd, onMarkPaid, onRequestVariableAmount, onConfirmVariablePaid, onRequestNextPeriodConfirm, onMarkUnpaid, onCaptureAmount, onEdit, onAbonar, onSplit, onPayFromFund, fundBalance, onViewSource, onDelete, onPostpone, onAdvance, onGoSettings, paymentMethodsList = [], onChangeMethod, notifications, unreadCount, onMarkAsRead, onMarkAllAsRead, onDeleteNotif, onClearAllNotifs, onNavigateNotif, slideClass }) {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   // Detecta un cambio REAL de espacio activo (no el primer montaje de la
   // página, que también dispararía un `key` remontado sin querer) — antes
   // se usaba `key={activeSpaceId}` para forzar el remontado del contenido,
@@ -262,8 +262,8 @@ export function HomePage({ payments, dataLoading = false, profile, spaceSwitcher
   // No-op fuera de la app nativa (ver lib/lunaWidget.js).
   useEffect(() => {
     if (dataLoading || activeSpaceId) return
-    syncLunaWidget({ done: lunaState.done, pending: pagarEsteCobro })
-  }, [dataLoading, activeSpaceId, lunaState.done, pagarEsteCobro])
+    syncLunaWidget({ done: lunaState.done, pending: pagarEsteCobro, lang: (i18n.language || 'es').slice(0, 2) })
+  }, [dataLoading, activeSpaceId, lunaState.done, pagarEsteCobro, i18n.language])
 
   // v0.9.282 — antes este objeto se recreaba en CADA render de HomePage,
   // rompiendo el React.memo de PayRail/PayCard (identidad nueva = re-render

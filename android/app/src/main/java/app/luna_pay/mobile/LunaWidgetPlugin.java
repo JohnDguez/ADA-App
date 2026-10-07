@@ -20,6 +20,7 @@ public class LunaWidgetPlugin extends Plugin {
             call.reject("snapshot requerido");
             return;
         }
+        LunaWidgetStore.saveLang(getContext(), call.getString("lang"));
         LunaWidgetStore.saveSnapshot(getContext(), snapshot);
         LunaWidgetProvider.refreshAll(getContext());
         call.resolve();

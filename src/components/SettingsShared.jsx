@@ -44,10 +44,11 @@ export function Row({ label, sub, value, onClick, last, icon: Icon, iconColor, f
   )
 }
 
-export function Toggle({ on }) {
+// `instant`: sin animación (para el primer pintado, antes de conocer el estado real).
+export function Toggle({ on, instant = false }) {
   return (
-    <div className="toggle-track" style={{ background: on ? 'var(--accent)' : 'var(--border)' }}>
-      <div className="toggle-thumb" style={{ left: on ? 19 : 3 }} />
+    <div className="toggle-track" style={{ background: on ? 'var(--accent)' : 'var(--border)', ...(instant ? { transition: 'none' } : null) }}>
+      <div className="toggle-thumb" style={{ left: on ? 19 : 3, ...(instant ? { transition: 'none' } : null) }} />
     </div>
   )
 }

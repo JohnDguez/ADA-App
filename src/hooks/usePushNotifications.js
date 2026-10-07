@@ -34,12 +34,15 @@ export function usePushNotifications(userId) {
   })
   const [subscribed, setSubscribed] = useState(false)
   const [loading,    setLoading]    = useState(false)
+  // `ready`: ya se consultó el estado real de la suscripción — antes el switch
+  // arrancaba apagado y se animaba a encendido cada vez que se abría la pantalla.
+  const [ready,      setReady]      = useState(false)
 
   useEffect(() => {
     if (!userId) return
-    if (isNativeAndroid()) { checkSubscriptionNative(); return }
-    if (!('serviceWorker' in navigator)) return
-    checkSubscription()
+    if (isNativeAndroid()) { checkSubscriptionNative().finally(() => setReady(true)); return }
+    if (!('serviceWorker' in navigator)) { setReady(true); return }
+    checkSubscription().finally(() => setReady(true))
   }, [userId])
 
   async function checkSubscription() {
@@ -205,5 +208,5 @@ export function usePushNotifications(userId) {
     setLoading(false)
   }
 
-  return { permission, subscribed, loading, subscribe, unsubscribe }
+  return { permission, subscribed, loading, ready, subscribe, unsubscribe }
 }

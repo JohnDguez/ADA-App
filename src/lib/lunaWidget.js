@@ -26,17 +26,18 @@ function getPlugin() {
   return plugin
 }
 
-export function syncLunaWidget({ done, pending }) {
+export function syncLunaWidget({ done, pending, lang }) {
   if (!isNativeAndroid()) return
   const snapshot = JSON.stringify({
     v: 1,
+    lang: lang || '',
     done,
     pending: pending.map(p => ({ n: String(p.name || ''), d: p.due_date })),
   })
   if (snapshot === lastSent) return
   lastSent = snapshot
   try {
-    getPlugin()?.sync({ snapshot })?.catch?.(err => console.error('[Widget de Luna]', err))
+    getPlugin()?.sync({ snapshot, lang: lang || '' })?.catch?.(err => console.error('[Widget de Luna]', err))
   } catch (err) {
     console.error('[Widget de Luna]', err)
   }

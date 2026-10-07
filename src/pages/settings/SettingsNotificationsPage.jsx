@@ -23,7 +23,7 @@ const HOUR_LABELS = Array.from({ length: 24 }, (_, i) =>
 // SettingsPage.jsx.
 export function SettingsNotificationsPage({ profile, user, onUpdate, onBack, slideClass }) {
   const { t } = useTranslation()
-  const { subscribed, subscribe, unsubscribe } = usePushNotifications(user?.id)
+  const { subscribed, ready, subscribe, unsubscribe } = usePushNotifications(user?.id)
 
   // `pushTarget` (v0.9.482): el switch se mueve al instante hacia donde se
   // pidió, en vez de esperar a que termine todo el proceso (registrar el
@@ -67,7 +67,7 @@ export function SettingsNotificationsPage({ profile, user, onUpdate, onBack, sli
                 </div>
               </div>
             </div>
-            <Toggle on={pushTarget ?? subscribed} />
+            <Toggle on={pushTarget ?? subscribed} instant={!ready} />
           </div>
         </div>
 

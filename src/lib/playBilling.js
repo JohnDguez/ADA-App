@@ -39,13 +39,15 @@ export function isAndroidBilling() {
 
 let storeInitialized = false
 let storeReadyPromise = null
+let storeRef = null
 
 // Registra los 2 productos y el listener permanente de aprobación —
 // idempotente (una sola vez por sesión de la app, sin importar cuántas
 // veces se abra/cierre PremiumPage). Se llama sola, de forma perezosa,
 // desde restorePurchases() — no hace falta que App.jsx la dispare aparte.
 function ensureStoreInitialized() {
-  if (storeInitialized || !isAndroidBilling()) return null
+  if (storeInitialized) return storeRef
+  if (!isAndroidBilling()) return null
   const CdvPurchase = window.CdvPurchase
   if (!CdvPurchase) return null // plugin no cargó (build sin `cap sync`, o web)
   const { store, ProductType, Platform } = CdvPurchase
@@ -69,6 +71,7 @@ function ensureStoreInitialized() {
     console.error('[Google Play Billing] Error al inicializar:', e)
   })
   storeInitialized = true
+  storeRef = store
   return store
 }
 

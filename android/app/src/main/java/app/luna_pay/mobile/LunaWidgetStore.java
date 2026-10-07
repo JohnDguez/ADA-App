@@ -15,6 +15,7 @@ final class LunaWidgetStore {
     private static final String PREFS = "luna_widget";
     private static final String KEY_SNAPSHOT = "snapshot";
     private static final String KEY_LAST_OPEN = "last_open";
+    private static final String KEY_LANG = "lang";
 
     private LunaWidgetStore() {}
 
@@ -24,6 +25,21 @@ final class LunaWidgetStore {
 
     static void saveSnapshot(Context c, String json) {
         prefs(c).edit().putString(KEY_SNAPSHOT, json).putLong(KEY_LAST_OPEN, System.currentTimeMillis()).apply();
+    }
+
+    /** Idioma de la app (no el del teléfono): el widget lo usa para sus textos. */
+    static void saveLang(Context c, String lang) {
+        if (lang == null || lang.isEmpty()) return;
+        prefs(c).edit().putString(KEY_LANG, lang).apply();
+    }
+
+    /** Context con el idioma elegido en la app; si no hay, el del teléfono. */
+    static Context localized(Context c) {
+        String lang = prefs(c).getString(KEY_LANG, null);
+        if (lang == null || lang.isEmpty()) return c;
+        android.content.res.Configuration cfg = new android.content.res.Configuration(c.getResources().getConfiguration());
+        cfg.setLocale(new java.util.Locale(lang));
+        return c.createConfigurationContext(cfg);
     }
 
     static String loadSnapshot(Context c) {

@@ -68,17 +68,20 @@ public class LunaWidgetProvider extends AppWidgetProvider {
         RemoteViews v = new RemoteViews(context.getPackageName(),
                 s.isNight() ? R.layout.luna_widget_4x2_night : R.layout.luna_widget_4x2);
 
+        // Textos en el idioma de la app (no el del teléfono).
+        Context lc = LunaWidgetStore.localized(context);
+
         v.setImageViewResource(R.id.luna_image, imageFor(s.key));
         v.setInt(R.id.luna_root, "setBackgroundResource", backgroundFor(s.key));
-        v.setTextViewText(R.id.luna_title, titleFor(context, s));
-        v.setTextViewText(R.id.luna_sub, subFor(context, s));
+        v.setTextViewText(R.id.luna_title, titleFor(lc, s));
+        v.setTextViewText(R.id.luna_sub, subFor(lc, s));
 
         boolean showProgress = s.total > 0;
         v.setViewVisibility(R.id.luna_progress, showProgress ? android.view.View.VISIBLE : android.view.View.GONE);
         if (showProgress) {
             v.setImageViewBitmap(R.id.luna_ring, drawRing(context, s));
             v.setTextViewText(R.id.luna_fraction, s.done + "/" + s.total);
-            v.setTextViewText(R.id.luna_count, context.getString(R.string.luna_progress, s.done, s.total));
+            v.setTextViewText(R.id.luna_count, lc.getString(R.string.luna_progress, s.done, s.total));
         }
 
         Intent launch = context.getPackageManager().getLaunchIntentForPackage(context.getPackageName());
