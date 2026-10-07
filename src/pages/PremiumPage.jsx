@@ -11,7 +11,7 @@ import { Target } from '@phosphor-icons/react/dist/csr/Target'
 import { loadStripe } from '@stripe/stripe-js'
 import { EmbeddedCheckoutProvider, EmbeddedCheckout } from '@stripe/react-stripe-js'
 import { supabase } from '../lib/supabase'
-import { isAndroidBilling, restorePurchases, purchasePremium } from '../lib/playBilling'
+import { isAndroidBilling, restorePurchases, purchasePremium, initPlayBilling } from '../lib/playBilling'
 import { getPremiumSource } from '../lib/utils'
 import { apiUrl } from '../lib/apiUrl'
 import styles from './PremiumPage.module.css'
@@ -66,6 +66,9 @@ export function PremiumPage({ profile, onClose, refreshProfile }) {
   const [closing, setClosing] = useState(false)
   const closeTimerRef = useRef(null)
   const enterTimerRef = useRef(null)
+
+  // Carga el catálogo de Google Play al abrir la pantalla (solo Android).
+  useEffect(() => { if (isAndroidBilling()) initPlayBilling() }, [])
 
   useEffect(() => {
     enterTimerRef.current = setTimeout(() => setEntering(false), ANIM_MS)

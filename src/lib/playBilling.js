@@ -38,6 +38,7 @@ export function isAndroidBilling() {
 }
 
 let storeInitialized = false
+let storeReadyPromise = null
 
 // Registra los 2 productos y el listener permanente de aprobación —
 // idempotente (una sola vez por sesión de la app, sin importar cuántas
@@ -60,9 +61,21 @@ function ensureStoreInitialized() {
   // reaparezca al restaurar.
   store.when().approved((transaction) => transaction.verify())
 
-  store.initialize([Platform.GOOGLE_PLAY])
+  // `initialize()` es asíncrono: el catálogo de productos (precios, ofertas)
+  // llega DESPUÉS. Se guarda la promesa para poder esperarla antes de ordenar —
+  // antes la primera compra pedía la oferta apenas se inicializaba el store,
+  // cuando todavía no cargaba, y fallaba con "plan no encontrado".
+  storeReadyPromise = Promise.resolve(store.initialize([Platform.GOOGLE_PLAY])).catch((e) => {
+    console.error('[Google Play Billing] Error al inicializar:', e)
+  })
   storeInitialized = true
   return store
+}
+
+// Se llama al abrir PremiumPage en Android para que el catálogo ya esté
+// cargado cuando el usuario toque "Comprar".
+export function initPlayBilling() {
+  ensureStoreInitialized()
 }
 
 // Envía el purchaseToken al backend para validarlo contra la Google Play
@@ -101,10 +114,17 @@ export async function purchasePremium(plan, accessToken) {
   }
   const { Platform } = window.CdvPurchase
   const productId = PLAY_PRODUCT_IDS[plan]
-  const product = store.get(productId, Platform.GOOGLE_PLAY)
-  const offer = product?.getOffer()
+  if (storeReadyPromise) await storeReadyPromise
+  // Reintenta unos segundos: el catálogo puede tardar en llegar de Google.
+  let offer = null
+  for (let i = 0; i < 10; i++) {
+    offer = store.get(productId, Platform.GOOGLE_PLAY)?.getOffer()
+    if (offer) break
+    try { await store.update() } catch (e) { /* se reintenta */ }
+    await new Promise((r) => setTimeout(r, 500))
+  }
   if (!offer) {
-    throw new Error('No se encontró el plan seleccionado en Google Play')
+    throw new Error('No se encontró el plan "' + productId + '" en Google Play (¿producto/oferta activos y cuenta de prueba con acceso?)')
   }
 
   return new Promise((resolve, reject) => {
