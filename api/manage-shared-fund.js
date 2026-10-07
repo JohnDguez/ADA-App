@@ -123,7 +123,7 @@ module.exports = async function handler(req, res) {
   if (userError || !userData?.user) return res.status(401).json({ error: 'Token inválido' })
   const actorId = userData.user.id
 
-  const { spaceId, amount, note, deleteLedgerId, todayStr } = req.body || {}
+  const { spaceId, amount, note, deleteLedgerId, todayStr, methodId } = req.body || {}
   if (!spaceId) return res.status(400).json({ error: 'Falta spaceId' })
 
   try {
@@ -217,7 +217,20 @@ module.exports = async function handler(req, res) {
     // que sin tope contra qué medirlo).
     const { data: actorProfileRow } = await supabase.from('profiles').select('salary_enabled, salary_amount').eq('id', actorId).maybeSingle()
     const actorHasIncome = !!(actorProfileRow?.salary_enabled && Number(actorProfileRow?.salary_amount) > 0)
-    if (actorHasIncome) {
+
+    // Método de pago de la aportación (v0.9.568). Las tarjetas son
+    // personales: se valida que sea de quien aporta. `methodId` null o
+    // ausente = Efectivo. Crédito cuenta como gasto pero nunca baja el
+    // disponible (mismo criterio que getPersonalAvailable), así que con
+    // crédito no aplica el tope contra el disponible.
+    let methodFields = { payment_method_id: null, payment_method_kind: 'cash' }
+    if (methodId) {
+      const { data: card } = await supabase.from('payment_methods').select('id, kind').eq('id', methodId).eq('user_id', actorId).maybeSingle()
+      if (!card) return res.status(400).json({ error: 'Método de pago no válido' })
+      methodFields = { payment_method_id: card.id, payment_method_kind: card.kind }
+    }
+
+    if (actorHasIncome && methodFields.payment_method_kind !== 'credit') {
       const personalAvailable = await getPersonalAvailable(supabase, actorId)
       if (personalAvailable <= 0) {
         return res.status(400).json({ error: 'No puedes aportar — tu remanente personal está en negativo' })
@@ -232,6 +245,7 @@ module.exports = async function handler(req, res) {
       amount: numAmount, due_date: todayStr || new Date().toISOString().slice(0, 10), is_paid: true, paid_at: new Date().toISOString(),
       is_variable: false, is_recurrent: false, postponed: false, paused: false,
       source_space_id: spaceId, is_contribution_reflection: true,
+      ...methodFields,
     }).select().single()
     if (reflErr) return res.status(500).json({ error: 'No se pudo registrar el descuento en tu personal: ' + reflErr.message })
 

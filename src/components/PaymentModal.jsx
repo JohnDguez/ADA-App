@@ -15,7 +15,7 @@ import { DatePicker } from './DatePicker'
 import AmountInput from './AmountInput'
 import styles from './PaymentModal.module.css'
 import { markBackHandled, wasBackHandled } from '../lib/backNav'
-import { CardFormModal } from './CardFormModal'
+import { AddCardModal } from './AddCardModal'
 
 export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelete, onEditMaster, initial, payments, profile, spacePermissions, isSharedSpace = false, customCategories = [], onAddCategory, onOpenPremium, paymentMethods = null }) {
   const { t } = useTranslation()
@@ -205,11 +205,6 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
   // `tmp-…` no sirve como payment_method_id); mientras tanto la tarjeta ya
   // aparece en la lista por la actualización optimista.
   const [cardFormOpen, setCardFormOpen] = useState(false)
-  async function handleCardSaved(data) {
-    setCardFormOpen(false)
-    const res = await paymentMethods.addMethod(data)
-    if (!res?.error && res?.id) setMethodId(res.id)
-  }
   const openAddCard = () => setCardFormOpen(true)
   function methodPayload() {
     if (!methodsAvailable) return {}
@@ -815,7 +810,7 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
       </div>
       <ConfirmCloseModal open={confirmClose} onConfirm={() => { setConfirmClose(false); onClose() }} onCancel={() => setConfirmClose(false)} />
       {methodsAvailable && (
-        <CardFormModal open={cardFormOpen} initial={null} onSave={handleCardSaved} onClose={() => setCardFormOpen(false)} />
+        <AddCardModal open={cardFormOpen} onClose={() => setCardFormOpen(false)} paymentMethods={paymentMethods} onAdded={setMethodId} />
       )}
       <ConfirmDeleteModal
         open={confirmDelete}

@@ -203,6 +203,10 @@
   margin-bottom: 12px;
 }
 
+.methodField {
+  margin-bottom: 12px;
+}
+
 .actionButtons {
   display: flex;
   gap: 10px;

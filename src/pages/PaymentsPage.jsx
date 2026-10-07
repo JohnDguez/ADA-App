@@ -14,6 +14,8 @@ import { showToast } from '../components/Toast'
 import { ConfirmDeleteModal } from '../components/ConfirmDeleteModal'
 import { CategoryListSkeleton, PaymentRowSkeleton, Bone } from '../components/SkeletonLoader'
 import AmountInput from '../components/AmountInput'
+import { PaymentMethodField } from '../components/PaymentMethodField'
+import { AddCardModal } from '../components/AddCardModal'
 import styles from './PaymentsPage.module.css'
 import { useScrollTop } from '../hooks/useScrollTop'
 
@@ -127,7 +129,7 @@ function MethodRow({ label, amount, total, barClass, cards = [], note = null }) 
   )
 }
 
-export function PaymentsPage({ payments, dataLoading = false, periodIncome, paymentMethodsList = [], onChangeMethod, profile, spaceSwitcher, activeSpaceHeader, activeSpaceId = null, rawActiveSpaceId = null, sharedSpaces, spacePermissions, onOpenPremium, onSpaceReady, unreadCount, onOpenNotifs, onGoSettings, onMarkUnpaid, onDelete, onDeleteDirect, onUpdateProfile, onEdit, onViewSource, onSplit, onAdd, onGoCategories, sharedFund, slideClass, ensureMonthLoaded, oldestPaymentYear = null }) {
+export function PaymentsPage({ payments, dataLoading = false, periodIncome, paymentMethodsList = [], paymentMethods = null, onChangeMethod, profile, spaceSwitcher, activeSpaceHeader, activeSpaceId = null, rawActiveSpaceId = null, sharedSpaces, spacePermissions, onOpenPremium, onSpaceReady, unreadCount, onOpenNotifs, onGoSettings, onMarkUnpaid, onDelete, onDeleteDirect, onUpdateProfile, onEdit, onViewSource, onSplit, onAdd, onGoCategories, sharedFund, slideClass, ensureMonthLoaded, oldestPaymentYear = null }) {
   const { t } = useTranslation()
   // Mismo mecanismo que HomePage.jsx — ver ahí el porqué (evitar que la
   // animación de entrada se dispare también en un simple cambio de
@@ -242,6 +244,13 @@ export function PaymentsPage({ payments, dataLoading = false, periodIncome, paym
   const [fundExpanded,      setFundExpanded]      = useState(false)
   const [addFundModal,      setAddFundModal]      = useState(false)
   const [fundAmount,        setFundAmount]        = useState('')
+  // "Se paga con" al añadir fondos (efectivo o tarjeta propia). Crédito no baja
+  // el disponible, así que con crédito no aplica el tope contra el disponible.
+  const [fundMethodId,      setFundMethodId]      = useState(null)
+  const [fundCardFormOpen,  setFundCardFormOpen]  = useState(false)
+  const fundMethod = paymentMethods?.methods.find(m => m.id === fundMethodId) || null
+  const fundIsCredit = fundMethod?.kind === 'credit'
+  useEffect(() => { if (!addFundModal) setFundMethodId(null) }, [addFundModal])
   const [fundNote,          setFundNote]          = useState('')
   const [savingFund,        setSavingFund]        = useState(false)
   const [manageFundModal,   setManageFundModal]   = useState(false)
@@ -294,7 +303,7 @@ export function PaymentsPage({ payments, dataLoading = false, periodIncome, paym
   async function handleAddFund() {
     const amount = parseFloat(fundAmount)
     if (!amount || amount <= 0) return
-    if (personalAvailable != null) {
+    if (personalAvailable != null && !fundIsCredit) {
       if (personalAvailable <= 0) {
         showToast(t('paymentsPage.addFundModal.toast.negativeAvailable'))
         return
@@ -305,10 +314,10 @@ export function PaymentsPage({ payments, dataLoading = false, periodIncome, paym
       }
     }
     setSavingFund(true)
-    const { error } = await sharedFund.addFunds(amount, fundNote.trim() || null)
+    const { error } = await sharedFund.addFunds(amount, fundNote.trim() || null, fundMethodId)
     setSavingFund(false)
     if (error) { showToast(error.message || t('paymentsPage.addFundModal.toast.error')); return }
-    setAddFundModal(false); setFundAmount(''); setFundNote('')
+    setAddFundModal(false); setFundAmount(''); setFundNote(''); setFundMethodId(null)
     showToast(t('paymentsPage.addFundModal.toast.success'))
   }
 
@@ -1103,7 +1112,7 @@ export function PaymentsPage({ payments, dataLoading = false, periodIncome, paym
               />
               {(() => {
                 const numAmt = parseFloat(fundAmount) || 0
-                if (personalAvailable == null || numAmt <= 0) return null
+                if (personalAvailable == null || numAmt <= 0 || fundIsCredit) return null
                 const excede = numAmt > personalAvailable
                 if (excede) {
                   return <div className={styles.fundExceedsError}>{t('paymentsPage.addFundModal.exceeds', { amount: fmt(personalAvailable) })}</div>
@@ -1111,6 +1120,16 @@ export function PaymentsPage({ payments, dataLoading = false, periodIncome, paym
                 return <div className={styles.fundRemainingHint}>{t('paymentsPage.addFundModal.remaining', { amount: fmt(personalAvailable - numAmt) })}</div>
               })()}
             </div>
+            {paymentMethods && (
+              <div className={styles.incomeFieldGroup}>
+                <PaymentMethodField
+                  methods={paymentMethods.methods}
+                  value={fundMethodId}
+                  onChange={setFundMethodId}
+                  onAddCard={() => setFundCardFormOpen(true)}
+                />
+              </div>
+            )}
             <div className={styles.incomeFieldGroupLast}>
               <div className={styles.incomeLabelMb6}>{t('paymentsPage.noteOptional')}</div>
               <input
@@ -1123,7 +1142,7 @@ export function PaymentsPage({ payments, dataLoading = false, periodIncome, paym
               onClick={handleAddFund}
               disabled={
                 savingFund || !fundAmount || parseFloat(fundAmount) <= 0 ||
-                (personalAvailable != null && (personalAvailable <= 0 || parseFloat(fundAmount) > personalAvailable))
+                (personalAvailable != null && !fundIsCredit && (personalAvailable <= 0 || parseFloat(fundAmount) > personalAvailable))
               }
               className={styles.incomeSaveButton}
             >
@@ -1132,6 +1151,14 @@ export function PaymentsPage({ payments, dataLoading = false, periodIncome, paym
             <button onClick={() => { setAddFundModal(false); setPersonalAvailable(null) }} className={styles.incomeCancelButton}>
               {t('buttons.cancel')}
             </button>
+            {paymentMethods && (
+              <AddCardModal
+                open={fundCardFormOpen}
+                onClose={() => setFundCardFormOpen(false)}
+                paymentMethods={paymentMethods}
+                onAdded={setFundMethodId}
+              />
+            )}
           </div>
         </div>
       )}

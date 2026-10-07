@@ -321,7 +321,10 @@ export function useGoals(userId, profile, spaceId = null, onPaymentsChanged = nu
 
   // Operaciones de un aporte personal (movimiento + gasto reflejo), para
   // aportar() y para completar con ingreso (markCompleted).
-  function aporteOps(goalId, amount, goalName) {
+  // `method` = { id, kind } de la tarjeta con la que se aporta (null =
+  // Efectivo). El gasto reflejo la lleva: crédito cuenta como gasto pero no
+  // baja el disponible (ver Mis tarjetas).
+  function aporteOps(goalId, amount, goalName, method = null) {
     const txId = tempId()
     const txRow = { goal_id: goalId, user_id: userId, space_id: null, amount, type: 'aporte' }
     const paymentRow = {
@@ -342,6 +345,7 @@ export function useGoals(userId, profile, spaceId = null, onPaymentsChanged = nu
       is_postponed: false,
       paused: false,
       is_installment: false,
+      ...(method ? { payment_method_id: method.id, payment_method_kind: method.kind } : {}),
     }
     return {
       serverOps: [
@@ -381,16 +385,16 @@ export function useGoals(userId, profile, spaceId = null, onPaymentsChanged = nu
   // pago pagado del periodo — nada de un cálculo aparte que el usuario no
   // pueda ver. En una meta del espacio hace exactamente lo mismo, pero
   // desde el endpoint y validando antes contra el disponible real.
-  async function aportar(goalId, amount, goalName) {
+  async function aportar(goalId, amount, goalName, method = null) {
     if (!amount || amount <= 0) return { error: { message: 'Monto inválido' } }
-    if (spaceId) return callSharedApi('contribute', { goalId, payload: { amount } })
+    if (spaceId) return callSharedApi('contribute', { goalId, payload: { amount, methodId: method?.id ?? null } })
 
     // Optimista + todo-o-nada (v0.9.483): antes eran 2 escrituras sueltas —
     // si la segunda fallaba, la meta subía sin que el gasto existiera.
     // `notifyPaymentsChanged` (v0.9.474) corre al confirmar: el gasto
     // "Aporte a meta" aparece en Gastos/Disponible en cuanto el servidor lo
     // aplica.
-    const { serverOps, txInsert } = aporteOps(goalId, amount, goalName)
+    const { serverOps, txInsert } = aporteOps(goalId, amount, goalName, method)
     return runGoalBatch({
       goalId, goalName, action: 'goalAportar', serverOps,
       local: { txInserts: [txInsert] },

@@ -12,7 +12,7 @@ import { fmt, getMonthsShort } from '../lib/utils'
 import { showToast } from '../components/Toast'
 import { GoalCardSkeleton } from '../components/SkeletonLoader'
 import styles from './GoalsPage.module.css'
-import { markBackHandled } from '../lib/backNav'
+import { markBackHandled, wasBackHandled } from '../lib/backNav'
 import { useScrollTop } from '../hooks/useScrollTop'
 
 function fmtDate(iso) {
@@ -42,7 +42,7 @@ function fmtDate(iso) {
 export function GoalsPage({
   goalsData, profile, isPremium, activeSpaceId = null, rawActiveSpaceId = null,
   spacePermissions, spaceMembers = [], spaceSwitcher, activeSpaceHeader, sharedSpaces, onSpaceReady,
-  unreadCount, onOpenNotifs, onGoSettings, onOpenPremium, slideClass,
+  unreadCount, onOpenNotifs, onGoSettings, onOpenPremium, slideClass, paymentMethods = null,
 }) {
   const { t } = useTranslation()
   const { activeGoals, completedGoals, totalRestante, loading: goalsLoading, addGoal, updateGoal, aportar, retirar, revertirAporte, markCompleted, deleteGoal } = goalsData
@@ -76,10 +76,16 @@ export function GoalsPage({
   // una pestaña, no un modal encima de otra pantalla.
   useEffect(() => {
     if (!formOpen && !selectedGoalId) return
+    // Se decide un instante después: si "Añadir tarjeta" (CardFormModal,
+    // abierto encima del detalle al aportar) ya atendió este "atrás", el
+    // detalle de la meta se queda.
     const handler = () => {
-      markBackHandled()
-      if (formOpen) { setFormOpen(false); return }
-      setSelectedGoalId(null)
+      setTimeout(() => {
+        if (wasBackHandled()) return
+        markBackHandled()
+        if (formOpen) { setFormOpen(false); return }
+        setSelectedGoalId(null)
+      }, 0)
     }
     window.history.pushState(null, '', window.location.href)
     window.addEventListener('popstate', handler)
@@ -313,7 +319,8 @@ export function GoalsPage({
               hasIncome={!!(profile?.salary_enabled && Number(profile?.salary_amount) > 0)}
               onBack={() => setSelectedGoalId(null)}
               onEdit={() => openEdit(selectedGoal)}
-              onAportar={amount => aportar(selectedGoal.id, amount, selectedGoal.name)}
+              onAportar={(amount, method) => aportar(selectedGoal.id, amount, selectedGoal.name, method)}
+              paymentMethods={paymentMethods}
               onRetirar={amount => retirar(selectedGoal.id, amount, selectedGoal.name)}
               onRevert={transactionId => revertirAporte(transactionId)}
               onMarkCompleted={completed => markCompleted(selectedGoal.id, completed)}

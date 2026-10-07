@@ -102,14 +102,14 @@ export function useSharedFund(spaceId) {
     return () => { supabase.removeChannel(channel) }
   }, [spaceId, fetchLedger])
 
-  async function addFunds(amount, note) {
+  async function addFunds(amount, note, methodId = null) {
     try {
       const { data: { session } } = await supabase.auth.getSession()
       if (!session) return { error: { message: i18n.t('apiErrors.sessionNotFound') } }
       const res = await fetch(apiUrl('/api/manage-shared-fund'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
-        body: JSON.stringify({ spaceId, amount, note, todayStr: todayStr() }),
+        body: JSON.stringify({ spaceId, amount, note, methodId, todayStr: todayStr() }),
       })
       const result = await res.json()
       if (!res.ok) return { error: result.error ? { message: result.error } : { message: i18n.t('apiErrors.addFundsFailed') } }

@@ -290,12 +290,24 @@ module.exports = async function handler(req, res) {
       const amount = Number(payload?.amount)
       if (!amount || amount <= 0) return res.status(400).json({ error: 'Monto inválido' })
 
+      // Método de pago del aporte (v0.9.568). Las tarjetas son personales:
+      // se valida que la tarjeta sea de quien aporta. `methodId` null o
+      // ausente = Efectivo. Una tarjeta de CRÉDITO cuenta como gasto pero
+      // nunca baja el disponible (mismo criterio que getPersonalAvailable),
+      // así que con crédito no aplica el tope contra el disponible.
+      let methodFields = { payment_method_id: null, payment_method_kind: 'cash' }
+      if (payload?.methodId) {
+        const { data: card } = await supabase.from('payment_methods').select('id, kind').eq('id', payload.methodId).eq('user_id', actorId).maybeSingle()
+        if (!card) return res.status(400).json({ error: 'Método de pago no válido' })
+        methodFields = { payment_method_id: card.id, payment_method_kind: card.kind }
+      }
+
       // La validación de "disponible suficiente" SOLO aplica si el actor
       // tiene el ingreso por periodo activado (ver `actorHasIncome`) — sin
       // ingreso, la acción se aprueba siempre; el pago reflejo se sigue
       // registrando igual, es un gasto real, solo que sin tope contra qué
       // medirlo.
-      if (await actorHasIncome(actorId)) {
+      if (methodFields.payment_method_kind !== 'credit' && await actorHasIncome(actorId)) {
         const personalAvailable = await getPersonalAvailable(actorId)
         if (personalAvailable <= 0) {
           return res.status(400).json({ error: 'No puedes aportar — tu disponible personal está en negativo' })
@@ -312,6 +324,7 @@ module.exports = async function handler(req, res) {
         is_paid: true, paid_at: new Date().toISOString(),
         is_variable: false, is_recurrent: false, postponed: false, paused: false,
         source_space_id: spaceId, is_contribution_reflection: true,
+        ...methodFields,
       }).select().single()
       if (reflErr) return res.status(500).json({ error: 'No se pudo registrar el descuento en tu personal: ' + reflErr.message })
 

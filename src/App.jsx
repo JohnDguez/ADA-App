@@ -1404,6 +1404,7 @@ export default function App() {
       )}
       {tab === 'payments' && (
         <PaymentsPage
+          paymentMethods={paymentMethods}
           payments={visiblePayments}
           dataLoading={paymentsLoading}
           periodIncome={periodIncome}
@@ -1456,6 +1457,7 @@ export default function App() {
       {tab === 'goals' && (
         <GoalsPage
           goalsData={goalsData}
+          paymentMethods={paymentMethods}
           isPremium={!!profile.is_premium}
           activeSpaceId={paymentsSpaceId}
           rawActiveSpaceId={activeSpaceId}

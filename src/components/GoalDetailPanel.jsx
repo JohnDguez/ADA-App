@@ -6,6 +6,8 @@ import { fmt, getMonthsShort } from '../lib/utils'
 import { showToast } from './Toast'
 import { DeleteGoalModal } from './DeleteGoalModal'
 import AmountInput from './AmountInput'
+import { PaymentMethodField } from './PaymentMethodField'
+import { AddCardModal } from './AddCardModal'
 import styles from './GoalDetailPanel.module.css'
 
 function fmtDate(iso) {
@@ -22,12 +24,15 @@ function fmtDate(iso) {
 export function GoalDetailPanel({
   goal, onBack, onEdit, onAportar, onRetirar, onRevert, onMarkCompleted, onDelete,
   isShared = false, canContribute = true, canWithdraw = true, canEdit = true, canDelete = true, currentUserId = null, spaceMembers = [],
-  hasIncome = true,
+  hasIncome = true, paymentMethods = null,
 }) {
   const { t } = useTranslation()
   const [menuOpen, setMenuOpen] = useState(false)
   const [activeAction, setActiveAction] = useState(null) // null | 'aportar' | 'retirar'
   const [amount, setAmount] = useState('')
+  // "Se paga con" al aportar (de dónde sale el dinero: efectivo o tarjeta).
+  const [methodId, setMethodId] = useState(null)
+  const [cardFormOpen, setCardFormOpen] = useState(false)
   const [saving, setSaving] = useState(false)
   const [deleteModalOpen, setDeleteModalOpen] = useState(false)
   const [completing, setCompleting] = useState(false)
@@ -57,6 +62,7 @@ export function GoalDetailPanel({
     if (type === 'retirar' && !canWithdraw) { showToast(t('goalDetailPanel.toast.noPermissionWithdraw')); return }
     setActiveAction(type)
     setAmount('')
+    setMethodId(null)
     setMenuOpen(false)
   }
 
@@ -69,7 +75,8 @@ export function GoalDetailPanel({
     }
     const action = activeAction
     const successMsg = action === 'aportar' ? t('goalDetailPanel.toast.contributed') : t('goalDetailPanel.toast.withdrawn')
-    const pending = action === 'aportar' ? onAportar(val) : onRetirar(val)
+    const card = paymentMethods?.methods.find(m => m.id === methodId)
+    const pending = action === 'aportar' ? onAportar(val, card ? { id: card.id, kind: card.kind } : null) : onRetirar(val)
     // Personal (v0.9.483): optimista — el panel cierra al instante y el
     // progreso ya se ve; el aviso de éxito sale al confirmar. Con
     // `reverted`/`busy` el aviso de error ya lo dio App.jsx.
@@ -195,6 +202,16 @@ export function GoalDetailPanel({
             onKeyDown={e => e.key === 'Enter' && confirmAction()}
             className={`field-input ${styles.actionInput}`}
           />
+          {activeAction === 'aportar' && paymentMethods && (
+            <div className={styles.methodField}>
+              <PaymentMethodField
+                methods={paymentMethods.methods}
+                value={methodId}
+                onChange={setMethodId}
+                onAddCard={() => setCardFormOpen(true)}
+              />
+            </div>
+          )}
           <div className={styles.actionButtons}>
             <button type="button" onClick={() => setActiveAction(null)} className="btn-ghost">{t('buttons.cancel')}</button>
             <button type="button" onClick={confirmAction} disabled={saving} className="btn-primary" style={{ width: 'auto' }}>
@@ -276,6 +293,14 @@ export function GoalDetailPanel({
         onCancel={() => setDeleteModalOpen(false)}
         onConfirm={resolution => { setDeleteModalOpen(false); onDelete(resolution) }}
       />
+      {paymentMethods && (
+        <AddCardModal
+          open={cardFormOpen}
+          onClose={() => setCardFormOpen(false)}
+          paymentMethods={paymentMethods}
+          onAdded={setMethodId}
+        />
+      )}
     </div>
   )
 }
