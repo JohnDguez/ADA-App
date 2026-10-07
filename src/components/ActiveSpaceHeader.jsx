@@ -2,7 +2,8 @@ import { useState, useRef, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import i18n from '../i18n'
 import { createPortal } from 'react-dom'
-import { MoreVertical, Pencil, Trash2, LogOut, Pin, UserRound, Crown, UsersRound, ChevronDown, ChevronUp, Plus } from 'lucide-react'
+import { MoreVertical, Pencil, Trash2, LogOut, Pin, UserRound, Crown, UsersRound, ChevronDown, ChevronUp, Plus, KeyRound } from 'lucide-react'
+import { showInviteCode } from './InviteCodeModal'
 import styles from './ActiveSpaceHeader.module.css'
 
 // Encabezado del espacio activo — antes vivía DENTRO de SpaceSwitcher.jsx
@@ -218,7 +219,7 @@ export function ActiveSpaceHeader({ activeSpaceId, sharedSpaces, onManage, onSwi
                 // (no relativas a este botón) porque el menú se renderiza
                 // por un portal.
                 const rect = e.currentTarget.getBoundingClientRect()
-                const upward = rect.bottom + 90 > window.innerHeight
+                const upward = rect.bottom + (isOwner ? 135 : 90) > window.innerHeight
                 setMenuPos({
                   top: upward ? undefined : rect.bottom + 4,
                   bottom: upward ? window.innerHeight - rect.top + 4 : undefined,
@@ -246,6 +247,14 @@ export function ActiveSpaceHeader({ activeSpaceId, sharedSpaces, onManage, onSwi
                 >
                   <Pencil size={14} /> {t('buttons.edit')}
                 </button>
+                {isOwner && (
+                  <button
+                    onClick={() => { setMenuOpen(false); showInviteCode({ code: entry.space.access_code, name: entry.space.name }) }}
+                    className={`${styles.menuItem} ${styles.menuItemBordered}`}
+                  >
+                    <KeyRound size={14} /> {t('activeSpaceHeader.menuInviteCode')}
+                  </button>
+                )}
                 {isOwner ? (
                   <button
                     onClick={openDanger}

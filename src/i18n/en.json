@@ -861,7 +861,8 @@
       "description": "You'll stop belonging to \"{{name}}\". Payments you already added will stay in the space for the owner.",
       "leaving": "Leaving…",
       "confirmButton": "Leave space"
-    }
+    },
+    "menuInviteCode": "View invite code"
   },
   "notificationsPanel": {
     "title": "Notifications",
@@ -1624,5 +1625,14 @@
       "title": "Hi, I'm Luna!",
       "sub": "Add your payments to get started"
     }
+  },
+  "inviteCodeModal": {
+    "title": "Invite code",
+    "description": "Share it with anyone you want to invite to your space.",
+    "copy": "Copy code",
+    "copied": "Copied",
+    "copyError": "Couldn't copy the code",
+    "hint": "You can find it later in Settings › Shared Space › {{name}}, or in the ⋮ menu of the space title.",
+    "close": "Done"
   }
 }

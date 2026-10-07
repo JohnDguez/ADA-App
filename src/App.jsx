@@ -61,6 +61,7 @@ import { useTheme } from './hooks/useTheme'
 import { useSharedSpaces } from './hooks/useSharedSpaces'
 import { ActiveSpaceHeader } from './components/ActiveSpaceHeader'
 import { APP_VERSION, getPatchNotes, isNewerVersion } from './lib/patchNotes'
+import { InviteCodeModal } from './components/InviteCodeModal'
 import { buildFeedbackUrl, FEEDBACK_PROMPT_AFTER_DAYS, FEEDBACK_REMIND_AFTER_DAYS } from './lib/feedback'
 
 function fmt(n) { return '$' + Number(n).toLocaleString('es-MX', { minimumFractionDigits: 0, maximumFractionDigits: 0 }) }
@@ -1669,6 +1670,7 @@ export default function App() {
         onRemindLater={handleFeedbackRemindLater}
       />
       <ConfirmExitModal open={exitConfirmOpen} onConfirm={confirmExit} onCancel={cancelExit} />
+      <InviteCodeModal />
       <Toast />
       {premiumPageOpen && <Suspense fallback={null}><PremiumPage profile={profile} onClose={closePremiumPage} refreshProfile={fetchProfile} /></Suspense>}
     </>

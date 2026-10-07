@@ -861,7 +861,8 @@
       "description": "Dejarás de pertenecer a \"{{name}}\". Tus pagos ya agregados se quedan en el espacio para el dueño.",
       "leaving": "Saliendo…",
       "confirmButton": "Salir del espacio"
-    }
+    },
+    "menuInviteCode": "Ver código de invitación"
   },
   "notificationsPanel": {
     "title": "Notificaciones",
@@ -1624,5 +1625,14 @@
       "title": "¡Hola, soy Luna!",
       "sub": "Agrega tus pagos para empezar"
     }
+  },
+  "inviteCodeModal": {
+    "title": "Código de invitación",
+    "description": "Compártelo con quien quieras invitar a tu espacio.",
+    "copy": "Copiar código",
+    "copied": "Copiado",
+    "copyError": "No se pudo copiar el código",
+    "hint": "Puedes encontrarlo después en Ajustes › Espacio compartido › {{name}}, o en el menú ⋮ del título del espacio.",
+    "close": "Listo"
   }
 }

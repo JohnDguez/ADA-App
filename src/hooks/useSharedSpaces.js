@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '../lib/supabase'
 import { notifySpaceChange } from '../lib/notifySpaceChange'
+import { showInviteCode } from '../components/InviteCodeModal'
 
 // Genera un candidato de código de 6 dígitos (como string, para no perder
 // ceros a la izquierda — "003456" es válido).
@@ -156,6 +157,7 @@ export function useSharedSpaces(userId) {
     // updateMemberPermissions/leaveSpace/removeMember/regenerateCode/
     // updateSpaceConfig de abajo, que sí se tocan seguido.
     await fetchSpaces()
+    showInviteCode({ code: space.access_code, name: space.name })
     return { data: space, error: null }
   }
 
