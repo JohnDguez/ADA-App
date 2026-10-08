@@ -16,9 +16,11 @@ import AmountInput from './AmountInput'
 import styles from './PaymentModal.module.css'
 import { markBackHandled, wasBackHandled } from '../lib/backNav'
 import { AddCardModal } from './AddCardModal'
-import { Mic } from 'lucide-react'
+import { Mic, ScanLine, HelpCircle } from 'lucide-react'
 import { isVoiceSupported, listenOnce, stopListening } from '../lib/voiceInput'
 import { parseVoicePayment } from '../lib/parseVoicePayment'
+import { isTicketScanSupported, scanTicketText } from '../lib/ticketScan'
+import { parseTicketText } from '../lib/parseTicket'
 
 export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelete, onEditMaster, initial, payments, profile, spacePermissions, isSharedSpace = false, customCategories = [], onAddCategory, onOpenPremium, paymentMethods = null, prefill = null }) {
   const { t } = useTranslation()
@@ -46,7 +48,16 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
   const [voiceState, setVoiceState] = useState('idle')
   const [voiceNote,  setVoiceNote]  = useState({ kind: '', text: '' })
   const voiceSupported = isVoiceSupported()
-  useEffect(() => { if (!open) { stopListening(); setVoiceState('idle'); setVoiceNote({ kind: '', text: '' }) } }, [open])
+  // Idioma del dictado (v0.9.578): por defecto el de la app, pero se puede cambiar y se recuerda
+  const [voiceLang, setVoiceLang] = useState(() => {
+    try { const v = localStorage.getItem('ada_voice_lang'); if (v === 'es' || v === 'en') return v } catch { /* sin storage */ }
+    return i18n.language === 'en' ? 'en' : 'es'
+  })
+  const [voiceHelpOpen, setVoiceHelpOpen] = useState(false)
+  // Escaneo de tickets (v0.9.578, solo Android)
+  const scanSupported = isTicketScanSupported()
+  const [scanning, setScanning] = useState(false)
+  useEffect(() => { if (!open) { stopListening(); setVoiceState('idle'); setVoiceNote({ kind: '', text: '' }); setVoiceHelpOpen(false); setScanning(false) } }, [open])
   const [saving,             setSaving]             = useState(false)
   const [error,              setError]              = useState('')
   const [confirmClose,       setConfirmClose]       = useState(false)
@@ -310,7 +321,7 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
     setVoiceNote({ kind: '', text: '' })
     setVoiceState('listening')
     try {
-      const text = await listenOnce(i18n.language === 'en' ? 'en-US' : 'es-MX')
+      const text = await listenOnce(voiceLang === 'en' ? 'en-US' : 'es-MX')
       const r = parseVoicePayment(text, { customCategories })
       if (!r) { setVoiceNote({ kind: 'error', text: t('paymentModal.voice.noSpeech') }); return }
       if (r.amount != null) setAmount(String(r.amount))
@@ -326,6 +337,34 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
       setVoiceNote({ kind: 'error', text: t(code === 'permission' ? 'paymentModal.voice.permission' : code === 'unavailable' ? 'paymentModal.voice.unavailable' : code === 'no-speech' ? 'paymentModal.voice.noSpeech' : 'paymentModal.voice.failed') })
     } finally {
       setVoiceState('idle')
+    }
+  }
+
+  function toggleVoiceLang() {
+    const next = voiceLang === 'es' ? 'en' : 'es'
+    setVoiceLang(next)
+    try { localStorage.setItem('ada_voice_lang', next) } catch { /* sin storage */ }
+  }
+
+  async function handleScan() {
+    if (scanning) return
+    setVoiceNote({ kind: '', text: '' })
+    setScanning(true)
+    try {
+      const text = await scanTicketText()
+      if (!text) return // canceló
+      const r = parseTicketText(text, { customCategories })
+      if (!r || (r.amount == null && !r.name && !r.date)) { setVoiceNote({ kind: 'error', text: t('paymentModal.scan.nothing') }); return }
+      if (r.amount != null) setAmount(String(r.amount))
+      if (r.name) setName(r.name)
+      if (r.date) setDueDate(r.date)
+      setCategory(r.category || 'Otros')
+      if (!isSharedSpace) setAlreadyPaid(true)
+      setVoiceNote({ kind: 'ok', text: r.amount != null ? t('paymentModal.scan.done') : t('paymentModal.scan.noAmount') })
+    } catch {
+      setVoiceNote({ kind: 'error', text: t('paymentModal.scan.failed') })
+    } finally {
+      setScanning(false)
     }
   }
 
@@ -599,12 +638,42 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
           {lockedMessage && <div className={styles.warningBox}>{lockedMessage}</div>}
 
           <div className={canWrite ? styles.formWrapper : styles.formDisabled}>
-          {!initial && mode === 'single' && voiceSupported && (
+          {!initial && mode === 'single' && (voiceSupported || scanSupported) && (
             <div className={styles.voiceBlock}>
-              <button type="button" onClick={handleVoice} className={`${styles.voiceButton} ${voiceState === 'listening' ? styles.voiceButtonListening : ''}`}>
-                <Mic size={16} className={voiceState === 'listening' ? styles.voiceIconPulse : ''} />
-                <span>{voiceState === 'listening' ? t('paymentModal.voice.listening') : t('paymentModal.voice.button')}</span>
-              </button>
+              <div className={styles.voiceRow}>
+                {voiceSupported && (
+                  <button type="button" onClick={handleVoice} className={`${styles.voiceButton} ${voiceState === 'listening' ? styles.voiceButtonListening : ''}`}>
+                    <Mic size={16} className={voiceState === 'listening' ? styles.voiceIconPulse : ''} />
+                    <span>{voiceState === 'listening' ? t('paymentModal.voice.listening') : t('paymentModal.voice.button')}</span>
+                  </button>
+                )}
+                {scanSupported && (
+                  <button type="button" onClick={handleScan} disabled={scanning || voiceState === 'listening'} className={styles.voiceButton}>
+                    <ScanLine size={16} />
+                    <span>{scanning ? t('paymentModal.scan.scanning') : t('paymentModal.scan.button')}</span>
+                  </button>
+                )}
+              </div>
+              {voiceSupported && (
+                <div className={styles.voiceMeta}>
+                  <button type="button" onClick={() => setVoiceHelpOpen(o => !o)} className={styles.voiceLink}>
+                    <HelpCircle size={13} /> {t('paymentModal.voice.helpLink')}
+                  </button>
+                  <button type="button" onClick={toggleVoiceLang} className={styles.voiceLink} aria-label={t('paymentModal.voice.langLabel')}>
+                    {t('paymentModal.voice.langLabel')}: <strong>{voiceLang === 'es' ? 'Español' : 'English'}</strong>
+                  </button>
+                </div>
+              )}
+              {voiceHelpOpen && voiceSupported && (
+                <div className={styles.voiceHelp}>
+                  <div>{t('paymentModal.voice.helpIntro')}</div>
+                  <ul>
+                    {(voiceLang === 'en' ? ['helpEn1', 'helpEn2', 'helpEn3', 'helpEn4'] : ['helpEs1', 'helpEs2', 'helpEs3', 'helpEs4']).map(k => <li key={k}>{t(`paymentModal.voice.${k}`)}</li>)}
+                  </ul>
+                  <div>{t('paymentModal.voice.helpTips')}</div>
+                </div>
+              )}
+              {scanSupported && <div className={styles.scanDisclaimer}>{t('paymentModal.scan.disclaimer')}</div>}
               {voiceNote.text && (
                 <div className={voiceNote.kind === 'error' ? styles.voiceNoteError : styles.voiceNote}>{voiceNote.text}</div>
               )}
@@ -612,7 +681,7 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
           )}
 
           <Field label={t('paymentModal.fields.name')}>
-            <input autoFocus={!initial && !voiceSupported} className="field-input" type="text" value={name} onChange={e => setName(e.target.value)} placeholder={t('paymentModal.namePlaceholder')} />
+            <input autoFocus={!initial && !voiceSupported && !scanSupported} className="field-input" type="text" value={name} onChange={e => setName(e.target.value)} placeholder={t('paymentModal.namePlaceholder')} />
           </Field>
 
           <div className={styles.fieldGroup}>

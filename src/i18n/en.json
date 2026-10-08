@@ -826,7 +826,28 @@
       "noSpeech": "I didn't hear you. Try again.",
       "permission": "Turn on microphone permission to dictate payments.",
       "unavailable": "Voice dictation isn't available on this device.",
-      "failed": "Voice dictation failed. Try again."
+      "failed": "Voice dictation failed. Try again.",
+      "helpLink": "How does it work?",
+      "langLabel": "Voice language",
+      "helpIntro": "Say a phrase with the amount and what it was for. Examples:",
+      "helpEs1": "“Gasté 250 pesos en el súper”",
+      "helpEs2": "“Pagué la luz ayer 480”",
+      "helpEs3": "“Tengo que pagar la renta 8500 el 5 de noviembre”",
+      "helpEs4": "“Gasolina 600 pesos hoy”",
+      "helpEn1": "“Spent 250 on groceries”",
+      "helpEn2": "“Paid the electric bill yesterday 80”",
+      "helpEn3": "“I have to pay rent 1200 on November 5”",
+      "helpEn4": "“Gas 40 dollars today”",
+      "helpTips": "It understands “today”, “yesterday”, “tomorrow”, weekdays and dates. If you say “I have to pay…” it's saved as pending; otherwise as already paid. Speak in the language chosen below and always review the data."
+    },
+    "scan": {
+      "button": "Scan receipt",
+      "scanning": "Scanning…",
+      "done": "Receipt read. Review the data before saving.",
+      "noAmount": "I read the receipt but couldn't find the total. Enter it manually.",
+      "nothing": "Couldn't read data from the receipt. Try better light or enter it manually.",
+      "failed": "Couldn't scan the receipt. Try again.",
+      "disclaimer": "Scan receipt: take the photo in good light, straight on and uncropped. LunaPay only tries to fill in the fields; carefully review all data before recording the payment. It is your responsibility that it is correct."
     }
   },
   "pageHeader": {

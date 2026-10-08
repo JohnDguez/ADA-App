@@ -531,3 +531,13 @@
 @keyframes voicePulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: .5; transform: scale(1.2); } }
 .voiceNote { margin-top: 8px; font-size: 12px; font-weight: 400; color: var(--text); }
 .voiceNoteError { margin-top: 8px; font-size: 12px; font-weight: 500; color: var(--danger); }
+
+.voiceRow { display: flex; gap: 8px; flex-wrap: wrap; }
+.voiceRow .voiceButton { flex: 1 1 140px; justify-content: center; }
+.voiceButton:disabled { opacity: .6; cursor: default; }
+.voiceMeta { display: flex; justify-content: space-between; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
+.voiceLink { display: inline-flex; align-items: center; gap: 4px; background: none; border: none; padding: 0; font: inherit; font-size: 12px; font-weight: 500; color: var(--accent); cursor: pointer; }
+.voiceHelp { margin-top: 8px; padding: 10px 12px; border-radius: 10px; background: var(--accent-soft); font-size: 12px; font-weight: 400; color: var(--text); line-height: 1.45; }
+.voiceHelp ul { margin: 6px 0; padding-left: 18px; }
+.voiceHelp li { margin-bottom: 3px; }
+.scanDisclaimer { margin-top: 8px; font-size: 11px; font-weight: 400; color: var(--muted); line-height: 1.4; }

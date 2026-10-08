@@ -826,7 +826,28 @@
       "noSpeech": "No te escuché. Intenta de nuevo.",
       "permission": "Activa el permiso de micrófono para dictar pagos.",
       "unavailable": "El dictado por voz no está disponible en este dispositivo.",
-      "failed": "No se pudo usar el dictado. Intenta de nuevo."
+      "failed": "No se pudo usar el dictado. Intenta de nuevo.",
+      "helpLink": "¿Cómo funciona?",
+      "langLabel": "Idioma de voz",
+      "helpIntro": "Di una frase con el monto y de qué fue. Ejemplos:",
+      "helpEs1": "«Gasté 250 pesos en el súper»",
+      "helpEs2": "«Pagué la luz ayer 480»",
+      "helpEs3": "«Tengo que pagar la renta 8500 el 5 de noviembre»",
+      "helpEs4": "«Gasolina 600 pesos hoy»",
+      "helpEn1": "“Spent 250 on groceries”",
+      "helpEn2": "“Paid the electric bill yesterday 80”",
+      "helpEn3": "“I have to pay rent 1200 on November 5”",
+      "helpEn4": "“Gas 40 dollars today”",
+      "helpTips": "Entiende «hoy», «ayer», «mañana», días de la semana y fechas. Si dices «tengo que pagar…» se guarda como pendiente; si no, como ya pagado. Habla en el idioma elegido abajo y revisa siempre los datos."
+    },
+    "scan": {
+      "button": "Escanear ticket",
+      "scanning": "Escaneando…",
+      "done": "Leí el ticket. Revisa los datos antes de guardar.",
+      "noAmount": "Leí el ticket pero no encontré el total. Escríbelo a mano.",
+      "nothing": "No pude leer datos del ticket. Intenta con mejor luz o escríbelo a mano.",
+      "failed": "No se pudo escanear el ticket. Intenta de nuevo.",
+      "disclaimer": "Escanear ticket: toma la foto con buena luz, de frente y sin cortes. LunaPay solo intenta llenar los campos; revisa bien todos los datos antes de registrar el pago. Es tu responsabilidad que sean correctos."
     }
   },
   "pageHeader": {

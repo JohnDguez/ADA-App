@@ -67,7 +67,7 @@ function findWordAmount(norm) {
 
 const KEYWORDS = [
   ['Alimentación', ['super', 'supermercado', 'despensa', 'comida', 'restaurante', 'tacos', 'taco', 'cafe', 'cafeteria', 'desayuno', 'cena', 'almuerzo', 'pizza', 'hamburguesa', 'uber eats', 'rappi', 'didi food', 'walmart', 'soriana', 'oxxo', 'costco', 'groceries', 'grocery', 'restaurant', 'lunch', 'dinner', 'breakfast', 'coffee']],
-  ['Transporte', ['gasolina', 'gas del carro', 'uber', 'didi', 'taxi', 'camion', 'autobus', 'estacionamiento', 'caseta', 'pasaje', 'metro', 'parking', 'fuel', 'gas station', 'bus', 'toll']],
+  ['Transporte', ['gasolina', 'gasolinera', 'pemex', 'gas del carro', 'uber', 'didi', 'taxi', 'camion', 'autobus', 'estacionamiento', 'caseta', 'pasaje', 'metro', 'parking', 'fuel', 'gas station', 'bus', 'toll']],
   ['Suscripciones', ['netflix', 'spotify', 'disney', 'hbo', 'max', 'amazon prime', 'prime video', 'youtube', 'icloud', 'suscripcion', 'subscription', 'apple music', 'chatgpt']],
   ['Servicios', ['luz', 'agua', 'gas', 'internet', 'telefono', 'celular', 'cfe', 'telmex', 'izzi', 'totalplay', 'electricity', 'water', 'phone', 'utilities']],
   ['Renta', ['renta', 'alquiler', 'rent']],
@@ -79,7 +79,7 @@ const KEYWORDS = [
   ['Ahorro', ['ahorro', 'savings']],
 ]
 
-function guessCategory(norm, customCategories) {
+export function guessCategory(norm, customCategories) {
   for (const c of customCategories || []) {
     const v = typeof c === 'string' ? c : c?.value
     if (v && norm.includes(strip(v))) return v
