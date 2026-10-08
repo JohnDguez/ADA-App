@@ -7,7 +7,7 @@ import styles from './RailFab.module.css'
  * este FAB flotante independiente (Regla 43), abajo a la derecha de la
  * pantalla. Mismo handler que BottomNav.onAdd — abre PaymentModal.
  */
-export function RailFab({ onAdd }) {
+export function RailFab({ onAdd, addOpen = false }) {
   const { t } = useTranslation()
   return (
     <button
@@ -15,8 +15,9 @@ export function RailFab({ onAdd }) {
       onClick={onAdd}
       className={styles.fab}
       aria-label={t('bottomNav.add')}
+      aria-expanded={addOpen}
     >
-      <Plus size={26} color="var(--nav-icon)" strokeWidth={2.5} />
+      <Plus size={26} color="var(--nav-icon)" strokeWidth={2.5} className={`${styles.icon} ${addOpen ? styles.iconOpen : ''}`} />
     </button>
   )
 }

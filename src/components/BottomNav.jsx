@@ -10,7 +10,7 @@ import styles from './BottomNav.module.css'
 const LEFT_TABS = NAV_ITEMS.slice(0, 2)
 const RIGHT_TABS = NAV_ITEMS.slice(2)
 
-export function BottomNav({ active, onChange, onAdd }) {
+export function BottomNav({ active, onChange, onAdd, addOpen = false }) {
   const { t } = useTranslation()
   return (
     <nav className={styles.nav}>
@@ -24,8 +24,9 @@ export function BottomNav({ active, onChange, onAdd }) {
           onClick={onAdd}
           className={styles.addButton}
           aria-label={t('bottomNav.add')}
+          aria-expanded={addOpen}
         >
-          <Plus size={26} color="var(--nav-icon)" strokeWidth={2.5} />
+          <Plus size={26} color="var(--nav-icon)" strokeWidth={2.5} className={`${styles.addIcon} ${addOpen ? styles.addIconOpen : ''}`} />
         </button>
       </div>
 

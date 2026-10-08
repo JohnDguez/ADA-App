@@ -22,3 +22,6 @@
     z-index: 100;
   }
 }
+
+.icon { transition: transform .25s cubic-bezier(0.25, 0.46, 0.45, 0.94); }
+.iconOpen { transform: rotate(135deg); }

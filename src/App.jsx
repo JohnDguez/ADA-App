@@ -1566,6 +1566,7 @@ export default function App() {
         active={tab}
         onChange={t => { setAddMenuOpen(false); changeTab(t) }}
         onAdd={openAddMenu}
+        addOpen={addMenuOpen}
       />
       <AddMenu open={addMenuOpen} onClose={() => setAddMenuOpen(false)} onPick={startAdd} />
 
@@ -1586,7 +1587,7 @@ export default function App() {
         onSwitchSpace={switchSpace}
         spaceSwitcherProfile={profile}
       />
-      <RailFab onAdd={openAddMenu} />
+      <RailFab onAdd={openAddMenu} addOpen={addMenuOpen} />
 
       <NotificationsPanel
         open={notifOpen}
