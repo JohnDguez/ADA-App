@@ -41,12 +41,32 @@ const PRESET_AVATARS = [
 // scroll largo; se migró a este patrón de menú para que escale mejor
 // (Categorías, y lo que venga después, no compiten por espacio con todo
 // lo demás).
+const SECTION_KEY = 'ada_settings_section'
+const VALID_SECTIONS = ['account', 'categories', 'cobro', 'notifications', 'appearance', 'sharedspace', 'subscription', 'export', 'cards']
+function readSavedSection() {
+  try {
+    const v = sessionStorage.getItem(SECTION_KEY)
+    return VALID_SECTIONS.includes(v) ? v : null
+  } catch { return null }
+}
+
 export function SettingsPage({ profile, user, onUpdate, onUploadAvatar, onDataDeleted, slideClass, theme, onThemeChange, onOpenPremium, sharedSpaces, paymentMethods, personalPayments = null, onPayCardNow, onSettlePlan, initialSection, onConsumeInitialSection, returnTab, onReturnToTab }) {
   const { t } = useTranslation()
   const FREQ_LABEL  = { weekly: t('frequency.weekly'), biweekly: t('frequency.biweekly'), monthly: t('frequency.monthly') }
   const THEME_LABEL = { sistema: t('theme.system'), light: t('theme.light'), dark: t('theme.dark') }
-  const [section, setSection] = useState(initialSection || null) // null | 'account' | 'categories' | 'cobro' | 'notifications' | 'appearance' | 'sharedspace' | 'subscription' | 'export' | 'cards'
+  const [section, setSection] = useState(initialSection || readSavedSection()) // null | 'account' | 'categories' | 'cobro' | 'notifications' | 'appearance' | 'sharedspace' | 'subscription' | 'export' | 'cards'
   const [uploadingAvatar, setUploadingAvatar] = useState(false)
+  // Recarga estando en una sub-página: se guarda cuál es (sessionStorage, como
+  // `ada_tab`) para volver a ella en vez de caer al menú de Ajustes. Solo
+  // sobrevive a una recarga: al salir de Ajustes (cambiar de tab) se borra,
+  // porque desmontar la pantalla no ocurre al recargar la página.
+  useEffect(() => {
+    try {
+      if (section) sessionStorage.setItem(SECTION_KEY, section)
+      else sessionStorage.removeItem(SECTION_KEY)
+    } catch { /* noop */ }
+  }, [section])
+  useEffect(() => () => { try { sessionStorage.removeItem(SECTION_KEY) } catch { /* noop */ } }, [])
   const [versionLabel, setVersionLabel] = useState('')
   useEffect(() => { getAppVersionLabel().then(setVersionLabel) }, [])
   const [avatarModal, setAvatarModal] = useState(null) // null | 'choice' | 'gallery'
