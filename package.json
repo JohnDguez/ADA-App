@@ -19,6 +19,7 @@
     "@capacitor/filesystem": "^8.1.4",
     "@capacitor/push-notifications": "^8.1.2",
     "@capacitor/share": "^8.0.3",
+    "@capawesome/capacitor-app-update": "^8.1.0",
     "@phosphor-icons/react": "^2.1.10",
     "@stripe/react-stripe-js": "^2.9.0",
     "@stripe/stripe-js": "^4.10.0",

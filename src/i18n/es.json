@@ -37,7 +37,6 @@
   "settingsPage": {
     "title": "Perfil",
     "feedbackLabel": "Danos tu feedback",
-    "feedbackSub": "Gana 3 meses de Premium gratis",
     "menu": {
       "account": "Cuenta",
       "categories": "Categorías",
@@ -1634,5 +1633,11 @@
     "copyError": "No se pudo copiar el código",
     "hint": "Puedes encontrarlo después en Ajustes › Espacio compartido › {{name}}, o en el menú ⋮ del título del espacio.",
     "close": "Listo"
+  },
+  "updatePrompt": {
+    "title": "Hay una versión nueva",
+    "description": "Actualiza LunaPay desde Google Play para tener las últimas mejoras.",
+    "update": "Actualizar",
+    "later": "Ahora no"
   }
 }
