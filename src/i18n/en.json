@@ -1311,7 +1311,8 @@
       "fallbackPaymentName": "Payment",
       "fallbackSpaceName": "Space",
       "fetchPaymentsError": "Couldn't load your payments. Check your connection.",
-      "fallbackIncomeName": "extra income"
+      "fallbackIncomeName": "extra income",
+      "installmentCharged": "Installment {{n}}/{{total}} of “{{name}}” charged to your card"
     },
     "confirm": {
       "deleteThisPayment": "Delete this payment?",

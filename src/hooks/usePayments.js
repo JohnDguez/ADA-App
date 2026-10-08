@@ -795,7 +795,7 @@ export function usePayments(userId, activeSpaceId = null, activeSpaceName = null
   // registro pagado guarda lo que de verdad se pagó (`amount: abonado`), no
   // el monto de la copia — antes el sobrante reducía el plan pero no
   // aparecía como gasto en ningún lado.
-  async function abonarInstallment(copyId, abonado) {
+  async function abonarInstallment(copyId, abonado, paidAtIso = null) {
     const copy = payments.find(p => p.id === copyId)
     if (!copy || !copy.parent_id) return { error: { message: 'Pago no encontrado' } }
     const master = payments.find(p => p.id === copy.parent_id)
@@ -803,7 +803,7 @@ export function usePayments(userId, activeSpaceId = null, activeSpaceName = null
 
     const montoRef    = Number(master.amount)
     const totalAmount = master.total_amount != null ? Number(master.total_amount) : montoRef * master.total_installments
-    const nowIso      = new Date().toISOString()
+    const nowIso      = paidAtIso || new Date().toISOString() // paidAtIso: cargo automático a tarjeta (fecha de la parcialidad)
 
     // ── Abono parcial: registro pagado propio + la copia baja lo abonado ──
     if (abonado < Number(copy.amount)) {

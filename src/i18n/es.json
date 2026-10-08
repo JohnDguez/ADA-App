@@ -1311,7 +1311,8 @@
       "fallbackPaymentName": "Pago",
       "fallbackSpaceName": "Espacio",
       "fetchPaymentsError": "No se pudieron cargar tus pagos. Revisa tu conexión.",
-      "fallbackIncomeName": "ingreso extra"
+      "fallbackIncomeName": "ingreso extra",
+      "installmentCharged": "Parcialidad {{n}}/{{total}} de «{{name}}» cargada a tu tarjeta"
     },
     "confirm": {
       "deleteThisPayment": "¿Eliminar este pago?",

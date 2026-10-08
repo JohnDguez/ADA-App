@@ -31,6 +31,7 @@ import { usePeriodIncome } from './hooks/usePeriodIncome'
 import { usePaymentMethods } from './hooks/usePaymentMethods'
 import { supabase } from './lib/supabase'
 import { computeMissingStatements, currentCycleSpend } from './lib/cardStatements'
+import { findAutoChargeCandidate, readAutoChargeSkip, addAutoChargeSkip, isCreditInstallmentCopy, dueDateNoon } from './lib/installmentCharge'
 import { today, todayStr, addDays, dateToStr } from './lib/utils'
 import { getBank } from './lib/cardCatalog'
 import { highlightPaymentWhenVisible } from './lib/highlightPayment'
@@ -430,6 +431,36 @@ export default function App() {
   }, [user?.id, paymentsSpaceId])
   const cardPayments = paymentsSpaceId === null ? payments : spaceCardPayments
 
+  // ── Cargo automático de parcialidades con tarjeta de crédito (v0.9.586) ──
+  // Una parcialidad personal con tarjeta de CRÉDITO se marca sola como cargada
+  // al llegar su fecha (paid_at = su fecha, como hace el banco). Una por vez:
+  // `abonarInstallment` usa `payments` actual, así que se espera a que termine
+  // y `autoChargeTick` vuelve a disparar el efecto para la siguiente. Va ANTES
+  // de los estados de cuenta, que esperan a que no quede ninguna pendiente.
+  const autoChargeRef = useRef(false)
+  const autoChargeFailedRef = useRef(new Set())
+  const [autoChargeTick, setAutoChargeTick] = useState(0)
+  function nextAutoCharge() {
+    const ids = new Set((paymentMethods.credit || []).filter(c => !c._syncing && !String(c.id).startsWith('tmp-')).map(c => c.id))
+    return findAutoChargeCandidate(payments, ids, readAutoChargeSkip(), autoChargeFailedRef.current)
+  }
+  useEffect(() => {
+    if (paymentsSpaceId !== null) return // solo Personal
+    if (paymentsLoading || !paymentMethods.loaded) return
+    if (autoChargeRef.current) return
+    const next = nextAutoCharge()
+    if (!next) return
+    autoChargeRef.current = true
+    ;(async () => {
+      const { error, busy } = await abonarInstallment(next.id, Number(next.amount), dueDateNoon(next.due_date))
+      if (error || busy) autoChargeFailedRef.current.add(next.id) // se reintenta en la próxima carga
+      else showToast(t('app.toast.installmentCharged', { n: next.current_installment, total: next.total_installments, name: next.name }))
+      autoChargeRef.current = false
+      setAutoChargeTick(n => n + 1)
+    })()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [paymentsSpaceId, paymentsLoading, paymentMethods.loaded, paymentMethods.credit, payments, autoChargeTick])
+
   // ── Estados de cuenta automáticos (entrega C, v0.9.490) ─────────────────
   // Al cargar Personal (las tarjetas son personales — nunca se generan
   // viendo un Espacio Compartido, porque ahí `payments` no trae los gastos
@@ -446,6 +477,7 @@ export default function App() {
     if (paymentsSpaceId !== null) return // solo Personal
     if (paymentsLoading || !paymentMethods.loaded) return
     if (generatingRef.current) return
+    if (autoChargeRef.current || nextAutoCharge()) return // primero se cargan las parcialidades pendientes
     const dueCards = paymentMethods.credit.filter(c => c.cut_day && c.due_day && !c._syncing)
     if (dueCards.length === 0) return
 
@@ -482,7 +514,7 @@ export default function App() {
       }
       generatingRef.current = false
     })()
-  }, [paymentsSpaceId, paymentsLoading, paymentMethods.loaded, paymentMethods.credit, payments])
+  }, [paymentsSpaceId, paymentsLoading, paymentMethods.loaded, paymentMethods.credit, payments, autoChargeTick])
 
   const [tab,            setTab]           = useState(() => {
     const hasActiveSession = sessionStorage.getItem('ada_session')
@@ -1006,6 +1038,7 @@ export default function App() {
       else showToast(t('app.toast.markedUnpaid', { name: payment.name }))
       return
     }
+    if (isCreditInstallmentCopy(payment)) addAutoChargeSkip(id) // el usuario la desmarcó: no volver a cargarla sola
     const { error, reverted, busy } = await markUnpaid(id)
     if (reverted || busy) return
     // Ajuste de crédito (v0.9.497): desmarcar como pagado un estado de
@@ -1029,6 +1062,7 @@ export default function App() {
       if (error) { showToast(error.message || t('app.toast.unmarkError')); return { failed: true } }
       return { failed: false }
     }
+    if (isCreditInstallmentCopy(payment)) addAutoChargeSkip(id)
     const { error, reverted, busy } = await markUnpaid(id)
     if (reverted || busy) return { failed: true }
     // Ajuste de crédito (v0.9.497) — mismo criterio que handleMarkUnpaid.
