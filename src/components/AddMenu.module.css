@@ -7,7 +7,9 @@
   -webkit-backdrop-filter: blur(8px);
   backdrop-filter: blur(8px);
   z-index: 99;
+  animation: addMenuBackdropIn .22s ease-out both;
 }
+.backdropOut { animation: addMenuBackdropOut .2s ease-in both; pointer-events: none; }
 
 /* Punto de anclaje = centro del "+" de BottomNav (móvil) */
 .anchor {
@@ -86,6 +88,15 @@
   from { opacity: 0; transform: translate(0, 0) scale(.6); }
   to   { opacity: 1; transform: translate(var(--dx, 0), calc(var(--dy, 0px) * -1)) scale(1); }
 }
+/* Salida: los íconos se contraen de vuelta hacia el "+" (orden inverso) */
+.closing { pointer-events: none; }
+.closing .slot { animation: addMenuOut .18s ease-in both; }
+@keyframes addMenuOut {
+  from { opacity: 1; transform: translate(var(--dx), calc(var(--dy) * -1)) scale(1); }
+  to   { opacity: 0; transform: translate(0, 0) scale(.4); }
+}
+@keyframes addMenuBackdropIn  { from { opacity: 0; } to { opacity: 1; } }
+@keyframes addMenuBackdropOut { from { opacity: 1; } to { opacity: 0; } }
 @keyframes addMenuFade { to { opacity: 0; } }
 
 /* Tablet/desktop (Regla 42/43): el "+" es el RailFab abajo a la derecha */

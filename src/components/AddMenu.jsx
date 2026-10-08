@@ -29,19 +29,29 @@ export function AddMenu({ open, onClose, onPick }) {
   const { t } = useTranslation()
   const [opens, setOpens] = useState(0)
   const [guideOpen, setGuideOpen] = useState(false)
+  // Se mantiene montado ~220 ms tras cerrar para animar la salida (v0.9.584)
+  const [mounted, setMounted] = useState(open)
+  const [closing, setClosing] = useState(false)
   useBackClose(open, onClose)
 
   useEffect(() => {
-    if (!open) return
-    const n = bumpOpens()
-    setOpens(n)
-    setGuideOpen(n === 1)
+    if (open) {
+      const n = bumpOpens()
+      setOpens(n)
+      setGuideOpen(n === 1)
+      setClosing(false)
+      setMounted(true)
+      return
+    }
+    setClosing(true)
+    const id = setTimeout(() => { setMounted(false); setClosing(false) }, 240)
+    return () => clearTimeout(id)
   }, [open])
 
-  if (!open) return null
+  if (!mounted) return null
   const voice = isVoiceSupported()
   const scan = isTicketScanSupported()
-  const showLabels = opens > 1 && opens <= LABEL_OPENS
+  const showLabels = !closing && opens > 1 && opens <= LABEL_OPENS
   const items = [
     scan && { key: 'scan', Icon: ScanLine, pos: styles.posA, label: t('addMenu.labelScan'), aria: t('addMenu.scan') },
     voice && { key: 'voice', Icon: Mic, pos: styles.posB, label: t('addMenu.labelVoice'), aria: t('addMenu.voice') },
@@ -50,10 +60,10 @@ export function AddMenu({ open, onClose, onPick }) {
 
   return (
     <>
-      <div className={styles.backdrop} onClick={onClose} />
-      <div className={styles.anchor}>
+      <div className={`${styles.backdrop} ${closing ? styles.backdropOut : ''}`} onClick={onClose} />
+      <div className={`${styles.anchor} ${closing ? styles.closing : ''}`}>
         {items.map(({ key, Icon, pos, label, aria }, i) => (
-          <div key={aria} className={`${styles.slot} ${pos}`} style={{ animationDelay: `${i * 40}ms` }}>
+          <div key={aria} className={`${styles.slot} ${pos}`} style={{ animationDelay: `${(closing ? items.length - 1 - i : i) * 40}ms` }}>
             <button className={styles.mini} onClick={() => onPick(key)} aria-label={aria}>
               <Icon size={20} />
             </button>
@@ -61,7 +71,7 @@ export function AddMenu({ open, onClose, onPick }) {
           </div>
         ))}
       </div>
-      {guideOpen && (
+      {guideOpen && !closing && (
         <div className={styles.guide} role="dialog">
           <div className={styles.guideTitle}>{t('addMenu.guideTitle')}</div>
           {scan && <div className={styles.guideRow}><ScanLine size={16} /> {t('addMenu.guideScan')}</div>}
