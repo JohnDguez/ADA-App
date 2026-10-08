@@ -1650,5 +1650,12 @@
     "hint": "Add it as a recurring payment so LunaPay reminds you when it renews. You can change the details before saving.",
     "addPayment": "Add as a new payment",
     "later": "Not now"
+  },
+  "rateApp": {
+    "title": "Enjoying LunaPay?",
+    "description": "Your rating on Google Play helps us a lot to improve and to reach more people.",
+    "rate": "Rate on Google Play",
+    "later": "Not now",
+    "alreadyRated": "I already rated it"
   }
 }

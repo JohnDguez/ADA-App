@@ -1650,5 +1650,12 @@
     "hint": "Agrégalo como pago recurrente para que LunaPay te avise cuando toque renovar. Puedes cambiar los datos antes de guardarlo.",
     "addPayment": "Agregar como pago nuevo",
     "later": "Ahora no"
+  },
+  "rateApp": {
+    "title": "¿Te está gustando LunaPay?",
+    "description": "Tu calificación en Google Play nos ayuda muchísimo a mejorar y a que más personas la encuentren.",
+    "rate": "Calificar en Google Play",
+    "later": "Ahora no",
+    "alreadyRated": "Ya la califiqué"
   }
 }

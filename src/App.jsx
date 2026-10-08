@@ -63,6 +63,7 @@ import { ActiveSpaceHeader } from './components/ActiveSpaceHeader'
 import { APP_VERSION, getPatchNotes, isNewerVersion } from './lib/patchNotes'
 import { InviteCodeModal } from './components/InviteCodeModal'
 import { UpdatePrompt } from './components/UpdatePrompt'
+import { RateAppPrompt } from './components/RateAppPrompt'
 import { PullToRefresh } from './components/PullToRefresh'
 import { PremiumThanksModal } from './components/PremiumThanksModal'
 import { buildFeedbackUrl, FEEDBACK_PROMPT_AFTER_DAYS, FEEDBACK_REMIND_AFTER_DAYS } from './lib/feedback'
@@ -1707,6 +1708,7 @@ export default function App() {
       <InviteCodeModal />
       <PremiumThanksModal info={premiumThanks} onClose={() => setPremiumThanks(null)} onAddPayment={handleThanksAddPayment} />
       <UpdatePrompt />
+      <RateAppPrompt blocked={feedbackPromptOpen} />
       <PullToRefresh />
       <Toast />
       {premiumPageOpen && <Suspense fallback={null}><PremiumPage profile={profile} onClose={closePremiumPage} refreshProfile={fetchProfile} onSubscribed={handlePremiumSubscribed} /></Suspense>}
