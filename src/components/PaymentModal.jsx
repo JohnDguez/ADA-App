@@ -16,6 +16,9 @@ import AmountInput from './AmountInput'
 import styles from './PaymentModal.module.css'
 import { markBackHandled, wasBackHandled } from '../lib/backNav'
 import { AddCardModal } from './AddCardModal'
+import { Mic } from 'lucide-react'
+import { isVoiceSupported, listenOnce, stopListening } from '../lib/voiceInput'
+import { parseVoicePayment } from '../lib/parseVoicePayment'
 
 export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelete, onEditMaster, initial, payments, profile, spacePermissions, isSharedSpace = false, customCategories = [], onAddCategory, onOpenPremium, paymentMethods = null, prefill = null }) {
   const { t } = useTranslation()
@@ -39,6 +42,11 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
   // SIEMPRE Efectivo (pedido de Johnatan). Las tarjetas son personales, así
   // que el campo no aparece en un Espacio Compartido.
   const [methodId, setMethodId] = useState(null)
+  // Dictado por voz (v0.9.577): 'idle' | 'listening'; voiceNote = lo que se entendió o el motivo del fallo
+  const [voiceState, setVoiceState] = useState('idle')
+  const [voiceNote,  setVoiceNote]  = useState({ kind: '', text: '' })
+  const voiceSupported = isVoiceSupported()
+  useEffect(() => { if (!open) { stopListening(); setVoiceState('idle'); setVoiceNote({ kind: '', text: '' }) } }, [open])
   const [saving,             setSaving]             = useState(false)
   const [error,              setError]              = useState('')
   const [confirmClose,       setConfirmClose]       = useState(false)
@@ -295,6 +303,30 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
         }
       </div>
     )
+  }
+
+  async function handleVoice() {
+    if (voiceState === 'listening') { stopListening(); return }
+    setVoiceNote({ kind: '', text: '' })
+    setVoiceState('listening')
+    try {
+      const text = await listenOnce(i18n.language === 'en' ? 'en-US' : 'es-MX')
+      const r = parseVoicePayment(text, { customCategories })
+      if (!r) { setVoiceNote({ kind: 'error', text: t('paymentModal.voice.noSpeech') }); return }
+      if (r.amount != null) setAmount(String(r.amount))
+      if (r.name) setName(r.name)
+      if (r.date) setDueDate(r.date)
+      setCategory(r.category || 'Otros')
+      if (!isSharedSpace) setAlreadyPaid(r.paid)
+      setVoiceNote(r.amount != null
+        ? { kind: 'ok', text: t('paymentModal.voice.heard', { text }) }
+        : { kind: 'error', text: t('paymentModal.voice.noAmount', { text }) })
+    } catch (err) {
+      const code = err?.code
+      setVoiceNote({ kind: 'error', text: t(code === 'permission' ? 'paymentModal.voice.permission' : code === 'unavailable' ? 'paymentModal.voice.unavailable' : code === 'no-speech' ? 'paymentModal.voice.noSpeech' : 'paymentModal.voice.failed') })
+    } finally {
+      setVoiceState('idle')
+    }
   }
 
   async function handleAddCategory() {
@@ -567,8 +599,20 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
           {lockedMessage && <div className={styles.warningBox}>{lockedMessage}</div>}
 
           <div className={canWrite ? styles.formWrapper : styles.formDisabled}>
+          {!initial && mode === 'single' && voiceSupported && (
+            <div className={styles.voiceBlock}>
+              <button type="button" onClick={handleVoice} className={`${styles.voiceButton} ${voiceState === 'listening' ? styles.voiceButtonListening : ''}`}>
+                <Mic size={16} className={voiceState === 'listening' ? styles.voiceIconPulse : ''} />
+                <span>{voiceState === 'listening' ? t('paymentModal.voice.listening') : t('paymentModal.voice.button')}</span>
+              </button>
+              {voiceNote.text && (
+                <div className={voiceNote.kind === 'error' ? styles.voiceNoteError : styles.voiceNote}>{voiceNote.text}</div>
+              )}
+            </div>
+          )}
+
           <Field label={t('paymentModal.fields.name')}>
-            <input autoFocus={!initial} className="field-input" type="text" value={name} onChange={e => setName(e.target.value)} placeholder={t('paymentModal.namePlaceholder')} />
+            <input autoFocus={!initial && !voiceSupported} className="field-input" type="text" value={name} onChange={e => setName(e.target.value)} placeholder={t('paymentModal.namePlaceholder')} />
           </Field>
 
           <div className={styles.fieldGroup}>

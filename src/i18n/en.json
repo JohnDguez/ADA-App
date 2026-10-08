@@ -817,6 +817,16 @@
       "label": "Log previous payments as expenses",
       "helperOn": "Payments 1 through {{n}} are logged with their dates and count in Expenses and your reports.",
       "helperOff": "Payments 1 through {{n}} will only show in this installment plan's history, without adding to your expenses. Use it if you already logged them."
+    },
+    "voice": {
+      "button": "Dictate payment",
+      "listening": "Listening… tap to stop",
+      "heard": "I heard: “{{text}}”. Check the details before saving.",
+      "noAmount": "I heard “{{text}}”, but not the amount. Type it in.",
+      "noSpeech": "I didn't hear you. Try again.",
+      "permission": "Turn on microphone permission to dictate payments.",
+      "unavailable": "Voice dictation isn't available on this device.",
+      "failed": "Voice dictation failed. Try again."
     }
   },
   "pageHeader": {

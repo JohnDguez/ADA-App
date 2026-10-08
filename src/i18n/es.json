@@ -817,6 +817,16 @@
       "label": "Registrar pagos anteriores como gastos",
       "helperOn": "Los pagos 1 al {{n}} se registran con su fecha y cuentan en Gastos y en tus reportes.",
       "helperOff": "Los pagos 1 al {{n}} solo aparecerán en el historial de esta parcialidad, sin sumar a tus gastos. Úsalo si ya los tenías registrados."
+    },
+    "voice": {
+      "button": "Dictar pago",
+      "listening": "Escuchando… toca para detener",
+      "heard": "Entendí: «{{text}}». Revisa los datos antes de guardar.",
+      "noAmount": "Entendí «{{text}}», pero no el monto. Escríbelo a mano.",
+      "noSpeech": "No te escuché. Intenta de nuevo.",
+      "permission": "Activa el permiso de micrófono para dictar pagos.",
+      "unavailable": "El dictado por voz no está disponible en este dispositivo.",
+      "failed": "No se pudo usar el dictado. Intenta de nuevo."
     }
   },
   "pageHeader": {

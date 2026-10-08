@@ -507,3 +507,27 @@
   border-radius: 50%;
   background: var(--text);
 }
+
+/* Dictado por voz (v0.9.577) */
+.voiceBlock { margin-bottom: 14px; }
+.voiceButton {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  font-weight: 600;
+  font-family: 'DM Sans', sans-serif;
+  cursor: pointer;
+}
+.voiceButtonListening { background: var(--danger-soft); color: var(--danger); }
+.voiceIconPulse { animation: voicePulse 1s ease-in-out infinite; }
+@keyframes voicePulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: .5; transform: scale(1.2); } }
+.voiceNote { margin-top: 8px; font-size: 12px; font-weight: 400; color: var(--text); }
+.voiceNoteError { margin-top: 8px; font-size: 12px; font-weight: 500; color: var(--danger); }
