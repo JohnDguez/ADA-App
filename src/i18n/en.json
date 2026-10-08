@@ -1692,6 +1692,14 @@
   "addMenu": {
     "scan": "Scan receipt",
     "voice": "Dictate payment",
-    "manual": "Enter manually"
+    "manual": "Enter manually",
+    "labelScan": "Scan",
+    "labelVoice": "Dictate",
+    "labelManual": "Manual",
+    "guideTitle": "Record a payment faster",
+    "guideScan": "Scan a receipt",
+    "guideVoice": "Dictate the payment",
+    "guideManual": "Or type it in",
+    "guideOk": "Got it"
   }
 }

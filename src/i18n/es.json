@@ -1692,6 +1692,14 @@
   "addMenu": {
     "scan": "Escanear ticket",
     "voice": "Dictar pago",
-    "manual": "Escribir a mano"
+    "manual": "Escribir a mano",
+    "labelScan": "Escanear",
+    "labelVoice": "Dictar",
+    "labelManual": "Manual",
+    "guideTitle": "Registra un pago más rápido",
+    "guideScan": "Escanea un ticket",
+    "guideVoice": "Dicta el pago con tu voz",
+    "guideManual": "O escríbelo a mano",
+    "guideOk": "Entendido"
   }
 }

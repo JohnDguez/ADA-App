@@ -1,49 +1,94 @@
 .backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(2, 10, 31, 0.35);
+  background: rgba(2, 10, 31, 0.55);
   z-index: 140;
 }
 
-.menu {
+/* Punto de anclaje = centro del "+" de BottomNav (móvil) */
+.anchor {
   position: fixed;
   left: 50%;
-  bottom: calc(env(safe-area-inset-bottom, 0px) + 84px);
-  transform: translateX(-50%);
+  bottom: 57px;
+  width: 0;
+  height: 0;
   z-index: 141;
+}
+
+.slot {
+  position: absolute;
+  width: 44px;
+  margin-left: -22px;
+  margin-top: -22px;
+  top: 0;
+  left: 0;
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  min-width: 220px;
-  animation: addMenuIn .18s ease-out both;
+  align-items: center;
+  transform: translate(var(--dx), calc(var(--dy) * -1));
+  animation: addMenuPop .2s ease-out both;
 }
+.posA { --dx: -66px; --dy: 62px; }
+.posB { --dx: 0px;   --dy: 94px; }
+.posC { --dx: 66px;  --dy: 62px; }
 
-.item {
+.mini {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: none;
+  padding: 0;
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 13px 18px;
-  border: 1px solid var(--border);
-  border-radius: 14px;
+  justify-content: center;
   background: var(--surface);
-  color: var(--text);
-  font: inherit;
-  font-size: 14px;
-  font-weight: 600;
+  color: var(--accent);
+  box-shadow: 0 4px 14px rgba(2, 10, 31, 0.45);
   cursor: pointer;
-  box-shadow: 0 4px 16px rgba(2, 10, 31, 0.25);
 }
-.item svg { color: var(--accent); }
+.mini:active { background: var(--accent); color: var(--surface); }
 
-@keyframes addMenuIn {
-  from { opacity: 0; transform: translateX(-50%) translateY(8px); }
-  to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+.label {
+  margin-top: 6px;
+  width: 80px;
+  text-align: center;
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.2;
+  color: var(--nav-icon);
+  pointer-events: none;
+  animation: addMenuFade .5s 2.6s forwards;
 }
 
+.guide {
+  position: fixed;
+  left: 24px;
+  right: 24px;
+  bottom: 190px;
+  max-width: 280px;
+  margin: 0 auto;
+  z-index: 142;
+  background: var(--surface);
+  border-radius: 12px;
+  padding: 14px;
+  box-shadow: 0 6px 20px rgba(2, 10, 31, 0.5);
+  animation: addMenuPop .22s ease-out both;
+}
+.guideTitle { font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 10px; }
+.guideRow { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 400; color: var(--text); margin-bottom: 8px; }
+.guideRow svg { color: var(--accent); flex-shrink: 0; }
+
+@keyframes addMenuPop {
+  from { opacity: 0; transform: translate(0, 0) scale(.6); }
+  to   { opacity: 1; transform: translate(var(--dx, 0), calc(var(--dy, 0px) * -1)) scale(1); }
+}
+@keyframes addMenuFade { to { opacity: 0; } }
+
+/* Tablet/desktop (Regla 42/43): el "+" es el RailFab abajo a la derecha */
 @media (min-width: 768px) {
-  .menu { left: auto; right: 24px; bottom: 96px; transform: none; animation-name: addMenuInRail; }
-  @keyframes addMenuInRail {
-    from { opacity: 0; transform: translateY(8px); }
-    to   { opacity: 1; transform: translateY(0); }
-  }
+  .anchor { left: auto; right: 52px; bottom: 52px; }
+  .posA { --dx: -90px; --dy: 0px; }
+  .posB { --dx: -64px; --dy: 64px; }
+  .posC { --dx: 0px;   --dy: 90px; }
+  .guide { left: auto; right: 24px; bottom: 170px; margin: 0; width: 260px; }
 }
