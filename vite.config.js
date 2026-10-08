@@ -1,8 +1,18 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
+// Identificador del build para el pie de Ajustes en web/PWA (la app de Android
+// lee su versión real del paquete instalado, ver src/lib/appVersion.js).
+// Vercel expone el commit en VERCEL_GIT_COMMIT_SHA; en local cae a 'dev'.
+const BUILD_SHA = (process.env.VERCEL_GIT_COMMIT_SHA || 'dev').slice(0, 7)
+const BUILD_DATE = new Date().toISOString().slice(0, 10)
+
 export default defineConfig({
   plugins: [react()],
+  define: {
+    __BUILD_SHA__: JSON.stringify(BUILD_SHA),
+    __BUILD_DATE__: JSON.stringify(BUILD_DATE),
+  },
   build: {
     // Genera archivos .js.map junto al build minificado — el navegador los
     // usa para traducir un error minificado (ej. "Cannot access 'P' before

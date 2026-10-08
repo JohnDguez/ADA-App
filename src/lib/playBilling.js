@@ -40,6 +40,7 @@ export function isAndroidBilling() {
 let storeInitialized = false
 let storeReadyPromise = null
 let storeRef = null
+let activeErrorHandler = null
 
 // Registra los 2 productos y el listener permanente de aprobación —
 // idempotente (una sola vez por sesión de la app, sin importar cuántas
@@ -61,7 +62,19 @@ function ensureStoreInitialized() {
   // hospedado de Fovea, que requeriría configurarlo aparte en su consola) —
   // `approved()` dispara tanto para una compra nueva como para cada una que
   // reaparezca al restaurar.
-  store.when().approved((transaction) => transaction.verify())
+  // (v0.9.575) Ya NO se llama `transaction.verify()` aquí: sin un validador
+  // configurado en el store no hace nada útil, y la verificación real la
+  // hacen purchasePremium()/restorePurchases() con verifyWithBackend().
+
+  // En cordova-plugin-purchase v13 los errores NO se escuchan con
+  // `store.when().error(...)` (esa función no existe — de ahí el error
+  // "s.when(...).error is not a function"): se registran con `store.error(cb)`,
+  // una sola vez, y no se pueden quitar. Se enruta a un manejador que
+  // purchasePremium() fija mientras hay una compra en curso.
+  store.error((err) => {
+    console.error('[Google Play Billing] store.error:', err?.code, err?.message, err)
+    if (typeof activeErrorHandler === 'function') activeErrorHandler(err)
+  })
 
   // `initialize()` es asíncrono: el catálogo de productos (precios, ofertas)
   // llega DESPUÉS. Se guarda la promesa para poder esperarla antes de ordenar —
@@ -133,7 +146,8 @@ export async function purchasePremium(plan, accessToken) {
   return new Promise((resolve, reject) => {
     let settled = false
     function cleanup() {
-      if (typeof store.off === 'function') { store.off(onApproved); store.off(onError) }
+      if (typeof store.off === 'function') store.off(onApproved)
+      activeErrorHandler = null
     }
     const onApproved = async (transaction) => {
       // El store puede tener más de una transacción viva (ej. una compra
@@ -169,8 +183,10 @@ export async function purchasePremium(plan, accessToken) {
       reject(wrapped)
     }
     store.when().approved(onApproved)
-    store.when().error(onError)
-    store.order(offer).catch(onError)
+    activeErrorHandler = onError
+    // En v13 `order()` NO rechaza la promesa cuando falla: resuelve con el
+    // error (IError) o con `undefined` si todo salió bien.
+    store.order(offer).then((err) => { if (err) onError(err) }).catch(onError)
   })
 }
 

@@ -4,7 +4,7 @@ import { createPortal } from 'react-dom'
 import { LogOut, Camera, Crown, User, Tag, Calendar, Bell, SunMoon, HelpCircle, Users, MessageCircle, Download, CreditCard } from 'lucide-react'
 import { showToast } from '../components/Toast'
 import { supabase } from '../lib/supabase'
-import { APP_VERSION } from '../lib/patchNotes'
+import { getAppVersionLabel } from '../lib/appVersion'
 import { APP_NAME } from '../lib/constants'
 import { buildFeedbackUrl } from '../lib/feedback'
 import { Card, Row } from '../components/SettingsShared'
@@ -47,6 +47,8 @@ export function SettingsPage({ profile, user, onUpdate, onUploadAvatar, onDataDe
   const THEME_LABEL = { sistema: t('theme.system'), light: t('theme.light'), dark: t('theme.dark') }
   const [section, setSection] = useState(initialSection || null) // null | 'account' | 'categories' | 'cobro' | 'notifications' | 'appearance' | 'sharedspace' | 'subscription' | 'export' | 'cards'
   const [uploadingAvatar, setUploadingAvatar] = useState(false)
+  const [versionLabel, setVersionLabel] = useState('')
+  useEffect(() => { getAppVersionLabel().then(setVersionLabel) }, [])
   const [avatarModal, setAvatarModal] = useState(null) // null | 'choice' | 'gallery'
 
   // Si esta sección se abrió por un atajo directo (ej. "Editar" desde el
@@ -302,7 +304,7 @@ export function SettingsPage({ profile, user, onUpdate, onUploadAvatar, onDataDe
 
       {/* Versión */}
       <div className={styles.versionFooter}>
-        {APP_NAME} v{APP_VERSION} — {t('settingsPage.versionSuffix')}
+        {APP_NAME} {versionLabel} — {t('settingsPage.versionSuffix')}
       </div>
 
       {/* Modal: elegir "Subir foto" o "Elegir avatar" — 2 tarjetas con ícono
