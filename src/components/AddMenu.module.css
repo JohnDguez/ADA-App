@@ -1,8 +1,12 @@
 .backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(2, 10, 31, 0.55);
-  z-index: 140;
+  /* Velo del color de fondo del tema (oscuro en tema oscuro, claro en tema claro) + blur.
+     Queda DEBAJO de la barra (z-index 100) para que el "+" y la barra sigan nítidos. */
+  background: color-mix(in srgb, var(--bg) 78%, transparent);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  z-index: 99;
 }
 
 /* Punto de anclaje = centro del "+" de BottomNav (móvil) */
@@ -41,12 +45,12 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--surface);
-  color: var(--accent);
-  box-shadow: 0 4px 14px rgba(2, 10, 31, 0.45);
+  background: var(--accent);
+  color: var(--nav-icon);
+  box-shadow: 0 4px 16px rgba(47, 140, 250, 0.55);
   cursor: pointer;
 }
-.mini:active { background: var(--accent); color: var(--surface); }
+.mini:active { opacity: 0.85; }
 
 .label {
   margin-top: 6px;
@@ -55,7 +59,7 @@
   font-size: 11px;
   font-weight: 500;
   line-height: 1.2;
-  color: var(--nav-icon);
+  color: var(--text);
   pointer-events: none;
   animation: addMenuFade .5s 2.6s forwards;
 }

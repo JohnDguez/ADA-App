@@ -745,7 +745,7 @@ export default function App() {
 
   function openAdd()   { setEditPayment(null); setAddAutoStart(null); setModalOpen(true) }
   // El "+" de la barra: si hay voz/escáner ofrece el menú; si no, abre el formulario directo
-  function openAddMenu() { if (addMenuHasExtras()) setAddMenuOpen(true); else openAdd() }
+  function openAddMenu() { if (addMenuHasExtras()) setAddMenuOpen(o => !o); else openAdd() }
   function startAdd(kind) { setAddMenuOpen(false); setEditPayment(null); setPaymentPrefill(null); setAddAutoStart(kind || null); setModalOpen(true) }
   // Antes redirigía en silencio al master cuando `p` era una copia de un
   // recurrente — el usuario pensaba que editaba solo esa copia y en
@@ -1564,7 +1564,7 @@ export default function App() {
 
       <BottomNav
         active={tab}
-        onChange={t => changeTab(t)}
+        onChange={t => { setAddMenuOpen(false); changeTab(t) }}
         onAdd={openAddMenu}
       />
       <AddMenu open={addMenuOpen} onClose={() => setAddMenuOpen(false)} onPick={startAdd} />
