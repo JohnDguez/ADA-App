@@ -1688,5 +1688,10 @@
     "rate": "Rate on Google Play",
     "later": "Not now",
     "alreadyRated": "I already rated it"
+  },
+  "addMenu": {
+    "scan": "Scan receipt",
+    "voice": "Dictate payment",
+    "manual": "Enter manually"
   }
 }

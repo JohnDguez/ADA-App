@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="shortcut_voice_short">Dictate payment</string>
+    <string name="shortcut_voice_long">Record a payment by voice</string>
+    <string name="shortcut_scan_short">Scan receipt</string>
+    <string name="shortcut_scan_long">Record a payment by scanning a receipt</string>
+</resources>

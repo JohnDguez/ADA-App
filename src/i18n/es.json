@@ -1688,5 +1688,10 @@
     "rate": "Calificar en Google Play",
     "later": "Ahora no",
     "alreadyRated": "Ya la califiqué"
+  },
+  "addMenu": {
+    "scan": "Escanear ticket",
+    "voice": "Dictar pago",
+    "manual": "Escribir a mano"
   }
 }

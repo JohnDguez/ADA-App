@@ -1,0 +1,49 @@
+.backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(2, 10, 31, 0.35);
+  z-index: 140;
+}
+
+.menu {
+  position: fixed;
+  left: 50%;
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 84px);
+  transform: translateX(-50%);
+  z-index: 141;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 220px;
+  animation: addMenuIn .18s ease-out both;
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 13px 18px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(2, 10, 31, 0.25);
+}
+.item svg { color: var(--accent); }
+
+@keyframes addMenuIn {
+  from { opacity: 0; transform: translateX(-50%) translateY(8px); }
+  to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
+@media (min-width: 768px) {
+  .menu { left: auto; right: 24px; bottom: 96px; transform: none; animation-name: addMenuInRail; }
+  @keyframes addMenuInRail {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+}

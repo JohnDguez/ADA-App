@@ -22,7 +22,7 @@ import { parseVoicePayment } from '../lib/parseVoicePayment'
 import { isTicketScanSupported, scanTicketText } from '../lib/ticketScan'
 import { parseTicketText } from '../lib/parseTicket'
 
-export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelete, onEditMaster, initial, payments, profile, spacePermissions, isSharedSpace = false, customCategories = [], onAddCategory, onOpenPremium, paymentMethods = null, prefill = null }) {
+export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelete, onEditMaster, initial, payments, profile, spacePermissions, isSharedSpace = false, customCategories = [], onAddCategory, onOpenPremium, paymentMethods = null, prefill = null, autoStart = null }) {
   const { t } = useTranslation()
   const [mode,               setMode]               = useState('single')
   const [name,               setName]               = useState('')
@@ -63,6 +63,16 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
   const [confirmClose,       setConfirmClose]       = useState(false)
   const [confirmDelete,      setConfirmDelete]      = useState(false)
   const [alreadyPaid,        setAlreadyPaid]        = useState(false)
+  // Arranque automático desde el menú "+" / atajos del ícono (v0.9.578): 'voice' | 'scan'
+  const autoRan = useRef(false)
+  useEffect(() => {
+    if (!open) { autoRan.current = false; return }
+    if (!autoStart || initial || autoRan.current) return
+    autoRan.current = true
+    const id = setTimeout(() => { if (autoStart === 'voice') handleVoice(); else if (autoStart === 'scan') handleScan() }, 450)
+    return () => clearTimeout(id)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, autoStart])
   const [paidAt,             setPaidAt]             = useState('')
   const [addingCategory,     setAddingCategory]     = useState(false)
   const [newCategoryName,    setNewCategoryName]    = useState('')

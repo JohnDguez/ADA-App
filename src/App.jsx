@@ -44,6 +44,7 @@ import { NavRail } from './components/NavRail'
 import { RailFab } from './components/RailFab'
 import { NotificationsPanel } from './components/NotificationsPanel'
 import { PaymentModal } from './components/PaymentModal'
+import { AddMenu, addMenuHasExtras } from './components/AddMenu'
 import { ChangeMethodModal } from './components/ChangeMethodModal'
 import { PayCardNowModal } from './components/PayCardNowModal'
 import { VariableAmountModal } from './components/VariableAmountModal'
@@ -411,6 +412,9 @@ export default function App() {
   // los datos con que se rellena "Nuevo pago" si el usuario la registra.
   const [premiumThanks, setPremiumThanks] = useState(null)
   const [paymentPrefill, setPaymentPrefill] = useState(null)
+  // Menú del "+" y arranque automático de voz/escáner (v0.9.578)
+  const [addMenuOpen, setAddMenuOpen] = useState(false)
+  const [addAutoStart, setAddAutoStart] = useState(null)
   const [spaceCardPayments, setSpaceCardPayments] = useState(null)
   async function loadSpaceCardPayments() {
     if (!user?.id) return
@@ -720,7 +724,27 @@ export default function App() {
     sessionStorage.setItem('ada_user_id', user.id)
   }
 
-  function openAdd()   { setEditPayment(null); setModalOpen(true) }
+  function openAdd()   { setEditPayment(null); setAddAutoStart(null); setModalOpen(true) }
+  // El "+" de la barra: si hay voz/escáner ofrece el menú; si no, abre el formulario directo
+  function openAddMenu() { if (addMenuHasExtras()) setAddMenuOpen(true); else openAdd() }
+  function startAdd(kind) { setAddMenuOpen(false); setEditPayment(null); setPaymentPrefill(null); setAddAutoStart(kind || null); setModalOpen(true) }
+  // Atajos del ícono de la app (v0.9.578): lunapay://add/voice y lunapay://add/scan
+  // abren el formulario de nuevo pago y arrancan la voz o el escáner solos.
+  const startAddRef = useRef(startAdd)
+  startAddRef.current = startAdd
+  useEffect(() => {
+    if (!Capacitor.isNativePlatform()) return
+    const handle = (url) => {
+      const m = /^lunapay:\/\/add\/(voice|scan)/.exec(url || '')
+      if (m) startAddRef.current(m[1])
+    }
+    CapacitorApp.getLaunchUrl().then(r => {
+      if (r?.url && window.__lunaLaunchUrlUsed !== r.url) { window.__lunaLaunchUrlUsed = r.url; handle(r.url) }
+    }).catch(() => {})
+    let sub
+    CapacitorApp.addListener('appUrlOpen', ({ url }) => handle(url)).then(h => { sub = h })
+    return () => { sub?.remove() }
+  }, [])
   // Antes redirigía en silencio al master cuando `p` era una copia de un
   // recurrente — el usuario pensaba que editaba solo esa copia y en
   // realidad reconfiguraba la plantilla completa (bug real reportado por
@@ -1539,8 +1563,9 @@ export default function App() {
       <BottomNav
         active={tab}
         onChange={t => changeTab(t)}
-        onAdd={openAdd}
+        onAdd={openAddMenu}
       />
+      <AddMenu open={addMenuOpen} onClose={() => setAddMenuOpen(false)} onPick={startAdd} />
 
       {/* Adaptación tablet/desktop (Regla 43): a partir de 768px, NavRail
           reemplaza a BottomNav (que se oculta vía CSS, ver
@@ -1559,7 +1584,7 @@ export default function App() {
         onSwitchSpace={switchSpace}
         spaceSwitcherProfile={profile}
       />
-      <RailFab onAdd={openAdd} />
+      <RailFab onAdd={openAddMenu} />
 
       <NotificationsPanel
         open={notifOpen}
@@ -1616,8 +1641,9 @@ export default function App() {
 
       <PaymentModal
         open={modalOpen}
-        onClose={() => { setModalOpen(false); setEditPayment(null); setPaymentPrefill(null) }}
+        onClose={() => { setModalOpen(false); setEditPayment(null); setPaymentPrefill(null); setAddAutoStart(null) }}
         prefill={paymentPrefill}
+        autoStart={addAutoStart}
         onSave={handleSave}
         onSaveInstallment={handleSaveInstallment}
         onDelete={handleDeleteDirect}
