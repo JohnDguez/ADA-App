@@ -93,7 +93,7 @@ function CardStack({ cards, onSelect, personalPayments }) {
   )
 }
 
-export function SettingsCardsPage({ paymentMethods, personalPayments = null, sharedSpaces = null, onPayCardNow, onBack, slideClass }) {
+export function SettingsCardsPage({ paymentMethods, personalPayments = null, sharedSpaces = null, onPayCardNow, onSettlePlan, onBack, slideClass }) {
   const { t } = useTranslation()
   const [kind, setKind] = useState('credit')
   const [formOpen, setFormOpen] = useState(false)
@@ -160,6 +160,8 @@ export function SettingsCardsPage({ paymentMethods, personalPayments = null, sha
             onEdit={() => openEdit(selectedCard)}
             onDelete={() => setDeleting(selectedCard)}
             onPayNow={onPayCardNow}
+            onSettlePlan={onSettlePlan}
+            onDeletePlan={(card, plan) => paymentMethods.updateStatementFields(card.id, { plans: (card.plans || []).filter(p => p.id !== plan.id) })}
           />
         </div>
 

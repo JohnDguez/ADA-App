@@ -380,6 +380,12 @@ function PayCardImpl({ payment: p, cfg, paymentMethodsList = [], onChangeMethod,
                 {t('cards.statementBadge')}
               </div>
             )}
+            {/* Compras a meses ligadas a la tarjeta (v0.9.587): UNA sola línea, sin importar cuántas */}
+            {p.is_card_statement && Array.isArray(p.plan_items) && p.plan_items.length > 0 && (
+              <div className={styles.freqLabel}>
+                {t('payCard.includesPlans', { count: p.plan_items.length, amount: fmt(p.plan_items.reduce((s, i) => s + Number(i.amount || 0), 0)) })}
+              </div>
+            )}
             {p.payment_method_kind && p.payment_method_kind !== 'cash' && (
               <div className={styles.methodLabel}>
                 <span className={styles.methodSwatch} style={{ '--swatch-color': paymentMethod ? bankColorVar(paymentMethod.bank) : 'var(--border-mid)' }} />

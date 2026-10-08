@@ -1,11 +1,44 @@
 import { useState, useRef, useEffect, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
-import { ChevronLeft, MoreVertical, Pencil, Trash2, Loader2, Users } from 'lucide-react'
+import { ChevronLeft, ChevronRight, MoreVertical, Pencil, Trash2, Loader2, Users } from 'lucide-react'
 import { CreditCardVisual } from './CreditCardVisual'
 import { Select } from './Select'
-import { getCategoryLabel, fmt, getMonths, getMonthsShort } from '../lib/utils'
-import { totalOwedOnCard } from '../lib/cardStatements'
+import { getCategoryLabel, fmt, getMonths, getMonthsShort, today } from '../lib/utils'
+import { cardDebt, cardCycleInfo } from '../lib/cardStatements'
+import { getPlans, activePlansCount, plansRemainingTotal, nextCutPlansTotal } from '../lib/cardPlans'
+import { CardPlansPanel } from './CardPlansPanel'
+import { useBackClose } from '../lib/backNav'
 import styles from './CardDetailPanel.module.css'
+
+// Dona de "Por pagar" (v0.9.587): una vuelta = lo que se debe, repartido en estado
+// de cuenta, ciclo en curso y planes por venir. Colores de la app (sin hex propios).
+const DONUT_R = 26
+const DONUT_C = 2 * Math.PI * DONUT_R
+function DebtDonut({ debt, label }) {
+  const parts = [
+    [debt.statement, 'var(--warning)'],
+    [debt.cycle, 'var(--accent)'],
+    [debt.plans, 'var(--label-variable)'],
+  ].filter(([v]) => v > 0)
+  const total = parts.reduce((s, [v]) => s + v, 0)
+  const GAP = parts.length > 1 ? 2 : 0
+  let offset = 0
+  return (
+    <div className={styles.donutWrap}>
+      <svg width="104" height="104" viewBox="0 0 64 64" role="img" aria-label={label}>
+        <g transform="rotate(-90 32 32)" fill="none" strokeWidth="9">
+          <circle cx="32" cy="32" r={DONUT_R} stroke="var(--border)" />
+          {parts.map(([v, color], i) => {
+            const len = Math.max(0, (v / total) * DONUT_C - GAP)
+            const el = <circle key={i} cx="32" cy="32" r={DONUT_R} stroke={color} strokeDasharray={`${len} ${DONUT_C}`} strokeDashoffset={-offset} />
+            offset += (v / total) * DONUT_C
+            return el
+          })}
+        </g>
+      </svg>
+    </div>
+  )
+}
 
 // Detalle de una tarjeta (v0.9.495, mockups confirmados con Johnatan).
 // Tocar una tarjeta en Mis tarjetas navega DIRECTO aquí — reemplaza el
@@ -21,10 +54,13 @@ import styles from './CardDetailPanel.module.css'
 //   — normalmente pagados en efectivo, por eso NO califican como
 //   `payment_method_id === card.id`; se identifican aparte).
 // Los pospuestos no cuentan en el total, mismo criterio que Gastos.
-export function CardDetailPanel({ card, payments, onBack, onEdit, onDelete, onPayNow, spaceNames = {}, canEdit = true, canDelete = true, blocked }) {
+export function CardDetailPanel({ card, payments, onBack, onEdit, onDelete, onPayNow, onSettlePlan, onDeletePlan, spaceNames = {}, canEdit = true, canDelete = true, blocked }) {
   const { t } = useTranslation()
   const [menuOpen, setMenuOpen] = useState(false)
   const menuRef = useRef(null)
+  // Pantalla aparte de compras a meses (v0.9.587)
+  const [plansOpen, setPlansOpen] = useState(false)
+  useBackClose(plansOpen, () => setPlansOpen(false))
 
   useEffect(() => {
     if (!menuOpen) return
@@ -74,7 +110,10 @@ export function CardDetailPanel({ card, payments, onBack, onEdit, onDelete, onPa
   // es la única fuente de esa cifra. "Debes" se evita a propósito (pedido
   // de Johnatan: se siente informal); se usa "Por pagar", como en las
   // apps de bancos.
-  const totalOwed = card.kind === 'credit' ? totalOwedOnCard(card, cardPayments) : 0
+  const debt = card.kind === 'credit' ? cardDebt(card, cardPayments) : null
+  const totalOwed = debt ? debt.total : 0
+  const hasPlans = card.kind === 'credit' && getPlans(card).length > 0
+  const cycleInfo = card.kind === 'credit' ? cardCycleInfo(card, today()) : null
 
   const inView = useMemo(() => {
     const resolved = cardPayments.filter(p => p.is_paid)
@@ -123,6 +162,17 @@ export function CardDetailPanel({ card, payments, onBack, onEdit, onDelete, onPa
     onDelete()
   }
 
+  if (plansOpen) {
+    return (
+      <CardPlansPanel
+        card={card}
+        onBack={() => window.history.back()}
+        onSettle={plan => onSettlePlan?.(card, plan)}
+        onDelete={plan => onDeletePlan?.(card, plan)}
+      />
+    )
+  }
+
   return (
     <div className={styles.screen}>
       <div className={styles.header}>
@@ -162,20 +212,67 @@ export function CardDetailPanel({ card, payments, onBack, onEdit, onDelete, onPa
         </button>
       )}
 
-      {/* "Por pagar" (v0.9.502): antes eran 2 pastillas ("Por pagar en
-          crédito" + "Debes en este periodo") que se sentían como la misma
-          información repetida — ahora es una sola, con el total
-          consolidado (`totalOwedOnCard`, arriba). */}
-      {card.kind === 'credit' && (
+      {/* Resumen en bento (v0.9.587, variante B elegida por Johnatan): "Por pagar" con
+          su dona (de dónde sale el número), lo pagado con la tarjeta, las compras a
+          meses (abren su pantalla aparte) y el avance del ciclo. */}
+      {card.kind === 'credit' ? (
+        <div className={styles.bento}>
+          <div className={`${styles.bCard} ${styles.bTall}`}>
+            <div className={styles.bKey}>{t('cards.pendingCreditTotal')}</div>
+            <div className={styles.bValue}>{fmt(totalOwed)}</div>
+            <DebtDonut debt={debt} label={t('cards.bento.donutLabel')} />
+            <div className={styles.legend}>
+              {[
+                ['statement', 'var(--warning)', t('cards.bento.statement')],
+                ['cycle', 'var(--accent)', t('cards.bento.cycle')],
+                ['plans', 'var(--label-variable)', t('cards.bento.plans')],
+              ].filter(([k]) => debt[k] > 0).map(([k, color, label]) => (
+                <div key={k} className={styles.legendRow}>
+                  <span className={styles.legendDot} style={{ background: color }} />
+                  <span>{label}</span>
+                  <b>{fmt(debt[k])}</b>
+                </div>
+              ))}
+              {debt.total <= 0 && <div className={styles.legendRow}><span>{t('cards.bento.noDebt')}</span></div>}
+            </div>
+          </div>
+
+          <div className={`${styles.bCard} ${!hasPlans ? styles.bTall : ''}`}>
+            <div className={styles.bKey}>{t('cards.detail.paidWithCard')}</div>
+            <div className={styles.bValueSm}>{fmt(total)}</div>
+          </div>
+
+          {hasPlans && (
+            <button type="button" onClick={() => setPlansOpen(true)} className={`${styles.bCard} ${styles.bButton}`}>
+              <div className={styles.bKey}>{t('cards.bento.plansTitle')}</div>
+              <div className={styles.bValueSm}>{fmt(plansRemainingTotal(card))}</div>
+              <div className={styles.bSub}>
+                {t('cards.bento.plansCount', { count: activePlansCount(card) })}
+                {nextCutPlansTotal(card) > 0 && ` · ${t('cards.bento.nextCutPlans', { amount: fmt(nextCutPlansTotal(card)) })}`}
+              </div>
+              <ChevronRight size={16} className={styles.bChevron} />
+            </button>
+          )}
+
+          {cycleInfo && (
+            <div className={`${styles.bCard} ${styles.bWide}`}>
+              <div className={styles.bKey}>
+                {t('cards.bento.nextCut', { day: cycleInfo.nextCut.getDate(), month: getMonthsShort()[cycleInfo.nextCut.getMonth()].toLowerCase() })}
+              </div>
+              <div className={styles.cycleTrack}><i style={{ width: `${Math.round(cycleInfo.day / cycleInfo.total * 100)}%` }} /></div>
+              <div className={styles.cycleRow}>
+                <span>{t('cards.bento.cycleDay', { day: cycleInfo.day, total: cycleInfo.total })}</span>
+                {cycleInfo.due && <span>{t('cards.bento.dueOn', { day: cycleInfo.due.getDate(), month: getMonthsShort()[cycleInfo.due.getMonth()].toLowerCase() })}</span>}
+              </div>
+            </div>
+          )}
+        </div>
+      ) : (
         <div className={styles.pill}>
-          <span>{t('cards.pendingCreditTotal')}</span>
-          <span className={styles.pillAmount}>{fmt(totalOwed)}</span>
+          <span>{t('cards.detail.paidWithCard')}</span>
+          <span className={styles.pillAmount}>{fmt(total)}</span>
         </div>
       )}
-      <div className={styles.pill}>
-        <span>{t('cards.detail.paidWithCard')}</span>
-        <span className={styles.pillAmount}>{fmt(total)}</span>
-      </div>
 
       <div className={styles.filtersWrapper}>
         <div className={styles.viewModeRow}>

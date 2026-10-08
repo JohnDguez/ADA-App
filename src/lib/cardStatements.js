@@ -1,4 +1,5 @@
 import { dateOf, dateToStr } from './utils'
+import { getPlans, cuotaAmount, debtBreakdown } from './cardPlans'
 
 // FIX v0.9.491 (bug real reportado por Johnatan: "Spent this cycle: $0.00"
 // tras marcar un gasto pagado con la tarjeta): `dateOf()` espera una fecha
@@ -61,6 +62,30 @@ function nextOccurrenceAfter(day, after) {
   return null
 }
 
+// Primer corte de la tarjeta DESPUÉS de una fecha 'YYYY-MM-DD' (Date), o null
+// si la tarjeta no tiene día de corte (v0.9.587, "Enlazar a fecha de tarjeta").
+// Datos del ciclo en curso para mostrar en el detalle de la tarjeta:
+// { nextCut, due (Dates), day (día N del ciclo), total (días del ciclo) }
+export function cardCycleInfo(card, todayDate) {
+  if (!card?.cut_day || !card?.due_day) return null
+  const start = card.last_statement_cut ? dateOf(card.last_statement_cut) : dayBefore(dateOfTimestamp(card.created_at))
+  // El siguiente corte es el primero DESPUÉS del último ya facturado (o del alta)
+  // que todavía no pasa; si ya pasó y no se ha facturado, el de después de hoy.
+  let nextCut = nextOccurrenceAfter(card.cut_day, start)
+  if (nextCut && nextCut <= todayDate) nextCut = nextOccurrenceAfter(card.cut_day, dayBefore(todayDate)) || nextCut
+  if (!nextCut) return null
+  const due = nextOccurrenceAfter(card.due_day, nextCut)
+  const prevCut = start
+  const total = Math.max(1, Math.round((nextCut - prevCut) / 86400000))
+  const day = Math.min(total, Math.max(1, Math.round((todayDate - prevCut) / 86400000)))
+  return { nextCut, due, day, total }
+}
+
+export function nextCutAfter(card, dateStr) {
+  if (!card?.cut_day) return null
+  return nextOccurrenceAfter(card.cut_day, dateOf(dateStr))
+}
+
 // `card`: { id, cut_day, due_day, carry_over, last_statement_cut, created_at }
 // `creditPayments`: SOLO los pagos de esa tarjeta con
 //   payment_method_id === card.id && payment_method_kind === 'credit' &&
@@ -105,6 +130,7 @@ export function computeMissingStatements(card, creditPayments, todayDate) {
   // está bien ahí; `created_at` SÍ es timestamp.
   let cursor = card.last_statement_cut ? dateOf(card.last_statement_cut) : dayBefore(dateOfTimestamp(card.created_at))
   let carryLeft = Number(card.carry_over) || 0
+  const planState = getPlans(card).map(p => ({ ...p }))
   let firstCycle = true
   let guard = 0 // red de seguridad: nunca más de 60 ciclos en una sola pasada
 
@@ -122,17 +148,36 @@ export function computeMissingStatements(card, creditPayments, todayDate) {
       .reduce((s, p) => s + Number(p.amount), 0)
 
     const carryThis = firstCycle ? carryLeft : 0
-    const amount = Math.round((spend + carryThis) * 100) / 100
+
+    // Compras a meses ligadas a la tarjeta (v0.9.587): cada plan activo mete
+    // UNA cuota a este estado de cuenta, desde el primer corte DESPUÉS de la
+    // compra. `planState` lleva el `charged` de cada plan a lo largo de los
+    // ciclos de esta misma pasada (varios cortes sin generar).
+    const planItems = []
+    for (const pl of planState) {
+      if (pl.settled || pl.charged >= pl.n) continue
+      if (pl.start && dateToStr(cycleEnd) <= pl.start) continue // el corte es de antes (o el mismo día) de la compra
+      const k = pl.charged + 1
+      planItems.push({ plan_id: pl.id, n: k, amount: cuotaAmount(pl, k) })
+      pl.charged = k
+    }
+    const planTotal = planItems.reduce((a, i) => a + i.amount, 0)
+
+    const amount = Math.round((spend + carryThis + planTotal) * 100) / 100
 
     if (amount > 0) {
       cycles.push({
         cycleStart: dateToStr(cycleStart), cycleEnd: dateToStr(cycleEnd), dueDate: dateToStr(dueDate),
-        amount, carryConsumed: carryThis !== 0,
+        amount, carryConsumed: carryThis !== 0, planItems,
       })
+    } else if (planItems.length) {
+      // (no debería pasar: una cuota siempre es > 0) — se deshace el avance
+      for (const it of planItems) { const pl = planState.find(x => x.id === it.plan_id); if (pl) pl.charged = it.n - 1 }
     }
     if (firstCycle) firstCycle = false
     cursor = cycleEnd
   }
+  cycles.plansAfter = planState
   return cycles
 }
 
@@ -165,11 +210,20 @@ export function pendingStatementsTotal(cardId, payments) {
 // personales — esta función filtra internamente lo que necesita de cada
 // tipo, así que no hace falta pre-filtrar antes de llamarla.
 export function totalOwedOnCard(card, payments) {
-  const pending = pendingStatementsTotal(card.id, payments)
-  const period = currentPeriodOwed(
+  return cardDebt(card, payments).total
+}
+
+// Desglose de lo que se debe en la tarjeta (v0.9.587): estados de cuenta sin
+// pagar + ciclo en curso (con el arrastre) + cuotas de planes por venir.
+// FIX v0.9.587: antes ignoraba el arrastre (`carry_over`) — un pago parcial
+// de un estado de cuenta, o uno desmarcado, no se reflejaba en "Por pagar".
+// El arrastre ya incluye los abonos de "Pagar ahora" (restan al abonar), por
+// eso aquí ya no se restan aparte.
+export function cardDebt(card, payments) {
+  const statement = pendingStatementsTotal(card.id, payments)
+  const cycleSpend = currentCycleSpend(
     card,
-    payments.filter(p => p.payment_method_id === card.id && p.payment_method_kind === 'credit' && p.is_paid),
-    payments.filter(p => p.card_statement_for === card.id && !p.is_card_statement && p.is_paid)
+    payments.filter(p => p.payment_method_id === card.id && p.payment_method_kind === 'credit' && p.is_paid)
   )
-  return Math.round((pending + period) * 100) / 100
+  return debtBreakdown({ statement, cycleSpend, carry: card.carry_over, card })
 }

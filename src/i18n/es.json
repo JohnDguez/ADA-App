@@ -848,6 +848,13 @@
       "nothing": "No pude leer datos del ticket. Intenta con mejor luz o escríbelo a mano.",
       "failed": "No se pudo escanear el ticket. Intenta de nuevo.",
       "disclaimer": "Escanear ticket: toma la foto con buena luz, de frente y sin cortes. LunaPay solo intenta llenar los campos; revisa bien todos los datos antes de registrar el pago. Es tu responsabilidad que sean correctos."
+    },
+    "linkCard": {
+      "label": "Enlazar a fecha de tarjeta",
+      "subOn": "Se paga con el estado de cuenta de tu tarjeta. No crea pagos en Inicio.",
+      "subOff": "Crea una cuota pendiente en Inicio por cada pago.",
+      "summary": "Pagarás {{count}} cuotas de ${{amount}}, una en cada corte de tu tarjeta.",
+      "firstCut": "La primera entra en tu siguiente corte, el {{day}} de {{month}}."
     }
   },
   "pageHeader": {
@@ -962,7 +969,9 @@
       "paidCount": "pagadas"
     },
     "markPaidAriaLabel": "Marcar como pagado",
-    "menuTriggerAriaLabel": "Más opciones"
+    "menuTriggerAriaLabel": "Más opciones",
+    "includesPlans_one": "Incluye {{count}} compra a meses · {{amount}}",
+    "includesPlans_other": "Incluye {{count}} compras a meses · {{amount}}"
   },
   "dates": {
     "weekAbbrev": "Sem",
@@ -1312,7 +1321,9 @@
       "fallbackSpaceName": "Espacio",
       "fetchPaymentsError": "No se pudieron cargar tus pagos. Revisa tu conexión.",
       "fallbackIncomeName": "ingreso extra",
-      "installmentCharged": "Parcialidad {{n}}/{{total}} de «{{name}}» cargada a tu tarjeta"
+      "installmentCharged": "Parcialidad {{n}}/{{total}} de «{{name}}» cargada a tu tarjeta",
+      "cardDebtRestored": "Se sumó a la deuda de {{name}}: {{amount}}",
+      "cardPlanCreated": "«{{name}}» quedó ligada a {{card}}"
     },
     "confirm": {
       "deleteThisPayment": "¿Eliminar este pago?",
@@ -1583,7 +1594,43 @@
       "success": "Pagaste {{amount}} a {{name}}"
     },
     "owedThisPeriodChip": "Debes este periodo: {{amount}}",
-    "owedChip": "Por pagar: {{amount}}"
+    "owedChip": "Por pagar: {{amount}}",
+    "bento": {
+      "donutLabel": "Distribución de lo que debes",
+      "statement": "Estado de cuenta",
+      "cycle": "Ciclo en curso",
+      "plans": "Planes por venir",
+      "noDebt": "Sin adeudo",
+      "plansTitle": "Compras a meses",
+      "plansCount_one": "{{count}} plan",
+      "plansCount_other": "{{count}} planes",
+      "nextCutPlans": "próximo corte {{amount}}",
+      "nextCut": "Próximo corte, {{day}} {{month}}",
+      "cycleDay": "Día {{day}} de {{total}} del ciclo",
+      "dueOn": "Vence {{day}} {{month}}"
+    },
+    "plans": {
+      "settleName": "Liquidación {{name}}",
+      "settleTitle": "Liquidar {{name}}",
+      "settleSubtitle": "Paga de una vez las cuotas que aún no entran a tu estado de cuenta. El plan ya no sumará más cuotas.",
+      "settled": "«{{name}}» liquidada: {{amount}}",
+      "totalDebt": "Deuda total en planes",
+      "nextCut": "Cuotas del próximo corte",
+      "active": "En curso",
+      "done": "Liquidados",
+      "perMonth": "{{amount}} / mes",
+      "cuotaOf": "Cuota {{n}} de {{total}} · total {{amount}}",
+      "notStarted": "Empieza en tu próximo corte · {{total}} cuotas · total {{amount}}",
+      "settledTag": "liquidada",
+      "paid": "Pagado {{amount}}",
+      "remaining": "Falta {{amount}}",
+      "settleButton": "Liquidar plan · {{amount}}",
+      "delete": "Eliminar",
+      "doneMeta": "{{n}} de {{n}} cuotas",
+      "empty": "Aún no tienes compras a meses ligadas a esta tarjeta.",
+      "deleteTitle": "Eliminar plan",
+      "deleteMessage": "«{{name}}» dejará de sumar cuotas a tu tarjeta. Lo que ya está en tus estados de cuenta se queda tal cual."
+    }
   },
   "paymentMethod": {
     "addCard": "Añadir tarjeta",

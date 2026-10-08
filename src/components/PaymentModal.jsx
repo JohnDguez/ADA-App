@@ -11,6 +11,7 @@ import { FrequencyPicker } from './FrequencyPicker'
 import { PremiumLock } from './PremiumLock'
 import { Select } from './Select'
 import { PaymentMethodField } from './PaymentMethodField'
+import { nextCutAfter } from '../lib/cardStatements'
 import { DatePicker } from './DatePicker'
 import AmountInput from './AmountInput'
 import styles from './PaymentModal.module.css'
@@ -22,7 +23,7 @@ import { parseVoicePayment } from '../lib/parseVoicePayment'
 import { isTicketScanSupported, scanTicketText } from '../lib/ticketScan'
 import { parseTicketText } from '../lib/parseTicket'
 
-export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelete, onEditMaster, initial, payments, profile, spacePermissions, isSharedSpace = false, customCategories = [], onAddCategory, onOpenPremium, paymentMethods = null, prefill = null, autoStart = null }) {
+export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onSaveCardPlan, onDelete, onEditMaster, initial, payments, profile, spacePermissions, isSharedSpace = false, customCategories = [], onAddCategory, onOpenPremium, paymentMethods = null, prefill = null, autoStart = null }) {
   const { t } = useTranslation()
   const [mode,               setMode]               = useState('single')
   const [name,               setName]               = useState('')
@@ -44,6 +45,9 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
   // SIEMPRE Efectivo (pedido de Johnatan). Las tarjetas son personales, así
   // que el campo no aparece en un Espacio Compartido.
   const [methodId, setMethodId] = useState(null)
+  // "Enlazar a fecha de tarjeta" (v0.9.587): una compra a meses con tarjeta de crédito
+  // vive en la tarjeta (una cuota por corte) en vez de crear pagos en Inicio.
+  const [linkToCard, setLinkToCard] = useState(true)
   // Dictado por voz (v0.9.577): 'idle' | 'listening'; voiceNote = lo que se entendió o el motivo del fallo
   const [voiceState, setVoiceState] = useState('idle')
   const [voiceNote,  setVoiceNote]  = useState({ kind: '', text: '' })
@@ -194,6 +198,7 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
       setMode(prefill?.recur_freq ? 'recurrent' : 'single'); setTotalInstallments(''); setStartFrom('1'); setTotalAmount('')
       setBackfillAsExpense(true)
       setMethodId(null)
+      setLinkToCard(true)
       setAlreadyPaid(false)
       setPaidAt('')
     }
@@ -228,6 +233,9 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
   // Solo se manda el método cuando el campo está visible (personal y con
   // el hook disponible): en un Espacio Compartido no debe tocarse nunca.
   const methodsAvailable = !isSharedSpace && !!paymentMethods
+  const selectedCard = methodsAvailable ? paymentMethods.methods.find(m => m.id === methodId) : null
+  const canLink = mode === 'installment' && !initial && !!selectedCard && selectedCard.kind === 'credit' && !!selectedCard.cut_day && !String(selectedCard.id).startsWith('tmp-')
+  const linked  = canLink && linkToCard
 
   // "Añadir tarjeta" desde el campo "Se paga con": CardFormModal se abre
   // ENCIMA de este modal (que sigue montado, así que no se pierde nada de lo
@@ -260,6 +268,11 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
       if (!totalInstallments || isNaN(parseInt(totalInstallments))) { setError(t('paymentModal.installment.countError')); return }
       const total = parseInt(totalInstallments)
       if (total < 2) { setError(t('paymentModal.installment.minError')); return }
+      if (linked) {
+        setSaving(true)
+        await onSaveCardPlan?.({ name: name.trim(), totalAmount: totalAmt, totalInstallments: total, cardId: selectedCard.id })
+        setSaving(false); onClose(); return
+      }
       const start = parseInt(startFrom) || 1
       if (start > total) { setError(t('paymentModal.installment.startExceedsTotal')); return }
       if (!dueDate) { setError(t('paymentModal.installment.firstDateError')); return }
@@ -389,7 +402,7 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
 
   if (!open) return null
 
-  const showDatePicker     = mode === 'single' || mode === 'installment' || (mode === 'recurrent' && monthBasedFreqs.includes(recurFreq))
+  const showDatePicker     = mode === 'single' || (mode === 'installment' && !linked) || (mode === 'recurrent' && monthBasedFreqs.includes(recurFreq))
   const showWeekdayPicker  = mode === 'recurrent' && recurFreq === 'weekly'
   const showBiweeklyPicker = mode === 'recurrent' && recurFreq === 'biweekly'
   const nextBiDate         = biweeklyDate ? nextBiweeklyFromDate(biweeklyDate) : null
@@ -724,6 +737,15 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
             </div>
           )}
 
+          {canLink && (
+            <Toggle
+              label={t('paymentModal.linkCard.label')}
+              sub={t(linkToCard ? 'paymentModal.linkCard.subOn' : 'paymentModal.linkCard.subOff')}
+              value={linkToCard}
+              onChange={setLinkToCard}
+            />
+          )}
+
           {mode !== 'installment' && (
             <div data-coachmark="modal-variable-toggle">
               <Toggle label={t('paymentModal.variableToggleLabel')} sub={t('paymentModal.variableToggleSub')} value={isVariable} onChange={setIsVariable} />
@@ -760,10 +782,12 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
                 <Field label={t('paymentModal.numPayments')}>
                   <input className="field-input" type="number" value={totalInstallments} onChange={e => setTotalInstallments(e.target.value)} placeholder={t('paymentModal.numPaymentsPlaceholder')} min="2" enterKeyHint="next" />
                 </Field>
+                {!linked && (
                 <Field label={t('paymentModal.startFromLabel')}>
                   <input className="field-input" type="number" value={startFrom} onChange={e => setStartFrom(e.target.value)} placeholder="1" min="1" enterKeyHint="next" />
                 </Field>
-                {startNum > 1 && (
+                )}
+                {!linked && startNum > 1 && (
                   <Toggle
                     label={t('paymentModal.backfill.label')}
                     sub={t(backfillAsExpense ? 'paymentModal.backfill.helperOn' : 'paymentModal.backfill.helperOff', { n: startNum - 1 })}
@@ -771,7 +795,19 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
                     onChange={setBackfillAsExpense}
                   />
                 )}
-                {totalAmt > 0 && numPayments >= 2 && (
+                {linked && totalAmt > 0 && numPayments >= 2 && (() => {
+                  const cut = nextCutAfter(selectedCard, todayStr())
+                  return (
+                    <div className={styles.summaryBox}>
+                      <div className={styles.summaryTitle}>{t('paymentModal.summary.title')}</div>
+                      <div className={styles.summaryText}>
+                        {t('paymentModal.linkCard.summary', { count: numPayments, amount: perPayment.toLocaleString('es-MX') })}
+                        {cut && <> {t('paymentModal.linkCard.firstCut', { day: cut.getDate(), month: i18n.language === 'en' ? getMonths()[cut.getMonth()] : getMonths()[cut.getMonth()].toLowerCase() })}</>}
+                      </div>
+                    </div>
+                  )
+                })()}
+                {!linked && totalAmt > 0 && numPayments >= 2 && (
                   <div className={styles.summaryBox}>
                     <div className={styles.summaryTitle}>{t('paymentModal.summary.title')}</div>
                     <div className={styles.summaryText}>
@@ -790,7 +826,7 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
             )
           })()}
 
-          {(mode === 'recurrent' || mode === 'installment') && (
+          {(mode === 'recurrent' || (mode === 'installment' && !linked)) && (
             <FrequencyPicker value={recurFreq} onChange={setRecurFreq} />
           )}
 

@@ -1,0 +1,151 @@
+/* Pantalla de compras a meses de una tarjeta (v0.9.587). Header y pastillas:
+   mismos valores que CardDetailPanel.module.css. Sin bordes en contenedores. */
+.screen {
+  padding: 20px 16px 40px;
+  box-sizing: border-box;
+  animation: fadeIn .2s ease both;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.iconButton {
+  background: none;
+  border: none;
+  padding: 4px;
+  display: flex;
+  cursor: pointer;
+}
+
+.headerTitle {
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--text);
+  flex: 1;
+  min-width: 0;
+}
+
+.pill {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--surface);
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+  font-size: 13px;
+  color: var(--text);
+  margin-bottom: 10px;
+}
+
+.pillAmount {
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.section {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text);
+  margin: 16px 0 8px;
+}
+
+.plan {
+  background: var(--surface);
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+  margin-bottom: 8px;
+  color: var(--text);
+}
+
+.planTop {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.planName {
+  font-size: 14px;
+  font-weight: 600;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.planCuota {
+  font-size: 14px;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.planMeta {
+  font-size: 11px;
+  margin-top: 2px;
+}
+
+.bar {
+  display: flex;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--border);
+  overflow: hidden;
+  margin: 10px 0 6px;
+}
+
+.bar i {
+  display: block;
+  height: 100%;
+}
+
+.planBottom {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+}
+
+.actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.settleBtn {
+  flex: 1;
+  padding: 9px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  border: none;
+  border-radius: var(--radius-sm);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.deleteBtn {
+  padding: 9px 12px;
+  background: none;
+  color: var(--danger);
+  border: none;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.empty {
+  font-size: 13px;
+  color: var(--text);
+  padding: 24px 0;
+  text-align: center;
+}

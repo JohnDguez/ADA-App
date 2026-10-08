@@ -17,7 +17,7 @@ import styles from './PayCardNowModal.module.css'
 // (Regla 30).
 const ANIM_MS = 320
 
-export function PayCardNowModal({ open, card, cycleSpend, methods, onSave, onClose }) {
+export function PayCardNowModal({ open, card, cycleSpend, methods, onSave, onClose, title = null, subtitle = null, fixedAmount = false }) {
   const { t } = useTranslation()
   const [amount, setAmount] = useState('')
   const [methodId, setMethodId] = useState(null)
@@ -72,23 +72,25 @@ export function PayCardNowModal({ open, card, cycleSpend, methods, onSave, onClo
     <div onClick={e => e.target === e.currentTarget && onClose()} className={`${styles.overlay} ${closing ? styles.overlayClosing : ''}`}>
       <div className={`${styles.modal} ${entering ? styles.modalEntering : ''} ${closing ? styles.modalClosing : ''}`}>
         <div className={styles.handle} />
-        <div className={styles.title}>{t('cards.payNow.title', { name: card.alias || t(`cards.kind.${card.kind}`) })}</div>
+        <div className={styles.title}>{title || t('cards.payNow.title', { name: card.alias || t(`cards.kind.${card.kind}`) })}</div>
         <div className={styles.subtitle}>
-          {cycleSpend > 0
+          {subtitle || (cycleSpend > 0
             ? t('cards.payNow.subtitle', { amount: fmt(cycleSpend) })
-            : t('cards.payNow.subtitleZero')}
+            : t('cards.payNow.subtitleZero'))}
         </div>
 
         <div className={styles.fieldGroup}>
           <label className="field-label">{t('cards.payNow.amountLabel')}</label>
-          <AmountInput className="field-input" value={amount} onChange={e => { setAmount(e.target.value); setError('') }} placeholder="0.00" />
+          {fixedAmount
+            ? <div className="field-input">{fmt(cycleSpend)}</div>
+            : <AmountInput className="field-input" value={amount} onChange={e => { setAmount(e.target.value); setError('') }} placeholder="0.00" />}
         </div>
 
         <div className={styles.fieldGroup}>
           <PaymentMethodField methods={debitOnly} value={methodId} onChange={setMethodId} label={t('paymentMethod.label')} />
         </div>
 
-        {!isZero && (
+        {!isZero && !fixedAmount && (
           <div className={styles.note}>
             {isFull
               ? t('cards.payNow.noteFull')

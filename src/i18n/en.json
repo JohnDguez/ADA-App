@@ -848,6 +848,13 @@
       "nothing": "Couldn't read data from the receipt. Try better light or enter it manually.",
       "failed": "Couldn't scan the receipt. Try again.",
       "disclaimer": "Scan receipt: take the photo in good light, straight on and uncropped. LunaPay only tries to fill in the fields; carefully review all data before recording the payment. It is your responsibility that it is correct."
+    },
+    "linkCard": {
+      "label": "Link to card statement",
+      "subOn": "Paid with your card statement. No payments are created on Home.",
+      "subOff": "Creates a pending payment on Home for each installment.",
+      "summary": "You will pay {{count}} installments of ${{amount}}, one on each card statement.",
+      "firstCut": "The first one lands on your next statement, on {{month}} {{day}}."
     }
   },
   "pageHeader": {
@@ -962,7 +969,9 @@
       "paidCount": "paid"
     },
     "markPaidAriaLabel": "Mark as paid",
-    "menuTriggerAriaLabel": "More options"
+    "menuTriggerAriaLabel": "More options",
+    "includesPlans_one": "Includes {{count}} installment purchase · {{amount}}",
+    "includesPlans_other": "Includes {{count}} installment purchases · {{amount}}"
   },
   "dates": {
     "weekAbbrev": "Wk",
@@ -1312,7 +1321,9 @@
       "fallbackSpaceName": "Space",
       "fetchPaymentsError": "Couldn't load your payments. Check your connection.",
       "fallbackIncomeName": "extra income",
-      "installmentCharged": "Installment {{n}}/{{total}} of “{{name}}” charged to your card"
+      "installmentCharged": "Installment {{n}}/{{total}} of “{{name}}” charged to your card",
+      "cardDebtRestored": "Added back to your {{name}} balance: {{amount}}",
+      "cardPlanCreated": "\"{{name}}\" is now linked to {{card}}"
     },
     "confirm": {
       "deleteThisPayment": "Delete this payment?",
@@ -1583,7 +1594,43 @@
       "success": "You paid {{amount}} to {{name}}"
     },
     "owedThisPeriodChip": "You owe this period: {{amount}}",
-    "owedChip": "Owed: {{amount}}"
+    "owedChip": "Owed: {{amount}}",
+    "bento": {
+      "donutLabel": "Breakdown of what you owe",
+      "statement": "Statement",
+      "cycle": "Current cycle",
+      "plans": "Upcoming installments",
+      "noDebt": "Nothing owed",
+      "plansTitle": "Installment purchases",
+      "plansCount_one": "{{count}} plan",
+      "plansCount_other": "{{count}} plans",
+      "nextCutPlans": "next statement {{amount}}",
+      "nextCut": "Next statement, {{month}} {{day}}",
+      "cycleDay": "Day {{day}} of {{total}} of the cycle",
+      "dueOn": "Due {{month}} {{day}}"
+    },
+    "plans": {
+      "settleName": "Payoff {{name}}",
+      "settleTitle": "Pay off {{name}}",
+      "settleSubtitle": "Pays now the installments that are not on a statement yet. The plan will not add more installments.",
+      "settled": "\"{{name}}\" paid off: {{amount}}",
+      "totalDebt": "Total owed in plans",
+      "nextCut": "Installments on next statement",
+      "active": "In progress",
+      "done": "Paid off",
+      "perMonth": "{{amount}} / month",
+      "cuotaOf": "Installment {{n}} of {{total}} · total {{amount}}",
+      "notStarted": "Starts on your next statement · {{total}} installments · total {{amount}}",
+      "settledTag": "paid off",
+      "paid": "Paid {{amount}}",
+      "remaining": "{{amount}} left",
+      "settleButton": "Pay off plan · {{amount}}",
+      "delete": "Delete",
+      "doneMeta": "{{n}} of {{n}} installments",
+      "empty": "You have no installment purchases linked to this card yet.",
+      "deleteTitle": "Delete plan",
+      "deleteMessage": "\"{{name}}\" will stop adding installments to your card. What is already on your statements stays as it is."
+    }
   },
   "paymentMethod": {
     "addCard": "Add card",

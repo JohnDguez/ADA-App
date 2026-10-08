@@ -31,6 +31,7 @@ import { usePeriodIncome } from './hooks/usePeriodIncome'
 import { usePaymentMethods } from './hooks/usePaymentMethods'
 import { supabase } from './lib/supabase'
 import { computeMissingStatements, currentCycleSpend } from './lib/cardStatements'
+import { planFuture, getPlans, newPlan, applyCharged, applyPaid, revertPaid, revertCharged, applySettle, revertSettle, itemsTotal } from './lib/cardPlans'
 import { findAutoChargeCandidate, readAutoChargeSkip, addAutoChargeSkip, isCreditInstallmentCopy, dueDateNoon } from './lib/installmentCharge'
 import { today, todayStr, addDays, dateToStr } from './lib/utils'
 import { getBank } from './lib/cardCatalog'
@@ -321,6 +322,41 @@ export default function App() {
     paymentMethods.updateStatementFields(cardId, { carry_over: Math.round((Number(card.carry_over) + delta) * 100) / 100 })
   }
 
+  function cardLabelOf(cardId) {
+    const card = paymentMethods.methods.find(m => m.id === cardId)
+    if (!card) return t('cards.fallbackName')
+    const bankLabel = getBank(card.bank).id === 'otro' ? t('cards.otherBank') : getBank(card.bank).name
+    return [bankLabel, card.alias].filter(Boolean).join(' ')
+  }
+
+  // Se quitó un pago a la tarjeta (estado de cuenta o abono; v0.9.587): su
+  // monto regresa a la deuda (arrastre) y las cuotas de compras a meses que
+  // llevaba dejan de contar como pagadas. UNA sola escritura a la tarjeta.
+  // - Pagado, normal: arrastre += monto.
+  // - Pagado, liquidación de plan: no tocó el arrastre; el plan vuelve a facturar.
+  // - Sin pagar (se borra un estado de cuenta): sus cuotas vuelven a quedar por facturar.
+  function applyCardPaymentRemoved(payment) {
+    const card = paymentMethods.methods.find(m => m.id === payment.card_statement_for)
+    if (!card) return
+    const items = payment.plan_items || []
+    const settle = items.some(i => i.settle)
+    const fields = {}
+    if (payment.is_paid) {
+      if (!settle) fields.carry_over = Math.round((Number(card.carry_over) + Number(payment.amount)) * 100) / 100
+      if (items.length) fields.plans = settle ? revertSettle(getPlans(card), items) : revertPaid(getPlans(card), items)
+    } else if (items.length && !settle) {
+      fields.plans = revertCharged(getPlans(card), items)
+    }
+    if (Object.keys(fields).length) paymentMethods.updateStatementFields(card.id, fields)
+  }
+
+  async function undoCardPayment(payment) {
+    const { reverted, busy } = await deletePayment(payment.id)
+    if (reverted || busy) return { failed: true }
+    applyCardPaymentRemoved(payment)
+    return { failed: false }
+  }
+
   // Mis tarjetas (v0.9.486): aviso + notificación que lleva a Ajustes →
   // Mis tarjetas.
   function handleCardSyncError({ method, action }) {
@@ -491,6 +527,7 @@ export default function App() {
         // En orden cronológico: cada ciclo depende de que el anterior ya
         // haya movido `last_statement_cut` (si no, el próximo cálculo del
         // ciclo siguiente partiría del mismo punto de nuevo).
+        let plansNow = getPlans(card)
         for (const cycle of cycles) {
           const bankName = getBank(card.bank).id === 'otro' ? t('cards.otherBank') : getBank(card.bank).name
           const label = [bankName, card.alias].filter(Boolean).join(' ')
@@ -504,11 +541,15 @@ export default function App() {
             card_statement_for: card.id,
             payment_method_id: null,
             payment_method_kind: 'cash',
+            // Cuotas de compras a meses ligadas a la tarjeta que lleva este estado de cuenta (v0.9.587)
+            ...(cycle.planItems?.length ? { plan_items: cycle.planItems } : {}),
           })
           if (error) break // no se pudo crear — se reintenta en la próxima carga
+          plansNow = applyCharged(plansNow, cycle.planItems)
           await paymentMethods.updateStatementFields(card.id, {
             last_statement_cut: cycle.cycleEnd,
             carry_over: cycle.carryConsumed ? 0 : card.carry_over,
+            ...(cycle.planItems?.length ? { plans: plansNow } : {}),
           })
         }
       }
@@ -550,6 +591,8 @@ export default function App() {
   // "Pagar ahora" (v0.9.497) — adelantar el pago de una tarjeta de
   // crédito antes de su corte.
   const [payCardNowCard, setPayCardNowCard] = useState(null)
+  // "Liquidar plan" (v0.9.587): { card, plan } mientras el modal está abierto
+  const [settleTarget, setSettleTarget] = useState(null)
   // Tab de origen cuando se entra a una sección de Ajustes por un atajo
   // directo (ej. "Editar" desde el switcher de Espacio Compartido) — el
   // PRIMER "atrás" desde ahí debe regresar a este tab, no al menú
@@ -907,9 +950,17 @@ export default function App() {
       if (reverted || busy) return
       if (error) { showToast(t('app.toast.registerPaymentError')); return }
       const shortfall = Math.round((originalDue - amount) * 100) / 100
-      if (shortfall !== 0 && payment.card_statement_for) {
+      if (payment.card_statement_for) {
         const card = paymentMethods.methods.find(m => m.id === payment.card_statement_for)
-        if (card) paymentMethods.updateStatementFields(card.id, { carry_over: Math.round((Number(card.carry_over) + shortfall) * 100) / 100 })
+        if (card) {
+          // UNA sola escritura: `updateStatementFields` rechaza (busy) una segunda
+          // mientras la primera sigue en vuelo. Las cuotas de compras a meses que
+          // llevaba este estado de cuenta pasan a pagadas (v0.9.587).
+          const fields = {}
+          if (shortfall !== 0) fields.carry_over = Math.round((Number(card.carry_over) + shortfall) * 100) / 100
+          if (payment.plan_items?.length) fields.plans = applyPaid(getPlans(card), payment.plan_items)
+          if (Object.keys(fields).length) paymentMethods.updateStatementFields(card.id, fields)
+        }
       }
       showToast(t('app.toast.registered', { name: payment.name, amount: fmt(amount) }))
       return
@@ -1039,13 +1090,15 @@ export default function App() {
       return
     }
     if (isCreditInstallmentCopy(payment)) addAutoChargeSkip(id) // el usuario la desmarcó: no volver a cargarla sola
+    // Pago a la tarjeta (estado de cuenta o abono) ya pagado (v0.9.587): NO
+    // regresa a Inicio como un pago aparte — su monto vuelve a la deuda de la tarjeta.
+    if (payment?.card_statement_for && payment.is_paid) {
+      const { failed } = await undoCardPayment(payment)
+      if (!failed) showToast(t('app.toast.cardDebtRestored', { name: cardLabelOf(payment.card_statement_for), amount: fmt(payment.amount) }))
+      return
+    }
     const { error, reverted, busy } = await markUnpaid(id)
     if (reverted || busy) return
-    // Ajuste de crédito (v0.9.497): desmarcar como pagado un estado de
-    // cuenta/abono ya pagado deshace TODO el crédito que había aplicado.
-    if (!error && payment?.card_statement_for && payment.is_paid) {
-      adjustCardCarryOver(payment.card_statement_for, Number(payment.amount))
-    }
     if (error) showToast(typeof error === 'string' ? error : t('app.toast.unmarkError'))
     else showToast(t('app.toast.markedUnpaid', { name: payment?.name || t('app.toast.fallbackPaymentName') }))
   }
@@ -1063,12 +1116,14 @@ export default function App() {
       return { failed: false }
     }
     if (isCreditInstallmentCopy(payment)) addAutoChargeSkip(id)
+    // Mismo criterio que handleMarkUnpaid (v0.9.587).
+    if (payment?.card_statement_for && payment.is_paid) {
+      const { failed } = await undoCardPayment(payment)
+      if (!failed) showToast(t('app.toast.cardDebtRestored', { name: cardLabelOf(payment.card_statement_for), amount: fmt(payment.amount) }))
+      return { failed }
+    }
     const { error, reverted, busy } = await markUnpaid(id)
     if (reverted || busy) return { failed: true }
-    // Ajuste de crédito (v0.9.497) — mismo criterio que handleMarkUnpaid.
-    if (!error && payment?.card_statement_for && payment.is_paid) {
-      adjustCardCarryOver(payment.card_statement_for, Number(payment.amount))
-    }
     if (error) { showToast(typeof error === 'string' ? error : t('app.toast.unmarkError')); return { failed: true } }
     return { failed: false }
   }
@@ -1119,9 +1174,7 @@ export default function App() {
       if (reverted || busy) return
       // Ajuste de crédito (v0.9.497): borrar un estado de cuenta/abono ya
       // pagado deshace el crédito que había aplicado a esa tarjeta.
-      if (payment?.card_statement_for && payment.is_paid) {
-        adjustCardCarryOver(payment.card_statement_for, Number(payment.amount))
-      }
+      if (payment?.card_statement_for) applyCardPaymentRemoved(payment)
     }
     showToast(t('app.toast.paymentDeleted'))
   }
@@ -1271,6 +1324,52 @@ export default function App() {
         addPayment(data).then(settle(t('app.toast.paymentAdded')))
       }
     }
+  }
+
+  // Compra a meses ligada a la tarjeta (v0.9.587): vive en `payment_methods.plans`.
+  // No crea pagos en Inicio — cada corte suma una cuota al estado de cuenta.
+  function handleSaveCardPlan({ name, totalAmount, totalInstallments, cardId }) {
+    const card = paymentMethods.methods.find(m => m.id === cardId)
+    if (!card) { showToast(t('app.toast.saveError')); return }
+    const plan = newPlan({ name, total: totalAmount, n: totalInstallments, start: todayStr() })
+    paymentMethods.updateStatementFields(card.id, { plans: [...getPlans(card), plan] })
+    showToast(t('app.toast.cardPlanCreated', { name, card: cardLabelOf(card.id) }))
+  }
+
+  // "Liquidar plan" (v0.9.587): paga de golpe lo que aún no entra a ningún estado de
+  // cuenta. Es un abono a la tarjeta que NO toca el arrastre (el plan ya no facturará
+  // más cuotas), así que el siguiente estado de cuenta no se reduce dos veces.
+  async function handleSettlePlan(card, plan, { methodId }) {
+    const amount = planFuture(plan)
+    const debitCard = methodId ? paymentMethods.methods.find(m => m.id === methodId) : null
+    setSettleTarget(null)
+    if (amount <= 0) return
+    const row = {
+      name: t('cards.plans.settleName', { name: plan.name }),
+      amount,
+      category: 'Créditos',
+      due_date: todayStr(),
+      is_variable: false,
+      is_recurrent: false,
+      is_installment: false,
+      is_card_statement: false,
+      card_statement_for: card.id,
+      payment_method_id: debitCard ? debitCard.id : null,
+      payment_method_kind: debitCard ? 'debit' : 'cash',
+      plan_items: [{ plan_id: plan.id, settle: true, amount }],
+      is_paid: true,
+      paid_at: new Date().toISOString(),
+    }
+    let error
+    if (paymentsSpaceId) {
+      ;({ error } = await supabase.from('payments').insert({ ...row, user_id: user.id, space_id: null }))
+      if (!error) loadSpaceCardPayments()
+    } else {
+      ;({ error } = await addPayment(row))
+    }
+    if (error) { showToast(t('app.toast.saveError')); return }
+    paymentMethods.updateStatementFields(card.id, { plans: applySettle(getPlans(card), plan.id) })
+    showToast(t('cards.plans.settled', { name: plan.name, amount: fmt(amount) }))
   }
 
   function handleSaveInstallment(data) {
@@ -1587,6 +1686,7 @@ export default function App() {
           // de ESE espacio — se manda null en vez de un número equivocado.
           personalPayments={cardPayments}
           onPayCardNow={setPayCardNowCard}
+          onSettlePlan={(card, plan) => setSettleTarget({ card, plan })}
           initialSection={settingsInitialSection}
           onConsumeInitialSection={() => setSettingsInitialSection(null)}
           returnTab={settingsReturnTab}
@@ -1676,6 +1776,18 @@ export default function App() {
         onClose={() => setPayCardNowCard(null)}
       />
 
+      <PayCardNowModal
+        open={!!settleTarget}
+        card={settleTarget?.card || null}
+        cycleSpend={settleTarget ? planFuture(settleTarget.plan) : 0}
+        methods={paymentMethods.methods}
+        title={settleTarget ? t('cards.plans.settleTitle', { name: settleTarget.plan.name }) : ''}
+        subtitle={t('cards.plans.settleSubtitle')}
+        fixedAmount
+        onSave={fields => handleSettlePlan(settleTarget.card, settleTarget.plan, fields)}
+        onClose={() => setSettleTarget(null)}
+      />
+
       <PaymentModal
         open={modalOpen}
         onClose={() => { setModalOpen(false); setEditPayment(null); setPaymentPrefill(null); setAddAutoStart(null) }}
@@ -1683,6 +1795,7 @@ export default function App() {
         autoStart={addAutoStart}
         onSave={handleSave}
         onSaveInstallment={handleSaveInstallment}
+        onSaveCardPlan={handleSaveCardPlan}
         onDelete={handleDeleteDirect}
         onEditMaster={openEditMaster}
         initial={editPayment}
