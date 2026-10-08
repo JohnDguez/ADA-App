@@ -1605,9 +1605,9 @@
       "plansCount_one": "{{count}} plan",
       "plansCount_other": "{{count}} planes",
       "nextCutPlans": "próximo corte {{amount}}",
-      "nextCut": "Próximo corte, {{day}} {{month}}",
+      "nextCut": "Próximo corte: {{day}} {{month}}",
       "cycleDay": "Día {{day}} de {{total}} del ciclo",
-      "dueOn": "Vence {{day}} {{month}}"
+      "dueOn": "Vence: {{day}} {{month}}"
     },
     "plans": {
       "settleName": "Liquidación {{name}}",

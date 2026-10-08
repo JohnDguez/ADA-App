@@ -267,7 +267,7 @@
    diseño), colores solo con variables de index.css. ─────────────────────── */
 .bento {
   display: grid;
-  grid-template-columns: 1.15fr 1fr;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 8px;
   margin-bottom: 10px;
 }
@@ -283,7 +283,6 @@
   font-family: 'DM Sans', sans-serif;
 }
 
-.bTall { grid-row: span 2; }
 .bWide { grid-column: 1 / -1; }
 
 .bButton {
@@ -298,7 +297,7 @@
 }
 
 .bValue {
-  font-size: 24px;
+  font-size: 32px;
   font-weight: 700;
   line-height: 1.1;
   margin-top: 4px;
@@ -324,10 +323,19 @@
   color: var(--text);
 }
 
-.donutWrap {
+.segBar {
   display: flex;
-  justify-content: center;
+  gap: 2px;
+  height: 8px;
+  border-radius: 4px;
+  overflow: hidden;
   margin: 14px 0 10px;
+}
+
+.segBar i {
+  display: block;
+  height: 100%;
+  min-width: 4px;
 }
 
 .legend {
@@ -372,8 +380,15 @@
 .cycleRow {
   display: flex;
   justify-content: space-between;
+  align-items: baseline;
   font-size: 12px;
-  margin-top: 10px;
+  white-space: nowrap;
+}
+
+.cycleDay {
+  font-size: 11px;
+  color: var(--muted);
+  margin-top: 6px;
 }
 
 .cycleRow span:first-child {

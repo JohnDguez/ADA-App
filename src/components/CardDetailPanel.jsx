@@ -5,37 +5,26 @@ import { CreditCardVisual } from './CreditCardVisual'
 import { Select } from './Select'
 import { getCategoryLabel, fmt, getMonths, getMonthsShort, today } from '../lib/utils'
 import { cardDebt, cardCycleInfo } from '../lib/cardStatements'
-import { getPlans, activePlansCount, plansRemainingTotal, nextCutPlansTotal } from '../lib/cardPlans'
+import { getPlans, activePlansCount, nextCutPlansTotal } from '../lib/cardPlans'
 import { CardPlansPanel } from './CardPlansPanel'
 import { useBackClose } from '../lib/backNav'
 import styles from './CardDetailPanel.module.css'
 
-// Dona de "Por pagar" (v0.9.587): una vuelta = lo que se debe, repartido en estado
-// de cuenta, ciclo en curso y planes por venir. Colores de la app (sin hex propios).
-const DONUT_R = 26
-const DONUT_C = 2 * Math.PI * DONUT_R
-function DebtDonut({ debt, label }) {
+// Barra segmentada de "Por pagar" (v0.9.587, variante A elegida por Johnatan): un
+// tramo por cada parte de lo que se debe (estado de cuenta, ciclo en curso, planes
+// por venir). Colores de la app (sin hex propios).
+function DebtBar({ debt, label }) {
   const parts = [
     [debt.statement, 'var(--warning)'],
     [debt.cycle, 'var(--accent)'],
     [debt.plans, 'var(--label-variable)'],
   ].filter(([v]) => v > 0)
-  const total = parts.reduce((s, [v]) => s + v, 0)
-  const GAP = parts.length > 1 ? 2 : 0
-  let offset = 0
+  if (!parts.length) return null
   return (
-    <div className={styles.donutWrap}>
-      <svg width="104" height="104" viewBox="0 0 64 64" role="img" aria-label={label}>
-        <g transform="rotate(-90 32 32)" fill="none" strokeWidth="9">
-          <circle cx="32" cy="32" r={DONUT_R} stroke="var(--border)" />
-          {parts.map(([v, color], i) => {
-            const len = Math.max(0, (v / total) * DONUT_C - GAP)
-            const el = <circle key={i} cx="32" cy="32" r={DONUT_R} stroke={color} strokeDasharray={`${len} ${DONUT_C}`} strokeDashoffset={-offset} />
-            offset += (v / total) * DONUT_C
-            return el
-          })}
-        </g>
-      </svg>
+    <div className={styles.segBar} role="img" aria-label={label}>
+      {parts.map(([v, color], i) => (
+        <i key={i} style={{ flexGrow: v, background: color }} />
+      ))}
     </div>
   )
 }
@@ -212,15 +201,15 @@ export function CardDetailPanel({ card, payments, onBack, onEdit, onDelete, onPa
         </button>
       )}
 
-      {/* Resumen en bento (v0.9.587, variante B elegida por Johnatan): "Por pagar" con
-          su dona (de dónde sale el número), lo pagado con la tarjeta, las compras a
+      {/* Resumen en bento (v0.9.587, variante A elegida por Johnatan): "Por pagar" con
+          su barra (de dónde sale el número), lo pagado con la tarjeta, las compras a
           meses (abren su pantalla aparte) y el avance del ciclo. */}
       {card.kind === 'credit' ? (
         <div className={styles.bento}>
-          <div className={`${styles.bCard} ${styles.bTall}`}>
+          <div className={`${styles.bCard} ${styles.bWide}`}>
             <div className={styles.bKey}>{t('cards.pendingCreditTotal')}</div>
             <div className={styles.bValue}>{fmt(totalOwed)}</div>
-            <DebtDonut debt={debt} label={t('cards.bento.donutLabel')} />
+            <DebtBar debt={debt} label={t('cards.bento.donutLabel')} />
             <div className={styles.legend}>
               {[
                 ['statement', 'var(--warning)', t('cards.bento.statement')],
@@ -237,7 +226,7 @@ export function CardDetailPanel({ card, payments, onBack, onEdit, onDelete, onPa
             </div>
           </div>
 
-          <div className={`${styles.bCard} ${!hasPlans ? styles.bTall : ''}`}>
+          <div className={`${styles.bCard} ${!hasPlans ? styles.bWide : ''}`}>
             <div className={styles.bKey}>{t('cards.detail.paidWithCard')}</div>
             <div className={styles.bValueSm}>{fmt(total)}</div>
           </div>
@@ -245,25 +234,22 @@ export function CardDetailPanel({ card, payments, onBack, onEdit, onDelete, onPa
           {hasPlans && (
             <button type="button" onClick={() => setPlansOpen(true)} className={`${styles.bCard} ${styles.bButton}`}>
               <div className={styles.bKey}>{t('cards.bento.plansTitle')}</div>
-              <div className={styles.bValueSm}>{fmt(plansRemainingTotal(card))}</div>
-              <div className={styles.bSub}>
-                {t('cards.bento.plansCount', { count: activePlansCount(card) })}
-                {nextCutPlansTotal(card) > 0 && ` · ${t('cards.bento.nextCutPlans', { amount: fmt(nextCutPlansTotal(card)) })}`}
-              </div>
+              <div className={styles.bValueSm}>{t('cards.bento.plansCount', { count: activePlansCount(card) })}</div>
+              {nextCutPlansTotal(card) > 0 && (
+                <div className={styles.bSub}>{t('cards.bento.nextCutPlans', { amount: fmt(nextCutPlansTotal(card)) })}</div>
+              )}
               <ChevronRight size={16} className={styles.bChevron} />
             </button>
           )}
 
           {cycleInfo && (
             <div className={`${styles.bCard} ${styles.bWide}`}>
-              <div className={styles.bKey}>
-                {t('cards.bento.nextCut', { day: cycleInfo.nextCut.getDate(), month: getMonthsShort()[cycleInfo.nextCut.getMonth()].toLowerCase() })}
-              </div>
-              <div className={styles.cycleTrack}><i style={{ width: `${Math.round(cycleInfo.day / cycleInfo.total * 100)}%` }} /></div>
               <div className={styles.cycleRow}>
-                <span>{t('cards.bento.cycleDay', { day: cycleInfo.day, total: cycleInfo.total })}</span>
+                <span>{t('cards.bento.nextCut', { day: cycleInfo.nextCut.getDate(), month: getMonthsShort()[cycleInfo.nextCut.getMonth()].toLowerCase() })}</span>
                 {cycleInfo.due && <span>{t('cards.bento.dueOn', { day: cycleInfo.due.getDate(), month: getMonthsShort()[cycleInfo.due.getMonth()].toLowerCase() })}</span>}
               </div>
+              <div className={styles.cycleTrack}><i style={{ width: `${Math.round(cycleInfo.day / cycleInfo.total * 100)}%` }} /></div>
+              <div className={styles.cycleDay}>{t('cards.bento.cycleDay', { day: cycleInfo.day, total: cycleInfo.total })}</div>
             </div>
           )}
         </div>

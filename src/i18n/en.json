@@ -1605,9 +1605,9 @@
       "plansCount_one": "{{count}} plan",
       "plansCount_other": "{{count}} plans",
       "nextCutPlans": "next statement {{amount}}",
-      "nextCut": "Next statement, {{month}} {{day}}",
+      "nextCut": "Next statement: {{month}} {{day}}",
       "cycleDay": "Day {{day}} of {{total}} of the cycle",
-      "dueOn": "Due {{month}} {{day}}"
+      "dueOn": "Due: {{month}} {{day}}"
     },
     "plans": {
       "settleName": "Payoff {{name}}",
