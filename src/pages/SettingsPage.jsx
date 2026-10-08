@@ -91,9 +91,17 @@ export function SettingsPage({ profile, user, onUpdate, onUploadAvatar, onDataDe
       // popstate, Ajustes no debe cerrar además su sección — antes lo hacía
       // y "atrás" desde el detalle de una tarjeta caía al menú de Ajustes en
       // vez de a la lista de tarjetas.
+      // Doble espera a propósito: Ajustes registra su listener ANTES que
+      // cualquier sub-pantalla (la lista de tarjetas lo registra al abrir un
+      // detalle), así que con una sola espera Ajustes decidía primero, veía
+      // que nadie había atendido el "atrás" y cerraba su sección aunque el
+      // detalle de la tarjeta lo iba a atender un instante después. Con la
+      // segunda espera las sub-pantallas deciden primero.
       setTimeout(() => {
-        if (wasBackHandled()) return
-        handle()
+        setTimeout(() => {
+          if (wasBackHandled()) return
+          handle()
+        }, 0)
       }, 0)
     }
     function handle() {
