@@ -1,9 +1,9 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { ChevronLeft } from 'lucide-react'
+import { ChevronLeft, MoreVertical } from 'lucide-react'
 import { fmt } from '../lib/utils'
 import { ConfirmDeleteModal } from './ConfirmDeleteModal'
-import { getPlans, planIsActive, planRemaining, planFuture, planBilledUnpaid, planPaidAmount, plansRemainingTotal, nextCutPlansTotal, cuotaAmount } from '../lib/cardPlans'
+import { getPlans, planIsActive, planRemaining, planFuture, plansRemainingTotal, nextCutPlansTotal, cuotaAmount } from '../lib/cardPlans'
 import styles from './CardPlansPanel.module.css'
 
 // Pantalla aparte de "Compras a meses" de una tarjeta (v0.9.587). Se abre desde
@@ -12,6 +12,7 @@ import styles from './CardPlansPanel.module.css'
 export function CardPlansPanel({ card, onBack, onSettle, onDelete }) {
   const { t } = useTranslation()
   const [deleting, setDeleting] = useState(null)
+  const [menuId, setMenuId] = useState(null)
   const plans = getPlans(card)
   const active = plans.filter(planIsActive)
   const done = plans.filter(p => !planIsActive(p))
@@ -25,52 +26,58 @@ export function CardPlansPanel({ card, onBack, onSettle, onDelete }) {
         <div className={styles.headerTitle}>{t('cards.bento.plansTitle')}</div>
       </div>
 
-      <div className={styles.pill}>
-        <span>{t('cards.plans.totalDebt')}</span>
-        <span className={styles.pillAmount}>{fmt(plansRemainingTotal(card))}</span>
-      </div>
-      {nextCutPlansTotal(card) > 0 && (
-        <div className={styles.pill}>
-          <span>{t('cards.plans.nextCut')}</span>
-          <span className={styles.pillAmount}>{fmt(nextCutPlansTotal(card))}</span>
+      <div className={styles.summary}>
+        <div>
+          <div className={styles.sKey}>{t('cards.plans.owed')}</div>
+          <div className={styles.sValue}>{fmt(plansRemainingTotal(card))}</div>
         </div>
-      )}
+        {nextCutPlansTotal(card) > 0 && (
+          <div className={styles.sSide}>
+            <div className={styles.sKey}>{t('cards.plans.nextCutShort')}</div>
+            <div className={styles.sSideValue}>{fmt(nextCutPlansTotal(card))}</div>
+          </div>
+        )}
+      </div>
 
       {active.length > 0 && <div className={styles.section}>{t('cards.plans.active')}</div>}
       {active.map(p => {
-        const total = Number(p.total) || 1
-        const paid = planPaidAmount(p)
-        const billed = planBilledUnpaid(p)
         const future = planFuture(p)
+        const segs = Array.from({ length: p.n }, (_, i) => (i < p.paid ? 'var(--accent)' : i < p.charged ? 'var(--warning)' : null))
         return (
           <div key={p.id} className={styles.plan}>
             <div className={styles.planTop}>
               <span className={styles.planName}>{p.name}</span>
-              <span className={styles.planCuota}>{t('cards.plans.perMonth', { amount: fmt(cuotaAmount(p, Math.min(p.n, p.charged + 1))) })}</span>
+              <div className={styles.menuWrapper}>
+                <button type="button" className={styles.menuBtn} aria-label={t('cards.plans.options')} onClick={() => setMenuId(menuId === p.id ? null : p.id)}>
+                  <MoreVertical size={18} />
+                </button>
+                {menuId === p.id && (
+                  <>
+                    <button type="button" className={styles.menuScrim} aria-label={t('goalDetailPanel.back')} onClick={() => setMenuId(null)} />
+                    <div className={styles.menu}>
+                      {future > 0 && (
+                        <button type="button" className={styles.menuItem} onClick={() => { setMenuId(null); onSettle(p) }}>
+                          {t('cards.plans.settleMenu', { amount: fmt(future) })}
+                        </button>
+                      )}
+                      <button type="button" className={`${styles.menuItem} ${styles.menuItemDanger}`} onClick={() => { setMenuId(null); setDeleting(p) }}>
+                        {t('cards.plans.delete')}
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
             </div>
             <div className={styles.planMeta}>
-              {p.charged > 0
-                ? t('cards.plans.cuotaOf', { n: p.charged, total: p.n, amount: fmt(p.total) })
-                : t('cards.plans.notStarted', { total: p.n, amount: fmt(p.total) })}
+              {p.charged > 0 ? t('cards.plans.cuotaN', { n: p.charged, total: p.n }) : t('cards.plans.startsNext')}
               {p.settled && ` · ${t('cards.plans.settledTag')}`}
             </div>
-            <div className={styles.bar}>
-              <i style={{ width: `${paid / total * 100}%`, background: 'var(--paid)' }} />
-              <i style={{ width: `${billed / total * 100}%`, background: 'var(--accent)' }} />
+            <div className={`${styles.segs} ${p.n > 24 ? styles.segsTight : ''}`}>
+              {segs.map((color, i) => <i key={i} style={color ? { background: color } : undefined} />)}
             </div>
             <div className={styles.planBottom}>
-              <span>{t('cards.plans.paid', { amount: fmt(paid) })}</span>
-              <span>{t('cards.plans.remaining', { amount: fmt(planRemaining(p)) })}</span>
-            </div>
-            <div className={styles.actions}>
-              {future > 0 && (
-                <button type="button" className={styles.settleBtn} onClick={() => onSettle(p)}>
-                  {t('cards.plans.settleButton', { amount: fmt(future) })}
-                </button>
-              )}
-              <button type="button" className={styles.deleteBtn} onClick={() => setDeleting(p)}>
-                {t('cards.plans.delete')}
-              </button>
+              <span>{t('cards.plans.perMonthLong', { amount: fmt(cuotaAmount(p, Math.min(p.n, p.charged + 1))) })}</span>
+              <span className={styles.planLeft}>{fmt(planRemaining(p))}</span>
             </div>
           </div>
         )
