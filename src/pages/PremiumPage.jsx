@@ -41,7 +41,7 @@ const ANIM_MS = 200
 // v0.9.505: rediseño de hero (degradado, ver comentario más abajo) y
 // beneficios (íconos Phosphor, copy corregido); banner de referidos
 // quitado (no tenía lógica real, ver HISTORIAL).
-export function PremiumPage({ profile, onClose, refreshProfile }) {
+export function PremiumPage({ profile, onClose, refreshProfile, onSubscribed }) {
   const { t } = useTranslation()
 
   // Prueba gratis de 7 días (v0.9.506) — SOLO para quien nunca ha tenido una
@@ -219,6 +219,7 @@ export function PremiumPage({ profile, onClose, refreshProfile }) {
       await purchasePremium(selectedPlan, session.access_token)
       await refreshProfile?.()
       setAndroidPurchaseState('idle')
+      onSubscribed?.({ plan: selectedPlan, trial: trialEligible, platform: 'google_play' })
       handleClose()
     } catch (e) {
       // Mismo criterio que handleRestorePurchases() arriba y que
@@ -253,6 +254,7 @@ export function PremiumPage({ profile, onClose, refreshProfile }) {
       if (data?.is_premium) break
       await new Promise(r => setTimeout(r, 1500))
     }
+    onSubscribed?.({ plan: selectedPlan, trial: trialEligible, platform: 'stripe' })
     handleClose()
   }
 

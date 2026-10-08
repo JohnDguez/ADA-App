@@ -31,7 +31,7 @@ import { usePeriodIncome } from './hooks/usePeriodIncome'
 import { usePaymentMethods } from './hooks/usePaymentMethods'
 import { supabase } from './lib/supabase'
 import { computeMissingStatements, currentCycleSpend } from './lib/cardStatements'
-import { today, todayStr } from './lib/utils'
+import { today, todayStr, addDays, dateToStr } from './lib/utils'
 import { getBank } from './lib/cardCatalog'
 import { highlightPaymentWhenVisible } from './lib/highlightPayment'
 import { useSpaceStats } from './hooks/useSpaceStats'
@@ -64,6 +64,7 @@ import { APP_VERSION, getPatchNotes, isNewerVersion } from './lib/patchNotes'
 import { InviteCodeModal } from './components/InviteCodeModal'
 import { UpdatePrompt } from './components/UpdatePrompt'
 import { PullToRefresh } from './components/PullToRefresh'
+import { PremiumThanksModal } from './components/PremiumThanksModal'
 import { buildFeedbackUrl, FEEDBACK_PROMPT_AFTER_DAYS, FEEDBACK_REMIND_AFTER_DAYS } from './lib/feedback'
 
 function fmt(n) { return '$' + Number(n).toLocaleString('es-MX', { minimumFractionDigits: 0, maximumFractionDigits: 0 }) }
@@ -405,6 +406,10 @@ export default function App() {
   // Pagar tu parte de un gasto compartido (v0.9.547) — ver askMethodThenPay().
   // Los hooks van ANTES de los return anticipados (Regla de hooks, React #310).
   const [sharedPay, setSharedPay] = useState(null)
+  // Gracias por suscribirte (v0.9.574): info de la suscripción recién hecha y
+  // los datos con que se rellena "Nuevo pago" si el usuario la registra.
+  const [premiumThanks, setPremiumThanks] = useState(null)
+  const [paymentPrefill, setPaymentPrefill] = useState(null)
   const [spaceCardPayments, setSpaceCardPayments] = useState(null)
   async function loadSpaceCardPayments() {
     if (!user?.id) return
@@ -1262,6 +1267,32 @@ export default function App() {
     }
   }
 
+  // Suscripción terminada (Stripe o Google Play): abre la pantalla de gracias.
+  // Precio: Stripe mensual $50, Google Play mensual $49, anual $500 en ambos.
+  // Con prueba gratis el primer cobro es 7 días después; sin ella, hoy.
+  function handlePremiumSubscribed({ plan, trial, platform }) {
+    const amount = plan === 'annual' ? 500 : (platform === 'google_play' ? 49 : 50)
+    const firstDate = trial ? dateToStr(addDays(new Date(), 7)) : todayStr()
+    setPremiumThanks({ plan, trial, amount, firstDate })
+  }
+
+  // "Agregar como pago nuevo": abre Nuevo pago (personal) ya rellenado.
+  function handleThanksAddPayment() {
+    const info = premiumThanks
+    setPremiumThanks(null)
+    if (!info) return
+    if (paymentsSpaceId) switchSpace(null)
+    setPaymentPrefill({
+      name: 'LunaPay Premium',
+      amount: info.amount,
+      category: 'Suscripciones',
+      recur_freq: info.plan === 'annual' ? 'annual' : 'monthly',
+      due_date: info.firstDate,
+    })
+    setEditPayment(null)
+    setModalOpen(true)
+  }
+
   function goToSharedSpaceSettings() {
     setSettingsReturnTab(tab)
     setSettingsInitialSection('sharedspace')
@@ -1584,7 +1615,8 @@ export default function App() {
 
       <PaymentModal
         open={modalOpen}
-        onClose={() => { setModalOpen(false); setEditPayment(null) }}
+        onClose={() => { setModalOpen(false); setEditPayment(null); setPaymentPrefill(null) }}
+        prefill={paymentPrefill}
         onSave={handleSave}
         onSaveInstallment={handleSaveInstallment}
         onDelete={handleDeleteDirect}
@@ -1673,10 +1705,11 @@ export default function App() {
       />
       <ConfirmExitModal open={exitConfirmOpen} onConfirm={confirmExit} onCancel={cancelExit} />
       <InviteCodeModal />
+      <PremiumThanksModal info={premiumThanks} onClose={() => setPremiumThanks(null)} onAddPayment={handleThanksAddPayment} />
       <UpdatePrompt />
       <PullToRefresh />
       <Toast />
-      {premiumPageOpen && <Suspense fallback={null}><PremiumPage profile={profile} onClose={closePremiumPage} refreshProfile={fetchProfile} /></Suspense>}
+      {premiumPageOpen && <Suspense fallback={null}><PremiumPage profile={profile} onClose={closePremiumPage} refreshProfile={fetchProfile} onSubscribed={handlePremiumSubscribed} /></Suspense>}
     </>
   )
 }

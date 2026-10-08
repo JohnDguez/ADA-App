@@ -1,0 +1,85 @@
+.screen {
+  position: fixed;
+  inset: 0;
+  z-index: 610;
+  background: var(--bg);
+  overflow-y: auto;
+  animation: thanksIn .28s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+}
+
+@keyframes thanksIn {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.body {
+  max-width: 420px;
+  margin: 0 auto;
+  padding: 20px 20px 40px;
+}
+
+.summary {
+  background: var(--surface);
+  border-radius: var(--radius);
+  padding: 16px;
+  margin-bottom: 24px;
+  box-shadow: 0 1px 4px rgba(2, 10, 31, 0.08);
+}
+
+.planName {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.planDetail {
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--text);
+  margin-top: 4px;
+}
+
+.question {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.questionHint {
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 1.5;
+  color: var(--text);
+  margin: 4px 0 16px;
+}
+
+.addButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 13px;
+  border-radius: var(--radius-sm);
+  border: none;
+  background: var(--premium-gold);
+  color: var(--premium-gold-text);
+  font-size: 14px;
+  font-weight: 700;
+  font-family: 'DM Sans', sans-serif;
+  cursor: pointer;
+  margin-bottom: 8px;
+}
+
+.laterButton {
+  width: 100%;
+  padding: 12px;
+  background: none;
+  color: var(--text);
+  border: 0.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  font-weight: 500;
+  font-family: 'DM Sans', sans-serif;
+  cursor: pointer;
+}

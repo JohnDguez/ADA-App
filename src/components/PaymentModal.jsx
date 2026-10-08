@@ -17,7 +17,7 @@ import styles from './PaymentModal.module.css'
 import { markBackHandled, wasBackHandled } from '../lib/backNav'
 import { AddCardModal } from './AddCardModal'
 
-export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelete, onEditMaster, initial, payments, profile, spacePermissions, isSharedSpace = false, customCategories = [], onAddCategory, onOpenPremium, paymentMethods = null }) {
+export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelete, onEditMaster, initial, payments, profile, spacePermissions, isSharedSpace = false, customCategories = [], onAddCategory, onOpenPremium, paymentMethods = null, prefill = null }) {
   const { t } = useTranslation()
   const [mode,               setMode]               = useState('single')
   const [name,               setName]               = useState('')
@@ -155,12 +155,14 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onDelet
       setAlreadyPaid(!!initial.is_paid)
       setPaidAt(initial.paid_at ? dateToStr(new Date(initial.paid_at)) : todayStr())
     } else {
-      setName(''); setAmount('')
-      setDueDate(todayStr())
-      setBiweeklyDate(todayStr())
-      setCategory('Servicios'); setIsVariable(false)
-      setRecurFreq('monthly'); setWeekday(5)
-      setMode('single'); setTotalInstallments(''); setStartFrom('1'); setTotalAmount('')
+      // `prefill` (v0.9.574): Nuevo pago ya rellenado — hoy lo usa "Gracias por
+      // suscribirte" para registrar la suscripción de LunaPay Premium.
+      setName(prefill?.name || ''); setAmount(prefill?.amount ?? '')
+      setDueDate(prefill?.due_date || todayStr())
+      setBiweeklyDate(prefill?.due_date || todayStr())
+      setCategory(prefill?.category || 'Servicios'); setIsVariable(false)
+      setRecurFreq(prefill?.recur_freq || 'monthly'); setWeekday(5)
+      setMode(prefill?.recur_freq ? 'recurrent' : 'single'); setTotalInstallments(''); setStartFrom('1'); setTotalAmount('')
       setBackfillAsExpense(true)
       setMethodId(null)
       setAlreadyPaid(false)

@@ -1639,5 +1639,16 @@
     "description": "Actualiza LunaPay desde Google Play para tener las últimas mejoras.",
     "update": "Actualizar",
     "later": "Ahora no"
+  },
+  "premiumThanks": {
+    "title": "¡Gracias por suscribirte!",
+    "subtitle": "Ya eres Premium. Disfruta todas las funciones de LunaPay.",
+    "planLine": "Plan {{plan}}",
+    "activeLine": "Suscripción activa desde el {{date}}",
+    "trialLine": "Tu prueba gratis termina el {{date}} y ese día se hace tu primer cobro",
+    "question": "¿Quieres llevar el control de este pago?",
+    "hint": "Agrégalo como pago recurrente para que LunaPay te avise cuando toque renovar. Puedes cambiar los datos antes de guardarlo.",
+    "addPayment": "Agregar como pago nuevo",
+    "later": "Ahora no"
   }
 }
