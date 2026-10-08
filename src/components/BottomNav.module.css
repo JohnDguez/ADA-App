@@ -41,7 +41,11 @@
   z-index: 1;
 }
 
-.addIcon { transition: transform .25s cubic-bezier(0.25, 0.46, 0.45, 0.94); }
+.addIcon { transition: transform .25s cubic-bezier(0.25, 0.46, 0.45, 0.94), stroke .25s; }
+/* Con el menú abierto el botón se "apaga": fondo neutro e ícono de acento (v0.9.585) */
+.addButton { transition: background .25s, box-shadow .25s; }
+.addButtonOpen { background: var(--surface); box-shadow: 0 4px 16px rgba(2, 10, 31, 0.25); }
+.addButtonOpen .addIcon { stroke: var(--accent); }
 /* Menú del "+" abierto: el + gira y queda como X (v0.9.583) */
 .addIconOpen { transform: rotate(135deg); }
 

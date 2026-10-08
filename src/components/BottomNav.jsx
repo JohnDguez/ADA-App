@@ -22,7 +22,7 @@ export function BottomNav({ active, onChange, onAdd, addOpen = false }) {
         <button
           data-coachmark="home-add-button"
           onClick={onAdd}
-          className={styles.addButton}
+          className={`${styles.addButton} ${addOpen ? styles.addButtonOpen : ''}`}
           aria-label={t('bottomNav.add')}
           aria-expanded={addOpen}
         >

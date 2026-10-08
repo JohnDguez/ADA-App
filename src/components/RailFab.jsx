@@ -13,7 +13,7 @@ export function RailFab({ onAdd, addOpen = false }) {
     <button
       data-coachmark="home-add-button"
       onClick={onAdd}
-      className={styles.fab}
+      className={`${styles.fab} ${addOpen ? styles.fabOpen : ''}`}
       aria-label={t('bottomNav.add')}
       aria-expanded={addOpen}
     >
