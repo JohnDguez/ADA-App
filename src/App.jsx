@@ -694,6 +694,25 @@ export default function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [profileLoading, sharedSpaces.loading, profile.default_space_id, sharedSpaces.spaces])
 
+  // (Va ANTES de los return de carga/login: los hooks no pueden ir después de un return condicional.)
+  // Atajos del ícono de la app (v0.9.578): lunapay://add/voice y lunapay://add/scan
+  // abren el formulario de nuevo pago y arrancan la voz o el escáner solos.
+  const startAddRef = useRef(startAdd)
+  startAddRef.current = startAdd
+  useEffect(() => {
+    if (!Capacitor.isNativePlatform()) return
+    const handle = (url) => {
+      const m = /^lunapay:\/\/add\/(voice|scan)/.exec(url || '')
+      if (m) startAddRef.current(m[1])
+    }
+    CapacitorApp.getLaunchUrl().then(r => {
+      if (r?.url && window.__lunaLaunchUrlUsed !== r.url) { window.__lunaLaunchUrlUsed = r.url; handle(r.url) }
+    }).catch(() => {})
+    let sub
+    CapacitorApp.addListener('appUrlOpen', ({ url }) => handle(url)).then(h => { sub = h })
+    return () => { sub?.remove() }
+  }, [])
+
   if (authLoading || (user && profileLoading)) return <SkeletonLoader />
   if (isRecovery) return <Suspense fallback={<SkeletonLoader />}><ResetPasswordPage onDone={() => setIsRecovery(false)} /></Suspense>
   if (!user) return <Suspense fallback={<SkeletonLoader />}><AuthPage /></Suspense>
@@ -728,23 +747,6 @@ export default function App() {
   // El "+" de la barra: si hay voz/escáner ofrece el menú; si no, abre el formulario directo
   function openAddMenu() { if (addMenuHasExtras()) setAddMenuOpen(true); else openAdd() }
   function startAdd(kind) { setAddMenuOpen(false); setEditPayment(null); setPaymentPrefill(null); setAddAutoStart(kind || null); setModalOpen(true) }
-  // Atajos del ícono de la app (v0.9.578): lunapay://add/voice y lunapay://add/scan
-  // abren el formulario de nuevo pago y arrancan la voz o el escáner solos.
-  const startAddRef = useRef(startAdd)
-  startAddRef.current = startAdd
-  useEffect(() => {
-    if (!Capacitor.isNativePlatform()) return
-    const handle = (url) => {
-      const m = /^lunapay:\/\/add\/(voice|scan)/.exec(url || '')
-      if (m) startAddRef.current(m[1])
-    }
-    CapacitorApp.getLaunchUrl().then(r => {
-      if (r?.url && window.__lunaLaunchUrlUsed !== r.url) { window.__lunaLaunchUrlUsed = r.url; handle(r.url) }
-    }).catch(() => {})
-    let sub
-    CapacitorApp.addListener('appUrlOpen', ({ url }) => handle(url)).then(h => { sub = h })
-    return () => { sub?.remove() }
-  }, [])
   // Antes redirigía en silencio al master cuando `p` era una copia de un
   // recurrente — el usuario pensaba que editaba solo esa copia y en
   // realidad reconfiguraba la plantilla completa (bug real reportado por
