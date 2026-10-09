@@ -222,6 +222,7 @@
     "dueTodaySub": "Payments reaching their due date today",
     "upcomingLabel": "Upcoming payments",
     "upcomingSub": "Reminder days before the due date",
+    "blockedNotice": "Notifications are blocked in your browser. Turn them on in the site settings and try again.",
     "daysBeforeLabel": "Days in advance",
     "payDayLabel": "Pay day",
     "payDaySub": "Summary of pending payments on payday",

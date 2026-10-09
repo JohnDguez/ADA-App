@@ -86,3 +86,18 @@
   color: var(--surface);
   font-weight: 600;
 }
+
+/* Aviso fijo cuando el navegador tiene el permiso bloqueado */
+.blockedNotice {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 0 14px 13px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: var(--warning-soft);
+  color: var(--text);
+  font-size: 12px;
+  line-height: 1.4;
+}
+.blockedIcon { flex-shrink: 0; margin-top: 1px; }

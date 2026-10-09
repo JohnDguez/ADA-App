@@ -222,6 +222,7 @@
     "dueTodaySub": "Pagos que llegan a su fecha límite hoy",
     "upcomingLabel": "Próximos pagos",
     "upcomingSub": "Recordatorio días antes del vencimiento",
+    "blockedNotice": "Las notificaciones están bloqueadas en tu navegador. Actívalas en los ajustes del sitio y vuelve a intentarlo.",
     "daysBeforeLabel": "Días de anticipación",
     "payDayLabel": "Día de cobro",
     "payDaySub": "Resumen de pagos pendientes al cobrar",

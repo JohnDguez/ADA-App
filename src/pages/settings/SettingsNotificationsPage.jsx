@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Bell, BellOff } from 'lucide-react'
+import { Bell, BellOff, TriangleAlert } from 'lucide-react'
 // Ícono del encabezado vía Phosphor Icons (mismo patrón que las demás
 // sub-páginas ya migradas, v0.9.442-448) — import directo para tree-shaking real.
 import { Bell as BellDuotone } from '@phosphor-icons/react/dist/csr/Bell'
@@ -9,6 +9,7 @@ import { usePushNotifications } from '../../hooks/usePushNotifications'
 import { showToast } from '../../components/Toast'
 import { Card, Toggle, NotifToggle } from '../../components/SettingsShared'
 import { Select } from '../../components/Select'
+import { Collapse } from '../../components/Collapse'
 import styles from './SettingsNotificationsPage.module.css'
 
 // Mismo formato de horas que ya usaba el <select> nativo (12:00 am ... 11:00
@@ -32,6 +33,11 @@ export function SettingsNotificationsPage({ profile, user, onUpdate, onBack, sli
   // si falló o se negó el permiso, regresa solo.
   const [pushTarget, setPushTarget] = useState(null)
 
+  // Permiso bloqueado en el navegador: se avisa con un mensaje fijo (el toast
+  // desaparece y el usuario se queda sin saber por qué no funciona).
+  const readBlocked = () => typeof Notification !== 'undefined' && Notification.permission === 'denied'
+  const [blocked, setBlocked] = useState(readBlocked)
+
   async function handlePushToggle() {
     if (pushTarget !== null) return
     if (subscribed) {
@@ -40,6 +46,7 @@ export function SettingsNotificationsPage({ profile, user, onUpdate, onBack, sli
     } else {
       setPushTarget(true)
       const { error } = await subscribe()
+      setBlocked(readBlocked())
       if (error === 'Permiso denegado') showToast(t('settingsNotifications.toast.permissionDenied'))
       else if (error) showToast(t('settingsNotifications.toast.enableError') + (typeof error === 'string' ? ` (${error})` : ''))
       else showToast(t('settingsNotifications.toast.enabled'))
@@ -72,7 +79,14 @@ export function SettingsNotificationsPage({ profile, user, onUpdate, onBack, sli
           </div>
         </div>
 
-        {subscribed && (<>
+        <Collapse open={blocked && !subscribed}>
+          <div className={styles.blockedNotice}>
+            <TriangleAlert size={16} color="var(--warning)" className={styles.blockedIcon} />
+            <span>{t('settingsNotifications.blockedNotice')}</span>
+          </div>
+        </Collapse>
+
+        <Collapse open={subscribed}>
           <div className={styles.subSection}>
             <div className={styles.hourLabel}>{t('settingsNotifications.notificationHour')}</div>
             <div className={styles.hourSelectWrapper}>
@@ -88,7 +102,7 @@ export function SettingsNotificationsPage({ profile, user, onUpdate, onBack, sli
           <NotifToggle label={t('settingsNotifications.dueTodayLabel')}      sub={t('settingsNotifications.dueTodaySub')}  value={profile.notif_due_today  !== false} onChange={v => onUpdate({ notif_due_today:  v })} />
           <NotifToggle label={t('settingsNotifications.upcomingLabel')}  sub={t('settingsNotifications.upcomingSub')} value={profile.notif_upcoming   !== false} onChange={v => onUpdate({ notif_upcoming:   v })} last={profile.notif_upcoming !== false} />
 
-          {profile.notif_upcoming !== false && (
+          <Collapse open={profile.notif_upcoming !== false}>
             <div className={styles.daysBeforeSection}>
               <div className={styles.daysBeforeLabel}>{t('settingsNotifications.daysBeforeLabel')}</div>
               <div className={styles.daysBeforeRow}>
@@ -100,10 +114,10 @@ export function SettingsNotificationsPage({ profile, user, onUpdate, onBack, sli
                 ))}
               </div>
             </div>
-          )}
+          </Collapse>
 
           <NotifToggle label={t('settingsNotifications.payDayLabel')} sub={t('settingsNotifications.payDaySub')} value={profile.notif_cobro_day !== false} onChange={v => onUpdate({ notif_cobro_day: v })} last />
-        </>)}
+        </Collapse>
       </Card>
     </div>
   )
