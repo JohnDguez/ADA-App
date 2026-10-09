@@ -1,6 +1,10 @@
 .switcherContainer {
   position: relative;
   overflow: hidden;
+  border-radius: 16px 16px 0 0;
+  /* v0.9.615 — sombra hacia arriba para despegar la pestaña de la escena de
+     fondo del header (el verde/azul se fundía con la imagen). */
+  box-shadow: 0 -4px 14px var(--space-stack-shadow);
 }
 
 .spaceCard {
@@ -9,6 +13,8 @@
   justify-content: space-between;
   padding: 16px 18px 24px;
   border-radius: 16px 16px 0 0;
+  /* También separa las pestañas apiladas entre sí. */
+  box-shadow: 0 -3px 8px -2px var(--space-stack-shadow);
 }
 
 .cardCushion {

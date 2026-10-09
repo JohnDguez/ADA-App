@@ -112,6 +112,7 @@
      para texto normal (hallazgo Lighthouse). --space-new-bg no se tocó,
      ya pasaba (5.28:1). */
   --space-new-bg:       #2F6E5C;
+  --space-stack-shadow: rgba(0, 0, 0, 0.4);
   --space-new-text:     #E1F5EE;
   --space-inactive-bg:  #5A779E;
   --space-inactive-text: #FFFFFF;
@@ -267,6 +268,7 @@
      @media (prefers-color-scheme: dark) más abajo, que siempre se
      mantiene en espejo de este. */
   --space-new-bg:       #357964;
+  --space-stack-shadow: rgba(0, 0, 0, 0.4);
   --space-new-text:     #E1F5EE;
   --space-inactive-bg:  #5677A2;
   --space-inactive-text: #FFFFFF;
@@ -319,6 +321,7 @@
     --soon-color:      #FE7600;
     --menu-bg:         #242837;
     --space-new-bg:       #357964;
+  --space-stack-shadow: rgba(0, 0, 0, 0.4);
     --space-new-text:     #E1F5EE;
     --space-inactive-bg:  #5677A2;
     --space-inactive-text: #FFFFFF;
