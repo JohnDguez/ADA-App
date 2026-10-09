@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Check, Search } from 'lucide-react'
 import { CATEGORIES, getCatColor, getCategoryLabel } from '../lib/utils'
@@ -50,6 +50,13 @@ export function CategoryFormModal({ open, onClose, editingCat = null, profile, o
     setIconSearch(''); setNameError(''); setSaving(false); setConfirmingDelete(false); setDeleting(false); setDeleteCount(null)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, editingCat])
+
+  // Al abrir la confirmación de borrar (y cuando termina de contar), baja el
+  // modal hasta ella — queda fuera de pantalla bajo Guardar/Cancelar.
+  const confirmRef = useRef(null)
+  useEffect(() => {
+    if (confirmingDelete) confirmRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+  }, [confirmingDelete, deleteCount])
 
   if (!render) return null
 
@@ -227,7 +234,7 @@ export function CategoryFormModal({ open, onClose, editingCat = null, profile, o
         <button onClick={onClose} className="btn-ghost">{t('buttons.cancel')}</button>
 
         {editingCat?.isCustom && (confirmingDelete ? (
-          <div className={styles.deleteConfirmBox}>
+          <div ref={confirmRef} className={styles.deleteConfirmBox}>
             <div className={styles.confirmText}>
               {deleteCount === null
                 ? t('settingsCategories.deleteChecking')
