@@ -1,14 +1,14 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Bell, BellOff, TriangleAlert } from 'lucide-react'
+import { Bell, BellOff, TriangleAlert, CircleAlert, CalendarCheck, Clock, Banknote } from 'lucide-react'
 // Ícono del encabezado vía Phosphor Icons (mismo patrón que las demás
 // sub-páginas ya migradas, v0.9.442-448) — import directo para tree-shaking real.
 import { Bell as BellDuotone } from '@phosphor-icons/react/dist/csr/Bell'
 import { PageHero } from '../../components/PageHero'
 import { usePushNotifications } from '../../hooks/usePushNotifications'
 import { showToast } from '../../components/Toast'
-import { Card, Toggle, NotifToggle } from '../../components/SettingsShared'
-import { Select } from '../../components/Select'
+import { Card, Toggle } from '../../components/SettingsShared'
+import { TimeWheelSheet } from '../../components/TimeWheelSheet'
 import { Collapse } from '../../components/Collapse'
 import styles from './SettingsNotificationsPage.module.css'
 
@@ -37,6 +37,23 @@ export function SettingsNotificationsPage({ profile, user, onUpdate, onBack, sli
   // desaparece y el usuario se queda sin saber por qué no funciona).
   const readBlocked = () => typeof Notification !== 'undefined' && Notification.permission === 'denied'
   const [blocked, setBlocked] = useState(readBlocked)
+  const [hourOpen, setHourOpen] = useState(false)
+
+  const hour = profile.notif_hour ?? 8
+  const daysBefore = profile.notif_days_before ?? 3
+  const upcomingOn = profile.notif_upcoming !== false
+  const onText = t('settingsNotifications.tileOn')
+  const offText = t('settingsNotifications.tileOff')
+  const mkTile = (key, Icon, label, field, on, status) => ({
+    key, Icon, label, on, status: status ?? (on ? onText : offText), onToggle: () => onUpdate({ [field]: !on }),
+  })
+  const tiles = [
+    mkTile('overdue', CircleAlert, t('settingsNotifications.overdueLabel'), 'notif_overdue', profile.notif_overdue !== false),
+    mkTile('dueToday', CalendarCheck, t('settingsNotifications.dueTodayLabel'), 'notif_due_today', profile.notif_due_today !== false),
+    mkTile('upcoming', Clock, t('settingsNotifications.upcomingLabel'), 'notif_upcoming', upcomingOn,
+      upcomingOn ? t('settingsNotifications.tileDaysBefore', { count: daysBefore }) : null),
+    mkTile('payDay', Banknote, t('settingsNotifications.payDayLabel'), 'notif_cobro_day', profile.notif_cobro_day !== false),
+  ]
 
   async function handlePushToggle() {
     if (pushTarget !== null) return
@@ -86,39 +103,44 @@ export function SettingsNotificationsPage({ profile, user, onUpdate, onBack, sli
           </div>
         </Collapse>
 
-        <Collapse open={subscribed}>
-          <div className={styles.subSection}>
-            <div className={styles.hourLabel}>{t('settingsNotifications.notificationHour')}</div>
-            <div className={styles.hourSelectWrapper}>
-              <Select
-                value={HOUR_LABELS[profile.notif_hour ?? 8]}
-                onChange={label => onUpdate({ notif_hour: HOUR_LABELS.indexOf(label), notif_last_sent: null })}
-                options={HOUR_LABELS}
-              />
+      </Card>
+
+      <Collapse open={subscribed}>
+        <div className={styles.timeRow}>
+          <span className={styles.timeLabel}>{t('settingsNotifications.notifyAt')}</span>
+          <button type="button" className={styles.timeButton} onClick={() => setHourOpen(true)}>{HOUR_LABELS[hour]}</button>
+        </div>
+
+        <div className={styles.tiles}>
+          {tiles.map(({ key, Icon, label, on, status, onToggle }) => (
+            <button key={key} type="button" aria-pressed={on} onClick={onToggle}
+              className={`${styles.tile} ${on ? styles.tileOn : ''}`}>
+              <span className={styles.tileIcon}><Icon size={17} /></span>
+              <span>
+                <span className={styles.tileLabel}>{label}</span>
+                <span className={styles.tileStatus}>{status}</span>
+              </span>
+            </button>
+          ))}
+        </div>
+
+        <Collapse open={upcomingOn}>
+          <div className={styles.daysRow}>
+            <span className={styles.timeLabel}>{t('settingsNotifications.daysBeforeLabel')}</span>
+            <div className={styles.daysBeforeRow}>
+              {[1, 2, 3, 5, 7].map(d => (
+                <button key={d} onClick={() => onUpdate({ notif_days_before: d })}
+                  className={`${styles.dayButton} ${daysBefore === d ? styles.dayButtonActive : ''}`}>
+                  {d}
+                </button>
+              ))}
             </div>
           </div>
-
-          <NotifToggle label={t('settingsNotifications.overdueLabel')}  sub={t('settingsNotifications.overdueSub')}    value={profile.notif_overdue    !== false} onChange={v => onUpdate({ notif_overdue:    v })} />
-          <NotifToggle label={t('settingsNotifications.dueTodayLabel')}      sub={t('settingsNotifications.dueTodaySub')}  value={profile.notif_due_today  !== false} onChange={v => onUpdate({ notif_due_today:  v })} />
-          <NotifToggle label={t('settingsNotifications.upcomingLabel')}  sub={t('settingsNotifications.upcomingSub')} value={profile.notif_upcoming   !== false} onChange={v => onUpdate({ notif_upcoming:   v })} last={profile.notif_upcoming !== false} />
-
-          <Collapse open={profile.notif_upcoming !== false}>
-            <div className={styles.daysBeforeSection}>
-              <div className={styles.daysBeforeLabel}>{t('settingsNotifications.daysBeforeLabel')}</div>
-              <div className={styles.daysBeforeRow}>
-                {[1, 2, 3, 5, 7].map(d => (
-                  <button key={d} onClick={() => onUpdate({ notif_days_before: d })}
-                    className={`${styles.dayButton} ${(profile.notif_days_before ?? 3) === d ? styles.dayButtonActive : ''}`}>
-                    {d}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </Collapse>
-
-          <NotifToggle label={t('settingsNotifications.payDayLabel')} sub={t('settingsNotifications.payDaySub')} value={profile.notif_cobro_day !== false} onChange={v => onUpdate({ notif_cobro_day: v })} last />
         </Collapse>
-      </Card>
+      </Collapse>
+
+      <TimeWheelSheet open={hourOpen} onClose={() => setHourOpen(false)} value={hour}
+        onSelect={h => onUpdate({ notif_hour: h, notif_last_sent: null })} />
     </div>
   )
 }

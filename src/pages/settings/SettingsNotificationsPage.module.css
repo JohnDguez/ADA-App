@@ -11,7 +11,6 @@
 
 .subSection {
   padding: 13px 14px;
-  border-bottom: 0.5px solid var(--border);
 }
 
 .toggleRow {
@@ -40,29 +39,72 @@
   margin-top: 1px;
 }
 
-.hourLabel {
+.timeRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 8px 20px 4px;
+}
+.timeLabel {
   font-size: 13px;
+  color: var(--muted);
+}
+.timeButton {
+  border: none;
+  background: none;
+  padding: 4px 0 4px 8px;
+  font-family: inherit;
+  font-size: 24px;
   font-weight: 600;
   color: var(--text);
-  margin-bottom: 8px;
+  cursor: pointer;
 }
 
-.hourSelectWrapper {
-  max-width: 140px;
+/* Mosaico de avisos: un toque enciende o apaga cada uno */
+.tiles {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin: 8px 16px 0;
 }
-
-.daysBeforeSection {
-  padding: 0 14px 13px;
-  border-bottom: 0.5px solid var(--border);
-}
-
-.daysBeforeLabel {
-  font-size: 12px;
-  font-weight: 500;
+.tile {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+  min-height: 92px;
+  padding: 14px;
+  border: none;
+  border-radius: var(--radius);
+  background: var(--surface);
   color: var(--text);
-  margin-bottom: 6px;
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background .2s;
 }
+.tileOn { background: color-mix(in srgb, var(--accent) 16%, var(--surface)); }
+.tileIcon {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg);
+  color: var(--muted);
+  transition: background .2s, color .2s;
+}
+.tileOn .tileIcon { background: var(--accent); color: var(--surface); }
+.tileLabel { display: block; font-size: 14px; font-weight: 600; }
+.tileStatus { display: block; font-size: 12px; color: var(--muted); margin-top: 1px; }
 
+.daysRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 14px 20px 0;
+}
 .daysBeforeRow {
   display: flex;
   gap: 6px;
@@ -73,7 +115,7 @@
   height: 36px;
   border-radius: 5px;
   border: none;
-  background: var(--bg);
+  background: var(--surface);
   color: var(--text);
   font-weight: 400;
   font-size: 13px;

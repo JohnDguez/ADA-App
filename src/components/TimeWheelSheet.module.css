@@ -1,0 +1,60 @@
+.wheels {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  height: 160px;
+}
+/* Franja que marca la selección, detrás de las ruedas */
+.band {
+  position: absolute;
+  left: 24px;
+  right: 24px;
+  top: 60px;
+  height: 40px;
+  border-radius: 10px;
+  background: var(--accent-soft);
+  pointer-events: none;
+}
+.wheel {
+  position: relative;
+  width: 96px;
+  height: 160px;
+  overflow-y: auto;
+  scroll-snap-type: y mandatory;
+  padding: 60px 0;
+  box-sizing: border-box;
+  scrollbar-width: none;
+  overscroll-behavior: contain;
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 30%, #000 70%, transparent 100%);
+  mask-image: linear-gradient(to bottom, transparent 0%, #000 30%, #000 70%, transparent 100%);
+}
+.wheel::-webkit-scrollbar { display: none; }
+.item {
+  height: 40px;
+  line-height: 40px;
+  text-align: center;
+  scroll-snap-align: center;
+  font-size: 18px;
+  color: var(--muted);
+  cursor: pointer;
+  transition: color .15s, font-size .15s;
+}
+.itemActive {
+  color: var(--text);
+  font-size: 22px;
+  font-weight: 600;
+}
+.done {
+  width: 100%;
+  height: 46px;
+  margin-top: 14px;
+  border: none;
+  border-radius: var(--radius);
+  background: var(--accent);
+  color: var(--surface);
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+}
