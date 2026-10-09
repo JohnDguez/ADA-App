@@ -810,7 +810,7 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onSaveC
           {!initial && scanned && <div className={styles.scanDisclaimer}>{t('paymentModal.scan.disclaimer')}</div>}
 
           {isFlat && !isVariable && (
-            <div className={styles.amountHero}>
+            <div className={styles.amountHero} onClick={e => e.currentTarget.querySelector('input')?.focus()}>
               <div className={styles.amountHeroLabel}>{t('paymentModal.amountLabel')}</div>
               <div className={styles.amountHeroRow}>
                 <span className={styles.amountHeroSymbol}>{getCurrencySymbol(profile)}</span>

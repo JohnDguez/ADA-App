@@ -572,7 +572,7 @@
   background: color-mix(in srgb, var(--label-variable) 16%, transparent);
 }
 
-.amountHero { text-align: center; margin: 0 0 14px; }
+.amountHero { text-align: center; margin: 0 0 14px; padding: 8px 0 10px; cursor: text; }
 .amountHeroLabel { font-size: 11px; color: var(--label-variable); margin-bottom: 2px; }
 .amountHeroInput {
   width: 100%; border: none; outline: none; background: transparent;
