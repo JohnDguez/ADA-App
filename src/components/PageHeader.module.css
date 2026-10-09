@@ -50,14 +50,16 @@
      var(--bg) (el mismo fondo de página que ya usa .premiumBadge para su
      borde "recorte") — en tema claro sale un degradado claro, en tema
      oscuro uno oscuro, en vez de negro fijo siempre. */
-  /* v0.9.613 — ya no es una "plasta" sólida: el velo arranca semitransparente
-     (la escena se ve a través) y se desvanece pronto. La legibilidad del
+  /* v0.9.613 — ya no es una "plasta" sólida: el velo es semitransparente
+     (la escena se ve a través). v0.9.632: 50% parejo hasta el 60% del ancho
+     (zona del texto) y se desvanece hacia la derecha, para que el saludo se
+     lea sobre cualquier imagen. La legibilidad del
      saludo/nombre la da el text-shadow de .greetingText/.nameText. */
   background: linear-gradient(
     to right,
-    color-mix(in srgb, var(--bg) 55%, transparent) 0%,
-    color-mix(in srgb, var(--bg) 35%, transparent) 40%,
-    transparent 85%
+    color-mix(in srgb, var(--bg) 50%, transparent) 0%,
+    color-mix(in srgb, var(--bg) 50%, transparent) 60%,
+    transparent 100%
   );
   pointer-events: none;
   z-index: 0;
