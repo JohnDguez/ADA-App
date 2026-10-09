@@ -1525,7 +1525,9 @@
       "subMemberSpending": "Cuánto ha puesto cada quien",
       "subIncome": "Todos los ingresos registrados en el rango elegido",
       "subGoals": "Resumen de tus metas de ahorro en el rango elegido",
-      "methodChart": "Por método de pago"
+      "methodChart": "Por método de pago",
+      "colMethod": "Método",
+      "methodFilterLine": "Método: {{method}}"
     },
     "salaryType": "Nómina",
     "fundDepositType": "Aportación al Fondo",

@@ -725,6 +725,7 @@ export function SettingsExportPage({ profile, sharedSpaces, onOpenPremium, onBac
       balance: t('settingsExport.pdf.balance'),
       categoryChart: t('settingsExport.pdf.categoryChart'),
       methodChart: t('settingsExport.pdf.methodChart'),
+      colMethod: t('settingsExport.pdf.colMethod'),
       subCategoryChart: t('settingsExport.pdf.subCategoryChart'),
       categoryChartContinued: t('settingsExport.pdf.categoryChartContinued'),
       trendChart: t('settingsExport.pdf.trendChart'),
@@ -768,7 +769,10 @@ export function SettingsExportPage({ profile, sharedSpaces, onOpenPremium, onBac
       // Por método de pago (entrega C, v0.9.490) — solo Personal; en un
       // Espacio Compartido las tarjetas no aplican, se manda null y
       // exportPdf.js omite la sección entera.
-      methods: (includeGastos && space === 'personal') ? buildMethodBreakdown(gastos) : null,
+      methods: (includeGastos && space === 'personal' && methodFilter === 'all') ? buildMethodBreakdown(gastos) : null,
+      filterLine: (space === 'personal' && methodFilter !== 'all')
+        ? t('settingsExport.pdf.methodFilterLine', { method: methodFilters.find(f => f.value === methodFilter)?.label })
+        : null,
       series,
       expenseRows: gastos.map(p => ({
         // "Pagado" ahora es la ÚNICA columna de fecha (Johnatan: el Sí/No
@@ -781,6 +785,7 @@ export function SettingsExportPage({ profile, sharedSpaces, onOpenPremium, onBac
         paidDate: p.is_paid ? dateToStr(new Date(p.paid_at)) : null,
         postponed: !!p.is_postponed,
         name: p.name, category: getCategoryLabel(p.category), amount: p.amount,
+        method: space === 'personal' ? methodLabel(p) : '',
       })),
       expenseContributors: contributorsByRow,
       memberTotals,

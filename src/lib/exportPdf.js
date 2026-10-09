@@ -210,7 +210,7 @@ function sectionTitle(doc, text, x, y, subtitle) {
 // (más prominente) y el rango de fechas debajo (más chico, mudo); título
 // general grande abajo de todo, con espacio de sobra respecto al logo
 // (Johnatan: "el logo queda pegado, casi arriba, del título").
-function drawHeader(doc, logo, spaceLabel, fromLabel, toLabel, reportTitle) {
+function drawHeader(doc, logo, spaceLabel, fromLabel, toLabel, reportTitle, filterLine = null) {
   let y = MARGIN
   if (logo) {
     const h = 7
@@ -232,6 +232,14 @@ function drawHeader(doc, logo, spaceLabel, fromLabel, toLabel, reportTitle) {
   doc.setFontSize(7.5)
   doc.setTextColor(...COLOR_MUTED)
   doc.text(`${fromLabel} — ${toLabel}`, PAGE_W - MARGIN, y + 6, { align: 'right' })
+  // v0.9.623 — filtro de método activo ("Método: Crédito"), para que el
+  // reporte diga qué subconjunto de gastos muestra.
+  if (filterLine) {
+    doc.setTextColor(...COLOR_ACCENT)
+    doc.setFont(undefined, 'bold')
+    doc.text(filterLine, PAGE_W - MARGIN, y + 10.5, { align: 'right' })
+    doc.setFont(undefined, 'normal')
+  }
 
   y += 18 // antes +9 — más espacio respecto al logo para que el título no se vea pegado
   doc.setFontSize(17)
@@ -476,6 +484,29 @@ function drawRemainingCategories(doc, y, categories, labels) {
   return y + 4
 }
 
+// ── Por método de pago (v0.9.623) — solo con filtro "Todos" en Personal.
+function drawMethodBreakdown(doc, y, methods, labels) {
+  if (!methods || methods.every(m => m.amount <= 0)) return y
+  y = ensureSpace(doc, y, 30)
+  y = sectionTitle(doc, labels.methodChart, MARGIN, y)
+  const maxAmount = Math.max(...methods.map(m => m.amount), 1)
+  const rowH = 6
+  for (const m of methods) {
+    y = ensureSpace(doc, y, rowH)
+    doc.setFontSize(8)
+    doc.setTextColor(...COLOR_DARK)
+    doc.text(m.label, MARGIN, y)
+    doc.text(money(m.amount), PAGE_W - MARGIN, y, { align: 'right' })
+    doc.setFillColor(...COLOR_LIGHT)
+    doc.roundedRect(MARGIN, y + 1, CONTENT_W, 2.5, 1, 1, 'F')
+    const w = (m.amount / maxAmount) * CONTENT_W
+    doc.setFillColor(...COLOR_ACCENT)
+    if (w > 0) doc.roundedRect(MARGIN, y + 1, w, 2.5, 1, 1, 'F')
+    y += rowH
+  }
+  return y + 4
+}
+
 // ── Listado de gastos (tabla completa, con aportantes si aplica) ────────
 // "Pagado" es ahora la ÚNICA columna de fecha (antes había "Fecha" +
 // "Pagado" Sí/No por separado — Johnatan: "no entiendo la funcionalidad de
@@ -485,9 +516,14 @@ function drawExpenseList(doc, y, { rows, contributorsByRow, isSharedSpace, label
   y = ensureSpace(doc, y, 14)
   y = sectionTitle(doc, labels.expenseList, MARGIN, y, labels.subExpenseList)
 
+  // v0.9.623 — columna "Método" solo en Personal (en un Espacio Compartido
+  // no hay tarjetas, todo es Efectivo).
+  const showMethod = !isSharedSpace && rows.some(r => r.method)
   const head = isSharedSpace
     ? [[labels.colPaid, labels.colName, labels.colCategory, labels.colAmount, labels.colContributors]]
-    : [[labels.colPaid, labels.colName, labels.colCategory, labels.colAmount]]
+    : showMethod
+      ? [[labels.colPaid, labels.colName, labels.colCategory, labels.colMethod, labels.colAmount]]
+      : [[labels.colPaid, labels.colName, labels.colCategory, labels.colAmount]]
 
   const body = rows.map(r => {
     // `r.postponed` (agosto 2026) — sin esto, un pago pospuesto también
@@ -496,7 +532,9 @@ function drawExpenseList(doc, y, { rows, contributorsByRow, isSharedSpace, label
     const paidCell = r.paidDate ? formatShortDate(r.paidDate) : r.postponed ? labels.postponed : labels.pending
     return isSharedSpace
       ? [paidCell, r.name, r.category, money(r.amount), '']
-      : [paidCell, r.name, r.category, money(r.amount)]
+      : showMethod
+        ? [paidCell, r.name, r.category, r.method || '', money(r.amount)]
+        : [paidCell, r.name, r.category, money(r.amount)]
   })
 
   const contributorsColIndex = isSharedSpace ? 4 : null
@@ -510,7 +548,7 @@ function drawExpenseList(doc, y, { rows, contributorsByRow, isSharedSpace, label
     styles: { fontSize: 7.5, textColor: COLOR_DARK, cellPadding: 1.6, minCellHeight: isSharedSpace ? 8 : 5 },
     headStyles: { fillColor: COLOR_LIGHT, textColor: COLOR_MUTED, fontStyle: 'bold' },
     alternateRowStyles: { fillColor: [249, 249, 249] },
-    columnStyles: isSharedSpace ? { 3: { halign: 'right', cellWidth: 22 }, 4: { cellWidth: 45 } } : { 3: { halign: 'right', cellWidth: 22 } },
+    columnStyles: isSharedSpace ? { 3: { halign: 'right', cellWidth: 22 }, 4: { cellWidth: 45 } } : showMethod ? { 3: { cellWidth: 34 }, 4: { halign: 'right', cellWidth: 22 } } : { 3: { halign: 'right', cellWidth: 22 } },
     didDrawCell(data) {
       if (!isSharedSpace || data.section !== 'body' || data.column.index !== contributorsColIndex) return
       const contributors = contributorsByRow[data.row.index] || []
@@ -679,7 +717,7 @@ function drawPageNumbers(doc) {
 export async function generateReportPdf({
   spaceLabel, fromLabel, toLabel, isSharedSpace,
   totals, categories, series, // series: { granularity: 'month'|'week'|'day', points: [{label, gastos, ingresos}] } | null
-  methods = null, // [{label, amount}] Efectivo/Débito/Crédito, o null en Espacio Compartido (entrega C, v0.9.490)
+  methods = null, filterLine = null, // [{label, amount}] Efectivo/Débito/Crédito, o null en Espacio Compartido (entrega C, v0.9.490)
   expenseRows, expenseContributors, // expenseContributors[i] = [{userId, name, avatarUrl, amount}]
   memberTotals, // [{ userId, name, avatarUrl, total }]
   incomes,
@@ -710,12 +748,13 @@ export async function generateReportPdf({
 
   const logo = await loadLogoDataUrl('/LunaPay_logo_horizontal_dark.png')
 
-  let y = drawHeader(doc, logo, spaceLabel, fromLabel, toLabel, labels.reportTitle)
+  let y = drawHeader(doc, logo, spaceLabel, fromLabel, toLabel, labels.reportTitle, filterLine)
   y = drawKpiRow(doc, y, totals, labels)
 
   const { nextY, remainingCategories } = drawCategoriesAndTrend(doc, y, { categories, series, labels })
   y = nextY
   y = drawRemainingCategories(doc, y, remainingCategories, labels)
+  y = drawMethodBreakdown(doc, y, methods, labels)
 
   if (expenseRows.length > 0) {
     const contributorsByRow = expenseContributors.map(list => list.map(withAvatar))

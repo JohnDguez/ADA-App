@@ -1525,7 +1525,9 @@
       "subMemberSpending": "How much each person has put in",
       "subIncome": "All income recorded in the chosen range",
       "subGoals": "Summary of your savings goals in the chosen range",
-      "methodChart": "By payment method"
+      "methodChart": "By payment method",
+      "colMethod": "Method",
+      "methodFilterLine": "Method: {{method}}"
     },
     "salaryType": "Salary",
     "fundDepositType": "Fund contribution",
