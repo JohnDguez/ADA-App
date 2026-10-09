@@ -265,3 +265,12 @@
   object-fit: cover;
   display: block;
 }
+
+/* v0.9.620 — encabezado de cada grupo del menú de Ajustes (sentido de oración,
+   sin mayúsculas: regla de diseño). */
+.groupLabel {
+  padding: 14px 20px 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text);
+}

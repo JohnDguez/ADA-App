@@ -66,6 +66,12 @@
       "photoUpdated": "Foto actualizada",
       "avatarUpdateError": "Error al actualizar avatar",
       "avatarUpdated": "Avatar actualizado"
+    },
+    "sections": {
+      "money": "Tu dinero",
+      "preferences": "Preferencias",
+      "accountData": "Cuenta y datos",
+      "help": "Ayuda"
     }
   },
   "settingsSubscription": {

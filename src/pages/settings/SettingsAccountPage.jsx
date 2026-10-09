@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { supabase } from '../../lib/supabase'
-import { ChevronRight, AlertTriangle, Eye, EyeOff, Check } from 'lucide-react'
+import { ChevronRight, AlertTriangle, Eye, EyeOff } from 'lucide-react'
 // Ícono del encabezado vía Phosphor Icons (mismo patrón que SettingsExportPage.jsx,
 // v0.9.442-445) — import directo al archivo del ícono para tree-shaking real.
 import { UserCircle } from '@phosphor-icons/react/dist/csr/UserCircle'
@@ -10,7 +10,6 @@ import { showToast } from '../../components/Toast'
 import { passwordRequirements, isPasswordStrong } from '../../components/PasswordSetupModal'
 import { RequirementRow } from '../../components/RequirementRow'
 import { Card, Row, SectionLabel } from '../../components/SettingsShared'
-import i18n, { resolveLanguage, LANGUAGE_STORAGE_KEY } from '../../i18n'
 import { apiUrl } from '../../lib/apiUrl'
 import styles from './SettingsAccountPage.module.css'
 import { Presence } from '../../components/Presence'
@@ -43,17 +42,6 @@ export function SettingsAccountPage({ profile, user, onUpdate, onDataDeleted, on
   const newPassStrong = isPasswordStrong(fieldVal)
   const newPassMatch  = fieldVal && fieldVal2 && fieldVal === fieldVal2
 
-  // Idioma: 'system' | 'es' | 'en' — vive en profiles.language (columna
-  // agregada por Johnatan vía migración manual, ver
-  // profiles_language_migration.sql entregado aparte). Mientras el
-  // profile no la traiga (undefined), se asume 'system' — mismo default
-  // que usa useProfile.js.
-  const currentLanguage = profile.language || 'system'
-  const LANGUAGE_OPTIONS = [
-    { id: 'system', label: t('settingsAccount.languageModal.system') },
-    { id: 'es',     label: t('settingsAccount.languageModal.spanish') },
-    { id: 'en',     label: t('settingsAccount.languageModal.english') },
-  ]
 
   async function verifyCurrentPassword(password) {
     const email = user?.email
@@ -95,19 +83,6 @@ export function SettingsAccountPage({ profile, user, onUpdate, onDataDeleted, on
   async function handleForgotPassword() {
     await supabase.auth.resetPasswordForEmail(user?.email)
     setForgotSent(true)
-  }
-
-  // Idioma: aplica de inmediato al tocar una opción (sin botón "Guardar"
-  // aparte, mismo patrón mockeado y confirmado con Johnatan) — guarda en
-  // profiles.language, en localStorage (cache de arranque que ya lee
-  // src/i18n/index.js) y cambia el idioma activo de i18next en el momento.
-  async function handleLanguageSelect(langId) {
-    localStorage.setItem(LANGUAGE_STORAGE_KEY, langId)
-    i18n.changeLanguage(resolveLanguage(langId))
-    setEditSection(null)
-    const { error } = await onUpdate({ language: langId })
-    if (error) showToast(error.message || t('settingsAccount.toast.wrongPassword'))
-    else showToast(t('settingsAccount.toast.languageUpdated'))
   }
 
   async function handleDeleteData() {
@@ -193,19 +168,13 @@ export function SettingsAccountPage({ profile, user, onUpdate, onDataDeleted, on
           {isGoogle
             ? <>
                 <Row label={t('settingsAccount.row.account')} value={t('settingsAccount.row.google')} />
-                <Row label={t('settingsAccount.row.password')} value="••••••••" onClick={() => openEdit('password')} />
+                <Row label={t('settingsAccount.row.password')} value="••••••••" onClick={() => openEdit('password')} last />
               </>
             : <>
                 <Row label={t('settingsAccount.row.email')} value={user?.email} onClick={() => openEdit('email')} />
-                <Row label={t('settingsAccount.row.password')} value="••••••••" onClick={() => openEdit('password')} />
+                <Row label={t('settingsAccount.row.password')} value="••••••••" onClick={() => openEdit('password')} last />
               </>
           }
-          <Row
-            label={t('settingsAccount.row.language')}
-            value={LANGUAGE_OPTIONS.find(o => o.id === currentLanguage)?.label}
-            onClick={() => setEditSection('language')}
-            last
-          />
         </Card>
 
         <SectionLabel>{t('settingsAccount.dangerZone.label')}</SectionLabel>
@@ -281,7 +250,6 @@ export function SettingsAccountPage({ profile, user, onUpdate, onDataDeleted, on
             <div className={styles.editTitle}>
               {editSection === 'name' ? t('settingsAccount.editModal.titleName')
                 : editSection === 'email' ? t('settingsAccount.editModal.titleEmail')
-                : editSection === 'language' ? t('settingsAccount.languageModal.title')
                 : t('settingsAccount.editModal.titlePassword')}
             </div>
 
@@ -347,26 +315,9 @@ export function SettingsAccountPage({ profile, user, onUpdate, onDataDeleted, on
               </div>
             </>)}
 
-            {editSection === 'language' && (
-              <div className={styles.fieldGroup}>
-                {LANGUAGE_OPTIONS.map((opt, i) => (
-                  <div
-                    key={opt.id}
-                    onClick={() => handleLanguageSelect(opt.id)}
-                    className={`${styles.languageOptionRow} ${i === LANGUAGE_OPTIONS.length - 1 ? styles.languageOptionRowLast : ''}`}
-                  >
-                    <span className={styles.languageOptionLabel}>{opt.label}</span>
-                    {currentLanguage === opt.id && <Check size={18} color="var(--accent)" />}
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {editSection !== 'language' && (
-              <button onClick={handleEditSave} disabled={saving} className={`btn-primary ${styles.saveButton}`}>
-                {saving ? t('settingsAccount.editModal.saving') : t('buttons.save')}
-              </button>
-            )}
+            <button onClick={handleEditSave} disabled={saving} className={`btn-primary ${styles.saveButton}`}>
+              {saving ? t('settingsAccount.editModal.saving') : t('buttons.save')}
+            </button>
             <button onClick={() => setEditSection(null)} className="btn-ghost">{t('buttons.cancel')}</button>
           </div>
         </div>

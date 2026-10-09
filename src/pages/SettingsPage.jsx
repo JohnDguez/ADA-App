@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { createPortal } from 'react-dom'
-import { LogOut, Camera, Crown, User, Tag, Calendar, Bell, SunMoon, HelpCircle, Users, MessageCircle, Download, CreditCard } from 'lucide-react'
+import { LogOut, Camera, Crown, User, Tag, Calendar, Bell, SunMoon, HelpCircle, Users, MessageCircle, Download, CreditCard, Languages } from 'lucide-react'
 import { showToast } from '../components/Toast'
 import { supabase } from '../lib/supabase'
 import { getAppVersionLabel } from '../lib/appVersion'
@@ -21,6 +21,7 @@ import styles from './SettingsPage.module.css'
 import { markBackHandled, wasBackHandled } from '../lib/backNav'
 import { AvatarImg } from '../components/AvatarImg'
 import { Presence } from '../components/Presence'
+import { LanguageSheet, useLanguageOptions } from '../components/LanguageSheet'
 
 // Galería de avatares preestablecidos — imágenes estáticas servidas desde
 // public/avatars/ (Vite/Vercel las expone tal cual, sin pasar por Supabase
@@ -53,6 +54,8 @@ function readSavedSection() {
 
 export function SettingsPage({ profile, user, onUpdate, onUploadAvatar, onDataDeleted, slideClass, theme, onThemeChange, onOpenPremium, sharedSpaces, paymentMethods, personalPayments = null, onPayCardNow, onSettlePlan, initialSection, onConsumeInitialSection, returnTab, onReturnToTab }) {
   const { t } = useTranslation()
+  const [languageOpen, setLanguageOpen] = useState(false)
+  const languageOptions = useLanguageOptions()
   const FREQ_LABEL  = { weekly: t('frequency.weekly'), biweekly: t('frequency.biweekly'), monthly: t('frequency.monthly') }
   const THEME_LABEL = { sistema: t('theme.system'), light: t('theme.light'), dark: t('theme.dark') }
   const [section, setSection] = useState(initialSection || readSavedSection()) // null | 'account' | 'categories' | 'cobro' | 'notifications' | 'appearance' | 'sharedspace' | 'subscription' | 'export' | 'cards'
@@ -285,35 +288,52 @@ export function SettingsPage({ profile, user, onUpdate, onUploadAvatar, onDataDe
         )}
       </div>
 
-      {/* Menú */}
+      {/* Premium — bloque propio, fuera de las secciones */}
       <Card>
         {profile.is_premium
-          ? <Row icon={Crown} filled label={t('settingsPage.menu.subscription')} onClick={() => openSection('subscription')} />
-          : <Row icon={Crown} filled label={t('settingsPage.menu.getPremium')} onClick={onOpenPremium} />
+          ? <Row icon={Crown} filled label={t('settingsPage.menu.subscription')} onClick={() => openSection('subscription')} last />
+          : <Row icon={Crown} filled label={t('settingsPage.menu.getPremium')} onClick={onOpenPremium} last />
         }
-        <Row icon={User}     label={t('settingsPage.menu.account')}                        onClick={() => openSection('account')} />
-        <div data-coachmark="perfil-categorias-row">
-          <Row icon={Tag}      label={t('settingsPage.menu.categories')}                    onClick={() => openSection('categories')} />
-        </div>
+      </Card>
+
+      {/* Tu dinero (v0.9.620: Ajustes agrupado por tema) */}
+      <div className={styles.groupLabel}>{t('settingsPage.sections.money')}</div>
+      <Card>
         <div data-coachmark="perfil-cobro-row">
-          <Row icon={Calendar} label={t('settingsPage.menu.cobro')}    value={FREQ_LABEL[profile.cobro_freq] || ''} onClick={() => openSection('cobro')} />
+          <Row icon={Calendar} label={t('settingsPage.menu.cobro')} value={[FREQ_LABEL[profile.cobro_freq], profile.currency].filter(Boolean).join(' · ')} onClick={() => openSection('cobro')} />
         </div>
-        <div data-coachmark="perfil-notificaciones-row">
-          <Row icon={Bell}     label={t('settingsPage.menu.notifications')}                 onClick={() => openSection('notifications')} />
+        <div data-coachmark="perfil-categorias-row">
+          <Row icon={Tag}      label={t('settingsPage.menu.categories')} onClick={() => openSection('categories')} />
         </div>
-        <Row icon={SunMoon}  label={t('settingsPage.menu.appearance')}                    value={THEME_LABEL[theme] || ''} onClick={() => openSection('appearance')} />
-        {/* Mis tarjetas (v0.9.486) — junto a Categorías/Cobro: organiza de
-            dónde sale el dinero. */}
         <Row icon={CreditCard} label={t('settingsPage.menu.cards')} onClick={() => openSection('cards')} />
-        <Row icon={Users}    label={t('settingsPage.menu.sharedSpace')}            onClick={() => openSection('sharedspace')} />
-        <Row icon={Download} label={t('settingsPage.menu.export')}                 onClick={() => openSection('export')} />
-        <Row icon={MessageCircle} label={t('settingsPage.feedbackLabel')} onClick={handleGiveFeedback} last />
+        <Row icon={Users}    label={t('settingsPage.menu.sharedSpace')} onClick={() => openSection('sharedspace')} last />
+      </Card>
+
+      {/* Preferencias */}
+      <div className={styles.groupLabel}>{t('settingsPage.sections.preferences')}</div>
+      <Card>
+        <div data-coachmark="perfil-notificaciones-row">
+          <Row icon={Bell}     label={t('settingsPage.menu.notifications')} onClick={() => openSection('notifications')} />
+        </div>
+        <Row icon={SunMoon}  label={t('settingsPage.menu.appearance')} value={THEME_LABEL[theme] || ''} onClick={() => openSection('appearance')} />
+        <Row icon={Languages} label={t('settingsAccount.row.language')} value={languageOptions.find(o => o.id === (profile.language || 'system'))?.label} onClick={() => setLanguageOpen(true)} last />
+      </Card>
+
+      {/* Cuenta y datos */}
+      <div className={styles.groupLabel}>{t('settingsPage.sections.accountData')}</div>
+      <Card>
+        <Row icon={User}     label={t('settingsPage.menu.account')} onClick={() => openSection('account')} />
+        <Row icon={Download} label={t('settingsPage.menu.export')} onClick={() => openSection('export')} last />
       </Card>
 
       {/* Ayuda */}
+      <div className={styles.groupLabel}>{t('settingsPage.sections.help')}</div>
       <Card>
-        <Row icon={HelpCircle} label={t('settingsPage.tutorialAgain')} onClick={() => onUpdate({ coachmarks_seen: {} })} last />
+        <Row icon={HelpCircle} label={t('settingsPage.tutorialAgain')} onClick={() => onUpdate({ coachmarks_seen: {} })} />
+        <Row icon={MessageCircle} label={t('settingsPage.feedbackLabel')} onClick={handleGiveFeedback} last />
       </Card>
+
+      <LanguageSheet open={languageOpen} onClose={() => setLanguageOpen(false)} profile={profile} onUpdate={onUpdate} />
 
       {/* Sesión */}
       <Card>

@@ -66,6 +66,12 @@
       "photoUpdated": "Photo updated",
       "avatarUpdateError": "Error updating avatar",
       "avatarUpdated": "Avatar updated"
+    },
+    "sections": {
+      "money": "Your money",
+      "preferences": "Preferences",
+      "accountData": "Account and data",
+      "help": "Help"
     }
   },
   "settingsSubscription": {
