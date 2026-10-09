@@ -19,7 +19,13 @@ import styles from './PremiumPage.module.css'
 // Módulo, no dentro del componente — loadStripe() cachea la promesa
 // internamente, pero de todas formas no tiene sentido recrearla en cada
 // render (mismo patrón que la doc oficial de Stripe recomienda).
-const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY)
+//
+// No se carga en la app de Android (ahí se paga con Google Play Billing, ver
+// playBilling.js) ni si falta la clave: antes, en un build local de Android
+// sin VITE_STRIPE_PUBLISHABLE_KEY, `loadStripe(undefined)` lanzaba "apiKey
+// should be a string" en la consola (v0.9.600).
+const stripeKey = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY
+const stripePromise = (isAndroidBilling() || !stripeKey) ? null : loadStripe(stripeKey)
 
 // Misma curva que el borde inferior de cada "escena" de OnboardingPage.jsx
 // (WAVE_PATH ahí) — pedido explícito de Johnatan: "una onda como en los
