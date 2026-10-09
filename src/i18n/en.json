@@ -239,6 +239,9 @@
   },
   "settingsCategories": {
     "title": "Categories",
+    "paymentsCount_one": "{{count}} payment",
+    "paymentsCount_other": "{{count}} payments",
+    "noPayments": "No payments",
     "description": "Customize the icon and color of your categories, or create your own.",
     "addModalTitleEdit": "Edit category",
     "addModalTitleNew": "Add category",

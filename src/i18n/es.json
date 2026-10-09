@@ -239,6 +239,9 @@
   },
   "settingsCategories": {
     "title": "Categorías",
+    "paymentsCount_one": "{{count}} pago",
+    "paymentsCount_other": "{{count}} pagos",
+    "noPayments": "Sin pagos",
     "description": "Personaliza el ícono y color de tus categorías, o crea las tuyas propias.",
     "addModalTitleEdit": "Editar categoría",
     "addModalTitleNew": "Agregar categoría",

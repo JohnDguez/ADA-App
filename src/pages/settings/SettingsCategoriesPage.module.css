@@ -82,11 +82,25 @@
   background: var(--text);
 }
 
+.categoryText {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
 .categoryLabel {
   font-size: 13px;
   font-weight: 500;
   color: var(--text);
-  flex: 1;
+}
+
+.categoryCount {
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--text);
+  opacity: 0.6;
+  margin-top: 1px;
 }
 
 .deleteIconButton {

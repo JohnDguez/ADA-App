@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import i18n from '../../i18n'
 import { Plus, Trash2, Pencil } from 'lucide-react'
@@ -34,6 +34,31 @@ export function SettingsCategoriesPage({ profile, onUpdate, onBack, slideClass }
   const [editingCat,  setEditingCat]  = useState(null) // { name, isCustom } | null (null = agregar nueva)
   const [confirmDeleteCat, setConfirmDeleteCat] = useState(null) // nombre de la categoría personalizada a confirmar, o null
   const [deleting,    setDeleting]    = useState(false)
+
+  // Pagos por categoría (v0.9.626) — mismo alcance que renombrar/borrar
+  // (todos los pagos del usuario con ese nombre), sin contar los maestros
+  // de recurrentes (son plantilla, no un pago real). Se pagina de 1000 en
+  // 1000 por el límite de filas de Supabase. Se recarga al cerrar el modal
+  // (renombrar) y al terminar de borrar.
+  const [counts, setCounts] = useState(null)
+  useEffect(() => {
+    if (modalOpen || deleting) return
+    let alive = true
+    ;(async () => {
+      const tally = {}
+      for (let from = 0; ; from += 1000) {
+        const { data, error } = await supabase
+          .from('payments').select('category')
+          .eq('user_id', profile.id).or('is_master.is.null,is_master.eq.false')
+          .range(from, from + 999)
+        if (error) return
+        for (const r of data) tally[r.category] = (tally[r.category] || 0) + 1
+        if (data.length < 1000) break
+      }
+      if (alive) setCounts(tally)
+    })()
+    return () => { alive = false }
+  }, [profile.id, modalOpen, deleting])
 
   const customCats     = profile.custom_categories || []
   const categoryIcons  = profile.category_icons || {}
@@ -103,7 +128,14 @@ export function SettingsCategoriesPage({ profile, onUpdate, onBack, slideClass }
               : <span className={styles.fallbackDot} />
             }
           </div>
-          <span className={styles.categoryLabel}>{isCustom ? cat : getCategoryLabel(cat)}</span>
+          <div className={styles.categoryText}>
+            <span className={styles.categoryLabel}>{isCustom ? cat : getCategoryLabel(cat)}</span>
+            {counts && (
+              <span className={styles.categoryCount}>
+                {counts[cat] ? t('settingsCategories.paymentsCount', { count: counts[cat] }) : t('settingsCategories.noPayments')}
+              </span>
+            )}
+          </div>
           <Pencil size={16} color="var(--text)" className={styles.editIcon} />
           {isCustom && (
             <button
