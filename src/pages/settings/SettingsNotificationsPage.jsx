@@ -60,7 +60,9 @@ export function SettingsNotificationsPage({ profile, user, onUpdate, onBack, sli
   function channelLines(r) {
     const app = r.fcmTokens === 0 ? t('settingsNotifications.testChNone')
       : r.fcm?.sent > 0 ? t('settingsNotifications.testChOk')
-      : !r.firebaseKey ? t('settingsNotifications.testChNoKey')
+      : !r.firebaseKey ? (r.firebaseKeyError && r.firebaseKeyError !== 'missing'
+          ? `${t('settingsNotifications.testChBadKey')} ${r.firebaseKeyError}`
+          : t('settingsNotifications.testChNoKey'))
       : `${t('settingsNotifications.testChErr')} ${(r.fcm?.errors || []).map(e => e.code).join(', ')}`
     const web = !r.webPush ? t('settingsNotifications.testChNone')
       : r.web?.sent > 0 ? t('settingsNotifications.testChOk')

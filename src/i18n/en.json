@@ -237,7 +237,8 @@
     "testChErr": "✗ error",
     "testPending": "The cron would notify today:",
     "testPendingNone": "Nothing to notify today (no overdue, due-today or upcoming payments).",
-    "testSchedule": "Set hour: {{hour}}:00 · local hour now: {{local}}:00 · last sent: {{last}}"
+    "testSchedule": "Set hour: {{hour}}:00 · local hour now: {{local}}:00 · last sent: {{last}}",
+    "testChBadKey": "✗ the Firebase key on Vercel is invalid:"
   },
   "settingsAppearance": {
     "title": "Appearance",

@@ -25,6 +25,9 @@ const admin = require('firebase-admin')
 
 let app = null
 let initAttempted = false
+// Por qué no hay app: 'missing' (variable ausente en este deploy) o el mensaje de
+// error al parsear/usar la clave. Lo lee el modo de prueba para diagnosticar.
+let initError = null
 
 function getFirebaseApp() {
   if (app) return app
@@ -32,12 +35,13 @@ function getFirebaseApp() {
   initAttempted = true
 
   const raw = process.env.FIREBASE_SERVICE_ACCOUNT_KEY
-  if (!raw) return null
+  if (!raw) { initError = 'missing'; return null }
   try {
     const credentials = JSON.parse(raw)
     app = admin.initializeApp({ credential: admin.credential.cert(credentials) }, 'lunapay-fcm')
     return app
   } catch (e) {
+    initError = e.message
     console.error('FIREBASE_SERVICE_ACCOUNT_KEY inválida:', e.message)
     return null
   }
@@ -90,4 +94,6 @@ async function sendFcm(tokens, { title, body, url, tag }) {
   }
 }
 
-module.exports = { sendFcm, isFcmConfigured }
+function getFcmInitError() { return initError }
+
+module.exports = { sendFcm, isFcmConfigured, getFcmInitError }

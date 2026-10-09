@@ -3,7 +3,7 @@ const { createClient } = require('@supabase/supabase-js')
 const {
   resolveLang, overdueText, dueTodayText, upcomingText, cobroDayText, goalDeadlineText, trialEndingText,
 } = require('./_notifyText')
-const { sendFcm, isFcmConfigured } = require('./_fcm')
+const { sendFcm, isFcmConfigured, getFcmInitError } = require('./_fcm')
 const applyCors = require('./_cors')
 
 webpush.setVapidDetails(
@@ -348,6 +348,7 @@ async function handleTest(req, res) {
   return res.json({
     status,
     firebaseKey,
+    firebaseKeyError: firebaseKey ? null : getFcmInitError(),
     fcmTokens: tokens.length,
     webPush: !!webSub?.subscription,
     fcm, web, pending,
