@@ -64,6 +64,7 @@
   /* Colores semánticos (antes hardcodeados) */
   --nav-bg:           #014BA3;
   --nav-icon:         #F2F2F2;
+  --nav-bg-opacity:   90%; /* tema claro: más opaco para que no se lave sobre fondo blanco */
   --header-text:      #FFFFFF;
   --pay-icon:         #F2F2F2;
   /* Contraparte de --pay-icon, pero para lo que se dibuje sobre el amarillo
@@ -245,6 +246,7 @@
   /* Colores semánticos en dark */
   --nav-bg:          #014BA3;
   --nav-icon:        #F2F2F2;
+  --nav-bg-opacity:  72%;
   --header-text:     #FFFFFF;
   --pay-icon:        #F2F2F2;
   --pending-icon:    #1A1D27;
@@ -308,6 +310,7 @@
     --impact-warning-text: #241C00;
     --nav-bg:          #014BA3;
     --nav-icon:        #F2F2F2;
+  --nav-bg-opacity:  72%;
     --header-text:     #FFFFFF;
     --pay-icon:        #F2F2F2;
     --pending-icon:    #1A1D27;

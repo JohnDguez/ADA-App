@@ -5,7 +5,7 @@
   transform: translateX(-50%);
   width: calc(100% - 32px);
   max-width: 388px;
-  background: color-mix(in srgb, var(--nav-bg) 72%, transparent);
+  background: color-mix(in srgb, var(--nav-bg) var(--nav-bg-opacity), transparent);
   -webkit-backdrop-filter: blur(12px);
   backdrop-filter: blur(12px);
   border-radius: 10px;
@@ -87,10 +87,13 @@
   content: '';
   position: absolute;
   top: 0;
-  left: -14px;
-  right: -14px;
-  height: 46px;
-  background: radial-gradient(ellipse 60% 100% at 50% 0%, color-mix(in srgb, var(--nav-icon) 28%, transparent) 0%, transparent 100%);
+  left: -34px;
+  right: -34px;
+  height: 48px;
+  /* Cono de luz: bordes angulares suaves (sin cortes) y desvanecido hacia abajo */
+  background: conic-gradient(from 148deg at 50% 0%, transparent 0deg, color-mix(in srgb, var(--nav-icon) 30%, transparent) 32deg, transparent 64deg);
+  -webkit-mask-image: linear-gradient(to bottom, #000 0%, transparent 100%);
+  mask-image: linear-gradient(to bottom, #000 0%, transparent 100%);
   pointer-events: none;
 }
 
