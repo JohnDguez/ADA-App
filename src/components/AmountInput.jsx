@@ -73,3 +73,50 @@ export default function AmountInput({ value, onChange, ...rest }) {
     />
   )
 }
+
+// Monto "estilo app de banco" (v0.9.608): siempre se ve 0.00 y los dígitos
+// entran por la derecha (1 → 0.01, 15 → 0.15, 1580 → 15.80). El valor que
+// entrega/recibe sigue siendo el número limpio ('15.8') o '' si es cero.
+const MAX_CENTS_DIGITS = 11
+
+function toCents(value) {
+  const n = parseFloat(value)
+  return Number.isFinite(n) && n > 0 ? Math.round(n * 100) : 0
+}
+
+export function CentsAmountInput({ value, onChange, className, emptyClassName, ...rest }) {
+  const inputRef = useRef(null)
+  const cents = toCents(value)
+  const text = formatAmount(String(Math.floor(cents / 100))) + '.' + String(cents % 100).padStart(2, '0')
+
+  // El cursor siempre al final: no hay nada que editar a la mitad.
+  useLayoutEffect(() => {
+    const el = inputRef.current
+    if (el && document.activeElement === el) el.setSelectionRange(text.length, text.length)
+  })
+
+  function handleChange(e) {
+    const digits = e.target.value.replace(/\D/g, '').replace(/^0+/, '').slice(0, MAX_CENTS_DIGITS)
+    const next = digits ? parseInt(digits, 10) : 0
+    onChange({ target: { value: next ? (next / 100).toFixed(2) : '' } })
+  }
+  function toEnd(e) { const l = e.target.value.length; e.target.setSelectionRange(l, l) }
+
+  // Ancho según el contenido (los separadores miden menos que un dígito).
+  const seps = (text.match(/[,.']/g) || []).length
+  return (
+    <input
+      {...rest}
+      ref={inputRef}
+      type="text"
+      inputMode="numeric"
+      className={`${className || ''} ${cents === 0 ? emptyClassName || '' : ''}`}
+      style={{ ...(rest.style || {}), width: `${text.length - seps * 0.45 + 0.6}ch` }}
+      value={text}
+      onChange={handleChange}
+      onFocus={toEnd}
+      onSelect={toEnd}
+      onClick={toEnd}
+    />
+  )
+}

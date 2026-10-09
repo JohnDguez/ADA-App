@@ -837,7 +837,10 @@
       "done": "Done",
       "heardType": "I heard: “{{text}}”. I set it as {{type}}; review the details before saving.",
       "helpEsType": "«Netflix 189 cada mes» → Recurring · «Laptop 15000 a 12 meses» → Installments",
-      "helpEnType": "“Netflix 15 every month” → Recurring · “Laptop 900 over 12 months” → Installments"
+      "helpEnType": "“Netflix 15 every month” → Recurring · “Laptop 900 over 12 months” → Installments",
+      "retryTitle": "I didn't catch that",
+      "retryHint": "No rush: read the examples and tap “Try again” when you’re ready.",
+      "retryButton": "Try again"
     },
     "scan": {
       "button": "Scan receipt",

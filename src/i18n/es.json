@@ -837,7 +837,10 @@
       "done": "Listo",
       "heardType": "Entendí: «{{text}}». Lo puse como {{type}}; revisa los datos antes de guardar.",
       "helpEsType": "«Netflix 189 cada mes» → Recurrente · «Laptop 15000 a 12 meses» → Parcialidades",
-      "helpEnType": "“Netflix 15 every month” → Recurring · “Laptop 900 over 12 months” → Installments"
+      "helpEnType": "“Netflix 15 every month” → Recurring · “Laptop 900 over 12 months” → Installments",
+      "retryTitle": "No te escuché",
+      "retryHint": "Sin prisa: lee los ejemplos y toca «Intentar de nuevo» cuando estés listo.",
+      "retryButton": "Intentar de nuevo"
     },
     "scan": {
       "button": "Escanear ticket",

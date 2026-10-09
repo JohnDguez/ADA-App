@@ -19,7 +19,7 @@ import { CaretUp } from '@phosphor-icons/react/dist/csr/CaretUp'
 import { Lock as PhLock } from '@phosphor-icons/react/dist/csr/Lock'
 import { nextCutAfter } from '../lib/cardStatements'
 import { DatePicker } from './DatePicker'
-import AmountInput from './AmountInput'
+import AmountInput, { CentsAmountInput } from './AmountInput'
 import { Collapse } from './Collapse'
 import { getCurrencySymbol } from '../lib/currency'
 import styles from './PaymentModal.module.css'
@@ -351,6 +351,9 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onSaveC
   // criterio ya aplicado en SettingsCategoriesPage.jsx). Select.jsx ya
   // soporta ambos formatos mezclados en el mismo arreglo.
   const allCategories = [...CATEGORIES.map(c => ({ value: c, label: getCategoryLabel(c) })), ...customCategories]
+  // Cuadrícula de la hoja: orden alfabético por el nombre que ve el usuario.
+  const sortedCategories = [...allCategories].sort((x, y) =>
+    String(typeof x === 'object' ? x.label : x).localeCompare(String(typeof y === 'object' ? y.label : y), intlLocale(), { sensitivity: 'base' }))
 
   // Ícono + color de cada categoría, mismo criterio que "Por Categoría" en
   // PaymentsPage.jsx — cuadro de color con el ícono elegido por el usuario
@@ -385,11 +388,14 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onSaveC
     setVoiceNote({ kind: '', text: '' })
     voiceCancelRef.current = false
     setVoiceState('listening')
+    // Si no se oyó nada (o no se entendió), la hoja NO se cierra: pasa a
+    // 'retry' para que quien dicta por primera vez lea los ejemplos con calma.
+    let retry = false
     try {
       const text = await listenOnce(voiceLang === 'en' ? 'en-US' : 'es-MX')
       if (voiceCancelRef.current) return
       const r = parseVoicePayment(text, { customCategories })
-      if (!r) { setVoiceNote({ kind: 'error', text: t('paymentModal.voice.noSpeech') }); return }
+      if (!r) { retry = true; return }
       // Tipo de pago detectado por la frase (v0.9.606): "cada 2 meses" →
       // Recurrente; "a 12 meses" → Parcialidades; si no, Pago único.
       let detected = null
@@ -416,16 +422,19 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onSaveC
             : t('paymentModal.voice.heard', { text }) }
         : { kind: 'error', text: t('paymentModal.voice.noAmount', { text }) })
     } catch (err) {
+      if (voiceCancelRef.current) return
       const code = err?.code
+      if (code === 'no-speech') { retry = true; return }
       setVoiceNote({ kind: 'error', text: t(code === 'permission' ? 'paymentModal.voice.permission' : code === 'unavailable' ? 'paymentModal.voice.unavailable' : code === 'no-speech' ? 'paymentModal.voice.noSpeech' : 'paymentModal.voice.failed') })
     } finally {
-      setVoiceState('idle')
+      setVoiceState(retry && !voiceCancelRef.current ? 'retry' : 'idle')
     }
   }
 
   function cancelVoice() {
     voiceCancelRef.current = true
     stopListening()
+    setVoiceState('idle')
   }
 
   function toggleVoiceLang() {
@@ -805,7 +814,7 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onSaveC
               <div className={styles.amountHeroLabel}>{t('paymentModal.amountLabel')}</div>
               <div className={styles.amountHeroRow}>
                 <span className={styles.amountHeroSymbol}>{getCurrencySymbol(profile)}</span>
-                <AmountInput className={styles.amountHeroInput} style={{ width: `${Math.max(4, String(amount).length + Math.floor(String(amount).length / 3) + 1)}ch` }} value={amount} onChange={e => setAmount(e.target.value)} placeholder="0.00" />
+                <CentsAmountInput className={styles.amountHeroInput} emptyClassName={styles.amountHeroEmpty} value={amount} onChange={e => setAmount(e.target.value)} />
               </div>
             </div>
           )}
@@ -825,7 +834,7 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onSaveC
                   </button>
                 </div>
                 <div data-coachmark="modal-category-field">
-                  <Select value={category} onChange={setCategory} options={allCategories} renderIcon={renderCategoryIcon} sheet cellIcon={renderCategoryCellIcon} cellColor={categoryCellColor} sheetTitle={t('paymentModal.fields.category')} sheetLayout="grid" sheetAction={{ label: t('paymentModal.fields.addCategory'), onClick: () => { setAddingCategory(true); setNewCategoryName('') } }} />
+                  <Select value={category} onChange={setCategory} options={sortedCategories} renderIcon={renderCategoryIcon} sheet cellIcon={renderCategoryCellIcon} cellColor={categoryCellColor} sheetTitle={t('paymentModal.fields.category')} sheetLayout="grid" sheetAction={{ label: t('paymentModal.fields.addCategory'), onClick: () => { setAddingCategory(true); setNewCategoryName('') } }} />
                 </div>
                 {addingCategory && (
                   <div className={styles.addCategoryRow}>
@@ -1116,14 +1125,14 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onSaveC
         </div>
       </div>
       <ConfirmCloseModal open={confirmClose} onConfirm={() => { setConfirmClose(false); onClose() }} onCancel={() => setConfirmClose(false)} />
-      {voiceState === 'listening' && (
-        <ModalSheet icon={Microphone} pulse title={t('paymentModal.voice.listeningTitle')} onBackdrop={cancelVoice} zIndex={450}>
-          <ModalSheet.Text>{t('paymentModal.voice.listeningHint')}</ModalSheet.Text>
+      {(voiceState === 'listening' || voiceState === 'retry') && (
+        <ModalSheet icon={Microphone} pulse={voiceState === 'listening'} title={t(voiceState === 'retry' ? 'paymentModal.voice.retryTitle' : 'paymentModal.voice.listeningTitle')} onBackdrop={cancelVoice} zIndex={450}>
+          <ModalSheet.Text>{t(voiceState === 'retry' ? 'paymentModal.voice.retryHint' : 'paymentModal.voice.listeningHint')}</ModalSheet.Text>
           <div className={styles.voiceExamples}>
             {(voiceLang === 'en' ? ['helpEn1', 'helpEn3'] : ['helpEs1', 'helpEs3']).map(k => <div key={k}>{t(`paymentModal.voice.${k}`)}</div>)}
             <div>{voiceLang === 'en' ? t('paymentModal.voice.helpEnType') : t('paymentModal.voice.helpEsType')}</div>
           </div>
-          <SheetButton onClick={handleVoice}>{t('paymentModal.voice.done')}</SheetButton>
+          <SheetButton onClick={handleVoice}>{t(voiceState === 'retry' ? 'paymentModal.voice.retryButton' : 'paymentModal.voice.done')}</SheetButton>
           <SheetButton variant="soft" onClick={cancelVoice}>{t('buttons.cancel')}</SheetButton>
           <button type="button" onClick={toggleVoiceLang} className={styles.voiceLangLink}>{t('paymentModal.voice.langLabel')}: <strong>{voiceLang === 'es' ? 'Español' : 'English'}</strong></button>
         </ModalSheet>
