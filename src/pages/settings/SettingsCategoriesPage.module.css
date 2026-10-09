@@ -1,4 +1,7 @@
 .pageWrapper {
+  /* Se extiende detrás de la barra de estado transparente (--sat). */
+  margin-top: calc(-1 * var(--sat, 0px));
+  padding-top: var(--sat, 0px);
   /* 120px cubría solo el nav. La pastilla fija "Agregar categoría" vive
      encima de él (mismo criterio que GoalsPage.jsx), así que hace falta
      más aire para que la última categoría de la lista no quede tapada. */

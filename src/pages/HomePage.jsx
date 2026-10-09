@@ -796,7 +796,16 @@ function PaidCollapse({ payments, expanded, onToggle, onMarkUnpaid, onViewSource
           <Check size={11} color="var(--pay-icon)" strokeWidth={3} />
         </div>
         <span className={styles.paidCollapseSummaryText}>
-          {t('homePage.paidCount', { count: payments.length })}
+          {(() => {
+            // Los pospuestos viven en esta lista pero NO están pagados —
+            // se separan para que "19 pagados" no mienta (18 + 1 pospuesto).
+            const postponed = payments.filter(p => p.is_postponed).length
+            const paid = payments.length - postponed
+            const parts = []
+            if (paid > 0 || postponed === 0) parts.push(t('homePage.paidCount', { count: paid }))
+            if (postponed > 0) parts.push(t('homePage.postponedCount', { count: postponed }))
+            return parts.join(' · ')
+          })()}
         </span>
         {expanded ? <ChevronUp size={15} color="var(--text)" /> : <ChevronDown size={15} color="var(--text)" />}
       </button>

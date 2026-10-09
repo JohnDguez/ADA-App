@@ -1,5 +1,8 @@
 /* Mis tarjetas (v0.9.486). */
 .pageWrapper {
+  /* Se extiende detrás de la barra de estado transparente (--sat). */
+  margin-top: calc(-1 * var(--sat, 0px));
+  padding-top: var(--sat, 0px);
   /* Aire para que la última tarjeta no quede bajo el botón flotante + nav
      (mismo criterio que SettingsCategoriesPage). */
   padding-bottom: 185px;

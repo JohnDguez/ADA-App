@@ -53,7 +53,6 @@ import { VariableAmountModal } from './components/VariableAmountModal'
 import { ConfirmNextPeriodPayModal } from './components/ConfirmNextPeriodPayModal'
 import { InstallmentAbonarModal } from './components/InstallmentAbonarModal'
 import { SplitContributionsModal } from './components/SplitContributionsModal'
-import { RecurrentMigrationModal } from './components/RecurrentMigrationModal'
 import { PatchNotesModal } from './components/PatchNotesModal'
 import { ConfirmExitModal } from './components/ConfirmExitModal'
 import { FeedbackPromptModal } from './components/FeedbackPromptModal'
@@ -570,7 +569,6 @@ export default function App() {
   const [splitModal,     setSplitModal]    = useState({ open: false, paymentId: null, openedBecauseFundInsufficient: false })
   const [notifOpen,      setNotifOpen]     = useState(false)
   const [slideDir,       setSlideDir]      = useState('right')
-  const [migrationModal, setMigrationModal] = useState(false)
   const [patchNotesOpen,   setPatchNotesOpen]   = useState(false)
   const [patchNotesToShow, setPatchNotesToShow] = useState([])
   const [premiumPageOpen, setPremiumPageOpen] = useState(false)
@@ -686,9 +684,6 @@ export default function App() {
 
     if (hasOldRecurrents || hasOldInstallments) {
       migrateRecurrents()
-      if (!localStorage.getItem('ada_recurrent_v2_seen')) {
-        setMigrationModal(true)
-      }
     }
   }, [user, payments, paymentsSpaceId])
 
@@ -1862,13 +1857,6 @@ export default function App() {
         screenKey={coachmarkScreenKey}
         profile={profile}
         onUpdateProfile={updateProfile}
-      />
-      <RecurrentMigrationModal
-        open={migrationModal}
-        onClose={() => {
-          localStorage.setItem('ada_recurrent_v2_seen', '1')
-          setMigrationModal(false)
-        }}
       />
       <PatchNotesModal
         open={patchNotesOpen}

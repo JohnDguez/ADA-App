@@ -7,6 +7,8 @@ import { Bell as BellDuotone } from '@phosphor-icons/react/dist/csr/Bell'
 import { PageHero } from '../../components/PageHero'
 import { usePushNotifications } from '../../hooks/usePushNotifications'
 import { showToast } from '../../components/Toast'
+import { supabase } from '../../lib/supabase'
+import { apiUrl } from '../../lib/apiUrl'
 import { Card, Toggle, NotifToggle } from '../../components/SettingsShared'
 import { Select } from '../../components/Select'
 import styles from './SettingsNotificationsPage.module.css'
@@ -31,6 +33,36 @@ export function SettingsNotificationsPage({ profile, user, onUpdate, onBack, sli
   // eso puede tardar segundos. Al terminar vuelve a mostrar el estado real:
   // si falló o se negó el permiso, regresa solo.
   const [pushTarget, setPushTarget] = useState(null)
+
+  // Notificación de prueba (v0.9.592) — ver handleTest() en
+  // api/send-notifications.js. El servidor espera 6 s antes de enviar para
+  // dar tiempo de salir de la app (en primer plano no se muestra el aviso).
+  const [testing, setTesting] = useState(false)
+  const [testResult, setTestResult] = useState(null)
+  async function handleTestPush() {
+    if (testing) return
+    setTesting(true); setTestResult(null)
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      const res = await fetch(apiUrl('/api/send-notifications?test=1'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token}` },
+        body: JSON.stringify({ delayMs: 6000 }),
+      })
+      if (!res.ok) throw new Error(String(res.status))
+      setTestResult(await res.json())
+    } catch (e) {
+      setTestResult({ status: 'unreachable', detail: e.message })
+    }
+    setTesting(false)
+  }
+  function testSummary(r) {
+    const key = { sent: 'testSent', no_token: 'testNoToken', no_firebase_key: 'testNoKey', fcm_error: 'testFcmError', unreachable: 'testFail' }[r.status] || 'testFail'
+    let text = t(`settingsNotifications.${key}`)
+    if (r.status === 'fcm_error' && r.fcm?.errors?.length) text += ' ' + r.fcm.errors.map(e => e.code).join(', ')
+    if (r.status === 'unreachable' && r.detail) text += ` (${r.detail})`
+    return text
+  }
   async function handlePushToggle() {
     if (pushTarget !== null) return
     if (subscribed) {
@@ -72,6 +104,26 @@ export function SettingsNotificationsPage({ profile, user, onUpdate, onBack, sli
         </div>
 
         {subscribed && (<>
+          <div className={styles.testSection}>
+            <button className={styles.testButton} onClick={handleTestPush} disabled={testing}>
+              {testing ? t('settingsNotifications.testSending') : t('settingsNotifications.testButton')}
+            </button>
+            <div className={styles.testHint}>{t('settingsNotifications.testHint')}</div>
+            {testResult && (
+              <div className={styles.testResult}>
+                <div>{testSummary(testResult)}</div>
+                {testResult.schedule && (<>
+                  <div>
+                    {Object.keys(testResult.pending || {}).length === 0
+                      ? t('settingsNotifications.testPendingNone')
+                      : `${t('settingsNotifications.testPending')} ${Object.entries(testResult.pending).map(([k, v]) => `${k} ×${v}`).join(', ')}`}
+                  </div>
+                  <div>{t('settingsNotifications.testSchedule', { hour: testResult.schedule.notifHour, local: testResult.schedule.localHour, last: testResult.schedule.lastSent || '—' })}</div>
+                </>)}
+              </div>
+            )}
+          </div>
+
           <div className={styles.subSection}>
             <div className={styles.hourLabel}>{t('settingsNotifications.notificationHour')}</div>
             <div className={styles.hourSelectWrapper}>

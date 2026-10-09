@@ -30,17 +30,66 @@ const money = (line) => (line.match(NUM_RE) || []).map(toNumber).filter(n => n !
 
 const TOTAL_RE = /\b(total a pagar|total pagado|importe total|gran total|grand total|amount due|total due|total|importe|a pagar|pago)\b/
 const NOT_TOTAL_RE = /\b(subtotal|sub total|sub-total|iva|impuesto|tax|cambio|change|ahorro|descuento|discount|propina|tip|puntos|cantidad|articulos|items)\b/
+// Encabezado de columnas de la lista de artículos ("P. UNIT  PROM  OFERTA  TOTAL"):
+// contiene "total" pero NO es el total del ticket.
+const COLUMN_HEADER_RE = /\b(p\.? ?unit|unit|prom|oferta|cant|descripcion|description|qty|precio|price|importe)\b/
+const TENDERED_RE = /\b(efectivo|tarjeta|cash|card|recibido|pago con|su pago)\b/
+const CHANGE_RE = /\b(cambio|change)\b/
 
-function findAmount(lines) {
-  const cands = []
+const AMOUNT_ONLY_RE = /^[^\d\p{L}]*\d[\d.,]*\d?\s*[A-Za-z]?\s*$/u // línea que es solo un monto ("$1,653.16", "16.85 G")
+const hasLetters = (l) => /\p{L}{2,}/u.test(l)
+const isAmountOnly = (l) => AMOUNT_ONLY_RE.test(l.trim()) && money(l).length === 1
+
+// Totales "etiquetados": "TOTAL 1,653.16" en la misma línea, o — cuando el OCR
+// separa columnas en bloques ("TOTAL / EFECTIVO / CAMBIO" y luego "1653.16 /
+// 1670.00 / 16.85") — el monto que ocupa la misma posición en el bloque de montos.
+function labeledAmounts(lines) {
+  const out = []
   lines.forEach((line, i) => {
     const n = strip(line)
-    if (TOTAL_RE.test(n) && !NOT_TOTAL_RE.test(n)) {
-      let vals = money(line)
-      if (!vals.length && lines[i + 1]) vals = money(lines[i + 1]) // el monto en la línea siguiente
-      if (vals.length) cands.push(vals[vals.length - 1])
-    }
+    if (!TOTAL_RE.test(n) || NOT_TOTAL_RE.test(n) || COLUMN_HEADER_RE.test(n)) return
+    const vals = money(line)
+    if (vals.length) { out.push(vals[vals.length - 1]); return }
+    // Monto en la línea siguiente SOLO si esa línea es únicamente un monto.
+    if (lines[i + 1] && isAmountOnly(lines[i + 1])) { out.push(money(lines[i + 1])[0]); return }
+    // Bloque de etiquetas → bloque de montos.
+    let a = i
+    while (a > 0 && hasLetters(lines[a - 1]) && !money(lines[a - 1]).length) a--
+    let b = i
+    while (b + 1 < lines.length && hasLetters(lines[b + 1]) && !money(lines[b + 1]).length) b++
+    const labels = lines.slice(a, b + 1)
+    const vs = []
+    for (let k = b + 1; k < lines.length && isAmountOnly(lines[k]); k++) vs.push(money(lines[k])[0])
+    // `$47.93` (IVA) suele quedar entre los dos bloques — se salta si hace falta.
+    const pos = i - a
+    if (vs.length >= labels.filter(l => !/^\W*\$/.test(l)).length && vs[pos] != null) out.push(vs[pos])
   })
+  return out
+}
+
+// Conciliación: total = efectivo/pago − cambio (±5 centavos). Es la señal más
+// fiable en tickets largos donde el OCR revuelve las columnas.
+function reconciledAmount(lines) {
+  const joined = strip(lines.join('\n'))
+  if (!CHANGE_RE.test(joined) || !TENDERED_RE.test(joined)) return null
+  const all = [...new Set(lines.flatMap(l => (l.match(/\d[\d.,]*[.,]\d{2}\b/g) || []).map(toNumber)).filter(n => n > 0 && n < 1e7))]
+  let best = null
+  for (const x of all) for (const y of all) {
+    if (y >= x) continue
+    const c = x - y
+    if (all.some(v => v !== x && v !== y && Math.abs(v - c) <= 0.05) && (best == null || c > best)) best = Math.round(c * 100) / 100
+  }
+  if (best == null) return null
+  // Devuelve el monto impreso más cercano (el que sí aparece en el ticket).
+  return all.find(v => Math.abs(v - best) <= 0.05) ?? best
+}
+
+function findAmount(lines) {
+  const cands = labeledAmounts(lines)
+  const rec = reconciledAmount(lines)
+  // La conciliación (efectivo − cambio) manda: si cuadra con un monto impreso,
+  // es el total aunque el OCR haya revuelto las columnas.
+  if (rec != null) return rec
   if (cands.length) return Math.max(...cands)
   // Sin "TOTAL": el mayor monto con centavos
   const all = lines.flatMap(l => (l.match(/\d[\d.,]*[.,]\d{2}\b/g) || []).map(toNumber)).filter(n => n > 0 && n < 1e7)

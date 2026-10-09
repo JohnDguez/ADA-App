@@ -3,7 +3,8 @@ const { createClient } = require('@supabase/supabase-js')
 const {
   resolveLang, overdueText, dueTodayText, upcomingText, cobroDayText, goalDeadlineText, trialEndingText,
 } = require('./_notifyText')
-const { sendFcm } = require('./_fcm')
+const { sendFcm, isFcmConfigured } = require('./_fcm')
+const applyCors = require('./_cors')
 
 webpush.setVapidDetails(
   process.env.VAPID_EMAIL,
@@ -273,7 +274,98 @@ function collectTrialReminder(profile, todayStr, lang) {
   }
 }
 
+// ─────────────────────────────────────────────────────────────────────────
+// Modo PRUEBA (v0.9.592) — `POST /api/send-notifications?test=1`, botón
+// "Enviar notificación de prueba" en Ajustes → Notificaciones. Para no tener
+// que esperar a la hora del cron: manda una push REAL a los dispositivos del
+// propio usuario (se autentica con su JWT de sesión, igual que
+// notify-space-change.js — nunca toca a otros usuarios) y devuelve un
+// diagnóstico de dónde se rompe la cadena (clave de Firebase, token FCM
+// guardado, respuesta de FCM, qué avisaría hoy el cron). Vive aquí y no en un
+// endpoint nuevo porque Vercel Hobby tope de 12 funciones ya está al límite.
+const sleep = (ms) => new Promise(r => setTimeout(r, ms))
+
+async function handleTest(req, res) {
+  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
+  const token = (req.headers.authorization || '').replace(/^Bearer\s+/i, '')
+  if (!token) return res.status(401).json({ error: 'Unauthorized' })
+  const { data: userData, error: userError } = await supabase.auth.getUser(token)
+  if (userError || !userData?.user) return res.status(401).json({ error: 'Unauthorized' })
+  const userId = userData.user.id
+
+  const body = typeof req.body === 'string' ? JSON.parse(req.body || '{}') : (req.body || {})
+  // Retraso para dar tiempo a salir de la app (en primer plano Android no
+  // muestra el aviso nativo de FCM). Tope 8 s por el límite de la función.
+  const delayMs = Math.min(Math.max(Number(body.delayMs) || 0, 0), 8000)
+
+  const [{ data: fcmRows }, { data: webSub }, { data: profile }] = await Promise.all([
+    supabase.from('fcm_tokens').select('token').eq('user_id', userId),
+    supabase.from('push_subscriptions').select('subscription').eq('user_id', userId).maybeSingle(),
+    supabase.from('profiles').select('notif_hour, timezone, notif_last_sent, notif_overdue, notif_due_today, notif_upcoming, notif_days_before, language').eq('id', userId).maybeSingle(),
+  ])
+  const tokens = (fcmRows || []).map(r => r.token)
+  const firebaseKey = isFcmConfigured()
+  const lang = resolveLang(profile?.language)
+  const timezone = profile?.timezone || 'America/Mazatlan'
+
+  // Qué avisaría el cron hoy (solo lectura — collectReminders no escribe).
+  let pending = {}
+  try {
+    const todayStr = getLocalDateStr(timezone)
+    const list = await collectReminders({ type: 'personal', userId }, profile || {}, todayStr, new Date(todayStr + 'T12:00:00'), lang)
+    for (const n of list) pending[n.type] = (pending[n.type] || 0) + 1
+  } catch (e) { pending = { error: e.message } }
+
+  if (delayMs) await sleep(delayMs)
+
+  const title = lang === 'en' ? 'LunaPay test notification' : 'Notificación de prueba de LunaPay'
+  const msg   = lang === 'en' ? 'If you see this, push notifications work.' : 'Si ves esto, las notificaciones funcionan.'
+
+  let fcm = { sent: 0, errors: [] }
+  if (tokens.length) {
+    const r = await sendFcm(tokens, { title, body: msg, url: '/', tag: 'test-push' })
+    fcm = { sent: r.sent, errors: r.errors || [] }
+    if (r.invalidTokens?.length) await supabase.from('fcm_tokens').delete().in('token', r.invalidTokens)
+  }
+
+  let web = { sent: 0, error: null }
+  if (webSub?.subscription) {
+    try {
+      await webpush.sendNotification(webSub.subscription, JSON.stringify({ title, body: msg, tag: 'test-push', urgent: false, url: '/' }))
+      web = { sent: 1, error: null }
+    } catch (e) {
+      web = { sent: 0, error: String(e.statusCode || e.message) }
+      if (e.statusCode === 410) await supabase.from('push_subscriptions').delete().eq('user_id', userId)
+    }
+  }
+
+  let status
+  if (fcm.sent > 0 || web.sent > 0) status = 'sent'
+  else if (!tokens.length && !webSub?.subscription) status = 'no_token'
+  else if (tokens.length && !firebaseKey) status = 'no_firebase_key'
+  else status = 'fcm_error'
+
+  return res.json({
+    status,
+    firebaseKey,
+    fcmTokens: tokens.length,
+    webPush: !!webSub?.subscription,
+    fcm, web, pending,
+    schedule: {
+      notifHour: profile?.notif_hour ?? 8, timezone,
+      localHour: getLocalHour(timezone), lastSent: profile?.notif_last_sent || null,
+    },
+  })
+}
+
 module.exports = async function handler(req, res) {
+  if (applyCors(req, res)) return
+  if (req.query.test === '1') {
+    try { return await handleTest(req, res) } catch (e) {
+      console.error(e)
+      return res.status(500).json({ error: e.message })
+    }
+  }
   const authHeader = req.headers.authorization
   if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
     return res.status(401).json({ error: 'Unauthorized' })

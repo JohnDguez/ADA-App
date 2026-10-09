@@ -57,10 +57,15 @@ const INVALID_TOKEN_CODES = [
 // para que el cliente Android los use igual que `sw.js` usa el payload de
 // Web Push, cuando se construya el manejador de notificaciones en primer/
 // segundo plano del lado de Capacitor.
+// ¿Hay clave de Firebase válida? (la usa el modo de prueba para diagnosticar)
+function isFcmConfigured() {
+  return !!getFirebaseApp()
+}
+
 async function sendFcm(tokens, { title, body, url, tag }) {
-  if (!tokens.length) return { sent: 0, invalidTokens: [] }
+  if (!tokens.length) return { sent: 0, invalidTokens: [], errors: [] }
   const firebaseApp = getFirebaseApp()
-  if (!firebaseApp) return { sent: 0, invalidTokens: [] }
+  if (!firebaseApp) return { sent: 0, invalidTokens: [], errors: [{ code: 'no-firebase-key', message: 'FIREBASE_SERVICE_ACCOUNT_KEY ausente o inválida' }] }
 
   const message = {
     notification: { title, body },
@@ -71,14 +76,18 @@ async function sendFcm(tokens, { title, body, url, tag }) {
   try {
     const result = await admin.messaging(firebaseApp).sendEachForMulticast(message)
     const invalidTokens = []
+    const errors = []
     result.responses.forEach((r, i) => {
-      if (!r.success && INVALID_TOKEN_CODES.includes(r.error?.code)) invalidTokens.push(tokens[i])
+      if (r.success) return
+      errors.push({ code: r.error?.code || 'unknown', message: r.error?.message || '' })
+      if (INVALID_TOKEN_CODES.includes(r.error?.code)) invalidTokens.push(tokens[i])
     })
-    return { sent: result.successCount, invalidTokens }
+    if (errors.length) console.error('FCM errores:', JSON.stringify(errors))
+    return { sent: result.successCount, invalidTokens, errors }
   } catch (e) {
     console.error('FCM sendEachForMulticast falló:', e.message)
-    return { sent: 0, invalidTokens: [] }
+    return { sent: 0, invalidTokens: [], errors: [{ code: e.code || 'exception', message: e.message }] }
   }
 }
 
-module.exports = { sendFcm }
+module.exports = { sendFcm, isFcmConfigured }

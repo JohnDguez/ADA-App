@@ -1,4 +1,7 @@
 .pageWrapper {
+  /* Se extiende detrás de la barra de estado transparente (--sat). */
+  margin-top: calc(-1 * var(--sat, 0px));
+  padding-top: var(--sat, 0px);
   padding-bottom: 120px;
   background: var(--bg);
   min-height: 100vh;

@@ -210,7 +210,18 @@
       "permissionDenied": "Permission denied — enable it in your browser settings",
       "enableError": "Error enabling notifications",
       "enabled": "Notifications enabled"
-    }
+    },
+    "testButton": "Send test notification",
+    "testSending": "Sending…",
+    "testHint": "Arrives in ~6 seconds: leave the app (home button) to see it.",
+    "testSent": "✓ Sent. If you don't see it, check that LunaPay's notification channel isn't muted in Android settings.",
+    "testNoToken": "This device has no notification token saved. Turn the switch above off and on again.",
+    "testNoKey": "The Firebase key is missing on the server (FIREBASE_SERVICE_ACCOUNT_KEY in Vercel). The token is saved.",
+    "testFcmError": "Firebase rejected the send:",
+    "testFail": "Could not reach the server",
+    "testPending": "The cron would notify today:",
+    "testPendingNone": "Nothing to notify today (no overdue, due-today or upcoming payments).",
+    "testSchedule": "Set hour: {{hour}}:00 · local hour now: {{local}}:00 · last sent: {{last}}"
   },
   "settingsAppearance": {
     "title": "Appearance",
@@ -274,7 +285,9 @@
     "markedUnpaid": "Marked as unpaid",
     "unpostponed": "Returned to pending",
     "shared": "Shared",
-    "viewInSharedSpace": "View in shared space"
+    "viewInSharedSpace": "View in shared space",
+    "postponedCount_one": "{{count}} postponed",
+    "postponedCount_other": "{{count}} postponed"
   },
   "paymentsPage": {
     "title": "Expenses and income",
@@ -531,16 +544,6 @@
     "errorPay": "Enter the amount you paid",
     "saveEstimate": "Save amount",
     "savePay": "Confirm payment"
-  },
-  "recurrentMigrationModal": {
-    "title": "Recurring payments improvement",
-    "description": "We updated how recurring payments work to make them smarter and editable.",
-    "benefit1": "Payments are generated automatically period after period",
-    "benefit2": "Now you can edit the name, amount, and dates at any time",
-    "benefit3": "You'll always see the current payment and the next one in your list",
-    "warningTitle": "Temporary visible change",
-    "warningText": "You might notice some adjustments in how your recurring payments are displayed while the system migrates the data. Payments you've already made are protected and won't be deleted.",
-    "understood": "Got it"
   },
   "passwordSetupModal": {
     "title": "Create a password",
