@@ -1,14 +1,13 @@
 import { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import i18n from '../../i18n'
-import { Plus, Trash2, Pencil } from 'lucide-react'
+import { Plus, ChevronRight } from 'lucide-react'
 // Ícono del encabezado vía Phosphor Icons (mismo patrón que Exportar/Cuenta,
 // v0.9.442-446) — import directo al archivo del ícono para tree-shaking real.
 import { Tag } from '@phosphor-icons/react/dist/csr/Tag'
 import { PageHero } from '../../components/PageHero'
 import { CATEGORIES, getCatColor, getCategoryLabel } from '../../lib/utils'
 import { getCategoryIcon } from '../../lib/categoryIcons'
-import { showToast } from '../../components/Toast'
 import { supabase } from '../../lib/supabase'
 import { Card } from '../../components/SettingsShared'
 import { CategoryFormModal } from '../../components/CategoryFormModal'
@@ -32,17 +31,15 @@ export function SettingsCategoriesPage({ profile, onUpdate, onBack, slideClass }
   const { t } = useTranslation()
   const [modalOpen,   setModalOpen]   = useState(false)
   const [editingCat,  setEditingCat]  = useState(null) // { name, isCustom } | null (null = agregar nueva)
-  const [confirmDeleteCat, setConfirmDeleteCat] = useState(null) // nombre de la categoría personalizada a confirmar, o null
-  const [deleting,    setDeleting]    = useState(false)
 
   // Pagos por categoría (v0.9.626) — mismo alcance que renombrar/borrar
   // (todos los pagos del usuario con ese nombre), sin contar los maestros
   // de recurrentes (son plantilla, no un pago real). Se pagina de 1000 en
   // 1000 por el límite de filas de Supabase. Se recarga al cerrar el modal
-  // (renombrar) y al terminar de borrar.
+  // (renombrar o borrar, ambos viven en el modal).
   const [counts, setCounts] = useState(null)
   useEffect(() => {
-    if (modalOpen || deleting) return
+    if (modalOpen) return
     let alive = true
     ;(async () => {
       const tally = {}
@@ -58,7 +55,7 @@ export function SettingsCategoriesPage({ profile, onUpdate, onBack, slideClass }
       if (alive) setCounts(tally)
     })()
     return () => { alive = false }
-  }, [profile.id, modalOpen, deleting])
+  }, [profile.id, modalOpen])
 
   const customCats     = profile.custom_categories || []
   const categoryIcons  = profile.category_icons || {}
@@ -91,30 +88,10 @@ export function SettingsCategoriesPage({ profile, onUpdate, onBack, slideClass }
     setModalOpen(true)
   }
 
-  // Eliminar categoría personalizada — las 11 fijas nunca pasan por aquí
-  // (el botón de borrar solo se dibuja para isCustom). Los pagos que ya
-  // tenían esta categoría se reasignan a "Otros" en vez de quedar huérfanos
-  // o bloquear el borrado (decisión de Johnatan).
-  async function handleDeleteCategory(cat) {
-    setDeleting(true)
-
-    const newCustom = customCats.filter(c => c !== cat)
-    const newIcons  = { ...categoryIcons };  delete newIcons[cat]
-    const newColors = { ...categoryColors }; delete newColors[cat]
-
-    await onUpdate({ custom_categories: newCustom, category_icons: newIcons, category_colors: newColors })
-    await supabase.from('payments').update({ category: 'Otros' }).eq('user_id', profile.id).eq('category', cat)
-
-    showToast(`${t('settingsCategories.toast.deletedPrefix')} "${cat}" ${t('settingsCategories.toast.deletedSuffix')}`)
-    setConfirmDeleteCat(null)
-    setDeleting(false)
-  }
-
   function CategoryRow({ cat, isCustom, last }) {
     const Icon  = getCategoryIcon(cat, categoryIcons)
     const color = getCatColor(cat, customCats, categoryColors)
-    const isConfirming = confirmDeleteCat === cat
-    const noBorder = last && !isConfirming
+    const noBorder = last
 
     return (
       <div>
@@ -136,32 +113,8 @@ export function SettingsCategoriesPage({ profile, onUpdate, onBack, slideClass }
               </span>
             )}
           </div>
-          <Pencil size={16} color="var(--text)" className={styles.editIcon} />
-          {isCustom && (
-            <button
-              onClick={e => { e.stopPropagation(); setConfirmDeleteCat(prev => prev === cat ? null : cat) }}
-              className={styles.deleteIconButton}
-            >
-              <Trash2 size={16} color="var(--text)" />
-            </button>
-          )}
+          <ChevronRight size={14} color="var(--text)" />
         </div>
-
-        {isConfirming && (
-          <div className={`${styles.confirmPanel} ${last ? styles.confirmPanelNoBorder : ''}`}>
-            <div className={styles.confirmText}>
-              {t('settingsCategories.deleteConfirmPrefix')} "{cat}"{t('settingsCategories.deleteConfirmSuffix')}
-            </div>
-            <div className={styles.confirmButtonsRow}>
-              <button onClick={() => setConfirmDeleteCat(null)} className={styles.confirmCancelButton}>
-                {t('buttons.cancel')}
-              </button>
-              <button onClick={() => handleDeleteCategory(cat)} disabled={deleting} className={styles.confirmDeleteButton}>
-                {deleting ? t('settingsCategories.deleting') : t('buttons.delete')}
-              </button>
-            </div>
-          </div>
-        )}
       </div>
     )
   }

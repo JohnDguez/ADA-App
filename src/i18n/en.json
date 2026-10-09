@@ -255,6 +255,7 @@
     "saving": "Saving…",
     "deleteConfirmPrefix": "Delete",
     "deleteConfirmSuffix": "? Payments already recorded with this category will be reassigned to \"Otros\".",
+    "deleteCategory": "Delete category",
     "deleting": "Deleting…",
     "toast": {
       "emptyName": "Enter a name",

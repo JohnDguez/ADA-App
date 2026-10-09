@@ -103,27 +103,25 @@
   margin-top: 1px;
 }
 
-.deleteIconButton {
-  width: 30px;
-  height: 30px;
-  border-radius: 8px;
+/* Eliminar categoría dentro del modal de edición (v0.9.627). */
+.deleteCategoryButton {
+  width: 100%;
+  margin-top: 8px;
+  padding: 10px;
   border: none;
   background: none;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  color: var(--danger);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
   cursor: pointer;
-  flex-shrink: 0;
 }
 
-.confirmPanel {
+.deleteConfirmBox {
+  margin-top: 8px;
   padding: 10px 14px;
+  border-radius: 8px;
   background: var(--danger-soft);
-  border-bottom: 0.5px solid var(--border);
-}
-
-.confirmPanelNoBorder {
-  border-bottom: none;
 }
 
 .confirmText {

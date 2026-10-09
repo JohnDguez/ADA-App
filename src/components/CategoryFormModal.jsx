@@ -26,6 +26,8 @@ export function CategoryFormModal({ open, onClose, editingCat = null, profile, o
   const [iconSearch, setIconSearch] = useState('')
   const [nameError,  setNameError]  = useState('')
   const [saving,     setSaving]     = useState(false)
+  const [confirmingDelete, setConfirmingDelete] = useState(false)
+  const [deleting,  setDeleting]    = useState(false)
 
   const customCats     = profile.custom_categories || []
   const categoryIcons  = profile.category_icons || {}
@@ -44,7 +46,7 @@ export function CategoryFormModal({ open, onClose, editingCat = null, profile, o
     } else {
       setFormName(''); setFormIcon(''); setFormColor(CATEGORY_PALETTE[0])
     }
-    setIconSearch(''); setNameError(''); setSaving(false)
+    setIconSearch(''); setNameError(''); setSaving(false); setConfirmingDelete(false); setDeleting(false)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, editingCat])
 
@@ -92,6 +94,22 @@ export function CategoryFormModal({ open, onClose, editingCat = null, profile, o
 
     setSaving(false)
     onSaved?.(trimmed)
+    onClose()
+  }
+
+  // Eliminar categoría personalizada (v0.9.627: vive aquí, antes era un
+  // ícono junto al lápiz en la lista) — las 11 fijas nunca lo muestran.
+  // Los pagos que ya tenían esta categoría se reasignan a "Otros".
+  async function handleDelete() {
+    const cat = editingCat.name
+    setDeleting(true)
+    const newCustom = customCats.filter(c => c !== cat)
+    const newIcons  = { ...categoryIcons };  delete newIcons[cat]
+    const newColors = { ...categoryColors }; delete newColors[cat]
+    await onUpdate({ custom_categories: newCustom, category_icons: newIcons, category_colors: newColors })
+    await supabase.from('payments').update({ category: 'Otros' }).eq('user_id', profile.id).eq('category', cat)
+    showToast(`${t('settingsCategories.toast.deletedPrefix')} "${cat}" ${t('settingsCategories.toast.deletedSuffix')}`)
+    setDeleting(false)
     onClose()
   }
 
@@ -197,6 +215,24 @@ export function CategoryFormModal({ open, onClose, editingCat = null, profile, o
           {saving ? t('settingsCategories.saving') : t('buttons.save')}
         </button>
         <button onClick={onClose} className="btn-ghost">{t('buttons.cancel')}</button>
+
+        {editingCat?.isCustom && (confirmingDelete ? (
+          <div className={styles.deleteConfirmBox}>
+            <div className={styles.confirmText}>
+              {t('settingsCategories.deleteConfirmPrefix')} "{editingCat.name}"{t('settingsCategories.deleteConfirmSuffix')}
+            </div>
+            <div className={styles.confirmButtonsRow}>
+              <button onClick={() => setConfirmingDelete(false)} className={styles.confirmCancelButton}>{t('buttons.cancel')}</button>
+              <button onClick={handleDelete} disabled={deleting} className={styles.confirmDeleteButton}>
+                {deleting ? t('settingsCategories.deleting') : t('buttons.delete')}
+              </button>
+            </div>
+          </div>
+        ) : (
+          <button onClick={() => setConfirmingDelete(true)} className={styles.deleteCategoryButton}>
+            {t('settingsCategories.deleteCategory')}
+          </button>
+        ))}
       </div>
     </div>
   )

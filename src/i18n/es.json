@@ -255,6 +255,7 @@
     "saving": "Guardando…",
     "deleteConfirmPrefix": "¿Eliminar",
     "deleteConfirmSuffix": "? Los pagos ya registrados con esta categoría se reasignarán a \"Otros\".",
+    "deleteCategory": "Eliminar categoría",
     "deleting": "Eliminando…",
     "toast": {
       "emptyName": "Escribe un nombre",
