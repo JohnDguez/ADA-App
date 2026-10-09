@@ -718,8 +718,7 @@
       "amountPerPayment": "Amount per payment",
       "totalPayments": "Total payments",
       "totalPaymentsPlaceholder": "e.g. 20",
-      "nextPaymentDate": "Next payment date",
-      "newCategoryTitle": "New category"
+      "nextPaymentDate": "Next payment date"
     },
     "tabs": {
       "single": "One-time",

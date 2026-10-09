@@ -1,19 +1,18 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import i18n from '../../i18n'
-import { Plus, Check, Search, Trash2, Pencil } from 'lucide-react'
+import { Plus, Trash2, Pencil } from 'lucide-react'
 // Ícono del encabezado vía Phosphor Icons (mismo patrón que Exportar/Cuenta,
 // v0.9.442-446) — import directo al archivo del ícono para tree-shaking real.
 import { Tag } from '@phosphor-icons/react/dist/csr/Tag'
 import { PageHero } from '../../components/PageHero'
 import { CATEGORIES, getCatColor, getCategoryLabel } from '../../lib/utils'
-import { CATEGORY_ICON_GROUPS, getCategoryIcon, getIconComponent } from '../../lib/categoryIcons'
+import { getCategoryIcon } from '../../lib/categoryIcons'
 import { showToast } from '../../components/Toast'
 import { supabase } from '../../lib/supabase'
 import { Card } from '../../components/SettingsShared'
+import { CategoryFormModal } from '../../components/CategoryFormModal'
 import styles from './SettingsCategoriesPage.module.css'
-
-const PALETTE = Array.from({ length: 16 }, (_, i) => `var(--palette-${i + 1})`)
 
 // Sub-página "Categorías" dentro de Ajustes — fase 3: modal completo
 // (nombre + ícono + color) para agregar y editar cualquier categoría.
@@ -33,12 +32,6 @@ export function SettingsCategoriesPage({ profile, onUpdate, onBack, slideClass }
   const { t } = useTranslation()
   const [modalOpen,   setModalOpen]   = useState(false)
   const [editingCat,  setEditingCat]  = useState(null) // { name, isCustom } | null (null = agregar nueva)
-  const [formName,    setFormName]    = useState('')
-  const [formIcon,    setFormIcon]    = useState('')
-  const [formColor,   setFormColor]   = useState('')
-  const [iconSearch,  setIconSearch]  = useState('')
-  const [nameError,   setNameError]   = useState('')
-  const [saving,      setSaving]      = useState(false)
   const [confirmDeleteCat, setConfirmDeleteCat] = useState(null) // nombre de la categoría personalizada a confirmar, o null
   const [deleting,    setDeleting]    = useState(false)
 
@@ -65,62 +58,12 @@ export function SettingsCategoriesPage({ profile, onUpdate, onBack, slideClass }
 
   function openEdit(cat, isCustom) {
     setEditingCat({ name: cat, isCustom })
-    setFormName(cat)
-    setFormIcon(categoryIcons[cat] || '')
-    setFormColor(getCatColor(cat, customCats, categoryColors))
-    setIconSearch(''); setNameError('')
     setModalOpen(true)
   }
 
   function openAdd() {
     setEditingCat(null)
-    setFormName(''); setFormIcon(''); setFormColor(PALETTE[0])
-    setIconSearch(''); setNameError('')
     setModalOpen(true)
-  }
-
-  async function handleSave() {
-    const trimmed = formName.trim()
-    if (!trimmed) { setNameError(t('settingsCategories.toast.emptyName')); return }
-
-    const oldName  = editingCat?.name
-    const isNew    = !editingCat
-    const isRename = editingCat?.isCustom && trimmed !== oldName
-
-    const others = [...CATEGORIES, ...customCats].filter(c => c !== oldName)
-    if (others.some(c => c.toLowerCase() === trimmed.toLowerCase())) {
-      setNameError(t('settingsCategories.toast.duplicateName')); return
-    }
-
-    setSaving(true)
-
-    const updates = {}
-    if (isNew)    updates.custom_categories = [...customCats, trimmed]
-    if (isRename) updates.custom_categories = customCats.map(c => c === oldName ? trimmed : c)
-
-    const newIcons = { ...categoryIcons }
-    if (oldName && oldName !== trimmed && newIcons[oldName]) { newIcons[trimmed] = newIcons[oldName]; delete newIcons[oldName] }
-    if (formIcon) newIcons[trimmed] = formIcon
-    updates.category_icons = newIcons
-
-    const newColors = { ...categoryColors }
-    if (oldName && oldName !== trimmed && newColors[oldName]) { newColors[trimmed] = newColors[oldName]; delete newColors[oldName] }
-    if (formColor) newColors[trimmed] = formColor
-    updates.category_colors = newColors
-
-    await onUpdate(updates)
-
-    if (isRename) {
-      await supabase.from('payments').update({ category: trimmed }).eq('user_id', profile.id).eq('category', oldName)
-      showToast(`${t('settingsCategories.toast.renamedPrefix')} "${trimmed}"`)
-    } else if (isNew) {
-      showToast(`"${trimmed}" ${t('settingsCategories.toast.addedSuffix')}`)
-    } else {
-      showToast(t('settingsCategories.toast.updated'))
-    }
-
-    setSaving(false)
-    setModalOpen(false)
   }
 
   // Eliminar categoría personalizada — las 11 fijas nunca pasan por aquí
@@ -191,11 +134,6 @@ export function SettingsCategoriesPage({ profile, onUpdate, onBack, slideClass }
     )
   }
 
-  const search = iconSearch.trim().toLowerCase()
-  const filteredGroups = CATEGORY_ICON_GROUPS
-    .map(g => ({ ...g, icons: search ? g.icons.filter(i => i.label.toLowerCase().includes(search)) : g.icons }))
-    .filter(g => g.icons.length > 0)
-
   return (
     <>
       <div className={`${slideClass} ${styles.pageWrapper}`}>
@@ -227,108 +165,13 @@ export function SettingsCategoriesPage({ profile, onUpdate, onBack, slideClass }
         </button>
       </div>
 
-      {modalOpen && (
-        <div onClick={e => e.target === e.currentTarget && setModalOpen(false)} className={styles.overlay}>
-          <div className={styles.modalPanel}>
-            <div className={styles.handle} />
-            <div className={styles.modalTitle}>
-              {editingCat ? t('settingsCategories.addModalTitleEdit') : t('settingsCategories.addModalTitleNew')}
-            </div>
-
-            {/* Nombre */}
-            <div className={styles.fieldGroup}>
-              <label className="field-label">{t('settingsCategories.nameLabel')}</label>
-              {editingCat && !editingCat.isCustom ? (
-                <>
-                  <div className={`field-input ${styles.readonlyField}`}>{getCategoryLabel(formName)}</div>
-                  <div className={styles.helperText}>
-                    {t('settingsCategories.nameReadonlyHelper')}
-                  </div>
-                </>
-              ) : (
-                <input
-                  autoFocus
-                  className={`field-input ${styles.inputMt4}`}
-                  value={formName}
-                  onChange={e => { setFormName(e.target.value); setNameError('') }}
-                  placeholder={t('settingsCategories.namePlaceholder')}
-                />
-              )}
-              {nameError && <div className={styles.errorText}>{nameError}</div>}
-            </div>
-
-            {/* Ícono */}
-            <div className={styles.fieldGroup}>
-              <label className={`field-label ${styles.label}`}>{t('settingsCategories.iconLabel')}</label>
-              <div className={styles.searchWrapper}>
-                <div className={styles.searchIcon}>
-                  <Search size={14} color="var(--text)" />
-                </div>
-                <input
-                  value={iconSearch}
-                  onChange={e => setIconSearch(e.target.value)}
-                  placeholder={t('settingsCategories.iconSearchPlaceholder')}
-                  className={`field-input ${styles.searchInput}`}
-                />
-              </div>
-
-              <div className={styles.iconGroupsContainer}>
-                {filteredGroups.map(group => (
-                  <div key={group.label} className={styles.iconGroup}>
-                    <div className={styles.iconGroupLabel}>
-                      {group.label}
-                    </div>
-                    <div className={styles.iconGrid}>
-                      {group.icons.map(({ name, label }) => {
-                        const Icon = getIconComponent(name)
-                        const selected = formIcon === name
-                        return (
-                          <button
-                            key={name}
-                            title={label}
-                            onClick={() => setFormIcon(name)}
-                            className={`${styles.iconButton} ${selected ? styles.iconButtonSelected : ''}`}
-                          >
-                            <Icon size={16} color={selected ? 'var(--surface)' : 'var(--text)'} />
-                          </button>
-                        )
-                      })}
-                    </div>
-                  </div>
-                ))}
-                {filteredGroups.length === 0 && (
-                  <div className={styles.noResultsText}>{t('settingsCategories.noIconResults', { search: iconSearch })}</div>
-                )}
-              </div>
-            </div>
-
-            {/* Color */}
-            <div className={styles.colorFieldGroup}>
-              <label className={`field-label ${styles.label}`}>{t('settingsCategories.colorLabel')}</label>
-              <div className={styles.colorGrid}>
-                {PALETTE.map(color => {
-                  const selected = formColor === color
-                  return (
-                    <button
-                      key={color}
-                      onClick={() => setFormColor(color)}
-                      className={`${styles.colorSwatch} ${selected ? styles.colorSwatchSelected : ''}`}
-                      style={{ background: color }}
-                    >
-                      {selected && <Check size={13} color="var(--surface)" strokeWidth={3} />}
-                    </button>
-                  )
-                })}
-              </div>
-            </div>
-
-            <button onClick={handleSave} disabled={saving} className={`btn-primary ${styles.saveButton}`}>
-              {saving ? t('settingsCategories.saving') : t('buttons.save')}
-            </button>
-            <button onClick={() => setModalOpen(false)} className="btn-ghost">{t('buttons.cancel')}</button>
-          </div>
-        </div>
-      )}
+      <CategoryFormModal
+        open={modalOpen}
+        onClose={() => setModalOpen(false)}
+        editingCat={editingCat}
+        profile={profile}
+        onUpdate={onUpdate}
+      />
     </>
   )
 }

@@ -21,7 +21,7 @@ import { nextCutAfter } from '../lib/cardStatements'
 import { DatePicker } from './DatePicker'
 import AmountInput, { CentsAmountInput } from './AmountInput'
 import { Collapse } from './Collapse'
-import { AddCategoryModal } from './AddCategoryModal'
+import { CategoryFormModal } from './CategoryFormModal'
 import { getCurrencySymbol } from '../lib/currency'
 import styles from './PaymentModal.module.css'
 import { markBackHandled, wasBackHandled } from '../lib/backNav'
@@ -32,7 +32,7 @@ import { parseVoicePayment } from '../lib/parseVoicePayment'
 import { isTicketScanSupported, scanTicketText } from '../lib/ticketScan'
 import { parseTicketText } from '../lib/parseTicket'
 
-export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onSaveCardPlan, onDelete, onEditMaster, initial, payments, profile, spacePermissions, isSharedSpace = false, customCategories = [], onAddCategory, onOpenPremium, paymentMethods = null, prefill = null, autoStart = null }) {
+export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onSaveCardPlan, onDelete, onEditMaster, initial, payments, profile, spacePermissions, isSharedSpace = false, customCategories = [], onUpdateProfile, onOpenPremium, paymentMethods = null, prefill = null, autoStart = null }) {
   const { t } = useTranslation()
   const [mode,               setMode]               = useState('single')
   const [name,               setName]               = useState('')
@@ -466,11 +466,12 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onSaveC
     }
   }
 
-  // Hoja "Nueva categoría" (v0.9.610) — se monta en cada return del formulario.
-  const addCategorySheet = (
-    <AddCategoryModal open={addingCategory} onClose={() => setAddingCategory(false)}
-      customCategories={customCategories} onAdd={cat => onAddCategory?.(cat)} onAdded={setCategory} />
-  )
+  // Modal completo "Agregar categoría" (nombre + ícono + color), el mismo de
+  // Ajustes → Categorías (v0.9.611). Se monta en cada return del formulario.
+  const addCategorySheet = profile && onUpdateProfile ? (
+    <CategoryFormModal open={addingCategory} onClose={() => setAddingCategory(false)}
+      profile={profile} onUpdate={onUpdateProfile} onSaved={setCategory} zIndex={450} />
+  ) : null
 
   // Cambiar de tipo conserva lo común (nombre, categoría, monto, fecha, método);
   // lo propio de cada tipo queda guardado en su estado y vuelve si se regresa.

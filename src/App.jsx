@@ -1829,9 +1829,7 @@ export default function App() {
         paymentMethods={paymentMethods}
         customCategories={profile.custom_categories || []}
         onOpenPremium={() => openPremiumPage(false)}
-        onAddCategory={async (cat) => {
-          await updateProfile({ custom_categories: [...(profile.custom_categories || []), cat] })
-        }}
+        onUpdateProfile={updateProfile}
       />
       <VariableAmountModal
         open={varModal.open}

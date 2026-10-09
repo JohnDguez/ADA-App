@@ -718,8 +718,7 @@
       "amountPerPayment": "Monto por pago",
       "totalPayments": "Total de pagos",
       "totalPaymentsPlaceholder": "Ej. 20",
-      "nextPaymentDate": "Fecha del próximo pago",
-      "newCategoryTitle": "Nueva categoría"
+      "nextPaymentDate": "Fecha del próximo pago"
     },
     "tabs": {
       "single": "Pago único",
