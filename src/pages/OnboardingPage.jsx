@@ -7,6 +7,7 @@ import { supabase } from '../lib/supabase'
 import { usePushNotifications } from '../hooks/usePushNotifications'
 import AmountInput from '../components/AmountInput'
 import { CurrencySelect } from '../components/CurrencySelect'
+import { getCurrencySymbol } from '../lib/currency'
 import styles from './OnboardingPage.module.css'
 
 // illustrationSize / illustrationBottom / bodyPaddingTop: mismos defaults
@@ -100,7 +101,7 @@ export function OnboardingPage({ userId, onDone }) {
       .upsert({ id: userId, ...updates }, { onConflict: 'id' })
       .select().single()
     setSaving(false)
-    if (!error) onDone(data)
+    if (!error) { window.scrollTo(0, 0); onDone(data) }
     else setFinishError(t('onboardingPage.finishError'))
   }
 
@@ -124,7 +125,7 @@ export function OnboardingPage({ userId, onDone }) {
       if (!name.trim()) { setNameError(t('onboardingPage.step1.nameError')); return }
       setNameError('')
     }
-    if (step === 2) {
+    if (step === 3) {
       if (!currency) { setCurrencyError(t('currency.onbError')); return }
       setCurrencyError('')
     }
@@ -184,10 +185,6 @@ export function OnboardingPage({ userId, onDone }) {
             <>
               <h2 className={styles.title}>{t('onboardingPage.step2.title')}</h2>
               <p className={styles.desc}>{t('onboardingPage.step2.desc')}</p>
-
-              <label className="field-label">{t('currency.onbLabel')}</label>
-              <CurrencySelect value={currency} onChange={v => { setCurrency(v); setCurrencyError('') }} />
-              {currencyError ? <div className={styles.errorText}>{currencyError}</div> : <p className={styles.desc}>{t('currency.onbHint')}</p>}
 
               <label className="field-label">{t('settingsCobro.frequencyLabel')}</label>
               <div className={styles.chipRow}>
@@ -307,6 +304,10 @@ export function OnboardingPage({ userId, onDone }) {
             <>
               <h2 className={styles.title}>{t('onboardingPage.step3.title')}</h2>
               <p className={styles.desc}>{t('onboardingPage.step3.desc')}</p>
+              <label className="field-label">{t('currency.onbLabel')}</label>
+              <CurrencySelect value={currency} onChange={v => { setCurrency(v); setCurrencyError('') }} />
+              {currencyError ? <div className={styles.errorText}>{currencyError}</div> : <p className={styles.desc}>{t('currency.onbHint')}</p>}
+
               <div onClick={() => setSalaryEnabled(v => !v)} className={styles.toggleRow}>
                 <div>
                   <div className={styles.toggleLabel}>{t('onboardingPage.step3.toggleLabel')}</div>
@@ -320,7 +321,7 @@ export function OnboardingPage({ userId, onDone }) {
                 <div>
                   <label className="field-label">{t('onboardingPage.step3.amountLabel')}</label>
                   <div className={styles.amountWrap}>
-                    <span className={styles.currencyPrefix}>$</span>
+                    <span className={styles.currencyPrefix}>{getCurrencySymbol(currency || undefined) ?? '$'}</span>
                     <AmountInput
                       autoFocus value={salaryAmount}
                       onChange={e => setSalaryAmount(e.target.value)}

@@ -617,6 +617,15 @@ export default function App() {
   exitOpenRef.current = exitConfirmOpen
   const applyTabRef = useRef(null)
   const navReady = !!user && !authLoading && !profileLoading && !!profile?.onboarding_completed
+  // Al salir del onboarding hacia Home el scroll debe arrancar arriba (regla
+  // de toda la app): el scroll que se dio en el onboarding no debe heredarse.
+  const onboardingDone = !!profile?.onboarding_completed
+  useEffect(() => {
+    if (!onboardingDone) return
+    window.scrollTo(0, 0)
+    const id = requestAnimationFrame(() => window.scrollTo(0, 0))
+    return () => cancelAnimationFrame(id)
+  }, [onboardingDone])
   const navReadyRef = useRef(false)
   navReadyRef.current = navReady
 

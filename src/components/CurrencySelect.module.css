@@ -1,0 +1,13 @@
+/* El disparador del Select (clase global .field-input) usa el mismo fondo que
+   la página y se confundía con texto suelto. Aquí se vuelve un control claro:
+   fondo de superficie, aro de acento (box-shadow, sin borde) y texto firme. */
+.wrap :global(.field-input) {
+  background: var(--surface);
+  border-color: transparent;
+  box-shadow: 0 0 0 1.5px var(--accent);
+  font-weight: 500;
+  padding: 12px 14px;
+}
+.wrap :global(.field-input):focus {
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}

@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next'
 import { Select } from './Select'
+import styles from './CurrencySelect.module.css'
 import { CURRENCIES, CURRENCY_CODES } from '../lib/currency'
 
 // Selector de moneda (hoja inferior). Reutilizado en el onboarding, en
@@ -12,6 +13,7 @@ export function CurrencySelect({ value, onChange, sheetTitle }) {
     label: `${t(`currency.names.${code}`)} (${CURRENCIES[code].code})`,
   }))
   return (
+    <div className={styles.wrap}>
     <Select
       value={value || ''}
       onChange={onChange}
@@ -20,5 +22,6 @@ export function CurrencySelect({ value, onChange, sheetTitle }) {
       sheet
       sheetTitle={sheetTitle || t('currency.sheetTitle')}
     />
+    </div>
   )
 }
