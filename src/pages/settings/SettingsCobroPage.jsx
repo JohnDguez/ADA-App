@@ -3,11 +3,12 @@ import { useTranslation } from 'react-i18next'
 // Ícono del encabezado vía Phosphor Icons (mismo patrón que las demás
 // sub-páginas ya migradas, v0.9.442-447) — import directo para tree-shaking real.
 import { Wallet } from '@phosphor-icons/react/dist/csr/Wallet'
+import { CalendarDots } from '@phosphor-icons/react/dist/csr/CalendarDots'
 import { PageHero } from '../../components/PageHero'
-import { getWeekdaysShort } from '../../lib/utils'
+import { getWeekdaysShort, nextCobroDate } from '../../lib/utils'
 import { showToast } from '../../components/Toast'
-import { Card, SectionLabel, Toggle } from '../../components/SettingsShared'
-import { CurrencySelect } from '../../components/CurrencySelect'
+import { Card, Row, SectionLabel, Toggle } from '../../components/SettingsShared'
+import { CurrencySheet } from '../../components/CurrencySheet'
 import AmountInput from '../../components/AmountInput'
 import { getCurrency } from '../../lib/currency'
 import styles from './SettingsCobroPage.module.css'
@@ -22,7 +23,8 @@ const BIWEEKLY_PRESETS = [
 // Día(s) de cobro, Moneda, e Ingreso por periodo. Antes vivía todo esto
 // mezclado directo en SettingsPage.jsx, en dos secciones separadas.
 export function SettingsCobroPage({ profile, onUpdate, onBack, slideClass }) {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
+  const [currencyOpen, setCurrencyOpen] = useState(false)
   const symbol = getCurrency(profile).symbol
   const [salaryAmount,   setSalaryAmount]   = useState(profile.salary_amount || '')
   const [biweeklyCustom, setBiweeklyCustom] = useState(() => {
@@ -36,11 +38,29 @@ export function SettingsCobroPage({ profile, onUpdate, onBack, slideClass }) {
   async function handleFreq(freq)   { await onUpdate({ cobro_freq: freq }) }
   async function handleWeekday(day) { await onUpdate({ cobro_weekday: day }) }
   async function handleSalaryToggle() { await onUpdate({ salary_enabled: !profile.salary_enabled }) }
-  async function handleSalaryAmount() {
+  async function handleMonthlyDay(day) { await onUpdate({ cobro_day1: day }) }
+  // v0.9.624 — el monto se guarda al salir del campo (sin botón), y solo si
+  // cambió; si quedó vacío/inválido se restaura el último valor guardado.
+  async function handleSalaryBlur() {
     const val = parseFloat(salaryAmount)
-    if (isNaN(val)) { showToast(t('settingsCobro.toast.invalidAmount')); return }
+    if (isNaN(val)) {
+      setSalaryAmount(profile.salary_amount || '')
+      showToast(t('settingsCobro.toast.invalidAmount'))
+      return
+    }
+    if (val === Number(profile.salary_amount)) return
     await onUpdate({ salary_amount: val }); showToast(t('settingsCobro.toast.salaryUpdated'))
   }
+  async function handleCurrency(code) {
+    setCurrencyOpen(false)
+    if (code === profile.currency) return
+    await onUpdate({ currency: code }); showToast(t('settingsCobro.toast.currencyUpdated'))
+  }
+
+  const nextPayday = nextCobroDate(profile).toLocaleDateString(
+    i18n.language?.startsWith('en') ? 'en-US' : 'es-MX',
+    { weekday: 'short', day: 'numeric', month: 'short' },
+  )
 
   return (
     <div className={`${slideClass} ${styles.pageWrapper}`}>
@@ -110,23 +130,28 @@ export function SettingsCobroPage({ profile, onUpdate, onBack, slideClass }) {
         )}
 
         {profile.cobro_freq === 'monthly' && (
-          <div className={styles.subSection}>
+          <div className={`${styles.subSection} ${styles.subSectionLast}`}>
             <div className={styles.subLabelMb8}>{t('settingsCobro.payDayLabel')}</div>
-            <input type="number" min="1" max="31" defaultValue={profile.cobro_day1 ?? 1} onBlur={e => onUpdate({ cobro_day1: parseInt(e.target.value) || 1 })} placeholder={t('settingsCobro.monthlyPlaceholder')} className={`field-input ${styles.monthlyDayInput}`} />
-            {profile.cobro_day1 && (
-              <div className={styles.monthlyHelperText}>
-                {t('settingsCobro.monthlyHelperPrefix')} <strong>{profile.cobro_day1}</strong> {t('settingsCobro.monthlyHelperSuffix')}
-              </div>
-            )}
+            <div className={styles.dayGrid}>
+              {Array.from({ length: 31 }, (_, i) => i + 1).map(d => (
+                <button key={d} onClick={() => handleMonthlyDay(d)}
+                  className={`${styles.dayButton} ${(profile.cobro_day1 ?? 1) === d ? styles.dayButtonActive : ''}`}>
+                  {d}
+                </button>
+              ))}
+            </div>
+            <div className={styles.monthlyHelperText}>
+              {t('settingsCobro.monthlyHelperPrefix')} <strong>{profile.cobro_day1 ?? 1}</strong> {t('settingsCobro.monthlyHelperSuffix')}
+              {(profile.cobro_day1 ?? 1) >= 29 && ` ${t('settingsCobro.monthShortHint')}`}
+            </div>
           </div>
         )}
-
-        <div className={styles.subSection}>
-          <div className={styles.subLabelMb8}>{t('settingsCobro.currencyLabel')}</div>
-          <CurrencySelect value={profile.currency} onChange={v => { onUpdate({ currency: v }); showToast(t('settingsCobro.toast.currencyUpdated')) }} />
-          <div className={styles.monthlyHelperText}>{t('currency.noConvertHint')}</div>
-        </div>
       </Card>
+
+      <div className={styles.nextPayday}>
+        <CalendarDots size={16} aria-hidden="true" />
+        <span>{t('settingsCobro.nextPayday', { date: nextPayday })}</span>
+      </div>
 
       {/* Ingreso */}
       <SectionLabel>{t('settingsCobro.incomeSection')}</SectionLabel>
@@ -142,17 +167,22 @@ export function SettingsCobroPage({ profile, onUpdate, onBack, slideClass }) {
         </div>
         {profile.salary_enabled && (
           <div className={styles.amountSection}>
-            <label className="field-label">{t('settingsCobro.amountLabel')}</label>
-            <div className={styles.amountRow}>
-              <div className={`${styles.amountField} ${symbol.length >= 3 ? styles.amountFieldLong : symbol.length === 2 ? styles.amountFieldMid : ''}`}>
-                <span className={styles.amountPrefix}>{symbol}</span>
-                <AmountInput value={salaryAmount} onChange={e => setSalaryAmount(e.target.value)} placeholder="0.00" className={`field-input ${styles.amountInput}`} />
-              </div>
-              <button onClick={handleSalaryAmount} className={`btn-primary ${styles.amountSaveButton}`}>{t('buttons.save')}</button>
+            <div className={`${styles.amountField} ${symbol.length >= 3 ? styles.amountFieldLong : symbol.length === 2 ? styles.amountFieldMid : ''}`}>
+              <span className={styles.amountPrefix}>{symbol}</span>
+              <AmountInput value={salaryAmount} onChange={e => setSalaryAmount(e.target.value)} onBlur={handleSalaryBlur} aria-label={t('settingsCobro.amountLabel')} placeholder="0.00" className={`field-input ${styles.amountInput}`} />
             </div>
+            <div className={styles.monthlyHelperText}>{t('settingsCobro.amountAutoSaveHint')}</div>
           </div>
         )}
       </Card>
+
+      {/* Moneda — ajuste que casi no cambia: fila con hoja, no campo ancho */}
+      <SectionLabel>{t('settingsCobro.currencySection')}</SectionLabel>
+      <Card>
+        <Row label={t('settingsCobro.currencyLabel')} value={profile.currency} onClick={() => setCurrencyOpen(true)} last />
+      </Card>
+      <div className={`${styles.monthlyHelperText} ${styles.currencyHint}`}>{t('currency.noConvertHint')}</div>
+      <CurrencySheet open={currencyOpen} onClose={() => setCurrencyOpen(false)} value={profile.currency} onSelect={handleCurrency} />
     </div>
   )
 }

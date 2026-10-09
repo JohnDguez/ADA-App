@@ -203,6 +203,10 @@
       "salaryUpdated": "Salario actualizado",
       "currencyUpdated": "Moneda actualizada"
     },
+        "nextPayday": "Próximo cobro: {{date}}",
+    "amountAutoSaveHint": "Se guarda al salir del campo.",
+    "monthShortHint": "En meses con menos días, se usa el último día del mes.",
+    "currencySection": "Moneda",
     "dayPair": "{{d1}} y {{d2}}"
   },
   "settingsNotifications": {

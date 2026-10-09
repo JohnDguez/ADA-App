@@ -14,6 +14,11 @@
   border-bottom: 0.5px solid var(--border);
 }
 
+.subSection:last-child,
+.subSectionLast {
+  border-bottom: none;
+}
+
 .subLabelMb10 {
   font-size: 13px;
   font-weight: 600;
@@ -122,9 +127,47 @@
   margin-bottom: 4px;
 }
 
-/* ── Día de cobro mensual ─────────────────────────────────────────────────── */
-.monthlyDayInput {
-  max-width: 120px;
+/* ── Día de cobro mensual (cuadrícula 1–31, v0.9.624) ─────────────────────── */
+.dayGrid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.dayButton {
+  height: 36px;
+  border-radius: 5px;
+  border: none;
+  background: var(--bg);
+  color: var(--text);
+  font-weight: 400;
+  font-size: 13px;
+  font-family: 'DM Sans', sans-serif;
+  cursor: pointer;
+}
+
+.dayButtonActive {
+  background: var(--accent);
+  color: var(--surface);
+  font-weight: 600;
+}
+
+/* Próxima fecha de cobro — confirma el efecto de lo elegido arriba. */
+.nextPayday {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 8px 16px 0;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  color: var(--accent);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.currencyHint {
+  margin: 6px 20px 0;
 }
 
 .monthlyHelperText {
@@ -168,12 +211,6 @@
   padding: 13px 14px;
 }
 
-.amountRow {
-  display: flex;
-  gap: 8px;
-  margin-top: 4px;
-}
-
 .amountField {
   position: relative;
   flex: 1;
@@ -200,7 +237,3 @@
 .amountFieldLong :global(.field-input).amountInput { padding-left: 46px; }
 .amountFieldMid  :global(.field-input).amountInput { padding-left: 38px; }
 
-:global(.btn-primary).amountSaveButton {
-  width: auto;
-  padding: 0 16px;
-}

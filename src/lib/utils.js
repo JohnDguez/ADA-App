@@ -170,6 +170,14 @@ export function fmt(n) {
   return sign + getCurrencySymbol() + Math.abs(num).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 }
 export function addDays(date, n)   { const d = new Date(date); d.setDate(d.getDate() + n); return d }
+// Fecha (año, mes, día) con el día ajustado al último del mes si no existe
+// (v0.9.624): día 31 en febrero/abril... daba el 3 de marzo/1 de mayo con
+// `new Date(y, m, 31)`, lo que corría los periodos de cobro.
+export function clampedDate(y, m, d) {
+  const first = new Date(y, m, 1) // JS normaliza meses fuera de rango (m = -1, 12...)
+  const dim = new Date(first.getFullYear(), first.getMonth() + 1, 0).getDate()
+  return new Date(first.getFullYear(), first.getMonth(), Math.min(d, dim))
+}
 export function addMonths(date, n) { const d = new Date(date); d.setMonth(d.getMonth() + n); return d }
 
 export function nextPeriodDate(date, freq) {
@@ -279,22 +287,24 @@ export function cobroPeriod(cfg, refDate) {
     const [dayA, dayB] = d1 < d2 ? [d1, d2] : [d2, d1]
     const y = t.getFullYear(); const m = t.getMonth()
     const cobroDates = [
-      new Date(y, m-1, dayA), new Date(y, m-1, dayB),
-      new Date(y, m,   dayA), new Date(y, m,   dayB),
-      new Date(y, m+1, dayA), new Date(y, m+1, dayB),
+      clampedDate(y, m-1, dayA), clampedDate(y, m-1, dayB),
+      clampedDate(y, m,   dayA), clampedDate(y, m,   dayB),
+      clampedDate(y, m+1, dayA), clampedDate(y, m+1, dayB),
     ]
     const past   = cobroDates.filter(d => d <= t).sort((a,b) => b-a)
     const future = cobroDates.filter(d => d > t).sort((a,b) => a-b)
-    const start     = past[0]   || new Date(y, m, dayA)
-    const nextCobro = future[0] || new Date(y, m+1, dayA)
+    const start     = past[0]   || clampedDate(y, m, dayA)
+    const nextCobro = future[0] || clampedDate(y, m+1, dayA)
     return { start, end: addDays(nextCobro, -1), nextCobro }
   }
   if (cfg.cobro_freq === 'monthly') {
     const d1 = cfg.cobro_day1 ?? 1; const y = t.getFullYear(); const m = t.getMonth()
     const day = t.getDate()
     let start, nextCobro
-    if (day >= d1) { start = new Date(y, m, d1);   nextCobro = new Date(y, m+1, d1) }
-    else           { start = new Date(y, m-1, d1);  nextCobro = new Date(y, m, d1) }
+    // El día de cobro de ESTE mes ya ajustado (31 → 30/28 en meses cortos).
+    const thisCobro = clampedDate(y, m, d1)
+    if (day >= thisCobro.getDate()) { start = thisCobro;                nextCobro = clampedDate(y, m+1, d1) }
+    else                            { start = clampedDate(y, m-1, d1);  nextCobro = thisCobro }
     return { start, end: addDays(nextCobro, -1), nextCobro }
   }
   return { start: t, end: t, nextCobro: t }
@@ -310,7 +320,7 @@ export function nextCobroPeriod(cfg) {
 
   if (freq === 'monthly') {
     const d1 = cfg.cobro_day1 ?? 1
-    const nextNext = new Date(nextStart.getFullYear(), nextStart.getMonth() + 1, d1)
+    const nextNext = clampedDate(nextStart.getFullYear(), nextStart.getMonth() + 1, d1)
     return { start: nextStart, end: addDays(nextNext, -1) }
   }
 
@@ -319,10 +329,10 @@ export function nextCobroPeriod(cfg) {
   const [dayA, dayB] = d1 < d2 ? [d1, d2] : [d2, d1]
   const y = nextStart.getFullYear(); const m = nextStart.getMonth()
   const cobroDates = [
-    new Date(y, m-1, dayA), new Date(y, m-1, dayB),
-    new Date(y, m,   dayA), new Date(y, m,   dayB),
-    new Date(y, m+1, dayA), new Date(y, m+1, dayB),
-    new Date(y, m+2, dayA),
+    clampedDate(y, m-1, dayA), clampedDate(y, m-1, dayB),
+    clampedDate(y, m,   dayA), clampedDate(y, m,   dayB),
+    clampedDate(y, m+1, dayA), clampedDate(y, m+1, dayB),
+    clampedDate(y, m+2, dayA),
   ]
   const future = cobroDates.filter(d => d > nextStart).sort((a,b) => a-b)
   const nextNext = future[0] || addDays(nextStart, 15)
