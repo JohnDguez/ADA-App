@@ -58,13 +58,13 @@
   /* v0.9.634 — franja esmerilada de todo el alto: tinte del tema + desenfoque,
      y una máscara de izquierda a derecha que los desvanece juntos (la
      máscara también recorta el backdrop-filter). Sustituye a la pastilla de
-     v0.9.633. Ajustes: 45% = tinte, 8px = desenfoque, 50%/100% = dónde
+     v0.9.633. Ajustes: 45% = tinte, 8px = desenfoque, 30%/70% = dónde
      empieza/termina el desvanecido. */
   background: color-mix(in srgb, var(--bg) 45%, transparent);
   -webkit-backdrop-filter: blur(8px);
   backdrop-filter: blur(8px);
-  -webkit-mask-image: linear-gradient(to right, #000 0%, #000 50%, transparent 100%);
-  mask-image: linear-gradient(to right, #000 0%, #000 50%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to right, #000 0%, #000 30%, transparent 70%);
+  mask-image: linear-gradient(to right, #000 0%, #000 30%, transparent 70%);
   pointer-events: none;
   z-index: 0;
 }
