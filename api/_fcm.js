@@ -90,9 +90,22 @@ async function sendFcm(tokens, { title, body, url, tag }) {
   const firebaseApp = getFirebaseApp()
   if (!firebaseApp) return { sent: 0, invalidTokens: [], errors: [{ code: 'no-firebase-key', message: 'FIREBASE_SERVICE_ACCOUNT_KEY ausente o inválida' }] }
 
+  // Cada aviso lleva su PROPIO tag de notificación Android (y su propia
+  // collapse key): sin ellos, varios avisos enviados seguidos al mismo
+  // dispositivo pueden terminar reemplazándose entre sí y solo se ve el último
+  // (reporte de Johnatan, v0.9.601: la PWA mostraba 4 avisos y la app solo el
+  // último, el del espacio compartido). Mismo criterio que el `tag` único por
+  // aviso de Web Push (ver sw.js). Con el mismo tag en días distintos, el aviso
+  // de hoy sí reemplaza al de ayer, que es lo deseado.
+  const androidTag = (tag || `lunapay-${Date.now()}`).slice(0, 100)
   const message = {
     notification: { title, body },
     data: { url: url || '/', tag: tag || '' },
+    android: {
+      priority: 'high',
+      collapseKey: androidTag,
+      notification: { tag: androidTag },
+    },
     tokens,
   }
 
