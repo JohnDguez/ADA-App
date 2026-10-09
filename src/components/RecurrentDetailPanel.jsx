@@ -5,6 +5,7 @@ import { getCategoryIcon } from '../lib/categoryIcons'
 import { fmt, dateOf, getFrequencyLabel, getCategoryLabel, getCatColor, getMonthsShort, installmentUntrackedCount } from '../lib/utils'
 import { supabase } from '../lib/supabase'
 import styles from './RecurrentDetailPanel.module.css'
+import { useScrollLock } from '../lib/scrollLock'
 
 function fmtDateFull(value) {
   const d = new Date(value)
@@ -39,6 +40,7 @@ export function RecurrentDetailPanel({
   const { t } = useTranslation()
   const [menuOpen, setMenuOpen] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
+  useScrollLock(menuOpen)
   const menuRef = useRef(null)
 
   useEffect(() => {

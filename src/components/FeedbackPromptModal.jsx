@@ -1,6 +1,8 @@
 import { useTranslation } from 'react-i18next'
 import { MessageCircle, Crown, ExternalLink } from 'lucide-react'
 import styles from './FeedbackPromptModal.module.css'
+import { usePresence } from '../lib/usePresence'
+import { useScrollLock } from '../lib/scrollLock'
 
 // Popup que invita a los probadores alpha a dejar feedback (Jotform) a
 // cambio de 3 meses de Premium gratis. Se dispara desde App.jsx: primera
@@ -13,11 +15,13 @@ import styles from './FeedbackPromptModal.module.css'
 // cierre silencioso — así nunca queda sin re-agendar el siguiente intento.
 export function FeedbackPromptModal({ open, onGiveFeedback, onRemindLater }) {
   const { t } = useTranslation()
-  if (!open) return null
+  const { render, closing } = usePresence(open)
+  useScrollLock(open)
+  if (!render) return null
 
   return (
-    <div onClick={onRemindLater} className={styles.overlay}>
-      <div onClick={e => e.stopPropagation()} className={styles.panel}>
+    <div onClick={onRemindLater} className={styles.overlay} data-presence="overlay" data-closing={closing ? '' : undefined}>
+      <div onClick={e => e.stopPropagation()} className={styles.panel} data-presence="panel" data-closing={closing ? '' : undefined}>
         <div className={styles.handle} />
 
         <div className={styles.iconCircle}>

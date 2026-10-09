@@ -13,6 +13,7 @@ import { Card, Row, SectionLabel } from '../../components/SettingsShared'
 import i18n, { resolveLanguage, LANGUAGE_STORAGE_KEY } from '../../i18n'
 import { apiUrl } from '../../lib/apiUrl'
 import styles from './SettingsAccountPage.module.css'
+import { Presence } from '../../components/Presence'
 
 // Sub-página "Cuenta" dentro de Ajustes: Nombre, Correo/Google, Contraseña,
 // Idioma, y la zona de peligro (Eliminar mis datos / Eliminar mi cuenta).
@@ -53,12 +54,6 @@ export function SettingsAccountPage({ profile, user, onUpdate, onDataDeleted, on
     { id: 'es',     label: t('settingsAccount.languageModal.spanish') },
     { id: 'en',     label: t('settingsAccount.languageModal.english') },
   ]
-
-  useEffect(() => {
-    if (dangerModal || editSection) document.body.classList.add('modal-open')
-    else                            document.body.classList.remove('modal-open')
-    return () => document.body.classList.remove('modal-open')
-  }, [dangerModal, editSection])
 
   async function verifyCurrentPassword(password) {
     const email = user?.email
@@ -232,7 +227,7 @@ export function SettingsAccountPage({ profile, user, onUpdate, onDataDeleted, on
         </Card>
       </div>
 
-      {dangerModal && (
+      <Presence show={!!dangerModal}>{() => (
         <div onClick={e => e.target === e.currentTarget && setDangerModal(null)} className={styles.dangerOverlay}>
           <div className={styles.modalPanel}>
             <div className={styles.handle} />
@@ -277,9 +272,9 @@ export function SettingsAccountPage({ profile, user, onUpdate, onDataDeleted, on
             <button onClick={() => { setDangerModal(null); setDangerPassword('') }} className="btn-ghost">{t('buttons.cancel')}</button>
           </div>
         </div>
-      )}
+      )}</Presence>
 
-      {editSection && (
+      <Presence show={!!editSection}>{() => (
         <div onClick={e => e.target === e.currentTarget && setEditSection(null)} className={styles.editOverlay}>
           <div className={styles.modalPanel}>
             <div className={styles.handle} />
@@ -375,7 +370,7 @@ export function SettingsAccountPage({ profile, user, onUpdate, onDataDeleted, on
             <button onClick={() => setEditSection(null)} className="btn-ghost">{t('buttons.cancel')}</button>
           </div>
         </div>
-      )}
+      )}</Presence>
     </>
   )
 }

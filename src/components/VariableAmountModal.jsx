@@ -30,12 +30,6 @@ export function VariableAmountModal({ open, payment, mode = 'pay', spacePermissi
   }, [open, payment])
 
   useEffect(() => {
-    if (open) document.body.classList.add('modal-open')
-    else document.body.classList.remove('modal-open')
-    return () => document.body.classList.remove('modal-open')
-  }, [open])
-
-  useEffect(() => {
     if (!open) return
     const handler = () => {
       markBackHandled()
@@ -55,11 +49,11 @@ export function VariableAmountModal({ open, payment, mode = 'pay', spacePermissi
     onConfirm(val)
   }
 
-  if (!open || !payment) return null
+  if (!payment) return null
 
   return (
     <>
-      <ModalSheet icon={Coins} title={mode === 'estimate' ? t('variableAmountModal.titleEstimate') : t('variableAmountModal.titlePay')} onBackdrop={requestClose} zIndex={250}>
+      <ModalSheet open={open} icon={Coins} title={mode === 'estimate' ? t('variableAmountModal.titleEstimate') : t('variableAmountModal.titlePay')} onBackdrop={requestClose} zIndex={250}>
         <div>
           <ModalSheet.Text>
             {payment.name} — {mode === 'estimate' ? t('variableAmountModal.descriptionEstimate') : t('variableAmountModal.descriptionPay')}

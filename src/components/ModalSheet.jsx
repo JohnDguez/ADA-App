@@ -1,3 +1,5 @@
+import { usePresence } from '../lib/usePresence'
+import { useScrollLock } from '../lib/scrollLock'
 import { useTranslation } from 'react-i18next'
 import styles from './ModalSheet.module.css'
 
@@ -13,10 +15,16 @@ import styles from './ModalSheet.module.css'
 //   </ModalSheet>
 //
 // tone: 'accent' (azul, por defecto) | 'danger' (rojo, acciones destructivas).
-export function ModalSheet({ icon: Icon, tone = 'accent', title, onBackdrop, children, zIndex, pulse = false }) {
+export function ModalSheet({ icon: Icon, tone = 'accent', title, onBackdrop, children, zIndex, pulse = false, open = true }) {
   const { t } = useTranslation()
+  // `open` (default true): con false se anima la salida y luego se desmonta;
+  // así el padre puede dejarla siempre montada y solo cambiar `open`.
+  const { render, closing } = usePresence(open)
+  useScrollLock(open)
+  if (!render) return null
   return (
     <div className={styles.overlay} style={zIndex ? { zIndex } : undefined}
+      data-presence="overlay" data-closing={closing ? '' : undefined}
       onClick={e => e.target === e.currentTarget && onBackdrop?.()}>
       <div className={styles.waves} aria-hidden="true">
         <svg viewBox="0 0 340 240" preserveAspectRatio="none">
@@ -37,7 +45,7 @@ export function ModalSheet({ icon: Icon, tone = 'accent', title, onBackdrop, chi
           <path d="M-20 120 C 60 40,150 120,230 60 S 320 30,370 70" fill="none" stroke="url(#sheetWaveA)" strokeWidth="14" strokeLinecap="round" opacity=".6" />
         </svg>
       </div>
-      <div className={styles.sheet} role="dialog" aria-modal="true" aria-label={title || t('buttons.close', { defaultValue: '' })}>
+      <div className={styles.sheet} data-presence="panel" data-closing={closing ? '' : undefined} role="dialog" aria-modal="true" aria-label={title || t('buttons.close', { defaultValue: '' })}>
         <div className={styles.handle} />
         {Icon && (
           <div className={`${styles.icon} ${tone === 'danger' ? styles.iconDanger : ''} ${pulse ? styles.iconPulse : ''}`}>

@@ -6,6 +6,7 @@ import { useBackClose } from '../lib/backNav'
 import { intlLocale } from '../lib/utils'
 import premium from '../pages/PremiumPage.module.css'
 import styles from './PremiumThanksModal.module.css'
+import { useScrollLock } from '../lib/scrollLock'
 
 // Misma curva que el hero de PremiumPage.jsx (duplicada a propósito: es solo
 // un string SVG).
@@ -23,6 +24,7 @@ function formatDueDate(str) {
 export function PremiumThanksModal({ info, onClose, onAddPayment }) {
   const { t } = useTranslation()
   useBackClose(!!info, onClose)
+  useScrollLock(!!info)
   if (!info) return null
 
   return (

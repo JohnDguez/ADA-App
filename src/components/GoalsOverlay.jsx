@@ -9,6 +9,7 @@ import { GoalDetailPanel } from './GoalDetailPanel'
 import { GoalFormModal } from './GoalFormModal'
 import styles from './GoalsOverlay.module.css'
 import { markBackHandled } from '../lib/backNav'
+import { useScrollLock } from '../lib/scrollLock'
 
 // Debe coincidir con la duración de `.overlayClosing` en el .module.css
 // (Regla 30, "JS/CSS timing sync") — mismo patrón que PANEL_ANIM_MS en
@@ -62,11 +63,8 @@ export function GoalsOverlay({ open, goalsData, isPremium, onClose, onOpenPremiu
     wasOpenRef.current = open
   }, [open])
 
-  useEffect(() => {
-    if (open) { document.body.classList.add('modal-open'); setSelectedGoalId(null) }
-    else document.body.classList.remove('modal-open')
-    return () => document.body.classList.remove('modal-open')
-  }, [open])
+  useEffect(() => { if (open) setSelectedGoalId(null) }, [open])
+  useScrollLock(open)
 
   // Botón/gesto "atrás" del teléfono — mismo patrón que VariableAmountModal:
   // primero cierra lo más "interno" (el form, luego el detalle) antes de

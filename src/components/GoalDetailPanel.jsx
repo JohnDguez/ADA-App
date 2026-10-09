@@ -9,6 +9,7 @@ import AmountInput from './AmountInput'
 import { PaymentMethodField } from './PaymentMethodField'
 import { AddCardModal } from './AddCardModal'
 import styles from './GoalDetailPanel.module.css'
+import { useScrollLock } from '../lib/scrollLock'
 
 function fmtDate(iso) {
   const d = new Date(iso)
@@ -28,6 +29,7 @@ export function GoalDetailPanel({
 }) {
   const { t } = useTranslation()
   const [menuOpen, setMenuOpen] = useState(false)
+  useScrollLock(menuOpen)
   const [activeAction, setActiveAction] = useState(null) // null | 'aportar' | 'retirar'
   const [amount, setAmount] = useState('')
   // "Se paga con" al aportar (de dónde sale el dinero: efectivo o tarjeta).

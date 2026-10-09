@@ -31,9 +31,16 @@ import { isVoiceSupported, listenOnce, stopListening } from '../lib/voiceInput'
 import { parseVoicePayment } from '../lib/parseVoicePayment'
 import { isTicketScanSupported, scanTicketText } from '../lib/ticketScan'
 import { parseTicketText } from '../lib/parseTicket'
+import { usePresence } from '../lib/usePresence'
+import { useScrollLock } from '../lib/scrollLock'
 
-export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onSaveCardPlan, onDelete, onEditMaster, initial, payments, profile, spacePermissions, isSharedSpace = false, customCategories = [], onUpdateProfile, onOpenPremium, paymentMethods = null, prefill = null, autoStart = null }) {
+export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onSaveCardPlan, onDelete, onEditMaster, initial: initialProp, payments, profile, spacePermissions, isSharedSpace = false, customCategories = [], onUpdateProfile, onOpenPremium, paymentMethods = null, prefill = null, autoStart = null }) {
   const { t } = useTranslation()
+  // Durante la animación de salida se conserva el pago que se estaba editando
+  // (el padre ya pudo limpiarlo) para que el formulario no cambie de forma.
+  const lastInitialRef = useRef(null)
+  if (open) lastInitialRef.current = initialProp
+  const initial = open ? initialProp : lastInitialRef.current
   const [mode,               setMode]               = useState('single')
   const [name,               setName]               = useState('')
   const [amount,             setAmount]             = useState('')
@@ -130,11 +137,9 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onSaveC
     ? t('paymentsPage.blockedAction', { action: initial ? t('paymentsPage.actionEditPayments') : t('paymentsPage.actionAddPayments') })
     : null
 
-  useEffect(() => {
-    if (open) document.body.classList.add('modal-open')
-    else      document.body.classList.remove('modal-open')
-    return () => document.body.classList.remove('modal-open')
-  }, [open])
+  // Entrada/salida animada y fondo sin scroll (reglas de superposiciones).
+  const { render, closing } = usePresence(open)
+  useScrollLock(open)
 
   const dirtyRef = useRef(false)
   useEffect(() => {
@@ -487,7 +492,7 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onSaveC
     setMode(m); setStep(1); setTypeChosen(true)
   }
 
-  if (!open) return null
+  if (!render) return null
 
   const showDatePicker     = mode === 'single' || (mode === 'installment' && !linked) || (mode === 'recurrent' && monthBasedFreqs.includes(recurFreq))
   const showWeekdayPicker  = mode === 'recurrent' && recurFreq === 'weekly'
@@ -560,8 +565,8 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onSaveC
     return (
       <>
         {addCategorySheet}
-        <div onClick={e => e.target === e.currentTarget && onClose()} className={styles.overlay}>
-          <div className={styles.panel}>
+        <div onClick={e => e.target === e.currentTarget && onClose()} className={styles.overlay} data-presence="overlay" data-closing={closing ? '' : undefined}>
+          <div className={styles.panel} data-presence="panel" data-closing={closing ? '' : undefined}>
             <div className={styles.handle} />
 
             {/* Contexto */}
@@ -663,8 +668,8 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onSaveC
 
     return (
       <>
-        <div onClick={e => e.target === e.currentTarget && onClose()} className={styles.overlay}>
-          <div className={styles.panel}>
+        <div onClick={e => e.target === e.currentTarget && onClose()} className={styles.overlay} data-presence="overlay" data-closing={closing ? '' : undefined}>
+          <div className={styles.panel} data-presence="panel" data-closing={closing ? '' : undefined}>
             <div className={styles.handle} />
 
             <div className={styles.modalTitle}>{t('paymentModal.editCopy.title')}</div>
@@ -733,8 +738,8 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onSaveC
     ]
     return (
       <>
-        <div onClick={e => e.target === e.currentTarget && requestClose()} className={styles.overlay}>
-          <div className={styles.panel}>
+        <div onClick={e => e.target === e.currentTarget && requestClose()} className={styles.overlay} data-presence="overlay" data-closing={closing ? '' : undefined}>
+          <div className={styles.panel} data-presence="panel" data-closing={closing ? '' : undefined}>
             <div className={styles.handle} />
             <div className={styles.modalTitle}>{t('paymentModal.typePicker.title')}</div>
             <div className={styles.typePickerSub}>{t('paymentModal.typePicker.subtitle')}</div>
@@ -758,8 +763,8 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onSaveC
 
   return (
     <>
-      <div onClick={e => e.target === e.currentTarget && requestClose()} className={styles.overlay}>
-        <div className={styles.panel}>
+      <div onClick={e => e.target === e.currentTarget && requestClose()} className={styles.overlay} data-presence="overlay" data-closing={closing ? '' : undefined}>
+        <div className={styles.panel} data-presence="panel" data-closing={closing ? '' : undefined}>
           <div className={styles.handle} />
 
           {!initial && (
@@ -1103,8 +1108,8 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onSaveC
       </div>
       {addCategorySheet}
       <ConfirmCloseModal open={confirmClose} onConfirm={() => { setConfirmClose(false); onClose() }} onCancel={() => setConfirmClose(false)} />
-      {(voiceState === 'listening' || voiceState === 'retry') && (
-        <ModalSheet icon={Microphone} pulse={voiceState === 'listening'} title={t(voiceState === 'retry' ? 'paymentModal.voice.retryTitle' : 'paymentModal.voice.listeningTitle')} onBackdrop={cancelVoice} zIndex={450}>
+      {(
+        <ModalSheet open={voiceState === 'listening' || voiceState === 'retry'} icon={Microphone} pulse={voiceState === 'listening'} title={t(voiceState === 'retry' ? 'paymentModal.voice.retryTitle' : 'paymentModal.voice.listeningTitle')} onBackdrop={cancelVoice} zIndex={450}>
           <ModalSheet.Text>{t(voiceState === 'retry' ? 'paymentModal.voice.retryHint' : 'paymentModal.voice.listeningHint')}</ModalSheet.Text>
           <div className={styles.voiceExamples}>
             {(voiceLang === 'en' ? ['helpEn1', 'helpEn3'] : ['helpEs1', 'helpEs3']).map(k => <div key={k}>{t(`paymentModal.voice.${k}`)}</div>)}
@@ -1115,8 +1120,8 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onSaveC
           <button type="button" onClick={toggleVoiceLang} className={styles.voiceLangLink}>{t('paymentModal.voice.langLabel')}: <strong>{voiceLang === 'es' ? 'Español' : 'English'}</strong></button>
         </ModalSheet>
       )}
-      {farPrompt && (
-        <ModalSheet icon={ArrowsClockwise} title={t('paymentModal.farPrompt.title')} onBackdrop={() => setFarPrompt(false)} zIndex={400}>
+      {(
+        <ModalSheet open={farPrompt} icon={ArrowsClockwise} title={t('paymentModal.farPrompt.title')} onBackdrop={() => setFarPrompt(false)} zIndex={400}>
           <ModalSheet.Text>{t('paymentModal.farPrompt.text', { date: formatDueDate(dueDate) })}</ModalSheet.Text>
           <SheetButton onClick={() => { setFarPrompt(false); selectType('recurrent') }}>{t('paymentModal.farPrompt.yes')}</SheetButton>
           <SheetButton variant="soft" onClick={() => { farOkRef.current = true; setFarPrompt(false); handleSave() }}>{t('paymentModal.farPrompt.no')}</SheetButton>

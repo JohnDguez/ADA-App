@@ -9,6 +9,7 @@ import { PaidByStack } from './PaidByStack'
 import { getBank, bankColorVar } from '../lib/cardCatalog'
 import { ConfirmDeleteModal } from './ConfirmDeleteModal'
 import styles from './PayCard.module.css'
+import { useScrollLock } from '../lib/scrollLock'
 
 // statusInfo() no es un componente — usa el singleton i18n.t(), mismo
 // criterio que greeting()/timeAgo()/getCategoryLabel() en otros archivos.
@@ -106,6 +107,7 @@ function PayCardImpl({ payment: p, cfg, paymentMethodsList = [], onChangeMethod,
   const [checkMenuOpen,    setCheckMenuOpen]    = useState(false)
   const checkMenuRef = useRef(null)
   const [checkMenuPos, setCheckMenuPos] = useState(null)
+  useScrollLock(menuOpen || checkMenuOpen)
 
   // Fases de la animación de "marcar como pagado":
   // idle → filling → (waitingModal solo si es variable) → labeled → exiting

@@ -5,6 +5,8 @@ import { ConfirmCloseModal } from './ConfirmCloseModal'
 import AmountInput from './AmountInput'
 import styles from './InstallmentAbonarModal.module.css'
 import { markBackHandled } from '../lib/backNav'
+import { usePresence } from '../lib/usePresence'
+import { useScrollLock } from '../lib/scrollLock'
 
 // Reemplaza el flujo de "Editar" para una copia individual de parcialidad —
 // nombre/monto de referencia/total de pagos ahora solo se editan desde el
@@ -34,11 +36,8 @@ export function InstallmentAbonarModal({ open, payment, payments, spacePermissio
     if (payment?.amount) setAmount(String(payment.amount))
   }, [open, payment])
 
-  useEffect(() => {
-    if (open) document.body.classList.add('modal-open')
-    else document.body.classList.remove('modal-open')
-    return () => document.body.classList.remove('modal-open')
-  }, [open])
+  const { render, closing } = usePresence(open)
+  useScrollLock(open)
 
   useEffect(() => {
     if (!open) return
@@ -60,7 +59,7 @@ export function InstallmentAbonarModal({ open, payment, payments, spacePermissio
     onConfirm(val)
   }
 
-  if (!open || !payment || !master) return null
+  if (!render || !payment || !master) return null
 
   const montoRef = Number(master.amount)
   const totalAmount = master.total_amount != null ? Number(master.total_amount) : montoRef * master.total_installments
@@ -111,8 +110,8 @@ export function InstallmentAbonarModal({ open, payment, payments, spacePermissio
 
   return (
     <>
-      <div onClick={e => e.target === e.currentTarget && requestClose()} className={styles.overlay}>
-        <div className={styles.modal}>
+      <div onClick={e => e.target === e.currentTarget && requestClose()} className={styles.overlay} data-presence="overlay" data-closing={closing ? '' : undefined}>
+        <div className={styles.modal} data-presence="panel" data-closing={closing ? '' : undefined}>
           <div className={styles.handle} />
           <div className={styles.headerRow}>
             <span className={styles.title}>{t('installmentAbonarModal.title')}</span>

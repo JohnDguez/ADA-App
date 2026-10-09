@@ -18,6 +18,8 @@ import { PaymentMethodField } from '../components/PaymentMethodField'
 import { AddCardModal } from '../components/AddCardModal'
 import styles from './PaymentsPage.module.css'
 import { useScrollTop } from '../hooks/useScrollTop'
+import { Presence } from '../components/Presence'
+import { useScrollLock } from '../lib/scrollLock'
 
 const INCOME_TYPES = ['Bono', 'Préstamo', 'Pago', 'Comisión', 'Otro']
 
@@ -202,6 +204,7 @@ export function PaymentsPage({ payments, dataLoading = false, periodIncome, paym
     if (viewMode === 'mes' && ensureMonthLoaded) ensureMonthLoaded(viewMonth, viewYear)
   }, [viewMode, viewMonth, viewYear, ensureMonthLoaded])
   const [openMenu,    setOpenMenu]    = useState(null)
+  useScrollLock(!!openMenu)
   // { payment, direct } | null — `direct` distingue el caso "ya pagado, se
   // borra directo con deletePayment" (onDeleteDirect) del genérico que
   // decide App.jsx según el tipo de pago (onDelete/handleDeleteDirect).
@@ -341,15 +344,7 @@ export function PaymentsPage({ payments, dataLoading = false, periodIncome, paym
   // inconsistente.
   const paidPayments = useMemo(() => payments.filter(p => p.is_paid || p.is_postponed), [payments])
 
-  // ── Bloquear scroll cuando hay modal abierto ──────────────────────────────
-  useEffect(() => {
-    if (incomeModal || remModal || manageIncomeModal || addFundModal || manageFundModal) {
-      document.body.classList.add('modal-open')
-    } else {
-      document.body.classList.remove('modal-open')
-    }
-    return () => document.body.classList.remove('modal-open')
-  }, [incomeModal, remModal, manageIncomeModal, addFundModal, manageFundModal])
+  // El fondo sin scroll lo resuelve <Presence> de cada modal (lib/scrollLock.js).
 
   // ── Verificar inicio de periodo — SOLO al abrir la página o cambiar de
   // espacio activo, nunca en cada edición de perfil. Bug real (Johnatan,
@@ -831,7 +826,7 @@ export function PaymentsPage({ payments, dataLoading = false, periodIncome, paym
       )}
 
       {/* ── Modal Remanente ── */}
-      {remModal && (
+      <Presence show={!!(remModal)}>{() => (
         <div
           onClick={() => { setRemModal(false); setRemCustomOpen(false) }}
           className={styles.modalOverlayBottom}
@@ -903,10 +898,10 @@ export function PaymentsPage({ payments, dataLoading = false, periodIncome, paym
             )}
           </div>
         </div>
-      )}
+      )}</Presence>
 
       {/* ── Modal Añadir Ingreso ── */}
-      {incomeModal && (
+      <Presence show={!!(incomeModal)}>{() => (
         <div
           onClick={() => setIncomeModal(false)}
           className={styles.modalOverlayBottom}
@@ -974,10 +969,10 @@ export function PaymentsPage({ payments, dataLoading = false, periodIncome, paym
             </button>
           </div>
         </div>
-      )}
+      )}</Presence>
 
       {/* ── Modal Gestionar Ingresos Extras (editar / eliminar) ── */}
-      {manageIncomeModal && (
+      <Presence show={!!(manageIncomeModal)}>{() => (
         <div
           onClick={() => { setManageIncomeModal(false); cancelEditIncome(); setConfirmDeleteIncomeId(null) }}
           className={styles.modalOverlayBottom}
@@ -1086,10 +1081,10 @@ export function PaymentsPage({ payments, dataLoading = false, periodIncome, paym
             </button>
           </div>
         </div>
-      )}
+      )}</Presence>
 
       {/* ── Modal Añadir fondos ── */}
-      {addFundModal && (
+      <Presence show={!!(addFundModal)}>{() => (
         <div onClick={() => { setAddFundModal(false); setPersonalAvailable(null) }} className={styles.modalOverlayBottom}>
           <div onClick={e => e.stopPropagation()} className={styles.modalPanelBottom}>
             <div className={styles.manageModalTitle}>{t('paymentsPage.addFundModal.title')}</div>
@@ -1161,10 +1156,10 @@ export function PaymentsPage({ payments, dataLoading = false, periodIncome, paym
             )}
           </div>
         </div>
-      )}
+      )}</Presence>
 
       {/* ── Modal Gestionar Fondo (eliminar una aportación equivocada) ── */}
-      {manageFundModal && (
+      <Presence show={!!(manageFundModal)}>{() => (
         <div
           onClick={() => { setManageFundModal(false); setConfirmDeleteFundId(null) }}
           className={styles.modalOverlayBottom}
@@ -1209,7 +1204,7 @@ export function PaymentsPage({ payments, dataLoading = false, periodIncome, paym
             </button>
           </div>
         </div>
-      )}
+      )}</Presence>
 
       {/* v0.9.388 — mismo tratamiento que HomePage.jsx (v0.9.365): oculto
           desde 768px, ahí ya lo cubre NavRail.jsx (avatar, saludo,

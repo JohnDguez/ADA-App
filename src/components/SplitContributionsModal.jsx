@@ -6,6 +6,8 @@ import AmountInput from './AmountInput'
 import { PaymentMethodField } from './PaymentMethodField'
 import styles from './SplitContributionsModal.module.css'
 import { AvatarImg } from './AvatarImg'
+import { usePresence } from '../lib/usePresence'
+import { useScrollLock } from '../lib/scrollLock'
 
 // Registro de "quién puso cuánto" en un gasto del Espacio Compartido —
 // deliberadamente NO es un split planeado de antemano (montos fijos por
@@ -50,13 +52,9 @@ export function SplitContributionsModal({ open, payment, spaceMembers, currentUs
     })
   }, [open, payment?.id])
 
-  useEffect(() => {
-    if (open) document.body.classList.add('modal-open')
-    else document.body.classList.remove('modal-open')
-    return () => document.body.classList.remove('modal-open')
-  }, [open])
-
-  if (!open || !payment) return null
+  const { render, closing } = usePresence(open)
+  useScrollLock(open)
+  if (!render || !payment) return null
 
   async function handleSaveTotal() {
     const val = parseFloat(totalDraft)
@@ -156,8 +154,8 @@ export function SplitContributionsModal({ open, payment, spaceMembers, currentUs
   }
 
   return (
-    <div onClick={e => e.target === e.currentTarget && onClose()} className={styles.overlay}>
-      <div className={styles.modal}>
+    <div onClick={e => e.target === e.currentTarget && onClose()} className={styles.overlay} data-presence="overlay" data-closing={closing ? '' : undefined}>
+      <div className={styles.modal} data-presence="panel" data-closing={closing ? '' : undefined}>
         <div className={styles.handle} />
         <div className={styles.title}>{t('paymentsPage.menuSplit')}</div>
         <div className={styles.description}>{payment.name}</div>

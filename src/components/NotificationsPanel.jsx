@@ -5,6 +5,8 @@ import { AlertCircle, Clock, Bell, Trash2, CheckCheck, X, Goal, AlertTriangle, C
 import { getMonthsShort } from '../lib/utils'
 import styles from './NotificationsPanel.module.css'
 import { AvatarImg } from './AvatarImg'
+import { usePresence } from '../lib/usePresence'
+import { useScrollLock } from '../lib/scrollLock'
 
 // timeAgo() no es un componente — usa el singleton i18n.t() directo, mismo
 // criterio que greeting() en PageHeader.jsx.
@@ -46,21 +48,19 @@ function ActorAvatar({ name, avatarUrl }) {
 export function NotificationsPanel({ open, onClose, notifications, unreadCount, onMarkAsRead, onMarkAllAsRead, onDelete, onClearAll, onNavigate }) {
   const { t } = useTranslation()
 
-  // Bloquear scroll del body mientras el panel está abierto
-  useEffect(() => {
-    if (open) document.body.classList.add('modal-open')
-    else document.body.classList.remove('modal-open')
-    return () => document.body.classList.remove('modal-open')
-  }, [open])
+  // Fondo sin scroll + entrada/salida animada
+  const { render, closing } = usePresence(open)
+  useScrollLock(open)
 
-  if (!open) return null
+  if (!render) return null
 
   return (
     <div
       onClick={e => e.target === e.currentTarget && onClose()}
       className={styles.overlay}
+      data-presence="overlay" data-closing={closing ? '' : undefined}
     >
-      <div className={styles.panel}>
+      <div className={styles.panel} data-presence="panel" data-closing={closing ? '' : undefined}>
 
         {/* Header */}
         <div className={styles.header}>

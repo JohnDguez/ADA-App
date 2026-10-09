@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { fmt } from '../lib/utils'
 import styles from './DeleteGoalModal.module.css'
+import { useScrollLock } from '../lib/scrollLock'
 
 // Debe coincidir con la duración de las animaciones del .module.css.
 const ANIM_MS = 320
@@ -9,6 +10,7 @@ const ANIM_MS = 320
 // La resolución del dinero abonado SIEMPRE la elige el usuario aquí —
 // nunca se asume 'return' ni 'discard' desde ningún otro lugar del código.
 export function DeleteGoalModal({ open, goal, onCancel, onConfirm }) {
+  useScrollLock(open)
   const { t } = useTranslation()
   // Entrada Y salida (regla 29). El `wasOpenRef.current` de `showModal`
   // cubre el frame entre que `open` pasa a false y que el efecto marca

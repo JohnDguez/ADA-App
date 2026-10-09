@@ -4,6 +4,7 @@ import { createPortal } from 'react-dom'
 import { ChevronDown, Check, Search } from 'lucide-react'
 import { BottomSheet } from './BottomSheet'
 import styles from './Select.module.css'
+import { useScrollLock } from '../lib/scrollLock'
 
 // PANEL_ANIM_MS debe coincidir EXACTO con `animation-duration` de
 // `.panelDown`/`.panelUp` y `.panelClosing` en Select.module.css (Regla 30,
@@ -47,6 +48,7 @@ export function Select({ value, onChange, options, placeholder, renderIcon, sear
   // Mismo patrón que `PaidCollapseItemExiting` en HomePage.jsx/PayCard.jsx.
   const [closing, setClosing] = useState(false)
   const [dropUp, setDropUp] = useState(false)
+  useScrollLock(open && !sheet)
   // Bug real reportado por Johnatan (v0.9.255): dentro de un contenedor con
   // overflow (ej. el body scrolleable de PaymentModal.jsx), el panel
   // `position: absolute` se recortaba al abrir hacia arriba, aunque

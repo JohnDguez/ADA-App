@@ -5,6 +5,7 @@ import { CATEGORY_ICON_GROUPS, getIconComponent } from '../lib/categoryIcons'
 import { DatePicker } from './DatePicker'
 import AmountInput from './AmountInput'
 import styles from './GoalFormModal.module.css'
+import { useScrollLock } from '../lib/scrollLock'
 
 const PALETTE = Array.from({ length: 16 }, (_, i) => `var(--palette-${i + 1})`)
 const ANIM_MS = 320
@@ -13,6 +14,7 @@ const ANIM_MS = 320
 // null para crear, o el objeto de la meta para editar (mismo criterio que
 // el resto de modales de edición de la app, ej. PaymentModal).
 export function GoalFormModal({ open, initial, onSave, onClose }) {
+  useScrollLock(open)
   const { t } = useTranslation()
   const [name, setName] = useState('')
   const [notes, setNotes] = useState('')

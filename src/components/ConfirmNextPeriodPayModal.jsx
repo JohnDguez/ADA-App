@@ -16,11 +16,11 @@ import { CalendarCheck } from '@phosphor-icons/react/dist/csr/CalendarCheck'
 // de sí/no.
 export function ConfirmNextPeriodPayModal({ open, payment, onConfirm, onCancel }) {
   const { t } = useTranslation()
-  if (!open || !payment) return null
+  if (!payment) return null
   const d = dateOf(payment.due_date)
 
   return (
-    <ModalSheet icon={CalendarCheck} title={t('confirmNextPeriodPayModal.title')} onBackdrop={onCancel}>
+    <ModalSheet open={open} icon={CalendarCheck} title={t('confirmNextPeriodPayModal.title')} onBackdrop={onCancel}>
         <ModalSheet.Text>
           <strong>{payment.name}</strong> {t('confirmNextPeriodPayModal.descriptionPrefix', { day: d.getDate(), month: getMonths()[d.getMonth()] })} <strong>{t('confirmNextPeriodPayModal.nextPeriodPhrase')}</strong>. {t('confirmNextPeriodPayModal.descriptionSuffix')}
         </ModalSheet.Text>

@@ -16,6 +16,7 @@ import Logo from '../components/Logo'
 import { APP_NAME } from '../lib/constants'
 import { loadGoogleIdentityScript, generateNonce } from '../lib/googleAuth'
 import { isNativeAndroid, signInWithGoogleNative } from '../lib/nativeGoogleAuth'
+import { Presence } from '../components/Presence'
 
 // Misma curva que el borde inferior de cada "escena" de OnboardingPage.jsx y
 // del hero de PremiumPage.jsx (WAVE_PATH ahí) — pedido explícito de
@@ -697,7 +698,7 @@ export function AuthPage() {
         </div>
       )}
 
-      {showTerms && <TermsModal onClose={() => setShowTerms(false)} />}
+      <Presence show={showTerms}>{() => <TermsModal onClose={() => setShowTerms(false)} />}</Presence>
     </div>
   )
 }

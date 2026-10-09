@@ -9,6 +9,7 @@ import { getPlans, activePlansCount, nextCutPlansTotal } from '../lib/cardPlans'
 import { CardPlansPanel } from './CardPlansPanel'
 import { useBackClose } from '../lib/backNav'
 import styles from './CardDetailPanel.module.css'
+import { useScrollLock } from '../lib/scrollLock'
 
 // Barra segmentada de "Por pagar" (v0.9.587, variante A elegida por Johnatan): un
 // tramo por cada parte de lo que se debe (estado de cuenta, ciclo en curso, planes
@@ -46,6 +47,7 @@ function DebtBar({ debt, label }) {
 export function CardDetailPanel({ card, payments, onBack, onEdit, onDelete, onPayNow, onSettlePlan, onDeletePlan, spaceNames = {}, canEdit = true, canDelete = true, blocked }) {
   const { t } = useTranslation()
   const [menuOpen, setMenuOpen] = useState(false)
+  useScrollLock(menuOpen)
   const menuRef = useRef(null)
   // Pantalla aparte de compras a meses (v0.9.587)
   const [plansOpen, setPlansOpen] = useState(false)

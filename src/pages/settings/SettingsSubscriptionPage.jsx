@@ -12,6 +12,7 @@ import { apiUrl } from '../../lib/apiUrl'
 import { showToast } from '../../components/Toast'
 import { Card } from '../../components/SettingsShared'
 import styles from './SettingsSubscriptionPage.module.css'
+import { Presence } from '../../components/Presence'
 
 // Sub-página "Mi suscripción" dentro de Ajustes — solo alcanzable si
 // profile.is_premium (ver SettingsPage.jsx). A diferencia de otras
@@ -218,7 +219,7 @@ export function SettingsSubscriptionPage({ profile, onOpenPremium, onBack, slide
         </>
       )}
 
-      {confirmModal && (
+      <Presence show={!!(confirmModal)}>{() => (
         <div className={styles.modalOverlay}>
           <div className={styles.modal}>
             <div className={styles.modalTitle}>
@@ -244,7 +245,7 @@ export function SettingsSubscriptionPage({ profile, onOpenPremium, onBack, slide
             </button>
           </div>
         </div>
-      )}
+      )}</Presence>
     </div>
   )
 }

@@ -67,9 +67,8 @@ export function UpdatePrompt() {
     setOpen(false)
   }
 
-  if (!open) return null
   return (
-    <ModalSheet icon={ArrowCircleUp} title={t('updatePrompt.title')} onBackdrop={later}>
+    <ModalSheet open={open} icon={ArrowCircleUp} title={t('updatePrompt.title')} onBackdrop={later}>
       <ModalSheet.Text>{t('updatePrompt.description')}</ModalSheet.Text>
       <SheetButton onClick={update}>{t('updatePrompt.update')}</SheetButton>
       <SheetButton variant="soft" onClick={later}>{t('updatePrompt.later')}</SheetButton>

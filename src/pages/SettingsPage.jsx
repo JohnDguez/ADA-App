@@ -20,6 +20,7 @@ import { SettingsCardsPage } from './settings/SettingsCardsPage'
 import styles from './SettingsPage.module.css'
 import { markBackHandled, wasBackHandled } from '../lib/backNav'
 import { AvatarImg } from '../components/AvatarImg'
+import { Presence } from '../components/Presence'
 
 // Galería de avatares preestablecidos — imágenes estáticas servidas desde
 // public/avatars/ (Vite/Vercel las expone tal cual, sin pasar por Supabase
@@ -150,14 +151,6 @@ export function SettingsPage({ profile, user, onUpdate, onUploadAvatar, onDataDe
       // reemplaza esa entrada (ver pushTabEntry en lib/backNav.js).
     }
   }, [])
-
-  // Mismo patrón usado en SettingsAccountPage.jsx: bloquea el scroll del
-  // fondo mientras cualquier modal de avatar está abierto.
-  useEffect(() => {
-    if (avatarModal) document.body.classList.add('modal-open')
-    else              document.body.classList.remove('modal-open')
-    return () => document.body.classList.remove('modal-open')
-  }, [avatarModal])
 
   // Bug real reportado por Johnatan: al abrir una sub-página (ej. "Exportar
   // datos", hasta abajo del menú), se quedaba con el scroll que traía el
@@ -342,7 +335,7 @@ export function SettingsPage({ profile, user, onUpdate, onUploadAvatar, onDataDe
           SpaceSwitcher.jsx (v0.9.146): esta página vive dentro de un
           contenedor que crea su propio contexto de apilamiento CSS, así que
           ni un z-index alto le gana al BottomNav sin escapar de ese árbol. */}
-      {avatarModal === 'choice' && createPortal(
+      {createPortal(<Presence show={avatarModal === 'choice'}>{() => (
         <div onClick={e => e.target === e.currentTarget && setAvatarModal(null)} className={styles.modalOverlay}>
           <div className={styles.modalPanel}>
             <div className={styles.modalHandle} />
@@ -363,12 +356,12 @@ export function SettingsPage({ profile, user, onUpdate, onUploadAvatar, onDataDe
             </div>
             <button onClick={() => setAvatarModal(null)} className="btn-ghost">{t('buttons.cancel')}</button>
           </div>
-        </div>,
+        </div>)}</Presence>,
         document.body
       )}
 
       {/* Modal: galería de 8 avatares preestablecidos — mismo fix de createPortal */}
-      {avatarModal === 'gallery' && createPortal(
+      {createPortal(<Presence show={avatarModal === 'gallery'}>{() => (
         <div onClick={e => e.target === e.currentTarget && setAvatarModal(null)} className={styles.modalOverlay}>
           <div className={styles.modalPanel}>
             <div className={styles.modalHandle} />
@@ -388,7 +381,7 @@ export function SettingsPage({ profile, user, onUpdate, onUploadAvatar, onDataDe
             </div>
             <button onClick={() => setAvatarModal(null)} className="btn-ghost">{t('buttons.cancel')}</button>
           </div>
-        </div>,
+        </div>)}</Presence>,
         document.body
       )}
     </div>

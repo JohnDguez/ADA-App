@@ -7,6 +7,8 @@ import { showToast } from './Toast'
 import { supabase } from '../lib/supabase'
 import { useBackClose } from '../lib/backNav'
 import styles from '../pages/settings/SettingsCategoriesPage.module.css'
+import { usePresence } from '../lib/usePresence'
+import { useScrollLock } from '../lib/scrollLock'
 
 export const CATEGORY_PALETTE = Array.from({ length: 16 }, (_, i) => `var(--palette-${i + 1})`)
 
@@ -30,6 +32,8 @@ export function CategoryFormModal({ open, onClose, editingCat = null, profile, o
   const categoryColors = profile.category_colors || {}
 
   useBackClose(open, onClose)
+  const { render, closing } = usePresence(open)
+  useScrollLock(open)
 
   useEffect(() => {
     if (!open) return
@@ -44,7 +48,7 @@ export function CategoryFormModal({ open, onClose, editingCat = null, profile, o
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, editingCat])
 
-  if (!open) return null
+  if (!render) return null
 
   async function handleSave() {
     const trimmed = formName.trim()
@@ -97,8 +101,8 @@ export function CategoryFormModal({ open, onClose, editingCat = null, profile, o
     .filter(g => g.icons.length > 0)
 
   return (
-    <div onClick={e => e.target === e.currentTarget && onClose()} className={styles.overlay} style={zIndex ? { zIndex } : undefined}>
-      <div className={styles.modalPanel}>
+    <div onClick={e => e.target === e.currentTarget && onClose()} className={styles.overlay} style={zIndex ? { zIndex } : undefined} data-presence="overlay" data-closing={closing ? '' : undefined}>
+      <div className={styles.modalPanel} data-presence="panel" data-closing={closing ? '' : undefined}>
         <div className={styles.handle} />
         <div className={styles.modalTitle}>
           {editingCat ? t('settingsCategories.addModalTitleEdit') : t('settingsCategories.addModalTitleNew')}

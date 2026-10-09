@@ -540,6 +540,25 @@ body.modal-open {
   width: 100%;
 }
 
+/* ── Entrada/salida de superposiciones (modales, hojas, paneles) ───────────
+   Cada superposición lleva data-presence="overlay" (fondo) y "panel"
+   (contenido), y data-closing mientras sale (ver lib/usePresence.js).
+   Duraciones: salida = EXIT_MS (220 ms) de usePresence. */
+@keyframes presenceFadeIn  { from { opacity: 0; } to { opacity: 1; } }
+@keyframes presenceFadeOut { from { opacity: 1; } to { opacity: 0; } }
+@keyframes presenceSheetIn  { from { opacity: 0; transform: translateY(48px); } to { opacity: 1; transform: none; } }
+@keyframes presenceSheetOut { from { opacity: 1; transform: none; } to { opacity: 0; transform: translateY(48px); } }
+html [data-presence="overlay"] { animation: presenceFadeIn .22s ease both; }
+html [data-presence="overlay"][data-closing] { animation: presenceFadeOut .22s ease both; pointer-events: none; }
+html [data-presence="panel"] { animation: presenceSheetIn .3s cubic-bezier(0.22, 1, 0.36, 1) both; overscroll-behavior: contain; }
+html [data-presence="panel"][data-closing] { animation: presenceSheetOut .22s cubic-bezier(0.4, 0, 1, 1) both; }
+/* <Presence>: la raíz de lo envuelto (el fondo) se desvanece al entrar/salir. */
+html [data-presence-wrap] > * { animation: presenceFadeIn .22s ease both; }
+html [data-presence-wrap][data-closing] > * { animation: presenceFadeOut .22s ease both; pointer-events: none; }
+@media (prefers-reduced-motion: reduce) {
+  html [data-presence="overlay"], html [data-presence="panel"], html [data-presence-wrap] > * { animation-duration: 0.01ms; }
+}
+
 /* ── Transición entre páginas ─────────────────────────────────────────────── */
 @keyframes slideInRight {
   from { transform: translateX(100%); opacity: 0; }

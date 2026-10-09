@@ -12,6 +12,7 @@ import { StatsCardSkeleton, CategoryAccordionSkeleton } from '../components/Skel
 import styles from './RecurrentsPage.module.css'
 import { markBackHandled } from '../lib/backNav'
 import { useScrollTop } from '../hooks/useScrollTop'
+import { useScrollLock } from '../lib/scrollLock'
 
 function FilterChip({ label, active, onClick }) {
   return (
@@ -43,6 +44,7 @@ export function RecurrentsPage({ payments, dataLoading = false, profile, spaceSw
   const [expandedCats,    setExpandedCats]    = useState({})
   const [confirmDelete,   setConfirmDelete]   = useState(null)
   const [openMenu,        setOpenMenu]        = useState(null)
+  useScrollLock(!!openMenu)
   const [selectedMasterId, setSelectedMasterId] = useState(null)
   useScrollTop(selectedMasterId)
 

@@ -5,6 +5,8 @@ import { createPortal } from 'react-dom'
 import { MoreVertical, Pencil, Trash2, LogOut, Pin, UserRound, Crown, UsersRound, ChevronDown, ChevronUp, Plus, KeyRound } from 'lucide-react'
 import { showInviteCode } from './InviteCodeModal'
 import styles from './ActiveSpaceHeader.module.css'
+import { useScrollLock } from '../lib/scrollLock'
+import { Presence } from './Presence'
 
 // Encabezado del espacio activo — antes vivía DENTRO de SpaceSwitcher.jsx
 // como la "tarjeta al frente" del stack, en su propio contenedor separado
@@ -34,6 +36,7 @@ export function ActiveSpaceHeader({ activeSpaceId, sharedSpaces, onManage, onSwi
   // Mismo patrón de posicionamiento por portal que ya usa el menú "...".
   const [spaceListOpen, setSpaceListOpen] = useState(false)
   const [spaceListPos,  setSpaceListPos]  = useState(null)
+  useScrollLock(menuOpen || spaceListOpen)
   const headerRowRef = useRef(null)
   // v0.9.415 — REEMPLAZA el overlay transparente de v0.9.413 (no cerraba
   // de verdad, confirmado en vivo por Johnatan) por el MISMO patrón de
@@ -320,7 +323,7 @@ export function ActiveSpaceHeader({ activeSpaceId, sharedSpaces, onManage, onSwi
 
       {/* Portal — mismo motivo que el resto de los modales de esta función:
           escapa del contexto de apilamiento del contenedor de la página. */}
-      {dangerOpen && createPortal(
+      {createPortal(<Presence show={dangerOpen}>{() => (
         <div onClick={e => e.target === e.currentTarget && setDangerOpen(false)} className={styles.dangerOverlay}>
           <div className={styles.dangerPanel}>
             {isOwner ? (
@@ -363,7 +366,7 @@ export function ActiveSpaceHeader({ activeSpaceId, sharedSpaces, onManage, onSwi
             )}
             <button onClick={() => setDangerOpen(false)} className="btn-ghost">{t('buttons.cancel')}</button>
           </div>
-        </div>,
+        </div>)}</Presence>,
         document.body
       )}
     </div>

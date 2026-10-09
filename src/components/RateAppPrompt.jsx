@@ -74,9 +74,8 @@ export function RateAppPrompt({ blocked = false }) {
     }
   }
 
-  if (!visible) return null
   return (
-    <ModalSheet icon={Star} title={t('rateApp.title')} onBackdrop={later}>
+    <ModalSheet open={visible} icon={Star} title={t('rateApp.title')} onBackdrop={later}>
       <ModalSheet.Text>{t('rateApp.description')}</ModalSheet.Text>
       <SheetButton onClick={rate}>{t('rateApp.rate')}</SheetButton>
       <SheetButton variant="soft" onClick={later}>{t('rateApp.later')}</SheetButton>

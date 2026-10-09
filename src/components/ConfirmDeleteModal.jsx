@@ -18,9 +18,8 @@ import { Trash } from '@phosphor-icons/react/dist/csr/Trash'
 // "Eliminar pago", como en todos los usos que ya existían.
 export function ConfirmDeleteModal({ open, title, message, onConfirm, onCancel }) {
   const { t } = useTranslation()
-  if (!open) return null
   return (
-    <ModalSheet icon={Trash} tone="danger" title={title || t('paymentModal.deletePayment')} onBackdrop={onCancel} zIndex={400}>
+    <ModalSheet open={open} icon={Trash} tone="danger" title={title || t('paymentModal.deletePayment')} onBackdrop={onCancel} zIndex={400}>
       <ModalSheet.Text>{message}</ModalSheet.Text>
       <SheetButton variant="danger" onClick={onConfirm}>{t('buttons.delete')}</SheetButton>
       <SheetButton variant="soft" onClick={onCancel}>{t('buttons.cancel')}</SheetButton>

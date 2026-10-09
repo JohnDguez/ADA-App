@@ -5,6 +5,7 @@ import AmountInput from './AmountInput'
 import { PaymentMethodField } from './PaymentMethodField'
 import { fmt } from '../lib/utils'
 import styles from './PayCardNowModal.module.css'
+import { useScrollLock } from '../lib/scrollLock'
 
 // "Pagar ahora" (v0.9.497, mockups confirmados con Johnatan) — adelantar
 // el pago de una tarjeta de crédito ANTES de que llegue su corte, en vez
@@ -18,6 +19,7 @@ import styles from './PayCardNowModal.module.css'
 const ANIM_MS = 320
 
 export function PayCardNowModal({ open, card, cycleSpend, methods, onSave, onClose, title = null, subtitle = null, fixedAmount = false }) {
+  useScrollLock(open)
   const { t } = useTranslation()
   const [amount, setAmount] = useState('')
   const [methodId, setMethodId] = useState(null)

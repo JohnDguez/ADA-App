@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useBackClose } from '../lib/backNav'
 import styles from './BottomSheet.module.css'
+import { useScrollLock } from '../lib/scrollLock'
 
 // Hoja inferior reutilizable para los selectores del formulario de pago
 // (categoría, fecha, método). Mantiene el contenido montado el tiempo de la
@@ -12,6 +13,7 @@ const EXIT_MS = 200
 export function BottomSheet({ open, title, onClose, children }) {
   const [mounted, setMounted] = useState(open)
   useBackClose(open, () => onClose?.())
+  useScrollLock(open)
   useEffect(() => {
     if (open) { setMounted(true); return }
     const id = setTimeout(() => setMounted(false), EXIT_MS)

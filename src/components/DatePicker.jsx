@@ -4,6 +4,7 @@ import { Calendar, ChevronLeft, ChevronRight, ChevronUp, ChevronDown } from 'luc
 import { getMonths, getMonthsShort, getWeekdaysShort, dateOf, addMonths } from '../lib/utils'
 import { BottomSheet } from './BottomSheet'
 import styles from './DatePicker.module.css'
+import { useScrollLock } from '../lib/scrollLock'
 
 function toStr(d) {
   const y = d.getFullYear(), m = String(d.getMonth() + 1).padStart(2, '0'), day = String(d.getDate()).padStart(2, '0')
@@ -28,6 +29,7 @@ const PANEL_HEIGHT = 300
 export function DatePicker({ value, onChange, placeholder, sheet = false, sheetTitle = '' }) {
   const { t } = useTranslation()
   const [open, setOpen] = useState(false)
+  useScrollLock(open && !sheet)
   const [dropUp, setDropUp] = useState(false)
   const [mode, setMode] = useState('days') // 'days' | 'monthYear'
   const [viewDate, setViewDate] = useState(() => value ? dateOf(value) : new Date())

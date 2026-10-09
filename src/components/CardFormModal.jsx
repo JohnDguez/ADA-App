@@ -9,6 +9,7 @@ import { Select } from './Select'
 import { SegmentedControl as Segmented } from './SegmentedControl'
 import styles from './CardFormModal.module.css'
 import { markBackHandled } from '../lib/backNav'
+import { useScrollLock } from '../lib/scrollLock'
 
 // Alta/edición de una tarjeta (v0.9.486, mockups confirmados con Johnatan).
 // Arriba, la tarjeta en vivo: cambia de color con el banco, muestra alias,
@@ -21,6 +22,7 @@ const ANIM_MS = 320
 const EMPTY = { kind: 'credit', bank: null, alias: '', last4: '', network: 'visa', form: 'physical', cut_day: null, due_day: null }
 
 export function CardFormModal({ open, initial, onSave, onClose }) {
+  useScrollLock(open)
   const { t } = useTranslation()
   const [form, setForm] = useState(EMPTY)
   const [error, setError] = useState('')

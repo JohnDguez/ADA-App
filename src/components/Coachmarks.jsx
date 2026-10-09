@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useLayoutEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { getCoachmarkSteps } from '../lib/coachmarkSteps'
 import styles from './Coachmarks.module.css'
+import { useScrollLock } from '../lib/scrollLock'
 
 // Motor de coach marks: dado un `screenKey` (home, gastos, recurrentes,
 // perfil, nuevo-pago), busca sus pasos en COACHMARK_STEPS y, si el usuario
@@ -68,20 +69,7 @@ export function Coachmarks({ screenKey, profile, onUpdateProfile }) {
   // guardar el scrollY real antes de bloquear, correr el body hacia arriba
   // ese mismo tanto con `top: -Npx` (así se ve igual aunque esté fijo), y
   // al desbloquear restaurar el scroll real con window.scrollTo.
-  const savedScrollYRef = useRef(0)
-  useEffect(() => {
-    const active = !alreadySeen && !!rect
-    if (active) {
-      savedScrollYRef.current = window.scrollY
-      document.body.style.top = `-${savedScrollYRef.current}px`
-      document.body.classList.add('modal-open')
-    } else {
-      document.body.classList.remove('modal-open')
-      document.body.style.top = ''
-      window.scrollTo(0, savedScrollYRef.current)
-    }
-    return () => { document.body.classList.remove('modal-open'); document.body.style.top = '' }
-  }, [alreadySeen, rect])
+  useScrollLock(!alreadySeen && !!rect)
 
   // Ubica el elemento del paso actual. Espera SETTLE_DELAY antes del primer
   // intento (animaciones de entrada), y ya con eso reintenta por frame unos

@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom'
 import { useTranslation } from 'react-i18next'
 import { PaymentMethodField } from './PaymentMethodField'
 import styles from './ChangeMethodModal.module.css'
+import { useScrollLock } from '../lib/scrollLock'
 
 // "Cambiar método de pago" (v0.9.487) — desde el menú de 3 puntos de un
 // pago. Cambia SOLO ese pago (una copia de un recurrente no arrastra al
@@ -11,6 +12,7 @@ import styles from './ChangeMethodModal.module.css'
 const ANIM_MS = 320
 
 export function ChangeMethodModal({ open, payment, methods, onSave, onClose, title, confirmLabel }) {
+  useScrollLock(open)
   const { t } = useTranslation()
   const [methodId, setMethodId] = useState(null)
   const [closing, setClosing] = useState(false)

@@ -11,6 +11,7 @@ import { showToast } from '../../components/Toast'
 import { getFrequencyLabel } from '../../lib/utils'
 import styles from './SettingsSharedSpacePage.module.css'
 import { AvatarImg } from '../../components/AvatarImg'
+import { Presence } from '../../components/Presence'
 
 // Sub-página de Ajustes → "Espacio Compartido". Sirve para 2 casos a la vez,
 // para no duplicar el formulario de crear/unirse en otro lugar (ej. la
@@ -463,7 +464,7 @@ function OwnedSpacePanel({ entry, user, regenerateCode, updateMemberPermissions,
         )}
       </div>
 
-      {dangerOpen && (
+      <Presence show={!!(dangerOpen)}>{() => (
         <div onClick={e => e.target === e.currentTarget && setDangerOpen(false)} className={styles.deleteModalOverlay}>
           <div className={styles.deleteModalSheet}>
             <div className={styles.deleteModalTitle}>{t('activeSpaceHeader.deleteModal.title')}</div>
@@ -488,7 +489,7 @@ function OwnedSpacePanel({ entry, user, regenerateCode, updateMemberPermissions,
             <button onClick={() => { setDangerOpen(false); setDangerPassword('') }} className="btn-ghost">{t('buttons.cancel')}</button>
           </div>
         </div>
-      )}
+      )}</Presence>
     </>
   )
 }

@@ -15,6 +15,7 @@ import { isAndroidBilling, restorePurchases, purchasePremium, initPlayBilling } 
 import { getPremiumSource } from '../lib/utils'
 import { apiUrl } from '../lib/apiUrl'
 import styles from './PremiumPage.module.css'
+import { useScrollLock } from '../lib/scrollLock'
 
 // Módulo, no dentro del componente — loadStripe() cachea la promesa
 // internamente, pero de todas formas no tiene sentido recrearla en cada
@@ -68,6 +69,7 @@ export function PremiumPage({ profile, onClose, refreshProfile, onSubscribed }) 
   // intercepta el cierre, dispara la animación de salida (`closing`), y
   // solo llama al `onClose` real de App.jsx (el que de verdad la desmonta)
   // después de que termina — App.jsx no necesita saber nada de esto.
+  useScrollLock(true)
   const [entering, setEntering] = useState(true)
   const [closing, setClosing] = useState(false)
   const closeTimerRef = useRef(null)

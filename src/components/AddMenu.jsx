@@ -5,6 +5,7 @@ import { isVoiceSupported } from '../lib/voiceInput'
 import { isTicketScanSupported } from '../lib/ticketScan'
 import { useBackClose } from '../lib/backNav'
 import styles from './AddMenu.module.css'
+import { useScrollLock } from '../lib/scrollLock'
 
 // Menú del "+" en arco (v0.9.581): íconos circulares alrededor del botón.
 // Enseñanza progresiva: la 1ª vez sale una tarjeta de guía; las siguientes 3
@@ -26,6 +27,7 @@ function bumpOpens() {
 }
 
 export function AddMenu({ open, onClose, onPick }) {
+  useScrollLock(open)
   const { t } = useTranslation()
   const [opens, setOpens] = useState(0)
   const [guideOpen, setGuideOpen] = useState(false)

@@ -4,6 +4,7 @@ import { Lock, Eye, EyeOff } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { RequirementRow } from './RequirementRow'
 import styles from './PasswordSetupModal.module.css'
+import { useScrollLock } from '../lib/scrollLock'
 
 // ── Validador de fortaleza de contraseña ─────────────────────────────────────
 export function passwordRequirements(pwd) {
@@ -34,10 +35,7 @@ export function PasswordSetupModal({ userId, onDone }) {
   const strong = isPasswordStrong(password)
   const match  = password && confirm && password === confirm
 
-  useEffect(() => {
-    document.body.classList.add('modal-open')
-    return () => document.body.classList.remove('modal-open')
-  }, [])
+  useScrollLock(true)
 
   async function handleSave() {
     setError('')

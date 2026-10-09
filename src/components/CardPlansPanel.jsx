@@ -5,6 +5,7 @@ import { fmt } from '../lib/utils'
 import { ConfirmDeleteModal } from './ConfirmDeleteModal'
 import { getPlans, planIsActive, planRemaining, planFuture, plansRemainingTotal, nextCutPlansTotal, cuotaAmount } from '../lib/cardPlans'
 import styles from './CardPlansPanel.module.css'
+import { useScrollLock } from '../lib/scrollLock'
 
 // Pantalla aparte de "Compras a meses" de una tarjeta (v0.9.587). Se abre desde
 // el bento del detalle de la tarjeta (CardDetailPanel.jsx) — una sola fila ahí,
@@ -13,6 +14,7 @@ export function CardPlansPanel({ card, onBack, onSettle, onDelete }) {
   const { t } = useTranslation()
   const [deleting, setDeleting] = useState(null)
   const [menuId, setMenuId] = useState(null)
+  useScrollLock(menuId != null)
   const plans = getPlans(card)
   const active = plans.filter(planIsActive)
   const done = plans.filter(p => !planIsActive(p))

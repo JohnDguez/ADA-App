@@ -6,9 +6,8 @@ import { SignOut } from '@phosphor-icons/react/dist/csr/SignOut'
 // Bottom sheet estándar (ModalSheet).
 export function ConfirmExitModal({ open, onConfirm, onCancel }) {
   const { t } = useTranslation()
-  if (!open) return null
   return (
-    <ModalSheet icon={SignOut} tone="danger" title={t('confirmExit.title')} onBackdrop={onCancel}>
+    <ModalSheet open={open} icon={SignOut} tone="danger" title={t('confirmExit.title')} onBackdrop={onCancel}>
       <ModalSheet.Text>{t('confirmExit.description')}</ModalSheet.Text>
       <SheetButton variant="danger" onClick={onConfirm}>{t('confirmExit.exit')}</SheetButton>
       <SheetButton variant="soft" onClick={onCancel}>{t('confirmExit.stay')}</SheetButton>
