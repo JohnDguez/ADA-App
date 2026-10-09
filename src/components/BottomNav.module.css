@@ -87,13 +87,16 @@
   content: '';
   position: absolute;
   top: 0;
-  left: -34px;
-  right: -34px;
+  left: -44px;
+  right: -44px;
   height: 48px;
-  /* Cono de luz: bordes angulares suaves (sin cortes) y desvanecido hacia abajo */
-  background: conic-gradient(from 148deg at 50% 0%, transparent 0deg, color-mix(in srgb, var(--nav-icon) 30%, transparent) 32deg, transparent 64deg);
-  -webkit-mask-image: linear-gradient(to bottom, #000 0%, transparent 100%);
-  mask-image: linear-gradient(to bottom, #000 0%, transparent 100%);
+  /* Luz orgánica: varias manchas elípticas desiguales y desplazadas (no un óvalo
+     perfecto). Cada una llega a transparente antes de su borde → sin cortes. */
+  background:
+    radial-gradient(ellipse 36% 90% at 50% 0%, color-mix(in srgb, var(--nav-icon) 26%, transparent) 0%, transparent 100%),
+    radial-gradient(ellipse 26% 100% at 41% 0%, color-mix(in srgb, var(--nav-icon) 15%, transparent) 0%, transparent 100%),
+    radial-gradient(ellipse 20% 62% at 60% 0%, color-mix(in srgb, var(--nav-icon) 13%, transparent) 0%, transparent 100%);
+  filter: blur(5px);
   pointer-events: none;
 }
 
