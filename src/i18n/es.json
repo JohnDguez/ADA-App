@@ -830,7 +830,13 @@
       "helpEn2": "“Paid the electric bill yesterday 80”",
       "helpEn3": "“I have to pay rent 1200 on November 5”",
       "helpEn4": "“Gas 40 dollars today”",
-      "helpTips": "Entiende «hoy», «ayer», «mañana», días de la semana y fechas. Si dices «tengo que pagar…» se guarda como pendiente; si no, como ya pagado. Habla en el idioma elegido abajo y revisa siempre los datos."
+      "helpTips": "Entiende «hoy», «ayer», «mañana», días de la semana y fechas. Si dices «tengo que pagar…» se guarda como pendiente; si no, como ya pagado. Habla en el idioma elegido abajo y revisa siempre los datos.",
+      "listeningTitle": "Te escucho…",
+      "listeningHint": "Di el nombre, el monto y, si quieres, cada cuánto se repite.",
+      "done": "Listo",
+      "heardType": "Entendí: «{{text}}». Lo puse como {{type}}; revisa los datos antes de guardar.",
+      "helpEsType": "«Netflix 189 cada mes» → Recurrente · «Laptop 15000 a 12 meses» → Parcialidades",
+      "helpEnType": "“Netflix 15 every month” → Recurring · “Laptop 900 over 12 months” → Installments"
     },
     "scan": {
       "button": "Escanear ticket",

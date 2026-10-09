@@ -830,7 +830,13 @@
       "helpEn2": "“Paid the electric bill yesterday 80”",
       "helpEn3": "“I have to pay rent 1200 on November 5”",
       "helpEn4": "“Gas 40 dollars today”",
-      "helpTips": "It understands “today”, “yesterday”, “tomorrow”, weekdays and dates. If you say “I have to pay…” it's saved as pending; otherwise as already paid. Speak in the language chosen below and always review the data."
+      "helpTips": "It understands “today”, “yesterday”, “tomorrow”, weekdays and dates. If you say “I have to pay…” it's saved as pending; otherwise as already paid. Speak in the language chosen below and always review the data.",
+      "listeningTitle": "Listening…",
+      "listeningHint": "Say the name, the amount and, if you like, how often it repeats.",
+      "done": "Done",
+      "heardType": "I heard: “{{text}}”. I set it as {{type}}; review the details before saving.",
+      "helpEsType": "«Netflix 189 cada mes» → Recurring · «Laptop 15000 a 12 meses» → Installments",
+      "helpEnType": "“Netflix 15 every month” → Recurring · “Laptop 900 over 12 months” → Installments"
     },
     "scan": {
       "button": "Scan receipt",

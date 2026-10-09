@@ -1,7 +1,9 @@
 import { CATEGORIES, dateToStr, today, addDays } from './utils'
 
 // Convierte lo que el usuario DICTÓ ("gasté 250 en el súper ayer") en los
-// campos de un pago único: monto, nombre, fecha, categoría y si ya se pagó.
+// campos de un pago: monto, nombre, fecha, categoría y si ya se pagó. Desde
+// v0.9.606 también detecta el TIPO: `freq` (recurrente: "cada 2 meses") o
+// `installments` (parcialidades: "a 12 meses"); si no dice nada, es único.
 // Función pura (sin red ni IA): reglas simples para es/en. Siempre se revisa
 // en el formulario antes de guardar, así que ante la duda deja el campo vacío
 // o con el valor por defecto en vez de adivinar.
@@ -103,6 +105,32 @@ export function parseVoicePayment(rawText, { customCategories = [] } = {}) {
   let text = ' ' + original.replace(/\s+/g, ' ') + ' '
   let norm = strip(text)
 
+  // --- Tipo de pago: frecuencia ("cada 2 meses") o parcialidades ("a 12 meses") ---
+  // Se detecta y se quita ANTES de buscar monto y fecha para que su número no
+  // se confunda con el monto.
+  let freq = null, installments = null
+  const NUMW = { dos: 2, tres: 3, cuatro: 4, seis: 6, nueve: 9, doce: 12, dieciocho: 18, veinticuatro: 24, two: 2, three: 3, six: 6, twelve: 12 }
+  const num = (x) => (/^\d+$/.test(x) ? parseInt(x) : NUMW[x])
+  const takeType = (re, fn) => {
+    const m = norm.match(re)
+    if (!m) return false
+    fn(m)
+    text = cut(text, m.index, m.index + m[0].length)
+    norm = strip(text)
+    return true
+  }
+  const NW = '(\\d{1,2}|dos|tres|cuatro|seis|nueve|doce|dieciocho|veinticuatro|two|three|six|twelve)'
+  takeType(new RegExp('\\b(?:a|en|over|in) ' + NW + ' (?:meses|mensualidades|pagos|parcialidades|abonos|months|payments|installments)\\b'), (m) => { const n = num(m[1]); if (n >= 2) installments = n })
+  if (!installments) {
+    takeType(/\b(cada (?:2|dos) meses|bimestral(?:es)?|cada bimestre|every (?:2|two) months)\b/, () => { freq = 'bimonthly' })
+      || takeType(/\b(cada (?:3|tres) meses|trimestral(?:es)?|every (?:3|three) months|quarterly)\b/, () => { freq = 'quarterly' })
+      || takeType(/\b(cada (?:6|seis) meses|semestral(?:es)?|every (?:6|six) months)\b/, () => { freq = 'semiannual' })
+      || takeType(/\b(cada ano|todos los anos|anual(?:es|mente)?|cada 12 meses|every year|yearly|annual(?:ly)?)\b/, () => { freq = 'annual' })
+      || takeType(/\b(cada quincena|todas las quincenas|quincenal(?:es|mente)?|cada (?:14|15) dias|every (?:2|two) weeks|biweekly)\b/, () => { freq = 'biweekly' })
+      || takeType(/\b(cada semana|todas las semanas|semanal(?:es|mente)?|cada 7 dias|every week|weekly)\b/, () => { freq = 'weekly' })
+      || takeType(/\b(cada mes|todos los meses|mensual(?:es|mente)?|cada 1 mes|every month|monthly)\b/, () => { freq = 'monthly' })
+  }
+
   // --- Fecha ---
   const now = today()
   let date = null
@@ -173,6 +201,8 @@ export function parseVoicePayment(rawText, { customCategories = [] } = {}) {
     name,
     date: date ? dateToStr(date) : null,
     category: category && (CATEGORIES.includes(category) || customCategories.some(c => (typeof c === 'string' ? c : c?.value) === category)) ? category : null,
-    paid,
+    paid: (freq || installments) ? false : paid,
+    freq,
+    installments,
   }
 }

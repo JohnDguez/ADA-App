@@ -13,7 +13,7 @@ import styles from './ModalSheet.module.css'
 //   </ModalSheet>
 //
 // tone: 'accent' (azul, por defecto) | 'danger' (rojo, acciones destructivas).
-export function ModalSheet({ icon: Icon, tone = 'accent', title, onBackdrop, children, zIndex }) {
+export function ModalSheet({ icon: Icon, tone = 'accent', title, onBackdrop, children, zIndex, pulse = false }) {
   const { t } = useTranslation()
   return (
     <div className={styles.overlay} style={zIndex ? { zIndex } : undefined}
@@ -40,7 +40,7 @@ export function ModalSheet({ icon: Icon, tone = 'accent', title, onBackdrop, chi
       <div className={styles.sheet} role="dialog" aria-modal="true" aria-label={title || t('buttons.close', { defaultValue: '' })}>
         <div className={styles.handle} />
         {Icon && (
-          <div className={`${styles.icon} ${tone === 'danger' ? styles.iconDanger : ''}`}>
+          <div className={`${styles.icon} ${tone === 'danger' ? styles.iconDanger : ''} ${pulse ? styles.iconPulse : ''}`}>
             <Icon size={30} weight="regular" />
           </div>
         )}

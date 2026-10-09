@@ -23,7 +23,7 @@ import AmountInput from './AmountInput'
 import styles from './PaymentModal.module.css'
 import { markBackHandled, wasBackHandled } from '../lib/backNav'
 import { AddCardModal } from './AddCardModal'
-import { Mic, ScanLine, HelpCircle } from 'lucide-react'
+import { Microphone } from '@phosphor-icons/react/dist/csr/Microphone'
 import { isVoiceSupported, listenOnce, stopListening } from '../lib/voiceInput'
 import { parseVoicePayment } from '../lib/parseVoicePayment'
 import { isTicketScanSupported, scanTicketText } from '../lib/ticketScan'
@@ -64,10 +64,12 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onSaveC
     return i18n.language === 'en' ? 'en' : 'es'
   })
   const [voiceHelpOpen, setVoiceHelpOpen] = useState(false)
+  const voiceCancelRef = useRef(false)
+  const [scanned, setScanned] = useState(false)
   // Escaneo de tickets (v0.9.578, solo Android)
   const scanSupported = isTicketScanSupported()
   const [scanning, setScanning] = useState(false)
-  useEffect(() => { if (!open) { stopListening(); setVoiceState('idle'); setVoiceNote({ kind: '', text: '' }); setVoiceHelpOpen(false); setScanning(false) } }, [open])
+  useEffect(() => { if (!open) { stopListening(); setVoiceState('idle'); setVoiceNote({ kind: '', text: '' }); setVoiceHelpOpen(false); setScanning(false); setScanned(false) } }, [open])
   const [saving,             setSaving]             = useState(false)
   const [error,              setError]              = useState('')
   const [confirmClose,       setConfirmClose]       = useState(false)
@@ -367,18 +369,37 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onSaveC
   async function handleVoice() {
     if (voiceState === 'listening') { stopListening(); return }
     setVoiceNote({ kind: '', text: '' })
+    voiceCancelRef.current = false
     setVoiceState('listening')
     try {
       const text = await listenOnce(voiceLang === 'en' ? 'en-US' : 'es-MX')
+      if (voiceCancelRef.current) return
       const r = parseVoicePayment(text, { customCategories })
       if (!r) { setVoiceNote({ kind: 'error', text: t('paymentModal.voice.noSpeech') }); return }
-      if (r.amount != null) setAmount(String(r.amount))
+      // Tipo de pago detectado por la frase (v0.9.606): "cada 2 meses" →
+      // Recurrente; "a 12 meses" → Parcialidades; si no, Pago único.
+      let detected = null
+      if (r.installments) {
+        detected = 'installment'
+        setMode('installment'); setStep(1)
+        setTotalInstallments(String(r.installments))
+        if (r.amount != null) { setTotalAmount(String(r.amount)); setAmount('') }
+      } else if (r.freq) {
+        detected = 'recurrent'
+        setMode('recurrent'); setRecurFreq(r.freq)
+        if (r.amount != null) setAmount(String(r.amount))
+      } else if (r.amount != null) {
+        setAmount(String(r.amount))
+      }
+      if (detected) hadTypeRef.current = true
       if (r.name) setName(r.name)
       if (r.date) setDueDate(r.date)
       setCategory(r.category || 'Otros')
-      if (!isSharedSpace) setAlreadyPaid(r.paid)
+      if (!isSharedSpace) { setAlreadyPaid(r.paid); if (r.paid) setMoreOpen(true) }
       setVoiceNote(r.amount != null
-        ? { kind: 'ok', text: t('paymentModal.voice.heard', { text }) }
+        ? { kind: 'ok', text: detected
+            ? t('paymentModal.voice.heardType', { text, type: t(`paymentModal.tabs.${detected}`) })
+            : t('paymentModal.voice.heard', { text }) }
         : { kind: 'error', text: t('paymentModal.voice.noAmount', { text }) })
     } catch (err) {
       const code = err?.code
@@ -386,6 +407,11 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onSaveC
     } finally {
       setVoiceState('idle')
     }
+  }
+
+  function cancelVoice() {
+    voiceCancelRef.current = true
+    stopListening()
   }
 
   function toggleVoiceLang() {
@@ -407,7 +433,8 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onSaveC
       if (r.name) setName(r.name)
       if (r.date) setDueDate(r.date)
       setCategory(r.category || 'Otros')
-      if (!isSharedSpace) setAlreadyPaid(true)
+      if (!isSharedSpace) { setAlreadyPaid(true); setMoreOpen(true) }
+      setScanned(true)
       setVoiceNote({ kind: 'ok', text: r.amount != null ? t('paymentModal.scan.done') : t('paymentModal.scan.noAmount') })
     } catch {
       setVoiceNote({ kind: 'error', text: t('paymentModal.scan.failed') })
@@ -754,48 +781,10 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onSaveC
           {lockedMessage && <div className={styles.warningBox}>{lockedMessage}</div>}
 
           <div className={canWrite ? styles.formWrapper : styles.formDisabled}>
-          {!initial && mode === 'single' && !initial && (voiceSupported || scanSupported) && (
-            <div className={styles.voiceBlock}>
-              <div className={styles.voiceRow}>
-                {voiceSupported && (
-                  <button type="button" onClick={handleVoice} className={`${styles.voiceButton} ${voiceState === 'listening' ? styles.voiceButtonListening : ''}`}>
-                    <Mic size={16} className={voiceState === 'listening' ? styles.voiceIconPulse : ''} />
-                    <span>{voiceState === 'listening' ? t('paymentModal.voice.listening') : t('paymentModal.voice.button')}</span>
-                  </button>
-                )}
-                {scanSupported && (
-                  <button type="button" onClick={handleScan} disabled={scanning || voiceState === 'listening'} className={styles.voiceButton}>
-                    <ScanLine size={16} />
-                    <span>{scanning ? t('paymentModal.scan.scanning') : t('paymentModal.scan.button')}</span>
-                  </button>
-                )}
-              </div>
-              {voiceSupported && (
-                <div className={styles.voiceMeta}>
-                  <button type="button" onClick={() => setVoiceHelpOpen(o => !o)} className={styles.voiceLink}>
-                    <HelpCircle size={13} /> {t('paymentModal.voice.helpLink')}
-                  </button>
-                  <button type="button" onClick={toggleVoiceLang} className={styles.voiceLink} aria-label={t('paymentModal.voice.langLabel')}>
-                    {t('paymentModal.voice.langLabel')}: <strong>{voiceLang === 'es' ? 'Español' : 'English'}</strong>
-                  </button>
-                </div>
-              )}
-              {voiceHelpOpen && voiceSupported && (
-                <div className={styles.voiceHelp}>
-                  <div>{t('paymentModal.voice.helpIntro')}</div>
-                  <ul>
-                    {(voiceLang === 'en' ? ['helpEn1', 'helpEn2', 'helpEn3', 'helpEn4'] : ['helpEs1', 'helpEs2', 'helpEs3', 'helpEs4']).map(k => <li key={k}>{t(`paymentModal.voice.${k}`)}</li>)}
-                  </ul>
-                  <div>{t('paymentModal.voice.helpTips')}</div>
-                </div>
-              )}
-              {scanSupported && <div className={styles.scanDisclaimer}>{t('paymentModal.scan.disclaimer')}</div>}
-              {voiceNote.text && (
-                <div className={voiceNote.kind === 'error' ? styles.voiceNoteError : styles.voiceNote}>{voiceNote.text}</div>
-              )}
-            </div>
+          {!initial && voiceNote.text && (
+            <div className={voiceNote.kind === 'error' ? styles.voiceNoteError : styles.voiceNote}>{voiceNote.text}</div>
           )}
-
+          {!initial && scanned && <div className={styles.scanDisclaimer}>{t('paymentModal.scan.disclaimer')}</div>}
 
           {isFlat && !isVariable && (
             <div className={styles.amountHero}>
@@ -1110,6 +1099,18 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onSaveC
         </div>
       </div>
       <ConfirmCloseModal open={confirmClose} onConfirm={() => { setConfirmClose(false); onClose() }} onCancel={() => setConfirmClose(false)} />
+      {voiceState === 'listening' && (
+        <ModalSheet icon={Microphone} pulse title={t('paymentModal.voice.listeningTitle')} onBackdrop={cancelVoice} zIndex={450}>
+          <ModalSheet.Text>{t('paymentModal.voice.listeningHint')}</ModalSheet.Text>
+          <div className={styles.voiceExamples}>
+            {(voiceLang === 'en' ? ['helpEn1', 'helpEn3'] : ['helpEs1', 'helpEs3']).map(k => <div key={k}>{t(`paymentModal.voice.${k}`)}</div>)}
+            <div>{voiceLang === 'en' ? t('paymentModal.voice.helpEnType') : t('paymentModal.voice.helpEsType')}</div>
+          </div>
+          <SheetButton onClick={handleVoice}>{t('paymentModal.voice.done')}</SheetButton>
+          <SheetButton variant="soft" onClick={cancelVoice}>{t('buttons.cancel')}</SheetButton>
+          <button type="button" onClick={toggleVoiceLang} className={styles.voiceLangLink}>{t('paymentModal.voice.langLabel')}: <strong>{voiceLang === 'es' ? 'Español' : 'English'}</strong></button>
+        </ModalSheet>
+      )}
       {farPrompt && (
         <ModalSheet icon={ArrowsClockwise} title={t('paymentModal.farPrompt.title')} onBackdrop={() => setFarPrompt(false)} zIndex={400}>
           <ModalSheet.Text>{t('paymentModal.farPrompt.text', { date: formatDueDate(dueDate) })}</ModalSheet.Text>
