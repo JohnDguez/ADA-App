@@ -573,18 +573,12 @@
 
 /* ── Parte 4: overlay/panel compartidos por los modales "bottom sheet" ──── */
 .modalOverlayBottom {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.45);
+  composes: sheetOverlay from '../components/sheetShared.module.css';
   z-index: 1000;
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
 }
 
 .modalPanelBottom {
-  background: var(--surface);
-  border-radius: 20px 20px 0 0;
+  composes: sheetPanel from '../components/sheetShared.module.css';
   padding: 24px 20px 32px;
   width: 100%;
   max-width: 420px;

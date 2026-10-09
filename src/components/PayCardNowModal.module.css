@@ -1,13 +1,8 @@
 /* "Pagar ahora" (v0.9.497) — mismas curvas/duraciones que CardFormModal y
    ChangeMethodModal (ANIM_MS = 320 en el .jsx, Regla 30). */
 .overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(2, 10, 31, 0.5);
+  composes: sheetOverlay from './sheetShared.module.css';
   z-index: 550;
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
 }
 
 .overlayClosing {
@@ -20,8 +15,7 @@
 }
 
 .modal {
-  background: var(--surface);
-  border-radius: 20px 20px 0 0;
+  composes: sheetPanel from './sheetShared.module.css';
   width: 100%;
   max-width: 420px;
   padding: 20px 16px 32px;

@@ -7,18 +7,12 @@
 
 /* ── Shell compartido por ambas ramas (editar parcialidades / normal) ──── */
 .overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(2, 10, 31, 0.45);
+  composes: sheetOverlay from './sheetShared.module.css';
   z-index: 200;
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
 }
 
 .panel {
-  background: var(--surface);
-  border-radius: 20px 20px 0 0;
+  composes: sheetPanel from './sheetShared.module.css';
   width: 100%;
   max-width: 420px;
   padding: 18px 16px 32px;
