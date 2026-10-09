@@ -1,10 +1,11 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { ChevronDown, ChevronUp, Users, Copy, RefreshCw, LogOut, Trash2, Crown, Plus, LogIn } from 'lucide-react'
+import { ChevronDown, ChevronUp, Users, Copy, RefreshCw, LogOut, Trash2, Crown, Plus } from 'lucide-react'
 // Ícono del encabezado vía Phosphor Icons (mismo patrón que las demás
 // sub-páginas ya migradas, v0.9.442-454) — import directo para tree-shaking real.
 import { UsersThree } from '@phosphor-icons/react/dist/csr/UsersThree'
 import { PageHero } from '../../components/PageHero'
+import { Collapse } from '../../components/Collapse'
 import { Card, Row, NotifToggle, Toggle } from '../../components/SettingsShared'
 import { CobroPeriodFields } from '../../components/CobroPeriodFields'
 import { CurrencySelect } from '../../components/CurrencySelect'
@@ -81,6 +82,7 @@ export function SettingsSharedSpacePage({ profile, user, sharedSpaces, onBack, o
   const canJoinMore   = guestEntries.length < 3
 
   return (
+    <>
     <div className={`${slideClass} ${styles.pageRoot}`}>
       <PageHero
         icon={UsersThree}
@@ -167,14 +169,20 @@ export function SettingsSharedSpacePage({ profile, user, sharedSpaces, onBack, o
         </Card>
       )}
 
-      {/* ── Unirse con código (si no ha llegado a 3): botón flotante que abre
-          una hoja con el campo (v0.9.630) — antes era una tarjeta fija al
-          final de la página. ── */}
-      {canJoinMore ? (
+      {!canJoinMore && (
+        <Card>
+          <div className={styles.joinMaxedCard}>
+            {t('newSharedSpacePanel.maxJoined')}
+          </div>
+        </Card>
+      )}
+    </div>
+
+      {canJoinMore && (
         <>
           <div className={styles.addPillRow}>
             <button type="button" onClick={() => { setJoinError(''); setJoinOpen(true) }} className={styles.addPill}>
-              <LogIn size={18} color="var(--surface)" />
+              <Users size={18} color="var(--surface)" />
               {t('settingsSharedSpacePage.joinFab')}
             </button>
           </div>
@@ -191,14 +199,8 @@ export function SettingsSharedSpacePage({ profile, user, sharedSpaces, onBack, o
             </button>
           </BottomSheet>
         </>
-      ) : (
-        <Card>
-          <div className={styles.joinMaxedCard}>
-            {t('newSharedSpacePanel.maxJoined')}
-          </div>
-        </Card>
       )}
-    </div>
+    </>
   )
 }
 
@@ -217,7 +219,7 @@ function GuestSpaceRow({ entry, onLeave, onToggleNotify }) {
         {expanded ? <ChevronUp size={16} color="var(--text)" /> : <ChevronDown size={16} color="var(--text)" />}
       </button>
 
-      {expanded && (
+      <Collapse open={expanded}>
         <div className={styles.guestRowBody}>
           <div className={styles.guestRowPeriod}>
             {t('settingsSharedSpacePage.period', { freq: getFrequencyLabel(entry.space.cobro_freq) })}
@@ -236,7 +238,7 @@ function GuestSpaceRow({ entry, onLeave, onToggleNotify }) {
             <LogOut size={12} /> {t('settingsSharedSpacePage.leave')}
           </button>
         </div>
-      )}
+      </Collapse>
     </div>
   )
 }
@@ -340,7 +342,7 @@ function OwnedSpacePanel({ entry, user, regenerateCode, updateMemberPermissions,
           {expanded ? <ChevronUp size={18} color="var(--text)" /> : <ChevronDown size={18} color="var(--text)" />}
         </button>
 
-        {expanded && (
+        <Collapse open={expanded}>
           <div className={styles.islandStack}>
 
             {/* ── Isla: configuración del espacio ── */}
@@ -450,7 +452,7 @@ function OwnedSpacePanel({ entry, user, regenerateCode, updateMemberPermissions,
                     {isOpen ? <ChevronUp size={16} color="var(--text)" /> : <ChevronDown size={16} color="var(--text)" />}
                   </button>
 
-                  {isOpen && (
+                  <Collapse open={isOpen}>
                     <>
                       <div className={styles.permGroupLabel}>{t('settingsSharedSpacePage.permGroupPayments')}</div>
                       <NotifToggle label={t('settingsSharedSpacePage.permAdd')}        value={m.can_add}        onChange={v => updateMemberPermissions(m.id, { can_add: v })} />
@@ -495,7 +497,7 @@ function OwnedSpacePanel({ entry, user, regenerateCode, updateMemberPermissions,
                         </div>
                       )}
                     </>
-                  )}
+                  </Collapse>
                 </div>
               )
             })}
@@ -531,7 +533,7 @@ function OwnedSpacePanel({ entry, user, regenerateCode, updateMemberPermissions,
             </div>
 
           </div>
-        )}
+        </Collapse>
       </div>
 
       <CurrencySheet open={currencyOpen} onClose={() => setCurrencyOpen(false)} value={entry.space.currency} onSelect={handleCurrency} title={t('currency.spaceSheetTitle')} />

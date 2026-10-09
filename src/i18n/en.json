@@ -1311,7 +1311,7 @@
     "closeAriaLabel": "Close Goals — swipe down"
   },
   "settingsSharedSpacePage": {
-    "joinFab": "Join with code",
+    "joinFab": "Join Shared Space",
     "regenerate": "Generate",
     "copyCode": "Copy code",
     "regenConfirm": "Generate a new code? The previous one will stop working.",

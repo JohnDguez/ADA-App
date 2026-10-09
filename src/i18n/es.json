@@ -1311,7 +1311,7 @@
     "closeAriaLabel": "Cerrar Metas — desliza hacia abajo"
   },
   "settingsSharedSpacePage": {
-    "joinFab": "Unirme con código",
+    "joinFab": "Unirse a Espacio Compartido",
     "regenerate": "Generar",
     "copyCode": "Copiar código",
     "regenConfirm": "¿Generar un código nuevo? El anterior dejará de funcionar.",
