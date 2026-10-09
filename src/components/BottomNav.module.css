@@ -67,6 +67,16 @@
 
 .tabIcon { transition: width .2s, height .2s; }
 
+/* Recorta la luz al contorno de la barra (el botón "+" sigue sobresaliendo) */
+.indicatorClip {
+  position: absolute;
+  inset: 0;
+  border-radius: 10px;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 0;
+}
+
 /* Indicador de página activa (v0.9.636): barra pegada al borde superior,
    estilo Amazon, que se desliza entre pestañas. Columnas: 5 iguales. */
 .indicator {
@@ -79,7 +89,7 @@
   border-radius: 0 0 4px 4px;
   transition: left .25s cubic-bezier(0.25, 0.46, 0.45, 0.94), opacity .2s;
   pointer-events: none;
-  z-index: 0; /* por debajo del botón "+" al deslizarse */
+  z-index: 0;
 }
 .indicatorHidden { opacity: 0; }
 /* Iluminación tenue bajo la barra: viaja junto con el indicador */
@@ -87,16 +97,18 @@
   content: '';
   position: absolute;
   top: 0;
-  left: -44px;
-  right: -44px;
-  height: 48px;
-  /* Luz orgánica: varias manchas elípticas desiguales y desplazadas (no un óvalo
-     perfecto). Cada una llega a transparente antes de su borde → sin cortes. */
+  left: 50%;
+  width: 200px;
+  margin-left: -100px;
+  height: 56px;
+  /* Nube de luz: manchas de distinto tamaño que forman un contorno irregular y
+     blando. Todos los radios terminan antes del borde de la caja → sin cortes. */
   background:
-    radial-gradient(ellipse 36% 90% at 50% 0%, color-mix(in srgb, var(--nav-icon) 26%, transparent) 0%, transparent 100%),
-    radial-gradient(ellipse 26% 100% at 41% 0%, color-mix(in srgb, var(--nav-icon) 15%, transparent) 0%, transparent 100%),
-    radial-gradient(ellipse 20% 62% at 60% 0%, color-mix(in srgb, var(--nav-icon) 13%, transparent) 0%, transparent 100%);
-  filter: blur(5px);
+    radial-gradient(ellipse 72px 50px at 50% 0, color-mix(in srgb, var(--nav-icon) 30%, transparent) 0%, transparent 100%),
+    radial-gradient(ellipse 46px 40px at 33% 0, color-mix(in srgb, var(--nav-icon) 20%, transparent) 0%, transparent 100%),
+    radial-gradient(ellipse 40px 54px at 64% 0, color-mix(in srgb, var(--nav-icon) 22%, transparent) 0%, transparent 100%),
+    radial-gradient(ellipse 30px 30px at 44% 0, color-mix(in srgb, var(--nav-icon) 14%, transparent) 0%, transparent 100%);
+  filter: blur(6px);
   pointer-events: none;
 }
 

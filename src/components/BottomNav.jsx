@@ -17,7 +17,9 @@ export function BottomNav({ active, onChange, onAdd, addOpen = false }) {
   const slot = tabIdx < 0 ? -1 : (tabIdx < 2 ? tabIdx : tabIdx + 1)
   return (
     <nav className={styles.nav} style={{ '--slot': Math.max(slot, 0) }}>
-      <span className={`${styles.indicator} ${slot < 0 ? styles.indicatorHidden : ''}`} aria-hidden="true" />
+      <span className={styles.indicatorClip} aria-hidden="true">
+        <span className={`${styles.indicator} ${slot < 0 ? styles.indicatorHidden : ''}`} />
+      </span>
       {LEFT_TABS.map(({ id, Icon, labelKey }) => (
         <TabBtn key={id} id={id} Icon={Icon} label={t(labelKey)} active={active === id} onChange={onChange} />
       ))}
