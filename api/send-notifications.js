@@ -160,10 +160,11 @@ async function collectReminders(scope, profile, todayStr, today, lang) {
 
 // Mismo formato de moneda que `fmt()` en lib/utils.js, replicado aquí
 // porque las funciones serverless no comparten código con el front.
-function money(n) {
+const CURRENCY_SYMBOLS = { MXN: '$', USD: 'US$', EUR: '€', COP: '$', ARS: '$', CLP: '$', PEN: 'S/' }
+function money(n, currency) {
   const num = Number(n)
   const sign = num < 0 ? '-' : ''
-  return sign + '$' + Math.abs(num).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+  return sign + (CURRENCY_SYMBOLS[currency] || '$') + Math.abs(num).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 }
 
 // Suma días a una fecha usando componentes LOCALES (regla 11), nunca
@@ -189,7 +190,7 @@ function addDaysStr(dateStr, days) {
 // resta), igual que en useGoals.js — nunca hay un contador guardado.
 const GOAL_DEADLINE_DAYS = 7
 
-async function collectGoalDeadlineReminders(userId, todayStr, lang) {
+async function collectGoalDeadlineReminders(userId, todayStr, lang, currency) {
   const limitStr = addDaysStr(todayStr, GOAL_DEADLINE_DAYS)
 
   const { data: goals } = await supabase
@@ -227,7 +228,7 @@ async function collectGoalDeadlineReminders(userId, todayStr, lang) {
       Math.round((new Date(goal.target_date + 'T12:00:00') - new Date(todayStr + 'T12:00:00')) / 86400000),
       0
     )
-    const { title, body } = goalDeadlineText(lang, goal.name, dias, money(falta))
+    const { title, body } = goalDeadlineText(lang, goal.name, dias, money(falta, currency))
 
     notifications.push({
       type: 'goal_deadline', title, body,
@@ -407,7 +408,7 @@ module.exports = async function handler(req, res) {
 
     const { data: profiles, error: profilesError } = await supabase
       .from('profiles')
-      .select('id, notif_cobro_day, notif_due_today, notif_upcoming, notif_overdue, notif_days_before, notif_hour, timezone, cobro_freq, cobro_weekday, notif_last_sent, stripe_subscription_status, trial_ends_at, trial_reminder_sent, language')
+      .select('id, notif_cobro_day, notif_due_today, notif_upcoming, notif_overdue, notif_days_before, notif_hour, timezone, cobro_freq, cobro_weekday, notif_last_sent, stripe_subscription_status, trial_ends_at, trial_reminder_sent, language, currency')
       .in('id', userIds)
 
     if (profilesError) return res.status(500).json({ error: profilesError.message })
@@ -465,7 +466,7 @@ module.exports = async function handler(req, res) {
       // aviso). No depende de ninguna preferencia de notificaciones porque
       // no existe una columna para eso: dispara como máximo una vez en la
       // vida de cada meta, así que no genera ruido repetido.
-      const goalNotifs = await collectGoalDeadlineReminders(userId, todayStr, lang)
+      const goalNotifs = await collectGoalDeadlineReminders(userId, todayStr, lang, profile.currency)
       notifications = notifications.concat(goalNotifs)
 
       // Prueba de 7 días — aviso único de "termina en 2 días" (v0.9.508).

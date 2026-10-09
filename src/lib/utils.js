@@ -1,6 +1,5 @@
 import i18n from '../i18n'
 import { getCurrencySymbol } from './currency'
-const CURRENCY_SYMBOL = getCurrencySymbol()
 
 // Arreglos crudos en español — YA NO se usan para mostrar texto en ningún
 // lado (ver getMonths()/getMonthsShort()/getWeekdays()/getWeekdaysShort()
@@ -168,7 +167,7 @@ export function daysDiff(str) { return Math.round((dateOf(str) - today()) / 864e
 export function fmt(n) {
   const num = Number(n)
   const sign = num < 0 ? '-' : ''
-  return sign + CURRENCY_SYMBOL + Math.abs(num).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+  return sign + getCurrencySymbol() + Math.abs(num).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 }
 export function addDays(date, n)   { const d = new Date(date); d.setDate(d.getDate() + n); return d }
 export function addMonths(date, n) { const d = new Date(date); d.setMonth(d.getMonth() + n); return d }

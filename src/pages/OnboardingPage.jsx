@@ -6,6 +6,7 @@ import { getWeekdays, getWeekdaysShort } from '../lib/utils'
 import { supabase } from '../lib/supabase'
 import { usePushNotifications } from '../hooks/usePushNotifications'
 import AmountInput from '../components/AmountInput'
+import { CurrencySelect } from '../components/CurrencySelect'
 import styles from './OnboardingPage.module.css'
 
 // illustrationSize / illustrationBottom / bodyPaddingTop: mismos defaults
@@ -49,6 +50,9 @@ export function OnboardingPage({ userId, onDone }) {
   const [transitionId,   setTransitionId]   = useState(0)
   const [name,           setName]           = useState('')
   const [nameError,      setNameError]      = useState('')
+  // Sin valor por defecto: la persona tiene que elegir su moneda (paso 2).
+  const [currency,       setCurrency]       = useState('')
+  const [currencyError,  setCurrencyError]  = useState('')
   const [cobroFreq,      setCobroFreq]      = useState('weekly')
   const [cobroWeekday,   setCobroWeekday]   = useState(5)
   const [cobroDay1,      setCobroDay1]      = useState(1)
@@ -69,6 +73,7 @@ export function OnboardingPage({ userId, onDone }) {
     setFinishError('')
     const updates = {
       name: name.trim(),
+      currency,
       cobro_freq:    cobroFreq,
       cobro_weekday: cobroFreq === 'weekly' ? cobroWeekday : null,
       cobro_day1:    cobroFreq !== 'weekly' ? (cobroDay1 ?? 1) : null,
@@ -118,6 +123,10 @@ export function OnboardingPage({ userId, onDone }) {
     if (step === 1) {
       if (!name.trim()) { setNameError(t('onboardingPage.step1.nameError')); return }
       setNameError('')
+    }
+    if (step === 2) {
+      if (!currency) { setCurrencyError(t('currency.onbError')); return }
+      setCurrencyError('')
     }
     if (step < TOTAL_STEPS) goToStep(step + 1, 'forward')
     else handleFinish()
@@ -175,6 +184,10 @@ export function OnboardingPage({ userId, onDone }) {
             <>
               <h2 className={styles.title}>{t('onboardingPage.step2.title')}</h2>
               <p className={styles.desc}>{t('onboardingPage.step2.desc')}</p>
+
+              <label className="field-label">{t('currency.onbLabel')}</label>
+              <CurrencySelect value={currency} onChange={v => { setCurrency(v); setCurrencyError('') }} />
+              {currencyError ? <div className={styles.errorText}>{currencyError}</div> : <p className={styles.desc}>{t('currency.onbHint')}</p>}
 
               <label className="field-label">{t('settingsCobro.frequencyLabel')}</label>
               <div className={styles.chipRow}>

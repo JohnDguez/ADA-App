@@ -194,7 +194,8 @@
     "amountLabel": "Amount",
     "toast": {
       "invalidAmount": "Enter a valid amount",
-      "salaryUpdated": "Salary updated"
+      "salaryUpdated": "Salary updated",
+      "currencyUpdated": "Currency updated"
     },
     "dayPair": "{{d1}} and {{d2}}"
   },
@@ -1802,5 +1803,27 @@
     "guideVoice": "Dictate the payment",
     "guideManual": "Or type it in",
     "guideOk": "Got it"
+  },
+  "currency": {
+    "names": {
+      "MXN": "Mexican peso",
+      "USD": "US dollar",
+      "EUR": "Euro",
+      "COP": "Colombian peso",
+      "ARS": "Argentine peso",
+      "CLP": "Chilean peso",
+      "PEN": "Peruvian sol"
+    },
+    "placeholder": "Choose a currency",
+    "sheetTitle": "Currency",
+    "spaceSheetTitle": "Space currency",
+    "noConvertHint": "Only changes the symbol of your amounts. It does not convert what you already have recorded.",
+    "onbLabel": "Currency",
+    "onbError": "Choose your currency",
+    "onbHint": "You can change it later in Settings.",
+    "spaceLabel": "Space currency",
+    "spaceHint": "All members will see this space's amounts in this currency. Only the owner can change it. Your personal currency stays the same.",
+    "spaceRequired": "Choose the space currency",
+    "guestHint": "Set by the space owner"
   }
 }

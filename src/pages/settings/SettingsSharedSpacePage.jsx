@@ -7,6 +7,8 @@ import { UsersThree } from '@phosphor-icons/react/dist/csr/UsersThree'
 import { PageHero } from '../../components/PageHero'
 import { Card, Row, NotifToggle, Toggle } from '../../components/SettingsShared'
 import { CobroPeriodFields } from '../../components/CobroPeriodFields'
+import { CurrencySelect } from '../../components/CurrencySelect'
+import { getCurrency } from '../../lib/currency'
 import { showToast } from '../../components/Toast'
 import { getFrequencyLabel } from '../../lib/utils'
 import styles from './SettingsSharedSpacePage.module.css'
@@ -30,6 +32,7 @@ export function SettingsSharedSpacePage({ profile, user, sharedSpaces, onBack, o
   // ── Crear ──
   const [creating,    setCreating]    = useState(false)
   const [newName,     setNewName]     = useState('')
+  const [newCurrency, setNewCurrency] = useState(profile.currency || '')
   const [newFreq,     setNewFreq]     = useState('biweekly')
   const [newDay1,     setNewDay1]     = useState(1)
   const [newDay2,     setNewDay2]     = useState(16)
@@ -39,11 +42,13 @@ export function SettingsSharedSpacePage({ profile, user, sharedSpaces, onBack, o
 
   async function handleCreate() {
     if (!newName.trim()) { setCreateError(t('newSharedSpacePanel.nameRequiredError')); return }
+    if (!newCurrency) { setCreateError(t('currency.spaceRequired')); return }
     setCreateSaving(true)
     setCreateError('')
     const { error } = await createSpace({
       name: newName.trim(),
       isPremium: profile.is_premium,
+      currency: newCurrency,
       cobroFreq: newFreq,
       cobroDay1: newFreq !== 'weekly' ? newDay1 : undefined,
       cobroDay2: newFreq === 'biweekly' ? newDay2 : undefined,
@@ -137,6 +142,10 @@ export function SettingsSharedSpacePage({ profile, user, sharedSpaces, onBack, o
               <>
                 <label className="field-label">{t('newSharedSpacePanel.spaceNameLabel')}</label>
                 <input className={`field-input ${styles.fieldMb16}`} value={newName} onChange={e => setNewName(e.target.value)} placeholder={t('newSharedSpacePanel.spaceNamePlaceholder')} />
+                <label className={`field-label ${styles.labelBlock}`}>{t('currency.spaceLabel')}</label>
+                <div className={styles.fieldMb16}>
+                  <CurrencySelect value={newCurrency} onChange={setNewCurrency} sheetTitle={t('currency.spaceSheetTitle')} />
+                </div>
                 <label className={`field-label ${styles.labelBlock}`}>{t('settingsCobro.periodSection')}</label>
                 <div className={styles.fieldMb16}>
                   <CobroPeriodFields
@@ -202,6 +211,9 @@ function GuestSpaceRow({ entry, onLeave, onToggleNotify }) {
         <div className={styles.guestRowBody}>
           <div className={styles.guestRowPeriod}>
             {t('settingsSharedSpacePage.period', { freq: getFrequencyLabel(entry.space.cobro_freq) })}
+          </div>
+          <div className={styles.guestRowPeriod}>
+            {t('currency.spaceLabel')}: {t(`currency.names.${getCurrency(entry.space.currency).code}`)} ({getCurrency(entry.space.currency).code}) · {t('currency.guestHint')}
           </div>
           <div className={`${styles.notifyRow} ${styles.notifyRowMb}`} onClick={onToggleNotify}>
             <div>
@@ -314,6 +326,15 @@ function OwnedSpacePanel({ entry, user, regenerateCode, updateMemberPermissions,
                   onChange={e => setNameInput(e.target.value)}
                   onBlur={handleNameBlur}
                   onKeyDown={e => e.key === 'Enter' && e.target.blur()}
+                />
+              </div>
+
+              <div className={styles.fieldRow}>
+                <label className="field-label">{t('currency.spaceLabel')}</label>
+                <CurrencySelect
+                  value={entry.space.currency}
+                  onChange={v => { handleCobroChange({ currency: v }); showToast(t('settingsSharedSpacePage.changesSaved')) }}
+                  sheetTitle={t('currency.spaceSheetTitle')}
                 />
               </div>
 

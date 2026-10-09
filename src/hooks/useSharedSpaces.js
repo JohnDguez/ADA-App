@@ -109,7 +109,7 @@ export function useSharedSpaces(userId) {
   // datos; aquí se revisa antes para dar un mensaje claro en vez de un error
   // crudo de Postgres).
   // ─────────────────────────────────────────────────────────────────────────
-  async function createSpace({ name, isPremium, cobroFreq, cobroDay1, cobroDay2, cobroWeekday, salaryEnabled, salaryAmount }) {
+  async function createSpace({ name, isPremium, currency, cobroFreq, cobroDay1, cobroDay2, cobroWeekday, salaryEnabled, salaryAmount }) {
     if (!isPremium) return { error: 'Necesitas Premium para crear un Espacio Compartido' }
     if (spaces.some(s => s.membership.role === 'owner')) {
       return { error: 'Ya eres dueño de un Espacio Compartido — solo puedes tener uno' }
@@ -125,6 +125,7 @@ export function useSharedSpaces(userId) {
         .insert({
           owner_id: userId,
           name,
+          currency: currency ?? null,
           access_code: randomCode(),
           cobro_freq: cobroFreq,
           cobro_day1: cobroDay1 ?? null,

@@ -194,7 +194,8 @@
     "amountLabel": "Monto",
     "toast": {
       "invalidAmount": "Ingresa un monto válido",
-      "salaryUpdated": "Salario actualizado"
+      "salaryUpdated": "Salario actualizado",
+      "currencyUpdated": "Moneda actualizada"
     },
     "dayPair": "{{d1}} y {{d2}}"
   },
@@ -1802,5 +1803,27 @@
     "guideVoice": "Dicta el pago con tu voz",
     "guideManual": "O escríbelo a mano",
     "guideOk": "Entendido"
+  },
+  "currency": {
+    "names": {
+      "MXN": "Peso mexicano",
+      "USD": "Dólar estadounidense",
+      "EUR": "Euro",
+      "COP": "Peso colombiano",
+      "ARS": "Peso argentino",
+      "CLP": "Peso chileno",
+      "PEN": "Sol peruano"
+    },
+    "placeholder": "Elige una moneda",
+    "sheetTitle": "Moneda",
+    "spaceSheetTitle": "Moneda del espacio",
+    "noConvertHint": "Solo cambia el símbolo de tus montos. No convierte lo que ya tienes registrado.",
+    "onbLabel": "Moneda",
+    "onbError": "Elige tu moneda",
+    "onbHint": "Puedes cambiarla después en Ajustes.",
+    "spaceLabel": "Moneda del espacio",
+    "spaceHint": "Todos los miembros verán los montos de este espacio en esta moneda. Solo el dueño puede cambiarla. Tu moneda personal no cambia.",
+    "spaceRequired": "Elige la moneda del espacio",
+    "guestHint": "La define el dueño del espacio"
   }
 }

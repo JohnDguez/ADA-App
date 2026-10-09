@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Crown } from 'lucide-react'
+import { CurrencySelect } from './CurrencySelect'
 import { CobroPeriodFields } from './CobroPeriodFields'
 import styles from './NewSharedSpacePanel.module.css'
 
@@ -21,6 +22,8 @@ export function NewSharedSpacePanel({ profile, sharedSpaces, onOpenPremium, onCr
 
   // ── Crear ──
   const [newName,     setNewName]     = useState('')
+  // Sugerida: la moneda personal del dueño; puede elegir otra para el espacio.
+  const [newCurrency, setNewCurrency] = useState(profile.currency || '')
   const [newFreq,     setNewFreq]     = useState('biweekly')
   const [newDay1,     setNewDay1]     = useState(1)
   const [newDay2,     setNewDay2]     = useState(16)
@@ -30,11 +33,13 @@ export function NewSharedSpacePanel({ profile, sharedSpaces, onOpenPremium, onCr
 
   async function handleCreate() {
     if (!newName.trim()) { setCreateError(t('newSharedSpacePanel.nameRequiredError')); return }
+    if (!newCurrency) { setCreateError(t('currency.spaceRequired')); return }
     setCreateSaving(true)
     setCreateError('')
     const { data, error } = await createSpace({
       name: newName.trim(),
       isPremium: profile.is_premium,
+      currency: newCurrency,
       cobroFreq: newFreq,
       cobroDay1: newFreq !== 'weekly' ? newDay1 : undefined,
       cobroDay2: newFreq === 'biweekly' ? newDay2 : undefined,
@@ -86,6 +91,10 @@ export function NewSharedSpacePanel({ profile, sharedSpaces, onOpenPremium, onCr
           <div className={styles.createTitle}>{t('newSharedSpacePanel.createTitle')}</div>
           <label className="field-label">{t('newSharedSpacePanel.spaceNameLabel')}</label>
           <input className={`field-input ${styles.fieldGroupMb16}`} value={newName} onChange={e => setNewName(e.target.value)} placeholder={t('newSharedSpacePanel.spaceNamePlaceholder')} />
+          <label className={`field-label ${styles.fieldLabelSpaced}`}>{t('currency.spaceLabel')}</label>
+          <div className={styles.fieldGroupMb16}>
+            <CurrencySelect value={newCurrency} onChange={setNewCurrency} sheetTitle={t('currency.spaceSheetTitle')} />
+          </div>
           <label className={`field-label ${styles.fieldLabelSpaced}`}>{t('settingsCobro.periodSection')}</label>
           <div className={styles.fieldGroupMb16}>
             <CobroPeriodFields

@@ -806,7 +806,7 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onSaveC
             <div className={styles.amountHero} onClick={e => e.currentTarget.querySelector('input')?.focus()}>
               <div className={styles.amountHeroLabel}>{t('paymentModal.amountLabel')}</div>
               <div className={styles.amountHeroRow}>
-                <span className={styles.amountHeroSymbol}>{getCurrencySymbol(profile)}</span>
+                <span className={styles.amountHeroSymbol}>{getCurrencySymbol()}</span>
                 <CentsAmountInput className={styles.amountHeroInput} emptyClassName={styles.amountHeroEmpty} value={amount} onChange={e => setAmount(e.target.value)} />
               </div>
             </div>

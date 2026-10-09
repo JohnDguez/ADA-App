@@ -6,7 +6,8 @@ import { Wallet } from '@phosphor-icons/react/dist/csr/Wallet'
 import { PageHero } from '../../components/PageHero'
 import { getWeekdaysShort } from '../../lib/utils'
 import { showToast } from '../../components/Toast'
-import { Card, SectionLabel, Row, Toggle } from '../../components/SettingsShared'
+import { Card, SectionLabel, Toggle } from '../../components/SettingsShared'
+import { CurrencySelect } from '../../components/CurrencySelect'
 import styles from './SettingsCobroPage.module.css'
 
 const BIWEEKLY_PRESETS = [
@@ -117,7 +118,11 @@ export function SettingsCobroPage({ profile, onUpdate, onBack, slideClass }) {
           </div>
         )}
 
-        <Row label={t('settingsCobro.currencyLabel')} value="MXN $" last />
+        <div className={styles.subSection}>
+          <div className={styles.subLabelMb8}>{t('settingsCobro.currencyLabel')}</div>
+          <CurrencySelect value={profile.currency} onChange={v => { onUpdate({ currency: v }); showToast(t('settingsCobro.toast.currencyUpdated')) }} />
+          <div className={styles.monthlyHelperText}>{t('currency.noConvertHint')}</div>
+        </div>
       </Card>
 
       {/* Ingreso */}

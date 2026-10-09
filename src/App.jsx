@@ -33,6 +33,7 @@ import { supabase } from './lib/supabase'
 import { computeMissingStatements, currentCycleSpend } from './lib/cardStatements'
 import { planFuture, getPlans, newPlan, applyCharged, applyPaid, revertPaid, revertCharged, applySettle, revertSettle, itemsTotal } from './lib/cardPlans'
 import { findAutoChargeCandidate, readAutoChargeSkip, addAutoChargeSkip, isCreditInstallmentCopy, dueDateNoon } from './lib/installmentCharge'
+import { setActiveCurrency } from './lib/currency'
 import { today, todayStr, addDays, dateToStr, dateOf, nextCobroPeriod, intlLocale } from './lib/utils'
 import { getBank } from './lib/cardCatalog'
 import { highlightPaymentWhenVisible } from './lib/highlightPayment'
@@ -174,6 +175,10 @@ export default function App() {
     ensureMonthLoaded, oldestYear,
   } = usePayments(user?.id, paymentsSpaceId, activeSpaceEntry?.space?.name)
   const { profile, loading: profileLoading, updateProfile, uploadAvatar, fetchProfile } = useProfile(user?.id)
+  // Moneda ACTIVA (v0.9.616): la del espacio que se está viendo, o la personal
+  // en "Personal" (y en la tarjeta "Nuevo espacio"). Se fija durante el render
+  // —antes de que pinten los hijos— para que `fmt()` ya use la correcta.
+  setActiveCurrency(activeSpaceEntry ? activeSpaceEntry.space.currency : profile.currency)
 
   // Fondo Compartido — a nivel de App (antes vivía solo dentro de
   // PaymentsPage.jsx) para que también llegue al check de Home (tercera
