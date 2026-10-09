@@ -55,12 +55,16 @@
      desvanece hacia la derecha; v0.9.633: baja a 25% porque la legibilidad
      ahora la da la pastilla esmerilada de .textCol. La legibilidad del
      saludo/nombre la da el text-shadow de .greetingText/.nameText. */
-  background: linear-gradient(
-    to right,
-    color-mix(in srgb, var(--bg) 25%, transparent) 0%,
-    color-mix(in srgb, var(--bg) 25%, transparent) 60%,
-    transparent 100%
-  );
+  /* v0.9.634 — franja esmerilada de todo el alto: tinte del tema + desenfoque,
+     y una máscara de izquierda a derecha que los desvanece juntos (la
+     máscara también recorta el backdrop-filter). Sustituye a la pastilla de
+     v0.9.633. Ajustes: 45% = tinte, 8px = desenfoque, 50%/100% = dónde
+     empieza/termina el desvanecido. */
+  background: color-mix(in srgb, var(--bg) 45%, transparent);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  -webkit-mask-image: linear-gradient(to right, #000 0%, #000 50%, transparent 100%);
+  mask-image: linear-gradient(to right, #000 0%, #000 50%, transparent 100%);
   pointer-events: none;
   z-index: 0;
 }
@@ -125,15 +129,7 @@
 
 .textCol {
   min-width: 0;
-  flex: 0 1 auto;
-  /* v0.9.633 — pastilla esmerilada detrás del saludo/nombre/botón: fondo del
-     tema semitransparente + desenfoque, para que el texto se lea sobre
-     cualquier ilustración sin tener que oscurecer/aclarar todo el header. */
-  padding: 8px 14px 8px 12px;
-  border-radius: 14px;
-  background: color-mix(in srgb, var(--bg) 55%, transparent);
-  -webkit-backdrop-filter: blur(8px);
-  backdrop-filter: blur(8px);
+  flex: 1;
 }
 
 .greetingText {
