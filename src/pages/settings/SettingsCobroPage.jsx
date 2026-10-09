@@ -171,7 +171,6 @@ export function SettingsCobroPage({ profile, onUpdate, onBack, slideClass }) {
               <span className={styles.amountPrefix}>{symbol}</span>
               <AmountInput value={salaryAmount} onChange={e => setSalaryAmount(e.target.value)} onBlur={handleSalaryBlur} aria-label={t('settingsCobro.amountLabel')} placeholder="0.00" className={`field-input ${styles.amountInput}`} />
             </div>
-            <div className={styles.monthlyHelperText}>{t('settingsCobro.amountAutoSaveHint')}</div>
           </div>
         )}
       </Card>

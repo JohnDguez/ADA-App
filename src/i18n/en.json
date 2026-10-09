@@ -204,7 +204,6 @@
       "currencyUpdated": "Currency updated"
     },
         "nextPayday": "Next payday: {{date}}",
-    "amountAutoSaveHint": "Saved when you leave the field.",
     "monthShortHint": "In shorter months, the last day of the month is used.",
     "currencySection": "Currency",
     "dayPair": "{{d1}} and {{d2}}"
