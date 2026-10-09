@@ -104,10 +104,10 @@
   /* Nube de luz: manchas de distinto tamaño que forman un contorno irregular y
      blando. Todos los radios terminan antes del borde de la caja → sin cortes. */
   background:
-    radial-gradient(ellipse 72px 50px at 50% 0, color-mix(in srgb, var(--nav-icon) 30%, transparent) 0%, transparent 100%),
-    radial-gradient(ellipse 46px 40px at 33% 0, color-mix(in srgb, var(--nav-icon) 20%, transparent) 0%, transparent 100%),
-    radial-gradient(ellipse 40px 54px at 64% 0, color-mix(in srgb, var(--nav-icon) 22%, transparent) 0%, transparent 100%),
-    radial-gradient(ellipse 30px 30px at 44% 0, color-mix(in srgb, var(--nav-icon) 14%, transparent) 0%, transparent 100%);
+    radial-gradient(ellipse 72px 50px at 50% 0, color-mix(in srgb, var(--accent) 55%, transparent) 0%, transparent 100%),
+    radial-gradient(ellipse 46px 40px at 33% 0, color-mix(in srgb, var(--accent) 38%, transparent) 0%, transparent 100%),
+    radial-gradient(ellipse 40px 54px at 64% 0, color-mix(in srgb, var(--accent) 42%, transparent) 0%, transparent 100%),
+    radial-gradient(ellipse 30px 30px at 44% 0, color-mix(in srgb, var(--accent) 28%, transparent) 0%, transparent 100%);
   filter: blur(6px);
   pointer-events: none;
 }
