@@ -5,7 +5,9 @@
   transform: translateX(-50%);
   width: calc(100% - 32px);
   max-width: 388px;
-  background: var(--nav-bg);
+  background: color-mix(in srgb, var(--nav-bg) 72%, transparent);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
   border-radius: 10px;
   display: flex;
   align-items: center;
@@ -80,6 +82,17 @@
   z-index: 0; /* por debajo del botón "+" al deslizarse */
 }
 .indicatorHidden { opacity: 0; }
+/* Iluminación tenue bajo la barra: viaja junto con el indicador */
+.indicator::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -14px;
+  right: -14px;
+  height: 46px;
+  background: radial-gradient(ellipse 60% 100% at 50% 0%, color-mix(in srgb, var(--nav-icon) 28%, transparent) 0%, transparent 100%);
+  pointer-events: none;
+}
 
 /* Adaptación tablet/desktop (Regla 42/43): a partir de 768px, BottomNav
    se reemplaza por NavRail.jsx — nunca conviven los dos a la vez. */
