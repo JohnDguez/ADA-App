@@ -51,14 +51,14 @@
      borde "recorte") — en tema claro sale un degradado claro, en tema
      oscuro uno oscuro, en vez de negro fijo siempre. */
   /* v0.9.613 — ya no es una "plasta" sólida: el velo es semitransparente
-     (la escena se ve a través). v0.9.632: 50% parejo hasta el 60% del ancho
-     (zona del texto) y se desvanece hacia la derecha, para que el saludo se
-     lea sobre cualquier imagen. La legibilidad del
+     (la escena se ve a través). v0.9.632: parejo hasta el 60% del ancho y se
+     desvanece hacia la derecha; v0.9.633: baja a 25% porque la legibilidad
+     ahora la da la pastilla esmerilada de .textCol. La legibilidad del
      saludo/nombre la da el text-shadow de .greetingText/.nameText. */
   background: linear-gradient(
     to right,
-    color-mix(in srgb, var(--bg) 50%, transparent) 0%,
-    color-mix(in srgb, var(--bg) 50%, transparent) 60%,
+    color-mix(in srgb, var(--bg) 25%, transparent) 0%,
+    color-mix(in srgb, var(--bg) 25%, transparent) 60%,
     transparent 100%
   );
   pointer-events: none;
@@ -125,7 +125,15 @@
 
 .textCol {
   min-width: 0;
-  flex: 1;
+  flex: 0 1 auto;
+  /* v0.9.633 — pastilla esmerilada detrás del saludo/nombre/botón: fondo del
+     tema semitransparente + desenfoque, para que el texto se lea sobre
+     cualquier ilustración sin tener que oscurecer/aclarar todo el header. */
+  padding: 8px 14px 8px 12px;
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--bg) 55%, transparent);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
 }
 
 .greetingText {
