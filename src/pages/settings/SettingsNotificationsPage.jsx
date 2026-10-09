@@ -56,12 +56,23 @@ export function SettingsNotificationsPage({ profile, user, onUpdate, onBack, sli
     }
     setTesting(false)
   }
+  // Una línea por canal: si llegó por PWA pero no por la app, aquí se ve por qué.
+  function channelLines(r) {
+    const app = r.fcmTokens === 0 ? t('settingsNotifications.testChNone')
+      : r.fcm?.sent > 0 ? t('settingsNotifications.testChOk')
+      : !r.firebaseKey ? t('settingsNotifications.testChNoKey')
+      : `${t('settingsNotifications.testChErr')} ${(r.fcm?.errors || []).map(e => e.code).join(', ')}`
+    const web = !r.webPush ? t('settingsNotifications.testChNone')
+      : r.web?.sent > 0 ? t('settingsNotifications.testChOk')
+      : `${t('settingsNotifications.testChErr')} ${r.web?.error || ''}`
+    return [
+      `${t('settingsNotifications.testChannelApp')}: ${app}`,
+      `${t('settingsNotifications.testChannelWeb')}: ${web}`,
+    ]
+  }
   function testSummary(r) {
-    const key = { sent: 'testSent', no_token: 'testNoToken', no_firebase_key: 'testNoKey', fcm_error: 'testFcmError', unreachable: 'testFail' }[r.status] || 'testFail'
-    let text = t(`settingsNotifications.${key}`)
-    if (r.status === 'fcm_error' && r.fcm?.errors?.length) text += ' ' + r.fcm.errors.map(e => e.code).join(', ')
-    if (r.status === 'unreachable' && r.detail) text += ` (${r.detail})`
-    return text
+    if (r.status === 'unreachable') return `${t('settingsNotifications.testFail')}${r.detail ? ` (${r.detail})` : ''}`
+    return t('settingsNotifications.testHint')
   }
   async function handlePushToggle() {
     if (pushTarget !== null) return
@@ -111,7 +122,9 @@ export function SettingsNotificationsPage({ profile, user, onUpdate, onBack, sli
             <div className={styles.testHint}>{t('settingsNotifications.testHint')}</div>
             {testResult && (
               <div className={styles.testResult}>
-                <div>{testSummary(testResult)}</div>
+                {testResult.status === 'unreachable'
+                  ? <div>{testSummary(testResult)}</div>
+                  : channelLines(testResult).map(l => <div key={l}>{l}</div>)}
                 {testResult.schedule && (<>
                   <div>
                     {Object.keys(testResult.pending || {}).length === 0

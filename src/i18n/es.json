@@ -220,7 +220,24 @@
       "permissionDenied": "Permiso denegado — actívalo en ajustes del navegador",
       "enableError": "Error al activar notificaciones",
       "enabled": "Notificaciones activadas"
-    }
+    },
+    "testButton": "Enviar notificación de prueba",
+    "testSending": "Enviando…",
+    "testHint": "Llega en ~6 segundos: sal de la app (botón de inicio) para verla.",
+    "testSent": "✓ Enviada. Si no la ves, revisa que el canal de notificaciones de LunaPay no esté silenciado en Ajustes de Android.",
+    "testNoToken": "Este dispositivo no tiene token de notificaciones guardado. Desactiva y vuelve a activar el switch de arriba.",
+    "testNoKey": "Falta la clave de Firebase en el servidor (FIREBASE_SERVICE_ACCOUNT_KEY en Vercel). El token sí está guardado.",
+    "testFcmError": "Firebase rechazó el envío:",
+    "testFail": "No se pudo contactar al servidor",
+    "testChannelApp": "App Android (Firebase)",
+    "testChannelWeb": "Navegador / PWA",
+    "testChOk": "✓ enviada",
+    "testChNone": "sin registrar en tu cuenta",
+    "testChNoKey": "✗ falta la clave de Firebase en Vercel",
+    "testChErr": "✗ error",
+    "testPending": "El cron avisaría hoy:",
+    "testPendingNone": "Hoy no hay nada que avisar (sin vencidos, ni pagos que venzan hoy o pronto).",
+    "testSchedule": "Hora configurada: {{hour}}:00 · hora local ahora: {{local}}:00 · último envío: {{last}}"
   },
   "settingsAppearance": {
     "title": "Apariencia",
@@ -284,7 +301,9 @@
     "markedUnpaid": "Marcado como no pagado",
     "unpostponed": "Regresado a pendiente",
     "shared": "Compartido",
-    "viewInSharedSpace": "Ver en el espacio compartido"
+    "viewInSharedSpace": "Ver en el espacio compartido",
+    "postponedCount_one": "{{count}} pospuesto",
+    "postponedCount_other": "{{count}} pospuestos"
   },
   "paymentsPage": {
     "title": "Gastos e ingresos",
@@ -541,16 +560,6 @@
     "errorPay": "Ingresa el monto que pagaste",
     "saveEstimate": "Guardar monto",
     "savePay": "Confirmar pago"
-  },
-  "recurrentMigrationModal": {
-    "title": "Mejora en pagos recurrentes",
-    "description": "Actualizamos cómo funcionan los pagos recurrentes para hacerlos más inteligentes y editables.",
-    "benefit1": "Los pagos se generan automáticamente periodo a periodo",
-    "benefit2": "Ahora puedes editar nombre, monto y fechas en cualquier momento",
-    "benefit3": "Siempre verás el pago actual y el siguiente en tu lista",
-    "warningTitle": "Cambio temporal visible",
-    "warningText": "Es posible que notes algunos ajustes en cómo se muestran tus pagos recurrentes mientras el sistema migra los datos. Tus pagos ya realizados están protegidos y no serán eliminados.",
-    "understood": "Entendido"
   },
   "passwordSetupModal": {
     "title": "Crea una contraseña",

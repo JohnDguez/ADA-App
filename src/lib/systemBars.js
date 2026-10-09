@@ -15,9 +15,27 @@ function apply() {
   SystemBars.setStyle({ style: isDark() ? SystemBarsStyle.Dark : SystemBarsStyle.Light }).catch(() => {})
 }
 
+// Fondo de la barra de estado al hacer scroll: arriba del todo es transparente
+// (se ve el hero/resplandor); al bajar, el contenido pasaría por debajo de la
+// hora y los iconos, así que aparece un fondo --bg (opacidad 0→1 en 60 px).
+function initStatusScrim() {
+  const el = document.createElement('div')
+  el.setAttribute('aria-hidden', 'true')
+  Object.assign(el.style, {
+    position: 'fixed', top: '0', left: '0', right: '0', height: 'var(--sat, 0px)',
+    background: 'var(--bg)', pointerEvents: 'none', opacity: '0', zIndex: '40',
+  })
+  document.body.appendChild(el)
+  const update = () => { el.style.opacity = String(Math.min(Math.max(window.scrollY / 60, 0), 1)) }
+  window.addEventListener('scroll', update, { passive: true })
+  update()
+}
+
 export function initSystemBars() {
   if (Capacitor.getPlatform() !== 'android') return
   apply()
+  if (document.body) initStatusScrim()
+  else window.addEventListener('DOMContentLoaded', initStatusScrim, { once: true })
   new MutationObserver(apply).observe(document.documentElement, {
     attributes: true,
     attributeFilter: ['data-theme'],
