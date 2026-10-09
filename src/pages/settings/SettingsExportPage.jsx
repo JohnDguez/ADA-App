@@ -877,7 +877,7 @@ export function SettingsExportPage({ profile, sharedSpaces, onOpenPremium, onBac
             </button>
             {/* Método de pago (entrega C, v0.9.490) — solo Personal: en un
                 Espacio Compartido las tarjetas no aplican. */}
-            {space === 'personal' && includeGastos && (
+            <Collapse open={space === 'personal' && includeGastos}>
               <button type="button" className={styles.filterRow} onClick={() => setOpenSheet('method')}>
                 <span>{t('settingsExport.method.label')}</span>
                 <span className={styles.filterValue}>
@@ -885,7 +885,7 @@ export function SettingsExportPage({ profile, sharedSpaces, onOpenPremium, onBac
                   <ChevronRight size={14} />
                 </span>
               </button>
-            )}
+            </Collapse>
             {spaces.length > 0 && (
               <button type="button" className={styles.filterRow} onClick={() => setOpenSheet('space')}>
                 <span>{t('settingsExport.spaceLabel')}</span>
