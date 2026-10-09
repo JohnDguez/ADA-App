@@ -1478,9 +1478,12 @@
   "settingsExport": {
     "title": "Exportar datos",
     "intro": "Descarga un archivo CSV con tus registros, o genera un reporte PDF con gráficas y resumen.",
-    "dataToInclude": "Datos a incluir",
+    "dataToInclude": "Qué incluir",
     "expenses": "Gastos",
     "income": "Ingresos",
+    "filters": "Filtros",
+    "period": "Periodo",
+    "custom": "Personalizado",
     "spaceLabel": "Espacio",
     "space": {
       "personal": "Personal"

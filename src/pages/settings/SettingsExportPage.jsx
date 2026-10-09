@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Receipt, Wallet, Download, FileSpreadsheet, FileText, Target } from 'lucide-react'
+import { Receipt, Wallet, Download, FileSpreadsheet, FileText, Target, Check, ChevronRight } from 'lucide-react'
 // Ícono del encabezado vía Phosphor Icons, peso "duotone" — Lucide se
 // siente muy plano para un ícono ancla de página completa (pedido de
 // Johnatan); el resto de la app se queda 100% en lucide-react, sin cambios.
@@ -11,7 +11,9 @@ import { FileXls } from '@phosphor-icons/react/dist/csr/FileXls'
 import { PageHero } from '../../components/PageHero'
 import { supabase } from '../../lib/supabase'
 import { PremiumLock } from '../../components/PremiumLock'
-import { Select } from '../../components/Select'
+import { OptionSheet } from '../../components/OptionSheet'
+import { BottomSheet } from '../../components/BottomSheet'
+import { Collapse } from '../../components/Collapse'
 import { DatePicker } from '../../components/DatePicker'
 import { dateToStr, todayStr, dateOf, fmt, getCategoryLabel, cobroPeriod, addDays, today, MONTHS_SHORT } from '../../lib/utils'
 import { buildCsv, downloadCsv } from '../../lib/exportCsv'
@@ -40,7 +42,8 @@ export function SettingsExportPage({ profile, sharedSpaces, onOpenPremium, onBac
   const [space, setSpace]   = useState('personal') // 'personal' | id de shared_spaces
   const [from, setFrom]     = useState(() => dateToStr(new Date(new Date().getFullYear(), new Date().getMonth(), 1)))
   const [to, setTo]         = useState(() => todayStr())
-  const [activeShortcut, setActiveShortcut] = useState(null) // null = rango personalizado
+  const [activeShortcut, setActiveShortcut] = useState('currentMonth') // null = rango personalizado (el rango inicial es justo "Este mes")
+  const [openSheet, setOpenSheet] = useState(null) // null | 'period' | 'method' | 'space'
 
   // Accesos rápidos de rango de fechas (Regla 8, mockup confirmado). Cada
   // uno calcula from/to y marca su propio chip como activo; tocar un
@@ -808,6 +811,10 @@ export function SettingsExportPage({ profile, sharedSpaces, onOpenPremium, onBac
 
 
   const total = counts ? counts.gastos + counts.ingresos : null
+  const [customOpen, setCustomOpen] = useState(false)
+  const periodValueLabel = activeShortcut
+    ? SHORTCUTS.find(sc => sc.key === activeShortcut)?.label
+    : `${formatDateLabel(from)} – ${formatDateLabel(to)}`
   const noneSelected = !includeGastos && !includeIngresos && !(format === 'pdf' && includeGoals)
 
   return (
@@ -825,110 +832,76 @@ export function SettingsExportPage({ profile, sharedSpaces, onOpenPremium, onBac
         onUpgradeClick={onOpenPremium}
       >
         <div className={styles.content}>
-          <div className={styles.fieldGroup}>
-            <div className="field-label">{t('settingsExport.format')}</div>
-            <div className={styles.chipRow}>
-              <button
-                type="button"
-                onClick={() => setFormat('csv')}
-                className={`${styles.chip} ${format === 'csv' ? styles.chipActive : ''}`}
-              >
-                <FileText size={18} />
-                <span>CSV</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => setFormat('pdf')}
-                className={`${styles.chip} ${format === 'pdf' ? styles.chipActive : ''}`}
-              >
-                <FileSpreadsheet size={18} />
-                <span>PDF</span>
-              </button>
-            </div>
+          <div className={styles.segmented}>
+            <button type="button" onClick={() => setFormat('csv')}
+              className={`${styles.segment} ${format === 'csv' ? styles.segmentActive : ''}`}>
+              <FileText size={18} />
+              <span>CSV</span>
+            </button>
+            <button type="button" onClick={() => setFormat('pdf')}
+              className={`${styles.segment} ${format === 'pdf' ? styles.segmentActive : ''}`}>
+              <FileSpreadsheet size={18} />
+              <span>PDF</span>
+            </button>
           </div>
 
-          <div className={styles.fieldGroup}>
-            <div className="field-label">{t('settingsExport.dataToInclude')}</div>
-            <div className={styles.chipRow}>
-              <button
-                type="button"
-                onClick={() => setIncludeGastos(v => !v)}
-                className={`${styles.chip} ${includeGastos ? styles.chipActive : ''}`}
-              >
-                <Receipt size={18} />
-                <span>{t('settingsExport.expenses')}</span>
+          <div className={styles.sectionLabel}>{t('settingsExport.dataToInclude')}</div>
+          <div className={styles.chipRow}>
+            <button type="button" onClick={() => setIncludeGastos(v => !v)}
+              className={`${styles.chip} ${includeGastos ? styles.chipActive : ''}`}>
+              {includeGastos ? <Check size={16} /> : <Receipt size={16} />}
+              <span>{t('settingsExport.expenses')}</span>
+            </button>
+            <button type="button" onClick={() => setIncludeIngresos(v => !v)}
+              className={`${styles.chip} ${includeIngresos ? styles.chipActive : ''}`}>
+              {includeIngresos ? <Check size={16} /> : <Wallet size={16} />}
+              <span>{t('settingsExport.income')}</span>
+            </button>
+            {format === 'pdf' && (
+              <button type="button" onClick={() => setIncludeGoals(v => !v)}
+                className={`${styles.chip} ${includeGoals ? styles.chipActive : ''}`}>
+                {includeGoals ? <Check size={16} /> : <Target size={16} />}
+                <span>{t('settingsExport.pdf.goalsTitle')}</span>
               </button>
-              <button
-                type="button"
-                onClick={() => setIncludeIngresos(v => !v)}
-                className={`${styles.chip} ${includeIngresos ? styles.chipActive : ''}`}
-              >
-                <Wallet size={18} />
-                <span>{t('settingsExport.income')}</span>
-              </button>
-              {format === 'pdf' && (
-                <button
-                  type="button"
-                  onClick={() => setIncludeGoals(v => !v)}
-                  className={`${styles.chip} ${includeGoals ? styles.chipActive : ''}`}
-                >
-                  <Target size={18} />
-                  <span>{t('settingsExport.pdf.goalsTitle')}</span>
-                </button>
-              )}
-            </div>
+            )}
           </div>
 
-          {/* Método de pago (entrega C, v0.9.490) — solo Personal: en un
-              Espacio Compartido las tarjetas no aplican. */}
-          {space === 'personal' && includeGastos && (
-            <div className={styles.fieldGroup}>
-              <div className="field-label">{t('settingsExport.method.label')}</div>
-              <div className={styles.fieldSurface}>
-                <Select value={methodFilter} onChange={setMethodFilter} options={methodFilters} />
-              </div>
-            </div>
-          )}
-
-          <div className={styles.fieldGroup}>
-            <div className="field-label">{t('settingsExport.spaceLabel')}</div>
-            <div className={styles.fieldSurface}>
-              <Select value={space} onChange={setSpace} options={spaceOptions} />
-            </div>
-          </div>
-
-          <div className={styles.fieldGroup}>
-            <div className="field-label">{t('settingsExport.dateRange')}</div>
-            <div className={styles.shortcutRow}>
-              {SHORTCUTS.map(s => (
-                <button
-                  key={s.key}
-                  type="button"
-                  onClick={() => applyShortcut(s.key)}
-                  className={`${styles.shortcutChip} ${activeShortcut === s.key ? styles.shortcutChipActive : ''}`}
-                >
-                  {s.label}
-                </button>
-              ))}
-            </div>
-            <div className={styles.dateRow}>
-              <div className={styles.dateCol}>
-                <div className={styles.dateSubLabel}>{t('settingsExport.from')}</div>
-                <div className={styles.fieldSurface}>
-                  <DatePicker value={from} onChange={handleFromChange} />
-                </div>
-              </div>
-              <div className={styles.dateCol}>
-                <div className={styles.dateSubLabel}>{t('settingsExport.to')}</div>
-                <div className={styles.fieldSurface}>
-                  <DatePicker value={to} onChange={handleToChange} />
-                </div>
-              </div>
-            </div>
+          <div className={styles.sectionLabel}>{t('settingsExport.filters')}</div>
+          <div className={styles.filterCard}>
+            <button type="button" className={styles.filterRow} onClick={() => setOpenSheet('period')}>
+              <span>{t('settingsExport.period')}</span>
+              <span className={styles.filterValue}>
+                <span className={styles.filterValueText}>{periodValueLabel}</span>
+                <ChevronRight size={14} />
+              </span>
+            </button>
+            {/* Método de pago (entrega C, v0.9.490) — solo Personal: en un
+                Espacio Compartido las tarjetas no aplican. */}
+            {space === 'personal' && includeGastos && (
+              <button type="button" className={styles.filterRow} onClick={() => setOpenSheet('method')}>
+                <span>{t('settingsExport.method.label')}</span>
+                <span className={styles.filterValue}>
+                  <span className={styles.filterValueText}>{methodFilters.find(f => f.value === methodFilter)?.label}</span>
+                  <ChevronRight size={14} />
+                </span>
+              </button>
+            )}
+            {spaces.length > 0 && (
+              <button type="button" className={styles.filterRow} onClick={() => setOpenSheet('space')}>
+                <span>{t('settingsExport.spaceLabel')}</span>
+                <span className={styles.filterValue}>
+                  <span className={styles.filterValueText}>{spaceOptions.find(o => o.value === space)?.label}</span>
+                  <ChevronRight size={14} />
+                </span>
+              </button>
+            )}
           </div>
 
           <div className={styles.countCard}>
-            <span className={styles.countLabel}>{t('settingsExport.recordsFound')}</span>
+            <div>
+              <div className={styles.countRange}>{formatDateLabel(from)} – {formatDateLabel(to)}</div>
+              <div className={styles.countLabel}>{t('settingsExport.recordsFound')}</div>
+            </div>
             <span className={styles.countValue}>{counting ? '…' : (total ?? 0)}</span>
           </div>
 
@@ -944,6 +917,43 @@ export function SettingsExportPage({ profile, sharedSpaces, onOpenPremium, onBac
           </button>
         </div>
       </PremiumLock>
+
+      <OptionSheet open={openSheet === 'method'} onClose={() => setOpenSheet(null)} title={t('settingsExport.method.label')}
+        options={methodFilters} value={methodFilter} onSelect={setMethodFilter} />
+      <OptionSheet open={openSheet === 'space'} onClose={() => setOpenSheet(null)} title={t('settingsExport.spaceLabel')}
+        options={spaceOptions} value={space} onSelect={setSpace} />
+
+      <BottomSheet open={openSheet === 'period'} title={t('settingsExport.period')} onClose={() => setOpenSheet(null)}>
+        <div className={styles.periodList}>
+          {SHORTCUTS.map(sc => (
+            <button key={sc.key} type="button" className={styles.periodOption}
+              onClick={() => { applyShortcut(sc.key); setCustomOpen(false); setOpenSheet(null) }}>
+              <span className={styles.periodLabel}>{sc.label}</span>
+              {activeShortcut === sc.key && !customOpen && <Check size={18} color="var(--accent)" />}
+            </button>
+          ))}
+          <button type="button" className={styles.periodOption} onClick={() => setCustomOpen(v => !v)}>
+            <span className={styles.periodLabel}>{t('settingsExport.custom')}</span>
+            {(activeShortcut === null || customOpen) && <Check size={18} color="var(--accent)" />}
+          </button>
+        </div>
+        <Collapse open={customOpen || activeShortcut === null}>
+          <div className={styles.dateRow}>
+            <div className={styles.dateCol}>
+              <div className={styles.dateSubLabel}>{t('settingsExport.from')}</div>
+              <div className={styles.fieldSurface}>
+                <DatePicker value={from} onChange={handleFromChange} sheet sheetTitle={t('settingsExport.from')} />
+              </div>
+            </div>
+            <div className={styles.dateCol}>
+              <div className={styles.dateSubLabel}>{t('settingsExport.to')}</div>
+              <div className={styles.fieldSurface}>
+                <DatePicker value={to} onChange={handleToChange} sheet sheetTitle={t('settingsExport.to')} />
+              </div>
+            </div>
+          </div>
+        </Collapse>
+      </BottomSheet>
     </div>
   )
 }

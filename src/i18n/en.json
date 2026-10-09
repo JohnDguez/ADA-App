@@ -1478,9 +1478,12 @@
   "settingsExport": {
     "title": "Export data",
     "intro": "Download a CSV file with your records, or generate a PDF report with charts and a summary.",
-    "dataToInclude": "Data to include",
+    "dataToInclude": "What to include",
     "expenses": "Expenses",
     "income": "Income",
+    "filters": "Filters",
+    "period": "Period",
+    "custom": "Custom",
     "spaceLabel": "Space",
     "space": {
       "personal": "Personal"
