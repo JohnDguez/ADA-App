@@ -1059,6 +1059,9 @@
     "confirm": "Yes, mark as paid"
   },
   "cobroPeriodFields": {
+    "periodLabel": "Payment period",
+    "payDayLabel": "Pay day",
+    "payDaysLabel": "Pay days",
     "monthlyHelperPrefix": "The period starts on day"
   },
   "datePicker": {
@@ -1308,6 +1311,12 @@
     "closeAriaLabel": "Close Goals — swipe down"
   },
   "settingsSharedSpacePage": {
+    "joinFab": "Join with code",
+    "regenerate": "Generate",
+    "copyCode": "Copy code",
+    "regenConfirm": "Generate a new code? The previous one will stop working.",
+    "permSummary": "{{on}} of {{total}} permissions",
+    "removeFromSpace": "Remove from space",
     "title": "Shared Space",
     "description": "Create a space, join with a code, or manage members and permissions of the one you already have.",
     "invitedSpacesLabel": "Spaces you were invited to",
@@ -1345,11 +1354,11 @@
     "permContributeGoals": "Contribute to goals",
     "permWithdrawGoals": "Withdraw from goals",
     "permWithdrawGoalsSub": "Can take out money other members contributed",
-    "clearDataButton": "Delete all payments and income",
+    "clearDataButton": "Delete payments and income",
     "confirmClearText": "ALL payments and income from \"{{name}}\" will be deleted, with no way to undo it. The space, code, and members stay the same.",
     "clearing": "Deleting…",
     "clearAll": "Delete all",
-    "deleteSpaceButton": "Delete Shared Space"
+    "deleteSpaceButton": "Delete space"
   },
   "app": {
     "toast": {

@@ -18,7 +18,7 @@ const BIWEEKLY_PRESETS = [
 // queda local es si se está mostrando el modo "Otro" (días quincenales
 // personalizados) — mismo patrón que el original, es solo un tema de qué
 // inputs mostrar, no del valor en sí.
-export function CobroPeriodFields({ freq, day1, day2, weekday, onChangeFreq, onChangeDay1, onChangeDay2, onChangeWeekday, showCurrency = true }) {
+export function CobroPeriodFields({ freq, day1, day2, weekday, onChangeFreq, onChangeDay1, onChangeDay2, onChangeWeekday }) {
   const { t } = useTranslation()
   const isPresetBiweekly = BIWEEKLY_PRESETS.some(p => p.d1 === (day1 ?? 1) && p.d2 === (day2 ?? 16))
   const [forceCustom, setForceCustom] = useState(!isPresetBiweekly)
@@ -40,7 +40,7 @@ export function CobroPeriodFields({ freq, day1, day2, weekday, onChangeFreq, onC
 
       {freq === 'weekly' && (
         <div className={styles.fieldGroup}>
-          <div className={styles.subLabelMb8}>{t('settingsCobro.payDayLabel')}</div>
+          <div className={styles.subLabelMb8}>{t('cobroPeriodFields.payDayLabel')}</div>
           <div className={styles.weekdayRow}>
             {getWeekdaysShort().map((day, i) => (
               <button key={i} type="button" onClick={() => onChangeWeekday(i)}
@@ -54,7 +54,7 @@ export function CobroPeriodFields({ freq, day1, day2, weekday, onChangeFreq, onC
 
       {freq === 'biweekly' && (
         <div className={styles.fieldGroup}>
-          <div className={styles.subLabelMb8}>{t('settingsCobro.payDaysLabel')}</div>
+          <div className={styles.subLabelMb8}>{t('cobroPeriodFields.payDaysLabel')}</div>
           <div className={styles.presetsRow}>
             {BIWEEKLY_PRESETS.map(p => (
               <button key={`${p.d1}-${p.d2}`} type="button" onClick={() => { onChangeDay1(p.d1); onChangeDay2(p.d2); setForceCustom(false) }}
@@ -84,20 +84,19 @@ export function CobroPeriodFields({ freq, day1, day2, weekday, onChangeFreq, onC
 
       {freq === 'monthly' && (
         <div className={styles.fieldGroup}>
-          <div className={styles.subLabelMb8}>{t('settingsCobro.payDayLabel')}</div>
-          <input type="number" min="1" max="31" defaultValue={day1 ?? 1} onBlur={e => onChangeDay1(Math.min(31, Math.max(1, parseInt(e.target.value) || 1)))} placeholder={t('settingsCobro.monthlyPlaceholder')} className={`field-input ${styles.monthlyDayInput}`} />
-          {day1 && (
-            <div className={styles.monthlyHelperText}>
-              {t('cobroPeriodFields.monthlyHelperPrefix')} <strong>{day1}</strong> {t('settingsCobro.monthlyHelperSuffix')}
-            </div>
-          )}
-        </div>
-      )}
-
-      {showCurrency && (
-        <div className={styles.currencyRow}>
-          <span className={styles.currencyLabel}>{t('settingsCobro.currencyLabel')}</span>
-          <span className={styles.currencyValue}>MXN $</span>
+          <div className={styles.subLabelMb8}>{t('cobroPeriodFields.payDayLabel')}</div>
+          <div className={styles.dayGrid}>
+            {Array.from({ length: 31 }, (_, i) => i + 1).map(d => (
+              <button key={d} type="button" onClick={() => onChangeDay1(d)}
+                className={`${styles.dayButton} ${(day1 ?? 1) === d ? styles.dayButtonActive : ''}`}>
+                {d}
+              </button>
+            ))}
+          </div>
+          <div className={styles.monthlyHelperText}>
+            {t('cobroPeriodFields.monthlyHelperPrefix')} <strong>{day1 ?? 1}</strong> {t('settingsCobro.monthlyHelperSuffix')}
+            {(day1 ?? 1) >= 29 && ` ${t('settingsCobro.monthShortHint')}`}
+          </div>
         </div>
       )}
     </div>

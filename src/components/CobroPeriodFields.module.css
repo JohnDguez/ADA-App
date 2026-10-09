@@ -107,8 +107,28 @@
   margin-bottom: 4px;
 }
 
-.monthlyDayInput {
-  max-width: 120px;
+.dayGrid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.dayButton {
+  height: 36px;
+  border-radius: 5px;
+  border: none;
+  background: var(--bg);
+  color: var(--text);
+  font-weight: 400;
+  font-size: 13px;
+  font-family: 'DM Sans', sans-serif;
+  cursor: pointer;
+}
+
+.dayButtonActive {
+  background: var(--accent);
+  color: var(--surface);
+  font-weight: 600;
 }
 
 .monthlyHelperText {
@@ -116,21 +136,4 @@
   font-weight: 400;
   color: var(--text);
   margin-top: 6px;
-}
-
-.currencyRow {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-size: 13px;
-  padding-top: 4px;
-}
-
-.currencyLabel {
-  color: var(--text);
-  font-weight: 600;
-}
-
-.currencyValue {
-  color: var(--text);
 }

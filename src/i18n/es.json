@@ -1059,6 +1059,9 @@
     "confirm": "Sí, marcar pagado"
   },
   "cobroPeriodFields": {
+    "periodLabel": "Periodo de pagos",
+    "payDayLabel": "Día de pago",
+    "payDaysLabel": "Días de pago",
     "monthlyHelperPrefix": "El periodo empieza el día"
   },
   "datePicker": {
@@ -1308,6 +1311,12 @@
     "closeAriaLabel": "Cerrar Metas — desliza hacia abajo"
   },
   "settingsSharedSpacePage": {
+    "joinFab": "Unirme con código",
+    "regenerate": "Generar",
+    "copyCode": "Copiar código",
+    "regenConfirm": "¿Generar un código nuevo? El anterior dejará de funcionar.",
+    "permSummary": "{{on}} de {{total}} permisos",
+    "removeFromSpace": "Quitar del espacio",
     "title": "Espacio Compartido",
     "description": "Crea un espacio, únete con un código, o administra miembros y permisos del que ya tienes.",
     "invitedSpacesLabel": "Espacios donde te invitaron",
@@ -1345,11 +1354,11 @@
     "permContributeGoals": "Aportar a metas",
     "permWithdrawGoals": "Retirar de metas",
     "permWithdrawGoalsSub": "Puede sacar dinero que aportaron otros miembros",
-    "clearDataButton": "Borrar todos los pagos e ingresos",
+    "clearDataButton": "Borrar pagos e ingresos",
     "confirmClearText": "Se borrarán TODOS los pagos e ingresos de \"{{name}}\", sin poder deshacerlo. El espacio, el código y los miembros se quedan igual.",
     "clearing": "Borrando…",
     "clearAll": "Borrar todo",
-    "deleteSpaceButton": "Eliminar Espacio Compartido"
+    "deleteSpaceButton": "Eliminar espacio"
   },
   "app": {
     "toast": {

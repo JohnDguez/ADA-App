@@ -95,7 +95,7 @@ export function NewSharedSpacePanel({ profile, sharedSpaces, onOpenPremium, onCr
           <div className={styles.fieldGroupMb16}>
             <CurrencySelect value={newCurrency} onChange={setNewCurrency} sheetTitle={t('currency.spaceSheetTitle')} />
           </div>
-          <label className={`field-label ${styles.fieldLabelSpaced}`}>{t('settingsCobro.periodSection')}</label>
+          <label className={`field-label ${styles.fieldLabelSpaced}`}>{t('cobroPeriodFields.periodLabel')}</label>
           <div className={styles.fieldGroupMb16}>
             <CobroPeriodFields
               freq={newFreq} day1={newDay1} day2={newDay2} weekday={newWeekday}
