@@ -847,7 +847,44 @@
       "subOff": "Crea una cuota pendiente en Inicio por cada pago.",
       "summary": "Pagarás {{count}} cuotas de ${{amount}}, una en cada corte de tu tarjeta.",
       "firstCut": "La primera entra en tu siguiente corte, el {{day}} de {{month}}."
-    }
+    },
+    "typePicker": {
+      "title": "¿Qué tipo de pago es?",
+      "subtitle": "Elige uno para mostrarte solo lo necesario",
+      "change": "Cambiar",
+      "changed": "Cambiaste a {{type}}. Conservamos nombre, categoría y monto.",
+      "single": {
+        "title": "Pago único",
+        "desc": "Solo esta vez. Súper, gasolina, una cena."
+      },
+      "recurrent": {
+        "title": "Recurrente",
+        "desc": "Se repite solo cada semana, quincena o mes. Renta, luz, Netflix.",
+        "hint": "Se crea el siguiente automáticamente"
+      },
+      "installment": {
+        "title": "En parcialidades",
+        "desc": "Un total dividido en pagos. Laptop a 12 meses."
+      }
+    },
+    "more": {
+      "title": "Más opciones",
+      "less": "Menos opciones",
+      "active_one": "{{count}} activa",
+      "active_other": "{{count}} activas",
+      "variable": "Variable",
+      "fixed": "Fijo",
+      "paid": "Pagado",
+      "unpaid": "Sin pagar"
+    },
+    "steps": {
+      "label": "Paso {{n}} de 2",
+      "data": "Datos del pago",
+      "amountDate": "Cuánto y cuándo",
+      "next": "Siguiente",
+      "back": "Atrás"
+    },
+    "alreadyPaidSub": "Lo registra como pagado hoy"
   },
   "pageHeader": {
     "greetingMorning": "¡Buenos días!",

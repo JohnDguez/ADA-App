@@ -847,7 +847,44 @@
       "subOff": "Creates a pending payment on Home for each installment.",
       "summary": "You will pay {{count}} installments of ${{amount}}, one on each card statement.",
       "firstCut": "The first one lands on your next statement, on {{month}} {{day}}."
-    }
+    },
+    "typePicker": {
+      "title": "What kind of payment is it?",
+      "subtitle": "Pick one so we only show what you need",
+      "change": "Change",
+      "changed": "Switched to {{type}}. We kept name, category and amount.",
+      "single": {
+        "title": "One-time payment",
+        "desc": "Just this once. Groceries, gas, a dinner."
+      },
+      "recurrent": {
+        "title": "Recurring",
+        "desc": "Repeats on its own every week, two weeks or month. Rent, power, Netflix.",
+        "hint": "The next one is created automatically"
+      },
+      "installment": {
+        "title": "Installments",
+        "desc": "A total split into payments. A laptop over 12 months."
+      }
+    },
+    "more": {
+      "title": "More options",
+      "less": "Fewer options",
+      "active_one": "{{count}} active",
+      "active_other": "{{count}} active",
+      "variable": "Variable",
+      "fixed": "Fixed",
+      "paid": "Paid",
+      "unpaid": "Unpaid"
+    },
+    "steps": {
+      "label": "Step {{n}} of 2",
+      "data": "Payment details",
+      "amountDate": "How much and when",
+      "next": "Next",
+      "back": "Back"
+    },
+    "alreadyPaidSub": "Records it as paid today"
   },
   "pageHeader": {
     "greetingMorning": "Good morning!",

@@ -8,9 +8,14 @@ import { supabase } from '../lib/supabase'
 import { ConfirmCloseModal } from './ConfirmCloseModal'
 import { ConfirmDeleteModal } from './ConfirmDeleteModal'
 import { FrequencyPicker } from './FrequencyPicker'
-import { PremiumLock } from './PremiumLock'
 import { Select } from './Select'
-import { PaymentMethodField } from './PaymentMethodField'
+import { PaymentMethodField, cardLabel } from './PaymentMethodField'
+import { NumberCircleOne } from '@phosphor-icons/react/dist/csr/NumberCircleOne'
+import { ArrowsClockwise } from '@phosphor-icons/react/dist/csr/ArrowsClockwise'
+import { Rows } from '@phosphor-icons/react/dist/csr/Rows'
+import { CaretDown } from '@phosphor-icons/react/dist/csr/CaretDown'
+import { CaretUp } from '@phosphor-icons/react/dist/csr/CaretUp'
+import { Lock as PhLock } from '@phosphor-icons/react/dist/csr/Lock'
 import { nextCutAfter } from '../lib/cardStatements'
 import { DatePicker } from './DatePicker'
 import AmountInput from './AmountInput'
@@ -81,6 +86,14 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onSaveC
   const [addingCategory,     setAddingCategory]     = useState(false)
   const [newCategoryName,    setNewCategoryName]    = useState('')
   const [periodIncomes,      setPeriodIncomes]      = useState([])
+  // Flujo por tipo (v0.9.604): al crear, primero se elige el tipo de pago.
+  const [typeChosen,  setTypeChosen]  = useState(false)
+  const [step,        setStep]        = useState(1)      // parcialidades: 1 = datos, 2 = cuánto y cuándo
+  const [moreOpen,    setMoreOpen]    = useState(false)  // "Más opciones"
+  const [impactOpen,  setImpactOpen]  = useState(false)  // franja de proyección abierta
+  const [typeNote,    setTypeNote]    = useState('')
+  const typeNoteTimer = useRef(null)
+  const hadTypeRef    = useRef(false)
 
   const isEditingInstallment = !!(initial?.is_installment)
   // Número del pago en curso. En una COPIA es su propio current_installment;
@@ -202,6 +215,9 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onSaveC
       setAlreadyPaid(false)
       setPaidAt('')
     }
+    setTypeChosen(!!initial || !!prefill || autoStart === 'voice' || autoStart === 'scan')
+    hadTypeRef.current = false
+    setStep(1); setMoreOpen(false); setImpactOpen(false); setTypeNote('')
     setError(''); setConfirmClose(false); setAddingCategory(false); setNewCategoryName('')
   }, [initial, open])
 
@@ -400,12 +416,41 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onSaveC
     setNewCategoryName('')
   }
 
+  // Cambiar de tipo conserva lo común (nombre, categoría, monto, fecha, método);
+  // lo propio de cada tipo queda guardado en su estado y vuelve si se regresa.
+  function selectType(m) {
+    if (m !== 'installment' && totalAmount && !amount) setAmount(String(totalAmount))
+    if (m === 'installment' && amount && !totalAmount) setTotalAmount(String(amount))
+    if (hadTypeRef.current && m !== mode) {
+      setTypeNote(t('paymentModal.typePicker.changed', { type: t(`paymentModal.tabs.${m}`) }))
+      clearTimeout(typeNoteTimer.current)
+      typeNoteTimer.current = setTimeout(() => setTypeNote(''), 4000)
+    }
+    hadTypeRef.current = true
+    setMode(m); setStep(1); setTypeChosen(true)
+  }
+
   if (!open) return null
 
   const showDatePicker     = mode === 'single' || (mode === 'installment' && !linked) || (mode === 'recurrent' && monthBasedFreqs.includes(recurFreq))
   const showWeekdayPicker  = mode === 'recurrent' && recurFreq === 'weekly'
   const showBiweeklyPicker = mode === 'recurrent' && recurFreq === 'biweekly'
   const nextBiDate         = biweeklyDate ? nextBiweeklyFromDate(biweeklyDate) : null
+
+  // Flujo por tipo (v0.9.604)
+  const isFlat       = mode !== 'installment'                         // Único / Recurrente: una sola pantalla
+  const showDataStep = isFlat || !!initial || step === 1              // nombre + categoría
+  const moreVisible  = !!initial || moreOpen
+  const moreActive   = (methodId ? 1 : 0) + (mode === 'single' && isVariable ? 1 : 0) + (alreadyPaid ? 1 : 0)
+  const moreSummary  = [
+    selectedCard ? cardLabel(selectedCard, t) : t('paymentMethod.cash'),
+    mode === 'single' ? t(isVariable ? 'paymentModal.more.variable' : 'paymentModal.more.fixed') : null,
+    mode === 'single' ? t(alreadyPaid ? 'paymentModal.more.paid' : 'paymentModal.more.unpaid') : null,
+  ].filter(Boolean).join(' · ')
+  function goNextStep() {
+    if (!name.trim()) { setError(t('paymentModal.nameError')); return }
+    setError(''); setStep(2)
+  }
 
   // Simulador — impacto en el periodo actual y el siguiente. Solo aplica a
   // pagos nuevos (no ediciones) de tipo único o recurrente con monto fijo.
@@ -633,6 +678,37 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onSaveC
     )
   }
 
+  if (!initial && !typeChosen) {
+    const types = [
+      ['single',      NumberCircleOne,  'single'],
+      ['recurrent',   ArrowsClockwise,  'recurrent'],
+      ['installment', Rows,             'installment'],
+    ]
+    return (
+      <>
+        <div onClick={e => e.target === e.currentTarget && requestClose()} className={styles.overlay}>
+          <div className={styles.panel}>
+            <div className={styles.handle} />
+            <div className={styles.modalTitle}>{t('paymentModal.typePicker.title')}</div>
+            <div className={styles.typePickerSub}>{t('paymentModal.typePicker.subtitle')}</div>
+            {types.map(([m, Icon, k]) => (
+              <button key={m} type="button" onClick={() => selectType(m)} className={`${styles.typeOption} ${mode === m && hadTypeRef.current ? styles.typeOptionCurrent : ''}`}>
+                <span className={styles.typeOptionIcon}><Icon size={24} /></span>
+                <span className={styles.typeOptionText}>
+                  <span className={styles.typeOptionTitle}>{t(`paymentModal.typePicker.${k}.title`)}</span>
+                  <span className={styles.typeOptionDesc}>{t(`paymentModal.typePicker.${k}.desc`)}</span>
+                  {t(`paymentModal.typePicker.${k}.hint`, { defaultValue: '' }) && <span className={styles.typeOptionHint}>{t(`paymentModal.typePicker.${k}.hint`)}</span>}
+                </span>
+              </button>
+            ))}
+            <button onClick={requestClose} className={`btn-ghost ${styles.cancelButtonSpacing}`}>{t('buttons.cancel')}</button>
+          </div>
+        </div>
+        <ConfirmCloseModal open={confirmClose} onConfirm={() => { setConfirmClose(false); onClose() }} onCancel={() => setConfirmClose(false)} />
+      </>
+    )
+  }
+
   return (
     <>
       <div onClick={e => e.target === e.currentTarget && requestClose()} className={styles.overlay}>
@@ -640,28 +716,36 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onSaveC
           <div className={styles.handle} />
 
           {!initial && (
-            <div data-coachmark="modal-payment-type-tabs" className={styles.paymentTypeTabs}>
-              {[['single',t('paymentModal.tabs.single')],['recurrent',t('paymentModal.tabs.recurrent')],['installment',t('paymentModal.tabs.installment')]].map(([m, label]) => (
-                <button key={m} onClick={() => setMode(m)} className={`${styles.paymentTypeTab} ${mode === m ? styles.paymentTypeTabActive : ''}`}>{label}</button>
-              ))}
+            <div data-coachmark="modal-payment-type-tabs" className={styles.typeChip}>
+              {mode === 'installment' ? <Rows size={18} /> : mode === 'recurrent' ? <ArrowsClockwise size={18} /> : <NumberCircleOne size={18} />}
+              <span>{t(`paymentModal.tabs.${mode}`)}</span>
+              <button type="button" onClick={() => setTypeChosen(false)} className={styles.typeChipChange}>{t('paymentModal.typePicker.change')}</button>
+            </div>
+          )}
+          {typeNote && <div className={styles.typeNote}>{typeNote}</div>}
+
+          {initial && (
+            <div className={styles.modalTitle}>
+              {initial.is_master && initial.paused ? t('paymentModal.title.reactivate') : initial.is_master ? t('paymentModal.title.editRecurrent') : t('paymentModal.title.edit')}
             </div>
           )}
 
-          <div className={styles.modalTitle}>
-            {initial?.is_master && initial?.paused ? t('paymentModal.title.reactivate') : initial?.is_master ? t('paymentModal.title.editRecurrent') : initial ? t('paymentModal.title.edit') : mode === 'installment' ? t('paymentModal.title.installment') : mode === 'recurrent' ? t('paymentModal.title.recurrent') : t('paymentModal.title.new')}
-          </div>
-
           {mode === 'installment' && !initial && (
-            <div className={styles.infoBanner}>
-              {t('paymentModal.installmentInfoBanner')}
-            </div>
+            <>
+              <div className={styles.stepsBar}><i className={styles.stepOn} /><i className={step === 2 ? styles.stepOn : ''} /></div>
+              <div className={styles.stepLabel}>
+                <span>{t('paymentModal.steps.label', { n: step })}</span>
+                <span>{step === 1 ? t('paymentModal.steps.data') : t('paymentModal.steps.amountDate')}</span>
+              </div>
+              {step === 1 && <div className={styles.infoBanner}>{t('paymentModal.installmentInfoBanner')}</div>}
+            </>
           )}
 
           {error && <div className={styles.errorBox}>{error}</div>}
           {lockedMessage && <div className={styles.warningBox}>{lockedMessage}</div>}
 
           <div className={canWrite ? styles.formWrapper : styles.formDisabled}>
-          {!initial && mode === 'single' && (voiceSupported || scanSupported) && (
+          {!initial && mode === 'single' && !initial && (voiceSupported || scanSupported) && (
             <div className={styles.voiceBlock}>
               <div className={styles.voiceRow}>
                 {voiceSupported && (
@@ -703,69 +787,149 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onSaveC
             </div>
           )}
 
-          <Field label={t('paymentModal.fields.name')}>
-            <input autoFocus={!initial && !voiceSupported && !scanSupported} className="field-input" type="text" value={name} onChange={e => setName(e.target.value)} placeholder={t('paymentModal.namePlaceholder')} />
-          </Field>
 
-          <div className={styles.fieldGroup}>
-            <div className={styles.categoryHeaderRow}>
-              <label className="field-label">{t('paymentModal.fields.category')}</label>
-              <button type="button" onClick={() => { setAddingCategory(true); setNewCategoryName('') }}
-                className={styles.addCategoryButton}>
-                {t('paymentModal.fields.addCategory')}
-              </button>
+          {isFlat && !isVariable && (
+            <div className={styles.amountHero}>
+              <div className={styles.amountHeroLabel}>{t('paymentModal.amountLabel')}</div>
+              <AmountInput className={styles.amountHeroInput} value={amount} onChange={e => setAmount(e.target.value)} placeholder="0.00" />
             </div>
-            <div data-coachmark="modal-category-field">
-              <Select value={category} onChange={setCategory} options={allCategories} renderIcon={renderCategoryIcon} />
-            </div>
-            {addingCategory && (
-              <div className={styles.addCategoryRow}>
-                <input autoFocus className={`field-input ${styles.addCategoryInput}`} placeholder={t('paymentModal.fields.categoryNamePlaceholder')} value={newCategoryName}
-                  onChange={e => setNewCategoryName(e.target.value)}
-                  onKeyDown={e => { if (e.key === 'Enter' && newCategoryName.trim()) handleAddCategory(); if (e.key === 'Escape') setAddingCategory(false) }} />
-                <button type="button" onClick={handleAddCategory} disabled={!newCategoryName.trim()}
-                  className={styles.addCategorySubmitButton}>
-                  {t('paymentModal.fields.add')}
-                </button>
+          )}
+
+          {showDataStep && (
+            <>
+              <Field label={t('paymentModal.fields.name')}>
+                <input autoFocus={!initial && !voiceSupported && !scanSupported} className="field-input" type="text" value={name} onChange={e => setName(e.target.value)} placeholder={t('paymentModal.namePlaceholder')} />
+              </Field>
+
+              <div className={styles.fieldGroup}>
+                <div className={styles.categoryHeaderRow}>
+                  <label className="field-label">{t('paymentModal.fields.category')}</label>
+                  <button type="button" onClick={() => { setAddingCategory(true); setNewCategoryName('') }}
+                    className={styles.addCategoryButton}>
+                    {t('paymentModal.fields.addCategory')}
+                  </button>
+                </div>
+                <div data-coachmark="modal-category-field">
+                  <Select value={category} onChange={setCategory} options={allCategories} renderIcon={renderCategoryIcon} />
+                </div>
+                {addingCategory && (
+                  <div className={styles.addCategoryRow}>
+                    <input autoFocus className={`field-input ${styles.addCategoryInput}`} placeholder={t('paymentModal.fields.categoryNamePlaceholder')} value={newCategoryName}
+                      onChange={e => setNewCategoryName(e.target.value)}
+                      onKeyDown={e => { if (e.key === 'Enter' && newCategoryName.trim()) handleAddCategory(); if (e.key === 'Escape') setAddingCategory(false) }} />
+                    <button type="button" onClick={handleAddCategory} disabled={!newCategoryName.trim()}
+                      className={styles.addCategorySubmitButton}>
+                      {t('paymentModal.fields.add')}
+                    </button>
+                  </div>
+                )}
               </div>
-            )}
-          </div>
+            </>
+          )}
 
-          {methodsAvailable && (
+          {/* Parcialidades · paso 1: con qué se paga (y si se enlaza a la tarjeta) */}
+          {mode === 'installment' && step === 1 && !initial && (
+            <>
+              {methodsAvailable && (
+                <div className={styles.fieldGroup}>
+                  <PaymentMethodField methods={paymentMethods.methods} value={methodId} onChange={setMethodId} onAddCard={openAddCard} />
+                </div>
+              )}
+              {canLink && (
+                <Toggle
+                  label={t('paymentModal.linkCard.label')}
+                  sub={t(linkToCard ? 'paymentModal.linkCard.subOn' : 'paymentModal.linkCard.subOff')}
+                  value={linkToCard}
+                  onChange={setLinkToCard}
+                />
+              )}
+            </>
+          )}
+
+          {mode === 'recurrent' && (
+            <FrequencyPicker value={recurFreq} onChange={setRecurFreq} />
+          )}
+
+          {isFlat && showDatePicker && (
             <div className={styles.fieldGroup}>
-              <PaymentMethodField methods={paymentMethods.methods} value={methodId} onChange={setMethodId} onAddCard={openAddCard} />
+              <label className="field-label">{t('paymentModal.dueDate')}</label>
+              <DatePicker value={dueDate} onChange={setDueDate} />
             </div>
           )}
 
-          {canLink && (
-            <Toggle
-              label={t('paymentModal.linkCard.label')}
-              sub={t(linkToCard ? 'paymentModal.linkCard.subOn' : 'paymentModal.linkCard.subOff')}
-              value={linkToCard}
-              onChange={setLinkToCard}
-            />
+          {mode === 'single' && initial && initial.is_paid && (
+            <Field label={t('paymentModal.paidDateLabel')}>
+              <DatePicker value={paidAt} onChange={setPaidAt} />
+            </Field>
           )}
 
-          {mode !== 'installment' && (
+          {showWeekdayPicker && (
+            <Field label={t('paymentModal.dueDayLabel')}>
+              <div className={styles.weekdayRow}>
+                {getWeekdaysShort().map((d, i) => (
+                  <button key={i} onClick={() => setWeekday(i)} className={`${styles.weekdayButton} ${weekday === i ? styles.weekdayButtonActive : ''}`}>{d}</button>
+                ))}
+              </div>
+              <div className={styles.helperTextMt6}>
+                {t('paymentModal.nextLabel', { date: nextWeekdayDate(weekday).toLocaleDateString(intlLocale(), { weekday: 'long', day: 'numeric', month: 'long' }) })}
+              </div>
+            </Field>
+          )}
+
+          {showBiweeklyPicker && (
+            <Field label={t('paymentModal.biweeklyBaseDateLabel')}>
+              <DatePicker value={biweeklyDate} onChange={setBiweeklyDate} />
+              {nextBiDate && <div className={styles.helperTextMt6}>{t('paymentModal.nextDueLabel', { date: nextBiDate.toLocaleDateString(intlLocale(), { day: 'numeric', month: 'long' }) })}</div>}
+            </Field>
+          )}
+
+          {/* Pago variable: en Recurrente va visible (luz, agua…); en Único queda en "Más opciones" */}
+          {mode === 'recurrent' && (
             <div data-coachmark="modal-variable-toggle">
               <Toggle label={t('paymentModal.variableToggleLabel')} sub={t('paymentModal.variableToggleSub')} value={isVariable} onChange={setIsVariable} />
             </div>
           )}
 
-          {!isVariable && mode !== 'installment' && (
-            <Field label={t('paymentModal.amountLabel')}>
-              <AmountInput className="field-input" value={amount} onChange={e => setAmount(e.target.value)} placeholder="0.00" />
-            </Field>
+          {mode === 'recurrent' && (
+            <div className={styles.recurrentNote}>
+              {t('paymentModal.recurrentNote', { interval: t(`paymentModal.recurrentIntervals.${recurFreq === 'weekly' ? 'weekly' : recurFreq === 'biweekly' ? 'biweekly' : 'monthly'}`) })}
+            </div>
           )}
 
-          {mode === 'installment' && (() => {
+          {/* Más opciones (Único / Recurrente) */}
+          {isFlat && !initial && (
+            <button type="button" onClick={() => setMoreOpen(o => !o)} className={styles.moreRow}>
+              {moreOpen ? <CaretUp size={16} /> : <CaretDown size={16} />}
+              <span>{moreOpen ? t('paymentModal.more.less') : t('paymentModal.more.title')}</span>
+              {moreActive > 0 && <span className={styles.moreBadge}>{t('paymentModal.more.active', { count: moreActive })}</span>}
+              {!moreOpen && <span className={styles.moreSummary}>{moreSummary}</span>}
+            </button>
+          )}
+          {isFlat && moreVisible && (
+            <>
+              {methodsAvailable && (
+                <div className={styles.fieldGroup}>
+                  <PaymentMethodField methods={paymentMethods.methods} value={methodId} onChange={setMethodId} onAddCard={openAddCard} />
+                </div>
+              )}
+              {mode === 'single' && (
+                <div data-coachmark="modal-variable-toggle">
+                  <Toggle label={t('paymentModal.variableToggleLabel')} sub={t('paymentModal.variableToggleSub')} value={isVariable} onChange={setIsVariable} />
+                </div>
+              )}
+              {mode === 'single' && !initial && !isVariable && !isSharedSpace && (
+                <Toggle label={t('paymentModal.alreadyPaidToggle')} sub={t('paymentModal.alreadyPaidSub')} value={alreadyPaid} onChange={setAlreadyPaid} />
+              )}
+            </>
+          )}
+
+          {/* Parcialidades · paso 2 */}
+          {mode === 'installment' && (step === 2 || initial) && (() => {
             const totalAmt    = parseFloat(totalAmount) || 0
             const numPayments = parseInt(totalInstallments) || 0
             const perPayment  = numPayments > 0 ? Math.round((totalAmt / numPayments) * 100) / 100 : 0
             const startNum    = parseInt(startFrom) || 1
-            const firstDateStr = dueDate  // parcialidades siempre usan fecha fija (date picker)
-            // El usuario ingresa la fecha del pago #1. Si startFrom > 1,
-            // el primer pago pendiente estará (startFrom - 1) periodos después.
+            const firstDateStr = dueDate
             let nextDate = firstDateStr ? new Date(firstDateStr + 'T12:00:00') : null
             if (nextDate && startNum > 1 && firstDateStr) {
               let dateStr = firstDateStr
@@ -794,6 +958,13 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onSaveC
                     value={backfillAsExpense}
                     onChange={setBackfillAsExpense}
                   />
+                )}
+                {!linked && <FrequencyPicker value={recurFreq} onChange={setRecurFreq} />}
+                {showDatePicker && (
+                  <div className={styles.fieldGroup}>
+                    <label className="field-label">{t('paymentModal.firstPaymentDate')}</label>
+                    <DatePicker value={dueDate} onChange={setDueDate} />
+                  </div>
                 )}
                 {linked && totalAmt > 0 && numPayments >= 2 && (() => {
                   const cut = nextCutAfter(selectedCard, todayStr())
@@ -825,85 +996,35 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onSaveC
               </>
             )
           })()}
-
-          {(mode === 'recurrent' || (mode === 'installment' && !linked)) && (
-            <FrequencyPicker value={recurFreq} onChange={setRecurFreq} />
-          )}
-
-          {showDatePicker && (
-            <div className={styles.fieldGroup}>
-              <div className={styles.categoryHeaderRow}>
-                <label className={`field-label ${styles.dueDateLabelNoMargin}`}>
-                  {mode === 'installment' ? t('paymentModal.firstPaymentDate') : t('paymentModal.dueDate')}
-                </label>
-                {mode === 'single' && !initial && !isVariable && !isSharedSpace && (
-                  <div onClick={() => setAlreadyPaid(v => !v)}
-                    className={styles.alreadyPaidToggle}>
-                    <span className={styles.alreadyPaidLabel} style={{ color: alreadyPaid ? 'var(--paid)' : 'var(--text)' }}>
-                      {t('paymentModal.alreadyPaidToggle')}
-                    </span>
-                    <div className="toggle-track" style={{ background: alreadyPaid ? 'var(--paid)' : 'var(--border)' }}>
-                      <div className="toggle-thumb" style={{ left: alreadyPaid ? 19 : 3 }} />
-                    </div>
-                  </div>
-                )}
-              </div>
-              <DatePicker value={dueDate} onChange={setDueDate} />
-            </div>
-          )}
-
-          {mode === 'single' && initial && initial.is_paid && (
-            <Field label={t('paymentModal.paidDateLabel')}>
-              <DatePicker value={paidAt} onChange={setPaidAt} />
-            </Field>
-          )}
-
-          {showWeekdayPicker && (
-            <Field label={t('paymentModal.dueDayLabel')}>
-              <div className={styles.weekdayRow}>
-                {getWeekdaysShort().map((d, i) => (
-                  <button key={i} onClick={() => setWeekday(i)} className={`${styles.weekdayButton} ${weekday === i ? styles.weekdayButtonActive : ''}`}>{d}</button>
-                ))}
-              </div>
-              <div className={styles.helperTextMt6}>
-                {t('paymentModal.nextLabel', { date: nextWeekdayDate(weekday).toLocaleDateString(intlLocale(), { weekday: 'long', day: 'numeric', month: 'long' }) })}
-              </div>
-            </Field>
-          )}
-
-          {showBiweeklyPicker && (
-            <Field label={t('paymentModal.biweeklyBaseDateLabel')}>
-              <DatePicker value={biweeklyDate} onChange={setBiweeklyDate} />
-              {nextBiDate && <div className={styles.helperTextMt6}>{t('paymentModal.nextDueLabel', { date: nextBiDate.toLocaleDateString(intlLocale(), { day: 'numeric', month: 'long' }) })}</div>}
-            </Field>
-          )}
-
-          {mode === 'recurrent' && (
-            <div className={styles.recurrentNote}>
-              {t('paymentModal.recurrentNote', { interval: t(`paymentModal.recurrentIntervals.${recurFreq === 'weekly' ? 'weekly' : recurFreq === 'biweekly' ? 'biweekly' : 'monthly'}`) })}
-            </div>
-          )}
           </div>
 
           {impactPreview && impactPreview.length > 0 && (() => {
             const [first, second] = impactPreview
             const esNegativo = first.disponibleDespues < 0
             const colorEstado = esNegativo ? 'var(--impact-warning)' : 'var(--accent)'
+            const isPremium = !!profile?.is_premium
 
+            // Franja de una línea (v0.9.604). Premium: se abre y muestra la
+            // proyección completa. Sin premium: franja atenuada con candado
+            // que lleva a la pantalla de Premium (sin pastilla de texto).
             return (
-              <PremiumLock
-                isPremium={profile?.is_premium}
-                label={t('paymentModal.impact.label')}
-                icon={Wallet}
-                message={t('paymentModal.impact.message')}
-                onUpgradeClick={onOpenPremium}
-              >
               <div className={styles.impactWrapper}>
-                <div className={styles.impactLabel}>
-                  <Wallet size={14} />
-                  {t('paymentModal.impact.label')}
-                </div>
-                <div className={styles.impactCard}>
+                <button type="button" className={`${styles.impactStrip} ${isPremium ? '' : styles.impactStripLocked}`}
+                  onClick={() => isPremium ? setImpactOpen(o => !o) : onOpenPremium?.()}>
+                  <Wallet size={15} />
+                  <span className={styles.impactStripLabel}>{t('paymentModal.impact.label')}</span>
+                  {isPremium ? (
+                    <span className={styles.impactStripStatus} style={{ color: colorEstado }}>
+                      {esNegativo ? <AlertTriangle size={14} /> : <Check size={14} />}
+                      {esNegativo ? t('paymentModal.impact.warning') : t('paymentModal.impact.ok')}
+                      {impactOpen ? <CaretUp size={13} /> : <CaretDown size={13} />}
+                    </span>
+                  ) : (
+                    <span className={styles.impactStripLock}><PhLock size={15} /> Premium</span>
+                  )}
+                </button>
+                {isPremium && impactOpen && (
+                  <div className={styles.impactCard}>
                   <div className={styles.impactPeriodBox} style={{ borderColor: colorEstado }}>
                     <div className={styles.impactStatusRow}>
                       {esNegativo ? <AlertTriangle size={15} color={colorEstado} className={styles.impactStatusIcon} /> : <Check size={15} color={colorEstado} className={styles.impactStatusIcon} />}
@@ -955,15 +1076,25 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onSaveC
                     </div>
                   )}
                 </div>
+                )}
               </div>
-              </PremiumLock>
             )
           })()}
 
-          <button onClick={handleSave} disabled={saving || !canWrite} className={`btn-primary ${styles.saveButtonSpacing}`} style={{ opacity: (saving || !canWrite) ? 0.7 : 1 }}>
-            {saving ? t('settingsCategories.saving') : initial?.is_master && initial?.paused ? t('paymentModal.save.reactivate') : initial ? t('paymentModal.save.saveChanges') : mode === 'installment' ? t('paymentModal.save.createPayments') : alreadyPaid ? t('paymentModal.save.saveAsPaid') : t('paymentModal.save.savePayment')}
-          </button>
-          <button onClick={requestClose} className={`btn-ghost ${styles.cancelButtonSpacing}`}>{t('buttons.cancel')}</button>
+          {mode === 'installment' && !initial && step === 1 ? (
+            <button onClick={goNextStep} disabled={!canWrite} className={`btn-primary ${styles.saveButtonSpacing}`}>
+              {t('paymentModal.steps.next')}
+            </button>
+          ) : (
+            <button onClick={handleSave} disabled={saving || !canWrite} className={`btn-primary ${styles.saveButtonSpacing}`} style={{ opacity: (saving || !canWrite) ? 0.7 : 1 }}>
+              {saving ? t('settingsCategories.saving') : initial?.is_master && initial?.paused ? t('paymentModal.save.reactivate') : initial ? t('paymentModal.save.saveChanges') : mode === 'installment' ? t('paymentModal.save.createPayments') : alreadyPaid ? t('paymentModal.save.saveAsPaid') : t('paymentModal.save.savePayment')}
+            </button>
+          )}
+          {mode === 'installment' && !initial && step === 2 ? (
+            <button onClick={() => setStep(1)} className={`btn-ghost ${styles.cancelButtonSpacing}`}>{t('paymentModal.steps.back')}</button>
+          ) : (
+            <button onClick={requestClose} className={`btn-ghost ${styles.cancelButtonSpacing}`}>{t('buttons.cancel')}</button>
+          )}
           {initial && !isEditingInstallment && (
             <button onClick={() => setConfirmDelete(true)} disabled={!canDelete} className={`btn-danger ${styles.deleteButtonSpacing}`} style={{ opacity: canDelete ? 1 : 0.5 }}>{t('paymentModal.deletePayment')}</button>
           )}
