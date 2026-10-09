@@ -50,15 +50,20 @@
   color: var(--muted);
 }
 .timeButton {
+  display: flex;
+  align-items: center;
+  gap: 10px;
   border: none;
-  background: none;
-  padding: 4px 0 4px 8px;
+  border-radius: var(--radius);
+  background: var(--surface);
+  padding: 9px 12px;
   font-family: inherit;
-  font-size: 24px;
+  font-size: 20px;
   font-weight: 600;
   color: var(--text);
   cursor: pointer;
 }
+.timeChevron { margin-left: 6px; color: var(--muted); }
 
 /* Mosaico de avisos: un toque enciende o apaga cada uno */
 .tiles {

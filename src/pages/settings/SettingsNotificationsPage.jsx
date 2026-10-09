@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Bell, BellOff, TriangleAlert, CircleAlert, CalendarCheck, Clock, Banknote } from 'lucide-react'
+import { Bell, BellOff, TriangleAlert, CircleAlert, CalendarCheck, Clock, Banknote, ChevronDown } from 'lucide-react'
 // Ícono del encabezado vía Phosphor Icons (mismo patrón que las demás
 // sub-páginas ya migradas, v0.9.442-448) — import directo para tree-shaking real.
 import { Bell as BellDuotone } from '@phosphor-icons/react/dist/csr/Bell'
@@ -108,7 +108,7 @@ export function SettingsNotificationsPage({ profile, user, onUpdate, onBack, sli
       <Collapse open={subscribed}>
         <div className={styles.timeRow}>
           <span className={styles.timeLabel}>{t('settingsNotifications.notifyAt')}</span>
-          <button type="button" className={styles.timeButton} onClick={() => setHourOpen(true)}>{HOUR_LABELS[hour]}</button>
+          <button type="button" className={styles.timeButton} onClick={() => setHourOpen(true)}><Clock size={20} color="var(--accent)" />{HOUR_LABELS[hour]}<ChevronDown size={18} className={styles.timeChevron} /></button>
         </div>
 
         <div className={styles.tiles}>
