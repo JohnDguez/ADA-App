@@ -12,8 +12,12 @@ const RIGHT_TABS = NAV_ITEMS.slice(2)
 
 export function BottomNav({ active, onChange, onAdd, addOpen = false }) {
   const { t } = useTranslation()
+  // Posición del indicador: 5 columnas iguales (2 tabs, "+", 2 tabs).
+  const tabIdx = NAV_ITEMS.findIndex(i => i.id === active)
+  const slot = tabIdx < 0 ? -1 : (tabIdx < 2 ? tabIdx : tabIdx + 1)
   return (
-    <nav className={styles.nav}>
+    <nav className={styles.nav} style={{ '--slot': Math.max(slot, 0) }}>
+      <span className={`${styles.indicator} ${slot < 0 ? styles.indicatorHidden : ''}`} aria-hidden="true" />
       {LEFT_TABS.map(({ id, Icon, labelKey }) => (
         <TabBtn key={id} id={id} Icon={Icon} label={t(labelKey)} active={active === id} onChange={onChange} />
       ))}
@@ -43,13 +47,14 @@ function TabBtn({ id, Icon, label, active, onChange }) {
       onClick={() => onChange(id)}
       className={styles.tabButton}
       aria-label={label}
-      style={{
-        background: active
-          ? 'linear-gradient(180deg, rgba(255,255,255,0.25) 0%, rgba(255,255,255,0) 100%)'
-          : 'none',
-      }}
+      aria-current={active ? 'page' : undefined}
     >
-      <Icon size={22} strokeWidth={active ? 2.2 : 1.8} color={active ? 'var(--nav-icon)' : 'rgba(255,255,255,0.5)'} />
+      <Icon
+        size={active ? 24 : 22}
+        strokeWidth={active ? 2.2 : 1.8}
+        color={active ? 'var(--nav-icon)' : 'rgba(255,255,255,0.6)'}
+        className={styles.tabIcon}
+      />
     </button>
   )
 }

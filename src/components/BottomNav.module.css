@@ -58,10 +58,28 @@
   border: none;
   cursor: pointer;
   border-radius: 8px;
-  transition: background .2s;
+  background: none;
   position: relative;
   z-index: 2;
 }
+
+.tabIcon { transition: width .2s, height .2s; }
+
+/* Indicador de página activa (v0.9.636): barra pegada al borde superior,
+   estilo Amazon, que se desliza entre pestañas. Columnas: 5 iguales. */
+.indicator {
+  position: absolute;
+  top: 0;
+  left: calc(8px + var(--slot) * ((100% - 32px) / 5 + 4px) + ((100% - 32px) / 5 - 28px) / 2);
+  width: 28px;
+  height: 4px;
+  background: var(--nav-icon);
+  border-radius: 0 0 4px 4px;
+  transition: left .25s cubic-bezier(0.25, 0.46, 0.45, 0.94), opacity .2s;
+  pointer-events: none;
+  z-index: 3;
+}
+.indicatorHidden { opacity: 0; }
 
 /* Adaptación tablet/desktop (Regla 42/43): a partir de 768px, BottomNav
    se reemplaza por NavRail.jsx — nunca conviven los dos a la vez. */
