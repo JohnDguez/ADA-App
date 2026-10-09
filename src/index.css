@@ -344,7 +344,12 @@ html, body {
   overflow-x: hidden;
 }
 
+/* --sat = alto de la barra de estado (Android edge-to-edge, v0.9.592).
+   MainActivity lo inyecta en px; en web/iOS queda en 0. */
+:root { --sat: 0px; }
+
 #root {
+  padding-top: var(--sat);
   max-width: 420px;
   margin: 0 auto;
   min-height: 100vh;

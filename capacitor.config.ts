@@ -18,6 +18,12 @@ const config: CapacitorConfig = {
       skipNativeAuth: false,
       providers: ['google.com'],
     },
+    // Barra de estado transparente (v0.9.592): 'disable' = Capacitor NO pone
+    // padding en el decor view; MainActivity gestiona los insets a mano
+    // (arriba 0 + inyecta --sat, abajo respeta la barra de navegación).
+    SystemBars: {
+      insetsHandling: 'disable',
+    },
   },
 };
 
