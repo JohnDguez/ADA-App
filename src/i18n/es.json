@@ -239,9 +239,6 @@
   },
   "settingsCategories": {
     "title": "Categorías",
-    "paymentsCount_one": "{{count}} pago",
-    "paymentsCount_other": "{{count}} pagos",
-    "noPayments": "Sin pagos",
     "description": "Personaliza el ícono y color de tus categorías, o crea las tuyas propias.",
     "addModalTitleEdit": "Editar categoría",
     "addModalTitleNew": "Agregar categoría",
@@ -253,9 +250,11 @@
     "noIconResults": "Sin resultados para \"{{search}}\"",
     "colorLabel": "Color",
     "saving": "Guardando…",
-    "deleteConfirmPrefix": "¿Eliminar",
-    "deleteConfirmSuffix": "? Los pagos ya registrados con esta categoría se reasignarán a \"Otros\".",
     "deleteCategory": "Eliminar categoría",
+    "deleteChecking": "Revisando pagos…",
+    "deleteConfirmNone": "¿Eliminar \"{{name}}\"? No tiene pagos registrados.",
+    "deleteConfirmCount_one": "¿Eliminar \"{{name}}\"? Su {{count}} pago se reasignará a \"Otros\".",
+    "deleteConfirmCount_other": "¿Eliminar \"{{name}}\"? Sus {{count}} pagos se reasignarán a \"Otros\".",
     "deleting": "Eliminando…",
     "toast": {
       "emptyName": "Escribe un nombre",

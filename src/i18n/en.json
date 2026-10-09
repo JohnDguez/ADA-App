@@ -239,9 +239,6 @@
   },
   "settingsCategories": {
     "title": "Categories",
-    "paymentsCount_one": "{{count}} payment",
-    "paymentsCount_other": "{{count}} payments",
-    "noPayments": "No payments",
     "description": "Customize the icon and color of your categories, or create your own.",
     "addModalTitleEdit": "Edit category",
     "addModalTitleNew": "Add category",
@@ -253,9 +250,11 @@
     "noIconResults": "No results for \"{{search}}\"",
     "colorLabel": "Color",
     "saving": "Saving…",
-    "deleteConfirmPrefix": "Delete",
-    "deleteConfirmSuffix": "? Payments already recorded with this category will be reassigned to \"Otros\".",
     "deleteCategory": "Delete category",
+    "deleteChecking": "Checking payments…",
+    "deleteConfirmNone": "Delete \"{{name}}\"? It has no recorded payments.",
+    "deleteConfirmCount_one": "Delete \"{{name}}\"? Its {{count}} payment will be reassigned to \"Otros\".",
+    "deleteConfirmCount_other": "Delete \"{{name}}\"? Its {{count}} payments will be reassigned to \"Otros\".",
     "deleting": "Deleting…",
     "toast": {
       "emptyName": "Enter a name",

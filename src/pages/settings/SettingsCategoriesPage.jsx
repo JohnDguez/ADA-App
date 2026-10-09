@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import i18n from '../../i18n'
 import { Plus, ChevronRight } from 'lucide-react'
@@ -8,7 +8,6 @@ import { Tag } from '@phosphor-icons/react/dist/csr/Tag'
 import { PageHero } from '../../components/PageHero'
 import { CATEGORIES, getCatColor, getCategoryLabel } from '../../lib/utils'
 import { getCategoryIcon } from '../../lib/categoryIcons'
-import { supabase } from '../../lib/supabase'
 import { Card } from '../../components/SettingsShared'
 import { CategoryFormModal } from '../../components/CategoryFormModal'
 import styles from './SettingsCategoriesPage.module.css'
@@ -31,31 +30,6 @@ export function SettingsCategoriesPage({ profile, onUpdate, onBack, slideClass }
   const { t } = useTranslation()
   const [modalOpen,   setModalOpen]   = useState(false)
   const [editingCat,  setEditingCat]  = useState(null) // { name, isCustom } | null (null = agregar nueva)
-
-  // Pagos por categoría (v0.9.626) — mismo alcance que renombrar/borrar
-  // (todos los pagos del usuario con ese nombre), sin contar los maestros
-  // de recurrentes (son plantilla, no un pago real). Se pagina de 1000 en
-  // 1000 por el límite de filas de Supabase. Se recarga al cerrar el modal
-  // (renombrar o borrar, ambos viven en el modal).
-  const [counts, setCounts] = useState(null)
-  useEffect(() => {
-    if (modalOpen) return
-    let alive = true
-    ;(async () => {
-      const tally = {}
-      for (let from = 0; ; from += 1000) {
-        const { data, error } = await supabase
-          .from('payments').select('category')
-          .eq('user_id', profile.id).or('is_master.is.null,is_master.eq.false')
-          .range(from, from + 999)
-        if (error) return
-        for (const r of data) tally[r.category] = (tally[r.category] || 0) + 1
-        if (data.length < 1000) break
-      }
-      if (alive) setCounts(tally)
-    })()
-    return () => { alive = false }
-  }, [profile.id, modalOpen])
 
   const customCats     = profile.custom_categories || []
   const categoryIcons  = profile.category_icons || {}
@@ -107,11 +81,6 @@ export function SettingsCategoriesPage({ profile, onUpdate, onBack, slideClass }
           </div>
           <div className={styles.categoryText}>
             <span className={styles.categoryLabel}>{isCustom ? cat : getCategoryLabel(cat)}</span>
-            {counts && (
-              <span className={styles.categoryCount}>
-                {counts[cat] ? t('settingsCategories.paymentsCount', { count: counts[cat] }) : t('settingsCategories.noPayments')}
-              </span>
-            )}
           </div>
           <ChevronRight size={14} color="var(--text)" />
         </div>

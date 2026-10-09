@@ -28,6 +28,7 @@ export function CategoryFormModal({ open, onClose, editingCat = null, profile, o
   const [saving,     setSaving]     = useState(false)
   const [confirmingDelete, setConfirmingDelete] = useState(false)
   const [deleting,  setDeleting]    = useState(false)
+  const [deleteCount, setDeleteCount] = useState(null) // pagos que se reasignarán, o null mientras carga
 
   const customCats     = profile.custom_categories || []
   const categoryIcons  = profile.category_icons || {}
@@ -46,7 +47,7 @@ export function CategoryFormModal({ open, onClose, editingCat = null, profile, o
     } else {
       setFormName(''); setFormIcon(''); setFormColor(CATEGORY_PALETTE[0])
     }
-    setIconSearch(''); setNameError(''); setSaving(false); setConfirmingDelete(false); setDeleting(false)
+    setIconSearch(''); setNameError(''); setSaving(false); setConfirmingDelete(false); setDeleting(false); setDeleteCount(null)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, editingCat])
 
@@ -111,6 +112,15 @@ export function CategoryFormModal({ open, onClose, editingCat = null, profile, o
     showToast(`${t('settingsCategories.toast.deletedPrefix')} "${cat}" ${t('settingsCategories.toast.deletedSuffix')}`)
     setDeleting(false)
     onClose()
+  }
+
+  // Al pedir borrar, cuenta los pagos que quedarían reasignados (sin contar
+  // maestros de recurrentes: son plantilla) para decirlo en la confirmación.
+  async function askDelete() {
+    setConfirmingDelete(true); setDeleteCount(null)
+    const { count } = await supabase.from('payments').select('id', { count: 'exact', head: true })
+      .eq('user_id', profile.id).eq('category', editingCat.name).or('is_master.is.null,is_master.eq.false')
+    setDeleteCount(count ?? 0)
   }
 
   const search = iconSearch.trim().toLowerCase()
@@ -219,17 +229,21 @@ export function CategoryFormModal({ open, onClose, editingCat = null, profile, o
         {editingCat?.isCustom && (confirmingDelete ? (
           <div className={styles.deleteConfirmBox}>
             <div className={styles.confirmText}>
-              {t('settingsCategories.deleteConfirmPrefix')} "{editingCat.name}"{t('settingsCategories.deleteConfirmSuffix')}
+              {deleteCount === null
+                ? t('settingsCategories.deleteChecking')
+                : deleteCount === 0
+                  ? t('settingsCategories.deleteConfirmNone', { name: editingCat.name })
+                  : t('settingsCategories.deleteConfirmCount', { name: editingCat.name, count: deleteCount })}
             </div>
             <div className={styles.confirmButtonsRow}>
               <button onClick={() => setConfirmingDelete(false)} className={styles.confirmCancelButton}>{t('buttons.cancel')}</button>
-              <button onClick={handleDelete} disabled={deleting} className={styles.confirmDeleteButton}>
+              <button onClick={handleDelete} disabled={deleting || deleteCount === null} className={styles.confirmDeleteButton}>
                 {deleting ? t('settingsCategories.deleting') : t('buttons.delete')}
               </button>
             </div>
           </div>
         ) : (
-          <button onClick={() => setConfirmingDelete(true)} className={styles.deleteCategoryButton}>
+          <button onClick={askDelete} className={styles.deleteCategoryButton}>
             {t('settingsCategories.deleteCategory')}
           </button>
         ))}
