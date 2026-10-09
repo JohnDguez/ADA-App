@@ -21,6 +21,7 @@ import { nextCutAfter } from '../lib/cardStatements'
 import { DatePicker } from './DatePicker'
 import AmountInput, { CentsAmountInput } from './AmountInput'
 import { Collapse } from './Collapse'
+import { AddCategoryModal } from './AddCategoryModal'
 import { getCurrencySymbol } from '../lib/currency'
 import styles from './PaymentModal.module.css'
 import { markBackHandled, wasBackHandled } from '../lib/backNav'
@@ -89,7 +90,6 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onSaveC
   }, [open, autoStart])
   const [paidAt,             setPaidAt]             = useState('')
   const [addingCategory,     setAddingCategory]     = useState(false)
-  const [newCategoryName,    setNewCategoryName]    = useState('')
   const [periodIncomes,      setPeriodIncomes]      = useState([])
   // Flujo por tipo (v0.9.604): al crear, primero se elige el tipo de pago.
   const [typeChosen,  setTypeChosen]  = useState(false)
@@ -227,7 +227,7 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onSaveC
     hadTypeRef.current = false
     farOkRef.current = false; setFarPrompt(false)
     setStep(1); setMoreOpen(false); setImpactOpen(false); setTypeNote('')
-    setError(''); setConfirmClose(false); setAddingCategory(false); setNewCategoryName('')
+    setError(''); setConfirmClose(false); setAddingCategory(false)
   }, [initial, open])
 
   useEffect(() => {
@@ -466,14 +466,11 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onSaveC
     }
   }
 
-  async function handleAddCategory() {
-    const cat = newCategoryName.trim()
-    if (!cat) return
-    if (onAddCategory) await onAddCategory(cat)
-    setCategory(cat)
-    setAddingCategory(false)
-    setNewCategoryName('')
-  }
+  // Hoja "Nueva categoría" (v0.9.610) — se monta en cada return del formulario.
+  const addCategorySheet = (
+    <AddCategoryModal open={addingCategory} onClose={() => setAddingCategory(false)}
+      customCategories={customCategories} onAdd={cat => onAddCategory?.(cat)} onAdded={setCategory} />
+  )
 
   // Cambiar de tipo conserva lo común (nombre, categoría, monto, fecha, método);
   // lo propio de cada tipo queda guardado en su estado y vuelve si se regresa.
@@ -561,6 +558,7 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onSaveC
 
     return (
       <>
+        {addCategorySheet}
         <div onClick={e => e.target === e.currentTarget && onClose()} className={styles.overlay}>
           <div className={styles.panel}>
             <div className={styles.handle} />
@@ -584,23 +582,12 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onSaveC
             <div className={styles.fieldGroup}>
               <div className={styles.categoryHeaderRow}>
                 <label className="field-label">{t('paymentModal.fields.category')}</label>
-                <button type="button" onClick={() => { setAddingCategory(true); setNewCategoryName('') }}
+                <button type="button" onClick={() => { setAddingCategory(true) }}
                   className={styles.addCategoryButton}>
                   {t('paymentModal.fields.addCategory')}
                 </button>
               </div>
               <Select value={category} onChange={setCategory} options={allCategories} renderIcon={renderCategoryIcon} />
-              {addingCategory && (
-                <div className={styles.addCategoryRow}>
-                  <input autoFocus className={`field-input ${styles.addCategoryInput}`} placeholder={t('paymentModal.fields.categoryNamePlaceholder')} value={newCategoryName}
-                    onChange={e => setNewCategoryName(e.target.value)}
-                    onKeyDown={e => { if (e.key === 'Enter' && newCategoryName.trim()) handleAddCategory(); if (e.key === 'Escape') setAddingCategory(false) }} />
-                  <button type="button" onClick={handleAddCategory} disabled={!newCategoryName.trim()}
-                    className={styles.addCategorySubmitButton}>
-                    {t('paymentModal.fields.add')}
-                  </button>
-                </div>
-              )}
             </div>
 
             {methodsAvailable && (
@@ -828,25 +815,14 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onSaveC
               <div className={styles.fieldGroup}>
                 <div className={styles.categoryHeaderRow}>
                   <label className="field-label">{t('paymentModal.fields.category')}</label>
-                  <button type="button" onClick={() => { setAddingCategory(true); setNewCategoryName('') }}
+                  <button type="button" onClick={() => { setAddingCategory(true) }}
                     className={styles.addCategoryButton}>
                     {t('paymentModal.fields.addCategory')}
                   </button>
                 </div>
                 <div data-coachmark="modal-category-field">
-                  <Select value={category} onChange={setCategory} options={sortedCategories} renderIcon={renderCategoryIcon} sheet cellIcon={renderCategoryCellIcon} cellColor={categoryCellColor} sheetTitle={t('paymentModal.fields.category')} sheetLayout="grid" sheetAction={{ label: t('paymentModal.fields.addCategory'), onClick: () => { setAddingCategory(true); setNewCategoryName('') } }} />
+                  <Select value={category} onChange={setCategory} options={sortedCategories} renderIcon={renderCategoryIcon} sheet cellIcon={renderCategoryCellIcon} cellColor={categoryCellColor} sheetTitle={t('paymentModal.fields.category')} sheetLayout="grid" sheetAction={{ label: t('paymentModal.fields.addCategory'), onClick: () => { setAddingCategory(true) } }} />
                 </div>
-                {addingCategory && (
-                  <div className={styles.addCategoryRow}>
-                    <input autoFocus className={`field-input ${styles.addCategoryInput}`} placeholder={t('paymentModal.fields.categoryNamePlaceholder')} value={newCategoryName}
-                      onChange={e => setNewCategoryName(e.target.value)}
-                      onKeyDown={e => { if (e.key === 'Enter' && newCategoryName.trim()) handleAddCategory(); if (e.key === 'Escape') setAddingCategory(false) }} />
-                    <button type="button" onClick={handleAddCategory} disabled={!newCategoryName.trim()}
-                      className={styles.addCategorySubmitButton}>
-                      {t('paymentModal.fields.add')}
-                    </button>
-                  </div>
-                )}
               </div>
             </div>
           )}
@@ -1124,6 +1100,7 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onSaveC
           )}
         </div>
       </div>
+      {addCategorySheet}
       <ConfirmCloseModal open={confirmClose} onConfirm={() => { setConfirmClose(false); onClose() }} onCancel={() => setConfirmClose(false)} />
       {(voiceState === 'listening' || voiceState === 'retry') && (
         <ModalSheet icon={Microphone} pulse={voiceState === 'listening'} title={t(voiceState === 'retry' ? 'paymentModal.voice.retryTitle' : 'paymentModal.voice.listeningTitle')} onBackdrop={cancelVoice} zIndex={450}>
