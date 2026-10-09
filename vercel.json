@@ -1,4 +1,7 @@
 {
+  "functions": {
+    "api/send-notifications.js": { "maxDuration": 30 }
+  },
   "redirects": [
     {
       "source": "/(.*)",
