@@ -4,6 +4,8 @@ import { Copy, Check } from 'lucide-react'
 import { useBackClose } from '../lib/backNav'
 import { showToast } from './Toast'
 import styles from './InviteCodeModal.module.css'
+import { ModalSheet, SheetButton } from './ModalSheet'
+import { ShareNetwork } from '@phosphor-icons/react/dist/csr/ShareNetwork'
 
 // Modal con el código de invitación de un espacio compartido. Se monta UNA
 // vez en App.jsx (mismo patrón que Toast) y se abre desde cualquier lado con
@@ -37,18 +39,17 @@ export function InviteCodeModal() {
   }
 
   return (
-    <div className={styles.overlay} onClick={close}>
-      <div className={styles.modal} onClick={e => e.stopPropagation()}>
-        <div className={styles.title}>{t('inviteCodeModal.title')}</div>
-        <div className={styles.description}>{t('inviteCodeModal.description')}</div>
-        <div className={styles.codeBox}>{info.code}</div>
-        <button onClick={copy} className={styles.copyButton}>
+    <ModalSheet icon={ShareNetwork} title={t('inviteCodeModal.title')} onBackdrop={close}>
+      <ModalSheet.Text>{t('inviteCodeModal.description')}</ModalSheet.Text>
+      <div className={styles.codeBox}>{info.code}</div>
+      <SheetButton onClick={copy}>
+        <span className={styles.copyInner}>
           {copied ? <Check size={16} /> : <Copy size={16} />}
           {copied ? t('inviteCodeModal.copied') : t('inviteCodeModal.copy')}
-        </button>
-        <div className={styles.hint}>{t('inviteCodeModal.hint', { name: info.name })}</div>
-        <button onClick={close} className={styles.closeButton}>{t('inviteCodeModal.close')}</button>
-      </div>
-    </div>
+        </span>
+      </SheetButton>
+      <div className={styles.hint}>{t('inviteCodeModal.hint', { name: info.name })}</div>
+      <SheetButton variant="soft" onClick={close}>{t('inviteCodeModal.close')}</SheetButton>
+    </ModalSheet>
   )
 }

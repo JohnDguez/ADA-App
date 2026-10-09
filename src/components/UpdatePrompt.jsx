@@ -3,7 +3,8 @@ import { useTranslation } from 'react-i18next'
 import { Capacitor } from '@capacitor/core'
 import { App as CapacitorApp } from '@capacitor/app'
 import { useBackClose } from '../lib/backNav'
-import styles from './UpdatePrompt.module.css'
+import { ModalSheet, SheetButton } from './ModalSheet'
+import { ArrowCircleUp } from '@phosphor-icons/react/dist/csr/ArrowCircleUp'
 
 // Aviso de "hay una versión nueva" — solo en la app de Android instalada
 // desde Play Store. Pregunta a Google Play (plugin de actualizaciones) si hay
@@ -68,13 +69,10 @@ export function UpdatePrompt() {
 
   if (!open) return null
   return (
-    <div className={styles.overlay}>
-      <div className={styles.modal}>
-        <div className={styles.title}>{t('updatePrompt.title')}</div>
-        <div className={styles.description}>{t('updatePrompt.description')}</div>
-        <button onClick={update} className={styles.updateButton}>{t('updatePrompt.update')}</button>
-        <button onClick={later} className={styles.laterButton}>{t('updatePrompt.later')}</button>
-      </div>
-    </div>
+    <ModalSheet icon={ArrowCircleUp} title={t('updatePrompt.title')} onBackdrop={later}>
+      <ModalSheet.Text>{t('updatePrompt.description')}</ModalSheet.Text>
+      <SheetButton onClick={update}>{t('updatePrompt.update')}</SheetButton>
+      <SheetButton variant="soft" onClick={later}>{t('updatePrompt.later')}</SheetButton>
+    </ModalSheet>
   )
 }

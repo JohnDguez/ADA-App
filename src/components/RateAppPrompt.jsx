@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Capacitor } from '@capacitor/core'
-import { Star } from 'lucide-react'
 import { useBackClose } from '../lib/backNav'
 import { ANDROID_PACKAGE_NAME } from '../lib/constants'
-import styles from './RateAppPrompt.module.css'
+import { ModalSheet, SheetButton } from './ModalSheet'
+import { Star } from '@phosphor-icons/react/dist/csr/Star'
 
 // Invitación a calificar LunaPay en Google Play — solo app de Android.
 // Reglas (pedidas por Johnatan):
@@ -76,17 +76,11 @@ export function RateAppPrompt({ blocked = false }) {
 
   if (!visible) return null
   return (
-    <div className={styles.overlay}>
-      <div className={styles.modal}>
-        <div className={styles.stars}>
-          {[0, 1, 2, 3, 4].map(i => <Star key={i} size={26} fill="var(--premium-gold)" color="var(--premium-gold)" />)}
-        </div>
-        <div className={styles.title}>{t('rateApp.title')}</div>
-        <div className={styles.description}>{t('rateApp.description')}</div>
-        <button onClick={rate} className={styles.rateButton}>{t('rateApp.rate')}</button>
-        <button onClick={later} className={styles.laterButton}>{t('rateApp.later')}</button>
-        <button onClick={alreadyRated} className={styles.doneButton}>{t('rateApp.alreadyRated')}</button>
-      </div>
-    </div>
+    <ModalSheet icon={Star} title={t('rateApp.title')} onBackdrop={later}>
+      <ModalSheet.Text>{t('rateApp.description')}</ModalSheet.Text>
+      <SheetButton onClick={rate}>{t('rateApp.rate')}</SheetButton>
+      <SheetButton variant="soft" onClick={later}>{t('rateApp.later')}</SheetButton>
+      <SheetButton variant="soft" onClick={alreadyRated}>{t('rateApp.alreadyRated')}</SheetButton>
+    </ModalSheet>
   )
 }

@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next'
-import styles from './ConfirmDeleteModal.module.css'
+import { ModalSheet, SheetButton } from './ModalSheet'
+import { Trash } from '@phosphor-icons/react/dist/csr/Trash'
 
 // Modal de confirmación genérico para cualquier borrado de pago — mismo
 // patrón visual que ConfirmCloseModal.jsx (overlay + tarjeta centrada),
@@ -19,13 +20,10 @@ export function ConfirmDeleteModal({ open, title, message, onConfirm, onCancel }
   const { t } = useTranslation()
   if (!open) return null
   return (
-    <div className={styles.overlay}>
-      <div className={styles.modal}>
-        <div className={styles.title}>{title || t('paymentModal.deletePayment')}</div>
-        <div className={styles.description}>{message}</div>
-        <button type="button" onClick={onConfirm} className={styles.discardButton}>{t('buttons.delete')}</button>
-        <button type="button" onClick={onCancel} className={styles.cancelButton}>{t('buttons.cancel')}</button>
-      </div>
-    </div>
+    <ModalSheet icon={Trash} tone="danger" title={title || t('paymentModal.deletePayment')} onBackdrop={onCancel} zIndex={400}>
+      <ModalSheet.Text>{message}</ModalSheet.Text>
+      <SheetButton variant="danger" onClick={onConfirm}>{t('buttons.delete')}</SheetButton>
+      <SheetButton variant="soft" onClick={onCancel}>{t('buttons.cancel')}</SheetButton>
+    </ModalSheet>
   )
 }

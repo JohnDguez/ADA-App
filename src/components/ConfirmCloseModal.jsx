@@ -1,17 +1,15 @@
 import { useTranslation } from 'react-i18next'
-import styles from './ConfirmCloseModal.module.css'
+import { ModalSheet, SheetButton } from './ModalSheet'
+import { Warning } from '@phosphor-icons/react/dist/csr/Warning'
 
 export function ConfirmCloseModal({ open, onConfirm, onCancel }) {
   const { t } = useTranslation()
   if (!open) return null
   return (
-    <div className={styles.overlay}>
-      <div className={styles.modal}>
-        <div className={styles.title}>{t('confirmClose.title')}</div>
-        <div className={styles.description}>{t('confirmClose.description')}</div>
-        <button onClick={onConfirm} className={styles.discardButton}>{t('confirmClose.discard')}</button>
-        <button onClick={onCancel} className={styles.cancelButton}>{t('confirmClose.keepEditing')}</button>
-      </div>
-    </div>
+    <ModalSheet icon={Warning} tone="danger" title={t('confirmClose.title')} onBackdrop={onCancel} zIndex={400}>
+      <ModalSheet.Text>{t('confirmClose.description')}</ModalSheet.Text>
+      <SheetButton variant="danger" onClick={onConfirm}>{t('confirmClose.discard')}</SheetButton>
+      <SheetButton variant="soft" onClick={onCancel}>{t('confirmClose.keepEditing')}</SheetButton>
+    </ModalSheet>
   )
 }

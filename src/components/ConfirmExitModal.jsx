@@ -1,19 +1,17 @@
 import { useTranslation } from 'react-i18next'
-import styles from './ConfirmExitModal.module.css'
+import { ModalSheet, SheetButton } from './ModalSheet'
+import { SignOut } from '@phosphor-icons/react/dist/csr/SignOut'
 
 // Confirmación al dar "atrás" estando en la primera pantalla de la sesión.
-// Mismo overlay + tarjeta que ConfirmCloseModal, con su propio CSS (sin muted).
+// Bottom sheet estándar (ModalSheet).
 export function ConfirmExitModal({ open, onConfirm, onCancel }) {
   const { t } = useTranslation()
   if (!open) return null
   return (
-    <div className={styles.overlay}>
-      <div className={styles.modal}>
-        <div className={styles.title}>{t('confirmExit.title')}</div>
-        <div className={styles.description}>{t('confirmExit.description')}</div>
-        <button onClick={onConfirm} className={styles.exitButton}>{t('confirmExit.exit')}</button>
-        <button onClick={onCancel} className={styles.stayButton}>{t('confirmExit.stay')}</button>
-      </div>
-    </div>
+    <ModalSheet icon={SignOut} tone="danger" title={t('confirmExit.title')} onBackdrop={onCancel}>
+      <ModalSheet.Text>{t('confirmExit.description')}</ModalSheet.Text>
+      <SheetButton variant="danger" onClick={onConfirm}>{t('confirmExit.exit')}</SheetButton>
+      <SheetButton variant="soft" onClick={onCancel}>{t('confirmExit.stay')}</SheetButton>
+    </ModalSheet>
   )
 }

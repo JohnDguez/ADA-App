@@ -4,6 +4,8 @@ import { ConfirmCloseModal } from './ConfirmCloseModal'
 import AmountInput from './AmountInput'
 import styles from './VariableAmountModal.module.css'
 import { markBackHandled } from '../lib/backNav'
+import { ModalSheet, SheetButton } from './ModalSheet'
+import { Coins } from '@phosphor-icons/react/dist/csr/Coins'
 
 export function VariableAmountModal({ open, payment, mode = 'pay', spacePermissions, onConfirm, onClose }) {
   const { t } = useTranslation()
@@ -57,14 +59,11 @@ export function VariableAmountModal({ open, payment, mode = 'pay', spacePermissi
 
   return (
     <>
-      <div onClick={e => e.target === e.currentTarget && requestClose()} className={styles.overlay}>
-        <div className={styles.modal}>
-          <div className={styles.title}>
-            {mode === 'estimate' ? t('variableAmountModal.titleEstimate') : t('variableAmountModal.titlePay')}
-          </div>
-          <div className={styles.description}>
+      <ModalSheet icon={Coins} title={mode === 'estimate' ? t('variableAmountModal.titleEstimate') : t('variableAmountModal.titlePay')} onBackdrop={requestClose} zIndex={250}>
+        <div>
+          <ModalSheet.Text>
             {payment.name} — {mode === 'estimate' ? t('variableAmountModal.descriptionEstimate') : t('variableAmountModal.descriptionPay')}
-          </div>
+          </ModalSheet.Text>
           {!allowed && (
             <div className={styles.warningBox}>
               {t('paymentsPage.blockedAction', { action: mode === 'estimate' ? t('paymentsPage.actionEditPayments') : t('paymentsPage.actionMarkPayments') })}
@@ -74,11 +73,11 @@ export function VariableAmountModal({ open, payment, mode = 'pay', spacePermissi
           <div className={`${styles.formWrapper} ${!allowed ? styles.formDisabled : ''}`}>
             <label className="field-label">{mode === 'estimate' ? t('variableAmountModal.amountLabelEstimate') : t('variableAmountModal.amountLabelPay')}</label>
             <AmountInput autoFocus value={amount} onChange={e => setAmount(e.target.value)} placeholder="0.00" onKeyDown={e => e.key === 'Enter' && handleConfirm()} className={`field-input ${styles.input}`} />
-            <button onClick={handleConfirm} disabled={!allowed} className={`btn-primary ${styles.confirmButton}`}>{mode === 'estimate' ? t('variableAmountModal.saveEstimate') : t('variableAmountModal.savePay')}</button>
+            <SheetButton onClick={handleConfirm} disabled={!allowed}>{mode === 'estimate' ? t('variableAmountModal.saveEstimate') : t('variableAmountModal.savePay')}</SheetButton>
           </div>
-          <button onClick={requestClose} className="btn-ghost">{t('buttons.cancel')}</button>
+          <SheetButton variant="soft" onClick={requestClose}>{t('buttons.cancel')}</SheetButton>
         </div>
-      </div>
+      </ModalSheet>
       <ConfirmCloseModal open={confirmClose} onConfirm={() => { setConfirmClose(false); onClose() }} onCancel={() => setConfirmClose(false)} />
     </>
   )

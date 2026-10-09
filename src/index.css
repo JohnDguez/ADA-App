@@ -47,6 +47,7 @@
   --impact-warning-soft: #FFF1E0;
   --impact-warning-text: #3D1F00;
 
+  --scrim: rgba(2, 10, 31, 0.58); /* velo oscuro de los bottom sheets (igual en ambos temas) */
   --radius: 12px;
   --radius-sm: 8px;
   --radius-full: 999px;

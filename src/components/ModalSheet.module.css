@@ -1,0 +1,113 @@
+/* Bottom sheet estándar (ver ModalSheet.jsx). Solo variables del tema. */
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 300;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  background: var(--scrim);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  animation: sheetFade .2s ease both;
+}
+
+/* Ondas de luz azul detrás de la hoja: bandas desenfocadas, no radial. */
+.waves {
+  position: absolute;
+  left: -20px;
+  right: -20px;
+  bottom: 200px;
+  height: 240px;
+  pointer-events: none;
+  opacity: 0.6;
+  animation: sheetFade .5s ease both;
+}
+.waves svg { width: 100%; height: 100%; filter: blur(13px); }
+
+.sheet {
+  position: relative;
+  width: 100%;
+  max-width: 520px;
+  padding: 10px 22px calc(26px + env(safe-area-inset-bottom, 0px));
+  text-align: center;
+  background: color-mix(in srgb, var(--menu-bg) 80%, transparent);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border-radius: 28px 28px 0 0;
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, var(--accent) 55%, transparent),
+    0 -10px 50px color-mix(in srgb, var(--accent) 25%, transparent);
+  animation: sheetUp .28s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+}
+
+.handle {
+  width: 38px;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--label-variable);
+  opacity: 0.4;
+  margin: 0 auto 18px;
+}
+
+.icon {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  margin: 0 auto 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 16%, transparent);
+  box-shadow:
+    0 0 0 8px color-mix(in srgb, var(--accent) 9%, transparent),
+    0 0 0 16px color-mix(in srgb, var(--accent) 5%, transparent);
+}
+.iconDanger {
+  color: var(--danger);
+  background: color-mix(in srgb, var(--danger) 16%, transparent);
+  box-shadow:
+    0 0 0 8px color-mix(in srgb, var(--danger) 9%, transparent),
+    0 0 0 16px color-mix(in srgb, var(--danger) 5%, transparent);
+}
+
+.title {
+  margin: 8px 0 8px;
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.3;
+  color: var(--text);
+}
+
+.text {
+  margin-bottom: 22px;
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--text); /* Regla 17: sin muted en el texto */
+}
+.text strong { color: var(--text); font-weight: 600; }
+
+.btn {
+  display: block;
+  width: 100%;
+  padding: 15px;
+  border: none;
+  border-radius: var(--radius);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-bottom: 8px;
+  transition: opacity .15s;
+}
+.btn:last-child { margin-bottom: 0; }
+.btn:active { opacity: 0.85; }
+.btn:disabled { opacity: 0.6; }
+
+.btnPrimary { background: var(--accent); color: var(--surface); }
+.btnDanger  { background: var(--danger); color: var(--surface); }
+.btnSoft    { background: color-mix(in srgb, var(--label-variable) 16%, transparent); color: var(--text); }
+
+@keyframes sheetUp   { from { transform: translateY(100%); } to { transform: translateY(0); } }
+@keyframes sheetFade { from { opacity: 0; } }

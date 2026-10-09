@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next'
 import { dateOf, getMonths } from '../lib/utils'
-import styles from './ConfirmNextPeriodPayModal.module.css'
+import { ModalSheet, SheetButton } from './ModalSheet'
+import { CalendarCheck } from '@phosphor-icons/react/dist/csr/CalendarCheck'
 
 // Confirmación antes de marcar como pagado un pago que en realidad vence en
 // el PRÓXIMO periodo (riel de "Pagos del próximo periodo" en Home) —
@@ -19,15 +20,12 @@ export function ConfirmNextPeriodPayModal({ open, payment, onConfirm, onCancel }
   const d = dateOf(payment.due_date)
 
   return (
-    <div onClick={e => e.target === e.currentTarget && onCancel()} className={styles.overlay}>
-      <div className={styles.modal}>
-        <div className={styles.title}>{t('confirmNextPeriodPayModal.title')}</div>
-        <div className={styles.description}>
+    <ModalSheet icon={CalendarCheck} title={t('confirmNextPeriodPayModal.title')} onBackdrop={onCancel}>
+        <ModalSheet.Text>
           <strong>{payment.name}</strong> {t('confirmNextPeriodPayModal.descriptionPrefix', { day: d.getDate(), month: getMonths()[d.getMonth()] })} <strong>{t('confirmNextPeriodPayModal.nextPeriodPhrase')}</strong>. {t('confirmNextPeriodPayModal.descriptionSuffix')}
-        </div>
-        <button onClick={onConfirm} className={`btn-primary ${styles.confirmButton}`}>{t('confirmNextPeriodPayModal.confirm')}</button>
-        <button onClick={onCancel} className="btn-ghost">{t('buttons.cancel')}</button>
-      </div>
-    </div>
+        </ModalSheet.Text>
+        <SheetButton onClick={onConfirm}>{t('confirmNextPeriodPayModal.confirm')}</SheetButton>
+        <SheetButton variant="soft" onClick={onCancel}>{t('buttons.cancel')}</SheetButton>
+    </ModalSheet>
   )
 }
