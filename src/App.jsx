@@ -33,7 +33,7 @@ import { supabase } from './lib/supabase'
 import { computeMissingStatements, currentCycleSpend } from './lib/cardStatements'
 import { planFuture, getPlans, newPlan, applyCharged, applyPaid, revertPaid, revertCharged, applySettle, revertSettle, itemsTotal } from './lib/cardPlans'
 import { findAutoChargeCandidate, readAutoChargeSkip, addAutoChargeSkip, isCreditInstallmentCopy, dueDateNoon } from './lib/installmentCharge'
-import { today, todayStr, addDays, dateToStr } from './lib/utils'
+import { today, todayStr, addDays, dateToStr, dateOf, nextCobroPeriod, intlLocale } from './lib/utils'
 import { getBank } from './lib/cardCatalog'
 import { highlightPaymentWhenVisible } from './lib/highlightPayment'
 import { useSpaceStats } from './hooks/useSpaceStats'
@@ -1316,9 +1316,37 @@ export default function App() {
           payment_method_kind: data.payment_method_kind || 'cash',
         }).then(settle(t('app.toast.added', { name: data.name })))
       } else {
-        addPayment(data).then(settle(t('app.toast.paymentAdded')))
+        addPayment(data).then(res => {
+          const { error, reverted, busy } = res
+          if (reverted || busy) return
+          if (error) { showToast(t('app.toast.saveError')); return }
+          // Pago único para dentro de 3+ periodos (v0.9.605): el aviso trae
+          // atajos para corregirlo en el momento (Editar / Repetir cada mes).
+          const far = !data.is_paid && !!profile && !!data.due_date && data.due_date > dateToStr(nextCobroPeriod(profile).end)
+          if (far && res.data) {
+            const row = res.data
+            showToast(t('app.toast.paymentAddedFar', { date: dateOf(row.due_date).toLocaleDateString(intlLocale(), { day: 'numeric', month: 'short' }) }), [
+              { label: t('app.toast.edit'), onClick: () => openEdit(row) },
+              { label: t('app.toast.repeatMonthly'), onClick: () => makeRecurrentFromSingle(row) },
+            ])
+          } else {
+            showToast(t('app.toast.paymentAdded'))
+          }
+        })
       }
     }
+  }
+
+  // "Repetir cada mes" desde el aviso de un pago único guardado para más
+  // adelante: se reemplaza por un recurrente mensual con los mismos datos.
+  async function makeRecurrentFromSingle(row) {
+    const del = await deletePayment(row.id)
+    if (del?.reverted || del?.busy || del?.error) return
+    addRecurrentPayment({
+      name: row.name, amount: row.amount, category: row.category, recur_freq: 'monthly',
+      is_variable: row.is_variable || false, firstDate: row.due_date,
+      payment_method_id: row.payment_method_id ?? null, payment_method_kind: row.payment_method_kind || 'cash',
+    }).then(r => { if (!r?.error) showToast(t('app.toast.added', { name: row.name })) })
   }
 
   // Compra a meses ligada a la tarjeta (v0.9.587): vive en `payment_methods.plans`.

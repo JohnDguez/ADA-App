@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { createPortal } from 'react-dom'
 import { ChevronDown, Check, Search } from 'lucide-react'
+import { BottomSheet } from './BottomSheet'
 import styles from './Select.module.css'
 
 // PANEL_ANIM_MS debe coincidir EXACTO con `animation-duration` de
@@ -26,7 +27,12 @@ const PANEL_ANIM_MS = 180
 //   tarjetas (37 instituciones).
 // - opciones con `group` + prop `groupLabels` ({ id: 'Etiqueta' }): dibuja
 //   un encabezado cada vez que cambia el grupo.
-export function Select({ value, onChange, options, placeholder, renderIcon, searchable = false, groupLabels = null }) {
+// v0.9.605 — `sheet`: en vez del desplegable, el selector abre una hoja
+// inferior (más cómoda con el pulgar). `sheetTitle` = encabezado de la hoja;
+// `sheetLayout` = 'list' (default) o 'grid' (cuadrícula de 3 columnas, usada
+// en categorías); `sheetAction` = { label, onClick } agrega una celda/fila
+// final (ej. "+ Nueva"). Los <Select> que no pasan `sheet` no cambian.
+export function Select({ value, onChange, options, placeholder, renderIcon, searchable = false, groupLabels = null, sheet = false, sheetTitle = '', sheetLayout = 'list', sheetAction = null }) {
   const { t } = useTranslation()
   const [open, setOpen] = useState(false)
   const [query, setQuery] = useState('')
@@ -91,7 +97,7 @@ export function Select({ value, onChange, options, placeholder, renderIcon, sear
   // desplegable se cerraba solo al intentar scrollear sus propias
   // opciones. Ahora ignora el scroll que ocurre DENTRO del panel.
   useEffect(() => {
-    if (!open) return
+    if (!open || sheet) return
     function handleScroll(e) {
       if (searchFocusedRef.current) return
       if (panelRef.current && panelRef.current.contains(e.target)) return
@@ -133,7 +139,8 @@ export function Select({ value, onChange, options, placeholder, renderIcon, sear
   const selectedLabel = value != null ? optLabel(options.find(o => optValue(o) === value) ?? value) : null
   const normalize = str => String(str).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
   const q = normalize(query.trim())
-  const visibleOptions = searchable && q ? options.filter(o => normalize(optLabel(o)).includes(q)) : options
+  const showSearch = searchable || (sheet && options.length > 7)
+  const visibleOptions = showSearch && q ? options.filter(o => normalize(optLabel(o)).includes(q)) : options
 
   return (
     <div ref={ref} className={styles.wrapper}>
@@ -149,7 +156,47 @@ export function Select({ value, onChange, options, placeholder, renderIcon, sear
         <ChevronDown size={16} color="var(--text)" className={`${styles.chevron} ${open ? styles.chevronOpen : ''}`} />
       </button>
 
-      {showPanel && panelPos && createPortal(
+      {sheet && (
+        <BottomSheet open={open} title={sheetTitle} onClose={closePanel}>
+          <div ref={panelRef}>
+            {showSearch && (
+              <div className={styles.sheetSearch}>
+                <Search size={14} color="var(--text)" />
+                <input value={query} onChange={e => setQuery(e.target.value)} placeholder={t('select.searchPlaceholder')} className={styles.searchInput} />
+              </div>
+            )}
+            <div className={sheetLayout === 'grid' ? styles.sheetGrid : styles.sheetList}>
+              {visibleOptions.map((opt, i) => {
+                const ov = optValue(opt)
+                const isSel = ov === value
+                const group = typeof opt === 'object' ? opt.group : null
+                const prevGroup = i > 0 && typeof visibleOptions[i - 1] === 'object' ? visibleOptions[i - 1].group : null
+                const showGroup = groupLabels && group && group !== prevGroup
+                return (
+                  <div key={ov} className={showGroup ? styles.sheetGroupWrap : undefined} style={sheetLayout === 'grid' ? { display: 'contents' } : undefined}>
+                    {showGroup && sheetLayout !== 'grid' && <div className={styles.groupLabel}>{groupLabels[group]}</div>}
+                    <button type="button" onClick={() => { onChange(ov); closePanel() }}
+                      className={`${sheetLayout === 'grid' ? styles.sheetCell : styles.sheetRow} ${isSel ? styles.sheetSelected : ''}`}>
+                      {renderIcon && renderIcon(ov)}
+                      <span className={styles.sheetLabel}>{optLabel(opt)}</span>
+                      {isSel && sheetLayout !== 'grid' && <Check size={16} color="var(--accent)" className={styles.checkIcon} />}
+                    </button>
+                  </div>
+                )
+              })}
+              {sheetAction && (
+                <button type="button" onClick={() => { closePanel(); sheetAction.onClick() }}
+                  className={`${sheetLayout === 'grid' ? styles.sheetCell : styles.sheetRow} ${styles.sheetActionCell}`}>
+                  <span className={styles.sheetLabel}>{sheetAction.label}</span>
+                </button>
+              )}
+            </div>
+            {showSearch && visibleOptions.length === 0 && <div className={styles.noResults}>{t('select.noResults')}</div>}
+          </div>
+        </BottomSheet>
+      )}
+
+      {!sheet && showPanel && panelPos && createPortal(
         <div
           ref={panelRef}
           className={`${styles.panel} ${dropUp ? styles.panelUp : styles.panelDown} ${closing ? styles.panelClosing : ''}`}

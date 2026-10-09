@@ -20,7 +20,7 @@ export function cardLabel(card, t) {
 // `allowCredit={false}`: sin tarjetas de crédito en la lista (aportar a metas y
 // al Fondo Compartido — crédito no baja el disponible, así que el progreso
 // y el disponible dejarían de cuadrar).
-export function PaymentMethodField({ methods, value, onChange, label, onAddCard = null, allowCredit = true }) {
+export function PaymentMethodField({ methods, value, onChange, label, onAddCard = null, allowCredit = true, sheet = false }) {
   const { t } = useTranslation()
   const debit = methods.filter(m => m.kind === 'debit')
   const credit = allowCredit ? methods.filter(m => m.kind === 'credit') : []
@@ -55,6 +55,8 @@ export function PaymentMethodField({ methods, value, onChange, label, onAddCard 
             options={options}
             groupLabels={groupLabels}
             renderIcon={renderIcon}
+            sheet={sheet}
+            sheetTitle={label || t('paymentMethod.label')}
           />
         </div>
         {/* Registrar una tarjeta sin salir del formulario (onAddCard abre

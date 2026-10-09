@@ -20,3 +20,24 @@
   transform: translateX(-50%) translateY(0);
   opacity: 1;
 }
+
+.withActions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  pointer-events: auto;
+  white-space: normal;
+  max-width: calc(100vw - 32px);
+}
+
+.action {
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--accent);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+}

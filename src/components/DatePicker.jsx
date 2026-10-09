@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Calendar, ChevronLeft, ChevronRight, ChevronUp, ChevronDown } from 'lucide-react'
 import { getMonths, getMonthsShort, getWeekdaysShort, dateOf, addMonths } from '../lib/utils'
+import { BottomSheet } from './BottomSheet'
 import styles from './DatePicker.module.css'
 
 function toStr(d) {
@@ -21,7 +22,10 @@ const PANEL_HEIGHT = 300
 // desplegable propio con el mismo estilo del resto de la app. El ícono de
 // calendario ahora es grande y en var(--accent) — antes era el diminuto
 // ícono gris que trae el navegador por defecto, casi invisible.
-export function DatePicker({ value, onChange, placeholder }) {
+// v0.9.605 — `sheet`: abre una hoja inferior con atajos (Hoy, Mañana, Fin de
+// mes, +1 mes) y el calendario debajo; `sheetTitle` = encabezado. Sin `sheet`
+// se comporta igual que siempre (desplegable).
+export function DatePicker({ value, onChange, placeholder, sheet = false, sheetTitle = '' }) {
   const { t } = useTranslation()
   const [open, setOpen] = useState(false)
   const [dropUp, setDropUp] = useState(false)
@@ -31,7 +35,7 @@ export function DatePicker({ value, onChange, placeholder }) {
 
   useEffect(() => {
     function handle(e) { if (ref.current && !ref.current.contains(e.target)) setOpen(false) }
-    if (open) document.addEventListener('mousedown', handle)
+    if (open && !sheet) document.addEventListener('mousedown', handle)
     return () => document.removeEventListener('mousedown', handle)
   }, [open])
 
@@ -69,6 +73,14 @@ export function DatePicker({ value, onChange, placeholder }) {
   function pick(dateObj) { onChange(toStr(dateObj)); setOpen(false) }
   function pickMonth(m) { setViewDate(new Date(year, m, 1)); setMode('days') }
 
+  const todayD = new Date()
+  const quick = [
+    { key: 'today',    label: t('datePicker.quick.today'),      date: new Date(todayD.getFullYear(), todayD.getMonth(), todayD.getDate()) },
+    { key: 'tomorrow', label: t('datePicker.quick.tomorrow'),   date: new Date(todayD.getFullYear(), todayD.getMonth(), todayD.getDate() + 1) },
+    { key: 'eom',      label: t('datePicker.quick.endOfMonth'), date: new Date(todayD.getFullYear(), todayD.getMonth() + 1, 0) },
+    { key: 'nextm',    label: t('datePicker.quick.nextMonth'),  date: addMonths(selected || todayD, 1) },
+  ]
+
   const label = selected
     ? `${String(selected.getDate()).padStart(2, '0')}/${String(selected.getMonth() + 1).padStart(2, '0')}/${selected.getFullYear()}`
     : (placeholder || t('datePicker.selectPlaceholder'))
@@ -84,7 +96,7 @@ export function DatePicker({ value, onChange, placeholder }) {
         <Calendar size={20} color="var(--accent)" strokeWidth={2} className={styles.calendarIcon} />
       </button>
 
-      {open && (
+      {!sheet && open && (
         <div className={`${styles.panel} ${dropUp ? styles.panelUp : styles.panelDown}`}>
           {mode === 'days' ? (
             <>
@@ -161,6 +173,91 @@ export function DatePicker({ value, onChange, placeholder }) {
             </>
           )}
         </div>
+      )}
+      {sheet && (
+        <BottomSheet open={open} title={sheetTitle} onClose={() => setOpen(false)}>
+          <div className={styles.quickRow}>
+            {quick.map(q => (
+              <button type="button" key={q.key} onClick={() => pick(q.date)} className={`${styles.quickChip} ${selected && isSameDay(q.date, selected) ? styles.quickChipOn : ''}`}>{q.label}</button>
+            ))}
+          </div>
+          <div className={styles.sheetCalendar}>
+          {mode === 'days' ? (
+            <>
+              <div className={styles.navRow}>
+                <button type="button" onClick={() => setViewDate(addMonths(viewDate, -1))} className={styles.navArrowButton}>
+                  <ChevronLeft size={16} color="var(--text)" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setMode('monthYear')}
+                  className={styles.monthYearButton}
+                >
+                  <span className={styles.monthYearLabel}>{getMonths()[month]} {year}</span>
+                  <ChevronDown size={13} color="var(--text)" />
+                </button>
+                <button type="button" onClick={() => setViewDate(addMonths(viewDate, 1))} className={styles.navArrowButton}>
+                  <ChevronRight size={16} color="var(--text)" />
+                </button>
+              </div>
+              <div className={styles.weekdaysRow}>
+                {getWeekdaysShort().map((w, i) => (
+                  <div key={w + i} className={styles.weekdayCell}>{w[0]}</div>
+                ))}
+              </div>
+              <div className={styles.daysGrid}>
+                {cells.map((c, i) => {
+                  const isSel = isSameDay(c.dateObj, selected)
+                  return (
+                    <button
+                      type="button"
+                      key={i}
+                      onClick={() => pick(c.dateObj)}
+                      className={`${styles.dayCell} ${isSel ? styles.dayCellSelected : c.muted ? styles.dayCellMuted : ''}`}
+                    >
+                      {c.day}
+                    </button>
+                  )
+                })}
+              </div>
+            </>
+          ) : (
+            <>
+              <div className={styles.navRow}>
+                <button type="button" onClick={() => setViewDate(new Date(year - 1, month, 1))} className={styles.navArrowButton}>
+                  <ChevronLeft size={16} color="var(--text)" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setMode('days')}
+                  className={styles.monthYearButton}
+                >
+                  <span className={styles.monthYearLabel}>{year}</span>
+                  <ChevronUp size={13} color="var(--text)" />
+                </button>
+                <button type="button" onClick={() => setViewDate(new Date(year + 1, month, 1))} className={styles.navArrowButton}>
+                  <ChevronRight size={16} color="var(--text)" />
+                </button>
+              </div>
+              <div className={styles.monthsGrid}>
+                {getMonthsShort().map((m, i) => {
+                  const isSel = i === month
+                  return (
+                    <button
+                      type="button"
+                      key={m}
+                      onClick={() => pickMonth(i)}
+                      className={`${styles.monthCell} ${isSel ? styles.monthCellSelected : ''}`}
+                    >
+                      {m}
+                    </button>
+                  )
+                })}
+              </div>
+            </>
+          )}
+          </div>
+        </BottomSheet>
       )}
     </div>
   )

@@ -884,7 +884,13 @@
       "next": "Next",
       "back": "Back"
     },
-    "alreadyPaidSub": "Records it as paid today"
+    "alreadyPaidSub": "Records it as paid today",
+    "farPrompt": {
+      "title": "This payment is further out",
+      "text": "You saved it for {{date}}. Does it repeat, like rent or a subscription?",
+      "yes": "Yes, make it recurring",
+      "no": "No, just this once"
+    }
   },
   "pageHeader": {
     "greetingMorning": "Good morning!",
@@ -1033,7 +1039,13 @@
     "monthlyHelperPrefix": "The period starts on day"
   },
   "datePicker": {
-    "selectPlaceholder": "Select a date"
+    "selectPlaceholder": "Select a date",
+    "quick": {
+      "today": "Today",
+      "tomorrow": "Tomorrow",
+      "endOfMonth": "End of month",
+      "nextMonth": "+1 month"
+    }
   },
   "feedbackPromptModal": {
     "premiumPill": "Get 3 months of Premium free",
@@ -1352,7 +1364,10 @@
       "fallbackIncomeName": "extra income",
       "installmentCharged": "Installment {{n}}/{{total}} of “{{name}}” charged to your card",
       "cardDebtRestored": "Added back to your {{name}} balance: {{amount}}",
-      "cardPlanCreated": "\"{{name}}\" is now linked to {{card}}"
+      "cardPlanCreated": "\"{{name}}\" is now linked to {{card}}",
+      "paymentAddedFar": "Saved for {{date}}",
+      "edit": "Edit",
+      "repeatMonthly": "Repeat monthly"
     },
     "confirm": {
       "deleteThisPayment": "Delete this payment?",

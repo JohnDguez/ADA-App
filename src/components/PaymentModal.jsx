@@ -2,11 +2,12 @@ import { useState, useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import i18n from '../i18n'
 import { Wallet, AlertTriangle, Repeat, Check, Info, Lock } from 'lucide-react'
-import { CATEGORIES, RECUR_FREQ, WEEKDAYS_SHORT, getWeekdaysShort, MONTHS, getMonths, MONTHS_SHORT, getMonthsShort, intlLocale, nextWeekdayDate, nextBiweeklyFromDate, nextPeriodDate, cobroPeriod, fmt, nameExistsActive, projectPeriodImpact, getCatColor, getCategoryLabel, getFrequencyLabel, dateToStr, todayStr, getDeleteConfirmMessage, installmentCurrentNumber } from '../lib/utils'
+import { CATEGORIES, RECUR_FREQ, WEEKDAYS_SHORT, getWeekdaysShort, MONTHS, getMonths, MONTHS_SHORT, getMonthsShort, intlLocale, nextWeekdayDate, nextBiweeklyFromDate, nextPeriodDate, cobroPeriod, fmt, nameExistsActive, projectPeriodImpact, nextCobroPeriod, getCatColor, getCategoryLabel, getFrequencyLabel, dateToStr, todayStr, getDeleteConfirmMessage, installmentCurrentNumber } from '../lib/utils'
 import { getCategoryIcon } from '../lib/categoryIcons'
 import { supabase } from '../lib/supabase'
 import { ConfirmCloseModal } from './ConfirmCloseModal'
 import { ConfirmDeleteModal } from './ConfirmDeleteModal'
+import { ModalSheet, SheetButton } from './ModalSheet'
 import { FrequencyPicker } from './FrequencyPicker'
 import { Select } from './Select'
 import { PaymentMethodField, cardLabel } from './PaymentMethodField'
@@ -94,6 +95,9 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onSaveC
   const [typeNote,    setTypeNote]    = useState('')
   const typeNoteTimer = useRef(null)
   const hadTypeRef    = useRef(false)
+  // Aviso de pago único con fecha de 3+ periodos adelante (v0.9.605)
+  const [farPrompt, setFarPrompt] = useState(false)
+  const farOkRef = useRef(false)
 
   const isEditingInstallment = !!(initial?.is_installment)
   // Número del pago en curso. En una COPIA es su propio current_installment;
@@ -217,6 +221,7 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onSaveC
     }
     setTypeChosen(!!initial || !!prefill || autoStart === 'voice' || autoStart === 'scan')
     hadTypeRef.current = false
+    farOkRef.current = false; setFarPrompt(false)
     setStep(1); setMoreOpen(false); setImpactOpen(false); setTypeNote('')
     setError(''); setConfirmClose(false); setAddingCategory(false); setNewCategoryName('')
   }, [initial, open])
@@ -302,6 +307,10 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onSaveC
     if (mode === 'recurrent' && recurFreq === 'weekly')    finalDate = dateToStr(nextWeekdayDate(weekday))
     if (mode === 'recurrent' && recurFreq === 'biweekly')  finalDate = biweeklyDate ? dateToStr(nextBiweeklyFromDate(biweeklyDate)) : dueDate
     if (!finalDate) { setError(t('paymentModal.dueDateError')); return }
+    if (mode === 'single' && !initial && !alreadyPaid && profile && !farOkRef.current) {
+      const { end } = nextCobroPeriod(profile)
+      if (finalDate > dateToStr(end)) { setFarPrompt(true); return }
+    }
     setSaving(true)
     const payload = {
       name: name.trim(),
@@ -810,7 +819,7 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onSaveC
                   </button>
                 </div>
                 <div data-coachmark="modal-category-field">
-                  <Select value={category} onChange={setCategory} options={allCategories} renderIcon={renderCategoryIcon} />
+                  <Select value={category} onChange={setCategory} options={allCategories} renderIcon={renderCategoryIcon} sheet sheetTitle={t('paymentModal.fields.category')} sheetLayout="grid" sheetAction={{ label: t('paymentModal.fields.addCategory'), onClick: () => { setAddingCategory(true); setNewCategoryName('') } }} />
                 </div>
                 {addingCategory && (
                   <div className={styles.addCategoryRow}>
@@ -832,7 +841,7 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onSaveC
             <>
               {methodsAvailable && (
                 <div className={styles.fieldGroup}>
-                  <PaymentMethodField methods={paymentMethods.methods} value={methodId} onChange={setMethodId} onAddCard={openAddCard} />
+                  <PaymentMethodField methods={paymentMethods.methods} value={methodId} onChange={setMethodId} onAddCard={openAddCard} sheet />
                 </div>
               )}
               {canLink && (
@@ -853,13 +862,13 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onSaveC
           {isFlat && showDatePicker && (
             <div className={styles.fieldGroup}>
               <label className="field-label">{t('paymentModal.dueDate')}</label>
-              <DatePicker value={dueDate} onChange={setDueDate} />
+              <DatePicker value={dueDate} onChange={setDueDate} sheet sheetTitle={t('paymentModal.dueDate')} />
             </div>
           )}
 
           {mode === 'single' && initial && initial.is_paid && (
             <Field label={t('paymentModal.paidDateLabel')}>
-              <DatePicker value={paidAt} onChange={setPaidAt} />
+              <DatePicker value={paidAt} onChange={setPaidAt} sheet sheetTitle={t('paymentModal.paidDateLabel')} />
             </Field>
           )}
 
@@ -878,7 +887,7 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onSaveC
 
           {showBiweeklyPicker && (
             <Field label={t('paymentModal.biweeklyBaseDateLabel')}>
-              <DatePicker value={biweeklyDate} onChange={setBiweeklyDate} />
+              <DatePicker value={biweeklyDate} onChange={setBiweeklyDate} sheet sheetTitle={t('paymentModal.biweeklyBaseDateLabel')} />
               {nextBiDate && <div className={styles.helperTextMt6}>{t('paymentModal.nextDueLabel', { date: nextBiDate.toLocaleDateString(intlLocale(), { day: 'numeric', month: 'long' }) })}</div>}
             </Field>
           )}
@@ -909,7 +918,7 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onSaveC
             <>
               {methodsAvailable && (
                 <div className={styles.fieldGroup}>
-                  <PaymentMethodField methods={paymentMethods.methods} value={methodId} onChange={setMethodId} onAddCard={openAddCard} />
+                  <PaymentMethodField methods={paymentMethods.methods} value={methodId} onChange={setMethodId} onAddCard={openAddCard} sheet />
                 </div>
               )}
               {mode === 'single' && (
@@ -963,7 +972,7 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onSaveC
                 {showDatePicker && (
                   <div className={styles.fieldGroup}>
                     <label className="field-label">{t('paymentModal.firstPaymentDate')}</label>
-                    <DatePicker value={dueDate} onChange={setDueDate} />
+                    <DatePicker value={dueDate} onChange={setDueDate} sheet sheetTitle={t('paymentModal.dueDate')} />
                   </div>
                 )}
                 {linked && totalAmt > 0 && numPayments >= 2 && (() => {
@@ -1101,6 +1110,13 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onSaveC
         </div>
       </div>
       <ConfirmCloseModal open={confirmClose} onConfirm={() => { setConfirmClose(false); onClose() }} onCancel={() => setConfirmClose(false)} />
+      {farPrompt && (
+        <ModalSheet icon={ArrowsClockwise} title={t('paymentModal.farPrompt.title')} onBackdrop={() => setFarPrompt(false)} zIndex={400}>
+          <ModalSheet.Text>{t('paymentModal.farPrompt.text', { date: formatDueDate(dueDate) })}</ModalSheet.Text>
+          <SheetButton onClick={() => { setFarPrompt(false); selectType('recurrent') }}>{t('paymentModal.farPrompt.yes')}</SheetButton>
+          <SheetButton variant="soft" onClick={() => { farOkRef.current = true; setFarPrompt(false); handleSave() }}>{t('paymentModal.farPrompt.no')}</SheetButton>
+        </ModalSheet>
+      )}
       {methodsAvailable && (
         <AddCardModal open={cardFormOpen} onClose={() => setCardFormOpen(false)} paymentMethods={paymentMethods} onAdded={setMethodId} />
       )}

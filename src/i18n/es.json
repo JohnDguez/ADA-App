@@ -884,7 +884,13 @@
       "next": "Siguiente",
       "back": "Atrás"
     },
-    "alreadyPaidSub": "Lo registra como pagado hoy"
+    "alreadyPaidSub": "Lo registra como pagado hoy",
+    "farPrompt": {
+      "title": "Este pago es para más adelante",
+      "text": "Lo guardaste para el {{date}}. ¿Se repite, como una renta o una suscripción?",
+      "yes": "Sí, hacerlo recurrente",
+      "no": "No, solo esta vez"
+    }
   },
   "pageHeader": {
     "greetingMorning": "¡Buenos días!",
@@ -1033,7 +1039,13 @@
     "monthlyHelperPrefix": "El periodo empieza el día"
   },
   "datePicker": {
-    "selectPlaceholder": "Selecciona una fecha"
+    "selectPlaceholder": "Selecciona una fecha",
+    "quick": {
+      "today": "Hoy",
+      "tomorrow": "Mañana",
+      "endOfMonth": "Fin de mes",
+      "nextMonth": "+1 mes"
+    }
   },
   "feedbackPromptModal": {
     "premiumPill": "Obtén 3 meses de Premium gratis",
@@ -1352,7 +1364,10 @@
       "fallbackIncomeName": "ingreso extra",
       "installmentCharged": "Parcialidad {{n}}/{{total}} de «{{name}}» cargada a tu tarjeta",
       "cardDebtRestored": "Se sumó a la deuda de {{name}}: {{amount}}",
-      "cardPlanCreated": "«{{name}}» quedó ligada a {{card}}"
+      "cardPlanCreated": "«{{name}}» quedó ligada a {{card}}",
+      "paymentAddedFar": "Guardado para el {{date}}",
+      "edit": "Editar",
+      "repeatMonthly": "Repetir cada mes"
     },
     "confirm": {
       "deleteThisPayment": "¿Eliminar este pago?",
