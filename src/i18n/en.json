@@ -1483,6 +1483,8 @@
     "income": "Income",
     "filters": "Filters",
     "period": "Period",
+    "since": "Since {{date}}",
+    "customHint": "Pick the dates",
     "custom": "Custom",
     "spaceLabel": "Space",
     "space": {

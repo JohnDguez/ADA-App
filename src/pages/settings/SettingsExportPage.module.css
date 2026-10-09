@@ -150,29 +150,39 @@
   white-space: nowrap;
 }
 
-/* Hoja de periodo */
-.periodList { display: flex; flex-direction: column; gap: 2px; }
-.periodOption {
+/* Hoja de periodo: mosaicos con el rango real debajo de cada nombre */
+.periodGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+.periodTile {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  width: 100%;
-  padding: 14px 12px;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 2px;
+  min-height: 62px;
+  padding: 12px 14px;
   border: none;
-  border-radius: var(--radius-sm);
-  background: none;
+  border-radius: var(--radius);
+  background: var(--bg);
   color: var(--text);
   font-family: inherit;
-  font-size: 15px;
-  cursor: pointer;
   text-align: left;
+  cursor: pointer;
+  transition: background .2s;
 }
-.periodLabel { font-weight: 500; }
+.periodTileFull { grid-column: 1 / -1; }
+.periodTileOn { background: color-mix(in srgb, var(--accent) 16%, var(--surface)); }
+.periodTileTitle { font-size: 14px; font-weight: 600; }
+.periodTileOn .periodTileTitle { color: var(--accent); }
+.periodTileSub { font-size: 12px; color: var(--muted); }
 
 .dateRow {
   display: flex;
   gap: 8px;
-  padding: 8px 12px 4px;
+  padding: 10px 0 4px;
 }
 
 .dateCol {

@@ -1483,6 +1483,8 @@
     "income": "Ingresos",
     "filters": "Filtros",
     "period": "Periodo",
+    "since": "Desde {{date}}",
+    "customHint": "Elige las fechas",
     "custom": "Personalizado",
     "spaceLabel": "Espacio",
     "space": {

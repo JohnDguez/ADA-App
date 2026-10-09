@@ -59,7 +59,9 @@ export function SettingsExportPage({ profile, sharedSpaces, onOpenPremium, onBac
     { key: 'allTime',        label: t('settingsExport.shortcuts.allTime') },
   ]
 
-  function applyShortcut(key) {
+  // Rango [desde, hasta] de cada acceso rápido — se usa al aplicarlo y para
+  // mostrar el rango debajo de cada opción en la hoja de periodo.
+  function rangeFor(key) {
     const now = new Date()
     let f, tt
     if (key === 'currentPeriod') {
@@ -90,6 +92,11 @@ export function SettingsExportPage({ profile, sharedSpaces, onOpenPremium, onBac
       f = createdRaw ? dateToStr(new Date(createdRaw)) : dateToStr(new Date(now.getFullYear() - 5, now.getMonth(), now.getDate()))
       tt = todayStr()
     }
+    return [f, tt]
+  }
+
+  function applyShortcut(key) {
+    const [f, tt] = rangeFor(key)
     setFrom(f)
     setTo(tt)
     setActiveShortcut(key)
@@ -545,6 +552,16 @@ export function SettingsExportPage({ profile, sharedSpaces, onOpenPremium, onBac
     return `${d.getDate()} ${MONTHS_SHORT[d.getMonth()].toLowerCase()} ${d.getFullYear()}`
   }
 
+  // Rango corto para los mosaicos: "1 – 15 oct" (mismo mes), "16 sep – 9 oct"
+  // (distinto mes) y, si cambia el año, "30 dic 2025 – 9 ene 2026".
+  function shortRange(f, tt) {
+    const a = dateOf(f), b = dateOf(tt)
+    const m = d => MONTHS_SHORT[d.getMonth()].toLowerCase()
+    if (a.getFullYear() !== b.getFullYear()) return `${a.getDate()} ${m(a)} ${a.getFullYear()} – ${b.getDate()} ${m(b)} ${b.getFullYear()}`
+    if (a.getMonth() === b.getMonth()) return `${a.getDate()} – ${b.getDate()} ${m(b)}`
+    return `${a.getDate()} ${m(a)} – ${b.getDate()} ${m(b)}`
+  }
+
   // Recalcula el contador de "registros encontrados" cada vez que cambia
   // algún filtro — con debounce (Regla 35) para no disparar una consulta
   // por cada tecla/clic mientras el usuario todavía está ajustando fechas.
@@ -924,17 +941,27 @@ export function SettingsExportPage({ profile, sharedSpaces, onOpenPremium, onBac
         options={spaceOptions} value={space} onSelect={setSpace} />
 
       <BottomSheet open={openSheet === 'period'} title={t('settingsExport.period')} onClose={() => setOpenSheet(null)}>
-        <div className={styles.periodList}>
-          {SHORTCUTS.map(sc => (
-            <button key={sc.key} type="button" className={styles.periodOption}
-              onClick={() => { applyShortcut(sc.key); setCustomOpen(false); setOpenSheet(null) }}>
-              <span className={styles.periodLabel}>{sc.label}</span>
-              {activeShortcut === sc.key && !customOpen && <Check size={18} color="var(--accent)" />}
-            </button>
-          ))}
-          <button type="button" className={styles.periodOption} onClick={() => setCustomOpen(v => !v)}>
-            <span className={styles.periodLabel}>{t('settingsExport.custom')}</span>
-            {(activeShortcut === null || customOpen) && <Check size={18} color="var(--accent)" />}
+        <div className={styles.periodGrid}>
+          {SHORTCUTS.map(sc => {
+            const [rf, rt] = rangeFor(sc.key)
+            const subtitle = sc.key === 'allTime'
+              ? t('settingsExport.since', { date: `${MONTHS_SHORT[dateOf(rf).getMonth()].toLowerCase()} ${dateOf(rf).getFullYear()}` })
+              : shortRange(rf, rt)
+            const on = activeShortcut === sc.key && !customOpen
+            return (
+              <button key={sc.key} type="button" className={`${styles.periodTile} ${on ? styles.periodTileOn : ''}`}
+                onClick={() => { applyShortcut(sc.key); setCustomOpen(false); setOpenSheet(null) }}>
+                <span className={styles.periodTileTitle}>{sc.label}</span>
+                <span className={styles.periodTileSub}>{subtitle}</span>
+              </button>
+            )
+          })}
+          <button type="button" onClick={() => setCustomOpen(v => !v)}
+            className={`${styles.periodTile} ${styles.periodTileFull} ${(activeShortcut === null || customOpen) ? styles.periodTileOn : ''}`}>
+            <span className={styles.periodTileTitle}>{t('settingsExport.custom')}</span>
+            <span className={styles.periodTileSub}>
+              {activeShortcut === null ? shortRange(from, to) : t('settingsExport.customHint')}
+            </span>
           </button>
         </div>
         <Collapse open={customOpen || activeShortcut === null}>
