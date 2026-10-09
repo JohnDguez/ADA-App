@@ -167,7 +167,7 @@ export function SettingsAccountPage({ profile, user, onUpdate, onDataDeleted, on
           <Row label={t('settingsAccount.row.name')} value={profile.name} onClick={() => openEdit('name')} />
           {isGoogle
             ? <>
-                <Row label={t('settingsAccount.row.account')} value={t('settingsAccount.row.google')} />
+                <Row label={t('settingsAccount.row.google')} value={user?.email} />
                 <Row label={t('settingsAccount.row.password')} value="••••••••" onClick={() => openEdit('password')} last />
               </>
             : <>
@@ -179,21 +179,22 @@ export function SettingsAccountPage({ profile, user, onUpdate, onDataDeleted, on
 
         <SectionLabel>{t('settingsAccount.dangerZone.label')}</SectionLabel>
         <Card>
-          <button onClick={() => { setDangerModal('data'); setDangerPassword(''); setDangerError('') }} className={styles.dangerButton}>
+          <button onClick={() => { setDangerModal('data'); setDangerPassword(''); setDangerError('') }} className={styles.dangerButtonLast}>
             <div className={styles.dangerButtonText}>
-              <div className={styles.dangerButtonTitle}>{t('settingsAccount.dangerZone.deleteDataTitle')}</div>
+              <div className={styles.dangerButtonTitleNeutral}>{t('settingsAccount.dangerZone.deleteDataTitle')}</div>
               <div className={styles.dangerButtonSubtitle}>{t('settingsAccount.dangerZone.deleteDataSubtitle')}</div>
             </div>
-            <ChevronRight size={14} color="var(--danger)" />
-          </button>
-          <button onClick={() => { setDangerModal('account'); setDangerPassword(''); setDangerError('') }} className={styles.dangerButtonLast}>
-            <div className={styles.dangerButtonText}>
-              <div className={styles.dangerButtonTitle}>{t('settingsAccount.dangerZone.deleteAccountTitle')}</div>
-              <div className={styles.dangerButtonSubtitle}>{t('settingsAccount.dangerZone.deleteAccountSubtitle')}</div>
-            </div>
-            <ChevronRight size={14} color="var(--danger)" />
+            <ChevronRight size={14} color="var(--muted)" />
           </button>
         </Card>
+
+        <button onClick={() => { setDangerModal('account'); setDangerPassword(''); setDangerError('') }} className={styles.dangerCard}>
+          <div className={styles.dangerButtonText}>
+            <div className={styles.dangerCardTitle}>{t('settingsAccount.dangerZone.deleteAccountTitle')}</div>
+            <div className={styles.dangerButtonSubtitle}>{t('settingsAccount.dangerZone.deleteAccountSubtitle')}</div>
+          </div>
+          <ChevronRight size={14} color="var(--danger)" />
+        </button>
       </div>
 
       <Presence show={!!dangerModal}>{() => (

@@ -122,10 +122,10 @@
     },
     "dangerZone": {
       "label": "Danger zone",
-      "deleteDataTitle": "Delete all my data",
-      "deleteDataSubtitle": "Erases all your payments and income. Your account stays active.",
+      "deleteDataTitle": "Delete my data",
+      "deleteDataSubtitle": "Erases your payments and income",
       "deleteAccountTitle": "Delete my account",
-      "deleteAccountSubtitle": "Permanently deletes your account and all your data."
+      "deleteAccountSubtitle": "Deletes your account and everything in it"
     },
     "dangerModal": {
       "titleData": "Delete all data",

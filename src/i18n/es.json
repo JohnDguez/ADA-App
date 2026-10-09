@@ -122,10 +122,10 @@
     },
     "dangerZone": {
       "label": "Zona de peligro",
-      "deleteDataTitle": "Eliminar todos mis datos",
-      "deleteDataSubtitle": "Borra todos tus pagos e ingresos. Tu cuenta se mantiene.",
+      "deleteDataTitle": "Borrar mis datos",
+      "deleteDataSubtitle": "Borra tus pagos e ingresos",
       "deleteAccountTitle": "Eliminar mi cuenta",
-      "deleteAccountSubtitle": "Elimina tu cuenta y todos tus datos permanentemente."
+      "deleteAccountSubtitle": "Elimina tu cuenta y todo lo que hay en ella"
     },
     "dangerModal": {
       "titleData": "Eliminar todos los datos",

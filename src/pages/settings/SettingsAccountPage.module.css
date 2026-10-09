@@ -33,6 +33,31 @@
   cursor: pointer;
 }
 
+.dangerButtonTitleNeutral {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+/* Eliminar cuenta: tarjeta aparte con fondo de peligro, más peso que borrar datos */
+.dangerCard {
+  width: calc(100% - 32px);
+  margin: 14px 16px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px;
+  border: none;
+  border-radius: var(--radius);
+  background: var(--danger-soft);
+  cursor: pointer;
+}
+.dangerCardTitle {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--danger);
+}
+
 .dangerButtonText {
   text-align: left;
 }
