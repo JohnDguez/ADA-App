@@ -137,6 +137,8 @@ export function OnboardingPage({ userId, onDone }) {
     if (step > 1) goToStep(step - 1, 'backward')
   }
 
+  const currencySymbol = getCurrencySymbol(currency || undefined)
+
   function renderStep(n) {
     const meta = STEP_META[n - 1]
     return (
@@ -320,8 +322,8 @@ export function OnboardingPage({ userId, onDone }) {
               {salaryEnabled && (
                 <div>
                   <label className="field-label">{t('onboardingPage.step3.amountLabel')}</label>
-                  <div className={styles.amountWrap}>
-                    <span className={styles.currencyPrefix}>{getCurrencySymbol(currency || undefined) ?? '$'}</span>
+                  <div className={`${styles.amountWrap} ${currencySymbol.length >= 3 ? styles.amountWrapLong : currencySymbol.length === 2 ? styles.amountWrapMid : ''}`}>
+                    <span className={styles.currencyPrefix}>{currencySymbol}</span>
                     <AmountInput
                       autoFocus value={salaryAmount}
                       onChange={e => setSalaryAmount(e.target.value)}

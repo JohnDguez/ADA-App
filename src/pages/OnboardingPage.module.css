@@ -341,6 +341,14 @@
 :global(.field-input).amountInput {
   padding-left: 28px;
 }
+/* Símbolos más largos (US$, S/): el prefijo mide más, el campo deja más
+   espacio a la izquierda para que no se encime con el monto. */
+.amountWrapLong :global(.field-input).amountInput {
+  padding-left: 46px;
+}
+.amountWrapMid :global(.field-input).amountInput {
+  padding-left: 38px;
+}
 
 /* ── Campo "Tu nombre" con ícono adentro ─────────────────────────────────────── */
 .inputWithIcon {
