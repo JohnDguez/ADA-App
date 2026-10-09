@@ -85,11 +85,18 @@
   left: calc(8px + var(--slot) * ((100% - 32px) / 5 + 4px) + 10px);
   width: calc((100% - 32px) / 5 - 20px);
   height: 3px;
-  background: var(--nav-icon);
-  border-radius: 0 0 4px 4px;
   transition: left .25s cubic-bezier(0.25, 0.46, 0.45, 0.94), opacity .2s;
   pointer-events: none;
   z-index: 0;
+}
+/* La línea va en ::before (z 1) para quedar por encima de la luz (::after, z 0) */
+.indicator::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--nav-icon);
+  border-radius: 0 0 4px 4px;
+  z-index: 1;
 }
 .indicatorHidden { opacity: 0; }
 /* Iluminación tenue bajo la barra: viaja junto con el indicador */
@@ -109,6 +116,7 @@
     radial-gradient(ellipse 40px 54px at 64% 0, color-mix(in srgb, var(--accent) 42%, transparent) 0%, transparent 100%),
     radial-gradient(ellipse 30px 30px at 44% 0, color-mix(in srgb, var(--accent) 28%, transparent) 0%, transparent 100%);
   filter: blur(6px);
+  z-index: 0;
   pointer-events: none;
 }
 
