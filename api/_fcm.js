@@ -21,13 +21,32 @@
 // truena nada — se salta en silencio, igual que cualquier usuario sin
 // token FCM guardado, para que el cron siga mandando Web Push al resto.
 
-const admin = require('firebase-admin')
+// firebase-admin v14: ya NO existe el namespace `admin.credential`/`admin.messaging()`
+// — solo la API modular (`firebase-admin/app`, `firebase-admin/messaging`).
+const { initializeApp, cert } = require('firebase-admin/app')
+const { getMessaging } = require('firebase-admin/messaging')
 
 let app = null
 let initAttempted = false
 // Por qué no hay app: 'missing' (variable ausente en este deploy) o el mensaje de
 // error al parsear/usar la clave. Lo lee el modo de prueba para diagnosticar.
 let initError = null
+
+// Tolerante a las formas en que suele pegarse la clave en Vercel: JSON tal cual,
+// JSON envuelto en comillas, JSON en base64, o con los saltos de línea de la
+// private_key como "\\n" literales / ya convertidos.
+function parseServiceAccount(raw) {
+  let text = String(raw).trim()
+  if ((text.startsWith('"') && text.endsWith('"')) || (text.startsWith("'") && text.endsWith("'"))) {
+    text = text.slice(1, -1).trim()
+  }
+  if (!text.startsWith('{')) text = Buffer.from(text, 'base64').toString('utf8').trim()
+  const credentials = JSON.parse(text)
+  if (typeof credentials.private_key === 'string') {
+    credentials.private_key = credentials.private_key.replace(/\\n/g, '\n')
+  }
+  return credentials
+}
 
 function getFirebaseApp() {
   if (app) return app
@@ -37,8 +56,8 @@ function getFirebaseApp() {
   const raw = process.env.FIREBASE_SERVICE_ACCOUNT_KEY
   if (!raw) { initError = 'missing'; return null }
   try {
-    const credentials = JSON.parse(raw)
-    app = admin.initializeApp({ credential: admin.credential.cert(credentials) }, 'lunapay-fcm')
+    const credentials = parseServiceAccount(raw)
+    app = initializeApp({ credential: cert(credentials) }, 'lunapay-fcm')
     return app
   } catch (e) {
     initError = e.message
@@ -78,7 +97,7 @@ async function sendFcm(tokens, { title, body, url, tag }) {
   }
 
   try {
-    const result = await admin.messaging(firebaseApp).sendEachForMulticast(message)
+    const result = await getMessaging(firebaseApp).sendEachForMulticast(message)
     const invalidTokens = []
     const errors = []
     result.responses.forEach((r, i) => {
