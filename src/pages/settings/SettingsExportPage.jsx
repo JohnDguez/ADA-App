@@ -879,7 +879,9 @@ export function SettingsExportPage({ profile, sharedSpaces, onOpenPremium, onBac
           {space === 'personal' && includeGastos && (
             <div className={styles.fieldGroup}>
               <div className="field-label">{t('settingsExport.method.label')}</div>
-              <Select value={methodFilter} onChange={setMethodFilter} options={methodFilters} />
+              <div className={styles.fieldSurface}>
+                <Select value={methodFilter} onChange={setMethodFilter} options={methodFilters} />
+              </div>
             </div>
           )}
 
