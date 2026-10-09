@@ -174,9 +174,31 @@
   margin-top: 4px;
 }
 
+.amountField {
+  position: relative;
+  flex: 1;
+}
+
+.amountPrefix {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 14px;
+  color: var(--text);
+  pointer-events: none;
+}
+
 .amountInput {
   flex: 1;
 }
+
+:global(.field-input).amountInput {
+  padding-left: 28px;
+}
+/* Símbolos largos (US$, S/): más espacio para que no se encimen al monto. */
+.amountFieldLong :global(.field-input).amountInput { padding-left: 46px; }
+.amountFieldMid  :global(.field-input).amountInput { padding-left: 38px; }
 
 :global(.btn-primary).amountSaveButton {
   width: auto;

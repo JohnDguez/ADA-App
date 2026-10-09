@@ -8,6 +8,8 @@ import { getWeekdaysShort } from '../../lib/utils'
 import { showToast } from '../../components/Toast'
 import { Card, SectionLabel, Toggle } from '../../components/SettingsShared'
 import { CurrencySelect } from '../../components/CurrencySelect'
+import AmountInput from '../../components/AmountInput'
+import { getCurrency } from '../../lib/currency'
 import styles from './SettingsCobroPage.module.css'
 
 const BIWEEKLY_PRESETS = [
@@ -21,6 +23,7 @@ const BIWEEKLY_PRESETS = [
 // mezclado directo en SettingsPage.jsx, en dos secciones separadas.
 export function SettingsCobroPage({ profile, onUpdate, onBack, slideClass }) {
   const { t } = useTranslation()
+  const symbol = getCurrency(profile).symbol
   const [salaryAmount,   setSalaryAmount]   = useState(profile.salary_amount || '')
   const [biweeklyCustom, setBiweeklyCustom] = useState(() => {
     return !BIWEEKLY_PRESETS.some(p => p.d1 === (profile.cobro_day1 ?? 1) && p.d2 === (profile.cobro_day2 ?? 16))
@@ -141,7 +144,10 @@ export function SettingsCobroPage({ profile, onUpdate, onBack, slideClass }) {
           <div className={styles.amountSection}>
             <label className="field-label">{t('settingsCobro.amountLabel')}</label>
             <div className={styles.amountRow}>
-              <input type="number" value={salaryAmount} onChange={e => setSalaryAmount(e.target.value)} placeholder="0.00" className={`field-input ${styles.amountInput}`} />
+              <div className={`${styles.amountField} ${symbol.length >= 3 ? styles.amountFieldLong : symbol.length === 2 ? styles.amountFieldMid : ''}`}>
+                <span className={styles.amountPrefix}>{symbol}</span>
+                <AmountInput value={salaryAmount} onChange={e => setSalaryAmount(e.target.value)} placeholder="0.00" className={`field-input ${styles.amountInput}`} />
+              </div>
               <button onClick={handleSalaryAmount} className={`btn-primary ${styles.amountSaveButton}`}>{t('buttons.save')}</button>
             </div>
           </div>
