@@ -13,7 +13,8 @@ android {
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
              // Default: https://android.googlesource.com/platform/frameworks/base/+/282e181b58cf72b6ca770dc7ca5f91f135444502/tools/aapt/AaptAssets.cpp#61
-            ignoreAssetsPattern = '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
+            ignoreAssetsPattern = '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~:!*.map'
+             // v0.9.599: `!*.map` deja fuera los source maps de la web (~13 MB sin comprimir) — solo sirven para DevTools en la PWA.
         }
     }
     buildTypes {
@@ -22,6 +23,18 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+}
+
+// v0.9.599 — peso de la app: @capacitor-mlkit/text-recognition incluye de serie los
+// modelos de chino, devanágari, japonés y coreano además del latino. LunaPay solo
+// lee tickets en alfabeto latino (es/en), así que esos 4 modelos nativos sobran.
+// El código del plugin los referencia solo en un `switch` de idioma que nunca se
+// ejecuta con el latino.
+configurations.all {
+    exclude group: 'com.google.mlkit', module: 'text-recognition-chinese'
+    exclude group: 'com.google.mlkit', module: 'text-recognition-devanagari'
+    exclude group: 'com.google.mlkit', module: 'text-recognition-japanese'
+    exclude group: 'com.google.mlkit', module: 'text-recognition-korean'
 }
 
 repositories {
