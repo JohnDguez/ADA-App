@@ -7,8 +7,6 @@ import { Bell as BellDuotone } from '@phosphor-icons/react/dist/csr/Bell'
 import { PageHero } from '../../components/PageHero'
 import { usePushNotifications } from '../../hooks/usePushNotifications'
 import { showToast } from '../../components/Toast'
-import { supabase } from '../../lib/supabase'
-import { apiUrl } from '../../lib/apiUrl'
 import { Card, Toggle, NotifToggle } from '../../components/SettingsShared'
 import { Select } from '../../components/Select'
 import styles from './SettingsNotificationsPage.module.css'
@@ -34,48 +32,6 @@ export function SettingsNotificationsPage({ profile, user, onUpdate, onBack, sli
   // si falló o se negó el permiso, regresa solo.
   const [pushTarget, setPushTarget] = useState(null)
 
-  // Notificación de prueba (v0.9.592) — ver handleTest() en
-  // api/send-notifications.js. El servidor espera 6 s antes de enviar para
-  // dar tiempo de salir de la app (en primer plano no se muestra el aviso).
-  const [testing, setTesting] = useState(false)
-  const [testResult, setTestResult] = useState(null)
-  async function handleTestPush() {
-    if (testing) return
-    setTesting(true); setTestResult(null)
-    try {
-      const { data: { session } } = await supabase.auth.getSession()
-      const res = await fetch(apiUrl('/api/send-notifications?test=1'), {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token}` },
-        body: JSON.stringify({ delayMs: 6000 }),
-      })
-      if (!res.ok) throw new Error(String(res.status))
-      setTestResult(await res.json())
-    } catch (e) {
-      setTestResult({ status: 'unreachable', detail: e.message })
-    }
-    setTesting(false)
-  }
-  // Una línea por canal: si llegó por PWA pero no por la app, aquí se ve por qué.
-  function channelLines(r) {
-    const app = r.fcmTokens === 0 ? t('settingsNotifications.testChNone')
-      : r.fcm?.sent > 0 ? t('settingsNotifications.testChOk')
-      : !r.firebaseKey ? (r.firebaseKeyError && r.firebaseKeyError !== 'missing'
-          ? `${t('settingsNotifications.testChBadKey')} ${r.firebaseKeyError}`
-          : t('settingsNotifications.testChNoKey'))
-      : `${t('settingsNotifications.testChErr')} ${(r.fcm?.errors || []).map(e => e.code).join(', ')}`
-    const web = !r.webPush ? t('settingsNotifications.testChNone')
-      : r.web?.sent > 0 ? t('settingsNotifications.testChOk')
-      : `${t('settingsNotifications.testChErr')} ${r.web?.error || ''}`
-    return [
-      `${t('settingsNotifications.testChannelApp')}: ${app}`,
-      `${t('settingsNotifications.testChannelWeb')}: ${web}`,
-    ]
-  }
-  function testSummary(r) {
-    if (r.status === 'unreachable') return `${t('settingsNotifications.testFail')}${r.detail ? ` (${r.detail})` : ''}`
-    return t('settingsNotifications.testHint')
-  }
   async function handlePushToggle() {
     if (pushTarget !== null) return
     if (subscribed) {
@@ -117,28 +73,6 @@ export function SettingsNotificationsPage({ profile, user, onUpdate, onBack, sli
         </div>
 
         {subscribed && (<>
-          <div className={styles.testSection}>
-            <button className={styles.testButton} onClick={handleTestPush} disabled={testing}>
-              {testing ? t('settingsNotifications.testSending') : t('settingsNotifications.testButton')}
-            </button>
-            <div className={styles.testHint}>{t('settingsNotifications.testHint')}</div>
-            {testResult && (
-              <div className={styles.testResult}>
-                {testResult.status === 'unreachable'
-                  ? <div>{testSummary(testResult)}</div>
-                  : channelLines(testResult).map(l => <div key={l}>{l}</div>)}
-                {testResult.schedule && (<>
-                  <div>
-                    {Object.keys(testResult.pending || {}).length === 0
-                      ? t('settingsNotifications.testPendingNone')
-                      : `${t('settingsNotifications.testPending')} ${Object.entries(testResult.pending).map(([k, v]) => `${k} ×${v}`).join(', ')}`}
-                  </div>
-                  <div>{t('settingsNotifications.testSchedule', { hour: testResult.schedule.notifHour, local: testResult.schedule.localHour, last: testResult.schedule.lastSent || '—' })}</div>
-                </>)}
-              </div>
-            )}
-          </div>
-
           <div className={styles.subSection}>
             <div className={styles.hourLabel}>{t('settingsNotifications.notificationHour')}</div>
             <div className={styles.hourSelectWrapper}>
