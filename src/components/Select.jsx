@@ -103,6 +103,12 @@ export function Select({ value, onChange, options, placeholder, renderIcon, sear
     function handleScroll(e) {
       if (searchFocusedRef.current) return
       if (panelRef.current && panelRef.current.contains(e.target)) return
+      // v0.9.621 — con el candado de scroll (`useScrollLock`, regla 29.1) la
+      // página ya no puede hacer scroll mientras el desplegable está abierto;
+      // el 'scroll' del documento que dispara el propio candado al fijar el
+      // body (si la página venía con scroll) cerraba el panel nada más abrir,
+      // sobre todo al abrir hacia abajo. Solo cuentan los contenedores internos.
+      if (e.target === document || e.target === document.documentElement || e.target === window) return
       closePanel()
     }
     window.addEventListener('scroll', handleScroll, true)
