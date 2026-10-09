@@ -73,6 +73,15 @@ export function SettingsAppearancePage({ theme, onThemeChange, onBack, slideClas
 
   useEffect(() => () => clearTimeout(settleTimeout.current), [])
 
+  // Tocar una tarjeta (la que asoma a un lado) la centra con animación; al
+  // asentarse, handleScroll la vuelve el tema activo.
+  function centerCard(idx) {
+    const track = trackRef.current
+    const card = track?.children[idx]
+    if (!card) return
+    track.scrollTo({ left: card.offsetLeft - (track.clientWidth - card.offsetWidth) / 2, behavior: 'smooth' })
+  }
+
   return (
     <div className={`${slideClass} ${styles.pageWrapper}`}>
       <PageHero
@@ -83,8 +92,8 @@ export function SettingsAppearancePage({ theme, onThemeChange, onBack, slideClas
       />
 
       <div ref={trackRef} onScroll={handleScroll} className={styles.carousel}>
-        {OPTIONS.map(({ id, icon: Icon }) => (
-          <div key={id} className={`${styles.carouselCard} ${theme === id ? styles.carouselCardActive : ''}`}>
+        {OPTIONS.map(({ id, icon: Icon }, idx) => (
+          <div key={id} onClick={() => centerCard(idx)} className={`${styles.carouselCard} ${theme === id ? styles.carouselCardActive : ''}`}>
             <Icon size={24} color={theme === id ? 'var(--accent)' : 'var(--text)'} />
             <div className={`${styles.skeletonPreview} ${styles['skeleton_' + id]}`}>
               <div className={styles.skeletonBarLeft} />
