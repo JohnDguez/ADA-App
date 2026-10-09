@@ -32,7 +32,7 @@ const PANEL_ANIM_MS = 180
 // `sheetLayout` = 'list' (default) o 'grid' (cuadrícula de 3 columnas, usada
 // en categorías); `sheetAction` = { label, onClick } agrega una celda/fila
 // final (ej. "+ Nueva"). Los <Select> que no pasan `sheet` no cambian.
-export function Select({ value, onChange, options, placeholder, renderIcon, searchable = false, groupLabels = null, sheet = false, sheetTitle = '', sheetLayout = 'list', sheetAction = null }) {
+export function Select({ value, onChange, options, placeholder, renderIcon, searchable = false, groupLabels = null, sheet = false, sheetTitle = '', sheetLayout = 'list', sheetAction = null, cellIcon = null, cellColor = null }) {
   const { t } = useTranslation()
   const [open, setOpen] = useState(false)
   const [query, setQuery] = useState('')
@@ -176,8 +176,9 @@ export function Select({ value, onChange, options, placeholder, renderIcon, sear
                   <div key={ov} className={showGroup ? styles.sheetGroupWrap : undefined} style={sheetLayout === 'grid' ? { display: 'contents' } : undefined}>
                     {showGroup && sheetLayout !== 'grid' && <div className={styles.groupLabel}>{groupLabels[group]}</div>}
                     <button type="button" onClick={() => { onChange(ov); closePanel() }}
-                      className={`${sheetLayout === 'grid' ? styles.sheetCell : styles.sheetRow} ${isSel ? styles.sheetSelected : ''}`}>
-                      {renderIcon && renderIcon(ov)}
+                      className={`${sheetLayout === 'grid' ? styles.sheetCell : styles.sheetRow} ${isSel ? styles.sheetSelected : ''} ${sheetLayout === 'grid' && cellColor ? styles.sheetCellColored : ''}`}
+                      style={sheetLayout === 'grid' && cellColor ? { background: cellColor(ov) } : undefined}>
+                      {sheetLayout === 'grid' && cellIcon ? cellIcon(ov) : renderIcon && renderIcon(ov)}
                       <span className={styles.sheetLabel}>{optLabel(opt)}</span>
                       {isSel && sheetLayout !== 'grid' && <Check size={16} color="var(--accent)" className={styles.checkIcon} />}
                     </button>

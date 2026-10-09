@@ -778,6 +778,7 @@
       "label": "Impact on your finances",
       "message": "See how this new expense impacts your finances for that period",
       "warning": "Careful! This could affect your finances",
+      "warningShort": "Careful!",
       "ok": "All good",
       "periodLabel": "Period {{range}}.",
       "currentlyAvailable": "Currently available {{amount}} MXN",

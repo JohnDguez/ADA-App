@@ -778,6 +778,7 @@
       "label": "Impacto en tus finanzas",
       "message": "Descubre como este nuevo gasto impacta en tus finanzas de ese periodo",
       "warning": "¡Cuidado! Puede alterar tus finanzas",
+      "warningShort": "¡Cuidado!",
       "ok": "Todo bien",
       "periodLabel": "Periodo {{range}}.",
       "currentlyAvailable": "Disponible actualmente {{amount}} MXN",

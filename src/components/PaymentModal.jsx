@@ -20,6 +20,8 @@ import { Lock as PhLock } from '@phosphor-icons/react/dist/csr/Lock'
 import { nextCutAfter } from '../lib/cardStatements'
 import { DatePicker } from './DatePicker'
 import AmountInput from './AmountInput'
+import { Collapse } from './Collapse'
+import { getCurrencySymbol } from '../lib/currency'
 import styles from './PaymentModal.module.css'
 import { markBackHandled, wasBackHandled } from '../lib/backNav'
 import { AddCardModal } from './AddCardModal'
@@ -364,6 +366,18 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onSaveC
         }
       </div>
     )
+  }
+
+  // Cuadrícula de categorías: la celda completa lleva el color de la categoría,
+  // así que el ícono va sin cuadro propio.
+  function renderCategoryCellIcon(cat) {
+    const CatIcon = getCategoryIcon(cat, profile?.category_icons)
+    return CatIcon
+      ? <CatIcon size={18} color="var(--text)" strokeWidth={2} />
+      : <span className={styles.categoryIconFallbackDot} />
+  }
+  function categoryCellColor(cat) {
+    return getCatColor(cat, customCategories, profile?.category_colors)
   }
 
   async function handleVoice() {
@@ -789,12 +803,15 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onSaveC
           {isFlat && !isVariable && (
             <div className={styles.amountHero}>
               <div className={styles.amountHeroLabel}>{t('paymentModal.amountLabel')}</div>
-              <AmountInput className={styles.amountHeroInput} value={amount} onChange={e => setAmount(e.target.value)} placeholder="0.00" />
+              <div className={styles.amountHeroRow}>
+                <span className={styles.amountHeroSymbol}>{getCurrencySymbol(profile)}</span>
+                <AmountInput className={styles.amountHeroInput} style={{ width: `${Math.max(4, String(amount).length + Math.floor(String(amount).length / 3) + 1)}ch` }} value={amount} onChange={e => setAmount(e.target.value)} placeholder="0.00" />
+              </div>
             </div>
           )}
 
           {showDataStep && (
-            <>
+            <div className={styles.stepEnter}>
               <Field label={t('paymentModal.fields.name')}>
                 <input autoFocus={!initial && !voiceSupported && !scanSupported} className="field-input" type="text" value={name} onChange={e => setName(e.target.value)} placeholder={t('paymentModal.namePlaceholder')} />
               </Field>
@@ -808,7 +825,7 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onSaveC
                   </button>
                 </div>
                 <div data-coachmark="modal-category-field">
-                  <Select value={category} onChange={setCategory} options={allCategories} renderIcon={renderCategoryIcon} sheet sheetTitle={t('paymentModal.fields.category')} sheetLayout="grid" sheetAction={{ label: t('paymentModal.fields.addCategory'), onClick: () => { setAddingCategory(true); setNewCategoryName('') } }} />
+                  <Select value={category} onChange={setCategory} options={allCategories} renderIcon={renderCategoryIcon} sheet cellIcon={renderCategoryCellIcon} cellColor={categoryCellColor} sheetTitle={t('paymentModal.fields.category')} sheetLayout="grid" sheetAction={{ label: t('paymentModal.fields.addCategory'), onClick: () => { setAddingCategory(true); setNewCategoryName('') } }} />
                 </div>
                 {addingCategory && (
                   <div className={styles.addCategoryRow}>
@@ -822,12 +839,12 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onSaveC
                   </div>
                 )}
               </div>
-            </>
+            </div>
           )}
 
           {/* Parcialidades · paso 1: con qué se paga (y si se enlaza a la tarjeta) */}
           {mode === 'installment' && step === 1 && !initial && (
-            <>
+            <div className={styles.stepEnter}>
               {methodsAvailable && (
                 <div className={styles.fieldGroup}>
                   <PaymentMethodField methods={paymentMethods.methods} value={methodId} onChange={setMethodId} onAddCard={openAddCard} sheet />
@@ -841,7 +858,7 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onSaveC
                   onChange={setLinkToCard}
                 />
               )}
-            </>
+            </div>
           )}
 
           {mode === 'recurrent' && (
@@ -903,7 +920,7 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onSaveC
               {!moreOpen && <span className={styles.moreSummary}>{moreSummary}</span>}
             </button>
           )}
-          {isFlat && moreVisible && (
+          <Collapse open={isFlat && moreVisible}>
             <>
               {methodsAvailable && (
                 <div className={styles.fieldGroup}>
@@ -919,10 +936,10 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onSaveC
                 <Toggle label={t('paymentModal.alreadyPaidToggle')} sub={t('paymentModal.alreadyPaidSub')} value={alreadyPaid} onChange={setAlreadyPaid} />
               )}
             </>
-          )}
+          </Collapse>
 
           {/* Parcialidades · paso 2 */}
-          {mode === 'installment' && (step === 2 || initial) && (() => {
+          {mode === 'installment' && (step === 2 || initial) && (<div className={styles.stepEnter}>{(() => {
             const totalAmt    = parseFloat(totalAmount) || 0
             const numPayments = parseInt(totalInstallments) || 0
             const perPayment  = numPayments > 0 ? Math.round((totalAmt / numPayments) * 100) / 100 : 0
@@ -993,7 +1010,7 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onSaveC
                 )}
               </>
             )
-          })()}
+          })()}</div>)}
           </div>
 
           {impactPreview && impactPreview.length > 0 && (() => {
@@ -1014,14 +1031,14 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onSaveC
                   {isPremium ? (
                     <span className={styles.impactStripStatus} style={{ color: colorEstado }}>
                       {esNegativo ? <AlertTriangle size={14} /> : <Check size={14} />}
-                      {esNegativo ? t('paymentModal.impact.warning') : t('paymentModal.impact.ok')}
+                      {esNegativo ? t('paymentModal.impact.warningShort') : t('paymentModal.impact.ok')}
                       {impactOpen ? <CaretUp size={13} /> : <CaretDown size={13} />}
                     </span>
                   ) : (
                     <span className={styles.impactStripLock}><PhLock size={15} /> Premium</span>
                   )}
                 </button>
-                {isPremium && impactOpen && (
+                <Collapse open={isPremium && impactOpen}>
                   <div className={styles.impactCard}>
                   <div className={styles.impactPeriodBox} style={{ borderColor: colorEstado }}>
                     <div className={styles.impactStatusRow}>
@@ -1074,7 +1091,7 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onSaveC
                     </div>
                   )}
                 </div>
-                )}
+                </Collapse>
               </div>
             )
           })()}

@@ -208,6 +208,8 @@
   font-family: 'DM Sans', sans-serif; font-size: 12px; font-weight: 600;
 }
 .sheetSelected { box-shadow: inset 0 0 0 2px var(--accent); }
+.sheetCellColored { color: var(--text); }
+.sheetCellColored.sheetSelected { box-shadow: inset 0 0 0 3px var(--surface), 0 0 0 2px var(--text); }
 .sheetLabel { line-height: 1.25; }
 .sheetActionCell { color: var(--accent); background: transparent; box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--label-variable) 40%, transparent); }
 .sheetGroupWrap { margin-top: 6px; }
