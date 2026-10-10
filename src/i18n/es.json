@@ -891,8 +891,7 @@
       },
       "recurrent": {
         "title": "Recurrente",
-        "desc": "Se repite solo cada semana, quincena o mes. Renta, luz, Netflix.",
-        "hint": "Se crea el siguiente automáticamente"
+        "desc": "Se repite solo cada semana, quincena o mes. Renta, luz, Netflix."
       },
       "installment": {
         "title": "En parcialidades",

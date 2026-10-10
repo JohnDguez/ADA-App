@@ -891,8 +891,7 @@
       },
       "recurrent": {
         "title": "Recurring",
-        "desc": "Repeats on its own every week, two weeks or month. Rent, power, Netflix.",
-        "hint": "The next one is created automatically"
+        "desc": "Repeats on its own every week, two weeks or month. Rent, power, Netflix."
       },
       "installment": {
         "title": "Installments",

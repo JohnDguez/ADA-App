@@ -749,7 +749,6 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onSaveC
                 <span className={styles.typeOptionText}>
                   <span className={styles.typeOptionTitle}>{t(`paymentModal.typePicker.${k}.title`)}</span>
                   <span className={styles.typeOptionDesc}>{t(`paymentModal.typePicker.${k}.desc`)}</span>
-                  {t(`paymentModal.typePicker.${k}.hint`, { defaultValue: '' }) && <span className={styles.typeOptionHint}>{t(`paymentModal.typePicker.${k}.hint`)}</span>}
                 </span>
               </button>
             ))}
