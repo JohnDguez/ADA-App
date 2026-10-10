@@ -800,6 +800,7 @@
       "message": "Descubre como este nuevo gasto impacta en tus finanzas de ese periodo",
       "warning": "¡Cuidado! Puede alterar tus finanzas",
       "warningShort": "¡Cuidado!",
+      "warningChip": "Cuidado: afecta tus finanzas",
       "ok": "Todo bien",
       "periodLabel": "Periodo {{range}}.",
       "currentlyAvailable": "Disponible actualmente {{amount}} MXN",

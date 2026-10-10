@@ -103,6 +103,7 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onSaveC
   const [step,        setStep]        = useState(1)      // parcialidades: 1 = datos, 2 = cuánto y cuándo
   const [moreOpen,    setMoreOpen]    = useState(false)  // "Más opciones"
   const [impactOpen,  setImpactOpen]  = useState(false)  // franja de proyección abierta
+  const impactRef = useRef(null)
   const [typeNote,    setTypeNote]    = useState('')
   const typeNoteTimer = useRef(null)
   const hadTypeRef    = useRef(false)
@@ -538,6 +539,15 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onSaveC
       }, periodIncomes)
     : null
 
+  // Aviso bajo el monto (v0.9.660): solo con advertencia y solo Premium (la
+  // franja de abajo lleva el detalle). Al tocarlo, abre la franja y baja a ella.
+  const impactWarnChip = !!profile?.is_premium && impactPreview?.length > 0 && impactPreview[0].disponibleDespues < 0
+  function goToImpact() {
+    const alreadyOpen = impactOpen
+    setImpactOpen(true)
+    setTimeout(() => impactRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' }), alreadyOpen ? 0 : 260)
+  }
+
   if (isEditingInstallment) {
     async function handleEditInstallment() {
       if (!canWrite) return
@@ -809,6 +819,15 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onSaveC
               </div>
             </div>
           )}
+          {isFlat && !isVariable && impactWarnChip && (
+            <div className={styles.impactChipRow}>
+              <button type="button" className={styles.impactChip} onClick={goToImpact}>
+                <AlertTriangle size={14} />
+                {t('paymentModal.impact.warningChip')}
+                <CaretDown size={13} />
+              </button>
+            </div>
+          )}
 
           {showDataStep && (
             <div className={styles.stepEnter}>
@@ -1012,7 +1031,7 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onSaveC
             // proyección completa. Sin premium: franja atenuada con candado
             // que lleva a la pantalla de Premium (sin pastilla de texto).
             return (
-              <div className={styles.impactWrapper}>
+              <div ref={impactRef} className={styles.impactWrapper}>
                 <button type="button" className={`${styles.impactStrip} ${isPremium ? '' : styles.impactStripLocked}`}
                   onClick={() => isPremium ? setImpactOpen(o => !o) : onOpenPremium?.()}>
                   <Wallet size={15} />
