@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Crown } from 'lucide-react'
+import { Crown, Check, ChevronRight, RefreshCw, Clock } from 'lucide-react'
 // Ícono del encabezado vía Phosphor Icons (mismo patrón que las demás
 // sub-páginas ya migradas, v0.9.442-455) — import directo para tree-shaking real.
 import { Crown as CrownDuotone } from '@phosphor-icons/react/dist/csr/Crown'
@@ -38,6 +38,11 @@ import { Presence } from '../../components/Presence'
 // - 'none'        → no debería llegar aquí (el menú de Ajustes solo enseña
 //                   este renglón si profile.is_premium), pero por si acaso
 //                   se comporta como "sin suscripción", igual que antes.
+// Beneficios que se listan en la tarjeta del plan (mismas claves que PremiumPage).
+const BENEFIT_KEYS = ['simulatorTitle', 'sharedTitle', 'pdfTitle', 'csvTitle', 'goalsTitle']
+// Precios vigentes (los mismos que muestra PremiumPage): $50/mes y $500/año.
+const ANNUAL_SAVING = 12 * 50 - 500
+
 export function SettingsSubscriptionPage({ profile, onOpenPremium, onBack, slideClass }) {
   const { t, i18n } = useTranslation()
 
@@ -128,15 +133,17 @@ export function SettingsSubscriptionPage({ profile, onOpenPremium, onBack, slide
       {premiumSource === 'google_play' && (
         <Card>
           <div className={styles.statusText}>{t('settingsSubscription.managedByGooglePlay')}</div>
-          <a
-            href={playStoreUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="btn-primary"
-            style={{ display: 'block', textAlign: 'center', marginTop: 12, textDecoration: 'none' }}
-          >
-            {t('settingsSubscription.openPlayStore')}
-          </a>
+          <div className={styles.cardAction}>
+            <a
+              href={playStoreUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn-primary"
+              style={{ display: 'block', textAlign: 'center', textDecoration: 'none' }}
+            >
+              {t('settingsSubscription.openPlayStore')}
+            </a>
+          </div>
         </Card>
       )}
 
@@ -149,9 +156,11 @@ export function SettingsSubscriptionPage({ profile, onOpenPremium, onBack, slide
         <Card>
           <div className={styles.statusText}>{t('settingsSubscription.adminGranted')}</div>
           {onOpenPremium && (
-            <button onClick={onOpenPremium} className="btn-primary" style={{ marginTop: 12 }}>
-              {t('settingsSubscription.viewPlans')}
-            </button>
+            <div className={styles.cardAction}>
+              <button onClick={onOpenPremium} className="btn-primary">
+                {t('settingsSubscription.viewPlans')}
+              </button>
+            </div>
           )}
         </Card>
       )}
@@ -164,7 +173,13 @@ export function SettingsSubscriptionPage({ profile, onOpenPremium, onBack, slide
       )}
 
       {premiumSource === 'stripe' && subscription === undefined && (
-        <Card><div className={styles.statusText}>{t('settingsSubscription.loading')}</div></Card>
+        <Card>
+          <div className={styles.planCard} aria-busy="true" aria-label={t('settingsSubscription.loading')}>
+            <div className={`skeleton-bone ${styles.skelBadge}`} />
+            <div className={`skeleton-bone ${styles.skelAmount}`} />
+            <div className={`skeleton-bone ${styles.skelLine}`} />
+          </div>
+        </Card>
       )}
 
       {premiumSource === 'stripe' && subscription === null && (
@@ -175,46 +190,58 @@ export function SettingsSubscriptionPage({ profile, onOpenPremium, onBack, slide
         <>
           <Card>
             <div className={styles.planCard}>
-              <div className={styles.planCardTop}>
-                <div className={styles.planCardLabel}>{t('settingsSubscription.currentPlan')}</div>
-                <div className={styles.planBadge}>
-                  <Crown size={11} fill="currentColor" />
-                  {t(`premiumPage.${subscription.plan}`)}
-                </div>
+              <div className={styles.planBadge}>
+                <Crown size={12} fill="currentColor" />
+                {t(`premiumPage.${subscription.plan}`)}
               </div>
               <div className={styles.planAmount}>
                 {fmt(subscription.amount)} <span className={styles.planAmountSuffix}>{t(`premiumPage.${subscription.plan}PriceSuffix`)}</span>
               </div>
               <div className={styles.renewLine}>
                 {subscription.cancelAtPeriodEnd
-                  ? t('settingsSubscription.willCancelOn', { date: formatRenewDate(subscription.currentPeriodEnd) })
-                  : t('settingsSubscription.renewsOn', { date: formatRenewDate(subscription.currentPeriodEnd) })}
+                  ? <Clock size={14} />
+                  : <RefreshCw size={14} />}
+                <span>
+                  {subscription.cancelAtPeriodEnd
+                    ? t('settingsSubscription.willCancelOn', { date: formatRenewDate(subscription.currentPeriodEnd) })
+                    : t('settingsSubscription.renewsOn', { date: formatRenewDate(subscription.currentPeriodEnd) })}
+                </span>
+              </div>
+              <div className={styles.benefitsSep} />
+              <div className={styles.benefits}>
+                {BENEFIT_KEYS.map(k => (
+                  <div key={k} className={styles.benefit}>
+                    <Check size={16} color="var(--premium-gold)" strokeWidth={2.5} />
+                    <span>{t(`premiumPage.benefits.${k}`)}</span>
+                  </div>
+                ))}
               </div>
             </div>
           </Card>
 
           {!subscription.cancelAtPeriodEnd && (
-            <div className={styles.actionsWrap}>
-              <button onClick={() => setConfirmModal('switch')} className={styles.switchButton}>
-                {t('settingsSubscription.switchTo', { plan: t(`premiumPage.${otherPlan}`) })}
-              </button>
-              <button onClick={() => setConfirmModal('cancel')} className="btn-danger">
+            <>
+              <Card>
+                <button onClick={() => setConfirmModal('switch')} className={styles.switchRow}>
+                  <span>{t('settingsSubscription.switchTo', { plan: t(`premiumPage.${otherPlan}`) })}</span>
+                  <span className={styles.switchValue}>
+                    {otherPlan === 'annual' && <span className={styles.savePill}>{t('settingsSubscription.saveYear', { amount: fmt(ANNUAL_SAVING) })}</span>}
+                    <ChevronRight size={14} />
+                  </span>
+                </button>
+              </Card>
+              <button onClick={() => setConfirmModal('cancel')} className={styles.cancelLink}>
                 {t('settingsSubscription.cancelButton')}
               </button>
-            </div>
+            </>
           )}
 
           {subscription.cancelAtPeriodEnd && (
-            <Card>
-              <div className={styles.pendingBox}>
-                <div className={styles.pendingText}>
-                  {t('settingsSubscription.pendingCancelText', { date: formatRenewDate(subscription.currentPeriodEnd) })}
-                </div>
-                <button onClick={() => runAction('reactivate')} disabled={actionLoading} className="btn-primary">
-                  {actionLoading ? t('settingsSubscription.processing') : t('settingsSubscription.reactivateButton')}
-                </button>
-              </div>
-            </Card>
+            <div className={styles.actionsWrap}>
+              <button onClick={() => runAction('reactivate')} disabled={actionLoading} className="btn-primary">
+                {actionLoading ? t('settingsSubscription.processing') : t('settingsSubscription.reactivateButton')}
+              </button>
+            </div>
           )}
         </>
       )}

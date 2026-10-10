@@ -86,6 +86,7 @@
     "currentPlan": "Current plan",
     "renewsOn": "Renews on {{date}}",
     "willCancelOn": "Will cancel on {{date}}. You keep Premium until then.",
+    "saveYear": "Save {{amount}} a year",
     "switchTo": "Switch to {{plan}} plan",
     "cancelButton": "Cancel subscription",
     "reactivateButton": "Reactivate subscription",

@@ -17,51 +17,97 @@
   opacity: 0.8;
 }
 
+.cardAction { padding: 0 14px 14px; }
+
 .planCard {
-  padding: 14px;
-}
-
-.planCardTop {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.planCardLabel {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--text);
+  padding: 16px;
+  background: linear-gradient(160deg, color-mix(in srgb, var(--premium-gold) 20%, var(--surface)) 0%, var(--surface) 75%);
 }
 
 .planBadge {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: 5px;
   background: var(--premium-gold);
   color: var(--premium-gold-text);
-  font-size: 10.5px;
+  font-size: 11.5px;
   font-weight: 700;
-  padding: 3px 10px;
+  padding: 4px 11px;
   border-radius: var(--radius-full);
 }
 
 .planAmount {
-  font-size: 26px;
-  font-weight: 700;
+  font-size: 28px;
+  font-weight: 600;
   color: var(--text);
-  margin-top: 8px;
+  margin-top: 10px;
 }
 
 .planAmountSuffix {
   font-size: 13px;
   font-weight: 500;
+  color: var(--muted);
 }
 
 .renewLine {
-  font-size: 12px;
-  color: var(--text);
-  opacity: 0.7;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12.5px;
+  color: var(--muted);
   margin-top: 6px;
+}
+
+.benefitsSep {
+  height: 0.5px;
+  background: var(--border);
+  margin: 14px 0 12px;
+}
+.benefits { display: flex; flex-direction: column; gap: 9px; }
+.benefit {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  color: var(--text);
+}
+
+.switchRow {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 14px;
+  border: none;
+  background: none;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 14px;
+  cursor: pointer;
+  text-align: left;
+}
+.switchValue { display: flex; align-items: center; gap: 8px; color: var(--muted); }
+.savePill {
+  background: var(--paid-soft);
+  color: var(--paid);
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: var(--radius-full);
+}
+
+/* Cancelar: enlace discreto, sin peso visual (la confirmación ya existe) */
+.cancelLink {
+  display: block;
+  margin: 8px auto 0;
+  padding: 10px 16px;
+  border: none;
+  background: none;
+  color: var(--muted);
+  font-family: inherit;
+  font-size: 13px;
+  cursor: pointer;
 }
 
 .actionsWrap {
@@ -71,30 +117,9 @@
   padding: 0 16px 12px;
 }
 
-.switchButton {
-  width: 100%;
-  padding: 12px;
-  background: var(--surface);
-  color: var(--accent);
-  border: 0.5px solid var(--accent-border);
-  border-radius: var(--radius-sm);
-  font-family: 'DM Sans', sans-serif;
-  font-size: 13.5px;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.pendingBox {
-  padding: 14px;
-  text-align: center;
-}
-
-.pendingText {
-  font-size: 12.5px;
-  color: var(--text);
-  line-height: 1.5;
-  margin-bottom: 12px;
-}
+.skelBadge  { width: 96px;  height: 22px; border-radius: var(--radius-full); }
+.skelAmount { width: 150px; height: 30px; border-radius: 6px; margin-top: 12px; }
+.skelLine   { width: 220px; height: 12px; border-radius: 6px; margin-top: 10px; }
 
 .modalOverlay {
   position: fixed;
