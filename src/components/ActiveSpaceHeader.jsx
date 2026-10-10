@@ -151,6 +151,10 @@ export function ActiveSpaceHeader({ activeSpaceId, sharedSpaces, onManage, onSwi
   }
 
   function handleToggleSpaceList(e) {
+    // v0.9.656 — el desplegable es solo de tablet/desktop (≥768px, mismo corte
+    // que el CSS de la isla). En celular el encabezado es un título fijo: el
+    // cambio de espacio lo hace el apilado de tarjetas de SpaceSwitcher.jsx.
+    if (!window.matchMedia('(min-width: 768px)').matches) return
     if (!spaceListOpen) {
       setMenuOpen(false) // exclusividad — nunca los 2 flotantes a la vez
       const rect = headerRowRef.current.getBoundingClientRect()
