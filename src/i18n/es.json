@@ -755,7 +755,6 @@
       "recurrent": "Pago recurrente",
       "new": "Nuevo pago"
     },
-    "installmentInfoBanner": "Los pagos se generan uno a uno. Al marcar cada pago como pagado, el siguiente aparece automáticamente.",
     "namePlaceholder": "Ej. Netflix, Renta, Luz…",
     "variableToggleLabel": "Pago variable",
     "variableToggleSub": "El monto cambia cada vez que pagas",

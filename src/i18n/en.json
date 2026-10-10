@@ -755,7 +755,6 @@
       "recurrent": "Recurring payment",
       "new": "New payment"
     },
-    "installmentInfoBanner": "Payments are generated one at a time. Once you mark each one as paid, the next one appears automatically.",
     "namePlaceholder": "e.g. Netflix, Rent, Electricity…",
     "variableToggleLabel": "Variable payment",
     "variableToggleSub": "The amount changes each time you pay",

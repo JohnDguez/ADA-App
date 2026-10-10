@@ -788,7 +788,6 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onSaveC
                 <span>{t('paymentModal.steps.label', { n: step })}</span>
                 <span>{step === 1 ? t('paymentModal.steps.data') : t('paymentModal.steps.amountDate')}</span>
               </div>
-              {step === 1 && <div className={styles.infoBanner}>{t('paymentModal.installmentInfoBanner')}</div>}
             </>
           )}
 
