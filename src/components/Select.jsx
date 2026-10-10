@@ -33,6 +33,8 @@ const PANEL_ANIM_MS = 180
 // `sheetLayout` = 'list' (default) o 'grid' (cuadrícula de 3 columnas, usada
 // en categorías); `sheetAction` = { label, onClick } agrega una celda/fila
 // final (ej. "+ Nueva"). Los <Select> que no pasan `sheet` no cambian.
+// v0.9.659 — una opción con `sub` (solo en la hoja, modo lista) muestra una
+// segunda línea tenue bajo su etiqueta (ej. fechas de corte de una tarjeta).
 export function Select({ value, onChange, options, placeholder, renderIcon, searchable = false, groupLabels = null, sheet = false, sheetTitle = '', sheetLayout = 'list', sheetAction = null, cellIcon = null, cellColor = null }) {
   const { t } = useTranslation()
   const [open, setOpen] = useState(false)
@@ -187,7 +189,9 @@ export function Select({ value, onChange, options, placeholder, renderIcon, sear
                       className={`${sheetLayout === 'grid' ? styles.sheetCell : styles.sheetRow} ${isSel ? styles.sheetSelected : ''} ${sheetLayout === 'grid' && cellColor ? styles.sheetCellColored : ''}`}
                       style={sheetLayout === 'grid' && cellColor ? { background: cellColor(ov) } : undefined}>
                       {sheetLayout === 'grid' && cellIcon ? cellIcon(ov) : renderIcon && renderIcon(ov)}
-                      <span className={styles.sheetLabel}>{optLabel(opt)}</span>
+                      {typeof opt === 'object' && opt.sub
+                        ? <span className={styles.sheetText}><span className={styles.sheetLabel}>{optLabel(opt)}</span><span className={styles.sheetSub}>{opt.sub}</span></span>
+                        : <span className={styles.sheetLabel}>{optLabel(opt)}</span>}
                       {isSel && sheetLayout !== 'grid' && <Check size={16} color="var(--accent)" className={styles.checkIcon} />}
                     </button>
                   </div>

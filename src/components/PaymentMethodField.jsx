@@ -28,7 +28,10 @@ export function PaymentMethodField({ methods, value, onChange, label, onAddCard 
   const options = [
     { value: CASH_VALUE, label: t('paymentMethod.cash'), group: 'cash' },
     ...debit.map(m => ({ value: m.id, label: cardLabel(m, t), group: 'debit' })),
-    ...credit.map(m => ({ value: m.id, label: cardLabel(m, t), group: 'credit' })),
+    ...credit.map(m => ({
+      value: m.id, label: cardLabel(m, t), group: 'credit',
+      sub: m.cut_day && m.due_day ? t('cards.cutAndDue', { cut: m.cut_day, due: m.due_day }) : undefined,
+    })),
   ]
 
   const groupLabels = {
