@@ -1152,8 +1152,15 @@
       "csvTitle": "Export your data as CSV",
       "csvDesc": "Download all your data to analyze it anywhere.",
       "goalsTitle": "Unlimited goals",
-      "goalsDesc": "Create as many savings goals as you want, not just one."
+      "goalsDesc": "Create as many savings goals as you want, not just one.",
+      "simulatorShort": "See the effect before confirming.",
+      "sharedShort": "Expenses with your partner or roommates.",
+      "goalsShort": "As many as you want.",
+      "reportsTitle": "Reports and export",
+      "reportsShort": "Print, share or analyze."
     },
+    "trialPill": "7 days free, cancel anytime",
+    "annualSaving": "Save {{saving}} · {{perMonth}} a month",
     "choosePlan": "Choose your plan",
     "monthly": "Monthly",
     "monthlyPriceSuffix": "MXN / month",
@@ -1161,7 +1168,7 @@
     "annual": "Annual",
     "annualPriceSuffix": "MXN / year",
     "continueWithPlan": "Continue with {{plan}} plan",
-    "termsAccept": "I agree to be charged the selected plan amount on a recurring basis until I cancel, per the Terms and Conditions.",
+    "termsAccept": "I agree to recurring charges for the selected plan until I cancel, per the Terms and Conditions.",
     "backToPlans": "Back to plans",
     "checkoutLoading": "Loading payment form…",
     "checkoutConfirming": "Confirming your payment…",
@@ -1182,7 +1189,7 @@
     "alreadyPremiumViaGooglePlay": "You already have Premium active, managed through Google Play Store in the app.",
     "adminGrantedBanner": "You have Premium access granted by the administrator. If you'd like to support the project, you can still subscribe:",
     "startTrial": "Start your free 7-day trial",
-    "termsAcceptTrial": "I agree that, once my free 7-day trial ends, I will be charged the selected plan's amount on a recurring basis until I cancel, per the Terms and Conditions.",
+    "termsAcceptTrial": "I agree that once the 7 free days end, the selected plan will be charged on a recurring basis until I cancel, per the Terms and Conditions.",
     "trialFinePrint": "Only for users who have never subscribed before. Once the 7-day trial ends, {{price}} {{suffix}} will be charged."
   },
   "spaceSwitcher": {

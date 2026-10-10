@@ -150,21 +150,61 @@
 .benefitCard {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 14px;
   background: var(--surface);
   border-radius: var(--radius);
   padding: 12px;
 }
 
-.benefitIconChip {
-  width: 38px;
-  height: 38px;
-  border-radius: 50%;
-  background: var(--premium-gold);
+/* Mini vista previa de cada función (decorativa, no interactiva) */
+.benefitVisual {
+  width: 68px;
+  height: 48px;
+  flex-shrink: 0;
+  border-radius: 10px;
+  background: var(--bg);
   display: flex;
   align-items: center;
   justify-content: center;
+  overflow: hidden;
+}
+.vBars {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: flex-end;
+  gap: 5px;
+  padding: 7px 9px;
+  box-sizing: border-box;
+}
+.vBars span { flex: 1; background: var(--accent); border-radius: 3px 3px 0 0; }
+.vAvatars { display: flex; align-items: center; padding-left: 6px; }
+.vAvatars i { width: 24px; height: 24px; border-radius: 50%; margin-left: -6px; border: 2px solid var(--bg); display: block; }
+.vAv1 { background: var(--accent); }
+.vAv2 { background: var(--premium-gold); }
+.vAv3 { background: var(--paid); }
+.vGoal { display: flex; align-items: center; gap: 8px; padding: 0 8px; width: 100%; box-sizing: border-box; }
+.vRing {
+  width: 26px;
+  height: 26px;
   flex-shrink: 0;
+  border-radius: 50%;
+  background: conic-gradient(var(--premium-gold) 0 70%, var(--border) 70% 100%);
+  position: relative;
+  display: block;
+}
+.vRing::after { content: ''; position: absolute; inset: 6px; border-radius: 50%; background: var(--bg); }
+.vTrack { flex: 1; height: 6px; border-radius: 3px; background: var(--border); }
+.vTrack u { display: block; width: 70%; height: 6px; border-radius: 3px; background: var(--premium-gold); }
+.vFiles { display: flex; align-items: center; gap: 4px; padding: 0 6px; }
+.vFiles em {
+  font-style: normal;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 3px 6px;
+  border-radius: 5px;
+  background: color-mix(in srgb, var(--premium-gold) 22%, var(--surface));
+  color: var(--text);
 }
 
 .benefitTitle {
@@ -182,16 +222,17 @@
 }
 
 .plansWrap {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  padding-top: 8px;
 }
 
 .planCard {
   text-align: left;
   cursor: pointer;
   width: 100%;
-  padding: 16px;
+  padding: 16px 14px 14px;
   font-family: inherit;
   position: relative;
   border-width: 1.5px;
@@ -227,7 +268,7 @@
 }
 
 .planPrice {
-  font-size: 26px;
+  font-size: 24px;
   font-weight: 700;
   color: var(--text);
   margin-top: 4px;
@@ -325,8 +366,7 @@
    muestra arriba de los planes/CTA (o en su lugar, cuando hidePurchaseFlow
    los oculta) — ver PremiumPage.jsx. */
 .sourceBanner {
-  background: var(--surface);
-  border-left: 3px solid var(--premium-gold);
+  background: color-mix(in srgb, var(--premium-gold) 14%, var(--surface));
   border-radius: var(--radius);
   padding: 12px 14px;
   margin-top: 16px;
@@ -334,4 +374,26 @@
   font-weight: 500;
   color: var(--text);
   line-height: 1.5;
+}
+
+
+/* "7 días gratis" visible antes de los planes */
+.trialPill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 16px;
+  padding: 6px 12px;
+  border-radius: var(--radius-full);
+  background: var(--paid-soft);
+  color: var(--paid);
+  font-size: 12px;
+  font-weight: 600;
+}
+.planSaving {
+  margin-top: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--paid);
+  line-height: 1.35;
 }

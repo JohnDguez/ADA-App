@@ -1,13 +1,8 @@
 import { useState, useMemo, useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
-import { X, Crown, ShieldCheck, ArrowLeft } from 'lucide-react'
+import { X, Crown, ShieldCheck, ArrowLeft, Gift } from 'lucide-react'
 import { Crown as CrownDuotone } from '@phosphor-icons/react/dist/csr/Crown'
 import { Sparkle } from '@phosphor-icons/react/dist/csr/Sparkle'
-import { FilePdf } from '@phosphor-icons/react/dist/csr/FilePdf'
-import { FileCsv } from '@phosphor-icons/react/dist/csr/FileCsv'
-import { ChartLineUp } from '@phosphor-icons/react/dist/csr/ChartLineUp'
-import { UsersThree } from '@phosphor-icons/react/dist/csr/UsersThree'
-import { Target } from '@phosphor-icons/react/dist/csr/Target'
 import { loadStripe } from '@stripe/stripe-js'
 import { EmbeddedCheckoutProvider, EmbeddedCheckout } from '@stripe/react-stripe-js'
 import { supabase } from '../lib/supabase'
@@ -179,11 +174,10 @@ export function PremiumPage({ profile, onClose, refreshProfile, onSubscribed }) 
   // `git log --all --diff-filter=A`, de ahí el ícono de "imagen rota"
   // idéntico en las 4 tarjetas).
   const BENEFITS = [
-    { icon: FilePdf,     title: t('premiumPage.benefits.pdfTitle'),       desc: t('premiumPage.benefits.pdfDesc') },
-    { icon: FileCsv,     title: t('premiumPage.benefits.csvTitle'),       desc: t('premiumPage.benefits.csvDesc') },
-    { icon: ChartLineUp, title: t('premiumPage.benefits.simulatorTitle'), desc: t('premiumPage.benefits.simulatorDesc') },
-    { icon: UsersThree,  title: t('premiumPage.benefits.sharedTitle'),    desc: t('premiumPage.benefits.sharedDesc') },
-    { icon: Target,      title: t('premiumPage.benefits.goalsTitle'),     desc: t('premiumPage.benefits.goalsDesc') },
+    { key: 'simulator', title: t('premiumPage.benefits.simulatorTitle'), desc: t('premiumPage.benefits.simulatorShort') },
+    { key: 'shared',    title: t('premiumPage.benefits.sharedTitle'),    desc: t('premiumPage.benefits.sharedShort') },
+    { key: 'goals',     title: t('premiumPage.benefits.goalsTitle'),     desc: t('premiumPage.benefits.goalsShort') },
+    { key: 'reports',   title: t('premiumPage.benefits.reportsTitle'),   desc: t('premiumPage.benefits.reportsShort') },
   ]
 
   // Pide el client_secret a create-checkout-session.js y abre el checkout
@@ -327,9 +321,20 @@ export function PremiumPage({ profile, onClose, refreshProfile, onSubscribed }) 
             chip circular dorado con el ícono, coherente con el hero. */}
         <div className={styles.benefitsList}>
           {BENEFITS.map(b => (
-            <div key={b.title} className={styles.benefitCard}>
-              <div className={styles.benefitIconChip}>
-                <b.icon size={18} weight="duotone" color="var(--premium-gold-text)" />
+            <div key={b.key} className={styles.benefitCard}>
+              <div className={styles.benefitVisual} aria-hidden="true">
+                {b.key === 'simulator' && (
+                  <div className={styles.vBars}><span style={{ height: '40%' }} /><span style={{ height: '65%' }} /><span style={{ height: '50%' }} /><span style={{ height: '85%' }} /></div>
+                )}
+                {b.key === 'shared' && (
+                  <div className={styles.vAvatars}><i className={styles.vAv1} /><i className={styles.vAv2} /><i className={styles.vAv3} /></div>
+                )}
+                {b.key === 'goals' && (
+                  <div className={styles.vGoal}><i className={styles.vRing} /><span className={styles.vTrack}><u /></span></div>
+                )}
+                {b.key === 'reports' && (
+                  <div className={styles.vFiles}><em>PDF</em><em>CSV</em></div>
+                )}
               </div>
               <div>
                 <div className={styles.benefitTitle}>{b.title}</div>
@@ -371,7 +376,14 @@ export function PremiumPage({ profile, onClose, refreshProfile, onSubscribed }) 
             con un pago real) o si no es Premium ('none'). */}
         {!checkoutOpen && !hidePurchaseFlow && (
           <>
-            <div style={{ fontSize: 17, fontWeight: 700, color: 'var(--text)', marginTop: 28, marginBottom: 12 }}>
+            {trialEligible && (
+              <div className={styles.trialPill}>
+                <Gift size={14} />
+                {t('premiumPage.trialPill')}
+              </div>
+            )}
+
+            <div style={{ fontSize: 17, fontWeight: 700, color: 'var(--text)', marginTop: 18, marginBottom: 12 }}>
               {t('premiumPage.choosePlan')}
             </div>
 
@@ -397,6 +409,7 @@ export function PremiumPage({ profile, onClose, refreshProfile, onSubscribed }) 
                 <div className={styles.planPrice}>
                   $500 <span className={styles.planPriceSuffix}>{t('premiumPage.annualPriceSuffix')}</span>
                 </div>
+                <div className={styles.planSaving}>{t('premiumPage.annualSaving', { saving: '$100', perMonth: '$41.67' })}</div>
               </button>
             </div>
 

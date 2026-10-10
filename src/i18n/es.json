@@ -1152,8 +1152,15 @@
       "csvTitle": "Exporta tus datos en CSV",
       "csvDesc": "Descarga toda tu información para analizarla donde quieras.",
       "goalsTitle": "Metas sin límite",
-      "goalsDesc": "Crea todas las metas de ahorro que quieras, sin quedarte en solo una."
+      "goalsDesc": "Crea todas las metas de ahorro que quieras, sin quedarte en solo una.",
+      "simulatorShort": "Mira el efecto antes de confirmar.",
+      "sharedShort": "Gastos con tu pareja o roomies.",
+      "goalsShort": "Todas las que quieras.",
+      "reportsTitle": "Reportes y exportación",
+      "reportsShort": "Imprime, comparte o analiza."
     },
+    "trialPill": "7 días gratis, cancela cuando quieras",
+    "annualSaving": "Ahorras {{saving}} · {{perMonth}} al mes",
     "choosePlan": "Elige tu plan",
     "monthly": "Mensual",
     "monthlyPriceSuffix": "MXN / mes",
@@ -1161,7 +1168,7 @@
     "annual": "Anual",
     "annualPriceSuffix": "MXN / año",
     "continueWithPlan": "Continuar con plan {{plan}}",
-    "termsAccept": "Acepto que se me cobre de forma recurrente el monto del plan seleccionado hasta que cancele, de acuerdo con los Términos y Condiciones.",
+    "termsAccept": "Acepto el cobro recurrente del plan elegido hasta que cancele, según los Términos y Condiciones.",
     "backToPlans": "Regresar a los planes",
     "checkoutLoading": "Cargando formulario de pago…",
     "checkoutConfirming": "Confirmando tu pago…",
@@ -1182,7 +1189,7 @@
     "alreadyPremiumViaGooglePlay": "Ya tienes Premium activo, gestionado desde Google Play Store en la app.",
     "adminGrantedBanner": "Tienes acceso a Premium por parte del administrador. Si quieres apoyar el proyecto, puedes suscribirte de todas formas:",
     "startTrial": "Iniciar prueba gratis de 7 días",
-    "termsAcceptTrial": "Acepto que, al terminar mi prueba gratis de 7 días, se me cobre de forma recurrente el monto del plan seleccionado hasta que cancele, de acuerdo con los Términos y Condiciones.",
+    "termsAcceptTrial": "Acepto que, al terminar los 7 días gratis, se cobre el plan elegido de forma recurrente hasta que cancele, según los Términos y Condiciones.",
     "trialFinePrint": "Solo para usuarios que nunca se han suscrito antes. Al terminar la prueba de 7 días, se cobrará {{price}} {{suffix}}."
   },
   "spaceSwitcher": {
