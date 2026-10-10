@@ -150,61 +150,21 @@
 .benefitCard {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 12px;
   background: var(--surface);
   border-radius: var(--radius);
   padding: 12px;
 }
 
-/* Mini vista previa de cada función (decorativa, no interactiva) */
-.benefitVisual {
-  width: 68px;
-  height: 48px;
-  flex-shrink: 0;
-  border-radius: 10px;
-  background: var(--bg);
+.benefitIconChip {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: var(--premium-gold);
   display: flex;
   align-items: center;
   justify-content: center;
-  overflow: hidden;
-}
-.vBars {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: flex-end;
-  gap: 5px;
-  padding: 7px 9px;
-  box-sizing: border-box;
-}
-.vBars span { flex: 1; background: var(--accent); border-radius: 3px 3px 0 0; }
-.vAvatars { display: flex; align-items: center; padding-left: 6px; }
-.vAvatars i { width: 24px; height: 24px; border-radius: 50%; margin-left: -6px; border: 2px solid var(--bg); display: block; }
-.vAv1 { background: var(--accent); }
-.vAv2 { background: var(--premium-gold); }
-.vAv3 { background: var(--paid); }
-.vGoal { display: flex; align-items: center; gap: 8px; padding: 0 8px; width: 100%; box-sizing: border-box; }
-.vRing {
-  width: 26px;
-  height: 26px;
   flex-shrink: 0;
-  border-radius: 50%;
-  background: conic-gradient(var(--premium-gold) 0 70%, var(--border) 70% 100%);
-  position: relative;
-  display: block;
-}
-.vRing::after { content: ''; position: absolute; inset: 6px; border-radius: 50%; background: var(--bg); }
-.vTrack { flex: 1; height: 6px; border-radius: 3px; background: var(--border); }
-.vTrack u { display: block; width: 70%; height: 6px; border-radius: 3px; background: var(--premium-gold); }
-.vFiles { display: flex; align-items: center; gap: 4px; padding: 0 6px; }
-.vFiles em {
-  font-style: normal;
-  font-size: 10px;
-  font-weight: 700;
-  padding: 3px 6px;
-  border-radius: 5px;
-  background: color-mix(in srgb, var(--premium-gold) 22%, var(--surface));
-  color: var(--text);
 }
 
 .benefitTitle {
@@ -366,7 +326,7 @@
    muestra arriba de los planes/CTA (o en su lugar, cuando hidePurchaseFlow
    los oculta) — ver PremiumPage.jsx. */
 .sourceBanner {
-  background: color-mix(in srgb, var(--premium-gold) 14%, var(--surface));
+  background: var(--surface);
   border-radius: var(--radius);
   padding: 12px 14px;
   margin-top: 16px;
@@ -379,21 +339,19 @@
 
 /* "7 días gratis" visible antes de los planes */
 .trialPill {
-  display: inline-flex;
+  display: flex;
   align-items: center;
-  gap: 6px;
-  margin-top: 16px;
-  padding: 6px 12px;
-  border-radius: var(--radius-full);
-  background: var(--paid-soft);
-  color: var(--paid);
-  font-size: 12px;
-  font-weight: 600;
+  gap: 8px;
+  margin-top: 18px;
+  padding: 0 2px;
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 500;
 }
 .planSaving {
   margin-top: 6px;
   font-size: 12px;
   font-weight: 600;
-  color: var(--paid);
+  color: var(--accent);
   line-height: 1.35;
 }
