@@ -417,7 +417,7 @@ export function HomePage({ payments, dataLoading = false, profile, spaceSwitcher
                     remonta el componente — sigue siendo la misma instancia,
                     así que el % anima suave de 100% al valor real solo. */}
                 <div className={styles.ringScale}><HalfRing key={activeSpaceId} percent={dataLoading || pagarEsteCobro.length === 0 ? 1 : pctPagado / 100} /></div>
-                {/* Pagado / Pendiente / Total en cajas (sin borde). Durante la
+                {/* Pagado / Pendiente / Total en 3 columnas con divisores finos. Durante la
                     carga ningún número es real todavía: bones, nunca el dato
                     del espacio anterior. Pagar todo deja Pendiente en $0.00.
                     Lo vencido ya lo dicen Luna y la sección "Vencidos". */}
