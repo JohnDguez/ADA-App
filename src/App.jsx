@@ -388,11 +388,29 @@ export default function App() {
   function handleNotifMarkAllAsRead() { localNotifs.markAllAsRead(); markAllAsRead() }
   function handleNotifDelete(id)      { isLocalNotification(id) ? localNotifs.remove(id) : deleteNotification(id) }
   function handleNotifClearAll()      { localNotifs.clear(); clearAll() }
-  // Tocar una notificación: las de error de sincronización llevan al pago
-  // (cambiando de espacio si hace falta) y lo resaltan; las demás se quedan
-  // con el comportamiento de siempre.
+  // Tocar una notificación lleva al lugar del aviso: cambia al espacio al que
+  // pertenece (si hace falta), abre Inicio y resalta el pago cuando la fila
+  // trae `payment_id`. Las filas anteriores a v0.9.675 no traen `space_id`:
+  // el espacio se deduce por `space_name`. Sin espacio → Personal. Los avisos
+  // de un espacio al que ya no se pertenece (salió, lo eliminaron) no cambian
+  // de espacio. Los de error de sincronización siguen su flujo propio.
   function handleNotifNavigate(n) {
-    if (n?.type !== 'sync_error') { window.scrollTo(0, 0); return }
+    if (!n) return
+    if (n.type !== 'sync_error') {
+      window.scrollTo(0, 0)
+      if (n.type === 'trial_ending' || n.type === 'goal_deadline') return
+      const gone = n.type === 'space_change' && !n.space_id && n.space_name
+        && !sharedSpaces.spaces.some(e => e.space.name === n.space_name)
+      if (gone) return
+      const targetSpace = n.space_id
+        || (n.space_name ? sharedSpaces.spaces.find(e => e.space.name === n.space_name)?.space?.id : null)
+        || null
+      if (n.space_id && !sharedSpaces.spaces.some(e => e.space.id === n.space_id)) return
+      if (paymentsSpaceId !== targetSpace) switchSpace(targetSpace)
+      changeTab('home')
+      highlightPaymentWhenVisible(n.payment_id || n.goal_id)
+      return
+    }
     // Ajustes → sección (v0.9.486, Mis tarjetas): las tarjetas no son de
     // ningún espacio — no se cambia de espacio para llegar a ellas.
     if (n.settings_section) {

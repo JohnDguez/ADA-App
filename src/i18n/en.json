@@ -204,7 +204,7 @@
       "salaryUpdated": "Salary updated",
       "currencyUpdated": "Currency updated"
     },
-        "nextPayday": "Next payday: {{date}}",
+    "nextPayday": "Next payday: {{date}}",
     "monthShortHint": "In shorter months, the last day of the month is used.",
     "currencySection": "Currency",
     "dayPair": "{{d1}} and {{d2}}"
@@ -980,7 +980,13 @@
     "empty": "No notifications",
     "timeNow": "now",
     "timeMinutes": "{{count}} min ago",
-    "timeHours": "{{count}} h ago"
+    "timeHours": "{{count}} h ago",
+    "delete": "Delete",
+    "section_today": "Today",
+    "section_yesterday": "Yesterday",
+    "section_earlier": "Earlier",
+    "groupMovements_one": "{{count}} change in {{space}}",
+    "groupMovements_other": "{{count}} changes in {{space}}"
   },
   "frequencyPicker": {
     "fewerOptions": "Fewer options",

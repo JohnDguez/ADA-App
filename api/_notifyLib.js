@@ -67,7 +67,7 @@ async function sendPush(supabase, webpush, userIds, payload) {
 // antes solo se usaba para el push, nunca se guardaba in-app (bug real,
 // reportado por Johnatan con captura: "Johnatan se unió al espacio" mostraba
 // iniciales en vez de la foto).
-async function notifyUsers(supabase, webpush, { userIds, title, body, actorName = null, spaceName = null, url = '/', icon = null }) {
+async function notifyUsers(supabase, webpush, { userIds, title, body, actorName = null, spaceName = null, url = '/', icon = null, spaceId = null, paymentId = null }) {
   const ids = [...new Set(userIds)].filter(Boolean)
   if (!ids.length) return { sent: 0, notified: 0, pushErrors: [] }
 
@@ -82,15 +82,22 @@ async function notifyUsers(supabase, webpush, { userIds, title, body, actorName 
 
   const messageFor = (uid) => (typeof title === 'function' ? title(uid, langMap[uid] || 'es') : { title, body })
 
-  await supabase.from('notifications').insert(
-    ids.map(uid => {
-      const m = messageFor(uid)
-      return {
-        user_id: uid, type: 'space_change', title: m.title, body: m.body, url, read: false,
-        actor_name: actorName, space_name: spaceName, actor_avatar_url: icon,
-      }
-    })
+  // v0.9.675 — `space_id` y `payment_id` (columnas nuevas, ver
+  // notifications_target_migration.sql) permiten que tocar la notificación
+  // lleve al espacio y al pago. Si la migración aún no se corrió, el insert
+  // falla por columna inexistente: se reintenta sin ellas para no perder el
+  // aviso.
+  const rows = ids.map(uid => {
+    const m = messageFor(uid)
+    return {
+      user_id: uid, type: 'space_change', title: m.title, body: m.body, url, read: false,
+      actor_name: actorName, space_name: spaceName, actor_avatar_url: icon,
+    }
+  })
+  const { error: insErr } = await supabase.from('notifications').insert(
+    rows.map(r => ({ ...r, space_id: spaceId, payment_id: paymentId }))
   )
+  if (insErr) await supabase.from('notifications').insert(rows)
 
   const { data: subs } = await supabase
     .from('push_subscriptions')

@@ -204,7 +204,7 @@
       "salaryUpdated": "Salario actualizado",
       "currencyUpdated": "Moneda actualizada"
     },
-        "nextPayday": "Próximo cobro: {{date}}",
+    "nextPayday": "Próximo cobro: {{date}}",
     "monthShortHint": "En meses con menos días, se usa el último día del mes.",
     "currencySection": "Moneda",
     "dayPair": "{{d1}} y {{d2}}"
@@ -980,7 +980,13 @@
     "empty": "Sin notificaciones",
     "timeNow": "ahora",
     "timeMinutes": "hace {{count}} min",
-    "timeHours": "hace {{count}} h"
+    "timeHours": "hace {{count}} h",
+    "delete": "Eliminar",
+    "section_today": "Hoy",
+    "section_yesterday": "Ayer",
+    "section_earlier": "Anteriores",
+    "groupMovements_one": "{{count}} movimiento en {{space}}",
+    "groupMovements_other": "{{count}} movimientos en {{space}}"
   },
   "frequencyPicker": {
     "fewerOptions": "Menos opciones",

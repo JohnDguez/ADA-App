@@ -45,7 +45,7 @@
 
 .unreadBadge {
   background: var(--danger);
-  color: var(--surface);
+  color: var(--on-danger);
   font-size: 10px;
   font-weight: 700;
   padding: 1px 6px;
@@ -197,3 +197,42 @@
   font-weight: 600;
   flex-shrink: 0;
 }
+
+/* ── v0.9.675: secciones por día, grupos, deslizar para borrar ─────────── */
+.sectionLabel {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text);
+  padding: 10px 16px 6px;
+  background: var(--surface);
+}
+.swipeWrap { position: relative; overflow: hidden; }
+.swipeBg {
+  position: absolute; inset: 0;
+  background: var(--danger);
+  display: flex; align-items: center; justify-content: flex-end;
+  padding-right: 20px;
+}
+.swipeFront { position: relative; background: var(--surface); }
+.chevron { opacity: 0.55; flex-shrink: 0; }
+/* El botón X (borrar) solo aparece con mouse; en celular se desliza la fila. */
+.deleteButton { display: none; }
+@media (hover: hover) {
+  .deleteButton { display: flex; }
+}
+.groupItems {
+  margin-top: 8px;
+  border-left: 2px solid var(--border-mid);
+  padding-left: 10px;
+}
+.groupLine {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--text);
+  padding: 5px 0;
+  cursor: pointer;
+}
+.groupLine em { font-style: normal; font-size: 10px; flex-shrink: 0; }
+.groupLineUnread { font-weight: 600; }

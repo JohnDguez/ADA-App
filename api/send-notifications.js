@@ -84,7 +84,7 @@ async function collectReminders(scope, profile, todayStr, today, lang) {
       notifications.push({
         type: 'overdue', title, body,
         tag: `overdue${scope.spaceId ? '-' + scope.spaceId : ''}`, urgent: true, url: '/',
-        space_name: scope.spaceName || null,
+        space_name: scope.spaceName || null, space_id: scope.spaceId || null,
       })
     }
   }
@@ -92,7 +92,7 @@ async function collectReminders(scope, profile, todayStr, today, lang) {
   // Pagos que vencen hoy
   if (profile.notif_due_today !== false) {
     const { data: dueToday } = await applyScope(
-      supabase.from('payments').select('name').eq('is_paid', false).eq('is_postponed', false).eq('paused', false).not('is_master', 'is', true).eq('due_date', todayStr),
+      supabase.from('payments').select('id, name').eq('is_paid', false).eq('is_postponed', false).eq('paused', false).not('is_master', 'is', true).eq('due_date', todayStr),
       scope
     )
     if (dueToday && dueToday.length > 0) {
@@ -101,7 +101,7 @@ async function collectReminders(scope, profile, todayStr, today, lang) {
         notifications.push({
           type: 'due_today', title, body,
           tag: `due-today-${p.name}${scope.spaceId ? '-' + scope.spaceId : ''}`, urgent: false, url: '/',
-          space_name: scope.spaceName || null,
+          space_name: scope.spaceName || null, space_id: scope.spaceId || null, payment_id: p.id,
         })
       })
     }
@@ -127,7 +127,7 @@ async function collectReminders(scope, profile, todayStr, today, lang) {
       notifications.push({
         type: 'upcoming', title, body,
         tag: `upcoming${scope.spaceId ? '-' + scope.spaceId : ''}`, urgent: false, url: '/',
-        space_name: scope.spaceName || null,
+        space_name: scope.spaceName || null, space_id: scope.spaceId || null,
       })
     }
   }
@@ -494,17 +494,21 @@ module.exports = async function handler(req, res) {
       // que NotificationsPanel.jsx pueda mostrar la etiqueta "· NombreEspacio"
       // cuando aplica (mismo patrón ya usado para los avisos de cambios,
       // Fase 5b).
-      await supabase.from('notifications').insert(
-        notifications.map(n => ({
-          user_id: userId,
-          type:    n.type,
-          title:   n.title,
-          body:    n.body,
-          url:     n.url,
-          read:    false,
-          space_name: n.space_name || null,
-        }))
+      // v0.9.675 — space_id/payment_id (ver notifications_target_migration.sql);
+      // si las columnas aún no existen se reintenta sin ellas.
+      const notifRows = notifications.map(n => ({
+        user_id: userId,
+        type:    n.type,
+        title:   n.title,
+        body:    n.body,
+        url:     n.url,
+        read:    false,
+        space_name: n.space_name || null,
+      }))
+      const { error: notifErr } = await supabase.from('notifications').insert(
+        notifRows.map((r, i) => ({ ...r, space_id: notifications[i].space_id || null, payment_id: notifications[i].payment_id || null }))
       )
+      if (notifErr) await supabase.from('notifications').insert(notifRows)
 
       // Enviar push — se le agrega el nombre del espacio al cuerpo del
       // mensaje nativo del sistema (no hay una segunda línea ahí como en el

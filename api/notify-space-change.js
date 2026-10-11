@@ -60,7 +60,7 @@ module.exports = async function handler(req, res) {
   const {
     spaceId, action,
     // Datos de pagos (acciones ya existentes)
-    paymentName, amount, paymentType, recurFreq, totalInstallments, isVariable,
+    paymentId, paymentName, amount, paymentType, recurFreq, totalInstallments, isVariable,
     // Datos de miembros/espacio (v0.9.236)
     targetUserId, removedUserId, removedUserName,
   } = req.body || {}
@@ -122,6 +122,7 @@ module.exports = async function handler(req, res) {
         const userIds = members.filter(m => m.notify_on_changes).map(m => m.user_id)
         result = await notifyUsers(supabase, webpush, {
           userIds, title, actorName, spaceName, icon: actorAvatarUrl,
+          spaceId, paymentId: action === 'deleted' ? null : (paymentId || null),
         })
         break
       }
@@ -132,7 +133,7 @@ module.exports = async function handler(req, res) {
       case 'joined': {
         const title = (uid, lang) => joinedText(lang, actorName, spaceName)
         result = await notifyUsers(supabase, webpush, {
-          userIds: members.map(m => m.user_id), title, actorName, spaceName, icon: actorAvatarUrl,
+          userIds: members.map(m => m.user_id), title, actorName, spaceName, icon: actorAvatarUrl, spaceId,
         })
         break
       }
@@ -172,7 +173,7 @@ module.exports = async function handler(req, res) {
         if (!targetUserId) return res.status(400).json({ error: 'Falta targetUserId' })
         const title = (uid, lang) => permissionsChangedText(lang, actorName, spaceName)
         result = await notifyUsers(supabase, webpush, {
-          userIds: [targetUserId], title, actorName, spaceName, icon: actorAvatarUrl,
+          userIds: [targetUserId], title, actorName, spaceName, icon: actorAvatarUrl, spaceId,
         })
         break
       }
@@ -184,7 +185,7 @@ module.exports = async function handler(req, res) {
       case 'space_config_changed': {
         const title = (uid, lang) => spaceConfigChangedText(lang, actorName, spaceName)
         result = await notifyUsers(supabase, webpush, {
-          userIds: members.map(m => m.user_id), title, actorName, spaceName, icon: actorAvatarUrl,
+          userIds: members.map(m => m.user_id), title, actorName, spaceName, icon: actorAvatarUrl, spaceId,
         })
         break
       }
@@ -207,7 +208,7 @@ module.exports = async function handler(req, res) {
       case 'space_data_cleared': {
         const title = (uid, lang) => spaceDataClearedText(lang, actorName, spaceName)
         result = await notifyUsers(supabase, webpush, {
-          userIds: members.map(m => m.user_id), title, actorName, spaceName, icon: actorAvatarUrl,
+          userIds: members.map(m => m.user_id), title, actorName, spaceName, icon: actorAvatarUrl, spaceId,
         })
         break
       }

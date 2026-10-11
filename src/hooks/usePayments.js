@@ -700,7 +700,7 @@ export function usePayments(userId, activeSpaceId = null, activeSpaceName = null
     const row = { ...payment, id: newId(), user_id: userId, space_id: activeSpaceId, is_master: false }
     const res = await runOptimisticBatch({ subject: row, action: 'create', inserts: [row] })
     if (!res.error) {
-      notifySpaceChange('added', { paymentName: row.name, amount: row.amount, paymentType: 'unico', isVariable: row.is_variable })
+      notifySpaceChange('added', { paymentId: row.id, paymentName: row.name, amount: row.amount, paymentType: 'unico', isVariable: row.is_variable })
     }
     return { ...res, data: res.error ? null : row }
   }
@@ -821,7 +821,7 @@ export function usePayments(userId, activeSpaceId = null, activeSpaceName = null
         updates: [{ id: copyId, fields: { amount: nuevoMonto } }],
         inserts: [abonoRow],
       })
-      if (!res.error) notifySpaceChange('marked_paid', { paymentName: copy.name })
+      if (!res.error) notifySpaceChange('marked_paid', { paymentId: copyId, paymentName: copy.name })
       return { ...res, done: false }
     }
 
@@ -846,7 +846,7 @@ export function usePayments(userId, activeSpaceId = null, activeSpaceName = null
       otherPending.forEach(p => deletes.push(p.id))
       updates.push({ id: master.id, fields: { total_installments: copy.current_installment } })
       const res = await runOptimisticBatch({ subjectId: copyId, action: 'abonar', updates, deletes })
-      if (!res.error) notifySpaceChange('marked_paid', { paymentName: copy.name })
+      if (!res.error) notifySpaceChange('marked_paid', { paymentId: copyId, paymentName: copy.name })
       return { ...res, done: !res.error }
     }
 
@@ -882,7 +882,7 @@ export function usePayments(userId, activeSpaceId = null, activeSpaceName = null
     }
 
     const res = await runOptimisticBatch({ subjectId: copyId, action: 'abonar', updates, deletes, inserts })
-    if (!res.error) notifySpaceChange('marked_paid', { paymentName: copy.name })
+    if (!res.error) notifySpaceChange('marked_paid', { paymentId: copyId, paymentName: copy.name })
     return { ...res, done: false }
   }
 
@@ -1177,7 +1177,7 @@ export function usePayments(userId, activeSpaceId = null, activeSpaceName = null
     const { data, error } = opResult
     if (!error) {
       const updatedPayments = payments.map(p => p.id === id ? { ...p, ...data } : p)
-      notifySpaceChange('marked_paid', { paymentName: data.name })
+      notifySpaceChange('marked_paid', { paymentId: id, paymentName: data.name })
 
       // Recurrente: asegurar siempre 2 pendientes en cola
       if (payment?.is_recurrent && !payment?.is_master && payment?.parent_id) {
