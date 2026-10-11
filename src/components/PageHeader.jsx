@@ -4,6 +4,7 @@ import { Bell, Crown, Settings, Sparkles } from 'lucide-react'
 import { useHeaderBackground, HEADER_IMAGES } from '../hooks/useHeaderBackground'
 import styles from './PageHeader.module.css'
 import { AvatarImg } from './AvatarImg'
+import { formatBadgeCount } from '../lib/formatBadgeCount'
 
 // `greeting()` no es un componente — no puede usar el hook `useTranslation()`.
 // Usa el singleton `i18n.t()` directo (mismo objeto que ya inicializa
@@ -140,12 +141,12 @@ export function PageHeader({ profile, unreadCount, onOpenNotifs, onGoSettings, o
             <button
               onClick={onOpenNotifs}
               className={styles.bellButton}
-              aria-label={t('pageHeader.notificationsAriaLabel')}
+              aria-label={unreadCount > 0 ? `${t('pageHeader.notificationsAriaLabel')} (${formatBadgeCount(unreadCount)})` : t('pageHeader.notificationsAriaLabel')}
             >
               <Bell size={18} color="var(--surface)" />
             </button>
             {unreadCount > 0 && (
-              <div className={styles.unreadDot} />
+              <span className={styles.unreadBadge} aria-hidden="true">{formatBadgeCount(unreadCount)}</span>
             )}
           </div>
         </div>

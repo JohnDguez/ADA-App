@@ -8,6 +8,7 @@ import { AvatarImg } from './AvatarImg'
 import { greeting } from './PageHeader'
 import { RailSpaceSwitcher } from './RailSpaceSwitcher'
 import styles from './NavRail.module.css'
+import { formatBadgeCount } from '../lib/formatBadgeCount'
 
 /**
  * Riel de navegación lateral — reemplaza BottomNav.jsx en tablet/desktop
@@ -185,7 +186,7 @@ export function NavRail({ active, onChange, profile, unreadCount, onOpenNotifs, 
           label={t('pageHeader.notificationsAriaLabel')}
           expanded={expanded}
           onClick={onOpenNotifs}
-          badge={unreadCount > 0}
+          badge={unreadCount > 0 ? formatBadgeCount(unreadCount) : null}
         />
         <RailButton
           Icon={Settings}
@@ -220,7 +221,7 @@ function RailButton({ Icon, label, expanded, active, onClick, badge }) {
     >
       <div className={styles.iconWrapper}>
         <Icon size={20} strokeWidth={active ? 2.2 : 1.8} color={active ? 'var(--nav-icon)' : 'rgba(255,255,255,0.6)'} />
-        {badge && <div className={styles.badgeDot} />}
+        {badge && <span className={styles.badgeCount} aria-hidden="true">{badge}</span>}
       </div>
       {expanded && <span className={styles.railButtonLabel}>{label}</span>}
     </button>
