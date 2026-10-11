@@ -288,6 +288,7 @@
     "nextStartsLabel": "Starts in",
     "nextStartsDays_one": "{{count}} day",
     "nextStartsDays_other": "{{count}} days",
+    "statToConfirm": "To confirm",
     "statPayments": "Payments",
     "periodPrefix": "Period",
     "variablePendingConfirm_one": "{{count}} variable payment to confirm",

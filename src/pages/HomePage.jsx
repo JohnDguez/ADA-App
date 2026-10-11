@@ -502,7 +502,7 @@ export function HomePage({ payments, dataLoading = false, profile, spaceSwitcher
                     }
                   />
                 </div>
-                <div className={`${styles.statBoxes} ${styles.statBoxesTwo}`}>
+                <div className={`${styles.statBoxes} ${(!dataLoading && nextPeriodPendingVariableCount > 0) ? '' : styles.statBoxesTwo}`}>
                   {dataLoading ? (
                     [0, 1].map(i => (
                       <div key={i} className={styles.statBox}>
@@ -514,6 +514,9 @@ export function HomePage({ payments, dataLoading = false, profile, spaceSwitcher
                     [
                       { key: 'total',    label: t('homePage.statTotal'),    value: fmt(nextPeriodKnownTotal) },
                       { key: 'payments', label: t('homePage.statPayments'), value: String(nextPeriodFixedCount) },
+                      ...(nextPeriodPendingVariableCount > 0
+                        ? [{ key: 'toConfirm', label: t('homePage.statToConfirm'), value: String(nextPeriodPendingVariableCount) }]
+                        : []),
                     ].map(b => (
                       <div key={b.key} className={styles.statBox}>
                         <div className={styles.statBoxLabel}>{b.label}</div>
@@ -522,11 +525,6 @@ export function HomePage({ payments, dataLoading = false, profile, spaceSwitcher
                     ))
                   )}
                 </div>
-                {!dataLoading && nextPeriodPendingVariableCount > 0 && (
-                  <div className={styles.cardVariableNote}>
-                    {t('homePage.variablePendingConfirm', { count: nextPeriodPendingVariableCount })}
-                  </div>
-                )}
               </div>
             </div>
           </div>
