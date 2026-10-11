@@ -793,16 +793,14 @@ export function PaymentsPage({ payments, dataLoading = false, periodIncome, paym
     }
   }
 
-  // Segmentos heatmap
-  const segmentos = useMemo(() => ALL_CATS
-    .map(cat => ({
-      cat,
-      total: gastosPeriodo.filter(p => p.category === cat && !p.is_postponed).reduce((a, p) => a + Number(p.amount), 0),
-    }))
-    .filter(s => s.total > 0)
-    .sort((a, b) => b.total - a.total),
-    [ALL_CATS, gastosPeriodo]
-  )
+  // Barra del balance: % del ingreso del periodo ya gastado y su color
+  const gastoRatio = ingresoTotal > 0 ? totalGastos / ingresoTotal : 0
+  const gastoPct = Math.min(gastoRatio * 100, 100)
+  const balanceTone = sobrePasado
+    ? { bar: 'var(--danger)', text: 'var(--danger)' }
+    : gastoRatio >= 0.75
+      ? { bar: 'var(--soon-color)', text: 'var(--soon-color)' }
+      : { bar: 'var(--accent)', text: 'var(--paid)' }
 
   // `!incomesLoaded` (v0.9.484): mientras no se sabe si hay extras, se deja
   // la tarjeta de balance (en esqueleto) en vez de anunciar "sin ingreso".
@@ -1292,76 +1290,60 @@ export function PaymentsPage({ payments, dataLoading = false, periodIncome, paym
         {showBalance && (
           <div data-coachmark="gastos-disponible-card" className={`${styles.balanceCard} ${tabHide('pagos')}`}>
 
-            {/* Cabecera con botón Añadir ingreso */}
+            {/* Cabecera: disponible + botón Añadir ingreso (protagonista) */}
             <div className={styles.balanceHeader}>
               <div>
                 <div className={styles.balanceLabel}>{t('paymentsPage.availableThisPeriod')}</div>
-                {/* Fase 1 del sistema de carga por sección (agosto 2026):
-                    `disponible`/`totalGastos`/`sobrePasado` dependen de
-                    `payments` (via `gastosPeriodo`), vacío a propósito
-                    durante `dataLoading` — sin este branch se veía "todo tu
-                    sueldo disponible" un instante, como si nada se hubiera
-                    gastado. Se reemplaza por un bone, nunca por el número
-                    real a medias. */}
+                {/* `disponible`/`totalGastos`/`sobrePasado` dependen de
+                    `payments` (vacío durante `dataLoading`): se reemplaza
+                    por un bone, nunca por el número real a medias. */}
                 {balanceLoading ? (
                   <Bone w={110} h={26} r={4} />
                 ) : (
-                  <div className={styles.balanceAmount} style={{ color: sobrePasado ? 'var(--danger)' : 'var(--paid)' }}>
+                  <div className={styles.balanceAmount} style={{ color: balanceTone.text }}>
                     {sobrePasado ? '-' : ''}{fmt(Math.abs(disponible))}
                   </div>
                 )}
               </div>
-              <div className={styles.balanceActions}>
-                {/* Botón discreto Añadir ingreso — no depende de `payments`,
-                    se queda tal cual durante la carga. */}
-                <button
-                  data-coachmark="gastos-add-income-button"
-                  onClick={() => setIncomeModal(true)}
-                  className={styles.addIncomeButtonSmall}
-                >
-                  <Plus size={13} strokeWidth={2.2} />
-                  {t('paymentsPage.addIncome')}
-                </button>
-                {balanceLoading ? (
-                  <Bone w={90} h={11} r={4} />
-                ) : (
-                  <div className={styles.balanceSubtext}>
-                    <div className={styles.balanceSubtextMain}>
-                      {fmt(totalGastos)} <span className={styles.balanceSubtextFaded}>/ {fmt(ingresoTotal)}</span>
-                    </div>
-                    {totalExtras > 0 && (
-                      <div className={styles.balanceExtras}>
-                        +{fmt(totalExtras)} {t('paymentsPage.extrasSuffix')}
-                      </div>
-                    )}
-                    {sobrePasado && (
-                      <div className={styles.balanceOverBudget}>{t('paymentsPage.overBudget')}</div>
-                    )}
-                  </div>
-                )}
-              </div>
+              <button
+                data-coachmark="gastos-add-income-button"
+                onClick={() => setIncomeModal(true)}
+                className={styles.addIncomeButton}
+              >
+                <Plus size={14} strokeWidth={2.4} />
+                {t('paymentsPage.addIncome')}
+              </button>
             </div>
 
-            {/* Barra heatmap segmentada — `segmentos` también depende de
-                `gastosPeriodo`; durante la carga se reemplaza por una barra
-                gris neutra en vez de una barra vacía (0 gastos aparentes). */}
+            {/* Barra de un solo color: qué parte del ingreso del periodo ya
+                se gastó. Azul normal, naranja desde 75%, rojo al pasarse. */}
             {balanceLoading ? (
               <Bone w="100%" h={12} r={6} style={{ marginBottom: 10 }} />
             ) : (
               <div className={styles.heatmapBar}>
-                {segmentos.map(({ cat, total }) => (
-                  <div
-                    key={cat}
-                    className={styles.heatmapSegment}
-                    style={{
-                      width: `${Math.min((total / ingresoTotal) * 100, 100)}%`,
-                      background: getCatColor(cat, profile.custom_categories, profile.category_colors),
-                    }}
-                    title={`${cat}: ${fmt(total)}`}
-                  />
-                ))}
+                <div
+                  className={styles.heatmapSegment}
+                  style={{ width: `${gastoPct}%`, background: balanceTone.bar }}
+                />
               </div>
             )}
+
+            <div className={styles.balanceStats}>
+              {balanceLoading ? (
+                <Bone w={140} h={30} r={4} />
+              ) : (
+                <>
+                  <div>
+                    <div className={styles.balanceStatLabel}>{t('paymentsPage.spent')}</div>
+                    <div className={styles.balanceStatValue}>{fmt(totalGastos)}</div>
+                  </div>
+                  <div className={styles.balanceStatRight}>
+                    <div className={styles.balanceStatLabel}>{t('paymentsPage.periodIncome')}</div>
+                    <div className={styles.balanceStatValue}>{fmt(ingresoTotal)}</div>
+                  </div>
+                </>
+              )}
+            </div>
 
             {/* Ingresos extras del periodo — solo en personal. En un
                 espacio compartido, esta misma sección ahora es el Fondo
@@ -1386,8 +1368,8 @@ export function PaymentsPage({ payments, dataLoading = false, periodIncome, paym
                     onClick={() => setIncomesExpanded(v => !v)}
                     className={styles.extrasSummaryButton}
                   >
-                    <div className={styles.extrasCheckIcon}>
-                      <Check size={10} color="var(--surface)" strokeWidth={3} />
+                    <div className={styles.extrasPlusIcon}>
+                      <Plus size={11} color="var(--accent)" strokeWidth={3} />
                     </div>
                     <span className={styles.extrasSummaryText}>
                       {t('paymentsPage.incomeCount', { count: periodIncomes.length })} · +{fmt(totalInc)}
