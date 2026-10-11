@@ -4,7 +4,10 @@ import styles from './SegmentedControl.module.css'
 // Segmentado con fondo que se desliza al cambiar de opción (v0.9.486 — Mis
 // tarjetas: crédito/débito, red, física/digital). Regla 13: el pill solo
 // se permite en segmentados. `options`: [{ value, label, icon? }].
-export function SegmentedControl({ value, options, onChange, disabled = false }) {
+// v0.9.661 — `variant="page"`: mismo aspecto que el switch Periodo actual /
+// Siguiente periodo del inicio (track `--section-bg`, más alto), para
+// pestañas de página (Pagos / Análisis).
+export function SegmentedControl({ value, options, onChange, disabled = false, variant = 'default' }) {
   const refs = useRef({})
   const [thumb, setThumb] = useState(null)
   useLayoutEffect(() => {
@@ -12,7 +15,7 @@ export function SegmentedControl({ value, options, onChange, disabled = false })
     if (el) setThumb({ left: el.offsetLeft, width: el.offsetWidth })
   }, [value, options.length, options.map(o => o.label).join('|')])
   return (
-    <div className={`${styles.seg} ${disabled ? styles.segDisabled : ''}`}>
+    <div className={`${styles.seg} ${variant === 'page' ? styles.segPage : ''} ${disabled ? styles.segDisabled : ''}`}>
       {thumb && <span className={styles.segThumb} style={{ '--seg-left': `${thumb.left}px`, '--seg-width': `${thumb.width}px` }} />}
       {options.map(o => (
         <button

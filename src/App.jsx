@@ -1499,6 +1499,13 @@ export default function App() {
   // Mismo atajo que goToSharedSpaceSettings, apuntando a Categorías — para
   // el link "Personalizar categorías" del EmptyState en PaymentsPage →
   // "Por Categoría" (v0.9.179).
+  // Atajo a Mis tarjetas desde "Por método de pago" (Gastos e ingresos).
+  function goToCards() {
+    setSettingsReturnTab(tab)
+    setSettingsInitialSection('cards')
+    changeTab('settings')
+  }
+
   function goToCategories() {
     setSettingsReturnTab(tab)
     setSettingsInitialSection('categories')
@@ -1660,6 +1667,7 @@ export default function App() {
           onSplit={openSplitModal}
           onAdd={openAdd}
           onGoCategories={goToCategories}
+          onGoCards={goToCards}
           ensureMonthLoaded={ensureMonthLoaded}
           oldestPaymentYear={oldestYear}
           sharedFund={sharedFund}

@@ -414,7 +414,13 @@
     "columnCategory": "Categoría",
     "columnAmount": "Monto",
     "byMethod": "Por método de pago",
-    "creditNote": "El crédito no bajó tu disponible: sale cuando pagas el estado de cuenta."
+    "creditNote": "El crédito no bajó tu disponible: sale cuando pagas el estado de cuenta.",
+    "tabPayments": "Pagos",
+    "tabAnalysis": "Análisis",
+    "myCards": "Mis tarjetas",
+    "myCardsCount_one": "{{count}} tarjeta registrada",
+    "myCardsCount_other": "{{count}} tarjetas registradas",
+    "myCardsEmpty": "Agrega tu primera tarjeta"
   },
   "recurrentsPage": {
     "title": "Gastos recurrentes",

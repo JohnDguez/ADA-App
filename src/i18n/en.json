@@ -414,7 +414,13 @@
     "columnCategory": "Category",
     "columnAmount": "Amount",
     "byMethod": "By payment method",
-    "creditNote": "Credit didn't lower your available balance: it leaves when you pay the statement."
+    "creditNote": "Credit didn't lower your available balance: it leaves when you pay the statement.",
+    "tabPayments": "Payments",
+    "tabAnalysis": "Analysis",
+    "myCards": "My cards",
+    "myCardsCount_one": "{{count}} card saved",
+    "myCardsCount_other": "{{count}} cards saved",
+    "myCardsEmpty": "Add your first card"
   },
   "recurrentsPage": {
     "title": "Recurring expenses",

@@ -56,3 +56,9 @@
   font-weight: 600;
 }
 
+
+/* Variante de página (v0.9.661): igual que .tabTrack/.tabButton de HomePage */
+.segPage { background: var(--section-bg); padding: 4px; }
+.segPage .segThumb { top: 4px; bottom: 4px; }
+.segPage .segOption { padding: 10px 0; font-weight: 400; }
+.segPage .segOptionOn { font-weight: 500; }

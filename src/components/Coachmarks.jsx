@@ -97,6 +97,8 @@ export function Coachmarks({ screenKey, profile, onUpdateProfile }) {
     if (alreadySeen) { setRect(null); return }
     const step = steps[stepIndex]
     if (!step) return
+    // Páginas con pestañas (Gastos e ingresos) escuchan esto para mostrar la pestaña del elemento
+    window.dispatchEvent(new CustomEvent('coachmark:target', { detail: step.target }))
 
     setRect(null) // oculta mientras se reubica, evita mostrar el rect del paso anterior
     let attempts = 0

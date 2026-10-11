@@ -6,6 +6,7 @@ import { NewSharedSpacePanel } from '../components/NewSharedSpacePanel'
 import { EmptyState } from '../components/EmptyState'
 import { PaidByStack } from '../components/PaidByStack'
 import { Select } from '../components/Select'
+import { SegmentedControl } from '../components/SegmentedControl'
 import { getBank, bankColorVar } from '../lib/cardCatalog'
 import { fmt, dateOf, dateToStr, getMonths, getMonthsShort, CATEGORIES, cobroPeriod, addDays, getCatColor, getCategoryLabel, RECUR_FREQ, getFrequencyLabel, getDeleteConfirmMessage } from '../lib/utils'
 import { getCategoryIcon } from '../lib/categoryIcons'
@@ -131,8 +132,20 @@ function MethodRow({ label, amount, total, barClass, cards = [], note = null }) 
   )
 }
 
-export function PaymentsPage({ payments, dataLoading = false, periodIncome, paymentMethodsList = [], paymentMethods = null, onChangeMethod, profile, spaceSwitcher, activeSpaceHeader, activeSpaceId = null, rawActiveSpaceId = null, sharedSpaces, spacePermissions, onOpenPremium, onSpaceReady, unreadCount, onOpenNotifs, onGoSettings, onMarkUnpaid, onDelete, onDeleteDirect, onUpdateProfile, onEdit, onViewSource, onSplit, onAdd, onGoCategories, sharedFund, slideClass, ensureMonthLoaded, oldestPaymentYear = null }) {
+export function PaymentsPage({ payments, dataLoading = false, periodIncome, paymentMethodsList = [], paymentMethods = null, onChangeMethod, profile, spaceSwitcher, activeSpaceHeader, activeSpaceId = null, rawActiveSpaceId = null, sharedSpaces, spacePermissions, onOpenPremium, onSpaceReady, unreadCount, onOpenNotifs, onGoSettings, onMarkUnpaid, onDelete, onDeleteDirect, onUpdateProfile, onEdit, onViewSource, onSplit, onAdd, onGoCategories, onGoCards, sharedFund, slideClass, ensureMonthLoaded, oldestPaymentYear = null }) {
   const { t } = useTranslation()
+  // v0.9.661 — pestañas Pagos / Análisis (solo en celular; desde 768px se ve todo junto).
+  const [pageTab, setPageTab] = useState('pagos')
+  const tabHide = name => (pageTab !== name ? styles.tabHidden : '')
+  useEffect(() => {
+    function onTarget(e) {
+      const tgt = e.detail
+      if (tgt === 'gastos-monthly-chart') setPageTab('analisis')
+      else if (tgt === 'gastos-disponible-card' || tgt === 'gastos-add-income-button') setPageTab('pagos')
+    }
+    window.addEventListener('coachmark:target', onTarget)
+    return () => window.removeEventListener('coachmark:target', onTarget)
+  }, [])
   // Mismo mecanismo que HomePage.jsx — ver ahí el porqué (evitar que la
   // animación de entrada se dispare también en un simple cambio de
   // pestaña, no solo en un cambio real de espacio).
@@ -1246,11 +1259,16 @@ export function PaymentsPage({ payments, dataLoading = false, periodIncome, paym
           <div className={styles.titleSectionSubtext}>{t('paymentsPage.subtitle')}</div>
         </div>
 
+        <div className={styles.pageTabs}>
+          <SegmentedControl variant="page" value={pageTab} onChange={setPageTab}
+            options={[{ value: 'pagos', label: t('paymentsPage.tabPayments') }, { value: 'analisis', label: t('paymentsPage.tabAnalysis') }]} />
+        </div>
+
 
         {/* ── Sin salario fijo y sin ingresos capturados todavía: CTA grande
              en vez de esconder la sección por completo ── */}
         {noIncomeYet && (
-          <div data-coachmark="gastos-disponible-card" className={styles.noIncomeCard}>
+          <div data-coachmark="gastos-disponible-card" className={`${styles.noIncomeCard} ${tabHide('pagos')}`}>
             <div className={styles.noIncomeText}>
               {t('paymentsPage.noIncomeText')}
             </div>
@@ -1267,7 +1285,7 @@ export function PaymentsPage({ payments, dataLoading = false, periodIncome, paym
 
         {/* ── BALANCE DEL PERIODO (salario fijo, o al menos un ingreso extra capturado) ── */}
         {showBalance && (
-          <div data-coachmark="gastos-disponible-card" className={styles.balanceCard}>
+          <div data-coachmark="gastos-disponible-card" className={`${styles.balanceCard} ${tabHide('pagos')}`}>
 
             {/* Cabecera con botón Añadir ingreso */}
             <div className={styles.balanceHeader}>
@@ -1340,31 +1358,6 @@ export function PaymentsPage({ payments, dataLoading = false, periodIncome, paym
               </div>
             )}
 
-            {/* Chips de categoría */}
-            {balanceLoading ? (
-              <div className={styles.categoryChipsRow}>
-                <Bone w={64} h={20} r={5} />
-                <Bone w={82} h={20} r={5} />
-                <Bone w={54} h={20} r={5} />
-              </div>
-            ) : (
-              <div className={styles.categoryChipsRow}>
-                {segmentos.map(({ cat, total }) => {
-                  const catColor = getCatColor(cat, profile.custom_categories, profile.category_colors)
-                  const CatIcon  = getCategoryIcon(cat, profile.category_icons)
-                  return (
-                    <div key={cat} className={styles.categoryChip} style={{ color: catColor }}>
-                      {CatIcon
-                        ? <CatIcon size={12} color={catColor} strokeWidth={2} />
-                        : <span className={styles.categoryChipDot} style={{ background: catColor }} />
-                      }
-                      {cat} {fmt(total)}
-                    </div>
-                  )
-                })}
-              </div>
-            )}
-
             {/* Ingresos extras del periodo — solo en personal. En un
                 espacio compartido, esta misma sección ahora es el Fondo
                 Compartido (ver abajo) — reemplaza por completo a
@@ -1432,7 +1425,7 @@ export function PaymentsPage({ payments, dataLoading = false, periodIncome, paym
                 anidada en .balanceCard — de ahí .extrasSection sacaba su
                 margen horizontal, por eso este bug de ancho completo. */}
             {activeSpaceId && (
-              <div className={styles.fundSection}>
+              <div className={`${styles.fundSection} ${tabHide('pagos')}`}>
                 <div className={styles.paymentsSectionHeader}>
                   <div className={styles.paymentsSectionTitle}>{t('paymentsPage.sharedFund')}</div>
                   {(spacePermissions?.can_add_funds || !spacePermissions?.isRestricted) && (
@@ -1540,7 +1533,7 @@ export function PaymentsPage({ payments, dataLoading = false, periodIncome, paym
         {/* Stats — grandTotal/avgMonthly dependen de `paidPayments`, vacío a
             propósito durante `dataLoading` (mismo criterio que balanceCard
             de arriba). */}
-        <div className={styles.statsCard}>
+        <div className={`${styles.statsCard} ${tabHide('analisis')}`}>
           <div className={styles.statsBlockWide}>
             <div className={styles.statsLabel}>
               {t('paymentsPage.totalMonths', { count: monthsBack })}
@@ -1557,7 +1550,7 @@ export function PaymentsPage({ payments, dataLoading = false, periodIncome, paym
         </div>
 
         {/* Selector de rango */}
-        <div className={styles.rangeSelectorRow}>
+        <div className={`${styles.rangeSelectorRow} ${tabHide('analisis')}`}>
           {[3, 6, 12].map(n => (
             <FilterChip key={n} label={t('paymentsPage.monthsChip', { count: n })} active={monthsBack === n} onClick={() => { setMonthsBack(n); setSelectedCat(null) }} />
           ))}
@@ -1566,7 +1559,7 @@ export function PaymentsPage({ payments, dataLoading = false, periodIncome, paym
         {/* Gráfica — `chartTotals` depende de `paidPayments`; durante la
             carga las barras muestran alturas neutras (no datos reales) en
             vez de una gráfica plana en $0 que luego "salta" al valor real. */}
-        <div data-coachmark="gastos-monthly-chart" className={styles.chartCard}>
+        <div data-coachmark="gastos-monthly-chart" className={`${styles.chartCard} ${tabHide('analisis')}`}>
           <div className={styles.chartTitle}>
             {t('paymentsPage.monthlyExpenses')}
           </div>
@@ -1690,7 +1683,7 @@ export function PaymentsPage({ payments, dataLoading = false, periodIncome, paym
         </div>
 
         {/* Por Categoría */}
-        <div className={styles.categorySection}>
+        <div className={`${styles.categorySection} ${tabHide('analisis')}`}>
           <div className={styles.categorySectionTitle}>
             <span className={styles.categorySectionTitleText}>{t('paymentsPage.byCategory')}</span>
           </div>
@@ -1746,7 +1739,7 @@ export function PaymentsPage({ payments, dataLoading = false, periodIncome, paym
 
         {/* ── Por método de pago (v0.9.487) ── */}
         {methodData.total > 0 && (
-          <div className={styles.methodSection}>
+          <div className={`${styles.methodSection} ${tabHide('analisis')}`}>
             <div className={styles.methodSectionTitle}>{t('paymentsPage.byMethod')}</div>
             <MethodRow
               label={t('paymentMethod.cash')}
@@ -1769,6 +1762,18 @@ export function PaymentsPage({ payments, dataLoading = false, periodIncome, paym
               cards={methodData.creditCards}
               note={methodData.credit > 0 ? t('paymentsPage.creditNote') : null}
             />
+            {onGoCards && !activeSpaceId && (
+              <button type="button" className={styles.myCardsRow} onClick={onGoCards}>
+                <CreditCard size={20} color="var(--accent)" />
+                <span className={styles.myCardsText}>
+                  <span className={styles.myCardsTitle}>{t('paymentsPage.myCards')}</span>
+                  <span className={styles.myCardsSub}>
+                    {paymentMethodsList.length > 0 ? t('paymentsPage.myCardsCount', { count: paymentMethodsList.length }) : t('paymentsPage.myCardsEmpty')}
+                  </span>
+                </span>
+                <ChevronRight size={18} color="var(--label-variable)" />
+              </button>
+            )}
           </div>
         )}
 
@@ -1776,7 +1781,7 @@ export function PaymentsPage({ payments, dataLoading = false, periodIncome, paym
         </div>
 
         {/* ── Pagos realizados ── */}
-        <div className={styles.paymentsSection}>
+        <div className={`${styles.paymentsSection} ${tabHide('pagos')}`}>
           <div className={styles.paymentsSectionHeader}>
             <span className={styles.paymentsSectionTitle}>{t('paymentsPage.paymentsTitle')}</span>
             {paidInView.length > 0 && (
