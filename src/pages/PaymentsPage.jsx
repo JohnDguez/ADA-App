@@ -18,7 +18,6 @@ import AmountInput from '../components/AmountInput'
 import { PaymentMethodField } from '../components/PaymentMethodField'
 import { AddCardModal } from '../components/AddCardModal'
 import styles from './PaymentsPage.module.css'
-import { useScrollTop } from '../hooks/useScrollTop'
 import { Presence } from '../components/Presence'
 import { useScrollLock } from '../lib/scrollLock'
 
@@ -140,7 +139,7 @@ export function PaymentsPage({ payments, dataLoading = false, periodIncome, paym
   useEffect(() => {
     function onTarget(e) {
       const tgt = e.detail
-      if (tgt === 'gastos-monthly-chart') setPageTab('analisis')
+      if (tgt === 'gastos-monthly-chart' || tgt === 'gastos-category-chips') setPageTab('analisis')
       else if (tgt === 'gastos-disponible-card' || tgt === 'gastos-add-income-button') setPageTab('pagos')
     }
     window.addEventListener('coachmark:target', onTarget)
@@ -204,7 +203,6 @@ export function PaymentsPage({ payments, dataLoading = false, periodIncome, paym
 
   const [monthsBack,  setMonthsBack]  = useState(3)
   const [selectedCat, setSelectedCat] = useState(null)
-  useScrollTop(selectedCat)
   const [viewMonth,   setViewMonth]   = useState(now.getMonth())
   const [viewYear,    setViewYear]    = useState(now.getFullYear())
   const [viewMode,    setViewMode]    = useState('periodo')  // 'mes' | 'periodo'
@@ -649,10 +647,17 @@ export function PaymentsPage({ payments, dataLoading = false, periodIncome, paym
         })
         .map(p => p.category)
     )
+    // Orden: de la categoría con más gasto histórico a la de menos (v0.9.662),
+    // sobre todos los pagos cargados — así el orden no salta entre periodos.
+    const historical = {}
+    paidPayments.forEach(p => {
+      if (p.is_postponed) return
+      historical[p.category] = (historical[p.category] || 0) + Number(p.amount)
+    })
     return [
       ...CATEGORIES.filter(c => catsWithExpense.has(c)),
       ...[...catsWithExpense].filter(c => !CATEGORIES.includes(c)),
-    ]
+    ].sort((a, b) => (historical[b] || 0) - (historical[a] || 0))
   }, [chartMonths, paidPayments])
 
   // ── Por categoría ─────────────────────────────────────────────────────────
@@ -1516,7 +1521,7 @@ export function PaymentsPage({ payments, dataLoading = false, periodIncome, paym
         <div className={styles.chartColumn} ref={chartColumnRef}>
 
         {/* Chips de categoría */}
-        <div data-coachmark="gastos-category-chips" className={styles.categoryChipsScroll}>
+        <div data-coachmark="gastos-category-chips" className={`${styles.categoryChipsScroll} ${tabHide('analisis')}`}>
           <FilterChip label={t('paymentsPage.allFilter')} active={!selectedCat} onClick={() => setSelectedCat(null)} />
           {visibleCats.map(c => (
             <FilterChip

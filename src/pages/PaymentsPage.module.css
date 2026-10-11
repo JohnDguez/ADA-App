@@ -1890,7 +1890,7 @@
 }
 
 /* ── v0.9.661 — pestañas Pagos / Análisis (solo celular) ─────────────────── */
-.pageTabs { margin: 0 0 12px; }
+.pageTabs { margin: 0 16px 12px; }
 @media (max-width: 767px) {
   .tabHidden { display: none; }
 }
