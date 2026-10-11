@@ -408,9 +408,20 @@ export default function App() {
     const ready = paymentsReadyRef.current
     if (ready.spaceId !== targetSpace || ready.loading) return null
     const text = (s) => (s || '').trim().toLowerCase()
+    const list = paymentsNowRef.current || []
+    // "N pagos vencidos / próximos": el cuerpo trae los nombres separados por
+    // coma; se resaltan los pagos pendientes con esos nombres.
+    if (n.type === 'overdue' || n.type === 'upcoming') {
+      const names = (n.body || '').split(',').map(text).filter(Boolean)
+      const ids = list
+        .filter(p => p?.name && !p.is_master && !p.is_paid && !p.is_postponed && names.includes(text(p.name)))
+        .sort((a, b) => String(a.due_date).localeCompare(String(b.due_date)))
+        .map(p => p.id)
+      return ids.length ? ids : null
+    }
     const title = text(n.title), body = text(n.body)
     let best = null
-    for (const p of paymentsNowRef.current || []) {
+    for (const p of list) {
       if (!p?.name || p.is_master) continue
       if (n.type === 'due_today' && (p.is_paid || p.is_postponed)) continue
       const name = text(p.name)
@@ -432,7 +443,7 @@ export default function App() {
       if (n.space_id && !sharedSpaces.spaces.some(e => e.space.id === n.space_id)) return
       if (paymentsSpaceId !== targetSpace) switchSpace(targetSpace)
       changeTab('home')
-      const canGuess = n.type === 'due_today' || n.type === 'space_change'
+      const canGuess = ['due_today', 'space_change', 'overdue', 'upcoming'].includes(n.type)
       highlightPaymentWhenVisible(n.payment_id || n.goal_id || (canGuess ? () => guessPaymentId(n, targetSpace) : null))
       return
     }

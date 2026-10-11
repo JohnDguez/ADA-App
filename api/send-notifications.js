@@ -76,7 +76,7 @@ async function collectReminders(scope, profile, todayStr, today, lang) {
   // Pagos vencidos
   if (profile.notif_overdue !== false) {
     const { data: overdue } = await applyScope(
-      supabase.from('payments').select('name').eq('is_paid', false).eq('is_postponed', false).eq('paused', false).not('is_master', 'is', true).lt('due_date', todayStr),
+      supabase.from('payments').select('id, name').eq('is_paid', false).eq('is_postponed', false).eq('paused', false).not('is_master', 'is', true).lt('due_date', todayStr),
       scope
     )
     if (overdue && overdue.length > 0) {
@@ -85,6 +85,7 @@ async function collectReminders(scope, profile, todayStr, today, lang) {
         type: 'overdue', title, body,
         tag: `overdue${scope.spaceId ? '-' + scope.spaceId : ''}`, urgent: true, url: '/',
         space_name: scope.spaceName || null, space_id: scope.spaceId || null,
+        payment_id: overdue.length === 1 ? overdue[0].id : null,
       })
     }
   }
