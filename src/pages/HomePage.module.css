@@ -127,7 +127,7 @@
 }
 
 .statBox + .statBox {
-  border-left: 0.5px solid var(--border);
+  border-left: 1px solid var(--border-mid);
 }
 
 .statBoxLabel {
