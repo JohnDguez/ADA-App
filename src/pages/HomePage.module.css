@@ -81,19 +81,6 @@
   border-radius: 12px;
   padding: 14px 16px;
 }
-
-.dateBadge {
-  display: inline-block;
-  background: var(--bg);
-  border-radius: 5px;
-  padding: 4px 8px;
-  font-size: 12px;
-  font-weight: 500;
-  color: var(--text);
-  margin-bottom: 6px;
-  float: right;
-}
-
 .periodHeader {
   display: flex;
   justify-content: space-between;
@@ -144,39 +131,14 @@
   white-space: nowrap;
 }
 
+.statBoxesTwo { grid-template-columns: repeat(2, 1fr); }
+.halfRingCenterSmallHome { display: block; font-size: 12px; font-weight: 400; color: var(--text); }
+.halfRingCenterBigHome { display: block; font-size: 20px; font-weight: 700; color: var(--text); }
 .statBoxValueLong { font-size: 13px; }
 .statBoxValueLonger { font-size: 12px; }
 .statBoxValueLongest { font-size: 11px; }
 .statBoxPaid { color: var(--paid); }
 .statBoxBone { display: flex; justify-content: center; margin-top: 6px; }
-
-.clearFloat {
-  clear: both;
-}
-
-.cardTitle {
-  text-align: center;
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--accent);
-  margin-bottom: 2px;
-}
-
-.cardAmount {
-  text-align: center;
-  font-size: 30px;
-  font-weight: 700;
-  color: var(--text);
-  margin-bottom: 8px;
-}
-
-.cardMeta {
-  text-align: center;
-  font-size: 12px;
-  font-weight: 500;
-  color: var(--text);
-}
-
 .cardVariableNote {
   text-align: center;
   font-size: 11px;
@@ -506,29 +468,11 @@
   .metricCard {
     padding: 20px 24px;
   }
-
-  .cardTitle {
-    font-size: 15px;
-  }
-
-  .cardAmount {
-    font-size: 38px;
-  }
-
-  .cardMeta {
-    font-size: 14px;
-  }
-
   .statBoxLabel { font-size: 12px; }
   .statBoxValue { font-size: 17px; }
   .statBoxValueLong { font-size: 15px; }
   .periodLabel { font-size: 14px; }
   .periodDay { font-size: 13px; }
-
-  .dateBadge {
-    font-size: 13px;
-  }
-
   /* HalfRing dibuja su SVG con dimensiones fijas por prop (no CSS) — se
      escala completo (dibujo + "81%" que va adentro) con transform, en vez
      de tocar HalfRing.jsx. Seguro aquí porque cada instancia vive sola

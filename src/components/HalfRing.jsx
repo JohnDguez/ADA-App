@@ -33,7 +33,9 @@ import styles from './HalfRing.module.css'
 // Extraído de HomePage.jsx a su propio archivo (v0.9.249, antes vivía como
 // función interna) — Johnatan lo señaló al buscarlo para preguntar sobre el
 // degradado y no lo encontró como componente aparte.
-export function HalfRing({ percent, width = 220, strokeWidth = 14 }) {
+// `center` (opcional): contenido propio para el hueco del arco en lugar del %
+// (ej. "Empieza en 6 días" en el próximo periodo, donde un 0% no informa nada).
+export function HalfRing({ percent, width = 220, strokeWidth = 14, center }) {
   // "Bolita luna" (agosto 2026) — Johnatan pidió agrandarla para que se
   // pareciera más al isotipo del logo de LunaPay (antes 0.65×, apenas más
   // grande que el grosor de la línea). Confirmado 1.0× vía mockup del
@@ -166,7 +168,9 @@ export function HalfRing({ percent, width = 220, strokeWidth = 14 }) {
         <circle cx={dotPoint.x} cy={dotPoint.y} r={dotRadius} fill="var(--accent)" stroke="var(--surface)" strokeWidth={3} />
       </svg>
       <div className={styles.halfRingPercentWrapper}>
-        <span className={styles.halfRingPercentText}>{Math.round(animated * 100)}%</span>
+        {center != null
+          ? center
+          : <span className={styles.halfRingPercentText}>{Math.round(animated * 100)}%</span>}
       </div>
     </div>
   )

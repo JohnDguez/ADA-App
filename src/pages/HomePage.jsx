@@ -268,6 +268,9 @@ export function HomePage({ payments, dataLoading = false, profile, spaceSwitcher
   const todayMid = new Date(); todayMid.setHours(0, 0, 0, 0)
   const periodDayNumber = Math.min(periodDayTotal, Math.max(1, Math.round((todayMid - derived.start) / DAY_MS) + 1))
 
+  // Días que faltan para que empiece el próximo periodo (mínimo 1).
+  const nextStartsInDays = Math.max(1, Math.round((derived.nextStart - todayMid) / DAY_MS))
+
   const {
     start, end, nextStart, nextEnd,
     pagarEsteCobro, vencidos, delPeriodo, pendingAmt, pendingVariableCount,
@@ -482,34 +485,47 @@ export function HomePage({ payments, dataLoading = false, profile, spaceSwitcher
                   no arranca, nada está "pagado" todavía: anillo vacío (0%),
                   sin fila pagado/pendiente. */}
               <div ref={nextCardRef} className={styles.metricCard}>
-                <div className={styles.dateBadge}>
-                  {nextPeriodRange(profile)}
+                <div className={styles.periodHeader}>
+                  <span className={styles.periodLabel}>{t('homePage.periodPrefix')} {nextPeriodRange(profile)}</span>
                 </div>
-                <div className={styles.clearFloat} />
-                <div className={styles.ringScale}><HalfRing key={activeSpaceId} percent={0} /></div>
-                {dataLoading ? (
-                  <>
-                    <div className={styles.cardTitle}>{t('homePage.totalNextPeriod')}</div>
-                    <div className={styles.cardAmount} style={{ display: 'flex', justifyContent: 'center' }}>
-                      <Bone w={110} h={26} r={4} />
-                    </div>
-                    <div className={styles.cardMeta} style={{ display: 'flex', justifyContent: 'center' }}>
-                      <Bone w={130} h={11} r={4} />
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    <div className={styles.cardTitle}>{t('homePage.totalNextPeriod')}</div>
-                    <div className={styles.cardAmount}>{fmt(nextPeriodKnownTotal)}</div>
-                    <div className={styles.cardMeta}>
-                      {t('homePage.fixedPayment', { count: nextPeriodFixedCount })}
-                    </div>
-                    {nextPeriodPendingVariableCount > 0 && (
-                      <div className={styles.cardVariableNote}>
-                        {t('homePage.variablePendingConfirm', { count: nextPeriodPendingVariableCount })}
+                {/* El % de un periodo que no ha empezado siempre sería 0 y no
+                    informa nada: el hueco del anillo dice cuándo empieza. */}
+                <div className={styles.ringScale}>
+                  <HalfRing
+                    key={activeSpaceId}
+                    percent={0}
+                    center={
+                      <>
+                        <span className={styles.halfRingCenterSmallHome}>{t('homePage.nextStartsLabel')}</span>
+                        <span className={styles.halfRingCenterBigHome}>{t('homePage.nextStartsDays', { count: nextStartsInDays })}</span>
+                      </>
+                    }
+                  />
+                </div>
+                <div className={`${styles.statBoxes} ${styles.statBoxesTwo}`}>
+                  {dataLoading ? (
+                    [0, 1].map(i => (
+                      <div key={i} className={styles.statBox}>
+                        <Bone w={50} h={11} r={4} />
+                        <div className={styles.statBoxBone}><Bone w={70} h={15} r={4} /></div>
                       </div>
-                    )}
-                  </>
+                    ))
+                  ) : (
+                    [
+                      { key: 'total',    label: t('homePage.statTotal'),    value: fmt(nextPeriodKnownTotal) },
+                      { key: 'payments', label: t('homePage.statPayments'), value: String(nextPeriodFixedCount) },
+                    ].map(b => (
+                      <div key={b.key} className={styles.statBox}>
+                        <div className={styles.statBoxLabel}>{b.label}</div>
+                        <div className={`${styles.statBoxValue} ${valueSizeClass(b.value)}`}>{b.value}</div>
+                      </div>
+                    ))
+                  )}
+                </div>
+                {!dataLoading && nextPeriodPendingVariableCount > 0 && (
+                  <div className={styles.cardVariableNote}>
+                    {t('homePage.variablePendingConfirm', { count: nextPeriodPendingVariableCount })}
+                  </div>
                 )}
               </div>
             </div>
