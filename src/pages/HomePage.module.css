@@ -92,6 +92,59 @@
   float: right;
 }
 
+.periodHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.periodLabel {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.periodDay {
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--text);
+}
+
+.statBoxes {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.statBox {
+  min-width: 0;
+  background: var(--section-bg-soft);
+  border-radius: 8px;
+  padding: 9px 6px;
+  text-align: center;
+}
+
+.statBoxLabel {
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--text);
+}
+
+.statBoxValue {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text);
+  margin-top: 2px;
+  white-space: nowrap;
+}
+
+.statBoxValueLong { font-size: 13px; }
+.statBoxPaid { color: var(--paid); }
+.statBoxBone { display: flex; justify-content: center; margin-top: 6px; }
+
 .clearFloat {
   clear: both;
 }
@@ -119,35 +172,12 @@
   color: var(--text);
 }
 
-.cardMetaDanger {
-  color: var(--danger);
-}
-
 .cardVariableNote {
   text-align: center;
-  font-size: 10px;
-  font-weight: 400;
-  color: var(--text);
-  margin-top: 5px;
-}
-
-.cardPaidPendingRow {
-  display: flex;
-  justify-content: center;
-  gap: 16px;
-  margin-bottom: 12px;
-}
-
-.cardPaidText {
-  font-size: 11px;
-  font-weight: 500;
-  color: var(--paid);
-}
-
-.cardPendingText {
   font-size: 11px;
   font-weight: 400;
   color: var(--text);
+  margin-top: 10px;
 }
 
 /* ── Contenido debajo de la tarjeta de métricas ──────────────────────────── */
@@ -484,10 +514,11 @@
     font-size: 14px;
   }
 
-  .cardPaidText,
-  .cardPendingText {
-    font-size: 13px;
-  }
+  .statBoxLabel { font-size: 12px; }
+  .statBoxValue { font-size: 17px; }
+  .statBoxValueLong { font-size: 15px; }
+  .periodLabel { font-size: 14px; }
+  .periodDay { font-size: 13px; }
 
   .dateBadge {
     font-size: 13px;

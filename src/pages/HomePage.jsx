@@ -202,13 +202,10 @@ export function HomePage({ payments, dataLoading = false, profile, spaceSwitcher
     const pagadoMonto = pagadosEstePeriodo.filter(p => !p.is_postponed).reduce((a, p) => a + Number(p.amount), 0) + pagadoParcialPendientes
     const totalConocido = pagadoMonto + pendingAmt
     const pctPagado = totalConocido > 0 ? Math.round((pagadoMonto / totalConocido) * 100) : 0
-    const pagosFijosCount = pagarEsteCobro.filter(p => !p.is_variable || p.amount > 0).length + pagadosEstePeriodo.length
     // Solo para el estado "sin pagos pendientes" (pagarEsteCobro vacío): antes
     // no se mostraba nada de cuántos pagos hubo este periodo al marcarlos
     // todos como pagados — Johnatan pidió que sí se muestre, separando fijos
     // de variables (mismo criterio de "es variable" que el resto de la app).
-    const pagadosFijosEstePeriodo     = pagadosEstePeriodo.filter(p => !p.is_variable).length
-    const pagadosVariablesEstePeriodo = pagadosEstePeriodo.filter(p => p.is_variable).length
 
     // Solo pagos DENTRO del próximo periodo (no todos los futuros)
     const upcoming = payments.filter(p => {
@@ -235,17 +232,22 @@ export function HomePage({ payments, dataLoading = false, profile, spaceSwitcher
     return {
       start, end, nextStart, nextEnd,
       pagarEsteCobro, vencidos, delPeriodo, pendingAmt, pendingVariableCount,
-      pagadosEstePeriodo, pagadoMonto, totalConocido, pctPagado, pagosFijosCount,
-      pagadosFijosEstePeriodo, pagadosVariablesEstePeriodo,
+      pagadosEstePeriodo, pagadoMonto, totalConocido, pctPagado,
       upcoming, nextPeriodKnownTotal, nextPeriodFixedCount, nextPeriodPendingVariableCount,
     }
   }, [payments, profile])
 
+  // "Día X de Y" del periodo actual (fechas locales a medianoche; round
+  // absorbe el cambio de horario de verano).
+  const DAY_MS = 86400000
+  const periodDayTotal = Math.max(1, Math.round((derived.end - derived.start) / DAY_MS) + 1)
+  const todayMid = new Date(); todayMid.setHours(0, 0, 0, 0)
+  const periodDayNumber = Math.min(periodDayTotal, Math.max(1, Math.round((todayMid - derived.start) / DAY_MS) + 1))
+
   const {
     start, end, nextStart, nextEnd,
     pagarEsteCobro, vencidos, delPeriodo, pendingAmt, pendingVariableCount,
-    pagadosEstePeriodo, pagadoMonto, totalConocido, pctPagado, pagosFijosCount,
-    pagadosFijosEstePeriodo, pagadosVariablesEstePeriodo,
+    pagadosEstePeriodo, pagadoMonto, totalConocido, pctPagado,
     upcoming, nextPeriodKnownTotal, nextPeriodFixedCount, nextPeriodPendingVariableCount,
   } = derived
 
@@ -378,10 +380,17 @@ export function HomePage({ payments, dataLoading = false, profile, spaceSwitcher
                   variables — info administrativa, no directamente ligada
                   al anillo, por eso va después). */}
               <div className={styles.metricCard}>
-                <div className={styles.dateBadge}>
-                  {t('homePage.periodPrefix')} {periodRange(profile)}
+                {/* Encabezado: fecha del periodo + "Día X de Y" (texto simple,
+                    sin contenedor — no debe parecer botón ni competir con el
+                    anillo). Sin "Quedan N días": eso se lee como fecha límite. */}
+                <div className={styles.periodHeader}>
+                  <span className={styles.periodLabel}>{t('homePage.periodPrefix')} {periodRange(profile)}</span>
+                  {dataLoading ? (
+                    <Bone w={56} h={12} r={4} />
+                  ) : (
+                    <span className={styles.periodDay}>{t('homePage.periodDay', { day: periodDayNumber, total: periodDayTotal })}</span>
+                  )}
                 </div>
-                <div className={styles.clearFloat} />
                 {/* v0.9.323 (histórico) — bug real reportado por Johnatan: al
                     recargar, `payments` viene vacío A PROPÓSITO mientras
                     `dataLoading` está en true (v0.9.284) — eso disparaba
@@ -408,55 +417,35 @@ export function HomePage({ payments, dataLoading = false, profile, spaceSwitcher
                     remonta el componente — sigue siendo la misma instancia,
                     así que el % anima suave de 100% al valor real solo. */}
                 <div className={styles.ringScale}><HalfRing key={activeSpaceId} percent={dataLoading || pagarEsteCobro.length === 0 ? 1 : pctPagado / 100} /></div>
-                {/* Fase 1 del sistema de carga por sección (agosto 2026):
-                    mientras `dataLoading` es true, ni el monto ni el
-                    "pagado/pendiente" muestran un número real (sería
-                    engañoso — $0 o "100% pagado" no son ciertos, solo
-                    faltan por llegar) — se reemplazan por bones, nunca por
-                    el dato del espacio anterior ni por un hueco vacío. */}
-                {dataLoading ? (
-                  <>
-                    <div className={styles.cardPaidPendingRow}>
-                      <Bone w={70} h={11} r={4} />
-                      <Bone w={70} h={11} r={4} />
-                    </div>
-                    <div className={styles.cardTitle}>{t('homePage.totalThisPeriod')}</div>
-                    <div className={styles.cardAmount} style={{ display: 'flex', justifyContent: 'center' }}>
-                      <Bone w={110} h={26} r={4} />
-                    </div>
-                    <div className={styles.cardMeta} style={{ display: 'flex', justifyContent: 'center' }}>
-                      <Bone w={130} h={11} r={4} />
-                    </div>
-                  </>
-                ) : pagarEsteCobro.length === 0 ? (
-                  <>
-                    <div className={styles.cardTitle}>{t('homePage.totalThisPeriod')}</div>
-                    <div className={styles.cardAmount}>{fmt(pagadoMonto)}</div>
-                    {(pagadosFijosEstePeriodo > 0 || pagadosVariablesEstePeriodo > 0) && (
-                      <div className={styles.cardMeta}>
-                        {t('homePage.fixedPayment', { count: pagadosFijosEstePeriodo })}
-                        {pagadosVariablesEstePeriodo > 0 && ` · ${t('homePage.variableCount', { count: pagadosVariablesEstePeriodo })}`}
+                {/* Pagado / Pendiente / Total en cajas (sin borde). Durante la
+                    carga ningún número es real todavía: bones, nunca el dato
+                    del espacio anterior. Pagar todo deja Pendiente en $0.00.
+                    Lo vencido ya lo dicen Luna y la sección "Vencidos". */}
+                <div className={styles.statBoxes}>
+                  {dataLoading ? (
+                    [0, 1, 2].map(i => (
+                      <div key={i} className={styles.statBox}>
+                        <Bone w={50} h={11} r={4} />
+                        <div className={styles.statBoxBone}><Bone w={70} h={15} r={4} /></div>
                       </div>
-                    )}
-                  </>
-                ) : (
-                  <>
-                    <div className={styles.cardPaidPendingRow}>
-                      <span className={styles.cardPaidText}>{t('homePage.paidLabel', { amount: fmt(pagadoMonto) })}</span>
-                      <span className={styles.cardPendingText}>{t('homePage.pendingLabel', { amount: fmt(pendingAmt) })}</span>
-                    </div>
-                    <div className={styles.cardTitle}>{t('homePage.totalThisPeriod')}</div>
-                    <div className={styles.cardAmount}>{fmt(totalConocido)}</div>
-                    <div className={styles.cardMeta}>
-                      {t('homePage.fixedPayment', { count: pagosFijosCount })}
-                      {vencidos.length > 0 && <span className={styles.cardMetaDanger}> · {t('homePage.overduePayment', { count: vencidos.length })}</span>}
-                    </div>
-                    {pendingVariableCount > 0 && (
-                      <div className={styles.cardVariableNote}>
-                        {t('homePage.variablePendingConfirm', { count: pendingVariableCount })}
+                    ))
+                  ) : (
+                    [
+                      { key: 'paid',    label: t('homePage.statPaid'),    value: fmt(pagadoMonto),    cls: styles.statBoxPaid },
+                      { key: 'pending', label: t('homePage.statPending'), value: fmt(pendingAmt),     cls: '' },
+                      { key: 'total',   label: t('homePage.statTotal'),   value: fmt(totalConocido),  cls: '' },
+                    ].map(b => (
+                      <div key={b.key} className={styles.statBox}>
+                        <div className={styles.statBoxLabel}>{b.label}</div>
+                        <div className={`${styles.statBoxValue} ${b.cls} ${b.value.length > 9 ? styles.statBoxValueLong : ''}`}>{b.value}</div>
                       </div>
-                    )}
-                  </>
+                    ))
+                  )}
+                </div>
+                {!dataLoading && pendingVariableCount > 0 && (
+                  <div className={styles.cardVariableNote}>
+                    {t('homePage.variablePendingConfirm', { count: pendingVariableCount })}
+                  </div>
                 )}
               </div>
 
