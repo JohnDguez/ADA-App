@@ -36,7 +36,7 @@ export function LanguageSheet({ open, onClose, profile, onUpdate }) {
     <BottomSheet open={open} title={t('settingsAccount.languageModal.title')} onClose={onClose}>
       <div className={styles.list}>
         {options.map(opt => (
-          <button key={opt.id} type="button" onClick={() => handleSelect(opt.id)} className={styles.option}>
+          <button key={opt.id} type="button" onClick={() => handleSelect(opt.id)} className={styles.option} data-selected={current === opt.id ? 'true' : undefined}>
             <span className={styles.label}>{opt.label}</span>
             {current === opt.id && <Check size={18} color="var(--accent)" />}
           </button>

@@ -12,7 +12,7 @@ export function CurrencySheet({ open, onClose, value, onSelect, title }) {
     <BottomSheet open={open} title={title || t('currency.sheetTitle')} onClose={onClose}>
       <div className={styles.list}>
         {CURRENCY_CODES.map(code => (
-          <button key={code} type="button" onClick={() => onSelect(code)} className={styles.option}>
+          <button key={code} type="button" onClick={() => onSelect(code)} className={styles.option} data-selected={value === code ? 'true' : undefined}>
             <span className={styles.label}>{`${t(`currency.names.${code}`)} (${CURRENCIES[code].code})`}</span>
             {value === code && <Check size={18} color="var(--accent)" />}
           </button>

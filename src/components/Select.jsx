@@ -5,6 +5,7 @@ import { ChevronDown, Check, Search } from 'lucide-react'
 import { BottomSheet } from './BottomSheet'
 import styles from './Select.module.css'
 import { useScrollLock } from '../lib/scrollLock'
+import { scrollSelectedIntoView } from '../lib/scrollSelected'
 
 // PANEL_ANIM_MS debe coincidir EXACTO con `animation-duration` de
 // `.panelDown`/`.panelUp` y `.panelClosing` en Select.module.css (Regla 30,
@@ -138,6 +139,12 @@ export function Select({ value, onChange, options, placeholder, renderIcon, sear
 
   const showPanel = open || closing
 
+  // Desplegable (no hoja): al abrir, desplaza la lista a la opción seleccionada.
+  useEffect(() => {
+    if (!open || sheet || !panelPos) return
+    scrollSelectedIntoView(panelRef.current)
+  }, [open, sheet, panelPos])
+
   // Cada opción puede ser un string plano (mismo valor = mismo label, como
   // ya usaban los selects de mes/año/hora) o un objeto {value, label} —
   // este último es el que necesitan las categorías fijas ahora que su
@@ -186,6 +193,7 @@ export function Select({ value, onChange, options, placeholder, renderIcon, sear
                   <div key={ov} className={showGroup ? styles.sheetGroupWrap : undefined} style={sheetLayout === 'grid' ? { display: 'contents' } : undefined}>
                     {showGroup && sheetLayout !== 'grid' && <div className={styles.groupLabel}>{groupLabels[group]}</div>}
                     <button type="button" onClick={() => { onChange(ov); closePanel() }}
+                      data-selected={isSel ? 'true' : undefined}
                       className={`${sheetLayout === 'grid' ? styles.sheetCell : styles.sheetRow} ${isSel ? styles.sheetSelected : ''} ${sheetLayout === 'grid' && cellColor ? styles.sheetCellColored : ''}`}
                       style={sheetLayout === 'grid' && cellColor ? { background: cellColor(ov) } : undefined}>
                       {sheetLayout === 'grid' && cellIcon ? cellIcon(ov) : renderIcon && renderIcon(ov)}
@@ -247,6 +255,7 @@ export function Select({ value, onChange, options, placeholder, renderIcon, sear
                 <button
                   type="button"
                   onClick={() => { onChange(ov); closePanel() }}
+                  data-selected={isSel ? 'true' : undefined}
                   className={`${styles.option} ${isSel ? styles.optionSelected : ''}`}
                 >
                   {renderIcon && renderIcon(ov)}

@@ -10,7 +10,7 @@ export function OptionSheet({ open, onClose, title, options, value, onSelect }) 
     <BottomSheet open={open} title={title} onClose={onClose}>
       <div className={styles.list}>
         {options.map(o => (
-          <button key={o.value} type="button" onClick={() => { onSelect(o.value); onClose() }} className={styles.option}>
+          <button key={o.value} type="button" onClick={() => { onSelect(o.value); onClose() }} className={styles.option} data-selected={value === o.value ? 'true' : undefined}>
             <span className={styles.label}>{o.label}</span>
             {value === o.value && <Check size={18} color="var(--accent)" />}
           </button>
