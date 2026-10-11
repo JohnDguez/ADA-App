@@ -269,7 +269,7 @@
   box-sizing: border-box;
   border-radius: 9px;
   background: var(--danger);
-  color: var(--surface);
+  color: var(--on-danger);
   font-size: 10px;
   font-weight: 700;
   line-height: 1;

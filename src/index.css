@@ -34,6 +34,7 @@
   --paid-border: #A0EDB8;
 
   --danger: #E82E47;
+  --on-danger: var(--surface); /* texto sobre fondo --danger (claro: blanco) */
   --danger-soft: #FDEAED;
   --danger-border: #F5B3BC;
 
@@ -235,6 +236,7 @@
   --paid-border: #0F4020;
 
   --danger: #F04361;
+  --on-danger: var(--text); /* en oscuro --surface es oscuro; el texto va claro */
   --danger-soft: #2D1219;
   --danger-border: #4A1A22;
 
@@ -304,6 +306,7 @@
     --paid-soft: #0D2B18;
     --paid-border: #0F4020;
     --danger: #F04361;
+    --on-danger: var(--text);
     --danger-soft: #2D1219;
     --danger-border: #4A1A22;
     --warning: #F5B325;
