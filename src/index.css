@@ -86,6 +86,9 @@
   --overdue-border:   #B10F17;
   --upcoming-border:  #FAAC2F;
   --soon-color:       #FE7600;
+  /* Advertencia por tema: tema claro = --soon-color, tema oscuro = --warning
+     (regla fija; en los bloques oscuros apunta a --warning). */
+  --warn-tone:        var(--soon-color);
   --menu-bg:          #F5F5F2;
 
   /* Franja de Luna (LunaStrip.jsx) — estado "dormida" (noche). Es oscura en
@@ -258,6 +261,7 @@
   --overdue-border:  #B10F17;
   --upcoming-border: #FAAC2F;
   --soon-color:      #FE7600;
+  --warn-tone:      var(--warning);
   --menu-bg:         #242837;
 
   /* Switcher de Espacio Compartido — ver nota en :root. Tono ligeramente
@@ -322,6 +326,7 @@
     --overdue-border:  #B10F17;
     --upcoming-border: #FAAC2F;
     --soon-color:      #FE7600;
+    --warn-tone:      var(--warning);
     --menu-bg:         #242837;
     --space-new-bg:       #357964;
   --space-stack-shadow: rgba(0, 0, 0, 0.4);

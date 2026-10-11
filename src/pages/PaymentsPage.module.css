@@ -155,7 +155,7 @@
 
 .balanceStatLabel {
   font-size: 11px;
-  color: var(--muted);
+  color: var(--text);
 }
 
 .balanceStatValue {

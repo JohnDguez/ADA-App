@@ -799,7 +799,7 @@ export function PaymentsPage({ payments, dataLoading = false, periodIncome, paym
   const balanceTone = sobrePasado
     ? { bar: 'var(--danger)', text: 'var(--danger)' }
     : gastoRatio >= 0.75
-      ? { bar: 'var(--soon-color)', text: 'var(--soon-color)' }
+      ? { bar: 'var(--warn-tone)', text: 'var(--warn-tone)' }
       : { bar: 'var(--accent)', text: 'var(--paid)' }
 
   // `!incomesLoaded` (v0.9.484): mientras no se sabe si hay extras, se deja
