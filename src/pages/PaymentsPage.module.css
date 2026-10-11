@@ -107,6 +107,8 @@
 
 .balanceHeader {
   display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
   justify-content: space-between;
   align-items: flex-start;
   margin-bottom: 12px;
@@ -128,6 +130,7 @@
 }
 
 .addIncomeButton {
+  margin-left: auto;
   display: flex;
   align-items: center;
   gap: 6px;
@@ -143,6 +146,10 @@
   flex-shrink: 0;
   align-self: flex-end;
 }
+
+.balanceAmountLong { font-size: 22px; }
+.balanceAmountLonger { font-size: 19px; }
+.balanceAmountLongest { font-size: 16px; }
 
 .balanceStats {
   display: flex;

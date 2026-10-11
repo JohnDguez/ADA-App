@@ -796,6 +796,13 @@ export function PaymentsPage({ payments, dataLoading = false, periodIncome, paym
   // Barra del balance: % del ingreso del periodo ya gastado y su color
   const gastoRatio = ingresoTotal > 0 ? totalGastos / ingresoTotal : 0
   const gastoPct = Math.min(gastoRatio * 100, 100)
+  // Monto grande: baja de tamaño por escalones si es largo (ej. $100,000.80)
+  const balanceAmountText = `${sobrePasado ? '-' : ''}${fmt(Math.abs(disponible))}`
+  const amountSizeClass =
+    balanceAmountText.length > 12 ? styles.balanceAmountLongest
+    : balanceAmountText.length > 10 ? styles.balanceAmountLonger
+    : balanceAmountText.length > 8 ? styles.balanceAmountLong
+    : ''
   const balanceTone = sobrePasado
     ? { bar: 'var(--danger)', text: 'var(--danger)' }
     : gastoRatio >= 0.75
@@ -1300,8 +1307,11 @@ export function PaymentsPage({ payments, dataLoading = false, periodIncome, paym
                 {balanceLoading ? (
                   <Bone w={110} h={26} r={4} />
                 ) : (
-                  <div className={styles.balanceAmount} style={{ color: balanceTone.text }}>
-                    {sobrePasado ? '-' : ''}{fmt(Math.abs(disponible))}
+                  <div
+                    className={`${styles.balanceAmount} ${amountSizeClass}`}
+                    style={{ color: balanceTone.text }}
+                  >
+                    {balanceAmountText}
                   </div>
                 )}
               </div>

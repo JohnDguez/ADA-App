@@ -17,6 +17,15 @@ import { syncLunaWidget } from '../lib/lunaWidget'
 import { fmt, cobroPeriod, nextCobroPeriod, getPagarEsteCobro, daysDiff, dateOf, dateToStr, getMonths, getMonthsShort, getCategoryLabel } from '../lib/utils'
 import styles from './HomePage.module.css'
 
+// Montos largos (ej. $300,000.80) bajan de tamaño por escalones para caber en
+// su columna sin salirse ni partirse.
+function valueSizeClass(str) {
+  if (str.length > 12) return styles.statBoxValueLongest
+  if (str.length > 11) return styles.statBoxValueLonger
+  if (str.length > 9)  return styles.statBoxValueLong
+  return ''
+}
+
 function periodRange(cfg) {
   const { start, end } = cobroPeriod(cfg)
   const months = getMonths(), monthsShort = getMonthsShort()
@@ -94,6 +103,21 @@ export function HomePage({ payments, dataLoading = false, profile, spaceSwitcher
   const actualPanelRef = useRef(null)
   const nextPanelRef   = useRef(null)
   const [swipeHeight, setSwipeHeight] = useState(null)
+
+  // Alto del carrusel de tarjetas = el de la tarjeta ACTIVA. Sin esto las dos
+  // tarjetas se estiraban al alto de la más alta y quedaba un hueco vacío
+  // debajo de los montos de la más baja.
+  const actualCardRef = useRef(null)
+  const nextCardRef = useRef(null)
+  const [cardsHeight, setCardsHeight] = useState(null)
+  useEffect(() => {
+    const el = activeCard === 0 ? actualCardRef.current : nextCardRef.current
+    if (!el) return
+    const ro = new ResizeObserver(() => setCardsHeight(el.offsetHeight))
+    ro.observe(el)
+    setCardsHeight(el.offsetHeight)
+    return () => ro.disconnect()
+  }, [activeCard])
 
   useEffect(() => {
     const el = activeCard === 0 ? actualPanelRef.current : nextPanelRef.current
@@ -359,6 +383,7 @@ export function HomePage({ payments, dataLoading = false, profile, spaceSwitcher
 
           <div
             className={styles.cardSwipeWrapper}
+            style={{ height: cardsHeight != null ? cardsHeight : 'auto' }}
             onTouchStart={e => setTouchStartX(e.touches[0].clientX)}
             onTouchEnd={e => {
               if (touchStartX === null) return
@@ -379,7 +404,7 @@ export function HomePage({ payments, dataLoading = false, profile, spaceSwitcher
                   arriba), luego título/monto/estatus (fijos, vencido,
                   variables — info administrativa, no directamente ligada
                   al anillo, por eso va después). */}
-              <div className={styles.metricCard}>
+              <div ref={actualCardRef} className={styles.metricCard}>
                 {/* Encabezado: fecha del periodo + "Día X de Y" (texto simple,
                     sin contenedor — no debe parecer botón ni competir con el
                     anillo). Sin "Quedan N días": eso se lee como fecha límite. */}
@@ -437,7 +462,7 @@ export function HomePage({ payments, dataLoading = false, profile, spaceSwitcher
                     ].map(b => (
                       <div key={b.key} className={styles.statBox}>
                         <div className={styles.statBoxLabel}>{b.label}</div>
-                        <div className={`${styles.statBoxValue} ${b.cls} ${b.value.length > 9 ? styles.statBoxValueLong : ''}`}>{b.value}</div>
+                        <div className={`${styles.statBoxValue} ${b.cls} ${valueSizeClass(b.value)}`}>{b.value}</div>
                       </div>
                     ))
                   )}
@@ -456,7 +481,7 @@ export function HomePage({ payments, dataLoading = false, profile, spaceSwitcher
                   Mismo tratamiento visual que Card 1. Como este periodo aún
                   no arranca, nada está "pagado" todavía: anillo vacío (0%),
                   sin fila pagado/pendiente. */}
-              <div className={styles.metricCard}>
+              <div ref={nextCardRef} className={styles.metricCard}>
                 <div className={styles.dateBadge}>
                   {nextPeriodRange(profile)}
                 </div>
