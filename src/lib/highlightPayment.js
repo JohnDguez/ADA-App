@@ -12,14 +12,22 @@ const FIRST_TRY_MS = 350 // cierre del panel + deslizamiento de la pestaña
 const RETRY_MS = 150
 const TIMEOUT_MS = 3000
 
+// `paymentId` puede ser una función que devuelve el id (o null): se evalúa en
+// cada intento, porque tras cambiar de espacio los pagos tardan en cargar
+// (v0.9.676, avisos antiguos sin `payment_id`).
 export function highlightPaymentWhenVisible(paymentId) {
   if (!paymentId) return
   const started = Date.now()
-  // v0.9.483: también tarjetas de Metas (`data-goal-id`) — mismo resalte.
-  const escaped = typeof CSS !== 'undefined' && CSS.escape ? CSS.escape(String(paymentId)) : paymentId
-  const selector = `[data-payment-id="${escaped}"], [data-goal-id="${escaped}"]`
 
   function attempt() {
+    const id = typeof paymentId === 'function' ? paymentId() : paymentId
+    if (!id) {
+      if (Date.now() - started < TIMEOUT_MS) setTimeout(attempt, RETRY_MS)
+      return
+    }
+    // v0.9.483: también tarjetas de Metas (`data-goal-id`) — mismo resalte.
+    const escaped = typeof CSS !== 'undefined' && CSS.escape ? CSS.escape(String(id)) : id
+    const selector = `[data-payment-id="${escaped}"], [data-goal-id="${escaped}"]`
     const el = Array.from(document.querySelectorAll(selector)).find(e => e.getClientRects().length > 0)
     if (el) {
       el.scrollIntoView({ behavior: 'smooth', block: 'center' })

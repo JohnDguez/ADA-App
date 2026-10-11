@@ -394,6 +394,22 @@ export default function App() {
   // el espacio se deduce por `space_name`. Sin espacio → Personal. Los avisos
   // de un espacio al que ya no se pertenece (salió, lo eliminaron) no cambian
   // de espacio. Los de error de sincronización siguen su flujo propio.
+  // Avisos anteriores a v0.9.675 no traen `payment_id`: se deduce por nombre
+  // (el título o el cuerpo empieza con el nombre del pago; gana el más largo).
+  const paymentsNowRef = useRef([])
+  paymentsNowRef.current = payments
+  function guessPaymentId(n) {
+    const text = (s) => (s || '').trim().toLowerCase()
+    const title = text(n.title), body = text(n.body)
+    let best = null
+    for (const p of paymentsNowRef.current || []) {
+      if (!p?.name || p.is_master) continue
+      if (n.type === 'due_today' && (p.is_paid || p.is_postponed)) continue
+      const name = text(p.name)
+      if ((title.startsWith(name) || body.startsWith(name)) && (!best || name.length > text(best.name).length)) best = p
+    }
+    return best?.id || null
+  }
   function handleNotifNavigate(n) {
     if (!n) return
     if (n.type !== 'sync_error') {
@@ -408,7 +424,8 @@ export default function App() {
       if (n.space_id && !sharedSpaces.spaces.some(e => e.space.id === n.space_id)) return
       if (paymentsSpaceId !== targetSpace) switchSpace(targetSpace)
       changeTab('home')
-      highlightPaymentWhenVisible(n.payment_id || n.goal_id)
+      const canGuess = n.type === 'due_today' || n.type === 'space_change'
+      highlightPaymentWhenVisible(n.payment_id || n.goal_id || (canGuess ? () => guessPaymentId(n) : null))
       return
     }
     // Ajustes → sección (v0.9.486, Mis tarjetas): las tarjetas no son de
