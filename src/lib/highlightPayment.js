@@ -10,7 +10,7 @@
 // salida en el mismo keyframe (Regla 29); la clase se quita al terminar.
 const FIRST_TRY_MS = 350 // cierre del panel + deslizamiento de la pestaña
 const RETRY_MS = 150
-const TIMEOUT_MS = 3000
+const TIMEOUT_MS = 6000
 
 // `paymentId` puede ser una función que devuelve el id (o null): se evalúa en
 // cada intento, porque tras cambiar de espacio los pagos tardan en cargar

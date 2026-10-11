@@ -398,7 +398,15 @@ export default function App() {
   // (el título o el cuerpo empieza con el nombre del pago; gana el más largo).
   const paymentsNowRef = useRef([])
   paymentsNowRef.current = payments
-  function guessPaymentId(n) {
+  // Estado vivo del espacio activo y de la carga: la deducción por nombre solo
+  // corre cuando YA se cambió de espacio y los pagos del espacio destino
+  // terminaron de cargar (si no, podría tomar un pago homónimo del espacio
+  // anterior y resaltarlo justo antes de que la vista cambie).
+  const paymentsReadyRef = useRef({ spaceId: null, loading: true })
+  paymentsReadyRef.current = { spaceId: paymentsSpaceId, loading: paymentsLoading }
+  function guessPaymentId(n, targetSpace) {
+    const ready = paymentsReadyRef.current
+    if (ready.spaceId !== targetSpace || ready.loading) return null
     const text = (s) => (s || '').trim().toLowerCase()
     const title = text(n.title), body = text(n.body)
     let best = null
@@ -425,7 +433,7 @@ export default function App() {
       if (paymentsSpaceId !== targetSpace) switchSpace(targetSpace)
       changeTab('home')
       const canGuess = n.type === 'due_today' || n.type === 'space_change'
-      highlightPaymentWhenVisible(n.payment_id || n.goal_id || (canGuess ? () => guessPaymentId(n) : null))
+      highlightPaymentWhenVisible(n.payment_id || n.goal_id || (canGuess ? () => guessPaymentId(n, targetSpace) : null))
       return
     }
     // Ajustes → sección (v0.9.486, Mis tarjetas): las tarjetas no son de
