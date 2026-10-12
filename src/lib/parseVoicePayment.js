@@ -115,16 +115,74 @@ const KEYWORDS = [
   ['Ahorro', ['ahorro', 'ahorros', 'fondo de emergencia', 'inversion', 'cetes', 'savings']],
 ]
 
+// Palabra completa con plural simple: "taco" ↔ "tacos", "refresco" ↔ "refrescos"
+const hasWord = (clean, w) => new RegExp(`(^|\\s)${w}(s|es)?(\\s|$)`).test(clean)
+
+// Categorías PERSONALIZADAS (v0.9.687). El usuario les pone el nombre que
+// quiera, así que se reconocen de 3 formas: (1) el nombre dicho tal cual
+// ("regalos" ← "regalo", singular/plural), (2) cualquier palabra del nombre
+// ("Gastos de cumpleaños" ← "cumpleaños"), y (3) por significado: si el nombre
+// se parece a un tema conocido (Entretenimiento, Regalos, Ropa, Mascotas…) se
+// usan las palabras de ese tema ("cine" → Entretenimiento).
+const CUSTOM_GROUPS = [
+  { names: ['entretenimiento', 'entertainment', 'ocio', 'diversion', 'salidas', 'salida', 'fun', 'cine', 'pasatiempo', 'hobbies', 'hobby'],
+    words: ['cine', 'pelicula', 'peliculas', 'concierto', 'teatro', 'obra de teatro', 'boliche', 'bowling', 'karaoke', 'antro', 'bar', 'fiesta', 'parque', 'museo', 'feria', 'juego', 'videojuego', 'steam', 'entradas', 'show', 'evento', 'balneario', 'club', 'palomitas', 'movie', 'movies', 'concert', 'game', 'games', 'party'] },
+  { names: ['regalo', 'regalos', 'cumpleanos', 'cumple', 'detalle', 'detalles', 'obsequio', 'aniversario', 'navidad', 'fiestas', 'gifts', 'gift', 'birthday', 'presents'],
+    words: ['regalo', 'obsequio', 'detalle', 'flores', 'ramo', 'peluche', 'cumple', 'cumpleanos', 'felicitacion', 'pastel', 'globos', 'aniversario', 'navidad', 'posada', 'gift', 'present', 'birthday', 'flowers'] },
+  { names: ['ropa', 'vestimenta', 'moda', 'clothes', 'clothing', 'calzado', 'outfit'],
+    words: ['ropa', 'camisa', 'camiseta', 'playera', 'pantalon', 'jeans', 'vestido', 'falda', 'zapatos', 'zapato', 'tenis', 'sandalias', 'botas', 'chamarra', 'sudadera', 'calcetines', 'calzones', 'bolsa', 'cinturon', 'zara', 'shein', 'h&m', 'pull and bear', 'shirt', 'pants', 'shoes', 'dress', 'jacket'] },
+  { names: ['mascota', 'mascotas', 'perro', 'perros', 'gato', 'gatos', 'pets', 'pet', 'dog', 'cat'],
+    words: ['croquetas', 'alimento para perro', 'alimento para gato', 'veterinario', 'arena para gato', 'arena', 'correa', 'perro', 'gato', 'mascota', 'vacuna', 'collar', 'pet food', 'vet'] },
+  { names: ['educacion', 'escuela', 'estudios', 'colegiatura', 'school', 'universidad', 'cursos', 'curso', 'education', 'libros', 'clases'],
+    words: ['colegiatura', 'escuela', 'libro', 'libros', 'curso', 'cursos', 'utiles', 'uniforme', 'inscripcion', 'universidad', 'clase', 'clases', 'papeleria', 'cuaderno', 'mochila', 'tuition', 'school', 'book', 'books', 'course'] },
+  { names: ['hogar', 'casa', 'home', 'mueble', 'muebles', 'decoracion', 'house'],
+    words: ['mueble', 'muebles', 'cocina', 'decoracion', 'sabanas', 'colchon', 'lampara', 'electrodomestico', 'licuadora', 'microondas', 'cortinas', 'almohada', 'toallas', 'sillon', 'sala', 'comedor', 'furniture', 'decor'] },
+  { names: ['tecnologia', 'electronica', 'tech', 'gadgets', 'computo', 'technology', 'electronics'],
+    words: ['celular', 'laptop', 'computadora', 'audifonos', 'cargador', 'mouse', 'teclado', 'memoria usb', 'cable usb', 'pantalla', 'tablet', 'bocina', 'monitor', 'camara', 'smartwatch', 'phone', 'charger', 'headphones', 'keyboard'] },
+  { names: ['viaje', 'viajes', 'vacaciones', 'travel', 'trip', 'turismo', 'paseo', 'paseos'],
+    words: ['hotel', 'vuelo', 'airbnb', 'hospedaje', 'maleta', 'tour', 'renta de auto', 'pasaporte', 'visa', 'crucero', 'hostal', 'flight', 'luggage', 'vacation'] },
+  { names: ['belleza', 'cuidado personal', 'personal', 'salon', 'spa', 'beauty', 'estetica', 'peluqueria', 'barberia', 'cuidado'],
+    words: ['corte de pelo', 'corte', 'barberia', 'peluqueria', 'salon', 'estetica', 'manicure', 'pedicure', 'unas', 'shampoo', 'jabon', 'desodorante', 'crema', 'maquillaje', 'perfume', 'spa', 'masaje', 'depilacion', 'haircut', 'makeup', 'nails'] },
+  { names: ['deporte', 'deportes', 'ejercicio', 'gym', 'gimnasio', 'fitness', 'sports', 'running'],
+    words: ['gimnasio', 'gym', 'balon', 'cancha', 'raqueta', 'entrenador', 'proteina', 'carrera', 'natacion', 'yoga', 'pesas', 'bicicleta', 'sports', 'workout'] },
+  { names: ['hijo', 'hijos', 'bebe', 'ninos', 'nino', 'kids', 'baby', 'familia', 'children'],
+    words: ['panales', 'panal', 'formula', 'juguete', 'juguetes', 'biberon', 'carriola', 'pediatra', 'escuela', 'toys', 'diapers', 'baby'] },
+]
+
+const NAME_STOP = new Set(['gastos', 'gasto', 'pagos', 'pago', 'otros', 'otro', 'varios', 'cosas', 'mis', 'del', 'las', 'los', 'para', 'con', 'and', 'the', 'for', 'my'])
+const stem = (w) => w.replace(/(es|s)$/, '')
+
+function matchCustomCategory(clean, v) {
+  const name = strip(v).replace(/[-_/]+/g, ' ').trim()
+  if (!name) return false
+  if (clean.includes(name)) return true
+  const phraseStems = new Set(clean.split(' ').map(stem))
+  const nameTokens = name.split(/[^a-z0-9&]+/).filter(t => t.length >= 3 && !NAME_STOP.has(t))
+  // 2) alguna palabra del nombre aparece en lo dictado
+  if (nameTokens.some(t => phraseStems.has(stem(t)))) return true
+  // 3) por significado: el nombre se parece a un tema conocido
+  const stems = nameTokens.map(stem)
+  for (const g of CUSTOM_GROUPS) {
+    if (g.names.some(n => stems.includes(stem(n)) || name.includes(n)) && g.words.some(w => hasWord(clean, w))) return true
+  }
+  // Nombres que significan comida o auto usan las palabras de esas categorías
+  const FOOD = ['comida', 'comidas', 'restaurante', 'restaurantes', 'super', 'despensa', 'antojos', 'bebidas', 'alimentos', 'food', 'groceries', 'snacks', 'cafe']
+  const CAR = ['carro', 'coche', 'auto', 'gasolina', 'vehiculo', 'moto', 'car']
+  const bag = (cat) => KEYWORDS.find(k => k[0] === cat)[1]
+  if (stems.some(t => FOOD.some(f => stem(f) === t)) && bag('Alimentación').some(w => hasWord(clean, w))) return true
+  if (stems.some(t => CAR.some(f => stem(f) === t)) && bag('Transporte').some(w => hasWord(clean, w))) return true
+  return false
+}
+
 export function guessCategory(norm, customCategories) {
   const clean = norm.replace(/[-_/]+/g, ' ').replace(/\s+/g, ' ')
   for (const c of customCategories || []) {
     const v = typeof c === 'string' ? c : c?.value
-    if (v && clean.includes(strip(v))) return v
+    if (v && matchCustomCategory(clean, v)) return v
   }
   for (const [cat, words] of KEYWORDS) {
     for (const w of words) {
-      // Plural simple: "taco" ↔ "tacos", "refresco" ↔ "refrescos"
-      if (new RegExp(`(^|\\s)${w}(s|es)?(\\s|$)`).test(clean)) return cat
+      if (hasWord(clean, w)) return cat
     }
   }
   return null
