@@ -38,6 +38,13 @@ function wordsToNumber(words) {
   return any ? total + current : null
 }
 
+// Palabras que, pegadas a un número, lo vuelven una cantidad ("3 litros",
+// "500 gramos") y no el monto. Sin esto "una coca de 3 litros a 68 pesos"
+// se guardaba como 3 (v0.9.685).
+const UNIT_AFTER = /^\s*(litros?|lts?|l|ml|mililitros?|kg|kilos?|kilogramos?|gr|gramos?|g|piezas?|pzas?|unidades?|botellas?|latas?|paquetes?|cajas?|metros?|m|cm|km|kilometros?|horas?|minutos?|dias?|semanas?|meses|mes|anos?|personas?|porciento|%|liters?|litres?|pounds?|lbs?|ounces?|oz|pieces?|bottles?|cans?|packs?|hours?|minutes?|days?|weeks?|months?|years?)\b/
+const PESOS_AFTER = /^\s*(pesos|mxn|dolares|usd|bucks|dollars)/
+const isUnitAfter = (rest) => UNIT_AFTER.test(strip(rest))
+
 // "250", "1,250.50", "1250", "$250"
 function findDigitAmount(text) {
   const re = /\$?\s?(\d{1,3}(?:,\d{3})+(?:\.\d+)?|\d+(?:[.,]\d+)?)/g
@@ -46,25 +53,36 @@ function findDigitAmount(text) {
   while ((m = re.exec(text))) {
     const raw = m[1]
     const value = parseFloat(raw.includes(',') && /,\d{3}/.test(raw) ? raw.replace(/,/g, '') : raw.replace(',', '.'))
-    if (!isNaN(value) && value > 0) found.push({ value, start: m.index, end: m.index + m[0].length, hint: /\$/.test(m[0]) })
+    if (!isNaN(value) && value > 0) {
+      const rest = text.slice(m.index + m[0].length)
+      found.push({ value, start: m.index, end: m.index + m[0].length, hint: /\$/.test(m[0]), unit: isUnitAfter(rest), pesos: PESOS_AFTER.test(strip(rest)) })
+    }
   }
   if (!found.length) return null
-  // Prefiere el que trae "$" o el que va pegado a "pesos"/"dolares".
-  const withHint = found.find(f => f.hint || /^\s*(pesos|mxn|dolares|usd|bucks|dollars)/.test(text.slice(f.end)))
-  return withHint || found[0]
+  // Prefiere el que trae "$" o va pegado a "pesos"/"dolares"; si no, el primero
+  // que no sea una cantidad con unidad. Si todos son cantidades, no hay monto.
+  return found.find(f => f.hint || f.pesos) || found.find(f => !f.unit) || null
 }
 
 function findWordAmount(norm) {
   const tokens = norm.split(/\s+/)
-  let best = null
+  const cands = []
   for (let i = 0; i < tokens.length; i++) {
     for (let j = tokens.length; j > i; j--) {
       const slice = tokens.slice(i, j)
       const n = wordsToNumber(slice)
-      if (n != null && n > 0 && (!best || slice.length > best.len)) best = { value: n, i, len: slice.length }
+      if (n == null || n <= 0) continue
+      const rest = tokens.slice(j).join(' ')
+      const pesos = PESOS_AFTER.test(' ' + rest)
+      // "una coca": un/una/uno solos son artículo, salvo que digan "pesos".
+      if (slice.length === 1 && n === 1 && !pesos) continue
+      if (isUnitAfter(rest) && !pesos) continue
+      cands.push({ value: n, i, len: slice.length, pesos })
     }
   }
-  return best
+  if (!cands.length) return null
+  cands.sort((a, b) => (b.pesos - a.pesos) || (b.len - a.len) || (a.i - b.i))
+  return cands[0]
 }
 
 const KEYWORDS = [

@@ -27,9 +27,19 @@ let stopCurrent = null
 export function stopListening() { if (stopCurrent) stopCurrent() }
 
 // Escucha UNA frase y devuelve el texto. Se puede cortar con stopListening().
-export async function listenOnce(lang = 'es-MX') {
+// Devuelve la lista de interpretaciones (la más probable primero): quien llama
+// puede quedarse con la primera que sí traiga un monto (v0.9.685).
+export async function listenAll(lang = 'es-MX') {
   return isNativeAndroid() ? listenNative(lang) : listenWeb(lang)
 }
+export async function listenOnce(lang = 'es-MX') {
+  return (await listenAll(lang))[0]
+}
+
+// Mensajes del reconocedor de Android (el plugin los manda tal cual en reject).
+const NATIVE_NO_SPEECH = /no match|no speech|didn'?t understand/i
+const NATIVE_TRANSIENT = /client side|busy|ongoing|audio recording/i
+const wait = (ms) => new Promise(r => setTimeout(r, ms))
 
 async function listenNative(lang) {
   const { SpeechRecognition } = await import('@capacitor-community/speech-recognition')
@@ -40,13 +50,33 @@ async function listenNative(lang) {
   if (perm.speechRecognition !== 'granted') perm = await SpeechRecognition.requestPermissions()
   if (perm.speechRecognition !== 'granted') throw voiceError('permission')
   stopCurrent = () => { SpeechRecognition.stop().catch(() => {}) }
+  // El 2º dictado seguido fallaba con "Client side error" / "busy": la sesión
+  // anterior aún no se liberaba. Se corta cualquier sesión viva antes de
+  // empezar y, si aun así falla por eso, se reintenta una vez (v0.9.685).
+  const attempt = async () => {
+    const res = await SpeechRecognition.start({ language: lang, maxResults: 5, prompt: '', partialResults: false, popup: false })
+    const list = (res?.matches || []).map(m => (m || '').trim()).filter(Boolean)
+    if (!list.length) throw voiceError('no-speech')
+    return list
+  }
   try {
-    const res = await SpeechRecognition.start({ language: lang, maxResults: 1, prompt: '', partialResults: false, popup: false })
-    const text = (res?.matches?.[0] || '').trim()
-    if (!text) throw voiceError('no-speech')
-    return text
+    try { await SpeechRecognition.stop() } catch { /* no había sesión */ }
+    await wait(150)
+    try {
+      return await attempt()
+    } catch (err) {
+      if (err?.code) throw err
+      const msg = String(err?.message || err || '')
+      if (NATIVE_NO_SPEECH.test(msg)) throw voiceError('no-speech', err)
+      if (!NATIVE_TRANSIENT.test(msg)) throw err
+      try { await SpeechRecognition.stop() } catch { /* idem */ }
+      await wait(500)
+      return await attempt()
+    }
   } catch (err) {
     if (err?.code) throw err
+    const msg = String(err?.message || err || '')
+    if (NATIVE_NO_SPEECH.test(msg)) throw voiceError('no-speech', err)
     console.error('[voiceInput] error nativo:', err)
     throw voiceError('failed', err)
   } finally {
@@ -62,12 +92,12 @@ function listenWeb(lang) {
     rec.lang = lang
     rec.interimResults = false
     rec.continuous = false
-    rec.maxAlternatives = 1
+    rec.maxAlternatives = 5
     let done = false
     const finish = (fn) => { if (done) return; done = true; stopCurrent = null; fn() }
     rec.onresult = (ev) => {
-      const text = (ev.results?.[0]?.[0]?.transcript || '').trim()
-      finish(() => (text ? resolve(text) : reject(voiceError('no-speech'))))
+      const list = Array.from(ev.results?.[0] || []).map(a => (a.transcript || '').trim()).filter(Boolean)
+      finish(() => (list.length ? resolve(list) : reject(voiceError('no-speech'))))
     }
     rec.onerror = (ev) => {
       const code = ev.error === 'not-allowed' || ev.error === 'service-not-allowed' ? 'permission'

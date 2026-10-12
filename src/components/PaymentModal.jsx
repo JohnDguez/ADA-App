@@ -27,7 +27,7 @@ import styles from './PaymentModal.module.css'
 import { markBackHandled, wasBackHandled } from '../lib/backNav'
 import { AddCardModal } from './AddCardModal'
 import { Microphone } from '@phosphor-icons/react/dist/csr/Microphone'
-import { isVoiceSupported, listenOnce, stopListening } from '../lib/voiceInput'
+import { isVoiceSupported, listenAll, stopListening } from '../lib/voiceInput'
 import { parseVoicePayment } from '../lib/parseVoicePayment'
 import { isTicketScanSupported, scanTicketText } from '../lib/ticketScan'
 import { parseTicketText } from '../lib/parseTicket'
@@ -398,9 +398,14 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onSaveC
     // 'retry' para que quien dicta por primera vez lea los ejemplos con calma.
     let retry = false
     try {
-      const text = await listenOnce(voiceLang === 'en' ? 'en-US' : 'es-MX')
+      const heard = await listenAll(voiceLang === 'en' ? 'en-US' : 'es-MX')
       if (voiceCancelRef.current) return
-      const r = parseVoicePayment(text, { customCategories })
+      // Entre las interpretaciones del reconocedor se usa la primera que sí
+      // trae un monto; si ninguna lo trae, la más probable.
+      const parsed = heard.map(h => ({ h, p: parseVoicePayment(h, { customCategories }) }))
+      const pick = parsed.find(x => x.p && x.p.amount != null) || parsed[0]
+      const text = pick.h
+      const r = pick.p
       if (!r) { retry = true; return }
       // Tipo de pago detectado por la frase (v0.9.606): "cada 2 meses" →
       // Recurrente; "a 12 meses" → Parcialidades; si no, Pago único.
