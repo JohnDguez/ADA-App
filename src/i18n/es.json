@@ -1880,5 +1880,17 @@
     "spaceHint": "Todos los miembros verán los montos de este espacio en esta moneda. Solo el dueño puede cambiarla. Tu moneda personal no cambia.",
     "spaceRequired": "Elige la moneda del espacio",
     "guestHint": "La define el dueño del espacio"
+  },
+  "pushReminder": {
+    "title": "No te dejes pasar un pago",
+    "description": "Activa las notificaciones y LunaPay te avisa en el momento justo.",
+    "dueTitle": "Pagos que vencen hoy o mañana",
+    "dueSub": "Con el nombre y el monto, a la hora que elijas.",
+    "spaceTitle": "Movimientos de tu espacio compartido",
+    "spaceSub": "Cuando alguien agrega o marca un pago.",
+    "nopromoTitle": "Nada de promociones",
+    "nopromoSub": "Solo avisos de tus propios pagos.",
+    "activate": "Activar notificaciones",
+    "later": "Ahora no"
   }
 }

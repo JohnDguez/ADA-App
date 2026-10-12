@@ -1,0 +1,14 @@
+.list { margin: 0 0 20px; padding: 0; list-style: none; }
+.item {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 10px 0;
+  border-top: 1px solid var(--border);
+  font-size: 14px;
+  line-height: 1.4;
+  color: var(--text); /* Regla 17: sin muted en el texto */
+}
+.item svg { flex: none; margin-top: 2px; color: var(--accent); }
+.itemTitle { display: block; font-weight: 600; }
+.itemSub { display: block; font-size: 13px; }

@@ -1880,5 +1880,17 @@
     "spaceHint": "All members will see this space's amounts in this currency. Only the owner can change it. Your personal currency stays the same.",
     "spaceRequired": "Choose the space currency",
     "guestHint": "Set by the space owner"
+  },
+  "pushReminder": {
+    "title": "Don't miss a payment",
+    "description": "Turn on notifications and LunaPay will remind you at the right time.",
+    "dueTitle": "Payments due today or tomorrow",
+    "dueSub": "With the name and amount, at the time you choose.",
+    "spaceTitle": "Shared space activity",
+    "spaceSub": "When someone adds or marks a payment.",
+    "nopromoTitle": "No promotions",
+    "nopromoSub": "Only alerts about your own payments.",
+    "activate": "Turn on notifications",
+    "later": "Not now"
   }
 }
