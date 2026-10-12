@@ -1838,6 +1838,7 @@ export default function App() {
         open={!!changeMethodPayment}
         payment={changeMethodPayment}
         methods={paymentMethods.methods}
+        paymentMethods={paymentMethods}
         onSave={(payment, fields) => {
           setChangeMethodPayment(null)
           updatePayment(payment.id, fields).then(({ error, reverted, busy }) => {
@@ -1852,6 +1853,7 @@ export default function App() {
         open={!!sharedPay}
         payment={sharedPay?.modalPayment || null}
         methods={paymentMethods.methods}
+        paymentMethods={paymentMethods}
         title={t('paymentMethod.payTitle')}
         confirmLabel={t('paymentMethod.payConfirm')}
         onSave={(payment, fields) => {

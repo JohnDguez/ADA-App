@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import { useTranslation } from 'react-i18next'
 import { PaymentMethodField } from './PaymentMethodField'
+import { AddCardModal } from './AddCardModal'
 import styles from './ChangeMethodModal.module.css'
 import { useScrollLock } from '../lib/scrollLock'
 
@@ -11,10 +12,11 @@ import { useScrollLock } from '../lib/scrollLock'
 // animadas; ANIM_MS debe coincidir con el CSS (Regla 30).
 const ANIM_MS = 320
 
-export function ChangeMethodModal({ open, payment, methods, onSave, onClose, title, confirmLabel }) {
+export function ChangeMethodModal({ open, payment, methods, onSave, onClose, title, confirmLabel, paymentMethods = null }) {
   useScrollLock(open)
   const { t } = useTranslation()
   const [methodId, setMethodId] = useState(null)
+  const [cardFormOpen, setCardFormOpen] = useState(false)
   const [closing, setClosing] = useState(false)
   const [entering, setEntering] = useState(false)
   const wasOpenRef = useRef(open)
@@ -52,18 +54,23 @@ export function ChangeMethodModal({ open, payment, methods, onSave, onClose, tit
   }
 
   return createPortal(
+    <>
     <div onClick={e => e.target === e.currentTarget && onClose()} className={`${styles.overlay} ${closing ? styles.overlayClosing : ''}`}>
       <div className={`${styles.modal} ${entering ? styles.modalEntering : ''} ${closing ? styles.modalClosing : ''}`}>
         <div className={styles.handle} />
         <div className={styles.title}>{title || t('paymentMethod.changeTitle')}</div>
         <div className={styles.subtitle}>{payment.name}</div>
         <div className={styles.field}>
-          <PaymentMethodField methods={methods} value={methodId} onChange={setMethodId} />
+          <PaymentMethodField methods={methods} value={methodId} onChange={setMethodId} onAddCard={paymentMethods ? () => setCardFormOpen(true) : null} />
         </div>
         <button type="button" onClick={handleSave} className="btn-primary">{confirmLabel || t('buttons.save')}</button>
         <button type="button" onClick={onClose} className={`btn-ghost ${styles.cancel}`}>{t('buttons.cancel')}</button>
       </div>
-    </div>,
+    </div>
+    {paymentMethods && (
+      <AddCardModal open={cardFormOpen} onClose={() => setCardFormOpen(false)} paymentMethods={paymentMethods} onAdded={setMethodId} />
+    )}
+    </>,
     document.body
   )
 }
