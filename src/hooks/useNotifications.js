@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '../lib/supabase'
+import { App as CapacitorApp } from '@capacitor/app'
 
 export function useNotifications(userId) {
   const [notifications, setNotifications] = useState([])
@@ -22,6 +23,28 @@ export function useNotifications(userId) {
   }, [userId])
 
   useEffect(() => { fetchNotifications() }, [fetchNotifications])
+
+  // Las notificaciones las inserta el servidor (cron / cambios de espacio):
+  // sin esto solo se leían al abrir la app y, con la app nativa viva en
+  // segundo plano, no aparecían aunque el push sí llegara. Se actualiza al
+  // volver a primer plano y en vivo por Realtime (si la tabla lo tiene activo).
+  useEffect(() => {
+    if (!userId) return
+    const onVisible = () => { if (document.visibilityState === 'visible') fetchNotifications() }
+    document.addEventListener('visibilitychange', onVisible)
+    window.addEventListener('focus', fetchNotifications)
+    const appSub = CapacitorApp.addListener('appStateChange', ({ isActive }) => { if (isActive) fetchNotifications() })
+    const channel = supabase
+      .channel(`notifications-${userId}`)
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'notifications', filter: `user_id=eq.${userId}` }, () => { fetchNotifications() })
+      .subscribe()
+    return () => {
+      document.removeEventListener('visibilitychange', onVisible)
+      window.removeEventListener('focus', fetchNotifications)
+      appSub.then(h => h.remove()).catch(() => {})
+      supabase.removeChannel(channel)
+    }
+  }, [userId, fetchNotifications])
 
   async function markAsRead(id) {
     await supabase.from('notifications').update({ read: true }).eq('id', id)
