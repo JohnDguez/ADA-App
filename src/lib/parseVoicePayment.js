@@ -85,28 +85,46 @@ function findWordAmount(norm) {
   return cands[0]
 }
 
+// Palabras que identifican la categoría de lo que se compró/pagó. Se busca
+// por palabra completa (con plural: "refresco/refrescos", "taco/tacos") en
+// lo dictado o escaneado, sin acentos ni guiones ("Coca-Cola" = "coca cola").
+// Gana la PRIMERA categoría que coincida, así que el orden importa: las frases
+// específicas ("agua embotellada", "uber eats") van antes que la palabra suelta
+// ("agua", "uber") de otra categoría. Si nada coincide, queda "Otros".
 const KEYWORDS = [
-  ['Alimentación', ['super', 'supermercado', 'despensa', 'comida', 'restaurante', 'tacos', 'taco', 'cafe', 'cafeteria', 'desayuno', 'cena', 'almuerzo', 'pizza', 'hamburguesa', 'uber eats', 'rappi', 'didi food', 'walmart', 'soriana', 'oxxo', 'costco', 'groceries', 'grocery', 'restaurant', 'lunch', 'dinner', 'breakfast', 'coffee']],
-  ['Transporte', ['gasolina', 'gasolinera', 'pemex', 'gas del carro', 'uber', 'didi', 'taxi', 'camion', 'autobus', 'estacionamiento', 'caseta', 'pasaje', 'metro', 'parking', 'fuel', 'gas station', 'bus', 'toll']],
-  ['Suscripciones', ['netflix', 'spotify', 'disney', 'hbo', 'max', 'amazon prime', 'prime video', 'youtube', 'icloud', 'suscripcion', 'subscription', 'apple music', 'chatgpt']],
-  ['Servicios', ['luz', 'agua', 'gas', 'internet', 'telefono', 'celular', 'cfe', 'telmex', 'izzi', 'totalplay', 'electricity', 'water', 'phone', 'utilities']],
-  ['Renta', ['renta', 'alquiler', 'rent']],
-  ['Seguros', ['seguro', 'insurance']],
-  ['Medicina', ['farmacia', 'medicina', 'medicamento', 'pastillas', 'pharmacy', 'medicine']],
-  ['Doctor', ['doctor', 'dentista', 'consulta', 'medico', 'hospital', 'dentist']],
-  ['Mantenimiento', ['mecanico', 'reparacion', 'plomero', 'mantenimiento', 'taller', 'repair', 'maintenance']],
-  ['Créditos', ['tarjeta', 'credito', 'prestamo', 'abono', 'hipoteca', 'loan', 'credit card', 'mortgage']],
-  ['Ahorro', ['ahorro', 'savings']],
+  ['Alimentación', [
+    // bebidas
+    'coca', 'coca cola', 'pepsi', 'sprite', 'fanta', 'refresco', 'soda', 'jugo', 'jumex', 'cerveza', 'chela', 'vino', 'tequila', 'whisky', 'vodka', 'ron', 'licor', 'bebida', 'leche', 'yogurt', 'cafe', 'capuchino', 'latte', 'starbucks', 'malteada', 'licuado', 'smoothie', 'gatorade', 'red bull', 'monster', 'electrolit', 'agua embotellada', 'agua purificada', 'agua de garrafon', 'garrafon', 'botella de agua', 'agua mineral', 'topochico',
+    // comida preparada y antojos
+    'comida', 'restaurante', 'fonda', 'taqueria', 'tacos', 'taco', 'torta', 'tortas', 'hamburguesa', 'hot dog', 'hotdog', 'pizza', 'sushi', 'pollo', 'carne', 'asada', 'carnitas', 'birria', 'mariscos', 'ceviche', 'aguachile', 'tamales', 'pozole', 'quesadilla', 'burrito', 'elote', 'esquites', 'helado', 'nieve', 'paleta', 'pastel', 'pan', 'dona', 'galletas', 'chocolate', 'dulces', 'chicles', 'papas', 'sabritas', 'frituras', 'botana', 'cacahuates', 'palomitas', 'snack', 'desayuno', 'almuerzo', 'comida corrida', 'cena', 'cafeteria', 'panaderia', 'carniceria', 'tortilleria', 'fruteria', 'verduleria', 'tienda', 'abarrotes', 'miscelanea',
+    // despensa
+    'super', 'supermercado', 'despensa', 'mandado', 'walmart', 'soriana', 'oxxo', 'seven eleven', '7 eleven', 'costco', 'sams', 'chedraui', 'heb', 'aurrera', 'bodega aurrera', 'la comer', 'city club', 'fruta', 'frutas', 'verdura', 'verduras', 'huevo', 'huevos', 'arroz', 'frijol', 'frijoles', 'azucar', 'harina', 'aceite de cocina', 'cereal', 'atun', 'sopa', 'jamon', 'queso', 'salchicha', 'mantequilla', 'tortillas', 'refrescos',
+    // apps y cadenas
+    'uber eats', 'rappi', 'didi food', 'mcdonalds', 'burger king', 'kfc', 'dominos', 'little caesars', 'subway', 'carls jr', 'vips', 'sanborns', 'cinepolis', 'cinemex',
+    'groceries', 'grocery', 'restaurant', 'lunch', 'dinner', 'breakfast', 'coffee', 'soda', 'drink', 'beer', 'snacks', 'food', 'burger', 'fries', 'ice cream', 'milk', 'bread', 'juice', 'water bottle',
+  ]],
+  ['Transporte', ['gasolina', 'gasolinera', 'pemex', 'diesel', 'magna', 'gas del carro', 'uber', 'didi', 'cabify', 'indriver', 'taxi', 'camion', 'autobus', 'estacionamiento', 'caseta', 'peaje', 'pasaje', 'metro', 'metrobus', 'tarjeta de transporte', 'lavado de carro', 'autolavado', 'llanta', 'llantas', 'aceite del carro', 'cambio de aceite', 'refaccion', 'refacciones', 'bateria', 'verificacion', 'tenencia', 'licencia de manejo', 'multa', 'grua', 'vuelo', 'avion', 'camioneta', 'bicicleta', 'parking', 'fuel', 'gas station', 'bus', 'toll', 'car wash', 'oil change', 'tires', 'flight']],
+  ['Suscripciones', ['netflix', 'spotify', 'disney', 'hbo', 'max', 'amazon prime', 'prime video', 'youtube', 'icloud', 'google one', 'suscripcion', 'subscription', 'apple music', 'apple tv', 'paramount', 'crunchyroll', 'twitch', 'xbox', 'game pass', 'playstation plus', 'ps plus', 'nintendo online', 'chatgpt', 'claude', 'canva', 'adobe', 'dropbox', 'notion', 'membresia', 'gimnasio', 'gym', 'membership']],
+  ['Servicios', ['luz', 'agua', 'gas', 'gas lp', 'tanque de gas', 'internet', 'wifi', 'telefono', 'celular', 'recarga', 'saldo', 'telcel', 'att', 'movistar', 'cfe', 'telmex', 'izzi', 'totalplay', 'megacable', 'axtel', 'dish', 'sky', 'basura', 'predial', 'recibo', 'electricity', 'water', 'phone', 'utilities', 'electric bill']],
+  ['Renta', ['renta', 'alquiler', 'mantenimiento del edificio', 'rent']],
+  ['Seguros', ['seguro', 'seguros', 'poliza', 'insurance']],
+  ['Medicina', ['farmacia', 'farmacias', 'similares', 'benavides', 'guadalajara farmacia', 'medicina', 'medicinas', 'medicamento', 'pastillas', 'pastilla', 'jarabe', 'paracetamol', 'ibuprofeno', 'aspirina', 'vitaminas', 'vitamina', 'suplemento', 'proteina', 'curitas', 'alcohol', 'tapabocas', 'cubrebocas', 'termometro', 'pharmacy', 'medicine', 'pills', 'vitamins']],
+  ['Doctor', ['doctor', 'doctora', 'dentista', 'consulta', 'medico', 'hospital', 'clinica', 'laboratorio', 'analisis', 'estudios', 'radiografia', 'ultrasonido', 'terapia', 'psicologo', 'nutriologo', 'optica', 'lentes', 'oculista', 'veterinario', 'dentist', 'therapy', 'checkup', 'lab test']],
+  ['Mantenimiento', ['mecanico', 'reparacion', 'plomero', 'electricista', 'herrero', 'carpintero', 'pintura', 'pintor', 'mantenimiento', 'taller', 'ferreteria', 'herramienta', 'herramientas', 'tornillos', 'clavos', 'cable', 'foco', 'focos', 'cemento', 'albanil', 'jardinero', 'fumigacion', 'limpieza', 'detergente', 'cloro', 'escoba', 'repair', 'maintenance', 'plumber', 'hardware']],
+  ['Créditos', ['tarjeta', 'credito', 'prestamo', 'abono', 'hipoteca', 'financiamiento', 'mensualidad del carro', 'coppel', 'elektra', 'liverpool', 'mercado pago', 'nu', 'loan', 'credit card', 'mortgage']],
+  ['Ahorro', ['ahorro', 'ahorros', 'fondo de emergencia', 'inversion', 'cetes', 'savings']],
 ]
 
 export function guessCategory(norm, customCategories) {
+  const clean = norm.replace(/[-_/]+/g, ' ').replace(/\s+/g, ' ')
   for (const c of customCategories || []) {
     const v = typeof c === 'string' ? c : c?.value
-    if (v && norm.includes(strip(v))) return v
+    if (v && clean.includes(strip(v))) return v
   }
   for (const [cat, words] of KEYWORDS) {
     for (const w of words) {
-      if (new RegExp(`(^|\\s)${w}(\\s|$)`).test(norm)) return cat
+      // Plural simple: "taco" ↔ "tacos", "refresco" ↔ "refrescos"
+      if (new RegExp(`(^|\\s)${w}(s|es)?(\\s|$)`).test(clean)) return cat
     }
   }
   return null
