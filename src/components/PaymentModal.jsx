@@ -505,10 +505,13 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onSaveC
   const showDataStep = isFlat || !!initial || step === 1              // nombre + categoría
   const moreVisible  = !!initial || moreOpen
   const moreActive   = (methodId ? 1 : 0) + (mode === 'single' && isVariable ? 1 : 0) + (alreadyPaid ? 1 : 0)
+  // Espacio compartido: no hay método de pago ni estado "ya pagado"; si solo
+  // queda el interruptor de variable, se muestra directo sin "Más opciones".
+  const hasMoreOptions = methodsAvailable || (mode === 'single' && !isSharedSpace)
   const moreSummary  = [
-    selectedCard ? cardLabel(selectedCard, t) : t('paymentMethod.cash'),
+    methodsAvailable ? (selectedCard ? cardLabel(selectedCard, t) : t('paymentMethod.cash')) : null,
     mode === 'single' ? t(isVariable ? 'paymentModal.more.variable' : 'paymentModal.more.fixed') : null,
-    mode === 'single' ? t(alreadyPaid ? 'paymentModal.more.paid' : 'paymentModal.more.unpaid') : null,
+    mode === 'single' && !isSharedSpace ? t(alreadyPaid ? 'paymentModal.more.paid' : 'paymentModal.more.unpaid') : null,
   ].filter(Boolean).join(' · ')
   function goNextStep() {
     if (!name.trim()) { setError(t('paymentModal.nameError')); return }
@@ -920,7 +923,7 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onSaveC
           )}
 
           {/* Más opciones (Único / Recurrente) */}
-          {isFlat && !initial && (
+          {isFlat && !initial && hasMoreOptions && (
             <button type="button" onClick={() => setMoreOpen(o => !o)} className={styles.moreRow}>
               {moreOpen ? <CaretUp size={16} /> : <CaretDown size={16} />}
               <span>{moreOpen ? t('paymentModal.more.less') : t('paymentModal.more.title')}</span>
@@ -928,7 +931,12 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onSaveC
               {!moreOpen && <span className={styles.moreSummary}>{moreSummary}</span>}
             </button>
           )}
-          <Collapse open={isFlat && moreVisible}>
+          {isFlat && !hasMoreOptions && mode === 'single' && (
+            <div data-coachmark="modal-variable-toggle">
+              <Toggle label={t('paymentModal.variableToggleLabel')} sub={t('paymentModal.variableToggleSub')} value={isVariable} onChange={setIsVariable} />
+            </div>
+          )}
+          <Collapse open={isFlat && hasMoreOptions && moreVisible}>
             <>
               {methodsAvailable && (
                 <div className={styles.fieldGroup}>
