@@ -1677,6 +1677,7 @@ export default function App() {
           onStartAdd={startAdd}
           onGoTab={changeTab}
           onGoSettingsSection={goToSettingsSection}
+          onOpenAddMenu={openAddMenu}
           slideClass={`page-slide-${slideDir}`}
           onMarkPaid={handleMarkPaid}
           onRequestVariableAmount={requestVariableAmount}

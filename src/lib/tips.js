@@ -1,17 +1,17 @@
 // Consejos de Inicio (v0.9.688). Se muestran de uno en uno cuando el periodo no
 // tiene pagos pendientes. `kind`: 'reminder' (algo que se olvida) o 'feature'
-// (función poco conocida). `action`: null | 'add' | 'voice' | 'scan' | 'tab:<pestaña>' | 'settings:<sección>' — lo que
+// (función poco conocida). `action`: null | 'add' | 'addmenu' (menú del + con voz/escáner) | 'voice' | 'scan' | 'tab:<pestaña>' | 'settings:<sección>' — lo que
 // hace el enlace de abajo; los textos viven en i18n (`tips.<id>`).
 import { isVoiceSupported } from './voiceInput'
 import { isTicketScanSupported } from './ticketScan'
 
 export const TIPS = [
-  { id: 'remToday',     kind: 'reminder', action: 'add' },
-  { id: 'remFood',      kind: 'reminder', action: 'add' },
+  { id: 'remToday', kind: 'reminder', action: 'addmenu' },
+  { id: 'remFood', kind: 'reminder', action: 'addmenu' },
   { id: 'remChanged',   kind: 'reminder', action: 'tab:recurrents' },
   { id: 'remExtra',     kind: 'reminder', action: null },
   { id: 'remNext',      kind: 'reminder', action: null },
-  { id: 'remCash',      kind: 'reminder', action: 'add' },
+  { id: 'remCash', kind: 'reminder', action: 'addmenu' },
   { id: 'voice',        kind: 'feature',  action: 'voice' },
   { id: 'scan',         kind: 'feature',  action: 'scan' },
   { id: 'variable',     kind: 'feature',  action: null },
