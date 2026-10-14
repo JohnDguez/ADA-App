@@ -87,6 +87,48 @@ function buildSections(notifications) {
   })
 }
 
+// Dentro de un grupo, los avisos del MISMO pago (p. ej. "agregó un pago" +
+// "registró un abono") se juntan en una sola línea (v0.9.697): nombre del pago,
+// monto, y debajo lo que pasó sin repetir el nombre de la persona. Los avisos
+// sin pago (alguien se unió, cambió permisos…) son una línea cada uno.
+const CAP = s => (s ? s.charAt(0).toUpperCase() + s.slice(1) : s)
+function eventText(n) {
+  let tt = n.title || ''
+  if (n.actor_name && tt.startsWith(n.actor_name)) tt = tt.slice(n.actor_name.length).trim()
+  return CAP(tt)
+}
+function isAddedEvent(n) { return /(agregó|added)(?![a-z])/i.test(n.title || '') }
+function buildGroupLines(items) {
+  const lines = []
+  const byPay = {}
+  for (const n of items) {
+    if (n.payment_id) {
+      if (byPay[n.payment_id]) { byPay[n.payment_id].items.push(n); continue }
+      byPay[n.payment_id] = { key: `p-${n.payment_id}`, items: [n] }
+      lines.push(byPay[n.payment_id])
+    } else {
+      lines.push({ key: n.id, items: [n] })
+    }
+  }
+  return lines.map(l => {
+    const bodies = l.items.map(n => n.body || '')
+    const withAmount = bodies.find(b => /—\s*\$[\d.,]+\s*$/.test(b))
+    const src = withAmount || bodies[0] || ''
+    const parts = src.split(' — ')
+    const hasName = parts.length > 1
+    const amountMatch = withAmount ? withAmount.match(/\$[\d.,]+\s*$/) : null
+    const subs = !l.items[0].payment_id ? [] : l.items.filter(n => !isAddedEvent(n)).map(eventText).filter(Boolean)
+    return {
+      ...l,
+      name: hasName ? parts[0] : (l.items.length === 1 && !l.items[0].payment_id ? eventText(l.items[0]) : src),
+      amount: amountMatch ? amountMatch[0].trim() : '',
+      sub: [...new Set(subs)].join(' · '),
+      unread: l.items.some(n => !n.read),
+      first: l.items[0],
+    }
+  })
+}
+
 // Fila que se borra al deslizarla hacia la izquierda (celular). En escritorio
 // el borrado es el botón X que aparece al pasar el mouse.
 function SwipeRow({ onDelete, children }) {
@@ -154,14 +196,12 @@ export function NotificationsPanel({ open, onClose, notifications, unreadCount, 
             }
           </div>
           <div className={styles.notifContent}>
-            <div className={`${styles.notifTitle} ${!n.read ? styles.notifTitleUnread : ''}`}>{n.title}</div>
-            <div className={styles.notifBody}>{n.body}</div>
-            <div className={styles.notifMeta}>
-              <span>{timeAgo(n.created_at)}</span>
-              {n.space_name && (
-                <span className={styles.notifSpaceName}>· {n.space_name}</span>
-              )}
+            <div className={styles.notifTop}>
+              <div className={`${styles.notifTitle} ${!n.read ? styles.notifTitleUnread : ''}`}>{n.title}</div>
+              <span className={styles.notifTime}>{timeAgo(n.created_at)}</span>
             </div>
+            <div className={styles.notifBody}>{n.body}</div>
+            {n.space_name && <div className={styles.notifMeta}><span className={styles.notifSpaceName}>{n.space_name}</span></div>}
           </div>
           <div className={styles.notifActions}>
             {!n.read && <div className={styles.unreadDot} />}
@@ -179,10 +219,18 @@ export function NotificationsPanel({ open, onClose, notifications, unreadCount, 
     )
   }
 
+  // Tocar una línea la marca como vista (todos sus avisos) y lleva al pago.
+  function goLine(line) {
+    line.items.forEach(n => { if (!n.read) onMarkAsRead(n.id) })
+    onNavigate(line.first); onClose()
+  }
+
   function renderGroup(g) {
     const first = g.items[0]
     const expanded = !!openGroups[g.key]
     const anyUnread = g.items.some(n => !n.read)
+    const lines = buildGroupLines(g.items)
+    const newCount = lines.filter(l => l.unread).length
     return (
       <div key={g.key}>
         <div
@@ -193,28 +241,34 @@ export function NotificationsPanel({ open, onClose, notifications, unreadCount, 
             <ActorAvatar name={first.actor_name} avatarUrl={first.actor_avatar_url} />
           </div>
           <div className={styles.notifContent}>
-            <div className={`${styles.notifTitle} ${anyUnread ? styles.notifTitleUnread : ''}`}>{first.actor_name}</div>
-            <div className={styles.notifBody}>
-              {t('notificationsPanel.groupMovements', { count: g.items.length, space: first.space_name || '' })}
+            <div className={styles.notifTop}>
+              <div className={`${styles.notifTitle} ${anyUnread ? styles.notifTitleUnread : ''}`}>{first.actor_name}</div>
+              <span className={styles.notifTime}>{timeAgo(first.created_at)}</span>
             </div>
-            <div className={styles.notifMeta}><span>{timeAgo(first.created_at)}</span></div>
+            <div className={styles.notifBody}>
+              {t('notificationsPanel.groupMovements', { count: lines.length, space: first.space_name || '' })}
+              {newCount > 0 && ` · ${t('notificationsPanel.groupNew', { count: newCount })}`}
+            </div>
             {expanded && (
-              <div className={styles.groupItems}>
-                {g.items.map(n => (
+              <div className={`${styles.groupBox} ${anyUnread ? styles.groupBoxOnUnread : ''}`}>
+                {lines.map(l => (
                   <div
-                    key={n.id}
-                    className={styles.groupLine}
-                    onClick={e => { e.stopPropagation(); go(n) }}
+                    key={l.key}
+                    className={`${styles.groupLine} ${l.unread ? styles.groupLineUnread : ''}`}
+                    onClick={e => { e.stopPropagation(); goLine(l) }}
                   >
-                    <span className={n.read ? '' : styles.groupLineUnread}>{n.body}</span>
-                    <em>{timeAgo(n.created_at)}</em>
+                    <span className={styles.groupDotSlot}>{l.unread && <span className={styles.unreadDot} />}</span>
+                    <div className={styles.groupName}>
+                      {l.name}
+                      {l.sub && <small>{l.sub}</small>}
+                    </div>
+                    {l.amount && <span className={styles.groupAmount}>{l.amount}</span>}
                   </div>
                 ))}
               </div>
             )}
           </div>
           <div className={styles.notifActions}>
-            {anyUnread && <div className={styles.unreadDot} />}
             {expanded
               ? <ChevronDown size={16} color="var(--text)" className={styles.chevron} />
               : <ChevronRight size={16} color="var(--text)" className={styles.chevron} />}

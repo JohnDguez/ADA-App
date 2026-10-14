@@ -986,7 +986,9 @@
     "section_yesterday": "Ayer",
     "section_earlier": "Anteriores",
     "groupMovements_one": "{{count}} movimiento en {{space}}",
-    "groupMovements_other": "{{count}} movimientos en {{space}}"
+    "groupMovements_other": "{{count}} movimientos en {{space}}",
+    "groupNew_one": "{{count}} nuevo",
+    "groupNew_other": "{{count}} nuevos"
   },
   "frequencyPicker": {
     "fewerOptions": "Menos opciones",

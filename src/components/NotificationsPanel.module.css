@@ -96,7 +96,7 @@
   align-items: flex-start;
   gap: 10px;
   padding: 12px 16px;
-  border-bottom: 0.5px solid var(--bg);
+  border-bottom: 0.5px solid var(--border);
   cursor: pointer;
   transition: background .15s;
 }
@@ -220,19 +220,29 @@
 @media (hover: hover) {
   .deleteButton { display: flex; }
 }
-.groupItems {
+.notifTop { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.notifTop .notifTitle { margin-bottom: 2px; }
+.notifTime { font-size: 11px; color: var(--text); flex-shrink: 0; }
+.groupBox {
   margin-top: 8px;
-  border-left: 2px solid var(--border-mid);
-  padding-left: 10px;
+  background: var(--bg);
+  border-radius: 10px;
+  overflow: hidden;
 }
+.groupBoxOnUnread { background: var(--surface); }
 .groupLine {
   display: flex;
-  justify-content: space-between;
+  align-items: center;
   gap: 8px;
-  font-size: 12px;
+  padding: 9px 10px;
+  border-bottom: 0.5px solid var(--border);
+  font-size: 12.5px;
   color: var(--text);
-  padding: 5px 0;
   cursor: pointer;
 }
-.groupLine em { font-style: normal; font-size: 10px; flex-shrink: 0; }
-.groupLineUnread { font-weight: 600; }
+.groupLine:last-child { border-bottom: none; }
+.groupDotSlot { width: 7px; flex-shrink: 0; display: flex; }
+.groupName { flex: 1; min-width: 0; }
+.groupName small { display: block; font-size: 10.5px; margin-top: 1px; }
+.groupAmount { font-weight: 600; flex-shrink: 0; }
+.groupLineUnread .groupName { font-weight: 600; }
