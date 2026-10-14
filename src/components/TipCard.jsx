@@ -9,7 +9,9 @@ import styles from './TipCard.module.css'
 // app, y con "Siguiente". No cambia mientras el dedo/cursor está encima.
 const ROTATE_MS = 2 * 60 * 1000
 
-export function TipCard({ onAction }) {
+// `compact` (v0.9.696): sin título y con la acción subrayada; se usa cuando hay
+// pagos vencidos arriba, para que el consejo no le quite protagonismo al pago.
+export function TipCard({ onAction, compact = false }) {
   const { t } = useTranslation()
   const [tip, setTip] = useState(() => nextTip())
   const [tick, setTick] = useState(0)
@@ -27,7 +29,7 @@ export function TipCard({ onAction }) {
   const actionLabel = tip.action ? t(`tips.${tip.id}.action`, { defaultValue: '' }) : ''
   const hold = (v) => { holdRef.current = v }
   return (
-    <div className={styles.tip} onTouchStart={() => hold(true)} onTouchEnd={() => hold(false)} onTouchCancel={() => hold(false)}
+    <div className={`${styles.tip} ${compact ? styles.compact : ''}`} onTouchStart={() => hold(true)} onTouchEnd={() => hold(false)} onTouchCancel={() => hold(false)}
       onMouseEnter={() => hold(true)} onMouseLeave={() => hold(false)}>
       <div key={tick} className={styles.fade}>
         <div className={styles.label}>
@@ -36,11 +38,13 @@ export function TipCard({ onAction }) {
             {t('tips.next')} <ChevronRight size={14} style={{ verticalAlign: '-2px' }} />
           </button>
         </div>
-        <p className={styles.title}>{t(`tips.${tip.id}.title`)}</p>
+        {!compact && <p className={styles.title}>{t(`tips.${tip.id}.title`)}</p>}
         <p className={styles.text}>{t(`tips.${tip.id}.text`)}</p>
         {actionLabel && (
           <div className={styles.foot}>
-            <button type="button" className={styles.action} onClick={() => onAction?.(tip.action)}>{actionLabel}</button>
+            <button type="button" className={styles.action} onClick={() => onAction?.(tip.action)}>
+              {actionLabel}{compact && <ChevronRight size={14} style={{ verticalAlign: '-2px' }} />}
+            </button>
           </div>
         )}
       </div>

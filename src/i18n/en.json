@@ -1954,7 +1954,7 @@
     },
     "shared": {
       "title": "Share expenses",
-      "text": "Creating a Shared Space is Premium; joining one with a code is free. See the same payments with your partner or family.",
+      "text": "Creating a Shared Space is Premium; joining one with a code is free.",
       "action": "Go to Shared Space"
     },
     "export": {
@@ -1964,7 +1964,7 @@
     },
     "installments": {
       "title": "Purchases in installments",
-      "text": "Log a card purchase in installments and LunaPay shows what you pay each month and how many payments remain.",
+      "text": "Log a purchase in installments and see what you pay each month and how many payments remain.",
       "action": "Log installment purchase"
     }
   }

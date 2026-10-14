@@ -1954,7 +1954,7 @@
     },
     "shared": {
       "title": "Comparte gastos",
-      "text": "Crear un Espacio Compartido es Premium; unirte a uno con un código es gratis. Compartan los mismos pagos con tu pareja o familia.",
+      "text": "Crear un Espacio Compartido es Premium; unirte con un código es gratis.",
       "action": "Ir a Espacio Compartido"
     },
     "export": {
@@ -1964,7 +1964,7 @@
     },
     "installments": {
       "title": "Compras a meses",
-      "text": "Registra una compra con tu tarjeta a meses y LunaPay te muestra cuánto pagas cada mes y cuántas parcialidades te faltan.",
+      "text": "Registra una compra a meses y ve cuánto pagas cada mes y cuántos pagos faltan.",
       "action": "Registrar compra a meses"
     }
   }
