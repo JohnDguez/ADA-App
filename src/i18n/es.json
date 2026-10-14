@@ -1908,7 +1908,8 @@
     },
     "remChanged": {
       "title": "¿Algún pago cambió de monto?",
-      "text": "Si tu recibo de luz o de celular llegó distinto, ajústalo para que tu periodo sea real."
+      "text": "Si tu recibo de luz o de celular llegó distinto, ajústalo para que tu periodo sea real.",
+      "action": "Ir a Recurrentes"
     },
     "remExtra": {
       "title": "¿Cobraste algo extra?",
@@ -1943,19 +1944,23 @@
     },
     "pause": {
       "title": "Pausa un pago recurrente",
-      "text": "¿Cancelaste una suscripción por un tiempo? Pausa el recurrente en lugar de borrarlo."
+      "text": "¿Cancelaste una suscripción por un tiempo? Pausa el recurrente en lugar de borrarlo.",
+      "action": "Ir a Recurrentes"
     },
     "goals": {
       "title": "Crea metas",
-      "text": "Ahorra para algo concreto en la pestaña Metas y mira tu avance."
+      "text": "Ahorra para algo concreto en la pestaña Metas y mira tu avance.",
+      "action": "Ir a Metas"
     },
     "shared": {
       "title": "Comparte gastos",
-      "text": "Crear un Espacio Compartido es Premium; unirte a uno con un código es gratis. Compartan los mismos pagos con tu pareja o familia."
+      "text": "Crear un Espacio Compartido es Premium; unirte a uno con un código es gratis. Compartan los mismos pagos con tu pareja o familia.",
+      "action": "Ir a Ajustes"
     },
     "export": {
       "title": "Exporta tus datos",
-      "text": "Descarga tu historial cuando lo necesites desde Ajustes (función Premium)."
+      "text": "Descarga tu historial cuando lo necesites desde Ajustes (función Premium).",
+      "action": "Ir a Ajustes"
     },
     "installments": {
       "title": "Compras a meses",

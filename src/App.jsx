@@ -1668,6 +1668,7 @@ export default function App() {
           activeSpaceHeader={activeSpaceHeaderEl}
           onAdd={openAdd}
           onStartAdd={startAdd}
+          onGoTab={changeTab}
           slideClass={`page-slide-${slideDir}`}
           onMarkPaid={handleMarkPaid}
           onRequestVariableAmount={requestVariableAmount}
