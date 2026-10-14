@@ -99,32 +99,38 @@ function eventText(n) {
 }
 function isAddedEvent(n) { return /(agregó|added)(?![a-z])/i.test(n.title || '') }
 function buildGroupLines(items) {
+  // Se juntan por nombre del pago (el texto antes de " — "): no todos los
+  // avisos de un mismo pago traen payment_id (p. ej. los abonos), pero todos
+  // empiezan con el nombre del pago.
   const lines = []
-  const byPay = {}
+  const byKey = {}
   for (const n of items) {
-    if (n.payment_id) {
-      if (byPay[n.payment_id]) { byPay[n.payment_id].items.push(n); continue }
-      byPay[n.payment_id] = { key: `p-${n.payment_id}`, items: [n] }
-      lines.push(byPay[n.payment_id])
-    } else {
-      lines.push({ key: n.id, items: [n] })
-    }
+    const parts = (n.body || '').split(' — ')
+    const k = parts.length > 1 ? `n-${parts[0].trim().toLowerCase()}` : n.payment_id ? `p-${n.payment_id}` : null
+    if (k && byKey[k]) { byKey[k].items.push(n); continue }
+    const line = { key: k || String(n.id), items: [n], name: parts.length > 1 ? parts[0].trim() : '' }
+    if (k) byKey[k] = line
+    lines.push(line)
   }
   return lines.map(l => {
     const bodies = l.items.map(n => n.body || '')
-    const withAmount = bodies.find(b => /—\s*\$[\d.,]+\s*$/.test(b))
-    const src = withAmount || bodies[0] || ''
-    const parts = src.split(' — ')
-    const hasName = parts.length > 1
-    const amountMatch = withAmount ? withAmount.match(/\$[\d.,]+\s*$/) : null
-    const subs = !l.items[0].payment_id ? [] : l.items.filter(n => !isAddedEvent(n)).map(eventText).filter(Boolean)
+    const total = bodies.find(b => /—\s*\$[\d.,]+\s*$/.test(b))
+    const anyAmount = total || bodies.find(b => /\$[\d.,]+/.test(b))
+    const m = anyAmount ? (total ? anyAmount.match(/\$[\d.,]+\s*$/) : anyAmount.match(/\$[\d.,]+/)) : null
+    const noName = !l.name
+    // Para abonos el cuerpo trae "Pago — Persona puso $X": se muestra "Puso $X".
+    const subOf = n => {
+      const rest = (n.body || '').split(' — ').slice(1).join(' — ')
+      return n.actor_name && rest.startsWith(n.actor_name) ? CAP(rest.slice(n.actor_name.length).trim()) : eventText(n)
+    }
+    const subs = noName ? [] : l.items.filter(n => !isAddedEvent(n)).map(subOf).filter(Boolean)
     return {
       ...l,
-      name: hasName ? parts[0] : (l.items.length === 1 && !l.items[0].payment_id ? eventText(l.items[0]) : src),
-      amount: amountMatch ? amountMatch[0].trim() : '',
+      name: l.name || eventText(l.items[0]) || bodies[0],
+      amount: m ? m[0].trim() : '',
       sub: [...new Set(subs)].join(' · '),
       unread: l.items.some(n => !n.read),
-      first: l.items[0],
+      first: l.items.find(n => isAddedEvent(n)) || l.items[0],
     }
   })
 }
