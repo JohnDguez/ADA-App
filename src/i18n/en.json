@@ -1892,5 +1892,75 @@
     "nopromoSub": "Only alerts about your own payments.",
     "activate": "Turn on notifications",
     "later": "Not now"
+  },
+  "tips": {
+    "label": "Tip",
+    "next": "Next",
+    "remToday": {
+      "title": "Paid something today?",
+      "text": "Log it now before you forget. With your voice or a photo it takes 10 seconds.",
+      "action": "Log payment"
+    },
+    "remFood": {
+      "title": "Logged your food yet?",
+      "text": "Small daily expenses (meals, coffee, snacks) are the easiest to forget and they add up.",
+      "action": "Log payment"
+    },
+    "remChanged": {
+      "title": "Did a payment change amount?",
+      "text": "If your electric or phone bill came out different, update it so your period stays accurate."
+    },
+    "remExtra": {
+      "title": "Got extra money?",
+      "text": "If you received money outside your regular paycheck, add it so your balance adds up."
+    },
+    "remNext": {
+      "title": "Check your upcoming payments",
+      "text": "Swipe to the Next period and see what's coming, so nothing surprises you."
+    },
+    "remCash": {
+      "title": "Paid something in cash?",
+      "text": "Log it with the Cash method to know how much leaves your wallet.",
+      "action": "Log payment"
+    },
+    "voice": {
+      "title": "Dictate your payments",
+      "text": "Just say the name and amount, like “gas 600 pesos”, and LunaPay fills in the form for you.",
+      "action": "Try it now"
+    },
+    "scan": {
+      "title": "Scan your receipt",
+      "text": "Instead of typing, snap a photo of the receipt and LunaPay fills in the amount and name for you.",
+      "action": "Try it now"
+    },
+    "variable": {
+      "title": "Variable payments",
+      "text": "For bills that change every month, turn on Variable payment and confirm the amount when you pay."
+    },
+    "postpone": {
+      "title": "Postpone instead of forgetting",
+      "text": "In a payment's ⋮ menu you can postpone it so it doesn't show up as overdue."
+    },
+    "pause": {
+      "title": "Pause a recurring payment",
+      "text": "Cancelled a subscription for a while? Pause the recurring payment instead of deleting it."
+    },
+    "goals": {
+      "title": "Create goals",
+      "text": "Save for something specific in the Goals tab and watch your progress."
+    },
+    "shared": {
+      "title": "Share expenses",
+      "text": "Create a Shared Space with your partner or family and see the same payments."
+    },
+    "export": {
+      "title": "Export your data",
+      "text": "Download your history whenever you need it from Settings (Premium feature)."
+    },
+    "installments": {
+      "title": "Purchases in installments",
+      "text": "Log a card purchase in installments and LunaPay shows what you pay each month and how many payments remain.",
+      "action": "Log installment purchase"
+    }
   }
 }

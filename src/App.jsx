@@ -1667,6 +1667,7 @@ export default function App() {
           spaceSwitcher={spaceSwitcherEl}
           activeSpaceHeader={activeSpaceHeaderEl}
           onAdd={openAdd}
+          onStartAdd={startAdd}
           slideClass={`page-slide-${slideDir}`}
           onMarkPaid={handleMarkPaid}
           onRequestVariableAmount={requestVariableAmount}

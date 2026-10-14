@@ -1892,5 +1892,75 @@
     "nopromoSub": "Solo avisos de tus propios pagos.",
     "activate": "Activar notificaciones",
     "later": "Ahora no"
+  },
+  "tips": {
+    "label": "Consejo",
+    "next": "Siguiente",
+    "remToday": {
+      "title": "¿Pagaste algo hoy?",
+      "text": "Regístralo ahora, antes de que se te olvide. Con voz o con una foto toma 10 segundos.",
+      "action": "Registrar pago"
+    },
+    "remFood": {
+      "title": "¿Ya registraste tu comida?",
+      "text": "Los gastos chiquitos del día (comida, café, antojos) son los que más se olvidan y los que más suman.",
+      "action": "Registrar pago"
+    },
+    "remChanged": {
+      "title": "¿Algún pago cambió de monto?",
+      "text": "Si tu recibo de luz o de celular llegó distinto, ajústalo para que tu periodo sea real."
+    },
+    "remExtra": {
+      "title": "¿Cobraste algo extra?",
+      "text": "Si te cayó dinero fuera de tu quincena, añádelo para que tu balance cuadre."
+    },
+    "remNext": {
+      "title": "Revisa tus próximos pagos",
+      "text": "Desliza al Próximo periodo y mira qué viene, así no te sorprende."
+    },
+    "remCash": {
+      "title": "¿Pagaste algo en efectivo?",
+      "text": "Anótalo con el método Efectivo para saber cuánto sale de tu cartera.",
+      "action": "Registrar pago"
+    },
+    "voice": {
+      "title": "Dicta tus pagos",
+      "text": "Solo di el nombre y el monto, como «gasolina 600 pesos», y LunaPay llena el formulario por ti.",
+      "action": "Probar ahora"
+    },
+    "scan": {
+      "title": "Escanea tu ticket",
+      "text": "En vez de teclear, toma una foto del ticket y LunaPay llena el monto y el nombre por ti.",
+      "action": "Probar ahora"
+    },
+    "variable": {
+      "title": "Pagos variables",
+      "text": "Para recibos que cambian cada mes, activa Pago variable y confirma el monto cuando pagues."
+    },
+    "postpone": {
+      "title": "Pospón en vez de olvidar",
+      "text": "En el menú ⋮ de un pago puedes posponerlo para que no salga como vencido."
+    },
+    "pause": {
+      "title": "Pausa un pago recurrente",
+      "text": "¿Cancelaste una suscripción por un tiempo? Pausa el recurrente en lugar de borrarlo."
+    },
+    "goals": {
+      "title": "Crea metas",
+      "text": "Ahorra para algo concreto en la pestaña Metas y mira tu avance."
+    },
+    "shared": {
+      "title": "Comparte gastos",
+      "text": "Crea un Espacio Compartido con tu pareja o familia y vean los mismos pagos."
+    },
+    "export": {
+      "title": "Exporta tus datos",
+      "text": "Descarga tu historial cuando lo necesites desde Ajustes (función Premium)."
+    },
+    "installments": {
+      "title": "Compras a meses",
+      "text": "Registra una compra con tu tarjeta a meses y LunaPay te muestra cuánto pagas cada mes y cuántas parcialidades te faltan.",
+      "action": "Registrar compra a meses"
+    }
   }
 }
