@@ -2,9 +2,6 @@
   background: var(--surface);
   border-radius: var(--radius);
   padding: 16px;
-  min-height: 132px;
-  display: flex;
-  flex-direction: column;
 }
 .fade { animation: tipIn .4s ease; }
 @keyframes tipIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
@@ -15,20 +12,19 @@
   font-size: 12px;
   font-weight: 700;
   color: var(--accent);
-  margin-bottom: 8px;
+  margin-bottom: 6px;
 }
 .title { font-size: 15px; font-weight: 700; color: var(--text); margin: 0 0 4px; }
 .text { font-size: 13.5px; line-height: 1.45; color: var(--text); margin: 0; }
 .foot {
   display: flex;
   align-items: center;
-  margin-top: auto;
-  padding-top: 10px;
+  margin-top: 12px;
+  padding-top: 8px;
   border-top: 1px solid var(--border);
   font-size: 13px;
   font-weight: 700;
 }
-.footSpaced { margin-top: 12px; }
 .action, .next {
   background: none;
   border: none;
@@ -37,4 +33,4 @@
   cursor: pointer;
 }
 .action { color: var(--accent); }
-.next { margin-left: auto; color: var(--text); font-weight: 600; }
+.next { margin-left: auto; color: var(--text); font-size: 12.5px; font-weight: 600; }

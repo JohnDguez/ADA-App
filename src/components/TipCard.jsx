@@ -30,15 +30,19 @@ export function TipCard({ onAction }) {
     <div className={styles.tip} onTouchStart={() => hold(true)} onTouchEnd={() => hold(false)} onTouchCancel={() => hold(false)}
       onMouseEnter={() => hold(true)} onMouseLeave={() => hold(false)}>
       <div key={tick} className={styles.fade}>
-        <div className={styles.label}><Lightbulb size={16} /><span>{t('tips.label')}</span></div>
+        <div className={styles.label}>
+          <Lightbulb size={16} /><span>{t('tips.label')}</span>
+          <button type="button" className={styles.next} onClick={advance}>
+            {t('tips.next')} <ChevronRight size={14} style={{ verticalAlign: '-2px' }} />
+          </button>
+        </div>
         <p className={styles.title}>{t(`tips.${tip.id}.title`)}</p>
         <p className={styles.text}>{t(`tips.${tip.id}.text`)}</p>
-      </div>
-      <div className={`${styles.foot} ${styles.footSpaced}`}>
-        {actionLabel && <button type="button" className={styles.action} onClick={() => onAction?.(tip.action)}>{actionLabel}</button>}
-        <button type="button" className={styles.next} onClick={advance}>
-          {t('tips.next')} <ChevronRight size={14} style={{ verticalAlign: '-2px' }} />
-        </button>
+        {actionLabel && (
+          <div className={styles.foot}>
+            <button type="button" className={styles.action} onClick={() => onAction?.(tip.action)}>{actionLabel}</button>
+          </div>
+        )}
       </div>
     </div>
   )
