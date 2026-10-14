@@ -1955,12 +1955,12 @@
     "shared": {
       "title": "Comparte gastos",
       "text": "Crear un Espacio Compartido es Premium; unirte a uno con un código es gratis. Compartan los mismos pagos con tu pareja o familia.",
-      "action": "Ir a Ajustes"
+      "action": "Ir a Espacio Compartido"
     },
     "export": {
       "title": "Exporta tus datos",
       "text": "Descarga tu historial cuando lo necesites desde Ajustes (función Premium).",
-      "action": "Ir a Ajustes"
+      "action": "Ir a Exportar datos"
     },
     "installments": {
       "title": "Compras a meses",

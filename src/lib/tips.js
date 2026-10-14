@@ -1,6 +1,6 @@
 // Consejos de Inicio (v0.9.688). Se muestran de uno en uno cuando el periodo no
 // tiene pagos pendientes. `kind`: 'reminder' (algo que se olvida) o 'feature'
-// (función poco conocida). `action`: null | 'add' | 'voice' | 'scan' | 'tab:<pestaña>' — lo que
+// (función poco conocida). `action`: null | 'add' | 'voice' | 'scan' | 'tab:<pestaña>' | 'settings:<sección>' — lo que
 // hace el enlace de abajo; los textos viven en i18n (`tips.<id>`).
 import { isVoiceSupported } from './voiceInput'
 import { isTicketScanSupported } from './ticketScan'
@@ -18,8 +18,8 @@ export const TIPS = [
   { id: 'postpone',     kind: 'feature',  action: null },
   { id: 'pause',        kind: 'feature',  action: 'tab:recurrents' },
   { id: 'goals',        kind: 'feature',  action: 'tab:goals' },
-  { id: 'shared',       kind: 'feature',  action: 'tab:settings' },
-  { id: 'export',       kind: 'feature',  action: 'tab:settings' },
+  { id: 'shared',       kind: 'feature',  action: 'settings:sharedspace' },
+  { id: 'export',       kind: 'feature',  action: 'settings:export' },
   { id: 'installments', kind: 'feature',  action: 'add' },
 ]
 

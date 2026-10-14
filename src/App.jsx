@@ -1561,6 +1561,13 @@ export default function App() {
     changeTab('settings')
   }
 
+  // Atajo genérico a una subpágina de Ajustes (consejos de Inicio, v0.9.692)
+  function goToSettingsSection(section) {
+    setSettingsReturnTab(tab)
+    setSettingsInitialSection(section)
+    changeTab('settings')
+  }
+
   function goToCategories() {
     setSettingsReturnTab(tab)
     setSettingsInitialSection('categories')
@@ -1669,6 +1676,7 @@ export default function App() {
           onAdd={openAdd}
           onStartAdd={startAdd}
           onGoTab={changeTab}
+          onGoSettingsSection={goToSettingsSection}
           slideClass={`page-slide-${slideDir}`}
           onMarkPaid={handleMarkPaid}
           onRequestVariableAmount={requestVariableAmount}
