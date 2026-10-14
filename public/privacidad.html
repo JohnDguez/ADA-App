@@ -75,7 +75,7 @@
   <div data-lang-content="es">
 
   <h1>Aviso de Privacidad</h1>
-  <p class="updated">Última actualización: septiembre de 2026</p>
+  <p class="updated">Última actualización: octubre de 2026</p>
 
   <div class="notice">
     Este documento fue redactado con apoyo de IA a partir de lo que la aplicación realmente hace, como base de trabajo — no sustituye la revisión de un abogado especializado en protección de datos antes de publicarse.
@@ -98,9 +98,14 @@
       <li><strong>Datos de identificación y contacto:</strong> nombre y correo electrónico, al crear tu cuenta.</li>
       <li><strong>Datos de acceso:</strong> tu contraseña (almacenada cifrada, nunca en texto plano) o, si eliges iniciar sesión con Google, el identificador que Google nos comparte para autenticarte — nunca vemos tu contraseña de Google.</li>
       <li><strong>Datos financieros que tú mismo registras:</strong> tus pagos, ingresos, metas de ahorro, montos, categorías y periodo de cobro. <strong>LunaPay no se conecta a tu banco ni a tus cuentas bancarias</strong> — es una herramienta de seguimiento personal, no un agregador financiero; todo lo que ves ahí es lo que tú mismo capturaste.</li>
-      <li><strong>Datos de pago de tu suscripción:</strong> si contratas Premium, tu tarjeta la procesa directamente Stripe, nuestro procesador de pagos — <strong>LunaPay nunca almacena el número completo de tu tarjeta</strong>.</li>
+      <li><strong>Tus métodos de pago como etiqueta:</strong> si registras tarjetas o cuentas para asociarlas a tus pagos, guardamos solo datos descriptivos que tú escribes (nombre, banco, día de corte y de pago). <strong>Nunca te pedimos ni guardamos números de tarjeta.</strong></li>
+      <li><strong>Datos de pago de tu suscripción:</strong> si contratas Premium en la web, tu tarjeta la procesa directamente Stripe; si lo contratas en la app de Android, el cobro lo gestiona Google Play. <strong>LunaPay nunca almacena el número completo de tu tarjeta</strong>; solo recibimos el estado de tu suscripción (plan, vigencia y si está activa).</li>
+      <li><strong>Dictado por voz:</strong> si usas el micrófono para registrar un pago, el audio lo procesa el reconocimiento de voz de tu dispositivo o navegador (normalmente de Google), no un servidor de LunaPay. <strong>LunaPay no graba ni guarda tu audio</strong>; solo recibe el texto resultante, que interpretamos en tu dispositivo para prellenar el formulario.</li>
+      <li><strong>Escaneo de tickets (app de Android):</strong> la foto del ticket se lee en tu dispositivo (reconocimiento de texto de ML Kit, sin enviar la imagen a nuestros servidores). LunaPay no guarda la foto; solo usa el texto para prellenar el pago, que siempre revisas antes de guardar.</li>
       <li><strong>Datos de Espacio Compartido:</strong> si creas o te unes a un Espacio Compartido, tu nombre, tus pagos y tus ingresos dentro de ese espacio son visibles para los demás miembros de ese mismo espacio — nunca fuera de él.</li>
-      <li><strong>Datos técnicos:</strong> un identificador de tu dispositivo para poder enviarte notificaciones push (si las activas), tu zona horaria y tu idioma preferido.</li>
+      <li><strong>Notificaciones:</strong> si las activas, guardamos el identificador técnico que tu navegador (notificaciones web) o tu dispositivo Android (Firebase Cloud Messaging) nos da para poder enviarte avisos. También guardamos dentro de la app el historial de avisos que ves en la sección de notificaciones.</li>
+      <li><strong>Datos técnicos:</strong> tu zona horaria y tu idioma preferido.</li>
+      <li><strong>Comentarios:</strong> si respondes el formulario de comentarios de la app, tus respuestas y tu correo se envían a nuestro proveedor de formularios (Jotform).</li>
     </ul>
   </div>
 
@@ -111,7 +116,9 @@
       <li>Crear y administrar tu cuenta.</li>
       <li>Mostrar, organizar y calcular tus pagos según tu periodo de cobro.</li>
       <li>Procesar el cobro de tu suscripción Premium, cuando aplique.</li>
-      <li>Enviarte las notificaciones que tú mismo actives (pagos próximos, vencidos, etc.).</li>
+      <li>Enviarte las notificaciones que tú mismo actives (pagos próximos, vencidos, cambios en tus Espacios Compartidos, etc.).</li>
+      <li>Permitirte registrar pagos por voz o escaneando un ticket, y exportar tus datos.</li>
+      <li>Mostrar la información de tus pagos en el widget de Luna de la pantalla de inicio de Android, si lo agregas (se alimenta de datos guardados en tu propio dispositivo).</li>
       <li>Hacer funcionar los Espacios Compartidos a los que pertenezcas.</li>
       <li>Brindarte soporte cuando lo solicites.</li>
     </ul>
@@ -130,9 +137,11 @@
     <p>Para poder operar, LunaPay comparte cierta información con los siguientes proveedores, únicamente para que puedan prestarnos el servicio que ofrecen (nunca con fines comerciales propios de ellos):</p>
     <ul>
       <li><strong>Supabase</strong> — aloja nuestra base de datos e infraestructura.</li>
-      <li><strong>Stripe</strong> — procesa el cobro de tu suscripción Premium.</li>
-      <li><strong>Google</strong> — solo si eliges iniciar sesión con tu cuenta de Google.</li>
-      <li><strong>Nuestro proveedor de notificaciones push</strong> — solo si activas las notificaciones.</li>
+      <li><strong>Stripe</strong> — procesa el cobro de tu suscripción Premium contratada en la web.</li>
+      <li><strong>Google Play</strong> — gestiona el cobro de Premium contratado en la app de Android y nos confirma el estado de la suscripción.</li>
+      <li><strong>Google</strong> — si eliges iniciar sesión con tu cuenta de Google, y para el reconocimiento de voz de tu dispositivo o navegador si usas el dictado.</li>
+      <li><strong>Firebase Cloud Messaging (Google) y los servicios de notificaciones web de tu navegador</strong> — solo si activas las notificaciones; por ahí viaja el texto del aviso.</li>
+      <li><strong>Jotform</strong> — solo si respondes el formulario de comentarios.</li>
     </ul>
     <p><strong>No vendemos ni rentamos tus datos personales a terceros con fines publicitarios.</strong></p>
   </div>
@@ -140,9 +149,12 @@
   <div class="card">
     <h2>5. Uso de tecnologías de rastreo</h2>
     <p>
-      LunaPay usa almacenamiento local de tu navegador (<em>localStorage</em>) únicamente para
-      recordar preferencias tuyas dentro de la app, como el tema claro/oscuro o el idioma —
-      nunca para rastrearte fuera de la aplicación ni para fines publicitarios de terceros.
+      LunaPay usa el almacenamiento local de tu navegador o de la app (<em>localStorage</em> y
+      <em>sessionStorage</em>) únicamente para mantener tu sesión y recordar preferencias tuyas,
+      como el tema claro/oscuro, el idioma, el idioma del dictado por voz, la pestaña o el
+      Espacio Compartido que tenías abierto y si ya viste ciertos avisos de la app (por
+      ejemplo, el recordatorio para activar notificaciones). No usamos cookies publicitarias
+      ni te rastreamos fuera de la aplicación.
     </p>
   </div>
 
@@ -154,7 +166,7 @@
     </p>
     <p>Puedes ejercerlos de 2 formas:</p>
     <ul>
-      <li>Directamente desde la app: en Ajustes puedes editar tus datos o eliminar tu cuenta y toda tu información en cualquier momento.</li>
+      <li>Directamente desde la app: en Ajustes puedes editar tus datos, exportarlos (función Premium) o eliminar tu cuenta y toda tu información en cualquier momento.</li>
       <li>Escribiendo a <a href="mailto:support@luna-pay.app">support@luna-pay.app</a>, indicando tu nombre, el derecho que deseas ejercer y una copia de una identificación que confirme quién eres. Responderemos en un plazo máximo de 20 días hábiles, conforme a la LFPDPPP.</li>
     </ul>
   </div>
@@ -203,7 +215,7 @@
   <div data-lang-content="en">
 
   <h1>Privacy Notice</h1>
-  <p class="updated">Last updated: September 2026</p>
+  <p class="updated">Last updated: October 2026</p>
 
   <div class="notice">
     This document was drafted with AI assistance based on what the app actually does, as a
@@ -227,9 +239,14 @@
       <li><strong>Identification and contact data:</strong> your name and email address, when you create an account.</li>
       <li><strong>Login data:</strong> your password (stored encrypted, never in plain text) or, if you choose Google Sign-In, the identifier Google shares with us to authenticate you — we never see your Google password.</li>
       <li><strong>Financial data you enter yourself:</strong> your payments, income, savings goals, amounts, categories, and pay period. <strong>LunaPay does not connect to your bank or bank accounts</strong> — it's a personal tracking tool, not a financial aggregator; everything you see there is what you entered yourself.</li>
-      <li><strong>Subscription payment data:</strong> if you subscribe to Premium, your card is processed directly by Stripe, our payment processor — <strong>LunaPay never stores your full card number</strong>.</li>
+      <li><strong>Your payment methods as labels:</strong> if you add cards or accounts to link them to your payments, we only store descriptive data you type (name, bank, statement and due days). <strong>We never ask for or store card numbers.</strong></li>
+      <li><strong>Subscription payment data:</strong> if you subscribe to Premium on the web, your card is processed directly by Stripe; if you subscribe in the Android app, billing is handled by Google Play. <strong>LunaPay never stores your full card number</strong>; we only receive your subscription status (plan, validity, and whether it is active).</li>
+      <li><strong>Voice dictation:</strong> if you use the microphone to log a payment, the audio is processed by your device's or browser's speech recognition (usually Google's), not by a LunaPay server. <strong>LunaPay does not record or store your audio</strong>; it only receives the resulting text, which we interpret on your device to pre-fill the form.</li>
+      <li><strong>Receipt scanning (Android app):</strong> the receipt photo is read on your device (ML Kit text recognition, without sending the image to our servers). LunaPay does not keep the photo; it only uses the text to pre-fill the payment, which you always review before saving.</li>
       <li><strong>Shared Space data:</strong> if you create or join a Shared Space, your name, and your payments and income within that space, are visible to the other members of that same space — never outside it.</li>
-      <li><strong>Technical data:</strong> a device identifier so we can send you push notifications (if you enable them), your timezone, and your preferred language.</li>
+      <li><strong>Notifications:</strong> if you enable them, we store the technical identifier your browser (web notifications) or Android device (Firebase Cloud Messaging) gives us so we can send you alerts. We also store, inside the app, the history of alerts you see in the notifications section.</li>
+      <li><strong>Technical data:</strong> your timezone and your preferred language.</li>
+      <li><strong>Feedback:</strong> if you answer the in-app feedback form, your answers and email are sent to our forms provider (Jotform).</li>
     </ul>
   </div>
 
@@ -240,7 +257,9 @@
       <li>Create and manage your account.</li>
       <li>Show, organize, and calculate your payments according to your pay period.</li>
       <li>Process your Premium subscription charge, when applicable.</li>
-      <li>Send you the notifications you enable (upcoming or overdue payments, etc.).</li>
+      <li>Send you the notifications you enable (upcoming or overdue payments, Shared Space changes, etc.).</li>
+      <li>Let you log payments by voice or by scanning a receipt, and export your data.</li>
+      <li>Show your payment information in the Luna home-screen widget on Android, if you add it (it is fed from data stored on your own device).</li>
       <li>Operate the Shared Spaces you belong to.</li>
       <li>Provide support when you request it.</li>
     </ul>
@@ -259,9 +278,11 @@
     <p>To operate, LunaPay shares certain information with the following providers, solely so they can provide us the service they offer (never for their own commercial purposes):</p>
     <ul>
       <li><strong>Supabase</strong> — hosts our database and infrastructure.</li>
-      <li><strong>Stripe</strong> — processes your Premium subscription charge.</li>
-      <li><strong>Google</strong> — only if you choose to sign in with your Google account.</li>
-      <li><strong>Our push notification provider</strong> — only if you enable notifications.</li>
+      <li><strong>Stripe</strong> — processes your Premium subscription charge when you subscribe on the web.</li>
+      <li><strong>Google Play</strong> — handles the Premium charge when you subscribe in the Android app and confirms your subscription status to us.</li>
+      <li><strong>Google</strong> — if you choose to sign in with your Google account, and for your device's or browser's speech recognition if you use dictation.</li>
+      <li><strong>Firebase Cloud Messaging (Google) and your browser's web notification services</strong> — only if you enable notifications; the alert text travels through them.</li>
+      <li><strong>Jotform</strong> — only if you answer the feedback form.</li>
     </ul>
     <p><strong>We do not sell or rent your personal data to third parties for advertising purposes.</strong></p>
   </div>
@@ -269,9 +290,11 @@
   <div class="card">
     <h2>5. Use of tracking technologies</h2>
     <p>
-      LunaPay uses your browser's local storage (<em>localStorage</em>) only to remember your
-      preferences within the app, such as light/dark theme or language — never to track you
-      outside the app or for third-party advertising purposes.
+      LunaPay uses your browser's or the app's local storage (<em>localStorage</em> and
+      <em>sessionStorage</em>) only to keep your session and remember your preferences, such as
+      light/dark theme, language, voice dictation language, the tab or Shared Space you had
+      open, and whether you've already seen certain in-app notices (for example, the reminder to
+      enable notifications). We don't use advertising cookies or track you outside the app.
     </p>
   </div>
 
@@ -283,7 +306,7 @@
     </p>
     <p>You can exercise these rights in 2 ways:</p>
     <ul>
-      <li>Directly in the app: in Settings, you can edit your data or delete your account and all your information at any time.</li>
+      <li>Directly in the app: in Settings, you can edit your data, export it (a Premium feature) or delete your account and all your information at any time.</li>
       <li>By emailing <a href="mailto:support@luna-pay.app">support@luna-pay.app</a>, including your name, the right you wish to exercise, and a copy of an ID confirming who you are. We will respond within a maximum of 20 business days, as required by the LFPDPPP.</li>
     </ul>
   </div>
