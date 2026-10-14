@@ -1,4 +1,5 @@
 .tip {
+  margin-top: 14px;
   background: var(--surface);
   border-radius: var(--radius);
   padding: 16px;

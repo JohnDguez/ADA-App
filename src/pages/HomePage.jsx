@@ -613,7 +613,10 @@ export function HomePage({ payments, dataLoading = false, profile, spaceSwitcher
                      `RailSkeleton` (mismas piezas del gate de arranque),
                      nunca con datos del espacio anterior. Mismo criterio en
                      el otro caso de abajo y en los 2 de PaymentsPage. */
-                  ? (dataLoading ? <RailSkeleton count={3} /> : <TipCard onAction={a => (a === 'voice' || a === 'scan') ? onStartAdd?.(a) : onAdd?.()} />)
+                  ? (dataLoading ? <RailSkeleton count={3} /> : <>
+                      {vencidos.length === 0 && <EmptyState title={t('homePage.emptyState.currentPeriodTitle')} subtitle={t('homePage.emptyState.subtitle')} onClick={onAdd} />}
+                      <TipCard onAction={a => (a === 'voice' || a === 'scan') ? onStartAdd?.(a) : onAdd?.()} />
+                    </>)
                   : <PayRail payments={delPeriodo} cfg={profile} dotColor="var(--upcoming-border)" dotTextColor="var(--impact-warning-text)" handlers={handlers} permissions={spacePermissions} spaceMembers={spaceMembers} />
                 }
               </div>
