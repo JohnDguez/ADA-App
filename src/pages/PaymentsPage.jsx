@@ -135,7 +135,22 @@ export function PaymentsPage({ payments, dataLoading = false, periodIncome, paym
   const { t } = useTranslation()
   // v0.9.661 — pestañas Pagos / Análisis (solo en celular; desde 768px se ve todo junto).
   const [pageTab, setPageTab] = useState('pagos')
-  const tabHide = name => (pageTab !== name ? styles.tabHidden : '')
+  // v0.9.709 — animación al cambiar de pestaña: la sección que sale se desvanece
+  // (130 ms) y la que entra aparece subiendo. `tabSwitched` evita animar la
+  // primera carga; `tabLeaving` mantiene visible la sección saliente mientras sale.
+  const [tabSwitched, setTabSwitched] = useState(false)
+  const [pendingTab, setPendingTab] = useState(null)   // pestaña elegida mientras sale la actual
+  const tabLeaving = pendingTab !== null
+  const tabTimerRef = useRef(null)
+  const changeTab = next => {
+    if (next === (pendingTab ?? pageTab)) return
+    setTabSwitched(true)
+    clearTimeout(tabTimerRef.current)
+    setPendingTab(next)
+    tabTimerRef.current = setTimeout(() => { setPageTab(next); setPendingTab(null) }, 130)
+  }
+  useEffect(() => () => clearTimeout(tabTimerRef.current), [])
+  const tabHide = name => (pageTab !== name ? styles.tabHidden : tabLeaving ? styles.tabOut : tabSwitched ? styles.tabIn : '')
   useEffect(() => {
     function onTarget(e) {
       const tgt = e.detail
@@ -1270,7 +1285,7 @@ export function PaymentsPage({ payments, dataLoading = false, periodIncome, paym
         </div>
 
         <div className={styles.pageTabs}>
-          <SegmentedControl variant="page" value={pageTab} onChange={setPageTab}
+          <SegmentedControl variant="page" value={pendingTab ?? pageTab} onChange={changeTab}
             options={[{ value: 'pagos', label: t('paymentsPage.tabPayments') }, { value: 'analisis', label: t('paymentsPage.tabAnalysis') }]} />
         </div>
 
