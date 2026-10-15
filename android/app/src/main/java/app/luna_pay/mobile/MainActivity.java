@@ -1,6 +1,5 @@
 package app.luna_pay.mobile;
 
-import android.graphics.Color;
 import android.os.Bundle;
 import android.view.View;
 import android.webkit.WebView;
@@ -34,7 +33,6 @@ public class MainActivity extends BridgeActivity {
      */
     private void setupEdgeToEdgeTop() {
         WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
-        getWindow().setStatusBarColor(Color.TRANSPARENT);
 
         View decor = getWindow().getDecorView();
         ViewCompat.setOnApplyWindowInsetsListener(decor, (v, insets) -> {

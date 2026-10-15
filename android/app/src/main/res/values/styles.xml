@@ -13,6 +13,10 @@
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>
         <item name="android:background">@null</item>
+        <!-- Barra de estado transparente por tema (v0.9.699): antes se hacía con
+             Window.setStatusBarColor() en MainActivity, API que Android 15 marca
+             como obsoleta (aviso de Google Play). El efecto es el mismo. -->
+        <item name="android:statusBarColor">@android:color/transparent</item>
     </style>
 
 
