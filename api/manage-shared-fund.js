@@ -204,7 +204,7 @@ module.exports = async function handler(req, res) {
       return res.status(403).json({ error: 'No tienes permiso para aportar al Fondo Compartido' })
     }
     const numAmount = Number(amount)
-    if (!numAmount || numAmount <= 0) return res.status(400).json({ error: 'Ingresa un monto válido' })
+    if (!Number.isFinite(numAmount) || numAmount <= 0 || numAmount > 1e9) return res.status(400).json({ error: 'Ingresa un monto válido' })
 
     // La validación de "disponible suficiente" SOLO aplica si el usuario
     // activó su ingreso por periodo (mismo criterio ya usado en

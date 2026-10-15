@@ -62,7 +62,7 @@ function TermsModal({ onClose }) {
           </p>
         </div>
         <div style={{ padding: '14px 20px', borderTop: '0.5px solid var(--border)', flexShrink: 0 }}>
-          <button onClick={onClose} className="btn-primary">{t('recurrentMigrationModal.understood')}</button>
+          <button onClick={onClose} className="btn-primary">{t('buttons.understood')}</button>
         </div>
       </div>
     </div>

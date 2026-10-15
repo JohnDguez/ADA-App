@@ -333,7 +333,7 @@ export function Coachmarks({ screenKey, profile, onUpdateProfile }) {
               onClick={goNext}
               className={styles.nextButton}
             >
-              {isLast ? t('recurrentMigrationModal.understood') : t('coachmarks.next')}
+              {isLast ? t('buttons.understood') : t('coachmarks.next')}
             </button>
           </div>
         </div>

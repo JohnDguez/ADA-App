@@ -196,6 +196,7 @@ module.exports = async function handler(req, res) {
     // cambio de monto vuelve a correr la misma revisión de "completo".
     if (setTotalAmount != null) {
       const newTotal = Number(setTotalAmount)
+      if (!Number.isFinite(newTotal) || newTotal < 0 || newTotal > 1e9) return res.status(400).json({ error: 'Monto inválido' })
       const { error: amountErr } = await supabase.from('payments').update({ amount: newTotal }).eq('id', paymentId)
       if (amountErr) return res.status(500).json({ error: 'No se pudo guardar el monto: ' + amountErr.message })
       let settled = false
@@ -262,6 +263,7 @@ module.exports = async function handler(req, res) {
         }
       } else {
         newFundAmount = Number(fundAmount)
+        if (!Number.isFinite(newFundAmount) || newFundAmount > 1e9) return res.status(400).json({ error: 'Monto inválido' })
       }
       if (newFundAmount < 0) newFundAmount = 0
 
@@ -368,6 +370,7 @@ module.exports = async function handler(req, res) {
       numAmount = Math.round(((existingContribution?.amount || 0) + Math.max(0, restante)) * 100) / 100
     } else {
       numAmount = Number(amount)
+      if (!Number.isFinite(numAmount) || Math.abs(numAmount) > 1e9) return res.status(400).json({ error: 'Monto inválido' })
       // Mientras el pago sigue PENDIENTE, nadie puede exceder lo que en
       // verdad queda disponible — nunca confiar solo en la validación del
       // cliente (SplitContributionsModal.jsx ya bloquea esto también, pero

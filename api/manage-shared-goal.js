@@ -172,7 +172,7 @@ module.exports = async function handler(req, res) {
       const p = payload || {}
       if (!p.name || !String(p.name).trim()) return res.status(400).json({ error: 'Falta el nombre' })
       const targetAmount = Number(p.targetAmount)
-      if (!targetAmount || targetAmount <= 0) return res.status(400).json({ error: 'Monto inválido' })
+      if (!Number.isFinite(targetAmount) || targetAmount <= 0 || targetAmount > 1e9) return res.status(400).json({ error: 'Monto inválido' })
 
       const { data: created, error } = await supabase.from('goals').insert({
         user_id: actorId, space_id: spaceId,
@@ -204,7 +204,11 @@ module.exports = async function handler(req, res) {
       if (p.notes !== undefined)        updates.notes = p.notes ? String(p.notes).trim() : null
       if (p.icon !== undefined)         updates.icon = p.icon
       if (p.color !== undefined)        updates.color = p.color
-      if (p.targetAmount !== undefined) updates.target_amount = Number(p.targetAmount)
+      if (p.targetAmount !== undefined) {
+        const ta = Number(p.targetAmount)
+        if (!Number.isFinite(ta) || ta <= 0 || ta > 1e9) return res.status(400).json({ error: 'Monto inválido' })
+        updates.target_amount = ta
+      }
       if (p.targetDate !== undefined)   updates.target_date = p.targetDate || null
       if (p.isCompleted !== undefined) {
         updates.is_completed = !!p.isCompleted
@@ -288,7 +292,7 @@ module.exports = async function handler(req, res) {
       if (loadErr) return res.status(404).json({ error: loadErr })
 
       const amount = Number(payload?.amount)
-      if (!amount || amount <= 0) return res.status(400).json({ error: 'Monto inválido' })
+      if (!Number.isFinite(amount) || amount <= 0 || amount > 1e9) return res.status(400).json({ error: 'Monto inválido' })
 
       // Método de pago del aporte (v0.9.568). Las tarjetas son personales:
       // se valida que la tarjeta sea de quien aporta. `methodId` null o
@@ -395,7 +399,7 @@ module.exports = async function handler(req, res) {
       if (loadErr) return res.status(404).json({ error: loadErr })
 
       const amount = Number(payload?.amount)
-      if (!amount || amount <= 0) return res.status(400).json({ error: 'Monto inválido' })
+      if (!Number.isFinite(amount) || amount <= 0 || amount > 1e9) return res.status(400).json({ error: 'Monto inválido' })
 
       const saldo = await goalBalance(goal.id)
       if (Math.round(amount * 100) > Math.round(saldo * 100)) {

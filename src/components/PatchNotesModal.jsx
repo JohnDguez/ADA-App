@@ -46,7 +46,7 @@ export function PatchNotesModal({ open, notes, onClose }) {
           onClick={onClose}
           className={styles.closeButton}
         >
-          {t('recurrentMigrationModal.understood')}
+          {t('buttons.understood')}
         </button>
       </div>
     </div>

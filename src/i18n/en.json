@@ -1,5 +1,6 @@
 {
   "buttons": {
+    "understood": "Got it",
     "save": "Save",
     "cancel": "Cancel",
     "delete": "Delete",
