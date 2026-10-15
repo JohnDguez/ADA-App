@@ -51,17 +51,28 @@ async function listenNative(lang) {
   if (perm.speechRecognition !== 'granted') throw voiceError('permission')
   stopCurrent = () => { SpeechRecognition.stop().catch(() => {}) }
   // El 2º dictado seguido fallaba con "Client side error" / "busy": la sesión
-  // anterior aún no se liberaba. Se corta cualquier sesión viva antes de
-  // empezar y, si aun así falla por eso, se reintenta una vez (v0.9.685).
+  // anterior aún no se liberaba. Si falla por eso se reintenta una vez
+  // (v0.9.685). IMPORTANTE (v0.9.707): `SpeechRecognition.stop()` del plugin NO
+  // resuelve nunca su promesa (el código nativo no llama a call.resolve), así
+  // que NUNCA se debe hacer `await` sobre él — en v0.9.685-706 el `await stop()`
+  // previo dejaba el dictado en "Escuchando…" para siempre, sin error. El plugin
+  // ya cancela/destruye la sesión anterior al llamar a start().
+  const LISTEN_TIMEOUT_MS = 25000
   const attempt = async () => {
-    const res = await SpeechRecognition.start({ language: lang, maxResults: 5, prompt: '', partialResults: false, popup: false })
+    let timer
+    const timeout = new Promise((_, rej) => { timer = setTimeout(() => { SpeechRecognition.stop().catch(() => {}); rej(voiceError('no-speech')) }, LISTEN_TIMEOUT_MS) })
+    let res
+    try {
+      res = await Promise.race([
+        SpeechRecognition.start({ language: lang, maxResults: 5, prompt: '', partialResults: false, popup: false }),
+        timeout,
+      ])
+    } finally { clearTimeout(timer) }
     const list = (res?.matches || []).map(m => (m || '').trim()).filter(Boolean)
     if (!list.length) throw voiceError('no-speech')
     return list
   }
   try {
-    try { await SpeechRecognition.stop() } catch { /* no había sesión */ }
-    await wait(150)
     try {
       return await attempt()
     } catch (err) {
@@ -69,7 +80,7 @@ async function listenNative(lang) {
       const msg = String(err?.message || err || '')
       if (NATIVE_NO_SPEECH.test(msg)) throw voiceError('no-speech', err)
       if (!NATIVE_TRANSIENT.test(msg)) throw err
-      try { await SpeechRecognition.stop() } catch { /* idem */ }
+      SpeechRecognition.stop().catch(() => {})   // sin await: nunca resuelve
       await wait(500)
       return await attempt()
     }
