@@ -120,7 +120,7 @@ async function verifyWithBackend({ purchaseToken, productId, accessToken }) {
 // del producto tal cual la devuelve Google (incluye la prueba de 7 días
 // cuando el usuario todavía califica para ella — Google decide eso solo,
 // no hace falta pedir un offerId específico) y la ordena.
-export async function purchasePremium(plan, accessToken) {
+export async function purchasePremium(plan, accessToken, userId) {
   if (!isAndroidBilling()) {
     throw new Error('La compra por Google Play solo aplica en la app de Android')
   }
@@ -131,6 +131,15 @@ export async function purchasePremium(plan, accessToken) {
   const { Platform } = window.CdvPurchase
   const productId = PLAY_PRODUCT_IDS[plan]
   if (storeReadyPromise) await storeReadyPromise
+  // Liga la compra a ESTE usuario de LunaPay (auditoría v0.9.713): Google la
+  // guarda como obfuscatedExternalAccountId y api/verify-play-purchase.js
+  // rechaza que otra cuenta la reclame. El id de Supabase es un UUID (36
+  // caracteres, sin datos personales), así que se manda tal cual
+  // ('disabled' = sin hash; el límite de Google es 64 caracteres).
+  if (userId) {
+    store.obfuscator = 'disabled'
+    store.applicationUsername = () => userId
+  }
   // Reintenta unos segundos: el catálogo puede tardar en llegar de Google.
   let offer = null
   for (let i = 0; i < 10; i++) {

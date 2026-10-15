@@ -42,11 +42,27 @@ async function handleVerify(req, res) {
     const state = subscription?.subscriptionState
     const isActive = ACTIVE_STATES.includes(state)
 
-    // El purchaseToken no está ligado por Google a un usuario de LunaPay —
-    // se confía en que restorePurchases() del cliente (src/lib/
-    // playBilling.js) solo trae compras de la cuenta de Google activa en
-    // ESE dispositivo, mismo criterio que stripe_subscription_id: la fuente
-    // de verdad es la pasarela, no una suposición nuestra del lado server.
+    // Auditoría v0.9.713: una compra solo puede reclamarla la cuenta de
+    // LunaPay para la que se hizo. (1) Las compras nuevas llevan el id del
+    // usuario como obfuscatedExternalAccountId (src/lib/playBilling.js) — si
+    // viene y no coincide, se rechaza. (2) Las compras anteriores a este
+    // cambio no lo traen: se aceptan solo si ningún OTRO perfil ya tiene ese
+    // purchaseToken (el primero que lo reclamó se queda con él; el índice
+    // único en profiles.google_play_purchase_token es el respaldo).
+    const boundTo = subscription?.externalAccountIdentifiers?.obfuscatedExternalAccountId
+    if (boundTo && boundTo !== user.id) {
+      return res.status(403).json({ error: 'Esta suscripción pertenece a otra cuenta de LunaPay' })
+    }
+    const { data: otherOwner } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('google_play_purchase_token', purchaseToken)
+      .neq('id', user.id)
+      .limit(1)
+      .maybeSingle()
+    if (otherOwner) {
+      return res.status(409).json({ error: 'Esta suscripción ya está vinculada a otra cuenta de LunaPay' })
+    }
     const updates = {
       subscription_platform: 'google_play',
       google_play_purchase_token: purchaseToken,
@@ -64,7 +80,10 @@ async function handleVerify(req, res) {
       .from('profiles')
       .update(updates)
       .eq('id', user.id)
-    if (updateError) return res.status(500).json({ error: 'No se pudo actualizar el perfil' })
+    if (updateError) {
+      if (updateError.code === '23505') return res.status(409).json({ error: 'Esta suscripción ya está vinculada a otra cuenta de LunaPay' })
+      return res.status(500).json({ error: 'No se pudo actualizar el perfil' })
+    }
 
     return res.status(200).json({ isPremium: isActive, plan, subscriptionState: state })
   } catch (e) {

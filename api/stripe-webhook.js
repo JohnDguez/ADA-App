@@ -48,6 +48,22 @@ function readRawBody(req) {
 // siendo 'trialing', así que un valor viejo nunca dispara nada por error.
 async function setPremiumByCustomer(customerId, { isPremium, subscriptionId, status, markSubscribed, trialEndsAt }) {
   const updates = { is_premium: isPremium, stripe_subscription_status: status ?? null }
+  if (isPremium) updates.subscription_platform = 'stripe'
+  // Auditoría v0.9.713: cancelar/vencer una suscripción de Stripe NO debe
+  // quitar Premium a quien hoy lo tiene por Google Play (cuenta que cambió de
+  // pasarela, o que conserva un customer de Stripe viejo). Si el perfil está
+  // marcado como google_play con un purchaseToken, solo se actualizan los
+  // campos de Stripe; is_premium lo sigue manejando verify-play-purchase.js.
+  if (!isPremium) {
+    const { data: current } = await supabase
+      .from('profiles')
+      .select('subscription_platform, google_play_purchase_token')
+      .eq('stripe_customer_id', customerId)
+      .maybeSingle()
+    if (current?.subscription_platform === 'google_play' && current?.google_play_purchase_token) {
+      delete updates.is_premium
+    }
+  }
   if (subscriptionId !== undefined) updates.stripe_subscription_id = subscriptionId
   if (markSubscribed) updates.has_subscribed_before = true
   if (trialEndsAt !== undefined) updates.trial_ends_at = trialEndsAt

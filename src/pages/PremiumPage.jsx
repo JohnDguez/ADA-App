@@ -222,7 +222,7 @@ export function PremiumPage({ profile, onClose, refreshProfile, onSubscribed }) 
     try {
       const { data: { session } } = await supabase.auth.getSession()
       if (!session) { setAndroidPurchaseState('error'); return }
-      await purchasePremium(selectedPlan, session.access_token)
+      await purchasePremium(selectedPlan, session.access_token, session.user.id)
       await refreshProfile?.()
       setAndroidPurchaseState('idle')
       onSubscribed?.({ plan: selectedPlan, trial: trialEligible, platform: 'google_play' })
