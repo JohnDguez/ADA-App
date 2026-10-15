@@ -1968,6 +1968,19 @@
       "title": "Purchases in installments",
       "text": "Log a purchase in installments and see what you pay each month and how many payments remain.",
       "action": "Log installment purchase"
+    },
+    "spaceSplit": {
+      "title": "Split a payment between members",
+      "text": "On a shared payment you can split the amount so each person puts in their part. Everyone sees who has already paid."
+    },
+    "spaceInvite": {
+      "title": "Invite more people",
+      "text": "Share the space code so someone else can join and see the shared payments.",
+      "action": "Go to Shared Space"
+    },
+    "spaceFund": {
+      "title": "Use the Shared Fund",
+      "text": "If the group pools money in a fund, payments can be covered from there so nobody has to front the cost."
     }
   }
 }

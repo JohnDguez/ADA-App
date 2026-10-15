@@ -1,7 +1,7 @@
 // Consejos de Inicio (v0.9.688). Se muestran de uno en uno cuando el periodo no
 // tiene pagos pendientes. `kind`: 'reminder' (algo que se olvida) o 'feature'
 // (función poco conocida). `action`: null | 'add' | 'addmenu' (menú del + con voz/escáner) | 'voice' | 'scan' | 'tab:<pestaña>' | 'settings:<sección>' — lo que
-// hace el enlace de abajo; los textos viven en i18n (`tips.<id>`).
+// hace el enlace de abajo; `scope`: 'all' (por defecto) | 'personal' | 'space' (solo en Personal / solo dentro de un Espacio Compartido); los textos viven en i18n (`tips.<id>`).
 import { isVoiceSupported } from './voiceInput'
 import { isTicketScanSupported } from './ticketScan'
 import { supabase } from './supabase'
@@ -11,18 +11,22 @@ export const TIPS = [
   { id: 'remToday', kind: 'reminder', action: 'addmenu' },
   { id: 'remFood', kind: 'reminder', action: 'addmenu' },
   { id: 'remChanged',   kind: 'reminder', action: 'tab:recurrents' },
-  { id: 'remExtra',     kind: 'reminder', action: null },
+  { id: 'remExtra',     kind: 'reminder', action: null, scope: 'personal' },
   { id: 'remNext',      kind: 'reminder', action: null },
-  { id: 'remCash', kind: 'reminder', action: 'addmenu' },
+  { id: 'remCash', kind: 'reminder', action: 'addmenu', scope: 'personal' },
   { id: 'voice',        kind: 'feature',  action: 'voice' },
   { id: 'scan',         kind: 'feature',  action: 'scan' },
   { id: 'variable',     kind: 'feature',  action: null },
   { id: 'postpone',     kind: 'feature',  action: null },
   { id: 'pause',        kind: 'feature',  action: 'tab:recurrents' },
   { id: 'goals',        kind: 'feature',  action: 'tab:goals' },
-  { id: 'shared',       kind: 'feature',  action: 'settings:sharedspace' },
-  { id: 'export',       kind: 'feature',  action: 'settings:export' },
+  { id: 'shared',       kind: 'feature',  action: 'settings:sharedspace', scope: 'personal' },
+  { id: 'export',       kind: 'feature',  action: 'settings:export', scope: 'personal' },
   { id: 'installments', kind: 'feature',  action: 'add' },
+  // Solo en un Espacio Compartido (v0.9.705)
+  { id: 'spaceSplit',   kind: 'feature',  action: null, scope: 'space' },
+  { id: 'spaceInvite',  kind: 'feature',  action: 'settings:sharedspace', scope: 'space' },
+  { id: 'spaceFund',    kind: 'feature',  action: null, scope: 'space' },
 ]
 
 // ── Consejos remotos (v0.9.701) ──────────────────────────────────────────────
@@ -51,7 +55,7 @@ function normalize(r) {
   const action = r.action && ACTION_OK.test(r.action) ? r.action : null
   return {
     id: String(r.id), kind: r.kind || 'feature', action, remote: true, active: r.active !== false,
-    platform: r.platform || 'all', minBuild: Number(r.min_build) || 0,
+    platform: r.platform || 'all', scope: ['personal','space'].includes(r.scope) ? r.scope : 'all', minBuild: Number(r.min_build) || 0,
     startsAt: r.starts_at || null, endsAt: r.ends_at || null,
     es: { title: r.title_es || '', text: r.text_es || '', action: r.action_label_es || '' },
     en: { title: r.title_en || '', text: r.text_en || '', action: r.action_label_en || '' },
@@ -107,7 +111,7 @@ function remoteUsable(r) {
   return !!(r.es.text || r.en.text)
 }
 
-function available() {
+function available(inSpace) {
   if (!cacheRead) { readCache(); cacheRead = true }
   const rows = remote.map(normalize).filter(Boolean)
   const byId = new Map(TIPS.map(t => [t.id, t]))
@@ -115,7 +119,7 @@ function available() {
     if (!remoteUsable(r)) { if (byId.has(r.id)) byId.delete(r.id); continue }
     byId.set(r.id, r)
   }
-  return [...byId.values()].filter(t => (t.action !== 'voice' && t.id !== 'voice' || isVoiceSupported()) && (t.action !== 'scan' && t.id !== 'scan' || isTicketScanSupported()))
+  return [...byId.values()].filter(t => !(t.scope === 'personal' && inSpace) && !(t.scope === 'space' && !inSpace)).filter(t => (t.action !== 'voice' && t.id !== 'voice' || isVoiceSupported()) && (t.action !== 'scan' && t.id !== 'scan' || isTicketScanSupported()))
 }
 
 function shuffle(arr) {
@@ -133,10 +137,13 @@ function shuffle(arr) {
 let deck = []
 let pos = -1
 let lastId = null
+let deckSpace = false
 
-export function nextTip() {
+// `inSpace`: true dentro de un Espacio Compartido (v0.9.705) — filtra por `scope`.
+export function nextTip(inSpace = false) {
+  if (deckSpace !== inSpace) { deck = []; pos = -1; deckSpace = inSpace }
   if (pos + 1 >= deck.length) {
-    deck = shuffle(available())
+    deck = shuffle(available(inSpace))
     if (deck.length > 1 && deck[0].id === lastId) deck.push(deck.shift())
     pos = -1
   }

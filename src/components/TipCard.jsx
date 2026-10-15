@@ -11,13 +11,19 @@ const ROTATE_MS = 2 * 60 * 1000
 
 // `compact` (v0.9.696): sin título y con la acción subrayada; se usa cuando hay
 // pagos vencidos arriba, para que el consejo no le quite protagonismo al pago.
-export function TipCard({ onAction, compact = false }) {
+export function TipCard({ onAction, compact = false, inSpace = false }) {
   const { t } = useTranslation()
-  const [tip, setTip] = useState(() => nextTip())
+  const [tip, setTip] = useState(() => nextTip(inSpace))
   const [tick, setTick] = useState(0)
   const holdRef = useRef(false)
 
-  const advance = () => { setTip(nextTip()); setTick(n => n + 1) }
+  const spaceRef = useRef(inSpace)
+  spaceRef.current = inSpace
+  const advance = () => { setTip(nextTip(spaceRef.current)); setTick(n => n + 1) }
+
+  // Al cambiar entre Personal y un espacio, se cambia de consejo al momento.
+  const firstRun = useRef(true)
+  useEffect(() => { if (firstRun.current) { firstRun.current = false; return } advance() }, [inSpace])
 
   // Consejos remotos (tabla `tips`): al llegar nuevos, se cambia al siguiente.
   useEffect(() => {

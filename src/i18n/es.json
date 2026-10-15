@@ -1968,6 +1968,19 @@
       "title": "Compras a meses",
       "text": "Registra una compra a meses y ve cuánto pagas cada mes y cuántos pagos faltan.",
       "action": "Registrar compra a meses"
+    },
+    "spaceSplit": {
+      "title": "Divide un pago entre miembros",
+      "text": "En un pago compartido puedes repartir el monto y que cada quien ponga su parte. Todos ven quién ya pagó."
+    },
+    "spaceInvite": {
+      "title": "Invita a más personas",
+      "text": "Comparte el código del espacio para que otra persona se una y vea los pagos en común.",
+      "action": "Ir a Espacio Compartido"
+    },
+    "spaceFund": {
+      "title": "Usa el Fondo Compartido",
+      "text": "Si el grupo junta dinero en un fondo, los pagos se pueden cubrir desde ahí sin que nadie adelante."
     }
   }
 }
