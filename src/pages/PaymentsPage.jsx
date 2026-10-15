@@ -19,6 +19,8 @@ import { PaymentMethodField } from '../components/PaymentMethodField'
 import { AddCardModal } from '../components/AddCardModal'
 import styles from './PaymentsPage.module.css'
 import { Presence } from '../components/Presence'
+import { Collapse } from '../components/Collapse'
+import { usePresence } from '../lib/usePresence'
 import { useScrollLock } from '../lib/scrollLock'
 
 const INCOME_TYPES = ['Bono', 'Préstamo', 'Pago', 'Comisión', 'Otro']
@@ -231,6 +233,11 @@ export function PaymentsPage({ payments, dataLoading = false, periodIncome, paym
   }, [viewMode, viewMonth, viewYear, ensureMonthLoaded])
   const [openMenu,    setOpenMenu]    = useState(null)
   useScrollLock(!!openMenu)
+  // v0.9.710 — el menú contextual entra y sale con animación (Regla 29.1).
+  const menuPresence = usePresence(!!openMenu)
+  const lastMenuRef = useRef(null)
+  if (openMenu) lastMenuRef.current = openMenu
+  const menuShown = openMenu || (menuPresence.render ? lastMenuRef.current : null)
   // { payment, direct } | null — `direct` distingue el caso "ya pagado, se
   // borra directo con deletePayment" (onDeleteDirect) del genérico que
   // decide App.jsx según el tipo de pago (onDelete/handleDeleteDirect).
@@ -835,14 +842,15 @@ export function PaymentsPage({ payments, dataLoading = false, periodIncome, paym
     <div className={styles.pageRoot} onClick={() => setOpenMenu(null)}>
 
       {/* Menú contextual flotante */}
-      {openMenu && (
+      {menuShown && (
         <div
           onClick={e => e.stopPropagation()}
           className={styles.contextMenu}
-          style={{ top: openMenu.top, bottom: openMenu.bottom, right: openMenu.right }}
+          data-closing={openMenu ? undefined : ''}
+          style={{ top: menuShown.top, bottom: menuShown.bottom, right: menuShown.right }}
         >
           {(() => {
-            const p = payments.find(x => x.id === openMenu.id)
+            const p = payments.find(x => x.id === menuShown.id)
             if (!p) return null
             return (
               <>
@@ -1402,7 +1410,7 @@ export function PaymentsPage({ payments, dataLoading = false, periodIncome, paym
                     {incomesExpanded ? <ChevronUp size={15} color="var(--text)" /> : <ChevronDown size={15} color="var(--text)" />}
                   </button>
 
-                  {incomesExpanded && (
+                  <Collapse open={incomesExpanded}>
                     <div className={styles.extrasList}>
                       {periodIncomes.map(inc => {
                         const d = inc.created_at ? new Date(inc.created_at) : null
@@ -1423,7 +1431,7 @@ export function PaymentsPage({ payments, dataLoading = false, periodIncome, paym
                         )
                       })}
                     </div>
-                  )}
+                  </Collapse>
                 </div>
               )
             })()}
@@ -1471,7 +1479,7 @@ export function PaymentsPage({ payments, dataLoading = false, periodIncome, paym
                       {fundExpanded ? <ChevronUp size={15} color="var(--text)" /> : <ChevronDown size={15} color="var(--text)" />}
                     </button>
 
-                    {fundExpanded && (
+                    <Collapse open={fundExpanded}>
                       <div className={styles.extrasList}>
                         {sharedFund.ledger.map(entry => {
                           const d = entry.created_at ? new Date(entry.created_at) : null
@@ -1514,7 +1522,7 @@ export function PaymentsPage({ payments, dataLoading = false, periodIncome, paym
                           )
                         })}
                       </div>
-                    )}
+                    </Collapse>
                   </>
                 )}
               </div>
@@ -1668,7 +1676,7 @@ export function PaymentsPage({ payments, dataLoading = false, periodIncome, paym
               </button>
             ))}
           </div>
-          {viewMode === 'mes' && (
+          <Collapse open={viewMode === 'mes'}>
             <div className={styles.monthYearRow}>
               <div className={styles.monthYearGroup}>
                 <span className={styles.monthYearLabel}>{t('paymentsPage.monthLabel')}</span>
@@ -1691,7 +1699,7 @@ export function PaymentsPage({ payments, dataLoading = false, periodIncome, paym
                 </div>
               </div>
             </div>
-          )}
+          </Collapse>
         </div>
 
         {/* Por Categoría */}
