@@ -32,7 +32,7 @@
 .sheetPanel {
   position: relative;
   z-index: 1;
-  background: color-mix(in srgb, var(--menu-bg) 90%, transparent);
+  background: color-mix(in srgb, var(--menu-bg) var(--sheet-form-opacity), transparent);
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
   border-radius: 28px 28px 0 0;

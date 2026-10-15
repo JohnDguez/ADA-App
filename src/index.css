@@ -48,7 +48,9 @@
   --impact-warning-soft: #FFF1E0;
   --impact-warning-text: #3D1F00;
 
-  --scrim: rgba(2, 10, 31, 0.58); /* velo oscuro de los bottom sheets (igual en ambos temas) */
+  --scrim: rgba(2, 10, 31, 0.38); /* velo de los bottom sheets: más suave en tema claro para que no se vea gris */
+  --sheet-opacity: 97%;      /* opacidad de la hoja de ModalSheet (casi opaca en claro) */
+  --sheet-form-opacity: 97%; /* opacidad de las hojas de formulario (sheetShared) */
   --radius: 12px;
   --radius-sm: 8px;
   --radius-full: 999px;
@@ -265,6 +267,9 @@
   --soon-color:      #FE7600;
   --warn-tone:      var(--warning);
   --menu-bg:         #242837;
+  --scrim: rgba(2, 10, 31, 0.58);
+  --sheet-opacity: 80%;
+  --sheet-form-opacity: 90%;
 
   /* Switcher de Espacio Compartido — ver nota en :root. Tono ligeramente
      más claro que en el tema claro, mismo criterio que --label-variable
@@ -331,6 +336,9 @@
     --soon-color:      #FE7600;
     --warn-tone:      var(--warning);
     --menu-bg:         #242837;
+    --scrim: rgba(2, 10, 31, 0.58);
+    --sheet-opacity: 80%;
+    --sheet-form-opacity: 90%;
     --space-new-bg:       #357964;
   --space-stack-shadow: rgba(0, 0, 0, 0.4);
     --space-new-text:     #E1F5EE;
