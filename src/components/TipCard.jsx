@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Lightbulb, ChevronRight } from 'lucide-react'
-import { nextTip } from '../lib/tips'
+import { nextTip, tipContent, subscribeTips, refreshRemoteTips } from '../lib/tips'
 import styles from './TipCard.module.css'
 
 // Tarjeta de consejo (v0.9.688) — reemplaza el vacío "Sin pagos pendientes" de
@@ -19,6 +19,12 @@ export function TipCard({ onAction, compact = false }) {
 
   const advance = () => { setTip(nextTip()); setTick(n => n + 1) }
 
+  // Consejos remotos (tabla `tips`): al llegar nuevos, se cambia al siguiente.
+  useEffect(() => {
+    refreshRemoteTips()
+    return subscribeTips(() => advance())
+  }, [])
+
   useEffect(() => {
     const timer = setInterval(() => { if (!holdRef.current) advance() }, ROTATE_MS)
     const onVisible = () => { if (document.visibilityState === 'visible') advance() }
@@ -26,7 +32,8 @@ export function TipCard({ onAction, compact = false }) {
     return () => { clearInterval(timer); document.removeEventListener('visibilitychange', onVisible) }
   }, [])
 
-  const actionLabel = tip.action ? t(`tips.${tip.id}.action`, { defaultValue: '' }) : ''
+  const content = tipContent(tip, t)
+  const actionLabel = tip.action ? content.action : ''
   const hold = (v) => { holdRef.current = v }
   return (
     <div className={`${styles.tip} ${compact ? styles.compact : ''}`} onTouchStart={() => hold(true)} onTouchEnd={() => hold(false)} onTouchCancel={() => hold(false)}
@@ -38,8 +45,8 @@ export function TipCard({ onAction, compact = false }) {
             {t('tips.next')} <ChevronRight size={14} style={{ verticalAlign: '-2px' }} />
           </button>
         </div>
-        {!compact && <p className={styles.title}>{t(`tips.${tip.id}.title`)}</p>}
-        <p className={styles.text}>{t(`tips.${tip.id}.text`)}</p>
+        {!compact && <p className={styles.title}>{content.title}</p>}
+        <p className={styles.text}>{content.text}</p>
         {actionLabel && (
           <div className={styles.foot}>
             <button type="button" className={styles.action} onClick={() => onAction?.(tip.action)}>
