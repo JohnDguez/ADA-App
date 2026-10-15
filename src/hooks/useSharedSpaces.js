@@ -49,8 +49,12 @@ export function useSharedSpaces(userId) {
           // se cruza a mano, para poder mostrar nombre/avatar real de
           // cada invitado en vez de solo su id.
           const memberUserIds = [...new Set(allMembers.map(m => m.user_id))]
+          // Vista `space_member_profiles` (auditoría v0.9.714): solo expone
+          // id/name/avatar_url de uno mismo y de quienes comparten espacio —
+          // consultar `profiles` directo dejaba leer salario, ids de Stripe
+          // y token de Play de los demás miembros.
           const { data: memberProfiles } = await supabase
-            .from('profiles')
+            .from('space_member_profiles')
             .select('id, name, avatar_url')
             .in('id', memberUserIds)
           const profileMap = {}
