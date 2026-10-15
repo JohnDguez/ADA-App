@@ -13,6 +13,8 @@ import styles from './RecurrentsPage.module.css'
 import { markBackHandled } from '../lib/backNav'
 import { useScrollTop } from '../hooks/useScrollTop'
 import { useScrollLock } from '../lib/scrollLock'
+import { Collapse } from '../components/Collapse'
+import { usePresence } from '../lib/usePresence'
 
 function FilterChip({ label, active, onClick }) {
   return (
@@ -44,6 +46,10 @@ export function RecurrentsPage({ payments, dataLoading = false, profile, spaceSw
   const [expandedCats,    setExpandedCats]    = useState({})
   const [confirmDelete,   setConfirmDelete]   = useState(null)
   const [openMenu,        setOpenMenu]        = useState(null)
+  const menuPresence = usePresence(!!openMenu)
+  const lastMenuRef = useRef(null)
+  if (openMenu) lastMenuRef.current = openMenu
+  const menuShown = openMenu || (menuPresence.render ? lastMenuRef.current : null)
   useScrollLock(!!openMenu)
   const [selectedMasterId, setSelectedMasterId] = useState(null)
   useScrollTop(selectedMasterId)
@@ -133,14 +139,15 @@ export function RecurrentsPage({ payments, dataLoading = false, profile, spaceSw
       <PageHeader profile={profile} unreadCount={unreadCount} onOpenNotifs={onOpenNotifs} onGoSettings={onGoSettings} onOpenPremium={onOpenPremium} />
 
       {/* Menú contextual flotante */}
-      {openMenu && (
+      {menuShown && (
         <div
           onClick={e => e.stopPropagation()}
           className={styles.contextMenu}
-          style={{ top: openMenu.top, bottom: openMenu.bottom, right: openMenu.right }}
+          data-closing={openMenu ? undefined : ''}
+          style={{ top: menuShown.top, bottom: menuShown.bottom, right: menuShown.right }}
         >
           {(() => {
-            const master = masters.find(m => m.id === openMenu.id)
+            const master = masters.find(m => m.id === menuShown.id)
             if (!master) return null
             return (
               <>
@@ -389,7 +396,7 @@ export function RecurrentsPage({ payments, dataLoading = false, profile, spaceSw
                           </div>
 
                           {/* Confirmación borrado */}
-                          {isConfirming && (
+                          <Collapse open={isConfirming}>
                             <div className={`${styles.deleteConfirmPanel} ${isLast ? styles.deleteConfirmPanelNoBorder : ''}`}>
                               <div className={styles.deleteConfirmText}>
                                 {t('recurrentsPage.deleteConfirm', { name: master.name })}
@@ -403,7 +410,7 @@ export function RecurrentsPage({ payments, dataLoading = false, profile, spaceSw
                                 </button>
                               </div>
                             </div>
-                          )}
+                          </Collapse>
                         </div>
                       )
                     })}

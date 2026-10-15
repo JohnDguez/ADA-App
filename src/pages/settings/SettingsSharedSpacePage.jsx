@@ -395,7 +395,7 @@ function OwnedSpacePanel({ entry, user, regenerateCode, updateMemberPermissions,
                     <RefreshCw size={16} color="var(--text)" />
                   </button>
                 </div>
-                {confirmRegen && (
+                <Collapse open={!!(confirmRegen)}>
                   <div className={styles.regenConfirm}>
                     <div className={styles.confirmBoxText}>{t('settingsSharedSpacePage.regenConfirm')}</div>
                     <div className={styles.confirmButtonsRow}>
@@ -405,7 +405,7 @@ function OwnedSpacePanel({ entry, user, regenerateCode, updateMemberPermissions,
                       </button>
                     </div>
                   </div>
-                )}
+                </Collapse>
                 {copied && <div className={styles.copiedText}>{t('settingsSharedSpacePage.copied')}</div>}
                 {(() => {
                   const remaining = 2 - guestMembers.length
@@ -479,7 +479,7 @@ function OwnedSpacePanel({ entry, user, regenerateCode, updateMemberPermissions,
                         <LogOut size={16} color="var(--danger)" />
                         <span className={styles.dangerButtonText}>{t('settingsSharedSpacePage.removeFromSpace')}</span>
                       </button>
-                      {isConfirming && (
+                      <Collapse open={!!(isConfirming)}>
                         <div className={styles.confirmBoxWrapper}>
                           <div className={styles.confirmBoxInner}>
                             <div className={styles.confirmBoxText}>
@@ -495,7 +495,7 @@ function OwnedSpacePanel({ entry, user, regenerateCode, updateMemberPermissions,
                             </div>
                           </div>
                         </div>
-                      )}
+                      </Collapse>
                     </>
                   </Collapse>
                 </div>
@@ -508,7 +508,7 @@ function OwnedSpacePanel({ entry, user, regenerateCode, updateMemberPermissions,
                 <Trash2 size={16} color="var(--danger)" />
                 <span className={styles.dangerButtonText}>{t('settingsSharedSpacePage.clearDataButton')}</span>
               </button>
-              {confirmClear && (
+              <Collapse open={!!(confirmClear)}>
                 <div className={styles.confirmBoxWrapper}>
                   <div className={styles.confirmBoxInner}>
                     <div className={styles.confirmBoxText}>
@@ -524,7 +524,7 @@ function OwnedSpacePanel({ entry, user, regenerateCode, updateMemberPermissions,
                     </div>
                   </div>
                 </div>
-              )}
+              </Collapse>
 
               <button onClick={() => { setDangerOpen(true); setDangerPassword(''); setDangerError('') }} className={`${styles.dangerButtonRow} ${styles.dangerButtonRowLast}`}>
                 <Trash2 size={16} color="var(--danger)" />

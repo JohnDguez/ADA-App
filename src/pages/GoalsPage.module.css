@@ -356,3 +356,7 @@
     display: none;
   }
 }
+
+.viewFade { animation: viewFade .24s cubic-bezier(0.25, 0.46, 0.45, 0.94) both; }
+@keyframes viewFade { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .viewFade { animation: none; } }

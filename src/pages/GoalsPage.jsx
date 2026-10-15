@@ -14,6 +14,7 @@ import { GoalCardSkeleton } from '../components/SkeletonLoader'
 import styles from './GoalsPage.module.css'
 import { markBackHandled, wasBackHandled } from '../lib/backNav'
 import { useScrollTop } from '../hooks/useScrollTop'
+import { Collapse } from '../components/Collapse'
 
 function fmtDate(iso) {
   const d = new Date(iso)
@@ -250,9 +251,10 @@ export function GoalsPage({
                     </button>
                   </div>
 
+                  <div key={goalsView} className={styles.viewFade}>
                   {goalsView === 'activas' ? (
                     <>
-                      {activeGoals.length > 1 && (
+                      <Collapse open={activeGoals.length > 1}>
                         <button
                           type="button"
                           className={styles.sortButton}
@@ -261,7 +263,7 @@ export function GoalsPage({
                           <SlidersHorizontal size={13} />
                           {t('goalsPage.sortBy', { criteria: t(`goalsPage.sortCriteria.${sortBy}`) })}
                         </button>
-                      )}
+                      </Collapse>
 
                       {activeGoals.length === 0 ? (
                         <EmptyState
@@ -278,7 +280,7 @@ export function GoalsPage({
                         </div>
                       )}
 
-                      {atFreeLimit && (
+                      <Collapse open={!!atFreeLimit}>
                         <div className={styles.premiumBanner}>
                           <div className={styles.premiumTitle}>{t('goalsPage.premiumBanner.title')}</div>
                           <div className={styles.premiumText}>{t('goalsPage.premiumBanner.text')}</div>
@@ -286,7 +288,7 @@ export function GoalsPage({
                             <Crown size={16} fill="currentColor" /> {t('goalsPage.premiumBanner.button')}
                           </button>
                         </div>
-                      )}
+                      </Collapse>
                     </>
                   ) : (
                     completedGoals.length === 0 ? (
@@ -303,6 +305,7 @@ export function GoalsPage({
                       </div>
                     )
                   )}
+                  </div>
                 </>
               )}
             </div>

@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Collapse } from '../../components/Collapse'
 import { useTranslation } from 'react-i18next'
 // Ícono del encabezado vía Phosphor Icons (mismo patrón que las demás
 // sub-páginas ya migradas, v0.9.442-447) — import directo para tree-shaking real.
@@ -85,7 +86,7 @@ export function SettingsCobroPage({ profile, onUpdate, onBack, slideClass }) {
           </div>
         </div>
 
-        {profile.cobro_freq === 'weekly' && (
+        <Collapse open={!!(profile.cobro_freq === 'weekly')}>
           <div className={styles.subSection}>
             <div className={styles.subLabelMb8}>{t('settingsCobro.payDayLabel')}</div>
             <div className={styles.weekdayRow}>
@@ -97,9 +98,9 @@ export function SettingsCobroPage({ profile, onUpdate, onBack, slideClass }) {
               ))}
             </div>
           </div>
-        )}
+        </Collapse>
 
-        {profile.cobro_freq === 'biweekly' && (
+        <Collapse open={!!(profile.cobro_freq === 'biweekly')}>
           <div className={styles.subSection}>
             <div className={styles.subLabelMb8}>{t('settingsCobro.payDaysLabel')}</div>
             <div className={styles.presetsRow}>
@@ -114,7 +115,7 @@ export function SettingsCobroPage({ profile, onUpdate, onBack, slideClass }) {
                 {t('settingsCobro.otherOption')}
               </button>
             </div>
-            {isCustomBiweekly() && (
+            <Collapse open={!!(isCustomBiweekly())}>
               <div className={styles.customDaysRow}>
                 <div className={styles.customDayField}>
                   <label className={styles.customDayLabel}>{t('settingsCobro.day1Label')}</label>
@@ -125,11 +126,11 @@ export function SettingsCobroPage({ profile, onUpdate, onBack, slideClass }) {
                   <input type="number" min="1" max="31" defaultValue={profile.cobro_day2 ?? ''} onBlur={e => { const v = Math.min(31, Math.max(1, parseInt(e.target.value)||1)); e.target.value=v; onUpdate({ cobro_day2: v }) }} placeholder={t('settingsCobro.day2Placeholder')} className="field-input" />
                 </div>
               </div>
-            )}
+            </Collapse>
           </div>
-        )}
+        </Collapse>
 
-        {profile.cobro_freq === 'monthly' && (
+        <Collapse open={!!(profile.cobro_freq === 'monthly')}>
           <div className={`${styles.subSection} ${styles.subSectionLast}`}>
             <div className={styles.subLabelMb8}>{t('settingsCobro.payDayLabel')}</div>
             <div className={styles.dayGrid}>
@@ -145,7 +146,7 @@ export function SettingsCobroPage({ profile, onUpdate, onBack, slideClass }) {
               {(profile.cobro_day1 ?? 1) >= 29 && ` ${t('settingsCobro.monthShortHint')}`}
             </div>
           </div>
-        )}
+        </Collapse>
       </Card>
 
       <div className={styles.nextPayday}>
@@ -165,14 +166,14 @@ export function SettingsCobroPage({ profile, onUpdate, onBack, slideClass }) {
             <Toggle on={profile.salary_enabled} />
           </div>
         </div>
-        {profile.salary_enabled && (
+        <Collapse open={!!(profile.salary_enabled)}>
           <div className={styles.amountSection}>
             <div className={`${styles.amountField} ${symbol.length >= 3 ? styles.amountFieldLong : symbol.length === 2 ? styles.amountFieldMid : ''}`}>
               <span className={styles.amountPrefix}>{symbol}</span>
               <AmountInput value={salaryAmount} onChange={e => setSalaryAmount(e.target.value)} onBlur={handleSalaryBlur} aria-label={t('settingsCobro.amountLabel')} placeholder="0.00" className={`field-input ${styles.amountInput}`} />
             </div>
           </div>
-        )}
+        </Collapse>
       </Card>
 
       {/* Moneda — ajuste que casi no cambia: fila con hoja, no campo ancho */}
