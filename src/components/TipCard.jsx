@@ -11,19 +11,19 @@ const ROTATE_MS = 2 * 60 * 1000
 
 // `compact` (v0.9.696): sin título y con la acción subrayada; se usa cuando hay
 // pagos vencidos arriba, para que el consejo no le quite protagonismo al pago.
-export function TipCard({ onAction, compact = false, inSpace = false }) {
+export function TipCard({ onAction, compact = false, inSpace = false, isOwner = false, perms = null }) {
   const { t } = useTranslation()
-  const [tip, setTip] = useState(() => nextTip(inSpace))
+  const [tip, setTip] = useState(() => nextTip({ inSpace, isOwner, perms }))
   const [tick, setTick] = useState(0)
   const holdRef = useRef(false)
 
-  const spaceRef = useRef(inSpace)
-  spaceRef.current = inSpace
-  const advance = () => { setTip(nextTip(spaceRef.current)); setTick(n => n + 1) }
+  const ctxRef = useRef({ inSpace, isOwner, perms })
+  ctxRef.current = { inSpace, isOwner, perms }
+  const advance = () => { setTip(nextTip(ctxRef.current)); setTick(n => n + 1) }
 
   // Al cambiar entre Personal y un espacio, se cambia de consejo al momento.
   const firstRun = useRef(true)
-  useEffect(() => { if (firstRun.current) { firstRun.current = false; return } advance() }, [inSpace])
+  useEffect(() => { if (firstRun.current) { firstRun.current = false; return } advance() }, [inSpace, isOwner, perms?.can_mark_paid, perms?.can_add_funds])
 
   // Consejos remotos (tabla `tips`): al llegar nuevos, se cambia al siguiente.
   useEffect(() => {
