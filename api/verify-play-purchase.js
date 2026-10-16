@@ -1,6 +1,7 @@
 const { createClient } = require('@supabase/supabase-js')
 const applyCors = require('./_cors')
 const { PLAN_BY_PRODUCT_ID, ACTIVE_STATES, fetchSubscriptionState } = require('./_playBilling')
+const { authorizeRtdn } = require('./_rtdnAuth')
 
 // Mismo patrón que create-checkout-session.js/manage-subscription.js: el
 // cliente manda su propio JWT de sesión, este endpoint lo valida con el
@@ -107,7 +108,7 @@ async function handleVerify(req, res) {
 // Pub/Sub contra la URL vieja, así que este cambio de ruta no rompe nada ya
 // configurado — ver "Acciones pendientes fuera del código" en CONTEXT.md
 // para la URL nueva a usar al configurar la suscripción Push de Pub/Sub:
-// `https://my.luna-pay.app/api/verify-play-purchase?rtdn=1&token=...`.
+// `https://my.luna-pay.app/api/verify-play-purchase?rtdn=1` (con autenticación OIDC).
 //
 // Cómo llega esto aquí (configuración en consolas, FUERA de este código,
 // ver CONTEXT.md): Play Console → Monetización → Configuración de
@@ -119,15 +120,11 @@ async function handleVerify(req, res) {
 // crear suscripción → tipo "Push") apunta esa suscripción a la URL pública
 // de esta rama — Pub/Sub entonces hace un POST aquí por cada mensaje.
 //
-// Autenticación: Pub/Sub push soporta verificación completa vía OIDC (un
-// service account firma cada request), pero para no sumar esa complejidad
-// de entrada se usa el método más simple que Google documenta como válido:
-// un token compartido en la URL de la suscripción push
-// (.../api/verify-play-purchase?rtdn=1&token=...), guardado en Vercel como
-// `GOOGLE_PLAY_RTDN_SECRET` y puesto TAMBIÉN como query string al crear la
-// suscripción push en Pub/Sub — sin el token correcto, 401 de inmediato. Si
-// más adelante se quiere blindar más, se puede migrar a verificación OIDC
-// completa sin tocar el resto de esta función.
+// Autenticación (v0.9.733, ver api/_rtdnAuth.js): verificación OIDC — Pub/Sub
+// firma cada llamada con una cuenta de servicio y aquí se valida firma,
+// audiencia y correo, sin ningún secreto en la URL. El token en query string
+// (`?token=` == GOOGLE_PLAY_RTDN_SECRET) sigue aceptándose como camino
+// heredado mientras esa variable exista.
 //
 // Nunca se confía en el `notificationType` del mensaje para decidir nada —
 // solo se usa como señal de "algo cambió en esta suscripción"; la verdad
@@ -135,13 +132,13 @@ async function handleVerify(req, res) {
 // (`fetchSubscriptionState`, mismo helper que usa handleVerify arriba)
 // antes de tocar `profiles`.
 async function handleRtdn(req, res) {
-  const expectedToken = process.env.GOOGLE_PLAY_RTDN_SECRET
-  if (!expectedToken) {
-    console.error('[verify-play-purchase/rtdn] Falta configurar GOOGLE_PLAY_RTDN_SECRET en el servidor')
-    return res.status(500).json({ error: 'Webhook no configurado' })
+  const auth = await authorizeRtdn(req)
+  if (!auth.ok) {
+    if (auth.status === 500) console.error('[verify-play-purchase/rtdn]', auth.error)
+    return res.status(auth.status).json({ error: auth.error })
   }
-  if (req.query?.token !== expectedToken) {
-    return res.status(401).json({ error: 'Token inválido' })
+  if (auth.via === 'query-token') {
+    console.warn('[verify-play-purchase/rtdn] Autenticado con token en la URL (heredado); migrar la suscripción push a OIDC')
   }
 
   // Envoltura estándar de un mensaje PUSH de Pub/Sub:
