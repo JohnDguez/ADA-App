@@ -115,7 +115,7 @@ export default function App() {
   useEffect(() => {
     if (!paymentsSpaceId || sharedSpaces.loading) return
     if (!activeSpaceEntry) switchSpace(null)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [paymentsSpaceId, sharedSpaces.loading, activeSpaceEntry])
 
   // Si App montó bien, la app está sana — se limpia la bandera de
@@ -702,7 +702,7 @@ export default function App() {
       }).then(h => { sub = h })
     }
     return () => { cleanup(); sub?.remove() }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [navReady])
 
   // "Quedarme": se vuelve a abrir una entrada de tab encima de la raíz para
@@ -774,7 +774,7 @@ export default function App() {
     const unseen = getPatchNotes().filter(n => isNewerVersion(n.version, lastSeen))
     setPatchNotesToShow(unseen)
     setPatchNotesOpen(unseen.length > 0)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [user, profile, profileLoading, i18n.language])
 
   // Popup de feedback alpha (ver components/FeedbackPromptModal.jsx): primera
@@ -830,7 +830,7 @@ export default function App() {
     if (sessionStorage.getItem('ada_active_space')) return
     const defId = profile.default_space_id
     if (defId && sharedSpaces.spaces.some(s => s.space.id === defId)) switchSpace(defId)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [profileLoading, sharedSpaces.loading, profile.default_space_id, sharedSpaces.spaces])
 
   // (Va ANTES de los return de carga/login: los hooks no pueden ir después de un return condicional.)

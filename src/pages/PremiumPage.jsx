@@ -270,7 +270,7 @@ export function PremiumPage({ profile, onClose, refreshProfile, onSubscribed }) 
   // viejo todavía en memoria.
   const checkoutOptions = useMemo(() => (
     clientSecret ? { clientSecret, onComplete: confirmAndClose } : null
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- solo debe
+     
     // recrearse cuando cambia clientSecret; confirmAndClose cierra sobre
     // refreshProfile/onClose (props), no hace falta recomputar por eso.
   ), [clientSecret])

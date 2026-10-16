@@ -8,7 +8,9 @@
     "build": "vite build",
     "preview": "vite preview",
     "cap:sync": "vite build && npx cap sync android",
-    "android:open": "npx cap open android"
+    "android:open": "npx cap open android",
+    "lint": "eslint src api public/sw.js --max-warnings=9999",
+    "test": "vitest run"
   },
   "dependencies": {
     "@capacitor-community/in-app-review": "^8.0.0",
@@ -42,8 +44,14 @@
   "devDependencies": {
     "@capacitor/assets": "^3.0.5",
     "@capacitor/cli": "^8.5.2",
+    "@eslint/js": "^9.39.5",
     "@vitejs/plugin-react": "^4.3.1",
+    "eslint": "^9.39.5",
+    "eslint-plugin-react-hooks": "^5.2.0",
+    "globals": "^17.13.0",
+    "jsdom": "^25.0.1",
     "typescript": "^7.0.2",
-    "vite": "^5.3.1"
+    "vite": "^5.3.1",
+    "vitest": "^2.1.9"
   }
 }

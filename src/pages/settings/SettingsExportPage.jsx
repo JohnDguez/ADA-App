@@ -159,7 +159,7 @@ export function SettingsExportPage({ profile, sharedSpaces, onOpenPremium, onBac
       const d = effectiveDateStr(p)
       return d >= from && d <= to
     })
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [space, from, to, profile.id])
 
   // Trae los ingresos EXTRA capturados a mano del rango (bonos, etc.) —
@@ -176,7 +176,7 @@ export function SettingsExportPage({ profile, sharedSpaces, onOpenPremium, onBac
 
     const { data, error } = await query
     return (!error && data) ? data : []
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [space, from, to, profile.id])
 
   // El salario/nómina periódico NO vive en `period_income` — vive como un

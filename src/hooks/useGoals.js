@@ -119,7 +119,7 @@ export function useGoals(userId, profile, spaceId = null, onPaymentsChanged = nu
     setRawGoals(applyPending('goals', goalsData || []))
     setTransactions(applyPending('goal_transactions', txData || []))
     setLoading(false)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [userId, spaceId])
 
   useEffect(() => { fetchAll() }, [fetchAll])

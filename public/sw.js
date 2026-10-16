@@ -1,6 +1,4 @@
-const CACHE_NAME = 'ada-pay-v1'
-
-self.addEventListener('install', e => {
+self.addEventListener('install', () => {
   self.skipWaiting()
 })
 

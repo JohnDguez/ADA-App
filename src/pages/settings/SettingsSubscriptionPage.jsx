@@ -74,7 +74,7 @@ export function SettingsSubscriptionPage({ profile, onOpenPremium, onBack, slide
     // Solo tiene sentido preguntarle a Stripe cuando la suscripción real es
     // de Stripe — para 'google_play'/'admin'/'none' no hay nada que pedir.
     if (premiumSource === 'stripe') loadSubscription()
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- premiumSource
+     
     // se deriva de `profile`, que no cambia de fuente de suscripción en
     // vivo dentro de la misma sesión; correr esto solo al montar es
     // suficiente (mismo criterio que el efecto original).

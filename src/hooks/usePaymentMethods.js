@@ -40,7 +40,7 @@ export function usePaymentMethods(userId, onSyncError = null) {
     if (error) { setLoaded(true); return }
     setMethods(applyPending(data || []))
     setLoaded(true)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [userId])
 
   useEffect(() => { fetchMethods() }, [fetchMethods])

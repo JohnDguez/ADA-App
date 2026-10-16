@@ -47,7 +47,7 @@ export function SettingsAppearancePage({ theme, onThemeChange, onBack, slideClas
     const card = track.children[idx]
     if (!card) return
     track.scrollLeft = card.offsetLeft - (track.clientWidth - card.offsetWidth) / 2
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [theme])
 
   // Mientras se desliza, detecta (con un pequeño debounce tras el último
