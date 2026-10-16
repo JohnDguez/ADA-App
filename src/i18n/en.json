@@ -144,6 +144,7 @@
     "dangerModal": {
       "titleData": "Delete all data",
       "titleAccount": "Delete account",
+      "playSubscriptionNotice": "Your Google Play subscription is not canceled automatically when you delete your account. Also cancel it in the Play Store (Payments & subscriptions) so you are not charged again.",
       "descriptionData": "This will permanently delete all your payments and income. Your account will stay active. This action can't be undone.",
       "descriptionAccount": "This will permanently delete your account and all your data. You won't be able to recover it. This action can't be undone.",
       "confirmLabel": "Confirm with your password",

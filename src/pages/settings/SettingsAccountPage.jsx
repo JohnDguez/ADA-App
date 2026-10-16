@@ -11,6 +11,7 @@ import { passwordRequirements, isPasswordStrong } from '../../components/Passwor
 import { RequirementRow } from '../../components/RequirementRow'
 import { Card, Row, SectionLabel } from '../../components/SettingsShared'
 import { apiUrl } from '../../lib/apiUrl'
+import { getPremiumSource } from '../../lib/utils'
 import styles from './SettingsAccountPage.module.css'
 import { Presence } from '../../components/Presence'
 
@@ -37,6 +38,9 @@ export function SettingsAccountPage({ profile, user, onUpdate, onDataDeleted, on
   const [dangerError,    setDangerError]    = useState('')
 
   const isGoogle = user?.app_metadata?.provider === 'google'
+  // Una suscripción de Google Play no se puede cancelar desde el servidor:
+  // al eliminar la cuenta hay que avisar que se cancela aparte en la Play Store.
+  const hasPlaySubscription = getPremiumSource(profile) === 'google_play'
 
   const newPassReqs   = passwordRequirements(fieldVal)
   const newPassStrong = isPasswordStrong(fieldVal)
@@ -213,6 +217,9 @@ export function SettingsAccountPage({ profile, user, onUpdate, onDataDeleted, on
                 : t('settingsAccount.dangerModal.descriptionAccount')
               }
             </div>
+            {dangerModal === 'account' && hasPlaySubscription && (
+              <div className={styles.playNotice}>{t('settingsAccount.dangerModal.playSubscriptionNotice')}</div>
+            )}
             {dangerError && (
               <div className={styles.errorBox}>
                 {dangerError}

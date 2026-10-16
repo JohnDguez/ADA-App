@@ -144,6 +144,7 @@
     "dangerModal": {
       "titleData": "Eliminar todos los datos",
       "titleAccount": "Eliminar cuenta",
+      "playSubscriptionNotice": "Tu suscripción de Google Play no se cancela sola al eliminar la cuenta. Cancélala también en Play Store (Pagos y suscripciones) para que no te sigan cobrando.",
       "descriptionData": "Esta acción eliminará todos tus pagos e ingresos permanentemente. Tu cuenta se mantendrá activa. Esta acción no se puede deshacer.",
       "descriptionAccount": "Esta acción eliminará tu cuenta y todos tus datos permanentemente. No podrás recuperarlos. Esta acción no se puede deshacer.",
       "confirmLabel": "Confirma con tu contraseña",
