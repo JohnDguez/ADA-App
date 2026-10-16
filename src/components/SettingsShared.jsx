@@ -1,5 +1,6 @@
 import { ChevronRight } from 'lucide-react'
 import styles from './SettingsShared.module.css'
+import { kbdIf, switchProps } from '../lib/a11y'
 
 // Componentes reutilizados por SettingsPage.jsx y sus sub-páginas
 // (SettingsAccountPage, SettingsCobroPage, SettingsCategoriesPage,
@@ -25,7 +26,7 @@ export function SectionLabel({ children }) {
 export function Row({ label, sub, value, onClick, last, icon: Icon, iconColor, filled }) {
   const color = filled ? 'var(--premium-gold-text)' : (iconColor || 'var(--text)')
   return (
-    <div
+    <div {...kbdIf(!!onClick)}
       onClick={onClick}
       className={`${styles.row} ${last ? styles.rowLast : ''} ${onClick ? styles.rowClickable : ''} ${filled ? styles.rowFilled : ''}`}
     >
@@ -55,7 +56,7 @@ export function Toggle({ on, instant = false }) {
 
 export function NotifToggle({ label, sub, value, onChange, last }) {
   return (
-    <div
+    <div {...switchProps(value)}
       onClick={() => onChange(!value)}
       className={`${styles.notifRow} ${last ? styles.notifRowLast : ''}`}
     >

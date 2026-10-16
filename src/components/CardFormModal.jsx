@@ -129,7 +129,7 @@ export function CardFormModal({ open, initial, onSave, onClose }) {
         <div className={styles.row2}>
           <div className={styles.fieldGrow}>
             <label className="field-label">{t('cards.form.alias')}</label>
-            <input
+            <input aria-label={t('cards.form.alias')}
               className="field-input"
               value={form.alias}
               maxLength={24}
@@ -139,7 +139,7 @@ export function CardFormModal({ open, initial, onSave, onClose }) {
           </div>
           <div className={styles.fieldLast4}>
             <label className="field-label">{t('cards.form.last4')}</label>
-            <input
+            <input aria-label={t('cards.form.last4')}
               className="field-input"
               inputMode="numeric"
               value={form.last4}

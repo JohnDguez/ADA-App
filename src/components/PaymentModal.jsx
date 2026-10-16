@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useId, Children, isValidElement, cloneElement } from 'react'
 import { useTranslation } from 'react-i18next'
 import i18n from '../i18n'
 import { Wallet, AlertTriangle, Repeat, Check, Info, Lock } from 'lucide-react'
@@ -33,6 +33,7 @@ import { isTicketScanSupported, scanTicketText } from '../lib/ticketScan'
 import { parseTicketText } from '../lib/parseTicket'
 import { usePresence } from '../lib/usePresence'
 import { useScrollLock } from '../lib/scrollLock'
+import { switchProps } from '../lib/a11y'
 
 export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onSaveCardPlan, onDelete, onEditMaster, initial: initialProp, payments, profile, spacePermissions, isSharedSpace = false, customCategories = [], onUpdateProfile, onOpenPremium, paymentMethods = null, prefill = null, autoStart = null }) {
   const { t } = useTranslation()
@@ -1196,17 +1197,19 @@ function rangeLabel(start, end) {
 }
 
 function Field({ label, children }) {
+  const id = useId()
+  const kids = Children.map(children, c => (isValidElement(c) && c.type === 'input' && !c.props.id ? cloneElement(c, { id }) : c))
   return (
     <div className={styles.fieldGroup}>
-      <label className="field-label">{label}</label>
-      {children}
+      <label className="field-label" htmlFor={id}>{label}</label>
+      {kids}
     </div>
   )
 }
 
 function Toggle({ label, sub, value, onChange }) {
   return (
-    <div onClick={() => onChange(!value)} className={styles.toggleWrapper}>
+    <div {...switchProps(value)} onClick={() => onChange(!value)} className={styles.toggleWrapper}>
       <div>
         <div className={styles.toggleLabel}>{label}</div>
         <div className={styles.toggleSub}>{sub}</div>

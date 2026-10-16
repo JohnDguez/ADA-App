@@ -8,6 +8,7 @@ import { AvatarImg } from './AvatarImg'
 import { usePresence } from '../lib/usePresence'
 import { useScrollLock } from '../lib/scrollLock'
 import { formatBadgeCount } from '../lib/formatBadgeCount'
+import { kbd } from '../lib/a11y'
 
 // timeAgo() no es un componente — usa el singleton i18n.t() directo, mismo
 // criterio que greeting() en PageHeader.jsx.
@@ -190,7 +191,7 @@ export function NotificationsPanel({ open, onClose, notifications, unreadCount, 
     const accent = accentFor(n.type)
     return (
       <SwipeRow key={n.id} onDelete={() => onDelete(n.id)}>
-        <div
+        <div {...kbd}
           onClick={() => go(n)}
           className={`${styles.notifRow} ${!n.read ? styles.notifRowUnread : ''}`}
           style={accent ? { boxShadow: `inset 3px 0 0 ${accent}` } : undefined}
@@ -239,7 +240,7 @@ export function NotificationsPanel({ open, onClose, notifications, unreadCount, 
     const newCount = lines.filter(l => l.unread).length
     return (
       <div key={g.key}>
-        <div
+        <div {...kbd}
           onClick={() => setOpenGroups(o => ({ ...o, [g.key]: !o[g.key] }))}
           className={`${styles.notifRow} ${anyUnread ? styles.notifRowUnread : ''}`}
         >
@@ -258,7 +259,7 @@ export function NotificationsPanel({ open, onClose, notifications, unreadCount, 
             {expanded && (
               <div className={`${styles.groupBox} ${anyUnread ? styles.groupBoxOnUnread : ''}`}>
                 {lines.map(l => (
-                  <div
+                  <div {...kbd}
                     key={l.key}
                     className={`${styles.groupLine} ${l.unread ? styles.groupLineUnread : ''}`}
                     onClick={e => { e.stopPropagation(); goLine(l) }}
@@ -311,7 +312,7 @@ export function NotificationsPanel({ open, onClose, notifications, unreadCount, 
                 <Trash2 size={14} color="var(--text)" />
               </button>
             )}
-            <button onClick={onClose} className={styles.iconButton}>
+            <button onClick={onClose} className={styles.iconButton} aria-label={t('buttons.close')}>
               <X size={14} color="var(--text)" />
             </button>
           </div>

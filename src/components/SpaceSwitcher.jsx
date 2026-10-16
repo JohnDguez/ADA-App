@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import i18n from '../i18n'
 import { Plus, UserRound, Crown, UsersRound } from 'lucide-react'
 import styles from './SpaceSwitcher.module.css'
+import { kbd } from '../lib/a11y'
 
 // Selector de espacio activo — tarjetas apiladas (patrón que Johnatan mostró
 // de la app de Banamex). Dibuja SOLO las tarjetas que asoman (no la activa
@@ -154,7 +155,7 @@ export function SpaceSwitcher({ spaces, activeSpaceId, onSwitch, profile, stats 
         const cardBg = useRestingColor ? 'var(--bg)' : colorsFor(item.kind).bg
         const cardFilter = (useRestingColor || item.kind !== 'space') ? 'none' : `brightness(${brightnessFor(item)})`
         return (
-          <div
+          <div {...kbd}
             key={item.id ?? 'personal'}
             onClick={() => !isExiting && onSwitch(item.id === 'new' ? 'new' : item.id)}
             className={styles.spaceCard}

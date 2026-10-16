@@ -8,6 +8,7 @@ import styles from './SplitContributionsModal.module.css'
 import { AvatarImg } from './AvatarImg'
 import { usePresence } from '../lib/usePresence'
 import { useScrollLock } from '../lib/scrollLock'
+import { kbd } from '../lib/a11y'
 
 // Registro de "quién puso cuánto" en un gasto del Espacio Compartido —
 // deliberadamente NO es un split planeado de antemano (montos fijos por
@@ -191,7 +192,7 @@ export function SplitContributionsModal({ open, payment, spaceMembers, currentUs
             <div className={styles.members}>
               {onSetFundContribution && (
                 <div className={styles.memberCard}>
-                  <div
+                  <div {...kbd}
                     onClick={() => (fundBalance > 0 || fundAmount > 0) && openFundRow()}
                     className={`${styles.memberRow} ${fundBalance <= 0 && fundAmount <= 0 ? styles.memberRowLocked : ''}`}
                   >
@@ -223,7 +224,7 @@ export function SplitContributionsModal({ open, payment, spaceMembers, currentUs
                 const amount = contributions[m.user_id]
                 return (
                   <div key={m.user_id} className={styles.memberCard}>
-                    <div onClick={() => openRow(m.user_id)} className={styles.memberRow}>
+                    <div {...kbd} onClick={() => openRow(m.user_id)} className={styles.memberRow}>
                       <span className={styles.memberNameRow}>
                         <span className={styles.memberAvatar}>
                           <AvatarImg

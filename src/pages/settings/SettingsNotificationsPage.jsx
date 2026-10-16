@@ -11,6 +11,7 @@ import { Card, Toggle } from '../../components/SettingsShared'
 import { TimeWheelSheet } from '../../components/TimeWheelSheet'
 import { Collapse } from '../../components/Collapse'
 import styles from './SettingsNotificationsPage.module.css'
+import { switchProps } from '../../lib/a11y'
 
 // Mismo formato de horas que ya usaba el <select> nativo (12:00 am ... 11:00
 // pm) — Select.jsx trabaja con opciones como texto, así que se guarda el
@@ -82,7 +83,7 @@ export function SettingsNotificationsPage({ profile, user, onUpdate, onBack, sli
 
       <Card>
         <div className={styles.subSection}>
-          <div className={styles.toggleRow} onClick={handlePushToggle}>
+          <div {...switchProps(subscribed)} className={styles.toggleRow} onClick={handlePushToggle}>
             <div className={styles.toggleRowLeft}>
               {subscribed ? <Bell size={18} color="var(--accent)" /> : <BellOff size={18} color="var(--text)" />}
               <div>

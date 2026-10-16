@@ -10,6 +10,7 @@ import { getBank, bankColorVar } from '../lib/cardCatalog'
 import { ConfirmDeleteModal } from './ConfirmDeleteModal'
 import styles from './PayCard.module.css'
 import { useScrollLock } from '../lib/scrollLock'
+import { kbdIf } from '../lib/a11y'
 
 // statusInfo() no es un componente — usa el singleton i18n.t(), mismo
 // criterio que greeting()/timeAgo()/getCategoryLabel() en otros archivos.
@@ -58,7 +59,7 @@ function PayCardImpl({ payment: p, cfg, paymentMethodsList = [], onChangeMethod,
     return (
       <div className={styles.cardOuter}>
         <div className={styles.cardWrapper}>
-          <div
+          <div {...kbdIf(!!onSelect)}
             onClick={onSelect ? () => onSelect(p.id) : undefined}
             className={`${styles.card} ${onSelect ? styles.cardSelectable : ''} ${selected ? styles.cardSelected : ''}`}
             style={{ borderLeft: `5px solid ${borderLeft || 'var(--border)'}` }}
@@ -334,7 +335,7 @@ function PayCardImpl({ payment: p, cfg, paymentMethodsList = [], onChangeMethod,
   return (
     <div ref={menuRef} className={styles.cardOuter}>
       <div ref={wrapperRef} className={styles.cardWrapper}>
-      <div
+      <div {...kbdIf(!!onSelect)}
         data-payment-id={p.id}
         onClick={onSelect ? () => onSelect(p.id) : undefined}
         className={`${styles.card} ${phase === 'exiting' ? styles.cardExiting : ''} ${onSelect ? styles.cardSelectable : ''} ${selected ? styles.cardSelected : ''}`}
@@ -574,7 +575,7 @@ export function GroupCard({ group, cfg, onMarkPaid, onMarkUnpaid, onEdit, onDele
         </div>
         <div className={styles.groupActions}>
           {isPending && (
-            <button onClick={() => onMarkPaid(group)} className={styles.groupMarkPaidButton}>
+            <button onClick={() => onMarkPaid(group)} className={styles.groupMarkPaidButton} aria-label={t('buttons.markPaid')}>
               <Check size={18} color="var(--pay-icon)" strokeWidth={2.5} />
             </button>
           )}
@@ -600,12 +601,12 @@ export function GroupCard({ group, cfg, onMarkPaid, onMarkUnpaid, onEdit, onDele
                 {p.amount > 0 && <span className={styles.groupItemAmount}>{fmt(p.amount)}</span>}
                 <span className={styles.groupItemStatus} style={{ color: bColor }}>{bLabel}</span>
                 {isPend && (
-                  <button onClick={() => onMarkPaid(p)} className={styles.groupItemMarkPaidButton}>
+                  <button onClick={() => onMarkPaid(p)} className={styles.groupItemMarkPaidButton} aria-label={t('buttons.markPaid')}>
                     <Check size={12} color="var(--pay-icon)" strokeWidth={2.5} />
                   </button>
                 )}
                 {p.is_paid && (
-                  <button onClick={() => onMarkUnpaid(p.id)} className={styles.groupItemUndoButton}>
+                  <button onClick={() => onMarkUnpaid(p.id)} className={styles.groupItemUndoButton} aria-label={t('buttons.markUnpaid')}>
                     <RotateCcw size={10} color="var(--text)" />
                   </button>
                 )}

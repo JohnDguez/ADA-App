@@ -6,6 +6,7 @@ import { MonitorSmartphone, Sun, Moon, MoveHorizontal } from 'lucide-react'
 import { MoonStars } from '@phosphor-icons/react/dist/csr/MoonStars'
 import { PageHero } from '../../components/PageHero'
 import styles from './SettingsAppearancePage.module.css'
+import { kbd } from '../../lib/a11y'
 
 // Los 3 íconos de las tarjetas SÍ son de Lucide (no Phosphor) — a
 // diferencia del ícono del encabezado, estos son la propia ACCIÓN
@@ -93,7 +94,7 @@ export function SettingsAppearancePage({ theme, onThemeChange, onBack, slideClas
 
       <div ref={trackRef} onScroll={handleScroll} className={styles.carousel}>
         {OPTIONS.map(({ id, icon: Icon }, idx) => (
-          <div key={id} onClick={() => centerCard(idx)} className={`${styles.carouselCard} ${theme === id ? styles.carouselCardActive : ''}`}>
+          <div {...kbd} key={id} onClick={() => centerCard(idx)} className={`${styles.carouselCard} ${theme === id ? styles.carouselCardActive : ''}`}>
             <Icon size={24} color={theme === id ? 'var(--accent)' : 'var(--text)'} />
             <div className={`${styles.skeletonPreview} ${styles['skeleton_' + id]}`}>
               <div className={styles.skeletonBarLeft} />

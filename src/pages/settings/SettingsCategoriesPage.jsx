@@ -11,6 +11,7 @@ import { getCategoryIcon } from '../../lib/categoryIcons'
 import { Card } from '../../components/SettingsShared'
 import { CategoryFormModal } from '../../components/CategoryFormModal'
 import styles from './SettingsCategoriesPage.module.css'
+import { kbd } from '../../lib/a11y'
 
 // Sub-página "Categorías" dentro de Ajustes — fase 3: modal completo
 // (nombre + ícono + color) para agregar y editar cualquier categoría.
@@ -69,7 +70,7 @@ export function SettingsCategoriesPage({ profile, onUpdate, onBack, slideClass }
 
     return (
       <div>
-        <div
+        <div {...kbd}
           onClick={() => openEdit(cat, isCustom)}
           className={`${styles.categoryRow} ${noBorder ? styles.categoryRowNoBorder : ''}`}
         >

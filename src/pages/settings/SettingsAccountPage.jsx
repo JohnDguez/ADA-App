@@ -220,7 +220,7 @@ export function SettingsAccountPage({ profile, user, onUpdate, onDataDeleted, on
             )}
             <label className={`field-label ${styles.label}`}>{t('settingsAccount.dangerModal.confirmLabel')}</label>
             <div className={styles.inputWrapperSpaced}>
-              <input
+              <input aria-label={t('settingsAccount.dangerModal.confirmLabel')}
                 autoFocus
                 type={showDangerPass ? 'text' : 'password'}
                 className={`field-input ${styles.dangerPasswordInput}`}
@@ -260,14 +260,14 @@ export function SettingsAccountPage({ profile, user, onUpdate, onDataDeleted, on
             {editSection === 'name' && (
               <div className={styles.fieldGroup}>
                 <label className="field-label">{t('settingsAccount.editModal.nameLabel')}</label>
-                <input autoFocus className="field-input" value={fieldVal} onChange={e => setFieldVal(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleEditSave()} />
+                <input aria-label={t('settingsAccount.editModal.nameLabel')} autoFocus className="field-input" value={fieldVal} onChange={e => setFieldVal(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleEditSave()} />
               </div>
             )}
 
             {editSection === 'email' && (
               <div className={styles.fieldGroup}>
                 <label className="field-label">{t('settingsAccount.editModal.emailLabel')}</label>
-                <input autoFocus className="field-input" type="email" value={fieldVal} onChange={e => setFieldVal(e.target.value)} />
+                <input aria-label={t('settingsAccount.editModal.emailLabel')} autoFocus className="field-input" type="email" value={fieldVal} onChange={e => setFieldVal(e.target.value)} />
               </div>
             )}
 
@@ -275,7 +275,7 @@ export function SettingsAccountPage({ profile, user, onUpdate, onDataDeleted, on
               <div className={styles.fieldGroupSm}>
                 <label className="field-label">{t('settingsAccount.editModal.currentPasswordLabel')}</label>
                 <div className={styles.inputWrapper}>
-                  <input autoFocus className={`field-input ${styles.inputWithToggle}`} type={showPass3 ? 'text' : 'password'} value={fieldVal3} onChange={e => setFieldVal3(e.target.value)} placeholder="••••••••" />
+                  <input aria-label={t('settingsAccount.editModal.currentPasswordLabel')} autoFocus className={`field-input ${styles.inputWithToggle}`} type={showPass3 ? 'text' : 'password'} value={fieldVal3} onChange={e => setFieldVal3(e.target.value)} placeholder="••••••••" />
                   <button type="button" onClick={() => setShowPass3(v => !v)} className={styles.toggleVisibilityButton}>
                     {showPass3 ? <EyeOff size={16} color="var(--text)" /> : <Eye size={16} color="var(--text)" />}
                   </button>
@@ -288,7 +288,7 @@ export function SettingsAccountPage({ profile, user, onUpdate, onDataDeleted, on
               <div className={styles.fieldGroupXs}>
                 <label className="field-label">{t('settingsAccount.editModal.newPasswordLabel')}</label>
                 <div className={styles.inputWrapper}>
-                  <input className={`field-input ${styles.inputWithToggle}`} type={showPass ? 'text' : 'password'} value={fieldVal} onChange={e => setFieldVal(e.target.value)} placeholder="••••••••" />
+                  <input aria-label={t('settingsAccount.editModal.newPasswordLabel')} className={`field-input ${styles.inputWithToggle}`} type={showPass ? 'text' : 'password'} value={fieldVal} onChange={e => setFieldVal(e.target.value)} placeholder="••••••••" />
                   <button type="button" onClick={() => setShowPass(v => !v)} className={styles.toggleVisibilityButton}>
                     {showPass ? <EyeOff size={16} color="var(--text)" /> : <Eye size={16} color="var(--text)" />}
                   </button>
@@ -307,7 +307,7 @@ export function SettingsAccountPage({ profile, user, onUpdate, onDataDeleted, on
               <div className={styles.fieldGroup}>
                 <label className="field-label">{t('settingsAccount.editModal.confirmPasswordLabel')}</label>
                 <div className={styles.inputWrapper}>
-                  <input className={`field-input ${styles.inputWithToggle} ${fieldVal2 && !newPassMatch ? styles.inputError : ''}`} type={showPass2 ? 'text' : 'password'} value={fieldVal2} onChange={e => setFieldVal2(e.target.value)} placeholder="••••••••" />
+                  <input aria-label={t('settingsAccount.editModal.confirmPasswordLabel')} className={`field-input ${styles.inputWithToggle} ${fieldVal2 && !newPassMatch ? styles.inputError : ''}`} type={showPass2 ? 'text' : 'password'} value={fieldVal2} onChange={e => setFieldVal2(e.target.value)} placeholder="••••••••" />
                   <button type="button" onClick={() => setShowPass2(v => !v)} className={styles.toggleVisibilityButton}>
                     {showPass2 ? <EyeOff size={16} color="var(--text)" /> : <Eye size={16} color="var(--text)" />}
                   </button>

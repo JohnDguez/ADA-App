@@ -7,6 +7,7 @@ import { showInviteCode } from './InviteCodeModal'
 import styles from './ActiveSpaceHeader.module.css'
 import { useScrollLock } from '../lib/scrollLock'
 import { Presence } from './Presence'
+import { kbd } from '../lib/a11y'
 
 // Encabezado del espacio activo — antes vivía DENTRO de SpaceSwitcher.jsx
 // como la "tarjeta al frente" del stack, en su propio contenedor separado
@@ -192,7 +193,7 @@ export function ActiveSpaceHeader({ activeSpaceId, sharedSpaces, onManage, onSwi
 
   return (
     <div className={styles.headerRoot} style={{ animation: entering ? 'activeHeaderEnter .3s cubic-bezier(0.25, 0.46, 0.45, 0.94) both' : 'none' }}>
-      <div
+      <div {...kbd}
         ref={headerRowRef}
         onClick={handleToggleSpaceList}
         className={`${styles.headerRow} ${styles.headerRowIsland} ${styles.headerRowClickable} ${spaceListOpen ? styles.headerRowExpanded : ''}`}
@@ -236,6 +237,9 @@ export function ActiveSpaceHeader({ activeSpaceId, sharedSpaces, onManage, onSwi
               setMenuOpen(v => !v)
             }}
             className={styles.menuButton}
+            aria-label={t('buttons.options')}
+            aria-haspopup="menu"
+            aria-expanded={menuOpen}
           >
             <MoreVertical size={18} color="var(--text)" />
           </button>
@@ -337,7 +341,7 @@ export function ActiveSpaceHeader({ activeSpaceId, sharedSpaces, onManage, onSwi
                   {t('activeSpaceHeader.deleteModal.description')}
                 </div>
                 <label className={`field-label ${styles.label}`}>{t('settingsAccount.dangerModal.confirmLabel')}</label>
-                <input
+                <input aria-label={t('settingsAccount.dangerModal.confirmLabel')}
                   type="password" className={`field-input ${styles.passwordInput}`} value={dangerPassword}
                   onChange={e => setDangerPassword(e.target.value)}
                   onKeyDown={e => e.key === 'Enter' && handleDeleteOrLeave()}

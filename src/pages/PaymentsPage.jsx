@@ -22,6 +22,7 @@ import { Presence } from '../components/Presence'
 import { Collapse } from '../components/Collapse'
 import { usePresence } from '../lib/usePresence'
 import { useScrollLock } from '../lib/scrollLock'
+import { kbd } from '../lib/a11y'
 
 const INCOME_TYPES = ['Bono', 'Préstamo', 'Pago', 'Comisión', 'Otro']
 
@@ -991,7 +992,7 @@ export function PaymentsPage({ payments, dataLoading = false, periodIncome, paym
             {/* Nota opcional */}
             <div className={styles.incomeFieldGroupLast}>
               <div className={styles.incomeLabelMb6}>{t('paymentsPage.noteOptional')}</div>
-              <input
+              <input aria-label={t('paymentsPage.noteOptional')}
                 type="text"
                 placeholder={t('paymentsPage.incomeModal.notePlaceholder')}
                 value={incomeNote}
@@ -1058,7 +1059,7 @@ export function PaymentsPage({ payments, dataLoading = false, periodIncome, paym
                           onChange={e => setEditIncomeAmount(e.target.value)}
                           className={styles.editInput}
                         />
-                        <input
+                        <input aria-label={t('paymentsPage.noteOptional')}
                           type="text"
                           placeholder={t('paymentsPage.noteOptional')}
                           value={editIncomeNote}
@@ -1172,7 +1173,7 @@ export function PaymentsPage({ payments, dataLoading = false, periodIncome, paym
             )}
             <div className={styles.incomeFieldGroupLast}>
               <div className={styles.incomeLabelMb6}>{t('paymentsPage.noteOptional')}</div>
-              <input
+              <input aria-label={t('paymentsPage.noteOptional')}
                 type="text" placeholder={t('paymentsPage.addFundModal.notePlaceholder')} value={fundNote}
                 onChange={e => setFundNote(e.target.value)}
                 className={styles.incomeInput}
@@ -1514,7 +1515,7 @@ export function PaymentsPage({ payments, dataLoading = false, periodIncome, paym
                                 {entry.amount < 0 ? '' : '+'}{fmt(entry.amount)}
                               </span>
                               {isDeposit && (
-                                <button onClick={() => setManageFundModal(true)} className={`${styles.extrasEditButton} ${styles.fundDeleteButton}`}>
+                                <button onClick={() => setManageFundModal(true)} className={`${styles.extrasEditButton} ${styles.fundDeleteButton}`} aria-label={t('buttons.delete')}>
                                   <Trash2 size={11} />
                                 </button>
                               )}
@@ -1727,7 +1728,7 @@ export function PaymentsPage({ payments, dataLoading = false, periodIncome, paym
                 const catColor = getCatColor(cat, profile.custom_categories, profile.category_colors)
                 const CatIcon  = getCategoryIcon(cat, profile.category_icons)
                 return (
-                  <div
+                  <div {...kbd}
                     key={cat}
                     onClick={() => setSelectedCat(selectedCat === cat ? null : cat)}
                     className={`${styles.categoryListItem} ${selectedCat === cat ? styles.categoryListItemActive : ''}`}

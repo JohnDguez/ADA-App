@@ -103,7 +103,7 @@ export function DatePicker({ value, onChange, placeholder, sheet = false, sheetT
           {mode === 'days' ? (
             <>
               <div className={styles.navRow}>
-                <button type="button" onClick={() => setViewDate(addMonths(viewDate, -1))} className={styles.navArrowButton}>
+                <button type="button" onClick={() => setViewDate(addMonths(viewDate, -1))} className={styles.navArrowButton} aria-label={t('buttons.previous')}>
                   <ChevronLeft size={16} color="var(--text)" />
                 </button>
                 <button
@@ -114,7 +114,7 @@ export function DatePicker({ value, onChange, placeholder, sheet = false, sheetT
                   <span className={styles.monthYearLabel}>{getMonths()[month]} {year}</span>
                   <ChevronDown size={13} color="var(--text)" />
                 </button>
-                <button type="button" onClick={() => setViewDate(addMonths(viewDate, 1))} className={styles.navArrowButton}>
+                <button type="button" onClick={() => setViewDate(addMonths(viewDate, 1))} className={styles.navArrowButton} aria-label={t('buttons.next')}>
                   <ChevronRight size={16} color="var(--text)" />
                 </button>
               </div>
@@ -142,7 +142,7 @@ export function DatePicker({ value, onChange, placeholder, sheet = false, sheetT
           ) : (
             <>
               <div className={styles.navRow}>
-                <button type="button" onClick={() => setViewDate(new Date(year - 1, month, 1))} className={styles.navArrowButton}>
+                <button type="button" onClick={() => setViewDate(new Date(year - 1, month, 1))} className={styles.navArrowButton} aria-label={t('buttons.previous')}>
                   <ChevronLeft size={16} color="var(--text)" />
                 </button>
                 <button
@@ -153,7 +153,7 @@ export function DatePicker({ value, onChange, placeholder, sheet = false, sheetT
                   <span className={styles.monthYearLabel}>{year}</span>
                   <ChevronUp size={13} color="var(--text)" />
                 </button>
-                <button type="button" onClick={() => setViewDate(new Date(year + 1, month, 1))} className={styles.navArrowButton}>
+                <button type="button" onClick={() => setViewDate(new Date(year + 1, month, 1))} className={styles.navArrowButton} aria-label={t('buttons.next')}>
                   <ChevronRight size={16} color="var(--text)" />
                 </button>
               </div>
@@ -187,7 +187,7 @@ export function DatePicker({ value, onChange, placeholder, sheet = false, sheetT
           {mode === 'days' ? (
             <>
               <div className={styles.navRow}>
-                <button type="button" onClick={() => setViewDate(addMonths(viewDate, -1))} className={styles.navArrowButton}>
+                <button type="button" onClick={() => setViewDate(addMonths(viewDate, -1))} className={styles.navArrowButton} aria-label={t('buttons.previous')}>
                   <ChevronLeft size={16} color="var(--text)" />
                 </button>
                 <button
@@ -198,7 +198,7 @@ export function DatePicker({ value, onChange, placeholder, sheet = false, sheetT
                   <span className={styles.monthYearLabel}>{getMonths()[month]} {year}</span>
                   <ChevronDown size={13} color="var(--text)" />
                 </button>
-                <button type="button" onClick={() => setViewDate(addMonths(viewDate, 1))} className={styles.navArrowButton}>
+                <button type="button" onClick={() => setViewDate(addMonths(viewDate, 1))} className={styles.navArrowButton} aria-label={t('buttons.next')}>
                   <ChevronRight size={16} color="var(--text)" />
                 </button>
               </div>
@@ -226,7 +226,7 @@ export function DatePicker({ value, onChange, placeholder, sheet = false, sheetT
           ) : (
             <>
               <div className={styles.navRow}>
-                <button type="button" onClick={() => setViewDate(new Date(year - 1, month, 1))} className={styles.navArrowButton}>
+                <button type="button" onClick={() => setViewDate(new Date(year - 1, month, 1))} className={styles.navArrowButton} aria-label={t('buttons.previous')}>
                   <ChevronLeft size={16} color="var(--text)" />
                 </button>
                 <button
@@ -237,7 +237,7 @@ export function DatePicker({ value, onChange, placeholder, sheet = false, sheetT
                   <span className={styles.monthYearLabel}>{year}</span>
                   <ChevronUp size={13} color="var(--text)" />
                 </button>
-                <button type="button" onClick={() => setViewDate(new Date(year + 1, month, 1))} className={styles.navArrowButton}>
+                <button type="button" onClick={() => setViewDate(new Date(year + 1, month, 1))} className={styles.navArrowButton} aria-label={t('buttons.next')}>
                   <ChevronRight size={16} color="var(--text)" />
                 </button>
               </div>

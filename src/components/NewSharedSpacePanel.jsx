@@ -90,7 +90,7 @@ export function NewSharedSpacePanel({ profile, sharedSpaces, onOpenPremium, onCr
         <div className={styles.createCard}>
           <div className={styles.createTitle}>{t('newSharedSpacePanel.createTitle')}</div>
           <label className="field-label">{t('newSharedSpacePanel.spaceNameLabel')}</label>
-          <input className={`field-input ${styles.fieldGroupMb16}`} value={newName} onChange={e => setNewName(e.target.value)} placeholder={t('newSharedSpacePanel.spaceNamePlaceholder')} />
+          <input aria-label={t('newSharedSpacePanel.spaceNameLabel')} className={`field-input ${styles.fieldGroupMb16}`} value={newName} onChange={e => setNewName(e.target.value)} placeholder={t('newSharedSpacePanel.spaceNamePlaceholder')} />
           <label className={`field-label ${styles.fieldLabelSpaced}`}>{t('currency.spaceLabel')}</label>
           <div className={styles.fieldGroupMb16}>
             <CurrencySelect value={newCurrency} onChange={setNewCurrency} sheetTitle={t('currency.spaceSheetTitle')} />
@@ -126,7 +126,7 @@ export function NewSharedSpacePanel({ profile, sharedSpaces, onOpenPremium, onCr
           <div className={styles.joinText}>
             {t('newSharedSpacePanel.joinText', { count: slotsLeft })}
           </div>
-          <input
+          <input aria-label={t('newSharedSpacePanel.joinTitle')}
             className={`field-input ${styles.joinCodeInput}`} inputMode="numeric" maxLength={6}
             value={joinCode} onChange={e => setJoinCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
             placeholder="000000"

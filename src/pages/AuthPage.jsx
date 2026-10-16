@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useId, Children, isValidElement, cloneElement } from 'react'
 import { useTranslation } from 'react-i18next'
 import { supabase } from '../lib/supabase'
 import { Eye, EyeOff, Lock, Mail, X, Check, ArrowLeft } from 'lucide-react'
@@ -17,6 +17,7 @@ import { APP_NAME } from '../lib/constants'
 import { loadGoogleIdentityScript, generateNonce } from '../lib/googleAuth'
 import { isNativeAndroid, signInWithGoogleNative } from '../lib/nativeGoogleAuth'
 import { Presence } from '../components/Presence'
+import { kbd, switchProps } from '../lib/a11y'
 
 // Misma curva que el borde inferior de cada "escena" de OnboardingPage.jsx y
 // del hero de PremiumPage.jsx (WAVE_PATH ahí) — pedido explícito de
@@ -37,7 +38,7 @@ function TermsModal({ onClose }) {
       <div style={{ background: 'var(--surface)', borderRadius: '20px 20px 0 0', width: '100%', maxWidth: 420, maxHeight: '85vh', display: 'flex', flexDirection: 'column' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', borderBottom: '0.5px solid var(--border)', flexShrink: 0 }}>
           <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--text)' }}>{t('termsModal.title')}</div>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', padding: 4 }}>
+          <button onClick={onClose} aria-label={t('buttons.close')} style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', padding: 4 }}>
             <X size={20} color="var(--text)" />
           </button>
         </div>
@@ -585,7 +586,7 @@ export function AuthPage() {
               {visibleMode === 'register' && (
                 <div style={{ fontSize: 11, color: 'var(--text)', textAlign: 'center', marginTop: 10 }}>
                   {t('authPage.google.termsNote')}{' '}
-                  <span onClick={() => setShowTerms(true)} style={{ color: 'var(--accent)', cursor: 'pointer', textDecoration: 'underline' }}>
+                  <span {...kbd} onClick={() => setShowTerms(true)} style={{ color: 'var(--accent)', cursor: 'pointer', textDecoration: 'underline' }}>
                     {t('authPage.termsLink')}
                   </span>
                 </div>
@@ -638,7 +639,7 @@ export function AuthPage() {
                 {confirm && !match && <div style={{ fontSize: 11, color: 'var(--danger)', marginTop: 4 }}>{t('settingsAccount.editModal.passwordMismatch')}</div>}
               </Field>
               {/* Checkbox de términos */}
-              <div onClick={() => setTermsAccepted(v => !v)} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, marginBottom: 20, cursor: 'pointer' }}>
+              <div {...switchProps(termsAccepted)} onClick={() => setTermsAccepted(v => !v)} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, marginBottom: 20, cursor: 'pointer' }}>
                 <div style={{ width: 18, height: 18, borderRadius: 4, flexShrink: 0, marginTop: 1, border: termsAccepted ? 'none' : '1.5px solid var(--border)', background: termsAccepted ? 'var(--accent)' : 'var(--surface)', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'background .15s' }}>
                   {termsAccepted && (
                     <svg width="11" height="9" viewBox="0 0 11 9" fill="none">
@@ -648,7 +649,7 @@ export function AuthPage() {
                 </div>
                 <div style={{ fontSize: 13, color: 'var(--text)', lineHeight: 1.5 }}>
                   {t('authPage.termsPrefix')}{' '}
-                  <span onClick={e => { e.stopPropagation(); setShowTerms(true) }} style={{ color: 'var(--accent)', fontWeight: 600, textDecoration: 'underline', cursor: 'pointer' }}>
+                  <span {...kbd} onClick={e => { e.stopPropagation(); setShowTerms(true) }} style={{ color: 'var(--accent)', fontWeight: 600, textDecoration: 'underline', cursor: 'pointer' }}>
                     {t('authPage.termsLink')}
                   </span>
                   {' '}{t('authPage.termsSuffix')}
@@ -704,10 +705,12 @@ export function AuthPage() {
 }
 
 function Field({ label, children }) {
+  const id = useId()
+  const kids = Children.map(children, c => (isValidElement(c) && c.type === 'input' && !c.props.id ? cloneElement(c, { id }) : c))
   return (
     <div style={{ position: 'relative', marginBottom: 14 }}>
-      <label className="field-label">{label}</label>
-      <div style={{ position: 'relative' }}>{children}</div>
+      <label className="field-label" htmlFor={id}>{label}</label>
+      <div style={{ position: 'relative' }}>{kids}</div>
     </div>
   )
 }
@@ -717,8 +720,9 @@ function FieldIcon({ children }) {
 }
 
 function EyeBtn({ show, onToggle }) {
+  const { t } = useTranslation()
   return (
-    <button type="button" onClick={onToggle} style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', display: 'flex', padding: 4 }}>
+    <button type="button" onClick={onToggle} aria-label={show ? t('buttons.hidePassword') : t('buttons.showPassword')} aria-pressed={show} style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', display: 'flex', padding: 4 }}>
       {show ? <EyeOff size={16} color="var(--text)" /> : <Eye size={16} color="var(--text)" />}
     </button>
   )

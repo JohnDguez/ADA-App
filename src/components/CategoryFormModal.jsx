@@ -152,7 +152,7 @@ export function CategoryFormModal({ open, onClose, editingCat = null, profile, o
               <div className={styles.helperText}>{t('settingsCategories.nameReadonlyHelper')}</div>
             </>
           ) : (
-            <input
+            <input aria-label={t('settingsCategories.namePlaceholder')}
               autoFocus
               className={`field-input ${styles.inputMt4}`}
               value={formName}
@@ -170,7 +170,7 @@ export function CategoryFormModal({ open, onClose, editingCat = null, profile, o
             <div className={styles.searchIcon}>
               <Search size={14} color="var(--text)" />
             </div>
-            <input
+            <input aria-label={t('settingsCategories.iconSearchPlaceholder')}
               value={iconSearch}
               onChange={e => setIconSearch(e.target.value)}
               placeholder={t('settingsCategories.iconSearchPlaceholder')}
@@ -211,12 +211,14 @@ export function CategoryFormModal({ open, onClose, editingCat = null, profile, o
         <div className={styles.colorFieldGroup}>
           <label className={`field-label ${styles.label}`}>{t('settingsCategories.colorLabel')}</label>
           <div className={styles.colorGrid}>
-            {CATEGORY_PALETTE.map(color => {
+            {CATEGORY_PALETTE.map((color, colorIdx) => {
               const selected = formColor === color
               return (
                 <button
                   key={color}
                   type="button"
+                  aria-label={t('buttons.colorN', { n: colorIdx + 1 })}
+                  aria-pressed={selected}
                   onClick={() => setFormColor(color)}
                   className={`${styles.colorSwatch} ${selected ? styles.colorSwatchSelected : ''}`}
                   style={{ background: color }}

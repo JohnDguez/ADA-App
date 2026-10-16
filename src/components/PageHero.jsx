@@ -1,4 +1,5 @@
 import { ChevronLeft } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import styles from './PageHero.module.css'
 
 // Encabezado "hero" reutilizable para sub-páginas de Ajustes — resplandor
@@ -26,12 +27,13 @@ import styles from './PageHero.module.css'
 // Por defecto `var(--accent)` (el azul de siempre, sin cambios en el resto
 // de páginas).
 export function PageHero({ icon: Icon, title, description, onBack, weight = 'duotone', action = null, accentColor = 'var(--accent)' }) {
+  const { t } = useTranslation()
   return (
     <>
       <div className={styles.glow} style={{ '--pageHeroAccent': accentColor }} />
 
       <div className={styles.header}>
-        <button onClick={onBack} className={styles.backButton}>
+        <button onClick={onBack} className={styles.backButton} aria-label={t('buttons.back')}>
           <ChevronLeft size={18} color="var(--text)" />
         </button>
         <div className={styles.heroIconCircle} style={{ '--pageHeroAccent': accentColor }}>

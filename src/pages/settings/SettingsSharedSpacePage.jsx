@@ -17,6 +17,7 @@ import { getFrequencyLabel } from '../../lib/utils'
 import styles from './SettingsSharedSpacePage.module.css'
 import { AvatarImg } from '../../components/AvatarImg'
 import { Presence } from '../../components/Presence'
+import { kbd, switchProps } from '../../lib/a11y'
 
 // Sub-página de Ajustes → "Espacio Compartido". Sirve para 2 casos a la vez,
 // para no duplicar el formulario de crear/unirse en otro lugar (ej. la
@@ -146,7 +147,7 @@ export function SettingsSharedSpacePage({ profile, user, sharedSpaces, onBack, o
             ) : (
               <>
                 <label className="field-label">{t('newSharedSpacePanel.spaceNameLabel')}</label>
-                <input className={`field-input ${styles.fieldMb16}`} value={newName} onChange={e => setNewName(e.target.value)} placeholder={t('newSharedSpacePanel.spaceNamePlaceholder')} />
+                <input aria-label={t('newSharedSpacePanel.spaceNameLabel')} className={`field-input ${styles.fieldMb16}`} value={newName} onChange={e => setNewName(e.target.value)} placeholder={t('newSharedSpacePanel.spaceNamePlaceholder')} />
                 <label className={`field-label ${styles.labelBlock}`}>{t('currency.spaceLabel')}</label>
                 <div className={styles.fieldMb16}>
                   <CurrencySelect value={newCurrency} onChange={setNewCurrency} sheetTitle={t('currency.spaceSheetTitle')} />
@@ -188,7 +189,7 @@ export function SettingsSharedSpacePage({ profile, user, sharedSpaces, onBack, o
           </div>
           <BottomSheet open={joinOpen} title={t('newSharedSpacePanel.joinTitle')} onClose={() => setJoinOpen(false)}>
             <div className={styles.joinDescription}>{t('settingsSharedSpacePage.joinDescription')}</div>
-            <input
+            <input aria-label={t('newSharedSpacePanel.joinTitle')}
               className={`field-input ${styles.joinCodeInput}`} inputMode="numeric" maxLength={6}
               value={joinCode} onChange={e => setJoinCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
               placeholder="000000"
@@ -227,7 +228,7 @@ function GuestSpaceRow({ entry, onLeave, onToggleNotify }) {
           <div className={styles.guestRowPeriod}>
             {t('currency.spaceLabel')}: {t(`currency.names.${getCurrency(entry.space.currency).code}`)} ({getCurrency(entry.space.currency).code}) · {t('currency.guestHint')}
           </div>
-          <div className={`${styles.notifyRow} ${styles.notifyRowMb}`} onClick={onToggleNotify}>
+          <div {...switchProps(entry.membership.notify_on_changes)} className={`${styles.notifyRow} ${styles.notifyRowMb}`} onClick={onToggleNotify}>
             <div>
               <div className={styles.notifyRowTitle}>{t('settingsSharedSpacePage.notifyMeLabel')}</div>
               <div className={styles.notifyRowSubtitle}>{t('settingsSharedSpacePage.notifyMeSubGuest')}</div>
@@ -351,7 +352,7 @@ function OwnedSpacePanel({ entry, user, regenerateCode, updateMemberPermissions,
                 <div className={styles.nameCurrencyRow}>
                   <div className={styles.nameCol}>
                     <label className={styles.plainLabel}>{t('newSharedSpacePanel.spaceNameLabel')}</label>
-                    <input
+                    <input aria-label={t('newSharedSpacePanel.spaceNameLabel')}
                       className="field-input" value={nameInput}
                       onChange={e => setNameInput(e.target.value)}
                       onBlur={handleNameBlur}
@@ -420,7 +421,7 @@ function OwnedSpacePanel({ entry, user, regenerateCode, updateMemberPermissions,
             {/* ── Isla: notificaciones del dueño ── */}
             <div className={styles.islandCard}>
               <div className={`${styles.fieldRow} ${styles.fieldRowLast}`}>
-                <div className={styles.notifyRow} onClick={() => updateMemberPermissions(entry.membership.id, { notify_on_changes: !entry.membership.notify_on_changes })}>
+                <div {...switchProps(entry.membership.notify_on_changes)} className={styles.notifyRow} onClick={() => updateMemberPermissions(entry.membership.id, { notify_on_changes: !entry.membership.notify_on_changes })}>
                   <div>
                     <div className={styles.notifyRowTitle}>{t('settingsSharedSpacePage.notifyMeLabel')}</div>
                     <div className={styles.notifyRowSubtitle}>{t('settingsSharedSpacePage.notifyMeSubOwner')}</div>
@@ -546,7 +547,7 @@ function OwnedSpacePanel({ entry, user, regenerateCode, updateMemberPermissions,
               {t('activeSpaceHeader.deleteModal.description')}
             </div>
             <label className={`field-label ${styles.labelBlock}`}>{t('settingsAccount.dangerModal.confirmLabel')}</label>
-            <input
+            <input aria-label={t('settingsAccount.dangerModal.confirmLabel')}
               type="password" className={`field-input ${styles.deleteModalPasswordInput}`} value={dangerPassword}
               onChange={e => setDangerPassword(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && handleDelete()}

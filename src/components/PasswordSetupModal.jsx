@@ -79,7 +79,7 @@ export function PasswordSetupModal({ userId, onDone }) {
             <div className={styles.inputIconLeft}>
               <Lock size={15} color="var(--text)" />
             </div>
-            <input
+            <input aria-label={t('passwordSetupModal.passwordLabel')}
               autoFocus
               type={showPass ? 'text' : 'password'}
               value={password}
@@ -112,7 +112,7 @@ export function PasswordSetupModal({ userId, onDone }) {
             <div className={styles.inputIconLeft}>
               <Lock size={15} color="var(--text)" />
             </div>
-            <input
+            <input aria-label={t('passwordSetupModal.confirmLabel')}
               type={showConf ? 'text' : 'password'}
               value={confirm}
               onChange={e => setConfirm(e.target.value)}

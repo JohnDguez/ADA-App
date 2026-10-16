@@ -131,7 +131,7 @@ export function NavRail({ active, onChange, profile, unreadCount, onOpenNotifs, 
             <div className={styles.avatarWrapper}>
               <AvatarImg
                 src={profile?.avatar_url}
-                alt="avatar"
+                alt={t('buttons.profilePhoto')}
                 className={styles.avatarImg}
                 style={{ border: `2px solid ${profile?.is_premium ? 'var(--premium-gold)' : 'rgba(255,255,255,0.3)'}` }}
                 fallback={<div className={styles.avatarFallback} style={{ border: `2px solid ${profile?.is_premium ? 'var(--premium-gold)' : 'rgba(255,255,255,0.3)'}` }}>{initials}</div>}

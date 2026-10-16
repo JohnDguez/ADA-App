@@ -91,7 +91,7 @@ export function GoalFormModal({ open, initial, onSave, onClose }) {
 
         <div className={styles.fieldGroup}>
           <label className="field-label">{t('goalFormModal.nameLabel')}</label>
-          <input
+          <input aria-label={t('goalFormModal.nameLabel')}
             autoFocus
             className={`field-input ${styles.inputMt}`}
             value={name}
@@ -102,7 +102,7 @@ export function GoalFormModal({ open, initial, onSave, onClose }) {
 
         <div className={styles.fieldGroup}>
           <label className="field-label">{t('goalFormModal.notesLabel')}</label>
-          <textarea
+          <textarea aria-label={t('goalFormModal.notesLabel')}
             className={`field-input ${styles.inputMt} ${styles.textarea}`}
             value={notes}
             onChange={e => setNotes(e.target.value)}
@@ -114,7 +114,7 @@ export function GoalFormModal({ open, initial, onSave, onClose }) {
           <label className="field-label">{t('goalFormModal.iconColorLabel')}</label>
           <div className={styles.searchWrapper}>
             <div className={styles.searchIcon}><Search size={14} color="var(--text)" /></div>
-            <input
+            <input aria-label={t('settingsCategories.iconSearchPlaceholder')}
               value={iconSearch}
               onChange={e => setIconSearch(e.target.value)}
               placeholder={t('settingsCategories.iconSearchPlaceholder')}
@@ -149,12 +149,14 @@ export function GoalFormModal({ open, initial, onSave, onClose }) {
             )}
           </div>
           <div className={styles.colorGrid}>
-            {PALETTE.map(c => {
+            {PALETTE.map((c, cIdx) => {
               const selected = color === c
               return (
                 <button
                   key={c}
                   type="button"
+                  aria-label={t('buttons.colorN', { n: cIdx + 1 })}
+                  aria-pressed={selected}
                   onClick={() => setColor(c)}
                   className={`${styles.colorSwatch} ${selected ? styles.colorSwatchSelected : ''}`}
                   style={{ background: c }}

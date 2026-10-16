@@ -13,6 +13,7 @@ import { CurrencySheet } from '../../components/CurrencySheet'
 import AmountInput from '../../components/AmountInput'
 import { getCurrency } from '../../lib/currency'
 import styles from './SettingsCobroPage.module.css'
+import { switchProps } from '../../lib/a11y'
 
 const BIWEEKLY_PRESETS = [
   { d1: 1,  d2: 16 },
@@ -119,11 +120,11 @@ export function SettingsCobroPage({ profile, onUpdate, onBack, slideClass }) {
               <div className={styles.customDaysRow}>
                 <div className={styles.customDayField}>
                   <label className={styles.customDayLabel}>{t('settingsCobro.day1Label')}</label>
-                  <input type="number" min="1" max="31" defaultValue={profile.cobro_day1 ?? ''} onBlur={e => { const v = Math.min(31, Math.max(1, parseInt(e.target.value)||1)); e.target.value=v; onUpdate({ cobro_day1: v }) }} placeholder={t('settingsCobro.day1Placeholder')} className="field-input" />
+                  <input aria-label={t('settingsCobro.day1Label')} type="number" min="1" max="31" defaultValue={profile.cobro_day1 ?? ''} onBlur={e => { const v = Math.min(31, Math.max(1, parseInt(e.target.value)||1)); e.target.value=v; onUpdate({ cobro_day1: v }) }} placeholder={t('settingsCobro.day1Placeholder')} className="field-input" />
                 </div>
                 <div className={styles.customDayField}>
                   <label className={styles.customDayLabel}>{t('settingsCobro.day2Label')}</label>
-                  <input type="number" min="1" max="31" defaultValue={profile.cobro_day2 ?? ''} onBlur={e => { const v = Math.min(31, Math.max(1, parseInt(e.target.value)||1)); e.target.value=v; onUpdate({ cobro_day2: v }) }} placeholder={t('settingsCobro.day2Placeholder')} className="field-input" />
+                  <input aria-label={t('settingsCobro.day2Label')} type="number" min="1" max="31" defaultValue={profile.cobro_day2 ?? ''} onBlur={e => { const v = Math.min(31, Math.max(1, parseInt(e.target.value)||1)); e.target.value=v; onUpdate({ cobro_day2: v }) }} placeholder={t('settingsCobro.day2Placeholder')} className="field-input" />
                 </div>
               </div>
             </Collapse>
@@ -158,7 +159,7 @@ export function SettingsCobroPage({ profile, onUpdate, onBack, slideClass }) {
       <SectionLabel>{t('settingsCobro.incomeSection')}</SectionLabel>
       <Card>
         <div className={`${styles.toggleRowWrapper} ${!profile.salary_enabled ? styles.toggleRowWrapperNoBorder : ''}`}>
-          <div className={styles.toggleRow} onClick={handleSalaryToggle}>
+          <div {...switchProps(profile.salary_enabled)} className={styles.toggleRow} onClick={handleSalaryToggle}>
             <div>
               <div className={styles.toggleLabel}>{t('settingsCobro.incomeLabel')}</div>
               <div className={styles.toggleSubtitle}>{t('settingsCobro.incomeSubtitle')}</div>

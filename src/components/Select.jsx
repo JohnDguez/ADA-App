@@ -179,7 +179,7 @@ export function Select({ value, onChange, options, placeholder, renderIcon, sear
             {showSearch && (
               <div className={styles.sheetSearch}>
                 <Search size={14} color="var(--text)" />
-                <input value={query} onChange={e => setQuery(e.target.value)} placeholder={t('select.searchPlaceholder')} className={styles.searchInput} />
+                <input aria-label={t('select.searchPlaceholder')} value={query} onChange={e => setQuery(e.target.value)} placeholder={t('select.searchPlaceholder')} className={styles.searchInput} />
               </div>
             )}
             <div className={sheetLayout === 'grid' ? styles.sheetGrid : styles.sheetList}>
@@ -232,7 +232,7 @@ export function Select({ value, onChange, options, placeholder, renderIcon, sear
           {searchable && (
             <div className={styles.searchRow}>
               <Search size={14} color="var(--text)" />
-              <input
+              <input aria-label={t('select.searchPlaceholder')}
                 autoFocus
                 value={query}
                 onChange={e => setQuery(e.target.value)}

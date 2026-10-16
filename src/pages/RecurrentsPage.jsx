@@ -15,6 +15,7 @@ import { useScrollTop } from '../hooks/useScrollTop'
 import { useScrollLock } from '../lib/scrollLock'
 import { Collapse } from '../components/Collapse'
 import { usePresence } from '../lib/usePresence'
+import { kbd } from '../lib/a11y'
 
 function FilterChip({ label, active, onClick }) {
   return (
@@ -206,7 +207,7 @@ export function RecurrentsPage({ payments, dataLoading = false, profile, spaceSw
               <div className={styles.searchIcon}>
                 <Search size={15} color="var(--text)" />
               </div>
-              <input value={search} onChange={e => setSearch(e.target.value)} placeholder={t('recurrentsPage.searchPlaceholder')} className={`field-input ${styles.searchInput}`} />
+              <input aria-label={t('recurrentsPage.searchPlaceholder')} value={search} onChange={e => setSearch(e.target.value)} placeholder={t('recurrentsPage.searchPlaceholder')} className={`field-input ${styles.searchInput}`} />
             </div>
           </div>
 
@@ -272,7 +273,7 @@ export function RecurrentsPage({ payments, dataLoading = false, profile, spaceSw
               return (
                 <div key={cat} className={styles.categoryCard}>
                   {/* Header categoría */}
-                  <div
+                  <div {...kbd}
                     onClick={() => setExpandedCats(prev => ({ ...prev, [cat]: !prev[cat] }))}
                     className={`${styles.categoryHeader} ${isOpen ? styles.categoryHeaderOpen : ''}`}
                   >
@@ -304,7 +305,7 @@ export function RecurrentsPage({ payments, dataLoading = false, profile, spaceSw
 
                       return (
                         <div key={master.id}>
-                          <div
+                          <div {...kbd}
                             data-payment-id={master.id}
                             onClick={() => setSelectedMasterId(master.id)}
                             className={`${styles.masterRow} ${styles.masterRowClickable} ${isLast && !isConfirming ? styles.masterRowNoBorder : ''}`}

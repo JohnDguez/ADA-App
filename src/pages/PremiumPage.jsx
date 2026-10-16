@@ -305,7 +305,7 @@ export function PremiumPage({ profile, onClose, refreshProfile, onSubscribed }) 
         <Sparkle weight="fill" size={16} className={`${styles.heroSparkle} ${styles.heroSparkle1}`} aria-hidden="true" />
         <Sparkle weight="fill" size={11} className={`${styles.heroSparkle} ${styles.heroSparkle2}`} aria-hidden="true" />
         <Sparkle weight="fill" size={9}  className={`${styles.heroSparkle} ${styles.heroSparkle3}`} aria-hidden="true" />
-        <button onClick={handleClose} className={styles.heroCloseButton}>
+        <button onClick={handleClose} className={styles.heroCloseButton} aria-label={t('buttons.close')}>
           <X size={18} color="#fff" />
         </button>
         <div className={styles.heroCrownWrap}>

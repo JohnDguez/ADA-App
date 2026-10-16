@@ -1,5 +1,6 @@
 import { Plus, MoveRight } from 'lucide-react'
 import styles from './EmptyState.module.css'
+import { kbd, kbdIf } from '../lib/a11y'
 
 // Estado vacío reutilizable — área tipo "drop-zone" (borde punteado, ícono
 // circular, título + subtítulo), tocable. Nace en HomePage.jsx v0.9.176 para
@@ -21,14 +22,14 @@ import styles from './EmptyState.module.css'
 // propio `stopPropagation` para no disparar también el `onClick` principal.
 export function EmptyState({ icon: Icon = Plus, title, subtitle, onClick, secondaryLabel, onSecondaryClick }) {
   return (
-    <div onClick={onClick} className={`${styles.container} ${onClick ? styles.clickable : ''}`}>
+    <div {...kbdIf(!!onClick)} onClick={onClick} className={`${styles.container} ${onClick ? styles.clickable : ''}`}>
       <div className={styles.iconWrapper}>
         <Icon size={18} color="var(--surface)" />
       </div>
       <div className={styles.title}>{title}</div>
       {subtitle && <div className={styles.subtitle}>{subtitle}</div>}
       {secondaryLabel && onSecondaryClick && (
-        <div
+        <div {...kbd}
           onClick={e => { e.stopPropagation(); onSecondaryClick() }}
           className={styles.secondaryLink}
         >

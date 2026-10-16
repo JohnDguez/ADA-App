@@ -6,7 +6,19 @@
     "delete": "Delete",
     "accept": "Accept",
     "close": "Close",
-    "edit": "Edit"
+    "edit": "Edit",
+    "back": "Back",
+    "undo": "Undo",
+    "showPassword": "Show password",
+    "hidePassword": "Hide password",
+    "previous": "Previous",
+    "next": "Next",
+    "markPaid": "Mark as paid",
+    "markUnpaid": "Unmark payment",
+    "options": "Options",
+    "colorN": "Color {{n}}",
+    "avatarN": "Avatar {{n}}",
+    "profilePhoto": "Your profile photo"
   },
   "confirmExit": {
     "title": "Close LunaPay?",

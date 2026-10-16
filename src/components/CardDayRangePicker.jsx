@@ -143,7 +143,7 @@ export function CardDayRangePicker({ cutDay, dueDay, onChange }) {
           <span className={styles.inputLabel}>
             <span className={`${styles.dot} ${styles.dotCut}`} />{t('cards.picker.cutLabel')}
           </span>
-          <input
+          <input aria-label={t('cards.picker.cutLabel')}
             inputMode="numeric"
             value={cutText}
             onFocus={() => setActive('cut')}
@@ -156,7 +156,7 @@ export function CardDayRangePicker({ cutDay, dueDay, onChange }) {
           <span className={styles.inputLabel}>
             <span className={`${styles.dot} ${styles.dotDue}`} />{t('cards.picker.dueLabel')}
           </span>
-          <input
+          <input aria-label={t('cards.picker.dueLabel')}
             inputMode="numeric"
             value={dueText}
             onFocus={() => setActive('due')}

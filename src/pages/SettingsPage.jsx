@@ -262,7 +262,7 @@ export function SettingsPage({ profile, user, onUpdate, onUploadAvatar, onDataDe
         <div className={styles.avatarWrapper}>
           <AvatarImg
             src={profile.avatar_url}
-            alt="avatar"
+            alt={t('buttons.profilePhoto')}
             className={`${styles.avatarImg} ${profile.is_premium ? styles.avatarImgPremium : ''}`}
             fallback={<div className={`${styles.avatarInitials} ${profile.is_premium ? styles.avatarImgPremium : ''}`}>{initials}</div>}
           />
@@ -387,12 +387,14 @@ export function SettingsPage({ profile, user, onUpdate, onUploadAvatar, onDataDe
             <div className={styles.modalHandle} />
             <div className={styles.modalTitle}>{t('settingsPage.galleryModal.title')}</div>
             <div className={styles.galleryGrid}>
-              {PRESET_AVATARS.map(path => {
+              {PRESET_AVATARS.map((path, avIdx) => {
                 const selected = profile.avatar_url === path
                 return (
                   <button
                     key={path}
                     onClick={() => handleSelectPresetAvatar(path)}
+                    aria-label={t('buttons.avatarN', { n: avIdx + 1 })}
+                    aria-pressed={selected}
                     className={`${styles.avatarOption} ${selected ? styles.avatarOptionSelected : ''}`}>
                     <img src={path} alt="" className={styles.avatarOptionImg} />
                   </button>

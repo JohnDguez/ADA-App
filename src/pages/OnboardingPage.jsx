@@ -9,6 +9,7 @@ import AmountInput from '../components/AmountInput'
 import { CurrencySelect } from '../components/CurrencySelect'
 import { getCurrencySymbol } from '../lib/currency'
 import styles from './OnboardingPage.module.css'
+import { switchProps } from '../lib/a11y'
 
 // illustrationSize / illustrationBottom / bodyPaddingTop: mismos defaults
 // para los 4 (los que ya se habían ajustado), pero cada paso puede
@@ -167,7 +168,7 @@ export function OnboardingPage({ userId, onDone }) {
               <label className="field-label">{t('onboardingPage.step1.nameLabel')}</label>
               <div className={styles.inputWithIcon}>
                 <UserRound size={18} className={styles.inputIcon} />
-                <input
+                <input aria-label={t('onboardingPage.step1.namePlaceholder')}
                   autoFocus
                   className={`field-input ${styles.nameInput}`}
                   type="text"
@@ -251,7 +252,7 @@ export function OnboardingPage({ userId, onDone }) {
                     <div className={styles.twoColRow}>
                       <div className={styles.colField}>
                         <label className={styles.smallLabel}>{t('onboardingPage.step2.day1Label28')}</label>
-                        <input
+                        <input aria-label={t('onboardingPage.step2.day1Label28')}
                           type="number" min="1" max="28" value={cobroDay1 ?? ''}
                           onChange={e => setCobroDay1(Math.min(28, Math.max(1, parseInt(e.target.value)||1)))}
                           onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); document.getElementById('cobro-day2')?.focus() } }}
@@ -283,7 +284,7 @@ export function OnboardingPage({ userId, onDone }) {
               {cobroFreq === 'monthly' && (
                 <div className={styles.section}>
                   <label className="field-label">{t('settingsCobro.payDayLabel')}</label>
-                  <input
+                  <input aria-label={t('settingsCobro.payDayLabel')}
                     type="number" min="1" max="31" value={cobroDay1 ?? ''}
                     onChange={e => setCobroDay1(Math.min(31, Math.max(1, parseInt(e.target.value)||1)))}
                     onKeyDown={e => e.key === 'Enter' && nextStep()}
@@ -310,7 +311,7 @@ export function OnboardingPage({ userId, onDone }) {
               <CurrencySelect value={currency} onChange={v => { setCurrency(v); setCurrencyError('') }} />
               {currencyError ? <div className={styles.errorText}>{currencyError}</div> : <p className={styles.desc}>{t('currency.onbHint')}</p>}
 
-              <div onClick={() => setSalaryEnabled(v => !v)} className={styles.toggleRow}>
+              <div {...switchProps(salaryEnabled)} onClick={() => setSalaryEnabled(v => !v)} className={styles.toggleRow}>
                 <div>
                   <div className={styles.toggleLabel}>{t('onboardingPage.step3.toggleLabel')}</div>
                   <div className={styles.toggleSub}>{t('onboardingPage.step3.toggleSub')}</div>
@@ -341,7 +342,7 @@ export function OnboardingPage({ userId, onDone }) {
             <>
               <h2 className={styles.title}>{t('onboardingPage.step4.title')}</h2>
               <p className={styles.desc}>{t('onboardingPage.step4.desc')}</p>
-              <div
+              <div {...switchProps(subscribed)}
                 onClick={async () => { if (!subscribed) await subscribe() }}
                 className={styles.toggleRow}
                 style={{ cursor: subscribed ? 'default' : 'pointer' }}

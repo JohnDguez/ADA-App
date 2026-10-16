@@ -71,11 +71,11 @@ export function CobroPeriodFields({ freq, day1, day2, weekday, onChangeFreq, onC
             <div className={styles.customDaysRow}>
               <div className={styles.customDayField}>
                 <label className={styles.customDayLabel}>{t('settingsCobro.day1Label')}</label>
-                <input type="number" min="1" max="31" defaultValue={day1 ?? ''} onBlur={e => { const v = Math.min(31, Math.max(1, parseInt(e.target.value) || 1)); e.target.value = v; onChangeDay1(v) }} placeholder={t('settingsCobro.day1Placeholder')} className="field-input" />
+                <input aria-label={t('settingsCobro.day1Label')} type="number" min="1" max="31" defaultValue={day1 ?? ''} onBlur={e => { const v = Math.min(31, Math.max(1, parseInt(e.target.value) || 1)); e.target.value = v; onChangeDay1(v) }} placeholder={t('settingsCobro.day1Placeholder')} className="field-input" />
               </div>
               <div className={styles.customDayField}>
                 <label className={styles.customDayLabel}>{t('settingsCobro.day2Label')}</label>
-                <input type="number" min="1" max="31" defaultValue={day2 ?? ''} onBlur={e => { const v = Math.min(31, Math.max(1, parseInt(e.target.value) || 1)); e.target.value = v; onChangeDay2(v) }} placeholder={t('settingsCobro.day2Placeholder')} className="field-input" />
+                <input aria-label={t('settingsCobro.day2Label')} type="number" min="1" max="31" defaultValue={day2 ?? ''} onBlur={e => { const v = Math.min(31, Math.max(1, parseInt(e.target.value) || 1)); e.target.value = v; onChangeDay2(v) }} placeholder={t('settingsCobro.day2Placeholder')} className="field-input" />
               </div>
             </div>
           )}

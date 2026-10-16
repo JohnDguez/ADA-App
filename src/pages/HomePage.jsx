@@ -17,6 +17,7 @@ import { getLunaState } from '../lib/lunaState'
 import { syncLunaWidget } from '../lib/lunaWidget'
 import { fmt, cobroPeriod, nextCobroPeriod, getPagarEsteCobro, daysDiff, dateOf, dateToStr, getMonths, getMonthsShort, getCategoryLabel } from '../lib/utils'
 import styles from './HomePage.module.css'
+import { kbdIf } from '../lib/a11y'
 
 // Montos largos (ej. $300,000.80) bajan de tamaño por escalones para caber en
 // su columna sin salirse ni partirse.
@@ -735,7 +736,7 @@ function PaidCollapseItem({ p, onMarkUnpaid, onViewSource, spaceMembers, onSelec
 
   return (
     <div ref={wrapperRef} className={styles.paidCollapseItemWrapper}>
-      <div
+      <div {...kbdIf(!!onSelect)}
         data-payment-id={p.id}
         onClick={onSelect ? () => onSelect(p.id) : undefined}
         className={`${styles.paidCollapseItem} ${phase === 'exiting' ? styles.paidCollapseItemExiting : ''} ${onSelect ? styles.paidCollapseItemSelectable : ''} ${selected ? styles.paidCollapseItemSelected : ''}`}
@@ -800,6 +801,7 @@ function PaidCollapseItem({ p, onMarkUnpaid, onViewSource, spaceMembers, onSelec
             <button
               onClick={handleUndo}
               disabled={phase !== 'idle'}
+              aria-label={t('buttons.undo')}
               className={styles.paidCollapseUndoButton}
             >
               <RotateCcw size={11} color="var(--text)" />

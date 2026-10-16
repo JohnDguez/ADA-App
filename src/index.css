@@ -773,3 +773,13 @@ html [data-presence-wrap][data-closing] > * { animation: presenceFadeOut .22s ea
   --bank-coppel: #004C97;
   --bank-otro: #3C4250;
 }
+
+/* Accesibilidad (v0.9.719): indicador de foco visible solo al navegar con
+   teclado (:focus-visible no aparece al tocar o hacer clic con el mouse). */
+button:focus-visible,
+[role="button"]:focus-visible,
+[role="switch"]:focus-visible,
+a:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
