@@ -87,7 +87,7 @@
   cursor: pointer;
   text-align: left;
 }
-.switchValue { display: flex; align-items: center; gap: 8px; color: var(--muted); }
+.switchValue { display: flex; align-items: center; gap: 8px; color: var(--text); }
 .savePill {
   background: var(--paid-soft);
   color: var(--paid);
@@ -104,7 +104,7 @@
   padding: 10px 16px;
   border: none;
   background: none;
-  color: var(--muted);
+  color: var(--text);
   font-family: inherit;
   font-size: 13px;
   cursor: pointer;

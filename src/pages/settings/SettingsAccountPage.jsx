@@ -184,7 +184,7 @@ export function SettingsAccountPage({ profile, user, onUpdate, onDataDeleted, on
               <div className={styles.dangerButtonTitleNeutral}>{t('settingsAccount.dangerZone.deleteDataTitle')}</div>
               <div className={styles.dangerButtonSubtitle}>{t('settingsAccount.dangerZone.deleteDataSubtitle')}</div>
             </div>
-            <ChevronRight size={14} color="var(--muted)" />
+            <ChevronRight size={14} color="var(--text)" />
           </button>
         </Card>
 

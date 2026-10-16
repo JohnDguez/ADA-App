@@ -56,7 +56,7 @@
   justify-content: center;
   gap: 8px;
   background: none;
-  color: var(--muted);
+  color: var(--text);
   border: 0.5px solid var(--border);
   border-radius: var(--radius-sm);
   padding: 11px;

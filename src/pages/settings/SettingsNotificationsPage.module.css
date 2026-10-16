@@ -63,7 +63,7 @@
   color: var(--text);
   cursor: pointer;
 }
-.timeChevron { margin-left: 6px; color: var(--muted); }
+.timeChevron { margin-left: 6px; color: var(--text); }
 
 /* Mosaico de avisos: un toque enciende o apaga cada uno */
 .tiles {

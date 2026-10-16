@@ -23,7 +23,7 @@
   --border-mid: #C8C5BE;
 
   --text: #020A1F;
-  --muted: #696969;
+  --muted: #5C6370;  /* v0.9.727: 6.1:1 sobre --bg/--surface (antes #696969, 4.9:1) */
 
   --accent: #2F8CFA;
   --accent-soft: #E8F2FF;
@@ -288,7 +288,7 @@
   --border-mid: #3A3D4E;
 
   --text: #E8EAF0;
-  --muted: #6B7280;
+  --muted: #9AA0B0;  /* v0.9.727: 6.4–7.2:1 (antes #6B7280, 3.5–3.9:1, bajo AA) */
 
   --accent: #3B9EFF;
   --accent-soft: #1A2B40;
@@ -364,7 +364,7 @@
     --border: #2A2D3A;
     --border-mid: #3A3D4E;
     --text: #E8EAF0;
-    --muted: #6B7280;
+    --muted: #9AA0B0;  /* v0.9.727: 6.4–7.2:1 (antes #6B7280, 3.5–3.9:1, bajo AA) */
     --accent: #3B9EFF;
     --accent-soft: #1A2B40;
     --accent-border: #1E3A5C;
@@ -529,7 +529,7 @@ a { color: inherit; text-decoration: none; }
   width: 100%;
   padding: 10px;
   background: none;
-  color: var(--muted);
+  color: var(--text);
   border: 0.5px solid var(--border);
   border-radius: var(--radius-sm);
   font-family: 'DM Sans', sans-serif;
