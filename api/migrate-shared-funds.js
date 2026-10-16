@@ -1,14 +1,14 @@
 const { createClient } = require('@supabase/supabase-js')
 const applyCors = require('./_cors')
+const { todayInTz, dateStrInTz } = require('./_tz')
 
 // Reimplementación fiel de cobroPeriod()/today()/dateToStr()/dateOf() de
 // lib/utils.js — este endpoint corre en Node (CommonJS), no comparte el
 // bundle del cliente, así que no puede importarlas directo. Si algún día
 // cambia la lógica de periodos en utils.js, hay que replicar el cambio
 // aquí también (mismo caso que FREQ_LABEL en notify-space-change.js).
-function today() {
-  const now = new Date()
-  return new Date(now.getFullYear(), now.getMonth(), now.getDate())
+function today(timezone) {
+  return todayInTz(timezone)
 }
 function dateToStr(d) {
   const y = d.getFullYear(), m = String(d.getMonth() + 1).padStart(2, '0'), day = String(d.getDate()).padStart(2, '0')
@@ -17,7 +17,7 @@ function dateToStr(d) {
 function addDays(date, n) { const d = new Date(date); d.setDate(d.getDate() + n); return d }
 
 function cobroPeriod(cfg) {
-  const t = today()
+  const t = today(cfg.timezone)
   if (cfg.cobro_freq === 'weekly') {
     const wd = cfg.cobro_weekday ?? 5; const td = t.getDay()
     let diffNext = wd - td; if (diffNext <= 0) diffNext += 7
@@ -99,7 +99,10 @@ module.exports = async function handler(req, res) {
       .maybeSingle()
     if (existing) return res.status(400).json({ error: 'Este espacio ya migró su Fondo antes' })
 
-    const { start, end } = cobroPeriod(space)
+    // El espacio no guarda zona horaria: se usa la de quien dispara la migración.
+    const { data: actorProf } = await supabase.from('profiles').select('timezone').eq('id', actorId).maybeSingle()
+    const actorTz = actorProf?.timezone
+    const { start, end } = cobroPeriod({ ...space, timezone: actorTz })
     const periodStartStr = dateToStr(start)
 
     const [{ data: incomes }, { data: paidPayments }] = await Promise.all([
@@ -112,7 +115,7 @@ module.exports = async function handler(req, res) {
     const gastos  = (paidPayments || [])
       .filter(p => {
         if (!p.paid_at) return false
-        const paidDate = dateToStr(new Date(p.paid_at))
+        const paidDate = dateStrInTz(new Date(p.paid_at), actorTz)
         return paidDate >= dateToStr(start) && paidDate <= dateToStr(end)
       })
       .reduce((s, p) => s + Number(p.amount), 0)

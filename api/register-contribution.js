@@ -281,19 +281,36 @@ module.exports = async function handler(req, res) {
         }
       }
       // El Fondo no puede cubrir más de lo que en verdad tiene ahorrado.
+      // Pre-chequeo rápido con el saldo ya leído (mensaje claro); la
+      // garantía real contra dos gastos simultáneos es la función SQL
+      // `fund_ledger_move_checked` de abajo, que revisa el saldo CON candado
+      // por espacio (v0.9.717).
       if (delta > 0 && Math.round(delta * 100) > Math.round(fundBalance * 100)) {
         return res.status(400).json({ error: `El Fondo no tiene suficiente saldo (disponible: ${fundBalance.toFixed(2)})` })
       }
 
-      const { error: fundAmtErr } = await supabase.from('payments').update({ fund_amount: newFundAmount }).eq('id', paymentId)
-      if (fundAmtErr) return res.status(500).json({ error: 'No se pudo actualizar el Fondo: ' + fundAmtErr.message })
-
+      // Primero se registra el movimiento del Fondo (con la revisión de saldo
+      // atómica) y SOLO si pasa se actualiza el pago — así un rechazo no deja
+      // nada a medias; si el pago falla después, se deshace el movimiento.
+      let ledgerRow = null
       if (Math.round(delta * 100) !== 0) {
-        const { error: ledgerErr } = await supabase.from('shared_fund_ledger').insert({
-          space_id: payment.space_id, user_id: actorId, amount: -delta, type: delta > 0 ? 'spend' : 'reversal',
-          payment_id: paymentId, note: payment.name,
+        const { data: moved, error: ledgerErr } = await supabase.rpc('fund_ledger_move_checked', {
+          p_space: payment.space_id, p_user: actorId, p_amount: -delta,
+          p_type: delta > 0 ? 'spend' : 'reversal', p_payment: paymentId, p_note: payment.name,
         })
-        if (ledgerErr) return res.status(500).json({ error: 'El monto se guardó, pero no se pudo registrar en la bitácora del Fondo: ' + ledgerErr.message })
+        if (ledgerErr) {
+          if (String(ledgerErr.message).includes('FUND_INSUFFICIENT')) {
+            return res.status(400).json({ error: 'El Fondo no tiene suficiente saldo' })
+          }
+          return res.status(500).json({ error: 'No se pudo registrar en la bitácora del Fondo: ' + ledgerErr.message })
+        }
+        ledgerRow = moved
+      }
+
+      const { error: fundAmtErr } = await supabase.from('payments').update({ fund_amount: newFundAmount }).eq('id', paymentId)
+      if (fundAmtErr) {
+        if (ledgerRow?.id != null) await supabase.from('shared_fund_ledger').delete().eq('id', ledgerRow.id)
+        return res.status(500).json({ error: 'No se pudo actualizar el Fondo: ' + fundAmtErr.message })
       }
 
       let settledFund = false

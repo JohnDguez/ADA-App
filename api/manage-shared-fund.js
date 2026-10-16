@@ -1,5 +1,6 @@
 const { createClient } = require('@supabase/supabase-js')
 const applyCors = require('./_cors')
+const { todayInTz, dateStrInTz } = require('./_tz')
 const webpush = require('web-push')
 const { notifyUsers } = require('./_notifyLib')
 const { fundContributionText, fundContributionDeletedText } = require('./_notifyText')
@@ -38,9 +39,8 @@ async function notifyAllSpaceMembers(spaceId, actorId, buildMessage) {
 // corre en Node/CommonJS, no comparte el bundle del cliente). Se necesita
 // aquí para poder validar el remanente PERSONAL de quien aporta, del lado
 // del servidor — nunca confiar solo en la validación del cliente.
-function today() {
-  const now = new Date()
-  return new Date(now.getFullYear(), now.getMonth(), now.getDate())
+function today(timezone) {
+  return todayInTz(timezone)
 }
 function dateToStr(d) {
   const y = d.getFullYear(), m = String(d.getMonth() + 1).padStart(2, '0'), day = String(d.getDate()).padStart(2, '0')
@@ -49,7 +49,7 @@ function dateToStr(d) {
 function addDays(date, n) { const d = new Date(date); d.setDate(d.getDate() + n); return d }
 
 function cobroPeriod(cfg) {
-  const t = today()
+  const t = today(cfg.timezone)
   if (cfg.cobro_freq === 'weekly') {
     const wd = cfg.cobro_weekday ?? 5; const td = t.getDay()
     let diffNext = wd - td; if (diffNext <= 0) diffNext += 7
@@ -96,7 +96,7 @@ async function getPersonalAvailable(supabase, userId) {
   const gastado = (paid || [])
     .filter(p => {
       if (!p.paid_at) return false
-      const d = dateToStr(new Date(p.paid_at))
+      const d = dateStrInTz(new Date(p.paid_at), profile.timezone)
       return d >= dateToStr(start) && d <= dateToStr(end)
     })
     .reduce((s, p) => s + Number(p.amount), 0)
@@ -163,14 +163,17 @@ module.exports = async function handler(req, res) {
 
       // El saldo actual debe alcanzar para cubrirla — si ya se gastó ese
       // dinero en otra cosa, eliminarla dejaría el Fondo en negativo.
-      const { data: allEntries } = await supabase.from('shared_fund_ledger').select('amount').eq('space_id', spaceId)
-      const saldoActual = (allEntries || []).reduce((s, r) => s + Number(r.amount), 0)
-      if (Math.round(saldoActual * 100) < Math.round(Number(entry.amount) * 100)) {
-        return res.status(400).json({ error: 'Ese dinero ya se gastó, no se puede quitar' })
+      // La revisión del saldo y el borrado van JUNTOS en una función SQL con
+      // candado por espacio (fund_ledger_delete_deposit_checked, v0.9.717):
+      // antes eran dos pasos sueltos y dos operaciones simultáneas podían
+      // dejar el Fondo en negativo.
+      const { error: delErr } = await supabase.rpc('fund_ledger_delete_deposit_checked', { p_id: String(deleteLedgerId), p_space: spaceId })
+      if (delErr) {
+        if (String(delErr.message).includes('FUND_INSUFFICIENT')) {
+          return res.status(400).json({ error: 'Ese dinero ya se gastó, no se puede quitar' })
+        }
+        return res.status(500).json({ error: 'No se pudo eliminar: ' + delErr.message })
       }
-
-      const { error: delErr } = await supabase.from('shared_fund_ledger').delete().eq('id', deleteLedgerId)
-      if (delErr) return res.status(500).json({ error: 'No se pudo eliminar: ' + delErr.message })
       if (entry.reflection_payment_id) {
         await supabase.from('payments').delete().eq('id', entry.reflection_payment_id)
       }

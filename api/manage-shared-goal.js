@@ -1,5 +1,6 @@
 const { createClient } = require('@supabase/supabase-js')
 const applyCors = require('./_cors')
+const { todayInTz, dateStrInTz } = require('./_tz')
 const webpush = require('web-push')
 const { notifyUsers } = require('./_notifyLib')
 
@@ -37,9 +38,8 @@ function money(n) {
 // corre en Node/CommonJS y no comparte el bundle del cliente. Se necesita
 // para validar el disponible PERSONAL de quien aporta del lado del
 // servidor; nunca confiar solo en la validación del cliente.
-function today() {
-  const now = new Date()
-  return new Date(now.getFullYear(), now.getMonth(), now.getDate())
+function today(timezone) {
+  return todayInTz(timezone)
 }
 function dateToStr(d) {
   const y = d.getFullYear(), m = String(d.getMonth() + 1).padStart(2, '0'), day = String(d.getDate()).padStart(2, '0')
@@ -48,7 +48,7 @@ function dateToStr(d) {
 function addDays(date, n) { const d = new Date(date); d.setDate(d.getDate() + n); return d }
 
 function cobroPeriod(cfg) {
-  const t = today()
+  const t = today(cfg.timezone)
   if (cfg.cobro_freq === 'weekly') {
     const wd = cfg.cobro_weekday ?? 5; const td = t.getDay()
     let diffNext = wd - td; if (diffNext <= 0) diffNext += 7
@@ -85,7 +85,7 @@ async function getPersonalAvailable(userId) {
   const gastado = (paid || [])
     .filter(p => {
       if (!p.paid_at) return false
-      const d = dateToStr(new Date(p.paid_at))
+      const d = dateStrInTz(new Date(p.paid_at), profile.timezone)
       return d >= dateToStr(start) && d <= dateToStr(end)
     })
     .reduce((s, p) => s + Number(p.amount), 0)
@@ -369,15 +369,18 @@ module.exports = async function handler(req, res) {
 
       // Si ese dinero ya salió de la meta (retiros posteriores), revertir
       // dejaría la meta en negativo.
-      const saldo = await goalBalance(tx.goal_id)
-      if (Math.round(saldo * 100) < Math.round(Number(tx.amount) * 100)) {
-        return res.status(400).json({ error: 'Ese dinero ya se retiró de la meta, no se puede revertir' })
-      }
-
       const { data: goal } = await supabase.from('goals').select('name').eq('id', tx.goal_id).maybeSingle()
 
-      const { error: delErr } = await supabase.from('goal_transactions').delete().eq('id', txId)
-      if (delErr) return res.status(500).json({ error: 'No se pudo revertir: ' + delErr.message })
+      // Revisión del saldo + borrado juntos, con candado por meta
+      // (goal_tx_revert_checked, v0.9.717) — evita que un retiro simultáneo
+      // deje la meta en negativo.
+      const { error: delErr } = await supabase.rpc('goal_tx_revert_checked', { p_tx: String(txId), p_space: spaceId })
+      if (delErr) {
+        if (String(delErr.message).includes('GOAL_INSUFFICIENT')) {
+          return res.status(400).json({ error: 'Ese dinero ya se retiró de la meta, no se puede revertir' })
+        }
+        return res.status(500).json({ error: 'No se pudo revertir: ' + delErr.message })
+      }
       if (tx.reflection_payment_id) {
         await supabase.from('payments').delete().eq('id', tx.reflection_payment_id)
       }
@@ -401,18 +404,20 @@ module.exports = async function handler(req, res) {
       const amount = Number(payload?.amount)
       if (!Number.isFinite(amount) || amount <= 0 || amount > 1e9) return res.status(400).json({ error: 'Monto inválido' })
 
-      const saldo = await goalBalance(goal.id)
-      if (Math.round(amount * 100) > Math.round(saldo * 100)) {
-        return res.status(400).json({ error: `La meta solo tiene ${money(saldo)}` })
-      }
-
       const { data: profile } = await supabase.from('profiles').select('*').eq('id', actorId).maybeSingle()
       const { start } = cobroPeriod(profile || {})
 
-      const { data: tx, error: txErr } = await supabase.from('goal_transactions').insert({
-        goal_id: goal.id, user_id: actorId, space_id: spaceId, amount, type: 'retiro',
-      }).select().single()
-      if (txErr) return res.status(500).json({ error: 'No se pudo retirar: ' + txErr.message })
+      // Revisión del saldo + inserción del retiro juntas, con candado por
+      // meta (goal_withdraw_checked, v0.9.717): dos retiros simultáneos ya
+      // no pueden sacar más de lo que hay.
+      const { data: tx, error: txErr } = await supabase.rpc('goal_withdraw_checked', {
+        p_goal: goal.id, p_user: actorId, p_space: spaceId, p_amount: amount,
+      })
+      if (txErr) {
+        const m = String(txErr.message).match(/GOAL_INSUFFICIENT:([-0-9.]+)/)
+        if (m) return res.status(400).json({ error: `La meta solo tiene ${money(Number(m[1]))}` })
+        return res.status(500).json({ error: 'No se pudo retirar: ' + txErr.message })
+      }
 
       const { error: incomeErr } = await supabase.from('period_income').insert({
         user_id: actorId, space_id: null, period_start: dateToStr(start),
