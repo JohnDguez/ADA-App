@@ -19,8 +19,13 @@ android {
     }
     buildTypes {
         release {
-            minifyEnabled false
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            // v0.9.735 — R8 activado (aviso de Play Console: sin ofuscación/reducción).
+            // Reglas conservadoras en proguard-rules.pro. Probar SIEMPRE el .aab
+            // de release en el track interno antes de promoverlo a producción.
+            // Para volver atrás: minifyEnabled/shrinkResources en false.
+            minifyEnabled true
+            shrinkResources true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
 }

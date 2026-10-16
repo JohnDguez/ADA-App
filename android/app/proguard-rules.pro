@@ -1,21 +1,36 @@
-# Add project specific ProGuard rules here.
-# You can control the set of applied configuration files using the
-# proguardFiles setting in build.gradle.
+# Reglas de R8 / ProGuard de LunaPay (v0.9.735).
 #
-# For more details, see
-#   http://developer.android.com/guide/developing/tools/proguard.html
+# Enfoque CONSERVADOR: R8 reduce (y ofusca) las librerías de terceros —
+# Firebase, ML Kit, Play Billing, AndroidX—, que traen sus propias reglas
+# "consumer"; el código de ESTE proyecto y de los plugins de Capacitor/Cordova
+# se conserva tal cual, porque se carga por reflexión (capacitor.plugins.json,
+# config.xml de Cordova, anotaciones @PluginMethod) y ofuscarlo rompería el
+# puente con la web sin ahorrar casi peso.
+#
+# Si una compilación de release falla con "Missing class ...", R8 escribe las
+# reglas sugeridas en android/app/build/outputs/mapping/release/missing_rules.txt;
+# pégalas aquí. Si algo funciona en debug pero no en release, es casi seguro
+# una clase que falta conservar: revisa Logcat (ClassNotFoundException /
+# NoSuchMethodException) y añade su `-keep`.
 
-# If your project uses WebView with JS, uncomment the following
-# and specify the fully qualified class name to the JavaScript interface
-# class:
-#-keepclassmembers class fqcn.of.javascript.interface.for.webview {
-#   public *;
-#}
+# Anotaciones, genéricos y números de línea (para stack traces legibles en Play Console).
+-keepattributes *Annotation*, Signature, InnerClasses, EnclosingMethod, SourceFile, LineNumberTable
+-renamesourcefileattribute SourceFile
 
-# Uncomment this to preserve the line number information for
-# debugging stack traces.
-#-keepattributes SourceFile,LineNumberTable
+# Interfaces JavaScript del WebView (Capacitor expone varias).
+-keepclassmembers class * {
+    @android.webkit.JavascriptInterface <methods>;
+}
 
-# If you keep the line number information, uncomment this to
-# hide the original source file name.
-#-renamesourcefileattribute SourceFile
+# Código propio: MainActivity, widget de Luna y su plugin local.
+-keep class app.luna_pay.mobile.** { *; }
+
+# Capacitor y sus plugins (se registran por nombre desde capacitor.plugins.json).
+-keep class com.getcapacitor.** { *; }
+-keep class com.capacitorjs.** { *; }
+-keep class io.capawesome.** { *; }
+-keep class app.capgo.** { *; }
+
+# Cordova: cordova-plugin-purchase se instancia por nombre de clase.
+-keep class org.apache.cordova.** { *; }
+-keep class cc.fovea.** { *; }
