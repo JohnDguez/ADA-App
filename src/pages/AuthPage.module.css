@@ -1,0 +1,372 @@
+/* AuthPage.module.css — v0.9.723 (antes todo era `style={{}}` inline, Regla 12).
+   Valores idénticos a los que tenían los inline. */
+
+/* ── Animación de cruce landing ↔ formulario (Regla 29) ───────────────────
+   La duración (220ms) está en 2 lugares a propósito (Regla 30): aquí y en
+   `ANIM_MS` de AuthPage.jsx — si cambia una, cambia la otra. */
+@keyframes contentEnter { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes contentExit  { from { opacity: 1; transform: translateY(0); } to { opacity: 0; transform: translateY(-10px); } }
+.fadeEnter { animation: contentEnter 220ms ease forwards; }
+.fadeExit  { animation: contentExit 220ms ease forwards; }
+
+/* ── Modal de términos ─────────────────────────────────────────────────── */
+.termsOverlay {
+  position: fixed;
+  inset: 0;
+  background: var(--scrim-strong);
+  z-index: 300;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+.termsSheet {
+  background: var(--surface);
+  border-radius: 20px 20px 0 0;
+  width: 100%;
+  max-width: 420px;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+}
+.termsHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 0.5px solid var(--border);
+  flex-shrink: 0;
+}
+.termsTitle { font-size: 16px; font-weight: 700; color: var(--text); }
+.iconButton {
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  padding: 4px;
+}
+.termsBody {
+  overflow-y: auto;
+  padding: 20px;
+  flex: 1;
+  line-height: 1.7;
+  font-size: 13px;
+  color: var(--text);
+}
+.termsParagraph { margin-bottom: 16px; }
+.termsClosing { margin-top: 16px; font-weight: 600; }
+.termsLinkRow { margin-top: 16px; }
+.link { color: var(--accent); font-weight: 600; }
+.termsFooter {
+  padding: 14px 20px;
+  border-top: 0.5px solid var(--border);
+  flex-shrink: 0;
+}
+.section { margin-bottom: 16px; }
+.sectionTitle { font-weight: 700; margin-bottom: 6px; }
+
+/* ── Requisitos de contraseña ──────────────────────────────────────────── */
+.reqRow { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; }
+.reqDot {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background .15s;
+}
+.reqDotMet { background: var(--paid); }
+.reqLabel { font-size: 12px; font-weight: 500; color: var(--text); }
+.reqBox {
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  margin-bottom: 14px;
+  border: 0.5px solid var(--border);
+}
+.reqBoxBg { background: var(--bg); }
+.reqBoxSurface { background: var(--surface); }
+
+/* ── Restablecer contraseña ────────────────────────────────────────────── */
+.resetPage {
+  min-height: 100vh;
+  background: var(--bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 24px;
+}
+.resetCard { width: 100%; max-width: 360px; }
+.resetTitle { font-size: 22px; font-weight: 700; color: var(--text); margin-bottom: 6px; }
+.resetSubtitle { font-size: 14px; color: var(--text); margin-bottom: 24px; }
+.cancelLink {
+  display: block;
+  margin: 16px auto 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted);
+}
+:global(.btn-primary).resetSubmit { margin-top: 8px; }
+
+/* ── Campos ─────────────────────────────────────────────────────────────── */
+.field { position: relative; margin-bottom: 14px; }
+.fieldBody { position: relative; }
+.fieldIcon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 1;
+  display: flex;
+}
+.eyeButton {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  padding: 4px;
+}
+/* Regla 20: clase global + local → `:global(.x).local`. El estado de error
+   también cubre :focus (el inline anterior ganaba sobre .field-input:focus). */
+:global(.field-input).inputIconLeft { padding-left: 40px; }
+:global(.field-input).inputIconBoth { padding-left: 40px; padding-right: 40px; }
+:global(.field-input).inputError,
+:global(.field-input).inputError:focus { border-color: var(--danger); }
+.mismatch { font-size: 11px; color: var(--danger); margin-top: 4px; }
+
+/* ── Mensajes ───────────────────────────────────────────────────────────── */
+.message {
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  font-size: 13px;
+  margin-bottom: 16px;
+}
+.messageError   { background: var(--danger-soft); border: 0.5px solid var(--danger-border); color: var(--danger); }
+.messageSuccess { background: var(--paid-soft);   border: 0.5px solid var(--paid-border);   color: var(--paid); }
+
+/* ── Pantalla principal ────────────────────────────────────────────────── */
+.page {
+  height: 100vh;
+  background: var(--bg);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* Hero permanente: ilustración + capa oscura + logo + onda. Franja fija. */
+.hero {
+  position: relative;
+  background-image: url(/login-header.svg);
+  background-size: cover;
+  background-position: center;
+  padding: 56px 24px 64px;
+  text-align: center;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+.heroOverlay { position: absolute; inset: 0; background: var(--auth-hero-overlay); }
+.backButton {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  z-index: 1;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--auth-hero-back-btn-bg);
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.heroContent { position: relative; }
+.heroLogo { height: 102px; display: block; margin: 0 auto; }
+.heroTitle {
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--on-color);
+  line-height: 1.3;
+  margin-top: 20px;
+}
+.heroSubtitle {
+  font-size: 13px;
+  color: var(--on-color);
+  opacity: 0.9;
+  line-height: 1.5;
+  margin: 8px auto 0;
+  max-width: 290px;
+}
+.heroWave {
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  width: 100%;
+  height: 50px;
+  display: block;
+}
+
+/* Franja con scroll propio entre el hero y la bottom bar */
+.scroll { flex: 1; min-height: 0; overflow-y: auto; }
+.scrollLanding { padding: 16px 24px; }
+.scrollForm    { padding: 20px 24px; }
+
+/* ── Landing ────────────────────────────────────────────────────────────── */
+.features { display: flex; flex-direction: column; gap: 12px; margin-top: 8px; }
+.feature {
+  background: var(--surface);
+  border-radius: 16px;
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  box-shadow: var(--shadow-feature);
+}
+.featureIcon {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.featureIconAccent { background: var(--accent-soft); }
+.featureIconGold   { background: var(--premium-gold); }
+.featureTitle { font-size: 14.5px; font-weight: 700; color: var(--text); }
+.featureDesc  { font-size: 12px; color: var(--muted); margin-top: 2px; }
+
+.bottomBar {
+  flex-shrink: 0;
+  width: 100%;
+  max-width: 420px;
+  margin: 0 auto;
+  background: var(--bg);
+  border-top: 1px solid var(--border);
+  padding: 14px 24px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+:global(.btn-primary).bottomPrimary { font-size: 15px; }
+.bottomSecondary {
+  width: 100%;
+  padding: 14px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-mid);
+  background: var(--surface);
+  color: var(--text);
+  font-weight: 600;
+  font-size: 15px;
+  font-family: 'DM Sans', sans-serif;
+  cursor: pointer;
+}
+.legal { text-align: center; font-size: 11px; color: var(--muted); margin-top: 4px; }
+
+/* ── Formulario ─────────────────────────────────────────────────────────── */
+.form { max-width: 360px; margin: 0 auto; }
+
+/* Switch Iniciar sesión / Registrarse (track + thumb deslizante) */
+.tabTrack {
+  position: relative;
+  display: flex;
+  background: var(--section-bg);
+  border-radius: 999px;
+  padding: 4px;
+  margin-bottom: 24px;
+}
+.tabThumb {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  width: calc(50% - 4px);
+  height: calc(100% - 8px);
+  background: var(--accent);
+  border-radius: 999px;
+  transform: translateX(0%);
+  transition: transform .25s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+.tabThumbRight { transform: translateX(100%); }
+.tabButton {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  text-align: center;
+  padding: 10px 0;
+  border-radius: 999px;
+  border: none;
+  background: transparent;
+  color: var(--text);
+  font-weight: 400;
+  font-size: 14px;
+  font-family: 'DM Sans', sans-serif;
+  cursor: pointer;
+  transition: color .2s;
+}
+.tabButtonActive { color: var(--surface); font-weight: 600; }
+
+.googleButton {
+  width: 100%;
+  padding: 11px;
+  background: var(--surface);
+  border: 0.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text);
+  font-family: 'DM Sans', sans-serif;
+  cursor: pointer;
+}
+.googleButtonDim { opacity: 0.6; }
+.termsNote { font-size: 11px; color: var(--text); text-align: center; margin-top: 10px; }
+.inlineLink { color: var(--accent); cursor: pointer; text-decoration: underline; }
+.inlineLinkBold { color: var(--accent); font-weight: 600; cursor: pointer; text-decoration: underline; }
+
+.divider { display: flex; align-items: center; gap: 10px; margin: 16px 0 20px; }
+.dividerLine { flex: 1; height: 0.5px; background: var(--border); }
+.dividerText { font-size: 12px; color: var(--text); }
+
+.forgotHead { margin-bottom: 20px; }
+.forgotTitle { font-size: 20px; font-weight: 700; color: var(--text); margin-bottom: 6px; }
+.forgotSubtitle { font-size: 14px; color: var(--text); }
+
+.termsCheck { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 20px; cursor: pointer; }
+.checkbox {
+  width: 18px;
+  height: 18px;
+  border-radius: 4px;
+  flex-shrink: 0;
+  margin-top: 1px;
+  border: 1.5px solid var(--border);
+  background: var(--surface);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background .15s;
+}
+.checkboxOn { border: none; background: var(--accent); }
+.termsCheckText { font-size: 13px; color: var(--text); line-height: 1.5; }
+
+:global(.btn-primary).submit { margin-bottom: 12px; }
+.textLink {
+  background: none;
+  border: none;
+  font-size: 13px;
+  color: var(--accent);
+  cursor: pointer;
+  display: block;
+  margin: 0 auto 16px;
+  font-family: 'DM Sans', sans-serif;
+}

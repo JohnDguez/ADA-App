@@ -246,6 +246,7 @@
   --premium-back-btn-bg: rgba(0, 0, 0, 0.35); /* botón de cerrar sobre el hero de Premium */
 
   --shadow-card:         0 2px 8px rgba(0, 0, 0, 0.08);
+  --shadow-feature:      0 1px 3px rgba(2, 10, 31, 0.06);
   --shadow-popover:      0 4px 16px rgba(0, 0, 0, 0.12);
   --shadow-lift:         0 8px 24px rgba(0, 0, 0, 0.35);
   --shadow-panel:        0 8px 32px rgba(2, 10, 31, 0.2);

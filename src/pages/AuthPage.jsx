@@ -18,6 +18,7 @@ import { loadGoogleIdentityScript, generateNonce } from '../lib/googleAuth'
 import { isNativeAndroid, signInWithGoogleNative } from '../lib/nativeGoogleAuth'
 import { Presence } from '../components/Presence'
 import { kbd, switchProps } from '../lib/a11y'
+import styles from './AuthPage.module.css'
 
 // Misma curva que el borde inferior de cada "escena" de OnboardingPage.jsx y
 // del hero de PremiumPage.jsx (WAVE_PATH ahí) — pedido explícito de
@@ -33,18 +34,18 @@ function TermsModal({ onClose }) {
   return (
     <div
       onClick={e => e.target === e.currentTarget && onClose()}
-      style={{ position: 'fixed', inset: 0, background: 'rgba(2,10,31,0.5)', zIndex: 300, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}
+      className={styles.termsOverlay}
     >
-      <div style={{ background: 'var(--surface)', borderRadius: '20px 20px 0 0', width: '100%', maxWidth: 420, maxHeight: '85vh', display: 'flex', flexDirection: 'column' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', borderBottom: '0.5px solid var(--border)', flexShrink: 0 }}>
-          <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--text)' }}>{t('termsModal.title')}</div>
-          <button onClick={onClose} aria-label={t('buttons.close')} style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', padding: 4 }}>
+      <div className={styles.termsSheet}>
+        <div className={styles.termsHeader}>
+          <div className={styles.termsTitle}>{t('termsModal.title')}</div>
+          <button onClick={onClose} aria-label={t('buttons.close')} className={styles.iconButton}>
             <X size={20} color="var(--text)" />
           </button>
         </div>
-        <div style={{ overflowY: 'auto', padding: '20px', flex: 1, lineHeight: 1.7, fontSize: 13, color: 'var(--text)' }}>
-          <p style={{ marginBottom: 16 }}>{t('termsModal.lastUpdated')}</p>
-          <p style={{ marginBottom: 16 }}>{t('termsModal.intro', { appName: APP_NAME })}</p>
+        <div className={styles.termsBody}>
+          <p className={styles.termsParagraph}>{t('termsModal.lastUpdated')}</p>
+          <p className={styles.termsParagraph}>{t('termsModal.intro', { appName: APP_NAME })}</p>
           <Section title={t('termsModal.section1Title')}>{t('termsModal.section1Text', { appName: APP_NAME })}</Section>
           <Section title={t('termsModal.section2Title')}>{t('termsModal.section2Text', { appName: APP_NAME })}</Section>
           <Section title={t('termsModal.section3Title')}>{t('termsModal.section3Text', { appName: APP_NAME })}</Section>
@@ -55,14 +56,14 @@ function TermsModal({ onClose }) {
           <Section title={t('termsModal.section8Title')}>{t('termsModal.section8Text', { appName: APP_NAME })}</Section>
           <Section title={t('termsModal.section9Title')}>{t('termsModal.section9Text', { appName: APP_NAME })}</Section>
           <Section title={t('termsModal.section10Title')}>{t('termsModal.section10Text', { appName: APP_NAME })}</Section>
-          <p style={{ marginTop: 16, fontWeight: 600 }}>{t('termsModal.closing')}</p>
-          <p style={{ marginTop: 16 }}>
-            <a href="/terminos.html" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--accent)', fontWeight: 600 }}>
+          <p className={styles.termsClosing}>{t('termsModal.closing')}</p>
+          <p className={styles.termsLinkRow}>
+            <a href="/terminos.html" target="_blank" rel="noopener noreferrer" className={styles.link}>
               {t('termsModal.viewFullVersion')}
             </a>
           </p>
         </div>
-        <div style={{ padding: '14px 20px', borderTop: '0.5px solid var(--border)', flexShrink: 0 }}>
+        <div className={styles.termsFooter}>
           <button onClick={onClose} className="btn-primary">{t('buttons.understood')}</button>
         </div>
       </div>
@@ -72,8 +73,8 @@ function TermsModal({ onClose }) {
 
 function Section({ title, children }) {
   return (
-    <div style={{ marginBottom: 16 }}>
-      <div style={{ fontWeight: 700, marginBottom: 6 }}>{title}</div>
+    <div className={styles.section}>
+      <div className={styles.sectionTitle}>{title}</div>
       <p>{children}</p>
     </div>
   )
@@ -82,19 +83,14 @@ function Section({ title, children }) {
 // ── Indicador de requisitos de contraseña ────────────────────────────────────
 function RequirementRow({ met, label }) {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
-      <div style={{
-        width: 16, height: 16, borderRadius: '50%', flexShrink: 0,
-        background: met ? 'var(--paid)' : 'var(--border)',
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        transition: 'background .15s',
-      }}>
+    <div className={styles.reqRow}>
+      <div className={`${styles.reqDot} ${met ? styles.reqDotMet : ''}`}>
         {met
           ? <Check size={10} color="var(--on-color)" strokeWidth={3} />
           : <X size={10} color="var(--text)" strokeWidth={2.5} />
         }
       </div>
-      <span style={{ fontSize: 12, fontWeight: 500, color: 'var(--text)' }}>{label}</span>
+      <span className={styles.reqLabel}>{label}</span>
     </div>
   )
 }
@@ -142,19 +138,19 @@ export function ResetPasswordPage({ onDone }) {
   }
 
   return (
-    <div style={{ minHeight: '100vh', background: 'var(--bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 24px' }}>
-      <div style={{ width: '100%', maxWidth: 360 }}>
+    <div className={styles.resetPage}>
+      <div className={styles.resetCard}>
         <Logo />
-        <div style={{ fontSize: 22, fontWeight: 700, color: 'var(--text)', marginBottom: 6 }}>{t('resetPasswordPage.title')}</div>
-        <div style={{ fontSize: 14, color: 'var(--text)', marginBottom: 24 }}>{t('resetPasswordPage.subtitle')}</div>
-        {error && <div style={{ background: 'var(--danger-soft)', border: '0.5px solid var(--danger-border)', borderRadius: 'var(--radius-sm)', padding: '10px 12px', fontSize: 13, color: 'var(--danger)', marginBottom: 16 }}>{error}</div>}
+        <div className={styles.resetTitle}>{t('resetPasswordPage.title')}</div>
+        <div className={styles.resetSubtitle}>{t('resetPasswordPage.subtitle')}</div>
+        {error && <div className={`${styles.message} ${styles.messageError}`}>{error}</div>}
         <Field label={t('resetPasswordPage.newPasswordLabel')}>
           <FieldIcon><Lock size={15} color="var(--text)" /></FieldIcon>
-          <input className="field-input" style={{ paddingLeft: 40, paddingRight: 40 }} type={showNew ? 'text' : 'password'} value={newPassword} onChange={e => setNewPassword(e.target.value)} placeholder={t('resetPasswordPage.newPasswordPlaceholder')} />
+          <input className={`field-input ${styles.inputIconBoth}`} type={showNew ? 'text' : 'password'} value={newPassword} onChange={e => setNewPassword(e.target.value)} placeholder={t('resetPasswordPage.newPasswordPlaceholder')} />
           <EyeBtn show={showNew} onToggle={() => setShowNew(v => !v)} />
         </Field>
         {newPassword.length > 0 && (
-          <div style={{ background: 'var(--bg)', borderRadius: 'var(--radius-sm)', padding: '10px 12px', marginBottom: 14, border: '0.5px solid var(--border)' }}>
+          <div className={`${styles.reqBox} ${styles.reqBoxBg}`}>
             <RequirementRow met={reqs.length}    label={t('settingsAccount.editModal.requirementLength')} />
             <RequirementRow met={reqs.uppercase} label={t('settingsAccount.editModal.requirementUppercase')} />
             <RequirementRow met={reqs.number}    label={t('settingsAccount.editModal.requirementNumber')} />
@@ -163,14 +159,14 @@ export function ResetPasswordPage({ onDone }) {
         )}
         <Field label={t('passwordSetupModal.confirmLabel')}>
           <FieldIcon><Lock size={15} color="var(--text)" /></FieldIcon>
-          <input className="field-input" style={{ paddingLeft: 40, paddingRight: 40, borderColor: confirm && !match ? 'var(--danger)' : undefined }} type={showConfirm ? 'text' : 'password'} value={confirm} onChange={e => setConfirm(e.target.value)} placeholder={t('passwordSetupModal.confirmPlaceholder')} onKeyDown={e => e.key === 'Enter' && handleUpdate()} />
+          <input className={`field-input ${styles.inputIconBoth} ${confirm && !match ? styles.inputError : ''}`} type={showConfirm ? 'text' : 'password'} value={confirm} onChange={e => setConfirm(e.target.value)} placeholder={t('passwordSetupModal.confirmPlaceholder')} onKeyDown={e => e.key === 'Enter' && handleUpdate()} />
           <EyeBtn show={showConfirm} onToggle={() => setShowConfirm(v => !v)} />
-          {confirm && !match && <div style={{ fontSize: 11, color: 'var(--danger)', marginTop: 4 }}>{t('settingsAccount.editModal.passwordMismatch')}</div>}
+          {confirm && !match && <div className={styles.mismatch}>{t('settingsAccount.editModal.passwordMismatch')}</div>}
         </Field>
-        <button onClick={handleUpdate} disabled={loading || !strong || !match} className="btn-primary" style={{ marginTop: 8, opacity: loading || !strong || !match ? 0.6 : 1 }}>
+        <button onClick={handleUpdate} disabled={loading || !strong || !match} className={`btn-primary ${styles.resetSubmit}`}>
           {loading ? t('resetPasswordPage.saving') : t('resetPasswordPage.submit')}
         </button>
-        <button onClick={handleCancel} disabled={loading} style={{ display: 'block', margin: '16px auto 0', background: 'none', border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 600, color: 'var(--muted)' }}>
+        <button onClick={handleCancel} disabled={loading} className={styles.cancelLink}>
           {t('resetPasswordPage.cancelLink')}
         </button>
       </div>
@@ -201,9 +197,9 @@ export function AuthPage() {
   // `visibleMode` es lo que en verdad está pintado en pantalla — se queda
   // atrás de `mode` (el objetivo real) mientras dura la animación, así el
   // contenido VIEJO sigue renderizado (con su fade de salida) el tiempo
-  // exacto antes de cambiar al nuevo (con su fade de entrada). ANIM_MS es
-  // la ÚNICA fuente de la duración — se inyecta tal cual en el `animation`
-  // inline de abajo, así JS y CSS nunca pueden desincronizarse (Regla 30).
+  // exacto antes de cambiar al nuevo (con su fade de entrada). ANIM_MS (220)
+  // debe valer lo mismo que la duración de .fadeEnter/.fadeExit en
+  // AuthPage.module.css — se mantiene a mano en los 2 lados (Regla 30).
   // El fade completo (salida+entrada) solo aplica al cruce 'landing' ↔
   // formulario — cambiar entre login/registro/olvidé-contraseña adentro
   // del formulario no lo dispara, para no re-animar todo el panel por un
@@ -232,11 +228,7 @@ export function AuthPage() {
     return () => clearTimeout(enterTimer)
   }, [contentPhase])
 
-  const fadeStyle = contentPhase === 'exit'
-    ? { animation: `authContentExit ${ANIM_MS}ms ease forwards` }
-    : contentPhase === 'enter'
-    ? { animation: `authContentEnter ${ANIM_MS}ms ease forwards` }
-    : {}
+  const fade = contentPhase === 'exit' ? styles.fadeExit : contentPhase === 'enter' ? styles.fadeEnter : ''
 
   const reqs   = passwordRequirements(password)
   const strong = isPasswordStrong(password)
@@ -436,36 +428,23 @@ export function AuthPage() {
   // que cualquier otro formulario de la app (PaymentModal, etc.).
   const showForm = visibleMode !== 'landing'
   const FEATURES = [
-    { icon: CalendarCheck, bg: 'var(--accent-soft)', color: 'var(--accent)', title: t('authPage.landing.feature1Title'), desc: t('authPage.landing.feature1Desc') },
-    { icon: UsersThree,    bg: 'var(--premium-gold)', color: 'var(--premium-gold-text)', title: t('authPage.landing.feature2Title'), desc: t('authPage.landing.feature2Desc') },
-    { icon: Target,        bg: 'var(--accent-soft)', color: 'var(--accent)', title: t('authPage.landing.feature3Title'), desc: t('authPage.landing.feature3Desc') },
+    { icon: CalendarCheck, color: 'var(--accent)', title: t('authPage.landing.feature1Title'), desc: t('authPage.landing.feature1Desc') },
+    { icon: UsersThree,    gold: true, color: 'var(--premium-gold-text)', title: t('authPage.landing.feature2Title'), desc: t('authPage.landing.feature2Desc') },
+    { icon: Target,        color: 'var(--accent)', title: t('authPage.landing.feature3Title'), desc: t('authPage.landing.feature3Desc') },
   ]
 
   return (
-    <div style={{ height: '100vh', background: 'var(--bg)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-      <style>{`
-        @keyframes authContentEnter { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes authContentExit  { from { opacity: 1; transform: translateY(0); } to { opacity: 0; transform: translateY(-10px); } }
-      `}</style>
+    <div className={styles.page}>
 
       {/* Hero permanente (nunca se desmonta al cambiar `mode`) — ilustración
           propia de Johnatan (login-header.svg), logo y onda inferior. Es
           justo lo que evita que el formulario real "pierda el encanto".
           `flexShrink: 0`: franja fija del layout de 3. */}
-      <div style={{
-        position: 'relative',
-        backgroundImage: 'url(/login-header.svg)',
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        padding: '56px 24px 64px',
-        textAlign: 'center',
-        overflow: 'hidden',
-        flexShrink: 0,
-      }}>
+      <div className={styles.hero}>
         {/* Capa oscura sobre la ilustración — "oscurece un poco la imagen,
             que se vea de fondo, ahorita pelea mucho con el texto"
             (v0.9.516). --auth-hero-overlay documentada en index.css. */}
-        <div style={{ position: 'absolute', inset: 0, background: 'var(--auth-hero-overlay)' }} />
+        <div className={styles.heroOverlay} />
 
         {/* Flecha de regreso a 'landing' — solo con el formulario real
             (no en 'forgot', que ya trae su propio link "volver a inicio de
@@ -479,36 +458,36 @@ export function AuthPage() {
             type="button"
             onClick={() => { setMode('landing'); setError(''); setSuccess('') }}
             aria-label={t('authPage.landing.backAriaLabel')}
-            style={{ ...fadeStyle, position: 'absolute', top: 16, left: 16, zIndex: 1, width: 36, height: 36, borderRadius: '50%', background: 'var(--auth-hero-back-btn-bg)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+            className={`${styles.backButton} ${fade}`}
           >
             <ArrowLeft size={20} color="var(--on-color)" />
           </button>
         )}
 
-        <div style={{ position: 'relative' }}>
+        <div className={styles.heroContent}>
           {/* Logo 3 veces más grande que el original (34px → 102px), sin
               animación. */}
           <img
             src="/Luna-Pay-logo-white.svg"
             alt={APP_NAME}
-            style={{ height: 102, display: 'block', margin: '0 auto' }}
+            className={styles.heroLogo}
           />
           {/* Titular/subtítulo solo en 'landing' — con el formulario real
               el hero se queda solo con el logo, para dejar más espacio a
               los campos. */}
           {!showForm && (
-            <div style={fadeStyle}>
-              <div style={{ fontSize: 22, fontWeight: 800, color: '#fff', lineHeight: 1.3, marginTop: 20 }}>
+            <div className={fade}>
+              <div className={styles.heroTitle}>
                 {t('authPage.landing.titleLine1')}<br />{t('authPage.landing.titleLine2')}
               </div>
-              <div style={{ fontSize: 13, color: '#fff', opacity: 0.9, lineHeight: 1.5, marginTop: 8, maxWidth: 290, marginLeft: 'auto', marginRight: 'auto' }}>
+              <div className={styles.heroSubtitle}>
                 {t('authPage.landing.subtitle')}
               </div>
             </div>
           )}
         </div>
 
-        <svg viewBox="0 0 300 110" preserveAspectRatio="none" style={{ position: 'absolute', bottom: -1, left: 0, width: '100%', height: 50, display: 'block' }}>
+        <svg viewBox="0 0 300 110" preserveAspectRatio="none" className={styles.heroWave}>
           <path d={WAVE_PATH} fill="var(--bg)" />
         </svg>
       </div>
@@ -518,49 +497,37 @@ export function AuthPage() {
           (bottom bar en 'landing', nada en el formulario real), así que
           nunca se tapa contenido (fix del bug de v0.9.516). Cambia de
           contenido según `visibleMode`, sin desmontar el hero de arriba;
-          el contenido interior lleva `fadeStyle` (entrada/salida, Regla 29
+          el contenido interior lleva la clase `fade` (entrada/salida, Regla 29
           — v0.9.518, antes este cruce no tenía ninguna animación). */}
-      <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', padding: showForm ? '20px 24px' : '16px 24px' }}>
+      <div className={`${styles.scroll} ${showForm ? styles.scrollForm : styles.scrollLanding}`}>
         {!showForm ? (
-          <div style={{ ...fadeStyle, display: 'flex', flexDirection: 'column', gap: 12, marginTop: 8 }}>
+          <div className={`${styles.features} ${fade}`}>
             {FEATURES.map(f => (
-              <div key={f.title} style={{ background: 'var(--surface)', borderRadius: 16, padding: 16, display: 'flex', alignItems: 'center', gap: 14, boxShadow: '0 1px 3px rgba(2,10,31,0.06)' }}>
-                <div style={{ width: 44, height: 44, borderRadius: 12, background: f.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <div key={f.title} className={styles.feature}>
+                <div className={`${styles.featureIcon} ${f.gold ? styles.featureIconGold : styles.featureIconAccent}`}>
                   <f.icon size={20} weight="duotone" color={f.color} />
                 </div>
                 <div>
-                  <div style={{ fontSize: 14.5, fontWeight: 700, color: 'var(--text)' }}>{f.title}</div>
-                  <div style={{ fontSize: 12, color: 'var(--muted)', marginTop: 2 }}>{f.desc}</div>
+                  <div className={styles.featureTitle}>{f.title}</div>
+                  <div className={styles.featureDesc}>{f.desc}</div>
                 </div>
               </div>
             ))}
           </div>
         ) : (
-          <div style={{ ...fadeStyle, maxWidth: 360, margin: '0 auto' }}>
+          <div className={`${styles.form} ${fade}`}>
             {/* Switch Iniciar sesión/Registrarse — mismo patrón "track +
                 thumb deslizante" que ya usa HomePage.jsx para sus tabs de
                 Periodo/Mes (.tabTrack/.tabThumb/.tabButton), en vez de 2
                 botones que solo cambiaban de color de golpe — pedido
                 explícito de Johnatan ("como estan los switchers de la
                 app... con un movimiento suave entre cada elemento").
-                AuthPage.jsx no tiene CSS module propio, así que se
-                reproduce inline con los mismos valores (pill, thumb
-                var(--accent) con transition de transform). */}
+                Vive en AuthPage.module.css (.tabTrack/.tabThumb/.tabButton). */}
             {visibleMode !== 'forgot' && (
-              <div style={{ position: 'relative', display: 'flex', background: 'var(--section-bg)', borderRadius: 999, padding: 4, marginBottom: 24 }}>
-                <div style={{
-                  position: 'absolute',
-                  top: 4,
-                  left: 4,
-                  width: 'calc(50% - 4px)',
-                  height: 'calc(100% - 8px)',
-                  background: 'var(--accent)',
-                  borderRadius: 999,
-                  transform: `translateX(${visibleMode === 'register' ? '100%' : '0%'})`,
-                  transition: 'transform .25s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
-                }} />
+              <div className={styles.tabTrack}>
+                <div className={`${styles.tabThumb} ${visibleMode === 'register' ? styles.tabThumbRight : ''}`} />
                 {[['login',t('authPage.tabs.login')],['register',t('authPage.tabs.register')]].map(([m, label]) => (
-                  <button key={m} onClick={() => { setMode(m); setError(''); setSuccess('') }} style={{ position: 'relative', zIndex: 1, flex: 1, textAlign: 'center', padding: '10px 0', borderRadius: 999, border: 'none', background: 'transparent', color: visibleMode === m ? 'var(--surface)' : 'var(--text)', fontWeight: visibleMode === m ? 600 : 400, fontSize: 14, fontFamily: 'DM Sans, sans-serif', cursor: 'pointer', transition: 'color .2s' }}>
+                  <button key={m} onClick={() => { setMode(m); setError(''); setSuccess('') }} className={`${styles.tabButton} ${visibleMode === m ? styles.tabButtonActive : ''}`}>
                     {label}
                   </button>
                 ))}
@@ -579,51 +546,51 @@ export function AuthPage() {
                 nueva clave de i18n (`orEmailLabel`) en vez de reutilizar
                 `orContinueWith` con el sentido invertido. */}
             {visibleMode !== 'forgot' && (<>
-              <button onClick={handleGoogle} disabled={googleLoading || !googleReady} style={{ width: '100%', padding: '11px', background: 'var(--surface)', border: '0.5px solid var(--border)', borderRadius: 'var(--radius-sm)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, fontSize: 14, fontWeight: 500, color: 'var(--text)', fontFamily: 'DM Sans, sans-serif', cursor: 'pointer', opacity: googleReady ? 1 : 0.6 }}>
+              <button onClick={handleGoogle} disabled={googleLoading || !googleReady} className={`${styles.googleButton} ${googleReady ? '' : styles.googleButtonDim}`}>
                 <GoogleIcon />
                 {googleLoading ? t('authPage.google.connecting') : 'Google'}
               </button>
               {visibleMode === 'register' && (
-                <div style={{ fontSize: 11, color: 'var(--text)', textAlign: 'center', marginTop: 10 }}>
+                <div className={styles.termsNote}>
                   {t('authPage.google.termsNote')}{' '}
-                  <span {...kbd} onClick={() => setShowTerms(true)} style={{ color: 'var(--accent)', cursor: 'pointer', textDecoration: 'underline' }}>
+                  <span {...kbd} onClick={() => setShowTerms(true)} className={styles.inlineLink}>
                     {t('authPage.termsLink')}
                   </span>
                 </div>
               )}
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '16px 0 20px' }}>
-                <div style={{ flex: 1, height: '0.5px', background: 'var(--border)' }} />
-                <span style={{ fontSize: 12, color: 'var(--text)' }}>{t('authPage.orEmailLabel')}</span>
-                <div style={{ flex: 1, height: '0.5px', background: 'var(--border)' }} />
+              <div className={styles.divider}>
+                <div className={styles.dividerLine} />
+                <span className={styles.dividerText}>{t('authPage.orEmailLabel')}</span>
+                <div className={styles.dividerLine} />
               </div>
             </>)}
 
             {visibleMode === 'forgot' && (
-              <div style={{ marginBottom: 20 }}>
-                <div style={{ fontSize: 20, fontWeight: 700, color: 'var(--text)', marginBottom: 6 }}>{t('authPage.forgotTitle')}</div>
-                <div style={{ fontSize: 14, color: 'var(--text)' }}>{t('authPage.forgotSubtitle')}</div>
+              <div className={styles.forgotHead}>
+                <div className={styles.forgotTitle}>{t('authPage.forgotTitle')}</div>
+                <div className={styles.forgotSubtitle}>{t('authPage.forgotSubtitle')}</div>
               </div>
             )}
 
-            {error   && <div style={{ background: 'var(--danger-soft)', border: '0.5px solid var(--danger-border)', borderRadius: 'var(--radius-sm)', padding: '10px 12px', fontSize: 13, color: 'var(--danger)', marginBottom: 16 }}>{error}</div>}
-            {success && <div style={{ background: 'var(--paid-soft)',   border: '0.5px solid var(--paid-border)',   borderRadius: 'var(--radius-sm)', padding: '10px 12px', fontSize: 13, color: 'var(--paid)',   marginBottom: 16 }}>{success}</div>}
+            {error   && <div className={`${styles.message} ${styles.messageError}`}>{error}</div>}
+            {success && <div className={`${styles.message} ${styles.messageSuccess}`}>{success}</div>}
 
             <Field label={t('authPage.emailLabel')}>
               <FieldIcon><Mail size={15} color="var(--text)" /></FieldIcon>
-              <input autoFocus className="field-input" style={{ paddingLeft: 40 }} type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder={t('authPage.emailPlaceholder')} onKeyDown={e => e.key === 'Enter' && handleSubmit()} enterKeyHint="next" />
+              <input autoFocus className={`field-input ${styles.inputIconLeft}`} type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder={t('authPage.emailPlaceholder')} onKeyDown={e => e.key === 'Enter' && handleSubmit()} enterKeyHint="next" />
             </Field>
 
             {visibleMode !== 'forgot' && (
               <Field label={t('authPage.passwordLabel')}>
                 <FieldIcon><Lock size={15} color="var(--text)" /></FieldIcon>
-                <input className="field-input" style={{ paddingLeft: 40, paddingRight: 40 }} type={showPass ? 'text' : 'password'} value={password} onChange={e => setPassword(e.target.value)} placeholder="••••••••" onKeyDown={e => e.key === 'Enter' && handleSubmit()} enterKeyHint={visibleMode === 'register' ? 'next' : 'done'} />
+                <input className={`field-input ${styles.inputIconBoth}`} type={showPass ? 'text' : 'password'} value={password} onChange={e => setPassword(e.target.value)} placeholder="••••••••" onKeyDown={e => e.key === 'Enter' && handleSubmit()} enterKeyHint={visibleMode === 'register' ? 'next' : 'done'} />
                 <EyeBtn show={showPass} onToggle={() => setShowPass(v => !v)} />
               </Field>
             )}
 
             {/* Requisitos de contraseña — solo en registro */}
             {visibleMode === 'register' && password.length > 0 && (
-              <div style={{ background: 'var(--surface)', borderRadius: 'var(--radius-sm)', padding: '10px 12px', marginBottom: 14, border: '0.5px solid var(--border)' }}>
+              <div className={`${styles.reqBox} ${styles.reqBoxSurface}`}>
                 <RequirementRow met={reqs.length}    label={t('settingsAccount.editModal.requirementLength')} />
                 <RequirementRow met={reqs.uppercase} label={t('settingsAccount.editModal.requirementUppercase')} />
                 <RequirementRow met={reqs.number}    label={t('settingsAccount.editModal.requirementNumber')} />
@@ -634,22 +601,22 @@ export function AuthPage() {
             {visibleMode === 'register' && (<>
               <Field label={t('passwordSetupModal.confirmLabel')}>
                 <FieldIcon><Lock size={15} color="var(--text)" /></FieldIcon>
-                <input className="field-input" style={{ paddingLeft: 40, paddingRight: 40, borderColor: confirm && !match ? 'var(--danger)' : undefined }} type={showConfirm ? 'text' : 'password'} value={confirm} onChange={e => setConfirm(e.target.value)} placeholder={t('passwordSetupModal.confirmPlaceholder')} enterKeyHint="next" />
+                <input className={`field-input ${styles.inputIconBoth} ${confirm && !match ? styles.inputError : ''}`} type={showConfirm ? 'text' : 'password'} value={confirm} onChange={e => setConfirm(e.target.value)} placeholder={t('passwordSetupModal.confirmPlaceholder')} enterKeyHint="next" />
                 <EyeBtn show={showConfirm} onToggle={() => setShowConfirm(v => !v)} />
-                {confirm && !match && <div style={{ fontSize: 11, color: 'var(--danger)', marginTop: 4 }}>{t('settingsAccount.editModal.passwordMismatch')}</div>}
+                {confirm && !match && <div className={styles.mismatch}>{t('settingsAccount.editModal.passwordMismatch')}</div>}
               </Field>
               {/* Checkbox de términos */}
-              <div {...switchProps(termsAccepted)} onClick={() => setTermsAccepted(v => !v)} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, marginBottom: 20, cursor: 'pointer' }}>
-                <div style={{ width: 18, height: 18, borderRadius: 4, flexShrink: 0, marginTop: 1, border: termsAccepted ? 'none' : '1.5px solid var(--border)', background: termsAccepted ? 'var(--accent)' : 'var(--surface)', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'background .15s' }}>
+              <div {...switchProps(termsAccepted)} onClick={() => setTermsAccepted(v => !v)} className={styles.termsCheck}>
+                <div className={`${styles.checkbox} ${termsAccepted ? styles.checkboxOn : ''}`}>
                   {termsAccepted && (
                     <svg width="11" height="9" viewBox="0 0 11 9" fill="none">
-                      <path d="M1 4L4 7.5L10 1" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                      <path d="M1 4L4 7.5L10 1" stroke="var(--on-color)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
                     </svg>
                   )}
                 </div>
-                <div style={{ fontSize: 13, color: 'var(--text)', lineHeight: 1.5 }}>
+                <div className={styles.termsCheckText}>
                   {t('authPage.termsPrefix')}{' '}
-                  <span {...kbd} onClick={e => { e.stopPropagation(); setShowTerms(true) }} style={{ color: 'var(--accent)', fontWeight: 600, textDecoration: 'underline', cursor: 'pointer' }}>
+                  <span {...kbd} onClick={e => { e.stopPropagation(); setShowTerms(true) }} className={styles.inlineLinkBold}>
                     {t('authPage.termsLink')}
                   </span>
                   {' '}{t('authPage.termsSuffix')}
@@ -657,17 +624,17 @@ export function AuthPage() {
               </div>
             </>)}
 
-            <button onClick={handleSubmit} disabled={loading} className="btn-primary" style={{ marginBottom: 12 }}>
+            <button onClick={handleSubmit} disabled={loading} className={`btn-primary ${styles.submit}`}>
               {loading ? t('authPage.submit.loading') : visibleMode === 'login' ? t('authPage.submit.login') : visibleMode === 'register' ? t('authPage.submit.register') : t('authPage.submit.forgot')}
             </button>
 
             {visibleMode === 'login' && (
-              <button onClick={() => { setMode('forgot'); setError(''); setSuccess('') }} style={{ background: 'none', border: 'none', fontSize: 13, color: 'var(--accent)', cursor: 'pointer', display: 'block', margin: '0 auto 16px', fontFamily: 'DM Sans, sans-serif' }}>
+              <button onClick={() => { setMode('forgot'); setError(''); setSuccess('') }} className={styles.textLink}>
                 {t('authPage.forgotPasswordLink')}
               </button>
             )}
             {visibleMode === 'forgot' && (
-              <button onClick={() => { setMode('login'); setError(''); setSuccess('') }} style={{ background: 'none', border: 'none', fontSize: 13, color: 'var(--accent)', cursor: 'pointer', display: 'block', margin: '0 auto 16px', fontFamily: 'DM Sans, sans-serif' }}>
+              <button onClick={() => { setMode('login'); setError(''); setSuccess('') }} className={styles.textLink}>
                 {t('authPage.backToLogin')}
               </button>
             )}
@@ -681,20 +648,20 @@ export function AuthPage() {
           contenido con scroll de arriba, así que no necesita una franja
           fija aparte. */}
       {!showForm && (
-        <div style={{ ...fadeStyle, flexShrink: 0, width: '100%', maxWidth: 420, margin: '0 auto', background: 'var(--bg)', borderTop: '1px solid var(--border)', padding: '14px 24px 20px', display: 'flex', flexDirection: 'column', gap: 10 }}>
-          <button onClick={() => setMode('register')} className="btn-primary" style={{ fontSize: 15 }}>
+        <div className={`${styles.bottomBar} ${fade}`}>
+          <button onClick={() => setMode('register')} className={`btn-primary ${styles.bottomPrimary}`}>
             {t('authPage.landing.createAccount')}
           </button>
           <button
             onClick={() => setMode('login')}
-            style={{ width: '100%', padding: 14, borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-mid)', background: 'var(--surface)', color: 'var(--text)', fontWeight: 600, fontSize: 15, fontFamily: 'DM Sans, sans-serif', cursor: 'pointer' }}
+            className={styles.bottomSecondary}
           >
             {t('authPage.landing.login')}
           </button>
-          <div style={{ textAlign: 'center', fontSize: 11, color: 'var(--muted)', marginTop: 4 }}>
-            <a href="/privacidad.html" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--accent)', fontWeight: 600 }}>{t('authPage.landing.privacy')}</a>
+          <div className={styles.legal}>
+            <a href="/privacidad.html" target="_blank" rel="noopener noreferrer" className={styles.link}>{t('authPage.landing.privacy')}</a>
             {' · '}
-            <a href="/terminos.html" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--accent)', fontWeight: 600 }}>{t('authPage.landing.terms')}</a>
+            <a href="/terminos.html" target="_blank" rel="noopener noreferrer" className={styles.link}>{t('authPage.landing.terms')}</a>
           </div>
         </div>
       )}
@@ -708,21 +675,21 @@ function Field({ label, children }) {
   const id = useId()
   const kids = Children.map(children, c => (isValidElement(c) && c.type === 'input' && !c.props.id ? cloneElement(c, { id }) : c))
   return (
-    <div style={{ position: 'relative', marginBottom: 14 }}>
+    <div className={styles.field}>
       <label className="field-label" htmlFor={id}>{label}</label>
-      <div style={{ position: 'relative' }}>{kids}</div>
+      <div className={styles.fieldBody}>{kids}</div>
     </div>
   )
 }
 
 function FieldIcon({ children }) {
-  return <div style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', zIndex: 1, display: 'flex' }}>{children}</div>
+  return <div className={styles.fieldIcon}>{children}</div>
 }
 
 function EyeBtn({ show, onToggle }) {
   const { t } = useTranslation()
   return (
-    <button type="button" onClick={onToggle} aria-label={show ? t('buttons.hidePassword') : t('buttons.showPassword')} aria-pressed={show} style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', display: 'flex', padding: 4 }}>
+    <button type="button" onClick={onToggle} aria-label={show ? t('buttons.hidePassword') : t('buttons.showPassword')} aria-pressed={show} className={styles.eyeButton}>
       {show ? <EyeOff size={16} color="var(--text)" /> : <Eye size={16} color="var(--text)" />}
     </button>
   )
