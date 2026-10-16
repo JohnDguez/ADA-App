@@ -11,7 +11,9 @@ import { scrollSelectedIntoView } from '../lib/scrollSelected'
 // `.exiting` / `.panelExiting` en BottomSheet.module.css (Regla 30).
 const EXIT_MS = 200
 
-export function BottomSheet({ open, title, onClose, children }) {
+// `header`: contenido opcional que se queda FIJO bajo el título (ej. la barra de
+// búsqueda de Select) — solo `children` hace scroll (v0.9.726).
+export function BottomSheet({ open, title, onClose, header, children }) {
   const [mounted, setMounted] = useState(open)
   const panelRef = useRef(null)
   useBackClose(open, () => onClose?.())
@@ -33,7 +35,8 @@ export function BottomSheet({ open, title, onClose, children }) {
       <div ref={panelRef} className={`${styles.panel} ${open ? '' : styles.panelExiting}`} role="dialog" aria-modal="true" aria-label={title}>
         <div className={styles.handle} />
         {title && <div className={styles.title}>{title}</div>}
-        {children}
+        {header}
+        <div className={styles.scroll}>{children}</div>
       </div>
     </div>,
     document.body

@@ -208,7 +208,7 @@
   font-family: 'DM Sans', sans-serif; font-size: 12px; font-weight: 600;
 }
 .sheetSelected { box-shadow: inset 0 0 0 2px var(--accent); }
-.sheetCellColored { color: var(--text); }
+.sheetCellColored { color: var(--on-color); } /* texto e ícono siempre blancos sobre el color de la categoría, en claro y oscuro */
 .sheetCellColored.sheetSelected { box-shadow: inset 0 0 0 3px var(--surface), 0 0 0 2px var(--text); }
 .sheetLabel { line-height: 1.25; }
 .sheetText { display: flex; flex-direction: column; gap: 2px; min-width: 0; }

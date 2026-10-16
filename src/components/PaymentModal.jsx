@@ -371,7 +371,7 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onSaveC
     return (
       <div className={styles.categoryIconSquare} style={{ background: catColor }}>
         {CatIcon
-          ? <CatIcon size={13} color="var(--text)" strokeWidth={2} />
+          ? <CatIcon size={13} color="var(--on-color)" strokeWidth={2} />
           : <span className={styles.categoryIconFallbackDot} />
         }
       </div>
@@ -383,7 +383,7 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onSaveC
   function renderCategoryCellIcon(cat) {
     const CatIcon = getCategoryIcon(cat, profile?.category_icons)
     return CatIcon
-      ? <CatIcon size={18} color="var(--text)" strokeWidth={2} />
+      ? <CatIcon size={18} color="var(--on-color)" strokeWidth={2} />
       : <span className={styles.categoryIconFallbackDot} />
   }
   function categoryCellColor(cat) {

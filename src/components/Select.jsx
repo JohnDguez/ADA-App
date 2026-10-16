@@ -174,14 +174,18 @@ export function Select({ value, onChange, options, placeholder, renderIcon, sear
       </button>
 
       {sheet && (
-        <BottomSheet open={open} title={sheetTitle} onClose={closePanel}>
+        <BottomSheet
+          open={open}
+          title={sheetTitle}
+          onClose={closePanel}
+          header={showSearch ? (
+            <div className={styles.sheetSearch}>
+              <Search size={14} color="var(--text)" />
+              <input aria-label={t('select.searchPlaceholder')} value={query} onChange={e => setQuery(e.target.value)} placeholder={t('select.searchPlaceholder')} className={styles.searchInput} />
+            </div>
+          ) : null}
+        >
           <div ref={panelRef}>
-            {showSearch && (
-              <div className={styles.sheetSearch}>
-                <Search size={14} color="var(--text)" />
-                <input aria-label={t('select.searchPlaceholder')} value={query} onChange={e => setQuery(e.target.value)} placeholder={t('select.searchPlaceholder')} className={styles.searchInput} />
-              </div>
-            )}
             <div className={sheetLayout === 'grid' ? styles.sheetGrid : styles.sheetList}>
               {visibleOptions.map((opt, i) => {
                 const ov = optValue(opt)
