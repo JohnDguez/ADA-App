@@ -13,7 +13,7 @@
   align-items: center;
   padding: 8px;
   gap: 4px;
-  box-shadow: 0 8px 24px rgba(1, 75, 163, 0.35), 0 2px 8px rgba(0, 0, 0, 0.2);
+  box-shadow: var(--shadow-nav);
   z-index: 100;
   overflow: visible;
 }
@@ -38,7 +38,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 20px rgba(47, 140, 250, 0.55);
+  box-shadow: var(--shadow-fab);
   cursor: pointer;
   z-index: 1;
 }
@@ -46,7 +46,7 @@
 .addIcon { transition: transform .25s cubic-bezier(0.25, 0.46, 0.45, 0.94), stroke .25s; }
 /* Con el menú abierto el botón se "apaga": fondo neutro e ícono de acento (v0.9.585) */
 .addButton { transition: background .25s, box-shadow .25s; }
-.addButtonOpen { background: var(--surface); box-shadow: 0 4px 16px rgba(2, 10, 31, 0.25); }
+.addButtonOpen { background: var(--surface); box-shadow: var(--shadow-fab-open); }
 .addButtonOpen .addIcon { stroke: var(--accent); }
 /* Menú del "+" abierto: el + gira y queda como X (v0.9.583) */
 .addIconOpen { transform: rotate(135deg); }

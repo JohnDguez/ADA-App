@@ -161,7 +161,7 @@ export function GoalFormModal({ open, initial, onSave, onClose }) {
                   className={`${styles.colorSwatch} ${selected ? styles.colorSwatchSelected : ''}`}
                   style={{ background: c }}
                 >
-                  {selected && <Check size={13} color="#fff" strokeWidth={3} />}
+                  {selected && <Check size={13} color="var(--on-color)" strokeWidth={3} />}
                 </button>
               )
             })}

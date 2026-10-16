@@ -73,19 +73,15 @@ export function PageHeader({ profile, unreadCount, onOpenNotifs, onGoSettings, o
           tabIndex={0}
           onKeyDown={e => e.key === 'Enter' && onGoSettings && onGoSettings()}
         >
-          {/* PENDIENTE (confirmado con Johnatan, fuera de esta entrega): el
-              anillo `rgba(255,255,255,0.3)` de abajo sigue fijo — con el
-              header ya adaptado al tema, en tema claro casi no se va a ver.
-              Falta `index.css` para agregar una variable propia
-              (ej. --header-avatar-ring) que sí reaccione al tema, en vez de
-              inventar un valor aquí sin verla. */}
+          {/* Nota: el anillo (.photoBorder, var(--white-a30)) es fijo y no reacciona
+              al tema — con el header adaptado, en tema claro casi no se ve.
+              Pendiente de decidir con Johnatan si lleva su propio token. */}
           <div className={styles.avatarWrapper}>
             <AvatarImg
               src={profile?.avatar_url}
               alt={t('buttons.profilePhoto')}
-              className={styles.avatarImg}
-              style={{ border: `2px solid ${profile?.is_premium ? 'var(--premium-gold)' : 'rgba(255,255,255,0.3)'}` }}
-              fallback={<div className={styles.avatarFallback} style={{ border: `2px solid ${profile?.is_premium ? 'var(--premium-gold)' : 'rgba(255,255,255,0.3)'}` }}>{initials}</div>}
+              className={`${styles.avatarImg} ${profile?.is_premium ? styles.photoBorderPremium : styles.photoBorder}`}
+              fallback={<div className={`${styles.avatarFallback} ${profile?.is_premium ? styles.photoBorderPremium : styles.photoBorder}`}>{initials}</div>}
             />
             {profile?.is_premium && (
               <div className={styles.premiumBadge}>

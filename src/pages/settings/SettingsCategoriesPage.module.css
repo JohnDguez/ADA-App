@@ -47,7 +47,7 @@
   font-weight: 500;
   font-family: inherit;
   cursor: pointer;
-  box-shadow: 0 4px 16px rgba(47, 140, 250, 0.4);
+  box-shadow: var(--shadow-accent);
   white-space: nowrap;
 }
 

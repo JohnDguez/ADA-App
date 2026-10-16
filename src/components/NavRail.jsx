@@ -132,9 +132,8 @@ export function NavRail({ active, onChange, profile, unreadCount, onOpenNotifs, 
               <AvatarImg
                 src={profile?.avatar_url}
                 alt={t('buttons.profilePhoto')}
-                className={styles.avatarImg}
-                style={{ border: `2px solid ${profile?.is_premium ? 'var(--premium-gold)' : 'rgba(255,255,255,0.3)'}` }}
-                fallback={<div className={styles.avatarFallback} style={{ border: `2px solid ${profile?.is_premium ? 'var(--premium-gold)' : 'rgba(255,255,255,0.3)'}` }}>{initials}</div>}
+                className={`${styles.avatarImg} ${profile?.is_premium ? styles.photoBorderPremium : styles.photoBorder}`}
+                fallback={<div className={`${styles.avatarFallback} ${profile?.is_premium ? styles.photoBorderPremium : styles.photoBorder}`}>{initials}</div>}
               />
               {profile?.is_premium && (
                 <div className={styles.premiumBadge}>
@@ -220,7 +219,7 @@ function RailButton({ Icon, label, expanded, active, onClick, badge }) {
       data-active={!!active}
     >
       <div className={styles.iconWrapper}>
-        <Icon size={20} strokeWidth={active ? 2.2 : 1.8} color={active ? 'var(--nav-icon)' : 'rgba(255,255,255,0.6)'} />
+        <Icon size={20} strokeWidth={active ? 2.2 : 1.8} color={active ? 'var(--nav-icon)' : 'var(--white-a60)'} />
         {badge && <span className={styles.badgeCount} aria-hidden="true">{badge}</span>}
       </div>
       {expanded && <span className={styles.railButtonLabel}>{label}</span>}

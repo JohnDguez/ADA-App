@@ -63,8 +63,8 @@
   background: color-mix(in srgb, var(--bg) 45%, transparent);
   -webkit-backdrop-filter: blur(8px);
   backdrop-filter: blur(8px);
-  -webkit-mask-image: linear-gradient(to right, #000 0%, #000 30%, transparent 70%);
-  mask-image: linear-gradient(to right, #000 0%, #000 30%, transparent 70%);
+  -webkit-mask-image: linear-gradient(to right, var(--mask-opaque) 0%, var(--mask-opaque) 30%, transparent 70%);
+  mask-image: linear-gradient(to right, var(--mask-opaque) 0%, var(--mask-opaque) 30%, transparent 70%);
   pointer-events: none;
   z-index: 0;
 }
@@ -97,6 +97,16 @@
   height: 52px;
   border-radius: 50%;
   object-fit: cover;
+}
+
+/* Anillo de la foto (antes style inline en el JSX): normal = blanco
+   translúcido, premium = dorado. */
+.photoBorder {
+  border: 2px solid var(--white-a30);
+}
+
+.photoBorderPremium {
+  border: 2px solid var(--premium-gold);
 }
 
 .avatarFallback {
@@ -205,9 +215,9 @@
 /* Anillo de pulso — mismo criterio de "llamativo sin gradiente" (Regla 18):
    box-shadow expandiéndose, nunca degradado. */
 @keyframes getPremiumPulse {
-  0%   { box-shadow: 0 0 0 0 rgba(245, 194, 66, 0.55); }
-  70%  { box-shadow: 0 0 0 8px rgba(245, 194, 66, 0); }
-  100% { box-shadow: 0 0 0 0 rgba(245, 194, 66, 0); }
+  0%   { box-shadow: 0 0 0 0 var(--gold-pulse); }
+  70%  { box-shadow: 0 0 0 8px var(--gold-pulse-end); }
+  100% { box-shadow: 0 0 0 0 var(--gold-pulse-end); }
 }
 
 @keyframes getPremiumCrownFloat {

@@ -11,9 +11,9 @@
    @keyframes en el MISMO archivo .module.css, Vite renombra ambos (la
    declaración y la referencia) de forma consistente, así que sí calzan. */
 @keyframes coachmarkPulse {
-  0%   { box-shadow: 0 0 0 0 rgba(59,158,255,0.55); }
-  70%  { box-shadow: 0 0 0 10px rgba(59,158,255,0); }
-  100% { box-shadow: 0 0 0 0 rgba(59,158,255,0); }
+  0%   { box-shadow: 0 0 0 0 var(--coach-pulse); }
+  70%  { box-shadow: 0 0 0 10px var(--coach-pulse-end); }
+  100% { box-shadow: 0 0 0 0 var(--coach-pulse-end); }
 }
 
 .overlayCorner {
@@ -26,7 +26,7 @@
 
 .overlayBand {
   position: fixed;
-  background: rgba(2, 10, 31, 0.92);
+  background: var(--scrim-coach);
   z-index: 399;
   /* pointer-events queda en 'auto' (default) a propósito — cada franja
      bloquea clics en SU zona oscura, pero como ninguna franja cubre el
@@ -52,7 +52,7 @@
   background: var(--surface);
   border-radius: 14px;
   padding: 16px 16px 14px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  box-shadow: var(--shadow-lift);
   animation: modalPopIn .2s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
 }
 

@@ -26,8 +26,8 @@
   box-sizing: border-box;
   scrollbar-width: none;
   overscroll-behavior: contain;
-  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 30%, #000 70%, transparent 100%);
-  mask-image: linear-gradient(to bottom, transparent 0%, #000 30%, #000 70%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, var(--mask-opaque) 30%, var(--mask-opaque) 70%, transparent 100%);
+  mask-image: linear-gradient(to bottom, transparent 0%, var(--mask-opaque) 30%, var(--mask-opaque) 70%, transparent 100%);
 }
 .wheel::-webkit-scrollbar { display: none; }
 .item {

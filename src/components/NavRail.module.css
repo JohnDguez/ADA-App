@@ -29,7 +29,7 @@
        empujarlo (index.css, #root ya no le hace espacio) — esta sombra
        refuerza que está flotando encima, no que forma parte del mismo
        plano que el contenido de abajo. */
-    box-shadow: 8px 0 24px rgba(2, 10, 31, 0.18);
+    box-shadow: var(--shadow-rail);
   }
 }
 
@@ -122,6 +122,16 @@
   transition: width .25s ease, height .25s ease;
 }
 
+/* Anillo de la foto (antes style inline en el JSX): normal = blanco
+   translúcido, premium = dorado. */
+.photoBorder {
+  border: 2px solid var(--white-a30);
+}
+
+.photoBorderPremium {
+  border: 2px solid var(--premium-gold);
+}
+
 .avatarFallback {
   width: 44px;
   height: 44px;
@@ -163,7 +173,7 @@
 .greetingText {
   font-size: 11px;
   font-weight: 400;
-  color: rgba(255, 255, 255, 0.7);
+  color: var(--white-a70);
   text-align: center;
   white-space: nowrap;
   overflow: hidden;
@@ -240,7 +250,7 @@
 }
 
 .railButton[data-active="true"] {
-  background: linear-gradient(180deg, rgba(255,255,255,0.25) 0%, rgba(255,255,255,0) 100%);
+  background: linear-gradient(180deg, var(--white-a25) 0%, transparent 100%);
 }
 
 /* Expandido: ícono+etiqueta vuelven a alinearse a la izquierda (como ya
@@ -315,7 +325,7 @@
 }
 
 .toggleButton:hover {
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--white-a8);
 }
 
 .toggleLabel {

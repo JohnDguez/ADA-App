@@ -90,7 +90,7 @@ function RequirementRow({ met, label }) {
         transition: 'background .15s',
       }}>
         {met
-          ? <Check size={10} color="#fff" strokeWidth={3} />
+          ? <Check size={10} color="var(--on-color)" strokeWidth={3} />
           : <X size={10} color="var(--text)" strokeWidth={2.5} />
         }
       </div>
@@ -481,7 +481,7 @@ export function AuthPage() {
             aria-label={t('authPage.landing.backAriaLabel')}
             style={{ ...fadeStyle, position: 'absolute', top: 16, left: 16, zIndex: 1, width: 36, height: 36, borderRadius: '50%', background: 'var(--auth-hero-back-btn-bg)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
           >
-            <ArrowLeft size={20} color="#fff" />
+            <ArrowLeft size={20} color="var(--on-color)" />
           </button>
         )}
 

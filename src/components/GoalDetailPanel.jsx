@@ -142,7 +142,7 @@ export function GoalDetailPanel({
           <ChevronLeft size={22} color="var(--text)" />
         </button>
         <div className={styles.headerIcon} style={{ background: goal.color }}>
-          {Icon && <Icon size={15} color="#fff" />}
+          {Icon && <Icon size={15} color="var(--on-color)" />}
         </div>
         <div className={styles.headerTitle}>{goal.name}</div>
         {showMenu && (

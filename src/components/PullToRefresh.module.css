@@ -18,7 +18,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 2px 10px rgba(2, 10, 31, 0.25);
+  box-shadow: var(--shadow-fab-open);
 }
 
 .spinning {

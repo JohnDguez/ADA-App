@@ -116,27 +116,27 @@
 }
 
 .skeleton_light {
-  background: #F2F2F2;
+  background: var(--preview-light-bg);
 }
 .skeleton_light .skeletonBarLeft,
 .skeleton_light .skeletonBarRight,
 .skeleton_light .skeletonMutedBar {
-  background: #C8C5BE;
+  background: var(--preview-light-bar);
 }
 .skeleton_light .skeletonAccentBar {
-  background: #2F8CFA;
+  background: var(--preview-light-accent);
 }
 
 .skeleton_dark {
-  background: #0F1117;
+  background: var(--preview-dark-bg);
 }
 .skeleton_dark .skeletonBarLeft,
 .skeleton_dark .skeletonBarRight,
 .skeleton_dark .skeletonMutedBar {
-  background: #3A3D4E;
+  background: var(--preview-dark-bar);
 }
 .skeleton_dark .skeletonAccentBar {
-  background: #3B9EFF;
+  background: var(--preview-dark-accent);
 }
 
 /* "Sistema" — mitad clara / mitad oscura, para representar visualmente
@@ -144,15 +144,15 @@
    mitad (izquierda = claro, derecha = oscuro), mismo criterio que las
    otras 2 tarjetas. */
 .skeleton_sistema {
-  background: linear-gradient(160deg, #F2F2F2 50%, #0F1117 50%);
+  background: linear-gradient(160deg, var(--preview-light-bg) 50%, var(--preview-dark-bg) 50%);
 }
 .skeleton_sistema .skeletonBarLeft,
 .skeleton_sistema .skeletonBarRight {
-  background: #C8C5BE;
+  background: var(--preview-light-bar);
 }
 .skeleton_sistema .skeletonAccentBar {
-  background: #2F8CFA;
+  background: var(--preview-light-accent);
 }
 .skeleton_sistema .skeletonMutedBar {
-  background: #3A3D4E;
+  background: var(--preview-dark-bar);
 }

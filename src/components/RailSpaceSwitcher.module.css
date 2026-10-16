@@ -3,8 +3,8 @@
   width: 30px;
   height: 30px;
   border-radius: 9px;
-  background: rgba(255, 255, 255, 0.16);
-  border: 1px solid rgba(255, 255, 255, 0.4);
+  background: var(--white-a16);
+  border: 1px solid var(--white-a40);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -24,7 +24,7 @@
   height: 14px;
   border-radius: 50%;
   background: var(--nav-bg);
-  border: 1.5px solid rgba(255, 255, 255, 0.5);
+  border: 1.5px solid var(--white-a50);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -36,7 +36,7 @@
 .divider {
   width: 20px;
   height: 1px;
-  background: rgba(255, 255, 255, 0.2);
+  background: var(--white-a20);
   margin: 8px auto 2px;
 }
 
@@ -51,7 +51,7 @@
   font-size: 10px;
   font-weight: 600;
   letter-spacing: 0.02em;
-  color: rgba(255, 255, 255, 0.5);
+  color: var(--white-a50);
   text-transform: uppercase;
   padding: 0 10px;
   margin-bottom: 2px;
@@ -66,12 +66,12 @@
   background: none;
   border-radius: 8px;
   cursor: pointer;
-  color: rgba(255, 255, 255, 0.75);
+  color: var(--white-a70);
   min-width: 0;
 }
 
 .itemActive {
-  background: rgba(255, 255, 255, 0.18);
+  background: var(--white-a16);
   color: var(--nav-icon);
 }
 

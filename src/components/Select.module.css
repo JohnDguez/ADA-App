@@ -51,7 +51,7 @@
   background: var(--menu-bg);
   border: 0.5px solid var(--border);
   border-radius: var(--radius-sm);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  box-shadow: var(--shadow-popover);
   /* Alto por ser ahora hijo directo de <body> — puede convivir con el
      overlay de cualquier modal (PaymentModal.jsx, etc.). Sin acceso a
      index.css para confirmar si existe una variable de z-index ya

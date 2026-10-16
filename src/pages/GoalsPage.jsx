@@ -337,7 +337,7 @@ export function GoalsPage({
       {!selectedGoal && rawActiveSpaceId !== 'new' && (
         <div data-coachmark="metas-add-pill" className={styles.addPillRow}>
           <button type="button" className={`${styles.addPill} ${(!canAdd && !atFreeLimit) ? styles.addPillDisabled : ''}`} onClick={handleAddClick}>
-            <Plus size={18} color="#fff" />
+            <Plus size={18} color="var(--on-color)" />
             {t('goalsPage.addGoal')}
           </button>
         </div>
@@ -385,7 +385,7 @@ function GoalCard({ goal, isShared, spaceMembers, onClick }) {
       <div className={styles.cardTop}>
         <div className={styles.cardTitleGroup}>
           <div className={styles.cardIcon} style={{ background: goal.color }}>
-            <Icon size={17} color="#fff" />
+            <Icon size={17} color="var(--on-color)" />
           </div>
           <span className={styles.cardName}>{goal.name}</span>
         </div>

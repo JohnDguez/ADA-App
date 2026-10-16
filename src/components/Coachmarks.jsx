@@ -284,7 +284,7 @@ export function Coachmarks({ screenKey, profile, onUpdateProfile }) {
         <div
           key={i}
           className={styles.overlayCorner}
-          style={{ top: c.top, left: c.left, background: `radial-gradient(circle at ${c.pos}, transparent ${RADIUS - 0.5}px, rgba(2,10,31,0.92) ${RADIUS}px)` }}
+          style={{ top: c.top, left: c.left, background: `radial-gradient(circle at ${c.pos}, transparent ${RADIUS - 0.5}px, var(--scrim-coach) ${RADIUS}px)` }}
         />
       ))}
       <div

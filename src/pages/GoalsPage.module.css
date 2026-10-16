@@ -44,12 +44,12 @@
   border: none;
   border-radius: 999px;
   background: var(--accent);
-  color: #fff;
+  color: var(--on-color);
   font-size: 14px;
   font-weight: 500;
   font-family: inherit;
   cursor: pointer;
-  box-shadow: 0 4px 16px rgba(47, 140, 250, 0.4);
+  box-shadow: var(--shadow-accent);
   white-space: nowrap;
 }
 
@@ -191,14 +191,14 @@
   background: var(--surface);
   border: none;
   border-radius: var(--radius);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  box-shadow: var(--shadow-card);
   padding: 16px;
   font-family: inherit;
   cursor: pointer;
 }
 
 .cardWarning {
-  box-shadow: 0 0 0 1.5px var(--soon-color), 0 2px 8px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 0 0 1.5px var(--soon-color), var(--shadow-card);
 }
 
 .cardTop {

@@ -217,6 +217,66 @@
   --onboarding-step2-bg: #EFC822;
   --onboarding-step3-bg: #E09613;
   --onboarding-step4-bg: #8BD130;
+
+  /* ── Colores fijos reutilizables (v0.9.722) ───────────────────────────────
+     Antes estos valores estaban repetidos a mano en los .module.css/JSX
+     (Regla 11). Son FIJOS (iguales en claro y oscuro, por eso solo viven en
+     :root): blancos/oscuros translúcidos sobre fondos de color fijos (riel
+     azul, tarjetas de banco, hero), scrims y sombras. Valores idénticos a los
+     que había en cada archivo, salvo consolidaciones de ≤0.03 de alpha o
+     ≤4px de blur que no se perciben. */
+  --on-color: #FFFFFF;           /* texto/ícono blanco sobre fondos de color (botón accent, círculos de categoría) */
+  --mask-opaque: #000000;        /* solo para mask-image (importa el alpha, no el color) */
+
+  --white-a8:  rgba(255, 255, 255, 0.08);
+  --white-a16: rgba(255, 255, 255, 0.16);
+  --white-a20: rgba(255, 255, 255, 0.2);
+  --white-a25: rgba(255, 255, 255, 0.25);
+  --white-a30: rgba(255, 255, 255, 0.3);
+  --white-a40: rgba(255, 255, 255, 0.4);
+  --white-a50: rgba(255, 255, 255, 0.5);
+  --white-a60: rgba(255, 255, 255, 0.6);
+  --white-a70: rgba(255, 255, 255, 0.7);
+
+  --shimmer-edge: rgba(255, 255, 255, 0.12);  /* skeleton: extremos del brillo */
+  --shimmer-mid:  rgba(255, 255, 255, 0.28);  /* skeleton: centro del brillo */
+
+  --scrim-strong: rgba(2, 10, 31, 0.5);       /* fondo de paneles/modales centrados */
+  --scrim-coach:  rgba(2, 10, 31, 0.92);      /* oscurecido de Coachmarks */
+  --premium-back-btn-bg: rgba(0, 0, 0, 0.35); /* botón de cerrar sobre el hero de Premium */
+
+  --shadow-card:         0 2px 8px rgba(0, 0, 0, 0.08);
+  --shadow-popover:      0 4px 16px rgba(0, 0, 0, 0.12);
+  --shadow-lift:         0 8px 24px rgba(0, 0, 0, 0.35);
+  --shadow-panel:        0 8px 32px rgba(2, 10, 31, 0.2);
+  --shadow-rail:         8px 0 24px rgba(2, 10, 31, 0.18);
+  --shadow-menu:         0 6px 20px rgba(2, 10, 31, 0.5);
+  --shadow-accent:       0 4px 16px rgba(47, 140, 250, 0.4);
+  --shadow-fab:          0 4px 20px rgba(47, 140, 250, 0.55);
+  --shadow-fab-open:     0 4px 16px rgba(2, 10, 31, 0.25);
+  --shadow-nav:          0 8px 24px rgba(1, 75, 163, 0.35), 0 2px 8px rgba(0, 0, 0, 0.2);
+  --shadow-credit-card:  0 10px 24px rgba(0, 0, 0, 0.28);
+
+  --coach-pulse:     rgba(59, 158, 255, 0.55);  /* Coachmarks: latido del spotlight */
+  --coach-pulse-end: rgba(59, 158, 255, 0);
+  --gold-pulse:      rgba(245, 194, 66, 0.55);  /* PageHeader: latido del badge premium */
+  --gold-pulse-end:  rgba(245, 194, 66, 0);
+
+  /* Tarjeta de banco (CreditCardVisual) */
+  --card-sheen-from: rgba(255, 255, 255, 0.06);
+  --card-sheen-to:   rgba(0, 0, 0, 0.22);
+  --chip-gold-from:  rgba(255, 236, 170, 0.95);
+  --chip-gold-to:    rgba(190, 150, 62, 0.95);
+
+  /* Miniaturas de tema en Ajustes › Apariencia: muestran los colores REALES
+     de cada tema, fijos aunque la app esté en el otro. Mismos valores que
+     --bg/--border-mid/--accent de cada tema. */
+  --preview-light-bg:     #F2F2F2;
+  --preview-light-bar:    #C8C5BE;
+  --preview-light-accent: #2F8CFA;
+  --preview-dark-bg:      #0F1117;
+  --preview-dark-bar:     #3A3D4E;
+  --preview-dark-accent:  #3B9EFF;
 }
 
 /* ── Tema oscuro manual ([data-theme="dark"] en <html>) ───────────────────── */
@@ -677,9 +737,9 @@ html [data-presence-wrap][data-closing] > * { animation: presenceFadeOut .22s ea
 .skeleton-bone-dark {
   background: linear-gradient(
     90deg,
-    rgba(255,255,255,0.12) 25%,
-    rgba(255,255,255,0.28) 50%,
-    rgba(255,255,255,0.12) 75%
+    var(--shimmer-edge) 25%,
+    var(--shimmer-mid) 50%,
+    var(--shimmer-edge) 75%
   );
   background-size: 400px 100%;
   animation: shimmer 1.5s ease-in-out infinite;

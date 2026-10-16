@@ -54,7 +54,7 @@ function TabBtn({ id, Icon, label, active, onChange }) {
       <Icon
         size={active ? 24 : 22}
         strokeWidth={active ? 2.2 : 1.8}
-        color={active ? 'var(--nav-icon)' : 'rgba(255,255,255,0.6)'}
+        color={active ? 'var(--nav-icon)' : 'var(--white-a60)'}
         className={styles.tabIcon}
       />
     </button>

@@ -132,7 +132,7 @@
   font-weight: 500;
   font-family: 'DM Sans', sans-serif;
   cursor: pointer;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  box-shadow: var(--shadow-card);
 }
 
 .actionButton:disabled {
@@ -173,7 +173,7 @@
   font-weight: 500;
   font-family: inherit;
   cursor: pointer;
-  box-shadow: 0 4px 16px rgba(47, 140, 250, 0.4);
+  box-shadow: var(--shadow-accent);
   white-space: nowrap;
 }
 

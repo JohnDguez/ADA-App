@@ -56,7 +56,7 @@
   margin-top: 4px;
   background: var(--menu-bg);
   border-radius: var(--radius-sm);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  box-shadow: var(--shadow-popover);
   min-width: 180px;
   overflow: hidden;
   z-index: 10;
@@ -175,7 +175,7 @@
   justify-content: center;
   gap: 6px;
   background: var(--accent);
-  color: #fff;
+  color: var(--on-color);
   border: none;
   border-radius: var(--radius-sm);
   padding: 11px;

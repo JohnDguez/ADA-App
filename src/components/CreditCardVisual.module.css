@@ -13,7 +13,7 @@
   justify-content: space-between;
   background-color: var(--card-color);
   color: var(--bank-card-text);
-  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.28);
+  box-shadow: var(--shadow-credit-card);
   transition: background-color .45s ease, color .45s ease;
   user-select: none;
 }
@@ -28,7 +28,7 @@
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.06), rgba(0, 0, 0, 0.22));
+  background: linear-gradient(135deg, var(--card-sheen-from), var(--card-sheen-to));
   pointer-events: none;
 }
 
@@ -41,7 +41,7 @@
   width: 90%;
   height: 140%;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--white-a8);
   pointer-events: none;
 }
 
@@ -82,7 +82,7 @@
   height: 26px;
   flex-shrink: 0;
   border-radius: 5px;
-  background: linear-gradient(135deg, rgba(255, 236, 170, 0.95), rgba(190, 150, 62, 0.95));
+  background: linear-gradient(135deg, var(--chip-gold-from), var(--chip-gold-to));
 }
 
 .badge {
@@ -91,7 +91,7 @@
   font-weight: 600;
   padding: 3px 7px;
   border-radius: 5px;
-  background: rgba(255, 255, 255, 0.22);
+  background: var(--white-a20);
 }
 
 .number {
@@ -121,7 +121,7 @@
   position: relative;
   z-index: 1;
   align-self: flex-start;
-  background: rgba(255, 255, 255, 0.16);
+  background: var(--white-a16);
   border-radius: 6px;
   padding: 4px 8px;
   font-size: 11px;
