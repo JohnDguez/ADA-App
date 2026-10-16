@@ -39,7 +39,7 @@ export default defineConfig({
         // async, descargado solo cuando alguien de verdad genera un PDF.
         manualChunks(id) {
           if (!id.includes('node_modules')) return undefined
-          const core = ['node_modules/react/', 'node_modules/react-dom', 'node_modules/react-i18next', 'node_modules/i18next', 'node_modules/lucide-react', 'node_modules/@supabase', 'node_modules/@stripe']
+          const core = ['node_modules/react/', 'node_modules/react-dom', 'node_modules/react-i18next', 'node_modules/i18next', 'node_modules/lucide-react', 'node_modules/@supabase']
           if (core.some(lib => id.includes(lib))) return 'vendor'
           return undefined
         },
