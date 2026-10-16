@@ -20,10 +20,12 @@ const OnboardingPage = lazy(() => import('./pages/OnboardingPage').then(m => ({ 
 const SettingsPage = lazy(() => import('./pages/SettingsPage').then(m => ({ default: m.SettingsPage })))
 const PasswordSetupModal = lazy(() => import('./components/PasswordSetupModal').then(m => ({ default: m.PasswordSetupModal })))
 const PremiumPage = lazy(() => import('./pages/PremiumPage').then(m => ({ default: m.PremiumPage })))
+const PaymentsPage = lazy(() => import('./pages/PaymentsPage').then(m => ({ default: m.PaymentsPage })))
+const RecurrentsPage = lazy(() => import('./pages/RecurrentsPage').then(m => ({ default: m.RecurrentsPage })))
+const GoalsPage = lazy(() => import('./pages/GoalsPage').then(m => ({ default: m.GoalsPage })))
 import { usePayments } from './hooks/usePayments'
 import { useSharedFund } from './hooks/useSharedFund'
 import { useGoals } from './hooks/useGoals'
-import { GoalsPage } from './pages/GoalsPage'
 import { useProfile } from './hooks/useProfile'
 import { useNotifications } from './hooks/useNotifications'
 import { useLocalNotifications, isLocalNotification } from './hooks/useLocalNotifications'
@@ -40,8 +42,6 @@ import { highlightPaymentWhenVisible } from './lib/highlightPayment'
 import { useSpaceStats } from './hooks/useSpaceStats'
 import { SpaceSwitcher } from './components/SpaceSwitcher'
 import { HomePage } from './pages/HomePage'
-import { PaymentsPage } from './pages/PaymentsPage'
-import { RecurrentsPage } from './pages/RecurrentsPage'
 import { BottomNav } from './components/BottomNav'
 import { NavRail } from './components/NavRail'
 import { RailFab } from './components/RailFab'
@@ -727,6 +727,24 @@ export default function App() {
   // Tocar una push del sistema abre el panel de notificaciones (ver el hook).
   const openNotifsFromTap = useCallback(() => setNotifOpen(true), [])
   useNotificationTap(!!user, openNotifsFromTap)
+
+  // Las pestañas Pagos, Recurrentes y Metas se cargan aparte (v0.9.734) para
+  // que el arranque descargue y analice menos JS. Se precargan cuando la app
+  // queda inactiva tras entrar, así el primer cambio de pestaña ya las tiene.
+  useEffect(() => {
+    if (!user) return undefined
+    const load = () => {
+      import('./pages/PaymentsPage')
+      import('./pages/RecurrentsPage')
+      import('./pages/GoalsPage')
+    }
+    if ('requestIdleCallback' in window) {
+      const id = window.requestIdleCallback(load, { timeout: 4000 })
+      return () => window.cancelIdleCallback(id)
+    }
+    const id = setTimeout(load, 2500)
+    return () => clearTimeout(id)
+  }, [user])
   useBackClose(premiumPageOpen, closePremiumPage)
 
   // "Obtener Premium" automático (v0.9.504) — 1 vez al día hasta que el
@@ -1711,75 +1729,81 @@ export default function App() {
         />
       )}
       {tab === 'payments' && (
-        <PaymentsPage
-          paymentMethods={paymentMethods}
-          payments={visiblePayments}
-          dataLoading={paymentsLoading}
-          periodIncome={periodIncome}
-          paymentMethodsList={paymentMethods.methods}
-          onChangeMethod={setChangeMethodPayment}
-          slideClass={`page-slide-${slideDir}`}
-          {...headerProps}
-          activeSpaceId={paymentsSpaceId}
-          rawActiveSpaceId={activeSpaceId}
-          sharedSpaces={sharedSpaces}
-          spacePermissions={spacePermissions}
-          onOpenPremium={() => openPremiumPage(false)}
-          onSpaceReady={handleSpaceReady}
-          spaceSwitcher={spaceSwitcherEl}
-          activeSpaceHeader={activeSpaceHeaderEl}
-          onMarkUnpaid={handleMarkUnpaid}
-          onDelete={handleDeleteDirect}
-          onDeleteDirect={async (id) => { const { reverted, busy } = await deletePayment(id); if (!reverted && !busy) showToast(t('app.toast.paymentDeleted')) }}
-          onUpdateProfile={updateProfile}
-          onEdit={openEdit}
-          onViewSource={handleViewSource}
-          onSplit={openSplitModal}
-          onAdd={openAdd}
-          onGoCategories={goToCategories}
-          onGoCards={goToCards}
-          ensureMonthLoaded={ensureMonthLoaded}
-          oldestPaymentYear={oldestYear}
-          sharedFund={sharedFund}
-        />
+        <Suspense fallback={null}>
+          <PaymentsPage
+            paymentMethods={paymentMethods}
+            payments={visiblePayments}
+            dataLoading={paymentsLoading}
+            periodIncome={periodIncome}
+            paymentMethodsList={paymentMethods.methods}
+            onChangeMethod={setChangeMethodPayment}
+            slideClass={`page-slide-${slideDir}`}
+            {...headerProps}
+            activeSpaceId={paymentsSpaceId}
+            rawActiveSpaceId={activeSpaceId}
+            sharedSpaces={sharedSpaces}
+            spacePermissions={spacePermissions}
+            onOpenPremium={() => openPremiumPage(false)}
+            onSpaceReady={handleSpaceReady}
+            spaceSwitcher={spaceSwitcherEl}
+            activeSpaceHeader={activeSpaceHeaderEl}
+            onMarkUnpaid={handleMarkUnpaid}
+            onDelete={handleDeleteDirect}
+            onDeleteDirect={async (id) => { const { reverted, busy } = await deletePayment(id); if (!reverted && !busy) showToast(t('app.toast.paymentDeleted')) }}
+            onUpdateProfile={updateProfile}
+            onEdit={openEdit}
+            onViewSource={handleViewSource}
+            onSplit={openSplitModal}
+            onAdd={openAdd}
+            onGoCategories={goToCategories}
+            onGoCards={goToCards}
+            ensureMonthLoaded={ensureMonthLoaded}
+            oldestPaymentYear={oldestYear}
+            sharedFund={sharedFund}
+          />
+        </Suspense>
       )}
       {tab === 'recurrents' && (
-        <RecurrentsPage
-          payments={payments}
-          dataLoading={paymentsLoading}
-          slideClass={`page-slide-${slideDir}`}
-          {...headerProps}
-          activeSpaceId={activeSpaceId}
-          sharedSpaces={sharedSpaces}
-          spacePermissions={spacePermissions}
-          onOpenPremium={() => openPremiumPage(false)}
-          onSpaceReady={handleSpaceReady}
-          spaceSwitcher={spaceSwitcherEl}
-          activeSpaceHeader={activeSpaceHeaderEl}
-          onPause={handlePauseRecurrent}
-          onResume={handleResumeRecurrent}
-          onDelete={handleDeleteDirect}
-          onEdit={openEdit}
-          onAdd={openAdd}
-        />
+        <Suspense fallback={null}>
+          <RecurrentsPage
+            payments={payments}
+            dataLoading={paymentsLoading}
+            slideClass={`page-slide-${slideDir}`}
+            {...headerProps}
+            activeSpaceId={activeSpaceId}
+            sharedSpaces={sharedSpaces}
+            spacePermissions={spacePermissions}
+            onOpenPremium={() => openPremiumPage(false)}
+            onSpaceReady={handleSpaceReady}
+            spaceSwitcher={spaceSwitcherEl}
+            activeSpaceHeader={activeSpaceHeaderEl}
+            onPause={handlePauseRecurrent}
+            onResume={handleResumeRecurrent}
+            onDelete={handleDeleteDirect}
+            onEdit={openEdit}
+            onAdd={openAdd}
+          />
+        </Suspense>
       )}
       {tab === 'goals' && (
-        <GoalsPage
-          goalsData={goalsData}
-          paymentMethods={paymentMethods}
-          isPremium={!!profile.is_premium}
-          activeSpaceId={paymentsSpaceId}
-          rawActiveSpaceId={activeSpaceId}
-          spacePermissions={spacePermissions}
-          spaceMembers={activeSpaceEntry?.space?.members || []}
-          spaceSwitcher={spaceSwitcherEl}
-          activeSpaceHeader={activeSpaceHeaderEl}
-          sharedSpaces={sharedSpaces}
-          onSpaceReady={handleSpaceReady}
-          onOpenPremium={() => openPremiumPage(false)}
-          slideClass={`page-slide-${slideDir}`}
-          {...headerProps}
-        />
+        <Suspense fallback={null}>
+          <GoalsPage
+            goalsData={goalsData}
+            paymentMethods={paymentMethods}
+            isPremium={!!profile.is_premium}
+            activeSpaceId={paymentsSpaceId}
+            rawActiveSpaceId={activeSpaceId}
+            spacePermissions={spacePermissions}
+            spaceMembers={activeSpaceEntry?.space?.members || []}
+            spaceSwitcher={spaceSwitcherEl}
+            activeSpaceHeader={activeSpaceHeaderEl}
+            sharedSpaces={sharedSpaces}
+            onSpaceReady={handleSpaceReady}
+            onOpenPremium={() => openPremiumPage(false)}
+            slideClass={`page-slide-${slideDir}`}
+            {...headerProps}
+          />
+        </Suspense>
       )}
       {tab === 'settings' && (
         <Suspense fallback={null}>
