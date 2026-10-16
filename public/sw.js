@@ -30,15 +30,28 @@ self.addEventListener('push', e => {
 
 self.addEventListener('notificationclick', e => {
   e.notification.close()
-  const url = e.notification.data?.url || '/'
+  // Solo se abren rutas de la propia app: un `url` de otro origen (o roto)
+  // cae a la raíz en vez de sacar al usuario de LunaPay.
+  let target
+  try {
+    target = new URL(e.notification.data?.url || '/', self.location.origin)
+    if (target.origin !== self.location.origin) target = new URL('/', self.location.origin)
+  } catch {
+    target = new URL('/', self.location.origin)
+  }
   e.waitUntil(
-    clients.matchAll({ type: 'window', includeUncontrolled: true }).then(windowClients => {
-      for (const client of windowClients) {
-        if (client.url.includes(self.location.origin) && 'focus' in client) {
-          return client.focus()
-        }
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then(async windowClients => {
+      const open = windowClients.find(c => new URL(c.url).origin === self.location.origin && 'focus' in c)
+      if (open) {
+        await open.focus()
+        // La app ya está abierta: no se recarga, se le avisa para que abra su
+        // panel de notificaciones (ver src/hooks/useNotificationTap.js).
+        open.postMessage({ type: 'notification-click', url: target.pathname + target.search + target.hash, tag: e.notification.tag })
+        return
       }
-      if (clients.openWindow) return clients.openWindow(url)
+      // App cerrada: se abre en la ruta de la notificación. El panel no se
+      // abre solo en este caso (el mensaje no tiene a quién llegar todavía).
+      if (clients.openWindow) return clients.openWindow(target.href)
     })
   )
 })

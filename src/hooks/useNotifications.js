@@ -41,7 +41,7 @@ export function useNotifications(userId) {
     return () => {
       document.removeEventListener('visibilitychange', onVisible)
       window.removeEventListener('focus', fetchNotifications)
-      appSub.then(h => h.remove()).catch(() => {})
+      appSub.then(h => h.remove()).catch(() => { /* el listener ya no existe: nada que quitar */ })
       supabase.removeChannel(channel)
     }
   }, [userId, fetchNotifications])

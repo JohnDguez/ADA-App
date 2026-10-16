@@ -12,7 +12,7 @@ function isDark() {
 
 function apply() {
   // Dark = iconos claros (tema oscuro); Light = iconos oscuros (tema claro).
-  SystemBars.setStyle({ style: isDark() ? SystemBarsStyle.Dark : SystemBarsStyle.Light }).catch(() => {})
+  SystemBars.setStyle({ style: isDark() ? SystemBarsStyle.Dark : SystemBarsStyle.Light }).catch(() => { /* estilo de barras es cosmético: si falla, se queda el actual */ })
 }
 
 // Fondo de la barra de estado al hacer scroll: arriba del todo es transparente

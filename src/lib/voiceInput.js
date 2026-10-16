@@ -49,7 +49,7 @@ async function listenNative(lang) {
   let perm = await SpeechRecognition.checkPermissions()
   if (perm.speechRecognition !== 'granted') perm = await SpeechRecognition.requestPermissions()
   if (perm.speechRecognition !== 'granted') throw voiceError('permission')
-  stopCurrent = () => { SpeechRecognition.stop().catch(() => {}) }
+  stopCurrent = () => { SpeechRecognition.stop().catch(() => { /* ya estaba detenido */ }) }
   // El 2º dictado seguido fallaba con "Client side error" / "busy": la sesión
   // anterior aún no se liberaba. Si falla por eso se reintenta una vez
   // (v0.9.685). IMPORTANTE (v0.9.707): `SpeechRecognition.stop()` del plugin NO
@@ -60,7 +60,7 @@ async function listenNative(lang) {
   const LISTEN_TIMEOUT_MS = 25000
   const attempt = async () => {
     let timer
-    const timeout = new Promise((_, rej) => { timer = setTimeout(() => { SpeechRecognition.stop().catch(() => {}); rej(voiceError('no-speech')) }, LISTEN_TIMEOUT_MS) })
+    const timeout = new Promise((_, rej) => { timer = setTimeout(() => { SpeechRecognition.stop().catch(() => { /* ya estaba detenido */ }); rej(voiceError('no-speech')) }, LISTEN_TIMEOUT_MS) })
     let res
     try {
       res = await Promise.race([
@@ -80,7 +80,7 @@ async function listenNative(lang) {
       const msg = String(err?.message || err || '')
       if (NATIVE_NO_SPEECH.test(msg)) throw voiceError('no-speech', err)
       if (!NATIVE_TRANSIENT.test(msg)) throw err
-      SpeechRecognition.stop().catch(() => {})   // sin await: nunca resuelve
+      SpeechRecognition.stop().catch(() => { /* ya estaba detenido */ })   // sin await: nunca resuelve
       await wait(500)
       return await attempt()
     }

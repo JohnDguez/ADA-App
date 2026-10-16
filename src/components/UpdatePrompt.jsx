@@ -47,7 +47,7 @@ export function UpdatePrompt() {
 
     check()
     const sub = CapacitorApp.addListener('appStateChange', ({ isActive }) => { if (isActive) check() })
-    return () => { cancelled = true; sub.then(h => h.remove()).catch(() => {}) }
+    return () => { cancelled = true; sub.then(h => h.remove()).catch(() => { /* el listener ya no existe: nada que quitar */ }) }
   }, [])
 
   function later() {

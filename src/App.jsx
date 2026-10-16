@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, lazy, Suspense } from 'react'
+import { useState, useEffect, useRef, useCallback, lazy, Suspense } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from './hooks/useAuth'
 import { Capacitor } from '@capacitor/core'
@@ -62,6 +62,7 @@ import { SkeletonLoader } from './components/SkeletonLoader'
 import { Coachmarks } from './components/Coachmarks'
 import { useTheme } from './hooks/useTheme'
 import { useSharedSpaces } from './hooks/useSharedSpaces'
+import { useNotificationTap } from './hooks/useNotificationTap'
 import { ActiveSpaceHeader } from './components/ActiveSpaceHeader'
 import { APP_VERSION, getPatchNotes, isNewerVersion } from './lib/patchNotes'
 import { InviteCodeModal } from './components/InviteCodeModal'
@@ -723,6 +724,9 @@ export default function App() {
 
   // Notificaciones y Premium se abren encima de un tab: "atrás" las cierra.
   useBackClose(notifOpen, () => setNotifOpen(false))
+  // Tocar una push del sistema abre el panel de notificaciones (ver el hook).
+  const openNotifsFromTap = useCallback(() => setNotifOpen(true), [])
+  useNotificationTap(!!user, openNotifsFromTap)
   useBackClose(premiumPageOpen, closePremiumPage)
 
   // "Obtener Premium" automático (v0.9.504) — 1 vez al día hasta que el
@@ -846,7 +850,7 @@ export default function App() {
     }
     CapacitorApp.getLaunchUrl().then(r => {
       if (r?.url && window.__lunaLaunchUrlUsed !== r.url) { window.__lunaLaunchUrlUsed = r.url; handle(r.url) }
-    }).catch(() => {})
+    }).catch(() => { /* sin URL de arranque: nada que procesar */ })
     let sub
     CapacitorApp.addListener('appUrlOpen', ({ url }) => handle(url)).then(h => { sub = h })
     return () => { sub?.remove() }
