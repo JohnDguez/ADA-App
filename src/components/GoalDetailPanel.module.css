@@ -275,3 +275,8 @@
   display: flex;
   cursor: pointer;
 }
+
+/* Antes style inline (v0.9.724) */
+:global(.btn-primary).confirmButton { width: auto; }
+.txIn  { color: var(--paid); }
+.txOut { color: var(--soon-color); }

@@ -18,7 +18,7 @@ export function Presence({ show, children }) {
   if (!render) return null
   const fn = show ? children : lastRef.current
   return (
-    <div data-presence-wrap data-closing={closing ? '' : undefined} style={{ display: 'contents' }}>
+    <div data-presence-wrap data-closing={closing ? '' : undefined}>
       {typeof fn === 'function' ? fn() : fn}
     </div>
   )

@@ -257,3 +257,8 @@
   line-height: 1.5;
   margin-bottom: 14px;
 }
+
+/* ── Antes `style={{}}` inline en SplitContributionsModal.jsx (v0.9.724, Regla 12) ── */
+.grow { flex: 1; }
+:global(.btn-primary).saveInline { width: auto; padding: 0 16px; }
+.methodFieldWrap { padding: 0 12px; margin-bottom: 10px; }

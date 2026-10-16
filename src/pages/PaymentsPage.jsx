@@ -936,8 +936,7 @@ export function PaymentsPage({ payments, dataLoading = false, periodIncome, paym
                     if (amt > 0) handleAddRemanente(amt)
                   }}
                   disabled={savingRem || !remCustomAmount || parseFloat(remCustomAmount) <= 0}
-                  className={styles.remanenteCustomButton}
-                  style={{ opacity: savingRem ? 0.6 : 1 }}
+                  className={`${styles.remanenteCustomButton} ${savingRem ? styles.remanenteCustomButtonDim : ''}`}
                 >
                   {t('paymentsPage.remanente.add')}
                 </button>
@@ -1140,7 +1139,7 @@ export function PaymentsPage({ payments, dataLoading = false, periodIncome, paym
             </div>
             <div className={styles.incomeFieldGroup}>
               <div className={styles.fundAmountLabelRow}>
-                <div className={styles.incomeLabelMb6} style={{ marginBottom: 0 }}>{t('paymentsPage.incomeModal.amountLabel')}</div>
+                <div className={`${styles.incomeLabelMb6} ${styles.incomeLabelFlush}`}>{t('paymentsPage.incomeModal.amountLabel')}</div>
                 {activeSpaceId && !loadingPersonalAvailable && personalAvailable != null && (
                   <div className={styles.fundAvailableTag}>{t('paymentsPage.addFundModal.available', { amount: fmt(personalAvailable) })}</div>
                 )}

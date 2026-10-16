@@ -40,7 +40,7 @@ export function PremiumThanksModal({ info, onClose, onAddPayment }) {
         <div className={premium.heroTitle}>{t('premiumThanks.title')}</div>
         <div className={premium.heroSubtitle}>{t('premiumThanks.subtitle')}</div>
         <svg className={premium.heroWave} viewBox="0 0 300 110" preserveAspectRatio="none" aria-hidden="true">
-          <path d={WAVE_PATH} style={{ fill: 'var(--bg)' }} />
+          <path d={WAVE_PATH} fill="var(--bg)" />
         </svg>
       </div>
 

@@ -213,7 +213,7 @@ export function RecurrentsPage({ payments, dataLoading = false, profile, spaceSw
 
           {/* Resumen */}
           {dataLoading ? (
-            <div data-coachmark="recurrentes-stats" style={{ margin: '0 16px 14px' }}>
+            <div data-coachmark="recurrentes-stats" className={styles.statsSkeletonWrap}>
               <StatsCardSkeleton />
             </div>
           ) : (
@@ -296,7 +296,7 @@ export function RecurrentsPage({ payments, dataLoading = false, profile, spaceSw
                   </div>
 
                   {/* Items */}
-                  <div style={{ maxHeight: isOpen ? '2000px' : '0px', overflow: 'hidden', transition: 'max-height .3s ease' }}>
+                  <div className={`${styles.collapse} ${isOpen ? styles.collapseOpen : ''}`}>
                     {catMasters.map((master, idx) => {
                       const isLast       = idx === catMasters.length - 1
                       const next         = getNextDue(master.id)

@@ -390,3 +390,8 @@
   color: var(--danger);
   text-align: center;
 }
+
+/* ── Antes `style={{}}` inline en OnboardingPage.jsx (v0.9.724, Regla 12) ── */
+.nameInputError { margin-bottom: 6px; }
+.chipRowOpen { margin-bottom: 12px; }
+.toggleRowStatic { cursor: default; }

@@ -642,11 +642,11 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onSaveC
             </Field>
             </div>
 
-            <button onClick={handleEditInstallment} disabled={saving || !canWrite} className={`btn-primary ${styles.saveButtonSpacing}`} style={{ opacity: (saving || !canWrite) ? 0.7 : 1 }}>
+            <button onClick={handleEditInstallment} disabled={saving || !canWrite} className={`btn-primary ${styles.saveButtonSpacing} ${(saving || !canWrite) ? styles.dim70 : ''}`}>
               {saving ? t('settingsCategories.saving') : t('paymentModal.editInstallment.saveButton')}
             </button>
             <button onClick={onClose} className={`btn-ghost ${styles.cancelButtonSpacing}`}>{t('buttons.cancel')}</button>
-            <button onClick={() => setConfirmDelete(true)} disabled={!canDelete} className={`btn-danger ${styles.deleteButtonSpacing}`} style={{ opacity: canDelete ? 1 : 0.5 }}>
+            <button onClick={() => setConfirmDelete(true)} disabled={!canDelete} className={`btn-danger ${styles.deleteButtonSpacing} ${canDelete ? '' : styles.dim50}`}>
               {t('paymentModal.editInstallment.cancelInstallments')}
             </button>
           </div>
@@ -739,7 +739,7 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onSaveC
               )}
             </div>
 
-            <button onClick={handleSaveCopyAmount} disabled={saving || !canWrite} className={`btn-primary ${styles.saveButtonSpacing}`} style={{ opacity: (saving || !canWrite) ? 0.7 : 1 }}>
+            <button onClick={handleSaveCopyAmount} disabled={saving || !canWrite} className={`btn-primary ${styles.saveButtonSpacing} ${(saving || !canWrite) ? styles.dim70 : ''}`}>
               {saving ? t('settingsCategories.saving') : t('paymentModal.save.saveChanges')}
             </button>
             <button onClick={onClose} className={`btn-ghost ${styles.cancelButtonSpacing}`}>{t('buttons.cancel')}</button>
@@ -1123,7 +1123,7 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onSaveC
               {t('paymentModal.steps.next')}
             </button>
           ) : (
-            <button onClick={handleSave} disabled={saving || !canWrite} className={`btn-primary ${styles.saveButtonSpacing}`} style={{ opacity: (saving || !canWrite) ? 0.7 : 1 }}>
+            <button onClick={handleSave} disabled={saving || !canWrite} className={`btn-primary ${styles.saveButtonSpacing} ${(saving || !canWrite) ? styles.dim70 : ''}`}>
               {saving ? t('settingsCategories.saving') : initial?.is_master && initial?.paused ? t('paymentModal.save.reactivate') : initial ? t('paymentModal.save.saveChanges') : mode === 'installment' ? t('paymentModal.save.createPayments') : alreadyPaid ? t('paymentModal.save.saveAsPaid') : t('paymentModal.save.savePayment')}
             </button>
           )}
@@ -1133,7 +1133,7 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onSaveC
             <button onClick={requestClose} className={`btn-ghost ${styles.cancelButtonSpacing}`}>{t('buttons.cancel')}</button>
           )}
           {initial && !isEditingInstallment && (
-            <button onClick={() => setConfirmDelete(true)} disabled={!canDelete} className={`btn-danger ${styles.deleteButtonSpacing}`} style={{ opacity: canDelete ? 1 : 0.5 }}>{t('paymentModal.deletePayment')}</button>
+            <button onClick={() => setConfirmDelete(true)} disabled={!canDelete} className={`btn-danger ${styles.deleteButtonSpacing} ${canDelete ? '' : styles.dim50}`}>{t('paymentModal.deletePayment')}</button>
           )}
         </div>
       </div>
@@ -1214,8 +1214,8 @@ function Toggle({ label, sub, value, onChange }) {
         <div className={styles.toggleLabel}>{label}</div>
         <div className={styles.toggleSub}>{sub}</div>
       </div>
-      <div className="toggle-track" style={{ background: value ? 'var(--accent)' : 'var(--border)' }}>
-        <div className="toggle-thumb" style={{ left: value ? 19 : 3 }} />
+      <div className={`toggle-track${value ? ' is-on' : ''}`}>
+        <div className={`toggle-thumb${value ? ' is-on' : ''}`} />
       </div>
     </div>
   )

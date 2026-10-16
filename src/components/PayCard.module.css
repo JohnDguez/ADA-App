@@ -469,3 +469,12 @@
   flex-shrink: 0;
   background: var(--swatch-color);
 }
+
+/* ── Antes `style={{}}` inline en PayCard.jsx (v0.9.724, Regla 12) ───────── */
+.statusLabelPaid { color: var(--paid); }
+.eyeIcon { opacity: 0.6; }
+.markPaidButton { background: var(--paid); }
+.markPaidLocked { background: var(--border); }
+.groupItemDotPending { background: var(--paid); }
+.groupItemDotPaid    { background: var(--border-mid); }
+.groupItemDotOverdue { background: var(--danger); }

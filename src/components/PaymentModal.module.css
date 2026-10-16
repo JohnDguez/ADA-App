@@ -616,3 +616,9 @@
 @media (prefers-reduced-motion: reduce) { .stepEnter { animation: none; } }
 .amountHeroEmpty { color: var(--label-variable); opacity: 0.55; }
 .amountHeroRow .amountHeroInput { max-width: none; text-align: center; padding: 0; }
+
+/* ── Antes `style={{}}` inline en PaymentModal.jsx (v0.9.724, Regla 12) ──── */
+.dim70,
+button.dim70:disabled { opacity: 0.7; } /* gana a .btn-primary:disabled (0.6) como el inline anterior */
+.dim50,
+button.dim50:disabled { opacity: 0.5; }

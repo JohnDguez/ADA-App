@@ -277,11 +277,7 @@ export function PremiumPage({ profile, onClose, refreshProfile, onSubscribed }) 
 
   return (
     <div
-      className={`${entering ? styles.entering : ''} ${closing ? styles.closing : ''}`}
-      style={{
-        position: 'fixed', inset: 0, zIndex: 600,
-        background: 'var(--bg)', overflowY: 'auto',
-      }}
+      className={`${styles.page} ${entering ? styles.entering : ''} ${closing ? styles.closing : ''}`}
     >
 
       {/* Hero — v0.9.505: antes eran 2 <img> a /premium-hero-bg.png y
@@ -314,11 +310,11 @@ export function PremiumPage({ profile, onClose, refreshProfile, onSubscribed }) 
         <div className={styles.heroTitle}>{t('premiumPage.title')}</div>
         <div className={styles.heroSubtitle}>{t('premiumPage.subtitle')}</div>
         <svg className={styles.heroWave} viewBox="0 0 300 110" preserveAspectRatio="none" aria-hidden="true">
-          <path d={WAVE_PATH} style={{ fill: 'var(--bg)' }} />
+          <path d={WAVE_PATH} fill="var(--bg)" />
         </svg>
       </div>
 
-      <div style={{ maxWidth: 420, margin: '0 auto', padding: '20px 20px 40px' }}>
+      <div className={styles.content}>
 
         {/* Beneficios — tarjetas sobre var(--surface) (antes var(--accent)
             sólido de borde a borde; Johnatan: "no se lee bien el texto") +
@@ -376,7 +372,7 @@ export function PremiumPage({ profile, onClose, refreshProfile, onSubscribed }) 
               </div>
             )}
 
-            <div style={{ fontSize: 17, fontWeight: 700, color: 'var(--text)', marginTop: 18, marginBottom: 12 }}>
+            <div className={styles.choosePlanTitle}>
               {t('premiumPage.choosePlan')}
             </div>
 
@@ -421,11 +417,7 @@ export function PremiumPage({ profile, onClose, refreshProfile, onSubscribed }) 
             <button
               onClick={isAndroid ? startAndroidPurchase : startCheckout}
               disabled={!termsAccepted || androidPurchaseState === 'processing'}
-              className={`btn-primary ${styles.ctaButton}`}
-              style={{
-                marginTop: 14, background: 'var(--premium-gold)', color: 'var(--premium-gold-text)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-              }}
+              className={`btn-primary ${styles.ctaButton} ${styles.ctaGold}`}
             >
               <Crown size={16} />
               {androidPurchaseState === 'processing'
@@ -437,14 +429,14 @@ export function PremiumPage({ profile, onClose, refreshProfile, onSubscribed }) 
                 hoja de compra nativa) — solo un mensaje de error inline con
                 reintento, si algo falla antes/después de esa hoja. */}
             {isAndroid && androidPurchaseState === 'error' && (
-              <div className={styles.checkoutStatus} style={{ marginTop: 10 }}>
+              <div className={`${styles.checkoutStatus} ${styles.checkoutStatusSpaced}`}>
                 {t('premiumPage.androidPurchaseError')}
                 {androidPurchaseDetail && (
-                  <div style={{ marginTop: 8, fontSize: 11, opacity: 0.7, wordBreak: 'break-word' }}>
+                  <div className={styles.checkoutDetail}>
                     {androidPurchaseDetail}
                   </div>
                 )}
-                <div style={{ marginTop: 12 }}>
+                <div className={styles.retryRow}>
                   <button type="button" onClick={startAndroidPurchase} className="btn-primary">
                     {t('premiumPage.checkoutRetry')}
                   </button>
@@ -475,7 +467,7 @@ export function PremiumPage({ profile, onClose, refreshProfile, onSubscribed }) 
             {checkoutState === 'error' && (
               <div className={styles.checkoutStatus}>
                 {t('premiumPage.checkoutError')}
-                <div style={{ marginTop: 12 }}>
+                <div className={styles.retryRow}>
                   <button type="button" onClick={startCheckout} className="btn-primary">
                     {t('premiumPage.checkoutRetry')}
                   </button>
@@ -501,8 +493,8 @@ export function PremiumPage({ profile, onClose, refreshProfile, onSubscribed }) 
             se suscribió antes no la ve, porque no aplica para él. Precio
             dinámico según el plan elegido — antes decía "$50 MXN al mes"
             fijo aunque el usuario hubiera elegido Anual. */}
-        <div style={{ textAlign: 'center', marginTop: 16 }}>
-          <div style={{ fontSize: 10.5, fontWeight: 400, color: 'var(--text)', opacity: 0.7, lineHeight: 1.6 }}>
+        <div className={styles.finePrint}>
+          <div className={styles.finePrintText}>
             {t('premiumPage.restrictionsApply')}
             {trialEligible && (<>
               <br />
@@ -512,11 +504,11 @@ export function PremiumPage({ profile, onClose, refreshProfile, onSubscribed }) 
               })}
             </>)}
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5, marginTop: 10, fontSize: 11.5, fontWeight: 500, color: 'var(--text)' }}>
+          <div className={styles.cancelAnytime}>
             <ShieldCheck size={13} color="var(--paid)" />
             {t('premiumPage.cancelAnytime')}
           </div>
-          <div style={{ fontSize: 10.5, fontWeight: 400, color: 'var(--text)', opacity: 0.6, marginTop: 10 }}>
+          <div className={styles.restoreRow}>
             {/* "Restaurar compras" solo tiene sentido en la app de Android
                 (Google Play Billing) — en web/PWA el cobro es por Stripe,
                 que ya tiene su propia pantalla de gestión de suscripción
@@ -532,15 +524,10 @@ export function PremiumPage({ profile, onClose, refreshProfile, onSubscribed }) 
                 {t('premiumPage.restorePurchases')}
               </button>
             )}{isAndroid && ' '}
-            <a href="/terminos.html" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--accent)', opacity: 1 }}>{t('authPage.termsLink')}</a>
+            <a href="/terminos.html" target="_blank" rel="noopener noreferrer" className={styles.termsAnchor}>{t('authPage.termsLink')}</a>
           </div>
           {isAndroid && restoreState !== 'idle' && (
-            <div
-              style={{
-                fontSize: 10.5, fontWeight: 500, textAlign: 'center', marginTop: 6,
-                color: restoreState === 'error' ? 'var(--danger)' : 'var(--text)',
-              }}
-            >
+            <div className={`${styles.restoreStatus} ${restoreState === 'error' ? styles.restoreStatusError : ''}`}>
               {restoreState === 'restoring' && t('premiumPage.restoringPurchases')}
               {restoreState === 'success' && t('premiumPage.restoreSuccess')}
               {restoreState === 'empty' && t('premiumPage.restoreEmpty')}

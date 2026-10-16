@@ -138,8 +138,7 @@ export function SettingsSubscriptionPage({ profile, onOpenPremium, onBack, slide
               href={playStoreUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="btn-primary"
-              style={{ display: 'block', textAlign: 'center', textDecoration: 'none' }}
+              className={`btn-primary ${styles.linkButton}`}
             >
               {t('settingsSubscription.openPlayStore')}
             </a>
@@ -260,8 +259,7 @@ export function SettingsSubscriptionPage({ profile, onOpenPremium, onBack, slide
             <button
               onClick={() => confirmModal === 'cancel' ? runAction('cancel') : runAction('change-plan', { newPlan: otherPlan })}
               disabled={actionLoading}
-              className={confirmModal === 'cancel' ? 'btn-danger' : 'btn-primary'}
-              style={{ marginBottom: 8 }}
+              className={`${confirmModal === 'cancel' ? 'btn-danger' : 'btn-primary'} ${styles.confirmSpacing}`}
             >
               {actionLoading
                 ? t('settingsSubscription.processing')

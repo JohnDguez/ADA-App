@@ -42,3 +42,6 @@
 .compact .text { font-size: 13px; }
 .compact .foot { margin-top: 4px; padding-top: 0; border-top: none; }
 .compact .action { text-decoration: underline; text-underline-offset: 3px; text-decoration-thickness: 1.5px; }
+
+/* Antes style inline (v0.9.724) */
+.chevron { vertical-align: -2px; }

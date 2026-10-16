@@ -48,7 +48,7 @@ export function TipCard({ onAction, compact = false, inSpace = false, isOwner = 
         <div className={styles.label}>
           <Lightbulb size={16} /><span>{t('tips.label')}</span>
           <button type="button" className={styles.next} onClick={advance}>
-            {t('tips.next')} <ChevronRight size={14} style={{ verticalAlign: '-2px' }} />
+            {t('tips.next')} <ChevronRight size={14} className={styles.chevron} />
           </button>
         </div>
         {!compact && <p className={styles.title}>{content.title}</p>}
@@ -56,7 +56,7 @@ export function TipCard({ onAction, compact = false, inSpace = false, isOwner = 
         {actionLabel && (
           <div className={styles.foot}>
             <button type="button" className={styles.action} onClick={() => onAction?.(tip.action)}>
-              {actionLabel}{compact && <ChevronRight size={14} style={{ verticalAlign: '-2px' }} />}
+              {actionLabel}{compact && <ChevronRight size={14} className={styles.chevron} />}
             </button>
           </div>
         )}

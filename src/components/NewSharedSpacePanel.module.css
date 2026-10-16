@@ -117,3 +117,7 @@
   font-size: 12px;
   color: var(--text);
 }
+
+/* Antes style inline (v0.9.724) */
+.dim70,
+button.dim70:disabled { opacity: 0.7; } /* gana a .btn-primary:disabled (0.6) como el inline anterior */

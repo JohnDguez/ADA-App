@@ -605,17 +605,24 @@ a { color: inherit; text-decoration: none; }
   border-radius: 11px;
   position: relative;
   flex-shrink: 0;
+  background: var(--border);
   transition: background .2s;
 }
 .toggle-thumb {
   position: absolute;
   top: 3px;
+  left: 3px;
   width: 16px;
   height: 16px;
   border-radius: 50%;
   background: var(--surface);
   transition: left .2s;
 }
+/* Estado encendido y sin animación (antes `style` inline en cada uso) */
+.toggle-track.is-on { background: var(--accent); }
+.toggle-thumb.is-on { left: 19px; }
+.toggle-track.is-instant,
+.toggle-thumb.is-instant { transition: none; }
 
 body.modal-open {
   overflow: hidden;
@@ -636,6 +643,7 @@ html [data-presence="overlay"][data-closing] { animation: presenceFadeOut .22s e
 html [data-presence="panel"] { animation: presenceSheetIn .3s cubic-bezier(0.22, 1, 0.36, 1) both; overscroll-behavior: contain; }
 html [data-presence="panel"][data-closing] { animation: presenceSheetOut .22s cubic-bezier(0.4, 0, 1, 1) both; }
 /* <Presence>: la raíz de lo envuelto (el fondo) se desvanece al entrar/salir. */
+[data-presence-wrap] { display: contents; } /* antes style inline en Presence.jsx */
 html [data-presence-wrap] > * { animation: presenceFadeIn .22s ease both; }
 html [data-presence-wrap][data-closing] > * { animation: presenceFadeOut .22s ease both; pointer-events: none; }
 @media (prefers-reduced-motion: reduce) {

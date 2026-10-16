@@ -70,11 +70,11 @@ function PayCardImpl({ payment: p, cfg, paymentMethodsList = [], onChangeMethod,
               </div>
               <div className={styles.amountSection}>
                 <span className={styles.amountText}>{fmt(p.amount)}</span>
-                <span className={styles.statusLabel} style={{ color: 'var(--paid)' }}>{t('payCard.status.paid')}</span>
+                <span className={`${styles.statusLabel} ${styles.statusLabelPaid}`}>{t('payCard.status.paid')}</span>
               </div>
               <div className={styles.actionsSection}>
                 <button onClick={() => onViewSource && onViewSource(p)} aria-label={t('homePage.viewInSharedSpace')} className={styles.menuTriggerButton}>
-                  <Eye size={14} color="var(--text)" style={{ opacity: 0.6 }} />
+                  <Eye size={14} color="var(--text)" className={styles.eyeIcon} />
                 </button>
               </div>
             </div>
@@ -428,9 +428,8 @@ function PayCardImpl({ payment: p, cfg, paymentMethodsList = [], onChangeMethod,
               <button
                 onClick={handleCheckButtonClick}
                 disabled={phase !== 'idle' || p._syncing}
-                className={styles.markPaidButton}
+                className={`${styles.markPaidButton} ${canMarkPaid ? '' : styles.markPaidLocked}`}
                 aria-label={t('payCard.markPaidAriaLabel')}
-                style={{ background: canMarkPaid ? 'var(--paid)' : 'var(--border)' }}
               >
                 <Check size={18} color={canMarkPaid ? 'var(--pay-icon)' : 'var(--muted)'} strokeWidth={2.5} />
               </button>
@@ -596,7 +595,7 @@ export function GroupCard({ group, cfg, onMarkPaid, onMarkUnpaid, onEdit, onDele
             const bLabel   = p.is_paid ? t('payCard.status.paid') : (p.postponed || p.is_postponed) ? t('payCard.status.postponed') : overdue ? t('payCard.status.overdue') : t('payCard.status.pending')
             return (
               <div key={p.id} className={`${styles.groupItemRow} ${!isLast ? styles.groupItemRowBordered : ''}`}>
-                <div className={styles.groupItemDot} style={{ background: overdue ? 'var(--danger)' : p.is_paid ? 'var(--border-mid)' : 'var(--paid)' }} />
+                <div className={`${styles.groupItemDot} ${overdue ? styles.groupItemDotOverdue : p.is_paid ? styles.groupItemDotPaid : styles.groupItemDotPending}`} />
                 <span className={styles.groupItemLabel}>{instLabel}</span>
                 {p.amount > 0 && <span className={styles.groupItemAmount}>{fmt(p.amount)}</span>}
                 <span className={styles.groupItemStatus} style={{ color: bColor }}>{bLabel}</span>

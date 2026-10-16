@@ -420,3 +420,10 @@
     display: none;
   }
 }
+
+/* ── Antes `style={{}}` inline en RecurrentsPage.jsx (v0.9.724, Regla 12) ── */
+.statsSkeletonWrap { margin: 0 16px 14px; }
+/* Colapso por categoría. El alto máximo (2000px) y los .3s se mantienen a
+   mano igual que antes (Regla 30: no hay JS que dependa de esta duración). */
+.collapse { max-height: 0; overflow: hidden; transition: max-height .3s ease; }
+.collapseOpen { max-height: 2000px; }

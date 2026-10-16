@@ -104,7 +104,7 @@ export function NewSharedSpacePanel({ profile, sharedSpaces, onOpenPremium, onCr
           </div>
 
           {createError && <div className={styles.errorText}>{createError}</div>}
-          <button onClick={handleCreate} disabled={createSaving} className="btn-primary" style={{ opacity: createSaving ? 0.7 : 1 }}>
+          <button onClick={handleCreate} disabled={createSaving} className={`btn-primary ${createSaving ? styles.dim70 : ''}`}>
             {createSaving ? t('newSharedSpacePanel.creating') : t('newSharedSpacePanel.create')}
           </button>
         </div>

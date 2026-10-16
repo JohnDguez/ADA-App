@@ -276,7 +276,7 @@ export function SettingsPage({ profile, user, onUpdate, onUploadAvatar, onDataDe
               ? <div className={styles.uploadingSpinner} />
               : <Camera size={14} color="var(--text)" />}
           </button>
-          <input ref={fileRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handleAvatarChange} />
+          <input ref={fileRef} type="file" accept="image/*" hidden onChange={handleAvatarChange} />
         </div>
         <div className={styles.profileName}>{profile.name}</div>
         <div className={styles.profileEmail}>{user?.email}</div>

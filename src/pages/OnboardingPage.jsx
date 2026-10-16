@@ -146,7 +146,7 @@ export function OnboardingPage({ userId, onDone }) {
       <div className={styles.stepPanel}>
         <div className={styles.scene} style={{ background: meta.bg }}>
           <svg className={styles.wave} viewBox="0 0 300 110" preserveAspectRatio="none">
-            <path d={WAVE_PATH} style={{ fill: 'var(--bg)' }} />
+            <path d={WAVE_PATH} fill="var(--bg)" />
           </svg>
           <img
             className={styles.illustration}
@@ -170,14 +170,13 @@ export function OnboardingPage({ userId, onDone }) {
                 <UserRound size={18} className={styles.inputIcon} />
                 <input aria-label={t('onboardingPage.step1.namePlaceholder')}
                   autoFocus
-                  className={`field-input ${styles.nameInput}`}
+                  className={`field-input ${styles.nameInput} ${nameError ? styles.nameInputError : ''}`}
                   type="text"
                   value={name}
                   onChange={e => setName(e.target.value)}
                   onKeyDown={e => e.key === 'Enter' && nextStep()}
                   enterKeyHint="next"
                   placeholder={t('onboardingPage.step1.namePlaceholder')}
-                  style={{ marginBottom: nameError ? 6 : 0 }}
                 />
               </div>
               {nameError && <div className={styles.errorText}>{nameError}</div>}
@@ -228,7 +227,7 @@ export function OnboardingPage({ userId, onDone }) {
               {cobroFreq === 'biweekly' && (
                 <div className={styles.section}>
                   <label className="field-label">{t('onboardingPage.step2.biweeklyDaysLabel')}</label>
-                  <div className={styles.chipRow} style={{ marginBottom: biweeklyCustom ? 12 : 0 }}>
+                  <div className={`${styles.chipRow} ${biweeklyCustom ? styles.chipRowOpen : ''}`}>
                     {[{d1:1,d2:16},{d1:13,d2:28},{d1:15,d2:30}].map(preset => {
                       const active = !biweeklyCustom && cobroDay1 === preset.d1 && cobroDay2 === preset.d2
                       return (
@@ -316,8 +315,8 @@ export function OnboardingPage({ userId, onDone }) {
                   <div className={styles.toggleLabel}>{t('onboardingPage.step3.toggleLabel')}</div>
                   <div className={styles.toggleSub}>{t('onboardingPage.step3.toggleSub')}</div>
                 </div>
-                <div className="toggle-track" style={{ background: salaryEnabled ? 'var(--accent)' : 'var(--border)' }}>
-                  <div className="toggle-thumb" style={{ left: salaryEnabled ? 19 : 3 }} />
+                <div className={`toggle-track${salaryEnabled ? ' is-on' : ''}`}>
+                  <div className={`toggle-thumb${salaryEnabled ? ' is-on' : ''}`} />
                 </div>
               </div>
               {salaryEnabled && (
@@ -344,8 +343,7 @@ export function OnboardingPage({ userId, onDone }) {
               <p className={styles.desc}>{t('onboardingPage.step4.desc')}</p>
               <div {...switchProps(subscribed)}
                 onClick={async () => { if (!subscribed) await subscribe() }}
-                className={styles.toggleRow}
-                style={{ cursor: subscribed ? 'default' : 'pointer' }}
+                className={`${styles.toggleRow} ${subscribed ? styles.toggleRowStatic : ''}`}
               >
                 <div>
                   <div className={styles.toggleLabel}>
@@ -355,8 +353,8 @@ export function OnboardingPage({ userId, onDone }) {
                     {subscribed ? t('onboardingPage.step4.enabledSub') : t('onboardingPage.step4.disabledSub')}
                   </div>
                 </div>
-                <div className="toggle-track" style={{ background: subscribed ? 'var(--accent)' : 'var(--border)' }}>
-                  <div className="toggle-thumb" style={{ left: subscribed ? 19 : 3 }} />
+                <div className={`toggle-track${subscribed ? ' is-on' : ''}`}>
+                  <div className={`toggle-thumb${subscribed ? ' is-on' : ''}`} />
                 </div>
               </div>
               {subscribed && (

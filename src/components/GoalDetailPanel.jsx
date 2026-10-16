@@ -217,7 +217,7 @@ export function GoalDetailPanel({
           )}
           <div className={styles.actionButtons}>
             <button type="button" onClick={() => setActiveAction(null)} className="btn-ghost">{t('buttons.cancel')}</button>
-            <button type="button" onClick={confirmAction} disabled={saving} className="btn-primary" style={{ width: 'auto' }}>
+            <button type="button" onClick={confirmAction} disabled={saving} className={`btn-primary ${styles.confirmButton}`}>
               {saving ? t('goalDetailPanel.saving') : t('goalDetailPanel.confirm')}
             </button>
           </div>
@@ -275,7 +275,7 @@ export function GoalDetailPanel({
                   </span>
                 </div>
                 <div className={styles.historyRight}>
-                  <span style={{ color: isAporte ? 'var(--paid)' : 'var(--soon-color)' }}>
+                  <span className={isAporte ? styles.txIn : styles.txOut}>
                     {isAporte ? '+' : '-'}{fmt(tx.amount)}
                   </span>
                   {canRevertThis && (

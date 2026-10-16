@@ -165,8 +165,8 @@ export function SplitContributionsModal({ open, payment, spaceMembers, currentUs
           <>
             <label className="field-label">{t('paymentModal.totalAmountToPay')}</label>
             <div className={styles.editRow}>
-              <AmountInput value={totalDraft} onChange={e => setTotalDraft(e.target.value)} placeholder="0.00" onKeyDown={e => e.key === 'Enter' && handleSaveTotal()} className="field-input" style={{ flex: 1 }} />
-              <button onClick={handleSaveTotal} disabled={totalSaving} className="btn-primary" style={{ width: 'auto', padding: '0 16px' }}>{t('buttons.save')}</button>
+              <AmountInput value={totalDraft} onChange={e => setTotalDraft(e.target.value)} placeholder="0.00" onKeyDown={e => e.key === 'Enter' && handleSaveTotal()} className={`field-input ${styles.grow}`} />
+              <button onClick={handleSaveTotal} disabled={totalSaving} className={`btn-primary ${styles.saveInline}`}>{t('buttons.save')}</button>
             </div>
           </>
         )}
@@ -213,8 +213,8 @@ export function SplitContributionsModal({ open, payment, spaceMembers, currentUs
                   </div>
                   {openId === FUND_ROW_ID && (
                     <div className={styles.editRow}>
-                      <AmountInput autoFocus value={draft} onChange={e => setDraft(e.target.value)} placeholder="0.00" onKeyDown={e => e.key === 'Enter' && handleSaveFund()} className="field-input" style={{ flex: 1 }} />
-                      <button onClick={handleSaveFund} disabled={saving} className="btn-primary" style={{ width: 'auto', padding: '0 16px' }}>{t('buttons.save')}</button>
+                      <AmountInput autoFocus value={draft} onChange={e => setDraft(e.target.value)} placeholder="0.00" onKeyDown={e => e.key === 'Enter' && handleSaveFund()} className={`field-input ${styles.grow}`} />
+                      <button onClick={handleSaveFund} disabled={saving} className={`btn-primary ${styles.saveInline}`}>{t('buttons.save')}</button>
                     </div>
                   )}
                 </div>
@@ -265,13 +265,13 @@ export function SplitContributionsModal({ open, payment, spaceMembers, currentUs
                           })}
                         </div>
                         {m.user_id === currentUserId && paymentMethods.length > 0 && (
-                          <div style={{ padding: '0 12px', marginBottom: 10 }}>
+                          <div className={styles.methodFieldWrap}>
                             <PaymentMethodField methods={paymentMethods} value={methodDraft} onChange={id => { setMethodDraft(id); setMethodTouched(true) }} />
                           </div>
                         )}
                         <div className={styles.editRow}>
-                          <AmountInput autoFocus value={draft} onChange={e => setDraft(e.target.value)} placeholder="0.00" onKeyDown={e => e.key === 'Enter' && handleSave(m.user_id)} className="field-input" style={{ flex: 1 }} />
-                          <button onClick={() => handleSave(m.user_id)} disabled={saving} className="btn-primary" style={{ width: 'auto', padding: '0 16px' }}>{t('buttons.save')}</button>
+                          <AmountInput autoFocus value={draft} onChange={e => setDraft(e.target.value)} placeholder="0.00" onKeyDown={e => e.key === 'Enter' && handleSave(m.user_id)} className={`field-input ${styles.grow}`} />
+                          <button onClick={() => handleSave(m.user_id)} disabled={saving} className={`btn-primary ${styles.saveInline}`}>{t('buttons.save')}</button>
                         </div>
                       </div>
                     )}

@@ -155,3 +155,7 @@
   line-height: 1.5;
   margin-bottom: 16px;
 }
+
+/* Antes style inline (v0.9.724) */
+:global(.btn-primary).linkButton { display: block; text-align: center; text-decoration: none; }
+.confirmSpacing { margin-bottom: 8px; }

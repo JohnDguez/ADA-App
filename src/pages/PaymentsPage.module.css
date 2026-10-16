@@ -1934,3 +1934,7 @@
 @media (prefers-reduced-motion: reduce) {
   .contextMenu, .contextMenu[data-closing], .chartBar, .categoryProgressFill, .paymentRow { animation: none; }
 }
+
+/* ── Antes `style={{}}` inline en PaymentsPage.jsx (v0.9.724, Regla 12) ──── */
+.remanenteCustomButtonDim { opacity: 0.6; }
+.incomeLabelFlush { margin-bottom: 0; }
