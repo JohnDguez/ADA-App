@@ -591,13 +591,6 @@ a { color: inherit; text-decoration: none; }
   appearance: textfield;
 }
 
-.section-head {
-  font-size: 10px;
-  font-weight: 600;
-  color: var(--muted);
-  text-transform: uppercase;
-  letter-spacing: 0.07em;
-}
 
 .toggle-track {
   width: 38px;

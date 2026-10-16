@@ -123,8 +123,6 @@
   font-size: 10px;
   font-weight: 600;
   color: var(--text);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
   margin-bottom: 10px;
 }
 
@@ -233,8 +231,6 @@
   font-size: 10px;
   font-weight: 600;
   color: var(--text);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
 }
 
 .extrasEditButton {
@@ -327,7 +323,6 @@
   font-size: 9px;
   font-weight: 500;
   color: var(--text);
-  text-transform: uppercase;
 }
 
 .extrasItemContent {
@@ -732,23 +727,9 @@
   margin-bottom: 20px;
 }
 
-.incomeLabelMb8 {
-  font-size: 10px;
-  font-weight: 600;
-  color: var(--text);
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  margin-bottom: 8px;
-}
+:global(.field-label).incomeLabelMb8 { margin-bottom: 8px; }
 
-.incomeLabelMb6 {
-  font-size: 10px;
-  font-weight: 600;
-  color: var(--text);
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  margin-bottom: 6px;
-}
+:global(.field-label).incomeLabelMb6 { margin-bottom: 6px; }
 
 .incomeTypeRow {
   display: flex;
@@ -1274,7 +1255,6 @@
   font-size: 9px;
   font-weight: 600;
   color: var(--text);
-  text-transform: uppercase;
 }
 
 .paymentDivider {
@@ -1937,4 +1917,4 @@
 
 /* ── Antes `style={{}}` inline en PaymentsPage.jsx (v0.9.724, Regla 12) ──── */
 .remanenteCustomButtonDim { opacity: 0.6; }
-.incomeLabelFlush { margin-bottom: 0; }
+:global(.field-label).incomeLabelFlush { margin-bottom: 0; }

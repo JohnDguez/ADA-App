@@ -962,7 +962,7 @@ export function PaymentsPage({ payments, dataLoading = false, periodIncome, paym
 
             {/* Tipo */}
             <div className={styles.incomeFieldGroup}>
-              <div className={styles.incomeLabelMb8}>{t('paymentsPage.incomeModal.typeLabel')}</div>
+              <div className={`field-label ${styles.incomeLabelMb8}`}>{t('paymentsPage.incomeModal.typeLabel')}</div>
               <div className={styles.incomeTypeRow}>
                 {INCOME_TYPES.map(t2 => (
                   <button
@@ -978,7 +978,7 @@ export function PaymentsPage({ payments, dataLoading = false, periodIncome, paym
 
             {/* Monto */}
             <div className={styles.incomeFieldGroup}>
-              <div className={styles.incomeLabelMb6}>{t('paymentsPage.incomeModal.amountLabel')}</div>
+              <div className={`field-label ${styles.incomeLabelMb6}`}>{t('paymentsPage.incomeModal.amountLabel')}</div>
               <AmountInput
                 placeholder="$0"
                 value={incomeAmount}
@@ -990,7 +990,7 @@ export function PaymentsPage({ payments, dataLoading = false, periodIncome, paym
 
             {/* Nota opcional */}
             <div className={styles.incomeFieldGroupLast}>
-              <div className={styles.incomeLabelMb6}>{t('paymentsPage.noteOptional')}</div>
+              <div className={`field-label ${styles.incomeLabelMb6}`}>{t('paymentsPage.noteOptional')}</div>
               <input aria-label={t('paymentsPage.noteOptional')}
                 type="text"
                 placeholder={t('paymentsPage.incomeModal.notePlaceholder')}
@@ -1139,7 +1139,7 @@ export function PaymentsPage({ payments, dataLoading = false, periodIncome, paym
             </div>
             <div className={styles.incomeFieldGroup}>
               <div className={styles.fundAmountLabelRow}>
-                <div className={`${styles.incomeLabelMb6} ${styles.incomeLabelFlush}`}>{t('paymentsPage.incomeModal.amountLabel')}</div>
+                <div className={`field-label ${styles.incomeLabelMb6} ${styles.incomeLabelFlush}`}>{t('paymentsPage.incomeModal.amountLabel')}</div>
                 {activeSpaceId && !loadingPersonalAvailable && personalAvailable != null && (
                   <div className={styles.fundAvailableTag}>{t('paymentsPage.addFundModal.available', { amount: fmt(personalAvailable) })}</div>
                 )}
@@ -1171,7 +1171,7 @@ export function PaymentsPage({ payments, dataLoading = false, periodIncome, paym
               </div>
             )}
             <div className={styles.incomeFieldGroupLast}>
-              <div className={styles.incomeLabelMb6}>{t('paymentsPage.noteOptional')}</div>
+              <div className={`field-label ${styles.incomeLabelMb6}`}>{t('paymentsPage.noteOptional')}</div>
               <input aria-label={t('paymentsPage.noteOptional')}
                 type="text" placeholder={t('paymentsPage.addFundModal.notePlaceholder')} value={fundNote}
                 onChange={e => setFundNote(e.target.value)}

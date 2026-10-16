@@ -44,7 +44,7 @@ const ICON_MAP = {
 // Agrupado + con etiqueta en español para el buscador (busca por label, no
 // por el nombre técnico del ícono en inglés).
 export const CATEGORY_ICON_GROUPS = [
-  { label: 'Familia y Gente', icons: [
+  { label: 'Familia y gente', icons: [
     { name: 'User', label: 'Persona' }, { name: 'Users', label: 'Personas' }, { name: 'Baby', label: 'Bebé' },
     { name: 'Heart', label: 'Corazón' }, { name: 'HeartHandshake', label: 'Cuidado' }, { name: 'Handshake', label: 'Acuerdo' },
     { name: 'Smile', label: 'Sonrisa' }, { name: 'UserPlus', label: 'Agregar persona' }, { name: 'UserCheck', label: 'Persona confirmada' },
@@ -63,7 +63,7 @@ export const CATEGORY_ICON_GROUPS = [
     { name: 'Mouse', label: 'Mouse' }, { name: 'Cpu', label: 'Procesador' }, { name: 'HardDrive', label: 'Disco duro' },
     { name: 'Battery', label: 'Batería' }, { name: 'Router', label: 'Router' },
   ]},
-  { label: 'Finanzas y Compras', icons: [
+  { label: 'Finanzas y compras', icons: [
     { name: 'Wallet', label: 'Cartera' }, { name: 'CreditCard', label: 'Tarjeta' }, { name: 'Banknote', label: 'Billete' },
     { name: 'PiggyBank', label: 'Alcancía' }, { name: 'Receipt', label: 'Recibo' }, { name: 'ShoppingCart', label: 'Carrito' },
     { name: 'ShoppingBag', label: 'Bolsa de compras' }, { name: 'Tag', label: 'Etiqueta' }, { name: 'Percent', label: 'Porcentaje' },
@@ -75,7 +75,7 @@ export const CATEGORY_ICON_GROUPS = [
     { name: 'PartyPopper', label: 'Fiesta' }, { name: 'Ticket', label: 'Boleto' }, { name: 'Sparkles', label: 'Brillos' },
     { name: 'Popcorn', label: 'Palomitas' }, { name: 'Tv', label: 'Televisión' },
   ]},
-  { label: 'Transporte y Viajes', icons: [
+  { label: 'Transporte y viajes', icons: [
     { name: 'Car', label: 'Auto' }, { name: 'Bus', label: 'Autobús' }, { name: 'Train', label: 'Tren' },
     { name: 'Plane', label: 'Avión' }, { name: 'Bike', label: 'Bicicleta' }, { name: 'Fuel', label: 'Gasolina' },
     { name: 'MapPin', label: 'Ubicación' }, { name: 'Compass', label: 'Brújula' }, { name: 'Luggage', label: 'Maleta' },
@@ -100,12 +100,12 @@ export const CATEGORY_ICON_GROUPS = [
     { name: 'Dumbbell', label: 'Pesas' }, { name: 'Trophy', label: 'Trofeo' }, { name: 'Medal', label: 'Medalla' },
     { name: 'Target', label: 'Objetivo' }, { name: 'Award', label: 'Premio' }, { name: 'Bike', label: 'Bicicleta' },
   ]},
-  { label: 'Música y Sonido', icons: [
+  { label: 'Música y sonido', icons: [
     { name: 'Music', label: 'Música' }, { name: 'Music2', label: 'Nota musical' }, { name: 'Music3', label: 'Nota musical 2' },
     { name: 'Music4', label: 'Nota musical 3' }, { name: 'Mic', label: 'Micrófono' }, { name: 'Radio', label: 'Radio' },
     { name: 'Volume2', label: 'Volumen' }, { name: 'Disc', label: 'Disco' },
   ]},
-  { label: 'Foto y Video', icons: [
+  { label: 'Foto y video', icons: [
     { name: 'Camera', label: 'Cámara' }, { name: 'Video', label: 'Video' }, { name: 'Image', label: 'Imagen' },
     { name: 'Film', label: 'Película' }, { name: 'Aperture', label: 'Apertura' }, { name: 'Clapperboard', label: 'Claqueta' },
   ]},

@@ -72,7 +72,7 @@ export function PasswordSetupModal({ userId, onDone }) {
 
         {/* Campo contraseña */}
         <div className={styles.passwordField}>
-          <label className={styles.fieldLabel}>
+          <label className={`field-label ${styles.fieldLabel}`}>
             {t('passwordSetupModal.passwordLabel')}
           </label>
           <div className={styles.inputWrapper}>
@@ -105,7 +105,7 @@ export function PasswordSetupModal({ userId, onDone }) {
 
         {/* Campo confirmar */}
         <div className={styles.confirmField}>
-          <label className={styles.fieldLabel}>
+          <label className={`field-label ${styles.fieldLabel}`}>
             {t('passwordSetupModal.confirmLabel')}
           </label>
           <div className={styles.inputWrapper}>

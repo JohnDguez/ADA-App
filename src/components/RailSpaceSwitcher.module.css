@@ -50,9 +50,7 @@
 .sectionLabel {
   font-size: 10px;
   font-weight: 600;
-  letter-spacing: 0.02em;
   color: var(--white-a50);
-  text-transform: uppercase;
   padding: 0 10px;
   margin-bottom: 2px;
 }
