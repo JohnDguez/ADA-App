@@ -51,6 +51,11 @@
   --scrim: rgba(2, 10, 31, 0.38); /* velo de los bottom sheets: más suave en tema claro para que no se vea gris */
   --sheet-opacity: 97%;      /* opacidad de la hoja de ModalSheet (casi opaca en claro) */
   --sheet-form-opacity: 97%; /* opacidad de las hojas de formulario (sheetShared) */
+  /* Campos y botones de selección dentro de hojas y formularios. En claro el
+     fondo es blanco y el borde el intermedio, para que se distingan de la
+     hoja (antes --bg/--border casi no se veían); en oscuro no cambia. */
+  --field-bg: var(--surface);
+  --field-border: var(--border-mid);
   --radius: 12px;
   --radius-sm: 8px;
   --radius-full: 999px;
@@ -331,6 +336,8 @@
   --scrim: rgba(2, 10, 31, 0.58);
   --sheet-opacity: 80%;
   --sheet-form-opacity: 90%;
+  --field-bg: var(--bg);
+  --field-border: var(--border);
 
   /* Switcher de Espacio Compartido — ver nota en :root. Tono ligeramente
      más claro que en el tema claro, mismo criterio que --label-variable
@@ -400,6 +407,8 @@
     --scrim: rgba(2, 10, 31, 0.58);
     --sheet-opacity: 80%;
     --sheet-form-opacity: 90%;
+    --field-bg: var(--bg);
+    --field-border: var(--border);
     --space-new-bg:       #357964;
   --space-stack-shadow: rgba(0, 0, 0, 0.4);
     --space-new-text:     #E1F5EE;
@@ -562,11 +571,11 @@ a { color: inherit; text-decoration: none; }
 .field-input {
   width: 100%;
   padding: 10px 12px;
-  border: 0.5px solid var(--border);
+  border: 0.5px solid var(--field-border);
   border-radius: var(--radius-sm);
   font-family: 'DM Sans', sans-serif;
   font-size: 14px;
-  background: var(--bg);
+  background: var(--field-bg);
   color: var(--text);
   outline: none;
   -webkit-appearance: none;

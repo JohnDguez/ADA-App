@@ -268,7 +268,9 @@ export function cardsCuttingInPeriod(cards, todayDate, periodEnd) {
     if (card.kind && card.kind !== 'credit') continue
     const cutDate = upcomingCut(card, todayDate)
     if (!cutDate || cutDate > periodEnd) continue
-    out.push({ card, cutDate, daysLeft: Math.round((cutDate - todayDate) / 86400000) })
+    // Vencimiento del pago de ese estado de cuenta (mismo cálculo que al generarlo).
+    const dueDate = card.due_day ? nextOccurrenceAfter(card.due_day, cutDate) : null
+    out.push({ card, cutDate, dueDate, daysLeft: Math.round((cutDate - todayDate) / 86400000) })
   }
   return out.sort((a, b) => a.cutDate - b.cutDate)
 }

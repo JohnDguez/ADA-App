@@ -23,3 +23,8 @@ export function cutBadgeLabel(date, daysLeft, t) {
 export function cutDateLong(date) {
   return shortDate(date, 'long')
 }
+
+// "5 de noviembre" (vencimiento del pago, sin día de la semana).
+export function dueDateLong(date) {
+  return new Intl.DateTimeFormat(intlLocale(), { day: 'numeric', month: 'long' }).format(date)
+}

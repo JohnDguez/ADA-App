@@ -194,6 +194,12 @@ export function nextPeriodDate(date, freq) {
 export function nextWeekdayDate(weekday) {
   const t = today(); let diff = weekday - t.getDay(); if (diff <= 0) diff += 7; return addDays(t, diff)
 }
+// Semanal con fecha de inicio elegida: si la fecha es hoy o futura, esa es la
+// primera; si ya pasó, se avanza de 7 en 7 hasta la siguiente.
+export function nextWeeklyFromDate(dateStr) {
+  const chosen = dateOf(dateStr); const t = today(); if (chosen >= t) return chosen
+  let d = new Date(chosen); while (d < t) d = addDays(d, 7); return d
+}
 export function nextBiweeklyFromDate(dateStr) {
   const chosen = dateOf(dateStr); const t = today(); if (chosen >= t) return chosen
   let d = new Date(chosen); while (d < t) d = addDays(d, 14); return d

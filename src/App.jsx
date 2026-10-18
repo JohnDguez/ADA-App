@@ -1174,7 +1174,10 @@ export default function App() {
   }
   async function handleMarkUnpaid(id) {
     const payment = payments.find(p => p.id === id)
-    if (payment?.space_id) {
+    // Un pospuesto de un espacio NO está pagado: el endpoint de desmarcar
+    // solo actúa sobre pagos pagados y respondía "ok" sin cambiar nada.
+    // Se regresa a pendientes con markUnpaid, igual que al posponerlo.
+    if (payment?.space_id && !payment.is_postponed) {
       const { error } = await unmarkSharedPayment(id)
       if (error) showToast(error.message || t('app.toast.unmarkError'))
       else showToast(t('app.toast.markedUnpaid', { name: payment.name }))
@@ -1201,7 +1204,7 @@ export default function App() {
   // toast como única confirmación.
   async function handleMarkUnpaidAnimated(id) {
     const payment = payments.find(p => p.id === id)
-    if (payment?.space_id) {
+    if (payment?.space_id && !payment.is_postponed) { // pospuesto: ver handleMarkUnpaid
       const { error } = await unmarkSharedPayment(id)
       if (error) { showToast(error.message || t('app.toast.unmarkError')); return { failed: true } }
       return { failed: false }

@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useId, Children, isValidElement, cloneElem
 import { useTranslation } from 'react-i18next'
 import i18n from '../i18n'
 import { Wallet, AlertTriangle, Repeat, Check, Info, Lock } from 'lucide-react'
-import { CATEGORIES, RECUR_FREQ, WEEKDAYS_SHORT, getWeekdaysShort, MONTHS, getMonths, MONTHS_SHORT, getMonthsShort, intlLocale, nextWeekdayDate, nextBiweeklyFromDate, nextPeriodDate, cobroPeriod, fmt, nameExistsActive, projectPeriodImpact, nextCobroPeriod, getCatColor, getCategoryLabel, getFrequencyLabel, dateToStr, todayStr, getDeleteConfirmMessage, installmentCurrentNumber } from '../lib/utils'
+import { CATEGORIES, RECUR_FREQ, MONTHS, getMonths, MONTHS_SHORT, getMonthsShort, intlLocale, nextWeeklyFromDate, nextBiweeklyFromDate, nextPeriodDate, cobroPeriod, fmt, nameExistsActive, projectPeriodImpact, nextCobroPeriod, getCatColor, getCategoryLabel, getFrequencyLabel, dateToStr, todayStr, getDeleteConfirmMessage, installmentCurrentNumber } from '../lib/utils'
 import { getCategoryIcon } from '../lib/categoryIcons'
 import { supabase } from '../lib/supabase'
 import { ConfirmCloseModal } from './ConfirmCloseModal'
@@ -49,7 +49,7 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onSaveC
   const [category,           setCategory]           = useState('Servicios')
   const [isVariable,         setIsVariable]         = useState(false)
   const [recurFreq,          setRecurFreq]          = useState('monthly')
-  const [weekday,            setWeekday]            = useState(5)
+  const [weeklyDate,         setWeeklyDate]         = useState('')
   const [biweeklyDate,       setBiweeklyDate]       = useState('')
   const [totalInstallments,  setTotalInstallments]  = useState('')
   const [startFrom,          setStartFrom]          = useState('1')
@@ -205,6 +205,7 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onSaveC
       }
       setDueDate(initialDue)
       setBiweeklyDate(initialDue)
+      setWeeklyDate(initialDue)
       setCategory(initial.category || 'Servicios')
       setIsVariable(initial.is_variable || false)
       setRecurFreq(initial.recur_freq || 'monthly')
@@ -221,8 +222,9 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onSaveC
       setName(prefill?.name || ''); setAmount(prefill?.amount ?? '')
       setDueDate(prefill?.due_date || todayStr())
       setBiweeklyDate(prefill?.due_date || todayStr())
+      setWeeklyDate(prefill?.due_date || todayStr())
       setCategory(prefill?.category || 'Servicios'); setIsVariable(false)
-      setRecurFreq(prefill?.recur_freq || 'monthly'); setWeekday(5)
+      setRecurFreq(prefill?.recur_freq || 'monthly')
       setMode(prefill?.recur_freq ? 'recurrent' : 'single'); setTotalInstallments(''); setStartFrom('1'); setTotalAmount('')
       setBackfillAsExpense(true)
       setMethodId(null)
@@ -315,7 +317,7 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onSaveC
     }
     if (!isVariable && (!amount || isNaN(parseFloat(amount)))) { setError(t('paymentModal.amountOrVariableError')); return }
     let finalDate = dueDate
-    if (mode === 'recurrent' && recurFreq === 'weekly')    finalDate = dateToStr(nextWeekdayDate(weekday))
+    if (mode === 'recurrent' && recurFreq === 'weekly')    finalDate = weeklyDate ? dateToStr(nextWeeklyFromDate(weeklyDate)) : dueDate
     if (mode === 'recurrent' && recurFreq === 'biweekly')  finalDate = biweeklyDate ? dateToStr(nextBiweeklyFromDate(biweeklyDate)) : dueDate
     if (!finalDate) { setError(t('paymentModal.dueDateError')); return }
     if (mode === 'single' && !initial && !alreadyPaid && profile && !farOkRef.current) {
@@ -502,8 +504,9 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onSaveC
   if (!render) return null
 
   const showDatePicker     = mode === 'single' || (mode === 'installment' && !linked) || (mode === 'recurrent' && monthBasedFreqs.includes(recurFreq))
-  const showWeekdayPicker  = mode === 'recurrent' && recurFreq === 'weekly'
+  const showWeeklyPicker   = mode === 'recurrent' && recurFreq === 'weekly'
   const showBiweeklyPicker = mode === 'recurrent' && recurFreq === 'biweekly'
+  const nextWeekDate       = weeklyDate ? nextWeeklyFromDate(weeklyDate) : null
   const nextBiDate         = biweeklyDate ? nextBiweeklyFromDate(biweeklyDate) : null
 
   // Flujo por tipo (v0.9.604)
@@ -528,7 +531,7 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onSaveC
   // pagos nuevos (no ediciones) de tipo único o recurrente con monto fijo.
   // NOTA: función de prueba, sin gate de premium por ahora (ver CONTEXT.md).
   const previewDueDate =
-    mode === 'recurrent' && recurFreq === 'weekly'   ? dateToStr(nextWeekdayDate(weekday)) :
+    mode === 'recurrent' && recurFreq === 'weekly'   ? (weeklyDate ? dateToStr(nextWeeklyFromDate(weeklyDate)) : dueDate) :
     mode === 'recurrent' && recurFreq === 'biweekly' ? (biweeklyDate ? dateToStr(nextBiweeklyFromDate(biweeklyDate)) : dueDate) :
     dueDate
 
@@ -895,16 +898,10 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onSaveC
             </Field>
           )}
 
-          {showWeekdayPicker && (
-            <Field label={t('paymentModal.dueDayLabel')}>
-              <div className={styles.weekdayRow}>
-                {getWeekdaysShort().map((d, i) => (
-                  <button key={i} onClick={() => setWeekday(i)} className={`${styles.weekdayButton} ${weekday === i ? styles.weekdayButtonActive : ''}`}>{d}</button>
-                ))}
-              </div>
-              <div className={styles.helperTextMt6}>
-                {t('paymentModal.nextLabel', { date: nextWeekdayDate(weekday).toLocaleDateString(intlLocale(), { weekday: 'long', day: 'numeric', month: 'long' }) })}
-              </div>
+          {showWeeklyPicker && (
+            <Field label={t('paymentModal.weeklyStartDateLabel')}>
+              <DatePicker value={weeklyDate} onChange={setWeeklyDate} sheet sheetTitle={t('paymentModal.weeklyStartDateLabel')} />
+              {nextWeekDate && <div className={styles.helperTextMt6}>{t('paymentModal.nextDueLabel', { date: nextWeekDate.toLocaleDateString(intlLocale(), { weekday: 'long', day: 'numeric', month: 'long' }) })}</div>}
             </Field>
           )}
 

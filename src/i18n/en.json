@@ -808,6 +808,7 @@
     "dueDayLabel": "Due day",
     "nextLabel": "Next: {{date}}",
     "biweeklyBaseDateLabel": "Starting base date (biweekly)",
+    "weeklyStartDateLabel": "First payment date",
     "nextDueLabel": "Next due date: {{date}}",
     "recurrentNote": "A new payment will be generated automatically every {{interval}}.",
     "recurrentIntervals": {
@@ -2003,6 +2004,7 @@
     "titleOne": "{{name}} closes its statement {{when}}",
     "titleMany": "{{count}} cards close their statement this period",
     "subtitle": "Tap to see your cards",
+    "dueOn": "Payment due {{date}}",
     "today": "today",
     "tomorrow": "tomorrow",
     "onDate": "on {{date}}",

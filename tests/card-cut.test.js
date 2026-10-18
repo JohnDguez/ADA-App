@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { computeMissingStatements, currentCycleSpend, cardsCuttingInPeriod, upcomingCut } from '../src/lib/cardStatements'
-import { dateOf, dateToStr } from '../src/lib/utils'
+import { dateOf, dateToStr, nextWeeklyFromDate } from '../src/lib/utils'
 
 // Hoy fijo: domingo 18 de octubre de 2026 (día de corte de la tarjeta de prueba).
 beforeEach(() => { vi.useFakeTimers(); vi.setSystemTime(new Date(2026, 9, 18, 9)) })
@@ -69,5 +69,17 @@ describe('recordatorio de corte', () => {
 
   it('sin tarjetas con corte en el periodo, la lista queda vacía', () => {
     expect(cardsCuttingInPeriod([card({ cut_day: 3 })], todayDate(), dateOf('2026-10-22'))).toEqual([])
+  })
+
+  it('incluye el vencimiento del pago (siguiente día de pago tras el corte)', () => {
+    const res = cardsCuttingInPeriod([card({ id: 'b', cut_day: 18, due_day: 5 })], todayDate(), dateOf('2026-10-22'))
+    expect(dateToStr(res[0].dueDate)).toBe('2026-11-05')
+  })
+})
+
+describe('semanal con fecha de inicio', () => {
+  it('fecha futura: esa es la primera; pasada: avanza de 7 en 7', () => {
+    expect(dateToStr(nextWeeklyFromDate('2026-10-26'))).toBe('2026-10-26')
+    expect(dateToStr(nextWeeklyFromDate('2026-10-05'))).toBe('2026-10-19')
   })
 })

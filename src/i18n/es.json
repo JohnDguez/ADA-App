@@ -808,6 +808,7 @@
     "dueDayLabel": "Día de vencimiento",
     "nextLabel": "Próximo: {{date}}",
     "biweeklyBaseDateLabel": "Fecha base de inicio (quincenal)",
+    "weeklyStartDateLabel": "Fecha del primer pago",
     "nextDueLabel": "Próximo vencimiento: {{date}}",
     "recurrentNote": "Se generará un nuevo pago automáticamente cada {{interval}}.",
     "recurrentIntervals": {
@@ -2003,6 +2004,7 @@
     "titleOne": "{{name}} hace corte {{when}}",
     "titleMany": "{{count}} tarjetas hacen corte este periodo",
     "subtitle": "Toca para ver tus tarjetas",
+    "dueOn": "El pago vence el {{date}}",
     "today": "hoy",
     "tomorrow": "mañana",
     "onDate": "el {{date}}",

@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { CreditCard, X } from 'lucide-react'
 import { getBank } from '../lib/cardCatalog'
-import { cutWhen } from '../lib/cutLabels'
+import { cutWhen, dueDateLong } from '../lib/cutLabels'
 import styles from './CutNotice.module.css'
 
 // Aviso de Inicio (v0.9.738, mockups confirmados con Johnatan): recuerda que
@@ -32,6 +32,12 @@ export function CutNotice({ cuts, periodKey, onOpen }) {
     ? t('cutNotice.titleOne', { name: cardName, when: cutWhen(first.cutDate, first.daysLeft, t) })
     : t('cutNotice.titleMany', { count: cuts.length })
 
+  // Una sola tarjeta: se aclara cuándo vence el pago, porque cae en el periodo
+  // siguiente y sin esto el aviso y el pago parecen no tener relación.
+  const subtitle = cuts.length === 1 && first.dueDate
+    ? t('cutNotice.dueOn', { date: dueDateLong(first.dueDate) })
+    : t('cutNotice.subtitle')
+
   function close(e) {
     e.stopPropagation()
     setLeaving(true)
@@ -54,7 +60,7 @@ export function CutNotice({ cuts, periodKey, onOpen }) {
         <CreditCard size={22} color="var(--warn-tone)" className={styles.icon} />
         <div className={styles.texts}>
           <div className={styles.title}>{title}</div>
-          <div className={styles.sub}>{t('cutNotice.subtitle')}</div>
+          <div className={styles.sub}>{subtitle}</div>
         </div>
       </div>
       <button type="button" className={styles.close} onClick={close} aria-label={t('cutNotice.close')}>

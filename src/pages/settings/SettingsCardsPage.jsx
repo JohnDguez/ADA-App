@@ -8,6 +8,7 @@ import { PageHero } from '../../components/PageHero'
 import { CreditCardVisual } from '../../components/CreditCardVisual'
 import { CardFormModal } from '../../components/CardFormModal'
 import { CardDetailPanel } from '../../components/CardDetailPanel'
+import { useScrollTop } from '../../hooks/useScrollTop'
 import { SegmentedControl } from '../../components/SegmentedControl'
 import { ConfirmDeleteModal } from '../../components/ConfirmDeleteModal'
 import { EmptyState } from '../../components/EmptyState'
@@ -135,6 +136,8 @@ export function SettingsCardsPage({ profile, paymentMethods, personalPayments = 
     return Object.fromEntries(cuts.map(c => [c.card.id, c]))
   }, [credit, profile])
   const selectedCard = selectedId ? paymentMethods.methods.find(m => m.id === selectedId) || null : null
+  // El detalle siempre abre desde arriba, sin heredar el scroll de la pila.
+  useScrollTop(selectedId)
 
   function openAdd() { setEditing(null); setFormOpen(true) }
   function openEdit(card) { setEditing(card); setFormOpen(true) }
