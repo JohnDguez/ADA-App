@@ -128,7 +128,7 @@ export function SettingsNotificationsPage({ profile, user, onUpdate, onBack, sli
           ))}
         </div>
 
-        <Collapse open={upcomingOn}>
+        <Collapse open={upcomingOn || profile.notif_cards !== false}>
           <div className={styles.daysRow}>
             <span className={styles.timeLabel}>{t('settingsNotifications.daysBeforeLabel')}</span>
             <div className={styles.daysBeforeRow}>
