@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Bell, BellOff, TriangleAlert, CircleAlert, CalendarCheck, Clock, Banknote, ChevronDown } from 'lucide-react'
+import { Bell, BellOff, TriangleAlert, CircleAlert, CalendarCheck, Clock, Banknote, CreditCard, ChevronDown } from 'lucide-react'
 // Ícono del encabezado vía Phosphor Icons (mismo patrón que las demás
 // sub-páginas ya migradas, v0.9.442-448) — import directo para tree-shaking real.
 import { Bell as BellDuotone } from '@phosphor-icons/react/dist/csr/Bell'
@@ -45,8 +45,8 @@ export function SettingsNotificationsPage({ profile, user, onUpdate, onBack, sli
   const upcomingOn = profile.notif_upcoming !== false
   const onText = t('settingsNotifications.tileOn')
   const offText = t('settingsNotifications.tileOff')
-  const mkTile = (key, Icon, label, field, on, status) => ({
-    key, Icon, label, on, status: status ?? (on ? onText : offText), onToggle: () => onUpdate({ [field]: !on }),
+  const mkTile = (key, Icon, label, field, on, status, wide = false) => ({
+    key, Icon, label, on, wide, status: status ?? (on ? onText : offText), onToggle: () => onUpdate({ [field]: !on }),
   })
   const tiles = [
     mkTile('overdue', CircleAlert, t('settingsNotifications.overdueLabel'), 'notif_overdue', profile.notif_overdue !== false),
@@ -54,6 +54,9 @@ export function SettingsNotificationsPage({ profile, user, onUpdate, onBack, sli
     mkTile('upcoming', Clock, t('settingsNotifications.upcomingLabel'), 'notif_upcoming', upcomingOn,
       upcomingOn ? t('settingsNotifications.tileDaysBefore', { count: daysBefore }) : null),
     mkTile('payDay', Banknote, t('settingsNotifications.payDayLabel'), 'notif_cobro_day', profile.notif_cobro_day !== false),
+    // Corte, recordatorio y vencimiento de tarjetas de crédito (v0.9.740).
+    mkTile('cards', CreditCard, t('settingsNotifications.cardsLabel'), 'notif_cards', profile.notif_cards !== false,
+      profile.notif_cards !== false ? t('settingsNotifications.cardsStatus', { count: daysBefore }) : null, true),
   ]
 
   async function handlePushToggle() {
@@ -113,9 +116,9 @@ export function SettingsNotificationsPage({ profile, user, onUpdate, onBack, sli
         </div>
 
         <div className={styles.tiles}>
-          {tiles.map(({ key, Icon, label, on, status, onToggle }) => (
+          {tiles.map(({ key, Icon, label, on, status, wide, onToggle }) => (
             <button key={key} type="button" aria-pressed={on} onClick={onToggle}
-              className={`${styles.tile} ${on ? styles.tileOn : ''}`}>
+              className={`${styles.tile} ${on ? styles.tileOn : ''} ${wide ? styles.tileWide : ''}`}>
               <span className={styles.tileIcon}><Icon size={17} /></span>
               <span>
                 <span className={styles.tileLabel}>{label}</span>

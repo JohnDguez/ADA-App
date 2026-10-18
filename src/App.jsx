@@ -51,6 +51,7 @@ import { PaymentModal } from './components/PaymentModal'
 import { AddMenu, addMenuHasExtras } from './components/AddMenu'
 import { ChangeMethodModal } from './components/ChangeMethodModal'
 import { PayCardNowModal } from './components/PayCardNowModal'
+import { PayStatementModal } from './components/PayStatementModal'
 import { VariableAmountModal } from './components/VariableAmountModal'
 import { ConfirmNextPeriodPayModal } from './components/ConfirmNextPeriodPayModal'
 import { InstallmentAbonarModal } from './components/InstallmentAbonarModal'
@@ -434,6 +435,8 @@ export default function App() {
   }
   function handleNotifNavigate(n) {
     if (!n) return
+    // Avisos de tarjeta (v0.9.740): llevan a Mis tarjetas, sin importar el espacio activo.
+    if (n.type?.startsWith('card_')) { window.scrollTo(0, 0); goToCards(); return }
     if (n.type !== 'sync_error') {
       window.scrollTo(0, 0)
       if (n.type === 'trial_ending' || n.type === 'goal_deadline') return
@@ -629,6 +632,10 @@ export default function App() {
   const [modalOpen,      setModalOpen]     = useState(false)
   const [editPayment,    setEditPayment]   = useState(null)
   const [varModal,       setVarModal]      = useState({ open: false, payment: null, resolver: null, fundMode: false })
+  // Pago de un estado de cuenta desde Inicio (v0.9.740): monto fijo + método. El
+  // método elegido se guarda en `stmtMethodRef` para confirmVariablePaid.
+  const [stmtModal, setStmtModal] = useState({ open: false, payment: null, resolver: null })
+  const stmtMethodRef = useRef(null)
   const [nextPeriodConfirm, setNextPeriodConfirm] = useState({ open: false, payment: null, resolver: null })
   const [estimateModal,  setEstimateModal] = useState({ open: false, payment: null })
   const [abonarModal,    setAbonarModal]   = useState({ open: false, payment: null })
@@ -967,7 +974,14 @@ export default function App() {
     // `registerContribution` — nunca reparte, nunca genera el reflejo en el
     // Home de quien pagó, nunca revisa si ya se completó. Un variable
     // personal (sin `space_id`) se queda exactamente igual que siempre.
-    if (payment.is_variable && !payment.space_id) { setVarModal({ open: true, payment, resolver: null }); return }
+    // Estado de cuenta fuera de Inicio: mismo flujo (monto fijo + método).
+    if (payment.is_card_statement && !payment.space_id) {
+      const amount = await requestVariableAmount(payment)
+      if (amount != null) confirmVariablePaid(payment, amount)
+      return
+    }
+    // Con monto ya capturado se paga directo (v0.9.740); sin monto, se pide.
+    if (payment.is_variable && !payment.space_id && !(Number(payment.amount) > 0)) { setVarModal({ open: true, payment, resolver: null }); return }
     // Parcialidad: el check paga directo el monto de referencia de ESTE
     // pago (sin abrir el modal de Abonar — eso vive solo en el menú de 3
     // puntos) pasando por la misma lógica de abonarInstallment, para que el
@@ -1008,6 +1022,9 @@ export default function App() {
   // `null` si se cancela) para que PayCard decida cómo continuar su
   // animación (mostrar "Pagado" y salir, o revertir el pintado).
   function requestVariableAmount(payment) {
+    if (payment.is_card_statement) {
+      return new Promise(resolve => setStmtModal({ open: true, payment, resolver: resolve }))
+    }
     return new Promise(resolve => {
       setVarModal({ open: true, payment, resolver: resolve })
     })
@@ -1037,7 +1054,12 @@ export default function App() {
     // original, porque nada lo ha tocado todavía.
     if (payment.is_card_statement) {
       const originalDue = Number(payment.amount)
-      const { error, reverted, busy } = await markPaid(payment.id, amount)
+      // Método con el que se pagó (solo Efectivo o Débito, v0.9.740).
+      const chosen = stmtMethodRef.current?.id === payment.id ? stmtMethodRef.current : null
+      stmtMethodRef.current = null
+      const payCard = chosen?.methodId ? paymentMethods.methods.find(m => m.id === chosen.methodId) : null
+      const methodFields = chosen ? { payment_method_id: payCard ? payCard.id : null, payment_method_kind: payCard ? payCard.kind : 'cash' } : undefined
+      const { error, reverted, busy } = await markPaid(payment.id, amount, methodFields)
       if (reverted || busy) return
       if (error) { showToast(t('app.toast.registerPaymentError')); return }
       const shortfall = Math.round((originalDue - amount) * 100) / 100
@@ -1091,6 +1113,17 @@ export default function App() {
     if (reverted || busy) return
     if (error) showToast(t('app.toast.registerPaymentError'))
     else showToast(t('app.toast.registered', { name: payment.name, amount: fmt(amount) }))
+  }
+  function handleStmtConfirm({ amount, methodId }) {
+    const { payment, resolver } = stmtModal
+    stmtMethodRef.current = payment ? { id: payment.id, methodId } : null
+    setStmtModal({ open: false, payment: null, resolver: null })
+    if (resolver) resolver(amount)
+  }
+  function handleStmtClose() {
+    const { resolver } = stmtModal
+    setStmtModal({ open: false, payment: null, resolver: null })
+    if (resolver) resolver(null)
   }
   // handleVarModalClose: reemplaza el onClose inline de VariableAmountModal
   // (varModal) — si el modal se abrió vía requestVariableAmount (resolver
@@ -1956,6 +1989,14 @@ export default function App() {
         customCategories={profile.custom_categories || []}
         onOpenPremium={() => openPremiumPage(false)}
         onUpdateProfile={updateProfile}
+      />
+      <PayStatementModal
+        open={stmtModal.open}
+        payment={stmtModal.payment}
+        title={stmtModal.payment ? t('cards.payStatement.title', { name: cardLabelOf(stmtModal.payment.card_statement_for) }) : ''}
+        methods={paymentMethods.methods}
+        onConfirm={handleStmtConfirm}
+        onClose={handleStmtClose}
       />
       <VariableAmountModal
         open={varModal.open}

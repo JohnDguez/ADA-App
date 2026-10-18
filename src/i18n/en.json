@@ -238,6 +238,9 @@
     "upcomingLabel": "Upcoming payments",
     "upcomingSub": "Reminder days before the due date",
     "notifyAt": "We'll notify you at",
+    "cardsLabel": "Credit cards",
+    "cardsStatus_one": "Statement cut and due date · {{count}} day before",
+    "cardsStatus_other": "Statement cut and due date · {{count}} days before",
     "tileOn": "On",
     "tileOff": "Off",
     "hourSheetTitle": "Notification time",
@@ -468,6 +471,7 @@
     "menuAriaLabel": "More options"
   },
   "recurrentDetailPanel": {
+    "totalPaidLabel": "Total paid",
     "paidLabel": "Paid",
     "nextLabel": "Next",
     "completedLabel": "Completed",
@@ -1707,6 +1711,19 @@
     },
     "alreadyAbonado": "Already paid {{amount}}",
     "earlyPaymentName": "Payment to {{name}}",
+    "payStatement": {
+      "title": "Pay {{name}}",
+      "subtitle": "Statement balance of {{amount}}",
+      "fullLabel": "Full payment",
+      "partialLabel": "Amount to pay",
+      "noteFull": "You are paying the full statement balance.",
+      "notePartial": "{{amount}} will remain pending and carry over to the next statement.",
+      "noteOver": "You are paying {{amount}} extra; it will be credited on your next statement.",
+      "switchPartial": "Pay a different amount",
+      "switchFull": "Pay the full balance",
+      "confirmFull": "Pay {{amount}}",
+      "confirmPartial": "Pay {{amount}}"
+    },
     "payNow": {
       "button": "Pay now",
       "title": "Pay {{name}} now",
@@ -2001,6 +2018,10 @@
     }
   },
   "cutNotice": {
+    "lineCutToday": "Cuts today",
+    "lineCutDate": "Cuts {{date}}",
+    "linePay": "due {{date}}",
+    "more": "and {{count}} more",
     "titleOne": "{{name}} closes its statement {{when}}",
     "titleMany": "{{count}} cards close their statement this period",
     "subtitle": "Tap to see your cards",

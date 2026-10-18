@@ -1,7 +1,7 @@
 import { useState, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import i18n from '../i18n'
-import { AlertCircle, Clock, Bell, Trash2, CheckCheck, X, Goal, AlertTriangle, Crown, ChevronRight, ChevronDown } from 'lucide-react'
+import { AlertCircle, Clock, Bell, Trash2, CheckCheck, X, Goal, AlertTriangle, Crown, ChevronRight, ChevronDown, CreditCard } from 'lucide-react'
 import { getMonthsShort } from '../lib/utils'
 import styles from './NotificationsPanel.module.css'
 import { AvatarImg } from './AvatarImg'
@@ -25,6 +25,9 @@ function timeAgo(dateStr) {
 function NotifIcon({ type }) {
   if (type === 'overdue')       return <AlertCircle size={16} color="var(--danger)" />
   if (type === 'due_today')     return <Clock size={16} color="var(--soon-color)" />
+  // Tarjetas de crédito (v0.9.740): corte y recordatorio en ámbar, vencimiento en rojo.
+  if (type === 'card_cut' || type === 'card_reminder') return <CreditCard size={16} color="var(--soon-color)" />
+  if (type === 'card_due')      return <CreditCard size={16} color="var(--danger)" />
   if (type === 'cobro_day')     return <Bell size={16} color="var(--accent)" />
   if (type === 'goal_deadline') return <Goal size={16} color="var(--soon-color)" />
   // Prueba de 7 días por terminar (v0.9.508) — mismo dorado que el resto
@@ -169,8 +172,8 @@ function SwipeRow({ onDelete, children }) {
 }
 
 function accentFor(type) {
-  if (type === 'overdue' || type === 'sync_error') return 'var(--danger)'
-  if (type === 'due_today') return 'var(--soon-color)'
+  if (type === 'overdue' || type === 'sync_error' || type === 'card_due') return 'var(--danger)'
+  if (type === 'due_today' || type === 'card_cut' || type === 'card_reminder') return 'var(--soon-color)'
   return null
 }
 

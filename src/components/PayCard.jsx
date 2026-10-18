@@ -203,7 +203,9 @@ function PayCardFull({ payment: p, cfg, paymentMethodsList = [], onChangeMethod,
       // debido), y editarlo hacia abajo o hacia arriba es justo cómo se
       // registra un pago parcial o de más (App.jsx → confirmVariablePaid
       // calcula el acarreo contra el monto original).
-      if (p.is_variable || p.is_card_statement) {
+      // Variable CON monto ya capturado: no se vuelve a pedir (v0.9.740); el
+      // monto se cambia desde "Editar monto". Sin monto, sí se pide.
+      if ((p.is_variable && !(Number(p.amount) > 0)) || p.is_card_statement) {
         setPhase('waitingModal')
         const amount = await onRequestVariableAmount(p)
         if (amount == null) {

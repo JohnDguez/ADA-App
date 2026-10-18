@@ -225,8 +225,12 @@ export function RecurrentDetailPanel({
         </>
       ) : (
         <>
-          {!master.is_variable && <div className={styles.bigAmount}>{fmt(master.amount)}</div>}
+          {/* Total pagado histórico (v0.9.740): grande, y debajo la frecuencia,
+              categoría y (si aplica) el monto fijo. Un pospuesto no suma. */}
+          <div className={styles.bigAmount}>{fmt(paidSum)}</div>
+          <div className={styles.bigLabel}>{t('recurrentDetailPanel.totalPaidLabel')}</div>
           <div className={styles.subtext}>
+            {!master.is_variable && <>{fmt(master.amount)} · </>}
             {getFrequencyLabel(master.recur_freq)} · {getCategoryLabel(master.category)}
             {master.is_variable && <span className={styles.variableBadge}>{t('paymentsPage.variable')}</span>}
           </div>

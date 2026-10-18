@@ -20,7 +20,7 @@
 
 .notice {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 12px;
   /* Espacio a la derecha para el botón de cerrar, que va aparte. */
   padding: 14px 56px 14px 16px;
@@ -77,4 +77,40 @@
 
 .close:focus-visible {
   outline: 2px solid var(--accent);
+}
+
+/* Una línea por tarjeta (v0.9.740) */
+.lines {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.line {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 12px;
+}
+
+.lineName {
+  font-weight: 600;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+
+.lineText {
+  color: var(--muted);
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.lineMore {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--accent);
 }

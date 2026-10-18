@@ -1161,10 +1161,13 @@ export function usePayments(userId, activeSpaceId = null, activeSpaceName = null
   // ─────────────────────────────────────────────────────────────────────────
   // MARCAR COMO PAGADO (recurrentes + parcialidades)
   // ─────────────────────────────────────────────────────────────────────────
-  async function markPaid(id, amount) {
+  // `extra` (v0.9.740): campos adicionales del mismo UPDATE, p. ej. el método
+  // con el que se pagó un estado de cuenta ({ payment_method_id, payment_method_kind }).
+  async function markPaid(id, amount, extra) {
     const payment = payments.find(p => p.id === id)
     const updates = { is_paid: true, paid_at: new Date().toISOString() }
     if (amount !== undefined) updates.amount = amount
+    if (extra) Object.assign(updates, extra)
 
     // Optimista (v0.9.480): el pago pasa a pagados al instante. Lo que sigue
     // (rellenar la cola de 2 pendientes) corre ya confirmado, en segundo

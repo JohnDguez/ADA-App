@@ -28,3 +28,8 @@ export function cutDateLong(date) {
 export function dueDateLong(date) {
   return new Intl.DateTimeFormat(intlLocale(), { day: 'numeric', month: 'long' }).format(date)
 }
+
+// "22 oct" (línea corta por tarjeta en el aviso con varias tarjetas).
+export function dayMonthShort(date) {
+  return new Intl.DateTimeFormat(intlLocale(), { day: 'numeric', month: 'short' }).format(date).replace('.', '')
+}

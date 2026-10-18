@@ -2,7 +2,9 @@ const webpush = require('web-push')
 const { createClient } = require('@supabase/supabase-js')
 const {
   resolveLang, overdueText, dueTodayText, upcomingText, cobroDayText, goalDeadlineText, trialEndingText,
+  cardDateLabel, cardCutText, cardReminderText, cardDueText,
 } = require('./_notifyText')
+const { cardAlerts, cardName } = require('./_cardAlerts')
 const { sendFcm, isFcmConfigured, getFcmInitError } = require('./_fcm')
 const applyCors = require('./_cors')
 
@@ -156,6 +158,54 @@ async function collectReminders(scope, profile, todayStr, today, lang) {
     }
   }
 
+  return notifications
+}
+
+// Tarjetas de crédito (v0.9.740) — corte, recordatorio previo al vencimiento
+// (usa los mismos "días antes" que Próximos) y vencimiento. SOLO personal
+// (las tarjetas no se comparten) y se evalúa una vez por usuario, no por
+// espacio, así que llega aunque el usuario abra un espacio compartido. Se
+// puede apagar con `profiles.notif_cards`. Un aviso de recordatorio o
+// vencimiento se omite si el estado de cuenta de ese vencimiento ya está
+// pagado. Varias tarjetas del mismo tipo el mismo día se agrupan en un aviso.
+async function collectCardReminders(userId, profile, todayStr, lang) {
+  if (profile.notif_cards === false) return []
+  const { data: cards } = await supabase
+    .from('payment_methods')
+    .select('id, kind, bank, alias, cut_day, due_day')
+    .eq('user_id', userId).eq('kind', 'credit')
+  let alerts = cardAlerts(cards, todayStr, profile.notif_days_before ?? 3)
+  if (alerts.length === 0) return []
+
+  const dueAlerts = alerts.filter(a => a.type !== 'card_cut')
+  if (dueAlerts.length > 0) {
+    const { data: paid } = await supabase
+      .from('payments')
+      .select('card_statement_for, due_date')
+      .eq('user_id', userId).eq('is_card_statement', true).eq('is_paid', true)
+      .in('card_statement_for', dueAlerts.map(a => a.card.id))
+      .in('due_date', [...new Set(dueAlerts.map(a => a.dueDate))])
+    const paidKeys = new Set((paid || []).map(r => `${r.card_statement_for}|${r.due_date}`))
+    alerts = alerts.filter(a => a.type === 'card_cut' || !paidKeys.has(`${a.card.id}|${a.dueDate}`))
+  }
+
+  const days = profile.notif_days_before ?? 3
+  const notifications = []
+  for (const type of ['card_cut', 'card_reminder', 'card_due']) {
+    const group = alerts.filter(a => a.type === type)
+    if (group.length === 0) continue
+    const names = group.map(a => cardName(a.card, lang))
+    const due = group[0].dueDate ? cardDateLabel(lang, group[0].dueDate) : null
+    const { title, body } =
+      type === 'card_cut' ? cardCutText(lang, names, group.length === 1 ? due : null)
+      : type === 'card_reminder' ? cardReminderText(lang, names, days, due)
+      : cardDueText(lang, names)
+    notifications.push({
+      type, title, body,
+      tag: `${type.replace('_', '-')}-${todayStr}`, urgent: type === 'card_due', url: '/',
+      space_name: null,
+    })
+  }
   return notifications
 }
 
@@ -409,10 +459,15 @@ module.exports = async function handler(req, res) {
     const userIds = [...new Set([...(subs || []).map(s => s.user_id), ...(fcmRows || []).map(r => r.user_id)])]
     if (userIds.length === 0) return res.json({ sent: 0, users: 0 })
 
-    const { data: profiles, error: profilesError } = await supabase
-      .from('profiles')
-      .select('id, notif_cobro_day, notif_due_today, notif_upcoming, notif_overdue, notif_days_before, notif_hour, timezone, cobro_freq, cobro_weekday, notif_last_sent, stripe_subscription_status, trial_ends_at, trial_reminder_sent, language, currency')
-      .in('id', userIds)
+    // `notif_cards` (v0.9.740) puede no existir todavía si falta correr su SQL:
+    // se reintenta sin esa columna para no tumbar todo el cron.
+    const PROFILE_COLS = 'id, notif_cobro_day, notif_due_today, notif_upcoming, notif_overdue, notif_days_before, notif_hour, timezone, cobro_freq, cobro_weekday, notif_last_sent, stripe_subscription_status, trial_ends_at, trial_reminder_sent, language, currency'
+    let { data: profiles, error: profilesError } = await supabase
+      .from('profiles').select(`${PROFILE_COLS}, notif_cards`).in('id', userIds)
+    if (profilesError) {
+      ;({ data: profiles, error: profilesError } = await supabase
+        .from('profiles').select(PROFILE_COLS).in('id', userIds))
+    }
 
     if (profilesError) return res.status(500).json({ error: profilesError.message })
 
@@ -471,6 +526,9 @@ module.exports = async function handler(req, res) {
       // vida de cada meta, así que no genera ruido repetido.
       const goalNotifs = await collectGoalDeadlineReminders(userId, todayStr, lang, profile.currency)
       notifications = notifications.concat(goalNotifs)
+
+      // Tarjetas de crédito: corte, recordatorio y vencimiento (v0.9.740).
+      notifications = notifications.concat(await collectCardReminders(userId, profile, todayStr, lang))
 
       // Prueba de 7 días — aviso único de "termina en 2 días" (v0.9.508).
       // No depende de ninguna preferencia de notificaciones (mismo criterio

@@ -88,6 +88,12 @@
   cursor: pointer;
   transition: background .2s;
 }
+.tileWide {
+  grid-column: span 2;
+  flex-direction: row;
+  align-items: center;
+  min-height: 0;
+}
 .tileOn { background: color-mix(in srgb, var(--accent) 16%, var(--surface)); }
 .tileIcon {
   width: 32px;

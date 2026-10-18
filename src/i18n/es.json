@@ -238,6 +238,9 @@
     "upcomingLabel": "Próximos pagos",
     "upcomingSub": "Recordatorio días antes del vencimiento",
     "notifyAt": "Te avisamos a las",
+    "cardsLabel": "Tarjetas de crédito",
+    "cardsStatus_one": "Corte y vencimiento · {{count}} día antes",
+    "cardsStatus_other": "Corte y vencimiento · {{count}} días antes",
     "tileOn": "Activado",
     "tileOff": "Apagado",
     "hourSheetTitle": "Hora del aviso",
@@ -468,6 +471,7 @@
     "menuAriaLabel": "Más opciones"
   },
   "recurrentDetailPanel": {
+    "totalPaidLabel": "Total pagado",
     "paidLabel": "Pagado",
     "nextLabel": "Próximo",
     "completedLabel": "Completados",
@@ -1707,6 +1711,19 @@
     },
     "alreadyAbonado": "Ya abonaste {{amount}}",
     "earlyPaymentName": "Abono a {{name}}",
+    "payStatement": {
+      "title": "Pagar {{name}}",
+      "subtitle": "Estado de cuenta por {{amount}}",
+      "fullLabel": "Pago completo",
+      "partialLabel": "Monto a abonar",
+      "noteFull": "Pagas el total del estado de cuenta.",
+      "notePartial": "Quedarán {{amount}} pendientes y pasarán al siguiente estado de cuenta.",
+      "noteOver": "Pagas {{amount}} de más; quedarán a tu favor en el siguiente estado de cuenta.",
+      "switchPartial": "Abonar otro monto",
+      "switchFull": "Pagar el total",
+      "confirmFull": "Pagar {{amount}}",
+      "confirmPartial": "Abonar {{amount}}"
+    },
     "payNow": {
       "button": "Pagar ahora",
       "title": "Pagar {{name}} ahora",
@@ -2001,6 +2018,10 @@
     }
   },
   "cutNotice": {
+    "lineCutToday": "Corta hoy",
+    "lineCutDate": "Corta {{date}}",
+    "linePay": "paga {{date}}",
+    "more": "y {{count}} más",
     "titleOne": "{{name}} hace corte {{when}}",
     "titleMany": "{{count}} tarjetas hacen corte este periodo",
     "subtitle": "Toca para ver tus tarjetas",

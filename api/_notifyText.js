@@ -76,6 +76,46 @@ function trialEndingText(lang) {
   }
 }
 
+
+// ── Tarjetas de crédito (v0.9.740, send-notifications.js) ───────────────
+// `due` = fecha límite ya formateada ("22 de octubre" / "October 22").
+function cardDateLabel(lang, dateStr) {
+  const [y, m, d] = dateStr.split('-').map(Number)
+  return new Intl.DateTimeFormat(lang === 'en' ? 'en-US' : 'es-MX', { day: 'numeric', month: 'long', timeZone: 'UTC' })
+    .format(new Date(Date.UTC(y, m - 1, d)))
+}
+
+function cardCutText(lang, names, due) {
+  if (names.length > 1) {
+    return lang === 'en'
+      ? { title: `${names.length} cards have their statement cut today`, body: names.join(', ') }
+      : { title: `${names.length} tarjetas hacen corte hoy`, body: names.join(', ') }
+  }
+  if (lang === 'en') return { title: `${names[0]} has its statement cut today`, body: due ? `The payment for this statement is due on ${due}.` : 'Review your statement in My cards.' }
+  return { title: `${names[0]} hace corte hoy`, body: due ? `El pago de este estado de cuenta vence el ${due}.` : 'Revisa tu estado de cuenta en Mis tarjetas.' }
+}
+
+function cardReminderText(lang, names, days, due) {
+  const dayWord = lang === 'en' ? (days > 1 ? 'days' : 'day') : (days > 1 ? 'días' : 'día')
+  if (names.length > 1) {
+    return lang === 'en'
+      ? { title: `${names.length} card payments due in ${days} ${dayWord}`, body: names.join(', ') }
+      : { title: `${names.length} pagos de tarjeta vencen en ${days} ${dayWord}`, body: names.join(', ') }
+  }
+  if (lang === 'en') return { title: `${names[0]} payment in ${days} ${dayWord}`, body: `Due on ${due}. Review My cards.` }
+  return { title: `Pago de ${names[0]} en ${days} ${dayWord}`, body: `Vence el ${due}. Revisa Mis tarjetas.` }
+}
+
+function cardDueText(lang, names) {
+  if (names.length > 1) {
+    return lang === 'en'
+      ? { title: `${names.length} card payments are due today`, body: names.join(', ') }
+      : { title: `Hoy vencen ${names.length} pagos de tarjeta`, body: names.join(', ') }
+  }
+  if (lang === 'en') return { title: `${names[0]} payment is due today`, body: 'Its deadline is today.' }
+  return { title: `Hoy vence el pago de ${names[0]}`, body: 'Su fecha límite es hoy.' }
+}
+
 // ── Espacio Compartido — pagos (notify-space-change.js) ─────────────────
 const FREQ_LABEL = {
   es: { weekly: 'semanal', biweekly: 'quincenal', monthly: 'mensual' },
@@ -235,6 +275,7 @@ function contributionForYouText(lang, actorName, paymentName, amountStr) {
 module.exports = {
   resolveLang,
   overdueText, dueTodayText, upcomingText, cobroDayText, goalDeadlineText, trialEndingText,
+  cardDateLabel, cardCutText, cardReminderText, cardDueText,
   paymentTitleText, paymentBodyText,
   joinedText, leftText, removedBroadcastText, removedTargetText,
   permissionsChangedText, spaceConfigChangedText, spaceDeletedText, spaceDataClearedText,
