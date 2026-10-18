@@ -228,6 +228,22 @@ export async function restorePurchases(accessToken) {
     // antes de leer `foundDuringRestore`.
     await new Promise((resolve) => setTimeout(resolve, 1500))
 
+    // Compras que YA estaban en el store como "aprobadas" antes de esta
+    // llamada (ej. una compra de Google que quedó sin confirmar porque el
+    // servidor falló al verificarla): `restorePurchases()` no vuelve a
+    // emitir `approved` para una transacción que ya está en ese estado, así
+    // que el listener de arriba no la ve y la restauración decía "no hay
+    // compras" aunque Google la tuviera. Se leen directo del store.
+    const { TransactionState } = window.CdvPurchase
+    const seen = new Set(foundDuringRestore.map((t) => t.transactionId || t.purchaseId))
+    for (const t of store.localTransactions || []) {
+      const id = t.transactionId || t.purchaseId
+      if (t.state === TransactionState.APPROVED && id && !seen.has(id)) {
+        seen.add(id)
+        foundDuringRestore.push(t)
+      }
+    }
+
     if (foundDuringRestore.length === 0) return { restored: 0 }
 
     let restoredCount = 0
