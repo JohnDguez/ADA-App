@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
-import { computeMissingStatements, currentCycleSpend, cardsCuttingInPeriod, upcomingCut } from '../src/lib/cardStatements'
+import { computeMissingStatements, currentCycleSpend, cardsCuttingInPeriod, upcomingCut, cardDebt } from '../src/lib/cardStatements'
 import { dateOf, dateToStr, nextWeeklyFromDate } from '../src/lib/utils'
 
 // Hoy fijo: domingo 18 de octubre de 2026 (día de corte de la tarjeta de prueba).
@@ -81,5 +81,21 @@ describe('semanal con fecha de inicio', () => {
   it('fecha futura: esa es la primera; pasada: avanza de 7 en 7', () => {
     expect(dateToStr(nextWeeklyFromDate('2026-10-26'))).toBe('2026-10-26')
     expect(dateToStr(nextWeeklyFromDate('2026-10-05'))).toBe('2026-10-19')
+  })
+})
+
+describe('por pagar: compra del día del corte, después de pagar el estado de cuenta', () => {
+  const after = card({ last_statement_cut: '2026-10-18' })
+  const stmt = { card_statement_for: 'c1', is_card_statement: true, is_paid: true, amount: 1010.1, paid_at: new Date(2026, 9, 18, 9).toISOString() }
+  const refl = (over = {}) => ({ ...pay('2026-10-18', 1000), payment_method_id: 'c1', payment_method_kind: 'credit', is_paid: true, ...over })
+
+  it('suma los $1,000 al ciclo siguiente (estado pagado, sin arrastre)', () => {
+    expect(cardDebt(after, [stmt, refl()]).total).toBe(1000)
+  })
+  it('un reflejo sin tipo "credit" NO cuenta como deuda (síntoma del reporte)', () => {
+    expect(cardDebt(after, [stmt, refl({ payment_method_kind: 'cash' })]).total).toBe(0)
+  })
+  it('un arrastre negativo de -1000 se come la compra', () => {
+    expect(cardDebt({ ...after, carry_over: -1000 }, [stmt, refl()]).total).toBe(0)
   })
 })
