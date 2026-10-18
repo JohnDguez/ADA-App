@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useLayoutEffect } from 'react'
+import { useState, useEffect, useRef, useLayoutEffect, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Plus, ShieldCheck, Loader2 } from 'lucide-react'
 // Import DIRECTO al archivo del ícono (no el barrel) — mismo criterio que
@@ -12,8 +12,9 @@ import { SegmentedControl } from '../../components/SegmentedControl'
 import { ConfirmDeleteModal } from '../../components/ConfirmDeleteModal'
 import { EmptyState } from '../../components/EmptyState'
 import { getBank } from '../../lib/cardCatalog'
-import { totalOwedOnCard } from '../../lib/cardStatements'
-import { fmt } from '../../lib/utils'
+import { totalOwedOnCard, cardsCuttingInPeriod } from '../../lib/cardStatements'
+import { cutBadgeLabel } from '../../lib/cutLabels'
+import { fmt, today, cobroPeriod } from '../../lib/utils'
 import styles from './SettingsCardsPage.module.css'
 import { markBackHandled, wasBackHandled } from '../../lib/backNav'
 
@@ -30,7 +31,7 @@ import { markBackHandled, wasBackHandled } from '../../lib/backNav'
 
 const PEEK = 58 // lo que asoma cada tarjeta en la pila
 
-function CardStack({ cards, onSelect, personalPayments }) {
+function CardStack({ cards, onSelect, personalPayments, cutsById }) {
   const { t } = useTranslation()
   const wrapRef = useRef(null)
   const [width, setWidth] = useState(0)
@@ -70,6 +71,7 @@ function CardStack({ cards, onSelect, personalPayments }) {
         >
           <CreditCardVisual
             card={c}
+            cutBadge={cutsById[c.id] ? cutBadgeLabel(cutsById[c.id].cutDate, cutsById[c.id].daysLeft, t) : null}
             cycleSpendLabel={
               // FIX v0.9.502 (reportado por Johnatan: "Debes" es muy
               // informal, y ya no es solo la deuda del ciclo — es el
@@ -93,7 +95,7 @@ function CardStack({ cards, onSelect, personalPayments }) {
   )
 }
 
-export function SettingsCardsPage({ paymentMethods, personalPayments = null, sharedSpaces = null, onPayCardNow, onSettlePlan, onBack, slideClass }) {
+export function SettingsCardsPage({ profile, paymentMethods, personalPayments = null, sharedSpaces = null, onPayCardNow, onSettlePlan, onBack, slideClass }) {
   const { t } = useTranslation()
   const [kind, setKind] = useState('credit')
   const [formOpen, setFormOpen] = useState(false)
@@ -125,6 +127,13 @@ export function SettingsCardsPage({ paymentMethods, personalPayments = null, sha
 
   const { credit, debit, loaded, addMethod, updateMethod, deleteMethod } = paymentMethods
   const cards = kind === 'credit' ? credit : debit
+  // Tarjetas que hacen corte en lo que resta del periodo del usuario (v0.9.738):
+  // llevan el distintivo de corte en la pila.
+  const cutsById = useMemo(() => {
+    if (!profile) return {}
+    const cuts = cardsCuttingInPeriod(credit, today(), cobroPeriod(profile).end)
+    return Object.fromEntries(cuts.map(c => [c.card.id, c]))
+  }, [credit, profile])
   const selectedCard = selectedId ? paymentMethods.methods.find(m => m.id === selectedId) || null : null
 
   function openAdd() { setEditing(null); setFormOpen(true) }
@@ -229,7 +238,7 @@ export function SettingsCardsPage({ paymentMethods, personalPayments = null, sha
             </div>
           ) : (
             // `key` por tipo: al cambiar de pila, la nueva entra escalonada.
-            <CardStack key={kind} cards={cards} onSelect={c => setSelectedId(c.id)} personalPayments={personalPayments} />
+            <CardStack key={kind} cards={cards} onSelect={c => setSelectedId(c.id)} personalPayments={personalPayments} cutsById={kind === 'credit' ? cutsById : {}} />
           )}
         </div>
       </div>

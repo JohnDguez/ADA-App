@@ -94,6 +94,22 @@
   background: var(--white-a20);
 }
 
+/* Corte próximo (v0.9.738): sobre fondo sólido de la superficie para que se lea
+   igual sobre cualquier color de banco; texto en el tono de advertencia
+   (Regla 11.1). */
+.cutBadge {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 7px;
+  border-radius: 5px;
+  background: var(--surface);
+  color: var(--warn-tone);
+}
+
 .number {
   position: relative;
   z-index: 1;

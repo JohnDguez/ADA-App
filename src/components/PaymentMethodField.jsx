@@ -2,6 +2,9 @@ import { useTranslation } from 'react-i18next'
 import { Wallet, CreditCard, Plus } from 'lucide-react'
 import { Select } from './Select'
 import { getBank, bankColorVar } from '../lib/cardCatalog'
+import { upcomingCut } from '../lib/cardStatements'
+import { cutDateLong } from '../lib/cutLabels'
+import { dateOf, todayStr } from '../lib/utils'
 import styles from './PaymentMethodField.module.css'
 
 // "Se paga con" (v0.9.487, entrega B). Efectivo (valor null) + las tarjetas
@@ -20,7 +23,12 @@ export function cardLabel(card, t) {
 // `allowCredit={false}`: sin tarjetas de crédito en la lista (aportar a metas y
 // al Fondo Compartido — crédito no baja el disponible, así que el progreso
 // y el disponible dejarían de cuadrar).
-export function PaymentMethodField({ methods, value, onChange, label, onAddCard = null, allowCredit = true, sheet = false }) {
+// `payDate` ('YYYY-MM-DD', opcional, v0.9.738): fecha del cargo; con tarjeta de
+// crédito, si cae a 2 días o menos del corte (o el mismo día) se avisa a qué
+// estado de cuenta entra. Por omisión, hoy.
+const CUT_NOTICE_DAYS = 2
+
+export function PaymentMethodField({ methods, value, onChange, label, onAddCard = null, allowCredit = true, sheet = false, payDate = null }) {
   const { t } = useTranslation()
   const debit = methods.filter(m => m.kind === 'debit')
   const credit = allowCredit ? methods.filter(m => m.kind === 'credit') : []
@@ -46,6 +54,17 @@ export function PaymentMethodField({ methods, value, onChange, label, onAddCard 
   }
 
   const selected = methods.find(m => m.id === value)
+
+  // Aviso de corte cercano: el día del corte ya pertenece al ciclo siguiente.
+  let cutNote = null
+  if (selected?.kind === 'credit' && selected.cut_day) {
+    const pay = dateOf(payDate || todayStr())
+    const cut = upcomingCut(selected, pay)
+    const left = cut ? Math.round((cut - pay) / 86400000) : null
+    if (left !== null && left <= CUT_NOTICE_DAYS) {
+      cutNote = t(left === 0 ? 'paymentMethod.cutSameDay' : 'paymentMethod.cutSoon', { date: cutDateLong(cut) })
+    }
+  }
 
   return (
     <>
@@ -81,6 +100,7 @@ export function PaymentMethodField({ methods, value, onChange, label, onAddCard 
       {selected?.kind === 'credit' && (
         <div className={styles.note}>{t('paymentMethod.creditNote')}</div>
       )}
+      {cutNote && <div className={styles.cutNote}>{cutNote}</div>}
     </>
   )
 }

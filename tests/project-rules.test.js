@@ -27,6 +27,15 @@ describe('reglas del proyecto', () => {
     expect({ onlyEs, onlyEn }).toEqual({ onlyEs: [], onlyEn: [] })
   })
 
+  it('los textos de la interfaz en español no usan lenguaje informal ni mexicanismos (Regla 51)', () => {
+    const es = JSON.parse(readFileSync(join(root, 'src/i18n/es.json'), 'utf8'))
+    const flat = (o, p = '') => Object.entries(o).flatMap(([k, v]) =>
+      v && typeof v === 'object' ? flat(v, p + k + '.') : [[p + k, String(v)]])
+    const banned = /\b(roomies?|depa|chiquit[oa]s?|nomás|ahorita|chamba|lana|plata|corta el|cortan el)\b/i
+    const bad = flat(es).filter(([, v]) => banned.test(v)).map(([k]) => k)
+    expect(bad).toEqual([])
+  })
+
   it('ningún .module.css lleva colores fijos (hex/rgb/rgba); se usan variables de index.css', () => {
     const files = walk(join(root, 'src')).filter(f => f.endsWith('.module.css'))
     const bad = []

@@ -12,10 +12,12 @@ import { TipCard } from '../components/TipCard'
 import { PaidByStack } from '../components/PaidByStack'
 import { HalfRing } from '../components/HalfRing'
 import { LunaStrip } from '../components/LunaStrip'
+import { CutNotice } from '../components/CutNotice'
+import { cardsCuttingInPeriod } from '../lib/cardStatements'
 import { Bone, RailSkeleton } from '../components/SkeletonLoader'
 import { getLunaState } from '../lib/lunaState'
 import { syncLunaWidget } from '../lib/lunaWidget'
-import { fmt, cobroPeriod, nextCobroPeriod, getPagarEsteCobro, daysDiff, dateOf, dateToStr, getMonths, getMonthsShort, getCategoryLabel } from '../lib/utils'
+import { fmt, today, cobroPeriod, nextCobroPeriod, getPagarEsteCobro, daysDiff, dateOf, dateToStr, getMonths, getMonthsShort, getCategoryLabel } from '../lib/utils'
 import styles from './HomePage.module.css'
 import { kbdIf } from '../lib/a11y'
 
@@ -262,6 +264,16 @@ export function HomePage({ payments, dataLoading = false, profile, spaceSwitcher
       upcoming, nextPeriodKnownTotal, nextPeriodFixedCount, nextPeriodPendingVariableCount,
     }
   }, [payments, profile])
+
+  // Tarjetas de crédito que hacen corte en lo que resta del periodo (v0.9.738).
+  // Solo en Personal: las tarjetas no se comparten en un Espacio Compartido.
+  const todayKey = dateToStr(today())
+  const cutsInPeriod = useMemo(
+    () => (activeSpaceId ? [] : cardsCuttingInPeriod(paymentMethodsList.filter(m => m.kind === 'credit'), today(), derived.end)),
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- `todayKey` hace que "hoy/mañana" se recalcule al cambiar el día
+    [activeSpaceId, paymentMethodsList, derived.end, todayKey]
+  )
+  const cutPeriodKey = dateToStr(derived.start)
 
   // "Día X de Y" del periodo actual (fechas locales a medianoche; round
   // absorbe el cambio de horario de verano).
@@ -566,6 +578,11 @@ export function HomePage({ payments, dataLoading = false, profile, spaceSwitcher
                   />
                 </div>
               )}
+
+              {/* Recordatorio de corte de tarjetas (v0.9.738): entre los pagados y
+                  las secciones pendientes — arriba de Vencidos si los hay, y si
+                  no, arriba de los pendientes del periodo. */}
+              <CutNotice cuts={cutsInPeriod} periodKey={cutPeriodKey} onOpen={() => onGoSettingsSection?.('cards')} />
 
               {/* Bug real corregido (agosto 2026): esta sección era la única
                   de las 3 (Vencidos / Pagos del periodo / Próximo periodo)

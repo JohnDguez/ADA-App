@@ -17,6 +17,13 @@
   margin-top: 6px;
 }
 
+/* Aviso de corte cercano (v0.9.738) — advertencia: --warn-tone (Regla 11.1). */
+.cutNote {
+  font-size: 12px;
+  color: var(--warn-tone);
+  margin-top: 6px;
+}
+
 /* Selector + botón "Añadir tarjeta" en la misma fila */
 .row {
   display: flex;

@@ -1151,7 +1151,7 @@
     "premiumCtaText": "Track expenses with your partner, roommates, or anyone you want — up to 2 more people, in a space separate from your personal account.",
     "createTitle": "Create Shared Space",
     "spaceNameLabel": "Space name",
-    "spaceNamePlaceholder": "e.g. Apartment with Alex",
+    "spaceNamePlaceholder": "e.g. Shared home",
     "creating": "Creating…",
     "create": "Create",
     "nameRequiredError": "Give the space a name",
@@ -1769,7 +1769,9 @@
     "payConfirm": "Pay",
     "deletedCredit": "Deleted credit card",
     "deletedDebit": "Deleted debit card",
-    "deletedCard": "Deleted card"
+    "deletedCard": "Deleted card",
+    "cutSoon": "This card's statement closes on {{date}}. This payment will be included in it.",
+    "cutSameDay": "This card's statement closes on {{date}}. This payment will go to the next statement."
   },
   "apiErrors": {
     "operationFailed": "Operation failed",
@@ -1996,5 +1998,17 @@
       "title": "Use the Shared Fund",
       "text": "If the group pools money in a fund, payments can be covered from there so nobody has to front the cost."
     }
+  },
+  "cutNotice": {
+    "titleOne": "{{name}} closes its statement {{when}}",
+    "titleMany": "{{count}} cards close their statement this period",
+    "subtitle": "Tap to see your cards",
+    "today": "today",
+    "tomorrow": "tomorrow",
+    "onDate": "on {{date}}",
+    "close": "Dismiss notice",
+    "badgeToday": "Closes today",
+    "badgeTomorrow": "Closes tomorrow",
+    "badgeDate": "Closes {{date}}"
   }
 }

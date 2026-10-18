@@ -51,6 +51,22 @@ function dayBefore(d) {
 // sí — quedan como pagos vencidos independientes, igual que cualquier
 // recurrente atrasado con varios periodos sin pagar.
 
+// CAMBIO v0.9.738 (pedido de Johnatan: "lo que entre hoy en adelante entra
+// hasta el próximo corte"): el día del corte ya NO cierra el ciclo que
+// termina — pertenece al ciclo siguiente. Las ventanas pasan de
+// (corte anterior, corte] a [corte anterior, corte), y el estado de cuenta
+// se genera al INICIO del día de corte (antes se generaba el mismo día, pero
+// incluía lo gastado ese día y perdía lo gastado después de generarlo).
+// `cycleOpenDate` es el primer día que cuenta para el ciclo en curso: el
+// último corte facturado, o el día de alta si la tarjeta nunca se ha
+// facturado. Ojo: `last_statement_cut` de cortes ya facturados antes de este
+// cambio dejó ese día dentro del estado de cuenta viejo; un pago fechado
+// exactamente en ese día se vería en ambos (caso aislado, solo en la
+// transición).
+function cycleOpenDate(card) {
+  return card.last_statement_cut ? dateOf(card.last_statement_cut) : dateOfTimestamp(card.created_at)
+}
+
 function nextOccurrenceAfter(day, after) {
   let y = after.getFullYear(), m = after.getMonth()
   for (let k = 0; k < 3; k++) {
@@ -110,16 +126,16 @@ export function nextCutAfter(card, dateStr) {
 // card.id, `is_card_statement` false (para no contar el estado de cuenta
 // automático, que es una cosa distinta) y `is_paid` true.
 export function currentCycleAbonos(card, abonoPayments) {
-  const cycleStart = card.last_statement_cut ? dateOf(card.last_statement_cut) : dayBefore(dateOfTimestamp(card.created_at))
+  const cycleStart = cycleOpenDate(card)
   return abonoPayments
-    .filter(p => dateOfTimestamp(p.paid_at) > cycleStart)
+    .filter(p => dateOfTimestamp(p.paid_at) >= cycleStart)
     .reduce((s, p) => s + Number(p.amount), 0)
 }
 
 export function currentCycleSpend(card, creditPayments) {
-  const cycleStart = card.last_statement_cut ? dateOf(card.last_statement_cut) : dayBefore(dateOfTimestamp(card.created_at))
+  const cycleStart = cycleOpenDate(card)
   return creditPayments
-    .filter(p => (p.paid_at ? dateOfTimestamp(p.paid_at) : dateOf(p.due_date)) > cycleStart)
+    .filter(p => (p.paid_at ? dateOfTimestamp(p.paid_at) : dateOf(p.due_date)) >= cycleStart)
     .reduce((s, p) => s + Number(p.amount), 0)
 }
 
@@ -128,7 +144,12 @@ export function computeMissingStatements(card, creditPayments, todayDate) {
   const cycles = []
   // `last_statement_cut` es un `date` puro (sin hora) — `dateOf()` directo
   // está bien ahí; `created_at` SÍ es timestamp.
+  // `cursor` ubica el siguiente corte; `cycleStart` (primer día que cuenta)
+  // es el último corte facturado o el día de alta. Para una tarjeta nunca
+  // facturada el cursor arranca un día antes del alta, así un corte que cae
+  // el mismo día del alta se evalúa (con ventana vacía, no genera nada).
   let cursor = card.last_statement_cut ? dateOf(card.last_statement_cut) : dayBefore(dateOfTimestamp(card.created_at))
+  let windowStart = cycleOpenDate(card)
   let carryLeft = Number(card.carry_over) || 0
   const planState = getPlans(card).map(p => ({ ...p }))
   let firstCycle = true
@@ -137,13 +158,13 @@ export function computeMissingStatements(card, creditPayments, todayDate) {
   while (guard++ < 60) {
     const cycleEnd = nextOccurrenceAfter(card.cut_day, cursor)
     if (!cycleEnd || cycleEnd > todayDate) break
-    const cycleStart = cursor
+    const cycleStart = windowStart
     const dueDate = nextOccurrenceAfter(card.due_day, cycleEnd)
 
     const spend = creditPayments
       .filter(p => {
         const paidDate = p.paid_at ? dateOfTimestamp(p.paid_at) : dateOf(p.due_date)
-        return paidDate > cycleStart && paidDate <= cycleEnd
+        return paidDate >= cycleStart && paidDate < cycleEnd
       })
       .reduce((s, p) => s + Number(p.amount), 0)
 
@@ -176,6 +197,7 @@ export function computeMissingStatements(card, creditPayments, todayDate) {
     }
     if (firstCycle) firstCycle = false
     cursor = cycleEnd
+    windowStart = cycleEnd
   }
   cycles.plansAfter = planState
   return cycles
@@ -226,4 +248,27 @@ export function cardDebt(card, payments) {
     payments.filter(p => p.payment_method_id === card.id && p.payment_method_kind === 'credit' && p.is_paid)
   )
   return debtBreakdown({ statement, cycleSpend, carry: card.carry_over, card })
+}
+
+// Próximo corte de la tarjeta contando HOY (un corte que cae hoy sigue siendo
+// "el próximo": su estado de cuenta se genera al iniciar el día, pero el
+// aviso de "hoy hace corte" debe verse todo ese día). Devuelve un Date o null.
+export function upcomingCut(card, todayDate) {
+  if (!card?.cut_day) return null
+  return nextOccurrenceAfter(card.cut_day, dayBefore(todayDate))
+}
+
+// Tarjetas de crédito cuyo corte cae dentro del periodo de cobro del usuario
+// que todavía no pasa (de hoy al fin del periodo). Orden: el corte más
+// próximo primero. `periodEnd`: Date (último día del periodo).
+// Regresa [{ card, cutDate, daysLeft }].
+export function cardsCuttingInPeriod(cards, todayDate, periodEnd) {
+  const out = []
+  for (const card of cards || []) {
+    if (card.kind && card.kind !== 'credit') continue
+    const cutDate = upcomingCut(card, todayDate)
+    if (!cutDate || cutDate > periodEnd) continue
+    out.push({ card, cutDate, daysLeft: Math.round((cutDate - todayDate) / 86400000) })
+  }
+  return out.sort((a, b) => a.cutDate - b.cutDate)
 }

@@ -1,4 +1,5 @@
 import { useTranslation } from 'react-i18next'
+import { CalendarClock } from 'lucide-react'
 import { getBank, bankColorVar } from '../lib/cardCatalog'
 import { CardNetworkIcon } from './CardNetworkIcon'
 import styles from './CreditCardVisual.module.css'
@@ -13,7 +14,10 @@ import styles from './CreditCardVisual.module.css'
 // ("Gastado en este corte: $X") que se muestra dentro del layout normal
 // de la tarjeta, entre el número y la fila de abajo — nunca superpuesto,
 // para no chocar con el ícono de red ni la info de corte/límite.
-export function CreditCardVisual({ card, className = '', cycleSpendLabel = null }) {
+// `cutBadge` (opcional, v0.9.738): texto de corte próximo ("Corte hoy") que
+// reemplaza al chip dorado en la esquina — esa zona es la que asoma cuando la
+// tarjeta está tapada en la pila de Mis tarjetas.
+export function CreditCardVisual({ card, className = '', cycleSpendLabel = null, cutBadge = null }) {
   const { t } = useTranslation()
   const bank = getBank(card.bank)
   const isCredit = card.kind === 'credit'
@@ -29,9 +33,11 @@ export function CreditCardVisual({ card, className = '', cycleSpendLabel = null 
           <div className={styles.bankName}>{bank.id === 'otro' ? t('cards.otherBank') : bank.name}</div>
           {card.alias ? <div className={styles.alias}>{card.alias}</div> : null}
         </div>
-        {isDigital
-          ? <span className={styles.badge}>{t('cards.form.digital')}</span>
-          : <span className={styles.chip} />}
+        {cutBadge
+          ? <span className={styles.cutBadge}><CalendarClock size={13} color="var(--warn-tone)" />{cutBadge}</span>
+          : isDigital
+            ? <span className={styles.badge}>{t('cards.form.digital')}</span>
+            : <span className={styles.chip} />}
       </div>
 
       <div className={styles.number}>{card.last4 ? `•••• ${card.last4}` : ''}</div>

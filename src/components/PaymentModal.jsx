@@ -617,7 +617,7 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onSaveC
 
             {methodsAvailable && (
               <div className={styles.fieldGroup}>
-                <PaymentMethodField methods={paymentMethods.methods} value={methodId} onChange={setMethodId} onAddCard={openAddCard} />
+                <PaymentMethodField methods={paymentMethods.methods} value={methodId} onChange={setMethodId} payDate={paidAt || null} onAddCard={openAddCard} />
               </div>
             )}
 
@@ -734,7 +734,7 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onSaveC
                   `PaymentMethodField` ya trae su propio label. */}
               {methodsAvailable && (
                 <div className={styles.fieldGroup}>
-                  <PaymentMethodField methods={paymentMethods.methods} value={methodId} onChange={setMethodId} onAddCard={openAddCard} />
+                  <PaymentMethodField methods={paymentMethods.methods} value={methodId} onChange={setMethodId} payDate={paidAt || null} onAddCard={openAddCard} />
                 </div>
               )}
             </div>
@@ -864,7 +864,7 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onSaveC
             <div className={styles.stepEnter}>
               {methodsAvailable && (
                 <div className={styles.fieldGroup}>
-                  <PaymentMethodField methods={paymentMethods.methods} value={methodId} onChange={setMethodId} onAddCard={openAddCard} sheet />
+                  <PaymentMethodField methods={paymentMethods.methods} value={methodId} onChange={setMethodId} payDate={paidAt || null} onAddCard={openAddCard} sheet />
                 </div>
               )}
               {canLink && (
@@ -946,7 +946,7 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onSaveC
             <>
               {methodsAvailable && (
                 <div className={styles.fieldGroup}>
-                  <PaymentMethodField methods={paymentMethods.methods} value={methodId} onChange={setMethodId} onAddCard={openAddCard} sheet />
+                  <PaymentMethodField methods={paymentMethods.methods} value={methodId} onChange={setMethodId} payDate={paidAt || null} onAddCard={openAddCard} sheet />
                 </div>
               )}
               {mode === 'single' && (

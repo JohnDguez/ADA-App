@@ -33,6 +33,7 @@ import { usePeriodIncome } from './hooks/usePeriodIncome'
 import { usePaymentMethods } from './hooks/usePaymentMethods'
 import { supabase } from './lib/supabase'
 import { computeMissingStatements, currentCycleSpend } from './lib/cardStatements'
+import { useDayKey } from './lib/useDayKey'
 import { planFuture, getPlans, newPlan, applyCharged, applyPaid, revertPaid, revertCharged, applySettle, revertSettle, itemsTotal } from './lib/cardPlans'
 import { findAutoChargeCandidate, readAutoChargeSkip, addAutoChargeSkip, isCreditInstallmentCopy, dueDateNoon } from './lib/installmentCharge'
 import { setActiveCurrency } from './lib/currency'
@@ -568,6 +569,10 @@ export default function App() {
   // nuevo hasta que cambien los datos, gracias al candado `generatingRef`
   // más la idempotencia real de `last_statement_cut` (un segundo intento
   // mientras el primero sigue en curso no encuentra nada que generar).
+  // v0.9.738: `dayKey` cambia al pasar la medianoche o al volver a la app
+  // otro día — el estado de cuenta se genera al INICIO del día de corte, así
+  // que este efecto también debe correr cuando solo cambió la fecha.
+  const dayKey = useDayKey()
   const generatingRef = useRef(false)
   useEffect(() => {
     if (paymentsSpaceId !== null) return // solo Personal
@@ -615,7 +620,7 @@ export default function App() {
       }
       generatingRef.current = false
     })()
-  }, [paymentsSpaceId, paymentsLoading, paymentMethods.loaded, paymentMethods.credit, payments, autoChargeTick])
+  }, [paymentsSpaceId, paymentsLoading, paymentMethods.loaded, paymentMethods.credit, payments, autoChargeTick, dayKey])
 
   const [tab,            setTab]           = useState(() => {
     const hasActiveSession = sessionStorage.getItem('ada_session')

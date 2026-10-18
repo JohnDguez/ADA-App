@@ -240,7 +240,7 @@ export function SettingsPage({ profile, user, onUpdate, onUploadAvatar, onDataDe
     return <SettingsSubscriptionPage profile={profile} onOpenPremium={onOpenPremium} onBack={back} slideClass={slideClass} />
   }
   if (section === 'cards') {
-    return <SettingsCardsPage paymentMethods={paymentMethods} personalPayments={personalPayments} sharedSpaces={sharedSpaces} onPayCardNow={onPayCardNow} onSettlePlan={onSettlePlan} onBack={back} slideClass={slideClass} />
+    return <SettingsCardsPage profile={profile} paymentMethods={paymentMethods} personalPayments={personalPayments} sharedSpaces={sharedSpaces} onPayCardNow={onPayCardNow} onSettlePlan={onSettlePlan} onBack={back} slideClass={slideClass} />
   }
   if (section === 'export') {
     return <SettingsExportPage profile={profile} sharedSpaces={sharedSpaces} onOpenPremium={onOpenPremium} onBack={back} slideClass={slideClass} />
