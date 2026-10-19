@@ -38,3 +38,10 @@
 # capacitor-firebase-authentication trae soporte opcional para Facebook (no lo usamos,
 # el SDK no está incluido): R8 reclamaba com.facebook.AccessToken en el build de release.
 -dontwarn com.facebook.**
+
+# capacitor-mlkit-text-recognition referencia los reconocedores opcionales de otros
+# alfabetos (chino, devanagari, japonés, coreano); no los incluimos (solo latino).
+-dontwarn com.google.mlkit.vision.text.chinese.**
+-dontwarn com.google.mlkit.vision.text.devanagari.**
+-dontwarn com.google.mlkit.vision.text.japanese.**
+-dontwarn com.google.mlkit.vision.text.korean.**
