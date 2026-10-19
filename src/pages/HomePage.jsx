@@ -694,14 +694,15 @@ const UNMARK_EXIT_MS = 320
 // dispara HASTA que la animación de salida terminó, nunca antes, para que
 // la fila nunca desaparezca del arreglo (y se desmonte) a la mitad de su
 // propia animación.
-function PaidCollapseItem({ p, onMarkUnpaid, onViewSource, spaceMembers, onSelect, selected, paymentMethodsList = [] }) {
+function PaidCollapseItem({ p, onMarkUnpaid, onKeep, onRelease, onViewSource, spaceMembers, onSelect, selected, paymentMethodsList = [] }) {
   const { t } = useTranslation()
   const [phase, setPhase] = useState('idle') // idle | filling | labeled | exiting
   const wrapperRef = useRef(null)
   const timers = useRef([])
 
   useEffect(() => {
-    return () => { timers.current.forEach(clearTimeout) }
+    return () => { timers.current.forEach(clearTimeout); onRelease?.(p.id) }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   function after(ms, fn) {
@@ -709,12 +710,19 @@ function PaidCollapseItem({ p, onMarkUnpaid, onViewSource, spaceMembers, onSelec
     timers.current.push(id)
   }
 
+  // v0.9.745: el guardado sale en cuanto termina el pintado (antes esperaba a
+  // que terminara TODA la animación). El cambio local se aplica al instante y
+  // el pago reaparece en Pendientes mientras esta fila termina de salir:
+  // `onKeep` pide al padre que siga dibujando esta fila (copia) aunque el
+  // pago ya no esté en la lista de pagados, y `onRelease` lo suelta al final.
   function handleUndo(e) {
     e.stopPropagation()
     if (phase !== 'idle') return
     setPhase('filling')
     after(UNMARK_FILL_MS, () => {
       setPhase('labeled')
+      onKeep?.(p)
+      const saving = Promise.resolve(onMarkUnpaid(p.id)).catch(() => ({ failed: true }))
       after(UNMARK_HOLD_MS, () => {
         setPhase('exiting')
         const el = wrapperRef.current
@@ -731,14 +739,15 @@ function PaidCollapseItem({ p, onMarkUnpaid, onViewSource, spaceMembers, onSelec
           })
         }
         after(UNMARK_EXIT_MS, async () => {
-          const result = await onMarkUnpaid(p.id)
-          // Si el guardado falló, la fila vuelve a su lugar (antes se quedaba
-          // colapsada a 0 de alto: parecía desmarcada pero seguía pagada).
+          const result = await saving
+          // Si el guardado falló, la fila vuelve a su lugar (el hook ya
+          // revirtió el pago y avisó).
           if (result?.failed) {
             const node = wrapperRef.current
             if (node) { node.style.maxHeight = ''; node.style.marginBottom = '' }
             setPhase('idle')
           }
+          onRelease?.(p.id)
         })
       })
     })
@@ -837,6 +846,10 @@ function PaidCollapseItem({ p, onMarkUnpaid, onViewSource, spaceMembers, onSelec
 // solo en cuanto cambia de periodo, sin lógica extra de limpieza.
 function PaidCollapse({ payments, expanded, onToggle, onMarkUnpaid, onViewSource, spaceMembers, onSelect, selectedId, paymentMethodsList = [] }) {
   const { t } = useTranslation()
+  // Filas que ya no están pagadas pero siguen animando su salida (v0.9.745).
+  const [leaving, setLeaving] = useState({})
+  const keepRow = row => setLeaving(prev => ({ ...prev, [row.id]: row }))
+  const releaseRow = id => setLeaving(prev => { if (!(id in prev)) return prev; const { [id]: _gone, ...rest } = prev; return rest })
   return (
     <div className={styles.paidCollapseRoot}>
       <button
@@ -871,7 +884,8 @@ function PaidCollapse({ payments, expanded, onToggle, onMarkUnpaid, onViewSource
         // descendente CUALQUIER pospuesto quedaba siempre al final. Se usa
         // `postponed_at` (fecha real de la acción), con due_date como
         // último respaldo.
-        const sorted = [...payments].sort((a, b) => {
+        const merged = [...payments, ...Object.values(leaving).filter(l => !payments.some(x => x.id === l.id))]
+        const sorted = merged.sort((a, b) => {
           const da = a.paid_at ? new Date(a.paid_at) : new Date(a.postponed_at || a.due_date)
           const db = b.paid_at ? new Date(b.paid_at) : new Date(b.postponed_at || b.due_date)
           return db - da
@@ -879,7 +893,7 @@ function PaidCollapse({ payments, expanded, onToggle, onMarkUnpaid, onViewSource
         return (
           <div className={styles.paidCollapseList}>
             {sorted.map(p => (
-              <PaidCollapseItem key={p.id} p={p} onMarkUnpaid={onMarkUnpaid} onViewSource={onViewSource} spaceMembers={spaceMembers} onSelect={onSelect} selected={selectedId === p.id} paymentMethodsList={paymentMethodsList} />
+              <PaidCollapseItem key={p.id} p={p} onMarkUnpaid={onMarkUnpaid} onKeep={keepRow} onRelease={releaseRow} onViewSource={onViewSource} spaceMembers={spaceMembers} onSelect={onSelect} selected={selectedId === p.id} paymentMethodsList={paymentMethodsList} />
             ))}
           </div>
         )

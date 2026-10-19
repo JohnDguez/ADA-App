@@ -55,7 +55,6 @@ import { PayStatementModal } from './components/PayStatementModal'
 import { VariableAmountModal } from './components/VariableAmountModal'
 import { ConfirmNextPeriodPayModal } from './components/ConfirmNextPeriodPayModal'
 import { InstallmentAbonarModal } from './components/InstallmentAbonarModal'
-import { systemNotify } from './lib/systemNotify'
 import { SplitContributionsModal } from './components/SplitContributionsModal'
 import { PatchNotesModal } from './components/PatchNotesModal'
 import { ConfirmExitModal } from './components/ConfirmExitModal'
@@ -236,8 +235,6 @@ export default function App() {
   const localNotifs = useLocalNotifications(user?.id)
   function handleSyncError({ payment, action }) {
     showToast(t(`sync.body.${action}`, { name: payment.name }))
-    // Con la app minimizada el toast ya no estará: aviso en la barra del sistema (v0.9.744)
-    systemNotify({ title: t('sync.notifTitle'), body: t(`sync.body.${action}`, { name: payment.name }), tag: `sync-${payment.id}` })
     localNotifs.add({
       type: 'sync_error',
       action,
@@ -254,7 +251,6 @@ export default function App() {
   function handleGoalSyncError({ goal, action }) {
     const name = goal?.name || t('app.toast.fallbackPaymentName')
     showToast(t(`sync.body.${action}`, { name }))
-    systemNotify({ title: t('sync.notifTitle'), body: t(`sync.body.${action}`, { name: name }) })
     localNotifs.add({
       type: 'sync_error',
       action,
@@ -268,7 +264,6 @@ export default function App() {
   function handleIncomeSyncError({ name, action }) {
     const label = name || t('app.toast.fallbackIncomeName')
     showToast(t(`sync.body.${action}`, { name: label }))
-    systemNotify({ title: t('sync.notifTitle'), body: t(`sync.body.${action}`, { name: label }) })
     localNotifs.add({ type: 'sync_error', action, payment_name: label, space_id: paymentsSpaceId || null, tab: 'payments' })
   }
   // Entrega C+ (v0.9.497, pedido de Johnatan: "como vas a dejar eso
@@ -376,7 +371,6 @@ export default function App() {
     const bankName = method ? getBank(method.bank).name : ''
     const label = [bankName, method?.alias].filter(Boolean).join(' ') || t('cards.fallbackName')
     showToast(t(`sync.body.${action}`, { name: label }))
-    systemNotify({ title: t('sync.notifTitle'), body: t(`sync.body.${action}`, { name: label }) })
     localNotifs.add({ type: 'sync_error', action, payment_name: label, tab: 'settings', settings_section: 'cards' })
   }
   // Se reasigna en cada render (es un ref dentro del hook, no provoca
