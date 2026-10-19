@@ -236,7 +236,15 @@ async function handleRtdn(req, res) {
 
     return res.status(200).json({ ok: true, isPremium: isActive, subscriptionState: state })
   } catch (e) {
-    console.error('[verify-play-purchase/rtdn] Error verificando contra Google Play:', e.message)
+    console.error('[verify-play-purchase/rtdn] Error verificando contra Google Play:', e.message,
+      '| packageName del aviso:', payload.packageName || '?',
+      '| tipo:', subNotif.notificationType)
+    // Error de permisos/credenciales de Google (403/401): reintentar no lo
+    // arregla y Pub/Sub reintentaba cada segundo inundando los logs. Se
+    // responde 200 (ack) y queda registrado arriba.
+    if (/insufficient permissions|permission|forbidden|unauthorized/i.test(e.message || '')) {
+      return res.status(200).json({ ok: false, note: 'Error de permisos con Google Play, aviso descartado' })
+    }
     // 500 para que Pub/Sub reintente — puede ser un error transitorio de la
     // API de Google, no necesariamente algo permanente.
     return res.status(500).json({ error: e.message || 'No se pudo verificar la suscripción' })
