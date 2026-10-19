@@ -221,33 +221,44 @@ export async function restorePurchases(accessToken) {
   store.when().approved(collect)
 
   try {
+    // (v0.9.749) Si el store se acaba de inicializar con este mismo toque,
+    // el catálogo y las compras de la cuenta todavía no llegan: restaurar de
+    // inmediato encontraba 0 aunque Google tuviera la suscripción (caso real:
+    // "Confirmar plan" pendiente en Play y "no encontramos compras").
+    if (storeReadyPromise) await storeReadyPromise
     await store.restorePurchases()
-    // No hay, en todas las versiones del plugin, un evento único y
-    // confiable de "la restauración terminó" — se da un margen corto para
-    // que el store termine de emitir approved() por cada compra encontrada
-    // antes de leer `foundDuringRestore`.
-    await new Promise((resolve) => setTimeout(resolve, 1500))
 
-    // Compras que YA estaban en el store como "aprobadas" antes de esta
-    // llamada (ej. una compra de Google que quedó sin confirmar porque el
-    // servidor falló al verificarla): `restorePurchases()` no vuelve a
-    // emitir `approved` para una transacción que ya está en ese estado, así
-    // que el listener de arriba no la ve y la restauración decía "no hay
-    // compras" aunque Google la tuviera. Se leen directo del store.
+    // No hay, en todas las versiones del plugin, un evento único y
+    // confiable de "la restauración terminó": se revisa cada segundo, hasta 6
+    // veces, si apareció alguna compra (por approved() o ya guardada en el
+    // store) y se corta en cuanto hay una.
     const { TransactionState } = window.CdvPurchase
-    const seen = new Set(foundDuringRestore.map((t) => t.transactionId || t.purchaseId))
-    for (const t of store.localTransactions || []) {
-      const id = t.transactionId || t.purchaseId
-      if (t.state === TransactionState.APPROVED && id && !seen.has(id)) {
-        seen.add(id)
-        foundDuringRestore.push(t)
+    const collectLocal = () => {
+      const seen = new Set(foundDuringRestore.map((t) => t.transactionId || t.purchaseId))
+      // Compras que YA estaban en el store como "aprobadas" antes de esta
+      // llamada (ej. una compra de Google que quedó sin confirmar porque el
+      // servidor falló al verificarla): `restorePurchases()` no vuelve a
+      // emitir `approved` para una transacción que ya está en ese estado, así
+      // que el listener de arriba no la ve. Se leen directo del store.
+      for (const t of store.localTransactions || []) {
+        const id = t.transactionId || t.purchaseId
+        if (t.state === TransactionState.APPROVED && id && !seen.has(id)) {
+          seen.add(id)
+          foundDuringRestore.push(t)
+        }
       }
+    }
+    for (let i = 0; i < 6; i++) {
+      await new Promise((resolve) => setTimeout(resolve, 1000))
+      collectLocal()
+      if (foundDuringRestore.length > 0) break
     }
 
     if (foundDuringRestore.length === 0) return { restored: 0 }
 
     let restoredCount = 0
     let lastResult = null
+    let lastError = null
     for (const transaction of foundDuringRestore) {
       const product = transaction.products?.[0]
       const purchaseToken = transaction.transactionId || transaction.purchaseId
@@ -265,8 +276,12 @@ export async function restorePurchases(accessToken) {
         // ejemplo, si lo que está fallando en realidad es la llamada al
         // backend (verify-play-purchase.js) y no la restauración en sí.
         console.error('[Google Play Billing] Error verificando una compra durante restorePurchases:', purchaseToken, e?.message, e)
+        lastError = e
       }
     }
+    // Si Google SÍ tenía compras pero ninguna se pudo verificar, no es
+    // "no hay compras": es un fallo real y debe verse como error.
+    if (restoredCount === 0 && lastError) throw lastError
     return { restored: restoredCount, result: lastResult }
   } finally {
     // El listener temporal se quita siempre, éxito o error — nunca debe
