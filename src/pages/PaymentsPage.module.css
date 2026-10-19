@@ -1222,8 +1222,6 @@
 
 /* ── Parte 6: Pagos realizados — lista ────────────────────────────────────── */
 .paymentsHeaderRow { display: none; }
-.paymentTags { display: none; }
-
 .paymentsList {
   background: var(--surface);
   border-radius: var(--radius);
@@ -1655,14 +1653,7 @@
 
   /* Etiquetas (frecuencia, compartido) bajo el nombre, no dentro de la
      celda de categoría: así ninguna celda se parte en dos líneas. */
-  .paymentTags {
-    display: block;
-    grid-column: 2;
-    grid-row: 2;
-    font-size: 12px;
-    color: var(--muted);
-    margin-top: -6px;
-  }
+  .paymentMethodRow .methodSwatch { display: none; }
   .paymentCategoryRow .paymentRecurrentTag { display: none; }
   .paymentCategoryRow,
   .paymentMethodRow,

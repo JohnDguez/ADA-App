@@ -1900,11 +1900,6 @@ export function PaymentsPage({ payments, dataLoading = false, periodIncome, paym
                             </span>
                           )}
                         </div>
-                        {!p.is_postponed && (p.is_recurrent || p.is_contribution_reflection) && (
-                          <div className={styles.paymentTags}>
-                            {[p.is_recurrent ? (getFrequencyLabel(p.recur_freq) || t('frequency.monthly')) : null, p.is_contribution_reflection ? t('homePage.shared') : null].filter(Boolean).join(' · ')}
-                          </div>
-                        )}
                         <div className={styles.paymentCategoryRow}>
                           {/* Pospuesto (agosto 2026) — mismo criterio que
                               PaidCollapseItem en HomePage.jsx: reemplaza la
