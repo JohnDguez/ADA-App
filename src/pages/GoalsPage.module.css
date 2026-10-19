@@ -102,7 +102,7 @@
 
 .summaryBox {
   flex: 1;
-  background: var(--section-bg);
+  background: var(--surface);
   border-radius: var(--radius);
   padding: 12px 14px;
 }
@@ -128,7 +128,7 @@
 .tabTrack {
   position: relative;
   display: flex;
-  background: var(--section-bg);
+  background: var(--surface);
   border-radius: 999px;
   padding: 4px;
   margin-bottom: 16px;
@@ -421,8 +421,6 @@
   }
 
   .summaryRow { gap: 16px; }
-  .summaryBox,
-  .tabTrack { background: var(--surface); }
   .summaryBoxTablet { display: block; }
   .summaryBox { padding: 14px 16px; }
   .summaryLabel { font-size: 13px; margin-bottom: 3px; }
