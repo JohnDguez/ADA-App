@@ -18,18 +18,22 @@ import { kbd } from '../lib/a11y'
 // todos de un jalón — el progreso mostrado es informativo, nunca bloquea.
 const PRESET_PERCENTAGES = [25, 50, 60, 75]
 
-export function SplitContributionsModal({ open, payment, spaceMembers, currentUserId, getContributions, registerContribution, onSetTotalAmount, onForceSettle, fundBalance, onSetFundContribution, openedBecauseFundInsufficient, paymentMethods = [], onClose }) {
+export function SplitContributionsModal({ open, payment, spaceMembers, currentUserId, getContributions, onCommit, onSetTotalAmount, onForceSettle, fundBalance, onSetFundContribution, openedBecauseFundInsufficient, paymentMethods = [], onClose }) {
   const { t } = useTranslation()
   // Método de pago de MI parte (v0.9.547): solo se muestra en mi propia fila
   // y solo con mis tarjetas. `methodTouched` evita pisar el método ya
   // guardado al editar solo el monto.
   const [methodDraft, setMethodDraft] = useState(null)
   const [methodTouched, setMethodTouched] = useState(false)
-  const [contributions, setContributions] = useState({}) // { [user_id]: amount }
+  const [contributions, setContributions] = useState({}) // { [user_id]: amount } (lo ya guardado en el servidor)
+  // Cambios pendientes de confirmar (v0.9.746): editar una fila ya NO guarda
+  // al instante; se acumulan aquí y se envían juntos con "Confirmar", que cierra
+  // el modal y deja que el pago se marque como pagado en segundo plano.
+  const [staged, setStaged] = useState({})          // { [user_id]: { amount, methodId } }
+  const [stagedFund, setStagedFund] = useState(undefined)
   const [loading,  setLoading]  = useState(false)
   const [openId,   setOpenId]   = useState(null)
   const [draft,    setDraft]    = useState('')
-  const [saving,   setSaving]   = useState(false)
   const [error,    setError]    = useState('')
   const [settling, setSettling] = useState(false)
 
@@ -42,7 +46,7 @@ export function SplitContributionsModal({ open, payment, spaceMembers, currentUs
 
   useEffect(() => {
     if (!open || !payment) return
-    setOpenId(null); setDraft(''); setError('')
+    setOpenId(null); setDraft(''); setError(''); setStaged({}); setStagedFund(undefined)
     setTotalDraft(payment.amount ? String(payment.amount) : '')
     setLoading(true)
     getContributions(payment.id).then(({ contributions: rows }) => {
@@ -97,8 +101,15 @@ export function SplitContributionsModal({ open, payment, spaceMembers, currentUs
 
   const total = Number(payment.amount) || 0
   const needsTotal = payment.is_variable && total <= 0
-  const fundAmount = Number(payment.fund_amount) || 0
-  const registrado = Object.values(contributions).reduce((s, v) => s + v, 0) + fundAmount
+  const fundAmount = stagedFund !== undefined ? stagedFund : (Number(payment.fund_amount) || 0)
+  // Lo guardado + lo pendiente de confirmar
+  const eff = { ...contributions }
+  for (const [id, st] of Object.entries(staged)) {
+    if (st.amount > 0) eff[id] = st.amount
+    else delete eff[id]
+  }
+  const hasChanges = Object.keys(staged).length > 0 || stagedFund !== undefined
+  const registrado = Object.values(eff).reduce((s, v) => s + v, 0) + fundAmount
   const restan = total - registrado
   const done = !needsTotal && restan <= 0
 
@@ -107,7 +118,7 @@ export function SplitContributionsModal({ open, payment, spaceMembers, currentUs
     setOpenId(memberId)
     setMethodDraft(null)
     setMethodTouched(false)
-    setDraft(contributions[memberId] != null ? String(contributions[memberId]) : '')
+    setDraft(eff[memberId] != null ? String(eff[memberId]) : '')
     setError('')
   }
 
@@ -119,7 +130,7 @@ export function SplitContributionsModal({ open, payment, spaceMembers, currentUs
     setError('')
   }
 
-  async function handleSaveFund() {
+  function handleSaveFund() {
     const val = parseFloat(draft)
     if (draft !== '' && (isNaN(val) || val < 0)) { setError(t('settingsCobro.toast.invalidAmount')); return }
     const numVal = val || 0
@@ -134,14 +145,11 @@ export function SplitContributionsModal({ open, payment, spaceMembers, currentUs
         return
       }
     }
-    setSaving(true)
-    const { error: err } = await onSetFundContribution(payment.id, numVal)
-    setSaving(false)
-    if (err) { setError(err.message || t('splitContributionsModal.saveError')); return }
+    setStagedFund(numVal)
     setOpenId(null)
   }
 
-  async function handleSave(memberId) {
+  function handleSave(memberId) {
     const val = parseFloat(draft)
     if (draft !== '' && (isNaN(val) || val < 0)) { setError(t('settingsCobro.toast.invalidAmount')); return }
     // Mientras el pago sigue PENDIENTE, nadie puede poner más de lo que en
@@ -150,28 +158,31 @@ export function SplitContributionsModal({ open, payment, spaceMembers, currentUs
     // servidor resta el sobrante de los demás contribuyentes (ver
     // register-contribution.js, es harina de otro costal).
     if (!payment.is_paid && val > 0) {
-      const available = total - (registrado - (contributions[memberId] || 0))
+      const available = total - (registrado - (eff[memberId] || 0))
       if (Math.round(val * 100) > Math.round(available * 100) + 1) {
         setError(t('splitContributionsModal.exceedsAvailable', { amount: fmt(Math.max(0, available)) }))
         return
       }
     }
-    setSaving(true)
-    const { error: err } = await registerContribution(
-      payment.id, memberId, val || 0,
-      memberId === currentUserId && paymentMethods.length > 0
-        ? (methodTouched ? methodDraft : (contributions[memberId] == null ? null : undefined))
-        : undefined
-    )
-    setSaving(false)
-    if (err) { setError(err.message || t('splitContributionsModal.saveError')); return }
-    setContributions(prev => {
-      const next = { ...prev }
-      if (!val || val <= 0) delete next[memberId]
-      else next[memberId] = val
-      return next
-    })
+    setStaged(prev => ({
+      ...prev,
+      [memberId]: {
+        amount: val || 0,
+        methodId: memberId === currentUserId && paymentMethods.length > 0
+          ? (methodTouched ? methodDraft : (contributions[memberId] == null ? null : undefined))
+          : undefined,
+      },
+    }))
+    setError('')
     setOpenId(null)
+  }
+
+  // Confirmar: se cierra el modal al instante y el guardado (con el pago
+  // marcándose como pagado si ya se cubrió) corre en segundo plano.
+  function handleConfirm() {
+    const rows = Object.entries(staged).map(([memberId, st]) => ({ memberId, amount: st.amount, methodId: st.methodId }))
+    onClose()
+    onCommit(payment.id, { rows, fund: stagedFund })
   }
 
   return (
@@ -234,14 +245,14 @@ export function SplitContributionsModal({ open, payment, spaceMembers, currentUs
                   {openId === FUND_ROW_ID && (
                     <div className={styles.editRow}>
                       <AmountInput autoFocus value={draft} onChange={e => setDraft(e.target.value)} placeholder="0.00" onKeyDown={e => e.key === 'Enter' && handleSaveFund()} className={`field-input ${styles.grow}`} />
-                      <button onClick={handleSaveFund} disabled={saving} className={`btn-primary ${styles.saveInline}`}>{t('buttons.save')}</button>
+                      <button onClick={handleSaveFund} className={`btn-primary ${styles.saveInline}`}>{t('splitContributionsModal.rowDone')}</button>
                     </div>
                   )}
                 </div>
               )}
               {spaceMembers.map(m => {
                 const isOpen = openId === m.user_id
-                const amount = contributions[m.user_id]
+                const amount = eff[m.user_id]
                 return (
                   <div key={m.user_id} className={styles.memberCard}>
                     <div {...kbd} onClick={() => openRow(m.user_id)} className={styles.memberRow}>
@@ -291,7 +302,7 @@ export function SplitContributionsModal({ open, payment, spaceMembers, currentUs
                         )}
                         <div className={styles.editRow}>
                           <AmountInput autoFocus value={draft} onChange={e => setDraft(e.target.value)} placeholder="0.00" onKeyDown={e => e.key === 'Enter' && handleSave(m.user_id)} className={`field-input ${styles.grow}`} />
-                          <button onClick={() => handleSave(m.user_id)} disabled={saving} className={`btn-primary ${styles.saveInline}`}>{t('buttons.save')}</button>
+                          <button onClick={() => handleSave(m.user_id)} className={`btn-primary ${styles.saveInline}`}>{t('splitContributionsModal.rowDone')}</button>
                         </div>
                       </div>
                     )}
@@ -302,12 +313,17 @@ export function SplitContributionsModal({ open, payment, spaceMembers, currentUs
           </>
         )}
 
-        {done && !payment.is_paid && (
+        {hasChanges && (
+          <button onClick={handleConfirm} className={styles.payButton}>
+            {t('splitContributionsModal.confirm')}
+          </button>
+        )}
+        {!hasChanges && done && !payment.is_paid && (
           <button onClick={handlePagar} disabled={settling} className={styles.payButton}>
             {settling ? t('splitContributionsModal.marking') : t('splitContributionsModal.pay')}
           </button>
         )}
-        <button onClick={onClose} className="btn-ghost">{t('buttons.close')}</button>
+        <button onClick={onClose} className="btn-ghost">{hasChanges ? t('buttons.cancel') : t('buttons.close')}</button>
       </div>
     </div>
   )

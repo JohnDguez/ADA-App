@@ -1337,6 +1337,8 @@
     }
   },
   "splitContributionsModal": {
+    "rowDone": "Listo",
+    "confirm": "Confirmar",
     "saveTotalError": "Error al guardar el monto",
     "settleError": "Error al marcar como pagado",
     "fundInsufficientNotice": "El Fondo Compartido no alcanzaba para cubrir todo el pago — ya se aplicó lo máximo posible ({{amount}}). Completa el resto con la nómina de algún miembro.",

@@ -167,7 +167,7 @@ export default function App() {
     updatePayment, updateRecurrentName, updateRecurrentConfig, updateInstallmentConfig, checkPeriodIncomeConflict,
     setSyncErrorHandler,
     abonarInstallment,
-    registerContribution, getContributions, payRemainingContribution, setContributionTotalAmount, unmarkSharedPayment, forceSettlePayment,
+    registerContribution, commitContributions, getContributions, payRemainingContribution, setContributionTotalAmount, unmarkSharedPayment, forceSettlePayment,
     payFromFund, setFundContribution,
     markPaid, markUnpaid, setEstimatedAmount,
     postponePayment,
@@ -1191,6 +1191,13 @@ export default function App() {
     else if (done) showToast(t('payCard.allPaymentsDone'))
     else showToast(t('app.toast.contributionRegistered', { amount: fmt(amount) }))
   }
+  // "Confirmar" del modal de Dividir (v0.9.746): el modal ya se cerró; el
+  // guardado es optimista y, si falla, el hook revierte y avisa.
+  async function handleSplitCommit(paymentId, changes) {
+    const { error, reverted, busy } = await commitContributions(paymentId, changes)
+    if (error && !reverted && !busy) showToast(error.message || t('app.toast.registerPaymentError'))
+    if (!error) loadSpaceCardPayments()
+  }
   function openSplitModal(payment) { setSplitModal({ open: true, paymentId: payment.id, openedBecauseFundInsufficient: false }) }
 
   // Check de la card, opción "Fondo compartido" — paga todo lo que falte
@@ -2075,7 +2082,7 @@ export default function App() {
         spaceMembers={activeSpaceEntry?.space?.members || []}
         currentUserId={user?.id}
         getContributions={getContributions}
-        registerContribution={async (...args) => { const r = await registerContribution(...args); if (!r?.error) loadSpaceCardPayments(); return r }}
+        onCommit={handleSplitCommit}
         onSetTotalAmount={setContributionTotalAmount}
         onForceSettle={forceSettlePayment}
         fundBalance={sharedFund.balance}

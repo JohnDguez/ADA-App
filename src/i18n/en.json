@@ -1337,6 +1337,8 @@
     }
   },
   "splitContributionsModal": {
+    "rowDone": "Done",
+    "confirm": "Confirm",
     "saveTotalError": "Error saving the amount",
     "settleError": "Error marking as paid",
     "fundInsufficientNotice": "The Shared Fund couldn't cover the whole payment — the maximum possible was already applied ({{amount}}). Cover the rest from a member's income.",

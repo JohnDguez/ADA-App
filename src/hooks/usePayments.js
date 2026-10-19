@@ -170,6 +170,42 @@ export function usePayments(userId, activeSpaceId = null, activeSpaceName = null
     })
   }
 
+  // "Confirmar" de Dividir entre miembros (v0.9.746): aplica de golpe los
+  // cambios que se acumularon en el modal. Optimista: el pago cambia al
+  // instante (y queda pagado si lo registrado ya cubre el total); si algún
+  // paso falla se revierte la fila y se avisa. Las bajas van primero para no
+  // chocar con el tope de "lo disponible" del servidor.
+  async function commitContributions(paymentId, { rows = [], fund } = {}) {
+    const before = payments.find(p => p.id === paymentId)
+    const prevByUser = Object.fromEntries((before?.contributors || []).map(c => [c.user_id, Number(c.amount)]))
+    const byUser = { ...prevByUser }
+    rows.forEach(r => { if (r.amount > 0) byUser[r.memberId] = r.amount; else delete byUser[r.memberId] })
+    const contributors = Object.entries(byUser).map(([user_id, amount]) => ({ user_id, amount }))
+    const contributed = contributors.reduce((a, c) => a + c.amount, 0)
+    const prevFund = Number(before?.fund_amount || 0)
+    const fundAmt = fund !== undefined ? fund : prevFund
+    const complete = Number(before?.amount) > 0 && contributed + fundAmt >= Number(before.amount) - 0.005
+    const patch = {
+      contributors, contributed_amount: contributed, fund_amount: fundAmt,
+      ...(complete && !before?.is_paid ? { is_paid: true, paid_at: new Date().toISOString() } : {}),
+    }
+    const ops = rows.map(r => ({ kind: 'row', ...r, delta: r.amount - Number(prevByUser[r.memberId] || 0) }))
+    if (fund !== undefined) ops.push({ kind: 'fund', amount: fund, delta: fund - prevFund })
+    ops.sort((a, b) => a.delta - b.delta)
+    return runOptimisticRemote({
+      id: paymentId, patch, action: 'abonar',
+      call: async () => {
+        for (const op of ops) {
+          const res = op.kind === 'fund'
+            ? await setFundContribution(paymentId, op.amount)
+            : await registerContribution(paymentId, op.memberId, op.amount, op.methodId)
+          if (res?.error) return { error: res.error }
+        }
+        return { error: null }
+      },
+    })
+  }
+
   // El check de la card, opción "Fondo compartido" — paga TODO lo que
   // falte del pago desde el saldo del Fondo, solo si alcanza. Si no
   // alcanza, el endpoint regresa error y quien llama (App.jsx) decide abrir
@@ -1730,7 +1766,7 @@ export function usePayments(userId, activeSpaceId = null, activeSpaceName = null
     updatePayment, updateRecurrentName, updateRecurrentConfig, updateInstallmentConfig, checkPeriodIncomeConflict,
     setSyncErrorHandler,
     abonarInstallment,
-    registerContribution, getContributions, payRemainingContribution, setContributionTotalAmount, unmarkSharedPayment, forceSettlePayment,
+    registerContribution, commitContributions, getContributions, payRemainingContribution, setContributionTotalAmount, unmarkSharedPayment, forceSettlePayment,
     payFromFund, setFundContribution,
     markPaid, markUnpaid, setEstimatedAmount,
     postponePayment,
