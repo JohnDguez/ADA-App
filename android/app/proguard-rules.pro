@@ -34,3 +34,7 @@
 # Cordova: cordova-plugin-purchase se instancia por nombre de clase.
 -keep class org.apache.cordova.** { *; }
 -keep class cc.fovea.** { *; }
+
+# capacitor-firebase-authentication trae soporte opcional para Facebook (no lo usamos,
+# el SDK no está incluido): R8 reclamaba com.facebook.AccessToken en el build de release.
+-dontwarn com.facebook.**
