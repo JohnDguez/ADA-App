@@ -582,7 +582,17 @@
       "completedWithIncome": "Meta completada — se aportaron {{amount}} de tu nómina",
       "completedNoIncome": "Meta completada — sin ingreso activo no se descontó nada, solo se registró el monto",
       "completed": "¡Meta completada!"
-    }
+    },
+    "completedLabel": "completado",
+    "savedLabel": "Ahorrado",
+    "remainingLabel": "Falta",
+    "targetLabel": "Meta",
+    "movementsCount_one": "{{count}} movimiento",
+    "movementsCount_other": "{{count}} movimientos",
+    "historyEmptyTitle": "Todavía no hay movimientos",
+    "historyEmptyHint": "Tus aportes y retiros aparecerán aquí.",
+    "firstContribution": "Hacer el primer aporte",
+    "nothingToWithdraw": "Aún no hay nada que retirar"
   },
   "goalFormModal": {
     "titleEdit": "Editar meta",

@@ -582,7 +582,17 @@
       "completedWithIncome": "Goal completed — {{amount}} was contributed from your income",
       "completedNoIncome": "Goal completed — with no active income, nothing was deducted, only the amount was recorded",
       "completed": "Goal completed!"
-    }
+    },
+    "completedLabel": "completed",
+    "savedLabel": "Saved",
+    "remainingLabel": "Remaining",
+    "targetLabel": "Goal",
+    "movementsCount_one": "{{count}} transaction",
+    "movementsCount_other": "{{count}} transactions",
+    "historyEmptyTitle": "No transactions yet",
+    "historyEmptyHint": "Your contributions and withdrawals will show up here.",
+    "firstContribution": "Make the first contribution",
+    "nothingToWithdraw": "Nothing to withdraw yet"
   },
   "goalFormModal": {
     "titleEdit": "Edit goal",

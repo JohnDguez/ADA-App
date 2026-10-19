@@ -340,7 +340,7 @@ export function GoalsPage({
               )}
             </div>
           ) : (
-            <div className={styles.detailWrap}>
+            <div>
             <GoalDetailPanel
               goal={selectedGoal}
               isShared={isShared}

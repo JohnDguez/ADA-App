@@ -176,10 +176,13 @@ export function GoalDetailPanel({
         )}
       </div>
 
+      <div className={styles.body}>
+      <div className={styles.summaryCol}>
       <div className={styles.ring} style={{ background: `conic-gradient(var(--paid) 0% ${goal.percent}%, var(--border) ${goal.percent}% 100%)` }}>
         <div className={styles.ringInner}>
           <div className={styles.ringPercent}>{goal.percent}%</div>
           <div className={styles.ringAmounts}>{fmt(goal.currentAmount)} / {fmt(goal.target_amount)}</div>
+          <div className={styles.ringSub}>{t('goalDetailPanel.completedLabel')}</div>
         </div>
       </div>
 
@@ -192,6 +195,13 @@ export function GoalDetailPanel({
       </div>
       <div className={styles.createdAt}>{t('goalDetailPanel.createdOn', { date: fmtDate(goal.created_at) })}</div>
       {goal.notes && <div className={styles.notes}>{goal.notes}</div>}
+
+      {/* Desglose — solo tablet (en teléfono los montos van dentro del anillo) */}
+      <div className={styles.statsList}>
+        <div className={styles.statRow}><span>{t('goalDetailPanel.savedLabel')}</span><b className={styles.statSaved}>{fmt(goal.currentAmount)}</b></div>
+        <div className={styles.statRow}><span>{t('goalDetailPanel.remainingLabel')}</span><b>{fmt(goal.remaining)}</b></div>
+        <div className={styles.statRow}><span>{t('goalDetailPanel.targetLabel')}</span><b>{fmt(goal.target_amount)}</b></div>
+      </div>
 
       {activeAction ? (
         <div className={styles.actionForm}>
@@ -228,7 +238,7 @@ export function GoalDetailPanel({
             <ArrowUp size={16} />
             {t('goalDetailPanel.contribute')}
           </button>
-          <button type="button" onClick={() => openAction('retirar')} className={`${styles.actionBtn} ${styles.actionBtnGhost} ${!canWithdraw ? styles.actionBtnBlocked : ''}`}>
+          <button type="button" onClick={() => openAction('retirar')} className={`${styles.actionBtn} ${styles.actionBtnGhost} ${!canWithdraw ? styles.actionBtnBlocked : ''} ${!(goal.currentAmount > 0) ? styles.actionBtnEmpty : ''}`}>
             <ArrowDown size={16} />
             {t('goalDetailPanel.withdraw')}
           </button>
@@ -236,6 +246,9 @@ export function GoalDetailPanel({
       )}
       {isShared && !canWithdraw && !activeAction && (
         <div className={styles.blockedHint}>{t('goalDetailPanel.withdrawBlockedHint')}</div>
+      )}
+      {!activeAction && !(goal.currentAmount > 0) && (
+        <div className={styles.emptyWithdrawHint}>{t('goalDetailPanel.nothingToWithdraw')}</div>
       )}
 
       {/* "Marcar como hecha" — solo para metas activas. Una meta ya
@@ -249,9 +262,30 @@ export function GoalDetailPanel({
         </button>
       )}
 
-      <div className={styles.historyTitle}>{t('goalDetailPanel.historyTitle')}</div>
+      </div>
+
+      <div className={styles.historyCol}>
+      <div className={styles.historyHead}>
+        <div className={styles.historyTitle}>{t('goalDetailPanel.historyTitle')}</div>
+        {goal.transactions.length > 0 && (
+          <span className={styles.historyCount}>{t('goalDetailPanel.movementsCount', { count: goal.transactions.length })}</span>
+        )}
+      </div>
       {goal.transactions.length === 0 ? (
-        <div className={styles.historyEmpty}>{t('goalDetailPanel.historyEmpty')}</div>
+        <>
+          <div className={styles.historyEmpty}>{t('goalDetailPanel.historyEmpty')}</div>
+          <div className={styles.historyEmptyBlock}>
+            <div className={styles.historyEmptyIcon}><ArrowUpCircle size={24} color="var(--muted)" /></div>
+            <div className={styles.historyEmptyTitle}>{t('goalDetailPanel.historyEmptyTitle')}</div>
+            <div className={styles.historyEmptyHint}>{t('goalDetailPanel.historyEmptyHint')}</div>
+            {!goal.is_completed && !activeAction && (
+              <button type="button" onClick={() => openAction('aportar')} className={styles.firstContribution}>
+                <ArrowUp size={16} />
+                {t('goalDetailPanel.firstContribution')}
+              </button>
+            )}
+          </div>
+        </>
       ) : (
         <div className={styles.historyList}>
           {goal.transactions.map(tx => {
@@ -289,6 +323,8 @@ export function GoalDetailPanel({
           })}
         </div>
       )}
+      </div>
+      </div>
 
       <DeleteGoalModal
         open={deleteModalOpen}
