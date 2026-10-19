@@ -355,7 +355,13 @@
     "noExpensesTitle": "No expenses recorded",
     "customizeCategories": "Customize categories",
     "paymentsTitle": "Payments",
-    "col": { "date": "Date", "name": "Name", "category": "Category", "method": "Method", "amount": "Amount" },
+    "col": {
+      "date": "Date",
+      "name": "Name",
+      "category": "Category",
+      "method": "Method",
+      "amount": "Amount"
+    },
     "total": "Total:",
     "noPaymentsCurrentPeriod": "No payments made in the current period",
     "noPaymentsInMonth": "No payments made in {{month}} {{year}}",
@@ -447,7 +453,7 @@
     "pausedCount_one": "{{count}} paused",
     "pausedCount_other": "{{count}} paused",
     "monthlySum": "Monthly total",
-    "monthlyPaymentsLabel": "monthly payments",
+    "monthlyPaymentsLabel": "per month, all frequencies",
     "filters": {
       "all": "All",
       "active": "Active",
@@ -468,7 +474,21 @@
     "actionResume": "resume payments",
     "actionPause": "pause payments",
     "deleteConfirm": "Delete \"{{name}}\"? Payments already made will be kept.",
-    "menuAriaLabel": "More options"
+    "menuAriaLabel": "More options",
+    "byFreq": "By frequency",
+    "infoLabel": "How it is calculated",
+    "infoText": "Each payment is converted to its monthly equivalent: weekly ×4.33, biweekly ×2.17, bimonthly ÷2, quarterly ÷3, semiannual ÷6 and annual ÷12. Paused and variable payments are not counted.",
+    "installmentsCount_one": "{{count}} installment plan",
+    "installmentsCount_other": "{{count}} installment plans",
+    "remaining": "Remaining",
+    "remainingPayments_one": "{{count}} payment left",
+    "remainingPayments_other": "{{count}} payments left",
+    "colName": "Name",
+    "colFreq": "Frequency",
+    "colNext": "Next",
+    "colAmount": "Amount",
+    "variableNote_one": "{{count}} variable payment with no fixed amount is not included.",
+    "variableNote_other": "{{count}} variable payments with no fixed amount are not included."
   },
   "recurrentDetailPanel": {
     "totalPaidLabel": "Total paid",

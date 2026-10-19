@@ -429,3 +429,254 @@
    mano igual que antes (Regla 30: no hay JS que dependa de esta duración). */
 .collapse { max-height: 0; overflow: hidden; transition: max-height .3s ease; }
 .collapseOpen { max-height: 2000px; }
+
+/* ── Tablet (v0.9.759, Regla 42/43/47) ────────────────────────────────────────
+   Mockup aprobado con Johnatan (Propuesta 8, variante E): sin PageHeader,
+   título + buscador en una fila, totales + "Por frecuencia" (con
+   parcialidades), filtros en una sola fila y cada categoría desplegada como
+   tabla con columnas. En teléfono nada de esto se ve. */
+.pageHeaderWrapper { display: block; }
+.headRow { display: block; }
+.filtersBlock { display: block; }
+.tabletOnly { display: none; }
+.tableHead { display: none; }
+
+@media (min-width: 768px) {
+  .pageHeaderWrapper { display: none; }
+  .mobileOnly { display: none; }
+  .tabletOnly { display: block; }
+
+  /* Mismo ajuste que PaymentsPage/HomePage: sin PageHeader no hace falta el
+     "colchón" redondeado. */
+  .roundedContentWrapper {
+    background: transparent;
+    margin-top: 0;
+    border-radius: 0;
+    padding: 28px 24px 0;
+    max-width: 90vw;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .headRow {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .titleSection {
+    flex: 1;
+    min-width: 0;
+    padding: 8px 0 20px;
+  }
+  .titleHeading { font-size: 26px; }
+  .searchWrapper {
+    flex: 0 0 260px;
+    padding: 0 0 12px;
+  }
+
+  .tabletStats {
+    display: flex;
+    align-items: stretch;
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+  .totalsCard {
+    flex: 0 0 230px;
+    background: var(--surface);
+    border-radius: var(--radius);
+    padding: 16px;
+  }
+  .totalsDivider {
+    border-top: 0.5px solid var(--border);
+    margin-top: 14px;
+    padding-top: 14px;
+  }
+  .freqCard {
+    flex: 1;
+    min-width: 0;
+    background: var(--surface);
+    border-radius: var(--radius);
+    padding: 16px;
+  }
+  .freqHead {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .iconChip {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    background: var(--bg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .freqTitle {
+    flex: 1;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text);
+  }
+  .infoButton {
+    width: 32px;
+    height: 32px;
+    border: none;
+    background: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+  }
+  .freqRow {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 10px;
+    font-size: 13px;
+  }
+  .freqLabel {
+    flex: 0 0 108px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--text);
+    white-space: nowrap;
+  }
+  .countPill {
+    min-width: 22px;
+    height: 22px;
+    padding: 0 6px;
+    border-radius: 11px;
+    background: var(--bg);
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .freqTrack {
+    flex: 1;
+    height: 8px;
+    border-radius: 4px;
+    background: var(--border);
+    overflow: hidden;
+  }
+  .freqFill {
+    display: block;
+    height: 100%;
+    border-radius: 4px;
+    background: var(--accent);
+  }
+  .freqAmount {
+    flex: 0 0 96px;
+    text-align: right;
+    font-weight: 700;
+    color: var(--text);
+  }
+  .installmentsStrip {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border-top: 0.5px solid var(--border);
+    margin-top: 14px;
+    padding-top: 12px;
+  }
+  .installmentsInfo { flex: 1; min-width: 0; }
+  .installmentsAmount { text-align: right; }
+  .installmentsTitle {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text);
+  }
+  .installmentsSub {
+    font-size: 12px;
+    color: var(--muted);
+  }
+  .infoNote {
+    margin: -4px 0 16px;
+    padding: 12px 14px;
+    background: var(--surface);
+    border-radius: var(--radius);
+    font-size: 12px;
+    line-height: 1.4;
+    color: var(--text);
+  }
+
+  .filtersBlock {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+    padding-bottom: 16px;
+  }
+  .filterRow,
+  .filterRowLast { padding: 0; }
+  .filterRowLast {
+    padding-left: 10px;
+    border-left: 0.5px solid var(--border);
+  }
+
+  .categoryListWrapper {
+    padding: 0;
+    gap: 12px;
+  }
+  .categoryCard {
+    --rec-cols: minmax(0, 1.6fr) 100px 120px 110px 76px;
+  }
+  .categoryHeader { padding: 14px 16px; }
+
+  .tableHead {
+    display: grid;
+    grid-template-columns: var(--rec-cols);
+    gap: 12px;
+    align-items: center;
+    padding: 8px 16px;
+    font-size: 12px;
+    color: var(--muted);
+    border-bottom: 0.5px solid var(--border);
+  }
+  .tableHeadAmount { text-align: right; }
+
+  .masterRow {
+    display: grid;
+    grid-template-columns: var(--rec-cols);
+    gap: 12px;
+    align-items: center;
+    padding: 12px 16px;
+    min-height: 52px;
+  }
+  .masterInfo { display: contents; }
+  .masterNameRow {
+    grid-column: 1;
+    grid-row: 1;
+    min-width: 0;
+    font-size: 14px;
+  }
+  .masterFreqRow,
+  .masterNextDate,
+  .masterPausedText {
+    grid-row: 1;
+    margin-top: 0;
+    font-size: 13px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .masterFreqRow { grid-column: 2; }
+  .masterNextDate,
+  .masterPausedText { grid-column: 3; }
+  .completedSuffix { display: none; }
+  .masterAmount {
+    grid-column: 4;
+    grid-row: 1;
+    text-align: right;
+  }
+  .masterActionsRow {
+    grid-column: 5;
+    grid-row: 1;
+    justify-self: end;
+  }
+}

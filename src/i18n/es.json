@@ -355,7 +355,13 @@
     "noExpensesTitle": "Sin gastos registrados",
     "customizeCategories": "Personalizar categorías",
     "paymentsTitle": "Pagos",
-    "col": { "date": "Fecha", "name": "Nombre", "category": "Categoría", "method": "Método", "amount": "Monto" },
+    "col": {
+      "date": "Fecha",
+      "name": "Nombre",
+      "category": "Categoría",
+      "method": "Método",
+      "amount": "Monto"
+    },
     "total": "Total:",
     "noPaymentsCurrentPeriod": "Sin pagos realizados en el periodo actual",
     "noPaymentsInMonth": "Sin pagos realizados en {{month}} {{year}}",
@@ -447,7 +453,7 @@
     "pausedCount_one": "{{count}} pausado",
     "pausedCount_other": "{{count}} pausados",
     "monthlySum": "Suma mensual",
-    "monthlyPaymentsLabel": "pagos mensuales",
+    "monthlyPaymentsLabel": "al mes, todas las frecuencias",
     "filters": {
       "all": "Todos",
       "active": "Activos",
@@ -468,7 +474,21 @@
     "actionResume": "reactivar pagos",
     "actionPause": "pausar pagos",
     "deleteConfirm": "¿Eliminar \"{{name}}\"? Los pagos ya realizados se conservarán.",
-    "menuAriaLabel": "Más opciones"
+    "menuAriaLabel": "Más opciones",
+    "byFreq": "Por frecuencia",
+    "infoLabel": "Cómo se calcula",
+    "infoText": "Cada pago se convierte a su equivalente mensual: semanal ×4.33, quincenal ×2.17, bimestral ÷2, trimestral ÷3, semestral ÷6 y anual ÷12. Los pagos pausados y los variables no se cuentan.",
+    "installmentsCount_one": "{{count}} parcialidad",
+    "installmentsCount_other": "{{count}} parcialidades",
+    "remaining": "Por pagar",
+    "remainingPayments_one": "{{count}} pago restante",
+    "remainingPayments_other": "{{count}} pagos restantes",
+    "colName": "Nombre",
+    "colFreq": "Frecuencia",
+    "colNext": "Próximo",
+    "colAmount": "Monto",
+    "variableNote_one": "{{count}} pago variable sin monto fijo no se incluye.",
+    "variableNote_other": "{{count}} pagos variables sin monto fijo no se incluyen."
   },
   "recurrentDetailPanel": {
     "totalPaidLabel": "Total pagado",

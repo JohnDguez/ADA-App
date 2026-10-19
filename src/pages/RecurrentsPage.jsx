@@ -1,11 +1,11 @@
 import { useState, useMemo, useRef, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Pause, Play, Trash2, Search, ChevronDown, CreditCard, Pencil, MoreVertical, Loader2 } from 'lucide-react'
+import { Pause, Play, Trash2, Search, ChevronDown, CreditCard, Pencil, MoreVertical, Loader2, CalendarDays, Info } from 'lucide-react'
 import { EmptyState } from '../components/EmptyState'
 import { PageHeader } from '../components/PageHeader'
 import { NewSharedSpacePanel } from '../components/NewSharedSpacePanel'
 import { RecurrentDetailPanel } from '../components/RecurrentDetailPanel'
-import { fmt, RECUR_FREQ, getFrequencyLabel, dateOf, getMonthsShort, getCatColor, getCategoryLabel } from '../lib/utils'
+import { fmt, RECUR_FREQ, getFrequencyLabel, dateOf, getMonthsShort, getCatColor, getCategoryLabel, monthlyEquivalent } from '../lib/utils'
 import { getCategoryIcon } from '../lib/categoryIcons'
 import { showToast } from '../components/Toast'
 import { StatsCardSkeleton, CategoryAccordionSkeleton } from '../components/SkeletonLoader'
@@ -52,6 +52,7 @@ export function RecurrentsPage({ payments, dataLoading = false, profile, spaceSw
   if (openMenu) lastMenuRef.current = openMenu
   const menuShown = openMenu || (menuPresence.render ? lastMenuRef.current : null)
   useScrollLock(!!openMenu)
+  const [infoOpen, setInfoOpen] = useState(false)
   const [selectedMasterId, setSelectedMasterId] = useState(null)
   useScrollTop(selectedMasterId)
 
@@ -96,9 +97,23 @@ export function RecurrentsPage({ payments, dataLoading = false, profile, spaceSw
   // Métricas
   const activeMasters = masters.filter(m => !m.paused)
   const pausedMasters = masters.filter(m => m.paused)
-  const totalMensual  = activeMasters
-    .filter(m => !m.is_variable && m.recur_freq === 'monthly')
-    .reduce((s, m) => s + Number(m.amount), 0)
+  // v0.9.759 — suma de TODAS las frecuencias, cada una a su equivalente
+  // mensual (antes solo contaba las mensuales y cada categoría sumaba el
+  // monto crudo de semanales/anuales como si fueran "/mes").
+  const totalMensual  = activeMasters.reduce((s, m) => s + monthlyEquivalent(m), 0)
+  const variableCount = activeMasters.filter(m => m.is_variable).length
+  const FREQ_ORDER = ['weekly', 'biweekly', 'monthly', 'bimonthly', 'quarterly', 'semiannual', 'annual']
+  const freqRows = FREQ_ORDER
+    .map(freq => {
+      const list = activeMasters.filter(m => !m.is_variable && m.recur_freq === freq)
+      return { freq, count: list.length, amount: list.reduce((s, m) => s + monthlyEquivalent(m), 0) }
+    })
+    .filter(r => r.count > 0)
+  const freqMax = Math.max(1, ...freqRows.map(r => r.amount))
+  const isInstallmentMaster = m => m.is_installment || m.total_installments > 0
+  const installmentMasters = activeMasters.filter(isInstallmentMaster)
+  const installmentsLeft = installmentMasters.reduce((s, m) => s + Math.max(0, (m.total_installments || 0) - getPaidCount(m.id)), 0)
+  const installmentsLeftAmount = installmentMasters.reduce((s, m) => s + Number(m.amount || 0) * Math.max(0, (m.total_installments || 0) - getPaidCount(m.id)), 0)
 
   // Filtros
   const filtered = useMemo(() => {
@@ -137,7 +152,11 @@ export function RecurrentsPage({ payments, dataLoading = false, profile, spaceSw
 
   return (
     <div className={styles.pageRoot} onClick={() => setOpenMenu(null)}>
-      <PageHeader profile={profile} unreadCount={unreadCount} onOpenNotifs={onOpenNotifs} onGoSettings={onGoSettings} onOpenPremium={onOpenPremium} />
+      {/* Oculto desde 768px — mismo criterio que HomePage/PaymentsPage:
+          NavRail.jsx ya cubre avatar, saludo, notificaciones y config. */}
+      <div className={styles.pageHeaderWrapper}>
+        <PageHeader profile={profile} unreadCount={unreadCount} onOpenNotifs={onOpenNotifs} onGoSettings={onGoSettings} onOpenPremium={onOpenPremium} />
+      </div>
 
       {/* Menú contextual flotante */}
       {menuShown && (
@@ -194,7 +213,8 @@ export function RecurrentsPage({ payments, dataLoading = false, profile, spaceSw
             />
           ) : (
           <>
-          {/* Zona título */}
+          {/* Zona título + buscador (en tablet comparten fila) */}
+          <div className={styles.headRow}>
           <div className={styles.titleSection}>
             <div className={styles.titleHeading}>{t('recurrentsPage.title')}</div>
             <div className={styles.titleSubtext}>{t('recurrentsPage.subtitle')}</div>
@@ -210,14 +230,17 @@ export function RecurrentsPage({ payments, dataLoading = false, profile, spaceSw
               <input aria-label={t('recurrentsPage.searchPlaceholder')} value={search} onChange={e => setSearch(e.target.value)} placeholder={t('recurrentsPage.searchPlaceholder')} className={`field-input ${styles.searchInput}`} />
             </div>
           </div>
+          </div>
 
-          {/* Resumen */}
+          {/* Resumen — teléfono: una tarjeta; tablet: totales + por frecuencia */}
+          <div data-coachmark="recurrentes-stats">
           {dataLoading ? (
-            <div data-coachmark="recurrentes-stats" className={styles.statsSkeletonWrap}>
+            <div className={styles.statsSkeletonWrap}>
               <StatsCardSkeleton />
             </div>
           ) : (
-            <div data-coachmark="recurrentes-stats" className={styles.statsCard}>
+            <>
+            <div className={`${styles.statsCard} ${styles.mobileOnly}`}>
               <div className={styles.statsBlockBordered}>
                 <div className={styles.statsLabel}>{t('recurrentsPage.activeLabel')}</div>
                 <div className={styles.statsValue}>{activeMasters.length}</div>
@@ -225,13 +248,66 @@ export function RecurrentsPage({ payments, dataLoading = false, profile, spaceSw
               </div>
               <div className={styles.statsBlockPadded}>
                 <div className={styles.statsLabel}>{t('recurrentsPage.monthlySum')}</div>
-                <div className={styles.statsValue}>{fmt(totalMensual)}</div>
+                <div className={styles.statsValue}>≈ {fmt(totalMensual)}</div>
                 <div className={styles.statsSubtext}>{t('recurrentsPage.monthlyPaymentsLabel')}</div>
               </div>
             </div>
-          )}
 
-          {/* Filtros */}
+            <div className={styles.tabletOnly}>
+              <div className={styles.tabletStats}>
+                <div className={styles.totalsCard}>
+                  <div className={styles.statsLabel}>{t('recurrentsPage.activeLabel')}</div>
+                  <div className={styles.statsValue}>{activeMasters.length}</div>
+                  <div className={styles.statsSubtext}>{t('recurrentsPage.pausedCount', { count: pausedMasters.length })}</div>
+                  <div className={styles.totalsDivider}>
+                    <div className={styles.statsLabel}>{t('recurrentsPage.monthlySum')}</div>
+                    <div className={styles.statsValue}>≈ {fmt(totalMensual)}</div>
+                    <div className={styles.statsSubtext}>{t('recurrentsPage.monthlyPaymentsLabel')}</div>
+                  </div>
+                </div>
+                <div className={styles.freqCard}>
+                  <div className={styles.freqHead}>
+                    <span className={styles.iconChip}><CalendarDays size={18} color="var(--muted)" /></span>
+                    <span className={styles.freqTitle}>{t('recurrentsPage.byFreq')}</span>
+                    <button type="button" className={styles.infoButton} onClick={() => setInfoOpen(o => !o)} aria-expanded={infoOpen} aria-label={t('recurrentsPage.infoLabel')}>
+                      <Info size={16} color="var(--muted)" />
+                    </button>
+                  </div>
+                  {freqRows.map(r => (
+                    <div key={r.freq} className={styles.freqRow}>
+                      <span className={styles.freqLabel}>{getFrequencyLabel(r.freq)}<span className={styles.countPill}>{r.count}</span></span>
+                      <span className={styles.freqTrack}><span className={styles.freqFill} style={{ width: `${(r.amount / freqMax) * 100}%` }} /></span>
+                      <span className={styles.freqAmount}>≈ {fmt(r.amount)}</span>
+                    </div>
+                  ))}
+                  {installmentMasters.length > 0 && (
+                    <div className={styles.installmentsStrip}>
+                      <span className={styles.iconChip}><CreditCard size={18} color="var(--muted)" /></span>
+                      <div className={styles.installmentsInfo}>
+                        <div className={styles.installmentsTitle}>{t('recurrentsPage.installmentsCount', { count: installmentMasters.length })}</div>
+                        <div className={styles.installmentsSub}>{t('recurrentsPage.remainingPayments', { count: installmentsLeft })}</div>
+                      </div>
+                      <div className={styles.installmentsAmount}>
+                        <div className={styles.installmentsSub}>{t('recurrentsPage.remaining')}</div>
+                        <div className={styles.installmentsTitle}>{fmt(installmentsLeftAmount)}</div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+              {infoOpen && (
+                <div className={styles.infoNote}>
+                  {t('recurrentsPage.infoText')}
+                  {variableCount > 0 && ` ${t('recurrentsPage.variableNote', { count: variableCount })}`}
+                </div>
+              )}
+            </div>
+            </>
+          )}
+          </div>
+
+          {/* Filtros (tablet: una sola fila) */}
+          <div className={styles.filtersBlock}>
           <div className={styles.filterRow}>
             {[['todos',t('recurrentsPage.filters.all')],['activos',t('recurrentsPage.filters.active')],['pausados',t('recurrentsPage.filters.paused')]].map(([val, label]) => (
               <FilterChip key={val} label={label} active={filterStatus === val} onClick={() => setFilterStatus(val)} />
@@ -241,6 +317,7 @@ export function RecurrentsPage({ payments, dataLoading = false, profile, spaceSw
             {[['todos',t('recurrentsPage.filters.all')],['recurrentes',t('recurrentsPage.filters.recurrent')],['parcialidades',t('recurrentsPage.filters.installments')]].map(([val, label]) => (
               <FilterChip key={val} label={label} active={filterType === val} onClick={() => setFilterType(val)} />
             ))}
+          </div>
           </div>
 
           {/* Lista por categoría */}
@@ -266,7 +343,7 @@ export function RecurrentsPage({ payments, dataLoading = false, profile, spaceSw
               )
             ) : byCategory.map(([cat, catMasters]) => {
               const isOpen   = !!expandedCats[cat]
-              const catTotal = catMasters.filter(m => !m.is_variable && !m.paused).reduce((s, m) => s + Number(m.amount), 0)
+              const catTotal = catMasters.reduce((s, m) => s + monthlyEquivalent(m), 0)
               const catColor = getCatColor(cat, profile.custom_categories, profile.category_colors)
               const CatIcon  = getCategoryIcon(cat, profile.category_icons)
 
@@ -287,7 +364,7 @@ export function RecurrentsPage({ payments, dataLoading = false, profile, spaceSw
                       <div className={styles.categoryName}>{getCategoryLabel(cat)}</div>
                       <div className={styles.categoryMeta}>
                         {t('recurrentsPage.paymentCount', { count: catMasters.length })}
-                        {catTotal > 0 && ` · ${fmt(catTotal)}${t('recurrentsPage.perMonthSuffix')}`}
+                        {catTotal > 0 && ` · ≈ ${fmt(catTotal)}${t('recurrentsPage.perMonthSuffix')}`}
                       </div>
                     </div>
                     <div className={`${styles.categoryChevron} ${isOpen ? styles.categoryChevronOpen : ''}`}>
@@ -297,6 +374,13 @@ export function RecurrentsPage({ payments, dataLoading = false, profile, spaceSw
 
                   {/* Items */}
                   <div className={`${styles.collapse} ${isOpen ? styles.collapseOpen : ''}`}>
+                    <div className={styles.tableHead} aria-hidden="true">
+                      <span>{t('recurrentsPage.colName')}</span>
+                      <span>{t('recurrentsPage.colFreq')}</span>
+                      <span>{t('recurrentsPage.colNext')}</span>
+                      <span className={styles.tableHeadAmount}>{t('recurrentsPage.colAmount')}</span>
+                      <span />
+                    </div>
                     {catMasters.map((master, idx) => {
                       const isLast       = idx === catMasters.length - 1
                       const next         = getNextDue(master.id)
@@ -320,7 +404,7 @@ export function RecurrentsPage({ payments, dataLoading = false, profile, spaceSw
                               </div>
                               <div className={styles.masterFreqRow}>
                                 {getFrequencyLabel(master.recur_freq)}
-                                {!(master.is_installment || master.total_installments > 0) && paid > 0 && ` · ${t('recurrentsPage.completedCount', { count: paid })}`}
+                                {!(master.is_installment || master.total_installments > 0) && paid > 0 && <span className={styles.completedSuffix}>{` · ${t('recurrentsPage.completedCount', { count: paid })}`}</span>}
                               </div>
                               {!master.paused && next && !(master.is_installment || master.total_installments > 0) && (
                                 <div className={styles.masterNextDate}>

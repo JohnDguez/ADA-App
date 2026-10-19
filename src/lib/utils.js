@@ -169,6 +169,19 @@ export function fmt(n) {
   const sign = num < 0 ? '-' : ''
   return sign + getCurrencySymbol() + Math.abs(num).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 }
+// Equivalente mensual de un pago recurrente según su frecuencia (v0.9.759).
+// weekly = cada 7 días y biweekly = cada 14 (ver nextPeriodDate), así que se
+// prorratean por 52/12 y 26/12 semanas-por-mes; el resto divide entre los
+// meses que dura su ciclo. Variables (sin monto fijo) y pausados no cuentan.
+const MONTHLY_FACTOR = {
+  weekly: 52 / 12, biweekly: 26 / 12, monthly: 1,
+  bimonthly: 1 / 2, quarterly: 1 / 3, semiannual: 1 / 6, annual: 1 / 12,
+}
+export function monthlyEquivalent(master) {
+  if (!master || master.paused || master.is_variable) return 0
+  const factor = MONTHLY_FACTOR[master.recur_freq] ?? 1
+  return Number(master.amount || 0) * factor
+}
 export function addDays(date, n)   { const d = new Date(date); d.setDate(d.getDate() + n); return d }
 // Fecha (año, mes, día) con el día ajustado al último del mes si no existe
 // (v0.9.624): día 31 en febrero/abril... daba el 3 de marzo/1 de mayo con

@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
-import { dateToStr, dateOf, clampedDate, nextPeriodDate, cobroPeriod, nextCobroPeriod, fmt, getPremiumSource } from '../src/lib/utils'
+import { dateToStr, dateOf, clampedDate, nextPeriodDate, cobroPeriod, nextCobroPeriod, fmt, getPremiumSource, monthlyEquivalent } from '../src/lib/utils'
 import { getCurrency, setActiveCurrency, getCurrencySymbol } from '../src/lib/currency'
 import { formatBadgeCount } from '../src/lib/formatBadgeCount'
 
@@ -87,5 +87,22 @@ describe('getPremiumSource', () => {
   it('premium sin suscripción real = admin (otorgado a mano)', () => {
     expect(getPremiumSource({ is_premium: true })).toBe('admin')
     expect(getPremiumSource({ is_premium: true, subscription_platform: 'google_play' })).toBe('admin')
+  })
+})
+
+describe('monthlyEquivalent', () => {
+  it('prorratea cada frecuencia a su equivalente mensual', () => {
+    const m = (recur_freq, amount = 1200) => monthlyEquivalent({ recur_freq, amount })
+    expect(m('monthly')).toBe(1200)
+    expect(m('weekly')).toBeCloseTo(1200 * 52 / 12)
+    expect(m('biweekly')).toBeCloseTo(1200 * 26 / 12)
+    expect(m('bimonthly')).toBe(600)
+    expect(m('quarterly')).toBe(400)
+    expect(m('semiannual')).toBe(200)
+    expect(m('annual')).toBe(100)
+  })
+  it('pausados y variables no cuentan', () => {
+    expect(monthlyEquivalent({ recur_freq: 'monthly', amount: 500, paused: true })).toBe(0)
+    expect(monthlyEquivalent({ recur_freq: 'monthly', amount: 500, is_variable: true })).toBe(0)
   })
 })
