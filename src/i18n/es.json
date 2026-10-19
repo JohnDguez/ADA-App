@@ -1230,7 +1230,10 @@
     "pendingCount_other": "{{count}} pendientes",
     "overdueCount_one": "{{count}} vencido",
     "overdueCount_other": "{{count}} vencidos",
-    "railLabel": "Espacios"
+    "railLabel": "Espacios",
+    "moreSpaces_one": "{{count}} espacio más",
+    "moreSpaces_other": "{{count}} espacios más",
+    "showLess": "Mostrar menos"
   },
   "coachmarks": {
     "skipTutorial": "Saltar tutorial",

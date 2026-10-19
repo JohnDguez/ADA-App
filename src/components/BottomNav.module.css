@@ -5,13 +5,12 @@
   transform: translateX(-50%);
   width: calc(100% - 32px);
   max-width: 388px;
-  background: color-mix(in srgb, var(--nav-bg) var(--nav-bg-opacity), transparent);
-  -webkit-backdrop-filter: blur(12px);
-  backdrop-filter: blur(12px);
-  border-radius: 10px;
+  /* v0.9.753 — pastilla sólida (Regla 13, excepción aprobada). */
+  background: var(--nav-bg);
+  border-radius: 999px;
   display: flex;
   align-items: center;
-  padding: 8px;
+  padding: 8px 12px;
   gap: 4px;
   box-shadow: var(--shadow-nav);
   z-index: 100;
@@ -71,7 +70,7 @@
 .indicatorClip {
   position: absolute;
   inset: 0;
-  border-radius: 10px;
+  border-radius: 999px;
   overflow: hidden;
   pointer-events: none;
   z-index: 0;
@@ -81,9 +80,9 @@
    estilo Amazon, que se desliza entre pestañas. Columnas: 5 iguales. */
 .indicator {
   position: absolute;
-  top: 0;
-  left: calc(8px + var(--slot) * ((100% - 32px) / 5 + 4px) + 10px);
-  width: calc((100% - 32px) / 5 - 20px);
+  bottom: 6px;
+  left: calc(12px + var(--slot) * ((100% - 40px) / 5 + 4px) + 10px);
+  width: calc((100% - 40px) / 5 - 20px);
   height: 3px;
   transition: left .25s cubic-bezier(0.25, 0.46, 0.45, 0.94), opacity .2s;
   pointer-events: none;
@@ -95,7 +94,7 @@
   position: absolute;
   inset: 0;
   background: var(--nav-icon);
-  border-radius: 0 0 4px 4px;
+  border-radius: 4px;
   z-index: 1;
 }
 .indicatorHidden { opacity: 0; }
@@ -103,7 +102,7 @@
 .indicator::after {
   content: '';
   position: absolute;
-  top: 0;
+  bottom: 0;
   left: 50%;
   width: 200px;
   margin-left: -100px;
@@ -111,10 +110,10 @@
   /* Nube de luz: manchas de distinto tamaño que forman un contorno irregular y
      blando. Todos los radios terminan antes del borde de la caja → sin cortes. */
   background:
-    radial-gradient(ellipse 72px 50px at 50% 0, color-mix(in srgb, var(--accent) 55%, transparent) 0%, transparent 100%),
-    radial-gradient(ellipse 46px 40px at 33% 0, color-mix(in srgb, var(--accent) 38%, transparent) 0%, transparent 100%),
-    radial-gradient(ellipse 40px 54px at 64% 0, color-mix(in srgb, var(--accent) 42%, transparent) 0%, transparent 100%),
-    radial-gradient(ellipse 30px 30px at 44% 0, color-mix(in srgb, var(--accent) 28%, transparent) 0%, transparent 100%);
+    radial-gradient(ellipse 72px 50px at 50% 100%, color-mix(in srgb, var(--accent) 55%, transparent) 0%, transparent 100%),
+    radial-gradient(ellipse 46px 40px at 33% 100%, color-mix(in srgb, var(--accent) 38%, transparent) 0%, transparent 100%),
+    radial-gradient(ellipse 40px 54px at 64% 100%, color-mix(in srgb, var(--accent) 42%, transparent) 0%, transparent 100%),
+    radial-gradient(ellipse 30px 30px at 44% 100%, color-mix(in srgb, var(--accent) 28%, transparent) 0%, transparent 100%);
   filter: blur(6px);
   z-index: 0;
   pointer-events: none;

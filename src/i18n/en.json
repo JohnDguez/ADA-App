@@ -1230,7 +1230,10 @@
     "pendingCount_other": "{{count}} pending",
     "overdueCount_one": "{{count}} overdue",
     "overdueCount_other": "{{count}} overdue",
-    "railLabel": "Spaces"
+    "railLabel": "Spaces",
+    "moreSpaces_one": "{{count}} more space",
+    "moreSpaces_other": "{{count}} more spaces",
+    "showLess": "Show less"
   },
   "coachmarks": {
     "skipTutorial": "Skip tutorial",

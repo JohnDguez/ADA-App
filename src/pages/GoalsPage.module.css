@@ -3,7 +3,9 @@
      de él, así que hace falta más aire para que la última tarjeta no
      quede tapada. */
   padding-bottom: 185px;
-  background: var(--bg);
+  background-color: var(--bg);
+  background-image: var(--page-grad);
+  background-attachment: fixed;
   min-height: 100vh;
 }
 
@@ -54,7 +56,9 @@
 }
 
 .roundedContentWrapper {
-  background: var(--bg);
+  background-color: var(--bg);
+  background-image: var(--page-grad);
+  background-attachment: fixed;
   border-radius: 24px 24px 0 0;
   margin-top: -24px;
   position: relative;

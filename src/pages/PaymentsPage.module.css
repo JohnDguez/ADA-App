@@ -1085,12 +1085,16 @@
 /* ── Parte 6: wrappers estructurales sueltos ─────────────────────────────── */
 .pageRoot {
   padding-bottom: 120px;
-  background: var(--bg);
+  background-color: var(--bg);
+  background-image: var(--page-grad);
+  background-attachment: fixed;
   min-height: 100vh;
 }
 
 .roundedContentWrapper {
-  background: var(--bg);
+  background-color: var(--bg);
+  background-image: var(--page-grad);
+  background-attachment: fixed;
   border-radius: 24px 24px 0 0;
   margin-top: -24px;
   position: relative;

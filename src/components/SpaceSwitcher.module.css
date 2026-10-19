@@ -40,3 +40,23 @@
   font-weight: 500;
   position: relative;
 }
+
+/* Franja del modo compacto (v0.9.753): "N espacios más" / "Mostrar menos". */
+.moreStrip {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  margin-top: -14px;
+  padding: 16px 18px 24px;
+  border: none;
+  border-radius: 16px 16px 0 0;
+  background: var(--space-more-bg);
+  color: var(--on-color);
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 500;
+  cursor: pointer;
+  box-shadow: 0 -3px 8px -2px var(--space-stack-shadow);
+}

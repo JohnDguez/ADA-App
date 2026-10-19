@@ -8,6 +8,7 @@
   padding: var(--sat, 0px) 20px 0;
   padding-bottom: 24px;
   overflow: hidden;
+  background: var(--bg);
 }
 
 /* Con el botón "Obtener Premium" (v0.9.504) hay una línea más debajo del
@@ -38,6 +39,11 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
+  object-position: right 62%;
+  /* v0.9.753 — máscara lateral: la ilustración se ve a la derecha y se
+     desvanece hacia el saludo, para no competir con el texto. */
+  -webkit-mask-image: linear-gradient(to left, var(--mask-opaque) 0%, color-mix(in srgb, var(--mask-opaque) 85%, transparent) 30%, transparent 78%);
+  mask-image: linear-gradient(to left, var(--mask-opaque) 0%, color-mix(in srgb, var(--mask-opaque) 85%, transparent) 30%, transparent 78%);
   transition: opacity 1.5s ease;
   pointer-events: none;
   z-index: 0;
@@ -46,25 +52,15 @@
 .gradientOverlay {
   position: absolute;
   inset: 0;
-  /* Antes era un degradado negro quemado directo en cada PNG. Ahora usa
-     var(--bg) (el mismo fondo de página que ya usa .premiumBadge para su
-     borde "recorte") — en tema claro sale un degradado claro, en tema
-     oscuro uno oscuro, en vez de negro fijo siempre. */
-  /* v0.9.613 — ya no es una "plasta" sólida: el velo es semitransparente
-     (la escena se ve a través). v0.9.632: parejo hasta el 60% del ancho y se
-     desvanece hacia la derecha; v0.9.633: baja a 25% porque la legibilidad
-     ahora la da la pastilla esmerilada de .textCol. La legibilidad del
-     saludo/nombre la da el text-shadow de .greetingText/.nameText. */
-  /* v0.9.634 — franja esmerilada de todo el alto: tinte del tema + desenfoque,
-     y una máscara de izquierda a derecha que los desvanece juntos (la
-     máscara también recorta el backdrop-filter). Sustituye a la pastilla de
-     v0.9.633. Ajustes: 45% = tinte, 8px = desenfoque, 30%/70% = dónde
-     empieza/termina el desvanecido. */
-  background: color-mix(in srgb, var(--bg) 45%, transparent);
-  -webkit-backdrop-filter: blur(8px);
-  backdrop-filter: blur(8px);
-  -webkit-mask-image: linear-gradient(to right, var(--mask-opaque) 0%, var(--mask-opaque) 30%, transparent 70%);
-  mask-image: linear-gradient(to right, var(--mask-opaque) 0%, var(--mask-opaque) 30%, transparent 70%);
+  /* v0.9.753 — sustituye a la franja esmerilada: velo vertical que funde la
+     escena con el fondo de la página (la máscara lateral de .bgImage ya
+     aparta la ilustración del saludo). */
+  background: linear-gradient(
+    to bottom,
+    color-mix(in srgb, var(--bg) 20%, transparent) 0%,
+    color-mix(in srgb, var(--bg) 45%, transparent) 62%,
+    var(--bg) 100%
+  );
   pointer-events: none;
   z-index: 0;
 }

@@ -129,6 +129,8 @@
   --space-inactive-bg:  #5A779E;
   --space-inactive-text: #FFFFFF;
   --space-personal-bg:   #47576B;
+  --space-more-bg:       #4A5A88;
+  --page-grad:           linear-gradient(180deg, #F2F2F2 0, #F2F2F2 250px, #DCE8FA 100%);
   --space-personal-text: #FFFFFF;
 
   /* ── Paleta de colores para categorías (selector libre) ──────────────────
@@ -354,6 +356,8 @@
   --space-inactive-bg:  #5677A2;
   --space-inactive-text: #FFFFFF;
   --space-personal-bg:   #566B85;
+  --space-more-bg:       #2E3860;
+  --page-grad:           linear-gradient(180deg, #0F1117 0, #0F1117 250px, #111A2E 100%);
   --space-personal-text: #FFFFFF;
 
   /* Hero de PremiumPage.jsx (v0.9.505) — ver nota en :root. */
@@ -415,6 +419,8 @@
     --space-inactive-bg:  #5677A2;
     --space-inactive-text: #FFFFFF;
     --space-personal-bg:   #566B85;
+    --space-more-bg:       #2E3860;
+    --page-grad:           linear-gradient(180deg, #0F1117 0, #0F1117 250px, #111A2E 100%);
     --space-personal-text: #FFFFFF;
 
     /* Hero de PremiumPage.jsx (v0.9.505) — espejo del bloque manual
@@ -428,7 +434,11 @@
 }
 
 html, body {
-  background: var(--bg);
+  background-color: var(--bg);
+  /* v0.9.753 — único degradado permitido en pantallas: el fondo (Regla 18).
+     Fijo al viewport para que no se estire con el largo de la página. */
+  background-image: var(--page-grad);
+  background-attachment: fixed;
   color: var(--text);
   font-family: 'DM Sans', sans-serif;
   font-size: 15px;

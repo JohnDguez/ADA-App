@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import i18n from '../i18n'
-import { Plus, UserRound, Crown, UsersRound } from 'lucide-react'
+import { Plus, UserRound, Crown, UsersRound, ChevronDown, ChevronUp } from 'lucide-react'
 import styles from './SpaceSwitcher.module.css'
 import { kbd } from '../lib/a11y'
 
@@ -22,6 +22,11 @@ import { kbd } from '../lib/a11y'
 // asomar); los espacios compartidos reales van alfabéticamente; Personal
 // siempre al final — mismo orden confirmado en el boceto original de
 // Johnatan.
+// Pestañas que asoman a partir de las cuales el stack se vuelve compacto, y
+// cuántas quedan visibles mientras está colapsado.
+const COMPACT_MIN = 4
+const COMPACT_VISIBLE = 2
+
 export function SpaceSwitcher({ spaces, activeSpaceId, onSwitch, profile, stats = {} }) {
   const { t } = useTranslation()
   // Detecta cuándo cambia el espacio activo y guarda por 300ms cuál era el
@@ -46,6 +51,12 @@ export function SpaceSwitcher({ spaces, activeSpaceId, onSwitch, profile, stats 
   // `transition: background/filter` de abajo hace el resto.
   const [colorsSettled, setColorsSettled] = useState(true)
 
+  // Modo compacto (v0.9.753): con varios espacios el stack sería muy largo.
+  // Desde COMPACT_MIN pestañas que asoman, solo se muestran las 2 con más
+  // urgencia (vencidos y luego pendientes) y una franja "N espacios más" que
+  // despliega el resto. Cambiar de espacio vuelve a colapsar.
+  const [expanded, setExpanded] = useState(false)
+
   const raf2Ref = useRef(null)
 
   useEffect(() => {
@@ -53,6 +64,7 @@ export function SpaceSwitcher({ spaces, activeSpaceId, onSwitch, profile, stats 
       setAnimIds({ outgoingId: prevActiveIdRef.current, incomingId: activeSpaceId })
       prevActiveIdRef.current = activeSpaceId
       setColorsSettled(false)
+      setExpanded(false)
       const raf1 = requestAnimationFrame(() => {
         raf2Ref.current = requestAnimationFrame(() => setColorsSettled(true))
       })
@@ -82,14 +94,25 @@ export function SpaceSwitcher({ spaces, activeSpaceId, onSwitch, profile, stats 
   const frontItem = allItems.find(it => it.id === activeSpaceId) || allItems.find(it => it.kind === 'personal')
   const peekItems = allItems.filter(it => it !== frontItem)
 
+  const compactable = peekItems.length >= COMPACT_MIN
+  const collapsed = compactable && !expanded
+  const urgency = it => {
+    const st = stats[it.id ?? 'personal']
+    return st ? st.overdue * 1000 + st.pending : 0
+  }
+  const visibleItems = collapsed
+    ? peekItems.filter(it => it.kind !== 'new').sort((a, b) => urgency(b) - urgency(a)).slice(0, COMPACT_VISIBLE)
+    : peekItems
+  const hiddenCount = peekItems.length - visibleItems.length
+
   // Durante los 300ms de transición, el item que ACABA de volverse activo
   // (`incomingId`) ya no está en `peekItems` (dejó de asomar) — pero para
   // que se vea saliendo del stack en vez de desaparecer de golpe, se
   // vuelve a agregar temporalmente a la lista que se dibuja, solo mientras
   // dura su animación de salida.
   const incomingItem = animIds ? allItems.find(it => it.id === animIds.incomingId) : null
-  const showIncoming  = incomingItem && !peekItems.includes(incomingItem)
-  const renderList     = showIncoming ? [...peekItems, incomingItem] : peekItems
+  const showIncoming  = incomingItem && !visibleItems.includes(incomingItem)
+  const renderList     = showIncoming ? [...visibleItems, incomingItem] : visibleItems
 
   function colorsFor(kind) {
     if (kind === 'new') return { bg: 'var(--space-new-bg)', text: 'var(--space-new-text)' }
@@ -223,6 +246,18 @@ export function SpaceSwitcher({ spaces, activeSpaceId, onSwitch, profile, stats 
           </div>
         )
       })}
+
+      {compactable && (
+        <button
+          type="button"
+          className={styles.moreStrip}
+          onClick={() => setExpanded(v => !v)}
+          aria-expanded={expanded}
+        >
+          <span>{collapsed ? t('spaceSwitcher.moreSpaces', { count: hiddenCount }) : t('spaceSwitcher.showLess')}</span>
+          {collapsed ? <ChevronDown size={18} strokeWidth={2} /> : <ChevronUp size={18} strokeWidth={2} />}
+        </button>
+      )}
     </div>
   )
 }
