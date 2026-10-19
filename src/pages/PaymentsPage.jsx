@@ -103,6 +103,36 @@ function prevPeriod(profile) {
 
 // Fila de "Por método de pago" (v0.9.487): monto, barra proporcional y,
 // si hay más de una tarjeta de ese tipo, el desglose por tarjeta.
+// v0.9.757 — "Por método de pago" en tablet/desktop: UNA barra dividida por
+// método (efectivo, débito, crédito) y la leyenda con montos. Teléfono sigue
+// con MethodRow (una barra por método, con detalle por tarjeta).
+function MethodStack({ data }) {
+  const { t } = useTranslation()
+  const segments = [
+    { key: 'cash', label: t('paymentMethod.cash'), amount: data.cash, fill: styles.methodBarCash, dot: styles.methodDotCash },
+    { key: 'debit', label: t('cards.kind.debit'), amount: data.debit, fill: styles.methodBarDebit, dot: styles.methodDotDebit },
+    { key: 'credit', label: t('cards.kind.credit'), amount: data.credit, fill: styles.methodBarCredit, dot: styles.methodDotCredit },
+  ].filter(sg => sg.amount > 0)
+  return (
+    <div className={styles.methodTile}>
+      <div className={styles.methodSectionTitle}>{t('paymentsPage.byMethod')}</div>
+      <div className={styles.stackBar}>
+        {segments.map(sg => (
+          <span key={sg.key} className={`${styles.stackSeg} ${sg.fill}`} style={{ '--method-pct': `${(sg.amount / data.total) * 100}%` }} />
+        ))}
+      </div>
+      <div className={styles.stackLegend}>
+        {segments.map(sg => (
+          <div key={sg.key} className={styles.stackLegendItem}>
+            <span className={styles.stackLegendLabel}><span className={`${styles.stackDot} ${sg.dot}`} />{sg.label}</span>
+            <span className={styles.stackLegendAmount}>{fmt(sg.amount)}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 function MethodRow({ label, amount, total, barClass, cards = [] }) {
   const { t } = useTranslation()
   if (!amount) return null
@@ -1641,6 +1671,11 @@ export function PaymentsPage({ payments, dataLoading = false, periodIncome, paym
           </div>
         </div>
 
+        {methodData.total > 0 && (
+          <div className={styles.tabletOnly}>
+            <MethodStack data={methodData} />
+          </div>
+        )}
         </div>
 
         {/* Columna derecha (Regla 47): el filtro compartido queda agrupado
@@ -1756,14 +1791,28 @@ export function PaymentsPage({ payments, dataLoading = false, periodIncome, paym
           )}
         </div>
 
+        {onGoCards && !activeSpaceId && (
+          <div className={styles.tabletOnly}>
+            <button type="button" className={`${styles.myCardsRow} ${styles.myCardsTablet}`} onClick={onGoCards}>
+              <CreditCard size={20} color="var(--accent)" />
+              <span className={styles.myCardsText}>
+                <span className={styles.myCardsTitle}>{t('paymentsPage.myCards')}</span>
+                <span className={styles.myCardsSub}>
+                  {paymentMethodsList.length > 0 ? t('paymentsPage.myCardsCount', { count: paymentMethodsList.length }) : t('paymentsPage.myCardsEmpty')}
+                </span>
+              </span>
+              <ChevronRight size={18} color="var(--label-variable)" />
+            </button>
+          </div>
+        )}
 
         </div>
         </div>
 
-        {/* Por método de pago + Mis tarjetas (v0.9.755): fuera de la columna derecha del grid (en tablet esa columna tiene alto fijo y las cortaba); en tablet ocupan una fila propia a todo el ancho, debajo del grid. */}
+        {/* Por método de pago + Mis tarjetas (solo teléfono; en tablet viven dentro de las columnas del grid, v0.9.757) (v0.9.755): fuera de la columna derecha del grid (en tablet esa columna tiene alto fijo y las cortaba); en tablet ocupan una fila propia a todo el ancho, debajo del grid. */}
         {/* ── Por método de pago (v0.9.487) ── */}
         {methodData.total > 0 && (
-          <div className={`${styles.methodSection} ${tabHide('analisis')}`}>
+          <div className={`${styles.methodSection} ${styles.mobileOnly} ${tabHide('analisis')}`}>
             <div className={styles.methodSectionTitle}>{t('paymentsPage.byMethod')}</div>
             <MethodRow
               label={t('paymentMethod.cash')}
@@ -1851,6 +1900,11 @@ export function PaymentsPage({ payments, dataLoading = false, periodIncome, paym
                             </span>
                           )}
                         </div>
+                        {!p.is_postponed && (p.is_recurrent || p.is_contribution_reflection) && (
+                          <div className={styles.paymentTags}>
+                            {[p.is_recurrent ? (getFrequencyLabel(p.recur_freq) || t('frequency.monthly')) : null, p.is_contribution_reflection ? t('homePage.shared') : null].filter(Boolean).join(' · ')}
+                          </div>
+                        )}
                         <div className={styles.paymentCategoryRow}>
                           {/* Pospuesto (agosto 2026) — mismo criterio que
                               PaidCollapseItem en HomePage.jsx: reemplaza la
@@ -1873,7 +1927,7 @@ export function PaymentsPage({ payments, dataLoading = false, periodIncome, paym
                                 })()}
                               </span>
                               <span className={styles.paymentCategoryDot} style={{ background: getCatColor(p.category, profile.custom_categories, profile.category_colors) }} />
-                              {getCategoryLabel(p.category)}
+                              <span className={styles.categoryText}>{getCategoryLabel(p.category)}</span>
                               {p.is_recurrent && <span className={styles.paymentRecurrentTag}>· {getFrequencyLabel(p.recur_freq) || t('frequency.monthly')}</span>}
                               {p.is_contribution_reflection && <span className={styles.paymentRecurrentTag}>· {t('homePage.shared')}</span>}
                             </>
@@ -1889,9 +1943,11 @@ export function PaymentsPage({ payments, dataLoading = false, periodIncome, paym
                           return (
                             <div className={styles.paymentMethodRow}>
                               <span className={styles.methodSwatch} style={{ '--swatch-color': card ? bankColorVar(card.bank) : 'var(--border-mid)' }} />
-                              {card
-                                ? `${getBank(card.bank).id === 'otro' ? t('cards.otherBank') : getBank(card.bank).name}${card.alias ? ` ${card.alias}` : ''}`
-                                : t(p.payment_method_kind === 'credit' ? 'paymentMethod.deletedCredit' : 'paymentMethod.deletedDebit')}
+                              <span className={styles.methodText}>
+                                {card
+                                  ? `${getBank(card.bank).id === 'otro' ? t('cards.otherBank') : getBank(card.bank).name}${card.alias ? ` ${card.alias}` : ''}`
+                                  : t(p.payment_method_kind === 'credit' ? 'paymentMethod.deletedCredit' : 'paymentMethod.deletedDebit')}
+                              </span>
                             </div>
                           )
                         })()}
