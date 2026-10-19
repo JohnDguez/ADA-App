@@ -117,7 +117,10 @@ export function usePayments(userId, activeSpaceId = null, activeSpaceName = null
       })
       const result = await res.json()
       if (!res.ok) return { error: result.error ? { message: result.error } : { message: i18n.t('apiErrors.registerContributionFailed') } }
-      await fetchPayments()
+      // Sin `await` (v0.9.743): el servidor ya confirmó; el refetch completo de
+      // pagos no tiene por qué bloquear el cierre del modal. La lista se
+      // actualiza sola al terminar (y el realtime la refresca para los demás).
+      fetchPayments()
       return { error: null, ...result }
     } catch (e) {
       return { error: { message: i18n.t('apiErrors.registerContributionConnectionError') } }
@@ -142,7 +145,7 @@ export function usePayments(userId, activeSpaceId = null, activeSpaceName = null
       })
       const result = await res.json()
       if (!res.ok) return { error: result.error ? { message: result.error } : { message: i18n.t('apiErrors.markPaidFailed') } }
-      await fetchPayments()
+      fetchPayments()
       return { error: null, ...result }
     } catch (e) {
       return { error: { message: i18n.t('apiErrors.markPaidConnectionError') } }

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Lock, PiggyBank } from 'lucide-react'
 import { fmt } from '../lib/utils'
@@ -52,6 +52,26 @@ export function SplitContributionsModal({ open, payment, spaceMembers, currentUs
       setLoading(false)
     })
   }, [open, payment?.id])
+
+  // Cambios de OTRO miembro mientras este modal está abierto (v0.9.743): el
+  // realtime refresca el pago (contributed_amount/fund_amount/is_paid) pero las
+  // contribuciones se leían una sola vez al abrir, así que el modal mostraba
+  // montos viejos. Se recargan sin tocar la fila que se está editando.
+  const liveKey = payment ? `${payment.contributed_amount}|${payment.fund_amount}|${payment.amount}|${payment.is_paid}` : ''
+  const firstLiveRun = useRef(true)
+  useEffect(() => {
+    if (firstLiveRun.current) { firstLiveRun.current = false; return }
+    if (!open || !payment || loading) return
+    let cancelled = false
+    getContributions(payment.id).then(({ contributions: rows }) => {
+      if (cancelled) return
+      const map = {}
+      for (const r of rows) map[r.user_id] = Number(r.amount)
+      setContributions(map)
+    })
+    return () => { cancelled = true }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [liveKey])
 
   const { render, closing } = usePresence(open)
   useScrollLock(open)

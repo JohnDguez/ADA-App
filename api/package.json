@@ -1,10 +1,11 @@
 {
   "type": "commonjs",
   "dependencies": {
-    "web-push": "^3.6.7",
     "@supabase/supabase-js": "^2.45.0",
-    "google-auth-library": "^9.15.0",
+    "@vercel/functions": "^2.2.13",
     "firebase-admin": "^14.5.0",
-    "stripe": "^17.4.0"
+    "google-auth-library": "^9.15.0",
+    "stripe": "^17.4.0",
+    "web-push": "^3.6.7"
   }
 }

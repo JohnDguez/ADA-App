@@ -1,6 +1,11 @@
 const { createClient } = require('@supabase/supabase-js')
 const applyCors = require('./_cors')
 const webpush = require('web-push')
+// `waitUntil` deja que la función siga trabajando DESPUÉS de responder (avisos
+// y push). Sin él, Vercel congela la función al cerrar la respuesta. Si el
+// paquete no está disponible se cae a esperar (comportamiento anterior).
+let waitUntil = null
+try { ({ waitUntil } = require('@vercel/functions')) } catch { waitUntil = null }
 const { notifyUsers } = require('./_notifyLib')
 const { ensureTwoAheadServer } = require('./_recurEnsureTwoAhead')
 const {
@@ -486,57 +491,78 @@ module.exports = async function handler(req, res) {
     // las contribuciones desde cero con otra consulta.
     let settled = false
     if (!payment.is_paid) {
-      const sumAfter = sumAll - (existingContribution?.amount || 0) + numAmount + currentFundAmount
-      if (Number(payment.amount) > 0 && Math.round(sumAfter * 100) >= Math.round(Number(payment.amount) * 100)) {
-        const { error: paidErr } = await supabase.from('payments').update({ is_paid: true, paid_at: new Date().toISOString() }).eq('id', paymentId)
+      // Suma FRESCA tras escribir (v0.9.743): dos abonos casi simultáneos de
+      // miembros distintos leían cada uno la suma anterior a la del otro, y
+      // ninguno veía el pago completo — quedaba cubierto pero sin marcarse
+      // pagado. Se recalcula contra la base ya con ambas escrituras.
+      const [{ data: freshContribs }, { data: freshPayment }] = await Promise.all([
+        supabase.from('payment_contributions').select('amount').eq('payment_id', paymentId),
+        supabase.from('payments').select('amount, is_paid, fund_amount').eq('id', paymentId).maybeSingle(),
+      ])
+      const sumAfter = (freshContribs || []).reduce((a, r) => a + Number(r.amount), 0) + (Number(freshPayment?.fund_amount) || 0)
+      const total = Number(freshPayment?.amount) || 0
+      if (freshPayment && !freshPayment.is_paid && total > 0 && Math.round(sumAfter * 100) >= Math.round(total * 100)) {
+        // `.eq('is_paid', false)` + `.select()`: si dos abonos simultáneos llegan
+        // aquí, solo UNO marca el pago y genera la siguiente copia (sin esto,
+        // los dos la generaban y quedaba duplicada).
+        const { data: flipped, error: paidErr } = await supabase.from('payments')
+          .update({ is_paid: true, paid_at: new Date().toISOString() })
+          .eq('id', paymentId).eq('is_paid', false).select('id')
         if (paidErr) {
-          // El abono ya quedó registrado y el reflejo ya existe — esto
-          // solo significa que el gasto ORIGINAL no se pudo marcar pagado
-          // (típicamente el trigger `check_payment_update_permission`
-          // bloqueando la escritura del service role — ver nota al
-          // principio del archivo). Se avisa en vez de reportar éxito.
           return res.status(500).json({ error: 'Se registró el abono, pero no se pudo marcar el gasto como pagado: ' + paidErr.message })
         }
-        settled = true
-        try { await ensureTwoAheadServer(supabase, paymentId) } catch (e) { console.error('ensureTwoAheadServer (abono):', e) }
+        if (flipped && flipped.length > 0) {
+          settled = true
+          try { await ensureTwoAheadServer(supabase, paymentId) } catch (e) { console.error('ensureTwoAheadServer (abono):', e) }
+        }
       }
     }
 
-    // Aviso a los demás miembros del espacio (mismo criterio de
-    // notify_on_changes que ya usa notify-space-change.js) — quien registró
-    // la contribución no se avisa a sí mismo. Las 3 consultas de abajo no
-    // dependen entre sí, van en paralelo (antes eran 4 seguidas).
-    const [{ data: actorProfile }, { data: memberProfile }, { data: spaceRow }, { data: toNotifyRows }] = await Promise.all([
-      supabase.from('profiles').select('name, avatar_url').eq('id', actorId).maybeSingle(),
-      supabase.from('profiles').select('name').eq('id', memberUserId).maybeSingle(),
-      supabase.from('shared_spaces').select('name').eq('id', payment.space_id).maybeSingle(),
-      supabase.from('shared_space_members').select('user_id, notify_on_changes').eq('space_id', payment.space_id).neq('user_id', actorId),
-    ])
-    const actorName      = actorProfile?.name || 'Alguien'
-    const actorAvatarUrl = actorProfile?.avatar_url || null
-    const memberName = memberProfile?.name || 'Un miembro'
-    const spaceName  = spaceRow?.name || 'tu Espacio Compartido'
-    const amountStr  = '$' + numAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-    const toNotify = (toNotifyRows || []).filter(m => m.notify_on_changes)
-    // Si alguien registró la parte de OTRO miembro, a ese miembro no le llega
-    // el aviso genérico sino uno propio: se le descontó de su ingreso en
-    // Efectivo y puede cambiar el método desde Pagados (v0.9.547).
-    const forYou = actorId !== memberUserId ? toNotify.find(m => m.user_id === memberUserId) : null
-    const general = forYou ? toNotify.filter(m => m.user_id !== memberUserId) : toNotify
+    // Los avisos (in-app + push) ya NO se esperan antes de responder
+    // (v0.9.743): eran varias consultas y envíos en serie que hacían que
+    // guardar un abono tardara segundos. Se mandan después de responder.
+    const sendNotices = async () => {
+      // Aviso a los demás miembros del espacio (mismo criterio de
+      // notify_on_changes que ya usa notify-space-change.js) — quien registró
+      // la contribución no se avisa a sí mismo. Las 3 consultas de abajo no
+      // dependen entre sí, van en paralelo (antes eran 4 seguidas).
+      const [{ data: actorProfile }, { data: memberProfile }, { data: spaceRow }, { data: toNotifyRows }] = await Promise.all([
+        supabase.from('profiles').select('name, avatar_url').eq('id', actorId).maybeSingle(),
+        supabase.from('profiles').select('name').eq('id', memberUserId).maybeSingle(),
+        supabase.from('shared_spaces').select('name').eq('id', payment.space_id).maybeSingle(),
+        supabase.from('shared_space_members').select('user_id, notify_on_changes').eq('space_id', payment.space_id).neq('user_id', actorId),
+      ])
+      const actorName      = actorProfile?.name || 'Alguien'
+      const actorAvatarUrl = actorProfile?.avatar_url || null
+      const memberName = memberProfile?.name || 'Un miembro'
+      const spaceName  = spaceRow?.name || 'tu Espacio Compartido'
+      const amountStr  = '$' + numAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+      const toNotify = (toNotifyRows || []).filter(m => m.notify_on_changes)
+      // Si alguien registró la parte de OTRO miembro, a ese miembro no le llega
+      // el aviso genérico sino uno propio: se le descontó de su ingreso en
+      // Efectivo y puede cambiar el método desde Pagados (v0.9.547).
+      const forYou = actorId !== memberUserId ? toNotify.find(m => m.user_id === memberUserId) : null
+      const general = forYou ? toNotify.filter(m => m.user_id !== memberUserId) : toNotify
 
-    if (general.length > 0) {
-      const title = (uid, lang) => contributionRegisteredText(lang, actorName, payment.name, memberName, amountStr)
-      await notifyUsers(supabase, webpush, {
-        userIds: general.map(m => m.user_id), title, actorName, spaceName, icon: actorAvatarUrl,
-      })
+      if (general.length > 0) {
+        const title = (uid, lang) => contributionRegisteredText(lang, actorName, payment.name, memberName, amountStr)
+        await notifyUsers(supabase, webpush, {
+          userIds: general.map(m => m.user_id), title, actorName, spaceName, icon: actorAvatarUrl,
+        })
+      }
+      if (forYou) {
+        const title = (uid, lang) => contributionForYouText(lang, actorName, payment.name, amountStr)
+        await notifyUsers(supabase, webpush, {
+          userIds: [memberUserId], title, actorName, spaceName, icon: actorAvatarUrl,
+        })
+      }
     }
-    if (forYou) {
-      const title = (uid, lang) => contributionForYouText(lang, actorName, payment.name, amountStr)
-      await notifyUsers(supabase, webpush, {
-        userIds: [memberUserId], title, actorName, spaceName, icon: actorAvatarUrl,
-      })
+    const noticesPromise = sendNotices().catch(e => console.error('avisos de abono:', e))
+    if (typeof waitUntil === 'function') {
+      waitUntil(noticesPromise)
+      return res.json({ error: null, reflectionPaymentId: reflectionId, settled })
     }
-
+    await noticesPromise
     return res.json({ error: null, reflectionPaymentId: reflectionId, settled })
   } catch (e) {
     console.error(e)

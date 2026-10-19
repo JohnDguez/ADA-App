@@ -1400,7 +1400,14 @@ export default function App() {
       // muestra el cambio (con el ícono de sincronizando). El resultado se
       // resuelve detrás; si falla, handleSyncError revierte y avisa.
       const edited = editPayment
-      updatePayment(edited.id, data).then(async ({ error, reverted, busy }) => {
+      // Solo se mandan los campos que ESTA persona cambió (v0.9.743). Antes se
+      // enviaba el formulario completo: si otro miembro editaba el mismo pago
+      // (monto, fecha…) mientras este modal estaba abierto, al guardar se le
+      // pisaban sus cambios con los valores viejos del formulario.
+      const sameVal = (a, b) => (a ?? null) === (b ?? null) || JSON.stringify(a ?? null) === JSON.stringify(b ?? null)
+      const changedData = Object.fromEntries(Object.entries(data).filter(([k, v]) => !sameVal(v, edited[k])))
+      if (Object.keys(changedData).length === 0) { showToast(t('app.toast.paymentUpdated')); return }
+      updatePayment(edited.id, changedData).then(async ({ error, reverted, busy }) => {
         if (reverted || busy) return
         if (error) { showToast(t('app.toast.saveError')); return }
         showToast(t('app.toast.paymentUpdated'))
@@ -1408,8 +1415,8 @@ export default function App() {
         // que representa crédito a favor de una tarjeta (estado de cuenta
         // o abono manual) — el crédito aplicado tenía que ser el monto
         // viejo; ahora es el nuevo. Delta = viejo - nuevo.
-        if (edited.card_statement_for && edited.is_paid && data.amount !== undefined) {
-          const delta = Math.round((Number(edited.amount) - Number(data.amount)) * 100) / 100
+        if (edited.card_statement_for && edited.is_paid && changedData.amount !== undefined) {
+          const delta = Math.round((Number(edited.amount) - Number(changedData.amount)) * 100) / 100
           adjustCardCarryOver(edited.card_statement_for, delta)
         }
         // Bug real reportado por Johnatan (v0.9.258): si la fecha de pago
@@ -1420,8 +1427,8 @@ export default function App() {
         // ya no es correcto. No se corrige automático (cambiar el número a
         // ciegas podría no ser lo que el usuario quiere), solo se avisa
         // para que lo revise a mano desde "Ingresos Extras del Periodo".
-        if (data.paid_at && data.paid_at !== edited.paid_at) {
-          const conflict = await checkPeriodIncomeConflict(profile, edited.paid_at, data.paid_at)
+        if (changedData.paid_at && changedData.paid_at !== edited.paid_at) {
+          const conflict = await checkPeriodIncomeConflict(profile, edited.paid_at, changedData.paid_at)
           if (conflict) {
             showToast(t('app.toast.remanenteConflict', { amount: fmt(conflict.amount) }))
           }
