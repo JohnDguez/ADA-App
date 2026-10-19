@@ -103,7 +103,7 @@ function prevPeriod(profile) {
 
 // Fila de "Por método de pago" (v0.9.487): monto, barra proporcional y,
 // si hay más de una tarjeta de ese tipo, el desglose por tarjeta.
-function MethodRow({ label, amount, total, barClass, cards = [], note = null }) {
+function MethodRow({ label, amount, total, barClass, cards = [] }) {
   const { t } = useTranslation()
   if (!amount) return null
   const pct = total > 0 ? Math.round((amount / total) * 100) : 0
@@ -129,7 +129,6 @@ function MethodRow({ label, amount, total, barClass, cards = [], note = null }) 
           ))}
         </div>
       )}
-      {note && <div className={styles.methodNote}>{note}</div>}
     </div>
   )
 }
@@ -1785,7 +1784,6 @@ export function PaymentsPage({ payments, dataLoading = false, periodIncome, paym
               total={methodData.total}
               barClass={styles.methodBarCredit}
               cards={methodData.creditCards}
-              note={methodData.credit > 0 ? t('paymentsPage.creditNote') : null}
             />
             {onGoCards && !activeSpaceId && (
               <button type="button" className={styles.myCardsRow} onClick={onGoCards}>

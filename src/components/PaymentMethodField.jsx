@@ -97,9 +97,6 @@ export function PaymentMethodField({ methods, value, onChange, label, onAddCard 
           </button>
         )}
       </div>
-      {selected?.kind === 'credit' && (
-        <div className={styles.note}>{t('paymentMethod.creditNote')}</div>
-      )}
       {cutNote && <div className={styles.cutNote}>{cutNote}</div>}
     </>
   )
