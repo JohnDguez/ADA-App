@@ -597,3 +597,19 @@
 button.dim70:disabled { opacity: 0.7; } /* gana a .btn-primary:disabled (0.6) como el inline anterior */
 .dim50,
 button.dim50:disabled { opacity: 0.5; }
+
+
+/* ── Tablet: diálogo centrado; Único/Recurrente en dos columnas ─────────── */
+.colLeft, .colRight, .actions { display: contents; }
+@media (min-width: 768px) {
+  .panel { padding: 24px 28px 24px; }
+  .panelWide { max-width: 760px; }
+  .handle { display: none; }
+  .formCols { display: grid; grid-template-columns: 340px minmax(0, 1fr); column-gap: 28px; align-items: start; }
+  .colLeft, .colRight { display: block; min-width: 0; }
+  .colRight .impactWrapper { margin-top: 12px; margin-bottom: 0; }
+  .moreRowHide { display: none; }
+  .actions { display: flex; flex-direction: row-reverse; justify-content: flex-start; gap: 10px; margin-top: 8px; }
+  .actions > button { margin-top: 0; width: auto; min-width: 150px; }
+  .actions > button:first-child { min-width: 220px; }
+}

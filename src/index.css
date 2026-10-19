@@ -654,6 +654,14 @@ html [data-presence="overlay"] { animation: presenceFadeIn .22s ease both; }
 html [data-presence="overlay"][data-closing] { animation: presenceFadeOut .22s ease both; pointer-events: none; }
 html [data-presence="panel"] { animation: presenceSheetIn .3s cubic-bezier(0.22, 1, 0.36, 1) both; overscroll-behavior: contain; }
 html [data-presence="panel"][data-closing] { animation: presenceSheetOut .22s cubic-bezier(0.4, 0, 1, 1) both; }
+/* Tablet (≥768px): los modales salen como diálogo centrado (fade + escala),
+   no como hoja desde abajo. En móvil no cambia nada. */
+@keyframes presenceDialogIn  { from { opacity: 0; transform: scale(0.96); } to { opacity: 1; transform: none; } }
+@keyframes presenceDialogOut { from { opacity: 1; transform: none; } to { opacity: 0; transform: scale(0.96); } }
+@media (min-width: 768px) {
+  html [data-presence="panel"] { animation: presenceDialogIn .24s cubic-bezier(0.22, 1, 0.36, 1) both; }
+  html [data-presence="panel"][data-closing] { animation: presenceDialogOut .18s ease-in both; }
+}
 /* <Presence>: la raíz de lo envuelto (el fondo) se desvanece al entrar/salir. */
 [data-presence-wrap] { display: contents; } /* antes style inline en Presence.jsx */
 html [data-presence-wrap] > * { animation: presenceFadeIn .22s ease both; }

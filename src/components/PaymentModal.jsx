@@ -103,6 +103,14 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onSaveC
   const [typeChosen,  setTypeChosen]  = useState(false)
   const [step,        setStep]        = useState(1)      // parcialidades: 1 = datos, 2 = cuánto y cuándo
   const [moreOpen,    setMoreOpen]    = useState(false)  // "Más opciones"
+  // Tablet (≥768px): diálogo ancho con "Más opciones" siempre abierto
+  const [isWide, setIsWide] = useState(() => typeof window !== 'undefined' && window.matchMedia('(min-width: 768px)').matches)
+  useEffect(() => {
+    const mq = window.matchMedia('(min-width: 768px)')
+    const on = e => setIsWide(e.matches)
+    mq.addEventListener('change', on)
+    return () => mq.removeEventListener('change', on)
+  }, [])
   const [impactOpen,  setImpactOpen]  = useState(false)  // franja de proyección abierta
   const impactRef = useRef(null)
   const [typeNote,    setTypeNote]    = useState('')
@@ -512,7 +520,7 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onSaveC
   // Flujo por tipo (v0.9.604)
   const isFlat       = mode !== 'installment'                         // Único / Recurrente: una sola pantalla
   const showDataStep = isFlat || !!initial || step === 1              // nombre + categoría
-  const moreVisible  = !!initial || moreOpen
+  const moreVisible  = !!initial || moreOpen || isWide
   const moreActive   = (methodId ? 1 : 0) + (mode === 'single' && isVariable ? 1 : 0) + (alreadyPaid ? 1 : 0)
   // Espacio compartido: no hay método de pago ni estado "ya pagado"; si solo
   // queda el interruptor de variable, se muestra directo sin "Más opciones".
@@ -782,10 +790,93 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onSaveC
     )
   }
 
+const impactBlock = impactPreview && impactPreview.length > 0 ? (() => {
+            const [first, second] = impactPreview
+            const esNegativo = first.disponibleDespues < 0
+            const colorEstado = esNegativo ? 'var(--impact-warning)' : 'var(--accent)'
+            const isPremium = !!profile?.is_premium
+
+            // Franja de una línea (v0.9.604). Premium: se abre y muestra la
+            // proyección completa. Sin premium: franja atenuada con candado
+            // que lleva a la pantalla de Premium (sin pastilla de texto).
+            return (
+              <div ref={impactRef} className={styles.impactWrapper}>
+                <button type="button" className={`${styles.impactStrip} ${isPremium ? '' : styles.impactStripLocked}`}
+                  onClick={() => isPremium ? setImpactOpen(o => !o) : onOpenPremium?.()}>
+                  <Wallet size={15} />
+                  <span className={styles.impactStripLabel}>{t('paymentModal.impact.label')}</span>
+                  {isPremium ? (
+                    <span className={styles.impactStripStatus} style={{ color: colorEstado }}>
+                      {esNegativo ? <AlertTriangle size={14} /> : <Check size={14} />}
+                      {esNegativo ? t('paymentModal.impact.warningShort') : t('paymentModal.impact.ok')}
+                      {impactOpen ? <CaretUp size={13} /> : <CaretDown size={13} />}
+                    </span>
+                  ) : (
+                    <span className={styles.impactStripLock}><PhLock size={15} /> Premium</span>
+                  )}
+                </button>
+                <Collapse open={isPremium && impactOpen}>
+                  <div className={styles.impactCard}>
+                  <div className={styles.impactPeriodBox} style={{ borderColor: colorEstado }}>
+                    <div className={styles.impactStatusRow}>
+                      {esNegativo ? <AlertTriangle size={15} color={colorEstado} className={styles.impactStatusIcon} /> : <Check size={15} color={colorEstado} className={styles.impactStatusIcon} />}
+                      <div className={styles.impactStatusText} style={{ color: colorEstado }}>
+                        <div>{esNegativo ? t('paymentModal.impact.warning') : t('paymentModal.impact.ok')}</div>
+                        <div>{t('paymentModal.impact.periodLabel', { range: rangeLabel(first.start, first.end) })}</div>
+                      </div>
+                    </div>
+                    <div className={styles.impactAmount} style={{ color: colorEstado }}>
+                      {fmt(first.disponibleDespues)}
+                    </div>
+                    <div className={styles.impactDetails}>
+                      <div>{t('paymentModal.impact.currentlyAvailable', { amount: fmt(first.disponibleAntes) })}</div>
+                      {(first.pendientesCount > 0 || first.variablesPendientes > 0) && (
+                        <div>
+                          {first.pendientesCount > 0 && t('paymentModal.impact.pendingCount', { count: first.pendientesCount, amount: fmt(first.pendientesMonto) })}
+                          {first.pendientesCount > 0 && first.variablesPendientes > 0 && ' + '}
+                          {first.variablesPendientes > 0 && t('paymentModal.impact.variableCount', { count: first.variablesPendientes })}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {second && (
+                    <div className={styles.impactSecondPeriod}>
+                      <div className={styles.impactSecondRow}>
+                        <div className={styles.impactSecondLeft}>
+                          <Repeat size={13} color="var(--text)" className={styles.impactSecondIcon} />
+                          <div className={styles.impactSecondText}>
+                            <div>{t('paymentModal.impact.nextPeriodAvailable')}</div>
+                            <div>{rangeLabel(second.start, second.end)}.</div>
+                          </div>
+                        </div>
+                        <span className={styles.impactSecondAmount}>{fmt(second.disponibleDespues)} MXN</span>
+                      </div>
+                      {(second.pendientesCount > 0 || second.variablesPendientes > 0) && (
+                        <div className={styles.impactSecondDetails}>
+                          {second.pendientesCount > 0 && t('paymentModal.impact.pendingCount', { count: second.pendientesCount, amount: fmt(second.pendientesMonto) })}
+                          {second.pendientesCount > 0 && second.variablesPendientes > 0 && ' + '}
+                          {second.variablesPendientes > 0 && t('paymentModal.impact.variableCountUncounted', { count: second.variablesPendientes })}
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {!profile.salary_enabled && (
+                    <div className={styles.impactSalaryHint}>
+                      {t('paymentModal.impact.salaryHint')}
+                    </div>
+                  )}
+                </div>
+                </Collapse>
+              </div>
+            )
+})() : null
+
   return (
     <>
       <div onClick={e => e.target === e.currentTarget && requestClose()} className={styles.overlay} data-presence="overlay" data-closing={closing ? '' : undefined}>
-        <div className={styles.panel} data-presence="panel" data-closing={closing ? '' : undefined}>
+        <div className={`${styles.panel} ${isFlat ? styles.panelWide : ''}`} data-presence="panel" data-closing={closing ? '' : undefined}>
           <div className={styles.handle} />
 
           {!initial && (
@@ -816,7 +907,8 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onSaveC
           {error && <div className={styles.errorBox}>{error}</div>}
           {lockedMessage && <div className={styles.warningBox}>{lockedMessage}</div>}
 
-          <div className={canWrite ? styles.formWrapper : styles.formDisabled}>
+          <div className={`${canWrite ? styles.formWrapper : styles.formDisabled} ${isFlat ? styles.formCols : ''}`}>
+          <div className={styles.colLeft}>
           {!initial && voiceNote.text && (
             <div className={voiceNote.kind === 'error' ? styles.voiceNoteError : styles.voiceNote}>{voiceNote.text}</div>
           )}
@@ -862,6 +954,12 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onSaveC
             </div>
           )}
 
+          {mode === 'recurrent' && (
+            <FrequencyPicker value={recurFreq} onChange={setRecurFreq} />
+          )}
+
+          </div>{/* /colLeft */}
+          <div className={styles.colRight}>
           {/* Parcialidades · paso 1: con qué se paga (y si se enlaza a la tarjeta) */}
           {mode === 'installment' && step === 1 && !initial && (
             <div className={styles.stepEnter}>
@@ -879,10 +977,6 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onSaveC
                 />
               )}
             </div>
-          )}
-
-          {mode === 'recurrent' && (
-            <FrequencyPicker value={recurFreq} onChange={setRecurFreq} />
           )}
 
           {isFlat && showDatePicker && (
@@ -927,7 +1021,7 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onSaveC
 
           {/* Más opciones (Único / Recurrente) */}
           {isFlat && !initial && hasMoreOptions && (
-            <button type="button" onClick={() => setMoreOpen(o => !o)} className={styles.moreRow}>
+            <button type="button" onClick={() => setMoreOpen(o => !o)} className={`${styles.moreRow} ${styles.moreRowHide}`}>
               {moreOpen ? <CaretUp size={16} /> : <CaretDown size={16} />}
               <span>{moreOpen ? t('paymentModal.more.less') : t('paymentModal.more.title')}</span>
               {moreActive > 0 && <span className={styles.moreBadge}>{t('paymentModal.more.active', { count: moreActive })}</span>}
@@ -1030,91 +1124,13 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onSaveC
               </>
             )
           })()}</div>)}
+          {isFlat && impactBlock}
+          </div>{/* /colRight */}
           </div>
 
-          {impactPreview && impactPreview.length > 0 && (() => {
-            const [first, second] = impactPreview
-            const esNegativo = first.disponibleDespues < 0
-            const colorEstado = esNegativo ? 'var(--impact-warning)' : 'var(--accent)'
-            const isPremium = !!profile?.is_premium
+          {!isFlat && impactBlock}
 
-            // Franja de una línea (v0.9.604). Premium: se abre y muestra la
-            // proyección completa. Sin premium: franja atenuada con candado
-            // que lleva a la pantalla de Premium (sin pastilla de texto).
-            return (
-              <div ref={impactRef} className={styles.impactWrapper}>
-                <button type="button" className={`${styles.impactStrip} ${isPremium ? '' : styles.impactStripLocked}`}
-                  onClick={() => isPremium ? setImpactOpen(o => !o) : onOpenPremium?.()}>
-                  <Wallet size={15} />
-                  <span className={styles.impactStripLabel}>{t('paymentModal.impact.label')}</span>
-                  {isPremium ? (
-                    <span className={styles.impactStripStatus} style={{ color: colorEstado }}>
-                      {esNegativo ? <AlertTriangle size={14} /> : <Check size={14} />}
-                      {esNegativo ? t('paymentModal.impact.warningShort') : t('paymentModal.impact.ok')}
-                      {impactOpen ? <CaretUp size={13} /> : <CaretDown size={13} />}
-                    </span>
-                  ) : (
-                    <span className={styles.impactStripLock}><PhLock size={15} /> Premium</span>
-                  )}
-                </button>
-                <Collapse open={isPremium && impactOpen}>
-                  <div className={styles.impactCard}>
-                  <div className={styles.impactPeriodBox} style={{ borderColor: colorEstado }}>
-                    <div className={styles.impactStatusRow}>
-                      {esNegativo ? <AlertTriangle size={15} color={colorEstado} className={styles.impactStatusIcon} /> : <Check size={15} color={colorEstado} className={styles.impactStatusIcon} />}
-                      <div className={styles.impactStatusText} style={{ color: colorEstado }}>
-                        <div>{esNegativo ? t('paymentModal.impact.warning') : t('paymentModal.impact.ok')}</div>
-                        <div>{t('paymentModal.impact.periodLabel', { range: rangeLabel(first.start, first.end) })}</div>
-                      </div>
-                    </div>
-                    <div className={styles.impactAmount} style={{ color: colorEstado }}>
-                      {fmt(first.disponibleDespues)}
-                    </div>
-                    <div className={styles.impactDetails}>
-                      <div>{t('paymentModal.impact.currentlyAvailable', { amount: fmt(first.disponibleAntes) })}</div>
-                      {(first.pendientesCount > 0 || first.variablesPendientes > 0) && (
-                        <div>
-                          {first.pendientesCount > 0 && t('paymentModal.impact.pendingCount', { count: first.pendientesCount, amount: fmt(first.pendientesMonto) })}
-                          {first.pendientesCount > 0 && first.variablesPendientes > 0 && ' + '}
-                          {first.variablesPendientes > 0 && t('paymentModal.impact.variableCount', { count: first.variablesPendientes })}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  {second && (
-                    <div className={styles.impactSecondPeriod}>
-                      <div className={styles.impactSecondRow}>
-                        <div className={styles.impactSecondLeft}>
-                          <Repeat size={13} color="var(--text)" className={styles.impactSecondIcon} />
-                          <div className={styles.impactSecondText}>
-                            <div>{t('paymentModal.impact.nextPeriodAvailable')}</div>
-                            <div>{rangeLabel(second.start, second.end)}.</div>
-                          </div>
-                        </div>
-                        <span className={styles.impactSecondAmount}>{fmt(second.disponibleDespues)} MXN</span>
-                      </div>
-                      {(second.pendientesCount > 0 || second.variablesPendientes > 0) && (
-                        <div className={styles.impactSecondDetails}>
-                          {second.pendientesCount > 0 && t('paymentModal.impact.pendingCount', { count: second.pendientesCount, amount: fmt(second.pendientesMonto) })}
-                          {second.pendientesCount > 0 && second.variablesPendientes > 0 && ' + '}
-                          {second.variablesPendientes > 0 && t('paymentModal.impact.variableCountUncounted', { count: second.variablesPendientes })}
-                        </div>
-                      )}
-                    </div>
-                  )}
-
-                  {!profile.salary_enabled && (
-                    <div className={styles.impactSalaryHint}>
-                      {t('paymentModal.impact.salaryHint')}
-                    </div>
-                  )}
-                </div>
-                </Collapse>
-              </div>
-            )
-          })()}
-
+          <div className={styles.actions}>
           {mode === 'installment' && !initial && step === 1 ? (
             <button onClick={goNextStep} disabled={!canWrite} className={`btn-primary ${styles.saveButtonSpacing}`}>
               {t('paymentModal.steps.next')}
@@ -1132,6 +1148,7 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onSaveC
           {initial && !isEditingInstallment && (
             <button onClick={() => setConfirmDelete(true)} disabled={!canDelete} className={`btn-danger ${styles.deleteButtonSpacing} ${canDelete ? '' : styles.dim50}`}>{t('paymentModal.deletePayment')}</button>
           )}
+          </div>
         </div>
       </div>
       {addCategorySheet}
