@@ -3,7 +3,9 @@
   margin-top: calc(-1 * var(--sat, 0px));
   padding-top: var(--sat, 0px);
   padding-bottom: 120px;
-  background: var(--bg);
+  background-color: var(--bg);
+  background-image: var(--page-grad);
+  background-attachment: fixed;
   min-height: 100vh;
   position: relative;
   overflow: hidden;
