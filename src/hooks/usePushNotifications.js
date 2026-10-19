@@ -62,6 +62,32 @@ export function usePushNotifications(userId) {
     }
   }
 
+  async function refreshNativeToken(PushNotifications, storedToken) {
+    try {
+      const token = await new Promise((resolve, reject) => {
+        const timer = setTimeout(() => reject(new Error('timeout')), 10000)
+        let regHandle = null
+        let errHandle = null
+        const done = (fn, v) => {
+          clearTimeout(timer)
+          regHandle?.then?.(h => h.remove?.()).catch(() => { /* ya quitado */ })
+          errHandle?.then?.(h => h.remove?.()).catch(() => { /* ya quitado */ })
+          fn(v)
+        }
+        regHandle = PushNotifications.addListener('registration', (t) => done(resolve, t.value))
+        errHandle = PushNotifications.addListener('registrationError', (err) => done(reject, new Error(err?.error || 'registrationError')))
+        PushNotifications.register()
+      })
+      if (token && token !== storedToken) {
+        const { error } = await supabase.from('fcm_tokens').upsert({ user_id: userId, token }, { onConflict: 'user_id' })
+        if (error) console.error('Native refresh: fcm_tokens upsert', error)
+        else setSubscribed(true)
+      }
+    } catch (e) {
+      console.error('Native refresh token:', e?.message || e)
+    }
+  }
+
   async function checkSubscriptionNative() {
     try {
       const { PushNotifications } = await import('@capacitor/push-notifications')
@@ -74,6 +100,14 @@ export function usePushNotifications(userId) {
           const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone
           await supabase.from('profiles').update({ timezone: userTimezone }).eq('id', userId)
         }
+        // v0.9.750 — el token de FCM solo se guardaba al encender el interruptor.
+        // Si el dispositivo lo rota (reinstalar, pasar de la build de depuración a
+        // la de Play, borrar datos), el cron recibe "token no registrado", lo borra
+        // y las push dejan de llegar a la app sin ningún aviso, aunque el permiso
+        // siga concedido. Ahora, con el permiso concedido, se vuelve a registrar al
+        // abrir la app y se guarda el token vigente (una escritura solo si cambió
+        // o faltaba).
+        refreshNativeToken(PushNotifications, data?.token || null)
       }
     } catch (e) {
       console.error('Error checking native subscription:', e)

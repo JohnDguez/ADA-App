@@ -416,18 +416,36 @@ export default function App() {
     // "N pagos vencidos / próximos": el cuerpo trae los nombres separados por
     // coma; se resaltan los pagos pendientes con esos nombres.
     if (n.type === 'overdue' || n.type === 'upcoming') {
-      const names = (n.body || '').split(',').map(text).filter(Boolean)
-      const ids = list
+      // El cuerpo de "próximos" trae un sufijo ("Claude, Gas — vence pronto"):
+      // se quita antes de separar los nombres (v0.9.750; antes no coincidía nada).
+      const names = (n.body || '').split(' — ')[0].split(',').map(text).filter(Boolean)
+      const pending = list
         .filter(p => p?.name && !p.is_master && !p.is_paid && !p.is_postponed && names.includes(text(p.name)))
         .sort((a, b) => String(a.due_date).localeCompare(String(b.due_date)))
-        .map(p => p.id)
+      // Un solo pago por nombre: el más próximo. Los recurrentes tienen copias
+      // pendientes de periodos siguientes con el mismo nombre y no son el aviso.
+      const seen = new Set()
+      const ids = []
+      for (const p of pending) {
+        const k = text(p.name)
+        if (seen.has(k)) continue
+        seen.add(k)
+        ids.push(p.id)
+      }
       return ids.length ? ids : null
     }
     const title = text(n.title), body = text(n.body)
+    // "Vence hoy": solo el pago cuyo vencimiento es el día del aviso. Antes se
+    // tomaba cualquier pago pendiente con ese nombre y, si el de hoy ya estaba
+    // pagado, resaltaba la copia del periodo siguiente (v0.9.750).
+    const noticeDay = n.created_at ? dateToStr(new Date(n.created_at)) : null
     let best = null
     for (const p of list) {
       if (!p?.name || p.is_master) continue
-      if (n.type === 'due_today' && (p.is_paid || p.is_postponed)) continue
+      if (n.type === 'due_today') {
+        if (p.is_paid || p.is_postponed) continue
+        if (noticeDay && String(p.due_date).slice(0, 10) !== noticeDay) continue
+      }
       const name = text(p.name)
       if ((title.startsWith(name) || body.startsWith(name)) && (!best || name.length > text(best.name).length)) best = p
     }

@@ -121,7 +121,7 @@ async function collectReminders(scope, profile, todayStr, today, lang) {
     const tomorrowStr   = addDaysStr(todayStr, 1)
 
     const { data: upcoming } = await applyScope(
-      supabase.from('payments').select('name, due_date').eq('is_paid', false).eq('is_postponed', false).eq('paused', false).not('is_master', 'is', true)
+      supabase.from('payments').select('id, name, due_date').eq('is_paid', false).eq('is_postponed', false).eq('paused', false).not('is_master', 'is', true)
         .gte('due_date', tomorrowStr).lte('due_date', futureDateStr),
       scope
     )
@@ -131,6 +131,7 @@ async function collectReminders(scope, profile, todayStr, today, lang) {
         type: 'upcoming', title, body,
         tag: `upcoming${scope.spaceId ? '-' + scope.spaceId : ''}`, urgent: false, url: '/',
         space_name: scope.spaceName || null, space_id: scope.spaceId || null,
+        payment_id: upcoming.length === 1 ? upcoming[0].id : null,
       })
     }
   }
