@@ -1646,9 +1646,11 @@
     display: contents;
   }
 
+  /* Espacio compartido: no hay método de pago; los contribuyentes ocupan su columna. */
   .paymentContributors {
-    grid-column: 3 / 5;
-    grid-row: 2;
+    grid-column: 4;
+    grid-row: 1;
+    min-width: 0;
   }
 
   /* Etiquetas (frecuencia, compartido) bajo el nombre, no dentro de la

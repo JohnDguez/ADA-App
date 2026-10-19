@@ -1873,7 +1873,7 @@ export function PaymentsPage({ payments, dataLoading = false, periodIncome, paym
                 <span>{t('paymentsPage.col.date')}</span>
                 <span>{t('paymentsPage.col.name')}</span>
                 <span>{t('paymentsPage.col.category')}</span>
-                <span>{t('paymentsPage.col.method')}</span>
+                <span>{t(activeSpaceId ? 'paymentsPage.col.contributors' : 'paymentsPage.col.method')}</span>
                 <span className={styles.paymentsHeaderAmount}>{t('paymentsPage.col.amount')}</span>
                 <span />
               </div>
@@ -1933,7 +1933,7 @@ export function PaymentsPage({ payments, dataLoading = false, periodIncome, paym
                             se ve en Gastos → "Pagos realizados" — nunca la
                             mostraba. Solo `PayCard.jsx` (pendientes en
                             Inicio) la tenía. Se oculta en efectivo. */}
-                        {p.payment_method_kind && p.payment_method_kind !== 'cash' && (() => {
+                        {!activeSpaceId && p.payment_method_kind && p.payment_method_kind !== 'cash' && (() => {
                           const card = paymentMethodsList.find(m => m.id === p.payment_method_id)
                           return (
                             <div className={styles.paymentMethodRow}>

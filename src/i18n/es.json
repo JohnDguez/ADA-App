@@ -360,6 +360,7 @@
       "name": "Nombre",
       "category": "Categoría",
       "method": "Método",
+      "contributors": "Contribuyen",
       "amount": "Monto"
     },
     "total": "Total:",
