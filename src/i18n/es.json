@@ -355,6 +355,7 @@
     "noExpensesTitle": "Sin gastos registrados",
     "customizeCategories": "Personalizar categorías",
     "paymentsTitle": "Pagos",
+    "col": { "date": "Fecha", "name": "Nombre", "category": "Categoría", "method": "Método", "amount": "Monto" },
     "total": "Total:",
     "noPaymentsCurrentPeriod": "Sin pagos realizados en el periodo actual",
     "noPaymentsInMonth": "Sin pagos realizados en {{month}} {{year}}",

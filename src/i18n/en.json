@@ -355,6 +355,7 @@
     "noExpensesTitle": "No expenses recorded",
     "customizeCategories": "Customize categories",
     "paymentsTitle": "Payments",
+    "col": { "date": "Date", "name": "Name", "category": "Category", "method": "Method", "amount": "Amount" },
     "total": "Total:",
     "noPaymentsCurrentPeriod": "No payments made in the current period",
     "noPaymentsInMonth": "No payments made in {{month}} {{year}}",

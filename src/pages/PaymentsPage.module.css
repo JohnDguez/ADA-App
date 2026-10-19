@@ -1221,6 +1221,8 @@
 }
 
 /* ── Parte 6: Pagos realizados — lista ────────────────────────────────────── */
+.paymentsHeaderRow { display: none; }
+
 .paymentsList {
   background: var(--surface);
   border-radius: var(--radius);
@@ -1610,11 +1612,32 @@
      Sin encabezados de columna (Fecha/Nombre/Categoría/Monto) — se
      quitaron en v0.9.392, se sentían de más sobre cada fila ya
      autoexplicativa. */
+  /* v0.9.755 — columnas explícitas: fecha, nombre, categoría, método,
+     monto, menú. Antes el método de pago no tenía columna y caía en una
+     fila nueva (la fila se rompía con cada campo agregado). Cada celda lleva
+     fila y columna fijas; los contribuyentes (espacios) van en la 2.ª fila. */
+  .paymentsSection { --pay-cols: 50px minmax(0, 1.5fr) minmax(0, 1.2fr) minmax(0, 1fr) 100px 32px; --pay-gap: 12px; }
+
   .paymentRow {
     display: grid;
-    grid-template-columns: 50px 1fr 150px 100px 32px;
-    gap: 12px;
+    grid-template-columns: var(--pay-cols);
+    gap: var(--pay-gap);
+    align-items: center;
   }
+
+  .paymentDate { grid-column: 1; grid-row: 1; }
+  .paymentNameRow { grid-column: 2; grid-row: 1; min-width: 0; }
+  .paymentMethodRow { grid-column: 4; grid-row: 1; margin-top: 0; min-width: 0; }
+
+  .paymentsHeaderRow {
+    display: grid;
+    grid-template-columns: var(--pay-cols);
+    gap: var(--pay-gap);
+    padding: 0 14px 8px 18px;
+    font-size: 12px;
+    color: var(--muted);
+  }
+  .paymentsHeaderAmount { text-align: right; }
 
   .paymentDivider {
     display: none;
@@ -1625,19 +1648,24 @@
   }
 
   .paymentContributors {
-    grid-column: 2;
+    grid-column: 2 / 5;
+    grid-row: 2;
   }
 
   .paymentCategoryRow {
     grid-column: 3;
+    grid-row: 1;
+    min-width: 0;
   }
 
   .paymentAmountBlock {
-    grid-column: 4;
+    grid-column: 5;
+    grid-row: 1;
   }
 
   .paymentMenuWrapper {
-    grid-column: 5;
+    grid-column: 6;
+    grid-row: 1;
   }
 }
 
@@ -1753,10 +1781,8 @@
 
   /* Lista de pagos — el grid crece junto con el texto para que ninguna
      columna quede apretada al subir el tamaño de letra. */
-  .paymentRow {
-    grid-template-columns: 64px 1fr 180px 130px 40px;
-    gap: 16px;
-  }
+  .paymentsSection { --pay-cols: 64px minmax(0, 1.5fr) minmax(0, 1.2fr) minmax(0, 1fr) 130px 40px; --pay-gap: 16px; }
+  .paymentsHeaderRow { font-size: 13px; }
   .paymentDateDay { font-size: 17px; }
   .paymentDateMonth { font-size: 11px; }
   .paymentNameRow { font-size: 16px; }
@@ -1922,3 +1948,28 @@
 /* ── Antes `style={{}}` inline en PaymentsPage.jsx (v0.9.724, Regla 12) ──── */
 .remanenteCustomButtonDim { opacity: 0.6; }
 :global(.field-label).incomeLabelFlush { margin-bottom: 0; }
+
+/* v0.9.755 — "Por método de pago" + "Mis tarjetas" en tablet/desktop: fila
+   propia a todo el ancho, debajo del grid de 2 columnas. Los métodos van en
+   3 columnas y "Mis tarjetas" cierra la tarjeta. */
+@media (min-width: 768px) {
+  .methodSection {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 14px 24px;
+    padding: 18px 20px;
+    margin-bottom: 24px;
+    background: var(--surface);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-card);
+  }
+  .methodSectionTitle {
+    grid-column: 1 / -1;
+    margin-bottom: 0;
+  }
+  .methodSection .myCardsRow {
+    grid-column: 1 / -1;
+    margin-top: 0;
+    background: var(--bg);
+  }
+}

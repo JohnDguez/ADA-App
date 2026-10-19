@@ -1757,6 +1757,11 @@ export function PaymentsPage({ payments, dataLoading = false, periodIncome, paym
           )}
         </div>
 
+
+        </div>
+        </div>
+
+        {/* Por método de pago + Mis tarjetas (v0.9.755): fuera de la columna derecha del grid (en tablet esa columna tiene alto fijo y las cortaba); en tablet ocupan una fila propia a todo el ancho, debajo del grid. */}
         {/* ── Por método de pago (v0.9.487) ── */}
         {methodData.total > 0 && (
           <div className={`${styles.methodSection} ${tabHide('analisis')}`}>
@@ -1797,9 +1802,6 @@ export function PaymentsPage({ payments, dataLoading = false, periodIncome, paym
           </div>
         )}
 
-        </div>
-        </div>
-
         {/* ── Pagos realizados ── */}
         <div className={`${styles.paymentsSection} ${tabHide('pagos')}`}>
           <div className={styles.paymentsSectionHeader}>
@@ -1819,6 +1821,15 @@ export function PaymentsPage({ payments, dataLoading = false, periodIncome, paym
             />
           ) : (
             <>
+              {/* Encabezados de columna, solo en tablet/desktop (Regla 47) */}
+              <div className={styles.paymentsHeaderRow} aria-hidden="true">
+                <span>{t('paymentsPage.col.date')}</span>
+                <span>{t('paymentsPage.col.name')}</span>
+                <span>{t('paymentsPage.col.category')}</span>
+                <span>{t('paymentsPage.col.method')}</span>
+                <span className={styles.paymentsHeaderAmount}>{t('paymentsPage.col.amount')}</span>
+                <span />
+              </div>
               <div className={styles.paymentsList}>
                 {paidInView.map((p, i) => {
                   // Un pospuesto no tiene paid_at — se usa postponed_at
