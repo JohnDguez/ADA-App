@@ -55,6 +55,7 @@ import { PayStatementModal } from './components/PayStatementModal'
 import { VariableAmountModal } from './components/VariableAmountModal'
 import { ConfirmNextPeriodPayModal } from './components/ConfirmNextPeriodPayModal'
 import { InstallmentAbonarModal } from './components/InstallmentAbonarModal'
+import { systemNotify } from './lib/systemNotify'
 import { SplitContributionsModal } from './components/SplitContributionsModal'
 import { PatchNotesModal } from './components/PatchNotesModal'
 import { ConfirmExitModal } from './components/ConfirmExitModal'
@@ -235,6 +236,8 @@ export default function App() {
   const localNotifs = useLocalNotifications(user?.id)
   function handleSyncError({ payment, action }) {
     showToast(t(`sync.body.${action}`, { name: payment.name }))
+    // Con la app minimizada el toast ya no estará: aviso en la barra del sistema (v0.9.744)
+    systemNotify({ title: t('sync.notifTitle'), body: t(`sync.body.${action}`, { name: payment.name }), tag: `sync-${payment.id}` })
     localNotifs.add({
       type: 'sync_error',
       action,
@@ -251,6 +254,7 @@ export default function App() {
   function handleGoalSyncError({ goal, action }) {
     const name = goal?.name || t('app.toast.fallbackPaymentName')
     showToast(t(`sync.body.${action}`, { name }))
+    systemNotify({ title: t('sync.notifTitle'), body: t(`sync.body.${action}`, { name: name }) })
     localNotifs.add({
       type: 'sync_error',
       action,
@@ -264,6 +268,7 @@ export default function App() {
   function handleIncomeSyncError({ name, action }) {
     const label = name || t('app.toast.fallbackIncomeName')
     showToast(t(`sync.body.${action}`, { name: label }))
+    systemNotify({ title: t('sync.notifTitle'), body: t(`sync.body.${action}`, { name: label }) })
     localNotifs.add({ type: 'sync_error', action, payment_name: label, space_id: paymentsSpaceId || null, tab: 'payments' })
   }
   // Entrega C+ (v0.9.497, pedido de Johnatan: "como vas a dejar eso
@@ -371,6 +376,7 @@ export default function App() {
     const bankName = method ? getBank(method.bank).name : ''
     const label = [bankName, method?.alias].filter(Boolean).join(' ') || t('cards.fallbackName')
     showToast(t(`sync.body.${action}`, { name: label }))
+    systemNotify({ title: t('sync.notifTitle'), body: t(`sync.body.${action}`, { name: label }) })
     localNotifs.add({ type: 'sync_error', action, payment_name: label, tab: 'settings', settings_section: 'cards' })
   }
   // Se reasigna en cada render (es un ref dentro del hook, no provoca
@@ -949,8 +955,24 @@ export default function App() {
   }
   async function runSharedPay({ payment, amount }, methodId) {
     if (amount == null) {
-      const { error } = await payRemainingContribution(payment.id, methodId)
-      if (error) showToast(error.message || t('app.toast.markPaidError'))
+      // Optimista (v0.9.744): el pago se ve pagado al instante; si el servidor
+      // falla, el hook revierte y avisa (aviso + notificación), sin otro toast.
+      // Con tarjeta, la deuda de esa tarjeta sube al instante con un reflejo
+      // provisional (se reemplaza por el real al recargar al terminar).
+      const card = methodId ? paymentMethods.methods.find(m => m.id === methodId) : null
+      const tmpId = `tmp-${payment.id}`
+      if (card) {
+        const remaining = Math.max(0, Math.round((Number(payment.amount) - Number(payment.contributed_amount || 0) - Number(payment.fund_amount || 0)) * 100) / 100)
+        setSpaceCardPayments(prev => [...(prev || []), {
+          id: tmpId, user_id: user?.id, space_id: null, name: payment.name, amount: remaining,
+          due_date: todayStr(), is_paid: true, paid_at: new Date().toISOString(),
+          payment_method_id: card.id, payment_method_kind: card.kind, is_contribution_reflection: true,
+        }])
+      }
+      const { error, reverted, busy } = await payRemainingContribution(payment.id, methodId)
+      if (error && !reverted && !busy) showToast(error.message || t('app.toast.markPaidError'))
+      if (error) setSpaceCardPayments(prev => (prev ? prev.filter(r => r.id !== tmpId) : prev))
+      else loadSpaceCardPayments()
       return
     }
     if (!(Number(payment.amount) > 0)) {
@@ -959,6 +981,14 @@ export default function App() {
     }
     const { error } = await registerContribution(payment.id, user?.id, amount, methodId)
     if (error) showToast(error.message || t('app.toast.registerPaymentError'))
+    else loadSpaceCardPayments()
+  }
+  // Pide el método de pago DURANTE la animación de la card (v0.9.744): la
+  // promesa resuelve `{ methodId }` o `null` si se cancela.
+  function requestSharedMethod(payment) {
+    return new Promise(resolve => {
+      setSharedPay({ payment, amount: null, modalPayment: { ...payment, payment_method_id: null }, resolver: resolve })
+    })
   }
 
   // handleMarkPaid: usado por PayCard (Home) al terminar su animación de
@@ -967,7 +997,7 @@ export default function App() {
   // conserva. También sigue siendo el punto de entrada de flujos SIN
   // animación (ej. GroupCard en RecurrentsPage): ahí un pago variable
   // sigue abriendo el modal directo, sin resolver, igual que siempre.
-  async function handleMarkPaid(payment) {
+  async function handleMarkPaid(payment, opts = null) {
     // BUG real corregido: antes `is_variable` se revisaba primero SIEMPRE,
     // así que un pago variable de un Espacio Compartido caía al modal viejo
     // (`VariableAmountModal` → `confirmVariablePaid`), que nunca pasa por
@@ -1008,6 +1038,8 @@ export default function App() {
         openSplitModal(payment)
         return
       }
+      // El método ya se eligió durante la animación de la card (v0.9.744).
+      if (opts?.methodChosen) { runSharedPay({ payment, amount: null }, opts.methodId ?? null); return }
       askMethodThenPay(payment)
       return
     }
@@ -1201,8 +1233,8 @@ export default function App() {
     const payment = estimateModal.payment
     setEstimateModal({ open: false, payment: null })
     if (!payment?.id) { showToast(t('app.toast.paymentNotFoundError')); return }
-    const { error } = await setEstimatedAmount(payment.id, amount)
-    if (error) showToast(t('app.toast.saveAmountError'))
+    const { error, reverted } = await setEstimatedAmount(payment.id, amount)
+    if (error) { if (!reverted) showToast(t('app.toast.saveAmountError')) }
     else showToast(t('app.toast.amountSavedFor', { name: payment.name, amount: fmt(amount) }))
   }
   async function handleMarkUnpaid(id) {
@@ -1211,9 +1243,11 @@ export default function App() {
     // solo actúa sobre pagos pagados y respondía "ok" sin cambiar nada.
     // Se regresa a pendientes con markUnpaid, igual que al posponerlo.
     if (payment?.space_id && !payment.is_postponed) {
-      const { error } = await unmarkSharedPayment(id)
+      // Optimista (v0.9.744): si falla, el hook ya revirtió y avisó.
+      const { error, reverted, busy } = await unmarkSharedPayment(id)
+      if (reverted || busy) return
       if (error) showToast(error.message || t('app.toast.unmarkError'))
-      else showToast(t('app.toast.markedUnpaid', { name: payment.name }))
+      else { showToast(t('app.toast.markedUnpaid', { name: payment.name })); loadSpaceCardPayments() }
       return
     }
     if (isCreditInstallmentCopy(payment)) addAutoChargeSkip(id) // el usuario la desmarcó: no volver a cargarla sola
@@ -1238,8 +1272,10 @@ export default function App() {
   async function handleMarkUnpaidAnimated(id) {
     const payment = payments.find(p => p.id === id)
     if (payment?.space_id && !payment.is_postponed) { // pospuesto: ver handleMarkUnpaid
-      const { error } = await unmarkSharedPayment(id)
+      const { error, reverted, busy } = await unmarkSharedPayment(id)
+      if (reverted || busy) return { failed: true }
       if (error) { showToast(error.message || t('app.toast.unmarkError')); return { failed: true } }
+      loadSpaceCardPayments()
       return { failed: false }
     }
     if (isCreditInstallmentCopy(payment)) addAutoChargeSkip(id)
@@ -1753,6 +1789,7 @@ export default function App() {
           onRequestVariableAmount={requestVariableAmount}
           onConfirmVariablePaid={confirmVariablePaid}
           onRequestNextPeriodConfirm={requestNextPeriodConfirm}
+          onRequestMethod={paymentMethods.methods.length > 0 ? requestSharedMethod : undefined}
           onMarkUnpaid={handleMarkUnpaidAnimated}
           onCaptureAmount={openEstimateModal}
           onEdit={openEdit}
@@ -1947,9 +1984,10 @@ export default function App() {
         onSave={(payment, fields) => {
           const pending = sharedPay
           setSharedPay(null)
-          if (pending) runSharedPay(pending, fields.payment_method_id)
+          if (pending?.resolver) pending.resolver({ methodId: fields.payment_method_id })
+          else if (pending) runSharedPay(pending, fields.payment_method_id)
         }}
-        onClose={() => setSharedPay(null)}
+        onClose={() => { sharedPay?.resolver?.(null); setSharedPay(null) }}
       />
 
       <PayCardNowModal
@@ -2043,7 +2081,7 @@ export default function App() {
         spaceMembers={activeSpaceEntry?.space?.members || []}
         currentUserId={user?.id}
         getContributions={getContributions}
-        registerContribution={registerContribution}
+        registerContribution={async (...args) => { const r = await registerContribution(...args); if (!r?.error) loadSpaceCardPayments(); return r }}
         onSetTotalAmount={setContributionTotalAmount}
         onForceSettle={forceSettlePayment}
         fundBalance={sharedFund.balance}

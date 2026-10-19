@@ -135,21 +135,39 @@ export function usePayments(userId, activeSpaceId = null, activeSpaceName = null
   // completo desde cero), evitando condiciones de carrera contra abonos de
   // otros miembros que pudieran llegar casi al mismo tiempo.
   async function payRemainingContribution(paymentId, methodId) {
-    try {
-      const { data: { session } } = await supabase.auth.getSession()
-      if (!session) return { error: { message: i18n.t('apiErrors.sessionNotFound') } }
-      const res = await fetch(apiUrl('/api/register-contribution'), {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
-        body: JSON.stringify({ paymentId, memberUserId: userId, payRemaining: true, methodId }),
-      })
-      const result = await res.json()
-      if (!res.ok) return { error: result.error ? { message: result.error } : { message: i18n.t('apiErrors.markPaidFailed') } }
-      fetchPayments()
-      return { error: null, ...result }
-    } catch (e) {
-      return { error: { message: i18n.t('apiErrors.markPaidConnectionError') } }
+    const before = payments.find(p => p.id === paymentId)
+    const remaining = before
+      ? Math.max(0, Math.round((Number(before.amount) - Number(before.contributed_amount || 0) - Number(before.fund_amount || 0)) * 100) / 100)
+      : 0
+    const mine = (before?.contributors || []).find(c => c.user_id === userId)
+    const patch = {
+      is_paid: true,
+      paid_at: new Date().toISOString(),
+      contributed_amount: Number(before?.contributed_amount || 0) + remaining,
+      contributors: [
+        ...(before?.contributors || []).filter(c => c.user_id !== userId),
+        { user_id: userId, amount: Number(mine?.amount || 0) + remaining },
+      ],
     }
+    return runOptimisticRemote({
+      id: paymentId, patch, action: 'markPaid',
+      call: async () => {
+        try {
+          const { data: { session } } = await supabase.auth.getSession()
+          if (!session) return { error: { message: i18n.t('apiErrors.sessionNotFound') } }
+          const res = await fetch(apiUrl('/api/register-contribution'), {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
+            body: JSON.stringify({ paymentId, memberUserId: userId, payRemaining: true, methodId }),
+          })
+          const result = await res.json()
+          if (!res.ok) return { error: result.error ? { message: result.error } : { message: i18n.t('apiErrors.markPaidFailed') } }
+          return { error: null, ...result }
+        } catch (e) {
+          return { error: { message: i18n.t('apiErrors.markPaidConnectionError') } }
+        }
+      },
+    })
   }
 
   // El check de la card, opción "Fondo compartido" — paga TODO lo que
@@ -168,7 +186,7 @@ export function usePayments(userId, activeSpaceId = null, activeSpaceName = null
       })
       const result = await res.json()
       if (!res.ok) return { error: result.error ? { message: result.error } : { message: i18n.t('apiErrors.payFromFundFailed') } }
-      await fetchPayments()
+      fetchPayments() // sin esperar (v0.9.744)
       return { error: null, ...result }
     } catch (e) {
       return { error: { message: i18n.t('apiErrors.payFromFundConnectionError') } }
@@ -189,7 +207,7 @@ export function usePayments(userId, activeSpaceId = null, activeSpaceName = null
       })
       const result = await res.json()
       if (!res.ok) return { error: result.error ? { message: result.error } : { message: i18n.t('apiErrors.updateFundFailed') } }
-      await fetchPayments()
+      fetchPayments() // sin esperar (v0.9.744)
       return { error: null, ...result }
     } catch (e) {
       return { error: { message: i18n.t('apiErrors.updateFundConnectionError') } }
@@ -212,7 +230,7 @@ export function usePayments(userId, activeSpaceId = null, activeSpaceName = null
       })
       const result = await res.json()
       if (!res.ok) return { error: result.error ? { message: result.error } : { message: i18n.t('apiErrors.saveAmountFailed') } }
-      await fetchPayments()
+      fetchPayments() // sin esperar (v0.9.744)
       return { error: null, ...result }
     } catch (e) {
       return { error: { message: i18n.t('apiErrors.saveAmountConnectionError') } }
@@ -225,21 +243,27 @@ export function usePayments(userId, activeSpaceId = null, activeSpaceName = null
   // remanente), y el pago vuelve a pendiente (nunca se borra el pago en sí,
   // eso es "Eliminar", una acción distinta). Confirmado con Johnatan.
   async function unmarkSharedPayment(paymentId) {
-    try {
-      const { data: { session } } = await supabase.auth.getSession()
-      if (!session) return { error: { message: i18n.t('apiErrors.sessionNotFound') } }
-      const res = await fetch(apiUrl('/api/register-contribution'), {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
-        body: JSON.stringify({ paymentId, unmarkPaid: true }),
-      })
-      const result = await res.json()
-      if (!res.ok) return { error: result.error ? { message: result.error } : { message: i18n.t('apiErrors.unmarkPaymentFailed') } }
-      await fetchPayments()
-      return { error: null, ...result }
-    } catch (e) {
-      return { error: { message: i18n.t('apiErrors.unmarkPaymentConnectionError') } }
-    }
+    return runOptimisticRemote({
+      id: paymentId,
+      patch: { is_paid: false, paid_at: null, contributed_amount: 0, contributors: [] },
+      action: 'markUnpaid',
+      call: async () => {
+        try {
+          const { data: { session } } = await supabase.auth.getSession()
+          if (!session) return { error: { message: i18n.t('apiErrors.sessionNotFound') } }
+          const res = await fetch(apiUrl('/api/register-contribution'), {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
+            body: JSON.stringify({ paymentId, unmarkPaid: true }),
+          })
+          const result = await res.json()
+          if (!res.ok) return { error: result.error ? { message: result.error } : { message: i18n.t('apiErrors.unmarkPaymentFailed') } }
+          return { error: null, ...result }
+        } catch (e) {
+          return { error: { message: i18n.t('apiErrors.unmarkPaymentConnectionError') } }
+        }
+      },
+    })
   }
 
   // Botón verde "Pagar" del modal de Dividir, cuando ya se juntó el 100%
@@ -259,7 +283,7 @@ export function usePayments(userId, activeSpaceId = null, activeSpaceName = null
       })
       const result = await res.json()
       if (!res.ok) return { error: result.error ? { message: result.error } : { message: i18n.t('apiErrors.markPaidFailed') } }
-      await fetchPayments()
+      fetchPayments() // sin esperar (v0.9.744)
       return { error: null, ...result }
     } catch (e) {
       return { error: { message: i18n.t('apiErrors.markPaidConnectionError') } }
@@ -511,6 +535,34 @@ export function usePayments(userId, activeSpaceId = null, activeSpaceName = null
       setPayments(prev => prev.map(p => p.id === id ? stripSync({ ...p, ...(serverRow || {}) }) : p))
     }
     return { data: res.data, error: null }
+  }
+
+  // Variante para acciones que van por un endpoint propio (espacios
+  // compartidos, v0.9.744) en vez de un update directo de Supabase: aplica el
+  // cambio al instante, llama a `call()` (que regresa `{ error }`) y, si
+  // falla, revierte SOLO esa fila y avisa por `syncErrorHandlerRef`. NO
+  // reintenta (el endpoint reparte dinero; un fallo se muestra, no se repite
+  // a ciegas). Tras revertir se vuelve a leer del servidor por si la
+  // respuesta se perdió pero la acción sí se aplicó.
+  async function runOptimisticRemote({ id, patch, action, call }) {
+    const before = payments.find(p => p.id === id)
+    if (!before) return call()
+    if (pendingOpsRef.current.has(id)) return { error: { message: 'Sincronizando', code: 'BUSY' }, busy: true }
+    const original = stripSync(before)
+    pendingOpsRef.current.set(id, { patch })
+    setPayments(prev => prev.map(p => p.id === id ? { ...p, ...patch, _syncing: true } : p))
+    let res
+    try { res = await call() } catch (e) { res = { error: { message: String(e?.message || e) } } }
+    pendingOpsRef.current.delete(id)
+    if (res?.error) {
+      setPayments(prev => prev.map(p => p.id === id ? original : p))
+      syncErrorHandlerRef.current?.({ payment: original, action, error: res.error })
+      fetchPayments()
+      return { ...res, reverted: true }
+    }
+    setPayments(prev => prev.map(p => p.id === id ? stripSync(p) : p))
+    fetchPayments()
+    return res
   }
 
   // ── Paquetes de varias filas (fase 3, v0.9.481) ─────────────────────────
@@ -1268,7 +1320,7 @@ export function usePayments(userId, activeSpaceId = null, activeSpaceName = null
     // Optimista (v0.9.480) — ver runOptimistic(). La limpieza de la cola de
     // abajo corre ya confirmada, en segundo plano.
     const { data, error } = await runOptimistic({
-      id, patch: updates, action: 'markUnpaid',
+      id, patch: updates, action: payment.is_postponed ? 'unpostpone' : 'markUnpaid',
       commit: () => supabase.from('payments').update(updates).match({ id }).select().single(),
     })
     if (error || !data) return { error, reverted: !!error }
@@ -1318,13 +1370,12 @@ export function usePayments(userId, activeSpaceId = null, activeSpaceName = null
   // (ej. llegó el recibo de luz) sin marcarlo como pagado todavía. No toca
   // is_paid, paid_at, ni ningún otro pago de la misma serie.
   async function setEstimatedAmount(id, amount) {
-    const { data, error } = await supabase
-      .from('payments')
-      .update({ amount })
-      .match({ id })
-      .select().single()
-    if (!error && data) setPayments(prev => prev.map(p => p.id === id ? { ...p, ...data } : p))
-    return { error }
+    // Optimista (v0.9.744): el monto se ve al instante; si falla se revierte y se avisa.
+    const { error, reverted } = await runOptimistic({
+      id, patch: { amount }, action: 'update',
+      commit: () => supabase.from('payments').update({ amount }).match({ id }).select().single(),
+    })
+    return { error, reverted }
   }
 
   // ─────────────────────────────────────────────────────────────────────────

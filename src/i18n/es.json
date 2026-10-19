@@ -1611,6 +1611,7 @@
       "markPaid": "{{name}} no se marcó como pagado. No se hicieron cambios.",
       "markUnpaid": "{{name}} no se desmarcó como pagado. No se hicieron cambios.",
       "postpone": "{{name}} no se pospuso. No se hicieron cambios.",
+      "unpostpone": "{{name}} no se regresó de pospuestos. No se hicieron cambios.",
       "update": "Los cambios de {{name}} no se guardaron. No se hicieron cambios.",
       "delete": "{{name}} no se eliminó. No se hicieron cambios.",
       "updateMaster": "Los cambios de {{name}} no se guardaron. No se hicieron cambios.",

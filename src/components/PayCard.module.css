@@ -47,11 +47,17 @@
   height: 100%;
   width: 0%;
   background: var(--paid);
-  transition: width 0.35s ease;
+  transition: width 0.35s ease, background-color 0.2s ease;
 }
 
 .fillLayerActive {
   width: 100%;
+}
+
+/* En espera de elegir el método de pago (v0.9.744): mitad del pintado, en amarillo */
+.fillLayerPause {
+  width: 50%;
+  background: var(--warning);
 }
 
 /* "Pagado" + checkmark, se muestran encima de la capa ya pintada */

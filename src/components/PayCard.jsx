@@ -80,7 +80,7 @@ function ReflectionCard({ payment: p, borderLeft, onViewSource, onSelect, select
   )
 }
 
-function PayCardFull({ payment: p, cfg, paymentMethodsList = [], onChangeMethod, onMarkPaid, onRequestVariableAmount, onConfirmVariablePaid, onRequestNextPeriodConfirm, onMarkUnpaid, onCaptureAmount, onEdit, onAbonar, onSplit, onPayFromFund, fundBalance, onViewSource, onDelete, onPostpone, onAdvance, borderLeft, hideDate, hideDueLabel, railMode, permissions, initialLoad = true, confirmBeforePay, spaceMembers, onSelect, selected }) {
+function PayCardFull({ payment: p, cfg, paymentMethodsList = [], onChangeMethod, onMarkPaid, onRequestVariableAmount, onConfirmVariablePaid, onRequestNextPeriodConfirm, onRequestMethod, onMarkUnpaid, onCaptureAmount, onEdit, onAbonar, onSplit, onPayFromFund, fundBalance, onViewSource, onDelete, onPostpone, onAdvance, borderLeft, hideDate, hideDueLabel, railMode, permissions, initialLoad = true, confirmBeforePay, spaceMembers, onSelect, selected }) {
   const { t } = useTranslation()
 
   const [menuOpen, setMenuOpen] = useState(false)
@@ -192,10 +192,49 @@ function PayCardFull({ payment: p, cfg, paymentMethodsList = [], onChangeMethod,
     handleMarkPaidClick(e)
   }
 
+  // ¿Esta card preguntará el método de pago durante la animación? Solo en
+  // espacios compartidos con tarjetas, y no en variables sin monto ni estados
+  // de cuenta (esos tienen su propio modal).
+  const askMethod = !!(p.space_id && onRequestMethod && !p.is_card_statement && !(p.is_variable && !(Number(p.amount) > 0)))
+
+  // La hoja ocupa la parte baja de la pantalla: si la card quedaría tapada,
+  // se sube suavemente para que se vea el pintado en pausa.
+  function revealForMethod() {
+    const el = wrapperRef.current
+    if (!el || typeof window === 'undefined') return
+    const rect = el.getBoundingClientRect()
+    const limit = window.innerHeight - 430
+    if (rect.bottom > limit) window.scrollBy({ top: rect.bottom - limit, behavior: 'smooth' })
+  }
+
+  // Camino de un gasto compartido con tarjetas (v0.9.744): el pintado llega a
+  // la mitad y se detiene, en amarillo, mientras se elige con qué se pagó. Al
+  // confirmar sigue en verde hasta el final; al cancelar regresa.
+  async function runMethodFlow() {
+    setPhase('methodPause')
+    after(FILL_MS, () => revealForMethod())
+    const choice = await onRequestMethod(p)
+    if (choice == null) {
+      setPhase('reversing')
+      after(FILL_MS, () => setPhase('idle'))
+      return
+    }
+    setPhase('filling')
+    after(FILL_MS, () => {
+      setPhase('labeled')
+      after(LABEL_HOLD_MS, () => {
+        setPhase('exiting')
+        collapseWrapper()
+        after(EXIT_MS, () => onMarkPaid(p, { methodChosen: true, methodId: choice.methodId ?? null }))
+      })
+    })
+  }
+
   async function handleMarkPaidClick(e) {
     e?.stopPropagation()
     if (!canMarkPaid) { blocked(t('paymentsPage.actionMarkPayments')); return }
     if (phase !== 'idle') return
+    if (askMethod) { runMethodFlow(); return }
     setPhase('filling')
     after(FILL_MS, async () => {
       // Estado de cuenta de tarjeta (v0.9.490): reutiliza el MISMO modal de
@@ -342,7 +381,7 @@ function PayCardFull({ payment: p, cfg, paymentMethodsList = [], onChangeMethod,
         className={`${styles.card} ${phase === 'exiting' ? styles.cardExiting : ''} ${onSelect ? styles.cardSelectable : ''} ${selected ? styles.cardSelected : ''}`}
         style={{ borderLeft: railMode ? 'none' : `5px solid ${borderLeft || 'var(--border)'}` }}
       >
-        <div className={`${styles.fillLayer} ${fillActive ? styles.fillLayerActive : ''}`} />
+        <div className={`${styles.fillLayer} ${fillActive ? styles.fillLayerActive : ''} ${phase === 'methodPause' ? styles.fillLayerPause : ''}`} />
         <div className={`${styles.fillLabel} ${phase === 'labeled' || phase === 'exiting' ? styles.fillLabelVisible : ''}`}>
           <span>{p.is_installment && p.current_installment === p.total_installments ? t('payCard.allPaymentsDone') : t('payCard.status.paid')}</span>
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
