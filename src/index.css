@@ -497,8 +497,16 @@ html, body {
      mobile (Regla 42) — volviendo overflow-x explícitamente "visible" en
      los 3 para que ningún eje quede desparejo y no se dispare la
      conversión implícita. */
-  html, body, #root {
+  html, body {
     overflow-x: visible;
+  }
+  /* v0.9.765 — `visible` dejaba que el translateX(100%) de la animación de
+     página (.page-slide-*) ensanchara el documento: el navegador táctil
+     agrandaba el viewport de layout y el riel (position:fixed) quedaba
+     desplazado al hacer scroll. `clip` recorta sin crear contenedor de
+     scroll, así que position:sticky sigue funcionando. */
+  #root {
+    overflow-x: clip;
   }
 }
 
