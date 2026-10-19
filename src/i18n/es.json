@@ -541,7 +541,9 @@
       "daysRemaining_one": "Queda {{count}} día",
       "daysRemaining_other": "Quedan {{count}} días",
       "overdue": "Fecha vencida"
-    }
+    },
+    "subtitle": "Ahorra con propósito, una meta a la vez.",
+    "totalSaved": "Total ahorrado"
   },
   "goalDetailPanel": {
     "back": "Regresar",

@@ -364,3 +364,74 @@
 .viewFade { animation: viewFade .24s cubic-bezier(0.25, 0.46, 0.45, 0.94) both; }
 @keyframes viewFade { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
 @media (prefers-reduced-motion: reduce) { .viewFade { animation: none; } }
+
+/* ── Tablet (v0.9.759, Regla 42/43) ───────────────────────────────────────────
+   Mockup aprobado con Johnatan (Propuesta 9, variante A): sin PageHeader,
+   título + subtítulo + "Agregar meta" en una fila, tres totales, switch
+   Activas/Cumplidas y las metas en cuadrícula de 2 columnas. El detalle
+   abre aparte, como en teléfono. */
+.pageHeaderWrapper { display: block; }
+.headerText { min-width: 0; }
+.headerSubtitle,
+.headerAddButton,
+.summaryBoxTablet { display: none; }
+
+@media (min-width: 768px) {
+  .pageHeaderWrapper { display: none; }
+
+  .pageRoot { padding-bottom: 120px; }
+
+  .roundedContentWrapper {
+    background: transparent;
+    margin-top: 0;
+    border-radius: 0;
+    padding: 28px 24px 0;
+    max-width: 90vw;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .screen { padding: 20px 0 0; }
+  .detailWrap { max-width: 760px; margin: 0 auto; }
+
+  .header { gap: 16px; }
+  .headerText { flex: 1; }
+  .headerTitle { font-size: 26px; font-weight: 700; }
+  .headerSubtitle {
+    display: block;
+    margin-top: 4px;
+    font-size: 13px;
+    color: var(--text);
+  }
+  .headerAddButton {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+    padding: 11px 18px;
+    border: none;
+    border-radius: 999px;
+    background: var(--accent);
+    color: var(--on-color);
+    font-size: 14px;
+    font-weight: 700;
+    font-family: inherit;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+
+  .summaryRow { gap: 16px; }
+  .summaryBox,
+  .tabTrack { background: var(--surface); }
+  .summaryBoxTablet { display: block; }
+  .summaryBox { padding: 14px 16px; }
+  .summaryLabel { font-size: 13px; margin-bottom: 3px; }
+  .summaryValue { font-size: 22px; font-weight: 700; }
+  .summaryValueSaved { color: var(--paid); }
+
+  .list {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+}

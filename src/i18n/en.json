@@ -541,7 +541,9 @@
       "daysRemaining_one": "{{count}} day left",
       "daysRemaining_other": "{{count}} days left",
       "overdue": "Past due date"
-    }
+    },
+    "subtitle": "Save with purpose, one goal at a time.",
+    "totalSaved": "Total saved"
   },
   "goalDetailPanel": {
     "back": "Back",

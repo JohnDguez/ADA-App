@@ -63,6 +63,18 @@ export function GoalsPage({
     }
   }, [rawActiveSpaceId])
 
+  // Tablet (≥768px): el botón "Agregar meta" vive en el encabezado y no en
+  // la pastilla fija de abajo. Se renderiza SOLO uno de los dos (nunca
+  // ambos ocultos por CSS) para que el coach mark `metas-add-pill` apunte
+  // siempre al que se ve.
+  const [isTablet, setIsTablet] = useState(() => typeof window !== 'undefined' && window.matchMedia('(min-width: 768px)').matches)
+  useEffect(() => {
+    const mq = window.matchMedia('(min-width: 768px)')
+    const onChange = e => setIsTablet(e.matches)
+    mq.addEventListener('change', onChange)
+    return () => mq.removeEventListener('change', onChange)
+  }, [])
+
   const [selectedGoalId, setSelectedGoalId] = useState(null)
   const [formOpen, setFormOpen] = useState(false)
   useScrollTop(selectedGoalId, formOpen)
@@ -106,6 +118,7 @@ export function GoalsPage({
   const atFreeLimit = !isShared && !isPremium && activeGoals.length >= 1
   const canAdd = isShared ? !!spacePermissions?.can_add_goals : true
   const noGoalsAtAll = activeGoals.length === 0 && completedGoals.length === 0
+  const totalAhorrado = activeGoals.reduce((s, g) => s + Number(g.currentAmount || 0), 0)
 
   function handleAddClick() {
     if (atFreeLimit) { onOpenPremium(); return }
@@ -156,13 +169,17 @@ export function GoalsPage({
 
   return (
     <div className={styles.pageRoot}>
-      <PageHeader
-        profile={profile}
-        unreadCount={unreadCount}
-        onOpenNotifs={onOpenNotifs}
-        onGoSettings={onGoSettings}
-        onOpenPremium={onOpenPremium}
-      />
+      {/* Oculto desde 768px — NavRail.jsx ya cubre avatar, saludo,
+          notificaciones y config (mismo criterio que las demás páginas). */}
+      <div className={styles.pageHeaderWrapper}>
+        <PageHeader
+          profile={profile}
+          unreadCount={unreadCount}
+          onOpenNotifs={onOpenNotifs}
+          onGoSettings={onGoSettings}
+          onOpenPremium={onOpenPremium}
+        />
+      </div>
 
       <div className={styles.roundedContentWrapper}>
         <div className={styles.spaceSwitcherMobileWrap}>{spaceSwitcher}</div>
@@ -184,7 +201,16 @@ export function GoalsPage({
           ) : !selectedGoal ? (
             <div className={styles.screen}>
               <div className={styles.header}>
-                <div className={styles.headerTitle}>{t('goalsPage.title')}</div>
+                <div className={styles.headerText}>
+                  <div className={styles.headerTitle}>{t('goalsPage.title')}</div>
+                  <div className={styles.headerSubtitle}>{t('goalsPage.subtitle')}</div>
+                </div>
+                {isTablet && rawActiveSpaceId !== 'new' && (
+                  <button data-coachmark="metas-add-pill" type="button" className={`${styles.headerAddButton} ${(!canAdd && !atFreeLimit) ? styles.addPillDisabled : ''}`} onClick={handleAddClick}>
+                    <Plus size={16} color="var(--on-color)" />
+                    {t('goalsPage.addGoal')}
+                  </button>
+                )}
               </div>
 
               {/* data-coachmark="metas-resumen" también en el EmptyState de
@@ -220,6 +246,10 @@ export function GoalsPage({
                     <div className={styles.summaryBox}>
                       <div className={styles.summaryLabel}>{t('goalsPage.totalRemaining')}</div>
                       <div className={styles.summaryValue}>{fmt(totalRestante)}</div>
+                    </div>
+                    <div className={`${styles.summaryBox} ${styles.summaryBoxTablet}`}>
+                      <div className={styles.summaryLabel}>{t('goalsPage.totalSaved')}</div>
+                      <div className={`${styles.summaryValue} ${styles.summaryValueSaved}`}>{fmt(totalAhorrado)}</div>
                     </div>
                     <div className={styles.summaryBox}>
                       <div className={styles.summaryLabel}>{t('goalsPage.goalsCompleted')}</div>
@@ -310,6 +340,7 @@ export function GoalsPage({
               )}
             </div>
           ) : (
+            <div className={styles.detailWrap}>
             <GoalDetailPanel
               goal={selectedGoal}
               isShared={isShared}
@@ -329,12 +360,13 @@ export function GoalsPage({
               onMarkCompleted={completed => markCompleted(selectedGoal.id, completed)}
               onDelete={resolution => { deleteGoal(selectedGoal.id, resolution); setSelectedGoalId(null) }}
             />
+            </div>
           )}
           </div>
         </div>
       </div>
 
-      {!selectedGoal && rawActiveSpaceId !== 'new' && (
+      {!isTablet && !selectedGoal && rawActiveSpaceId !== 'new' && (
         <div data-coachmark="metas-add-pill" className={styles.addPillRow}>
           <button type="button" className={`${styles.addPill} ${(!canAdd && !atFreeLimit) ? styles.addPillDisabled : ''}`} onClick={handleAddClick}>
             <Plus size={18} color="var(--on-color)" />
