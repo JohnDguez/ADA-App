@@ -87,11 +87,15 @@
   margin: 0 auto;
 }
 
-/* Tablet: encabezado más grande y con aire (patrón común de las sub-páginas). */
+/* Encabezado de sub-páginas (v0.9.770): ícono más grande con aire; en tablet
+   aún mayor. */
+.heroIconCircle { width: 64px; height: 64px; }
+.heroIconCircle svg { width: 28px; height: 28px; }
+.heroTitle { font-size: 21px; }
+.hero { padding-bottom: 8px; }
 @media (min-width: 768px) {
   .header { padding-top: 34px; }
   .heroIconCircle { width: 72px; height: 72px; }
   .heroIconCircle svg { width: 32px; height: 32px; }
   .heroTitle { font-size: 24px; }
-  .hero { padding-bottom: 8px; }
 }
