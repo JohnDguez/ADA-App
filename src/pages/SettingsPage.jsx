@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { createPortal } from 'react-dom'
-import { LogOut, Camera, Crown, User, Tag, Calendar, Bell, SunMoon, HelpCircle, Users, MessageCircle, Download, CreditCard, Languages } from 'lucide-react'
+import { LogOut, Camera, Crown, User, Tag, Calendar, Bell, SunMoon, HelpCircle, Users, MessageCircle, Download, CreditCard, Languages, ChevronRight } from 'lucide-react'
 import { showToast } from '../components/Toast'
 import { supabase } from '../lib/supabase'
 import { getAppVersionLabel } from '../lib/appVersion'
@@ -52,9 +52,31 @@ function readSavedSection() {
   } catch { return null }
 }
 
+// Tarjeta de opción (tablet): ícono circular con tinte, título, dato y flecha.
+function OptionCard({ icon: Icon, tone, label, value, onClick }) {
+  return (
+    <button type="button" onClick={onClick} className={styles.optionCard} style={{ '--tone': tone }}>
+      <span className={styles.optionIcon}><Icon size={22} /></span>
+      <span className={styles.optionText}>
+        <span className={styles.optionLabel}>{label}</span>
+        {value ? <span className={styles.optionValue}>{value}</span> : null}
+      </span>
+      <span className={styles.optionChevron}><ChevronRight size={16} /></span>
+    </button>
+  )
+}
+
 export function SettingsPage({ profile, user, onUpdate, onUploadAvatar, onDataDeleted, slideClass, theme, onThemeChange, onOpenPremium, sharedSpaces, paymentMethods, personalPayments = null, onPayCardNow, onSettlePlan, initialSection, onConsumeInitialSection, returnTab, onReturnToTab }) {
   const { t } = useTranslation()
   const [languageOpen, setLanguageOpen] = useState(false)
+  // Tablet (≥768px): tarjetas por opción en vez de la lista de filas.
+  const [isTablet, setIsTablet] = useState(() => typeof window !== 'undefined' && window.matchMedia('(min-width: 768px)').matches)
+  useEffect(() => {
+    const mq = window.matchMedia('(min-width: 768px)')
+    const on = e => setIsTablet(e.matches)
+    mq.addEventListener('change', on)
+    return () => mq.removeEventListener('change', on)
+  }, [])
   const languageOptions = useLanguageOptions()
   const FREQ_LABEL  = { weekly: t('frequency.weekly'), biweekly: t('frequency.biweekly'), monthly: t('frequency.monthly') }
   const THEME_LABEL = { sistema: t('theme.system'), light: t('theme.light'), dark: t('theme.dark') }
@@ -257,6 +279,7 @@ export function SettingsPage({ profile, user, onUpdate, onUploadAvatar, onDataDe
         style={{ '--settingsGlowAccent': profile.is_premium ? 'var(--premium-gold)' : 'var(--accent)' }}
       />
 
+      {!isTablet && (<>
       {/* Avatar */}
       <div className={styles.avatarSection}>
         <div className={styles.avatarWrapper}>
@@ -333,8 +356,86 @@ export function SettingsPage({ profile, user, onUpdate, onUploadAvatar, onDataDe
         <Row icon={MessageCircle} label={t('settingsPage.feedbackLabel')} onClick={handleGiveFeedback} last />
       </Card>
 
+      </>)}
+
+      {isTablet && (
+        <div className={styles.tabletWrap}>
+          <div className={styles.headCard}>
+            <div className={styles.headText}>
+              <div className={styles.headTitle}>{t('settingsPage.headTitle')}</div>
+              <div className={styles.headSub}>{t('settingsPage.subtitle')}</div>
+            </div>
+            <div className={styles.headProfile}>
+              <div className={styles.avatarWrapper}>
+                <AvatarImg
+                  src={profile.avatar_url}
+                  alt={t('buttons.profilePhoto')}
+                  className={`${styles.avatarImg} ${profile.is_premium ? styles.avatarImgPremium : ''}`}
+                  fallback={<div className={`${styles.avatarInitials} ${profile.is_premium ? styles.avatarImgPremium : ''}`}>{initials}</div>}
+                />
+                <button onClick={() => setAvatarModal('choice')} className={styles.cameraButton}>
+                  {uploadingAvatar ? <div className={styles.uploadingSpinner} /> : <Camera size={14} color="var(--text)" />}
+                </button>
+                <input ref={fileRef} type="file" accept="image/*" hidden onChange={handleAvatarChange} />
+              </div>
+              <div>
+                <div className={styles.profileName}>{profile.name}</div>
+                <div className={styles.profileEmail}>{user?.email}</div>
+                {profile.is_premium && (
+                  <div className={styles.premiumPill}><Crown size={11} fill="currentColor" />{t('settingsPage.premiumBadge')}</div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          <button type="button" className={styles.subBanner} onClick={() => profile.is_premium ? openSection('subscription') : onOpenPremium()}>
+            <span className={styles.subIcon}><Crown size={22} fill="currentColor" /></span>
+            <span className={styles.subText}>
+              <span className={styles.subTitle}>{profile.is_premium ? t('settingsPage.menu.subscription') : t('settingsPage.menu.getPremium')}</span>
+              <span className={styles.subSub}>{profile.is_premium ? t('settingsPage.subscriptionActive') : t('settingsPage.getPremiumSub')}</span>
+            </span>
+            <span className={styles.subAction}>{profile.is_premium ? t('settingsPage.manage') : t('settingsPage.seePlans')}</span>
+          </button>
+
+          <div className={styles.bigCard}>
+            <div className={styles.groupLabelT}>{t('settingsPage.sections.money')}</div>
+            <div className={styles.optionGrid}>
+              <div data-coachmark="perfil-cobro-row"><OptionCard icon={Calendar} tone="var(--accent)" label={t('settingsPage.menu.cobro')} value={[FREQ_LABEL[profile.cobro_freq], profile.currency].filter(Boolean).join(' · ')} onClick={() => openSection('cobro')} /></div>
+              <div data-coachmark="perfil-categorias-row"><OptionCard icon={Tag} tone="var(--cat-servicios)" label={t('settingsPage.menu.categories')} onClick={() => openSection('categories')} /></div>
+              <OptionCard icon={CreditCard} tone="var(--cat-renta)" label={t('settingsPage.menu.cards')} onClick={() => openSection('cards')} />
+              <OptionCard icon={Users} tone="var(--cat-suscripciones)" label={t('settingsPage.menu.sharedSpace')} onClick={() => openSection('sharedspace')} />
+            </div>
+            <div className={styles.groupLabelT}>{t('settingsPage.sections.preferences')}</div>
+            <div className={styles.optionGrid}>
+              <div data-coachmark="perfil-notificaciones-row"><OptionCard icon={Bell} tone="var(--cat-medicina)" label={t('settingsPage.menu.notifications')} onClick={() => openSection('notifications')} /></div>
+              <OptionCard icon={SunMoon} tone="var(--cat-servicios)" label={t('settingsPage.menu.appearance')} value={THEME_LABEL[theme] || ''} onClick={() => openSection('appearance')} />
+              <OptionCard icon={Languages} tone="var(--accent)" label={t('settingsAccount.row.language')} value={languageOptions.find(o => o.id === (profile.language || 'system'))?.label} onClick={() => setLanguageOpen(true)} />
+            </div>
+            <div className={styles.groupLabelT}>{t('settingsPage.sections.accountData')}</div>
+            <div className={styles.optionGrid}>
+              <OptionCard icon={User} tone="var(--cat-suscripciones)" label={t('settingsPage.menu.account')} onClick={() => openSection('account')} />
+              <OptionCard icon={Download} tone="var(--cat-renta)" label={t('settingsPage.menu.export')} onClick={() => openSection('export')} />
+            </div>
+            <div className={styles.groupLabelT}>{t('settingsPage.sections.help')}</div>
+            <div className={styles.optionGrid}>
+              <OptionCard icon={HelpCircle} tone="var(--accent)" label={t('settingsPage.tutorialAgain')} onClick={() => onUpdate({ coachmarks_seen: {} })} />
+              <OptionCard icon={MessageCircle} tone="var(--cat-medicina)" label={t('settingsPage.feedbackLabel')} onClick={handleGiveFeedback} />
+            </div>
+          </div>
+
+          <div className={styles.optionGrid} style={{ marginTop: 14 }}>
+            <button type="button" onClick={handleLogout} className={`${styles.optionCard} ${styles.logoutCard}`}>
+              <span className={styles.optionIcon}><LogOut size={22} /></span>
+              <span className={styles.optionText}><span className={styles.optionLabel}>{t('settingsPage.logout')}</span></span>
+            </button>
+          </div>
+          <div className={styles.versionFooter}>{APP_NAME} {versionLabel} — {t('settingsPage.versionSuffix')}</div>
+        </div>
+      )}
+
       <LanguageSheet open={languageOpen} onClose={() => setLanguageOpen(false)} profile={profile} onUpdate={onUpdate} />
 
+      {!isTablet && (<>
       {/* Sesión */}
       <Card>
         <button onClick={handleLogout} className={styles.logoutButton}>
@@ -347,6 +448,8 @@ export function SettingsPage({ profile, user, onUpdate, onUploadAvatar, onDataDe
       <div className={styles.versionFooter}>
         {APP_NAME} {versionLabel} — {t('settingsPage.versionSuffix')}
       </div>
+
+      </>)}
 
       {/* Modal: elegir "Subir foto" o "Elegir avatar" — 2 tarjetas con ícono
           grande, lado a lado (pedido explícito de Johnatan, confirmado vía

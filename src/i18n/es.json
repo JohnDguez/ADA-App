@@ -85,7 +85,13 @@
       "preferences": "Preferencias",
       "accountData": "Cuenta y datos",
       "help": "Ayuda"
-    }
+    },
+    "subtitle": "Administra tu cuenta y tus preferencias.",
+    "subscriptionActive": "Premium activo",
+    "manage": "Administrar",
+    "getPremiumSub": "Desbloquea todas las funciones",
+    "seePlans": "Ver planes",
+    "headTitle": "Ajustes"
   },
   "settingsSubscription": {
     "title": "Mi suscripción",
