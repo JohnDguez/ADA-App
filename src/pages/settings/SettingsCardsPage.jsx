@@ -253,7 +253,8 @@ export function SettingsCardsPage({ profile, paymentMethods, personalPayments = 
       info[c.id].pct = total > 0 ? info[c.id].spent / total : 0
       if (info[c.id].count > 0 && (!top || info[c.id].count > info[top.id].count)) top = c
     }
-    const topName = top ? (getBank(top.bank).id === 'otro' ? t('cards.otherBank') : getBank(top.bank).name) : null
+    // El alias que le puso el usuario; sin alias, el banco (puede haber varias del mismo banco).
+    const topName = top ? (top.alias || (getBank(top.bank).id === 'otro' ? t('cards.otherBank') : getBank(top.bank).name)) : null
     return { loading, info, summary: { spent: total, top: topName, moves } }
   }, [personalPayments, profile, kind, credit, debit, t])
 
