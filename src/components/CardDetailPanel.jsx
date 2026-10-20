@@ -51,6 +51,15 @@ export function CardDetailPanel({ card, payments, onBack, onEdit, onDelete, onPa
   const menuRef = useRef(null)
   // Pantalla aparte de compras a meses (v0.9.587)
   const [plansOpen, setPlansOpen] = useState(false)
+  // Tablet (≥768px, v0.9.777): resumen en 2 columnas, línea del ciclo e
+  // historial en tabla.
+  const [isTablet, setIsTablet] = useState(() => typeof window !== 'undefined' && window.matchMedia('(min-width: 768px)').matches)
+  useEffect(() => {
+    const mq = window.matchMedia('(min-width: 768px)')
+    const on = e => setIsTablet(e.matches)
+    mq.addEventListener('change', on)
+    return () => mq.removeEventListener('change', on)
+  }, [])
   useBackClose(plansOpen, () => setPlansOpen(false))
 
   useEffect(() => {
@@ -105,6 +114,19 @@ export function CardDetailPanel({ card, payments, onBack, onEdit, onDelete, onPa
   const totalOwed = debt ? debt.total : 0
   const hasPlans = card.kind === 'credit' && getPlans(card).length > 0
   const cycleInfo = card.kind === 'credit' ? cardCycleInfo(card, today()) : null
+  // Línea del ciclo (tablet): corte anterior → próximo corte → límite de pago,
+  // a escala, con el avance de hoy.
+  const monthDay = d => `${d.getDate()} ${getMonthsShort()[d.getMonth()].toLowerCase()}`
+  let tl = null
+  if (cycleInfo) {
+    const nc = cycleInfo.nextCut
+    const prevCut = new Date(nc.getFullYear(), nc.getMonth(), nc.getDate() - cycleInfo.total)
+    const span = cycleInfo.due ? Math.max(cycleInfo.total + 1, Math.round((cycleInfo.due - prevCut) / 86400000)) : cycleInfo.total
+    tl = {
+      prev: monthDay(prevCut), next: monthDay(nc), due: cycleInfo.due ? monthDay(cycleInfo.due) : null,
+      nextPct: (cycleInfo.total / span) * 100, nowPct: (cycleInfo.day / span) * 100,
+    }
+  }
 
   const inView = useMemo(() => {
     const resolved = cardPayments.filter(p => p.is_paid)
@@ -153,6 +175,28 @@ export function CardDetailPanel({ card, payments, onBack, onEdit, onDelete, onPa
     onDelete()
   }
 
+  const debtLegend = debt && (
+    <div className={styles.legend}>
+      {[
+        ['statement', 'var(--warning)', t('cards.bento.statement')],
+        ['cycle', 'var(--accent)', t('cards.bento.cycle')],
+        ['plans', 'var(--label-variable)', t('cards.bento.plans')],
+      ].filter(([k]) => debt[k] > 0).map(([k, color, label]) => (
+        <div key={k} className={styles.legendRow}>
+          <span className={styles.legendDot} style={{ background: color }} />
+          <span>{label}</span>
+          <b>{fmt(debt[k])}</b>
+        </div>
+      ))}
+      {debt.total <= 0 && <div className={styles.legendRow}><span>{t('cards.bento.noDebt')}</span></div>}
+    </div>
+  )
+  const payNowBtn = card.kind === 'credit' && onPayNow && (
+    <button type="button" onClick={() => onPayNow(card)} className={`btn-primary ${isTablet ? styles.payInline : styles.payNowButton}`}>
+      {t('cards.payNow.button')}
+    </button>
+  )
+
   if (plansOpen) {
     return (
       <CardPlansPanel
@@ -188,6 +232,70 @@ export function CardDetailPanel({ card, payments, onBack, onEdit, onDelete, onPa
         </div>
       </div>
 
+      {isTablet && (
+        <div className={styles.tabSummary}>
+          <div className={styles.tabTop}>
+            <div><CreditCardVisual card={card} /></div>
+            {card.kind === 'credit' ? (
+              <div className={`${styles.bCard} ${styles.tabOwed}`}>
+                <div className={styles.tabOwedHead}>
+                  <div>
+                    <div className={styles.bKey}>{t('cards.pendingCreditTotal')}</div>
+                    <div className={styles.bValue}>{fmt(totalOwed)}</div>
+                  </div>
+                  {payNowBtn}
+                </div>
+                <DebtBar debt={debt} label={t('cards.bento.donutLabel')} />
+                {debtLegend}
+              </div>
+            ) : (
+              <div className={`${styles.bCard} ${styles.tabPaidOnly}`}>
+                <div className={styles.bKey}>{t('cards.detail.paidWithCard')}</div>
+                <div className={styles.bValue}>{fmt(total)}</div>
+              </div>
+            )}
+          </div>
+
+          {card.kind === 'credit' && (
+            <div className={styles.tabRow2}>
+              <div className={`${styles.bCard} ${!hasPlans ? styles.tabSpan2 : ''}`}>
+                <div className={styles.bKey}>{t('cards.detail.paidWithCard')}</div>
+                <div className={styles.bValueSm}>{fmt(total)}</div>
+              </div>
+              {hasPlans && (
+                <button type="button" onClick={() => setPlansOpen(true)} className={`${styles.bCard} ${styles.bButton}`}>
+                  <div className={styles.bKey}>{t('cards.bento.plansTitle')}</div>
+                  <div className={styles.bValueSm}>{t('cards.bento.plansCount', { count: activePlansCount(card) })}</div>
+                  {nextCutPlansTotal(card) > 0 && (
+                    <div className={styles.bSub}>{t('cards.bento.nextCutPlans', { amount: fmt(nextCutPlansTotal(card)) })}</div>
+                  )}
+                  <ChevronRight size={16} className={styles.bChevron} />
+                </button>
+              )}
+            </div>
+          )}
+
+          {tl && (
+            <div className={`${styles.bCard} ${styles.tabTimeline}`}>
+              <div className={styles.tlTrack} style={{ '--now': `${tl.nowPct}%` }}>
+                <i />
+                <span className={`${styles.tlDot} ${styles.tlDotOn}`} style={{ left: '0%' }} />
+                <span className={styles.tlDot} style={{ left: `${tl.nextPct}%` }} />
+                {tl.due && <span className={styles.tlDot} style={{ left: '100%' }} />}
+              </div>
+              <div className={styles.tlLabels}>
+                <div className={styles.tlLabelStart}><b>{tl.prev}</b>{t('cards.tablet.cutLabel')}</div>
+                <div className={styles.tlLabelMid} style={{ '--at': `${tl.nextPct}%` }}><b>{tl.next}</b>{t('cards.tablet.nextCutLabel')}</div>
+                {tl.due && <div className={styles.tlLabelEnd}><b>{tl.due}</b>{t('cards.tablet.dueLabel')}</div>}
+              </div>
+              <div className={styles.cycleDay}>{t('cards.bento.cycleDay', { day: cycleInfo.day, total: cycleInfo.total })}</div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {!isTablet && (
+        <>
       <div className={styles.preview}>
         {/* FIX v0.9.502 (reportado por Johnatan): el chip repetía la misma
             cifra que ya muestra la pastilla "Por pagar" de abajo — se
@@ -197,11 +305,7 @@ export function CardDetailPanel({ card, payments, onBack, onEdit, onDelete, onPa
         <CreditCardVisual card={card} />
       </div>
 
-      {card.kind === 'credit' && onPayNow && (
-        <button type="button" onClick={() => onPayNow(card)} className={`btn-primary ${styles.payNowButton}`}>
-          {t('cards.payNow.button')}
-        </button>
-      )}
+      {!isTablet && payNowBtn}
 
       {/* Resumen en bento (v0.9.587, variante A elegida por Johnatan): "Por pagar" con
           su barra (de dónde sale el número), lo pagado con la tarjeta, las compras a
@@ -212,20 +316,7 @@ export function CardDetailPanel({ card, payments, onBack, onEdit, onDelete, onPa
             <div className={styles.bKey}>{t('cards.pendingCreditTotal')}</div>
             <div className={styles.bValue}>{fmt(totalOwed)}</div>
             <DebtBar debt={debt} label={t('cards.bento.donutLabel')} />
-            <div className={styles.legend}>
-              {[
-                ['statement', 'var(--warning)', t('cards.bento.statement')],
-                ['cycle', 'var(--accent)', t('cards.bento.cycle')],
-                ['plans', 'var(--label-variable)', t('cards.bento.plans')],
-              ].filter(([k]) => debt[k] > 0).map(([k, color, label]) => (
-                <div key={k} className={styles.legendRow}>
-                  <span className={styles.legendDot} style={{ background: color }} />
-                  <span>{label}</span>
-                  <b>{fmt(debt[k])}</b>
-                </div>
-              ))}
-              {debt.total <= 0 && <div className={styles.legendRow}><span>{t('cards.bento.noDebt')}</span></div>}
-            </div>
+            {debtLegend}
           </div>
 
           <div className={`${styles.bCard} ${!hasPlans ? styles.bWide : ''}`}>
@@ -261,6 +352,8 @@ export function CardDetailPanel({ card, payments, onBack, onEdit, onDelete, onPa
           <span className={styles.pillAmount}>{fmt(total)}</span>
         </div>
       )}
+        </>
+      )}
 
       <div className={styles.filtersWrapper}>
         <div className={styles.viewModeRow}>
@@ -285,13 +378,22 @@ export function CardDetailPanel({ card, payments, onBack, onEdit, onDelete, onPa
         )}
       </div>
 
-      <div className={styles.historyList}>
+      <div className={`${styles.historyList} ${isTablet ? styles.historyTable : ''}`}>
         {groups.length === 0 && (
           <div className={styles.empty}>{t('cards.detail.noHistory')}</div>
         )}
         {groups.map(g => (
           <div key={g.label}>
             <div className={styles.monthLabel}>{g.label}</div>
+            {isTablet && (
+              <div className={`${styles.tRow} ${styles.tHead}`}>
+                <span>{t('cards.tablet.colDate')}</span>
+                <span>{t('cards.tablet.colName')}</span>
+                <span>{t('cards.tablet.colCategory')}</span>
+                <span>{t('cards.tablet.colSpace')}</span>
+                <span className={styles.tRight}>{t('cards.tablet.colAmount')}</span>
+              </div>
+            )}
             {g.rows.map(p => {
               const d = new Date(p.paid_at || p.due_date)
               // Estilo "como los bancos" (v0.9.497, pedido de Johnatan):
@@ -308,6 +410,22 @@ export function CardDetailPanel({ card, payments, onBack, onEdit, onDelete, onPa
                 : isIncome
                   ? t('cards.detail.abono')
                   : getCategoryLabel(p.category)
+              if (isTablet) {
+                return (
+                  <div key={p.id} className={styles.tRow}>
+                    <span>{d.getDate()} {getMonthsShort()[d.getMonth()]}</span>
+                    <span className={styles.tName}>{p.name}</span>
+                    <span>
+                      {label}
+                      {p.is_postponed && ` · ${t('payCard.status.postponed')}`}
+                    </span>
+                    <span className={styles.tName}>{p.source_space_id ? (spaceNames[p.source_space_id] || t('cards.detail.sharedSpaceFallback')) : '—'}</span>
+                    <span className={`${styles.tRight} ${styles.tAmount} ${isIncome ? styles.rowAmountIncome : ''}`}>
+                      {isIncome ? '+' : '−'}{fmt(p.amount)}
+                    </span>
+                  </div>
+                )
+              }
               return (
                 <div key={p.id} className={styles.row}>
                   <div className={styles.rowDate}>

@@ -1768,7 +1768,15 @@
       "when_inDays": "en {{n}} días",
       "moves_one": "{{count}} movimiento",
       "moves_other": "{{count}} movimientos",
-      "none": "—"
+      "none": "—",
+      "colDate": "Fecha",
+      "colName": "Concepto",
+      "colCategory": "Categoría",
+      "colSpace": "Espacio",
+      "colAmount": "Monto",
+      "cutLabel": "Corte",
+      "nextCutLabel": "Próximo corte",
+      "dueLabel": "Límite de pago"
     },
     "detail": {
       "paidWithCard": "Pagado con esta tarjeta",

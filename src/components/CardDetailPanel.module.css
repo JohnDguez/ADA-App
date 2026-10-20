@@ -394,3 +394,37 @@
 .cycleRow span:first-child {
   font-weight: 600;
 }
+
+/* ── Tablet (≥768px, v0.9.777): tarjeta + "Por pagar" lado a lado, fila de
+      "Pagado" y "Compras a meses", línea del ciclo e historial en tabla ─── */
+.payInline { width: auto; flex: none; height: 44px; padding: 0 20px; margin: 0; }
+
+.tabSummary { display: flex; flex-direction: column; gap: 12px; margin-bottom: 4px; }
+.tabTop { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; align-items: stretch; }
+.tabOwed { display: flex; flex-direction: column; justify-content: space-between; }
+.tabOwedHead { display: flex; justify-content: space-between; align-items: flex-end; gap: 12px; }
+.tabPaidOnly { display: flex; flex-direction: column; justify-content: center; }
+.tabRow2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.tabSpan2 { grid-column: 1 / -1; }
+
+.tlTrack { position: relative; height: 16px; margin: 4px 8px 0; }
+.tlTrack::before { content: ''; position: absolute; left: 0; right: 0; top: 6px; height: 4px; border-radius: 2px; background: var(--border); }
+.tlTrack i { position: absolute; left: 0; top: 6px; height: 4px; border-radius: 2px; background: var(--accent); width: var(--now); }
+.tlDot { position: absolute; top: 0; width: 16px; height: 16px; margin-left: -8px; border-radius: 50%; background: var(--surface); border: 3px solid var(--border); box-sizing: border-box; }
+.tlDotOn { background: var(--accent); border-color: var(--accent); }
+.tlLabels { position: relative; height: 38px; margin-top: 8px; font-size: 12px; }
+.tlLabels b { display: block; font-size: 13px; font-weight: 700; }
+.tlLabelStart { position: absolute; left: 0; top: 0; }
+.tlLabelMid { position: absolute; left: var(--at); top: 0; transform: translateX(-50%); text-align: center; white-space: nowrap; }
+.tlLabelEnd { position: absolute; right: 0; top: 0; text-align: right; }
+
+.historyTable .monthLabel { margin-top: 20px; }
+.tRow { display: grid; grid-template-columns: 70px minmax(0, 1.5fr) minmax(0, 1fr) minmax(0, 1fr) 110px; gap: 12px; align-items: center; padding: 12px 6px; border-bottom: 0.5px solid var(--border); font-size: 14px; color: var(--text); }
+.tHead { font-size: 12px; font-weight: 600; padding: 8px 6px; }
+.tName { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tRight { text-align: right; }
+.tAmount { font-weight: 700; }
+
+@media (min-width: 768px) {
+  .screen { max-width: 700px; margin: 24px auto 0; padding: 0 24px 120px; }
+}

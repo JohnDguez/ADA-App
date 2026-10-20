@@ -1768,7 +1768,15 @@
       "when_inDays": "in {{n}} days",
       "moves_one": "{{count}} transaction",
       "moves_other": "{{count}} transactions",
-      "none": "—"
+      "none": "—",
+      "colDate": "Date",
+      "colName": "Description",
+      "colCategory": "Category",
+      "colSpace": "Space",
+      "colAmount": "Amount",
+      "cutLabel": "Cut",
+      "nextCutLabel": "Next cut",
+      "dueLabel": "Payment due"
     },
     "detail": {
       "paidWithCard": "Paid with this card",
