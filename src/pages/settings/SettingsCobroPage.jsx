@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next'
 // sub-páginas ya migradas, v0.9.442-447) — import directo para tree-shaking real.
 import { Wallet } from '@phosphor-icons/react/dist/csr/Wallet'
 import { CalendarDots } from '@phosphor-icons/react/dist/csr/CalendarDots'
+import { CalendarDays, CalendarRange, CalendarCheck, Banknote, Coins } from 'lucide-react'
 import { PageHero } from '../../components/PageHero'
 import { getWeekdaysShort, nextCobroDate } from '../../lib/utils'
 import { showToast } from '../../components/Toast'
@@ -59,10 +60,16 @@ export function SettingsCobroPage({ profile, onUpdate, onBack, slideClass }) {
     await onUpdate({ currency: code }); showToast(t('settingsCobro.toast.currencyUpdated'))
   }
 
-  const nextPayday = nextCobroDate(profile).toLocaleDateString(
+  const nextDateObj = nextCobroDate(profile)
+  const locale = i18n.language?.startsWith('en') ? 'en-US' : 'es-MX'
+  const nextPayday = nextDateObj.toLocaleDateString(
     i18n.language?.startsWith('en') ? 'en-US' : 'es-MX',
     { weekday: 'short', day: 'numeric', month: 'short' },
   )
+  const nextLongRaw = nextDateObj.toLocaleDateString(locale, { weekday: 'long', day: 'numeric', month: 'long' })
+  const nextLong = nextLongRaw.charAt(0).toUpperCase() + nextLongRaw.slice(1)
+  const nextMonthShort = nextDateObj.toLocaleDateString(locale, { month: 'short' }).replace('.', '').toUpperCase()
+  const FREQ_ICON = { weekly: CalendarDays, biweekly: CalendarRange, monthly: CalendarCheck }
 
   return (
     <div className={`${slideClass} ${styles.pageWrapper}`}>
@@ -73,17 +80,24 @@ export function SettingsCobroPage({ profile, onUpdate, onBack, slideClass }) {
         onBack={onBack}
       />
 
+      <div className={styles.content}>
       {/* Periodo de cobro */}
-      <SectionLabel>{t('settingsCobro.periodSection')}</SectionLabel>
+      <div className={styles.block}>
+      <div className={styles.blockHead}><span className={styles.blockIcon}><CalendarDays size={20} /></span><SectionLabel>{t('settingsCobro.periodSection')}</SectionLabel></div>
       <Card>
         <div className={styles.subSection}>
           <div className={styles.subLabelMb10}>{t('settingsCobro.frequencyLabel')}</div>
           <div className={styles.pillRow}>
-            {[['weekly',t('frequency.weekly')],['biweekly',t('frequency.biweekly')],['monthly',t('frequency.monthly')]].map(([val, label]) => (
-              <button key={val} onClick={() => handleFreq(val)} className={`${styles.pill} ${profile.cobro_freq === val ? styles.pillActive : ''}`}>
-                {label}
-              </button>
-            ))}
+            {[['weekly',t('frequency.weekly')],['biweekly',t('frequency.biweekly')],['monthly',t('frequency.monthly')]].map(([val, label]) => {
+              const FIcon = FREQ_ICON[val]
+              return (
+                <button key={val} onClick={() => handleFreq(val)} className={`${styles.pill} ${profile.cobro_freq === val ? styles.pillActive : ''}`}>
+                  <span className={styles.pillIcon}><FIcon size={20} /></span>
+                  <span>{label}</span>
+                  <span className={styles.pillSub}>{t(`settingsCobro.freqSub.${val}`)}</span>
+                </button>
+              )
+            })}
           </div>
         </div>
 
@@ -154,9 +168,18 @@ export function SettingsCobroPage({ profile, onUpdate, onBack, slideClass }) {
         <CalendarDots size={16} aria-hidden="true" />
         <span>{t('settingsCobro.nextPayday', { date: nextPayday })}</span>
       </div>
+      <div className={styles.nextCal}>
+        <div className={styles.nextCalDate}><i>{nextMonthShort}</i><b>{nextDateObj.getDate()}</b></div>
+        <div>
+          <div className={styles.nextCalLabel}>{t('settingsCobro.nextPaydayLabel')}</div>
+          <div className={styles.nextCalValue}>{nextLong}</div>
+        </div>
+      </div>
+      </div>
 
       {/* Ingreso */}
-      <SectionLabel>{t('settingsCobro.incomeSection')}</SectionLabel>
+      <div className={styles.block}>
+      <div className={styles.blockHead}><span className={styles.blockIcon}><Banknote size={20} /></span><SectionLabel>{t('settingsCobro.incomeSection')}</SectionLabel></div>
       <Card>
         <div className={`${styles.toggleRowWrapper} ${!profile.salary_enabled ? styles.toggleRowWrapperNoBorder : ''}`}>
           <div {...switchProps(profile.salary_enabled)} className={styles.toggleRow} onClick={handleSalaryToggle}>
@@ -176,13 +199,17 @@ export function SettingsCobroPage({ profile, onUpdate, onBack, slideClass }) {
           </div>
         </Collapse>
       </Card>
+      </div>
 
       {/* Moneda — ajuste que casi no cambia: fila con hoja, no campo ancho */}
-      <SectionLabel>{t('settingsCobro.currencySection')}</SectionLabel>
+      <div className={styles.block}>
+      <div className={styles.blockHead}><span className={styles.blockIcon}><Coins size={20} /></span><SectionLabel>{t('settingsCobro.currencySection')}</SectionLabel></div>
       <Card>
         <Row label={t('settingsCobro.currencyLabel')} value={profile.currency} onClick={() => setCurrencyOpen(true)} last />
       </Card>
       <div className={`${styles.monthlyHelperText} ${styles.currencyHint}`}>{t('currency.noConvertHint')}</div>
+      </div>
+      </div>
       <CurrencySheet open={currencyOpen} onClose={() => setCurrencyOpen(false)} value={profile.currency} onSelect={handleCurrency} />
     </div>
   )

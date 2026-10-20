@@ -227,7 +227,13 @@
     "nextPayday": "Next payday: {{date}}",
     "monthShortHint": "In shorter months, the last day of the month is used.",
     "currencySection": "Currency",
-    "dayPair": "{{d1}} and {{d2}}"
+    "dayPair": "{{d1}} and {{d2}}",
+    "freqSub": {
+      "weekly": "every week",
+      "biweekly": "twice a month",
+      "monthly": "once a month"
+    },
+    "nextPaydayLabel": "Next payday"
   },
   "settingsNotifications": {
     "title": "Notifications",

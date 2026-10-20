@@ -86,3 +86,12 @@
   max-width: 280px;
   margin: 0 auto;
 }
+
+/* Tablet: encabezado más grande y con aire (patrón común de las sub-páginas). */
+@media (min-width: 768px) {
+  .header { padding-top: 34px; }
+  .heroIconCircle { width: 72px; height: 72px; }
+  .heroIconCircle svg { width: 32px; height: 32px; }
+  .heroTitle { font-size: 24px; }
+  .hero { padding-bottom: 8px; }
+}

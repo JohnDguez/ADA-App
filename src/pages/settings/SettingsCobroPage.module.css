@@ -237,3 +237,48 @@
 .amountFieldLong :global(.field-input).amountInput { padding-left: 46px; }
 .amountFieldMid  :global(.field-input).amountInput { padding-left: 38px; }
 
+
+/* ── Móvil: los elementos nuevos de tablet no se ven ───────────────────── */
+.pillIcon, .pillSub, .blockIcon, .nextCal { display: none; }
+
+/* ── Tablet (≥768px): tarjetas por sección, frecuencia en tarjetas,
+      días en círculos y próximo cobro como mini calendario ────────────── */
+@media (min-width: 768px) {
+  .content { max-width: 600px; margin: 22px auto 0; padding: 0 24px; }
+  .block { background: var(--surface); border-radius: 20px; padding: 18px 20px 20px; margin-top: 14px; }
+  .blockHead { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+  .blockHead > div { padding: 0; font-size: 15px; font-weight: 700; }
+  .blockIcon { display: flex; color: var(--accent); }
+  /* El Card interno pierde su fondo/margen: la tarjeta es .block. */
+  .block > *:not(.blockHead):not(.nextPayday):not(.nextCal):not(.currencyHint) { background: transparent; margin: 0; border-radius: 0; overflow: visible; }
+  .block > *:not(.blockHead):not(.nextPayday):not(.nextCal):not(.currencyHint) > div { padding-left: 0; padding-right: 0; }
+  .subSection { padding: 0; border-bottom: none; margin-bottom: 18px; }
+  .subSection:last-child, .subSectionLast { margin-bottom: 0; }
+  .subLabelMb10, .subLabelMb8 { font-size: 14px; font-weight: 600; opacity: 0.75; }
+
+  .pillRow { gap: 10px; }
+  .pill { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 16px 10px; border-radius: 16px; background: transparent; border: 2px solid var(--border); font-size: 15px; font-weight: 700; }
+  .pillActive { background: color-mix(in srgb, var(--accent) 10%, transparent); border-color: var(--accent); color: var(--accent); font-weight: 700; }
+  .pillIcon { display: flex; width: 40px; height: 40px; border-radius: 50%; align-items: center; justify-content: center; margin-bottom: 8px; background: color-mix(in srgb, var(--accent) 14%, transparent); color: var(--accent); }
+  .pillActive .pillIcon { background: var(--accent); color: var(--surface); }
+  .pillSub { display: block; font-size: 11px; font-weight: 400; color: var(--muted); }
+
+  .weekdayRow { flex-wrap: nowrap; justify-content: space-between; }
+  .weekdayButton { flex: 0 0 56px; min-width: 0; width: 56px; height: 56px; border-radius: 50%; background: transparent; border: 2px solid var(--border); font-weight: 600; }
+  .weekdayButtonActive { background: var(--accent); border-color: var(--accent); }
+  .presetButton { padding: 10px 16px; border-radius: 12px; }
+  .dayButton { height: 44px; border-radius: 12px; }
+
+  /* El renglón de una línea se sustituye por el mini calendario. */
+  .nextPayday { display: none; }
+  .nextCal { display: flex; align-items: center; gap: 16px; margin-top: 18px; padding: 14px 16px; border-radius: 16px; background: color-mix(in srgb, var(--accent) 12%, transparent); }
+  .nextCalDate { width: 56px; flex: 0 0 56px; border-radius: 12px; background: var(--surface); overflow: hidden; text-align: center; }
+  .nextCalDate i { display: block; font-style: normal; background: var(--accent); color: var(--surface); font-size: 10px; font-weight: 800; padding: 3px 0; }
+  .nextCalDate b { display: block; font-size: 22px; padding: 4px 0; color: var(--text); }
+  .nextCalLabel { font-size: 12px; color: var(--muted); }
+  .nextCalValue { font-size: 16px; font-weight: 700; color: var(--text); margin-top: 2px; }
+
+  .toggleRowWrapper { padding: 0 0 14px; }
+  .amountSection { padding: 14px 0 0; }
+  .currencyHint { margin: 10px 0 0; }
+}

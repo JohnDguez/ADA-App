@@ -227,7 +227,13 @@
     "nextPayday": "Próximo cobro: {{date}}",
     "monthShortHint": "En meses con menos días, se usa el último día del mes.",
     "currencySection": "Moneda",
-    "dayPair": "{{d1}} y {{d2}}"
+    "dayPair": "{{d1}} y {{d2}}",
+    "freqSub": {
+      "weekly": "cada semana",
+      "biweekly": "dos veces al mes",
+      "monthly": "una vez al mes"
+    },
+    "nextPaydayLabel": "Próximo cobro"
   },
   "settingsNotifications": {
     "title": "Notificaciones",
