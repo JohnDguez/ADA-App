@@ -295,7 +295,7 @@
   .weekdayRow { gap: 4px; }
   .weekdayButton { flex: 0 0 42px; width: 42px; height: 42px; font-size: 11px; }
   .dayButton { height: 38px; border-radius: 10px; font-size: 12px; background: transparent; border: 2px solid var(--border); }
-  .dayButtonActive { border-color: var(--accent); }
+  .dayButtonActive { background: var(--accent); border-color: var(--accent); color: var(--surface); }
   .nextCal { padding: 12px 14px; }
   .nextCalValue { font-size: 15px; }
 }
