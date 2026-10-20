@@ -307,3 +307,22 @@
 .saveButton {
   margin-bottom: 8px;
 }
+
+/* ── Tablet (≥768px): mosaico de 3 columnas, ícono en el color de la
+      categoría (sin recuadro de fondo) y pastilla "Añadir" al fondo ────── */
+@media (min-width: 768px) {
+  .pageWrapper { padding-bottom: 120px; }
+  .gridWrap { max-width: 680px; margin: 24px auto 0; padding: 0 24px; }
+  .gridWrap > div { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; background: transparent; margin: 0; border-radius: 0; overflow: visible; }
+  .gridWrap > div > div { background: var(--surface); border-radius: 18px; }
+  .categoryRow { position: relative; flex-direction: column; justify-content: center; gap: 10px; padding: 18px 12px 14px; border-bottom: none; text-align: center; min-height: 120px; }
+  .iconWrapper { width: 56px; height: 56px; background: transparent !important; }
+  .iconWrapper svg { width: 34px; height: 34px; stroke: var(--cat-color); }
+  .fallbackDot { width: 14px; height: 14px; background: var(--cat-color); }
+  .categoryText { flex: none; align-items: center; }
+  .categoryLabel { font-size: 13px; font-weight: 700; }
+  .categoryRow > svg:last-child { position: absolute; top: 12px; right: 12px; opacity: 0.6; }
+
+  /* Pastilla al fondo, centrada sobre el contenido (el riel ocupa 72px). */
+  .addPillRow { bottom: 28px; left: calc(50% + 36px); max-width: 680px; justify-content: center; }
+}

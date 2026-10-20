@@ -74,7 +74,7 @@ export function SettingsCategoriesPage({ profile, onUpdate, onBack, slideClass }
           onClick={() => openEdit(cat, isCustom)}
           className={`${styles.categoryRow} ${noBorder ? styles.categoryRowNoBorder : ''}`}
         >
-          <div className={styles.iconWrapper} style={{ background: color }}>
+          <div className={styles.iconWrapper} style={{ background: color, '--cat-color': color }}>
             {Icon
               ? <Icon size={18} color="var(--text)" strokeWidth={2} />
               : <span className={styles.fallbackDot} />
@@ -99,11 +99,13 @@ export function SettingsCategoriesPage({ profile, onUpdate, onBack, slideClass }
           onBack={onBack}
         />
 
-        <Card>
-          {sortedCats.map((c, i) => (
-            <CategoryRow key={c.name} cat={c.name} isCustom={c.isCustom} last={i === sortedCats.length - 1} />
-          ))}
-        </Card>
+        <div className={styles.gridWrap}>
+          <Card>
+            {sortedCats.map((c, i) => (
+              <CategoryRow key={c.name} cat={c.name} isCustom={c.isCustom} last={i === sortedCats.length - 1} />
+            ))}
+          </Card>
+        </div>
       </div>
 
       {/* Pastilla flotante "Agregar categoría" — mismo patrón ya aprobado
