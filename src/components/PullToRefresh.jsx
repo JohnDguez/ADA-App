@@ -77,6 +77,20 @@ export function PullToRefresh() {
     }
   }, [native])
 
+  // El contenido (<main>) acompaña el jalón; el fondo y el riel no se mueven.
+  useEffect(() => {
+    if (!native) return
+    const main = document.querySelector('main')
+    if (!main) return
+    const moving = pull > 0
+    main.style.transition = moving && !refreshing ? 'none' : 'transform .2s ease'
+    main.style.transform = moving ? `translateY(${pull}px)` : ''
+    if (!moving) {
+      const id = setTimeout(() => { main.style.transition = '' }, 220)
+      return () => clearTimeout(id)
+    }
+  }, [native, pull, refreshing])
+
   if (!native || (pull === 0 && !refreshing)) return null
   const progress = Math.min(1, pull / THRESHOLD)
   return (

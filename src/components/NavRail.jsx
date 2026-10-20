@@ -200,8 +200,8 @@ export function NavRail({ active, onChange, profile, unreadCount, onOpenNotifs, 
           aria-label={t(expanded ? 'navRail.collapse' : 'navRail.expand')}
         >
           {expanded
-            ? <ChevronLeft size={18} color="var(--nav-icon)" />
-            : <ChevronRight size={18} color="var(--nav-icon)" />
+            ? <ChevronLeft size={22} color="var(--nav-icon)" />
+            : <ChevronRight size={22} color="var(--nav-icon)" />
           }
           {expanded && <span className={styles.toggleLabel}>{t('navRail.collapse')}</span>}
         </button>
@@ -219,7 +219,7 @@ function RailButton({ Icon, label, expanded, active, onClick, badge }) {
       data-active={!!active}
     >
       <div className={styles.iconWrapper}>
-        <Icon size={20} strokeWidth={active ? 2.2 : 1.8} color={active ? 'var(--nav-icon)' : 'var(--white-a60)'} />
+        <Icon size={26} strokeWidth={active ? 2.2 : 1.8} color={active ? 'var(--nav-icon)' : 'var(--white-a60)'} />
         {badge && <span className={styles.badgeCount} aria-hidden="true">{badge}</span>}
       </div>
       {expanded && <span className={styles.railButtonLabel}>{label}</span>}

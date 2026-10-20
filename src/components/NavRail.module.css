@@ -229,7 +229,7 @@
 .navItems {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 6px;
   padding: 16px 8px;
   flex: 1;
   overflow-y: auto;
@@ -240,10 +240,13 @@
   align-items: center;
   justify-content: center;
   gap: 12px;
-  padding: 10px;
+  /* v0.9.767 — área táctil más grande (≈56px de alto): con el dedo en
+     tablet los íconos de 20px (botón de 40px) fallaban. */
+  padding: 15px 10px;
+  min-height: 56px;
   border: none;
   background: none;
-  border-radius: 8px;
+  border-radius: 14px;
   cursor: pointer;
   transition: background .2s;
   min-width: 0;
@@ -305,7 +308,7 @@
 .bottomActions {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 6px;
   padding: 8px;
   flex-shrink: 0;
   border-top: none; /* Regla 13.1: sin bordes en contenedores */
@@ -316,10 +319,11 @@
   align-items: center;
   justify-content: center;
   gap: 12px;
-  padding: 10px;
+  padding: 15px 10px;
+  min-height: 56px;
   border: none;
   background: none;
-  border-radius: 8px;
+  border-radius: 14px;
   cursor: pointer;
   transition: background .2s;
 }
