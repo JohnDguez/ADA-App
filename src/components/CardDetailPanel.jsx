@@ -114,17 +114,27 @@ export function CardDetailPanel({ card, payments, onBack, onEdit, onDelete, onPa
   const totalOwed = debt ? debt.total : 0
   const hasPlans = card.kind === 'credit' && getPlans(card).length > 0
   const cycleInfo = card.kind === 'credit' ? cardCycleInfo(card, today()) : null
-  // Línea del ciclo (tablet): corte anterior → próximo corte → límite de pago,
-  // a escala, con el avance de hoy.
+  // Línea del ciclo (tablet): corte anterior → límite de pago de ESE estado de
+  // cuenta → próximo corte, a escala, con el avance de hoy. El límite de pago
+  // del siguiente estado no aparece hasta que la línea se reinicie en el corte.
   const monthDay = d => `${d.getDate()} ${getMonthsShort()[d.getMonth()].toLowerCase()}`
   let tl = null
   if (cycleInfo) {
     const nc = cycleInfo.nextCut
     const prevCut = new Date(nc.getFullYear(), nc.getMonth(), nc.getDate() - cycleInfo.total)
-    const span = cycleInfo.due ? Math.max(cycleInfo.total + 1, Math.round((cycleInfo.due - prevCut) / 86400000)) : cycleInfo.total
+    // Primer día límite DESPUÉS del corte anterior (puede caer en el mes siguiente).
+    let prevDue = null
+    for (let k = 0; k < 3 && !prevDue; k++) {
+      const m = prevCut.getMonth() + k
+      const last = new Date(prevCut.getFullYear(), m + 1, 0).getDate()
+      const d = new Date(prevCut.getFullYear(), m, Math.min(card.due_day, last))
+      if (d > prevCut) prevDue = d
+    }
+    const duePct = prevDue ? ((prevDue - prevCut) / 86400000 / cycleInfo.total) * 100 : null
     tl = {
-      prev: monthDay(prevCut), next: monthDay(nc), due: cycleInfo.due ? monthDay(cycleInfo.due) : null,
-      nextPct: (cycleInfo.total / span) * 100, nowPct: (cycleInfo.day / span) * 100,
+      prev: monthDay(prevCut), next: monthDay(nc),
+      due: prevDue && duePct < 100 ? monthDay(prevDue) : null, duePct,
+      nowPct: (cycleInfo.day / cycleInfo.total) * 100,
     }
   }
 
@@ -280,13 +290,13 @@ export function CardDetailPanel({ card, payments, onBack, onEdit, onDelete, onPa
               <div className={styles.tlTrack} style={{ '--now': `${tl.nowPct}%` }}>
                 <i />
                 <span className={`${styles.tlDot} ${styles.tlDotOn}`} style={{ left: '0%' }} />
-                <span className={styles.tlDot} style={{ left: `${tl.nextPct}%` }} />
-                {tl.due && <span className={styles.tlDot} style={{ left: '100%' }} />}
+                {tl.due && <span className={styles.tlDot} style={{ left: `${tl.duePct}%` }} />}
+                <span className={styles.tlDot} style={{ left: '100%' }} />
               </div>
               <div className={styles.tlLabels}>
                 <div className={styles.tlLabelStart}><b>{tl.prev}</b>{t('cards.tablet.cutLabel')}</div>
-                <div className={styles.tlLabelMid} style={{ '--at': `${tl.nextPct}%` }}><b>{tl.next}</b>{t('cards.tablet.nextCutLabel')}</div>
-                {tl.due && <div className={styles.tlLabelEnd}><b>{tl.due}</b>{t('cards.tablet.dueLabel')}</div>}
+                {tl.due && <div className={styles.tlLabelMid} style={{ '--at': `${tl.duePct}%` }}><b>{tl.due}</b>{t('cards.tablet.dueLabel')}</div>}
+                <div className={styles.tlLabelEnd}><b>{tl.next}</b>{t('cards.tablet.nextCutLabel')}</div>
               </div>
               <div className={styles.cycleDay}>{t('cards.bento.cycleDay', { day: cycleInfo.day, total: cycleInfo.total })}</div>
             </div>
