@@ -1,12 +1,12 @@
 import { useEffect, useRef, useState } from 'react'
-import { Capacitor } from '@capacitor/core'
 import { RefreshCw } from 'lucide-react'
 import styles from './PullToRefresh.module.css'
 
 // Arrastrar hacia abajo desde el inicio de cualquier pantalla para recargar,
-// como el gesto nativo del navegador en la PWA. El WebView de la app de
-// Android no trae ese gesto, así que se hace aquí. En web/PWA no se monta
-// (el navegador ya lo hace).
+// como el gesto nativo del navegador. El WebView de la app de Android no trae
+// ese gesto y en la PWA/navegador lo desactivamos (overscroll-behavior en
+// index.css, porque movía fondo, riel y contenido), así que se hace aquí en
+// todos los dispositivos táctiles (con ratón no hay eventos touch).
 const THRESHOLD = 70   // px de arrastre (ya amortiguado) para disparar
 const MAX_PULL  = 110
 
@@ -23,7 +23,7 @@ function startsInBlockedZone(el) {
 }
 
 export function PullToRefresh() {
-  const native = Capacitor.isNativePlatform()
+  const native = true
   const [pull, setPull] = useState(0)
   const [refreshing, setRefreshing] = useState(false)
   const state = useRef({ startY: 0, startX: 0, active: false, pull: 0 })
