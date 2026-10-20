@@ -13,9 +13,9 @@ import { SegmentedControl } from '../../components/SegmentedControl'
 import { ConfirmDeleteModal } from '../../components/ConfirmDeleteModal'
 import { EmptyState } from '../../components/EmptyState'
 import { getBank } from '../../lib/cardCatalog'
-import { totalOwedOnCard, cardsCuttingInPeriod } from '../../lib/cardStatements'
+import { totalOwedOnCard, cardsCuttingInPeriod, cardCycleInfo } from '../../lib/cardStatements'
 import { cutBadgeLabel } from '../../lib/cutLabels'
-import { fmt, today, cobroPeriod } from '../../lib/utils'
+import { fmt, today, cobroPeriod, dateOf, dateToStr } from '../../lib/utils'
 import styles from './SettingsCardsPage.module.css'
 import { markBackHandled, wasBackHandled } from '../../lib/backNav'
 
@@ -96,6 +96,65 @@ function CardStack({ cards, onSelect, personalPayments, cutsById }) {
   )
 }
 
+// Tablet (≥768px, v0.9.774): cuadrícula de 2 columnas. Cada tarjeta va en su
+// propio recuadro con lo útil debajo — crédito: por pagar, avance del ciclo,
+// días al corte y al pago; débito: gastado en el periodo de cobro, su parte
+// del total y movimientos (débito no tiene ciclo ni deuda).
+function TabletCards({ cards, kind, onSelect, info, cutsById }) {
+  const { t } = useTranslation()
+  return (
+    <div className={styles.tileGrid}>
+      {cards.map((c, i) => {
+        const x = info[c.id]
+        return (
+          <div
+            role="button"
+            tabIndex={0}
+            key={c.id}
+            onClick={() => onSelect(c)}
+            onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onSelect(c) } }}
+            className={styles.tile}
+            style={{ '--enter-delay': `${i * 70}ms` }}
+            aria-label={getBank(c.bank).name}
+          >
+            <CreditCardVisual
+              card={c}
+              cutBadge={cutsById[c.id] ? cutBadgeLabel(cutsById[c.id].cutDate, cutsById[c.id].daysLeft, t) : null}
+            />
+            {c._syncing && (
+              <span className={`sync-spinner ${styles.cardSync}`} aria-label={t('sync.syncing')}>
+                <Loader2 size={14} color="var(--surface)" />
+              </span>
+            )}
+            {x && (
+              <div className={styles.tileInfo}>
+                <div className={styles.tileRow}>
+                  <span>{kind === 'credit' ? t('cards.tablet.owed') : t('cards.tablet.spent')}</span>
+                  <span className={styles.tileAmount}>{fmt(kind === 'credit' ? x.owed : x.spent)}</span>
+                </div>
+                <div className={styles.bar}><div className={styles.barFill} style={{ '--pct': `${Math.round(x.pct * 100)}%` }} /></div>
+                <div className={`${styles.tileRow} ${styles.tileSub}`}>
+                  {kind === 'credit' ? (
+                    <>
+                      <span>{x.cutDays != null ? t('cards.tablet.cutWhen', { when: x.cutWhen }) : ''}</span>
+                      <span>{x.dueDays != null ? t('cards.tablet.dueWhen', { when: x.dueWhen }) : ''}</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>{t('cards.tablet.moves', { count: x.count })}</span>
+                      <span>{t('cards.tablet.share', { pct: Math.round(x.pct * 100) })}</span>
+                    </>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
 export function SettingsCardsPage({ profile, paymentMethods, personalPayments = null, sharedSpaces = null, onPayCardNow, onSettlePlan, onBack, slideClass }) {
   const { t } = useTranslation()
   const [kind, setKind] = useState('credit')
@@ -103,6 +162,13 @@ export function SettingsCardsPage({ profile, paymentMethods, personalPayments = 
   const [editing, setEditing] = useState(null)
   const [deleting, setDeleting] = useState(null)
   const [selectedId, setSelectedId] = useState(null)
+  const [isTablet, setIsTablet] = useState(() => typeof window !== 'undefined' && window.matchMedia('(min-width: 768px)').matches)
+  useEffect(() => {
+    const mq = window.matchMedia('(min-width: 768px)')
+    const on = e => setIsTablet(e.matches)
+    mq.addEventListener('change', on)
+    return () => mq.removeEventListener('change', on)
+  }, [])
 
   // El detalle de una tarjeta es una pantalla propia: abrirlo empuja una
   // entrada al historial para que "atrás" (botón del teléfono o el de la
@@ -135,6 +201,59 @@ export function SettingsCardsPage({ profile, paymentMethods, personalPayments = 
     const cuts = cardsCuttingInPeriod(credit, today(), cobroPeriod(profile).end)
     return Object.fromEntries(cuts.map(c => [c.card.id, c]))
   }, [credit, profile])
+  // Datos de la vista de tablet (v0.9.774). `personalPayments === null` →
+  // viendo un Espacio Compartido: no se muestra ningún número (igual que el
+  // chip "Por pagar" de la pila).
+  const tabletData = useMemo(() => {
+    if (!personalPayments || !profile) return null
+    const now = today()
+    const dayDiff = d => Math.round((d - now) / 86400000)
+    const whenLabel = n => (n <= 0 ? t('cards.tablet.when_today') : n === 1 ? t('cards.tablet.when_tomorrow') : t('cards.tablet.when_inDays', { n }))
+    const info = {}
+    if (kind === 'credit') {
+      let minCut = null, minDue = null, owedTotal = 0
+      for (const c of credit) {
+        const owed = totalOwedOnCard(c, personalPayments)
+        owedTotal += owed
+        const cyc = cardCycleInfo(c, now)
+        const stmtDues = personalPayments
+          .filter(p => p.card_statement_for === c.id && p.is_card_statement && !p.is_paid && p.due_date)
+          .map(p => dateOf(p.due_date))
+        const due = stmtDues.length ? stmtDues.sort((a, b) => a - b)[0] : (cyc ? cyc.due : null)
+        const cutDays = cyc ? dayDiff(cyc.nextCut) : null
+        const dueDays = due ? dayDiff(due) : null
+        if (cutDays != null && (minCut == null || cutDays < minCut)) minCut = cutDays
+        if (dueDays != null && (minDue == null || dueDays < minDue)) minDue = dueDays
+        info[c.id] = {
+          owed, cutDays, dueDays,
+          cutWhen: cutDays != null ? whenLabel(cutDays) : '',
+          dueWhen: dueDays != null ? whenLabel(dueDays) : '',
+          pct: cyc ? cyc.day / cyc.total : 0,
+        }
+      }
+      return { info, summary: { owed: owedTotal, cut: minCut != null ? whenLabel(minCut) : null, due: minDue != null ? whenLabel(minDue) : null, cutSoon: minCut != null && minCut <= 3 } }
+    }
+    const { start, end } = cobroPeriod(profile)
+    const inPeriod = p => {
+      const d = p.paid_at ? dateOf(dateToStr(new Date(p.paid_at))) : dateOf(p.due_date)
+      return d >= start && d <= end
+    }
+    let total = 0, moves = 0
+    for (const c of debit) {
+      const mine = personalPayments.filter(p => p.payment_method_id === c.id && p.payment_method_kind === 'debit' && p.is_paid && !p.is_postponed && inPeriod(p))
+      const spent = mine.reduce((s, p) => s + Number(p.amount), 0)
+      info[c.id] = { spent, count: mine.length, pct: 0 }
+      total += spent; moves += mine.length
+    }
+    let top = null
+    for (const c of debit) {
+      info[c.id].pct = total > 0 ? info[c.id].spent / total : 0
+      if (info[c.id].count > 0 && (!top || info[c.id].count > info[top.id].count)) top = c
+    }
+    const topName = top ? (getBank(top.bank).id === 'otro' ? t('cards.otherBank') : getBank(top.bank).name) : null
+    return { info, summary: { spent: total, top: topName, moves } }
+  }, [personalPayments, profile, kind, credit, debit, t])
+
   const selectedCard = selectedId ? paymentMethods.methods.find(m => m.id === selectedId) || null : null
   // El detalle siempre abre desde arriba, sin heredar el scroll de la pila.
   useScrollTop(selectedId)
@@ -159,6 +278,19 @@ export function SettingsCardsPage({ profile, paymentMethods, personalPayments = 
   const deletingName = deleting
     ? [getBank(deleting.bank).id === 'otro' ? t('cards.otherBank') : getBank(deleting.bank).name, deleting.alias].filter(Boolean).join(' ')
     : ''
+
+  const disclaimerEl = (
+    <div className={styles.disclaimer}>
+      <ShieldCheck size={18} color="var(--accent)" className={styles.disclaimerIcon} />
+      <div>
+        <div className={styles.disclaimerTitle}>{t('cards.disclaimer.title')}</div>
+        <div className={styles.disclaimerText}>{t('cards.disclaimer.text')}</div>
+      </div>
+    </div>
+  )
+  const sm = tabletData?.summary
+  const showSummary = isTablet && !!sm && cards.length > 0
+  const cap = str => (str ? str.charAt(0).toUpperCase() + str.slice(1) : str)
 
   if (selectedCard) {
     return (
@@ -200,13 +332,21 @@ export function SettingsCardsPage({ profile, paymentMethods, personalPayments = 
         />
 
         <div className={styles.content}>
-          <div className={styles.disclaimer}>
-            <ShieldCheck size={18} color="var(--accent)" className={styles.disclaimerIcon} />
-            <div>
-              <div className={styles.disclaimerTitle}>{t('cards.disclaimer.title')}</div>
-              <div className={styles.disclaimerText}>{t('cards.disclaimer.text')}</div>
+          {!isTablet && disclaimerEl}
+
+          {showSummary && (
+            <div className={styles.summary}>
+              {kind === 'credit' ? (<>
+                <div className={styles.sumItem}><span className={styles.sumLabel}>{t('cards.tablet.owed')}</span><span className={styles.sumValue}>{fmt(sm.owed)}</span></div>
+                <div className={styles.sumItem}><span className={styles.sumLabel}>{t('cards.tablet.nextCut')}</span><span className={`${styles.sumValue} ${sm.cutSoon ? styles.sumWarn : ''}`}>{sm.cut ? cap(sm.cut) : t('cards.tablet.none')}</span></div>
+                <div className={styles.sumItem}><span className={styles.sumLabel}>{t('cards.tablet.nextDue')}</span><span className={styles.sumValue}>{sm.due ? cap(sm.due) : t('cards.tablet.none')}</span></div>
+              </>) : (<>
+                <div className={styles.sumItem}><span className={styles.sumLabel}>{t('cards.tablet.spent')}</span><span className={styles.sumValue}>{fmt(sm.spent)}</span></div>
+                <div className={styles.sumItem}><span className={styles.sumLabel}>{t('cards.tablet.mostUsed')}</span><span className={styles.sumValue}>{sm.top || t('cards.tablet.none')}</span></div>
+                <div className={styles.sumItem}><span className={styles.sumLabel}>{t('cards.tablet.moves')}</span><span className={styles.sumValue}>{sm.moves}</span></div>
+              </>)}
             </div>
-          </div>
+          )}
 
           <SegmentedControl
             value={kind}
@@ -221,7 +361,7 @@ export function SettingsCardsPage({ profile, paymentMethods, personalPayments = 
               los estados de cuenta YA generados — ahora, igual que la
               pastilla del detalle, suma también el ciclo en curso de cada
               tarjeta (`totalOwedOnCard`, una por tarjeta y luego sumadas). */}
-          {kind === 'credit' && personalPayments && (
+          {!isTablet && kind === 'credit' && personalPayments && (
             <div className={styles.totalPill}>
               <span>{t('cards.pendingCreditTotal')}</span>
               <span className={styles.totalPillAmount}>
@@ -241,8 +381,12 @@ export function SettingsCardsPage({ profile, paymentMethods, personalPayments = 
             </div>
           ) : (
             // `key` por tipo: al cambiar de pila, la nueva entra escalonada.
-            <CardStack key={kind} cards={cards} onSelect={c => setSelectedId(c.id)} personalPayments={personalPayments} cutsById={kind === 'credit' ? cutsById : {}} />
+            isTablet
+              ? <TabletCards key={kind} cards={cards} kind={kind} onSelect={c => setSelectedId(c.id)} info={tabletData?.info || {}} cutsById={kind === 'credit' ? cutsById : {}} />
+              : <CardStack key={kind} cards={cards} onSelect={c => setSelectedId(c.id)} personalPayments={personalPayments} cutsById={kind === 'credit' ? cutsById : {}} />
           )}
+
+          {isTablet && disclaimerEl}
         </div>
       </div>
 

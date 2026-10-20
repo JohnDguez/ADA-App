@@ -196,3 +196,27 @@
 .totalPillAmount {
   font-weight: 600;
 }
+
+/* ── Tablet (≥768px, v0.9.774): resumen arriba, cuadrícula de 2 columnas con
+      la info de cada tarjeta debajo, aviso al final y pastilla centrada ─── */
+.summary { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; animation: cardsFadeUp .35s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.sumItem { display: flex; flex-direction: column; gap: 4px; background: var(--surface); border-radius: var(--radius-sm); padding: 14px 16px; min-width: 0; }
+.sumLabel { font-size: 12px; font-weight: 400; color: var(--text); }
+.sumValue { font-size: 20px; font-weight: 700; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sumWarn { color: var(--warn-tone); }
+
+.tileGrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.tile { position: relative; background: var(--surface); border-radius: 18px; padding: 10px 10px 14px; cursor: pointer; outline: none; animation: stackCardIn .5s cubic-bezier(0.22, 1, 0.36, 1) var(--enter-delay) both; }
+.tile:focus-visible { box-shadow: 0 0 0 2px var(--accent); }
+.tileInfo { display: flex; flex-direction: column; gap: 8px; padding: 12px 6px 0; }
+.tileRow { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; font-size: 13px; color: var(--text); }
+.tileAmount { font-weight: 700; }
+.tileSub { font-size: 12px; font-weight: 400; }
+.bar { height: 6px; border-radius: 3px; background: var(--border); overflow: hidden; }
+.barFill { height: 100%; width: var(--pct); border-radius: 3px; background: var(--accent); transition: width .45s cubic-bezier(0.22, 1, 0.36, 1); }
+
+@media (min-width: 768px) {
+  .pageWrapper { padding-bottom: 120px; }
+  .content { max-width: 680px; margin: 24px auto 0; padding: 0 24px; }
+  .addPillRow { bottom: 28px; left: calc(50% + 36px); max-width: 680px; justify-content: center; }
+}

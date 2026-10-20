@@ -1753,6 +1753,23 @@
     "statementBadge": "Card statement",
     "cycleSpend": "Spent this cycle: {{amount}}",
     "pendingCreditTotal": "Owed",
+    "tablet": {
+      "nextCut": "Next cut",
+      "nextDue": "Next payment",
+      "spent": "Spent this period",
+      "mostUsed": "Most used card",
+      "moves": "Transactions",
+      "owed": "Owed",
+      "cutWhen": "Cut {{when}}",
+      "dueWhen": "Due {{when}}",
+      "share": "{{pct}}% of total",
+      "when_today": "today",
+      "when_tomorrow": "tomorrow",
+      "when_inDays": "in {{n}} days",
+      "moves_one": "{{count}} transaction",
+      "moves_other": "{{count}} transactions",
+      "none": "—"
+    },
     "detail": {
       "paidWithCard": "Paid with this card",
       "sharedSpaceFallback": "Shared space",

@@ -1753,6 +1753,23 @@
     "statementBadge": "Estado de cuenta",
     "cycleSpend": "Gastado en este corte: {{amount}}",
     "pendingCreditTotal": "Por pagar",
+    "tablet": {
+      "nextCut": "Próximo corte",
+      "nextDue": "Próximo pago",
+      "spent": "Gastado este periodo",
+      "mostUsed": "Tarjeta más usada",
+      "moves": "Movimientos",
+      "owed": "Por pagar",
+      "cutWhen": "Corte {{when}}",
+      "dueWhen": "Pago {{when}}",
+      "share": "{{pct}}% del total",
+      "when_today": "hoy",
+      "when_tomorrow": "mañana",
+      "when_inDays": "en {{n}} días",
+      "moves_one": "{{count}} movimiento",
+      "moves_other": "{{count}} movimientos",
+      "none": "—"
+    },
     "detail": {
       "paidWithCard": "Pagado con esta tarjeta",
       "sharedSpaceFallback": "Espacio compartido",
