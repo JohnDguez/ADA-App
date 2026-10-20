@@ -102,6 +102,18 @@ export function SettingsAppearancePage({ theme, onThemeChange, onBack, slideClas
               <div className={styles.skeletonAccentBar} />
               <div className={styles.skeletonMutedBar} />
             </div>
+            {/* Tablet (≥768px): vista previa en forma de tablet, con riel y
+                bloques (el esqueleto de teléfono de arriba se oculta). */}
+            <div className={`${styles.tabPreview} ${styles['tab_' + id]}`}>
+              <div className={styles.tabRail} />
+              <div className={styles.tabBody}>
+                <i className={styles.tabBar1} />
+                <i className={styles.tabBar2} />
+                <i className={styles.tabAccent} />
+                <div className={styles.tabGrid}><b /><b /><b /><b /></div>
+                <div className={styles.tabList}><b /><b /><b /><b /></div>
+              </div>
+            </div>
             <span className={`${styles.carouselCardLabel} ${theme === id ? styles.carouselCardLabelActive : ''}`}>
               {t(`theme.${id === 'sistema' ? 'system' : id}`)}
             </span>

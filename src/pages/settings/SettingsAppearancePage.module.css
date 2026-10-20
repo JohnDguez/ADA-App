@@ -156,3 +156,64 @@
 .skeleton_sistema .skeletonMutedBar {
   background: var(--preview-dark-bar);
 }
+
+/* ── Vista previa de tablet (solo ≥768px) ─────────────────────────────────
+   Mismos valores `--preview-*` que el esqueleto de teléfono (misma excepción
+   a la Regla 11: cada vista previa muestra SU tema sin importar el activo). */
+.tabPreview { display: none; }
+
+@media (min-width: 768px) {
+  .pageWrapper { padding-bottom: 140px; }
+  .carousel { gap: 20px; padding: 50px calc(50% - 215px) 30px; }
+  .carouselCard {
+    flex: 0 0 430px;
+    gap: 16px;
+    padding: 22px 18px 18px;
+    border-radius: 16px;
+    opacity: 0.55;
+    transform: scale(0.94);
+    transition: transform .3s cubic-bezier(0.22, 1, 0.36, 1), opacity .3s ease, box-shadow .3s ease;
+  }
+  .carouselCardActive { opacity: 1; transform: scale(1.04); box-shadow: var(--shadow-popover); }
+  .carouselCardLabel { font-size: 20px; }
+
+  .skeletonPreview { display: none; }
+  .tabPreview {
+    display: flex;
+    gap: 8px;
+    width: 100%;
+    max-width: 370px;
+    aspect-ratio: 3 / 4;
+    border-radius: 12px;
+    padding: 8px;
+    box-sizing: border-box;
+    overflow: hidden;
+    position: relative;
+  }
+  .tabRail { width: 12%; flex: none; border-radius: 8px; background: var(--nav-bg); }
+  .tabBody { flex: 1; min-width: 0; padding: 6px 2px; }
+  .tabBody i { display: block; height: 9px; border-radius: 4px; }
+  .tabBar1 { width: 34%; }
+  .tabBar2 { width: 20%; margin-top: 6px; }
+  .tabAccent { height: 30px !important; border-radius: 7px !important; margin-top: 22px; }
+  .tabGrid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 16px; }
+  .tabGrid b { display: block; height: 84px; border-radius: 8px; }
+  .tabList { display: flex; flex-direction: column; gap: 10px; margin-top: 18px; }
+  .tabList b { display: block; height: 46px; border-radius: 8px; }
+
+  .tab_light { background: var(--preview-light-bg); }
+  .tab_light .tabBody i { background: var(--preview-light-bar); }
+  .tab_light .tabAccent { background: var(--preview-light-accent); }
+  .tab_light .tabGrid b, .tab_light .tabList b { background: color-mix(in srgb, var(--preview-light-bar) 40%, transparent); }
+
+  .tab_dark { background: var(--preview-dark-bg); }
+  .tab_dark .tabBody i { background: var(--preview-dark-bar); }
+  .tab_dark .tabAccent { background: var(--preview-dark-accent); }
+  .tab_dark .tabGrid b, .tab_dark .tabList b { background: color-mix(in srgb, var(--preview-dark-bar) 45%, transparent); }
+
+  .tab_sistema { background: linear-gradient(160deg, var(--preview-light-bg) 50%, var(--preview-dark-bg) 50%); }
+  .tab_sistema .tabBody i { background: var(--preview-light-bar); }
+  .tab_sistema .tabAccent { background: var(--preview-light-accent); }
+  .tab_sistema .tabGrid b:nth-child(odd), .tab_sistema .tabList b:nth-child(odd) { background: color-mix(in srgb, var(--preview-light-bar) 40%, transparent); }
+  .tab_sistema .tabGrid b:nth-child(even), .tab_sistema .tabList b:nth-child(even) { background: color-mix(in srgb, var(--preview-dark-bar) 45%, transparent); }
+}
