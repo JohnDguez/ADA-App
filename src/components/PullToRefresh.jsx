@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { Capacitor } from '@capacitor/core'
 import { RefreshCw } from 'lucide-react'
 import styles from './PullToRefresh.module.css'
 
@@ -23,7 +24,9 @@ function startsInBlockedZone(el) {
 }
 
 export function PullToRefresh() {
-  const native = true
+  // App nativa (siempre) o tablet táctil (donde se desactivó el gesto del
+  // navegador). En el móvil web se deja el gesto nativo del navegador.
+  const native = Capacitor.isNativePlatform() || (typeof window !== 'undefined' && window.matchMedia('(min-width: 768px) and (pointer: coarse)').matches)
   const [pull, setPull] = useState(0)
   const [refreshing, setRefreshing] = useState(false)
   const state = useRef({ startY: 0, startX: 0, active: false, pull: 0 })

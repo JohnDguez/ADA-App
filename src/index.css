@@ -445,10 +445,14 @@ html, body {
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
   overflow-x: hidden;
-  /* v0.9.767 — sin rebote/estiramiento nativo al jalar en los extremos: movía
-     todo (fondo, riel y contenido). El gesto de recargar lo dibuja
-     PullToRefresh.jsx y solo desplaza el contenido. */
-  overscroll-behavior-y: none;
+}
+
+/* v0.9.767/771 — solo tablet: sin rebote/estiramiento nativo al jalar en los
+   extremos (movía fondo, riel y contenido). El gesto de recargar lo dibuja
+   PullToRefresh.jsx y solo desplaza el contenido. En móvil se deja el
+   comportamiento nativo (v0.9.771: se reportó scroll difícil en móvil). */
+@media (min-width: 768px) {
+  html, body { overscroll-behavior-y: none; }
 }
 
 /* --sat = alto de la barra de estado (Android edge-to-edge, v0.9.592).
