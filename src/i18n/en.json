@@ -860,6 +860,8 @@
     "weeklyStartDateLabel": "First payment date",
     "nextDueLabel": "Next due date: {{date}}",
     "recurrentNote": "A new payment will be generated automatically every {{interval}}.",
+    "nextDueThen": "Next charge: {{date}} · then {{freq}}",
+    "recurrentEvery": {"monthly": "every month", "bimonthly": "every 2 months", "quarterly": "every 3 months", "semiannual": "every 6 months", "annual": "every year"},
     "recurrentIntervals": {
       "weekly": "7 days",
       "biweekly": "14 days",

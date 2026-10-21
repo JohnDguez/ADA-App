@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useId, Children, isValidElement, cloneElem
 import { useTranslation } from 'react-i18next'
 import i18n from '../i18n'
 import { Wallet, AlertTriangle, Repeat, Check, Info, Lock } from 'lucide-react'
-import { CATEGORIES, RECUR_FREQ, MONTHS, getMonths, MONTHS_SHORT, getMonthsShort, intlLocale, nextWeeklyFromDate, nextBiweeklyFromDate, nextPeriodDate, cobroPeriod, fmt, nameExistsActive, projectPeriodImpact, nextCobroPeriod, getCatColor, getCategoryLabel, getFrequencyLabel, dateToStr, todayStr, getDeleteConfirmMessage, installmentCurrentNumber } from '../lib/utils'
+import { CATEGORIES, RECUR_FREQ, MONTHS, getMonths, MONTHS_SHORT, getMonthsShort, intlLocale, nextWeeklyFromDate, nextBiweeklyFromDate, nextPeriodDate, cobroPeriod, fmt, nameExistsActive, projectPeriodImpact, nextCobroPeriod, getCatColor, getCategoryLabel, getFrequencyLabel, dateToStr, dateOf, todayStr, getDeleteConfirmMessage, installmentCurrentNumber } from '../lib/utils'
 import { getCategoryIcon } from '../lib/categoryIcons'
 import { supabase } from '../lib/supabase'
 import { ConfirmCloseModal } from './ConfirmCloseModal'
@@ -190,7 +190,18 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onSaveC
             .filter(p => p.parent_id === initial.id && !p.is_paid && !p.is_postponed)
             .sort((a, b) => a.current_installment - b.current_installment)[0]
         : null
-      let initialDue = nextInstallmentCopy?.due_date || initial.due_date || todayStr()
+      // Recurrente ACTIVO (v0.9.780): su due_date es el ancla con la que se creó
+      // (puede ser de hace meses). La fecha que de verdad manda es la de su
+      // próxima copia pendiente — y es la que updateRecurrentConfig compara
+      // para decidir si re-encadena fechas. Si se sembrara el ancla vieja, el
+      // calendario abriría en ese mes viejo y guardar sin tocar la fecha movería
+      // el cobro hacia atrás.
+      const nextRecurrentCopy = initial.is_master && initial.is_recurrent && !initial.is_installment && !initial.paused
+        ? (payments || [])
+            .filter(p => p.parent_id === initial.id && !p.is_paid && !p.is_postponed)
+            .sort((a, b) => (a.due_date < b.due_date ? -1 : a.due_date > b.due_date ? 1 : 0))[0]
+        : null
+      let initialDue = nextInstallmentCopy?.due_date || nextRecurrentCopy?.due_date || initial.due_date || todayStr()
       // Reactivar un master PAUSADO (fase 3, v0.9.481): no tiene copias
       // pendientes, y su due_date es la fecha del PRIMER pago del plan — como
       // fecha sugerida dejaba las copias nuevas vencidas de entrada si se
@@ -516,6 +527,9 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onSaveC
   const showBiweeklyPicker = mode === 'recurrent' && recurFreq === 'biweekly'
   const nextWeekDate       = weeklyDate ? nextWeeklyFromDate(weeklyDate) : null
   const nextBiDate         = biweeklyDate ? nextBiweeklyFromDate(biweeklyDate) : null
+  // Confirmación en vivo (v0.9.780): el mes va escrito completo para no
+  // depender de leer dd/mm/aaaa. Solo en frecuencias basadas en mes.
+  const nextMonthlyDate    = mode === 'recurrent' && monthBasedFreqs.includes(recurFreq) && dueDate ? dateOf(dueDate) : null
 
   // Flujo por tipo (v0.9.604)
   const isFlat       = mode !== 'installment'                         // Único / Recurrente: una sola pantalla
@@ -983,6 +997,15 @@ const impactBlock = impactPreview && impactPreview.length > 0 ? (() => {
             <div className={styles.fieldGroup}>
               <label className="field-label">{t('paymentModal.dueDate')}</label>
               <DatePicker value={dueDate} onChange={setDueDate} sheet sheetTitle={t('paymentModal.dueDate')} />
+              {nextMonthlyDate && (
+                <div className={styles.nextDueNote}>
+                  <Repeat size={14} />
+                  <span>{t('paymentModal.nextDueThen', {
+                    date: nextMonthlyDate.toLocaleDateString(intlLocale(), { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }),
+                    freq: t(`paymentModal.recurrentEvery.${recurFreq}`),
+                  })}</span>
+                </div>
+              )}
             </div>
           )}
 

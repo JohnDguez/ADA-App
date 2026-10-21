@@ -66,14 +66,15 @@
   display: flex;
   align-items: center;
   gap: 4px;
-  padding: 4px 8px;
-  border-radius: 5px;
+  padding: 4px 10px;
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
 }
 
 .monthYearLabel {
   font-size: 13px;
-  font-weight: 600;
-  color: var(--text);
+  font-weight: 700;
+  color: var(--accent);
 }
 
 .weekdaysRow {
