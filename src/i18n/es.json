@@ -259,6 +259,7 @@
     "hourDone": "Listo",
     "tileDaysBefore_one": "{{count}} día antes",
     "tileDaysBefore_other": "{{count}} días antes",
+    "tablet": {"stepsTitle": "Cómo te avisamos de un pago", "stepBefore": "Antes", "stepDay": "El día", "stepAfter": "Después", "upcomingSub": "Con anticipación", "dueTodaySub": "El mismo día", "overdueSub": "Si no los pagas"},
     "blockedNotice": "Las notificaciones están bloqueadas en tu navegador. Actívalas en los ajustes del sitio y vuelve a intentarlo.",
     "daysBeforeLabel": "Días de anticipación",
     "payDayLabel": "Día de cobro",

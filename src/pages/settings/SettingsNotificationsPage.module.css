@@ -154,3 +154,104 @@
   line-height: 1.4;
 }
 .blockedIcon { flex-shrink: 0; margin-top: 1px; }
+
+/* ── Tablet (≥768px, v0.9.781): hora protagonista + tres pasos Antes / El día / Después ── */
+.tabWrap { display: none; }
+
+@media (min-width: 768px) {
+  .tabWrap {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    max-width: 680px;
+    margin: 14px auto 0;
+    padding: 0 16px;
+  }
+  .hourCard {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    width: 100%;
+    padding: 16px 22px;
+    border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
+    border-radius: 20px;
+    background: linear-gradient(135deg, color-mix(in srgb, var(--accent) 16%, var(--surface)), var(--surface));
+    color: var(--text);
+    font-family: inherit;
+    text-align: left;
+    cursor: pointer;
+  }
+  .hourIcon {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: var(--accent);
+    color: var(--surface);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .hourText { flex: 1; display: flex; flex-direction: column; gap: 2px; }
+  .hourLabel { font-size: 12px; color: var(--muted); }
+  .hourValue { font-size: 30px; font-weight: 700; line-height: 1.1; }
+
+  .stepsPanel {
+    background: var(--surface);
+    border-radius: 20px;
+    padding: 20px 22px;
+    box-shadow: var(--card-shadow);
+  }
+  .stepsTitle { font-size: 15px; font-weight: 700; margin-bottom: 14px; }
+  .steps {
+    display: grid;
+    grid-template-columns: 1.5fr 1fr 1fr;
+    gap: 12px;
+  }
+  .step {
+    position: relative;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 16px;
+    transition: border-color .2s;
+  }
+  .stepOn { border-color: color-mix(in srgb, var(--accent) 45%, transparent); }
+  .stepHead { display: flex; align-items: center; justify-content: space-between; }
+  .stepCap { font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+  .stepSwitch { cursor: pointer; display: flex; }
+  .stepBody { display: flex; align-items: center; gap: 10px; margin-top: 12px; }
+  .stepIcon {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: var(--border);
+    color: var(--muted);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: background .2s, color .2s;
+  }
+  .stepOn .stepIcon { background: var(--accent); color: var(--surface); }
+  .stepLabel { display: block; font-size: 15px; font-weight: 700; }
+  .stepSub { display: block; font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .stepDays { margin-top: 14px; display: flex; flex-direction: column; gap: 8px; }
+  .stepArrow {
+    position: absolute;
+    right: -14px;
+    top: 50%;
+    margin-top: -10px;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--muted);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2;
+  }
+  .tabTiles { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+}

@@ -1,6 +1,6 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Bell, BellOff, TriangleAlert, CircleAlert, CalendarCheck, Clock, Banknote, CreditCard, ChevronDown } from 'lucide-react'
+import { Bell, BellOff, TriangleAlert, CircleAlert, CalendarCheck, Clock, Banknote, CreditCard, ChevronDown, ChevronRight } from 'lucide-react'
 // Ícono del encabezado vía Phosphor Icons (mismo patrón que las demás
 // sub-páginas ya migradas, v0.9.442-448) — import directo para tree-shaking real.
 import { Bell as BellDuotone } from '@phosphor-icons/react/dist/csr/Bell'
@@ -39,6 +39,14 @@ export function SettingsNotificationsPage({ profile, user, onUpdate, onBack, sli
   const readBlocked = () => typeof Notification !== 'undefined' && Notification.permission === 'denied'
   const [blocked, setBlocked] = useState(readBlocked)
   const [hourOpen, setHourOpen] = useState(false)
+  // Tablet (≥768px, v0.9.781): distribución propia; el móvil queda intacto.
+  const [isTablet, setIsTablet] = useState(() => typeof window !== 'undefined' && window.matchMedia('(min-width: 768px)').matches)
+  useEffect(() => {
+    const mq = window.matchMedia('(min-width: 768px)')
+    const on = e => setIsTablet(e.matches)
+    mq.addEventListener('change', on)
+    return () => mq.removeEventListener('change', on)
+  }, [])
 
   const hour = profile.notif_hour ?? 8
   const daysBefore = profile.notif_days_before ?? 3
@@ -110,6 +118,7 @@ export function SettingsNotificationsPage({ profile, user, onUpdate, onBack, sli
       </Card>
 
       <Collapse open={subscribed}>
+        {!isTablet && (<>
         <div className={styles.timeRow}>
           <span className={styles.timeLabel}>{t('settingsNotifications.notifyAt')}</span>
           <button type="button" className={styles.timeButton} onClick={() => setHourOpen(true)}><Clock size={20} color="var(--accent)" />{HOUR_LABELS[hour]}<ChevronDown size={18} className={styles.timeChevron} /></button>
@@ -141,6 +150,71 @@ export function SettingsNotificationsPage({ profile, user, onUpdate, onBack, sli
             </div>
           </div>
         </Collapse>
+        </>)}
+        {isTablet && (
+          <div className={styles.tabWrap}>
+            <button type="button" className={styles.hourCard} onClick={() => setHourOpen(true)}>
+              <span className={styles.hourIcon}><Clock size={26} /></span>
+              <span className={styles.hourText}>
+                <span className={styles.hourLabel}>{t('settingsNotifications.notifyAt')}</span>
+                <span className={styles.hourValue}>{HOUR_LABELS[hour]}</span>
+              </span>
+              <ChevronDown size={22} className={styles.timeChevron} />
+            </button>
+
+            <div className={styles.stepsPanel}>
+              <div className={styles.stepsTitle}>{t('settingsNotifications.tablet.stepsTitle')}</div>
+              <div className={styles.steps}>
+                {[
+                  { key: 'upcoming', cap: t('settingsNotifications.tablet.stepBefore'), Icon: Clock, label: t('settingsNotifications.upcomingLabel'), sub: t('settingsNotifications.tablet.upcomingSub'), field: 'notif_upcoming', on: upcomingOn, days: true },
+                  { key: 'dueToday', cap: t('settingsNotifications.tablet.stepDay'), Icon: CalendarCheck, label: t('settingsNotifications.dueTodayLabel'), sub: t('settingsNotifications.tablet.dueTodaySub'), field: 'notif_due_today', on: profile.notif_due_today !== false },
+                  { key: 'overdue', cap: t('settingsNotifications.tablet.stepAfter'), Icon: CircleAlert, label: t('settingsNotifications.overdueLabel'), sub: t('settingsNotifications.tablet.overdueSub'), field: 'notif_overdue', on: profile.notif_overdue !== false, last: true },
+                ].map(({ key, cap, Icon, label, sub, field, on, days, last }) => (
+                  <div key={key} className={`${styles.step} ${on ? styles.stepOn : ''}`}>
+                    <div className={styles.stepHead}>
+                      <span className={styles.stepCap}>{cap}</span>
+                      <div {...switchProps(on)} className={styles.stepSwitch} onClick={() => onUpdate({ [field]: !on })}><Toggle on={on} /></div>
+                    </div>
+                    <div className={styles.stepBody}>
+                      <span className={styles.stepIcon}><Icon size={18} /></span>
+                      <span>
+                        <span className={styles.stepLabel}>{label}</span>
+                        <span className={styles.stepSub}>{sub}</span>
+                      </span>
+                    </div>
+                    {days && (
+                      <div className={styles.stepDays}>
+                        <span className={styles.timeLabel}>{t('settingsNotifications.daysBeforeLabel')}</span>
+            <div className={styles.daysBeforeRow}>
+              {[1, 2, 3, 5, 7].map(d => (
+                <button key={d} onClick={() => onUpdate({ notif_days_before: d })}
+                  className={`${styles.dayButton} ${daysBefore === d ? styles.dayButtonActive : ''}`}>
+                  {d}
+                </button>
+              ))}
+            </div>
+                      </div>
+                    )}
+                    {!last && <span className={styles.stepArrow}><ChevronRight size={12} /></span>}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className={styles.tabTiles}>
+              {tiles.filter(x => x.key === 'payDay' || x.key === 'cards').map(({ key, Icon, label, on, status, onToggle }) => (
+                <button key={key} type="button" aria-pressed={on} onClick={onToggle}
+                  className={`${styles.tile} ${on ? styles.tileOn : ''}`}>
+                  <span className={styles.tileIcon}><Icon size={17} /></span>
+                  <span>
+                    <span className={styles.tileLabel}>{label}</span>
+                    <span className={styles.tileStatus}>{status}</span>
+                  </span>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
       </Collapse>
 
       <TimeWheelSheet open={hourOpen} onClose={() => setHourOpen(false)} value={hour}
