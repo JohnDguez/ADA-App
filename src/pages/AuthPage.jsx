@@ -2,15 +2,6 @@ import { useState, useEffect, useRef, useId, Children, isValidElement, cloneElem
 import { useTranslation } from 'react-i18next'
 import { supabase } from '../lib/supabase'
 import { Eye, EyeOff, Lock, Mail, X, Check, ArrowLeft } from 'lucide-react'
-// Íconos de las 3 tarjetas de beneficio de la pantalla de bienvenida — antes
-// Lucide (CalendarClock/Users/Target), cambiados a Phosphor en v0.9.516
-// ("se me hacen mas bonitos", pedido explícito de Johnatan) — mismos
-// imports por subruta y mismo weight="duotone" que ya usa PremiumPage.jsx
-// para sus tarjetas de beneficio (UsersThree/Target incluso son el mismo
-// ícono conceptual reutilizado ahí para Espacios Compartidos/Metas).
-import { CalendarCheck } from '@phosphor-icons/react/dist/csr/CalendarCheck'
-import { UsersThree } from '@phosphor-icons/react/dist/csr/UsersThree'
-import { Target } from '@phosphor-icons/react/dist/csr/Target'
 import { passwordRequirements, isPasswordStrong } from '../components/PasswordSetupModal'
 import Logo from '../components/Logo'
 import { APP_NAME } from '../lib/constants'
@@ -20,14 +11,6 @@ import { Presence } from '../components/Presence'
 import { kbd, switchProps } from '../lib/a11y'
 import styles from './AuthPage.module.css'
 
-// Misma curva que el borde inferior de cada "escena" de OnboardingPage.jsx y
-// del hero de PremiumPage.jsx (WAVE_PATH ahí) — pedido explícito de
-// Johnatan de reutilizar ese mismo patrón para la pantalla de bienvenida
-// (v0.9.514). Duplicada a propósito, mismo criterio ya documentado en
-// PremiumPage.jsx: es solo un string SVG, no vale la pena una fuente
-// compartida para 3 usos.
-const WAVE_PATH = 'M0,110 L0,20 C30,-19 60,38 95,38 C135,36 150,73 195,64 C238,58 255,101 300,80 L300,110 Z'
-
 // Tablet (≥768px): sin sesión no existe el riel, así que se libera su margen
 // (index.css → html.auth-screen #root).
 function useAuthScreenClass() {
@@ -35,17 +18,6 @@ function useAuthScreenClass() {
     document.documentElement.classList.add('auth-screen')
     return () => document.documentElement.classList.remove('auth-screen')
   }, [])
-}
-
-function useIsTablet() {
-  const [isTablet, setIsTablet] = useState(() => typeof window !== 'undefined' && window.matchMedia('(min-width: 768px)').matches)
-  useEffect(() => {
-    const mq = window.matchMedia('(min-width: 768px)')
-    const on = e => setIsTablet(e.matches)
-    mq.addEventListener('change', on)
-    return () => mq.removeEventListener('change', on)
-  }, [])
-  return isTablet
 }
 
 // ── Modal de Términos y Condiciones ──────────────────────────────────────────
@@ -199,7 +171,6 @@ export function ResetPasswordPage({ onDone }) {
 export function AuthPage() {
   const { t } = useTranslation()
   useAuthScreenClass()
-  const isTablet = useIsTablet()
   const [mode,          setMode]          = useState('landing')
   // Carrusel informativo de la bienvenida móvil (v0.9.785, mockup MovAuth16-18):
   // rota solo cada 5 s y se puede deslizar; no bloquea los botones fijos.
@@ -257,10 +228,10 @@ export function AuthPage() {
   }, [contentPhase])
 
   useEffect(() => {
-    if (isTablet || mode !== 'landing') return undefined
+    if (mode !== 'landing') return undefined
     const id = setTimeout(() => setSlide(s => (s + 1) % 3), 5000)
     return () => clearTimeout(id)
-  }, [slide, isTablet, mode])
+  }, [slide, mode])
   const onSwipeEnd = e => {
     if (swipeX.current == null) return
     const dx = e.changedTouches[0].clientX - swipeX.current
@@ -466,14 +437,9 @@ export function AuthPage() {
   // real trae su botón de enviar dentro del contenido con scroll, igual
   // que cualquier otro formulario de la app (PaymentModal, etc.).
   const showForm = visibleMode !== 'landing'
-  const FEATURES = [
-    { icon: CalendarCheck, color: 'var(--accent)', title: t('authPage.landing.feature1Title'), desc: t('authPage.landing.feature1Desc') },
-    { icon: UsersThree,    gold: true, color: 'var(--premium-gold-text)', title: t('authPage.landing.feature2Title'), desc: t('authPage.landing.feature2Desc') },
-    { icon: Target,        color: 'var(--accent)', title: t('authPage.landing.feature3Title'), desc: t('authPage.landing.feature3Desc') },
-  ]
 
   return (
-    <div className={`${styles.page} ${isTablet ? styles.pageTablet : ''} ${isTablet && showForm ? styles.pageTabForm : ''} ${!isTablet && !showForm ? styles.pageMob : ''}`}>
+    <div className={`${styles.page} ${showForm ? styles.pageForm : styles.pageLanding}`}>
 
       {/* Hero permanente (nunca se desmonta al cambiar `mode`) — ilustración
           propia de Johnatan (login-header.svg), logo y onda inferior. Es
@@ -485,24 +451,6 @@ export function AuthPage() {
             (v0.9.516). --auth-hero-overlay documentada en index.css. */}
         <div className={styles.heroOverlay} />
 
-        {/* Flecha de regreso a 'landing' — solo con el formulario real
-            (no en 'forgot', que ya trae su propio link "volver a inicio de
-            sesión" más abajo). Color fijo #fff y fondo translúcido fijo
-            (`--auth-hero-back-btn-bg`, v0.9.518 — "agrega un fondo
-            trasparentoso... para que resalte mas") a propósito, igual que
-            el resto del hero — el fondo siempre es la misma ilustración
-            oscura, sin reaccionar al tema de la app. */}
-        {(visibleMode === 'login' || visibleMode === 'register') && (
-          <button
-            type="button"
-            onClick={() => { setMode('landing'); setError(''); setSuccess('') }}
-            aria-label={t('authPage.landing.backAriaLabel')}
-            className={`${styles.backButton} ${fade}`}
-          >
-            <ArrowLeft size={20} color="var(--on-color)" />
-          </button>
-        )}
-
         <div className={styles.heroContent}>
           {/* Logo 3 veces más grande que el original (34px → 102px), sin
               animación. */}
@@ -513,9 +461,6 @@ export function AuthPage() {
           />
         </div>
 
-        <svg viewBox="0 0 300 110" preserveAspectRatio="none" className={styles.heroWave}>
-          <path d={WAVE_PATH} fill="var(--bg)" />
-        </svg>
       </div>
 
       {/* Única franja con scroll propio (flex: 1 + overflowY: auto) —
@@ -527,7 +472,7 @@ export function AuthPage() {
           — v0.9.518, antes este cruce no tenía ninguna animación). */}
       {/* Móvil · bienvenida (v0.9.785, mockup MovAuth16-18): logo, carrusel de
           3 mensajes sobre la ilustración, Luna en el suelo y botones fijos. */}
-      {!isTablet && !showForm && (
+      {!showForm && (
         <div className={`${styles.mobLanding} ${fade}`}>
           <div
             className={styles.mobSlides}
@@ -555,73 +500,11 @@ export function AuthPage() {
           </div>
           <div className={styles.mobBottom}>
             <img src="/luna/luna_waving.webp" alt={t('authPage.landing.lunaAlt')} className={styles.mobLuna} />
-            <button onClick={() => setMode('register')} className={`btn-primary ${styles.bottomPrimary}`}>
-              {t('authPage.landing.createAccount')}
-            </button>
-            <button onClick={() => setMode('login')} className={styles.mobSecondary}>
-              {t('authPage.landing.login')}
-            </button>
+            <div className={styles.mobCtas}>
+              <button onClick={() => setMode('register')} className={styles.mobCtaPrimary}>{t('authPage.landing.createAccount')}</button>
+              <button onClick={() => setMode('login')} className={styles.mobCtaGhost}>{t('authPage.landing.login')}</button>
+            </div>
             <div className={styles.mobLegal}>
-              <a href="/privacidad.html" target="_blank" rel="noopener noreferrer">{t('authPage.landing.privacy')}</a>
-              {' · '}
-              <a href="/terminos.html" target="_blank" rel="noopener noreferrer">{t('authPage.landing.terms')}</a>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Tablet · bienvenida (v0.9.783, mockup TabAuthB4): lema, descripción de
-          la app, Luna con tarjetas de vidrio, chips y CTAs sobre la ilustración
-          a pantalla completa. En móvil no se renderiza. */}
-      {isTablet && !showForm && (
-        <div className={`${styles.tabLanding} ${fade}`}>
-          <div className={styles.tabTop}>
-            <h1 className={styles.tabTagline}>
-              {t('authPage.landing.tagline1')}<br />{t('authPage.landing.tagline2')}<br />
-              <em className={styles.tabTaglineEm}>{t('authPage.landing.tagline3')}</em>
-            </h1>
-            <p className={styles.tabDesc}>
-              <strong>{t('authPage.landing.descTitle')}</strong><br />
-              <span className={styles.tabDescSub}>{t('authPage.landing.descBody')}</span>
-            </p>
-          </div>
-
-          <div className={styles.tabStage}>
-            <div className={`${styles.glass} ${styles.glassPeriod}`}>
-              <svg width="64" height="64" viewBox="0 0 64 64" aria-hidden="true">
-                <circle cx="32" cy="32" r="27" fill="none" stroke="var(--auth-glass-border)" strokeWidth="9" />
-                <circle cx="32" cy="32" r="27" fill="none" stroke="var(--accent)" strokeWidth="9" strokeLinecap="round"
-                  strokeDasharray="105 170" transform="rotate(-90 32 32)" />
-                <text x="32" y="37" textAnchor="middle" fontSize="14" fontWeight="700" fill="var(--on-color)">62%</text>
-              </svg>
-              <div>
-                <div className={styles.glassMuted}>{t('authPage.landing.demoPeriod')}</div>
-                <div className={styles.glassAmount}>{t('authPage.landing.demoAmount')}</div>
-                <div className={styles.glassMuted}>{t('authPage.landing.demoPending')}</div>
-              </div>
-            </div>
-            <img src="/luna/luna_waving.webp" alt={t('authPage.landing.lunaAlt')} className={styles.tabLuna} />
-            <div className={`${styles.glass} ${styles.glassNotif}`}>
-              <div className={styles.notifIcon}>L</div>
-              <div>
-                <div className={styles.glassMuted}>{t('authPage.landing.demoNotifApp')}</div>
-                <div className={styles.glassNotifTitle}>{t('authPage.landing.demoNotifTitle')}</div>
-                <div className={styles.glassMuted}>{t('authPage.landing.demoNotifAmount')}</div>
-              </div>
-            </div>
-          </div>
-
-          <div className={styles.tabBottom}>
-            <div className={styles.chips}>
-              {['chip1', 'chip2', 'chip3'].map(k => (
-                <span key={k} className={styles.chip}><i className={styles.chipDot} />{t(`authPage.landing.${k}`)}</span>
-              ))}
-            </div>
-            <div className={styles.tabCtas}>
-              <button onClick={() => setMode('register')} className={styles.tabCtaPrimary}>{t('authPage.landing.createAccount')}</button>
-              <button onClick={() => setMode('login')} className={styles.tabCtaGhost}>{t('authPage.landing.login')}</button>
-            </div>
-            <div className={styles.tabLegal}>
               <a href="/privacidad.html" target="_blank" rel="noopener noreferrer">{t('authPage.landing.privacyFull')}</a>
               {' · '}
               <a href="/terminos.html" target="_blank" rel="noopener noreferrer">{t('authPage.landing.termsFull')}</a>
@@ -630,25 +513,10 @@ export function AuthPage() {
         </div>
       )}
 
-      <div className={`${styles.scroll} ${showForm ? styles.scrollForm : styles.scrollLanding}`}>
-        {!showForm ? (
-          <div className={`${styles.features} ${fade}`}>
-            {FEATURES.map(f => (
-              <div key={f.title} className={styles.feature}>
-                <div className={`${styles.featureIcon} ${f.gold ? styles.featureIconGold : styles.featureIconAccent}`}>
-                  <f.icon size={20} weight="duotone" color={f.color} />
-                </div>
-                <div>
-                  <div className={styles.featureTitle}>{f.title}</div>
-                  <div className={styles.featureDesc}>{f.desc}</div>
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : (<>
-          {isTablet && (
-            <img src="/Luna-Pay-logo-white.svg" alt={APP_NAME} className={`${styles.tabFormLogo} ${fade}`} />
-          )}
+      {showForm && (
+      <div className={`${styles.scroll} ${styles.scrollForm}`}>
+        {(<>
+          <img src="/Luna-Pay-logo-white.svg" alt={APP_NAME} className={`${styles.tabFormLogo} ${fade}`} />
           <div className={`${styles.form} ${fade}`}>
             {/* Switch Iniciar sesión/Registrarse — mismo patrón "track +
                 thumb deslizante" que ya usa HomePage.jsx para sus tabs de
@@ -774,7 +642,7 @@ export function AuthPage() {
             )}
 
           </div>
-          {isTablet && (visibleMode === 'login' || visibleMode === 'register') && (
+          {(visibleMode === 'login' || visibleMode === 'register') && (
             <button type="button" onClick={() => { setMode('landing'); setError(''); setSuccess('') }} className={`${styles.tabBack} ${fade}`}>
               <ArrowLeft size={18} />
               {t('authPage.landing.backLabel')}
@@ -782,6 +650,7 @@ export function AuthPage() {
           )}
         </>)}
       </div>
+      )}
 
       <Presence show={showTerms}>{() => <TermsModal onClose={() => setShowTerms(false)} />}</Presence>
     </div>
