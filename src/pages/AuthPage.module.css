@@ -171,7 +171,7 @@
   background-image: url(/login-header.svg);
   background-size: cover;
   background-position: center bottom;
-  padding: 62px 24px 0;
+  padding: calc(62px + var(--sat, 0px)) 24px 0;
   text-align: center;
   overflow: hidden;
 }
@@ -189,7 +189,7 @@
   justify-content: space-between;
   gap: 24px;
   min-height: 100%;
-  padding: 226px 24px 0;
+  padding: calc(226px + var(--sat, 0px)) 24px 0;
   box-sizing: border-box;
   color: var(--on-color);
 }
@@ -284,9 +284,9 @@
 
 /* Pantallas bajas (≤700px): se compacta para que los botones quepan. */
 @media (max-height: 700px) {
-  .hero { padding-top: 40px; }
+  .hero { padding-top: calc(40px + var(--sat, 0px)); }
   .heroLogo { height: 80px; }
-  .mobLanding { padding-top: 140px; }
+  .mobLanding { padding-top: calc(140px + var(--sat, 0px)); }
   .mobHeadline { font-size: 27px; margin: 12px 0 8px; }
   .mobDesc { font-size: 14px; }
   .mobDots { margin-top: 14px; }
@@ -302,7 +302,7 @@
   justify-content: center;
   gap: 20px;
   min-height: 100%;
-  padding: 32px 20px;
+  padding: calc(32px + var(--sat, 0px)) 20px 32px;
   box-sizing: border-box;
 }
 .tabFormLogo { height: 104px; display: block; }
@@ -436,9 +436,9 @@
 
 /* ── Tablet (≥768px): mismo diseño, escala mayor ────────────────────────── */
 @media (min-width: 768px) {
-  .hero { padding-top: 96px; }
+  .hero { padding-top: calc(96px + var(--sat, 0px)); }
   .heroLogo { height: 130px; }
-  .mobLanding { padding-top: 320px; }
+  .mobLanding { padding-top: calc(320px + var(--sat, 0px)); }
   .mobPill { height: 34px; padding: 0 18px; font-size: 13.5px; }
   .mobHeadline { font-size: 38px; letter-spacing: -1px; margin: 18px auto 10px; max-width: 520px; }
   .mobDesc { font-size: 17px; max-width: 460px; margin: 0 auto; }
