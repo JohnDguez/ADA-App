@@ -715,7 +715,17 @@
       "demoNotifAmount": "$219.00",
       "privacyFull": "Privacy policy",
       "termsFull": "Terms and conditions",
-      "lunaAlt": "Luna, the LunaPay mascot"
+      "lunaAlt": "Luna, the LunaPay mascot",
+      "slide1Pill": "Personal and shared bill organizer",
+      "slide1Title": "Your bills, by pay period",
+      "slide1Desc": "Weekly, biweekly or monthly: every bill arrives when you get paid.",
+      "slide2Pill": "Reminders at your time",
+      "slide2Title": "We warn you before it is due",
+      "slide2Desc": "Pick when to get the alert and never pay late.",
+      "slide3Pill": "No bank connection",
+      "slide3Title": "You log it, you decide",
+      "slide3Desc": "Fixed bills, installments and savings goals, your way.",
+      "slideDot": "Go to message {{n}}"
     }
   },
   "resetPasswordPage": {

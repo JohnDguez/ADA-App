@@ -715,7 +715,17 @@
       "demoNotifAmount": "$219.00",
       "privacyFull": "Política de privacidad",
       "termsFull": "Términos y condiciones",
-      "lunaAlt": "Luna, la mascota de LunaPay"
+      "lunaAlt": "Luna, la mascota de LunaPay",
+      "slide1Pill": "Organizador de pagos personales y compartidos",
+      "slide1Title": "Tus pagos, por periodo de cobro",
+      "slide1Desc": "Semanal, quincenal o mensual: cada pago llega cuando cobras.",
+      "slide2Pill": "Avisos a tu hora",
+      "slide2Title": "Te avisamos antes de que venza",
+      "slide2Desc": "Elige cuándo recibir el aviso y nunca pagues tarde.",
+      "slide3Pill": "Sin conectar tu banco",
+      "slide3Title": "Tú registras, tú decides",
+      "slide3Desc": "Pagos fijos, a meses y metas de ahorro, a tu manera.",
+      "slideDot": "Ir al mensaje {{n}}"
     }
   },
   "resetPasswordPage": {

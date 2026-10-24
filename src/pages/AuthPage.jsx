@@ -201,6 +201,11 @@ export function AuthPage() {
   useAuthScreenClass()
   const isTablet = useIsTablet()
   const [mode,          setMode]          = useState('landing')
+  // Carrusel informativo de la bienvenida móvil (v0.9.785, mockup MovAuth16-18):
+  // rota solo cada 5 s y se puede deslizar; no bloquea los botones fijos.
+  const [slide, setSlide] = useState(0)
+  const swipeX = useRef(null)
+
   const [email,         setEmail]         = useState('')
   const [password,      setPassword]      = useState('')
   const [confirm,       setConfirm]       = useState('')
@@ -251,6 +256,17 @@ export function AuthPage() {
     return () => clearTimeout(enterTimer)
   }, [contentPhase])
 
+  useEffect(() => {
+    if (isTablet || mode !== 'landing') return undefined
+    const id = setTimeout(() => setSlide(s => (s + 1) % 3), 5000)
+    return () => clearTimeout(id)
+  }, [slide, isTablet, mode])
+  const onSwipeEnd = e => {
+    if (swipeX.current == null) return
+    const dx = e.changedTouches[0].clientX - swipeX.current
+    swipeX.current = null
+    if (Math.abs(dx) > 40) setSlide(s => (s + (dx < 0 ? 1 : 2)) % 3)
+  }
   const fade = contentPhase === 'exit' ? styles.fadeExit : contentPhase === 'enter' ? styles.fadeEnter : ''
 
   const reqs   = passwordRequirements(password)
@@ -457,7 +473,7 @@ export function AuthPage() {
   ]
 
   return (
-    <div className={`${styles.page} ${isTablet ? styles.pageTablet : ''} ${isTablet && showForm ? styles.pageTabForm : ''}`}>
+    <div className={`${styles.page} ${isTablet ? styles.pageTablet : ''} ${isTablet && showForm ? styles.pageTabForm : ''} ${!isTablet && !showForm ? styles.pageMob : ''}`}>
 
       {/* Hero permanente (nunca se desmonta al cambiar `mode`) — ilustración
           propia de Johnatan (login-header.svg), logo y onda inferior. Es
@@ -495,19 +511,6 @@ export function AuthPage() {
             alt={APP_NAME}
             className={styles.heroLogo}
           />
-          {/* Titular/subtítulo solo en 'landing' — con el formulario real
-              el hero se queda solo con el logo, para dejar más espacio a
-              los campos. */}
-          {!showForm && !isTablet && (
-            <div className={fade}>
-              <div className={styles.heroTitle}>
-                {t('authPage.landing.titleLine1')}<br />{t('authPage.landing.titleLine2')}
-              </div>
-              <div className={styles.heroSubtitle}>
-                {t('authPage.landing.subtitle')}
-              </div>
-            </div>
-          )}
         </div>
 
         <svg viewBox="0 0 300 110" preserveAspectRatio="none" className={styles.heroWave}>
@@ -522,6 +525,51 @@ export function AuthPage() {
           contenido según `visibleMode`, sin desmontar el hero de arriba;
           el contenido interior lleva la clase `fade` (entrada/salida, Regla 29
           — v0.9.518, antes este cruce no tenía ninguna animación). */}
+      {/* Móvil · bienvenida (v0.9.785, mockup MovAuth16-18): logo, carrusel de
+          3 mensajes sobre la ilustración, Luna en el suelo y botones fijos. */}
+      {!isTablet && !showForm && (
+        <div className={`${styles.mobLanding} ${fade}`}>
+          <div
+            className={styles.mobSlides}
+            onTouchStart={e => { swipeX.current = e.touches[0].clientX }}
+            onTouchEnd={onSwipeEnd}
+          >
+            {[1, 2, 3].map((n, i) => (
+              <div key={n} className={`${styles.mobSlide} ${slide === i ? styles.mobSlideOn : ''}`} aria-hidden={slide !== i}>
+                <span className={styles.mobPill}>{t(`authPage.landing.slide${n}Pill`)}</span>
+                <div className={styles.mobHeadline}>{t(`authPage.landing.slide${n}Title`)}</div>
+                <div className={styles.mobDesc}>{t(`authPage.landing.slide${n}Desc`)}</div>
+              </div>
+            ))}
+            <div className={styles.mobDots}>
+              {[0, 1, 2].map(i => (
+                <button
+                  key={i}
+                  type="button"
+                  onClick={() => setSlide(i)}
+                  aria-label={t('authPage.landing.slideDot', { n: i + 1 })}
+                  className={`${styles.mobDot} ${slide === i ? styles.mobDotOn : ''}`}
+                />
+              ))}
+            </div>
+          </div>
+          <div className={styles.mobBottom}>
+            <img src="/luna/luna_waving.webp" alt={t('authPage.landing.lunaAlt')} className={styles.mobLuna} />
+            <button onClick={() => setMode('register')} className={`btn-primary ${styles.bottomPrimary}`}>
+              {t('authPage.landing.createAccount')}
+            </button>
+            <button onClick={() => setMode('login')} className={styles.mobSecondary}>
+              {t('authPage.landing.login')}
+            </button>
+            <div className={styles.mobLegal}>
+              <a href="/privacidad.html" target="_blank" rel="noopener noreferrer">{t('authPage.landing.privacy')}</a>
+              {' · '}
+              <a href="/terminos.html" target="_blank" rel="noopener noreferrer">{t('authPage.landing.terms')}</a>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Tablet · bienvenida (v0.9.783, mockup TabAuthB4): lema, descripción de
           la app, Luna con tarjetas de vidrio, chips y CTAs sobre la ilustración
           a pantalla completa. En móvil no se renderiza. */}
@@ -734,29 +782,6 @@ export function AuthPage() {
           )}
         </>)}
       </div>
-
-      {/* Bottom bar — exclusivo de 'landing' (los 2 CTA + links legales).
-          El formulario real ya trae su botón de enviar dentro del
-          contenido con scroll de arriba, así que no necesita una franja
-          fija aparte. */}
-      {!showForm && !isTablet && (
-        <div className={`${styles.bottomBar} ${fade}`}>
-          <button onClick={() => setMode('register')} className={`btn-primary ${styles.bottomPrimary}`}>
-            {t('authPage.landing.createAccount')}
-          </button>
-          <button
-            onClick={() => setMode('login')}
-            className={styles.bottomSecondary}
-          >
-            {t('authPage.landing.login')}
-          </button>
-          <div className={styles.legal}>
-            <a href="/privacidad.html" target="_blank" rel="noopener noreferrer" className={styles.link}>{t('authPage.landing.privacy')}</a>
-            {' · '}
-            <a href="/terminos.html" target="_blank" rel="noopener noreferrer" className={styles.link}>{t('authPage.landing.terms')}</a>
-          </div>
-        </div>
-      )}
 
       <Presence show={showTerms}>{() => <TermsModal onClose={() => setShowTerms(false)} />}</Presence>
     </div>
