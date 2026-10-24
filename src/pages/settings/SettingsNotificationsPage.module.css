@@ -205,7 +205,7 @@
   .stepsTitle { font-size: 15px; font-weight: 700; margin-bottom: 14px; }
   .steps {
     display: grid;
-    grid-template-columns: 1.5fr 1fr 1fr;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 12px;
   }
   .step {
@@ -220,10 +220,10 @@
   .stepHead { display: flex; align-items: center; justify-content: space-between; }
   .stepCap { font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
   .stepSwitch { cursor: pointer; display: flex; }
-  .stepBody { display: flex; align-items: center; gap: 10px; margin-top: 12px; }
   .stepIcon {
-    width: 36px;
-    height: 36px;
+    margin-top: 12px;
+    width: 44px;
+    height: 44px;
     border-radius: 50%;
     background: var(--border);
     color: var(--muted);
@@ -234,9 +234,20 @@
     transition: background .2s, color .2s;
   }
   .stepOn .stepIcon { background: var(--accent); color: var(--surface); }
-  .stepLabel { display: block; font-size: 15px; font-weight: 700; }
+  .stepLabel { display: block; font-size: 16px; font-weight: 700; margin-top: 12px; white-space: nowrap; }
   .stepSub { display: block; font-size: 12px; color: var(--muted); margin-top: 2px; }
-  .stepDays { margin-top: 14px; display: flex; flex-direction: column; gap: 8px; }
+  .daysStrip {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-top: 12px;
+    padding: 12px 16px;
+    border-radius: 14px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+  }
+  .daysStripTitle { display: block; font-size: 14px; font-weight: 600; }
   .stepArrow {
     position: absolute;
     right: -14px;

@@ -259,7 +259,7 @@
     "hourDone": "Done",
     "tileDaysBefore_one": "{{count}} day before",
     "tileDaysBefore_other": "{{count}} days before",
-    "tablet": {"stepsTitle": "How we alert you about a payment", "stepBefore": "Before", "stepDay": "The day", "stepAfter": "After", "upcomingSub": "In advance", "dueTodaySub": "On the same day", "overdueSub": "If you don't pay them"},
+    "tablet": {"stepsTitle": "How we alert you about a payment", "stepBefore": "Before", "stepDay": "The day", "stepAfter": "After", "upcomingSub": "In advance", "dueTodaySub": "On the same day", "overdueSub": "If you don't pay them", "daysFor": "For Upcoming payments and Credit cards"},
     "blockedNotice": "Notifications are blocked in your browser. Turn them on in the site settings and try again.",
     "daysBeforeLabel": "Days in advance",
     "payDayLabel": "Pay day",

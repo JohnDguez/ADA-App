@@ -166,26 +166,28 @@ export function SettingsNotificationsPage({ profile, user, onUpdate, onBack, sli
               <div className={styles.stepsTitle}>{t('settingsNotifications.tablet.stepsTitle')}</div>
               <div className={styles.steps}>
                 {[
-                  { key: 'upcoming', cap: t('settingsNotifications.tablet.stepBefore'), Icon: Clock, label: t('settingsNotifications.upcomingLabel'), sub: t('settingsNotifications.tablet.upcomingSub'), field: 'notif_upcoming', on: upcomingOn, days: true },
+                  { key: 'upcoming', cap: t('settingsNotifications.tablet.stepBefore'), Icon: Clock, label: t('settingsNotifications.upcomingLabel'), sub: t('settingsNotifications.tablet.upcomingSub'), field: 'notif_upcoming', on: upcomingOn },
                   { key: 'dueToday', cap: t('settingsNotifications.tablet.stepDay'), Icon: CalendarCheck, label: t('settingsNotifications.dueTodayLabel'), sub: t('settingsNotifications.tablet.dueTodaySub'), field: 'notif_due_today', on: profile.notif_due_today !== false },
                   { key: 'overdue', cap: t('settingsNotifications.tablet.stepAfter'), Icon: CircleAlert, label: t('settingsNotifications.overdueLabel'), sub: t('settingsNotifications.tablet.overdueSub'), field: 'notif_overdue', on: profile.notif_overdue !== false, last: true },
-                ].map(({ key, cap, Icon, label, sub, field, on, days, last }) => (
+                ].map(({ key, cap, Icon, label, sub, field, on, last }) => (
                   <div key={key} className={`${styles.step} ${on ? styles.stepOn : ''}`}>
                     <div className={styles.stepHead}>
                       <span className={styles.stepCap}>{cap}</span>
                       <div {...switchProps(on)} className={styles.stepSwitch} onClick={() => onUpdate({ [field]: !on })}><Toggle on={on} /></div>
                     </div>
-                    <div className={styles.stepBody}>
-                      <span className={styles.stepIcon}><Icon size={18} /></span>
-                      <span>
-                        <span className={styles.stepLabel}>{label}</span>
-                        <span className={styles.stepSub}>{sub}</span>
-                      </span>
-                    </div>
-                    {days && (
-                      <div className={styles.stepDays}>
-                        <span className={styles.timeLabel}>{t('settingsNotifications.daysBeforeLabel')}</span>
-            <div className={styles.daysBeforeRow}>
+                    <span className={styles.stepIcon}><Icon size={20} /></span>
+                    <span className={styles.stepLabel}>{label}</span>
+                    <span className={styles.stepSub}>{sub}</span>
+                    {!last && <span className={styles.stepArrow}><ChevronRight size={12} /></span>}
+                  </div>
+                ))}
+              </div>
+              <div className={styles.daysStrip}>
+                <span>
+                  <span className={styles.daysStripTitle}>{t('settingsNotifications.daysBeforeLabel')}</span>
+                  <span className={styles.stepSub}>{t('settingsNotifications.tablet.daysFor')}</span>
+                </span>
+<div className={styles.daysBeforeRow}>
               {[1, 2, 3, 5, 7].map(d => (
                 <button key={d} onClick={() => onUpdate({ notif_days_before: d })}
                   className={`${styles.dayButton} ${daysBefore === d ? styles.dayButtonActive : ''}`}>
@@ -193,11 +195,6 @@ export function SettingsNotificationsPage({ profile, user, onUpdate, onBack, sli
                 </button>
               ))}
             </div>
-                      </div>
-                    )}
-                    {!last && <span className={styles.stepArrow}><ChevronRight size={12} /></span>}
-                  </div>
-                ))}
               </div>
             </div>
 
