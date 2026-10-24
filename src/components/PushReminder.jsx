@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Bell } from '@phosphor-icons/react/dist/csr/Bell'
-import { Check } from '@phosphor-icons/react/dist/csr/Check'
+import { CalendarCheck } from '@phosphor-icons/react/dist/csr/CalendarCheck'
+import { UsersThree } from '@phosphor-icons/react/dist/csr/UsersThree'
+import { ProhibitInset } from '@phosphor-icons/react/dist/csr/ProhibitInset'
 import { ModalSheet, SheetButton } from './ModalSheet'
 import { usePushNotifications } from '../hooks/usePushNotifications'
 import styles from './PushReminder.module.css'
@@ -67,15 +69,16 @@ export function PushReminder({ userId, ready: appReady, blocked }) {
     setOpen(false)
   }
 
-  const items = ['due', 'space', 'nopromo']
+  // Un ícono propio por punto (v0.9.790, antes un check igual en los 3).
+  const items = [['due', CalendarCheck], ['space', UsersThree], ['nopromo', ProhibitInset]]
   return (
     <ModalSheet open={open} icon={Bell} title={t('pushReminder.title')} onBackdrop={() => setOpen(false)}>
       <ModalSheet.Text>{t('pushReminder.description')}</ModalSheet.Text>
       <ul className={styles.list}>
-        {items.map(k => (
+        {items.map(([k, Icon]) => (
           <li key={k} className={styles.item}>
-            <Check size={18} weight="bold" />
-            <div>
+            <span className={styles.itemIcon}><Icon size={20} weight="duotone" /></span>
+            <div className={styles.itemText}>
               <span className={styles.itemTitle}>{t(`pushReminder.${k}Title`)}</span>
               <span className={styles.itemSub}>{t(`pushReminder.${k}Sub`)}</span>
             </div>

@@ -2,13 +2,25 @@
 .item {
   display: flex;
   gap: 10px;
-  align-items: flex-start;
+  align-items: center;
+  text-align: left; /* ModalSheet centra el texto; los puntos van a la izquierda */
   padding: 10px 0;
   border-top: 1px solid var(--border);
   font-size: 14px;
   line-height: 1.4;
   color: var(--text); /* Regla 17: sin muted en el texto */
 }
-.item svg { flex: none; margin-top: 2px; color: var(--accent); }
+.itemIcon {
+  flex: none;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.itemText { flex: 1; min-width: 0; }
 .itemTitle { display: block; font-weight: 600; }
 .itemSub { display: block; font-size: 13px; }
