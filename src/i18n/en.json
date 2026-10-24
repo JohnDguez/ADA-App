@@ -683,6 +683,10 @@
       "emailNotConfirmed": "You haven't confirmed your email yet. Check your inbox and click the link we sent you.",
       "googleFailed": "Couldn't sign in with Google. Try again or use your email and password."
     },
+    "desktop": {
+      "title": "Welcome",
+      "subtitle": "Log in or create your account to organize your bills."
+    },
     "landing": {
       "titleLine1": "Organize your bills,",
       "titleLine2": "pay period by pay period",

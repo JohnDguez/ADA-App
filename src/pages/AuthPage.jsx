@@ -20,6 +20,19 @@ function useAuthScreenClass() {
   }, [])
 }
 
+// Escritorio (≥1024px, v0.9.792): sin bienvenida aparte — tarjeta flotante con
+// el formulario a la izquierda y el panel informativo a la derecha.
+function useIsDesktop() {
+  const [isDesktop, setIsDesktop] = useState(() => typeof window !== 'undefined' && window.matchMedia('(min-width: 1024px)').matches)
+  useEffect(() => {
+    const mq = window.matchMedia('(min-width: 1024px)')
+    const on = e => setIsDesktop(e.matches)
+    mq.addEventListener('change', on)
+    return () => mq.removeEventListener('change', on)
+  }, [])
+  return isDesktop
+}
+
 // ── Modal de Términos y Condiciones ──────────────────────────────────────────
 function TermsModal({ onClose }) {
   const { t } = useTranslation()
@@ -171,7 +184,8 @@ export function ResetPasswordPage({ onDone }) {
 export function AuthPage() {
   const { t } = useTranslation()
   useAuthScreenClass()
-  const [mode,          setMode]          = useState('landing')
+  const isDesktop = useIsDesktop()
+  const [mode,          setMode]          = useState(() => (typeof window !== 'undefined' && window.matchMedia('(min-width: 1024px)').matches ? 'login' : 'landing'))
   // Carrusel informativo de la bienvenida móvil (v0.9.785, mockup MovAuth16-18):
   // rota solo cada 5 s y se puede deslizar; no bloquea los botones fijos.
   const [slide, setSlide] = useState(0)
@@ -228,10 +242,12 @@ export function AuthPage() {
   }, [contentPhase])
 
   useEffect(() => {
-    if (mode !== 'landing') return undefined
+    if (mode !== 'landing' && !isDesktop) return undefined
     const id = setTimeout(() => setSlide(s => (s + 1) % 3), 5000)
     return () => clearTimeout(id)
-  }, [slide, mode])
+  }, [slide, mode, isDesktop])
+  // Al ensanchar la ventana hasta escritorio no existe la bienvenida aparte.
+  useEffect(() => { if (isDesktop && mode === 'landing') setMode('login') }, [isDesktop, mode])
   const onSwipeEnd = e => {
     if (swipeX.current == null) return
     const dx = e.changedTouches[0].clientX - swipeX.current
@@ -436,10 +452,37 @@ export function AuthPage() {
   // que ahora el bottom bar es EXCLUSIVO de 'landing' — el formulario
   // real trae su botón de enviar dentro del contenido con scroll, igual
   // que cualquier otro formulario de la app (PaymentModal, etc.).
-  const showForm = visibleMode !== 'landing'
+  const showForm = isDesktop || visibleMode !== 'landing'
+
+  const slidesEl = (
+    <div
+      className={styles.mobSlides}
+      onTouchStart={e => { swipeX.current = e.touches[0].clientX }}
+      onTouchEnd={onSwipeEnd}
+    >
+      {[1, 2, 3].map((n, i) => (
+        <div key={n} className={`${styles.mobSlide} ${slide === i ? styles.mobSlideOn : ''}`} aria-hidden={slide !== i}>
+          <span className={styles.mobPill}>{t(`authPage.landing.slide${n}Pill`)}</span>
+          <div className={styles.mobHeadline}>{t(`authPage.landing.slide${n}Title`)}</div>
+          <div className={styles.mobDesc}>{t(`authPage.landing.slide${n}Desc`)}</div>
+        </div>
+      ))}
+      <div className={styles.mobDots}>
+        {[0, 1, 2].map(i => (
+          <button
+            key={i}
+            type="button"
+            onClick={() => setSlide(i)}
+            aria-label={t('authPage.landing.slideDot', { n: i + 1 })}
+            className={`${styles.mobDot} ${slide === i ? styles.mobDotOn : ''}`}
+          />
+        ))}
+      </div>
+    </div>
+  )
 
   return (
-    <div className={`${styles.page} ${showForm ? styles.pageForm : styles.pageLanding}`}>
+    <div className={`${styles.page} ${showForm ? styles.pageForm : styles.pageLanding} ${isDesktop ? styles.pageDesk : ''}`}>
 
       {/* Hero permanente (nunca se desmonta al cambiar `mode`) — ilustración
           propia de Johnatan (login-header.svg), logo y onda inferior. Es
@@ -474,30 +517,7 @@ export function AuthPage() {
           3 mensajes sobre la ilustración, Luna en el suelo y botones fijos. */}
       {!showForm && (
         <div className={`${styles.mobLanding} ${fade}`}>
-          <div
-            className={styles.mobSlides}
-            onTouchStart={e => { swipeX.current = e.touches[0].clientX }}
-            onTouchEnd={onSwipeEnd}
-          >
-            {[1, 2, 3].map((n, i) => (
-              <div key={n} className={`${styles.mobSlide} ${slide === i ? styles.mobSlideOn : ''}`} aria-hidden={slide !== i}>
-                <span className={styles.mobPill}>{t(`authPage.landing.slide${n}Pill`)}</span>
-                <div className={styles.mobHeadline}>{t(`authPage.landing.slide${n}Title`)}</div>
-                <div className={styles.mobDesc}>{t(`authPage.landing.slide${n}Desc`)}</div>
-              </div>
-            ))}
-            <div className={styles.mobDots}>
-              {[0, 1, 2].map(i => (
-                <button
-                  key={i}
-                  type="button"
-                  onClick={() => setSlide(i)}
-                  aria-label={t('authPage.landing.slideDot', { n: i + 1 })}
-                  className={`${styles.mobDot} ${slide === i ? styles.mobDotOn : ''}`}
-                />
-              ))}
-            </div>
-          </div>
+          {slidesEl}
           <div className={styles.mobBottom}>
             <img src="/luna/luna_waving.webp" alt={t('authPage.landing.lunaAlt')} className={styles.mobLuna} />
             <div className={styles.mobCtas}>
@@ -514,6 +534,7 @@ export function AuthPage() {
       )}
 
       {showForm && (
+      <div className={isDesktop ? styles.deskShell : styles.formShell}>
       <div className={`${styles.scroll} ${styles.scrollForm}`}>
         {(<>
           <img src="/Luna-Pay-logo-white.svg" alt={APP_NAME} className={`${styles.tabFormLogo} ${fade}`} />
@@ -525,6 +546,12 @@ export function AuthPage() {
                 explícito de Johnatan ("como estan los switchers de la
                 app... con un movimiento suave entre cada elemento").
                 Vive en AuthPage.module.css (.tabTrack/.tabThumb/.tabButton). */}
+            {visibleMode !== 'forgot' && (
+              <div className={styles.deskHead}>
+                <h1 className={styles.deskTitle}>{t('authPage.desktop.title')}</h1>
+                <p className={styles.deskSub}>{t('authPage.desktop.subtitle')}</p>
+              </div>
+            )}
             {visibleMode !== 'forgot' && (
               <div className={styles.tabTrack}>
                 <div className={`${styles.tabThumb} ${visibleMode === 'register' ? styles.tabThumbRight : ''}`} />
@@ -648,7 +675,20 @@ export function AuthPage() {
               {t('authPage.landing.backLabel')}
             </button>
           )}
+          <div className={styles.deskLegal}>
+            <a href="/privacidad.html" target="_blank" rel="noopener noreferrer">{t('authPage.landing.privacyFull')}</a>
+            {' · '}
+            <a href="/terminos.html" target="_blank" rel="noopener noreferrer">{t('authPage.landing.termsFull')}</a>
+          </div>
         </>)}
+      </div>
+      {isDesktop && (
+        <div className={styles.deskPanel}>
+          <img src="/Luna-Pay-logo-white.svg" alt={APP_NAME} className={styles.deskPanelLogo} />
+          {slidesEl}
+          <img src="/luna/luna_waving.webp" alt={t('authPage.landing.lunaAlt')} className={styles.deskLuna} />
+        </div>
+      )}
       </div>
       )}
 
