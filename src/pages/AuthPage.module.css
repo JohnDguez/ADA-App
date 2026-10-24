@@ -395,9 +395,35 @@
     position: relative;
     z-index: 1;
     display: flex;
+    flex-direction: column;
+    align-items: center;
     justify-content: center;
-    padding: 240px 24px 40px;
+    gap: 28px;
+    min-height: 100vh;
+    padding: 40px 24px;
+    box-sizing: border-box;
     overflow: visible;
+  }
+  /* En el formulario el logo vive dentro de la pila centrada (junto a la
+     tarjeta), no arriba en el hero. */
+  .pageTabForm .heroLogo { display: none; }
+  .tabFormLogo { height: 130px; display: block; }
+  .tabBack {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    height: 44px;
+    padding: 0 20px;
+    border-radius: 22px;
+    border: 1px solid var(--auth-glass-border);
+    background: var(--auth-glass-ghost-bg);
+    color: var(--on-color);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
   }
   .pageTablet .form {
     width: 440px;
@@ -407,7 +433,6 @@
     background: var(--surface);
     border-radius: 24px;
     box-shadow: var(--shadow-popover);
-    align-self: flex-start;
   }
 
   .tabLanding {
@@ -527,4 +552,11 @@
   }
   .tabLegal { font-size: 13px; color: var(--auth-glass-muted); }
   .tabLegal a { color: var(--accent); font-weight: 600; }
+}
+
+/* La flecha del hero quedaba tapada por .scroll (z-index 1, a pantalla
+   completa) y no recibía toques; en tablet el regreso es el botón «Volver»
+   debajo de la tarjeta (.tabBack), así que la flecha de arriba se oculta. */
+@media (min-width: 768px) {
+  .pageTablet .backButton { display: none; }
 }

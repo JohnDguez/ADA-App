@@ -457,7 +457,7 @@ export function AuthPage() {
   ]
 
   return (
-    <div className={`${styles.page} ${isTablet ? styles.pageTablet : ''}`}>
+    <div className={`${styles.page} ${isTablet ? styles.pageTablet : ''} ${isTablet && showForm ? styles.pageTabForm : ''}`}>
 
       {/* Hero permanente (nunca se desmonta al cambiar `mode`) — ilustración
           propia de Johnatan (login-header.svg), logo y onda inferior. Es
@@ -597,7 +597,10 @@ export function AuthPage() {
               </div>
             ))}
           </div>
-        ) : (
+        ) : (<>
+          {isTablet && (
+            <img src="/Luna-Pay-logo-white.svg" alt={APP_NAME} className={`${styles.tabFormLogo} ${fade}`} />
+          )}
           <div className={`${styles.form} ${fade}`}>
             {/* Switch Iniciar sesión/Registrarse — mismo patrón "track +
                 thumb deslizante" que ya usa HomePage.jsx para sus tabs de
@@ -723,7 +726,13 @@ export function AuthPage() {
             )}
 
           </div>
-        )}
+          {isTablet && (visibleMode === 'login' || visibleMode === 'register') && (
+            <button type="button" onClick={() => { setMode('landing'); setError(''); setSuccess('') }} className={`${styles.tabBack} ${fade}`}>
+              <ArrowLeft size={18} />
+              {t('authPage.landing.backLabel')}
+            </button>
+          )}
+        </>)}
       </div>
 
       {/* Bottom bar — exclusivo de 'landing' (los 2 CTA + links legales).
