@@ -370,3 +370,161 @@
   margin: 0 auto 16px;
   font-family: 'DM Sans', sans-serif;
 }
+
+/* ── Tablet (≥768px, v0.9.783): bienvenida premium + formulario en tarjeta ──
+   Ilustración a pantalla completa; en móvil nada de esto aplica. */
+.tabLanding { display: none; }
+
+@media (min-width: 768px) {
+  .pageTablet {
+    position: relative;
+    min-height: 100vh;
+    height: auto;
+    overflow-y: auto;
+  }
+  .pageTablet .hero {
+    position: absolute;
+    inset: 0;
+    padding: 44px 24px 0;
+    background-position: center bottom;
+  }
+  .pageTablet .heroLogo { height: 150px; }
+  .pageTablet .heroWave { display: none; }
+  .pageTablet .scrollLanding { display: none; }
+  .pageTablet .scrollForm {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    justify-content: center;
+    padding: 240px 24px 40px;
+    overflow: visible;
+  }
+  .pageTablet .form {
+    width: 440px;
+    max-width: 100%;
+    margin: 0;
+    padding: 28px;
+    background: var(--surface);
+    border-radius: 24px;
+    box-shadow: var(--shadow-popover);
+    align-self: flex-start;
+  }
+
+  .tabLanding {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    min-height: 100vh;
+    padding: 236px 24px 28px;
+    box-sizing: border-box;
+    color: var(--on-color);
+  }
+  .tabTop { text-align: center; }
+  .tabTagline {
+    margin: 0;
+    font-size: 56px;
+    font-weight: 800;
+    line-height: 1.04;
+    letter-spacing: -1.5px;
+  }
+  .tabTaglineEm { font-style: normal; color: var(--accent); }
+  .tabDesc {
+    margin: 18px auto 0;
+    max-width: 520px;
+    font-size: 16px;
+    line-height: 1.5;
+  }
+  .tabDescSub { color: var(--auth-glass-muted); }
+
+  .tabStage {
+    position: relative;
+    width: 100%;
+    max-width: 720px;
+    height: 330px;
+    margin: 0 auto;
+  }
+  .tabLuna {
+    position: absolute;
+    left: 50%;
+    bottom: 0;
+    height: 290px;
+    transform: translateX(-50%);
+    filter: drop-shadow(0 20px 30px var(--auth-glass-bg));
+  }
+  .glass {
+    position: absolute;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 16px 18px;
+    background: var(--auth-glass-bg);
+    border: 1px solid var(--auth-glass-border);
+    border-radius: 22px;
+    box-shadow: var(--auth-glass-shadow);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+  }
+  .glassPeriod { left: 0; top: 10px; }
+  .glassNotif { right: 0; top: 150px; padding: 14px 16px; }
+  .glassMuted { font-size: 12px; color: var(--auth-glass-muted); }
+  .glassAmount { font-size: 21px; font-weight: 700; margin: 2px 0; }
+  .glassNotifTitle { font-size: 14px; font-weight: 700; margin: 2px 0; }
+  .notifIcon {
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+    background: var(--accent);
+    color: var(--on-accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    flex-shrink: 0;
+  }
+
+  .tabBottom { display: flex; flex-direction: column; align-items: center; gap: 18px; }
+  .chips { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; }
+  .chip {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    height: 38px;
+    padding: 0 14px;
+    border-radius: 19px;
+    background: var(--auth-glass-ghost-bg);
+    border: 1px solid var(--auth-glass-border);
+    font-size: 13px;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+  }
+  .chipDot { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); display: block; }
+  .tabCtas { display: flex; gap: 12px; width: 100%; max-width: 500px; }
+  .tabCtaPrimary, .tabCtaGhost {
+    flex: 1;
+    height: 56px;
+    border-radius: 16px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 16px;
+    cursor: pointer;
+  }
+  .tabCtaPrimary {
+    flex: 1.2;
+    border: none;
+    background: var(--accent);
+    color: var(--on-color);
+    font-weight: 700;
+    box-shadow: var(--auth-cta-glow);
+  }
+  .tabCtaGhost {
+    border: 1px solid var(--auth-glass-border);
+    background: var(--auth-glass-ghost-bg);
+    color: var(--on-color);
+    font-weight: 600;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+  }
+  .tabLegal { font-size: 13px; color: var(--auth-glass-muted); }
+  .tabLegal a { color: var(--accent); font-weight: 600; }
+}

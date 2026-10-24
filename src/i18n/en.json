@@ -697,7 +697,24 @@
       "login": "Log in",
       "privacy": "Privacy",
       "terms": "Terms",
-      "backAriaLabel": "Go back"
+      "backAriaLabel": "Go back",
+      "tagline1": "Organize.",
+      "tagline2": "Pay.",
+      "tagline3": "Relax.",
+      "descTitle": "LunaPay is your personal and shared bill organizer.",
+      "descBody": "Track fixed, recurring and installment bills by pay period, get reminders before they're due and follow your savings goals.",
+      "chip1": "No bank connection",
+      "chip2": "Weekly, biweekly or monthly",
+      "chip3": "Reminders at your time",
+      "demoPeriod": "This pay period",
+      "demoAmount": "$4,280.00",
+      "demoPending": "left to pay · 6 bills",
+      "demoNotifApp": "LunaPay · 8:00 am",
+      "demoNotifTitle": "Netflix is due tomorrow",
+      "demoNotifAmount": "$219.00",
+      "privacyFull": "Privacy policy",
+      "termsFull": "Terms and conditions",
+      "lunaAlt": "Luna, the LunaPay mascot"
     }
   },
   "resetPasswordPage": {

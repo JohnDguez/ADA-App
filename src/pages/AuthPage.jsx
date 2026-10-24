@@ -28,6 +28,26 @@ import styles from './AuthPage.module.css'
 // compartida para 3 usos.
 const WAVE_PATH = 'M0,110 L0,20 C30,-19 60,38 95,38 C135,36 150,73 195,64 C238,58 255,101 300,80 L300,110 Z'
 
+// Tablet (≥768px): sin sesión no existe el riel, así que se libera su margen
+// (index.css → html.auth-screen #root).
+function useAuthScreenClass() {
+  useEffect(() => {
+    document.documentElement.classList.add('auth-screen')
+    return () => document.documentElement.classList.remove('auth-screen')
+  }, [])
+}
+
+function useIsTablet() {
+  const [isTablet, setIsTablet] = useState(() => typeof window !== 'undefined' && window.matchMedia('(min-width: 768px)').matches)
+  useEffect(() => {
+    const mq = window.matchMedia('(min-width: 768px)')
+    const on = e => setIsTablet(e.matches)
+    mq.addEventListener('change', on)
+    return () => mq.removeEventListener('change', on)
+  }, [])
+  return isTablet
+}
+
 // ── Modal de Términos y Condiciones ──────────────────────────────────────────
 function TermsModal({ onClose }) {
   const { t } = useTranslation()
@@ -98,6 +118,7 @@ function RequirementRow({ met, label }) {
 // ── Reset Password ────────────────────────────────────────────────────────────
 export function ResetPasswordPage({ onDone }) {
   const { t } = useTranslation()
+  useAuthScreenClass()
   const [newPassword, setNewPassword] = useState('')
   const [confirm,     setConfirm]     = useState('')
   const [showNew,     setShowNew]     = useState(false)
@@ -177,6 +198,8 @@ export function ResetPasswordPage({ onDone }) {
 // ── Auth Page ─────────────────────────────────────────────────────────────────
 export function AuthPage() {
   const { t } = useTranslation()
+  useAuthScreenClass()
+  const isTablet = useIsTablet()
   const [mode,          setMode]          = useState('landing')
   const [email,         setEmail]         = useState('')
   const [password,      setPassword]      = useState('')
@@ -434,7 +457,7 @@ export function AuthPage() {
   ]
 
   return (
-    <div className={styles.page}>
+    <div className={`${styles.page} ${isTablet ? styles.pageTablet : ''}`}>
 
       {/* Hero permanente (nunca se desmonta al cambiar `mode`) — ilustración
           propia de Johnatan (login-header.svg), logo y onda inferior. Es
@@ -475,7 +498,7 @@ export function AuthPage() {
           {/* Titular/subtítulo solo en 'landing' — con el formulario real
               el hero se queda solo con el logo, para dejar más espacio a
               los campos. */}
-          {!showForm && (
+          {!showForm && !isTablet && (
             <div className={fade}>
               <div className={styles.heroTitle}>
                 {t('authPage.landing.titleLine1')}<br />{t('authPage.landing.titleLine2')}
@@ -499,6 +522,66 @@ export function AuthPage() {
           contenido según `visibleMode`, sin desmontar el hero de arriba;
           el contenido interior lleva la clase `fade` (entrada/salida, Regla 29
           — v0.9.518, antes este cruce no tenía ninguna animación). */}
+      {/* Tablet · bienvenida (v0.9.783, mockup TabAuthB4): lema, descripción de
+          la app, Luna con tarjetas de vidrio, chips y CTAs sobre la ilustración
+          a pantalla completa. En móvil no se renderiza. */}
+      {isTablet && !showForm && (
+        <div className={`${styles.tabLanding} ${fade}`}>
+          <div className={styles.tabTop}>
+            <h1 className={styles.tabTagline}>
+              {t('authPage.landing.tagline1')}<br />{t('authPage.landing.tagline2')}<br />
+              <em className={styles.tabTaglineEm}>{t('authPage.landing.tagline3')}</em>
+            </h1>
+            <p className={styles.tabDesc}>
+              <strong>{t('authPage.landing.descTitle')}</strong><br />
+              <span className={styles.tabDescSub}>{t('authPage.landing.descBody')}</span>
+            </p>
+          </div>
+
+          <div className={styles.tabStage}>
+            <div className={`${styles.glass} ${styles.glassPeriod}`}>
+              <svg width="64" height="64" viewBox="0 0 64 64" aria-hidden="true">
+                <circle cx="32" cy="32" r="27" fill="none" stroke="var(--auth-glass-border)" strokeWidth="9" />
+                <circle cx="32" cy="32" r="27" fill="none" stroke="var(--accent)" strokeWidth="9" strokeLinecap="round"
+                  strokeDasharray="105 170" transform="rotate(-90 32 32)" />
+                <text x="32" y="37" textAnchor="middle" fontSize="14" fontWeight="700" fill="var(--on-color)">62%</text>
+              </svg>
+              <div>
+                <div className={styles.glassMuted}>{t('authPage.landing.demoPeriod')}</div>
+                <div className={styles.glassAmount}>{t('authPage.landing.demoAmount')}</div>
+                <div className={styles.glassMuted}>{t('authPage.landing.demoPending')}</div>
+              </div>
+            </div>
+            <img src="/luna/luna_waving.webp" alt={t('authPage.landing.lunaAlt')} className={styles.tabLuna} />
+            <div className={`${styles.glass} ${styles.glassNotif}`}>
+              <div className={styles.notifIcon}>L</div>
+              <div>
+                <div className={styles.glassMuted}>{t('authPage.landing.demoNotifApp')}</div>
+                <div className={styles.glassNotifTitle}>{t('authPage.landing.demoNotifTitle')}</div>
+                <div className={styles.glassMuted}>{t('authPage.landing.demoNotifAmount')}</div>
+              </div>
+            </div>
+          </div>
+
+          <div className={styles.tabBottom}>
+            <div className={styles.chips}>
+              {['chip1', 'chip2', 'chip3'].map(k => (
+                <span key={k} className={styles.chip}><i className={styles.chipDot} />{t(`authPage.landing.${k}`)}</span>
+              ))}
+            </div>
+            <div className={styles.tabCtas}>
+              <button onClick={() => setMode('register')} className={styles.tabCtaPrimary}>{t('authPage.landing.createAccount')}</button>
+              <button onClick={() => setMode('login')} className={styles.tabCtaGhost}>{t('authPage.landing.login')}</button>
+            </div>
+            <div className={styles.tabLegal}>
+              <a href="/privacidad.html" target="_blank" rel="noopener noreferrer">{t('authPage.landing.privacyFull')}</a>
+              {' · '}
+              <a href="/terminos.html" target="_blank" rel="noopener noreferrer">{t('authPage.landing.termsFull')}</a>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className={`${styles.scroll} ${showForm ? styles.scrollForm : styles.scrollLanding}`}>
         {!showForm ? (
           <div className={`${styles.features} ${fade}`}>
@@ -647,7 +730,7 @@ export function AuthPage() {
           El formulario real ya trae su botón de enviar dentro del
           contenido con scroll de arriba, así que no necesita una franja
           fija aparte. */}
-      {!showForm && (
+      {!showForm && !isTablet && (
         <div className={`${styles.bottomBar} ${fade}`}>
           <button onClick={() => setMode('register')} className={`btn-primary ${styles.bottomPrimary}`}>
             {t('authPage.landing.createAccount')}

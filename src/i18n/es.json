@@ -697,7 +697,24 @@
       "login": "Iniciar sesión",
       "privacy": "Privacidad",
       "terms": "Términos",
-      "backAriaLabel": "Regresar"
+      "backAriaLabel": "Regresar",
+      "tagline1": "Organiza.",
+      "tagline2": "Paga.",
+      "tagline3": "Relájate.",
+      "descTitle": "LunaPay es tu organizador de pagos personales y compartidos.",
+      "descBody": "Registra pagos fijos, recurrentes y a meses por periodo de cobro, recibe avisos antes de que venzan y sigue tus metas de ahorro.",
+      "chip1": "Sin conectar tu banco",
+      "chip2": "Semanal, quincenal o mensual",
+      "chip3": "Avisos a tu hora",
+      "demoPeriod": "Esta quincena",
+      "demoAmount": "$4,280.00",
+      "demoPending": "por pagar · 6 pagos",
+      "demoNotifApp": "LunaPay · 8:00 am",
+      "demoNotifTitle": "Mañana vence Netflix",
+      "demoNotifAmount": "$219.00",
+      "privacyFull": "Política de privacidad",
+      "termsFull": "Términos y condiciones",
+      "lunaAlt": "Luna, la mascota de LunaPay"
     }
   },
   "resetPasswordPage": {
