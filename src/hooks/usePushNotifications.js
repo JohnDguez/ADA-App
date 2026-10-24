@@ -130,6 +130,8 @@ export function usePushNotifications(userId) {
     if (!userId) return { error: 'No user' }
     setLoading(true)
     if (isNativeAndroid()) return subscribeNative()
+    // iOS/iPadOS fuera de la PWA instalada: no existe Notification/PushManager.
+    if (typeof Notification === 'undefined' || !('PushManager' in window)) { setLoading(false); return { error: 'No disponible en este navegador' } }
     try {
       const reg = await registerSW()
       if (!reg) { setLoading(false); return { error: 'Service Worker no disponible' } }

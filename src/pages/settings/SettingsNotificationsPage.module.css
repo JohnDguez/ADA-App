@@ -266,3 +266,6 @@
   }
   .tabTiles { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 }
+
+.installSteps { margin: 6px 0 0; padding-left: 18px; }
+.installSteps li { margin-bottom: 2px; }

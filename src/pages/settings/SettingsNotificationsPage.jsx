@@ -6,6 +6,7 @@ import { Bell, BellOff, TriangleAlert, CircleAlert, CalendarCheck, Clock, Bankno
 import { Bell as BellDuotone } from '@phosphor-icons/react/dist/csr/Bell'
 import { PageHero } from '../../components/PageHero'
 import { usePushNotifications } from '../../hooks/usePushNotifications'
+import { needsPwaInstall } from '../../lib/pwa'
 import { showToast } from '../../components/Toast'
 import { Card, Toggle } from '../../components/SettingsShared'
 import { TimeWheelSheet } from '../../components/TimeWheelSheet'
@@ -39,6 +40,8 @@ export function SettingsNotificationsPage({ profile, user, onUpdate, onBack, sli
   const readBlocked = () => typeof Notification !== 'undefined' && Notification.permission === 'denied'
   const [blocked, setBlocked] = useState(readBlocked)
   const [hourOpen, setHourOpen] = useState(false)
+  // iPhone/iPad sin instalar: se muestran los pasos en vez de intentar activar.
+  const installNeeded = needsPwaInstall()
   // Tablet (≥768px, v0.9.781): distribución propia; el móvil queda intacto.
   const [isTablet, setIsTablet] = useState(() => typeof window !== 'undefined' && window.matchMedia('(min-width: 768px)').matches)
   useEffect(() => {
@@ -69,6 +72,7 @@ export function SettingsNotificationsPage({ profile, user, onUpdate, onBack, sli
 
   async function handlePushToggle() {
     if (pushTarget !== null) return
+    if (installNeeded && !subscribed) return
     if (subscribed) {
       setPushTarget(false)
       await unsubscribe(); showToast(t('settingsNotifications.toast.disabled'))
@@ -108,7 +112,21 @@ export function SettingsNotificationsPage({ profile, user, onUpdate, onBack, sli
           </div>
         </div>
 
-        <Collapse open={blocked && !subscribed}>
+        <Collapse open={installNeeded}>
+          <div className={styles.blockedNotice}>
+            <TriangleAlert size={16} color="var(--warning)" className={styles.blockedIcon} />
+            <div>
+              <strong>{t('settingsNotifications.installNeededTitle')}</strong>
+              <ol className={styles.installSteps}>
+                <li>{t('settingsNotifications.installStep1')}</li>
+                <li>{t('settingsNotifications.installStep2')}</li>
+                <li>{t('settingsNotifications.installStep3')}</li>
+              </ol>
+            </div>
+          </div>
+        </Collapse>
+
+        <Collapse open={blocked && !subscribed && !installNeeded}>
           <div className={styles.blockedNotice}>
             <TriangleAlert size={16} color="var(--warning)" className={styles.blockedIcon} />
             <span>{t('settingsNotifications.blockedNotice')}</span>
