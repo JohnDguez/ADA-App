@@ -165,6 +165,16 @@ export function SkeletonLoader() {
   return (
     <div className={styles.pageRoot}>
 
+      {/* ── Riel lateral — solo ≥768px (tablet/escritorio): ahí no existen el
+           header ni el BottomNav, el chrome es NavRail.jsx (72px colapsado). ── */}
+      <div className={styles.railSkel}>
+        <Bone w={36} h={36} r={10} dark />
+        <div className={styles.railSkelItems}>
+          {[0, 1, 2, 3, 4].map(i => <Bone key={i} w={24} h={24} r={7} dark />)}
+        </div>
+        <Bone w={36} h={36} r="50%" dark />
+      </div>
+
       {/* ── Header ── */}
       <div className={styles.header}>
         <div className={styles.headerInner}>

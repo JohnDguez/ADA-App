@@ -329,3 +329,38 @@
   align-items: center;
   gap: 10px;
 }
+
+/* ── Tablet/escritorio (≥768px, v0.9.788) ─────────────────────────────────
+   Mismo layout que Home en este breakpoint: riel lateral de 72px, sin
+   header ni BottomNav, el contenido a todo el ancho (#root ya deja el
+   margen del riel, index.css) y sin el switcher de espacios (vive en el
+   riel). En móvil nada de esto aplica. */
+.railSkel { display: none; }
+
+@media (min-width: 768px) {
+  .railSkel {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 72px;
+    height: 100vh;
+    height: 100dvh;
+    padding: 20px 0;
+    box-sizing: border-box;
+    background: var(--nav-bg);
+  }
+  .railSkelItems { display: flex; flex-direction: column; align-items: center; gap: 28px; }
+
+  .pageRoot { padding-bottom: 40px; }
+  .header,
+  .bottomNavSkeleton,
+  .switcherPlaceholder { display: none; }
+  .roundedWrapper { margin-top: 0; border-radius: 0; }
+  .contentPadding { padding: 28px 24px 0; }
+  .tabsRow { margin-top: 0; }
+  .metricCard { padding: 20px 24px; }
+}
