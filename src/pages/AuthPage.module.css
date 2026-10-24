@@ -154,16 +154,19 @@
 
 /* ── Pantalla principal (v0.9.786: móvil y tablet comparten diseño) ─────── */
 .page {
-  position: relative;
-  min-height: 100vh;
-  min-height: 100dvh;
+  /* Fija al viewport (v0.9.791): antes min-height:100vh + el padding de
+     #root hacían la página más alta que la pantalla en móvil → scroll y una
+     franja azul oscura debajo del hero al cerrar sesión. */
+  position: fixed;
+  inset: 0;
   background: var(--bg);
   overflow-x: hidden;
+  overflow-y: auto;
 }
 
 /* Hero permanente: ilustración a pantalla completa + capa oscura + logo. */
 .hero {
-  position: absolute;
+  position: fixed;
   inset: 0;
   background-image: url(/login-header.svg);
   background-size: cover;
@@ -185,8 +188,7 @@
   flex-direction: column;
   justify-content: space-between;
   gap: 24px;
-  min-height: 100vh;
-  min-height: 100dvh;
+  min-height: 100%;
   padding: 226px 24px 0;
   box-sizing: border-box;
   color: var(--on-color);
@@ -245,7 +247,7 @@
   width: 100%;
   max-width: 500px;
   margin: 0 auto;
-  padding-bottom: 20px;
+  padding-bottom: calc(20px + env(safe-area-inset-bottom, 0px));
 }
 .mobLuna {
   height: 190px;
@@ -299,8 +301,7 @@
   align-items: center;
   justify-content: center;
   gap: 20px;
-  min-height: 100vh;
-  min-height: 100dvh;
+  min-height: 100%;
   padding: 32px 20px;
   box-sizing: border-box;
 }
