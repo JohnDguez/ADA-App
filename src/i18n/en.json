@@ -150,7 +150,6 @@
     "dangerModal": {
       "titleData": "Delete all data",
       "titleAccount": "Delete account",
-      "playSubscriptionNotice": "Your Google Play subscription is not canceled automatically when you delete your account. Also cancel it in the Play Store (Payments & subscriptions) so you are not charged again.",
       "descriptionData": "This will permanently delete all your payments and income. Your account will stay active. This action can't be undone.",
       "descriptionAccount": "This will permanently delete your account and all your data. You won't be able to recover it. This action can't be undone.",
       "confirmLabel": "Confirm with your password",
@@ -197,6 +196,24 @@
       "allDataDeleted": "All your data has been deleted",
       "deleteAccountError": "Error deleting account",
       "languageUpdated": "Language updated"
+    },
+    "subscriptionBlock": {
+      "title": "Cancel your subscription first",
+      "descriptionStripe": "To delete your account, cancel your subscription first from Settings → Subscription. That way you won't be charged again. Your Premium access continues until the end of the paid period.",
+      "descriptionTrial": "To delete your account, cancel your trial first from Settings → Subscription. If you don't, the first charge would be made when the trial ends.",
+      "descriptionPlay": "Your subscription is billed through Google Play and can only be canceled there: Play Store → Payments & subscriptions. Cancel it and come back to delete your account.",
+      "plan_monthly": "LunaPay Premium · Monthly",
+      "plan_annual": "LunaPay Premium · Annual",
+      "planGeneric": "LunaPay Premium",
+      "planTrial": "LunaPay Premium · Free trial",
+      "planPlay": "LunaPay Premium · Google Play",
+      "renewsOn": "Renews on {{date}}",
+      "trialEnds": "Ends on {{date}}",
+      "stripeManaged": "Managed in Settings → Subscription",
+      "playManaged": "Managed in the Play Store",
+      "goSubscription": "Go to Subscription",
+      "openPlay": "Open Google Play",
+      "understood": "Got it"
     }
   },
   "settingsCobro": {
@@ -259,12 +276,21 @@
     "hourDone": "Done",
     "tileDaysBefore_one": "{{count}} day before",
     "tileDaysBefore_other": "{{count}} days before",
-    "tablet": {"stepsTitle": "How we alert you about a payment", "stepBefore": "Before", "stepDay": "The day", "stepAfter": "After", "upcomingSub": "In advance", "dueTodaySub": "On the same day", "overdueSub": "If you don't pay them", "daysFor": "For Upcoming payments and Credit cards"},
-        "installNeededTitle": "To get reminders on iPhone or iPad, install LunaPay:",
+    "tablet": {
+      "stepsTitle": "How we alert you about a payment",
+      "stepBefore": "Before",
+      "stepDay": "The day",
+      "stepAfter": "After",
+      "upcomingSub": "In advance",
+      "dueTodaySub": "On the same day",
+      "overdueSub": "If you don't pay them",
+      "daysFor": "For Upcoming payments and Credit cards"
+    },
+    "installNeededTitle": "To get reminders on iPhone or iPad, install LunaPay:",
     "installStep1": "In Safari, tap Share (the square with the arrow).",
     "installStep2": "Choose “Add to Home Screen” and confirm.",
     "installStep3": "Open LunaPay from its icon and turn on notifications here.",
-"blockedNotice": "Notifications are blocked in your browser. Turn them on in the site settings and try again.",
+    "blockedNotice": "Notifications are blocked in your browser. Turn them on in the site settings and try again.",
     "daysBeforeLabel": "Days in advance",
     "payDayLabel": "Pay day",
     "payDaySub": "Summary of pending payments on payday",
@@ -898,7 +924,13 @@
     "nextDueLabel": "Next due date: {{date}}",
     "recurrentNote": "A new payment will be generated automatically every {{interval}}.",
     "nextDueThen": "Next charge: {{date}} · then {{freq}}",
-    "recurrentEvery": {"monthly": "every month", "bimonthly": "every 2 months", "quarterly": "every 3 months", "semiannual": "every 6 months", "annual": "every year"},
+    "recurrentEvery": {
+      "monthly": "every month",
+      "bimonthly": "every 2 months",
+      "quarterly": "every 3 months",
+      "semiannual": "every 6 months",
+      "annual": "every year"
+    },
     "recurrentIntervals": {
       "weekly": "7 days",
       "biweekly": "14 days",

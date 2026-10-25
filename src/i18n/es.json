@@ -150,7 +150,6 @@
     "dangerModal": {
       "titleData": "Eliminar todos los datos",
       "titleAccount": "Eliminar cuenta",
-      "playSubscriptionNotice": "Tu suscripción de Google Play no se cancela sola al eliminar la cuenta. Cancélala también en Play Store (Pagos y suscripciones) para que no te sigan cobrando.",
       "descriptionData": "Esta acción eliminará todos tus pagos e ingresos permanentemente. Tu cuenta se mantendrá activa. Esta acción no se puede deshacer.",
       "descriptionAccount": "Esta acción eliminará tu cuenta y todos tus datos permanentemente. No podrás recuperarlos. Esta acción no se puede deshacer.",
       "confirmLabel": "Confirma con tu contraseña",
@@ -197,6 +196,24 @@
       "allDataDeleted": "Todos tus datos han sido eliminados",
       "deleteAccountError": "Error al eliminar la cuenta",
       "languageUpdated": "Idioma actualizado"
+    },
+    "subscriptionBlock": {
+      "title": "Primero cancela tu suscripción",
+      "descriptionStripe": "Para eliminar tu cuenta, cancela antes tu suscripción desde Ajustes → Suscripción. Así no se te vuelve a cobrar. Tu acceso Premium sigue hasta el fin del periodo pagado.",
+      "descriptionTrial": "Para eliminar tu cuenta, cancela antes tu prueba desde Ajustes → Suscripción. Si no la cancelas, al terminar la prueba se haría el primer cobro.",
+      "descriptionPlay": "Tu suscripción se cobra por Google Play y solo puedes cancelarla ahí: Play Store → Pagos y suscripciones. Cancélala y vuelve para eliminar tu cuenta.",
+      "plan_monthly": "LunaPay Premium · Mensual",
+      "plan_annual": "LunaPay Premium · Anual",
+      "planGeneric": "LunaPay Premium",
+      "planTrial": "LunaPay Premium · Prueba gratis",
+      "planPlay": "LunaPay Premium · Google Play",
+      "renewsOn": "Se renueva el {{date}}",
+      "trialEnds": "Termina el {{date}}",
+      "stripeManaged": "Se gestiona en Ajustes → Suscripción",
+      "playManaged": "Se gestiona en Play Store",
+      "goSubscription": "Ir a Suscripción",
+      "openPlay": "Abrir Google Play",
+      "understood": "Entendido"
     }
   },
   "settingsCobro": {
@@ -259,12 +276,21 @@
     "hourDone": "Listo",
     "tileDaysBefore_one": "{{count}} día antes",
     "tileDaysBefore_other": "{{count}} días antes",
-    "tablet": {"stepsTitle": "Cómo te avisamos de un pago", "stepBefore": "Antes", "stepDay": "El día", "stepAfter": "Después", "upcomingSub": "Con anticipación", "dueTodaySub": "El mismo día", "overdueSub": "Si no los pagas", "daysFor": "Para Próximos pagos y Tarjetas de crédito"},
-        "installNeededTitle": "Para recibir avisos en iPhone o iPad, instala LunaPay:",
+    "tablet": {
+      "stepsTitle": "Cómo te avisamos de un pago",
+      "stepBefore": "Antes",
+      "stepDay": "El día",
+      "stepAfter": "Después",
+      "upcomingSub": "Con anticipación",
+      "dueTodaySub": "El mismo día",
+      "overdueSub": "Si no los pagas",
+      "daysFor": "Para Próximos pagos y Tarjetas de crédito"
+    },
+    "installNeededTitle": "Para recibir avisos en iPhone o iPad, instala LunaPay:",
     "installStep1": "En Safari, toca Compartir (el cuadro con la flecha).",
     "installStep2": "Elige «Añadir a pantalla de inicio» y confirma.",
     "installStep3": "Abre LunaPay desde su ícono y activa las notificaciones aquí.",
-"blockedNotice": "Las notificaciones están bloqueadas en tu navegador. Actívalas en los ajustes del sitio y vuelve a intentarlo.",
+    "blockedNotice": "Las notificaciones están bloqueadas en tu navegador. Actívalas en los ajustes del sitio y vuelve a intentarlo.",
     "daysBeforeLabel": "Días de anticipación",
     "payDayLabel": "Día de cobro",
     "payDaySub": "Resumen de pagos pendientes al cobrar",
@@ -898,7 +924,13 @@
     "nextDueLabel": "Próximo vencimiento: {{date}}",
     "recurrentNote": "Se generará un nuevo pago automáticamente cada {{interval}}.",
     "nextDueThen": "Próximo cobro: {{date}} · luego {{freq}}",
-    "recurrentEvery": {"monthly": "cada mes", "bimonthly": "cada 2 meses", "quarterly": "cada 3 meses", "semiannual": "cada 6 meses", "annual": "cada año"},
+    "recurrentEvery": {
+      "monthly": "cada mes",
+      "bimonthly": "cada 2 meses",
+      "quarterly": "cada 3 meses",
+      "semiannual": "cada 6 meses",
+      "annual": "cada año"
+    },
     "recurrentIntervals": {
       "weekly": "7 días",
       "biweekly": "14 días",

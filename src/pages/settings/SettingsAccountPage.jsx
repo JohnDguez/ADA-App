@@ -5,12 +5,14 @@ import { ChevronRight, AlertTriangle, Eye, EyeOff } from 'lucide-react'
 // Ícono del encabezado vía Phosphor Icons (mismo patrón que SettingsExportPage.jsx,
 // v0.9.442-445) — import directo al archivo del ícono para tree-shaking real.
 import { UserCircle } from '@phosphor-icons/react/dist/csr/UserCircle'
+import { Crown } from '@phosphor-icons/react/dist/csr/Crown'
 import { PageHero } from '../../components/PageHero'
 import { showToast } from '../../components/Toast'
 import { passwordRequirements, isPasswordStrong } from '../../components/PasswordSetupModal'
 import { RequirementRow } from '../../components/RequirementRow'
 import { Card, Row, SectionLabel } from '../../components/SettingsShared'
 import { apiUrl } from '../../lib/apiUrl'
+import { ANDROID_PACKAGE_NAME } from '../../lib/constants'
 import { getPremiumSource } from '../../lib/utils'
 import styles from './SettingsAccountPage.module.css'
 import { Presence } from '../../components/Presence'
@@ -18,8 +20,8 @@ import { Presence } from '../../components/Presence'
 // Sub-página "Cuenta" dentro de Ajustes: Nombre, Correo/Google, Contraseña,
 // Idioma, y la zona de peligro (Eliminar mis datos / Eliminar mi cuenta).
 // Antes vivía todo esto (menos Idioma) mezclado directo en SettingsPage.jsx.
-export function SettingsAccountPage({ profile, user, onUpdate, onDataDeleted, onBack, slideClass }) {
-  const { t } = useTranslation()
+export function SettingsAccountPage({ profile, user, onUpdate, onDataDeleted, onBack, onGoSubscription, slideClass }) {
+  const { t, i18n } = useTranslation()
   const [editSection, setEditSection] = useState(null)
   const [fieldVal,    setFieldVal]    = useState('')
   const [fieldVal2,   setFieldVal2]   = useState('')
@@ -36,11 +38,45 @@ export function SettingsAccountPage({ profile, user, onUpdate, onDataDeleted, on
   const [showDangerPass, setShowDangerPass] = useState(false)
   const [dangerLoading,  setDangerLoading]  = useState(false)
   const [dangerError,    setDangerError]    = useState('')
+  // v0.9.795: aviso "primero cancela tu suscripción" (null | { source, trial?, plan?, date? }).
+  const [subBlock,       setSubBlock]       = useState(null)
+  const [checkingSub,    setCheckingSub]    = useState(false)
 
   const isGoogle = user?.app_metadata?.provider === 'google'
-  // Una suscripción de Google Play no se puede cancelar desde el servidor:
-  // al eliminar la cuenta hay que avisar que se cancela aparte en la Play Store.
-  const hasPlaySubscription = getPremiumSource(profile) === 'google_play'
+  const premiumSource = getPremiumSource(profile)
+  const playStoreUrl = `https://play.google.com/store/account/subscriptions?package=${ANDROID_PACKAGE_NAME}`
+    + (profile?.google_play_product_id ? `&sku=${profile.google_play_product_id}` : '')
+
+  function formatDate(unixSeconds) {
+    const locale = i18n.language?.startsWith('en') ? 'en-US' : 'es-MX'
+    return new Date(unixSeconds * 1000).toLocaleDateString(locale, { day: 'numeric', month: 'long', year: 'numeric' })
+  }
+
+  // v0.9.795: una suscripción vigente (Stripe de pago/prueba o Google Play)
+  // impide eliminar la cuenta — primero hay que cancelarla. El servidor
+  // (api/delete-account.js) lo vuelve a comprobar y responde 409.
+  async function requestDeleteAccount() {
+    if (checkingSub) return
+    if (premiumSource === 'google_play') { setSubBlock({ source: 'google_play' }); return }
+    if (premiumSource === 'stripe') {
+      setCheckingSub(true)
+      try {
+        const { data: { session } } = await supabase.auth.getSession()
+        const res = await fetch(apiUrl('/api/get-subscription'), { headers: { Authorization: `Bearer ${session?.access_token}` } })
+        const body = res.ok ? await res.json() : null
+        const sub = body?.subscription
+        if (sub && ['active', 'trialing', 'past_due'].includes(sub.status) && !sub.cancelAtPeriodEnd) {
+          setSubBlock({ source: 'stripe', trial: sub.status === 'trialing', plan: sub.plan, date: sub.currentPeriodEnd })
+          return
+        }
+      } catch (e) {
+        // Sin red: se sigue al flujo normal; el servidor bloquea si aplica.
+      } finally {
+        setCheckingSub(false)
+      }
+    }
+    setDangerModal('account'); setDangerPassword(''); setDangerError('')
+  }
 
   const newPassReqs   = passwordRequirements(fieldVal)
   const newPassStrong = isPasswordStrong(fieldVal)
@@ -147,6 +183,11 @@ export function SettingsAccountPage({ profile, user, onUpdate, onDataDeleted, on
     setDangerLoading(false)
     if (!res.ok) {
       const body = await res.json().catch(() => null)
+      if (res.status === 409 && body?.code === 'SUBSCRIPTION_ACTIVE') {
+        setDangerModal(null); setDangerPassword('')
+        setSubBlock({ source: body.source === 'google_play' ? 'google_play' : 'stripe' })
+        return
+      }
       console.error('[handleDeleteAccount] El servidor no pudo borrar la cuenta:', body?.error || res.status)
       setDangerError(t('settingsAccount.toast.deleteAccountError'))
       return
@@ -192,7 +233,7 @@ export function SettingsAccountPage({ profile, user, onUpdate, onDataDeleted, on
           </button>
         </Card>
 
-        <button onClick={() => { setDangerModal('account'); setDangerPassword(''); setDangerError('') }} className={styles.dangerCard}>
+        <button onClick={requestDeleteAccount} disabled={checkingSub} className={styles.dangerCard}>
           <div className={styles.dangerButtonText}>
             <div className={styles.dangerCardTitle}>{t('settingsAccount.dangerZone.deleteAccountTitle')}</div>
             <div className={styles.dangerButtonSubtitle}>{t('settingsAccount.dangerZone.deleteAccountSubtitle')}</div>
@@ -217,9 +258,6 @@ export function SettingsAccountPage({ profile, user, onUpdate, onDataDeleted, on
                 : t('settingsAccount.dangerModal.descriptionAccount')
               }
             </div>
-            {dangerModal === 'account' && hasPlaySubscription && (
-              <div className={styles.playNotice}>{t('settingsAccount.dangerModal.playSubscriptionNotice')}</div>
-            )}
             {dangerError && (
               <div className={styles.errorBox}>
                 {dangerError}
@@ -247,6 +285,55 @@ export function SettingsAccountPage({ profile, user, onUpdate, onDataDeleted, on
               {dangerLoading ? t('settingsAccount.dangerModal.verifying') : dangerModal === 'data' ? t('settingsAccount.dangerModal.deleteDataButton') : t('settingsAccount.dangerModal.deleteAccountButton')}
             </button>
             <button onClick={() => { setDangerModal(null); setDangerPassword('') }} className="btn-ghost">{t('buttons.cancel')}</button>
+          </div>
+        </div>
+      )}</Presence>
+
+      <Presence show={!!subBlock}>{() => (
+        <div onClick={e => e.target === e.currentTarget && setSubBlock(null)} className={styles.dangerOverlay}>
+          <div className={styles.modalPanel}>
+            <div className={styles.handle} />
+            <div className={styles.blockIconWrapper}>
+              <Crown size={22} color="var(--warning)" />
+            </div>
+            <div className={styles.blockTitle}>{t('settingsAccount.subscriptionBlock.title')}</div>
+            <div className={styles.dangerDescription}>
+              {subBlock.source === 'google_play'
+                ? t('settingsAccount.subscriptionBlock.descriptionPlay')
+                : subBlock.trial
+                  ? t('settingsAccount.subscriptionBlock.descriptionTrial')
+                  : t('settingsAccount.subscriptionBlock.descriptionStripe')}
+            </div>
+            <div className={styles.blockPlan}>
+              <div className={styles.blockPlanIcon}><Crown size={18} color="var(--accent)" /></div>
+              <div>
+                <div className={styles.blockPlanName}>
+                  {subBlock.source === 'google_play'
+                    ? t('settingsAccount.subscriptionBlock.planPlay')
+                    : subBlock.trial
+                      ? t('settingsAccount.subscriptionBlock.planTrial')
+                      : subBlock.plan
+                        ? t(`settingsAccount.subscriptionBlock.plan_${subBlock.plan}`)
+                        : t('settingsAccount.subscriptionBlock.planGeneric')}
+                </div>
+                <div className={styles.blockPlanSub}>
+                  {subBlock.source === 'google_play'
+                    ? t('settingsAccount.subscriptionBlock.playManaged')
+                    : subBlock.date
+                      ? t(subBlock.trial ? 'settingsAccount.subscriptionBlock.trialEnds' : 'settingsAccount.subscriptionBlock.renewsOn', { date: formatDate(subBlock.date) })
+                      : t('settingsAccount.subscriptionBlock.stripeManaged')}
+                </div>
+              </div>
+            </div>
+            <button
+              onClick={() => {
+                if (subBlock.source === 'google_play') { window.open(playStoreUrl, '_blank') }
+                else { setSubBlock(null); onGoSubscription?.() }
+              }}
+              className="btn-primary">
+              {subBlock.source === 'google_play' ? t('settingsAccount.subscriptionBlock.openPlay') : t('settingsAccount.subscriptionBlock.goSubscription')}
+            </button>
+            <button onClick={() => setSubBlock(null)} className="btn-ghost">{t('settingsAccount.subscriptionBlock.understood')}</button>
           </div>
         </div>
       )}</Presence>

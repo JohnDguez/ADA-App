@@ -102,16 +102,6 @@
   margin-bottom: 12px;
 }
 
-.playNotice {
-  background: var(--warning-soft);
-  border-radius: var(--radius-sm);
-  padding: 10px 12px;
-  font-size: 13px;
-  line-height: 1.5;
-  color: var(--text);
-  margin-bottom: 14px;
-}
-
 .successBox {
   background: var(--paid-soft);
   border: 0.5px solid var(--paid-border);
@@ -280,4 +270,55 @@
 
 .saveButton {
   margin-bottom: 8px;
+}
+
+/* ── Aviso "primero cancela tu suscripción" (v0.9.795) ──────────────────── */
+.blockIconWrapper {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: var(--warning-soft);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 12px;
+}
+
+.blockTitle {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 6px;
+}
+
+.blockPlan {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--bg);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  margin-bottom: 16px;
+}
+
+.blockPlanIcon {
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+  background: var(--accent-soft);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.blockPlanName {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.blockPlanSub {
+  font-size: 12px;
+  color: var(--muted);
 }
