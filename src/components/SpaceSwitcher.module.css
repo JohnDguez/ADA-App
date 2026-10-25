@@ -99,34 +99,22 @@
   position: relative;
 }
 
-.pinSliver {
+.pinRow {
   position: absolute;
   left: 0;
   right: 0;
-  height: 30px;
-  border: none;
-  padding: 0;
-  border-radius: 14px 14px 0 0;
-  box-shadow: 0 -2px 6px -1px var(--space-stack-shadow);
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 12px 18px 0;
+  border-radius: 16px 16px 0 0;
+  box-shadow: 0 -3px 8px -2px var(--space-stack-shadow);
   cursor: pointer;
 }
 
-.pinActive {
-  position: absolute;
-  left: 0;
-  right: 0;
-  height: 44px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 4px 18px 0;
-  border: none;
-  border-radius: 14px 14px 0 0;
+.pinRowActive {
   background: var(--bg);
   color: var(--text);
-  font-family: inherit;
-  cursor: pointer;
-  box-shadow: 0 -2px 6px -1px var(--space-stack-shadow);
 }
 
 .pinName {
@@ -137,8 +125,72 @@
   font-weight: 500;
 }
 
+.pinRight {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
 .pinStat {
   font-size: 11px;
   font-weight: 500;
-  color: var(--muted);
+  opacity: 0.85;
+}
+
+/* Flechita ⌄: abre el stack completo. Área de toque de 36px (aunque el
+   ícono sea pequeño) y centrada con el texto de la fila. */
+.pinMore {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  margin: -10px -10px -10px -4px;
+  cursor: pointer;
+}
+
+/* Hoja con todos los espacios (se abre desde la flechita). */
+.allOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  background: var(--scrim);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.allPanel {
+  width: 100%;
+  max-width: 420px;
+  padding: 12px 16px 28px;
+  background: var(--menu-bg);
+  border-radius: 28px 28px 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  animation: modalSlideUp .3s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+}
+
+.allHandle {
+  width: 34px;
+  height: 4px;
+  background: var(--border);
+  border-radius: 2px;
+  margin: 0 auto 8px;
+}
+
+.allItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  border-radius: 12px;
+  cursor: pointer;
+}
+
+.allItemActive {
+  border: 1.5px solid var(--accent);
 }

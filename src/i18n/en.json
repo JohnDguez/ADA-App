@@ -1350,7 +1350,8 @@
     "moreSpaces_one": "{{count}} more space",
     "moreSpaces_other": "{{count}} more spaces",
     "showLess": "Show less",
-    "backToTop": "Back to top"
+    "backToTop": "Back to top",
+    "allSpaces": "See all spaces"
   },
   "coachmarks": {
     "skipTutorial": "Skip tutorial",
