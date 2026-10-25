@@ -60,3 +60,85 @@
   cursor: pointer;
   box-shadow: 0 -3px 8px -2px var(--space-stack-shadow);
 }
+
+/* ── Barra fija al hacer scroll (v0.9.796, solo móvil) ───────────────────── */
+.pinBar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 90;
+  padding-top: var(--sat, 0px);
+  background: linear-gradient(var(--bg) var(--sat, 0px), transparent var(--sat, 0px));
+  opacity: 0;
+  transform: translateY(-8px);
+  pointer-events: none;
+  transition: opacity .18s ease, transform .18s ease;
+}
+
+.pinBarOn {
+  opacity: 1;
+  transform: none;
+  pointer-events: auto;
+}
+
+/* Desvanecido: el contenido que pasa por debajo se funde con el fondo en
+   vez de cortarse de golpe contra el borde de la barra. */
+.pinBar::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 100%;
+  height: 24px;
+  background: linear-gradient(var(--bg), transparent);
+  pointer-events: none;
+}
+
+.pinStack {
+  position: relative;
+}
+
+.pinSliver {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 30px;
+  border: none;
+  padding: 0;
+  border-radius: 14px 14px 0 0;
+  box-shadow: 0 -2px 6px -1px var(--space-stack-shadow);
+  cursor: pointer;
+}
+
+.pinActive {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 18px 0;
+  border: none;
+  border-radius: 14px 14px 0 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: inherit;
+  cursor: pointer;
+  box-shadow: 0 -2px 6px -1px var(--space-stack-shadow);
+}
+
+.pinName {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.pinStat {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--muted);
+}
