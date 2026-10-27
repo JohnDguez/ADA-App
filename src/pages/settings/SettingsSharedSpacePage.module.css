@@ -664,3 +664,9 @@
     margin-right: auto;
   }
 }
+
+/* Pastilla "Unirme con código" al fondo, centrada sobre el contenido en
+   tablet (el riel ocupa 72px); mismo patrón que Categorías y Tarjetas. */
+@media (min-width: 768px) {
+  .addPillRow { bottom: 28px; left: calc(50% + 36px); max-width: 680px; justify-content: center; }
+}
