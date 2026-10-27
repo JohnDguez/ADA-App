@@ -11,6 +11,10 @@ import { showToast } from '../../components/Toast'
 import { Card, Toggle } from '../../components/SettingsShared'
 import { TimeWheelSheet } from '../../components/TimeWheelSheet'
 import { Collapse } from '../../components/Collapse'
+import { useDeskSettings } from '../../components/DeskSettingsContext'
+import { DeskSettingsHead, DeskPage } from '../../components/DeskSettingsHead'
+import deskStyles from '../../components/SettingsDesk.module.css'
+import dk from './SettingsNotificationsDesk.module.css'
 import styles from './SettingsNotificationsPage.module.css'
 import { switchProps } from '../../lib/a11y'
 
@@ -26,6 +30,7 @@ const HOUR_LABELS = Array.from({ length: 24 }, (_, i) =>
 // SettingsPage.jsx.
 export function SettingsNotificationsPage({ profile, user, onUpdate, onBack, slideClass }) {
   const { t } = useTranslation()
+  const desk = useDeskSettings()
   const { subscribed, ready, subscribe, unsubscribe } = usePushNotifications(user?.id)
 
   // `pushTarget` (v0.9.482): el switch se mueve al instante hacia donde se
@@ -85,6 +90,95 @@ export function SettingsNotificationsPage({ profile, user, onUpdate, onBack, sli
       else showToast(t('settingsNotifications.toast.enabled'))
     }
     setPushTarget(null)
+  }
+
+  if (desk) {
+    const [hh, ap] = HOUR_LABELS[hour].split(' ')
+    const stepList = [
+      { key: 'upcoming', cap: t('settingsNotifications.tablet.stepBefore'), Icon: Clock, label: t('settingsNotifications.upcomingLabel'), sub: t('settingsNotifications.tablet.upcomingSub'), field: 'notif_upcoming', on: upcomingOn },
+      { key: 'dueToday', cap: t('settingsNotifications.tablet.stepDay'), Icon: CalendarCheck, label: t('settingsNotifications.dueTodayLabel'), sub: t('settingsNotifications.tablet.dueTodaySub'), field: 'notif_due_today', on: profile.notif_due_today !== false },
+      { key: 'overdue', cap: t('settingsNotifications.tablet.stepAfter'), Icon: CircleAlert, label: t('settingsNotifications.overdueLabel'), sub: t('settingsNotifications.tablet.overdueSub'), field: 'notif_overdue', on: profile.notif_overdue !== false },
+    ]
+    const extra = tiles.filter(x => x.key === 'payDay' || x.key === 'cards')
+    return (
+      <DeskPage>
+        <DeskSettingsHead title={t('settingsNotifications.title')} description={t('settingsNotifications.description')} />
+
+        <div className={dk.top}>
+          <div {...switchProps(subscribed)} className={`${deskStyles.blue} ${dk.master} ${dk.blueSw}`} onClick={handlePushToggle}>
+            <span className={deskStyles.ic}>{subscribed ? <Bell size={24} /> : <BellOff size={24} />}</span>
+            <div className={dk.masterText}>
+              <b>{subscribed ? t('settingsNotifications.activeLabel') : t('settingsNotifications.enableLabel')}</b>
+              <span>{subscribed ? t('settingsNotifications.activeSubtitle') : t('settingsNotifications.enableSubtitle')}</span>
+            </div>
+            <Toggle on={pushTarget ?? subscribed} instant={!ready} />
+          </div>
+          <div className={deskStyles.fill}>
+            <button type="button" className={`${dk.hour} ${deskStyles.fill}`} style={{ padding: 0, background: 'none' }} onClick={() => setHourOpen(true)}>
+              <span><b>{t('settingsNotifications.notifyAt')}</b></span>
+              <strong>{hh} <small>{ap}</small></strong>
+            </button>
+          </div>
+        </div>
+
+        {installNeeded && (
+          <div className={dk.notice}>
+            <TriangleAlert size={18} color="var(--warning)" />
+            <div>
+              <strong>{t('settingsNotifications.installNeededTitle')}</strong>
+              <ol><li>{t('settingsNotifications.installStep1')}</li><li>{t('settingsNotifications.installStep2')}</li><li>{t('settingsNotifications.installStep3')}</li></ol>
+            </div>
+          </div>
+        )}
+        {blocked && !subscribed && !installNeeded && (
+          <div className={dk.notice}><TriangleAlert size={18} color="var(--warning)" /><span>{t('settingsNotifications.blockedNotice')}</span></div>
+        )}
+
+        {subscribed && (
+          <>
+            <div className={deskStyles.sec}>{t('settingsNotifications.tablet.stepsTitle')}</div>
+            <div className={dk.steps}>
+              {stepList.map(({ key, cap, Icon, label, sub, field, on }) => (
+                <div key={key} className={`${dk.step} ${on ? dk.stepOn : ''}`}>
+                  <div className={dk.stepHead}>
+                    <span className={deskStyles.ic}><Icon size={22} /></span>
+                    <div {...switchProps(on)} className={dk.sw} onClick={() => onUpdate({ [field]: !on })}><Toggle on={on} /></div>
+                  </div>
+                  <span className={dk.stepLabel}>{label}</span>
+                  <span className={dk.stepSub}>{sub}</span>
+                  <span className={dk.stepCap}>{cap}</span>
+                </div>
+              ))}
+            </div>
+
+            <div className={dk.bottom}>
+              <div className={`${deskStyles.fill} ${dk.days}`}>
+                <div>
+                  <b>{t('settingsNotifications.daysBeforeLabel')}</b>
+                  <span>{t('settingsNotifications.tablet.daysFor')}</span>
+                </div>
+                <div className={dk.dayBtns}>
+                  {[1, 2, 3, 5, 7].map(d => (
+                    <button key={d} type="button" onClick={() => onUpdate({ notif_days_before: d })} className={`${dk.dayBtn} ${daysBefore === d ? dk.dayOn : ''}`}>{d}</button>
+                  ))}
+                </div>
+              </div>
+              <div className={deskStyles.fill}>
+                {extra.map(({ key, label, on, status, onToggle }) => (
+                  <div key={key} {...switchProps(on)} className={deskStyles.tgl} onClick={onToggle}>
+                    <div><b>{label}</b><span>{status}</span></div>
+                    <Toggle on={on} />
+                  </div>
+                ))}
+              </div>
+            </div>
+          </>
+        )}
+
+        <TimeWheelSheet open={hourOpen} onClose={() => setHourOpen(false)} value={hour}
+          onSelect={h => onUpdate({ notif_hour: h, notif_last_sent: null })} />
+      </DeskPage>
+    )
   }
 
   return (

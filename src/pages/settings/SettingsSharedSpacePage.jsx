@@ -15,6 +15,9 @@ import { getCurrency } from '../../lib/currency'
 import { showToast } from '../../components/Toast'
 import { getFrequencyLabel } from '../../lib/utils'
 import { useDeskSettings } from '../../components/DeskSettingsContext'
+import { DeskSettingsHead, DeskPage } from '../../components/DeskSettingsHead'
+import deskStyles from '../../components/SettingsDesk.module.css'
+import dk from './SettingsSharedSpaceDesk.module.css'
 import styles from './SettingsSharedSpacePage.module.css'
 import { AvatarImg } from '../../components/AvatarImg'
 import { Presence } from '../../components/Presence'
@@ -114,6 +117,107 @@ export function SettingsSharedSpacePage({ profile, user, sharedSpaces, onBack, o
 
   const canCreateMore = profile.is_premium && !ownedEntry
   const canJoinMore   = guestEntries.length < 3
+
+  const joinSheet = canJoinMore && (
+    <BottomSheet open={joinOpen} title={t('newSharedSpacePanel.joinTitle')} onClose={() => setJoinOpen(false)}>
+      <div className={styles.joinDescription}>{t('settingsSharedSpacePage.joinDescription')}</div>
+      <input aria-label={t('newSharedSpacePanel.joinTitle')}
+        className={`field-input ${styles.joinCodeInput}`} inputMode="numeric" maxLength={6}
+        value={joinCode} onChange={e => setJoinCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+        placeholder="000000"
+      />
+      {joinError && <div className={styles.errorText}>{joinError}</div>}
+      <button onClick={handleJoin} disabled={joinSaving || joinCode.length !== 6} className={`btn-primary ${(joinSaving || joinCode.length !== 6) ? styles.disabledOpacity : ''}`}>
+        {joinSaving ? t('newSharedSpacePanel.joining') : t('newSharedSpacePanel.join')}
+      </button>
+    </BottomSheet>
+  )
+
+  if (desk) {
+    return (
+      <DeskPage>
+        <DeskSettingsHead
+          title={t('settingsSharedSpacePage.title')}
+          description={t('settingsSharedSpacePage.description')}
+          actions={<>
+            {canJoinMore && <button type="button" className={`${deskStyles.btn} ${deskStyles.btnSoft}`} onClick={() => { setJoinError(''); setJoinOpen(true) }}><Users size={16} />{t('settingsSharedSpacePage.deskJoin')}</button>}
+            {canCreateMore && !creating && <button type="button" className={deskStyles.btn} onClick={() => setCreating(true)}><Plus size={16} />{t('settingsSharedSpacePage.deskNew')}</button>}
+          </>}
+        />
+
+        {ownedEntry && (
+          <OwnedSpacePanel
+            entry={ownedEntry} user={user}
+            regenerateCode={regenerateCode} updateMemberPermissions={updateMemberPermissions}
+            updateSpaceConfig={updateSpaceConfig} removeMember={removeMember}
+            deleteSpace={deleteSpace} clearSpaceData={clearSpaceData}
+          />
+        )}
+
+        {guestEntries.length > 0 && (
+          <>
+            <div className={`${deskStyles.sec} ${ownedEntry ? '' : deskStyles.secFirst}`}>{t('settingsSharedSpacePage.invitedSpacesLabel')}</div>
+            <div className={deskStyles.fill}>
+              {guestEntries.map(entry => {
+                const cur = getCurrency(entry.space.currency)
+                return (
+                  <div key={entry.membership.id} className={dk.guest}>
+                    <div className={dk.guestTop}>
+                      <span>{entry.space.name}</span>
+                      <button type="button" className={`${deskStyles.btn} ${deskStyles.btnSoft}`} onClick={() => leaveSpace(entry.membership.id)}><LogOut size={14} />{t('settingsSharedSpacePage.leave')}</button>
+                    </div>
+                    <div className={dk.guestSub}>
+                      {t('settingsSharedSpacePage.period', { freq: getFrequencyLabel(entry.space.cobro_freq) })} · {cur.code} · {t('currency.guestHint')}
+                    </div>
+                    <div {...switchProps(entry.membership.notify_on_changes)} className={deskStyles.tgl}
+                      onClick={() => updateMemberPermissions(entry.membership.id, { notify_on_changes: !entry.membership.notify_on_changes })}>
+                      <div><b>{t('settingsSharedSpacePage.notifyMeLabel')}</b><span>{t('settingsSharedSpacePage.notifyMeSubGuest')}</span></div>
+                      <Toggle on={entry.membership.notify_on_changes} />
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          </>
+        )}
+
+        {!ownedEntry && !profile.is_premium && (
+          <div className={`${deskStyles.blue} ${dk.cta}`} style={{ marginTop: guestEntries.length ? 18 : 0 }}>
+            <Crown size={26} />
+            <div className={dk.ctaTitle}>{t('newSharedSpacePanel.premiumCtaTitle')}</div>
+            <div className={dk.ctaText}>{t('newSharedSpacePanel.premiumCtaText')}</div>
+            <button type="button" className={`${deskStyles.btn} ${deskStyles.btnWhite}`} onClick={onOpenPremium}><Crown size={16} />{t('goalsPage.premiumBanner.button')}</button>
+          </div>
+        )}
+
+        {!ownedEntry && profile.is_premium && creating && (
+          <div className={`${deskStyles.fill} ${dk.form}`}>
+            <label className="field-label">{t('newSharedSpacePanel.spaceNameLabel')}</label>
+            <input aria-label={t('newSharedSpacePanel.spaceNameLabel')} className="field-input" value={newName} onChange={e => setNewName(e.target.value)} placeholder={t('newSharedSpacePanel.spaceNamePlaceholder')} />
+            <label className={`field-label ${dk.field}`}>{t('currency.spaceLabel')}</label>
+            <CurrencySelect value={newCurrency} onChange={setNewCurrency} sheetTitle={t('currency.spaceSheetTitle')} />
+            <label className={`field-label ${dk.field}`}>{t('cobroPeriodFields.periodLabel')}</label>
+            <CobroPeriodFields
+              freq={newFreq} day1={newDay1} day2={newDay2} weekday={newWeekday}
+              onChangeFreq={setNewFreq} onChangeDay1={setNewDay1} onChangeDay2={setNewDay2} onChangeWeekday={setNewWeekday}
+            />
+            {createError && <div className={dk.err}>{createError}</div>}
+            <div className={deskStyles.actions} style={{ marginTop: 18 }}>
+              <button type="button" className={deskStyles.btn} onClick={handleCreate} disabled={createSaving}>{createSaving ? t('newSharedSpacePanel.creating') : t('newSharedSpacePanel.create')}</button>
+              <button type="button" className={`${deskStyles.btn} ${deskStyles.btnSoft}`} onClick={() => { setCreating(false); setCreateError('') }}>{t('buttons.cancel')}</button>
+            </div>
+          </div>
+        )}
+
+        {!ownedEntry && profile.is_premium && !creating && guestEntries.length === 0 && (
+          <div className={deskStyles.fill}>{t('settingsSharedSpacePage.deskEmpty')}</div>
+        )}
+
+        {!canJoinMore && <div className={dk.hint}>{t('newSharedSpacePanel.maxJoined')}</div>}
+        {joinSheet}
+      </DeskPage>
+    )
+  }
 
   return (
     <>
@@ -285,6 +389,7 @@ const PERM_KEYS = [
 // ── Panel de administración del espacio propio ──────────────────────────────
 function OwnedSpacePanel({ entry, user, regenerateCode, updateMemberPermissions, updateSpaceConfig, removeMember, deleteSpace, clearSpaceData }) {
   const { t } = useTranslation()
+  const desk = useDeskSettings()
   const [expanded,      setExpanded]      = useState(false)
   const [copied,        setCopied]        = useState(false)
   const [regenerating,  setRegenerating]  = useState(false)
@@ -363,6 +468,193 @@ function OwnedSpacePanel({ entry, user, regenerateCode, updateMemberPermissions,
     setDangerLoading(false)
     if (error) setDangerError(typeof error === 'string' ? error : t('activeSpaceHeader.errors.wrongPassword'))
     else { setDangerOpen(false); setDangerPassword('') }
+  }
+
+  const modals = (
+    <>
+      <CurrencySheet open={currencyOpen} onClose={() => setCurrencyOpen(false)} value={entry.space.currency} onSelect={handleCurrency} title={t('currency.spaceSheetTitle')} />
+      <Presence show={!!(dangerOpen)}>{() => (
+        <div onClick={e => e.target === e.currentTarget && setDangerOpen(false)} className={styles.deleteModalOverlay}>
+          <div className={styles.deleteModalSheet}>
+            <div className={styles.deleteModalTitle}>{t('activeSpaceHeader.deleteModal.title')}</div>
+            <div className={styles.deleteModalDescription}>
+              {t('activeSpaceHeader.deleteModal.description')}
+            </div>
+            <label className={`field-label ${styles.labelBlock}`}>{t('settingsAccount.dangerModal.confirmLabel')}</label>
+            <input aria-label={t('settingsAccount.dangerModal.confirmLabel')}
+              type="password" className={`field-input ${styles.deleteModalPasswordInput}`} value={dangerPassword}
+              onChange={e => setDangerPassword(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && handleDelete()}
+              placeholder="••••••••"
+            />
+            {dangerError && <div className={styles.errorText}>{dangerError}</div>}
+            <button
+              onClick={handleDelete}
+              disabled={dangerLoading || !dangerPassword}
+              className={`${styles.deleteModalConfirmButton} ${(dangerLoading || !dangerPassword) ? styles.savingOpacity : ''}`}
+            >
+              {dangerLoading ? t('settingsAccount.dangerModal.verifying') : t('activeSpaceHeader.deleteModal.confirmButton')}
+            </button>
+            <button onClick={() => { setDangerOpen(false); setDangerPassword('') }} className="btn-ghost">{t('buttons.cancel')}</button>
+          </div>
+        </div>
+      )}</Presence>
+    </>
+  )
+
+  if (desk) {
+    const members = entry.space.members?.length ? entry.space.members : guestMembers
+    const count = Math.max(members.length, guestMembers.length + 1)
+    const nm = m => m.profile?.name || t('settingsSharedSpacePage.guestFallback')
+    const remaining = 2 - guestMembers.length
+    return (
+      <>
+        <div className={dk.grid}>
+          <div className={dk.col}>
+            <div className={`${deskStyles.blue} ${dk.hero}`}>
+              <span className={deskStyles.sub}><Crown size={13} style={{ verticalAlign: '-2px' }} /> {t('settingsSharedSpacePage.deskOwnerBadge')}</span>
+              <div className={dk.heroName}>{entry.space.name}</div>
+              <div className={dk.heroRow}>
+                <div className={dk.stack}>
+                  {members.slice(0, 4).map(m => (
+                    <div key={m.id}>
+                      <AvatarImg src={m.profile?.avatar_url} className={dk.img} fallback={<div className={dk.stackFb}>{nm(m).slice(0, 1).toUpperCase()}</div>} />
+                    </div>
+                  ))}
+                </div>
+                <span>{t('settingsSharedSpacePage.deskMembers', { count })}</span>
+              </div>
+            </div>
+
+            <div className={deskStyles.fill}>
+              <div className={deskStyles.fillTitle}>{t('settingsSharedSpacePage.deskConfig')}</div>
+              <div className={dk.cfgRow}>
+                <div>
+                  <label className={dk.lab}>{t('newSharedSpacePanel.spaceNameLabel')}</label>
+                  <input aria-label={t('newSharedSpacePanel.spaceNameLabel')} className="field-input" value={nameInput}
+                    onChange={e => setNameInput(e.target.value)} onBlur={handleNameBlur}
+                    onKeyDown={e => e.key === 'Enter' && e.target.blur()} />
+                </div>
+                <div>
+                  <label className={dk.lab}>{t('settingsCobro.currencyLabel')}</label>
+                  <button type="button" onClick={() => setCurrencyOpen(true)} className={`field-input ${dk.curBtn}`}>
+                    {getCurrency(entry.space.currency).code}<ChevronDown size={14} color="var(--text)" />
+                  </button>
+                </div>
+              </div>
+              <div className={dk.field}>
+                <label className={dk.lab}>{t('cobroPeriodFields.periodLabel')}</label>
+                <CobroPeriodFields
+                  freq={entry.space.cobro_freq} day1={entry.space.cobro_day1} day2={entry.space.cobro_day2} weekday={entry.space.cobro_weekday}
+                  onChangeFreq={v => handleCobroChange({ cobro_freq: v })} onChangeDay1={v => handleCobroChange({ cobro_day1: v })}
+                  onChangeDay2={v => handleCobroChange({ cobro_day2: v })} onChangeWeekday={v => handleCobroChange({ cobro_weekday: v })}
+                />
+              </div>
+            </div>
+
+            <div className={deskStyles.fill}>
+              <div className={deskStyles.fillTitle}>{t('settingsSharedSpacePage.deskMembersTitle')}</div>
+              {guestMembers.length === 0 && <div className={dk.hint}>{t('settingsSharedSpacePage.inviteHint', { count: remaining })}</div>}
+              {guestMembers.map(m => {
+                const guestName = nm(m)
+                const isOpen = openMemberId === m.id
+                const isConfirming = confirmExpel === m.id
+                const onCount = PERM_KEYS.filter(k => m[k]).length
+                return (
+                  <div key={m.id} className={dk.member}>
+                    <button type="button" className={dk.memberHead} onClick={() => setOpenMemberId(isOpen ? null : m.id)}>
+                      <div className={dk.avatar}><AvatarImg src={m.profile?.avatar_url} className={dk.img} fallback={<div className={dk.avatarFb}>{guestName.slice(0, 2).toUpperCase()}</div>} /></div>
+                      <div className={dk.memberText}><b>{guestName}</b><span>{t('settingsSharedSpacePage.permSummary', { on: onCount, total: PERM_KEYS.length })}</span></div>
+                      <span className={dk.role}>{t('settingsSharedSpacePage.guestFallback')}</span>
+                      {isOpen ? <ChevronUp size={16} color="var(--text)" /> : <ChevronDown size={16} color="var(--text)" />}
+                    </button>
+                    <Collapse open={isOpen}>
+                      <div className={dk.perms}>
+                        <div className={dk.permLabel}>{t('settingsSharedSpacePage.permGroupPayments')}</div>
+                        <div className={dk.permGrid}>
+                          {PAYMENT_PERMS.map(({ key, Icon, label }) => (
+                            <PermTile key={key} Icon={Icon} label={t(label)} on={!!m[key]} onToggle={() => updateMemberPermissions(m.id, { [key]: !m[key] })} />
+                          ))}
+                        </div>
+                        <div className={dk.permLabel}>{t('settingsSharedSpacePage.permGroupGoals')}</div>
+                        <div className={dk.permGrid}>
+                          {GOAL_PERMS.map(({ key, Icon, label, sub }) => (
+                            <PermTile key={key} Icon={Icon} label={t(label)} sub={sub ? t(sub) : undefined} on={!!m[key]} onToggle={() => updateMemberPermissions(m.id, { [key]: !m[key] })} />
+                          ))}
+                        </div>
+                        <button type="button" className={dk.linkDanger} onClick={() => setConfirmExpel(isConfirming ? null : m.id)}>
+                          <LogOut size={15} />{t('settingsSharedSpacePage.removeFromSpace')}
+                        </button>
+                        <Collapse open={!!isConfirming}>
+                          <div className={dk.confirm}>
+                            {t('settingsSharedSpacePage.confirmExpel', { name: guestName })}
+                            <div className={dk.confirmBtns}>
+                              <button type="button" className={`${deskStyles.btn} ${deskStyles.btnSoft}`} onClick={() => setConfirmExpel(null)}>{t('buttons.cancel')}</button>
+                              <button type="button" className={`${deskStyles.btn} ${dk.btnDanger}`} disabled={expelling} onClick={() => handleExpel(m.id)}>
+                                {expelling ? t('settingsSharedSpacePage.expelling') : t('settingsSharedSpacePage.expel')}
+                              </button>
+                            </div>
+                          </div>
+                        </Collapse>
+                      </div>
+                    </Collapse>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+
+          <div className={dk.col}>
+            <div className={deskStyles.fill}>
+              <div className={deskStyles.fillTitle}>{t('settingsSharedSpacePage.accessCodeLabel')}</div>
+              <div className={dk.code}>{entry.space.access_code}</div>
+              <div className={dk.codeBtns}>
+                <button type="button" className={`${deskStyles.btn} ${dk.grow}`} onClick={copyCode}><Copy size={15} />{copied ? t('settingsSharedSpacePage.copied') : t('settingsSharedSpacePage.copyCode')}</button>
+                <button type="button" className={`${deskStyles.btn} ${deskStyles.btnSoft}`} disabled={regenerating} onClick={() => setConfirmRegen(v => !v)} aria-label={t('settingsSharedSpacePage.regenerate')}><RefreshCw size={15} /></button>
+              </div>
+              <Collapse open={!!confirmRegen}>
+                <div className={dk.confirm} style={{ marginTop: 12 }}>
+                  {t('settingsSharedSpacePage.regenConfirm')}
+                  <div className={dk.confirmBtns}>
+                    <button type="button" className={`${deskStyles.btn} ${deskStyles.btnSoft}`} onClick={() => setConfirmRegen(false)}>{t('buttons.cancel')}</button>
+                    <button type="button" className={`${deskStyles.btn} ${dk.btnDanger}`} disabled={regenerating} onClick={handleRegenerate}>{t('settingsSharedSpacePage.regenerate')}</button>
+                  </div>
+                </div>
+              </Collapse>
+              <div className={`${dk.hint} ${remaining > 0 ? '' : dk.full}`}>
+                {remaining > 0 ? t('settingsSharedSpacePage.inviteHint', { count: remaining }) : t('settingsSharedSpacePage.spaceFullText')}
+              </div>
+            </div>
+
+            <div className={deskStyles.fill}>
+              <div {...switchProps(entry.membership.notify_on_changes)} className={deskStyles.tgl} style={{ paddingTop: 0, paddingBottom: 0 }}
+                onClick={() => updateMemberPermissions(entry.membership.id, { notify_on_changes: !entry.membership.notify_on_changes })}>
+                <div><b>{t('settingsSharedSpacePage.notifyMeLabel')}</b><span>{t('settingsSharedSpacePage.notifyMeSubOwner')}</span></div>
+                <Toggle on={entry.membership.notify_on_changes} />
+              </div>
+            </div>
+
+            <div className={deskStyles.fill}>
+              <div className={deskStyles.fillTitle}>{t('settingsSharedSpacePage.deskDanger')}</div>
+              <div className={dk.danger}>
+                <button type="button" className={dk.dangerRow} onClick={() => setConfirmClear(v => !v)}><Trash2 size={16} />{t('settingsSharedSpacePage.clearDataButton')}</button>
+                <Collapse open={!!confirmClear}>
+                  <div className={dk.confirm}>
+                    {t('settingsSharedSpacePage.confirmClearText', { name: entry.space.name })}
+                    <div className={dk.confirmBtns}>
+                      <button type="button" className={`${deskStyles.btn} ${deskStyles.btnSoft}`} onClick={() => setConfirmClear(false)}>{t('buttons.cancel')}</button>
+                      <button type="button" className={`${deskStyles.btn} ${dk.btnDanger}`} disabled={clearing} onClick={handleClearData}>{clearing ? t('settingsSharedSpacePage.clearing') : t('settingsSharedSpacePage.clearAll')}</button>
+                    </div>
+                  </div>
+                </Collapse>
+                <button type="button" className={dk.dangerRow} onClick={() => { setDangerOpen(true); setDangerPassword(''); setDangerError('') }}><Trash2 size={16} />{t('settingsSharedSpacePage.deleteSpaceButton')}</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        {modals}
+      </>
+    )
   }
 
   return (
@@ -565,34 +857,7 @@ function OwnedSpacePanel({ entry, user, regenerateCode, updateMemberPermissions,
         </Collapse>
       </div>
 
-      <CurrencySheet open={currencyOpen} onClose={() => setCurrencyOpen(false)} value={entry.space.currency} onSelect={handleCurrency} title={t('currency.spaceSheetTitle')} />
-
-      <Presence show={!!(dangerOpen)}>{() => (
-        <div onClick={e => e.target === e.currentTarget && setDangerOpen(false)} className={styles.deleteModalOverlay}>
-          <div className={styles.deleteModalSheet}>
-            <div className={styles.deleteModalTitle}>{t('activeSpaceHeader.deleteModal.title')}</div>
-            <div className={styles.deleteModalDescription}>
-              {t('activeSpaceHeader.deleteModal.description')}
-            </div>
-            <label className={`field-label ${styles.labelBlock}`}>{t('settingsAccount.dangerModal.confirmLabel')}</label>
-            <input aria-label={t('settingsAccount.dangerModal.confirmLabel')}
-              type="password" className={`field-input ${styles.deleteModalPasswordInput}`} value={dangerPassword}
-              onChange={e => setDangerPassword(e.target.value)}
-              onKeyDown={e => e.key === 'Enter' && handleDelete()}
-              placeholder="••••••••"
-            />
-            {dangerError && <div className={styles.errorText}>{dangerError}</div>}
-            <button
-              onClick={handleDelete}
-              disabled={dangerLoading || !dangerPassword}
-              className={`${styles.deleteModalConfirmButton} ${(dangerLoading || !dangerPassword) ? styles.savingOpacity : ''}`}
-            >
-              {dangerLoading ? t('settingsAccount.dangerModal.verifying') : t('activeSpaceHeader.deleteModal.confirmButton')}
-            </button>
-            <button onClick={() => { setDangerOpen(false); setDangerPassword('') }} className="btn-ghost">{t('buttons.cancel')}</button>
-          </div>
-        </div>
-      )}</Presence>
+      {modals}
     </>
   )
 }

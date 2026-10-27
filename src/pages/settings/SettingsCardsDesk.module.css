@@ -1,0 +1,38 @@
+/* Mis tarjetas — escritorio (v0.9.835). */
+.top { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); gap: 16px; }
+.hero { display: flex; flex-direction: column; min-height: 230px; }
+.big { margin: 6px 0 auto; font-size: 52px; font-weight: 700; letter-spacing: -2px; line-height: 1; padding-bottom: 16px; }
+.pills { display: flex; flex-wrap: wrap; gap: 10px; }
+.pills > div { padding: 10px 16px; border-radius: 16px; background: color-mix(in srgb, var(--desk-ink-text) 18%, transparent); }
+.pills span { display: block; font-size: 12px; opacity: 0.8; }
+.pills b { display: block; margin-top: 2px; font-size: 16px; font-weight: 600; }
+.dueRow { display: flex; align-items: center; gap: 14px; padding: 11px 0; }
+.dueRow + .dueRow { border-top: 1px solid var(--desk-hair); }
+.date { width: 46px; height: 50px; border-radius: 14px; background: var(--desk-card); display: grid; place-items: center; text-align: center; font-size: 11px; line-height: 1.1; color: var(--muted); text-transform: uppercase; flex-shrink: 0; }
+.date b { display: block; font-size: 18px; color: var(--text); }
+.dateSoon { background: var(--premium-gold); color: var(--premium-gold-text); }
+.dateSoon b { color: var(--premium-gold-text); }
+.dueName { flex: 1; min-width: 0; font-size: 14.5px; font-weight: 600; color: var(--text); }
+.dueName span { display: block; font-size: 12.5px; font-weight: 400; color: var(--muted); }
+.dueAmt { font-weight: 700; color: var(--text); }
+.emptyNote { padding: 18px 0 6px; font-size: 13.5px; color: var(--muted); }
+.seg { display: inline-flex; margin-top: 22px; padding: 4px; border-radius: 99px; background: var(--desk-chip); }
+.seg button { padding: 9px 22px; border: 0; border-radius: 99px; background: none; color: var(--muted); font-size: 13.5px; font-weight: 600; }
+.segOn { background: var(--accent) !important; color: var(--desk-ink-text) !important; }
+.cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 16px; margin-top: 16px; }
+.card { position: relative; display: block; padding: 16px; border-radius: 22px; background: var(--desk-chip); text-align: left; cursor: pointer; }
+.info { margin-top: 14px; }
+.row { display: flex; justify-content: space-between; align-items: center; font-size: 13px; color: var(--muted); }
+.row b { font-size: 17px; font-weight: 700; color: var(--text); }
+.bar { height: 7px; margin-top: 10px; border-radius: 99px; background: var(--desk-card); overflow: hidden; }
+.bar i { display: block; height: 100%; border-radius: 99px; background: var(--accent); }
+.sub { display: flex; justify-content: space-between; margin-top: 10px; font-size: 12px; color: var(--muted); }
+.addCard { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; min-height: 200px; border: 0; border-radius: 22px; background: var(--accent-soft); color: var(--accent); font-size: 14px; font-weight: 600; }
+.addCard i { width: 54px; height: 54px; border-radius: 50%; display: grid; place-items: center; background: var(--accent); color: var(--desk-ink-text); }
+.foot { display: flex; align-items: center; gap: 10px; margin-top: 20px; font-size: 12.5px; color: var(--muted); }
+.cardSync { position: absolute; top: 24px; right: 24px; }
+@media (hover: hover) and (pointer: fine) {
+  .card:hover { background: var(--desk-hair); translate: none; filter: none; }
+  .seg button:not(.segOn):hover { background: var(--desk-hair); translate: none; filter: none; }
+  .addCard:hover { opacity: 0.85; translate: none; filter: none; }
+}

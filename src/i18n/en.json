@@ -219,6 +219,11 @@
     "tablet": {
       "profile": "Profile",
       "security": "Security"
+    },
+    "desk": {
+      "freePlan": "Free plan",
+      "yourData": "Your data",
+      "edit": "Edit"
     }
   },
   "settingsCobro": {
@@ -339,7 +344,17 @@
       "deletedPrefix": "Category",
       "deletedSuffix": "deleted"
     },
-    "addButton": "Add category"
+    "addButton": "Add category",
+    "deskCustom": "Custom",
+    "deskDefault": "Default",
+    "deskSearch": "Search category",
+    "deskNew": "New category",
+    "deskNewShort": "New",
+    "deskNoResults": "No category matches your search.",
+    "deskDefaults_one": "Default · {{count}}",
+    "deskDefaults_other": "Default · {{count}}",
+    "deskMine_one": "Yours · {{count}}",
+    "deskMine_other": "Yours · {{count}}"
   },
   "homePage": {
     "tabs": {
@@ -1112,38 +1127,38 @@
     "scanHint": "Photo of the receipt"
   },
   "deskSettings": {
-      "freqHelp": "How often you get paid",
-      "daysHelp": "The days you get paid",
-      "nextHelp": "Calculated from your settings",
-      "incomeOff": "No fixed salary"
+    "freqHelp": "How often you get paid",
+    "daysHelp": "The days you get paid",
+    "nextHelp": "Calculated from your settings",
+    "incomeOff": "No fixed salary"
   },
   "deskGoals": {
-      "ofTarget": "of {{amount}} · {{pct}}%",
+    "ofTarget": "of {{amount}} · {{pct}}%",
     "listTitle": "My goals",
-      "toGo": "to reach all your goals",
-      "savedSub_one": "in {{count}} active goal",
-      "savedSub_other": "in {{count}} active goals",
-      "lastDone": "latest: {{name}}",
-      "noneDone": "none yet",
-      "noDeadline": "No deadline",
-      "depositedOf": "saved of {{amount}} · {{pct}}%",
-      "overallTitle": "Overall progress",
-      "ofGoals": "of your goals",
-      "saved": "Saved",
-      "total": "Total goal",
-      "left": "Remaining",
-      "upcoming": "Upcoming dates",
-      "selectHint": "Select a goal to see its details"
+    "toGo": "to reach all your goals",
+    "savedSub_one": "in {{count}} active goal",
+    "savedSub_other": "in {{count}} active goals",
+    "lastDone": "latest: {{name}}",
+    "noneDone": "none yet",
+    "noDeadline": "No deadline",
+    "depositedOf": "saved of {{amount}} · {{pct}}%",
+    "overallTitle": "Overall progress",
+    "ofGoals": "of your goals",
+    "saved": "Saved",
+    "total": "Total goal",
+    "left": "Remaining",
+    "upcoming": "Upcoming dates",
+    "selectHint": "Select a goal to see its details"
   },
   "deskRecurrents": {
-      "ofTarget": "of {{amount}} · {{pct}}%",
+    "ofTarget": "of {{amount}} · {{pct}}%",
     "listTitle": "My recurring payments",
-      "ofTotal": "of {{count}} recurring payments",
-      "pausedLabel": "Paused",
-      "pausedSub": "no charges generated",
-      "installmentsLabel": "Installments",
-      "noInstallments": "no active plans",
-      "paidOf": "{{paid}} of {{total}} paid",
+    "ofTotal": "of {{count}} recurring payments",
+    "pausedLabel": "Paused",
+    "pausedSub": "no charges generated",
+    "installmentsLabel": "Installments",
+    "noInstallments": "no active plans",
+    "paidOf": "{{paid}} of {{total}} paid",
     "selectHint": "Select a payment to see its details"
   },
   "deskPayments": {
@@ -1648,7 +1663,16 @@
     "confirmClearText": "ALL payments and income from \"{{name}}\" will be deleted, with no way to undo it. The space, code, and members stay the same.",
     "clearing": "Deleting…",
     "clearAll": "Delete all",
-    "deleteSpaceButton": "Delete space"
+    "deleteSpaceButton": "Delete space",
+    "deskJoin": "Join with code",
+    "deskNew": "New space",
+    "deskOwnerBadge": "Your space",
+    "deskMembers_one": "{{count}} member",
+    "deskMembers_other": "{{count}} members",
+    "deskConfig": "Space settings",
+    "deskMembersTitle": "Members",
+    "deskDanger": "Danger zone",
+    "deskEmpty": "You don't belong to any space yet. Join with a code or create your own."
   },
   "app": {
     "toast": {
@@ -1844,6 +1868,11 @@
     "method": {
       "label": "Payment method",
       "all": "All"
+    },
+    "desk": {
+      "format": "Format",
+      "csvSub": "All your records in one table",
+      "pdfSub": "Report with charts and summary"
     }
   },
   "sync": {
@@ -2041,6 +2070,16 @@
       "empty": "You have no installment purchases linked to this card yet.",
       "deleteTitle": "Delete plan",
       "deleteMessage": "\"{{name}}\" will stop adding installments to your card. What is already on your statements stays as it is."
+    },
+    "desk": {
+      "owedTotal": "Owed on cards",
+      "cardsCount": "Cards",
+      "upcoming": "Upcoming dates",
+      "topUsed": "Most used",
+      "nothingYet": "Nothing to show yet.",
+      "cutOf": "{{name}} cut",
+      "dueOf": "{{name}} payment",
+      "footNote": "Only to organize your spending. LunaPay has no access to your accounts or banking data."
     }
   },
   "paymentMethod": {

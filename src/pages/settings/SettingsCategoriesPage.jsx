@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import i18n from '../../i18n'
-import { Plus, ChevronRight } from 'lucide-react'
+import { Plus, ChevronRight, Search } from 'lucide-react'
 // Ícono del encabezado vía Phosphor Icons (mismo patrón que Exportar/Cuenta,
 // v0.9.442-446) — import directo al archivo del ícono para tree-shaking real.
 import { Tag } from '@phosphor-icons/react/dist/csr/Tag'
@@ -11,6 +11,9 @@ import { getCategoryIcon } from '../../lib/categoryIcons'
 import { Card } from '../../components/SettingsShared'
 import { CategoryFormModal } from '../../components/CategoryFormModal'
 import { useDeskSettings } from '../../components/DeskSettingsContext'
+import { DeskSettingsHead, DeskPage } from '../../components/DeskSettingsHead'
+import deskStyles from '../../components/SettingsDesk.module.css'
+import dk from './SettingsCategoriesDesk.module.css'
 import styles from './SettingsCategoriesPage.module.css'
 import { kbd } from '../../lib/a11y'
 
@@ -33,6 +36,7 @@ export function SettingsCategoriesPage({ profile, onUpdate, onBack, slideClass }
   const desk = useDeskSettings()
   const [modalOpen,   setModalOpen]   = useState(false)
   const [editingCat,  setEditingCat]  = useState(null) // { name, isCustom } | null (null = agregar nueva)
+  const [query,        setQuery]       = useState('')
 
   const customCats     = profile.custom_categories || []
   const categoryIcons  = profile.category_icons || {}
@@ -88,6 +92,51 @@ export function SettingsCategoriesPage({ profile, onUpdate, onBack, slideClass }
           <ChevronRight size={14} color="var(--text)" />
         </div>
       </div>
+    )
+  }
+
+  if (desk) {
+    const q = query.trim().toLowerCase()
+    const labelOf = c => (c.isCustom ? c.name : getCategoryLabel(c.name))
+    const shown = sortedCats.filter(c => !q || labelOf(c).toLowerCase().includes(q))
+    const defaults = shown.filter(c => !c.isCustom)
+    const mine = shown.filter(c => c.isCustom)
+    const Tile = ({ c }) => {
+      const Icon = getCategoryIcon(c.name, categoryIcons)
+      const color = getCatColor(c.name, customCats, categoryColors)
+      return (
+        <button type="button" className={dk.tile} style={{ '--cat': color }} onClick={() => openEdit(c.name, c.isCustom)}>
+          <i>{Icon ? <Icon size={26} color={color} strokeWidth={2} /> : null}</i>
+          {labelOf(c)}
+          <span>{c.isCustom ? t('settingsCategories.deskCustom') : t('settingsCategories.deskDefault')}</span>
+        </button>
+      )
+    }
+    return (
+      <DeskPage>
+        <DeskSettingsHead
+          title={t('settingsCategories.title')}
+          description={t('settingsCategories.description')}
+          actions={<>
+            <label className={dk.search}>
+              <Search size={16} />
+              <input value={query} onChange={e => setQuery(e.target.value)} placeholder={t('settingsCategories.deskSearch')} aria-label={t('settingsCategories.deskSearch')} />
+            </label>
+            <button type="button" className={deskStyles.btn} onClick={openAdd}><Plus size={16} />{t('settingsCategories.deskNew')}</button>
+          </>}
+        />
+        {shown.length === 0 && <div className={dk.empty}>{t('settingsCategories.deskNoResults')}</div>}
+        {defaults.length > 0 && <>
+          <div className={`${deskStyles.sec} ${deskStyles.secFirst}`}>{t('settingsCategories.deskDefaults', { count: defaults.length })}</div>
+          <div className={dk.grid}>{defaults.map(c => <Tile key={c.name} c={c} />)}</div>
+        </>}
+        <div className={deskStyles.sec}>{t('settingsCategories.deskMine', { count: mine.length })}</div>
+        <div className={dk.grid}>
+          {mine.map(c => <Tile key={c.name} c={c} />)}
+          {!q && <button type="button" className={`${dk.tile} ${dk.add}`} onClick={openAdd}><i><Plus size={28} /></i>{t('settingsCategories.deskNewShort')}</button>}
+        </div>
+        <CategoryFormModal open={modalOpen} onClose={() => setModalOpen(false)} editingCat={editingCat} profile={profile} onUpdate={onUpdate} />
+      </DeskPage>
     )
   }
 

@@ -35,4 +35,4 @@
 }
 
 /* Las sub-páginas traen su propio fondo y alto de pantalla: aquí se anulan */
-.contentBody > div { background: none; min-height: 0; margin: 0; padding: 0; }
+.contentBody > div:not([data-dp]) { background: none; min-height: 0; margin: 0; padding: 0; }

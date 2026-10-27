@@ -219,6 +219,11 @@
     "tablet": {
       "profile": "Perfil",
       "security": "Seguridad"
+    },
+    "desk": {
+      "freePlan": "Plan gratuito",
+      "yourData": "Tus datos",
+      "edit": "Editar"
     }
   },
   "settingsCobro": {
@@ -339,7 +344,17 @@
       "deletedPrefix": "Categoría",
       "deletedSuffix": "eliminada"
     },
-    "addButton": "Agregar categoría"
+    "addButton": "Agregar categoría",
+    "deskCustom": "Personalizada",
+    "deskDefault": "Predeterminada",
+    "deskSearch": "Buscar categoría",
+    "deskNew": "Nueva categoría",
+    "deskNewShort": "Nueva",
+    "deskNoResults": "Ninguna categoría coincide con tu búsqueda.",
+    "deskDefaults_one": "Predeterminadas · {{count}}",
+    "deskDefaults_other": "Predeterminadas · {{count}}",
+    "deskMine_one": "Tuyas · {{count}}",
+    "deskMine_other": "Tuyas · {{count}}"
   },
   "homePage": {
     "tabs": {
@@ -1112,38 +1127,38 @@
     "scanHint": "Foto del recibo"
   },
   "deskSettings": {
-      "freqHelp": "Cada cuánto recibes tu pago",
-      "daysHelp": "Los días en que cobras",
-      "nextHelp": "Calculado con tu configuración",
-      "incomeOff": "Sin sueldo fijo"
+    "freqHelp": "Cada cuánto recibes tu pago",
+    "daysHelp": "Los días en que cobras",
+    "nextHelp": "Calculado con tu configuración",
+    "incomeOff": "Sin sueldo fijo"
   },
   "deskGoals": {
-      "ofTarget": "de {{amount}} · {{pct}}%",
+    "ofTarget": "de {{amount}} · {{pct}}%",
     "listTitle": "Mis metas",
-      "toGo": "para cumplir todas tus metas",
-      "savedSub_one": "en {{count}} meta activa",
-      "savedSub_other": "en {{count}} metas activas",
-      "lastDone": "la última: {{name}}",
-      "noneDone": "aún ninguna",
-      "noDeadline": "Sin fecha límite",
-      "depositedOf": "abonado de {{amount}} · {{pct}}%",
-      "overallTitle": "Avance total",
-      "ofGoals": "de tus metas",
-      "saved": "Ahorrado",
-      "total": "Meta total",
-      "left": "Restante",
-      "upcoming": "Próximas fechas",
-      "selectHint": "Selecciona una meta para ver su detalle"
+    "toGo": "para cumplir todas tus metas",
+    "savedSub_one": "en {{count}} meta activa",
+    "savedSub_other": "en {{count}} metas activas",
+    "lastDone": "la última: {{name}}",
+    "noneDone": "aún ninguna",
+    "noDeadline": "Sin fecha límite",
+    "depositedOf": "abonado de {{amount}} · {{pct}}%",
+    "overallTitle": "Avance total",
+    "ofGoals": "de tus metas",
+    "saved": "Ahorrado",
+    "total": "Meta total",
+    "left": "Restante",
+    "upcoming": "Próximas fechas",
+    "selectHint": "Selecciona una meta para ver su detalle"
   },
   "deskRecurrents": {
-      "ofTarget": "de {{amount}} · {{pct}}%",
+    "ofTarget": "de {{amount}} · {{pct}}%",
     "listTitle": "Mis recurrentes",
-      "ofTotal": "de {{count}} pagos recurrentes",
-      "pausedLabel": "Pausados",
-      "pausedSub": "no generan cobros",
-      "installmentsLabel": "Parcialidades",
-      "noInstallments": "sin planes activos",
-      "paidOf": "{{paid}} de {{total}} pagados",
+    "ofTotal": "de {{count}} pagos recurrentes",
+    "pausedLabel": "Pausados",
+    "pausedSub": "no generan cobros",
+    "installmentsLabel": "Parcialidades",
+    "noInstallments": "sin planes activos",
+    "paidOf": "{{paid}} de {{total}} pagados",
     "selectHint": "Selecciona un pago para ver su detalle"
   },
   "deskPayments": {
@@ -1648,7 +1663,16 @@
     "confirmClearText": "Se borrarán TODOS los pagos e ingresos de \"{{name}}\", sin poder deshacerlo. El espacio, el código y los miembros se quedan igual.",
     "clearing": "Borrando…",
     "clearAll": "Borrar todo",
-    "deleteSpaceButton": "Eliminar espacio"
+    "deleteSpaceButton": "Eliminar espacio",
+    "deskJoin": "Unirme con código",
+    "deskNew": "Nuevo espacio",
+    "deskOwnerBadge": "Tu espacio",
+    "deskMembers_one": "{{count}} miembro",
+    "deskMembers_other": "{{count}} miembros",
+    "deskConfig": "Configuración del espacio",
+    "deskMembersTitle": "Miembros",
+    "deskDanger": "Zona de peligro",
+    "deskEmpty": "Aún no perteneces a ningún espacio. Únete con un código o crea el tuyo."
   },
   "app": {
     "toast": {
@@ -1844,6 +1868,11 @@
     "method": {
       "label": "Método de pago",
       "all": "Todos"
+    },
+    "desk": {
+      "format": "Formato",
+      "csvSub": "Todos tus registros en una tabla",
+      "pdfSub": "Reporte con gráficas y resumen"
     }
   },
   "sync": {
@@ -2041,6 +2070,16 @@
       "empty": "Aún no tienes compras a meses ligadas a esta tarjeta.",
       "deleteTitle": "Eliminar plan",
       "deleteMessage": "«{{name}}» dejará de sumar cuotas a tu tarjeta. Lo que ya está en tus estados de cuenta se queda tal cual."
+    },
+    "desk": {
+      "owedTotal": "Por pagar en tarjetas",
+      "cardsCount": "Tarjetas",
+      "upcoming": "Próximos vencimientos",
+      "topUsed": "Más usadas",
+      "nothingYet": "Todavía no hay nada que mostrar.",
+      "cutOf": "Corte {{name}}",
+      "dueOf": "Pago {{name}}",
+      "footNote": "Solo para organizar tus gastos. LunaPay no accede a tus cuentas ni datos bancarios."
     }
   },
   "paymentMethod": {

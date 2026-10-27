@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { supabase } from '../../lib/supabase'
-import { ChevronRight, AlertTriangle, Eye, EyeOff, User, Lock, Trash2 } from 'lucide-react'
+import { ChevronRight, AlertTriangle, Eye, EyeOff, User, Lock, Trash2, Mail } from 'lucide-react'
 // Ícono del encabezado vía Phosphor Icons (mismo patrón que SettingsExportPage.jsx,
 // v0.9.442-445) — import directo al archivo del ícono para tree-shaking real.
 import { UserCircle } from '@phosphor-icons/react/dist/csr/UserCircle'
@@ -14,6 +14,11 @@ import { Card, Row, SectionLabel } from '../../components/SettingsShared'
 import { apiUrl } from '../../lib/apiUrl'
 import { ANDROID_PACKAGE_NAME } from '../../lib/constants'
 import { getPremiumSource } from '../../lib/utils'
+import { AvatarImg } from '../../components/AvatarImg'
+import { useDeskSettings } from '../../components/DeskSettingsContext'
+import { DeskSettingsHead, DeskPage } from '../../components/DeskSettingsHead'
+import deskStyles from '../../components/SettingsDesk.module.css'
+import dk from './SettingsAccountDesk.module.css'
 import styles from './SettingsAccountPage.module.css'
 import { Presence } from '../../components/Presence'
 
@@ -22,6 +27,7 @@ import { Presence } from '../../components/Presence'
 // Antes vivía todo esto (menos Idioma) mezclado directo en SettingsPage.jsx.
 export function SettingsAccountPage({ profile, user, onUpdate, onDataDeleted, onBack, onGoSubscription, slideClass }) {
   const { t, i18n } = useTranslation()
+  const desk = useDeskSettings()
   const [editSection, setEditSection] = useState(null)
   const [fieldVal,    setFieldVal]    = useState('')
   const [fieldVal2,   setFieldVal2]   = useState('')
@@ -208,8 +214,58 @@ export function SettingsAccountPage({ profile, user, onUpdate, onDataDeleted, on
     await supabase.auth.signOut()
   }
 
+  const deskBody = (
+    <DeskPage>
+      <DeskSettingsHead title={t('settingsAccount.title')} description={t('settingsAccount.description')} />
+      <div className={deskStyles.blue}>
+        <div className={dk.who}>
+          <div className={dk.avatar}><AvatarImg src={profile.avatar_url} className={dk.img} fallback={<div className={dk.avatarFb}>{(profile.name || user?.email || '?').slice(0, 1).toUpperCase()}</div>} /></div>
+          <div>
+            <span>{profile.is_premium ? t('settingsPage.premiumBadge') : t('settingsAccount.desk.freePlan')}</span>
+            <h3>{profile.name}</h3>
+            <span>{user?.email}</span>
+          </div>
+        </div>
+      </div>
+
+      <div className={deskStyles.sec}>{t('settingsAccount.desk.yourData')}</div>
+      <div className={dk.data}>
+        <div className={dk.item}>
+          <div className={dk.itemHead}><span className={deskStyles.ic}><User size={18} /></span>{t('settingsAccount.row.name')}</div>
+          <div className={dk.val}>{profile.name}</div>
+          <button type="button" className={dk.edit} onClick={() => openEdit('name')}>{t('settingsAccount.desk.edit')}</button>
+        </div>
+        <div className={dk.item}>
+          <div className={dk.itemHead}><span className={deskStyles.ic}><Mail size={18} /></span>{isGoogle ? t('settingsAccount.row.google') : t('settingsAccount.row.email')}</div>
+          <div className={dk.val}>{user?.email}</div>
+          {!isGoogle && <button type="button" className={dk.edit} onClick={() => openEdit('email')}>{t('settingsAccount.desk.edit')}</button>}
+        </div>
+        <div className={dk.item}>
+          <div className={dk.itemHead}><span className={deskStyles.ic}><Lock size={18} /></span>{t('settingsAccount.row.password')}</div>
+          <div className={dk.val}>••••••••</div>
+          <button type="button" className={dk.edit} onClick={() => openEdit('password')}>{t('settingsAccount.desk.edit')}</button>
+        </div>
+      </div>
+
+      <div className={deskStyles.sec}>{t('settingsAccount.dangerZone.label')}</div>
+      <div className={dk.danger}>
+        <button type="button" className={dk.dz} onClick={() => { setDangerModal('data'); setDangerPassword(''); setDangerError('') }}>
+          <span className={deskStyles.ic}><Trash2 size={18} /></span>
+          <div className={dk.t}><b>{t('settingsAccount.dangerZone.deleteDataTitle')}</b><span>{t('settingsAccount.dangerZone.deleteDataSubtitle')}</span></div>
+          <ChevronRight size={16} />
+        </button>
+        <button type="button" className={`${dk.dz} ${dk.dzRed}`} onClick={requestDeleteAccount} disabled={checkingSub}>
+          <span className={deskStyles.ic}><AlertTriangle size={18} /></span>
+          <div className={dk.t}><b>{t('settingsAccount.dangerZone.deleteAccountTitle')}</b><span>{t('settingsAccount.dangerZone.deleteAccountSubtitle')}</span></div>
+          <ChevronRight size={16} color="var(--danger)" />
+        </button>
+      </div>
+    </DeskPage>
+  )
+
   return (
     <>
+      {desk ? deskBody : (
       <div className={`${slideClass} ${styles.pageWrapper}`}>
         <PageHero
           icon={UserCircle}
@@ -281,6 +337,7 @@ export function SettingsAccountPage({ profile, user, onUpdate, onDataDeleted, on
         </div>
         </div>
       </div>
+      )}
 
       <Presence show={!!dangerModal}>{() => (
         <div onClick={e => e.target === e.currentTarget && setDangerModal(null)} className={styles.dangerOverlay}>

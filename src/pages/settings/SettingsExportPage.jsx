@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Receipt, Wallet, Download, FileSpreadsheet, FileText, Target, Check, ChevronRight } from 'lucide-react'
+import { Receipt, Wallet, Download, FileSpreadsheet, FileText, Target, Check, ChevronRight, CalendarDays, CreditCard, Users } from 'lucide-react'
 // Ícono del encabezado vía Phosphor Icons, peso "duotone" — Lucide se
 // siente muy plano para un ícono ancla de página completa (pedido de
 // Johnatan); el resto de la app se queda 100% en lucide-react, sin cambios.
@@ -21,6 +21,10 @@ import { generateReportPdf } from '../../lib/exportPdf'
 import { saveOrShareBlob } from '../../lib/nativeExport'
 import { getBank } from '../../lib/cardCatalog'
 import { showToast } from '../../components/Toast'
+import { useDeskSettings } from '../../components/DeskSettingsContext'
+import { DeskSettingsHead, DeskPage } from '../../components/DeskSettingsHead'
+import deskStyles from '../../components/SettingsDesk.module.css'
+import dk from './SettingsExportDesk.module.css'
 import styles from './SettingsExportPage.module.css'
 
 // Sub-página "Exportar datos" — Fases 1 y 2 del módulo de Reportes (ver
@@ -33,6 +37,7 @@ import styles from './SettingsExportPage.module.css'
 // PaymentModal.jsx.
 export function SettingsExportPage({ profile, sharedSpaces, onOpenPremium, onBack, slideClass }) {
   const { t } = useTranslation()
+  const desk = useDeskSettings()
   const { spaces } = sharedSpaces
 
   const [format, setFormat] = useState('csv') // 'csv' | 'pdf'
@@ -834,6 +839,137 @@ export function SettingsExportPage({ profile, sharedSpaces, onOpenPremium, onBac
     : `${formatDateLabel(from)} – ${formatDateLabel(to)}`
   const noneSelected = !includeGastos && !includeIngresos && !(format === 'pdf' && includeGoals)
 
+  const sheets = (
+    <>
+      <OptionSheet open={openSheet === 'method'} onClose={() => setOpenSheet(null)} title={t('settingsExport.method.label')}
+        options={methodFilters} value={methodFilter} onSelect={setMethodFilter} />
+      <OptionSheet open={openSheet === 'space'} onClose={() => setOpenSheet(null)} title={t('settingsExport.spaceLabel')}
+        options={spaceOptions} value={space} onSelect={setSpace} />
+
+      <BottomSheet open={openSheet === 'period'} title={t('settingsExport.period')} onClose={() => setOpenSheet(null)}>
+        <div className={styles.periodGrid}>
+          {SHORTCUTS.map(sc => {
+            const [rf, rt] = rangeFor(sc.key)
+            const subtitle = sc.key === 'allTime'
+              ? t('settingsExport.since', { date: `${MONTHS_SHORT[dateOf(rf).getMonth()].toLowerCase()} ${dateOf(rf).getFullYear()}` })
+              : shortRange(rf, rt)
+            const on = activeShortcut === sc.key && !customOpen
+            return (
+              <button key={sc.key} type="button" className={`${styles.periodTile} ${on ? styles.periodTileOn : ''}`}
+                onClick={() => { applyShortcut(sc.key); setCustomOpen(false); setOpenSheet(null) }}>
+                <span className={styles.periodTileTitle}>{sc.label}</span>
+                <span className={styles.periodTileSub}>{subtitle}</span>
+              </button>
+            )
+          })}
+          <button type="button" onClick={() => setCustomOpen(v => !v)}
+            className={`${styles.periodTile} ${styles.periodTileFull} ${(activeShortcut === null || customOpen) ? styles.periodTileOn : ''}`}>
+            <span className={styles.periodTileTitle}>{t('settingsExport.custom')}</span>
+            <span className={styles.periodTileSub}>
+              {activeShortcut === null ? shortRange(from, to) : t('settingsExport.customHint')}
+            </span>
+          </button>
+        </div>
+        <Collapse open={customOpen || activeShortcut === null}>
+          <div className={styles.dateRow}>
+            <div className={styles.dateCol}>
+              <div className={styles.dateSubLabel}>{t('settingsExport.from')}</div>
+              <div className={styles.fieldSurface}>
+                <DatePicker value={from} onChange={handleFromChange} sheet sheetTitle={t('settingsExport.from')} />
+              </div>
+            </div>
+            <div className={styles.dateCol}>
+              <div className={styles.dateSubLabel}>{t('settingsExport.to')}</div>
+              <div className={styles.fieldSurface}>
+                <DatePicker value={to} onChange={handleToChange} sheet sheetTitle={t('settingsExport.to')} />
+              </div>
+            </div>
+          </div>
+        </Collapse>
+      </BottomSheet>
+    </>
+  )
+
+  if (desk) {
+    const spaceLabelNow = spaceOptions.find(o => o.value === space)?.label
+    const showMethod = space === 'personal' && includeGastos
+    return (
+      <DeskPage>
+        <DeskSettingsHead title={t('settingsExport.title')} description={t('settingsExport.intro')} />
+        <PremiumLock isPremium={profile?.is_premium} message={t('settingsExport.premiumMessage')} onUpgradeClick={onOpenPremium}>
+          <div className={dk.grid}>
+            <div>
+              <div className={`${deskStyles.sec} ${deskStyles.secFirst}`}>{t('settingsExport.desk.format')}</div>
+              <div className={dk.fmt}>
+                {[['csv', FileText, 'CSV', t('settingsExport.desk.csvSub')], ['pdf', FileSpreadsheet, 'PDF', t('settingsExport.desk.pdfSub')]].map(([k, Icon, name, sub]) => (
+                  <button key={k} type="button" onClick={() => setFormat(k)} className={`${dk.fmtBtn} ${format === k ? dk.fmtOn : ''}`}>
+                    <span className={deskStyles.ic}><Icon size={20} /></span>
+                    <span><b>{name}</b><span className={dk.s}>{sub}</span></span>
+                  </button>
+                ))}
+              </div>
+
+              <div className={deskStyles.sec}>{t('settingsExport.dataToInclude')}</div>
+              <div className={dk.chips}>
+                <button type="button" onClick={() => setIncludeGastos(v => !v)} className={`${dk.chip} ${includeGastos ? dk.chipOn : ''}`}>
+                  <span>{t('settingsExport.expenses')}</span>{includeGastos ? <Check size={18} /> : <Receipt size={18} />}
+                </button>
+                <button type="button" onClick={() => setIncludeIngresos(v => !v)} className={`${dk.chip} ${includeIngresos ? dk.chipOn : ''}`}>
+                  <span>{t('settingsExport.income')}</span>{includeIngresos ? <Check size={18} /> : <Wallet size={18} />}
+                </button>
+                {format === 'pdf' && (
+                  <button type="button" onClick={() => setIncludeGoals(v => !v)} className={`${dk.chip} ${includeGoals ? dk.chipOn : ''}`}>
+                    <span>{t('settingsExport.pdf.goalsTitle')}</span>{includeGoals ? <Check size={18} /> : <Target size={18} />}
+                  </button>
+                )}
+              </div>
+
+              <div className={deskStyles.sec}>{t('settingsExport.filters')}</div>
+              <div className={dk.filters}>
+                <button type="button" className={dk.filter} onClick={() => setOpenSheet('period')}>
+                  <span className={dk.filterHead}><span className={deskStyles.ic}><CalendarDays size={18} /></span>{t('settingsExport.period')}</span>
+                  <b>{periodValueLabel}<ChevronRight size={16} /></b>
+                </button>
+                {showMethod && (
+                  <button type="button" className={dk.filter} onClick={() => setOpenSheet('method')}>
+                    <span className={dk.filterHead}><span className={deskStyles.ic}><CreditCard size={18} /></span>{t('settingsExport.method.label')}</span>
+                    <b>{methodFilters.find(f => f.value === methodFilter)?.label}<ChevronRight size={16} /></b>
+                  </button>
+                )}
+                {spaces.length > 0 && (
+                  <button type="button" className={dk.filter} onClick={() => setOpenSheet('space')}>
+                    <span className={dk.filterHead}><span className={deskStyles.ic}><Users size={18} /></span>{t('settingsExport.spaceLabel')}</span>
+                    <b>{spaceLabelNow}<ChevronRight size={16} /></b>
+                  </button>
+                )}
+              </div>
+            </div>
+
+            <div className={`${deskStyles.blue} ${dk.sum}`}>
+              <span className={dk.range}>{formatDateLabel(from)} – {formatDateLabel(to)}</span>
+              <div className={dk.n}>{counting ? '…' : (total ?? 0)}</div>
+              <span className={dk.lab}>{t('settingsExport.recordsFound')}</span>
+              {counts && (
+                <div className={dk.split}>
+                  <div>{t('settingsExport.expenses')}<b>{counts.gastos}</b></div>
+                  <div>{t('settingsExport.income')}<b>{counts.ingresos}</b></div>
+                </div>
+              )}
+              <div className={dk.spacer} />
+              <button type="button" onClick={handleGenerate}
+                disabled={noneSelected || downloading || counting || (format === 'csv' && total === 0)}
+                className={`${deskStyles.btn} ${deskStyles.btnWhite} ${dk.dl}`}>
+                <Download size={16} />
+                {downloading ? t('settingsExport.downloading') : format === 'csv' ? t('settingsExport.downloadCsv') : t('settingsExport.pdf.generate')}
+              </button>
+            </div>
+          </div>
+        </PremiumLock>
+        {sheets}
+      </DeskPage>
+    )
+  }
+
   return (
     <div className={`${slideClass} ${styles.pageWrapper}`}>
       <PageHero
@@ -942,52 +1078,7 @@ export function SettingsExportPage({ profile, sharedSpaces, onOpenPremium, onBac
         </div>
       </PremiumLock>
 
-      <OptionSheet open={openSheet === 'method'} onClose={() => setOpenSheet(null)} title={t('settingsExport.method.label')}
-        options={methodFilters} value={methodFilter} onSelect={setMethodFilter} />
-      <OptionSheet open={openSheet === 'space'} onClose={() => setOpenSheet(null)} title={t('settingsExport.spaceLabel')}
-        options={spaceOptions} value={space} onSelect={setSpace} />
-
-      <BottomSheet open={openSheet === 'period'} title={t('settingsExport.period')} onClose={() => setOpenSheet(null)}>
-        <div className={styles.periodGrid}>
-          {SHORTCUTS.map(sc => {
-            const [rf, rt] = rangeFor(sc.key)
-            const subtitle = sc.key === 'allTime'
-              ? t('settingsExport.since', { date: `${MONTHS_SHORT[dateOf(rf).getMonth()].toLowerCase()} ${dateOf(rf).getFullYear()}` })
-              : shortRange(rf, rt)
-            const on = activeShortcut === sc.key && !customOpen
-            return (
-              <button key={sc.key} type="button" className={`${styles.periodTile} ${on ? styles.periodTileOn : ''}`}
-                onClick={() => { applyShortcut(sc.key); setCustomOpen(false); setOpenSheet(null) }}>
-                <span className={styles.periodTileTitle}>{sc.label}</span>
-                <span className={styles.periodTileSub}>{subtitle}</span>
-              </button>
-            )
-          })}
-          <button type="button" onClick={() => setCustomOpen(v => !v)}
-            className={`${styles.periodTile} ${styles.periodTileFull} ${(activeShortcut === null || customOpen) ? styles.periodTileOn : ''}`}>
-            <span className={styles.periodTileTitle}>{t('settingsExport.custom')}</span>
-            <span className={styles.periodTileSub}>
-              {activeShortcut === null ? shortRange(from, to) : t('settingsExport.customHint')}
-            </span>
-          </button>
-        </div>
-        <Collapse open={customOpen || activeShortcut === null}>
-          <div className={styles.dateRow}>
-            <div className={styles.dateCol}>
-              <div className={styles.dateSubLabel}>{t('settingsExport.from')}</div>
-              <div className={styles.fieldSurface}>
-                <DatePicker value={from} onChange={handleFromChange} sheet sheetTitle={t('settingsExport.from')} />
-              </div>
-            </div>
-            <div className={styles.dateCol}>
-              <div className={styles.dateSubLabel}>{t('settingsExport.to')}</div>
-              <div className={styles.fieldSurface}>
-                <DatePicker value={to} onChange={handleToChange} sheet sheetTitle={t('settingsExport.to')} />
-              </div>
-            </div>
-          </div>
-        </Collapse>
-      </BottomSheet>
+      {sheets}
     </div>
   )
 }

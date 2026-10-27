@@ -1,0 +1,38 @@
+/* Piezas compartidas de las sub-páginas de Ajustes en escritorio (v0.9.835).
+   Superficies rellenas (sin bordes delgados), bloques azules con --desk-hero-bg
+   y accent en botones, selecciones e íconos. */
+.head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 22px; }
+.title { margin: 0; font-size: 26px; font-weight: 700; letter-spacing: -0.5px; color: var(--text); }
+.desc { margin: 4px 0 0; font-size: 14.5px; color: var(--muted); }
+.actions { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+
+.btn { display: inline-flex; align-items: center; gap: 8px; padding: 12px 22px; border: 0; border-radius: 99px; background: var(--accent); color: var(--desk-ink-text); font-size: 14px; font-weight: 600; white-space: nowrap; }
+.btnSoft { background: var(--desk-chip); color: var(--text); }
+.btnWhite { background: var(--desk-ink-text); color: var(--desk-deep); }
+.btnFull { width: 100%; justify-content: center; }
+
+.sec { margin: 22px 0 12px; font-size: 11.5px; font-weight: 600; letter-spacing: 0.9px; text-transform: uppercase; color: var(--muted); }
+.secFirst { margin-top: 0; }
+
+.fill { background: var(--desk-chip); border-radius: 24px; padding: 20px 22px; }
+.fillTitle { font-size: 16px; font-weight: 600; color: var(--text); }
+.blue { position: relative; overflow: hidden; border-radius: 26px; padding: 24px 26px; background: var(--desk-hero-bg); color: var(--desk-ink-text); }
+.blue::after { content: ""; position: absolute; right: -60px; top: -70px; width: 240px; height: 240px; border-radius: 50%; background: color-mix(in srgb, var(--desk-ink-text) 12%, transparent); pointer-events: none; }
+.blue > * { position: relative; z-index: 1; }
+.blue .sub { font-size: 13px; opacity: 0.8; }
+
+.ic { width: 42px; height: 42px; border-radius: 50%; display: grid; place-items: center; flex-shrink: 0; background: var(--accent-soft); color: var(--accent); }
+.blue .ic { background: color-mix(in srgb, var(--desk-ink-text) 20%, transparent); color: var(--desk-ink-text); }
+
+.tgl { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 0; cursor: pointer; }
+.tgl + .tgl { border-top: 1px solid var(--desk-hair); }
+.tgl b { display: block; font-size: 14px; font-weight: 600; color: var(--text); }
+.tgl span { font-size: 12.5px; color: var(--muted); }
+
+.grid2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.grid3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+
+@media (hover: hover) and (pointer: fine) {
+  .btn:hover { opacity: 0.9; translate: none; filter: none; }
+  .btnSoft:hover { background: var(--desk-hair); opacity: 1; }
+}

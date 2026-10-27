@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useLayoutEffect, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
+import i18n from '../../i18n'
 import { Plus, ShieldCheck, Loader2 } from 'lucide-react'
 // Import DIRECTO al archivo del ícono (no el barrel) — mismo criterio que
 // las demás sub-páginas de Ajustes (tree-shaking real).
@@ -17,6 +18,9 @@ import { totalOwedOnCard, cardsCuttingInPeriod, cardCycleInfo } from '../../lib/
 import { cutBadgeLabel } from '../../lib/cutLabels'
 import { fmt, today, cobroPeriod, dateOf, dateToStr } from '../../lib/utils'
 import { useDeskSettings } from '../../components/DeskSettingsContext'
+import { DeskSettingsHead, DeskPage } from '../../components/DeskSettingsHead'
+import deskStyles from '../../components/SettingsDesk.module.css'
+import dk from './SettingsCardsDesk.module.css'
 import styles from './SettingsCardsPage.module.css'
 import { markBackHandled, wasBackHandled } from '../../lib/backNav'
 
@@ -297,6 +301,7 @@ export function SettingsCardsPage({ profile, paymentMethods, personalPayments = 
   const sm = tabletData?.summary
   const ld = !!tabletData?.loading
   const money = n => (ld ? t('cards.tablet.none') : fmt(n))
+  const i18nLang = () => i18n.language
   const showSummary = isTablet && !!sm && cards.length > 0
   const cap = str => (str ? str.charAt(0).toUpperCase() + str.slice(1) : str)
 
@@ -326,6 +331,123 @@ export function SettingsCardsPage({ profile, paymentMethods, personalPayments = 
           onCancel={() => setDeleting(null)}
         />
       </>
+    )
+  }
+
+  if (desk) {
+    const now = today()
+    const monthShort = d => d.toLocaleDateString(i18nLang(), { month: 'short' }).replace('.', '')
+    const dateBadge = days => {
+      const d = new Date(now.getTime() + days * 86400000)
+      return { m: monthShort(d), n: d.getDate(), soon: days <= 3 }
+    }
+    const cardName = c => c.alias || (getBank(c.bank).id === 'otro' ? t('cards.otherBank') : getBank(c.bank).name)
+    // Próximos vencimientos (crédito): corte y pago de cada tarjeta, lo más cercano primero.
+    const events = []
+    if (kind === 'credit' && tabletData) {
+      for (const c of credit) {
+        const x = tabletData.info[c.id]
+        if (!x) continue
+        if (x.cutDays != null) events.push({ key: `${c.id}c`, days: x.cutDays, label: t('cards.desk.cutOf', { name: cardName(c) }), when: x.cutWhen, amount: null })
+        if (x.dueDays != null) events.push({ key: `${c.id}d`, days: x.dueDays, label: t('cards.desk.dueOf', { name: cardName(c) }), when: x.dueWhen, amount: x.owed })
+      }
+      events.sort((a, b) => a.days - b.days)
+    }
+    const topDebit = kind === 'debit' && tabletData
+      ? [...debit].sort((a, b) => (tabletData.info[b.id]?.spent || 0) - (tabletData.info[a.id]?.spent || 0)).filter(c => (tabletData.info[c.id]?.spent || 0) > 0).slice(0, 3)
+      : []
+    return (
+      <DeskPage>
+        <DeskSettingsHead
+          title={t('cards.title')}
+          description={t('cards.description')}
+          actions={<button type="button" className={deskStyles.btn} onClick={openAdd}><Plus size={16} />{t('cards.addButton')}</button>}
+        />
+
+        {sm && (
+          <div className={dk.top}>
+            <div className={`${deskStyles.blue} ${dk.hero}`}>
+              <span className={deskStyles.sub}>{kind === 'credit' ? t('cards.desk.owedTotal') : t('cards.tablet.spent')}</span>
+              <div className={dk.big}>{money(kind === 'credit' ? sm.owed : sm.spent)}</div>
+              <div className={dk.pills}>
+                {kind === 'credit' ? (<>
+                  <div><span>{t('cards.tablet.nextCut')}</span><b>{!ld && sm.cut ? cap(sm.cut) : t('cards.tablet.none')}</b></div>
+                  <div><span>{t('cards.tablet.nextDue')}</span><b>{!ld && sm.due ? cap(sm.due) : t('cards.tablet.none')}</b></div>
+                  <div><span>{t('cards.desk.cardsCount')}</span><b>{credit.length}</b></div>
+                </>) : (<>
+                  <div><span>{t('cards.tablet.mostUsed')}</span><b>{(!ld && sm.top) || t('cards.tablet.none')}</b></div>
+                  <div><span>{t('cards.tablet.moves')}</span><b>{ld ? t('cards.tablet.none') : sm.moves}</b></div>
+                  <div><span>{t('cards.desk.cardsCount')}</span><b>{debit.length}</b></div>
+                </>)}
+              </div>
+            </div>
+            <div className={deskStyles.fill}>
+              <div className={deskStyles.fillTitle}>{kind === 'credit' ? t('cards.desk.upcoming') : t('cards.desk.topUsed')}</div>
+              {kind === 'credit' && events.slice(0, 3).map(ev => {
+                const b = dateBadge(ev.days)
+                return (
+                  <div key={ev.key} className={dk.dueRow}>
+                    <div className={`${dk.date} ${b.soon ? dk.dateSoon : ''}`}><div>{b.m}<b>{b.n}</b></div></div>
+                    <div className={dk.dueName}>{ev.label}<span>{cap(ev.when)}</span></div>
+                    {ev.amount != null && <div className={dk.dueAmt}>{fmt(ev.amount)}</div>}
+                  </div>
+                )
+              })}
+              {kind === 'debit' && topDebit.map(c => (
+                <div key={c.id} className={dk.dueRow}>
+                  <div className={dk.dueName}>{cardName(c)}<span>{t('cards.tablet.moves', { count: tabletData.info[c.id].count })}</span></div>
+                  <div className={dk.dueAmt}>{fmt(tabletData.info[c.id].spent)}</div>
+                </div>
+              ))}
+              {((kind === 'credit' && events.length === 0) || (kind === 'debit' && topDebit.length === 0)) && <div className={dk.emptyNote}>{t('cards.desk.nothingYet')}</div>}
+            </div>
+          </div>
+        )}
+
+        <div className={dk.seg} role="tablist">
+          {[['credit', t('cards.kind.credit'), credit.length], ['debit', t('cards.kind.debit'), debit.length]].map(([k, label, n]) => (
+            <button key={k} type="button" role="tab" aria-selected={kind === k} className={kind === k ? dk.segOn : ''} onClick={() => setKind(k)}>{label} · {n}</button>
+          ))}
+        </div>
+
+        <div className={dk.cards}>
+          {cards.map(c => {
+            const x = tabletData?.info?.[c.id]
+            return (
+              <div key={c.id} role="button" tabIndex={0} className={dk.card} aria-label={getBank(c.bank).name}
+                onClick={() => setSelectedId(c.id)}
+                onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setSelectedId(c.id) } }}>
+                <CreditCardVisual card={c} cutBadge={kind === 'credit' && cutsById[c.id] ? cutBadgeLabel(cutsById[c.id].cutDate, cutsById[c.id].daysLeft, t) : null} />
+                {c._syncing && <span className={`sync-spinner ${dk.cardSync}`} aria-label={t('sync.syncing')}><Loader2 size={14} color="var(--surface)" /></span>}
+                {x && (
+                  <div className={dk.info}>
+                    <div className={dk.row}>
+                      <span>{kind === 'credit' ? t('cards.tablet.owed') : t('cards.tablet.spent')}</span>
+                      <b>{ld ? t('cards.tablet.none') : fmt(kind === 'credit' ? x.owed : x.spent)}</b>
+                    </div>
+                    <div className={dk.bar}><i style={{ width: ld ? '0%' : `${Math.round(x.pct * 100)}%` }} /></div>
+                    <div className={dk.sub}>
+                      {kind === 'credit' ? (<>
+                        <span>{!ld && x.cutDays != null ? t('cards.tablet.cutWhen', { when: x.cutWhen }) : ''}</span>
+                        <span>{!ld && x.dueDays != null ? t('cards.tablet.dueWhen', { when: x.dueWhen }) : ''}</span>
+                      </>) : (<>
+                        <span>{ld ? '' : t('cards.tablet.moves', { count: x.count })}</span>
+                        <span>{ld ? '' : t('cards.tablet.share', { pct: Math.round(x.pct * 100) })}</span>
+                      </>)}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )
+          })}
+          <button type="button" className={dk.addCard} onClick={openAdd}><i><Plus size={26} /></i>{t('cards.addButton')}</button>
+        </div>
+
+        <div className={dk.foot}><ShieldCheck size={16} color="var(--accent)" />{t('cards.desk.footNote')}</div>
+
+        <CardFormModal open={formOpen} initial={editing} onSave={handleSave} onClose={() => setFormOpen(false)} />
+        <ConfirmDeleteModal open={!!deleting} title={t('cards.deleteTitle')} message={t('cards.deleteMessage', { name: deletingName })} onConfirm={confirmDelete} onCancel={() => setDeleting(null)} />
+      </DeskPage>
     )
   }
 
