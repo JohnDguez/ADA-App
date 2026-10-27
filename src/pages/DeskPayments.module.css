@@ -1,0 +1,132 @@
+/* Gastos e ingresos de escritorio (v0.9.825). Reutiliza la estructura de
+   DeskHome.module.css (encabezado, tarjetas, cuerpo); aquí solo lo propio.
+   Todos los colores salen de los tokens --desk-* / globales de index.css. */
+
+/* ── Tarjetas de totales ─────────────────────────────────────────────── */
+.heroTrack { height: 8px; border-radius: 99px; background: var(--white-a16); margin-top: 12px; overflow: hidden; }
+.heroFill { display: block; height: 100%; border-radius: 99px; background: var(--desk-ink-text); transition: width .5s cubic-bezier(0.22, 1, 0.36, 1); }
+.fillWarn { background: var(--desk-date-warn); }
+.fillOver { background: var(--desk-date-red); }
+.noIncomeText { margin-top: auto; font-size: 14px; line-height: 1.35; max-width: 90%; }
+.heroBtn {
+  margin-top: 10px;
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 36px;
+  padding: 0 16px;
+  border-radius: 99px;
+  background: var(--desk-ink-text);
+  color: var(--desk-deep);
+  font-size: 13.5px;
+  font-weight: 600;
+}
+.tileAdd {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 34px;
+  padding: 0 14px;
+  border-radius: 99px;
+  background: var(--desk-pill);
+  color: var(--desk-pill-ink);
+  font-size: 13px;
+  font-weight: 600;
+}
+.linkBtn { background: none; padding: 0; color: inherit; font: inherit; display: inline-flex; align-items: center; gap: 4px; text-decoration: underline; text-underline-offset: 2px; text-decoration-color: var(--desk-hair); }
+.linkBtn b { font-weight: 600; color: var(--text); }
+
+/* ── Tarjeta Pagos ───────────────────────────────────────────────────── */
+.listTop { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+.listTop h2 { margin: 0 0 12px; }
+.totalText { font-size: 13px; color: var(--muted); white-space: nowrap; }
+.totalText b { color: var(--text); font-weight: 600; }
+.filters { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 4px; flex-wrap: wrap; }
+.filters > :first-child { margin-bottom: 0; }
+.monthYear { display: flex; gap: 8px; align-items: center; }
+.selBox { width: 150px; }
+.selBoxYear { width: 96px; }
+
+.th, .tr {
+  display: grid;
+  grid-template-columns: 54px minmax(0, 1.4fr) minmax(0, 1fr) minmax(0, 1fr) 100px 32px;
+  gap: 12px;
+  align-items: center;
+}
+.th { font-size: 12px; color: var(--muted); padding: 12px 0 8px; border-bottom: 1px solid var(--desk-hair); }
+.thAmount { text-align: right; }
+.rowsBody { padding-right: 2px; }
+.tr { padding: 9px 0; border-bottom: 1px solid var(--desk-hair); font-size: 14px; }
+.dt {
+  width: 46px;
+  height: 48px;
+  border-radius: 14px;
+  background: var(--desk-chip);
+  display: flex;
+  flex-direction: column-reverse;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+.dt s { text-decoration: none; font-size: 10.5px; color: var(--muted); text-transform: capitalize; margin-bottom: 0; }
+.dt b { font-size: 18px; font-weight: 700; color: var(--text); }
+.name { display: flex; align-items: baseline; gap: 6px; min-width: 0; font-weight: 600; color: var(--text); }
+.nameText { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.name em, .cat em { font-style: normal; font-weight: 500; font-size: 11.5px; color: var(--muted); white-space: nowrap; flex-shrink: 0; }
+.cat { display: flex; align-items: center; gap: 8px; min-width: 0; color: var(--text); }
+.catChip { width: 22px; height: 22px; border-radius: 7px; display: grid; place-items: center; flex-shrink: 0; }
+.catText, .methodText { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.postponed { font-size: 12px; font-weight: 600; color: var(--muted); }
+.method { display: flex; align-items: center; gap: 7px; min-width: 0; font-size: 12.5px; color: var(--muted); }
+.swatch { width: 14px; height: 9px; border-radius: 2px; flex-shrink: 0; display: block; }
+.amount { text-align: right; font-weight: 600; font-feature-settings: 'tnum'; color: var(--text); }
+.amountMuted { color: var(--muted); }
+.menuCell { display: flex; justify-content: flex-end; }
+.menuBtn { width: 30px; height: 30px; border-radius: 50%; background: none; color: var(--muted); display: grid; place-items: center; }
+
+/* ── Gastos mensuales ────────────────────────────────────────────────── */
+.bars { display: flex; gap: 6px; align-items: flex-end; height: 150px; margin-top: 14px; }
+.barCell { flex: 1; min-width: 0; height: 100%; display: flex; flex-direction: column; justify-content: flex-end; align-items: stretch; gap: 5px; text-align: center; }
+.barAmt { font-size: 11.5px; font-weight: 600; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: clip; }
+.bar { display: block; width: 100%; border-radius: 4px 4px 0 0; background: var(--bar-color); opacity: 0.35; }
+.barMonth { font-size: 11.5px; color: var(--muted); height: 17px; }
+.barCur .bar { opacity: 1; }
+.barCur .barAmt, .barCur .barMonth { color: var(--bar-color); font-weight: 700; }
+
+/* ── Por categoría ───────────────────────────────────────────────────── */
+.ringWrap { position: relative; width: 220px; margin: 6px auto 0; }
+.ringSvg { display: block; width: 100%; overflow: visible; }
+.ringTrack { fill: none; stroke: var(--desk-chip); stroke-width: 16; stroke-linecap: round; }
+.ringSeg { fill: none; stroke-width: 16; stroke-linecap: round; transition: opacity .2s ease; }
+.ringCenter { position: absolute; left: 0; right: 0; bottom: 0; text-align: center; }
+.ringCenter b { display: block; font-size: 28px; font-weight: 500; letter-spacing: -1px; line-height: 1; color: var(--text); }
+.ringCenter span { display: block; margin-top: 3px; font-size: 12px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding: 0 30px; }
+.legend { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 12px; margin-top: 14px; }
+.legendItem { display: flex; align-items: center; gap: 8px; min-width: 0; padding: 5px 6px; margin: 0 -6px; border-radius: 10px; background: none; font-size: 13px; color: var(--text); text-align: left; transition: opacity .2s ease, background .15s ease; }
+.legendItem i { width: 20px; height: 20px; border-radius: 6px; flex-shrink: 0; display: block; }
+.legendItem span { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.legendItem b { font-size: 12.5px; font-weight: 600; font-feature-settings: 'tnum'; }
+.legendOn { background: var(--desk-chip); font-weight: 600; }
+.legendDim { opacity: 0.45; }
+@media (hover: hover) and (pointer: fine) {
+  .legendItem:hover { background: var(--desk-chip); translate: none; filter: none; }
+}
+
+/* ── Método de pago y tarjetas ───────────────────────────────────────── */
+.methodBar { display: flex; gap: 4px; height: 12px; margin: 4px 0 12px; }
+.methodBar i { display: block; border-radius: 99px; min-width: 12px; }
+.methodLegend { display: flex; gap: 20px; flex-wrap: wrap; font-size: 12.5px; color: var(--muted); }
+.methodLegend span { display: flex; flex-direction: column; gap: 2px; }
+.methodLegend u { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; }
+.methodLegend b { font-size: 17px; color: var(--text); font-weight: 600; }
+.m_cash { background: var(--paid); }
+.m_debit { background: var(--accent); }
+.m_credit { background: var(--desk-deep); }
+.cardsRow { display: flex; align-items: center; justify-content: space-between; gap: 12px; width: 100%; text-align: left; color: var(--text); }
+.cardsRow b { display: block; font-size: 15px; font-weight: 600; }
+.cardsRow em { display: block; font-style: normal; font-size: 12.5px; color: var(--muted); margin-top: 2px; }
+.go { width: 34px; height: 34px; border-radius: 50%; border: 1.5px solid var(--desk-hair); display: grid; place-items: center; color: var(--muted); flex-shrink: 0; }

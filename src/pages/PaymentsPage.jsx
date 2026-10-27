@@ -17,6 +17,8 @@ import { CategoryListSkeleton, PaymentRowSkeleton, Bone } from '../components/Sk
 import AmountInput from '../components/AmountInput'
 import { PaymentMethodField } from '../components/PaymentMethodField'
 import { AddCardModal } from '../components/AddCardModal'
+import { DeskPayments } from './DeskPayments'
+import { useIsDesktop } from '../hooks/useIsDesktop'
 import styles from './PaymentsPage.module.css'
 import { Presence } from '../components/Presence'
 import { Collapse } from '../components/Collapse'
@@ -165,6 +167,7 @@ function MethodRow({ label, amount, total, barClass, cards = [] }) {
 
 export function PaymentsPage({ payments, dataLoading = false, periodIncome, paymentMethodsList = [], paymentMethods = null, onChangeMethod, profile, spaceSwitcher, activeSpaceHeader, activeSpaceId = null, rawActiveSpaceId = null, sharedSpaces, spacePermissions, onOpenPremium, onSpaceReady, unreadCount, onOpenNotifs, onGoSettings, onMarkUnpaid, onDelete, onDeleteDirect, onUpdateProfile, onEdit, onViewSource, onSplit, onAdd, onImport, onGoCategories, onGoCards, sharedFund, slideClass, ensureMonthLoaded, oldestPaymentYear = null }) {
   const { t } = useTranslation()
+  const isDesktop = useIsDesktop()
   // v0.9.661 — pestañas Pagos / Análisis (solo en celular; desde 768px se ve todo junto).
   const [pageTab, setPageTab] = useState('pagos')
   // v0.9.709 — animación al cambiar de pestaña: la sección que sale se desvanece
@@ -868,8 +871,21 @@ export function PaymentsPage({ payments, dataLoading = false, periodIncome, paym
   const showBalance = (profile?.salary_enabled && profile?.salary_amount > 0) || periodIncomes.length > 0 || !incomesLoaded
   const noIncomeYet = incomesLoaded && !activeSpaceId && !(profile?.salary_enabled && profile?.salary_amount > 0) && periodIncomes.length === 0
 
+  // Datos ya calculados que pinta la versión de escritorio (DeskPayments.jsx, v0.9.825).
+  const deskData = isDesktop ? {
+    profile, dataLoading, activeSpaceId, rawActiveSpaceId, sharedSpaces, spacePermissions, spaceMembers, paymentMethodsList,
+    slideClass, spaceJustChanged, onOpenPremium, onSpaceReady, onAdd, onGoCards, onGoCategories, onViewSource,
+    balance: { loading: balanceLoading, amountText: balanceAmountText, gastoPct, totalGastos, ingresoTotal, sobrePasado, noIncomeYet },
+    incomes: { total: totalExtras, count: periodIncomes.length, loaded: incomesLoaded, onAdd: () => setIncomeModal(true), onManage: () => setManageIncomeModal(true) },
+    fund: { balance: sharedFund?.balance ?? 0, loading: !!sharedFund?.loading, ledgerCount: sharedFund?.ledger?.length || 0, onAdd: () => setAddFundModal(true), onManage: () => setManageFundModal(true) },
+    chart: { monthsBack, setMonthsBack, months: chartMonths, totals: chartTotals, max: maxChart, grandTotal, avgMonthly, now },
+    selectedCat, setSelectedCat, catData,
+    view: { mode: viewMode, setMode: setViewMode, month: viewMonth, setMonth: setViewMonth, year: viewYear, setYear: setViewYear, years: availableYears },
+    rows: paidInView, totalInView, methodData, openMenu, setOpenMenu,
+  } : null
+
   return (
-    <div className={styles.pageRoot} onClick={() => setOpenMenu(null)}>
+    <div className={`${styles.pageRoot} ${isDesktop ? styles.pageRootDesk : ''}`} onClick={() => setOpenMenu(null)}>
 
       {/* Menú contextual flotante */}
       {menuShown && (
@@ -1285,6 +1301,10 @@ export function PaymentsPage({ payments, dataLoading = false, periodIncome, paym
           desde 768px, ahí ya lo cubre NavRail.jsx (avatar, saludo,
           notificaciones, configuración — Regla 43/44). Se me había
           quedado sin aplicar aquí en la entrega anterior. */}
+      {isDesktop ? (
+        <DeskPayments d={deskData} />
+      ) : (
+      <>
       <div className={styles.pageHeaderWrapper}>
         <PageHeader
           profile={profile}
@@ -2023,6 +2043,8 @@ export function PaymentsPage({ payments, dataLoading = false, periodIncome, paym
         </div>
         </div>
       </div>
+      </>
+      )}
 
       <ConfirmDeleteModal
         open={!!confirmDeleteTarget}

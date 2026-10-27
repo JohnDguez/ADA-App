@@ -1111,6 +1111,16 @@
     "scan": "Escanear ticket",
     "scanHint": "Foto del recibo"
   },
+  "deskPayments": {
+    "usedPct": "{{pct}} % del ingreso usado",
+    "ofIncome": "de {{amount}}",
+    "addShort": "Añadir",
+    "spentCenter": "Gastado",
+    "clearFilter": "Quitar filtro",
+    "paymentsIn": "Pagos · {{cat}}",
+    "monthlyIn": "Gastos mensuales · {{cat}}",
+    "noPaymentsInCategory": "Sin pagos de {{cat}} en este periodo"
+  },
   "deskHome": {
     "import": "Importar",
     "periodTitle": "Pagos",

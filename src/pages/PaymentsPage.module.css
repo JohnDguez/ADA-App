@@ -1091,6 +1091,8 @@
   min-height: 100vh;
 }
 
+.pageRootDesk { padding-bottom: 0; min-height: 0; background: none; }
+
 .roundedContentWrapper {
   background-color: var(--bg);
   background-image: var(--page-grad);

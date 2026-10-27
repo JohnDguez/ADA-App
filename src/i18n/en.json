@@ -1111,6 +1111,16 @@
     "scan": "Scan a receipt",
     "scanHint": "Photo of the receipt"
   },
+  "deskPayments": {
+    "usedPct": "{{pct}}% of income used",
+    "ofIncome": "of {{amount}}",
+    "addShort": "Add",
+    "spentCenter": "Spent",
+    "clearFilter": "Clear filter",
+    "paymentsIn": "Payments · {{cat}}",
+    "monthlyIn": "Monthly expenses · {{cat}}",
+    "noPaymentsInCategory": "No {{cat}} payments in this period"
+  },
   "deskHome": {
     "import": "Import",
     "periodTitle": "Payments",
