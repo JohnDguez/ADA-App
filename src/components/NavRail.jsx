@@ -4,7 +4,6 @@ import { Bell, Crown, Settings, ChevronLeft, ChevronRight } from 'lucide-react'
 import { NAV_ITEMS } from '../lib/constants'
 import { useHeaderBackground, HEADER_IMAGES } from '../hooks/useHeaderBackground'
 import { useRailExpanded } from '../hooks/useRailExpanded'
-import { useIsDesktop } from '../hooks/useIsDesktop'
 import { AvatarImg } from './AvatarImg'
 import { greeting } from './PageHeader'
 import { RailSpaceSwitcher } from './RailSpaceSwitcher'
@@ -34,17 +33,9 @@ import { formatBadgeCount } from '../lib/formatBadgeCount'
  */
 export function NavRail({ active, onChange, profile, unreadCount, onOpenNotifs, onGoSettings, spaces, activeSpaceId, onSwitchSpace, spaceSwitcherProfile }) {
   const { t } = useTranslation()
-  // v0.9.814 — escritorio (≥1100px): el riel arranca abierto y FIJO (empuja el
-  // contenido, ver index.css `data-rail-pinned`); no se cierra solo por clic
-  // afuera / scroll / elegir página — solo cuando el usuario lo cierra. En
-  // tablet sigue igual: colapsado por defecto y sobrepuesto.
-  const isDesktop = useIsDesktop()
-  const [expanded, setExpanded] = useRailExpanded(isDesktop)
-  const pinned = isDesktop && expanded
-  useEffect(() => {
-    document.documentElement.dataset.railPinned = pinned ? 'true' : 'false'
-    return () => { delete document.documentElement.dataset.railPinned }
-  }, [pinned])
+  // Tablet (768–1099px): colapsado por defecto y sobrepuesto. En escritorio
+  // (≥1100px) App.jsx monta DeskSidebar en su lugar (v0.9.819).
+  const [expanded, setExpanded] = useRailExpanded()
   const initials = (profile?.name || 'U').slice(0, 2).toUpperCase()
   const railRef = useRef(null)
 
@@ -58,7 +49,7 @@ export function NavRail({ active, onChange, profile, unreadCount, onOpenNotifs, 
   // orden de listeners). Solo se registra mientras `expanded` es true —
   // nada escuchando de más cuando el riel ya está colapsado.
   useEffect(() => {
-    if (!expanded || isDesktop) return
+    if (!expanded) return
     function handleOutsideClick(e) {
       if (railRef.current && !railRef.current.contains(e.target)) {
         setExpanded(false)
@@ -66,7 +57,7 @@ export function NavRail({ active, onChange, profile, unreadCount, onOpenNotifs, 
     }
     document.addEventListener('mousedown', handleOutsideClick)
     return () => document.removeEventListener('mousedown', handleOutsideClick)
-  }, [expanded, isDesktop, setExpanded])
+  }, [expanded, setExpanded])
 
   // v0.9.373 — el riel se colapsa solo en 3 casos más, además del clic
   // afuera (v0.9.368): al hacer scroll fuera del riel, al elegir una
@@ -78,20 +69,20 @@ export function NavRail({ active, onChange, profile, unreadCount, onOpenNotifs, 
   // contenedor distinto sin relación de ancestro/descendiente con el
   // scroll interno del riel.
   useEffect(() => {
-    if (!expanded || isDesktop) return
+    if (!expanded) return
     function handleScroll() { setExpanded(false) }
     window.addEventListener('scroll', handleScroll, { passive: true })
     return () => window.removeEventListener('scroll', handleScroll)
-  }, [expanded, isDesktop, setExpanded])
+  }, [expanded, setExpanded])
 
   function handleChangeTab(id) {
     onChange(id)
-    if (!isDesktop) setExpanded(false)
+    setExpanded(false)
   }
 
   function handleSwitchSpace(id) {
     onSwitchSpace(id)
-    if (!isDesktop) setExpanded(false)
+    setExpanded(false)
   }
 
   // Mismo cálculo/crossfade que PageHeader.jsx — solo se pinta cuando el
@@ -100,7 +91,7 @@ export function NavRail({ active, onChange, profile, unreadCount, onOpenNotifs, 
   const { timeOfDay, mountedKeys } = useHeaderBackground(profile?.timezone)
 
   return (
-    <aside ref={railRef} className={styles.rail} data-expanded={expanded} data-pinned={pinned}>
+    <aside ref={railRef} className={styles.rail} data-expanded={expanded}>
 
       {/* Franja con el ícono de la app — SOLO colapsado (pedido de
           Johnatan: "al expandirse se quitará el ícono"). favicon.svg ya
@@ -133,10 +124,10 @@ export function NavRail({ active, onChange, profile, unreadCount, onOpenNotifs, 
 
         <div
           className={styles.avatarSection}
-          onClick={() => { onGoSettings(); if (!isDesktop) setExpanded(false) }}
+          onClick={() => { onGoSettings(); setExpanded(false) }}
           role="button"
           tabIndex={0}
-          onKeyDown={e => e.key === 'Enter' && onGoSettings && (onGoSettings(), !isDesktop && setExpanded(false))}
+          onKeyDown={e => e.key === 'Enter' && onGoSettings && (onGoSettings(), setExpanded(false))}
         >
           <div className={styles.avatarRing}>
             <div className={styles.avatarWrapper}>
@@ -202,7 +193,7 @@ export function NavRail({ active, onChange, profile, unreadCount, onOpenNotifs, 
           Icon={Settings}
           label={t('pageHeader.settingsAriaLabel')}
           expanded={expanded}
-          onClick={() => { onGoSettings(); if (!isDesktop) setExpanded(false) }}
+          onClick={() => { onGoSettings(); setExpanded(false) }}
         />
 
         <button

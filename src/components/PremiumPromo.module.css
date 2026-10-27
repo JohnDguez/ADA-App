@@ -31,15 +31,20 @@
   cursor: pointer;
 }
 
-/* Tarjeta (escritorio, panel derecho) */
-.card {
+/* Tarjeta oscura (barra lateral de escritorio, v0.9.819) */
+.side {
+  background: var(--desk-rings), var(--desk-ink);
+  color: var(--desk-ink-text);
+  border-radius: 20px;
+  padding: 18px 16px 16px;
+  margin-bottom: 10px;
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
-  gap: 8px;
-  padding: 16px 18px;
+  gap: 6px;
 }
-.card .sub { margin-bottom: 4px; }
+.side .title { color: var(--desk-ink-text); font-size: 16px; line-height: 1.2; }
+.side .sub { color: var(--desk-ink-text); opacity: 0.7; font-size: 12px; line-height: 1.4; margin-bottom: 8px; }
+.side .cta { background: var(--premium-gold); color: var(--premium-gold-text); width: 100%; padding: 11px 16px; font-size: 14px; }
 
 /* Franja (solo tablet 768–1099px) */
 .strip {

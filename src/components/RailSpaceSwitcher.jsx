@@ -16,9 +16,9 @@ import styles from './RailSpaceSwitcher.module.css'
  * (SpaceSwitcher.jsx sí lo hace) — no entra cómodo en el ancho del riel
  * ni siquiera expandido (240px); queda como simplificación intencional.
  */
-export function RailSpaceSwitcher({ spaces, activeSpaceId, onSwitch, profile, expanded, onRequestExpand }) {
-  const { t } = useTranslation()
-
+// Lista de espacios (Personal + compartidos + "crear") — compartida por el
+// riel de tablet y la barra lateral de escritorio (DeskSidebar.jsx).
+export function getSpaceItems(spaces, profile, t) {
   const ownedEntry   = spaces.find(s => s.membership.role === 'owner')
   const guestEntries = spaces.filter(s => s.membership.role === 'guest')
   const canAddMore   = (profile.is_premium && !ownedEntry) || guestEntries.length < 3
@@ -27,7 +27,7 @@ export function RailSpaceSwitcher({ spaces, activeSpaceId, onSwitch, profile, ex
     .sort((a, b) => a.space.name.localeCompare(b.space.name, i18n.language))
     .map(s => ({ id: s.space.id, kind: 'space', name: s.space.name, entry: s }))
 
-  const allItems = [
+  return [
     { id: null, kind: 'personal', name: t('activeSpaceHeader.personalName') },
     ...spaceItems,
     // v0.9.814 — para quien aún no es Premium la fila es dorada y dice
@@ -35,6 +35,11 @@ export function RailSpaceSwitcher({ spaces, activeSpaceId, onSwitch, profile, ex
     // Premium (unirse con código sigue siendo gratis, dentro del panel).
     ...(canAddMore ? [{ id: 'new', kind: 'new', premiumLocked: !profile.is_premium, name: profile.is_premium ? t('activeSpaceHeader.newSpaceName') : t('spaceSwitcher.railCreatePremium') }] : []),
   ]
+}
+
+export function RailSpaceSwitcher({ spaces, activeSpaceId, onSwitch, profile, expanded, onRequestExpand }) {
+  const { t } = useTranslation()
+  const allItems = getSpaceItems(spaces, profile, t)
 
   function iconFor(item) {
     if (item.kind === 'personal') return UserRound

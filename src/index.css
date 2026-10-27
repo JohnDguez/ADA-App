@@ -548,12 +548,11 @@ html, body {
 }
 
 /* v0.9.814 — escritorio (≥1100px): el riel abierto (240px) EMPUJA el
-   contenido en vez de sobreponerse. NavRail.jsx marca
-   html[data-rail-pinned="true"] solo cuando está abierto en ese ancho; si
-   el usuario lo cierra, #root vuelve a los 72px del riel colapsado. */
+   contenido en vez de sobreponerse. DeskSidebar.jsx marca
+   html[data-desk-sidebar="open"] (DeskSidebar.jsx, v0.9.819 — ver abajo, al
+   final del archivo, el lienzo de escritorio). */
 @media (min-width: 1100px) {
   #root { transition: margin-left .25s ease; }
-  html[data-rail-pinned="true"] #root { margin-left: 240px; }
 }
 
 button { cursor: pointer; font-family: 'DM Sans', sans-serif; border: none; }
@@ -1004,4 +1003,82 @@ a:focus-visible {
   }
   .premium-fx:not(:disabled):hover { scale: 1.04; }
   .premium-fx:not(:disabled):hover::after { left: 130%; }
+}
+
+/* ── Escritorio (≥1100px): diseño de Inicio v0.9.819 ───────────────────────
+   Tokens del nuevo estilo (lienzo gris, panel, tarjetas blancas, fichas de
+   fecha, degradado de Luna). Aprobado por Johnatan con mockup; los módulos
+   CSS solo usan estos tokens (nunca hex/rgb). */
+:root {
+  --desk-outer:   #E4E6EB;
+  --desk-panel:   #F4F5F7;
+  --desk-card:    #FFFFFF;
+  --desk-chip:    #EEF0F3;
+  --desk-hair:    rgba(11, 18, 32, 0.09);
+  --desk-hatch:   rgba(11, 18, 32, 0.28);
+  --desk-pill:    #0B1220;
+  --desk-pill-ink: #FFFFFF;
+  --desk-deep:    #014BA3;
+  --desk-ink:     #0B1220;
+  --desk-ink-text: #FFFFFF;
+  --desk-shadow:  0 1px 2px rgba(11, 18, 32, 0.04), 0 10px 28px -14px rgba(11, 18, 32, 0.16);
+  --desk-pop-shadow: 0 24px 60px -16px rgba(11, 18, 32, 0.45);
+  --desk-hero-bg: radial-gradient(120% 90% at 0 0, rgba(255, 255, 255, 0.14), transparent 55%), #014BA3;
+  --desk-luna-bg: linear-gradient(115deg, #1B1446 0%, #014BA3 55%, #2F8CFA 100%);
+  --desk-rings:   repeating-radial-gradient(circle at 85% 110%, transparent 0 14px, rgba(255, 255, 255, 0.05) 14px 15px);
+  --desk-date-red:      #E82E47;
+  --desk-date-red-ink:  #FFFFFF;
+  --desk-date-warn:     #F5B325;
+  --desk-date-warn-ink: #1A1200;
+  --desk-img-opacity:   0.62;
+  --desk-btn-ring:      0 0 0 1.5px rgba(255, 255, 255, 0.55), 0 6px 16px -6px rgba(11, 18, 32, 0.5);
+  --desk-gold-text:     #B5740B;
+}
+[data-theme="dark"] {
+  --desk-outer:   #05070C;
+  --desk-panel:   #0F1117;
+  --desk-card:    #1A1D27;
+  --desk-chip:    #242836;
+  --desk-hair:    rgba(255, 255, 255, 0.09);
+  --desk-hatch:   rgba(255, 255, 255, 0.22);
+  --desk-pill:    #E8EAF0;
+  --desk-pill-ink: #0B1220;
+  --desk-ink:     #080A10;
+  --desk-shadow:  0 1px 2px rgba(0, 0, 0, 0.3), 0 10px 28px -14px rgba(0, 0, 0, 0.6);
+  --desk-pop-shadow: 0 24px 60px -16px rgba(0, 0, 0, 0.8);
+  --desk-img-opacity:   0.5;
+  --desk-btn-ring:      0 0 0 1.5px rgba(255, 255, 255, 0.4), 0 6px 16px -6px rgba(0, 0, 0, 0.7);
+  --desk-gold-text:     #F5C242;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+  --desk-outer:   #05070C;
+  --desk-panel:   #0F1117;
+  --desk-card:    #1A1D27;
+  --desk-chip:    #242836;
+  --desk-hair:    rgba(255, 255, 255, 0.09);
+  --desk-hatch:   rgba(255, 255, 255, 0.22);
+  --desk-pill:    #E8EAF0;
+  --desk-pill-ink: #0B1220;
+  --desk-ink:     #080A10;
+  --desk-shadow:  0 1px 2px rgba(0, 0, 0, 0.3), 0 10px 28px -14px rgba(0, 0, 0, 0.6);
+  --desk-pop-shadow: 0 24px 60px -16px rgba(0, 0, 0, 0.8);
+  --desk-img-opacity:   0.5;
+  --desk-btn-ring:      0 0 0 1.5px rgba(255, 255, 255, 0.4), 0 6px 16px -6px rgba(0, 0, 0, 0.7);
+  --desk-gold-text:     #F5C242;
+  }
+}
+
+/* Lienzo de escritorio: sidebar flotante + panel principal con esquinas
+   redondeadas sobre el fondo gris. #root deja 14px de aire alrededor. */
+@media (min-width: 1100px) {
+  html, body { background-color: var(--desk-outer); background-image: none; }
+  #root { margin-left: 100px; padding: 14px 14px 14px 0; box-sizing: border-box; }
+  html[data-desk-sidebar="open"] #root { margin-left: 256px; }
+  #root > main {
+    background: var(--desk-panel);
+    border-radius: 26px;
+    min-height: calc(100vh - 28px);
+    overflow: clip;
+  }
 }

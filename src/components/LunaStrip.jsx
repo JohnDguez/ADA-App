@@ -1,4 +1,5 @@
 import { useTranslation } from 'react-i18next'
+import { ArrowUpRight } from 'lucide-react'
 import { Bone } from './SkeletonLoader'
 import styles from './LunaStrip.module.css'
 
@@ -27,13 +28,15 @@ const IMAGES = {
 // Circunferencia del anillo (r=18) — se usa en strokeDasharray.
 const RING_C = 2 * Math.PI * 18
 
-export function LunaStrip({ lunaState, loading = false }) {
+// `variant="desk"` (v0.9.819): tarjeta oscura con degradado del nuevo Inicio de
+// escritorio; `onArrow` lleva a la sección que Luna menciona.
+export function LunaStrip({ lunaState, loading = false, variant, onArrow }) {
   const { t } = useTranslation()
 
   if (loading) {
     return (
       <div className={styles.wrap}>
-        <Bone w="100%" h={112} r={12} />
+        <Bone w="100%" h={variant === 'desk' ? 84 : 112} r={variant === 'desk' ? 24 : 12} />
       </div>
     )
   }
@@ -75,6 +78,23 @@ export function LunaStrip({ lunaState, loading = false }) {
   }
 
   const pct = total > 0 ? done / total : 0
+
+  if (variant === 'desk') {
+    return (
+      <section className={styles.deskStrip} aria-label={`${title}. ${sub}`}>
+        <img className={styles.deskImg} src={img.src} width={img.w} height={img.h} alt="" decoding="async" />
+        <div className={styles.deskText}>
+          <div className={styles.deskTitle}>{title}</div>
+          <div className={styles.deskSub}>{sub}</div>
+        </div>
+        {onArrow && (
+          <button type="button" className={styles.deskArrow} onClick={onArrow} aria-label={title}>
+            <ArrowUpRight size={16} strokeWidth={1.9} />
+          </button>
+        )}
+      </section>
+    )
+  }
 
   return (
     <div className={styles.wrap}>

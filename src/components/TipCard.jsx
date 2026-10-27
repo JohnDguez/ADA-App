@@ -11,7 +11,7 @@ const ROTATE_MS = 2 * 60 * 1000
 
 // `compact` (v0.9.696): sin título y con la acción subrayada; se usa cuando hay
 // pagos vencidos arriba, para que el consejo no le quite protagonismo al pago.
-export function TipCard({ onAction, compact = false, inSpace = false, isOwner = false, perms = null }) {
+export function TipCard({ onAction, compact = false, inSpace = false, isOwner = false, perms = null, desk = false }) {
   const { t } = useTranslation()
   const [tip, setTip] = useState(() => nextTip({ inSpace, isOwner, perms }))
   const [tick, setTick] = useState(0)
@@ -41,6 +41,22 @@ export function TipCard({ onAction, compact = false, inSpace = false, isOwner = 
   const content = tipContent(tip, t)
   const actionLabel = tip.action ? content.action : ''
   const hold = (v) => { holdRef.current = v }
+  // Escritorio (v0.9.819): franja gris al fondo de la tarjeta de Pagos.
+  if (desk) {
+    return (
+      <div className={styles.deskTip} onMouseEnter={() => hold(true)} onMouseLeave={() => hold(false)}>
+        <div className={styles.deskBulb}><Lightbulb size={18} strokeWidth={1.9} /></div>
+        <div key={tick} className={`${styles.fade} ${styles.deskBody}`}>
+          <p className={styles.deskTitle}>{content.title}</p>
+          <p className={styles.deskText}>{content.text}</p>
+          {actionLabel && <button type="button" className={`${styles.action} ${styles.deskAction}`} onClick={() => onAction?.(tip.action)}>{actionLabel}</button>}
+        </div>
+        <button type="button" className={styles.deskNext} onClick={advance}>
+          {t('tips.next')}<span className={styles.deskNextIcon}><ChevronRight size={15} /></span>
+        </button>
+      </div>
+    )
+  }
   return (
     <div className={`${styles.tip} ${compact ? styles.compact : ''}`} onTouchStart={() => hold(true)} onTouchEnd={() => hold(false)} onTouchCancel={() => hold(false)}
       onMouseEnter={() => hold(true)} onMouseLeave={() => hold(false)}>

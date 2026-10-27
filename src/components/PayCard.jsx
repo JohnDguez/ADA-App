@@ -80,7 +80,7 @@ function ReflectionCard({ payment: p, borderLeft, onViewSource, onSelect, select
   )
 }
 
-function PayCardFull({ payment: p, cfg, paymentMethodsList = [], onChangeMethod, onMarkPaid, onRequestVariableAmount, onConfirmVariablePaid, onRequestNextPeriodConfirm, onRequestMethod, onMarkUnpaid, onCaptureAmount, onEdit, onAbonar, onSplit, onPayFromFund, fundBalance, onViewSource, onDelete, onPostpone, onAdvance, borderLeft, hideDate, hideDueLabel, railMode, permissions, initialLoad = true, confirmBeforePay, spaceMembers, onSelect, selected }) {
+function PayCardFull({ payment: p, cfg, paymentMethodsList = [], onChangeMethod, onMarkPaid, onRequestVariableAmount, onConfirmVariablePaid, onRequestNextPeriodConfirm, onRequestMethod, onMarkUnpaid, onCaptureAmount, onEdit, onAbonar, onSplit, onPayFromFund, fundBalance, onViewSource, onDelete, onPostpone, onAdvance, borderLeft, hideDate, hideDueLabel, railMode, permissions, initialLoad = true, confirmBeforePay, spaceMembers, onSelect, selected, deskMode }) {
   const { t } = useTranslation()
 
   const [menuOpen, setMenuOpen] = useState(false)
@@ -373,7 +373,7 @@ function PayCardFull({ payment: p, cfg, paymentMethodsList = [], onChangeMethod,
   const fillActive    = phase === 'filling' || phase === 'waitingModal' || phase === 'labeled' || phase === 'exiting'
 
   return (
-    <div ref={menuRef} className={styles.cardOuter}>
+    <div ref={menuRef} className={`${styles.cardOuter} ${deskMode ? styles.desk : ''}`}>
       <div ref={wrapperRef} className={styles.cardWrapper}>
       <div {...kbdIf(!!onSelect)}
         data-payment-id={p.id}
@@ -397,6 +397,14 @@ function PayCardFull({ payment: p, cfg, paymentMethodsList = [], onChangeMethod,
         </div>
 
         <div className={`${styles.cardContentRow} ${contentHidden ? styles.cardContentHidden : ''}`}>
+          {/* Ficha de fecha (solo escritorio, v0.9.819): roja si venció, amarilla
+              si vence en ≤3 días, gris el resto. */}
+          {deskMode && (
+            <div className={`${styles.deskDate} ${isPending && daysDiff(p.due_date) < 0 ? styles.deskDateRed : isPending && daysDiff(p.due_date) <= 3 ? styles.deskDateWarn : ''}`} aria-hidden="true">
+              <span className={styles.deskDateMonth}>{getMonthsShort()[d.getMonth()]}</span>
+              <span className={styles.deskDateDay}>{d.getDate()}</span>
+            </div>
+          )}
           {/* Info izquierda */}
           <div className={styles.infoSection}>
             <div className={styles.name}>
@@ -405,12 +413,12 @@ function PayCardFull({ payment: p, cfg, paymentMethodsList = [], onChangeMethod,
             <div className={styles.subtitle}>
               {p.space_id && isPending && registradoTotal > 0
                 ? `${fmt(registradoTotal)} / ${fmt(p.amount)}`
-                : hideDate ? getCategoryLabel(p.category) : `${getCategoryLabel(p.category)} · ${d.getDate()} ${getMonthsShort()[d.getMonth()]}`}
+                : hideDate ? `${getCategoryLabel(p.category)}${deskMode && freqLabel ? ` · ${freqLabel}` : ''}` : `${getCategoryLabel(p.category)} · ${d.getDate()} ${getMonthsShort()[d.getMonth()]}`}
             </div>
             {p.space_id && isPending && registradoTotal > 0 && (
               <PaidByStack contributors={p.contributors} members={spaceMembers} fundAmount={p.fund_amount || 0} size={16} />
             )}
-            {freqLabel && (
+            {freqLabel && !deskMode && (
               <div className={styles.freqLabel}>{freqLabel}</div>
             )}
             {instLabel && (

@@ -45,3 +45,46 @@
 
 /* Antes style inline (v0.9.724) */
 .chevron { vertical-align: -2px; }
+
+/* Escritorio (v0.9.819) */
+.deskTip {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: var(--desk-chip);
+  border-radius: 18px;
+  padding: 14px 16px;
+}
+.deskBulb {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: var(--desk-pill);
+  color: var(--desk-pill-ink);
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+.deskBody { flex: 1; min-width: 0; }
+.deskTitle { font-size: 14px; font-weight: 600; color: var(--text); margin: 0; }
+.deskText { font-size: 12.5px; line-height: 1.4; color: var(--muted); margin: 2px 0 0; }
+.deskAction { font-size: 12.5px; padding: 2px 0 0; }
+.deskNext {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: none;
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--text);
+  white-space: nowrap;
+}
+.deskNextIcon {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 1.5px solid var(--desk-hair);
+  display: grid;
+  place-items: center;
+}

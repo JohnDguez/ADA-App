@@ -47,6 +47,8 @@ import { HomePage } from './pages/HomePage'
 import { BottomNav } from './components/BottomNav'
 import { NavRail } from './components/NavRail'
 import { RailFab } from './components/RailFab'
+import { DeskSidebar } from './components/DeskSidebar'
+import { useIsDesktop } from './hooks/useIsDesktop'
 import { NotificationsPanel } from './components/NotificationsPanel'
 import { PaymentModal } from './components/PaymentModal'
 import { AddMenu, addMenuHasExtras } from './components/AddMenu'
@@ -486,6 +488,7 @@ export default function App() {
     highlightPaymentWhenVisible(n.payment_id || n.goal_id)
   }
   const { theme, setTheme } = useTheme()
+  const isDesktop = useIsDesktop()
 
   // "Perfil efectivo": en modo espacio, el periodo de cobro y el ingreso
   // por periodo cambian a los del espacio (tiene los suyos propios,
@@ -1963,19 +1966,39 @@ export default function App() {
           BottomNav.module.css) — ambos quedan montados para no complicar
           el árbol con matchMedia en JS, cada uno se muestra/oculta por
           media query. El "+" sale del riel como FAB independiente. */}
-      <NavRail
-        active={tab}
-        onChange={t => changeTab(t)}
-        profile={effectiveProfile}
-        unreadCount={allUnreadCount}
-        onOpenNotifs={() => setNotifOpen(true)}
-        onGoSettings={() => changeTab('settings')}
-        spaces={sharedSpaces.spaces}
-        activeSpaceId={activeSpaceId}
-        onSwitchSpace={switchSpace}
-        spaceSwitcherProfile={profile}
-      />
-      <RailFab onAdd={openAddMenu} addOpen={addMenuOpen} />
+      {/* Escritorio (≥1100px, v0.9.819): barra lateral nueva; tablet conserva el riel. */}
+      {isDesktop ? (
+        <DeskSidebar
+          active={tab}
+          onChange={t => changeTab(t)}
+          profile={effectiveProfile}
+          unreadCount={allUnreadCount}
+          onOpenNotifs={() => setNotifOpen(true)}
+          onGoSettings={() => changeTab('settings')}
+          spaces={sharedSpaces.spaces}
+          activeSpaceId={activeSpaceId}
+          onSwitchSpace={switchSpace}
+          spaceSwitcherProfile={profile}
+          onOpenPremium={() => openPremiumPage(false)}
+          theme={theme}
+          onThemeChange={setTheme}
+        />
+      ) : (
+        <NavRail
+          active={tab}
+          onChange={t => changeTab(t)}
+          profile={effectiveProfile}
+          unreadCount={allUnreadCount}
+          onOpenNotifs={() => setNotifOpen(true)}
+          onGoSettings={() => changeTab('settings')}
+          spaces={sharedSpaces.spaces}
+          activeSpaceId={activeSpaceId}
+          onSwitchSpace={switchSpace}
+          spaceSwitcherProfile={profile}
+        />
+      )}
+      {/* En Inicio de escritorio el botón vive en el encabezado. */}
+      {!(isDesktop && tab === 'home') && <RailFab onAdd={openAddMenu} addOpen={addMenuOpen} />}
 
       <NotificationsPanel
         open={notifOpen}

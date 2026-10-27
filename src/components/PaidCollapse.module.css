@@ -1,0 +1,197 @@
+/* Colapsable de pagados del periodo (extraído de HomePage.module.css en
+   v0.9.819 para compartirlo con la versión de escritorio). */
+.paidCollapseRoot { margin-bottom: 12px; }
+
+.paidCollapseToggle {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--surface);
+  border: none;
+  border-radius: 8px;
+  padding: 9px 12px;
+  cursor: pointer;
+}
+
+.paidCollapseCheckIcon {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--paid);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.paidCollapseSummaryText {
+  flex: 1;
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--text);
+  text-align: left;
+}
+
+.paidCollapseList {
+  margin-top: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.paidCollapseItemWrapper {
+  position: relative;
+  overflow: hidden;
+  transition: max-height 0.32s ease, margin-bottom 0.32s ease;
+}
+
+.paidCollapseItem {
+  position: relative;
+  overflow: hidden;
+  background: var(--surface);
+  border-radius: 8px;
+  transition: transform 0.32s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.32s ease;
+}
+
+.paidCollapseItemExiting {
+  transform: translateX(-110%);
+  opacity: 0;
+}
+
+/* Capa de pintado amarillo (derecha a izquierda) al desmarcar como pagado —
+   espejo de .fillLayer en PayCard.module.css, pero desde el otro lado */
+.paidUnmarkFill {
+  position: absolute;
+  top: 0;
+  right: 0;
+  height: 100%;
+  width: 0%;
+  background: var(--upcoming-border);
+  transition: width 0.35s ease;
+}
+
+.paidUnmarkFillActive { width: 100%; }
+
+.paidUnmarkLabel {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--pending-icon);
+  font-size: 13px;
+  font-weight: 500;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.paidUnmarkLabelVisible { opacity: 1; }
+
+.paidCollapseItemRow {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px;
+  transition: opacity 0.2s ease;
+}
+
+.paidCollapseItemRowHidden { opacity: 0; pointer-events: none; }
+
+.paidCollapseDate { width: 28px; text-align: center; flex-shrink: 0; }
+.paidCollapseDay { font-size: 13px; font-weight: 600; color: var(--text); line-height: 1.1; }
+.paidCollapseMonth { font-size: 9px; font-weight: 500; color: var(--text); }
+
+.paidCollapseInfo { flex: 1; min-width: 0; overflow: hidden; }
+
+.paidCollapseName {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.paidCollapseCategory { font-size: 11px; font-weight: 400; color: var(--text); }
+.paidCollapsePostponedTag { font-size: 11px; font-weight: 700; color: var(--soon-color); }
+.paidCollapseAmount { font-size: 13px; font-weight: 500; color: var(--text); }
+.paidCollapseAmountMuted { color: var(--muted); }
+
+.paidCollapseUndoButton {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: none;
+  border: 0.5px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+/* Método de pago en la lista colapsada de pagados (v0.9.492). */
+.paidCollapseMethod {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 2px;
+  font-size: 11px;
+  color: var(--text);
+}
+
+.methodSwatch {
+  width: 16px;
+  height: 11px;
+  border-radius: 2px;
+  flex-shrink: 0;
+  background: var(--swatch-color);
+}
+
+.paidCollapseItemSelectable { cursor: pointer; }
+
+/* Tablet (≥768px): textos más grandes (Regla 45). */
+@media (min-width: 768px) {
+  .paidCollapseItemSelected { background: var(--accent-soft); border: 2px solid var(--accent); }
+  .paidCollapseSummaryText { font-size: 15px; }
+  .paidCollapseToggle { padding: 14px 16px; }
+}
+
+/* Escritorio (≥1100px, v0.9.819): estilo del nuevo diseño — fila plana sin
+   caja, check verde, filas con fecha en ficha. */
+@media (min-width: 1100px) {
+  .paidCollapseRoot { margin-bottom: 4px; }
+  .paidCollapseToggle { background: none; border-radius: 14px; padding: 10px 0; gap: 12px; }
+  .paidCollapseCheckIcon { width: 24px; height: 24px; border-radius: 8px; }
+  .paidCollapseSummaryText { font-size: 15px; color: var(--muted); }
+  .paidCollapseList { gap: 0; margin-top: 0; }
+  .paidCollapseItem { background: none; border-radius: 0; border-bottom: 1px solid var(--desk-hair); }
+  .paidCollapseItemRow { padding: 12px 0; gap: 14px; }
+  .paidCollapseDate {
+    width: 50px;
+    height: 54px;
+    border-radius: 15px;
+    background: var(--desk-chip);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column-reverse;
+  }
+  .paidCollapseDay { font-size: 19px; font-weight: 700; }
+  .paidCollapseMonth { font-size: 11px; color: var(--muted); text-transform: capitalize; }
+  .paidCollapseName { font-size: 15px; font-weight: 600; }
+  .paidCollapseCategory { font-size: 13px; color: var(--muted); }
+  .paidCollapseAmount { font-size: 16px; font-weight: 600; }
+  .paidCollapseUndoButton { width: 34px; height: 34px; border: 1.5px solid var(--desk-hair); }
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .paidCollapseToggle:hover { translate: none; filter: none; }
+  .paidCollapseToggle:hover { background: var(--border); }
+}
+@media (hover: hover) and (pointer: fine) and (min-width: 1100px) {
+  .paidCollapseToggle:hover { background: var(--desk-chip); }
+}

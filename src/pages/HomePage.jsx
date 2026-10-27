@@ -1,17 +1,16 @@
 import { useState, useRef, useEffect, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
-import { ChevronDown, ChevronUp, Check, RotateCcw, Eye, Loader2 } from 'lucide-react'
 import { PayCard } from '../components/PayCard'
 import { PayRail } from '../components/PayRail'
-import { getBank, bankColorVar } from '../lib/cardCatalog'
-import { PageHeader, greeting } from '../components/PageHeader'
+import { PaidCollapse } from '../components/PaidCollapse'
+import { PageHeader } from '../components/PageHeader'
 import { PremiumPromo } from '../components/PremiumPromo'
+import { DeskHome } from './DeskHome'
 import { useIsDesktop } from '../hooks/useIsDesktop'
 import { NotificationsPanel } from '../components/NotificationsPanel'
 import { NewSharedSpacePanel } from '../components/NewSharedSpacePanel'
 import { EmptyState } from '../components/EmptyState'
 import { TipCard } from '../components/TipCard'
-import { PaidByStack } from '../components/PaidByStack'
 import { HalfRing } from '../components/HalfRing'
 import { LunaStrip } from '../components/LunaStrip'
 import { CutNotice } from '../components/CutNotice'
@@ -19,9 +18,8 @@ import { cardsCuttingInPeriod } from '../lib/cardStatements'
 import { Bone, RailSkeleton } from '../components/SkeletonLoader'
 import { getLunaState } from '../lib/lunaState'
 import { syncLunaWidget } from '../lib/lunaWidget'
-import { fmt, today, cobroPeriod, nextCobroPeriod, getPagarEsteCobro, daysDiff, dateOf, dateToStr, getMonths, getMonthsShort, getCategoryLabel } from '../lib/utils'
+import { fmt, today, cobroPeriod, nextCobroPeriod, getPagarEsteCobro, daysDiff, dateOf, dateToStr, getMonths, getMonthsShort } from '../lib/utils'
 import styles from './HomePage.module.css'
-import { kbdIf } from '../lib/a11y'
 
 // Montos largos (ej. $300,000.80) bajan de tamaño por escalones para caber en
 // su columna sin salirse ni partirse.
@@ -323,6 +321,21 @@ export function HomePage({ payments, dataLoading = false, profile, spaceSwitcher
     [onMarkPaid, onRequestVariableAmount, onConfirmVariablePaid, onRequestNextPeriodConfirm, onRequestMethod, onMarkUnpaid, onCaptureAmount, onEdit, onAbonar, onSplit, onPayFromFund, fundBalance, onDelete, onPostpone, onAdvance, paymentMethodsList, onChangeMethod]
   )
 
+  // Escritorio (≥1100px, v0.9.819): pantalla propia, no el layout móvil reacomodado.
+  if (isDesktop) {
+    return (
+      <DeskHome
+        profile={profile} dataLoading={dataLoading} activeSpaceId={activeSpaceId} spaceMembers={spaceMembers}
+        sharedSpaces={sharedSpaces} spacePermissions={spacePermissions} derived={derived} lunaState={lunaState} handlers={handlers}
+        cutsInPeriod={cutsInPeriod} cutPeriodKey={cutPeriodKey} paymentMethodsList={paymentMethodsList}
+        periodRangeLabel={periodRange(profile)} nextRangeLabel={nextPeriodRange(profile)}
+        slideClass={slideClass} spaceJustChanged={spaceJustChanged}
+        onOpenPremium={onOpenPremium} onSpaceReady={onSpaceReady} onAdd={onAdd} onImport={onImport} onStartAdd={onStartAdd}
+        onGoTab={onGoTab} onGoSettingsSection={onGoSettingsSection} onMarkUnpaid={onMarkUnpaid} onViewSource={onViewSource}
+      />
+    )
+  }
+
   return (
     <div className={styles.pageRoot}>
       {/* Oculto desde 768px (HomePage.module.css) — desde ahí, NavRail.jsx
@@ -353,19 +366,7 @@ export function HomePage({ payments, dataLoading = false, profile, spaceSwitcher
 
         <div className={styles.spaceSwitcherMobileWrap}>{spaceSwitcher}</div>
 
-        {/* Escritorio (≥1100px): el selector de espacio vive en el riel abierto,
-            así que este desplegable se oculta (tablet lo conserva). */}
-        <div className={styles.activeSpaceWrap}>{activeSpaceHeader}</div>
-
-        {/* Escritorio: saludo, nombre y fecha en texto (sin imagen; tablet no
-            lleva encabezado, el riel expandido ya los tiene). */}
-        {isDesktop && (
-          <div className={styles.deskHeader}>
-            <div className={styles.deskGreeting}>{greeting()}</div>
-            <div className={styles.deskName}>{profile?.name || ''}</div>
-            <div className={styles.deskDate}>{new Date().toLocaleDateString(i18n.language, { weekday: 'long', day: 'numeric', month: 'long', ...(profile?.timezone ? { timeZone: profile.timezone } : {}) })}</div>
-          </div>
-        )}
+        {activeSpaceHeader}
 
         {/* Tablet (768–1099px): franja de Premium para usuarios gratuitos; el
             CSS de PremiumPromo la oculta en cualquier otro ancho. */}
@@ -402,7 +403,6 @@ export function HomePage({ payments, dataLoading = false, profile, spaceSwitcher
             patrón oficial a reusar en cualquier otro switch de 2
             posiciones que se agregue después (ej. futuros toggles en
             Ajustes) — no repetir el estilo viejo de 5px para eso. */}
-        <div className={styles.deskGrid}>
         <div data-coachmark="home-metric-card" className={styles.metricCardSection}>
           <div className={styles.tabTrack}>
             <div className={styles.tabThumb} style={{ transform: `translateX(${activeCard * 100}%)` }} />
@@ -568,50 +568,6 @@ export function HomePage({ payments, dataLoading = false, profile, spaceSwitcher
 
         <div className={styles.contentPadding}>
 
-          {/* Escritorio (≥1100px): panel fijo a la derecha con el resumen de los dos
-              periodos (las tarjetas de arriba se ocultan en ese ancho). */}
-          {isDesktop && (() => {
-            const variablesCount = pagarEsteCobro.filter(x => x.is_variable).length
-            const nextFijosCount = upcoming.filter(x => !x.is_variable).length
-            const nextVariablesCount = upcoming.filter(x => x.is_variable).length
-            const stat = (label, value, cls = '') => (
-              <div className={styles.deskStat}>
-                <div className={styles.deskStatLabel}>{label}</div>
-                <div className={`${styles.deskStatValue} ${cls}`}>{value}</div>
-              </div>
-            )
-            return (
-              <aside className={styles.deskSide}>
-                <div className={styles.deskCard}>
-                  <div className={styles.deskCardTitle}>{t('homePage.tabs.currentPeriod')}</div>
-                  <div className={styles.deskCardRange}>{periodRange(profile)} · {t('homePage.periodDay', { day: periodDayNumber, total: periodDayTotal })}</div>
-                  <div className={styles.deskRing}><HalfRing key={`d-${activeSpaceId}`} percent={dataLoading || pagarEsteCobro.length === 0 ? 1 : pctPagado / 100} /></div>
-                  <div className={styles.deskStats}>
-                    <div className={`${styles.deskStat} ${styles.deskStatWide}`}>
-                      <div className={styles.deskStatLabel}>{t('homePage.desktop.statTotal')}</div>
-                      <div className={styles.deskStatValue}>{dataLoading ? '…' : fmt(totalConocido)}</div>
-                    </div>
-                    {stat(t('homePage.statPaid'), dataLoading ? '…' : fmt(pagadoMonto), styles.statBoxPaid)}
-                    {stat(t('homePage.statPending'), dataLoading ? '…' : fmt(pendingAmt))}
-                    {stat(t('homePage.desktop.statOverdue'), dataLoading ? '…' : t('homePage.desktop.statCount', { count: vencidos.length }), vencidos.length > 0 ? styles.deskStatDanger : '')}
-                    {stat(t('homePage.desktop.statVariables'), dataLoading ? '…' : t('homePage.desktop.statCount', { count: variablesCount }))}
-                  </div>
-                </div>
-                <div className={styles.deskCard}>
-                  <div className={styles.deskCardTitle}>{t('homePage.tabs.nextPeriod')}</div>
-                  <div className={styles.deskCardRange}>{nextPeriodRange(profile)}</div>
-                  <div className={styles.deskBig}>{dataLoading ? '…' : fmt(nextPeriodKnownTotal)}</div>
-                  <div className={styles.deskCardRange}>{t('homePage.desktop.estimatedSub', { count: nextPeriodFixedCount })}</div>
-                  <div className={styles.deskStats}>
-                    {stat(t('homePage.desktop.statFixed'), dataLoading ? '…' : t('homePage.desktop.statCount', { count: nextFijosCount }))}
-                    {stat(t('homePage.desktop.statVariables'), dataLoading ? '…' : t('homePage.desktop.statCount', { count: nextVariablesCount }))}
-                  </div>
-                </div>
-                {!profile?.is_premium && <PremiumPromo variant="card" onOpen={onOpenPremium} />}
-              </aside>
-            )
-          })()}
-
           {/* Todo lo de abajo ahora reacciona al mismo switch de arriba
               (activeCard) — antes "Vencidos"/"Pagos del periodo" siempre se
               mostraban y "Próximo periodo" era un bloque APARTE, apilado
@@ -670,7 +626,7 @@ export function HomePage({ payments, dataLoading = false, profile, spaceSwitcher
               ) : vencidos.length > 0 && (
                 <div className={styles.overdueSection}>
                   <div className={styles.overdueTitle}>
-                    {t('homePage.overdueTitle')}{isDesktop ? ` · ${vencidos.length}` : ''}
+                    {t('homePage.overdueTitle')}
                   </div>
                   <PayRail payments={vencidos} cfg={profile} dotColor="var(--overdue-border)" dotTextColor="var(--overdue-text)" handlers={handlers} permissions={spacePermissions} spaceMembers={spaceMembers} />
                 </div>
@@ -686,8 +642,8 @@ export function HomePage({ payments, dataLoading = false, profile, spaceSwitcher
                   bloques; si no hay vencidos, la lista ya es autoexplicativa
                   justo debajo del colapsable de pagados y no hace falta. */}
               <div data-coachmark="home-rail" className={styles.periodSection}>
-                {(dataLoading || (isDesktop ? delPeriodo.length > 0 : (vencidos.length > 0 && delPeriodo.length > 0))) && (
-                  <div className={styles.pendingSectionTitle}>{isDesktop && !dataLoading ? `${t('homePage.desktop.toPay')} · ${delPeriodo.length}` : t('homePage.pendingSectionTitle')}</div>
+                {(dataLoading || (vencidos.length > 0 && delPeriodo.length > 0)) && (
+                  <div className={styles.pendingSectionTitle}>{t('homePage.pendingSectionTitle')}</div>
                 )}
                 {delPeriodo.length === 0
                   /* Fase 1 del sistema de carga por sección (agosto 2026):
@@ -698,7 +654,7 @@ export function HomePage({ payments, dataLoading = false, profile, spaceSwitcher
                      nunca con datos del espacio anterior. Mismo criterio en
                      el otro caso de abajo y en los 2 de PaymentsPage. */
                   ? (dataLoading ? <RailSkeleton count={3} /> : <>
-                      {vencidos.length === 0 && <div className={styles.emptyTall}><EmptyState title={t('homePage.emptyState.currentPeriodTitle')} subtitle={t('homePage.emptyState.subtitle')} onClick={onAdd} secondaryLabel={onImport ? t('importCsv.emptyLink') : undefined} onSecondaryClick={onImport} /></div>}
+                      {vencidos.length === 0 && <EmptyState title={t('homePage.emptyState.currentPeriodTitle')} subtitle={t('homePage.emptyState.subtitle')} onClick={onAdd} secondaryLabel={onImport ? t('importCsv.emptyLink') : undefined} onSecondaryClick={onImport} />}
                       <TipCard inSpace={!!(activeSpaceId && activeSpaceId !== 'new')} isOwner={spacePermissions?.isRestricted === false} perms={spacePermissions} compact={vencidos.length > 0} onAction={a => a?.startsWith('settings:') ? onGoSettingsSection?.(a.slice(9)) : a?.startsWith('tab:') ? onGoTab?.(a.slice(4)) : (a === 'voice' || a === 'scan') ? onStartAdd?.(a) : a === 'addmenu' ? (onOpenAddMenu || onAdd)?.() : onAdd?.()} />
                     </>)
                   : <PayRail payments={delPeriodo} cfg={profile} dotColor="var(--upcoming-border)" dotTextColor="var(--impact-warning-text)" handlers={handlers} permissions={spacePermissions} spaceMembers={spaceMembers} />
@@ -709,13 +665,12 @@ export function HomePage({ payments, dataLoading = false, profile, spaceSwitcher
             <div ref={nextPanelRef} className={`${styles.contentPanel} ${activeCard === 1 ? '' : styles.panelOff}`} style={{ transform: `translateX(${activeCard === 0 ? 100 : 0}%)` }}>
               <div className={styles.periodSection}>
                 {upcoming.length === 0
-                  ? (dataLoading ? <RailSkeleton count={2} /> : <div className={styles.emptyTall}><EmptyState title={t('homePage.emptyState.nextPeriodTitle')} subtitle={t('homePage.emptyState.subtitle')} onClick={onAdd} /></div>)
+                  ? (dataLoading ? <RailSkeleton count={2} /> : <EmptyState title={t('homePage.emptyState.nextPeriodTitle')} subtitle={t('homePage.emptyState.subtitle')} onClick={onAdd} />)
                   : <PayRail payments={upcoming} cfg={profile} dotColor="var(--accent)" dotTextColor="var(--bg)" handlers={handlers} permissions={spacePermissions} nextPeriodMode spaceMembers={spaceMembers} />
                 }
               </div>
             </div>
           </div>
-        </div>
         </div>
         </>
         )}
@@ -744,227 +699,3 @@ export function HomePage({ payments, dataLoading = false, profile, spaceSwitcher
 
 // (Empty/EmptyState ahora vive en components/EmptyState.jsx — extraído en
 // v0.9.176 para poder reutilizarlo fuera de Home)
-
-// Timing de la animación de "marcar como no pagado" en PaidCollapse — mismo
-// criterio que FILL_MS/LABEL_HOLD_MS/EXIT_MS en PayCard.jsx, pero en
-// reversa: pinta de var(--upcoming-border) de derecha a izquierda, y sale
-// deslizándose hacia la izquierda (el opuesto de cómo una card sale hacia
-// la derecha al pagar).
-const UNMARK_FILL_MS = 350
-const UNMARK_HOLD_MS = 250
-const UNMARK_EXIT_MS = 320
-
-// Fila individual del colapsable de pagados — antes vivía inline dentro del
-// .map() de PaidCollapse; se extrajo para poder darle su propia fase local
-// de animación (idle → filling → labeled → exiting), igual patrón que ya
-// usa PayCard.jsx para "marcar pagado": el guardado real (onMarkUnpaid) se
-// dispara HASTA que la animación de salida terminó, nunca antes, para que
-// la fila nunca desaparezca del arreglo (y se desmonte) a la mitad de su
-// propia animación.
-function PaidCollapseItem({ p, onMarkUnpaid, onKeep, onRelease, onViewSource, spaceMembers, onSelect, selected, paymentMethodsList = [] }) {
-  const { t } = useTranslation()
-  const [phase, setPhase] = useState('idle') // idle | filling | labeled | exiting
-  const wrapperRef = useRef(null)
-  const timers = useRef([])
-
-  useEffect(() => {
-    return () => { timers.current.forEach(clearTimeout); onRelease?.(p.id) }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
-
-  function after(ms, fn) {
-    const id = setTimeout(fn, ms)
-    timers.current.push(id)
-  }
-
-  // v0.9.745: el guardado sale en cuanto termina el pintado (antes esperaba a
-  // que terminara TODA la animación). El cambio local se aplica al instante y
-  // el pago reaparece en Pendientes mientras esta fila termina de salir:
-  // `onKeep` pide al padre que siga dibujando esta fila (copia) aunque el
-  // pago ya no esté en la lista de pagados, y `onRelease` lo suelta al final.
-  function handleUndo(e) {
-    e.stopPropagation()
-    if (phase !== 'idle') return
-    setPhase('filling')
-    after(UNMARK_FILL_MS, () => {
-      setPhase('labeled')
-      onKeep?.(p)
-      const saving = Promise.resolve(onMarkUnpaid(p.id)).catch(() => ({ failed: true }))
-      after(UNMARK_HOLD_MS, () => {
-        setPhase('exiting')
-        const el = wrapperRef.current
-        if (el) {
-          const h = el.offsetHeight
-          el.style.maxHeight = `${h}px`
-          el.style.marginBottom = '0px'
-          void el.offsetHeight // fuerza reflow para que la transición sí anime desde este valor
-          requestAnimationFrame(() => {
-            el.style.maxHeight = '0px'
-            // -6px cancela el `gap: 6px` fijo de .paidCollapseList — mismo
-            // criterio que collapseWrapper() en PayCard.jsx
-            el.style.marginBottom = '-6px'
-          })
-        }
-        after(UNMARK_EXIT_MS, async () => {
-          const result = await saving
-          // Si el guardado falló, la fila vuelve a su lugar (el hook ya
-          // revirtió el pago y avisó).
-          if (result?.failed) {
-            const node = wrapperRef.current
-            if (node) { node.style.maxHeight = ''; node.style.marginBottom = '' }
-            setPhase('idle')
-          }
-          onRelease?.(p.id)
-        })
-      })
-    })
-  }
-
-  const contentHidden = phase === 'labeled' || phase === 'exiting'
-  const fillActive    = phase === 'filling' || phase === 'labeled' || phase === 'exiting'
-  // Un pospuesto no tiene paid_at (nunca se marcó pagado de verdad) — se
-  // usa postponed_at (fecha real en que se pospuso), con due_date como
-  // último respaldo si por algo faltara.
-  const pd = new Date(p.paid_at || p.postponed_at || p.due_date)
-
-  return (
-    <div ref={wrapperRef} className={styles.paidCollapseItemWrapper}>
-      <div {...kbdIf(!!onSelect)}
-        data-payment-id={p.id}
-        onClick={onSelect ? () => onSelect(p.id) : undefined}
-        className={`${styles.paidCollapseItem} ${phase === 'exiting' ? styles.paidCollapseItemExiting : ''} ${onSelect ? styles.paidCollapseItemSelectable : ''} ${selected ? styles.paidCollapseItemSelected : ''}`}
-      >
-        <div className={`${styles.paidUnmarkFill} ${fillActive ? styles.paidUnmarkFillActive : ''}`} />
-        <div className={`${styles.paidUnmarkLabel} ${phase === 'labeled' || phase === 'exiting' ? styles.paidUnmarkLabelVisible : ''}`}>
-          {t(p.is_postponed ? 'homePage.unpostponed' : 'homePage.markedUnpaid')}
-        </div>
-        <div className={`${styles.paidCollapseItemRow} ${contentHidden ? styles.paidCollapseItemRowHidden : ''}`}>
-          <div className={styles.paidCollapseDate}>
-            <div className={styles.paidCollapseDay}>{pd.getDate()}</div>
-            <div className={styles.paidCollapseMonth}>{getMonthsShort()[pd.getMonth()]}</div>
-          </div>
-          <div className={styles.paidCollapseInfo}>
-            <div className={styles.paidCollapseName}>{p.name}</div>
-            <div className={styles.paidCollapseCategory}>
-              {/* Pospuesto (agosto 2026) — reemplaza la categoría por la
-                  etiqueta, mismo criterio que instLabel/freqLabel en
-                  PayCard.jsx (un pago solo muestra UNA línea de contexto
-                  aquí, nunca las 2 a la vez). Mockup confirmado con
-                  Johnatan antes de código (Regla 8). */}
-              {p.is_postponed ? (
-                <span className={styles.paidCollapsePostponedTag}>{t('payCard.status.postponed')}</span>
-              ) : (
-                <>
-                  {getCategoryLabel(p.category)}{p.is_contribution_reflection ? ` · ${t('homePage.shared')}` : ''}
-                  {!p.is_contribution_reflection && (
-                    <PaidByStack contributors={p.contributors} members={spaceMembers} fundAmount={p.fund_amount || 0} size={18} inline />
-                  )}
-                </>
-              )}
-            </div>
-            {/* Método de pago (v0.9.492) — mismo hueco que faltaba en
-                Gastos; aquí es la vista colapsada de "pagados" de Inicio. */}
-            {!p.is_postponed && p.payment_method_kind && p.payment_method_kind !== 'cash' && (() => {
-              const card = paymentMethodsList.find(m => m.id === p.payment_method_id)
-              return (
-                <div className={styles.paidCollapseMethod}>
-                  <span className={styles.methodSwatch} style={{ '--swatch-color': card ? bankColorVar(card.bank) : 'var(--border-mid)' }} />
-                  {card
-                    ? `${getBank(card.bank).id === 'otro' ? t('cards.otherBank') : getBank(card.bank).name}${card.alias ? ` ${card.alias}` : ''}`
-                    : t(p.payment_method_kind === 'credit' ? 'paymentMethod.deletedCredit' : 'paymentMethod.deletedDebit')}
-                </div>
-              )
-            })()}
-          </div>
-          <span className={`${styles.paidCollapseAmount} ${p.is_postponed ? styles.paidCollapseAmountMuted : ''}`}>{fmt(p.amount)}</span>
-          {p.is_contribution_reflection ? (
-            <button
-              onClick={e => { e.stopPropagation(); onViewSource && onViewSource(p) }}
-              aria-label={t('homePage.viewInSharedSpace')}
-              className={styles.paidCollapseUndoButton}
-            >
-              <Eye size={11} color="var(--text)" />
-            </button>
-          ) : p._syncing ? (
-            // Sincronizando (v0.9.480) — ver PayCard.jsx, mismo criterio.
-            <button type="button" disabled className={styles.paidCollapseUndoButton} aria-label={t('sync.syncing')}>
-              <span className="sync-spinner"><Loader2 size={11} color="var(--text)" /></span>
-            </button>
-          ) : (
-            <button
-              onClick={handleUndo}
-              disabled={phase !== 'idle'}
-              aria-label={t('buttons.undo')}
-              className={styles.paidCollapseUndoButton}
-            >
-              <RotateCcw size={11} color="var(--text)" />
-            </button>
-          )}
-        </div>
-      </div>
-    </div>
-  )
-}
-
-// Resumen colapsable de pagos ya liquidados dentro del periodo actual — no
-// es un segundo registro (ese sigue siendo PaymentsPage/"Pagos"), es solo un
-// atajo de conveniencia para deshacer/revisar sin salir de Home. Se calcula
-// con el mismo rango de fechas del periodo actual, así que se "reinicia"
-// solo en cuanto cambia de periodo, sin lógica extra de limpieza.
-function PaidCollapse({ payments, expanded, onToggle, onMarkUnpaid, onViewSource, spaceMembers, onSelect, selectedId, paymentMethodsList = [] }) {
-  const { t } = useTranslation()
-  // Filas que ya no están pagadas pero siguen animando su salida (v0.9.745).
-  const [leaving, setLeaving] = useState({})
-  const keepRow = row => setLeaving(prev => ({ ...prev, [row.id]: row }))
-  const releaseRow = id => setLeaving(prev => { if (!(id in prev)) return prev; const { [id]: _gone, ...rest } = prev; return rest })
-  return (
-    <div className={styles.paidCollapseRoot}>
-      <button
-        onClick={onToggle}
-        className={styles.paidCollapseToggle}
-      >
-        <div className={styles.paidCollapseCheckIcon}>
-          <Check size={11} color="var(--pay-icon)" strokeWidth={3} />
-        </div>
-        <span className={styles.paidCollapseSummaryText}>
-          {(() => {
-            // Los pospuestos viven en esta lista pero NO están pagados —
-            // se separan para que "19 pagados" no mienta (18 + 1 pospuesto).
-            const postponed = payments.filter(p => p.is_postponed).length
-            const paid = payments.length - postponed
-            const parts = []
-            if (paid > 0 || postponed === 0) parts.push(t('homePage.paidCount', { count: paid }))
-            if (postponed > 0) parts.push(t('homePage.postponedCount', { count: postponed }))
-            return parts.join(' · ')
-          })()}
-        </span>
-        {expanded ? <ChevronUp size={15} color="var(--text)" /> : <ChevronDown size={15} color="var(--text)" />}
-      </button>
-
-      {expanded && (() => {
-        // Bug real reportado por Johnatan con captura: un pago pospuesto
-        // (is_postponed:true, sin paid_at) siempre caía hasta el fondo de
-        // la lista sin importar su fecha real. Causa: este `sort` es un
-        // SEGUNDO ordenamiento, independiente del que ya hace
-        // `pagadosEstePeriodo` más arriba — este usaba `p.paid_at` directo,
-        // y `new Date(null)` da el 1 de enero de 1970, así que en orden
-        // descendente CUALQUIER pospuesto quedaba siempre al final. Se usa
-        // `postponed_at` (fecha real de la acción), con due_date como
-        // último respaldo.
-        const merged = [...payments, ...Object.values(leaving).filter(l => !payments.some(x => x.id === l.id))]
-        const sorted = merged.sort((a, b) => {
-          const da = a.paid_at ? new Date(a.paid_at) : new Date(a.postponed_at || a.due_date)
-          const db = b.paid_at ? new Date(b.paid_at) : new Date(b.postponed_at || b.due_date)
-          return db - da
-        })
-        return (
-          <div className={styles.paidCollapseList}>
-            {sorted.map(p => (
-              <PaidCollapseItem key={p.id} p={p} onMarkUnpaid={onMarkUnpaid} onKeep={keepRow} onRelease={releaseRow} onViewSource={onViewSource} spaceMembers={spaceMembers} onSelect={onSelect} selected={selectedId === p.id} paymentMethodsList={paymentMethodsList} />
-            ))}
-          </div>
-        )
-      })()}
-    </div>
-  )
-}

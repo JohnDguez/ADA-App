@@ -31,12 +31,6 @@
        plano que el contenido de abajo. */
     box-shadow: var(--shadow-rail);
   }
-
-  /* v0.9.814 — escritorio: abierto y fijo junto al contenido (lo empuja,
-     index.css), sin sombra de "flotando encima". */
-  .rail[data-pinned="true"] {
-    box-shadow: none;
-  }
 }
 
 /* ── Franja del logo — solo colapsado (Regla 43/49) ──────────────────── */

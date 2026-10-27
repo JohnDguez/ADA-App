@@ -53,3 +53,6 @@
   gap: 8px;
 }
 
+
+/* Lista plana de escritorio (v0.9.819) */
+.deskList { display: flex; flex-direction: column; }

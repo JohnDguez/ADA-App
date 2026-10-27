@@ -501,3 +501,54 @@
 @media (hover: hover) and (pointer: fine) {
   .markPaidButton { --hover-glow: var(--paid); }
 }
+
+/* ── Escritorio (≥1100px, v0.9.819): fila plana con ficha de fecha ─────────
+   Solo se activa con `deskMode` (clase .desk en .cardOuter). Conserva toda la
+   mecánica de la tarjeta (pintado verde al pagar, menú ⋮, variables). */
+.deskDate { display: none; }
+.desk .deskDate {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 50px;
+  height: 54px;
+  margin-left: 2px;
+  border-radius: 15px;
+  background: var(--desk-chip);
+  color: var(--text);
+  flex-shrink: 0;
+}
+.desk .deskDateRed  { background: var(--desk-date-red);  color: var(--desk-date-red-ink); }
+.desk .deskDateWarn { background: var(--desk-date-warn); color: var(--desk-date-warn-ink); }
+.desk .deskDateMonth { font-size: 11px; font-weight: 500; text-transform: capitalize; line-height: 1.1; opacity: 0.85; }
+.desk .deskDateDay { font-size: 20px; font-weight: 700; line-height: 1.1; }
+.desk .card { background: none; border-radius: 0; border-bottom: 1px solid var(--desk-hair); }
+.desk .cardWrapper { overflow: hidden; }
+.desk .cardContentRow { gap: 4px; padding: 12px 0; }
+.desk .infoSection { padding: 0 8px 0 12px; }
+.desk .name { font-size: 16px; margin-bottom: 3px; }
+.desk .subtitle { font-size: 13px; color: var(--muted); }
+.desk .freqLabel, .desk .instLabel { font-size: 12.5px; color: var(--muted); font-weight: 400; }
+.desk .methodLabel { font-size: 12.5px; color: var(--muted); }
+.desk .amountSection { padding: 0 8px; }
+.desk .amountText { font-size: 17px; }
+.desk .statusLabel { font-size: 12.5px; font-weight: 500; }
+.desk .actionsSection { padding: 0 2px 0 6px; gap: 8px; }
+.desk .markPaidButton {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: none;
+  border: 1.5px solid var(--desk-hair);
+  transition: background-color .2s, border-color .2s;
+}
+.desk .markPaidButton svg { stroke: var(--muted); transition: stroke .2s; }
+.desk .markPaidLocked { background: none; }
+.desk .paidIndicator { width: 40px; height: 40px; border-radius: 50%; }
+.desk .menuTriggerButton { width: 28px; height: 28px; opacity: 0.55; }
+@media (hover: hover) and (pointer: fine) {
+  .desk .markPaidButton:not(.markPaidLocked):hover { background: var(--paid); border-color: var(--paid); }
+  .desk .markPaidButton:not(.markPaidLocked):hover svg { stroke: var(--pay-icon); }
+  .desk .menuTriggerButton:hover { opacity: 1; }
+}

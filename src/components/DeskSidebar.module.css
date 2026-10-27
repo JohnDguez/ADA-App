@@ -1,0 +1,136 @@
+/* Barra lateral de escritorio (v0.9.819). Todos los colores salen de los
+   tokens --desk-* de index.css. */
+.side {
+  position: fixed;
+  top: 14px;
+  left: 14px;
+  bottom: 14px;
+  width: 228px;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  background: var(--desk-panel);
+  border-radius: 26px;
+  padding: 20px 14px 14px;
+  transition: width .25s ease;
+  box-sizing: border-box;
+}
+.side[data-open="false"] { width: 72px; padding-inline: 10px; align-items: stretch; }
+
+.top { display: flex; align-items: center; gap: 10px; padding: 0 6px 18px; min-height: 44px; }
+.side[data-open="false"] .top { flex-direction: column; padding: 0 0 14px; gap: 10px; }
+.logo { width: 34px; height: 34px; border-radius: 10px; flex-shrink: 0; }
+.brand { font-size: 18px; font-weight: 700; color: var(--text); letter-spacing: -0.3px; flex: 1; }
+.collapse {
+  background: none;
+  color: var(--muted);
+  width: 30px;
+  height: 30px;
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+
+.scroll { flex: 1; overflow-y: auto; min-height: 0; }
+.label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.9px;
+  text-transform: uppercase;
+  color: var(--muted);
+  padding: 0 14px;
+  margin: 14px 0 6px;
+}
+.group { display: flex; flex-direction: column; gap: 2px; margin-bottom: 6px; }
+.side[data-open="false"] .group + .group { margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--desk-hair); }
+
+.item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  min-height: 42px;
+  padding: 0 14px;
+  border-radius: 14px;
+  background: none;
+  color: var(--muted);
+  font-size: 15px;
+  font-weight: 500;
+  text-align: left;
+}
+.item > span:not(.iconWrap):not(.badge) { flex: 1; min-width: 0; }
+.side[data-open="false"] .item { justify-content: center; padding: 0; }
+.itemActive { color: var(--text); font-weight: 600; }
+.itemActive::before {
+  content: "";
+  position: absolute;
+  left: -14px;
+  top: 8px;
+  bottom: 8px;
+  width: 4px;
+  border-radius: 0 4px 4px 0;
+  background: var(--desk-deep);
+}
+.side[data-open="false"] .itemActive::before { left: -10px; }
+.itemActive svg { color: var(--accent); }
+.itemPremium { color: var(--desk-gold-text); font-weight: 600; line-height: 1.15; }
+
+.promo { display: block; }
+@media (max-height: 840px) { .promo { display: none; } }
+
+.bottom { display: flex; flex-direction: column; gap: 2px; padding-top: 10px; }
+.iconWrap { position: relative; display: inline-flex; }
+.dot { position: absolute; top: -2px; right: -3px; width: 9px; height: 9px; border-radius: 50%; background: var(--danger); border: 2px solid var(--desk-panel); }
+.badge {
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 10px;
+  background: var(--danger);
+  color: var(--on-danger);
+  font-size: 11px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.seg { display: flex; background: var(--desk-chip); border-radius: 99px; padding: 3px; margin: 8px 4px 0; }
+.segBtn {
+  flex: 1;
+  height: 30px;
+  border-radius: 99px;
+  background: none;
+  color: var(--muted);
+  display: grid;
+  place-items: center;
+}
+.segOn { background: var(--desk-card); color: var(--text); box-shadow: var(--desk-shadow); }
+
+.me {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  margin-top: 8px;
+  padding: 8px;
+  border-radius: 18px;
+  background: var(--desk-card);
+  box-shadow: var(--desk-shadow);
+  text-align: left;
+  color: var(--text);
+}
+.side[data-open="false"] .me { padding: 4px; justify-content: center; background: none; box-shadow: none; }
+.avatar, .avatarFallback { width: 38px; height: 38px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
+.avatarFallback { display: grid; place-items: center; background: var(--accent); color: var(--surface); font-size: 13px; font-weight: 700; }
+.meText { display: flex; flex-direction: column; min-width: 0; line-height: 1.25; }
+.meText b { font-size: 14px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.meText span { font-size: 12px; color: var(--muted); }
+
+@media (hover: hover) and (pointer: fine) {
+  .item:not(.itemActive):hover { background: var(--desk-chip); color: var(--text); translate: none; filter: none; }
+  .collapse:hover, .segBtn:hover, .me:hover { translate: none; filter: none; }
+  .collapse:hover { background: var(--desk-chip); color: var(--text); }
+}

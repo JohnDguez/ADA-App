@@ -44,3 +44,21 @@
   margin-top: 12px;
   cursor: pointer;
 }
+
+/* Escritorio (v0.9.819): zona vacía alta que llena la tarjeta de Pagos. */
+.desk {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  min-height: 320px;
+  border-color: var(--desk-hatch);
+  border-radius: 20px;
+  padding: 32px 20px;
+}
+.desk .iconWrapper { width: 52px; height: 52px; background: var(--desk-pill); margin-bottom: 14px; }
+.desk .iconWrapper svg { stroke: var(--desk-pill-ink); width: 22px; height: 22px; }
+.desk .title { font-size: 17px; font-weight: 600; }
+.desk .subtitle { font-size: 13px; color: var(--muted); }
+.desk .secondaryLink { font-size: 13px; font-weight: 600; margin-top: 14px; }
