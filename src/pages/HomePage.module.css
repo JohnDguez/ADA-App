@@ -546,7 +546,7 @@
   .deskGrid {
     padding: 20px 16px 0;
     display: grid;
-    grid-template-columns: minmax(0, 1fr) 340px;
+    grid-template-columns: minmax(0, 1fr) 380px;
     grid-template-areas:
       "tabs side"
       "list side";
@@ -560,7 +560,8 @@
     justify-self: start;
     margin-bottom: 14px;
   }
-  .tabButton { padding: 8px 22px; font-size: 13px; }
+  .tabTrack { width: 400px; max-width: 100%; }
+  .tabButton { padding: 11px 0; font-size: 15px; white-space: nowrap; }
 
   .cardSwipeWrapper { display: none; }
 
@@ -578,19 +579,20 @@
     border-radius: var(--radius);
     padding: 18px 20px;
   }
-  .deskCardTitle { font-size: 14px; font-weight: 700; color: var(--text); }
-  .deskCardRange { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .deskCardTitle { font-size: 17px; font-weight: 700; color: var(--text); }
+  .deskCardRange { font-size: 14px; color: var(--muted); margin-top: 2px; }
   .deskRing { display: flex; justify-content: center; margin: 14px 0 12px; }
-  .deskBig { font-size: 28px; font-weight: 700; color: var(--text); margin: 8px 0 2px; }
+  .deskBig { font-size: 34px; font-weight: 700; color: var(--text); margin: 8px 0 2px; }
   .deskStats {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 10px;
     margin-top: 12px;
   }
-  .deskStat { background: var(--bg); border-radius: var(--radius-sm); padding: 10px 12px; }
-  .deskStatLabel { font-size: 12px; color: var(--muted); }
-  .deskStatValue { font-size: 17px; font-weight: 700; color: var(--text); margin-top: 2px; }
+  .deskStat { background: var(--bg); border-radius: var(--radius-sm); padding: 12px 14px; }
+  .deskStatWide { grid-column: 1 / -1; }
+  .deskStatLabel { font-size: 14px; color: var(--muted); }
+  .deskStatValue { font-size: 21px; font-weight: 700; color: var(--text); margin-top: 2px; }
   .deskStatDanger { color: var(--danger); }
 
   .contentSwipeWrap {
@@ -610,9 +612,9 @@
 
   .activeSpaceWrap { display: none; }
   .deskHeader { display: block; padding: 0 4px 16px; }
-  .deskGreeting { font-size: 13px; color: var(--muted); }
-  .deskName { font-size: 26px; font-weight: 700; color: var(--text); line-height: 1.2; }
-  .deskDate { font-size: 12.5px; color: var(--muted); margin-top: 2px; }
+  .deskGreeting { font-size: 15px; color: var(--muted); }
+  .deskName { font-size: 30px; font-weight: 700; color: var(--text); line-height: 1.2; }
+  .deskDate { font-size: 14px; color: var(--muted); margin-top: 2px; }
   /* Estado vacío más alto en escritorio (EmptyState es genérico: se agranda
      desde aquí sin tocar el componente). */
   .emptyTall { display: block; }
@@ -621,9 +623,12 @@
   .periodSection { margin-top: 16px; }
   .overdueTitle,
   .pendingSectionTitle {
-    font-size: 13px;
+    font-size: 15px;
     font-weight: 600;
     margin-bottom: 10px;
   }
   .pendingSectionTitle { color: var(--muted); }
+  .paidCollapseToggle { padding: 13px 16px; border-radius: var(--radius); }
+  .paidCollapseSummaryText { font-size: 15px; }
+  .paidCollapseCheckIcon { width: 24px; height: 24px; }
 }

@@ -484,3 +484,16 @@
 .groupItemDotPending { background: var(--paid); }
 .groupItemDotPaid    { background: var(--border-mid); }
 .groupItemDotOverdue { background: var(--danger); }
+
+/* Escritorio (≥1100px, v0.9.815): texto y botones más grandes que en tablet. */
+@media (min-width: 1100px) {
+  .name { font-size: 18px; }
+  .subtitle,
+  .freqLabel,
+  .instLabel { font-size: 14.5px; }
+  .amountText { font-size: 22px; }
+  .infoSection { padding: 16px 12px 16px 18px; }
+  .amountSection { padding: 16px 12px; }
+  .markPaidButton,
+  .paidIndicator { width: 52px; height: 52px; }
+}

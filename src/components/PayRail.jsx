@@ -25,7 +25,7 @@ import styles from './PayRail.module.css'
 // pagado un pago que en realidad vence hasta el periodo siguiente (previene
 // pagar por error algo del periodo equivocado si el usuario se confunde de
 // switch activo). No afecta a Vencidos/Pagos del periodo actual.
-function PayRailImpl({ payments, cfg, dotColor, dotTextColor, handlers, permissions, nextPeriodMode, spaceMembers, onSelect, selectedId, flat }) {
+function PayRailImpl({ payments, cfg, dotColor, dotTextColor, handlers, permissions, nextPeriodMode, spaceMembers, onSelect, selectedId }) {
   // Se llama el hook aunque no se use t() directo abajo — es lo que hace
   // que este componente memoizado se re-renderice al cambiar de idioma
   // (el label de mes de abajo usa getMonthsShort(), no t(), así que sin
@@ -51,18 +51,6 @@ function PayRailImpl({ payments, cfg, dotColor, dotTextColor, handlers, permissi
     if (last && last.key === p.due_date) last.items.push(p)
     else groups.push({ key: p.due_date, items: [p] })
   })
-
-  // `flat` (escritorio, v0.9.812): lista plana sin riel de fechas — cada tarjeta
-  // lleva su propia fecha y etiqueta de vencimiento.
-  if (flat) {
-    return (
-      <div className={styles.flatList}>
-        {payments.map(p => (
-          <PayCard key={p.id} payment={p} cfg={cfg} {...handlers} permissions={permissions} railMode initialLoad={initialLoad} confirmBeforePay={nextPeriodMode} spaceMembers={spaceMembers} onSelect={onSelect} selected={selectedId === p.id} />
-        ))}
-      </div>
-    )
-  }
 
   let lastMonth = null
 

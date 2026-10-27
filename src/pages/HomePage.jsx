@@ -572,10 +572,9 @@ export function HomePage({ payments, dataLoading = false, profile, spaceSwitcher
               periodos (las tarjetas de arriba se ocultan en ese ancho). */}
           {isDesktop && (() => {
             const sum = arr => arr.reduce((acc, x) => acc + Number(x.amount || 0), 0)
-            const vencidoMonto = sum(vencidos)
-            const variablesMonto = sum(pagarEsteCobro.filter(x => x.is_variable))
+            const variablesCount = pagarEsteCobro.filter(x => x.is_variable).length
             const nextFijos = sum(upcoming.filter(x => !x.is_variable))
-            const nextVariables = sum(upcoming.filter(x => x.is_variable))
+            const nextVariablesCount = upcoming.filter(x => x.is_variable).length
             const stat = (label, value, cls = '') => (
               <div className={styles.deskStat}>
                 <div className={styles.deskStatLabel}>{label}</div>
@@ -589,10 +588,14 @@ export function HomePage({ payments, dataLoading = false, profile, spaceSwitcher
                   <div className={styles.deskCardRange}>{periodRange(profile)} · {t('homePage.periodDay', { day: periodDayNumber, total: periodDayTotal })}</div>
                   <div className={styles.deskRing}><HalfRing key={`d-${activeSpaceId}`} percent={dataLoading || pagarEsteCobro.length === 0 ? 1 : pctPagado / 100} /></div>
                   <div className={styles.deskStats}>
+                    <div className={`${styles.deskStat} ${styles.deskStatWide}`}>
+                      <div className={styles.deskStatLabel}>{t('homePage.desktop.statTotal')}</div>
+                      <div className={styles.deskStatValue}>{dataLoading ? '…' : fmt(totalConocido)}</div>
+                    </div>
                     {stat(t('homePage.statPaid'), dataLoading ? '…' : fmt(pagadoMonto), styles.statBoxPaid)}
                     {stat(t('homePage.statPending'), dataLoading ? '…' : fmt(pendingAmt))}
-                    {stat(t('homePage.desktop.statOverdue'), dataLoading ? '…' : fmt(vencidoMonto), vencidoMonto > 0 ? styles.deskStatDanger : '')}
-                    {stat(t('homePage.desktop.statVariables'), dataLoading ? '…' : fmt(variablesMonto))}
+                    {stat(t('homePage.desktop.statOverdue'), dataLoading ? '…' : t('homePage.desktop.statCount', { count: vencidos.length }), vencidos.length > 0 ? styles.deskStatDanger : '')}
+                    {stat(t('homePage.desktop.statVariables'), dataLoading ? '…' : t('homePage.desktop.statCount', { count: variablesCount }))}
                   </div>
                 </div>
                 <div className={styles.deskCard}>
@@ -602,7 +605,7 @@ export function HomePage({ payments, dataLoading = false, profile, spaceSwitcher
                   <div className={styles.deskCardRange}>{t('homePage.desktop.estimatedSub', { count: nextPeriodFixedCount })}</div>
                   <div className={styles.deskStats}>
                     {stat(t('homePage.desktop.statFixed'), dataLoading ? '…' : fmt(nextFijos))}
-                    {stat(t('homePage.desktop.statVariables'), dataLoading ? '…' : fmt(nextVariables))}
+                    {stat(t('homePage.desktop.statVariables'), dataLoading ? '…' : t('homePage.desktop.statCount', { count: nextVariablesCount }))}
                   </div>
                 </div>
                 {!profile?.is_premium && <PremiumPromo variant="card" onOpen={onOpenPremium} />}
@@ -670,7 +673,7 @@ export function HomePage({ payments, dataLoading = false, profile, spaceSwitcher
                   <div className={styles.overdueTitle}>
                     {t('homePage.overdueTitle')}{isDesktop ? ` · ${vencidos.length}` : ''}
                   </div>
-                  <PayRail flat={isDesktop} payments={vencidos} cfg={profile} dotColor="var(--overdue-border)" dotTextColor="var(--overdue-text)" handlers={handlers} permissions={spacePermissions} spaceMembers={spaceMembers} />
+                  <PayRail payments={vencidos} cfg={profile} dotColor="var(--overdue-border)" dotTextColor="var(--overdue-text)" handlers={handlers} permissions={spacePermissions} spaceMembers={spaceMembers} />
                 </div>
               )}
 
@@ -699,7 +702,7 @@ export function HomePage({ payments, dataLoading = false, profile, spaceSwitcher
                       {vencidos.length === 0 && <div className={styles.emptyTall}><EmptyState title={t('homePage.emptyState.currentPeriodTitle')} subtitle={t('homePage.emptyState.subtitle')} onClick={onAdd} secondaryLabel={onImport ? t('importCsv.emptyLink') : undefined} onSecondaryClick={onImport} /></div>}
                       <TipCard inSpace={!!(activeSpaceId && activeSpaceId !== 'new')} isOwner={spacePermissions?.isRestricted === false} perms={spacePermissions} compact={vencidos.length > 0} onAction={a => a?.startsWith('settings:') ? onGoSettingsSection?.(a.slice(9)) : a?.startsWith('tab:') ? onGoTab?.(a.slice(4)) : (a === 'voice' || a === 'scan') ? onStartAdd?.(a) : a === 'addmenu' ? (onOpenAddMenu || onAdd)?.() : onAdd?.()} />
                     </>)
-                  : <PayRail flat={isDesktop} payments={delPeriodo} cfg={profile} dotColor="var(--upcoming-border)" dotTextColor="var(--impact-warning-text)" handlers={handlers} permissions={spacePermissions} spaceMembers={spaceMembers} />
+                  : <PayRail payments={delPeriodo} cfg={profile} dotColor="var(--upcoming-border)" dotTextColor="var(--impact-warning-text)" handlers={handlers} permissions={spacePermissions} spaceMembers={spaceMembers} />
                 }
               </div>
             </div>
@@ -708,7 +711,7 @@ export function HomePage({ payments, dataLoading = false, profile, spaceSwitcher
               <div className={styles.periodSection}>
                 {upcoming.length === 0
                   ? (dataLoading ? <RailSkeleton count={2} /> : <div className={styles.emptyTall}><EmptyState title={t('homePage.emptyState.nextPeriodTitle')} subtitle={t('homePage.emptyState.subtitle')} onClick={onAdd} /></div>)
-                  : <PayRail flat={isDesktop} payments={upcoming} cfg={profile} dotColor="var(--accent)" dotTextColor="var(--bg)" handlers={handlers} permissions={spacePermissions} nextPeriodMode spaceMembers={spaceMembers} />
+                  : <PayRail payments={upcoming} cfg={profile} dotColor="var(--accent)" dotTextColor="var(--bg)" handlers={handlers} permissions={spacePermissions} nextPeriodMode spaceMembers={spaceMembers} />
                 }
               </div>
             </div>

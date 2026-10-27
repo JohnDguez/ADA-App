@@ -366,7 +366,10 @@
       "statVariables": "Variables",
       "statFixed": "Fijos",
       "estimatedSub_one": "estimado · {{count}} pago",
-      "estimatedSub_other": "estimado · {{count}} pagos"
+      "estimatedSub_other": "estimado · {{count}} pagos",
+      "statTotal": "Total del periodo",
+      "statCount_one": "{{count}} pago",
+      "statCount_other": "{{count}} pagos"
     },
     "overdueTitle": "Vencidos",
     "pendingSectionTitle": "Pagos pendientes",
