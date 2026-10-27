@@ -17,6 +17,9 @@
 
 /* ── Tema claro (default) ─────────────────────────────────────────────────── */
 :root {
+  /* Hover de botones (v0.9.817): en claro se oscurece un poco, en oscuro se
+     aclara — lo usa la regla global de `button:hover` (solo mouse). */
+  --hover-filter: brightness(0.93);
   --bg: #F2F2F2;
   --surface: #FFFFFF;
   --border: #E4E2DC;
@@ -312,6 +315,7 @@
 
 /* ── Tema oscuro manual ([data-theme="dark"] en <html>) ───────────────────── */
 [data-theme="dark"] {
+  --hover-filter: brightness(1.14);
   --bg: #0F1117;
   --surface: #1A1D27;
   --border: #2A2D3A;
@@ -396,6 +400,7 @@
 /* ── Tema oscuro automático (preferencia del sistema) ─────────────────────── */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
+    --hover-filter: brightness(1.14);
     --bg: #0F1117;
     --surface: #1A1D27;
     --border: #2A2D3A;
@@ -961,4 +966,22 @@ a:focus-visible {
    sesión, así que no existe el riel — no se reserva su margen de 72px. */
 @media (min-width: 768px) {
   html.auth-screen #root { margin-left: 0; }
+}
+
+/* ── Hover de botones (v0.9.817) ─────────────────────────────────────────
+   Solo con mouse (hover:hover + pointer:fine) — en táctil no existe hover y
+   no se toca nada (Regla 42). Un `filter` en vez de cambiar colores: sirve
+   para cualquier botón (rellenos, degradados de Premium, íconos) sin pisar
+   sus box-shadow/background propios. Los botones transparentes del riel
+   llevan además su propio fondo (NavRail.module.css, RailSpaceSwitcher). */
+@media (hover: hover) and (pointer: fine) {
+  button:not(:disabled):not(.btn-primary):hover,
+  [role="button"]:not([aria-disabled="true"]):hover,
+  [role="switch"]:hover,
+  [role="tab"]:hover {
+    filter: var(--hover-filter);
+  }
+  button:not(:disabled), [role="button"], [role="switch"], [role="tab"] {
+    transition: filter 0.15s ease;
+  }
 }

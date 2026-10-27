@@ -344,3 +344,9 @@
   color: var(--nav-icon);
   white-space: nowrap;
 }
+
+/* v0.9.817 — hover del riel (solo mouse): fondo suave en los botones
+   transparentes que no están activos. */
+@media (hover: hover) and (pointer: fine) {
+  .railButton:not([data-active="true"]):hover { background: var(--white-a16); }
+}
