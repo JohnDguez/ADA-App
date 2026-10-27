@@ -106,7 +106,7 @@
   box-shadow: var(--desk-shadow);
   padding: 20px 22px;
 }
-.list { display: flex; flex-direction: column; min-width: 0; }
+.list { display: flex; flex-direction: column; min-width: 0; max-height: calc(100dvh - 28px); scroll-margin-top: 14px; }
 .cardTitle { font-size: 18px; font-weight: 600; margin: 0 0 12px; color: var(--text); }
 .chips { display: flex; gap: 8px; margin-bottom: 16px; }
 .chip {
@@ -120,7 +120,7 @@
   font-weight: 600;
 }
 .chipOn { background: var(--desk-pill); border-color: var(--desk-pill); color: var(--desk-pill-ink); }
-.listBody { display: flex; flex-direction: column; flex: 1; }
+.listBody { display: flex; flex-direction: column; flex: 1; min-height: 0; }
 .section { margin-bottom: 8px; scroll-margin-top: 16px; }
 .secTitle { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 600; color: var(--muted); padding: 10px 0 2px; }
 .secDanger { color: var(--danger); }

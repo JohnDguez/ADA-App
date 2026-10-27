@@ -66,6 +66,8 @@ export function DeskHome({
   const [addOpen, setAddOpen] = useState(false)
   const paidRef = useRef(null)
   const overdueRef = useRef(null)
+  const listRef = useRef(null)
+  const listBodyRef = useRef(null)
   const toPayRef = useRef(null)
   const { timeOfDay, mountedKeys } = useHeaderBackground(profile?.timezone)
 
@@ -90,7 +92,17 @@ export function DeskHome({
   function goto(ref, { tabIndex = 0, expandPaid = false } = {}) {
     if (tab !== tabIndex) setTab(tabIndex)
     if (expandPaid) setPaidExpanded(true)
-    setTimeout(() => ref.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 80)
+    // La lista de pagos scrollea por dentro (v0.9.820): primero se trae la tarjeta
+    // a la vista y luego se desplaza su cuerpo hasta la sección pedida.
+    setTimeout(() => {
+      const box = listBodyRef.current
+      const target = ref.current
+      listRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      if (box && target) {
+        const top = target.getBoundingClientRect().top - box.getBoundingClientRect().top + box.scrollTop - 4
+        box.scrollTo({ top, behavior: 'smooth' })
+      }
+    }, 80)
   }
 
   const firstOverdue = vencidos[0]
@@ -193,7 +205,7 @@ export function DeskHome({
               </section>
 
               <div className={styles.body}>
-                <section className={styles.list} data-coachmark="home-rail">
+                <section ref={listRef} className={styles.list} data-coachmark="home-rail">
                   <h2 className={styles.cardTitle}>{t('deskHome.periodTitle')}</h2>
                   <div className={styles.chips} role="tablist">
                     <button type="button" role="tab" aria-selected={tab === 0} className={`${styles.chip} ${tab === 0 ? styles.chipOn : ''}`} onClick={() => setTab(0)}>{t('homePage.tabs.currentPeriod')}</button>
@@ -201,7 +213,7 @@ export function DeskHome({
                   </div>
 
                   {tab === 0 ? (
-                    <div className={styles.listBody}>
+                    <div ref={listBodyRef} className={`${styles.listBody} scroll-y`}>
                       {pagadosEstePeriodo.length > 0 && (
                         <div ref={paidRef} data-coachmark="home-paid-collapse" className={styles.section}>
                           <PaidCollapse payments={pagadosEstePeriodo} expanded={paidExpanded} onToggle={() => setPaidExpanded(v => !v)} onMarkUnpaid={onMarkUnpaid} onViewSource={onViewSource} spaceMembers={spaceMembers} paymentMethodsList={paymentMethodsList} />
@@ -229,7 +241,7 @@ export function DeskHome({
                       )}
                     </div>
                   ) : (
-                    <div className={styles.listBody}>
+                    <div ref={listBodyRef} className={`${styles.listBody} scroll-y`}>
                       {dataLoading ? <RailSkeleton count={2} /> : upcoming.length === 0
                         ? <EmptyState desk title={t('homePage.emptyState.nextPeriodTitle')} subtitle={t('homePage.emptyState.subtitle')} onClick={onAdd} />
                         : <PayRail deskMode payments={upcoming} cfg={profile} handlers={handlers} permissions={spacePermissions} spaceMembers={spaceMembers} nextPeriodMode />}
