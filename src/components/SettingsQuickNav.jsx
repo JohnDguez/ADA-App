@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { User, Calendar, Tag, Bell, SunMoon, Users, CreditCard, Crown, Download } from 'lucide-react'
 import styles from './SettingsQuickNav.module.css'
@@ -21,13 +22,21 @@ const ITEMS = [
 export function SettingsQuickNav({ active, isPremium, onSelect }) {
   const { t } = useTranslation()
   const items = ITEMS.filter(it => !it.premiumOnly || isPremium)
+  // Las etiquetas se muestran unos segundos al entrar a la sub-página y se
+  // desvanecen (v0.9.805); vuelven al pasar el cursor o enfocar el menú.
+  const [showLabels, setShowLabels] = useState(true)
+  useEffect(() => {
+    const id = setTimeout(() => setShowLabels(false), 3000)
+    return () => clearTimeout(id)
+  }, [])
   return (
-    <nav className={styles.nav} aria-label={t('settingsQuickNav.aria')}>
+    <nav className={`${styles.nav} ${showLabels ? styles.navLabels : ''}`} aria-label={t('settingsQuickNav.aria')}>
       {items.map(({ id, icon: Icon, key }) => (
         <button
           key={id}
           type="button"
           onClick={() => onSelect(id)}
+          title={t(`settingsQuickNav.${key}`)}
           aria-current={id === active ? 'page' : undefined}
           className={`${styles.item} ${id === active ? styles.itemActive : ''}`}
         >

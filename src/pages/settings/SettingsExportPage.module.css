@@ -229,3 +229,44 @@
   opacity: 0.5;
   cursor: default;
 }
+
+/* ── Tablet (≥768px, v0.9.805): opciones a la izquierda, resumen a la derecha ─ */
+.optionsCol,
+.summaryCol,
+.countText { display: contents; }
+
+@media (min-width: 768px) {
+  .content {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 250px;
+    gap: 16px;
+    align-items: start;
+    max-width: 700px;
+    margin: 0 auto;
+  }
+  .optionsCol { display: block; }
+  .summaryCol {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    position: sticky;
+    top: 16px;
+    margin-top: 4px;
+    padding: 16px;
+    background: var(--surface);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-card);
+  }
+  .countCard {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+    margin: 0;
+    padding: 0;
+    background: none;
+  }
+  .countRange { order: 1; }
+  .countValue { order: 2; font-size: 34px; font-weight: 700; color: var(--accent); line-height: 1.1; }
+  .countLabel { order: 3; font-size: 12px; color: var(--muted); margin: 0; }
+}

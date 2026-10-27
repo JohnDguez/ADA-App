@@ -849,6 +849,7 @@ export function SettingsExportPage({ profile, sharedSpaces, onOpenPremium, onBac
         onUpgradeClick={onOpenPremium}
       >
         <div className={styles.content}>
+          <div className={styles.optionsCol}>
           <div className={styles.segmented}>
             <button type="button" onClick={() => setFormat('csv')}
               className={`${styles.segment} ${format === 'csv' ? styles.segmentActive : ''}`}>
@@ -914,8 +915,13 @@ export function SettingsExportPage({ profile, sharedSpaces, onOpenPremium, onBac
             )}
           </div>
 
+          </div>
+
+          {/* Tablet (≥768px): tarjeta de resumen a la derecha con el conteo y
+              el botón; en móvil es un contenedor transparente (v0.9.805). */}
+          <div className={styles.summaryCol}>
           <div className={styles.countCard}>
-            <div>
+            <div className={styles.countText}>
               <div className={styles.countRange}>{formatDateLabel(from)} – {formatDateLabel(to)}</div>
               <div className={styles.countLabel}>{t('settingsExport.recordsFound')}</div>
             </div>
@@ -932,6 +938,7 @@ export function SettingsExportPage({ profile, sharedSpaces, onOpenPremium, onBac
               ? t('settingsExport.downloading')
               : format === 'csv' ? t('settingsExport.downloadCsv') : t('settingsExport.pdf.generate')}
           </button>
+          </div>
         </div>
       </PremiumLock>
 
