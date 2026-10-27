@@ -159,3 +159,42 @@
 /* Antes style inline (v0.9.724) */
 :global(.btn-primary).linkButton { display: block; text-align: center; text-decoration: none; }
 .confirmSpacing { margin-bottom: 8px; }
+
+/* ── Tablet (≥768px, v0.9.799): columna de 600px; en la tarjeta del plan,
+   precio y renovación a la izquierda y beneficios a la derecha. Móvil
+   intacto. ──────────────────────────────────────────────────────────── */
+@media (min-width: 768px) {
+  .tabCol {
+    max-width: 632px;
+    margin: 22px auto 0;
+  }
+
+  .planCard {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr auto auto auto 1fr;
+    column-gap: 28px;
+    padding: 24px 26px;
+  }
+
+  .planBadge { grid-column: 1; grid-row: 2; justify-self: start; }
+  .planAmount { grid-column: 1; grid-row: 3; justify-self: start; }
+  .renewLine { grid-column: 1; grid-row: 4; justify-self: start; }
+
+  .planAmount { font-size: 40px; }
+  .planAmountSuffix { font-size: 16px; }
+  .renewLine { font-size: 13px; }
+
+  .benefitsSep { display: none; }
+
+  .benefits {
+    grid-column: 2;
+    grid-row: 1 / span 5;
+    align-self: center;
+    gap: 12px;
+    padding-left: 28px;
+    border-left: 0.5px solid var(--border);
+  }
+
+  .benefit { font-size: 14px; }
+}

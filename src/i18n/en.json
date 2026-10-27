@@ -214,6 +214,10 @@
       "goSubscription": "Go to Subscription",
       "openPlay": "Open Google Play",
       "understood": "Got it"
+    },
+    "tablet": {
+      "profile": "Profile",
+      "security": "Security"
     }
   },
   "settingsCobro": {

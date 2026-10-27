@@ -124,6 +124,7 @@ export function SettingsSubscriptionPage({ profile, onOpenPremium, onBack, slide
         accentColor="var(--premium-gold)"
       />
 
+      <div className={styles.tabCol}>
       {/* NUEVO (v0.9.526) — Google Play Billing: nunca se llama a Stripe,
           nunca se muestra "sin suscripción" ni cancelar/cambiar de plan de
           aquí — Google no permite gestionar una suscripción de Play Billing
@@ -244,6 +245,8 @@ export function SettingsSubscriptionPage({ profile, onOpenPremium, onBack, slide
           )}
         </>
       )}
+
+      </div>
 
       <Presence show={!!(confirmModal)}>{() => (
         <div className={styles.modalOverlay}>

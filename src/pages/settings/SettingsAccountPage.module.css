@@ -274,13 +274,7 @@
 
 /* ── Aviso "primero cancela tu suscripción" (v0.9.795) ──────────────────── */
 .blockIconWrapper {
-  width: 44px;
-  height: 44px;
-  border-radius: 12px;
-  background: var(--warning-soft);
   display: flex;
-  align-items: center;
-  justify-content: center;
   margin-bottom: 12px;
 }
 
@@ -302,13 +296,7 @@
 }
 
 .blockPlanIcon {
-  width: 32px;
-  height: 32px;
-  border-radius: 9px;
-  background: var(--accent-soft);
   display: flex;
-  align-items: center;
-  justify-content: center;
   flex-shrink: 0;
 }
 
@@ -321,4 +309,81 @@
 .blockPlanSub {
   font-size: 12px;
   color: var(--muted);
+}
+
+/* ── Tablet (≥768px, v0.9.799): columna de 600px, Perfil/Seguridad en
+   tarjetas con título + ícono (sin fondo en el ícono) y zona de peligro en
+   dos mitades. Móvil intacto: fuera de este media query solo hay
+   contenedores neutros. ──────────────────────────────────────────────── */
+.dangerLeft {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+@media (min-width: 768px) {
+  .tabCol {
+    max-width: 632px;
+    margin: 18px auto 0;
+  }
+
+  .tabBlock {
+    background: var(--surface);
+    border-radius: 20px;
+    padding: 18px 20px 8px;
+    margin: 0 16px 14px;
+  }
+
+  .tabBlockHead {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 6px;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text);
+  }
+
+  .tabBlockHead svg {
+    color: var(--accent);
+  }
+
+  /* El Card interno pierde fondo/margen: la tarjeta es .tabBlock. */
+  .tabBlock > div:not(.tabBlockHead) {
+    background: transparent;
+    margin: 0;
+    border-radius: 0;
+    overflow: visible;
+  }
+
+  .tabBlock > div:not(.tabBlockHead) > div {
+    padding-left: 0;
+    padding-right: 0;
+    padding-top: 15px;
+    padding-bottom: 15px;
+  }
+
+  .tabDanger {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin: 0 16px;
+  }
+
+  .tabDanger > div,
+  .tabDanger > button {
+    width: 100%;
+    margin: 0;
+    border-radius: 20px;
+    min-height: 84px;
+  }
+
+  .tabDanger > div > button {
+    height: 100%;
+    padding: 18px;
+  }
+
+  .tabDanger > button {
+    padding: 18px;
+  }
 }

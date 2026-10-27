@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { supabase } from '../../lib/supabase'
-import { ChevronRight, AlertTriangle, Eye, EyeOff } from 'lucide-react'
+import { ChevronRight, AlertTriangle, Eye, EyeOff, User, Lock, Trash2 } from 'lucide-react'
 // Ícono del encabezado vía Phosphor Icons (mismo patrón que SettingsExportPage.jsx,
 // v0.9.442-445) — import directo al archivo del ícono para tree-shaking real.
 import { UserCircle } from '@phosphor-icons/react/dist/csr/UserCircle'
@@ -41,6 +41,16 @@ export function SettingsAccountPage({ profile, user, onUpdate, onDataDeleted, on
   // v0.9.795: aviso "primero cancela tu suscripción" (null | { source, trial?, plan?, date? }).
   const [subBlock,       setSubBlock]       = useState(null)
   const [checkingSub,    setCheckingSub]    = useState(false)
+
+  // v0.9.799 — tablet (≥768px): columna de 600px con Perfil/Seguridad en
+  // tarjetas con título + ícono y la zona de peligro en dos mitades. Móvil intacto.
+  const [isTablet, setIsTablet] = useState(() => typeof window !== 'undefined' && window.matchMedia('(min-width: 768px)').matches)
+  useEffect(() => {
+    const mq = window.matchMedia('(min-width: 768px)')
+    const onChange = () => setIsTablet(mq.matches)
+    mq.addEventListener('change', onChange)
+    return () => mq.removeEventListener('change', onChange)
+  }, [])
 
   const isGoogle = user?.app_metadata?.provider === 'google'
   const premiumSource = getPremiumSource(profile)
@@ -208,38 +218,68 @@ export function SettingsAccountPage({ profile, user, onUpdate, onDataDeleted, on
           onBack={onBack}
         />
 
-        <Card>
-          <Row label={t('settingsAccount.row.name')} value={profile.name} onClick={() => openEdit('name')} />
-          {isGoogle
-            ? <>
-                <Row label={t('settingsAccount.row.google')} value={user?.email} />
+        <div className={styles.tabCol}>
+        {isTablet ? (
+          <>
+            <div className={styles.tabBlock}>
+              <div className={styles.tabBlockHead}><User size={18} />{t('settingsAccount.tablet.profile')}</div>
+              <Card>
+                <Row label={t('settingsAccount.row.name')} value={profile.name} onClick={() => openEdit('name')} />
+                {isGoogle
+                  ? <Row label={t('settingsAccount.row.google')} value={user?.email} last />
+                  : <Row label={t('settingsAccount.row.email')} value={user?.email} onClick={() => openEdit('email')} last />}
+              </Card>
+            </div>
+            <div className={styles.tabBlock}>
+              <div className={styles.tabBlockHead}><Lock size={18} />{t('settingsAccount.tablet.security')}</div>
+              <Card>
                 <Row label={t('settingsAccount.row.password')} value="••••••••" onClick={() => openEdit('password')} last />
-              </>
-            : <>
-                <Row label={t('settingsAccount.row.email')} value={user?.email} onClick={() => openEdit('email')} />
-                <Row label={t('settingsAccount.row.password')} value="••••••••" onClick={() => openEdit('password')} last />
-              </>
-          }
-        </Card>
+              </Card>
+            </div>
+          </>
+        ) : (
+          <Card>
+            <Row label={t('settingsAccount.row.name')} value={profile.name} onClick={() => openEdit('name')} />
+            {isGoogle
+              ? <>
+                  <Row label={t('settingsAccount.row.google')} value={user?.email} />
+                  <Row label={t('settingsAccount.row.password')} value="••••••••" onClick={() => openEdit('password')} last />
+                </>
+              : <>
+                  <Row label={t('settingsAccount.row.email')} value={user?.email} onClick={() => openEdit('email')} />
+                  <Row label={t('settingsAccount.row.password')} value="••••••••" onClick={() => openEdit('password')} last />
+                </>
+            }
+          </Card>
+        )}
 
         <SectionLabel>{t('settingsAccount.dangerZone.label')}</SectionLabel>
-        <Card>
-          <button onClick={() => { setDangerModal('data'); setDangerPassword(''); setDangerError('') }} className={styles.dangerButtonLast}>
-            <div className={styles.dangerButtonText}>
-              <div className={styles.dangerButtonTitleNeutral}>{t('settingsAccount.dangerZone.deleteDataTitle')}</div>
-              <div className={styles.dangerButtonSubtitle}>{t('settingsAccount.dangerZone.deleteDataSubtitle')}</div>
-            </div>
-            <ChevronRight size={14} color="var(--text)" />
-          </button>
-        </Card>
+        <div className={styles.tabDanger}>
+          <Card>
+            <button onClick={() => { setDangerModal('data'); setDangerPassword(''); setDangerError('') }} className={styles.dangerButtonLast}>
+              <div className={styles.dangerLeft}>
+                {isTablet && <Trash2 size={20} color="var(--text)" />}
+                <div className={styles.dangerButtonText}>
+                  <div className={styles.dangerButtonTitleNeutral}>{t('settingsAccount.dangerZone.deleteDataTitle')}</div>
+                  <div className={styles.dangerButtonSubtitle}>{t('settingsAccount.dangerZone.deleteDataSubtitle')}</div>
+                </div>
+              </div>
+              <ChevronRight size={14} color="var(--text)" />
+            </button>
+          </Card>
 
-        <button onClick={requestDeleteAccount} disabled={checkingSub} className={styles.dangerCard}>
-          <div className={styles.dangerButtonText}>
-            <div className={styles.dangerCardTitle}>{t('settingsAccount.dangerZone.deleteAccountTitle')}</div>
-            <div className={styles.dangerButtonSubtitle}>{t('settingsAccount.dangerZone.deleteAccountSubtitle')}</div>
-          </div>
-          <ChevronRight size={14} color="var(--danger)" />
-        </button>
+          <button onClick={requestDeleteAccount} disabled={checkingSub} className={styles.dangerCard}>
+            <div className={styles.dangerLeft}>
+              {isTablet && <AlertTriangle size={20} color="var(--danger)" />}
+              <div className={styles.dangerButtonText}>
+                <div className={styles.dangerCardTitle}>{t('settingsAccount.dangerZone.deleteAccountTitle')}</div>
+                <div className={styles.dangerButtonSubtitle}>{t('settingsAccount.dangerZone.deleteAccountSubtitle')}</div>
+              </div>
+            </div>
+            <ChevronRight size={14} color="var(--danger)" />
+          </button>
+        </div>
+        </div>
       </div>
 
       <Presence show={!!dangerModal}>{() => (
@@ -294,7 +334,7 @@ export function SettingsAccountPage({ profile, user, onUpdate, onDataDeleted, on
           <div className={styles.modalPanel}>
             <div className={styles.handle} />
             <div className={styles.blockIconWrapper}>
-              <Crown size={22} color="var(--warning)" />
+              <Crown size={28} color="var(--warning)" />
             </div>
             <div className={styles.blockTitle}>{t('settingsAccount.subscriptionBlock.title')}</div>
             <div className={styles.dangerDescription}>
