@@ -230,43 +230,75 @@
   cursor: default;
 }
 
-/* ── Tablet (≥768px, v0.9.805): opciones a la izquierda, resumen a la derecha ─ */
+/* ── Tablet (≥768px, v0.9.806): todo en una vista ───────────────────────────
+   Formato y datos en filas horizontales, los filtros como fichas lado a lado
+   y una barra inferior con el conteo y el botón. */
 .optionsCol,
 .summaryCol,
 .countText { display: contents; }
 
 @media (min-width: 768px) {
   .content {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) 250px;
-    gap: 16px;
-    align-items: start;
-    max-width: 700px;
+    max-width: 632px;
     margin: 0 auto;
   }
   .optionsCol { display: block; }
+
+  .filterCard {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(0, 1fr);
+    gap: 12px;
+    background: none;
+    border-radius: 0;
+    overflow: visible;
+  }
+  .filterCard > div { min-width: 0; }
+  .filterRow,
+  .filterCard > .filterRow:first-child {
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: flex-start;
+    gap: 4px;
+    height: 100%;
+    padding: 14px;
+    border: none;
+    border-radius: var(--radius);
+    background: var(--surface);
+    box-shadow: var(--shadow-card);
+    font-size: 12px;
+    color: var(--muted);
+  }
+  .filterValue {
+    justify-content: space-between;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text);
+  }
+
   .summaryCol {
     display: flex;
-    flex-direction: column;
-    gap: 14px;
-    position: sticky;
-    top: 16px;
-    margin-top: 4px;
-    padding: 16px;
+    align-items: center;
+    gap: 16px;
+    margin-top: 16px;
+    padding: 14px 16px;
     background: var(--surface);
     border-radius: var(--radius);
     box-shadow: var(--shadow-card);
   }
   .countCard {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 4px;
+    flex: 1;
+    display: grid;
+    grid-template-columns: auto 1fr;
+    align-items: baseline;
+    column-gap: 8px;
+    row-gap: 2px;
     margin: 0;
     padding: 0;
     background: none;
   }
-  .countRange { order: 1; }
-  .countValue { order: 2; font-size: 34px; font-weight: 700; color: var(--accent); line-height: 1.1; }
-  .countLabel { order: 3; font-size: 12px; color: var(--muted); margin: 0; }
+  .countRange { grid-column: 1 / -1; font-size: 12px; color: var(--muted); }
+  .countValue { grid-column: 1; grid-row: 2; font-size: 24px; font-weight: 700; color: var(--accent); }
+  .countLabel { grid-column: 2; grid-row: 2; font-size: 13px; color: var(--text); margin: 0; }
+  .downloadButton { width: auto; padding: 0 22px; }
 }

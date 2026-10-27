@@ -17,7 +17,6 @@ import { SettingsSharedSpacePage } from './settings/SettingsSharedSpacePage'
 import { SettingsSubscriptionPage } from './settings/SettingsSubscriptionPage'
 import { SettingsExportPage } from './settings/SettingsExportPage'
 import { SettingsCardsPage } from './settings/SettingsCardsPage'
-import { SettingsQuickNav } from '../components/SettingsQuickNav'
 import styles from './SettingsPage.module.css'
 import { markBackHandled, wasBackHandled } from '../lib/backNav'
 import { AvatarImg } from '../components/AvatarImg'
@@ -119,11 +118,6 @@ export function SettingsPage({ profile, user, onUpdate, onUploadAvatar, onDataDe
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialSection])
-
-  // v0.9.801 — al saltar entre sub-páginas con el menú rápido no se repite la
-  // animación de entrada; se limpia al volver al menú principal.
-  const [quickSwitched, setQuickSwitched] = useState(false)
-  useEffect(() => { if (!section) setQuickSwitched(false) }, [section])
 
   const fileRef  = useRef(null)
   const initials = (profile.name || user?.email || 'U').slice(0, 2).toUpperCase()
@@ -246,53 +240,32 @@ export function SettingsPage({ profile, user, onUpdate, onUploadAvatar, onDataDe
     await supabase.auth.signOut()
   }
 
-  // v0.9.801 — menú rápido flotante (solo tablet/escritorio) sobre cada
-  // sub-página. Cambiar de sub-página reemplaza la entrada del historial (no
-  // apila), así que "atrás" sigue llevando al menú principal de Ajustes.
-  const sc = quickSwitched ? '' : slideClass
-  function quickSelect(next) {
-    if (next === section) return
-    shortcutReturnRef.current = null
-    window.history.replaceState({ settingsSection: next, lunaTab: 'settings' }, '')
-    setQuickSwitched(true)
-    setSection(next)
-  }
-  function withQuickNav(el) {
-    if (!isTablet) return el
-    return (
-      <div className={styles.withQuickNav}>
-        {el}
-        <SettingsQuickNav active={section} isPremium={!!profile.is_premium} onSelect={quickSelect} />
-      </div>
-    )
-  }
-
   if (section === 'account') {
-    return withQuickNav(<SettingsAccountPage profile={profile} user={user} onUpdate={onUpdate} onDataDeleted={onDataDeleted} onBack={back} onGoSubscription={() => openSection('subscription')} slideClass={sc} />)
+    return <SettingsAccountPage profile={profile} user={user} onUpdate={onUpdate} onDataDeleted={onDataDeleted} onBack={back} onGoSubscription={() => openSection('subscription')} slideClass={slideClass} />
   }
   if (section === 'categories') {
-    return withQuickNav(<SettingsCategoriesPage profile={profile} onUpdate={onUpdate} onBack={back} slideClass={sc} />)
+    return <SettingsCategoriesPage profile={profile} onUpdate={onUpdate} onBack={back} slideClass={slideClass} />
   }
   if (section === 'cobro') {
-    return withQuickNav(<SettingsCobroPage profile={profile} onUpdate={onUpdate} onBack={back} slideClass={sc} />)
+    return <SettingsCobroPage profile={profile} onUpdate={onUpdate} onBack={back} slideClass={slideClass} />
   }
   if (section === 'notifications') {
-    return withQuickNav(<SettingsNotificationsPage profile={profile} user={user} onUpdate={onUpdate} onBack={back} slideClass={sc} />)
+    return <SettingsNotificationsPage profile={profile} user={user} onUpdate={onUpdate} onBack={back} slideClass={slideClass} />
   }
   if (section === 'appearance') {
-    return withQuickNav(<SettingsAppearancePage theme={theme} onThemeChange={onThemeChange} onBack={back} slideClass={sc} />)
+    return <SettingsAppearancePage theme={theme} onThemeChange={onThemeChange} onBack={back} slideClass={slideClass} />
   }
   if (section === 'sharedspace') {
-    return withQuickNav(<SettingsSharedSpacePage profile={profile} user={user} sharedSpaces={sharedSpaces} onBack={back} slideClass={sc} onOpenPremium={onOpenPremium} />)
+    return <SettingsSharedSpacePage profile={profile} user={user} sharedSpaces={sharedSpaces} onBack={back} slideClass={slideClass} onOpenPremium={onOpenPremium} />
   }
   if (section === 'subscription') {
-    return withQuickNav(<SettingsSubscriptionPage profile={profile} onOpenPremium={onOpenPremium} onBack={back} slideClass={sc} />)
+    return <SettingsSubscriptionPage profile={profile} onOpenPremium={onOpenPremium} onBack={back} slideClass={slideClass} />
   }
   if (section === 'cards') {
-    return withQuickNav(<SettingsCardsPage profile={profile} paymentMethods={paymentMethods} personalPayments={personalPayments} sharedSpaces={sharedSpaces} onPayCardNow={onPayCardNow} onSettlePlan={onSettlePlan} onBack={back} slideClass={sc} />)
+    return <SettingsCardsPage profile={profile} paymentMethods={paymentMethods} personalPayments={personalPayments} sharedSpaces={sharedSpaces} onPayCardNow={onPayCardNow} onSettlePlan={onSettlePlan} onBack={back} slideClass={slideClass} />
   }
   if (section === 'export') {
-    return withQuickNav(<SettingsExportPage profile={profile} sharedSpaces={sharedSpaces} onOpenPremium={onOpenPremium} onBack={back} slideClass={sc} />)
+    return <SettingsExportPage profile={profile} sharedSpaces={sharedSpaces} onOpenPremium={onOpenPremium} onBack={back} slideClass={slideClass} />
   }
 
   return (

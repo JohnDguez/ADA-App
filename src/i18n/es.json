@@ -2186,18 +2186,6 @@
     "badgeTomorrow": "Corte mañana",
     "badgeDate": "Corte el {{date}}"
   },
-  "settingsQuickNav": {
-    "aria": "Menú rápido de Ajustes",
-    "account": "Cuenta",
-    "cobro": "Cobro",
-    "categories": "Categorías",
-    "notifications": "Avisos",
-    "appearance": "Apariencia",
-    "sharedSpace": "Espacios",
-    "cards": "Tarjetas",
-    "subscription": "Suscripción",
-    "export": "Exportar"
-  },
   "importCsv": {
     "title": "Importar datos",
     "emptyLink": "Importar desde un CSV",

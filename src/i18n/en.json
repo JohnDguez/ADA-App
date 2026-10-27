@@ -2186,18 +2186,6 @@
     "badgeTomorrow": "Closes tomorrow",
     "badgeDate": "Closes {{date}}"
   },
-  "settingsQuickNav": {
-    "aria": "Settings quick menu",
-    "account": "Account",
-    "cobro": "Pay period",
-    "categories": "Categories",
-    "notifications": "Alerts",
-    "appearance": "Appearance",
-    "sharedSpace": "Spaces",
-    "cards": "Cards",
-    "subscription": "Plan",
-    "export": "Export"
-  },
   "importCsv": {
     "title": "Import data",
     "emptyLink": "Import from a CSV",
