@@ -519,6 +519,11 @@
   background: var(--swatch-color);
 }
 
+/* v0.9.811 — envoltorio de la tarjeta del periodo actual + sus pagados (solo
+   escritorio); en móvil/tablet se comporta como la tarjeta sola. */
+.metricColActual { min-width: 100%; }
+.paidUnderCard { display: none; }
+
 /* ── Escritorio (≥1100px, v0.9.810) — tablero ────────────────────────────────
    Se quita el switch Periodo/Próximo: las dos tarjetas de métricas se ven a la
    vez y los pagos se reparten en columnas por urgencia (Vencidos / Este
@@ -547,6 +552,7 @@
     transform: none !important;
   }
   .metricCard { min-width: 0; }
+  .metricColActual { min-width: 0; }
 
   .contentSwipeWrap {
     height: auto !important;
@@ -569,8 +575,8 @@
   .overdueSection { grid-row: 2; margin-top: 20px; }
   .panelActual > .periodSection,
   .panelNext > .periodSection { grid-row: 2; }
-  .paidCollapseWrapper { grid-row: 3; grid-column: 2; margin-top: 0; }
-  .noOverdue .paidCollapseWrapper { grid-column: 1; }
+  .paidCollapseWrapper { display: none; }
+  .paidUnderCard { display: block; margin-top: 10px; }
 
   .pendingSectionTitle { display: none; }
 

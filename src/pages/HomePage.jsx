@@ -421,6 +421,7 @@ export function HomePage({ payments, dataLoading = false, profile, spaceSwitcher
                   arriba), luego título/monto/estatus (fijos, vencido,
                   variables — info administrativa, no directamente ligada
                   al anillo, por eso va después). */}
+              <div className={styles.metricColActual}>
               <div ref={actualCardRef} className={styles.metricCard}>
                 {/* Encabezado: fecha del periodo + "Día X de Y" (texto simple,
                     sin contenedor — no debe parecer botón ni competir con el
@@ -489,6 +490,23 @@ export function HomePage({ payments, dataLoading = false, profile, spaceSwitcher
                     {t('homePage.variablePendingConfirm', { count: pendingVariableCount })}
                   </div>
                 )}
+              </div>
+              {/* Escritorio (≥1100px, v0.9.811): "X pagados" va justo debajo del
+                  resumen del periodo actual. Es una segunda instancia (misma
+                  `paidExpanded`); la de abajo se oculta en ese ancho. */}
+              {pagadosEstePeriodo.length > 0 && (
+                <div className={styles.paidUnderCard}>
+                  <PaidCollapse
+                    payments={pagadosEstePeriodo}
+                    expanded={paidExpanded}
+                    onToggle={() => setPaidExpanded(v => !v)}
+                    onMarkUnpaid={onMarkUnpaid}
+                    onViewSource={onViewSource}
+                    spaceMembers={spaceMembers}
+                    paymentMethodsList={paymentMethodsList}
+                  />
+                </div>
+              )}
               </div>
 
               {/* Card 2 — Próximo periodo. Siempre esta data para cualquier
