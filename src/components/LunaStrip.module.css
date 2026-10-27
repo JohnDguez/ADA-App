@@ -172,22 +172,43 @@
   display: flex;
   align-items: center;
   gap: 14px;
-  padding: 12px 18px 12px 12px;
+  min-height: 84px;
+  padding: 12px 18px 12px 146px;
   border-radius: 24px;
   background: var(--desk-luna-bg);
   color: var(--desk-ink-text);
-  overflow: hidden;
+  box-shadow: var(--desk-pop-shadow);
+  margin-top: 54px;
 }
+.desk_happy { background: var(--desk-luna-happy); }
+.desk_attentive { background: var(--desk-luna-attentive); }
+.desk_worried { background: var(--desk-luna-worried); }
+.desk_celebrating { background: var(--desk-luna-celebrating); }
+.desk_sleeping { background: var(--desk-luna-sleeping); }
 .deskStrip::after {
   content: "";
   position: absolute;
   inset: 0;
+  border-radius: 24px;
   background: repeating-linear-gradient(135deg, var(--white-a8) 0 1.5px, transparent 1.5px 6px);
   -webkit-mask-image: linear-gradient(to left, black, transparent 70%);
   mask-image: linear-gradient(to left, black, transparent 70%);
   pointer-events: none;
 }
-.deskImg { height: 58px; width: auto; flex-shrink: 0; position: relative; z-index: 1; }
+.deskImg {
+  position: absolute;
+  left: 12px;
+  bottom: 0;
+  height: 128px;
+  width: auto;
+  z-index: 2;
+  pointer-events: none;
+  filter: drop-shadow(0 10px 10px black);
+  animation: lunaFloat 3.2s ease-in-out infinite;
+}
+.deskImgWide { height: 84px; left: 6px; }
+@keyframes lunaFloat { 50% { transform: translateY(-6px) rotate(-2deg); } }
+@media (prefers-reduced-motion: reduce) { .deskImg { animation: none; } }
 .deskText { flex: 1; min-width: 0; position: relative; z-index: 1; }
 .deskTitle { font-size: 16px; font-weight: 600; }
 .deskSub { font-size: 13px; opacity: 0.78; margin-top: 2px; }

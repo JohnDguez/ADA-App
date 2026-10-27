@@ -1025,6 +1025,12 @@ a:focus-visible {
   --desk-pop-shadow: 0 24px 60px -16px rgba(11, 18, 32, 0.45);
   --desk-hero-bg: radial-gradient(120% 90% at 0 0, rgba(255, 255, 255, 0.14), transparent 55%), #014BA3;
   --desk-luna-bg: linear-gradient(115deg, #1B1446 0%, #014BA3 55%, #2F8CFA 100%);
+  /* Un degradado por estado de Luna (v0.9.821, aprobado con mockup). */
+  --desk-luna-happy:       linear-gradient(115deg, #052E2B 0%, #0B6B5C 55%, #2BC48A 100%);
+  --desk-luna-attentive:   linear-gradient(115deg, #4A2A05 0%, #B3650A 55%, #F5B63D 100%);
+  --desk-luna-worried:     linear-gradient(115deg, #4A0F1E 0%, #B3203A 55%, #FF6B7D 100%);
+  --desk-luna-celebrating: linear-gradient(115deg, #2A1050 0%, #7B3FE4 55%, #E37BFF 100%);
+  --desk-luna-sleeping:    linear-gradient(115deg, #0F1117 0%, #1A2B40 55%, #1E3A5C 100%);
   --desk-rings:   repeating-radial-gradient(circle at 85% 110%, transparent 0 14px, rgba(255, 255, 255, 0.05) 14px 15px);
   --desk-date-red:      #E82E47;
   --desk-date-red-ink:  #FFFFFF;

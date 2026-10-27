@@ -81,8 +81,8 @@ export function LunaStrip({ lunaState, loading = false, variant, onArrow }) {
 
   if (variant === 'desk') {
     return (
-      <section className={styles.deskStrip} aria-label={`${title}. ${sub}`}>
-        <img className={styles.deskImg} src={img.src} width={img.w} height={img.h} alt="" decoding="async" />
+      <section className={`${styles.deskStrip} ${styles['desk_' + key] || ''}`} aria-label={`${title}. ${sub}`}>
+        <img className={`${styles.deskImg} ${key === 'sleeping' ? styles.deskImgWide : ''}`} src={img.src} width={img.w} height={img.h} alt="" decoding="async" />
         <div className={styles.deskText}>
           <div className={styles.deskTitle}>{title}</div>
           <div className={styles.deskSub}>{sub}</div>

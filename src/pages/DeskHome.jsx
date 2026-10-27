@@ -251,6 +251,7 @@ export function DeskHome({
                 </section>
 
                 <aside className={styles.side}>
+                  <LunaStrip variant="desk" lunaState={lunaState} loading={dataLoading} onArrow={vencidos.length > 0 || delPeriodo.length > 0 ? lunaArrow : undefined} />
                   <section className={styles.card}>
                     <h2 className={styles.cardTitle}>{t('deskHome.gaugeTitle')}</h2>
                     <Gauge empty={!hasPayments || dataLoading} paidPct={hasPayments && !dataLoading ? pctPagado : 0} overduePct={hasPayments && !dataLoading ? overduePct : 0}
@@ -277,7 +278,6 @@ export function DeskHome({
                     </div>
                   </section>
 
-                  <LunaStrip variant="desk" lunaState={lunaState} loading={dataLoading} onArrow={vencidos.length > 0 || delPeriodo.length > 0 ? lunaArrow : undefined} />
                 </aside>
               </div>
             </>
