@@ -163,7 +163,7 @@ function MethodRow({ label, amount, total, barClass, cards = [] }) {
   )
 }
 
-export function PaymentsPage({ payments, dataLoading = false, periodIncome, paymentMethodsList = [], paymentMethods = null, onChangeMethod, profile, spaceSwitcher, activeSpaceHeader, activeSpaceId = null, rawActiveSpaceId = null, sharedSpaces, spacePermissions, onOpenPremium, onSpaceReady, unreadCount, onOpenNotifs, onGoSettings, onMarkUnpaid, onDelete, onDeleteDirect, onUpdateProfile, onEdit, onViewSource, onSplit, onAdd, onGoCategories, onGoCards, sharedFund, slideClass, ensureMonthLoaded, oldestPaymentYear = null }) {
+export function PaymentsPage({ payments, dataLoading = false, periodIncome, paymentMethodsList = [], paymentMethods = null, onChangeMethod, profile, spaceSwitcher, activeSpaceHeader, activeSpaceId = null, rawActiveSpaceId = null, sharedSpaces, spacePermissions, onOpenPremium, onSpaceReady, unreadCount, onOpenNotifs, onGoSettings, onMarkUnpaid, onDelete, onDeleteDirect, onUpdateProfile, onEdit, onViewSource, onSplit, onAdd, onImport, onGoCategories, onGoCards, sharedFund, slideClass, ensureMonthLoaded, oldestPaymentYear = null }) {
   const { t } = useTranslation()
   // v0.9.661 — pestañas Pagos / Análisis (solo en celular; desde 768px se ve todo junto).
   const [pageTab, setPageTab] = useState('pagos')
@@ -1865,6 +1865,8 @@ export function PaymentsPage({ payments, dataLoading = false, periodIncome, paym
               title={viewMode === 'periodo' ? t('paymentsPage.noPaymentsCurrentPeriod') : t('paymentsPage.noPaymentsInMonth', { month: getMonths()[viewMonth], year: viewYear })}
               subtitle={t('homePage.emptyState.subtitle')}
               onClick={onAdd}
+              secondaryLabel={onImport ? t('importCsv.emptyLink') : undefined}
+              onSecondaryClick={onImport}
             />
           ) : (
             <>

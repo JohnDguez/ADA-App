@@ -50,7 +50,7 @@ function nextPeriodRange(cfg) {
 // aquí como función interna). Ver ese archivo para el detalle de diseño y
 // el fix del degradado a porcentajes bajos.
 
-export function HomePage({ payments, dataLoading = false, profile, spaceSwitcher, activeSpaceHeader, activeSpaceId, sharedSpaces, spacePermissions, onOpenPremium, onSpaceReady, onAdd, onStartAdd, onGoTab, onGoSettingsSection, onOpenAddMenu, onMarkPaid, onRequestVariableAmount, onConfirmVariablePaid, onRequestNextPeriodConfirm, onRequestMethod, onMarkUnpaid, onCaptureAmount, onEdit, onAbonar, onSplit, onPayFromFund, fundBalance, onViewSource, onDelete, onPostpone, onAdvance, onGoSettings, paymentMethodsList = [], onChangeMethod, notifications, unreadCount, onMarkAsRead, onMarkAllAsRead, onDeleteNotif, onClearAllNotifs, onNavigateNotif, slideClass }) {
+export function HomePage({ payments, dataLoading = false, profile, spaceSwitcher, activeSpaceHeader, activeSpaceId, sharedSpaces, spacePermissions, onOpenPremium, onSpaceReady, onAdd, onImport, onStartAdd, onGoTab, onGoSettingsSection, onOpenAddMenu, onMarkPaid, onRequestVariableAmount, onConfirmVariablePaid, onRequestNextPeriodConfirm, onRequestMethod, onMarkUnpaid, onCaptureAmount, onEdit, onAbonar, onSplit, onPayFromFund, fundBalance, onViewSource, onDelete, onPostpone, onAdvance, onGoSettings, paymentMethodsList = [], onChangeMethod, notifications, unreadCount, onMarkAsRead, onMarkAllAsRead, onDeleteNotif, onClearAllNotifs, onNavigateNotif, slideClass }) {
   const { t, i18n } = useTranslation()
   // Detecta un cambio REAL de espacio activo (no el primer montaje de la
   // página, que también dispararía un `key` remontado sin querer) — antes
@@ -632,7 +632,7 @@ export function HomePage({ payments, dataLoading = false, profile, spaceSwitcher
                      nunca con datos del espacio anterior. Mismo criterio en
                      el otro caso de abajo y en los 2 de PaymentsPage. */
                   ? (dataLoading ? <RailSkeleton count={3} /> : <>
-                      {vencidos.length === 0 && <EmptyState title={t('homePage.emptyState.currentPeriodTitle')} subtitle={t('homePage.emptyState.subtitle')} onClick={onAdd} />}
+                      {vencidos.length === 0 && <EmptyState title={t('homePage.emptyState.currentPeriodTitle')} subtitle={t('homePage.emptyState.subtitle')} onClick={onAdd} secondaryLabel={onImport ? t('importCsv.emptyLink') : undefined} onSecondaryClick={onImport} />}
                       <TipCard inSpace={!!(activeSpaceId && activeSpaceId !== 'new')} isOwner={spacePermissions?.isRestricted === false} perms={spacePermissions} compact={vencidos.length > 0} onAction={a => a?.startsWith('settings:') ? onGoSettingsSection?.(a.slice(9)) : a?.startsWith('tab:') ? onGoTab?.(a.slice(4)) : (a === 'voice' || a === 'scan') ? onStartAdd?.(a) : a === 'addmenu' ? (onOpenAddMenu || onAdd)?.() : onAdd?.()} />
                     </>)
                   : <PayRail payments={delPeriodo} cfg={profile} dotColor="var(--upcoming-border)" dotTextColor="var(--impact-warning-text)" handlers={handlers} permissions={spacePermissions} spaceMembers={spaceMembers} />

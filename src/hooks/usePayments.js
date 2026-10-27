@@ -83,6 +83,11 @@ export function usePayments(userId, activeSpaceId = null, activeSpaceName = null
   // selector y no habría forma de pedirlos). Se consulta 1 sola vez por
   // contexto (1 fila, solo `due_date`).
   const [oldestYear, setOldestYear] = useState(null)
+  // v0.9.802 — `true` cuando ya se consultó el registro más viejo del
+  // contexto: distingue "cuenta nueva sin ningún pago" de "todavía no sé"
+  // (la entrada "Importar desde un CSV" del estado vacío solo se ofrece en
+  // el primer caso).
+  const [oldestChecked, setOldestChecked] = useState(false)
 
   // Aviso a los demás miembros del espacio compartido tras agregar (único,
   // recurrente o en parcialidades), marcar pagado, o eliminar un pago —
@@ -460,6 +465,7 @@ export function usePayments(userId, activeSpaceId = null, activeSpaceName = null
   useEffect(() => {
     if (!userId) return
     let alive = true
+    setOldestChecked(false)
     ;(async () => {
       let q = supabase.from('payments').select('due_date')
         .order('due_date', { ascending: true }).limit(1)
@@ -467,7 +473,7 @@ export function usePayments(userId, activeSpaceId = null, activeSpaceName = null
         ? q.eq('space_id', activeSpaceId)
         : q.eq('user_id', userId).is('space_id', null)
       const { data } = await q
-      if (alive) setOldestYear(data?.[0] ? dateOf(data[0].due_date).getFullYear() : null)
+      if (alive) { setOldestYear(data?.[0] ? dateOf(data[0].due_date).getFullYear() : null); setOldestChecked(true) }
     })()
     return () => { alive = false }
   }, [userId, activeSpaceId])
@@ -706,6 +712,75 @@ export function usePayments(userId, activeSpaceId = null, activeSpaceName = null
     const touched = new Set([...updById.keys(), ...insIds])
     setPayments(prev => prev.map(p => touched.has(p.id) ? stripSync({ ...p, ...(serverInserted.get(p.id) || {}) }) : p))
     return { error: null }
+  }
+
+
+  // ── Importar desde un CSV (v0.9.802) ─────────────────────────────────────
+  // Los movimientos importados son SIEMPRE personales (space_id null), pagados
+  // y únicos: el historial de otra app no es un compromiso futuro. Solo si el
+  // usuario lo acepta en el paso "Pagos que se repiten" se crea además un
+  // master (con sus 2 copias pendientes) por cada sugerencia; el historial
+  // suelto no se enlaza a él.
+  // - Un solo paquete todo-o-nada (apply_payment_batch): o entra todo o nada.
+  // - Con un Espacio Compartido activo, `payments` en pantalla es el del
+  //   espacio, así que ahí NO se hace el reflejo optimista (llegarían filas
+  //   personales a la vista equivocada): se aplica el paquete directo.
+  // - `items`: [{ name, amount, category, date }] · `recurrents`: [{ name,
+  //   amount, category, freq, isVariable, nextDate }].
+  async function findExistingForImport(minDate, maxDate) {
+    if (!userId) return []
+    const { data, error } = await supabase.from('payments')
+      .select('name, amount, due_date')
+      .eq('user_id', userId).is('space_id', null).eq('is_master', false)
+      .gte('due_date', minDate).lte('due_date', maxDate)
+      .limit(5000)
+    if (error) return []
+    return (data || []).map(p => ({ date: p.due_date, name: p.name, amount: Number(p.amount) }))
+  }
+
+  // Mediodía local de la fecha original (Regla 22): `paid_at` no se desfasa de día.
+  function paidAtFor(dateStr) {
+    const d = dateOf(dateStr); d.setHours(12, 0, 0, 0)
+    return d.toISOString()
+  }
+
+  async function importPayments(items, recurrents = []) {
+    const base = {
+      user_id: userId, space_id: null, parent_id: null, is_master: false,
+      postponed: false, is_postponed: false, postponed_at: null, paused: false,
+      is_installment: false, is_history_only: false,
+      payment_method_id: null, payment_method_kind: 'cash',
+    }
+    const inserts = items.map(it => ({
+      ...base, id: newId(), name: it.name, amount: it.amount, category: it.category || 'Otros',
+      due_date: it.date, is_variable: false, is_recurrent: false,
+      is_paid: true, paid_at: paidAtFor(it.date),
+    }))
+    for (const r of recurrents) {
+      const amount = r.isVariable ? 0 : r.amount
+      const masterId = newId()
+      const mk = fields => ({
+        ...base, id: newId(), name: r.name, amount, category: r.category || 'Otros',
+        is_variable: !!r.isVariable, is_recurrent: true, recur_freq: r.freq,
+        is_paid: false, paid_at: null, parent_id: masterId, ...fields,
+      })
+      inserts.push({
+        ...base, id: masterId, name: r.name, amount, category: r.category || 'Otros',
+        is_variable: !!r.isVariable, is_recurrent: true, recur_freq: r.freq, is_master: true,
+        due_date: r.nextDate, is_paid: false, paid_at: null,
+      })
+      inserts.push(mk({ due_date: r.nextDate }))
+      inserts.push(mk({ due_date: dateToStr(nextPeriodDate(r.nextDate, r.freq)) }))
+    }
+    if (!inserts.length) return { error: null }
+
+    if (activeSpaceId) {
+      const res = await withRetry(() => supabase.rpc('apply_payment_batch', {
+        p_op_id: newId(), p_updates: [], p_deletes: [], p_inserts: inserts,
+      }))
+      return { error: res?.error || null }
+    }
+    return runOptimisticBatch({ subject: inserts[0], action: 'create', inserts })
   }
 
   // Asegura siempre 2 copias pendientes en cola para un master dado
@@ -1775,6 +1850,7 @@ export function usePayments(userId, activeSpaceId = null, activeSpaceName = null
     deleteRecurrentFuture, deleteInstallmentFuture,
     migrateRecurrents,
     refetch: fetchPayments,
-    ensureMonthLoaded, oldestYear,
+    ensureMonthLoaded, oldestYear, oldestChecked,
+    importPayments, findExistingForImport,
   }
 }

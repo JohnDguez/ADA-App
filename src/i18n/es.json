@@ -60,7 +60,8 @@
       "subscription": "Mi suscripción",
       "getPremium": "Obtener Premium",
       "export": "Exportar datos",
-      "cards": "Mis tarjetas"
+      "cards": "Mis tarjetas",
+      "import": "Importar datos"
     },
     "premiumBadge": "Cuenta Premium",
     "tutorialAgain": "Ver tutorial de nuevo",
@@ -2195,5 +2196,105 @@
     "cards": "Tarjetas",
     "subscription": "Suscripción",
     "export": "Exportar"
+  },
+  "importCsv": {
+    "title": "Importar datos",
+    "emptyLink": "Importar desde un CSV",
+    "personalNote": "Los movimientos se importan a tu cuenta personal, aunque tengas un Espacio Compartido abierto.",
+    "steps": {
+      "file": "Archivo",
+      "columns": "Columnas",
+      "review": "Revisión",
+      "recurring": "Se repiten"
+    },
+    "stepOf": "Paso {{n}} de {{total}}",
+    "file": {
+      "title": "Elige tu archivo CSV",
+      "subtitle": "Sirve el archivo que exporta tu banco u otra app de finanzas. Se procesa en tu dispositivo: no se envía a ningún servidor.",
+      "pick": "Seleccionar archivo",
+      "drop": "o arrástralo hasta aquí",
+      "reading": "Leyendo el archivo…",
+      "errorEmpty": "No encontramos movimientos en este archivo.",
+      "errorRead": "No se pudo leer el archivo. Revisa que sea un CSV.",
+      "errorBig": "El archivo es demasiado grande. El máximo es de 5,000 movimientos.",
+      "own": "Reconocimos un archivo exportado por LunaPay: no hace falta configurar columnas."
+    },
+    "columns": {
+      "title": "Revisa las columnas",
+      "subtitle": "Esto es lo que detectamos en tu archivo. Corrige lo que no coincida.",
+      "date": "Fecha",
+      "concept": "Concepto",
+      "amount": "Monto",
+      "debit": "Cargo (gasto)",
+      "credit": "Abono (ingreso)",
+      "category": "Categoría (opcional)",
+      "none": "No usar",
+      "choose": "Elegir columna",
+      "modeSingle": "Una columna de monto",
+      "modeDouble": "Cargo y abono",
+      "dateFormat": "Formato de fecha",
+      "dateAmbiguous": "Las fechas de tu archivo se pueden leer de dos maneras. Elegimos día/mes/año; cámbialo si la vista previa no coincide.",
+      "negative": "Los gastos vienen con signo negativo",
+      "negativeHint": "Los movimientos positivos se omiten porque son ingresos o abonos.",
+      "preview": "Así se leerá",
+      "previewBad": "No se pudo leer",
+      "needFields": "Elige al menos las columnas de fecha, concepto y monto.",
+      "continue": "Continuar"
+    },
+    "review": {
+      "ok": "Correctos",
+      "rev": "Por revisar",
+      "err": "Errores",
+      "byMonth": "Por mes",
+      "byConcept": "Por concepto",
+      "search": "Buscar concepto",
+      "selectView": "Seleccionar los {{count}} de esta vista",
+      "clearView": "Quitar la selección de esta vista",
+      "selectGroup": "Seleccionar los {{count}} de este grupo",
+      "clearGroup": "Quitar la selección de este grupo",
+      "changeCategory": "Cambiar categoría",
+      "categoryTitle": "Categoría",
+      "categoryApply": "Se aplicará a {{count}} movimientos",
+      "noCategory": "Sin categoría",
+      "noConcept": "Sin concepto",
+      "reason": {
+        "duplicate": "Posible duplicado: ya existe un pago igual",
+        "uncategorized": "Sin categoría: se usará Otros",
+        "badDate": "Fecha no válida",
+        "badAmount": "Monto no válido"
+      },
+      "line": "Línea {{n}}",
+      "empty": "No hay movimientos en esta vista",
+      "selected": "{{count}} seleccionados",
+      "total": "Total",
+      "periodWarn": "{{count}} movimientos caen en tu periodo actual y bajarán tu disponible en {{amount}}. Los anteriores no lo afectan.",
+      "skippedIncome": "{{count}} ingresos o abonos omitidos",
+      "skippedUnpaid": "{{count}} pagos pendientes omitidos",
+      "repeats": "Se repite · {{freq}}",
+      "import": "Importar {{count}} movimientos",
+      "importing": "Importando…",
+      "summary": "Resumen",
+      "errNote": "Los errores no se importan. Corrige el archivo y vuelve a cargarlo si los necesitas."
+    },
+    "recurring": {
+      "title": "Pagos que se repiten",
+      "subtitle": "Detectamos movimientos con el mismo concepto y una frecuencia regular. Actívalos para crearlos como recurrentes desde su próximo cobro; el historial se queda como gastos únicos.",
+      "freq": {
+        "weekly": "Cada semana",
+        "biweekly": "Cada 2 semanas",
+        "monthly": "Cada mes"
+      },
+      "fixed": "Monto fijo",
+      "variable": "Monto variable",
+      "next": "Próximo cobro: {{date}}",
+      "detected": "{{count}} pagos detectados",
+      "cta": "Importar y crear {{count}}",
+      "toggle": "Crear como recurrente"
+    },
+    "toast": {
+      "success": "Se importaron {{count}} movimientos",
+      "successRecurring": "Se importaron {{count}} movimientos y se crearon {{recurring}} recurrentes",
+      "error": "No se pudo importar. No se guardó ningún movimiento."
+    }
   }
 }

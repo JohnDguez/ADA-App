@@ -1,0 +1,304 @@
+/* Importar desde un CSV (v0.9.802) — ver ImportModal.jsx.
+   Móvil: hoja casi a pantalla completa. ≥768px: diálogo centrado (tablet
+   vertical 768×1024, horizontal 1024×768 y escritorio). Solo variables del
+   tema; sin bordes en contenedores (Regla 13.1); radios 5px / 8px. */
+.overlay {
+  composes: sheetOverlay from './sheetShared.module.css';
+  z-index: 540;
+}
+
+.panel {
+  composes: sheetPanel from './sheetShared.module.css';
+  width: 100%;
+  height: calc(100dvh - 24px);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+@media (min-width: 768px) {
+  .panel {
+    width: min(640px, calc(100vw - 32px));
+    height: min(760px, calc(100dvh - 96px));
+  }
+}
+@media (min-width: 1024px) {
+  .panel {
+    width: 880px;
+    height: min(680px, calc(100dvh - 96px));
+  }
+}
+
+/* ── Encabezado ──────────────────────────────────────────────────────────── */
+.head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 12px 4px;
+  flex-shrink: 0;
+}
+.headCenter { flex: 1; min-width: 0; text-align: center; }
+.headTitle { font-size: 16px; font-weight: 500; color: var(--text); }
+.headStep { font-size: 12px; color: var(--muted); margin-top: 2px; }
+.iconBtn, .iconSpacer {
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  border-radius: 5px;
+  padding: 0;
+  cursor: pointer;
+}
+.iconSpacer { cursor: default; }
+
+.dots { display: flex; gap: 6px; justify-content: center; padding: 8px 0 10px; flex-shrink: 0; }
+.dot { width: 22px; height: 4px; border-radius: 2px; background: var(--border); transition: background .2s; }
+.dotOn { background: var(--accent); }
+
+.content { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+
+.bodyPad { padding: 4px 16px 16px; flex: 1; min-height: 0; box-sizing: border-box; }
+.stepTitle { font-size: 17px; font-weight: 500; color: var(--text); margin-bottom: 4px; }
+.stepSub { font-size: 13px; line-height: 1.5; color: var(--muted); margin-bottom: 16px; }
+
+/* ── Paso 1: archivo ─────────────────────────────────────────────────────── */
+.drop {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 28px 16px;
+  border-radius: 8px;
+  background: var(--section-bg-soft);
+  text-align: center;
+  transition: background .15s;
+}
+.drop button { max-width: 280px; }
+.dropOver { background: var(--accent-soft); }
+.dropText { font-size: 13px; color: var(--muted); }
+.fileName { font-size: 12px; color: var(--text); word-break: break-all; }
+.btnIcon { vertical-align: -2px; margin-right: 6px; }
+.errorText { font-size: 12px; color: var(--danger); margin-top: 10px; }
+.note { font-size: 12px; line-height: 1.5; color: var(--muted); margin-top: 12px; }
+.warnText { font-size: 12px; line-height: 1.5; color: var(--warn-tone); margin-top: 8px; }
+
+/* ── Paso 2: columnas ────────────────────────────────────────────────────── */
+.field { margin-bottom: 14px; }
+.toggleRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border-radius: 8px;
+  background: var(--section-bg-soft);
+  cursor: pointer;
+  margin-bottom: 14px;
+}
+.toggleText { flex: 1; min-width: 0; }
+.toggleLabel { font-size: 13px; color: var(--text); }
+.toggleHint { font-size: 12px; color: var(--muted); margin-top: 2px; line-height: 1.4; }
+.previewBox { padding: 12px; border-radius: 8px; background: var(--section-bg-soft); margin-bottom: 8px; }
+.previewRow { display: flex; gap: 10px; align-items: baseline; font-size: 12px; padding: 4px 0; }
+.previewDate { color: var(--text); white-space: nowrap; }
+.previewBad { color: var(--danger); white-space: nowrap; }
+.previewConcept { flex: 1; min-width: 0; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.previewAmount { margin-left: auto; color: var(--text); white-space: nowrap; }
+
+.footer {
+  flex-shrink: 0;
+  padding: 12px 16px calc(14px + env(safe-area-inset-bottom, 0px));
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background: color-mix(in srgb, var(--menu-bg) 94%, transparent);
+  box-shadow: 0 -6px 18px color-mix(in srgb, var(--text) 6%, transparent);
+}
+.footerTotals { display: flex; justify-content: space-between; align-items: baseline; font-size: 13px; color: var(--text); }
+.footerAmount { font-size: 16px; font-weight: 500; }
+
+/* ── Paso 3: revisión ────────────────────────────────────────────────────── */
+.reviewWrap { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+.reviewMain { flex: 1; min-height: 0; display: flex; flex-direction: column; padding: 0 16px; }
+
+@media (min-width: 768px) {
+  .reviewWrap { flex-direction: row; }
+  .reviewMain { padding: 0 8px 16px 16px; }
+}
+
+.tiles { display: flex; gap: 8px; flex-shrink: 0; margin-bottom: 10px; }
+.tile {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 9px 6px;
+  border-radius: 5px;
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+  min-width: 0;
+}
+.tileOn { background: var(--accent); color: var(--surface); }
+/* Móvil: el nombre va debajo del conteo para que no se corte ("Por revisar"). */
+@media (max-width: 767px) {
+  .tile { flex-direction: column; gap: 2px; padding: 8px 4px; }
+  .tileCount { display: flex; align-items: center; gap: 6px; }
+}
+.tileCount { font-size: 15px; font-weight: 600; display: flex; align-items: center; gap: 6px; }
+.tileLabel { font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.tools { display: flex; gap: 8px; align-items: center; flex-shrink: 0; margin-bottom: 8px; flex-wrap: wrap; }
+.segWrap { flex-shrink: 0; white-space: nowrap; }
+.searchBox {
+  flex: 1;
+  min-width: 140px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 10px;
+  height: 36px;
+  border-radius: 5px;
+  background: var(--field-bg);
+  box-shadow: inset 0 0 0 0.5px var(--field-border);
+}
+.searchInput {
+  flex: 1;
+  min-width: 0;
+  background: none;
+  border: none;
+  outline: none;
+  font-family: inherit;
+  font-size: 13px;
+  color: var(--text);
+}
+.searchInput::placeholder { color: var(--muted); }
+
+.bulkBar { flex-shrink: 0; padding: 2px 0 6px; }
+.linkBtn {
+  background: none;
+  border: none;
+  padding: 2px 0;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--accent);
+  cursor: pointer;
+  text-align: left;
+}
+
+/* La lista scrollea por dentro (.scroll-y global): nunca crece el diálogo. */
+.list { flex: 1; min-height: 0; border-radius: 5px; }
+.emptyList { flex: 1; display: flex; align-items: center; justify-content: center; font-size: 13px; color: var(--muted); text-align: center; padding: 20px; }
+.skipInline { flex-shrink: 0; font-size: 11px; color: var(--muted); padding: 6px 0 2px; }
+
+.groupHead {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2px;
+  padding: 0 4px;
+  overflow: hidden;
+}
+.groupTitle { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.groupLabel { font-size: 13px; font-weight: 500; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.groupCount { font-size: 11px; color: var(--muted); }
+.repeatTag {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 11px;
+  padding: 1px 6px;
+  border-radius: 5px;
+  background: var(--accent);
+  color: var(--surface);
+  white-space: nowrap;
+}
+.groupActions { display: flex; gap: 14px; }
+
+.row {
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 8px;
+  border-radius: 5px;
+  box-shadow: inset 0 -0.5px 0 var(--border);
+}
+.rowOn { background: var(--section-bg-soft); }
+.check {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  border-radius: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--field-bg);
+  box-shadow: inset 0 0 0 1px var(--field-border);
+  cursor: pointer;
+}
+.checkOn { background: var(--accent); box-shadow: none; }
+.checkOff { opacity: 0.35; cursor: default; }
+.rowMain { flex: 1; min-width: 0; }
+.rowConcept { font-size: 13px; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rowMeta { font-size: 11px; color: var(--muted); margin-top: 2px; display: flex; gap: 8px; flex-wrap: wrap; overflow: hidden; max-height: 28px; }
+.metaWarn { color: var(--warn-tone); }
+.metaErr { color: var(--danger); }
+.catBtn { display: flex; align-items: center; gap: 6px; cursor: pointer; flex-shrink: 0; padding: 4px; border-radius: 5px; }
+.catName { font-size: 12px; color: var(--text); max-width: 110px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.catSquare { width: 22px; height: 22px; border-radius: 5px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.catDot { width: 6px; height: 6px; border-radius: 50%; background: var(--on-color); }
+.catEmpty { width: 22px; height: 22px; border-radius: 5px; background: var(--border); flex-shrink: 0; }
+.rowAmount { font-size: 13px; font-weight: 500; color: var(--text); min-width: 72px; text-align: right; flex-shrink: 0; }
+
+/* Panel fijo a la derecha (tablet/escritorio, Regla 48) */
+.sidePanel {
+  width: 220px;
+  flex-shrink: 0;
+  box-sizing: border-box;
+  margin: 0 16px 16px 8px;
+  padding: 14px;
+  border-radius: 8px;
+  background: var(--section-bg-soft);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  overflow-y: auto;
+}
+@media (min-width: 1024px) {
+  .sidePanel { width: 260px; }
+}
+.sideStat { font-size: 13px; color: var(--text); }
+.sideTotal { font-size: 24px; font-weight: 500; color: var(--text); }
+.warnBox { font-size: 12px; line-height: 1.5; color: var(--text); padding: 10px; border-radius: 5px; background: var(--surface); box-shadow: inset 3px 0 0 var(--warn-tone); }
+.skipList { font-size: 12px; line-height: 1.5; color: var(--muted); display: flex; flex-direction: column; gap: 4px; margin-top: auto; }
+
+/* ── Paso 4: pagos que se repiten ────────────────────────────────────────── */
+.sugg { border-radius: 8px; background: var(--section-bg-soft); margin-bottom: 8px; padding: 10px 12px; }
+.suggTop { display: flex; align-items: center; gap: 12px; }
+.suggMain { flex: 1; min-width: 0; display: flex; align-items: center; gap: 10px; cursor: pointer; }
+.suggText { flex: 1; min-width: 0; }
+.chevOpen { transform: rotate(180deg); }
+.suggDetail { margin-top: 10px; padding-top: 8px; }
+.detailList { margin-top: 6px; max-height: 140px; overflow-y: auto; }
+
+/* ── Selector de categoría (hoja) ────────────────────────────────────────── */
+.pickerSub { font-size: 12px; color: var(--muted); padding: 0 16px 8px; }
+.pickerRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  font-size: 14px;
+  color: var(--text);
+  cursor: pointer;
+  border-radius: 5px;
+}
+.pickerRowOn { background: var(--accent); color: var(--surface); }

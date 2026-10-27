@@ -60,7 +60,8 @@
       "subscription": "My subscription",
       "getPremium": "Get Premium",
       "export": "Export data",
-      "cards": "My cards"
+      "cards": "My cards",
+      "import": "Import data"
     },
     "premiumBadge": "Premium Account",
     "tutorialAgain": "View tutorial again",
@@ -2195,5 +2196,105 @@
     "cards": "Cards",
     "subscription": "Plan",
     "export": "Export"
+  },
+  "importCsv": {
+    "title": "Import data",
+    "emptyLink": "Import from a CSV",
+    "personalNote": "Entries are imported into your personal account, even if a Shared Space is open.",
+    "steps": {
+      "file": "File",
+      "columns": "Columns",
+      "review": "Review",
+      "recurring": "Repeating"
+    },
+    "stepOf": "Step {{n}} of {{total}}",
+    "file": {
+      "title": "Choose your CSV file",
+      "subtitle": "Works with the file your bank or another finance app exports. It is processed on your device and never sent to a server.",
+      "pick": "Select file",
+      "drop": "or drag it here",
+      "reading": "Reading the file…",
+      "errorEmpty": "We could not find any entries in this file.",
+      "errorRead": "The file could not be read. Make sure it is a CSV.",
+      "errorBig": "The file is too large. The maximum is 5,000 entries.",
+      "own": "We recognized a LunaPay export: no column setup needed."
+    },
+    "columns": {
+      "title": "Check the columns",
+      "subtitle": "This is what we detected in your file. Fix anything that does not match.",
+      "date": "Date",
+      "concept": "Concept",
+      "amount": "Amount",
+      "debit": "Debit (expense)",
+      "credit": "Credit (income)",
+      "category": "Category (optional)",
+      "none": "Do not use",
+      "choose": "Choose column",
+      "modeSingle": "One amount column",
+      "modeDouble": "Debit and credit",
+      "dateFormat": "Date format",
+      "dateAmbiguous": "The dates in your file can be read two ways. We chose day/month/year; change it if the preview does not match.",
+      "negative": "Expenses come with a negative sign",
+      "negativeHint": "Positive entries are skipped because they are income or credits.",
+      "preview": "How it will be read",
+      "previewBad": "Could not be read",
+      "needFields": "Choose at least the date, concept and amount columns.",
+      "continue": "Continue"
+    },
+    "review": {
+      "ok": "Ready",
+      "rev": "To review",
+      "err": "Errors",
+      "byMonth": "By month",
+      "byConcept": "By concept",
+      "search": "Search concept",
+      "selectView": "Select all {{count}} in this view",
+      "clearView": "Clear selection in this view",
+      "selectGroup": "Select all {{count}} in this group",
+      "clearGroup": "Clear selection in this group",
+      "changeCategory": "Change category",
+      "categoryTitle": "Category",
+      "categoryApply": "Applies to {{count}} entries",
+      "noCategory": "No category",
+      "noConcept": "No concept",
+      "reason": {
+        "duplicate": "Possible duplicate: an identical payment already exists",
+        "uncategorized": "No category: Other will be used",
+        "badDate": "Invalid date",
+        "badAmount": "Invalid amount"
+      },
+      "line": "Line {{n}}",
+      "empty": "No entries in this view",
+      "selected": "{{count}} selected",
+      "total": "Total",
+      "periodWarn": "{{count}} entries fall in your current period and will lower your available amount by {{amount}}. Earlier ones do not affect it.",
+      "skippedIncome": "{{count}} income or credit entries skipped",
+      "skippedUnpaid": "{{count}} pending payments skipped",
+      "repeats": "Repeats · {{freq}}",
+      "import": "Import {{count}} entries",
+      "importing": "Importing…",
+      "summary": "Summary",
+      "errNote": "Errors are not imported. Fix the file and upload it again if you need them."
+    },
+    "recurring": {
+      "title": "Repeating payments",
+      "subtitle": "We found entries with the same concept on a regular schedule. Turn them on to create them as recurring from their next charge; the history stays as one-time expenses.",
+      "freq": {
+        "weekly": "Every week",
+        "biweekly": "Every 2 weeks",
+        "monthly": "Every month"
+      },
+      "fixed": "Fixed amount",
+      "variable": "Variable amount",
+      "next": "Next charge: {{date}}",
+      "detected": "{{count}} payments found",
+      "cta": "Import and create {{count}}",
+      "toggle": "Create as recurring"
+    },
+    "toast": {
+      "success": "{{count}} entries imported",
+      "successRecurring": "{{count}} entries imported and {{recurring}} recurring payments created",
+      "error": "The import failed. No entries were saved."
+    }
   }
 }

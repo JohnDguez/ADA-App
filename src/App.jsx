@@ -18,6 +18,7 @@ const AuthPage = lazy(() => import('./pages/AuthPage').then(m => ({ default: m.A
 const ResetPasswordPage = lazy(() => import('./pages/AuthPage').then(m => ({ default: m.ResetPasswordPage })))
 const OnboardingPage = lazy(() => import('./pages/OnboardingPage').then(m => ({ default: m.OnboardingPage })))
 const SettingsPage = lazy(() => import('./pages/SettingsPage').then(m => ({ default: m.SettingsPage })))
+const ImportModal = lazy(() => import('./components/ImportModal').then(m => ({ default: m.ImportModal })))
 const PasswordSetupModal = lazy(() => import('./components/PasswordSetupModal').then(m => ({ default: m.PasswordSetupModal })))
 const PremiumPage = lazy(() => import('./pages/PremiumPage').then(m => ({ default: m.PremiumPage })))
 const PaymentsPage = lazy(() => import('./pages/PaymentsPage').then(m => ({ default: m.PaymentsPage })))
@@ -176,7 +177,8 @@ export default function App() {
     deleteRecurrentFuture, deleteInstallmentFuture,
     migrateRecurrents,
     refetch,
-    ensureMonthLoaded, oldestYear,
+    ensureMonthLoaded, oldestYear, oldestChecked,
+    importPayments, findExistingForImport,
   } = usePayments(user?.id, paymentsSpaceId, activeSpaceEntry?.space?.name)
   const { profile, loading: profileLoading, updateProfile, uploadAvatar, fetchProfile } = useProfile(user?.id)
   // Moneda ACTIVA (v0.9.616): la del espacio que se está viendo, o la personal
@@ -680,6 +682,12 @@ export default function App() {
   // "Pagar ahora" (v0.9.497) — adelantar el pago de una tarjeta de
   // crédito antes de su corte.
   const [payCardNowCard, setPayCardNowCard] = useState(null)
+  // Importar desde un CSV (v0.9.802): gratis para todos; se abre desde Ajustes
+  // y desde el estado vacío de una cuenta nueva (sin ningún pago).
+  const [importOpen, setImportOpen] = useState(false)
+  const [importMounted, setImportMounted] = useState(false) // el modal se descarga la primera vez que se abre y se queda montado (animación de salida)
+  const openImport = () => { setImportMounted(true); setImportOpen(true) }
+  const showImportLink = oldestChecked && oldestYear === null && !activeSpaceId && !paymentsLoading && payments.length === 0
   // "Liquidar plan" (v0.9.587): { card, plan } mientras el modal está abierto
   const [settleTarget, setSettleTarget] = useState(null)
   // Tab de origen cuando se entra a una sección de Ajustes por un atajo
@@ -1800,6 +1808,7 @@ export default function App() {
           activeSpaceHeader={activeSpaceHeaderEl}
           onAdd={openAdd}
           onStartAdd={startAdd}
+          onImport={showImportLink ? openImport : undefined}
           onGoTab={changeTab}
           onGoSettingsSection={goToSettingsSection}
           onOpenAddMenu={openAddMenu}
@@ -1860,6 +1869,7 @@ export default function App() {
             onSplit={openSplitModal}
             onAdd={openAdd}
             onGoCategories={goToCategories}
+            onImport={showImportLink ? openImport : undefined}
             onGoCards={goToCards}
             ensureMonthLoaded={ensureMonthLoaded}
             oldestPaymentYear={oldestYear}
@@ -1929,6 +1939,7 @@ export default function App() {
           // de ESE espacio — se manda null en vez de un número equivocado.
           personalPayments={cardPayments}
           onPayCardNow={setPayCardNowCard}
+          onOpenImport={openImport}
           onSettlePlan={(card, plan) => setSettleTarget({ card, plan })}
           initialSection={settingsInitialSection}
           onConsumeInitialSection={() => setSettingsInitialSection(null)}
@@ -2008,6 +2019,19 @@ export default function App() {
         }}
         onClose={() => { sharedPay?.resolver?.(null); setSharedPay(null) }}
       />
+
+      {importMounted && (
+        <Suspense fallback={null}>
+          <ImportModal
+            open={importOpen}
+            onClose={() => setImportOpen(false)}
+            profile={profile}
+            sharedActive={!!activeSpaceId}
+            onFetchExisting={findExistingForImport}
+            onImport={importPayments}
+          />
+        </Suspense>
+      )}
 
       <PayCardNowModal
         open={!!payCardNowCard}

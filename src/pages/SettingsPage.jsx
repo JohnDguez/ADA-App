@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { createPortal } from 'react-dom'
-import { LogOut, Camera, Crown, User, Tag, Calendar, Bell, SunMoon, HelpCircle, Users, MessageCircle, Download, CreditCard, Languages, ChevronRight } from 'lucide-react'
+import { LogOut, Camera, Crown, User, Tag, Calendar, Bell, SunMoon, HelpCircle, Users, MessageCircle, Download, Upload, CreditCard, Languages, ChevronRight } from 'lucide-react'
 import { showToast } from '../components/Toast'
 import { supabase } from '../lib/supabase'
 import { getAppVersionLabel } from '../lib/appVersion'
@@ -67,7 +67,7 @@ function OptionCard({ icon: Icon, tone, label, value, onClick }) {
   )
 }
 
-export function SettingsPage({ profile, user, onUpdate, onUploadAvatar, onDataDeleted, slideClass, theme, onThemeChange, onOpenPremium, sharedSpaces, paymentMethods, personalPayments = null, onPayCardNow, onSettlePlan, initialSection, onConsumeInitialSection, returnTab, onReturnToTab }) {
+export function SettingsPage({ profile, user, onUpdate, onUploadAvatar, onDataDeleted, slideClass, theme, onThemeChange, onOpenPremium, sharedSpaces, paymentMethods, personalPayments = null, onPayCardNow, onSettlePlan, onOpenImport, initialSection, onConsumeInitialSection, returnTab, onReturnToTab }) {
   const { t } = useTranslation()
   const [languageOpen, setLanguageOpen] = useState(false)
   // Tablet (≥768px): tarjetas por opción en vez de la lista de filas.
@@ -373,6 +373,7 @@ export function SettingsPage({ profile, user, onUpdate, onUploadAvatar, onDataDe
       <div className={styles.groupLabel}>{t('settingsPage.sections.accountData')}</div>
       <Card>
         <Row icon={User}     label={t('settingsPage.menu.account')} onClick={() => openSection('account')} />
+        <Row icon={Upload} label={t('settingsPage.menu.import')} onClick={onOpenImport} />
         <Row icon={Download} label={t('settingsPage.menu.export')} onClick={() => openSection('export')} last />
       </Card>
 
@@ -441,6 +442,7 @@ export function SettingsPage({ profile, user, onUpdate, onUploadAvatar, onDataDe
             <div className={styles.groupLabelT}>{t('settingsPage.sections.accountData')}</div>
             <div className={styles.optionGrid}>
               <OptionCard icon={User} tone="var(--cat-suscripciones)" label={t('settingsPage.menu.account')} onClick={() => openSection('account')} />
+              <OptionCard icon={Upload} tone="var(--cat-renta)" label={t('settingsPage.menu.import')} onClick={onOpenImport} />
               <OptionCard icon={Download} tone="var(--cat-renta)" label={t('settingsPage.menu.export')} onClick={() => openSection('export')} />
             </div>
             <div className={styles.groupLabelT}>{t('settingsPage.sections.help')}</div>
