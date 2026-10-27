@@ -1144,6 +1144,11 @@
     "paidPct": "{{pct}}% pagado",
     "goPayments": "Ir a Pagos",
     "goSection": "Ir a la sección",
+    "barTipEmpty": "Sin pagos este día",
+    "barTipCount_one": "{{count}} pago",
+    "barTipCount_other": "{{count}} pagos",
+    "barTipMore": "y {{count}} más",
+    "barTipHint": "Primeros 7 días del próximo periodo",
     "nextBarsLabel": "Pagos por día, primeros 7 días del próximo periodo"
   },
   "navRail": {

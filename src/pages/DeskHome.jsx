@@ -141,9 +141,10 @@ export function DeskHome({
     const max = Math.max(0, ...days.map(d => byDay[dateToStr(d)] || 0))
     return days.map(d => {
       const amount = byDay[dateToStr(d)] || 0
-      return { key: dateToStr(d), letter: d.toLocaleDateString(i18n.language, { weekday: 'narrow' }).toUpperCase(), amount, isMax: max > 0 && amount === max, filled: upcoming.some(p => p.due_date === dateToStr(d)), h: max > 0 ? 34 + Math.round((amount / max) * 40) : 34 }
+      return { key: dateToStr(d), long: d.toLocaleDateString(i18n.language, { weekday: 'long', day: 'numeric', month: 'short' }), items: upcoming.filter(p => p.due_date === dateToStr(d)), letter: d.toLocaleDateString(i18n.language, { weekday: 'narrow' }).toUpperCase(), amount, isMax: max > 0 && amount === max, filled: upcoming.some(p => p.due_date === dateToStr(d)), h: max > 0 ? 34 + Math.round((amount / max) * 40) : 34 }
     })
   }, [upcoming, nextStart, i18n.language])
+  const [barTip, setBarTip] = useState(null) // índice de la barra con tooltip
   const nextFixed = upcoming.filter(p => !p.is_variable).length
   const nextVariable = upcoming.filter(p => p.is_variable).length
   const [nextInt, nextCents] = splitMoney(fmt(nextPeriodKnownTotal))
@@ -269,8 +270,26 @@ export function DeskHome({
                     <div className={styles.nextNum}>{dataLoading ? '…' : <>{nextInt}<small>{nextCents}</small></>}</div>
                     <div className={styles.range}><b>{t('deskHome.nextFixed', { count: nextFixed })}</b> · <b>{t('deskHome.nextVariable', { count: nextVariable })}</b></div>
                     <div className={styles.bars} role="img" aria-label={t('deskHome.nextBarsLabel')}>
-                      {bars.map(b => (
-                        <div key={b.key} className={styles.barCol}>
+                      {bars.map((b, i) => (
+                        <div key={b.key} className={styles.barCol} tabIndex={0} onMouseEnter={() => setBarTip(i)} onMouseLeave={() => setBarTip(null)} onFocus={() => setBarTip(i)} onBlur={() => setBarTip(null)}>
+                          {barTip === i && (
+                            <div className={`${styles.barTip} ${i < 2 ? styles.barTipStart : i > 4 ? styles.barTipEnd : ''}`} role="tooltip">
+                              <div className={styles.barTipDay}>{b.long}</div>
+                              {b.items.length === 0 ? (
+                                <div className={styles.barTipEmpty}>{t('deskHome.barTipEmpty')}</div>
+                              ) : (
+                                <>
+                                  <div className={styles.barTipAmount}>{fmt(b.amount)}</div>
+                                  <div className={styles.barTipCount}>{t('deskHome.barTipCount', { count: b.items.length })}</div>
+                                  <ul className={styles.barTipList}>
+                                    {b.items.slice(0, 3).map(p => <li key={p.id}><span>{p.name}</span><b>{fmt(Number(p.amount) || 0)}</b></li>)}
+                                  </ul>
+                                  {b.items.length > 3 && <div className={styles.barTipMore}>{t('deskHome.barTipMore', { count: b.items.length - 3 })}</div>}
+                                </>
+                              )}
+                              <div className={styles.barTipHint}>{t('deskHome.barTipHint')}</div>
+                            </div>
+                          )}
                           <div className={`${styles.bar} ${b.filled ? (b.isMax ? styles.barMax : styles.barOn) : styles.barOff}`} style={{ height: b.filled ? b.h : 34 }} />
                           <span>{b.letter}</span>
                         </div>
