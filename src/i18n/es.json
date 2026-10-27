@@ -1112,7 +1112,8 @@
     "scanHint": "Foto del recibo"
   },
   "deskGoals": {
-      "listTitle": "Mis metas",
+      "ofTarget": "de {{amount}} · {{pct}}%",
+    "listTitle": "Mis metas",
       "toGo": "para cumplir todas tus metas",
       "savedSub_one": "en {{count}} meta activa",
       "savedSub_other": "en {{count}} metas activas",

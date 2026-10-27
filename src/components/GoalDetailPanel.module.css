@@ -438,3 +438,26 @@
 @media (hover: hover) and (pointer: fine) {
   .desk .iconButton:hover { background: var(--desk-chip); translate: none; filter: none; }
 }
+
+/* A3 (v0.9.832): resplandor del color de la meta en la esquina de la tarjeta */
+.desk { border-radius: 24px; }
+.dHero { margin: 6px 0 0; }
+.dTop { display: flex; justify-content: space-between; font-size: 13px; color: var(--muted); margin-top: 10px; }
+.dLate { color: var(--danger); }
+.dBig { font-size: 42px; font-weight: 500; letter-spacing: -1.5px; line-height: 1.05; margin-top: 6px; color: var(--text); white-space: nowrap; }
+.dBig small { font-size: 18px; opacity: 0.55; letter-spacing: 0; }
+.dOf { font-size: 13px; color: var(--muted); margin-top: 2px; }
+.dTrack { height: 10px; border-radius: 99px; margin-top: 14px; overflow: hidden; background: repeating-linear-gradient(135deg, var(--desk-hatch) 0 1.5px, transparent 1.5px 6px); }
+.dTrack u { display: block; height: 100%; border-radius: 99px; min-width: 10px; }
+.dFoot { display: flex; justify-content: space-between; gap: 8px; font-size: 12.5px; color: var(--muted); margin-top: 8px; }
+.desk .statsList { display: none; }
+.desk .actionBtn { background: var(--desk-pill); color: var(--desk-pill-ink); border: 0; padding: 12px; font-weight: 600; }
+.desk .actionBtnGhost { background: none; color: var(--text); border: 1.5px solid var(--desk-hair); }
+.desk .completeButton { border: 1.5px solid var(--desk-hair); color: var(--muted); }
+.desk .historyHead { margin-top: 4px; }
+.desk .historyLeft svg { width: 30px; height: 30px; padding: 7px; box-sizing: border-box; border-radius: 50%; background: var(--desk-chip); }
+.desk .historyLeft { gap: 12px; }
+@media (hover: hover) and (pointer: fine) {
+  .desk .actionBtn:hover { translate: none; filter: none; opacity: .88; }
+  .desk .actionBtnGhost:hover, .desk .completeButton:hover { background: var(--desk-chip); opacity: 1; }
+}

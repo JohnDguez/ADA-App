@@ -1112,7 +1112,8 @@
     "scanHint": "Photo of the receipt"
   },
   "deskGoals": {
-      "listTitle": "My goals",
+      "ofTarget": "of {{amount}} · {{pct}}%",
+    "listTitle": "My goals",
       "toGo": "to reach all your goals",
       "savedSub_one": "in {{count}} active goal",
       "savedSub_other": "in {{count}} active goals",

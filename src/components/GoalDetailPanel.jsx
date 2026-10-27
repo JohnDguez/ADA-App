@@ -136,7 +136,7 @@ export function GoalDetailPanel({
   }
 
   return (
-    <div className={`${styles.screen} ${desk ? styles.desk : ''}`}>
+    <div className={`${styles.screen} ${desk ? styles.desk : ''}`} style={desk ? { backgroundImage: `radial-gradient(70% 50% at 0% 0%, color-mix(in srgb, ${goal.color} 30%, transparent), transparent 70%)` } : undefined}>
       <div className={styles.header}>
         <button type="button" onClick={onBack} className={styles.iconButton} aria-label={t('goalDetailPanel.back')}>
           <ChevronLeft size={22} color="var(--text)" />
@@ -178,6 +178,22 @@ export function GoalDetailPanel({
 
       <div className={styles.body}>
       <div className={styles.summaryCol}>
+      {desk ? (
+        <div className={styles.dHero}>
+          <div className={styles.dTop}>
+            <span>{t('goalDetailPanel.savedLabel')}</span>
+            {!goal.is_completed && goal.target_date && <span className={goal.isOverdue ? styles.dLate : ''}>{goal.isOverdue ? t('goalsPage.card.overdue') : t('goalsPage.card.daysRemaining', { count: goal.daysRemaining })}</span>}
+          </div>
+          <div className={styles.dBig}>{fmt(goal.currentAmount).replace(/\.\d+$/, '')}<small>{fmt(goal.currentAmount).match(/\.\d+$/)?.[0] || ''}</small></div>
+          <div className={styles.dOf}>{t('deskGoals.ofTarget', { amount: fmt(goal.target_amount), pct: (goal.is_completed ? 100 : goal.percent) })}</div>
+          <div className={styles.dTrack}><u style={{ width: `${(goal.is_completed ? 100 : goal.percent)}%`, background: goal.color }} /></div>
+          <div className={styles.dFoot}>
+            <span>{t('goalsPage.card.remaining', { amount: fmt(goal.remaining) })}</span>
+            <span>{t('goalDetailPanel.createdOn', { date: fmtDate(goal.created_at) })}</span>
+          </div>
+        </div>
+      ) : (
+      <>
       <div className={styles.ring} style={{ background: `conic-gradient(${desk ? 'var(--accent)' : 'var(--paid)'} 0% ${goal.percent}%, ${desk ? 'var(--desk-chip)' : 'var(--border)'} ${goal.percent}% 100%)` }}>
         <div className={styles.ringInner}>
           <div className={styles.ringPercent}>{goal.percent}%</div>
@@ -194,6 +210,8 @@ export function GoalDetailPanel({
         )}
       </div>
       <div className={styles.createdAt}>{t('goalDetailPanel.createdOn', { date: fmtDate(goal.created_at) })}</div>
+      </>
+      )}
       {goal.notes && <div className={styles.notes}>{goal.notes}</div>}
 
       {/* Desglose — solo tablet (en teléfono los montos van dentro del anillo) */}
