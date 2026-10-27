@@ -632,3 +632,9 @@
   .paidCollapseSummaryText { font-size: 15px; }
   .paidCollapseCheckIcon { width: 24px; height: 24px; }
 }
+
+@media (hover: hover) and (pointer: fine) {
+  .tabButton:hover,
+  .paidCollapseToggle:hover { translate: none; filter: none; }
+  .paidCollapseToggle:hover { background: var(--border); }
+}

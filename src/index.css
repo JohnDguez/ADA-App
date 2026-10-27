@@ -17,9 +17,6 @@
 
 /* ── Tema claro (default) ─────────────────────────────────────────────────── */
 :root {
-  /* Hover de botones (v0.9.817): en claro se oscurece un poco, en oscuro se
-     aclara — lo usa la regla global de `button:hover` (solo mouse). */
-  --hover-filter: brightness(0.93);
   --bg: #F2F2F2;
   --surface: #FFFFFF;
   --border: #E4E2DC;
@@ -315,7 +312,6 @@
 
 /* ── Tema oscuro manual ([data-theme="dark"] en <html>) ───────────────────── */
 [data-theme="dark"] {
-  --hover-filter: brightness(1.14);
   --bg: #0F1117;
   --surface: #1A1D27;
   --border: #2A2D3A;
@@ -400,8 +396,7 @@
 /* ── Tema oscuro automático (preferencia del sistema) ─────────────────────── */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --hover-filter: brightness(1.14);
-    --bg: #0F1117;
+      --bg: #0F1117;
     --surface: #1A1D27;
     --border: #2A2D3A;
     --border-mid: #3A3D4E;
@@ -968,20 +963,45 @@ a:focus-visible {
   html.auth-screen #root { margin-left: 0; }
 }
 
-/* ── Hover de botones (v0.9.817) ─────────────────────────────────────────
-   Solo con mouse (hover:hover + pointer:fine) — en táctil no existe hover y
-   no se toca nada (Regla 42). Un `filter` en vez de cambiar colores: sirve
-   para cualquier botón (rellenos, degradados de Premium, íconos) sin pisar
-   sus box-shadow/background propios. Los botones transparentes del riel
-   llevan además su propio fondo (NavRail.module.css, RailSpaceSwitcher). */
+/* ── Hover de botones (v0.9.818) ─────────────────────────────────────────
+   Solo con mouse (hover:hover + pointer:fine) — en táctil no cambia nada
+   (Regla 42). Propuesta A+B aprobada por Johnatan:
+   · A (todos los botones): se elevan 2px con rebote y proyectan un
+     resplandor del color en `--hover-glow` (default: --accent). Usa las
+     propiedades `translate`/`scale` (independientes de `transform`) y
+     `drop-shadow` (sigue la forma del botón, incluso sin fondo), así no
+     pisa transform/box-shadow que un botón ya tenga. `:where()` deja la
+     especificidad en cero: cualquier regla de un módulo gana (p. ej. las
+     filas planas de navegación quitan la elevación).
+   · B (elementos de Premium, clase `premium-fx`): crecen con resorte y un
+     destello diagonal los cruza. Se aplica con `composes: premium-fx from
+     global` en el CSS de cada botón dorado. */
 @media (hover: hover) and (pointer: fine) {
-  button:not(:disabled):not(.btn-primary):hover,
-  [role="button"]:not([aria-disabled="true"]):hover,
-  [role="switch"]:hover,
-  [role="tab"]:hover {
-    filter: var(--hover-filter);
+  :where(button:not(:disabled), [role="button"]:not([aria-disabled="true"]), [role="switch"], [role="tab"]) {
+    transition: translate 0.22s cubic-bezier(0.34, 1.56, 0.64, 1), scale 0.22s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.2s ease;
   }
-  button:not(:disabled), [role="button"], [role="switch"], [role="tab"] {
-    transition: filter 0.15s ease;
+  :where(button:not(:disabled):not(.btn-primary), [role="button"]:not([aria-disabled="true"]), [role="switch"], [role="tab"]):hover {
+    translate: 0 -2px;
+    filter: drop-shadow(0 6px 8px color-mix(in srgb, var(--hover-glow, var(--accent)) 45%, transparent));
   }
+  :where(button:not(:disabled), [role="button"]:not([aria-disabled="true"]), [role="switch"], [role="tab"]):active {
+    translate: 0 0;
+    scale: 0.96;
+  }
+
+  .premium-fx { position: relative; overflow: hidden; --hover-glow: var(--premium-gold); }
+  .premium-fx::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: -60%;
+    width: 40%;
+    height: 100%;
+    background: linear-gradient(105deg, transparent, color-mix(in srgb, var(--premium-hero-sparkle) 60%, transparent), transparent);
+    transform: skewX(-20deg);
+    transition: left 0.55s ease;
+    pointer-events: none;
+  }
+  .premium-fx:not(:disabled):hover { scale: 1.04; }
+  .premium-fx:not(:disabled):hover::after { left: 130%; }
 }

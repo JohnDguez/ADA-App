@@ -497,3 +497,7 @@
   .markPaidButton,
   .paidIndicator { width: 52px; height: 52px; }
 }
+
+@media (hover: hover) and (pointer: fine) {
+  .markPaidButton { --hover-glow: var(--paid); }
+}

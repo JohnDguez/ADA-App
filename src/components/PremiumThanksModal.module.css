@@ -54,6 +54,7 @@
 }
 
 .addButton {
+  composes: premium-fx from global;
   display: flex;
   align-items: center;
   justify-content: center;

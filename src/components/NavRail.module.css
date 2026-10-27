@@ -350,3 +350,8 @@
 @media (hover: hover) and (pointer: fine) {
   .railButton:not([data-active="true"]):hover { background: var(--white-a16); }
 }
+
+@media (hover: hover) and (pointer: fine) {
+  .railButton:hover,
+  .toggleButton:hover { translate: none; filter: none; }
+}

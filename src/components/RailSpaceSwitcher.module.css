@@ -85,6 +85,7 @@
    colores del hero de Premium (tokens, fijos en ambos temas) para que se
    note que es una función de pago. */
 .itemPremium {
+  composes: premium-fx from global;
   background: var(--premium-hero-bg);
   color: var(--premium-hero-ink);
   margin-top: 4px;
@@ -93,4 +94,10 @@
 
 @media (hover: hover) and (pointer: fine) {
   .item:not(.itemActive):not(.itemPremium):hover { background: var(--white-a8); }
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .item:hover,
+  .collapsedBadge:hover { translate: none; filter: none; }
+  .itemPremium:hover { scale: 1.03; }
 }

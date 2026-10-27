@@ -417,7 +417,7 @@ export function PremiumPage({ profile, onClose, refreshProfile, onSubscribed }) 
             <button
               onClick={isAndroid ? startAndroidPurchase : startCheckout}
               disabled={!termsAccepted || androidPurchaseState === 'processing'}
-              className={`btn-primary ${styles.ctaButton} ${styles.ctaGold}`}
+              className={`btn-primary premium-fx ${styles.ctaButton} ${styles.ctaGold}`}
             >
               <Crown size={16} />
               {androidPurchaseState === 'processing'

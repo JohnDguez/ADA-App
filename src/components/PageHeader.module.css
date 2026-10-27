@@ -163,6 +163,7 @@
    margin-top propio: es lo único que empuja hacia abajo, saludo/nombre de
    arriba no se tocan. */
 .getPremiumButton {
+  composes: premium-fx from global;
   position: relative;
   display: flex;
   align-items: center;
