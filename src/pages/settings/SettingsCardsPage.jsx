@@ -16,6 +16,7 @@ import { getBank } from '../../lib/cardCatalog'
 import { totalOwedOnCard, cardsCuttingInPeriod, cardCycleInfo } from '../../lib/cardStatements'
 import { cutBadgeLabel } from '../../lib/cutLabels'
 import { fmt, today, cobroPeriod, dateOf, dateToStr } from '../../lib/utils'
+import { useDeskSettings } from '../../components/DeskSettingsContext'
 import styles from './SettingsCardsPage.module.css'
 import { markBackHandled, wasBackHandled } from '../../lib/backNav'
 
@@ -157,6 +158,7 @@ function TabletCards({ cards, kind, onSelect, info, cutsById, loading }) {
 
 export function SettingsCardsPage({ profile, paymentMethods, personalPayments = null, sharedSpaces = null, onPayCardNow, onSettlePlan, onBack, slideClass }) {
   const { t } = useTranslation()
+  const desk = useDeskSettings()
   const [kind, setKind] = useState('credit')
   const [formOpen, setFormOpen] = useState(false)
   const [editing, setEditing] = useState(null)
@@ -398,7 +400,7 @@ export function SettingsCardsPage({ profile, paymentMethods, personalPayments = 
 
       {/* Mismo botón flotante que "Agregar categoría"/"Añadir meta" —
           excepción documentada a la Regla 13 (RULES.md). */}
-      <div className={styles.addPillRow}>
+      <div className={`${styles.addPillRow} ${desk ? styles.addPillRowDesk : ''}`}>
         <button type="button" onClick={openAdd} className={styles.addPill}>
           <Plus size={18} color="var(--surface)" />
           {t('cards.addButton')}

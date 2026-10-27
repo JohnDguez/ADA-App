@@ -14,6 +14,7 @@ import { BottomSheet } from '../../components/BottomSheet'
 import { getCurrency } from '../../lib/currency'
 import { showToast } from '../../components/Toast'
 import { getFrequencyLabel } from '../../lib/utils'
+import { useDeskSettings } from '../../components/DeskSettingsContext'
 import styles from './SettingsSharedSpacePage.module.css'
 import { AvatarImg } from '../../components/AvatarImg'
 import { Presence } from '../../components/Presence'
@@ -59,6 +60,7 @@ function PermTile({ Icon, label, sub, on, onToggle }) {
 //   lista de espacios donde es invitado (con opción de salirse).
 export function SettingsSharedSpacePage({ profile, user, sharedSpaces, onBack, onOpenPremium, slideClass }) {
   const { t } = useTranslation()
+  const desk = useDeskSettings()
   const { spaces, createSpace, regenerateCode, redeemCode, updateMemberPermissions, updateSpaceConfig, leaveSpace, removeMember, deleteSpace, clearSpaceData } = sharedSpaces
 
   const ownedEntry  = spaces.find(s => s.membership.role === 'owner')
@@ -212,7 +214,7 @@ export function SettingsSharedSpacePage({ profile, user, sharedSpaces, onBack, o
 
       {canJoinMore && (
         <>
-          <div className={styles.addPillRow}>
+          <div className={`${styles.addPillRow} ${desk ? styles.addPillRowDesk : ''}`}>
             <button type="button" onClick={() => { setJoinError(''); setJoinOpen(true) }} className={styles.addPill}>
               <Users size={18} color="var(--surface)" />
               {t('settingsSharedSpacePage.joinFab')}

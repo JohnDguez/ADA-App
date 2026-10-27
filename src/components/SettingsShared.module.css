@@ -89,3 +89,6 @@
   color: var(--text);
   margin-top: 1px;
 }
+
+/* Escritorio (v0.9.834): sin márgenes de teléfono, borde fino de las tarjetas nuevas */
+.cardDesk { margin: 0 0 14px; background: none; border: 1.5px solid var(--desk-hair); border-radius: 20px; max-width: 760px; }

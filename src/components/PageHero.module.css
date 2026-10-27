@@ -103,3 +103,8 @@
   .heroIconCircle svg { width: 32px; height: 32px; }
   .heroTitle { font-size: 24px; }
 }
+
+/* Escritorio (v0.9.834): título a la izquierda, sin resplandor ni regreso */
+.deskHead { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 18px; }
+.deskTitle { margin: 0; font-size: 22px; font-weight: 700; letter-spacing: -0.4px; color: var(--text); }
+.deskDesc { margin: 4px 0 0; font-size: 13.5px; line-height: 1.45; color: var(--muted); max-width: 640px; }

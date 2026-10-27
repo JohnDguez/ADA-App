@@ -1111,6 +1111,12 @@
     "scan": "Scan a receipt",
     "scanHint": "Photo of the receipt"
   },
+  "deskSettings": {
+      "freqHelp": "How often you get paid",
+      "daysHelp": "The days you get paid",
+      "nextHelp": "Calculated from your settings",
+      "incomeOff": "No fixed salary"
+  },
   "deskGoals": {
       "ofTarget": "of {{amount}} · {{pct}}%",
     "listTitle": "My goals",

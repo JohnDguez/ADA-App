@@ -217,3 +217,14 @@
   .tab_sistema .tabGrid b:nth-child(odd), .tab_sistema .tabList b:nth-child(odd) { background: color-mix(in srgb, var(--preview-light-bar) 40%, transparent); }
   .tab_sistema .tabGrid b:nth-child(even), .tab_sistema .tabList b:nth-child(even) { background: color-mix(in srgb, var(--preview-dark-bar) 45%, transparent); }
 }
+
+/* Escritorio (v0.9.834) */
+.deskGrid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; max-width: 760px; }
+.deskCard { display: flex; flex-direction: column; gap: 12px; padding: 12px; border-radius: 20px; border: 1.5px solid var(--desk-hair); background: none; color: var(--text); text-align: center; }
+.deskCardOn { border-color: var(--accent); box-shadow: 0 0 0 1.5px var(--accent); }
+.deskPrev { display: flex; height: 128px; border-radius: 12px; overflow: hidden; border: 1px solid var(--desk-hair); }
+.deskLabel { display: inline-flex; align-items: center; justify-content: center; gap: 8px; font-size: 13.5px; font-weight: 600; }
+@media (hover: hover) and (pointer: fine) {
+  .deskCard:hover:not(.deskCardOn) { background: var(--desk-chip); translate: none; filter: none; }
+  .deskCardOn:hover { translate: none; filter: none; }
+}

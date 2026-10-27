@@ -1111,6 +1111,12 @@
     "scan": "Escanear ticket",
     "scanHint": "Foto del recibo"
   },
+  "deskSettings": {
+      "freqHelp": "Cada cuánto recibes tu pago",
+      "daysHelp": "Los días en que cobras",
+      "nextHelp": "Calculado con tu configuración",
+      "incomeOff": "Sin sueldo fijo"
+  },
   "deskGoals": {
       "ofTarget": "de {{amount}} · {{pct}}%",
     "listTitle": "Mis metas",

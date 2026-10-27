@@ -1,6 +1,7 @@
 import { ChevronLeft } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import styles from './PageHero.module.css'
+import { useDeskSettings } from './DeskSettingsContext'
 
 // Encabezado "hero" reutilizable para sub-páginas de Ajustes — resplandor
 // azul detrás + botón de regreso e ícono representativo en la misma fila +
@@ -28,6 +29,18 @@ import styles from './PageHero.module.css'
 // de páginas).
 export function PageHero({ icon: Icon, title, description, onBack, weight = 'duotone', action = null, accentColor = 'var(--accent)' }) {
   const { t } = useTranslation()
+  const desk = useDeskSettings()
+  if (desk) {
+    return (
+      <div className={styles.deskHead}>
+        <div>
+          <h3 className={styles.deskTitle}>{title}</h3>
+          <p className={styles.deskDesc}>{description}</p>
+        </div>
+        {action}
+      </div>
+    )
+  }
   return (
     <>
       <div className={styles.glow} style={{ '--pageHeroAccent': accentColor }} />

@@ -10,6 +10,7 @@ import { CATEGORIES, getCatColor, getCategoryLabel } from '../../lib/utils'
 import { getCategoryIcon } from '../../lib/categoryIcons'
 import { Card } from '../../components/SettingsShared'
 import { CategoryFormModal } from '../../components/CategoryFormModal'
+import { useDeskSettings } from '../../components/DeskSettingsContext'
 import styles from './SettingsCategoriesPage.module.css'
 import { kbd } from '../../lib/a11y'
 
@@ -29,6 +30,7 @@ import { kbd } from '../../lib/a11y'
 // pasada de extracción de texto.
 export function SettingsCategoriesPage({ profile, onUpdate, onBack, slideClass }) {
   const { t } = useTranslation()
+  const desk = useDeskSettings()
   const [modalOpen,   setModalOpen]   = useState(false)
   const [editingCat,  setEditingCat]  = useState(null) // { name, isCustom } | null (null = agregar nueva)
 
@@ -115,7 +117,7 @@ export function SettingsCategoriesPage({ profile, onUpdate, onBack, slideClass }
           larga. EXCEPCIÓN DOCUMENTADA a la Regla 13 (radius 5px / pills
           solo en segmentados de 2 posiciones) — ver RULES.md, ya aprobada
           para este mismo tipo de botón en Metas. */}
-      <div className={styles.addPillRow}>
+      <div className={`${styles.addPillRow} ${desk ? styles.addPillRowDesk : ''}`}>
         <button type="button" onClick={openAdd} className={styles.addPill}>
           <Plus size={18} color="var(--surface)" />
           {t('settingsCategories.addButton')}

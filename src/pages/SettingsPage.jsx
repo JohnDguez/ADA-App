@@ -22,6 +22,8 @@ import { markBackHandled, wasBackHandled } from '../lib/backNav'
 import { AvatarImg } from '../components/AvatarImg'
 import { Presence } from '../components/Presence'
 import { LanguageSheet, useLanguageOptions } from '../components/LanguageSheet'
+import { useIsDesktop } from '../hooks/useIsDesktop'
+import { DeskSettings } from './DeskSettings'
 
 // Galería de avatares preestablecidos — imágenes estáticas servidas desde
 // public/avatars/ (Vite/Vercel las expone tal cual, sin pasar por Supabase
@@ -68,6 +70,7 @@ function OptionCard({ icon: Icon, tone, label, value, onClick }) {
 
 export function SettingsPage({ profile, user, onUpdate, onUploadAvatar, onDataDeleted, slideClass, theme, onThemeChange, onOpenPremium, sharedSpaces, paymentMethods, personalPayments = null, onPayCardNow, onSettlePlan, onOpenImport, initialSection, onConsumeInitialSection, returnTab, onReturnToTab }) {
   const { t } = useTranslation()
+  const isDesktop = useIsDesktop()
   const [languageOpen, setLanguageOpen] = useState(false)
   // Tablet (≥768px): tarjetas por opción en vez de la lista de filas.
   const [isTablet, setIsTablet] = useState(() => typeof window !== 'undefined' && window.matchMedia('(min-width: 768px)').matches)
@@ -240,46 +243,56 @@ export function SettingsPage({ profile, user, onUpdate, onUploadAvatar, onDataDe
     await supabase.auth.signOut()
   }
 
-  if (section === 'account') {
-    return <SettingsAccountPage profile={profile} user={user} onUpdate={onUpdate} onDataDeleted={onDataDeleted} onBack={back} onGoSubscription={() => openSection('subscription')} slideClass={slideClass} />
+  // Sub-página de una sección. En escritorio (v0.9.834) se muestra dentro del
+  // panel derecho: sin «atrás» ni animación de entrada propia.
+  const noop = () => {}
+  function sectionEl(s, desk) {
+    if (s === 'account') return <SettingsAccountPage profile={profile} user={user} onUpdate={onUpdate} onDataDeleted={onDataDeleted} onBack={desk ? noop : back} onGoSubscription={() => openSection('subscription')} slideClass={desk ? '' : slideClass} />
+    if (s === 'categories') return <SettingsCategoriesPage profile={profile} onUpdate={onUpdate} onBack={desk ? noop : back} slideClass={desk ? '' : slideClass} />
+    if (s === 'cobro') return <SettingsCobroPage profile={profile} onUpdate={onUpdate} onBack={desk ? noop : back} slideClass={desk ? '' : slideClass} />
+    if (s === 'notifications') return <SettingsNotificationsPage profile={profile} user={user} onUpdate={onUpdate} onBack={desk ? noop : back} slideClass={desk ? '' : slideClass} />
+    if (s === 'appearance') return <SettingsAppearancePage theme={theme} onThemeChange={onThemeChange} onBack={desk ? noop : back} slideClass={desk ? '' : slideClass} />
+    if (s === 'sharedspace') return <SettingsSharedSpacePage profile={profile} user={user} sharedSpaces={sharedSpaces} onBack={desk ? noop : back} slideClass={desk ? '' : slideClass} onOpenPremium={onOpenPremium} />
+    if (s === 'subscription') return <SettingsSubscriptionPage profile={profile} onOpenPremium={onOpenPremium} onBack={desk ? noop : back} slideClass={desk ? '' : slideClass} />
+    if (s === 'cards') return <SettingsCardsPage profile={profile} paymentMethods={paymentMethods} personalPayments={personalPayments} sharedSpaces={sharedSpaces} onPayCardNow={onPayCardNow} onSettlePlan={onSettlePlan} onBack={desk ? noop : back} slideClass={desk ? '' : slideClass} />
+    if (s === 'export') return <SettingsExportPage profile={profile} sharedSpaces={sharedSpaces} onOpenPremium={onOpenPremium} onBack={desk ? noop : back} slideClass={desk ? '' : slideClass} />
+    return null
   }
-  if (section === 'categories') {
-    return <SettingsCategoriesPage profile={profile} onUpdate={onUpdate} onBack={back} slideClass={slideClass} />
+  if (!isDesktop) {
+    const el = sectionEl(section, false)
+    if (el) return el
   }
-  if (section === 'cobro') {
-    return <SettingsCobroPage profile={profile} onUpdate={onUpdate} onBack={back} slideClass={slideClass} />
-  }
-  if (section === 'notifications') {
-    return <SettingsNotificationsPage profile={profile} user={user} onUpdate={onUpdate} onBack={back} slideClass={slideClass} />
-  }
-  if (section === 'appearance') {
-    return <SettingsAppearancePage theme={theme} onThemeChange={onThemeChange} onBack={back} slideClass={slideClass} />
-  }
-  if (section === 'sharedspace') {
-    return <SettingsSharedSpacePage profile={profile} user={user} sharedSpaces={sharedSpaces} onBack={back} slideClass={slideClass} onOpenPremium={onOpenPremium} />
-  }
-  if (section === 'subscription') {
-    return <SettingsSubscriptionPage profile={profile} onOpenPremium={onOpenPremium} onBack={back} slideClass={slideClass} />
-  }
-  if (section === 'cards') {
-    return <SettingsCardsPage profile={profile} paymentMethods={paymentMethods} personalPayments={personalPayments} sharedSpaces={sharedSpaces} onPayCardNow={onPayCardNow} onSettlePlan={onSettlePlan} onBack={back} slideClass={slideClass} />
-  }
-  if (section === 'export') {
-    return <SettingsExportPage profile={profile} sharedSpaces={sharedSpaces} onOpenPremium={onOpenPremium} onBack={back} slideClass={slideClass} />
-  }
+  const deskCurrent = VALID_SECTIONS.includes(section) ? section : 'cobro'
+  const deskData = isDesktop ? {
+    profile, user, initials, current: deskCurrent,
+    onSelect: s => { shortcutReturnRef.current = null; setSection(s) },
+    content: sectionEl(deskCurrent, true),
+    nav: {
+      cobroValue: [FREQ_LABEL[profile.cobro_freq], profile.currency].filter(Boolean).join(' · '),
+      themeValue: THEME_LABEL[theme] || '',
+      languageValue: languageOptions.find(o => o.id === (profile.language || 'system'))?.label,
+      onLanguage: () => setLanguageOpen(true),
+      onImport: onOpenImport,
+      onTutorial: () => onUpdate({ coachmarks_seen: {} }),
+      onFeedback: handleGiveFeedback,
+    },
+    onUploadClick: () => setAvatarModal('choice'), uploadingAvatar, onOpenPremium, onLogout: handleLogout, versionLabel, appName: APP_NAME,
+  } : null
 
   return (
-    <div className={`${slideClass} ${styles.pageWrapper}`}>
+    <div className={`${slideClass} ${styles.pageWrapper} ${isDesktop ? styles.pageRootDesk : ''}`}>
       {/* Resplandor — azul de acento en cuenta normal, dorado premium si
           profile.is_premium (pedido de Johnatan, mismo criterio que la
           prop accentColor de PageHero.jsx, pero esta pantalla no usa
           PageHero: no tiene botón de regreso, es la raíz del tab). */}
-      <div
+      {!isDesktop && <div
         className={styles.glow}
         style={{ '--settingsGlowAccent': profile.is_premium ? 'var(--premium-gold)' : 'var(--accent)' }}
-      />
+      />}
 
-      {!isTablet && (<>
+      {isDesktop && <DeskSettings d={deskData} />}
+
+      {!isTablet && !isDesktop && (<>
       {/* Avatar */}
       <div className={styles.avatarSection}>
         <div className={styles.avatarWrapper}>
@@ -359,7 +372,7 @@ export function SettingsPage({ profile, user, onUpdate, onUploadAvatar, onDataDe
 
       </>)}
 
-      {isTablet && (
+      {isTablet && !isDesktop && (
         <div className={styles.tabletWrap}>
           <div className={styles.headCard}>
             <div className={styles.headText}>
@@ -437,7 +450,7 @@ export function SettingsPage({ profile, user, onUpdate, onUploadAvatar, onDataDe
 
       <LanguageSheet open={languageOpen} onClose={() => setLanguageOpen(false)} profile={profile} onUpdate={onUpdate} />
 
-      {!isTablet && (<>
+      {!isTablet && !isDesktop && (<>
       {/* Sesión */}
       <Card>
         <button onClick={handleLogout} className={styles.logoutButton}>

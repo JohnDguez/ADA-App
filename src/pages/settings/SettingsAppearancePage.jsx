@@ -7,6 +7,7 @@ import { MoonStars } from '@phosphor-icons/react/dist/csr/MoonStars'
 import { PageHero } from '../../components/PageHero'
 import styles from './SettingsAppearancePage.module.css'
 import { kbd } from '../../lib/a11y'
+import { useDeskSettings } from '../../components/DeskSettingsContext'
 
 // Los 3 íconos de las tarjetas SÍ son de Lucide (no Phosphor) — a
 // diferencia del ícono del encabezado, estos son la propia ACCIÓN
@@ -33,6 +34,7 @@ const OPTIONS = [
 // tocarla aparte.
 export function SettingsAppearancePage({ theme, onThemeChange, onBack, slideClass }) {
   const { t } = useTranslation()
+  const desk = useDeskSettings()
   const trackRef = useRef(null)
   const settleTimeout = useRef(null)
 
@@ -81,6 +83,31 @@ export function SettingsAppearancePage({ theme, onThemeChange, onBack, slideClas
     const card = track?.children[idx]
     if (!card) return
     track.scrollTo({ left: card.offsetLeft - (track.clientWidth - card.offsetWidth) / 2, behavior: 'smooth' })
+  }
+
+  // Escritorio (v0.9.834): las 3 opciones lado a lado, sin carrusel.
+  if (desk) {
+    return (
+      <div>
+        <PageHero icon={MoonStars} title={t('settingsAppearance.title')} description={t('settingsAppearance.description')} onBack={onBack} />
+        <div className={styles.deskGrid} role="radiogroup" aria-label={t('settingsAppearance.title')}>
+          {OPTIONS.map(({ id, icon: Icon }) => (
+            <button key={id} type="button" role="radio" aria-checked={theme === id} onClick={() => onThemeChange(id)} className={`${styles.deskCard} ${theme === id ? styles.deskCardOn : ''}`}>
+              <div className={`${styles.deskPrev} ${styles['tab_' + id]}`}>
+                <div className={styles.tabRail} />
+                <div className={styles.tabBody}>
+                  <i className={styles.tabBar1} />
+                  <i className={styles.tabBar2} />
+                  <i className={styles.tabAccent} />
+                  <div className={styles.tabGrid}><b /><b /><b /><b /></div>
+                </div>
+              </div>
+              <span className={styles.deskLabel}><Icon size={16} />{t(`theme.${id === 'sistema' ? 'system' : id}`)}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+    )
   }
 
   return (

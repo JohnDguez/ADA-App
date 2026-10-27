@@ -1,6 +1,7 @@
 import { ChevronRight } from 'lucide-react'
 import styles from './SettingsShared.module.css'
 import { kbdIf, switchProps } from '../lib/a11y'
+import { useDeskSettings } from './DeskSettingsContext'
 
 // Componentes reutilizados por SettingsPage.jsx y sus sub-páginas
 // (SettingsAccountPage, SettingsCobroPage, SettingsCategoriesPage,
@@ -8,7 +9,8 @@ import { kbdIf, switchProps } from '../lib/a11y'
 // al final de SettingsPage.jsx.
 
 export function Card({ children }) {
-  return <div className={styles.card}>{children}</div>
+  const desk = useDeskSettings()
+  return <div className={`${styles.card} ${desk ? styles.cardDesk : ''}`}>{children}</div>
 }
 
 export function SectionLabel({ children }) {
