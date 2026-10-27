@@ -519,17 +519,13 @@
   background: var(--swatch-color);
 }
 
-/* v0.9.811 — envoltorio de la tarjeta del periodo actual + sus pagados (solo
-   escritorio); en móvil/tablet se comporta como la tarjeta sola. */
-.metricColActual { min-width: 100%; }
-.paidUnderCard { display: none; }
-
-/* ── Escritorio (≥1100px, v0.9.810) — tablero ────────────────────────────────
-   Se quita el switch Periodo/Próximo: las dos tarjetas de métricas se ven a la
-   vez y los pagos se reparten en columnas por urgencia (Vencidos / Este
-   periodo / Próximos). Solo CSS: lo inline que fija el swipe (alto y
-   translateX) se anula con !important dentro de este @media. */
-.deskColTitle { display: none; }
+/* ── Escritorio (≥1100px, v0.9.812) — lista + resumen fijo ───────────────────
+   Layout propio, no el de móvil reacomodado: a la izquierda las pestañas
+   Este periodo / Próximo y la lista plana de pagos (con su fecha en cada
+   tarjeta); a la derecha un panel fijo con el resumen de los dos periodos
+   (`isDesktop` en HomePage.jsx lo renderiza). Lo inline del swipe móvil
+   (alto, translateX) se anula con !important dentro de este @media. */
+.deskSide { display: none; }
 
 @media (min-width: 1100px) {
   .roundedContentWrapper {
@@ -539,71 +535,76 @@
     overflow-x: visible;
   }
 
-  .tabTrack { display: none; }
-
-  .cardSwipeWrapper {
-    height: auto !important;
-    overflow: visible;
-  }
-  .cardSwipeTrack {
+  .metricCardSection {
     display: grid;
-    grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
-    gap: 16px;
-    transform: none !important;
-  }
-  .metricCard { min-width: 0; }
-  .metricColActual { min-width: 0; }
-
-  .contentSwipeWrap {
-    height: auto !important;
-    overflow: visible;
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    column-gap: 16px;
+    grid-template-columns: minmax(0, 1fr) 340px;
+    grid-template-areas:
+      "tabs side"
+      "list side";
+    column-gap: 20px;
     align-items: start;
   }
-  .contentSwipeWrap.noOverdue { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 
-  /* Los dos paneles dejan de ser capas superpuestas: sus hijos pasan a ser
-     celdas de la cuadrícula. */
-  .contentPanel { display: contents; }
-
-  .panelActual > :not(.paidCollapseWrapper):not(.overdueSection):not(.periodSection) {
-    grid-column: 1 / -1;
-    grid-row: 1;
+  .tabTrack {
+    grid-area: tabs;
+    justify-self: start;
+    margin-bottom: 14px;
   }
-  .overdueSection { grid-row: 2; margin-top: 20px; }
-  .panelActual > .periodSection,
-  .panelNext > .periodSection { grid-row: 2; }
-  .paidCollapseWrapper { display: none; }
-  .paidUnderCard { display: block; margin-top: 10px; }
+  .tabButton { padding: 8px 22px; font-size: 13px; }
 
-  .pendingSectionTitle { display: none; }
+  .cardSwipeWrapper { display: none; }
 
-  .deskColTitle {
+  .deskSide {
+    grid-area: side;
+    grid-row: 1 / span 2;
     display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 14px;
-    font-weight: 700;
-    color: var(--text);
+    flex-direction: column;
+    gap: 14px;
+    position: sticky;
+    top: 16px;
+  }
+  .deskCard {
+    background: var(--surface);
+    border-radius: var(--radius);
+    padding: 18px 20px;
+  }
+  .deskCardTitle { font-size: 14px; font-weight: 700; color: var(--text); }
+  .deskCardRange { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .deskRing { display: flex; justify-content: center; margin: 14px 0 12px; }
+  .deskBig { font-size: 28px; font-weight: 700; color: var(--text); margin: 8px 0 2px; }
+  .deskStats {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+    margin-top: 12px;
+  }
+  .deskStat { background: var(--bg); border-radius: var(--radius-sm); padding: 10px 12px; }
+  .deskStatLabel { font-size: 12px; color: var(--muted); }
+  .deskStatValue { font-size: 17px; font-weight: 700; color: var(--text); margin-top: 2px; }
+  .deskStatDanger { color: var(--danger); }
+
+  .contentSwipeWrap {
+    grid-area: list;
+    height: auto !important;
+    overflow: visible;
+  }
+  .contentPanel {
+    position: static;
+    transform: none !important;
+    display: flex;
+    flex-direction: column;
+  }
+  .panelOff { display: none; }
+  /* "X pagados" va al final de la lista, no arriba. */
+  .paidCollapseWrapper { order: 99; margin-top: 12px; }
+
+  .overdueSection { margin-top: 0; }
+  .periodSection { margin-top: 16px; }
+  .overdueTitle,
+  .pendingSectionTitle {
+    font-size: 13px;
+    font-weight: 600;
     margin-bottom: 10px;
   }
-  .deskColTitle::before {
-    content: '';
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    background: var(--muted);
-  }
-  .deskColTitleWarn::before { background: var(--warning); }
-  .deskColTitleAccent::before { background: var(--accent); }
-  .overdueTitle { font-size: 14px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
-  .overdueTitle::before {
-    content: '';
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    background: var(--danger);
-  }
+  .pendingSectionTitle { color: var(--muted); }
 }

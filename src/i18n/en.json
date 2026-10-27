@@ -361,8 +361,14 @@
     "paidCount_one": "{{count}} paid",
     "paidCount_other": "{{count}} paid",
     "desktop": {
-      "thisPeriod": "This period",
-      "upcoming": "Upcoming"
+      "thisPeriodTab": "This period",
+      "nextTab": "Next",
+      "toPay": "To pay",
+      "statOverdue": "Overdue",
+      "statVariables": "Variable",
+      "statFixed": "Fixed",
+      "estimatedSub_one": "estimated · {{count}} payment",
+      "estimatedSub_other": "estimated · {{count}} payments"
     },
     "overdueTitle": "Overdue",
     "pendingSectionTitle": "Pending payments",

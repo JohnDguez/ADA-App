@@ -52,3 +52,9 @@
   flex-direction: column;
   gap: 8px;
 }
+
+.flatList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}

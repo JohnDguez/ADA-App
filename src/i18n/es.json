@@ -361,8 +361,14 @@
     "paidCount_one": "{{count}} pagado",
     "paidCount_other": "{{count}} pagados",
     "desktop": {
-      "thisPeriod": "Este periodo",
-      "upcoming": "Próximos"
+      "thisPeriodTab": "Este periodo",
+      "nextTab": "Próximo",
+      "toPay": "Por pagar",
+      "statOverdue": "Vencido",
+      "statVariables": "Variables",
+      "statFixed": "Fijos",
+      "estimatedSub_one": "estimado · {{count}} pago",
+      "estimatedSub_other": "estimado · {{count}} pagos"
     },
     "overdueTitle": "Vencidos",
     "pendingSectionTitle": "Pagos pendientes",

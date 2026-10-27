@@ -89,6 +89,15 @@ export function HomePage({ payments, dataLoading = false, profile, spaceSwitcher
   // dejaba claro de qué periodo era cada pago — ahora solo se ve un bloque
   // a la vez, el que indique el switch de arriba.
   const [activeCard,     setActiveCard]     = useState(0)
+  // Escritorio (≥1100px, v0.9.812): layout propio (lista + resumen fijo), no
+  // el de móvil reacomodado — decide qué se renderiza, no solo el CSS.
+  const [isDesktop, setIsDesktop] = useState(() => typeof window !== 'undefined' && window.matchMedia('(min-width: 1100px)').matches)
+  useEffect(() => {
+    const mq = window.matchMedia('(min-width: 1100px)')
+    const onChange = e => setIsDesktop(e.matches)
+    mq.addEventListener('change', onChange)
+    return () => mq.removeEventListener('change', onChange)
+  }, [])
   const [touchStartX,    setTouchStartX]    = useState(null)
   const [paidExpanded, setPaidExpanded] = useState(false)
 
@@ -388,13 +397,13 @@ export function HomePage({ payments, dataLoading = false, profile, spaceSwitcher
               onClick={() => setActiveCard(0)}
               className={`${styles.tabButton} ${activeCard === 0 ? styles.tabButtonActive : ''}`}
             >
-              {t('homePage.tabs.currentPeriod')}
+              {isDesktop ? t('homePage.desktop.thisPeriodTab') : t('homePage.tabs.currentPeriod')}
             </button>
             <button
               onClick={() => setActiveCard(1)}
               className={`${styles.tabButton} ${activeCard === 1 ? styles.tabButtonActive : ''}`}
             >
-              {t('homePage.tabs.nextPeriod')}
+              {isDesktop ? t('homePage.desktop.nextTab') : t('homePage.tabs.nextPeriod')}
             </button>
           </div>
 
@@ -421,7 +430,6 @@ export function HomePage({ payments, dataLoading = false, profile, spaceSwitcher
                   arriba), luego título/monto/estatus (fijos, vencido,
                   variables — info administrativa, no directamente ligada
                   al anillo, por eso va después). */}
-              <div className={styles.metricColActual}>
               <div ref={actualCardRef} className={styles.metricCard}>
                 {/* Encabezado: fecha del periodo + "Día X de Y" (texto simple,
                     sin contenedor — no debe parecer botón ni competir con el
@@ -491,23 +499,6 @@ export function HomePage({ payments, dataLoading = false, profile, spaceSwitcher
                   </div>
                 )}
               </div>
-              {/* Escritorio (≥1100px, v0.9.811): "X pagados" va justo debajo del
-                  resumen del periodo actual. Es una segunda instancia (misma
-                  `paidExpanded`); la de abajo se oculta en ese ancho. */}
-              {pagadosEstePeriodo.length > 0 && (
-                <div className={styles.paidUnderCard}>
-                  <PaidCollapse
-                    payments={pagadosEstePeriodo}
-                    expanded={paidExpanded}
-                    onToggle={() => setPaidExpanded(v => !v)}
-                    onMarkUnpaid={onMarkUnpaid}
-                    onViewSource={onViewSource}
-                    spaceMembers={spaceMembers}
-                    paymentMethodsList={paymentMethodsList}
-                  />
-                </div>
-              )}
-              </div>
 
               {/* Card 2 — Próximo periodo. Siempre esta data para cualquier
                   frecuencia de cobro (antes solo para Mensual; Semanal/
@@ -564,6 +555,47 @@ export function HomePage({ payments, dataLoading = false, profile, spaceSwitcher
 
         <div className={styles.contentPadding}>
 
+          {/* Escritorio (≥1100px): panel fijo a la derecha con el resumen de los dos
+              periodos (las tarjetas de arriba se ocultan en ese ancho). */}
+          {isDesktop && (() => {
+            const sum = arr => arr.reduce((acc, x) => acc + Number(x.amount || 0), 0)
+            const vencidoMonto = sum(vencidos)
+            const variablesMonto = sum(pagarEsteCobro.filter(x => x.is_variable))
+            const nextFijos = sum(upcoming.filter(x => !x.is_variable))
+            const nextVariables = sum(upcoming.filter(x => x.is_variable))
+            const stat = (label, value, cls = '') => (
+              <div className={styles.deskStat}>
+                <div className={styles.deskStatLabel}>{label}</div>
+                <div className={`${styles.deskStatValue} ${cls}`}>{value}</div>
+              </div>
+            )
+            return (
+              <aside className={styles.deskSide}>
+                <div className={styles.deskCard}>
+                  <div className={styles.deskCardTitle}>{t('homePage.tabs.currentPeriod')}</div>
+                  <div className={styles.deskCardRange}>{periodRange(profile)} · {t('homePage.periodDay', { day: periodDayNumber, total: periodDayTotal })}</div>
+                  <div className={styles.deskRing}><HalfRing key={`d-${activeSpaceId}`} percent={dataLoading || pagarEsteCobro.length === 0 ? 1 : pctPagado / 100} /></div>
+                  <div className={styles.deskStats}>
+                    {stat(t('homePage.statPaid'), dataLoading ? '…' : fmt(pagadoMonto), styles.statBoxPaid)}
+                    {stat(t('homePage.statPending'), dataLoading ? '…' : fmt(pendingAmt))}
+                    {stat(t('homePage.desktop.statOverdue'), dataLoading ? '…' : fmt(vencidoMonto), vencidoMonto > 0 ? styles.deskStatDanger : '')}
+                    {stat(t('homePage.desktop.statVariables'), dataLoading ? '…' : fmt(variablesMonto))}
+                  </div>
+                </div>
+                <div className={styles.deskCard}>
+                  <div className={styles.deskCardTitle}>{t('homePage.tabs.nextPeriod')}</div>
+                  <div className={styles.deskCardRange}>{nextPeriodRange(profile)}</div>
+                  <div className={styles.deskBig}>{dataLoading ? '…' : fmt(nextPeriodKnownTotal)}</div>
+                  <div className={styles.deskCardRange}>{t('homePage.desktop.estimatedSub', { count: nextPeriodFixedCount })}</div>
+                  <div className={styles.deskStats}>
+                    {stat(t('homePage.desktop.statFixed'), dataLoading ? '…' : fmt(nextFijos))}
+                    {stat(t('homePage.desktop.statVariables'), dataLoading ? '…' : fmt(nextVariables))}
+                  </div>
+                </div>
+              </aside>
+            )
+          })()}
+
           {/* Todo lo de abajo ahora reacciona al mismo switch de arriba
               (activeCard) — antes "Vencidos"/"Pagos del periodo" siempre se
               mostraban y "Próximo periodo" era un bloque APARTE, apilado
@@ -581,8 +613,8 @@ export function HomePage({ payments, dataLoading = false, profile, spaceSwitcher
               solo su lista, con `nextPeriodMode` en el PayRail para que el
               check de cada pago pida confirmación antes de marcarlo pagado
               (ver ConfirmNextPeriodPayModal). */}
-          <div className={`${styles.contentSwipeWrap} ${(dataLoading || vencidos.length > 0) ? '' : styles.noOverdue}`} style={{ height: swipeHeight != null ? swipeHeight : 'auto' }}>
-            <div ref={actualPanelRef} className={`${styles.contentPanel} ${styles.panelActual}`} style={{ transform: `translateX(${activeCard === 0 ? 0 : -100}%)` }}>
+          <div className={styles.contentSwipeWrap} style={{ height: swipeHeight != null ? swipeHeight : 'auto' }}>
+            <div ref={actualPanelRef} className={`${styles.contentPanel} ${activeCard === 0 ? '' : styles.panelOff}`} style={{ transform: `translateX(${activeCard === 0 ? 0 : -100}%)` }}>
               {pagadosEstePeriodo.length > 0 && (
                 <div data-coachmark="home-paid-collapse" className={styles.paidCollapseWrapper}>
                   <PaidCollapse
@@ -622,9 +654,9 @@ export function HomePage({ payments, dataLoading = false, profile, spaceSwitcher
               ) : vencidos.length > 0 && (
                 <div className={styles.overdueSection}>
                   <div className={styles.overdueTitle}>
-                    {t('homePage.overdueTitle')}
+                    {t('homePage.overdueTitle')}{isDesktop ? ` · ${vencidos.length}` : ''}
                   </div>
-                  <PayRail payments={vencidos} cfg={profile} dotColor="var(--overdue-border)" dotTextColor="var(--overdue-text)" handlers={handlers} permissions={spacePermissions} spaceMembers={spaceMembers} />
+                  <PayRail flat={isDesktop} payments={vencidos} cfg={profile} dotColor="var(--overdue-border)" dotTextColor="var(--overdue-text)" handlers={handlers} permissions={spacePermissions} spaceMembers={spaceMembers} />
                 </div>
               )}
 
@@ -638,9 +670,8 @@ export function HomePage({ payments, dataLoading = false, profile, spaceSwitcher
                   bloques; si no hay vencidos, la lista ya es autoexplicativa
                   justo debajo del colapsable de pagados y no hace falta. */}
               <div data-coachmark="home-rail" className={styles.periodSection}>
-                <div className={`${styles.deskColTitle} ${styles.deskColTitleWarn}`}>{t('homePage.desktop.thisPeriod')}</div>
-                {(dataLoading || (vencidos.length > 0 && delPeriodo.length > 0)) && (
-                  <div className={styles.pendingSectionTitle}>{t('homePage.pendingSectionTitle')}</div>
+                {(dataLoading || (isDesktop ? delPeriodo.length > 0 : (vencidos.length > 0 && delPeriodo.length > 0))) && (
+                  <div className={styles.pendingSectionTitle}>{isDesktop && !dataLoading ? `${t('homePage.desktop.toPay')} · ${delPeriodo.length}` : t('homePage.pendingSectionTitle')}</div>
                 )}
                 {delPeriodo.length === 0
                   /* Fase 1 del sistema de carga por sección (agosto 2026):
@@ -654,17 +685,16 @@ export function HomePage({ payments, dataLoading = false, profile, spaceSwitcher
                       {vencidos.length === 0 && <EmptyState title={t('homePage.emptyState.currentPeriodTitle')} subtitle={t('homePage.emptyState.subtitle')} onClick={onAdd} secondaryLabel={onImport ? t('importCsv.emptyLink') : undefined} onSecondaryClick={onImport} />}
                       <TipCard inSpace={!!(activeSpaceId && activeSpaceId !== 'new')} isOwner={spacePermissions?.isRestricted === false} perms={spacePermissions} compact={vencidos.length > 0} onAction={a => a?.startsWith('settings:') ? onGoSettingsSection?.(a.slice(9)) : a?.startsWith('tab:') ? onGoTab?.(a.slice(4)) : (a === 'voice' || a === 'scan') ? onStartAdd?.(a) : a === 'addmenu' ? (onOpenAddMenu || onAdd)?.() : onAdd?.()} />
                     </>)
-                  : <PayRail payments={delPeriodo} cfg={profile} dotColor="var(--upcoming-border)" dotTextColor="var(--impact-warning-text)" handlers={handlers} permissions={spacePermissions} spaceMembers={spaceMembers} />
+                  : <PayRail flat={isDesktop} payments={delPeriodo} cfg={profile} dotColor="var(--upcoming-border)" dotTextColor="var(--impact-warning-text)" handlers={handlers} permissions={spacePermissions} spaceMembers={spaceMembers} />
                 }
               </div>
             </div>
 
-            <div ref={nextPanelRef} className={`${styles.contentPanel} ${styles.panelNext}`} style={{ transform: `translateX(${activeCard === 0 ? 100 : 0}%)` }}>
+            <div ref={nextPanelRef} className={`${styles.contentPanel} ${activeCard === 1 ? '' : styles.panelOff}`} style={{ transform: `translateX(${activeCard === 0 ? 100 : 0}%)` }}>
               <div className={styles.periodSection}>
-                <div className={`${styles.deskColTitle} ${styles.deskColTitleAccent}`}>{t('homePage.desktop.upcoming')}</div>
                 {upcoming.length === 0
                   ? (dataLoading ? <RailSkeleton count={2} /> : <EmptyState title={t('homePage.emptyState.nextPeriodTitle')} subtitle={t('homePage.emptyState.subtitle')} onClick={onAdd} />)
-                  : <PayRail payments={upcoming} cfg={profile} dotColor="var(--accent)" dotTextColor="var(--bg)" handlers={handlers} permissions={spacePermissions} nextPeriodMode spaceMembers={spaceMembers} />
+                  : <PayRail flat={isDesktop} payments={upcoming} cfg={profile} dotColor="var(--accent)" dotTextColor="var(--bg)" handlers={handlers} permissions={spacePermissions} nextPeriodMode spaceMembers={spaceMembers} />
                 }
               </div>
             </div>
