@@ -1111,6 +1111,23 @@
     "scan": "Escanear ticket",
     "scanHint": "Foto del recibo"
   },
+  "deskGoals": {
+      "listTitle": "Mis metas",
+      "toGo": "para cumplir todas tus metas",
+      "savedSub_one": "en {{count}} meta activa",
+      "savedSub_other": "en {{count}} metas activas",
+      "lastDone": "la última: {{name}}",
+      "noneDone": "aún ninguna",
+      "noDeadline": "Sin fecha límite",
+      "depositedOf": "abonado de {{amount}} · {{pct}}%",
+      "overallTitle": "Avance total",
+      "ofGoals": "de tus metas",
+      "saved": "Ahorrado",
+      "total": "Meta total",
+      "left": "Restante",
+      "upcoming": "Próximas fechas",
+      "selectHint": "Selecciona una meta para ver su detalle"
+  },
   "deskRecurrents": {
       "listTitle": "Mis recurrentes",
       "ofTotal": "de {{count}} pagos recurrentes",

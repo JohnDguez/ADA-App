@@ -15,6 +15,8 @@ import styles from './GoalsPage.module.css'
 import { markBackHandled, wasBackHandled } from '../lib/backNav'
 import { useScrollTop } from '../hooks/useScrollTop'
 import { Collapse } from '../components/Collapse'
+import { useIsDesktop } from '../hooks/useIsDesktop'
+import { DeskGoals } from './DeskGoals'
 
 function fmtDate(iso) {
   const d = new Date(iso)
@@ -46,6 +48,7 @@ export function GoalsPage({
   unreadCount, onOpenNotifs, onGoSettings, onOpenPremium, slideClass, paymentMethods = null,
 }) {
   const { t } = useTranslation()
+  const isDesktop = useIsDesktop()
   const { activeGoals, completedGoals, totalRestante, loading: goalsLoading, addGoal, updateGoal, aportar, retirar, revertirAporte, markCompleted, deleteGoal } = goalsData
 
   // Mismo criterio que RecurrentsPage.jsx: la animación de entrada del
@@ -167,11 +170,35 @@ export function GoalsPage({
     setFormOpen(false)
   }
 
+  const deskData = isDesktop ? {
+    profile, goalsLoading, rawActiveSpaceId, sharedSpaces, onOpenPremium, onSpaceReady, slideClass, spaceJustChanged,
+    isShared, spaceMembers, canAdd, atFreeLimit, onAdd: handleAddClick, noGoalsAtAll,
+    activeGoals, completedGoals, sortedGoals, sortBy, setSortBy, goalsView, setGoalsView,
+    totalRestante, totalAhorrado, selectedGoal, setSelectedGoalId,
+    detailProps: selectedGoal ? {
+      isShared,
+      canContribute: isShared ? !!spacePermissions?.can_contribute_goals : true,
+      canWithdraw: isShared ? !!spacePermissions?.can_withdraw_goals : true,
+      canEdit: isShared ? !!spacePermissions?.can_edit_goals : true,
+      canDelete: isShared ? !!spacePermissions?.can_delete_goals : true,
+      currentUserId: profile.id, spaceMembers,
+      hasIncome: !!(profile?.salary_enabled && Number(profile?.salary_amount) > 0),
+      onBack: () => setSelectedGoalId(null),
+      onEdit: () => openEdit(selectedGoal),
+      onAportar: (amount, method) => aportar(selectedGoal.id, amount, selectedGoal.name, method),
+      paymentMethods,
+      onRetirar: amount => retirar(selectedGoal.id, amount, selectedGoal.name),
+      onRevert: transactionId => revertirAporte(transactionId),
+      onMarkCompleted: completed => markCompleted(selectedGoal.id, completed),
+      onDelete: resolution => { deleteGoal(selectedGoal.id, resolution); setSelectedGoalId(null) },
+    } : null,
+  } : null
+
   return (
-    <div className={styles.pageRoot}>
+    <div className={`${styles.pageRoot} ${isDesktop ? styles.pageRootDesk : ''}`}>
       {/* Oculto desde 768px — NavRail.jsx ya cubre avatar, saludo,
           notificaciones y config (mismo criterio que las demás páginas). */}
-      <div className={styles.pageHeaderWrapper}>
+      {!isDesktop && <div className={styles.pageHeaderWrapper}>
         <PageHeader
           profile={profile}
           unreadCount={unreadCount}
@@ -179,8 +206,9 @@ export function GoalsPage({
           onGoSettings={onGoSettings}
           onOpenPremium={onOpenPremium}
         />
-      </div>
+      </div>}
 
+      {isDesktop ? <DeskGoals d={deskData} /> : (
       <div className={styles.roundedContentWrapper}>
         <div className={styles.spaceSwitcherMobileWrap}>{spaceSwitcher}</div>
 
@@ -365,8 +393,9 @@ export function GoalsPage({
           </div>
         </div>
       </div>
+      )}
 
-      {!isTablet && !selectedGoal && rawActiveSpaceId !== 'new' && (
+      {!isDesktop && !isTablet && !selectedGoal && rawActiveSpaceId !== 'new' && (
         <div data-coachmark="metas-add-pill" className={styles.addPillRow}>
           <button type="button" className={`${styles.addPill} ${(!canAdd && !atFreeLimit) ? styles.addPillDisabled : ''}`} onClick={handleAddClick}>
             <Plus size={18} color="var(--on-color)" />

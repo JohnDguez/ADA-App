@@ -432,3 +432,5 @@
     gap: 16px;
   }
 }
+
+.pageRootDesk { padding-bottom: 0; min-height: 0; background: none; }

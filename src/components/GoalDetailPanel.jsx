@@ -25,7 +25,7 @@ function fmtDate(iso) {
 export function GoalDetailPanel({
   goal, onBack, onEdit, onAportar, onRetirar, onRevert, onMarkCompleted, onDelete,
   isShared = false, canContribute = true, canWithdraw = true, canEdit = true, canDelete = true, currentUserId = null, spaceMembers = [],
-  hasIncome = true, paymentMethods = null,
+  hasIncome = true, paymentMethods = null, desk = false,
 }) {
   const { t } = useTranslation()
   const [menuOpen, setMenuOpen] = useState(false)
@@ -136,7 +136,7 @@ export function GoalDetailPanel({
   }
 
   return (
-    <div className={styles.screen}>
+    <div className={`${styles.screen} ${desk ? styles.desk : ''}`}>
       <div className={styles.header}>
         <button type="button" onClick={onBack} className={styles.iconButton} aria-label={t('goalDetailPanel.back')}>
           <ChevronLeft size={22} color="var(--text)" />
@@ -178,7 +178,7 @@ export function GoalDetailPanel({
 
       <div className={styles.body}>
       <div className={styles.summaryCol}>
-      <div className={styles.ring} style={{ background: `conic-gradient(var(--paid) 0% ${goal.percent}%, var(--border) ${goal.percent}% 100%)` }}>
+      <div className={styles.ring} style={{ background: `conic-gradient(${desk ? 'var(--accent)' : 'var(--paid)'} 0% ${goal.percent}%, ${desk ? 'var(--desk-chip)' : 'var(--border)'} ${goal.percent}% 100%)` }}>
         <div className={styles.ringInner}>
           <div className={styles.ringPercent}>{goal.percent}%</div>
           <div className={styles.ringAmounts}>{fmt(goal.currentAmount)} / {fmt(goal.target_amount)}</div>
@@ -287,7 +287,7 @@ export function GoalDetailPanel({
           </div>
         </>
       ) : (
-        <div className={styles.historyList}>
+        <div className={`${styles.historyList} ${desk ? 'scroll-y' : ''}`}>
           {goal.transactions.map(tx => {
             const isAporte = tx.type === 'aporte'
             const TxIcon = isAporte ? ArrowUpCircle : ArrowDownCircle
