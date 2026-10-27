@@ -1111,6 +1111,15 @@
     "scan": "Scan a receipt",
     "scanHint": "Photo of the receipt"
   },
+  "deskRecurrents": {
+      "listTitle": "My recurring payments",
+      "ofTotal": "of {{count}} recurring payments",
+      "pausedLabel": "Paused",
+      "pausedSub": "no charges generated",
+      "installmentsLabel": "Installments",
+      "noInstallments": "no active plans",
+      "selectHint": "Select a payment to see its details"
+  },
   "deskPayments": {
     "hint": "Click a category to filter the payments and the chart.",
     "hintActive": "Filtering by {{cat}}. Click again to clear the filter.",

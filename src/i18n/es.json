@@ -1111,6 +1111,15 @@
     "scan": "Escanear ticket",
     "scanHint": "Foto del recibo"
   },
+  "deskRecurrents": {
+      "listTitle": "Mis recurrentes",
+      "ofTotal": "de {{count}} pagos recurrentes",
+      "pausedLabel": "Pausados",
+      "pausedSub": "no generan cobros",
+      "installmentsLabel": "Parcialidades",
+      "noInstallments": "sin planes activos",
+      "selectHint": "Selecciona un pago para ver su detalle"
+  },
   "deskPayments": {
     "hint": "Haz clic en una categoría para filtrar los pagos y la gráfica.",
     "hintActive": "Filtrando por {{cat}}. Haz clic de nuevo para quitar el filtro.",

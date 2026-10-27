@@ -16,6 +16,8 @@ import { useScrollLock } from '../lib/scrollLock'
 import { Collapse } from '../components/Collapse'
 import { usePresence } from '../lib/usePresence'
 import { kbd } from '../lib/a11y'
+import { useIsDesktop } from '../hooks/useIsDesktop'
+import { DeskRecurrents } from './DeskRecurrents'
 
 function FilterChip({ label, active, onClick }) {
   return (
@@ -27,6 +29,7 @@ function FilterChip({ label, active, onClick }) {
 
 export function RecurrentsPage({ payments, dataLoading = false, profile, spaceSwitcher, activeSpaceHeader, activeSpaceId = null, sharedSpaces, spacePermissions, onOpenPremium, onSpaceReady, unreadCount, onOpenNotifs, onGoSettings, onPause, onResume, onDelete, onEdit, onAdd, slideClass }) {
   const { t } = useTranslation()
+  const isDesktop = useIsDesktop()
   // Mismo mecanismo que HomePage.jsx — ver ahí el porqué (evitar que la
   // animación de entrada se dispare también en un simple cambio de
   // pestaña, no solo en un cambio real de espacio).
@@ -150,13 +153,24 @@ export function RecurrentsPage({ payments, dataLoading = false, profile, spaceSw
     return `${d.getDate()} ${getMonthsShort()[d.getMonth()]}`
   }
 
+  const deskData = isDesktop ? {
+    profile, dataLoading, activeSpaceId, sharedSpaces, spacePermissions, slideClass, spaceJustChanged, onOpenPremium, onSpaceReady, onAdd,
+    search, setSearch, filterStatus, setFilterStatus, filterType, setFilterType, byCategory,
+    totals: { active: activeMasters.length, paused: pausedMasters.length, all: masters.length, monthly: totalMensual },
+    freqRows, freqMax, variableCount,
+    installments: { count: installmentMasters.length, left: installmentsLeft, leftAmount: installmentsLeftAmount },
+    getNextDue, getPaidCount, formatNextDate,
+    canEdit, canDelete, blocked, onPause, onResume, onEdit, onDelete, payments, selectedMaster, setSelectedMasterId,
+    openMenu, setOpenMenu, confirmDelete, setConfirmDelete,
+  } : null
+
   return (
-    <div className={styles.pageRoot} onClick={() => setOpenMenu(null)}>
+    <div className={`${styles.pageRoot} ${isDesktop ? styles.pageRootDesk : ''}`} onClick={() => setOpenMenu(null)}>
       {/* Oculto desde 768px — mismo criterio que HomePage/PaymentsPage:
           NavRail.jsx ya cubre avatar, saludo, notificaciones y config. */}
-      <div className={styles.pageHeaderWrapper}>
+      {!isDesktop && <div className={styles.pageHeaderWrapper}>
         <PageHeader profile={profile} unreadCount={unreadCount} onOpenNotifs={onOpenNotifs} onGoSettings={onGoSettings} onOpenPremium={onOpenPremium} />
-      </div>
+      </div>}
 
       {/* Menú contextual flotante */}
       {menuShown && (
@@ -179,6 +193,7 @@ export function RecurrentsPage({ payments, dataLoading = false, profile, spaceSw
         </div>
       )}
 
+      {isDesktop ? <DeskRecurrents d={deskData} /> : (
       <div className={styles.roundedContentWrapper}>
         <div className={styles.spaceSwitcherMobileWrap}>{spaceSwitcher}</div>
 
@@ -512,6 +527,7 @@ export function RecurrentsPage({ payments, dataLoading = false, profile, spaceSw
           </div>
         </div>
       </div>
+      )}
     </div>
   )
 }

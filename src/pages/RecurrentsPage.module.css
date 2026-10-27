@@ -680,3 +680,4 @@
     justify-self: end;
   }
 }
+.pageRootDesk { padding-bottom: 0; min-height: 0; background: none; }
