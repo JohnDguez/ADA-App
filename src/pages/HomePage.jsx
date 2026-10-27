@@ -571,9 +571,8 @@ export function HomePage({ payments, dataLoading = false, profile, spaceSwitcher
           {/* Escritorio (≥1100px): panel fijo a la derecha con el resumen de los dos
               periodos (las tarjetas de arriba se ocultan en ese ancho). */}
           {isDesktop && (() => {
-            const sum = arr => arr.reduce((acc, x) => acc + Number(x.amount || 0), 0)
             const variablesCount = pagarEsteCobro.filter(x => x.is_variable).length
-            const nextFijos = sum(upcoming.filter(x => !x.is_variable))
+            const nextFijosCount = upcoming.filter(x => !x.is_variable).length
             const nextVariablesCount = upcoming.filter(x => x.is_variable).length
             const stat = (label, value, cls = '') => (
               <div className={styles.deskStat}>
@@ -604,7 +603,7 @@ export function HomePage({ payments, dataLoading = false, profile, spaceSwitcher
                   <div className={styles.deskBig}>{dataLoading ? '…' : fmt(nextPeriodKnownTotal)}</div>
                   <div className={styles.deskCardRange}>{t('homePage.desktop.estimatedSub', { count: nextPeriodFixedCount })}</div>
                   <div className={styles.deskStats}>
-                    {stat(t('homePage.desktop.statFixed'), dataLoading ? '…' : fmt(nextFijos))}
+                    {stat(t('homePage.desktop.statFixed'), dataLoading ? '…' : t('homePage.desktop.statCount', { count: nextFijosCount }))}
                     {stat(t('homePage.desktop.statVariables'), dataLoading ? '…' : t('homePage.desktop.statCount', { count: nextVariablesCount }))}
                   </div>
                 </div>
