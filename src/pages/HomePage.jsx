@@ -4,7 +4,9 @@ import { ChevronDown, ChevronUp, Check, RotateCcw, Eye, Loader2 } from 'lucide-r
 import { PayCard } from '../components/PayCard'
 import { PayRail } from '../components/PayRail'
 import { getBank, bankColorVar } from '../lib/cardCatalog'
-import { PageHeader } from '../components/PageHeader'
+import { PageHeader, greeting } from '../components/PageHeader'
+import { PremiumPromo } from '../components/PremiumPromo'
+import { useIsDesktop } from '../hooks/useIsDesktop'
 import { NotificationsPanel } from '../components/NotificationsPanel'
 import { NewSharedSpacePanel } from '../components/NewSharedSpacePanel'
 import { EmptyState } from '../components/EmptyState'
@@ -91,13 +93,7 @@ export function HomePage({ payments, dataLoading = false, profile, spaceSwitcher
   const [activeCard,     setActiveCard]     = useState(0)
   // Escritorio (≥1100px, v0.9.812): layout propio (lista + resumen fijo), no
   // el de móvil reacomodado — decide qué se renderiza, no solo el CSS.
-  const [isDesktop, setIsDesktop] = useState(() => typeof window !== 'undefined' && window.matchMedia('(min-width: 1100px)').matches)
-  useEffect(() => {
-    const mq = window.matchMedia('(min-width: 1100px)')
-    const onChange = e => setIsDesktop(e.matches)
-    mq.addEventListener('change', onChange)
-    return () => mq.removeEventListener('change', onChange)
-  }, [])
+  const isDesktop = useIsDesktop()
   const [touchStartX,    setTouchStartX]    = useState(null)
   const [paidExpanded, setPaidExpanded] = useState(false)
 
@@ -357,7 +353,23 @@ export function HomePage({ payments, dataLoading = false, profile, spaceSwitcher
 
         <div className={styles.spaceSwitcherMobileWrap}>{spaceSwitcher}</div>
 
-        {activeSpaceHeader}
+        {/* Escritorio (≥1100px): el selector de espacio vive en el riel abierto,
+            así que este desplegable se oculta (tablet lo conserva). */}
+        <div className={styles.activeSpaceWrap}>{activeSpaceHeader}</div>
+
+        {/* Escritorio: saludo, nombre y fecha en texto (sin imagen; tablet no
+            lleva encabezado, el riel expandido ya los tiene). */}
+        {isDesktop && (
+          <div className={styles.deskHeader}>
+            <div className={styles.deskGreeting}>{greeting()}</div>
+            <div className={styles.deskName}>{profile?.name || ''}</div>
+            <div className={styles.deskDate}>{new Date().toLocaleDateString(i18n.language, { weekday: 'long', day: 'numeric', month: 'long', ...(profile?.timezone ? { timeZone: profile.timezone } : {}) })}</div>
+          </div>
+        )}
+
+        {/* Tablet (768–1099px): franja de Premium para usuarios gratuitos; el
+            CSS de PremiumPromo la oculta en cualquier otro ancho. */}
+        {!profile?.is_premium && activeSpaceId !== 'new' && <PremiumPromo variant="strip" onOpen={onOpenPremium} />}
 
         <div className={slideClass}>
         <div className={spaceJustChanged ? 'content-slide-up' : ''}>
@@ -398,13 +410,13 @@ export function HomePage({ payments, dataLoading = false, profile, spaceSwitcher
               onClick={() => setActiveCard(0)}
               className={`${styles.tabButton} ${activeCard === 0 ? styles.tabButtonActive : ''}`}
             >
-              {isDesktop ? t('homePage.desktop.thisPeriodTab') : t('homePage.tabs.currentPeriod')}
+              {t('homePage.tabs.currentPeriod')}
             </button>
             <button
               onClick={() => setActiveCard(1)}
               className={`${styles.tabButton} ${activeCard === 1 ? styles.tabButtonActive : ''}`}
             >
-              {isDesktop ? t('homePage.desktop.nextTab') : t('homePage.tabs.nextPeriod')}
+              {t('homePage.tabs.nextPeriod')}
             </button>
           </div>
 
@@ -593,6 +605,7 @@ export function HomePage({ payments, dataLoading = false, profile, spaceSwitcher
                     {stat(t('homePage.desktop.statVariables'), dataLoading ? '…' : fmt(nextVariables))}
                   </div>
                 </div>
+                {!profile?.is_premium && <PremiumPromo variant="card" onOpen={onOpenPremium} />}
               </aside>
             )
           })()}
@@ -683,7 +696,7 @@ export function HomePage({ payments, dataLoading = false, profile, spaceSwitcher
                      nunca con datos del espacio anterior. Mismo criterio en
                      el otro caso de abajo y en los 2 de PaymentsPage. */
                   ? (dataLoading ? <RailSkeleton count={3} /> : <>
-                      {vencidos.length === 0 && <EmptyState title={t('homePage.emptyState.currentPeriodTitle')} subtitle={t('homePage.emptyState.subtitle')} onClick={onAdd} secondaryLabel={onImport ? t('importCsv.emptyLink') : undefined} onSecondaryClick={onImport} />}
+                      {vencidos.length === 0 && <div className={styles.emptyTall}><EmptyState title={t('homePage.emptyState.currentPeriodTitle')} subtitle={t('homePage.emptyState.subtitle')} onClick={onAdd} secondaryLabel={onImport ? t('importCsv.emptyLink') : undefined} onSecondaryClick={onImport} /></div>}
                       <TipCard inSpace={!!(activeSpaceId && activeSpaceId !== 'new')} isOwner={spacePermissions?.isRestricted === false} perms={spacePermissions} compact={vencidos.length > 0} onAction={a => a?.startsWith('settings:') ? onGoSettingsSection?.(a.slice(9)) : a?.startsWith('tab:') ? onGoTab?.(a.slice(4)) : (a === 'voice' || a === 'scan') ? onStartAdd?.(a) : a === 'addmenu' ? (onOpenAddMenu || onAdd)?.() : onAdd?.()} />
                     </>)
                   : <PayRail flat={isDesktop} payments={delPeriodo} cfg={profile} dotColor="var(--upcoming-border)" dotTextColor="var(--impact-warning-text)" handlers={handlers} permissions={spacePermissions} spaceMembers={spaceMembers} />
@@ -694,7 +707,7 @@ export function HomePage({ payments, dataLoading = false, profile, spaceSwitcher
             <div ref={nextPanelRef} className={`${styles.contentPanel} ${activeCard === 1 ? '' : styles.panelOff}`} style={{ transform: `translateX(${activeCard === 0 ? 100 : 0}%)` }}>
               <div className={styles.periodSection}>
                 {upcoming.length === 0
-                  ? (dataLoading ? <RailSkeleton count={2} /> : <EmptyState title={t('homePage.emptyState.nextPeriodTitle')} subtitle={t('homePage.emptyState.subtitle')} onClick={onAdd} />)
+                  ? (dataLoading ? <RailSkeleton count={2} /> : <div className={styles.emptyTall}><EmptyState title={t('homePage.emptyState.nextPeriodTitle')} subtitle={t('homePage.emptyState.subtitle')} onClick={onAdd} /></div>)
                   : <PayRail flat={isDesktop} payments={upcoming} cfg={profile} dotColor="var(--accent)" dotTextColor="var(--bg)" handlers={handlers} permissions={spacePermissions} nextPeriodMode spaceMembers={spaceMembers} />
                 }
               </div>

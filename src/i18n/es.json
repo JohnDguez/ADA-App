@@ -361,8 +361,6 @@
     "paidCount_one": "{{count}} pagado",
     "paidCount_other": "{{count}} pagados",
     "desktop": {
-      "thisPeriodTab": "Este periodo",
-      "nextTab": "Próximo",
       "toPay": "Por pagar",
       "statOverdue": "Vencido",
       "statVariables": "Variables",
@@ -1365,7 +1363,8 @@
     "railLabel": "Espacios",
     "moreSpaces_one": "{{count}} espacio más",
     "moreSpaces_other": "{{count}} espacios más",
-    "showLess": "Mostrar menos"
+    "showLess": "Mostrar menos",
+    "railCreatePremium": "Crear espacio compartido"
   },
   "coachmarks": {
     "skipTutorial": "Saltar tutorial",
@@ -2297,5 +2296,12 @@
       "successRecurring": "Se importaron {{count}} movimientos y se crearon {{recurring}} recurrentes",
       "error": "No se pudo importar. No se guardó ningún movimiento."
     }
+  },
+  "premiumPromo": {
+    "cardTitle": "Lleva LunaPay al siguiente nivel",
+    "cardSub": "Espacios compartidos, metas ilimitadas, recordatorios push y más.",
+    "stripTitle": "Desbloquea LunaPay Premium",
+    "stripSub": "Espacios compartidos, metas ilimitadas y más",
+    "cta": "Ver Premium"
   }
 }

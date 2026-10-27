@@ -80,3 +80,13 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
+/* v0.9.814 — "Crear espacio compartido" para usuarios sin Premium: mismos
+   colores del hero de Premium (tokens, fijos en ambos temas) para que se
+   note que es una función de pago. */
+.itemPremium {
+  background: var(--premium-hero-bg);
+  color: var(--premium-hero-ink);
+  margin-top: 4px;
+}
+.itemPremium .itemName { font-weight: 700; }

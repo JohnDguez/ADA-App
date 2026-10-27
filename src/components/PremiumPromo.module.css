@@ -1,0 +1,56 @@
+.root {
+  background: var(--premium-hero-bg);
+  color: var(--premium-hero-ink);
+  border-radius: var(--radius);
+}
+
+.crown {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: var(--premium-hero-crown-bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.title { font-size: 14px; font-weight: 700; color: var(--premium-hero-ink); }
+.sub { font-size: 12px; color: var(--premium-hero-ink); opacity: 0.85; margin-top: 2px; }
+
+.cta {
+  background: var(--premium-hero-ink);
+  color: var(--premium-hero-sparkle);
+  border-radius: var(--radius-full);
+  padding: 8px 16px;
+  font-size: 12.5px;
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+/* Tarjeta (escritorio, panel derecho) */
+.card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 16px 18px;
+}
+.card .sub { margin-bottom: 4px; }
+
+/* Franja (solo tablet 768–1099px) */
+.strip {
+  display: none;
+}
+
+@media (min-width: 768px) and (max-width: 1099px) {
+  .strip {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 12px 16px;
+    margin-bottom: 16px;
+  }
+  .strip .text { flex: 1; min-width: 0; }
+}

@@ -30,12 +30,15 @@ export function RailSpaceSwitcher({ spaces, activeSpaceId, onSwitch, profile, ex
   const allItems = [
     { id: null, kind: 'personal', name: t('activeSpaceHeader.personalName') },
     ...spaceItems,
-    ...(canAddMore ? [{ id: 'new', kind: 'new', name: t('activeSpaceHeader.newSpaceName') }] : []),
+    // v0.9.814 — para quien aún no es Premium la fila es dorada y dice
+    // "Crear espacio compartido": así se entiende que crear requiere
+    // Premium (unirse con código sigue siendo gratis, dentro del panel).
+    ...(canAddMore ? [{ id: 'new', kind: 'new', premiumLocked: !profile.is_premium, name: profile.is_premium ? t('activeSpaceHeader.newSpaceName') : t('spaceSwitcher.railCreatePremium') }] : []),
   ]
 
   function iconFor(item) {
     if (item.kind === 'personal') return UserRound
-    if (item.kind === 'new') return Plus
+    if (item.kind === 'new') return item.premiumLocked ? Crown : Plus
     return item.entry.membership.role === 'owner' ? Crown : UsersRound
   }
 
@@ -80,7 +83,7 @@ export function RailSpaceSwitcher({ spaces, activeSpaceId, onSwitch, profile, ex
           <button
             key={item.id ?? 'personal'}
             onClick={() => onSwitch(item.kind === 'new' ? 'new' : item.id)}
-            className={`${styles.item} ${isActive ? styles.itemActive : ''}`}
+            className={`${styles.item} ${isActive ? styles.itemActive : ''} ${item.premiumLocked ? styles.itemPremium : ''}`}
           >
             <Icon size={15} strokeWidth={2} />
             <span className={styles.itemName}>{item.name}</span>
