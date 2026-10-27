@@ -10,7 +10,11 @@
   left: 0;
   right: 0;
   height: 220px;
-  background: radial-gradient(circle at 50% -10%, color-mix(in srgb, var(--pageHeroAccent, var(--accent)) 35%, transparent), transparent 70%);
+  /* v0.9.800 — elipse con radios explícitos (65% del ancho × alto completo):
+     el degradado llega a transparente justo en el borde inferior en
+     CUALQUIER ancho. Antes era un círculo cuyo radio dependía del ancho: en
+     tablet seguía con color al llegar a los 220px y se veía un corte seco. */
+  background: radial-gradient(ellipse 65% 100% at 50% 0%, color-mix(in srgb, var(--pageHeroAccent, var(--accent)) 35%, transparent), transparent 100%);
   pointer-events: none;
   z-index: 0;
 }
