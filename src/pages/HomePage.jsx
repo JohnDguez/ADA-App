@@ -390,6 +390,7 @@ export function HomePage({ payments, dataLoading = false, profile, spaceSwitcher
             patrón oficial a reusar en cualquier otro switch de 2
             posiciones que se agregue después (ej. futuros toggles en
             Ajustes) — no repetir el estilo viejo de 5px para eso. */}
+        <div className={styles.deskGrid}>
         <div data-coachmark="home-metric-card" className={styles.metricCardSection}>
           <div className={styles.tabTrack}>
             <div className={styles.tabThumb} style={{ transform: `translateX(${activeCard * 100}%)` }} />
@@ -699,6 +700,7 @@ export function HomePage({ payments, dataLoading = false, profile, spaceSwitcher
               </div>
             </div>
           </div>
+        </div>
         </div>
         </>
         )}

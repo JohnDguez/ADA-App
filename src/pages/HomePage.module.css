@@ -525,6 +525,7 @@
    tarjeta); a la derecha un panel fijo con el resumen de los dos periodos
    (`isDesktop` en HomePage.jsx lo renderiza). Lo inline del swipe móvil
    (alto, translateX) se anula con !important dentro de este @media. */
+.deskGrid { display: contents; }
 .deskSide { display: none; }
 
 @media (min-width: 1100px) {
@@ -535,7 +536,13 @@
     overflow-x: visible;
   }
 
-  .metricCardSection {
+  /* La cuadrícula vive en .deskGrid para que pestañas, panel y lista sean
+     hermanos; los contenedores móviles se vuelven transparentes. */
+  .metricCardSection,
+  .contentPadding { display: contents; }
+
+  .deskGrid {
+    padding: 20px 16px 0;
     display: grid;
     grid-template-columns: minmax(0, 1fr) 340px;
     grid-template-areas:
