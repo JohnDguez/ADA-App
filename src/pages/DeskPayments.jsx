@@ -1,6 +1,6 @@
-import { useRef, useMemo } from 'react'
+import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Plus, ArrowUpRight, ChevronRight, MoreVertical, Eye, Loader2, Pencil } from 'lucide-react'
+import { Plus, ChevronRight, MoreVertical, Eye, Loader2, Pencil } from 'lucide-react'
 import { NewSharedSpacePanel } from '../components/NewSharedSpacePanel'
 import { EmptyState } from '../components/EmptyState'
 import { PaidByStack } from '../components/PaidByStack'
@@ -71,10 +71,6 @@ export function DeskPayments({ d }) {
   } = d
 
   const { timeOfDay, mountedKeys } = useHeaderBackground(profile?.timezone)
-  const tableRef = useRef(null)
-  const catRef = useRef(null)
-  const chartRef = useRef(null)
-  const toCard = ref => ref.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
 
   const catColor = c => getCatColor(c, profile.custom_categories, profile.category_colors)
   const selectedLabel = selectedCat ? getCategoryLabel(selectedCat) : null
@@ -146,7 +142,6 @@ export function DeskPayments({ d }) {
               <section className={home.tiles}>
                 {/* Disponible este periodo */}
                 <div data-coachmark="gastos-disponible-card" className={`${home.tile} ${home.tileHero}`}>
-                  <button type="button" className={home.tileArrow} onClick={() => toCard(tableRef)} aria-label={t('paymentsPage.paymentsTitle')}><ArrowUpRight size={16} strokeWidth={1.8} /></button>
                   <span className={home.tileLabel}>{t('paymentsPage.availableThisPeriod')}</span>
                   {balance.noIncomeYet ? (
                     <>
@@ -164,7 +159,6 @@ export function DeskPayments({ d }) {
 
                 {/* Gastado */}
                 <div className={home.tile}>
-                  <button type="button" className={home.tileArrow} onClick={() => toCard(catRef)} aria-label={t('paymentsPage.byCategory')}><ArrowUpRight size={16} strokeWidth={1.8} /></button>
                   <span className={home.tileLabel}>{t('paymentsPage.spent')}</span>
                   <span className={home.tileNum}>{balance.loading ? <Bone w={150} h={36} r={8} /> : <>{spentInt}<small>{spentCents}</small></>}</span>
                   <span className={home.tileSub}>{balance.loading ? '' : t('deskPayments.ofIncome', { amount: fmt(balance.ingresoTotal) })}</span>
@@ -194,7 +188,6 @@ export function DeskPayments({ d }) {
 
                 {/* Promedio mensual */}
                 <div className={home.tile}>
-                  <button type="button" className={home.tileArrow} onClick={() => toCard(chartRef)} aria-label={t('paymentsPage.monthlyExpenses')}><ArrowUpRight size={16} strokeWidth={1.8} /></button>
                   <span className={home.tileLabel}>{t('paymentsPage.monthlyAverage')}</span>
                   <span className={home.tileNum}>{dataLoading ? <Bone w={130} h={36} r={8} /> : avgInt}</span>
                   <span className={home.tileSub}>{dataLoading ? '' : <>{t('paymentsPage.totalMonths', { count: chart.monthsBack })} <b>{fmt(chart.grandTotal)}</b></>}</span>
@@ -203,7 +196,7 @@ export function DeskPayments({ d }) {
 
               <div className={home.body}>
                 {/* ── Pagos ── */}
-                <section ref={tableRef} className={home.list}>
+                <section className={home.list}>
                   <div className={styles.listTop}>
                     <h2 className={home.cardTitle}>{selectedLabel ? t('deskPayments.paymentsIn', { cat: selectedLabel }) : t('paymentsPage.paymentsTitle')}</h2>
                     {visibleRows.length > 0 && (
@@ -301,7 +294,7 @@ export function DeskPayments({ d }) {
 
                 {/* ── Columna derecha ── */}
                 <aside className={home.side}>
-                  <section ref={chartRef} data-coachmark="gastos-monthly-chart" className={home.card}>
+                  <section data-coachmark="gastos-monthly-chart" className={home.card}>
                     <h2 className={home.cardTitle}>{selectedLabel ? t('deskPayments.monthlyIn', { cat: selectedLabel }) : t('paymentsPage.monthlyExpenses')}</h2>
                     <div className={home.chips}>
                       {[3, 6, 12].map(n => (
@@ -328,7 +321,7 @@ export function DeskPayments({ d }) {
                     </div>
                   </section>
 
-                  <section ref={catRef} data-coachmark="gastos-category-chips" className={home.card}>
+                  <section data-coachmark="gastos-category-chips" className={home.card}>
                     <h2 className={home.cardTitle}>{t('paymentsPage.byCategory')}</h2>
                     {catData.length > 0 && <p className={styles.hint}>{selectedCat ? t('deskPayments.hintActive', { cat: selectedLabel }) : t('deskPayments.hint')}</p>}
                     {catData.length === 0 ? (
