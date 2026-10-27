@@ -306,3 +306,12 @@
 .optionChevron { width: 34px; height: 34px; flex: 0 0 34px; border-radius: 50%; border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; }
 .logoutCard { --tone: var(--danger); background: var(--surface); }
 .logoutCard .optionLabel { color: var(--danger); }
+
+/* v0.9.801 — espacio reservado a la derecha para el menú rápido flotante:
+   algunas sub-páginas (Notificaciones, Tarjetas) ocupan todo el ancho y el
+   menú tapaba sus controles. */
+@media (min-width: 768px) {
+  .withQuickNav {
+    padding-right: 72px;
+  }
+}
