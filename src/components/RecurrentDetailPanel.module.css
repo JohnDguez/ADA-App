@@ -347,3 +347,20 @@
 @media (hover: hover) and (pointer: fine) {
   .desk .iconButton:hover { background: var(--desk-chip); translate: none; filter: none; }
 }
+
+/* Mismo detalle que Metas (A3, v0.9.833): resplandor del color de la categoría */
+.desk { border-radius: 24px; }
+.dHero { margin: 6px 0 14px; }
+.dTop { display: flex; justify-content: space-between; font-size: 13px; color: var(--muted); margin-top: 10px; }
+.dBig { font-size: 42px; font-weight: 500; letter-spacing: -1.5px; line-height: 1.05; margin-top: 6px; color: var(--text); white-space: nowrap; }
+.dBig small { font-size: 18px; opacity: 0.55; letter-spacing: 0; }
+.dOf { font-size: 13px; color: var(--muted); margin-top: 2px; }
+.dTrack { height: 10px; border-radius: 99px; margin-top: 14px; overflow: hidden; background: repeating-linear-gradient(135deg, var(--desk-hatch) 0 1.5px, transparent 1.5px 6px); }
+.dTrack u { display: block; height: 100%; border-radius: 99px; min-width: 10px; }
+.dFoot { display: flex; justify-content: space-between; gap: 8px; font-size: 12.5px; color: var(--muted); margin-top: 8px; }
+.dStats { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 16px; }
+.dStats div { background: var(--desk-chip); border-radius: 16px; padding: 10px 6px; text-align: center; }
+.dStats span { display: block; font-size: 11.5px; color: var(--muted); }
+.dStats b { font-size: 14px; font-weight: 600; color: var(--text); }
+.dStats .dNext { color: var(--text); }
+.desk .historyIcon { width: 30px; height: 30px; padding: 7px; box-sizing: border-box; border-radius: 50%; background: var(--desk-chip); }

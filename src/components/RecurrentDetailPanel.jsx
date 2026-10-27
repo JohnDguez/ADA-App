@@ -159,7 +159,7 @@ export function RecurrentDetailPanel({
   }
 
   return (
-    <div className={`${styles.screen} ${desk ? styles.desk : ''}`}>
+    <div className={`${styles.screen} ${desk ? styles.desk : ''}`} style={desk ? { backgroundImage: `radial-gradient(70% 50% at 0% 0%, color-mix(in srgb, ${catColor} 30%, transparent), transparent 70%)` } : undefined}>
       <div className={styles.header}>
         <button type="button" onClick={onBack} className={styles.iconButton} aria-label={t('goalDetailPanel.back')}>
           <ChevronLeft size={22} color="var(--text)" />
@@ -189,7 +189,36 @@ export function RecurrentDetailPanel({
         </div>
       </div>
 
-      {isInstallment ? (
+      {desk ? (
+        <div className={styles.dHero}>
+          <div className={styles.dTop}>
+            <span>{isInstallment ? t('recurrentDetailPanel.paidLabel') : t('recurrentDetailPanel.totalPaidLabel')}</span>
+            <span>{isInstallment ? `${installmentsPaid}/${totalInstallments} ${t('recurrentDetailPanel.paidSuffix')}` : getFrequencyLabel(master.recur_freq)}</span>
+          </div>
+          <div className={styles.dBig}>{fmt(paidSum).replace(/\.\d+$/, '')}<small>{fmt(paidSum).match(/\.\d+$/)?.[0] || ''}</small></div>
+          {isInstallment ? (
+            <>
+              <div className={styles.dOf}>{t('deskRecurrents.ofTarget', { amount: fmt(totalAmount), pct: percent })}</div>
+              <div className={styles.dTrack}><u style={{ width: `${percent}%`, background: catColor }} /></div>
+              <div className={styles.dFoot}>
+                <span>{t('recurrentDetailPanel.nextLabel')}: {master.paused ? t('recurrentsPage.paused') : nextChild ? fmtDateShort(nextChild.due_date) : '—'}{abonadoAlProximo > 0 && ` · ${t('recurrentDetailPanel.alreadyAbonado', { amount: fmt(abonadoAlProximo) })}`}</span>
+                <span>{t('recurrentDetailPanel.referenceAmount', { amount: fmt(master.amount) })} · {getFrequencyLabel(master.recur_freq)}</span>
+              </div>
+            </>
+          ) : (
+            <>
+              <div className={styles.dOf}>
+                {!master.is_variable && <>{fmt(master.amount)} · </>}{getCategoryLabel(master.category)}
+                {master.is_variable && <span className={styles.variableBadge}>{t('paymentsPage.variable')}</span>}
+              </div>
+              <div className={styles.dStats}>
+                <div><span>{t('recurrentDetailPanel.completedLabel')}</span><b>{paidCount}</b></div>
+                <div><span>{t('recurrentDetailPanel.nextLabel')}</span><b className={styles.dNext}>{master.paused ? t('recurrentsPage.paused') : nextChild ? fmtDateShort(nextChild.due_date) : '—'}</b></div>
+              </div>
+            </>
+          )}
+        </div>
+      ) : isInstallment ? (
         <>
           <div className={styles.ring} style={{ background: `conic-gradient(var(--accent) 0% ${percent}%, var(--border) ${percent}% 100%)` }}>
             <div className={styles.ringInner}>

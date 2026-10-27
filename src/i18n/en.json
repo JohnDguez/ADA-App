@@ -1130,7 +1130,8 @@
       "selectHint": "Select a goal to see its details"
   },
   "deskRecurrents": {
-      "listTitle": "My recurring payments",
+      "ofTarget": "of {{amount}} · {{pct}}%",
+    "listTitle": "My recurring payments",
       "ofTotal": "of {{count}} recurring payments",
       "pausedLabel": "Paused",
       "pausedSub": "no charges generated",

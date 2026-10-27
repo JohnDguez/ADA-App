@@ -1130,7 +1130,8 @@
       "selectHint": "Selecciona una meta para ver su detalle"
   },
   "deskRecurrents": {
-      "listTitle": "Mis recurrentes",
+      "ofTarget": "de {{amount}} · {{pct}}%",
+    "listTitle": "Mis recurrentes",
       "ofTotal": "de {{count}} pagos recurrentes",
       "pausedLabel": "Pausados",
       "pausedSub": "no generan cobros",
