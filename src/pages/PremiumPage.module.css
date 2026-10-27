@@ -85,16 +85,15 @@
 .heroTitle {
   margin-top: 16px;
   font-size: 22px;
-  font-weight: 700;
-  color: var(--premium-text);
+  font-weight: 800;
+  color: var(--premium-hero-ink);
   position: relative;
 }
 
 .heroSubtitle {
   font-size: 13px;
-  font-weight: 400;
-  color: var(--premium-text);
-  opacity: 0.9;
+  font-weight: 500;
+  color: var(--premium-hero-ink);
   margin-top: 6px;
   line-height: 1.5;
   position: relative;
@@ -114,7 +113,8 @@
 
 .heroSparkle {
   position: absolute;
-  color: var(--premium-gold);
+  color: var(--premium-hero-sparkle);
+  filter: var(--premium-hero-sparkle-filter);
 }
 
 .heroSparkle1 { top: 24px;  right: 48px; animation: heroSparkle 2.6s ease-in-out infinite; }
@@ -419,3 +419,16 @@
   color: var(--text);
 }
 .restoreStatusError { color: var(--danger); }
+
+/* ── Tablet vertical (≥768px, v0.9.809): cabecera más amplia, beneficios en
+   cuadrícula de 2×2 y el resto en una sola columna de 632px. ─────────── */
+@media (min-width: 768px) {
+  .hero { padding: 56px 20px 64px; }
+  .heroTitle { font-size: 26px; }
+  .heroSubtitle { font-size: 14px; }
+  .content { max-width: 632px; }
+  .benefitsList {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

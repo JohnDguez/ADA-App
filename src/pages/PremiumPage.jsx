@@ -305,7 +305,7 @@ export function PremiumPage({ profile, onClose, refreshProfile, onSubscribed }) 
           <X size={18} color="var(--on-color)" />
         </button>
         <div className={styles.heroCrownWrap}>
-          <CrownDuotone size={34} weight="duotone" color="var(--premium-gold-text)" />
+          <CrownDuotone size={34} weight="duotone" color="var(--premium-hero-ink)" />
         </div>
         <div className={styles.heroTitle}>{t('premiumPage.title')}</div>
         <div className={styles.heroSubtitle}>{t('premiumPage.subtitle')}</div>
