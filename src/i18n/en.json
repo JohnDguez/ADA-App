@@ -1118,7 +1118,8 @@
       "pausedSub": "no charges generated",
       "installmentsLabel": "Installments",
       "noInstallments": "no active plans",
-      "selectHint": "Select a payment to see its details"
+      "paidOf": "{{paid}} of {{total}} paid",
+    "selectHint": "Select a payment to see its details"
   },
   "deskPayments": {
     "hint": "Click a category to filter the payments and the chart.",

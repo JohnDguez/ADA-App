@@ -141,7 +141,7 @@ export function DeskPayments({ d }) {
             <>
               <section className={home.tiles}>
                 {/* Disponible este periodo */}
-                <div data-coachmark="gastos-disponible-card" className={`${home.tile} ${home.tileHero}`}>
+                <div data-coachmark="gastos-disponible-card" className={`${home.tile} ${home.tileHero} ${!balance.loading && !balance.noIncomeYet && balance.sobrePasado ? styles.heroNeg : ''}`}>
                   <span className={home.tileLabel}>{t('paymentsPage.availableThisPeriod')}</span>
                   {balance.noIncomeYet ? (
                     <>

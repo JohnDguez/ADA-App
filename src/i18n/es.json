@@ -1118,7 +1118,8 @@
       "pausedSub": "no generan cobros",
       "installmentsLabel": "Parcialidades",
       "noInstallments": "sin planes activos",
-      "selectHint": "Selecciona un pago para ver su detalle"
+      "paidOf": "{{paid}} de {{total}} pagados",
+    "selectHint": "Selecciona un pago para ver su detalle"
   },
   "deskPayments": {
     "hint": "Haz clic en una categoría para filtrar los pagos y la gráfica.",

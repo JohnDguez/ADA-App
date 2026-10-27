@@ -158,7 +158,7 @@ export function RecurrentsPage({ payments, dataLoading = false, profile, spaceSw
     search, setSearch, filterStatus, setFilterStatus, filterType, setFilterType, byCategory,
     totals: { active: activeMasters.length, paused: pausedMasters.length, all: masters.length, monthly: totalMensual },
     freqRows, freqMax, variableCount,
-    installments: { count: installmentMasters.length, left: installmentsLeft, leftAmount: installmentsLeftAmount },
+    installments: { count: installmentMasters.length, left: installmentsLeft, leftAmount: installmentsLeftAmount, items: installmentMasters.map(m => ({ id: m.id, name: m.name, category: m.category, paid: getPaidCount(m.id), total: m.total_installments || 0, amount: Number(m.amount || 0) })) },
     getNextDue, getPaidCount, formatNextDate,
     canEdit, canDelete, blocked, onPause, onResume, onEdit, onDelete, payments, selectedMaster, setSelectedMasterId,
     openMenu, setOpenMenu, confirmDelete, setConfirmDelete,

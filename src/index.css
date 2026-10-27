@@ -1025,6 +1025,7 @@ a:focus-visible {
   --desk-shadow:  0 1px 2px rgba(11, 18, 32, 0.04), 0 10px 28px -14px rgba(11, 18, 32, 0.16);
   --desk-pop-shadow: 0 24px 60px -16px rgba(11, 18, 32, 0.45);
   --desk-hero-bg: radial-gradient(120% 90% at 0 0, rgba(255, 255, 255, 0.14), transparent 55%), #014BA3;
+  --desk-hero-bg-neg: radial-gradient(120% 90% at 0 0, rgba(255, 255, 255, 0.14), transparent 55%), color-mix(in srgb, #014BA3 68%, var(--danger));
   --desk-luna-bg: linear-gradient(115deg, #1B1446 0%, #014BA3 55%, #2F8CFA 100%);
   /* Un degradado por estado de Luna (v0.9.821, aprobado con mockup). */
   --desk-luna-happy:       linear-gradient(115deg, #052E2B 0%, #0B6B5C 55%, #2BC48A 100%);

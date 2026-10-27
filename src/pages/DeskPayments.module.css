@@ -3,6 +3,7 @@
    Todos los colores salen de los tokens --desk-* / globales de index.css. */
 
 /* ── Tarjetas de totales ─────────────────────────────────────────────── */
+.heroNeg.heroNeg { background: var(--desk-hero-bg-neg); }
 .heroTrack { height: 8px; border-radius: 99px; background: var(--white-a16); margin-top: 12px; overflow: hidden; }
 .heroFill { display: block; height: 100%; border-radius: 99px; background: var(--desk-ink-text); transition: width .5s cubic-bezier(0.22, 1, 0.36, 1); }
 .fillWarn { background: var(--desk-date-warn); }
@@ -38,6 +39,7 @@
   font-weight: 600;
 }
 .linkBtn { background: none; padding: 0; color: inherit; font: inherit; display: inline-flex; align-items: center; gap: 4px; text-decoration: underline; text-underline-offset: 2px; text-decoration-color: var(--desk-hair); }
+.linkBtn:hover { filter: none; translate: none; text-decoration-color: currentColor; }
 .linkBtn b { font-weight: 600; color: var(--text); }
 
 /* ── Tarjeta Pagos ───────────────────────────────────────────────────── */

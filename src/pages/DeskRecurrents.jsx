@@ -233,6 +233,15 @@ export function DeskRecurrents({ d }) {
                             <div><b>{t('recurrentsPage.installmentsCount', { count: installments.count })}</b><span>{t('recurrentsPage.remainingPayments', { count: installments.left })}</span></div>
                             <div className={styles.instRight}><span>{t('recurrentsPage.remaining')}</span><b>{fmt(installments.leftAmount)}</b></div>
                           </div>
+                          <div className={styles.instList}>
+                            {installments.items.map(it => (
+                              <button key={it.id} type="button" className={styles.instItem} onClick={() => setSelectedMasterId(it.id)}>
+                                <i className={styles.catChip} style={{ background: getCatColor(it.category || 'Otros', profile.custom_categories, profile.category_colors) }} />
+                                <span className={styles.instName}><b>{it.name}</b><em>{t('deskRecurrents.paidOf', { paid: it.paid, total: it.total })}</em></span>
+                                <span className={styles.instAmt}>{fmt(it.amount * Math.max(0, it.total - it.paid))}</span>
+                              </button>
+                            ))}
+                          </div>
                         </section>
                       )}
 
