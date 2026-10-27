@@ -103,7 +103,14 @@ export function OnboardingPage({ userId, onDone }) {
       .select().single()
     setSaving(false)
     if (!error) { window.scrollTo(0, 0); onDone(data) }
-    else setFinishError(t('onboardingPage.finishError'))
+    else {
+      // v0.9.803: el mensaje genérico ocultaba la causa real (RLS, columna
+      // inexistente, sesión vencida…). Se deja el código técnico a la vista
+      // para poder diagnosticar sin abrir la consola.
+      console.error('[onboarding] no se pudo guardar el perfil', error)
+      const detail = error.code || error.message || ''
+      setFinishError(t('onboardingPage.finishError') + (detail ? ` (${detail})` : ''))
+    }
   }
 
   function goToStep(newStep, dir) {
