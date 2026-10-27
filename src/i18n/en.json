@@ -360,6 +360,10 @@
     "variablePendingConfirm_other": "{{count}} variable payments to confirm",
     "paidCount_one": "{{count}} paid",
     "paidCount_other": "{{count}} paid",
+    "desktop": {
+      "thisPeriod": "This period",
+      "upcoming": "Upcoming"
+    },
     "overdueTitle": "Overdue",
     "pendingSectionTitle": "Pending payments",
     "emptyState": {

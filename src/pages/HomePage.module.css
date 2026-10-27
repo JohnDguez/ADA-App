@@ -518,3 +518,86 @@
   flex-shrink: 0;
   background: var(--swatch-color);
 }
+
+/* ── Escritorio (≥1100px, v0.9.810) — tablero ────────────────────────────────
+   Se quita el switch Periodo/Próximo: las dos tarjetas de métricas se ven a la
+   vez y los pagos se reparten en columnas por urgencia (Vencidos / Este
+   periodo / Próximos). Solo CSS: lo inline que fija el swipe (alto y
+   translateX) se anula con !important dentro de este @media. */
+.deskColTitle { display: none; }
+
+@media (min-width: 1100px) {
+  .roundedContentWrapper {
+    max-width: 1320px;
+    margin-left: auto;
+    margin-right: auto;
+    overflow-x: visible;
+  }
+
+  .tabTrack { display: none; }
+
+  .cardSwipeWrapper {
+    height: auto !important;
+    overflow: visible;
+  }
+  .cardSwipeTrack {
+    display: grid;
+    grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
+    gap: 16px;
+    transform: none !important;
+  }
+  .metricCard { min-width: 0; }
+
+  .contentSwipeWrap {
+    height: auto !important;
+    overflow: visible;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    column-gap: 16px;
+    align-items: start;
+  }
+  .contentSwipeWrap.noOverdue { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+
+  /* Los dos paneles dejan de ser capas superpuestas: sus hijos pasan a ser
+     celdas de la cuadrícula. */
+  .contentPanel { display: contents; }
+
+  .panelActual > :not(.paidCollapseWrapper):not(.overdueSection):not(.periodSection) {
+    grid-column: 1 / -1;
+    grid-row: 1;
+  }
+  .overdueSection { grid-row: 2; margin-top: 20px; }
+  .panelActual > .periodSection,
+  .panelNext > .periodSection { grid-row: 2; }
+  .paidCollapseWrapper { grid-row: 3; grid-column: 2; margin-top: 0; }
+  .noOverdue .paidCollapseWrapper { grid-column: 1; }
+
+  .pendingSectionTitle { display: none; }
+
+  .deskColTitle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 10px;
+  }
+  .deskColTitle::before {
+    content: '';
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--muted);
+  }
+  .deskColTitleWarn::before { background: var(--warning); }
+  .deskColTitleAccent::before { background: var(--accent); }
+  .overdueTitle { font-size: 14px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+  .overdueTitle::before {
+    content: '';
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--danger);
+  }
+}

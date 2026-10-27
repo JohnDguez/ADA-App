@@ -563,8 +563,8 @@ export function HomePage({ payments, dataLoading = false, profile, spaceSwitcher
               solo su lista, con `nextPeriodMode` en el PayRail para que el
               check de cada pago pida confirmación antes de marcarlo pagado
               (ver ConfirmNextPeriodPayModal). */}
-          <div className={styles.contentSwipeWrap} style={{ height: swipeHeight != null ? swipeHeight : 'auto' }}>
-            <div ref={actualPanelRef} className={styles.contentPanel} style={{ transform: `translateX(${activeCard === 0 ? 0 : -100}%)` }}>
+          <div className={`${styles.contentSwipeWrap} ${(dataLoading || vencidos.length > 0) ? '' : styles.noOverdue}`} style={{ height: swipeHeight != null ? swipeHeight : 'auto' }}>
+            <div ref={actualPanelRef} className={`${styles.contentPanel} ${styles.panelActual}`} style={{ transform: `translateX(${activeCard === 0 ? 0 : -100}%)` }}>
               {pagadosEstePeriodo.length > 0 && (
                 <div data-coachmark="home-paid-collapse" className={styles.paidCollapseWrapper}>
                   <PaidCollapse
@@ -620,6 +620,7 @@ export function HomePage({ payments, dataLoading = false, profile, spaceSwitcher
                   bloques; si no hay vencidos, la lista ya es autoexplicativa
                   justo debajo del colapsable de pagados y no hace falta. */}
               <div data-coachmark="home-rail" className={styles.periodSection}>
+                <div className={`${styles.deskColTitle} ${styles.deskColTitleWarn}`}>{t('homePage.desktop.thisPeriod')}</div>
                 {(dataLoading || (vencidos.length > 0 && delPeriodo.length > 0)) && (
                   <div className={styles.pendingSectionTitle}>{t('homePage.pendingSectionTitle')}</div>
                 )}
@@ -640,8 +641,9 @@ export function HomePage({ payments, dataLoading = false, profile, spaceSwitcher
               </div>
             </div>
 
-            <div ref={nextPanelRef} className={styles.contentPanel} style={{ transform: `translateX(${activeCard === 0 ? 100 : 0}%)` }}>
+            <div ref={nextPanelRef} className={`${styles.contentPanel} ${styles.panelNext}`} style={{ transform: `translateX(${activeCard === 0 ? 100 : 0}%)` }}>
               <div className={styles.periodSection}>
+                <div className={`${styles.deskColTitle} ${styles.deskColTitleAccent}`}>{t('homePage.desktop.upcoming')}</div>
                 {upcoming.length === 0
                   ? (dataLoading ? <RailSkeleton count={2} /> : <EmptyState title={t('homePage.emptyState.nextPeriodTitle')} subtitle={t('homePage.emptyState.subtitle')} onClick={onAdd} />)
                   : <PayRail payments={upcoming} cfg={profile} dotColor="var(--accent)" dotTextColor="var(--bg)" handlers={handlers} permissions={spacePermissions} nextPeriodMode spaceMembers={spaceMembers} />
