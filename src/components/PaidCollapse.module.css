@@ -163,7 +163,7 @@
    caja, check verde, filas con fecha en ficha. */
 @media (min-width: 1100px) {
   .paidCollapseRoot { margin-bottom: 4px; }
-  .paidCollapseToggle { background: none; border-radius: 14px; padding: 10px 0; gap: 12px; }
+  .paidCollapseToggle { background: none; border-radius: 14px; padding: 10px 12px; margin: 0 -12px; width: calc(100% + 24px); gap: 12px; }
   .paidCollapseCheckIcon { width: 24px; height: 24px; border-radius: 8px; }
   .paidCollapseSummaryText { font-size: 15px; color: var(--muted); }
   .paidCollapseList { gap: 0; margin-top: 0; }
