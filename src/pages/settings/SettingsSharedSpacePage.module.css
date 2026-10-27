@@ -605,3 +605,62 @@
   box-shadow: var(--shadow-accent);
   white-space: nowrap;
 }
+
+/* ── Permisos como fichas (v0.9.807) ─────────────────────────────────────── */
+.permTiles {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  padding: 4px 16px 10px;
+}
+.permTile {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  min-height: 84px;
+  padding: 12px;
+  border: none;
+  border-radius: var(--radius);
+  background: var(--bg);
+  color: var(--text);
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background .2s;
+}
+.permTileOn { background: color-mix(in srgb, var(--accent) 16%, var(--surface)); }
+.permTileIcon {
+  width: 32px;
+  height: 32px;
+  flex: none;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--surface);
+  color: var(--muted);
+  transition: background .2s, color .2s;
+}
+.permTileOn .permTileIcon { background: var(--accent); color: var(--surface); }
+.permTileText { display: block; min-width: 0; }
+.permTileLabel { display: block; font-size: 13px; font-weight: 600; line-height: 1.25; }
+.permTileStatus { display: block; font-size: 11px; color: var(--muted); margin-top: 1px; }
+
+@media (min-width: 768px) {
+  .permTile {
+    flex-direction: row;
+    align-items: center;
+    min-height: 56px;
+  }
+}
+
+/* Tablet (≥768px, v0.9.807): columna de 632px como el resto de Ajustes; el
+   PageHero (primer hijo) sigue a todo el ancho. */
+@media (min-width: 768px) {
+  .pageRoot > :not(:first-child) {
+    max-width: 632px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+}

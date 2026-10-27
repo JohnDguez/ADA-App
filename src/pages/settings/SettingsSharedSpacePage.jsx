@@ -1,12 +1,12 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { ChevronDown, ChevronUp, Users, Copy, RefreshCw, LogOut, Trash2, Crown, Plus } from 'lucide-react'
+import { ChevronDown, ChevronUp, Users, Copy, RefreshCw, LogOut, Trash2, Crown, Plus, Pencil, CircleCheck, Banknote, PiggyBank, Target, HandCoins, ArrowDownToLine } from 'lucide-react'
 // Ícono del encabezado vía Phosphor Icons (mismo patrón que las demás
 // sub-páginas ya migradas, v0.9.442-454) — import directo para tree-shaking real.
 import { UsersThree } from '@phosphor-icons/react/dist/csr/UsersThree'
 import { PageHero } from '../../components/PageHero'
 import { Collapse } from '../../components/Collapse'
-import { Card, Row, NotifToggle, Toggle } from '../../components/SettingsShared'
+import { Card, Row, Toggle } from '../../components/SettingsShared'
 import { CobroPeriodFields } from '../../components/CobroPeriodFields'
 import { CurrencySelect } from '../../components/CurrencySelect'
 import { CurrencySheet } from '../../components/CurrencySheet'
@@ -18,6 +18,37 @@ import styles from './SettingsSharedSpacePage.module.css'
 import { AvatarImg } from '../../components/AvatarImg'
 import { Presence } from '../../components/Presence'
 import { kbd, switchProps } from '../../lib/a11y'
+
+// Permisos del invitado (v0.9.807): definidos aquí para pintarlos como fichas.
+const PAYMENT_PERMS = [
+  { key: 'can_add',        Icon: Plus,        label: 'settingsSharedSpacePage.permAdd' },
+  { key: 'can_edit',       Icon: Pencil,      label: 'settingsSharedSpacePage.permEdit' },
+  { key: 'can_mark_paid',  Icon: CircleCheck, label: 'settingsSharedSpacePage.permMarkPaid' },
+  { key: 'can_delete',     Icon: Trash2,      label: 'settingsSharedSpacePage.permDelete' },
+  { key: 'can_add_income', Icon: Banknote,    label: 'settingsSharedSpacePage.permAddIncome' },
+  { key: 'can_add_funds',  Icon: PiggyBank,   label: 'settingsSharedSpacePage.permAddFunds' },
+]
+const GOAL_PERMS = [
+  { key: 'can_add_goals',        Icon: Target,          label: 'settingsSharedSpacePage.permAddGoals' },
+  { key: 'can_edit_goals',       Icon: Pencil,          label: 'settingsSharedSpacePage.permEditGoals' },
+  { key: 'can_delete_goals',     Icon: Trash2,          label: 'settingsSharedSpacePage.permDeleteGoals' },
+  { key: 'can_contribute_goals', Icon: HandCoins,       label: 'settingsSharedSpacePage.permContributeGoals' },
+  { key: 'can_withdraw_goals',   Icon: ArrowDownToLine, label: 'settingsSharedSpacePage.permWithdrawGoals', sub: 'settingsSharedSpacePage.permWithdrawGoalsSub' },
+]
+
+function PermTile({ Icon, label, sub, on, onToggle }) {
+  const { t } = useTranslation()
+  return (
+    <button type="button" role="switch" aria-checked={on} title={sub} onClick={onToggle}
+      className={`${styles.permTile} ${on ? styles.permTileOn : ''}`}>
+      <span className={styles.permTileIcon}><Icon size={17} /></span>
+      <span className={styles.permTileText}>
+        <span className={styles.permTileLabel}>{label}</span>
+        <span className={styles.permTileStatus}>{on ? t('settingsSharedSpacePage.permTileOn') : t('settingsSharedSpacePage.permTileOff')}</span>
+      </span>
+    </button>
+  )
+}
 
 // Sub-página de Ajustes → "Espacio Compartido". Sirve para 2 casos a la vez,
 // para no duplicar el formulario de crear/unirse en otro lugar (ej. la
@@ -455,26 +486,21 @@ function OwnedSpacePanel({ entry, user, regenerateCode, updateMemberPermissions,
 
                   <Collapse open={isOpen}>
                     <>
+                      {/* v0.9.807: permisos como fichas (mismo patrón que las de Notificaciones). */}
                       <div className={styles.permGroupLabel}>{t('settingsSharedSpacePage.permGroupPayments')}</div>
-                      <NotifToggle label={t('settingsSharedSpacePage.permAdd')}        value={m.can_add}        onChange={v => updateMemberPermissions(m.id, { can_add: v })} />
-                      <NotifToggle label={t('settingsSharedSpacePage.permEdit')}          value={m.can_edit}       onChange={v => updateMemberPermissions(m.id, { can_edit: v })} />
-                      <NotifToggle label={t('settingsSharedSpacePage.permMarkPaid')} value={m.can_mark_paid} onChange={v => updateMemberPermissions(m.id, { can_mark_paid: v })} />
-                      <NotifToggle label={t('settingsSharedSpacePage.permDelete')}        value={m.can_delete}     onChange={v => updateMemberPermissions(m.id, { can_delete: v })} />
-                      <NotifToggle label={t('settingsSharedSpacePage.permAddIncome')} value={m.can_add_income} onChange={v => updateMemberPermissions(m.id, { can_add_income: v })} />
-                      <NotifToggle label={t('settingsSharedSpacePage.permAddFunds')} value={m.can_add_funds} onChange={v => updateMemberPermissions(m.id, { can_add_funds: v })} />
-
+                      <div className={styles.permTiles}>
+                        {PAYMENT_PERMS.map(({ key, Icon, label }) => (
+                          <PermTile key={key} Icon={Icon} label={t(label)} on={!!m[key]}
+                            onToggle={() => updateMemberPermissions(m.id, { [key]: !m[key] })} />
+                        ))}
+                      </div>
                       <div className={styles.permGroupLabel}>{t('settingsSharedSpacePage.permGroupGoals')}</div>
-                      <NotifToggle label={t('settingsSharedSpacePage.permAddGoals')}    value={m.can_add_goals}        onChange={v => updateMemberPermissions(m.id, { can_add_goals: v })} />
-                      <NotifToggle label={t('settingsSharedSpacePage.permEditGoals')}   value={m.can_edit_goals}       onChange={v => updateMemberPermissions(m.id, { can_edit_goals: v })} />
-                      <NotifToggle label={t('settingsSharedSpacePage.permDeleteGoals')} value={m.can_delete_goals}     onChange={v => updateMemberPermissions(m.id, { can_delete_goals: v })} />
-                      <NotifToggle label={t('settingsSharedSpacePage.permContributeGoals')} value={m.can_contribute_goals} onChange={v => updateMemberPermissions(m.id, { can_contribute_goals: v })} />
-                      <NotifToggle
-                        label={t('settingsSharedSpacePage.permWithdrawGoals')}
-                        sub={t('settingsSharedSpacePage.permWithdrawGoalsSub')}
-                        value={m.can_withdraw_goals}
-                        onChange={v => updateMemberPermissions(m.id, { can_withdraw_goals: v })}
-                        last
-                      />
+                      <div className={styles.permTiles}>
+                        {GOAL_PERMS.map(({ key, Icon, label, sub }) => (
+                          <PermTile key={key} Icon={Icon} label={t(label)} sub={sub ? t(sub) : undefined} on={!!m[key]}
+                            onToggle={() => updateMemberPermissions(m.id, { [key]: !m[key] })} />
+                        ))}
+                      </div>
 
                       <button onClick={() => setConfirmExpel(isConfirming ? null : m.id)} className={`${styles.dangerButtonRow} ${styles.dangerButtonRowTop} ${isConfirming ? '' : styles.dangerButtonRowLast}`}>
                         <LogOut size={16} color="var(--danger)" />

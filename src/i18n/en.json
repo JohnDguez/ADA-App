@@ -1490,6 +1490,8 @@
     "regenerate": "Generate",
     "copyCode": "Copy code",
     "regenConfirm": "Generate a new code? The previous one will stop working.",
+    "permTileOn": "Allowed",
+    "permTileOff": "Not allowed",
     "permSummary": "{{on}} of {{total}} permissions",
     "removeFromSpace": "Remove from space",
     "title": "Shared Space",
