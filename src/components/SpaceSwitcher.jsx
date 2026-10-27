@@ -1,5 +1,4 @@
 import { useState, useRef, useEffect } from 'react'
-import { createPortal } from 'react-dom'
 import { useTranslation } from 'react-i18next'
 import i18n from '../i18n'
 import { Plus, UserRound, Crown, UsersRound, ChevronDown, ChevronUp } from 'lucide-react'
@@ -27,9 +26,6 @@ import { kbd } from '../lib/a11y'
 // cuántas quedan visibles mientras está colapsado.
 const COMPACT_MIN = 4
 const COMPACT_VISIBLE = 2
-// v0.9.796 — barra fija al hacer scroll (franjas + pestaña activa compacta).
-const BAR_STRIDE = 38   // alto visible de la pestaña de atrás en la barra fija
-const BAR_ROW_H = 52    // alto de cada pestaña de la barra fija
 
 export function SpaceSwitcher({ spaces, activeSpaceId, onSwitch, profile, stats = {} }) {
   const { t } = useTranslation()
@@ -62,46 +58,6 @@ export function SpaceSwitcher({ spaces, activeSpaceId, onSwitch, profile, stats 
   const [expanded, setExpanded] = useState(false)
 
   const raf2Ref = useRef(null)
-
-  // v0.9.796 — barra fija al hacer scroll en móvil. El stack completo sigue
-  // en el flujo de la página (no se mueve nada: sin saltos de layout); cuando
-  // el encabezado del espacio activo llega al borde superior, aparece una
-  // barra `position: fixed` con una franja de color por cada pestaña que
-  // asoma (tocables) y la pestaña activa compacta, con un degradado debajo
-  // para que el contenido se desvanezca en vez de cortarse de golpe.
-  const wrapRef = useRef(null)
-  const zoneRef = useRef(0)
-  const [pinned, setPinned] = useState(false)
-  const [allOpen, setAllOpen] = useState(false)
-  const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' && window.matchMedia('(max-width: 767px)').matches)
-  useEffect(() => {
-    const mq = window.matchMedia('(max-width: 767px)')
-    const onChange = () => setIsMobile(mq.matches)
-    mq.addEventListener('change', onChange)
-    return () => mq.removeEventListener('change', onChange)
-  }, [])
-  useEffect(() => {
-    if (!isMobile) { setPinned(false); return }
-    let raf = 0
-    function check() {
-      raf = 0
-      const el = wrapRef.current
-      if (!el) return
-      const sat = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--sat')) || 0
-      const header = el.parentElement?.nextElementSibling
-      const top = (header || el).getBoundingClientRect().top
-      setPinned(top <= sat + zoneRef.current)
-    }
-    function onScroll() { if (!raf) raf = requestAnimationFrame(check) }
-    window.addEventListener('scroll', onScroll, { passive: true })
-    window.addEventListener('resize', onScroll)
-    check()
-    return () => {
-      window.removeEventListener('scroll', onScroll)
-      window.removeEventListener('resize', onScroll)
-      if (raf) cancelAnimationFrame(raf)
-    }
-  }, [isMobile])
 
   useEffect(() => {
     if (prevActiveIdRef.current !== activeSpaceId) {
@@ -192,110 +148,10 @@ export function SpaceSwitcher({ spaces, activeSpaceId, onSwitch, profile, stats 
     return null
   }
 
-  // Barra fija: pestaña activa + la más urgente de las demás (sin "Nuevo
-  // espacio"), ambas completas. Las demás quedan atrás: una flechita ⌄ en la
-  // última fila abre el stack completo en una hoja.
-  const barSecond = peekItems.filter(it => it.kind !== 'new')
-    .sort((a, b) => urgency(b) - urgency(a))[0] || null
-  const barHidden = peekItems.length - (barSecond ? 1 : 0)
-  zoneRef.current = barSecond ? BAR_STRIDE : 0
-  const FrontIcon = iconFor(frontItem)
-  const SecondIcon = barSecond ? iconFor(barSecond) : null
-
   if (renderList.length === 0) return null
 
-  const moreBtn = barHidden > 0 && (
-    <span
-      role="button"
-      tabIndex={pinned ? 0 : -1}
-      aria-label={t('spaceSwitcher.allSpaces')}
-      onClick={e => { e.stopPropagation(); setAllOpen(true) }}
-      className={styles.pinMore}
-    >
-      <ChevronDown size={18} strokeWidth={2.2} />
-    </span>
-  )
-
-  const pinnedBar = isMobile && createPortal(
-    <div className={`${styles.pinBar} ${pinned ? styles.pinBarOn : ''}`} aria-hidden={!pinned}>
-      <div className={styles.pinStack} style={{ height: (barSecond ? BAR_STRIDE : 0) + BAR_ROW_H }}>
-        {barSecond && (
-          <div {...kbd}
-            onClick={() => onSwitch(barSecond.id)}
-            className={styles.pinRow}
-            style={{
-              top: 0, zIndex: 1, height: BAR_ROW_H,
-              background: colorsFor(barSecond.kind).bg,
-              filter: barSecond.kind === 'space' ? `brightness(${brightnessFor(barSecond)})` : 'none',
-              color: colorsFor(barSecond.kind).text,
-            }}
-          >
-            <span className={styles.pinName}>
-              {SecondIcon && <SecondIcon size={14} strokeWidth={2} />}
-              {barSecond.name}
-            </span>
-            <span className={styles.pinRight}>
-              <span className={styles.pinStat}>{statFor(barSecond)}</span>
-              {moreBtn}
-            </span>
-          </div>
-        )}
-        <div {...kbd}
-          onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-          aria-label={t('spaceSwitcher.backToTop')}
-          className={`${styles.pinRow} ${styles.pinRowActive}`}
-          style={{ top: barSecond ? BAR_STRIDE : 0, zIndex: 2, height: BAR_ROW_H }}
-        >
-          <span className={styles.pinName}>
-            {frontItem.kind === 'new' && <Plus size={15} strokeWidth={2.5} />}
-            {FrontIcon && <FrontIcon size={14} strokeWidth={2} />}
-            {frontItem.name}
-          </span>
-          <span className={styles.pinRight}>
-            {frontItem.kind !== 'new' && <span className={styles.pinStat}>{statFor(frontItem)}</span>}
-            {!barSecond && moreBtn}
-          </span>
-        </div>
-      </div>
-    </div>,
-    document.body
-  )
-
-  const allSheet = allOpen && createPortal(
-    <div className={styles.allOverlay} onClick={e => e.target === e.currentTarget && setAllOpen(false)}>
-      <div className={styles.allPanel}>
-        <div className={styles.allHandle} />
-        {allItems.map(item => {
-          const Ico = iconFor(item)
-          const isActive = item === frontItem
-          return (
-            <div {...kbd}
-              key={item.id ?? 'personal'}
-              onClick={() => { setAllOpen(false); if (!isActive) onSwitch(item.id === 'new' ? 'new' : item.id) }}
-              className={`${styles.allItem} ${isActive ? styles.allItemActive : ''}`}
-              style={{
-                background: isActive ? 'var(--bg)' : colorsFor(item.kind).bg,
-                filter: !isActive && item.kind === 'space' ? `brightness(${brightnessFor(item)})` : 'none',
-                color: isActive ? 'var(--text)' : colorsFor(item.kind).text,
-              }}
-            >
-              <span className={styles.pinName}>
-                {item.kind === 'new' && <Plus size={15} strokeWidth={2.5} />}
-                {Ico && <Ico size={14} strokeWidth={2} />}
-                {item.name}
-              </span>
-              {item.kind !== 'new' && <span className={styles.pinStat}>{statFor(item)}</span>}
-            </div>
-          )
-        })}
-      </div>
-    </div>,
-    document.body
-  )
-
   return (
-    <>
-    <div ref={wrapRef} data-coachmark="home-space-switcher" className={styles.switcherContainer}>
+    <div data-coachmark="home-space-switcher" className={styles.switcherContainer}>
       {renderList.map((item, i) => {
         const isFirst    = i === 0
         const isEntering = animIds && item.id === animIds.outgoingId
@@ -403,8 +259,5 @@ export function SpaceSwitcher({ spaces, activeSpaceId, onSwitch, profile, stats 
         </button>
       )}
     </div>
-    {pinnedBar}
-    {allSheet}
-    </>
   )
 }

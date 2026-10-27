@@ -1349,9 +1349,7 @@
     "railLabel": "Espacios",
     "moreSpaces_one": "{{count}} espacio más",
     "moreSpaces_other": "{{count}} espacios más",
-    "showLess": "Mostrar menos",
-    "backToTop": "Subir al inicio",
-    "allSpaces": "Ver todos los espacios"
+    "showLess": "Mostrar menos"
   },
   "coachmarks": {
     "skipTutorial": "Saltar tutorial",
