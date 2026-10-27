@@ -5,7 +5,7 @@
   top: 14px;
   left: 14px;
   bottom: 14px;
-  width: 228px;
+  width: 248px;
   z-index: 100;
   display: flex;
   flex-direction: column;
@@ -38,6 +38,7 @@
   font-weight: 600;
   letter-spacing: 0.9px;
   text-transform: uppercase;
+  font-weight: 500;
   color: var(--muted);
   padding: 0 14px;
   margin: 14px 0 6px;
@@ -60,21 +61,21 @@
   font-weight: 500;
   text-align: left;
 }
-.item > span:not(.iconWrap):not(.badge) { flex: 1; min-width: 0; }
+.item > span:not(.iconWrap):not(.badge) { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .side[data-open="false"] .item { justify-content: center; padding: 0; }
-.itemActive { color: var(--text); font-weight: 600; }
+.itemActive { color: var(--text); font-weight: 700; }
 .itemActive::before {
   content: "";
   position: absolute;
   left: -14px;
-  top: 8px;
-  bottom: 8px;
-  width: 4px;
+  top: 6px;
+  bottom: 6px;
+  width: 5px;
   border-radius: 0 4px 4px 0;
   background: var(--desk-deep);
 }
 .side[data-open="false"] .itemActive::before { left: -10px; }
-.itemActive svg { color: var(--accent); }
+.itemActive svg { color: var(--desk-deep); }
 .itemPremium { color: var(--desk-gold-text); font-weight: 600; line-height: 1.15; }
 
 .promo { display: block; }

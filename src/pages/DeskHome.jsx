@@ -181,8 +181,8 @@ export function DeskHome({
         </div>
       </header>
 
-      <div className={slideClass}>
-        <div className={spaceJustChanged ? 'content-slide-up' : ''}>
+      <div className={`${styles.fill} ${slideClass || ''}`}>
+        <div className={`${styles.fill} ${spaceJustChanged ? 'content-slide-up' : ''}`}>
           {activeSpaceId === 'new' ? (
             <NewSharedSpacePanel profile={profile} sharedSpaces={sharedSpaces} onOpenPremium={onOpenPremium} onCreated={onSpaceReady} onJoined={onSpaceReady} />
           ) : (

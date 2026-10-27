@@ -1,6 +1,22 @@
 /* Inicio de escritorio (v0.9.819). Solo se monta ≥1100px (HomePage.jsx);
    todos los colores salen de los tokens --desk-* de index.css. */
-.root { padding: 26px 28px 28px; min-height: calc(100vh - 28px); box-sizing: border-box; }
+.root {
+  /* Sin scroll de página (v0.9.822): la pantalla mide lo que la ventana y cada
+     sección (Pagos, columna derecha) scrollea por dentro. Si la ventana es muy
+     baja, el conjunto sí scrollea como red de seguridad. */
+  display: flex;
+  flex-direction: column;
+  height: calc(100dvh - 28px);
+  padding: 26px 28px 28px;
+  box-sizing: border-box;
+  overflow-y: auto;
+}
+.root > * { flex-shrink: 0; }
+.root > .fill { flex: 1 1 auto; }
+.fill { display: flex; flex-direction: column; min-height: 0; }
+.fill > .fill { flex: 1 1 auto; }
+.fill > .tiles { flex-shrink: 0; }
+.fill > .body { flex: 1 1 auto; min-height: 460px; }
 
 /* ── Encabezado ───────────────────────────────────────────────────────── */
 .head {
@@ -99,14 +115,15 @@
 .tileLink { cursor: pointer; }
 
 /* ── Cuerpo ───────────────────────────────────────────────────────────── */
-.body { display: grid; grid-template-columns: minmax(0, 1fr) 400px; gap: 14px; align-items: stretch; }
+.body { display: grid; grid-template-columns: minmax(0, 1fr) 400px; grid-template-rows: minmax(0, 1fr); gap: 14px; align-items: stretch; }
 .list, .card {
   background: var(--desk-card);
   border-radius: 24px;
   box-shadow: var(--desk-shadow);
   padding: 20px 22px;
 }
-.list { display: flex; flex-direction: column; min-width: 0; max-height: calc(100dvh - 28px); scroll-margin-top: 14px; }
+.list { display: flex; flex-direction: column; min-width: 0; min-height: 0; overflow: hidden; }
+.list .listBody { overscroll-behavior: auto; }
 .cardTitle { font-size: 18px; font-weight: 600; margin: 0 0 12px; color: var(--text); }
 .chips { display: flex; gap: 8px; margin-bottom: 16px; }
 .chip {
@@ -141,7 +158,8 @@
 .tipSlot { margin-top: auto; padding-top: 16px; }
 
 /* ── Columna derecha ──────────────────────────────────────────────────── */
-.side { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+.side { display: flex; flex-direction: column; gap: 14px; min-width: 0; min-height: 0; overflow-y: auto; scrollbar-width: none; padding: 0 10px 14px; margin: 0 -10px -14px; }
+.side::-webkit-scrollbar { display: none; }
 .gaugeWrap { position: relative; max-width: 300px; margin: 8px auto 0; }
 .gaugeSvg { display: block; width: 100%; height: auto; overflow: visible; }
 .gaugeSvg path { fill: none; stroke-width: 26; transition: stroke-dasharray .8s cubic-bezier(0.22, 1, 0.36, 1), stroke-dashoffset .8s cubic-bezier(0.22, 1, 0.36, 1); }

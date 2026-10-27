@@ -204,11 +204,9 @@
   z-index: 2;
   pointer-events: none;
   filter: drop-shadow(0 10px 10px black);
-  animation: lunaFloat 3.2s ease-in-out infinite;
 }
 .deskImgWide { height: 84px; left: 6px; }
-@keyframes lunaFloat { 50% { transform: translateY(-6px) rotate(-2deg); } }
-@media (prefers-reduced-motion: reduce) { .deskImg { animation: none; } }
+
 .deskText { flex: 1; min-width: 0; position: relative; z-index: 1; }
 .deskTitle { font-size: 16px; font-weight: 600; }
 .deskSub { font-size: 13px; opacity: 0.78; margin-top: 2px; }
