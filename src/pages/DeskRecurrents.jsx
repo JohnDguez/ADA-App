@@ -201,7 +201,7 @@ export function DeskRecurrents({ d }) {
                   {selectedMaster ? (
                     <section className={`${home.card} ${styles.detail}`}>
                       <RecurrentDetailPanel
-                        master={selectedMaster} payments={payments} profile={profile} canEdit={canEdit} canDelete={canDelete} blocked={blocked}
+                        master={selectedMaster} payments={payments} profile={profile} canEdit={canEdit} canDelete={canDelete} blocked={blocked} desk
                         onBack={() => setSelectedMasterId(null)}
                         onEdit={() => onEdit && onEdit(selectedMaster)}
                         onPause={() => onPause(selectedMaster.id)}

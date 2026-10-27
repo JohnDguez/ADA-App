@@ -313,3 +313,37 @@
   cursor: pointer;
   font-family: 'DM Sans', sans-serif;
 }
+
+/* ── Variante de escritorio (v0.9.830): mismo lenguaje que las tarjetas
+   --desk-*; el historial hace scroll interno y el resto queda fijo. ───── */
+.desk { display: flex; flex-direction: column; height: 100%; min-height: 0; padding: 22px 22px 18px; }
+.desk .header { gap: 10px; margin-bottom: 18px; }
+.desk .iconButton { width: 34px; height: 34px; padding: 0; border-radius: 50%; border: 1.5px solid var(--desk-hair); align-items: center; justify-content: center; flex-shrink: 0; }
+.desk .headerIcon { width: 32px; height: 32px; border-radius: 10px; }
+.desk .headerTitle { font-size: 17px; font-weight: 700; }
+.desk .menu { background: var(--desk-card); box-shadow: var(--desk-pop-shadow); border-radius: 16px; padding: 4px; }
+.desk .menuItem { border: 0; border-radius: 12px; padding: 10px 12px; }
+.desk .ring { width: 150px; height: 150px; flex-shrink: 0; }
+.desk .ringInner { width: 116px; height: 116px; background: var(--desk-card); }
+.desk .ringPercent { font-size: 26px; font-weight: 600; letter-spacing: -0.5px; }
+.desk .ringSub { color: var(--muted); }
+.desk .bigAmount { font-size: 38px; font-weight: 500; letter-spacing: -1.2px; margin-top: 2px; }
+.desk .bigLabel, .desk .subtext { color: var(--muted); }
+.desk .subtext { margin-bottom: 18px; }
+.desk .statsRow { flex-shrink: 0; margin-bottom: 18px; }
+.desk .statBox { background: var(--desk-chip); border-radius: 18px; padding: 14px 12px; }
+.desk .statLabel { color: var(--muted); font-size: 12px; margin-bottom: 4px; }
+.desk .statValue { font-size: 18px; font-weight: 600; }
+.desk .statValueMuted, .desk .statSub { color: var(--muted); }
+.desk .statValueAccent { font-size: 20px; color: var(--accent); }
+.desk .historyTitle { font-size: 15px; font-weight: 600; flex-shrink: 0; margin-bottom: 4px; }
+.desk .historyList { flex: 1; min-height: 0; overflow-y: auto; }
+.desk .historyRow { border-top: 1px solid var(--desk-hair); padding: 12px 0; }
+.desk .historyRow:first-child { border-top: 0; }
+.desk .historyDate { font-size: 13.5px; }
+.desk .historyNote, .desk .historyEmpty { color: var(--muted); }
+.desk .historyAmount { font-size: 14px; font-feature-settings: 'tnum'; }
+.desk .deleteConfirmPanel { flex-shrink: 0; border-radius: 16px; }
+@media (hover: hover) and (pointer: fine) {
+  .desk .iconButton:hover { background: var(--desk-chip); translate: none; filter: none; }
+}

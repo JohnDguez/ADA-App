@@ -35,7 +35,7 @@ function fmtDateShort(value) {
 export function RecurrentDetailPanel({
   master, payments, profile,
   canEdit = true, canDelete = true, blocked,
-  onBack, onEdit, onPause, onResume, onDelete,
+  onBack, onEdit, onPause, onResume, onDelete, desk = false,
 }) {
   const { t } = useTranslation()
   const [menuOpen, setMenuOpen] = useState(false)
@@ -159,7 +159,7 @@ export function RecurrentDetailPanel({
   }
 
   return (
-    <div className={styles.screen}>
+    <div className={`${styles.screen} ${desk ? styles.desk : ''}`}>
       <div className={styles.header}>
         <button type="button" onClick={onBack} className={styles.iconButton} aria-label={t('goalDetailPanel.back')}>
           <ChevronLeft size={22} color="var(--text)" />
@@ -258,7 +258,7 @@ export function RecurrentDetailPanel({
       {paidChildren.length === 0 ? (
         <div className={styles.historyEmpty}>{t('recurrentDetailPanel.historyEmpty')}</div>
       ) : (
-        <div className={styles.historyList}>
+        <div className={`${styles.historyList} ${desk ? 'scroll-y' : ''}`}>
           {paidChildren.map(p => {
             const isAbono    = abonoIds.has(p.id)
             const isAdjusted = isInstallment && !p.is_postponed && !isAbono && Number(p.amount) !== Number(master.amount)

@@ -5,7 +5,7 @@ import { EmptyState } from '../components/EmptyState'
 import { PageHeader } from '../components/PageHeader'
 import { NewSharedSpacePanel } from '../components/NewSharedSpacePanel'
 import { RecurrentDetailPanel } from '../components/RecurrentDetailPanel'
-import { fmt, RECUR_FREQ, getFrequencyLabel, dateOf, getMonthsShort, getCatColor, getCategoryLabel, monthlyEquivalent } from '../lib/utils'
+import { installmentUntrackedCount, fmt, RECUR_FREQ, getFrequencyLabel, dateOf, getMonthsShort, getCatColor, getCategoryLabel, monthlyEquivalent } from '../lib/utils'
 import { getCategoryIcon } from '../lib/categoryIcons'
 import { showToast } from '../components/Toast'
 import { StatsCardSkeleton, CategoryAccordionSkeleton } from '../components/SkeletonLoader'
@@ -97,6 +97,17 @@ export function RecurrentsPage({ payments, dataLoading = false, profile, spaceSw
     return payments.filter(p => p.parent_id === masterId && p.is_paid).length
   }
 
+  // Pagos ya hechos de una parcialidad. `getPaidCount` solo ve las copias
+  // cargadas en memoria (últimos 3 meses) y no las anteriores al primer
+  // registro; el siguiente pendiente (N) ya implica N-1 pagados — igual que
+  // el detalle (v0.9.830, «dice 7 y van 11»).
+  function installmentPaid(m) {
+    const next = getNextDue(m.id)
+    const n = Number(next?.current_installment)
+    if (n > 0) return Math.min(m.total_installments || n - 1, n - 1)
+    return Math.min(m.total_installments || Infinity, getPaidCount(m.id) + installmentUntrackedCount(m, payments))
+  }
+
   // Métricas
   const activeMasters = masters.filter(m => !m.paused)
   const pausedMasters = masters.filter(m => m.paused)
@@ -115,8 +126,8 @@ export function RecurrentsPage({ payments, dataLoading = false, profile, spaceSw
   const freqMax = Math.max(1, ...freqRows.map(r => r.amount))
   const isInstallmentMaster = m => m.is_installment || m.total_installments > 0
   const installmentMasters = activeMasters.filter(isInstallmentMaster)
-  const installmentsLeft = installmentMasters.reduce((s, m) => s + Math.max(0, (m.total_installments || 0) - getPaidCount(m.id)), 0)
-  const installmentsLeftAmount = installmentMasters.reduce((s, m) => s + Number(m.amount || 0) * Math.max(0, (m.total_installments || 0) - getPaidCount(m.id)), 0)
+  const installmentsLeft = installmentMasters.reduce((s, m) => s + Math.max(0, (m.total_installments || 0) - installmentPaid(m)), 0)
+  const installmentsLeftAmount = installmentMasters.reduce((s, m) => s + Number(m.amount || 0) * Math.max(0, (m.total_installments || 0) - installmentPaid(m)), 0)
 
   // Filtros
   const filtered = useMemo(() => {
@@ -158,7 +169,7 @@ export function RecurrentsPage({ payments, dataLoading = false, profile, spaceSw
     search, setSearch, filterStatus, setFilterStatus, filterType, setFilterType, byCategory,
     totals: { active: activeMasters.length, paused: pausedMasters.length, all: masters.length, monthly: totalMensual },
     freqRows, freqMax, variableCount,
-    installments: { count: installmentMasters.length, left: installmentsLeft, leftAmount: installmentsLeftAmount, items: installmentMasters.map(m => ({ id: m.id, name: m.name, category: m.category, paid: getPaidCount(m.id), total: m.total_installments || 0, amount: Number(m.amount || 0) })) },
+    installments: { count: installmentMasters.length, left: installmentsLeft, leftAmount: installmentsLeftAmount, items: installmentMasters.map(m => ({ id: m.id, name: m.name, category: m.category, paid: installmentPaid(m), total: m.total_installments || 0, amount: Number(m.amount || 0) })) },
     getNextDue, getPaidCount, formatNextDate,
     canEdit, canDelete, blocked, onPause, onResume, onEdit, onDelete, payments, selectedMaster, setSelectedMasterId,
     openMenu, setOpenMenu, confirmDelete, setConfirmDelete,
