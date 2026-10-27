@@ -821,6 +821,7 @@
       "custom": "Personalizado",
       "day1Label28": "Día 1 (1–28)",
       "day2Label31": "Día 2 (1–31)",
+      "pickTwoDays": "Toca el primer día y luego el segundo.",
       "biweeklyHint": "Te avisaremos qué pagos cubrir antes de los días {{d1}} y {{d2}} de cada mes."
     },
     "step3": {

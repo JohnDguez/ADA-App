@@ -62,6 +62,8 @@ export function OnboardingPage({ userId, onDone }) {
   const [biweeklyCustom, setBiweeklyCustom] = useState(false)
   const [salaryEnabled,  setSalaryEnabled]  = useState(false)
   const [salaryAmount,   setSalaryAmount]   = useState('')
+  // Quincenal personalizado: el 1.er toque elige el primer día, el 2.º el segundo.
+  const [biweeklyPick,   setBiweeklyPick]   = useState(0)
   const [saving,         setSaving]         = useState(false)
   const [finishError,    setFinishError]    = useState('')
 
@@ -69,6 +71,12 @@ export function OnboardingPage({ userId, onDone }) {
   const exitTimeoutRef = useRef(null)
 
   useEffect(() => () => clearTimeout(exitTimeoutRef.current), [])
+
+  function pickBiweeklyDay(d) {
+    if (biweeklyPick === 0) { setCobroDay1(d); setCobroDay2(null); setBiweeklyPick(1); return }
+    if (d === cobroDay1) return
+    setCobroDay1(Math.min(d, cobroDay1)); setCobroDay2(Math.max(d, cobroDay1)); setBiweeklyPick(0)
+  }
 
   async function handleFinish() {
     setSaving(true)
@@ -79,7 +87,7 @@ export function OnboardingPage({ userId, onDone }) {
       cobro_freq:    cobroFreq,
       cobro_weekday: cobroFreq === 'weekly' ? cobroWeekday : null,
       cobro_day1:    cobroFreq !== 'weekly' ? (cobroDay1 ?? 1) : null,
-      cobro_day2:    cobroFreq === 'biweekly' ? (cobroDay2 ?? 16) : null,
+      cobro_day2:    cobroFreq === 'biweekly' ? (cobroDay2 ?? (cobroDay1 === 16 ? 1 : 16)) : null,
       salary_enabled: salaryEnabled,
       salary_amount:  salaryEnabled ? (parseFloat(salaryAmount) || 0) : 0,
       onboarding_completed: true,
@@ -255,26 +263,18 @@ export function OnboardingPage({ userId, onDone }) {
                     </button>
                   </div>
                   {biweeklyCustom && (
-                    <div className={styles.twoColRow}>
-                      <div className={styles.colField}>
-                        <label className={styles.smallLabel}>{t('onboardingPage.step2.day1Label28')}</label>
-                        <input aria-label={t('onboardingPage.step2.day1Label28')}
-                          type="number" min="1" max="28" value={cobroDay1 ?? ''}
-                          onChange={e => setCobroDay1(Math.min(28, Math.max(1, parseInt(e.target.value)||1)))}
-                          onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); document.getElementById('cobro-day2')?.focus() } }}
-                          enterKeyHint="next" placeholder={t('settingsCobro.day1Placeholder')} className="field-input"
-                        />
+                    <>
+                      <div className={styles.dayPickHelp}>{t('onboardingPage.step2.pickTwoDays')}</div>
+                      <div className={styles.dayGrid} role="group" aria-label={t('onboardingPage.step2.biweeklyDaysLabel')}>
+                        {Array.from({ length: 31 }, (_, i) => i + 1).map(d => (
+                          <button key={d} type="button" onClick={() => pickBiweeklyDay(d)}
+                            aria-pressed={d === cobroDay1 || d === cobroDay2}
+                            className={`${styles.dayButton} ${d === cobroDay1 || d === cobroDay2 ? styles.dayButtonActive : ''}`}>
+                            {d}
+                          </button>
+                        ))}
                       </div>
-                      <div className={styles.colField}>
-                        <label className={styles.smallLabel}>{t('onboardingPage.step2.day2Label31')}</label>
-                        <input
-                          type="number" min="1" max="31" value={cobroDay2 ?? ''} id="cobro-day2"
-                          onChange={e => setCobroDay2(Math.min(31, Math.max(1, parseInt(e.target.value)||1)))}
-                          onKeyDown={e => e.key === 'Enter' && nextStep()}
-                          enterKeyHint="next" placeholder={t('settingsCobro.day2Placeholder')} className="field-input"
-                        />
-                      </div>
-                    </div>
+                    </>
                   )}
                   {cobroDay1 && cobroDay2 && (
                     <div className={styles.hintCard}>
@@ -290,12 +290,15 @@ export function OnboardingPage({ userId, onDone }) {
               {cobroFreq === 'monthly' && (
                 <div className={styles.section}>
                   <label className="field-label">{t('settingsCobro.payDayLabel')}</label>
-                  <input aria-label={t('settingsCobro.payDayLabel')}
-                    type="number" min="1" max="31" value={cobroDay1 ?? ''}
-                    onChange={e => setCobroDay1(Math.min(31, Math.max(1, parseInt(e.target.value)||1)))}
-                    onKeyDown={e => e.key === 'Enter' && nextStep()}
-                    enterKeyHint="next" placeholder={t('settingsCobro.monthlyPlaceholder')} className={`field-input ${styles.monthDayInput}`}
-                  />
+                  <div className={styles.dayGrid} role="group" aria-label={t('settingsCobro.payDayLabel')}>
+                    {Array.from({ length: 31 }, (_, i) => i + 1).map(d => (
+                      <button key={d} type="button" onClick={() => setCobroDay1(d)}
+                        aria-pressed={cobroDay1 === d}
+                        className={`${styles.dayButton} ${cobroDay1 === d ? styles.dayButtonActive : ''}`}>
+                        {d}
+                      </button>
+                    ))}
+                  </div>
                   {cobroDay1 && (
                     <div className={styles.hintCard}>
                       <CalendarCheck size={18} className={styles.hintIcon} />

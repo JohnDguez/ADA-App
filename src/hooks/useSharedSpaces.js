@@ -53,10 +53,10 @@ export function useSharedSpaces(userId) {
           // id/name/avatar_url de uno mismo y de quienes comparten espacio —
           // consultar `profiles` directo dejaba leer salario, ids de Stripe
           // y token de Play de los demás miembros.
+          // v0.9.804: ahora es la función `get_space_member_profiles` (la
+          // vista era SECURITY DEFINER y Supabase la marcaba como crítica).
           const { data: memberProfiles } = await supabase
-            .from('space_member_profiles')
-            .select('id, name, avatar_url')
-            .in('id', memberUserIds)
+            .rpc('get_space_member_profiles', { member_ids: memberUserIds })
           const profileMap = {}
           for (const p of (memberProfiles || [])) profileMap[p.id] = p
           allMembers.forEach(m => { m.profile = profileMap[m.user_id] || null })
