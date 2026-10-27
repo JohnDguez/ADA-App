@@ -330,6 +330,7 @@ export function DeskPayments({ d }) {
 
                   <section ref={catRef} data-coachmark="gastos-category-chips" className={home.card}>
                     <h2 className={home.cardTitle}>{t('paymentsPage.byCategory')}</h2>
+                    {catData.length > 0 && <p className={styles.hint}>{selectedCat ? t('deskPayments.hintActive', { cat: selectedLabel }) : t('deskPayments.hint')}</p>}
                     {catData.length === 0 ? (
                       dataLoading ? <CategoryListSkeleton count={4} /> : (
                         <EmptyState desk title={t('paymentsPage.noExpensesTitle')} subtitle={t('homePage.emptyState.subtitle')} onClick={onAdd}

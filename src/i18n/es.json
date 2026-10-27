@@ -1112,6 +1112,8 @@
     "scanHint": "Foto del recibo"
   },
   "deskPayments": {
+    "hint": "Haz clic en una categoría para filtrar los pagos y la gráfica.",
+    "hintActive": "Filtrando por {{cat}}. Haz clic de nuevo para quitar el filtro.",
     "usedPct": "{{pct}} % del ingreso usado",
     "ofIncome": "de {{amount}}",
     "addShort": "Añadir",

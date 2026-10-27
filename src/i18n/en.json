@@ -1112,6 +1112,8 @@
     "scanHint": "Photo of the receipt"
   },
   "deskPayments": {
+    "hint": "Click a category to filter the payments and the chart.",
+    "hintActive": "Filtering by {{cat}}. Click again to clear the filter.",
     "usedPct": "{{pct}}% of income used",
     "ofIncome": "of {{amount}}",
     "addShort": "Add",
