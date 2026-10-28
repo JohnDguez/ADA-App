@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useId, Children, isValidElement, cloneElement } from 'react'
 import { useTranslation } from 'react-i18next'
 import i18n from '../i18n'
-import { Wallet, AlertTriangle, Repeat, Check, Info, Lock, Users, User, ChevronDown, Crown, CreditCard } from 'lucide-react'
+import { Wallet, AlertTriangle, Repeat, Check, Info, Lock, Users, User, ChevronDown, Crown, CreditCard, Calendar, Flag } from 'lucide-react'
 import { CATEGORIES, RECUR_FREQ, MONTHS, getMonths, MONTHS_SHORT, getMonthsShort, intlLocale, nextWeeklyFromDate, nextBiweeklyFromDate, nextPeriodDate, cobroPeriod, fmt, nameExistsActive, projectPeriodImpact, nextCobroPeriod, getCatColor, getCategoryLabel, getFrequencyLabel, dateToStr, dateOf, todayStr, getDeleteConfirmMessage, installmentCurrentNumber } from '../lib/utils'
 import { getCategoryIcon } from '../lib/categoryIcons'
 import { supabase } from '../lib/supabase'
@@ -32,6 +32,7 @@ import { ScanLine, X as XIcon } from 'lucide-react'
 import { useIsDesktop } from '../hooks/useIsDesktop'
 import dk from './PaymentDesk.module.css'
 import ip from './PaymentImpactDesk.module.css'
+import ins from './PaymentInstallDesk.module.css'
 import { isVoiceSupported, listenAll, stopListening } from '../lib/voiceInput'
 import { parseVoicePayment } from '../lib/parseVoicePayment'
 import { isTicketScanSupported, scanTicketText } from '../lib/ticketScan'
@@ -1213,21 +1214,76 @@ const impactBlock = impactPreview && impactPreview.length > 0 ? (() => {
                 {mode === 'installment' ? (
                   <>
                     <div className={dk.sideTitle}>{t('paymentModal.summary.title')}</div>
-                    {totalAmt > 0 && numPayments >= 2 ? (
+                    {totalAmt > 0 && numPayments >= 2 ? (() => {
+                      // Plan de pagos (v0.9.873): el pago #1 cae en `dueDate`; los
+                      // anteriores a `startNum` ya están pagados.
+                      const paidCount = Math.min(numPayments, Math.max(0, startNum - 1))
+                      const pct = Math.round((paidCount / numPayments) * 100)
+                      const shortMonths = getMonthsShort()
+                      const fmtDate = ds => { const d = new Date(ds + 'T12:00:00'); return `${d.getDate()} ${shortMonths[d.getMonth()].toLowerCase().replace('.', '')} ${d.getFullYear()}` }
+                      const dates = []
+                      if (!linked && dueDate) { let ds = dueDate; for (let i = 1; i <= numPayments; i++) { dates.push(ds); ds = dateToStr(nextPeriodDate(ds, recurFreq)) } }
+                      const left = []
+                      for (let i = Math.max(1, startNum); i <= numPayments; i++) left.push(i)
+                      const shown = left.length <= 5 ? left : [...left.slice(0, 3), 'more', left[left.length - 1]]
+                      const remaining = left.length * perPayment
+                      return (
+                        <>
+                          <div className={ins.hero}>
+                            <div className={ins.lbl}>{t('paymentModal.summary.eachPayment').toUpperCase()}</div>
+                            <div className={ins.bigAmt}>{fmt(perPayment)}</div>
+                            <div className={ins.sub}>{t('paymentModal.summary.countEvery', { count: numPayments, freq: t(`paymentModal.summary.frequency.${recurFreq}`) })}</div>
+                            <div className={ins.prog}><i style={{ width: `${pct}%` }} /></div>
+                            <div className={ins.progLbl}><span>{t('paymentModal.summary.paidOf', { done: paidCount, total: numPayments })}</span><span>{t('paymentModal.summary.totalLabel', { amount: fmt(totalAmt) })}</span></div>
+                          </div>
+                          {startNum > 1 && (
+                            <div className={ins.rows}>
+                              <div className={ins.rw}><span>{t('paymentModal.summary.remainingToPay')}</span><b>{fmt(remaining)}</b></div>
+                              {dates.length > 0 && <div className={ins.rw}><span>{t('paymentModal.summary.lastPayment')}</span><b>{fmtDate(dates[numPayments - 1])}</b></div>}
+                            </div>
+                          )}
+                          {dates.length > 0 && (
+                            <div className={ins.tl}>
+                              <div className={ins.tlh}>{t('paymentModal.summary.calendar')}<span>{t(startNum > 1 ? 'paymentModal.summary.paymentsLeft' : 'paymentModal.summary.paymentsCount', { count: left.length })}</span></div>
+                              {shown.map((n, idx) => n === 'more' ? (
+                                <div key="more" className={ins.more}>{t('paymentModal.summary.morePayments', { count: left.length - 4 })}</div>
+                              ) : (
+                                <div key={n} className={ins.it}>
+                                  <span className={`${ins.dot} ${idx === 0 ? ins.dotNow : ''}`}>{n}</span>
+                                  <b>{t('paymentModal.summary.payN', { n })}</b>
+                                  <span className={ins.date}>{fmtDate(dates[n - 1])}</span>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                          <div className={dk.sideText}>
+                            {linked ? (() => {
+                              const cut = nextCutAfter(selectedCard, todayStr())
+                              return <>{t('paymentModal.linkCard.summary', { count: numPayments, amount: perPayment.toLocaleString('es-MX') })}{cut && <> {t('paymentModal.linkCard.firstCut', { day: cut.getDate(), month: monthName(cut) })}</>}</>
+                            })() : nextInst && <>{t('paymentModal.summary.nextPayment', { day: nextInst.getDate(), month: monthName(nextInst) })}.</>}
+                          </div>
+                        </>
+                      )
+                    })() : (
                       <>
-                        <div className={dk.big}>{numPayments} × {getCurrencySymbol()}{perPayment.toLocaleString('es-MX')}</div>
-                        <div className={dk.sideText}>
-                          {linked ? (() => {
-                            const cut = nextCutAfter(selectedCard, todayStr())
-                            return <>{t('paymentModal.linkCard.summary', { count: numPayments, amount: perPayment.toLocaleString('es-MX') })}{cut && <> {t('paymentModal.linkCard.firstCut', { day: cut.getDate(), month: monthName(cut) })}</>}</>
-                          })() : <>
-                            {t('paymentModal.summary.willPay')} <strong>{t('paymentModal.summary.paymentsOf', { count: numPayments, amount: perPayment.toLocaleString('es-MX') })}</strong>, {t('paymentModal.summary.every')} {t(`paymentModal.summary.frequency.${recurFreq}`)}.
-                            {nextInst && <> {t('paymentModal.summary.nextPayment', { day: nextInst.getDate(), month: monthName(nextInst) })}.</>}
-                            {startNum > 1 && <> {t('paymentModal.summary.remainingTotal', { amount: ((numPayments - startNum + 1) * perPayment).toLocaleString('es-MX') })}.</>}
-                          </>}
+                        <div className={ip.what}>
+                          <div className={ip.wt}>{t('paymentModal.summary.installEmptyTitle')}</div>
+                          {[['installWi1', CreditCard, 'wicAccent'], ['installWi2', Calendar, 'wicWarn'], ['installWi3', Flag, 'wicOk']].map(([k, Ic, cls]) => (
+                            <div className={ip.wi} key={k}>
+                              <span className={`${ip.wic} ${ip[cls]}`}><Ic size={16} /></span>
+                              <div><b>{t(`paymentModal.summary.${k}`)}</b>{t(`paymentModal.summary.${k}Sub`)}</div>
+                            </div>
+                          ))}
+                        </div>
+                        <div className={ip.todo}>
+                          <span className={ip.td}>{t('paymentModal.impact.missingLabel')}</span>
+                          <span className={ip.pills}>
+                            <span className={`${ip.pill} ${totalAmt > 0 ? ip.done : ''}`}>{totalAmt > 0 ? '✓' : '○'} {t('paymentModal.summary.chipTotal')}</span>
+                            <span className={`${ip.pill} ${numPayments >= 2 ? ip.done : ''}`}>{numPayments >= 2 ? '✓' : '○'} {t('paymentModal.summary.chipPayments')}</span>
+                          </span>
                         </div>
                       </>
-                    ) : <div className={dk.sideText}>{t('paymentModal.desk.installmentEmpty')}</div>}
+                    )}
                   </>
                 ) : deskImpact}
                 {mode === 'recurrent' && (
