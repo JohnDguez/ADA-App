@@ -262,3 +262,9 @@
 .grow { flex: 1; }
 :global(.btn-primary).saveInline { width: auto; padding: 0 16px; }
 .methodFieldWrap { padding: 0 12px; margin-bottom: 10px; }
+
+/* Escritorio (v0.9.845): radios del nuevo diseño. */
+@media (min-width: 1100px) {
+  .presetButton { border-radius: 99px; }
+  .payButton { border-radius: 99px; }
+}

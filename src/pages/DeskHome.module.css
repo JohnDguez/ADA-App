@@ -42,7 +42,8 @@
   mask-image: linear-gradient(to left, black 25%, transparent), linear-gradient(to bottom, black 55%, transparent);
   mask-composite: intersect;
 }
-.bandImg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center 40%; transition: opacity 1.5s ease; }
+.bandImg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center 40%; opacity: 0; transition: opacity 1.5s ease; }
+.bandImgOn { opacity: var(--desk-img-opacity); }
 .headText, .actions { position: relative; z-index: 2; }
 .date { font-size: 13.5px; color: var(--muted); margin-bottom: 4px; }
 .hello { font-size: 42px; font-weight: 500; letter-spacing: -1.4px; line-height: 1.05; margin: 0; color: var(--text); }
@@ -158,8 +159,7 @@
 .tipSlot { margin-top: auto; padding-top: 16px; }
 
 /* ── Columna derecha ──────────────────────────────────────────────────── */
-.side { display: flex; flex-direction: column; gap: 14px; min-width: 0; min-height: 0; overflow-y: auto; scrollbar-width: none; padding: 0 10px 14px; margin: 0 -10px -14px; }
-.side::-webkit-scrollbar { display: none; }
+.side { display: flex; flex-direction: column; gap: 14px; min-width: 0; min-height: 0; overflow-y: auto; padding: 0 10px 14px; margin: 0 -10px -14px; }
 .gaugeWrap { position: relative; max-width: 300px; margin: 8px auto 0; }
 .gaugeSvg { display: block; width: 100%; height: auto; overflow: visible; }
 .gaugeSvg path { fill: none; stroke-width: 26; transition: stroke-dasharray .8s cubic-bezier(0.22, 1, 0.36, 1), stroke-dashoffset .8s cubic-bezier(0.22, 1, 0.36, 1); }

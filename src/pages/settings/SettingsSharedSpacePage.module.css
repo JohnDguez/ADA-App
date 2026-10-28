@@ -680,3 +680,10 @@
 
 /* Escritorio (v0.9.834): el botón queda pegado abajo del panel, no fijo a la ventana */
 .addPillRowDesk { position: sticky; bottom: 8px; left: auto; transform: none; width: auto; max-width: none; margin-top: 12px; }
+
+/* Escritorio (v0.9.845): radios del nuevo diseño. */
+@media (min-width: 1100px) {
+  .smallDangerButton { border-radius: 99px; }
+  .confirmCancelButton { border-radius: 99px; }
+  .confirmDangerButton { border-radius: 99px; }
+}

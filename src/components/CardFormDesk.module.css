@@ -11,3 +11,9 @@
 .side { display: flex; flex-direction: column; gap: 14px; }
 .preview { display: flex; justify-content: center; }
 .full { width: 100%; justify-content: center; }
+
+/* Diálogo de escritorio al añadir/editar tarjeta desde otro formulario (v0.9.845). */
+.dlg { width: 940px; }
+.dlgForm { min-width: 0; }
+.dlgSide { display: flex; align-items: center; justify-content: center; padding: 28px; border-radius: 26px; background: var(--desk-chip); }
+.dlg .input { background: var(--desk-chip); }

@@ -62,3 +62,9 @@
 .segPage .segThumb { top: 4px; bottom: 4px; }
 .segPage .segOption { padding: 10px 0; font-weight: 400; }
 .segPage .segOptionOn { font-weight: 500; }
+
+/* Escritorio (v0.9.845): pista y opción activa del nuevo diseño. */
+@media (min-width: 1100px) {
+  .seg { background: var(--desk-chip); }
+  .segOptionOn { color: var(--desk-ink-text); }
+}

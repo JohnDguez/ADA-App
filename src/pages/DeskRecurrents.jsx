@@ -66,7 +66,7 @@ export function DeskRecurrents({ d }) {
       <header className={home.head}>
         <div className={home.band} aria-hidden="true">
           {mountedKeys.map(key => (
-            <img key={key} src={HEADER_IMAGES[key]} alt="" className={home.bandImg} style={{ opacity: timeOfDay === key ? 'var(--desk-img-opacity)' : 0 }} />
+            <img key={key} src={HEADER_IMAGES[key]} alt="" className={`${home.bandImg} ${timeOfDay === key ? home.bandImgOn : ''}`} />
           ))}
         </div>
         <div className={home.headText}>

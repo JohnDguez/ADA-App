@@ -17,12 +17,11 @@
 .fill { background: var(--desk-chip); border-radius: 24px; padding: 20px 22px; }
 .fillTitle { font-size: 16px; font-weight: 600; color: var(--text); }
 .blue { position: relative; overflow: hidden; border-radius: 26px; padding: 24px 26px; background: var(--desk-hero-bg); color: var(--desk-ink-text); }
-.blue::after { content: ""; position: absolute; right: -60px; top: -70px; width: 240px; height: 240px; border-radius: 50%; background: color-mix(in srgb, var(--desk-ink-text) 12%, transparent); pointer-events: none; }
 .blue > * { position: relative; z-index: 1; }
 .blue .sub { font-size: 13px; opacity: 0.8; }
 
-.ic { width: 42px; height: 42px; border-radius: 50%; display: grid; place-items: center; flex-shrink: 0; background: var(--accent-soft); color: var(--accent); }
-.blue .ic { background: color-mix(in srgb, var(--desk-ink-text) 20%, transparent); color: var(--desk-ink-text); }
+.ic { width: 42px; height: 42px; border-radius: 50%; display: grid; place-items: center; flex-shrink: 0; background: var(--desk-chip); color: var(--accent); }
+.blue .ic { background: var(--desk-ink-text); color: var(--accent); }
 
 .tgl { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 0; cursor: pointer; }
 .tgl + .tgl { border-top: 1px solid var(--desk-hair); }

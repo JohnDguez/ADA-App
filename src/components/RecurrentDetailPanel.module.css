@@ -364,3 +364,9 @@
 .dStats b { font-size: 14px; font-weight: 600; color: var(--text); }
 .dStats .dNext { color: var(--text); }
 .desk .historyIcon { width: 30px; height: 30px; padding: 7px; box-sizing: border-box; border-radius: 50%; background: var(--desk-chip); }
+
+/* Escritorio (v0.9.845): radios del nuevo diseño. */
+@media (min-width: 1100px) {
+  .deleteCancelButton { border-radius: 99px; }
+  .deleteConfirmButton { border-radius: 99px; }
+}

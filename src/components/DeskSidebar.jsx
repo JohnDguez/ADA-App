@@ -89,8 +89,8 @@ export function DeskSidebar({ active, onChange, profile, unreadCount, onOpenNoti
           {open && <span>{t('pageHeader.notificationsAriaLabel')}</span>}
           {open && unreadCount > 0 && <span className={styles.badge}>{formatBadgeCount(unreadCount)}</span>}
         </button>
-        <button className={styles.item} onClick={onGoSettings} aria-label={t('pageHeader.settingsAriaLabel')}>
-          <Settings size={20} strokeWidth={1.8} />
+        <button className={`${styles.item} ${active === 'settings' ? styles.itemActive : ''}`} onClick={onGoSettings} aria-label={t('pageHeader.settingsAriaLabel')} aria-current={active === 'settings' ? 'page' : undefined}>
+          <Settings size={20} strokeWidth={active === 'settings' ? 2.2 : 1.8} />
           {open && <span>{t('pageHeader.settingsAriaLabel')}</span>}
         </button>
 

@@ -53,3 +53,13 @@
   font-family: 'DM Sans', sans-serif;
   padding: 2px 0;
 }
+
+/* Escritorio (v0.9.845): radios del nuevo diseño. */
+@media (min-width: 1100px) {
+  .pill { border-radius: 99px; }
+}
+@media (min-width: 1100px) {
+  .pillGroup, .pillGroupExtra { gap: 8px; }
+  .pill { padding: 12px 0; border: 0; background: var(--desk-chip); }
+  .pillActive { background: var(--accent); color: var(--desk-ink-text); }
+}

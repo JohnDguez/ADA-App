@@ -264,7 +264,7 @@
 .panelDesk .list { padding: 0 12px 12px; }
 
 .panelDesk .sectionLabel, .deskList .sectionLabel { padding: 12px 12px 6px; background: none; font-size: 12px; letter-spacing: 0.8px; text-transform: uppercase; color: var(--muted); }
-.panelDesk .swipeWrap, .deskList .swipeWrap { border-radius: 18px; }
+.panelDesk .swipeWrap, .deskList .swipeWrap { border-radius: 18px; margin-bottom: 6px; }
 .panelDesk .swipeFront, .deskList .swipeFront { background: var(--desk-card); border-radius: 18px; }
 .panelDesk .notifRow, .deskList .notifRow { gap: 14px; padding: 14px 12px; border-bottom: 0; border-radius: 18px; box-shadow: none !important; }
 .panelDesk .notifRowUnread, .deskList .notifRowUnread { background: var(--desk-chip); }

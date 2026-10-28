@@ -11,7 +11,9 @@ import styles from './CardFormModal.module.css'
 import { DeskSettingsHead, DeskPage } from './DeskSettingsHead'
 import deskStyles from './SettingsDesk.module.css'
 import dk from './CardFormDesk.module.css'
-import { ChevronLeft } from 'lucide-react'
+import dkp from './PaymentDesk.module.css'
+import { useIsDesktop } from '../hooks/useIsDesktop'
+import { ChevronLeft, X as XIcon } from 'lucide-react'
 import { markBackHandled } from '../lib/backNav'
 import { useScrollLock } from '../lib/scrollLock'
 
@@ -29,6 +31,7 @@ const EMPTY = { kind: 'credit', bank: null, alias: '', last4: '', network: 'visa
 export function CardFormModal({ open, initial, onSave, onClose, inline = false }) {
   useScrollLock(open && !inline)
   const { t } = useTranslation()
+  const isDesk = useIsDesktop()
   const [form, setForm] = useState(EMPTY)
   const [error, setError] = useState('')
 
@@ -95,16 +98,8 @@ export function CardFormModal({ open, initial, onSave, onClose, inline = false }
   }
   const bankOptions = BANKS.map(b => ({ value: b.id, label: b.id === 'otro' ? t('cards.otherBank') : b.name, group: b.group }))
 
-  if (inline) {
-    return (
-      <DeskPage>
-        <DeskSettingsHead
-          title={initial ? t('cards.form.titleEdit') : t('cards.form.titleNew')}
-          description={t('cards.desk.formDesc')}
-          actions={<button type="button" className={`${deskStyles.btn} ${deskStyles.btnSoft}`} onClick={onClose}><ChevronLeft size={16} />{t('buttons.back')}</button>}
-        />
-        <div className={dk.layout}>
-          <div className={deskStyles.fill}>
+  const deskFields = (
+    <>
             <Segmented value={form.kind} disabled={!!initial} onChange={kind => set({ kind })}
               options={[{ value: 'credit', label: t('cards.kind.credit') }, { value: 'debit', label: t('cards.kind.debit') }]} />
             {initial && <div className={dk.help}>{t('cards.form.kindLocked')}</div>}
@@ -146,6 +141,20 @@ export function CardFormModal({ open, initial, onSave, onClose, inline = false }
                 <CardDayRangePicker cutDay={form.cut_day} dueDay={form.due_day} onChange={days => set(days)} />
               </>
             ) : <div className={dk.help}>{t('cards.form.debitNote')}</div>}
+    </>
+  )
+
+  if (inline) {
+    return (
+      <DeskPage>
+        <DeskSettingsHead
+          title={initial ? t('cards.form.titleEdit') : t('cards.form.titleNew')}
+          description={t('cards.desk.formDesc')}
+          actions={<button type="button" className={`${deskStyles.btn} ${deskStyles.btnSoft}`} onClick={onClose}><ChevronLeft size={16} />{t('buttons.back')}</button>}
+        />
+        <div className={dk.layout}>
+          <div className={deskStyles.fill}>
+            {deskFields}
           </div>
 
           <div className={dk.side}>
@@ -156,6 +165,34 @@ export function CardFormModal({ open, initial, onSave, onClose, inline = false }
           </div>
         </div>
       </DeskPage>
+    )
+  }
+
+  if (isDesk) {
+    return createPortal(
+      <div onClick={e => e.target === e.currentTarget && onClose()} className={dkp.overlay} data-presence="overlay" data-closing={closing ? '' : undefined}>
+        <div className={`${dkp.dialog} ${dk.dlg}`} role="dialog" aria-modal="true" aria-label={initial ? t('cards.form.titleEdit') : t('cards.form.titleNew')} data-presence="panel" data-closing={closing ? '' : undefined}>
+          <div className={dkp.head}>
+            <div>
+              <h2 className={dkp.title}>{initial ? t('cards.form.titleEdit') : t('cards.form.titleNew')}</h2>
+              <div className={dkp.sub}>{t('cards.desk.formDesc')}</div>
+            </div>
+            <button type="button" className={dkp.close} onClick={onClose} aria-label={t('buttons.cancel')}><XIcon size={16} /></button>
+          </div>
+          <div className={dk.layout}>
+            <div className={dk.dlgForm}>{deskFields}</div>
+            <div className={dk.dlgSide}>
+              <div className={dk.preview}><CreditCardVisual card={{ ...form, bank: form.bank || 'otro' }} /></div>
+            </div>
+          </div>
+          {error && <div className={dk.err}>{error}</div>}
+          <div className={dkp.foot}>
+            <button type="button" className={dkp.cancel} onClick={onClose}>{t('buttons.cancel')}</button>
+            <button type="button" className={`btn-primary ${dkp.save}`} onClick={handleSave}>{initial ? t('cards.form.saveEdit') : t('cards.form.saveNew')}</button>
+          </div>
+        </div>
+      </div>,
+      document.body
     )
   }
 

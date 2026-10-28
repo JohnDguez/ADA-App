@@ -428,3 +428,8 @@
 @media (min-width: 768px) {
   .screen { max-width: 700px; margin: 24px auto 0; padding: 0 24px 120px; }
 }
+
+/* Escritorio (v0.9.845): radios del nuevo diseño. */
+@media (min-width: 1100px) {
+  .viewModeButton { border-radius: 99px; }
+}

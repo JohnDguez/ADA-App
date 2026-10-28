@@ -14,7 +14,7 @@
 .sideTitle { font-size: 12px; font-weight: 600; letter-spacing: 0.8px; text-transform: uppercase; color: var(--muted); }
 .preview { --tint: var(--palette-1); display: flex; flex-direction: column; gap: 10px; padding: 20px; border-radius: 22px; background: var(--desk-card); }
 .pTop { display: flex; align-items: center; gap: 12px; }
-.pIcon { width: 46px; height: 46px; flex: none; border-radius: 15px; display: grid; place-items: center; background: color-mix(in srgb, var(--tint) 25%, transparent); color: var(--tint); }
+.pIcon { width: 46px; height: 46px; flex: none; border-radius: 15px; display: grid; place-items: center; background: var(--tint); color: var(--on-color); }
 .pName { font-size: 16px; min-width: 0; overflow-wrap: anywhere; }
 .pAmount { font-size: 30px; font-weight: 700; letter-spacing: -0.8px; }
 .pMeta { font-size: 13px; color: var(--muted); }

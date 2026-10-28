@@ -164,7 +164,7 @@ export function DeskHome({
       <header className={styles.head}>
         <div className={styles.band} aria-hidden="true">
           {mountedKeys.map(key => (
-            <img key={key} src={HEADER_IMAGES[key]} alt="" className={styles.bandImg} style={{ opacity: timeOfDay === key ? 'var(--desk-img-opacity)' : 0 }} />
+            <img key={key} src={HEADER_IMAGES[key]} alt="" className={`${styles.bandImg} ${timeOfDay === key ? styles.bandImgOn : ''}`} />
           ))}
         </div>
         <div className={styles.headText}>

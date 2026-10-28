@@ -137,3 +137,15 @@
   color: var(--text);
   margin-top: 6px;
 }
+
+/* Escritorio (v0.9.845): mismos chips redondeados del nuevo diseño. */
+@media (min-width: 1100px) {
+  .pillRow, .weekdayRow, .presetsRow { gap: 8px; }
+  .dayGrid { gap: 8px; }
+  .pill, .weekdayButton, .presetButton, .dayButton { border-radius: 16px; background: var(--desk-chip); }
+  .pill { padding: 13px 0; }
+  .weekdayButton { width: 46px; height: 46px; }
+  .presetButton { padding: 11px 16px; }
+  .dayButton { height: 42px; }
+  .pillActive, .weekdayButtonActive, .presetButtonActive, .dayButtonActive { background: var(--accent); color: var(--desk-ink-text); }
+}

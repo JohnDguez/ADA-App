@@ -337,3 +337,12 @@
 @media (hover: hover) and (pointer: fine) {
   .pickerRow:not(.pickerRowOn):hover { background: color-mix(in srgb, var(--accent) 12%, var(--bg)); filter: none; translate: none; }
 }
+
+/* Escritorio (v0.9.845): radios del nuevo diseño. */
+@media (min-width: 1100px) {
+  .tile { border-radius: 16px; }
+  .catBtn { border-radius: 14px; }
+  .iconBtn { border-radius: 14px; }
+  .toggleRow { border-radius: 16px; }
+  .sidePanel { border-radius: 20px; }
+}

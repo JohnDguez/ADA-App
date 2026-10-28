@@ -47,7 +47,7 @@
 .right { text-align: right; }
 .amt { font-weight: 700; }
 .inc { color: var(--paid); }
-.danger { background: color-mix(in srgb, var(--danger) 14%, transparent); color: var(--danger); }
+.danger { background: var(--desk-chip); color: var(--danger); }
 .pgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
 .plan { display: flex; flex-direction: column; gap: 6px; }
 .planTop { display: flex; justify-content: space-between; align-items: center; font-size: 16px; font-weight: 700; color: var(--text); }

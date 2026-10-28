@@ -17,13 +17,13 @@ input.input:focus { box-shadow: inset 0 0 0 2px var(--accent); }
 .sw { width: 44px; height: 44px; border: 0; border-radius: 50%; display: grid; place-items: center; }
 .swOn { box-shadow: 0 0 0 3px var(--desk-chip), 0 0 0 6px var(--text); }
 .side { display: flex; flex-direction: column; gap: 14px; }
-.preview { --tint: var(--palette-1); display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 28px 20px; border-radius: 28px; text-align: center; background: color-mix(in srgb, var(--tint) 14%, transparent); color: var(--text); }
-.pi { width: 90px; height: 90px; border-radius: 30px; display: grid; place-items: center; background: color-mix(in srgb, var(--tint) 25%, transparent); color: var(--tint); }
+.preview { --tint: var(--palette-1); display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 28px 20px; border-radius: 28px; text-align: center; background: var(--desk-chip); color: var(--text); }
+.pi { width: 90px; height: 90px; border-radius: 30px; display: grid; place-items: center; background: var(--tint); color: var(--on-color); }
 .dot { width: 14px; height: 14px; border-radius: 50%; background: var(--tint); }
 .preview b { font-size: 22px; }
 .preview span:last-child { font-size: 13px; color: var(--muted); }
 .full { width: 100%; justify-content: center; }
-.delete { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 12px 22px; border: 0; border-radius: 99px; background: color-mix(in srgb, var(--danger) 14%, transparent); color: var(--danger); font-size: 14px; font-weight: 600; }
+.delete { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 12px 22px; border: 0; border-radius: 99px; background: var(--desk-chip); color: var(--danger); font-size: 14px; font-weight: 600; }
 .danger { background: var(--danger); color: var(--on-danger); }
 .confirm { font-size: 14px; line-height: 1.5; color: var(--text); }
 .confirmBtns { display: flex; gap: 10px; margin-top: 14px; }

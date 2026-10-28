@@ -627,3 +627,10 @@ button.dim50:disabled { opacity: 0.5; }
   .actions > button { margin-top: 0; width: auto; min-width: 150px; }
   .actions > button:first-child { min-width: 220px; }
 }
+
+/* Escritorio (v0.9.845): radios del nuevo diseño. */
+@media (min-width: 1100px) {
+  .paymentTypeTabs { border-radius: 99px; }
+  .paymentTypeTab { border-radius: 99px; }
+  .impactChip { border-radius: 99px; }
+}
