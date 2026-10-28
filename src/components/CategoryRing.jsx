@@ -17,10 +17,16 @@ export function CategoryRing({ cats, selectedCat, profile, totalAll, centerAmoun
   }, [])
   // pathLength=100: cada categoría es un tramo con puntas redondeadas. Se resta
   // el ancho de las puntas (≈3.4 por lado) para que no se encimen.
+  // Los extremos del arco no llevan separación: el primer y el último tramo
+  // llegan hasta donde llega la pista (v0.9.903); solo los cortes internos
+  // descuentan el ancho de las puntas.
+  const GAP = 3.4
   let off = 0
-  const segs = cats.map(({ cat, total }) => {
+  const segs = cats.map(({ cat, total }, i) => {
     const len = totalAll > 0 ? (total / totalAll) * 100 : 0
-    const seg = { cat, len: Math.max(len - 7, 0.01), start: off + 3.4, color: getCatColor(cat, profile.custom_categories, profile.category_colors) }
+    const lead = i === 0 ? 0 : GAP
+    const trail = i === cats.length - 1 ? 0 : GAP
+    const seg = { cat, len: Math.max(len - lead - trail, 0.01), start: off + lead, color: getCatColor(cat, profile.custom_categories, profile.category_colors) }
     off += len
     return seg
   })
