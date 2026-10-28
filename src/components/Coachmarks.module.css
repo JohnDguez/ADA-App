@@ -138,3 +138,61 @@
   cursor: pointer;
   font-family: 'DM Sans', sans-serif;
 }
+
+/* ── Escritorio (≥1100px): globo anclado de ancho fijo con flecha (v0.9.853) ── */
+@media (min-width: 1100px) {
+  .overlayBand { background: var(--scrim-coach-desk); }
+}
+
+.deskBubble {
+  position: fixed;
+  z-index: 401;
+  box-sizing: border-box;
+  background: var(--desk-card);
+  color: var(--text);
+  border-radius: 26px;
+  padding: 22px 24px 20px;
+  box-shadow: var(--desk-pop-shadow);
+  animation: modalPopIn .2s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+}
+
+.deskArrow {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  margin-left: -10px;
+  background: var(--desk-card);
+  border-radius: 4px;
+  transform: rotate(45deg);
+}
+.deskArrowUp   { top: -8px; }
+.deskArrowDown { bottom: -8px; }
+
+.deskClose {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--desk-chip);
+  color: var(--text);
+  display: grid;
+  place-items: center;
+}
+
+.deskKicker {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.9px;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+.deskTitle { margin-top: 8px; padding-right: 40px; font-size: 21px; font-weight: 700; letter-spacing: -0.4px; color: var(--text); }
+.deskText { margin-top: 6px; font-size: 14.5px; line-height: 1.5; color: var(--muted); }
+.deskFooter { display: flex; align-items: center; justify-content: space-between; margin-top: 20px; }
+.deskDot { width: 7px; height: 7px; border-radius: 7px; background: var(--desk-chip); transition: width .2s, background .2s; }
+.deskDotActive { width: 22px; background: var(--accent); }
+.deskBack, .deskNext { height: 40px; padding: 0 20px; border-radius: 99px; font-size: 14px; font-weight: 600; }
+.deskBack { background: var(--desk-chip); color: var(--text); }
+.deskNext { background: var(--accent); color: var(--surface); padding: 0 22px; }

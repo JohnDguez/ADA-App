@@ -3,6 +3,8 @@ import { useTranslation } from 'react-i18next'
 import { getCoachmarkSteps } from '../lib/coachmarkSteps'
 import styles from './Coachmarks.module.css'
 import { useScrollLock } from '../lib/scrollLock'
+import { useIsDesktop } from '../hooks/useIsDesktop'
+import { X } from 'lucide-react'
 
 // Motor de coach marks: dado un `screenKey` (home, gastos, recurrentes,
 // perfil, nuevo-pago), busca sus pasos en COACHMARK_STEPS y, si el usuario
@@ -34,8 +36,14 @@ import { useScrollLock } from '../lib/scrollLock'
 // spotlight quede desalineado.
 const SETTLE_DELAY = 320
 
+// Escritorio (≥1100px): globo de ancho fijo anclado al elemento, con flecha.
+const DESK_BUBBLE_W = 420
+const DESK_PADDING = 8
+const DESK_RADIUS = 24
+
 export function Coachmarks({ screenKey, profile, onUpdateProfile }) {
   const { t } = useTranslation()
+  const isDesk = useIsDesktop()
   const [stepIndex, setStepIndex] = useState(0)
   const [rect, setRect] = useState(null)
   const rafRef = useRef(null)
@@ -203,12 +211,15 @@ export function Coachmarks({ screenKey, profile, onUpdateProfile }) {
   // Recalcula la posición de la burbuja para que nunca quede fuera de la
   // pantalla — mide su alto real (varía según el largo del texto) y ajusta
   // hacia arriba/abajo si se saldría por cualquiera de los dos bordes.
+  // bubblePos: top (px) de la burbuja. En escritorio además `deskPos` trae su
+  // left y la posición X de la flecha (que apunta al elemento) y el lado.
   const [bubblePos, setBubblePos] = useState(null)
+  const [deskPos, setDeskPos] = useState(null)
   useLayoutEffect(() => {
-    if (!rect || !bubbleRef.current) { setBubblePos(null); return }
+    if (!rect || !bubbleRef.current) { setBubblePos(null); setDeskPos(null); return }
     const step = steps[stepIndex]
-    const PADDING = 6
-    const GAP = 12
+    const PADDING = isDesk ? DESK_PADDING : 6
+    const GAP = isDesk ? 16 : 12
     const margin  = 16
     const bubbleH = bubbleRef.current.offsetHeight
 
@@ -228,13 +239,25 @@ export function Coachmarks({ screenKey, profile, onUpdateProfile }) {
       : rect.bottom + PADDING + GAP
     top = Math.max(margin, Math.min(top, window.innerHeight - bubbleH - margin))
     setBubblePos(top)
-  }, [rect, stepIndex]) // eslint-disable-line react-hooks/exhaustive-deps
+
+    if (isDesk) {
+      // Globo anclado: si el elemento es angosto se centra sobre él; si es
+      // ancho (una fila de tarjetas, una lista) se alinea a su borde izquierdo.
+      const W = DESK_BUBBLE_W
+      const centerX = rect.left + rect.width / 2
+      let left = rect.width < W ? centerX - W / 2 : rect.left
+      left = Math.max(margin, Math.min(left, window.innerWidth - W - margin))
+      const anchorX = rect.width < W ? centerX : rect.left + Math.min(rect.width / 2, 64)
+      const arrowX = Math.max(34, Math.min(anchorX - left, W - 34))
+      setDeskPos({ left, arrowX, side })
+    }
+  }, [rect, stepIndex, isDesk]) // eslint-disable-line react-hooks/exhaustive-deps
 
   if (alreadySeen || !rect) return null
 
   const step = steps[stepIndex]
   const isLast = stepIndex === steps.length - 1
-  const PADDING = 6
+  const PADDING = isDesk ? DESK_PADDING : 6
 
   // El área "agujereada" (sin oscurecer) es exactamente el rect del
   // spotlight, con el mismo PADDING que ya usa el propio spotlight. En vez
@@ -266,7 +289,7 @@ export function Coachmarks({ screenKey, profile, onUpdateProfile }) {
   // cercano a la esquina interior — mismo radio que el borde redondeado,
   // así la curva calza perfecto y el resto del cuadradito (la esquina
   // exterior recta del rectángulo) se oscurece igual que las franjas.
-  const RADIUS = 10
+  const RADIUS = isDesk ? DESK_RADIUS : 10
   const corners = [
     { top: holeTop, left: holeLeft, pos: '100% 100%' },              // superior-izquierda
     { top: holeTop, left: holeRight - RADIUS, pos: '0% 100%' },       // superior-derecha
@@ -284,7 +307,7 @@ export function Coachmarks({ screenKey, profile, onUpdateProfile }) {
         <div
           key={i}
           className={styles.overlayCorner}
-          style={{ top: c.top, left: c.left, background: `radial-gradient(circle at ${c.pos}, transparent ${RADIUS - 0.5}px, var(--scrim-coach) ${RADIUS}px)` }}
+          style={{ top: c.top, left: c.left, background: `radial-gradient(circle at ${c.pos}, transparent ${RADIUS - 0.5}px, ${isDesk ? 'var(--scrim-coach-desk)' : 'var(--scrim-coach)'} ${RADIUS}px)` }}
         />
       ))}
       <div
@@ -294,8 +317,51 @@ export function Coachmarks({ screenKey, profile, onUpdateProfile }) {
           left: rect.left - PADDING,
           width: rect.width + PADDING * 2,
           height: rect.height + PADDING * 2,
+          ...(isDesk ? { borderRadius: DESK_RADIUS } : null),
         }}
       />
+      {isDesk ? (
+        <div
+          ref={bubbleRef}
+          className={styles.deskBubble}
+          role="dialog"
+          aria-label={step.title}
+          style={{
+            top: bubblePos ?? -9999,
+            left: deskPos?.left ?? 0,
+            width: DESK_BUBBLE_W,
+            visibility: bubblePos === null || !deskPos ? 'hidden' : 'visible',
+          }}
+        >
+          {deskPos && (
+            <span
+              className={`${styles.deskArrow} ${deskPos.side === 'top' ? styles.deskArrowDown : styles.deskArrowUp}`}
+              style={{ left: deskPos.arrowX }}
+            />
+          )}
+          <button type="button" onClick={skipAll} className={styles.deskClose} aria-label={t('coachmarks.skipTutorial')}>
+            <X size={16} />
+          </button>
+          <div className={styles.deskKicker}>{t('coachmarks.stepOf', { n: stepIndex + 1, total: steps.length })}</div>
+          <div className={styles.deskTitle}>{step.title}</div>
+          <div className={styles.deskText}>{step.text}</div>
+          <div className={styles.deskFooter}>
+            <div className={styles.dotsRow}>
+              {steps.map((_, i) => (
+                <div key={i} className={`${styles.deskDot} ${i === stepIndex ? styles.deskDotActive : ''}`} />
+              ))}
+            </div>
+            <div className={styles.buttonsRow}>
+              {stepIndex > 0 && (
+                <button type="button" onClick={goBack} className={styles.deskBack}>{t('onboardingPage.back')}</button>
+              )}
+              <button type="button" onClick={goNext} className={styles.deskNext}>
+                {isLast ? t('buttons.understood') : t('coachmarks.next')}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : (
       <div
         ref={bubbleRef}
         className={styles.bubble}
@@ -338,6 +404,7 @@ export function Coachmarks({ screenKey, profile, onUpdateProfile }) {
           </div>
         </div>
       </div>
+      )}
     </>
   )
 }

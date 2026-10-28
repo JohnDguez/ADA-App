@@ -1687,7 +1687,8 @@
         "title": "Create your first goal",
         "text": "Give it a name, a target amount, and, if you want, a deadline — that’s all it takes to start."
       }
-    }
+    },
+    "stepOf": "Step {{n}} of {{total}}"
   },
   "splitContributionsModal": {
     "rowDone": "Done",

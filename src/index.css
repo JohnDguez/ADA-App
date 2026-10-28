@@ -274,6 +274,7 @@
 
   --scrim-strong: rgba(2, 10, 31, 0.5);       /* fondo de paneles/modales centrados */
   --scrim-coach:  rgba(2, 10, 31, 0.92);      /* oscurecido de Coachmarks */
+  --scrim-coach-desk: rgba(2, 10, 31, 0.78);  /* oscurecido de Coachmarks en escritorio (más suave: se ve la app detrás) */
   --premium-back-btn-bg: rgba(0, 0, 0, 0.35); /* botón de cerrar sobre el hero de Premium */
 
   --shadow-card:         0 2px 8px rgba(0, 0, 0, 0.08);

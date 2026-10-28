@@ -1687,7 +1687,8 @@
         "title": "Crea tu primera meta",
         "text": "Dale nombre, monto objetivo y, si quieres, una fecha límite — desde aquí empieza todo."
       }
-    }
+    },
+    "stepOf": "Paso {{n}} de {{total}}"
   },
   "splitContributionsModal": {
     "rowDone": "Listo",
