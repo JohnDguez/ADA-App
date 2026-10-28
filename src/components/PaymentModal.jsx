@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useId, Children, isValidElement, cloneElement } from 'react'
 import { useTranslation } from 'react-i18next'
 import i18n from '../i18n'
-import { Wallet, AlertTriangle, Repeat, Check, Info, Lock, Users, User, ChevronDown } from 'lucide-react'
+import { Wallet, AlertTriangle, Repeat, Check, Info, Lock, Users, User, ChevronDown, Crown, CreditCard } from 'lucide-react'
 import { CATEGORIES, RECUR_FREQ, MONTHS, getMonths, MONTHS_SHORT, getMonthsShort, intlLocale, nextWeeklyFromDate, nextBiweeklyFromDate, nextPeriodDate, cobroPeriod, fmt, nameExistsActive, projectPeriodImpact, nextCobroPeriod, getCatColor, getCategoryLabel, getFrequencyLabel, dateToStr, dateOf, todayStr, getDeleteConfirmMessage, installmentCurrentNumber } from '../lib/utils'
 import { getCategoryIcon } from '../lib/categoryIcons'
 import { supabase } from '../lib/supabase'
@@ -31,6 +31,7 @@ import { Microphone } from '@phosphor-icons/react/dist/csr/Microphone'
 import { ScanLine, X as XIcon } from 'lucide-react'
 import { useIsDesktop } from '../hooks/useIsDesktop'
 import dk from './PaymentDesk.module.css'
+import ip from './PaymentImpactDesk.module.css'
 import { isVoiceSupported, listenAll, stopListening } from '../lib/voiceInput'
 import { parseVoicePayment } from '../lib/parseVoicePayment'
 import { isTicketScanSupported, scanTicketText } from '../lib/ticketScan'
@@ -922,6 +923,117 @@ const impactBlock = impactPreview && impactPreview.length > 0 ? (() => {
   if (!initial && isDesk) {
     const tiles = [['single', NumberCircleOne], ['recurrent', ArrowsClockwise], ['installment', Rows]]
     const symbol = getCurrencySymbol()
+    // Panel «Impacto en tus finanzas» (v0.9.868). Sin Premium: bloqueo siempre
+    // visible. Premium: estado vacío con lista de lo que verá, o la tarjeta de
+    // impacto (naranja si queda en negativo, verde si alcanza).
+    const impactIsPremium = !!profile?.is_premium
+    const impactHead = (
+      <div className={ip.head}>
+        <span className={dk.sideTitle}>{t('paymentModal.impact.label')}</span>
+        {impactIsPremium && <span className={ip.badge}><Crown size={12} />Premium</span>}
+      </div>
+    )
+    let deskImpact
+    if (!impactIsPremium) {
+      deskImpact = (
+        <div className={ip.lockWrap}>
+          {impactHead}
+          <div className={ip.ghost} aria-hidden="true">
+            <div className={`${ip.hero} ${ip.warn}`}>
+              <div className={ip.status}><span className={ip.chip}><AlertTriangle size={17} /></span><div className={ip.s1}>{t('paymentModal.impact.warning')}</div></div>
+              <div className={ip.lbl}>{t('paymentModal.impact.remaining')}</div>
+              <div className={ip.bigAmt}>{fmt(-414.52)}</div>
+              <div className={ip.bar}><i style={{ width: '100%' }} /></div>
+              <div className={ip.rows}><div className={ip.row}><span>{t('paymentModal.impact.currentlyAvailable', { amount: fmt(1280) })}</span></div></div>
+            </div>
+          </div>
+          <span className={ip.tagEx}>{t('paymentModal.impact.example')}</span>
+          <div className={ip.lock}>
+            <span className={ip.crown}><Crown size={24} /></span>
+            <h3 className={ip.lockTitle}>{t('paymentModal.impact.lockTitle')}</h3>
+            <p className={ip.lockText}>{t('paymentModal.impact.lockText')}</p>
+            <button type="button" className={ip.cta} onClick={() => onOpenPremium?.()}>
+              <Crown size={16} />{t('goalsPage.premiumBanner.button')}
+            </button>
+            <div className={ip.fine}>{t('premiumLock.finePrint')}</div>
+          </div>
+        </div>
+      )
+    } else if (impactPreview && impactPreview.length > 0) {
+      const [first, second] = impactPreview
+      const neg = first.disponibleDespues < 0
+      const pct = neg || first.disponibleAntes <= 0 ? 100 : Math.max(0, Math.min(100, (first.disponibleDespues / first.disponibleAntes) * 100))
+      const thisAmount = methodPayload().payment_method_kind === 'credit' ? 0 : parseFloat(amount) || 0
+      deskImpact = (
+        <>
+          {impactHead}
+          <div className={`${ip.hero} ${neg ? ip.warn : ip.ok}`}>
+            <div className={ip.status}>
+              <span className={ip.chip}>{neg ? <AlertTriangle size={17} /> : <Check size={17} />}</span>
+              <div>
+                <div className={ip.s1}>{neg ? t('paymentModal.impact.warning') : t('paymentModal.impact.okFits')}</div>
+                <div className={ip.s2}>{t('paymentModal.impact.periodLabel', { range: rangeLabel(first.start, first.end) })}</div>
+              </div>
+            </div>
+            <div className={ip.lbl}>{t('paymentModal.impact.remaining')}</div>
+            <div className={ip.bigAmt}>{fmt(first.disponibleDespues)}</div>
+            <div className={ip.bar}><i style={{ width: `${pct}%` }} /></div>
+            <div className={ip.barLbl}><span>{t('paymentModal.impact.today', { amount: fmt(first.disponibleAntes) })}</span><span>{t('paymentModal.impact.withPayment')}</span></div>
+            <div className={ip.rows}>
+              <div className={ip.row}><span>{t('paymentModal.impact.thisPayment')}</span><b>{fmt(-thisAmount)}</b></div>
+              {(first.pendientesCount > 0 || first.variablesPendientes > 0) && (
+                <div className={ip.row}>
+                  <span>
+                    {first.pendientesCount > 0 && t('paymentModal.impact.pendingCount', { count: first.pendientesCount, amount: '' }).trim()}
+                    {first.pendientesCount > 0 && first.variablesPendientes > 0 && ' + '}
+                    {first.variablesPendientes > 0 && t('paymentModal.impact.variableCount', { count: first.variablesPendientes })}
+                  </span>
+                  {first.pendientesCount > 0 && <b>{fmt(first.pendientesMonto)}</b>}
+                </div>
+              )}
+            </div>
+          </div>
+          {second && (
+            <div className={ip.next}>
+              <div>{t('paymentModal.impact.nextPeriod')}<small>{rangeLabel(second.start, second.end)}</small></div>
+              <b>{fmt(second.disponibleDespues)}</b>
+            </div>
+          )}
+          {!profile.salary_enabled && <div className={ip.salaryHint}>{t('paymentModal.impact.salaryHint')}</div>}
+        </>
+      )
+    } else {
+      const hasAmount = !!amount && parseFloat(amount) > 0
+      const hasDate = !!previewDueDate
+      const reason = isVariable ? 'paymentModal.desk.impactVariable' : alreadyPaid ? 'paymentModal.desk.impactPaid' : null
+      deskImpact = (
+        <>
+          {impactHead}
+          {reason ? (
+            <div className={dk.sideText}>{t(reason)}</div>
+          ) : (
+            <>
+              <div className={ip.what}>
+                <div className={ip.wt}>{t('paymentModal.impact.whatTitle')}</div>
+                {[['whatAvailable', CreditCard, 'wicAccent'], ['whatNegative', AlertTriangle, 'wicWarn'], ['whatNext', Repeat, 'wicOk']].map(([k, Ic, cls]) => (
+                  <div className={ip.wi} key={k}>
+                    <span className={`${ip.wic} ${ip[cls]}`}><Ic size={16} /></span>
+                    <div><b>{t(`paymentModal.impact.${k}`)}</b>{t(`paymentModal.impact.${k}Sub`)}</div>
+                  </div>
+                ))}
+              </div>
+              <div className={ip.todo}>
+                <span className={ip.td}>{t('paymentModal.impact.missingLabel')}</span>
+                <span className={ip.pills}>
+                  <span className={`${ip.pill} ${hasAmount ? ip.done : ''}`}>{hasAmount ? '✓' : '○'} {t('paymentModal.impact.chipAmount')}</span>
+                  <span className={`${ip.pill} ${hasDate ? ip.done : ''}`}>{hasDate ? '✓' : '○'} {t('paymentModal.impact.chipDate')}</span>
+                </span>
+              </div>
+            </>
+          )}
+        </>
+      )
+    }
     const totalAmt = parseFloat(totalAmount) || 0
     const numPayments = parseInt(totalInstallments) || 0
     const perPayment = numPayments > 0 ? Math.round((totalAmt / numPayments) * 100) / 100 : 0
@@ -1117,12 +1229,7 @@ const impactBlock = impactPreview && impactPreview.length > 0 ? (() => {
                       </>
                     ) : <div className={dk.sideText}>{t('paymentModal.desk.installmentEmpty')}</div>}
                   </>
-                ) : impactBlock ? impactBlock : (
-                  <>
-                    <div className={dk.sideTitle}>{t('paymentModal.impact.label')}</div>
-                    <div className={dk.sideText}>{t(isVariable ? 'paymentModal.desk.impactVariable' : alreadyPaid ? 'paymentModal.desk.impactPaid' : 'paymentModal.desk.impactEmpty')}</div>
-                  </>
-                )}
+                ) : deskImpact}
                 {mode === 'recurrent' && (
                   <div className={styles.recurrentNote}>
                     {t('paymentModal.recurrentNote', { interval: t(`paymentModal.recurrentIntervals.${recurFreq === 'weekly' ? 'weekly' : recurFreq === 'biweekly' ? 'biweekly' : 'monthly'}`) })}

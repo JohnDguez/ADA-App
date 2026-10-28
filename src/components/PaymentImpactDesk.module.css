@@ -1,0 +1,84 @@
+/* Panel «Impacto en tus finanzas» del modal Nuevo pago en escritorio (v0.9.868).
+   Vive dentro de `.side` de PaymentDesk.module.css. Colores solo con tokens. */
+.head { display: flex; align-items: center; justify-content: space-between; min-height: 24px; }
+.badge {
+  display: inline-flex; align-items: center; gap: 5px; border-radius: 99px; padding: 4px 10px;
+  font-size: 11px; font-weight: 700;
+  background: color-mix(in srgb, var(--premium-gold) 24%, var(--surface));
+  color: color-mix(in srgb, var(--premium-gold-text) 80%, var(--text));
+}
+
+/* ── Sin Premium ── */
+.lockWrap { display: contents; }
+.ghost { filter: blur(5px); opacity: 0.85; pointer-events: none; user-select: none; }
+.tagEx {
+  position: absolute; top: 22px; right: 24px; border-radius: 99px; padding: 3px 9px;
+  font-size: 10px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
+  color: var(--muted); background: var(--surface);
+}
+.lock {
+  position: absolute; inset: 0; border-radius: inherit;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center;
+  gap: 12px; padding: 28px 30px;
+  background: radial-gradient(ellipse at 50% 45%,
+    color-mix(in srgb, var(--desk-chip) 92%, transparent) 0%,
+    color-mix(in srgb, var(--desk-chip) 78%, transparent) 100%);
+}
+.crown {
+  width: 52px; height: 52px; border-radius: 50%; display: grid; place-items: center;
+  background: var(--premium-gold); color: var(--premium-gold-text);
+  box-shadow: 0 8px 22px color-mix(in srgb, var(--premium-gold) 55%, transparent);
+}
+.lockTitle { font-size: 19px; font-weight: 800; line-height: 1.2; max-width: 290px; color: var(--text); }
+.lockText { font-size: 13.5px; line-height: 1.45; color: var(--muted); max-width: 290px; }
+.cta {
+  composes: premium-fx from global;
+  display: flex; align-items: center; gap: 8px; margin-top: 4px;
+  background: var(--premium-gold); color: var(--premium-gold-text);
+  border: none; border-radius: 99px; padding: 13px 24px;
+  font-size: 14px; font-weight: 700; font-family: inherit; cursor: pointer;
+}
+.fine { font-size: 11px; color: var(--muted); max-width: 290px; }
+
+/* ── Tarjeta de impacto ── */
+.hero { border-radius: 22px; padding: 20px 20px 18px; background: var(--surface); }
+.warn { background: linear-gradient(160deg, var(--impact-warning-soft), color-mix(in srgb, var(--impact-warning-soft) 40%, var(--surface))); }
+.ok { background: linear-gradient(160deg, var(--paid-soft), color-mix(in srgb, var(--paid-soft) 40%, var(--surface))); }
+.status { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+.chip { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; flex: none; }
+.warn .chip { background: var(--impact-warning); color: var(--impact-warning-text); }
+.ok .chip { background: var(--paid); color: var(--text); }
+.s1 { font-size: 14px; font-weight: 800; line-height: 1.2; color: var(--text); }
+.s2 { font-size: 12px; color: var(--muted); }
+.lbl { font-size: 12px; font-weight: 500; color: var(--muted); }
+.bigAmt { font-size: 44px; font-weight: 800; letter-spacing: -0.02em; line-height: 1.05; margin: 2px 0 14px; color: var(--text); overflow-wrap: anywhere; }
+.warn .bigAmt { color: var(--impact-warning); }
+.ok .bigAmt { color: color-mix(in srgb, var(--paid) 62%, var(--text)); }
+.bar { height: 10px; border-radius: 99px; position: relative; overflow: hidden; margin-bottom: 6px; background: color-mix(in srgb, var(--text) 10%, transparent); }
+.bar i { position: absolute; inset: 0 auto 0 0; border-radius: 99px; transition: width 0.3s ease; }
+.warn .bar i { background: var(--impact-warning); }
+.ok .bar i { background: var(--paid); }
+.barLbl { display: flex; justify-content: space-between; gap: 8px; font-size: 11px; color: var(--muted); margin-bottom: 14px; }
+.rows { border-top: 1px solid color-mix(in srgb, var(--text) 10%, transparent); padding-top: 10px; display: grid; gap: 7px; }
+.row { display: flex; justify-content: space-between; gap: 10px; font-size: 13px; color: var(--text); }
+.row span { color: var(--muted); }
+.row b { font-weight: 700; }
+.next { display: flex; justify-content: space-between; align-items: center; gap: 10px; border-radius: 16px; padding: 12px 14px; font-size: 13px; background: var(--surface); color: var(--text); }
+.next small { display: block; margin-top: 1px; font-size: 11.5px; color: var(--muted); }
+.next b { font-size: 16px; }
+.salaryHint { font-size: 12px; line-height: 1.45; color: var(--muted); }
+
+/* ── Premium sin monto ── */
+.what { background: var(--surface); border-radius: 22px; padding: 18px 18px 6px; }
+.wt { font-size: 13px; font-weight: 700; margin-bottom: 12px; color: var(--text); }
+.wi { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; font-size: 12.5px; line-height: 1.3; color: var(--muted); }
+.wi b { display: block; font-size: 13.5px; color: var(--text); }
+.wic { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; flex: none; }
+.wicAccent { background: var(--accent-soft); color: var(--accent); }
+.wicWarn { background: var(--impact-warning-soft); color: var(--impact-warning); }
+.wicOk { background: var(--paid-soft); color: color-mix(in srgb, var(--paid) 62%, var(--text)); }
+.todo { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 0 4px; }
+.td { font-size: 12.5px; color: var(--muted); }
+.pills { display: flex; gap: 8px; }
+.pill { border-radius: 99px; padding: 5px 12px; font-size: 12px; font-weight: 700; background: var(--surface); color: var(--muted); border: 1px solid var(--desk-hair); transition: background 0.2s, color 0.2s; }
+.done { background: var(--paid-soft); color: color-mix(in srgb, var(--paid) 62%, var(--text)); border-color: var(--paid-border); }

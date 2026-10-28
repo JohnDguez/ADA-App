@@ -1054,7 +1054,26 @@
       "variableCountUncounted_one": "{{count}} variable payment not counted",
       "variableCountUncounted_other": "{{count}} variable payments not counted",
       "nextPeriodAvailable": "Available in the next period",
-      "salaryHint": "Set up your income in Settings to see your full available amount."
+      "salaryHint": "Set up your income in Settings to see your full available amount.",
+      "lockTitle": "See what's left before you spend",
+      "lockText": "With Premium, every payment you type shows right away how it affects your period: whether you can afford it and how much is left.",
+      "example": "Example",
+      "whatTitle": "Here you'll instantly see:",
+      "whatAvailable": "How much you'll have left",
+      "whatAvailableSub": "available in that period",
+      "whatNegative": "If it puts you in the red",
+      "whatNegativeSub": "before you save the payment",
+      "whatNext": "How the next period looks",
+      "whatNextSub": "with this expense included",
+      "missingLabel": "To calculate it we need:",
+      "chipAmount": "Amount",
+      "chipDate": "Date",
+      "remaining": "You'd have left",
+      "today": "Today {{amount}}",
+      "withPayment": "With this payment",
+      "thisPayment": "This payment",
+      "okFits": "All good, you can afford it",
+      "nextPeriod": "Next period"
     },
     "save": {
       "reactivate": "Reactivate",
@@ -1465,7 +1484,6 @@
     }
   },
   "feedbackPromptModal": {
-    "premiumPill": "Get 3 months of Premium free",
     "title": "Tell us how the app's been working for you",
     "subtitle": "Your feedback matters to us.",
     "cta": "Give my feedback",

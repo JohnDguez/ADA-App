@@ -34,19 +34,6 @@
   margin-bottom: 14px;
 }
 
-.premiumPill {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  background: var(--premium-gold);
-  color: var(--premium-gold-text);
-  font-size: 12.5px;
-  font-weight: 700;
-  padding: 7px 14px;
-  border-radius: var(--radius-full);
-  margin-bottom: 14px;
-}
-
 .title {
   font-size: 16px;
   font-weight: 700;
@@ -99,4 +86,17 @@
   padding: 16px 0 0;
   cursor: pointer;
   font-family: 'DM Sans', sans-serif;
+}
+
+/* Escritorio (≥1100px, v0.9.868): diálogo centrado de PaymentDesk. */
+@media (min-width: 1100px) {
+  .dOverlay.dOverlay { z-index: 1000; }
+  .dDialog.dDialog { width: 440px; gap: 0; align-items: center; text-align: center; padding: 34px 34px 26px; animation: none; }
+  .dDialog .iconCircle { width: 56px; height: 56px; background: var(--accent-soft); margin-bottom: 16px; }
+  .dDialog .title { font-size: 20px; letter-spacing: -0.3px; max-width: 320px; }
+  .dDialog .subtitle { font-size: 14px; color: var(--muted); max-width: 320px; margin-bottom: 24px; }
+  .dDialog .ctaButton { height: 48px; padding: 0; border-radius: 99px; font-size: 15px; color: var(--on-color); }
+  .dDialog .hint { color: var(--muted); font-size: 12px; margin-top: 12px; }
+  .dDialog .remindButton { width: auto; margin-top: 12px; height: 44px; padding: 0 22px; border-radius: 99px; background: var(--desk-chip); color: var(--text); text-decoration: none; font-size: 14px; }
+  .dDialog .remindButton:hover { background: var(--desk-hair); }
 }

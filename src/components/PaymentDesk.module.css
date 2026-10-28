@@ -28,7 +28,7 @@
 .amountSym { font-size: 22px; color: var(--muted); }
 .amountInput { flex: 1; min-width: 0; border: 0; background: none; outline: none; color: var(--text); font-family: inherit; font-size: 46px; font-weight: 700; letter-spacing: -1.5px; padding: 0; }
 .amountEmpty { color: var(--muted); }
-.side { display: flex; flex-direction: column; gap: 14px; padding: 22px 24px; border-radius: 26px; background: var(--desk-chip); min-width: 0; }
+.side { position: relative; display: flex; flex-direction: column; gap: 14px; padding: 22px 24px; border-radius: 26px; background: var(--desk-chip); min-width: 0; }
 .sideTitle { font-size: 12px; font-weight: 600; letter-spacing: 0.8px; text-transform: uppercase; color: var(--muted); }
 .sideText { font-size: 14px; line-height: 1.55; color: var(--muted); }
 .sideText strong { color: var(--text); }

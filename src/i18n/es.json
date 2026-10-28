@@ -1054,7 +1054,26 @@
       "variableCountUncounted_one": "{{count}} pago variable sin contar",
       "variableCountUncounted_other": "{{count}} pagos variables sin contar",
       "nextPeriodAvailable": "Disponible en el siguiente periodo",
-      "salaryHint": "Configura tu sueldo en Ajustes para ver tu disponible completo."
+      "salaryHint": "Configura tu sueldo en Ajustes para ver tu disponible completo.",
+      "lockTitle": "Mira cuánto te queda antes de gastar",
+      "lockText": "Con Premium, cada pago que escribas te muestra al instante cómo afecta tu periodo: si te alcanza y cuánto te sobra.",
+      "example": "Ejemplo",
+      "whatTitle": "Aquí verás, al instante:",
+      "whatAvailable": "Cuánto te queda",
+      "whatAvailableSub": "disponible en ese periodo",
+      "whatNegative": "Si te dejas en negativo",
+      "whatNegativeSub": "antes de guardar el pago",
+      "whatNext": "Cómo queda el siguiente periodo",
+      "whatNextSub": "con este gasto incluido",
+      "missingLabel": "Para calcularlo falta:",
+      "chipAmount": "Monto",
+      "chipDate": "Fecha",
+      "remaining": "Te quedaría disponible",
+      "today": "Hoy {{amount}}",
+      "withPayment": "Con este pago",
+      "thisPayment": "Este pago",
+      "okFits": "Todo bien, te alcanza",
+      "nextPeriod": "Siguiente periodo"
     },
     "save": {
       "reactivate": "Reactivar",
@@ -1465,7 +1484,6 @@
     }
   },
   "feedbackPromptModal": {
-    "premiumPill": "Obtén 3 meses de Premium gratis",
     "title": "Cuéntanos cómo te ha ido con la app",
     "subtitle": "Tus comentarios son importantes para nosotros.",
     "cta": "Dejar mi feedback",
