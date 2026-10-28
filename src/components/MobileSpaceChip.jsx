@@ -63,7 +63,7 @@ export function MobileSpaceChip({ activeSpaceId, sharedSpaces, profile, stats = 
   return (
     <>
       <div className={styles.row}>
-        <button type="button" data-coachmark="home-space-switcher" className={styles.chip} onClick={openSheet} aria-haspopup="dialog" aria-expanded={open}>
+        <button type="button" data-coachmark="home-space-switcher" className={`${styles.chip} ${noSpaces && canAddMore && !isNew ? styles.chipHug : ''}`} onClick={openSheet} aria-haspopup="dialog" aria-expanded={open}>
           <span className={`${styles.icon} ${activeKind === 'owner' || activeKind === 'guest' ? styles.iconShared : ''}`}><ActiveIcon size={15} strokeWidth={2.2} /></span>
           <span className={styles.texts}>
             <span className={styles.label}>{t('spaceChip.label')}</span>

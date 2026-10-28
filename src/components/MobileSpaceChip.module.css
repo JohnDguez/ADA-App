@@ -16,14 +16,18 @@
   cursor: pointer;
   box-shadow: var(--shadow-card);
   min-width: 0;
+  flex: 1 1 auto;
+  text-align: left;
 }
+.chipHug { flex: 0 1 auto; }
+.chipHug .texts { flex: 0 1 auto; }
 .icon { display: grid; place-items: center; color: var(--accent); }
 .iconShared { color: var(--space-inactive-bg); }
-.texts { display: flex; flex-direction: column; align-items: flex-start; line-height: 1.1; min-width: 0; }
+.texts { display: flex; flex-direction: column; align-items: flex-start; line-height: 1.1; min-width: 0; flex: 1; }
 .label { font-size: 10px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
-.name { font-size: 14px; font-weight: 700; max-width: 150px; overflow: hidden; text-overflow: ellipsis; }
+.name { font-size: 14px; font-weight: 700; max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
 .badge { min-width: 20px; height: 20px; padding: 0 6px; border-radius: 99px; display: grid; place-items: center; background: var(--danger); color: var(--on-danger); font-size: 11px; font-weight: 700; }
-.chev { width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; background: var(--desk-chip); }
+.chev { flex-shrink: 0; margin-left: auto; width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; background: var(--desk-chip); }
 .pulse {
   position: absolute;
   top: -2px;
@@ -41,6 +45,7 @@
 }
 @media (prefers-reduced-motion: reduce) { .pulse { animation: none; } }
 .addChip {
+  flex-shrink: 0;
   display: inline-flex;
   align-items: center;
   gap: 5px;
