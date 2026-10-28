@@ -1286,7 +1286,9 @@
     "installmentsLabel": "Installments",
     "noInstallments": "no active plans",
     "paidOf": "{{paid}} of {{total}} paid",
-    "selectHint": "Select a payment to see its details"
+    "selectHint": "Select a payment to see its details",
+    "collapseAll": "Collapse all",
+    "expandAll": "Expand all"
   },
   "deskPayments": {
     "hint": "Click a category to filter the payments and the chart.",

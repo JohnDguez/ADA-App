@@ -19,6 +19,7 @@
 
 .filters { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 6px; }
 .filters > div { margin-bottom: 0; }
+.collapseAll { display: inline-flex; align-items: center; gap: 8px; margin-left: auto; color: var(--text); }
 .sep { width: 1.5px; height: 22px; background: var(--desk-hair); }
 
 .thAmount { text-align: right; }

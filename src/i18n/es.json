@@ -1286,7 +1286,9 @@
     "installmentsLabel": "Parcialidades",
     "noInstallments": "sin planes activos",
     "paidOf": "{{paid}} de {{total}} pagados",
-    "selectHint": "Selecciona un pago para ver su detalle"
+    "selectHint": "Selecciona un pago para ver su detalle",
+    "collapseAll": "Contraer todo",
+    "expandAll": "Expandir todo"
   },
   "deskPayments": {
     "hint": "Haz clic en una categoría para filtrar los pagos y la gráfica.",

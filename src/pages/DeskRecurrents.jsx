@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Plus, Search, ChevronDown, Pause, Play, MoreVertical, Loader2, Info } from 'lucide-react'
+import { Plus, Search, ChevronDown, Pause, Play, MoreVertical, Loader2, Info, ChevronsDownUp, ChevronsUpDown } from 'lucide-react'
 import { NewSharedSpacePanel } from '../components/NewSharedSpacePanel'
 import { EmptyState } from '../components/EmptyState'
 import { RecurrentDetailPanel } from '../components/RecurrentDetailPanel'
@@ -127,6 +127,16 @@ export function DeskRecurrents({ d }) {
                         <button key={v} type="button" aria-pressed={filterType === v} className={`${home.chip} ${filterType === v ? home.chipOn : ''}`} onClick={() => setFilterType(v)}>{l}</button>
                       ))}
                     </div>
+                    {!dataLoading && byCategory.length > 1 && (() => {
+                      const allCollapsed = byCategory.every(([cat]) => collapsed[cat])
+                      const Ic = allCollapsed ? ChevronsUpDown : ChevronsDownUp
+                      return (
+                        <button type="button" className={`${home.chip} ${styles.collapseAll}`}
+                          onClick={() => setCollapsed(allCollapsed ? {} : Object.fromEntries(byCategory.map(([cat]) => [cat, true])))}>
+                          <Ic size={15} />{t(allCollapsed ? 'deskRecurrents.expandAll' : 'deskRecurrents.collapseAll')}
+                        </button>
+                      )
+                    })()}
                   </div>
 
                   <div className={styles.th} aria-hidden="true">
