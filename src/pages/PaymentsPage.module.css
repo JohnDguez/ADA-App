@@ -2021,20 +2021,20 @@
   .incomeTypeRow, .editTypeRow { gap: 8px; }
   .incomeTypeButton, .editTypeButton {
     padding: 10px 18px;
-    border: 0;
+    border: 1px solid var(--pfb, transparent);
     border-radius: var(--radius-full);
-    background: var(--desk-chip);
+    background: var(--pf, var(--desk-chip));
     font-size: 14px;
     font-weight: 600;
   }
-  .incomeTypeButtonActive, .editTypeButtonActive { background: var(--accent); color: var(--on-color); }
+  .incomeTypeButtonActive, .editTypeButtonActive { background: var(--accent); border-color: var(--accent); color: var(--on-color); }
 
   .incomeInput, .editInput, .editInputMb10 {
     padding: 14px 16px;
     min-height: 52px;
-    border: 0;
+    border: 1px solid var(--pfb, transparent);
     border-radius: 16px;
-    background: var(--desk-chip);
+    background: var(--pf, var(--desk-chip));
     font-size: 15.5px;
     box-sizing: border-box;
   }
@@ -2050,8 +2050,9 @@
     border-radius: var(--radius-full);
     font-size: 15px;
   }
-  .incomeSaveButton { color: var(--on-color); }
-  .incomeCancelButton, .manageCloseButton { background: var(--desk-chip); font-weight: 600; }
+  .incomeSaveButton { color: var(--on-color); border: 0; }
+  .incomeSaveButton:disabled { opacity: 1; background: color-mix(in srgb, var(--accent) 45%, var(--desk-card)); cursor: not-allowed; }
+  .incomeCancelButton, .manageCloseButton { background: var(--pf, var(--desk-chip)); border: 1px solid var(--pfb, transparent); font-weight: 600; }
   .manageCloseButton { display: block; margin: 8px 0 0 auto; }
 
   .fundInfoText { margin-bottom: 20px; font-size: 14px; opacity: 1; color: var(--muted); }
@@ -2061,7 +2062,7 @@
 
   .manageModalPanelExtra { max-height: calc(100vh - 80px); }
   .manageList { gap: 10px; margin-bottom: 12px; }
-  .manageListItem { border: 0; border-radius: 20px; padding: 16px 20px; background: var(--desk-chip); }
+  .manageListItem { border: 1px solid var(--pfb, transparent); border-radius: 20px; padding: 16px 20px; background: var(--pf, var(--desk-chip)); }
   .manageEmptyText { padding: 26px 0; font-size: 14px; color: var(--muted); }
   .incomeRowType { font-size: 15px; }
   .incomeRowNote { margin-top: 3px; font-size: 13px; color: var(--muted); }
@@ -2070,18 +2071,19 @@
   .incomeRowActions svg { width: 18px; height: 18px; }
 
   .manageListItem .editInput, .manageListItem .editInputMb10 { background: var(--desk-card); }
+  .manageListItem :global(.field-input) { background: var(--desk-card); }
   .editActionsRow, .confirmDeleteRow { gap: 10px; }
   .editSaveButton, .editCancelButton, .confirmDeleteButton, .confirmDeleteCancelButton {
     flex: 0 0 auto;
     height: 42px;
     padding: 0 24px;
-    border: 0;
+    border: 1px solid var(--pfb, transparent);
     border-radius: var(--radius-full);
     font-size: 14px;
     font-weight: 600;
   }
-  .editSaveButton { color: var(--on-color); }
-  .confirmDeleteButton { color: var(--on-danger); }
+  .editSaveButton { color: var(--on-color); border-color: transparent; }
+  .confirmDeleteButton { color: var(--on-danger); border-color: transparent; }
   .editCancelButton, .confirmDeleteCancelButton { background: var(--desk-card); }
   .confirmDeleteText { font-size: 14px; }
 }

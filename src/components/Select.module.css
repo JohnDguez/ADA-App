@@ -57,7 +57,9 @@
      index.css para confirmar si existe una variable de z-index ya
      establecida para "por encima de todo" — si algún modal lo sigue
      tapando, avisar para ajustar este valor o usar la variable correcta. */
-  z-index: 999;
+  /* v0.9.855: 1100 (antes 999) — los modales y popovers de escritorio usan
+     z-index 1000 y tapaban el desplegable (método de pago en Añadir fondos). */
+  z-index: 1100;
   max-height: 240px;
   overflow-y: auto;
 }

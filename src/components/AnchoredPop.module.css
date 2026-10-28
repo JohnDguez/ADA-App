@@ -1,0 +1,32 @@
+/* Popover anclado de escritorio para formularios cortos (v0.9.855).
+   Campos y botones inactivos con más presencia que --desk-chip: mezcla sólida
+   del texto sobre la tarjeta + borde (sin rellenos con alfa). */
+.pop {
+  --pf: color-mix(in srgb, var(--text) 9%, var(--desk-card, var(--surface)));
+  --pfb: color-mix(in srgb, var(--text) 20%, var(--desk-card, var(--surface)));
+  --field-desk-bg: var(--pf);
+  --field-bg: var(--pf);
+  --field-border: var(--pfb);
+  position: fixed;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  padding: 24px 24px 22px;
+  border-radius: 26px;
+  background: var(--desk-card, var(--surface));
+  box-shadow: var(--desk-pop-shadow, var(--desk-shadow)), 0 0 0 1px var(--desk-hair, var(--border));
+  animation: apIn .16s ease both;
+}
+.pop::before {
+  content: ""; position: absolute; top: -7px; left: var(--arrow, 40px); width: 14px; height: 14px;
+  margin-left: -7px; background: var(--desk-card, var(--surface)); transform: rotate(45deg);
+  border-radius: 4px 0 0 0; box-shadow: -1px -1px 0 var(--desk-hair, var(--border));
+}
+.popUp::before { top: auto; bottom: -7px; border-radius: 0 0 4px 0; box-shadow: 1px 1px 0 var(--desk-hair, var(--border)); }
+.popOut { animation: apOut .2s ease both; }
+.scroll { flex: 1 1 auto; min-height: 0; overflow-y: auto; margin: 0 -6px; padding: 0 6px; }
+.pop.pop :global(.field-input) { border: 1px solid var(--pfb); }
+.pop :global(.field-label) { font-size: 12px; font-weight: 600; letter-spacing: 0.8px; text-transform: uppercase; color: var(--muted); }
+@keyframes apIn { from { opacity: 0; transform: translateY(-4px); } }
+@keyframes apOut { to { opacity: 0; } }

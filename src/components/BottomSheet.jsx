@@ -20,7 +20,7 @@ if (typeof document !== 'undefined') {
     lastTriggerAt = Date.now()
   }, true)
 }
-function resolveAnchor() {
+export function resolveAnchor() {
   if (lastTrigger && document.contains(lastTrigger) && Date.now() - lastTriggerAt < 1500) return lastTrigger
   const a = document.activeElement
   return a && a !== document.body ? a : null

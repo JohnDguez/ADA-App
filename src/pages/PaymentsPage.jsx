@@ -19,6 +19,7 @@ import { PaymentMethodField } from '../components/PaymentMethodField'
 import { AddCardModal } from '../components/AddCardModal'
 import { DeskPayments } from './DeskPayments'
 import { useIsDesktop } from '../hooks/useIsDesktop'
+import { AnchoredPop, useAnchor } from '../components/AnchoredPop'
 import styles from './PaymentsPage.module.css'
 import { Presence } from '../components/Presence'
 import { Collapse } from '../components/Collapse'
@@ -162,6 +163,26 @@ function MethodRow({ label, amount, total, barClass, cards = [] }) {
         </div>
       )}
     </div>
+  )
+}
+
+// Modales cortos de Pagos: en escritorio (≥1100px) se abren como popover
+// anclado al botón que los abrió; en móvil/tablet (o sin ancla) siguen como
+// hoja/modal. `children` va como función para evaluarse solo si hay algo que dibujar.
+function ModalOrPop({ show, onClose, manage = false, width, children }) {
+  const desk = useIsDesktop()
+  const anchorRef = useAnchor(show)
+  if (desk && anchorRef.current) {
+    return <AnchoredPop open={!!show} onClose={onClose} anchorRef={anchorRef} width={width}>{children()}</AnchoredPop>
+  }
+  return (
+    <Presence show={!!show}>{() => (
+      <div onClick={onClose} className={styles.modalOverlayBottom}>
+        <div onClick={e => e.stopPropagation()} className={`${styles.modalPanelBottom} ${manage ? styles.manageModalPanelExtra : ''}`}>
+          {children()}
+        </div>
+      </div>
+    )}</Presence>
   )
 }
 
@@ -992,15 +1013,8 @@ export function PaymentsPage({ payments, dataLoading = false, periodIncome, paym
       )}</Presence>
 
       {/* ── Modal Añadir Ingreso ── */}
-      <Presence show={!!(incomeModal)}>{() => (
-        <div
-          onClick={() => setIncomeModal(false)}
-          className={styles.modalOverlayBottom}
-        >
-          <div
-            onClick={e => e.stopPropagation()}
-            className={styles.modalPanelBottom}
-          >
+      <ModalOrPop show={!!(incomeModal)} onClose={() => setIncomeModal(false)} width={420}>{() => (
+        <>
             <div className={styles.incomeModalTitle}>
               {t('paymentsPage.incomeModal.title')}
             </div>
@@ -1060,20 +1074,12 @@ export function PaymentsPage({ payments, dataLoading = false, periodIncome, paym
                 {t('buttons.cancel')}
               </button>
             </div>
-          </div>
-        </div>
-      )}</Presence>
+        </>
+      )}</ModalOrPop>
 
       {/* ── Modal Gestionar Ingresos Extras (editar / eliminar) ── */}
-      <Presence show={!!(manageIncomeModal)}>{() => (
-        <div
-          onClick={() => { setManageIncomeModal(false); cancelEditIncome(); setConfirmDeleteIncomeId(null) }}
-          className={styles.modalOverlayBottom}
-        >
-          <div
-            onClick={e => e.stopPropagation()}
-            className={`${styles.modalPanelBottom} ${styles.manageModalPanelExtra}`}
-          >
+      <ModalOrPop show={!!(manageIncomeModal)} onClose={() => { setManageIncomeModal(false); cancelEditIncome(); setConfirmDeleteIncomeId(null) }} manage width={460}>{() => (
+        <>
             <div className={styles.manageModalTitle}>
               {t('paymentsPage.manageIncomeModal.title')}
             </div>
@@ -1172,14 +1178,12 @@ export function PaymentsPage({ payments, dataLoading = false, periodIncome, paym
             >
               {t('buttons.close')}
             </button>
-          </div>
-        </div>
-      )}</Presence>
+        </>
+      )}</ModalOrPop>
 
       {/* ── Modal Añadir fondos ── */}
-      <Presence show={!!(addFundModal)}>{() => (
-        <div onClick={() => { setAddFundModal(false); setPersonalAvailable(null) }} className={styles.modalOverlayBottom}>
-          <div onClick={e => e.stopPropagation()} className={styles.modalPanelBottom}>
+      <ModalOrPop show={!!(addFundModal)} onClose={() => { setAddFundModal(false); setPersonalAvailable(null) }} width={420}>{() => (
+        <>
             <div className={styles.manageModalTitle}>{t('paymentsPage.addFundModal.title')}</div>
             <div className={styles.fundInfoText}>
               {t('paymentsPage.addFundModal.info')}
@@ -1249,17 +1253,12 @@ export function PaymentsPage({ payments, dataLoading = false, periodIncome, paym
                 selectableKinds={['debit']}
               />
             )}
-          </div>
-        </div>
-      )}</Presence>
+        </>
+      )}</ModalOrPop>
 
       {/* ── Modal Gestionar Fondo (eliminar una aportación equivocada) ── */}
-      <Presence show={!!(manageFundModal)}>{() => (
-        <div
-          onClick={() => { setManageFundModal(false); setConfirmDeleteFundId(null) }}
-          className={styles.modalOverlayBottom}
-        >
-          <div onClick={e => e.stopPropagation()} className={`${styles.modalPanelBottom} ${styles.manageModalPanelExtra}`}>
+      <ModalOrPop show={!!(manageFundModal)} onClose={() => { setManageFundModal(false); setConfirmDeleteFundId(null) }} manage width={460}>{() => (
+        <>
             <div className={styles.manageModalTitle}>{t('paymentsPage.manageFundModal.title')}</div>
             {sharedFund.ledger.filter(e => e.type === 'deposit').length === 0 ? (
               <div className={styles.manageEmptyText}>{t('paymentsPage.manageFundModal.empty')}</div>
@@ -1297,9 +1296,8 @@ export function PaymentsPage({ payments, dataLoading = false, periodIncome, paym
             <button onClick={() => { setManageFundModal(false); setConfirmDeleteFundId(null) }} className={styles.manageCloseButton}>
               {t('buttons.close')}
             </button>
-          </div>
-        </div>
-      )}</Presence>
+        </>
+      )}</ModalOrPop>
 
       {/* v0.9.388 — mismo tratamiento que HomePage.jsx (v0.9.365): oculto
           desde 768px, ahí ya lo cubre NavRail.jsx (avatar, saludo,
