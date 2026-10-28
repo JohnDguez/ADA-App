@@ -5,7 +5,7 @@ import { SegmentedControl } from '../components/SegmentedControl'
 import { CategoryRing } from '../components/CategoryRing'
 import { EmptyState } from '../components/EmptyState'
 import { PaidByStack } from '../components/PaidByStack'
-import { Select } from '../components/Select'
+import { MonthPicker } from '../components/MonthPicker'
 import { Bone, PaymentRowSkeleton, CategoryListSkeleton } from '../components/SkeletonLoader'
 import { getBank, bankColorVar } from '../lib/cardCatalog'
 import { fmt, getMonths, getMonthsShort, getCatColor, getCategoryLabel } from '../lib/utils'
@@ -116,18 +116,13 @@ function PaymentsTab({ d }) {
 
       <div className={styles.filterRow}>
         <div className={styles.chips} role="tablist">
-          {[['periodo', t('homePage.tabs.currentPeriod')], ['mes', t('paymentsPage.byMonth')]].map(([val, label]) => (
-            <button key={val} type="button" role="tab" aria-selected={view.mode === val} className={`${styles.chip} ${view.mode === val ? styles.chipOn : ''}`} onClick={() => view.setMode(val)}>{label}</button>
-          ))}
+          <button type="button" role="tab" aria-selected={view.mode === 'periodo'} className={`${styles.chip} ${view.mode === 'periodo' ? styles.chipOn : ''}`} onClick={() => view.setMode('periodo')}>{t('homePage.tabs.currentPeriod')}</button>
+          {view.mode === 'mes'
+            ? <MonthPicker month={view.month} year={view.year} years={view.years} className={`${styles.chip} ${styles.chipOn}`} onChange={(m, y) => { view.setMonth(m); view.setYear(y) }} />
+            : <button type="button" role="tab" aria-selected={false} className={styles.chip} onClick={() => view.setMode('mes')}>{t('paymentsPage.byMonth')}</button>}
         </div>
-        {visibleRows.length > 0 && <span className={styles.total}>{t('paymentsPage.total')} <b>{whole(visibleTotal)}</b></span>}
+        {visibleRows.length > 0 && <span className={styles.total}><span className={styles.totalWord}>{t('paymentsPage.total')} </span><b>{whole(visibleTotal)}</b></span>}
       </div>
-      {view.mode === 'mes' && (
-        <div className={styles.monthYear}>
-          <div className={styles.selBox}><Select value={getMonths()[view.month]} onChange={name => view.setMonth(getMonths().indexOf(name))} options={getMonths()} /></div>
-          <div className={styles.selBoxYear}><Select value={String(view.year)} onChange={y => view.setYear(Number(y))} options={view.years.map(String)} /></div>
-        </div>
-      )}
       {selectedCat && (
         <button type="button" className={styles.filterPill} onClick={() => setSelectedCat(null)}>
           <i style={{ background: getCatColor(selectedCat, profile.custom_categories, profile.category_colors) }} />{getCategoryLabel(selectedCat)}<X size={14} strokeWidth={2.2} />
@@ -226,17 +221,12 @@ function AnalysisTab({ d }) {
         <div className={styles.cardHead}>
           <h2>{t('paymentsPage.byCategory')}</h2>
           <div className={styles.pills}>
-            {[['periodo', t('homePage.tabs.currentPeriod')], ['mes', t('paymentsPage.byMonth')]].map(([val, label]) => (
-              <button key={val} type="button" className={`${styles.pill} ${view.mode === val ? styles.pillOn : ''}`} onClick={() => view.setMode(val)}>{label}</button>
-            ))}
+            <button type="button" className={`${styles.pill} ${view.mode === 'periodo' ? styles.pillOn : ''}`} onClick={() => view.setMode('periodo')}>{t('homePage.tabs.currentPeriod')}</button>
+            {view.mode === 'mes'
+              ? <MonthPicker month={view.month} year={view.year} years={view.years} className={`${styles.pill} ${styles.pillOn}`} onChange={(m, y) => { view.setMonth(m); view.setYear(y) }} />
+              : <button type="button" className={styles.pill} onClick={() => view.setMode('mes')}>{t('paymentsPage.byMonth')}</button>}
           </div>
         </div>
-        {view.mode === 'mes' && (
-          <div className={styles.monthYear}>
-            <div className={styles.selBox}><Select value={getMonths()[view.month]} onChange={name => view.setMonth(getMonths().indexOf(name))} options={getMonths()} /></div>
-            <div className={styles.selBoxYear}><Select value={String(view.year)} onChange={y => view.setYear(Number(y))} options={view.years.map(String)} /></div>
-          </div>
-        )}
         {catData.length === 0 ? (
           dataLoading ? <CategoryListSkeleton count={4} /> : (
             <EmptyState title={t('paymentsPage.noExpensesTitle')} subtitle={t('homePage.emptyState.subtitle')} onClick={onAdd}

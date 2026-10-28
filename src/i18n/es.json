@@ -2669,5 +2669,10 @@
     "perk1Text": "Cada quien ve y marca sus partes",
     "perk2Title": "Avisos para todos",
     "perk2Text": "Nadie olvida un pago"
+  },
+  "monthPicker": {
+    "label": "Seleccionar mes y año",
+    "prevYear": "Año anterior",
+    "nextYear": "Año siguiente"
   }
 }

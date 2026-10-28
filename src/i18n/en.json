@@ -2669,5 +2669,10 @@
     "perk1Text": "Everyone sees and marks their share",
     "perk2Title": "Alerts for everyone",
     "perk2Text": "Nobody forgets a payment"
+  },
+  "monthPicker": {
+    "label": "Select month and year",
+    "prevYear": "Previous year",
+    "nextYear": "Next year"
   }
 }
