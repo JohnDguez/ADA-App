@@ -14,6 +14,8 @@ import {
 } from '../lib/importCsv'
 import { CATEGORIES, getCategoryLabel, getCatColor, fmt, cobroPeriod, dateToStr, dateOf, getMonths, intlLocale } from '../lib/utils'
 import { getCategoryIcon } from '../lib/categoryIcons'
+import { DeskSettingsHead, DeskPage } from './DeskSettingsHead'
+import deskStyles from './SettingsDesk.module.css'
 import styles from './ImportModal.module.css'
 
 // Importar desde un CSV (v0.9.802) — modal de hasta 4 pasos (Archivo ·
@@ -97,7 +99,7 @@ function CategoryChip({ cat, profile, customCategories }) {
 }
 
 // ── Contenido (se monta dentro de <Presence>: su estado se reinicia al cerrar) ──
-function ImportBody({ profile, sharedActive, onClose, onImport, onFetchExisting }) {
+function ImportBody({ profile, sharedActive, onClose, onImport, onFetchExisting, inline = false }) {
   const { t } = useTranslation()
   const isTablet = useIsTablet()
   const customCategories = profile?.custom_categories || []
@@ -650,28 +652,16 @@ function ImportBody({ profile, sharedActive, onClose, onImport, onFetchExisting 
 
   const categoryOptions = [...CATEGORIES, ...customCategories.map(c => (typeof c === 'string' ? c : c?.value)).filter(Boolean)]
 
-  return (
+  const stepsContent = (
     <>
-      <div className={styles.head}>
-        {step !== 'file'
-          ? <button type="button" className={styles.iconBtn} onClick={back} aria-label={t('buttons.back')}><ChevronLeft size={20} color="var(--text)" /></button>
-          : <span className={styles.iconSpacer} />}
-        <div className={styles.headCenter}>
-          <div className={styles.headTitle}>{t('importCsv.title')}</div>
-          <div className={styles.headStep}>{t('importCsv.stepOf', { n: stepNo, total: visibleSteps.length })} · {t(`importCsv.steps.${step}`)}</div>
-        </div>
-        <button type="button" className={styles.iconBtn} onClick={onClose} aria-label={t('buttons.close')}><X size={20} color="var(--text)" /></button>
-      </div>
-      <div className={styles.dots} aria-hidden="true">
-        {visibleSteps.map((s, i) => <span key={s} className={`${styles.dot} ${i < stepNo ? styles.dotOn : ''}`} />)}
-      </div>
-      <div className={styles.content}>
-        {step === 'file' && renderFile()}
-        {step === 'columns' && mapping && renderColumns()}
-        {step === 'review' && renderReview()}
-        {step === 'recurring' && renderRecurring()}
-      </div>
+      {step === 'file' && renderFile()}
+      {step === 'columns' && mapping && renderColumns()}
+      {step === 'review' && renderReview()}
+      {step === 'recurring' && renderRecurring()}
+    </>
+  )
 
+  const pickerSheet = (
       <BottomSheet
         open={!!picker}
         title={t('importCsv.review.categoryTitle')}
@@ -688,8 +678,59 @@ function ImportBody({ profile, sharedActive, onClose, onImport, onFetchExisting 
           </div>
         ))}
       </BottomSheet>
+  )
+
+  // Escritorio (v0.9.836): página dentro del panel de Ajustes, sin modal.
+  if (inline) {
+    return (
+      <DeskPage>
+        <DeskSettingsHead
+          title={t('importCsv.title')}
+          description={t('importCsv.desk.description')}
+          actions={step !== 'file' ? <button type="button" className={`${deskStyles.btn} ${deskStyles.btnSoft}`} onClick={back}><ChevronLeft size={16} />{t('buttons.back')}</button> : null}
+        />
+        <div className={styles.inl}>
+          <ol className={styles.stp}>
+            {visibleSteps.map((st, i) => (
+              <li key={st} className={`${styles.stpItem} ${i + 1 === stepNo ? styles.stpOn : ''} ${i + 1 < stepNo ? styles.stpDone : ''}`} aria-current={i + 1 === stepNo ? 'step' : undefined}>
+                <i>{i + 1 < stepNo ? <Check size={14} strokeWidth={3} /> : i + 1}</i>{t(`importCsv.steps.${st}`)}
+              </li>
+            ))}
+          </ol>
+          <div className={styles.inlBody}>{stepsContent}</div>
+        </div>
+        {pickerSheet}
+      </DeskPage>
+    )
+  }
+
+  return (
+    <>
+      <div className={styles.head}>
+        {step !== 'file'
+          ? <button type="button" className={styles.iconBtn} onClick={back} aria-label={t('buttons.back')}><ChevronLeft size={20} color="var(--text)" /></button>
+          : <span className={styles.iconSpacer} />}
+        <div className={styles.headCenter}>
+          <div className={styles.headTitle}>{t('importCsv.title')}</div>
+          <div className={styles.headStep}>{t('importCsv.stepOf', { n: stepNo, total: visibleSteps.length })} · {t(`importCsv.steps.${step}`)}</div>
+        </div>
+        <button type="button" className={styles.iconBtn} onClick={onClose} aria-label={t('buttons.close')}><X size={20} color="var(--text)" /></button>
+      </div>
+      <div className={styles.dots} aria-hidden="true">
+        {visibleSteps.map((s, i) => <span key={s} className={`${styles.dot} ${i < stepNo ? styles.dotOn : ''}`} />)}
+      </div>
+      <div className={styles.content}>{stepsContent}</div>
+
+      {pickerSheet}
     </>
   )
+}
+
+// Versión en línea (escritorio): se monta dentro del panel de Ajustes. Al
+// terminar de importar se remonta (key) para volver al paso 1 con todo limpio.
+export function ImportInline({ profile, sharedActive, onImport, onFetchExisting }) {
+  const [k, setK] = useState(0)
+  return <ImportBody key={k} inline profile={profile} sharedActive={sharedActive} onImport={onImport} onFetchExisting={onFetchExisting} onClose={() => setK(n => n + 1)} />
 }
 
 export function ImportModal({ open, onClose, profile, onImport, onFetchExisting, sharedActive = false }) {

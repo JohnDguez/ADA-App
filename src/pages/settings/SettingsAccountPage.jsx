@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { supabase } from '../../lib/supabase'
-import { ChevronRight, AlertTriangle, Eye, EyeOff, User, Lock, Trash2, Mail } from 'lucide-react'
+import { ChevronRight, AlertTriangle, Eye, EyeOff, User, Lock, Trash2, Mail, Camera } from 'lucide-react'
 // Ícono del encabezado vía Phosphor Icons (mismo patrón que SettingsExportPage.jsx,
 // v0.9.442-445) — import directo al archivo del ícono para tree-shaking real.
 import { UserCircle } from '@phosphor-icons/react/dist/csr/UserCircle'
@@ -25,7 +25,7 @@ import { Presence } from '../../components/Presence'
 // Sub-página "Cuenta" dentro de Ajustes: Nombre, Correo/Google, Contraseña,
 // Idioma, y la zona de peligro (Eliminar mis datos / Eliminar mi cuenta).
 // Antes vivía todo esto (menos Idioma) mezclado directo en SettingsPage.jsx.
-export function SettingsAccountPage({ profile, user, onUpdate, onDataDeleted, onBack, onGoSubscription, slideClass }) {
+export function SettingsAccountPage({ onChangePhoto, uploadingAvatar, profile, user, onUpdate, onDataDeleted, onBack, onGoSubscription, slideClass }) {
   const { t, i18n } = useTranslation()
   const desk = useDeskSettings()
   const [editSection, setEditSection] = useState(null)
@@ -225,6 +225,11 @@ export function SettingsAccountPage({ profile, user, onUpdate, onDataDeleted, on
             <h3>{profile.name}</h3>
             <span>{user?.email}</span>
           </div>
+          {onChangePhoto && (
+            <button type="button" className={`${deskStyles.btn} ${deskStyles.btnWhite} ${dk.photoBtn}`} onClick={onChangePhoto} disabled={uploadingAvatar}>
+              <Camera size={16} />{uploadingAvatar ? t('settingsAccount.desk.uploading') : t('settingsAccount.desk.changePhoto')}
+            </button>
+          )}
         </div>
       </div>
 

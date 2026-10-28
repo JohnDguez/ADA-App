@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Receipt, Wallet, Download, FileSpreadsheet, FileText, Target, Check, ChevronRight, CalendarDays, CreditCard, Users } from 'lucide-react'
+import { Receipt, Wallet, Download, FileSpreadsheet, FileText, Target, Check, ChevronRight, ChevronDown, CalendarDays, CreditCard, Users } from 'lucide-react'
 // Ícono del encabezado vía Phosphor Icons, peso "duotone" — Lucide se
 // siente muy plano para un ícono ancla de página completa (pedido de
 // Johnatan); el resto de la app se queda 100% en lucide-react, sin cambios.
@@ -839,6 +839,72 @@ export function SettingsExportPage({ profile, sharedSpaces, onOpenPremium, onBac
     : `${formatDateLabel(from)} – ${formatDateLabel(to)}`
   const noneSelected = !includeGastos && !includeIngresos && !(format === 'pdf' && includeGoals)
 
+  // Escritorio (v0.9.836): los filtros se abren como popover anclado a su
+  // tarjeta (sin modal ni fondo oscurecido). Se cierra al hacer clic fuera o
+  // con Esc.
+  const filtersRef = useRef(null)
+  const [popUp, setPopUp] = useState(false)
+  function togglePop(key, e) {
+    if (openSheet === key) { setOpenSheet(null); return }
+    // Si abajo no cabe, el popover se abre hacia arriba.
+    const r = e.currentTarget.getBoundingClientRect()
+    const below = window.innerHeight - r.bottom - 24
+    setPopUp(below < (key === 'period' ? 380 : 300) && r.top > below)
+    setOpenSheet(key)
+  }
+  useEffect(() => {
+    if (!desk || !openSheet) return undefined
+    const onDown = e => { if (filtersRef.current && !filtersRef.current.contains(e.target)) setOpenSheet(null) }
+    const onKey = e => { if (e.key === 'Escape') setOpenSheet(null) }
+    document.addEventListener('mousedown', onDown)
+    document.addEventListener('keydown', onKey)
+    return () => { document.removeEventListener('mousedown', onDown); document.removeEventListener('keydown', onKey) }
+  }, [desk, openSheet])
+
+  const optionPop = (title, options, value, onSelect) => (
+    <div className={`${dk.pop} ${dk.popNarrow} ${popUp ? dk.popUp : ''}`} role="dialog" aria-label={title}>
+      <div className={dk.popTitle}>{title}</div>
+      <div className={dk.plist}>
+        {options.map(o => (
+          <button key={o.value} type="button" className={`${dk.popt} ${value === o.value ? dk.poptOn : ''}`} onClick={() => { onSelect(o.value); setOpenSheet(null) }}>
+            <span>{o.label}</span>{value === o.value && <Check size={16} />}
+          </button>
+        ))}
+      </div>
+    </div>
+  )
+
+  const periodPop = (
+    <div className={`${dk.pop} ${dk.popWide} ${popUp ? dk.popUp : ''}`} role="dialog" aria-label={t('settingsExport.period')}>
+      <div className={dk.popTitle}>{t('settingsExport.period')}</div>
+      <div className={dk.pgrid}>
+        {SHORTCUTS.map(sc => {
+          const [rf, rt] = rangeFor(sc.key)
+          const subtitle = sc.key === 'allTime'
+            ? t('settingsExport.since', { date: `${MONTHS_SHORT[dateOf(rf).getMonth()].toLowerCase()} ${dateOf(rf).getFullYear()}` })
+            : shortRange(rf, rt)
+          const on = activeShortcut === sc.key && !customOpen
+          return (
+            <button key={sc.key} type="button" className={`${dk.ptile} ${on ? dk.ptileOn : ''}`}
+              onClick={() => { applyShortcut(sc.key); setCustomOpen(false); setOpenSheet(null) }}>
+              <b>{sc.label}</b><span>{subtitle}</span>
+            </button>
+          )
+        })}
+        <button type="button" onClick={() => setCustomOpen(v => !v)} className={`${dk.ptile} ${dk.pfull} ${(activeShortcut === null || customOpen) ? dk.ptileOn : ''}`}>
+          <b>{t('settingsExport.custom')}</b>
+          <span>{activeShortcut === null ? shortRange(from, to) : t('settingsExport.customHint')}</span>
+        </button>
+      </div>
+      {(customOpen || activeShortcut === null) && (
+        <div className={dk.dates}>
+          <div><span>{t('settingsExport.from')}</span><div className={styles.fieldSurface}><DatePicker value={from} onChange={handleFromChange} /></div></div>
+          <div><span>{t('settingsExport.to')}</span><div className={styles.fieldSurface}><DatePicker value={to} onChange={handleToChange} /></div></div>
+        </div>
+      )}
+    </div>
+  )
+
   const sheets = (
     <>
       <OptionSheet open={openSheet === 'method'} onClose={() => setOpenSheet(null)} title={t('settingsExport.method.label')}
@@ -925,22 +991,31 @@ export function SettingsExportPage({ profile, sharedSpaces, onOpenPremium, onBac
               </div>
 
               <div className={deskStyles.sec}>{t('settingsExport.filters')}</div>
-              <div className={dk.filters}>
-                <button type="button" className={dk.filter} onClick={() => setOpenSheet('period')}>
-                  <span className={dk.filterHead}><span className={deskStyles.ic}><CalendarDays size={18} /></span>{t('settingsExport.period')}</span>
-                  <b>{periodValueLabel}<ChevronRight size={16} /></b>
-                </button>
-                {showMethod && (
-                  <button type="button" className={dk.filter} onClick={() => setOpenSheet('method')}>
-                    <span className={dk.filterHead}><span className={deskStyles.ic}><CreditCard size={18} /></span>{t('settingsExport.method.label')}</span>
-                    <b>{methodFilters.find(f => f.value === methodFilter)?.label}<ChevronRight size={16} /></b>
+              <div className={dk.filters} ref={filtersRef}>
+                <div className={dk.anchor}>
+                  <button type="button" className={dk.filter} aria-haspopup="dialog" aria-expanded={openSheet === 'period'} onClick={e => togglePop('period', e)}>
+                    <span className={dk.filterHead}><span className={deskStyles.ic}><CalendarDays size={18} /></span>{t('settingsExport.period')}</span>
+                    <b>{periodValueLabel}<ChevronDown size={16} /></b>
                   </button>
+                  {openSheet === 'period' && periodPop}
+                </div>
+                {showMethod && (
+                  <div className={dk.anchor}>
+                    <button type="button" className={dk.filter} aria-haspopup="dialog" aria-expanded={openSheet === 'method'} onClick={e => togglePop('method', e)}>
+                      <span className={dk.filterHead}><span className={deskStyles.ic}><CreditCard size={18} /></span>{t('settingsExport.method.label')}</span>
+                      <b>{methodFilters.find(f => f.value === methodFilter)?.label}<ChevronDown size={16} /></b>
+                    </button>
+                    {openSheet === 'method' && optionPop(t('settingsExport.method.label'), methodFilters, methodFilter, setMethodFilter)}
+                  </div>
                 )}
                 {spaces.length > 0 && (
-                  <button type="button" className={dk.filter} onClick={() => setOpenSheet('space')}>
-                    <span className={dk.filterHead}><span className={deskStyles.ic}><Users size={18} /></span>{t('settingsExport.spaceLabel')}</span>
-                    <b>{spaceLabelNow}<ChevronRight size={16} /></b>
-                  </button>
+                  <div className={`${dk.anchor} ${dk.anchorEnd}`}>
+                    <button type="button" className={dk.filter} aria-haspopup="dialog" aria-expanded={openSheet === 'space'} onClick={e => togglePop('space', e)}>
+                      <span className={dk.filterHead}><span className={deskStyles.ic}><Users size={18} /></span>{t('settingsExport.spaceLabel')}</span>
+                      <b>{spaceLabelNow}<ChevronDown size={16} /></b>
+                    </button>
+                    {openSheet === 'space' && optionPop(t('settingsExport.spaceLabel'), spaceOptions, space, setSpace)}
+                  </div>
                 )}
               </div>
             </div>
@@ -965,7 +1040,6 @@ export function SettingsExportPage({ profile, sharedSpaces, onOpenPremium, onBac
             </div>
           </div>
         </PremiumLock>
-        {sheets}
       </DeskPage>
     )
   }

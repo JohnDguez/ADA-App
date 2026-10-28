@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
-import { MonitorSmartphone, Sun, Moon, MoveHorizontal } from 'lucide-react'
+import { MonitorSmartphone, Sun, Moon, MoveHorizontal, Check } from 'lucide-react'
 // Ícono del encabezado vía Phosphor Icons (mismo patrón que las demás
 // sub-páginas ya migradas, v0.9.442-452) — import directo para tree-shaking real.
 import { MoonStars } from '@phosphor-icons/react/dist/csr/MoonStars'
@@ -8,6 +8,7 @@ import { PageHero } from '../../components/PageHero'
 import styles from './SettingsAppearancePage.module.css'
 import { kbd } from '../../lib/a11y'
 import { useDeskSettings } from '../../components/DeskSettingsContext'
+import { DeskSettingsHead, DeskPage } from '../../components/DeskSettingsHead'
 
 // Los 3 íconos de las tarjetas SÍ son de Lucide (no Phosphor) — a
 // diferencia del ícono del encabezado, estos son la propia ACCIÓN
@@ -85,11 +86,11 @@ export function SettingsAppearancePage({ theme, onThemeChange, onBack, slideClas
     track.scrollTo({ left: card.offsetLeft - (track.clientWidth - card.offsetWidth) / 2, behavior: 'smooth' })
   }
 
-  // Escritorio (v0.9.834): las 3 opciones lado a lado, sin carrusel.
+  // Escritorio (v0.9.836): 3 tarjetas grandes con vista previa, lado a lado.
   if (desk) {
     return (
-      <div>
-        <PageHero icon={MoonStars} title={t('settingsAppearance.title')} description={t('settingsAppearance.description')} onBack={onBack} />
+      <DeskPage>
+        <DeskSettingsHead title={t('settingsAppearance.title')} description={t('settingsAppearance.description')} />
         <div className={styles.deskGrid} role="radiogroup" aria-label={t('settingsAppearance.title')}>
           {OPTIONS.map(({ id, icon: Icon }) => (
             <button key={id} type="button" role="radio" aria-checked={theme === id} onClick={() => onThemeChange(id)} className={`${styles.deskCard} ${theme === id ? styles.deskCardOn : ''}`}>
@@ -102,11 +103,14 @@ export function SettingsAppearancePage({ theme, onThemeChange, onBack, slideClas
                   <div className={styles.tabGrid}><b /><b /><b /><b /></div>
                 </div>
               </div>
-              <span className={styles.deskLabel}><Icon size={16} />{t(`theme.${id === 'sistema' ? 'system' : id}`)}</span>
+              <span className={styles.deskLabel}>
+                <span className={styles.deskName}><Icon size={18} />{t(`theme.${id === 'sistema' ? 'system' : id}`)}</span>
+                <span className={styles.deskChk}>{theme === id && <Check size={15} strokeWidth={3} />}</span>
+              </span>
             </button>
           ))}
         </div>
-      </div>
+      </DeskPage>
     )
   }
 

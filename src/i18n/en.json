@@ -223,7 +223,9 @@
     "desk": {
       "freePlan": "Free plan",
       "yourData": "Your data",
-      "edit": "Edit"
+      "edit": "Edit",
+      "changePhoto": "Change photo",
+      "uploading": "Uploading…"
     }
   },
   "settingsCobro": {
@@ -1130,7 +1132,8 @@
     "freqHelp": "How often you get paid",
     "daysHelp": "The days you get paid",
     "nextHelp": "Calculated from your settings",
-    "incomeOff": "No fixed salary"
+    "incomeOff": "No fixed salary",
+    "incomeOn": "I have a fixed income"
   },
   "deskGoals": {
     "ofTarget": "of {{amount}} · {{pct}}%",
@@ -2438,6 +2441,9 @@
       "success": "{{count}} entries imported",
       "successRecurring": "{{count}} entries imported and {{recurring}} recurring payments created",
       "error": "The import failed. No entries were saved."
+    },
+    "desk": {
+      "description": "Bring in your transactions from a CSV from your bank or another finance app."
     }
   },
   "premiumPromo": {
@@ -2446,5 +2452,12 @@
     "stripTitle": "Unlock LunaPay Premium",
     "stripSub": "Shared spaces, unlimited goals and more",
     "cta": "See Premium"
+  },
+  "settingsLanguage": {
+    "title": "Language",
+    "description": "Choose the language of LunaPay. The change applies instantly.",
+    "systemSub": "Uses your device language",
+    "esSub": "Interface in Spanish",
+    "enSub": "Interface in English"
   }
 }

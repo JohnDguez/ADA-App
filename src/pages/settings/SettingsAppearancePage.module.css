@@ -218,13 +218,16 @@
   .tab_sistema .tabGrid b:nth-child(even), .tab_sistema .tabList b:nth-child(even) { background: color-mix(in srgb, var(--preview-dark-bar) 45%, transparent); }
 }
 
-/* Escritorio (v0.9.834) */
-.deskGrid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; max-width: 760px; }
-.deskCard { display: flex; flex-direction: column; gap: 12px; padding: 12px; border-radius: 20px; border: 1.5px solid var(--desk-hair); background: none; color: var(--text); text-align: center; }
-.deskCardOn { border-color: var(--accent); box-shadow: 0 0 0 1.5px var(--accent); }
-.deskPrev { display: flex; height: 128px; border-radius: 12px; overflow: hidden; border: 1px solid var(--desk-hair); }
-.deskLabel { display: inline-flex; align-items: center; justify-content: center; gap: 8px; font-size: 13.5px; font-weight: 600; }
+/* Escritorio (v0.9.836) */
+.deskGrid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; }
+.deskCard { display: flex; flex-direction: column; gap: 16px; padding: 18px; border: 0; border-radius: 28px; background: var(--desk-chip); color: var(--text); text-align: left; }
+.deskCardOn { background: var(--accent-soft); color: var(--accent); }
+.deskPrev { display: flex; height: 250px; border-radius: 20px; overflow: hidden; }
+.deskLabel { display: flex; align-items: center; justify-content: space-between; padding: 0 4px; font-size: 16px; font-weight: 600; }
+.deskName { display: inline-flex; align-items: center; gap: 10px; }
+.deskChk { width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; background: var(--desk-card); color: var(--desk-ink-text); }
+.deskCardOn .deskChk { background: var(--accent); }
 @media (hover: hover) and (pointer: fine) {
-  .deskCard:hover:not(.deskCardOn) { background: var(--desk-chip); translate: none; filter: none; }
+  .deskCard:hover:not(.deskCardOn) { background: var(--desk-hair); translate: none; filter: none; }
   .deskCardOn:hover { translate: none; filter: none; }
 }

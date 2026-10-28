@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, lazy, Suspense } from 'react'
 import { useTranslation } from 'react-i18next'
 import { createPortal } from 'react-dom'
 import { LogOut, Camera, Crown, User, Tag, Calendar, Bell, SunMoon, HelpCircle, Users, MessageCircle, Download, Upload, CreditCard, Languages, ChevronRight } from 'lucide-react'
@@ -22,8 +22,11 @@ import { markBackHandled, wasBackHandled } from '../lib/backNav'
 import { AvatarImg } from '../components/AvatarImg'
 import { Presence } from '../components/Presence'
 import { LanguageSheet, useLanguageOptions } from '../components/LanguageSheet'
+import { SettingsLanguageDesk } from './settings/SettingsLanguageDesk'
 import { useIsDesktop } from '../hooks/useIsDesktop'
 import { DeskSettings } from './DeskSettings'
+
+const ImportInline = lazy(() => import('../components/ImportModal').then(m => ({ default: m.ImportInline })))
 
 // Galería de avatares preestablecidos — imágenes estáticas servidas desde
 // public/avatars/ (Vite/Vercel las expone tal cual, sin pasar por Supabase
@@ -46,7 +49,7 @@ const PRESET_AVATARS = [
 // (Categorías, y lo que venga después, no compiten por espacio con todo
 // lo demás).
 const SECTION_KEY = 'ada_settings_section'
-const VALID_SECTIONS = ['account', 'categories', 'cobro', 'notifications', 'appearance', 'sharedspace', 'subscription', 'export', 'cards']
+const VALID_SECTIONS = ['account', 'categories', 'cobro', 'notifications', 'appearance', 'sharedspace', 'subscription', 'export', 'cards', 'language', 'import']
 function readSavedSection() {
   try {
     const v = sessionStorage.getItem(SECTION_KEY)
@@ -68,7 +71,7 @@ function OptionCard({ icon: Icon, tone, label, value, onClick }) {
   )
 }
 
-export function SettingsPage({ profile, user, onUpdate, onUploadAvatar, onDataDeleted, slideClass, theme, onThemeChange, onOpenPremium, sharedSpaces, paymentMethods, personalPayments = null, onPayCardNow, onSettlePlan, onOpenImport, initialSection, onConsumeInitialSection, returnTab, onReturnToTab }) {
+export function SettingsPage({ profile, user, onUpdate, onUploadAvatar, onDataDeleted, slideClass, theme, onThemeChange, onOpenPremium, sharedSpaces, paymentMethods, personalPayments = null, onPayCardNow, onSettlePlan, onOpenImport, importProps, initialSection, onConsumeInitialSection, returnTab, onReturnToTab }) {
   const { t } = useTranslation()
   const isDesktop = useIsDesktop()
   const [languageOpen, setLanguageOpen] = useState(false)
@@ -247,7 +250,9 @@ export function SettingsPage({ profile, user, onUpdate, onUploadAvatar, onDataDe
   // panel derecho: sin «atrás» ni animación de entrada propia.
   const noop = () => {}
   function sectionEl(s, desk) {
-    if (s === 'account') return <SettingsAccountPage profile={profile} user={user} onUpdate={onUpdate} onDataDeleted={onDataDeleted} onBack={desk ? noop : back} onGoSubscription={() => openSection('subscription')} slideClass={desk ? '' : slideClass} />
+    if (desk && s === 'language') return <SettingsLanguageDesk profile={profile} onUpdate={onUpdate} />
+    if (desk && s === 'import') return <Suspense fallback={null}><ImportInline profile={profile} {...importProps} /></Suspense>
+    if (s === 'account') return <SettingsAccountPage onChangePhoto={desk ? () => setAvatarModal('choice') : undefined} uploadingAvatar={uploadingAvatar} profile={profile} user={user} onUpdate={onUpdate} onDataDeleted={onDataDeleted} onBack={desk ? noop : back} onGoSubscription={() => openSection('subscription')} slideClass={desk ? '' : slideClass} />
     if (s === 'categories') return <SettingsCategoriesPage profile={profile} onUpdate={onUpdate} onBack={desk ? noop : back} slideClass={desk ? '' : slideClass} />
     if (s === 'cobro') return <SettingsCobroPage profile={profile} onUpdate={onUpdate} onBack={desk ? noop : back} slideClass={desk ? '' : slideClass} />
     if (s === 'notifications') return <SettingsNotificationsPage profile={profile} user={user} onUpdate={onUpdate} onBack={desk ? noop : back} slideClass={desk ? '' : slideClass} />
@@ -271,12 +276,10 @@ export function SettingsPage({ profile, user, onUpdate, onUploadAvatar, onDataDe
       cobroValue: [FREQ_LABEL[profile.cobro_freq], profile.currency].filter(Boolean).join(' · '),
       themeValue: THEME_LABEL[theme] || '',
       languageValue: languageOptions.find(o => o.id === (profile.language || 'system'))?.label,
-      onLanguage: () => setLanguageOpen(true),
-      onImport: onOpenImport,
       onTutorial: () => onUpdate({ coachmarks_seen: {} }),
       onFeedback: handleGiveFeedback,
     },
-    onUploadClick: () => setAvatarModal('choice'), uploadingAvatar, onOpenPremium, onLogout: handleLogout, versionLabel, appName: APP_NAME,
+    onOpenPremium, onLogout: handleLogout, versionLabel, appName: APP_NAME,
   } : null
 
   return (
@@ -291,6 +294,7 @@ export function SettingsPage({ profile, user, onUpdate, onUploadAvatar, onDataDe
       />}
 
       {isDesktop && <DeskSettings d={deskData} />}
+      {isDesktop && <input ref={fileRef} type="file" accept="image/*" hidden onChange={handleAvatarChange} />}
 
       {!isTablet && !isDesktop && (<>
       {/* Avatar */}

@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next'
-import { Crown, User, Tag, Calendar, Bell, SunMoon, HelpCircle, Users, MessageCircle, Download, Upload, CreditCard, Languages, LogOut, Camera } from 'lucide-react'
+import { Crown, User, Tag, Calendar, Bell, SunMoon, HelpCircle, Users, MessageCircle, Download, Upload, CreditCard, Languages, LogOut } from 'lucide-react'
 import { AvatarImg } from '../components/AvatarImg'
 import { DeskSettingsContext } from '../components/DeskSettingsContext'
 import { useHeaderBackground, HEADER_IMAGES } from '../hooks/useHeaderBackground'
@@ -24,7 +24,7 @@ function NavItem({ icon: Icon, label, value, active, danger, onClick, coach }) {
 
 export function DeskSettings({ d }) {
   const { t } = useTranslation()
-  const { profile, user, initials, current, onSelect, content, nav, onUploadClick, uploadingAvatar, onOpenPremium, onLogout, versionLabel, appName } = d
+  const { profile, user, initials, current, onSelect, content, nav, onOpenPremium, onLogout, versionLabel, appName } = d
   const { timeOfDay, mountedKeys } = useHeaderBackground(profile?.timezone)
   const Row = ({ id, icon, label, value, coach }) => (
     <NavItem icon={icon} label={label} value={value} coach={coach} active={current === id} onClick={() => onSelect(id)} />
@@ -43,11 +43,8 @@ export function DeskSettings({ d }) {
         </div>
         <div className={home.actions}>
           <div className={styles.profile}>
-            <button type="button" className={styles.avatarBtn} onClick={onUploadClick} aria-label={t('buttons.profilePhoto')}>
-              <AvatarImg src={profile.avatar_url} alt={t('buttons.profilePhoto')} className={styles.avatar}
-                fallback={<span className={styles.avatarFallback}>{initials}</span>} />
-              <span className={styles.cam}>{uploadingAvatar ? <span className={styles.spin} /> : <Camera size={11} />}</span>
-            </button>
+            <AvatarImg src={profile.avatar_url} alt={t('buttons.profilePhoto')} className={styles.avatar}
+              fallback={<span className={styles.avatarFallback}>{initials}</span>} />
             <div className={styles.who}><b>{profile.name}</b><span>{user?.email}</span></div>
             {profile.is_premium && <em className={styles.badge}><Crown size={11} fill="currentColor" />{t('settingsPage.premiumBadge')}</em>}
           </div>
@@ -73,11 +70,11 @@ export function DeskSettings({ d }) {
               <div className={styles.gl}>{t('settingsPage.sections.preferences')}</div>
               <Row id="notifications" icon={Bell} label={t('settingsPage.menu.notifications')} coach="perfil-notificaciones-row" />
               <Row id="appearance" icon={SunMoon} label={t('settingsPage.menu.appearance')} value={nav.themeValue} />
-              <NavItem icon={Languages} label={t('settingsAccount.row.language')} value={nav.languageValue} onClick={nav.onLanguage} />
+              <Row id="language" icon={Languages} label={t('settingsAccount.row.language')} value={nav.languageValue} />
 
               <div className={styles.gl}>{t('settingsPage.sections.accountData')}</div>
               <Row id="account" icon={User} label={t('settingsPage.menu.account')} />
-              <NavItem icon={Upload} label={t('settingsPage.menu.import')} onClick={nav.onImport} />
+              <Row id="import" icon={Upload} label={t('settingsPage.menu.import')} />
               <Row id="export" icon={Download} label={t('settingsPage.menu.export')} />
 
               <div className={styles.gl}>{t('settingsPage.sections.help')}</div>

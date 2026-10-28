@@ -302,3 +302,34 @@
   border-radius: 5px;
 }
 .pickerRowOn { background: var(--accent); color: var(--surface); }
+
+/* ── Escritorio en línea (v0.9.836): página dentro de Ajustes, sin modal ──── */
+.inl { display: flex; flex-direction: column; height: max(520px, calc(100dvh - 340px)); }
+.stp { list-style: none; margin: 0 0 18px; padding: 0; display: flex; gap: 10px; flex-shrink: 0; }
+.stpItem { flex: 1; min-width: 0; display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-radius: 20px; background: var(--desk-chip); color: var(--muted); font-size: 14px; font-weight: 600; }
+.stpItem i { width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; flex-shrink: 0; font-style: normal; font-size: 13px; background: var(--desk-card); color: var(--muted); }
+.stpOn { background: var(--accent-soft); color: var(--accent); }
+.stpOn i { background: var(--accent); color: var(--desk-ink-text); }
+.stpDone i { background: var(--paid); color: var(--desk-ink-text); }
+.inlBody { flex: 1; min-height: 0; display: flex; flex-direction: column; border-radius: 28px; background: var(--desk-chip); overflow: hidden; }
+.inl .bodyPad { padding: 28px 32px; }
+.inl .stepTitle { font-size: 22px; font-weight: 700; letter-spacing: -0.3px; }
+.inl .stepSub { font-size: 14px; max-width: 560px; }
+.inl .drop { flex: 1; min-height: 280px; justify-content: center; gap: 16px; padding: 28px; border-radius: 24px; background: var(--desk-card); }
+.inl .drop button { width: auto; max-width: none; padding: 12px 26px; border-radius: 99px; }
+.inl .dropOver { background: var(--accent-soft); }
+.inl .toggleRow, .inl .previewBox, .inl .sugg, .inl .sidePanel, .inl .tile { background: var(--desk-card); border-radius: 20px; }
+.inl .tileOn { background: var(--accent); color: var(--desk-ink-text); }
+.inl .rowOn { background: var(--desk-card); }
+.inl .row { box-shadow: none; border-radius: 14px; }
+.inl .searchBox { background: var(--desk-card); box-shadow: none; border-radius: 14px; height: 40px; }
+.inl .reviewMain { padding: 24px 8px 20px 28px; }
+.inl .sidePanel { margin: 24px 24px 20px 8px; padding: 20px; width: 280px; }
+.inl .footer { flex-direction: row; align-items: center; justify-content: flex-end; gap: 20px; background: none; box-shadow: none; padding: 0 32px 24px; }
+.inl .footerTotals { gap: 14px; }
+.inl .footer button, .inl .sidePanel button { width: auto; padding: 12px 26px; border-radius: 99px; }
+.inl .sidePanel button { width: 100%; }
+.inl .bodyPad:has(.field) { max-width: 760px; width: 100%; margin: 0 auto; box-sizing: border-box; }
+.inl .bodyPad { display: flex; flex-direction: column; }
+.inl .bodyPad > * { flex-shrink: 0; }
+.inl .bodyPad > .drop { flex: 1 1 auto; }

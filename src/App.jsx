@@ -1943,6 +1943,7 @@ export default function App() {
           personalPayments={cardPayments}
           onPayCardNow={setPayCardNowCard}
           onOpenImport={openImport}
+          importProps={{ sharedActive: !!activeSpaceId, onFetchExisting: findExistingForImport, onImport: importPayments }}
           onSettlePlan={(card, plan) => setSettleTarget({ card, plan })}
           initialSection={settingsInitialSection}
           onConsumeInitialSection={() => setSettingsInitialSection(null)}

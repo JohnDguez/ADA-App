@@ -28,3 +28,32 @@
 @media (hover: hover) and (pointer: fine) {
   .fmtBtn:not(.fmtOn):hover, .chip:not(.chipOn):hover, .filter:hover { background: var(--desk-hair); translate: none; filter: none; }
 }
+
+/* Popovers de filtros (v0.9.836): anclados a su tarjeta, sin fondo oscurecido. */
+.anchor { position: relative; min-width: 0; }
+.anchor .filter { width: 100%; }
+.pop { position: absolute; top: calc(100% + 12px); left: 0; z-index: 30; padding: 16px; border-radius: 26px; background: var(--desk-card); box-shadow: var(--desk-shadow), 0 0 0 1px var(--desk-hair); }
+.pop::before { content: ""; position: absolute; top: -7px; left: 44px; width: 14px; height: 14px; background: var(--desk-card); transform: rotate(45deg); border-radius: 4px 0 0 0; box-shadow: -1px -1px 0 var(--desk-hair); }
+.anchorEnd .pop { left: auto; right: 0; }
+.anchorEnd .pop::before { left: auto; right: 44px; }
+.popWide { width: 430px; }
+.popNarrow { width: 300px; }
+.popTitle { margin: 2px 6px 10px; font-size: 12px; font-weight: 600; letter-spacing: 0.9px; text-transform: uppercase; color: var(--muted); }
+.pgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.ptile { display: flex; flex-direction: column; gap: 2px; padding: 12px 14px; border: 0; border-radius: 16px; background: var(--desk-chip); color: var(--text); text-align: left; }
+.ptile b { font-size: 14px; font-weight: 600; }
+.ptile span { font-size: 12px; color: var(--muted); }
+.ptileOn { background: var(--accent-soft); color: var(--accent); }
+.ptileOn span { color: var(--accent); opacity: 0.8; }
+.pfull { grid-column: 1 / -1; }
+.dates { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px; }
+.dates > div > span { display: block; margin: 0 4px 6px; font-size: 12px; color: var(--muted); }
+.plist { display: flex; flex-direction: column; gap: 2px; max-height: 320px; overflow-y: auto; }
+.popt { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 12px 14px; border: 0; border-radius: 14px; background: none; color: var(--text); font-size: 14px; font-weight: 600; text-align: left; }
+.poptOn { background: var(--accent-soft); color: var(--accent); }
+@media (hover: hover) and (pointer: fine) {
+  .ptile:not(.ptileOn):hover, .popt:not(.poptOn):hover { background: var(--desk-hair); translate: none; filter: none; }
+  .ptileOn:hover, .poptOn:hover { translate: none; filter: none; }
+}
+.popUp { top: auto; bottom: calc(100% + 12px); }
+.popUp::before { top: auto; bottom: -7px; border-radius: 0 0 4px 0; box-shadow: 1px 1px 0 var(--desk-hair); }

@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next'
 // sub-páginas ya migradas, v0.9.442-447) — import directo para tree-shaking real.
 import { Wallet } from '@phosphor-icons/react/dist/csr/Wallet'
 import { CalendarDots } from '@phosphor-icons/react/dist/csr/CalendarDots'
-import { CalendarDays, CalendarRange, CalendarCheck, Banknote, Coins } from 'lucide-react'
+import { CalendarDays, CalendarRange, CalendarCheck, Banknote, Coins, ChevronDown } from 'lucide-react'
 import { PageHero } from '../../components/PageHero'
 import { getWeekdaysShort, nextCobroDate } from '../../lib/utils'
 import { showToast } from '../../components/Toast'
@@ -16,6 +16,8 @@ import { getCurrency } from '../../lib/currency'
 import styles from './SettingsCobroPage.module.css'
 import { switchProps } from '../../lib/a11y'
 import { useDeskSettings } from '../../components/DeskSettingsContext'
+import { DeskSettingsHead, DeskPage } from '../../components/DeskSettingsHead'
+import deskStyles from '../../components/SettingsDesk.module.css'
 import dk from './SettingsCobroDesk.module.css'
 
 const BIWEEKLY_PRESETS = [
@@ -74,103 +76,100 @@ export function SettingsCobroPage({ profile, onUpdate, onBack, slideClass }) {
   const nextMonthShort = nextDateObj.toLocaleDateString(locale, { month: 'short' }).replace('.', '').toUpperCase()
   const FREQ_ICON = { weekly: CalendarDays, biweekly: CalendarRange, monthly: CalendarCheck }
 
-  // Escritorio (v0.9.834, opción B aprobada): formulario por filas — nombre y
-  // ayuda a la izquierda, control a la derecha, separadas por líneas finas.
+  // Escritorio (v0.9.836, mockup aprobado): a la izquierda frecuencia, día(s)
+  // de cobro e ingreso; a la derecha el próximo cobro (bloque azul) y la moneda.
   if (desk) {
     const freq = profile.cobro_freq
-    const dayCtl = (onVal, v) => Math.min(31, Math.max(1, parseInt(v) || 1))
+    const dayCtl = v => Math.min(31, Math.max(1, parseInt(v) || 1))
+    let curName = ''
+    try { curName = new Intl.DisplayNames([locale], { type: 'currency' }).of(profile.currency) || '' } catch { /* sin soporte */ }
     return (
-      <div className={dk.wrap}>
-        <PageHero icon={Wallet} title={t('settingsCobro.title')} description={t('settingsCobro.description')} onBack={onBack} />
-        <div className={dk.form}>
-          <div className={dk.group}>{t('settingsCobro.periodSection')}</div>
-
-          <div className={`${dk.row} ${dk.first}`}>
-            <div><b>{t('settingsCobro.frequencyLabel')}</b><p>{t('deskSettings.freqHelp')}</p></div>
-            <div className={dk.tiles3}>
+      <DeskPage>
+        <DeskSettingsHead title={t('settingsCobro.title')} description={t('settingsCobro.description')} />
+        <div className={dk.layout}>
+          <div>
+            <div className={`${deskStyles.sec} ${deskStyles.secFirst}`}>{t('settingsCobro.frequencyLabel')}</div>
+            <div className={dk.freq}>
               {['weekly', 'biweekly', 'monthly'].map(val => (
-                <button key={val} type="button" aria-pressed={freq === val} onClick={() => handleFreq(val)} className={`${dk.tile} ${freq === val ? dk.tileOn : ''}`}>
+                <button key={val} type="button" aria-pressed={freq === val} onClick={() => handleFreq(val)} className={`${dk.fq} ${freq === val ? dk.fqOn : ''}`}>
                   <b>{t(`frequency.${val}`)}</b><span>{t(`settingsCobro.freqSub.${val}`)}</span>
                 </button>
               ))}
             </div>
-          </div>
 
-          <div className={dk.row}>
-            <div><b>{freq === 'biweekly' ? t('settingsCobro.payDaysLabel') : t('settingsCobro.payDayLabel')}</b><p>{t('deskSettings.daysHelp')}</p></div>
-            <div>
-              {freq === 'weekly' && (
-                <div className={dk.weekdays}>
-                  {getWeekdaysShort().map((day, i) => (
-                    <button key={i} type="button" aria-pressed={profile.cobro_weekday === i} onClick={() => handleWeekday(i)} className={`${dk.chip} ${profile.cobro_weekday === i ? dk.chipOn : ''}`}>{day}</button>
+            <div className={deskStyles.sec}>{freq === 'biweekly' ? t('settingsCobro.payDaysLabel') : t('settingsCobro.payDayLabel')}</div>
+            {freq === 'weekly' && (
+              <div className={dk.weekdays}>
+                {getWeekdaysShort().map((day, i) => (
+                  <button key={i} type="button" aria-pressed={profile.cobro_weekday === i} onClick={() => handleWeekday(i)} className={`${dk.chip} ${profile.cobro_weekday === i ? dk.chipOn : ''}`}>{day}</button>
+                ))}
+              </div>
+            )}
+            {freq === 'biweekly' && (
+              <>
+                <div className={dk.presets}>
+                  {BIWEEKLY_PRESETS.map(pr => {
+                    const on = !isCustomBiweekly() && profile.cobro_day1 === pr.d1 && profile.cobro_day2 === pr.d2
+                    return <button key={`${pr.d1}-${pr.d2}`} type="button" aria-pressed={on} onClick={() => { onUpdate({ cobro_day1: pr.d1, cobro_day2: pr.d2 }); setBiweeklyCustom(false) }} className={`${dk.chip} ${on ? dk.chipOn : ''}`}>{t('settingsCobro.dayPair', { d1: pr.d1, d2: pr.d2 })}</button>
+                  })}
+                  <button type="button" aria-pressed={isCustomBiweekly()} onClick={() => setBiweeklyCustom(true)} className={`${dk.chip} ${isCustomBiweekly() ? dk.chipOn : ''}`}>{t('settingsCobro.otherOption')}</button>
+                </div>
+                {isCustomBiweekly() && (
+                  <div className={`${deskStyles.fill} ${dk.custom}`}>
+                    <label><span>{t('settingsCobro.day1Label')}</span>
+                      <input aria-label={t('settingsCobro.day1Label')} type="number" min="1" max="31" defaultValue={profile.cobro_day1 ?? ''} onBlur={e => { const v = dayCtl(e.target.value); e.target.value = v; onUpdate({ cobro_day1: v }) }} placeholder={t('settingsCobro.day1Placeholder')} className="field-input" /></label>
+                    <label><span>{t('settingsCobro.day2Label')}</span>
+                      <input aria-label={t('settingsCobro.day2Label')} type="number" min="1" max="31" defaultValue={profile.cobro_day2 ?? ''} onBlur={e => { const v = dayCtl(e.target.value); e.target.value = v; onUpdate({ cobro_day2: v }) }} placeholder={t('settingsCobro.day2Placeholder')} className="field-input" /></label>
+                  </div>
+                )}
+              </>
+            )}
+            {freq === 'monthly' && (
+              <>
+                <div className={dk.dayGrid}>
+                  {Array.from({ length: 31 }, (_, i) => i + 1).map(d => (
+                    <button key={d} type="button" aria-pressed={(profile.cobro_day1 ?? 1) === d} onClick={() => handleMonthlyDay(d)} className={`${dk.chip} ${(profile.cobro_day1 ?? 1) === d ? dk.chipOn : ''}`}>{d}</button>
                   ))}
                 </div>
-              )}
-              {freq === 'biweekly' && (
-                <>
-                  <div className={dk.chips}>
-                    {BIWEEKLY_PRESETS.map(pr => {
-                      const on = !isCustomBiweekly() && profile.cobro_day1 === pr.d1 && profile.cobro_day2 === pr.d2
-                      return <button key={`${pr.d1}-${pr.d2}`} type="button" aria-pressed={on} onClick={() => { onUpdate({ cobro_day1: pr.d1, cobro_day2: pr.d2 }); setBiweeklyCustom(false) }} className={`${dk.chip} ${on ? dk.chipOn : ''}`}>{t('settingsCobro.dayPair', { d1: pr.d1, d2: pr.d2 })}</button>
-                    })}
-                    <button type="button" aria-pressed={isCustomBiweekly()} onClick={() => setBiweeklyCustom(true)} className={`${dk.chip} ${isCustomBiweekly() ? dk.chipOn : ''}`}>{t('settingsCobro.otherOption')}</button>
-                  </div>
-                  {isCustomBiweekly() && (
-                    <div className={dk.custom}>
-                      <label><span>{t('settingsCobro.day1Label')}</span>
-                        <input aria-label={t('settingsCobro.day1Label')} type="number" min="1" max="31" defaultValue={profile.cobro_day1 ?? ''} onBlur={e => { const v = dayCtl(0, e.target.value); e.target.value = v; onUpdate({ cobro_day1: v }) }} placeholder={t('settingsCobro.day1Placeholder')} className="field-input" /></label>
-                      <label><span>{t('settingsCobro.day2Label')}</span>
-                        <input aria-label={t('settingsCobro.day2Label')} type="number" min="1" max="31" defaultValue={profile.cobro_day2 ?? ''} onBlur={e => { const v = dayCtl(0, e.target.value); e.target.value = v; onUpdate({ cobro_day2: v }) }} placeholder={t('settingsCobro.day2Placeholder')} className="field-input" /></label>
-                    </div>
-                  )}
-                </>
-              )}
-              {freq === 'monthly' && (
-                <>
-                  <div className={dk.dayGrid}>
-                    {Array.from({ length: 31 }, (_, i) => i + 1).map(d => (
-                      <button key={d} type="button" aria-pressed={(profile.cobro_day1 ?? 1) === d} onClick={() => handleMonthlyDay(d)} className={`${dk.chip} ${(profile.cobro_day1 ?? 1) === d ? dk.chipOn : ''}`}>{d}</button>
-                    ))}
-                  </div>
-                  <p className={dk.hint}>
-                    {t('settingsCobro.monthlyHelperPrefix')} <strong>{profile.cobro_day1 ?? 1}</strong> {t('settingsCobro.monthlyHelperSuffix')}
-                    {(profile.cobro_day1 ?? 1) >= 29 && ` ${t('settingsCobro.monthShortHint')}`}
-                  </p>
-                </>
-              )}
-            </div>
-          </div>
+                <p className={dk.hint}>
+                  {t('settingsCobro.monthlyHelperPrefix')} <strong>{profile.cobro_day1 ?? 1}</strong> {t('settingsCobro.monthlyHelperSuffix')}
+                  {(profile.cobro_day1 ?? 1) >= 29 && ` ${t('settingsCobro.monthShortHint')}`}
+                </p>
+              </>
+            )}
 
-          <div className={dk.row}>
-            <div><b>{t('settingsCobro.nextPaydayLabel')}</b><p>{t('deskSettings.nextHelp')}</p></div>
-            <div className={dk.next}>
-              <div className={dk.cal}><i>{nextMonthShort}</i><b>{nextDateObj.getDate()}</b></div>
-              <div><span>{t('settingsCobro.nextPaydayLabel')}</span><strong>{nextLong}</strong></div>
-            </div>
-          </div>
-
-          <div className={`${dk.group} ${dk.groupGap}`}>{t('settingsCobro.incomeSection')}</div>
-          <div className={`${dk.row} ${dk.first}`}>
-            <div><b>{t('settingsCobro.incomeLabel')}</b><p>{t('settingsCobro.incomeSubtitle')}</p></div>
-            <div className={dk.salary}>
-              {profile.salary_enabled ? (
+            <div className={deskStyles.sec}>{t('settingsCobro.incomeSection')}</div>
+            <div className={deskStyles.fill}>
+              <div {...switchProps(profile.salary_enabled)} onClick={handleSalaryToggle} className={deskStyles.tgl} style={{ paddingTop: 0 }}>
+                <div><b>{t('deskSettings.incomeOn')}</b><span>{t('settingsCobro.incomeSubtitle')}</span></div>
+                <Toggle on={profile.salary_enabled} />
+              </div>
+              {profile.salary_enabled && (
                 <div className={`${styles.amountField} ${dk.amount} ${symbol.length >= 3 ? styles.amountFieldLong : symbol.length === 2 ? styles.amountFieldMid : ''}`}>
                   <span className={styles.amountPrefix}>{symbol}</span>
                   <AmountInput value={salaryAmount} onChange={e => setSalaryAmount(e.target.value)} onBlur={handleSalaryBlur} aria-label={t('settingsCobro.amountLabel')} placeholder="0.00" className={`field-input ${styles.amountInput}`} />
                 </div>
-              ) : <span className={dk.off}>{t('deskSettings.incomeOff')}</span>}
-              <div {...switchProps(profile.salary_enabled)} onClick={handleSalaryToggle} className={dk.sw}><Toggle on={profile.salary_enabled} /></div>
+              )}
             </div>
           </div>
 
-          <div className={`${dk.group} ${dk.groupGap}`}>{t('settingsCobro.currencySection')}</div>
-          <div className={`${dk.row} ${dk.first}`}>
-            <div><b>{t('settingsCobro.currencyLabel')}</b><p>{t('currency.noConvertHint')}</p></div>
-            <button type="button" className={dk.select} onClick={() => setCurrencyOpen(true)}><span>{profile.currency}</span><em>›</em></button>
+          <div className={dk.side}>
+            <div className={deskStyles.blue}>
+              <span className={deskStyles.sub}>{t('settingsCobro.nextPaydayLabel')}</span>
+              <div className={dk.next}>
+                <div className={dk.cal}><i>{nextMonthShort}</i><b>{nextDateObj.getDate()}</b></div>
+                <div><strong>{nextLong}</strong><span className={deskStyles.sub}>{t('deskSettings.nextHelp')}</span></div>
+              </div>
+            </div>
+            <div className={deskStyles.fill}>
+              <div className={deskStyles.fillTitle}>{t('settingsCobro.currencyLabel')}</div>
+              <p className={dk.curHelp}>{t('currency.noConvertHint')}</p>
+              <button type="button" className={dk.select} onClick={() => setCurrencyOpen(true)}><span>{profile.currency}{curName ? ` · ${curName.charAt(0).toUpperCase()}${curName.slice(1)}` : ''}</span><ChevronDown size={18} /></button>
+            </div>
           </div>
         </div>
         <CurrencySheet open={currencyOpen} onClose={() => setCurrencyOpen(false)} value={profile.currency} onSelect={handleCurrency} />
-      </div>
+      </DeskPage>
     )
   }
 
