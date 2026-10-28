@@ -371,9 +371,11 @@ export function PremiumPage({ profile, onClose, refreshProfile, onSubscribed }) 
                 </div>
               )}
               {checkoutState === 'idle' && clientSecret && (
-                <EmbeddedCheckoutProvider stripe={stripePromise} options={checkoutOptions}>
-                  <EmbeddedCheckout />
-                </EmbeddedCheckoutProvider>
+                <div className={dk.stripeBox}>
+                  <EmbeddedCheckoutProvider stripe={stripePromise} options={checkoutOptions}>
+                    <EmbeddedCheckout />
+                  </EmbeddedCheckoutProvider>
+                </div>
               )}
             </div>
           )}

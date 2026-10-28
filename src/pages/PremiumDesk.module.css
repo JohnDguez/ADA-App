@@ -40,3 +40,5 @@
 .safe { display: flex; align-items: center; gap: 6px; margin-top: 4px; color: var(--paid); }
 .link { padding: 0; border: 0; background: none; color: var(--accent); font-size: inherit; text-decoration: underline; }
 .restoreErr { color: var(--danger); }
+/* Stripe Embedded Checkout es de una sola columna: se limita su ancho y se centra para que no flote en un lienzo enorme. */
+.stripeBox { width: 100%; max-width: 560px; margin: 0 auto; border-radius: 20px; overflow: hidden; }
