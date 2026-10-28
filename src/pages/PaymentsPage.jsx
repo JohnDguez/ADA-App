@@ -21,6 +21,7 @@ import { DeskPayments } from './DeskPayments'
 import { useIsDesktop } from '../hooks/useIsDesktop'
 import { AnchoredPop, useAnchor } from '../components/AnchoredPop'
 import styles from './PaymentsPage.module.css'
+import dkp from '../components/PaymentDesk.module.css'
 import { Presence } from '../components/Presence'
 import { Collapse } from '../components/Collapse'
 import { usePresence } from '../lib/usePresence'
@@ -942,11 +943,13 @@ export function PaymentsPage({ payments, dataLoading = false, periodIncome, paym
       <Presence show={!!(remModal)}>{() => (
         <div
           onClick={() => { setRemModal(false); setRemCustomOpen(false) }}
-          className={styles.modalOverlayBottom}
+          className={isDesktop ? dkp.overlay : styles.modalOverlayBottom}
         >
           <div
             onClick={e => e.stopPropagation()}
-            className={styles.modalPanelBottom}
+            className={isDesktop ? `${dkp.dialog} ${styles.remDlg}` : styles.modalPanelBottom}
+            role={isDesktop ? 'dialog' : undefined}
+            aria-modal={isDesktop ? 'true' : undefined}
           >
             <div className={styles.remanenteHeader}>
               <div className={styles.remanenteIconWrapper}>
