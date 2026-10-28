@@ -61,3 +61,14 @@
 .newPreview span { font-size: 13px; opacity: 0.85; }
 .full { width: 100%; justify-content: center; }
 .newLayout .form { max-width: none; }
+
+/* v0.9.867 — diálogo «Eliminar espacio compartido» con la plantilla de escritorio */
+.delDlg.delDlg { width: 480px; gap: 0; padding: 30px 32px 26px; }
+.delDlg.delDlg :global(.field-input) { height: 48px; padding: 0 18px; border: 1px solid color-mix(in srgb, var(--text) 20%, var(--desk-panel)); border-radius: 99px; margin-bottom: 14px; }
+.delDlg :global(.field-label) { display: block; margin-bottom: 8px; font-size: 12px; font-weight: 600; letter-spacing: 0.8px; text-transform: uppercase; color: var(--muted); }
+.delIcon { width: 48px; height: 48px; margin-bottom: 16px; display: grid; place-items: center; border-radius: 16px; background: var(--danger); color: var(--on-danger); }
+.delTitle { margin-bottom: 8px; font-size: 20px; font-weight: 700; color: var(--text); }
+.delDesc { margin-bottom: 22px; font-size: 14px; line-height: 1.55; color: var(--muted); }
+.delFoot { display: flex; flex-direction: row-reverse; justify-content: flex-start; gap: 12px; margin-top: 6px; }
+.delBtn { width: auto; height: 46px; padding: 0 28px; border: 0; border-radius: 99px; font-size: 15px; font-weight: 600; background: var(--danger); color: var(--on-danger); }
+.delBtn:disabled { opacity: 0.5; cursor: not-allowed; }

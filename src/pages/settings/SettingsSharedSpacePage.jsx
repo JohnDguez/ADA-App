@@ -19,6 +19,7 @@ import { useDeskSettings } from '../../components/DeskSettingsContext'
 import { DeskSettingsHead, DeskPage } from '../../components/DeskSettingsHead'
 import deskStyles from '../../components/SettingsDesk.module.css'
 import dk from './SettingsSharedSpaceDesk.module.css'
+import dkp from '../../components/PaymentDesk.module.css'
 import styles from './SettingsSharedSpacePage.module.css'
 import { AvatarImg } from '../../components/AvatarImg'
 import { Presence } from '../../components/Presence'
@@ -497,28 +498,32 @@ function OwnedSpacePanel({ entry, user, onGoNotifications, regenerateCode, updat
     <>
       <CurrencySheet open={currencyOpen} onClose={() => setCurrencyOpen(false)} value={entry.space.currency} onSelect={handleCurrency} title={t('currency.spaceSheetTitle')} />
       <Presence show={!!(dangerOpen)}>{() => (
-        <div onClick={e => e.target === e.currentTarget && setDangerOpen(false)} className={styles.deleteModalOverlay}>
-          <div className={styles.deleteModalSheet}>
-            <div className={styles.deleteModalTitle}>{t('activeSpaceHeader.deleteModal.title')}</div>
-            <div className={styles.deleteModalDescription}>
+        <div onClick={e => e.target === e.currentTarget && setDangerOpen(false)} className={desk ? dkp.overlay : styles.deleteModalOverlay}>
+          <div className={desk ? `${dkp.dialog} ${dk.delDlg}` : styles.deleteModalSheet} role={desk ? 'dialog' : undefined} aria-modal={desk ? 'true' : undefined}>
+            {desk && <div className={dk.delIcon}><Trash2 size={22} /></div>}
+            <div className={desk ? dk.delTitle : styles.deleteModalTitle}>{t('activeSpaceHeader.deleteModal.title')}</div>
+            <div className={desk ? dk.delDesc : styles.deleteModalDescription}>
               {t('activeSpaceHeader.deleteModal.description')}
             </div>
             <label className={`field-label ${styles.labelBlock}`}>{t('settingsAccount.dangerModal.confirmLabel')}</label>
             <input aria-label={t('settingsAccount.dangerModal.confirmLabel')}
               type="password" className={`field-input ${styles.deleteModalPasswordInput}`} value={dangerPassword}
+              autoFocus={desk}
               onChange={e => setDangerPassword(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && handleDelete()}
               placeholder="••••••••"
             />
             {dangerError && <div className={styles.errorText}>{dangerError}</div>}
-            <button
-              onClick={handleDelete}
-              disabled={dangerLoading || !dangerPassword}
-              className={`${styles.deleteModalConfirmButton} ${(dangerLoading || !dangerPassword) ? styles.savingOpacity : ''}`}
-            >
-              {dangerLoading ? t('settingsAccount.dangerModal.verifying') : t('activeSpaceHeader.deleteModal.confirmButton')}
-            </button>
-            <button onClick={() => { setDangerOpen(false); setDangerPassword('') }} className="btn-ghost">{t('buttons.cancel')}</button>
+            <div className={desk ? dk.delFoot : undefined}>
+              <button
+                onClick={handleDelete}
+                disabled={dangerLoading || !dangerPassword}
+                className={desk ? dk.delBtn : `${styles.deleteModalConfirmButton} ${(dangerLoading || !dangerPassword) ? styles.savingOpacity : ''}`}
+              >
+                {dangerLoading ? t('settingsAccount.dangerModal.verifying') : t('activeSpaceHeader.deleteModal.confirmButton')}
+              </button>
+              <button onClick={() => { setDangerOpen(false); setDangerPassword('') }} className={desk ? dkp.cancel : 'btn-ghost'}>{t('buttons.cancel')}</button>
+            </div>
           </div>
         </div>
       )}</Presence>
