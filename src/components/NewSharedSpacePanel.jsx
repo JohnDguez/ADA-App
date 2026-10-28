@@ -1,9 +1,11 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Crown } from 'lucide-react'
+import { Crown, Users, Receipt, Bell, Plus, Check, LogIn } from 'lucide-react'
 import { CurrencySelect } from './CurrencySelect'
 import { CobroPeriodFields } from './CobroPeriodFields'
 import styles from './NewSharedSpacePanel.module.css'
+import dk from './NewSharedSpaceDesk.module.css'
+import { useIsDesktop } from '../hooks/useIsDesktop'
 
 // Panel que reemplaza el contenido normal de Inicio/Gastos/Recurrentes
 // cuando la tarjeta "Nuevo espacio compartido" del switcher está activa.
@@ -15,6 +17,7 @@ import styles from './NewSharedSpacePanel.module.css'
 // espacios más puede unirse (dinámico), no solo un tope fijo de 3.
 export function NewSharedSpacePanel({ profile, sharedSpaces, onOpenPremium, onCreated, onJoined }) {
   const { t } = useTranslation()
+  const isDesktop = useIsDesktop()
   const { spaces, createSpace, redeemCode } = sharedSpaces
   const ownedEntry   = spaces.find(s => s.membership.role === 'owner')
   const guestEntries = spaces.filter(s => s.membership.role === 'guest')
@@ -63,6 +66,109 @@ export function NewSharedSpacePanel({ profile, sharedSpaces, onOpenPremium, onCr
     setJoinSaving(false)
     if (error) setJoinError(typeof error === 'string' ? error : t('newSharedSpacePanel.joinCodeInvalid'))
     else { setJoinCode(''); onJoined && data?.space_id && onJoined(data.space_id) }
+  }
+
+  // ── Escritorio (≥1100px, v0.9.871): dos tarjetas lado a lado ──
+  if (isDesktop) {
+    const isPremium = !!profile.is_premium
+    const perks = [['perk1', Users], ['perk2', Receipt], ['perk3', Bell]]
+    return (
+      <div className={dk.wrap}>
+        <div className={dk.hd}>
+          <h2 className={dk.h2}>{t('newSharedSpacePanel.deskTitle')}</h2>
+          <p className={dk.p}>{t('newSharedSpacePanel.deskSub')}</p>
+        </div>
+        <div className={dk.cols}>
+          {!isPremium && (
+            <div className={dk.card}>
+              <div className={dk.ct}>
+                <span className={`${dk.ic} ${dk.icGold}`}><Crown size={20} fill="currentColor" /></span>
+                <div><b>{t('newSharedSpacePanel.upsellTitle')}</b><span>{t('newSharedSpacePanel.upsellSub')}</span></div>
+              </div>
+              <div className={dk.perks}>
+                {perks.map(([k, Ic]) => (
+                  <div className={dk.perk} key={k}>
+                    <span className={dk.pi}><Ic size={16} /></span>
+                    <div><b>{t(`newSharedSpacePanel.${k}Title`)}</b>{t(`newSharedSpacePanel.${k}Sub`)}</div>
+                  </div>
+                ))}
+              </div>
+              <button type="button" onClick={onOpenPremium} className={`${dk.btn} ${dk.btnGold}`}>
+                <Crown size={16} fill="currentColor" /> {t('goalsPage.premiumBanner.button')}
+              </button>
+              <div className={dk.fine}>{t('premiumLock.finePrint')}</div>
+            </div>
+          )}
+
+          {isPremium && !ownedEntry && (
+            <div className={dk.card}>
+              <div className={dk.ct}>
+                <span className={dk.ic}><Plus size={20} strokeWidth={2.4} /></span>
+                <div><b>{t('newSharedSpacePanel.createTitle')}</b><span>{t('newSharedSpacePanel.createSub')}</span></div>
+              </div>
+              <div>
+                <label className={dk.lbl}>{t('newSharedSpacePanel.spaceNameLabel')}</label>
+                <input aria-label={t('newSharedSpacePanel.spaceNameLabel')} className={`field-input ${dk.input}`} value={newName} onChange={e => setNewName(e.target.value)} placeholder={t('newSharedSpacePanel.spaceNamePlaceholder')} />
+              </div>
+              <div>
+                <label className={dk.lbl}>{t('currency.spaceLabel')}</label>
+                <CurrencySelect value={newCurrency} onChange={setNewCurrency} sheetTitle={t('currency.spaceSheetTitle')} />
+              </div>
+              <div>
+                <label className={dk.lbl}>{t('cobroPeriodFields.periodLabel')}</label>
+                <CobroPeriodFields
+                  freq={newFreq} day1={newDay1} day2={newDay2} weekday={newWeekday}
+                  onChangeFreq={setNewFreq} onChangeDay1={setNewDay1} onChangeDay2={setNewDay2} onChangeWeekday={setNewWeekday}
+                />
+              </div>
+              {createError && <div className={dk.err}>{createError}</div>}
+              <button type="button" onClick={handleCreate} disabled={createSaving} className={dk.btn}>
+                {createSaving ? t('newSharedSpacePanel.creating') : t('newSharedSpacePanel.create')}
+              </button>
+            </div>
+          )}
+
+          {isPremium && ownedEntry && (
+            <div className={dk.card}>
+              <div className={dk.ct}>
+                <span className={dk.ic}><Check size={20} strokeWidth={2.6} /></span>
+                <div><b>{t('newSharedSpacePanel.ownedTitle')}</b><span>{t('newSharedSpacePanel.ownedSub')}</span></div>
+              </div>
+              <div className={dk.okBox}>{t('newSharedSpacePanel.ownedText')}</div>
+              {onCreated && ownedEntry.space?.id && (
+                <button type="button" onClick={() => onCreated(ownedEntry.space.id)} className={`${dk.btn} ${dk.btnSoft}`}>{t('newSharedSpacePanel.goToSpace')}</button>
+              )}
+            </div>
+          )}
+
+          {slotsLeft > 0 ? (
+            <div className={dk.card}>
+              <div className={dk.ct}>
+                <span className={dk.ic}><LogIn size={20} /></span>
+                <div><b>{t('newSharedSpacePanel.joinTitle')}</b><span>{t(isPremium ? 'newSharedSpacePanel.joinSub' : 'newSharedSpacePanel.joinSubFree')}</span></div>
+              </div>
+              <div className={dk.codeWrap}>
+                <div className={dk.code} aria-hidden="true">
+                  {Array.from({ length: 6 }, (_, i) => (
+                    <i key={i} className={i === Math.min(joinCode.length, 5) ? dk.codeFocus : ''}>{joinCode[i] || ''}</i>
+                  ))}
+                </div>
+                <input aria-label={t('newSharedSpacePanel.codeAria')} className={dk.codeInput} inputMode="numeric" autoComplete="one-time-code" maxLength={6}
+                  value={joinCode} onChange={e => setJoinCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                  onKeyDown={e => { if (e.key === 'Enter' && joinCode.length === 6 && !joinSaving) handleJoin() }} />
+              </div>
+              <div className={dk.hint}>{t('newSharedSpacePanel.joinText', { count: slotsLeft })}</div>
+              {joinError && <div className={dk.err}>{joinError}</div>}
+              <button type="button" onClick={handleJoin} disabled={joinSaving || joinCode.length !== 6} className={dk.btn}>
+                {joinSaving ? t('newSharedSpacePanel.joining') : t('newSharedSpacePanel.join')}
+              </button>
+            </div>
+          ) : (
+            <div className={dk.card}><div className={dk.okBox}>{t('newSharedSpacePanel.maxJoined')}</div></div>
+          )}
+        </div>
+      </div>
+    )
   }
 
   return (
