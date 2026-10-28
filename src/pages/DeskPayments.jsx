@@ -95,14 +95,19 @@ export function DeskPayments({ d }) {
     return `${getBank(card.bank).id === 'otro' ? t('cards.otherBank') : getBank(card.bank).name}${card.alias ? ` ${card.alias}` : ''}`
   }
 
-  // Doble clic en la fila (v0.9.876): abre el mismo menú que el botón «⋮» de esa fila.
-  function openRowMenuOnDouble(e, p) {
-    if (e.target.closest('button, a, input')) return
-    const btn = e.currentTarget.querySelector('[data-row-menu]')
-    if (!btn) return
-    window.getSelection()?.removeAllRanges()
-    if (openMenu?.id === p.id) return
-    openRowMenu({ stopPropagation() {}, currentTarget: btn }, p)
+  // Clic derecho en la fila (v0.9.876): abre el mismo menú que el botón «⋮», pegado al cursor.
+  function openRowMenuOnRightClick(e, p) {
+    if (p.is_contribution_reflection || p._syncing) return
+    e.preventDefault()
+    e.stopPropagation()
+    const estimatedHeight = (p.space_id && p.is_paid) ? 230 : 190
+    const openUpward = e.clientY + estimatedHeight > window.innerHeight - 16
+    setOpenMenu({
+      id: p.id,
+      top: openUpward ? undefined : e.clientY,
+      bottom: openUpward ? window.innerHeight - e.clientY : undefined,
+      right: Math.max(12, window.innerWidth - e.clientX - 240),
+    })
   }
 
   function openRowMenu(e, p) {
@@ -252,7 +257,7 @@ export function DeskPayments({ d }) {
                           const when = p.paid_at ? new Date(p.paid_at) : new Date(p.postponed_at || p.due_date)
                           const CatIcon = getCategoryIcon(p.category, profile.category_icons)
                           return (
-                            <div key={p.id} data-payment-id={p.id} className={styles.tr} onDoubleClick={e => openRowMenuOnDouble(e, p)}>
+                            <div key={p.id} data-payment-id={p.id} className={styles.tr} onContextMenu={e => openRowMenuOnRightClick(e, p)}>
                               <div className={styles.dt}><s>{getMonthsShort()[when.getMonth()]}</s><b>{when.getDate()}</b></div>
                               <div className={styles.name} title={p.name}>
                                 <span className={styles.nameText}>{p.name}</span>
@@ -290,7 +295,7 @@ export function DeskPayments({ d }) {
                                 ) : p._syncing ? (
                                   <button type="button" disabled className={styles.menuBtn} aria-label={t('sync.syncing')}><span className="sync-spinner"><Loader2 size={16} strokeWidth={1.8} /></span></button>
                                 ) : (
-                                  <button type="button" data-row-menu className={styles.menuBtn} onClick={e => openRowMenu(e, p)} aria-label={t('paymentsPage.menuAriaLabel')}><MoreVertical size={16} strokeWidth={1.8} /></button>
+                                  <button type="button" className={styles.menuBtn} onClick={e => openRowMenu(e, p)} aria-label={t('paymentsPage.menuAriaLabel')}><MoreVertical size={16} strokeWidth={1.8} /></button>
                                 )}
                               </div>
                             </div>

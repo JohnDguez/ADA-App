@@ -317,13 +317,22 @@ function PayCardFull({ payment: p, cfg, paymentMethodsList = [], onChangeMethod,
     return count
   }
 
-  // Doble clic en la fila (solo escritorio, v0.9.876): abre el mismo menú de
-  // opciones que el botón «⋮». Se ignora sobre botones y mientras sincroniza.
-  function openMenuOnDouble(e) {
+  // Clic derecho en la fila (solo escritorio, v0.9.876): abre el mismo menú de
+  // opciones que el botón «⋮», pegado al cursor. Se ignora mientras sincroniza.
+  function openMenuOnRightClick(e) {
     if (!document.documentElement.hasAttribute('data-desk-sidebar')) return
-    if (p._syncing || e.target.closest('button, a, input')) return
-    window.getSelection()?.removeAllRanges()
-    if (!menuOpen) openMenuAt()
+    if (p._syncing) return
+    e.preventDefault()
+    e.stopPropagation()
+    const MENU_W = 240
+    const estimatedHeight = menuItemCount() * 42 + 20
+    const upward = e.clientY + estimatedHeight > window.innerHeight - 16
+    setMenuPos({
+      right: Math.max(12, window.innerWidth - e.clientX - MENU_W),
+      top: upward ? null : e.clientY,
+      bottom: upward ? window.innerHeight - e.clientY : null,
+    })
+    setMenuOpen(true)
   }
 
   function openMenuAt() {
@@ -387,7 +396,7 @@ function PayCardFull({ payment: p, cfg, paymentMethodsList = [], onChangeMethod,
       <div {...kbdIf(!!onSelect)}
         data-payment-id={p.id}
         onClick={onSelect ? () => onSelect(p.id) : undefined}
-        onDoubleClick={openMenuOnDouble}
+        onContextMenu={openMenuOnRightClick}
         className={`${styles.card} ${phase === 'exiting' ? styles.cardExiting : ''} ${onSelect ? styles.cardSelectable : ''} ${selected ? styles.cardSelected : ''}`}
         style={{ borderLeft: railMode ? 'none' : `5px solid ${borderLeft || 'var(--border)'}` }}
       >
