@@ -55,6 +55,7 @@ import { PaymentModal } from './components/PaymentModal'
 import { AddMenu, addMenuHasExtras } from './components/AddMenu'
 import { ChangeMethodModal } from './components/ChangeMethodModal'
 import { PayCardNowModal } from './components/PayCardNowModal'
+import { DeskTooltip } from './components/DeskTooltip'
 import { PayStatementModal } from './components/PayStatementModal'
 import { VariableAmountModal } from './components/VariableAmountModal'
 import { ConfirmNextPeriodPayModal } from './components/ConfirmNextPeriodPayModal'
@@ -2083,6 +2084,8 @@ export default function App() {
           />
         </Suspense>
       )}
+
+      <DeskTooltip />
 
       <PayCardNowModal
         open={!!payCardNowCard}
