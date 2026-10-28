@@ -468,6 +468,8 @@
   color: var(--text);
 }
 
+.methodText { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
 .methodSwatch {
   width: 16px;
   height: 11px;
@@ -553,17 +555,22 @@
   .desk .menuTriggerButton:hover { opacity: 1; }
 }
 
-/* Móvil (v0.9.896): la fila de escritorio se compacta para que el nombre quepa */
+/* Móvil (v0.9.896/897): la fila de escritorio se escala con clamp() en rem para
+   que el nombre quepa; el método de pago pasa de rectángulo a puntito y todo
+   texto largo se trunca con puntos suspensivos. */
 @media (max-width: 767px) {
-  .desk .deskDate { width: 44px; height: 50px; border-radius: 13px; }
-  .desk .deskDateDay { font-size: 18px; }
-  .desk .infoSection { padding: 0 6px 0 10px; }
-  .desk .name { font-size: 15px; }
-  .desk .amountSection { padding: 0 4px; }
-  .desk .amountText { font-size: 15px; }
-  .desk .statusLabel { font-size: 11.5px; max-width: 84px; line-height: 1.2; }
+  .desk .deskDate { width: clamp(2.5rem, 12vw, 2.9rem); height: clamp(2.8rem, 13vw, 3.2rem); border-radius: 13px; }
+  .desk .deskDateDay { font-size: clamp(1rem, 4.6vw, 1.15rem); }
+  .desk .infoSection { flex: 1 1 0; min-width: 0; padding: 0 6px 0 10px; }
+  .desk .name { font-size: clamp(0.875rem, 3.9vw, 1rem); }
+  .desk .subtitle, .desk .freqLabel, .desk .instLabel, .desk .methodLabel { font-size: clamp(0.6875rem, 3.2vw, 0.8125rem); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .desk .methodSwatch { width: 7px; height: 7px; border-radius: 50%; }
+  .desk .methodLabel { gap: 5px; }
+  .desk .amountSection { flex: none; padding: 0 4px; }
+  .desk .amountText { font-size: clamp(0.875rem, 3.9vw, 1rem); }
+  .desk .statusLabel { font-size: clamp(0.6875rem, 3vw, 0.78rem); max-width: 5.25rem; line-height: 1.2; }
   .desk .actionsSection { padding: 0; gap: 2px; }
-  .desk .markPaidButton, .desk .paidIndicator { width: 36px; height: 36px; }
+  .desk .markPaidButton, .desk .paidIndicator { width: clamp(2.1rem, 9.5vw, 2.4rem); height: clamp(2.1rem, 9.5vw, 2.4rem); }
   .desk .menuTriggerButton { width: 24px; }
 }
 

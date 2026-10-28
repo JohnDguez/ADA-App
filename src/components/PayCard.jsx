@@ -464,7 +464,7 @@ function PayCardFull({ payment: p, cfg, paymentMethodsList = [], onChangeMethod,
             {statementCard && (
               <div className={styles.methodLabel}>
                 <span className={styles.methodSwatch} style={{ '--swatch-color': bankColorVar(statementCard.bank) }} />
-                {t('cards.statementBadge')}
+                <span className={styles.methodText}>{t('cards.statementBadge')}</span>
               </div>
             )}
             {/* Compras a meses ligadas a la tarjeta (v0.9.587): UNA sola línea, sin importar cuántas */}
@@ -476,9 +476,11 @@ function PayCardFull({ payment: p, cfg, paymentMethodsList = [], onChangeMethod,
             {p.payment_method_kind && p.payment_method_kind !== 'cash' && (
               <div className={styles.methodLabel}>
                 <span className={styles.methodSwatch} style={{ '--swatch-color': paymentMethod ? bankColorVar(paymentMethod.bank) : 'var(--border-mid)' }} />
-                {paymentMethod
-                  ? `${getBank(paymentMethod.bank).id === 'otro' ? t('cards.otherBank') : getBank(paymentMethod.bank).name}${paymentMethod.alias ? ` ${paymentMethod.alias}` : ''}`
-                  : t(p.payment_method_kind === 'credit' ? 'paymentMethod.deletedCredit' : 'paymentMethod.deletedDebit')}
+                <span className={styles.methodText}>
+                  {paymentMethod
+                    ? `${getBank(paymentMethod.bank).id === 'otro' ? t('cards.otherBank') : getBank(paymentMethod.bank).name}${paymentMethod.alias ? ` ${paymentMethod.alias}` : ''}`
+                    : t(p.payment_method_kind === 'credit' ? 'paymentMethod.deletedCredit' : 'paymentMethod.deletedDebit')}
+                </span>
               </div>
             )}
           </div>
