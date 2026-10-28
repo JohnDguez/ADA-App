@@ -1,0 +1,29 @@
+/* Nueva meta en escritorio (v0.9.841), mockup aprobado. Solo tokens. */
+.overlay { position: fixed; inset: 0; z-index: 550; display: grid; place-items: center; padding: 24px; background: var(--scrim); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
+.dialog { width: 980px; max-width: 100%; max-height: calc(100vh - 48px); overflow-y: auto; display: flex; flex-direction: column; gap: 18px; padding: 30px 34px; border-radius: 32px; background: var(--desk-panel); color: var(--text); box-shadow: var(--desk-pop-shadow); }
+.head { display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; }
+.title { margin: 0; font-size: 26px; letter-spacing: -0.6px; }
+.sub { margin-top: 4px; font-size: 13.5px; color: var(--muted); }
+.close { width: 40px; height: 40px; border: 0; border-radius: 50%; background: var(--desk-chip); color: var(--text); display: grid; place-items: center; }
+.body { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); gap: 20px; align-items: start; }
+.form { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+.row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; align-items: start; }
+.groups { max-height: 190px; }
+.colors { margin-top: 14px; }
+.side { display: flex; flex-direction: column; gap: 14px; padding: 22px 24px; border-radius: 26px; background: var(--desk-chip); position: sticky; top: 0; }
+.sideTitle { font-size: 12px; font-weight: 600; letter-spacing: 0.8px; text-transform: uppercase; color: var(--muted); }
+.preview { --tint: var(--palette-1); display: flex; flex-direction: column; gap: 10px; padding: 20px; border-radius: 22px; background: var(--desk-card); }
+.pTop { display: flex; align-items: center; gap: 12px; }
+.pIcon { width: 46px; height: 46px; flex: none; border-radius: 15px; display: grid; place-items: center; background: color-mix(in srgb, var(--tint) 25%, transparent); color: var(--tint); }
+.pName { font-size: 16px; min-width: 0; overflow-wrap: anywhere; }
+.pAmount { font-size: 30px; font-weight: 700; letter-spacing: -0.8px; }
+.pMeta { font-size: 13px; color: var(--muted); }
+.bar { height: 10px; border-radius: 99px; background: var(--desk-chip); overflow: hidden; }
+.bar i { display: block; width: 0; height: 100%; background: var(--tint); border-radius: 99px; }
+.hint { font-size: 13px; color: var(--muted); }
+.foot { display: flex; align-items: center; justify-content: flex-end; gap: 12px; }
+.cancel { height: 46px; padding: 0 24px; border: 0; border-radius: 99px; background: var(--desk-chip); color: var(--text); font-size: 15px; font-weight: 600; }
+.save { width: auto; min-width: 160px; margin: 0; }
+@media (hover: hover) and (pointer: fine) { .close:hover, .cancel:hover { background: var(--desk-hair); translate: none; filter: none; } }
+.dialog :global(.field-input) { background: var(--desk-chip); border: 0; border-radius: 16px; }
+.dialog :global(.field-input):focus { box-shadow: inset 0 0 0 2px var(--accent); }

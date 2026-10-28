@@ -165,7 +165,7 @@ function MethodRow({ label, amount, total, barClass, cards = [] }) {
   )
 }
 
-export function PaymentsPage({ payments, dataLoading = false, periodIncome, paymentMethodsList = [], paymentMethods = null, onChangeMethod, profile, spaceSwitcher, activeSpaceHeader, activeSpaceId = null, rawActiveSpaceId = null, sharedSpaces, spacePermissions, onOpenPremium, onSpaceReady, unreadCount, onOpenNotifs, onGoSettings, onMarkUnpaid, onDelete, onDeleteDirect, onUpdateProfile, onEdit, onViewSource, onSplit, onAdd, onImport, onGoCategories, onGoCards, sharedFund, slideClass, ensureMonthLoaded, oldestPaymentYear = null }) {
+export function PaymentsPage({ payments, dataLoading = false, periodIncome, paymentMethodsList = [], paymentMethods = null, onChangeMethod, profile, spaceSwitcher, activeSpaceHeader, activeSpaceId = null, rawActiveSpaceId = null, sharedSpaces, spacePermissions, onOpenPremium, onSpaceReady, unreadCount, onOpenNotifs, onGoSettings, onMarkUnpaid, onDelete, onDeleteDirect, onUpdateProfile, onEdit, onViewSource, onSplit, onAdd, onStartAdd, onImport, onGoCategories, onGoCards, sharedFund, slideClass, ensureMonthLoaded, oldestPaymentYear = null }) {
   const { t } = useTranslation()
   const isDesktop = useIsDesktop()
   // v0.9.661 — pestañas Pagos / Análisis (solo en celular; desde 768px se ve todo junto).
@@ -874,7 +874,7 @@ export function PaymentsPage({ payments, dataLoading = false, periodIncome, paym
   // Datos ya calculados que pinta la versión de escritorio (DeskPayments.jsx, v0.9.825).
   const deskData = isDesktop ? {
     profile, dataLoading, activeSpaceId, rawActiveSpaceId, sharedSpaces, spacePermissions, spaceMembers, paymentMethodsList,
-    slideClass, spaceJustChanged, onOpenPremium, onSpaceReady, onAdd, onGoCards, onGoCategories, onViewSource,
+    slideClass, spaceJustChanged, onOpenPremium, onSpaceReady, onAdd, onStartAdd, onGoCards, onGoCategories, onViewSource,
     balance: { loading: balanceLoading, amountText: balanceAmountText, gastoPct, totalGastos, ingresoTotal, sobrePasado, noIncomeYet },
     incomes: { total: totalExtras, count: periodIncomes.length, loaded: incomesLoaded, onAdd: () => setIncomeModal(true), onManage: () => setManageIncomeModal(true) },
     fund: { balance: sharedFund?.balance ?? 0, loading: !!sharedFund?.loading, ledgerCount: sharedFund?.ledger?.length || 0, onAdd: () => setAddFundModal(true), onManage: () => setManageFundModal(true) },

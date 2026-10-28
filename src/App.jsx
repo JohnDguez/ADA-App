@@ -1871,6 +1871,7 @@ export default function App() {
             onViewSource={handleViewSource}
             onSplit={openSplitModal}
             onAdd={openAdd}
+            onStartAdd={startAdd}
             onGoCategories={goToCategories}
             onImport={showImportLink ? openImport : undefined}
             onGoCards={goToCards}
@@ -1899,6 +1900,7 @@ export default function App() {
             onDelete={handleDeleteDirect}
             onEdit={openEdit}
             onAdd={openAdd}
+            onStartAdd={startAdd}
           />
         </Suspense>
       )}

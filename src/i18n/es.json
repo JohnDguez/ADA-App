@@ -630,7 +630,16 @@
       "overdue": "Fecha vencida"
     },
     "subtitle": "Ahorra con propósito, una meta a la vez.",
-    "totalSaved": "Total ahorrado"
+    "totalSaved": "Total ahorrado",
+    "desk": {
+      "newTitle": "Nueva meta",
+      "newDesc": "Define cuánto quieres ahorrar y para qué.",
+      "previewTitle": "Vista previa",
+      "previewName": "Tu meta",
+      "previewNoDate": "Sin fecha límite",
+      "previewLeft": "Quedan",
+      "previewHint": "Podrás aportar desde Metas cuando quieras."
+    }
   },
   "goalDetailPanel": {
     "back": "Regresar",
@@ -1106,6 +1115,19 @@
       "text": "Lo guardaste para el {{date}}. ¿Se repite, como una renta o una suscripción?",
       "yes": "Sí, hacerlo recurrente",
       "no": "No, solo esta vez"
+    },
+    "desk": {
+      "title": "Nuevo pago",
+      "subtitle": "Registra un gasto y mira cómo afecta tu periodo.",
+      "tileDesc": {
+        "single": "Un solo pago",
+        "recurrent": "Se repite cada periodo",
+        "installment": "Compra a meses"
+      },
+      "installmentEmpty": "Escribe el monto total y el número de pagos para ver el resumen.",
+      "impactEmpty": "Escribe un monto y una fecha para ver cómo afecta tu periodo.",
+      "impactVariable": "Un pago variable no se cuenta hasta que confirmes su monto.",
+      "impactPaid": "Como ya está pagado, se registra hoy y no se proyecta."
     }
   },
   "pageHeader": {

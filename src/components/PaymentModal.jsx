@@ -27,6 +27,9 @@ import styles from './PaymentModal.module.css'
 import { markBackHandled, wasBackHandled } from '../lib/backNav'
 import { AddCardModal } from './AddCardModal'
 import { Microphone } from '@phosphor-icons/react/dist/csr/Microphone'
+import { ScanLine, X as XIcon } from 'lucide-react'
+import { useIsDesktop } from '../hooks/useIsDesktop'
+import dk from './PaymentDesk.module.css'
 import { isVoiceSupported, listenAll, stopListening } from '../lib/voiceInput'
 import { parseVoicePayment } from '../lib/parseVoicePayment'
 import { isTicketScanSupported, scanTicketText } from '../lib/ticketScan'
@@ -111,6 +114,8 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onSaveC
     mq.addEventListener('change', on)
     return () => mq.removeEventListener('change', on)
   }, [])
+  // Escritorio (≥1100px): diálogo de dos columnas con tipos arriba (v0.9.841)
+  const isDesk = useIsDesktop()
   const [impactOpen,  setImpactOpen]  = useState(false)  // franja de proyección abierta
   const impactRef = useRef(null)
   const [typeNote,    setTypeNote]    = useState('')
@@ -774,7 +779,7 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onSaveC
     )
   }
 
-  if (!initial && !typeChosen) {
+  if (!initial && !typeChosen && !isDesk) {
     const types = [
       ['single',      NumberCircleOne,  'single'],
       ['recurrent',   ArrowsClockwise,  'recurrent'],
@@ -815,7 +820,7 @@ const impactBlock = impactPreview && impactPreview.length > 0 ? (() => {
             // que lleva a la pantalla de Premium (sin pastilla de texto).
             return (
               <div ref={impactRef} className={styles.impactWrapper}>
-                <button type="button" className={`${styles.impactStrip} ${isPremium ? '' : styles.impactStripLocked}`}
+                {!(isDesk && isPremium) && <button type="button" className={`${styles.impactStrip} ${isPremium ? '' : styles.impactStripLocked}`}
                   onClick={() => isPremium ? setImpactOpen(o => !o) : onOpenPremium?.()}>
                   <Wallet size={15} />
                   <span className={styles.impactStripLabel}>{t('paymentModal.impact.label')}</span>
@@ -828,8 +833,8 @@ const impactBlock = impactPreview && impactPreview.length > 0 ? (() => {
                   ) : (
                     <span className={styles.impactStripLock}><PhLock size={15} /> Premium</span>
                   )}
-                </button>
-                <Collapse open={isPremium && impactOpen}>
+                </button>}
+                <Collapse open={isPremium && (impactOpen || isDesk)}>
                   <div className={styles.impactCard}>
                   <div className={styles.impactPeriodBox} style={{ borderColor: colorEstado }}>
                     <div className={styles.impactStatusRow}>
@@ -886,6 +891,231 @@ const impactBlock = impactPreview && impactPreview.length > 0 ? (() => {
               </div>
             )
 })() : null
+
+  // ── Escritorio · Nuevo pago (v0.9.841) ───────────────────────────────────
+  if (!initial && isDesk) {
+    const tiles = [['single', NumberCircleOne], ['recurrent', ArrowsClockwise], ['installment', Rows]]
+    const symbol = getCurrencySymbol()
+    const totalAmt = parseFloat(totalAmount) || 0
+    const numPayments = parseInt(totalInstallments) || 0
+    const perPayment = numPayments > 0 ? Math.round((totalAmt / numPayments) * 100) / 100 : 0
+    const startNum = parseInt(startFrom) || 1
+    let nextInst = dueDate ? new Date(dueDate + 'T12:00:00') : null
+    if (nextInst && startNum > 1) {
+      let ds = dueDate
+      for (let i = 1; i < startNum; i++) ds = dateToStr(nextPeriodDate(ds, recurFreq))
+      nextInst = new Date(ds + 'T12:00:00')
+    }
+    const monthName = d => { const m = getMonths()[d.getMonth()]; return i18n.language === 'en' ? m : m.toLowerCase() }
+    const methodField = methodsAvailable && (
+      <div className={dk.cell}>
+        <PaymentMethodField methods={paymentMethods.methods} value={methodId} onChange={setMethodId} payDate={paidAt || null} onAddCard={openAddCard} sheet />
+      </div>
+    )
+    const categoryField = (
+      <div className={dk.cell}>
+        <div className={dk.catHead}>
+          <label className="field-label">{t('paymentModal.fields.category')}</label>
+          <button type="button" onClick={() => setAddingCategory(true)} className={styles.addCategoryButton}>{t('paymentModal.fields.addCategory')}</button>
+        </div>
+        <div data-coachmark="modal-category-field">
+          <Select value={category} onChange={setCategory} options={sortedCategories} renderIcon={renderCategoryIcon} sheet cellIcon={renderCategoryCellIcon} cellColor={categoryCellColor} sheetTitle={t('paymentModal.fields.category')} sheetLayout="grid" sheetAction={{ label: t('paymentModal.fields.addCategory'), onClick: () => setAddingCategory(true) }} />
+        </div>
+      </div>
+    )
+    const nameField = (
+      <div className={dk.cell}>
+        <label className="field-label">{t('paymentModal.fields.name')}</label>
+        <input autoFocus className="field-input" type="text" value={name} onChange={e => setName(e.target.value)} placeholder={t('paymentModal.namePlaceholder')} />
+      </div>
+    )
+    const saveLabel = saving ? t('settingsCategories.saving') : mode === 'installment' ? t('paymentModal.save.createPayments') : alreadyPaid ? t('paymentModal.save.saveAsPaid') : t('paymentModal.save.savePayment')
+    return (
+      <>
+        <div onClick={e => e.target === e.currentTarget && requestClose()} className={dk.overlay} data-presence="overlay" data-closing={closing ? '' : undefined}>
+          <div className={dk.dialog} role="dialog" aria-modal="true" aria-label={t('paymentModal.desk.title')} data-presence="panel" data-closing={closing ? '' : undefined}>
+            <div className={dk.head}>
+              <div>
+                <h2 className={dk.title}>{t('paymentModal.desk.title')}</h2>
+                <div className={dk.sub}>{t('paymentModal.desk.subtitle')}</div>
+              </div>
+              <div className={dk.headActions}>
+                {voiceSupported && <button type="button" className={dk.ghost} onClick={handleVoice}><Microphone size={16} />{t('addDropdown.voice')}</button>}
+                {scanSupported && <button type="button" className={dk.ghost} onClick={handleScan} disabled={scanning}><ScanLine size={16} />{t('addDropdown.scan')}</button>}
+                <button type="button" className={dk.close} onClick={requestClose} aria-label={t('buttons.cancel')}><XIcon size={16} /></button>
+              </div>
+            </div>
+
+            <div className={dk.tiles} data-coachmark="modal-payment-type-tabs">
+              {tiles.map(([m, Icon]) => (
+                <button key={m} type="button" onClick={() => selectType(m)} className={`${dk.tile} ${mode === m ? dk.tileOn : ''}`} aria-pressed={mode === m}>
+                  <span className={dk.tileIcon}><Icon size={20} /></span>
+                  <span className={dk.tileText}><b>{t(`paymentModal.typePicker.${m}.title`)}</b><span>{t(`paymentModal.desk.tileDesc.${m}`)}</span></span>
+                </button>
+              ))}
+            </div>
+            {typeNote && <div className={styles.typeNote}>{typeNote}</div>}
+            {error && <div className={styles.errorBox}>{error}</div>}
+            {lockedMessage && <div className={styles.warningBox}>{lockedMessage}</div>}
+            {voiceNote.text && <div className={voiceNote.kind === 'error' ? styles.voiceNoteError : styles.voiceNote}>{voiceNote.text}</div>}
+            {scanned && <div className={styles.scanDisclaimer}>{t('paymentModal.scan.disclaimer')}</div>}
+
+            <div className={`${dk.body} ${canWrite ? '' : styles.formDisabled}`}>
+              <div className={dk.form}>
+                {mode === 'recurrent' && <FrequencyPicker value={recurFreq} onChange={setRecurFreq} />}
+
+                {mode !== 'installment' && !isVariable && (
+                  <div className={dk.amount} onClick={e => e.currentTarget.querySelector('input')?.focus()}>
+                    <span className={dk.amountLabel}>{t('paymentModal.amountLabel')}</span>
+                    <div className={dk.amountRow}>
+                      <span className={dk.amountSym}>{symbol}</span>
+                      <CentsAmountInput className={dk.amountInput} emptyClassName={dk.amountEmpty} value={amount} onChange={e => setAmount(e.target.value)} />
+                    </div>
+                  </div>
+                )}
+
+                {mode === 'installment' ? (
+                  <>
+                    <div className={dk.row2}>{nameField}{categoryField}</div>
+                    <div className={dk.row2}>
+                      <div className={dk.cell}>
+                        <label className="field-label">{t('paymentModal.totalAmountToPay')}</label>
+                        <AmountInput className="field-input" value={totalAmount} onChange={e => setTotalAmount(e.target.value)} placeholder={t('paymentModal.totalAmountPlaceholder')} enterKeyHint="next" />
+                      </div>
+                      <div className={dk.cell}>
+                        <label className="field-label">{t('paymentModal.numPayments')}</label>
+                        <input className="field-input" type="number" value={totalInstallments} onChange={e => setTotalInstallments(e.target.value)} placeholder={t('paymentModal.numPaymentsPlaceholder')} min="2" enterKeyHint="next" />
+                      </div>
+                    </div>
+                    <div className={dk.row2}>
+                      {!linked && (
+                        <div className={dk.cell}>
+                          <label className="field-label">{t('paymentModal.startFromLabel')}</label>
+                          <input className="field-input" type="number" value={startFrom} onChange={e => setStartFrom(e.target.value)} placeholder="1" min="1" enterKeyHint="next" />
+                        </div>
+                      )}
+                      {showDatePicker && (
+                        <div className={dk.cell}>
+                          <label className="field-label">{t('paymentModal.firstPaymentDate')}</label>
+                          <DatePicker value={dueDate} onChange={setDueDate} sheet sheetTitle={t('paymentModal.dueDate')} />
+                        </div>
+                      )}
+                    </div>
+                    {!linked && <FrequencyPicker value={recurFreq} onChange={setRecurFreq} />}
+                    {methodField}
+                    {canLink && <Toggle label={t('paymentModal.linkCard.label')} sub={t(linkToCard ? 'paymentModal.linkCard.subOn' : 'paymentModal.linkCard.subOff')} value={linkToCard} onChange={setLinkToCard} />}
+                    {!linked && startNum > 1 && (
+                      <Toggle label={t('paymentModal.backfill.label')} sub={t(backfillAsExpense ? 'paymentModal.backfill.helperOn' : 'paymentModal.backfill.helperOff', { n: startNum - 1 })} value={backfillAsExpense} onChange={setBackfillAsExpense} />
+                    )}
+                  </>
+                ) : (
+                  <>
+                    <div className={dk.row2}>{nameField}{categoryField}</div>
+                    <div className={dk.row2}>
+                      {showDatePicker && (
+                        <div className={dk.cell}>
+                          <label className="field-label">{t('paymentModal.dueDate')}</label>
+                          <DatePicker value={dueDate} onChange={setDueDate} sheet sheetTitle={t('paymentModal.dueDate')} />
+                        </div>
+                      )}
+                      {showWeeklyPicker && (
+                        <div className={dk.cell}>
+                          <label className="field-label">{t('paymentModal.weeklyStartDateLabel')}</label>
+                          <DatePicker value={weeklyDate} onChange={setWeeklyDate} sheet sheetTitle={t('paymentModal.weeklyStartDateLabel')} />
+                          {nextWeekDate && <div className={styles.helperTextMt6}>{t('paymentModal.nextDueLabel', { date: nextWeekDate.toLocaleDateString(intlLocale(), { weekday: 'long', day: 'numeric', month: 'long' }) })}</div>}
+                        </div>
+                      )}
+                      {showBiweeklyPicker && (
+                        <div className={dk.cell}>
+                          <label className="field-label">{t('paymentModal.biweeklyBaseDateLabel')}</label>
+                          <DatePicker value={biweeklyDate} onChange={setBiweeklyDate} sheet sheetTitle={t('paymentModal.biweeklyBaseDateLabel')} />
+                          {nextBiDate && <div className={styles.helperTextMt6}>{t('paymentModal.nextDueLabel', { date: nextBiDate.toLocaleDateString(intlLocale(), { day: 'numeric', month: 'long' }) })}</div>}
+                        </div>
+                      )}
+                      {methodField}
+                    </div>
+                    {nextMonthlyDate && (
+                      <div className={styles.nextDueNote}>
+                        <Repeat size={14} />
+                        <span>{t('paymentModal.nextDueThen', {
+                          date: nextMonthlyDate.toLocaleDateString(intlLocale(), { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }),
+                          freq: t(`paymentModal.recurrentEvery.${recurFreq}`),
+                        })}</span>
+                      </div>
+                    )}
+                    <div className={dk.toggles}>
+                      <div data-coachmark="modal-variable-toggle">
+                        <Toggle label={t('paymentModal.variableToggleLabel')} sub={t('paymentModal.variableToggleSub')} value={isVariable} onChange={setIsVariable} />
+                      </div>
+                      {mode === 'single' && !isVariable && !isSharedSpace && (
+                        <Toggle label={t('paymentModal.alreadyPaidToggle')} sub={t('paymentModal.alreadyPaidSub')} value={alreadyPaid} onChange={setAlreadyPaid} />
+                      )}
+                    </div>
+                  </>
+                )}
+              </div>
+
+              <aside className={dk.side}>
+                {mode === 'installment' ? (
+                  <>
+                    <div className={dk.sideTitle}>{t('paymentModal.summary.title')}</div>
+                    {totalAmt > 0 && numPayments >= 2 ? (
+                      <>
+                        <div className={dk.big}>{numPayments} × {getCurrencySymbol()}{perPayment.toLocaleString('es-MX')}</div>
+                        <div className={dk.sideText}>
+                          {linked ? (() => {
+                            const cut = nextCutAfter(selectedCard, todayStr())
+                            return <>{t('paymentModal.linkCard.summary', { count: numPayments, amount: perPayment.toLocaleString('es-MX') })}{cut && <> {t('paymentModal.linkCard.firstCut', { day: cut.getDate(), month: monthName(cut) })}</>}</>
+                          })() : <>
+                            {t('paymentModal.summary.willPay')} <strong>{t('paymentModal.summary.paymentsOf', { count: numPayments, amount: perPayment.toLocaleString('es-MX') })}</strong>, {t('paymentModal.summary.every')} {t(`paymentModal.summary.frequency.${recurFreq}`)}.
+                            {nextInst && <> {t('paymentModal.summary.nextPayment', { day: nextInst.getDate(), month: monthName(nextInst) })}.</>}
+                            {startNum > 1 && <> {t('paymentModal.summary.remainingTotal', { amount: ((numPayments - startNum + 1) * perPayment).toLocaleString('es-MX') })}.</>}
+                          </>}
+                        </div>
+                      </>
+                    ) : <div className={dk.sideText}>{t('paymentModal.desk.installmentEmpty')}</div>}
+                  </>
+                ) : impactBlock ? impactBlock : (
+                  <>
+                    <div className={dk.sideTitle}>{t('paymentModal.impact.label')}</div>
+                    <div className={dk.sideText}>{t(isVariable ? 'paymentModal.desk.impactVariable' : alreadyPaid ? 'paymentModal.desk.impactPaid' : 'paymentModal.desk.impactEmpty')}</div>
+                  </>
+                )}
+                {mode === 'recurrent' && (
+                  <div className={styles.recurrentNote}>
+                    {t('paymentModal.recurrentNote', { interval: t(`paymentModal.recurrentIntervals.${recurFreq === 'weekly' ? 'weekly' : recurFreq === 'biweekly' ? 'biweekly' : 'monthly'}`) })}
+                  </div>
+                )}
+              </aside>
+            </div>
+
+            <div className={dk.foot}>
+              <button type="button" onClick={requestClose} className={dk.cancel}>{t('buttons.cancel')}</button>
+              <button type="button" onClick={handleSave} disabled={saving || !canWrite} className={`btn-primary ${dk.save}`}>{saveLabel}</button>
+            </div>
+          </div>
+        </div>
+        {addCategorySheet}
+        <ConfirmCloseModal open={confirmClose} onConfirm={() => { setConfirmClose(false); onClose() }} onCancel={() => setConfirmClose(false)} />
+        <ModalSheet open={voiceState === 'listening' || voiceState === 'retry'} icon={Microphone} pulse={voiceState === 'listening'} title={t(voiceState === 'retry' ? 'paymentModal.voice.retryTitle' : 'paymentModal.voice.listeningTitle')} onBackdrop={cancelVoice} zIndex={450}>
+          <ModalSheet.Text>{t(voiceState === 'retry' ? 'paymentModal.voice.retryHint' : 'paymentModal.voice.listeningHint')}</ModalSheet.Text>
+          <div className={styles.voiceExamples}>
+            {(voiceLang === 'en' ? ['helpEn1', 'helpEn3'] : ['helpEs1', 'helpEs3']).map(k => <div key={k}>{t(`paymentModal.voice.${k}`)}</div>)}
+            <div>{voiceLang === 'en' ? t('paymentModal.voice.helpEnType') : t('paymentModal.voice.helpEsType')}</div>
+          </div>
+          <SheetButton onClick={handleVoice}>{t(voiceState === 'retry' ? 'paymentModal.voice.retryButton' : 'paymentModal.voice.done')}</SheetButton>
+          <SheetButton variant="soft" onClick={cancelVoice}>{t('buttons.cancel')}</SheetButton>
+          <button type="button" onClick={toggleVoiceLang} className={styles.voiceLangLink}>{t('paymentModal.voice.langLabel')}: <strong>{voiceLang === 'es' ? 'Español' : 'English'}</strong></button>
+        </ModalSheet>
+        <ModalSheet open={farPrompt} icon={ArrowsClockwise} title={t('paymentModal.farPrompt.title')} onBackdrop={() => setFarPrompt(false)} zIndex={400}>
+          <ModalSheet.Text>{t('paymentModal.farPrompt.text', { date: formatDueDate(dueDate) })}</ModalSheet.Text>
+          <SheetButton onClick={() => { setFarPrompt(false); selectType('recurrent') }}>{t('paymentModal.farPrompt.yes')}</SheetButton>
+          <SheetButton variant="soft" onClick={() => { farOkRef.current = true; setFarPrompt(false); handleSave() }}>{t('paymentModal.farPrompt.no')}</SheetButton>
+        </ModalSheet>
+        {methodsAvailable && <AddCardModal open={cardFormOpen} onClose={() => setCardFormOpen(false)} paymentMethods={paymentMethods} onAdded={setMethodId} />}
+      </>
+    )
+  }
 
   return (
     <>

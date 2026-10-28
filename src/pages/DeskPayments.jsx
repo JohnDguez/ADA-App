@@ -11,6 +11,7 @@ import { getBank, bankColorVar } from '../lib/cardCatalog'
 import { fmt, getMonths, getMonthsShort, getCatColor, getCategoryLabel, getFrequencyLabel } from '../lib/utils'
 import { getCategoryIcon } from '../lib/categoryIcons'
 import home from './DeskHome.module.css'
+import { DeskAddButton } from '../components/DeskAddButton'
 import styles from './DeskPayments.module.css'
 
 // Gastos e ingresos de escritorio (≥1100px, v0.9.825) — diseño aprobado por
@@ -66,7 +67,7 @@ export function DeskPayments({ d }) {
   const { t, i18n } = useTranslation()
   const {
     profile, dataLoading, activeSpaceId, rawActiveSpaceId, sharedSpaces, spacePermissions, spaceMembers, paymentMethodsList,
-    slideClass, spaceJustChanged, onOpenPremium, onSpaceReady, onAdd, onGoCards,
+    slideClass, spaceJustChanged, onOpenPremium, onSpaceReady, onAdd, onStartAdd, onGoCards,
     balance, incomes, fund, chart, selectedCat, setSelectedCat, catData, view, rows, totalInView, methodData, openMenu, setOpenMenu, onViewSource,
   } = d
 
@@ -127,9 +128,7 @@ export function DeskPayments({ d }) {
           <h1 className={home.hello}>{t('paymentsPage.title')}</h1>
         </div>
         <div className={home.actions}>
-          <button type="button" className={home.addBtn} onClick={onAdd}>
-            <Plus size={18} strokeWidth={2.2} />{t('bottomNav.add')}
-          </button>
+          <DeskAddButton onAdd={onAdd} onStartAdd={onStartAdd} />
         </div>
       </header>
 

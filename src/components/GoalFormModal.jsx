@@ -4,6 +4,11 @@ import { Search, Check } from 'lucide-react'
 import { CATEGORY_ICON_GROUPS, getIconComponent } from '../lib/categoryIcons'
 import { DatePicker } from './DatePicker'
 import AmountInput from './AmountInput'
+import { X } from 'lucide-react'
+import { fmt } from '../lib/utils'
+import { useIsDesktop } from '../hooks/useIsDesktop'
+import cf from './CategoryFormDesk.module.css'
+import gd from './GoalFormDesk.module.css'
 import styles from './GoalFormModal.module.css'
 import { useScrollLock } from '../lib/scrollLock'
 
@@ -16,6 +21,7 @@ const ANIM_MS = 320
 export function GoalFormModal({ open, initial, onSave, onClose }) {
   useScrollLock(open)
   const { t } = useTranslation()
+  const isDesk = useIsDesktop()
   const [name, setName] = useState('')
   const [notes, setNotes] = useState('')
   const [icon, setIcon] = useState('PiggyBank')
@@ -82,6 +88,102 @@ export function GoalFormModal({ open, initial, onSave, onClose }) {
   const filteredGroups = CATEGORY_ICON_GROUPS
     .map(g => ({ ...g, icons: search ? g.icons.filter(i => i.label.toLowerCase().includes(search)) : g.icons }))
     .filter(g => g.icons.length > 0)
+
+  if (isDesk) {
+    const PreviewIcon = getIconComponent(icon)
+    const target = parseFloat(targetAmount) || 0
+    return (
+      <div onClick={e => e.target === e.currentTarget && onClose()} className={`${gd.overlay} ${closing ? styles.overlayClosing : ''}`}>
+        <div className={gd.dialog} role="dialog" aria-modal="true" aria-label={initial ? t('goalFormModal.titleEdit') : t('goalFormModal.titleNew')}>
+          <div className={gd.head}>
+            <div>
+              <h2 className={gd.title}>{initial ? t('goalFormModal.titleEdit') : t('goalFormModal.titleNew')}</h2>
+              <div className={gd.sub}>{t('goalsPage.desk.newDesc')}</div>
+            </div>
+            <button type="button" className={gd.close} onClick={onClose} aria-label={t('buttons.cancel')}><X size={16} /></button>
+          </div>
+          <div className={gd.body}>
+            <div className={gd.form}>
+              <div>
+                <label className="field-label">{t('goalFormModal.nameLabel')}</label>
+                <input aria-label={t('goalFormModal.nameLabel')} autoFocus className="field-input" value={name}
+                  onChange={e => { setName(e.target.value); setError('') }} placeholder={t('goalFormModal.namePlaceholder')} />
+              </div>
+              <div>
+                <label className="field-label">{t('goalFormModal.notesLabel')}</label>
+                <input aria-label={t('goalFormModal.notesLabel')} className="field-input" value={notes}
+                  onChange={e => setNotes(e.target.value)} placeholder={t('goalFormModal.notesPlaceholder')} />
+              </div>
+              <div className={gd.row2}>
+                <div>
+                  <label className="field-label">{t('goalFormModal.amountLabel')}</label>
+                  <AmountInput className="field-input" value={targetAmount} onChange={e => { setTargetAmount(e.target.value); setError('') }} placeholder="$0.00" />
+                </div>
+                <div>
+                  <label className="field-label">{t('goalFormModal.deadlineLabel')}</label>
+                  <DatePicker value={targetDate} onChange={setTargetDate} placeholder={t('goalFormModal.deadlinePlaceholder')} sheet sheetTitle={t('goalFormModal.deadlineLabel')} />
+                </div>
+              </div>
+              <div>
+                <label className="field-label">{t('goalFormModal.iconColorLabel')}</label>
+                <div className={cf.search}>
+                  <Search size={16} />
+                  <input aria-label={t('settingsCategories.iconSearchPlaceholder')} value={iconSearch} onChange={e => setIconSearch(e.target.value)} placeholder={t('settingsCategories.iconSearchPlaceholder')} />
+                </div>
+                <div className={`${cf.groups} ${gd.groups} scroll-y`}>
+                  {filteredGroups.map(group => (
+                    <div key={group.label}>
+                      <div className={cf.gl}>{group.label}</div>
+                      <div className={cf.icons}>
+                        {group.icons.map(({ name: iconName, label }) => {
+                          const Icon = getIconComponent(iconName)
+                          return (
+                            <button key={iconName} type="button" title={label} onClick={() => setIcon(iconName)} className={`${cf.ib} ${icon === iconName ? cf.ibOn : ''}`}>
+                              <Icon size={20} />
+                            </button>
+                          )
+                        })}
+                      </div>
+                    </div>
+                  ))}
+                  {filteredGroups.length === 0 && <div className={cf.help}>{t('settingsCategories.noIconResults', { search: iconSearch })}</div>}
+                </div>
+                <div className={`${cf.colors} ${gd.colors}`}>
+                  {PALETTE.map((c, cIdx) => (
+                    <button key={c} type="button" aria-label={t('buttons.colorN', { n: cIdx + 1 })} aria-pressed={color === c}
+                      onClick={() => setColor(c)} className={`${cf.sw} ${color === c ? cf.swOn : ''}`} style={{ background: c }}>
+                      {color === c && <Check size={14} color="var(--on-color)" strokeWidth={3} />}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+            <aside className={gd.side}>
+              <div className={gd.sideTitle}>{t('goalsPage.desk.previewTitle')}</div>
+              <div className={gd.preview} style={{ '--tint': color }}>
+                <div className={gd.pTop}>
+                  <span className={gd.pIcon}><PreviewIcon size={22} /></span>
+                  <b className={gd.pName}>{name.trim() || t('goalsPage.desk.previewName')}</b>
+                </div>
+                <div className={gd.pAmount}>{fmt(0)}</div>
+                <div className={gd.pMeta}>{target > 0 ? `${t('goalsPage.desk.previewLeft')} ${fmt(target)}` : ' '}</div>
+                <div className={gd.bar}><i /></div>
+                <div className={gd.pMeta}>{targetDate ? targetDate : t('goalsPage.desk.previewNoDate')}</div>
+              </div>
+              <div className={gd.hint}>{t('goalsPage.desk.previewHint')}</div>
+            </aside>
+          </div>
+          {error && <div className={styles.errorText}>{error}</div>}
+          <div className={gd.foot}>
+            <button type="button" onClick={onClose} className={gd.cancel}>{t('buttons.cancel')}</button>
+            <button type="button" onClick={handleSave} disabled={saving} className={`btn-primary ${gd.save}`}>
+              {saving ? t('settingsCategories.saving') : t('buttons.save')}
+            </button>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div onClick={e => e.target === e.currentTarget && onClose()} className={`${styles.overlay} ${closing ? styles.overlayClosing : ''}`}>

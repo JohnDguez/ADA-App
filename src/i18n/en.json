@@ -630,7 +630,16 @@
       "overdue": "Past due date"
     },
     "subtitle": "Save with purpose, one goal at a time.",
-    "totalSaved": "Total saved"
+    "totalSaved": "Total saved",
+    "desk": {
+      "newTitle": "New goal",
+      "newDesc": "Set how much you want to save and what for.",
+      "previewTitle": "Preview",
+      "previewName": "Your goal",
+      "previewNoDate": "No deadline",
+      "previewLeft": "Left",
+      "previewHint": "You can contribute from Goals whenever you want."
+    }
   },
   "goalDetailPanel": {
     "back": "Back",
@@ -1106,6 +1115,19 @@
       "text": "You saved it for {{date}}. Does it repeat, like rent or a subscription?",
       "yes": "Yes, make it recurring",
       "no": "No, just this once"
+    },
+    "desk": {
+      "title": "New payment",
+      "subtitle": "Record an expense and see how it affects your period.",
+      "tileDesc": {
+        "single": "One-time payment",
+        "recurrent": "Repeats every period",
+        "installment": "Pay in installments"
+      },
+      "installmentEmpty": "Enter the total amount and number of payments to see the summary.",
+      "impactEmpty": "Enter an amount and a date to see how it affects your period.",
+      "impactVariable": "A variable payment is not counted until you confirm its amount.",
+      "impactPaid": "Since it is already paid, it is recorded today and not projected."
     }
   },
   "pageHeader": {

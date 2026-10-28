@@ -9,6 +9,7 @@ import { useHeaderBackground, HEADER_IMAGES } from '../hooks/useHeaderBackground
 import { fmt, getFrequencyLabel, getCatColor, getCategoryLabel, monthlyEquivalent } from '../lib/utils'
 import { getCategoryIcon } from '../lib/categoryIcons'
 import home from './DeskHome.module.css'
+import { DeskAddButton } from '../components/DeskAddButton'
 import styles from './DeskRecurrents.module.css'
 
 // Gastos recurrentes de escritorio (≥1100px, v0.9.828) — diseño aprobado por
@@ -25,7 +26,7 @@ function splitMoney(str) {
 export function DeskRecurrents({ d }) {
   const { t } = useTranslation()
   const {
-    profile, dataLoading, activeSpaceId, sharedSpaces, spacePermissions, slideClass, spaceJustChanged, onOpenPremium, onSpaceReady, onAdd,
+    profile, dataLoading, activeSpaceId, sharedSpaces, spacePermissions, slideClass, spaceJustChanged, onOpenPremium, onSpaceReady, onAdd, onStartAdd,
     search, setSearch, filterStatus, setFilterStatus, filterType, setFilterType, byCategory,
     totals, freqRows, freqMax, installments, variableCount, getNextDue, getPaidCount, formatNextDate,
     canEdit, canDelete, blocked, onPause, onResume, onEdit, onDelete, payments, selectedMaster, setSelectedMasterId,
@@ -77,7 +78,7 @@ export function DeskRecurrents({ d }) {
             <Search size={16} strokeWidth={1.9} />
             <input aria-label={t('recurrentsPage.searchPlaceholder')} value={search} onChange={e => setSearch(e.target.value)} placeholder={t('recurrentsPage.searchPlaceholder')} />
           </label>
-          <button type="button" className={home.addBtn} onClick={onAdd}><Plus size={18} strokeWidth={2.2} />{t('bottomNav.add')}</button>
+          <DeskAddButton onAdd={onAdd} onStartAdd={onStartAdd} />
         </div>
       </header>
 

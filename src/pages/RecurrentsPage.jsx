@@ -27,7 +27,7 @@ function FilterChip({ label, active, onClick }) {
   )
 }
 
-export function RecurrentsPage({ payments, dataLoading = false, profile, spaceSwitcher, activeSpaceHeader, activeSpaceId = null, sharedSpaces, spacePermissions, onOpenPremium, onSpaceReady, unreadCount, onOpenNotifs, onGoSettings, onPause, onResume, onDelete, onEdit, onAdd, slideClass }) {
+export function RecurrentsPage({ payments, dataLoading = false, profile, spaceSwitcher, activeSpaceHeader, activeSpaceId = null, sharedSpaces, spacePermissions, onOpenPremium, onSpaceReady, unreadCount, onOpenNotifs, onGoSettings, onPause, onResume, onDelete, onEdit, onAdd, onStartAdd, slideClass }) {
   const { t } = useTranslation()
   const isDesktop = useIsDesktop()
   // Mismo mecanismo que HomePage.jsx — ver ahí el porqué (evitar que la
@@ -165,7 +165,7 @@ export function RecurrentsPage({ payments, dataLoading = false, profile, spaceSw
   }
 
   const deskData = isDesktop ? {
-    profile, dataLoading, activeSpaceId, sharedSpaces, spacePermissions, slideClass, spaceJustChanged, onOpenPremium, onSpaceReady, onAdd,
+    profile, dataLoading, activeSpaceId, sharedSpaces, spacePermissions, slideClass, spaceJustChanged, onOpenPremium, onSpaceReady, onAdd, onStartAdd,
     search, setSearch, filterStatus, setFilterStatus, filterType, setFilterType, byCategory,
     totals: { active: activeMasters.length, paused: pausedMasters.length, all: masters.length, monthly: totalMensual },
     freqRows, freqMax, variableCount,

@@ -417,7 +417,13 @@
 .desk .body { display: flex; flex-direction: column; flex: 1; min-height: 0; gap: 0; }
 .desk .summaryCol, .desk .historyCol { background: none; border-radius: 0; padding: 0; }
 .desk .summaryCol { flex-shrink: 0; }
-.desk .historyCol { flex: 1; min-height: 0; margin-top: 14px; }
+.desk .historyCol { flex: 1; min-height: 0; margin-top: 14px; overflow: hidden; }
+/* Sin movimientos (v0.9.841): el aviso queda DENTRO de la tarjeta, compacto; el
+   botón de aportar ya está arriba con las acciones. */
+.desk .historyEmptyBlock { flex: 1; min-height: 0; padding: 8px 0; gap: 6px; overflow: hidden; justify-content: center; }
+.desk .historyEmptyIcon { width: 44px; height: 44px; background: var(--desk-chip); }
+.desk .historyEmptyHint { max-width: none; }
+.desk .firstContribution { display: none; }
 .desk .ring { width: 150px; height: 150px; margin: 0 auto 10px; }
 .desk .ringInner { width: 116px; height: 116px; background: var(--desk-card); }
 .desk .ringPercent { font-size: 28px; font-weight: 600; letter-spacing: -0.6px; }
