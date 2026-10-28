@@ -81,9 +81,14 @@ export function BottomSheet({ open, title, onClose, header, children, modal = fa
       onClose?.()
     }
     const onKey = e => { if (e.key === 'Escape') onClose?.() }
+    // Volver a pulsar el control que abrió el popover lo cierra. El clic se
+    // detiene en el propio control para que su manejador no lo reabra.
+    const anchor = anchorRef.current
+    const onAnchorClick = e => { e.stopPropagation(); onClose?.() }
+    anchor?.addEventListener('click', onAnchorClick)
     document.addEventListener('pointerdown', onDown)
     document.addEventListener('keydown', onKey)
-    return () => { document.removeEventListener('pointerdown', onDown); document.removeEventListener('keydown', onKey) }
+    return () => { anchor?.removeEventListener('click', onAnchorClick); document.removeEventListener('pointerdown', onDown); document.removeEventListener('keydown', onKey) }
   }, [open, popover, onClose])
   // Al abrir, deja a la vista la opción marcada con data-selected (si la hay)
   useEffect(() => {

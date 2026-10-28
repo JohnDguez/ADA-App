@@ -215,3 +215,11 @@
 .sheetSub { font-size: 12px; font-weight: 500; line-height: 1.3; color: var(--label-variable); }
 .sheetActionCell { color: var(--accent); background: transparent; box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--label-variable) 40%, transparent); }
 .sheetGroupWrap { margin-top: 6px; }
+
+@media (hover: hover) and (pointer: fine) {
+  .sheetRow:not([data-selected='true']):hover { background: color-mix(in srgb, var(--accent) 12%, var(--bg)); filter: none; translate: none; }
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .sheetCell:not([data-selected='true']):hover { background: color-mix(in srgb, var(--accent) 12%, var(--bg)); filter: none; translate: none; }
+}

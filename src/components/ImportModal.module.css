@@ -333,3 +333,7 @@
 .inl .bodyPad { display: flex; flex-direction: column; }
 .inl .bodyPad > * { flex-shrink: 0; }
 .inl .bodyPad > .drop { flex: 1 1 auto; }
+
+@media (hover: hover) and (pointer: fine) {
+  .pickerRow:not(.pickerRowOn):hover { background: color-mix(in srgb, var(--accent) 12%, var(--bg)); filter: none; translate: none; }
+}

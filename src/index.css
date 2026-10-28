@@ -17,6 +17,7 @@
 
 /* ── Tema claro (default) ─────────────────────────────────────────────────── */
 :root {
+  --hover-brightness: 0.94;
   --bg: #F2F2F2;
   --surface: #FFFFFF;
   --border: #E4E2DC;
@@ -312,6 +313,7 @@
 
 /* ── Tema oscuro manual ([data-theme="dark"] en <html>) ───────────────────── */
 [data-theme="dark"] {
+  --hover-brightness: 1.12;
   --bg: #0F1117;
   --surface: #1A1D27;
   --border: #2A2D3A;
@@ -396,6 +398,7 @@
 /* ── Tema oscuro automático (preferencia del sistema) ─────────────────────── */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
+      --hover-brightness: 1.12;
       --bg: #0F1117;
     --surface: #1A1D27;
     --border: #2A2D3A;
@@ -962,7 +965,9 @@ a:focus-visible {
   html.auth-screen #root { margin-left: 0; }
 }
 
-/* ── Hover de botones (v0.9.818) ─────────────────────────────────────────
+/* ── Hover de botones (v0.9.818; v0.9.838: sin elevación ni resplandor — ahora
+   el botón se aclara u oscurece según el tema con `--hover-brightness`, y las
+   listas/filas definen su propio hover con tinte de acento) ── ─────────────────────────────────────────
    Solo con mouse (hover:hover + pointer:fine) — en táctil no cambia nada
    (Regla 42). Propuesta A+B aprobada por Johnatan:
    · A (botones de acción; v0.9.824: se excluyen selectores `.field-input`/listbox,
@@ -978,11 +983,10 @@ a:focus-visible {
      global` en el CSS de cada botón dorado. */
 @media (hover: hover) and (pointer: fine) {
   :where(button:not(:disabled):not(.field-input):not([aria-haspopup="listbox"]):not([role="option"]):not([role="menuitem"]), [role="button"]:not([aria-disabled="true"]):not(.field-input):not([aria-haspopup="listbox"]):not([role="option"]):not([role="menuitem"])) {
-    transition: translate 0.22s cubic-bezier(0.34, 1.56, 0.64, 1), scale 0.22s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.2s ease;
+    transition: scale 0.22s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.15s ease;
   }
   :where(button:not(:disabled):not(.btn-primary):not(.field-input):not([aria-haspopup="listbox"]):not([role="option"]):not([role="menuitem"]), [role="button"]:not([aria-disabled="true"]):not(.field-input):not([aria-haspopup="listbox"]):not([role="option"]):not([role="menuitem"])):hover {
-    translate: 0 -2px;
-    filter: drop-shadow(0 6px 8px color-mix(in srgb, var(--hover-glow, var(--accent)) 45%, transparent));
+    filter: brightness(var(--hover-brightness));
   }
   :where(button:not(:disabled):not(.field-input):not([aria-haspopup="listbox"]):not([role="option"]):not([role="menuitem"]), [role="button"]:not([aria-disabled="true"]):not(.field-input):not([aria-haspopup="listbox"]):not([role="option"]):not([role="menuitem"])):active {
     translate: 0 0;

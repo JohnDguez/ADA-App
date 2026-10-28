@@ -21,3 +21,7 @@
 .label {
   font-weight: 500;
 }
+
+@media (hover: hover) and (pointer: fine) {
+  .option:not([data-selected='true']):hover { background: color-mix(in srgb, var(--accent) 12%, var(--bg)); filter: none; translate: none; }
+}
