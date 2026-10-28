@@ -1,6 +1,6 @@
 .wrap { position: relative; max-width: 300px; margin: 8px auto 0; }
 .svg { display: block; width: 100%; height: auto; overflow: visible; }
-.svg path { fill: none; stroke-width: 26; transition: stroke-dasharray .8s cubic-bezier(0.22, 1, 0.36, 1), stroke-dashoffset .8s cubic-bezier(0.22, 1, 0.36, 1); }
+.svg path { fill: none; stroke-width: 26; }
 .track { stroke: var(--desk-chip); stroke-linecap: round; }
 .pending { stroke-linecap: butt; }
 .paid { stroke: var(--desk-deep); stroke-linecap: round; }

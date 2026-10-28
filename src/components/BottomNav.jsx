@@ -41,7 +41,7 @@ function TabBtn({ id, Icon, label, active, onChange }) {
       aria-current={active ? 'page' : undefined}
     >
       <Icon size={22} strokeWidth={active ? 2.2 : 1.8} className={styles.tabIcon} />
-      {active && <span className={styles.tabLabel}>{label}</span>}
+      <span className={styles.tabLabelWrap} aria-hidden={!active}><span className={styles.tabLabel}>{label}</span></span>
     </button>
   )
 }
