@@ -17,7 +17,7 @@
   color: var(--muted); background: var(--surface);
 }
 .lock {
-  position: absolute; inset: 0; border-radius: inherit;
+  position: absolute; inset: 0; border-radius: 26px;
   display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center;
   gap: 12px; padding: 28px 30px;
   background: radial-gradient(ellipse at 50% 45%,
