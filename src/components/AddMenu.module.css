@@ -11,11 +11,12 @@
 }
 .backdropOut { animation: addMenuBackdropOut .2s ease-in both; pointer-events: none; }
 
-/* Punto de anclaje = centro del "+" de BottomNav (móvil) */
+/* Punto de anclaje = centro del "+" flotante de BottomNav (móvil, v0.9.888):
+   16px del borde + 28px (mitad del botón), 72px de barra + 16px + 28px de alto. */
 .anchor {
   position: fixed;
-  left: 50%;
-  bottom: 57px;
+  right: 44px;
+  bottom: calc(116px + env(safe-area-inset-bottom));
   width: 0;
   height: 0;
   z-index: 141;
@@ -34,9 +35,9 @@
   transform: translate(var(--dx), calc(var(--dy) * -1));
   animation: addMenuPop .2s ease-out both;
 }
-.posA { --dx: -66px; --dy: 62px; }
-.posB { --dx: 0px;   --dy: 94px; }
-.posC { --dx: 66px;  --dy: 62px; }
+.posA { --dx: -90px; --dy: 0px; }
+.posB { --dx: -64px; --dy: 64px; }
+.posC { --dx: 0px;   --dy: 90px; }
 
 .mini {
   width: 44px;
@@ -70,7 +71,7 @@
   position: fixed;
   left: 24px;
   right: 24px;
-  bottom: 190px;
+  bottom: calc(250px + env(safe-area-inset-bottom));
   max-width: 280px;
   margin: 0 auto;
   z-index: 142;
@@ -101,9 +102,6 @@
 
 /* Tablet/desktop (Regla 42/43): el "+" es el RailFab abajo a la derecha */
 @media (min-width: 768px) {
-  .anchor { left: auto; right: 52px; bottom: 52px; }
-  .posA { --dx: -90px; --dy: 0px; }
-  .posB { --dx: -64px; --dy: 64px; }
-  .posC { --dx: 0px;   --dy: 90px; }
+  .anchor { right: 52px; bottom: 52px; }
   .guide { left: auto; right: 24px; bottom: 170px; margin: 0; width: 260px; }
 }

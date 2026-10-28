@@ -1,64 +1,64 @@
-/* Barra inferior acoplada (v0.9.885, mockup aprobado): ancho completo pegada al
-   borde, esquinas superiores redondeadas, pestaña activa como píldora con su
-   nombre y "+" sobresaliendo al centro con aro del color del fondo. */
+/* Barra inferior con la forma de la pantalla (v0.9.888, mockup A aprobado):
+   ancho completo pegada al borde; arriba, esquinas cóncavas que suben hasta el
+   borde del teléfono (::before/::after); abajo, esquinas redondeadas que
+   acompañan las de la pantalla. Pestaña activa = píldora con su nombre.
+   El "+" es un botón flotante aparte (.fab). */
 .nav {
+  --nav-fillet: 36px;
   position: fixed;
   left: 0;
   right: 0;
   bottom: 0;
   display: flex;
   align-items: flex-start;
-  justify-content: space-between;
+  justify-content: space-around;
   padding: 12px 12px calc(14px + env(safe-area-inset-bottom));
   background: var(--nav-bg);
-  border-radius: 30px 30px 0 0;
-  box-shadow: 0 -6px 24px color-mix(in srgb, var(--nav-bg) 28%, transparent);
+  border-radius: 0 0 40px 40px;
+  /* drop-shadow sigue la silueta completa, esquinas cóncavas incluidas */
+  filter: drop-shadow(0 -4px 12px color-mix(in srgb, var(--nav-bg) 35%, transparent));
   z-index: 100;
-  overflow: visible;
 }
-
-.side {
-  flex: 1 1 0;
-  min-width: min-content;
-  display: flex;
-  align-items: center;
-  justify-content: space-around;
-}
-
-.addButtonWrapper {
-  flex: none;
-  width: 58px;
-  position: relative;
-}
-
-.addButton {
+.nav::before,
+.nav::after {
+  content: "";
   position: absolute;
-  top: -34px;
-  left: 0;
-  width: 58px;
-  height: 58px;
+  top: calc(-1 * var(--nav-fillet));
+  width: var(--nav-fillet);
+  height: var(--nav-fillet);
+  pointer-events: none;
+}
+.nav::before { left: 0;  background: radial-gradient(circle at 100% 0, transparent calc(var(--nav-fillet) - 1px), var(--nav-bg) var(--nav-fillet)); }
+.nav::after  { right: 0; background: radial-gradient(circle at 0 0,    transparent calc(var(--nav-fillet) - 1px), var(--nav-bg) var(--nav-fillet)); }
+
+/* Botón "+" flotante, arriba a la derecha de la barra */
+.fab {
+  position: fixed;
+  right: 16px;
+  bottom: calc(72px + 16px + env(safe-area-inset-bottom));
+  width: 56px;
+  height: 56px;
   border-radius: 50%;
   background: var(--accent);
   border: none;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 0 0 6px var(--bg), var(--shadow-fab);
+  box-shadow: var(--shadow-fab);
   cursor: pointer;
-  z-index: 1;
+  z-index: 100;
   transition: background .25s, box-shadow .25s;
 }
-
 .addIcon { transition: transform .25s cubic-bezier(0.25, 0.46, 0.45, 0.94), stroke .25s; }
 /* Con el menú abierto el botón se "apaga": fondo neutro e ícono de acento */
-.addButtonOpen { background: var(--surface); box-shadow: 0 0 0 6px var(--bg), var(--shadow-fab-open); }
-.addButtonOpen .addIcon { stroke: var(--accent); }
+.fabOpen { background: var(--surface); box-shadow: var(--shadow-fab-open); }
+.fabOpen .addIcon { stroke: var(--accent); }
 /* Menú del "+" abierto: el + gira y queda como X */
 .addIconOpen { transform: rotate(135deg); }
 
 .tabButton {
   flex: none;
-  min-width: 42px;
+  min-width: 46px;
   height: 46px;
   display: flex;
   align-items: center;
@@ -81,9 +81,10 @@
 .tabLabel { font-size: 13.5px; font-weight: 700; white-space: nowrap; }
 
 /* Adaptación tablet/desktop (Regla 42/43): a partir de 768px, BottomNav
-   se reemplaza por NavRail.jsx — nunca conviven los dos a la vez. */
+   se reemplaza por NavRail.jsx (y el "+" por RailFab) — nunca conviven. */
 @media (min-width: 768px) {
-  .nav {
+  .nav,
+  .fab {
     display: none;
   }
 }
