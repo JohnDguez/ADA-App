@@ -309,9 +309,9 @@
   object-position: right 62%;
   /* Se funde hacia la izquierda Y hacia abajo (intersección de dos máscaras):
      sin corte donde termina la imagen (v0.9.892) */
-  -webkit-mask-image: linear-gradient(to left, var(--mask-opaque) 0%, color-mix(in srgb, var(--mask-opaque) 85%, transparent) 30%, transparent 78%), linear-gradient(to bottom, var(--mask-opaque) 0%, var(--mask-opaque) 35%, transparent 96%);
+  -webkit-mask-image: linear-gradient(to left, var(--mask-opaque) 0%, color-mix(in srgb, var(--mask-opaque) 85%, transparent) 30%, transparent 78%), linear-gradient(to bottom, var(--mask-opaque) 0%, color-mix(in srgb, var(--mask-opaque) 80%, transparent) 25%, color-mix(in srgb, var(--mask-opaque) 40%, transparent) 55%, color-mix(in srgb, var(--mask-opaque) 12%, transparent) 78%, transparent 95%);
   -webkit-mask-composite: source-in;
-  mask-image: linear-gradient(to left, var(--mask-opaque) 0%, color-mix(in srgb, var(--mask-opaque) 85%, transparent) 30%, transparent 78%), linear-gradient(to bottom, var(--mask-opaque) 0%, var(--mask-opaque) 35%, transparent 96%);
+  mask-image: linear-gradient(to left, var(--mask-opaque) 0%, color-mix(in srgb, var(--mask-opaque) 85%, transparent) 30%, transparent 78%), linear-gradient(to bottom, var(--mask-opaque) 0%, color-mix(in srgb, var(--mask-opaque) 80%, transparent) 25%, color-mix(in srgb, var(--mask-opaque) 40%, transparent) 55%, color-mix(in srgb, var(--mask-opaque) 12%, transparent) 78%, transparent 95%);
   mask-composite: intersect;
   transition: opacity 1.5s ease;
   pointer-events: none;

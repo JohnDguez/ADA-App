@@ -13,6 +13,7 @@ import { AddDropdown, addDropdownHasExtras } from '../components/AddDropdown'
 import { RailSkeleton } from '../components/SkeletonLoader'
 import { useHeaderBackground, HEADER_IMAGES } from '../hooks/useHeaderBackground'
 import { fmt, dateToStr, daysDiff } from '../lib/utils'
+import { PeriodGauge } from '../components/PeriodGauge'
 import styles from './DeskHome.module.css'
 
 // Inicio de escritorio (≥1100px, v0.9.819) — diseño propio aprobado por
@@ -25,33 +26,6 @@ import styles from './DeskHome.module.css'
 function splitMoney(str) {
   const i = str.lastIndexOf('.')
   return i < 0 ? [str, ''] : [str.slice(0, i), str.slice(i)]
-}
-
-function Gauge({ paidPct, overduePct, empty, label, centerLabel }) {
-  // pathLength=100 permite dibujar cada tramo con strokeDasharray en porcentaje.
-  const arc = 'M 40 140 A 110 110 0 0 1 260 140'
-  const paid = Math.max(0, Math.min(100, paidPct))
-  const over = Math.max(0, Math.min(100 - paid, overduePct))
-  return (
-    <div className={styles.gaugeWrap} role="img" aria-label={label}>
-      <svg viewBox="0 0 300 150" className={styles.gaugeSvg} aria-hidden="true">
-        <defs>
-          <pattern id="deskHatch" width="7" height="7" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
-            <line x1="0" y1="0" x2="0" y2="7" className={styles.hatchLine} />
-          </pattern>
-        </defs>
-        <path d={arc} pathLength="100" className={styles.gaugeTrack} />
-        {!empty && <path d={arc} pathLength="100" className={styles.gaugePending} strokeDasharray={`${100 - paid - over} 100`} strokeDashoffset={-(paid + over)} />}
-        {empty && <path d={arc} pathLength="100" className={styles.gaugePending} strokeDasharray="100 100" />}
-        {paid > 0 && <path d={arc} pathLength="100" className={styles.gaugePaid} strokeDasharray={`${paid} 100`} />}
-        {over > 0 && <path d={arc} pathLength="100" className={styles.gaugeOver} strokeDasharray={`${over} 100`} strokeDashoffset={-paid} />}
-      </svg>
-      <div className={styles.gaugeCenter}>
-        <b>{Math.round(paidPct)}%</b>
-        <span>{centerLabel}</span>
-      </div>
-    </div>
-  )
 }
 
 export function DeskHome({
@@ -253,7 +227,7 @@ export function DeskHome({
                   <LunaStrip variant="desk" lunaState={lunaState} loading={dataLoading} />
                   <section className={styles.card}>
                     <h2 className={styles.cardTitle}>{t('deskHome.gaugeTitle')}</h2>
-                    <Gauge empty={!hasPayments || dataLoading} paidPct={hasPayments && !dataLoading ? pctPagado : 0} overduePct={hasPayments && !dataLoading ? overduePct : 0}
+                    <PeriodGauge large empty={!hasPayments || dataLoading} paidPct={hasPayments && !dataLoading ? pctPagado : 0} overduePct={hasPayments && !dataLoading ? overduePct : 0}
                       label={`${t('deskHome.gaugeTitle')}: ${pctPagado}%`} centerLabel={hasPayments ? t('deskHome.gaugePaid') : t('deskHome.gaugeEmpty')} />
                     <div className={styles.legend}>
                       <span><i className={styles.dotPaid} />{t('deskHome.legendPaid')}</span>

@@ -161,17 +161,6 @@
 
 /* ── Columna derecha ──────────────────────────────────────────────────── */
 .side { display: flex; flex-direction: column; gap: 14px; min-width: 0; min-height: 0; overflow-y: auto; padding: 0 10px 14px; margin: 0 -10px -14px; }
-.gaugeWrap { position: relative; max-width: 300px; margin: 8px auto 0; }
-.gaugeSvg { display: block; width: 100%; height: auto; overflow: visible; }
-.gaugeSvg path { fill: none; stroke-width: 26; transition: stroke-dasharray .8s cubic-bezier(0.22, 1, 0.36, 1), stroke-dashoffset .8s cubic-bezier(0.22, 1, 0.36, 1); }
-.gaugeTrack { stroke: var(--desk-chip); stroke-linecap: round; }
-.gaugePending { stroke: url(#deskHatch); stroke-linecap: butt; }
-.gaugePaid { stroke: var(--desk-deep); stroke-linecap: round; }
-.gaugeOver { stroke: var(--danger); stroke-linecap: butt; }
-.hatchLine { stroke: var(--desk-hatch); stroke-width: 2.2; }
-.gaugeCenter { position: absolute; left: 0; right: 0; bottom: 4px; display: flex; flex-direction: column; align-items: center; }
-.gaugeCenter b { font-size: 44px; font-weight: 500; letter-spacing: -1.5px; line-height: 1; }
-.gaugeCenter span { font-size: 13px; color: var(--muted); margin-top: 4px; }
 .legend { display: flex; justify-content: center; gap: 18px; margin-top: 14px; font-size: 13px; color: var(--muted); }
 .legend span { display: inline-flex; align-items: center; gap: 6px; }
 .legend i { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }

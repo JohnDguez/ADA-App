@@ -3,8 +3,8 @@ import styles from './PeriodGauge.module.css'
 
 // Medidor semicircular "Avance del periodo" — mismo dibujo que el de escritorio
 // (arco grueso, pendiente rayado, pagado azul profundo, vencido rojo, % al
-// centro). Nació para el Inicio móvil (v0.9.885, mockup B aprobado); el de
-// escritorio (DeskHome.jsx) sigue con su copia propia.
+// centro). Nació para el Inicio móvil (v0.9.885); desde v0.9.893 lo usa también
+// el de escritorio (`large`).
 // `center`: contenido propio para el hueco (ej. "Empieza en 6 días").
 // Entrada animada: arranca en 0 y, al montar, pasa al valor real en el
 // siguiente cuadro para que dispare la transición CSS del trazo; el número
@@ -26,26 +26,50 @@ function useGrow(target, ms = 900) {
   return v
 }
 
-export function PeriodGauge({ paidPct, overduePct = 0, empty = false, label, centerLabel, center }) {
-  const hatchId = useId().replace(/:/g, '')
-  const arc = 'M 40 140 A 110 110 0 0 1 260 140'
+// Geometría: el arco se alarga 13 px recto en cada extremo (el radio de la
+// punta redonda del carril) y todos los tramos se recortan con la forma del
+// carril. Así el achurado y los colores llegan hasta la punta redondeada en
+// ambos extremos; antes terminaban en el punto medio de la punta y el carril
+// sobresalía (v0.9.893).
+const ARC = 'M 40 153 L 40 140 A 110 110 0 0 1 260 140 L 260 153'
+const TRACK = 'M 40 140 A 110 110 0 0 1 260 140'
+const EXT = 13
+const ARC_LEN = Math.PI * 110
+const TOTAL = ARC_LEN + 2 * EXT
+const E = (EXT / TOTAL) * 100       // % del trazo largo que ocupa cada extensión
+const K = ARC_LEN / TOTAL           // factor de % de arco → % de trazo largo
+const at = (p) => E + K * p
+// Tramo [a, b] (en % del arco) → dasharray/dashoffset sobre el trazo largo
+function seg(a, b) {
+  const from = a <= 0 ? 0 : at(a)
+  const to = b >= 100 ? 100 : at(b)
+  return { strokeDasharray: `${Math.max(0, to - from)} 200`, strokeDashoffset: -from }
+}
+
+export function PeriodGauge({ paidPct, overduePct = 0, empty = false, label, centerLabel, center, large = false }) {
+  const uid = useId().replace(/:/g, '')
   const paidT = Math.max(0, Math.min(100, paidPct))
   const overT = Math.max(0, Math.min(100 - paidT, overduePct))
   const paid = useGrow(paidT)
   const over = useGrow(overT)
+  const pending = empty ? seg(0, 100) : seg(paid + over, 100)
   return (
-    <div className={styles.wrap} role="img" aria-label={label}>
+    <div className={`${styles.wrap} ${large ? styles.large : ''}`} role="img" aria-label={label}>
       <svg viewBox="0 0 300 150" className={styles.svg} aria-hidden="true">
         <defs>
-          <pattern id={hatchId} width="7" height="7" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+          <pattern id={`h${uid}`} width="7" height="7" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
             <line x1="0" y1="0" x2="0" y2="7" className={styles.hatchLine} />
           </pattern>
+          <mask id={`m${uid}`} maskUnits="userSpaceOnUse" x="0" y="0" width="300" height="170">
+            <path d={TRACK} className={styles.maskShape} />
+          </mask>
         </defs>
-        <path d={arc} pathLength="100" className={styles.track} />
-        <path d={arc} pathLength="100" className={styles.pending} stroke={`url(#${hatchId})`}
-          strokeDasharray={empty ? '100 100' : `${100 - paid - over} 100`} strokeDashoffset={empty ? 0 : -(paid + over)} />
-        {!empty && paidT > 0 && <path d={arc} pathLength="100" className={styles.paid} style={{ opacity: paid > 0.05 ? 1 : 0 }} strokeDasharray={`${paid} 100`} />}
-        {!empty && overT > 0 && <path d={arc} pathLength="100" className={styles.over} strokeDasharray={`${over} 100`} strokeDashoffset={-paid} />}
+        <path d={TRACK} className={styles.track} />
+        <g mask={`url(#m${uid})`}>
+          <path d={ARC} pathLength="100" className={styles.pending} stroke={`url(#h${uid})`} {...pending} />
+          {!empty && paidT > 0 && <path d={ARC} pathLength="100" className={styles.paid} style={{ opacity: paid > 0.05 ? 1 : 0 }} {...seg(0, paid)} />}
+          {!empty && overT > 0 && <path d={ARC} pathLength="100" className={styles.over} {...seg(paid, paid + over)} />}
+        </g>
       </svg>
       <div className={styles.center}>
         {center || <><b>{Math.round(paid)}%</b><span>{centerLabel}</span></>}
