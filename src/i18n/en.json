@@ -2638,5 +2638,13 @@
     "text": "You won't get alerts about changes in this space. Turn them on to stay in the loop.",
     "blocked": "Your browser is blocking them, so alerts from this space will not arrive. See how to enable them.",
     "action": "Turn on"
+  },
+  "webUpdate": {
+    "title": "A new version is available",
+    "description": "Update to see the latest LunaPay improvements.",
+    "update": "Update",
+    "later": "Not now",
+    "tipPre": "Or press",
+    "tipPost": "to reload"
   }
 }

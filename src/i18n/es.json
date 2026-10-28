@@ -2638,5 +2638,13 @@
     "text": "No te llegarán avisos de los cambios de este espacio. Actívalas para enterarte al momento.",
     "blocked": "El navegador las tiene bloqueadas, así que no llegarán avisos de este espacio. Mira cómo habilitarlas.",
     "action": "Activar"
+  },
+  "webUpdate": {
+    "title": "Hay una versión nueva",
+    "description": "Actualiza para ver las últimas mejoras de LunaPay.",
+    "update": "Actualizar",
+    "later": "Ahora no",
+    "tipPre": "O presiona",
+    "tipPost": "para recargar"
   }
 }

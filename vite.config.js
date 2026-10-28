@@ -7,8 +7,20 @@ import react from '@vitejs/plugin-react'
 const BUILD_SHA = (process.env.VERCEL_GIT_COMMIT_SHA || 'dev').slice(0, 7)
 const BUILD_DATE = new Date().toISOString().slice(0, 10)
 
+// Publica /version.json con el commit del build. La web/PWA lo consulta para
+// avisar "hay una versión nueva" (ver WebUpdatePrompt.jsx). En local ('dev')
+// no se usa: no hay deploys que detectar.
+function versionFilePlugin() {
+  return {
+    name: 'lunapay-version-file',
+    generateBundle() {
+      this.emitFile({ type: 'asset', fileName: 'version.json', source: JSON.stringify({ sha: BUILD_SHA }) })
+    },
+  }
+}
+
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react(), versionFilePlugin()],
   define: {
     __BUILD_SHA__: JSON.stringify(BUILD_SHA),
     __BUILD_DATE__: JSON.stringify(BUILD_DATE),

@@ -74,6 +74,7 @@ import { ActiveSpaceHeader } from './components/ActiveSpaceHeader'
 import { APP_VERSION, getPatchNotes, isNewerVersion } from './lib/patchNotes'
 import { InviteCodeModal } from './components/InviteCodeModal'
 import { UpdatePrompt } from './components/UpdatePrompt'
+import { WebUpdatePrompt } from './components/WebUpdatePrompt'
 import { PushReminder } from './components/PushReminder'
 import { RateAppPrompt } from './components/RateAppPrompt'
 import { PullToRefresh } from './components/PullToRefresh'
@@ -2211,6 +2212,7 @@ export default function App() {
       <InviteCodeModal />
       <PremiumThanksModal info={premiumThanks} onClose={() => setPremiumThanks(null)} onAddPayment={handleThanksAddPayment} />
       <UpdatePrompt />
+      <WebUpdatePrompt />
       <PushReminder userId={user?.id} ready={navReady && !!profile.coachmarks_seen?.home} blocked={premiumPageOpen} />
       <RateAppPrompt blocked={feedbackPromptOpen} />
       <PullToRefresh />
