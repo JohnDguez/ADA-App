@@ -4,6 +4,7 @@ import i18n from '../i18n'
 import { Plus, UserRound, Crown, UsersRound, ChevronDown, ChevronUp } from 'lucide-react'
 import styles from './SpaceSwitcher.module.css'
 import { kbd } from '../lib/a11y'
+import { useIsMobile } from '../hooks/useIsMobile'
 
 // Selector de espacio activo — tarjetas apiladas (patrón que Johnatan mostró
 // de la app de Banamex). Dibuja SOLO las tarjetas que asoman (no la activa
@@ -29,6 +30,8 @@ const COMPACT_VISIBLE = 2
 
 export function SpaceSwitcher({ spaces, activeSpaceId, onSwitch, profile, stats = {} }) {
   const { t } = useTranslation()
+  // Móvil (<768px, v0.9.887): lo sustituye el chip de ActiveSpaceHeader (MobileSpaceChip.jsx).
+  const isMobile = useIsMobile()
   // Detecta cuándo cambia el espacio activo y guarda por 300ms cuál era el
   // de antes (para animarlo cambiando de color hacia su tono de "asoma",
   // ver `colorsSettled` abajo) y cuál es el nuevo (para animarlo
@@ -148,7 +151,7 @@ export function SpaceSwitcher({ spaces, activeSpaceId, onSwitch, profile, stats 
     return null
   }
 
-  if (renderList.length === 0) return null
+  if (isMobile || renderList.length === 0) return null
 
   return (
     <div data-coachmark="home-space-switcher" className={styles.switcherContainer}>

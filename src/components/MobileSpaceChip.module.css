@@ -1,0 +1,107 @@
+/* Selector de espacio móvil (mockup aprobado). Solo colores de index.css. */
+.row { display: flex; align-items: center; gap: 8px; }
+.chip {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 44px;
+  padding: 0 8px 0 12px;
+  border: none;
+  border-radius: 99px;
+  background: var(--surface);
+  color: var(--text);
+  font-family: inherit;
+  white-space: nowrap;
+  cursor: pointer;
+  box-shadow: var(--shadow-card);
+  min-width: 0;
+}
+.icon { display: grid; place-items: center; color: var(--accent); }
+.iconShared { color: var(--space-inactive-bg); }
+.texts { display: flex; flex-direction: column; align-items: flex-start; line-height: 1.1; min-width: 0; }
+.label { font-size: 10px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+.name { font-size: 14px; font-weight: 700; max-width: 150px; overflow: hidden; text-overflow: ellipsis; }
+.badge { min-width: 20px; height: 20px; padding: 0 6px; border-radius: 99px; display: grid; place-items: center; background: var(--danger); color: var(--on-danger); font-size: 11px; font-weight: 700; }
+.chev { width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; background: var(--desk-chip); }
+.pulse {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--accent);
+  border: 2px solid var(--bg);
+  animation: chipPulse 1.8s ease-out infinite;
+}
+@keyframes chipPulse {
+  0% { box-shadow: 0 0 0 0 var(--accent-soft); }
+  70%, 100% { box-shadow: 0 0 0 9px transparent; }
+}
+@media (prefers-reduced-motion: reduce) { .pulse { animation: none; } }
+.addChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 44px;
+  padding: 0 14px;
+  border-radius: 99px;
+  border: 1.8px dashed var(--accent);
+  background: transparent;
+  color: var(--accent);
+  font-family: inherit;
+  font-size: 13.5px;
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+/* Hoja */
+.intro { font-size: 13px; line-height: 1.45; color: var(--muted); margin: 0 0 14px; }
+.perks { display: grid; gap: 10px; margin-bottom: 14px; }
+.perk { display: flex; align-items: center; gap: 10px; font-size: 12.5px; color: var(--muted); }
+.perk b { display: block; font-size: 13px; color: var(--text); }
+.perkIc { width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; flex: none; background: var(--desk-chip); color: var(--accent); }
+.list { display: grid; gap: 8px; }
+.opt {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 11px 12px;
+  border: none;
+  border-radius: 18px;
+  background: var(--desk-chip);
+  color: var(--text);
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  box-shadow: inset 0 0 0 2px transparent;
+}
+.optOn { box-shadow: inset 0 0 0 2px var(--accent); }
+.oi { width: 38px; height: 38px; border-radius: 50%; display: grid; place-items: center; flex: none; }
+.oiPersonal { background: var(--space-personal-bg); color: var(--space-personal-text); }
+.oiShared { background: var(--space-inactive-bg); color: var(--space-inactive-text); }
+.ot { display: flex; flex-direction: column; min-width: 0; flex: 1; }
+.ot b { font-size: 14.5px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ot > span { font-size: 12px; color: var(--muted); }
+.tag { align-self: flex-start; margin-top: 4px; padding: 2px 8px; border-radius: 99px; background: var(--surface); color: var(--muted); font-style: normal; font-size: 10.5px; font-weight: 700; }
+.active { font-size: 11.5px; font-weight: 700; color: var(--muted); }
+.cta, .ctaAlt {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  height: 48px;
+  margin-top: 10px;
+  border: none;
+  border-radius: 99px;
+  font-family: inherit;
+  font-size: 14.5px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.cta { background: var(--space-new-bg); color: var(--space-new-text); }
+.ctaAlt { margin-top: 8px; background: var(--desk-chip); color: var(--text); }

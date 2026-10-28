@@ -7,6 +7,8 @@ import { showInviteCode } from './InviteCodeModal'
 import styles from './ActiveSpaceHeader.module.css'
 import { useScrollLock } from '../lib/scrollLock'
 import { Presence } from './Presence'
+import { useIsMobile } from '../hooks/useIsMobile'
+import { MobileSpaceChip } from './MobileSpaceChip'
 import { kbd } from '../lib/a11y'
 
 // Encabezado del espacio activo — antes vivía DENTRO de SpaceSwitcher.jsx
@@ -21,8 +23,10 @@ import { kbd } from '../lib/a11y'
 // Cada página (HomePage/PaymentsPage/RecurrentsPage) lo dibuja como lo
 // primero dentro de su propio contenedor de contenido — no dentro de
 // SpaceSwitcher.jsx, que ahora solo dibuja las tarjetas que asoman.
-export function ActiveSpaceHeader({ activeSpaceId, sharedSpaces, onManage, onSwitch, deleteSpace, leaveSpace, user, defaultSpaceId, onSetDefault, profile }) {
+export function ActiveSpaceHeader({ activeSpaceId, sharedSpaces, onManage, onSwitch, deleteSpace, leaveSpace, user, defaultSpaceId, onSetDefault, profile, stats }) {
   const { t } = useTranslation()
+  // Móvil (<768px, v0.9.887): chip + hoja en vez de la isla de tablet/escritorio.
+  const isMobile = useIsMobile()
   const [menuOpen,       setMenuOpen]       = useState(false)
   const [menuPos,        setMenuPos]        = useState(null) // { top, bottom, right } en coordenadas de pantalla
   const [dangerOpen,     setDangerOpen]     = useState(false)
@@ -191,104 +195,112 @@ export function ActiveSpaceHeader({ activeSpaceId, sharedSpaces, onManage, onSwi
     }
   }
 
+  const actionsEl = !isNewPanel && (
+    <>
+    <button
+      onClick={handleTogglePin}
+      className={styles.pinButton}
+      aria-label={isPinned ? t('activeSpaceHeader.pinAriaLabelOn') : t('activeSpaceHeader.pinAriaLabelOff')}
+    >
+      <Pin size={18} color={isPinned ? 'var(--accent)' : 'var(--text)'} fill={isPinned ? 'var(--accent)' : 'none'} />
+    </button>
+
+      {isRealSpace && (
+    <div className={styles.menuWrapper}>
+      <button
+        onClick={e => {
+          e.stopPropagation()
+          setSpaceListOpen(false) // exclusividad — nunca los 2 flotantes a la vez
+          if (!menuOpen) {
+            // Mismo criterio que ya usaba SpaceSwitcher.jsx: 2 ítems fijos
+            // (~90px) — si no caben debajo antes del final de la
+            // pantalla, se abre hacia arriba. Coordenadas de pantalla
+            // (no relativas a este botón) porque el menú se renderiza
+            // por un portal.
+            const rect = e.currentTarget.getBoundingClientRect()
+            const upward = rect.bottom + (isOwner ? 135 : 90) > window.innerHeight
+            setMenuPos({
+              top: upward ? undefined : rect.bottom + 4,
+              bottom: upward ? window.innerHeight - rect.top + 4 : undefined,
+              right: window.innerWidth - rect.right,
+            })
+          }
+          setMenuOpen(v => !v)
+        }}
+        className={styles.menuButton}
+        aria-label={t('buttons.options')}
+        aria-haspopup="menu"
+        aria-expanded={menuOpen}
+      >
+        <MoreVertical size={18} color="var(--text)" />
+      </button>
+
+      {menuOpen && menuPos && createPortal(
+        <>
+          <div onClick={() => setMenuOpen(false)} className={styles.menuOverlay} />
+          <div
+            onClick={e => e.stopPropagation()}
+            className={styles.menuPanel}
+            style={{ top: menuPos.top, bottom: menuPos.bottom, right: menuPos.right }}
+          >
+            <button
+              onClick={() => { setMenuOpen(false); onManage() }}
+              className={`${styles.menuItem} ${styles.menuItemBordered}`}
+            >
+              <Pencil size={14} /> {t('buttons.edit')}
+            </button>
+            {isOwner && (
+              <button
+                onClick={() => { setMenuOpen(false); showInviteCode({ code: entry.space.access_code, name: entry.space.name }) }}
+                className={`${styles.menuItem} ${styles.menuItemBordered}`}
+              >
+                <KeyRound size={14} /> {t('activeSpaceHeader.menuInviteCode')}
+              </button>
+            )}
+            {isOwner ? (
+              <button
+                onClick={openDanger}
+                className={`${styles.menuItem} ${styles.menuItemDanger}`}
+              >
+                <Trash2 size={14} /> {t('buttons.delete')}
+              </button>
+            ) : (
+              <button
+                onClick={openDanger}
+                className={`${styles.menuItem} ${styles.menuItemDanger}`}
+              >
+                <LogOut size={14} /> {t('activeSpaceHeader.menuLeave')}
+              </button>
+            )}
+          </div>
+        </>,
+        document.body
+      )}
+    </div>
+      )}
+    </>
+  )
+
   return (
-    <div className={styles.headerRoot} style={{ animation: entering ? 'activeHeaderEnter .3s cubic-bezier(0.25, 0.46, 0.45, 0.94) both' : 'none' }}>
+    <div className={isMobile ? styles.mobRoot : styles.headerRoot} style={isMobile ? undefined : { animation: entering ? 'activeHeaderEnter .3s cubic-bezier(0.25, 0.46, 0.45, 0.94) both' : 'none' }}>
       <div {...kbd}
         ref={headerRowRef}
         onClick={handleToggleSpaceList}
-        className={`${styles.headerRow} ${styles.headerRowIsland} ${styles.headerRowClickable} ${spaceListOpen ? styles.headerRowExpanded : ''}`}
+        className={isMobile ? styles.mobRowWrap : `${styles.headerRow} ${styles.headerRowIsland} ${styles.headerRowClickable} ${spaceListOpen ? styles.headerRowExpanded : ''}`}
       >
+      {isMobile ? (
+        <MobileSpaceChip activeSpaceId={activeSpaceId} sharedSpaces={sharedSpaces} profile={profile} stats={stats} onSwitch={onSwitch}>
+          <div className={styles.mobActions}>{actionsEl}</div>
+        </MobileSpaceChip>
+      ) : (
+      <>
       <span className={styles.headerName}>
         {HeaderIcon && <HeaderIcon size={15} color="var(--text)" strokeWidth={2} />}
         {name}
       </span>
 
       <div className={styles.headerActions}>
-        {!isNewPanel && (
-        <>
-        <button
-          onClick={handleTogglePin}
-          className={styles.pinButton}
-          aria-label={isPinned ? t('activeSpaceHeader.pinAriaLabelOn') : t('activeSpaceHeader.pinAriaLabelOff')}
-        >
-          <Pin size={18} color={isPinned ? 'var(--accent)' : 'var(--text)'} fill={isPinned ? 'var(--accent)' : 'none'} />
-        </button>
-
-      {isRealSpace && (
-        <div className={styles.menuWrapper}>
-          <button
-            onClick={e => {
-              e.stopPropagation()
-              setSpaceListOpen(false) // exclusividad — nunca los 2 flotantes a la vez
-              if (!menuOpen) {
-                // Mismo criterio que ya usaba SpaceSwitcher.jsx: 2 ítems fijos
-                // (~90px) — si no caben debajo antes del final de la
-                // pantalla, se abre hacia arriba. Coordenadas de pantalla
-                // (no relativas a este botón) porque el menú se renderiza
-                // por un portal.
-                const rect = e.currentTarget.getBoundingClientRect()
-                const upward = rect.bottom + (isOwner ? 135 : 90) > window.innerHeight
-                setMenuPos({
-                  top: upward ? undefined : rect.bottom + 4,
-                  bottom: upward ? window.innerHeight - rect.top + 4 : undefined,
-                  right: window.innerWidth - rect.right,
-                })
-              }
-              setMenuOpen(v => !v)
-            }}
-            className={styles.menuButton}
-            aria-label={t('buttons.options')}
-            aria-haspopup="menu"
-            aria-expanded={menuOpen}
-          >
-            <MoreVertical size={18} color="var(--text)" />
-          </button>
-
-          {menuOpen && menuPos && createPortal(
-            <>
-              <div onClick={() => setMenuOpen(false)} className={styles.menuOverlay} />
-              <div
-                onClick={e => e.stopPropagation()}
-                className={styles.menuPanel}
-                style={{ top: menuPos.top, bottom: menuPos.bottom, right: menuPos.right }}
-              >
-                <button
-                  onClick={() => { setMenuOpen(false); onManage() }}
-                  className={`${styles.menuItem} ${styles.menuItemBordered}`}
-                >
-                  <Pencil size={14} /> {t('buttons.edit')}
-                </button>
-                {isOwner && (
-                  <button
-                    onClick={() => { setMenuOpen(false); showInviteCode({ code: entry.space.access_code, name: entry.space.name }) }}
-                    className={`${styles.menuItem} ${styles.menuItemBordered}`}
-                  >
-                    <KeyRound size={14} /> {t('activeSpaceHeader.menuInviteCode')}
-                  </button>
-                )}
-                {isOwner ? (
-                  <button
-                    onClick={openDanger}
-                    className={`${styles.menuItem} ${styles.menuItemDanger}`}
-                  >
-                    <Trash2 size={14} /> {t('buttons.delete')}
-                  </button>
-                ) : (
-                  <button
-                    onClick={openDanger}
-                    className={`${styles.menuItem} ${styles.menuItemDanger}`}
-                  >
-                    <LogOut size={14} /> {t('activeSpaceHeader.menuLeave')}
-                  </button>
-                )}
-              </div>
-            </>,
-            document.body
-          )}
-        </div>
-      )}
-        </>
-        )}
+        {actionsEl}
 
       {/* Chevron al final de todo — después de pin y "..." (si se
           muestran; en "Nuevo espacio compartido" no aplican, pero el
@@ -296,6 +308,8 @@ export function ActiveSpaceHeader({ activeSpaceId, sharedSpaces, onManage, onSwi
           para que se sienta que envuelve el encabezado completo. */}
       <ChevronIcon size={16} color="var(--text)" strokeWidth={2} className={styles.chevronIcon} />
       </div>
+      </>
+      )}
 
       {/* Desplegable de espacios — misma mecánica de portal que el menú
           "..." de arriba: flota ENCIMA del contenido de la página en vez

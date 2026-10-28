@@ -2646,5 +2646,26 @@
     "later": "Ahora no",
     "tipPre": "O presiona",
     "tipPost": "para recargar"
+  },
+  "spaceChip": {
+    "label": "Espacio",
+    "sheetTitle": "Tus espacios",
+    "sheetIntro": "Personal es solo tuyo. Los espacios compartidos te dejan dividir pagos con otras personas.",
+    "newTitle": "Espacios compartidos",
+    "newIntro": "Divide gastos con tu pareja, tus compañeros de casa o tu familia, y todos ven quién pagó qué.",
+    "addChip": "Espacio compartido",
+    "tagPersonal": "Solo tú",
+    "tagOwner_one": "Tuyo · {{count}} persona",
+    "tagOwner_other": "Tuyo · {{count}} personas",
+    "tagGuest_one": "Compartido · {{count}} persona",
+    "tagGuest_other": "Compartido · {{count}} personas",
+    "personalSub": "Tus pagos, solo tú",
+    "active": "Activo",
+    "create": "Crear espacio compartido",
+    "haveCode": "Tengo un código de invitación",
+    "perk1Title": "Paguen juntos",
+    "perk1Text": "Cada quien ve y marca sus partes",
+    "perk2Title": "Avisos para todos",
+    "perk2Text": "Nadie olvida un pago"
   }
 }

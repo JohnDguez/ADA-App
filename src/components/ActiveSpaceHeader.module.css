@@ -242,3 +242,20 @@
   cursor: pointer;
   text-align: left;
 }
+
+/* ── Móvil (v0.9.887): chip de espacio en lugar de la isla ─────────────────
+   El contenido lo dibuja MobileSpaceChip.jsx; aquí solo la fila y los botones
+   circulares de fijar / opciones a su derecha. */
+.mobRoot { position: relative; z-index: 35; background: var(--bg); padding: 0 16px 12px; margin-top: -6px; }
+.mobRowWrap { display: contents; }
+.mobActions { margin-left: auto; display: flex; align-items: center; gap: 8px; }
+.mobActions .headerActions { gap: 8px; }
+.mobActions .pinButton, .mobActions .menuButton {
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border-radius: 50%;
+  background: var(--surface);
+  justify-content: center;
+  box-shadow: var(--shadow-card);
+}

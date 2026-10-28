@@ -2646,5 +2646,26 @@
     "later": "Not now",
     "tipPre": "Or press",
     "tipPost": "to reload"
+  },
+  "spaceChip": {
+    "label": "Space",
+    "sheetTitle": "Your spaces",
+    "sheetIntro": "Personal is only yours. Shared spaces let you split payments with other people.",
+    "newTitle": "Shared spaces",
+    "newIntro": "Split expenses with your partner, roommates or family and everyone sees who paid what.",
+    "addChip": "Shared space",
+    "tagPersonal": "Just you",
+    "tagOwner_one": "Yours · {{count}} person",
+    "tagOwner_other": "Yours · {{count}} people",
+    "tagGuest_one": "Shared · {{count}} person",
+    "tagGuest_other": "Shared · {{count}} people",
+    "personalSub": "Your payments, just you",
+    "active": "Active",
+    "create": "Create shared space",
+    "haveCode": "I have an invite code",
+    "perk1Title": "Pay together",
+    "perk1Text": "Everyone sees and marks their share",
+    "perk2Title": "Alerts for everyone",
+    "perk2Text": "Nobody forgets a payment"
   }
 }
