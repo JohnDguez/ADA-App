@@ -143,9 +143,9 @@
 }
 
 .methodSwatch {
-  width: 16px;
-  height: 11px;
-  border-radius: 2px;
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
   flex-shrink: 0;
   background: var(--swatch-color);
 }

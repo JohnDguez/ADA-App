@@ -84,7 +84,7 @@
 .catText, .methodText { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .postponed { font-size: 12px; font-weight: 600; color: var(--muted); }
 .method { display: flex; align-items: center; gap: 7px; min-width: 0; font-size: 12.5px; color: var(--muted); }
-.swatch { width: 14px; height: 9px; border-radius: 2px; flex-shrink: 0; display: block; }
+.swatch { width: 0.5rem; height: 0.5rem; border-radius: 50%; flex-shrink: 0; display: block; }
 .amount { text-align: right; font-weight: 600; font-feature-settings: 'tnum'; color: var(--text); }
 .amountMuted { color: var(--muted); }
 .menuCell { display: flex; justify-content: flex-end; }

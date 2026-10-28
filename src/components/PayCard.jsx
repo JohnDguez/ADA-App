@@ -582,6 +582,19 @@ function PayCardFull({ payment: p, cfg, paymentMethodsList = [], onChangeMethod,
             bottom: menuPos.bottom != null ? menuPos.bottom : 'auto',
           }}
         >
+          {compact && (
+            <div className={styles.menuInfo}>
+              <div className={styles.menuInfoLine}><span>{getCategoryLabel(p.category)}{(freqLabel || instLabel) ? ` · ${freqLabel || instLabel}` : ''}{p.is_variable ? ` · ${t('payCard.variableTag')}` : ''}</span></div>
+              {hasMethodLine && (
+                <div className={styles.menuInfoLine}>
+                  <span className={styles.methodSwatch} style={{ '--swatch-color': statementCard ? bankColorVar(statementCard.bank) : (paymentMethod ? bankColorVar(paymentMethod.bank) : 'var(--border-mid)') }} />
+                  <span>{statementCard ? t('cards.statementBadge') : paymentMethod
+                    ? `${getBank(paymentMethod.bank).id === 'otro' ? t('cards.otherBank') : getBank(paymentMethod.bank).name}${paymentMethod.alias ? ` ${paymentMethod.alias}` : ''}`
+                    : t(p.payment_method_kind === 'credit' ? 'paymentMethod.deletedCredit' : 'paymentMethod.deletedDebit')}</span>
+                </div>
+              )}
+            </div>
+          )}
           {isPending && p.is_installment && !p.space_id && onAbonar && <MenuItem icon={<DollarSign size={14}/>} label={t('payCard.menu.contribute')} onClick={() => { canMarkPaid ? onAbonar(p) : blocked(t('paymentsPage.actionRegisterContributions')); setMenuOpen(false) }} />}
           {isPending && !p.is_installment && <MenuItem icon={<Pencil size={14}/>} label={t('buttons.edit')} onClick={() => { onEdit(p); setMenuOpen(false) }} />}
           {isPending && p.is_variable && onCaptureAmount && <MenuItem icon={<DollarSign size={14}/>} label={p.amount ? t('payCard.editAmount') : t('payCard.addAmount')} onClick={() => { onCaptureAmount(p); setMenuOpen(false) }} />}
