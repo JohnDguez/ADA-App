@@ -317,6 +317,15 @@ function PayCardFull({ payment: p, cfg, paymentMethodsList = [], onChangeMethod,
     return count
   }
 
+  // Doble clic en la fila (solo escritorio, v0.9.876): abre el mismo menú de
+  // opciones que el botón «⋮». Se ignora sobre botones y mientras sincroniza.
+  function openMenuOnDouble(e) {
+    if (!document.documentElement.hasAttribute('data-desk-sidebar')) return
+    if (p._syncing || e.target.closest('button, a, input')) return
+    window.getSelection()?.removeAllRanges()
+    if (!menuOpen) openMenuAt()
+  }
+
   function openMenuAt() {
     const rect = menuRef.current.getBoundingClientRect()
     const estimatedHeight = menuItemCount() * 38 + 8
@@ -378,6 +387,7 @@ function PayCardFull({ payment: p, cfg, paymentMethodsList = [], onChangeMethod,
       <div {...kbdIf(!!onSelect)}
         data-payment-id={p.id}
         onClick={onSelect ? () => onSelect(p.id) : undefined}
+        onDoubleClick={openMenuOnDouble}
         className={`${styles.card} ${phase === 'exiting' ? styles.cardExiting : ''} ${onSelect ? styles.cardSelectable : ''} ${selected ? styles.cardSelected : ''}`}
         style={{ borderLeft: railMode ? 'none' : `5px solid ${borderLeft || 'var(--border)'}` }}
       >
