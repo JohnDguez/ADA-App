@@ -15,5 +15,6 @@
 /* Diálogo de escritorio al añadir/editar tarjeta desde otro formulario (v0.9.845). */
 .dlg { --field-desk-bg: var(--desk-chip); width: 940px; }
 .dlgForm { min-width: 0; }
-.dlgSide { display: flex; align-items: center; justify-content: center; padding: 28px; border-radius: 26px; background: var(--desk-chip); }
+.dlgSide { display: flex; align-items: flex-start; }
+.dlgSide > * { width: 100%; }
 .dlg .input { background: var(--desk-chip); }

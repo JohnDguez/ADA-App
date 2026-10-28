@@ -149,6 +149,7 @@ export function CardDayRangePicker({ cutDay, dueDay, onChange }) {
             onFocus={() => setActive('cut')}
             onChange={e => handleType('cut', e.target.value)}
             onBlur={() => setCutText(String(cutDay || ''))}
+            placeholder="1–31"
             className={styles.input}
           />
         </label>
@@ -162,6 +163,7 @@ export function CardDayRangePicker({ cutDay, dueDay, onChange }) {
             onFocus={() => setActive('due')}
             onChange={e => handleType('due', e.target.value)}
             onBlur={() => setDueText(String(dueDay || ''))}
+            placeholder="1–31"
             className={styles.input}
           />
         </label>

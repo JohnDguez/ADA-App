@@ -182,7 +182,7 @@ export function CardFormModal({ open, initial, onSave, onClose, inline = false }
           <div className={dk.layout}>
             <div className={dk.dlgForm}>{deskFields}</div>
             <div className={dk.dlgSide}>
-              <div className={dk.preview}><CreditCardVisual card={{ ...form, bank: form.bank || 'otro' }} /></div>
+              <CreditCardVisual large card={{ ...form, bank: form.bank || 'otro' }} />
             </div>
           </div>
           {error && <div className={dk.err}>{error}</div>}

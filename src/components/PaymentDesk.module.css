@@ -41,3 +41,22 @@
 }
 .dialog :global(.field-input) { background: var(--desk-chip); border: 0; border-radius: 16px; }
 .dialog :global(.field-input):focus { box-shadow: inset 0 0 0 2px var(--accent); }
+
+/* Dictado por voz sin modal (v0.9.847, propuesta B): tira dentro del diálogo. */
+.voice { display: flex; align-items: center; gap: 16px; padding: 14px 18px; border-radius: 22px; background: var(--desk-chip); }
+.voiceMic { position: relative; width: 46px; height: 46px; flex: none; border-radius: 50%; display: grid; place-items: center; background: var(--accent); color: var(--desk-ink-text); }
+.voiceMicOn::after { content: ""; position: absolute; inset: 0; border-radius: 50%; border: 2px solid var(--accent); animation: voicePulse 1.6s ease-out infinite; }
+@keyframes voicePulse { from { transform: scale(1); opacity: 1; } to { transform: scale(1.7); opacity: 0; } }
+.voiceText { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.voiceText small { font-size: 12px; font-weight: 600; letter-spacing: 0.8px; text-transform: uppercase; color: var(--muted); }
+.voiceText b { font-size: 15.5px; font-weight: 600; }
+.voiceText span { font-size: 13px; color: var(--muted); }
+.wave { display: flex; align-items: center; gap: 4px; height: 34px; flex: none; }
+.wave i { display: block; width: 4px; height: 100%; border-radius: 4px; background: var(--accent); transform: scaleY(0.25); animation: voiceWave 1s ease-in-out infinite; }
+.wave i:nth-child(3n) { animation-delay: -0.3s; }
+.wave i:nth-child(3n+1) { animation-delay: -0.6s; }
+.wave i:nth-child(2n) { animation-duration: 1.3s; }
+@keyframes voiceWave { 0%, 100% { transform: scaleY(0.25); } 50% { transform: scaleY(1); } }
+.voiceLang { height: 36px; padding: 0 14px; border: 0; border-radius: 99px; background: var(--desk-card); color: var(--text); font-size: 13px; font-weight: 700; }
+.voiceDone { height: 40px; padding: 0 22px; border: 0; border-radius: 99px; background: var(--accent); color: var(--desk-ink-text); font-size: 14px; font-weight: 600; }
+@media (prefers-reduced-motion: reduce) { .wave i, .voiceMicOn::after { animation: none; } }

@@ -940,11 +940,26 @@ const impactBlock = impactPreview && impactPreview.length > 0 ? (() => {
                 <div className={dk.sub}>{t('paymentModal.desk.subtitle')}</div>
               </div>
               <div className={dk.headActions}>
-                {voiceSupported && <button type="button" className={dk.ghost} onClick={handleVoice}><Microphone size={16} />{t('addDropdown.voice')}</button>}
+                {voiceSupported && voiceState === 'idle' && <button type="button" className={dk.ghost} onClick={handleVoice}><Microphone size={16} />{t('addDropdown.voice')}</button>}
                 {scanSupported && <button type="button" className={dk.ghost} onClick={handleScan} disabled={scanning}><ScanLine size={16} />{t('addDropdown.scan')}</button>}
                 <button type="button" className={dk.close} onClick={requestClose} aria-label={t('buttons.cancel')}><XIcon size={16} /></button>
               </div>
             </div>
+
+            {(voiceState === 'listening' || voiceState === 'retry') && (
+              <div className={dk.voice} role="status" aria-live="polite">
+                <span className={`${dk.voiceMic} ${voiceState === 'listening' ? dk.voiceMicOn : ''}`}><Microphone size={20} /></span>
+                <div className={dk.voiceText}>
+                  <small>{t(voiceState === 'retry' ? 'paymentModal.voice.retryTitle' : 'paymentModal.voice.listeningTitle')}</small>
+                  <b>{t(voiceState === 'retry' ? 'paymentModal.voice.retryHint' : 'paymentModal.voice.listeningHint')}</b>
+                  <span>{voiceLang === 'en' ? t('paymentModal.voice.helpEn1') : t('paymentModal.voice.helpEs1')}</span>
+                </div>
+                {voiceState === 'listening' && <span className={dk.wave} aria-hidden="true">{Array.from({ length: 14 }, (_, i) => <i key={i} />)}</span>}
+                <button type="button" onClick={toggleVoiceLang} className={dk.voiceLang}>{voiceLang === 'es' ? 'ES' : 'EN'}</button>
+                <button type="button" className={dk.voiceDone} onClick={handleVoice}>{t(voiceState === 'retry' ? 'paymentModal.voice.retryButton' : 'paymentModal.voice.done')}</button>
+                <button type="button" className={dk.close} onClick={cancelVoice} aria-label={t('buttons.cancel')}><XIcon size={16} /></button>
+              </div>
+            )}
 
             <div className={dk.tiles} data-coachmark="modal-payment-type-tabs">
               {tiles.map(([m, Icon]) => (
@@ -1097,16 +1112,6 @@ const impactBlock = impactPreview && impactPreview.length > 0 ? (() => {
         </div>
         {addCategorySheet}
         <ConfirmCloseModal open={confirmClose} onConfirm={() => { setConfirmClose(false); onClose() }} onCancel={() => setConfirmClose(false)} />
-        <ModalSheet open={voiceState === 'listening' || voiceState === 'retry'} icon={Microphone} pulse={voiceState === 'listening'} title={t(voiceState === 'retry' ? 'paymentModal.voice.retryTitle' : 'paymentModal.voice.listeningTitle')} onBackdrop={cancelVoice} zIndex={450}>
-          <ModalSheet.Text>{t(voiceState === 'retry' ? 'paymentModal.voice.retryHint' : 'paymentModal.voice.listeningHint')}</ModalSheet.Text>
-          <div className={styles.voiceExamples}>
-            {(voiceLang === 'en' ? ['helpEn1', 'helpEn3'] : ['helpEs1', 'helpEs3']).map(k => <div key={k}>{t(`paymentModal.voice.${k}`)}</div>)}
-            <div>{voiceLang === 'en' ? t('paymentModal.voice.helpEnType') : t('paymentModal.voice.helpEsType')}</div>
-          </div>
-          <SheetButton onClick={handleVoice}>{t(voiceState === 'retry' ? 'paymentModal.voice.retryButton' : 'paymentModal.voice.done')}</SheetButton>
-          <SheetButton variant="soft" onClick={cancelVoice}>{t('buttons.cancel')}</SheetButton>
-          <button type="button" onClick={toggleVoiceLang} className={styles.voiceLangLink}>{t('paymentModal.voice.langLabel')}: <strong>{voiceLang === 'es' ? 'Español' : 'English'}</strong></button>
-        </ModalSheet>
         <ModalSheet open={farPrompt} icon={ArrowsClockwise} title={t('paymentModal.farPrompt.title')} onBackdrop={() => setFarPrompt(false)} zIndex={400}>
           <ModalSheet.Text>{t('paymentModal.farPrompt.text', { date: formatDueDate(dueDate) })}</ModalSheet.Text>
           <SheetButton onClick={() => { setFarPrompt(false); selectType('recurrent') }}>{t('paymentModal.farPrompt.yes')}</SheetButton>

@@ -17,7 +17,7 @@ import styles from './CreditCardVisual.module.css'
 // `cutBadge` (opcional, v0.9.738): texto de corte próximo ("Corte hoy") que
 // reemplaza al chip dorado en la esquina — esa zona es la que asoma cuando la
 // tarjeta está tapada en la pila de Mis tarjetas.
-export function CreditCardVisual({ card, className = '', cycleSpendLabel = null, cutBadge = null }) {
+export function CreditCardVisual({ card, className = '', cycleSpendLabel = null, cutBadge = null, large = false }) {
   const { t } = useTranslation()
   const bank = getBank(card.bank)
   const isCredit = card.kind === 'credit'
@@ -25,7 +25,7 @@ export function CreditCardVisual({ card, className = '', cycleSpendLabel = null,
 
   return (
     <div
-      className={`${styles.card} ${bank.darkText ? styles.darkText : ''} ${className}`}
+      className={`${styles.card} ${bank.darkText ? styles.darkText : ''} ${large ? styles.large : ''} ${className}`}
       style={{ '--card-color': bankColorVar(card.bank) }}
     >
       <div className={styles.top}>
@@ -50,7 +50,7 @@ export function CreditCardVisual({ card, className = '', cycleSpendLabel = null,
             ? t('cards.cutAndDue', { cut: card.cut_day, due: card.due_day })
             : t(isCredit ? 'cards.kind.credit' : 'cards.kind.debit')}
         </span>
-        <CardNetworkIcon network={card.network} size={30} className={styles.network} />
+        <CardNetworkIcon network={card.network} size={large ? 46 : 30} className={styles.network} />
       </div>
     </div>
   )
