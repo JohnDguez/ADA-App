@@ -56,3 +56,5 @@
 
 /* Lista plana de escritorio (v0.9.819) */
 .deskList { display: flex; flex-direction: column; }
+/* Móvil: la última fila no lleva línea de cierre dentro de su tarjeta */
+@media (max-width: 767px) { .deskList { overflow: hidden; } .deskList > :last-child { margin-bottom: -1px; } }

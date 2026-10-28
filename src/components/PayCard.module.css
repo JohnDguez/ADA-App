@@ -553,6 +553,20 @@
   .desk .menuTriggerButton:hover { opacity: 1; }
 }
 
+/* Móvil (v0.9.896): la fila de escritorio se compacta para que el nombre quepa */
+@media (max-width: 767px) {
+  .desk .deskDate { width: 44px; height: 50px; border-radius: 13px; }
+  .desk .deskDateDay { font-size: 18px; }
+  .desk .infoSection { padding: 0 6px 0 10px; }
+  .desk .name { font-size: 15px; }
+  .desk .amountSection { padding: 0 4px; }
+  .desk .amountText { font-size: 15px; }
+  .desk .statusLabel { font-size: 11.5px; max-width: 84px; line-height: 1.2; }
+  .desk .actionsSection { padding: 0; gap: 2px; }
+  .desk .markPaidButton, .desk .paidIndicator { width: 36px; height: 36px; }
+  .desk .menuTriggerButton { width: 24px; }
+}
+
 /* Menús de opciones en escritorio (v0.9.875), mockup aprobado: tarjeta redonda,
    opciones de 42px con resalte, «Eliminar» separado y en rojo. Solo ≥1100px. */
 :global(html[data-desk-sidebar]) .contextMenu {

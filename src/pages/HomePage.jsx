@@ -52,6 +52,12 @@ function nextPeriodRange(cfg) {
 // aquí como función interna). Ver ese archivo para el detalle de diseño y
 // el fix del degradado a porcentajes bajos.
 
+// Móvil (v0.9.896, mockup A): los pagos van en lista plana de escritorio
+// (ficha de fecha de color, check circular) dentro de una tarjeta por sección.
+function MobList({ isMobile, children }) {
+  return isMobile ? <div className={styles.mobCard}>{children}</div> : children
+}
+
 export function HomePage({ payments, dataLoading = false, profile, spaceSwitcher, activeSpaceHeader, activeSpaceId, sharedSpaces, spacePermissions, onOpenPremium, onSpaceReady, onAdd, onImport, onStartAdd, onGoTab, onGoSettingsSection, onOpenAddMenu, onMarkPaid, onRequestVariableAmount, onConfirmVariablePaid, onRequestNextPeriodConfirm, onRequestMethod, onMarkUnpaid, onCaptureAmount, onEdit, onAbonar, onSplit, onPayFromFund, fundBalance, onViewSource, onDelete, onPostpone, onAdvance, onGoSettings, paymentMethodsList = [], onChangeMethod, notifications, unreadCount, onMarkAsRead, onMarkAllAsRead, onDeleteNotif, onClearAllNotifs, onNavigateNotif, slideClass }) {
   const { t, i18n } = useTranslation()
   // Detecta un cambio REAL de espacio activo (no el primer montaje de la
@@ -651,8 +657,11 @@ export function HomePage({ payments, dataLoading = false, profile, spaceSwitcher
                 <div className={styles.overdueSection}>
                   <div className={styles.overdueTitle}>
                     {t('homePage.overdueTitle')}
+                    {isMobile && <span className={styles.mobCount}>{vencidos.length}</span>}
                   </div>
-                  <PayRail payments={vencidos} cfg={profile} dotColor="var(--overdue-border)" dotTextColor="var(--overdue-text)" handlers={handlers} permissions={spacePermissions} spaceMembers={spaceMembers} />
+                  <MobList isMobile={isMobile}>
+                    <PayRail payments={vencidos} cfg={profile} dotColor="var(--overdue-border)" dotTextColor="var(--overdue-text)" handlers={handlers} permissions={spacePermissions} spaceMembers={spaceMembers} deskMode={isMobile} />
+                  </MobList>
                 </div>
               )}
 
@@ -666,8 +675,8 @@ export function HomePage({ payments, dataLoading = false, profile, spaceSwitcher
                   bloques; si no hay vencidos, la lista ya es autoexplicativa
                   justo debajo del colapsable de pagados y no hace falta. */}
               <div data-coachmark="home-rail" className={styles.periodSection}>
-                {(dataLoading || (vencidos.length > 0 && delPeriodo.length > 0)) && (
-                  <div className={styles.pendingSectionTitle}>{t('homePage.pendingSectionTitle')}</div>
+                {(dataLoading || (vencidos.length > 0 && delPeriodo.length > 0) || (isMobile && delPeriodo.length > 0)) && (
+                  <div className={styles.pendingSectionTitle}>{t('homePage.pendingSectionTitle')}{isMobile && !dataLoading && <span className={styles.mobCount}>{delPeriodo.length}</span>}</div>
                 )}
                 {delPeriodo.length === 0
                   /* Fase 1 del sistema de carga por sección (agosto 2026):
@@ -681,7 +690,7 @@ export function HomePage({ payments, dataLoading = false, profile, spaceSwitcher
                       {vencidos.length === 0 && <EmptyState title={t('homePage.emptyState.currentPeriodTitle')} subtitle={t('homePage.emptyState.subtitle')} onClick={onAdd} secondaryLabel={onImport ? t('importCsv.emptyLink') : undefined} onSecondaryClick={onImport} />}
                       <TipCard inSpace={!!(activeSpaceId && activeSpaceId !== 'new')} isOwner={spacePermissions?.isRestricted === false} perms={spacePermissions} compact={vencidos.length > 0} onAction={a => a?.startsWith('settings:') ? onGoSettingsSection?.(a.slice(9)) : a?.startsWith('tab:') ? onGoTab?.(a.slice(4)) : (a === 'voice' || a === 'scan') ? onStartAdd?.(a) : a === 'addmenu' ? (onOpenAddMenu || onAdd)?.() : onAdd?.()} />
                     </>)
-                  : <PayRail payments={delPeriodo} cfg={profile} dotColor="var(--upcoming-border)" dotTextColor="var(--impact-warning-text)" handlers={handlers} permissions={spacePermissions} spaceMembers={spaceMembers} />
+                  : <MobList isMobile={isMobile}><PayRail payments={delPeriodo} cfg={profile} dotColor="var(--upcoming-border)" dotTextColor="var(--impact-warning-text)" handlers={handlers} permissions={spacePermissions} spaceMembers={spaceMembers} deskMode={isMobile} /></MobList>
                 }
               </div>
             </div>
@@ -690,7 +699,7 @@ export function HomePage({ payments, dataLoading = false, profile, spaceSwitcher
               <div className={styles.periodSection}>
                 {upcoming.length === 0
                   ? (dataLoading ? <RailSkeleton count={2} /> : <EmptyState title={t('homePage.emptyState.nextPeriodTitle')} subtitle={t('homePage.emptyState.subtitle')} onClick={onAdd} />)
-                  : <PayRail payments={upcoming} cfg={profile} dotColor="var(--accent)" dotTextColor="var(--bg)" handlers={handlers} permissions={spacePermissions} nextPeriodMode spaceMembers={spaceMembers} />
+                  : <MobList isMobile={isMobile}><PayRail payments={upcoming} cfg={profile} dotColor="var(--accent)" dotTextColor="var(--bg)" handlers={handlers} permissions={spacePermissions} nextPeriodMode spaceMembers={spaceMembers} deskMode={isMobile} /></MobList>
                 }
               </div>
             </div>
