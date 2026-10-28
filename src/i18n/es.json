@@ -413,7 +413,9 @@
     "shared": "Compartido",
     "viewInSharedSpace": "Ver en el espacio compartido",
     "postponedCount_one": "{{count}} pospuesto",
-    "postponedCount_other": "{{count}} pospuestos"
+    "postponedCount_other": "{{count}} pospuestos",
+    "overdueAlert_one": "{{count}} vencido",
+    "overdueAlert_other": "{{count}} vencidos"
   },
   "paymentsPage": {
     "title": "Gastos e ingresos",

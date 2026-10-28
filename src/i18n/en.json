@@ -413,7 +413,9 @@
     "shared": "Shared",
     "viewInSharedSpace": "View in shared space",
     "postponedCount_one": "{{count}} postponed",
-    "postponedCount_other": "{{count}} postponed"
+    "postponedCount_other": "{{count}} postponed",
+    "overdueAlert_one": "{{count}} overdue",
+    "overdueAlert_other": "{{count}} overdue"
   },
   "paymentsPage": {
     "title": "Expenses and income",
