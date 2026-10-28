@@ -927,6 +927,15 @@
           "title": "Pagos vencidos",
           "sub": "Para que ningún pago se te pase"
         }
+      },
+      "avatar": {
+        "upload": "Subir foto",
+        "uploading": "Subiendo…",
+        "remove": "Quitar",
+        "orChoose": "O elige un avatar",
+        "errorSize": "La imagen no puede superar 2 MB",
+        "errorType": "Solo se permiten imágenes JPG, PNG o WebP",
+        "errorUpload": "No pudimos subir la foto. Intenta de nuevo."
       }
     }
   },

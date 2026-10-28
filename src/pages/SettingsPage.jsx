@@ -6,6 +6,7 @@ import { showToast } from '../components/Toast'
 import { supabase } from '../lib/supabase'
 import { getAppVersionLabel } from '../lib/appVersion'
 import { APP_NAME } from '../lib/constants'
+import { PRESET_AVATARS } from '../lib/avatars'
 import { buildFeedbackUrl } from '../lib/feedback'
 import { Card, Row } from '../components/SettingsShared'
 import { SettingsAccountPage } from './settings/SettingsAccountPage'
@@ -27,21 +28,6 @@ import { useIsDesktop } from '../hooks/useIsDesktop'
 import { DeskSettings } from './DeskSettings'
 
 const ImportInline = lazy(() => import('../components/ImportModal').then(m => ({ default: m.ImportInline })))
-
-// Galería de avatares preestablecidos — imágenes estáticas servidas desde
-// public/avatars/ (Vite/Vercel las expone tal cual, sin pasar por Supabase
-// Storage). Al elegir uno, simplemente se guarda su ruta en profiles.avatar_url,
-// igual que ya se hace con la URL pública de una foto subida.
-const PRESET_AVATARS = [
-  '/avatars/hombre-1.webp',
-  '/avatars/hombre-2.webp',
-  '/avatars/hombre-3.webp',
-  '/avatars/hombre-4.webp',
-  '/avatars/mujer-1.webp',
-  '/avatars/mujer-2.webp',
-  '/avatars/mujer-3.webp',
-  '/avatars/mujer-4.webp',
-]
 
 // Menú principal de "Perfil"/Ajustes. Cada renglón navega a su propia
 // sub-página (ver ./settings/). Antes todo esto vivía junto en un solo

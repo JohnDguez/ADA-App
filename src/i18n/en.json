@@ -927,6 +927,15 @@
           "title": "Overdue payments",
           "sub": "So no payment slips by"
         }
+      },
+      "avatar": {
+        "upload": "Upload photo",
+        "uploading": "Uploading…",
+        "remove": "Remove",
+        "orChoose": "Or pick an avatar",
+        "errorSize": "The image cannot exceed 2 MB",
+        "errorType": "Only JPG, PNG or WebP images are allowed",
+        "errorUpload": "We could not upload the photo. Try again."
       }
     }
   },

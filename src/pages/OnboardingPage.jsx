@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import i18n from '../i18n'
-import { User, CalendarCheck, Wallet, BellRing, UserRound, ArrowRight, Check, AlarmClock, TriangleAlert } from 'lucide-react'
+import { User, CalendarCheck, Wallet, BellRing, UserRound, ArrowRight, Check, AlarmClock, TriangleAlert, Camera, X } from 'lucide-react'
 import { getWeekdays, getWeekdaysShort } from '../lib/utils'
 import { supabase } from '../lib/supabase'
 import { usePushNotifications } from '../hooks/usePushNotifications'
@@ -11,6 +11,8 @@ import { getCurrencySymbol } from '../lib/currency'
 import styles from './OnboardingPage.module.css'
 import { switchProps } from '../lib/a11y'
 import { useIsDesktop } from '../hooks/useIsDesktop'
+import { AvatarImg } from '../components/AvatarImg'
+import { PRESET_AVATARS, uploadAvatarFile } from '../lib/avatars'
 
 // illustrationSize / illustrationBottom / bodyPaddingTop: mismos defaults
 // para los 4 (los que ya se habían ajustado), pero cada paso puede
@@ -70,6 +72,11 @@ export function OnboardingPage({ userId, onDone }) {
   const [salaryAmount,   setSalaryAmount]   = useState('')
   // Quincenal personalizado: el 1.er toque elige el primer día, el 2.º el segundo.
   const [biweeklyPick,   setBiweeklyPick]   = useState(0)
+  // Avatar (opcional): ruta de un preestablecido o URL de la foto subida.
+  const [avatarUrl,       setAvatarUrl]       = useState('')
+  const [avatarUploading, setAvatarUploading] = useState(false)
+  const [avatarError,     setAvatarError]     = useState('')
+  const fileRef = useRef(null)
   const [saving,         setSaving]         = useState(false)
   const [finishError,    setFinishError]    = useState('')
 
@@ -97,6 +104,23 @@ export function OnboardingPage({ userId, onDone }) {
     setCobroDay1(Math.min(d, cobroDay1)); setCobroDay2(Math.max(d, cobroDay1)); setBiweeklyPick(0)
   }
 
+  async function handleAvatarFile(e) {
+    const file = e.target.files?.[0]
+    e.target.value = ''
+    if (!file) return
+    setAvatarError('')
+    setAvatarUploading(true)
+    const { url, error } = await uploadAvatarFile(userId, file)
+    setAvatarUploading(false)
+    if (error) {
+      setAvatarError(error.code === 'size' ? t('onboardingPage.desk.avatar.errorSize')
+        : error.code === 'type' ? t('onboardingPage.desk.avatar.errorType')
+        : t('onboardingPage.desk.avatar.errorUpload'))
+      return
+    }
+    setAvatarUrl(url)
+  }
+
   async function handleFinish() {
     setSaving(true)
     setFinishError('')
@@ -110,6 +134,8 @@ export function OnboardingPage({ userId, onDone }) {
       salary_enabled: salaryEnabled,
       salary_amount:  salaryEnabled ? (parseFloat(salaryAmount) || 0) : 0,
       onboarding_completed: true,
+      // Solo si eligió uno: así no se pisa el avatar de Google que se sincroniza solo.
+      ...(avatarUrl ? { avatar_url: avatarUrl } : {}),
     }
     // FIX (agosto 2026): antes era `.update(updates).eq('id', userId)` — si
     // por lo que sea no existía YA una fila en `profiles` para este userId
@@ -197,13 +223,47 @@ export function OnboardingPage({ userId, onDone }) {
           </div>
           {nameError && <div className={styles.errorText}>{nameError}</div>}
           {isDesk && (
-            <div className={styles.extraCard}>
-              <span className={styles.avatar}>{(name.trim()[0] || '?').toUpperCase()}</span>
-              <div>
-                <div className={styles.extraTitle}>{name.trim() || t('onboardingPage.step1.namePlaceholder')}</div>
-                <div className={styles.extraSub}>{t('onboardingPage.desk.namePreview')}</div>
+            <>
+              <div className={styles.avatarBlock}>
+                <div className={styles.avatarBigWrap}>
+                  <div className={styles.avatarBig}>
+                    <AvatarImg src={avatarUrl} className={styles.avatarImg}
+                      fallback={<span className={styles.avatarInitial}>{(name.trim()[0] || '?').toUpperCase()}</span>} />
+                    {avatarUploading && <span className={styles.avatarSpin} aria-hidden="true" />}
+                  </div>
+                  <button type="button" className={styles.avatarCam} onClick={() => fileRef.current?.click()}
+                    disabled={avatarUploading} aria-label={t('onboardingPage.desk.avatar.upload')}>
+                    <Camera size={16} />
+                  </button>
+                </div>
+                <div className={styles.avatarSide}>
+                  <div className={styles.extraTitle}>{name.trim() || t('onboardingPage.step1.namePlaceholder')}</div>
+                  <div className={styles.extraSub}>{t('onboardingPage.desk.namePreview')}</div>
+                  <div className={styles.avatarActions}>
+                    <button type="button" className={styles.avatarBtn} onClick={() => fileRef.current?.click()} disabled={avatarUploading}>
+                      <Camera size={15} />{avatarUploading ? t('onboardingPage.desk.avatar.uploading') : t('onboardingPage.desk.avatar.upload')}
+                    </button>
+                    {avatarUrl && (
+                      <button type="button" className={styles.avatarBtn} onClick={() => setAvatarUrl('')}>
+                        <X size={15} />{t('onboardingPage.desk.avatar.remove')}
+                      </button>
+                    )}
+                  </div>
+                  {avatarError && <div className={styles.errorText}>{avatarError}</div>}
+                </div>
+                <input ref={fileRef} type="file" accept="image/jpeg,image/png,image/webp" hidden onChange={handleAvatarFile} />
               </div>
-            </div>
+              <label className="field-label">{t('onboardingPage.desk.avatar.orChoose')}</label>
+              <div className={styles.avatarGrid} role="group" aria-label={t('onboardingPage.desk.avatar.orChoose')}>
+                {PRESET_AVATARS.map(path => (
+                  <button key={path} type="button" onClick={() => setAvatarUrl(path)}
+                    aria-pressed={avatarUrl === path}
+                    className={`${styles.presetAvatar} ${avatarUrl === path ? styles.presetAvatarOn : ''}`}>
+                    <img src={path} alt="" />
+                  </button>
+                ))}
+              </div>
+            </>
           )}
         </>
       )}

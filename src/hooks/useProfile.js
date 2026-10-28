@@ -3,6 +3,7 @@ import { supabase } from '../lib/supabase'
 import { showToast } from '../components/Toast'
 import i18n, { resolveLanguage, LANGUAGE_STORAGE_KEY } from '../i18n'
 import { withRetry } from '../lib/withRetry'
+import { uploadAvatarFile } from '../lib/avatars'
 
 const DEFAULT_PROFILE = {
   name: '',
@@ -101,17 +102,10 @@ export function useProfile(userId) {
   }
 
   async function uploadAvatar(file) {
-    if (file.size > 2 * 1024 * 1024) return { error: { message: 'La imagen no puede superar 2 MB' } }
-    const allowed = ['image/jpeg', 'image/png', 'image/webp']
-    if (!allowed.includes(file.type)) return { error: { message: 'Solo se permiten imágenes JPG, PNG o WebP' } }
-    const ext = file.name.split('.').pop()
-    const path = `${userId}/avatar.${ext}`
-    const { error: uploadError } = await supabase.storage.from('avatars').upload(path, file, { upsert: true })
-    if (uploadError) return { error: uploadError }
-    const { data: { publicUrl } } = supabase.storage.from('avatars').getPublicUrl(path)
-    const urlWithCacheBust = `${publicUrl}?t=${Date.now()}`
-    await updateProfile({ avatar_url: urlWithCacheBust })
-    return { url: urlWithCacheBust, error: null }
+    const { url, error } = await uploadAvatarFile(userId, file)
+    if (error) return { error }
+    await updateProfile({ avatar_url: url })
+    return { url, error: null }
   }
 
   return { profile, loading, updateProfile, uploadAvatar }
