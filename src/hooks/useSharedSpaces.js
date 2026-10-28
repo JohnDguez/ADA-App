@@ -2,6 +2,8 @@ import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '../lib/supabase'
 import { notifySpaceChange } from '../lib/notifySpaceChange'
 import { showInviteCode } from '../components/InviteCodeModal'
+import { showToast } from '../components/Toast'
+import i18n from '../i18n'
 
 // Genera un candidato de código de 6 dígitos (como string, para no perder
 // ceros a la izquierda — "003456" es válido).
@@ -308,6 +310,8 @@ export function useSharedSpaces(userId) {
       // granulares de v0.9.132) — revertir el optimismo para no dejar el
       // switch mostrando algo que en realidad no se guardó.
       setSpaces(previousSpaces)
+      console.error('[updateMemberPermissions]', error)
+      showToast(i18n.t('settingsSharedSpacePage.permissionSaveError', { code: error.code || error.message || '' }))
       return { data: null, error }
     }
 

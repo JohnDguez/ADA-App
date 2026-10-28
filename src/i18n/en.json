@@ -319,7 +319,8 @@
       "permissionDenied": "Permission denied — enable it in your browser settings",
       "enableError": "Error enabling notifications",
       "enabled": "Notifications enabled"
-    }
+    },
+    "hourNeedsOn": "Turn on notifications first to choose a time."
   },
   "settingsAppearance": {
     "title": "Appearance",
@@ -1780,7 +1781,8 @@
     "deskEmpty": "You don't belong to any space yet. Join with a code or create your own.",
     "invitedSpacesCount": "Spaces you were invited to · {{n}} of 3",
     "deskNewTitle": "New space",
-    "deskNewDesc": "Create a space to share payments, goals and funds with the people you invite."
+    "deskNewDesc": "Create a space to share payments, goals and funds with the people you invite.",
+    "permissionSaveError": "Couldn't save the change ({{code}})."
   },
   "app": {
     "toast": {

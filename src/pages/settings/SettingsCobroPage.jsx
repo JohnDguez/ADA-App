@@ -39,8 +39,9 @@ export function SettingsCobroPage({ profile, onUpdate, onBack, slideClass }) {
     return !BIWEEKLY_PRESETS.some(p => p.d1 === (profile.cobro_day1 ?? 1) && p.d2 === (profile.cobro_day2 ?? 16))
   })
 
+  // «Otro» está activo si el usuario lo eligió o si los días guardados no son un preajuste.
   function isCustomBiweekly() {
-    return !BIWEEKLY_PRESETS.some(p => p.d1 === (profile.cobro_day1 ?? 1) && p.d2 === (profile.cobro_day2 ?? 16))
+    return biweeklyCustom || !BIWEEKLY_PRESETS.some(p => p.d1 === (profile.cobro_day1 ?? 1) && p.d2 === (profile.cobro_day2 ?? 16))
   }
 
   async function handleFreq(freq)   { await onUpdate({ cobro_freq: freq }) }

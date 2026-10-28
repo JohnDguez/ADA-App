@@ -114,8 +114,8 @@ export function SettingsNotificationsPage({ profile, user, onUpdate, onBack, sli
             <Toggle on={pushTarget ?? subscribed} instant={!ready} />
           </div>
           <div className={deskStyles.fill}>
-            <button type="button" className={`${dk.hour} ${deskStyles.fill}`} style={{ padding: 0, background: 'none' }} onClick={() => setHourOpen(true)}>
-              <span><b>{t('settingsNotifications.notifyAt')}</b></span>
+            <button type="button" disabled={!subscribed} className={`${dk.hour} ${deskStyles.fill}`} style={{ padding: 0, background: 'none' }} onClick={() => setHourOpen(true)}>
+              <span><b>{t('settingsNotifications.notifyAt')}</b>{!subscribed && <em className={dk.hourHint}>{t('settingsNotifications.hourNeedsOn')}</em>}</span>
               <strong>{hh} <small>{ap}</small></strong>
             </button>
           </div>

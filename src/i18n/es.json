@@ -319,7 +319,8 @@
       "permissionDenied": "Permiso denegado — actívalo en ajustes del navegador",
       "enableError": "Error al activar notificaciones",
       "enabled": "Notificaciones activadas"
-    }
+    },
+    "hourNeedsOn": "Activa primero las notificaciones para elegir la hora."
   },
   "settingsAppearance": {
     "title": "Apariencia",
@@ -1780,7 +1781,8 @@
     "deskEmpty": "Aún no perteneces a ningún espacio. Únete con un código o crea el tuyo.",
     "invitedSpacesCount": "Espacios a los que te invitaron · {{n}} de 3",
     "deskNewTitle": "Nuevo espacio",
-    "deskNewDesc": "Crea un espacio para compartir pagos, metas y fondos con quien tú invites."
+    "deskNewDesc": "Crea un espacio para compartir pagos, metas y fondos con quien tú invites.",
+    "permissionSaveError": "No se pudo guardar el cambio ({{code}})."
   },
   "app": {
     "toast": {
