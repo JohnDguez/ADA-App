@@ -128,6 +128,12 @@
       "reactivated": "Tu suscripción fue reactivada",
       "planChanged": "Tu plan fue actualizado",
       "genericError": "No se pudo completar la acción. Intenta de nuevo."
+    },
+    "desk": {
+      "changePlan": "Cambiar de plan",
+      "changeNote": "El cambio aplica desde tu próxima renovación.",
+      "cancelTitle": "Cancelar",
+      "cancelNote": "Conservas Premium hasta el {{date}}. Después pasas al plan gratuito."
     }
   },
   "settingsAccount": {
@@ -2090,7 +2096,15 @@
       "cutOf": "Corte {{name}}",
       "dueOf": "Pago {{name}}",
       "footNote": "Solo para organizar tus gastos. LunaPay no accede a tus cuentas ni datos bancarios.",
-      "formDesc": "Elige el banco y los datos. La tarjeta se actualiza mientras escribes."
+      "formDesc": "Elige el banco y los datos. La tarjeta se actualiza mientras escribes.",
+      "detailDescCredit": "Detalle de tu tarjeta de crédito: adeudo, ciclo e historial.",
+      "detailDescDebit": "Las tarjetas de débito solo muestran lo gastado.",
+      "noDebt": "Sin adeudo — estás al corriente",
+      "debitNote": "Débito: no tiene corte, fecha de pago ni adeudo.",
+      "byCategory": "Gasto por categoría",
+      "cycleTitle": "Ciclo de la tarjeta",
+      "paidHint": "Compras del periodo actual",
+      "plansDesc": "Todas las compras diferidas de esta tarjeta."
     }
   },
   "paymentMethod": {

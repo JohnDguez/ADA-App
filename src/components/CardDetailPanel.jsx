@@ -10,6 +10,9 @@ import { CardPlansPanel } from './CardPlansPanel'
 import { useBackClose } from '../lib/backNav'
 import styles from './CardDetailPanel.module.css'
 import { useScrollLock } from '../lib/scrollLock'
+import { DeskSettingsHead, DeskPage } from './DeskSettingsHead'
+import deskStyles from './SettingsDesk.module.css'
+import dd from './CardDetailDesk.module.css'
 
 // Barra segmentada de "Por pagar" (v0.9.587, variante A elegida por Johnatan): un
 // tramo por cada parte de lo que se debe (estado de cuenta, ciclo en curso, planes
@@ -44,7 +47,7 @@ function DebtBar({ debt, label }) {
 //   — normalmente pagados en efectivo, por eso NO califican como
 //   `payment_method_id === card.id`; se identifican aparte).
 // Los pospuestos no cuentan en el total, mismo criterio que Gastos.
-export function CardDetailPanel({ card, payments, onBack, onEdit, onDelete, onPayNow, onSettlePlan, onDeletePlan, spaceNames = {}, canEdit = true, canDelete = true, blocked }) {
+export function CardDetailPanel({ card, payments, onBack, onEdit, onDelete, onPayNow, onSettlePlan, onDeletePlan, spaceNames = {}, canEdit = true, canDelete = true, blocked, desk = false }) {
   const { t } = useTranslation()
   const [menuOpen, setMenuOpen] = useState(false)
   useScrollLock(menuOpen)
@@ -211,10 +214,162 @@ export function CardDetailPanel({ card, payments, onBack, onEdit, onDelete, onPa
     return (
       <CardPlansPanel
         card={card}
+        desk={desk}
         onBack={() => window.history.back()}
         onSettle={plan => onSettlePlan?.(card, plan)}
         onDelete={plan => onDeletePlan?.(card, plan)}
       />
+    )
+  }
+
+  if (desk) {
+    const isCredit = card.kind === 'credit'
+    const edit = () => { if (!canEdit) { blocked?.(t('paymentsPage.actionEditPayments')); return } onEdit() }
+    const spendByCat = (() => {
+      if (isCredit) return []
+      const m = new Map()
+      for (const p of inView) {
+        if (p.is_postponed || p.payment_method_id !== card.id) continue
+        m.set(p.category, (m.get(p.category) || 0) + Number(p.amount))
+      }
+      return [...m.entries()].sort((a, b) => b[1] - a[1]).slice(0, 4)
+    })()
+    const maxCat = spendByCat.length ? spendByCat[0][1] : 1
+    const parts = debt ? [
+      ['statement', 'var(--warning)', t('cards.bento.statement')],
+      ['cycle', 'var(--accent)', t('cards.bento.cycle')],
+      ['plans', 'var(--label-variable)', t('cards.bento.plans')],
+    ].filter(([k]) => debt[k] > 0) : []
+    return (
+      <DeskPage>
+        <DeskSettingsHead
+          title={card.alias || t(`cards.kind.${card.kind}`)}
+          description={isCredit ? t('cards.desk.detailDescCredit') : t('cards.desk.detailDescDebit')}
+          actions={<>
+            <button type="button" className={`${deskStyles.btn} ${deskStyles.btnSoft}`} onClick={onBack}><ChevronLeft size={16} />{t('goalDetailPanel.back')}</button>
+            <button type="button" className={`${deskStyles.btn} ${deskStyles.btnSoft}`} onClick={edit}><Pencil size={15} />{t('buttons.edit')}</button>
+            <button type="button" className={`${deskStyles.btn} ${dd.danger}`} onClick={handleDeleteClick}><Trash2 size={15} />{t('buttons.delete')}</button>
+          </>}
+        />
+        <div className={dd.top}>
+          <div className={dd.cardWrap}><CreditCardVisual card={card} /></div>
+          {isCredit ? (
+            <div className={deskStyles.fill}>
+              <div className={dd.owedHead}>
+                <div>
+                  <div className={dd.key}>{t('cards.pendingCreditTotal')}</div>
+                  <div className={dd.big}>{fmt(totalOwed)}</div>
+                </div>
+                {onPayNow && <button type="button" className={deskStyles.btn} onClick={() => onPayNow(card)}>{t('cards.payNow.button')}</button>}
+              </div>
+              {parts.length > 0 ? (
+                <>
+                  <div className={dd.segBar} role="img" aria-label={t('cards.bento.donutLabel')}>
+                    {parts.map(([k, color]) => <i key={k} style={{ flexGrow: debt[k], background: color }} />)}
+                  </div>
+                  <div className={dd.legend}>
+                    {parts.map(([k, color, label]) => (
+                      <div key={k}><em style={{ background: color }} /><span>{label}</span><b>{fmt(debt[k])}</b></div>
+                    ))}
+                  </div>
+                </>
+              ) : <div className={dd.ok}>{t('cards.desk.noDebt')}</div>}
+            </div>
+          ) : (
+            <div className={deskStyles.fill}>
+              <div className={dd.key}>{t('cards.detail.paidWithCard')}</div>
+              <div className={dd.big}>{fmt(total)}</div>
+              <div className={dd.hint}>{t('cards.desk.debitNote')}</div>
+              {spendByCat.length > 0 && (
+                <>
+                  <div className={`${dd.key} ${dd.keyGap}`}>{t('cards.desk.byCategory')}</div>
+                  {spendByCat.map(([cat, v]) => (
+                    <div key={cat} className={dd.catRow}>
+                      <div><span>{getCategoryLabel(cat)}</span><b>{fmt(v)}</b></div>
+                      <i><u style={{ width: `${Math.max(4, Math.round(v / maxCat * 100))}%` }} /></i>
+                    </div>
+                  ))}
+                </>
+              )}
+            </div>
+          )}
+        </div>
+
+        {isCredit && (
+          <div className={`${dd.mid} ${tl && hasPlans ? dd.mid3 : dd.mid2}`}>
+            {tl && (
+              <div className={deskStyles.fill}>
+                <div className={dd.key}>{t('cards.desk.cycleTitle')}</div>
+                <div className={dd.tlTrack} style={{ '--now': `${tl.nowPct}%` }}>
+                  <i />
+                  <span className={`${dd.tlDot} ${dd.tlDotOn}`} style={{ left: '0%' }} />
+                  {tl.due && <span className={dd.tlDot} style={{ left: `${tl.duePct}%` }} />}
+                  <span className={dd.tlDot} style={{ left: '100%' }} />
+                </div>
+                <div className={dd.tlLabels}>
+                  <div><b>{tl.prev}</b>{t('cards.tablet.cutLabel')}</div>
+                  {tl.due && <div className={dd.tlMid} style={{ '--at': `${tl.duePct}%` }}><b>{tl.due}</b>{t('cards.tablet.dueLabel')}</div>}
+                  <div className={dd.tlEnd}><b>{tl.next}</b>{t('cards.tablet.nextCutLabel')}</div>
+                </div>
+                <div className={dd.hint}>{t('cards.bento.cycleDay', { day: cycleInfo.day, total: cycleInfo.total })}</div>
+              </div>
+            )}
+            <div className={deskStyles.fill}>
+              <div className={dd.key}>{t('cards.detail.paidWithCard')}</div>
+              <div className={dd.mid2v}>{fmt(total)}</div>
+              <div className={dd.hint}>{t('cards.desk.paidHint')}</div>
+            </div>
+            {hasPlans && (
+              <button type="button" className={`${deskStyles.fill} ${dd.linkTile}`} onClick={() => setPlansOpen(true)}>
+                <div className={dd.key}>{t('cards.bento.plansTitle')}</div>
+                <div className={dd.mid2v}>{t('cards.bento.plansCount', { count: activePlansCount(card) })}</div>
+                {nextCutPlansTotal(card) > 0 && <div className={dd.hint}>{t('cards.bento.nextCutPlans', { amount: fmt(nextCutPlansTotal(card)) })}</div>}
+                <ChevronRight size={20} className={dd.chev} />
+              </button>
+            )}
+          </div>
+        )}
+
+        <div className={dd.filters}>
+          <div className={dd.seg}>
+            {[['periodo', t('homePage.tabs.currentPeriod')], ['mes', t('paymentsPage.byMonth')]].map(([val, label]) => (
+              <button key={val} type="button" onClick={() => setViewMode(val)} className={viewMode === val ? dd.segOn : ''}>{label}</button>
+            ))}
+          </div>
+          {viewMode === 'mes' && (
+            <>
+              <div className={dd.sel}><Select value={getMonths()[viewMonth]} onChange={name => setViewMonth(getMonths().indexOf(name))} options={getMonths()} /></div>
+              <div className={dd.sel}><Select value={String(viewYear)} onChange={y => setViewYear(Number(y))} options={availableYears.map(String)} /></div>
+            </>
+          )}
+        </div>
+
+        {groups.length === 0 && <div className={`${deskStyles.fill} ${dd.empty}`}>{t('cards.detail.noHistory')}</div>}
+        {groups.map(g => (
+          <div key={g.label}>
+            <div className={deskStyles.sec}>{g.label}</div>
+            <div className={`${deskStyles.fill} ${dd.table}`}>
+              <div className={`${dd.tr} ${dd.th}`}>
+                <span>{t('cards.tablet.colDate')}</span><span>{t('cards.tablet.colName')}</span><span>{t('cards.tablet.colCategory')}</span><span>{t('cards.tablet.colSpace')}</span><span className={dd.right}>{t('cards.tablet.colAmount')}</span>
+              </div>
+              {g.rows.map(p => {
+                const d = new Date(p.paid_at || p.due_date)
+                const isIncome = p.card_statement_for === card.id
+                const label = p.is_card_statement ? t('cards.statementBadge') : isIncome ? t('cards.detail.abono') : getCategoryLabel(p.category)
+                return (
+                  <div key={p.id} className={dd.tr}>
+                    <span>{d.getDate()} {getMonthsShort()[d.getMonth()]}</span>
+                    <span className={dd.name}>{p.name}</span>
+                    <span>{label}{p.is_postponed && ` · ${t('payCard.status.postponed')}`}</span>
+                    <span className={dd.name}>{p.source_space_id ? (spaceNames[p.source_space_id] || t('cards.detail.sharedSpaceFallback')) : '—'}</span>
+                    <span className={`${dd.right} ${dd.amt} ${isIncome ? dd.inc : ''}`}>{isIncome ? '+' : '−'}{fmt(p.amount)}</span>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        ))}
+      </DeskPage>
     )
   }
 

@@ -1,0 +1,19 @@
+/* Mi suscripción en escritorio (v0.9.839), mockup aprobado. */
+.hero { display: flex; justify-content: space-between; align-items: center; gap: 40px; padding: 30px 34px; border-radius: 28px; background: var(--premium-gold); color: var(--premium-gold-text); }
+.heroMain { display: flex; flex-direction: column; align-items: flex-start; gap: 12px; }
+.badge { display: inline-flex; align-items: center; gap: 6px; padding: 5px 14px; border-radius: 99px; background: color-mix(in srgb, var(--premium-gold-text) 12%, transparent); font-size: 13px; font-weight: 700; }
+.amount { font-size: 46px; font-weight: 700; letter-spacing: -1.5px; }
+.amount small { font-size: 18px; font-weight: 600; letter-spacing: 0; }
+.renew { display: flex; align-items: center; gap: 8px; font-size: 14px; }
+.reactivate { margin-top: 4px; border: 0; padding: 12px 22px; border-radius: 99px; background: var(--premium-gold-text); color: var(--premium-gold); font-family: inherit; font-size: 14px; font-weight: 700; }
+.benefits { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 28px; min-width: 460px; }
+.benefits div { display: flex; align-items: center; gap: 10px; font-size: 14.5px; }
+.actions { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-top: 18px; }
+.key { font-size: 12px; font-weight: 600; letter-spacing: 0.8px; text-transform: uppercase; color: var(--muted); }
+.text { margin: 10px 0 16px; font-size: 14.5px; line-height: 1.5; color: var(--text); }
+.simple { display: flex; flex-direction: column; align-items: flex-start; }
+.row { width: 100%; display: flex; align-items: center; gap: 12px; margin-top: 12px; padding: 16px 18px; border: 0; border-radius: 18px; background: var(--desk-card); color: var(--text); font-family: inherit; font-size: 15px; font-weight: 600; text-align: left; }
+.row > span:first-child { flex: 1; }
+.save { padding: 4px 12px; border-radius: 99px; background: var(--accent-soft); color: var(--accent); font-size: 12px; font-weight: 700; }
+.note { margin-top: 10px; font-size: 13px; color: var(--muted); }
+.danger { background: color-mix(in srgb, var(--danger) 14%, transparent); color: var(--danger); }

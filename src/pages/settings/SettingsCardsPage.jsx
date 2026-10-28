@@ -308,8 +308,9 @@ export function SettingsCardsPage({ profile, paymentMethods, personalPayments = 
   if (selectedCard) {
     return (
       <>
-        <div className={`${slideClass} ${styles.pageWrapper}`}>
+        <div className={desk ? undefined : `${slideClass} ${styles.pageWrapper}`}>
           <CardDetailPanel
+            desk={desk}
             card={selectedCard}
             payments={personalPayments}
             spaceNames={Object.fromEntries((sharedSpaces?.spaces || []).map(s => [s.space.id, s.space.name]))}

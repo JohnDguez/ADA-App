@@ -128,6 +128,12 @@
       "reactivated": "Your subscription was reactivated",
       "planChanged": "Your plan was updated",
       "genericError": "Couldn't complete the action. Try again."
+    },
+    "desk": {
+      "changePlan": "Change plan",
+      "changeNote": "The change applies from your next renewal.",
+      "cancelTitle": "Cancel",
+      "cancelNote": "You keep Premium until {{date}}. After that you move to the free plan."
     }
   },
   "settingsAccount": {
@@ -2090,7 +2096,15 @@
       "cutOf": "{{name}} cut",
       "dueOf": "{{name}} payment",
       "footNote": "Only to organize your spending. LunaPay has no access to your accounts or banking data.",
-      "formDesc": "Choose the bank and details. The card updates as you type."
+      "formDesc": "Choose the bank and details. The card updates as you type.",
+      "detailDescCredit": "Credit card detail: balance, cycle and history.",
+      "detailDescDebit": "Debit cards only show what you spent.",
+      "noDebt": "No balance — you are up to date",
+      "debitNote": "Debit: no cut-off, due date or balance.",
+      "byCategory": "Spending by category",
+      "cycleTitle": "Card cycle",
+      "paidHint": "Purchases this period",
+      "plansDesc": "All deferred purchases on this card."
     }
   },
   "paymentMethod": {

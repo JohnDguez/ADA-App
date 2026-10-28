@@ -13,6 +13,10 @@ import { showToast } from '../../components/Toast'
 import { Card } from '../../components/SettingsShared'
 import styles from './SettingsSubscriptionPage.module.css'
 import { Presence } from '../../components/Presence'
+import { useDeskSettings } from '../../components/DeskSettingsContext'
+import { DeskSettingsHead, DeskPage } from '../../components/DeskSettingsHead'
+import deskStyles from '../../components/SettingsDesk.module.css'
+import dk from './SettingsSubscriptionDesk.module.css'
 
 // Sub-página "Mi suscripción" dentro de Ajustes — solo alcanzable si
 // profile.is_premium (ver SettingsPage.jsx). A diferencia de otras
@@ -45,6 +49,7 @@ const ANNUAL_SAVING = 12 * 50 - 500
 
 export function SettingsSubscriptionPage({ profile, onOpenPremium, onBack, slideClass }) {
   const { t, i18n } = useTranslation()
+  const desk = useDeskSettings()
 
   const premiumSource = getPremiumSource(profile)
 
@@ -112,6 +117,115 @@ export function SettingsSubscriptionPage({ profile, onOpenPremium, onBack, slide
   function formatRenewDate(unixSeconds) {
     const locale = i18n.language?.startsWith('en') ? 'en-US' : 'es-MX'
     return new Date(unixSeconds * 1000).toLocaleDateString(locale, { day: 'numeric', month: 'long', year: 'numeric' })
+  }
+
+  const confirmModal_ = (
+    <Presence show={!!(confirmModal)}>{() => (
+      <div className={styles.modalOverlay}>
+        <div className={styles.modal}>
+          <div className={styles.modalTitle}>
+            {confirmModal === 'cancel' ? t('settingsSubscription.cancelModal.title') : t('settingsSubscription.switchModal.title', { plan: t(`premiumPage.${otherPlan}`) })}
+          </div>
+          <div className={styles.modalDesc}>
+            {confirmModal === 'cancel'
+              ? t('settingsSubscription.cancelModal.description', { date: formatRenewDate(subscription.currentPeriodEnd) })
+              : t('settingsSubscription.switchModal.description', { plan: t(`premiumPage.${otherPlan}`) })}
+          </div>
+          <button
+            onClick={() => confirmModal === 'cancel' ? runAction('cancel') : runAction('change-plan', { newPlan: otherPlan })}
+            disabled={actionLoading}
+            className={`${confirmModal === 'cancel' ? 'btn-danger' : 'btn-primary'} ${styles.confirmSpacing}`}
+          >
+            {actionLoading
+              ? t('settingsSubscription.processing')
+              : confirmModal === 'cancel' ? t('settingsSubscription.cancelModal.confirm') : t('settingsSubscription.switchModal.confirm')}
+          </button>
+          <button onClick={() => setConfirmModal(null)} disabled={actionLoading} className="btn-ghost">
+            {t('settingsSubscription.keepButton')}
+          </button>
+        </div>
+      </div>
+    )}</Presence>
+  )
+
+  if (desk) {
+    const head = <DeskSettingsHead title={t('settingsSubscription.title')} description={t('settingsSubscription.description')} />
+    const loadingBlock = premiumSource === 'stripe' && subscription === undefined
+    const emptyBlock = premiumSource === 'none' || (premiumSource === 'stripe' && subscription === null)
+    return (
+      <DeskPage>
+        {head}
+        {premiumSource === 'google_play' && (
+          <div className={`${deskStyles.fill} ${dk.simple}`}>
+            <div className={dk.key}>Google Play</div>
+            <div className={dk.text}>{t('settingsSubscription.managedByGooglePlay')}</div>
+            <a href={playStoreUrl} target="_blank" rel="noopener noreferrer" className={deskStyles.btn}>{t('settingsSubscription.openPlayStore')}</a>
+          </div>
+        )}
+        {premiumSource === 'admin' && (
+          <div className={`${deskStyles.fill} ${dk.simple}`}>
+            <div className={dk.key}><Crown size={14} /></div>
+            <div className={dk.text}>{t('settingsSubscription.adminGranted')}</div>
+            {onOpenPremium && <button type="button" className={`${deskStyles.btn} ${deskStyles.btnSoft}`} onClick={onOpenPremium}>{t('settingsSubscription.viewPlans')}</button>}
+          </div>
+        )}
+        {emptyBlock && <div className={`${deskStyles.fill} ${dk.simple}`}><div className={dk.text}>{t('settingsSubscription.noSubscription')}</div></div>}
+        {loadingBlock && (
+          <div className={dk.hero} aria-busy="true" aria-label={t('settingsSubscription.loading')}>
+            <div className={`skeleton-bone ${styles.skelBadge}`} />
+            <div className={`skeleton-bone ${styles.skelAmount}`} />
+            <div className={`skeleton-bone ${styles.skelLine}`} />
+          </div>
+        )}
+        {subscription && (
+          <>
+            <div className={dk.hero}>
+              <div className={dk.heroMain}>
+                <div className={dk.badge}><Crown size={13} fill="currentColor" />{t(`premiumPage.${subscription.plan}`)}</div>
+                <div className={dk.amount}>{fmt(subscription.amount)} <small>{t(`premiumPage.${subscription.plan}PriceSuffix`)}</small></div>
+                <div className={dk.renew}>
+                  {subscription.cancelAtPeriodEnd ? <Clock size={15} /> : <RefreshCw size={15} />}
+                  <span>
+                    {subscription.cancelAtPeriodEnd
+                      ? t('settingsSubscription.willCancelOn', { date: formatRenewDate(subscription.currentPeriodEnd) })
+                      : t('settingsSubscription.renewsOn', { date: formatRenewDate(subscription.currentPeriodEnd) })}
+                  </span>
+                </div>
+                {subscription.cancelAtPeriodEnd && (
+                  <button type="button" className={dk.reactivate} onClick={() => runAction('reactivate')} disabled={actionLoading}>
+                    {actionLoading ? t('settingsSubscription.processing') : t('settingsSubscription.reactivateButton')}
+                  </button>
+                )}
+              </div>
+              <div className={dk.benefits}>
+                {BENEFIT_KEYS.map(k => (
+                  <div key={k}><Check size={16} strokeWidth={2.5} /><span>{t(`premiumPage.benefits.${k}`)}</span></div>
+                ))}
+              </div>
+            </div>
+            {!subscription.cancelAtPeriodEnd && (
+              <div className={dk.actions}>
+                <div className={deskStyles.fill}>
+                  <div className={dk.key}>{t('settingsSubscription.desk.changePlan')}</div>
+                  <button type="button" className={dk.row} onClick={() => setConfirmModal('switch')}>
+                    <span>{t('settingsSubscription.switchTo', { plan: t(`premiumPage.${otherPlan}`) })}</span>
+                    {otherPlan === 'annual' && <span className={dk.save}>{t('settingsSubscription.saveYear', { amount: fmt(ANNUAL_SAVING) })}</span>}
+                    <ChevronRight size={16} />
+                  </button>
+                  <div className={dk.note}>{t('settingsSubscription.desk.changeNote')}</div>
+                </div>
+                <div className={deskStyles.fill}>
+                  <div className={dk.key}>{t('settingsSubscription.desk.cancelTitle')}</div>
+                  <div className={dk.text}>{t('settingsSubscription.desk.cancelNote', { date: formatRenewDate(subscription.currentPeriodEnd) })}</div>
+                  <button type="button" className={`${deskStyles.btn} ${dk.danger}`} onClick={() => setConfirmModal('cancel')}>{t('settingsSubscription.cancelButton')}</button>
+                </div>
+              </div>
+            )}
+          </>
+        )}
+        {confirmModal_}
+      </DeskPage>
+    )
   }
 
   return (
