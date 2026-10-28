@@ -910,6 +910,24 @@
       "cobro": "Pay frequency",
       "income": "Your income",
       "notifs": "Notifications"
+    },
+    "desk": {
+      "namePreview": "This is how you will appear on your profile and in shared spaces",
+      "incomeSummary": "Your income per period, paid {{freq}}",
+      "benefit": {
+        "cobro": {
+          "title": "Before payday",
+          "sub": "We remind you which payments to cover each period"
+        },
+        "soon": {
+          "title": "Upcoming payments",
+          "sub": "A heads-up when a payment date gets close"
+        },
+        "overdue": {
+          "title": "Overdue payments",
+          "sub": "So no payment slips by"
+        }
+      }
     }
   },
   "paymentModal": {

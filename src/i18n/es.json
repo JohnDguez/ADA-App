@@ -910,6 +910,24 @@
       "cobro": "Frecuencia de cobro",
       "income": "Tu ingreso",
       "notifs": "Notificaciones"
+    },
+    "desk": {
+      "namePreview": "Así te verán en tu perfil y en los espacios compartidos",
+      "incomeSummary": "Tu ingreso por periodo, con cobro {{freq}}",
+      "benefit": {
+        "cobro": {
+          "title": "Antes de tu cobro",
+          "sub": "Te recordamos qué pagos cubrir en cada periodo"
+        },
+        "soon": {
+          "title": "Pagos por vencer",
+          "sub": "Un aviso cuando se acerque la fecha de un pago"
+        },
+        "overdue": {
+          "title": "Pagos vencidos",
+          "sub": "Para que ningún pago se te pase"
+        }
+      }
     }
   },
   "paymentModal": {

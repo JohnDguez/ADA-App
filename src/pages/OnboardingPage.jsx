@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import i18n from '../i18n'
-import { User, CalendarCheck, Wallet, BellRing, UserRound, ArrowRight, Check } from 'lucide-react'
+import { User, CalendarCheck, Wallet, BellRing, UserRound, ArrowRight, Check, AlarmClock, TriangleAlert } from 'lucide-react'
 import { getWeekdays, getWeekdaysShort } from '../lib/utils'
 import { supabase } from '../lib/supabase'
 import { usePushNotifications } from '../hooks/usePushNotifications'
@@ -196,6 +196,15 @@ export function OnboardingPage({ userId, onDone }) {
             />
           </div>
           {nameError && <div className={styles.errorText}>{nameError}</div>}
+          {isDesk && (
+            <div className={styles.extraCard}>
+              <span className={styles.avatar}>{(name.trim()[0] || '?').toUpperCase()}</span>
+              <div>
+                <div className={styles.extraTitle}>{name.trim() || t('onboardingPage.step1.namePlaceholder')}</div>
+                <div className={styles.extraSub}>{t('onboardingPage.desk.namePreview')}</div>
+              </div>
+            </div>
+          )}
         </>
       )}
 
@@ -348,6 +357,15 @@ export function OnboardingPage({ userId, onDone }) {
               </div>
             </div>
           )}
+          {isDesk && salaryEnabled && parseFloat(salaryAmount) > 0 && (
+            <div className={styles.extraCard}>
+              <span className={styles.extraIcon}><Wallet size={18} /></span>
+              <div>
+                <div className={styles.extraTitle}>{currencySymbol}{Number(salaryAmount).toLocaleString()}</div>
+                <div className={styles.extraSub}>{t('onboardingPage.desk.incomeSummary', { freq: t(`frequency.${cobroFreq}`).toLowerCase() })}</div>
+              </div>
+            </div>
+          )}
         </>
       )}
 
@@ -371,6 +389,19 @@ export function OnboardingPage({ userId, onDone }) {
               <div className={`toggle-thumb${subscribed ? ' is-on' : ''}`} />
             </div>
           </div>
+          {isDesk && (
+            <div className={styles.benefits}>
+              {[[CalendarCheck, 'cobro'], [AlarmClock, 'soon'], [TriangleAlert, 'overdue']].map(([Ico, k]) => (
+                <div key={k} className={styles.extraCard}>
+                  <span className={styles.extraIcon}><Ico size={18} /></span>
+                  <div>
+                    <div className={styles.extraTitle}>{t(`onboardingPage.desk.benefit.${k}.title`)}</div>
+                    <div className={styles.extraSub}>{t(`onboardingPage.desk.benefit.${k}.sub`)}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
           {subscribed && (
             <div className={styles.readyBanner}>
               <div className={styles.readyTitle}>{t('onboardingPage.step4.readyTitle')}</div>
