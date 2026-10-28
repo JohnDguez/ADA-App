@@ -426,3 +426,286 @@
 .nameInputError { margin-bottom: 6px; }
 .chipRowOpen { margin-bottom: 12px; }
 .toggleRowStatic { cursor: default; }
+
+/* ═════════════════════════════════════════════════════════════════════════════
+   ESCRITORIO (≥1100px) — v0.9.848
+   Riel izquierdo con los pasos + bloque de color con la ilustración asomando
+   (cambia por paso) y, a la derecha, una tarjeta con el formulario. Estas
+   clases solo existen en el markup de escritorio (OnboardingPage.jsx →
+   isDesk); los overrides de .chip/.hintCard/etc. cuelgan de .deskBody para
+   no tocar el onboarding móvil.
+   ═════════════════════════════════════════════════════════════════════════════ */
+.chipSub { display: none; }
+
+.deskRoot {
+  min-height: 100vh;
+  background: var(--desk-outer);
+  padding: 16px;
+  display: flex;
+}
+
+.deskShell {
+  flex: 1;
+  background: var(--desk-panel);
+  border-radius: 32px;
+  display: flex;
+  min-height: calc(100vh - 32px);
+}
+
+/* ── Riel ── */
+.rail {
+  width: 340px;
+  flex-shrink: 0;
+  padding: 34px 28px 34px;
+  display: flex;
+  flex-direction: column;
+}
+
+.railBrand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.3px;
+  color: var(--text);
+  margin-bottom: 40px;
+}
+
+.railLogo { width: 36px; height: 36px; border-radius: 12px; }
+
+.railSteps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.railStep {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px;
+  border-radius: 18px;
+  color: var(--muted);
+  transition: background .2s, color .2s;
+}
+
+.railActive { background: var(--desk-card); color: var(--text); }
+.railDone   { color: var(--text); }
+
+.railDot {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: var(--desk-chip);
+  display: grid;
+  place-items: center;
+  font-size: 15px;
+  font-weight: 600;
+  flex-shrink: 0;
+  transition: background .2s, color .2s;
+}
+
+.railActive .railDot { background: var(--accent); color: var(--on-color); }
+.railDone .railDot   { background: var(--paid); color: var(--on-color); }
+
+.railText { display: flex; flex-direction: column; min-width: 0; }
+.railLabel { font-size: 15.5px; font-weight: 600; }
+.railSub { font-size: 12.5px; font-weight: 500; color: var(--muted); }
+
+/* ── Bloque de color con la ilustración asomando por arriba ── */
+.railScene {
+  position: relative;
+  height: 190px;
+  margin-top: auto;
+  flex-shrink: 0;
+}
+
+.sceneBlock {
+  position: absolute;
+  inset: 0;
+  border-radius: 32px;
+  opacity: 0;
+  transition: opacity .3s ease;
+  pointer-events: none;
+}
+
+.sceneBlockOn { opacity: 1; }
+
+.sceneImg {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  object-fit: contain;
+}
+
+/* ── Tarjeta del formulario ── */
+.deskMain {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  padding: 30px 40px 30px 0;
+}
+
+.deskCard {
+  width: 100%;
+  max-width: 1040px;
+  margin: 0 auto;
+  min-height: min(880px, calc(100vh - 92px));
+  background: var(--desk-card);
+  border-radius: 32px;
+  padding: 54px 64px 40px;
+  display: flex;
+  flex-direction: column;
+}
+
+.deskKicker {
+  margin: 0 0 14px;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.deskViewport { position: relative; flex: 1; }
+
+/* Entrada/salida por paso: fundido con un pequeño desplazamiento (Regla 29).
+   Misma duración que STEP_TRANSITION_MS (Regla 30). */
+@keyframes deskIn  { from { opacity: 0; transform: translateX(var(--desk-shift)); } to { opacity: 1; transform: translateX(0); } }
+@keyframes deskOut { from { opacity: 1; transform: translateX(0); } to { opacity: 0; transform: translateX(calc(var(--desk-shift) * -1)); } }
+.deskViewport .enterFromRight { --desk-shift: 28px;  animation: deskIn  0.3s ease both; }
+.deskViewport .enterFromLeft  { --desk-shift: -28px; animation: deskIn  0.3s ease both; }
+.deskViewport .exitToLeft     { --desk-shift: 28px;  animation: deskOut 0.3s ease both; }
+.deskViewport .exitToRight    { --desk-shift: -28px; animation: deskOut 0.3s ease both; }
+
+.deskBody { max-width: 860px; }
+
+.deskBody .title {
+  font-size: 44px;
+  letter-spacing: -1.4px;
+  line-height: 1.08;
+  margin-bottom: 0;
+}
+
+.deskBody .desc {
+  font-size: 16px;
+  line-height: 1.55;
+  color: var(--muted);
+  max-width: 560px;
+  margin: 12px 0 0;
+}
+
+.deskBody :global(.field-label) {
+  display: block;
+  margin: 26px 0 10px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.deskBody .section { margin-top: 0; }
+
+.deskBody .errorText { margin-top: 8px; font-size: 13px; }
+
+/* Opciones de frecuencia: tarjetas con subtítulo */
+.deskBody .chipRow { gap: 12px; }
+.deskBody .chip {
+  background: var(--desk-chip);
+  color: var(--text);
+  border-radius: 20px;
+  font-size: 17px;
+  font-weight: 700;
+}
+.deskBody .chipFlex {
+  flex: 1;
+  text-align: left;
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.deskBody .chipSub {
+  display: block;
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--muted);
+}
+.deskBody .chipActive { background: var(--accent); color: var(--on-color); }
+.deskBody .chipActive .chipSub { color: var(--on-color); }
+.deskBody .presetChip { border-radius: var(--radius-full); padding: 11px 20px; font-size: 14px; font-weight: 600; }
+
+.deskBody .weekdayRow { gap: 10px; margin-top: 0; flex-wrap: nowrap; }
+.deskBody .weekdayChip {
+  min-width: 0;
+  height: 54px;
+  padding: 0;
+  border-radius: 18px;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.deskBody .dayPickHelp { font-size: 13px; margin: 14px 0 8px; }
+.deskBody .dayGrid { gap: 8px; max-width: 640px; margin-top: 0; }
+.deskBody .dayButton {
+  height: 48px;
+  border-radius: 14px;
+  background: var(--desk-chip);
+  font-weight: 600;
+}
+.deskBody .dayButtonActive { background: var(--accent); color: var(--on-color); }
+
+.deskBody .hintCard {
+  align-items: center;
+  gap: 14px;
+  margin-top: 22px;
+  padding: 16px 20px;
+  border-radius: 20px;
+  background: var(--desk-chip);
+  font-size: 14.5px;
+}
+.deskBody .hintIcon {
+  box-sizing: content-box;
+  width: 18px;
+  height: 18px;
+  padding: 11px;
+  border-radius: 14px;
+  background: var(--accent);
+  color: var(--on-color);
+  margin-top: 0;
+}
+.deskBody .hintHighlight { font-weight: 700; }
+
+/* Nombre / monto / moneda: campos de ancho cómodo */
+.deskBody .inputWithIcon,
+.deskBody .amountWrap { max-width: 460px; }
+.deskBody .inputIcon { left: 16px; }
+.deskBody :global(.field-input).nameInput { padding-left: 44px; }
+.deskBody :global(.field-input).amountInput { padding-left: 38px; }
+.deskBody .amountWrapMid :global(.field-input).amountInput { padding-left: 48px; }
+.deskBody .amountWrapLong :global(.field-input).amountInput { padding-left: 58px; }
+.deskBody .currencyPrefix { left: 16px; }
+.deskBody .currencyField { max-width: 460px; }
+
+.deskBody .toggleRow {
+  max-width: 560px;
+  margin: 22px 0 0;
+  padding: 18px 20px;
+  border-radius: 20px;
+  background: var(--desk-chip);
+}
+.deskBody .toggleSub { color: var(--muted); font-size: 13px; }
+.deskBody .readyBanner { max-width: 560px; margin-top: 14px; padding: 14px 18px; border-radius: 18px; }
+
+/* ── Pie: Atrás / Continuar ── */
+.deskFoot { margin-top: auto; padding-top: 24px; }
+.deskFootRow { display: flex; align-items: center; justify-content: space-between; }
+.deskFootRow .continueBtn { width: auto; height: 50px; padding: 0 34px; font-size: 15.5px; }
+.deskFootRow :global(.btn-ghost) { width: auto; height: 50px; padding: 0 28px; font-size: 15.5px; background: var(--desk-chip); }
+.deskFinishError { margin: 0 0 12px; font-size: 13px; font-weight: 600; color: var(--danger); text-align: right; }

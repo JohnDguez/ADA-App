@@ -869,7 +869,12 @@
       "day1Label28": "Día 1 (1–28)",
       "day2Label31": "Día 2 (1–31)",
       "pickTwoDays": "Toca el primer día y luego el segundo.",
-      "biweeklyHint": "Te avisaremos qué pagos cubrir antes de los días {{d1}} y {{d2}} de cada mes."
+      "biweeklyHint": "Te avisaremos qué pagos cubrir antes de los días {{d1}} y {{d2}} de cada mes.",
+      "freqSub": {
+        "weekly": "cada semana",
+        "biweekly": "dos veces al mes",
+        "monthly": "una vez al mes"
+      }
     },
     "step3": {
       "title": "¿Cuánto ganas por periodo?",
@@ -891,7 +896,21 @@
     "continue": "Continuar",
     "start": "¡Comenzar!",
     "back": "Atrás",
-    "finishError": "No pudimos guardar tu perfil. Revisa tu conexión e intenta de nuevo."
+    "finishError": "No pudimos guardar tu perfil. Revisa tu conexión e intenta de nuevo.",
+    "stepsAria": "Pasos",
+    "stepOf": "Paso {{n}} de {{total}}",
+    "state": {
+      "done": "Listo",
+      "current": "En curso",
+      "pending": "Pendiente",
+      "optional": "Opcional"
+    },
+    "stepNames": {
+      "name": "Tu nombre",
+      "cobro": "Frecuencia de cobro",
+      "income": "Tu ingreso",
+      "notifs": "Notificaciones"
+    }
   },
   "paymentModal": {
     "nameError": "Escribe el nombre del pago",

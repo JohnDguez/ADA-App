@@ -869,7 +869,12 @@
       "day1Label28": "Day 1 (1–28)",
       "day2Label31": "Day 2 (1–31)",
       "pickTwoDays": "Tap the first day, then the second.",
-      "biweeklyHint": "We'll remind you which payments to cover before days {{d1}} and {{d2}} of each month."
+      "biweeklyHint": "We'll remind you which payments to cover before days {{d1}} and {{d2}} of each month.",
+      "freqSub": {
+        "weekly": "every week",
+        "biweekly": "twice a month",
+        "monthly": "once a month"
+      }
     },
     "step3": {
       "title": "How much do you earn per period?",
@@ -891,7 +896,21 @@
     "continue": "Continue",
     "start": "Get started!",
     "back": "Back",
-    "finishError": "We couldn't save your profile. Check your connection and try again."
+    "finishError": "We couldn't save your profile. Check your connection and try again.",
+    "stepsAria": "Steps",
+    "stepOf": "Step {{n}} of {{total}}",
+    "state": {
+      "done": "Done",
+      "current": "In progress",
+      "pending": "Pending",
+      "optional": "Optional"
+    },
+    "stepNames": {
+      "name": "Your name",
+      "cobro": "Pay frequency",
+      "income": "Your income",
+      "notifs": "Notifications"
+    }
   },
   "paymentModal": {
     "nameError": "Enter the payment's name",

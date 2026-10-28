@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import i18n from '../i18n'
-import { User, CalendarCheck, Wallet, BellRing, UserRound, ArrowRight } from 'lucide-react'
+import { User, CalendarCheck, Wallet, BellRing, UserRound, ArrowRight, Check } from 'lucide-react'
 import { getWeekdays, getWeekdaysShort } from '../lib/utils'
 import { supabase } from '../lib/supabase'
 import { usePushNotifications } from '../hooks/usePushNotifications'
@@ -10,6 +10,7 @@ import { CurrencySelect } from '../components/CurrencySelect'
 import { getCurrencySymbol } from '../lib/currency'
 import styles from './OnboardingPage.module.css'
 import { switchProps } from '../lib/a11y'
+import { useIsDesktop } from '../hooks/useIsDesktop'
 
 // illustrationSize / illustrationBottom / bodyPaddingTop: mismos defaults
 // para los 4 (los que ya se habían ajustado), pero cada paso puede
@@ -18,16 +19,21 @@ import { switchProps } from '../lib/a11y'
 // misma cantidad para no dejar un hueco vacío entre los dos (pedido
 // explícito de Johnatan).
 const STEP_META = [
-  { label: 'Tu nombre',           Icon: User,          bg: 'var(--onboarding-step1-bg)', illustration: '/onboarding-illustration-1.png', illustrationBottom: -65, bodyPaddingTop: 85 },
-  { label: 'Frecuencia de cobro', Icon: CalendarCheck, bg: 'var(--onboarding-step2-bg)', illustration: '/onboarding-illustration-2.png', illustrationBottom: -55, bodyPaddingTop: 60 },
-  { label: 'Tu ingreso',          Icon: Wallet,        bg: 'var(--onboarding-step3-bg)', illustration: '/onboarding-illustration-3.png', illustrationBottom: -65, bodyPaddingTop: 85, illustrationSize: 270 },
-  { label: 'Notificaciones',      Icon: BellRing,      bg: 'var(--onboarding-step4-bg)', illustration: '/onboarding-illustration-4.png', illustrationBottom: -50, bodyPaddingTop: 60 },
+  { key: 'name',   label: 'Tu nombre',           Icon: User,          bg: 'var(--onboarding-step1-bg)', illustration: '/onboarding-illustration-1.png', illustrationBottom: -65, bodyPaddingTop: 85 },
+  { key: 'cobro',  label: 'Frecuencia de cobro', Icon: CalendarCheck, bg: 'var(--onboarding-step2-bg)', illustration: '/onboarding-illustration-2.png', illustrationBottom: -55, bodyPaddingTop: 60, deskSize: 280, deskBottom: 4 },
+  { key: 'income', label: 'Tu ingreso',          Icon: Wallet,        bg: 'var(--onboarding-step3-bg)', illustration: '/onboarding-illustration-3.png', illustrationBottom: -65, bodyPaddingTop: 85, illustrationSize: 270 },
+  { key: 'notifs',  label: 'Notificaciones',      Icon: BellRing, optional: true,      bg: 'var(--onboarding-step4-bg)', illustration: '/onboarding-illustration-4.png', illustrationBottom: -50, bodyPaddingTop: 60, deskSize: 260, deskBottom: 6 },
 ]
 
 // Defaults (para cualquier paso que no traiga su propio override arriba).
 const DEFAULT_ILLUSTRATION_SIZE = 280
 const DEFAULT_ILLUSTRATION_BOTTOM = -100
 const DEFAULT_BODY_PADDING_TOP = 135
+
+// Escritorio: tamaño/posición de la ilustración que asoma sobre el bloque de
+// color del riel (cada paso puede sobreescribir deskSize / deskBottom).
+const DESK_ILLUSTRATION_SIZE = 230
+const DESK_ILLUSTRATION_BOTTOM = 8
 
 const TOTAL_STEPS = STEP_META.length
 
@@ -67,10 +73,23 @@ export function OnboardingPage({ userId, onDone }) {
   const [saving,         setSaving]         = useState(false)
   const [finishError,    setFinishError]    = useState('')
 
+  const isDesk = useIsDesktop()
   const { subscribe, subscribed } = usePushNotifications(userId)
   const exitTimeoutRef = useRef(null)
 
   useEffect(() => () => clearTimeout(exitTimeoutRef.current), [])
+
+  // Escritorio: marca html[data-desk-sidebar] (valor 'onboarding', sin margen
+  // de sidebar) para heredar radios, campos con fondo y botones en píldora
+  // de index.css sin duplicarlos aquí.
+  useEffect(() => {
+    if (!isDesk) return
+    const root = document.documentElement
+    root.dataset.deskSidebar = 'onboarding'
+    // Sin sesión de app todavía no hay riel: no se reserva su margen izquierdo.
+    root.classList.add('auth-screen')
+    return () => { delete root.dataset.deskSidebar; root.classList.remove('auth-screen') }
+  }, [isDesk])
 
   function pickBiweeklyDay(d) {
     if (biweeklyPick === 0) { setCobroDay1(d); setCobroDay2(null); setBiweeklyPick(1); return }
@@ -155,6 +174,215 @@ export function OnboardingPage({ userId, onDone }) {
 
   const currencySymbol = getCurrencySymbol(currency || undefined)
 
+  function renderForm(n) {
+    return (
+      <>
+      {n === 1 && (
+        <>
+          <h2 className={styles.title}>{t('onboardingPage.step1.titleLine1')}<br />{t('onboardingPage.step1.titleLine2')}</h2>
+          <p className={styles.desc}>{t('onboardingPage.step1.desc')}</p>
+          <label className="field-label">{t('onboardingPage.step1.nameLabel')}</label>
+          <div className={styles.inputWithIcon}>
+            <UserRound size={18} className={styles.inputIcon} />
+            <input aria-label={t('onboardingPage.step1.namePlaceholder')}
+              autoFocus
+              className={`field-input ${styles.nameInput} ${nameError ? styles.nameInputError : ''}`}
+              type="text"
+              value={name}
+              onChange={e => setName(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && nextStep()}
+              enterKeyHint="next"
+              placeholder={t('onboardingPage.step1.namePlaceholder')}
+            />
+          </div>
+          {nameError && <div className={styles.errorText}>{nameError}</div>}
+        </>
+      )}
+
+      {n === 2 && (
+        <>
+          <h2 className={styles.title}>{t('onboardingPage.step2.title')}</h2>
+          <p className={styles.desc}>{t('onboardingPage.step2.desc')}</p>
+
+          <label className="field-label">{t('settingsCobro.frequencyLabel')}</label>
+          <div className={styles.chipRow}>
+            {[['weekly',t('frequency.weekly')],['biweekly',t('frequency.biweekly')],['monthly',t('frequency.monthly')]].map(([val, label]) => (
+              <button
+                key={val}
+                onClick={() => setCobroFreq(val)}
+                className={`${styles.chip} ${styles.chipFlex} ${cobroFreq === val ? styles.chipActive : ''}`}
+              >
+                {label}
+                <small className={styles.chipSub}>{t(`onboardingPage.step2.freqSub.${val}`)}</small>
+              </button>
+            ))}
+          </div>
+
+          {cobroFreq === 'weekly' && (
+            <div className={styles.section}>
+              <label className="field-label">{t('onboardingPage.step2.weekdayLabel')}</label>
+              <div className={styles.weekdayRow}>
+                {getWeekdaysShort().map((d, i) => (
+                  <button
+                    key={i}
+                    onClick={() => setCobroWeekday(i)}
+                    className={`${styles.chip} ${styles.weekdayChip} ${cobroWeekday === i ? styles.chipActive : ''}`}
+                  >
+                    {d}
+                  </button>
+                ))}
+              </div>
+              <div className={styles.hintCard}>
+                <CalendarCheck size={18} className={styles.hintIcon} />
+                <div>
+                  {t('onboardingPage.step2.weekdayHint', { weekday: i18n.language === 'en' ? getWeekdays()[cobroWeekday] : getWeekdays()[cobroWeekday].toLowerCase() })}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {cobroFreq === 'biweekly' && (
+            <div className={styles.section}>
+              <label className="field-label">{t('onboardingPage.step2.biweeklyDaysLabel')}</label>
+              <div className={`${styles.chipRow} ${biweeklyCustom ? styles.chipRowOpen : ''}`}>
+                {[{d1:1,d2:16},{d1:13,d2:28},{d1:15,d2:30}].map(preset => {
+                  const active = !biweeklyCustom && cobroDay1 === preset.d1 && cobroDay2 === preset.d2
+                  return (
+                    <button
+                      key={`${preset.d1}-${preset.d2}`}
+                      onClick={() => { setBiweeklyCustom(false); setCobroDay1(preset.d1); setCobroDay2(preset.d2) }}
+                      className={`${styles.chip} ${styles.presetChip} ${active ? styles.chipActive : ''}`}
+                    >
+                      {t('settingsCobro.dayPair', { d1: preset.d1, d2: preset.d2 })}
+                    </button>
+                  )
+                })}
+                <button
+                  onClick={() => setBiweeklyCustom(true)}
+                  className={`${styles.chip} ${styles.presetChip} ${biweeklyCustom ? styles.chipActive : ''}`}
+                >
+                  {t('onboardingPage.step2.custom')}
+                </button>
+              </div>
+              {biweeklyCustom && (
+                <>
+                  <div className={styles.dayPickHelp}>{t('onboardingPage.step2.pickTwoDays')}</div>
+                  <div className={styles.dayGrid} role="group" aria-label={t('onboardingPage.step2.biweeklyDaysLabel')}>
+                    {Array.from({ length: 31 }, (_, i) => i + 1).map(d => (
+                      <button key={d} type="button" onClick={() => pickBiweeklyDay(d)}
+                        aria-pressed={d === cobroDay1 || d === cobroDay2}
+                        className={`${styles.dayButton} ${d === cobroDay1 || d === cobroDay2 ? styles.dayButtonActive : ''}`}>
+                        {d}
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
+              {cobroDay1 && cobroDay2 && (
+                <div className={styles.hintCard}>
+                  <CalendarCheck size={18} className={styles.hintIcon} />
+                  <div>
+                    {t('onboardingPage.step2.biweeklyHint', { d1: cobroDay1, d2: cobroDay2 })}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {cobroFreq === 'monthly' && (
+            <div className={styles.section}>
+              <label className="field-label">{t('settingsCobro.payDayLabel')}</label>
+              <div className={styles.dayGrid} role="group" aria-label={t('settingsCobro.payDayLabel')}>
+                {Array.from({ length: 31 }, (_, i) => i + 1).map(d => (
+                  <button key={d} type="button" onClick={() => setCobroDay1(d)}
+                    aria-pressed={cobroDay1 === d}
+                    className={`${styles.dayButton} ${cobroDay1 === d ? styles.dayButtonActive : ''}`}>
+                    {d}
+                  </button>
+                ))}
+              </div>
+              {cobroDay1 && (
+                <div className={styles.hintCard}>
+                  <CalendarCheck size={18} className={styles.hintIcon} />
+                  <div>
+                    {t('settingsCobro.monthlyHelperPrefix')} <span className={styles.hintHighlight}>{cobroDay1}</span> {t('settingsCobro.monthlyHelperSuffix')}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </>
+      )}
+
+      {n === 3 && (
+        <>
+          <h2 className={styles.title}>{t('onboardingPage.step3.title')}</h2>
+          <p className={styles.desc}>{t('onboardingPage.step3.desc')}</p>
+          <label className="field-label">{t('currency.onbLabel')}</label>
+          <div className={styles.currencyField}>
+                <CurrencySelect value={currency} onChange={v => { setCurrency(v); setCurrencyError('') }} />
+              </div>
+          {currencyError ? <div className={styles.errorText}>{currencyError}</div> : <p className={styles.desc}>{t('currency.onbHint')}</p>}
+
+          <div {...switchProps(salaryEnabled)} onClick={() => setSalaryEnabled(v => !v)} className={styles.toggleRow}>
+            <div>
+              <div className={styles.toggleLabel}>{t('onboardingPage.step3.toggleLabel')}</div>
+              <div className={styles.toggleSub}>{t('onboardingPage.step3.toggleSub')}</div>
+            </div>
+            <div className={`toggle-track${salaryEnabled ? ' is-on' : ''}`}>
+              <div className={`toggle-thumb${salaryEnabled ? ' is-on' : ''}`} />
+            </div>
+          </div>
+          {salaryEnabled && (
+            <div>
+              <label className="field-label">{t('onboardingPage.step3.amountLabel')}</label>
+              <div className={`${styles.amountWrap} ${currencySymbol.length >= 3 ? styles.amountWrapLong : currencySymbol.length === 2 ? styles.amountWrapMid : ''}`}>
+                <span className={styles.currencyPrefix}>{currencySymbol}</span>
+                <AmountInput
+                  autoFocus value={salaryAmount}
+                  onChange={e => setSalaryAmount(e.target.value)}
+                  onKeyDown={e => e.key === 'Enter' && nextStep()}
+                  enterKeyHint="next" placeholder="0.00"
+                  className={`field-input ${styles.amountInput}`}
+                />
+              </div>
+            </div>
+          )}
+        </>
+      )}
+
+      {n === 4 && (
+        <>
+          <h2 className={styles.title}>{t('onboardingPage.step4.title')}</h2>
+          <p className={styles.desc}>{t('onboardingPage.step4.desc')}</p>
+          <div {...switchProps(subscribed)}
+            onClick={async () => { if (!subscribed) await subscribe() }}
+            className={`${styles.toggleRow} ${subscribed ? styles.toggleRowStatic : ''}`}
+          >
+            <div>
+              <div className={styles.toggleLabel}>
+                {subscribed ? t('onboardingPage.step4.enabledLabel') : t('onboardingPage.step4.disabledLabel')}
+              </div>
+              <div className={styles.toggleSub}>
+                {subscribed ? t('onboardingPage.step4.enabledSub') : t('onboardingPage.step4.disabledSub')}
+              </div>
+            </div>
+            <div className={`toggle-track${subscribed ? ' is-on' : ''}`}>
+              <div className={`toggle-thumb${subscribed ? ' is-on' : ''}`} />
+            </div>
+          </div>
+          {subscribed && (
+            <div className={styles.readyBanner}>
+              <div className={styles.readyTitle}>{t('onboardingPage.step4.readyTitle')}</div>
+              <div className={styles.readyText}>{t('onboardingPage.step4.readyText')}</div>
+            </div>
+          )}
+        </>
+      )}
+      </>
+    )
+  }
+
   function renderStep(n) {
     const meta = STEP_META[n - 1]
     return (
@@ -176,205 +404,90 @@ export function OnboardingPage({ userId, onDone }) {
         </div>
 
         <div className={styles.body} style={{ paddingTop: meta.bodyPaddingTop ?? DEFAULT_BODY_PADDING_TOP }}>
-          {n === 1 && (
-            <>
-              <h2 className={styles.title}>{t('onboardingPage.step1.titleLine1')}<br />{t('onboardingPage.step1.titleLine2')}</h2>
-              <p className={styles.desc}>{t('onboardingPage.step1.desc')}</p>
-              <label className="field-label">{t('onboardingPage.step1.nameLabel')}</label>
-              <div className={styles.inputWithIcon}>
-                <UserRound size={18} className={styles.inputIcon} />
-                <input aria-label={t('onboardingPage.step1.namePlaceholder')}
-                  autoFocus
-                  className={`field-input ${styles.nameInput} ${nameError ? styles.nameInputError : ''}`}
-                  type="text"
-                  value={name}
-                  onChange={e => setName(e.target.value)}
-                  onKeyDown={e => e.key === 'Enter' && nextStep()}
-                  enterKeyHint="next"
-                  placeholder={t('onboardingPage.step1.namePlaceholder')}
-                />
+          {renderForm(n)}
+        </div>
+      </div>
+    )
+  }
+
+  if (isDesk) {
+    return (
+      <div className={styles.deskRoot}>
+        <div className={styles.deskShell}>
+          <aside className={styles.rail}>
+            <div className={styles.railBrand}>
+              <img src="/favicon.svg" alt="" className={styles.railLogo} />
+              <span>LunaPay</span>
+            </div>
+
+            <ol className={styles.railSteps} aria-label={t('onboardingPage.stepsAria')}>
+              {STEP_META.map(({ key }, i) => {
+                const s = i + 1
+                const done   = s < step
+                const active = s === step
+                const sub = done ? t('onboardingPage.state.done')
+                  : active ? t('onboardingPage.state.current')
+                  : STEP_META[i].optional ? t('onboardingPage.state.optional') : t('onboardingPage.state.pending')
+                return (
+                  <li key={s} className={`${styles.railStep} ${done ? styles.railDone : ''} ${active ? styles.railActive : ''}`}
+                      aria-current={active ? 'step' : undefined}>
+                    <span className={styles.railDot}>
+                      {done ? <Check size={17} strokeWidth={3} /> : s}
+                    </span>
+                    <span className={styles.railText}>
+                      <span className={styles.railLabel}>{t(`onboardingPage.stepNames.${key}`)}</span>
+                      <span className={styles.railSub}>{sub}</span>
+                    </span>
+                  </li>
+                )
+              })}
+            </ol>
+
+            {/* Bloque de color con la ilustración asomando por arriba. Los 4 se
+                montan apilados y solo cambia cuál está visible (fundido) —
+                así hay entrada y salida (Regla 29). */}
+            <div className={styles.railScene} aria-hidden="true">
+              {STEP_META.map((meta, i) => (
+                <div key={meta.key} className={`${styles.sceneBlock} ${i + 1 === step ? styles.sceneBlockOn : ''}`} style={{ background: meta.bg }}>
+                  <img className={styles.sceneImg} src={meta.illustration} alt=""
+                    style={{ width: meta.deskSize ?? DESK_ILLUSTRATION_SIZE, bottom: meta.deskBottom ?? DESK_ILLUSTRATION_BOTTOM }} />
+                </div>
+              ))}
+            </div>
+          </aside>
+
+          <main className={styles.deskMain}>
+            <section className={styles.deskCard}>
+              <p className={styles.deskKicker}>{t('onboardingPage.stepOf', { n: step, total: TOTAL_STEPS })}</p>
+
+              <div className={styles.deskViewport}>
+                {exitingStep !== null && (
+                  <div key={`exit-${transitionId}`} className={`${styles.panelWrap} ${styles.exiting} ${direction === 'forward' ? styles.exitToLeft : styles.exitToRight}`}>
+                    <div className={styles.deskBody}>{renderForm(exitingStep)}</div>
+                  </div>
+                )}
+                <div key={`enter-${transitionId}`} className={`${styles.panelWrap} ${!initial ? (direction === 'forward' ? styles.enterFromRight : styles.enterFromLeft) : ''}`}>
+                  <div className={styles.deskBody}>{renderForm(step)}</div>
+                </div>
               </div>
-              {nameError && <div className={styles.errorText}>{nameError}</div>}
-            </>
-          )}
 
-          {n === 2 && (
-            <>
-              <h2 className={styles.title}>{t('onboardingPage.step2.title')}</h2>
-              <p className={styles.desc}>{t('onboardingPage.step2.desc')}</p>
-
-              <label className="field-label">{t('settingsCobro.frequencyLabel')}</label>
-              <div className={styles.chipRow}>
-                {[['weekly',t('frequency.weekly')],['biweekly',t('frequency.biweekly')],['monthly',t('frequency.monthly')]].map(([val, label]) => (
-                  <button
-                    key={val}
-                    onClick={() => setCobroFreq(val)}
-                    className={`${styles.chip} ${styles.chipFlex} ${cobroFreq === val ? styles.chipActive : ''}`}
-                  >
-                    {label}
+              <div className={styles.deskFoot}>
+                {finishError && <p className={styles.deskFinishError}>{finishError}</p>}
+                <div className={styles.deskFootRow}>
+                  {step > 1
+                    ? <button onClick={prevStep} className="btn-ghost">{t('onboardingPage.back')}</button>
+                    : <span />}
+                  <button onClick={nextStep} disabled={saving} className={`btn-primary ${styles.continueBtn}`}>
+                    {saving
+                      ? t('settingsCategories.saving')
+                      : step < TOTAL_STEPS
+                        ? <>{t('onboardingPage.continue')} <ArrowRight size={17} strokeWidth={2.2} /></>
+                        : t('onboardingPage.start')}
                   </button>
-                ))}
-              </div>
-
-              {cobroFreq === 'weekly' && (
-                <div className={styles.section}>
-                  <label className="field-label">{t('onboardingPage.step2.weekdayLabel')}</label>
-                  <div className={styles.weekdayRow}>
-                    {getWeekdaysShort().map((d, i) => (
-                      <button
-                        key={i}
-                        onClick={() => setCobroWeekday(i)}
-                        className={`${styles.chip} ${styles.weekdayChip} ${cobroWeekday === i ? styles.chipActive : ''}`}
-                      >
-                        {d}
-                      </button>
-                    ))}
-                  </div>
-                  <div className={styles.hintCard}>
-                    <CalendarCheck size={18} className={styles.hintIcon} />
-                    <div>
-                      {t('onboardingPage.step2.weekdayHint', { weekday: i18n.language === 'en' ? getWeekdays()[cobroWeekday] : getWeekdays()[cobroWeekday].toLowerCase() })}
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {cobroFreq === 'biweekly' && (
-                <div className={styles.section}>
-                  <label className="field-label">{t('onboardingPage.step2.biweeklyDaysLabel')}</label>
-                  <div className={`${styles.chipRow} ${biweeklyCustom ? styles.chipRowOpen : ''}`}>
-                    {[{d1:1,d2:16},{d1:13,d2:28},{d1:15,d2:30}].map(preset => {
-                      const active = !biweeklyCustom && cobroDay1 === preset.d1 && cobroDay2 === preset.d2
-                      return (
-                        <button
-                          key={`${preset.d1}-${preset.d2}`}
-                          onClick={() => { setBiweeklyCustom(false); setCobroDay1(preset.d1); setCobroDay2(preset.d2) }}
-                          className={`${styles.chip} ${styles.presetChip} ${active ? styles.chipActive : ''}`}
-                        >
-                          {t('settingsCobro.dayPair', { d1: preset.d1, d2: preset.d2 })}
-                        </button>
-                      )
-                    })}
-                    <button
-                      onClick={() => setBiweeklyCustom(true)}
-                      className={`${styles.chip} ${styles.presetChip} ${biweeklyCustom ? styles.chipActive : ''}`}
-                    >
-                      {t('onboardingPage.step2.custom')}
-                    </button>
-                  </div>
-                  {biweeklyCustom && (
-                    <>
-                      <div className={styles.dayPickHelp}>{t('onboardingPage.step2.pickTwoDays')}</div>
-                      <div className={styles.dayGrid} role="group" aria-label={t('onboardingPage.step2.biweeklyDaysLabel')}>
-                        {Array.from({ length: 31 }, (_, i) => i + 1).map(d => (
-                          <button key={d} type="button" onClick={() => pickBiweeklyDay(d)}
-                            aria-pressed={d === cobroDay1 || d === cobroDay2}
-                            className={`${styles.dayButton} ${d === cobroDay1 || d === cobroDay2 ? styles.dayButtonActive : ''}`}>
-                            {d}
-                          </button>
-                        ))}
-                      </div>
-                    </>
-                  )}
-                  {cobroDay1 && cobroDay2 && (
-                    <div className={styles.hintCard}>
-                      <CalendarCheck size={18} className={styles.hintIcon} />
-                      <div>
-                        {t('onboardingPage.step2.biweeklyHint', { d1: cobroDay1, d2: cobroDay2 })}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {cobroFreq === 'monthly' && (
-                <div className={styles.section}>
-                  <label className="field-label">{t('settingsCobro.payDayLabel')}</label>
-                  <div className={styles.dayGrid} role="group" aria-label={t('settingsCobro.payDayLabel')}>
-                    {Array.from({ length: 31 }, (_, i) => i + 1).map(d => (
-                      <button key={d} type="button" onClick={() => setCobroDay1(d)}
-                        aria-pressed={cobroDay1 === d}
-                        className={`${styles.dayButton} ${cobroDay1 === d ? styles.dayButtonActive : ''}`}>
-                        {d}
-                      </button>
-                    ))}
-                  </div>
-                  {cobroDay1 && (
-                    <div className={styles.hintCard}>
-                      <CalendarCheck size={18} className={styles.hintIcon} />
-                      <div>
-                        {t('settingsCobro.monthlyHelperPrefix')} <span className={styles.hintHighlight}>{cobroDay1}</span> {t('settingsCobro.monthlyHelperSuffix')}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
-            </>
-          )}
-
-          {n === 3 && (
-            <>
-              <h2 className={styles.title}>{t('onboardingPage.step3.title')}</h2>
-              <p className={styles.desc}>{t('onboardingPage.step3.desc')}</p>
-              <label className="field-label">{t('currency.onbLabel')}</label>
-              <CurrencySelect value={currency} onChange={v => { setCurrency(v); setCurrencyError('') }} />
-              {currencyError ? <div className={styles.errorText}>{currencyError}</div> : <p className={styles.desc}>{t('currency.onbHint')}</p>}
-
-              <div {...switchProps(salaryEnabled)} onClick={() => setSalaryEnabled(v => !v)} className={styles.toggleRow}>
-                <div>
-                  <div className={styles.toggleLabel}>{t('onboardingPage.step3.toggleLabel')}</div>
-                  <div className={styles.toggleSub}>{t('onboardingPage.step3.toggleSub')}</div>
-                </div>
-                <div className={`toggle-track${salaryEnabled ? ' is-on' : ''}`}>
-                  <div className={`toggle-thumb${salaryEnabled ? ' is-on' : ''}`} />
                 </div>
               </div>
-              {salaryEnabled && (
-                <div>
-                  <label className="field-label">{t('onboardingPage.step3.amountLabel')}</label>
-                  <div className={`${styles.amountWrap} ${currencySymbol.length >= 3 ? styles.amountWrapLong : currencySymbol.length === 2 ? styles.amountWrapMid : ''}`}>
-                    <span className={styles.currencyPrefix}>{currencySymbol}</span>
-                    <AmountInput
-                      autoFocus value={salaryAmount}
-                      onChange={e => setSalaryAmount(e.target.value)}
-                      onKeyDown={e => e.key === 'Enter' && nextStep()}
-                      enterKeyHint="next" placeholder="0.00"
-                      className={`field-input ${styles.amountInput}`}
-                    />
-                  </div>
-                </div>
-              )}
-            </>
-          )}
-
-          {n === 4 && (
-            <>
-              <h2 className={styles.title}>{t('onboardingPage.step4.title')}</h2>
-              <p className={styles.desc}>{t('onboardingPage.step4.desc')}</p>
-              <div {...switchProps(subscribed)}
-                onClick={async () => { if (!subscribed) await subscribe() }}
-                className={`${styles.toggleRow} ${subscribed ? styles.toggleRowStatic : ''}`}
-              >
-                <div>
-                  <div className={styles.toggleLabel}>
-                    {subscribed ? t('onboardingPage.step4.enabledLabel') : t('onboardingPage.step4.disabledLabel')}
-                  </div>
-                  <div className={styles.toggleSub}>
-                    {subscribed ? t('onboardingPage.step4.enabledSub') : t('onboardingPage.step4.disabledSub')}
-                  </div>
-                </div>
-                <div className={`toggle-track${subscribed ? ' is-on' : ''}`}>
-                  <div className={`toggle-thumb${subscribed ? ' is-on' : ''}`} />
-                </div>
-              </div>
-              {subscribed && (
-                <div className={styles.readyBanner}>
-                  <div className={styles.readyTitle}>{t('onboardingPage.step4.readyTitle')}</div>
-                  <div className={styles.readyText}>{t('onboardingPage.step4.readyText')}</div>
-                </div>
-              )}
-            </>
-          )}
+            </section>
+          </main>
         </div>
       </div>
     )
