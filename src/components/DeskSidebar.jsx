@@ -22,7 +22,7 @@ const THEMES = [
   { id: 'sistema', Icon: Monitor, labelKey: 'theme.system' },
 ]
 
-export function DeskSidebar({ active, onChange, profile, unreadCount, onOpenNotifs, onGoSettings, onOpenPremium, spaces, activeSpaceId, onSwitchSpace, spaceSwitcherProfile, theme, onThemeChange }) {
+export function DeskSidebar({ active, onChange, profile, unreadCount, onOpenNotifs, onGoSettings, onGoAccount, onOpenPremium, spaces, activeSpaceId, onSwitchSpace, spaceSwitcherProfile, theme, onThemeChange }) {
   const { t } = useTranslation()
   const [open, setOpen] = useRailExpanded(true)
 
@@ -103,13 +103,16 @@ export function DeskSidebar({ active, onChange, profile, unreadCount, onOpenNoti
           ))}
         </div>
 
-        <button className={styles.me} onClick={onGoSettings} aria-label={t('buttons.profilePhoto')}>
-          <AvatarImg
-            src={profile?.avatar_url}
-            alt=""
-            className={styles.avatar}
-            fallback={<span className={styles.avatarFallback}>{initials}</span>}
-          />
+        <button className={styles.me} onClick={onGoAccount || onGoSettings} aria-label={t('settingsPage.menu.account')}>
+          <span className={styles.avatarWrap}>
+            <AvatarImg
+              src={profile?.avatar_url}
+              alt=""
+              className={`${styles.avatar} ${profile?.is_premium ? styles.avatarPremium : ''}`}
+              fallback={<span className={`${styles.avatarFallback} ${profile?.is_premium ? styles.avatarPremium : ''}`}>{initials}</span>}
+            />
+            {profile?.is_premium && <span className={styles.crown}><Crown size={10} fill="currentColor" /></span>}
+          </span>
           {open && (
             <span className={styles.meText}>
               <b>{profile?.name || ''}</b>

@@ -2000,6 +2000,7 @@ export default function App() {
           unreadCount={allUnreadCount}
           onOpenNotifs={() => setNotifOpen(true)}
           onGoSettings={() => changeTab('settings')}
+          onGoAccount={() => (tab === 'settings' ? setSettingsInitialSection('account') : goToSettingsSection('account'))}
           spaces={sharedSpaces.spaces}
           activeSpaceId={activeSpaceId}
           onSwitchSpace={switchSpace}
