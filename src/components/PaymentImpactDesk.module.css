@@ -77,8 +77,8 @@
 .wicAccent { background: var(--accent-soft); color: var(--accent); }
 .wicWarn { background: var(--impact-warning-soft); color: var(--impact-warning); }
 .wicOk { background: var(--paid-soft); color: color-mix(in srgb, var(--paid) 62%, var(--text)); }
-.todo { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 0 4px; }
+.todo { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; padding: 0 4px; }
 .td { font-size: 12.5px; color: var(--muted); }
 .pills { display: flex; gap: 8px; }
-.pill { border-radius: 99px; padding: 5px 12px; font-size: 12px; font-weight: 700; background: var(--surface); color: var(--muted); border: 1px solid var(--desk-hair); transition: background 0.2s, color 0.2s; }
+.pill { white-space: nowrap; border-radius: 99px; padding: 5px 12px; font-size: 12px; font-weight: 700; background: var(--surface); color: var(--muted); border: 1px solid var(--desk-hair); transition: background 0.2s, color 0.2s; }
 .done { background: var(--paid-soft); color: color-mix(in srgb, var(--paid) 62%, var(--text)); border-color: var(--paid-border); }
