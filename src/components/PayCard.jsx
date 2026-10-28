@@ -356,7 +356,11 @@ function PayCardFull({ payment: p, cfg, paymentMethodsList = [], onChangeMethod,
   useEffect(() => {
     if (!menuOpen) return undefined
     function inside(e) {
-      return (menuRef.current && menuRef.current.contains(e.target)) || (menuPortalRef.current && menuPortalRef.current.contains(e.target))
+      // Solo el menú y su botón «⋮» cuentan como «dentro»: un clic en el resto de
+      // la propia fila también lo cierra (v0.9.880).
+      if (menuPortalRef.current && menuPortalRef.current.contains(e.target)) return true
+      const trig = e.target instanceof Element ? e.target.closest('[data-pay-menu-trigger]') : null
+      return !!(trig && menuRef.current && menuRef.current.contains(trig))
     }
     function handle(e) { if (!inside(e)) setMenuOpen(false) }
     function onKey(e) { if (e.key === 'Escape') setMenuOpen(false) }
@@ -531,6 +535,7 @@ function PayCardFull({ payment: p, cfg, paymentMethodsList = [], onChangeMethod,
             ) : (
               <button
                 onClick={e => { e.stopPropagation(); menuOpen ? setMenuOpen(false) : openMenuAt() }}
+                data-pay-menu-trigger
                 className={styles.menuTriggerButton}
                 aria-label={t('payCard.menuTriggerAriaLabel')}
               >
