@@ -571,7 +571,15 @@
   .desk .statusLabel { font-size: clamp(0.6875rem, 3vw, 0.78rem); max-width: 5.25rem; line-height: 1.2; }
   .desk .actionsSection { padding: 0; gap: 2px; }
   .desk .markPaidButton, .desk .paidIndicator { width: clamp(2.1rem, 9.5vw, 2.4rem); height: clamp(2.1rem, 9.5vw, 2.4rem); }
-  .desk .menuTriggerButton { width: 24px; }
+  .desk .menuTriggerButton { width: 1.5rem; }
+  /* Monto variable: botón "Agregar monto" sólido y sin etiqueta repetida */
+  .desk .captureButton { background: var(--accent); color: var(--on-color); border: 0; border-radius: 0.5rem; padding: 0.25rem 0.55rem; font-size: clamp(0.6875rem, 3vw, 0.75rem); }
+  .desk .variableGroup { gap: 0.2rem; }
+  .desk .variableGroup .variableTag { display: none; }
+  .desk .variableTag { font-size: clamp(0.625rem, 2.7vw, 0.6875rem); }
+  /* Sin hover en el celular: el check va verde desde el inicio (v0.9.898) */
+  .desk .markPaidButton:not(.markPaidLocked) { background: var(--paid); border-color: var(--paid); }
+  .desk .markPaidButton:not(.markPaidLocked) svg { stroke: var(--pay-icon); }
 }
 
 /* Menús de opciones en escritorio (v0.9.875), mockup aprobado: tarjeta redonda,

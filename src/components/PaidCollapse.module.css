@@ -159,6 +159,36 @@
   .paidCollapseToggle { padding: 14px 16px; }
 }
 
+/* Móvil (v0.9.898): mismo diseño que el resto del Inicio — tarjeta redonda
+   para el colapsable y, al abrirlo, lista plana con ficha de fecha. Medidas en
+   rem/clamp. */
+@media (max-width: 767px) {
+  .paidCollapseRoot { margin-bottom: 0.75rem; }
+  .paidCollapseToggle { background: var(--desk-card); border-radius: 1.25rem; padding: 0.8rem 1rem; gap: 0.75rem; box-shadow: var(--desk-shadow); }
+  .paidCollapseCheckIcon { width: 1.5rem; height: 1.5rem; }
+  .paidCollapseSummaryText { font-size: clamp(0.875rem, 3.8vw, 0.9375rem); color: var(--text); }
+  .paidCollapseList { background: var(--desk-card); border-radius: 1.5rem; padding: 0.125rem 0.875rem; margin-top: 0.5rem; gap: 0; box-shadow: var(--desk-shadow); }
+  .paidCollapseItem { background: none; border-radius: 0; border-bottom: 1px solid var(--desk-hair); }
+  .paidCollapseItemWrapper:last-child .paidCollapseItem { border-bottom: 0; }
+  .paidCollapseItemRow { padding: 0.75rem 0; gap: 0.75rem; }
+  .paidCollapseDate {
+    width: clamp(2.5rem, 12vw, 2.9rem);
+    height: clamp(2.8rem, 13vw, 3.2rem);
+    border-radius: 0.8rem;
+    background: var(--desk-chip);
+    display: flex;
+    flex-direction: column-reverse;
+    align-items: center;
+    justify-content: center;
+  }
+  .paidCollapseDay { font-size: clamp(1rem, 4.6vw, 1.15rem); font-weight: 700; }
+  .paidCollapseMonth { font-size: 0.6875rem; color: var(--muted); text-transform: capitalize; }
+  .paidCollapseName { font-size: clamp(0.875rem, 3.9vw, 1rem); font-weight: 600; }
+  .paidCollapseCategory { font-size: clamp(0.6875rem, 3.2vw, 0.8125rem); color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .paidCollapseAmount { font-size: clamp(0.875rem, 3.9vw, 1rem); font-weight: 600; }
+  .paidCollapseUndoButton { width: 2.1rem; height: 2.1rem; border: 1.5px solid var(--desk-hair); }
+}
+
 /* Escritorio (≥1100px, v0.9.819): estilo del nuevo diseño — fila plana sin
    caja, check verde, filas con fecha en ficha. */
 @media (min-width: 1100px) {

@@ -2,6 +2,10 @@
   padding-bottom: 120px;
   min-height: 100vh;
 }
+/* Móvil: deja libre la barra inferior y el botón + flotante (v0.9.898) */
+@media (max-width: 767px) {
+  .pageRoot { padding-bottom: calc(12rem + env(safe-area-inset-bottom)); }
+}
 
 .roundedContentWrapper {
   background-color: var(--bg);
