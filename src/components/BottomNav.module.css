@@ -13,8 +13,6 @@
   justify-content: space-around;
   padding: 12px 12px calc(14px + env(safe-area-inset-bottom));
   background: var(--nav-bg);
-  /* drop-shadow sigue la silueta completa, esquinas cóncavas incluidas */
-  filter: drop-shadow(0 -4px 12px color-mix(in srgb, var(--nav-bg) 35%, transparent));
   z-index: 100;
 }
 .nav::before,
