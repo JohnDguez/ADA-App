@@ -12,6 +12,8 @@
 // el esqueleto ya no debe mostrar la barra horizontal ni el toggle de 5px,
 // que ya no existen en la pantalla real.
 import styles from './SkeletonLoader.module.css'
+import dk from './SkeletonDesk.module.css'
+import { useIsDesktop } from '../hooks/useIsDesktop'
 
 // `Bone` y `RailSkeleton` se exportan (antes solo vivían aquí, para el
 // gate de pantalla completa de App.jsx) — Fase 1 del sistema de carga por
@@ -161,7 +163,97 @@ export function GoalCardSkeleton({ count = 2 }) {
   )
 }
 
+// Hueso del esqueleto de escritorio (huesos sólidos con brillo; ver SkeletonDesk.module.css).
+function DBone({ w, h, r = 8, style }) {
+  return <span className={dk.bone} style={{ width: w, height: h, borderRadius: r, ...style }} />
+}
+
+// Esqueleto de escritorio (≥1100px): sidebar + Inicio de escritorio (3 tarjetas
+// de totales, lista de pagos, anillo y barras de 7 días) — aprobado con mockup
+// B "fantasma detallado" (v0.9.852).
+function DeskSkeleton() {
+  const rows = [0, 1, 2, 3, 4]
+  return (
+    <div className={dk.root} aria-busy="true">
+      <aside className={dk.side}>
+        <div className={dk.sideTop}><DBone w={34} h={34} r={10} /><DBone w={90} h={16} r={5} /></div>
+        <div className={dk.sideLabel}><DBone w={44} h={10} r={4} /></div>
+        {[90, 110, 90, 110, 90].map((w, i) => (
+          <div key={i} className={dk.sideItem}><DBone w={22} h={22} r={7} /><DBone w={w} h={13} r={5} /></div>
+        ))}
+        <div className={dk.sideLabel2}><DBone w={60} h={10} r={4} /></div>
+        <div className={dk.sideItem}><DBone w={24} h={24} r="50%" /><DBone w={100} h={13} r={5} /></div>
+        <div className={dk.sideBottom}>
+          <DBone w="100%" h={44} r={22} />
+          <div className={dk.sideUser}>
+            <DBone w={38} h={38} r="50%" />
+            <div className={dk.stack7}><DBone w={90} h={12} r={5} /><DBone w={60} h={10} r={5} /></div>
+          </div>
+        </div>
+      </aside>
+
+      <main className={dk.main}>
+        <div className={dk.head}>
+          <div className={dk.headText}><DBone w={160} h={13} r={5} /><DBone w={380} h={40} r={12} /></div>
+          <DBone w={150} h={46} r={23} />
+        </div>
+
+        <div className={dk.tiles}>
+          {[0, 1, 2].map(i => (
+            <div key={i} className={dk.tile}>
+              <DBone w={90} h={14} r={5} />
+              <div className={dk.tileNum}><DBone w={190} h={40} r={10} /></div>
+              <div className={dk.tileSub}><DBone w={120} h={12} r={5} /></div>
+            </div>
+          ))}
+        </div>
+
+        <div className={dk.body}>
+          <section className={dk.card}>
+            <DBone w={190} h={20} r={6} />
+            <div className={dk.chips}>{[0, 1, 2].map(i => <DBone key={i} w={96} h={36} r={18} />)}</div>
+            <div className={dk.secHead}><DBone w={16} h={16} r={5} /><DBone w={150} h={14} r={5} /><DBone w={26} h={18} r={9} /></div>
+            {rows.map(i => (
+              <div key={i}>
+                <div className={dk.row}>
+                  <DBone w={40} h={40} r="50%" />
+                  <div className={dk.rowText}><DBone w={i % 2 ? '46%' : '38%'} h={14} r={5} /><DBone w="22%" h={11} r={5} /></div>
+                  <DBone w={80} h={16} r={5} />
+                </div>
+                {i < rows.length - 1 && <div className={dk.hair} />}
+              </div>
+            ))}
+          </section>
+
+          <div className={dk.side2}>
+            <section className={`${dk.card} ${dk.cardGauge}`}>
+              <DBone w={150} h={20} r={6} />
+              <svg className={dk.gauge} viewBox="0 0 300 165" aria-hidden="true">
+                <path className={dk.gTrack} d="M20,140 A130,130 0 0 1 280,140" />
+                <path className={dk.gFill} d="M20,140 A130,130 0 0 1 140,10" />
+              </svg>
+              <div className={dk.legend}>{[0, 1, 2].map(i => <DBone key={i} w={80} h={11} r={5} />)}</div>
+            </section>
+            <section className={`${dk.card} ${dk.cardNext}`}>
+              <DBone w={150} h={20} r={6} />
+              <div style={{ height: 12 }} />
+              <DBone w={170} h={38} r={10} />
+              <div style={{ height: 10 }} />
+              <DBone w={220} h={11} r={5} />
+              <div className={dk.bars}>
+                {[45, 70, 30, 85, 55, 40, 65].map((h, i) => <span key={i} className={dk.bone} style={{ height: `${h}%` }} />)}
+              </div>
+            </section>
+          </div>
+        </div>
+      </main>
+    </div>
+  )
+}
+
 export function SkeletonLoader() {
+  const isDesk = useIsDesktop()
+  if (isDesk) return <DeskSkeleton />
   return (
     <div className={styles.pageRoot}>
 
