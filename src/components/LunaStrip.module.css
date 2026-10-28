@@ -166,50 +166,58 @@
   }
 }
 
-/* ── Escritorio (v0.9.819): tarjeta oscura con degradado ─────────────────── */
+/* ── Escritorio (v0.9.861): Luna sin sombra + globo teñido ─────────────────
+   El mensaje es un globo con colita hacia Luna, siempre visible. El fondo y el
+   borde se tiñen con el color del estado (--tint), mezclados con la tarjeta
+   para que el texto siga oscuro/legible en claro y oscuro. */
 .deskStrip {
+  --tint: var(--accent);
   position: relative;
   display: flex;
-  align-items: center;
-  gap: 14px;
-  min-height: 96px;
-  padding: 20px 28px 20px 150px;
-  border-radius: 24px;
-  background: var(--desk-luna-bg);
-  color: var(--desk-ink-text);
-  box-shadow: var(--desk-pop-shadow);
-  margin-top: 54px;
+  align-items: flex-end;
+  gap: 18px;
+  margin-top: 4px;
 }
-.desk_happy { background: var(--desk-luna-happy); }
-.desk_attentive { background: var(--desk-luna-attentive); }
-.desk_worried { background: var(--desk-luna-worried); }
-.desk_celebrating { background: var(--desk-luna-celebrating); }
-.desk_sleeping { background: var(--desk-luna-sleeping); }
-.deskStrip::after {
+.desk_happy { --tint: var(--paid); }
+.desk_attentive { --tint: var(--warning); }
+.desk_worried { --tint: var(--danger); }
+.desk_celebrating { --tint: var(--paid); }
+.desk_sleeping { --tint: var(--accent); }
+.desk_waving { --tint: var(--accent); }
+.deskImg {
+  flex: none;
+  height: 124px;
+  width: auto;
+  pointer-events: none;
+}
+.deskImgWide { height: 84px; }
+
+.deskText {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  margin-bottom: 20px;
+  padding: 16px 20px;
+  border-radius: 22px;
+  color: var(--text);
+  background: color-mix(in srgb, var(--tint) 16%, var(--desk-card));
+  border: 1px solid color-mix(in srgb, var(--tint) 45%, var(--desk-card));
+}
+.deskText::before {
   content: "";
   position: absolute;
-  inset: 0;
-  border-radius: 24px;
-  background: repeating-linear-gradient(135deg, var(--white-a8) 0 1.5px, transparent 1.5px 6px);
-  -webkit-mask-image: linear-gradient(to left, black, transparent 70%);
-  mask-image: linear-gradient(to left, black, transparent 70%);
-  pointer-events: none;
+  left: -8px;
+  bottom: 22px;
+  width: 14px;
+  height: 14px;
+  transform: rotate(45deg);
+  border-radius: 0 0 0 4px;
+  background: color-mix(in srgb, var(--tint) 16%, var(--desk-card));
+  border-left: 1px solid color-mix(in srgb, var(--tint) 45%, var(--desk-card));
+  border-bottom: 1px solid color-mix(in srgb, var(--tint) 45%, var(--desk-card));
 }
-.deskImg {
-  position: absolute;
-  left: 12px;
-  bottom: 0;
-  height: 128px;
-  width: auto;
-  z-index: 2;
-  pointer-events: none;
-  filter: drop-shadow(0 10px 10px black);
-}
-.deskImgWide { height: 84px; left: 6px; }
-
-.deskText { flex: 1; min-width: 0; position: relative; z-index: 1; }
-.deskTitle { font-size: 16px; font-weight: 600; }
-.deskSub { font-size: 13px; line-height: 1.35; opacity: 0.78; margin-top: 4px; }
+.deskTitle { font-size: 15.5px; font-weight: 700; line-height: 1.25; color: var(--text); }
+.deskSub { font-size: 13px; line-height: 1.35; margin-top: 4px; color: var(--muted); }
 .deskArrow {
   position: relative;
   z-index: 1;
