@@ -19,6 +19,7 @@ import { useDeskSettings } from '../../components/DeskSettingsContext'
 import { DeskSettingsHead, DeskPage } from '../../components/DeskSettingsHead'
 import deskStyles from '../../components/SettingsDesk.module.css'
 import dk from './SettingsAccountDesk.module.css'
+import dkp from '../../components/PaymentDesk.module.css'
 import styles from './SettingsAccountPage.module.css'
 import { Presence } from '../../components/Presence'
 import { BottomSheet } from '../../components/BottomSheet'
@@ -350,9 +351,9 @@ export function SettingsAccountPage({ onChangePhoto, uploadingAvatar, profile, u
       )}
 
       <Presence show={!!dangerModal}>{() => (
-        <div onClick={e => e.target === e.currentTarget && setDangerModal(null)} className={styles.dangerOverlay}>
-          <div className={styles.modalPanel}>
-            <div className={styles.handle} />
+        <div onClick={e => e.target === e.currentTarget && setDangerModal(null)} className={deskMode ? dkp.overlay : styles.dangerOverlay}>
+          <div className={deskMode ? `${dkp.dialog} ${dk.dangerDlg}` : styles.modalPanel} role={deskMode ? 'dialog' : undefined} aria-modal={deskMode ? 'true' : undefined}>
+            {!deskMode && <div className={styles.handle} />}
             <div className={styles.dangerIconWrapper}>
               <AlertTriangle size={22} color="var(--danger)" />
             </div>
@@ -385,21 +386,23 @@ export function SettingsAccountPage({ onChangePhoto, uploadingAvatar, profile, u
                 {showDangerPass ? <EyeOff size={16} color="var(--text)" /> : <Eye size={16} color="var(--text)" />}
               </button>
             </div>
-            <button
-              onClick={dangerModal === 'data' ? handleDeleteData : handleDeleteAccount}
-              disabled={dangerLoading || !dangerPassword}
-              className={styles.deleteConfirmButton}>
-              {dangerLoading ? t('settingsAccount.dangerModal.verifying') : dangerModal === 'data' ? t('settingsAccount.dangerModal.deleteDataButton') : t('settingsAccount.dangerModal.deleteAccountButton')}
-            </button>
-            <button onClick={() => { setDangerModal(null); setDangerPassword('') }} className="btn-ghost">{t('buttons.cancel')}</button>
+            <div className={deskMode ? dk.dangerFoot : undefined}>
+              <button
+                onClick={dangerModal === 'data' ? handleDeleteData : handleDeleteAccount}
+                disabled={dangerLoading || !dangerPassword}
+                className={deskMode ? dk.dangerBtn : styles.deleteConfirmButton}>
+                {dangerLoading ? t('settingsAccount.dangerModal.verifying') : dangerModal === 'data' ? t('settingsAccount.dangerModal.deleteDataButton') : t('settingsAccount.dangerModal.deleteAccountButton')}
+              </button>
+              <button onClick={() => { setDangerModal(null); setDangerPassword('') }} className={deskMode ? dkp.cancel : 'btn-ghost'}>{t('buttons.cancel')}</button>
+            </div>
           </div>
         </div>
       )}</Presence>
 
       <Presence show={!!subBlock}>{() => (
-        <div onClick={e => e.target === e.currentTarget && setSubBlock(null)} className={styles.dangerOverlay}>
-          <div className={styles.modalPanel}>
-            <div className={styles.handle} />
+        <div onClick={e => e.target === e.currentTarget && setSubBlock(null)} className={deskMode ? dkp.overlay : styles.dangerOverlay}>
+          <div className={deskMode ? `${dkp.dialog} ${dk.dangerDlg}` : styles.modalPanel} role={deskMode ? 'dialog' : undefined} aria-modal={deskMode ? 'true' : undefined}>
+            {!deskMode && <div className={styles.handle} />}
             <div className={styles.blockIconWrapper}>
               <Crown size={28} color="var(--warning)" />
             </div>
@@ -432,15 +435,17 @@ export function SettingsAccountPage({ onChangePhoto, uploadingAvatar, profile, u
                 </div>
               </div>
             </div>
-            <button
-              onClick={() => {
-                if (subBlock.source === 'google_play') { window.open(playStoreUrl, '_blank') }
-                else { setSubBlock(null); onGoSubscription?.() }
-              }}
-              className="btn-primary">
-              {subBlock.source === 'google_play' ? t('settingsAccount.subscriptionBlock.openPlay') : t('settingsAccount.subscriptionBlock.goSubscription')}
-            </button>
-            <button onClick={() => setSubBlock(null)} className="btn-ghost">{t('settingsAccount.subscriptionBlock.understood')}</button>
+            <div className={deskMode ? dk.dangerFoot : undefined}>
+              <button
+                onClick={() => {
+                  if (subBlock.source === 'google_play') { window.open(playStoreUrl, '_blank') }
+                  else { setSubBlock(null); onGoSubscription?.() }
+                }}
+                className={deskMode ? `btn-primary ${dk.primaryBtn}` : 'btn-primary'}>
+                {subBlock.source === 'google_play' ? t('settingsAccount.subscriptionBlock.openPlay') : t('settingsAccount.subscriptionBlock.goSubscription')}
+              </button>
+              <button onClick={() => setSubBlock(null)} className={deskMode ? dkp.cancel : 'btn-ghost'}>{t('settingsAccount.subscriptionBlock.understood')}</button>
+            </div>
           </div>
         </div>
       )}</Presence>

@@ -59,6 +59,10 @@
 .popUp::before { top: auto; bottom: -7px; border-radius: 0 0 4px 0; box-shadow: 1px 1px 0 var(--desk-hair, var(--border)); }
 .popExiting { animation: bsPopOut .16s ease both; }
 .popTitle { margin: 0 6px 10px; font-size: 12px; font-weight: 600; letter-spacing: 0.9px; text-transform: uppercase; color: var(--muted); }
-.popScroll { flex: 1 1 auto; min-height: 0; overflow-y: auto; padding-bottom: 6px; }
+/* margen/padding laterales y arriba: el aro de foco de los campos no se recorta con el overflow */
+.popScroll { flex: 1 1 auto; min-height: 0; overflow-y: auto; margin: -4px -6px 0; padding: 4px 6px 6px; }
+/* campos dentro del popover con fondo y borde visibles (antes igualaban a la tarjeta) */
+.pop { --field-desk-bg: color-mix(in srgb, var(--text) 9%, var(--desk-card, var(--surface))); }
+.pop.pop :global(.field-input) { border: 1px solid color-mix(in srgb, var(--text) 20%, var(--desk-card, var(--surface))); }
 @keyframes bsPop { from { opacity: 0; transform: translateY(-4px); } }
 @keyframes bsPopOut { to { opacity: 0; } }
