@@ -8,7 +8,7 @@
   --field-bg: var(--pf);
   --field-border: var(--pfb);
   position: fixed;
-  z-index: 1000;
+  z-index: 190; /* bajo los diálogos de escritorio (z 200): la nueva tarjeta abre encima */
   display: flex;
   flex-direction: column;
   box-sizing: border-box;

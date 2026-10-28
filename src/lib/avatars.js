@@ -29,6 +29,13 @@ export async function uploadAvatarFile(userId, file) {
   const path = `${userId}/avatar.${ext}`
   const { error } = await supabase.storage.from('avatars').upload(path, file, { upsert: true })
   if (error) return { error }
+  // Si la foto anterior tenía otra extensión (avatar.png → avatar.jpg) quedaría
+  // huérfana en el bucket: se borran las demás avatar.* de esta carpeta.
+  try {
+    const { data: files } = await supabase.storage.from('avatars').list(userId)
+    const stale = (files || []).filter(f => /^avatar\./.test(f.name) && `${userId}/${f.name}` !== path).map(f => `${userId}/${f.name}`)
+    if (stale.length) await supabase.storage.from('avatars').remove(stale)
+  } catch { /* limpieza best-effort: no bloquea la subida */ }
   const { data: { publicUrl } } = supabase.storage.from('avatars').getPublicUrl(path)
   return { url: `${publicUrl}?t=${Date.now()}`, error: null }
 }

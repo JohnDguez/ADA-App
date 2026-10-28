@@ -60,3 +60,10 @@
 .voiceLang { height: 36px; padding: 0 14px; border: 0; border-radius: 99px; background: var(--desk-card); color: var(--text); font-size: 13px; font-weight: 700; }
 .voiceDone { height: 40px; padding: 0 22px; border: 0; border-radius: 99px; background: var(--accent); color: var(--desk-ink-text); font-size: 14px; font-weight: 600; }
 @media (prefers-reduced-motion: reduce) { .wave i, .voiceMicOn::after { animation: none; } }
+
+.spaceTag {
+  display: inline-flex; align-items: center; gap: 6px; margin-top: 10px; padding: 5px 12px 5px 10px;
+  border-radius: 999px; font-size: 12.5px; font-weight: 700; color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 14%, var(--surface));
+  border: 1px solid color-mix(in srgb, var(--accent) 35%, var(--surface));
+}

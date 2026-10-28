@@ -1176,7 +1176,9 @@
       "impactEmpty": "Enter an amount and a date to see how it affects your period.",
       "impactVariable": "A variable payment is not counted until you confirm its amount.",
       "impactPaid": "Since it is already paid, it is recorded today and not projected."
-    }
+    },
+    "spaceTag": "Shared space · {{name}}",
+    "spaceTagNoName": "Shared space"
   },
   "pageHeader": {
     "greetingMorning": "Good morning!",

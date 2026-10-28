@@ -1176,7 +1176,9 @@
       "impactEmpty": "Escribe un monto y una fecha para ver cómo afecta tu periodo.",
       "impactVariable": "Un pago variable no se cuenta hasta que confirmes su monto.",
       "impactPaid": "Como ya está pagado, se registra hoy y no se proyecta."
-    }
+    },
+    "spaceTag": "Espacio compartido · {{name}}",
+    "spaceTagNoName": "Espacio compartido"
   },
   "pageHeader": {
     "greetingMorning": "¡Buenos días!",

@@ -467,3 +467,5 @@
   .desk .actionBtn:hover { translate: none; filter: none; opacity: .88; }
   .desk .actionBtnGhost:hover, .desk .completeButton:hover { background: var(--desk-chip); opacity: 1; }
 }
+
+.actionBtn:disabled { cursor: not-allowed; opacity: 0.5; }

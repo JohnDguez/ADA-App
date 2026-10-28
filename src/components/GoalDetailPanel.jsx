@@ -245,7 +245,7 @@ export function GoalDetailPanel({
           )}
           <div className={styles.actionButtons}>
             <button type="button" onClick={() => setActiveAction(null)} className="btn-ghost">{t('buttons.cancel')}</button>
-            <button type="button" onClick={confirmAction} disabled={saving} className={`btn-primary ${styles.confirmButton}`}>
+            <button type="button" onClick={confirmAction} disabled={saving || !(parseFloat(amount) > 0) || (activeAction === 'retirar' && parseFloat(amount) > goal.currentAmount)} className={`btn-primary ${styles.confirmButton}`}>
               {saving ? t('goalDetailPanel.saving') : t('goalDetailPanel.confirm')}
             </button>
           </div>
@@ -256,7 +256,7 @@ export function GoalDetailPanel({
             <ArrowUp size={16} />
             {t('goalDetailPanel.contribute')}
           </button>
-          <button type="button" onClick={() => openAction('retirar')} className={`${styles.actionBtn} ${styles.actionBtnGhost} ${!canWithdraw ? styles.actionBtnBlocked : ''} ${!(goal.currentAmount > 0) ? styles.actionBtnEmpty : ''}`}>
+          <button type="button" onClick={() => openAction('retirar')} disabled={!(goal.currentAmount > 0)} className={`${styles.actionBtn} ${styles.actionBtnGhost} ${!canWithdraw ? styles.actionBtnBlocked : ''} ${!(goal.currentAmount > 0) ? styles.actionBtnEmpty : ''}`}>
             <ArrowDown size={16} />
             {t('goalDetailPanel.withdraw')}
           </button>

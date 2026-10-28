@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useId, Children, isValidElement, cloneElement } from 'react'
 import { useTranslation } from 'react-i18next'
 import i18n from '../i18n'
-import { Wallet, AlertTriangle, Repeat, Check, Info, Lock } from 'lucide-react'
+import { Wallet, AlertTriangle, Repeat, Check, Info, Lock, Users } from 'lucide-react'
 import { CATEGORIES, RECUR_FREQ, MONTHS, getMonths, MONTHS_SHORT, getMonthsShort, intlLocale, nextWeeklyFromDate, nextBiweeklyFromDate, nextPeriodDate, cobroPeriod, fmt, nameExistsActive, projectPeriodImpact, nextCobroPeriod, getCatColor, getCategoryLabel, getFrequencyLabel, dateToStr, dateOf, todayStr, getDeleteConfirmMessage, installmentCurrentNumber } from '../lib/utils'
 import { getCategoryIcon } from '../lib/categoryIcons'
 import { supabase } from '../lib/supabase'
@@ -38,7 +38,7 @@ import { usePresence } from '../lib/usePresence'
 import { useScrollLock } from '../lib/scrollLock'
 import { switchProps } from '../lib/a11y'
 
-export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onSaveCardPlan, onDelete, onEditMaster, initial: initialProp, payments, profile, spacePermissions, isSharedSpace = false, customCategories = [], onUpdateProfile, onOpenPremium, paymentMethods = null, prefill = null, autoStart = null }) {
+export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onSaveCardPlan, onDelete, onEditMaster, initial: initialProp, payments, profile, spacePermissions, isSharedSpace = false, spaceName = '', customCategories = [], onUpdateProfile, onOpenPremium, paymentMethods = null, prefill = null, autoStart = null }) {
   const { t } = useTranslation()
   // Durante la animación de salida se conserva el pago que se estaba editando
   // (el padre ya pudo limpiarlo) para que el formulario no cambie de forma.
@@ -941,6 +941,7 @@ const impactBlock = impactPreview && impactPreview.length > 0 ? (() => {
               <div>
                 <h2 className={dk.title}>{t('paymentModal.desk.title')}</h2>
                 <div className={dk.sub}>{t('paymentModal.desk.subtitle')}</div>
+                {isSharedSpace && <div className={dk.spaceTag}><Users size={14} /><span>{spaceName ? t('paymentModal.spaceTag', { name: spaceName }) : t('paymentModal.spaceTagNoName')}</span></div>}
               </div>
               <div className={dk.headActions}>
                 {voiceSupported && voiceState === 'idle' && <button type="button" className={dk.ghost} onClick={handleVoice}><Microphone size={16} />{t('addDropdown.voice')}</button>}
@@ -1130,6 +1131,7 @@ const impactBlock = impactPreview && impactPreview.length > 0 ? (() => {
       <div onClick={e => e.target === e.currentTarget && requestClose()} className={styles.overlay} data-presence="overlay" data-closing={closing ? '' : undefined}>
         <div className={`${styles.panel} ${isFlat ? styles.panelWide : ''}`} data-presence="panel" data-closing={closing ? '' : undefined}>
           <div className={styles.handle} />
+          {isSharedSpace && <div className={styles.spaceTag}><Users size={14} /><span>{spaceName ? t('paymentModal.spaceTag', { name: spaceName }) : t('paymentModal.spaceTagNoName')}</span></div>}
 
           {!initial && (
             <div data-coachmark="modal-payment-type-tabs" className={styles.typeChip}>

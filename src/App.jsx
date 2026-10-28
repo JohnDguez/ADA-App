@@ -2123,6 +2123,7 @@ export default function App() {
         profile={effectiveProfile}
         spacePermissions={spacePermissions}
         isSharedSpace={!!paymentsSpaceId}
+        spaceName={activeSpaceEntry?.space?.name || ''}
         paymentMethods={paymentMethods}
         customCategories={profile.custom_categories || []}
         onOpenPremium={() => openPremiumPage(false)}
