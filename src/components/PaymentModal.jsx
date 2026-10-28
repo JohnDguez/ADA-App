@@ -43,6 +43,7 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onSaveC
   // Durante la animación de salida se conserva el pago que se estaba editando
   // (el padre ya pudo limpiarlo) para que el formulario no cambie de forma.
   const lastInitialRef = useRef(null)
+  const nameRef = useRef(null)
   if (open) lastInitialRef.current = initialProp
   const initial = open ? initialProp : lastInitialRef.current
   const [mode,               setMode]               = useState('single')
@@ -537,6 +538,8 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onSaveC
   const nextMonthlyDate    = mode === 'recurrent' && monthBasedFreqs.includes(recurFreq) && dueDate ? dateOf(dueDate) : null
 
   // Flujo por tipo (v0.9.604)
+  // Pago nuevo sin monto (v0.9.856): no se puede guardar hasta capturarlo.
+  const needsAmount  = !initial && mode !== 'installment' && !isVariable && !(parseFloat(amount) > 0)
   const isFlat       = mode !== 'installment'                         // Único / Recurrente: una sola pantalla
   const showDataStep = isFlat || !!initial || step === 1              // nombre + categoría
   const moreVisible  = !!initial || moreOpen || isWide
@@ -926,7 +929,7 @@ const impactBlock = impactPreview && impactPreview.length > 0 ? (() => {
     const nameField = (
       <div className={dk.cell}>
         <label className="field-label">{t('paymentModal.fields.name')}</label>
-        <input autoFocus className="field-input" type="text" value={name} onChange={e => setName(e.target.value)} placeholder={t('paymentModal.namePlaceholder')} />
+        <input ref={nameRef} autoFocus={isVariable} className="field-input" type="text" value={name} onChange={e => setName(e.target.value)} placeholder={t('paymentModal.namePlaceholder')} />
       </div>
     )
     const saveLabel = saving ? t('settingsCategories.saving') : mode === 'installment' ? t('paymentModal.save.createPayments') : alreadyPaid ? t('paymentModal.save.saveAsPaid') : t('paymentModal.save.savePayment')
@@ -984,7 +987,7 @@ const impactBlock = impactPreview && impactPreview.length > 0 ? (() => {
                     <span className={dk.amountLabel}>{t('paymentModal.amountLabel')}</span>
                     <div className={dk.amountRow}>
                       <span className={dk.amountSym}>{symbol}</span>
-                      <CentsAmountInput className={dk.amountInput} emptyClassName={dk.amountEmpty} value={amount} onChange={e => setAmount(e.target.value)} />
+                      <CentsAmountInput className={dk.amountInput} emptyClassName={dk.amountEmpty} value={amount} onChange={e => setAmount(e.target.value)} autoFocus={!initial} onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); nameRef.current?.focus() } }} />
                     </div>
                   </div>
                 )}
@@ -1106,7 +1109,7 @@ const impactBlock = impactPreview && impactPreview.length > 0 ? (() => {
 
             <div className={dk.foot}>
               <button type="button" onClick={requestClose} className={dk.cancel}>{t('buttons.cancel')}</button>
-              <button type="button" onClick={handleSave} disabled={saving || !canWrite} className={`btn-primary ${dk.save}`}>{saveLabel}</button>
+              <button type="button" onClick={handleSave} disabled={saving || !canWrite || needsAmount} className={`btn-primary ${dk.save}`}>{saveLabel}</button>
             </div>
           </div>
         </div>
@@ -1168,7 +1171,7 @@ const impactBlock = impactPreview && impactPreview.length > 0 ? (() => {
               <div className={styles.amountHeroLabel}>{t('paymentModal.amountLabel')}</div>
               <div className={styles.amountHeroRow}>
                 <span className={styles.amountHeroSymbol}>{getCurrencySymbol()}</span>
-                <CentsAmountInput className={styles.amountHeroInput} emptyClassName={styles.amountHeroEmpty} value={amount} onChange={e => setAmount(e.target.value)} />
+                <CentsAmountInput className={styles.amountHeroInput} emptyClassName={styles.amountHeroEmpty} value={amount} onChange={e => setAmount(e.target.value)} autoFocus={!initial && !voiceSupported && !scanSupported} onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); nameRef.current?.focus() } }} />
               </div>
             </div>
           )}
@@ -1185,7 +1188,7 @@ const impactBlock = impactPreview && impactPreview.length > 0 ? (() => {
           {showDataStep && (
             <div className={styles.stepEnter}>
               <Field label={t('paymentModal.fields.name')}>
-                <input autoFocus={!initial && !voiceSupported && !scanSupported} className="field-input" type="text" value={name} onChange={e => setName(e.target.value)} placeholder={t('paymentModal.namePlaceholder')} />
+                <input ref={nameRef} autoFocus={!initial && !voiceSupported && !scanSupported && isVariable} className="field-input" type="text" value={name} onChange={e => setName(e.target.value)} placeholder={t('paymentModal.namePlaceholder')} />
               </Field>
 
               <div className={styles.fieldGroup}>
@@ -1394,7 +1397,7 @@ const impactBlock = impactPreview && impactPreview.length > 0 ? (() => {
               {t('paymentModal.steps.next')}
             </button>
           ) : (
-            <button onClick={handleSave} disabled={saving || !canWrite} className={`btn-primary ${styles.saveButtonSpacing} ${(saving || !canWrite) ? styles.dim70 : ''}`}>
+            <button onClick={handleSave} disabled={saving || !canWrite || needsAmount} className={`btn-primary ${styles.saveButtonSpacing} ${(saving || !canWrite || needsAmount) ? styles.dim70 : ''}`}>
               {saving ? t('settingsCategories.saving') : initial?.is_master && initial?.paused ? t('paymentModal.save.reactivate') : initial ? t('paymentModal.save.saveChanges') : mode === 'installment' ? t('paymentModal.save.createPayments') : alreadyPaid ? t('paymentModal.save.saveAsPaid') : t('paymentModal.save.savePayment')}
             </button>
           )}
