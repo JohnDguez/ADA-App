@@ -2124,6 +2124,9 @@ export default function App() {
         spacePermissions={spacePermissions}
         isSharedSpace={!!paymentsSpaceId}
         spaceName={activeSpaceEntry?.space?.name || ''}
+        spaces={sharedSpaces.spaces}
+        activeSpaceId={paymentsSpaceId}
+        onSwitchSpace={switchSpace}
         paymentMethods={paymentMethods}
         customCategories={profile.custom_categories || []}
         onOpenPremium={() => openPremiumPage(false)}

@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useId, Children, isValidElement, cloneElement } from 'react'
 import { useTranslation } from 'react-i18next'
 import i18n from '../i18n'
-import { Wallet, AlertTriangle, Repeat, Check, Info, Lock, Users } from 'lucide-react'
+import { Wallet, AlertTriangle, Repeat, Check, Info, Lock, Users, User, ChevronDown } from 'lucide-react'
 import { CATEGORIES, RECUR_FREQ, MONTHS, getMonths, MONTHS_SHORT, getMonthsShort, intlLocale, nextWeeklyFromDate, nextBiweeklyFromDate, nextPeriodDate, cobroPeriod, fmt, nameExistsActive, projectPeriodImpact, nextCobroPeriod, getCatColor, getCategoryLabel, getFrequencyLabel, dateToStr, dateOf, todayStr, getDeleteConfirmMessage, installmentCurrentNumber } from '../lib/utils'
 import { getCategoryIcon } from '../lib/categoryIcons'
 import { supabase } from '../lib/supabase'
@@ -26,6 +26,7 @@ import { getCurrencySymbol } from '../lib/currency'
 import styles from './PaymentModal.module.css'
 import { markBackHandled, wasBackHandled } from '../lib/backNav'
 import { AddCardModal } from './AddCardModal'
+import { OptionSheet } from './OptionSheet'
 import { Microphone } from '@phosphor-icons/react/dist/csr/Microphone'
 import { ScanLine, X as XIcon } from 'lucide-react'
 import { useIsDesktop } from '../hooks/useIsDesktop'
@@ -38,12 +39,13 @@ import { usePresence } from '../lib/usePresence'
 import { useScrollLock } from '../lib/scrollLock'
 import { switchProps } from '../lib/a11y'
 
-export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onSaveCardPlan, onDelete, onEditMaster, initial: initialProp, payments, profile, spacePermissions, isSharedSpace = false, spaceName = '', customCategories = [], onUpdateProfile, onOpenPremium, paymentMethods = null, prefill = null, autoStart = null }) {
+export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onSaveCardPlan, onDelete, onEditMaster, initial: initialProp, payments, profile, spacePermissions, isSharedSpace = false, spaceName = '', spaces = [], activeSpaceId = null, onSwitchSpace = null, customCategories = [], onUpdateProfile, onOpenPremium, paymentMethods = null, prefill = null, autoStart = null }) {
   const { t } = useTranslation()
   // Durante la animación de salida se conserva el pago que se estaba editando
   // (el padre ya pudo limpiarlo) para que el formulario no cambie de forma.
   const lastInitialRef = useRef(null)
   const nameRef = useRef(null)
+  const [spaceSheet, setSpaceSheet] = useState(false)
   if (open) lastInitialRef.current = initialProp
   const initial = open ? initialProp : lastInitialRef.current
   const [mode,               setMode]               = useState('single')
@@ -540,6 +542,27 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onSaveC
   // Flujo por tipo (v0.9.604)
   // Pago nuevo sin monto (v0.9.856): no se puede guardar hasta capturarlo.
   const needsAmount  = !initial && mode !== 'installment' && !isVariable && !(parseFloat(amount) > 0)
+  // Etiqueta del espacio (v0.9.859): en pagos nuevos con espacios disponibles
+  // es un selector que cambia el espacio activo de la app (el formulario
+  // conserva lo escrito); al editar, o sin espacios, solo informa.
+  const canSwitchSpace = !initial && !!onSwitchSpace && spaces.length > 0
+  const spaceLabel = isSharedSpace
+    ? (spaceName ? t('paymentModal.spaceTag', { name: spaceName }) : t('paymentModal.spaceTagNoName'))
+    : t('paymentModal.spacePersonal')
+  const SpaceIcon = isSharedSpace ? Users : User
+  const spaceTagFor = cls => (isSharedSpace || canSwitchSpace) ? (
+    canSwitchSpace ? (
+      <>
+        <button type="button" className={`${cls}`} data-switch="true" onClick={() => setSpaceSheet(true)} aria-haspopup="dialog">
+          <SpaceIcon size={14} /><span>{spaceLabel}</span><ChevronDown size={14} />
+        </button>
+        <OptionSheet open={spaceSheet} onClose={() => setSpaceSheet(false)} title={t('paymentModal.spaceSwitchTitle')}
+          options={[{ value: 'personal', label: t('paymentModal.spacePersonal') }, ...spaces.map(s => ({ value: s.space.id, label: s.space.name }))]}
+          value={activeSpaceId || 'personal'}
+          onSelect={v => { setMethodId(null); onSwitchSpace(v === 'personal' ? null : v) }} />
+      </>
+    ) : <div className={cls}><SpaceIcon size={14} /><span>{spaceLabel}</span></div>
+  ) : null
   const isFlat       = mode !== 'installment'                         // Único / Recurrente: una sola pantalla
   const showDataStep = isFlat || !!initial || step === 1              // nombre + categoría
   const moreVisible  = !!initial || moreOpen || isWide
@@ -941,7 +964,7 @@ const impactBlock = impactPreview && impactPreview.length > 0 ? (() => {
               <div>
                 <h2 className={dk.title}>{t('paymentModal.desk.title')}</h2>
                 <div className={dk.sub}>{t('paymentModal.desk.subtitle')}</div>
-                {isSharedSpace && <div className={dk.spaceTag}><Users size={14} /><span>{spaceName ? t('paymentModal.spaceTag', { name: spaceName }) : t('paymentModal.spaceTagNoName')}</span></div>}
+                {spaceTagFor(dk.spaceTag)}
               </div>
               <div className={dk.headActions}>
                 {voiceSupported && voiceState === 'idle' && <button type="button" className={dk.ghost} onClick={handleVoice}><Microphone size={16} />{t('addDropdown.voice')}</button>}
@@ -1131,7 +1154,7 @@ const impactBlock = impactPreview && impactPreview.length > 0 ? (() => {
       <div onClick={e => e.target === e.currentTarget && requestClose()} className={styles.overlay} data-presence="overlay" data-closing={closing ? '' : undefined}>
         <div className={`${styles.panel} ${isFlat ? styles.panelWide : ''}`} data-presence="panel" data-closing={closing ? '' : undefined}>
           <div className={styles.handle} />
-          {isSharedSpace && <div className={styles.spaceTag}><Users size={14} /><span>{spaceName ? t('paymentModal.spaceTag', { name: spaceName }) : t('paymentModal.spaceTagNoName')}</span></div>}
+          {spaceTagFor(styles.spaceTag)}
 
           {!initial && (
             <div data-coachmark="modal-payment-type-tabs" className={styles.typeChip}>

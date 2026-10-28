@@ -67,3 +67,6 @@
   background: color-mix(in srgb, var(--accent) 14%, var(--surface));
   border: 1px solid color-mix(in srgb, var(--accent) 35%, var(--surface));
 }
+
+button.spaceTag { font-family: inherit; cursor: pointer; transition: background .15s; }
+button.spaceTag:hover { background: color-mix(in srgb, var(--accent) 22%, var(--surface)); }

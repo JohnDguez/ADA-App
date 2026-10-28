@@ -1178,7 +1178,9 @@
       "impactPaid": "Como ya está pagado, se registra hoy y no se proyecta."
     },
     "spaceTag": "Espacio compartido · {{name}}",
-    "spaceTagNoName": "Espacio compartido"
+    "spaceTagNoName": "Espacio compartido",
+    "spacePersonal": "Personal",
+    "spaceSwitchTitle": "Registrar en"
   },
   "pageHeader": {
     "greetingMorning": "¡Buenos días!",

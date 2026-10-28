@@ -1178,7 +1178,9 @@
       "impactPaid": "Since it is already paid, it is recorded today and not projected."
     },
     "spaceTag": "Shared space · {{name}}",
-    "spaceTagNoName": "Shared space"
+    "spaceTagNoName": "Shared space",
+    "spacePersonal": "Personal",
+    "spaceSwitchTitle": "Record in"
   },
   "pageHeader": {
     "greetingMorning": "Good morning!",
