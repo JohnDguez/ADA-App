@@ -97,3 +97,4 @@ i.toneOver { background: var(--danger); }
 
 .totalWord { }
 @media (max-width: 350px) { .totalWord { display: none; } }
+.bigNum small, .tile b small, .midNum small { font-size: 0.55em; opacity: 0.55; font-weight: 500; letter-spacing: 0; }

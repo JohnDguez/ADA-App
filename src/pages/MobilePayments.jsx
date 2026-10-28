@@ -18,6 +18,12 @@ import styles from './MobilePayments.module.css'
 
 const whole = v => fmt(v).replace(/\.00$/, '')
 
+// Totales grandes: los centavos van más chicos y atenuados, igual que en escritorio.
+function Money({ text }) {
+  const i = text.lastIndexOf('.')
+  return i < 0 ? text : <>{text.slice(0, i)}<small>{text.slice(i)}</small></>
+}
+
 // Pasa de false a true en el siguiente cuadro: dispara las transiciones de
 // entrada (barras, relleno) al montar o al cambiar de pestaña (Regla 53).
 function useGrown() {
@@ -48,11 +54,11 @@ function AvailableCard({ d }) {
   return (
     <div data-coachmark="gastos-disponible-card" className={styles.card}>
       <div className={styles.label}>{t('paymentsPage.availableThisPeriod')}</div>
-      {balance.loading ? <Bone w={140} h={36} r={8} style={{ marginTop: '0.5rem' }} /> : <div className={`${styles.bigNum} ${tone}`}>{balance.amountText}</div>}
+      {balance.loading ? <Bone w={140} h={36} r={8} style={{ marginTop: '0.5rem' }} /> : <div className={`${styles.bigNum} ${tone}`}><Money text={balance.amountText} /></div>}
       <div className={styles.track}><i className={`${styles.fill} ${tone}`} style={{ width: balance.loading || !grown ? '0%' : `${pct}%` }} /></div>
       <div className={styles.tiles}>
-        <div className={styles.tile}><span>{t('paymentsPage.spent')}</span><b>{balance.loading ? '…' : whole(balance.totalGastos)}</b></div>
-        <div className={styles.tile}><span>{t('paymentsPage.periodIncome')}</span><b>{balance.loading ? '…' : whole(balance.ingresoTotal)}</b></div>
+        <div className={styles.tile}><span>{t('paymentsPage.spent')}</span><b>{balance.loading ? '…' : <Money text={fmt(balance.totalGastos)} />}</b></div>
+        <div className={styles.tile}><span>{t('paymentsPage.periodIncome')}</span><b>{balance.loading ? '…' : <Money text={fmt(balance.ingresoTotal)} />}</b></div>
       </div>
       <div className={styles.linkRow}>
         <button type="button" data-coachmark="gastos-add-income-button" className={styles.linkBtn} onClick={incomes.onAdd}><Plus size={14} strokeWidth={2.4} />{t('paymentsPage.addIncome')}</button>
@@ -70,7 +76,7 @@ function FundCard({ d }) {
   return (
     <div className={styles.card}>
       <div className={styles.label}>{t('paymentsPage.sharedFund')}</div>
-      {fund.loading ? <Bone w={140} h={36} r={8} style={{ marginTop: '0.5rem' }} /> : <div className={styles.bigNum}>{fmt(fund.balance)}</div>}
+      {fund.loading ? <Bone w={140} h={36} r={8} style={{ marginTop: '0.5rem' }} /> : <div className={styles.bigNum}><Money text={fmt(fund.balance)} /></div>}
       <div className={styles.linkRow}>
         <button type="button" className={styles.linkBtn} onClick={fund.onAdd}><Plus size={14} strokeWidth={2.4} />{t('deskPayments.addShort')}</button>
         {fund.ledgerCount > 0 && <button type="button" className={styles.linkMuted} onClick={fund.onManage}>{t('paymentsPage.movementCount', { count: fund.ledgerCount })}</button>}
@@ -175,7 +181,7 @@ function AnalysisTab({ d }) {
   const selectedLabel = selectedCat ? getCategoryLabel(selectedCat) : null
   const totalCats = catData.reduce((a, c) => a + c.total, 0)
   const selTotal = selectedCat ? (catData.find(c => c.cat === selectedCat)?.total || 0) : 0
-  const centerAmount = whole(selectedCat ? selTotal : totalCats)
+  const centerAmount = fmt(selectedCat ? selTotal : totalCats).replace(/\.\d+$/, '')
   const centerLabel = selectedCat ? `${selectedLabel} · ${totalCats > 0 ? Math.round((selTotal / totalCats) * 100) : 0}%` : t('deskPayments.spentCenter')
   const methods = [['cash', t('paymentMethod.cash')], ['debit', t('cards.kind.debit')], ['credit', t('cards.kind.credit')]].filter(([k]) => methodData[k] > 0)
 
@@ -183,7 +189,7 @@ function AnalysisTab({ d }) {
     <>
       <div className={styles.card}>
         <div className={styles.twoCols}>
-          <div><span className={styles.label}>{t('paymentsPage.totalMonths', { count: chart.monthsBack })}</span><b className={styles.midNum}>{dataLoading ? <Bone w={110} h={28} r={6} /> : whole(chart.grandTotal)}</b></div>
+          <div><span className={styles.label}>{t('paymentsPage.totalMonths', { count: chart.monthsBack })}</span><b className={styles.midNum}>{dataLoading ? <Bone w={110} h={28} r={6} /> : <Money text={fmt(chart.grandTotal)} />}</b></div>
           <div><span className={styles.label}>{t('paymentsPage.monthlyAverage')}</span><b className={styles.midNum}>{dataLoading ? <Bone w={110} h={28} r={6} /> : whole(Math.round(chart.avgMonthly))}</b></div>
         </div>
       </div>
