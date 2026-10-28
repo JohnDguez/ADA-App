@@ -1473,7 +1473,8 @@
       "sharedShort": "Expenses with your partner or roommates.",
       "goalsShort": "As many as you want.",
       "reportsTitle": "Reports and export",
-      "reportsShort": "Print, share or analyze."
+      "reportsShort": "Print, share or analyze.",
+      "reportsDesc": "Generate PDF reports and download your data as CSV to analyze it anywhere."
     },
     "trialPill": "7 days free, cancel anytime",
     "annualSaving": "Save {{saving}} · {{perMonth}} a month",
@@ -1506,7 +1507,10 @@
     "adminGrantedBanner": "You have Premium access granted by the administrator. If you'd like to support the project, you can still subscribe:",
     "startTrial": "Start your free 7-day trial",
     "termsAcceptTrial": "I agree that once the 7 free days end, the selected plan will be charged on a recurring basis until I cancel, per the Terms and Conditions.",
-    "trialFinePrint": "Only for users who have never subscribed before. Once the 7-day trial ends, {{price}} {{suffix}} will be charged."
+    "trialFinePrint": "Only for users who have never subscribed before. Once the 7-day trial ends, {{price}} {{suffix}} will be charged.",
+    "back": "Back",
+    "titleLead": "Get",
+    "checkoutTitle": "Secure payment"
   },
   "spaceSwitcher": {
     "noPending": "No pending payments",

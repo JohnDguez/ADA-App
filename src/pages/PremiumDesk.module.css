@@ -1,0 +1,42 @@
+/* Premium en escritorio (v0.9.842), mockup B aprobado. Solo colores sólidos de
+   tokens: sin fondos con opacidad ni degradados. */
+.page { position: fixed; inset: 0; z-index: 600; background: var(--desk-panel); overflow-y: auto; display: grid; grid-template-columns: minmax(0, 56fr) minmax(0, 44fr); grid-template-rows: auto 1fr; column-gap: 0; }
+.top { grid-column: 1 / -1; display: flex; align-items: center; justify-content: space-between; padding: 22px 48px; }
+.back { display: inline-flex; align-items: center; gap: 10px; height: 44px; padding: 0 20px 0 16px; border: 0; border-radius: 99px; background: var(--desk-chip); color: var(--text); font-size: 15px; font-weight: 600; }
+.close { width: 44px; height: 44px; border: 0; border-radius: 50%; background: var(--desk-chip); color: var(--text); display: grid; place-items: center; }
+.left { padding: 24px 80px 60px 120px; display: flex; flex-direction: column; gap: 22px; min-width: 0; }
+.titleRow { display: flex; align-items: center; gap: 18px; }
+.crown { width: 64px; height: 64px; border-radius: 22px; background: var(--premium-gold); display: grid; place-items: center; flex: none; }
+.title { margin: 0; font-size: 44px; letter-spacing: -1.6px; color: var(--text); }
+.title span { color: var(--desk-gold-text); }
+.subtitle { margin: 0; max-width: 560px; font-size: 18px; line-height: 1.5; color: var(--muted); }
+.benefits { display: flex; flex-direction: column; margin-top: 10px; }
+.benefit { display: flex; align-items: flex-start; gap: 18px; padding: 20px 0; border-top: 1px solid var(--desk-hair); }
+.benefitIcon { width: 52px; height: 52px; border-radius: 18px; background: var(--desk-chip); display: grid; place-items: center; flex: none; }
+.benefitTitle { font-size: 19px; font-weight: 700; color: var(--text); }
+.benefitDesc { margin-top: 4px; max-width: 520px; font-size: 14.5px; line-height: 1.5; color: var(--muted); }
+.right { margin: 0 48px 36px 0; padding: 44px 48px; border-radius: 36px; background: var(--desk-card); display: flex; flex-direction: column; gap: 20px; min-width: 0; box-shadow: var(--desk-shadow); }
+.rightTitle { margin: 0; font-size: 28px; letter-spacing: -0.6px; color: var(--text); }
+.trial { align-self: flex-start; display: inline-flex; align-items: center; gap: 8px; padding: 9px 16px; border-radius: 99px; background: var(--premium-gold); color: var(--premium-gold-text); font-size: 13.5px; font-weight: 700; }
+.banner { padding: 18px 20px; border-radius: 20px; background: var(--desk-chip); color: var(--text); font-size: 14.5px; line-height: 1.5; }
+.plans { display: flex; flex-direction: column; gap: 18px; }
+.plan { position: relative; display: flex; flex-direction: column; align-items: flex-start; gap: 4px; padding: 24px 26px; border: 2px solid var(--desk-chip); border-radius: 26px; background: var(--desk-chip); color: var(--text); text-align: left; }
+.planOn { border-color: var(--premium-gold); }
+.planName { font-size: 14px; font-weight: 600; color: var(--muted); }
+.planPrice { font-size: 42px; font-weight: 700; letter-spacing: -1.5px; }
+.planPrice small { font-size: 14px; font-weight: 500; letter-spacing: 0; color: var(--muted); }
+.planSaving { font-size: 13px; color: var(--muted); }
+.badge { position: absolute; top: -13px; left: 24px; padding: 5px 12px; border-radius: 99px; background: var(--premium-gold); color: var(--premium-gold-text); font-size: 12px; font-weight: 700; }
+.radio { position: absolute; top: 24px; right: 24px; width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--desk-hatch); box-sizing: border-box; }
+.planOn .radio { border-color: var(--premium-gold); background: radial-gradient(circle, var(--premium-gold) 0 45%, transparent 50%); }
+.terms { display: flex; align-items: flex-start; gap: 12px; font-size: 13.5px; line-height: 1.5; color: var(--muted); }
+.checkbox { width: 22px; height: 22px; flex: none; margin: 0; accent-color: var(--premium-gold); }
+:global(.btn-primary).cta { display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; height: 60px; margin: 0; border-radius: 99px; background: var(--premium-gold); color: var(--premium-gold-text); font-size: 17px; font-weight: 700; }
+:global(.btn-primary).cta:disabled { opacity: 1; background: var(--desk-chip); color: var(--muted); }
+.status { padding: 18px 20px; border-radius: 20px; background: var(--desk-chip); color: var(--text); font-size: 14.5px; line-height: 1.5; display: flex; flex-direction: column; gap: 12px; align-items: flex-start; }
+:global(.btn-primary).retry { width: auto; margin: 0; }
+.checkout { flex: 1; display: flex; flex-direction: column; gap: 16px; min-height: 0; }
+.fine { margin-top: auto; font-size: 12.5px; line-height: 1.6; color: var(--muted); }
+.safe { display: flex; align-items: center; gap: 6px; margin-top: 4px; color: var(--paid); }
+.link { padding: 0; border: 0; background: none; color: var(--accent); font-size: inherit; text-decoration: underline; }
+.restoreErr { color: var(--danger); }

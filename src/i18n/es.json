@@ -1473,7 +1473,8 @@
       "sharedShort": "Gastos con tu pareja o compañeros de casa.",
       "goalsShort": "Todas las que quieras.",
       "reportsTitle": "Reportes y exportación",
-      "reportsShort": "Imprime, comparte o analiza."
+      "reportsShort": "Imprime, comparte o analiza.",
+      "reportsDesc": "Genera reportes en PDF y descarga tus datos en CSV para analizarlos donde quieras."
     },
     "trialPill": "7 días gratis, cancela cuando quieras",
     "annualSaving": "Ahorras {{saving}} · {{perMonth}} al mes",
@@ -1506,7 +1507,10 @@
     "adminGrantedBanner": "Tienes acceso a Premium por parte del administrador. Si quieres apoyar el proyecto, puedes suscribirte de todas formas:",
     "startTrial": "Iniciar prueba gratis de 7 días",
     "termsAcceptTrial": "Acepto que, al terminar los 7 días gratis, se cobre el plan elegido de forma recurrente hasta que cancele, según los Términos y Condiciones.",
-    "trialFinePrint": "Solo para usuarios que nunca se han suscrito antes. Al terminar la prueba de 7 días, se cobrará {{price}} {{suffix}}."
+    "trialFinePrint": "Solo para usuarios que nunca se han suscrito antes. Al terminar la prueba de 7 días, se cobrará {{price}} {{suffix}}.",
+    "back": "Volver",
+    "titleLead": "Obtén",
+    "checkoutTitle": "Pago seguro"
   },
   "spaceSwitcher": {
     "noPending": "Sin pagos pendientes",
