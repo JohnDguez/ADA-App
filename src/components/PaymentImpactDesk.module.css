@@ -41,9 +41,19 @@
 .fine { font-size: 11px; color: var(--muted); max-width: 290px; }
 
 /* ── Tarjeta de impacto ── */
-.hero { border-radius: 22px; padding: 20px 20px 18px; background: var(--surface); }
-.warn { background: var(--impact-warning-soft); }
-.ok { background: var(--paid-soft); }
+.hero { border-radius: 22px; padding: 20px 20px 18px; background: var(--surface); position: relative; overflow: hidden; isolation: isolate; }
+/* Resplandor superior, igual que en el detalle de metas (en vez de teñir toda la tarjeta). */
+.hero::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 180px;
+  background: radial-gradient(ellipse 80% 100% at 50% 0%, color-mix(in srgb, var(--glow, var(--accent)) 35%, transparent), transparent 100%);
+  pointer-events: none;
+  z-index: -1;
+}
+.warn { --glow: var(--impact-warning); }
+.ok { --glow: var(--paid); }
 .status { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
 .chip { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; flex: none; }
 .warn .chip { background: var(--impact-warning); color: var(--impact-warning-text); }
