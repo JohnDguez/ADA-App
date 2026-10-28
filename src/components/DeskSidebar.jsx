@@ -111,7 +111,7 @@ export function DeskSidebar({ active, onChange, profile, unreadCount, onOpenNoti
               className={`${styles.avatar} ${profile?.is_premium ? styles.avatarPremium : ''}`}
               fallback={<span className={`${styles.avatarFallback} ${profile?.is_premium ? styles.avatarPremium : ''}`}>{initials}</span>}
             />
-            {profile?.is_premium && <span className={styles.crown}><Crown size={10} fill="currentColor" /></span>}
+            {profile?.is_premium && <span className={styles.crown}><Crown size={8} fill="currentColor" /></span>}
           </span>
           {open && (
             <span className={styles.meText}>

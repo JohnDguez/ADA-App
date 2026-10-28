@@ -128,7 +128,7 @@
 .avatar, .avatarFallback { width: 38px; height: 38px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
 .avatarWrap { position: relative; flex-shrink: 0; display: block; }
 .avatarPremium { box-shadow: 0 0 0 2px var(--premium-gold); }
-.crown { position: absolute; top: -4px; right: -4px; width: 18px; height: 18px; border-radius: 50%; display: grid; place-items: center; background: var(--premium-gold); color: var(--premium-gold-text); border: 2px solid var(--desk-card); box-sizing: content-box; margin: 0; }
+.crown { position: absolute; top: -6px; right: -6px; width: 12px; height: 12px; border-radius: 50%; display: grid; place-items: center; background: var(--premium-gold); color: var(--premium-gold-text); border: 2px solid var(--desk-card); box-sizing: content-box; margin: 0; }
 .side[data-open="false"] .crown { border-color: var(--desk-panel); }
 .avatarFallback { display: grid; place-items: center; background: var(--accent); color: var(--surface); font-size: 13px; font-weight: 700; }
 .meText { display: flex; flex-direction: column; min-width: 0; line-height: 1.25; }
