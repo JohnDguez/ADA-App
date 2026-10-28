@@ -85,18 +85,20 @@ export function NewSharedSpacePanel({ profile, sharedSpaces, onOpenPremium, onCr
                 <span className={`${dk.ic} ${dk.icGold}`}><Crown size={20} fill="currentColor" /></span>
                 <div><b>{t('newSharedSpacePanel.upsellTitle')}</b><span>{t('newSharedSpacePanel.upsellSub')}</span></div>
               </div>
-              <div className={dk.perks}>
+              <div className={dk.row3}>
                 {perks.map(([k, Ic]) => (
-                  <div className={dk.perk} key={k}>
+                  <div className={dk.tile} key={k}>
                     <span className={dk.pi}><Ic size={16} /></span>
                     <div><b>{t(`newSharedSpacePanel.${k}Title`)}</b>{t(`newSharedSpacePanel.${k}Sub`)}</div>
                   </div>
                 ))}
               </div>
-              <button type="button" onClick={onOpenPremium} className={`${dk.btn} ${dk.btnGold}`}>
-                <Crown size={16} fill="currentColor" /> {t('goalsPage.premiumBanner.button')}
-              </button>
-              <div className={dk.fine}>{t('premiumLock.finePrint')}</div>
+              <div className={dk.foot}>
+                <button type="button" onClick={onOpenPremium} className={`${dk.btn} ${dk.btnGold} ${dk.btnFit}`}>
+                  <Crown size={16} fill="currentColor" /> {t('goalsPage.premiumBanner.button')}
+                </button>
+                <div className={dk.fine}>{t('premiumLock.finePrint')}</div>
+              </div>
             </div>
           )}
 
@@ -106,6 +108,7 @@ export function NewSharedSpacePanel({ profile, sharedSpaces, onOpenPremium, onCr
                 <span className={dk.ic}><Plus size={20} strokeWidth={2.4} /></span>
                 <div><b>{t('newSharedSpacePanel.createTitle')}</b><span>{t('newSharedSpacePanel.createSub')}</span></div>
               </div>
+              <div className={dk.two}>
               <div>
                 <label className={dk.lbl}>{t('newSharedSpacePanel.spaceNameLabel')}</label>
                 <input aria-label={t('newSharedSpacePanel.spaceNameLabel')} className={`field-input ${dk.input}`} value={newName} onChange={e => setNewName(e.target.value)} placeholder={t('newSharedSpacePanel.spaceNamePlaceholder')} />
@@ -113,6 +116,7 @@ export function NewSharedSpacePanel({ profile, sharedSpaces, onOpenPremium, onCr
               <div>
                 <label className={dk.lbl}>{t('currency.spaceLabel')}</label>
                 <CurrencySelect value={newCurrency} onChange={setNewCurrency} sheetTitle={t('currency.spaceSheetTitle')} />
+              </div>
               </div>
               <div>
                 <label className={dk.lbl}>{t('cobroPeriodFields.periodLabel')}</label>
@@ -122,7 +126,7 @@ export function NewSharedSpacePanel({ profile, sharedSpaces, onOpenPremium, onCr
                 />
               </div>
               {createError && <div className={dk.err}>{createError}</div>}
-              <button type="button" onClick={handleCreate} disabled={createSaving} className={dk.btn}>
+              <button type="button" onClick={handleCreate} disabled={createSaving} className={`${dk.btn} ${dk.btnFit}`}>
                 {createSaving ? t('newSharedSpacePanel.creating') : t('newSharedSpacePanel.create')}
               </button>
             </div>
