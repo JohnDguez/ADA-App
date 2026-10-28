@@ -396,7 +396,7 @@ export function HomePage({ payments, dataLoading = false, profile, spaceSwitcher
             lugar de ellas (mockup confirmado con Johnatan, octubre 2026).
             Fuera de `metricCardSection` a propósito: ese contenedor lleva el
             coachmark `home-metric-card`, y Luna no debe ensanchar su resaltado. */}
-        <LunaStrip variant={isMobile ? 'mobile' : undefined} lunaState={lunaState} loading={dataLoading} />
+        <LunaStrip variant={isMobile ? 'desk' : undefined} lunaState={lunaState} loading={dataLoading} />
 
         {/* Tabs Periodo / Mes — switch deslizante real (track + thumb que se
             mueve), no 2 botones que solo cambian de color. Excepción

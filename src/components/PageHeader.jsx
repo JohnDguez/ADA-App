@@ -65,7 +65,7 @@ export function PageHeader({ profile, unreadCount, onOpenNotifs, onGoSettings, o
           <div className={styles.homeActions}>
             <div className={styles.bellWrapper}>
               <button onClick={onOpenNotifs} className={styles.homeCircle} aria-label={unreadCount > 0 ? `${t('pageHeader.notificationsAriaLabel')} (${formatBadgeCount(unreadCount)})` : t('pageHeader.notificationsAriaLabel')}>
-                <Bell size={19} color="var(--text)" />
+                <Bell size={20} color="var(--on-color)" />
               </button>
               {unreadCount > 0 && <span className={styles.unreadBadge} aria-hidden="true">{formatBadgeCount(unreadCount)}</span>}
             </div>
