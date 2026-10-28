@@ -1,7 +1,6 @@
 /* Barra inferior con la forma de la pantalla (v0.9.888, mockup A aprobado):
    ancho completo pegada al borde; arriba, esquinas cóncavas que suben hasta el
-   borde del teléfono (::before/::after); abajo, esquinas redondeadas que
-   acompañan las de la pantalla. Pestaña activa = píldora con su nombre.
+   borde del teléfono (::before/::after); abajo, esquinas rectas (las redondea la propia pantalla). Pestaña activa = píldora con su nombre.
    El "+" es un botón flotante aparte (.fab). */
 .nav {
   --nav-fillet: 36px;
@@ -14,7 +13,6 @@
   justify-content: space-around;
   padding: 12px 12px calc(14px + env(safe-area-inset-bottom));
   background: var(--nav-bg);
-  border-radius: 0 0 40px 40px;
   /* drop-shadow sigue la silueta completa, esquinas cóncavas incluidas */
   filter: drop-shadow(0 -4px 12px color-mix(in srgb, var(--nav-bg) 35%, transparent));
   z-index: 100;
