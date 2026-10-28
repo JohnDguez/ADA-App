@@ -119,7 +119,7 @@ export function SettingsSharedSpacePage({ profile, user, sharedSpaces, onBack, o
   const canJoinMore   = guestEntries.length < 3
 
   const joinSheet = canJoinMore && (
-    <BottomSheet open={joinOpen} title={t('newSharedSpacePanel.joinTitle')} onClose={() => setJoinOpen(false)}>
+    <BottomSheet modal open={joinOpen} title={t('newSharedSpacePanel.joinTitle')} onClose={() => setJoinOpen(false)}>
       <div className={styles.joinDescription}>{t('settingsSharedSpacePage.joinDescription')}</div>
       <input aria-label={t('newSharedSpacePanel.joinTitle')}
         className={`field-input ${styles.joinCodeInput}`} inputMode="numeric" maxLength={6}
@@ -324,7 +324,7 @@ export function SettingsSharedSpacePage({ profile, user, sharedSpaces, onBack, o
               {t('settingsSharedSpacePage.joinFab')}
             </button>
           </div>
-          <BottomSheet open={joinOpen} title={t('newSharedSpacePanel.joinTitle')} onClose={() => setJoinOpen(false)}>
+          <BottomSheet modal open={joinOpen} title={t('newSharedSpacePanel.joinTitle')} onClose={() => setJoinOpen(false)}>
             <div className={styles.joinDescription}>{t('settingsSharedSpacePage.joinDescription')}</div>
             <input aria-label={t('newSharedSpacePanel.joinTitle')}
               className={`field-input ${styles.joinCodeInput}`} inputMode="numeric" maxLength={6}

@@ -37,3 +37,28 @@
 @keyframes bsDown    { to   { transform: translateY(100%); } }
 @keyframes bsFade    { from { opacity: 0; } }
 @keyframes bsFadeOut { to   { opacity: 0; } }
+
+/* Popover anclado (escritorio, v0.9.837) — reemplaza a la hoja modal. */
+.pop {
+  position: fixed;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  padding: 14px 12px 8px;
+  border-radius: 22px;
+  background: var(--desk-card, var(--surface));
+  box-shadow: var(--desk-shadow), 0 0 0 1px var(--desk-hair, var(--border));
+  animation: bsPop .16s ease both;
+}
+.pop::before {
+  content: ""; position: absolute; top: -7px; left: var(--arrow, 40px); width: 14px; height: 14px;
+  margin-left: -7px; background: var(--desk-card, var(--surface)); transform: rotate(45deg);
+  border-radius: 4px 0 0 0; box-shadow: -1px -1px 0 var(--desk-hair, var(--border));
+}
+.popUp::before { top: auto; bottom: -7px; border-radius: 0 0 4px 0; box-shadow: 1px 1px 0 var(--desk-hair, var(--border)); }
+.popExiting { animation: bsPopOut .16s ease both; }
+.popTitle { margin: 0 6px 10px; font-size: 12px; font-weight: 600; letter-spacing: 0.9px; text-transform: uppercase; color: var(--muted); }
+.popScroll { flex: 1 1 auto; min-height: 0; overflow-y: auto; padding-bottom: 6px; }
+@keyframes bsPop { from { opacity: 0; transform: translateY(-4px); } }
+@keyframes bsPopOut { to { opacity: 0; } }
