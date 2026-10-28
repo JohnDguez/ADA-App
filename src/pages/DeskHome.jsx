@@ -198,13 +198,13 @@ export function DeskHome({
                           {vencidos.length > 0 && (
                             <div ref={overdueRef} className={styles.section}>
                               <div className={`${styles.secTitle} ${styles.secDanger}`}>{t('deskHome.overdueTitle')} <i className={styles.countDanger}>{vencidos.length}</i></div>
-                              <PayRail deskMode payments={vencidos} cfg={profile} handlers={handlers} permissions={spacePermissions} spaceMembers={spaceMembers} />
+                              <PayRail deskMode compact payments={vencidos} cfg={profile} handlers={handlers} permissions={spacePermissions} spaceMembers={spaceMembers} />
                             </div>
                           )}
                           {delPeriodo.length > 0 && (
                             <div ref={toPayRef} className={styles.section}>
                               <div className={styles.secTitle}>{t('deskHome.toPayTitle')} <i className={styles.count}>{delPeriodo.length}</i></div>
-                              <PayRail deskMode payments={delPeriodo} cfg={profile} handlers={handlers} permissions={spacePermissions} spaceMembers={spaceMembers} />
+                              <PayRail deskMode compact payments={delPeriodo} cfg={profile} handlers={handlers} permissions={spacePermissions} spaceMembers={spaceMembers} />
                             </div>
                           )}
                           {delPeriodo.length === 0 && vencidos.length === 0 && (
@@ -217,7 +217,7 @@ export function DeskHome({
                     <div ref={listBodyRef} className={`${styles.listBody} scroll-y`}>
                       {dataLoading ? <RailSkeleton count={2} /> : upcoming.length === 0
                         ? <EmptyState desk title={t('homePage.emptyState.nextPeriodTitle')} subtitle={t('homePage.emptyState.subtitle')} onClick={onAdd} />
-                        : <PayRail deskMode payments={upcoming} cfg={profile} handlers={handlers} permissions={spacePermissions} spaceMembers={spaceMembers} nextPeriodMode />}
+                        : <PayRail deskMode compact payments={upcoming} cfg={profile} handlers={handlers} permissions={spacePermissions} spaceMembers={spaceMembers} nextPeriodMode />}
                     </div>
                   )}
                   <div className={styles.tipSlot}>{tipEl}</div>

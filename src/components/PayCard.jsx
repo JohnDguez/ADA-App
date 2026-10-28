@@ -503,7 +503,7 @@ function PayCardFull({ payment: p, cfg, paymentMethodsList = [], onChangeMethod,
               <div className={styles.variableGroup}>
                 <button
                   onClick={e => { e.stopPropagation(); onCaptureAmount && onCaptureAmount(p) }}
-                  className={styles.captureButton}
+                  className={`${styles.captureButton} ${compact ? styles.captureLink : ''}`}
                 >
                   {!compact && <DollarSign size={12} strokeWidth={2.5} />}{compact && '+ '}{t('payCard.addAmount')}
                 </button>

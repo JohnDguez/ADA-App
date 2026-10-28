@@ -597,3 +597,6 @@
 :global(html[data-desk-sidebar]) .menuItem.menuItemDanger:not(:first-child)::before {
   content: ""; position: absolute; left: 8px; right: 8px; top: -4px; height: 1px; background: var(--desk-hair);
 }
+
+/* Fila depurada (v0.9.900, todas las versiones): "+ Agregar monto" como texto de acento, sin caja */
+.captureButton.captureLink { background: none; color: var(--accent); border: 0; padding: 0; border-radius: 0; font-size: clamp(0.78rem, 3.3vw, 0.875rem); font-weight: 700; white-space: nowrap; }
