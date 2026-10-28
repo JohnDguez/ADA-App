@@ -70,7 +70,9 @@
     "avatarModal": {
       "title": "Profile photo",
       "upload": "Upload photo",
-      "chooseAvatar": "Choose avatar"
+      "chooseAvatar": "Choose avatar",
+      "subtitle": "Upload your own photo or pick one of the avatars",
+      "uploadHint": "JPG, PNG or WebP · max 2 MB"
     },
     "galleryModal": {
       "title": "Choose avatar"

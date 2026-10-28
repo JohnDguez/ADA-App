@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, lazy, Suspense } from 'react'
 import { useTranslation } from 'react-i18next'
 import { createPortal } from 'react-dom'
-import { LogOut, Camera, Crown, User, Tag, Calendar, Bell, SunMoon, HelpCircle, Users, MessageCircle, Download, Upload, CreditCard, Languages, ChevronRight } from 'lucide-react'
+import { LogOut, Camera, Crown, User, Tag, Calendar, Bell, SunMoon, HelpCircle, Users, MessageCircle, Download, Upload, CreditCard, Languages, ChevronRight, X } from 'lucide-react'
 import { showToast } from '../components/Toast'
 import { supabase } from '../lib/supabase'
 import { getAppVersionLabel } from '../lib/appVersion'
@@ -22,6 +22,7 @@ import styles from './SettingsPage.module.css'
 import { markBackHandled, wasBackHandled } from '../lib/backNav'
 import { AvatarImg } from '../components/AvatarImg'
 import { Presence } from '../components/Presence'
+import dkp from '../components/PaymentDesk.module.css'
 import { LanguageSheet, useLanguageOptions } from '../components/LanguageSheet'
 import { SettingsLanguageDesk } from './settings/SettingsLanguageDesk'
 import { useIsDesktop } from '../hooks/useIsDesktop'
@@ -463,7 +464,7 @@ export function SettingsPage({ profile, user, onUpdate, onUploadAvatar, onDataDe
           SpaceSwitcher.jsx (v0.9.146): esta página vive dentro de un
           contenedor que crea su propio contexto de apilamiento CSS, así que
           ni un z-index alto le gana al BottomNav sin escapar de ese árbol. */}
-      {createPortal(<Presence show={avatarModal === 'choice'}>{() => (
+      {createPortal(<Presence show={!isDesktop && avatarModal === 'choice'}>{() => (
         <div onClick={e => e.target === e.currentTarget && setAvatarModal(null)} className={styles.modalOverlay}>
           <div className={styles.modalPanel}>
             <div className={styles.modalHandle} />
@@ -488,8 +489,57 @@ export function SettingsPage({ profile, user, onUpdate, onUploadAvatar, onDataDe
         document.body
       )}
 
+      {/* Escritorio: un solo diálogo (subir foto + galería) con la plantilla de
+          diálogos de escritorio (PaymentDesk). Móvil/tablet conservan las dos
+          hojas de abajo. */}
+      {createPortal(<Presence show={isDesktop && avatarModal !== null}>{() => (
+        <div onClick={e => e.target === e.currentTarget && setAvatarModal(null)} className={dkp.overlay}>
+          <div className={`${dkp.dialog} ${styles.avDlg}`} role="dialog" aria-modal="true" aria-label={t('settingsPage.avatarModal.title')} data-presence="panel">
+            <div className={dkp.head}>
+              <div>
+                <h2 className={dkp.title}>{t('settingsPage.avatarModal.title')}</h2>
+                <div className={dkp.sub}>{t('settingsPage.avatarModal.subtitle')}</div>
+              </div>
+              <button type="button" className={dkp.close} onClick={() => setAvatarModal(null)} aria-label={t('buttons.cancel')}><X size={18} /></button>
+            </div>
+
+            <div className={styles.avTop}>
+              <div className={styles.avPreview}>
+                <AvatarImg src={profile.avatar_url} className={styles.avPreviewImg}
+                  fallback={<span className={styles.avPreviewFb}>{(profile.name || user?.email || '?').slice(0, 1).toUpperCase()}</span>} />
+              </div>
+              <div>
+                <button type="button" className={`btn-primary ${styles.avUpload}`} onClick={() => { setAvatarModal(null); fileRef.current?.click() }}>
+                  <Camera size={17} />{t('settingsPage.avatarModal.upload')}
+                </button>
+                <div className={styles.avHint}>{t('settingsPage.avatarModal.uploadHint')}</div>
+              </div>
+            </div>
+
+            <div className={styles.avLabel}>{t('settingsPage.avatarModal.chooseAvatar')}</div>
+            <div className={styles.avGrid} role="group" aria-label={t('settingsPage.avatarModal.chooseAvatar')}>
+              {PRESET_AVATARS.map((path, avIdx) => {
+                const selected = profile.avatar_url === path
+                return (
+                  <button key={path} type="button" onClick={() => handleSelectPresetAvatar(path)}
+                    aria-label={t('buttons.avatarN', { n: avIdx + 1 })} aria-pressed={selected}
+                    className={`${styles.avOpt} ${selected ? styles.avOptOn : ''}`}>
+                    <img src={path} alt="" />
+                  </button>
+                )
+              })}
+            </div>
+
+            <div className={dkp.foot}>
+              <button type="button" className={dkp.cancel} onClick={() => setAvatarModal(null)}>{t('buttons.cancel')}</button>
+            </div>
+          </div>
+        </div>)}</Presence>,
+        document.body
+      )}
+
       {/* Modal: galería de 8 avatares preestablecidos — mismo fix de createPortal */}
-      {createPortal(<Presence show={avatarModal === 'gallery'}>{() => (
+      {createPortal(<Presence show={!isDesktop && avatarModal === 'gallery'}>{() => (
         <div onClick={e => e.target === e.currentTarget && setAvatarModal(null)} className={styles.modalOverlay}>
           <div className={styles.modalPanel}>
             <div className={styles.modalHandle} />
