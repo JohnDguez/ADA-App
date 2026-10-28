@@ -80,7 +80,7 @@ function ReflectionCard({ payment: p, borderLeft, onViewSource, onSelect, select
   )
 }
 
-function PayCardFull({ payment: p, cfg, paymentMethodsList = [], onChangeMethod, onMarkPaid, onRequestVariableAmount, onConfirmVariablePaid, onRequestNextPeriodConfirm, onRequestMethod, onMarkUnpaid, onCaptureAmount, onEdit, onAbonar, onSplit, onPayFromFund, fundBalance, onViewSource, onDelete, onPostpone, onAdvance, borderLeft, hideDate, hideDueLabel, railMode, permissions, initialLoad = true, confirmBeforePay, spaceMembers, onSelect, selected, deskMode }) {
+function PayCardFull({ payment: p, cfg, paymentMethodsList = [], onChangeMethod, onMarkPaid, onRequestVariableAmount, onConfirmVariablePaid, onRequestNextPeriodConfirm, onRequestMethod, onMarkUnpaid, onCaptureAmount, onEdit, onAbonar, onSplit, onPayFromFund, fundBalance, onViewSource, onDelete, onPostpone, onAdvance, borderLeft, hideDate, hideDueLabel, railMode, permissions, initialLoad = true, confirmBeforePay, spaceMembers, onSelect, selected, deskMode, compact }) {
   const { t } = useTranslation()
 
   const [menuOpen, setMenuOpen] = useState(false)
@@ -269,7 +269,12 @@ function PayCardFull({ payment: p, cfg, paymentMethodsList = [], onChangeMethod,
     })
   }
   const info      = statusInfo(p, cfg)
-  const showLabel = !hideDueLabel || STATUS_LABELS_ALWAYS_VISIBLE.includes(info.status)
+  // Móvil (v0.9.899, mockup A): fila depurada — monto sin ".00", una sola línea de apoyo
+  // y estado solo si hay vencimiento o pausa/pospuesto.
+  const money = v => (compact ? fmt(v).replace(/\.00$/, '') : fmt(v))
+  const showLabel = compact
+    ? (info.color === 'var(--danger)' || STATUS_LABELS_ALWAYS_VISIBLE.includes(info.status))
+    : (!hideDueLabel || STATUS_LABELS_ALWAYS_VISIBLE.includes(info.status))
   const d         = dateOf(p.due_date)
   // Tarjeta con la que se paga (v0.9.487); null = efectivo, o tarjeta
   // eliminada (el pago conserva su tipo, ver payments_method.sql).
@@ -280,6 +285,7 @@ function PayCardFull({ payment: p, cfg, paymentMethodsList = [], onChangeMethod,
   const statementCard = p.is_card_statement && p.card_statement_for
     ? paymentMethodsList.find(m => m.id === p.card_statement_for) : null
   const isPending = !p.is_paid && !p.postponed && !p.is_postponed && !p.paused
+  const hasMethodLine = !!(statementCard || (p.payment_method_kind && p.payment_method_kind !== 'cash'))
   const freqLabel = p.is_recurrent && p.recur_freq && !p.is_installment ? getFrequencyLabel(p.recur_freq) : null
   const instLabel = p.is_installment ? `Pago ${p.current_installment}/${p.total_installments}` : null
   // Fix real (v0.9.259, reportado por Johnatan): `contributed_amount` solo
@@ -450,18 +456,20 @@ function PayCardFull({ payment: p, cfg, paymentMethodsList = [], onChangeMethod,
             <div className={styles.name}>
               {p.name}
             </div>
-            <div className={styles.subtitle}>
-              {p.space_id && isPending && registradoTotal > 0
+            {!(compact && hasMethodLine) && <div className={styles.subtitle}>
+              {compact && !(p.space_id && isPending && registradoTotal > 0)
+                ? `${getCategoryLabel(p.category)}${instLabel ? ` · ${instLabel}` : ''}`
+                : p.space_id && isPending && registradoTotal > 0
                 ? `${fmt(registradoTotal)} / ${fmt(p.amount)}`
                 : hideDate ? `${getCategoryLabel(p.category)}${deskMode && freqLabel ? ` · ${freqLabel}` : ''}` : `${getCategoryLabel(p.category)} · ${d.getDate()} ${getMonthsShort()[d.getMonth()]}`}
-            </div>
+            </div>}
             {p.space_id && isPending && registradoTotal > 0 && (
               <PaidByStack contributors={p.contributors} members={spaceMembers} fundAmount={p.fund_amount || 0} size={16} />
             )}
             {freqLabel && !deskMode && (
               <div className={styles.freqLabel}>{freqLabel}</div>
             )}
-            {instLabel && (
+            {instLabel && !compact && (
               <div className={styles.instLabel}>{instLabel}</div>
             )}
             {/* Método de pago (v0.9.487): solo cuando NO es efectivo. */}
@@ -472,7 +480,7 @@ function PayCardFull({ payment: p, cfg, paymentMethodsList = [], onChangeMethod,
               </div>
             )}
             {/* Compras a meses ligadas a la tarjeta (v0.9.587): UNA sola línea, sin importar cuántas */}
-            {p.is_card_statement && Array.isArray(p.plan_items) && p.plan_items.length > 0 && (
+            {!compact && p.is_card_statement && Array.isArray(p.plan_items) && p.plan_items.length > 0 && (
               <div className={styles.freqLabel}>
                 {t('payCard.includesPlans', { count: p.plan_items.length, amount: fmt(p.plan_items.reduce((s, i) => s + Number(i.amount || 0), 0)) })}
               </div>
@@ -497,17 +505,17 @@ function PayCardFull({ payment: p, cfg, paymentMethodsList = [], onChangeMethod,
                   onClick={e => { e.stopPropagation(); onCaptureAmount && onCaptureAmount(p) }}
                   className={styles.captureButton}
                 >
-                  <DollarSign size={12} strokeWidth={2.5} /> {t('payCard.addAmount')}
+                  {!compact && <DollarSign size={12} strokeWidth={2.5} />}{compact && '+ '}{t('payCard.addAmount')}
                 </button>
-                <span className={styles.variableTag}>{t('payCard.variableTag')}</span>
+                {!compact && <span className={styles.variableTag}>{t('payCard.variableTag')}</span>}
               </div>
             ) : p.is_variable && !p.is_paid ? (
               <div className={styles.variableGroupTight}>
-                <div className={styles.amountText}>{fmt(p.amount)}</div>
-                <span className={styles.variableTag}>{t('payCard.variableTag')}</span>
+                <div className={styles.amountText}>{money(p.amount)}</div>
+                {!compact && <span className={styles.variableTag}>{t('payCard.variableTag')}</span>}
               </div>
             ) : (
-              <div className={styles.amountText}>{fmt(p.amount)}</div>
+              <div className={styles.amountText}>{money(p.amount)}</div>
             )}
             {showLabel && <div className={styles.statusLabel} style={{ color: info.color }}>{info.label}</div>}
           </div>
