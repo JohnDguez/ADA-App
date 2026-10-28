@@ -552,3 +552,21 @@
   .desk .markPaidButton:not(.markPaidLocked):hover svg { stroke: var(--pay-icon); }
   .desk .menuTriggerButton:hover { opacity: 1; }
 }
+
+/* Menús de opciones en escritorio (v0.9.875), mockup aprobado: tarjeta redonda,
+   opciones de 42px con resalte, «Eliminar» separado y en rojo. Solo ≥1100px. */
+:global(html[data-desk-sidebar]) .contextMenu {
+  background: var(--desk-card); border: 0; border-radius: 18px; padding: 6px; min-width: 230px; overflow: hidden;
+  box-shadow: var(--desk-pop-shadow), 0 0 0 1px var(--desk-hair);
+}
+:global(html[data-desk-sidebar]) .menuItem {
+  position: relative; display: flex; align-items: center; gap: 12px; width: 100%; min-height: 42px; padding: 0 12px;
+  border: 0; border-radius: 12px; font-size: 14px; font-weight: 600; color: var(--text);
+}
+:global(html[data-desk-sidebar]) .menuItem:hover { background: var(--desk-chip); }
+:global(html[data-desk-sidebar]) .menuItemDanger { color: var(--danger); }
+:global(html[data-desk-sidebar]) .menuItemDanger:hover { background: var(--danger-soft); }
+:global(html[data-desk-sidebar]) .menuItem.menuItemDanger:not(:first-child) { margin-top: 7px; }
+:global(html[data-desk-sidebar]) .menuItem.menuItemDanger:not(:first-child)::before {
+  content: ""; position: absolute; left: 8px; right: 8px; top: -4px; height: 1px; background: var(--desk-hair);
+}
