@@ -1991,3 +1991,97 @@
 
   .myCardsTablet { margin-top: 0; background: var(--surface); box-shadow: var(--shadow-card); }
 }
+
+/* ═══ Escritorio (≥1100px): modales de ingreso extra y fondo compartido ═══════
+   Diálogo sólido del nuevo diseño (misma plantilla que PaymentDesk): sin
+   ondas ni relleno translúcido, campos con fondo --desk-chip, opciones y
+   botones en píldora. En móvil/tablet .dialogFoot no existe (display:contents). */
+.dialogFoot { display: contents; }
+
+@media (min-width: 1100px) {
+  .modalOverlayBottom { align-items: center; }
+  .modalOverlayBottom.modalOverlayBottom::before { display: none; }
+  .modalPanelBottom {
+    --field-desk-bg: var(--desk-chip);
+    max-width: 520px;
+    padding: 30px 34px 28px;
+    border-radius: 32px;
+    background: var(--desk-panel);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    box-shadow: var(--desk-pop-shadow);
+    animation: none;
+  }
+
+  .incomeModalTitle, .manageModalTitle { margin-bottom: 20px; font-size: 24px; letter-spacing: -0.5px; }
+  .incomeFieldGroup { margin-bottom: 18px; }
+  .incomeFieldGroupLast { margin-bottom: 24px; }
+  :global(.field-label).incomeLabelMb8, :global(.field-label).incomeLabelMb6 { margin-bottom: 10px; font-size: 12px; font-weight: 600; letter-spacing: 0.8px; text-transform: uppercase; color: var(--muted); }
+
+  .incomeTypeRow, .editTypeRow { gap: 8px; }
+  .incomeTypeButton, .editTypeButton {
+    padding: 10px 18px;
+    border: 0;
+    border-radius: var(--radius-full);
+    background: var(--desk-chip);
+    font-size: 14px;
+    font-weight: 600;
+  }
+  .incomeTypeButtonActive, .editTypeButtonActive { background: var(--accent); color: var(--on-color); }
+
+  .incomeInput, .editInput, .editInputMb10 {
+    padding: 14px 16px;
+    min-height: 52px;
+    border: 0;
+    border-radius: 16px;
+    background: var(--desk-chip);
+    font-size: 15.5px;
+    box-sizing: border-box;
+  }
+  .incomeInput:focus, .editInput:focus, .editInputMb10:focus { box-shadow: 0 0 0 2px var(--accent); }
+
+  .dialogFoot { display: flex; flex-direction: row-reverse; justify-content: flex-start; gap: 12px; }
+  .incomeSaveButton, .incomeCancelButton, .manageCloseButton {
+    width: auto;
+    height: 46px;
+    padding: 0 28px;
+    margin: 0;
+    border: 0;
+    border-radius: var(--radius-full);
+    font-size: 15px;
+  }
+  .incomeSaveButton { color: var(--on-color); }
+  .incomeCancelButton, .manageCloseButton { background: var(--desk-chip); font-weight: 600; }
+  .manageCloseButton { display: block; margin: 8px 0 0 auto; }
+
+  .fundInfoText { margin-bottom: 20px; font-size: 14px; opacity: 1; color: var(--muted); }
+  .fundAvailableTag { font-size: 13px; }
+  .fundExceedsError, .fundRemainingHint { margin-top: 8px; font-size: 13px; }
+  .fundRemainingHint { opacity: 1; color: var(--muted); }
+
+  .manageModalPanelExtra { max-height: calc(100vh - 80px); }
+  .manageList { gap: 10px; margin-bottom: 12px; }
+  .manageListItem { border: 0; border-radius: 20px; padding: 16px 20px; background: var(--desk-chip); }
+  .manageEmptyText { padding: 26px 0; font-size: 14px; color: var(--muted); }
+  .incomeRowType { font-size: 15px; }
+  .incomeRowNote { margin-top: 3px; font-size: 13px; color: var(--muted); }
+  .incomeRowActions { gap: 14px; }
+  .incomeRowAmount { font-size: 15px; }
+  .incomeRowActions svg { width: 18px; height: 18px; }
+
+  .manageListItem .editInput, .manageListItem .editInputMb10 { background: var(--desk-card); }
+  .editActionsRow, .confirmDeleteRow { gap: 10px; }
+  .editSaveButton, .editCancelButton, .confirmDeleteButton, .confirmDeleteCancelButton {
+    flex: 0 0 auto;
+    height: 42px;
+    padding: 0 24px;
+    border: 0;
+    border-radius: var(--radius-full);
+    font-size: 14px;
+    font-weight: 600;
+  }
+  .editSaveButton { color: var(--on-color); }
+  .confirmDeleteButton { color: var(--on-danger); }
+  .editCancelButton, .confirmDeleteCancelButton { background: var(--desk-card); }
+  .confirmDeleteText { font-size: 14px; }
+}

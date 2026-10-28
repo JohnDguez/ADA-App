@@ -1045,19 +1045,21 @@ export function PaymentsPage({ payments, dataLoading = false, periodIncome, paym
               />
             </div>
 
-            <button
-              onClick={handleAddIncome}
-              disabled={savingIncome || !incomeAmount || parseFloat(incomeAmount) <= 0}
-              className={styles.incomeSaveButton}
-            >
-              {savingIncome ? t('paymentsPage.incomeModal.saving') : t('paymentsPage.incomeModal.save')}
-            </button>
-            <button
-              onClick={() => setIncomeModal(false)}
-              className={styles.incomeCancelButton}
-            >
-              {t('buttons.cancel')}
-            </button>
+            <div className={styles.dialogFoot}>
+              <button
+                onClick={handleAddIncome}
+                disabled={savingIncome || !incomeAmount || parseFloat(incomeAmount) <= 0}
+                className={styles.incomeSaveButton}
+              >
+                {savingIncome ? t('paymentsPage.incomeModal.saving') : t('paymentsPage.incomeModal.save')}
+              </button>
+              <button
+                onClick={() => setIncomeModal(false)}
+                className={styles.incomeCancelButton}
+              >
+                {t('buttons.cancel')}
+              </button>
+            </div>
           </div>
         </div>
       )}</Presence>
@@ -1223,19 +1225,21 @@ export function PaymentsPage({ payments, dataLoading = false, periodIncome, paym
                 className={styles.incomeInput}
               />
             </div>
-            <button
-              onClick={handleAddFund}
-              disabled={
-                savingFund || !fundAmount || parseFloat(fundAmount) <= 0 ||
-                (personalAvailable != null && (personalAvailable <= 0 || parseFloat(fundAmount) > personalAvailable))
-              }
-              className={styles.incomeSaveButton}
-            >
-              {savingFund ? t('paymentsPage.addFundModal.saving') : t('paymentsPage.addFundModal.save')}
-            </button>
-            <button onClick={() => { setAddFundModal(false); setPersonalAvailable(null) }} className={styles.incomeCancelButton}>
-              {t('buttons.cancel')}
-            </button>
+            <div className={styles.dialogFoot}>
+              <button
+                onClick={handleAddFund}
+                disabled={
+                  savingFund || !fundAmount || parseFloat(fundAmount) <= 0 ||
+                  (personalAvailable != null && (personalAvailable <= 0 || parseFloat(fundAmount) > personalAvailable))
+                }
+                className={styles.incomeSaveButton}
+              >
+                {savingFund ? t('paymentsPage.addFundModal.saving') : t('paymentsPage.addFundModal.save')}
+              </button>
+              <button onClick={() => { setAddFundModal(false); setPersonalAvailable(null) }} className={styles.incomeCancelButton}>
+                {t('buttons.cancel')}
+              </button>
+            </div>
             {paymentMethods && (
               <AddCardModal
                 open={fundCardFormOpen}
