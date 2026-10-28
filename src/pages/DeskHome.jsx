@@ -152,8 +152,6 @@ export function DeskHome({
   function pickAdd(kind) { setAddOpen(false); if (kind) onStartAdd?.(kind); else onAdd?.() }
   function toggleAdd() { if (addDropdownHasExtras()) setAddOpen(o => !o); else onAdd?.() }
 
-  const lunaArrow = () => (vencidos.length > 0 ? goto(overdueRef) : delPeriodo.length > 0 ? goto(toPayRef) : undefined)
-
   const tipEl = (
     <TipCard desk inSpace={!!(activeSpaceId && activeSpaceId !== 'new')} isOwner={spacePermissions?.isRestricted === false} perms={spacePermissions}
       onAction={a => a?.startsWith('settings:') ? onGoSettingsSection?.(a.slice(9)) : a?.startsWith('tab:') ? onGoTab?.(a.slice(4)) : (a === 'voice' || a === 'scan') ? onStartAdd?.(a) : a === 'addmenu' ? toggleAdd() : onAdd?.()} />
@@ -252,7 +250,7 @@ export function DeskHome({
                 </section>
 
                 <aside className={styles.side}>
-                  <LunaStrip variant="desk" lunaState={lunaState} loading={dataLoading} onArrow={vencidos.length > 0 || delPeriodo.length > 0 ? lunaArrow : undefined} />
+                  <LunaStrip variant="desk" lunaState={lunaState} loading={dataLoading} />
                   <section className={styles.card}>
                     <h2 className={styles.cardTitle}>{t('deskHome.gaugeTitle')}</h2>
                     <Gauge empty={!hasPayments || dataLoading} paidPct={hasPayments && !dataLoading ? pctPagado : 0} overduePct={hasPayments && !dataLoading ? overduePct : 0}
