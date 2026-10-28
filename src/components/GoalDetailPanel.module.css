@@ -469,3 +469,16 @@
 }
 
 .actionBtn:disabled { cursor: not-allowed; opacity: 0.5; }
+/* Deshabilitado (meta en $0): sin efecto hover, para que no parezca pulsable. */
+.actionBtn:disabled,
+.desk .actionBtn:disabled,
+.desk .actionBtnGhost:disabled:hover,
+.actionBtn:disabled:hover {
+  opacity: 0.45;
+  cursor: not-allowed;
+  translate: none;
+  filter: none;
+  box-shadow: none;
+  pointer-events: auto;
+}
+.desk .actionBtnGhost:disabled, .desk .actionBtnGhost:disabled:hover { background: none; }
