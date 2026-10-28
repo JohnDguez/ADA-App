@@ -65,7 +65,7 @@ export function MobileHomeHero({
       <PeriodGauge empty={!hasPayments || dataLoading} paidPct={hasPayments && !dataLoading ? pctPagado : 0} overduePct={hasPayments && !dataLoading ? overduePct : 0}
         label={`${t('deskHome.gaugeTitle')}: ${pctPagado}%`} centerLabel={hasPayments ? t('deskHome.gaugePaid') : t('deskHome.gaugeEmpty')} />
       {/* v0.9.894 (mockup C): dos mosaicos con punto de color (hacen de leyenda)
-          y los vencidos solo aparecen como aviso rojo cuando existen. */}
+          y los vencidos van en un aviso rojo; sin vencidos dice "Todo al corriente" (igual que escritorio). */}
       <div className={`${styles.tiles} ${styles.tilesTwo}`}>
         <div className={styles.tile}>
           <div className={styles.tileLabel}><i className={styles.dotPaid} />{t('deskHome.paidLabel')}</div>
@@ -76,13 +76,18 @@ export function MobileHomeHero({
           <div className={`${styles.tileNum} ${tileSize(pendInt)}`}>{dataLoading ? '…' : pendInt}</div>
         </div>
       </div>
-      {!dataLoading && first && (
+      {!dataLoading && (first ? (
         <div className={styles.alert} role="status">
           <i className={styles.dotOver} />
           <span className={styles.alertCount}>{t('homePage.overdueAlert', { count: vencidos.length })}</span>
           <span className={styles.alertSub}>{first.name} · {t('payCard.status.overdueDays', { count: Math.abs(daysDiff(first.due_date)) })}</span>
         </div>
-      )}
+      ) : (
+        <div className={styles.alert} role="status">
+          <i className={styles.dotOk} />
+          <span className={styles.alertSub}>{t('deskHome.allGood')}</span>
+        </div>
+      ))}
     </div>
   )
 }

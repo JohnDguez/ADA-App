@@ -28,8 +28,9 @@
 .sub { margin-top: 6px; font-size: 12.5px; color: var(--muted); min-height: 16px; }
 .smallTop { font-size: 13px; color: var(--muted); margin-bottom: 4px; }
 .centerText { font-size: 30px; font-weight: 500; letter-spacing: -1px; line-height: 1; }
-.dotPaid, .dotPending, .dotOver { width: 9px; height: 9px; border-radius: 50%; display: inline-block; flex: none; }
+.dotPaid, .dotPending, .dotOver, .dotOk { width: 9px; height: 9px; border-radius: 50%; display: inline-block; flex: none; }
 .dotPaid { background: var(--desk-deep); }
+.dotOk { background: var(--paid); }
 .dotPending { background: var(--desk-hatch); }
 .dotOver { background: var(--danger); }
 .tiles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-top: 14px; }
