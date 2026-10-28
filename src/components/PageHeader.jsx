@@ -26,7 +26,7 @@ function nameFontSize(name) {
   return 13
 }
 
-export function PageHeader({ profile, unreadCount, onOpenNotifs, onGoSettings, onOpenPremium, variant }) {
+export function PageHeader({ profile, unreadCount, onOpenNotifs, onGoSettings, onOpenPremium, variant, title }) {
   const { t, i18n: i18nHook } = useTranslation()
   const initials = (profile?.name || 'U').slice(0, 2).toUpperCase()
 
@@ -52,7 +52,7 @@ export function PageHeader({ profile, unreadCount, onOpenNotifs, onGoSettings, o
         <div className={styles.homeRow}>
           <div className={styles.homeText}>
             <div className={styles.homeDate}>{dateStr}</div>
-            <div className={styles.homeHello}>{hello}{firstName ? `,` : ''}{firstName && <><br />{firstName}</>}</div>
+            <div className={styles.homeHello}>{title || <>{hello}{firstName ? `,` : ''}{firstName && <><br />{firstName}</>}</>}</div>
             {!profile?.is_premium && (
               <button type="button" onClick={onOpenPremium} className={styles.getPremiumButton} aria-label={t('pageHeader.getPremiumAriaLabel')}>
                 <Sparkles size={8} className={styles.getPremiumSparkleTop} aria-hidden="true" />

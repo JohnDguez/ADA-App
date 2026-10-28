@@ -19,6 +19,8 @@ import { PaymentMethodField } from '../components/PaymentMethodField'
 import { AddCardModal } from '../components/AddCardModal'
 import { DeskPayments } from './DeskPayments'
 import { useIsDesktop } from '../hooks/useIsDesktop'
+import { useIsMobile } from '../hooks/useIsMobile'
+import { MobilePayments } from './MobilePayments'
 import { AnchoredPop, useAnchor } from '../components/AnchoredPop'
 import styles from './PaymentsPage.module.css'
 import dkp from '../components/PaymentDesk.module.css'
@@ -190,6 +192,7 @@ function ModalOrPop({ show, onClose, manage = false, width, children }) {
 export function PaymentsPage({ payments, dataLoading = false, periodIncome, paymentMethodsList = [], paymentMethods = null, onChangeMethod, profile, spaceSwitcher, activeSpaceHeader, activeSpaceId = null, rawActiveSpaceId = null, sharedSpaces, spacePermissions, onOpenPremium, onSpaceReady, unreadCount, onOpenNotifs, onGoSettings, onMarkUnpaid, onDelete, onDeleteDirect, onUpdateProfile, onEdit, onViewSource, onSplit, onAdd, onStartAdd, onImport, onGoCategories, onGoCards, sharedFund, slideClass, ensureMonthLoaded, oldestPaymentYear = null }) {
   const { t } = useTranslation()
   const isDesktop = useIsDesktop()
+  const isMobile = useIsMobile()
   // v0.9.661 — pestañas Pagos / Análisis (solo en celular; desde 768px se ve todo junto).
   const [pageTab, setPageTab] = useState('pagos')
   // v0.9.709 — animación al cambiar de pestaña: la sección que sale se desvanece
@@ -894,7 +897,7 @@ export function PaymentsPage({ payments, dataLoading = false, periodIncome, paym
   const noIncomeYet = incomesLoaded && !activeSpaceId && !(profile?.salary_enabled && profile?.salary_amount > 0) && periodIncomes.length === 0
 
   // Datos ya calculados que pinta la versión de escritorio (DeskPayments.jsx, v0.9.825).
-  const deskData = isDesktop ? {
+  const deskData = (isDesktop || isMobile) ? {
     profile, dataLoading, activeSpaceId, rawActiveSpaceId, sharedSpaces, spacePermissions, spaceMembers, paymentMethodsList,
     slideClass, spaceJustChanged, onOpenPremium, onSpaceReady, onAdd, onStartAdd, onGoCards, onGoCategories, onViewSource,
     balance: { loading: balanceLoading, amountText: balanceAmountText, gastoPct, totalGastos, ingresoTotal, sobrePasado, noIncomeYet },
@@ -1308,6 +1311,33 @@ export function PaymentsPage({ payments, dataLoading = false, periodIncome, paym
           quedado sin aplicar aquí en la entrega anterior. */}
       {isDesktop ? (
         <DeskPayments d={deskData} />
+      ) : isMobile ? (
+      <>
+      <div className={styles.pageHeaderWrapper}>
+        <PageHeader
+          profile={profile}
+          unreadCount={unreadCount}
+          onOpenNotifs={onOpenNotifs}
+          onGoSettings={onGoSettings}
+          onOpenPremium={onOpenPremium}
+          variant="home"
+          title={t('paymentsPage.title')}
+        />
+      </div>
+      <div className={styles.spaceSwitcherMobileWrap}>{spaceSwitcher}</div>
+      {activeSpaceHeader}
+      <div className={slideClass}>
+        <div className={spaceJustChanged ? 'content-slide-up' : ''}>
+          {rawActiveSpaceId === 'new' ? (
+            <div className={styles.newSpacePanelWrapper}>
+              <NewSharedSpacePanel profile={profile} sharedSpaces={sharedSpaces} onOpenPremium={onOpenPremium} onCreated={onSpaceReady} onJoined={onSpaceReady} />
+            </div>
+          ) : (
+            <MobilePayments d={deskData} tab={{ value: pageTab, pending: pendingTab, change: changeTab }} />
+          )}
+        </div>
+      </div>
+      </>
       ) : (
       <>
       <div className={styles.pageHeaderWrapper}>

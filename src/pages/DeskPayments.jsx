@@ -12,6 +12,7 @@ import { fmt, getMonths, getMonthsShort, getCatColor, getCategoryLabel, getFrequ
 import { getCategoryIcon } from '../lib/categoryIcons'
 import home from './DeskHome.module.css'
 import { DeskAddButton } from '../components/DeskAddButton'
+import { CategoryRing } from '../components/CategoryRing'
 import styles from './DeskPayments.module.css'
 
 // Gastos e ingresos de escritorio (≥1100px, v0.9.825) — diseño aprobado por
@@ -31,36 +32,6 @@ function fmtShort(n) {
   if (num >= 999500) return `$${(num / 1000000).toLocaleString('es-MX', { maximumFractionDigits: 1 })}M`
   if (num >= 999.5) return `$${(num / 1000).toLocaleString('es-MX', { maximumFractionDigits: 1 })}k`
   return `$${num.toLocaleString('es-MX', { maximumFractionDigits: 0 })}`
-}
-
-const RING = 'M 20 100 A 80 80 0 0 1 180 100'
-
-function CategoryRing({ cats, selectedCat, profile, totalAll, centerAmount, centerLabel, label }) {
-  // pathLength=100: cada categoría es un tramo con puntas redondeadas. Se resta
-  // el ancho de las puntas (≈3.4 por lado) para que no se encimen.
-  let off = 0
-  const segs = cats.map(({ cat, total }) => {
-    const len = totalAll > 0 ? (total / totalAll) * 100 : 0
-    const seg = { cat, len: Math.max(len - 7, 0.01), start: off + 3.4, color: getCatColor(cat, profile.custom_categories, profile.category_colors) }
-    off += len
-    return seg
-  })
-  return (
-    <div className={styles.ringWrap} role="img" aria-label={label}>
-      <svg viewBox="0 0 200 106" className={styles.ringSvg} aria-hidden="true">
-        <path d={RING} pathLength="100" className={styles.ringTrack} />
-        {segs.map(sg => (
-          <path key={sg.cat} d={RING} pathLength="100" className={styles.ringSeg} stroke={sg.color}
-            strokeDasharray={`${sg.len.toFixed(2)} 200`} strokeDashoffset={-sg.start}
-            opacity={!selectedCat || selectedCat === sg.cat ? 1 : 0.25} />
-        ))}
-      </svg>
-      <div className={styles.ringCenter}>
-        <b>{centerAmount}</b>
-        <span>{centerLabel}</span>
-      </div>
-    </div>
-  )
 }
 
 export function DeskPayments({ d }) {
