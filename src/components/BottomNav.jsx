@@ -12,17 +12,15 @@ const RIGHT_TABS = NAV_ITEMS.slice(2)
 
 export function BottomNav({ active, onChange, onAdd, addOpen = false }) {
   const { t } = useTranslation()
-  // Posición del indicador: 5 columnas iguales (2 tabs, "+", 2 tabs).
-  const tabIdx = NAV_ITEMS.findIndex(i => i.id === active)
-  const slot = tabIdx < 0 ? -1 : (tabIdx < 2 ? tabIdx : tabIdx + 1)
+  // v0.9.885 — barra acoplada al borde inferior (mockup aprobado): la pestaña
+  // activa se expande a píldora con su nombre y el "+" sobresale al centro.
   return (
-    <nav className={styles.nav} style={{ '--slot': Math.max(slot, 0) }}>
-      <span className={styles.indicatorClip} aria-hidden="true">
-        <span className={`${styles.indicator} ${slot < 0 ? styles.indicatorHidden : ''}`} />
-      </span>
-      {LEFT_TABS.map(({ id, Icon, labelKey }) => (
-        <TabBtn key={id} id={id} Icon={Icon} label={t(labelKey)} active={active === id} onChange={onChange} />
-      ))}
+    <nav className={styles.nav}>
+      <div className={styles.side}>
+        {LEFT_TABS.map(({ id, Icon, labelKey }) => (
+          <TabBtn key={id} id={id} Icon={Icon} label={t(labelKey)} active={active === id} onChange={onChange} />
+        ))}
+      </div>
 
       <div className={styles.addButtonWrapper}>
         <button
@@ -32,13 +30,15 @@ export function BottomNav({ active, onChange, onAdd, addOpen = false }) {
           aria-label={t('bottomNav.add')}
           aria-expanded={addOpen}
         >
-          <Plus size={26} color="var(--nav-icon)" strokeWidth={2.5} className={`${styles.addIcon} ${addOpen ? styles.addIconOpen : ''}`} />
+          <Plus size={26} color="var(--on-color)" strokeWidth={2.5} className={`${styles.addIcon} ${addOpen ? styles.addIconOpen : ''}`} />
         </button>
       </div>
 
-      {RIGHT_TABS.map(({ id, Icon, labelKey }) => (
-        <TabBtn key={id} id={id} Icon={Icon} label={t(labelKey)} active={active === id} onChange={onChange} />
-      ))}
+      <div className={styles.side}>
+        {RIGHT_TABS.map(({ id, Icon, labelKey }) => (
+          <TabBtn key={id} id={id} Icon={Icon} label={t(labelKey)} active={active === id} onChange={onChange} />
+        ))}
+      </div>
     </nav>
   )
 }
@@ -47,16 +47,12 @@ function TabBtn({ id, Icon, label, active, onChange }) {
   return (
     <button
       onClick={() => onChange(id)}
-      className={styles.tabButton}
+      className={`${styles.tabButton} ${active ? styles.tabButtonActive : ''}`}
       aria-label={label}
       aria-current={active ? 'page' : undefined}
     >
-      <Icon
-        size={active ? 24 : 22}
-        strokeWidth={active ? 2.2 : 1.8}
-        color={active ? 'var(--nav-icon)' : 'var(--white-a60)'}
-        className={styles.tabIcon}
-      />
+      <Icon size={22} strokeWidth={active ? 2.2 : 1.8} className={styles.tabIcon} />
+      {active && <span className={styles.tabLabel}>{label}</span>}
     </button>
   )
 }

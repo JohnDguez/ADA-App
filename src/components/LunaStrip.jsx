@@ -36,7 +36,7 @@ export function LunaStrip({ lunaState, loading = false, variant, onArrow }) {
   if (loading) {
     return (
       <div className={styles.wrap}>
-        <Bone w="100%" h={variant === 'desk' ? 84 : 112} r={variant === 'desk' ? 24 : 12} />
+        <Bone w="100%" h={variant === 'desk' ? 84 : variant === 'mobile' ? 88 : 112} r={variant === 'desk' || variant === 'mobile' ? 24 : 12} />
       </div>
     )
   }
@@ -89,6 +89,25 @@ export function LunaStrip({ lunaState, loading = false, variant, onArrow }) {
         </div>
         {onArrow && (
           <button type="button" className={styles.deskArrow} onClick={onArrow} aria-label={title}>
+            <ArrowUpRight size={16} strokeWidth={1.9} />
+          </button>
+        )}
+      </section>
+    )
+  }
+
+  // Inicio móvil (v0.9.885, mockup aprobado): tarjeta de 24px con el degradado
+  // del estado y flecha, a juego con la del escritorio.
+  if (variant === 'mobile') {
+    return (
+      <section className={`${styles.mobStrip} ${styles['mob_' + key] || ''}`} aria-label={`${title}. ${sub}`}>
+        <img className={`${styles.mobImg} ${key === 'sleeping' ? styles.mobImgWide : ''}`} src={img.src} width={img.w} height={img.h} alt="" decoding="async" />
+        <div className={styles.mobText}>
+          <div className={styles.mobTitle}>{title}</div>
+          <div className={styles.mobSub}>{sub}</div>
+        </div>
+        {onArrow && (
+          <button type="button" className={styles.mobArrow} onClick={onArrow} aria-label={title}>
             <ArrowUpRight size={16} strokeWidth={1.9} />
           </button>
         )}

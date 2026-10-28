@@ -303,3 +303,23 @@
 @media (hover: hover) and (pointer: fine) {
   .tabButton:hover { translate: none; filter: none; }
 }
+
+/* ── Inicio móvil (v0.9.885, mockup B) ─────────────────────────────────────
+   El encabezado nuevo ya se funde con el fondo: sin "hoja" redondeada encima. */
+@media (max-width: 767px) {
+  .roundedContentWrapper { margin-top: 0; border-radius: 0; }
+}
+.mobChips { display: flex; gap: 8px; padding: 14px 16px 0; }
+.mobChip {
+  height: 38px;
+  padding: 0 16px;
+  border-radius: 99px;
+  border: none;
+  background: var(--desk-card);
+  color: var(--text);
+  font: inherit;
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.mobChipOn { background: var(--accent); color: var(--on-color); }

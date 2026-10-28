@@ -26,8 +26,8 @@ function nameFontSize(name) {
   return 13
 }
 
-export function PageHeader({ profile, unreadCount, onOpenNotifs, onGoSettings, onOpenPremium }) {
-  const { t } = useTranslation()
+export function PageHeader({ profile, unreadCount, onOpenNotifs, onGoSettings, onOpenPremium, variant }) {
+  const { t, i18n: i18nHook } = useTranslation()
   const initials = (profile?.name || 'U').slice(0, 2).toUpperCase()
 
   // Franja horaria + qué imágenes están montadas para el crossfade — sale
@@ -35,6 +35,56 @@ export function PageHeader({ profile, unreadCount, onOpenNotifs, onGoSettings, o
   // vez de calcularse aquí; mismo comportamiento de antes (precarga
   // diferida incluida), solo se movió el cálculo.
   const { timeOfDay, mountedKeys } = useHeaderBackground(profile?.timezone)
+
+  // Inicio móvil (v0.9.885, mockup aprobado): fecha + saludo grande sobre la
+  // ilustración de la hora; campana y foto (que lleva a Ajustes) a la derecha.
+  if (variant === 'home') {
+    const firstName = (profile?.name || '').trim().split(/\s+/)[0]
+    const d = new Date().toLocaleDateString(i18nHook.language, { weekday: 'long', day: 'numeric', month: 'long', ...(profile?.timezone ? { timeZone: profile.timezone } : {}) })
+    const dateStr = d.charAt(0).toUpperCase() + d.slice(1)
+    const hello = greeting().replace(/[¡!]/g, '').trim()
+    return (
+      <div className={styles.homeRoot}>
+        {mountedKeys.map(key => (
+          <img key={key} src={HEADER_IMAGES[key]} alt="" className={styles.homeImg} style={{ opacity: timeOfDay === key ? 1 : 0 }} fetchPriority={timeOfDay === key ? 'high' : 'low'} />
+        ))}
+        <div className={styles.homeFade} />
+        <div className={styles.homeRow}>
+          <div className={styles.homeText}>
+            <div className={styles.homeDate}>{dateStr}</div>
+            <div className={styles.homeHello}>{hello}{firstName ? `,` : ''}{firstName && <><br />{firstName}</>}</div>
+            {!profile?.is_premium && (
+              <button type="button" onClick={onOpenPremium} className={styles.getPremiumButton} aria-label={t('pageHeader.getPremiumAriaLabel')}>
+                <Sparkles size={8} className={styles.getPremiumSparkleTop} aria-hidden="true" />
+                <Sparkles size={7} className={styles.getPremiumSparkleBottom} aria-hidden="true" />
+                <Crown size={13} className={styles.getPremiumCrown} fill="currentColor" aria-hidden="true" />
+                <span className={styles.getPremiumText}>{t('pageHeader.getPremiumButton')}</span>
+              </button>
+            )}
+          </div>
+          <div className={styles.homeActions}>
+            <div className={styles.bellWrapper}>
+              <button onClick={onOpenNotifs} className={styles.homeCircle} aria-label={unreadCount > 0 ? `${t('pageHeader.notificationsAriaLabel')} (${formatBadgeCount(unreadCount)})` : t('pageHeader.notificationsAriaLabel')}>
+                <Bell size={19} color="var(--text)" />
+              </button>
+              {unreadCount > 0 && <span className={styles.unreadBadge} aria-hidden="true">{formatBadgeCount(unreadCount)}</span>}
+            </div>
+            <button data-coachmark="home-settings-gear" onClick={onGoSettings} className={styles.homeAvatarBtn} aria-label={t('pageHeader.settingsAriaLabel')}>
+              <div className={styles.avatarWrapper}>
+                <AvatarImg
+                  src={profile?.avatar_url}
+                  alt={t('buttons.profilePhoto')}
+                  className={`${styles.homeAvatar} ${profile?.is_premium ? styles.photoBorderPremium : ''}`}
+                  fallback={<div className={`${styles.homeAvatarFallback} ${profile?.is_premium ? styles.photoBorderPremium : ''}`}>{initials}</div>}
+                />
+                {profile?.is_premium && <div className={styles.premiumBadge}><Crown size={11} fill="currentColor" /></div>}
+              </div>
+            </button>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className={`${styles.headerRoot} ${!profile?.is_premium ? styles.headerRootWithPremium : ''}`}>

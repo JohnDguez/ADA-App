@@ -230,3 +230,40 @@
   place-items: center;
   flex-shrink: 0;
 }
+
+/* ── Inicio móvil (v0.9.885): tarjeta con degradado del estado ─────────────
+   Mismos degradados que escritorio usó en v0.9.821 (--desk-luna-*); texto
+   blanco sobre fondo oscuro en ambos temas. */
+.mobStrip {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 88px;
+  margin: 0 16px;
+  padding: 0 14px 0 4px;
+  border-radius: 24px;
+  overflow: hidden;
+  color: var(--desk-ink-text);
+  background: var(--desk-luna-bg);
+}
+.mob_happy { background: var(--desk-luna-happy); }
+.mob_attentive { background: var(--desk-luna-attentive); }
+.mob_worried { background: var(--desk-luna-worried); }
+.mobImg { flex: none; height: 80px; width: auto; align-self: flex-end; pointer-events: none; }
+.mobImgWide { height: 56px; }
+.mobText { flex: 1; min-width: 0; }
+.mobTitle { font-size: 14.5px; font-weight: 600; line-height: 1.25; }
+.mobSub { margin-top: 2px; font-size: 12px; line-height: 1.3; opacity: 0.85; }
+.mobArrow {
+  flex: none;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: transparent;
+  border: 1.5px solid var(--desk-ink-text);
+  color: var(--desk-ink-text);
+  cursor: pointer;
+}

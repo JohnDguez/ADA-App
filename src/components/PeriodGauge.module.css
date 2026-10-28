@@ -1,0 +1,11 @@
+.wrap { position: relative; max-width: 300px; margin: 8px auto 0; }
+.svg { display: block; width: 100%; height: auto; overflow: visible; }
+.svg path { fill: none; stroke-width: 26; transition: stroke-dasharray .8s cubic-bezier(0.22, 1, 0.36, 1), stroke-dashoffset .8s cubic-bezier(0.22, 1, 0.36, 1); }
+.track { stroke: var(--desk-chip); stroke-linecap: round; }
+.pending { stroke-linecap: butt; }
+.paid { stroke: var(--desk-deep); stroke-linecap: round; }
+.over { stroke: var(--danger); stroke-linecap: butt; }
+.hatchLine { stroke: var(--desk-hatch); stroke-width: 2.2; }
+.center { position: absolute; left: 0; right: 0; bottom: 4px; display: flex; flex-direction: column; align-items: center; text-align: center; }
+.center b { font-size: 40px; font-weight: 500; letter-spacing: -1.5px; line-height: 1; }
+.center span { font-size: 13px; color: var(--muted); margin-top: 4px; }

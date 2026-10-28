@@ -7,6 +7,8 @@ import { PageHeader } from '../components/PageHeader'
 import { PremiumPromo } from '../components/PremiumPromo'
 import { DeskHome } from './DeskHome'
 import { useIsDesktop } from '../hooks/useIsDesktop'
+import { useIsMobile } from '../hooks/useIsMobile'
+import { MobileHomeHero } from '../components/MobileHomeHero'
 import { NotificationsPanel } from '../components/NotificationsPanel'
 import { NewSharedSpacePanel } from '../components/NewSharedSpacePanel'
 import { EmptyState } from '../components/EmptyState'
@@ -92,6 +94,8 @@ export function HomePage({ payments, dataLoading = false, profile, spaceSwitcher
   // Escritorio (≥1100px, v0.9.812): layout propio (lista + resumen fijo), no
   // el de móvil reacomodado — decide qué se renderiza, no solo el CSS.
   const isDesktop = useIsDesktop()
+  // Móvil (<768px, v0.9.885): Inicio con tarjeta principal nueva; tablet conserva la anterior.
+  const isMobile = useIsMobile()
   const [touchStartX,    setTouchStartX]    = useState(null)
   const [paidExpanded, setPaidExpanded] = useState(false)
 
@@ -351,6 +355,7 @@ export function HomePage({ payments, dataLoading = false, profile, spaceSwitcher
           onOpenNotifs={() => setNotifOpen(true)}
           onGoSettings={onGoSettings}
           onOpenPremium={onOpenPremium}
+          variant="home"
         />
       </div>
 
@@ -391,7 +396,7 @@ export function HomePage({ payments, dataLoading = false, profile, spaceSwitcher
             lugar de ellas (mockup confirmado con Johnatan, octubre 2026).
             Fuera de `metricCardSection` a propósito: ese contenedor lleva el
             coachmark `home-metric-card`, y Luna no debe ensanchar su resaltado. */}
-        <LunaStrip lunaState={lunaState} loading={dataLoading} />
+        <LunaStrip variant={isMobile ? 'mobile' : undefined} lunaState={lunaState} loading={dataLoading} />
 
         {/* Tabs Periodo / Mes — switch deslizante real (track + thumb que se
             mueve), no 2 botones que solo cambian de color. Excepción
@@ -403,168 +408,187 @@ export function HomePage({ payments, dataLoading = false, profile, spaceSwitcher
             patrón oficial a reusar en cualquier otro switch de 2
             posiciones que se agregue después (ej. futuros toggles en
             Ajustes) — no repetir el estilo viejo de 5px para eso. */}
-        <div data-coachmark="home-metric-card" className={styles.metricCardSection}>
-          <div className={styles.tabTrack}>
-            <div className={styles.tabThumb} style={{ transform: `translateX(${activeCard * 100}%)` }} />
-            <button
-              onClick={() => setActiveCard(0)}
-              className={`${styles.tabButton} ${activeCard === 0 ? styles.tabButtonActive : ''}`}
-            >
-              {t('homePage.tabs.currentPeriod')}
-            </button>
-            <button
-              onClick={() => setActiveCard(1)}
-              className={`${styles.tabButton} ${activeCard === 1 ? styles.tabButtonActive : ''}`}
-            >
-              {t('homePage.tabs.nextPeriod')}
-            </button>
+        {isMobile ? (
+          <div data-coachmark="home-metric-card">
+            <MobileHomeHero
+              activeCard={activeCard} dataLoading={dataLoading}
+              periodRangeLabel={periodRange(profile)} nextRangeLabel={nextPeriodRange(profile)}
+              periodDayNumber={periodDayNumber} periodDayTotal={periodDayTotal} nextStartsInDays={nextStartsInDays}
+              hasPayments={pagarEsteCobro.length > 0 || pagadosEstePeriodo.length > 0}
+              totalConocido={totalConocido} pagadoMonto={pagadoMonto} pendingAmt={pendingAmt} pctPagado={pctPagado}
+              vencidos={vencidos} delPeriodo={delPeriodo} pagadosCount={pagadosEstePeriodo.filter(p => !p.is_postponed).length}
+              nextTotal={nextPeriodKnownTotal} nextFixed={nextPeriodFixedCount} nextVariable={nextPeriodPendingVariableCount}
+              onGoPayments={() => onGoTab?.('payments')}
+            />
+            <div className={styles.mobChips} role="tablist">
+              <button type="button" role="tab" aria-selected={activeCard === 0} className={`${styles.mobChip} ${activeCard === 0 ? styles.mobChipOn : ''}`} onClick={() => setActiveCard(0)}>{t('homePage.tabs.currentPeriod')}</button>
+              <button type="button" role="tab" aria-selected={activeCard === 1} className={`${styles.mobChip} ${activeCard === 1 ? styles.mobChipOn : ''}`} onClick={() => setActiveCard(1)}>{t('homePage.tabs.nextPeriod')}</button>
+            </div>
           </div>
-
-          <div
-            className={styles.cardSwipeWrapper}
-            style={{ height: cardsHeight != null ? cardsHeight : 'auto' }}
-            onTouchStart={e => setTouchStartX(e.touches[0].clientX)}
-            onTouchEnd={e => {
-              if (touchStartX === null) return
-              const dx = e.changedTouches[0].clientX - touchStartX
-              if (dx < -40) setActiveCard(1)
-              if (dx > 40)  setActiveCard(0)
-              setTouchStartX(null)
-            }}
-          >
-            <div className={styles.cardSwipeTrack} style={{ transform: `translateX(${activeCard * -100}%)` }}>
-
-              {/* Card 1 — Periodo actual. Medio anillo tipo gauge (mockup
-                  confirmado con Johnatan, referencia "Current balance" que
-                  trajo) — tercer rediseño de esta tarjeta. Orden dentro de
-                  la tarjeta, de arriba a abajo: fecha (recuadro var(--bg),
-                  efecto de "hueco"), anillo con el %, pagado/pendiente
-                  PEGADO al anillo (explica directamente el % que se ve
-                  arriba), luego título/monto/estatus (fijos, vencido,
-                  variables — info administrativa, no directamente ligada
-                  al anillo, por eso va después). */}
-              <div ref={actualCardRef} className={styles.metricCard}>
-                {/* Encabezado: fecha del periodo + "Día X de Y" (texto simple,
-                    sin contenedor — no debe parecer botón ni competir con el
-                    anillo). Sin "Quedan N días": eso se lee como fecha límite. */}
-                <div className={styles.periodHeader}>
-                  <span className={styles.periodLabel}>{t('homePage.periodPrefix')} {periodRange(profile)}</span>
-                  {dataLoading ? (
-                    <Bone w={56} h={12} r={4} />
-                  ) : (
-                    <span className={styles.periodDay}>{t('homePage.periodDay', { day: periodDayNumber, total: periodDayTotal })}</span>
-                  )}
-                </div>
-                {/* v0.9.323 (histórico) — bug real reportado por Johnatan: al
-                    recargar, `payments` viene vacío A PROPÓSITO mientras
-                    `dataLoading` está en true (v0.9.284) — eso disparaba
-                    la rama de "todo pagado" mostrando 100% como si fuera un
-                    dato real. La solución de ese entonces fue meter
-                    `dataLoading` en el `key` del anillo: al pasar a false
-                    forzaba un montaje NUEVO, saltando directo al valor
-                    correcto SIN barrido — evitaba animar desde un número
-                    que en ese momento se sentía "falso".
-                    NUEVO (agosto 2026) — Johnatan pidió lo contrario: que
-                    el salto de "cargando" a los datos reales SÍ se vea
-                    animado, no de golpe. El 100% durante la carga ya no es
-                    un dato real calculado por accidente (como en v0.9.323)
-                    sino un placeholder explícito e intencional (ver el
-                    `percent` de abajo: `dataLoading ... ? 1 : ...`), así
-                    que animar DESDE ahí hacia el valor real ya no es
-                    engañoso — es la misma "actualización en vivo" que ya
-                    sabe animar HalfRing.jsx por sí solo. El fix es quitar
-                    `dataLoading` del `key` — se deja SOLO `activeSpaceId`,
-                    para que cambiar de espacio siga forzando un montaje
-                    nuevo sin barrido (esa regla no cambió, un espacio
-                    distinto sigue siendo un dato sin relación con el
-                    anterior), pero cargar datos del MISMO espacio ya no
-                    remonta el componente — sigue siendo la misma instancia,
-                    así que el % anima suave de 100% al valor real solo. */}
-                <div className={styles.ringScale}><HalfRing key={activeSpaceId} percent={dataLoading || pagarEsteCobro.length === 0 ? 1 : pctPagado / 100} /></div>
-                {/* Pagado / Pendiente / Total en 3 columnas con divisores finos. Durante la
-                    carga ningún número es real todavía: bones, nunca el dato
-                    del espacio anterior. Pagar todo deja Pendiente en $0.00.
-                    Lo vencido ya lo dicen Luna y la sección "Vencidos". */}
-                <div className={styles.statBoxes}>
-                  {dataLoading ? (
-                    [0, 1, 2].map(i => (
-                      <div key={i} className={styles.statBox}>
-                        <Bone w={50} h={11} r={4} />
-                        <div className={styles.statBoxBone}><Bone w={70} h={15} r={4} /></div>
-                      </div>
-                    ))
-                  ) : (
-                    [
-                      { key: 'paid',    label: t('homePage.statPaid'),    value: fmt(pagadoMonto),    cls: styles.statBoxPaid },
-                      { key: 'pending', label: t('homePage.statPending'), value: fmt(pendingAmt),     cls: '' },
-                      { key: 'total',   label: t('homePage.statTotal'),   value: fmt(totalConocido),  cls: '' },
-                    ].map(b => (
-                      <div key={b.key} className={styles.statBox}>
-                        <div className={styles.statBoxLabel}>{b.label}</div>
-                        <div className={`${styles.statBoxValue} ${b.cls} ${valueSizeClass(b.value)}`}>{b.value}</div>
-                      </div>
-                    ))
-                  )}
-                </div>
-                {!dataLoading && pendingVariableCount > 0 && (
-                  <div className={styles.cardVariableNote}>
-                    {t('homePage.variablePendingConfirm', { count: pendingVariableCount })}
+        ) : (
+        <div data-coachmark="home-metric-card" className={styles.metricCardSection}>
+            <div className={styles.tabTrack}>
+              <div className={styles.tabThumb} style={{ transform: `translateX(${activeCard * 100}%)` }} />
+              <button
+                onClick={() => setActiveCard(0)}
+                className={`${styles.tabButton} ${activeCard === 0 ? styles.tabButtonActive : ''}`}
+              >
+                {t('homePage.tabs.currentPeriod')}
+              </button>
+              <button
+                onClick={() => setActiveCard(1)}
+                className={`${styles.tabButton} ${activeCard === 1 ? styles.tabButtonActive : ''}`}
+              >
+                {t('homePage.tabs.nextPeriod')}
+              </button>
+            </div>
+  
+            <div
+              className={styles.cardSwipeWrapper}
+              style={{ height: cardsHeight != null ? cardsHeight : 'auto' }}
+              onTouchStart={e => setTouchStartX(e.touches[0].clientX)}
+              onTouchEnd={e => {
+                if (touchStartX === null) return
+                const dx = e.changedTouches[0].clientX - touchStartX
+                if (dx < -40) setActiveCard(1)
+                if (dx > 40)  setActiveCard(0)
+                setTouchStartX(null)
+              }}
+            >
+              <div className={styles.cardSwipeTrack} style={{ transform: `translateX(${activeCard * -100}%)` }}>
+  
+                {/* Card 1 — Periodo actual. Medio anillo tipo gauge (mockup
+                    confirmado con Johnatan, referencia "Current balance" que
+                    trajo) — tercer rediseño de esta tarjeta. Orden dentro de
+                    la tarjeta, de arriba a abajo: fecha (recuadro var(--bg),
+                    efecto de "hueco"), anillo con el %, pagado/pendiente
+                    PEGADO al anillo (explica directamente el % que se ve
+                    arriba), luego título/monto/estatus (fijos, vencido,
+                    variables — info administrativa, no directamente ligada
+                    al anillo, por eso va después). */}
+                <div ref={actualCardRef} className={styles.metricCard}>
+                  {/* Encabezado: fecha del periodo + "Día X de Y" (texto simple,
+                      sin contenedor — no debe parecer botón ni competir con el
+                      anillo). Sin "Quedan N días": eso se lee como fecha límite. */}
+                  <div className={styles.periodHeader}>
+                    <span className={styles.periodLabel}>{t('homePage.periodPrefix')} {periodRange(profile)}</span>
+                    {dataLoading ? (
+                      <Bone w={56} h={12} r={4} />
+                    ) : (
+                      <span className={styles.periodDay}>{t('homePage.periodDay', { day: periodDayNumber, total: periodDayTotal })}</span>
+                    )}
                   </div>
-                )}
-              </div>
-
-              {/* Card 2 — Próximo periodo. Siempre esta data para cualquier
-                  frecuencia de cobro (antes solo para Mensual; Semanal/
-                  Quincenal mostraban "Mes actual" con totales del mes
-                  calendario — quitado por completo, ver useMemo de arriba).
-                  Mismo tratamiento visual que Card 1. Como este periodo aún
-                  no arranca, nada está "pagado" todavía: anillo vacío (0%),
-                  sin fila pagado/pendiente. */}
-              <div ref={nextCardRef} className={styles.metricCard}>
-                <div className={styles.periodHeader}>
-                  <span className={styles.periodLabel}>{t('homePage.periodPrefix')} {nextPeriodRange(profile)}</span>
-                </div>
-                {/* El % de un periodo que no ha empezado siempre sería 0 y no
-                    informa nada: el hueco del anillo dice cuándo empieza. */}
-                <div className={styles.ringScale}>
-                  <HalfRing
-                    key={activeSpaceId}
-                    percent={0}
-                    center={
-                      <>
-                        <span className={styles.halfRingCenterSmallHome}>{t('homePage.nextStartsLabel')}</span>
-                        <span className={styles.halfRingCenterBigHome}>{t('homePage.nextStartsDays', { count: nextStartsInDays })}</span>
-                      </>
-                    }
-                  />
-                </div>
-                <div className={`${styles.statBoxes} ${(!dataLoading && nextPeriodPendingVariableCount > 0) ? '' : styles.statBoxesTwo}`}>
-                  {dataLoading ? (
-                    [0, 1].map(i => (
-                      <div key={i} className={styles.statBox}>
-                        <Bone w={50} h={11} r={4} />
-                        <div className={styles.statBoxBone}><Bone w={70} h={15} r={4} /></div>
-                      </div>
-                    ))
-                  ) : (
-                    [
-                      { key: 'total',    label: t('homePage.statTotal'),    value: fmt(nextPeriodKnownTotal) },
-                      { key: 'payments', label: t('homePage.statPayments'), value: String(nextPeriodFixedCount) },
-                      ...(nextPeriodPendingVariableCount > 0
-                        ? [{ key: 'toConfirm', label: t('homePage.statToConfirm'), value: String(nextPeriodPendingVariableCount) }]
-                        : []),
-                    ].map(b => (
-                      <div key={b.key} className={styles.statBox}>
-                        <div className={styles.statBoxLabel}>{b.label}</div>
-                        <div className={`${styles.statBoxValue} ${valueSizeClass(b.value)}`}>{b.value}</div>
-                      </div>
-                    ))
+                  {/* v0.9.323 (histórico) — bug real reportado por Johnatan: al
+                      recargar, `payments` viene vacío A PROPÓSITO mientras
+                      `dataLoading` está en true (v0.9.284) — eso disparaba
+                      la rama de "todo pagado" mostrando 100% como si fuera un
+                      dato real. La solución de ese entonces fue meter
+                      `dataLoading` en el `key` del anillo: al pasar a false
+                      forzaba un montaje NUEVO, saltando directo al valor
+                      correcto SIN barrido — evitaba animar desde un número
+                      que en ese momento se sentía "falso".
+                      NUEVO (agosto 2026) — Johnatan pidió lo contrario: que
+                      el salto de "cargando" a los datos reales SÍ se vea
+                      animado, no de golpe. El 100% durante la carga ya no es
+                      un dato real calculado por accidente (como en v0.9.323)
+                      sino un placeholder explícito e intencional (ver el
+                      `percent` de abajo: `dataLoading ... ? 1 : ...`), así
+                      que animar DESDE ahí hacia el valor real ya no es
+                      engañoso — es la misma "actualización en vivo" que ya
+                      sabe animar HalfRing.jsx por sí solo. El fix es quitar
+                      `dataLoading` del `key` — se deja SOLO `activeSpaceId`,
+                      para que cambiar de espacio siga forzando un montaje
+                      nuevo sin barrido (esa regla no cambió, un espacio
+                      distinto sigue siendo un dato sin relación con el
+                      anterior), pero cargar datos del MISMO espacio ya no
+                      remonta el componente — sigue siendo la misma instancia,
+                      así que el % anima suave de 100% al valor real solo. */}
+                  <div className={styles.ringScale}><HalfRing key={activeSpaceId} percent={dataLoading || pagarEsteCobro.length === 0 ? 1 : pctPagado / 100} /></div>
+                  {/* Pagado / Pendiente / Total en 3 columnas con divisores finos. Durante la
+                      carga ningún número es real todavía: bones, nunca el dato
+                      del espacio anterior. Pagar todo deja Pendiente en $0.00.
+                      Lo vencido ya lo dicen Luna y la sección "Vencidos". */}
+                  <div className={styles.statBoxes}>
+                    {dataLoading ? (
+                      [0, 1, 2].map(i => (
+                        <div key={i} className={styles.statBox}>
+                          <Bone w={50} h={11} r={4} />
+                          <div className={styles.statBoxBone}><Bone w={70} h={15} r={4} /></div>
+                        </div>
+                      ))
+                    ) : (
+                      [
+                        { key: 'paid',    label: t('homePage.statPaid'),    value: fmt(pagadoMonto),    cls: styles.statBoxPaid },
+                        { key: 'pending', label: t('homePage.statPending'), value: fmt(pendingAmt),     cls: '' },
+                        { key: 'total',   label: t('homePage.statTotal'),   value: fmt(totalConocido),  cls: '' },
+                      ].map(b => (
+                        <div key={b.key} className={styles.statBox}>
+                          <div className={styles.statBoxLabel}>{b.label}</div>
+                          <div className={`${styles.statBoxValue} ${b.cls} ${valueSizeClass(b.value)}`}>{b.value}</div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                  {!dataLoading && pendingVariableCount > 0 && (
+                    <div className={styles.cardVariableNote}>
+                      {t('homePage.variablePendingConfirm', { count: pendingVariableCount })}
+                    </div>
                   )}
+                </div>
+  
+                {/* Card 2 — Próximo periodo. Siempre esta data para cualquier
+                    frecuencia de cobro (antes solo para Mensual; Semanal/
+                    Quincenal mostraban "Mes actual" con totales del mes
+                    calendario — quitado por completo, ver useMemo de arriba).
+                    Mismo tratamiento visual que Card 1. Como este periodo aún
+                    no arranca, nada está "pagado" todavía: anillo vacío (0%),
+                    sin fila pagado/pendiente. */}
+                <div ref={nextCardRef} className={styles.metricCard}>
+                  <div className={styles.periodHeader}>
+                    <span className={styles.periodLabel}>{t('homePage.periodPrefix')} {nextPeriodRange(profile)}</span>
+                  </div>
+                  {/* El % de un periodo que no ha empezado siempre sería 0 y no
+                      informa nada: el hueco del anillo dice cuándo empieza. */}
+                  <div className={styles.ringScale}>
+                    <HalfRing
+                      key={activeSpaceId}
+                      percent={0}
+                      center={
+                        <>
+                          <span className={styles.halfRingCenterSmallHome}>{t('homePage.nextStartsLabel')}</span>
+                          <span className={styles.halfRingCenterBigHome}>{t('homePage.nextStartsDays', { count: nextStartsInDays })}</span>
+                        </>
+                      }
+                    />
+                  </div>
+                  <div className={`${styles.statBoxes} ${(!dataLoading && nextPeriodPendingVariableCount > 0) ? '' : styles.statBoxesTwo}`}>
+                    {dataLoading ? (
+                      [0, 1].map(i => (
+                        <div key={i} className={styles.statBox}>
+                          <Bone w={50} h={11} r={4} />
+                          <div className={styles.statBoxBone}><Bone w={70} h={15} r={4} /></div>
+                        </div>
+                      ))
+                    ) : (
+                      [
+                        { key: 'total',    label: t('homePage.statTotal'),    value: fmt(nextPeriodKnownTotal) },
+                        { key: 'payments', label: t('homePage.statPayments'), value: String(nextPeriodFixedCount) },
+                        ...(nextPeriodPendingVariableCount > 0
+                          ? [{ key: 'toConfirm', label: t('homePage.statToConfirm'), value: String(nextPeriodPendingVariableCount) }]
+                          : []),
+                      ].map(b => (
+                        <div key={b.key} className={styles.statBox}>
+                          <div className={styles.statBoxLabel}>{b.label}</div>
+                          <div className={`${styles.statBoxValue} ${valueSizeClass(b.value)}`}>{b.value}</div>
+                        </div>
+                      ))
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
+          )}
 
         <div className={styles.contentPadding}>
 

@@ -290,3 +290,52 @@
   box-shadow: 0 0 0 2px var(--surface);
   pointer-events: none;
 }
+
+/* ── Inicio móvil (v0.9.885): encabezado con fecha + saludo grande ─────────
+   La ilustración de la hora se ve a la derecha y se funde con el fondo de la
+   página hacia abajo y hacia el saludo. Botones circulares sólidos. */
+.homeRoot {
+  position: relative;
+  margin-top: calc(-1 * var(--sat, 0px));
+  min-height: calc(176px + var(--sat, 0px));
+  padding: calc(var(--sat, 0px) + 22px) 16px 20px;
+  overflow: hidden;
+  background: var(--bg);
+}
+.homeImg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: right 62%;
+  -webkit-mask-image: linear-gradient(to left, var(--mask-opaque) 0%, color-mix(in srgb, var(--mask-opaque) 85%, transparent) 30%, transparent 78%);
+  mask-image: linear-gradient(to left, var(--mask-opaque) 0%, color-mix(in srgb, var(--mask-opaque) 85%, transparent) 30%, transparent 78%);
+  transition: opacity 1.5s ease;
+  pointer-events: none;
+}
+.homeFade {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to bottom, color-mix(in srgb, var(--bg) 20%, transparent) 0%, color-mix(in srgb, var(--bg) 45%, transparent) 62%, var(--bg) 100%);
+  pointer-events: none;
+}
+.homeRow { position: relative; z-index: 1; display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+.homeText { min-width: 0; }
+.homeDate { font-size: 12.5px; font-weight: 600; color: var(--text); text-shadow: 0 1px 3px color-mix(in srgb, var(--bg) 90%, transparent), 0 0 12px color-mix(in srgb, var(--bg) 75%, transparent); }
+.homeHello { margin-top: 2px; font-size: 25px; font-weight: 700; letter-spacing: -0.6px; line-height: 1.12; color: var(--text); overflow-wrap: anywhere; text-shadow: 0 1px 3px color-mix(in srgb, var(--bg) 90%, transparent), 0 0 12px color-mix(in srgb, var(--bg) 75%, transparent); }
+.homeActions { flex-shrink: 0; display: flex; align-items: center; gap: 8px; }
+.homeCircle {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  border: none;
+  background: var(--surface);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  box-shadow: var(--shadow-card);
+}
+.homeAvatarBtn { border: none; background: none; padding: 0; cursor: pointer; border-radius: 50%; }
+.homeAvatar, .homeAvatarFallback { width: 42px; height: 42px; border-radius: 50%; object-fit: cover; display: block; }
+.homeAvatarFallback { background: var(--accent); color: var(--on-color); display: grid; place-items: center; font-size: 15px; font-weight: 700; }
