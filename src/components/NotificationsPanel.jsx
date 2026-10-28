@@ -177,18 +177,13 @@ function accentFor(type) {
   return null
 }
 
-export function NotificationsPanel({ open, onClose, notifications, unreadCount, onMarkAsRead, onMarkAllAsRead, onDelete, onClearAll, onNavigate }) {
+// Lista agrupada por día (Hoy / Ayer / Anteriores), compartida por el panel
+// (móvil/tablet y popover de escritorio) y la página de escritorio (v0.9.844).
+export function NotificationsList({ notifications, onMarkAsRead, onDelete, onNavigate, onAfter }) {
   const { t } = useTranslation()
   const [openGroups, setOpenGroups] = useState({})
-
-  // Fondo sin scroll + entrada/salida animada
-  const { render, closing } = usePresence(open)
-  useScrollLock(open)
-
-  if (!render) return null
-
   const sections = buildSections(notifications)
-  function go(n) { onMarkAsRead(n.id); onNavigate(n); onClose() }
+  function go(n) { onMarkAsRead(n.id); onNavigate(n); onAfter?.() }
 
   function renderNotif(n) {
     const accent = accentFor(n.type)
@@ -199,7 +194,7 @@ export function NotificationsPanel({ open, onClose, notifications, unreadCount, 
           className={`${styles.notifRow} ${!n.read ? styles.notifRowUnread : ''}`}
           style={accent ? { boxShadow: `inset 3px 0 0 ${accent}` } : undefined}
         >
-          <div className={styles.notifIconWrapper}>
+          <div className={`${styles.notifIconWrapper} ${accent === 'var(--danger)' ? styles.iconDanger : accent ? styles.iconSoon : ''}`}>
             {n.type === 'space_change'
               ? <ActorAvatar name={n.actor_name} avatarUrl={n.actor_avatar_url} />
               : <NotifIcon type={n.type} />
@@ -232,7 +227,7 @@ export function NotificationsPanel({ open, onClose, notifications, unreadCount, 
   // Tocar una línea la marca como vista (todos sus avisos) y lleva al pago.
   function goLine(line) {
     line.items.forEach(n => { if (!n.read) onMarkAsRead(n.id) })
-    onNavigate(line.first); onClose()
+    onNavigate(line.first); onAfter?.()
   }
 
   function renderGroup(g) {
@@ -288,13 +283,68 @@ export function NotificationsPanel({ open, onClose, notifications, unreadCount, 
     )
   }
 
+  if (notifications.length === 0) {
+    return (
+      <div className={styles.emptyState}>
+        <Bell size={28} color="var(--border)" className={styles.emptyIcon} />
+        <div className={styles.emptyText}>{t('notificationsPanel.empty')}</div>
+      </div>
+    )
+  }
+  return sections.map(sec => (
+    <div key={sec.key}>
+      <div className={styles.sectionLabel}>{t(`notificationsPanel.section_${sec.key}`)}</div>
+      {sec.rows.map(r => r.group ? renderGroup(r) : renderNotif(r.n))}
+    </div>
+  ))
+}
+
+// Filtros de escritorio (popover y página).
+export const NOTIF_FILTERS = ['all', 'unread', 'overdue', 'upcoming']
+const OVERDUE_TYPES = ['overdue', 'card_due', 'sync_error']
+const UPCOMING_TYPES = ['due_today', 'upcoming', 'card_cut', 'card_reminder', 'goal_deadline']
+export function filterNotifications(list, filter) {
+  if (filter === 'unread') return list.filter(n => !n.read)
+  if (filter === 'overdue') return list.filter(n => OVERDUE_TYPES.includes(n.type))
+  if (filter === 'upcoming') return list.filter(n => UPCOMING_TYPES.includes(n.type))
+  return list
+}
+export function NotifFilterTabs({ value, onChange, unreadCount }) {
+  const { t } = useTranslation()
+  return (
+    <div className={styles.filters} role="tablist">
+      {NOTIF_FILTERS.map(f => (
+        <button key={f} type="button" role="tab" aria-selected={value === f} onClick={() => onChange(f)}
+          className={`${styles.filter} ${value === f ? styles.filterOn : ''}`}>
+          {t(`notificationsPanel.filter_${f}`)}{f === 'unread' && unreadCount > 0 ? ` · ${unreadCount}` : ''}
+        </button>
+      ))}
+    </div>
+  )
+}
+
+const DESK_CAP = 8
+
+export function NotificationsPanel({ open, onClose, notifications, unreadCount, onMarkAsRead, onMarkAllAsRead, onDelete, onClearAll, onNavigate, desk = false, onViewAll }) {
+  const { t } = useTranslation()
+  const [filter, setFilter] = useState('all')
+
+  // Fondo sin scroll + entrada/salida animada
+  const { render, closing } = usePresence(open)
+  useScrollLock(open)
+
+  if (!render) return null
+
+  const filtered = desk ? filterNotifications(notifications, filter) : notifications
+  const shown = desk ? filtered.slice(0, DESK_CAP) : notifications
+
   return (
     <div
       onClick={e => e.target === e.currentTarget && onClose()}
-      className={styles.overlay}
+      className={`${styles.overlay} ${desk ? styles.overlayDesk : ''}`}
       data-presence="overlay" data-closing={closing ? '' : undefined}
     >
-      <div className={styles.panel} data-presence="panel" data-closing={closing ? '' : undefined}>
+      <div className={`${styles.panel} ${desk ? styles.panelDesk : ''}`} data-presence="panel" data-closing={closing ? '' : undefined}>
 
         {/* Header */}
         <div className={styles.header}>
@@ -321,22 +371,20 @@ export function NotificationsPanel({ open, onClose, notifications, unreadCount, 
           </div>
         </div>
 
+        {/* Filtros (solo escritorio) */}
+        {desk && <NotifFilterTabs value={filter} onChange={setFilter} unreadCount={unreadCount} />}
+
         {/* Lista */}
         <div className={styles.list}>
-          {notifications.length === 0 ? (
-            <div className={styles.emptyState}>
-              <Bell size={28} color="var(--border)" className={styles.emptyIcon} />
-              <div className={styles.emptyText}>{t('notificationsPanel.empty')}</div>
-            </div>
-          ) : (
-            sections.map(sec => (
-              <div key={sec.key}>
-                <div className={styles.sectionLabel}>{t(`notificationsPanel.section_${sec.key}`)}</div>
-                {sec.rows.map(r => r.group ? renderGroup(r) : renderNotif(r.n))}
-              </div>
-            ))
-          )}
+          <NotificationsList notifications={shown} onMarkAsRead={onMarkAsRead} onDelete={onDelete} onNavigate={onNavigate} onAfter={onClose} />
         </div>
+
+        {desk && (
+          <div className={styles.footer}>
+            <span>{t('notificationsPanel.showing', { shown: shown.length, total: filtered.length })}</span>
+            <button type="button" className={styles.viewAll} onClick={onViewAll}>{t('notificationsPanel.viewAll')} →</button>
+          </div>
+        )}
       </div>
     </div>
   )

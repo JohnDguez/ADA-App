@@ -1291,7 +1291,20 @@
     "groupMovements_one": "{{count}} movimiento en {{space}}",
     "groupMovements_other": "{{count}} movimientos en {{space}}",
     "groupNew_one": "{{count}} nuevo",
-    "groupNew_other": "{{count}} nuevos"
+    "groupNew_other": "{{count}} nuevos",
+    "filter_all": "Todas",
+    "filter_unread": "Sin leer",
+    "filter_overdue": "Vencidos",
+    "filter_upcoming": "Próximos",
+    "showing": "Mostrando {{shown}} de {{total}}",
+    "viewAll": "Ver todas",
+    "pageSubtitle_one": "{{count}} notificación",
+    "pageSubtitle_other": "{{count}} notificaciones",
+    "summary": "Resumen",
+    "summaryUnread": "Sin leer",
+    "summaryOverdue": "Pagos vencidos",
+    "summaryUpcoming": "Próximos a vencer",
+    "goPayments": "Ir a mis pagos"
   },
   "frequencyPicker": {
     "fewerOptions": "Menos opciones",

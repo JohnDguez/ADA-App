@@ -81,7 +81,7 @@ export function DeskSidebar({ active, onChange, profile, unreadCount, onOpenNoti
 
       <div className={styles.bottom}>
         {open && !profile?.is_premium && <div className={styles.promo}><PremiumPromo variant="side" onOpen={onOpenPremium} /></div>}
-        <button className={styles.item} onClick={onOpenNotifs} aria-label={t('pageHeader.notificationsAriaLabel')}>
+        <button className={`${styles.item} ${active === 'notifications' ? styles.itemActive : ''}`} onClick={onOpenNotifs} aria-label={t('pageHeader.notificationsAriaLabel')}>
           <span className={styles.iconWrap}>
             <Bell size={20} strokeWidth={1.8} />
             {unreadCount > 0 && !open && <span className={styles.dot} />}

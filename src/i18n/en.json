@@ -1291,7 +1291,20 @@
     "groupMovements_one": "{{count}} change in {{space}}",
     "groupMovements_other": "{{count}} changes in {{space}}",
     "groupNew_one": "{{count}} new",
-    "groupNew_other": "{{count}} new"
+    "groupNew_other": "{{count}} new",
+    "filter_all": "All",
+    "filter_unread": "Unread",
+    "filter_overdue": "Overdue",
+    "filter_upcoming": "Upcoming",
+    "showing": "Showing {{shown}} of {{total}}",
+    "viewAll": "View all",
+    "pageSubtitle_one": "{{count}} notification",
+    "pageSubtitle_other": "{{count}} notifications",
+    "summary": "Summary",
+    "summaryUnread": "Unread",
+    "summaryOverdue": "Overdue payments",
+    "summaryUpcoming": "Due soon",
+    "goPayments": "Go to my payments"
   },
   "frequencyPicker": {
     "fewerOptions": "Fewer options",

@@ -246,3 +246,48 @@
 .groupName small { display: block; font-size: 10.5px; margin-top: 1px; }
 .groupAmount { font-weight: 600; flex-shrink: 0; }
 .groupLineUnread .groupName { font-weight: 600; }
+
+/* ── Escritorio (v0.9.844): popover anclado a la campana + lista de la página ─ */
+.filters { display: flex; flex-wrap: wrap; gap: 8px; padding: 0 24px 14px; flex-shrink: 0; }
+.filter { height: 36px; padding: 0 16px; border: 0; border-radius: 99px; background: var(--desk-chip); color: var(--text); font-family: inherit; font-size: 13.5px; font-weight: 600; cursor: pointer; }
+.filterOn { background: var(--accent); color: var(--desk-ink-text); }
+.footer { display: flex; align-items: center; justify-content: space-between; padding: 14px 24px; border-top: 1px solid var(--desk-hair); font-size: 13.5px; color: var(--muted); flex-shrink: 0; }
+.viewAll { border: 0; background: none; padding: 0; color: var(--accent); font-family: inherit; font-size: 13.5px; font-weight: 600; cursor: pointer; }
+
+.overlayDesk { padding: 0; align-items: flex-end; justify-content: flex-start; background: var(--scrim); }
+.panelDesk { position: fixed; left: 288px; bottom: 24px; width: 470px; max-width: none; height: min(760px, calc(100vh - 48px)); max-height: none; background: var(--desk-card); border-radius: 28px; box-shadow: var(--desk-pop-shadow); }
+:global(html[data-desk-sidebar="closed"]) .panelDesk { left: 112px; }
+.panelDesk .header { padding: 22px 24px 14px; border-bottom: 0; }
+.panelDesk .headerTitle { font-size: 22px; font-weight: 700; letter-spacing: -0.5px; }
+.panelDesk .unreadBadge { font-size: 12px; padding: 3px 9px; }
+.panelDesk .iconButton { width: 38px; height: 38px; border: 0; background: var(--desk-chip); }
+.panelDesk .list { padding: 0 12px 12px; }
+
+.panelDesk .sectionLabel, .deskList .sectionLabel { padding: 12px 12px 6px; background: none; font-size: 12px; letter-spacing: 0.8px; text-transform: uppercase; color: var(--muted); }
+.panelDesk .swipeWrap, .deskList .swipeWrap { border-radius: 18px; }
+.panelDesk .swipeFront, .deskList .swipeFront { background: var(--desk-card); border-radius: 18px; }
+.panelDesk .notifRow, .deskList .notifRow { gap: 14px; padding: 14px 12px; border-bottom: 0; border-radius: 18px; box-shadow: none !important; }
+.panelDesk .notifRowUnread, .deskList .notifRowUnread { background: var(--desk-chip); }
+.panelDesk .notifIconWrapper, .deskList .notifIconWrapper { width: 42px; height: 42px; margin-top: 0; border-radius: 14px; display: grid; place-items: center; background: var(--desk-chip); }
+.panelDesk .notifRowUnread .notifIconWrapper, .deskList .notifRowUnread .notifIconWrapper { background: var(--desk-card); }
+.panelDesk .iconDanger, .deskList .iconDanger, .panelDesk .notifRowUnread .iconDanger, .deskList .notifRowUnread .iconDanger { background: var(--danger); }
+.panelDesk .iconDanger svg, .deskList .iconDanger svg { stroke: var(--on-danger); }
+.panelDesk .iconSoon, .deskList .iconSoon, .panelDesk .notifRowUnread .iconSoon, .deskList .notifRowUnread .iconSoon { background: var(--soon-color); }
+.panelDesk .iconSoon svg, .deskList .iconSoon svg { stroke: var(--premium-gold-text); }
+.panelDesk .avatarImg, .panelDesk .avatarFallback, .deskList .avatarImg, .deskList .avatarFallback { width: 42px; height: 42px; border-radius: 14px; font-size: 15px; }
+.panelDesk .notifTitle, .deskList .notifTitle { font-size: 15px; font-weight: 600; margin-bottom: 2px; }
+.panelDesk .notifBody, .deskList .notifBody { font-size: 13.5px; color: var(--muted); line-height: 1.45; }
+.panelDesk .notifTime, .deskList .notifTime { font-size: 12.5px; color: var(--muted); }
+.panelDesk .notifMeta, .deskList .notifMeta { margin-top: 8px; }
+.panelDesk .notifSpaceName, .deskList .notifSpaceName { display: inline-block; padding: 3px 10px; border-radius: 99px; background: var(--desk-chip); font-size: 12px; font-weight: 500; color: var(--muted); }
+.panelDesk .notifRowUnread .notifSpaceName, .deskList .notifRowUnread .notifSpaceName { background: var(--desk-card); }
+.panelDesk .unreadDot, .deskList .unreadDot { width: 9px; height: 9px; }
+.panelDesk .groupBox, .deskList .groupBox { background: var(--desk-card); }
+.panelDesk .notifRowUnread .groupBox, .deskList .notifRowUnread .groupBox { background: var(--desk-panel); }
+.panelDesk .groupLine, .deskList .groupLine { border-bottom-color: var(--desk-hair); font-size: 13.5px; }
+.panelDesk .groupName small, .deskList .groupName small { font-size: 12px; color: var(--muted); }
+@media (hover: hover) and (pointer: fine) {
+  .panelDesk .notifRow:not(.notifRowUnread):hover, .deskList .notifRow:not(.notifRowUnread):hover { background: var(--desk-chip); }
+  .filter:not(.filterOn):hover { background: var(--desk-hair); translate: none; filter: none; }
+}
+.panelDesk .swipeBg, .deskList .swipeBg { display: none; }

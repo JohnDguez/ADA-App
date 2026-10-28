@@ -50,6 +50,7 @@ import { RailFab } from './components/RailFab'
 import { DeskSidebar } from './components/DeskSidebar'
 import { useIsDesktop } from './hooks/useIsDesktop'
 import { NotificationsPanel } from './components/NotificationsPanel'
+import { DeskNotifications } from './pages/DeskNotifications'
 import { PaymentModal } from './components/PaymentModal'
 import { AddMenu, addMenuHasExtras } from './components/AddMenu'
 import { ChangeMethodModal } from './components/ChangeMethodModal'
@@ -765,6 +766,13 @@ export default function App() {
 
   // Notificaciones y Premium se abren encima de un tab: "atrás" las cierra.
   useBackClose(notifOpen, () => setNotifOpen(false))
+  // La página Notificaciones solo existe en escritorio: si se restaura (o se
+  // reduce la ventana) en otro tamaño, regresa a Inicio.
+  useEffect(() => {
+    if (tab === 'notifications' && !isDesktop) {
+      setTab('home'); tabRef.current = 'home'; sessionStorage.setItem('ada_tab', 'home')
+    }
+  }, [tab, isDesktop])
   // Tocar una push del sistema abre el panel de notificaciones (ver el hook).
   const openNotifsFromTap = useCallback(() => setNotifOpen(true), [])
   useNotificationTap(!!user, openNotifsFromTap)
@@ -932,7 +940,7 @@ export default function App() {
   // "settings" ya no es pestaña del nav (se abre desde el header), pero se
   // deja en el orden porque `tab` sí toma ese valor al entrar a Ajustes y
   // de aquí sale la dirección del deslizamiento.
-  const TAB_ORDER = ['home', 'payments', 'recurrents', 'goals', 'settings']
+  const TAB_ORDER = ['home', 'payments', 'recurrents', 'goals', 'notifications', 'settings']
   const TAB_TO_COACHMARK_KEY = { home: 'home', payments: 'gastos', recurrents: 'recurrentes', goals: 'metas', settings: 'perfil' }
   const coachmarkScreenKey = modalOpen ? 'nuevo-pago' : (TAB_TO_COACHMARK_KEY[tab] || null)
   sessionStorage.setItem('ada_session', '1')
@@ -1924,6 +1932,20 @@ export default function App() {
           />
         </Suspense>
       )}
+      {tab === 'notifications' && isDesktop && (
+        <DeskNotifications
+          profile={effectiveProfile}
+          notifications={allNotifications}
+          unreadCount={allUnreadCount}
+          onMarkAsRead={handleNotifMarkAsRead}
+          onMarkAllAsRead={handleNotifMarkAllAsRead}
+          onDelete={handleNotifDelete}
+          onClearAll={handleNotifClearAll}
+          onNavigate={handleNotifNavigate}
+          onGoPayments={() => changeTab('payments')}
+          slideClass={`page-slide-${slideDir}`}
+        />
+      )}
       {tab === 'settings' && (
         <Suspense fallback={null}>
         <SettingsPage
@@ -2001,7 +2023,7 @@ export default function App() {
         />
       )}
       {/* En Inicio de escritorio el botón vive en el encabezado. */}
-      {!(isDesktop && (tab === 'home' || tab === 'payments' || tab === 'recurrents' || tab === 'goals' || tab === 'settings')) && <RailFab onAdd={openAddMenu} addOpen={addMenuOpen} />}
+      {!(isDesktop && (tab === 'home' || tab === 'payments' || tab === 'recurrents' || tab === 'goals' || tab === 'notifications' || tab === 'settings')) && <RailFab onAdd={openAddMenu} addOpen={addMenuOpen} />}
 
       <NotificationsPanel
         open={notifOpen}
@@ -2013,6 +2035,8 @@ export default function App() {
         onDelete={handleNotifDelete}
         onClearAll={handleNotifClearAll}
         onNavigate={handleNotifNavigate}
+        desk={isDesktop}
+        onViewAll={() => { setNotifOpen(false); changeTab('notifications') }}
       />
 
       <ChangeMethodModal
