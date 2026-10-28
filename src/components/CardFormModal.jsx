@@ -8,6 +8,10 @@ import { CardDayRangePicker } from './CardDayRangePicker'
 import { Select } from './Select'
 import { SegmentedControl as Segmented } from './SegmentedControl'
 import styles from './CardFormModal.module.css'
+import { DeskSettingsHead, DeskPage } from './DeskSettingsHead'
+import deskStyles from './SettingsDesk.module.css'
+import dk from './CardFormDesk.module.css'
+import { ChevronLeft } from 'lucide-react'
 import { markBackHandled } from '../lib/backNav'
 import { useScrollLock } from '../lib/scrollLock'
 
@@ -21,8 +25,9 @@ const ANIM_MS = 320
 
 const EMPTY = { kind: 'credit', bank: null, alias: '', last4: '', network: 'visa', form: 'physical', cut_day: null, due_day: null }
 
-export function CardFormModal({ open, initial, onSave, onClose }) {
-  useScrollLock(open)
+// `inline` (v0.9.839, escritorio): página dentro del panel de Ajustes.
+export function CardFormModal({ open, initial, onSave, onClose, inline = false }) {
+  useScrollLock(open && !inline)
   const { t } = useTranslation()
   const [form, setForm] = useState(EMPTY)
   const [error, setError] = useState('')
@@ -51,7 +56,7 @@ export function CardFormModal({ open, initial, onSave, onClose }) {
   // encima de otro modal —ej. "Añadir tarjeta" desde Nuevo pago— el "atrás"
   // cerraba el modal de abajo y se perdían los datos).
   useEffect(() => {
-    if (!open) return
+    if (!open || inline) return
     const handler = () => { markBackHandled(); onClose() }
     window.history.pushState(null, '', window.location.href)
     window.addEventListener('popstate', handler)
@@ -68,7 +73,7 @@ export function CardFormModal({ open, initial, onSave, onClose }) {
     setError('')
   }, [open, initial])
 
-  const showModal = open || closing || wasOpenRef.current
+  const showModal = inline ? open : (open || closing || wasOpenRef.current)
   if (!showModal) return null
 
   const set = patch => { setForm(f => ({ ...f, ...patch })); setError('') }
@@ -89,6 +94,70 @@ export function CardFormModal({ open, initial, onSave, onClose }) {
     other: t('cards.bankGroups.other'),
   }
   const bankOptions = BANKS.map(b => ({ value: b.id, label: b.id === 'otro' ? t('cards.otherBank') : b.name, group: b.group }))
+
+  if (inline) {
+    return (
+      <DeskPage>
+        <DeskSettingsHead
+          title={initial ? t('cards.form.titleEdit') : t('cards.form.titleNew')}
+          description={t('cards.desk.formDesc')}
+          actions={<button type="button" className={`${deskStyles.btn} ${deskStyles.btnSoft}`} onClick={onClose}><ChevronLeft size={16} />{t('buttons.back')}</button>}
+        />
+        <div className={dk.layout}>
+          <div className={deskStyles.fill}>
+            <Segmented value={form.kind} disabled={!!initial} onChange={kind => set({ kind })}
+              options={[{ value: 'credit', label: t('cards.kind.credit') }, { value: 'debit', label: t('cards.kind.debit') }]} />
+            {initial && <div className={dk.help}>{t('cards.form.kindLocked')}</div>}
+
+            <label className={dk.lbl}>{t('cards.form.bank')}</label>
+            <Select value={form.bank} onChange={bank => set({ bank })} options={bankOptions} placeholder={t('cards.form.bankPlaceholder')} searchable
+              groupLabels={groupLabels} renderIcon={id => <span className={styles.bankDot} style={{ '--bank-dot': bankColorVar(id) }} />} />
+
+            <div className={dk.row2}>
+              <div className={dk.grow}>
+                <label className={dk.lbl}>{t('cards.form.alias')}</label>
+                <input aria-label={t('cards.form.alias')} className={dk.input} value={form.alias} maxLength={24}
+                  onChange={e => set({ alias: e.target.value })} placeholder={t('cards.form.aliasPlaceholder')} />
+              </div>
+              <div className={dk.last4}>
+                <label className={dk.lbl}>{t('cards.form.last4')}</label>
+                <input aria-label={t('cards.form.last4')} className={dk.input} inputMode="numeric" value={form.last4}
+                  onChange={e => set({ last4: e.target.value.replace(/\D/g, '').slice(0, 4) })} placeholder="0000" />
+              </div>
+            </div>
+            <div className={dk.help}>{t('cards.form.aliasHelper')}</div>
+
+            <div className={dk.row2}>
+              <div className={dk.grow}>
+                <label className={dk.lbl}>{t('cards.form.network')}</label>
+                <Segmented value={form.network} onChange={network => set({ network })}
+                  options={NETWORKS.map(n => ({ value: n, label: t(`cards.network.${n}`), icon: <CardNetworkIcon network={n} size={16} className={styles.segIcon} /> }))} />
+              </div>
+              <div className={dk.grow}>
+                <label className={dk.lbl}>{t('cards.form.form')}</label>
+                <Segmented value={form.form} onChange={f => set({ form: f })}
+                  options={[{ value: 'physical', label: t('cards.form.physical') }, { value: 'digital', label: t('cards.form.digital') }]} />
+              </div>
+            </div>
+
+            {isCredit ? (
+              <>
+                <label className={dk.lbl}>{t('cards.form.days')}</label>
+                <CardDayRangePicker cutDay={form.cut_day} dueDay={form.due_day} onChange={days => set(days)} />
+              </>
+            ) : <div className={dk.help}>{t('cards.form.debitNote')}</div>}
+          </div>
+
+          <div className={dk.side}>
+            <div className={dk.preview}><CreditCardVisual card={{ ...form, bank: form.bank || 'otro' }} /></div>
+            {error && <div className={dk.err}>{error}</div>}
+            <button type="button" className={`${deskStyles.btn} ${dk.full}`} onClick={handleSave}>{initial ? t('cards.form.saveEdit') : t('cards.form.saveNew')}</button>
+            <button type="button" className={`${deskStyles.btn} ${deskStyles.btnSoft} ${dk.full}`} onClick={onClose}>{t('buttons.cancel')}</button>
+          </div>
+        </div>
+      </DeskPage>
+    )
+  }
 
   return createPortal(
     <div onClick={e => e.target === e.currentTarget && onClose()} className={`${styles.overlay} ${closing ? styles.overlayClosing : ''}`}>

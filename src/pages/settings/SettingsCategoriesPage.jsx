@@ -95,6 +95,10 @@ export function SettingsCategoriesPage({ profile, onUpdate, onBack, slideClass }
     )
   }
 
+  if (desk && modalOpen) {
+    return <CategoryFormModal inline open onClose={() => setModalOpen(false)} editingCat={editingCat} profile={profile} onUpdate={onUpdate} />
+  }
+
   if (desk) {
     const q = query.trim().toLowerCase()
     const labelOf = c => (c.isCustom ? c.name : getCategoryLabel(c.name))
@@ -135,7 +139,6 @@ export function SettingsCategoriesPage({ profile, onUpdate, onBack, slideClass }
           {mine.map(c => <Tile key={c.name} c={c} />)}
           {!q && <button type="button" className={`${dk.tile} ${dk.add}`} onClick={openAdd}><i><Plus size={28} /></i>{t('settingsCategories.deskNewShort')}</button>}
         </div>
-        <CategoryFormModal open={modalOpen} onClose={() => setModalOpen(false)} editingCat={editingCat} profile={profile} onUpdate={onUpdate} />
       </DeskPage>
     )
   }

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { ChevronDown, ChevronUp, Users, Copy, RefreshCw, LogOut, Trash2, Crown, Plus, Pencil, CircleCheck, Banknote, PiggyBank, Target, HandCoins, ArrowDownToLine } from 'lucide-react'
+import { ChevronLeft, ChevronDown, ChevronUp, Users, Copy, RefreshCw, LogOut, Trash2, Crown, Plus, Pencil, CircleCheck, Banknote, PiggyBank, Target, HandCoins, ArrowDownToLine } from 'lucide-react'
 // Ícono del encabezado vía Phosphor Icons (mismo patrón que las demás
 // sub-páginas ya migradas, v0.9.442-454) — import directo para tree-shaking real.
 import { UsersThree } from '@phosphor-icons/react/dist/csr/UsersThree'
@@ -119,7 +119,7 @@ export function SettingsSharedSpacePage({ profile, user, sharedSpaces, onBack, o
   const canJoinMore   = guestEntries.length < 3
 
   const joinSheet = canJoinMore && (
-    <BottomSheet modal open={joinOpen} title={t('newSharedSpacePanel.joinTitle')} onClose={() => setJoinOpen(false)}>
+    <BottomSheet modal={!desk} open={joinOpen} title={t('newSharedSpacePanel.joinTitle')} onClose={() => setJoinOpen(false)}>
       <div className={styles.joinDescription}>{t('settingsSharedSpacePage.joinDescription')}</div>
       <input aria-label={t('newSharedSpacePanel.joinTitle')}
         className={`field-input ${styles.joinCodeInput}`} inputMode="numeric" maxLength={6}
@@ -132,6 +132,41 @@ export function SettingsSharedSpacePage({ profile, user, sharedSpaces, onBack, o
       </button>
     </BottomSheet>
   )
+
+  if (desk && !ownedEntry && profile.is_premium && creating) {
+    return (
+      <DeskPage>
+        <DeskSettingsHead
+          title={t('settingsSharedSpacePage.deskNewTitle')}
+          description={t('settingsSharedSpacePage.deskNewDesc')}
+          actions={<button type="button" className={`${deskStyles.btn} ${deskStyles.btnSoft}`} onClick={() => { setCreating(false); setCreateError('') }}><ChevronLeft size={16} />{t('buttons.back')}</button>}
+        />
+        <div className={dk.newLayout}>
+          <div className={`${deskStyles.fill} ${dk.form}`}>
+            <label className="field-label">{t('newSharedSpacePanel.spaceNameLabel')}</label>
+            <input aria-label={t('newSharedSpacePanel.spaceNameLabel')} autoFocus className="field-input" value={newName} onChange={e => setNewName(e.target.value)} placeholder={t('newSharedSpacePanel.spaceNamePlaceholder')} />
+            <label className={`field-label ${dk.field}`}>{t('currency.spaceLabel')}</label>
+            <CurrencySelect value={newCurrency} onChange={setNewCurrency} sheetTitle={t('currency.spaceSheetTitle')} />
+            <label className={`field-label ${dk.field}`}>{t('cobroPeriodFields.periodLabel')}</label>
+            <CobroPeriodFields
+              freq={newFreq} day1={newDay1} day2={newDay2} weekday={newWeekday}
+              onChangeFreq={setNewFreq} onChangeDay1={setNewDay1} onChangeDay2={setNewDay2} onChangeWeekday={setNewWeekday}
+            />
+          </div>
+          <div className={dk.newSide}>
+            <div className={`${deskStyles.blue} ${dk.newPreview}`}>
+              <UsersThree size={34} />
+              <b>{newName.trim() || t('newSharedSpacePanel.spaceNamePlaceholder')}</b>
+              <span>{getFrequencyLabel(newFreq)} · {newCurrency || '—'}</span>
+            </div>
+            {createError && <div className={dk.err}>{createError}</div>}
+            <button type="button" className={`${deskStyles.btn} ${dk.full}`} onClick={handleCreate} disabled={createSaving}>{createSaving ? t('newSharedSpacePanel.creating') : t('newSharedSpacePanel.create')}</button>
+            <button type="button" className={`${deskStyles.btn} ${deskStyles.btnSoft} ${dk.full}`} onClick={() => { setCreating(false); setCreateError('') }}>{t('buttons.cancel')}</button>
+          </div>
+        </div>
+      </DeskPage>
+    )
+  }
 
   if (desk) {
     return (
@@ -156,18 +191,19 @@ export function SettingsSharedSpacePage({ profile, user, sharedSpaces, onBack, o
 
         {guestEntries.length > 0 && (
           <>
-            <div className={`${deskStyles.sec} ${ownedEntry ? '' : deskStyles.secFirst}`}>{t('settingsSharedSpacePage.invitedSpacesLabel')}</div>
-            <div className={deskStyles.fill}>
+            <div className={`${deskStyles.sec} ${ownedEntry ? '' : deskStyles.secFirst}`}>{t('settingsSharedSpacePage.invitedSpacesCount', { n: guestEntries.length })}</div>
+            <div className={dk.guestGrid}>
               {guestEntries.map(entry => {
                 const cur = getCurrency(entry.space.currency)
                 return (
-                  <div key={entry.membership.id} className={dk.guest}>
+                  <div key={entry.membership.id} className={`${deskStyles.fill} ${dk.guestCard}`}>
                     <div className={dk.guestTop}>
-                      <span>{entry.space.name}</span>
+                      <span className={dk.guestAv}>{(entry.space.name || '?').trim().charAt(0).toUpperCase()}</span>
+                      <div className={dk.guestInfo}>
+                        <b>{entry.space.name}</b>
+                        <span>{t('settingsSharedSpacePage.period', { freq: getFrequencyLabel(entry.space.cobro_freq) })} · {cur.code}</span>
+                      </div>
                       <button type="button" className={`${deskStyles.btn} ${deskStyles.btnSoft}`} onClick={() => leaveSpace(entry.membership.id)}><LogOut size={14} />{t('settingsSharedSpacePage.leave')}</button>
-                    </div>
-                    <div className={dk.guestSub}>
-                      {t('settingsSharedSpacePage.period', { freq: getFrequencyLabel(entry.space.cobro_freq) })} · {cur.code} · {t('currency.guestHint')}
                     </div>
                     <div {...switchProps(entry.membership.notify_on_changes)} className={deskStyles.tgl}
                       onClick={() => updateMemberPermissions(entry.membership.id, { notify_on_changes: !entry.membership.notify_on_changes })}>
@@ -187,25 +223,6 @@ export function SettingsSharedSpacePage({ profile, user, sharedSpaces, onBack, o
             <div className={dk.ctaTitle}>{t('newSharedSpacePanel.premiumCtaTitle')}</div>
             <div className={dk.ctaText}>{t('newSharedSpacePanel.premiumCtaText')}</div>
             <button type="button" className={`${deskStyles.btn} ${deskStyles.btnWhite}`} onClick={onOpenPremium}><Crown size={16} />{t('goalsPage.premiumBanner.button')}</button>
-          </div>
-        )}
-
-        {!ownedEntry && profile.is_premium && creating && (
-          <div className={`${deskStyles.fill} ${dk.form}`}>
-            <label className="field-label">{t('newSharedSpacePanel.spaceNameLabel')}</label>
-            <input aria-label={t('newSharedSpacePanel.spaceNameLabel')} className="field-input" value={newName} onChange={e => setNewName(e.target.value)} placeholder={t('newSharedSpacePanel.spaceNamePlaceholder')} />
-            <label className={`field-label ${dk.field}`}>{t('currency.spaceLabel')}</label>
-            <CurrencySelect value={newCurrency} onChange={setNewCurrency} sheetTitle={t('currency.spaceSheetTitle')} />
-            <label className={`field-label ${dk.field}`}>{t('cobroPeriodFields.periodLabel')}</label>
-            <CobroPeriodFields
-              freq={newFreq} day1={newDay1} day2={newDay2} weekday={newWeekday}
-              onChangeFreq={setNewFreq} onChangeDay1={setNewDay1} onChangeDay2={setNewDay2} onChangeWeekday={setNewWeekday}
-            />
-            {createError && <div className={dk.err}>{createError}</div>}
-            <div className={deskStyles.actions} style={{ marginTop: 18 }}>
-              <button type="button" className={deskStyles.btn} onClick={handleCreate} disabled={createSaving}>{createSaving ? t('newSharedSpacePanel.creating') : t('newSharedSpacePanel.create')}</button>
-              <button type="button" className={`${deskStyles.btn} ${deskStyles.btnSoft}`} onClick={() => { setCreating(false); setCreateError('') }}>{t('buttons.cancel')}</button>
-            </div>
           </div>
         )}
 

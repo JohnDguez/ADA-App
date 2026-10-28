@@ -21,6 +21,7 @@ import deskStyles from '../../components/SettingsDesk.module.css'
 import dk from './SettingsAccountDesk.module.css'
 import styles from './SettingsAccountPage.module.css'
 import { Presence } from '../../components/Presence'
+import { BottomSheet } from '../../components/BottomSheet'
 
 // Sub-página "Cuenta" dentro de Ajustes: Nombre, Correo/Google, Contraseña,
 // Idioma, y la zona de peligro (Eliminar mis datos / Eliminar mi cuenta).
@@ -94,6 +95,10 @@ export function SettingsAccountPage({ onChangePhoto, uploadingAvatar, profile, u
     setDangerModal('account'); setDangerPassword(''); setDangerError('')
   }
 
+  const deskMode = !!desk
+  const editTitle = editSection === 'name' ? t('settingsAccount.editModal.titleName')
+    : editSection === 'email' ? t('settingsAccount.editModal.titleEmail')
+    : t('settingsAccount.editModal.titlePassword')
   const newPassReqs   = passwordRequirements(fieldVal)
   const newPassStrong = isPasswordStrong(fieldVal)
   const newPassMatch  = fieldVal && fieldVal2 && fieldVal === fieldVal2
@@ -440,14 +445,84 @@ export function SettingsAccountPage({ onChangePhoto, uploadingAvatar, profile, u
         </div>
       )}</Presence>
 
+      {deskMode ? (
+        <BottomSheet open={!!editSection} title={editTitle} onClose={() => setEditSection(null)}>
+          <div className={styles.deskEditBody}>
+            {editError  && <div className={styles.errorBox}>{editError}</div>}
+            {forgotSent && <div className={styles.successBox}>{t('settingsAccount.editModal.resetLinkSent', { email: user?.email })}</div>}
+
+            {editSection === 'name' && (
+              <div className={styles.fieldGroup}>
+                <label className="field-label">{t('settingsAccount.editModal.nameLabel')}</label>
+                <input aria-label={t('settingsAccount.editModal.nameLabel')} autoFocus className="field-input" value={fieldVal} onChange={e => setFieldVal(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleEditSave()} />
+              </div>
+            )}
+
+            {editSection === 'email' && (
+              <div className={styles.fieldGroup}>
+                <label className="field-label">{t('settingsAccount.editModal.emailLabel')}</label>
+                <input aria-label={t('settingsAccount.editModal.emailLabel')} autoFocus className="field-input" type="email" value={fieldVal} onChange={e => setFieldVal(e.target.value)} />
+              </div>
+            )}
+
+            {editSection === 'password' && (<>
+              <div className={styles.fieldGroupSm}>
+                <label className="field-label">{t('settingsAccount.editModal.currentPasswordLabel')}</label>
+                <div className={styles.inputWrapper}>
+                  <input aria-label={t('settingsAccount.editModal.currentPasswordLabel')} autoFocus className={`field-input ${styles.inputWithToggle}`} type={showPass3 ? 'text' : 'password'} value={fieldVal3} onChange={e => setFieldVal3(e.target.value)} placeholder="••••••••" />
+                  <button type="button" onClick={() => setShowPass3(v => !v)} className={styles.toggleVisibilityButton}>
+                    {showPass3 ? <EyeOff size={16} color="var(--text)" /> : <Eye size={16} color="var(--text)" />}
+                  </button>
+                </div>
+                <button onClick={handleForgotPassword} className={styles.forgotPasswordLink}>
+                  {t('settingsAccount.editModal.forgotPassword')}
+                </button>
+              </div>
+
+              <div className={styles.fieldGroupXs}>
+                <label className="field-label">{t('settingsAccount.editModal.newPasswordLabel')}</label>
+                <div className={styles.inputWrapper}>
+                  <input aria-label={t('settingsAccount.editModal.newPasswordLabel')} className={`field-input ${styles.inputWithToggle}`} type={showPass ? 'text' : 'password'} value={fieldVal} onChange={e => setFieldVal(e.target.value)} placeholder="••••••••" />
+                  <button type="button" onClick={() => setShowPass(v => !v)} className={styles.toggleVisibilityButton}>
+                    {showPass ? <EyeOff size={16} color="var(--text)" /> : <Eye size={16} color="var(--text)" />}
+                  </button>
+                </div>
+              </div>
+
+              {fieldVal.length > 0 && (
+                <div className={styles.requirementsBox}>
+                  <RequirementRow met={newPassReqs.length}    label={t('settingsAccount.editModal.requirementLength')} />
+                  <RequirementRow met={newPassReqs.uppercase} label={t('settingsAccount.editModal.requirementUppercase')} />
+                  <RequirementRow met={newPassReqs.number}    label={t('settingsAccount.editModal.requirementNumber')} />
+                  <RequirementRow met={newPassReqs.symbol}    label={t('settingsAccount.editModal.requirementSymbol')} />
+                </div>
+              )}
+
+              <div className={styles.fieldGroup}>
+                <label className="field-label">{t('settingsAccount.editModal.confirmPasswordLabel')}</label>
+                <div className={styles.inputWrapper}>
+                  <input aria-label={t('settingsAccount.editModal.confirmPasswordLabel')} className={`field-input ${styles.inputWithToggle} ${fieldVal2 && !newPassMatch ? styles.inputError : ''}`} type={showPass2 ? 'text' : 'password'} value={fieldVal2} onChange={e => setFieldVal2(e.target.value)} placeholder="••••••••" />
+                  <button type="button" onClick={() => setShowPass2(v => !v)} className={styles.toggleVisibilityButton}>
+                    {showPass2 ? <EyeOff size={16} color="var(--text)" /> : <Eye size={16} color="var(--text)" />}
+                  </button>
+                </div>
+                {fieldVal2 && !newPassMatch && <div className={styles.matchError}>{t('settingsAccount.editModal.passwordMismatch')}</div>}
+              </div>
+            </>)}
+
+            <button onClick={handleEditSave} disabled={saving} className={`btn-primary ${styles.saveButton}`}>
+              {saving ? t('settingsAccount.editModal.saving') : t('buttons.save')}
+            </button>
+            <button onClick={() => setEditSection(null)} className="btn-ghost">{t('buttons.cancel')}</button>
+          </div>
+        </BottomSheet>
+      ) : (
       <Presence show={!!editSection}>{() => (
         <div onClick={e => e.target === e.currentTarget && setEditSection(null)} className={styles.editOverlay}>
           <div className={styles.modalPanel}>
             <div className={styles.handle} />
             <div className={styles.editTitle}>
-              {editSection === 'name' ? t('settingsAccount.editModal.titleName')
-                : editSection === 'email' ? t('settingsAccount.editModal.titleEmail')
-                : t('settingsAccount.editModal.titlePassword')}
+              {editTitle}
             </div>
 
             {editError  && <div className={styles.errorBox}>{editError}</div>}
@@ -519,6 +594,7 @@ export function SettingsAccountPage({ onChangePhoto, uploadingAvatar, profile, u
           </div>
         </div>
       )}</Presence>
+      )}
     </>
   )
 }

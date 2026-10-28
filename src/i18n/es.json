@@ -356,7 +356,11 @@
     "deskDefaults_one": "Predeterminadas · {{count}}",
     "deskDefaults_other": "Predeterminadas · {{count}}",
     "deskMine_one": "Tuyas · {{count}}",
-    "deskMine_other": "Tuyas · {{count}}"
+    "deskMine_other": "Tuyas · {{count}}",
+    "desk": {
+      "formDesc": "Elige nombre, ícono y color. Así se verá en tus pagos.",
+      "previewHint": "Vista previa"
+    }
   },
   "homePage": {
     "tabs": {
@@ -1675,7 +1679,10 @@
     "deskConfig": "Configuración del espacio",
     "deskMembersTitle": "Miembros",
     "deskDanger": "Zona de peligro",
-    "deskEmpty": "Aún no perteneces a ningún espacio. Únete con un código o crea el tuyo."
+    "deskEmpty": "Aún no perteneces a ningún espacio. Únete con un código o crea el tuyo.",
+    "invitedSpacesCount": "Espacios a los que te invitaron · {{n}} de 3",
+    "deskNewTitle": "Nuevo espacio",
+    "deskNewDesc": "Crea un espacio para compartir pagos, metas y fondos con quien tú invites."
   },
   "app": {
     "toast": {
@@ -2082,7 +2089,8 @@
       "nothingYet": "Todavía no hay nada que mostrar.",
       "cutOf": "Corte {{name}}",
       "dueOf": "Pago {{name}}",
-      "footNote": "Solo para organizar tus gastos. LunaPay no accede a tus cuentas ni datos bancarios."
+      "footNote": "Solo para organizar tus gastos. LunaPay no accede a tus cuentas ni datos bancarios.",
+      "formDesc": "Elige el banco y los datos. La tarjeta se actualiza mientras escribes."
     }
   },
   "paymentMethod": {

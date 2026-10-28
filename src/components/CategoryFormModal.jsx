@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Check, Search } from 'lucide-react'
+import { Check, Search, ChevronLeft, Trash2 } from 'lucide-react'
 import { CATEGORIES, getCatColor, getCategoryLabel } from '../lib/utils'
 import { CATEGORY_ICON_GROUPS, getIconComponent } from '../lib/categoryIcons'
 import { showToast } from './Toast'
@@ -9,6 +9,9 @@ import { useBackClose } from '../lib/backNav'
 import styles from '../pages/settings/SettingsCategoriesPage.module.css'
 import { usePresence } from '../lib/usePresence'
 import { useScrollLock } from '../lib/scrollLock'
+import { DeskSettingsHead, DeskPage } from './DeskSettingsHead'
+import deskStyles from './SettingsDesk.module.css'
+import dk from './CategoryFormDesk.module.css'
 
 export const CATEGORY_PALETTE = Array.from({ length: 16 }, (_, i) => `var(--palette-${i + 1})`)
 
@@ -18,7 +21,9 @@ export const CATEGORY_PALETTE = Array.from({ length: 16 }, (_, i) => `var(--pale
 // `editingCat` = { name, isCustom } para editar, o null para agregar.
 // `onSaved(nombre)` avisa el nombre final (el formulario de pago lo deja
 // seleccionado). Las 11 categorías fijas solo permiten ícono/color.
-export function CategoryFormModal({ open, onClose, editingCat = null, profile, onUpdate, onSaved, zIndex }) {
+// `inline` (v0.9.839, escritorio): se muestra como página dentro del panel de
+// Ajustes en vez de como hoja modal; misma lógica.
+export function CategoryFormModal({ open, onClose, editingCat = null, profile, onUpdate, onSaved, zIndex, inline = false }) {
   const { t } = useTranslation()
   const [formName,   setFormName]   = useState('')
   const [formIcon,   setFormIcon]   = useState('')
@@ -34,9 +39,9 @@ export function CategoryFormModal({ open, onClose, editingCat = null, profile, o
   const categoryIcons  = profile.category_icons || {}
   const categoryColors = profile.category_colors || {}
 
-  useBackClose(open, onClose)
-  const { render, closing } = usePresence(open)
-  useScrollLock(open)
+  useBackClose(open && !inline, onClose)
+  const { render, closing } = usePresence(open && !inline)
+  useScrollLock(open && !inline)
 
   useEffect(() => {
     if (!open) return
@@ -58,7 +63,7 @@ export function CategoryFormModal({ open, onClose, editingCat = null, profile, o
     if (confirmingDelete) confirmRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
   }, [confirmingDelete, deleteCount])
 
-  if (!render) return null
+  if (inline ? !open : !render) return null
 
   async function handleSave() {
     const trimmed = formName.trim()
@@ -134,6 +139,97 @@ export function CategoryFormModal({ open, onClose, editingCat = null, profile, o
   const filteredGroups = CATEGORY_ICON_GROUPS
     .map(g => ({ ...g, icons: search ? g.icons.filter(i => i.label.toLowerCase().includes(search)) : g.icons }))
     .filter(g => g.icons.length > 0)
+
+  if (inline) {
+    const PreviewIcon = formIcon ? getIconComponent(formIcon) : null
+    const tint = formColor || 'var(--palette-1)'
+    const previewName = formName ? getCategoryLabel(formName) : t('settingsCategories.namePlaceholder')
+    return (
+      <DeskPage>
+        <DeskSettingsHead
+          title={editingCat ? t('settingsCategories.addModalTitleEdit') : t('settingsCategories.addModalTitleNew')}
+          description={t('settingsCategories.desk.formDesc')}
+          actions={<button type="button" className={`${deskStyles.btn} ${deskStyles.btnSoft}`} onClick={onClose}><ChevronLeft size={16} />{t('buttons.back')}</button>}
+        />
+        <div className={dk.layout}>
+          <div className={deskStyles.fill}>
+            <label className={dk.lbl}>{t('settingsCategories.nameLabel')}</label>
+            {editingCat && !editingCat.isCustom ? (
+              <>
+                <div className={dk.input}>{getCategoryLabel(formName)}</div>
+                <div className={dk.help}>{t('settingsCategories.nameReadonlyHelper')}</div>
+              </>
+            ) : (
+              <input aria-label={t('settingsCategories.namePlaceholder')} autoFocus className={dk.input} value={formName}
+                onChange={e => { setFormName(e.target.value); setNameError('') }} placeholder={t('settingsCategories.namePlaceholder')} />
+            )}
+            {nameError && <div className={dk.err}>{nameError}</div>}
+
+            <label className={dk.lbl}>{t('settingsCategories.iconLabel')}</label>
+            <div className={dk.search}>
+              <Search size={15} />
+              <input aria-label={t('settingsCategories.iconSearchPlaceholder')} value={iconSearch} onChange={e => setIconSearch(e.target.value)} placeholder={t('settingsCategories.iconSearchPlaceholder')} />
+            </div>
+            <div className={`${dk.groups} scroll-y`}>
+              {filteredGroups.map(group => (
+                <div key={group.label}>
+                  <div className={dk.gl}>{group.label}</div>
+                  <div className={dk.icons}>
+                    {group.icons.map(({ name, label }) => {
+                      const Icon = getIconComponent(name)
+                      const on = formIcon === name
+                      return <button key={name} type="button" title={label} aria-pressed={on} onClick={() => setFormIcon(name)} className={`${dk.ib} ${on ? dk.ibOn : ''}`}><Icon size={20} /></button>
+                    })}
+                  </div>
+                </div>
+              ))}
+              {filteredGroups.length === 0 && <div className={dk.help}>{t('settingsCategories.noIconResults', { search: iconSearch })}</div>}
+            </div>
+
+            <label className={dk.lbl}>{t('settingsCategories.colorLabel')}</label>
+            <div className={dk.colors}>
+              {CATEGORY_PALETTE.map((color, i) => {
+                const on = formColor === color
+                return (
+                  <button key={color} type="button" aria-label={t('buttons.colorN', { n: i + 1 })} aria-pressed={on} onClick={() => setFormColor(color)}
+                    className={`${dk.sw} ${on ? dk.swOn : ''}`} style={{ background: color }}>
+                    {on && <Check size={16} color="var(--on-color)" strokeWidth={3} />}
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+
+          <div className={dk.side}>
+            <div className={dk.preview} style={{ '--tint': tint }}>
+              <span className={dk.pi}>{PreviewIcon ? <PreviewIcon size={40} /> : <span className={dk.dot} />}</span>
+              <b>{previewName}</b>
+              <span>{t('settingsCategories.desk.previewHint')}</span>
+            </div>
+            <button type="button" className={`${deskStyles.btn} ${dk.full}`} onClick={handleSave} disabled={saving}>{saving ? t('settingsCategories.saving') : t('buttons.save')}</button>
+            <button type="button" className={`${deskStyles.btn} ${deskStyles.btnSoft} ${dk.full}`} onClick={onClose}>{t('buttons.cancel')}</button>
+            {editingCat?.isCustom && (confirmingDelete ? (
+              <div ref={confirmRef} className={deskStyles.fill}>
+                <div className={dk.confirm}>
+                  {deleteCount === null
+                    ? t('settingsCategories.deleteChecking')
+                    : deleteCount === 0
+                      ? t('settingsCategories.deleteConfirmNone', { name: editingCat.name })
+                      : t('settingsCategories.deleteConfirmCount', { name: editingCat.name, count: deleteCount })}
+                </div>
+                <div className={dk.confirmBtns}>
+                  <button type="button" className={`${deskStyles.btn} ${deskStyles.btnSoft}`} onClick={() => setConfirmingDelete(false)}>{t('buttons.cancel')}</button>
+                  <button type="button" className={`${deskStyles.btn} ${dk.danger}`} onClick={handleDelete} disabled={deleting || deleteCount === null}>{deleting ? t('settingsCategories.deleting') : t('buttons.delete')}</button>
+                </div>
+              </div>
+            ) : (
+              <button type="button" className={`${dk.delete} ${dk.full}`} onClick={askDelete}><Trash2 size={16} />{t('settingsCategories.deleteCategory')}</button>
+            ))}
+          </div>
+        </div>
+      </DeskPage>
+    )
+  }
 
   return (
     <div onClick={e => e.target === e.currentTarget && onClose()} className={styles.overlay} style={zIndex ? { zIndex } : undefined} data-presence="overlay" data-closing={closing ? '' : undefined}>

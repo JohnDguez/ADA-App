@@ -387,3 +387,6 @@
     padding: 18px;
   }
 }
+
+/* Popover de edición en escritorio (v0.9.839). */
+.deskEditBody { display: flex; flex-direction: column; gap: 12px; padding: 4px 4px 8px; }

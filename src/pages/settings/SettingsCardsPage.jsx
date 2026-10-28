@@ -322,7 +322,6 @@ export function SettingsCardsPage({ profile, paymentMethods, personalPayments = 
           />
         </div>
 
-        <CardFormModal open={formOpen} initial={editing} onSave={handleSave} onClose={() => setFormOpen(false)} />
         <ConfirmDeleteModal
           open={!!deleting}
           title={t('cards.deleteTitle')}
@@ -332,6 +331,10 @@ export function SettingsCardsPage({ profile, paymentMethods, personalPayments = 
         />
       </>
     )
+  }
+
+  if (desk && formOpen) {
+    return <CardFormModal inline open initial={editing} onSave={handleSave} onClose={() => setFormOpen(false)} />
   }
 
   if (desk) {
