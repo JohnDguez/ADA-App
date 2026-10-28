@@ -2520,5 +2520,11 @@
     "systemSub": "Usa el idioma de tu dispositivo",
     "esSub": "Interfaz en español",
     "enSub": "Interfaz en inglés"
+  },
+  "notifOffNotice": {
+    "title": "Notificaciones desactivadas",
+    "text": "No te llegarán avisos de los cambios de este espacio. Actívalas para enterarte al momento.",
+    "blocked": "El navegador las tiene bloqueadas, así que no llegarán avisos de este espacio. Mira cómo habilitarlas.",
+    "action": "Activar"
   }
 }

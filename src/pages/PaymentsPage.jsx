@@ -868,7 +868,7 @@ export function PaymentsPage({ payments, dataLoading = false, periodIncome, paym
   // la tarjeta de balance (en esqueleto) en vez de anunciar "sin ingreso".
   // Balance del periodo: esqueleto hasta tener pagos Y extras (v0.9.484).
   const balanceLoading = dataLoading || !incomesLoaded
-  const showBalance = (profile?.salary_enabled && profile?.salary_amount > 0) || periodIncomes.length > 0 || !incomesLoaded
+  const showBalance = !activeSpaceId && ((profile?.salary_enabled && profile?.salary_amount > 0) || periodIncomes.length > 0 || !incomesLoaded)
   const noIncomeYet = incomesLoaded && !activeSpaceId && !(profile?.salary_enabled && profile?.salary_amount > 0) && periodIncomes.length === 0
 
   // Datos ya calculados que pinta la versión de escritorio (DeskPayments.jsx, v0.9.825).

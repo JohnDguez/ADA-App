@@ -8,6 +8,7 @@ import { PageHero } from '../../components/PageHero'
 import { Collapse } from '../../components/Collapse'
 import { Card, Row, Toggle } from '../../components/SettingsShared'
 import { CobroPeriodFields } from '../../components/CobroPeriodFields'
+import { NotifOffNotice } from '../../components/NotifOffNotice'
 import { CurrencySelect } from '../../components/CurrencySelect'
 import { CurrencySheet } from '../../components/CurrencySheet'
 import { BottomSheet } from '../../components/BottomSheet'
@@ -61,7 +62,7 @@ function PermTile({ Icon, label, sub, on, onToggle }) {
 //   (solo Premium, máximo 1 propio) y/o unirse con código.
 // - Si ya pertenece a alguno: panel de administración (si es dueño) y/o
 //   lista de espacios donde es invitado (con opción de salirse).
-export function SettingsSharedSpacePage({ profile, user, sharedSpaces, onBack, onOpenPremium, slideClass }) {
+export function SettingsSharedSpacePage({ profile, user, sharedSpaces, onBack, onOpenPremium, onGoNotifications, slideClass }) {
   const { t } = useTranslation()
   const desk = useDeskSettings()
   const { spaces, createSpace, regenerateCode, redeemCode, updateMemberPermissions, updateSpaceConfig, leaveSpace, removeMember, deleteSpace, clearSpaceData } = sharedSpaces
@@ -182,7 +183,7 @@ export function SettingsSharedSpacePage({ profile, user, sharedSpaces, onBack, o
 
         {ownedEntry && (
           <OwnedSpacePanel
-            entry={ownedEntry} user={user}
+            entry={ownedEntry} user={user} onGoNotifications={onGoNotifications}
             regenerateCode={regenerateCode} updateMemberPermissions={updateMemberPermissions}
             updateSpaceConfig={updateSpaceConfig} removeMember={removeMember}
             deleteSpace={deleteSpace} clearSpaceData={clearSpaceData}
@@ -210,6 +211,7 @@ export function SettingsSharedSpacePage({ profile, user, sharedSpaces, onBack, o
                       <div><b>{t('settingsSharedSpacePage.notifyMeLabel')}</b><span>{t('settingsSharedSpacePage.notifyMeSubGuest')}</span></div>
                       <Toggle on={entry.membership.notify_on_changes} />
                     </div>
+                    <NotifOffNotice userId={user?.id} show={entry.membership.notify_on_changes} onGo={onGoNotifications} />
                   </div>
                 )
               })}
@@ -251,6 +253,7 @@ export function SettingsSharedSpacePage({ profile, user, sharedSpaces, onBack, o
         <OwnedSpacePanel
           entry={ownedEntry}
           user={user}
+          onGoNotifications={onGoNotifications}
           regenerateCode={regenerateCode}
           updateMemberPermissions={updateMemberPermissions}
           updateSpaceConfig={updateSpaceConfig}
@@ -270,6 +273,8 @@ export function SettingsSharedSpacePage({ profile, user, sharedSpaces, onBack, o
             <GuestSpaceRow
               key={entry.membership.id}
               entry={entry}
+              userId={user?.id}
+              onGoNotifications={onGoNotifications}
               onLeave={() => leaveSpace(entry.membership.id)}
               onToggleNotify={() => updateMemberPermissions(entry.membership.id, { notify_on_changes: !entry.membership.notify_on_changes })}
             />
@@ -360,7 +365,7 @@ export function SettingsSharedSpacePage({ profile, user, sharedSpaces, onBack, o
 }
 
 // ── Fila plegable de un espacio donde te invitaron ──────────────────────────
-function GuestSpaceRow({ entry, onLeave, onToggleNotify }) {
+function GuestSpaceRow({ entry, userId, onGoNotifications, onLeave, onToggleNotify }) {
   const { t } = useTranslation()
   const [expanded, setExpanded] = useState(false)
 
@@ -389,6 +394,7 @@ function GuestSpaceRow({ entry, onLeave, onToggleNotify }) {
             </div>
             <Toggle on={entry.membership.notify_on_changes} />
           </div>
+          <NotifOffNotice userId={userId} show={entry.membership.notify_on_changes} onGo={onGoNotifications} />
           <button onClick={onLeave} className={styles.smallDangerButton}>
             <LogOut size={12} /> {t('settingsSharedSpacePage.leave')}
           </button>
@@ -404,7 +410,7 @@ const PERM_KEYS = [
 ]
 
 // ── Panel de administración del espacio propio ──────────────────────────────
-function OwnedSpacePanel({ entry, user, regenerateCode, updateMemberPermissions, updateSpaceConfig, removeMember, deleteSpace, clearSpaceData }) {
+function OwnedSpacePanel({ entry, user, onGoNotifications, regenerateCode, updateMemberPermissions, updateSpaceConfig, removeMember, deleteSpace, clearSpaceData }) {
   const { t } = useTranslation()
   const desk = useDeskSettings()
   const [expanded,      setExpanded]      = useState(false)
@@ -649,6 +655,7 @@ function OwnedSpacePanel({ entry, user, regenerateCode, updateMemberPermissions,
                 <div><b>{t('settingsSharedSpacePage.notifyMeLabel')}</b><span>{t('settingsSharedSpacePage.notifyMeSubOwner')}</span></div>
                 <Toggle on={entry.membership.notify_on_changes} />
               </div>
+              <NotifOffNotice userId={user?.id} show={entry.membership.notify_on_changes} onGo={onGoNotifications} />
             </div>
 
             <div className={deskStyles.fill}>
@@ -770,6 +777,7 @@ function OwnedSpacePanel({ entry, user, regenerateCode, updateMemberPermissions,
                   </div>
                   <Toggle on={entry.membership.notify_on_changes} />
                 </div>
+                <NotifOffNotice userId={user?.id} show={entry.membership.notify_on_changes} onGo={onGoNotifications} />
               </div>
             </div>
 

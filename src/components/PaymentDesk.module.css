@@ -1,6 +1,6 @@
 /* Nuevo pago en escritorio (v0.9.841), mockup aprobado. Solo tokens. */
 .overlay { position: fixed; inset: 0; z-index: 200; display: grid; place-items: center; padding: 24px; background: var(--scrim); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
-.dialog { position: relative; width: 1080px; max-width: 100%; max-height: calc(100vh - 48px); overflow-y: auto; display: flex; flex-direction: column; gap: 18px; padding: 30px 34px; border-radius: 32px; background: var(--desk-panel); color: var(--text); box-shadow: var(--desk-pop-shadow); }
+.dialog { --field-desk-bg: var(--desk-chip); position: relative; width: 1080px; max-width: 100%; max-height: calc(100vh - 48px); overflow-y: auto; display: flex; flex-direction: column; gap: 18px; padding: 30px 34px; border-radius: 32px; background: var(--desk-panel); color: var(--text); box-shadow: var(--desk-pop-shadow); }
 .head { display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; }
 .title { margin: 0; font-size: 26px; letter-spacing: -0.6px; }
 .sub { margin-top: 4px; font-size: 13.5px; color: var(--muted); }

@@ -138,9 +138,9 @@ export function DeskPayments({ d }) {
             <NewSharedSpacePanel profile={profile} sharedSpaces={sharedSpaces} onOpenPremium={onOpenPremium} onCreated={onSpaceReady} onJoined={onSpaceReady} />
           ) : (
             <>
-              <section className={home.tiles}>
-                {/* Disponible este periodo */}
-                <div data-coachmark="gastos-disponible-card" className={`${home.tile} ${home.tileHero} ${!balance.loading && !balance.noIncomeYet && balance.sobrePasado ? styles.heroNeg : ''}`}>
+              <section className={`${home.tiles} ${activeSpaceId ? home.tiles3 : ''}`}>
+                {/* Disponible este periodo — no aplica en un Espacio Compartido (no tiene ingreso fijo) */}
+                {!activeSpaceId && <div data-coachmark="gastos-disponible-card" className={`${home.tile} ${home.tileHero} ${!balance.loading && !balance.noIncomeYet && balance.sobrePasado ? styles.heroNeg : ''}`}>
                   <span className={home.tileLabel}>{t('paymentsPage.availableThisPeriod')}</span>
                   {balance.noIncomeYet ? (
                     <>
@@ -154,13 +154,13 @@ export function DeskPayments({ d }) {
                       <span className={home.tileSub}>{balance.loading ? '' : t('deskPayments.usedPct', { pct: Math.round(balance.gastoPct) })}</span>
                     </>
                   )}
-                </div>
+                </div>}
 
                 {/* Gastado */}
                 <div className={home.tile}>
                   <span className={home.tileLabel}>{t('paymentsPage.spent')}</span>
                   <span className={home.tileNum}>{balance.loading ? <Bone w={150} h={36} r={8} /> : <>{spentInt}<small>{spentCents}</small></>}</span>
-                  <span className={home.tileSub}>{balance.loading ? '' : t('deskPayments.ofIncome', { amount: fmt(balance.ingresoTotal) })}</span>
+                  <span className={home.tileSub}>{balance.loading || activeSpaceId ? '' : t('deskPayments.ofIncome', { amount: fmt(balance.ingresoTotal) })}</span>
                 </div>
 
                 {/* Ingresos extra (personal) o Fondo compartido (espacio) */}

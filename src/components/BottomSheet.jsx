@@ -35,7 +35,8 @@ const EXIT_MS = 200
 
 // `header`: contenido opcional que se queda FIJO bajo el título (ej. la barra de
 // búsqueda de Select) — solo `children` hace scroll (v0.9.726).
-export function BottomSheet({ open, title, onClose, header, children, modal = false }) {
+// `wide`: cuadrículas (categorías) — el popover de escritorio mide 420px en vez de 380.
+export function BottomSheet({ open, title, onClose, header, children, modal = false, wide = false }) {
   const [mounted, setMounted] = useState(open)
   const panelRef = useRef(null)
   const desk = useIsDesktop()
@@ -59,7 +60,7 @@ export function BottomSheet({ open, title, onClose, header, children, modal = fa
       const a = anchorRef.current
       if (!a || !document.contains(a)) return
       const r = a.getBoundingClientRect()
-      const w = Math.min(Math.max(r.width, 300), POP_MAX_W)
+      const w = Math.min(Math.max(r.width, wide ? 420 : 300), wide ? 420 : POP_MAX_W)
       const left = Math.max(12, Math.min(r.left, window.innerWidth - w - 12))
       const below = window.innerHeight - r.bottom - 20
       const above = r.top - 20

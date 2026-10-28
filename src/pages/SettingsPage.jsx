@@ -257,7 +257,7 @@ export function SettingsPage({ profile, user, onUpdate, onUploadAvatar, onDataDe
     if (s === 'cobro') return <SettingsCobroPage profile={profile} onUpdate={onUpdate} onBack={desk ? noop : back} slideClass={desk ? '' : slideClass} />
     if (s === 'notifications') return <SettingsNotificationsPage profile={profile} user={user} onUpdate={onUpdate} onBack={desk ? noop : back} slideClass={desk ? '' : slideClass} />
     if (s === 'appearance') return <SettingsAppearancePage theme={theme} onThemeChange={onThemeChange} onBack={desk ? noop : back} slideClass={desk ? '' : slideClass} />
-    if (s === 'sharedspace') return <SettingsSharedSpacePage profile={profile} user={user} sharedSpaces={sharedSpaces} onBack={desk ? noop : back} slideClass={desk ? '' : slideClass} onOpenPremium={onOpenPremium} />
+    if (s === 'sharedspace') return <SettingsSharedSpacePage profile={profile} user={user} sharedSpaces={sharedSpaces} onBack={desk ? noop : back} slideClass={desk ? '' : slideClass} onOpenPremium={onOpenPremium} onGoNotifications={() => openSection('notifications')} />
     if (s === 'subscription') return <SettingsSubscriptionPage profile={profile} onOpenPremium={onOpenPremium} onBack={desk ? noop : back} slideClass={desk ? '' : slideClass} />
     if (s === 'cards') return <SettingsCardsPage profile={profile} paymentMethods={paymentMethods} personalPayments={personalPayments} sharedSpaces={sharedSpaces} onPayCardNow={onPayCardNow} onSettlePlan={onSettlePlan} onBack={desk ? noop : back} slideClass={desk ? '' : slideClass} />
     if (s === 'export') return <SettingsExportPage profile={profile} sharedSpaces={sharedSpaces} onOpenPremium={onOpenPremium} onBack={desk ? noop : back} slideClass={desk ? '' : slideClass} />

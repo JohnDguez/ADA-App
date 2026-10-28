@@ -76,6 +76,7 @@
 
 /* ── Tarjetas de totales ──────────────────────────────────────────────── */
 .tiles { position: relative; z-index: 1; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; margin-bottom: 14px; }
+.tiles3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .tile {
   position: relative;
   display: flex;

@@ -176,6 +176,7 @@ export function Select({ value, onChange, options, placeholder, renderIcon, sear
       {sheet && (
         <BottomSheet
           open={open}
+          wide={sheetLayout === 'grid'}
           title={sheetTitle}
           onClose={closePanel}
           header={showSearch ? (

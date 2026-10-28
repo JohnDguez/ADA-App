@@ -1110,8 +1110,11 @@ html[data-desk-sidebar] { --radius: 20px; --radius-sm: 14px; }
 html[data-desk-sidebar] .btn-primary { border-radius: var(--radius-full); padding: 13px 22px; }
 html[data-desk-sidebar] .btn-ghost,
 html[data-desk-sidebar] .btn-danger { border-radius: var(--radius-full); padding: 12px 22px; }
+/* --field-desk-bg: los diálogos (sobre --desk-panel) lo ponen en --desk-chip;
+   fuera de ellos el campo va en --desk-card para distinguirse de los bloques
+   --desk-chip de Ajustes (en v0.9.845 se veían sin fondo). */
 html[data-desk-sidebar] .field-input {
-  background: var(--desk-chip);
+  background: var(--field-desk-bg, var(--desk-card));
   border: 0;
   border-radius: 16px;
   padding-top: 13px;

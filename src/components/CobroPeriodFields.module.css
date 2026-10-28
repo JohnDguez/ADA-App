@@ -142,7 +142,7 @@
 @media (min-width: 1100px) {
   .pillRow, .weekdayRow, .presetsRow { gap: 8px; }
   .dayGrid { gap: 8px; }
-  .pill, .weekdayButton, .presetButton, .dayButton { border-radius: 16px; background: var(--desk-chip); }
+  .pill, .weekdayButton, .presetButton, .dayButton { border-radius: 16px; background: var(--field-desk-bg, var(--desk-card)); }
   .pill { padding: 13px 0; }
   .weekdayButton { width: 46px; height: 46px; }
   .presetButton { padding: 11px 16px; }
