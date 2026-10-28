@@ -354,13 +354,26 @@ function PayCardFull({ payment: p, cfg, paymentMethodsList = [], onChangeMethod,
   }
 
   useEffect(() => {
-    function handle(e) {
-      if (menuRef.current && menuRef.current.contains(e.target)) return
-      if (menuPortalRef.current && menuPortalRef.current.contains(e.target)) return
-      setMenuOpen(false)
+    if (!menuOpen) return undefined
+    function inside(e) {
+      return (menuRef.current && menuRef.current.contains(e.target)) || (menuPortalRef.current && menuPortalRef.current.contains(e.target))
     }
-    if (menuOpen) document.addEventListener('mousedown', handle)
-    return () => document.removeEventListener('mousedown', handle)
+    function handle(e) { if (!inside(e)) setMenuOpen(false) }
+    function onKey(e) { if (e.key === 'Escape') setMenuOpen(false) }
+    function onScroll(e) { if (!(menuPortalRef.current && menuPortalRef.current.contains(e.target))) setMenuOpen(false) }
+    // En captura (v0.9.878): un `stopPropagation` de cualquier contenedor ya no
+    // impide cerrar el menú. También cierra con Esc, clic derecho fuera y scroll
+    // (el menú es `position: fixed` y se quedaría flotando).
+    document.addEventListener('mousedown', handle, true)
+    document.addEventListener('contextmenu', handle, true)
+    document.addEventListener('keydown', onKey)
+    document.addEventListener('scroll', onScroll, true)
+    return () => {
+      document.removeEventListener('mousedown', handle, true)
+      document.removeEventListener('contextmenu', handle, true)
+      document.removeEventListener('keydown', onKey)
+      document.removeEventListener('scroll', onScroll, true)
+    }
   }, [menuOpen])
 
   // Mini-menú del check en un pago PENDIENTE de un Espacio Compartido —
