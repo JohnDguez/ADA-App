@@ -6,6 +6,8 @@ import { PaymentMethodField } from './PaymentMethodField'
 import { fmt } from '../lib/utils'
 import styles from './PayCardNowModal.module.css'
 import { useScrollLock } from '../lib/scrollLock'
+import { AnchoredPop, useAnchor } from './AnchoredPop'
+import { useIsDesktop } from '../hooks/useIsDesktop'
 
 // "Pagar ahora" (v0.9.497, mockups confirmados con Johnatan) — adelantar
 // el pago de una tarjeta de crédito ANTES de que llegue su corte, en vez
@@ -21,6 +23,12 @@ const ANIM_MS = 320
 export function PayCardNowModal({ open, card, cycleSpend, methods, onSave, onClose, title = null, subtitle = null, fixedAmount = false }) {
   useScrollLock(open)
   const { t } = useTranslation()
+  // Escritorio (≥1100px, v0.9.879): popover anclado al botón que lo abrió; sin
+  // ancla (apertura por código) o en móvil/tablet sigue siendo el modal de siempre.
+  const desk = useIsDesktop()
+  const anchorRef = useAnchor(open)
+  const lastCard = useRef(card)
+  if (card) lastCard.current = card
   const [amount, setAmount] = useState('')
   const [methodId, setMethodId] = useState(null)
   const [error, setError] = useState('')
@@ -55,7 +63,7 @@ export function PayCardNowModal({ open, card, cycleSpend, methods, onSave, onClo
   }, [open, cycleSpend])
 
   const showModal = open || closing || wasOpenRef.current
-  if (!showModal || !card) return null
+  if (desk && anchorRef.current) { if (!lastCard.current) return null } else if (!showModal || !card) return null
 
   // Nunca otra tarjeta de crédito — solo Efectivo o Débito (ver nota arriba).
   const debitOnly = methods.filter(m => m.kind !== 'credit')
@@ -70,11 +78,10 @@ export function PayCardNowModal({ open, card, cycleSpend, methods, onSave, onClo
     onSave({ amount: Math.round(parsed * 100) / 100, methodId })
   }
 
-  return createPortal(
-    <div onClick={e => e.target === e.currentTarget && onClose()} className={`${styles.overlay} ${closing ? styles.overlayClosing : ''}`}>
-      <div className={`${styles.modal} ${entering ? styles.modalEntering : ''} ${closing ? styles.modalClosing : ''}`}>
-        <div className={styles.handle} />
-        <div className={styles.title}>{title || t('cards.payNow.title', { name: card.alias || t(`cards.kind.${card.kind}`) })}</div>
+  const c = card || lastCard.current
+  const form = (
+    <>
+        <div className={styles.title}>{title || t('cards.payNow.title', { name: c.alias || t(`cards.kind.${c.kind}`) })}</div>
         <div className={styles.subtitle}>
           {subtitle || (cycleSpend > 0
             ? t('cards.payNow.subtitle', { amount: fmt(cycleSpend) })
@@ -106,6 +113,18 @@ export function PayCardNowModal({ open, card, cycleSpend, methods, onSave, onClo
 
         <button type="button" onClick={handleSave} className="btn-primary">{t('cards.payNow.confirm')}</button>
         <button type="button" onClick={onClose} className={`btn-ghost ${styles.cancel}`}>{t('buttons.cancel')}</button>
+    </>
+  )
+
+  if (desk && anchorRef.current) {
+    return <AnchoredPop open={!!open} onClose={onClose} anchorRef={anchorRef} width={380} label={t('cards.payNow.button')}>{form}</AnchoredPop>
+  }
+
+  return createPortal(
+    <div onClick={e => e.target === e.currentTarget && onClose()} className={`${styles.overlay} ${closing ? styles.overlayClosing : ''}`}>
+      <div className={`${styles.modal} ${entering ? styles.modalEntering : ''} ${closing ? styles.modalClosing : ''}`}>
+        <div className={styles.handle} />
+        {form}
       </div>
     </div>,
     document.body

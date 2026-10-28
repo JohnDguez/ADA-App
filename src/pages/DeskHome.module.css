@@ -132,8 +132,8 @@
   height: 36px;
   padding: 0 16px;
   border-radius: 99px;
-  background: none;
-  border: 1.5px solid var(--desk-hair);
+  background: var(--desk-chip);
+  border: 1.5px solid transparent;
   color: var(--muted);
   font-size: 14px;
   font-weight: 600;

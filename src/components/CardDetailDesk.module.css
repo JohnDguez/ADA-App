@@ -32,8 +32,8 @@
 .tlLabels b { display: block; font-size: 14px; color: var(--text); }
 .tlMid { position: absolute; left: var(--at); transform: translateX(-50%); text-align: center; }
 .tlEnd { text-align: right; }
-.filters { display: flex; align-items: center; gap: 12px; margin-top: 18px; }
-.seg { display: flex; padding: 4px; border-radius: 99px; background: var(--desk-card); }
+.filters { --field-desk-bg: var(--desk-chip); display: flex; align-items: center; gap: 12px; margin-top: 18px; }
+.seg { display: flex; padding: 4px; border-radius: 99px; background: var(--desk-chip); }
 .seg button { border: 0; padding: 9px 18px; border-radius: 99px; background: none; color: var(--text); font-family: inherit; font-size: 14px; font-weight: 600; }
 .seg .segOn { background: var(--accent); color: var(--desk-ink-text); }
 .sel { min-width: 160px; }
