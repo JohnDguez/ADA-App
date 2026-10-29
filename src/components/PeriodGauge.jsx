@@ -46,6 +46,13 @@ function seg(a, b) {
   return { strokeDasharray: `${Math.max(0, to - from)} 200`, strokeDashoffset: -from }
 }
 
+// Azul con punta redonda: el trazo se acorta el radio de la punta (E) para que
+// la punta —no el borde recto— caiga justo en el porcentaje.
+function segCap(p) {
+  if (p >= 100) return seg(0, 100)
+  return { strokeDasharray: `${Math.max(0, at(p) - E)} 200`, strokeDashoffset: 0 }
+}
+
 export function PeriodGauge({ paidPct, overduePct = 0, empty = false, label, centerLabel, center, large = false }) {
   const uid = useId().replace(/:/g, '')
   const paidT = Math.max(0, Math.min(100, paidPct))
@@ -67,8 +74,10 @@ export function PeriodGauge({ paidPct, overduePct = 0, empty = false, label, cen
         <path d={TRACK} className={styles.track} />
         <g mask={`url(#m${uid})`}>
           <path d={ARC} pathLength="100" className={styles.pending} stroke={`url(#h${uid})`} {...pending} />
-          {!empty && paidT > 0 && <path d={ARC} pathLength="100" className={styles.paid} style={{ opacity: paid > 0.05 ? 1 : 0 }} {...seg(0, paid)} />}
-          {!empty && overT > 0 && <path d={ARC} pathLength="100" className={styles.over} {...seg(paid, paid + over)} />}
+          {/* El rojo arranca desde el inicio y queda DETRÁS del azul: así la punta
+              redondeada del azul se ve sobre el rojo. */}
+          {!empty && overT > 0 && <path d={ARC} pathLength="100" className={styles.over} {...seg(0, paid + over)} />}
+          {!empty && paidT > 0 && <path d={ARC} pathLength="100" className={styles.paid} style={{ opacity: paid > 0.05 ? 1 : 0 }} {...segCap(paid)} />}
         </g>
       </svg>
       <div className={styles.center}>
