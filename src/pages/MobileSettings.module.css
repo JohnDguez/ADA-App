@@ -1,5 +1,5 @@
 /* Ajustes móvil (<768px, v0.9.913). Regla 54: rem/clamp; px solo en líneas finas. */
-.root { padding-bottom: calc(10rem + env(safe-area-inset-bottom)); }
+.root { padding-bottom: calc(6.5rem + env(safe-area-inset-bottom)); }
 .body { padding: 0 clamp(0.75rem, 4.2vw, 1.25rem); display: flex; flex-direction: column; gap: 0.75rem; }
 .group { animation: setIn 0.42s cubic-bezier(0.22, 1, 0.36, 1) both; animation-delay: calc(var(--i) * 50ms); }
 @keyframes setIn { from { opacity: 0; transform: translateY(0.5rem); } to { opacity: 1; transform: none; } }

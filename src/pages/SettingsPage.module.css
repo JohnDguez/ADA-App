@@ -307,6 +307,7 @@
 .logoutCard { --tone: var(--danger); background: var(--surface); }
 .logoutCard .optionLabel { color: var(--danger); }
 
+.pageRootMobile { padding-bottom: 0; min-height: 0; }
 .pageRootDesk { margin-top: 0; padding: 0; min-height: 0; background: none; }
 
 /* ── Diálogo de foto de perfil (escritorio) ── */
