@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Crown, Check, ChevronRight, RefreshCw, Clock } from 'lucide-react'
+import { Crown, Check, ChevronRight, ChevronLeft, RefreshCw, Clock, ArrowLeftRight, X, Sparkles, Play, ExternalLink } from 'lucide-react'
 // Ícono del encabezado vía Phosphor Icons (mismo patrón que las demás
 // sub-páginas ya migradas, v0.9.442-455) — import directo para tree-shaking real.
 import { Crown as CrownDuotone } from '@phosphor-icons/react/dist/csr/Crown'
@@ -17,6 +17,8 @@ import { useDeskSettings } from '../../components/DeskSettingsContext'
 import { DeskSettingsHead, DeskPage } from '../../components/DeskSettingsHead'
 import deskStyles from '../../components/SettingsDesk.module.css'
 import dk from './SettingsSubscriptionDesk.module.css'
+import mb from './SettingsSubscriptionMobile.module.css'
+import { useIsMobile } from '../../hooks/useIsMobile'
 
 // Sub-página "Mi suscripción" dentro de Ajustes — solo alcanzable si
 // profile.is_premium (ver SettingsPage.jsx). A diferencia de otras
@@ -50,6 +52,7 @@ const ANNUAL_SAVING = 12 * 50 - 500
 export function SettingsSubscriptionPage({ profile, onOpenPremium, onBack, slideClass }) {
   const { t, i18n } = useTranslation()
   const desk = useDeskSettings()
+  const isMobile = useIsMobile()
 
   const premiumSource = getPremiumSource(profile)
 
@@ -225,6 +228,128 @@ export function SettingsSubscriptionPage({ profile, onOpenPremium, onBack, slide
         )}
         {confirmModal_}
       </DeskPage>
+    )
+  }
+
+  // Móvil (<768px, v0.9.915, mockup aprobado): botón de regreso redondo +
+  // título, tarjeta del plan y filas verticales (ícono · título/descripción ·
+  // chip debajo · chevron). La lógica de Stripe/Play/admin es la misma.
+  if (isMobile && !desk) {
+    const loadingBlock = premiumSource === 'stripe' && subscription === undefined
+    const emptyBlock = premiumSource === 'none' || (premiumSource === 'stripe' && subscription === null)
+    const endDate = subscription ? formatRenewDate(subscription.currentPeriodEnd) : ''
+    return (
+      <div className={`${slideClass} ${mb.root}`}>
+        <div className={mb.top}>
+          <button type="button" className={mb.back} onClick={onBack} aria-label={t('buttons.back')}><ChevronLeft size={20} /></button>
+          <h1 className={mb.title}>{t('settingsSubscription.title')}</h1>
+        </div>
+
+        {premiumSource === 'google_play' && (
+          <div className={mb.card} style={{ '--i': 0 }}>
+            <div className={mb.row}>
+              <i className={mb.ic}><Play size={15} /></i>
+              <span className={mb.stack}><b>{t('settingsSubscription.mobile.playTitle')}</b><em>{t('settingsSubscription.mobile.playSub')}</em></span>
+            </div>
+            <a href={playStoreUrl} target="_blank" rel="noopener noreferrer" className={`${mb.row} ${mb.btn}`}>
+              <i className={mb.ic}><ExternalLink size={15} /></i>
+              <span className={mb.stack}><b>{t('settingsSubscription.openPlayStore')}</b></span>
+              <ChevronRight size={16} className={mb.chev} />
+            </a>
+          </div>
+        )}
+
+        {premiumSource === 'admin' && (
+          <>
+            <div className={mb.card} style={{ '--i': 0 }}>
+              <div className={mb.row}>
+                <i className={`${mb.ic} ${mb.gold}`}><Crown size={15} fill="currentColor" /></i>
+                <span className={mb.stack}><b>{t('settingsSubscription.mobile.adminTitle')}</b><em>{t('settingsSubscription.mobile.adminSub')}</em></span>
+              </div>
+              <div className={mb.note}>{t('settingsSubscription.adminGranted')}</div>
+            </div>
+            {onOpenPremium && (
+              <div className={mb.card} style={{ '--i': 1 }}>
+                <button type="button" className={`${mb.row} ${mb.btn}`} onClick={onOpenPremium}>
+                  <i className={mb.ic}><Sparkles size={15} /></i>
+                  <span className={mb.stack}><b>{t('settingsSubscription.viewPlans')}</b></span>
+                  <ChevronRight size={16} className={mb.chev} />
+                </button>
+              </div>
+            )}
+          </>
+        )}
+
+        {emptyBlock && <div className={mb.card}><div className={mb.note}>{t('settingsSubscription.noSubscription')}</div></div>}
+
+        {loadingBlock && (
+          <div className={mb.card} aria-busy="true" aria-label={t('settingsSubscription.loading')}>
+            <div className={mb.plan}>
+              <div className={`skeleton-bone ${styles.skelBadge}`} />
+              <div className={`skeleton-bone ${styles.skelAmount}`} />
+              <div className={`skeleton-bone ${styles.skelLine}`} />
+            </div>
+          </div>
+        )}
+
+        {subscription && (
+          <>
+            <div className={mb.card} style={{ '--i': 0 }}>
+              <div className={mb.plan}>
+                <span className={mb.badge}><Crown size={11} fill="currentColor" />{t(`premiumPage.${subscription.plan}`)}</span>
+                <div className={mb.amount}>{fmt(subscription.amount)} <small>{t(`premiumPage.${subscription.plan}PriceSuffix`)}</small></div>
+                <div className={mb.renew}>
+                  {subscription.cancelAtPeriodEnd ? <Clock size={14} /> : <RefreshCw size={14} />}
+                  <span>{subscription.cancelAtPeriodEnd ? t('settingsSubscription.willCancelOn', { date: endDate }) : t('settingsSubscription.renewsOn', { date: endDate })}</span>
+                </div>
+                <hr className={mb.hr} />
+                <ul className={mb.benefits}>
+                  {BENEFIT_KEYS.map(k => <li key={k}><Check size={15} strokeWidth={2.5} /><span>{t(`premiumPage.benefits.${k}`)}</span></li>)}
+                </ul>
+              </div>
+            </div>
+
+            {subscription.cancelAtPeriodEnd ? (
+              <div className={mb.card} style={{ '--i': 1 }}>
+                <button type="button" className={`${mb.row} ${mb.btn}`} onClick={() => runAction('reactivate')} disabled={actionLoading}>
+                  <i className={`${mb.ic} ${mb.gold}`}><RefreshCw size={15} /></i>
+                  <span className={mb.stack}>
+                    <b>{actionLoading ? t('settingsSubscription.processing') : t('settingsSubscription.reactivateButton')}</b>
+                    <em>{t('settingsSubscription.mobile.reactivateSub')}</em>
+                  </span>
+                  <ChevronRight size={16} className={mb.chev} />
+                </button>
+              </div>
+            ) : (
+              <>
+                <div className={mb.cap} style={{ '--i': 1 }}>{t('settingsSubscription.mobile.plan')}</div>
+                <div className={mb.card} style={{ '--i': 2 }}>
+                  <button type="button" className={`${mb.row} ${mb.btn}`} onClick={() => setConfirmModal('switch')}>
+                    <i className={mb.ic}><ArrowLeftRight size={15} /></i>
+                    <span className={mb.stack}>
+                      <b>{t('settingsSubscription.switchTo', { plan: t(`premiumPage.${otherPlan}`) })}</b>
+                      <em>{t('settingsSubscription.desk.changeNote')}</em>
+                      {otherPlan === 'annual' && <span className={mb.save}>{t('settingsSubscription.saveYear', { amount: fmt(ANNUAL_SAVING) })}</span>}
+                    </span>
+                    <ChevronRight size={16} className={mb.chev} />
+                  </button>
+                </div>
+                <div className={mb.card} style={{ '--i': 3 }}>
+                  <button type="button" className={`${mb.row} ${mb.btn} ${mb.danger}`} onClick={() => setConfirmModal('cancel')}>
+                    <i className={mb.ic}><X size={15} /></i>
+                    <span className={mb.stack}>
+                      <b>{t('settingsSubscription.cancelButton')}</b>
+                      <em>{t('settingsSubscription.desk.cancelNote', { date: endDate })}</em>
+                    </span>
+                    <ChevronRight size={16} className={mb.chev} />
+                  </button>
+                </div>
+              </>
+            )}
+          </>
+        )}
+        {confirmModal_}
+      </div>
     )
   }
 

@@ -136,6 +136,14 @@
       "changeNote": "El cambio aplica desde tu próxima renovación.",
       "cancelTitle": "Cancelar",
       "cancelNote": "Conservas Premium hasta el {{date}}. Después pasas al plan gratuito."
+    },
+    "mobile": {
+      "plan": "Plan",
+      "adminTitle": "Premium por administrador",
+      "adminSub": "Acceso concedido, sin cobros",
+      "playTitle": "Se gestiona en Google Play",
+      "playSub": "Tu suscripción no se puede editar desde aquí",
+      "reactivateSub": "Vuelve a renovarse automáticamente"
     }
   },
   "settingsAccount": {

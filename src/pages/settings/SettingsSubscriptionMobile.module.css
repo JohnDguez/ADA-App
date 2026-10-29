@@ -1,0 +1,35 @@
+/* "Mi suscripción" móvil (<768px, v0.9.915). Regla 54: rem/clamp; Regla 53: entrada escalonada. */
+.root { padding: calc(var(--sat, 0px) + 0.75rem) clamp(0.75rem, 4.2vw, 1.25rem) calc(10rem + env(safe-area-inset-bottom)); background: var(--bg); min-height: 100vh; }
+.top { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem; }
+.back { width: 2.5rem; height: 2.5rem; border-radius: 50%; border: 0; background: var(--desk-card); color: var(--text); display: grid; place-items: center; cursor: pointer; padding: 0; box-shadow: var(--desk-shadow); flex-shrink: 0; }
+.title { font-size: 1.25rem; font-weight: 600; margin: 0; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.card, .cap { animation: subIn 0.42s cubic-bezier(0.22, 1, 0.36, 1) both; animation-delay: calc(var(--i, 0) * 50ms); }
+@keyframes subIn { from { opacity: 0; transform: translateY(0.5rem); } to { opacity: 1; transform: none; } }
+.card { background: var(--desk-card); border-radius: clamp(1rem, 5vw, 1.25rem); box-shadow: var(--desk-shadow); overflow: hidden; margin-bottom: 0.75rem; }
+.cap { font-size: 0.6875rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); margin: 0.25rem 0.375rem 0.5rem; }
+.plan { padding: clamp(0.875rem, 4vw, 1.125rem); }
+.badge { display: inline-flex; align-items: center; gap: 0.3125rem; background: var(--premium-gold); color: var(--premium-gold-text); font-size: 0.6875rem; font-weight: 700; padding: 0.25rem 0.625rem; border-radius: 99px; }
+.amount { font-size: clamp(1.625rem, 8vw, 1.875rem); font-weight: 600; margin-top: 0.625rem; }
+.amount small { font-size: 0.8125rem; font-weight: 500; color: var(--muted); }
+.renew { display: flex; align-items: flex-start; gap: 0.375rem; font-size: 0.78125rem; color: var(--muted); margin-top: 0.25rem; line-height: 1.4; }
+.renew svg { flex-shrink: 0; margin-top: 0.1875rem; }
+.hr { border: 0; border-top: 1px solid var(--desk-hair); margin: 0.875rem 0 0.75rem; }
+.benefits { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.5625rem; }
+.benefits li { display: flex; align-items: center; gap: 0.625rem; font-size: 0.8125rem; min-width: 0; }
+.benefits svg { color: var(--premium-gold); flex-shrink: 0; }
+.row { display: flex; align-items: flex-start; gap: 0.75rem; width: 100%; padding: 0.8125rem clamp(0.75rem, 3.6vw, 1rem); color: var(--text); font: inherit; text-align: left; min-width: 0; text-decoration: none; }
+.row + .row { border-top: 1px solid var(--desk-hair); }
+.btn { border: 0; background: none; cursor: pointer; transition: background 0.2s ease; }
+.btn:active { background: var(--desk-chip); }
+.btn:disabled { opacity: 0.6; }
+.ic { width: 2.125rem; height: 2.125rem; border-radius: 50%; background: var(--desk-chip); display: grid; place-items: center; flex-shrink: 0; }
+.gold { background: var(--premium-gold); color: var(--premium-gold-text); }
+.stack { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: flex-start; gap: 0.125rem; }
+.stack b { font-size: 0.90625rem; font-weight: 600; }
+.stack em { font-style: normal; font-size: 0.75rem; color: var(--muted); line-height: 1.35; }
+.save { margin-top: 0.375rem; font-size: 0.6875rem; font-weight: 600; color: var(--paid); background: var(--paid-soft); padding: 0.1875rem 0.5rem; border-radius: 99px; }
+.chev { color: var(--muted); flex-shrink: 0; align-self: center; }
+.danger, .danger .stack b { color: var(--danger); }
+.danger .ic { color: var(--danger); }
+.note { padding: 0 clamp(0.75rem, 3.6vw, 1rem) 0.875rem; font-size: 0.75rem; color: var(--muted); line-height: 1.4; }
+@media (prefers-reduced-motion: reduce) { .card, .cap { animation: none; } }

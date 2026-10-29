@@ -136,6 +136,14 @@
       "changeNote": "The change applies from your next renewal.",
       "cancelTitle": "Cancel",
       "cancelNote": "You keep Premium until {{date}}. After that you move to the free plan."
+    },
+    "mobile": {
+      "plan": "Plan",
+      "adminTitle": "Premium via administrator",
+      "adminSub": "Access granted, no charges",
+      "playTitle": "Managed in Google Play",
+      "playSub": "Your subscription can't be edited from here",
+      "reactivateSub": "Renews automatically again"
     }
   },
   "settingsAccount": {

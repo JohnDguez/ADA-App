@@ -1987,6 +1987,7 @@ export default function App() {
         onChange={t => { setAddMenuOpen(false); changeTab(t) }}
         onAdd={openAddMenu}
         addOpen={addMenuOpen}
+        hideAdd={tab === 'settings'}
       />
       <AddMenu open={addMenuOpen} onClose={() => setAddMenuOpen(false)} onPick={startAdd} />
 

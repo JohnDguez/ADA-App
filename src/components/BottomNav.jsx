@@ -6,7 +6,7 @@ import styles from './BottomNav.module.css'
 // Las pestañas salen de NAV_ITEMS (lib/constants.js), fuente única compartida
 // con NavRail.jsx (Regla 43).
 
-export function BottomNav({ active, onChange, onAdd, addOpen = false }) {
+export function BottomNav({ active, onChange, onAdd, addOpen = false, hideAdd = false }) {
   const { t } = useTranslation()
   // v0.9.888 — barra con la forma de la pantalla (esquinas cóncavas arriba,
   // redondeadas abajo) y 4 pestañas parejas; la activa se expande a píldora con
@@ -23,7 +23,7 @@ export function BottomNav({ active, onChange, onAdd, addOpen = false }) {
             tienen en NavRail. */}
         <TabBtn id="settings" Icon={Settings} label={t('bottomNav.settings')} active={active === 'settings'} onChange={onChange} />
       </nav>
-      <button
+      {!hideAdd && <button
         data-coachmark="home-add-button"
         onClick={onAdd}
         className={`${styles.fab} ${addOpen ? styles.fabOpen : ''}`}
@@ -31,7 +31,7 @@ export function BottomNav({ active, onChange, onAdd, addOpen = false }) {
         aria-expanded={addOpen}
       >
         <Plus size={28} color="var(--on-color)" strokeWidth={2.5} className={`${styles.addIcon} ${addOpen ? styles.addIconOpen : ''}`} />
-      </button>
+      </button>}
     </>
   )
 }
