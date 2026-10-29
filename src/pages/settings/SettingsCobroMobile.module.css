@@ -46,3 +46,32 @@
 .chev { color: var(--muted); flex-shrink: 0; }
 .note { font-size: 0.71875rem; color: var(--muted); margin-top: 0.625rem; line-height: 1.4; }
 @media (prefers-reduced-motion: reduce) { .card, .cap { animation: none; } .segBtn, .dot, .pre { transition: none; } }
+
+/* Hero: próximo cobro (bloque sólido de acento, sin transparencias) */
+.hero, .tiles { animation: cIn 0.42s cubic-bezier(0.22, 1, 0.36, 1) both; animation-delay: calc(var(--i, 0) * 50ms); }
+.hero { background: var(--accent); color: var(--on-color); border-radius: clamp(1.125rem, 5.5vw, 1.375rem); padding: clamp(0.875rem, 4.2vw, 1.125rem); margin: 0.375rem 0 0.75rem; display: flex; align-items: flex-start; justify-content: space-between; gap: 0.75rem; }
+.heroTxt { min-width: 0; display: flex; flex-direction: column; align-items: flex-start; }
+.heroTxt small { font-size: 0.6875rem; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; opacity: 0.85; }
+.heroTxt b { font-size: clamp(1.375rem, 6.8vw, 1.625rem); font-weight: 700; line-height: 1.1; margin-top: 0.25rem; }
+.heroPill { margin-top: 0.625rem; background: var(--on-color); color: var(--accent); font-size: 0.6875rem; font-weight: 700; padding: 0.25rem 0.625rem; border-radius: 99px; }
+.heroCal { width: 3.375rem; border-radius: 0.75rem; overflow: hidden; text-align: center; background: var(--desk-card); color: var(--text); flex-shrink: 0; }
+.heroCal i { display: block; background: var(--on-color); color: var(--accent); font-size: 0.59375rem; font-weight: 800; font-style: normal; padding: 0.125rem 0; }
+.heroCal b { display: block; font-size: 1.5rem; font-weight: 700; padding: 0.25rem 0; }
+
+/* Frecuencia en mosaicos con ícono */
+.tiles { display: flex; gap: 0.5rem; }
+.tile { flex: 1; min-width: 0; border: 0; border-radius: 1.125rem; background: var(--desk-card); box-shadow: var(--desk-shadow); color: var(--text); font: inherit; padding: 0.75rem 0.25rem 0.625rem; display: flex; flex-direction: column; align-items: center; gap: 0.375rem; cursor: pointer; transition: background 0.3s cubic-bezier(0.22, 1, 0.36, 1), color 0.2s, transform 0.15s; }
+.tile:active { transform: scale(0.97); }
+.tile b { font-size: 0.78125rem; font-weight: 600; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tile span { font-size: 0.65625rem; color: var(--muted); margin-top: -0.25rem; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; transition: color 0.2s; }
+.tileIc { width: 2.25rem; height: 2.25rem; border-radius: 50%; background: var(--desk-chip); display: grid; place-items: center; transition: background 0.3s, color 0.2s, transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); }
+.tileOn { background: var(--accent); color: var(--on-color); }
+.tileOn span { color: var(--on-color); opacity: 0.85; }
+.tileOn .tileIc { background: var(--on-color); color: var(--accent); transform: scale(1.08); }
+
+/* Monto: grande pero sin exagerar */
+.amount :global(.field-input) { font-size: 1.5rem; font-weight: 700; padding-top: 0.625rem; padding-bottom: 0.625rem; }
+.amount > span { font-size: 1.125rem; }
+.amountMeta { display: flex; align-items: baseline; justify-content: space-between; gap: 0.5rem; margin: 0.5rem 0.25rem 0; font-size: 0.75rem; color: var(--muted); }
+.amountMeta em { font-style: normal; font-weight: 600; color: var(--paid); }
+@media (prefers-reduced-motion: reduce) { .hero, .tiles { animation: none; } .tile, .tileIc { transition: none; } }

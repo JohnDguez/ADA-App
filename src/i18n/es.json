@@ -279,7 +279,20 @@
       "monthly": "una vez al mes"
     },
     "nextPaydayLabel": "Próximo cobro",
-    "mobileDescription": "Define cada cuánto cobras y cuánto ganas."
+    "mobileDescription": "Define cada cuánto cobras y cuánto ganas.",
+    "mobile": {
+      "today": "Hoy",
+      "tomorrow": "Mañana",
+      "inDays": "En {{count}} días",
+      "perPeriod": {
+        "weekly": "cada semana",
+        "biweekly": "cada quincena",
+        "monthly": "cada mes"
+      },
+      "monthEquiv": "≈ {{amount}} al mes",
+      "dayLabel": "Día de cobro",
+      "frequency": "Frecuencia"
+    }
   },
   "settingsNotifications": {
     "title": "Notificaciones",

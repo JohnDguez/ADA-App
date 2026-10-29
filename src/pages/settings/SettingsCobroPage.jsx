@@ -178,27 +178,54 @@ export function SettingsCobroPage({ profile, onUpdate, onBack, slideClass }) {
     )
   }
 
-  // Móvil (<768px, v0.9.917, mockup aprobado): selector de frecuencia en una
-  // sola pastilla, días de cobro y próximo cobro en la misma tarjeta; ingreso y
-  // moneda en tarjetas aparte. Misma lógica de guardado que el resto.
+  // Móvil (<768px, v0.9.919, mockup "1 · Hero" aprobado): el próximo cobro manda
+  // arriba (bloque azul con cuenta regresiva); frecuencia en mosaicos con ícono;
+  // días de cobro en su tarjeta; ingreso con monto grande y equivalente mensual
+  // (semanal ×4, quincenal ×2; solo si hay monto); moneda aparte.
   if (isMobile && !desk) {
     const freq = profile.cobro_freq
     const custom = isCustomBiweekly()
     const dayCtl = v => Math.min(31, Math.max(1, parseInt(v) || 1))
+    const startOf = d => new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime()
+    const diffDays = Math.round((startOf(nextDateObj) - startOf(new Date())) / 86400000)
+    const countdown = diffDays <= 0 ? t('settingsCobro.mobile.today') : diffDays === 1 ? t('settingsCobro.mobile.tomorrow') : t('settingsCobro.mobile.inDays', { count: diffDays })
+    const cap = x => x.charAt(0).toUpperCase() + x.slice(1)
+    const heroWeekday = cap(nextDateObj.toLocaleDateString(locale, { weekday: 'long' }))
+    const heroDate = nextDateObj.toLocaleDateString(locale, { day: 'numeric', month: 'long' })
+    const salaryNum = parseFloat(salaryAmount)
+    const perMonth = { weekly: 4, biweekly: 2 }[freq]
+    const showEquiv = !!profile.salary_enabled && salaryNum > 0 && !!perMonth
+    const equiv = showEquiv ? `${symbol}${(salaryNum * perMonth).toLocaleString(locale, { maximumFractionDigits: 2 })}` : ''
     return (
       <div className={`${slideClass} ${mb.root}`}>
         <SubpageHeader icon={Wallet} title={t('settingsCobro.title')} onBack={onBack} />
         <p className={mb.desc}>{t('settingsCobro.mobileDescription')}</p>
 
-        <div className={mb.cap} style={{ '--i': 0 }}>{t('settingsCobro.periodSection')}</div>
-        <div className={mb.card} style={{ '--i': 1 }}>
-          <div className={mb.seg} role="group" aria-label={t('settingsCobro.frequencyLabel')}>
-            {['weekly', 'biweekly', 'monthly'].map(val => (
-              <button key={val} type="button" aria-pressed={freq === val} onClick={() => handleFreq(val)} className={`${mb.segBtn} ${freq === val ? mb.segOn : ''}`}>{t(`frequency.${val}`)}</button>
-            ))}
+        <div className={mb.hero} style={{ '--i': 0 }}>
+          <div className={mb.heroTxt}>
+            <small>{t('settingsCobro.nextPaydayLabel')}</small>
+            <b>{heroWeekday}<br />{heroDate}</b>
+            <span className={mb.heroPill}>{countdown}</span>
           </div>
-          <div className={mb.hint}>{t(`settingsCobro.freqSub.${freq}`).replace(/^./, c => c.toUpperCase())}</div>
+          <div className={mb.heroCal}><i>{nextMonthShort}</i><b>{nextDateObj.getDate()}</b></div>
+        </div>
 
+        <div className={mb.cap} style={{ '--i': 1 }}>{t('settingsCobro.mobile.frequency')}</div>
+        <div className={mb.tiles} style={{ '--i': 2 }} role="group" aria-label={t('settingsCobro.frequencyLabel')}>
+          {['weekly', 'biweekly', 'monthly'].map(val => {
+            const FIcon = FREQ_ICON[val]
+            return (
+              <button key={val} type="button" aria-pressed={freq === val} onClick={() => handleFreq(val)} className={`${mb.tile} ${freq === val ? mb.tileOn : ''}`}>
+                <i className={mb.tileIc}><FIcon size={17} /></i>
+                <b>{t(`frequency.${val}`)}</b>
+                <span>{t(`settingsCobro.freqSub.${val}`)}</span>
+              </button>
+            )
+          })}
+        </div>
+
+        <div className={mb.cap} style={{ '--i': 3 }}>{t('settingsCobro.mobile.dayLabel')}</div>
+        <div className={mb.card} style={{ '--i': 4 }}>
           {freq === 'weekly' && (
             <div className={mb.weekdays}>
               {getWeekdaysShort().map((day, i) => (
@@ -206,7 +233,6 @@ export function SettingsCobroPage({ profile, onUpdate, onBack, slideClass }) {
               ))}
             </div>
           )}
-
           {freq === 'biweekly' && (
             <>
               <div className={mb.presets}>
@@ -226,7 +252,6 @@ export function SettingsCobroPage({ profile, onUpdate, onBack, slideClass }) {
               </Collapse>
             </>
           )}
-
           {freq === 'monthly' && (
             <>
               <div className={mb.grid}>
@@ -237,15 +262,10 @@ export function SettingsCobroPage({ profile, onUpdate, onBack, slideClass }) {
               {(profile.cobro_day1 ?? 1) >= 29 && <div className={mb.hint}>{t('settingsCobro.monthShortHint')}</div>}
             </>
           )}
-
-          <div className={mb.next}>
-            <div className={mb.cal}><i>{nextMonthShort}</i><b>{nextDateObj.getDate()}</b></div>
-            <div className={mb.nextTxt}><small>{t('settingsCobro.nextPaydayLabel')}</small><strong>{nextLong}</strong></div>
-          </div>
         </div>
 
-        <div className={mb.cap} style={{ '--i': 2 }}>{t('settingsCobro.incomeSection')}</div>
-        <div className={mb.card} style={{ '--i': 3 }}>
+        <div className={mb.cap} style={{ '--i': 5 }}>{t('settingsCobro.incomeSection')}</div>
+        <div className={mb.card} style={{ '--i': 6 }}>
           <div {...switchProps(profile.salary_enabled)} onClick={handleSalaryToggle} className={mb.tgl}>
             <div><b>{t('settingsCobro.incomeLabel')}</b><span>{t('settingsCobro.incomeSubtitle')}</span></div>
             <Toggle on={profile.salary_enabled} />
@@ -255,11 +275,14 @@ export function SettingsCobroPage({ profile, onUpdate, onBack, slideClass }) {
               <span className={styles.amountPrefix}>{symbol}</span>
               <AmountInput value={salaryAmount} onChange={e => setSalaryAmount(e.target.value)} onBlur={handleSalaryBlur} aria-label={t('settingsCobro.amountLabel')} placeholder="0.00" className={`field-input ${styles.amountInput}`} />
             </div>
+            <div className={mb.amountMeta}>
+              <span>{t(`settingsCobro.mobile.perPeriod.${freq}`)}</span>
+              {showEquiv && <em>{t('settingsCobro.mobile.monthEquiv', { amount: equiv })}</em>}
+            </div>
           </Collapse>
         </div>
 
-        <div className={mb.cap} style={{ '--i': 4 }}>{t('settingsCobro.currencySection')}</div>
-        <div className={mb.card} style={{ '--i': 5 }}>
+        <div className={mb.card} style={{ '--i': 7 }}>
           <button type="button" className={mb.curRow} onClick={() => setCurrencyOpen(true)}>
             <i className={mb.ic}><Coins size={15} /></i>
             <span className={mb.curLabel}>{t('settingsCobro.currencyLabel')}</span>

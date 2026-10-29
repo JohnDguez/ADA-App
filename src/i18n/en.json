@@ -279,7 +279,20 @@
       "monthly": "once a month"
     },
     "nextPaydayLabel": "Next payday",
-    "mobileDescription": "Set how often you get paid and how much you earn."
+    "mobileDescription": "Set how often you get paid and how much you earn.",
+    "mobile": {
+      "today": "Today",
+      "tomorrow": "Tomorrow",
+      "inDays": "In {{count}} days",
+      "perPeriod": {
+        "weekly": "every week",
+        "biweekly": "every two weeks",
+        "monthly": "every month"
+      },
+      "monthEquiv": "≈ {{amount}} per month",
+      "dayLabel": "Pay day",
+      "frequency": "Frequency"
+    }
   },
   "settingsNotifications": {
     "title": "Notifications",
