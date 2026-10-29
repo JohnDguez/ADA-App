@@ -52,4 +52,39 @@ describe('reglas del proyecto', () => {
     const fns = readdirSync(join(root, 'api')).filter(f => f.endsWith('.js') && !f.startsWith('_'))
     expect(fns.length).toBeLessThanOrEqual(12)
   })
+
+  // Rediseño móvil (Regla 56): lo que se acordó con Johnatan se vigila aquí para
+  // no depender de que alguien lo recuerde en cada pantalla nueva.
+  const mobileCss = () => walk(join(root, 'src')).filter(f => /(Mobile|Mobile\.\w+)\.module\.css$/.test(f) || /Mobile\.module\.css$/.test(f))
+  const blocks = css => [...css.replace(/\/\*[\s\S]*?\*\//g, '').matchAll(/([^{}]+)\{([^{}]*)\}/g)].map(m => [m[1].trim(), m[2]])
+
+  it('chips, segmentados y pestañas activos de las pantallas móviles usan --desk-pill (no azul de acento) — Regla 56', () => {
+    const bad = []
+    for (const f of mobileCss()) {
+      for (const [sel, body] of blocks(readFileSync(f, 'utf8'))) {
+        if (/(chipOn|segOn|tabOn|pillOn)\b/.test(sel) && /background:\s*var\(--accent\)/.test(body)) bad.push(`${relative(root, f)} ${sel}`)
+      }
+    }
+    expect(bad).toEqual([])
+  })
+
+  it('las raíces de las pantallas móviles no pintan fondo propio (dejan ver el degradado de página) — Regla 56', () => {
+    const bad = []
+    for (const f of mobileCss()) {
+      for (const [sel, body] of blocks(readFileSync(f, 'utf8'))) {
+        if (/^\.root$/.test(sel) && /background\s*:/.test(body)) bad.push(relative(root, f))
+      }
+    }
+    expect(bad).toEqual([])
+  })
+
+  it('las pantallas móviles escriben texto en rem, no en px — Regla 54/56', () => {
+    const bad = []
+    for (const f of mobileCss()) {
+      blocks(readFileSync(f, 'utf8')).forEach(([sel, body]) => {
+        if (/font-size:\s*\d+(\.\d+)?px/.test(body)) bad.push(`${relative(root, f)} ${sel}`)
+      })
+    }
+    expect(bad).toEqual([])
+  })
 })
