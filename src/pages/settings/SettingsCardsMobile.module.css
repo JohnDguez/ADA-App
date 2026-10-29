@@ -42,3 +42,7 @@
 @keyframes cardsIn { from { opacity: 0; transform: translateY(0.5rem); } to { opacity: 1; } }
 @media (prefers-reduced-motion: reduce) { .slide, .det, .pill, .noteText { animation: none; } .slide, .dots i, .bar i, .seg button { transition: none; } }
 @media (min-width: 768px) { .pillRow { display: none; } }
+
+/* Una sola tarjeta: ancho completo, sin carrusel ni atenuado. */
+.trackSolo { overflow-x: hidden; scroll-snap-type: none; }
+.solo { flex: 0 0 100%; opacity: 1; transform: none; cursor: pointer; }

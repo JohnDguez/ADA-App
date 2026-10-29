@@ -313,7 +313,7 @@ export function SettingsCardsPage({ profile, paymentMethods, personalPayments = 
   if (selectedCard) {
     return (
       <>
-        <div className={desk ? undefined : `${slideClass} ${styles.pageWrapper}`}>
+        <div className={desk ? undefined : isMobile ? slideClass : `${slideClass} ${styles.pageWrapper}`}>
           <CardDetailPanel
             desk={desk}
             initialPlansOpen={openPlans}

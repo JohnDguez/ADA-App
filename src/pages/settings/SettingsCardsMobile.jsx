@@ -82,12 +82,12 @@ export function SettingsCardsMobile({
         </div>
       ) : (
         <>
-          <div key={kind} className={mb.track} ref={trackRef} onScroll={onScroll}>
+          <div key={kind} className={`${mb.track} ${cards.length === 1 ? mb.trackSolo : ''}`} ref={trackRef} onScroll={onScroll}>
             {cards.map((c, i) => (
               <button
                 key={c.id}
                 type="button"
-                className={`${mb.slide} ${i === idx ? mb.slideOn : ''}`}
+                className={`${mb.slide} ${i === idx ? mb.slideOn : ''} ${cards.length === 1 ? mb.solo : ''}`}
                 style={{ '--n': Math.min(i, 6) }}
                 aria-label={nameOf(c)}
                 onClick={() => (i === idx ? onSelect(c) : setFocusId(c.id))}

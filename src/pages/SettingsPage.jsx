@@ -281,7 +281,7 @@ export function SettingsPage({ profile, user, onUpdate, onUploadAvatar, onDataDe
   } : null
 
   return (
-    <div className={`${slideClass} ${styles.pageWrapper} ${isDesktop ? styles.pageRootDesk : ''} ${isMobile && !section ? styles.pageRootMobile : ''}`}>
+    <div className={`${slideClass} ${styles.pageWrapper} ${isDesktop ? styles.pageRootDesk : ''} ${isMobile ? styles.pageRootMobile : ''}`}>
       {/* Resplandor — azul de acento en cuenta normal, dorado premium si
           profile.is_premium (pedido de Johnatan, mismo criterio que la
           prop accentColor de PageHero.jsx, pero esta pantalla no usa
