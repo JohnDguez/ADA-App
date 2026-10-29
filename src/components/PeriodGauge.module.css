@@ -12,3 +12,7 @@
 .maskShape { fill: none; stroke: var(--mask-opaque); stroke-width: 26; stroke-linecap: round; }
 .large .center b { font-size: 44px; }
 .svg mask { mask-type: alpha; }
+/* Textura muy tenue de rayas sobre el azul y el rojo (mismo patrón del pendiente) para que no se vean planos. */
+.hatchOn { stroke: var(--on-color); stroke-width: 2.2; }
+.tex { opacity: 0.12; stroke-linecap: butt; }
+.texCap { stroke-linecap: round; }

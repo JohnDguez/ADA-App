@@ -55,8 +55,12 @@ function segCap(p) {
 
 export function PeriodGauge({ paidPct, overduePct = 0, empty = false, label, centerLabel, center, large = false }) {
   const uid = useId().replace(/:/g, '')
-  const paidT = Math.max(0, Math.min(100, paidPct))
-  const overT = Math.max(0, Math.min(100 - paidT, overduePct))
+  let paidT = Math.max(0, Math.min(100, paidPct))
+  let overT = Math.max(0, Math.min(100 - paidT, overduePct))
+  // El % pagado llega redondeado y el vencido exacto: la diferencia (<1 %) no es
+  // "pendiente", es redondeo. Se absorbe para que el anillo llegue al final.
+  const gap = 100 - paidT - overT
+  if (!empty && gap > 0 && gap < 1) { if (overT > 0) overT += gap; else paidT += gap }
   const paid = useGrow(paidT)
   const over = useGrow(overT)
   const pending = empty ? seg(0, 100) : seg(paid + over, 100)
@@ -66,6 +70,9 @@ export function PeriodGauge({ paidPct, overduePct = 0, empty = false, label, cen
         <defs>
           <pattern id={`h${uid}`} width="7" height="7" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
             <line x1="0" y1="0" x2="0" y2="7" className={styles.hatchLine} />
+          </pattern>
+          <pattern id={`o${uid}`} width="7" height="7" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+            <line x1="0" y1="0" x2="0" y2="7" className={styles.hatchOn} />
           </pattern>
           <mask id={`m${uid}`} maskUnits="userSpaceOnUse" x="0" y="0" width="300" height="170">
             <path d={TRACK} className={styles.maskShape} />
@@ -77,7 +84,9 @@ export function PeriodGauge({ paidPct, overduePct = 0, empty = false, label, cen
           {/* El rojo arranca desde el inicio y queda DETRÁS del azul: así la punta
               redondeada del azul se ve sobre el rojo. */}
           {!empty && overT > 0 && <path d={ARC} pathLength="100" className={styles.over} {...seg(0, paid + over)} />}
+          {!empty && overT > 0 && <path d={ARC} pathLength="100" className={styles.tex} stroke={`url(#o${uid})`} {...seg(0, paid + over)} />}
           {!empty && paidT > 0 && <path d={ARC} pathLength="100" className={styles.paid} style={{ opacity: paid > 0.05 ? 1 : 0 }} {...segCap(paid)} />}
+          {!empty && paidT > 0 && <path d={ARC} pathLength="100" className={`${styles.tex} ${styles.texCap}`} stroke={`url(#o${uid})`} style={{ opacity: paid > 0.05 ? undefined : 0 }} {...segCap(paid)} />}
         </g>
       </svg>
       <div className={styles.center}>
