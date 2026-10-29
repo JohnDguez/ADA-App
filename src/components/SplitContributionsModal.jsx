@@ -27,7 +27,7 @@ export function SplitContributionsModal({ open, payment: paymentProp, spaceMembe
   // Se conserva el último pago para que la animación de salida no se corte
   // cuando App.jsx limpia el id al cerrar.
   const desk = useIsDesktop()
-  const anchorRef = useAnchor(open)
+  const anchorRef = useAnchor(open, paymentProp?.id)
   const asPop = desk && !!anchorRef.current
   const lastPay = useRef(null)
   if (paymentProp) lastPay.current = paymentProp

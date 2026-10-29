@@ -18,6 +18,8 @@
 /* ── Tema claro (default) ─────────────────────────────────────────────────── */
 :root {
   --hover-brightness: 0.94;
+  /* Relleno sólido de hover para controles claros sobre `--desk-chip` (v0.9.929): el aclarado/oscurecido global los iguala al fondo y "desaparecen". Se usa con `filter: none`. */
+  --desk-hover-fill: color-mix(in srgb, var(--text) 13%, var(--desk-card, var(--surface)));
   --bg: #F2F2F2;
   --surface: #FFFFFF;
   --border: #E4E2DC;

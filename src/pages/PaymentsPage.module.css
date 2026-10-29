@@ -2126,3 +2126,8 @@
 
 /* v0.9.909 — en móvil el espacio inferior lo da el contenido (10rem: barra + botón +); sin sumarle los 120px de antes. */
 @media (max-width: 767px) { .pageRoot { padding-bottom: 0; } }
+
+/* Hover sólido (Regla 64) */
+@media (hover: hover) and (pointer: fine) {
+  .editCancelButton:hover, .confirmDeleteCancelButton:hover { filter: none; background: var(--desk-hover-fill); }
+}

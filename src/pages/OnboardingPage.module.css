@@ -812,3 +812,8 @@
 }
 .presetAvatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .presetAvatarOn { border-color: var(--accent); }
+
+/* Hover sólido (Regla 64) */
+@media (hover: hover) and (pointer: fine) {
+  .avatarBtn:hover { filter: none; background: var(--desk-hover-fill); }
+}

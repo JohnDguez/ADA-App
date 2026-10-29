@@ -1389,12 +1389,15 @@ const impactBlock = impactPreview && impactPreview.length > 0 ? (() => {
     )
   }
 
+  // Editar pago (v0.9.929), escritorio: la misma hoja de siempre pero con el
+  // lenguaje de Pagos de escritorio (ver `.editDesk` en el CSS).
+  const editDesk = !!initial && isDesk
   return (
     <>
-      <div onClick={e => e.target === e.currentTarget && requestClose()} className={styles.overlay} data-presence="overlay" data-closing={closing ? '' : undefined}>
-        <div className={`${styles.panel} ${isFlat ? styles.panelWide : ''}`} data-presence="panel" data-closing={closing ? '' : undefined}>
-          <div className={styles.handle} />
-          {spaceTagFor(styles.spaceTag)}
+      <div onClick={e => e.target === e.currentTarget && requestClose()} className={`${styles.overlay} ${editDesk ? dk.overlay : ''}`} data-presence="overlay" data-closing={closing ? '' : undefined}>
+        <div className={`${styles.panel} ${isFlat ? styles.panelWide : ''} ${editDesk ? styles.editDesk : ''}`} data-presence="panel" data-closing={closing ? '' : undefined} {...(editDesk ? { role: 'dialog', 'aria-modal': 'true' } : {})}>
+          {!editDesk && <div className={styles.handle} />}
+          {!editDesk && spaceTagFor(styles.spaceTag)}
 
           {!initial && (
             <div data-coachmark="modal-payment-type-tabs" className={styles.typeChip}>
@@ -1405,7 +1408,16 @@ const impactBlock = impactPreview && impactPreview.length > 0 ? (() => {
           )}
           {typeNote && <div className={styles.typeNote}>{typeNote}</div>}
 
-          {initial && (
+          {initial && editDesk && (
+            <div className={styles.editHead}>
+              <div className={styles.editHeadMain}>
+                <h2 className={dk.title}>{initial.is_master && initial.paused ? t('paymentModal.title.reactivate') : initial.is_master ? t('paymentModal.title.editRecurrent') : t('paymentModal.title.edit')}</h2>
+                {spaceTagFor(styles.spaceTag)}
+              </div>
+              <button type="button" className={dk.close} onClick={requestClose} aria-label={t('buttons.cancel')}><XIcon size={16} /></button>
+            </div>
+          )}
+          {initial && !editDesk && (
             <div className={styles.modalTitle}>
               {initial.is_master && initial.paused ? t('paymentModal.title.reactivate') : initial.is_master ? t('paymentModal.title.editRecurrent') : t('paymentModal.title.edit')}
             </div>

@@ -213,3 +213,8 @@
 .barTipMore { opacity: 0.8; margin-top: 3px; }
 .barTipHint { margin-top: 8px; padding-top: 6px; border-top: 1px solid var(--white-a16); font-size: 11px; opacity: 0.7; }
 @keyframes barTipIn { from { opacity: 0; translate: 0 4px; } }
+
+/* Hover sólido (Regla 64) */
+@media (hover: hover) and (pointer: fine) {
+  .importBtn:hover { filter: none; background: var(--desk-hover-fill); }
+}

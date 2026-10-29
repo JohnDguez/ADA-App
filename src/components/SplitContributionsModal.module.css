@@ -308,6 +308,10 @@
 .deskRoot .presetButton,
 .deskRoot .fillButton { border: 0; border-radius: 99px; background: var(--desk-card); color: var(--text); font-size: 13px; font-weight: 600; padding: 9px 0; }
 .deskRoot .fillButton { color: var(--accent); }
+@media (hover: hover) and (pointer: fine) {
+  .deskRoot .presetButton:not(:disabled):hover,
+  .deskRoot .fillButton:not(:disabled):hover { filter: none; background: var(--desk-hover-fill); }
+}
 .deskRoot .editLabel { font-size: 12px; font-weight: 600; }
 .deskFoot { display: flex; align-items: center; justify-content: flex-end; gap: 10px; margin-top: 18px; }
 .deskCancel { height: 44px; padding: 0 22px; border: 0; border-radius: 99px; background: var(--desk-chip); color: var(--text); font-size: 14px; font-weight: 600; cursor: pointer; }

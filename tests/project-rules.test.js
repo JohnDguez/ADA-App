@@ -87,4 +87,28 @@ describe('reglas del proyecto', () => {
     }
     expect(bad).toEqual([])
   })
+
+  // Escritorio (Regla 64): el hover global oscurece 6 % y un botón `--desk-card`
+  // sobre una superficie parecida "desaparece"; cada uno define su hover sólido.
+  it('los botones/píldoras con fondo --desk-card definen su :hover sólido (filter: none) — Regla 64', () => {
+    const bad = []
+    for (const f of walk(join(root, 'src')).filter(f => /\.module\.css$/.test(f) && !/Mobile/.test(f))) {
+      const bl = blocks(readFileSync(f, 'utf8'))
+      for (const [sel, body] of bl) {
+        if (!/background(-color)?:\s*var\(--desk-card\)/.test(body) || sel.includes(':hover')) continue
+        const last = sel.split(',').pop().trim().split(/\s+/).pop()
+        const m = last.match(/^\.([A-Za-z0-9_]+)$/)
+        if (!m || !/(Button|Btn|btn|pill|chip|^ib$|preset|fill|^sw$)/.test(m[1])) continue
+        const ok = bl.some(([s, b]) => s.includes(':hover') && s.includes('.' + m[1]) && /filter:\s*none/.test(b))
+        if (!ok) bad.push(`${relative(root, f)} ${sel}`)
+      }
+    }
+    expect(bad).toEqual([])
+  })
+
+  // Regla 66: la tinta de un ícono sobre un color elegido por el usuario se calcula.
+  it('CategoryFormModal calcula la tinta sobre el color elegido (catInk) en todos los tamaños — Regla 66', () => {
+    const src = readFileSync(join(root, 'src/components/CategoryFormModal.jsx'), 'utf8')
+    expect(src).not.toMatch(/color="var\(--on-color\)"/)
+  })
 })

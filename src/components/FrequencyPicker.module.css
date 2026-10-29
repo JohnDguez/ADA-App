@@ -67,6 +67,6 @@
 /* Hover de escritorio (v0.9.928): el aclarado global dejaba la píldora sin
    fondo sobre el diálogo; se sustituye por un relleno sólido definido. */
 @media (min-width: 1100px) and (hover: hover) and (pointer: fine) {
-  .pill:not(.pillActive):hover { filter: none; background: var(--desk-hair, var(--field-bg)); }
+  .pill:not(.pillActive):hover { filter: none; background: var(--desk-hover-fill); }
   .pillActive:hover { filter: none; }
 }

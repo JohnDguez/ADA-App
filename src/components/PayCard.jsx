@@ -526,6 +526,7 @@ function PayCardFull({ payment: p, cfg, paymentMethodsList = [], onChangeMethod,
               <button
                 onClick={handleCheckButtonClick}
                 disabled={phase !== 'idle' || p._syncing}
+                data-pay-check={p.id}
                 className={`${styles.markPaidButton} ${canMarkPaid ? '' : styles.markPaidLocked}`}
                 aria-label={t('payCard.markPaidAriaLabel')}
               >
@@ -533,7 +534,7 @@ function PayCardFull({ payment: p, cfg, paymentMethodsList = [], onChangeMethod,
               </button>
             )}
             {p.is_paid && (
-              <div className={styles.paidIndicator}>
+              <div className={styles.paidIndicator} data-pay-check={p.id}>
                 <Check size={18} color="var(--pay-icon)" strokeWidth={2.5} />
               </div>
             )}

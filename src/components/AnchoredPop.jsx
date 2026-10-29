@@ -11,12 +11,15 @@ import styles from './AnchoredPop.module.css'
 // usePresence debe coincidir con `.popOut` en el CSS — Regla 30).
 // `anchorRef` lo comparte con quien lo usa para saber si hay ancla: si no la
 // hay (apertura por código), quien llama cae al modal centrado.
-export function useAnchor(open) {
+export function useAnchor(open, payId = null) {
   const ref = useRef(null)
   const was = useRef(false)
   // Se resuelve al pasar de cerrado a abierto; al cerrar se conserva para la animación de salida.
   if (open && !was.current) {
-    ref.current = resolveAnchor()
+    // Con `payId` el ancla es el check de ESA fila de pago (siempre el mismo
+    // lugar, sin importar desde dónde se abrió: menú, check, etc.).
+    const checks = payId ? [...document.querySelectorAll(`[data-pay-check="${payId}"]`)] : []
+    ref.current = checks.find(el => el.getBoundingClientRect().width > 0) || resolveAnchor()
     // Se guarda también la posición: si el elemento desaparece (el menú que lo
     // contenía se cierra, la fila se vuelve a dibujar al procesar el pago) el
     // popover se queda donde estaba en vez de no aparecer (v0.9.928).

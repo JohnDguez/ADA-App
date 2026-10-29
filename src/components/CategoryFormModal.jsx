@@ -16,7 +16,6 @@ import mm from './CategoryFormMobile.module.css'
 import { ColorPickerPanel } from './ColorPickerPanel'
 import { catInk, isHexColor, colorToHex } from '../lib/colorUtils'
 import { useIsMobile } from '../hooks/useIsMobile'
-import { useIsDesktop } from '../hooks/useIsDesktop'
 import dkp from './PaymentDesk.module.css'
 
 export const CATEGORY_PALETTE = Array.from({ length: 16 }, (_, i) => `var(--palette-${i + 1})`)
@@ -40,7 +39,6 @@ export function CategoryFormModal({ open, onClose, editingCat = null, profile, o
   const [confirmingDelete, setConfirmingDelete] = useState(false)
   const [deleting,  setDeleting]    = useState(false)
   const isMobile = useIsMobile()
-  const isDesk = useIsDesktop()
   const [deleteCount, setDeleteCount] = useState(null) // pagos que se reasignarán, o null mientras carga
 
   const customCats     = profile.custom_categories || []
@@ -148,7 +146,7 @@ export function CategoryFormModal({ open, onClose, editingCat = null, profile, o
     .map(g => ({ ...g, icons: search ? g.icons.filter(i => i.label.toLowerCase().includes(search)) : g.icons }))
     .filter(g => g.icons.length > 0)
 
-  if (inline || isDesk) {
+  if (inline || !isMobile) {
     const PreviewIcon = formIcon ? getIconComponent(formIcon) : null
     const tint = formColor || 'var(--palette-1)'
     const previewName = formName ? getCategoryLabel(formName) : t('settingsCategories.namePlaceholder')
@@ -197,7 +195,7 @@ export function CategoryFormModal({ open, onClose, editingCat = null, profile, o
                 return (
                   <button key={color} type="button" aria-label={t('buttons.colorN', { n: i + 1 })} aria-pressed={on} onClick={() => setFormColor(color)}
                     className={`${dk.sw} ${on ? dk.swOn : ''}`} style={{ background: color }}>
-                    {on && <Check size={16} color="var(--on-color)" strokeWidth={3} />}
+                    {on && <Check size={16} color={catInk(color)} strokeWidth={3} />}
                   </button>
                 )
               })}
@@ -213,7 +211,7 @@ export function CategoryFormModal({ open, onClose, editingCat = null, profile, o
 
           <div className={dk.side}>
             <div className={dk.preview} style={{ '--tint': tint }}>
-              <span className={dk.pi}>{PreviewIcon ? <PreviewIcon size={40} /> : <span className={dk.dot} />}</span>
+              <span className={dk.pi} style={{ color: catInk(tint) }}>{PreviewIcon ? <PreviewIcon size={40} /> : <span className={dk.dot} />}</span>
               <b>{previewName}</b>
               <span>{t('settingsCategories.desk.previewHint')}</span>
             </div>

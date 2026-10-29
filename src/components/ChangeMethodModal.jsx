@@ -20,7 +20,7 @@ export function ChangeMethodModal({ open, payment: paymentProp, methods, onSave,
   // nueva tarjeta se abre en un diálogo, que queda por encima — z 200 vs 190).
   // Sin ancla, o en móvil/tablet, sigue siendo la hoja de siempre.
   const desk = useIsDesktop()
-  const anchorRef = useAnchor(open)
+  const anchorRef = useAnchor(open, paymentProp?.id)
   const asPop = desk && !!anchorRef.current
   const lastPay = useRef(null)
   if (paymentProp) lastPay.current = paymentProp
