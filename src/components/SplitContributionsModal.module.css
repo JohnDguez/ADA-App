@@ -305,6 +305,7 @@
 .deskRoot .availableHint { font-size: 12px; opacity: 1; color: var(--muted); padding: 0 14px; }
 .deskRoot .presetRow, .deskRoot .fillWrap, .deskRoot .methodFieldWrap { padding: 0 14px; }
 .deskRoot .editRow { padding: 0 14px 14px; }
+.deskRoot .editRow.totalRow, .editRow.totalRow { padding: 0; margin-bottom: 4px; }
 .deskRoot .presetButton,
 .deskRoot .fillButton { border: 0; border-radius: 99px; background: var(--desk-card); color: var(--text); font-size: 13px; font-weight: 600; padding: 9px 0; }
 .deskRoot .fillButton { color: var(--accent); }

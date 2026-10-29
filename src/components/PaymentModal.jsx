@@ -1394,7 +1394,7 @@ const impactBlock = impactPreview && impactPreview.length > 0 ? (() => {
   const editDesk = !!initial && isDesk
   return (
     <>
-      <div onClick={e => e.target === e.currentTarget && requestClose()} className={`${styles.overlay} ${editDesk ? dk.overlay : ''}`} data-presence="overlay" data-closing={closing ? '' : undefined}>
+      <div onClick={e => e.target === e.currentTarget && requestClose()} className={`${styles.overlay} ${editDesk ? `${dk.overlay} ${styles.editDeskOverlay}` : ''}`} data-presence="overlay" data-closing={closing ? '' : undefined}>
         <div className={`${styles.panel} ${isFlat ? styles.panelWide : ''} ${editDesk ? styles.editDesk : ''}`} data-presence="panel" data-closing={closing ? '' : undefined} {...(editDesk ? { role: 'dialog', 'aria-modal': 'true' } : {})}>
           {!editDesk && <div className={styles.handle} />}
           {!editDesk && spaceTagFor(styles.spaceTag)}

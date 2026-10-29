@@ -218,7 +218,7 @@ export function SplitContributionsModal({ open, payment: paymentProp, spaceMembe
         {payment.is_variable && (
           <>
             <label className="field-label">{t('paymentModal.totalAmountToPay')}</label>
-            <div className={styles.editRow}>
+            <div className={`${styles.editRow} ${styles.totalRow}`}>
               <AmountInput value={totalDraft} onChange={e => setTotalDraft(e.target.value)} placeholder="0.00" onKeyDown={e => e.key === 'Enter' && handleSaveTotal()} className={`field-input ${styles.grow}`} />
               <button onClick={handleSaveTotal} disabled={totalSaving} className={`btn-primary ${styles.saveInline}`}>{t('buttons.save')}</button>
             </div>

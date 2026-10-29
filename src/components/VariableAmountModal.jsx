@@ -14,7 +14,7 @@ export function VariableAmountModal({ open, payment, mode = 'pay', spacePermissi
   // Escritorio (≥1100px, v0.9.928): popover anclado al botón que lo abrió; sin
   // ancla, o en móvil/tablet, sigue siendo la hoja de siempre.
   const desk = useIsDesktop()
-  const anchorRef = useAnchor(open, mode === 'pay' ? payment?.id : null)
+  const anchorRef = useAnchor(open, payment?.id)
   const asPop = desk && !!anchorRef.current
   const [amount, setAmount] = useState('')
   const [error, setError] = useState('')
