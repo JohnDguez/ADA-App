@@ -5,9 +5,7 @@ import { EmptyState } from '../components/EmptyState'
 import { PageHeader } from '../components/PageHeader'
 import { NewSharedSpacePanel } from '../components/NewSharedSpacePanel'
 import { RecurrentDetailPanel } from '../components/RecurrentDetailPanel'
-import { installmentUntrackedCount, fmt, RECUR_FREQ, getFrequencyLabel, dateOf, getMonthsShort, getCatColor, getCategoryLabel, monthlyEquivalent } from '../lib/utils'
-import { catInk } from '../lib/colorUtils'
-import { getCategoryIcon } from '../lib/categoryIcons'
+import { installmentUntrackedCount, RECUR_FREQ, dateOf, getMonthsShort, monthlyEquivalent } from '../lib/utils'
 import { showToast } from '../components/Toast'
 import { StatsCardSkeleton, CategoryAccordionSkeleton } from '../components/SkeletonLoader'
 import styles from './RecurrentsPage.module.css'
@@ -16,7 +14,6 @@ import { useScrollTop } from '../hooks/useScrollTop'
 import { useScrollLock } from '../lib/scrollLock'
 import { Collapse } from '../components/Collapse'
 import { usePresence } from '../lib/usePresence'
-import { kbd } from '../lib/a11y'
 import { useIsDesktop } from '../hooks/useIsDesktop'
 import { useIsMobile } from '../hooks/useIsMobile'
 import { MobileRecurrents } from './MobileRecurrents'
@@ -51,7 +48,6 @@ export function RecurrentsPage({ payments, dataLoading = false, profile, spaceSw
   const [search,          setSearch]          = useState('')
   const [filterStatus,    setFilterStatus]    = useState('todos')
   const [filterType,      setFilterType]      = useState('todos')
-  const [expandedCats,    setExpandedCats]    = useState({})
   const [confirmDelete,   setConfirmDelete]   = useState(null)
   const [openMenu,        setOpenMenu]        = useState(null)
   const menuPresence = usePresence(!!openMenu)
@@ -59,7 +55,6 @@ export function RecurrentsPage({ payments, dataLoading = false, profile, spaceSw
   if (openMenu) lastMenuRef.current = openMenu
   const menuShown = openMenu || (menuPresence.render ? lastMenuRef.current : null)
   useScrollLock(!!openMenu)
-  const [infoOpen, setInfoOpen] = useState(false)
   const [selectedMasterId, setSelectedMasterId] = useState(null)
   useScrollTop(selectedMasterId)
 
@@ -168,7 +163,7 @@ export function RecurrentsPage({ payments, dataLoading = false, profile, spaceSw
     return `${d.getDate()} ${getMonthsShort()[d.getMonth()]}`
   }
 
-  const deskData = (isDesktop || isMobile) ? {
+  const deskData = {
     profile, dataLoading, activeSpaceId, sharedSpaces, spacePermissions, slideClass, spaceJustChanged, onOpenPremium, onSpaceReady, onAdd, onStartAdd,
     search, setSearch, filterStatus, setFilterStatus, filterType, setFilterType, byCategory,
     totals: { active: activeMasters.length, paused: pausedMasters.length, all: masters.length, monthly: totalMensual },
@@ -177,10 +172,10 @@ export function RecurrentsPage({ payments, dataLoading = false, profile, spaceSw
     getNextDue, getPaidCount, formatNextDate,
     canEdit, canDelete, blocked, onPause, onResume, onEdit, onDelete, payments, selectedMaster, setSelectedMasterId,
     openMenu, setOpenMenu, confirmDelete, setConfirmDelete,
-  } : null
+  }
 
   return (
-    <div className={`${styles.pageRoot} ${isDesktop ? styles.pageRootDesk : ''}`} onClick={() => setOpenMenu(null)}>
+    <div className={`${styles.pageRoot} ${!isMobile ? styles.pageRootDesk : ''}`} onClick={() => setOpenMenu(null)}>
       {/* Oculto desde 768px — mismo criterio que HomePage/PaymentsPage:
           NavRail.jsx ya cubre avatar, saludo, notificaciones y config. */}
       {!isDesktop && <div className={styles.pageHeaderWrapper}>
@@ -215,7 +210,7 @@ export function RecurrentsPage({ payments, dataLoading = false, profile, spaceSw
         </div>
       )}
 
-      {isDesktop ? <DeskRecurrents d={deskData} /> : isMobile ? (
+      {isDesktop ? <DeskRecurrents d={deskData} /> : !isMobile ? <DeskRecurrents d={deskData} tablet /> : (
         <>
           <div className={styles.spaceSwitcherMobileWrap}>{spaceSwitcher}</div>
           {activeSpaceHeader}
@@ -239,340 +234,6 @@ export function RecurrentsPage({ payments, dataLoading = false, profile, spaceSw
             </div>
           </div>
         </>
-      ) : (
-      <div className={styles.roundedContentWrapper}>
-        <div className={styles.spaceSwitcherMobileWrap}>{spaceSwitcher}</div>
-
-        {activeSpaceHeader}
-
-        <div className={slideClass}>
-          <div className={spaceJustChanged ? 'content-slide-up' : ''}>
-
-          {activeSpaceId === 'new' ? (
-            <div className={styles.newSpacePanelWrapper}>
-              <NewSharedSpacePanel
-                profile={profile}
-                sharedSpaces={sharedSpaces}
-                onOpenPremium={onOpenPremium}
-                onCreated={onSpaceReady}
-                onJoined={onSpaceReady}
-              />
-            </div>
-          ) : selectedMaster ? (
-            <RecurrentDetailPanel
-              master={selectedMaster}
-              payments={payments}
-              profile={profile}
-              canEdit={canEdit}
-              canDelete={canDelete}
-              blocked={blocked}
-              onBack={() => setSelectedMasterId(null)}
-              onEdit={() => onEdit && onEdit(selectedMaster)}
-              onPause={() => onPause(selectedMaster.id)}
-              onResume={() => onResume(selectedMaster.id)}
-              onDelete={() => { onDelete && onDelete(selectedMaster.id, selectedMaster); setSelectedMasterId(null) }}
-            />
-          ) : (
-          <>
-          {/* Zona título + buscador (en tablet comparten fila) */}
-          <div className={styles.headRow}>
-          <div className={styles.titleSection}>
-            <div className={styles.titleHeading}>{t('recurrentsPage.title')}</div>
-            <div className={styles.titleSubtext}>{t('recurrentsPage.subtitle')}</div>
-          </div>
-
-
-          {/* Buscador */}
-          <div className={styles.searchWrapper}>
-            <div className={styles.searchInner}>
-              <div className={styles.searchIcon}>
-                <Search size={15} color="var(--text)" />
-              </div>
-              <input aria-label={t('recurrentsPage.searchPlaceholder')} value={search} onChange={e => setSearch(e.target.value)} placeholder={t('recurrentsPage.searchPlaceholder')} className={`field-input ${styles.searchInput}`} />
-            </div>
-          </div>
-          </div>
-
-          {/* Resumen — teléfono: una tarjeta; tablet: totales + por frecuencia */}
-          <div data-coachmark="recurrentes-stats">
-          {dataLoading ? (
-            <div className={styles.statsSkeletonWrap}>
-              <StatsCardSkeleton />
-            </div>
-          ) : (
-            <>
-            <div className={`${styles.statsCard} ${styles.mobileOnly}`}>
-              <div className={styles.statsBlockBordered}>
-                <div className={styles.statsLabel}>{t('recurrentsPage.activeLabel')}</div>
-                <div className={styles.statsValue}>{activeMasters.length}</div>
-                <div className={styles.statsSubtext}>{t('recurrentsPage.pausedCount', { count: pausedMasters.length })}</div>
-              </div>
-              <div className={styles.statsBlockPadded}>
-                <div className={styles.statsLabel}>{t('recurrentsPage.monthlySum')}</div>
-                <div className={styles.statsValue}>≈ {fmt(totalMensual)}</div>
-                <div className={styles.statsSubtext}>{t('recurrentsPage.monthlyPaymentsLabel')}</div>
-              </div>
-            </div>
-
-            <div className={styles.tabletOnly}>
-              <div className={styles.tabletStats}>
-                <div className={styles.totalsCard}>
-                  <div className={styles.statsLabel}>{t('recurrentsPage.activeLabel')}</div>
-                  <div className={styles.statsValue}>{activeMasters.length}</div>
-                  <div className={styles.statsSubtext}>{t('recurrentsPage.pausedCount', { count: pausedMasters.length })}</div>
-                  <div className={styles.totalsDivider}>
-                    <div className={styles.statsLabel}>{t('recurrentsPage.monthlySum')}</div>
-                    <div className={styles.statsValue}>≈ {fmt(totalMensual)}</div>
-                    <div className={styles.statsSubtext}>{t('recurrentsPage.monthlyPaymentsLabel')}</div>
-                  </div>
-                </div>
-                <div className={styles.freqCard}>
-                  <div className={styles.freqHead}>
-                    <span className={styles.iconChip}><CalendarDays size={18} color="var(--muted)" /></span>
-                    <span className={styles.freqTitle}>{t('recurrentsPage.byFreq')}</span>
-                    <button type="button" className={styles.infoButton} onClick={() => setInfoOpen(o => !o)} aria-expanded={infoOpen} aria-label={t('recurrentsPage.infoLabel')}>
-                      <Info size={16} color="var(--muted)" />
-                    </button>
-                  </div>
-                  {freqRows.map(r => (
-                    <div key={r.freq} className={styles.freqRow}>
-                      <span className={styles.freqLabel}>{getFrequencyLabel(r.freq)}<span className={styles.countPill}>{r.count}</span></span>
-                      <span className={styles.freqTrack}><span className={styles.freqFill} style={{ width: `${(r.amount / freqMax) * 100}%` }} /></span>
-                      <span className={styles.freqAmount}>≈ {fmt(r.amount)}</span>
-                    </div>
-                  ))}
-                  {installmentMasters.length > 0 && (
-                    <div className={styles.installmentsStrip}>
-                      <span className={styles.iconChip}><CreditCard size={18} color="var(--muted)" /></span>
-                      <div className={styles.installmentsInfo}>
-                        <div className={styles.installmentsTitle}>{t('recurrentsPage.installmentsCount', { count: installmentMasters.length })}</div>
-                        <div className={styles.installmentsSub}>{t('recurrentsPage.remainingPayments', { count: installmentsLeft })}</div>
-                      </div>
-                      <div className={styles.installmentsAmount}>
-                        <div className={styles.installmentsSub}>{t('recurrentsPage.remaining')}</div>
-                        <div className={styles.installmentsTitle}>{fmt(installmentsLeftAmount)}</div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-              {infoOpen && (
-                <div className={styles.infoNote}>
-                  {t('recurrentsPage.infoText')}
-                  {variableCount > 0 && ` ${t('recurrentsPage.variableNote', { count: variableCount })}`}
-                </div>
-              )}
-            </div>
-            </>
-          )}
-          </div>
-
-          {/* Filtros (tablet: una sola fila) */}
-          <div className={styles.filtersBlock}>
-          <div className={styles.filterRow}>
-            {[['todos',t('recurrentsPage.filters.all')],['activos',t('recurrentsPage.filters.active')],['pausados',t('recurrentsPage.filters.paused')]].map(([val, label]) => (
-              <FilterChip key={val} label={label} active={filterStatus === val} onClick={() => setFilterStatus(val)} />
-            ))}
-          </div>
-          <div data-coachmark="recurrentes-filtro-tipo" className={styles.filterRowLast}>
-            {[['todos',t('recurrentsPage.filters.all')],['recurrentes',t('recurrentsPage.filters.recurrent')],['parcialidades',t('recurrentsPage.filters.installments')]].map(([val, label]) => (
-              <FilterChip key={val} label={label} active={filterType === val} onClick={() => setFilterType(val)} />
-            ))}
-          </div>
-          </div>
-
-          {/* Lista por categoría */}
-          <div className={styles.categoryListWrapper}>
-            {dataLoading ? (
-              /* Fase 1 del sistema de carga por sección (agosto 2026):
-                 antes, con `payments` vacío a propósito durante la carga,
-                 `byCategory` quedaba en 0 y se mostraba el EmptyState real
-                 ("Sin recurrentes") como si fuera un dato cierto — ahora se
-                 muestra el esqueleto del acordeón mientras `dataLoading` es
-                 true, nunca el EmptyState prematuro ni el hueco vacío. */
-              <CategoryAccordionSkeleton count={3} />
-            ) : byCategory.length === 0 ? (
-              search ? (
-                <div className={styles.noResultsBlock}>
-                  <CreditCard size={32} color="var(--border)" className={styles.noResultsIcon} />
-                  <div className={styles.noResultsText}>
-                    {t('recurrentsPage.noResultsForSearch')}
-                  </div>
-                </div>
-              ) : (
-                <EmptyState title={t('recurrentsPage.noRecurrentsTitle')} subtitle={t('homePage.emptyState.subtitle')} onClick={onAdd} />
-              )
-            ) : byCategory.map(([cat, catMasters]) => {
-              const isOpen   = !!expandedCats[cat]
-              const catTotal = catMasters.reduce((s, m) => s + monthlyEquivalent(m), 0)
-              const catColor = getCatColor(cat, profile.custom_categories, profile.category_colors)
-              const CatIcon  = getCategoryIcon(cat, profile.category_icons)
-
-              return (
-                <div key={cat} className={styles.categoryCard}>
-                  {/* Header categoría */}
-                  <div {...kbd}
-                    onClick={() => setExpandedCats(prev => ({ ...prev, [cat]: !prev[cat] }))}
-                    className={`${styles.categoryHeader} ${isOpen ? styles.categoryHeaderOpen : ''}`}
-                  >
-                    <div className={styles.categoryIconWrapper} style={{ background: catColor }}>
-                      {CatIcon
-                        ? <CatIcon size={18} color={catInk(catColor)} strokeWidth={2} />
-                        : <span className={styles.categoryFallbackDot} />
-                      }
-                    </div>
-                    <div className={styles.categoryInfo}>
-                      <div className={styles.categoryName}>{getCategoryLabel(cat)}</div>
-                      <div className={styles.categoryMeta}>
-                        {t('recurrentsPage.paymentCount', { count: catMasters.length })}
-                        {catTotal > 0 && ` · ≈ ${fmt(catTotal)}${t('recurrentsPage.perMonthSuffix')}`}
-                      </div>
-                    </div>
-                    <div className={`${styles.categoryChevron} ${isOpen ? styles.categoryChevronOpen : ''}`}>
-                      <ChevronDown size={18} color="var(--text)" />
-                    </div>
-                  </div>
-
-                  {/* Items */}
-                  <div className={`${styles.collapse} ${isOpen ? styles.collapseOpen : ''}`}>
-                    <div className={styles.tableHead} aria-hidden="true">
-                      <span>{t('recurrentsPage.colName')}</span>
-                      <span>{t('recurrentsPage.colFreq')}</span>
-                      <span>{t('recurrentsPage.colNext')}</span>
-                      <span className={styles.tableHeadAmount}>{t('recurrentsPage.colAmount')}</span>
-                      <span />
-                    </div>
-                    {catMasters.map((master, idx) => {
-                      const isLast       = idx === catMasters.length - 1
-                      const next         = getNextDue(master.id)
-                      const paid         = getPaidCount(master.id)
-                      const isConfirming = confirmDelete === master.id
-
-                      return (
-                        <div key={master.id}>
-                          <div {...kbd}
-                            data-payment-id={master.id}
-                            onClick={() => setSelectedMasterId(master.id)}
-                            className={`${styles.masterRow} ${styles.masterRowClickable} ${isLast && !isConfirming ? styles.masterRowNoBorder : ''}`}
-                          >
-                            {/* Info */}
-                            <div className={styles.masterInfo}>
-                              <div className={styles.masterNameRow}>
-                                {master.name}
-                                {master.is_variable && (
-                                  <span className={styles.variableBadge}>{t('paymentsPage.variable')}</span>
-                                )}
-                              </div>
-                              <div className={styles.masterFreqRow}>
-                                {getFrequencyLabel(master.recur_freq)}
-                                {!(master.is_installment || master.total_installments > 0) && paid > 0 && <span className={styles.completedSuffix}>{` · ${t('recurrentsPage.completedCount', { count: paid })}`}</span>}
-                              </div>
-                              {!master.paused && next && !(master.is_installment || master.total_installments > 0) && (
-                                <div className={styles.masterNextDate}>
-                                  {t('recurrentsPage.nextDate', { date: formatNextDate(next.due_date) })}
-                                </div>
-                              )}
-                              {!master.paused && next && (master.is_installment || master.total_installments > 0) && (
-                                <div className={styles.masterNextDate}>
-                                  {t('recurrentsPage.installmentProgress', { current: next.current_installment, total: master.total_installments })}
-                                </div>
-                              )}
-                              {master.paused && (
-                                <div className={styles.masterPausedText}>{t('recurrentsPage.paused')}</div>
-                              )}
-                            </div>
-
-                            {/* Monto */}
-                            {!master.is_variable && (
-                              <div className={styles.masterAmount}>
-                                {fmt(master.amount)}
-                              </div>
-                            )}
-
-                            {/* Botones */}
-                            <div className={styles.masterActionsRow}>
-                              {/* `_syncing` (fase 3, v0.9.481): el paquete de este
-                                  master todavía no se confirma — pausar/reactivar
-                                  se atenúa y el menú se cambia por el ícono
-                                  girando (mismo criterio que PayCard.jsx). */}
-                              <ActionBtn
-                                disabled={master._syncing}
-                                onClick={e => {
-                                  e.stopPropagation()
-                                  canEdit ? (master.paused ? onResume(master.id) : onPause(master.id)) : blocked(master.paused ? t('recurrentsPage.actionResume') : t('recurrentsPage.actionPause'))
-                                }}
-                                color={!canEdit ? 'var(--border)' : master.paused ? 'var(--paid)' : 'var(--warning)'}
-                                label={master.paused ? t('recurrentsPage.actionResume') : t('recurrentsPage.actionPause')}
-                              >
-                                {master.paused
-                                  ? <Play size={13} color={canEdit ? 'var(--surface)' : 'var(--muted)'} />
-                                  : <Pause size={13} color={canEdit ? 'var(--surface)' : 'var(--muted)'} />
-                                }
-                              </ActionBtn>
-                              {master._syncing ? (
-                                <button type="button" disabled onClick={e => e.stopPropagation()} className={styles.masterMenuButton} aria-label={t('sync.syncing')}>
-                                  <span className="sync-spinner"><Loader2 size={16} color="var(--text)" /></span>
-                                </button>
-                              ) : (
-                              <button
-                                onClick={e => {
-                                  e.stopPropagation()
-                                  const rect = e.currentTarget.getBoundingClientRect()
-                                  // Menú fijo de 2 ítems (~95px) — si no cabe
-                                  // debajo antes del final de la pantalla, se
-                                  // abre hacia arriba (bug real: se veía
-                                  // cortado por el navbar en recurrentes
-                                  // cerca del fondo de la lista).
-                                  const estimatedHeight = 95
-                                  const openUpward = rect.bottom + estimatedHeight > window.innerHeight
-                                  setOpenMenu(openMenu?.id === master.id ? null : {
-                                    id: master.id,
-                                    top: openUpward ? undefined : rect.bottom + 4,
-                                    bottom: openUpward ? window.innerHeight - rect.top + 4 : undefined,
-                                    right: window.innerWidth - rect.right,
-                                  })
-                                }}
-                                className={styles.masterMenuButton}
-                                aria-label={t('recurrentsPage.menuAriaLabel')}
-                              >
-                                <MoreVertical size={16} color="var(--text)" />
-                              </button>
-                              )}
-                            </div>
-                          </div>
-
-                          {/* Confirmación borrado */}
-                          <Collapse open={isConfirming}>
-                            <div className={`${styles.deleteConfirmPanel} ${isLast ? styles.deleteConfirmPanelNoBorder : ''}`}>
-                              <div className={styles.deleteConfirmText}>
-                                {t('recurrentsPage.deleteConfirm', { name: master.name })}
-                              </div>
-                              <div className={styles.deleteConfirmRow}>
-                                <button onClick={() => setConfirmDelete(null)} className={styles.deleteCancelButton}>
-                                  {t('buttons.cancel')}
-                                </button>
-                                <button onClick={() => { onDelete && onDelete(master.id, master); setConfirmDelete(null) }} className={styles.deleteConfirmButton}>
-                                  {t('buttons.delete')}
-                                </button>
-                              </div>
-                            </div>
-                          </Collapse>
-                        </div>
-                      )
-                    })}
-                  </div>
-                </div>
-              )
-            })}
-
-          </div>
-
-          </>
-          )}
-
-          </div>
-        </div>
-      </div>
       )}
     </div>
   )

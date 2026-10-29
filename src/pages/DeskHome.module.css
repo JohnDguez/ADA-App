@@ -367,3 +367,38 @@
   .payTab .tileHero .tileSub { display: none; }
   .payTab .tileHero .tileNum { margin-top: 6px; }
 }
+
+/* Recurrentes en tablet (mockups «Recurrentes · vertical/horizontal»):
+   DeskRecurrents reutiliza este módulo con `.tablet` + `.recTab`. */
+@media (max-width: 959px) {
+  .recTab .tileHero {
+    grid-column: 1 / -1; grid-row: 1;
+    display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "label sub" "num sub";
+    align-items: center; column-gap: 16px; min-height: 0; padding: 20px 24px;
+  }
+  .recTab .tileHero .tileLabel { grid-area: label; align-self: end; font-weight: 400; font-size: 14px; opacity: 0.8; }
+  .recTab .tileHero .tileNum { grid-area: num; margin-top: 6px; align-self: start; font-size: 44px; }
+  .recTab .tileHero .tileNum small { font-size: 24px; }
+  .recTab .tileHero .tileSub { grid-area: sub; margin: 0; min-height: 0; max-width: 140px; text-align: right; line-height: 1.4; font-size: 14px; }
+  .recTab .tile:not(.tileHero) { grid-column: span 2; grid-row: 2; min-height: 0; padding: 16px 18px; justify-content: center; gap: 3px; }
+  .recTab .tile:not(.tileHero) .tileLabel { font-size: 14px; font-weight: 400; color: var(--muted); }
+  .recTab .tile:not(.tileHero) .tileNum { margin-top: 0; font-size: 27px; letter-spacing: -1px; line-height: 1.1; }
+  .recTab .tile:not(.tileHero) .tileNum small { font-size: 15px; }
+  .recTab .tile:not(.tileHero) .tileSub { margin-top: 0; min-height: 0; font-size: 12px; }
+  .recTab .list { grid-area: 3 / 1 / 4 / -1; overflow: visible; }
+  .recTab .listBody { overflow: visible; flex: none; }
+}
+@media (min-width: 768px) and (max-width: 1099px) {
+  .recTab .chip { height: 32px; padding: 0 11px; font-size: 12.5px; }
+  .recTab .list { position: relative; }
+}
+@media (min-width: 960px) and (max-width: 1099px) {
+  .recTab .tiles { grid-template-columns: 1.3fr 1fr 1fr 1fr; gap: 12px; }
+  .recTab .tileHero .tileSub { margin-top: 4px; }
+  .recTab .tileHero .tileNum { font-size: 34px; }
+  .recTab .tileHero .tileNum small { font-size: 19px; }
+  .recTab .tileHero .tileLabel { font-weight: 400; font-size: 14px; opacity: 0.8; }
+  .recTab .tile:not(.tileHero) .tileLabel { font-weight: 400; color: var(--muted); }
+  .recTab .chip { height: 32px; padding: 0 9px; font-size: 12px; }
+  .recTab .tile:not(.tileHero) .tileSub { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+}

@@ -1,4 +1,6 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect, useRef } from 'react'
+import { createPortal } from 'react-dom'
+import { usePresence } from '../lib/usePresence'
 import { useTranslation } from 'react-i18next'
 import { Plus, Search, ChevronDown, Pause, Play, MoreVertical, Loader2, Info, ChevronsDownUp, ChevronsUpDown } from 'lucide-react'
 import { NewSharedSpacePanel } from '../components/NewSharedSpacePanel'
@@ -24,7 +26,7 @@ function splitMoney(str) {
   return i < 0 ? [str, ''] : [str.slice(0, i), str.slice(i)]
 }
 
-export function DeskRecurrents({ d }) {
+export function DeskRecurrents({ d, tablet = false }) {
   const { t } = useTranslation()
   const {
     profile, dataLoading, activeSpaceId, sharedSpaces, spacePermissions, slideClass, spaceJustChanged, onOpenPremium, onSpaceReady, onAdd, onStartAdd,
@@ -37,6 +39,27 @@ export function DeskRecurrents({ d }) {
   const [collapsed, setCollapsed] = useState({})
   const [infoOpen, setInfoOpen] = useState(false)
   const [totInt, totCents] = splitMoney(fmt(totals.monthly))
+  // Tablet: en vertical el detalle es un panel lateral sobre la lista; en
+  // horizontal reemplaza la columna derecha (como en escritorio).
+  const [landscape, setLandscape] = useState(() => typeof window !== 'undefined' && window.matchMedia('(min-width: 960px)').matches)
+  useEffect(() => {
+    if (!tablet) return undefined
+    const mq = window.matchMedia('(min-width: 960px)')
+    const on = e => setLandscape(e.matches)
+    mq.addEventListener('change', on)
+    return () => mq.removeEventListener('change', on)
+  }, [tablet])
+  const drawerMode = tablet && !landscape
+  const drawerPresence = usePresence(drawerMode && !!selectedMaster, 280)
+  const lastMasterRef = useRef(null)
+  if (selectedMaster) lastMasterRef.current = selectedMaster
+  const drawerMaster = selectedMaster || lastMasterRef.current
+  useEffect(() => {
+    if (!drawerMode || !selectedMaster) return undefined
+    const onKey = e => { if (e.key === 'Escape') setSelectedMasterId(null) }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [drawerMode, selectedMaster, setSelectedMasterId])
   const isInst = m => m.is_installment || m.total_installments > 0
 
   const status = m => {
@@ -63,8 +86,8 @@ export function DeskRecurrents({ d }) {
   const rowsCount = useMemo(() => byCategory.reduce((a, [, l]) => a + l.length, 0), [byCategory])
 
   return (
-    <div className={home.root}>
-      <header className={home.head}>
+    <div className={`${home.root} ${tablet ? `${home.tablet} ${home.recTab} ${styles.tabRec}` : ''}`}>
+      <header className={`${home.head} ${tablet ? styles.tabHeader : ''}`}>
         <div className={home.band} aria-hidden="true">
           {mountedKeys.map(key => (
             <img key={key} src={HEADER_IMAGES[key]} alt="" className={`${home.bandImg} ${timeOfDay === key ? home.bandImgOn : ''}`} />
@@ -79,18 +102,43 @@ export function DeskRecurrents({ d }) {
             <Search size={16} strokeWidth={1.9} />
             <input aria-label={t('recurrentsPage.searchPlaceholder')} value={search} onChange={e => setSearch(e.target.value)} placeholder={t('recurrentsPage.searchPlaceholder')} />
           </label>
-          <DeskAddButton onAdd={onAdd} onStartAdd={onStartAdd} />
+          {!tablet && <DeskAddButton onAdd={onAdd} onStartAdd={onStartAdd} />}
         </div>
       </header>
 
       <div className={`${home.fill} ${slideClass || ''}`}>
-        <div className={`${home.fill} ${spaceJustChanged ? 'content-slide-up' : ''}`}>
+        <div className={`${home.fill} ${tablet ? styles.tabGrid : ''} ${spaceJustChanged ? 'content-slide-up' : ''}`}>
           {activeSpaceId === 'new' ? (
             <NewSharedSpacePanel profile={profile} sharedSpaces={sharedSpaces} onOpenPremium={onOpenPremium} onCreated={onSpaceReady} onJoined={onSpaceReady} />
           ) : (
             <>
               <section className={home.tiles} data-coachmark="recurrentes-stats">
-                <div className={`${home.tile} ${home.tileHero}`}>
+                {tablet ? (
+                  <>
+                    <div className={`${home.tile} ${home.tileHero}`}>
+                      <span className={home.tileLabel}>{t('recurrentsPage.monthlySum')}</span>
+                      <span className={home.tileNum}>{dataLoading ? <Bone w={150} h={36} r={8} /> : <>≈{totInt}<small>{totCents}</small></>}</span>
+                      <span className={home.tileSub}>{t('recurrentsPage.monthlyPaymentsLabel')}</span>
+                    </div>
+                    <div className={home.tile}>
+                      <span className={home.tileLabel}>{t('recurrentsPage.activeLabel')}</span>
+                      <span className={home.tileNum}>{dataLoading ? <Bone w={60} h={30} r={8} /> : totals.active}</span>
+                      <span className={home.tileSub}>{dataLoading ? '' : t('deskRecurrents.ofTotal', { count: totals.all })}</span>
+                    </div>
+                    <div className={home.tile}>
+                      <span className={home.tileLabel}>{t('deskRecurrents.pausedLabel')}</span>
+                      <span className={home.tileNum}>{dataLoading ? <Bone w={60} h={30} r={8} /> : totals.paused}</span>
+                      <span className={home.tileSub}>{t('deskRecurrents.pausedSub')}</span>
+                    </div>
+                    <div className={home.tile}>
+                      <span className={home.tileLabel}>{t('deskRecurrents.installmentsLabel')}</span>
+                      <span className={home.tileNum}>{dataLoading ? <Bone w={60} h={30} r={8} /> : installments.count}</span>
+                      <span className={home.tileSub}>{installments.count > 0 ? <><b>{t('recurrentsPage.remainingPayments', { count: installments.left })}</b> · {fmt(installments.leftAmount)}</> : t('deskRecurrents.noInstallments')}</span>
+                    </div>
+                  </>
+                ) : (
+                  <>
+<div className={`${home.tile} ${home.tileHero}`}>
                   <span className={home.tileLabel}>{t('recurrentsPage.activeLabel')}</span>
                   <span className={home.tileNum}>{dataLoading ? <Bone w={80} h={36} r={8} /> : totals.active}</span>
                   <span className={home.tileSub}>{dataLoading ? '' : t('deskRecurrents.ofTotal', { count: totals.all })}</span>
@@ -110,6 +158,8 @@ export function DeskRecurrents({ d }) {
                   <span className={home.tileNum}>{dataLoading ? <Bone w={80} h={36} r={8} /> : installments.count}</span>
                   <span className={home.tileSub}>{installments.count > 0 ? <><b>{t('recurrentsPage.remainingPayments', { count: installments.left })}</b> · {fmt(installments.leftAmount)}</> : t('deskRecurrents.noInstallments')}</span>
                 </div>
+                                </>
+                )}
               </section>
 
               <div className={home.body}>
@@ -171,12 +221,15 @@ export function DeskRecurrents({ d }) {
                                 onClick={() => setSelectedMasterId(selectedMaster?.id === m.id ? null : m.id)}
                                 onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setSelectedMasterId(selectedMaster?.id === m.id ? null : m.id) } }}
                                 className={`${styles.tr} ${selectedMaster?.id === m.id ? styles.trSel : ''} ${m.paused ? styles.trPaused : ''}`}>
-                                <div className={styles.name} title={m.name}>
-                                  <span className={styles.nameText}>{m.name}</span>
-                                  {m.is_variable && <em>{t('paymentsPage.variable')}</em>}
+                                <div className={styles.nameCell}>
+                                  <div className={styles.name} title={m.name}>
+                                    <span className={styles.nameText}>{m.name}</span>
+                                    {m.is_variable && <em>{t('paymentsPage.variable')}</em>}
+                                  </div>
+                                  <span className={styles.sub}>{getFrequencyLabel(m.recur_freq)}{!isInst(m) && getPaidCount(m.id) > 0 && ` · ${t('recurrentsPage.completedCount', { count: getPaidCount(m.id) })}`} · {status(m)}</span>
                                 </div>
-                                <span className={styles.muted}>{getFrequencyLabel(m.recur_freq)}{!isInst(m) && getPaidCount(m.id) > 0 && ` · ${t('recurrentsPage.completedCount', { count: getPaidCount(m.id) })}`}</span>
-                                <span className={styles.muted}>{status(m)}</span>
+                                <span className={`${styles.muted} ${styles.colFreq}`}>{getFrequencyLabel(m.recur_freq)}{!isInst(m) && getPaidCount(m.id) > 0 && ` · ${t('recurrentsPage.completedCount', { count: getPaidCount(m.id) })}`}</span>
+                                <span className={`${styles.muted} ${styles.colNext}`}>{status(m)}</span>
                                 <span className={styles.amount}>{m.is_variable ? '' : fmt(m.amount)}</span>
                                 <div className={styles.actions}>
                                   <button type="button" className={styles.roundBtn} disabled={m._syncing}
@@ -210,8 +263,8 @@ export function DeskRecurrents({ d }) {
 
                 {/* ── Columna derecha: resumen o detalle ── */}
                 <aside className={home.side}>
-                  {selectedMaster ? (
-                    <section className={`${home.card} ${styles.detail}`}>
+                  {selectedMaster && !drawerMode ? (
+                    <section key="detail" className={`${home.card} ${styles.detail} ${tablet ? styles.swapIn : ''}`}>
                       <RecurrentDetailPanel
                         master={selectedMaster} payments={payments} profile={profile} canEdit={canEdit} canDelete={canDelete} blocked={blocked} desk
                         onBack={() => setSelectedMasterId(null)}
@@ -222,7 +275,7 @@ export function DeskRecurrents({ d }) {
                     </section>
                   ) : (
                     <>
-                      <section className={home.card}>
+                      <section className={`${home.card} ${tablet ? `${styles.swapIn} ${installments.count > 0 ? styles.cFreq : styles.cFreqSolo}` : ''}`}>
                         <div className={styles.cardHead}>
                           <h2 className={home.cardTitle}>{t('recurrentsPage.byFreq')}</h2>
                           <button type="button" className={styles.infoBtn} onClick={() => setInfoOpen(o => !o)} aria-expanded={infoOpen} aria-label={t('recurrentsPage.infoLabel')}><Info size={16} /></button>
@@ -239,7 +292,7 @@ export function DeskRecurrents({ d }) {
                       </section>
 
                       {installments.count > 0 && (
-                        <section className={home.card}>
+                        <section className={`${home.card} ${tablet ? `${styles.swapIn} ${styles.cInst}` : ''}`}>
                           <h2 className={home.cardTitle}>{t('deskRecurrents.installmentsLabel')}</h2>
                           <div className={styles.inst}>
                             <div><b>{t('recurrentsPage.installmentsCount', { count: installments.count })}</b><span>{t('recurrentsPage.remainingPayments', { count: installments.left })}</span></div>
@@ -266,6 +319,21 @@ export function DeskRecurrents({ d }) {
           )}
         </div>
       </div>
+      {drawerMode && drawerPresence.render && drawerMaster && createPortal(
+        <>
+          <div className={`${styles.scrim} ${drawerPresence.closing ? styles.scrimOut : ''}`} onClick={() => setSelectedMasterId(null)} />
+          <aside className={`${styles.drawer} ${drawerPresence.closing ? styles.drawerOut : ''}`} aria-label={drawerMaster.name}>
+            <RecurrentDetailPanel
+              master={drawerMaster} payments={payments} profile={profile} canEdit={canEdit} canDelete={canDelete} blocked={blocked} desk
+              onBack={() => setSelectedMasterId(null)}
+              onEdit={() => onEdit && onEdit(drawerMaster)}
+              onPause={() => onPause(drawerMaster.id)}
+              onResume={() => onResume(drawerMaster.id)}
+              onDelete={() => { onDelete && onDelete(drawerMaster.id, drawerMaster); setSelectedMasterId(null) }} />
+          </aside>
+        </>,
+        document.body,
+      )}
     </div>
   )
 }
