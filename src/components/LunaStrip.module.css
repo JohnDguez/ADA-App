@@ -245,7 +245,6 @@
    El contenedor recorta a Luna; el encabezado de DeskHome lo deja pisar el
    hueco hasta las tarjetas. */
 .peek {
-  --tint: var(--accent);
   position: relative;
   display: flex;
   align-items: flex-end;
