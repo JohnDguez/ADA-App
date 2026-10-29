@@ -84,7 +84,7 @@ export function MobileGoals({ d }) {
   if (noGoalsAtAll) {
     return (
       <div className={styles.root} data-coachmark="metas-resumen">
-        <EmptyState icon={PiggyBank} title={t('goalsPage.noGoalsAtAllTitle')} subtitle={t('goalsPage.noGoalsAtAllSubtitle')} onClick={onAdd} />
+        <EmptyState mobile icon={PiggyBank} title={t('goalsPage.noGoalsAtAllTitle')} subtitle={t('goalsPage.noGoalsAtAllSubtitle')} onClick={onAdd} />
       </div>
     )
   }
@@ -129,8 +129,8 @@ export function MobileGoals({ d }) {
       <div key={goalsView} className={styles.list}>
         {showing.length === 0 ? (
           goalsView === 'activas'
-            ? <EmptyState icon={PiggyBank} title={t('goalsPage.noActiveGoalsTitle')} subtitle={t('goalsPage.noActiveGoalsSubtitle')} onClick={onAdd} />
-            : <EmptyState icon={Target} title={t('goalsPage.noCompletedGoalsTitle')} subtitle={t('goalsPage.noCompletedGoalsSubtitle')} />
+            ? <EmptyState mobile icon={PiggyBank} title={t('goalsPage.noActiveGoalsTitle')} subtitle={t('goalsPage.noActiveGoalsSubtitle')} onClick={onAdd} />
+            : <EmptyState mobile icon={Target} title={t('goalsPage.noCompletedGoalsTitle')} subtitle={t('goalsPage.noCompletedGoalsSubtitle')} />
         ) : (
           <div data-coachmark={goalsView === 'activas' ? 'metas-lista' : undefined} className={styles.grid}>
             {showing.map((g, i) => (

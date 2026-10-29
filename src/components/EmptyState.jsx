@@ -20,9 +20,9 @@ import { kbd, kbdIf } from '../lib/a11y'
 // categorías — dos acciones del mismo tamaño hubieran competido por el
 // mismo tap, por eso es un link chiquito y no otro botón grande). Lleva su
 // propio `stopPropagation` para no disparar también el `onClick` principal.
-export function EmptyState({ icon: Icon = Plus, title, subtitle, onClick, secondaryLabel, onSecondaryClick, desk = false }) {
+export function EmptyState({ icon: Icon = Plus, title, subtitle, onClick, secondaryLabel, onSecondaryClick, desk = false, mobile = false }) {
   return (
-    <div {...kbdIf(!!onClick)} onClick={onClick} className={`${styles.container} ${onClick ? styles.clickable : ''} ${desk ? styles.desk : ''}`}>
+    <div {...kbdIf(!!onClick)} onClick={onClick} className={`${styles.container} ${onClick ? styles.clickable : ''} ${desk ? styles.desk : ''} ${mobile ? styles.mobile : ''}`}>
       <div className={styles.iconWrapper}>
         <Icon size={18} color="var(--surface)" />
       </div>

@@ -137,7 +137,7 @@ function PaymentsTab({ d }) {
 
       {visibleRows.length === 0 ? (
         dataLoading ? <PaymentRowSkeleton count={4} /> : (
-          <EmptyState
+          <EmptyState mobile
             title={selectedCat ? t('deskPayments.noPaymentsInCategory', { cat: getCategoryLabel(selectedCat) }) : view.mode === 'periodo' ? t('paymentsPage.noPaymentsCurrentPeriod') : t('paymentsPage.noPaymentsInMonth', { month: getMonths()[view.month], year: view.year })}
             subtitle={t('homePage.emptyState.subtitle')} onClick={onAdd} />
         )
@@ -235,7 +235,7 @@ function AnalysisTab({ d }) {
         </div>
         {catData.length === 0 ? (
           dataLoading ? <CategoryListSkeleton count={4} /> : (
-            <EmptyState title={t('paymentsPage.noExpensesTitle')} subtitle={t('homePage.emptyState.subtitle')} onClick={onAdd}
+            <EmptyState mobile title={t('paymentsPage.noExpensesTitle')} subtitle={t('homePage.emptyState.subtitle')} onClick={onAdd}
               secondaryLabel={t('paymentsPage.customizeCategories')} onSecondaryClick={d.onGoCategories} />
           )
         ) : (

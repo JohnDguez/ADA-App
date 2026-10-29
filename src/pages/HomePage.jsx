@@ -687,7 +687,7 @@ export function HomePage({ payments, dataLoading = false, profile, spaceSwitcher
                      nunca con datos del espacio anterior. Mismo criterio en
                      el otro caso de abajo y en los 2 de PaymentsPage. */
                   ? (dataLoading ? <RailSkeleton count={3} /> : <>
-                      {vencidos.length === 0 && <EmptyState title={t('homePage.emptyState.currentPeriodTitle')} subtitle={t('homePage.emptyState.subtitle')} onClick={onAdd} secondaryLabel={onImport ? t('importCsv.emptyLink') : undefined} onSecondaryClick={onImport} />}
+                      {vencidos.length === 0 && <EmptyState mobile={isMobile} title={t('homePage.emptyState.currentPeriodTitle')} subtitle={t('homePage.emptyState.subtitle')} onClick={onAdd} secondaryLabel={onImport ? t('importCsv.emptyLink') : undefined} onSecondaryClick={onImport} />}
                       <TipCard inSpace={!!(activeSpaceId && activeSpaceId !== 'new')} isOwner={spacePermissions?.isRestricted === false} perms={spacePermissions} compact={vencidos.length > 0} onAction={a => a?.startsWith('settings:') ? onGoSettingsSection?.(a.slice(9)) : a?.startsWith('tab:') ? onGoTab?.(a.slice(4)) : (a === 'voice' || a === 'scan') ? onStartAdd?.(a) : a === 'addmenu' ? (onOpenAddMenu || onAdd)?.() : onAdd?.()} />
                     </>)
                   : <MobList isMobile={isMobile}><PayRail payments={delPeriodo} cfg={profile} dotColor="var(--upcoming-border)" dotTextColor="var(--impact-warning-text)" handlers={handlers} permissions={spacePermissions} spaceMembers={spaceMembers} deskMode={isMobile} compact={isMobile} /></MobList>
@@ -698,7 +698,7 @@ export function HomePage({ payments, dataLoading = false, profile, spaceSwitcher
             <div ref={nextPanelRef} className={`${styles.contentPanel} ${activeCard === 1 ? '' : styles.panelOff}`} style={{ transform: `translateX(${activeCard === 0 ? 100 : 0}%)` }}>
               <div className={styles.periodSection}>
                 {upcoming.length === 0
-                  ? (dataLoading ? <RailSkeleton count={2} /> : <EmptyState title={t('homePage.emptyState.nextPeriodTitle')} subtitle={t('homePage.emptyState.subtitle')} onClick={onAdd} />)
+                  ? (dataLoading ? <RailSkeleton count={2} /> : <EmptyState mobile={isMobile} title={t('homePage.emptyState.nextPeriodTitle')} subtitle={t('homePage.emptyState.subtitle')} onClick={onAdd} />)
                   : <MobList isMobile={isMobile}><PayRail payments={upcoming} cfg={profile} dotColor="var(--accent)" dotTextColor="var(--bg)" handlers={handlers} permissions={spacePermissions} nextPeriodMode spaceMembers={spaceMembers} deskMode={isMobile} compact={isMobile} /></MobList>
                 }
               </div>

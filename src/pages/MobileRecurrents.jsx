@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Search, ChevronDown, MoreVertical, Loader2, CreditCard } from 'lucide-react'
+import { Search, ChevronDown, MoreVertical, Loader2, CreditCard, Repeat } from 'lucide-react'
 import { EmptyState } from '../components/EmptyState'
 import { ChipMenu } from '../components/ChipMenu'
 import { Bone, CategoryAccordionSkeleton } from '../components/SkeletonLoader'
@@ -91,7 +91,7 @@ export function MobileRecurrents({ d }) {
         search ? (
           <div className={styles.noResults}><CreditCard size={32} strokeWidth={1.6} /><span>{t('recurrentsPage.noResultsForSearch')}</span></div>
         ) : (
-          <EmptyState title={t('recurrentsPage.noRecurrentsTitle')} subtitle={t('homePage.emptyState.subtitle')} onClick={onAdd} />
+          <EmptyState mobile icon={Repeat} title={t('recurrentsPage.noRecurrentsTitle')} subtitle={t('homePage.emptyState.subtitle')} onClick={onAdd} />
         )
       ) : byCategory.map(([cat, list], gi) => {
         const isOpen = !!open[cat]

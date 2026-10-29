@@ -62,3 +62,21 @@
 .desk .title { font-size: 17px; font-weight: 600; }
 .desk .subtitle { font-size: 13px; color: var(--muted); }
 .desk .secondaryLink { font-size: 13px; font-weight: 600; margin-top: 14px; }
+
+/* Móvil (v0.9.912): tarjeta con borde punteado, ícono en círculo oscuro con
+   entrada animada. Regla 54: rem/clamp. */
+.mobile {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  background: var(--desk-card); border-color: var(--desk-hatch);
+  border-radius: clamp(1rem, 5vw, 1.25rem);
+  padding: clamp(1.75rem, 9vw, 2.5rem) clamp(1rem, 5vw, 1.5rem);
+  animation: emptyIn 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.mobile .iconWrapper { width: 3.25rem; height: 3.25rem; background: var(--desk-pill); margin-bottom: 0.875rem; animation: emptyPop 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) 0.1s both; }
+.mobile .iconWrapper svg { stroke: var(--desk-pill-ink); width: 1.375rem; height: 1.375rem; }
+.mobile .title { font-size: 1rem; font-weight: 600; margin-bottom: 0.25rem; }
+.mobile .subtitle { font-size: 0.8125rem; color: var(--muted); max-width: 18rem; line-height: 1.4; }
+.mobile .secondaryLink { font-size: 0.8125rem; font-weight: 600; margin-top: 0.875rem; }
+@keyframes emptyIn { from { opacity: 0; transform: translateY(0.5rem); } to { opacity: 1; transform: none; } }
+@keyframes emptyPop { from { opacity: 0; transform: scale(0.6); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .mobile, .mobile .iconWrapper { animation: none; } }
