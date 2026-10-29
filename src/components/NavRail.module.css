@@ -39,16 +39,22 @@
     transition: background .22s ease, color .22s ease;
   }
   .nav:hover { background: var(--desk-chip); filter: none; }
-  .navOn, .navOn:hover { background: var(--desk-pill); color: var(--desk-pill-ink); }
+  .navOn, .navOn:hover { background: none; color: var(--text); }
+  .navOn svg { color: var(--accent); }
+  .navOn::before, .itOn::before, .itSpace::before {
+    content: ""; position: absolute; left: -12px; top: 8px; bottom: 8px; width: 5px;
+    border-radius: 0 4px 4px 0; background: var(--accent);
+  }
   .divider { width: 32px; height: 1px; background: var(--desk-hair); margin: 8px 0; flex: none; }
-  .spaceBtn { background: var(--desk-card); box-shadow: var(--desk-shadow); color: var(--text); }
-  .spaceBtn:hover { background: var(--desk-hover-fill); filter: none; }
+  .spaces { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+  .premiumIco { color: var(--premium-gold-text); }
   .badge {
     position: absolute; right: 2px; top: 2px;
     min-width: 18px; height: 18px; padding: 0 5px; box-sizing: border-box;
     border-radius: 99px; background: var(--danger); color: var(--on-danger);
     font-size: 11px; font-weight: 700; display: grid; place-items: center;
   }
+  .iconWrap .badge { right: -10px; top: -9px; }
   .grow { flex: 1; }
   .iconWrap { position: relative; display: grid; place-items: center; }
   .dot { position: absolute; top: 0; right: 1px; width: 9px; height: 9px; border-radius: 50%; background: var(--danger); box-shadow: 0 0 0 2px var(--desk-panel); }
@@ -93,12 +99,16 @@
   }
   .it:hover { background: var(--desk-chip); filter: none; }
   .it > span:not([class*="badge"]) { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .itOn, .itOn:hover { background: var(--desk-pill); color: var(--desk-pill-ink); font-weight: 600; }
+  .it { position: relative; }
+  .itOn, .itOn:hover { color: var(--text); font-weight: 700; }
+  .itOn::before { left: -14px; top: 6px; bottom: 6px; }
+  .itOn svg, .itSpace svg { color: var(--accent); }
   .spaceRow { padding: 0 8px 0 0; gap: 2px; }
   .spaceMain { flex: 1; min-width: 0; min-height: 44px; display: flex; align-items: center; gap: 12px; padding: 0 0 0 12px; background: none; color: inherit; font-size: inherit; text-align: left; }
   .spaceMain span:first-of-type { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .spaceMain:hover { filter: none; }
-  .itSpace, .itSpace:hover { background: var(--desk-card); box-shadow: var(--desk-shadow); font-weight: 600; }
+  .itSpace, .itSpace:hover { font-weight: 700; }
+  .itSpace::before { left: -14px; top: 6px; bottom: 6px; }
   .itPremium { color: var(--premium-gold-text); }
   .mini { width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; background: none; color: var(--muted); flex: none; }
   .mini:hover { background: var(--desk-chip); filter: none; }

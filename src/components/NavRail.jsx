@@ -52,7 +52,6 @@ export function NavRail({ active, onChange, profile, unreadCount, onOpenNotifs, 
     : item.kind === 'new' ? (item.premiumLocked ? Crown : Plus)
     : item.entry.membership.role === 'owner' ? Crown : UsersRound
   const activeItem = items.find(it => it.id === activeSpaceId) || (activeSpaceId === 'new' ? items.find(it => it.kind === 'new') : null) || items[0]
-  const ActiveIcon = iconFor(activeItem)
   const overdue = spaceStats[activeSpaceId && activeSpaceId !== 'new' ? activeSpaceId : 'personal']?.overdue || 0
   const isRealSpace = activeItem?.kind === 'space'
   const isPinned = (defaultSpaceId ?? null) === (isRealSpace ? activeItem.id : null)
@@ -76,10 +75,20 @@ export function NavRail({ active, onChange, profile, unreadCount, onOpenNotifs, 
           ))}
         </nav>
         <div className={styles.divider} />
-        <button type="button" data-coachmark="home-space-switcher" className={`${styles.nav} ${styles.spaceBtn}`} onClick={() => setExpanded(true)} aria-label={activeItem?.name}>
-          <ActiveIcon size={22} strokeWidth={1.8} />
-          {overdue > 0 && <span className={styles.badge}>{formatBadgeCount(overdue)}</span>}
-        </button>
+        <div className={styles.spaces} data-coachmark="home-space-switcher">
+          {items.map(item => {
+            const Icon = iconFor(item)
+            const isActive = item.id === activeSpaceId || (item.kind === 'new' && activeSpaceId === 'new')
+            return (
+              <button key={item.id ?? 'personal'} type="button" className={`${styles.nav} ${isActive ? styles.navOn : ''}`} onClick={() => pickSpace(item)} aria-label={item.name} aria-current={isActive ? 'true' : undefined}>
+                <span className={styles.iconWrap}>
+                  <Icon size={22} strokeWidth={isActive ? 2.2 : 1.8} className={item.premiumLocked ? styles.premiumIco : undefined} />
+                  {isActive && overdue > 0 && <span className={styles.badge}>{formatBadgeCount(overdue)}</span>}
+                </span>
+              </button>
+            )
+          })}
+        </div>
         <div className={styles.grow} />
         <button type="button" className={`${styles.nav} ${active === 'notifications' ? styles.navOn : ''}`} onClick={onOpenNotifs} aria-label={t('pageHeader.notificationsAriaLabel')}>
           <span className={styles.iconWrap}>
