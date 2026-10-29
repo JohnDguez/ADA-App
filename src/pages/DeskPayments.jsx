@@ -101,6 +101,9 @@ export function DeskPayments({ d, tablet = false }) {
     return t('paymentsPage.subtitle')
   }, [i18n.language, t])
 
+  // Tablet vertical (mockup «12 meses y muchas categorías», opción B): las dos tarjetas van lado a lado
+  // solo con 3 meses y hasta 6 categorías; si no, cada una a ancho completo.
+  const wideCards = tablet && (chart.monthsBack >= 6 || catData.length > 6)
   const tone = balance.sobrePasado ? styles.fillOver : balance.gastoPct >= 75 ? styles.fillWarn : ''
 
   return (
@@ -123,7 +126,7 @@ export function DeskPayments({ d, tablet = false }) {
       </header>
 
       <div className={`${home.fill} ${slideClass || ''}`}>
-        <div className={`${home.fill} ${tablet ? styles.tabGrid : ''} ${spaceJustChanged ? 'content-slide-up' : ''}`}>
+        <div className={`${home.fill} ${tablet ? styles.tabGrid : ''} ${wideCards ? styles.tabWide : ''} ${spaceJustChanged ? 'content-slide-up' : ''}`}>
           {rawActiveSpaceId === 'new' ? (
             <NewSharedSpacePanel profile={profile} sharedSpaces={sharedSpaces} onOpenPremium={onOpenPremium} onCreated={onSpaceReady} onJoined={onSpaceReady} />
           ) : (
@@ -315,7 +318,7 @@ export function DeskPayments({ d, tablet = false }) {
                         <button key={n} type="button" className={`${home.chip} ${chart.monthsBack === n ? home.chipOn : ''}`} onClick={() => { chart.setMonthsBack(n); setSelectedCat(null) }}>{t('paymentsPage.monthsChip', { count: n })}</button>
                       ))}
                     </div>
-                    <div className={styles.bars} style={{ '--bar-color': selectedCat ? catColor(selectedCat) : 'var(--accent)' }}>
+                    <div className={`${styles.bars} ${chart.monthsBack === 3 ? styles.bars3 : ''}`} style={{ '--bar-color': selectedCat ? catColor(selectedCat) : 'var(--accent)' }}>
                       {chart.months.map((m, i) => {
                         const total = chart.totals[i]
                         const h = Math.max((total / chart.max) * 100, total > 0 ? 3 : 0)
@@ -324,7 +327,7 @@ export function DeskPayments({ d, tablet = false }) {
                           <div key={i} className={`${styles.barCell} ${isCur ? styles.barCur : ''}`}>
                             {dataLoading ? <Bone w="100%" h={`${[45, 65, 30, 55, 40, 70][i % 6]}%`} r="4px 4px 0 0" style={{ minHeight: 0 }} /> : (
                               <>
-                                {total > 0 && <span className={styles.barAmt}>{chart.monthsBack >= 6 ? fmtShort(total) : fmt(total)}</span>}
+                                {total > 0 && <span className={`${styles.barAmt} ${chart.monthsBack === 12 && !isCur && total !== chart.max ? styles.barAmtMuted : ''}`}>{chart.monthsBack >= 6 ? fmtShort(total) : fmt(total)}</span>}
                                 <i className={styles.bar} style={{ height: `calc((100% - 22px) * ${(h / 100).toFixed(4)})`, minHeight: total > 0 ? 3 : 0 }} />
                               </>
                             )}

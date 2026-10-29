@@ -178,3 +178,31 @@
   .tabPay .tr { grid-template-columns: 54px minmax(0, 1.4fr) minmax(0, 1fr) 100px 32px; }
   .tabPay .tr .method { display: none; }
 }
+
+/* Tablet: gráfica mensual y categorías (mockups «12 meses…» y «3 meses B»). */
+.bars3 .barCell { align-items: center; }
+.bars3 .bar { max-width: 96px; align-self: stretch; }
+@media (min-width: 768px) and (max-width: 1099px) {
+  .tabPay .legendItem i { width: 10px; height: 10px; border-radius: 50%; }
+  .tabPay .legendItem { padding: 3px 6px; }
+}
+@media (max-width: 959px) {
+  .tabWide .cMonthly { grid-column: 1 / -1; grid-row: 4; }
+  .tabWide .cMonthly .bars { flex: none; height: 170px; min-height: 0; }
+  .tabWide .cCat { grid-column: 1 / -1; grid-row: 5; display: grid; grid-template-columns: 250px minmax(0, 1fr); grid-template-areas: "h h" "hint hint" "ring legend"; column-gap: 22px; align-items: center; }
+  .tabWide .cCat > h2 { grid-area: h; }
+  .tabWide .cCat > .hint { grid-area: hint; margin-bottom: 10px; }
+  .tabWide .cCat > :nth-child(3) { grid-area: ring; }
+  .tabWide .cCat > .legend { grid-area: legend; margin-top: 0; grid-template-columns: 1fr 1fr; gap: 6px 18px; }
+  .tabWide .cMethod, .tabWide .cCards { grid-row: 6; }
+  .tabWide .cCat + .cCards { grid-row: 6; }
+}
+@media (min-width: 960px) and (max-width: 1099px) {
+  .tabPay .cMonthly .bars { height: 128px; }
+  .tabPay .barAmt.barAmtMuted { display: none; }
+  .tabPay .barAmt { overflow: visible; display: flex; justify-content: center; }
+  .tabPay .barMonth { font-size: 10.5px; }
+  .tabPay .barCell { min-width: 0; }
+  .tabPay .legend { gap: 2px 14px; }
+  .tabPay .legendItem { font-size: 12.5px; }
+}
