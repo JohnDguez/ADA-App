@@ -391,6 +391,10 @@
     "desk": {
       "formDesc": "Choose a name, icon and color. This is how it will look in your payments.",
       "previewHint": "Preview"
+    },
+    "mobile": {
+      "tapHint": "Tap a category to edit it",
+      "noResults": "No categories match your search."
     }
   },
   "homePage": {

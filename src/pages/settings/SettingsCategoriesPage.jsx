@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import i18n from '../../i18n'
-import { Plus, ChevronRight, Search } from 'lucide-react'
+import { Plus, ChevronRight, Search, Pointer } from 'lucide-react'
 // Ícono del encabezado vía Phosphor Icons (mismo patrón que Exportar/Cuenta,
 // v0.9.442-446) — import directo al archivo del ícono para tree-shaking real.
 import { Tag } from '@phosphor-icons/react/dist/csr/Tag'
@@ -15,6 +15,9 @@ import { DeskSettingsHead, DeskPage } from '../../components/DeskSettingsHead'
 import deskStyles from '../../components/SettingsDesk.module.css'
 import dk from './SettingsCategoriesDesk.module.css'
 import styles from './SettingsCategoriesPage.module.css'
+import mb from './SettingsCategoriesMobile.module.css'
+import { SubpageHeader } from '../../components/SubpageHeader'
+import { useIsMobile } from '../../hooks/useIsMobile'
 import { kbd } from '../../lib/a11y'
 
 // Sub-página "Categorías" dentro de Ajustes — fase 3: modal completo
@@ -34,6 +37,7 @@ import { kbd } from '../../lib/a11y'
 export function SettingsCategoriesPage({ profile, onUpdate, onBack, slideClass }) {
   const { t } = useTranslation()
   const desk = useDeskSettings()
+  const isMobile = useIsMobile()
   const [modalOpen,   setModalOpen]   = useState(false)
   const [editingCat,  setEditingCat]  = useState(null) // { name, isCustom } | null (null = agregar nueva)
   const [query,        setQuery]       = useState('')
@@ -140,6 +144,74 @@ export function SettingsCategoriesPage({ profile, onUpdate, onBack, slideClass }
           {!q && <button type="button" className={`${dk.tile} ${dk.add}`} onClick={openAdd}><i><Plus size={28} /></i>{t('settingsCategories.deskNewShort')}</button>}
         </div>
       </DeskPage>
+    )
+  }
+
+  // Móvil (<768px, v0.9.920, mockup "A · Mosaicos" aprobado): buscador, "Tuyas"
+  // (con mosaico "Nueva") y "Predeterminadas" en cuadrícula de 3, nota de toque
+  // y píldora flotante. El editor sigue siendo CategoryFormModal.
+  if (isMobile && !desk) {
+    const q = query.trim().toLowerCase()
+    const labelOf = c => (c.isCustom ? c.name : getCategoryLabel(c.name))
+    const shown = sortedCats.filter(c => !q || labelOf(c).toLowerCase().includes(q))
+    const defaults = shown.filter(c => !c.isCustom)
+    const mine = shown.filter(c => c.isCustom)
+    let n = 0
+    // Función (no componente): si fuera un componente definido aquí se remontaría
+    // en cada tecla del buscador y la animación de entrada se repetiría.
+    const renderTile = c => {
+      const Icon = getCategoryIcon(c.name, categoryIcons)
+      const color = getCatColor(c.name, customCats, categoryColors)
+      return (
+        <button key={c.name} type="button" className={mb.tile} style={{ '--n': Math.min(n++, 14) }} onClick={() => openEdit(c.name, c.isCustom)}>
+          <i className={mb.ico} style={{ background: color }}>{Icon ? <Icon size={22} color="var(--text)" strokeWidth={2} /> : <span className={styles.fallbackDot} />}</i>
+          <span>{labelOf(c)}</span>
+        </button>
+      )
+    }
+    return (
+      <>
+        <div className={`${slideClass} ${mb.root}`}>
+          <SubpageHeader icon={Tag} title={t('settingsCategories.title')} onBack={onBack} />
+          <p className={mb.desc}>{t('settingsCategories.description')}</p>
+          <label className={mb.search}>
+            <Search size={16} />
+            <input value={query} onChange={e => setQuery(e.target.value)} placeholder={t('settingsCategories.deskSearch')} aria-label={t('settingsCategories.deskSearch')} />
+          </label>
+          <p className={mb.hint}><Pointer size={14} strokeWidth={1.9} />{t('settingsCategories.mobile.tapHint')}</p>
+
+          {shown.length === 0 && <div className={mb.empty}>{t('settingsCategories.mobile.noResults')}</div>}
+          {(mine.length > 0 || !q) && (
+            <>
+              <div className={mb.cap}>{t('settingsCategories.deskMine', { count: mine.length })}</div>
+              <div className={mb.grid}>
+                {mine.map(renderTile)}
+                {!q && (
+                  <button type="button" className={`${mb.tile} ${mb.add}`} style={{ '--n': Math.min(n++, 14) }} onClick={openAdd}>
+                    <i className={mb.ico}><Plus size={22} strokeWidth={2.4} /></i>
+                    <span>{t('settingsCategories.deskNewShort')}</span>
+                  </button>
+                )}
+              </div>
+            </>
+          )}
+          {defaults.length > 0 && (
+            <>
+              <div className={mb.cap}>{t('settingsCategories.deskDefaults', { count: defaults.length })}</div>
+              <div className={mb.grid}>{defaults.map(renderTile)}</div>
+            </>
+          )}
+        </div>
+
+        <div className={mb.pillRow}>
+          <button type="button" onClick={openAdd} className={mb.pill}>
+            <Plus size={18} strokeWidth={2.4} />
+            {t('settingsCategories.addButton')}
+          </button>
+        </div>
+
+        <CategoryFormModal open={modalOpen} onClose={() => setModalOpen(false)} editingCat={editingCat} profile={profile} onUpdate={onUpdate} />
+      </>
     )
   }
 

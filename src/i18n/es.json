@@ -391,6 +391,10 @@
     "desk": {
       "formDesc": "Elige nombre, ícono y color. Así se verá en tus pagos.",
       "previewHint": "Vista previa"
+    },
+    "mobile": {
+      "tapHint": "Toca una categoría para editarla",
+      "noResults": "Ninguna categoría coincide con tu búsqueda."
     }
   },
   "homePage": {
