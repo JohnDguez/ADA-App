@@ -36,7 +36,7 @@ export function LunaStrip({ lunaState, loading = false, variant, onArrow }) {
   if (loading) {
     return (
       <div className={styles.wrap}>
-        <Bone w="100%" h={variant === 'desk' ? 84 : 112} r={variant === 'desk' ? 24 : 12} />
+        {variant === 'peek' ? <Bone w={240} h={64} r={18} /> : <Bone w="100%" h={variant === 'desk' ? 84 : 112} r={variant === 'desk' ? 24 : 12} />}
       </div>
     )
   }
@@ -78,6 +78,20 @@ export function LunaStrip({ lunaState, loading = false, variant, onArrow }) {
   }
 
   const pct = total > 0 ? done / total : 0
+
+  // `variant="peek"` (tablet, v0.9.937): globo + Luna asomándose por el borde
+  // inferior del encabezado, sobre las tarjetas de abajo.
+  if (variant === 'peek') {
+    return (
+      <section className={`${styles.peek} ${styles['desk_' + key] || ''}`} aria-label={`${title}. ${sub}`}>
+        <div className={styles.peekText}>
+          <div className={styles.deskTitle}>{title}</div>
+          <div className={styles.deskSub}>{sub}</div>
+        </div>
+        <img className={`${styles.peekImg} ${key === 'sleeping' ? styles.peekImgWide : ''}`} src={img.src} width={img.w} height={img.h} alt="" decoding="async" />
+      </section>
+    )
+  }
 
   if (variant === 'desk') {
     return (

@@ -1376,11 +1376,18 @@
     "barTipCount_other": "{{count}} pagos",
     "barTipMore": "y {{count}} más",
     "barTipHint": "Primeros 7 días del próximo periodo",
-    "nextBarsLabel": "Pagos por día, primeros 7 días del próximo periodo"
+    "nextBarsLabel": "Pagos por día, primeros 7 días del próximo periodo",
+    "tabletNotStarted": "Aún no empieza",
+    "tabletVariablesLabel": "Variables",
+    "tabletVariablesUnit": "por definir",
+    "tabletVariablesSome": "Falta definir el monto",
+    "tabletVariablesNone": "Todo con monto fijo"
   },
   "navRail": {
     "expand": "Expandir menú",
-    "collapse": "Colapsar menú"
+    "collapse": "Colapsar menú",
+    "label": "Menú de navegación",
+    "manageSpace": "Administrar espacio"
   },
   "activeSpaceHeader": {
     "newSpaceName": "Nuevo espacio compartido",

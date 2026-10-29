@@ -1109,6 +1109,20 @@ a:focus-visible {
   }
 }
 
+/* Lienzo de tablet (768–1099px, v0.9.937): mismo concepto que escritorio — riel
+   flotante de 72px (NavRail.jsx) y el contenido en un panel redondeado sobre el
+   fondo gris. */
+@media (min-width: 768px) and (max-width: 1099px) {
+  html, body { background-color: var(--desk-outer); background-image: none; }
+  #root { margin-left: 96px; padding: 12px 12px 12px 0; box-sizing: border-box; }
+  #root > main {
+    background: var(--desk-panel);
+    border-radius: 28px;
+    min-height: calc(100vh - 24px);
+    overflow: clip;
+  }
+}
+
 /* ── Escritorio (v0.9.845): forma del nuevo diseño en lo que aún usa las bases
    antiguas. Solo con la barra lateral de escritorio montada
    (html[data-desk-sidebar]); móvil y tablet no cambian. Redefinir los radios

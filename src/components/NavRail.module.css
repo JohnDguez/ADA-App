@@ -1,351 +1,129 @@
-/* Oculto por default (mobile) — solo aparece desde 768px (Regla 42),
-   reemplazando a BottomNav (ver BottomNav.module.css → display:none ahí). */
-.rail {
-  display: none;
-}
+/* Riel de tablet (768–1099px), rediseño v0.9.937. Todos los colores salen de
+   los tokens --desk-* de index.css. Oculto en móvil (BottomNav). Entrada y
+   salida del menú expandido animadas; 220ms = EXIT_MS (usePresence). */
+.rail { display: none; }
+.scrim, .exp { display: none; }
 
-@media (min-width: 768px) {
+@media (min-width: 768px) and (max-width: 1099px) {
   .rail {
+    position: fixed;
+    top: 12px;
+    left: 12px;
+    bottom: 12px;
+    width: 72px;
+    z-index: 100;
     display: flex;
     flex-direction: column;
-    position: fixed;
-    top: 0;
-    left: 0;
-    height: 100vh;
-    height: 100dvh; /* iOS/iPadOS Safari: 100vh no descuenta la barra de
-      direcciones, el riel queda más alto que el viewport visible y se
-      corta abajo. 100dvh sí — navegadores que no lo soportan ignoran esta
-      línea y se quedan con el 100vh de arriba como fallback. */
-    width: 72px;
-    background: var(--nav-bg);
-    z-index: 100;
-    overflow: hidden;
-    transition: width .25s ease;
+    align-items: center;
+    gap: 6px;
+    padding: 14px 0;
+    background: var(--desk-panel);
+    border-radius: 28px;
+    box-sizing: border-box;
+  }
+  .logo { width: 44px; height: 44px; border-radius: 14px; display: block; flex: none; }
+  .expand {
+    width: 32px; height: 32px; border-radius: 50%;
+    display: grid; place-items: center;
+    background: var(--desk-chip); color: var(--text);
+    margin: 2px 0 8px; flex: none;
+    transition: background .2s, transform .2s;
+  }
+  .expand:hover { background: var(--desk-hover-fill); filter: none; }
+  .group { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+  .nav {
+    position: relative;
+    width: 48px; height: 48px; border-radius: 16px;
+    display: grid; place-items: center;
+    background: none; color: var(--muted);
+    transition: background .22s ease, color .22s ease;
+  }
+  .nav:hover { background: var(--desk-chip); filter: none; }
+  .navOn, .navOn:hover { background: var(--desk-pill); color: var(--desk-pill-ink); }
+  .divider { width: 32px; height: 1px; background: var(--desk-hair); margin: 8px 0; flex: none; }
+  .spaceBtn { background: var(--desk-card); box-shadow: var(--desk-shadow); color: var(--text); }
+  .spaceBtn:hover { background: var(--desk-hover-fill); filter: none; }
+  .badge {
+    position: absolute; right: 2px; top: 2px;
+    min-width: 18px; height: 18px; padding: 0 5px; box-sizing: border-box;
+    border-radius: 99px; background: var(--danger); color: var(--on-danger);
+    font-size: 11px; font-weight: 700; display: grid; place-items: center;
+  }
+  .grow { flex: 1; }
+  .iconWrap { position: relative; display: grid; place-items: center; }
+  .dot { position: absolute; top: 0; right: 1px; width: 9px; height: 9px; border-radius: 50%; background: var(--danger); box-shadow: 0 0 0 2px var(--desk-panel); }
+  .me { position: relative; margin-top: 6px; width: 44px; height: 44px; border-radius: 50%; background: none; flex: none; }
+  .avatar, .avatarFallback { width: 44px; height: 44px; border-radius: 50%; object-fit: cover; display: block; }
+  .avatarFallback { display: grid; place-items: center; background: var(--accent); color: var(--surface); font-size: 15px; font-weight: 700; }
+  .avatarPremium { outline: 2px solid var(--premium-gold); outline-offset: 2px; }
+  .crown {
+    position: absolute; right: -4px; top: -4px; width: 20px; height: 20px; border-radius: 50%;
+    background: var(--premium-gold); color: var(--premium-gold-text); display: grid; place-items: center;
   }
 
-  .rail[data-expanded="true"] {
-    width: 240px;
-    /* v0.9.366 — el riel expandido se SOBREPONE al contenido en vez de
-       empujarlo (index.css, #root ya no le hace espacio) — esta sombra
-       refuerza que está flotando encima, no que forma parte del mismo
-       plano que el contenido de abajo. */
-    box-shadow: var(--shadow-rail);
+  /* Menú expandido: encima del contenido, nunca lo empuja. */
+  .scrim {
+    display: block;
+    position: fixed; inset: 0; z-index: 105;
+    background: var(--scrim);
+    animation: scrimIn .22s ease both;
   }
+  .scrimOut { animation: scrimOut .22s ease both; }
+  .exp {
+    position: fixed; top: 12px; left: 12px; bottom: 12px; width: 248px; z-index: 110;
+    display: flex; flex-direction: column;
+    padding: 16px 14px 14px; box-sizing: border-box;
+    background: var(--desk-panel); border-radius: 28px;
+    box-shadow: var(--desk-pop-shadow);
+    animation: expIn .26s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+  .expOut { animation: expOut .22s ease-in both; }
+  .expTop { display: flex; align-items: center; gap: 10px; padding: 0 4px 10px; }
+  .expLogo { width: 40px; height: 40px; border-radius: 12px; flex: none; }
+  .brand { flex: 1; font-size: 19px; font-weight: 700; letter-spacing: -0.3px; color: var(--text); }
+  .collapse { width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; background: var(--desk-chip); color: var(--text); flex: none; }
+  .collapse:hover { background: var(--desk-hover-fill); filter: none; }
+  .expScroll { flex: 1; min-height: 0; overflow-y: auto; margin-inline: -6px; padding-inline: 6px; display: flex; flex-direction: column; gap: 2px; }
+  .label { font-size: 12px; font-weight: 500; color: var(--muted); padding: 14px 12px 6px; margin: 0; }
+  .it {
+    width: 100%; min-height: 44px; border-radius: 14px; padding: 0 12px;
+    display: flex; align-items: center; gap: 12px;
+    background: none; color: var(--text); font-size: 15px; text-align: left;
+    transition: background .2s;
+  }
+  .it:hover { background: var(--desk-chip); filter: none; }
+  .it > span:not([class*="badge"]) { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .itOn, .itOn:hover { background: var(--desk-pill); color: var(--desk-pill-ink); font-weight: 600; }
+  .spaceRow { padding: 0 8px 0 0; gap: 2px; }
+  .spaceMain { flex: 1; min-width: 0; min-height: 44px; display: flex; align-items: center; gap: 12px; padding: 0 0 0 12px; background: none; color: inherit; font-size: inherit; text-align: left; }
+  .spaceMain span:first-of-type { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .spaceMain:hover { filter: none; }
+  .itSpace, .itSpace:hover { background: var(--desk-card); box-shadow: var(--desk-shadow); font-weight: 600; }
+  .itPremium { color: var(--premium-gold-text); }
+  .mini { width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; background: none; color: var(--muted); flex: none; }
+  .mini:hover { background: var(--desk-chip); filter: none; }
+  .badgeInline {
+    min-width: 22px; height: 22px; padding: 0 6px; box-sizing: border-box; flex: none !important;
+    border-radius: 99px; background: var(--danger); color: var(--on-danger);
+    font-size: 12px; font-weight: 700; display: grid; place-items: center;
+  }
+  .expBottom { display: flex; flex-direction: column; gap: 2px; padding-top: 8px; }
+  .meCard {
+    margin-top: 8px; width: 100%; padding: 10px; border-radius: 20px; text-align: left;
+    display: flex; align-items: center; gap: 10px;
+    background: var(--desk-card); box-shadow: var(--desk-shadow); color: var(--text);
+  }
+  .meCard:hover { background: var(--desk-hover-fill); filter: none; }
+  .meAvatarWrap .avatar, .meAvatarWrap .avatarFallback { width: 40px; height: 40px; }
+  .meText { display: flex; flex-direction: column; min-width: 0; }
+  .meText b { font-size: 14px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .meText span { font-size: 12px; color: var(--muted); }
 }
 
-/* ── Franja del logo — solo colapsado (Regla 43/49) ──────────────────── */
-
-.logoStrip {
-  height: 44px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.logoIcon {
-  width: 32px;
-  height: 32px;
-  display: block;
-  background: transparent;
-  border: none;
-  border-radius: 0;
-}
-
-/* ── Bloque de perfil ──────────────────────────────────────────────────── */
-
-.profileBlock {
-  position: relative;
-  flex-shrink: 0;
-}
-
-.heroSection {
-  position: relative;
-  height: 120px;
-  overflow: hidden;
-}
-
-.heroImage {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  transition: opacity 1.5s ease;
-  pointer-events: none;
-}
-
-.heroOverlay {
-  position: absolute;
-  inset: 0;
-  /* Degradado de abajo hacia arriba con var(--nav-bg) — mismo criterio que
-     .gradientOverlay de PageHeader.module.css (Regla 18: nunca gradiente
-     CSS "decorativo" nuevo, este reutiliza el mismo color sólido del riel
-     para fundir la imagen con el bloque de tabs de abajo). */
-  background: linear-gradient(to bottom, transparent 40%, var(--nav-bg) 100%);
-  pointer-events: none;
-}
-
-.avatarSection {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 10px;
-  padding: 18px 12px;
-  cursor: pointer;
-  min-width: 0;
-}
-
-.avatarWrapper {
-  flex-shrink: 0;
-  position: relative;
-}
-
-/* Anillo "corte" — mismo azul del riel (var(--nav-bg), igual que el fondo
-   del cuerpo bajo el header) separando la foto de la portada cuando se
-   traslapan (Regla 44 — ajuste tras feedback visual de Johnatan sobre
-   v0.9.362, mockup confirmado antes de este código). En colapsado no hay
-   portada detrás, así que el padding extra es invisible (mismo color que
-   el fondo del riel). */
-.avatarRing {
-  background: var(--nav-bg);
-  border-radius: 50%;
-  padding: 4px;
-}
-
-.avatarImg {
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
-  object-fit: cover;
-  transition: width .25s ease, height .25s ease;
-}
-
-/* Anillo de la foto (antes style inline en el JSX): normal = blanco
-   translúcido, premium = dorado. */
-.photoBorder {
-  border: 2px solid var(--white-a30);
-}
-
-.photoBorderPremium {
-  border: 2px solid var(--premium-gold);
-}
-
-.avatarFallback {
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
-  background: var(--accent);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 15px;
-  font-weight: 700;
-  color: var(--surface);
-  transition: width .25s ease, height .25s ease;
-}
-
-.premiumBadge {
-  position: absolute;
-  top: -2px;
-  right: -2px;
-  width: 17px;
-  height: 17px;
-  border-radius: 50%;
-  background: var(--premium-gold);
-  color: var(--premium-gold-text);
-  border: 2px solid var(--nav-bg);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.textCol {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 2px;
-  width: 100%;
-  min-width: 0;
-}
-
-.greetingText {
-  font-size: 11px;
-  font-weight: 400;
-  color: var(--white-a70);
-  text-align: center;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 100%;
-}
-
-.nameText {
-  font-size: 14px;
-  font-weight: 700;
-  color: var(--nav-icon);
-  text-align: center;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 100%;
-}
-
-/* Perfil expandido (Regla 43/44 — ajuste tras feedback visual de
-   Johnatan sobre v0.9.361): avatar más grande y foto+saludo+nombre
-   centrados en columna, en vez de fila con avatar chico a la izquierda. */
-.rail[data-expanded="true"] .avatarImg,
-.rail[data-expanded="true"] .avatarFallback {
-  width: 64px;
-  height: 64px;
-}
-
-.rail[data-expanded="true"] .avatarFallback {
-  font-size: 20px;
-}
-
-.rail[data-expanded="true"] .premiumBadge {
-  width: 20px;
-  height: 20px;
-}
-
-/* v0.9.363 — la foto queda a mitad entre la portada y el cuerpo del
-   riel: -36px sube el anillo (72px de diámetro con el padding de
-   .avatarRing) exactamente la mitad de su alto, para que la otra mitad
-   se quede traslapando la portada (mockup confirmado por Johnatan antes
-   de este código). padding-top en 0 porque el traslape ya cubre ese
-   espacio — sin esto, quedaría un hueco doble arriba del avatar. */
-.rail[data-expanded="true"] .avatarSection {
-  padding-top: 0;
-}
-
-.rail[data-expanded="true"] .avatarRing {
-  margin-top: -36px;
-}
-
-/* ── Tabs principales ──────────────────────────────────────────────────── */
-
-.navItems {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  padding: 16px 8px;
-  flex: 1;
-  overflow-y: auto;
-}
-
-.railButton {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
-  /* v0.9.767 — área táctil más grande (≈56px de alto): con el dedo en
-     tablet los íconos de 20px (botón de 40px) fallaban. */
-  padding: 15px 10px;
-  min-height: 56px;
-  border: none;
-  background: none;
-  border-radius: 14px;
-  cursor: pointer;
-  transition: background .2s;
-  min-width: 0;
-}
-
-.railButton[data-active="true"] {
-  background: linear-gradient(180deg, var(--white-a25) 0%, transparent 100%);
-}
-
-/* Expandido: ícono+etiqueta vuelven a alinearse a la izquierda (como ya
-   se veía bien) — el centrado de arriba es solo para el estado colapsado,
-   donde el botón únicamente tiene el ícono como hijo. */
-.rail[data-expanded="true"] .railButton,
-.rail[data-expanded="true"] .toggleButton {
-  justify-content: flex-start;
-}
-
-.iconWrapper {
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.badgeCount {
-  position: absolute;
-  top: -8px;
-  right: -10px;
-  min-width: 18px;
-  height: 18px;
-  padding: 0 4px;
-  box-sizing: border-box;
-  border-radius: 9px;
-  background: var(--danger);
-  color: var(--on-danger);
-  font-size: 10px;
-  font-weight: 700;
-  line-height: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 1.5px solid var(--nav-bg);
-}
-
-.railButtonLabel {
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--nav-icon);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-/* ── Notificaciones + configuración + toggle, fijas al fondo ─────────────
-   Mismo lugar colapsado o expandido (Regla 43) — es el mismo .railButton
-   reutilizado, así que ya hereda esa propiedad sin código extra. */
-
-.bottomActions {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  padding: 8px;
-  flex-shrink: 0;
-  border-top: none; /* Regla 13.1: sin bordes en contenedores */
-}
-
-.toggleButton {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
-  padding: 15px 10px;
-  min-height: 56px;
-  border: none;
-  background: none;
-  border-radius: 14px;
-  cursor: pointer;
-  transition: background .2s;
-}
-
-.toggleButton:hover {
-  background: var(--white-a8);
-}
-
-.toggleLabel {
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--nav-icon);
-  white-space: nowrap;
-}
-
-/* v0.9.817 — hover del riel (solo mouse): fondo suave en los botones
-   transparentes que no están activos. */
-@media (hover: hover) and (pointer: fine) {
-  .railButton:not([data-active="true"]):hover { background: var(--white-a16); }
-}
-
-@media (hover: hover) and (pointer: fine) {
-  .railButton:hover,
-  .toggleButton:hover { translate: none; filter: none; }
+@keyframes expIn { from { opacity: 0; transform: translateX(-24px) scale(.98); } to { opacity: 1; transform: none; } }
+@keyframes expOut { to { opacity: 0; transform: translateX(-24px) scale(.98); } }
+@keyframes scrimIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes scrimOut { to { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) {
+  .exp, .expOut, .scrim, .scrimOut { animation-duration: .01ms; }
 }

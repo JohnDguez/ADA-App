@@ -2022,10 +2022,15 @@ export default function App() {
           unreadCount={allUnreadCount}
           onOpenNotifs={() => setNotifOpen(true)}
           onGoSettings={() => changeTab('settings')}
+          onGoAccount={() => (tab === 'settings' ? setSettingsInitialSection('account') : goToSettingsSection('account'))}
           spaces={sharedSpaces.spaces}
           activeSpaceId={activeSpaceId}
           onSwitchSpace={switchSpace}
           spaceSwitcherProfile={profile}
+          spaceStats={spaceStats}
+          defaultSpaceId={profile.default_space_id ?? null}
+          onSetDefault={handleSetDefaultSpace}
+          onManageSpace={goToSharedSpaceSettings}
         />
       )}
       {/* En Inicio de escritorio el botón vive en el encabezado. */}

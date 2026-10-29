@@ -240,3 +240,41 @@
   .deskTitle { font-size: 14.5px; }
   .deskSub { font-size: 12.5px; }
 }
+
+/* ── Tablet (v0.9.937): globo a la izquierda y Luna asomándose por abajo ──
+   El contenedor recorta a Luna; el encabezado de DeskHome lo deja pisar el
+   hueco hasta las tarjetas. */
+.peek {
+  --tint: var(--accent);
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  height: 100%;
+  overflow: hidden;
+}
+.peekText {
+  position: relative;
+  max-width: 290px;
+  margin-bottom: 34px;
+  padding: 10px 16px;
+  border-radius: 18px;
+  color: var(--text);
+  background: color-mix(in srgb, var(--tint) 16%, var(--desk-card));
+  border: 1px solid color-mix(in srgb, var(--tint) 45%, var(--desk-card));
+}
+.peekText::after {
+  content: "";
+  position: absolute;
+  right: -8px;
+  bottom: 14px;
+  width: 14px;
+  height: 14px;
+  transform: rotate(-45deg);
+  border-radius: 0 0 4px 0;
+  background: color-mix(in srgb, var(--tint) 16%, var(--desk-card));
+  border-right: 1px solid color-mix(in srgb, var(--tint) 45%, var(--desk-card));
+  border-bottom: 1px solid color-mix(in srgb, var(--tint) 45%, var(--desk-card));
+}
+.peekImg { flex: none; height: 112px; width: auto; margin-bottom: -26px; pointer-events: none; }
+.peekImgWide { height: 76px; margin-bottom: -8px; }

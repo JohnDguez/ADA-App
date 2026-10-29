@@ -1,6 +1,6 @@
 import { useState, useRef, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Plus, ArrowUpRight } from 'lucide-react'
+import { Plus, ArrowUpRight, UserRound, Crown, UsersRound } from 'lucide-react'
 import { PayRail } from '../components/PayRail'
 import { PaidCollapse } from '../components/PaidCollapse'
 import { greeting } from '../components/PageHeader'
@@ -21,6 +21,14 @@ import styles from './DeskHome.module.css'
 // 4 tarjetas de totales (cada una lleva a su sección), tarjeta "Pagos" con
 // pestañas y fichas de fecha, y a la derecha avance, próximo periodo y Luna.
 // Los datos ya vienen calculados por HomePage (`derived`), aquí solo se pintan.
+//
+// Tablet (768–1099px, v0.9.937, `tablet`): el mismo componente con el mockup
+// «Tablet: Inicio»: sin botón «Agregar pago» (va el + flotante de App.jsx),
+// Luna asomándose en el encabezado (variant="peek") y nombre del espacio en la
+// fecha. Vertical (<960px): franja azul de Total, medidor + 3 fichas apiladas y
+// la lista (el CSS reordena la misma estructura, sin tarjeta de próximo
+// periodo); horizontal (≥960px): el layout de escritorio compactado. En la
+// pestaña «Próximo periodo» las cifras y el medidor pasan al próximo periodo.
 
 // Divide "$13,497.38" en entero y centavos para pintar los centavos chicos.
 function splitMoney(str) {
@@ -32,6 +40,7 @@ export function DeskHome({
   profile, dataLoading, activeSpaceId, spaceMembers, sharedSpaces, spacePermissions, derived, lunaState, handlers,
   cutsInPeriod, cutPeriodKey, paymentMethodsList, periodRangeLabel, nextRangeLabel, slideClass, spaceJustChanged,
   onOpenPremium, onSpaceReady, onAdd, onImport, onStartAdd, onGoTab, onGoSettingsSection, onMarkUnpaid, onViewSource,
+  tablet = false, periodDayNumber, periodDayTotal, nextStartsInDays,
 }) {
   const { t, i18n } = useTranslation()
   const { pagarEsteCobro, vencidos, delPeriodo, pagadosEstePeriodo, pagadoMonto, pendingAmt, totalConocido, pctPagado, upcoming, nextPeriodKnownTotal, nextStart, pendingVariableCount } = derived
@@ -50,6 +59,11 @@ export function DeskHome({
     const s = new Date().toLocaleDateString(i18n.language, { weekday: 'long', day: 'numeric', month: 'long', ...(profile?.timezone ? { timeZone: profile.timezone } : {}) })
     return s.charAt(0).toUpperCase() + s.slice(1)
   }, [i18n.language, profile?.timezone])
+
+  // Espacio activo (solo tablet lo muestra en la línea de la fecha).
+  const spaceEntry = (activeSpaceId && activeSpaceId !== 'new') ? sharedSpaces?.spaces?.find(s => s.space.id === activeSpaceId) : null
+  const SpaceIcon = spaceEntry ? (spaceEntry.membership.role === 'owner' ? Crown : UsersRound) : UserRound
+  const spaceName = activeSpaceId === 'new' ? t('activeSpaceHeader.newSpaceName') : spaceEntry ? spaceEntry.space.name : t('activeSpaceHeader.personalName')
 
   const hasPayments = pagarEsteCobro.length > 0 || pagadosEstePeriodo.length > 0
   const [totalInt, totalCents] = splitMoney(fmt(totalConocido))
@@ -87,7 +101,8 @@ export function DeskHome({
   const tiles = [
     {
       key: 'total', hero: true, label: t('deskHome.totalLabel'), int: totalInt, cents: totalCents,
-      sub: hasPayments ? <><b>{t('deskHome.paidPct', { pct: pctPagado })}</b> · {periodRangeLabel}</> : t('deskHome.totalEmpty'),
+      sub: tablet && hasPayments ? <>{periodRangeLabel}<span className={styles.subSep}> · </span><span className={styles.subLine}>{t('homePage.periodDay', { day: periodDayNumber, total: periodDayTotal })}</span></>
+        : hasPayments ? <><b>{t('deskHome.paidPct', { pct: pctPagado })}</b> · {periodRangeLabel}</> : t('deskHome.totalEmpty'),
       onClick: () => onGoTab?.('payments'), aria: t('deskHome.goPayments'),
     },
     {
@@ -122,6 +137,18 @@ export function DeskHome({
   const nextFixed = upcoming.filter(p => !p.is_variable).length
   const nextVariable = upcoming.filter(p => p.is_variable).length
   const [nextInt, nextCents] = splitMoney(fmt(nextPeriodKnownTotal))
+  // Tablet, pestaña «Próximo periodo»: las fichas hablan del próximo periodo.
+  const tabletNext = tablet && tab === 1
+  const [zeroInt, zeroCents] = splitMoney(fmt(0))
+  const shownTiles = !tabletNext ? tiles : [
+    { key: 'total', hero: true, label: t('deskHome.totalLabel'), int: nextInt, cents: nextCents,
+      sub: <>{nextRangeLabel}<span className={styles.subSep}> · </span><span className={styles.subLine}>{t('deskHome.nextFixed', { count: nextFixed })} · {t('deskHome.nextVariable', { count: nextVariable })}</span></>,
+      onClick: () => onGoTab?.('payments'), aria: t('deskHome.goPayments') },
+    { key: 'paid', label: t('deskHome.paidLabel'), int: zeroInt, cents: zeroCents, sub: t('deskHome.tabletNotStarted') },
+    { key: 'pending', label: t('deskHome.pendingLabel'), int: nextInt, cents: nextCents, sub: t('deskHome.pendingSub', { count: upcoming.length }) },
+    { key: 'overdue', label: t('deskHome.tabletVariablesLabel'), int: String(nextVariable), unit: t('deskHome.tabletVariablesUnit'),
+      sub: nextVariable > 0 ? t('deskHome.tabletVariablesSome') : t('deskHome.tabletVariablesNone') },
+  ]
 
   function pickAdd(kind) { setAddOpen(false); if (kind) onStartAdd?.(kind); else onAdd?.() }
   function toggleAdd() { if (addDropdownHasExtras()) setAddOpen(o => !o); else onAdd?.() }
@@ -132,7 +159,7 @@ export function DeskHome({
   )
 
   return (
-    <div className={styles.root}>
+    <div className={`${styles.root} ${tablet ? styles.tablet : ''}`}>
       <header className={styles.head}>
         <div className={styles.band} aria-hidden="true">
           {mountedKeys.map(key => (
@@ -140,9 +167,12 @@ export function DeskHome({
           ))}
         </div>
         <div className={styles.headText}>
-          <div className={styles.date}>{dateStr}</div>
+          <div className={styles.date}>{dateStr}{tablet && <> · <SpaceIcon size={14} aria-hidden="true" className={styles.dateIcon} />{spaceName}</>}</div>
           <h1 className={styles.hello}>{greeting().replace(/[¡!]/g, '').trim()}{firstName ? `, ${firstName}` : ''}</h1>
         </div>
+        {tablet ? (
+          <div className={styles.lunaPeek}><LunaStrip variant="peek" lunaState={lunaState} loading={dataLoading} /></div>
+        ) : (
         <div className={styles.actions}>
           <div className={styles.addWrap}>
             <button type="button" data-coachmark="home-add-button" data-add-trigger className={styles.addBtn} onClick={toggleAdd} aria-haspopup={addDropdownHasExtras() ? 'menu' : undefined} aria-expanded={addOpen}>
@@ -152,20 +182,21 @@ export function DeskHome({
           </div>
           {onImport && <button type="button" className={styles.importBtn} onClick={onImport}>{t('deskHome.import')}</button>}
         </div>
+        )}
       </header>
 
       <div className={`${styles.fill} ${slideClass || ''}`}>
-        <div className={`${styles.fill} ${spaceJustChanged ? 'content-slide-up' : ''}`}>
+        <div className={`${styles.fill} ${tablet ? styles.tabBody : ''} ${spaceJustChanged ? 'content-slide-up' : ''}`}>
           {activeSpaceId === 'new' ? (
             <NewSharedSpacePanel profile={profile} sharedSpaces={sharedSpaces} onOpenPremium={onOpenPremium} onCreated={onSpaceReady} onJoined={onSpaceReady} />
           ) : (
             <>
               <section className={styles.tiles} data-coachmark="home-metric-card">
-                {tiles.map(tile => {
+                {shownTiles.map(tile => {
                   const Wrap = tile.onClick ? 'button' : 'div'
                   return (
                     <Wrap key={tile.key} type={tile.onClick ? 'button' : undefined} onClick={tile.onClick || undefined} aria-label={tile.aria}
-                      className={`${styles.tile} ${tile.hero ? styles.tileHero : ''} ${tile.onClick ? styles.tileLink : ''}`}>
+                      className={`${styles.tile} ${styles['tile_' + tile.key] || ''} ${tile.key === 'overdue' && !tabletNext ? styles.tileDot : ''} ${tile.hero ? styles.tileHero : ''} ${tile.onClick ? styles.tileLink : ''}`}>
                       <span className={styles.tileLabel}>{tile.label}</span>
                       {tile.onClick && <span className={styles.tileArrow} aria-hidden="true"><ArrowUpRight size={16} strokeWidth={1.8} /></span>}
                       <span className={styles.tileNum}>
@@ -224,11 +255,16 @@ export function DeskHome({
                 </section>
 
                 <aside className={styles.side}>
-                  <LunaStrip variant="desk" lunaState={lunaState} loading={dataLoading} />
-                  <section className={styles.card}>
+                  {!tablet && <LunaStrip variant="desk" lunaState={lunaState} loading={dataLoading} />}
+                  <section className={`${styles.card} ${styles.gaugeCard}`}>
                     <h2 className={styles.cardTitle}>{t('deskHome.gaugeTitle')}</h2>
-                    <PeriodGauge large empty={!hasPayments || dataLoading} paidPct={hasPayments && !dataLoading ? pctPagado : 0} overduePct={hasPayments && !dataLoading ? overduePct : 0}
+                    {tabletNext ? (
+                      <PeriodGauge empty paidPct={0} label={t('deskHome.nextTitle')}
+                        center={<><span className={styles.gaugeSmall}>{t('homePage.nextStartsLabel')}</span><b className={styles.gaugeText}>{t('homePage.nextStartsDays', { count: nextStartsInDays })}</b></>} />
+                    ) : (
+                    <PeriodGauge large={!tablet} empty={!hasPayments || dataLoading} paidPct={hasPayments && !dataLoading ? pctPagado : 0} overduePct={hasPayments && !dataLoading ? overduePct : 0}
                       label={`${t('deskHome.gaugeTitle')}: ${pctPagado}%`} centerLabel={hasPayments ? t('deskHome.gaugePaid') : t('deskHome.gaugeEmpty')} />
+                    )}
                     <div className={styles.legend}>
                       <span><i className={styles.dotPaid} />{t('deskHome.legendPaid')}</span>
                       <span><i className={styles.dotPending} />{t('deskHome.legendPending')}</span>
@@ -236,7 +272,7 @@ export function DeskHome({
                     </div>
                   </section>
 
-                  <section className={styles.card}>
+                  <section className={`${styles.card} ${styles.nextCard}`}>
                     <h2 className={styles.cardTitle}>{t('deskHome.nextTitle')}</h2>
                     <div className={styles.range}>{nextRangeLabel}</div>
                     <div className={styles.nextNum}>{dataLoading ? '…' : <>{nextInt}<small>{nextCents}</small></>}</div>

@@ -218,3 +218,96 @@
 @media (hover: hover) and (pointer: fine) {
   .importBtn:hover { filter: none; background: var(--desk-hover-fill); }
 }
+
+/* ══ Tablet (768–1099px, v0.9.937) — mockup «Tablet: Inicio» ═════════════════
+   El mismo DeskHome con `.tablet`. Vertical (<960px): la franja azul de Total,
+   el medidor con tres fichas apiladas y la lista, reordenando con grid la
+   misma estructura (tiles/body/side pasan a `display: contents`). Horizontal
+   (≥960px): el layout de escritorio compactado. */
+.subSep { display: none; }
+.subLine { display: block; }
+.gaugeSmall { font-size: 13px; color: var(--muted); }
+.dateIcon { margin: 0 2px 0 0; flex: none; }
+
+.root.tablet { padding: 20px; }
+.tablet .head { margin: -20px -20px 14px; padding: 0 28px; min-height: 150px; align-items: flex-end; }
+.tablet .headText { padding-bottom: 14px; }
+.tablet .date { display: flex; align-items: center; gap: 6px; }
+.tablet .hello { font-size: 36px; letter-spacing: -1.2px; }
+.lunaPeek { position: relative; z-index: 2; height: 136px; margin-bottom: -14px; min-width: 0; display: flex; align-items: flex-end; }
+
+.tablet .tile { padding: 18px 20px; }
+.tablet .tileHero .tileArrow { background: var(--desk-card); }
+
+@media (max-width: 959px) {
+  .root.tablet { height: auto; overflow: visible; }
+  .tablet .tabBody {
+    display: grid;
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+    grid-template-areas: "total total" "gauge paid" "gauge pending" "gauge overdue" "list list";
+    gap: 14px;
+    align-content: start;
+  }
+  .tablet .tiles, .tablet .body, .tablet .side { display: contents; }
+  .tablet .tile_total { grid-area: total; }
+  .tablet .tile_paid { grid-area: paid; }
+  .tablet .tile_pending { grid-area: pending; }
+  .tablet .tile_overdue { grid-area: overdue; }
+  .tablet .gaugeCard { grid-area: gauge; }
+  .tablet .list { grid-area: list; overflow: visible; }
+  .tablet .listBody { overflow: visible; flex: none; }
+  .tablet .nextCard { display: none; }
+
+  /* Franja azul de Total: monto a la izquierda; fechas y flecha a la derecha. */
+  .tablet .tile_total {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto auto;
+    grid-template-areas: "label sub arrow" "num sub arrow";
+    align-items: center;
+    column-gap: 14px;
+    min-height: 0;
+    padding: 20px 24px;
+  }
+  .tablet .tile_total .tileLabel { grid-area: label; align-self: end; font-weight: 400; font-size: 14px; opacity: 0.8; }
+  .tablet .tile_total .tileNum { grid-area: num; margin-top: 6px; align-self: start; font-size: 44px; }
+  .tablet .tile_total .tileNum small { font-size: 24px; }
+  .tablet .tile_total .tileSub { grid-area: sub; margin: 0; min-height: 0; text-align: right; line-height: 1.5; font-size: 14px; }
+  .tablet .tile_total .tileArrow { position: static; grid-area: arrow; width: 40px; height: 40px; }
+
+  /* Fichas apiladas junto al medidor. */
+  .tablet .tile_paid, .tablet .tile_pending, .tablet .tile_overdue { min-height: 0; padding: 14px 18px; justify-content: center; gap: 2px; }
+  .tablet .tile_paid .tileLabel, .tablet .tile_pending .tileLabel, .tablet .tile_overdue .tileLabel { font-size: 14px; font-weight: 400; color: var(--muted); display: flex; align-items: center; }
+  .tablet .tile_paid .tileArrow, .tablet .tile_pending .tileArrow, .tablet .tile_overdue .tileArrow { display: none; }
+  .tablet .tile_paid .tileNum, .tablet .tile_pending .tileNum, .tablet .tile_overdue .tileNum { margin-top: 0; font-size: 28px; letter-spacing: -1px; line-height: 1.1; }
+  .tablet .tile_paid .tileNum small, .tablet .tile_pending .tileNum small, .tablet .tile_overdue .tileNum small { font-size: 16px; }
+  .tablet .tile_paid .tileSub, .tablet .tile_pending .tileSub, .tablet .tile_overdue .tileSub { margin-top: 0; min-height: 0; }
+  .tablet .tileDot .tileLabel::before { content: ""; width: 9px; height: 9px; border-radius: 50%; background: var(--danger); margin-right: 8px; flex: none; }
+
+  .tablet .gaugeCard { padding: 22px 20px 18px; display: flex; flex-direction: column; justify-content: center; }
+  .tablet .gaugeCard .cardTitle { font-size: 16px; margin-bottom: 10px; }
+  .tablet .gaugeCard .gaugeText { font-size: 26px; line-height: 1.1; letter-spacing: -0.8px; }
+  .tablet .tipSlot { margin-top: 0; padding-top: 14px; }
+}
+
+@media (min-width: 960px) {
+  .root.tablet { height: calc(100dvh - 24px); padding: 16px; }
+  .tablet .head { margin: -16px -16px 12px; min-height: 112px; }
+  .tablet .hello { font-size: 34px; }
+  .lunaPeek { height: 98px; }
+  .tablet .subSep { display: inline; }
+  .tablet .subLine { display: inline; }
+  .tablet .tiles { gap: 12px; margin-bottom: 12px; }
+  .tablet .tile { min-height: 112px; padding: 16px 18px; }
+  .tablet .tileLabel { font-size: 14px; }
+  .tablet .tileNum { font-size: 30px; letter-spacing: -1px; }
+  .tablet .tileNum small { font-size: 17px; }
+  .tablet .tileSub { margin-top: 4px; font-size: 12px; min-height: 0; }
+  .tablet .tileArrow { display: none; }
+  .tablet .body { grid-template-columns: minmax(0, 1fr) 320px; gap: 12px; }
+  .tablet .fill > .body { min-height: 0; }
+  .tablet .side { gap: 12px; }
+  .tablet .list, .tablet .card { padding: 18px 20px; }
+  .tablet .gaugeCard .cardTitle, .tablet .nextCard .cardTitle { font-size: 16px; margin-bottom: 6px; }
+  .tablet .gaugeCard .gaugeText { font-size: 24px; line-height: 1.1; }
+  .tablet .nextNum { font-size: 28px; }
+}

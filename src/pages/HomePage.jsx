@@ -332,9 +332,12 @@ export function HomePage({ payments, dataLoading = false, profile, spaceSwitcher
   )
 
   // Escritorio (≥1100px, v0.9.819): pantalla propia, no el layout móvil reacomodado.
-  if (isDesktop) {
+  // Escritorio y tablet (≥768px) comparten DeskHome; tablet lo recibe con `tablet`
+  // (v0.9.937). Solo móvil conserva el Inicio de abajo.
+  if (!isMobile) {
     return (
       <DeskHome
+        tablet={!isDesktop} periodDayNumber={periodDayNumber} periodDayTotal={periodDayTotal} nextStartsInDays={nextStartsInDays}
         profile={profile} dataLoading={dataLoading} activeSpaceId={activeSpaceId} spaceMembers={spaceMembers}
         sharedSpaces={sharedSpaces} spacePermissions={spacePermissions} derived={derived} lunaState={lunaState} handlers={handlers}
         cutsInPeriod={cutsInPeriod} cutPeriodKey={cutPeriodKey} paymentMethodsList={paymentMethodsList}
