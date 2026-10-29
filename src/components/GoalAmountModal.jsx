@@ -51,8 +51,16 @@ export function GoalAmountModal({ open, kind, goal, amount, setAmount, methodId,
     <>
       <div className={styles.field}>
         <label className="field-label">{withdraw ? t('goalDetailPanel.amountToWithdraw') : t('goalDetailPanel.amountToContribute')}</label>
-        <AmountInput autoFocus value={amount} onChange={e => setAmount(e.target.value)} placeholder="0.00"
-          onKeyDown={e => e.key === 'Enter' && onConfirm()} className={`field-input ${styles.amount}`} />
+        {asPop ? (
+          <AmountInput autoFocus value={amount} onChange={e => setAmount(e.target.value)} placeholder="0.00"
+            onKeyDown={e => e.key === 'Enter' && onConfirm()} className={`field-input ${styles.amount}`} />
+        ) : (
+          <div className={styles.amountBox}>
+            <span className={styles.cur}>$</span>
+            <AmountInput autoFocus value={amount} onChange={e => setAmount(e.target.value)} placeholder="0.00"
+              onKeyDown={e => e.key === 'Enter' && onConfirm()} className={styles.amountIn} />
+          </div>
+        )}
         <div className={styles.hint}>{hint}</div>
       </div>
       {!withdraw && paymentMethods && (

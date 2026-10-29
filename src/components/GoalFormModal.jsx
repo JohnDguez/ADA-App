@@ -5,7 +5,7 @@ import { CATEGORY_ICON_GROUPS, getIconComponent } from '../lib/categoryIcons'
 import { DatePicker } from './DatePicker'
 import AmountInput from './AmountInput'
 import { X } from 'lucide-react'
-import { fmt } from '../lib/utils'
+import { fmt, dateOf, getMonthsShort } from '../lib/utils'
 import { useIsMobile } from '../hooks/useIsMobile'
 import { ColorPickerPanel } from './ColorPickerPanel'
 import { catInk, isHexColor, colorToHex } from '../lib/colorUtils'
@@ -13,6 +13,12 @@ import cf from './CategoryFormDesk.module.css'
 import gd from './GoalFormDesk.module.css'
 import styles from './GoalFormModal.module.css'
 import { useScrollLock } from '../lib/scrollLock'
+
+function prettyDate(str) {
+  if (!str) return ''
+  const d = dateOf(str)
+  return `${d.getDate()} ${getMonthsShort()[d.getMonth()]} ${d.getFullYear()}`
+}
 
 const PALETTE = Array.from({ length: 16 }, (_, i) => `var(--palette-${i + 1})`)
 const ANIM_MS = 320
@@ -38,13 +44,17 @@ export function GoalFormModal({ open, initial, onSave, onClose }) {
 
   const [closing, setClosing] = useState(false)
   const [entering, setEntering] = useState(false)
+  // `entering` se activa DURANTE el render en que `open` pasa a true (no en un
+  // efecto): si no, la hoja se pinta primero ya colocada y la animación arranca
+  // un frame después, reiniciándose («aparece y vuelve a aparecer»).
+  const [prevOpen, setPrevOpen] = useState(open)
+  if (open !== prevOpen) { setPrevOpen(open); if (open) setEntering(true) }
   const wasOpenRef = useRef(open)
   const closeTimerRef = useRef(null)
   const enterTimerRef = useRef(null)
   useEffect(() => () => { clearTimeout(closeTimerRef.current); clearTimeout(enterTimerRef.current) }, [])
   useEffect(() => {
     if (!wasOpenRef.current && open) {
-      setEntering(true)
       clearTimeout(enterTimerRef.current)
       enterTimerRef.current = setTimeout(() => setEntering(false), ANIM_MS)
     }
@@ -110,7 +120,7 @@ export function GoalFormModal({ open, initial, onSave, onClose }) {
           {customOn && <Check size={cls.check} color={ink} strokeWidth={3} />}
         </button>
       </div>
-      {customOn && <ColorPickerPanel value={color} onChange={setColor} />}
+      {customOn && (cls.panel ? <div className={cls.panel}><ColorPickerPanel value={color} onChange={setColor} /></div> : <ColorPickerPanel value={color} onChange={setColor} />)}
     </>
   )
 
@@ -186,7 +196,7 @@ export function GoalFormModal({ open, initial, onSave, onClose }) {
                 <div className={gd.pAmount}>{fmt(0)}</div>
                 <div className={gd.pMeta}>{target > 0 ? `${t('goalsPage.desk.previewLeft')} ${fmt(target)}` : ' '}</div>
                 <div className={gd.bar}><i /></div>
-                <div className={gd.pMeta}>{targetDate ? targetDate : t('goalsPage.desk.previewNoDate')}</div>
+                <div className={gd.pMeta}>{targetDate ? prettyDate(targetDate) : t('goalsPage.desk.previewNoDate')}</div>
               </div>
               <div className={gd.hint}>{t('goalsPage.desk.previewHint')}</div>
             </aside>
@@ -214,101 +224,80 @@ export function GoalFormModal({ open, initial, onSave, onClose }) {
           <button type="button" className={styles.close} onClick={onClose} aria-label={t('buttons.cancel')}><X size={16} /></button>
         </div>
 
-        <div className={styles.preview} style={{ '--tint': color }}>
-          <div className={styles.pTop}>
-            <span className={styles.pIcon} style={{ color: ink }}><MobIcon size={20} /></span>
-            <b className={styles.pName}>{name.trim() || t('goalsPage.desk.previewName')}</b>
-          </div>
-          <div className={styles.pAmount}>{fmt(0)}</div>
-          <div className={styles.pMeta}>{mobTarget > 0 ? `${t('goalsPage.desk.previewLeft')} ${fmt(mobTarget)}` : ' '}</div>
-          <div className={styles.bar}><i /></div>
-        </div>
-
-        <div className={styles.fieldGroup}>
-          <label className="field-label">{t('goalFormModal.nameLabel')}</label>
-          <input aria-label={t('goalFormModal.nameLabel')}
-            autoFocus
-            className={`field-input ${styles.inputMt}`}
-            value={name}
-            onChange={e => { setName(e.target.value); setError('') }}
-            placeholder={t('goalFormModal.namePlaceholder')}
-          />
-        </div>
-
-        <div className={styles.fieldGroup}>
-          <label className="field-label">{t('goalFormModal.notesLabel')}</label>
-          <textarea aria-label={t('goalFormModal.notesLabel')}
-            className={`field-input ${styles.inputMt} ${styles.textarea}`}
-            value={notes}
-            onChange={e => setNotes(e.target.value)}
-            placeholder={t('goalFormModal.notesPlaceholder')}
-          />
-        </div>
-
-        <div className={styles.row2}>
-          <div>
-            <label className="field-label">{t('goalFormModal.amountLabel')}</label>
-            <AmountInput
-              className={`field-input ${styles.inputMt}`}
-              value={targetAmount}
-              onChange={e => { setTargetAmount(e.target.value); setError('') }}
-              placeholder="$0.00"
-            />
-          </div>
-          <div>
-            <label className="field-label">{t('goalFormModal.deadlineLabel')}</label>
-            <div className={styles.inputMt}>
-              <DatePicker value={targetDate} onChange={setTargetDate} placeholder={t('goalFormModal.deadlinePlaceholder')} />
+        <div className={styles.body}>
+          <div className={styles.preview} style={{ '--tint': color }}>
+            <div className={styles.lbl} style={{ margin: 0 }}>{t('goalsPage.desk.previewTitle')}</div>
+            <div className={styles.pCard}>
+              <div className={styles.pTop}>
+                <span className={styles.pIcon} style={{ color: ink }}><MobIcon size={18} /></span>
+                <b className={styles.pName}>{name.trim() || t('goalsPage.desk.previewName')}</b>
+              </div>
+              <div className={styles.pAmount}>{fmt(0)}</div>
+              <div className={styles.pMeta}>{mobTarget > 0 ? `${t('goalsPage.desk.previewLeft')} ${fmt(mobTarget)}` : ' '}</div>
+              <div className={styles.bar}><i /></div>
+              <div className={styles.pMeta}>{targetDate ? prettyDate(targetDate) : t('goalsPage.desk.previewNoDate')}</div>
             </div>
           </div>
-        </div>
 
-        <div className={styles.fieldGroup}>
-          <label className="field-label">{t('goalFormModal.iconColorLabel')}</label>
-          <div className={styles.searchWrapper}>
-            <div className={styles.searchIcon}><Search size={14} color="var(--text)" /></div>
-            <input aria-label={t('settingsCategories.iconSearchPlaceholder')}
-              value={iconSearch}
-              onChange={e => setIconSearch(e.target.value)}
-              placeholder={t('settingsCategories.iconSearchPlaceholder')}
-              className={`field-input ${styles.searchInput}`}
-            />
+          <div>
+            <label className={styles.lbl}>{t('goalFormModal.nameLabel')}</label>
+            <input aria-label={t('goalFormModal.nameLabel')} className="field-input" value={name}
+              onChange={e => { setName(e.target.value); setError('') }} placeholder={t('goalFormModal.namePlaceholder')} />
           </div>
-          <div className={styles.iconGroupsContainer}>
-            {filteredGroups.map(group => (
-              <div key={group.label} className={styles.iconGroup}>
-                <div className={styles.iconGroupLabel}>{group.label}</div>
-                <div className={styles.iconGrid}>
-                  {group.icons.map(({ name: iconName, label }) => {
-                    const Icon = getIconComponent(iconName)
-                    const selected = icon === iconName
-                    return (
-                      <button
-                        key={iconName}
-                        type="button"
-                        title={label}
-                        onClick={() => setIcon(iconName)}
-                        className={`${styles.iconButton} ${selected ? styles.iconButtonSelected : ''}`}
-                      >
-                        <Icon size={16} color={selected ? 'var(--surface)' : 'var(--text)'} />
-                      </button>
-                    )
-                  })}
+
+          <div>
+            <label className={styles.lbl}>{t('goalFormModal.notesLabel')}</label>
+            <input aria-label={t('goalFormModal.notesLabel')} className="field-input" value={notes}
+              onChange={e => setNotes(e.target.value)} placeholder={t('goalFormModal.notesPlaceholder')} />
+          </div>
+
+          <div className={styles.row2}>
+            <div>
+              <label className={styles.lbl}>{t('goalFormModal.amountLabel')}</label>
+              <AmountInput className="field-input" value={targetAmount}
+                onChange={e => { setTargetAmount(e.target.value); setError('') }} placeholder="$0.00" />
+            </div>
+            <div>
+              <label className={styles.lbl}>{t('goalFormModal.deadlineLabel')}</label>
+              <DatePicker value={targetDate} onChange={setTargetDate} placeholder={t('goalFormModal.deadlinePlaceholder')} sheet sheetTitle={t('goalFormModal.deadlineLabel')} />
+            </div>
+          </div>
+
+          <div>
+            <label className={styles.lbl}>{t('goalFormModal.iconColorLabel')}</label>
+            <div className={styles.search}>
+              <Search size={16} />
+              <input aria-label={t('settingsCategories.iconSearchPlaceholder')} value={iconSearch}
+                onChange={e => setIconSearch(e.target.value)} placeholder={t('settingsCategories.iconSearchPlaceholder')} />
+            </div>
+            <div className={`${styles.groups} scroll-y`}>
+              {filteredGroups.map(group => (
+                <div key={group.label}>
+                  <div className={styles.gl}>{group.label}</div>
+                  <div className={styles.iconGrid}>
+                    {group.icons.map(({ name: iconName, label }) => {
+                      const Icon = getIconComponent(iconName)
+                      return (
+                        <button key={iconName} type="button" title={label} onClick={() => setIcon(iconName)}
+                          className={`${styles.ib} ${icon === iconName ? styles.ibOn : ''}`}>
+                          <Icon size={18} />
+                        </button>
+                      )
+                    })}
+                  </div>
                 </div>
-              </div>
-            ))}
-            {filteredGroups.length === 0 && (
-              <div className={styles.noResultsText}>{t('settingsCategories.noIconResults', { search: iconSearch })}</div>
-            )}
+              ))}
+              {filteredGroups.length === 0 && <div className={styles.help}>{t('settingsCategories.noIconResults', { search: iconSearch })}</div>}
+            </div>
+            {colorBlock({ wrap: styles.colors, sw: styles.sw, swOn: styles.swOn, rainbow: styles.rainbow, check: 14, panel: styles.picker })}
           </div>
-          {colorBlock({ wrap: styles.colorGrid, sw: styles.colorSwatch, swOn: styles.colorSwatchSelected, rainbow: styles.rainbow, check: 13 })}
-        </div>
 
-        {error && <div className={styles.errorText}>{error}</div>}
+          {error && <div className={styles.errorText}>{error}</div>}
+        </div>
 
         <div className={styles.foot}>
           <button type="button" onClick={onClose} className={styles.cancel}>{t('buttons.cancel')}</button>
-          <button type="button" onClick={handleSave} disabled={saving} className={`btn-primary ${styles.saveButton}`}>
+          <button type="button" onClick={handleSave} disabled={saving} className={styles.save}>
             {saving ? t('settingsCategories.saving') : t('buttons.save')}
           </button>
         </div>
