@@ -1976,6 +1976,7 @@ export default function App() {
           onConsumeInitialSection={() => setSettingsInitialSection(null)}
           returnTab={settingsReturnTab}
           onReturnToTab={returnFromSettingsShortcut}
+          headerProps={headerProps}
         />
         </Suspense>
       )}

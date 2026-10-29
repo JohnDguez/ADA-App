@@ -27,6 +27,8 @@ import { LanguageSheet, useLanguageOptions } from '../components/LanguageSheet'
 import { SettingsLanguageDesk } from './settings/SettingsLanguageDesk'
 import { useIsDesktop } from '../hooks/useIsDesktop'
 import { DeskSettings } from './DeskSettings'
+import { MobileSettings } from './MobileSettings'
+import { useIsMobile } from '../hooks/useIsMobile'
 
 const ImportInline = lazy(() => import('../components/ImportModal').then(m => ({ default: m.ImportInline })))
 
@@ -58,9 +60,10 @@ function OptionCard({ icon: Icon, tone, label, value, onClick }) {
   )
 }
 
-export function SettingsPage({ profile, user, onUpdate, onUploadAvatar, onDataDeleted, slideClass, theme, onThemeChange, onOpenPremium, sharedSpaces, paymentMethods, personalPayments = null, onPayCardNow, onSettlePlan, onOpenImport, importProps, initialSection, onConsumeInitialSection, returnTab, onReturnToTab }) {
+export function SettingsPage({ profile, user, onUpdate, onUploadAvatar, onDataDeleted, slideClass, theme, onThemeChange, onOpenPremium, sharedSpaces, paymentMethods, personalPayments = null, onPayCardNow, onSettlePlan, onOpenImport, importProps, initialSection, onConsumeInitialSection, returnTab, onReturnToTab, headerProps }) {
   const { t } = useTranslation()
   const isDesktop = useIsDesktop()
+  const isMobile = useIsMobile()
   const [languageOpen, setLanguageOpen] = useState(false)
   // Tablet (≥768px): tarjetas por opción en vez de la lista de filas.
   const [isTablet, setIsTablet] = useState(() => typeof window !== 'undefined' && window.matchMedia('(min-width: 768px)').matches)
@@ -275,7 +278,7 @@ export function SettingsPage({ profile, user, onUpdate, onUploadAvatar, onDataDe
           profile.is_premium (pedido de Johnatan, mismo criterio que la
           prop accentColor de PageHero.jsx, pero esta pantalla no usa
           PageHero: no tiene botón de regreso, es la raíz del tab). */}
-      {!isDesktop && <div
+      {!isDesktop && !isMobile && <div
         className={styles.glow}
         style={{ '--settingsGlowAccent': profile.is_premium ? 'var(--premium-gold)' : 'var(--accent)' }}
       />}
@@ -283,85 +286,20 @@ export function SettingsPage({ profile, user, onUpdate, onUploadAvatar, onDataDe
       {isDesktop && <DeskSettings d={deskData} />}
       {isDesktop && <input ref={fileRef} type="file" accept="image/*" hidden onChange={handleAvatarChange} />}
 
-      {!isTablet && !isDesktop && (<>
-      {/* Avatar */}
-      <div className={styles.avatarSection}>
-        <div className={styles.avatarWrapper}>
-          <AvatarImg
-            src={profile.avatar_url}
-            alt={t('buttons.profilePhoto')}
-            className={`${styles.avatarImg} ${profile.is_premium ? styles.avatarImgPremium : ''}`}
-            fallback={<div className={`${styles.avatarInitials} ${profile.is_premium ? styles.avatarImgPremium : ''}`}>{initials}</div>}
-          />
-          {profile.is_premium && (
-            <div className={styles.premiumCrownBadge}>
-              <Crown size={14} fill="currentColor" />
-            </div>
-          )}
-          <button onClick={() => setAvatarModal('choice')} className={styles.cameraButton}>
-            {uploadingAvatar
-              ? <div className={styles.uploadingSpinner} />
-              : <Camera size={14} color="var(--text)" />}
-          </button>
+      {isMobile && (
+        <>
           <input ref={fileRef} type="file" accept="image/*" hidden onChange={handleAvatarChange} />
-        </div>
-        <div className={styles.profileName}>{profile.name}</div>
-        <div className={styles.profileEmail}>{user?.email}</div>
-        {profile.is_premium && (
-          <div className={styles.premiumPill}>
-            <Crown size={11} fill="currentColor" />
-            {t('settingsPage.premiumBadge')}
-          </div>
-        )}
-      </div>
-
-      {/* Premium — bloque propio, fuera de las secciones */}
-      <Card>
-        {profile.is_premium
-          ? <Row icon={Crown} filled label={t('settingsPage.menu.subscription')} onClick={() => openSection('subscription')} last />
-          : <Row icon={Crown} filled label={t('settingsPage.menu.getPremium')} onClick={onOpenPremium} last />
-        }
-      </Card>
-
-      {/* Tu dinero (v0.9.620: Ajustes agrupado por tema) */}
-      <div className={styles.groupLabel}>{t('settingsPage.sections.money')}</div>
-      <Card>
-        <div data-coachmark="perfil-cobro-row">
-          <Row icon={Calendar} label={t('settingsPage.menu.cobro')} value={[FREQ_LABEL[profile.cobro_freq], profile.currency].filter(Boolean).join(' · ')} onClick={() => openSection('cobro')} />
-        </div>
-        <div data-coachmark="perfil-categorias-row">
-          <Row icon={Tag}      label={t('settingsPage.menu.categories')} onClick={() => openSection('categories')} />
-        </div>
-        <Row icon={CreditCard} label={t('settingsPage.menu.cards')} onClick={() => openSection('cards')} />
-        <Row icon={Users}    label={t('settingsPage.menu.sharedSpace')} onClick={() => openSection('sharedspace')} last />
-      </Card>
-
-      {/* Preferencias */}
-      <div className={styles.groupLabel}>{t('settingsPage.sections.preferences')}</div>
-      <Card>
-        <div data-coachmark="perfil-notificaciones-row">
-          <Row icon={Bell}     label={t('settingsPage.menu.notifications')} onClick={() => openSection('notifications')} />
-        </div>
-        <Row icon={SunMoon}  label={t('settingsPage.menu.appearance')} value={THEME_LABEL[theme] || ''} onClick={() => openSection('appearance')} />
-        <Row icon={Languages} label={t('settingsAccount.row.language')} value={languageOptions.find(o => o.id === (profile.language || 'system'))?.label} onClick={() => setLanguageOpen(true)} last />
-      </Card>
-
-      {/* Cuenta y datos */}
-      <div className={styles.groupLabel}>{t('settingsPage.sections.accountData')}</div>
-      <Card>
-        <Row icon={User}     label={t('settingsPage.menu.account')} onClick={() => openSection('account')} />
-        <Row icon={Upload} label={t('settingsPage.menu.import')} onClick={onOpenImport} />
-        <Row icon={Download} label={t('settingsPage.menu.export')} onClick={() => openSection('export')} last />
-      </Card>
-
-      {/* Ayuda */}
-      <div className={styles.groupLabel}>{t('settingsPage.sections.help')}</div>
-      <Card>
-        <Row icon={HelpCircle} label={t('settingsPage.tutorialAgain')} onClick={() => onUpdate({ coachmarks_seen: {} })} />
-        <Row icon={MessageCircle} label={t('settingsPage.feedbackLabel')} onClick={handleGiveFeedback} last />
-      </Card>
-
-      </>)}
+          <MobileSettings
+            profile={profile} user={user} initials={initials} uploadingAvatar={uploadingAvatar} headerProps={headerProps}
+            onChangePhoto={() => setAvatarModal('choice')}
+            cobroValue={[FREQ_LABEL[profile.cobro_freq], profile.currency].filter(Boolean).join(' · ')}
+            themeValue={THEME_LABEL[theme] || ''}
+            languageValue={languageOptions.find(o => o.id === (profile.language || 'system'))?.label}
+            onOpen={openSection} onOpenPremium={onOpenPremium} onOpenImport={onOpenImport} onOpenLanguage={() => setLanguageOpen(true)}
+            onTutorial={() => onUpdate({ coachmarks_seen: {} })} onFeedback={handleGiveFeedback} onLogout={handleLogout}
+            versionLabel={versionLabel} appName={APP_NAME} />
+        </>
+      )}
 
       {isTablet && !isDesktop && (
         <div className={styles.tabletWrap}>
@@ -441,21 +379,6 @@ export function SettingsPage({ profile, user, onUpdate, onUploadAvatar, onDataDe
 
       <LanguageSheet open={languageOpen} onClose={() => setLanguageOpen(false)} profile={profile} onUpdate={onUpdate} />
 
-      {!isTablet && !isDesktop && (<>
-      {/* Sesión */}
-      <Card>
-        <button onClick={handleLogout} className={styles.logoutButton}>
-          <LogOut size={16} color="var(--danger)" />
-          <span className={styles.logoutText}>{t('settingsPage.logout')}</span>
-        </button>
-      </Card>
-
-      {/* Versión */}
-      <div className={styles.versionFooter}>
-        {APP_NAME} {versionLabel} — {t('settingsPage.versionSuffix')}
-      </div>
-
-      </>)}
 
       {/* Modal: elegir "Subir foto" o "Elegir avatar" — 2 tarjetas con ícono
           grande, lado a lado (pedido explícito de Johnatan, confirmado vía
