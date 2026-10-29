@@ -2686,6 +2686,7 @@
     "overallPct": "{{pct}}% of your active goals",
     "savedTile": "Saved",
     "doneTile": "Completed",
-    "sortAria": "Sort goals"
+    "sortAria": "Sort goals",
+    "tapHint": "Tap a goal to see its details"
   }
 }

@@ -2686,6 +2686,7 @@
     "overallPct": "{{pct}}% de tus metas activas",
     "savedTile": "Ahorrado",
     "doneTile": "Cumplidas",
-    "sortAria": "Ordenar metas"
+    "sortAria": "Ordenar metas",
+    "tapHint": "Toca una meta para ver su detalle"
   }
 }

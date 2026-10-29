@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Crown, PiggyBank, Target, Check, Loader2 } from 'lucide-react'
+import { Crown, PiggyBank, Target, Check, Loader2, Pointer } from 'lucide-react'
 import { EmptyState } from '../components/EmptyState'
 import { ChipMenu } from '../components/ChipMenu'
 import { PaidByStack } from '../components/PaidByStack'
@@ -137,6 +137,9 @@ export function MobileGoals({ d }) {
               <GoalTile key={g.id} goal={g} index={i} grown={grown} isShared={isShared} spaceMembers={spaceMembers} onClick={() => setSelectedGoalId(g.id)} />
             ))}
           </div>
+        )}
+        {showing.length > 0 && (
+          <p className={styles.hint}><Pointer size={14} strokeWidth={1.9} />{t('mobileGoals.tapHint')}</p>
         )}
         {atFreeLimit && goalsView === 'activas' && (
           <div className={styles.premium}>
