@@ -46,11 +46,18 @@ function seg(a, b) {
   return { strokeDasharray: `${Math.max(0, to - from)} 200`, strokeDashoffset: -from }
 }
 
-// Azul con punta redonda: el trazo se acorta el radio de la punta (E) para que
-// la punta —no el borde recto— caiga justo en el porcentaje.
+// Tramos con punta redonda (azul y rojo): el trazo se acorta el radio de la
+// punta (E) y la punta redonda cae en el porcentaje. `tip` es continua y vale
+// exactamente el final del carril (TOTAL) en 100 %, así que al llegar al final
+// la punta ya es la del carril y no hay salto al terminar la animación.
+const tip = (p) => at(p) + E * (p / 100)
 function segCap(p) {
-  if (p >= 100) return seg(0, 100)
-  return { strokeDasharray: `${Math.max(0, at(p) - E)} 200`, strokeDashoffset: 0 }
+  return { strokeDasharray: `${Math.max(0, tip(Math.min(100, p)) - E)} 200`, strokeDashoffset: 0 }
+}
+// Pendiente: arranca bajo la punta redonda del tramo anterior.
+function segPend(p) {
+  const from = p <= 0 ? 0 : tip(p) - E
+  return { strokeDasharray: `${Math.max(0, 100 - from)} 200`, strokeDashoffset: -from }
 }
 
 export function PeriodGauge({ paidPct, overduePct = 0, empty = false, label, centerLabel, center, large = false }) {
@@ -63,7 +70,7 @@ export function PeriodGauge({ paidPct, overduePct = 0, empty = false, label, cen
   if (!empty && gap > 0 && gap < 1) { if (overT > 0) overT += gap; else paidT += gap }
   const paid = useGrow(paidT)
   const over = useGrow(overT)
-  const pending = empty ? seg(0, 100) : seg(paid + over, 100)
+  const pending = empty ? seg(0, 100) : segPend(paid + over)
   return (
     <div className={`${styles.wrap} ${large ? styles.large : ''}`} role="img" aria-label={label}>
       <svg viewBox="0 0 300 150" className={styles.svg} aria-hidden="true">
@@ -83,8 +90,8 @@ export function PeriodGauge({ paidPct, overduePct = 0, empty = false, label, cen
           <path d={ARC} pathLength="100" className={styles.pending} stroke={`url(#h${uid})`} {...pending} />
           {/* El rojo arranca desde el inicio y queda DETRÁS del azul: así la punta
               redondeada del azul se ve sobre el rojo. */}
-          {!empty && overT > 0 && <path d={ARC} pathLength="100" className={styles.over} {...seg(0, paid + over)} />}
-          {!empty && overT > 0 && <path d={ARC} pathLength="100" className={styles.tex} stroke={`url(#o${uid})`} {...seg(0, paid + over)} />}
+          {!empty && overT > 0 && <path d={ARC} pathLength="100" className={styles.over} {...segCap(paid + over)} />}
+          {!empty && overT > 0 && <path d={ARC} pathLength="100" className={`${styles.tex} ${styles.texCap}`} stroke={`url(#o${uid})`} {...segCap(paid + over)} />}
           {!empty && paidT > 0 && <path d={ARC} pathLength="100" className={styles.paid} style={{ opacity: paid > 0.05 ? 1 : 0 }} {...segCap(paid)} />}
           {!empty && paidT > 0 && <path d={ARC} pathLength="100" className={`${styles.tex} ${styles.texCap}`} stroke={`url(#o${uid})`} style={{ opacity: paid > 0.05 ? undefined : 0 }} {...segCap(paid)} />}
         </g>

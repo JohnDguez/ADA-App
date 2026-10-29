@@ -4,7 +4,7 @@
 .track { stroke: var(--desk-chip); stroke-linecap: round; }
 .pending { stroke-linecap: butt; }
 .paid { stroke: var(--desk-deep); stroke-linecap: round; }
-.over { stroke: var(--danger); stroke-linecap: butt; }
+.over { stroke: var(--danger); stroke-linecap: round; }
 .hatchLine { stroke: var(--desk-hatch); stroke-width: 2.2; }
 .center { position: absolute; left: 0; right: 0; bottom: 4px; display: flex; flex-direction: column; align-items: center; text-align: center; }
 .center b { font-size: 40px; font-weight: 500; letter-spacing: -1.5px; line-height: 1; }
