@@ -251,7 +251,7 @@
     "frequencyLabel": "Frequency",
     "payDayLabel": "Pay day",
     "payDaysLabel": "Pay days",
-    "otherOption": "Other",
+    "otherOption": "Custom",
     "day1Label": "Day 1 (1–31)",
     "day2Label": "Day 2 (1–31)",
     "day1Placeholder": "e.g. 13",
@@ -278,7 +278,8 @@
       "biweekly": "twice a month",
       "monthly": "once a month"
     },
-    "nextPaydayLabel": "Next payday"
+    "nextPaydayLabel": "Next payday",
+    "mobileDescription": "Set how often you get paid and how much you earn."
   },
   "settingsNotifications": {
     "title": "Notifications",

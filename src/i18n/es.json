@@ -251,7 +251,7 @@
     "frequencyLabel": "Frecuencia",
     "payDayLabel": "Día de cobro",
     "payDaysLabel": "Días de cobro",
-    "otherOption": "Otro",
+    "otherOption": "Personalizado",
     "day1Label": "Día 1 (1–31)",
     "day2Label": "Día 2 (1–31)",
     "day1Placeholder": "ej. 13",
@@ -278,7 +278,8 @@
       "biweekly": "dos veces al mes",
       "monthly": "una vez al mes"
     },
-    "nextPaydayLabel": "Próximo cobro"
+    "nextPaydayLabel": "Próximo cobro",
+    "mobileDescription": "Define cada cuánto cobras y cuánto ganas."
   },
   "settingsNotifications": {
     "title": "Notificaciones",
