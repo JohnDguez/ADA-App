@@ -2123,3 +2123,6 @@
 :global(html[data-desk-sidebar]) .menuItem.menuItemDanger:not(:first-child)::before {
   content: ""; position: absolute; left: 8px; right: 8px; top: -4px; height: 1px; background: var(--desk-hair);
 }
+
+/* v0.9.909 — en móvil el espacio inferior lo da el contenido (10rem: barra + botón +); sin sumarle los 120px de antes. */
+@media (max-width: 767px) { .pageRoot { padding-bottom: 0; } }

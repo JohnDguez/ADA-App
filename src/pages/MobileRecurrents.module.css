@@ -1,5 +1,5 @@
 /* Gastos recurrentes móvil (<768px, v0.9.907). Regla 54: rem/clamp; px solo en líneas finas. */
-.root { padding: 0 clamp(0.75rem, 4.2vw, 1.25rem) 12rem; display: flex; flex-direction: column; gap: 0.875rem; }
+.root { padding: 0 clamp(0.75rem, 4.2vw, 1.25rem) calc(10rem + env(safe-area-inset-bottom)); display: flex; flex-direction: column; gap: 0.875rem; }
 .search { display: flex; align-items: center; gap: 0.5rem; height: 2.75rem; padding: 0 0.875rem; border-radius: 0.875rem; background: var(--desk-card); border: 1px solid var(--desk-hair); color: var(--muted); }
 .search input { flex: 1; min-width: 0; border: 0; background: none; outline: 0; font: inherit; font-size: 0.875rem; color: var(--text); }
 .card { background: var(--desk-card); border-radius: clamp(1rem, 5vw, 1.25rem); box-shadow: var(--desk-shadow); padding: clamp(1rem, 4.5vw, 1.25rem); min-width: 0; }
