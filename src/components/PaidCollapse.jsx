@@ -1,10 +1,11 @@
 import { useState, useRef, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
-import { ChevronDown, ChevronUp, Check, RotateCcw, Eye, Loader2 } from 'lucide-react'
+import { ChevronDown, Check, RotateCcw, Eye, Loader2 } from 'lucide-react'
 import { PaidByStack } from './PaidByStack'
 import { getBank, bankColorVar } from '../lib/cardCatalog'
 import { fmt, getMonthsShort, getCategoryLabel } from '../lib/utils'
 import { kbdIf } from '../lib/a11y'
+import { usePresence } from '../lib/usePresence'
 import styles from './PaidCollapse.module.css'
 
 // Timing de la animación de "marcar como no pagado" en PaidCollapse — mismo
@@ -177,6 +178,7 @@ export function PaidCollapse({ payments, expanded, onToggle, onMarkUnpaid, onVie
   const { t } = useTranslation()
   // Filas que ya no están pagadas pero siguen animando su salida (v0.9.745).
   const [leaving, setLeaving] = useState({})
+  const { render: listRender, closing: listClosing } = usePresence(expanded, 260)
   const keepRow = row => setLeaving(prev => ({ ...prev, [row.id]: row }))
   const releaseRow = id => setLeaving(prev => { if (!(id in prev)) return prev; const { [id]: _gone, ...rest } = prev; return rest })
   return (
@@ -200,10 +202,10 @@ export function PaidCollapse({ payments, expanded, onToggle, onMarkUnpaid, onVie
             return parts.join(' · ')
           })()}
         </span>
-        {expanded ? <ChevronUp size={15} color="var(--text)" /> : <ChevronDown size={15} color="var(--text)" />}
+        <ChevronDown size={15} color="var(--text)" className={`${styles.paidChevron} ${expanded ? styles.paidChevronOpen : ''}`} />
       </button>
 
-      {expanded && (() => {
+      {listRender && (() => {
         // Bug real reportado por Johnatan con captura: un pago pospuesto
         // (is_postponed:true, sin paid_at) siempre caía hasta el fondo de
         // la lista sin importar su fecha real. Causa: este `sort` es un
@@ -220,10 +222,12 @@ export function PaidCollapse({ payments, expanded, onToggle, onMarkUnpaid, onVie
           return db - da
         })
         return (
+          <div className={`${styles.paidCollapseAnim} ${listClosing ? styles.paidCollapseAnimOut : ''}`}>
           <div className={styles.paidCollapseList}>
             {sorted.map(p => (
               <PaidCollapseItem key={p.id} p={p} onMarkUnpaid={onMarkUnpaid} onKeep={keepRow} onRelease={releaseRow} onViewSource={onViewSource} spaceMembers={spaceMembers} onSelect={onSelect} selected={selectedId === p.id} paymentMethodsList={paymentMethodsList} />
             ))}
+          </div>
           </div>
         )
       })()}

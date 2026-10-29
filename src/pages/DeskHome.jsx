@@ -1,4 +1,4 @@
-import { useState, useRef, useMemo } from 'react'
+import { useState, useRef, useMemo, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Plus, ArrowUpRight, UserRound, Crown, UsersRound } from 'lucide-react'
 import { PayRail } from '../components/PayRail'
@@ -46,6 +46,26 @@ export function DeskHome({
   const { pagarEsteCobro, vencidos, delPeriodo, pagadosEstePeriodo, pagadoMonto, pendingAmt, totalConocido, pctPagado, upcoming, nextPeriodKnownTotal, nextStart, pendingVariableCount } = derived
   const [tab, setTab] = useState(0) // 0 periodo actual · 1 próximo periodo
   const [paidExpanded, setPaidExpanded] = useState(false)
+  // Cambio de periodo animado: el contenido actual sale (140 ms) y el nuevo entra
+  // desde el lado del chip elegido. `chipTab` marca el chip al instante.
+  const [chipTab, setChipTab] = useState(0)
+  const [tabPhase, setTabPhase] = useState('idle') // idle | out | in
+  const tabTimer = useRef(null)
+  const tabDir = useRef(1)
+  function changeTab(n) {
+    if (n === chipTab) return
+    tabDir.current = n > chipTab ? 1 : -1
+    setChipTab(n)
+    setTabPhase('out')
+    clearTimeout(tabTimer.current)
+    tabTimer.current = setTimeout(() => {
+      setTab(n)
+      setTabPhase('in')
+      tabTimer.current = setTimeout(() => setTabPhase('idle'), 260)
+    }, 140)
+  }
+  useEffect(() => () => clearTimeout(tabTimer.current), [])
+  const tabAnimCls = tabPhase === 'out' ? (tabDir.current > 0 ? styles.tabOutL : styles.tabOutR) : tabPhase === 'in' ? (tabDir.current > 0 ? styles.tabInR : styles.tabInL) : ''
   const [addOpen, setAddOpen] = useState(false)
   const paidRef = useRef(null)
   const overdueRef = useRef(null)
@@ -78,7 +98,7 @@ export function DeskHome({
   const overduePct = totalConocido > 0 ? (overdueAmt / totalConocido) * 100 : 0
 
   function goto(ref, { tabIndex = 0, expandPaid = false } = {}) {
-    if (tab !== tabIndex) setTab(tabIndex)
+    if (tab !== tabIndex) { setTab(tabIndex); setChipTab(tabIndex) }
     if (expandPaid) setPaidExpanded(true)
     // La lista de pagos scrollea por dentro (v0.9.820): primero se trae la tarjeta
     // a la vista y luego se desplaza su cuerpo hasta la sección pedida.
@@ -196,7 +216,7 @@ export function DeskHome({
                   const Wrap = tile.onClick ? 'button' : 'div'
                   return (
                     <Wrap key={tile.key} type={tile.onClick ? 'button' : undefined} onClick={tile.onClick || undefined} aria-label={tile.aria}
-                      className={`${styles.tile} ${styles['tile_' + tile.key] || ''} ${tile.key === 'overdue' && !tabletNext ? styles.tileDot : ''} ${tile.hero ? styles.tileHero : ''} ${tile.onClick ? styles.tileLink : ''}`}>
+                      className={`${styles.tile} ${styles['tile_' + tile.key] || ''} ${tile.key === 'overdue' && !tabletNext ? styles.tileDot : ''} ${tile.hero ? styles.tileHero : ''} ${tile.onClick ? styles.tileLink : ''} ${tablet ? tabAnimCls : ''}`}>
                       <span className={styles.tileLabel}>{tile.label}</span>
                       {tile.onClick && <span className={styles.tileArrow} aria-hidden="true"><ArrowUpRight size={16} strokeWidth={1.8} /></span>}
                       <span className={styles.tileNum}>
@@ -210,14 +230,16 @@ export function DeskHome({
 
               <div className={styles.body}>
                 <section ref={listRef} className={styles.list} data-coachmark="home-rail">
-                  <h2 className={styles.cardTitle}>{t('deskHome.periodTitle')}</h2>
-                  <div className={styles.chips} role="tablist">
-                    <button type="button" role="tab" aria-selected={tab === 0} className={`${styles.chip} ${tab === 0 ? styles.chipOn : ''}`} onClick={() => setTab(0)}>{t('homePage.tabs.currentPeriod')}</button>
-                    <button type="button" role="tab" aria-selected={tab === 1} className={`${styles.chip} ${tab === 1 ? styles.chipOn : ''}`} onClick={() => setTab(1)}>{t('homePage.tabs.nextPeriod')}</button>
+                  <div className={styles.listHead}>
+                    <h2 className={styles.cardTitle}>{t('deskHome.periodTitle')}</h2>
+                    <div className={styles.chips} role="tablist">
+                      <button type="button" role="tab" aria-selected={chipTab === 0} className={`${styles.chip} ${chipTab === 0 ? styles.chipOn : ''}`} onClick={() => changeTab(0)}>{t('homePage.tabs.currentPeriod')}</button>
+                      <button type="button" role="tab" aria-selected={chipTab === 1} className={`${styles.chip} ${chipTab === 1 ? styles.chipOn : ''}`} onClick={() => changeTab(1)}>{t('homePage.tabs.nextPeriod')}</button>
+                    </div>
                   </div>
 
                   {tab === 0 ? (
-                    <div ref={listBodyRef} className={`${styles.listBody} scroll-y`}>
+                    <div ref={listBodyRef} className={`${styles.listBody} ${tabAnimCls} scroll-y`}>
                       {pagadosEstePeriodo.length > 0 && (
                         <div ref={paidRef} data-coachmark="home-paid-collapse" className={styles.section}>
                           <PaidCollapse payments={pagadosEstePeriodo} expanded={paidExpanded} onToggle={() => setPaidExpanded(v => !v)} onMarkUnpaid={onMarkUnpaid} onViewSource={onViewSource} spaceMembers={spaceMembers} paymentMethodsList={paymentMethodsList} />
@@ -245,7 +267,7 @@ export function DeskHome({
                       )}
                     </div>
                   ) : (
-                    <div ref={listBodyRef} className={`${styles.listBody} scroll-y`}>
+                    <div ref={listBodyRef} className={`${styles.listBody} ${tabAnimCls} scroll-y`}>
                       {dataLoading ? <RailSkeleton count={2} /> : upcoming.length === 0
                         ? <EmptyState desk title={t('homePage.emptyState.nextPeriodTitle')} subtitle={t('homePage.emptyState.subtitle')} onClick={onAdd} />
                         : <PayRail deskMode compact payments={upcoming} cfg={profile} handlers={handlers} permissions={spacePermissions} spaceMembers={spaceMembers} nextPeriodMode />}
@@ -256,7 +278,7 @@ export function DeskHome({
 
                 <aside className={styles.side}>
                   {!tablet && <LunaStrip variant="desk" lunaState={lunaState} loading={dataLoading} />}
-                  <section className={`${styles.card} ${styles.gaugeCard}`}>
+                  <section className={`${styles.card} ${styles.gaugeCard} ${tablet ? tabAnimCls : ''}`}>
                     <h2 className={styles.cardTitle}>{t('deskHome.gaugeTitle')}</h2>
                     {tabletNext ? (
                       <PeriodGauge empty paidPct={0} label={t('deskHome.nextTitle')}

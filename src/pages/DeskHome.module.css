@@ -127,7 +127,18 @@
 .list { display: flex; flex-direction: column; min-width: 0; min-height: 0; overflow: hidden; }
 .list .listBody { overscroll-behavior: auto; }
 .cardTitle { font-size: 18px; font-weight: 600; margin: 0 0 12px; color: var(--text); }
+.listHead { display: contents; }
 .chips { display: flex; gap: 8px; margin-bottom: 16px; }
+/* Cambio de periodo: sale hacia el lado contrario al chip elegido y entra desde él. */
+.tabOutL { animation: tabOutL .14s ease-in both; }
+.tabOutR { animation: tabOutR .14s ease-in both; }
+.tabInR { animation: tabInR .26s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.tabInL { animation: tabInL .26s cubic-bezier(0.22, 1, 0.36, 1) both; }
+@keyframes tabOutL { to { opacity: 0; transform: translateX(-14px); } }
+@keyframes tabOutR { to { opacity: 0; transform: translateX(14px); } }
+@keyframes tabInR { from { opacity: 0; transform: translateX(14px); } }
+@keyframes tabInL { from { opacity: 0; transform: translateX(-14px); } }
+@media (prefers-reduced-motion: reduce) { .tabOutL, .tabOutR, .tabInR, .tabInL { animation: none; } }
 .chip {
   height: 36px;
   padding: 0 16px;
@@ -313,4 +324,12 @@
   .tablet .gaugeCard .cardTitle, .tablet .nextCard .cardTitle { font-size: 16px; margin-bottom: 6px; }
   .tablet .gaugeCard .gaugeText { font-size: 24px; line-height: 1.1; }
   .tablet .nextNum { font-size: 28px; }
+}
+
+/* Tablet: pastillas de periodo a la derecha del título «Pagos» (mockup aprobado). */
+@media (min-width: 768px) and (max-width: 1099px) {
+  .tablet .listHead { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 14px; }
+  .tablet .listHead .cardTitle { margin: 0; }
+  .tablet .listHead .chips { margin-bottom: 0; }
+  .tablet .listHead .chip { height: 34px; padding: 0 14px; font-size: 13px; }
 }

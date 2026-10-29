@@ -227,3 +227,13 @@
 @media (hover: hover) and (pointer: fine) and (min-width: 1100px) {
   .paidCollapseToggle:hover { background: var(--desk-chip); }
 }
+
+/* Desplegar / plegar los pagados: la altura crece y se encoge (grid 0fr↔1fr) con fundido. */
+.paidChevron { transition: transform .28s cubic-bezier(0.22, 1, 0.36, 1); }
+.paidChevronOpen { transform: rotate(180deg); }
+.paidCollapseAnim { display: grid; grid-template-rows: 1fr; animation: paidIn .3s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.paidCollapseAnim > * { min-height: 0; overflow: hidden; }
+.paidCollapseAnimOut { animation: paidOut .24s ease-in both; }
+@keyframes paidIn { from { grid-template-rows: 0fr; opacity: 0; } to { grid-template-rows: 1fr; opacity: 1; } }
+@keyframes paidOut { from { grid-template-rows: 1fr; opacity: 1; } to { grid-template-rows: 0fr; opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .paidChevron, .paidCollapseAnim, .paidCollapseAnimOut { transition: none; animation: none; } }
