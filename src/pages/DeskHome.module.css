@@ -402,3 +402,36 @@
   .recTab .chip { height: 32px; padding: 0 9px; font-size: 12px; }
   .recTab .tile:not(.tileHero) .tileSub { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 }
+
+/* Metas en tablet (mockups «Metas · Tablet»): DeskGoals reutiliza este módulo
+   con `.tablet` + `.metTab`. */
+@media (max-width: 959px) {
+  .metTab .tiles { display: contents; }
+  .metTab .tileHero {
+    grid-column: 1 / -1; grid-row: 1;
+    display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "label sub" "num sub" "track track";
+    align-items: center; column-gap: 16px; row-gap: 0; min-height: 0; padding: 20px 24px;
+  }
+  .metTab .tileHero .tileLabel { grid-area: label; align-self: end; font-weight: 400; font-size: 14px; opacity: 0.8; }
+  .metTab .tileHero .tileNum { grid-area: num; margin-top: 6px; align-self: start; font-size: 44px; }
+  .metTab .tileHero .tileNum small { font-size: 24px; }
+  .metTab .tileHero .tileSub { grid-area: sub; margin: 0; min-height: 0; text-align: right; line-height: 1.5; font-size: 14px; }
+  .metTab .tileHero > div { grid-area: track; margin-top: 14px; height: 10px; }
+  .metTab .tile:not(.tileHero) { grid-row: 2; min-height: 0; padding: 16px 18px; justify-content: center; gap: 3px; }
+  .metTab .tile:not(.tileHero) .tileLabel { font-size: 14px; font-weight: 400; color: var(--muted); }
+  .metTab .tile:not(.tileHero) .tileNum { margin-top: 0; font-size: 27px; letter-spacing: -1px; line-height: 1.1; }
+  .metTab .tile:not(.tileHero) .tileNum small { font-size: 15px; }
+  .metTab .tile:not(.tileHero) .tileSub { margin-top: 0; min-height: 0; font-size: 12px; }
+  .metTab .list { grid-area: 3 / 1 / 4 / -1; overflow: visible; }
+  .metTab .listBody { overflow: visible; flex: none; }
+  .metTab .body, .metTab .side { display: contents; }
+}
+@media (min-width: 960px) and (max-width: 1099px) {
+  .metTab .tileHero { display: grid; grid-template-columns: minmax(0, 1fr); grid-template-areas: "label" "num" "sub" "track"; align-content: center; padding: 14px 20px; }
+  .metTab .tileHero .tileLabel { grid-area: label; font-weight: 400; font-size: 14px; opacity: 0.8; }
+  .metTab .tileHero .tileNum { grid-area: num; font-size: 34px; margin-top: 4px; }
+  .metTab .tileHero .tileNum small { font-size: 19px; }
+  .metTab .tileHero .tileSub { grid-area: sub; display: none; }
+  .metTab .tileHero > div { grid-area: track; margin-top: 8px; height: 8px; }
+  .metTab .tile:not(.tileHero) .tileLabel { font-weight: 400; color: var(--muted); }
+}

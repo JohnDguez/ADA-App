@@ -726,7 +726,11 @@
     "historyEmptyTitle": "Todavía no hay movimientos",
     "historyEmptyHint": "Tus aportes y retiros aparecerán aquí.",
     "firstContribution": "Hacer el primer aporte",
-    "nothingToWithdraw": "Aún no hay nada que retirar"
+    "nothingToWithdraw": "Aún no hay nada que retirar",
+    "contributeTitle": "Aportar a la meta",
+    "withdrawTitle": "Retirar de la meta",
+    "remainingHint": "Faltan {{amount}} para tu meta",
+    "availableHint": "Disponible para retirar: {{amount}}"
   },
   "goalFormModal": {
     "titleEdit": "Editar meta",

@@ -1,4 +1,7 @@
+import { useEffect, useRef } from 'react'
+import { createPortal } from 'react-dom'
 import { useTranslation } from 'react-i18next'
+import { usePresence } from '../lib/usePresence'
 import { Plus, Crown, PiggyBank, Target, Check, Loader2, ArrowDownUp } from 'lucide-react'
 import { NewSharedSpacePanel } from '../components/NewSharedSpacePanel'
 import { EmptyState } from '../components/EmptyState'
@@ -7,6 +10,7 @@ import { PaidByStack } from '../components/PaidByStack'
 import { GoalCardSkeleton } from '../components/SkeletonLoader'
 import { useHeaderBackground, HEADER_IMAGES } from '../hooks/useHeaderBackground'
 import { getIconComponent } from '../lib/categoryIcons'
+import { catInk } from '../lib/colorUtils'
 import { fmt, getMonthsShort } from '../lib/utils'
 import home from './DeskHome.module.css'
 import styles from './DeskGoals.module.css'
@@ -44,7 +48,7 @@ function GoalTile({ goal, selected, isShared, spaceMembers, onClick }) {
   return (
     <button type="button" data-goal-id={goal.id} className={`${styles.gc} ${selected ? styles.gcSel : ''}`} onClick={onClick}>
       <div className={styles.gcTop}>
-        <i className={styles.gcIcon} style={{ background: goal.color }}><Icon size={17} color="var(--on-color)" /></i>
+        <i className={styles.gcIcon} style={{ background: goal.color }}><Icon size={17} color={catInk(goal.color)} /></i>
         <b className={styles.gcName} title={goal.name}>{goal.name}</b>
         {goal._syncing && <span className="sync-spinner" aria-label={t('sync.syncing')}><Loader2 size={14} /></span>}
         {!done && (goal.isOverdue
@@ -64,7 +68,7 @@ function GoalTile({ goal, selected, isShared, spaceMembers, onClick }) {
   )
 }
 
-export function DeskGoals({ d }) {
+export function DeskGoals({ d, tablet = false }) {
   const { t } = useTranslation()
   const {
     profile, goalsLoading, rawActiveSpaceId, sharedSpaces, onOpenPremium, onSpaceReady, slideClass, spaceJustChanged,
@@ -80,10 +84,22 @@ export function DeskGoals({ d }) {
   const lastDone = [...completedGoals].sort((a, b) => new Date(b.completed_at || 0) - new Date(a.completed_at || 0))[0]
   const upcoming = activeGoals.filter(g => g.target_date).sort((a, b) => new Date(a.target_date) - new Date(b.target_date)).slice(0, 4)
   const showing = goalsView === 'activas' ? sortedGoals : completedGoals
+  // Tablet: el detalle es un panel lateral animado (portal) en vertical y horizontal.
+  const drawerPresence = usePresence(tablet && !!selectedGoal, 280)
+  const lastGoalRef = useRef(null)
+  const lastDetailRef = useRef(null)
+  if (selectedGoal) { lastGoalRef.current = selectedGoal; lastDetailRef.current = detailProps }
+  const drawerGoal = selectedGoal || lastGoalRef.current
+  useEffect(() => {
+    if (!tablet || !selectedGoal) return undefined
+    const onKey = e => { if (e.key === 'Escape' && !document.querySelector('[role="dialog"]')) setSelectedGoalId(null) }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [tablet, selectedGoal, setSelectedGoalId])
 
   return (
-    <div className={home.root}>
-      <header className={home.head}>
+    <div className={`${home.root} ${tablet ? `${home.tablet} ${home.metTab} ${styles.tabMet}` : ''}`}>
+      <header className={`${home.head} ${tablet ? styles.tabHeader : ''}`}>
         <div className={home.band} aria-hidden="true">
           {mountedKeys.map(key => (
             <img key={key} src={HEADER_IMAGES[key]} alt="" className={`${home.bandImg} ${timeOfDay === key ? home.bandImgOn : ''}`} />
@@ -93,7 +109,7 @@ export function DeskGoals({ d }) {
           <div className={home.date}>{t('goalsPage.subtitle')}</div>
           <h1 className={home.hello}>{t('goalsPage.title')}</h1>
         </div>
-        {rawActiveSpaceId !== 'new' && (
+        {rawActiveSpaceId !== 'new' && !tablet && (
           <div className={home.actions}>
             <button type="button" data-coachmark="metas-add-pill" className={`${home.addBtn} ${(!canAdd && !atFreeLimit) ? styles.addOff : ''}`} onClick={onAdd}><Plus size={18} strokeWidth={2.2} />{t('goalsPage.addGoal')}</button>
           </div>
@@ -101,7 +117,7 @@ export function DeskGoals({ d }) {
       </header>
 
       <div className={`${home.fill} ${slideClass || ''}`}>
-        <div className={`${home.fill} ${spaceJustChanged ? 'content-slide-up' : ''}`}>
+        <div className={`${home.fill} ${tablet ? styles.tabGrid : ''} ${spaceJustChanged ? 'content-slide-up' : ''}`}>
           {rawActiveSpaceId === 'new' ? (
             <NewSharedSpacePanel profile={profile} sharedSpaces={sharedSpaces} onOpenPremium={onOpenPremium} onCreated={onSpaceReady} onJoined={onSpaceReady} />
           ) : goalsLoading ? (
@@ -116,7 +132,8 @@ export function DeskGoals({ d }) {
                 <div className={`${home.tile} ${home.tileHero}`}>
                   <span className={home.tileLabel}>{t('goalsPage.totalRemaining')}</span>
                   <span className={home.tileNum}>{restInt}<small>{restCents}</small></span>
-                  <span className={home.tileSub}>{t('deskGoals.toGo')}</span>
+                  <span className={home.tileSub}>{tablet ? <>{overallPct} % {t('deskGoals.ofGoals')}<span className={styles.subSecond}>{t('deskGoals.total')} {fmt(totalTarget)}</span></> : t('deskGoals.toGo')}</span>
+                  {tablet && <div className={styles.heroTrack}><i className={styles.heroFill} style={{ width: `${overallPct}%` }} /></div>}
                 </div>
                 <div className={home.tile}>
                   <span className={home.tileLabel}>{t('goalsPage.totalSaved')}</span>
@@ -132,8 +149,9 @@ export function DeskGoals({ d }) {
 
               <div className={home.body}>
                 <section className={home.list}>
-                  <h2 className={home.cardTitle}>{t('deskGoals.listTitle')}</h2>
-                  <div className={styles.bar}>
+                  {!tablet && <h2 className={home.cardTitle}>{t('deskGoals.listTitle')}</h2>}
+                  <div className={`${styles.bar} ${tablet ? styles.barTab : ''}`}>
+                    {tablet && <h2 className={home.cardTitle}>{t('deskGoals.listTitle')}</h2>}
                     <div data-coachmark="metas-tabs" className={home.chips}>
                       <button type="button" aria-pressed={goalsView === 'activas'} className={`${home.chip} ${goalsView === 'activas' ? home.chipOn : ''}`} onClick={() => setGoalsView('activas')}>{t('goalsPage.tabs.active')}</button>
                       <button type="button" aria-pressed={goalsView === 'cumplidas'} className={`${home.chip} ${goalsView === 'cumplidas' ? home.chipOn : ''}`} onClick={() => setGoalsView('cumplidas')}>{t('goalsPage.tabs.completed')}</button>
@@ -168,13 +186,13 @@ export function DeskGoals({ d }) {
                 </section>
 
                 <aside className={home.side}>
-                  {selectedGoal ? (
+                  {selectedGoal && !tablet ? (
                     <section className={`${home.card} ${styles.detail}`}>
                       <GoalDetailPanel key={selectedGoal.id} goal={selectedGoal} desk {...detailProps} />
                     </section>
                   ) : (
                     <>
-                      <section className={home.card}>
+                      {!tablet && <section className={home.card}>
                         <h2 className={home.cardTitle}>{t('deskGoals.overallTitle')}</h2>
                         <div className={styles.ring} style={{ background: `conic-gradient(var(--desk-deep) 0 ${overallPct}%, var(--desk-chip) ${overallPct}% 100%)` }}>
                           <div><b>{overallPct}%</b><span>{t('deskGoals.ofGoals')}</span></div>
@@ -184,9 +202,9 @@ export function DeskGoals({ d }) {
                           <div><span>{t('deskGoals.total')}</span><b>{fmt(totalTarget)}</b></div>
                           <div><span>{t('deskGoals.left')}</span><b>{fmt(totalRestante)}</b></div>
                         </div>
-                      </section>
+                      </section>}
                       {upcoming.length > 0 && (
-                        <section className={home.card}>
+                        <section className={`${home.card} ${tablet ? styles.cUpcoming : ''}`}>
                           <h2 className={home.cardTitle}>{t('deskGoals.upcoming')}</h2>
                           {upcoming.map(g => (
                             <button key={g.id} type="button" className={styles.dl} onClick={() => setSelectedGoalId(g.id)}>
@@ -197,7 +215,7 @@ export function DeskGoals({ d }) {
                           ))}
                         </section>
                       )}
-                      <section className={`${home.card} ${styles.hint}`}>{t('deskGoals.selectHint')}</section>
+                      {!tablet && <section className={`${home.card} ${styles.hint}`}>{t('deskGoals.selectHint')}</section>}
                     </>
                   )}
                 </aside>
@@ -206,6 +224,15 @@ export function DeskGoals({ d }) {
           )}
         </div>
       </div>
+      {tablet && drawerPresence.render && drawerGoal && createPortal(
+        <>
+          <div className={`${styles.scrim} ${drawerPresence.closing ? styles.scrimOut : ''}`} onClick={() => setSelectedGoalId(null)} />
+          <aside className={`${styles.drawer} ${drawerPresence.closing ? styles.drawerOut : ''}`} aria-label={drawerGoal.name}>
+            <GoalDetailPanel key={drawerGoal.id} goal={drawerGoal} desk {...(detailProps || lastDetailRef.current)} />
+          </aside>
+        </>,
+        document.body,
+      )}
     </div>
   )
 }

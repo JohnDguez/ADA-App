@@ -173,7 +173,7 @@ export function GoalsPage({
     setFormOpen(false)
   }
 
-  const deskData = (isDesktop || isMobile) ? {
+  const deskData = {
     profile, goalsLoading, rawActiveSpaceId, sharedSpaces, onOpenPremium, onSpaceReady, slideClass, spaceJustChanged,
     isShared, spaceMembers, canAdd, atFreeLimit, onAdd: handleAddClick, noGoalsAtAll,
     activeGoals, completedGoals, sortedGoals, sortBy, setSortBy, goalsView, setGoalsView,
@@ -195,10 +195,10 @@ export function GoalsPage({
       onMarkCompleted: completed => markCompleted(selectedGoal.id, completed),
       onDelete: resolution => { deleteGoal(selectedGoal.id, resolution); setSelectedGoalId(null) },
     } : null,
-  } : null
+  }
 
   return (
-    <div className={`${styles.pageRoot} ${isDesktop ? styles.pageRootDesk : ''}`}>
+    <div className={`${styles.pageRoot} ${!isMobile ? styles.pageRootDesk : ''}`}>
       {/* Oculto desde 768px — NavRail.jsx ya cubre avatar, saludo,
           notificaciones y config (mismo criterio que las demás páginas). */}
       {!isDesktop && <div className={styles.pageHeaderWrapper}>
@@ -212,7 +212,7 @@ export function GoalsPage({
         />
       </div>}
 
-      {isDesktop ? <DeskGoals d={deskData} /> : isMobile ? (
+      {isDesktop ? <DeskGoals d={deskData} /> : !isMobile ? <DeskGoals d={deskData} tablet /> : (
         <>
           <div className={styles.spaceSwitcherMobileWrap}>{spaceSwitcher}</div>
           {activeSpaceHeader}
@@ -230,191 +230,6 @@ export function GoalsPage({
             </div>
           </div>
         </>
-      ) : (
-      <div className={styles.roundedContentWrapper}>
-        <div className={styles.spaceSwitcherMobileWrap}>{spaceSwitcher}</div>
-
-        {activeSpaceHeader}
-
-        <div className={slideClass}>
-          <div className={spaceJustChanged ? 'content-slide-up' : ''}>
-          {rawActiveSpaceId === 'new' ? (
-            <div className={styles.newSpacePanelWrapper}>
-              <NewSharedSpacePanel
-                profile={profile}
-                sharedSpaces={sharedSpaces}
-                onOpenPremium={onOpenPremium}
-                onCreated={onSpaceReady}
-                onJoined={onSpaceReady}
-              />
-            </div>
-          ) : !selectedGoal ? (
-            <div className={styles.screen}>
-              <div className={styles.header}>
-                <div className={styles.headerText}>
-                  <div className={styles.headerTitle}>{t('goalsPage.title')}</div>
-                  <div className={styles.headerSubtitle}>{t('goalsPage.subtitle')}</div>
-                </div>
-                {isTablet && rawActiveSpaceId !== 'new' && (
-                  <button data-coachmark="metas-add-pill" type="button" className={`${styles.headerAddButton} ${(!canAdd && !atFreeLimit) ? styles.addPillDisabled : ''}`} onClick={handleAddClick}>
-                    <Plus size={16} color="var(--on-color)" />
-                    {t('goalsPage.addGoal')}
-                  </button>
-                )}
-              </div>
-
-              {/* data-coachmark="metas-resumen" también en el EmptyState de
-                  abajo (mismo patrón que gastos-disponible-card en
-                  PaymentsPage.jsx) — un usuario nuevo con cero metas nunca
-                  llega a este summaryRow real (noGoalsAtAll cae en el
-                  EmptyState de arriba), así que sin el dual-tag el primer
-                  paso del tour de "metas" nunca encontraba dónde anclar y
-                  saltaba directo hasta el último paso (reportado por
-                  Johnatan, v0.9.348). */}
-              {goalsLoading ? (
-                /* Fase 1 del sistema de carga por sección (agosto 2026):
-                   `useGoals` inicializa `activeGoals`/`completedGoals`
-                   vacíos a propósito mientras carga — sin este branch,
-                   `noGoalsAtAll` caería en true y mostraría "Sin metas"
-                   como si fuera un dato real. Se muestra el esqueleto de
-                   tarjetas en su lugar, antes de evaluar `noGoalsAtAll`. */
-                <div data-coachmark="metas-resumen">
-                  <GoalCardSkeleton count={2} />
-                </div>
-              ) : noGoalsAtAll ? (
-                <div data-coachmark="metas-resumen">
-                  <EmptyState
-                    icon={PiggyBank}
-                    title={t('goalsPage.noGoalsAtAllTitle')}
-                    subtitle={t('goalsPage.noGoalsAtAllSubtitle')}
-                    onClick={handleAddClick}
-                  />
-                </div>
-              ) : (
-                <>
-                  <div data-coachmark="metas-resumen" className={styles.summaryRow}>
-                    <div className={styles.summaryBox}>
-                      <div className={styles.summaryLabel}>{t('goalsPage.totalRemaining')}</div>
-                      <div className={styles.summaryValue}>{fmt(totalRestante)}</div>
-                    </div>
-                    <div className={`${styles.summaryBox} ${styles.summaryBoxTablet}`}>
-                      <div className={styles.summaryLabel}>{t('goalsPage.totalSaved')}</div>
-                      <div className={`${styles.summaryValue} ${styles.summaryValueSaved}`}>{fmt(totalAhorrado)}</div>
-                    </div>
-                    <div className={styles.summaryBox}>
-                      <div className={styles.summaryLabel}>{t('goalsPage.goalsCompleted')}</div>
-                      <div className={styles.summaryValue}>{completedGoals.length}/{activeGoals.length + completedGoals.length}</div>
-                    </div>
-                  </div>
-
-                  {/* Switch "Activas"/"Cumplidas" — mismo patrón exacto que
-                      el de HomePage.jsx ("Periodo actual"/"Próximo
-                      periodo"): track + thumb deslizante, pastilla 999px. */}
-                  <div data-coachmark="metas-tabs" className={styles.tabTrack}>
-                    <div
-                      className={styles.tabThumb}
-                      style={{ transform: `translateX(${goalsView === 'cumplidas' ? 100 : 0}%)` }}
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setGoalsView('activas')}
-                      className={`${styles.tabButton} ${goalsView === 'activas' ? styles.tabButtonActive : ''}`}
-                    >
-                      {t('goalsPage.tabs.active')}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setGoalsView('cumplidas')}
-                      className={`${styles.tabButton} ${goalsView === 'cumplidas' ? styles.tabButtonActive : ''}`}
-                    >
-                      {t('goalsPage.tabs.completed')}
-                    </button>
-                  </div>
-
-                  <div key={goalsView} className={styles.viewFade}>
-                  {goalsView === 'activas' ? (
-                    <>
-                      <Collapse open={activeGoals.length > 1}>
-                        <button
-                          type="button"
-                          className={styles.sortButton}
-                          onClick={() => setSortBy(s => (s === 'monto' ? 'nombre' : 'monto'))}
-                        >
-                          <SlidersHorizontal size={13} />
-                          {t('goalsPage.sortBy', { criteria: t(`goalsPage.sortCriteria.${sortBy}`) })}
-                        </button>
-                      </Collapse>
-
-                      {activeGoals.length === 0 ? (
-                        <EmptyState
-                          icon={PiggyBank}
-                          title={t('goalsPage.noActiveGoalsTitle')}
-                          subtitle={t('goalsPage.noActiveGoalsSubtitle')}
-                          onClick={handleAddClick}
-                        />
-                      ) : (
-                        <div data-coachmark="metas-lista" className={styles.list}>
-                          {sortedGoals.map(goal => (
-                            <GoalCard key={goal.id} goal={goal} isShared={isShared} spaceMembers={spaceMembers} onClick={() => setSelectedGoalId(goal.id)} />
-                          ))}
-                        </div>
-                      )}
-
-                      <Collapse open={!!atFreeLimit}>
-                        <div className={styles.premiumBanner}>
-                          <div className={styles.premiumTitle}>{t('goalsPage.premiumBanner.title')}</div>
-                          <div className={styles.premiumText}>{t('goalsPage.premiumBanner.text')}</div>
-                          <button type="button" onClick={onOpenPremium} className={styles.premiumButton}>
-                            <Crown size={16} fill="currentColor" /> {t('goalsPage.premiumBanner.button')}
-                          </button>
-                        </div>
-                      </Collapse>
-                    </>
-                  ) : (
-                    completedGoals.length === 0 ? (
-                      <EmptyState
-                        icon={Target}
-                        title={t('goalsPage.noCompletedGoalsTitle')}
-                        subtitle={t('goalsPage.noCompletedGoalsSubtitle')}
-                      />
-                    ) : (
-                      <div className={styles.list}>
-                        {completedGoals.map(goal => (
-                          <GoalCard key={goal.id} goal={goal} isShared={isShared} spaceMembers={spaceMembers} onClick={() => setSelectedGoalId(goal.id)} />
-                        ))}
-                      </div>
-                    )
-                  )}
-                  </div>
-                </>
-              )}
-            </div>
-          ) : (
-            <div>
-            <GoalDetailPanel
-              goal={selectedGoal}
-              isShared={isShared}
-              canContribute={isShared ? !!spacePermissions?.can_contribute_goals : true}
-              canWithdraw={isShared ? !!spacePermissions?.can_withdraw_goals : true}
-              canEdit={isShared ? !!spacePermissions?.can_edit_goals : true}
-              canDelete={isShared ? !!spacePermissions?.can_delete_goals : true}
-              currentUserId={profile.id}
-              spaceMembers={spaceMembers}
-              hasIncome={!!(profile?.salary_enabled && Number(profile?.salary_amount) > 0)}
-              onBack={() => setSelectedGoalId(null)}
-              onEdit={() => openEdit(selectedGoal)}
-              onAportar={(amount, method) => aportar(selectedGoal.id, amount, selectedGoal.name, method)}
-              paymentMethods={paymentMethods}
-              onRetirar={amount => retirar(selectedGoal.id, amount, selectedGoal.name)}
-              onRevert={transactionId => revertirAporte(transactionId)}
-              onMarkCompleted={completed => markCompleted(selectedGoal.id, completed)}
-              onDelete={resolution => { deleteGoal(selectedGoal.id, resolution); setSelectedGoalId(null) }}
-            />
-            </div>
-          )}
-          </div>
-        </div>
-      </div>
       )}
 
       {!isDesktop && !isTablet && !selectedGoal && rawActiveSpaceId !== 'new' && (

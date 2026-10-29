@@ -51,12 +51,21 @@
   margin: 0 auto 16px;
 }
 
-.title {
-  font-size: 16px;
-  font-weight: 500;
-  color: var(--text);
-  margin-bottom: 16px;
-}
+.head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
+.title { font-size: 22px; font-weight: 600; letter-spacing: -0.4px; color: var(--text); }
+.close { width: 34px; height: 34px; border: 0; border-radius: 50%; background: var(--bg); color: var(--text); display: grid; place-items: center; flex: none; }
+.preview { --tint: var(--palette-1); display: flex; flex-direction: column; gap: 6px; padding: 14px 16px; margin-bottom: 18px; border-radius: 20px; background: var(--surface); }
+.pTop { display: flex; align-items: center; gap: 10px; }
+.pIcon { width: 36px; height: 36px; flex: none; border-radius: 12px; display: grid; place-items: center; background: var(--tint); }
+.pName { font-size: 15px; font-weight: 600; min-width: 0; overflow-wrap: anywhere; }
+.pAmount { font-size: 26px; font-weight: 500; letter-spacing: -0.8px; }
+.pMeta { font-size: 12px; color: var(--muted); min-height: 15px; }
+.bar { height: 8px; border-radius: 99px; background: var(--bg); overflow: hidden; }
+.bar i { display: block; width: 0; height: 100%; background: var(--tint); border-radius: 99px; }
+.row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 18px; }
+.foot { position: sticky; bottom: -32px; display: flex; gap: 10px; margin: 0 -16px -32px; padding: 12px 16px 24px; background: var(--surface); border-top: 1px solid var(--border); }
+.cancel { flex: 1; height: 48px; border: 0; border-radius: 99px; background: var(--bg); color: var(--text); font-size: 15px; font-weight: 600; }
+.rainbow { background: conic-gradient(from 0deg, hsl(0 85% 58%), hsl(45 90% 58%), hsl(90 75% 52%), hsl(150 70% 48%), hsl(200 85% 55%), hsl(260 80% 62%), hsl(310 80% 60%), hsl(360 85% 58%)); }
 
 .fieldGroup {
   margin-bottom: 18px;
@@ -158,9 +167,10 @@
 }
 
 .colorSwatchSelected {
-  border: 2px solid var(--text);
+  box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--text);
 }
 
 .saveButton {
-  margin-bottom: 8px;
+  flex: 2;
+  margin: 0;
 }

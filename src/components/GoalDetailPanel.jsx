@@ -2,11 +2,11 @@ import { useState, useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ChevronLeft, MoreVertical, ArrowUp, ArrowDown, Check, ArrowUpCircle, ArrowDownCircle, Pencil, Trash2, RotateCcw } from 'lucide-react'
 import { getIconComponent } from '../lib/categoryIcons'
+import { catInk } from '../lib/colorUtils'
 import { fmt, getMonthsShort } from '../lib/utils'
 import { showToast } from './Toast'
 import { DeleteGoalModal } from './DeleteGoalModal'
-import AmountInput from './AmountInput'
-import { PaymentMethodField } from './PaymentMethodField'
+import { GoalAmountModal } from './GoalAmountModal'
 import { AddCardModal } from './AddCardModal'
 import styles from './GoalDetailPanel.module.css'
 import { useScrollLock } from '../lib/scrollLock'
@@ -144,7 +144,7 @@ export function GoalDetailPanel({
           <ChevronLeft size={22} color="var(--text)" />
         </button>
         <div className={styles.headerIcon} style={{ background: goal.color }}>
-          {Icon && <Icon size={15} color="var(--on-color)" />}
+          {Icon && <Icon size={15} color={catInk(goal.color)} />}
         </div>
         <div className={styles.headerTitle}>{goal.name}</div>
         {showMenu && (
@@ -223,36 +223,6 @@ export function GoalDetailPanel({
         <div className={styles.statRow}><span>{t('goalDetailPanel.targetLabel')}</span><b>{fmt(goal.target_amount)}</b></div>
       </div>
 
-      {activeAction ? (
-        <div className={styles.actionForm}>
-          <label className="field-label">{activeAction === 'aportar' ? t('goalDetailPanel.amountToContribute') : t('goalDetailPanel.amountToWithdraw')}</label>
-          <AmountInput
-            autoFocus
-            value={amount}
-            onChange={e => setAmount(e.target.value)}
-            placeholder="0.00"
-            onKeyDown={e => e.key === 'Enter' && confirmAction()}
-            className={`field-input ${styles.actionInput}`}
-          />
-          {activeAction === 'aportar' && paymentMethods && (
-            <div className={styles.methodField}>
-              <PaymentMethodField
-                methods={paymentMethods.methods}
-                value={methodId}
-                onChange={setMethodId}
-                onAddCard={() => setCardFormOpen(true)}
-                allowCredit={false}
-              />
-            </div>
-          )}
-          <div className={styles.actionButtons}>
-            <button type="button" onClick={() => setActiveAction(null)} className="btn-ghost">{t('buttons.cancel')}</button>
-            <button type="button" onClick={confirmAction} disabled={saving || !(parseFloat(amount) > 0) || (activeAction === 'retirar' && parseFloat(amount) > goal.currentAmount)} className={`btn-primary ${styles.confirmButton}`}>
-              {saving ? t('goalDetailPanel.saving') : t('goalDetailPanel.confirm')}
-            </button>
-          </div>
-        </div>
-      ) : (
         <div className={styles.buttonsRow}>
           <button type="button" onClick={() => openAction('aportar')} className={`${styles.actionBtn} ${!canContribute ? styles.actionBtnBlocked : ''}`}>
             <ArrowUp size={16} />
@@ -263,7 +233,6 @@ export function GoalDetailPanel({
             {t('goalDetailPanel.withdraw')}
           </button>
         </div>
-      )}
       {isShared && !canWithdraw && !activeAction && (
         <div className={styles.blockedHint}>{t('goalDetailPanel.withdrawBlockedHint')}</div>
       )}
@@ -346,6 +315,12 @@ export function GoalDetailPanel({
       </div>
       </div>
 
+      <GoalAmountModal
+        open={!!activeAction} kind={activeAction} goal={goal}
+        amount={amount} setAmount={setAmount} methodId={methodId} setMethodId={setMethodId}
+        paymentMethods={paymentMethods} onAddCard={() => setCardFormOpen(true)}
+        saving={saving} canConfirm={parseFloat(amount) > 0 && !(activeAction === 'retirar' && parseFloat(amount) > goal.currentAmount)}
+        onConfirm={confirmAction} onClose={() => setActiveAction(null)} />
       <DeleteGoalModal
         open={deleteModalOpen}
         goal={goal}

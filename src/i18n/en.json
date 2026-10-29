@@ -726,7 +726,11 @@
     "historyEmptyTitle": "No transactions yet",
     "historyEmptyHint": "Your contributions and withdrawals will show up here.",
     "firstContribution": "Make the first contribution",
-    "nothingToWithdraw": "Nothing to withdraw yet"
+    "nothingToWithdraw": "Nothing to withdraw yet",
+    "contributeTitle": "Contribute to goal",
+    "withdrawTitle": "Withdraw from goal",
+    "remainingHint": "{{amount}} left to reach your goal",
+    "availableHint": "Available to withdraw: {{amount}}"
   },
   "goalFormModal": {
     "titleEdit": "Edit goal",

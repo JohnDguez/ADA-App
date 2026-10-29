@@ -49,3 +49,40 @@
   .dl:hover { background: var(--desk-chip); translate: none; filter: none; }
   .sort:hover { background: var(--desk-chip); color: var(--text); translate: none; filter: none; }
 }
+
+/* ══ Tablet (768–1099px) — mockups «Metas · Tablet vertical/horizontal» ═══════
+   Mismo DeskGoals con `tablet`. Vertical: franja azul con el total restante y
+   la barra de avance, 2 fichas, lista de metas (2 columnas) y Próximas fechas
+   al final. Horizontal: fila de 3 fichas y lista + Próximas fechas a la
+   derecha. El detalle abre siempre como panel lateral animado. */
+.heroTrack { height: 8px; border-radius: 99px; background: var(--white-a16); overflow: hidden; }
+.heroFill { display: block; height: 100%; min-width: 8px; border-radius: 99px; background: var(--desk-ink-text); transition: width .5s cubic-bezier(0.22, 1, 0.36, 1); }
+.subSecond { display: block; }
+.barTab { margin-bottom: 14px; }
+.barTab h2 { margin: 0; margin-right: auto; }
+@media (min-width: 768px) and (max-width: 1099px) {
+  .tabHeader.tabHeader.tabHeader { min-height: 118px; }
+}
+@media (max-width: 959px) {
+  .tabGrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; align-content: start; }
+  .cUpcoming { grid-column: 1 / -1; grid-row: 4; }
+}
+@media (min-width: 960px) and (max-width: 1099px) {
+  .tabMet .tiles3.tiles3 { grid-template-columns: 1.3fr 1fr 1fr; gap: 12px; }
+}
+
+/* Panel lateral del detalle */
+.scrim { position: fixed; inset: 0; z-index: 119; background: var(--scrim); animation: scrimIn .24s ease both; }
+.scrimOut { animation: scrimOut .26s ease both; }
+.drawer {
+  position: fixed; top: 12px; right: 12px; bottom: 12px; z-index: 120;
+  width: min(400px, calc(100vw - 24px)); display: flex; flex-direction: column;
+  background: var(--desk-card); border-radius: 24px; box-shadow: var(--desk-pop-shadow); overflow: hidden;
+  animation: drawerIn .32s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.drawerOut { animation: drawerOut .26s cubic-bezier(0.4, 0, 1, 1) both; }
+@keyframes scrimIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes scrimOut { to { opacity: 0; } }
+@keyframes drawerIn { from { opacity: 0; transform: translateX(36px); } to { opacity: 1; transform: none; } }
+@keyframes drawerOut { to { opacity: 0; transform: translateX(36px); } }
+@media (prefers-reduced-motion: reduce) { .scrim, .scrimOut, .drawer, .drawerOut { animation-duration: .01ms; } }

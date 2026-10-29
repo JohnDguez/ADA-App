@@ -6,6 +6,7 @@ import { ChipMenu } from '../components/ChipMenu'
 import { PaidByStack } from '../components/PaidByStack'
 import { GoalCardSkeleton } from '../components/SkeletonLoader'
 import { getIconComponent } from '../lib/categoryIcons'
+import { catInk } from '../lib/colorUtils'
 import { fmt, getMonthsShort } from '../lib/utils'
 import styles from './MobileGoals.module.css'
 
@@ -51,7 +52,7 @@ function GoalTile({ goal, index, grown, isShared, spaceMembers, onClick }) {
   return (
     <button type="button" data-goal-id={goal.id} className={styles.goal} style={{ '--i': index }} onClick={onClick}>
       <div className={styles.gTop}>
-        <i className={styles.gIcon} style={{ background: goal.color }}><Icon size={17} color="var(--on-color)" /></i>
+        <i className={styles.gIcon} style={{ background: goal.color }}><Icon size={17} color={catInk(goal.color)} /></i>
         <b className={styles.gName} title={goal.name}>{goal.name}</b>
         {goal._syncing && <span className="sync-spinner" aria-label={t('sync.syncing')}><Loader2 size={14} /></span>}
         {!done && (goal.isOverdue

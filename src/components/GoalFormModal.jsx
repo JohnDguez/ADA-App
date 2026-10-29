@@ -6,7 +6,9 @@ import { DatePicker } from './DatePicker'
 import AmountInput from './AmountInput'
 import { X } from 'lucide-react'
 import { fmt } from '../lib/utils'
-import { useIsDesktop } from '../hooks/useIsDesktop'
+import { useIsMobile } from '../hooks/useIsMobile'
+import { ColorPickerPanel } from './ColorPickerPanel'
+import { catInk, isHexColor, colorToHex } from '../lib/colorUtils'
 import cf from './CategoryFormDesk.module.css'
 import gd from './GoalFormDesk.module.css'
 import styles from './GoalFormModal.module.css'
@@ -21,7 +23,9 @@ const ANIM_MS = 320
 export function GoalFormModal({ open, initial, onSave, onClose }) {
   useScrollLock(open)
   const { t } = useTranslation()
-  const isDesk = useIsDesktop()
+  const isMobile = useIsMobile()
+  // Escritorio y tablet usan el diálogo con vista previa; móvil, la hoja.
+  const isDesk = !isMobile
   const [name, setName] = useState('')
   const [notes, setNotes] = useState('')
   const [icon, setIcon] = useState('PiggyBank')
@@ -89,6 +93,27 @@ export function GoalFormModal({ open, initial, onSave, onClose }) {
     .map(g => ({ ...g, icons: search ? g.icons.filter(i => i.label.toLowerCase().includes(search)) : g.icons }))
     .filter(g => g.icons.length > 0)
 
+  const customOn = isHexColor(color)
+  const ink = catInk(color)
+  const colorBlock = (cls) => (
+    <>
+      <div className={cls.wrap}>
+        {PALETTE.map((c, cIdx) => (
+          <button key={c} type="button" aria-label={t('buttons.colorN', { n: cIdx + 1 })} aria-pressed={color === c}
+            onClick={() => setColor(c)} className={`${cls.sw} ${color === c ? cls.swOn : ''}`} style={{ background: c }}>
+            {color === c && <Check size={cls.check} color={catInk(c)} strokeWidth={3} />}
+          </button>
+        ))}
+        <button type="button" aria-label={t('settingsCategories.mobile.customColor')} aria-pressed={customOn}
+          onClick={() => { if (!customOn) setColor(colorToHex(color) || '#F5A623') }}
+          className={`${cls.sw} ${customOn ? cls.swOn : cls.rainbow}`} style={customOn ? { background: color } : undefined}>
+          {customOn && <Check size={cls.check} color={ink} strokeWidth={3} />}
+        </button>
+      </div>
+      {customOn && <ColorPickerPanel value={color} onChange={setColor} />}
+    </>
+  )
+
   if (isDesk) {
     const PreviewIcon = getIconComponent(icon)
     const target = parseFloat(targetAmount) || 0
@@ -148,21 +173,14 @@ export function GoalFormModal({ open, initial, onSave, onClose }) {
                   ))}
                   {filteredGroups.length === 0 && <div className={cf.help}>{t('settingsCategories.noIconResults', { search: iconSearch })}</div>}
                 </div>
-                <div className={`${cf.colors} ${gd.colors}`}>
-                  {PALETTE.map((c, cIdx) => (
-                    <button key={c} type="button" aria-label={t('buttons.colorN', { n: cIdx + 1 })} aria-pressed={color === c}
-                      onClick={() => setColor(c)} className={`${cf.sw} ${color === c ? cf.swOn : ''}`} style={{ background: c }}>
-                      {color === c && <Check size={14} color="var(--on-color)" strokeWidth={3} />}
-                    </button>
-                  ))}
-                </div>
+                <div className={gd.colors}>{colorBlock({ wrap: cf.colors, sw: cf.sw, swOn: cf.swOn, rainbow: cf.rainbow, check: 14 })}</div>
               </div>
             </div>
             <aside className={gd.side}>
               <div className={gd.sideTitle}>{t('goalsPage.desk.previewTitle')}</div>
               <div className={gd.preview} style={{ '--tint': color }}>
                 <div className={gd.pTop}>
-                  <span className={gd.pIcon}><PreviewIcon size={22} /></span>
+                  <span className={gd.pIcon} style={{ color: ink }}><PreviewIcon size={22} /></span>
                   <b className={gd.pName}>{name.trim() || t('goalsPage.desk.previewName')}</b>
                 </div>
                 <div className={gd.pAmount}>{fmt(0)}</div>
@@ -185,11 +203,26 @@ export function GoalFormModal({ open, initial, onSave, onClose }) {
     )
   }
 
+  const MobIcon = getIconComponent(icon)
+  const mobTarget = parseFloat(targetAmount) || 0
   return (
     <div onClick={e => e.target === e.currentTarget && onClose()} className={`${styles.overlay} ${closing ? styles.overlayClosing : ''}`}>
-      <div className={`${styles.modal} ${entering ? styles.modalEntering : ''} ${closing ? styles.modalClosing : ''}`}>
+      <div className={`${styles.modal} ${entering ? styles.modalEntering : ''} ${closing ? styles.modalClosing : ''}`} role="dialog" aria-modal="true">
         <div className={styles.handle} />
-        <div className={styles.title}>{initial ? t('goalFormModal.titleEdit') : t('goalFormModal.titleNew')}</div>
+        <div className={styles.head}>
+          <div className={styles.title}>{initial ? t('goalFormModal.titleEdit') : t('goalFormModal.titleNew')}</div>
+          <button type="button" className={styles.close} onClick={onClose} aria-label={t('buttons.cancel')}><X size={16} /></button>
+        </div>
+
+        <div className={styles.preview} style={{ '--tint': color }}>
+          <div className={styles.pTop}>
+            <span className={styles.pIcon} style={{ color: ink }}><MobIcon size={20} /></span>
+            <b className={styles.pName}>{name.trim() || t('goalsPage.desk.previewName')}</b>
+          </div>
+          <div className={styles.pAmount}>{fmt(0)}</div>
+          <div className={styles.pMeta}>{mobTarget > 0 ? `${t('goalsPage.desk.previewLeft')} ${fmt(mobTarget)}` : ' '}</div>
+          <div className={styles.bar}><i /></div>
+        </div>
 
         <div className={styles.fieldGroup}>
           <label className="field-label">{t('goalFormModal.nameLabel')}</label>
@@ -210,6 +243,24 @@ export function GoalFormModal({ open, initial, onSave, onClose }) {
             onChange={e => setNotes(e.target.value)}
             placeholder={t('goalFormModal.notesPlaceholder')}
           />
+        </div>
+
+        <div className={styles.row2}>
+          <div>
+            <label className="field-label">{t('goalFormModal.amountLabel')}</label>
+            <AmountInput
+              className={`field-input ${styles.inputMt}`}
+              value={targetAmount}
+              onChange={e => { setTargetAmount(e.target.value); setError('') }}
+              placeholder="$0.00"
+            />
+          </div>
+          <div>
+            <label className="field-label">{t('goalFormModal.deadlineLabel')}</label>
+            <div className={styles.inputMt}>
+              <DatePicker value={targetDate} onChange={setTargetDate} placeholder={t('goalFormModal.deadlinePlaceholder')} />
+            </div>
+          </div>
         </div>
 
         <div className={styles.fieldGroup}>
@@ -250,49 +301,17 @@ export function GoalFormModal({ open, initial, onSave, onClose }) {
               <div className={styles.noResultsText}>{t('settingsCategories.noIconResults', { search: iconSearch })}</div>
             )}
           </div>
-          <div className={styles.colorGrid}>
-            {PALETTE.map((c, cIdx) => {
-              const selected = color === c
-              return (
-                <button
-                  key={c}
-                  type="button"
-                  aria-label={t('buttons.colorN', { n: cIdx + 1 })}
-                  aria-pressed={selected}
-                  onClick={() => setColor(c)}
-                  className={`${styles.colorSwatch} ${selected ? styles.colorSwatchSelected : ''}`}
-                  style={{ background: c }}
-                >
-                  {selected && <Check size={13} color="var(--on-color)" strokeWidth={3} />}
-                </button>
-              )
-            })}
-          </div>
-        </div>
-
-        <div className={styles.fieldGroup}>
-          <label className="field-label">{t('goalFormModal.amountLabel')}</label>
-          <AmountInput
-            className={`field-input ${styles.inputMt}`}
-            value={targetAmount}
-            onChange={e => { setTargetAmount(e.target.value); setError('') }}
-            placeholder="$0.00"
-          />
-        </div>
-
-        <div className={styles.fieldGroup}>
-          <label className="field-label">{t('goalFormModal.deadlineLabel')}</label>
-          <div className={styles.inputMt}>
-            <DatePicker value={targetDate} onChange={setTargetDate} placeholder={t('goalFormModal.deadlinePlaceholder')} />
-          </div>
+          {colorBlock({ wrap: styles.colorGrid, sw: styles.colorSwatch, swOn: styles.colorSwatchSelected, rainbow: styles.rainbow, check: 13 })}
         </div>
 
         {error && <div className={styles.errorText}>{error}</div>}
 
-        <button type="button" onClick={handleSave} disabled={saving} className={`btn-primary ${styles.saveButton}`}>
-          {saving ? t('settingsCategories.saving') : t('buttons.save')}
-        </button>
-        <button type="button" onClick={onClose} className="btn-ghost">{t('buttons.cancel')}</button>
+        <div className={styles.foot}>
+          <button type="button" onClick={onClose} className={styles.cancel}>{t('buttons.cancel')}</button>
+          <button type="button" onClick={handleSave} disabled={saving} className={`btn-primary ${styles.saveButton}`}>
+            {saving ? t('settingsCategories.saving') : t('buttons.save')}
+          </button>
+        </div>
       </div>
     </div>
   )
