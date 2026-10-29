@@ -156,3 +156,18 @@
   .input { font-size: 22px; padding-top: 4px; }
   .input::placeholder { color: var(--muted); }
 }
+
+/* Móvil (<768px, v0.9.926): casillas rellenas, franja visible y días en rem. */
+@media (max-width: 767px) {
+  .wrapper { gap: 0.75rem; }
+  .inputs { gap: 0.5rem; }
+  .inputBox { background: var(--desk-chip); border-radius: 0.875rem; padding: 0.625rem 0.75rem; }
+  .inputLabel { font-size: 0.75rem; color: var(--muted); }
+  .input { font-size: 1.25rem; padding-top: 0.125rem; }
+  .grid { background: var(--desk-chip); border-radius: 1.125rem; padding: 0.5rem 0.375rem; row-gap: 0.25rem; }
+  .day { height: 2.25rem; font-size: 0.8125rem; }
+  .band::before { background: var(--desk-card); }
+  .cut .dayNum, .due .dayNum { color: var(--on-color); }
+  .hint { font-size: 0.75rem; color: var(--text); }
+  .help { font-size: 0.71875rem; color: var(--muted); }
+}

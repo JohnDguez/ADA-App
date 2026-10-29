@@ -13,6 +13,8 @@ import deskStyles from './SettingsDesk.module.css'
 import dk from './CardFormDesk.module.css'
 import dkp from './PaymentDesk.module.css'
 import { useIsDesktop } from '../hooks/useIsDesktop'
+import { useIsMobile } from '../hooks/useIsMobile'
+import mm from './CardFormMobile.module.css'
 import { ChevronLeft, X as XIcon } from 'lucide-react'
 import { markBackHandled } from '../lib/backNav'
 import { useScrollLock } from '../lib/scrollLock'
@@ -32,6 +34,7 @@ export function CardFormModal({ open, initial, onSave, onClose, inline = false }
   useScrollLock(open && !inline)
   const { t } = useTranslation()
   const isDesk = useIsDesktop()
+  const isMobile = useIsMobile()
   const [form, setForm] = useState(EMPTY)
   const [error, setError] = useState('')
 
@@ -189,6 +192,98 @@ export function CardFormModal({ open, initial, onSave, onClose, inline = false }
           <div className={dkp.foot}>
             <button type="button" className={dkp.cancel} onClick={onClose}>{t('buttons.cancel')}</button>
             <button type="button" className={`btn-primary ${dkp.save}`} onClick={handleSave}>{initial ? t('cards.form.saveEdit') : t('cards.form.saveNew')}</button>
+          </div>
+        </div>
+      </div>,
+      document.body
+    )
+  }
+
+  // Móvil (<768px, v0.9.926, mockup aprobado): hoja con ✕, vista previa grande,
+  // campos rellenos, segmentados en píldora, selector de días con fondo y pie
+  // fijo con "Guardar". Misma lógica de guardado que el resto.
+  if (isMobile && !inline) {
+    const title = initial ? t('cards.form.titleEdit') : t('cards.form.titleNew')
+    return createPortal(
+      <div onClick={e => e.target === e.currentTarget && onClose()} className={`${mm.overlay} ${closing ? mm.overlayOut : ''}`}>
+        <div className={`${mm.sheet} ${closing ? mm.sheetOut : ''}`} role="dialog" aria-modal="true" aria-label={title}>
+          <div className={mm.handle} />
+          <div className={mm.hd}>
+            <div>
+              <h2>{title}</h2>
+              <p>{t('cards.disclaimer.title')}</p>
+            </div>
+            <button type="button" className={mm.x} onClick={onClose} aria-label={t('buttons.cancel')}><XIcon size={17} /></button>
+          </div>
+
+          <div className={mm.body}>
+            <div className={mm.seg} role="tablist">
+              {['credit', 'debit'].map(k => (
+                <button key={k} type="button" role="tab" aria-selected={form.kind === k} disabled={!!initial} className={form.kind === k ? mm.segOn : ''} onClick={() => set({ kind: k })}>{t(`cards.kind.${k}`)}</button>
+              ))}
+            </div>
+            {initial && <div className={mm.help}>{t('cards.form.kindLocked')}</div>}
+
+            <div className={mm.prev}>
+              <CreditCardVisual card={{ ...form, bank: form.bank || 'otro' }} />
+            </div>
+
+            <div className={mm.lbl}>{t('cards.form.bank')}</div>
+            <div className={mm.sel}>
+              <Select
+                value={form.bank}
+                onChange={bank => set({ bank })}
+                options={bankOptions}
+                placeholder={t('cards.form.bankPlaceholder')}
+                searchable
+                sheet
+                sheetTitle={t('cards.form.bank')}
+                groupLabels={groupLabels}
+                renderIcon={id => <span className={styles.bankDot} style={{ '--bank-dot': bankColorVar(id) }} />}
+              />
+            </div>
+
+            <div className={mm.row2}>
+              <div className={mm.grow}>
+                <div className={mm.lbl}>{t('cards.form.alias')}</div>
+                <input aria-label={t('cards.form.alias')} className={mm.field} value={form.alias} maxLength={24}
+                  onChange={e => set({ alias: e.target.value })} placeholder={t('cards.form.aliasPlaceholder')} />
+              </div>
+              <div className={mm.last4}>
+                <div className={mm.lbl}>{t('cards.form.last4')}</div>
+                <input aria-label={t('cards.form.last4')} className={mm.field} inputMode="numeric" value={form.last4}
+                  onChange={e => set({ last4: e.target.value.replace(/\D/g, '').slice(0, 4) })} placeholder="0000" />
+              </div>
+            </div>
+            <div className={mm.help}>{t('cards.form.aliasHelper')}</div>
+
+            <div className={mm.lbl}>{t('cards.form.network')}</div>
+            <div className={mm.opts}>
+              {NETWORKS.map(n => (
+                <button key={n} type="button" className={`${mm.opt} ${form.network === n ? mm.optOn : ''}`} onClick={() => set({ network: n })}>
+                  <CardNetworkIcon network={n} size={16} className={styles.segIcon} />{t(`cards.network.${n}`)}
+                </button>
+              ))}
+            </div>
+
+            <div className={mm.lbl}>{t('cards.form.form')}</div>
+            <div className={mm.opts}>
+              {[['physical', t('cards.form.physical')], ['digital', t('cards.form.digital')]].map(([v, label]) => (
+                <button key={v} type="button" className={`${mm.opt} ${form.form === v ? mm.optOn : ''}`} onClick={() => set({ form: v })}>{label}</button>
+              ))}
+            </div>
+
+            {isCredit ? (
+              <>
+                <div className={mm.lbl}>{t('cards.form.days')}</div>
+                <CardDayRangePicker cutDay={form.cut_day} dueDay={form.due_day} onChange={days => set(days)} />
+              </>
+            ) : <div className={mm.note}>{t('cards.form.debitNote')}</div>}
+          </div>
+
+          <div className={mm.ft}>
+            {error && <div className={mm.err}>{error}</div>}
+            <button type="button" className={mm.save} onClick={handleSave}>{initial ? t('cards.form.saveEdit') : t('cards.form.saveNew')}</button>
           </div>
         </div>
       </div>,
