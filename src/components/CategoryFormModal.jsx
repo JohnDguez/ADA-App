@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Check, Search, ChevronLeft, Trash2 } from 'lucide-react'
+import { Check, Search, ChevronLeft, Trash2, X, Lock } from 'lucide-react'
 import { CATEGORIES, getCatColor, getCategoryLabel } from '../lib/utils'
 import { CATEGORY_ICON_GROUPS, getIconComponent } from '../lib/categoryIcons'
 import { showToast } from './Toast'
@@ -12,6 +12,10 @@ import { useScrollLock } from '../lib/scrollLock'
 import { DeskSettingsHead, DeskPage } from './DeskSettingsHead'
 import deskStyles from './SettingsDesk.module.css'
 import dk from './CategoryFormDesk.module.css'
+import mm from './CategoryFormMobile.module.css'
+import { ColorPickerPanel } from './ColorPickerPanel'
+import { catInk, isHexColor, colorToHex } from '../lib/colorUtils'
+import { useIsMobile } from '../hooks/useIsMobile'
 
 export const CATEGORY_PALETTE = Array.from({ length: 16 }, (_, i) => `var(--palette-${i + 1})`)
 
@@ -33,6 +37,7 @@ export function CategoryFormModal({ open, onClose, editingCat = null, profile, o
   const [saving,     setSaving]     = useState(false)
   const [confirmingDelete, setConfirmingDelete] = useState(false)
   const [deleting,  setDeleting]    = useState(false)
+  const isMobile = useIsMobile()
   const [deleteCount, setDeleteCount] = useState(null) // pagos que se reasignarán, o null mientras carga
 
   const customCats     = profile.custom_categories || []
@@ -228,6 +233,115 @@ export function CategoryFormModal({ open, onClose, editingCat = null, profile, o
           </div>
         </div>
       </DeskPage>
+    )
+  }
+
+  // Móvil (<768px, v0.9.921, mockup aprobado): hoja con vista previa viva,
+  // campos rellenos, selector de color propio y pie fijo (Guardar + eliminar
+  // redondo). Misma lógica de guardado/borrado que el resto.
+  if (isMobile && !inline) {
+    const PreviewIcon = formIcon ? getIconComponent(formIcon) : null
+    const tint = formColor || CATEGORY_PALETTE[0]
+    const ink = catInk(tint)
+    const previewName = formName ? getCategoryLabel(formName) : t('settingsCategories.namePlaceholder')
+    const isDefault = editingCat && !editingCat.isCustom
+    const customOn = isHexColor(formColor)
+    const title = confirmingDelete ? t('settingsCategories.deleteCategory') : editingCat ? t('settingsCategories.addModalTitleEdit') : t('settingsCategories.addModalTitleNew')
+    return (
+      <div onClick={e => e.target === e.currentTarget && onClose()} className={mm.overlay} style={zIndex ? { zIndex } : undefined} data-presence="overlay" data-closing={closing ? '' : undefined}>
+        <div className={mm.sheet} data-presence="panel" data-closing={closing ? '' : undefined} role="dialog" aria-modal="true" aria-label={title}>
+          <div className={mm.handle} />
+          <div className={mm.hd}>
+            <h2>{title}</h2>
+            <button type="button" className={mm.x} onClick={onClose} aria-label={t('buttons.close')}><X size={17} /></button>
+          </div>
+
+          <div className={mm.body}>
+            <div className={mm.prev}>
+              <i className={mm.pi} style={{ background: tint }}>{PreviewIcon ? <PreviewIcon size={24} color={ink} strokeWidth={2} /> : <span className={mm.dot} />}</i>
+              <div><b>{previewName}</b><small>{confirmingDelete ? t('settingsCategories.mobile.confirmSheetSub') : t('settingsCategories.mobile.previewSub')}</small></div>
+            </div>
+
+            {confirmingDelete ? (
+              <div className={mm.conf}>
+                <b>{deleteCount === null
+                  ? t('settingsCategories.deleteChecking')
+                  : deleteCount === 0
+                    ? t('settingsCategories.deleteConfirmNone', { name: editingCat.name })
+                    : t('settingsCategories.deleteConfirmCount', { name: editingCat.name, count: deleteCount })}</b>
+              </div>
+            ) : (
+              <>
+                <div className={mm.lbl}>{t('settingsCategories.nameLabel')}</div>
+                {isDefault ? (
+                  <>
+                    <div className={`${mm.field} ${mm.ro}`}><span>{getCategoryLabel(formName)}</span><Lock size={14} /></div>
+                    <div className={mm.help}>{t('settingsCategories.nameReadonlyHelper')}</div>
+                  </>
+                ) : (
+                  <input aria-label={t('settingsCategories.namePlaceholder')} autoFocus className={mm.field} value={formName}
+                    onChange={e => { setFormName(e.target.value); setNameError('') }} placeholder={t('settingsCategories.namePlaceholder')} />
+                )}
+                {nameError && <div className={mm.err}>{nameError}</div>}
+
+                <div className={mm.lbl}>{t('settingsCategories.iconLabel')}</div>
+                <label className={`${mm.field} ${mm.search}`}>
+                  <Search size={16} />
+                  <input aria-label={t('settingsCategories.iconSearchPlaceholder')} value={iconSearch} onChange={e => setIconSearch(e.target.value)} placeholder={t('settingsCategories.iconSearchPlaceholder')} />
+                </label>
+                <div className={`${mm.groups} scroll-y`}>
+                  {filteredGroups.map(group => (
+                    <div key={group.label}>
+                      <div className={mm.gl}>{group.label}</div>
+                      <div className={mm.icons}>
+                        {group.icons.map(({ name, label }) => {
+                          const Icon = getIconComponent(name)
+                          const on = formIcon === name
+                          return <button key={name} type="button" title={label} aria-label={label} aria-pressed={on} onClick={() => setFormIcon(name)} className={`${mm.ib} ${on ? mm.ibOn : ''}`}><Icon size={19} /></button>
+                        })}
+                      </div>
+                    </div>
+                  ))}
+                  {filteredGroups.length === 0 && <div className={mm.help}>{t('settingsCategories.noIconResults', { search: iconSearch })}</div>}
+                </div>
+
+                <div className={mm.lbl}>{t('settingsCategories.colorLabel')}</div>
+                <div className={mm.colors}>
+                  {CATEGORY_PALETTE.map((color, i) => {
+                    const on = formColor === color
+                    return (
+                      <button key={color} type="button" aria-label={t('buttons.colorN', { n: i + 1 })} aria-pressed={on} onClick={() => setFormColor(color)}
+                        className={`${mm.sw} ${on ? mm.swOn : ''}`} style={{ background: color }}>
+                        {on && <Check size={16} color={catInk(color)} strokeWidth={3} />}
+                      </button>
+                    )
+                  })}
+                  <button type="button" aria-label={t('settingsCategories.mobile.customColor')} aria-pressed={customOn}
+                    onClick={() => { if (!customOn) setFormColor(colorToHex(formColor) || '#F5A623') }}
+                    className={`${mm.sw} ${customOn ? mm.swOn : mm.rainbow}`} style={customOn ? { background: formColor } : undefined}>
+                    {customOn && <Check size={16} color={ink} strokeWidth={3} />}
+                  </button>
+                </div>
+                {customOn && <ColorPickerPanel value={formColor} onChange={setFormColor} />}
+              </>
+            )}
+          </div>
+
+          <div className={mm.ft}>
+            {confirmingDelete ? (
+              <>
+                <button type="button" className={`${mm.btn} ${mm.soft}`} onClick={() => setConfirmingDelete(false)}>{t('buttons.cancel')}</button>
+                <button type="button" className={`${mm.btn} ${mm.danger}`} onClick={handleDelete} disabled={deleting || deleteCount === null}>{deleting ? t('settingsCategories.deleting') : t('buttons.delete')}</button>
+              </>
+            ) : (
+              <>
+                {editingCat?.isCustom && <button type="button" className={mm.del} onClick={askDelete} aria-label={t('settingsCategories.deleteCategory')}><Trash2 size={19} /></button>}
+                <button type="button" className={`${mm.btn} ${mm.primary}`} onClick={handleSave} disabled={saving}>{saving ? t('settingsCategories.saving') : t('buttons.save')}</button>
+              </>
+            )}
+          </div>
+        </div>
+      </div>
     )
   }
 

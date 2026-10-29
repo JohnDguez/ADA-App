@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import i18n from '../i18n'
 import { Wallet, AlertTriangle, Repeat, Check, Info, Lock, Users, User, ChevronDown, Crown, CreditCard, Calendar, Flag } from 'lucide-react'
 import { CATEGORIES, RECUR_FREQ, MONTHS, getMonths, MONTHS_SHORT, getMonthsShort, intlLocale, nextWeeklyFromDate, nextBiweeklyFromDate, nextPeriodDate, cobroPeriod, fmt, nameExistsActive, projectPeriodImpact, nextCobroPeriod, getCatColor, getCategoryLabel, getFrequencyLabel, dateToStr, dateOf, todayStr, getDeleteConfirmMessage, installmentCurrentNumber } from '../lib/utils'
+import { catInk } from '../lib/colorUtils'
 import { getCategoryIcon } from '../lib/categoryIcons'
 import { supabase } from '../lib/supabase'
 import { ConfirmCloseModal } from './ConfirmCloseModal'
@@ -402,7 +403,7 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onSaveC
     return (
       <div className={styles.categoryIconSquare} style={{ background: catColor }}>
         {CatIcon
-          ? <CatIcon size={13} color="var(--on-color)" strokeWidth={2} />
+          ? <CatIcon size={13} color={catInk(catColor)} strokeWidth={2} />
           : <span className={styles.categoryIconFallbackDot} />
         }
       </div>
@@ -414,7 +415,7 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onSaveC
   function renderCategoryCellIcon(cat) {
     const CatIcon = getCategoryIcon(cat, profile?.category_icons)
     return CatIcon
-      ? <CatIcon size={18} color="var(--on-color)" strokeWidth={2} />
+      ? <CatIcon size={18} color={catInk(categoryCellColor(cat))} strokeWidth={2} />
       : <span className={styles.categoryIconFallbackDot} />
   }
   function categoryCellColor(cat) {

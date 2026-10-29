@@ -7,6 +7,7 @@ import { Plus, ChevronRight, Search, Pointer } from 'lucide-react'
 import { Tag } from '@phosphor-icons/react/dist/csr/Tag'
 import { PageHero } from '../../components/PageHero'
 import { CATEGORIES, getCatColor, getCategoryLabel } from '../../lib/utils'
+import { catInk } from '../../lib/colorUtils'
 import { getCategoryIcon } from '../../lib/categoryIcons'
 import { Card } from '../../components/SettingsShared'
 import { CategoryFormModal } from '../../components/CategoryFormModal'
@@ -86,7 +87,7 @@ export function SettingsCategoriesPage({ profile, onUpdate, onBack, slideClass }
         >
           <div className={styles.iconWrapper} style={{ background: color, '--cat-color': color }}>
             {Icon
-              ? <Icon size={18} color="var(--text)" strokeWidth={2} />
+              ? <Icon size={18} color={catInk(color)} strokeWidth={2} />
               : <span className={styles.fallbackDot} />
             }
           </div>
@@ -164,7 +165,7 @@ export function SettingsCategoriesPage({ profile, onUpdate, onBack, slideClass }
       const color = getCatColor(c.name, customCats, categoryColors)
       return (
         <button key={c.name} type="button" className={mb.tile} style={{ '--n': Math.min(n++, 14) }} onClick={() => openEdit(c.name, c.isCustom)}>
-          <i className={mb.ico} style={{ background: color }}>{Icon ? <Icon size={22} color="var(--text)" strokeWidth={2} /> : <span className={styles.fallbackDot} />}</i>
+          <i className={mb.ico} style={{ background: color }}>{Icon ? <Icon size={22} color={catInk(color)} strokeWidth={2} /> : <span className={styles.fallbackDot} />}</i>
           <span>{labelOf(c)}</span>
         </button>
       )

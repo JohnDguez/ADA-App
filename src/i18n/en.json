@@ -394,7 +394,14 @@
     },
     "mobile": {
       "tapHint": "Tap a category to edit it",
-      "noResults": "No categories match your search."
+      "noResults": "No categories match your search.",
+      "previewSub": "How it will look on your payments",
+      "hueLabel": "Hue",
+      "brightnessLabel": "Brightness",
+      "hexLabel": "Color code",
+      "customColor": "Custom color",
+      "inkNote": "The icon switches to light or dark on its own so it's always readable.",
+      "confirmSheetSub": "Your category"
     }
   },
   "homePage": {

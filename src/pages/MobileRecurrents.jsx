@@ -5,6 +5,7 @@ import { EmptyState } from '../components/EmptyState'
 import { ChipMenu } from '../components/ChipMenu'
 import { Bone, CategoryAccordionSkeleton } from '../components/SkeletonLoader'
 import { fmt, getFrequencyLabel, getCatColor, getCategoryLabel, monthlyEquivalent, dateOf, getMonthsShort } from '../lib/utils'
+import { catInk } from '../lib/colorUtils'
 import { getCategoryIcon } from '../lib/categoryIcons'
 import { kbd } from '../lib/a11y'
 import styles from './MobileRecurrents.module.css'
@@ -100,7 +101,7 @@ export function MobileRecurrents({ d }) {
         return (
           <div key={cat} className={styles.group} style={{ '--i': gi }}>
             <button type="button" className={styles.gh} aria-expanded={isOpen} onClick={() => setOpen(o => ({ ...o, [cat]: !o[cat] }))}>
-              <i className={styles.catChip} style={{ background: getCatColor(cat, profile.custom_categories, profile.category_colors) }}>{CatIcon && <CatIcon size={18} color="var(--on-color)" strokeWidth={2} />}</i>
+              <i className={styles.catChip} style={{ background: getCatColor(cat, profile.custom_categories, profile.category_colors) }}>{CatIcon && <CatIcon size={18} color={catInk(getCatColor(cat, profile.custom_categories, profile.category_colors))} strokeWidth={2} />}</i>
               <span className={styles.gt}>
                 <b>{getCategoryLabel(cat)}</b>
                 <span>{t('recurrentsPage.paymentCount', { count: list.length })}{catTotal > 0 && ` · ≈ ${whole(catTotal)}${t('recurrentsPage.perMonthSuffix')}`}</span>

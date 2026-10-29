@@ -143,6 +143,9 @@
      de categoría debe verse igual sin importar claro/oscuro. Usada por el
      selector de color en SettingsCategoriesPage.jsx; el valor elegido se
      guarda como el string "var(--palette-N)" en profile.category_colors. */
+  /* Tinta sobre colores de categoría (v0.9.921): fija en ambos temas; catInk() elige cuál. */
+  --cat-ink-light: #FFFFFF;
+  --cat-ink-dark:  #0B1220;
   --palette-1:  #F5A623;
   --palette-2:  #2ECC71;
   --palette-3:  #3498DB;

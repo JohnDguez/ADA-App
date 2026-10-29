@@ -1,0 +1,13 @@
+/* Selector de color propio (v0.9.921). Regla 54: rem/clamp. Los degradados de las barras son dinámicos (inline en el JSX). */
+.panel { background: var(--desk-chip); border-radius: 1.125rem; padding: 0.875rem; margin-top: 0.75rem; animation: cpIn 0.3s cubic-bezier(0.22, 1, 0.36, 1) both; }
+@keyframes cpIn { from { opacity: 0; transform: translateY(-0.375rem); } to { opacity: 1; transform: none; } }
+.bar { position: relative; height: 1.375rem; border-radius: 99px; touch-action: none; cursor: pointer; outline: none; }
+.bar + .bar { margin-top: 0.75rem; }
+.bar:focus-visible { box-shadow: 0 0 0 2px var(--accent); }
+.knob { position: absolute; top: -0.1875rem; width: 1.75rem; height: 1.75rem; border-radius: 50%; border: 3px solid var(--cat-ink-light); box-shadow: var(--desk-shadow); pointer-events: none; box-sizing: border-box; }
+.hexRow { display: flex; align-items: center; gap: 0.625rem; margin-top: 0.875rem; }
+.swatch { width: 2.125rem; height: 2.125rem; border-radius: 50%; flex-shrink: 0; }
+.hex { flex: 1; min-width: 0; border: 0; outline: 0; background: var(--desk-card); color: var(--text); font: inherit; font-size: 0.875rem; letter-spacing: 0.04em; padding: 0.5625rem 0.75rem; border-radius: 0.75rem; }
+.hex:focus { box-shadow: 0 0 0 2px var(--accent); }
+.note { font-size: 0.71875rem; color: var(--muted); margin: 0.625rem 0.25rem 0; line-height: 1.35; }
+@media (prefers-reduced-motion: reduce) { .panel { animation: none; } }

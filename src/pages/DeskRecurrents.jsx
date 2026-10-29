@@ -7,6 +7,7 @@ import { RecurrentDetailPanel } from '../components/RecurrentDetailPanel'
 import { Bone } from '../components/SkeletonLoader'
 import { useHeaderBackground, HEADER_IMAGES } from '../hooks/useHeaderBackground'
 import { fmt, getFrequencyLabel, getCatColor, getCategoryLabel, monthlyEquivalent } from '../lib/utils'
+import { catInk } from '../lib/colorUtils'
 import { getCategoryIcon } from '../lib/categoryIcons'
 import home from './DeskHome.module.css'
 import { DeskAddButton } from '../components/DeskAddButton'
@@ -159,7 +160,7 @@ export function DeskRecurrents({ d }) {
                       return (
                         <div key={cat} className={styles.group}>
                           <button type="button" className={styles.gh} aria-expanded={open} onClick={() => setCollapsed(c => ({ ...c, [cat]: open }))}>
-                            <i className={styles.catChip} style={{ background: getCatColor(cat, profile.custom_categories, profile.category_colors) }}>{CatIcon && <CatIcon size={14} color="var(--on-color)" strokeWidth={2} />}</i>
+                            <i className={styles.catChip} style={{ background: getCatColor(cat, profile.custom_categories, profile.category_colors) }}>{CatIcon && <CatIcon size={14} color={catInk(getCatColor(cat, profile.custom_categories, profile.category_colors))} strokeWidth={2} />}</i>
                             <b>{getCategoryLabel(cat)}</b>
                             <span>{t('recurrentsPage.paymentCount', { count: list.length })}{catTotal > 0 && ` · ≈ ${fmt(catTotal)}${t('recurrentsPage.perMonthSuffix')}`}</span>
                             <ChevronDown size={16} className={`${styles.chev} ${open ? '' : styles.chevClosed}`} />

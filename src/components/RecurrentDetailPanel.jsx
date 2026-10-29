@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { ChevronLeft, MoreVertical, Pencil, Pause, Play, Trash2, Check } from 'lucide-react'
 import { getCategoryIcon } from '../lib/categoryIcons'
 import { fmt, dateOf, getFrequencyLabel, getCategoryLabel, getCatColor, getMonthsShort, installmentUntrackedCount } from '../lib/utils'
+import { catInk } from '../lib/colorUtils'
 import { supabase } from '../lib/supabase'
 import styles from './RecurrentDetailPanel.module.css'
 import { useScrollLock } from '../lib/scrollLock'
@@ -168,7 +169,7 @@ export function RecurrentDetailPanel({
           <ChevronLeft size={22} color="var(--text)" />
         </button>
         <div className={styles.headerIcon} style={{ background: catColor }}>
-          {CatIcon ? <CatIcon size={15} color="var(--text)" strokeWidth={2} /> : <span className={styles.headerIconFallback} />}
+          {CatIcon ? <CatIcon size={15} color={catInk(catColor)} strokeWidth={2} /> : <span className={styles.headerIconFallback} />}
         </div>
         <div className={styles.headerTitle}>{master.name}</div>
         <div className={styles.menuWrapper} ref={menuRef}>

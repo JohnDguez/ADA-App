@@ -9,6 +9,7 @@ import { Bone, PaymentRowSkeleton, CategoryListSkeleton } from '../components/Sk
 import { useHeaderBackground, HEADER_IMAGES } from '../hooks/useHeaderBackground'
 import { getBank, bankColorVar } from '../lib/cardCatalog'
 import { fmt, getMonths, getMonthsShort, getCatColor, getCategoryLabel, getFrequencyLabel } from '../lib/utils'
+import { catInk } from '../lib/colorUtils'
 import { getCategoryIcon } from '../lib/categoryIcons'
 import home from './DeskHome.module.css'
 import { DeskAddButton } from '../components/DeskAddButton'
@@ -240,7 +241,7 @@ export function DeskPayments({ d }) {
                                   <span className={styles.postponed}>{t('payCard.status.postponed')}</span>
                                 ) : (
                                   <>
-                                    <i className={styles.catChip} style={{ background: catColor(p.category) }}>{CatIcon && <CatIcon size={13} color="var(--on-color)" strokeWidth={2} />}</i>
+                                    <i className={styles.catChip} style={{ background: catColor(p.category) }}>{CatIcon && <CatIcon size={13} color={catInk(catColor(p.category))} strokeWidth={2} />}</i>
                                     <span className={styles.catText} title={getCategoryLabel(p.category)}>{getCategoryLabel(p.category)}</span>
                                     {p.is_recurrent && <em>· {getFrequencyLabel(p.recur_freq) || t('frequency.monthly')}</em>}
                                   </>

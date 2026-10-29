@@ -13,6 +13,7 @@ import {
   groupByConcept, headerSignature, strip,
 } from '../lib/importCsv'
 import { CATEGORIES, getCategoryLabel, getCatColor, fmt, cobroPeriod, dateToStr, dateOf, getMonths, intlLocale } from '../lib/utils'
+import { catInk } from '../lib/colorUtils'
 import { getCategoryIcon } from '../lib/categoryIcons'
 import { DeskSettingsHead, DeskPage } from './DeskSettingsHead'
 import deskStyles from './SettingsDesk.module.css'
@@ -93,7 +94,7 @@ function CategoryChip({ cat, profile, customCategories }) {
   const Icon = getCategoryIcon(cat, profile?.category_icons)
   return (
     <span className={styles.catSquare} style={{ background: color }}>
-      {Icon ? <Icon size={13} color="var(--on-color)" strokeWidth={2} /> : <span className={styles.catDot} />}
+      {Icon ? <Icon size={13} color={catInk(color)} strokeWidth={2} /> : <span className={styles.catDot} />}
     </span>
   )
 }

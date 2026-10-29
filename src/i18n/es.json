@@ -394,7 +394,14 @@
     },
     "mobile": {
       "tapHint": "Toca una categoría para editarla",
-      "noResults": "Ninguna categoría coincide con tu búsqueda."
+      "noResults": "Ninguna categoría coincide con tu búsqueda.",
+      "previewSub": "Así se verá en tus pagos",
+      "hueLabel": "Tono",
+      "brightnessLabel": "Brillo",
+      "hexLabel": "Código del color",
+      "customColor": "Color personalizado",
+      "inkNote": "El ícono cambia solo a claro u oscuro para que siempre se lea.",
+      "confirmSheetSub": "Categoría tuya"
     }
   },
   "homePage": {

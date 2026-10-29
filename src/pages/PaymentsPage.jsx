@@ -9,6 +9,7 @@ import { Select } from '../components/Select'
 import { SegmentedControl } from '../components/SegmentedControl'
 import { getBank, bankColorVar } from '../lib/cardCatalog'
 import { fmt, dateOf, dateToStr, getMonths, getMonthsShort, CATEGORIES, cobroPeriod, addDays, getCatColor, getCategoryLabel, RECUR_FREQ, getFrequencyLabel, getDeleteConfirmMessage } from '../lib/utils'
+import { catInk } from '../lib/colorUtils'
 import { getCategoryIcon } from '../lib/categoryIcons'
 import { supabase } from '../lib/supabase'
 import { showToast } from '../components/Toast'
@@ -1823,7 +1824,7 @@ export function PaymentsPage({ payments, dataLoading = false, periodIncome, paym
                   >
                     <div className={styles.categoryListIconWrapper} style={{ background: catColor }}>
                       {CatIcon
-                        ? <CatIcon size={19} color="var(--text)" strokeWidth={2} />
+                        ? <CatIcon size={19} color={catInk(catColor)} strokeWidth={2} />
                         : <span className={styles.categoryListFallbackDot} />
                       }
                     </div>
@@ -1975,7 +1976,7 @@ export function PaymentsPage({ payments, dataLoading = false, periodIncome, paym
                               <span className={styles.categoryChipSquare} style={{ background: getCatColor(p.category, profile.custom_categories, profile.category_colors) }}>
                                 {(() => {
                                   const RowCatIcon = getCategoryIcon(p.category, profile.category_icons)
-                                  return RowCatIcon ? <RowCatIcon size={12} color="var(--text)" strokeWidth={2} /> : null
+                                  return RowCatIcon ? <RowCatIcon size={12} color={catInk(getCatColor(p.category, profile.custom_categories, profile.category_colors))} strokeWidth={2} /> : null
                                 })()}
                               </span>
                               <span className={styles.paymentCategoryDot} style={{ background: getCatColor(p.category, profile.custom_categories, profile.category_colors) }} />

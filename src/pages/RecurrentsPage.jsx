@@ -6,6 +6,7 @@ import { PageHeader } from '../components/PageHeader'
 import { NewSharedSpacePanel } from '../components/NewSharedSpacePanel'
 import { RecurrentDetailPanel } from '../components/RecurrentDetailPanel'
 import { installmentUntrackedCount, fmt, RECUR_FREQ, getFrequencyLabel, dateOf, getMonthsShort, getCatColor, getCategoryLabel, monthlyEquivalent } from '../lib/utils'
+import { catInk } from '../lib/colorUtils'
 import { getCategoryIcon } from '../lib/categoryIcons'
 import { showToast } from '../components/Toast'
 import { StatsCardSkeleton, CategoryAccordionSkeleton } from '../components/SkeletonLoader'
@@ -416,7 +417,7 @@ export function RecurrentsPage({ payments, dataLoading = false, profile, spaceSw
                   >
                     <div className={styles.categoryIconWrapper} style={{ background: catColor }}>
                       {CatIcon
-                        ? <CatIcon size={18} color="var(--text)" strokeWidth={2} />
+                        ? <CatIcon size={18} color={catInk(catColor)} strokeWidth={2} />
                         : <span className={styles.categoryFallbackDot} />
                       }
                     </div>
