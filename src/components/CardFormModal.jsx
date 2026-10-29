@@ -217,7 +217,7 @@ export function CardFormModal({ open, initial, onSave, onClose, inline = false }
           </div>
 
           <div className={mm.body}>
-            <div className={mm.seg} role="tablist">
+            <div className={mm.seg} role="tablist" data-i={form.kind === 'credit' ? 0 : 1}>
               {['credit', 'debit'].map(k => (
                 <button key={k} type="button" role="tab" aria-selected={form.kind === k} disabled={!!initial} className={form.kind === k ? mm.segOn : ''} onClick={() => set({ kind: k })}>{t(`cards.kind.${k}`)}</button>
               ))}

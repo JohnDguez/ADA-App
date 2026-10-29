@@ -1806,7 +1806,8 @@
     "youSuffix": " (you)",
     "availableHint": "Available: {{available}} of {{total}}",
     "marking": "Marking…",
-    "pay": "Pay"
+    "pay": "Pay",
+    "fillRemaining": "Fill with the remainder ({{amount}})"
   },
   "goalsOverlay": {
     "newGoalAriaLabel": "New goal",

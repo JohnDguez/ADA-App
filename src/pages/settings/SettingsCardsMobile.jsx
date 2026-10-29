@@ -65,7 +65,7 @@ export function SettingsCardsMobile({
     <div className={`${slideClass || ''} ${mb.root}`}>
       <SubpageHeader icon={CreditCard} title={t('cards.title')} onBack={onBack} />
 
-      <div className={mb.seg} role="tablist">
+      <div className={mb.seg} role="tablist" data-i={kind === 'credit' ? 0 : 1}>
         {[['credit', t('cards.kind.credit'), credit.length], ['debit', t('cards.kind.debit'), debit.length]].map(([k, label, n]) => (
           <button key={k} type="button" role="tab" aria-selected={kind === k} className={kind === k ? mb.segOn : ''} onClick={() => setKind(k)}>{label} · {n}</button>
         ))}

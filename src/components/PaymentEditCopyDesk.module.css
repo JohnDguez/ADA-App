@@ -1,0 +1,17 @@
+/* "Editar pago" (copia de un recurrente) en escritorio (v0.9.927): diálogo
+   angosto del lenguaje de Pagos de escritorio (PaymentDesk): campos rellenos,
+   candados, monto protagonista, acciones a la derecha. */
+.dialog.dialog { width: 480px; gap: 14px; padding: 28px 30px; border-radius: 30px; }
+.banner { display: flex; gap: 10px; align-items: flex-start; padding: 14px 16px; border-radius: 18px; background: var(--desk-chip); }
+.bannerIcon { flex: none; margin-top: 2px; color: var(--accent); }
+.bannerBody { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: flex-start; gap: 10px; }
+.bannerText { font-size: 13px; line-height: 1.5; color: var(--text); }
+.masterBtn { display: inline-flex; align-items: center; gap: 6px; height: 34px; padding: 0 16px; border: 0; border-radius: 99px; background: var(--accent); color: var(--desk-ink-text); font-size: 13px; font-weight: 600; cursor: pointer; }
+.locked { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.lockedLabel { font-size: 12px; font-weight: 600; letter-spacing: 0.8px; text-transform: uppercase; color: var(--muted); }
+.lockedValue { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 46px; padding: 0 16px; border-radius: 16px; background: var(--desk-chip); color: var(--muted); font-size: 14.5px; }
+.lockedIcon { flex: none; opacity: 0.7; }
+.row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.fields { display: flex; flex-direction: column; gap: 14px; }
+.fields > div { margin-bottom: 0; }
+.dialog.dialog :global(.field-label) { font-size: 12px; font-weight: 600; letter-spacing: 0.8px; text-transform: uppercase; color: var(--muted); }

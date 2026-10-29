@@ -263,6 +263,57 @@
 :global(.btn-primary).saveInline { width: auto; padding: 0 16px; }
 .methodFieldWrap { padding: 0 12px; margin-bottom: 10px; }
 
+/* "Completar con el restante" (v0.9.927) — todos los tamaños. */
+.fillWrap { padding: 0 12px; margin-bottom: 8px; }
+.fillButton {
+  width: 100%;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 7px 0;
+  border-radius: 5px;
+  border: 0.5px solid var(--border);
+  background: var(--surface);
+  color: var(--accent);
+  cursor: pointer;
+}
+.fillButton:disabled { opacity: 0.35; cursor: not-allowed; }
+
+/* Popover de escritorio (v0.9.927): mismo lenguaje que Pagos de escritorio —
+   campos y filas rellenos (--desk-chip), píldoras, acciones a la derecha. */
+.deskRoot { color: var(--text); }
+.deskHead { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 4px; }
+.deskTitle { margin: 0; font-size: 19px; font-weight: 700; letter-spacing: -0.3px; }
+.deskSub { margin-top: 2px; font-size: 13px; color: var(--muted); }
+.deskClose { width: 36px; height: 36px; flex: none; border: 0; border-radius: 50%; background: var(--desk-chip); color: var(--text); display: grid; place-items: center; cursor: pointer; }
+.deskRoot .progress,
+.deskRoot .memberCard,
+.deskRoot .fundInsufficientNotice { background: var(--desk-chip); border-radius: 18px; }
+.deskRoot .progress { padding: 14px 16px; margin: 14px 0; }
+.deskRoot .progressAmounts { font-size: 20px; letter-spacing: -0.4px; }
+.deskRoot .progressStatus { font-size: 12px; color: var(--muted); opacity: 1; }
+.deskRoot .progressDone .progressStatus { color: var(--paid); }
+.bar { height: 6px; border-radius: 9px; background: var(--desk-card); margin-top: 10px; overflow: hidden; }
+.bar i { display: block; height: 100%; border-radius: 9px; background: var(--accent); transition: width .4s cubic-bezier(0.22, 1, 0.36, 1); }
+.progressDone .bar i { background: var(--paid); }
+.deskRoot .errorBox { border: 0; border-radius: 14px; background: var(--desk-chip); }
+.deskRoot .members { gap: 8px; }
+.deskRoot .memberRow { padding: 10px 14px; }
+.deskRoot .memberName { font-size: 14px; font-weight: 600; }
+.deskRoot .memberEmpty { font-size: 12.5px; font-weight: 500; opacity: 1; color: var(--muted); }
+.deskRoot .memberAmount { font-size: 14px; font-weight: 700; }
+.deskRoot .memberAvatar, .deskRoot .fundAvatar { width: 30px; height: 30px; }
+.deskRoot .availableHint { font-size: 12px; opacity: 1; color: var(--muted); padding: 0 14px; }
+.deskRoot .presetRow, .deskRoot .fillWrap, .deskRoot .methodFieldWrap { padding: 0 14px; }
+.deskRoot .editRow { padding: 0 14px 14px; }
+.deskRoot .presetButton,
+.deskRoot .fillButton { border: 0; border-radius: 99px; background: var(--desk-card); color: var(--text); font-size: 13px; font-weight: 600; padding: 9px 0; }
+.deskRoot .fillButton { color: var(--accent); }
+.deskRoot .editLabel { font-size: 12px; font-weight: 600; }
+.deskFoot { display: flex; align-items: center; justify-content: flex-end; gap: 10px; margin-top: 18px; }
+.deskCancel { height: 44px; padding: 0 22px; border: 0; border-radius: 99px; background: var(--desk-chip); color: var(--text); font-size: 14px; font-weight: 600; cursor: pointer; }
+.deskFoot .payButton { width: auto; margin: 0; height: 44px; padding: 0 24px; border-radius: 99px; background: var(--accent); color: var(--desk-ink-text); font-size: 14px; font-weight: 700; }
+.deskRoot :global(.btn-primary).saveInline { height: 44px; border-radius: 99px; }
+
 /* Escritorio (v0.9.845): radios del nuevo diseño. */
 @media (min-width: 1100px) {
   .presetButton { border-radius: 99px; }

@@ -67,3 +67,11 @@
 :global(.btn-ghost).cancel {
   margin-top: 8px;
 }
+
+/* Popover de escritorio (v0.9.927) */
+.deskTitle { margin: 0; font-size: 19px; font-weight: 700; letter-spacing: -0.3px; color: var(--text); }
+.deskSub { margin-top: 2px; font-size: 13px; color: var(--muted); }
+.deskField { margin-top: 14px; }
+.deskFoot { display: flex; gap: 10px; margin-top: 20px; }
+.deskCancel { height: 44px; padding: 0 22px; border: 0; border-radius: 99px; background: var(--desk-chip); color: var(--text); font-size: 14px; font-weight: 600; cursor: pointer; }
+.deskFoot .deskSave { flex: 1; width: auto; margin: 0; height: 44px; border-radius: 99px; font-size: 14px; font-weight: 700; }

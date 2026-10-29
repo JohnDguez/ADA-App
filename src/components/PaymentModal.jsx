@@ -34,6 +34,7 @@ import { useIsDesktop } from '../hooks/useIsDesktop'
 import dk from './PaymentDesk.module.css'
 import ip from './PaymentImpactDesk.module.css'
 import ins from './PaymentInstallDesk.module.css'
+import ec from './PaymentEditCopyDesk.module.css'
 import { isVoiceSupported, listenAll, stopListening } from '../lib/voiceInput'
 import { parseVoicePayment } from '../lib/parseVoicePayment'
 import { isTicketScanSupported, scanTicketText } from '../lib/ticketScan'
@@ -744,6 +745,80 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onSaveC
 
     const master = payments?.find(p => p.id === initial.parent_id)
 
+    if (isDesk) {
+      const LockedDesk = ({ label, value }) => (
+        <div className={ec.locked}>
+          <span className={ec.lockedLabel}>{label}</span>
+          <div className={ec.lockedValue}><span>{value}</span><PhLock size={15} weight="duotone" className={ec.lockedIcon} /></div>
+        </div>
+      )
+      return (
+        <>
+        <div onClick={e => e.target === e.currentTarget && onClose()} className={dk.overlay} data-presence="overlay" data-closing={closing ? '' : undefined}>
+          <div className={`${dk.dialog} ${ec.dialog}`} role="dialog" aria-modal="true" aria-label={t('paymentModal.editCopy.title')} data-presence="panel" data-closing={closing ? '' : undefined}>
+            <div className={dk.head}>
+              <div>
+                <h2 className={dk.title}>{t('paymentModal.editCopy.title')}</h2>
+                <div className={dk.sub}>{initial.name} · {t('paymentModal.editCopy.dueDate', { date: formatDueDate(initial.due_date) })}</div>
+              </div>
+              <button type="button" className={dk.close} onClick={onClose} aria-label={t('buttons.cancel')}><XIcon size={16} /></button>
+            </div>
+
+            {error && <div className={styles.errorBox}>{error}</div>}
+            {lockedMessage && <div className={styles.warningBox}>{lockedMessage}</div>}
+
+            <div className={ec.banner}>
+              <Info size={16} className={ec.bannerIcon} />
+              <div className={ec.bannerBody}>
+                <div className={ec.bannerText}>{t('paymentModal.editCopy.banner')}</div>
+                {master && (
+                  <button type="button" onClick={() => onEditMaster && onEditMaster(master)} className={ec.masterBtn}>
+                    <Repeat size={13} /> {t('paymentModal.editCopy.editMasterButton')}
+                  </button>
+                )}
+              </div>
+            </div>
+
+            <LockedDesk label={t('paymentModal.fields.name')} value={initial.name} />
+            <div className={ec.row2}>
+              <LockedDesk label={t('paymentModal.fields.category')} value={getCategoryLabel(initial.category)} />
+              <LockedDesk label={t('settingsCobro.frequencyLabel')} value={getFrequencyLabel(initial.recur_freq)} />
+            </div>
+            <LockedDesk label={t('paymentModal.dueDate')} value={formatDueDate(initial.due_date)} />
+
+            <div className={`${ec.fields} ${canWrite ? '' : styles.formDisabled}`}>
+              <div className={dk.amount} onClick={e => e.currentTarget.querySelector('input')?.focus()}>
+                <span className={dk.amountLabel}>{t('paymentModal.amountLabel')}</span>
+                <div className={dk.amountRow}>
+                  <span className={dk.amountSym}>{getCurrencySymbol()}</span>
+                  <AmountInput className={dk.amountInput} value={amount} onChange={e => setAmount(e.target.value)} placeholder="0.00" autoFocus />
+                </div>
+              </div>
+              {initial.is_paid && (
+                <Field label={t('paymentModal.paidDateLabel')}>
+                  <DatePicker value={paidAt} onChange={setPaidAt} />
+                </Field>
+              )}
+              {methodsAvailable && (
+                <div>
+                  <PaymentMethodField methods={paymentMethods.methods} value={methodId} onChange={setMethodId} payDate={paidAt || null} onAddCard={openAddCard} />
+                </div>
+              )}
+            </div>
+
+            <div className={dk.foot}>
+              <button type="button" onClick={onClose} className={dk.cancel}>{t('buttons.cancel')}</button>
+              <button type="button" onClick={handleSaveCopyAmount} disabled={saving || !canWrite} className={`btn-primary ${dk.save}`}>
+                {saving ? t('settingsCategories.saving') : t('paymentModal.save.saveChanges')}
+              </button>
+            </div>
+          </div>
+        </div>
+        {methodsAvailable && <AddCardModal open={cardFormOpen} onClose={() => setCardFormOpen(false)} paymentMethods={paymentMethods} onAdded={setMethodId} />}
+        </>
+      )
+    }
+
     return (
       <>
         <div onClick={e => e.target === e.currentTarget && onClose()} className={styles.overlay} data-presence="overlay" data-closing={closing ? '' : undefined}>
@@ -804,6 +879,7 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onSaveC
             <button onClick={onClose} className={`btn-ghost ${styles.cancelButtonSpacing}`}>{t('buttons.cancel')}</button>
           </div>
         </div>
+        {methodsAvailable && <AddCardModal open={cardFormOpen} onClose={() => setCardFormOpen(false)} paymentMethods={paymentMethods} onAdded={setMethodId} />}
       </>
     )
   }

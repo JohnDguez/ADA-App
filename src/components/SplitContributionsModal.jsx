@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Lock, PiggyBank } from 'lucide-react'
+import { Lock, PiggyBank, X as XIcon } from 'lucide-react'
 import { fmt } from '../lib/utils'
 import AmountInput from './AmountInput'
 import { PaymentMethodField } from './PaymentMethodField'
@@ -9,6 +9,8 @@ import { AvatarImg } from './AvatarImg'
 import { usePresence } from '../lib/usePresence'
 import { useScrollLock } from '../lib/scrollLock'
 import { kbd } from '../lib/a11y'
+import { AnchoredPop, useAnchor } from './AnchoredPop'
+import { useIsDesktop } from '../hooks/useIsDesktop'
 
 // Registro de "quién puso cuánto" en un gasto del Espacio Compartido —
 // deliberadamente NO es un split planeado de antemano (montos fijos por
@@ -18,8 +20,18 @@ import { kbd } from '../lib/a11y'
 // todos de un jalón — el progreso mostrado es informativo, nunca bloquea.
 const PRESET_PERCENTAGES = [25, 50, 60, 75]
 
-export function SplitContributionsModal({ open, payment, spaceMembers, currentUserId, getContributions, onCommit, onSetTotalAmount, onForceSettle, fundBalance, onSetFundContribution, openedBecauseFundInsufficient, paymentMethods = [], onClose }) {
+export function SplitContributionsModal({ open, payment: paymentProp, spaceMembers, currentUserId, getContributions, onCommit, onSetTotalAmount, onForceSettle, fundBalance, onSetFundContribution, openedBecauseFundInsufficient, paymentMethods = [], onClose }) {
   const { t } = useTranslation()
+  // Escritorio (≥1100px, v0.9.927): popover anclado a lo que lo abrió; sin ancla
+  // (apertura por código) o en móvil/tablet sigue siendo la hoja de siempre.
+  // Se conserva el último pago para que la animación de salida no se corte
+  // cuando App.jsx limpia el id al cerrar.
+  const desk = useIsDesktop()
+  const anchorRef = useAnchor(open)
+  const asPop = desk && !!anchorRef.current
+  const lastPay = useRef(null)
+  if (paymentProp) lastPay.current = paymentProp
+  const payment = paymentProp || lastPay.current
   // Método de pago de MI parte (v0.9.547): solo se muestra en mi propia fila
   // y solo con mis tarjetas. `methodTouched` evita pisar el método ya
   // guardado al editar solo el monto.
@@ -78,7 +90,7 @@ export function SplitContributionsModal({ open, payment, spaceMembers, currentUs
   }, [liveKey])
 
   const { render, closing } = usePresence(open)
-  useScrollLock(open)
+  useScrollLock(open && !asPop)
   if (!render || !payment) return null
 
   async function handleSaveTotal() {
@@ -185,12 +197,23 @@ export function SplitContributionsModal({ open, payment, spaceMembers, currentUs
     onCommit(payment.id, { rows, fund: stagedFund })
   }
 
-  return (
-    <div onClick={e => e.target === e.currentTarget && onClose()} className={styles.overlay} data-presence="overlay" data-closing={closing ? '' : undefined}>
-      <div className={styles.modal} data-presence="panel" data-closing={closing ? '' : undefined}>
-        <div className={styles.handle} />
-        <div className={styles.title}>{t('paymentsPage.menuSplit')}</div>
-        <div className={styles.description}>{payment.name}</div>
+  const body = (
+    <div className={asPop ? styles.deskRoot : undefined}>
+        {asPop ? (
+          <div className={styles.deskHead}>
+            <div>
+              <h2 className={styles.deskTitle}>{t('paymentsPage.menuSplit')}</h2>
+              <div className={styles.deskSub}>{payment.name}</div>
+            </div>
+            <button type="button" className={styles.deskClose} onClick={onClose} aria-label={t('buttons.close')}><XIcon size={16} /></button>
+          </div>
+        ) : (
+          <>
+            <div className={styles.handle} />
+            <div className={styles.title}>{t('paymentsPage.menuSplit')}</div>
+            <div className={styles.description}>{payment.name}</div>
+          </>
+        )}
 
         {payment.is_variable && (
           <>
@@ -214,6 +237,7 @@ export function SplitContributionsModal({ open, payment, spaceMembers, currentUs
           <div className={`${styles.progress} ${done ? styles.progressDone : ''}`}>
             <div className={styles.progressAmounts}>{fmt(registrado)} / {fmt(total)}</div>
             <div className={styles.progressStatus}>{done ? t('splitContributionsModal.complete') : t('splitContributionsModal.remaining', { amount: fmt(restan) })}</div>
+            {asPop && <div className={styles.bar}><i style={{ width: `${total > 0 ? Math.min(100, Math.max(0, (registrado / total) * 100)) : 0}%` }} /></div>}
           </div>
         )}
 
@@ -295,6 +319,18 @@ export function SplitContributionsModal({ open, payment, spaceMembers, currentUs
                             )
                           })}
                         </div>
+                        {(() => {
+                          // "Completar" (v0.9.927): rellena con lo que de verdad falta,
+                          // sin tener que calcularlo ni teclear centavos.
+                          const left = Math.round((total - (registrado - (amount || 0))) * 100) / 100
+                          return (
+                            <div className={styles.fillWrap}>
+                              <button type="button" disabled={left <= 0} onClick={() => setDraft(String(left))} className={styles.fillButton}>
+                                {t('splitContributionsModal.fillRemaining', { amount: fmt(Math.max(0, left)) })}
+                              </button>
+                            </div>
+                          )
+                        })()}
                         {m.user_id === currentUserId && paymentMethods.length > 0 && (
                           <div className={styles.methodFieldWrap}>
                             <PaymentMethodField methods={paymentMethods} value={methodDraft} onChange={id => { setMethodDraft(id); setMethodTouched(true) }} />
@@ -313,17 +349,31 @@ export function SplitContributionsModal({ open, payment, spaceMembers, currentUs
           </>
         )}
 
-        {hasChanges && (
-          <button onClick={handleConfirm} className={styles.payButton}>
-            {t('splitContributionsModal.confirm')}
-          </button>
-        )}
-        {!hasChanges && done && !payment.is_paid && (
-          <button onClick={handlePagar} disabled={settling} className={styles.payButton}>
-            {settling ? t('splitContributionsModal.marking') : t('splitContributionsModal.pay')}
-          </button>
-        )}
-        <button onClick={onClose} className="btn-ghost">{hasChanges ? t('buttons.cancel') : t('buttons.close')}</button>
+        <div className={asPop ? styles.deskFoot : undefined}>
+          {asPop && <button onClick={onClose} className={styles.deskCancel}>{hasChanges ? t('buttons.cancel') : t('buttons.close')}</button>}
+          {hasChanges && (
+            <button onClick={handleConfirm} className={styles.payButton}>
+              {t('splitContributionsModal.confirm')}
+            </button>
+          )}
+          {!hasChanges && done && !payment.is_paid && (
+            <button onClick={handlePagar} disabled={settling} className={styles.payButton}>
+              {settling ? t('splitContributionsModal.marking') : t('splitContributionsModal.pay')}
+            </button>
+          )}
+          {!asPop && <button onClick={onClose} className="btn-ghost">{hasChanges ? t('buttons.cancel') : t('buttons.close')}</button>}
+        </div>
+    </div>
+  )
+
+  if (asPop) {
+    return <AnchoredPop open={!!open} onClose={onClose} anchorRef={anchorRef} width={420} label={t('paymentsPage.menuSplit')}>{body}</AnchoredPop>
+  }
+
+  return (
+    <div onClick={e => e.target === e.currentTarget && onClose()} className={styles.overlay} data-presence="overlay" data-closing={closing ? '' : undefined}>
+      <div className={styles.modal} data-presence="panel" data-closing={closing ? '' : undefined}>
+        {body}
       </div>
     </div>
   )

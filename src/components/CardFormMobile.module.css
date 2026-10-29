@@ -12,10 +12,12 @@
 .body { flex: 1; min-height: 0; overflow-y: auto; padding: 0.25rem 1rem 1rem; overscroll-behavior: contain; }
 
 /* Segmentado Crédito/Débito: píldora, activo = --desk-pill */
-.seg { display: flex; background: var(--desk-chip); border-radius: 99px; padding: 0.1875rem; gap: 0.125rem; }
-.seg button { flex: 1; min-width: 0; border: 0; background: none; color: var(--muted); font: inherit; font-size: 0.8125rem; font-weight: 600; padding: 0.5625rem 0; border-radius: 99px; cursor: pointer; transition: background 0.25s, color 0.25s; }
+.seg { position: relative; display: flex; background: var(--desk-chip); border-radius: 99px; padding: 0.1875rem; gap: 0.125rem; }
+.seg button { position: relative; z-index: 1; flex: 1; min-width: 0; border: 0; background: none; color: var(--muted); font: inherit; font-size: 0.8125rem; font-weight: 600; padding: 0.5625rem 0; border-radius: 99px; cursor: pointer; transition: background 0.25s, color 0.25s; }
 .seg button:disabled { cursor: default; }
-.seg .segOn { background: var(--desk-pill); color: var(--desk-pill-ink); }
+.seg .segOn { color: var(--desk-pill-ink); }
+.seg::before { content: ''; position: absolute; top: 0.1875rem; bottom: 0.1875rem; left: 0.1875rem; width: calc((100% - 0.5rem) / 2); border-radius: 99px; background: var(--desk-pill); transform: translateX(0); transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1); }
+.seg[data-i="1"]::before { transform: translateX(calc(100% + 0.125rem)); }
 
 /* Vista previa: grande, sin sombra (la sombra la hacía ver chica) */
 .prev { width: min(100%, 19rem); margin: 1rem auto 0.25rem; animation: cfUp 0.45s cubic-bezier(0.22, 1, 0.36, 1) 0.08s backwards; }
@@ -51,5 +53,5 @@
 @keyframes cfFadeOut { to { opacity: 0; } }
 @keyframes cfUp { from { transform: translateY(1.5rem); opacity: 0; } }
 @keyframes cfDown { to { transform: translateY(100%); } }
-@media (prefers-reduced-motion: reduce) { .overlay, .sheet, .prev { animation: none; } .seg button, .opt { transition: none; } }
+@media (prefers-reduced-motion: reduce) { .seg::before { transition: none; } .overlay, .sheet, .prev { animation: none; } .seg button, .opt { transition: none; } }
 @media (min-width: 768px) { .overlay { display: none; } }
