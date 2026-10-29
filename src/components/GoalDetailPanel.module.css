@@ -500,3 +500,19 @@
 :global(html[data-desk-sidebar]) .menuItem.menuItemDanger:not(:first-child)::before {
   content: ""; position: absolute; left: 8px; right: 8px; top: -4px; height: 1px; background: var(--desk-hair);
 }
+
+/* ── Móvil (<768px, v0.9.910): el diseño de escritorio dentro de una tarjeta.
+   Regla 54: rem/clamp. El historial crece con la página (sin scroll interno). ── */
+.mobile { height: auto; overflow: hidden; margin: 0 clamp(0.75rem, 4.2vw, 1.25rem) calc(10rem + env(safe-area-inset-bottom)); padding: 1rem clamp(1rem, 4.5vw, 1.25rem) 0.5rem; border-radius: clamp(1rem, 5vw, 1.25rem); background-color: var(--desk-card); box-shadow: var(--desk-shadow); animation: goalDetailIn 0.38s cubic-bezier(0.22, 1, 0.36, 1) both; }
+@keyframes goalDetailIn { from { opacity: 0; transform: translateY(0.5rem); } to { opacity: 1; transform: none; } }
+.mobile .body { display: block; }
+.mobile .historyCol { overflow: visible; }
+.mobile .historyList { flex: none; overflow: visible; }
+.mobile .historyEmptyBlock { flex: none; overflow: visible; padding: 1rem 0; }
+.mobile .headerTitle { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mobile .dBig { font-size: clamp(2.125rem, 11.5vw, 2.75rem); overflow: hidden; text-overflow: ellipsis; }
+.mobile .dBig small { font-size: 0.45em; }
+.mobile .dFoot { flex-wrap: wrap; font-size: 0.75rem; }
+.mobile .actionBtn { background: var(--accent); color: var(--on-color); }
+.mobile .actionBtnGhost { background: none; color: var(--text); }
+@media (prefers-reduced-motion: reduce) { .mobile { animation: none; } }

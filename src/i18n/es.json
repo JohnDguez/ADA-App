@@ -2681,5 +2681,11 @@
     "installmentShort": "cuota {{current}}/{{total}}",
     "pause": "Pausar",
     "resume": "Reanudar"
+  },
+  "mobileGoals": {
+    "overallPct": "{{pct}}% de tus metas activas",
+    "savedTile": "Ahorrado",
+    "doneTile": "Cumplidas",
+    "sortAria": "Ordenar metas"
   }
 }

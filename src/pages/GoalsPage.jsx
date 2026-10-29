@@ -17,6 +17,8 @@ import { useScrollTop } from '../hooks/useScrollTop'
 import { Collapse } from '../components/Collapse'
 import { useIsDesktop } from '../hooks/useIsDesktop'
 import { DeskGoals } from './DeskGoals'
+import { MobileGoals } from './MobileGoals'
+import { useIsMobile } from '../hooks/useIsMobile'
 
 function fmtDate(iso) {
   const d = new Date(iso)
@@ -49,6 +51,7 @@ export function GoalsPage({
 }) {
   const { t } = useTranslation()
   const isDesktop = useIsDesktop()
+  const isMobile = useIsMobile()
   const { activeGoals, completedGoals, totalRestante, loading: goalsLoading, addGoal, updateGoal, aportar, retirar, revertirAporte, markCompleted, deleteGoal } = goalsData
 
   // Mismo criterio que RecurrentsPage.jsx: la animación de entrada del
@@ -170,7 +173,7 @@ export function GoalsPage({
     setFormOpen(false)
   }
 
-  const deskData = isDesktop ? {
+  const deskData = (isDesktop || isMobile) ? {
     profile, goalsLoading, rawActiveSpaceId, sharedSpaces, onOpenPremium, onSpaceReady, slideClass, spaceJustChanged,
     isShared, spaceMembers, canAdd, atFreeLimit, onAdd: handleAddClick, noGoalsAtAll,
     activeGoals, completedGoals, sortedGoals, sortBy, setSortBy, goalsView, setGoalsView,
@@ -205,10 +208,29 @@ export function GoalsPage({
           onOpenNotifs={onOpenNotifs}
           onGoSettings={onGoSettings}
           onOpenPremium={onOpenPremium}
+          {...(isMobile ? { variant: 'home', title: t('goalsPage.title') } : {})}
         />
       </div>}
 
-      {isDesktop ? <DeskGoals d={deskData} /> : (
+      {isDesktop ? <DeskGoals d={deskData} /> : isMobile ? (
+        <>
+          <div className={styles.spaceSwitcherMobileWrap}>{spaceSwitcher}</div>
+          {activeSpaceHeader}
+          <div className={slideClass}>
+            <div className={spaceJustChanged ? 'content-slide-up' : ''}>
+              {rawActiveSpaceId === 'new' ? (
+                <div className={styles.newSpacePanelWrapper}>
+                  <NewSharedSpacePanel profile={profile} sharedSpaces={sharedSpaces} onOpenPremium={onOpenPremium} onCreated={onSpaceReady} onJoined={onSpaceReady} />
+                </div>
+              ) : selectedGoal ? (
+                <GoalDetailPanel key={selectedGoal.id} goal={selectedGoal} mobile {...deskData.detailProps} />
+              ) : (
+                <MobileGoals d={deskData} />
+              )}
+            </div>
+          </div>
+        </>
+      ) : (
       <div className={styles.roundedContentWrapper}>
         <div className={styles.spaceSwitcherMobileWrap}>{spaceSwitcher}</div>
 

@@ -25,8 +25,10 @@ function fmtDate(iso) {
 export function GoalDetailPanel({
   goal, onBack, onEdit, onAportar, onRetirar, onRevert, onMarkCompleted, onDelete,
   isShared = false, canContribute = true, canWithdraw = true, canEdit = true, canDelete = true, currentUserId = null, spaceMembers = [],
-  hasIncome = true, paymentMethods = null, desk = false,
+  hasIncome = true, paymentMethods = null, desk = false, mobile = false,
 }) {
+  // v0.9.910 — en móvil se usa el diseño de escritorio dentro de una tarjeta.
+  if (mobile) desk = true
   const { t } = useTranslation()
   const [menuOpen, setMenuOpen] = useState(false)
   useScrollLock(menuOpen)
@@ -136,7 +138,7 @@ export function GoalDetailPanel({
   }
 
   return (
-    <div className={`${styles.screen} ${desk ? styles.desk : ''}`} style={desk ? { backgroundImage: `radial-gradient(70% 50% at 0% 0%, color-mix(in srgb, ${goal.color} 30%, transparent), transparent 70%)` } : undefined}>
+    <div className={`${styles.screen} ${desk ? styles.desk : ''} ${mobile ? styles.mobile : ''}`} style={desk ? { backgroundImage: `radial-gradient(70% 50% at 0% 0%, color-mix(in srgb, ${goal.color} 30%, transparent), transparent 70%)` } : undefined}>
       <div className={styles.header}>
         <button type="button" onClick={onBack} className={styles.iconButton} aria-label={t('goalDetailPanel.back')}>
           <ChevronLeft size={22} color="var(--text)" />
@@ -305,7 +307,7 @@ export function GoalDetailPanel({
           </div>
         </>
       ) : (
-        <div className={`${styles.historyList} ${desk ? 'scroll-y' : ''}`}>
+        <div className={`${styles.historyList} ${desk && !mobile ? 'scroll-y' : ''}`}>
           {goal.transactions.map(tx => {
             const isAporte = tx.type === 'aporte'
             const TxIcon = isAporte ? ArrowUpCircle : ArrowDownCircle

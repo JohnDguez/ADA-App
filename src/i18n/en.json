@@ -2681,5 +2681,11 @@
     "installmentShort": "installment {{current}}/{{total}}",
     "pause": "Pause",
     "resume": "Resume"
+  },
+  "mobileGoals": {
+    "overallPct": "{{pct}}% of your active goals",
+    "savedTile": "Saved",
+    "doneTile": "Completed",
+    "sortAria": "Sort goals"
   }
 }

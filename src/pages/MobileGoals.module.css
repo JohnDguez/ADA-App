@@ -1,0 +1,44 @@
+/* Metas móvil (<768px, v0.9.910). Regla 54: rem/clamp; px solo en líneas finas. */
+.root { padding: 0 clamp(0.75rem, 4.2vw, 1.25rem) calc(10rem + env(safe-area-inset-bottom)); display: flex; flex-direction: column; gap: 0.875rem; }
+.card { background: var(--desk-card); border-radius: clamp(1rem, 5vw, 1.25rem); box-shadow: var(--desk-shadow); padding: clamp(1rem, 4.5vw, 1.25rem); min-width: 0; }
+.label { font-size: 0.75rem; font-weight: 500; color: var(--muted); }
+.bigNum { font-size: clamp(1.875rem, 9.5vw, 2.375rem); font-weight: 600; letter-spacing: -0.02em; line-height: 1.1; margin-top: 0.25rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bigNum small, .tile b small, .gAmt small { font-size: 0.55em; opacity: 0.55; font-weight: 500; letter-spacing: 0; }
+.track, .pb { height: 0.5rem; border-radius: 99px; overflow: hidden; background: repeating-linear-gradient(135deg, var(--desk-hatch) 0 1.5px, transparent 1.5px 6px); }
+.track { margin: 0.75rem 0 0.375rem; }
+.track u, .pb u { display: block; height: 100%; border-radius: 99px; min-width: 0.5rem; transition: width 0.9s cubic-bezier(0.22, 1, 0.36, 1); }
+.track u { background: var(--accent); }
+.sub { font-size: 0.75rem; color: var(--muted); }
+.tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 0.625rem; margin-top: 0.875rem; }
+.tile { background: var(--desk-chip); border-radius: 0.875rem; padding: 0.625rem 0.75rem; display: flex; flex-direction: column; gap: 0.125rem; min-width: 0; }
+.tile span { font-size: 0.6875rem; color: var(--muted); }
+.tile b { font-size: clamp(1.0625rem, 5vw, 1.25rem); font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tile em { font-style: normal; font-size: 0.6875rem; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.filterRow { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; flex-wrap: nowrap; }
+.chips { display: flex; gap: 0.375rem; flex-shrink: 0; }
+.chip { display: inline-flex; align-items: center; line-height: 1.2; border: 1px solid var(--desk-hair); background: var(--desk-chip); color: var(--muted); font: inherit; font-size: 0.75rem; font-weight: 500; padding: 0.375rem clamp(0.5rem, 3vw, 0.75rem); border-radius: 99px; cursor: pointer; white-space: nowrap; transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease; }
+.chipOn { background: var(--desk-pill); border-color: var(--desk-pill); color: var(--desk-pill-ink); }
+.chipSort { background: var(--desk-card); color: var(--text); min-width: 0; }
+
+.list { display: flex; flex-direction: column; gap: 0.875rem; }
+.grid { display: flex; flex-direction: column; gap: 0.75rem; }
+.goal { display: block; width: 100%; text-align: left; font: inherit; color: var(--text); border: 0; background: var(--desk-card); border-radius: clamp(1rem, 5vw, 1.25rem); box-shadow: var(--desk-shadow); padding: clamp(0.875rem, 4vw, 1.125rem); min-width: 0; cursor: pointer; animation: goalIn 0.4s cubic-bezier(0.22, 1, 0.36, 1) both; animation-delay: calc(var(--i) * 45ms); }
+@keyframes goalIn { from { opacity: 0; transform: translateY(0.5rem); } to { opacity: 1; transform: none; } }
+.gTop { display: flex; align-items: center; gap: 0.625rem; min-width: 0; }
+.gIcon { width: 2.125rem; height: 2.125rem; border-radius: 0.6875rem; display: grid; place-items: center; flex-shrink: 0; }
+.gName { flex: 1; min-width: 0; font-size: 0.9375rem; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.badge { font-size: 0.6875rem; color: var(--muted); background: var(--desk-chip); padding: 0.1875rem 0.5rem; border-radius: 99px; white-space: nowrap; flex-shrink: 0; }
+.badgeLate { color: var(--danger); }
+.gAmt { font-size: clamp(1.5rem, 7.5vw, 1.75rem); font-weight: 600; letter-spacing: -0.02em; margin-top: 0.625rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.gSub { font-size: 0.75rem; color: var(--muted); margin-top: 0.0625rem; }
+.pb { margin: 0.75rem 0 0.5rem; }
+.gFoot { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; font-size: 0.75rem; color: var(--muted); min-width: 0; }
+.doneTxt { display: inline-flex; align-items: center; gap: 0.25rem; }
+
+.premium { background: var(--desk-card); border-radius: clamp(1rem, 5vw, 1.25rem); box-shadow: var(--desk-shadow); padding: 1rem; display: flex; flex-direction: column; gap: 0.5rem; }
+.premium b { font-size: 0.9375rem; }
+.premium p { margin: 0; font-size: 0.8125rem; color: var(--muted); }
+.premium button { align-self: flex-start; display: inline-flex; align-items: center; gap: 0.375rem; border: 0; border-radius: 99px; background: var(--accent); color: var(--on-color); font: inherit; font-size: 0.8125rem; font-weight: 600; padding: 0.5rem 1rem; cursor: pointer; }
+
+@media (prefers-reduced-motion: reduce) { .goal { animation: none; } .track u, .pb u { transition: none; } }
