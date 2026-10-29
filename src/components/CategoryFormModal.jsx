@@ -16,6 +16,8 @@ import mm from './CategoryFormMobile.module.css'
 import { ColorPickerPanel } from './ColorPickerPanel'
 import { catInk, isHexColor, colorToHex } from '../lib/colorUtils'
 import { useIsMobile } from '../hooks/useIsMobile'
+import { useIsDesktop } from '../hooks/useIsDesktop'
+import dkp from './PaymentDesk.module.css'
 
 export const CATEGORY_PALETTE = Array.from({ length: 16 }, (_, i) => `var(--palette-${i + 1})`)
 
@@ -38,6 +40,7 @@ export function CategoryFormModal({ open, onClose, editingCat = null, profile, o
   const [confirmingDelete, setConfirmingDelete] = useState(false)
   const [deleting,  setDeleting]    = useState(false)
   const isMobile = useIsMobile()
+  const isDesk = useIsDesktop()
   const [deleteCount, setDeleteCount] = useState(null) // pagos que se reasignarán, o null mientras carga
 
   const customCats     = profile.custom_categories || []
@@ -145,17 +148,13 @@ export function CategoryFormModal({ open, onClose, editingCat = null, profile, o
     .map(g => ({ ...g, icons: search ? g.icons.filter(i => i.label.toLowerCase().includes(search)) : g.icons }))
     .filter(g => g.icons.length > 0)
 
-  if (inline) {
+  if (inline || isDesk) {
     const PreviewIcon = formIcon ? getIconComponent(formIcon) : null
     const tint = formColor || 'var(--palette-1)'
     const previewName = formName ? getCategoryLabel(formName) : t('settingsCategories.namePlaceholder')
-    return (
-      <DeskPage>
-        <DeskSettingsHead
-          title={editingCat ? t('settingsCategories.addModalTitleEdit') : t('settingsCategories.addModalTitleNew')}
-          description={t('settingsCategories.desk.formDesc')}
-          actions={<button type="button" className={`${deskStyles.btn} ${deskStyles.btnSoft}`} onClick={onClose}><ChevronLeft size={16} />{t('buttons.back')}</button>}
-        />
+    const customOn = isHexColor(formColor)
+    const deskTitle = editingCat ? t('settingsCategories.addModalTitleEdit') : t('settingsCategories.addModalTitleNew')
+    const deskBody = (
         <div className={dk.layout}>
           <div className={deskStyles.fill}>
             <label className={dk.lbl}>{t('settingsCategories.nameLabel')}</label>
@@ -202,7 +201,14 @@ export function CategoryFormModal({ open, onClose, editingCat = null, profile, o
                   </button>
                 )
               })}
+              {/* Color personalizado (v0.9.928): el mismo selector propio del móvil. */}
+              <button type="button" aria-label={t('settingsCategories.mobile.customColor')} aria-pressed={customOn}
+                onClick={() => { if (!customOn) setFormColor(colorToHex(formColor) || '#F5A623') }}
+                className={`${dk.sw} ${customOn ? dk.swOn : dk.rainbow}`} style={customOn ? { background: formColor } : undefined}>
+                {customOn && <Check size={16} color={catInk(formColor)} strokeWidth={3} />}
+              </button>
             </div>
+            {customOn && <ColorPickerPanel value={formColor} onChange={setFormColor} />}
           </div>
 
           <div className={dk.side}>
@@ -232,7 +238,34 @@ export function CategoryFormModal({ open, onClose, editingCat = null, profile, o
             ))}
           </div>
         </div>
-      </DeskPage>
+    )
+    if (inline) {
+      return (
+        <DeskPage>
+          <DeskSettingsHead
+            title={deskTitle}
+            description={t('settingsCategories.desk.formDesc')}
+            actions={<button type="button" className={`${deskStyles.btn} ${deskStyles.btnSoft}`} onClick={onClose}><ChevronLeft size={16} />{t('buttons.back')}</button>}
+          />
+          {deskBody}
+        </DeskPage>
+      )
+    }
+    // Escritorio, desde el formulario de pago (v0.9.928): mismo formulario como
+    // diálogo, encima del de pago (z 450 > 200).
+    return (
+      <div onClick={e => e.target === e.currentTarget && onClose()} className={dkp.overlay} style={{ zIndex: zIndex || 450 }} data-presence="overlay" data-closing={closing ? '' : undefined}>
+        <div className={`${dkp.dialog} ${dk.dialogWide}`} role="dialog" aria-modal="true" aria-label={deskTitle} data-presence="panel" data-closing={closing ? '' : undefined}>
+          <div className={dkp.head}>
+            <div>
+              <h2 className={dkp.title}>{deskTitle}</h2>
+              <div className={dkp.sub}>{t('settingsCategories.desk.formDesc')}</div>
+            </div>
+            <button type="button" className={dkp.close} onClick={onClose} aria-label={t('buttons.close')}><X size={16} /></button>
+          </div>
+          {deskBody}
+        </div>
+      </div>
     )
   }
 

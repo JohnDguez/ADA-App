@@ -15,7 +15,14 @@ export function useAnchor(open) {
   const ref = useRef(null)
   const was = useRef(false)
   // Se resuelve al pasar de cerrado a abierto; al cerrar se conserva para la animación de salida.
-  if (open && !was.current) ref.current = resolveAnchor()
+  if (open && !was.current) {
+    ref.current = resolveAnchor()
+    // Se guarda también la posición: si el elemento desaparece (el menú que lo
+    // contenía se cierra, la fila se vuelve a dibujar al procesar el pago) el
+    // popover se queda donde estaba en vez de no aparecer (v0.9.928).
+    const b = ref.current?.getBoundingClientRect()
+    ref.rect = b ? { left: b.left, top: b.top, right: b.right, bottom: b.bottom, width: b.width, height: b.height } : null
+  }
   was.current = !!open
   return ref
 }
@@ -29,8 +36,13 @@ export function AnchoredPop({ open, onClose, anchorRef, width = 420, label, chil
     if (!render) return undefined
     function place() {
       const a = anchorRef.current
-      if (!a || !document.contains(a)) return
-      const r = a.getBoundingClientRect()
+      let r = anchorRef.rect
+      if (a && document.contains(a)) {
+        const b = a.getBoundingClientRect()
+        r = { left: b.left, top: b.top, right: b.right, bottom: b.bottom, width: b.width, height: b.height }
+        anchorRef.rect = r
+      }
+      if (!r) return
       const w = Math.min(width, window.innerWidth - 24)
       // Centrado bajo el botón, sin salirse de la ventana.
       const left = Math.max(12, Math.min(r.left + r.width / 2 - w / 2, window.innerWidth - w - 12))

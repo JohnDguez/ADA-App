@@ -31,3 +31,7 @@ input.input:focus { box-shadow: inset 0 0 0 2px var(--accent); }
   .ib:not(.ibOn):hover { background: var(--desk-hair); translate: none; filter: none; }
   .sw:hover, .delete:hover { translate: none; filter: none; }
 }
+
+/* Color personalizado y diálogo (v0.9.928) */
+.rainbow { background: conic-gradient(from 0deg, hsl(0 85% 58%), hsl(45 90% 58%), hsl(90 75% 52%), hsl(150 70% 48%), hsl(200 85% 55%), hsl(260 80% 62%), hsl(310 80% 60%), hsl(360 85% 58%)); }
+.dialogWide.dialogWide { width: 880px; }

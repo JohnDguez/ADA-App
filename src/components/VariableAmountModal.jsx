@@ -6,9 +6,16 @@ import styles from './VariableAmountModal.module.css'
 import { markBackHandled } from '../lib/backNav'
 import { ModalSheet, SheetButton } from './ModalSheet'
 import { Coins } from '@phosphor-icons/react/dist/csr/Coins'
+import { AnchoredPop, useAnchor } from './AnchoredPop'
+import { useIsDesktop } from '../hooks/useIsDesktop'
 
 export function VariableAmountModal({ open, payment, mode = 'pay', spacePermissions, onConfirm, onClose }) {
   const { t } = useTranslation()
+  // Escritorio (≥1100px, v0.9.928): popover anclado al botón que lo abrió; sin
+  // ancla, o en móvil/tablet, sigue siendo la hoja de siempre.
+  const desk = useIsDesktop()
+  const anchorRef = useAnchor(open)
+  const asPop = desk && !!anchorRef.current
   const [amount, setAmount] = useState('')
   const [error, setError] = useState('')
   const [confirmClose, setConfirmClose] = useState(false)
@@ -50,6 +57,33 @@ export function VariableAmountModal({ open, payment, mode = 'pay', spacePermissi
   }
 
   if (!payment) return null
+
+  if (asPop) {
+    const title = mode === 'estimate' ? t('variableAmountModal.titleEstimate') : t('variableAmountModal.titlePay')
+    return (
+      <>
+        <AnchoredPop open={!!open} onClose={requestClose} anchorRef={anchorRef} width={360} label={title}>
+          <h2 className={styles.deskTitle}>{title}</h2>
+          <div className={styles.deskSub}>{payment.name} — {mode === 'estimate' ? t('variableAmountModal.descriptionEstimate') : t('variableAmountModal.descriptionPay')}</div>
+          {!allowed && (
+            <div className={styles.deskBox}>
+              {t('paymentsPage.blockedAction', { action: mode === 'estimate' ? t('paymentsPage.actionEditPayments') : t('paymentsPage.actionMarkPayments') })}
+            </div>
+          )}
+          {error && <div className={styles.deskBox}>{error}</div>}
+          <div className={`${styles.deskField} ${!allowed ? styles.formDisabled : ''}`}>
+            <label className="field-label">{mode === 'estimate' ? t('variableAmountModal.amountLabelEstimate') : t('variableAmountModal.amountLabelPay')}</label>
+            <AmountInput autoFocus value={amount} onChange={e => setAmount(e.target.value)} placeholder="0.00" onKeyDown={e => e.key === 'Enter' && handleConfirm()} className="field-input" />
+          </div>
+          <div className={styles.deskFoot}>
+            <button type="button" onClick={requestClose} className={styles.deskCancel}>{t('buttons.cancel')}</button>
+            <button type="button" onClick={handleConfirm} disabled={!allowed} className={`btn-primary ${styles.deskSave}`}>{mode === 'estimate' ? t('variableAmountModal.saveEstimate') : t('variableAmountModal.savePay')}</button>
+          </div>
+        </AnchoredPop>
+        <ConfirmCloseModal open={confirmClose} onConfirm={() => { setConfirmClose(false); onClose() }} onCancel={() => setConfirmClose(false)} />
+      </>
+    )
+  }
 
   return (
     <>

@@ -32,3 +32,12 @@
 .input {
   margin-bottom: 14px;
 }
+
+/* Popover de escritorio (v0.9.928) */
+.deskTitle { margin: 0; font-size: 19px; font-weight: 700; letter-spacing: -0.3px; color: var(--text); }
+.deskSub { margin-top: 2px; font-size: 13px; color: var(--muted); }
+.deskBox { margin-top: 12px; padding: 10px 14px; border-radius: 14px; background: var(--desk-chip); font-size: 13px; color: var(--text); }
+.deskField { margin-top: 16px; }
+.deskFoot { display: flex; gap: 10px; margin-top: 20px; }
+.deskCancel { height: 44px; padding: 0 22px; border: 0; border-radius: 99px; background: var(--desk-chip); color: var(--text); font-size: 14px; font-weight: 600; cursor: pointer; }
+.deskFoot .deskSave { flex: 1; width: auto; margin: 0; height: 44px; border-radius: 99px; font-size: 14px; font-weight: 700; }
