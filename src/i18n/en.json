@@ -1336,7 +1336,9 @@
     "clearFilter": "Clear filter",
     "paymentsIn": "Payments · {{cat}}",
     "monthlyIn": "Monthly expenses · {{cat}}",
-    "noPaymentsInCategory": "No {{cat}} payments in this period"
+    "noPaymentsInCategory": "No {{cat}} payments in this period",
+    "showMoreCats": "Show the other {{count}}",
+    "showLessCats": "Show less"
   },
   "deskHome": {
     "import": "Import",

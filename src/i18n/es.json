@@ -1336,7 +1336,9 @@
     "clearFilter": "Quitar filtro",
     "paymentsIn": "Pagos · {{cat}}",
     "monthlyIn": "Gastos mensuales · {{cat}}",
-    "noPaymentsInCategory": "Sin pagos de {{cat}} en este periodo"
+    "noPaymentsInCategory": "Sin pagos de {{cat}} en este periodo",
+    "showMoreCats": "Ver las {{count}} restantes",
+    "showLessCats": "Ver menos"
   },
   "deskHome": {
     "import": "Importar",

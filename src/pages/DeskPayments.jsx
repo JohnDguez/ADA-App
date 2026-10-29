@@ -1,6 +1,6 @@
-import { useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Plus, ChevronRight, MoreVertical, Eye, Loader2, Pencil } from 'lucide-react'
+import { Plus, ChevronRight, ChevronDown, MoreVertical, Eye, Loader2, Pencil } from 'lucide-react'
 import { MonthPicker } from '../components/MonthPicker'
 import { NewSharedSpacePanel } from '../components/NewSharedSpacePanel'
 import { EmptyState } from '../components/EmptyState'
@@ -101,10 +101,32 @@ export function DeskPayments({ d, tablet = false }) {
     return t('paymentsPage.subtitle')
   }, [i18n.language, t])
 
-  // Tablet vertical (mockup «12 meses y muchas categorías», opción B): las dos tarjetas van lado a lado
-  // solo con 3 meses y hasta 6 categorías; si no, cada una a ancho completo.
-  const wideCards = tablet && (chart.monthsBack >= 6 || catData.length > 6)
+  // Tablet: lista de categorías plegable («Ver las N restantes», mockup Opción F). Vertical
+  // muestra 8; horizontal (≥960px, columna angosta) muestra 6.
+  const [catsOpen, setCatsOpen] = useState(false)
+  const [landscape, setLandscape] = useState(() => typeof window !== 'undefined' && window.matchMedia('(min-width: 960px)').matches)
+  useEffect(() => {
+    if (!tablet) return undefined
+    const mq = window.matchMedia('(min-width: 960px)')
+    const on = e => setLandscape(e.matches)
+    mq.addEventListener('change', on)
+    return () => mq.removeEventListener('change', on)
+  }, [tablet])
+  const catLimit = landscape ? 6 : 8
+  const hiddenCats = tablet ? catData.slice(catLimit) : []
+  const catsExpanded = catsOpen || (!!selectedCat && hiddenCats.some(c => c.cat === selectedCat))
+
   const tone = balance.sobrePasado ? styles.fillOver : balance.gastoPct >= 75 ? styles.fillWarn : ''
+
+  const legendBtn = ({ cat, total }) => (
+    <button key={cat} type="button" onClick={() => setSelectedCat(selectedCat === cat ? null : cat)}
+      className={`${styles.legendItem} ${selectedCat === cat ? styles.legendOn : ''} ${selectedCat && selectedCat !== cat ? styles.legendDim : ''}`}
+      aria-pressed={selectedCat === cat}>
+      <i style={{ background: catColor(cat) }} />
+      <span title={getCategoryLabel(cat)}>{getCategoryLabel(cat)}</span>
+      <b>{fmt(total).replace(/\.\d+$/, '')}</b>
+    </button>
+  )
 
   return (
     <div className={`${home.root} ${tablet ? `${home.tablet} ${home.payTab} ${styles.tabPay}` : ''}`}>
@@ -126,7 +148,7 @@ export function DeskPayments({ d, tablet = false }) {
       </header>
 
       <div className={`${home.fill} ${slideClass || ''}`}>
-        <div className={`${home.fill} ${tablet ? styles.tabGrid : ''} ${wideCards ? styles.tabWide : ''} ${spaceJustChanged ? 'content-slide-up' : ''}`}>
+        <div className={`${home.fill} ${tablet ? styles.tabGrid : ''} ${spaceJustChanged ? 'content-slide-up' : ''}`}>
           {rawActiveSpaceId === 'new' ? (
             <NewSharedSpacePanel profile={profile} sharedSpaces={sharedSpaces} onOpenPremium={onOpenPremium} onCreated={onSpaceReady} onJoined={onSpaceReady} />
           ) : (
@@ -350,6 +372,28 @@ export function DeskPayments({ d, tablet = false }) {
                       <>
                         <CategoryRing cats={catData} selectedCat={selectedCat} profile={profile} totalAll={totalCats}
                           centerAmount={centerAmount} centerLabel={centerLabel} label={t('paymentsPage.byCategory')} />
+                        {tablet ? (
+                          <div className={styles.legendBox}>
+                            <div className={styles.legend}>
+                              {catData.slice(0, catLimit).map(c => legendBtn(c))}
+                            </div>
+                            {hiddenCats.length > 0 && (
+                              <>
+                                <div className={`${styles.legendMore} ${catsExpanded ? styles.legendMoreOpen : ''}`} aria-hidden={!catsExpanded}>
+                                  <div className={styles.legend} {...(!catsExpanded ? { inert: '' } : {})}>
+                                    {hiddenCats.map(c => legendBtn(c))}
+                                  </div>
+                                </div>
+                                {!selectedCat || !hiddenCats.some(c => c.cat === selectedCat) ? (
+                                  <button type="button" className={styles.moreBtn} aria-expanded={catsExpanded} onClick={() => setCatsOpen(v => !v)}>
+                                    {catsExpanded ? t('deskPayments.showLessCats') : t('deskPayments.showMoreCats', { count: hiddenCats.length })}
+                                    <ChevronDown size={14} strokeWidth={2.2} className={catsExpanded ? styles.moreChevOpen : ''} />
+                                  </button>
+                                ) : null}
+                              </>
+                            )}
+                          </div>
+                        ) : (
                         <div className={styles.legend}>
                           {catData.map(({ cat, total }) => (
                             <button key={cat} type="button" onClick={() => setSelectedCat(selectedCat === cat ? null : cat)}
@@ -361,6 +405,7 @@ export function DeskPayments({ d, tablet = false }) {
                             </button>
                           ))}
                         </div>
+                        )}
                       </>
                     )}
                   </section>
@@ -381,7 +426,28 @@ export function DeskPayments({ d, tablet = false }) {
                     </section>
                   )}
 
-                  {onGoCards && !activeSpaceId && (
+                  {onGoCards && !activeSpaceId && (tablet ? (
+                    <button type="button" className={`${home.card} ${styles.cardsTab} ${styles.cCards}`} onClick={onGoCards}>
+                      <span className={styles.cardsTabHead}>
+                        <span>
+                          <b>{t('paymentsPage.myCards')}</b>
+                          <em>{paymentMethodsList.length > 0 ? t('paymentsPage.myCardsCount', { count: paymentMethodsList.length }) : t('paymentsPage.myCardsEmpty')}</em>
+                        </span>
+                        <i className={styles.go}><ChevronRight size={16} strokeWidth={2} /></i>
+                      </span>
+                      {paymentMethodsList.length > 0 && (
+                        <span className={styles.miniCards}>
+                          {paymentMethodsList.slice(0, 3).map((m, i) => (
+                            <span key={m.id} className={styles.miniCard} style={{ background: bankColorVar(m.bank), zIndex: i }}>
+                              <b>{getBank(m.bank).id === 'otro' ? (m.alias || t('cards.otherBank')) : getBank(m.bank).name}</b>
+                              <small>{t(m.kind === 'credit' ? 'cards.kind.credit' : 'cards.kind.debit')}</small>
+                            </span>
+                          ))}
+                          {paymentMethodsList.length > 3 && <span className={styles.miniMore}>+{paymentMethodsList.length - 3}</span>}
+                        </span>
+                      )}
+                    </button>
+                  ) : (
                     <button type="button" className={`${home.card} ${styles.cardsRow} ${styles.cCards}`} onClick={onGoCards}>
                       <span>
                         <b>{t('paymentsPage.myCards')}</b>
@@ -389,7 +455,7 @@ export function DeskPayments({ d, tablet = false }) {
                       </span>
                       <i className={styles.go}><ChevronRight size={16} strokeWidth={2} /></i>
                     </button>
-                  )}
+                  ))}
                 </aside>
               </div>
             </>
