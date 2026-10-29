@@ -796,7 +796,7 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onSaveC
               </div>
               {initial.is_paid && (
                 <Field label={t('paymentModal.paidDateLabel')}>
-                  <DatePicker value={paidAt} onChange={setPaidAt} />
+                  <DatePicker value={paidAt} onChange={setPaidAt} sheet sheetTitle={t('paymentModal.paidDateLabel')} />
                 </Field>
               )}
               {methodsAvailable && (
@@ -860,7 +860,7 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onSaveC
                   pagada; una pendiente no tiene una que corregir todavía. */}
               {initial.is_paid && (
                 <Field label={t('paymentModal.paidDateLabel')}>
-                  <DatePicker value={paidAt} onChange={setPaidAt} />
+                  <DatePicker value={paidAt} onChange={setPaidAt} sheet sheetTitle={t('paymentModal.paidDateLabel')} />
                 </Field>
               )}
               {/* Se paga con (v0.9.494) — mismo campo que el resto del
