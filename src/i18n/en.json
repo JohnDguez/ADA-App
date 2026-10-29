@@ -1238,7 +1238,8 @@
     "payments": "Payments",
     "recurrents": "Recurring",
     "goals": "Goals",
-    "add": "Add payment"
+    "add": "Add payment",
+    "settings": "Settings"
   },
   "deskSidebar": {
     "menu": "Menu",

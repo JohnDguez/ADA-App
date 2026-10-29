@@ -37,7 +37,7 @@ export function MobileSettings({
   const { t } = useTranslation()
   return (
     <div className={styles.root}>
-      <PageHeader {...headerProps} variant="home" title={t('settingsPage.headTitle')} />
+      <PageHeader {...headerProps} variant="home" title={t('settingsPage.headTitle')} hideAvatar />
 
       <div className={styles.body}>
         <section className={`${styles.group} ${styles.card} ${styles.profile}`} style={{ '--i': 0 }}>

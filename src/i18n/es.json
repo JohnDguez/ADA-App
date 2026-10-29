@@ -1238,7 +1238,8 @@
     "payments": "Pagos",
     "recurrents": "Recurrentes",
     "goals": "Metas",
-    "add": "Agregar pago"
+    "add": "Agregar pago",
+    "settings": "Ajustes"
   },
   "deskSidebar": {
     "menu": "Menú",

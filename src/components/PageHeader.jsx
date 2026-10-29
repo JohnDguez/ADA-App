@@ -26,7 +26,7 @@ function nameFontSize(name) {
   return 13
 }
 
-export function PageHeader({ profile, unreadCount, onOpenNotifs, onGoSettings, onOpenPremium, variant, title }) {
+export function PageHeader({ profile, unreadCount, onOpenNotifs, onGoSettings, onOpenPremium, variant, title, hideAvatar }) {
   const { t, i18n: i18nHook } = useTranslation()
   const initials = (profile?.name || 'U').slice(0, 2).toUpperCase()
 
@@ -69,6 +69,7 @@ export function PageHeader({ profile, unreadCount, onOpenNotifs, onGoSettings, o
               </button>
               {unreadCount > 0 && <span className={styles.unreadBadge} aria-hidden="true">{formatBadgeCount(unreadCount)}</span>}
             </div>
+            {!hideAvatar && (
             <button data-coachmark="home-settings-gear" onClick={onGoSettings} className={styles.homeAvatarBtn} aria-label={t('pageHeader.settingsAriaLabel')}>
               <div className={styles.avatarWrapper}>
                 <AvatarImg
@@ -80,6 +81,7 @@ export function PageHeader({ profile, unreadCount, onOpenNotifs, onGoSettings, o
                 {profile?.is_premium && <div className={styles.premiumBadge}><Crown size={11} fill="currentColor" /></div>}
               </div>
             </button>
+            )}
           </div>
         </div>
       </div>

@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next'
-import { Plus } from 'lucide-react'
+import { Plus, Settings } from 'lucide-react'
 import { NAV_ITEMS } from '../lib/constants'
 import styles from './BottomNav.module.css'
 
@@ -18,6 +18,10 @@ export function BottomNav({ active, onChange, onAdd, addOpen = false }) {
         {NAV_ITEMS.map(({ id, Icon, labelKey }) => (
           <TabBtn key={id} id={id} Icon={Icon} label={t(labelKey)} active={active === id} onChange={onChange} />
         ))}
+        {/* Ajustes (v0.9.914): quinta pestaña, acceso visible en lugar de depender
+            de tocar la foto del encabezado. Solo móvil: tablet/desktop ya lo
+            tienen en NavRail. */}
+        <TabBtn id="settings" Icon={Settings} label={t('bottomNav.settings')} active={active === 'settings'} onChange={onChange} />
       </nav>
       <button
         data-coachmark="home-add-button"
