@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Plus, ChevronRight, MoreVertical, Eye, Loader2, Pencil } from 'lucide-react'
+import { MonthPicker } from '../components/MonthPicker'
 import { NewSharedSpacePanel } from '../components/NewSharedSpacePanel'
 import { EmptyState } from '../components/EmptyState'
 import { PaidByStack } from '../components/PaidByStack'
@@ -35,7 +36,7 @@ function fmtShort(n) {
   return `$${num.toLocaleString('es-MX', { maximumFractionDigits: 0 })}`
 }
 
-export function DeskPayments({ d }) {
+export function DeskPayments({ d, tablet = false }) {
   const { t, i18n } = useTranslation()
   const {
     profile, dataLoading, activeSpaceId, rawActiveSpaceId, sharedSpaces, spacePermissions, spaceMembers, paymentMethodsList,
@@ -103,8 +104,8 @@ export function DeskPayments({ d }) {
   const tone = balance.sobrePasado ? styles.fillOver : balance.gastoPct >= 75 ? styles.fillWarn : ''
 
   return (
-    <div className={home.root}>
-      <header className={home.head}>
+    <div className={`${home.root} ${tablet ? `${home.tablet} ${home.payTab} ${styles.tabPay}` : ''}`}>
+      <header className={`${home.head} ${tablet ? styles.tabHeader : ''}`}>
         <div className={home.band} aria-hidden="true">
           {mountedKeys.map(key => (
             <img key={key} src={HEADER_IMAGES[key]} alt="" className={`${home.bandImg} ${timeOfDay === key ? home.bandImgOn : ''}`} />
@@ -114,20 +115,22 @@ export function DeskPayments({ d }) {
           <div className={home.date}>{dateStr}</div>
           <h1 className={home.hello}>{t('paymentsPage.title')}</h1>
         </div>
-        <div className={home.actions}>
-          <DeskAddButton onAdd={onAdd} onStartAdd={onStartAdd} />
-        </div>
+        {!tablet && (
+          <div className={home.actions}>
+            <DeskAddButton onAdd={onAdd} onStartAdd={onStartAdd} />
+          </div>
+        )}
       </header>
 
       <div className={`${home.fill} ${slideClass || ''}`}>
-        <div className={`${home.fill} ${spaceJustChanged ? 'content-slide-up' : ''}`}>
+        <div className={`${home.fill} ${tablet ? styles.tabGrid : ''} ${spaceJustChanged ? 'content-slide-up' : ''}`}>
           {rawActiveSpaceId === 'new' ? (
             <NewSharedSpacePanel profile={profile} sharedSpaces={sharedSpaces} onOpenPremium={onOpenPremium} onCreated={onSpaceReady} onJoined={onSpaceReady} />
           ) : (
             <>
               <section className={`${home.tiles} ${activeSpaceId ? home.tiles3 : ''}`}>
                 {/* Disponible este periodo — no aplica en un Espacio Compartido (no tiene ingreso fijo) */}
-                {!activeSpaceId && <div data-coachmark="gastos-disponible-card" className={`${home.tile} ${home.tileHero} ${!balance.loading && !balance.noIncomeYet && balance.sobrePasado ? styles.heroNeg : ''}`}>
+                {!activeSpaceId && <div data-coachmark="gastos-disponible-card" className={`${home.tile} ${home.tileHero} ${styles.tHero} ${!balance.loading && !balance.noIncomeYet && balance.sobrePasado ? styles.heroNeg : ''}`}>
                   <span className={home.tileLabel}>{t('paymentsPage.availableThisPeriod')}</span>
                   {balance.noIncomeYet ? (
                     <>
@@ -138,20 +141,20 @@ export function DeskPayments({ d }) {
                     <>
                       <span className={home.tileNum}>{balance.loading ? <Bone w={150} h={36} r={8} /> : <>{availInt}<small>{availCents}</small></>}</span>
                       <div className={styles.heroTrack}><i className={`${styles.heroFill} ${tone}`} style={{ width: `${balance.loading ? 0 : balance.gastoPct}%` }} /></div>
-                      <span className={home.tileSub}>{balance.loading ? '' : t('deskPayments.usedPct', { pct: Math.round(balance.gastoPct) })}</span>
+                      <span className={home.tileSub}>{balance.loading ? '' : t('deskPayments.usedPct', { pct: Math.round(balance.gastoPct) })}{tablet && !balance.loading && <span className={styles.subSecond}>{t('paymentsPage.periodIncome')} {fmt(balance.ingresoTotal)}</span>}</span>
                     </>
                   )}
                 </div>}
 
                 {/* Gastado */}
-                <div className={home.tile}>
+                <div className={`${home.tile} ${styles.tSpent}`}>
                   <span className={home.tileLabel}>{t('paymentsPage.spent')}</span>
                   <span className={home.tileNum}>{balance.loading ? <Bone w={150} h={36} r={8} /> : <>{spentInt}<small>{spentCents}</small></>}</span>
                   <span className={home.tileSub}>{balance.loading || activeSpaceId ? '' : t('deskPayments.ofIncome', { amount: fmt(balance.ingresoTotal) })}</span>
                 </div>
 
                 {/* Ingresos extra (personal) o Fondo compartido (espacio) */}
-                <div className={home.tile}>
+                <div className={`${home.tile} ${styles.tExtra}`}>
                   {activeSpaceId ? (
                     (spacePermissions?.can_add_funds || !spacePermissions?.isRestricted) && (
                       <button type="button" className={styles.tileAdd} onClick={fund.onAdd}><Plus size={14} strokeWidth={2.4} />{t('deskPayments.addShort')}</button>
@@ -173,7 +176,7 @@ export function DeskPayments({ d }) {
                 </div>
 
                 {/* Promedio mensual */}
-                <div className={home.tile}>
+                <div className={`${home.tile} ${styles.tAvg}`}>
                   <span className={home.tileLabel}>{t('paymentsPage.monthlyAverage')}</span>
                   <span className={home.tileNum}>{dataLoading ? <Bone w={130} h={36} r={8} /> : avgInt}</span>
                   <span className={home.tileSub}>{dataLoading ? '' : <>{t('paymentsPage.totalMonths', { count: chart.monthsBack })} <b>{fmt(chart.grandTotal)}</b></>}</span>
@@ -183,6 +186,26 @@ export function DeskPayments({ d }) {
               <div className={home.body}>
                 {/* ── Pagos ── */}
                 <section className={home.list}>
+                  {tablet ? (
+                    <div className={styles.tabListTop}>
+                      <div>
+                        <h2 className={home.cardTitle}>{selectedLabel ? t('deskPayments.paymentsIn', { cat: selectedLabel }) : t('paymentsPage.paymentsTitle')}</h2>
+                        {visibleRows.length > 0 && (
+                          <span className={styles.totalText}>
+                            {t('paymentsPage.total')} <b>{fmt(visibleTotal)}</b>
+                            {selectedCat && <> · <button type="button" className={styles.linkBtn} onClick={() => setSelectedCat(null)}>{t('deskPayments.clearFilter')}</button></>}
+                          </span>
+                        )}
+                      </div>
+                      <div className={home.chips} role="tablist">
+                        <button type="button" role="tab" aria-selected={view.mode === 'periodo'} className={`${home.chip} ${view.mode === 'periodo' ? home.chipOn : ''}`} onClick={() => view.setMode('periodo')}>{t('homePage.tabs.currentPeriod')}</button>
+                        {view.mode === 'mes'
+                          ? <MonthPicker month={view.month} year={view.year} years={view.years} className={`${home.chip} ${home.chipOn}`} onChange={(m, y) => { view.setMonth(m); view.setYear(y) }} />
+                          : <button type="button" role="tab" aria-selected={false} className={home.chip} onClick={() => view.setMode('mes')}>{t('paymentsPage.byMonth')}</button>}
+                      </div>
+                    </div>
+                  ) : (
+                  <>
                   <div className={styles.listTop}>
                     <h2 className={home.cardTitle}>{selectedLabel ? t('deskPayments.paymentsIn', { cat: selectedLabel }) : t('paymentsPage.paymentsTitle')}</h2>
                     {visibleRows.length > 0 && (
@@ -205,6 +228,9 @@ export function DeskPayments({ d }) {
                       </div>
                     )}
                   </div>
+
+                  </>
+                  )}
 
                   {visibleRows.length === 0 ? (
                     <div className={`${home.listBody} scroll-y`}>
@@ -236,6 +262,7 @@ export function DeskPayments({ d }) {
                                 {p.is_installment && <em>{p.current_installment}/{p.total_installments}</em>}
                                 {p.is_variable && <em>{t('paymentsPage.variable')}</em>}
                               </div>
+                              <div className={styles.catMeth}>
                               <div className={styles.cat}>
                                 {p.is_postponed ? (
                                   <span className={styles.postponed}>{t('payCard.status.postponed')}</span>
@@ -260,6 +287,7 @@ export function DeskPayments({ d }) {
                                   </>
                                 )}
                               </div>
+                              </div>
                               <div className={`${styles.amount} ${p.is_postponed ? styles.amountMuted : ''}`}>{fmt(p.amount)}</div>
                               <div className={styles.menuCell}>
                                 {p.is_contribution_reflection ? (
@@ -280,7 +308,7 @@ export function DeskPayments({ d }) {
 
                 {/* ── Columna derecha ── */}
                 <aside className={home.side}>
-                  <section data-coachmark="gastos-monthly-chart" className={home.card}>
+                  <section data-coachmark="gastos-monthly-chart" className={`${home.card} ${styles.cMonthly}`}>
                     <h2 className={home.cardTitle}>{selectedLabel ? t('deskPayments.monthlyIn', { cat: selectedLabel }) : t('paymentsPage.monthlyExpenses')}</h2>
                     <div className={home.chips}>
                       {[3, 6, 12].map(n => (
@@ -307,7 +335,7 @@ export function DeskPayments({ d }) {
                     </div>
                   </section>
 
-                  <section data-coachmark="gastos-category-chips" className={home.card}>
+                  <section data-coachmark="gastos-category-chips" className={`${home.card} ${styles.cCat}`}>
                     <h2 className={home.cardTitle}>{t('paymentsPage.byCategory')}</h2>
                     {catData.length > 0 && <p className={styles.hint}>{selectedCat ? t('deskPayments.hintActive', { cat: selectedLabel }) : t('deskPayments.hint')}</p>}
                     {catData.length === 0 ? (
@@ -335,7 +363,7 @@ export function DeskPayments({ d }) {
                   </section>
 
                   {methodData.total > 0 && (
-                    <section className={home.card}>
+                    <section className={`${home.card} ${styles.cMethod}`}>
                       <h2 className={home.cardTitle}>{t('paymentsPage.byMethod')}</h2>
                       <div className={styles.methodBar}>
                         {[['cash', t('paymentMethod.cash')], ['debit', t('cards.kind.debit')], ['credit', t('cards.kind.credit')]].filter(([k]) => methodData[k] > 0).map(([k]) => (
@@ -351,7 +379,7 @@ export function DeskPayments({ d }) {
                   )}
 
                   {onGoCards && !activeSpaceId && (
-                    <button type="button" className={`${home.card} ${styles.cardsRow}`} onClick={onGoCards}>
+                    <button type="button" className={`${home.card} ${styles.cardsRow} ${styles.cCards}`} onClick={onGoCards}>
                       <span>
                         <b>{t('paymentsPage.myCards')}</b>
                         <em>{paymentMethodsList.length > 0 ? t('paymentsPage.myCardsCount', { count: paymentMethodsList.length }) : t('paymentsPage.myCardsEmpty')}</em>

@@ -333,3 +333,37 @@
   .tablet .listHead .chips { margin-bottom: 0; }
   .tablet .listHead .chip { height: 34px; padding: 0 14px; font-size: 13px; }
 }
+
+/* Gastos e ingresos en tablet (mockup «Tablet: Gastos» aprobado): DeskPayments
+   reutiliza este módulo con las clases `.tablet` + `.payTab`. */
+@media (min-width: 768px) and (max-width: 1099px) {
+  .payTab .head { min-height: 118px; }
+  .payTab .list { overflow: visible; }
+}
+@media (max-width: 959px) {
+  .payTab .list { grid-column: 1 / -1; grid-row: 3; margin-inline: 7px; }
+  .payTab .listBody { overflow: visible; flex: none; }
+  .payTab .tileHero {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas: "label sub" "num sub" "track track";
+    align-items: center;
+    column-gap: 16px;
+    min-height: 0;
+    padding: 20px 24px;
+  }
+  .payTab .tileHero .tileLabel { grid-area: label; align-self: end; font-weight: 400; font-size: 14px; opacity: 0.8; }
+  .payTab .tileHero .tileNum { grid-area: num; margin-top: 6px; align-self: start; font-size: 44px; }
+  .payTab .tileHero .tileNum small { font-size: 24px; }
+  .payTab .tileHero .tileSub { grid-area: sub; margin: 0; min-height: 0; text-align: right; line-height: 1.5; font-size: 14px; }
+  .payTab .tileHero > div { grid-area: track; }
+  .payTab .tile:not(.tileHero) { min-height: 0; padding: 16px 18px; justify-content: center; gap: 3px; }
+  .payTab .tile:not(.tileHero) .tileLabel { font-size: 14px; font-weight: 400; color: var(--muted); }
+  .payTab .tile:not(.tileHero) .tileNum { margin-top: 0; font-size: 27px; letter-spacing: -1px; line-height: 1.1; }
+  .payTab .tile:not(.tileHero) .tileNum small { font-size: 15px; }
+  .payTab .tile:not(.tileHero) .tileSub { margin-top: 0; min-height: 0; font-size: 12px; }
+}
+@media (min-width: 960px) and (max-width: 1099px) {
+  .payTab .tileHero .tileSub { display: none; }
+  .payTab .tileHero .tileNum { margin-top: 6px; }
+}
