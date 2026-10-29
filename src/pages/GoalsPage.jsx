@@ -69,18 +69,6 @@ export function GoalsPage({
     }
   }, [rawActiveSpaceId])
 
-  // Tablet (≥768px): el botón "Agregar meta" vive en el encabezado y no en
-  // la pastilla fija de abajo. Se renderiza SOLO uno de los dos (nunca
-  // ambos ocultos por CSS) para que el coach mark `metas-add-pill` apunte
-  // siempre al que se ve.
-  const [isTablet, setIsTablet] = useState(() => typeof window !== 'undefined' && window.matchMedia('(min-width: 768px)').matches)
-  useEffect(() => {
-    const mq = window.matchMedia('(min-width: 768px)')
-    const onChange = e => setIsTablet(e.matches)
-    mq.addEventListener('change', onChange)
-    return () => mq.removeEventListener('change', onChange)
-  }, [])
-
   const [selectedGoalId, setSelectedGoalId] = useState(null)
   const [formOpen, setFormOpen] = useState(false)
   useScrollTop(selectedGoalId, formOpen)
@@ -232,7 +220,7 @@ export function GoalsPage({
         </>
       )}
 
-      {!isDesktop && !isTablet && !selectedGoal && rawActiveSpaceId !== 'new' && (
+      {!isDesktop && !selectedGoal && rawActiveSpaceId !== 'new' && (
         <div data-coachmark="metas-add-pill" className={styles.addPillRow}>
           <button type="button" className={`${styles.addPill} ${(!canAdd && !atFreeLimit) ? styles.addPillDisabled : ''}`} onClick={handleAddClick}>
             <Plus size={18} color="var(--on-color)" />
