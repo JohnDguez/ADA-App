@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next'
 // sub-páginas ya migradas, v0.9.442-447) — import directo para tree-shaking real.
 import { Wallet } from '@phosphor-icons/react/dist/csr/Wallet'
 import { CalendarDots } from '@phosphor-icons/react/dist/csr/CalendarDots'
-import { CalendarDays, CalendarRange, CalendarCheck, Banknote, Coins, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react'
+import { CalendarDays, CalendarRange, CalendarCheck, Banknote, Coins, ChevronDown, ChevronRight } from 'lucide-react'
 import { PageHero } from '../../components/PageHero'
 import { getWeekdaysShort, nextCobroDate } from '../../lib/utils'
 import { showToast } from '../../components/Toast'
@@ -20,6 +20,7 @@ import { DeskSettingsHead, DeskPage } from '../../components/DeskSettingsHead'
 import deskStyles from '../../components/SettingsDesk.module.css'
 import dk from './SettingsCobroDesk.module.css'
 import mb from './SettingsCobroMobile.module.css'
+import { SubpageHeader } from '../../components/SubpageHeader'
 import { useIsMobile } from '../../hooks/useIsMobile'
 
 const BIWEEKLY_PRESETS = [
@@ -186,10 +187,7 @@ export function SettingsCobroPage({ profile, onUpdate, onBack, slideClass }) {
     const dayCtl = v => Math.min(31, Math.max(1, parseInt(v) || 1))
     return (
       <div className={`${slideClass} ${mb.root}`}>
-        <div className={mb.top}>
-          <button type="button" className={mb.back} onClick={onBack} aria-label={t('buttons.back')}><ChevronLeft size={20} /></button>
-          <h1 className={mb.title}>{t('settingsCobro.title')}</h1>
-        </div>
+        <SubpageHeader icon={Wallet} title={t('settingsCobro.title')} onBack={onBack} />
         <p className={mb.desc}>{t('settingsCobro.mobileDescription')}</p>
 
         <div className={mb.cap} style={{ '--i': 0 }}>{t('settingsCobro.periodSection')}</div>

@@ -1,8 +1,5 @@
 /* "Mi suscripción" móvil (<768px, v0.9.915). Regla 54: rem/clamp; Regla 53: entrada escalonada. */
-.root { padding: calc(var(--sat, 0px) + 0.75rem) clamp(0.75rem, 4.2vw, 1.25rem) calc(6.5rem + env(safe-area-inset-bottom)); background: var(--bg); }
-.top { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem; }
-.back { width: 2.5rem; height: 2.5rem; border-radius: 50%; border: 0; background: var(--desk-card); color: var(--text); display: grid; place-items: center; cursor: pointer; padding: 0; box-shadow: var(--desk-shadow); flex-shrink: 0; }
-.title { font-size: 1.25rem; font-weight: 600; margin: 0; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.root { padding: 0.75rem clamp(0.75rem, 4.2vw, 1.25rem) calc(6.5rem + env(safe-area-inset-bottom)); background: var(--bg); }
 .card, .cap { animation: subIn 0.42s cubic-bezier(0.22, 1, 0.36, 1) both; animation-delay: calc(var(--i, 0) * 50ms); }
 @keyframes subIn { from { opacity: 0; transform: translateY(0.5rem); } to { opacity: 1; transform: none; } }
 .card { background: var(--desk-card); border-radius: clamp(1rem, 5vw, 1.25rem); box-shadow: var(--desk-shadow); overflow: hidden; margin-bottom: 0.75rem; }

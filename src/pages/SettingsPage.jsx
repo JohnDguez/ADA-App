@@ -196,6 +196,14 @@ export function SettingsPage({ profile, user, onUpdate, onUploadAvatar, onDataDe
   // sincronizado con el estado real de React (un tap = una entrada consumida).
   const back = () => window.history.back()
 
+  // Tocar la pestaña "Ajustes" del nav estando dentro de una sub-página regresa
+  // al menú (alcanzable con el pulgar; ver App.jsx / BottomNav).
+  useEffect(() => {
+    const goHome = () => { if (sectionRef.current) window.history.back() }
+    window.addEventListener('ada:settings-home', goHome)
+    return () => window.removeEventListener('ada:settings-home', goHome)
+  }, [])
+
   async function handleAvatarChange(e) {
     const file = e.target.files?.[0]
     if (!file) return

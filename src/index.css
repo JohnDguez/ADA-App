@@ -494,6 +494,7 @@ html, body {
 
 #root {
   padding-top: var(--sat);
+  box-sizing: border-box; /* v0.9.918: min-height:100vh incluye el padding de --sat (antes sobraba un scroll vacío) */
   max-width: 420px;
   margin: 0 auto;
   min-height: 100vh;

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Crown, Check, ChevronRight, ChevronLeft, RefreshCw, Clock, ArrowLeftRight, X, Sparkles, Play, ExternalLink } from 'lucide-react'
+import { Crown, Check, ChevronRight, RefreshCw, Clock, ArrowLeftRight, X, Sparkles, Play, ExternalLink } from 'lucide-react'
 // Ícono del encabezado vía Phosphor Icons (mismo patrón que las demás
 // sub-páginas ya migradas, v0.9.442-455) — import directo para tree-shaking real.
 import { Crown as CrownDuotone } from '@phosphor-icons/react/dist/csr/Crown'
@@ -18,6 +18,7 @@ import { DeskSettingsHead, DeskPage } from '../../components/DeskSettingsHead'
 import deskStyles from '../../components/SettingsDesk.module.css'
 import dk from './SettingsSubscriptionDesk.module.css'
 import mb from './SettingsSubscriptionMobile.module.css'
+import { SubpageHeader } from '../../components/SubpageHeader'
 import { useIsMobile } from '../../hooks/useIsMobile'
 
 // Sub-página "Mi suscripción" dentro de Ajustes — solo alcanzable si
@@ -240,10 +241,7 @@ export function SettingsSubscriptionPage({ profile, onOpenPremium, onBack, slide
     const endDate = subscription ? formatRenewDate(subscription.currentPeriodEnd) : ''
     return (
       <div className={`${slideClass} ${mb.root}`}>
-        <div className={mb.top}>
-          <button type="button" className={mb.back} onClick={onBack} aria-label={t('buttons.back')}><ChevronLeft size={20} /></button>
-          <h1 className={mb.title}>{t('settingsSubscription.title')}</h1>
-        </div>
+        <SubpageHeader icon={CrownDuotone} title={t('settingsSubscription.title')} onBack={onBack} accentColor="var(--premium-gold)" />
 
         {premiumSource === 'google_play' && (
           <div className={mb.card} style={{ '--i': 0 }}>

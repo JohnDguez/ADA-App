@@ -1984,7 +1984,7 @@ export default function App() {
 
       <BottomNav
         active={tab}
-        onChange={t => { setAddMenuOpen(false); changeTab(t) }}
+        onChange={t => { setAddMenuOpen(false); if (t === 'settings' && tab === 'settings') window.dispatchEvent(new Event('ada:settings-home')); else changeTab(t) }}
         onAdd={openAddMenu}
         addOpen={addMenuOpen}
         hideAdd={tab === 'settings'}
