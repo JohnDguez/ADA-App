@@ -51,12 +51,10 @@
   margin: 0 auto 16px;
 }
 
-.title {
-  font-size: 16px;
-  font-weight: 500;
-  color: var(--text);
-  margin-bottom: 16px;
-}
+.headRow { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 16px; }
+.title { font-size: 16px; font-weight: 500; color: var(--text); }
+.closeX { display: none; }
+.footer { display: block; }
 
 .fieldGroup {
   margin-bottom: 18px;
@@ -125,4 +123,16 @@
 
 .segIcon {
   flex-shrink: 0;
+}
+
+/* Móvil (<768px, v0.9.922): hoja con ✕ arriba, vista previa compacta y
+   "Guardar" fijo abajo; el "Cancelar" sobra (el ✕ y el scrim cierran). */
+@media (max-width: 767px) {
+  .modal { padding: 0.75rem clamp(0.875rem, 4.5vw, 1.25rem) 0; max-height: 92dvh; border-radius: 1.75rem 1.75rem 0 0; }
+  .handle { margin-bottom: 0.75rem; }
+  .title { font-size: 1.0625rem; font-weight: 600; }
+  .closeX { display: grid; place-items: center; width: 2.125rem; height: 2.125rem; border-radius: 50%; border: 0; background: var(--desk-chip); color: var(--text); cursor: pointer; padding: 0; flex-shrink: 0; }
+  .preview { width: min(100%, 13.5rem); margin-left: auto; margin-right: auto; }
+  .footer { position: sticky; bottom: 0; background: var(--menu-bg); padding: 0.75rem 0 calc(1rem + env(safe-area-inset-bottom)); margin-top: 0.25rem; }
+  :global(.btn-ghost).cancel { display: none; }
 }

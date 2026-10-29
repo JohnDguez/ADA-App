@@ -94,3 +94,8 @@
   text-decoration: underline;
   cursor: pointer;
 }
+
+/* Atajo de monto (móvil, v0.9.922) */
+.quick { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.625rem; }
+.chip { border: 0; background: var(--desk-chip); color: var(--text); font: inherit; font-size: 0.75rem; font-weight: 600; padding: 0.4375rem 0.75rem; border-radius: 99px; cursor: pointer; }
+.chipOn { outline: 2px solid var(--accent); }

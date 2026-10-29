@@ -8,6 +8,7 @@ import styles from './PayCardNowModal.module.css'
 import { useScrollLock } from '../lib/scrollLock'
 import { AnchoredPop, useAnchor } from './AnchoredPop'
 import { useIsDesktop } from '../hooks/useIsDesktop'
+import { useIsMobile } from '../hooks/useIsMobile'
 
 // "Pagar ahora" (v0.9.497, mockups confirmados con Johnatan) — adelantar
 // el pago de una tarjeta de crédito ANTES de que llegue su corte, en vez
@@ -26,6 +27,8 @@ export function PayCardNowModal({ open, card, cycleSpend, methods, onSave, onClo
   // Escritorio (≥1100px, v0.9.879): popover anclado al botón que lo abrió; sin
   // ancla (apertura por código) o en móvil/tablet sigue siendo el modal de siempre.
   const desk = useIsDesktop()
+  // Móvil (v0.9.922): el monto arranca vacío (monto personalizado) con un atajo "Todo".
+  const mobile = useIsMobile()
   const anchorRef = useAnchor(open)
   const lastCard = useRef(card)
   if (card) lastCard.current = card
@@ -56,10 +59,11 @@ export function PayCardNowModal({ open, card, cycleSpend, methods, onSave, onClo
 
   useEffect(() => {
     if (open) {
-      setAmount(cycleSpend > 0 ? String(cycleSpend) : '')
+      setAmount(cycleSpend > 0 && !(mobile && !fixedAmount) ? String(cycleSpend) : '')
       setMethodId(null)
       setError('')
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, cycleSpend])
 
   const showModal = open || closing || wasOpenRef.current
@@ -93,6 +97,13 @@ export function PayCardNowModal({ open, card, cycleSpend, methods, onSave, onClo
           {fixedAmount
             ? <div className="field-input">{fmt(cycleSpend)}</div>
             : <AmountInput className="field-input" value={amount} onChange={e => { setAmount(e.target.value); setError('') }} placeholder="0.00" />}
+          {mobile && !fixedAmount && cycleSpend > 0 && (
+            <div className={styles.quick}>
+              <button type="button" className={`${styles.chip} ${parsed === cycleSpend ? styles.chipOn : ''}`} onClick={() => { setAmount(String(cycleSpend)); setError('') }}>
+                {t('cards.mobile.quickAll', { amount: fmt(cycleSpend) })}
+              </button>
+            </div>
+          )}
         </div>
 
         <div className={styles.fieldGroup}>

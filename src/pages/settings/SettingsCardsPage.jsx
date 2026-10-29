@@ -23,6 +23,8 @@ import deskStyles from '../../components/SettingsDesk.module.css'
 import dk from './SettingsCardsDesk.module.css'
 import styles from './SettingsCardsPage.module.css'
 import { markBackHandled, wasBackHandled } from '../../lib/backNav'
+import { useIsMobile } from '../../hooks/useIsMobile'
+import { SettingsCardsMobile } from './SettingsCardsMobile'
 
 // Mis tarjetas (v0.9.486, entrega A). Actualizado en v0.9.495 (mockups
 // confirmados con Johnatan): tocar una tarjeta ya NO la abre en la propia
@@ -168,6 +170,9 @@ export function SettingsCardsPage({ profile, paymentMethods, personalPayments = 
   const [editing, setEditing] = useState(null)
   const [deleting, setDeleting] = useState(null)
   const [selectedId, setSelectedId] = useState(null)
+  const [openPlans, setOpenPlans] = useState(false)
+  const [focusId, setFocusId] = useState(null)
+  const isMobile = useIsMobile()
   const [isTablet, setIsTablet] = useState(() => typeof window !== 'undefined' && window.matchMedia('(min-width: 768px)').matches)
   useEffect(() => {
     const mq = window.matchMedia('(min-width: 768px)')
@@ -311,6 +316,7 @@ export function SettingsCardsPage({ profile, paymentMethods, personalPayments = 
         <div className={desk ? undefined : `${slideClass} ${styles.pageWrapper}`}>
           <CardDetailPanel
             desk={desk}
+            initialPlansOpen={openPlans}
             card={selectedCard}
             payments={personalPayments}
             spaceNames={Object.fromEntries((sharedSpaces?.spaces || []).map(s => [s.space.id, s.space.name]))}
@@ -452,6 +458,32 @@ export function SettingsCardsPage({ profile, paymentMethods, personalPayments = 
         <CardFormModal open={formOpen} initial={editing} onSave={handleSave} onClose={() => setFormOpen(false)} />
         <ConfirmDeleteModal open={!!deleting} title={t('cards.deleteTitle')} message={t('cards.deleteMessage', { name: deletingName })} onConfirm={confirmDelete} onCancel={() => setDeleting(null)} />
       </DeskPage>
+    )
+  }
+
+  if (isMobile && !desk) {
+    const focused = focusId && cards.some(c => c.id === focusId) ? focusId : cards[0]?.id
+    return (
+      <>
+        <SettingsCardsMobile
+          kind={kind}
+          setKind={setKind}
+          credit={credit}
+          debit={debit}
+          loaded={loaded}
+          info={tabletData?.info || {}}
+          ld={ld}
+          cutsById={cutsById}
+          focusId={focused}
+          setFocusId={setFocusId}
+          onSelect={(c, opts) => { setOpenPlans(!!opts?.plans); setSelectedId(c.id) }}
+          onAdd={openAdd}
+          onBack={onBack}
+          slideClass={slideClass}
+        />
+        <CardFormModal open={formOpen} initial={editing} onSave={handleSave} onClose={() => setFormOpen(false)} />
+        <ConfirmDeleteModal open={!!deleting} title={t('cards.deleteTitle')} message={t('cards.deleteMessage', { name: deletingName })} onConfirm={confirmDelete} onCancel={() => setDeleting(null)} />
+      </>
     )
   }
 

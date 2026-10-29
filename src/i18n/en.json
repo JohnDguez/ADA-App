@@ -2292,6 +2292,24 @@
       "cycleTitle": "Card cycle",
       "paidHint": "Purchases this period",
       "plansDesc": "All deferred purchases on this card."
+    },
+    "mobile": {
+      "owedOf": "Owed · {{name}}",
+      "spentOf": "Spent · {{name}}",
+      "cycle": "Cycle",
+      "cycleDay": "Day {{day}} of {{total}}",
+      "limit": "Due",
+      "plansActive_one": "{{count}} active",
+      "plansActive_other": "{{count}} active",
+      "history": "Transactions",
+      "see": "View",
+      "more": "More info",
+      "less": "Less",
+      "quickAll": "All {{amount}}",
+      "quickStatement": "Statement {{amount}}",
+      "quickCuota": "Monthly installment {{amount}}",
+      "typeAmount": "Type an amount or tap a shortcut.",
+      "debitPreview": "Debit"
     }
   },
   "paymentMethod": {

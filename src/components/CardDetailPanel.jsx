@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
-import { ChevronLeft, ChevronRight, MoreVertical, Pencil, Trash2, Loader2, Users } from 'lucide-react'
+import { ChevronLeft, ChevronRight, MoreVertical, Pencil, Trash2, Loader2, Users, Repeat } from 'lucide-react'
 import { CreditCardVisual } from './CreditCardVisual'
 import { Select } from './Select'
 import { getCategoryLabel, fmt, getMonths, getMonthsShort, today } from '../lib/utils'
@@ -13,6 +13,9 @@ import { useScrollLock } from '../lib/scrollLock'
 import { DeskSettingsHead, DeskPage } from './DeskSettingsHead'
 import deskStyles from './SettingsDesk.module.css'
 import dd from './CardDetailDesk.module.css'
+import md from './CardDetailMobile.module.css'
+import { SubpageHeader } from './SubpageHeader'
+import { CreditCard as CreditCardIcon } from '@phosphor-icons/react/dist/csr/CreditCard'
 
 // Barra segmentada de "Por pagar" (v0.9.587, variante A elegida por Johnatan): un
 // tramo por cada parte de lo que se debe (estado de cuenta, ciclo en curso, planes
@@ -47,13 +50,13 @@ function DebtBar({ debt, label }) {
 //   — normalmente pagados en efectivo, por eso NO califican como
 //   `payment_method_id === card.id`; se identifican aparte).
 // Los pospuestos no cuentan en el total, mismo criterio que Gastos.
-export function CardDetailPanel({ card, payments, onBack, onEdit, onDelete, onPayNow, onSettlePlan, onDeletePlan, spaceNames = {}, canEdit = true, canDelete = true, blocked, desk = false }) {
+export function CardDetailPanel({ card, payments, onBack, onEdit, onDelete, onPayNow, onSettlePlan, onDeletePlan, spaceNames = {}, canEdit = true, canDelete = true, blocked, desk = false, initialPlansOpen = false }) {
   const { t } = useTranslation()
   const [menuOpen, setMenuOpen] = useState(false)
   useScrollLock(menuOpen)
   const menuRef = useRef(null)
   // Pantalla aparte de compras a meses (v0.9.587)
-  const [plansOpen, setPlansOpen] = useState(false)
+  const [plansOpen, setPlansOpen] = useState(initialPlansOpen)
   // Tablet (≥768px, v0.9.777): resumen en 2 columnas, línea del ciclo e
   // historial en tabla.
   const [isTablet, setIsTablet] = useState(() => typeof window !== 'undefined' && window.matchMedia('(min-width: 768px)').matches)
@@ -373,15 +376,9 @@ export function CardDetailPanel({ card, payments, onBack, onEdit, onDelete, onPa
     )
   }
 
-  return (
-    <div className={styles.screen}>
-      <div className={styles.header}>
-        <button type="button" onClick={onBack} className={styles.iconButton} aria-label={t('goalDetailPanel.back')}>
-          <ChevronLeft size={22} color="var(--text)" />
-        </button>
-        <div className={styles.headerTitle}>{card.alias || t(`cards.kind.${card.kind}`)}</div>
+  const menuEl = (
         <div className={styles.menuWrapper} ref={menuRef}>
-          <button type="button" onClick={() => setMenuOpen(o => !o)} className={styles.iconButton} aria-label={t('goalDetailPanel.moreOptions')}>
+          <button type="button" onClick={() => setMenuOpen(o => !o)} className={`${styles.iconButton} ${!isTablet ? md.roundBtn : ''}`} aria-label={t('goalDetailPanel.moreOptions')}>
             {card._syncing ? <Loader2 size={20} color="var(--text)" className="sync-spinner" /> : <MoreVertical size={20} color="var(--text)" />}
           </button>
           {menuOpen && (
@@ -395,7 +392,21 @@ export function CardDetailPanel({ card, payments, onBack, onEdit, onDelete, onPa
             </div>
           )}
         </div>
+  )
+
+  return (
+    <div className={`${styles.screen} ${!isTablet ? md.mobileRoot : ''}`}>
+      {!isTablet ? (
+        <SubpageHeader icon={CreditCardIcon} title={card.alias || t(`cards.kind.${card.kind}`)} onBack={onBack} action={menuEl} />
+      ) : (
+      <div className={styles.header}>
+        <button type="button" onClick={onBack} className={styles.iconButton} aria-label={t('goalDetailPanel.back')}>
+          <ChevronLeft size={22} color="var(--text)" />
+        </button>
+        <div className={styles.headerTitle}>{card.alias || t(`cards.kind.${card.kind}`)}</div>
+        {menuEl}
       </div>
+      )}
 
       {isTablet && (
         <div className={styles.tabSummary}>
@@ -476,45 +487,47 @@ export function CardDetailPanel({ card, payments, onBack, onEdit, onDelete, onPa
           su barra (de dónde sale el número), lo pagado con la tarjeta, las compras a
           meses (abren su pantalla aparte) y el avance del ciclo. */}
       {card.kind === 'credit' ? (
-        <div className={styles.bento}>
-          <div className={`${styles.bCard} ${styles.bWide}`}>
-            <div className={styles.bKey}>{t('cards.pendingCreditTotal')}</div>
-            <div className={styles.bValue}>{fmt(totalOwed)}</div>
-            <DebtBar debt={debt} label={t('cards.bento.donutLabel')} />
-            {debtLegend}
-          </div>
-
-          <div className={`${styles.bCard} ${!hasPlans ? styles.bWide : ''}`}>
-            <div className={styles.bKey}>{t('cards.detail.paidWithCard')}</div>
-            <div className={styles.bValueSm}>{fmt(total)}</div>
-          </div>
-
-          {hasPlans && (
-            <button type="button" onClick={() => setPlansOpen(true)} className={`${styles.bCard} ${styles.bButton}`}>
-              <div className={styles.bKey}>{t('cards.bento.plansTitle')}</div>
-              <div className={styles.bValueSm}>{t('cards.bento.plansCount', { count: activePlansCount(card) })}</div>
-              {nextCutPlansTotal(card) > 0 && (
-                <div className={styles.bSub}>{t('cards.bento.nextCutPlans', { amount: fmt(nextCutPlansTotal(card)) })}</div>
-              )}
-              <ChevronRight size={16} className={styles.bChevron} />
-            </button>
-          )}
-
-          {cycleInfo && (
-            <div className={`${styles.bCard} ${styles.bWide}`}>
-              <div className={styles.cycleRow}>
-                <span>{t('cards.bento.nextCut', { day: cycleInfo.nextCut.getDate(), month: getMonthsShort()[cycleInfo.nextCut.getMonth()].toLowerCase() })}</span>
-                {cycleInfo.due && <span>{t('cards.bento.dueOn', { day: cycleInfo.due.getDate(), month: getMonthsShort()[cycleInfo.due.getMonth()].toLowerCase() })}</span>}
+        <div className={md.sum}>
+          <div className={md.key}>{t('cards.pendingCreditTotal')}</div>
+          <div className={md.big}>{fmt(totalOwed)}</div>
+          <DebtBar debt={debt} label={t('cards.bento.donutLabel')} />
+          {debtLegend}
+          {tl && (
+            <div className={md.tl}>
+              <div className={styles.tlTrack} style={{ '--now': `${tl.nowPct}%` }}>
+                <i />
+                <span className={`${styles.tlDot} ${styles.tlDotOn}`} style={{ left: '0%' }} />
+                {tl.due && <span className={styles.tlDot} style={{ left: `${tl.duePct}%` }} />}
+                <span className={styles.tlDot} style={{ left: '100%' }} />
               </div>
-              <div className={styles.cycleTrack}><i style={{ width: `${Math.round(cycleInfo.day / cycleInfo.total * 100)}%` }} /></div>
+              <div className={styles.tlLabels}>
+                <div className={styles.tlLabelStart}><b>{tl.prev}</b>{t('cards.tablet.cutLabel')}</div>
+                {tl.due && <div className={styles.tlLabelMid} style={{ '--at': `${tl.duePct}%` }}><b>{tl.due}</b>{t('cards.tablet.dueLabel')}</div>}
+                <div className={styles.tlLabelEnd}><b>{tl.next}</b>{t('cards.tablet.nextCutLabel')}</div>
+              </div>
               <div className={styles.cycleDay}>{t('cards.bento.cycleDay', { day: cycleInfo.day, total: cycleInfo.total })}</div>
             </div>
           )}
+          <div className={md.line}>
+            <span>{t('cards.detail.paidWithCard')}</span>
+            <b>{fmt(total)}</b>
+          </div>
+          {hasPlans && (
+            <button type="button" onClick={() => setPlansOpen(true)} className={md.link}>
+              <i className={md.linkIc}><Repeat size={15} color="var(--label-variable)" /></i>
+              <span className={md.linkT}>{t('cards.bento.plansTitle')}</span>
+              <span className={md.linkR}>
+                {t('cards.bento.plansCount', { count: activePlansCount(card) })}
+                {nextCutPlansTotal(card) > 0 ? ` · ${fmt(nextCutPlansTotal(card))}` : ''}
+                <ChevronRight size={15} />
+              </span>
+            </button>
+          )}
         </div>
       ) : (
-        <div className={styles.pill}>
-          <span>{t('cards.detail.paidWithCard')}</span>
-          <span className={styles.pillAmount}>{fmt(total)}</span>
+        <div className={md.sum}>
+          <div className={md.key}>{t('cards.detail.paidWithCard')}</div>
+          <div className={md.big}>{fmt(total)}</div>
         </div>
       )}
         </>

@@ -200,7 +200,10 @@ export function CardFormModal({ open, initial, onSave, onClose, inline = false }
     <div onClick={e => e.target === e.currentTarget && onClose()} className={`${styles.overlay} ${closing ? styles.overlayClosing : ''}`}>
       <div className={`${styles.modal} ${entering ? styles.modalEntering : ''} ${closing ? styles.modalClosing : ''}`}>
         <div className={styles.handle} />
-        <div className={styles.title}>{initial ? t('cards.form.titleEdit') : t('cards.form.titleNew')}</div>
+        <div className={styles.headRow}>
+          <div className={styles.title}>{initial ? t('cards.form.titleEdit') : t('cards.form.titleNew')}</div>
+          <button type="button" className={styles.closeX} onClick={onClose} aria-label={t('buttons.cancel')}><XIcon size={16} /></button>
+        </div>
 
         <div className={styles.fieldGroup}>
           <Segmented
@@ -296,10 +299,12 @@ export function CardFormModal({ open, initial, onSave, onClose, inline = false }
 
         {error && <div className={styles.errorText}>{error}</div>}
 
-        <button type="button" onClick={handleSave} className="btn-primary">
-          {initial ? t('cards.form.saveEdit') : t('cards.form.saveNew')}
-        </button>
-        <button type="button" onClick={onClose} className={`btn-ghost ${styles.cancel}`}>{t('buttons.cancel')}</button>
+        <div className={styles.footer}>
+          <button type="button" onClick={handleSave} className="btn-primary">
+            {initial ? t('cards.form.saveEdit') : t('cards.form.saveNew')}
+          </button>
+          <button type="button" onClick={onClose} className={`btn-ghost ${styles.cancel}`}>{t('buttons.cancel')}</button>
+        </div>
       </div>
     </div>,
     document.body

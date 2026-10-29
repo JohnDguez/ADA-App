@@ -2292,6 +2292,24 @@
       "cycleTitle": "Ciclo de la tarjeta",
       "paidHint": "Compras del periodo actual",
       "plansDesc": "Todas las compras diferidas de esta tarjeta."
+    },
+    "mobile": {
+      "owedOf": "Por pagar · {{name}}",
+      "spentOf": "Gastado · {{name}}",
+      "cycle": "Ciclo",
+      "cycleDay": "Día {{day}} de {{total}}",
+      "limit": "Límite",
+      "plansActive_one": "{{count}} activa",
+      "plansActive_other": "{{count}} activas",
+      "history": "Movimientos",
+      "see": "Ver",
+      "more": "Más info",
+      "less": "Menos",
+      "quickAll": "Todo {{amount}}",
+      "quickStatement": "Estado de cuenta {{amount}}",
+      "quickCuota": "Cuota mensual {{amount}}",
+      "typeAmount": "Escribe un monto o toca un atajo.",
+      "debitPreview": "Débito"
     }
   },
   "paymentMethod": {
