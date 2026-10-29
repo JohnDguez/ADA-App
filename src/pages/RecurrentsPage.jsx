@@ -17,6 +17,8 @@ import { Collapse } from '../components/Collapse'
 import { usePresence } from '../lib/usePresence'
 import { kbd } from '../lib/a11y'
 import { useIsDesktop } from '../hooks/useIsDesktop'
+import { useIsMobile } from '../hooks/useIsMobile'
+import { MobileRecurrents } from './MobileRecurrents'
 import { DeskRecurrents } from './DeskRecurrents'
 
 function FilterChip({ label, active, onClick }) {
@@ -30,6 +32,7 @@ function FilterChip({ label, active, onClick }) {
 export function RecurrentsPage({ payments, dataLoading = false, profile, spaceSwitcher, activeSpaceHeader, activeSpaceId = null, sharedSpaces, spacePermissions, onOpenPremium, onSpaceReady, unreadCount, onOpenNotifs, onGoSettings, onPause, onResume, onDelete, onEdit, onAdd, onStartAdd, slideClass }) {
   const { t } = useTranslation()
   const isDesktop = useIsDesktop()
+  const isMobile = useIsMobile()
   // Mismo mecanismo que HomePage.jsx — ver ahí el porqué (evitar que la
   // animación de entrada se dispare también en un simple cambio de
   // pestaña, no solo en un cambio real de espacio).
@@ -164,7 +167,7 @@ export function RecurrentsPage({ payments, dataLoading = false, profile, spaceSw
     return `${d.getDate()} ${getMonthsShort()[d.getMonth()]}`
   }
 
-  const deskData = isDesktop ? {
+  const deskData = (isDesktop || isMobile) ? {
     profile, dataLoading, activeSpaceId, sharedSpaces, spacePermissions, slideClass, spaceJustChanged, onOpenPremium, onSpaceReady, onAdd, onStartAdd,
     search, setSearch, filterStatus, setFilterStatus, filterType, setFilterType, byCategory,
     totals: { active: activeMasters.length, paused: pausedMasters.length, all: masters.length, monthly: totalMensual },
@@ -180,7 +183,7 @@ export function RecurrentsPage({ payments, dataLoading = false, profile, spaceSw
       {/* Oculto desde 768px — mismo criterio que HomePage/PaymentsPage:
           NavRail.jsx ya cubre avatar, saludo, notificaciones y config. */}
       {!isDesktop && <div className={styles.pageHeaderWrapper}>
-        <PageHeader profile={profile} unreadCount={unreadCount} onOpenNotifs={onOpenNotifs} onGoSettings={onGoSettings} onOpenPremium={onOpenPremium} />
+        <PageHeader profile={profile} unreadCount={unreadCount} onOpenNotifs={onOpenNotifs} onGoSettings={onGoSettings} onOpenPremium={onOpenPremium} {...(isMobile ? { variant: 'home', title: t('recurrentsPage.title') } : {})} />
       </div>}
 
       {/* Menú contextual flotante */}
@@ -196,7 +199,14 @@ export function RecurrentsPage({ payments, dataLoading = false, profile, spaceSw
             if (!master) return null
             return (
               <>
+                {isMobile && getPaidCount(master.id) > 0 && !(master.is_installment || master.total_installments > 0) && (
+                  <div className={styles.menuInfo}>{t('recurrentsPage.completedCount', { count: getPaidCount(master.id) })}</div>
+                )}
                 <MenuItem icon={<Pencil size={14} />} label={t('buttons.edit')} onClick={() => { onEdit && onEdit(master); setOpenMenu(null) }} />
+                {isMobile && (
+                  <MenuItem icon={master.paused ? <Play size={14} /> : <Pause size={14} />} label={master.paused ? t('mobileRecurrents.resume') : t('mobileRecurrents.pause')}
+                    onClick={() => { canEdit ? (master.paused ? onResume(master.id) : onPause(master.id)) : blocked(master.paused ? t('recurrentsPage.actionResume') : t('recurrentsPage.actionPause')); setOpenMenu(null) }} />
+                )}
                 <MenuItem icon={<Trash2 size={14} />} label={t('buttons.delete')} onClick={() => { canDelete ? setConfirmDelete(master.id) : blocked(t('paymentsPage.actionDeletePayments')); setOpenMenu(null) }} danger />
               </>
             )
@@ -204,7 +214,31 @@ export function RecurrentsPage({ payments, dataLoading = false, profile, spaceSw
         </div>
       )}
 
-      {isDesktop ? <DeskRecurrents d={deskData} /> : (
+      {isDesktop ? <DeskRecurrents d={deskData} /> : isMobile ? (
+        <>
+          <div className={styles.spaceSwitcherMobileWrap}>{spaceSwitcher}</div>
+          {activeSpaceHeader}
+          <div className={slideClass}>
+            <div className={spaceJustChanged ? 'content-slide-up' : ''}>
+              {activeSpaceId === 'new' ? (
+                <div className={styles.newSpacePanelWrapper}>
+                  <NewSharedSpacePanel profile={profile} sharedSpaces={sharedSpaces} onOpenPremium={onOpenPremium} onCreated={onSpaceReady} onJoined={onSpaceReady} />
+                </div>
+              ) : selectedMaster ? (
+                <RecurrentDetailPanel
+                  master={selectedMaster} payments={payments} profile={profile} canEdit={canEdit} canDelete={canDelete} blocked={blocked}
+                  onBack={() => setSelectedMasterId(null)}
+                  onEdit={() => onEdit && onEdit(selectedMaster)}
+                  onPause={() => onPause(selectedMaster.id)}
+                  onResume={() => onResume(selectedMaster.id)}
+                  onDelete={() => { onDelete && onDelete(selectedMaster.id, selectedMaster); setSelectedMasterId(null) }} />
+              ) : (
+                <MobileRecurrents d={deskData} />
+              )}
+            </div>
+          </div>
+        </>
+      ) : (
       <div className={styles.roundedContentWrapper}>
         <div className={styles.spaceSwitcherMobileWrap}>{spaceSwitcher}</div>
 

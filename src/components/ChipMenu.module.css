@@ -1,0 +1,11 @@
+/* Chip con popover de opciones (v0.9.907). Regla 54: rem/clamp. */
+.trigger { display: inline-flex; align-items: center; gap: 0.25rem; white-space: nowrap; }
+.chev { transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1); flex-shrink: 0; }
+.chevOpen { transform: rotate(180deg); }
+.pop { position: fixed; z-index: 1200; background: var(--desk-card); border: 1px solid var(--desk-hair); border-radius: 1.25rem; padding: 0.375rem; box-shadow: var(--desk-pop-shadow); transform-origin: var(--arrow) 0; animation: popIn 0.22s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.pop::before { content: ''; position: absolute; top: -0.375rem; left: calc(var(--arrow) - 0.375rem); width: 0.75rem; height: 0.75rem; background: var(--desk-card); border-left: 1px solid var(--desk-hair); border-top: 1px solid var(--desk-hair); transform: rotate(45deg); }
+@keyframes popIn { from { opacity: 0; transform: translateY(-0.375rem) scale(0.96); } to { opacity: 1; transform: none; } }
+.opt { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; width: 100%; border: 0; background: none; color: var(--text); font: inherit; font-size: 0.875rem; font-weight: 500; text-align: left; padding: 0.75rem 0.875rem; border-radius: 0.875rem; cursor: pointer; transition: background 0.2s ease; animation: optIn 0.28s cubic-bezier(0.22, 1, 0.36, 1) both; animation-delay: calc(var(--i) * 25ms); }
+@keyframes optIn { from { opacity: 0; transform: translateY(0.25rem); } to { opacity: 1; transform: none; } }
+.optOn { background: var(--desk-chip); font-weight: 600; color: var(--accent); }
+@media (prefers-reduced-motion: reduce) { .pop, .opt { animation: none; } .chev { transition: none; } }

@@ -2674,5 +2674,12 @@
     "label": "Select month and year",
     "prevYear": "Previous year",
     "nextYear": "Next year"
+  },
+  "mobileRecurrents": {
+    "typeShort": "Type",
+    "typeAria": "Filter by type",
+    "installmentShort": "installment {{current}}/{{total}}",
+    "pause": "Pause",
+    "resume": "Resume"
   }
 }

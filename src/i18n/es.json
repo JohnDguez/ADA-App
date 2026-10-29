@@ -2674,5 +2674,12 @@
     "label": "Seleccionar mes y año",
     "prevYear": "Año anterior",
     "nextYear": "Año siguiente"
+  },
+  "mobileRecurrents": {
+    "typeShort": "Tipo",
+    "typeAria": "Filtrar por tipo",
+    "installmentShort": "cuota {{current}}/{{total}}",
+    "pause": "Pausar",
+    "resume": "Reanudar"
   }
 }

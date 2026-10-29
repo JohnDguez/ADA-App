@@ -699,3 +699,6 @@
 :global(html[data-desk-sidebar]) .menuItem.menuItemDanger:not(:first-child)::before {
   content: ""; position: absolute; left: 8px; right: 8px; top: -4px; height: 1px; background: var(--desk-hair);
 }
+
+/* Dato que la fila móvil ya no muestra, arriba del menú ⋮ (v0.9.907). */
+.menuInfo { padding: 0.625rem 0.875rem; border-bottom: 1px solid var(--border); font-size: 0.75rem; color: var(--muted); }
