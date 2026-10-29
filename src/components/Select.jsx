@@ -225,6 +225,7 @@ export function Select({ value, onChange, options, placeholder, renderIcon, sear
       {!sheet && showPanel && panelPos && createPortal(
         <div
           ref={panelRef}
+          data-select-panel
           className={`${styles.panel} ${dropUp ? styles.panelUp : styles.panelDown} ${closing ? styles.panelClosing : ''}`}
           style={{
             left: panelPos.left,

@@ -170,6 +170,7 @@
   .paidCollapseList { background: var(--desk-card); border-radius: 1.5rem; padding: 0.125rem 0.875rem; margin-top: 0.5rem; gap: 0; box-shadow: var(--desk-shadow); }
   .paidCollapseItem { background: none; border-radius: 0; border-bottom: 1px solid var(--desk-hair); }
   .paidCollapseItemWrapper:last-child .paidCollapseItem { border-bottom: 0; }
+  .paidUnmarkFill { top: 0.25rem; bottom: 0.25rem; height: auto; border-radius: 1.5rem; }
   .paidCollapseItemRow { padding: 0.75rem 0; gap: 0.75rem; }
   .paidCollapseDate {
     width: clamp(2.5rem, 12vw, 2.9rem);
@@ -193,11 +194,12 @@
    caja, check verde, filas con fecha en ficha. */
 @media (min-width: 1100px) {
   .paidCollapseRoot { margin-bottom: 4px; }
-  .paidCollapseToggle { background: none; border-radius: 14px; padding: 10px 12px; margin: 0 -12px; width: calc(100% + 24px); gap: 12px; }
+  .paidCollapseToggle { background: none; border-radius: 99px; padding: 10px 14px; margin: 0; width: 100%; gap: 12px; }
   .paidCollapseCheckIcon { width: 24px; height: 24px; border-radius: 8px; }
   .paidCollapseSummaryText { font-size: 15px; color: var(--muted); }
   .paidCollapseList { gap: 0; margin-top: 0; }
   .paidCollapseItem { background: none; border-radius: 0; border-bottom: 1px solid var(--desk-hair); }
+  .paidUnmarkFill { top: 0.25rem; bottom: 0.25rem; height: auto; border-radius: 1.5rem; }
   .paidCollapseItemRow { padding: 12px 0; gap: 14px; }
   .paidCollapseDate {
     width: 50px;

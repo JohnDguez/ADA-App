@@ -74,6 +74,8 @@ export function AnchoredPop({ open, onClose, anchorRef, width = 420, label, chil
       if (panelRef.current?.contains(t) || anchor?.contains(t)) return
       // Un selector o formulario abierto desde dentro (método de pago,
       // nueva tarjeta) vive en otro diálogo: no cuenta como "fuera".
+      // El desplegable de un `Select` abierto desde dentro también cuenta como dentro.
+      if (t instanceof Element && t.closest('[data-select-panel]')) return
       const dlg = t instanceof Element ? t.closest('[role="dialog"],[data-presence="overlay"]') : null
       if (dlg && dlg !== panelRef.current) return
       onClose?.()
