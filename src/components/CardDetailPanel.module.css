@@ -452,10 +452,7 @@
   content: ""; position: absolute; left: 8px; right: 8px; top: -4px; height: 1px; background: var(--desk-hair);
 }
 
-/* Móvil (<768px, v0.9.922): filtros y "Pagar ahora" en píldora, como el resto del rediseño. */
+/* Móvil (<768px, v0.9.922): "Pagar ahora" en píldora. */
 @media (max-width: 767px) {
-  .viewModeRow { gap: 0.5rem; margin-bottom: 0.625rem; }
-  .viewModeButton { border: 0; border-radius: 99px; background: var(--desk-card); box-shadow: var(--desk-shadow); color: var(--muted); font-weight: 600; font-size: 0.8125rem; padding: 0.5rem 1rem; transition: background 0.25s, color 0.25s; }
-  .viewModeButtonActive { background: var(--accent); color: var(--on-color); box-shadow: none; }
   .payNowButton { border-radius: 99px; margin-bottom: 0.875rem; }
 }

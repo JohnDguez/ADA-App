@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { ChevronLeft, ChevronRight, MoreVertical, Pencil, Trash2, Loader2, Users, Repeat } from 'lucide-react'
 import { CreditCardVisual } from './CreditCardVisual'
 import { Select } from './Select'
+import { MonthPicker } from './MonthPicker'
 import { getCategoryLabel, fmt, getMonths, getMonthsShort, today } from '../lib/utils'
 import { cardDebt, cardCycleInfo } from '../lib/cardStatements'
 import { getPlans, activePlansCount, nextCutPlansTotal } from '../lib/cardPlans'
@@ -533,6 +534,14 @@ export function CardDetailPanel({ card, payments, onBack, onEdit, onDelete, onPa
         </>
       )}
 
+      {!isTablet ? (
+        <div className={md.chips} role="tablist">
+          <button type="button" role="tab" aria-selected={viewMode === 'periodo'} className={`${md.chip} ${viewMode === 'periodo' ? md.chipOn : ''}`} onClick={() => setViewMode('periodo')}>{t('homePage.tabs.currentPeriod')}</button>
+          {viewMode === 'mes'
+            ? <MonthPicker month={viewMonth} year={viewYear} years={availableYears} className={`${md.chip} ${md.chipOn}`} onChange={(m, y) => { setViewMonth(m); setViewYear(y) }} />
+            : <button type="button" role="tab" aria-selected={false} className={md.chip} onClick={() => setViewMode('mes')}>{t('paymentsPage.byMonth')}</button>}
+        </div>
+      ) : (
       <div className={styles.filtersWrapper}>
         <div className={styles.viewModeRow}>
           {[['periodo', t('homePage.tabs.currentPeriod')], ['mes', t('paymentsPage.byMonth')]].map(([val, label]) => (
@@ -555,6 +564,7 @@ export function CardDetailPanel({ card, payments, onBack, onEdit, onDelete, onPa
           </div>
         )}
       </div>
+      )}
 
       <div className={`${styles.historyList} ${isTablet ? styles.historyTable : ''}`}>
         {groups.length === 0 && (
