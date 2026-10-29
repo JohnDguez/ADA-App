@@ -226,7 +226,7 @@ export function RecurrentsPage({ payments, dataLoading = false, profile, spaceSw
                 </div>
               ) : selectedMaster ? (
                 <RecurrentDetailPanel
-                  master={selectedMaster} payments={payments} profile={profile} canEdit={canEdit} canDelete={canDelete} blocked={blocked}
+                  master={selectedMaster} payments={payments} profile={profile} canEdit={canEdit} canDelete={canDelete} blocked={blocked} mobile
                   onBack={() => setSelectedMasterId(null)}
                   onEdit={() => onEdit && onEdit(selectedMaster)}
                   onPause={() => onPause(selectedMaster.id)}

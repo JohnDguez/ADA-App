@@ -35,8 +35,11 @@ function fmtDateShort(value) {
 export function RecurrentDetailPanel({
   master, payments, profile,
   canEdit = true, canDelete = true, blocked,
-  onBack, onEdit, onPause, onResume, onDelete, desk = false,
+  onBack, onEdit, onPause, onResume, onDelete, desk = false, mobile = false,
 }) {
+  // v0.9.908 — en móvil se usa el mismo diseño que escritorio (`desk`), dentro
+  // de una tarjeta y con el historial a lo largo de la página.
+  if (mobile) desk = true
   const { t } = useTranslation()
   const [menuOpen, setMenuOpen] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
@@ -159,7 +162,7 @@ export function RecurrentDetailPanel({
   }
 
   return (
-    <div className={`${styles.screen} ${desk ? styles.desk : ''}`} style={desk ? { backgroundImage: `radial-gradient(70% 50% at 0% 0%, color-mix(in srgb, ${catColor} 30%, transparent), transparent 70%)` } : undefined}>
+    <div className={`${styles.screen} ${desk ? styles.desk : ''} ${mobile ? styles.mobile : ''}`} style={desk ? { backgroundImage: `radial-gradient(70% 50% at 0% 0%, color-mix(in srgb, ${catColor} 30%, transparent), transparent 70%)` } : undefined}>
       <div className={styles.header}>
         <button type="button" onClick={onBack} className={styles.iconButton} aria-label={t('goalDetailPanel.back')}>
           <ChevronLeft size={22} color="var(--text)" />
@@ -287,7 +290,7 @@ export function RecurrentDetailPanel({
       {paidChildren.length === 0 ? (
         <div className={styles.historyEmpty}>{t('recurrentDetailPanel.historyEmpty')}</div>
       ) : (
-        <div className={`${styles.historyList} ${desk ? 'scroll-y' : ''}`}>
+        <div className={`${styles.historyList} ${desk && !mobile ? 'scroll-y' : ''}`}>
           {paidChildren.map(p => {
             const isAbono    = abonoIds.has(p.id)
             const isAdjusted = isInstallment && !p.is_postponed && !isAbono && Number(p.amount) !== Number(master.amount)
