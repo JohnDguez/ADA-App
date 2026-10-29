@@ -283,8 +283,11 @@
   .tablet .tile_paid .tileSub, .tablet .tile_pending .tileSub, .tablet .tile_overdue .tileSub { margin-top: 0; min-height: 0; }
   .tablet .tileDot .tileLabel::before { content: ""; width: 9px; height: 9px; border-radius: 50%; background: var(--danger); margin-right: 8px; flex: none; }
 
-  .tablet .gaugeCard { padding: 22px 20px 18px; display: flex; flex-direction: column; justify-content: center; }
-  .tablet .gaugeCard .cardTitle { font-size: 16px; margin-bottom: 10px; }
+  /* Título arriba, medidor ocupando el centro y leyenda abajo: sin hueco muerto
+     cuando la tarjeta se estira a la altura de las 3 mini tarjetas. */
+  .tablet .gaugeCard { padding: 22px 16px 18px; display: flex; flex-direction: column; justify-content: space-between; }
+  .tablet .gaugeCard > div:not(.legend) { width: 100%; max-width: 340px; margin: auto; padding-top: 8px; }
+  .tablet .gaugeCard .cardTitle { font-size: 16px; margin-bottom: 0; padding-left: 4px; }
   .tablet .gaugeCard .gaugeText { font-size: 26px; line-height: 1.1; letter-spacing: -0.8px; }
   .tablet .tipSlot { margin-top: 0; padding-top: 14px; }
 }
