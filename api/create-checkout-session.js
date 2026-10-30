@@ -62,6 +62,18 @@ module.exports = async function handler(req, res) {
     if (profileErr) return res.status(500).json({ error: 'No se pudo leer el perfil' })
 
     let customerId = profile?.stripe_customer_id || null
+    // (v0.9.963) Un id guardado en modo de prueba no existe en live (y al
+    // revés): Stripe rechaza el checkout con "No such customer". Se comprueba
+    // y, si no existe o fue borrado, se crea uno nuevo.
+    if (customerId) {
+      try {
+        const existing = await stripe.customers.retrieve(customerId)
+        if (existing?.deleted) customerId = null
+      } catch (e) {
+        if (e?.code === 'resource_missing' || e?.statusCode === 404) customerId = null
+        else throw e
+      }
+    }
     if (!customerId) {
       const customer = await stripe.customers.create({
         email: user.email,
@@ -100,6 +112,7 @@ module.exports = async function handler(req, res) {
 
     return res.status(200).json({ clientSecret: session.client_secret })
   } catch (e) {
+    console.error('[create-checkout-session] Error al crear la sesión:', e?.code, e?.message)
     return res.status(500).json({ error: e.message || 'Error al crear la sesión de pago' })
   }
 }

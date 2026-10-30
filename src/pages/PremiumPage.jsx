@@ -211,7 +211,11 @@ export function PremiumPage({ profile, onClose, refreshProfile, onSubscribed }) 
         body: JSON.stringify({ plan: selectedPlan }),
       })
       const result = await res.json()
-      if (!res.ok || !result.clientSecret) { setCheckoutState('error'); return }
+      if (!res.ok || !result.clientSecret) {
+        console.error('[Stripe] No se pudo crear el checkout:', res.status, result?.error)
+        setCheckoutState('error')
+        return
+      }
       setClientSecret(result.clientSecret)
       setCheckoutState('idle')
     } catch (e) {
