@@ -1,10 +1,10 @@
 /* Aviso de notificaciones apagadas (v0.9.845). Solo tokens, fondos sólidos. */
-.box { display: flex; align-items: center; gap: 12px; margin-top: 12px; padding: 12px 14px; border-radius: var(--radius); background: var(--bg); }
+.box { display: flex; align-items: center; gap: 12px; margin-top: 12px; padding: 12px 14px; border-radius: var(--radius); background: var(--notice-bg, var(--bg)); }
 .icon { width: 36px; height: 36px; flex: none; border-radius: 12px; display: grid; place-items: center; background: var(--soon-color); color: var(--premium-gold-text); }
 .text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; font-size: 12.5px; color: var(--muted); }
 .text b { font-size: 13.5px; color: var(--text); }
 .go { flex: none; height: 36px; padding: 0 16px; border: 0; border-radius: 99px; background: var(--accent); color: var(--surface); font-family: inherit; font-size: 13px; font-weight: 600; }
 @media (min-width: 1100px) {
-  .box { background: var(--desk-card); border-radius: 20px; }
+  .box { background: var(--notice-bg, var(--desk-card)); border-radius: 20px; }
   .go { color: var(--desk-ink-text); }
 }

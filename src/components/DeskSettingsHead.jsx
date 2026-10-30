@@ -17,6 +17,6 @@ export function DeskSettingsHead({ title, description, actions }) {
 // Raíz de una sub-página de Ajustes rediseñada para escritorio. El atributo
 // la distingue de las páginas antiguas, a las que DeskSettings.module.css les
 // quita fondo y márgenes (v0.9.835).
-export function DeskPage({ children }) {
-  return <div data-dp="">{children}</div>
+export function DeskPage({ children, gray = false }) {
+  return <div data-dp="" data-gray={gray ? '' : undefined}>{children}</div>
 }

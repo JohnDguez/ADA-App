@@ -1,6 +1,8 @@
 /* Ajustes de escritorio (v0.9.834). Reutiliza DeskHome.module.css. */
 .body { display: grid; grid-template-columns: 350px minmax(0, 1fr); grid-template-rows: minmax(0, 1fr); gap: 14px; flex: 1; min-height: 0; }
 .content { padding-right: 14px; }
+/* v0.9.954: páginas con paneles blancos (Espacio Compartido) — el recuadro de la página pasa a gris para que contrasten */
+.content:has([data-gray]) { background: var(--desk-panel); }
 .profile { display: flex; align-items: center; gap: 12px; padding: 8px 18px 8px 8px; border-radius: 20px; background: var(--desk-card); box-shadow: var(--desk-shadow); }
 .avatar { width: 46px; height: 46px; border-radius: 50%; object-fit: cover; display: block; }
 .avatarFallback { width: 46px; height: 46px; border-radius: 50%; display: grid; place-items: center; background: var(--accent); color: var(--surface); font-weight: 700; }

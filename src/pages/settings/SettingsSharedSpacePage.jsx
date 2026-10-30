@@ -6,7 +6,7 @@ import { ChevronLeft, ChevronDown, ChevronUp, Users, Copy, RefreshCw, LogOut, Tr
 import { UsersThree } from '@phosphor-icons/react/dist/csr/UsersThree'
 import { PageHero } from '../../components/PageHero'
 import { Collapse } from '../../components/Collapse'
-import { Card, Row, Toggle } from '../../components/SettingsShared'
+import { Toggle } from '../../components/SettingsShared'
 import { CobroPeriodFields } from '../../components/CobroPeriodFields'
 import { NotifOffNotice } from '../../components/NotifOffNotice'
 import { CurrencySelect } from '../../components/CurrencySelect'
@@ -20,10 +20,16 @@ import { DeskSettingsHead, DeskPage } from '../../components/DeskSettingsHead'
 import deskStyles from '../../components/SettingsDesk.module.css'
 import dk from './SettingsSharedSpaceDesk.module.css'
 import dkp from '../../components/PaymentDesk.module.css'
+import sp from './SettingsSharedSpaceTab.module.css'
 import styles from './SettingsSharedSpacePage.module.css'
+import wd from './SettingsCategoriesWide.module.css'
+import home from '../DeskHome.module.css'
+import tb from './SettingsCobroTab.module.css'
 import { AvatarImg } from '../../components/AvatarImg'
 import { Presence } from '../../components/Presence'
-import { kbd, switchProps } from '../../lib/a11y'
+import { switchProps } from '../../lib/a11y'
+import { useIsMobile } from '../../hooks/useIsMobile'
+import { useIsDesktop } from '../../hooks/useIsDesktop'
 
 // Permisos del invitado (v0.9.807): definidos aquí para pintarlos como fichas.
 const PAYMENT_PERMS = [
@@ -46,26 +52,46 @@ function PermTile({ Icon, label, sub, on, onToggle }) {
   const { t } = useTranslation()
   return (
     <button type="button" role="switch" aria-checked={on} title={sub} onClick={onToggle}
-      className={`${styles.permTile} ${on ? styles.permTileOn : ''}`}>
-      <span className={styles.permTileIcon}><Icon size={17} /></span>
-      <span className={styles.permTileText}>
-        <span className={styles.permTileLabel}>{label}</span>
-        <span className={styles.permTileStatus}>{on ? t('settingsSharedSpacePage.permTileOn') : t('settingsSharedSpacePage.permTileOff')}</span>
+      className={`${sp.perm} ${on ? sp.permOn : ''}`}>
+      <span className={sp.permIcon}><Icon size={17} /></span>
+      <span className={sp.permText}>
+        <span className={sp.permLabel}>{label}</span>
+        <span className={sp.permStatus}>{on ? t('settingsSharedSpacePage.permTileOn') : t('settingsSharedSpacePage.permTileOff')}</span>
       </span>
     </button>
+  )
+}
+
+// Código de 6 dígitos en casillas (un solo <input> invisible encima).
+function CodeBoxes({ value, onChange, onEnter, label, autoFocus }) {
+  const [focus, setFocus] = useState(false)
+  return (
+    <div className={sp.codeBoxes}>
+      {Array.from({ length: 6 }).map((_, i) => (
+        <span key={i} className={`${sp.box} ${value[i] ? '' : sp.boxEmpty} ${focus && i === Math.min(value.length, 5) ? sp.boxOn : ''}`}>{value[i] || '·'}</span>
+      ))}
+      <input aria-label={label} inputMode="numeric" autoComplete="one-time-code" maxLength={6} value={value} autoFocus={autoFocus}
+        onFocus={() => setFocus(true)} onBlur={() => setFocus(false)}
+        onKeyDown={e => e.key === 'Enter' && onEnter?.()}
+        onChange={e => onChange(e.target.value.replace(/\D/g, '').slice(0, 6))} />
+    </div>
   )
 }
 
 // Sub-página de Ajustes → "Espacio Compartido". Sirve para 2 casos a la vez,
 // para no duplicar el formulario de crear/unirse en otro lugar (ej. la
 // tarjeta vacía del selector de Home solo navega aquí):
-// - Si el usuario no pertenece a ningún espacio: formulario de crear
-//   (solo Premium, máximo 1 propio) y/o unirse con código.
+// - Si el usuario no pertenece a ningún espacio: estado vacío con «Unirme con un
+//   código» en grande y crear (solo Premium, máximo 1 propio).
 // - Si ya pertenece a alguno: panel de administración (si es dueño) y/o
 //   lista de espacios donde es invitado (con opción de salirse).
+// v0.9.954: rediseño para móvil, tablet (vertical/horizontal) y escritorio.
 export function SettingsSharedSpacePage({ profile, user, sharedSpaces, onBack, onOpenPremium, onGoNotifications, slideClass }) {
   const { t } = useTranslation()
   const desk = useDeskSettings()
+  const isMobile = useIsMobile()
+  const isDesktop = useIsDesktop()
+  const mode = desk ? (isDesktop ? 'wide' : 'pane') : isMobile ? 'mobile' : 'tablet'
   const { spaces, createSpace, regenerateCode, redeemCode, updateMemberPermissions, updateSpaceConfig, leaveSpace, removeMember, deleteSpace, clearSpaceData } = sharedSpaces
 
   const ownedEntry  = spaces.find(s => s.membership.role === 'owner')
@@ -100,6 +126,7 @@ export function SettingsSharedSpacePage({ profile, user, sharedSpaces, onBack, o
     if (error) setCreateError(typeof error === 'string' ? error : t('newSharedSpacePanel.createGenericError'))
     else { setCreating(false); setNewName('') }
   }
+  function cancelCreate() { setCreating(false); setCreateError('') }
 
   // ── Unirse ──
   const [joinCode,   setJoinCode]   = useState('')
@@ -119,276 +146,268 @@ export function SettingsSharedSpacePage({ profile, user, sharedSpaces, onBack, o
 
   const canCreateMore = profile.is_premium && !ownedEntry
   const canJoinMore   = guestEntries.length < 3
+  const showEmpty     = !ownedEntry && guestEntries.length === 0
+  const showCreating  = creating && canCreateMore
 
+  const joinDisabled = joinSaving || joinCode.length !== 6
+  const joinAction = (
+    <button type="button" onClick={handleJoin} disabled={joinDisabled} className={sp.btnFull}>
+      {joinSaving ? t('newSharedSpacePanel.joining') : t('newSharedSpacePanel.join')}
+    </button>
+  )
   const joinSheet = canJoinMore && (
     <BottomSheet modal={!desk} open={joinOpen} title={t('newSharedSpacePanel.joinTitle')} onClose={() => setJoinOpen(false)}>
-      <div className={styles.joinDescription}>{t('settingsSharedSpacePage.joinDescription')}</div>
-      <input aria-label={t('newSharedSpacePanel.joinTitle')}
-        className={`field-input ${styles.joinCodeInput}`} inputMode="numeric" maxLength={6}
-        value={joinCode} onChange={e => setJoinCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
-        placeholder="000000"
-      />
-      {joinError && <div className={styles.errorText}>{joinError}</div>}
-      <button onClick={handleJoin} disabled={joinSaving || joinCode.length !== 6} className={`btn-primary ${(joinSaving || joinCode.length !== 6) ? styles.disabledOpacity : ''}`}>
-        {joinSaving ? t('newSharedSpacePanel.joining') : t('newSharedSpacePanel.join')}
-      </button>
+      <div className={sp.joinSheet}>
+        <div className={sp.joinDesc}>{t('settingsSharedSpacePage.joinDescription')}</div>
+        <CodeBoxes value={joinCode} onChange={setJoinCode} onEnter={handleJoin} label={t('newSharedSpacePanel.joinTitle')} autoFocus />
+        {joinError && <div className={sp.err}>{joinError}</div>}
+        {joinAction}
+      </div>
     </BottomSheet>
   )
+  const openJoin = () => { setJoinError(''); setJoinOpen(true) }
 
-  if (desk && !ownedEntry && profile.is_premium && creating) {
-    return (
-      <DeskPage>
-        <DeskSettingsHead
-          title={t('settingsSharedSpacePage.deskNewTitle')}
-          description={t('settingsSharedSpacePage.deskNewDesc')}
-          actions={<button type="button" className={`${deskStyles.btn} ${deskStyles.btnSoft}`} onClick={() => { setCreating(false); setCreateError('') }}><ChevronLeft size={16} />{t('buttons.back')}</button>}
-        />
-        <div className={dk.newLayout}>
-          <div className={`${deskStyles.fill} ${dk.form}`}>
-            <label className="field-label">{t('newSharedSpacePanel.spaceNameLabel')}</label>
-            <input aria-label={t('newSharedSpacePanel.spaceNameLabel')} autoFocus className="field-input" value={newName} onChange={e => setNewName(e.target.value)} placeholder={t('newSharedSpacePanel.spaceNamePlaceholder')} />
-            <label className={`field-label ${dk.field}`}>{t('currency.spaceLabel')}</label>
-            <CurrencySelect value={newCurrency} onChange={setNewCurrency} sheetTitle={t('currency.spaceSheetTitle')} />
-            <label className={`field-label ${dk.field}`}>{t('cobroPeriodFields.periodLabel')}</label>
-            <CobroPeriodFields
-              freq={newFreq} day1={newDay1} day2={newDay2} weekday={newWeekday}
-              onChangeFreq={setNewFreq} onChangeDay1={setNewDay1} onChangeDay2={setNewDay2} onChangeWeekday={setNewWeekday}
-            />
+  // Tarjeta «Crear espacio» (Premium) o invitación a Premium (dorada).
+  const createCard = (extra = '') => canCreateMore ? (
+    <div className={`${sp.big} ${extra}`}>
+      <span className={`${sp.bigIco} ${sp.bigIcoAcc}`}><Plus size={24} /></span>
+      <div>
+        <div className={sp.bigTitle}>{t('settingsSharedSpacePage.createCardTitle')}</div>
+        <div className={sp.bigSub}>{t('settingsSharedSpacePage.createCardSub')}</div>
+      </div>
+      <div className={sp.fillSpace} />
+      <button type="button" className={`${sp.btnFull} ${sp.btnSoft}`} onClick={() => setCreating(true)}><Plus size={17} />{t('settingsSharedSpacePage.createCardButton')}</button>
+    </div>
+  ) : !ownedEntry && !profile.is_premium ? (
+    <div className={`${sp.big} ${sp.gold} ${extra}`}>
+      <span className={sp.bigIco}><Crown size={24} /></span>
+      <div>
+        <div className={sp.bigTitle}>{t('newSharedSpacePanel.premiumCtaTitle')}</div>
+        <div className={sp.bigSub}>{t('newSharedSpacePanel.premiumCtaText')}</div>
+      </div>
+      <div className={sp.fillSpace} />
+      <button type="button" className={`${sp.btnFull} ${sp.btnGold}`} onClick={onOpenPremium}><Crown size={17} />{t('goalsPage.premiumBanner.button')}</button>
+    </div>
+  ) : null
+
+  // ── Estado vacío: unirse con código en grande ──
+  const emptyView = (
+    <div className={sp.empty}>
+      <div className={sp.emptyHead}>
+        <span className={sp.emptyIco}><UsersThree size={36} /></span>
+        <h2 className={sp.emptyTitle}>{t('settingsSharedSpacePage.emptyTitle')}</h2>
+        <p className={sp.emptySub}>{t('settingsSharedSpacePage.emptySub')}</p>
+      </div>
+      <div className={sp.emptyCards}>
+        <div className={sp.big}>
+          <span className={sp.bigIco}><Users size={24} /></span>
+          <div>
+            <div className={sp.bigTitle}>{t('settingsSharedSpacePage.joinCardTitle')}</div>
+            <div className={sp.bigSub}>{t('settingsSharedSpacePage.joinCardSub')}</div>
           </div>
-          <div className={dk.newSide}>
-            <div className={`${deskStyles.blue} ${dk.newPreview}`}>
-              <UsersThree size={34} />
-              <b>{newName.trim() || t('newSharedSpacePanel.spaceNamePlaceholder')}</b>
-              <span>{getFrequencyLabel(newFreq)} · {newCurrency || '—'}</span>
-            </div>
-            {createError && <div className={dk.err}>{createError}</div>}
-            <button type="button" className={`${deskStyles.btn} ${dk.full}`} onClick={handleCreate} disabled={createSaving}>{createSaving ? t('newSharedSpacePanel.creating') : t('newSharedSpacePanel.create')}</button>
-            <button type="button" className={`${deskStyles.btn} ${deskStyles.btnSoft} ${dk.full}`} onClick={() => { setCreating(false); setCreateError('') }}>{t('buttons.cancel')}</button>
-          </div>
+          <CodeBoxes value={joinCode} onChange={setJoinCode} onEnter={handleJoin} label={t('newSharedSpacePanel.joinTitle')} />
+          {joinError && <div className={sp.err}>{joinError}</div>}
+          {joinAction}
         </div>
-      </DeskPage>
+        {createCard()}
+      </div>
+    </div>
+  )
+
+  // ── Crear espacio ──
+  const createPreview = (
+    <div className={`${deskStyles.blue} ${sp.newPreview}`}>
+      <UsersThree size={34} />
+      <b>{newName.trim() || t('newSharedSpacePanel.spaceNamePlaceholder')}</b>
+      <span>{getFrequencyLabel(newFreq)} · {newCurrency || '—'}</span>
+    </div>
+  )
+  const createForm = (
+    <div className={sp.panel} data-newchips="">
+      <label className="field-label">{t('newSharedSpacePanel.spaceNameLabel')}</label>
+      <input aria-label={t('newSharedSpacePanel.spaceNameLabel')} autoFocus={desk} className="field-input" value={newName} onChange={e => setNewName(e.target.value)} placeholder={t('newSharedSpacePanel.spaceNamePlaceholder')} />
+      <label className={`field-label ${sp.cfgField}`} style={{ display: 'block' }}>{t('currency.spaceLabel')}</label>
+      <CurrencySelect value={newCurrency} onChange={setNewCurrency} sheetTitle={t('currency.spaceSheetTitle')} />
+      <label className={`field-label ${sp.cfgField}`} style={{ display: 'block' }}>{t('cobroPeriodFields.periodLabel')}</label>
+      <CobroPeriodFields
+        freq={newFreq} day1={newDay1} day2={newDay2} weekday={newWeekday}
+        onChangeFreq={setNewFreq} onChangeDay1={setNewDay1} onChangeDay2={setNewDay2} onChangeWeekday={setNewWeekday}
+      />
+    </div>
+  )
+  const createButtons = (
+    <>
+      {createError && <div className={sp.err}>{createError}</div>}
+      <div className={mode === 'wide' ? sp.newSide : sp.btnRow}>
+        <button type="button" className={sp.btnFull} onClick={handleCreate} disabled={createSaving}>{createSaving ? t('newSharedSpacePanel.creating') : t('newSharedSpacePanel.create')}</button>
+        <button type="button" className={`${sp.btnFull} ${sp.btnSoft}`} onClick={cancelCreate}>{t('buttons.cancel')}</button>
+      </div>
+    </>
+  )
+  const createView = desk ? (
+    <div className={sp.newLayout}>
+      {createForm}
+      <div className={sp.newSide}>{createPreview}{createButtons}</div>
+    </div>
+  ) : (
+    <div className={sp.newStack}>{createPreview}{createForm}{createButtons}</div>
+  )
+
+  // ── Espacios donde te invitaron ──
+  const guestSection = guestEntries.length > 0 && (
+    desk ? (
+      <>
+        <div className={`${deskStyles.sec} ${ownedEntry ? '' : deskStyles.secFirst}`}>{t('settingsSharedSpacePage.invitedSpacesCount', { n: guestEntries.length })}</div>
+        <div className={dk.guestGrid}>
+          {guestEntries.map(entry => {
+            const cur = getCurrency(entry.space.currency)
+            return (
+              <div key={entry.membership.id} className={`${sp.panel} ${dk.guestCard}`}>
+                <div className={dk.guestTop}>
+                  <span className={dk.guestAv}>{(entry.space.name || '?').trim().charAt(0).toUpperCase()}</span>
+                  <div className={dk.guestInfo}>
+                    <b>{entry.space.name}</b>
+                    <span>{t('settingsSharedSpacePage.period', { freq: getFrequencyLabel(entry.space.cobro_freq) })} · {cur.code}</span>
+                  </div>
+                  <button type="button" className={`${deskStyles.btn} ${deskStyles.btnSoft}`} onClick={() => leaveSpace(entry.membership.id)}><LogOut size={14} />{t('settingsSharedSpacePage.leave')}</button>
+                </div>
+                <div {...switchProps(entry.membership.notify_on_changes)} className={deskStyles.tgl}
+                  onClick={() => updateMemberPermissions(entry.membership.id, { notify_on_changes: !entry.membership.notify_on_changes })}>
+                  <div><b>{t('settingsSharedSpacePage.notifyMeLabel')}</b><span>{t('settingsSharedSpacePage.notifyMeSubGuest')}</span></div>
+                  <Toggle on={entry.membership.notify_on_changes} />
+                </div>
+                <NotifOffNotice userId={user?.id} show={entry.membership.notify_on_changes} onGo={onGoNotifications} />
+              </div>
+            )
+          })}
+        </div>
+      </>
+    ) : (
+      <>
+        <div className={sp.sec}>{t('settingsSharedSpacePage.invitedSpacesLabel')}</div>
+        {guestEntries.map(entry => (
+          <GuestSpaceRow
+            key={entry.membership.id}
+            entry={entry}
+            userId={user?.id}
+            onGoNotifications={onGoNotifications}
+            onLeave={() => leaveSpace(entry.membership.id)}
+            onToggleNotify={() => updateMemberPermissions(entry.membership.id, { notify_on_changes: !entry.membership.notify_on_changes })}
+          />
+        ))}
+      </>
     )
-  }
+  )
+
+  const body = showCreating ? createView : showEmpty ? emptyView : (
+    <>
+      {ownedEntry && (
+        <OwnedSpacePanel
+          entry={ownedEntry} user={user} mode={mode} onGoNotifications={onGoNotifications}
+          regenerateCode={regenerateCode} updateMemberPermissions={updateMemberPermissions}
+          updateSpaceConfig={updateSpaceConfig} removeMember={removeMember}
+          deleteSpace={deleteSpace} clearSpaceData={clearSpaceData}
+        />
+      )}
+      {guestSection}
+      {!ownedEntry && createCard()}
+      {!canJoinMore && <div className={sp.hint}>{t('newSharedSpacePanel.maxJoined')}</div>}
+    </>
+  )
+
+  const title = showCreating ? t('settingsSharedSpacePage.deskNewTitle') : t('settingsSharedSpacePage.title')
+  const description = showCreating ? t('settingsSharedSpacePage.deskNewDesc') : t('settingsSharedSpacePage.description')
+  const showJoinBtn = canJoinMore && !showEmpty && !showCreating
 
   if (desk) {
     return (
-      <DeskPage>
+      <DeskPage gray>
         <DeskSettingsHead
-          title={t('settingsSharedSpacePage.title')}
-          description={t('settingsSharedSpacePage.description')}
-          actions={<>
-            {canJoinMore && <button type="button" className={`${deskStyles.btn} ${deskStyles.btnSoft}`} onClick={() => { setJoinError(''); setJoinOpen(true) }}><Users size={16} />{t('settingsSharedSpacePage.deskJoin')}</button>}
-            {canCreateMore && !creating && <button type="button" className={deskStyles.btn} onClick={() => setCreating(true)}><Plus size={16} />{t('settingsSharedSpacePage.deskNew')}</button>}
-          </>}
+          title={title}
+          description={description}
+          actions={showCreating
+            ? <button type="button" className={`${deskStyles.btn} ${deskStyles.btnSoft}`} onClick={cancelCreate}><ChevronLeft size={16} />{t('buttons.back')}</button>
+            : showJoinBtn && <button type="button" className={`${deskStyles.btn} ${deskStyles.btnSoft}`} onClick={openJoin}><Users size={16} />{t('settingsSharedSpacePage.deskJoin')}</button>}
         />
-
-        {ownedEntry && (
-          <OwnedSpacePanel
-            entry={ownedEntry} user={user} onGoNotifications={onGoNotifications}
-            regenerateCode={regenerateCode} updateMemberPermissions={updateMemberPermissions}
-            updateSpaceConfig={updateSpaceConfig} removeMember={removeMember}
-            deleteSpace={deleteSpace} clearSpaceData={clearSpaceData}
-          />
-        )}
-
-        {guestEntries.length > 0 && (
-          <>
-            <div className={`${deskStyles.sec} ${ownedEntry ? '' : deskStyles.secFirst}`}>{t('settingsSharedSpacePage.invitedSpacesCount', { n: guestEntries.length })}</div>
-            <div className={dk.guestGrid}>
-              {guestEntries.map(entry => {
-                const cur = getCurrency(entry.space.currency)
-                return (
-                  <div key={entry.membership.id} className={`${deskStyles.fill} ${dk.guestCard}`}>
-                    <div className={dk.guestTop}>
-                      <span className={dk.guestAv}>{(entry.space.name || '?').trim().charAt(0).toUpperCase()}</span>
-                      <div className={dk.guestInfo}>
-                        <b>{entry.space.name}</b>
-                        <span>{t('settingsSharedSpacePage.period', { freq: getFrequencyLabel(entry.space.cobro_freq) })} · {cur.code}</span>
-                      </div>
-                      <button type="button" className={`${deskStyles.btn} ${deskStyles.btnSoft}`} onClick={() => leaveSpace(entry.membership.id)}><LogOut size={14} />{t('settingsSharedSpacePage.leave')}</button>
-                    </div>
-                    <div {...switchProps(entry.membership.notify_on_changes)} className={deskStyles.tgl}
-                      onClick={() => updateMemberPermissions(entry.membership.id, { notify_on_changes: !entry.membership.notify_on_changes })}>
-                      <div><b>{t('settingsSharedSpacePage.notifyMeLabel')}</b><span>{t('settingsSharedSpacePage.notifyMeSubGuest')}</span></div>
-                      <Toggle on={entry.membership.notify_on_changes} />
-                    </div>
-                    <NotifOffNotice userId={user?.id} show={entry.membership.notify_on_changes} onGo={onGoNotifications} />
-                  </div>
-                )
-              })}
-            </div>
-          </>
-        )}
-
-        {!ownedEntry && !profile.is_premium && (
-          <div className={`${deskStyles.blue} ${dk.cta}`} style={{ marginTop: guestEntries.length ? 18 : 0 }}>
-            <Crown size={26} />
-            <div className={dk.ctaTitle}>{t('newSharedSpacePanel.premiumCtaTitle')}</div>
-            <div className={dk.ctaText}>{t('newSharedSpacePanel.premiumCtaText')}</div>
-            <button type="button" className={`${deskStyles.btn} ${deskStyles.btnWhite}`} onClick={onOpenPremium}><Crown size={16} />{t('goalsPage.premiumBanner.button')}</button>
-          </div>
-        )}
-
-        {!ownedEntry && profile.is_premium && !creating && guestEntries.length === 0 && (
-          <div className={deskStyles.fill}>{t('settingsSharedSpacePage.deskEmpty')}</div>
-        )}
-
-        {!canJoinMore && <div className={dk.hint}>{t('newSharedSpacePanel.maxJoined')}</div>}
+        {body}
         {joinSheet}
       </DeskPage>
     )
   }
 
-  return (
-    <>
-    <div className={`${slideClass} ${styles.pageRoot}`}>
-      <PageHero
-        icon={UsersThree}
-        title={t('settingsSharedSpacePage.title')}
-        description={t('settingsSharedSpacePage.description')}
-        onBack={onBack}
-      />
-
-      {/* ── Tu espacio (si eres dueño) ── */}
-      {ownedEntry && (
-        <OwnedSpacePanel
-          entry={ownedEntry}
-          user={user}
-          onGoNotifications={onGoNotifications}
-          regenerateCode={regenerateCode}
-          updateMemberPermissions={updateMemberPermissions}
-          updateSpaceConfig={updateSpaceConfig}
-          removeMember={removeMember}
-          deleteSpace={deleteSpace}
-          clearSpaceData={clearSpaceData}
-        />
-      )}
-
-      {/* ── Espacios donde te invitaron ── */}
-      {guestEntries.length > 0 && (
-        <div className={styles.guestWrapper}>
-          <div className={styles.sectionLabel}>
-            {t('settingsSharedSpacePage.invitedSpacesLabel')}
-          </div>
-          {guestEntries.map(entry => (
-            <GuestSpaceRow
-              key={entry.membership.id}
-              entry={entry}
-              userId={user?.id}
-              onGoNotifications={onGoNotifications}
-              onLeave={() => leaveSpace(entry.membership.id)}
-              onToggleNotify={() => updateMemberPermissions(entry.membership.id, { notify_on_changes: !entry.membership.notify_on_changes })}
-            />
-          ))}
-        </div>
-      )}
-
-      {/* ── Crear (solo si es Premium y no tiene ya uno propio) ── */}
-      {!ownedEntry && (
-        <Card>
-          <div className={styles.cardPadding}>
-            {!profile.is_premium ? (
-              <div className={styles.premiumBlock}>
-                <div className={styles.premiumIcon}><Crown size={22} /></div>
-                <div className={styles.premiumTitle}>
-                  {t('newSharedSpacePanel.premiumCtaTitle')}
-                </div>
-                <div className={styles.premiumDescription}>
-                  {t('newSharedSpacePanel.premiumCtaText')}
-                </div>
-                <button onClick={onOpenPremium} className={styles.premiumButton}>
-                  <Crown size={16} /> {t('goalsPage.premiumBanner.button')}
-                </button>
+  if (mode === 'tablet') {
+    return (
+      <>
+        <div className={`${slideClass} ${home.root} ${home.tablet}`}>
+          <header className={`${home.head} ${tb.headBar}`}>
+            <div className={`${home.headText} ${tb.headRow}`}>
+              <button type="button" className={tb.back} onClick={showCreating ? cancelCreate : onBack} aria-label={t('buttons.back')}><ChevronLeft size={20} /></button>
+              <div>
+                <div className={home.date}>{description}</div>
+                <h1 className={home.hello}>{title}</h1>
               </div>
-            ) : !creating ? (
-              <button onClick={() => setCreating(true)} className={styles.createSpaceButton}>
-                <Plus size={16} /> {t('newSharedSpacePanel.createTitle')}
-              </button>
-            ) : (
-              <>
-                <label className="field-label">{t('newSharedSpacePanel.spaceNameLabel')}</label>
-                <input aria-label={t('newSharedSpacePanel.spaceNameLabel')} className={`field-input ${styles.fieldMb16}`} value={newName} onChange={e => setNewName(e.target.value)} placeholder={t('newSharedSpacePanel.spaceNamePlaceholder')} />
-                <label className={`field-label ${styles.labelBlock}`}>{t('currency.spaceLabel')}</label>
-                <div className={styles.fieldMb16}>
-                  <CurrencySelect value={newCurrency} onChange={setNewCurrency} sheetTitle={t('currency.spaceSheetTitle')} />
-                </div>
-                <label className={`field-label ${styles.labelBlock}`}>{t('cobroPeriodFields.periodLabel')}</label>
-                <div className={styles.fieldMb16}>
-                  <CobroPeriodFields
-                    freq={newFreq} day1={newDay1} day2={newDay2} weekday={newWeekday}
-                    onChangeFreq={setNewFreq} onChangeDay1={setNewDay1} onChangeDay2={setNewDay2} onChangeWeekday={setNewWeekday}
-                  />
-                </div>
-                {createError && <div className={styles.errorText}>{createError}</div>}
-                <button onClick={handleCreate} disabled={createSaving} className={`btn-primary ${styles.createConfirmMb} ${createSaving ? styles.savingOpacity : ''}`}>
-                  {createSaving ? t('newSharedSpacePanel.creating') : t('newSharedSpacePanel.create')}
-                </button>
-                <button onClick={() => { setCreating(false); setCreateError('') }} className="btn-ghost">{t('buttons.cancel')}</button>
-              </>
-            )}
-          </div>
-        </Card>
-      )}
-
-      {!canJoinMore && (
-        <Card>
-          <div className={styles.joinMaxedCard}>
-            {t('newSharedSpacePanel.maxJoined')}
-          </div>
-        </Card>
-      )}
-    </div>
-
-      {canJoinMore && (
-        <>
-          <div className={`${styles.addPillRow} ${desk ? styles.addPillRowDesk : ''}`}>
-            <button type="button" onClick={() => { setJoinError(''); setJoinOpen(true) }} className={styles.addPill}>
-              <Users size={18} color="var(--surface)" />
+            </div>
+          </header>
+          <div className={sp.page}>{body}</div>
+        </div>
+        {showJoinBtn && (
+          <div className={wd.pillRow}>
+            <button type="button" onClick={openJoin} className={wd.pill}>
+              <Users size={19} strokeWidth={2.4} />
               {t('settingsSharedSpacePage.joinFab')}
             </button>
           </div>
-          <BottomSheet modal open={joinOpen} title={t('newSharedSpacePanel.joinTitle')} onClose={() => setJoinOpen(false)}>
-            <div className={styles.joinDescription}>{t('settingsSharedSpacePage.joinDescription')}</div>
-            <input aria-label={t('newSharedSpacePanel.joinTitle')}
-              className={`field-input ${styles.joinCodeInput}`} inputMode="numeric" maxLength={6}
-              value={joinCode} onChange={e => setJoinCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
-              placeholder="000000"
-            />
-            {joinError && <div className={styles.errorText}>{joinError}</div>}
-            <button onClick={handleJoin} disabled={joinSaving || joinCode.length !== 6} className={`btn-primary ${(joinSaving || joinCode.length !== 6) ? styles.disabledOpacity : ''}`}>
-              {joinSaving ? t('newSharedSpacePanel.joining') : t('newSharedSpacePanel.join')}
-            </button>
-          </BottomSheet>
-        </>
+        )}
+        {joinSheet}
+      </>
+    )
+  }
+
+  return (
+    <>
+      <div className={`${slideClass} ${styles.pageRoot}`}>
+        <PageHero
+          icon={UsersThree}
+          title={title}
+          description={description}
+          onBack={showCreating ? cancelCreate : onBack}
+        />
+        <div className={sp.mobilePage}>{body}</div>
+      </div>
+      {showJoinBtn && (
+        <div className={styles.addPillRow}>
+          <button type="button" onClick={openJoin} className={styles.addPill}>
+            <Users size={18} color="var(--surface)" />
+            {t('settingsSharedSpacePage.joinFab')}
+          </button>
+        </div>
       )}
+      {joinSheet}
     </>
   )
 }
 
-// ── Fila plegable de un espacio donde te invitaron ──────────────────────────
+// ── Fila plegable de un espacio donde te invitaron (móvil / tablet vertical) ──
 function GuestSpaceRow({ entry, userId, onGoNotifications, onLeave, onToggleNotify }) {
   const { t } = useTranslation()
   const [expanded, setExpanded] = useState(false)
+  const cur = getCurrency(entry.space.currency)
 
   return (
-    <div className={styles.guestRowMargin}>
-      <button onClick={() => setExpanded(v => !v)} className={styles.guestRowButton}>
-        <div className={styles.guestRowLeft}>
-          <Users size={16} color="var(--text)" />
-          <span className={styles.guestRowTitle}>{entry.space.name}</span>
-        </div>
-        {expanded ? <ChevronUp size={16} color="var(--text)" /> : <ChevronDown size={16} color="var(--text)" />}
+    <div className={sp.guestWrap}>
+      <button type="button" aria-expanded={expanded} onClick={() => setExpanded(v => !v)} className={`${sp.guestRow} ${expanded ? sp.guestRowOpen : ''}`}>
+        <span className={sp.guestIco}><Users size={18} color="var(--text)" /></span>
+        <span className={sp.guestName}>{entry.space.name}</span>
+        {expanded ? <ChevronUp size={18} color="var(--text)" /> : <ChevronDown size={18} color="var(--text)" />}
       </button>
 
       <Collapse open={expanded}>
-        <div className={styles.guestRowBody}>
-          <div className={styles.guestRowPeriod}>
-            {t('settingsSharedSpacePage.period', { freq: getFrequencyLabel(entry.space.cobro_freq) })}
+        <div className={sp.guestBody}>
+          <div className={sp.chips}>
+            <span className={sp.chip}>{t('settingsSharedSpacePage.period', { freq: getFrequencyLabel(entry.space.cobro_freq) })}</span>
+            <span className={sp.chip}>{t('currency.spaceLabel')}: {t(`currency.names.${cur.code}`)} ({cur.code}) · {t('currency.guestHint')}</span>
           </div>
-          <div className={styles.guestRowPeriod}>
-            {t('currency.spaceLabel')}: {t(`currency.names.${getCurrency(entry.space.currency).code}`)} ({getCurrency(entry.space.currency).code}) · {t('currency.guestHint')}
-          </div>
-          <div {...switchProps(entry.membership.notify_on_changes)} className={`${styles.notifyRow} ${styles.notifyRowMb}`} onClick={onToggleNotify}>
+          <div {...switchProps(entry.membership.notify_on_changes)} className={styles.notifyRow} onClick={onToggleNotify}>
             <div>
               <div className={styles.notifyRowTitle}>{t('settingsSharedSpacePage.notifyMeLabel')}</div>
               <div className={styles.notifyRowSubtitle}>{t('settingsSharedSpacePage.notifyMeSubGuest')}</div>
@@ -396,8 +415,8 @@ function GuestSpaceRow({ entry, userId, onGoNotifications, onLeave, onToggleNoti
             <Toggle on={entry.membership.notify_on_changes} />
           </div>
           <NotifOffNotice userId={userId} show={entry.membership.notify_on_changes} onGo={onGoNotifications} />
-          <button onClick={onLeave} className={styles.smallDangerButton}>
-            <LogOut size={12} /> {t('settingsSharedSpacePage.leave')}
+          <button type="button" onClick={onLeave} className={sp.leaveBtn}>
+            <LogOut size={16} /> {t('settingsSharedSpacePage.leave')}
           </button>
         </div>
       </Collapse>
@@ -411,10 +430,9 @@ const PERM_KEYS = [
 ]
 
 // ── Panel de administración del espacio propio ──────────────────────────────
-function OwnedSpacePanel({ entry, user, onGoNotifications, regenerateCode, updateMemberPermissions, updateSpaceConfig, removeMember, deleteSpace, clearSpaceData }) {
+function OwnedSpacePanel({ entry, user, mode, onGoNotifications, regenerateCode, updateMemberPermissions, updateSpaceConfig, removeMember, deleteSpace, clearSpaceData }) {
   const { t } = useTranslation()
   const desk = useDeskSettings()
-  const [expanded,      setExpanded]      = useState(false)
   const [copied,        setCopied]        = useState(false)
   const [regenerating,  setRegenerating]  = useState(false)
   const [nameInput,     setNameInput]     = useState(entry.space.name)
@@ -530,363 +548,156 @@ function OwnedSpacePanel({ entry, user, onGoNotifications, regenerateCode, updat
     </>
   )
 
-  if (desk) {
-    const members = entry.space.members?.length ? entry.space.members : guestMembers
-    const count = Math.max(members.length, guestMembers.length + 1)
-    const nm = m => m.profile?.name || t('settingsSharedSpacePage.guestFallback')
-    const remaining = 2 - guestMembers.length
-    return (
-      <>
-        <div className={dk.grid}>
-          <div className={dk.col}>
-            <div className={`${deskStyles.blue} ${dk.hero}`}>
-              <span className={deskStyles.sub}><Crown size={13} style={{ verticalAlign: '-2px' }} /> {t('settingsSharedSpacePage.deskOwnerBadge')}</span>
-              <div className={dk.heroName}>{entry.space.name}</div>
-              <div className={dk.heroRow}>
-                <div className={dk.stack}>
-                  {members.slice(0, 4).map(m => (
-                    <div key={m.id}>
-                      <AvatarImg src={m.profile?.avatar_url} className={dk.img} fallback={<div className={dk.stackFb}>{nm(m).slice(0, 1).toUpperCase()}</div>} />
-                    </div>
-                  ))}
-                </div>
-                <span>{t('settingsSharedSpacePage.deskMembers', { count })}</span>
-              </div>
-            </div>
-
-            <div className={deskStyles.fill}>
-              <div className={deskStyles.fillTitle}>{t('settingsSharedSpacePage.deskConfig')}</div>
-              <div className={dk.cfgRow}>
-                <div>
-                  <label className={dk.lab}>{t('newSharedSpacePanel.spaceNameLabel')}</label>
-                  <input aria-label={t('newSharedSpacePanel.spaceNameLabel')} className="field-input" value={nameInput}
-                    onChange={e => setNameInput(e.target.value)} onBlur={handleNameBlur}
-                    onKeyDown={e => e.key === 'Enter' && e.target.blur()} />
-                </div>
-                <div>
-                  <label className={dk.lab}>{t('settingsCobro.currencyLabel')}</label>
-                  <button type="button" onClick={() => setCurrencyOpen(true)} className={`field-input ${dk.curBtn}`}>
-                    {getCurrency(entry.space.currency).code}<ChevronDown size={14} color="var(--text)" />
-                  </button>
-                </div>
-              </div>
-              <div className={dk.field}>
-                <label className={dk.lab}>{t('cobroPeriodFields.periodLabel')}</label>
-                <CobroPeriodFields
-                  freq={entry.space.cobro_freq} day1={entry.space.cobro_day1} day2={entry.space.cobro_day2} weekday={entry.space.cobro_weekday}
-                  onChangeFreq={v => handleCobroChange({ cobro_freq: v })} onChangeDay1={v => handleCobroChange({ cobro_day1: v })}
-                  onChangeDay2={v => handleCobroChange({ cobro_day2: v })} onChangeWeekday={v => handleCobroChange({ cobro_weekday: v })}
-                />
-              </div>
-            </div>
-
-            <div className={deskStyles.fill}>
-              <div className={deskStyles.fillTitle}>{t('settingsSharedSpacePage.deskMembersTitle')}</div>
-              {guestMembers.length === 0 && <div className={dk.hint}>{t('settingsSharedSpacePage.inviteHint', { count: remaining })}</div>}
-              {guestMembers.map(m => {
-                const guestName = nm(m)
-                const isOpen = openMemberId === m.id
-                const isConfirming = confirmExpel === m.id
-                const onCount = PERM_KEYS.filter(k => m[k]).length
-                return (
-                  <div key={m.id} className={dk.member}>
-                    <button type="button" className={dk.memberHead} onClick={() => setOpenMemberId(isOpen ? null : m.id)}>
-                      <div className={dk.avatar}><AvatarImg src={m.profile?.avatar_url} className={dk.img} fallback={<div className={dk.avatarFb}>{guestName.slice(0, 2).toUpperCase()}</div>} /></div>
-                      <div className={dk.memberText}><b>{guestName}</b><span>{t('settingsSharedSpacePage.permSummary', { on: onCount, total: PERM_KEYS.length })}</span></div>
-                      <span className={dk.role}>{t('settingsSharedSpacePage.guestFallback')}</span>
-                      {isOpen ? <ChevronUp size={16} color="var(--text)" /> : <ChevronDown size={16} color="var(--text)" />}
-                    </button>
-                    <Collapse open={isOpen}>
-                      <div className={dk.perms}>
-                        <div className={dk.permLabel}>{t('settingsSharedSpacePage.permGroupPayments')}</div>
-                        <div className={dk.permGrid}>
-                          {PAYMENT_PERMS.map(({ key, Icon, label }) => (
-                            <PermTile key={key} Icon={Icon} label={t(label)} on={!!m[key]} onToggle={() => updateMemberPermissions(m.id, { [key]: !m[key] })} />
-                          ))}
-                        </div>
-                        <div className={dk.permLabel}>{t('settingsSharedSpacePage.permGroupGoals')}</div>
-                        <div className={dk.permGrid}>
-                          {GOAL_PERMS.map(({ key, Icon, label, sub }) => (
-                            <PermTile key={key} Icon={Icon} label={t(label)} sub={sub ? t(sub) : undefined} on={!!m[key]} onToggle={() => updateMemberPermissions(m.id, { [key]: !m[key] })} />
-                          ))}
-                        </div>
-                        <button type="button" className={dk.linkDanger} onClick={() => setConfirmExpel(isConfirming ? null : m.id)}>
-                          <LogOut size={15} />{t('settingsSharedSpacePage.removeFromSpace')}
-                        </button>
-                        <Collapse open={!!isConfirming}>
-                          <div className={dk.confirm}>
-                            {t('settingsSharedSpacePage.confirmExpel', { name: guestName })}
-                            <div className={dk.confirmBtns}>
-                              <button type="button" className={`${deskStyles.btn} ${deskStyles.btnSoft}`} onClick={() => setConfirmExpel(null)}>{t('buttons.cancel')}</button>
-                              <button type="button" className={`${deskStyles.btn} ${dk.btnDanger}`} disabled={expelling} onClick={() => handleExpel(m.id)}>
-                                {expelling ? t('settingsSharedSpacePage.expelling') : t('settingsSharedSpacePage.expel')}
-                              </button>
-                            </div>
-                          </div>
-                        </Collapse>
-                      </div>
-                    </Collapse>
-                  </div>
-                )
-              })}
-            </div>
-          </div>
-
-          <div className={dk.col}>
-            <div className={deskStyles.fill}>
-              <div className={deskStyles.fillTitle}>{t('settingsSharedSpacePage.accessCodeLabel')}</div>
-              <div className={dk.code}>{entry.space.access_code}</div>
-              <div className={dk.codeBtns}>
-                <button type="button" className={`${deskStyles.btn} ${dk.grow}`} onClick={copyCode}><Copy size={15} />{copied ? t('settingsSharedSpacePage.copied') : t('settingsSharedSpacePage.copyCode')}</button>
-                <button type="button" className={`${deskStyles.btn} ${deskStyles.btnSoft}`} disabled={regenerating} onClick={() => setConfirmRegen(v => !v)} aria-label={t('settingsSharedSpacePage.regenerate')}><RefreshCw size={15} /></button>
-              </div>
-              <Collapse open={!!confirmRegen}>
-                <div className={dk.confirm} style={{ marginTop: 12 }}>
-                  {t('settingsSharedSpacePage.regenConfirm')}
-                  <div className={dk.confirmBtns}>
-                    <button type="button" className={`${deskStyles.btn} ${deskStyles.btnSoft}`} onClick={() => setConfirmRegen(false)}>{t('buttons.cancel')}</button>
-                    <button type="button" className={`${deskStyles.btn} ${dk.btnDanger}`} disabled={regenerating} onClick={handleRegenerate}>{t('settingsSharedSpacePage.regenerate')}</button>
-                  </div>
-                </div>
-              </Collapse>
-              <div className={`${dk.hint} ${remaining > 0 ? '' : dk.full}`}>
-                {remaining > 0 ? t('settingsSharedSpacePage.inviteHint', { count: remaining }) : t('settingsSharedSpacePage.spaceFullText')}
-              </div>
-            </div>
-
-            <div className={deskStyles.fill}>
-              <div {...switchProps(entry.membership.notify_on_changes)} className={deskStyles.tgl} style={{ paddingTop: 0, paddingBottom: 0 }}
-                onClick={() => updateMemberPermissions(entry.membership.id, { notify_on_changes: !entry.membership.notify_on_changes })}>
-                <div><b>{t('settingsSharedSpacePage.notifyMeLabel')}</b><span>{t('settingsSharedSpacePage.notifyMeSubOwner')}</span></div>
-                <Toggle on={entry.membership.notify_on_changes} />
-              </div>
-              <NotifOffNotice userId={user?.id} show={entry.membership.notify_on_changes} onGo={onGoNotifications} />
-            </div>
-
-            <div className={deskStyles.fill}>
-              <div className={deskStyles.fillTitle}>{t('settingsSharedSpacePage.deskDanger')}</div>
-              <div className={dk.danger}>
-                <button type="button" className={dk.dangerRow} onClick={() => setConfirmClear(v => !v)}><Trash2 size={16} />{t('settingsSharedSpacePage.clearDataButton')}</button>
-                <Collapse open={!!confirmClear}>
-                  <div className={dk.confirm}>
-                    {t('settingsSharedSpacePage.confirmClearText', { name: entry.space.name })}
-                    <div className={dk.confirmBtns}>
-                      <button type="button" className={`${deskStyles.btn} ${deskStyles.btnSoft}`} onClick={() => setConfirmClear(false)}>{t('buttons.cancel')}</button>
-                      <button type="button" className={`${deskStyles.btn} ${dk.btnDanger}`} disabled={clearing} onClick={handleClearData}>{clearing ? t('settingsSharedSpacePage.clearing') : t('settingsSharedSpacePage.clearAll')}</button>
-                    </div>
-                  </div>
-                </Collapse>
-                <button type="button" className={dk.dangerRow} onClick={() => { setDangerOpen(true); setDangerPassword(''); setDangerError('') }}><Trash2 size={16} />{t('settingsSharedSpacePage.deleteSpaceButton')}</button>
-              </div>
-            </div>
-          </div>
-        </div>
-        {modals}
-      </>
-    )
-  }
-
+  const members = entry.space.members?.length ? entry.space.members : guestMembers
+  const count = Math.max(members.length, guestMembers.length + 1)
+  const nm = m => m.profile?.name || t('settingsSharedSpacePage.guestFallback')
+  const remaining = 2 - guestMembers.length
   return (
     <>
-      <div className={styles.ownedWrapper}>
-        <button onClick={() => setExpanded(v => !v)} className={styles.ownedHeaderButton}>
-          <div className={styles.ownedHeaderLeft}>
-            <Crown size={16} color="var(--premium-gold)" />
-            <span className={styles.ownedHeaderTitle}>{entry.space.name}</span>
+      <div className={`${sp.owned} ${sp[mode]}`}>
+        <div className={sp.col}>
+          <div className={`${deskStyles.blue} ${dk.hero} ${sp.oHero}`}>
+            <span className={deskStyles.sub}><Crown size={13} style={{ verticalAlign: '-2px' }} /> {t('settingsSharedSpacePage.deskOwnerBadge')}</span>
+            <div className={dk.heroName}>{entry.space.name}</div>
+            <div className={dk.heroRow}>
+              <div className={dk.stack}>
+                {members.slice(0, 4).map(m => (
+                  <div key={m.id}>
+                    <AvatarImg src={m.profile?.avatar_url} className={dk.img} fallback={<div className={dk.stackFb}>{nm(m).slice(0, 1).toUpperCase()}</div>} />
+                  </div>
+                ))}
+              </div>
+              <span>{t('settingsSharedSpacePage.deskMembers', { count })}</span>
+            </div>
           </div>
-          {expanded ? <ChevronUp size={18} color="var(--text)" /> : <ChevronDown size={18} color="var(--text)" />}
-        </button>
 
-        <Collapse open={expanded}>
-          <div className={styles.islandStack}>
-
-            {/* ── Isla: configuración del espacio ── */}
-            <div className={styles.islandCard}>
-              <div className={styles.fieldRow}>
-                <div className={styles.nameCurrencyRow}>
-                  <div className={styles.nameCol}>
-                    <label className={styles.plainLabel}>{t('newSharedSpacePanel.spaceNameLabel')}</label>
-                    <input aria-label={t('newSharedSpacePanel.spaceNameLabel')}
-                      className="field-input" value={nameInput}
-                      onChange={e => setNameInput(e.target.value)}
-                      onBlur={handleNameBlur}
-                      onKeyDown={e => e.key === 'Enter' && e.target.blur()}
-                    />
-                  </div>
-                  <div className={styles.currencyCol}>
-                    <label className={styles.plainLabel}>{t('settingsCobro.currencyLabel')}</label>
-                    <button type="button" onClick={() => setCurrencyOpen(true)} className={`field-input ${styles.currencyButton}`}>
-                      {getCurrency(entry.space.currency).code}
-                      <ChevronDown size={14} color="var(--text)" />
-                    </button>
-                  </div>
-                </div>
+          <div className={`${sp.panel} ${sp.oCfg}`} data-newchips="">
+            <div className={sp.panelTitle}>{t('settingsSharedSpacePage.deskConfig')}</div>
+            <div className={sp.cfgRow}>
+              <div>
+                <label className={sp.lab}>{t('newSharedSpacePanel.spaceNameLabel')}</label>
+                <input aria-label={t('newSharedSpacePanel.spaceNameLabel')} className="field-input" value={nameInput}
+                  onChange={e => setNameInput(e.target.value)} onBlur={handleNameBlur}
+                  onKeyDown={e => e.key === 'Enter' && e.target.blur()} />
               </div>
-
-              <div className={styles.fieldRow}>
-                <label className={styles.plainLabel}>{t('cobroPeriodFields.periodLabel')}</label>
-                <CobroPeriodFields
-                  freq={entry.space.cobro_freq}
-                  day1={entry.space.cobro_day1}
-                  day2={entry.space.cobro_day2}
-                  weekday={entry.space.cobro_weekday}
-                  onChangeFreq={v => handleCobroChange({ cobro_freq: v })}
-                  onChangeDay1={v => handleCobroChange({ cobro_day1: v })}
-                  onChangeDay2={v => handleCobroChange({ cobro_day2: v })}
-                  onChangeWeekday={v => handleCobroChange({ cobro_weekday: v })}
-                />
-              </div>
-
-              <div className={`${styles.fieldRow} ${styles.fieldRowLast}`}>
-                <label className={styles.plainLabel}>{t('settingsSharedSpacePage.accessCodeLabel')}</label>
-                <div className={styles.codeRow}>
-                  <div className={styles.codeDisplay}>
-                    {entry.space.access_code}
-                  </div>
-                  <button onClick={copyCode} className={styles.codeIconButton} aria-label={t('settingsSharedSpacePage.copyCode')}>
-                    <Copy size={16} color="var(--text)" />
-                  </button>
-                  <button onClick={() => setConfirmRegen(v => !v)} disabled={regenerating} className={`${styles.codeIconButton} ${regenerating ? styles.disabledOpacity : ''}`} aria-label={t('settingsSharedSpacePage.regenerate')}>
-                    <RefreshCw size={16} color="var(--text)" />
-                  </button>
-                </div>
-                <Collapse open={!!(confirmRegen)}>
-                  <div className={styles.regenConfirm}>
-                    <div className={styles.confirmBoxText}>{t('settingsSharedSpacePage.regenConfirm')}</div>
-                    <div className={styles.confirmButtonsRow}>
-                      <button onClick={() => setConfirmRegen(false)} className={styles.confirmCancelButton}>{t('buttons.cancel')}</button>
-                      <button onClick={handleRegenerate} disabled={regenerating} className={`${styles.confirmDangerButton} ${regenerating ? styles.savingOpacity : ''}`}>
-                        {t('settingsSharedSpacePage.regenerate')}
-                      </button>
-                    </div>
-                  </div>
-                </Collapse>
-                {copied && <div className={styles.copiedText}>{t('settingsSharedSpacePage.copied')}</div>}
-                {(() => {
-                  const remaining = 2 - guestMembers.length
-                  if (remaining > 0) {
-                    return <div className={styles.inviteHintText}>{t('settingsSharedSpacePage.inviteHint', { count: remaining })}</div>
-                  }
-                  return <div className={styles.spaceFullText}>{t('settingsSharedSpacePage.spaceFullText')}</div>
-                })()}
+              <div>
+                <label className={sp.lab}>{t('settingsCobro.currencyLabel')}</label>
+                <button type="button" onClick={() => setCurrencyOpen(true)} className={`field-input ${dk.curBtn}`}>
+                  {getCurrency(entry.space.currency).code}<ChevronDown size={14} color="var(--text)" />
+                </button>
               </div>
             </div>
-
-            {/* ── Isla: notificaciones del dueño ── */}
-            <div className={styles.islandCard}>
-              <div className={`${styles.fieldRow} ${styles.fieldRowLast}`}>
-                <div {...switchProps(entry.membership.notify_on_changes)} className={styles.notifyRow} onClick={() => updateMemberPermissions(entry.membership.id, { notify_on_changes: !entry.membership.notify_on_changes })}>
-                  <div>
-                    <div className={styles.notifyRowTitle}>{t('settingsSharedSpacePage.notifyMeLabel')}</div>
-                    <div className={styles.notifyRowSubtitle}>{t('settingsSharedSpacePage.notifyMeSubOwner')}</div>
-                  </div>
-                  <Toggle on={entry.membership.notify_on_changes} />
-                </div>
-                <NotifOffNotice userId={user?.id} show={entry.membership.notify_on_changes} onGo={onGoNotifications} />
-              </div>
+            <div className={sp.cfgField}>
+              <label className={sp.lab}>{t('cobroPeriodFields.periodLabel')}</label>
+              <CobroPeriodFields
+                freq={entry.space.cobro_freq} day1={entry.space.cobro_day1} day2={entry.space.cobro_day2} weekday={entry.space.cobro_weekday}
+                onChangeFreq={v => handleCobroChange({ cobro_freq: v })} onChangeDay1={v => handleCobroChange({ cobro_day1: v })}
+                onChangeDay2={v => handleCobroChange({ cobro_day2: v })} onChangeWeekday={v => handleCobroChange({ cobro_weekday: v })}
+              />
             </div>
+          </div>
 
-            {/* ── Isla por cada invitado (colapsado: resumen; al tocar, permisos) ── */}
-            {guestMembers.length > 0 && guestMembers.map((m) => {
-              const guestName = m.profile?.name || t('settingsSharedSpacePage.guestFallback')
-              const initials = guestName.slice(0, 2).toUpperCase()
-              const isConfirming = confirmExpel === m.id
+          <div className={`${sp.panel} ${sp.oMem}`}>
+            <div className={sp.panelTitle}>{t('settingsSharedSpacePage.deskMembersTitle')}</div>
+            {guestMembers.length === 0 && <div className={sp.hint}>{t('settingsSharedSpacePage.inviteHint', { count: remaining })}</div>}
+            {guestMembers.map(m => {
+              const guestName = nm(m)
               const isOpen = openMemberId === m.id
+              const isConfirming = confirmExpel === m.id
               const onCount = PERM_KEYS.filter(k => m[k]).length
               return (
-                <div key={m.id} className={styles.islandCard}>
-                  <button type="button" onClick={() => setOpenMemberId(isOpen ? null : m.id)} className={styles.memberHeaderButton}>
-                    <AvatarImg
-                      src={m.profile?.avatar_url}
-                      className={styles.memberAvatarImg}
-                      fallback={<div className={styles.memberAvatarFallback}>{initials}</div>}
-                    />
-                    <div className={styles.memberTextCol}>
-                      <span className={styles.memberName}>{guestName}</span>
-                      <span className={styles.memberSummary}>{t('settingsSharedSpacePage.permSummary', { on: onCount, total: PERM_KEYS.length })}</span>
-                    </div>
-                    {isOpen ? <ChevronUp size={16} color="var(--text)" /> : <ChevronDown size={16} color="var(--text)" />}
+                <div key={m.id} className={sp.member}>
+                  <button type="button" aria-expanded={isOpen} className={sp.memberHead} onClick={() => setOpenMemberId(isOpen ? null : m.id)}>
+                    <div className={dk.avatar}><AvatarImg src={m.profile?.avatar_url} className={dk.img} fallback={<div className={dk.avatarFb}>{guestName.slice(0, 2).toUpperCase()}</div>} /></div>
+                    <div className={sp.memberText}><b>{guestName}</b><span>{t('settingsSharedSpacePage.permSummary', { on: onCount, total: PERM_KEYS.length })}</span></div>
+                    <span className={sp.role}>{t('settingsSharedSpacePage.guestFallback')}</span>
+                    {isOpen ? <ChevronUp size={18} color="var(--text)" /> : <ChevronDown size={18} color="var(--text)" />}
                   </button>
-
                   <Collapse open={isOpen}>
-                    <>
-                      {/* v0.9.807: permisos como fichas (mismo patrón que las de Notificaciones). */}
-                      <div className={styles.permGroupLabel}>{t('settingsSharedSpacePage.permGroupPayments')}</div>
-                      <div className={styles.permTiles}>
+                    <div className={dk.perms}>
+                      <div className={dk.permLabel}>{t('settingsSharedSpacePage.permGroupPayments')}</div>
+                      <div className={sp.permGrid}>
                         {PAYMENT_PERMS.map(({ key, Icon, label }) => (
-                          <PermTile key={key} Icon={Icon} label={t(label)} on={!!m[key]}
-                            onToggle={() => updateMemberPermissions(m.id, { [key]: !m[key] })} />
+                          <PermTile key={key} Icon={Icon} label={t(label)} on={!!m[key]} onToggle={() => updateMemberPermissions(m.id, { [key]: !m[key] })} />
                         ))}
                       </div>
-                      <div className={styles.permGroupLabel}>{t('settingsSharedSpacePage.permGroupGoals')}</div>
-                      <div className={styles.permTiles}>
+                      <div className={dk.permLabel}>{t('settingsSharedSpacePage.permGroupGoals')}</div>
+                      <div className={sp.permGrid}>
                         {GOAL_PERMS.map(({ key, Icon, label, sub }) => (
-                          <PermTile key={key} Icon={Icon} label={t(label)} sub={sub ? t(sub) : undefined} on={!!m[key]}
-                            onToggle={() => updateMemberPermissions(m.id, { [key]: !m[key] })} />
+                          <PermTile key={key} Icon={Icon} label={t(label)} sub={sub ? t(sub) : undefined} on={!!m[key]} onToggle={() => updateMemberPermissions(m.id, { [key]: !m[key] })} />
                         ))}
                       </div>
-
-                      <button onClick={() => setConfirmExpel(isConfirming ? null : m.id)} className={`${styles.dangerButtonRow} ${styles.dangerButtonRowTop} ${isConfirming ? '' : styles.dangerButtonRowLast}`}>
-                        <LogOut size={16} color="var(--danger)" />
-                        <span className={styles.dangerButtonText}>{t('settingsSharedSpacePage.removeFromSpace')}</span>
+                      <button type="button" className={dk.linkDanger} onClick={() => setConfirmExpel(isConfirming ? null : m.id)}>
+                        <LogOut size={15} />{t('settingsSharedSpacePage.removeFromSpace')}
                       </button>
-                      <Collapse open={!!(isConfirming)}>
-                        <div className={styles.confirmBoxWrapper}>
-                          <div className={styles.confirmBoxInner}>
-                            <div className={styles.confirmBoxText}>
-                              {t('settingsSharedSpacePage.confirmExpel', { name: guestName })}
-                            </div>
-                            <div className={styles.confirmButtonsRow}>
-                              <button onClick={() => setConfirmExpel(null)} className={styles.confirmCancelButton}>
-                                {t('buttons.cancel')}
-                              </button>
-                              <button onClick={() => handleExpel(m.id)} disabled={expelling} className={`${styles.confirmDangerButton} ${expelling ? styles.savingOpacity : ''}`}>
-                                {expelling ? t('settingsSharedSpacePage.expelling') : t('settingsSharedSpacePage.expel')}
-                              </button>
-                            </div>
+                      <Collapse open={!!isConfirming}>
+                        <div className={dk.confirm}>
+                          {t('settingsSharedSpacePage.confirmExpel', { name: guestName })}
+                          <div className={dk.confirmBtns}>
+                            <button type="button" className={`${deskStyles.btn} ${deskStyles.btnSoft}`} onClick={() => setConfirmExpel(null)}>{t('buttons.cancel')}</button>
+                            <button type="button" className={`${deskStyles.btn} ${dk.btnDanger}`} disabled={expelling} onClick={() => handleExpel(m.id)}>
+                              {expelling ? t('settingsSharedSpacePage.expelling') : t('settingsSharedSpacePage.expel')}
+                            </button>
                           </div>
                         </div>
                       </Collapse>
-                    </>
+                    </div>
                   </Collapse>
                 </div>
               )
             })}
+          </div>
+        </div>
 
-            {/* ── Isla: zona de peligro ── */}
-            <div className={styles.islandCard}>
-              <button onClick={() => setConfirmClear(v => !v)} className={styles.dangerButtonRow}>
-                <Trash2 size={16} color="var(--danger)" />
-                <span className={styles.dangerButtonText}>{t('settingsSharedSpacePage.clearDataButton')}</span>
-              </button>
-              <Collapse open={!!(confirmClear)}>
-                <div className={styles.confirmBoxWrapper}>
-                  <div className={styles.confirmBoxInner}>
-                    <div className={styles.confirmBoxText}>
-                      {t('settingsSharedSpacePage.confirmClearText', { name: entry.space.name })}
-                    </div>
-                    <div className={styles.confirmButtonsRow}>
-                      <button onClick={() => setConfirmClear(false)} className={styles.confirmCancelButton}>
-                        {t('buttons.cancel')}
-                      </button>
-                      <button onClick={handleClearData} disabled={clearing} className={`${styles.confirmDangerButton} ${clearing ? styles.savingOpacity : ''}`}>
-                        {clearing ? t('settingsSharedSpacePage.clearing') : t('settingsSharedSpacePage.clearAll')}
-                      </button>
-                    </div>
+        <div className={sp.col}>
+          <div className={`${sp.panel} ${sp.oCode}`}>
+            <div className={sp.panelTitle}>{t('settingsSharedSpacePage.accessCodeLabel')}</div>
+            <div className={sp.code}>{entry.space.access_code}</div>
+            <div className={sp.codeBtns}>
+              <button type="button" className={`${deskStyles.btn} ${sp.grow}`} onClick={copyCode}><Copy size={15} />{copied ? t('settingsSharedSpacePage.copied') : t('settingsSharedSpacePage.copyCode')}</button>
+              <button type="button" className={sp.iconBtn} disabled={regenerating} onClick={() => setConfirmRegen(v => !v)} aria-label={t('settingsSharedSpacePage.regenerate')}><RefreshCw size={16} /></button>
+            </div>
+            <Collapse open={!!confirmRegen}>
+              <div className={dk.confirm} style={{ marginTop: 12 }}>
+                {t('settingsSharedSpacePage.regenConfirm')}
+                <div className={dk.confirmBtns}>
+                  <button type="button" className={`${deskStyles.btn} ${deskStyles.btnSoft}`} onClick={() => setConfirmRegen(false)}>{t('buttons.cancel')}</button>
+                  <button type="button" className={`${deskStyles.btn} ${dk.btnDanger}`} disabled={regenerating} onClick={handleRegenerate}>{t('settingsSharedSpacePage.regenerate')}</button>
+                </div>
+              </div>
+            </Collapse>
+            <div className={`${sp.hint} ${remaining > 0 ? '' : sp.hintFull}`}>
+              {remaining > 0 ? t('settingsSharedSpacePage.inviteHint', { count: remaining }) : t('settingsSharedSpacePage.spaceFullText')}
+            </div>
+          </div>
+
+          <div className={`${sp.panel} ${sp.oNotif}`}>
+            <div {...switchProps(entry.membership.notify_on_changes)} className={deskStyles.tgl} style={{ paddingTop: 0, paddingBottom: 0 }}
+              onClick={() => updateMemberPermissions(entry.membership.id, { notify_on_changes: !entry.membership.notify_on_changes })}>
+              <div><b>{t('settingsSharedSpacePage.notifyMeLabel')}</b><span>{t('settingsSharedSpacePage.notifyMeSubOwner')}</span></div>
+              <Toggle on={entry.membership.notify_on_changes} />
+            </div>
+            <NotifOffNotice userId={user?.id} show={entry.membership.notify_on_changes} onGo={onGoNotifications} />
+          </div>
+
+          <div className={`${sp.panel} ${sp.oDanger}`}>
+            <div className={sp.panelTitle}>{t('settingsSharedSpacePage.deskDanger')}</div>
+            <div className={dk.danger}>
+              <button type="button" className={dk.dangerRow} onClick={() => setConfirmClear(v => !v)}><Trash2 size={16} />{t('settingsSharedSpacePage.clearDataButton')}</button>
+              <Collapse open={!!confirmClear}>
+                <div className={dk.confirm}>
+                  {t('settingsSharedSpacePage.confirmClearText', { name: entry.space.name })}
+                  <div className={dk.confirmBtns}>
+                    <button type="button" className={`${deskStyles.btn} ${deskStyles.btnSoft}`} onClick={() => setConfirmClear(false)}>{t('buttons.cancel')}</button>
+                    <button type="button" className={`${deskStyles.btn} ${dk.btnDanger}`} disabled={clearing} onClick={handleClearData}>{clearing ? t('settingsSharedSpacePage.clearing') : t('settingsSharedSpacePage.clearAll')}</button>
                   </div>
                 </div>
               </Collapse>
-
-              <button onClick={() => { setDangerOpen(true); setDangerPassword(''); setDangerError('') }} className={`${styles.dangerButtonRow} ${styles.dangerButtonRowLast}`}>
-                <Trash2 size={16} color="var(--danger)" />
-                <span className={styles.dangerButtonText}>{t('settingsSharedSpacePage.deleteSpaceButton')}</span>
-              </button>
+              <button type="button" className={dk.dangerRow} onClick={() => { setDangerOpen(true); setDangerPassword(''); setDangerError('') }}><Trash2 size={16} />{t('settingsSharedSpacePage.deleteSpaceButton')}</button>
             </div>
-
           </div>
-        </Collapse>
+        </div>
       </div>
-
       {modals}
     </>
   )

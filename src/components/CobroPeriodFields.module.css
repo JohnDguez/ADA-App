@@ -138,8 +138,10 @@
   margin-top: 6px;
 }
 
-/* Escritorio (v0.9.845): mismos chips redondeados del nuevo diseño. */
-@media (min-width: 1100px) {
+/* Nuevo diseño: chips redondeados en tablet/escritorio (v0.9.845, ≥768px desde v0.9.954) y,
+   en móvil, dentro de un contenedor con data-newchips. El fondo del chip viene de
+   --field-desk-bg (gris sobre panel blanco); el hover usa un relleno más oscuro. */
+@media (min-width: 768px) {
   .pillRow, .weekdayRow, .presetsRow { gap: 8px; }
   .dayGrid { gap: 8px; }
   .pill, .weekdayButton, .presetButton, .dayButton { border-radius: 16px; background: var(--field-desk-bg, var(--desk-card)); }
@@ -148,4 +150,15 @@
   .presetButton { padding: 11px 16px; }
   .dayButton { height: 42px; }
   .pillActive, .weekdayButtonActive, .presetButtonActive, .dayButtonActive { background: var(--accent); color: var(--desk-ink-text); }
+}
+:global([data-newchips]) .pillRow, :global([data-newchips]) .weekdayRow, :global([data-newchips]) .presetsRow { gap: 8px; }
+:global([data-newchips]) .dayGrid { gap: 8px; }
+:global([data-newchips]) .pill, :global([data-newchips]) .weekdayButton, :global([data-newchips]) .presetButton, :global([data-newchips]) .dayButton { border-radius: 16px; background: var(--field-desk-bg, var(--desk-card)); }
+:global([data-newchips]) .pill { padding: 13px 0; }
+:global([data-newchips]) .weekdayButton { width: 44px; height: 44px; }
+:global([data-newchips]) .presetButton { padding: 11px 16px; }
+:global([data-newchips]) .dayButton { height: 42px; }
+:global([data-newchips]) .pillActive, :global([data-newchips]) .weekdayButtonActive, :global([data-newchips]) .presetButtonActive, :global([data-newchips]) .dayButtonActive { background: var(--accent); color: var(--on-color); }
+@media (hover: hover) and (pointer: fine) {
+  .pill:not(.pillActive):hover, .weekdayButton:not(.weekdayButtonActive):hover, .presetButton:not(.presetButtonActive):hover, .dayButton:not(.dayButtonActive):hover { background: var(--desk-hover-fill); filter: none; }
 }

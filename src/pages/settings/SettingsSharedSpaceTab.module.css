@@ -1,0 +1,133 @@
+/* Espacio Compartido — rediseño v0.9.954 (móvil, tablet vertical/horizontal y escritorio).
+   Paneles BLANCOS con sombra y controles en gris: el hover oscurece un tono (--desk-hover-fill)
+   para que el botón nunca se confunda con el fondo. Solo tokens. */
+.page { display: flex; flex-direction: column; gap: 14px; padding-bottom: 7rem; }
+.mobilePage { display: flex; flex-direction: column; gap: 12px; padding: 0 16px; }
+
+/* ── Paneles ── */
+.panel { --field-desk-bg: var(--desk-chip); --notice-bg: var(--desk-chip); background: var(--desk-card); box-shadow: var(--desk-shadow); border-radius: 24px; padding: 18px 22px; min-width: 0; }
+.panelTitle { font-size: 15px; font-weight: 600; color: var(--text); }
+.panel :global(.field-input) { background: var(--desk-chip); border: 0; border-radius: 16px; }
+.panel :global(.field-input):focus { box-shadow: inset 0 0 0 2px var(--accent); }
+
+/* ── Disposición del espacio propio ── */
+.owned { display: grid; grid-template-columns: minmax(0, 1fr) minmax(300px, 380px); gap: 14px; align-items: start; }
+.col { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+.tablet, .pane, .mobile { grid-template-columns: minmax(0, 1fr); }
+.tablet { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.tablet .col, .pane .col, .mobile .col { display: contents; }
+.oHero { order: 1; grid-column: 1 / -1; }
+.oCode { order: 2; }
+.oNotif { order: 3; }
+.oCfg { order: 4; grid-column: 1 / -1; }
+.oMem { order: 5; grid-column: 1 / -1; }
+.oDanger { order: 6; grid-column: 1 / -1; }
+
+.cfgRow { display: grid; grid-template-columns: minmax(0, 1fr) 140px; gap: 12px; margin-top: 14px; }
+.mobile .cfgRow { grid-template-columns: minmax(0, 1fr) 110px; }
+.lab { display: block; margin-bottom: 6px; font-size: 12.5px; color: var(--muted); }
+.cfgField { margin-top: 16px; }
+
+/* ── Miembros ── */
+.member + .member { border-top: 1px solid var(--desk-hair); }
+.permGrid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.tablet .permGrid, .pane .permGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.mobile .permGrid { grid-template-columns: minmax(0, 1fr); }
+.perm { display: flex; align-items: center; gap: 10px; min-width: 0; padding: 10px 12px; border: 0; border-radius: 16px; background: var(--desk-chip); color: var(--text); font-family: inherit; text-align: left; cursor: pointer; transition: background 0.15s; }
+.permOn { background: var(--accent-soft); }
+.permIcon { width: 34px; height: 34px; flex: none; display: grid; place-items: center; border-radius: 50%; background: var(--desk-card); color: var(--muted); }
+.permOn .permIcon { background: var(--accent); color: var(--on-color); }
+.permText { display: flex; flex-direction: column; min-width: 0; }
+.permLabel { font-size: 13px; font-weight: 600; line-height: 1.2; }
+.permStatus { font-size: 11.5px; color: var(--muted); }
+
+/* ── Código ── */
+.code { margin: 14px 0 16px; text-align: center; font-size: 34px; font-weight: 700; letter-spacing: 9px; color: var(--accent); padding-left: 9px; }
+.codeBtns { display: flex; gap: 10px; }
+.codeBtns .grow { flex: 1; justify-content: center; }
+.iconBtn { width: 46px; height: 46px; flex: none; display: grid; place-items: center; border: 0; border-radius: 50%; background: var(--desk-chip); color: var(--text); }
+
+/* ── Invitados (tablet / móvil) ── */
+.guestRow { display: flex; align-items: center; gap: 12px; width: 100%; padding: 14px 20px; border: 0; border-radius: 24px; background: var(--desk-card); box-shadow: var(--desk-shadow); color: var(--text); font-family: inherit; text-align: left; }
+.guestRowOpen { border-radius: 24px 24px 0 0; box-shadow: none; }
+.guestIco { width: 36px; height: 36px; flex: none; display: grid; place-items: center; border-radius: 12px; background: var(--desk-chip); }
+.guestName { flex: 1; min-width: 0; font-size: 15px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.guestBody { display: flex; flex-direction: column; gap: 12px; padding: 4px 20px 18px; border-radius: 0 0 24px 24px; background: var(--desk-card); box-shadow: var(--desk-shadow); --notice-bg: var(--desk-chip); }
+.guestWrap { display: flex; flex-direction: column; }
+.guestWrap > .guestRow + * { margin-top: 0; }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip { padding: 8px 14px; border-radius: 99px; background: var(--desk-chip); font-size: 13px; color: var(--text); }
+.leaveBtn { align-self: flex-start; display: inline-flex; align-items: center; gap: 8px; height: 38px; padding: 0 16px; border: 0; border-radius: 99px; background: var(--desk-chip); color: var(--danger); font-family: inherit; font-size: 13.5px; font-weight: 700; }
+.sec { margin: 8px 4px 0; font-size: 11px; font-weight: 600; letter-spacing: 0.8px; text-transform: uppercase; color: var(--muted); }
+
+/* ── Estado vacío ── */
+.empty { display: flex; flex-direction: column; gap: 18px; width: 100%; max-width: 920px; margin: 0 auto; padding-top: 6px; }
+.emptyHead { text-align: center; }
+.emptyIco { display: inline-grid; place-items: center; width: 72px; height: 72px; border-radius: 24px; background: var(--accent-soft); color: var(--accent); }
+.emptyTitle { margin: 12px 0 0; font-size: 22px; font-weight: 600; letter-spacing: -0.4px; color: var(--text); }
+.emptySub { margin: 4px 0 0; font-size: 14px; color: var(--muted); }
+.emptyCards { display: flex; gap: 16px; }
+.big { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 14px; padding: 22px 24px; border-radius: 26px; background: var(--desk-card); box-shadow: var(--desk-shadow); }
+.bigIco { width: 48px; height: 48px; display: grid; place-items: center; border-radius: 16px; background: var(--accent-soft); color: var(--accent); }
+.bigIcoAcc { background: var(--accent); color: var(--on-color); }
+.bigTitle { font-size: 18px; font-weight: 600; color: var(--text); }
+.bigSub { margin-top: 4px; font-size: 13px; line-height: 1.45; color: var(--muted); }
+.gold { background: color-mix(in srgb, var(--premium-gold) 16%, var(--desk-card)); box-shadow: none; }
+.gold .bigIco { background: var(--premium-gold); color: var(--premium-gold-text); }
+.fillSpace { flex: 1; }
+.btnFull { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; height: 48px; padding: 0; border: 0; border-radius: 99px; background: var(--accent); color: var(--on-color); font-family: inherit; font-size: 14.5px; font-weight: 700; }
+.btnFull:disabled { opacity: 0.55; cursor: not-allowed; }
+.btnSoft { background: var(--desk-chip); color: var(--text); font-weight: 600; }
+.btnGold { background: var(--premium-gold); color: var(--premium-gold-text); }
+.err { font-size: 13px; text-align: center; color: var(--danger); }
+
+/* ── Casillas del código de 6 dígitos ── */
+.codeBoxes { position: relative; display: flex; justify-content: center; gap: 8px; }
+.codeBoxes input { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; border: 0; background: none; cursor: text; font-size: 16px; }
+.box { width: 52px; height: 60px; display: grid; place-items: center; border-radius: 14px; background: var(--desk-chip); font-size: 24px; font-weight: 600; color: var(--text); }
+.boxEmpty { color: var(--muted); }
+.boxOn { box-shadow: inset 0 0 0 2px var(--accent); }
+.joinSheet { --field-desk-bg: var(--desk-chip); display: flex; flex-direction: column; gap: 14px; }
+.joinSheet .box { background: var(--desk-card); }
+.joinDesc { text-align: center; font-size: 13px; color: var(--muted); }
+
+/* ── Crear espacio ── */
+.newLayout { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); gap: 14px; align-items: start; }
+.newSide, .newStack { display: flex; flex-direction: column; gap: 12px; }
+.newPreview { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 26px 20px; text-align: center; }
+.newPreview b { font-size: 24px; letter-spacing: -0.4px; }
+.newPreview span { font-size: 13px; opacity: 0.85; }
+.btnRow { display: flex; gap: 10px; }
+.btnRow > * { flex: 1; }
+.hint { font-size: 12.5px; color: var(--muted); margin-top: 12px; }
+.hintFull { color: var(--text); }
+
+@media (hover: hover) and (pointer: fine) {
+  .perm:not(.permOn):hover, .iconBtn:hover, .btnSoft:hover, .leaveBtn:hover { background: var(--desk-hover-fill); filter: none; translate: none; }
+  .permOn:hover { background: color-mix(in srgb, var(--accent) 24%, var(--desk-card)); filter: none; translate: none; }
+  .guestRow:hover { filter: none; translate: none; }
+  .guestRow:hover .guestName { text-decoration: underline; }
+  .btnFull:not(.btnSoft):not(:disabled):hover { opacity: 0.9; filter: none; translate: none; }
+}
+/* El botón se encoge al presionar (scale global): en filas anchas la flecha del borde
+   quedaba fuera del botón encogido y el clic se perdía. */
+.guestRow:active, .memberHead:active { scale: 1; }
+.memberHead { display: flex; align-items: center; gap: 14px; width: 100%; padding: 14px 0; border: 0; background: none; color: var(--text); font-family: inherit; text-align: left; }
+.memberText { flex: 1; min-width: 0; }
+.memberText b { display: block; font-size: 14.5px; font-weight: 600; }
+.memberText span { font-size: 12.5px; color: var(--muted); }
+.role { padding: 6px 12px; border-radius: 99px; background: var(--desk-chip); font-size: 12.5px; font-weight: 600; }
+@media (hover: hover) and (pointer: fine) {
+  .memberHead:hover .memberText b { text-decoration: underline; }
+  .memberHead:hover { filter: none; translate: none; }
+}
+
+@media (max-width: 767px) {
+  .emptyCards { flex-direction: column; }
+  .newLayout { grid-template-columns: minmax(0, 1fr); }
+  .box { width: 42px; height: 50px; }
+}
+@media (max-width: 1099px) {
+  .newLayout { grid-template-columns: minmax(0, 1fr); }
+  .emptyCards { flex-direction: column; }
+}
