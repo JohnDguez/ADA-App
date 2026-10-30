@@ -22,7 +22,7 @@ function NavItem({ icon: Icon, label, value, active, danger, onClick, coach }) {
   )
 }
 
-export function DeskSettings({ d }) {
+export function DeskSettings({ d, tablet = false }) {
   const { t } = useTranslation()
   const { profile, user, initials, current, onSelect, content, nav, onOpenPremium, onLogout, versionLabel, appName } = d
   const { timeOfDay, mountedKeys } = useHeaderBackground(profile?.timezone)
@@ -30,7 +30,7 @@ export function DeskSettings({ d }) {
     <NavItem icon={icon} label={label} value={value} coach={coach} active={current === id} onClick={() => onSelect(id)} />
   )
   return (
-    <div className={home.root}>
+    <div className={`${home.root} ${tablet ? home.tablet : ''} ${tablet ? styles.tab : ''}`}>
       <header className={home.head}>
         <div className={home.band} aria-hidden="true">
           {mountedKeys.map(key => (
@@ -62,7 +62,7 @@ export function DeskSettings({ d }) {
               </button>
 
               <div className={styles.gl}>{t('settingsPage.sections.money')}</div>
-              <Row id="cobro" icon={Calendar} label={t('settingsPage.menu.cobro')} value={nav.cobroValue} coach="perfil-cobro-row" />
+              <Row id="cobro" icon={Calendar} label={t('settingsPage.menu.cobro')} value={tablet ? nav.cobroValue?.split(' · ')[0] : nav.cobroValue} coach="perfil-cobro-row" />
               <Row id="categories" icon={Tag} label={t('settingsPage.menu.categories')} coach="perfil-categorias-row" />
               <Row id="cards" icon={CreditCard} label={t('settingsPage.menu.cards')} />
               <Row id="sharedspace" icon={Users} label={t('settingsPage.menu.sharedSpace')} />

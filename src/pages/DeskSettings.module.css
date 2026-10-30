@@ -32,3 +32,13 @@
 
 /* Las sub-páginas traen su propio fondo y alto de pantalla: aquí se anulan */
 .contentBody > div:not([data-dp]) { background: none; min-height: 0; margin: 0; padding: 0; }
+
+/* Tablet horizontal (960–1099px, v0.9.949): menú más angosto, mismo maestro-detalle (mockup «Ajustes · Tablet horizontal»). */
+@media (max-width: 1099px) {
+  .tab .body { grid-template-columns: 292px minmax(0, 1fr); gap: 12px; }
+  .tab .profile { padding: 6px 14px 6px 6px; }
+  .tab .content { padding-right: 8px; }
+  .tab .gl { margin: 12px 8px 4px; }
+  .tab .item { padding: 6px 8px; font-size: 13.5px; }
+  .tab .item i { width: 28px; height: 28px; border-radius: 9px; }
+}
