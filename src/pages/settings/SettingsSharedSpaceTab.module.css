@@ -161,23 +161,33 @@
 .dFoot > * { flex: 1; }
 .dFoot > :last-child { flex: 1.5; }
 .dlg .cbox { background: var(--desk-card); }
-.curList { display: flex; flex-direction: column; gap: 8px; max-height: min(55vh, 440px); overflow-y: auto; }
-.curOpt { display: flex; align-items: center; justify-content: space-between; gap: 10px; height: 48px; flex: none; padding: 0 16px; border: 0; border-radius: 15px; background: var(--desk-card); color: var(--text); font-family: inherit; font-size: 14.5px; text-align: left; }
+.curList { display: flex; flex-direction: column; gap: 6px; }
+.curCap { margin: 0 2px 10px; font-size: 11.5px; font-weight: 600; letter-spacing: 0.9px; text-transform: uppercase; color: var(--muted); }
+.curOpt { display: flex; align-items: center; justify-content: space-between; gap: 10px; height: 44px; flex: none; padding: 0 14px; border: 0; border-radius: 14px; background: var(--desk-chip); color: var(--text); font-family: inherit; font-size: 14.5px; text-align: left; }
 .curOptOn { background: var(--accent-soft); font-weight: 600; }
 .curBtnField { display: flex; align-items: center; justify-content: space-between; width: 100%; text-align: left; }
 
 /* Botón secundario fuera de un recuadro: blanco con sombra para que se vea sobre el fondo gris */
 .btnOut { background: var(--desk-card); color: var(--text); box-shadow: var(--desk-shadow); font-weight: 600; }
 
-/* Aviso de notificaciones apagadas en tarjeta angosta: ícono + texto arriba, botón completo abajo */
-.panel [class*="_box_"] { flex-wrap: wrap; }
-.panel [class*="_box_"] [class*="_text_"] { flex: 1 1 140px; min-width: 0; }
-.panel [class*="_box_"] [class*="_go_"] { flex: 1 1 100%; height: 40px; }
-.wide .oNotif [class*="_box_"] [class*="_go_"], .pane .oNotif [class*="_box_"] [class*="_go_"], .mobile .oNotif [class*="_box_"] [class*="_go_"] { flex: 0 0 auto; margin-left: auto; height: 36px; }
-.wide .oNotif [class*="_box_"], .pane .oNotif [class*="_box_"], .mobile .oNotif [class*="_box_"] { flex-wrap: nowrap; }
+/* Aviso de notificaciones apagadas: ícono arriba junto al título, texto a su lado y botón completo abajo */
+.panel [class*="_box_"] { flex-wrap: wrap; align-items: flex-start; }
+.panel [class*="_box_"] [class*="_text_"] { flex: 1 1 0; min-width: 0; }
+.panel [class*="_box_"] [class*="_go_"] { flex: 1 1 100%; height: 42px; }
+.mPillRow.mPillRow { bottom: 96px; }
+
+/* Tablet: código y notificaciones a la misma altura; el código reparte su contenido en vez de dejar un hueco */
+.tablet { align-items: stretch; }
+.tablet .oCode { display: flex; flex-direction: column; justify-content: space-between; }
+.tablet .oCode .code { margin: 8px 0 12px; }
+.tablet .oCode .hint { margin-top: 12px; }
+.tablet .oNotif { display: flex; flex-direction: column; justify-content: center; }
+
+/* Formulario de nuevo espacio en escritorio: ancho contenido, no se estira */
+.newLayout { max-width: 880px; }
 
 @media (hover: hover) and (pointer: fine) {
-  .curOpt:not(.curOptOn):hover { background: var(--accent-soft); filter: none; translate: none; }
+  .curOpt:not(.curOptOn):hover { background: var(--desk-hover-fill); filter: none; translate: none; }
   .dClose:hover, .btnOut:hover { background: var(--desk-hover-fill); filter: none; translate: none; }
   .curOptOn:hover { filter: none; translate: none; }
 }

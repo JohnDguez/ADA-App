@@ -27,6 +27,7 @@ import tb from './SettingsCobroTab.module.css'
 import { AvatarImg } from '../../components/AvatarImg'
 import { Presence } from '../../components/Presence'
 import { createPortal } from 'react-dom'
+import { AnchoredPop, useAnchor } from '../../components/AnchoredPop'
 import { useBackClose } from '../../lib/backNav'
 import { CURRENCIES, CURRENCY_CODES } from '../../lib/currency'
 import { switchProps } from '../../lib/a11y'
@@ -89,10 +90,13 @@ function SpaceDialog({ open, onClose, icon: Icon, title, subtitle, children }) {
   )
 }
 
+// Selector de moneda: popover anclado al campo (en todos los tamaños), selección rápida.
 function CurrencyDialog({ open, onClose, value, onSelect, title }) {
   const { t } = useTranslation()
+  const anchorRef = useAnchor(open)
   return (
-    <SpaceDialog open={open} onClose={onClose} icon={Banknote} title={title}>
+    <AnchoredPop open={!!open} onClose={onClose} anchorRef={anchorRef} width={340} label={title}>
+      <div className={sp.curCap}>{title}</div>
       <div className={sp.curList}>
         {CURRENCY_CODES.map(code => (
           <button key={code} type="button" onClick={() => onSelect(code)} className={`${sp.curOpt} ${value === code ? sp.curOptOn : ''}`}>
@@ -101,7 +105,7 @@ function CurrencyDialog({ open, onClose, value, onSelect, title }) {
           </button>
         ))}
       </div>
-    </SpaceDialog>
+    </AnchoredPop>
   )
 }
 
@@ -435,7 +439,7 @@ export function SettingsSharedSpacePage({ profile, user, sharedSpaces, onBack, o
         <div className={sp.mobilePage}>{body}</div>
       </div>
       {showJoinBtn && (
-        <div className={styles.addPillRow}>
+        <div className={`${styles.addPillRow} ${sp.mPillRow}`}>
           <button type="button" onClick={openJoin} className={styles.addPill}>
             <Users size={18} color="var(--surface)" />
             {t('settingsSharedSpacePage.joinFab')}
