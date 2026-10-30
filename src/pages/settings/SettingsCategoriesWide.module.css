@@ -14,7 +14,7 @@
 .pageGrid { --tile-bg: var(--desk-card); }
 .tile { border: 0; background: var(--tile-bg); color: var(--text); font: inherit; border-radius: 22px; padding: 16px 8px 14px; min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 10px; cursor: pointer; animation: catPop 0.4s cubic-bezier(0.22, 1, 0.36, 1) both; animation-delay: calc(var(--n, 0) * 25ms); transition: transform 0.15s, background-color 0.15s; }
 .pageGrid .tile { box-shadow: var(--desk-shadow); }
-.tile:active { transform: scale(0.96); }
+.tile:active { opacity: 0.8; }
 .tile span { font-size: 13.5px; font-weight: 600; line-height: 1.2; text-align: center; max-width: 96%; overflow-wrap: anywhere; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .ico { width: 52px; height: 52px; border-radius: 17px; display: grid; place-items: center; flex: none; }
 .add { background: none; box-shadow: none; border: 1.5px dashed var(--accent); color: var(--accent); }

@@ -27,12 +27,12 @@ input.field:focus, .search:focus-within { box-shadow: 0 0 0 2px var(--accent); }
 .gl { font-size: 0.71875rem; font-weight: 600; color: var(--muted); margin: 0.625rem 0.125rem 0.4375rem; }
 .icons { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 0.4375rem; }
 .ib { aspect-ratio: 1 / 1; border: 0; border-radius: 50%; background: var(--desk-chip); color: var(--text); display: grid; place-items: center; cursor: pointer; padding: 0; transition: background 0.2s ease, color 0.2s ease, transform 0.15s; }
-.ib:active { transform: scale(0.9); }
+.ib:active { opacity: 0.8; }
 .ibOn { background: var(--accent); color: var(--on-color); }
 
 .colors { display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 0.4375rem; }
 .sw { aspect-ratio: 1 / 1; border: 0; border-radius: 50%; display: grid; place-items: center; cursor: pointer; padding: 0; transition: transform 0.15s ease, box-shadow 0.2s ease; }
-.sw:active { transform: scale(0.9); }
+.sw:active { opacity: 0.8; }
 .swOn { box-shadow: 0 0 0 2px var(--desk-card), 0 0 0 4px var(--text); }
 .rainbow { background: conic-gradient(from 0deg, hsl(0 85% 58%), hsl(45 90% 58%), hsl(90 75% 52%), hsl(150 70% 48%), hsl(200 85% 55%), hsl(260 80% 62%), hsl(310 80% 60%), hsl(360 85% 58%)); }
 
@@ -41,7 +41,7 @@ input.field:focus, .search:focus-within { box-shadow: 0 0 0 2px var(--accent); }
 
 .ft { display: flex; gap: 0.625rem; padding: 0.75rem 1rem calc(1rem + env(safe-area-inset-bottom)); border-top: 1px solid var(--desk-hair); flex-shrink: 0; }
 .btn { flex: 1; height: 3rem; border: 0; border-radius: 99px; font: inherit; font-size: 0.9375rem; font-weight: 700; cursor: pointer; transition: transform 0.15s, opacity 0.2s; }
-.btn:active { transform: scale(0.98); }
+.btn:active { opacity: 0.8; }
 .btn:disabled { opacity: 0.6; }
 .primary { background: var(--accent); color: var(--on-color); }
 .soft { background: var(--desk-chip); color: var(--text); font-weight: 600; }

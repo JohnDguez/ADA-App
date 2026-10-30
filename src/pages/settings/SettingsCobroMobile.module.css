@@ -15,7 +15,7 @@
 .grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: clamp(0.1875rem, 1.2vw, 0.3125rem); margin-top: 0.875rem; }
 /* Círculos perfectos: ancho de la celda y alto igual (aspect-ratio), sin padding que los ovale. */
 .dot { aspect-ratio: 1 / 1; width: 100%; min-width: 0; padding: 0; border: 0; border-radius: 50%; background: var(--desk-chip); color: var(--text); font: inherit; font-size: 0.71875rem; font-weight: 600; display: grid; place-items: center; cursor: pointer; transition: background 0.25s ease, color 0.2s, transform 0.15s; }
-.dot:active { transform: scale(0.92); }
+.dot:active { opacity: 0.8; }
 .dotOn { background: var(--accent); color: var(--on-color); }
 
 .presets { display: flex; flex-wrap: wrap; gap: 0.375rem; margin-top: 0.875rem; }
@@ -61,7 +61,7 @@
 /* Frecuencia en mosaicos con ícono */
 .tiles { display: flex; gap: 0.5rem; }
 .tile { flex: 1; min-width: 0; border: 0; border-radius: 1.125rem; background: var(--desk-card); box-shadow: var(--desk-shadow); color: var(--text); font: inherit; padding: 0.75rem 0.25rem 0.625rem; display: flex; flex-direction: column; align-items: center; gap: 0.375rem; cursor: pointer; transition: background 0.3s cubic-bezier(0.22, 1, 0.36, 1), color 0.2s, transform 0.15s; }
-.tile:active { transform: scale(0.97); }
+.tile:active { opacity: 0.8; }
 .tile b { font-size: 0.78125rem; font-weight: 600; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .tile span { font-size: 0.65625rem; color: var(--muted); margin-top: -0.25rem; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; transition: color 0.2s; }
 .tileIc { width: 2.25rem; height: 2.25rem; border-radius: 50%; background: var(--desk-chip); display: grid; place-items: center; transition: background 0.3s, color 0.2s, transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); }

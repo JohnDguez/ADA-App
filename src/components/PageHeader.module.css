@@ -341,7 +341,7 @@
   box-shadow: var(--shadow-fab);
   transition: transform .15s;
 }
-.homeCircle:active { transform: scale(0.92); }
+.homeCircle:active { opacity: 0.8; }
 .homeAvatarBtn { border: none; background: none; padding: 0; cursor: pointer; border-radius: 50%; }
 .homeAvatar, .homeAvatarFallback { width: 46px; height: 46px; border-radius: 50%; object-fit: cover; display: block; box-shadow: 0 0 0 3px var(--surface), var(--shadow-card); }
 .homeAvatarFallback { background: var(--accent); color: var(--on-color); display: grid; place-items: center; font-size: 15px; font-weight: 700; }

@@ -111,7 +111,6 @@
 }
 /* El botón se encoge al presionar (scale global): en filas anchas la flecha del borde
    quedaba fuera del botón encogido y el clic se perdía. */
-.guestRow:active, .memberHead:active { scale: 1; }
 .memberHead { display: flex; align-items: center; gap: 14px; width: 100%; padding: 14px 0; border: 0; background: none; color: var(--text); font-family: inherit; text-align: left; }
 .memberText { flex: 1; min-width: 0; }
 .memberText b { display: block; font-size: 14.5px; font-weight: 600; }
