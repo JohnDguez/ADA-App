@@ -10,7 +10,8 @@ import { Target } from '@phosphor-icons/react/dist/csr/Target'
 import { loadStripe } from '@stripe/stripe-js'
 import { EmbeddedCheckoutProvider, EmbeddedCheckout } from '@stripe/react-stripe-js'
 import { supabase } from '../lib/supabase'
-import { isAndroidBilling, restorePurchases, purchasePremium, initPlayBilling, getPlayTrialAvailability } from '../lib/playBilling'
+import { isAndroidBilling, restorePurchases, purchasePremium, initPlayBilling } from '../lib/playBilling'
+import { usePremiumOffer } from '../lib/premiumOffer'
 import { getPremiumSource } from '../lib/utils'
 import { apiUrl } from '../lib/apiUrl'
 import styles from './PremiumPage.module.css'
@@ -53,14 +54,12 @@ export function PremiumPage({ profile, onClose, refreshProfile, onSubscribed }) 
   const { t } = useTranslation()
   const isDesktop = useIsDesktop()
 
-  // Prueba gratis de 7 días (v0.9.506) — SOLO para quien nunca ha tenido una
-  // suscripción real (`profiles.has_subscribed_before`, marcada por
-  // stripe-webhook.js la primera vez que hay un `checkout.session.completed`,
-  // nunca se revierte — ni al cancelar). Decide qué copy mostrar aquí; la
-  // decisión real de si Stripe aplica el trial vive en
-  // create-checkout-session.js (misma columna, dos lugares distintos por
-  // diseño: aquí es solo texto, allá es dinero de verdad).
-  const neverSubscribed = !profile?.has_subscribed_before
+  // Precios y prueba gratis (v0.9.960): salen de lib/premiumOffer.js — en
+  // Android del catálogo real de Google Play (cambian en Play Console sin
+  // compilar); en web, de los precios de Stripe y de
+  // `profiles.has_subscribed_before` (la misma columna que decide el trial en
+  // create-checkout-session.js).
+  const offer = usePremiumOffer()
 
   // Entrada y salida (Regla 29) — antes esta pantalla aparecía y
   // desaparecía de golpe: App.jsx la monta/desmonta condicionalmente
@@ -77,20 +76,8 @@ export function PremiumPage({ profile, onClose, refreshProfile, onSubscribed }) 
   const closeTimerRef = useRef(null)
   const enterTimerRef = useRef(null)
 
-  // Carga el catálogo de Google Play al abrir la pantalla (solo Android) y
-  // pregunta a Google qué planes traen prueba gratis PARA ESTA cuenta
-  // (v0.9.959): Google decide la elegibilidad con su propio historial, que
-  // no conoce nuestra columna has_subscribed_before.
-  const [playTrial, setPlayTrial] = useState(null) // null = sin saber todavía
-  useEffect(() => {
-    if (!isAndroidBilling()) return
-    initPlayBilling()
-    let alive = true
-    getPlayTrialAvailability().then((r) => { if (alive) setPlayTrial(r) }).catch((e) => {
-      console.error('[Google Play Billing] No se pudo leer la oferta de prueba:', e)
-    })
-    return () => { alive = false }
-  }, [])
+  // Carga el catálogo de Google Play al abrir la pantalla (solo Android).
+  useEffect(() => { if (isAndroidBilling()) initPlayBilling() }, [])
 
   useEffect(() => {
     enterTimerRef.current = setTimeout(() => setEntering(false), ANIM_MS)
@@ -106,7 +93,9 @@ export function PremiumPage({ profile, onClose, refreshProfile, onSubscribed }) 
   // (v0.9.959) En Android la prueba solo se anuncia si Google de verdad la
   // ofrece para el plan elegido; mientras no se sabe, no se promete. Caso
   // real: el paywall decía "7 días gratis" y Google cobró desde el día uno.
-  const trialEligible = neverSubscribed && (!isAndroidBilling() || !!playTrial?.[selectedPlan])
+  const trialEligible = offer.trial[selectedPlan]
+  const priceSuffix = (plan) => t(`premiumPage.${plan}PriceSuffix`, { currency: offer.currency })
+  const savingText = offer.saving ? t('premiumPage.annualSaving', { saving: offer.saving, perMonth: offer.annualPerMonth }) : null
   const [termsAccepted, setTermsAccepted] = useState(false)
   const [checkoutOpen, setCheckoutOpen] = useState(false)
   const [clientSecret, setClientSecret] = useState(null)
@@ -350,14 +339,14 @@ export function PremiumPage({ profile, onClose, refreshProfile, onSubscribed }) 
                 <button type="button" onClick={() => setSelectedPlan('monthly')} className={`${dk.plan} ${!annual ? dk.planOn : ''}`} aria-pressed={!annual}>
                   <span className={dk.radio} />
                   <span className={dk.planName}>{t('premiumPage.monthly')}</span>
-                  <span className={dk.planPrice}>$50 <small>{t('premiumPage.monthlyPriceSuffix')}</small></span>
+                  <span className={dk.planPrice}>{offer.prices.monthly} <small>{priceSuffix('monthly')}</small></span>
                 </button>
                 <button type="button" onClick={() => setSelectedPlan('annual')} className={`${dk.plan} ${annual ? dk.planOn : ''}`} aria-pressed={annual}>
                   <span className={dk.badge}>★ {t('premiumPage.mostPopular')}</span>
                   <span className={dk.radio} />
                   <span className={dk.planName}>{t('premiumPage.annual')}</span>
-                  <span className={dk.planPrice}>$500 <small>{t('premiumPage.annualPriceSuffix')}</small></span>
-                  <span className={dk.planSaving}>{t('premiumPage.annualSaving', { saving: '$100', perMonth: '$41.67' })}</span>
+                  <span className={dk.planPrice}>{offer.prices.annual} <small>{priceSuffix('annual')}</small></span>
+                  {savingText && <span className={dk.planSaving}>{savingText}</span>}
                 </button>
               </div>
               <label className={dk.terms}>
@@ -398,7 +387,7 @@ export function PremiumPage({ profile, onClose, refreshProfile, onSubscribed }) 
 
           <div className={dk.fine}>
             {t('premiumPage.restrictionsApply')}
-            {trialEligible && <> {t('premiumPage.trialFinePrint', { price: annual ? '$500' : '$50', suffix: t(`premiumPage.${selectedPlan}PriceSuffix`) })}</>}
+            {trialEligible && <> {t('premiumPage.trialFinePrint', { price: offer.prices[selectedPlan], suffix: priceSuffix(selectedPlan) })}</>}
             <div className={dk.safe}><ShieldCheck size={14} />{t('premiumPage.cancelAnytime')}</div>
             <div>
               {isAndroid && <button type="button" onClick={handleRestorePurchases} disabled={restoreState === 'restoring'} className={dk.link}>{t('premiumPage.restorePurchases')}</button>}{isAndroid && ' '}
@@ -527,7 +516,7 @@ export function PremiumPage({ profile, onClose, refreshProfile, onSubscribed }) 
               >
                 <div className={styles.planName}>{t('premiumPage.monthly')}</div>
                 <div className={styles.planPrice}>
-                  $50 <span className={styles.planPriceSuffix}>{t('premiumPage.monthlyPriceSuffix')}</span>
+                  {offer.prices.monthly} <span className={styles.planPriceSuffix}>{priceSuffix('monthly')}</span>
                 </div>
               </button>
 
@@ -539,9 +528,9 @@ export function PremiumPage({ profile, onClose, refreshProfile, onSubscribed }) 
                 <div className={styles.popularBadge}>★ {t('premiumPage.mostPopular')}</div>
                 <div className={styles.planName}>{t('premiumPage.annual')}</div>
                 <div className={styles.planPrice}>
-                  $500 <span className={styles.planPriceSuffix}>{t('premiumPage.annualPriceSuffix')}</span>
+                  {offer.prices.annual} <span className={styles.planPriceSuffix}>{priceSuffix('annual')}</span>
                 </div>
-                <div className={styles.planSaving}>{t('premiumPage.annualSaving', { saving: '$100', perMonth: '$41.67' })}</div>
+                {savingText && <div className={styles.planSaving}>{savingText}</div>}
               </button>
             </div>
 
@@ -642,8 +631,8 @@ export function PremiumPage({ profile, onClose, refreshProfile, onSubscribed }) 
             {trialEligible && (<>
               <br />
               {t('premiumPage.trialFinePrint', {
-                price: selectedPlan === 'annual' ? '$500' : '$50',
-                suffix: t(`premiumPage.${selectedPlan}PriceSuffix`),
+                price: offer.prices[selectedPlan],
+                suffix: priceSuffix(selectedPlan),
               })}
             </>)}
           </div>

@@ -33,6 +33,7 @@ import { CURRENCIES, CURRENCY_CODES } from '../../lib/currency'
 import { switchProps } from '../../lib/a11y'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import { useIsDesktop } from '../../hooks/useIsDesktop'
+import { usePremiumCta } from '../../lib/premiumOffer'
 
 // Permisos del invitado (v0.9.807): definidos aquí para pintarlos como fichas.
 const PAYMENT_PERMS = [
@@ -135,6 +136,7 @@ function CodeBoxes({ value, onChange, onEnter, label, autoFocus }) {
 // v0.9.954: rediseño para móvil, tablet (vertical/horizontal) y escritorio.
 export function SettingsSharedSpacePage({ profile, user, sharedSpaces, onBack, onOpenPremium, onGoNotifications, slideClass }) {
   const { t } = useTranslation()
+  const premiumCta = usePremiumCta()
   const desk = useDeskSettings()
   const isMobile = useIsMobile()
   const isDesktop = useIsDesktop()
@@ -244,7 +246,7 @@ export function SettingsSharedSpacePage({ profile, user, sharedSpaces, onBack, o
         <div className={sp.bigSub}>{t('newSharedSpacePanel.premiumCtaText')}</div>
       </div>
       <div className={sp.fillSpace} />
-      <button type="button" className={`${sp.btnFull} ${sp.btnGold}`} onClick={onOpenPremium}><Crown size={17} />{t('goalsPage.premiumBanner.button')}</button>
+      <button type="button" className={`${sp.btnFull} ${sp.btnGold}`} onClick={onOpenPremium}><Crown size={17} />{premiumCta.cta}</button>
     </div>
   ) : null
 

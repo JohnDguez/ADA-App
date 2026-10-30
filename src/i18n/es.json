@@ -1565,7 +1565,8 @@
     "title": "Novedades"
   },
   "premiumLock": {
-    "finePrint": "Solo para nuevos usuarios. Al finalizar la prueba $50 MXN al mes."
+    "finePrint": "Solo para nuevos usuarios. Al finalizar la prueba, {{price}} {{currency}} al mes.",
+    "ctaNoTrial": "Obtener Premium"
   },
   "goalsTray": {
     "label": "Mis metas",
@@ -1652,10 +1653,10 @@
     "annualSaving": "Ahorras {{saving}} · {{perMonth}} al mes",
     "choosePlan": "Elige tu plan",
     "monthly": "Mensual",
-    "monthlyPriceSuffix": "MXN / mes",
+    "monthlyPriceSuffix": "{{currency}} / mes",
     "mostPopular": "Más popular",
     "annual": "Anual",
-    "annualPriceSuffix": "MXN / año",
+    "annualPriceSuffix": "{{currency}} / año",
     "continueWithPlan": "Continuar con plan {{plan}}",
     "termsAccept": "Acepto el cobro recurrente del plan elegido hasta que cancele, según los Términos y Condiciones.",
     "backToPlans": "Regresar a los planes",

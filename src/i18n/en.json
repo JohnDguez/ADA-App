@@ -1565,7 +1565,8 @@
     "title": "What's new"
   },
   "premiumLock": {
-    "finePrint": "Only for new users. After the trial, $50 MXN per month."
+    "finePrint": "Only for new users. After the trial, {{price}} {{currency}} per month.",
+    "ctaNoTrial": "Get Premium"
   },
   "goalsTray": {
     "label": "My goals",
@@ -1652,10 +1653,10 @@
     "annualSaving": "Save {{saving}} · {{perMonth}} a month",
     "choosePlan": "Choose your plan",
     "monthly": "Monthly",
-    "monthlyPriceSuffix": "MXN / month",
+    "monthlyPriceSuffix": "{{currency}} / month",
     "mostPopular": "Most popular",
     "annual": "Annual",
-    "annualPriceSuffix": "MXN / year",
+    "annualPriceSuffix": "{{currency}} / year",
     "continueWithPlan": "Continue with {{plan}} plan",
     "termsAccept": "I agree to recurring charges for the selected plan until I cancel, per the Terms and Conditions.",
     "backToPlans": "Back to plans",

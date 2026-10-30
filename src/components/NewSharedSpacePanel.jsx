@@ -6,6 +6,7 @@ import { CobroPeriodFields } from './CobroPeriodFields'
 import styles from './NewSharedSpacePanel.module.css'
 import dk from './NewSharedSpaceDesk.module.css'
 import { useIsDesktop } from '../hooks/useIsDesktop'
+import { usePremiumCta } from '../lib/premiumOffer'
 
 // Panel que reemplaza el contenido normal de Inicio/Gastos/Recurrentes
 // cuando la tarjeta "Nuevo espacio compartido" del switcher está activa.
@@ -17,6 +18,7 @@ import { useIsDesktop } from '../hooks/useIsDesktop'
 // espacios más puede unirse (dinámico), no solo un tope fijo de 3.
 export function NewSharedSpacePanel({ profile, sharedSpaces, onOpenPremium, onCreated, onJoined }) {
   const { t } = useTranslation()
+  const premiumCta = usePremiumCta()
   const isDesktop = useIsDesktop()
   const { spaces, createSpace, redeemCode } = sharedSpaces
   const ownedEntry   = spaces.find(s => s.membership.role === 'owner')
@@ -95,9 +97,9 @@ export function NewSharedSpacePanel({ profile, sharedSpaces, onOpenPremium, onCr
               </div>
               <div className={dk.foot}>
                 <button type="button" onClick={onOpenPremium} className={`${dk.btn} ${dk.btnGold} ${dk.btnFit}`}>
-                  <Crown size={16} fill="currentColor" /> {t('goalsPage.premiumBanner.button')}
+                  <Crown size={16} fill="currentColor" /> {premiumCta.cta}
                 </button>
-                <div className={dk.fine}>{t('premiumLock.finePrint')}</div>
+                {premiumCta.fine && <div className={dk.fine}>{premiumCta.fine}</div>}
               </div>
             </div>
           )}
@@ -190,7 +192,7 @@ export function NewSharedSpacePanel({ profile, sharedSpaces, onOpenPremium, onCr
             onClick={onOpenPremium}
             className={styles.premiumButton}
           >
-            <Crown size={16} fill="currentColor" /> {t('goalsPage.premiumBanner.button')}
+            <Crown size={16} fill="currentColor" /> {premiumCta.cta}
           </button>
         </div>
       )}

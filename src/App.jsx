@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback, lazy, Suspense } from 'react'
+import { getPremiumOffer, setPremiumOfferProfile } from './lib/premiumOffer'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from './hooks/useAuth'
 import { Capacitor } from '@capacitor/core'
@@ -186,6 +187,9 @@ export default function App() {
     importPayments, findExistingForImport,
   } = usePayments(user?.id, paymentsSpaceId, activeSpaceEntry?.space?.name)
   const { profile, loading: profileLoading, updateProfile, uploadAvatar, fetchProfile } = useProfile(user?.id)
+  // Fuente única de precios/prueba de Premium (v0.9.960): los botones de
+  // Premium de toda la app leen si este usuario ya se suscribió alguna vez.
+  useEffect(() => { setPremiumOfferProfile(!!profile?.has_subscribed_before) }, [profile?.has_subscribed_before])
   // Moneda ACTIVA (v0.9.616): la del espacio que se está viendo, o la personal
   // en "Personal" (y en la tarjeta "Nuevo espacio"). Se fija durante el render
   // —antes de que pinten los hijos— para que `fmt()` ya use la correcta.
@@ -1666,10 +1670,11 @@ export default function App() {
   }
 
   // Suscripción terminada (Stripe o Google Play): abre la pantalla de gracias.
-  // Precio: Stripe mensual $50, Google Play mensual $49, anual $500 en ambos.
+  // Precio (v0.9.960): el de lib/premiumOffer.js — en Android, el real del
+  // catálogo de Google Play; en web, el de Stripe.
   // Con prueba gratis el primer cobro es 7 días después; sin ella, hoy.
-  function handlePremiumSubscribed({ plan, trial, platform }) {
-    const amount = plan === 'annual' ? 500 : (platform === 'google_play' ? 49 : 50)
+  function handlePremiumSubscribed({ plan, trial }) {
+    const amount = getPremiumOffer().amounts[plan]
     const firstDate = trial ? dateToStr(addDays(new Date(), 7)) : todayStr()
     setPremiumThanks({ plan, trial, amount, firstDate })
   }

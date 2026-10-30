@@ -14,6 +14,7 @@ import { catInk } from '../lib/colorUtils'
 import { fmt, getMonthsShort } from '../lib/utils'
 import home from './DeskHome.module.css'
 import styles from './DeskGoals.module.css'
+import { usePremiumCta } from '../lib/premiumOffer'
 
 // Metas de escritorio (≥1100px, v0.9.831) — diseño aprobado por Johnatan con
 // mockup. Mismo esqueleto que DeskHome/DeskPayments/DeskRecurrents: la
@@ -70,6 +71,7 @@ function GoalTile({ goal, selected, isShared, spaceMembers, onClick }) {
 
 export function DeskGoals({ d, tablet = false }) {
   const { t } = useTranslation()
+  const premiumCta = usePremiumCta()
   const {
     profile, goalsLoading, rawActiveSpaceId, sharedSpaces, onOpenPremium, onSpaceReady, slideClass, spaceJustChanged,
     isShared, spaceMembers, canAdd, atFreeLimit, onAdd, noGoalsAtAll,
@@ -179,7 +181,7 @@ export function DeskGoals({ d, tablet = false }) {
                       <div className={styles.premium}>
                         <b>{t('goalsPage.premiumBanner.title')}</b>
                         <p>{t('goalsPage.premiumBanner.text')}</p>
-                        <button type="button" onClick={onOpenPremium}><Crown size={15} fill="currentColor" /> {t('goalsPage.premiumBanner.button')}</button>
+                        <button type="button" onClick={onOpenPremium}><Crown size={15} fill="currentColor" /> {premiumCta.cta}</button>
                       </div>
                     )}
                   </div>

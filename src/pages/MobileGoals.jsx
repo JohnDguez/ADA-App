@@ -9,6 +9,7 @@ import { getIconComponent } from '../lib/categoryIcons'
 import { catInk } from '../lib/colorUtils'
 import { fmt, getMonthsShort } from '../lib/utils'
 import styles from './MobileGoals.module.css'
+import { usePremiumCta } from '../lib/premiumOffer'
 
 // Metas móvil (<768px, v0.9.910) — diseño aprobado con mockup. La lógica, el
 // detalle y los modales siguen en GoalsPage.jsx: aquí solo se pinta lo que
@@ -74,6 +75,7 @@ function GoalTile({ goal, index, grown, isShared, spaceMembers, onClick }) {
 
 export function MobileGoals({ d }) {
   const { t } = useTranslation()
+  const premiumCta = usePremiumCta()
   const {
     goalsLoading, noGoalsAtAll, onAdd, isShared, spaceMembers, atFreeLimit, onOpenPremium,
     activeGoals, completedGoals, sortedGoals, sortBy, setSortBy, goalsView, setGoalsView,
@@ -146,7 +148,7 @@ export function MobileGoals({ d }) {
           <div className={styles.premium}>
             <b>{t('goalsPage.premiumBanner.title')}</b>
             <p>{t('goalsPage.premiumBanner.text')}</p>
-            <button type="button" onClick={onOpenPremium}><Crown size={15} fill="currentColor" /> {t('goalsPage.premiumBanner.button')}</button>
+            <button type="button" onClick={onOpenPremium}><Crown size={15} fill="currentColor" /> {premiumCta.cta}</button>
           </div>
         )}
       </div>

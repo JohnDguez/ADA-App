@@ -136,21 +136,28 @@ async function getProductWithRetry(store, productId) {
   return null
 }
 
-// (v0.9.959) Qué planes traen prueba gratis PARA ESTA cuenta de Google:
-// `{ monthly: bool, annual: bool }`, o null si el catálogo no cargó.
-// PremiumPage lo usa para no prometer "7 días gratis" cuando Google va a
-// cobrar desde el primer día (caso real: una cuenta que ya tuvo una
-// suscripción de LunaPay en Play ya no califica, pero nuestra columna
-// `has_subscribed_before` seguía en false).
-export async function getPlayTrialAvailability() {
+// (v0.9.960) Catálogo real de Google Play PARA ESTA cuenta:
+// `{ monthly: { amount, currency, hasTrial }, annual: {...} }`, o null si no
+// cargó. `amount` es el precio recurrente (la última fase con costo de la
+// oferta que se va a ordenar) y `currency` el código ISO que Google cobra en
+// el país de la cuenta. `hasTrial` sale de las ofertas que Google devuelve,
+// que ya filtran por elegibilidad. Así el precio y la prueba se cambian en
+// Play Console sin compilar una versión nueva.
+export async function getPlayCatalog() {
   if (!isAndroidBilling()) return null
   const store = ensureStoreInitialized()
   if (!store) return null
   const result = {}
   for (const [plan, productId] of Object.entries(PLAY_PRODUCT_IDS)) {
-    const product = await getProductWithRetry(store, productId)
-    if (!product) return null
-    result[plan] = hasFreePhase(pickOffer(product))
+    const offer = pickOffer(await getProductWithRetry(store, productId))
+    const paid = (offer?.pricingPhases || []).filter((ph) => Number(ph.priceMicros) > 0)
+    const recurring = paid[paid.length - 1]
+    if (!recurring) return null
+    result[plan] = {
+      amount: Number(recurring.priceMicros) / 1e6,
+      currency: recurring.currency || 'MXN',
+      hasTrial: hasFreePhase(offer),
+    }
   }
   return result
 }

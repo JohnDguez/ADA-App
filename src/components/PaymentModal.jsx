@@ -42,9 +42,11 @@ import { parseTicketText } from '../lib/parseTicket'
 import { usePresence } from '../lib/usePresence'
 import { useScrollLock } from '../lib/scrollLock'
 import { switchProps } from '../lib/a11y'
+import { usePremiumCta } from '../lib/premiumOffer'
 
 export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onSaveCardPlan, onDelete, onEditMaster, initial: initialProp, payments, profile, spacePermissions, isSharedSpace = false, spaceName = '', spaces = [], activeSpaceId = null, onSwitchSpace = null, customCategories = [], onUpdateProfile, onOpenPremium, paymentMethods = null, prefill = null, autoStart = null }) {
   const { t } = useTranslation()
+  const premiumCta = usePremiumCta()
   // Durante la animación de salida se conserva el pago que se estaba editando
   // (el padre ya pudo limpiarlo) para que el formulario no cambie de forma.
   const lastInitialRef = useRef(null)
@@ -1031,9 +1033,9 @@ const impactBlock = impactPreview && impactPreview.length > 0 ? (() => {
             <h3 className={ip.lockTitle}>{t('paymentModal.impact.lockTitle')}</h3>
             <p className={ip.lockText}>{t('paymentModal.impact.lockText')}</p>
             <button type="button" className={ip.cta} onClick={() => onOpenPremium?.()}>
-              <Crown size={16} />{t('goalsPage.premiumBanner.button')}
+              <Crown size={16} />{premiumCta.cta}
             </button>
-            <div className={ip.fine}>{t('premiumLock.finePrint')}</div>
+            {premiumCta.fine && <div className={ip.fine}>{premiumCta.fine}</div>}
           </div>
         </div>
       )

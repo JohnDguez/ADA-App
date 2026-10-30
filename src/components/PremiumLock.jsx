@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next'
 import { Crown } from 'lucide-react'
 import styles from './PremiumLock.module.css'
+import { usePremiumCta } from '../lib/premiumOffer'
 
 // Candado visual reutilizable para cualquier función detrás de is_premium.
 // Si isPremium es true, muestra `children` normal, sin ningún cambio.
@@ -19,6 +20,7 @@ export function PremiumLock({
   children,
 }) {
   const { t } = useTranslation()
+  const premiumCta = usePremiumCta()
   if (isPremium) return children
 
   return (
@@ -45,12 +47,14 @@ export function PremiumLock({
             className={styles.ctaButton}
           >
             <Crown size={16} />
-            {ctaText || t('goalsPage.premiumBanner.button')}
+            {ctaText || premiumCta.cta}
           </button>
 
-          <div className={styles.finePrint}>
-            {finePrint || t('premiumLock.finePrint')}
-          </div>
+          {(finePrint || premiumCta.fine) && (
+            <div className={styles.finePrint}>
+              {finePrint || premiumCta.fine}
+            </div>
+          )}
         </div>
       </div>
     </div>
