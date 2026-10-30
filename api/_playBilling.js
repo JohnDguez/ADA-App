@@ -50,4 +50,25 @@ async function fetchSubscriptionState(purchaseToken) {
   return data // { subscriptionState, lineItems, linkedPurchaseToken, ... }
 }
 
-module.exports = { PACKAGE_NAME, PLAN_BY_PRODUCT_ID, ACTIVE_STATES, getServiceAccountClient, fetchSubscriptionState }
+// (v0.9.959) Confirma (acknowledge) la compra del lado del servidor si
+// Google todavía la tiene pendiente. Google reembolsa y cancela sola una
+// suscripción que nadie confirma en 3 días ("Confirmar plan" en Play Store).
+// El cliente ya la confirma con `transaction.finish()`, pero si la app se
+// cierra o falla justo después de verificar, esta es la red de seguridad.
+// Nunca truena: un fallo aquí se loggea y la verificación sigue siendo válida.
+async function acknowledgeIfPending(purchaseToken, subscription, productIdHint) {
+  if (subscription?.acknowledgementState !== 'ACKNOWLEDGEMENT_STATE_PENDING') return false
+  const productId = productIdHint || subscription?.lineItems?.[0]?.productId
+  if (!productId) return false
+  try {
+    const client = getServiceAccountClient()
+    const url = `https://androidpublisher.googleapis.com/androidpublisher/v3/applications/${PACKAGE_NAME}/purchases/subscriptions/${productId}/tokens/${purchaseToken}:acknowledge`
+    await client.request({ url, method: 'POST', data: {} })
+    return true
+  } catch (e) {
+    console.error('[playBilling] No se pudo confirmar (acknowledge) la compra:', e.message)
+    return false
+  }
+}
+
+module.exports = { PACKAGE_NAME, PLAN_BY_PRODUCT_ID, ACTIVE_STATES, getServiceAccountClient, fetchSubscriptionState, acknowledgeIfPending }

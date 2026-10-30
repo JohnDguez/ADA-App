@@ -10,7 +10,7 @@ import { Target } from '@phosphor-icons/react/dist/csr/Target'
 import { loadStripe } from '@stripe/stripe-js'
 import { EmbeddedCheckoutProvider, EmbeddedCheckout } from '@stripe/react-stripe-js'
 import { supabase } from '../lib/supabase'
-import { isAndroidBilling, restorePurchases, purchasePremium, initPlayBilling } from '../lib/playBilling'
+import { isAndroidBilling, restorePurchases, purchasePremium, initPlayBilling, getPlayTrialAvailability } from '../lib/playBilling'
 import { getPremiumSource } from '../lib/utils'
 import { apiUrl } from '../lib/apiUrl'
 import styles from './PremiumPage.module.css'
@@ -60,7 +60,7 @@ export function PremiumPage({ profile, onClose, refreshProfile, onSubscribed }) 
   // decisión real de si Stripe aplica el trial vive en
   // create-checkout-session.js (misma columna, dos lugares distintos por
   // diseño: aquí es solo texto, allá es dinero de verdad).
-  const trialEligible = !profile?.has_subscribed_before
+  const neverSubscribed = !profile?.has_subscribed_before
 
   // Entrada y salida (Regla 29) — antes esta pantalla aparecía y
   // desaparecía de golpe: App.jsx la monta/desmonta condicionalmente
@@ -77,8 +77,20 @@ export function PremiumPage({ profile, onClose, refreshProfile, onSubscribed }) 
   const closeTimerRef = useRef(null)
   const enterTimerRef = useRef(null)
 
-  // Carga el catálogo de Google Play al abrir la pantalla (solo Android).
-  useEffect(() => { if (isAndroidBilling()) initPlayBilling() }, [])
+  // Carga el catálogo de Google Play al abrir la pantalla (solo Android) y
+  // pregunta a Google qué planes traen prueba gratis PARA ESTA cuenta
+  // (v0.9.959): Google decide la elegibilidad con su propio historial, que
+  // no conoce nuestra columna has_subscribed_before.
+  const [playTrial, setPlayTrial] = useState(null) // null = sin saber todavía
+  useEffect(() => {
+    if (!isAndroidBilling()) return
+    initPlayBilling()
+    let alive = true
+    getPlayTrialAvailability().then((r) => { if (alive) setPlayTrial(r) }).catch((e) => {
+      console.error('[Google Play Billing] No se pudo leer la oferta de prueba:', e)
+    })
+    return () => { alive = false }
+  }, [])
 
   useEffect(() => {
     enterTimerRef.current = setTimeout(() => setEntering(false), ANIM_MS)
@@ -91,6 +103,10 @@ export function PremiumPage({ profile, onClose, refreshProfile, onSubscribed }) 
   }
 
   const [selectedPlan, setSelectedPlan] = useState('annual') // 'monthly' | 'annual'
+  // (v0.9.959) En Android la prueba solo se anuncia si Google de verdad la
+  // ofrece para el plan elegido; mientras no se sabe, no se promete. Caso
+  // real: el paywall decía "7 días gratis" y Google cobró desde el día uno.
+  const trialEligible = neverSubscribed && (!isAndroidBilling() || !!playTrial?.[selectedPlan])
   const [termsAccepted, setTermsAccepted] = useState(false)
   const [checkoutOpen, setCheckoutOpen] = useState(false)
   const [clientSecret, setClientSecret] = useState(null)

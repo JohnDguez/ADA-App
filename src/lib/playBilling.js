@@ -94,6 +94,67 @@ export function initPlayBilling() {
   ensureStoreInitialized()
 }
 
+// (v0.9.959) El purchaseToken REAL de Google es `purchaseId`. En
+// cordova-plugin-purchase v13 `transactionId` es el orderId ("GPA.xxxx")
+// cuando Google lo da (siempre en compras reales de producción) y solo cae
+// al purchaseToken si no hay orderId. Antes se mandaba `transactionId`
+// primero: el servidor le preguntaba a Google por un "token" que en
+// realidad era un orderId, Google respondía error, la verificación fallaba,
+// `finish()` nunca corría y la compra quedaba SIN CONFIRMAR ("Confirmar
+// plan" en Play Store; Google la reembolsa sola a los 3 días). Mismo error
+// en "Restaurar compras".
+function purchaseTokenOf(transaction) {
+  return transaction?.purchaseId || transaction?.nativePurchase?.purchaseToken || transaction?.transactionId
+}
+
+// ¿La oferta trae una fase gratis (prueba)? Google solo devuelve las ofertas
+// para las que ESA cuenta de Google califica, así que esto refleja la
+// elegibilidad real de Google, no la de nuestra base de datos.
+function hasFreePhase(offer) {
+  return !!offer?.pricingPhases?.some((ph) => Number(ph.priceMicros) === 0)
+}
+
+// (v0.9.959) Elige la oferta a ordenar. Antes se tomaba `getOffer()` (la
+// primera de la lista), cuyo orden lo decide Google: podía ser el plan base
+// SIN prueba aunque la cuenta sí calificara para los 7 días gratis. Ahora se
+// prefiere la oferta con fase gratis; si no hay, el plan base.
+function pickOffer(product) {
+  const offers = product?.offers || []
+  return offers.find(hasFreePhase) || offers[0] || null
+}
+
+async function getProductWithRetry(store, productId) {
+  const { Platform } = window.CdvPurchase
+  if (storeReadyPromise) await storeReadyPromise
+  // Reintenta unos segundos: el catálogo puede tardar en llegar de Google.
+  for (let i = 0; i < 10; i++) {
+    const product = store.get(productId, Platform.GOOGLE_PLAY)
+    if (product?.offers?.length) return product
+    try { await store.update() } catch (e) { /* se reintenta en la siguiente vuelta */ }
+    await new Promise((r) => setTimeout(r, 500))
+  }
+  return null
+}
+
+// (v0.9.959) Qué planes traen prueba gratis PARA ESTA cuenta de Google:
+// `{ monthly: bool, annual: bool }`, o null si el catálogo no cargó.
+// PremiumPage lo usa para no prometer "7 días gratis" cuando Google va a
+// cobrar desde el primer día (caso real: una cuenta que ya tuvo una
+// suscripción de LunaPay en Play ya no califica, pero nuestra columna
+// `has_subscribed_before` seguía en false).
+export async function getPlayTrialAvailability() {
+  if (!isAndroidBilling()) return null
+  const store = ensureStoreInitialized()
+  if (!store) return null
+  const result = {}
+  for (const [plan, productId] of Object.entries(PLAY_PRODUCT_IDS)) {
+    const product = await getProductWithRetry(store, productId)
+    if (!product) return null
+    result[plan] = hasFreePhase(pickOffer(product))
+  }
+  return result
+}
+
 // Envía el purchaseToken al backend para validarlo contra la Google Play
 // Developer API antes de tocar profiles.is_premium — mismo patrón de Bearer
 // token de sesión que api/create-checkout-session.js/manage-subscription.js.
@@ -128,9 +189,7 @@ export async function purchasePremium(plan, accessToken, userId) {
   if (!store) {
     throw new Error('El sistema de compras de Google Play no está disponible')
   }
-  const { Platform } = window.CdvPurchase
   const productId = PLAY_PRODUCT_IDS[plan]
-  if (storeReadyPromise) await storeReadyPromise
   // Liga la compra a ESTE usuario de LunaPay (auditoría v0.9.713): Google la
   // guarda como obfuscatedExternalAccountId y api/verify-play-purchase.js
   // rechaza que otra cuenta la reclame. El id de Supabase es un UUID (36
@@ -140,14 +199,7 @@ export async function purchasePremium(plan, accessToken, userId) {
     store.obfuscator = 'disabled'
     store.applicationUsername = () => userId
   }
-  // Reintenta unos segundos: el catálogo puede tardar en llegar de Google.
-  let offer = null
-  for (let i = 0; i < 10; i++) {
-    offer = store.get(productId, Platform.GOOGLE_PLAY)?.getOffer()
-    if (offer) break
-    try { await store.update() } catch (e) { /* se reintenta */ }
-    await new Promise((r) => setTimeout(r, 500))
-  }
+  const offer = pickOffer(await getProductWithRetry(store, productId))
   if (!offer) {
     throw new Error('No se encontró el plan "' + productId + '" en Google Play (¿producto/oferta activos y cuenta de prueba con acceso?)')
   }
@@ -167,7 +219,7 @@ export async function purchasePremium(plan, accessToken, userId) {
       settled = true
       cleanup()
       try {
-        const purchaseToken = transaction.transactionId || transaction.purchaseId
+        const purchaseToken = purchaseTokenOf(transaction)
         const result = await verifyWithBackend({ purchaseToken, productId, accessToken })
         transaction.finish()
         resolve(result)
@@ -234,14 +286,14 @@ export async function restorePurchases(accessToken) {
     // store) y se corta en cuanto hay una.
     const { TransactionState } = window.CdvPurchase
     const collectLocal = () => {
-      const seen = new Set(foundDuringRestore.map((t) => t.transactionId || t.purchaseId))
+      const seen = new Set(foundDuringRestore.map(purchaseTokenOf))
       // Compras que YA estaban en el store como "aprobadas" antes de esta
       // llamada (ej. una compra de Google que quedó sin confirmar porque el
       // servidor falló al verificarla): `restorePurchases()` no vuelve a
       // emitir `approved` para una transacción que ya está en ese estado, así
       // que el listener de arriba no la ve. Se leen directo del store.
       for (const t of store.localTransactions || []) {
-        const id = t.transactionId || t.purchaseId
+        const id = purchaseTokenOf(t)
         if (t.state === TransactionState.APPROVED && id && !seen.has(id)) {
           seen.add(id)
           foundDuringRestore.push(t)
@@ -261,7 +313,7 @@ export async function restorePurchases(accessToken) {
     let lastError = null
     for (const transaction of foundDuringRestore) {
       const product = transaction.products?.[0]
-      const purchaseToken = transaction.transactionId || transaction.purchaseId
+      const purchaseToken = purchaseTokenOf(transaction)
       const productId = product?.id
       if (!purchaseToken || !productId) continue
       try {

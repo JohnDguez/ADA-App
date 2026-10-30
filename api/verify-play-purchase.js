@@ -1,6 +1,6 @@
 const { createClient } = require('@supabase/supabase-js')
 const applyCors = require('./_cors')
-const { PLAN_BY_PRODUCT_ID, ACTIVE_STATES, fetchSubscriptionState } = require('./_playBilling')
+const { PLAN_BY_PRODUCT_ID, ACTIVE_STATES, fetchSubscriptionState, acknowledgeIfPending } = require('./_playBilling')
 const { authorizeRtdn } = require('./_rtdnAuth')
 
 // Mismo patrón que create-checkout-session.js/manage-subscription.js: el
@@ -86,8 +86,15 @@ async function handleVerify(req, res) {
       return res.status(500).json({ error: 'No se pudo actualizar el perfil' })
     }
 
+    // (v0.9.959) Solo después de ligarla a este usuario: confirmar ante
+    // Google si sigue pendiente (ver acknowledgeIfPending en _playBilling.js).
+    if (isActive) await acknowledgeIfPending(purchaseToken, subscription, productId)
+
     return res.status(200).json({ isPremium: isActive, plan, subscriptionState: state })
   } catch (e) {
+    // (v0.9.959) Se loggea el error real: antes solo viajaba al cliente y en
+    // Vercel no quedaba rastro de por qué fallaba la verificación.
+    console.error('[verify-play-purchase] Error verificando contra Google Play:', e.message, '| productId:', productId)
     return res.status(500).json({ error: e.message || 'No se pudo verificar la compra con Google Play' })
   }
 }
@@ -233,6 +240,8 @@ async function handleRtdn(req, res) {
       console.error('[verify-play-purchase/rtdn] No se pudo actualizar el perfil:', updateError.message)
       return res.status(500).json({ error: 'No se pudo actualizar el perfil' })
     }
+
+    if (isActive) await acknowledgeIfPending(purchaseToken, subscription)
 
     return res.status(200).json({ ok: true, isPremium: isActive, subscriptionState: state })
   } catch (e) {
