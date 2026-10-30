@@ -1,6 +1,6 @@
 /* Periodo de cobro e ingresos — tablet (v0.9.950, mockups «Periodo de cobro · Tablet»).
    Vertical: página completa; horizontal (.land): una columna dentro del panel de detalle. Solo tokens. */
-.headBar.headBar.headBar { min-height: 0; padding-top: 6px; padding-bottom: 4px; margin-bottom: 10px; }
+.headBar.headBar.headBar { min-height: 0; padding-top: 34px; padding-bottom: 4px; margin-bottom: 10px; }
 .headRow { display: flex; align-items: center; gap: 14px; }
 .back { width: 44px; height: 44px; flex: none; border: 0; border-radius: 50%; background: var(--desk-card); box-shadow: var(--desk-shadow); color: var(--text); display: grid; place-items: center; }
 

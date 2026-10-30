@@ -1,10 +1,9 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { ChevronLeft, ChevronDown, ChevronUp, Users, Copy, RefreshCw, LogOut, Trash2, Crown, Plus, Pencil, CircleCheck, Banknote, PiggyBank, Target, HandCoins, ArrowDownToLine } from 'lucide-react'
+import { X, Check, ChevronLeft, ChevronDown, ChevronUp, Users, Copy, RefreshCw, LogOut, Trash2, Crown, Plus, Pencil, CircleCheck, Banknote, PiggyBank, Target, HandCoins, ArrowDownToLine } from 'lucide-react'
 // Ícono del encabezado vía Phosphor Icons (mismo patrón que las demás
 // sub-páginas ya migradas, v0.9.442-454) — import directo para tree-shaking real.
 import { UsersThree } from '@phosphor-icons/react/dist/csr/UsersThree'
-import { PageHero } from '../../components/PageHero'
 import { Collapse } from '../../components/Collapse'
 import { Toggle } from '../../components/SettingsShared'
 import { CobroPeriodFields } from '../../components/CobroPeriodFields'
@@ -27,6 +26,9 @@ import home from '../DeskHome.module.css'
 import tb from './SettingsCobroTab.module.css'
 import { AvatarImg } from '../../components/AvatarImg'
 import { Presence } from '../../components/Presence'
+import { createPortal } from 'react-dom'
+import { useBackClose } from '../../lib/backNav'
+import { CURRENCIES, CURRENCY_CODES } from '../../lib/currency'
 import { switchProps } from '../../lib/a11y'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import { useIsDesktop } from '../../hooks/useIsDesktop'
@@ -62,13 +64,54 @@ function PermTile({ Icon, label, sub, on, onToggle }) {
   )
 }
 
+
+// Diálogo del nuevo diseño: hoja inferior en móvil, diálogo centrado en tablet.
+function SpaceDialog({ open, onClose, icon: Icon, title, subtitle, children }) {
+  const { t } = useTranslation()
+  useBackClose(open, onClose)
+  return createPortal(
+    <Presence show={!!open}>{() => (
+      <div className={sp.ovl} onClick={e => e.target === e.currentTarget && onClose()}>
+        <div className={sp.dlg} role="dialog" aria-modal="true" aria-label={title}>
+          <div className={sp.dHead}>
+            <span className={sp.dIco}><Icon size={22} /></span>
+            <div className={sp.dText}>
+              <div className={sp.dTitle}>{title}</div>
+              {subtitle && <div className={sp.dSub}>{subtitle}</div>}
+            </div>
+            <button type="button" className={sp.dClose} onClick={onClose} aria-label={t('buttons.close', { defaultValue: 'Cerrar' })}><X size={16} /></button>
+          </div>
+          {children}
+        </div>
+      </div>
+    )}</Presence>,
+    document.body
+  )
+}
+
+function CurrencyDialog({ open, onClose, value, onSelect, title }) {
+  const { t } = useTranslation()
+  return (
+    <SpaceDialog open={open} onClose={onClose} icon={Banknote} title={title}>
+      <div className={sp.curList}>
+        {CURRENCY_CODES.map(code => (
+          <button key={code} type="button" onClick={() => onSelect(code)} className={`${sp.curOpt} ${value === code ? sp.curOptOn : ''}`}>
+            <span>{`${t(`currency.names.${code}`)} (${CURRENCIES[code].code})`}</span>
+            {value === code && <Check size={18} color="var(--accent)" />}
+          </button>
+        ))}
+      </div>
+    </SpaceDialog>
+  )
+}
+
 // Código de 6 dígitos en casillas (un solo <input> invisible encima).
 function CodeBoxes({ value, onChange, onEnter, label, autoFocus }) {
   const [focus, setFocus] = useState(false)
   return (
     <div className={sp.codeBoxes}>
       {Array.from({ length: 6 }).map((_, i) => (
-        <span key={i} className={`${sp.box} ${value[i] ? '' : sp.boxEmpty} ${focus && i === Math.min(value.length, 5) ? sp.boxOn : ''}`}>{value[i] || '·'}</span>
+        <span key={i} className={`${sp.cbox} ${value[i] ? '' : sp.cboxEmpty} ${focus && i === Math.min(value.length, 5) ? sp.cboxOn : ''}`}>{value[i] || '·'}</span>
       ))}
       <input aria-label={label} inputMode="numeric" autoComplete="one-time-code" maxLength={6} value={value} autoFocus={autoFocus}
         onFocus={() => setFocus(true)} onBlur={() => setFocus(false)}
@@ -107,6 +150,7 @@ export function SettingsSharedSpacePage({ profile, user, sharedSpaces, onBack, o
   const [newWeekday,  setNewWeekday]  = useState(5)
   const [createError, setCreateError] = useState('')
   const [createSaving,setCreateSaving]= useState(false)
+  const [newCurrencyOpen, setNewCurrencyOpen] = useState(false)
 
   async function handleCreate() {
     if (!newName.trim()) { setCreateError(t('newSharedSpacePanel.nameRequiredError')); return }
@@ -155,16 +199,26 @@ export function SettingsSharedSpacePage({ profile, user, sharedSpaces, onBack, o
       {joinSaving ? t('newSharedSpacePanel.joining') : t('newSharedSpacePanel.join')}
     </button>
   )
-  const joinSheet = canJoinMore && (
-    <BottomSheet modal={!desk} open={joinOpen} title={t('newSharedSpacePanel.joinTitle')} onClose={() => setJoinOpen(false)}>
-      <div className={sp.joinSheet}>
-        <div className={sp.joinDesc}>{t('settingsSharedSpacePage.joinDescription')}</div>
-        <CodeBoxes value={joinCode} onChange={setJoinCode} onEnter={handleJoin} label={t('newSharedSpacePanel.joinTitle')} autoFocus />
-        {joinError && <div className={sp.err}>{joinError}</div>}
+  const joinBody = (
+    <>
+      {mode === 'wide' && <div className={sp.joinDesc}>{t('settingsSharedSpacePage.joinDescription')}</div>}
+      <CodeBoxes value={joinCode} onChange={setJoinCode} onEnter={handleJoin} label={t('newSharedSpacePanel.joinTitle')} autoFocus />
+      {joinError && <div className={sp.err}>{joinError}</div>}
+    </>
+  )
+  const joinSheet = canJoinMore && (mode === 'wide' ? (
+    <BottomSheet open={joinOpen} title={t('newSharedSpacePanel.joinTitle')} onClose={() => setJoinOpen(false)}>
+      <div className={sp.joinSheet}>{joinBody}{joinAction}</div>
+    </BottomSheet>
+  ) : (
+    <SpaceDialog open={joinOpen} onClose={() => setJoinOpen(false)} icon={Users} title={t('newSharedSpacePanel.joinTitle')} subtitle={t('settingsSharedSpacePage.joinSub')}>
+      <div className={sp.joinSheet}>{joinBody}</div>
+      <div className={sp.dFoot}>
+        <button type="button" className={`${sp.btnFull} ${sp.btnOut}`} onClick={() => setJoinOpen(false)}>{t('buttons.cancel')}</button>
         {joinAction}
       </div>
-    </BottomSheet>
-  )
+    </SpaceDialog>
+  ))
   const openJoin = () => { setJoinError(''); setJoinOpen(true) }
 
   // Tarjeta «Crear espacio» (Premium) o invitación a Premium (dorada).
@@ -227,7 +281,11 @@ export function SettingsSharedSpacePage({ profile, user, sharedSpaces, onBack, o
       <label className="field-label">{t('newSharedSpacePanel.spaceNameLabel')}</label>
       <input aria-label={t('newSharedSpacePanel.spaceNameLabel')} autoFocus={desk} className="field-input" value={newName} onChange={e => setNewName(e.target.value)} placeholder={t('newSharedSpacePanel.spaceNamePlaceholder')} />
       <label className={`field-label ${sp.cfgField}`} style={{ display: 'block' }}>{t('currency.spaceLabel')}</label>
-      <CurrencySelect value={newCurrency} onChange={setNewCurrency} sheetTitle={t('currency.spaceSheetTitle')} />
+      {mode === 'wide'
+        ? <CurrencySelect value={newCurrency} onChange={setNewCurrency} sheetTitle={t('currency.spaceSheetTitle')} />
+        : <button type="button" className={`field-input ${sp.curBtnField}`} onClick={() => setNewCurrencyOpen(true)}>
+            <span>{newCurrency ? `${t(`currency.names.${newCurrency}`)} (${newCurrency})` : t('currency.placeholder')}</span><ChevronDown size={16} color="var(--text)" />
+          </button>}
       <label className={`field-label ${sp.cfgField}`} style={{ display: 'block' }}>{t('cobroPeriodFields.periodLabel')}</label>
       <CobroPeriodFields
         freq={newFreq} day1={newDay1} day2={newDay2} weekday={newWeekday}
@@ -240,17 +298,19 @@ export function SettingsSharedSpacePage({ profile, user, sharedSpaces, onBack, o
       {createError && <div className={sp.err}>{createError}</div>}
       <div className={mode === 'wide' ? sp.newSide : sp.btnRow}>
         <button type="button" className={sp.btnFull} onClick={handleCreate} disabled={createSaving}>{createSaving ? t('newSharedSpacePanel.creating') : t('newSharedSpacePanel.create')}</button>
-        <button type="button" className={`${sp.btnFull} ${sp.btnSoft}`} onClick={cancelCreate}>{t('buttons.cancel')}</button>
+        <button type="button" className={`${sp.btnFull} ${sp.btnOut}`} onClick={cancelCreate}>{t('buttons.cancel')}</button>
       </div>
     </>
   )
+  const newCurDialog = <CurrencyDialog open={newCurrencyOpen} onClose={() => setNewCurrencyOpen(false)} value={newCurrency} onSelect={c => { setNewCurrency(c); setNewCurrencyOpen(false) }} title={t('currency.spaceSheetTitle')} />
   const createView = desk ? (
     <div className={sp.newLayout}>
       {createForm}
       <div className={sp.newSide}>{createPreview}{createButtons}</div>
+      {newCurDialog}
     </div>
   ) : (
-    <div className={sp.newStack}>{createPreview}{createForm}{createButtons}</div>
+    <div className={sp.newStack}>{createPreview}{createForm}{createButtons}{newCurDialog}</div>
   )
 
   // ── Espacios donde te invitaron ──
@@ -366,12 +426,12 @@ export function SettingsSharedSpacePage({ profile, user, sharedSpaces, onBack, o
   return (
     <>
       <div className={`${slideClass} ${styles.pageRoot}`}>
-        <PageHero
-          icon={UsersThree}
-          title={title}
-          description={description}
-          onBack={showCreating ? cancelCreate : onBack}
-        />
+        <div className={sp.mHead}>
+          <button type="button" className={sp.mBack} onClick={showCreating ? cancelCreate : onBack} aria-label={t('buttons.back')}><ChevronLeft size={20} /></button>
+          <span className={sp.mIco}><UsersThree size={20} /></span>
+          <h1 className={sp.mTitle}>{title}</h1>
+        </div>
+        <p className={sp.mDesc}>{description}</p>
         <div className={sp.mobilePage}>{body}</div>
       </div>
       {showJoinBtn && (
@@ -514,7 +574,9 @@ function OwnedSpacePanel({ entry, user, mode, onGoNotifications, regenerateCode,
 
   const modals = (
     <>
-      <CurrencySheet open={currencyOpen} onClose={() => setCurrencyOpen(false)} value={entry.space.currency} onSelect={handleCurrency} title={t('currency.spaceSheetTitle')} />
+      {mode === 'wide'
+        ? <CurrencySheet open={currencyOpen} onClose={() => setCurrencyOpen(false)} value={entry.space.currency} onSelect={handleCurrency} title={t('currency.spaceSheetTitle')} />
+        : <CurrencyDialog open={currencyOpen} onClose={() => setCurrencyOpen(false)} value={entry.space.currency} onSelect={handleCurrency} title={t('currency.spaceSheetTitle')} />}
       <Presence show={!!(dangerOpen)}>{() => (
         <div onClick={e => e.target === e.currentTarget && setDangerOpen(false)} className={desk ? dkp.overlay : styles.deleteModalOverlay}>
           <div className={desk ? `${dkp.dialog} ${dk.delDlg}` : styles.deleteModalSheet} role={desk ? 'dialog' : undefined} aria-modal={desk ? 'true' : undefined}>

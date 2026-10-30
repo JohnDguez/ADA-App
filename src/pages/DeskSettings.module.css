@@ -3,6 +3,8 @@
 .content { padding-right: 14px; }
 /* v0.9.954: páginas con paneles blancos (Espacio Compartido) — el recuadro de la página pasa a gris para que contrasten */
 .content:has([data-gray]) { background: var(--desk-panel); }
+.contentBody > [data-gray] { display: flex; flex-direction: column; min-height: 100%; }
+.contentBody > [data-gray] > * { flex-shrink: 0; }
 .profile { display: flex; align-items: center; gap: 12px; padding: 8px 18px 8px 8px; border-radius: 20px; background: var(--desk-card); box-shadow: var(--desk-shadow); }
 .avatar { width: 46px; height: 46px; border-radius: 50%; object-fit: cover; display: block; }
 .avatarFallback { width: 46px; height: 46px; border-radius: 50%; display: grid; place-items: center; background: var(--accent); color: var(--surface); font-weight: 700; }

@@ -1885,6 +1885,7 @@
     "deskConfig": "Space settings",
     "deskMembersTitle": "Members",
     "deskDanger": "Danger zone",
+    "joinSub": "The code has 6 digits. The space creator gives it to you.",
     "emptyTitle": "You're not in any space yet",
     "emptySub": "Join with a code or create your own to share payments and goals.",
     "joinCardTitle": "Join with a code",

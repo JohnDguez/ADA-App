@@ -61,7 +61,7 @@
 .sec { margin: 8px 4px 0; font-size: 11px; font-weight: 600; letter-spacing: 0.8px; text-transform: uppercase; color: var(--muted); }
 
 /* ── Estado vacío ── */
-.empty { display: flex; flex-direction: column; gap: 18px; width: 100%; max-width: 920px; margin: 0 auto; padding-top: 6px; }
+.empty { display: flex; flex-direction: column; gap: 18px; width: 100%; max-width: 920px; margin: auto; padding: 6px 0 40px; }
 .emptyHead { text-align: center; }
 .emptyIco { display: inline-grid; place-items: center; width: 72px; height: 72px; border-radius: 24px; background: var(--accent-soft); color: var(--accent); }
 .emptyTitle { margin: 12px 0 0; font-size: 22px; font-weight: 600; letter-spacing: -0.4px; color: var(--text); }
@@ -84,11 +84,11 @@
 /* ── Casillas del código de 6 dígitos ── */
 .codeBoxes { position: relative; display: flex; justify-content: center; gap: 8px; }
 .codeBoxes input { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; border: 0; background: none; cursor: text; font-size: 16px; }
-.box { width: 52px; height: 60px; display: grid; place-items: center; border-radius: 14px; background: var(--desk-chip); font-size: 24px; font-weight: 600; color: var(--text); }
-.boxEmpty { color: var(--muted); }
-.boxOn { box-shadow: inset 0 0 0 2px var(--accent); }
+.cbox { width: 52px; height: 60px; display: grid; place-items: center; border-radius: 14px; background: var(--desk-chip); font-size: 24px; font-weight: 600; color: var(--text); }
+.cboxEmpty { color: var(--muted); }
+.cboxOn { box-shadow: inset 0 0 0 2px var(--accent); }
 .joinSheet { --field-desk-bg: var(--desk-chip); display: flex; flex-direction: column; gap: 14px; }
-.joinSheet .box { background: var(--desk-card); }
+.joinSheet .cbox { background: var(--desk-card); }
 .joinDesc { text-align: center; font-size: 13px; color: var(--muted); }
 
 /* ── Crear espacio ── */
@@ -125,9 +125,59 @@
 @media (max-width: 767px) {
   .emptyCards { flex-direction: column; }
   .newLayout { grid-template-columns: minmax(0, 1fr); }
-  .box { width: 42px; height: 50px; }
+  .cbox { width: 42px; height: 50px; }
 }
 @media (max-width: 1099px) {
   .newLayout { grid-template-columns: minmax(0, 1fr); }
   .emptyCards { flex-direction: column; }
+}
+
+/* ── Encabezado móvil (como el mockup): regreso + ícono + título, descripción debajo ── */
+.mHead { display: flex; align-items: center; gap: 12px; padding: 24px 16px 6px; }
+.mBack { width: 40px; height: 40px; flex: none; display: grid; place-items: center; border: 0; border-radius: 50%; background: var(--desk-card); box-shadow: var(--desk-shadow); color: var(--text); }
+.mIco { width: 36px; height: 36px; flex: none; display: grid; place-items: center; border-radius: 12px; background: var(--accent-soft); color: var(--accent); }
+.mTitle { margin: 0; font-size: 21px; font-weight: 700; letter-spacing: -0.3px; color: var(--text); }
+.mDesc { margin: 0; padding: 4px 22px 14px; font-size: 13px; line-height: 1.45; color: var(--muted); }
+
+/* ── Diálogos (unirse / moneda): hoja en móvil, diálogo centrado en tablet ── */
+.ovl { position: fixed; inset: 0; z-index: 250; display: flex; align-items: flex-end; justify-content: center; background: var(--scrim); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
+.dlg { --field-desk-bg: var(--desk-card); position: relative; width: 100%; max-height: calc(100vh - 24px); overflow-y: auto; display: flex; flex-direction: column; gap: 14px; padding: 22px 18px calc(22px + env(safe-area-inset-bottom)); border-radius: 28px 28px 0 0; background: var(--desk-panel); color: var(--text); box-shadow: var(--desk-pop-shadow); animation: dlgUp 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) both; }
+.dlg::before { content: ''; position: absolute; top: 8px; left: 50%; width: 44px; height: 5px; margin-left: -22px; border-radius: 99px; background: var(--desk-hair); }
+@keyframes dlgUp { from { transform: translateY(100%); } to { transform: none; } }
+@keyframes dlgIn { from { opacity: 0; transform: scale(0.96) translateY(8px); } to { opacity: 1; transform: none; } }
+@media (min-width: 768px) {
+  .ovl { align-items: center; padding: 24px; }
+  .dlg { width: 440px; border-radius: 28px; padding: 22px 24px; animation: dlgIn 0.24s cubic-bezier(0.22, 1, 0.36, 1) both; }
+  .dlg::before { display: none; }
+}
+:global([data-closing]) .ovl { opacity: 0; transition: opacity 0.2s; }
+.dHead { display: flex; align-items: center; gap: 12px; margin-top: 6px; }
+.dIco { width: 42px; height: 42px; flex: none; display: grid; place-items: center; border-radius: 14px; background: var(--accent-soft); color: var(--accent); }
+.dText { flex: 1; min-width: 0; }
+.dTitle { font-size: 18px; font-weight: 700; line-height: 1.2; }
+.dSub { margin-top: 2px; font-size: 12.5px; color: var(--muted); }
+.dClose { width: 34px; height: 34px; flex: none; display: grid; place-items: center; border: 0; border-radius: 50%; background: var(--desk-card); color: var(--text); }
+.dFoot { display: flex; gap: 10px; }
+.dFoot > * { flex: 1; }
+.dFoot > :last-child { flex: 1.5; }
+.dlg .cbox { background: var(--desk-card); }
+.curList { display: flex; flex-direction: column; gap: 8px; max-height: min(55vh, 440px); overflow-y: auto; }
+.curOpt { display: flex; align-items: center; justify-content: space-between; gap: 10px; height: 48px; flex: none; padding: 0 16px; border: 0; border-radius: 15px; background: var(--desk-card); color: var(--text); font-family: inherit; font-size: 14.5px; text-align: left; }
+.curOptOn { background: var(--accent-soft); font-weight: 600; }
+.curBtnField { display: flex; align-items: center; justify-content: space-between; width: 100%; text-align: left; }
+
+/* Botón secundario fuera de un recuadro: blanco con sombra para que se vea sobre el fondo gris */
+.btnOut { background: var(--desk-card); color: var(--text); box-shadow: var(--desk-shadow); font-weight: 600; }
+
+/* Aviso de notificaciones apagadas en tarjeta angosta: ícono + texto arriba, botón completo abajo */
+.panel [class*="_box_"] { flex-wrap: wrap; }
+.panel [class*="_box_"] [class*="_text_"] { flex: 1 1 140px; min-width: 0; }
+.panel [class*="_box_"] [class*="_go_"] { flex: 1 1 100%; height: 40px; }
+.wide .oNotif [class*="_box_"] [class*="_go_"], .pane .oNotif [class*="_box_"] [class*="_go_"], .mobile .oNotif [class*="_box_"] [class*="_go_"] { flex: 0 0 auto; margin-left: auto; height: 36px; }
+.wide .oNotif [class*="_box_"], .pane .oNotif [class*="_box_"], .mobile .oNotif [class*="_box_"] { flex-wrap: nowrap; }
+
+@media (hover: hover) and (pointer: fine) {
+  .curOpt:not(.curOptOn):hover { background: var(--accent-soft); filter: none; translate: none; }
+  .dClose:hover, .btnOut:hover { background: var(--desk-hover-fill); filter: none; translate: none; }
+  .curOptOn:hover { filter: none; translate: none; }
 }

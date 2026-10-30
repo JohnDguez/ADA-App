@@ -2034,7 +2034,7 @@ export default function App() {
         />
       )}
       {/* En Inicio de escritorio el botón vive en el encabezado. */}
-      {!(isDesktop && (tab === 'home' || tab === 'payments' || tab === 'recurrents' || tab === 'goals' || tab === 'notifications' || tab === 'settings')) && <RailFab onAdd={openAddMenu} addOpen={addMenuOpen} />}
+      {tab !== 'settings' && !(isDesktop && (tab === 'home' || tab === 'payments' || tab === 'recurrents' || tab === 'goals' || tab === 'notifications' || tab === 'settings')) && <RailFab onAdd={openAddMenu} addOpen={addMenuOpen} />}
 
       <NotificationsPanel
         open={notifOpen}

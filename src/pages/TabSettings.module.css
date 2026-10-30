@@ -15,4 +15,4 @@
 @media (hover: hover) and (pointer: fine) { .camera:hover { translate: none; filter: none; } }
 
 /* Sin paisaje (v0.9.952): cabecera más baja. */
-.headBar.headBar.headBar { min-height: 96px; margin-bottom: 10px; }
+.headBar.headBar.headBar { min-height: 118px; padding-top: 28px; margin-bottom: 10px; }
