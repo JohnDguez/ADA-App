@@ -56,3 +56,24 @@ describe('Stripe: catálogo desde el dashboard', () => {
     expect(planOfPrice({ recurring: { interval: 'month' } })).toBe('monthly')
   })
 })
+
+describe('Promoción en la app (variante B)', () => {
+  it('calcula el % y los textos a partir del catálogo', async () => {
+    const { vi } = await import('vitest')
+    vi.stubGlobal('fetch', vi.fn(async () => ({
+      ok: true,
+      json: async () => ({
+        monthly: { amount: 50, currency: 'MXN', trialDays: 0, intro: null },
+        annual: { amount: 500, currency: 'MXN', trialDays: 0, intro: { amount: 375, unit: 'year', cycles: 1 } },
+      }),
+    })))
+    const mod = await import('../src/lib/premiumOffer.js')
+    await mod.loadPremiumOffer()
+    const promo = mod.getPremiumOffer().promo
+    expect(promo.monthly).toBeNull()
+    expect(promo.annual.pct).toBe(25)
+    expect(promo.annual.price).toBe('$375')
+    expect(promo.annual.regular).toBe('$500')
+    vi.unstubAllGlobals()
+  })
+})

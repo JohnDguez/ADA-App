@@ -26,6 +26,10 @@
 .planPrice { font-size: 42px; font-weight: 700; letter-spacing: -1.5px; }
 .planPrice small { font-size: 14px; font-weight: 500; letter-spacing: 0; color: var(--muted); }
 .planSaving { font-size: 13px; color: var(--muted); }
+.promoChip { position: absolute; top: 1.5rem; right: 3.625rem; padding: 0.25rem 0.625rem; border-radius: 99px; background: var(--danger); color: var(--on-color); font-size: 0.75rem; font-weight: 700; line-height: 1.2; animation: promoInDesk 300ms cubic-bezier(0.22, 1, 0.36, 1) backwards; }
+.planRegular { font-size: 0.9375rem; font-weight: 500; color: var(--muted); text-decoration: line-through; }
+@keyframes promoInDesk { from { opacity: 0; transform: translateY(-0.25rem); } }
+@media (prefers-reduced-motion: reduce) { .promoChip { animation: none; } }
 .badge { position: absolute; top: -13px; left: 24px; padding: 5px 12px; border-radius: 99px; background: var(--premium-gold); color: var(--premium-gold-text); font-size: 12px; font-weight: 700; }
 .radio { position: absolute; top: 24px; right: 24px; width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--desk-hatch); box-sizing: border-box; }
 .planOn .radio { border-color: var(--premium-gold); background: radial-gradient(circle, var(--premium-gold) 0 45%, transparent 50%); }

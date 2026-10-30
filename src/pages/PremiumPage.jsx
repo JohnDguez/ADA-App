@@ -340,16 +340,20 @@ export function PremiumPage({ profile, onClose, refreshProfile, onSubscribed }) 
                 <button type="button" onClick={() => setSelectedPlan('monthly')} className={`${dk.plan} ${!annual ? dk.planOn : ''}`} aria-pressed={!annual}>
                   <span className={dk.radio} />
                   <span className={dk.planName}>{t('premiumPage.monthly')}</span>
-                  <span className={dk.planPrice}>{offer.prices.monthly} <small>{priceSuffix('monthly')}</small></span>
-                  {offer.intro.monthly && <span className={dk.planSaving}>{offer.intro.monthly}</span>}
+                  {offer.promo.monthly && <span className={dk.promoChip}>-{offer.promo.monthly.pct}%</span>}
+                  {offer.promo.monthly && <span className={dk.planRegular}>{offer.promo.monthly.regular}</span>}
+                  <span className={dk.planPrice}>{offer.promo.monthly ? offer.promo.monthly.price : offer.prices.monthly} <small>{priceSuffix('monthly')}</small></span>
+                  {offer.promo.monthly && <span className={dk.planSaving}>{offer.promo.monthly.label}</span>}
                 </button>
                 <button type="button" onClick={() => setSelectedPlan('annual')} className={`${dk.plan} ${annual ? dk.planOn : ''}`} aria-pressed={annual}>
                   <span className={dk.badge}>★ {t('premiumPage.mostPopular')}</span>
                   <span className={dk.radio} />
                   <span className={dk.planName}>{t('premiumPage.annual')}</span>
-                  <span className={dk.planPrice}>{offer.prices.annual} <small>{priceSuffix('annual')}</small></span>
-                  {offer.intro.annual
-                    ? <span className={dk.planSaving}>{offer.intro.annual}</span>
+                  {offer.promo.annual && <span className={dk.promoChip}>-{offer.promo.annual.pct}%</span>}
+                  {offer.promo.annual && <span className={dk.planRegular}>{offer.promo.annual.regular}</span>}
+                  <span className={dk.planPrice}>{offer.promo.annual ? offer.promo.annual.price : offer.prices.annual} <small>{priceSuffix('annual')}</small></span>
+                  {offer.promo.annual
+                    ? <span className={dk.planSaving}>{offer.promo.annual.label}</span>
                     : savingText && <span className={dk.planSaving}>{savingText}</span>}
                 </button>
               </div>
@@ -392,6 +396,7 @@ export function PremiumPage({ profile, onClose, refreshProfile, onSubscribed }) 
           <div className={dk.fine}>
             {t('premiumPage.restrictionsApply')}
             {trialEligible && <> {t('premiumPage.trialFinePrint', { price: offer.prices[selectedPlan], suffix: priceSuffix(selectedPlan), days: trialDays })}</>}
+            {offer.promo[selectedPlan]?.fine && <> {offer.promo[selectedPlan].fine}</>}
             <div className={dk.safe}><ShieldCheck size={14} />{t('premiumPage.cancelAnytime')}</div>
             <div>
               {isAndroid && <button type="button" onClick={handleRestorePurchases} disabled={restoreState === 'restoring'} className={dk.link}>{t('premiumPage.restorePurchases')}</button>}{isAndroid && ' '}
@@ -518,11 +523,13 @@ export function PremiumPage({ profile, onClose, refreshProfile, onSubscribed }) 
                 onClick={() => setSelectedPlan('monthly')}
                 className={`card ${styles.planCard} ${selectedPlan === 'monthly' ? styles.planCardActive : ''}`}
               >
+                {offer.promo.monthly && <div className={styles.promoChip}>-{offer.promo.monthly.pct}%</div>}
                 <div className={styles.planName}>{t('premiumPage.monthly')}</div>
+                {offer.promo.monthly && <div className={styles.planRegular}>{offer.promo.monthly.regular}</div>}
                 <div className={styles.planPrice}>
-                  {offer.prices.monthly} <span className={styles.planPriceSuffix}>{priceSuffix('monthly')}</span>
+                  {offer.promo.monthly ? offer.promo.monthly.price : offer.prices.monthly} <span className={styles.planPriceSuffix}>{priceSuffix('monthly')}</span>
                 </div>
-                {offer.intro.monthly && <div className={styles.planSaving}>{offer.intro.monthly}</div>}
+                {offer.promo.monthly && <div className={styles.planSaving}>{offer.promo.monthly.label}</div>}
               </button>
 
               <button
@@ -531,12 +538,14 @@ export function PremiumPage({ profile, onClose, refreshProfile, onSubscribed }) 
                 className={`card ${styles.planCard} ${selectedPlan === 'annual' ? styles.planCardActive : ''}`}
               >
                 <div className={styles.popularBadge}>★ {t('premiumPage.mostPopular')}</div>
+                {offer.promo.annual && <div className={styles.promoChip}>-{offer.promo.annual.pct}%</div>}
                 <div className={styles.planName}>{t('premiumPage.annual')}</div>
+                {offer.promo.annual && <div className={styles.planRegular}>{offer.promo.annual.regular}</div>}
                 <div className={styles.planPrice}>
-                  {offer.prices.annual} <span className={styles.planPriceSuffix}>{priceSuffix('annual')}</span>
+                  {offer.promo.annual ? offer.promo.annual.price : offer.prices.annual} <span className={styles.planPriceSuffix}>{priceSuffix('annual')}</span>
                 </div>
-                {offer.intro.annual
-                  ? <div className={styles.planSaving}>{offer.intro.annual}</div>
+                {offer.promo.annual
+                  ? <div className={styles.planSaving}>{offer.promo.annual.label}</div>
                   : savingText && <div className={styles.planSaving}>{savingText}</div>}
               </button>
             </div>
@@ -642,6 +651,10 @@ export function PremiumPage({ profile, onClose, refreshProfile, onSubscribed }) 
                 suffix: priceSuffix(selectedPlan),
                 days: trialDays,
               })}
+            </>)}
+            {offer.promo[selectedPlan]?.fine && (<>
+              <br />
+              {offer.promo[selectedPlan].fine}
             </>)}
           </div>
           <div className={styles.cancelAnytime}>

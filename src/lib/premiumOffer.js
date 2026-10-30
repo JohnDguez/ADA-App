@@ -120,14 +120,25 @@ function build() {
     annual: neverSubscribed && trustTrial ? annual.trialDays : 0,
   }
 
-  const introText = (plan, offer) => {
+  // Promoción por plan (v0.9.962, variante B aprobada): precio normal,
+  // precio de promoción, % de descuento y textos ya listos.
+  const promoOf = (plan, offer) => {
     const intro = offer.intro
-    if (!intro) return null
-    const price = formatPrice(intro.amount, offer.currency)
-    if (intro.cycles === 0) return i18n.t('premiumPage.introForever', { price })
-    const key = intro.unit === 'year' ? 'premiumPage.introYears' : 'premiumPage.introMonths'
-    return i18n.t(key, { price, count: intro.cycles })
+    if (!intro || !(intro.amount < offer.amount)) return null
+    const pct = Math.round((1 - intro.amount / offer.amount) * 100)
+    if (pct <= 0) return null
+    const suffix = i18n.t(`premiumPage.${plan}PriceSuffix`, { currency: offer.currency })
+    const vars = { count: intro.cycles, intro: formatPrice(intro.amount, offer.currency), price: formatPrice(offer.amount, offer.currency), suffix }
+    const unitKey = intro.unit === 'year' ? 'Years' : 'Months'
+    return {
+      pct,
+      price: formatPrice(intro.amount, offer.currency),
+      regular: formatPrice(offer.amount, offer.currency),
+      label: intro.cycles === 0 ? i18n.t('premiumPage.introForever') : i18n.t(`premiumPage.intro${unitKey}`, vars),
+      fine: intro.cycles === 0 ? null : i18n.t(`premiumPage.introFine${unitKey}`, vars),
+    }
   }
+  const promo = { monthly: promoOf('monthly', monthly), annual: promoOf('annual', annual) }
 
   return {
     // true mientras no llega el catálogo de esta sesión
@@ -142,10 +153,9 @@ function build() {
     // Para los botones que no eligen plan: la prueba más larga disponible.
     anyTrial: trialDays.monthly > 0 || trialDays.annual > 0,
     maxTrialDays: Math.max(trialDays.monthly, trialDays.annual),
-    // Precio de introducción/promoción por plan, ya como texto (o null).
-    intro: { monthly: introText('monthly', monthly), annual: introText('annual', annual) },
-    // ¿Hay promoción en algún plan? (para los botones genéricos)
-    anyIntro: !!(monthly.intro || annual.intro),
+    // Promoción por plan (o null): { pct, price, regular, label, fine }.
+    promo,
+    anyPromo: !!(promo.monthly || promo.annual),
   }
 }
 
@@ -203,7 +213,7 @@ export function usePremiumOffer() {
 // Texto de los botones de Premium repartidos por la app (candados, banners
 // de Metas, Espacio Compartido, simulador): con prueba, "Prueba Premium
 // GRATIS N días" + letra pequeña con el precio real; sin prueba, "Obtener
-// Premium" (y, si hay promoción, la promoción como letra pequeña).
+// Premium" (y, si hay promoción, el descuento como letra pequeña).
 export function usePremiumCta() {
   const offer = usePremiumOffer()
   if (offer.anyTrial) {
@@ -212,8 +222,9 @@ export function usePremiumCta() {
       fine: i18n.t('premiumLock.finePrint', { price: offer.prices.monthly, currency: offer.currency }),
     }
   }
+  const p = offer.promo.annual || offer.promo.monthly
   return {
     cta: i18n.t('premiumLock.ctaNoTrial'),
-    fine: offer.intro.monthly || offer.intro.annual || null,
+    fine: p ? i18n.t('premiumLock.finePromo', { pct: p.pct, price: p.price }) : null,
   }
 }

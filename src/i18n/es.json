@@ -1566,7 +1566,8 @@
   },
   "premiumLock": {
     "finePrint": "Solo para nuevos usuarios. Al finalizar la prueba, {{price}} {{currency}} al mes.",
-    "ctaNoTrial": "Obtener Premium"
+    "ctaNoTrial": "Obtener Premium",
+    "finePromo": "Promoción: -{{pct}}%, desde {{price}}"
   },
   "goalsTray": {
     "label": "Mis metas",
@@ -1684,11 +1685,15 @@
     "back": "Volver",
     "titleLead": "Obtén",
     "checkoutTitle": "Pago seguro",
-    "introMonths_one": "{{price}} el primer mes",
-    "introMonths_other": "{{price}} al mes los primeros {{count}} meses",
-    "introYears_one": "{{price}} el primer año",
-    "introYears_other": "{{price}} al año los primeros {{count}} años",
-    "introForever": "Precio especial: {{price}}"
+    "introMonths_one": "Precio especial el primer mes",
+    "introMonths_other": "Precio especial los primeros {{count}} meses",
+    "introYears_one": "Precio especial el primer año",
+    "introYears_other": "Precio especial los primeros {{count}} años",
+    "introForever": "Precio especial",
+    "introFineMonths_one": "El primer mes se cobran {{intro}}; después, {{price}} {{suffix}}.",
+    "introFineMonths_other": "Los primeros {{count}} meses se cobran {{intro}} al mes; después, {{price}} {{suffix}}.",
+    "introFineYears_one": "El primer año se cobran {{intro}}; después, {{price}} {{suffix}}.",
+    "introFineYears_other": "Los primeros {{count}} años se cobran {{intro}} al año; después, {{price}} {{suffix}}."
   },
   "spaceSwitcher": {
     "noPending": "Sin pagos pendientes",

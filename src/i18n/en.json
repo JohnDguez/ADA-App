@@ -1566,7 +1566,8 @@
   },
   "premiumLock": {
     "finePrint": "Only for new users. After the trial, {{price}} {{currency}} per month.",
-    "ctaNoTrial": "Get Premium"
+    "ctaNoTrial": "Get Premium",
+    "finePromo": "Promotion: -{{pct}}%, from {{price}}"
   },
   "goalsTray": {
     "label": "My goals",
@@ -1684,11 +1685,15 @@
     "back": "Back",
     "titleLead": "Get",
     "checkoutTitle": "Secure payment",
-    "introMonths_one": "{{price}} for the first month",
-    "introMonths_other": "{{price}} a month for the first {{count}} months",
-    "introYears_one": "{{price}} for the first year",
-    "introYears_other": "{{price}} a year for the first {{count}} years",
-    "introForever": "Special price: {{price}}"
+    "introMonths_one": "Special price for the first month",
+    "introMonths_other": "Special price for the first {{count}} months",
+    "introYears_one": "Special price for the first year",
+    "introYears_other": "Special price for the first {{count}} years",
+    "introForever": "Special price",
+    "introFineMonths_one": "The first month costs {{intro}}; after that, {{price}} {{suffix}}.",
+    "introFineMonths_other": "The first {{count}} months cost {{intro}} a month; after that, {{price}} {{suffix}}.",
+    "introFineYears_one": "The first year costs {{intro}}; after that, {{price}} {{suffix}}.",
+    "introFineYears_other": "The first {{count}} years cost {{intro}} a year; after that, {{price}} {{suffix}}."
   },
   "spaceSwitcher": {
     "noPending": "No pending payments",

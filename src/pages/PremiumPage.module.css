@@ -234,6 +234,38 @@
   margin-top: 4px;
 }
 
+/* Promoción (v0.9.962, variante B aprobada por Johnatan): chip rojo sólido
+   con el % en la esquina, precio normal tachado y precio de promoción grande. */
+.promoChip {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  padding: 0.1875rem 0.5625rem;
+  border-radius: 99px;
+  background: var(--danger);
+  color: var(--on-color);
+  font-size: 0.75rem;
+  font-weight: 700;
+  line-height: 1.2;
+  animation: promoIn 300ms cubic-bezier(0.22, 1, 0.36, 1) backwards;
+}
+
+.planRegular {
+  margin-top: 0.25rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--muted);
+  text-decoration: line-through;
+}
+
+@keyframes promoIn {
+  from { opacity: 0; transform: translateY(-0.25rem); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .promoChip { animation: none; }
+}
+
 .planPriceSuffix {
   font-size: 13px;
   font-weight: 500;
