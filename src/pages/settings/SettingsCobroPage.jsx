@@ -21,7 +21,6 @@ import mb from './SettingsCobroMobile.module.css'
 import { SubpageHeader } from '../../components/SubpageHeader'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import { useIsDesktop } from '../../hooks/useIsDesktop'
-import { useHeaderBackground, HEADER_IMAGES } from '../../hooks/useHeaderBackground'
 import home from '../DeskHome.module.css'
 import tb from './SettingsCobroTab.module.css'
 
@@ -39,7 +38,6 @@ export function SettingsCobroPage({ profile, onUpdate, onBack, slideClass }) {
   const desk = useDeskSettings()
   const isMobile = useIsMobile()
   const isDesk1100 = useIsDesktop()
-  const { timeOfDay, mountedKeys } = useHeaderBackground(profile?.timezone)
   const [currencyOpen, setCurrencyOpen] = useState(false)
   const symbol = getCurrency(profile).symbol
   const [salaryAmount,   setSalaryAmount]   = useState(profile.salary_amount || '')
@@ -429,12 +427,7 @@ export function SettingsCobroPage({ profile, onUpdate, onBack, slideClass }) {
 
   return (
     <div className={`${slideClass} ${home.root} ${home.tablet}`}>
-      <header className={home.head}>
-        <div className={home.band} aria-hidden="true">
-          {mountedKeys.map(key => (
-            <img key={key} src={HEADER_IMAGES[key]} alt="" className={`${home.bandImg} ${timeOfDay === key ? home.bandImgOn : ''}`} />
-          ))}
-        </div>
+      <header className={`${home.head} ${tb.headBar}`}>
         <div className={`${home.headText} ${tb.headRow}`}>
           <button type="button" className={tb.back} onClick={onBack} aria-label={t('buttons.back')}><ChevronLeft size={20} /></button>
           <div>
