@@ -1,6 +1,7 @@
 const { createClient } = require('@supabase/supabase-js')
 const applyCors = require('./_cors')
 const Stripe = require('stripe')
+const { loadCatalog, publicCatalog } = require('./_stripePrices')
 
 const stripe = Stripe(process.env.STRIPE_SECRET_KEY)
 
@@ -12,16 +13,28 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY
 )
 
-// Los 2 planes reales de Stripe (modo de prueba por ahora) — los Price ID
-// viven en variables de entorno, nunca hardcodeados, para poder apuntar a
-// los IDs de modo LIVE el día que se publique sin tocar código.
-const PRICE_IDS = {
-  monthly: process.env.STRIPE_PRICE_MONTHLY,
-  annual: process.env.STRIPE_PRICE_ANNUAL,
+// Precios, prueba y promociones salen del dashboard de Stripe vía
+// `_stripePrices.js` (v0.9.961): lookup keys, metadata `trial_days` y
+// `coupon` del Price. Ver ese archivo.
+
+// GET (v0.9.961): catálogo público para que la app web muestre los precios
+// y la prueba reales sin tenerlos escritos en el código. Sin sesión: no
+// expone nada privado. Va en este mismo endpoint por el límite de 12
+// funciones de Vercel.
+async function handleCatalog(res) {
+  try {
+    const catalog = await loadCatalog(stripe)
+    res.setHeader('Cache-Control', 'public, max-age=300')
+    return res.status(200).json(publicCatalog(catalog))
+  } catch (e) {
+    console.error('[create-checkout-session] No se pudo leer el catálogo de Stripe:', e.message)
+    return res.status(500).json({ error: 'No se pudo leer el catálogo' })
+  }
 }
 
 module.exports = async function handler(req, res) {
   if (applyCors(req, res)) return
+  if (req.method === 'GET') return handleCatalog(res)
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
 
   const authHeader = req.headers.authorization
@@ -33,10 +46,11 @@ module.exports = async function handler(req, res) {
   const user = userData.user
 
   const { plan } = req.body || {}
-  const priceId = PRICE_IDS[plan]
-  if (!priceId) return res.status(400).json({ error: 'Plan inválido' })
+  if (!['monthly', 'annual'].includes(plan)) return res.status(400).json({ error: 'Plan inválido' })
 
   try {
+    const catalog = await loadCatalog(stripe)
+    const entry = catalog[plan]
     // Reutiliza el customer de Stripe si el usuario ya tiene uno guardado
     // (de un intento de checkout anterior, completado o no) — evita crear
     // customers duplicados en Stripe cada vez que alguien abre PremiumPage.
@@ -57,14 +71,13 @@ module.exports = async function handler(req, res) {
       await supabase.from('profiles').update({ stripe_customer_id: customerId }).eq('id', user.id)
     }
 
-    // Prueba gratis de 7 días (v0.9.506) — SOLO para quien nunca ha tenido
-    // una suscripción real (`has_subscribed_before`, marcada por
-    // stripe-webhook.js la primera vez, nunca se revierte). Aplica igual
-    // sin importar el plan elegido — al día 8, Stripe cobra el precio del
-    // plan seleccionado automáticamente, sin acción extra de este archivo.
+    // Prueba gratis — SOLO para quien nunca ha tenido una suscripción real,
+    // ni en Stripe ni en Google Play (`has_subscribed_before`, compartida;
+    // nunca se revierte). Los días salen de la metadata `trial_days` del
+    // Price (v0.9.961); 0 = sin prueba.
     const subscriptionData = { metadata: { supabase_user_id: user.id } }
-    if (!profile?.has_subscribed_before) {
-      subscriptionData.trial_period_days = 7
+    if (!profile?.has_subscribed_before && entry.trialDays > 0) {
+      subscriptionData.trial_period_days = entry.trialDays
     }
 
     // ui_mode: 'embedded' + redirect_on_completion: 'never' — el formulario
@@ -76,10 +89,13 @@ module.exports = async function handler(req, res) {
       ui_mode: 'embedded',
       mode: 'subscription',
       customer: customerId,
-      line_items: [{ price: priceId, quantity: 1 }],
+      line_items: [{ price: entry.priceId, quantity: 1 }],
       redirect_on_completion: 'never',
       metadata: { supabase_user_id: user.id },
       subscription_data: subscriptionData,
+      // Promoción automática (cupón en la metadata del Price) o, si no hay,
+      // campo para códigos promocionales creados en Stripe (v0.9.961).
+      ...(entry.couponId ? { discounts: [{ coupon: entry.couponId }] } : { allow_promotion_codes: true }),
     })
 
     return res.status(200).json({ clientSecret: session.client_secret })

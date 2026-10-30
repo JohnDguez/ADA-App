@@ -653,7 +653,7 @@
     "premiumBanner": {
       "title": "Obtén Premium para ahorrar en más de una meta a la vez",
       "text": "Crea todas las que quieras — tu próximo viaje, una consola, lo que se te ocurra — y ahorra para varias al mismo tiempo, en vez de quedarte solo con una activa.",
-      "button": "Prueba Premium GRATIS 7 días"
+      "button": "Prueba Premium GRATIS {{days}} días"
     },
     "addGoal": "Añadir meta",
     "toast": {
@@ -1649,7 +1649,7 @@
       "reportsShort": "Imprime, comparte o analiza.",
       "reportsDesc": "Genera reportes en PDF y descarga tus datos en CSV para analizarlos donde quieras."
     },
-    "trialPill": "7 días gratis, cancela cuando quieras",
+    "trialPill": "{{days}} días gratis, cancela cuando quieras",
     "annualSaving": "Ahorras {{saving}} · {{perMonth}} al mes",
     "choosePlan": "Elige tu plan",
     "monthly": "Mensual",
@@ -1678,12 +1678,17 @@
     "alreadyPremiumViaStripe": "Ya tienes Premium activo, gestionado desde la web (Stripe).",
     "alreadyPremiumViaGooglePlay": "Ya tienes Premium activo, gestionado desde Google Play Store en la app.",
     "adminGrantedBanner": "Tienes acceso a Premium por parte del administrador. Si quieres apoyar el proyecto, puedes suscribirte de todas formas:",
-    "startTrial": "Iniciar prueba gratis de 7 días",
-    "termsAcceptTrial": "Acepto que, al terminar los 7 días gratis, se cobre el plan elegido de forma recurrente hasta que cancele, según los Términos y Condiciones.",
-    "trialFinePrint": "Solo para usuarios que nunca se han suscrito antes. Al terminar la prueba de 7 días, se cobrará {{price}} {{suffix}}.",
+    "startTrial": "Iniciar prueba gratis de {{days}} días",
+    "termsAcceptTrial": "Acepto que, al terminar los {{days}} días gratis, se cobre el plan elegido de forma recurrente hasta que cancele, según los Términos y Condiciones.",
+    "trialFinePrint": "Solo para usuarios que nunca se han suscrito antes. Al terminar la prueba de {{days}} días, se cobrará {{price}} {{suffix}}.",
     "back": "Volver",
     "titleLead": "Obtén",
-    "checkoutTitle": "Pago seguro"
+    "checkoutTitle": "Pago seguro",
+    "introMonths_one": "{{price}} el primer mes",
+    "introMonths_other": "{{price}} al mes los primeros {{count}} meses",
+    "introYears_one": "{{price}} el primer año",
+    "introYears_other": "{{price}} al año los primeros {{count}} años",
+    "introForever": "Precio especial: {{price}}"
   },
   "spaceSwitcher": {
     "noPending": "Sin pagos pendientes",

@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback, lazy, Suspense } from 'react'
 import { getPremiumOffer, setPremiumOfferProfile } from './lib/premiumOffer'
+import { startPlayBillingSync, stopPlayBillingSync } from './lib/playBilling'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from './hooks/useAuth'
 import { Capacitor } from '@capacitor/core'
@@ -190,6 +191,18 @@ export default function App() {
   // Fuente única de precios/prueba de Premium (v0.9.960): los botones de
   // Premium de toda la app leen si este usuario ya se suscribió alguna vez.
   useEffect(() => { setPremiumOfferProfile(!!profile?.has_subscribed_before) }, [profile?.has_subscribed_before])
+  // Android (v0.9.961): con sesión, el store de Google Play queda escuchando
+  // y verifica solo cualquier compra aprobada — incluidas las canjeadas con
+  // un código promocional desde Play Store o las que quedaron sin confirmar —
+  // sin que el usuario tenga que tocar "Restaurar compras".
+  useEffect(() => {
+    if (!user?.id) return
+    startPlayBillingSync(
+      async () => (await supabase.auth.getSession()).data.session?.access_token || null,
+      () => fetchProfile?.(),
+    )
+    return () => stopPlayBillingSync()
+  }, [user?.id]) // eslint-disable-line react-hooks/exhaustive-deps -- fetchProfile cambia en cada render; solo importa el usuario
   // Moneda ACTIVA (v0.9.616): la del espacio que se está viendo, o la personal
   // en "Personal" (y en la tarjeta "Nuevo espacio"). Se fija durante el render
   // —antes de que pinten los hijos— para que `fmt()` ya use la correcta.
@@ -1673,9 +1686,9 @@ export default function App() {
   // Precio (v0.9.960): el de lib/premiumOffer.js — en Android, el real del
   // catálogo de Google Play; en web, el de Stripe.
   // Con prueba gratis el primer cobro es 7 días después; sin ella, hoy.
-  function handlePremiumSubscribed({ plan, trial }) {
+  function handlePremiumSubscribed({ plan, trial, trialDays }) {
     const amount = getPremiumOffer().amounts[plan]
-    const firstDate = trial ? dateToStr(addDays(new Date(), 7)) : todayStr()
+    const firstDate = trial && trialDays > 0 ? dateToStr(addDays(new Date(), trialDays)) : todayStr()
     setPremiumThanks({ plan, trial, amount, firstDate })
   }
 

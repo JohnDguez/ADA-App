@@ -1,33 +1,39 @@
-// Fuente única de precios y de prueba gratis de Premium (v0.9.960).
+// Fuente única de precios, prueba gratis y promociones de Premium
+// (v0.9.960–961).
 //
-// Antes los precios ($50/$500, ahorro $100 · $41.67) y el "7 días gratis"
-// estaban escritos a mano en PremiumPage, SettingsSubscriptionPage, App.jsx
-// y en cada botón de Premium de la app. En Android eso tenía dos problemas:
-// (1) cambiar el precio en Play Console exigía compilar y publicar una
-// versión nueva, y (2) los botones prometían la prueba aunque Google ya no
-// la ofreciera a esa cuenta (Google decide la elegibilidad con su propio
-// historial).
+// Principio: lo comercial NO vive en el código. Cambiar precio, días de
+// prueba o lanzar una promoción se hace en la consola de cada tienda y la
+// app lo refleja sin compilar ni publicar versión:
+// - Android: catálogo de Google Play (`getPlayCatalog()` en playBilling.js).
+// - Web: catálogo de Stripe (GET /api/create-checkout-session, que lee
+//   lookup keys y metadata `trial_days`/`coupon` de cada Price).
 //
-// Ahora:
-// - Android: precio, moneda y prueba vienen del catálogo de Google Play
-//   (`getPlayCatalog()`), con la última lectura guardada en localStorage
-//   para mostrar algo al instante en el siguiente arranque. La prueba solo se
-//   anuncia con el catálogo FRESCO de esta sesión, nunca desde la caché.
-// - Web (Stripe): precios fijos de abajo (WEB_PRICES); la prueba depende de
-//   `profiles.has_subscribed_before`, igual que create-checkout-session.js.
+// Prueba gratis UNA sola vez por cuenta de LunaPay, sin importar dónde se
+// usó (Stripe o Google Play): `profiles.has_subscribed_before`. En web la
+// hace cumplir el servidor; en Android se ordena la oferta sin prueba
+// (playBilling.js → `allowTrial`). Además Google aplica su propia regla con
+// la cuenta de Google.
+//
+// Mientras no llega el catálogo se muestran los últimos valores guardados
+// (localStorage) o, la primera vez, FALLBACK. La prueba en Android solo se
+// promete con el catálogo fresco de la sesión.
 //
 // App.jsx informa `has_subscribed_before` con setPremiumOfferProfile(); los
-// componentes leen todo con el hook usePremiumOffer().
+// componentes leen todo con usePremiumOffer() / usePremiumCta().
 
 import { useEffect, useSyncExternalStore } from 'react'
 import i18n from '../i18n'
+import { apiUrl } from './apiUrl'
 import { isAndroidBilling, getPlayCatalog } from './playBilling'
 
-// Precios de Stripe (web). Si cambian en Stripe, se cambian aquí y en ningún
-// otro archivo.
-export const WEB_PRICES = { currency: 'MXN', monthly: 50, annual: 500 }
+// Solo para la primera carga sin red ni caché. No es la fuente de verdad.
+const FALLBACK = {
+  monthly: { amount: 50, currency: 'MXN', trialDays: 7, intro: null },
+  annual: { amount: 500, currency: 'MXN', trialDays: 7, intro: null },
+}
 
-const CACHE_KEY = 'lunapay-play-catalog'
+const CACHE_KEY = 'lunapay-premium-catalog'
+const PLANS = ['monthly', 'annual']
 
 function readCache() {
   try {
@@ -47,9 +53,8 @@ function writeCache(catalog) {
 }
 
 let neverSubscribed = true
-let freshCatalog = null
-let cachedCatalog = null
-let cacheRead = false
+let fresh = null // catálogo de esta sesión (forma normalizada, ver normalize*)
+let cached
 let loadPromise = null
 let snapshot = null
 const listeners = new Set()
@@ -75,35 +80,72 @@ export function formatPrice(amount, currency) {
   }
 }
 
-function build() {
-  const android = isAndroidBilling()
-  if (android && !cacheRead) {
-    cachedCatalog = readCache()
-    cacheRead = true
+// Forma normalizada: { [plan]: { withTrial, noTrial } }, cada una
+// { amount, currency, trialDays, intro }.
+function normalizeWeb(web) {
+  const out = {}
+  for (const plan of PLANS) {
+    const p = web?.[plan]
+    if (!p) return null
+    const base = { amount: p.amount, currency: p.currency, intro: p.intro || null }
+    out[plan] = { withTrial: { ...base, trialDays: p.trialDays || 0 }, noTrial: { ...base, trialDays: 0 } }
   }
-  const catalog = android ? (freshCatalog || cachedCatalog) : null
-  const currency = catalog?.monthly?.currency || WEB_PRICES.currency
-  const monthly = catalog?.monthly?.amount ?? WEB_PRICES.monthly
-  const annual = catalog?.annual?.amount ?? WEB_PRICES.annual
-  const saving = Math.max(0, Math.round((monthly * 12 - annual) * 100) / 100)
+  return out
+}
 
-  const trial = {
-    monthly: neverSubscribed && (!android || !!freshCatalog?.monthly?.hasTrial),
-    annual: neverSubscribed && (!android || !!freshCatalog?.annual?.hasTrial),
+function fallbackCatalog() {
+  const out = {}
+  for (const plan of PLANS) {
+    out[plan] = { withTrial: FALLBACK[plan], noTrial: { ...FALLBACK[plan], trialDays: 0 } }
+  }
+  return out
+}
+
+function build() {
+  if (cached === undefined) cached = readCache()
+  const android = isAndroidBilling()
+  const catalog = fresh || cached || fallbackCatalog()
+  const pick = (plan) => (neverSubscribed ? catalog[plan].withTrial : catalog[plan].noTrial)
+  const monthly = pick('monthly')
+  const annual = pick('annual')
+  const currency = monthly.currency
+  const saving = Math.max(0, Math.round((monthly.amount * 12 - annual.amount) * 100) / 100)
+
+  // En Android la prueba solo se promete con el catálogo fresco (Google
+  // decide la elegibilidad de esa cuenta); en web, la caché basta porque el
+  // servidor vuelve a decidir al crear el checkout.
+  const trustTrial = !android || !!fresh
+  const trialDays = {
+    monthly: neverSubscribed && trustTrial ? monthly.trialDays : 0,
+    annual: neverSubscribed && trustTrial ? annual.trialDays : 0,
+  }
+
+  const introText = (plan, offer) => {
+    const intro = offer.intro
+    if (!intro) return null
+    const price = formatPrice(intro.amount, offer.currency)
+    if (intro.cycles === 0) return i18n.t('premiumPage.introForever', { price })
+    const key = intro.unit === 'year' ? 'premiumPage.introYears' : 'premiumPage.introMonths'
+    return i18n.t(key, { price, count: intro.cycles })
   }
 
   return {
-    // true en Android mientras no llega el catálogo de esta sesión
-    loading: android && !freshCatalog,
+    // true mientras no llega el catálogo de esta sesión
+    loading: !fresh,
     currency,
-    amounts: { monthly, annual },
-    prices: { monthly: formatPrice(monthly, currency), annual: formatPrice(annual, currency) },
+    amounts: { monthly: monthly.amount, annual: annual.amount },
+    prices: { monthly: formatPrice(monthly.amount, currency), annual: formatPrice(annual.amount, currency) },
     saving: saving > 0 ? formatPrice(saving, currency) : null,
-    annualPerMonth: formatPrice(annual / 12, currency),
-    trial,
-    // Para los botones que no eligen plan: se promete la prueba solo si
-    // algún plan la tiene.
-    anyTrial: trial.monthly || trial.annual,
+    annualPerMonth: formatPrice(annual.amount / 12, currency),
+    trialDays,
+    trial: { monthly: trialDays.monthly > 0, annual: trialDays.annual > 0 },
+    // Para los botones que no eligen plan: la prueba más larga disponible.
+    anyTrial: trialDays.monthly > 0 || trialDays.annual > 0,
+    maxTrialDays: Math.max(trialDays.monthly, trialDays.annual),
+    // Precio de introducción/promoción por plan, ya como texto (o null).
+    intro: { monthly: introText('monthly', monthly), annual: introText('annual', annual) },
+    // ¿Hay promoción en algún plan? (para los botones genéricos)
+    anyIntro: !!(monthly.intro || annual.intro),
   }
 }
 
@@ -117,18 +159,26 @@ function subscribe(fn) {
   return () => listeners.delete(fn)
 }
 
-// Pide el catálogo a Google una vez por sesión (solo Android).
+async function fetchCatalog() {
+  if (isAndroidBilling()) return getPlayCatalog()
+  const res = await fetch(apiUrl('/api/create-checkout-session'), { method: 'GET' })
+  if (!res.ok) throw new Error('HTTP ' + res.status)
+  return normalizeWeb(await res.json())
+}
+
+// Pide el catálogo una vez por sesión.
 export function loadPremiumOffer() {
-  if (!isAndroidBilling() || loadPromise) return loadPromise
-  loadPromise = getPlayCatalog()
+  if (loadPromise) return loadPromise
+  loadPromise = fetchCatalog()
     .then((catalog) => {
       if (!catalog) { loadPromise = null; return } // se reintenta en el siguiente montaje
-      freshCatalog = catalog
+      fresh = catalog
+      cached = catalog
       writeCache(catalog)
       emit()
     })
     .catch((e) => {
-      console.error('[Premium] No se pudo leer el catálogo de Google Play:', e)
+      console.error('[Premium] No se pudo leer el catálogo de precios:', e)
       loadPromise = null
     })
   return loadPromise
@@ -151,13 +201,19 @@ export function usePremiumOffer() {
 }
 
 // Texto de los botones de Premium repartidos por la app (candados, banners
-// de Metas, Espacio Compartido, simulador): con prueba disponible, "Prueba
-// Premium GRATIS 7 días" + letra pequeña con el precio real; sin prueba,
-// "Obtener Premium" y sin letra pequeña.
+// de Metas, Espacio Compartido, simulador): con prueba, "Prueba Premium
+// GRATIS N días" + letra pequeña con el precio real; sin prueba, "Obtener
+// Premium" (y, si hay promoción, la promoción como letra pequeña).
 export function usePremiumCta() {
   const offer = usePremiumOffer()
+  if (offer.anyTrial) {
+    return {
+      cta: i18n.t('goalsPage.premiumBanner.button', { days: offer.maxTrialDays }),
+      fine: i18n.t('premiumLock.finePrint', { price: offer.prices.monthly, currency: offer.currency }),
+    }
+  }
   return {
-    cta: offer.anyTrial ? i18n.t('goalsPage.premiumBanner.button') : i18n.t('premiumLock.ctaNoTrial'),
-    fine: offer.anyTrial ? i18n.t('premiumLock.finePrint', { price: offer.prices.monthly, currency: offer.currency }) : null,
+    cta: i18n.t('premiumLock.ctaNoTrial'),
+    fine: offer.intro.monthly || offer.intro.annual || null,
   }
 }

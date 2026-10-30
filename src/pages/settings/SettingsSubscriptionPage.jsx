@@ -20,7 +20,7 @@ import dk from './SettingsSubscriptionDesk.module.css'
 import mb from './SettingsSubscriptionMobile.module.css'
 import { SubpageHeader } from '../../components/SubpageHeader'
 import { useIsMobile } from '../../hooks/useIsMobile'
-import { WEB_PRICES, formatPrice } from '../../lib/premiumOffer'
+import { usePremiumOffer } from '../../lib/premiumOffer'
 
 // Sub-página "Mi suscripción" dentro de Ajustes — solo alcanzable si
 // profile.is_premium (ver SettingsPage.jsx). A diferencia de otras
@@ -49,11 +49,12 @@ import { WEB_PRICES, formatPrice } from '../../lib/premiumOffer'
 // Beneficios que se listan en la tarjeta del plan (mismas claves que PremiumPage).
 const BENEFIT_KEYS = ['simulatorTitle', 'sharedTitle', 'pdfTitle', 'csvTitle', 'goalsTitle']
 // Ahorro del plan anual en Stripe (esta página gestiona la suscripción de
-// Stripe). Los precios viven en un solo lugar: WEB_PRICES de lib/premiumOffer.js.
-const ANNUAL_SAVING = formatPrice(12 * WEB_PRICES.monthly - WEB_PRICES.annual, WEB_PRICES.currency)
+// Stripe). Sale del catálogo real de Stripe vía lib/premiumOffer.js (v0.9.961).
 
 export function SettingsSubscriptionPage({ profile, onOpenPremium, onBack, slideClass }) {
   const { t, i18n } = useTranslation()
+  const premiumOffer = usePremiumOffer()
+  const ANNUAL_SAVING = premiumOffer.saving
   const desk = useDeskSettings()
   const isMobile = useIsMobile()
 
@@ -188,7 +189,7 @@ export function SettingsSubscriptionPage({ profile, onOpenPremium, onBack, slide
             <div className={dk.hero}>
               <div className={dk.heroMain}>
                 <div className={dk.badge}><Crown size={13} fill="currentColor" />{t(`premiumPage.${subscription.plan}`)}</div>
-                <div className={dk.amount}>{fmt(subscription.amount)} <small>{t(`premiumPage.${subscription.plan}PriceSuffix`, { currency: (subscription.currency || WEB_PRICES.currency).toUpperCase() })}</small></div>
+                <div className={dk.amount}>{fmt(subscription.amount)} <small>{t(`premiumPage.${subscription.plan}PriceSuffix`, { currency: (subscription.currency || premiumOffer.currency).toUpperCase() })}</small></div>
                 <div className={dk.renew}>
                   {subscription.cancelAtPeriodEnd ? <Clock size={15} /> : <RefreshCw size={15} />}
                   <span>
@@ -215,7 +216,7 @@ export function SettingsSubscriptionPage({ profile, onOpenPremium, onBack, slide
                   <div className={dk.key}>{t('settingsSubscription.desk.changePlan')}</div>
                   <button type="button" className={dk.row} onClick={() => setConfirmModal('switch')}>
                     <span>{t('settingsSubscription.switchTo', { plan: t(`premiumPage.${otherPlan}`) })}</span>
-                    {otherPlan === 'annual' && <span className={dk.save}>{t('settingsSubscription.saveYear', { amount: ANNUAL_SAVING })}</span>}
+                    {otherPlan === 'annual' && ANNUAL_SAVING && <span className={dk.save}>{t('settingsSubscription.saveYear', { amount: ANNUAL_SAVING })}</span>}
                     <ChevronRight size={16} />
                   </button>
                   <div className={dk.note}>{t('settingsSubscription.desk.changeNote')}</div>
@@ -297,7 +298,7 @@ export function SettingsSubscriptionPage({ profile, onOpenPremium, onBack, slide
             <div className={mb.card} style={{ '--i': 0 }}>
               <div className={mb.plan}>
                 <span className={mb.badge}><Crown size={11} fill="currentColor" />{t(`premiumPage.${subscription.plan}`)}</span>
-                <div className={mb.amount}>{fmt(subscription.amount)} <small>{t(`premiumPage.${subscription.plan}PriceSuffix`, { currency: (subscription.currency || WEB_PRICES.currency).toUpperCase() })}</small></div>
+                <div className={mb.amount}>{fmt(subscription.amount)} <small>{t(`premiumPage.${subscription.plan}PriceSuffix`, { currency: (subscription.currency || premiumOffer.currency).toUpperCase() })}</small></div>
                 <div className={mb.renew}>
                   {subscription.cancelAtPeriodEnd ? <Clock size={14} /> : <RefreshCw size={14} />}
                   <span>{subscription.cancelAtPeriodEnd ? t('settingsSubscription.willCancelOn', { date: endDate }) : t('settingsSubscription.renewsOn', { date: endDate })}</span>
@@ -329,7 +330,7 @@ export function SettingsSubscriptionPage({ profile, onOpenPremium, onBack, slide
                     <span className={mb.stack}>
                       <b>{t('settingsSubscription.switchTo', { plan: t(`premiumPage.${otherPlan}`) })}</b>
                       <em>{t('settingsSubscription.desk.changeNote')}</em>
-                      {otherPlan === 'annual' && <span className={mb.save}>{t('settingsSubscription.saveYear', { amount: ANNUAL_SAVING })}</span>}
+                      {otherPlan === 'annual' && ANNUAL_SAVING && <span className={mb.save}>{t('settingsSubscription.saveYear', { amount: ANNUAL_SAVING })}</span>}
                     </span>
                     <ChevronRight size={16} className={mb.chev} />
                   </button>
@@ -434,7 +435,7 @@ export function SettingsSubscriptionPage({ profile, onOpenPremium, onBack, slide
                 {t(`premiumPage.${subscription.plan}`)}
               </div>
               <div className={styles.planAmount}>
-                {fmt(subscription.amount)} <span className={styles.planAmountSuffix}>{t(`premiumPage.${subscription.plan}PriceSuffix`, { currency: (subscription.currency || WEB_PRICES.currency).toUpperCase() })}</span>
+                {fmt(subscription.amount)} <span className={styles.planAmountSuffix}>{t(`premiumPage.${subscription.plan}PriceSuffix`, { currency: (subscription.currency || premiumOffer.currency).toUpperCase() })}</span>
               </div>
               <div className={styles.renewLine}>
                 {subscription.cancelAtPeriodEnd
@@ -464,7 +465,7 @@ export function SettingsSubscriptionPage({ profile, onOpenPremium, onBack, slide
                 <button onClick={() => setConfirmModal('switch')} className={styles.switchRow}>
                   <span>{t('settingsSubscription.switchTo', { plan: t(`premiumPage.${otherPlan}`) })}</span>
                   <span className={styles.switchValue}>
-                    {otherPlan === 'annual' && <span className={styles.savePill}>{t('settingsSubscription.saveYear', { amount: ANNUAL_SAVING })}</span>}
+                    {otherPlan === 'annual' && ANNUAL_SAVING && <span className={styles.savePill}>{t('settingsSubscription.saveYear', { amount: ANNUAL_SAVING })}</span>}
                     <ChevronRight size={14} />
                   </span>
                 </button>

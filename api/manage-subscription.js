@@ -1,6 +1,7 @@
 const { createClient } = require('@supabase/supabase-js')
 const applyCors = require('./_cors')
 const Stripe = require('stripe')
+const { loadCatalog, planOfPrice } = require('./_stripePrices')
 
 const stripe = Stripe(process.env.STRIPE_SECRET_KEY)
 
@@ -9,19 +10,13 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY
 )
 
-const PRICE_IDS = {
-  monthly: process.env.STRIPE_PRICE_MONTHLY,
-  annual: process.env.STRIPE_PRICE_ANNUAL,
-}
-const PLAN_BY_PRICE_ID = {
-  [process.env.STRIPE_PRICE_MONTHLY]: 'monthly',
-  [process.env.STRIPE_PRICE_ANNUAL]: 'annual',
-}
-
+// Precios desde `_stripePrices.js` (v0.9.961). El plan de una suscripción
+// se deduce del intervalo de cobro, así los suscriptores con un precio
+// anterior (sin lookup key) siguen reconociéndose.
 function serializeSubscription(subscription) {
   const item = subscription.items.data[0]
   return {
-    plan: PLAN_BY_PRICE_ID[item.price.id] || null,
+    plan: planOfPrice(item.price),
     amount: item.price.unit_amount / 100,
     currency: item.price.currency,
     status: subscription.status,
@@ -45,7 +40,7 @@ module.exports = async function handler(req, res) {
   if (!['cancel', 'reactivate', 'change-plan'].includes(action)) {
     return res.status(400).json({ error: 'Acción inválida' })
   }
-  if (action === 'change-plan' && !PRICE_IDS[newPlan]) {
+  if (action === 'change-plan' && !['monthly', 'annual'].includes(newPlan)) {
     return res.status(400).json({ error: 'Plan inválido' })
   }
 
@@ -77,8 +72,9 @@ module.exports = async function handler(req, res) {
       // prorrateo se refleja en la SIGUIENTE factura, no cobra ni reembolsa
       // de inmediato. Más simple y predecible que 'always_invoice' para un
       // primer lanzamiento.
+      const catalog = await loadCatalog(stripe)
       subscription = await stripe.subscriptions.update(subscriptionId, {
-        items: [{ id: itemId, price: PRICE_IDS[newPlan] }],
+        items: [{ id: itemId, price: catalog[newPlan].priceId }],
       })
     }
 

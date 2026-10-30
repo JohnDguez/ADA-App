@@ -653,7 +653,7 @@
     "premiumBanner": {
       "title": "Get Premium to save toward more than one goal at a time",
       "text": "Create as many as you want — your next trip, a console, whatever comes to mind — and save for several at once, instead of only having one active.",
-      "button": "Try Premium FREE for 7 days"
+      "button": "Try Premium FREE for {{days}} days"
     },
     "addGoal": "Add goal",
     "toast": {
@@ -1649,7 +1649,7 @@
       "reportsShort": "Print, share or analyze.",
       "reportsDesc": "Generate PDF reports and download your data as CSV to analyze it anywhere."
     },
-    "trialPill": "7 days free, cancel anytime",
+    "trialPill": "{{days}} days free, cancel anytime",
     "annualSaving": "Save {{saving}} · {{perMonth}} a month",
     "choosePlan": "Choose your plan",
     "monthly": "Monthly",
@@ -1678,12 +1678,17 @@
     "alreadyPremiumViaStripe": "You already have Premium active, managed on the web (Stripe).",
     "alreadyPremiumViaGooglePlay": "You already have Premium active, managed through Google Play Store in the app.",
     "adminGrantedBanner": "You have Premium access granted by the administrator. If you'd like to support the project, you can still subscribe:",
-    "startTrial": "Start your free 7-day trial",
-    "termsAcceptTrial": "I agree that once the 7 free days end, the selected plan will be charged on a recurring basis until I cancel, per the Terms and Conditions.",
-    "trialFinePrint": "Only for users who have never subscribed before. Once the 7-day trial ends, {{price}} {{suffix}} will be charged.",
+    "startTrial": "Start your free {{days}}-day trial",
+    "termsAcceptTrial": "I agree that once the {{days}} free days end, the selected plan will be charged on a recurring basis until I cancel, per the Terms and Conditions.",
+    "trialFinePrint": "Only for users who have never subscribed before. Once the {{days}}-day trial ends, {{price}} {{suffix}} will be charged.",
     "back": "Back",
     "titleLead": "Get",
-    "checkoutTitle": "Secure payment"
+    "checkoutTitle": "Secure payment",
+    "introMonths_one": "{{price}} for the first month",
+    "introMonths_other": "{{price}} a month for the first {{count}} months",
+    "introYears_one": "{{price}} for the first year",
+    "introYears_other": "{{price}} a year for the first {{count}} years",
+    "introForever": "Special price: {{price}}"
   },
   "spaceSwitcher": {
     "noPending": "No pending payments",

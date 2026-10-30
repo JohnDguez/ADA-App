@@ -1,6 +1,7 @@
 const { createClient } = require('@supabase/supabase-js')
 const applyCors = require('./_cors')
 const Stripe = require('stripe')
+const { planOfPrice } = require('./_stripePrices')
 
 const stripe = Stripe(process.env.STRIPE_SECRET_KEY)
 
@@ -9,13 +10,9 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY
 )
 
-// Mismos 2 Price ID que create-checkout-session.js — se comparan contra el
-// precio real de la suscripción para saber si es 'monthly' o 'annual' (el
-// frontend nunca decide esto solo, siempre viene resuelto del servidor).
-const PLAN_BY_PRICE_ID = {
-  [process.env.STRIPE_PRICE_MONTHLY]: 'monthly',
-  [process.env.STRIPE_PRICE_ANNUAL]: 'annual',
-}
+// El plan ('monthly'/'annual') se deduce del intervalo de cobro del precio
+// real de la suscripción (v0.9.961), así sigue funcionando cuando el precio
+// cambia en Stripe y los suscriptores viejos conservan su Price anterior.
 
 module.exports = async function handler(req, res) {
   if (applyCors(req, res)) return
@@ -50,7 +47,7 @@ module.exports = async function handler(req, res) {
 
     return res.status(200).json({
       subscription: {
-        plan: PLAN_BY_PRICE_ID[item.price.id] || null,
+        plan: planOfPrice(item.price),
         amount: item.price.unit_amount / 100,
         currency: item.price.currency,
         status: subscription.status,

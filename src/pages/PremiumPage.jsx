@@ -94,6 +94,7 @@ export function PremiumPage({ profile, onClose, refreshProfile, onSubscribed }) 
   // ofrece para el plan elegido; mientras no se sabe, no se promete. Caso
   // real: el paywall decía "7 días gratis" y Google cobró desde el día uno.
   const trialEligible = offer.trial[selectedPlan]
+  const trialDays = offer.trialDays[selectedPlan]
   const priceSuffix = (plan) => t(`premiumPage.${plan}PriceSuffix`, { currency: offer.currency })
   const savingText = offer.saving ? t('premiumPage.annualSaving', { saving: offer.saving, perMonth: offer.annualPerMonth }) : null
   const [termsAccepted, setTermsAccepted] = useState(false)
@@ -230,10 +231,10 @@ export function PremiumPage({ profile, onClose, refreshProfile, onSubscribed }) 
     try {
       const { data: { session } } = await supabase.auth.getSession()
       if (!session) { setAndroidPurchaseState('error'); return }
-      await purchasePremium(selectedPlan, session.access_token, session.user.id)
+      await purchasePremium(selectedPlan, session.access_token, session.user.id, { allowTrial: !profile?.has_subscribed_before })
       await refreshProfile?.()
       setAndroidPurchaseState('idle')
-      onSubscribed?.({ plan: selectedPlan, trial: trialEligible, platform: 'google_play' })
+      onSubscribed?.({ plan: selectedPlan, trial: trialEligible, trialDays, platform: 'google_play' })
       handleClose()
     } catch (e) {
       // Mismo criterio que handleRestorePurchases() arriba y que
@@ -268,7 +269,7 @@ export function PremiumPage({ profile, onClose, refreshProfile, onSubscribed }) 
       if (data?.is_premium) break
       await new Promise(r => setTimeout(r, 1500))
     }
-    onSubscribed?.({ plan: selectedPlan, trial: trialEligible, platform: 'stripe' })
+    onSubscribed?.({ plan: selectedPlan, trial: trialEligible, trialDays, platform: 'stripe' })
     handleClose()
   }
 
@@ -295,7 +296,7 @@ export function PremiumPage({ profile, onClose, refreshProfile, onSubscribed }) 
         <Crown size={18} />
         {androidPurchaseState === 'processing'
           ? t('premiumPage.androidPurchaseProcessing')
-          : (trialEligible ? t('premiumPage.startTrial') : t('premiumPage.continueWithPlan', { plan: t(`premiumPage.${selectedPlan}`) }))}
+          : (trialEligible ? t('premiumPage.startTrial', { days: trialDays }) : t('premiumPage.continueWithPlan', { plan: t(`premiumPage.${selectedPlan}`) }))}
       </button>
     )
     return (
@@ -333,25 +334,28 @@ export function PremiumPage({ profile, onClose, refreshProfile, onSubscribed }) 
 
           {!checkoutOpen && !hidePurchaseFlow && (
             <>
-              {trialEligible && <div className={dk.trial}><Gift size={16} />{t('premiumPage.trialPill')}</div>}
+              {trialEligible && <div className={dk.trial}><Gift size={16} />{t('premiumPage.trialPill', { days: trialDays })}</div>}
               <h2 className={dk.rightTitle}>{t('premiumPage.choosePlan')}</h2>
               <div className={dk.plans}>
                 <button type="button" onClick={() => setSelectedPlan('monthly')} className={`${dk.plan} ${!annual ? dk.planOn : ''}`} aria-pressed={!annual}>
                   <span className={dk.radio} />
                   <span className={dk.planName}>{t('premiumPage.monthly')}</span>
                   <span className={dk.planPrice}>{offer.prices.monthly} <small>{priceSuffix('monthly')}</small></span>
+                  {offer.intro.monthly && <span className={dk.planSaving}>{offer.intro.monthly}</span>}
                 </button>
                 <button type="button" onClick={() => setSelectedPlan('annual')} className={`${dk.plan} ${annual ? dk.planOn : ''}`} aria-pressed={annual}>
                   <span className={dk.badge}>★ {t('premiumPage.mostPopular')}</span>
                   <span className={dk.radio} />
                   <span className={dk.planName}>{t('premiumPage.annual')}</span>
                   <span className={dk.planPrice}>{offer.prices.annual} <small>{priceSuffix('annual')}</small></span>
-                  {savingText && <span className={dk.planSaving}>{savingText}</span>}
+                  {offer.intro.annual
+                    ? <span className={dk.planSaving}>{offer.intro.annual}</span>
+                    : savingText && <span className={dk.planSaving}>{savingText}</span>}
                 </button>
               </div>
               <label className={dk.terms}>
                 <input type="checkbox" className={dk.checkbox} checked={termsAccepted} onChange={e => setTermsAccepted(e.target.checked)} />
-                <span>{trialEligible ? t('premiumPage.termsAcceptTrial') : t('premiumPage.termsAccept')}</span>
+                <span>{trialEligible ? t('premiumPage.termsAcceptTrial', { days: trialDays }) : t('premiumPage.termsAccept')}</span>
               </label>
               {buyBtn}
               {isAndroid && androidPurchaseState === 'error' && (
@@ -387,7 +391,7 @@ export function PremiumPage({ profile, onClose, refreshProfile, onSubscribed }) 
 
           <div className={dk.fine}>
             {t('premiumPage.restrictionsApply')}
-            {trialEligible && <> {t('premiumPage.trialFinePrint', { price: offer.prices[selectedPlan], suffix: priceSuffix(selectedPlan) })}</>}
+            {trialEligible && <> {t('premiumPage.trialFinePrint', { price: offer.prices[selectedPlan], suffix: priceSuffix(selectedPlan), days: trialDays })}</>}
             <div className={dk.safe}><ShieldCheck size={14} />{t('premiumPage.cancelAnytime')}</div>
             <div>
               {isAndroid && <button type="button" onClick={handleRestorePurchases} disabled={restoreState === 'restoring'} className={dk.link}>{t('premiumPage.restorePurchases')}</button>}{isAndroid && ' '}
@@ -500,7 +504,7 @@ export function PremiumPage({ profile, onClose, refreshProfile, onSubscribed }) 
             {trialEligible && (
               <div className={styles.trialPill}>
                 <Gift size={16} color="var(--premium-gold)" />
-                {t('premiumPage.trialPill')}
+                {t('premiumPage.trialPill', { days: trialDays })}
               </div>
             )}
 
@@ -518,6 +522,7 @@ export function PremiumPage({ profile, onClose, refreshProfile, onSubscribed }) 
                 <div className={styles.planPrice}>
                   {offer.prices.monthly} <span className={styles.planPriceSuffix}>{priceSuffix('monthly')}</span>
                 </div>
+                {offer.intro.monthly && <div className={styles.planSaving}>{offer.intro.monthly}</div>}
               </button>
 
               <button
@@ -530,7 +535,9 @@ export function PremiumPage({ profile, onClose, refreshProfile, onSubscribed }) 
                 <div className={styles.planPrice}>
                   {offer.prices.annual} <span className={styles.planPriceSuffix}>{priceSuffix('annual')}</span>
                 </div>
-                {savingText && <div className={styles.planSaving}>{savingText}</div>}
+                {offer.intro.annual
+                  ? <div className={styles.planSaving}>{offer.intro.annual}</div>
+                  : savingText && <div className={styles.planSaving}>{savingText}</div>}
               </button>
             </div>
 
@@ -542,7 +549,7 @@ export function PremiumPage({ profile, onClose, refreshProfile, onSubscribed }) 
                 onChange={e => setTermsAccepted(e.target.checked)}
               />
               <span className={styles.termsText}>
-                {trialEligible ? t('premiumPage.termsAcceptTrial') : t('premiumPage.termsAccept')}
+                {trialEligible ? t('premiumPage.termsAcceptTrial', { days: trialDays }) : t('premiumPage.termsAccept')}
               </span>
             </label>
 
@@ -554,7 +561,7 @@ export function PremiumPage({ profile, onClose, refreshProfile, onSubscribed }) 
               <Crown size={16} />
               {androidPurchaseState === 'processing'
                 ? t('premiumPage.androidPurchaseProcessing')
-                : (trialEligible ? t('premiumPage.startTrial') : t('premiumPage.continueWithPlan', { plan: t(`premiumPage.${selectedPlan}`) }))}
+                : (trialEligible ? t('premiumPage.startTrial', { days: trialDays }) : t('premiumPage.continueWithPlan', { plan: t(`premiumPage.${selectedPlan}`) }))}
             </button>
 
             {/* Android no abre ningún checkoutBox (Google muestra su propia
@@ -633,6 +640,7 @@ export function PremiumPage({ profile, onClose, refreshProfile, onSubscribed }) 
               {t('premiumPage.trialFinePrint', {
                 price: offer.prices[selectedPlan],
                 suffix: priceSuffix(selectedPlan),
+                days: trialDays,
               })}
             </>)}
           </div>
