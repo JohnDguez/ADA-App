@@ -1006,6 +1006,9 @@ a:focus-visible {
     translate: 0 0;
     scale: 0.96;
   }
+  /* Botones solo-ícono (⋮, flechas…): no se encogen al presionar — el encogimiento
+     movía el borde bajo el cursor y el clic se perdía (v0.9.957). */
+  button:has(> svg:only-child):not(:disabled):active { scale: 1; }
 
   .premium-fx { position: relative; overflow: hidden; --hover-glow: var(--premium-gold); }
   .premium-fx::after {
