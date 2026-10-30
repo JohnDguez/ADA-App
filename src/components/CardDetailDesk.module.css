@@ -61,4 +61,37 @@
 @media (hover: hover) and (pointer: fine) {
   .linkTile:hover, .seg button:hover { filter: none; translate: none; }
 }
-.soft { background: var(--desk-card); }
+.soft { background: var(--desk-card); color: var(--text); }
+
+/* Panel de Ajustes en tablet horizontal (<1100px, v0.9.953): tarjeta más angosta y la línea
+   del ciclo a todo el ancho, como en el mockup. */
+@media (max-width: 1099px) {
+  .top { grid-template-columns: 230px minmax(0, 1fr); }
+  .big { font-size: 30px; }
+  .owedHead { flex-wrap: wrap; gap: 10px; }
+  .mid3 { grid-template-columns: 1fr 1fr; }
+  .mid3 > :first-child { grid-column: 1 / -1; }
+  .mid2 { grid-template-columns: 1.6fr 1fr; }
+  .tr { grid-template-columns: 74px 1.3fr 1fr 1fr 104px; gap: 8px; padding: 14px 10px; font-size: 14px; }
+  .th { font-size: 12px; }
+  .table { padding: 8px; }
+}
+
+/* Tablet vertical (v0.9.953). Se intercambian los tokens de panel y tarjeta para que
+   los recuadros salgan blancos sobre el fondo gris, como en el mockup (swapA guarda los
+   valores; swapB los invierte). Solo tokens. */
+.swapA { --_card: var(--desk-card); --_chip: var(--desk-chip); }
+.swapB { --desk-card: var(--_chip); --desk-chip: var(--_card); padding-bottom: 40px; }
+.swapB [class*="_fill_"] { box-shadow: var(--desk-shadow); }
+.headRow.headRow { justify-content: space-between; width: 100%; }
+.headTxt { flex: 1; min-width: 0; }
+.topV { grid-template-columns: 300px minmax(0, 1fr); }
+.topV .big { font-size: 34px; }
+.midV2 { grid-template-columns: 1.6fr 1fr; }
+.midVP { grid-template-columns: 1fr 1fr; }
+.midVP > :first-child { grid-column: 1 / -1; }
+.chipOff, .chipOn { display: inline-flex; align-items: center; gap: 6px; border: 0; border-radius: 99px; padding: 12px 20px; font: inherit; font-size: 14px; font-weight: 600; }
+.chipOff { background: var(--desk-chip); color: var(--text); }
+.chipOn { background: var(--accent); color: var(--desk-ink-text); }
+.sumRowV { grid-template-columns: 1.4fr 1fr 0.8fr; gap: 12px; }
+.planActions .danger { background: var(--desk-card); }

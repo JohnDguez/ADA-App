@@ -2,13 +2,13 @@ import { useState, useRef, useEffect, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ChevronLeft, ChevronRight, MoreVertical, Pencil, Trash2, Loader2, Users, Repeat } from 'lucide-react'
 import { CreditCardVisual } from './CreditCardVisual'
-import { Select } from './Select'
 import { MonthPicker } from './MonthPicker'
 import { getCategoryLabel, fmt, getMonths, getMonthsShort, today } from '../lib/utils'
 import { cardDebt, cardCycleInfo } from '../lib/cardStatements'
 import { getPlans, activePlansCount, nextCutPlansTotal } from '../lib/cardPlans'
 import { CardPlansPanel } from './CardPlansPanel'
 import { useBackClose } from '../lib/backNav'
+import { useIsDesktop } from '../hooks/useIsDesktop'
 import styles from './CardDetailPanel.module.css'
 import { useScrollLock } from '../lib/scrollLock'
 import { DeskSettingsHead, DeskPage } from './DeskSettingsHead'
@@ -16,6 +16,8 @@ import deskStyles from './SettingsDesk.module.css'
 import dd from './CardDetailDesk.module.css'
 import md from './CardDetailMobile.module.css'
 import { SubpageHeader } from './SubpageHeader'
+import home from '../pages/DeskHome.module.css'
+import tb from '../pages/settings/SettingsCobroTab.module.css'
 import { CreditCard as CreditCardIcon } from '@phosphor-icons/react/dist/csr/CreditCard'
 
 // Barra segmentada de "Por pagar" (v0.9.587, variante A elegida por Johnatan): un
@@ -54,6 +56,7 @@ function DebtBar({ debt, label }) {
 export function CardDetailPanel({ card, payments, onBack, onEdit, onDelete, onPayNow, onSettlePlan, onDeletePlan, spaceNames = {}, canEdit = true, canDelete = true, blocked, desk = false, initialPlansOpen = false }) {
   const { t } = useTranslation()
   const [menuOpen, setMenuOpen] = useState(false)
+  const wide = useIsDesktop()
   useScrollLock(menuOpen)
   const menuRef = useRef(null)
   // Pantalla aparte de compras a meses (v0.9.587)
@@ -209,9 +212,27 @@ export function CardDetailPanel({ card, payments, onBack, onEdit, onDelete, onPa
     </div>
   )
   const payNowBtn = card.kind === 'credit' && onPayNow && (
-    <button type="button" onClick={() => onPayNow(card)} className={`btn-primary ${isTablet ? styles.payInline : styles.payNowButton}`}>
+    <button type="button" onClick={() => onPayNow(card)} className={`btn-primary ${styles.payNowButton}`}>
       {t('cards.payNow.button')}
     </button>
+  )
+
+  const menuEl = (
+        <div className={styles.menuWrapper} ref={menuRef}>
+          <button type="button" onClick={() => setMenuOpen(o => !o)} className={`${styles.iconButton} ${md.roundBtn}`} aria-label={t('goalDetailPanel.moreOptions')}>
+            {card._syncing ? <Loader2 size={20} color="var(--text)" className="sync-spinner" /> : <MoreVertical size={20} color="var(--text)" />}
+          </button>
+          {menuOpen && (
+            <div className={styles.menu}>
+              <button type="button" onClick={() => { setMenuOpen(false); if (!canEdit) { blocked?.(t('paymentsPage.actionEditPayments')); return }; onEdit() }} className={styles.menuItem}>
+                <span><Pencil size={14} /></span>{t('buttons.edit')}
+              </button>
+              <button type="button" onClick={handleDeleteClick} className={`${styles.menuItem} ${styles.menuItemDanger}`}>
+                <span><Trash2 size={14} /></span>{t('buttons.delete')}
+              </button>
+            </div>
+          )}
+        </div>
   )
 
   if (plansOpen) {
@@ -226,7 +247,7 @@ export function CardDetailPanel({ card, payments, onBack, onEdit, onDelete, onPa
     )
   }
 
-  if (desk) {
+  if (desk || isTablet) {
     const isCredit = card.kind === 'credit'
     const edit = () => { if (!canEdit) { blocked?.(t('paymentsPage.actionEditPayments')); return } onEdit() }
     const spendByCat = (() => {
@@ -244,18 +265,8 @@ export function CardDetailPanel({ card, payments, onBack, onEdit, onDelete, onPa
       ['cycle', 'var(--accent)', t('cards.bento.cycle')],
       ['plans', 'var(--label-variable)', t('cards.bento.plans')],
     ].filter(([k]) => debt[k] > 0) : []
-    return (
-      <DeskPage>
-        <DeskSettingsHead
-          title={card.alias || t(`cards.kind.${card.kind}`)}
-          description={isCredit ? t('cards.desk.detailDescCredit') : t('cards.desk.detailDescDebit')}
-          actions={<>
-            <button type="button" className={`${deskStyles.btn} ${deskStyles.btnSoft}`} onClick={onBack}><ChevronLeft size={16} />{t('goalDetailPanel.back')}</button>
-            <button type="button" className={`${deskStyles.btn} ${deskStyles.btnSoft}`} onClick={edit}><Pencil size={15} />{t('buttons.edit')}</button>
-            <button type="button" className={`${deskStyles.btn} ${dd.danger}`} onClick={handleDeleteClick}><Trash2 size={15} />{t('buttons.delete')}</button>
-          </>}
-        />
-        <div className={dd.top}>
+    const body = (<>
+        <div className={`${dd.top} ${desk ? '' : dd.topV}`}>
           <div className={dd.cardWrap}><CreditCardVisual card={card} /></div>
           {isCredit ? (
             <div className={deskStyles.fill}>
@@ -283,8 +294,8 @@ export function CardDetailPanel({ card, payments, onBack, onEdit, onDelete, onPa
             <div className={deskStyles.fill}>
               <div className={dd.key}>{t('cards.detail.paidWithCard')}</div>
               <div className={dd.big}>{fmt(total)}</div>
-              <div className={dd.hint}>{t('cards.desk.debitNote')}</div>
-              {spendByCat.length > 0 && (
+              <div className={dd.hint}>{wide ? t('cards.desk.debitNote') : t('cards.desk.paidHint')}</div>
+              {wide && spendByCat.length > 0 && (
                 <>
                   <div className={`${dd.key} ${dd.keyGap}`}>{t('cards.desk.byCategory')}</div>
                   {spendByCat.map(([cat, v]) => (
@@ -300,7 +311,7 @@ export function CardDetailPanel({ card, payments, onBack, onEdit, onDelete, onPa
         </div>
 
         {isCredit && (
-          <div className={`${dd.mid} ${tl && hasPlans ? dd.mid3 : dd.mid2}`}>
+          <div className={`${dd.mid} ${desk ? (tl && hasPlans ? dd.mid3 : dd.mid2) : (hasPlans ? dd.midVP : dd.midV2)}`}>
             {tl && (
               <div className={deskStyles.fill}>
                 <div className={dd.key}>{t('cards.desk.cycleTitle')}</div>
@@ -335,15 +346,16 @@ export function CardDetailPanel({ card, payments, onBack, onEdit, onDelete, onPa
         )}
 
         <div className={dd.filters}>
-          <div className={dd.seg}>
-            {[['periodo', t('homePage.tabs.currentPeriod')], ['mes', t('paymentsPage.byMonth')]].map(([val, label]) => (
-              <button key={val} type="button" onClick={() => setViewMode(val)} className={viewMode === val ? dd.segOn : ''}>{label}</button>
-            ))}
-          </div>
-          {viewMode === 'mes' && (
+          {viewMode === 'periodo' ? (
+            <div className={dd.seg}>
+              {[['periodo', t('homePage.tabs.currentPeriod')], ['mes', t('paymentsPage.byMonth')]].map(([val, label]) => (
+                <button key={val} type="button" onClick={() => setViewMode(val)} className={viewMode === val ? dd.segOn : ''}>{label}</button>
+              ))}
+            </div>
+          ) : (
             <>
-              <div className={dd.sel}><Select value={getMonths()[viewMonth]} onChange={name => setViewMonth(getMonths().indexOf(name))} options={getMonths()} /></div>
-              <div className={dd.sel}><Select value={String(viewYear)} onChange={y => setViewYear(Number(y))} options={availableYears.map(String)} /></div>
+              <button type="button" className={dd.chipOff} onClick={() => setViewMode('periodo')}>{t('homePage.tabs.currentPeriod')}</button>
+              <MonthPicker month={viewMonth} year={viewYear} years={availableYears} className={dd.chipOn} onChange={(m, y) => { setViewMonth(m); setViewYear(y) }} />
             </>
           )}
         </div>
@@ -373,106 +385,46 @@ export function CardDetailPanel({ card, payments, onBack, onEdit, onDelete, onPa
             </div>
           </div>
         ))}
-      </DeskPage>
+    </>)
+    if (desk) {
+      return (
+        <DeskPage>
+          <DeskSettingsHead
+            title={card.alias || t(`cards.kind.${card.kind}`)}
+            description={isCredit ? t('cards.desk.detailDescCredit') : t('cards.desk.detailDescDebit')}
+            actions={<>
+              <button type="button" className={`${deskStyles.btn} ${deskStyles.btnSoft}`} onClick={onBack}><ChevronLeft size={16} />{t('goalDetailPanel.back')}</button>
+              <button type="button" className={`${deskStyles.btn} ${deskStyles.btnSoft}`} onClick={edit}><Pencil size={15} />{t('buttons.edit')}</button>
+              <button type="button" className={`${deskStyles.btn} ${dd.danger}`} onClick={handleDeleteClick}><Trash2 size={15} />{t('buttons.delete')}</button>
+            </>}
+          />
+          {body}
+        </DeskPage>
+      )
+    }
+    // Tablet vertical (v0.9.953): página completa con regreso y menú ⋮; las tarjetas
+    // se pintan blancas intercambiando los tokens de panel (ver .swapA/.swapB).
+    return (
+      <div className={dd.swapA}>
+        <header className={`${home.head} ${tb.headBar}`}>
+          <div className={`${home.headText} ${tb.headRow} ${dd.headRow}`}>
+            <button type="button" className={tb.back} onClick={onBack} aria-label={t('goalDetailPanel.back')}><ChevronLeft size={20} /></button>
+            <div className={dd.headTxt}>
+              <div className={home.date}>{isCredit ? t('cards.desk.detailDescCredit') : t('cards.desk.detailDescDebit')}</div>
+              <h1 className={home.hello}>{card.alias || t(`cards.kind.${card.kind}`)}</h1>
+            </div>
+            {menuEl}
+          </div>
+        </header>
+        <div className={dd.swapB}>{body}</div>
+      </div>
     )
   }
 
-  const menuEl = (
-        <div className={styles.menuWrapper} ref={menuRef}>
-          <button type="button" onClick={() => setMenuOpen(o => !o)} className={`${styles.iconButton} ${!isTablet ? md.roundBtn : ''}`} aria-label={t('goalDetailPanel.moreOptions')}>
-            {card._syncing ? <Loader2 size={20} color="var(--text)" className="sync-spinner" /> : <MoreVertical size={20} color="var(--text)" />}
-          </button>
-          {menuOpen && (
-            <div className={styles.menu}>
-              <button type="button" onClick={() => { setMenuOpen(false); if (!canEdit) { blocked?.(t('paymentsPage.actionEditPayments')); return }; onEdit() }} className={styles.menuItem}>
-                <span><Pencil size={14} /></span>{t('buttons.edit')}
-              </button>
-              <button type="button" onClick={handleDeleteClick} className={`${styles.menuItem} ${styles.menuItemDanger}`}>
-                <span><Trash2 size={14} /></span>{t('buttons.delete')}
-              </button>
-            </div>
-          )}
-        </div>
-  )
-
   return (
-    <div className={`${styles.screen} ${!isTablet ? md.mobileRoot : ''}`}>
-      {!isTablet ? (
-        <SubpageHeader icon={CreditCardIcon} title={card.alias || t(`cards.kind.${card.kind}`)} onBack={onBack} action={menuEl} />
-      ) : (
-      <div className={styles.header}>
-        <button type="button" onClick={onBack} className={styles.iconButton} aria-label={t('goalDetailPanel.back')}>
-          <ChevronLeft size={22} color="var(--text)" />
-        </button>
-        <div className={styles.headerTitle}>{card.alias || t(`cards.kind.${card.kind}`)}</div>
-        {menuEl}
-      </div>
-      )}
+    <div className={`${styles.screen} ${md.mobileRoot}`}>
+      <SubpageHeader icon={CreditCardIcon} title={card.alias || t(`cards.kind.${card.kind}`)} onBack={onBack} action={menuEl} />
 
-      {isTablet && (
-        <div className={styles.tabSummary}>
-          <div className={styles.tabTop}>
-            <div><CreditCardVisual card={card} /></div>
-            {card.kind === 'credit' ? (
-              <div className={`${styles.bCard} ${styles.tabOwed}`}>
-                <div className={styles.tabOwedHead}>
-                  <div>
-                    <div className={styles.bKey}>{t('cards.pendingCreditTotal')}</div>
-                    <div className={styles.bValue}>{fmt(totalOwed)}</div>
-                  </div>
-                  {payNowBtn}
-                </div>
-                <DebtBar debt={debt} label={t('cards.bento.donutLabel')} />
-                {debtLegend}
-              </div>
-            ) : (
-              <div className={`${styles.bCard} ${styles.tabPaidOnly}`}>
-                <div className={styles.bKey}>{t('cards.detail.paidWithCard')}</div>
-                <div className={styles.bValue}>{fmt(total)}</div>
-              </div>
-            )}
-          </div>
-
-          {card.kind === 'credit' && (
-            <div className={styles.tabRow2}>
-              <div className={`${styles.bCard} ${!hasPlans ? styles.tabSpan2 : ''}`}>
-                <div className={styles.bKey}>{t('cards.detail.paidWithCard')}</div>
-                <div className={styles.bValueSm}>{fmt(total)}</div>
-              </div>
-              {hasPlans && (
-                <button type="button" onClick={() => setPlansOpen(true)} className={`${styles.bCard} ${styles.bButton}`}>
-                  <div className={styles.bKey}>{t('cards.bento.plansTitle')}</div>
-                  <div className={styles.bValueSm}>{t('cards.bento.plansCount', { count: activePlansCount(card) })}</div>
-                  {nextCutPlansTotal(card) > 0 && (
-                    <div className={styles.bSub}>{t('cards.bento.nextCutPlans', { amount: fmt(nextCutPlansTotal(card)) })}</div>
-                  )}
-                  <ChevronRight size={16} className={styles.bChevron} />
-                </button>
-              )}
-            </div>
-          )}
-
-          {tl && (
-            <div className={`${styles.bCard} ${styles.tabTimeline}`}>
-              <div className={styles.tlTrack} style={{ '--now': `${tl.nowPct}%` }}>
-                <i />
-                <span className={`${styles.tlDot} ${styles.tlDotOn}`} style={{ left: '0%' }} />
-                {tl.due && <span className={styles.tlDot} style={{ left: `${tl.duePct}%` }} />}
-                <span className={styles.tlDot} style={{ left: '100%' }} />
-              </div>
-              <div className={styles.tlLabels}>
-                <div className={styles.tlLabelStart}><b>{tl.prev}</b>{t('cards.tablet.cutLabel')}</div>
-                {tl.due && <div className={styles.tlLabelMid} style={{ '--at': `${tl.duePct}%` }}><b>{tl.due}</b>{t('cards.tablet.dueLabel')}</div>}
-                <div className={styles.tlLabelEnd}><b>{tl.next}</b>{t('cards.tablet.nextCutLabel')}</div>
-              </div>
-              <div className={styles.cycleDay}>{t('cards.bento.cycleDay', { day: cycleInfo.day, total: cycleInfo.total })}</div>
-            </div>
-          )}
-        </div>
-      )}
-
-      {!isTablet && (
-        <>
       <div className={styles.preview}>
         {/* FIX v0.9.502 (reportado por Johnatan): el chip repetía la misma
             cifra que ya muestra la pastilla "Por pagar" de abajo — se
@@ -482,7 +434,7 @@ export function CardDetailPanel({ card, payments, onBack, onEdit, onDelete, onPa
         <CreditCardVisual card={card} />
       </div>
 
-      {!isTablet && payNowBtn}
+      {payNowBtn}
 
       {/* Resumen en bento (v0.9.587, variante A elegida por Johnatan): "Por pagar" con
           su barra (de dónde sale el número), lo pagado con la tarjeta, las compras a
@@ -531,57 +483,21 @@ export function CardDetailPanel({ card, payments, onBack, onEdit, onDelete, onPa
           <div className={md.big}>{fmt(total)}</div>
         </div>
       )}
-        </>
-      )}
 
-      {!isTablet ? (
-        <div className={md.chips} role="tablist">
-          <button type="button" role="tab" aria-selected={viewMode === 'periodo'} className={`${md.chip} ${viewMode === 'periodo' ? md.chipOn : ''}`} onClick={() => setViewMode('periodo')}>{t('homePage.tabs.currentPeriod')}</button>
-          {viewMode === 'mes'
-            ? <MonthPicker month={viewMonth} year={viewYear} years={availableYears} className={`${md.chip} ${md.chipOn}`} onChange={(m, y) => { setViewMonth(m); setViewYear(y) }} />
-            : <button type="button" role="tab" aria-selected={false} className={md.chip} onClick={() => setViewMode('mes')}>{t('paymentsPage.byMonth')}</button>}
-        </div>
-      ) : (
-      <div className={styles.filtersWrapper}>
-        <div className={styles.viewModeRow}>
-          {[['periodo', t('homePage.tabs.currentPeriod')], ['mes', t('paymentsPage.byMonth')]].map(([val, label]) => (
-            <button key={val} onClick={() => setViewMode(val)}
-              className={`${styles.viewModeButton} ${viewMode === val ? styles.viewModeButtonActive : ''}`}>
-              {label}
-            </button>
-          ))}
-        </div>
-        {viewMode === 'mes' && (
-          <div className={styles.monthYearRow}>
-            <div className={styles.monthYearGroup}>
-              <span className={styles.monthYearLabel}>{t('paymentsPage.monthLabel')}</span>
-              <Select value={getMonths()[viewMonth]} onChange={name => setViewMonth(getMonths().indexOf(name))} options={getMonths()} />
-            </div>
-            <div className={styles.monthYearGroup}>
-              <span className={styles.monthYearLabel}>{t('paymentsPage.yearLabel')}</span>
-              <Select value={String(viewYear)} onChange={y => setViewYear(Number(y))} options={availableYears.map(String)} />
-            </div>
-          </div>
-        )}
+      <div className={md.chips} role="tablist">
+        <button type="button" role="tab" aria-selected={viewMode === 'periodo'} className={`${md.chip} ${viewMode === 'periodo' ? md.chipOn : ''}`} onClick={() => setViewMode('periodo')}>{t('homePage.tabs.currentPeriod')}</button>
+        {viewMode === 'mes'
+          ? <MonthPicker month={viewMonth} year={viewYear} years={availableYears} className={`${md.chip} ${md.chipOn}`} onChange={(m, y) => { setViewMonth(m); setViewYear(y) }} />
+          : <button type="button" role="tab" aria-selected={false} className={md.chip} onClick={() => setViewMode('mes')}>{t('paymentsPage.byMonth')}</button>}
       </div>
-      )}
 
-      <div className={`${styles.historyList} ${isTablet ? styles.historyTable : ''}`}>
+      <div className={styles.historyList}>
         {groups.length === 0 && (
           <div className={styles.empty}>{t('cards.detail.noHistory')}</div>
         )}
         {groups.map(g => (
           <div key={g.label}>
             <div className={styles.monthLabel}>{g.label}</div>
-            {isTablet && (
-              <div className={`${styles.tRow} ${styles.tHead}`}>
-                <span>{t('cards.tablet.colDate')}</span>
-                <span>{t('cards.tablet.colName')}</span>
-                <span>{t('cards.tablet.colCategory')}</span>
-                <span>{t('cards.tablet.colSpace')}</span>
-                <span className={styles.tRight}>{t('cards.tablet.colAmount')}</span>
-              </div>
-            )}
             {g.rows.map(p => {
               const d = new Date(p.paid_at || p.due_date)
               // Estilo "como los bancos" (v0.9.497, pedido de Johnatan):
@@ -598,22 +514,6 @@ export function CardDetailPanel({ card, payments, onBack, onEdit, onDelete, onPa
                 : isIncome
                   ? t('cards.detail.abono')
                   : getCategoryLabel(p.category)
-              if (isTablet) {
-                return (
-                  <div key={p.id} className={styles.tRow}>
-                    <span>{d.getDate()} {getMonthsShort()[d.getMonth()]}</span>
-                    <span className={styles.tName}>{p.name}</span>
-                    <span>
-                      {label}
-                      {p.is_postponed && ` · ${t('payCard.status.postponed')}`}
-                    </span>
-                    <span className={styles.tName}>{p.source_space_id ? (spaceNames[p.source_space_id] || t('cards.detail.sharedSpaceFallback')) : '—'}</span>
-                    <span className={`${styles.tRight} ${styles.tAmount} ${isIncome ? styles.rowAmountIncome : ''}`}>
-                      {isIncome ? '+' : '−'}{fmt(p.amount)}
-                    </span>
-                  </div>
-                )
-              }
               return (
                 <div key={p.id} className={styles.row}>
                   <div className={styles.rowDate}>

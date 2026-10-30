@@ -3,9 +3,9 @@
 .hero { display: flex; flex-direction: column; min-height: 230px; }
 .big { margin: 6px 0 auto; font-size: 52px; font-weight: 700; letter-spacing: -2px; line-height: 1; padding-bottom: 16px; }
 .pills { display: flex; flex-wrap: wrap; gap: 10px; }
-.pills > div { padding: 10px 16px; border-radius: 16px; background: color-mix(in srgb, var(--desk-ink-text) 18%, transparent); }
-.pills span { display: block; font-size: 12px; opacity: 0.8; }
-.pills b { display: block; margin-top: 2px; font-size: 16px; font-weight: 600; }
+.pills > div { padding: 8px 13px; border-radius: 14px; background: color-mix(in srgb, var(--desk-ink-text) 18%, transparent); }
+.pills span { display: block; font-size: 11.5px; opacity: 0.8; }
+.pills b { display: block; margin-top: 1px; font-size: 15px; font-weight: 600; }
 .dueRow { display: flex; align-items: center; gap: 14px; padding: 11px 0; }
 .dueRow + .dueRow { border-top: 1px solid var(--desk-hair); }
 .date { width: 46px; height: 50px; border-radius: 14px; background: var(--desk-card); display: grid; place-items: center; text-align: center; font-size: 11px; line-height: 1.1; color: var(--muted); text-transform: uppercase; flex-shrink: 0; }
@@ -27,8 +27,8 @@
 .bar { height: 7px; margin-top: 10px; border-radius: 99px; background: var(--desk-card); overflow: hidden; }
 .bar i { display: block; height: 100%; border-radius: 99px; background: var(--accent); }
 .sub { display: flex; justify-content: space-between; margin-top: 10px; font-size: 12px; color: var(--muted); }
-.addCard { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; min-height: 200px; border: 0; border-radius: 22px; background: var(--accent-soft); color: var(--accent); font-size: 14px; font-weight: 600; }
-.addCard i { width: 54px; height: 54px; border-radius: 50%; display: grid; place-items: center; background: var(--accent); color: var(--desk-ink-text); }
+.addCard { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; min-height: 200px; border: 1.5px dashed var(--accent); border-radius: 22px; background: none; color: var(--accent); font-size: 14px; font-weight: 600; }
+.addCard i { width: 54px; height: 54px; border-radius: 17px; display: grid; place-items: center; background: var(--accent); color: var(--desk-ink-text); }
 .foot { display: flex; align-items: center; gap: 10px; margin-top: 20px; font-size: 12.5px; color: var(--muted); }
 .cardSync { position: absolute; top: 24px; right: 24px; }
 @media (hover: hover) and (pointer: fine) {

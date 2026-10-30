@@ -7,7 +7,8 @@ import { fmt } from '../lib/utils'
 import styles from './PayCardNowModal.module.css'
 import { useScrollLock } from '../lib/scrollLock'
 import { AnchoredPop, useAnchor } from './AnchoredPop'
-import { useIsDesktop } from '../hooks/useIsDesktop'
+import { X } from 'lucide-react'
+import { CreditCard as CardIc } from '@phosphor-icons/react/dist/csr/CreditCard'
 import { useIsMobile } from '../hooks/useIsMobile'
 
 // "Pagar ahora" (v0.9.497, mockups confirmados con Johnatan) — adelantar
@@ -24,11 +25,12 @@ const ANIM_MS = 320
 export function PayCardNowModal({ open, card, cycleSpend, methods, onSave, onClose, title = null, subtitle = null, fixedAmount = false }) {
   useScrollLock(open)
   const { t } = useTranslation()
-  // Escritorio (≥1100px, v0.9.879): popover anclado al botón que lo abrió; sin
-  // ancla (apertura por código) o en móvil/tablet sigue siendo el modal de siempre.
-  const desk = useIsDesktop()
-  // Móvil (v0.9.922): el monto arranca vacío (monto personalizado) con un atajo "Todo".
+  // Tablet y escritorio (≥768px, v0.9.953): popover anclado al botón que lo abrió; sin
+  // ancla (apertura por código) cae a la hoja de siempre.
+  // Móvil (v0.9.922): el monto arranca vacío (monto personalizado) con un atajo "Todo";
+  // v0.9.953: hoja con el diseño nuevo (ícono, cerrar, monto grande).
   const mobile = useIsMobile()
+  const desk = !mobile
   const anchorRef = useAnchor(open)
   const lastCard = useRef(card)
   if (card) lastCard.current = card
@@ -83,6 +85,53 @@ export function PayCardNowModal({ open, card, cycleSpend, methods, onSave, onClo
   }
 
   const c = card || lastCard.current
+  const mForm = (
+    <>
+      <div className={styles.mHead}>
+        <i className={styles.mIco}><CardIc size={22} /></i>
+        <div className={styles.mTxt}>
+          <div className={styles.mTitle}>{title || t('cards.payNow.title', { name: c.alias || t(`cards.kind.${c.kind}`) })}</div>
+          <div className={styles.mSub}>
+            {subtitle || (cycleSpend > 0 ? t('cards.payNow.subtitle', { amount: fmt(cycleSpend) }) : t('cards.payNow.subtitleZero'))}
+          </div>
+        </div>
+        <button type="button" className={styles.mClose} onClick={onClose} aria-label={t('buttons.cancel')}><X size={18} /></button>
+      </div>
+
+      <div className={styles.mCap}>{t('cards.payNow.amountLabel')}</div>
+      {fixedAmount
+        ? <div className={styles.mBox}><span>$</span><b>{fmt(cycleSpend).replace(/^[^\d]*/, '')}</b></div>
+        : (
+          <label className={styles.mBox}>
+            <span>$</span>
+            <AmountInput className={styles.mInput} value={amount} onChange={e => { setAmount(e.target.value); setError('') }} placeholder="0.00" />
+          </label>
+        )}
+      {!fixedAmount && cycleSpend > 0 && (
+        <div className={styles.quick}>
+          <button type="button" className={`${styles.chip} ${parsed === cycleSpend ? styles.chipOn : ''}`} onClick={() => { setAmount(String(cycleSpend)); setError('') }}>
+            {t('cards.mobile.quickAll', { amount: fmt(cycleSpend) })}
+          </button>
+        </div>
+      )}
+
+      <div className={styles.mField}>
+        <PaymentMethodField methods={debitOnly} value={methodId} onChange={setMethodId} label={t('paymentMethod.label')} />
+      </div>
+
+      {!isZero && !fixedAmount && (
+        <div className={styles.note}>
+          {isFull ? t('cards.payNow.noteFull') : parsed > cycleSpend ? t('cards.payNow.noteOver') : t('cards.payNow.notePartial', { amount: fmt(restante) })}
+        </div>
+      )}
+      {error && <div className={styles.errorText}>{error}</div>}
+
+      <div className={styles.mBtns}>
+        <button type="button" onClick={onClose} className={styles.mCancel}>{t('buttons.cancel')}</button>
+        <button type="button" onClick={handleSave} className={`btn-primary ${styles.mOk}`} disabled={isZero}>{t('cards.payNow.confirm')}</button>
+      </div>
+    </>
+  )
   const form = (
     <>
         <div className={styles.title}>{title || t('cards.payNow.title', { name: c.alias || t(`cards.kind.${c.kind}`) })}</div>
@@ -135,7 +184,7 @@ export function PayCardNowModal({ open, card, cycleSpend, methods, onSave, onClo
     <div onClick={e => e.target === e.currentTarget && onClose()} className={`${styles.overlay} ${closing ? styles.overlayClosing : ''}`}>
       <div className={`${styles.modal} ${entering ? styles.modalEntering : ''} ${closing ? styles.modalClosing : ''}`}>
         <div className={styles.handle} />
-        {form}
+        {mobile ? mForm : form}
       </div>
     </div>,
     document.body

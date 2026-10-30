@@ -1,18 +1,12 @@
-import { useState, useEffect, useRef, useLayoutEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import i18n from '../../i18n'
-import { Plus, ShieldCheck, Loader2 } from 'lucide-react'
-// Import DIRECTO al archivo del ícono (no el barrel) — mismo criterio que
-// las demás sub-páginas de Ajustes (tree-shaking real).
-import { CreditCard } from '@phosphor-icons/react/dist/csr/CreditCard'
-import { PageHero } from '../../components/PageHero'
+import { Plus, ShieldCheck, Loader2, ChevronLeft } from 'lucide-react'
 import { CreditCardVisual } from '../../components/CreditCardVisual'
 import { CardFormModal } from '../../components/CardFormModal'
 import { CardDetailPanel } from '../../components/CardDetailPanel'
 import { useScrollTop } from '../../hooks/useScrollTop'
-import { SegmentedControl } from '../../components/SegmentedControl'
 import { ConfirmDeleteModal } from '../../components/ConfirmDeleteModal'
-import { EmptyState } from '../../components/EmptyState'
 import { getBank } from '../../lib/cardCatalog'
 import { totalOwedOnCard, cardsCuttingInPeriod, cardCycleInfo } from '../../lib/cardStatements'
 import { cutBadgeLabel } from '../../lib/cutLabels'
@@ -21,7 +15,10 @@ import { useDeskSettings } from '../../components/DeskSettingsContext'
 import { DeskSettingsHead, DeskPage } from '../../components/DeskSettingsHead'
 import deskStyles from '../../components/SettingsDesk.module.css'
 import dk from './SettingsCardsDesk.module.css'
-import styles from './SettingsCardsPage.module.css'
+import tab from './SettingsCardsTab.module.css'
+import wd from './SettingsCategoriesWide.module.css'
+import home from '../DeskHome.module.css'
+import tb from './SettingsCobroTab.module.css'
 import { markBackHandled, wasBackHandled } from '../../lib/backNav'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import { SettingsCardsMobile } from './SettingsCardsMobile'
@@ -37,131 +34,6 @@ import { SettingsCardsMobile } from './SettingsCardsMobile'
 // Todo animado con entrada y salida (Regla 29): entrada escalonada de las
 // tarjetas al cambiar de pila.
 
-const PEEK = 58 // lo que asoma cada tarjeta en la pila
-
-function CardStack({ cards, onSelect, personalPayments, cutsById }) {
-  const { t } = useTranslation()
-  const wrapRef = useRef(null)
-  const [width, setWidth] = useState(0)
-
-  useLayoutEffect(() => {
-    const el = wrapRef.current
-    if (!el) return
-    const measure = () => setWidth(el.offsetWidth)
-    measure()
-    const ro = new ResizeObserver(measure)
-    ro.observe(el)
-    return () => ro.disconnect()
-  }, [])
-
-  const H = width / 1.586
-  const height = cards.length > 0 ? (cards.length - 1) * PEEK + H : 0
-
-  return (
-    <div ref={wrapRef} className={styles.stack} style={{ '--stack-height': `${height}px` }}>
-      {width > 0 && cards.map((c, i) => (
-        // div con role=button (no <button>): la tarjeta visual lleva bloques
-        // adentro, que un <button> no admite como contenido válido.
-        <div
-          role="button"
-          tabIndex={0}
-          key={c.id}
-          onClick={() => onSelect(c)}
-          onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onSelect(c) } }}
-          className={styles.stackCard}
-          style={{
-            '--card-top': `${i * PEEK}px`,
-            '--card-z': i,
-            '--card-scale': 1,
-            '--enter-delay': `${i * 70}ms`,
-          }}
-          aria-label={getBank(c.bank).name}
-        >
-          <CreditCardVisual
-            card={c}
-            cutBadge={cutsById[c.id] ? cutBadgeLabel(cutsById[c.id].cutDate, cutsById[c.id].daysLeft, t) : null}
-            cycleSpendLabel={
-              // FIX v0.9.502 (reportado por Johnatan: "Debes" es muy
-              // informal, y ya no es solo la deuda del ciclo — es el
-              // mismo total consolidado que la pastilla "Por pagar" del
-              // detalle, `totalOwedOnCard`). `personalPayments === null`
-              // (viendo un Espacio Compartido) → no se muestra un número
-              // incorrecto.
-              c.kind === 'credit' && personalPayments
-                ? t('cards.owedChip', { amount: fmt(totalOwedOnCard(c, personalPayments)) })
-                : null
-            }
-          />
-          {c._syncing && (
-            <span className={`sync-spinner ${styles.cardSync}`} aria-label={t('sync.syncing')}>
-              <Loader2 size={14} color="var(--surface)" />
-            </span>
-          )}
-        </div>
-      ))}
-    </div>
-  )
-}
-
-// Tablet (≥768px, v0.9.774): cuadrícula de 2 columnas. Cada tarjeta va en su
-// propio recuadro con lo útil debajo — crédito: por pagar, avance del ciclo,
-// días al corte y al pago; débito: gastado en el periodo de cobro, su parte
-// del total y movimientos (débito no tiene ciclo ni deuda).
-function TabletCards({ cards, kind, onSelect, info, cutsById, loading }) {
-  const { t } = useTranslation()
-  return (
-    <div className={styles.tileGrid}>
-      {cards.map((c, i) => {
-        const x = info[c.id]
-        return (
-          <div
-            role="button"
-            tabIndex={0}
-            key={c.id}
-            onClick={() => onSelect(c)}
-            onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onSelect(c) } }}
-            className={styles.tile}
-            style={{ '--enter-delay': `${i * 70}ms` }}
-            aria-label={getBank(c.bank).name}
-          >
-            <CreditCardVisual
-              card={c}
-              cutBadge={cutsById[c.id] ? cutBadgeLabel(cutsById[c.id].cutDate, cutsById[c.id].daysLeft, t) : null}
-            />
-            {c._syncing && (
-              <span className={`sync-spinner ${styles.cardSync}`} aria-label={t('sync.syncing')}>
-                <Loader2 size={14} color="var(--surface)" />
-              </span>
-            )}
-            {x && (
-              <div className={styles.tileInfo}>
-                <div className={styles.tileRow}>
-                  <span>{kind === 'credit' ? t('cards.tablet.owed') : t('cards.tablet.spent')}</span>
-                  <span className={styles.tileAmount}>{loading ? t('cards.tablet.none') : fmt(kind === 'credit' ? x.owed : x.spent)}</span>
-                </div>
-                <div className={styles.bar}><div className={styles.barFill} style={{ '--pct': loading ? '0%' : `${Math.round(x.pct * 100)}%` }} /></div>
-                <div className={`${styles.tileRow} ${styles.tileSub}`}>
-                  {kind === 'credit' ? (
-                    <>
-                      <span>{!loading && x.cutDays != null ? t('cards.tablet.cutWhen', { when: x.cutWhen }) : ''}</span>
-                      <span>{!loading && x.dueDays != null ? t('cards.tablet.dueWhen', { when: x.dueWhen }) : ''}</span>
-                    </>
-                  ) : (
-                    <>
-                      <span>{loading ? '' : t('cards.tablet.moves', { count: x.count })}</span>
-                      <span>{loading ? '' : t('cards.tablet.share', { pct: Math.round(x.pct * 100) })}</span>
-                    </>
-                  )}
-                </div>
-              </div>
-            )}
-          </div>
-        )
-      })}
-    </div>
-  )
-}
-
 export function SettingsCardsPage({ profile, paymentMethods, personalPayments = null, sharedSpaces = null, onPayCardNow, onSettlePlan, onBack, slideClass }) {
   const { t } = useTranslation()
   const desk = useDeskSettings()
@@ -173,13 +45,6 @@ export function SettingsCardsPage({ profile, paymentMethods, personalPayments = 
   const [openPlans, setOpenPlans] = useState(false)
   const [focusId, setFocusId] = useState(null)
   const isMobile = useIsMobile()
-  const [isTablet, setIsTablet] = useState(() => typeof window !== 'undefined' && window.matchMedia('(min-width: 768px)').matches)
-  useEffect(() => {
-    const mq = window.matchMedia('(min-width: 768px)')
-    const on = e => setIsTablet(e.matches)
-    mq.addEventListener('change', on)
-    return () => mq.removeEventListener('change', on)
-  }, [])
 
   // El detalle de una tarjeta es una pantalla propia: abrirlo empuja una
   // entrada al historial para que "atrás" (botón del teléfono o el de la
@@ -294,26 +159,20 @@ export function SettingsCardsPage({ profile, paymentMethods, personalPayments = 
     ? [getBank(deleting.bank).id === 'otro' ? t('cards.otherBank') : getBank(deleting.bank).name, deleting.alias].filter(Boolean).join(' ')
     : ''
 
-  const disclaimerEl = (
-    <div className={styles.disclaimer}>
-      <ShieldCheck size={18} color="var(--accent)" className={styles.disclaimerIcon} />
-      <div>
-        <div className={styles.disclaimerTitle}>{t('cards.disclaimer.title')}</div>
-        <div className={styles.disclaimerText}>{t('cards.disclaimer.text')}</div>
-      </div>
-    </div>
-  )
   const sm = tabletData?.summary
   const ld = !!tabletData?.loading
   const money = n => (ld ? t('cards.tablet.none') : fmt(n))
   const i18nLang = () => i18n.language
-  const showSummary = isTablet && !!sm && cards.length > 0
   const cap = str => (str ? str.charAt(0).toUpperCase() + str.slice(1) : str)
+
+  if (desk && formOpen) {
+    return <CardFormModal inline open initial={editing} onSave={handleSave} onClose={() => setFormOpen(false)} />
+  }
 
   if (selectedCard) {
     return (
       <>
-        <div className={desk ? undefined : isMobile ? slideClass : `${slideClass} ${styles.pageWrapper}`}>
+        <div className={desk ? undefined : isMobile ? slideClass : `${slideClass} ${home.root} ${home.tablet}`}>
           <CardDetailPanel
             desk={desk}
             initialPlansOpen={openPlans}
@@ -329,6 +188,7 @@ export function SettingsCardsPage({ profile, paymentMethods, personalPayments = 
           />
         </div>
 
+        <CardFormModal open={formOpen} initial={editing} onSave={handleSave} onClose={() => setFormOpen(false)} />
         <ConfirmDeleteModal
           open={!!deleting}
           title={t('cards.deleteTitle')}
@@ -340,11 +200,7 @@ export function SettingsCardsPage({ profile, paymentMethods, personalPayments = 
     )
   }
 
-  if (desk && formOpen) {
-    return <CardFormModal inline open initial={editing} onSave={handleSave} onClose={() => setFormOpen(false)} />
-  }
-
-  if (desk) {
+  if (desk || !isMobile) {
     const now = today()
     const monthShort = d => d.toLocaleDateString(i18nLang(), { month: 'short' }).replace('.', '')
     const dateBadge = days => {
@@ -366,17 +222,10 @@ export function SettingsCardsPage({ profile, paymentMethods, personalPayments = 
     const topDebit = kind === 'debit' && tabletData
       ? [...debit].sort((a, b) => (tabletData.info[b.id]?.spent || 0) - (tabletData.info[a.id]?.spent || 0)).filter(c => (tabletData.info[c.id]?.spent || 0) > 0).slice(0, 3)
       : []
-    return (
-      <DeskPage>
-        <DeskSettingsHead
-          title={t('cards.title')}
-          description={t('cards.description')}
-          actions={<button type="button" className={deskStyles.btn} onClick={openAdd}><Plus size={16} />{t('cards.addButton')}</button>}
-        />
-
+    const body = (<>
         {sm && (
-          <div className={dk.top}>
-            <div className={`${deskStyles.blue} ${dk.hero}`}>
+          <div className={`${dk.top} ${desk ? '' : tab.topCol}`}>
+            <div className={`${deskStyles.blue} ${dk.hero} ${desk ? '' : tab.hero}`}>
               <span className={deskStyles.sub}>{kind === 'credit' ? t('cards.desk.owedTotal') : t('cards.tablet.spent')}</span>
               <div className={dk.big}>{money(kind === 'credit' ? sm.owed : sm.spent)}</div>
               <div className={dk.pills}>
@@ -391,7 +240,7 @@ export function SettingsCardsPage({ profile, paymentMethods, personalPayments = 
                 </>)}
               </div>
             </div>
-            <div className={deskStyles.fill}>
+            <div className={`${deskStyles.fill} ${desk ? '' : tab.fill}`}>
               <div className={deskStyles.fillTitle}>{kind === 'credit' ? t('cards.desk.upcoming') : t('cards.desk.topUsed')}</div>
               {kind === 'credit' && events.slice(0, 3).map(ev => {
                 const b = dateBadge(ev.days)
@@ -414,17 +263,17 @@ export function SettingsCardsPage({ profile, paymentMethods, personalPayments = 
           </div>
         )}
 
-        <div className={dk.seg} role="tablist">
+        <div className={`${dk.seg} ${desk ? '' : tab.seg}`} role="tablist">
           {[['credit', t('cards.kind.credit'), credit.length], ['debit', t('cards.kind.debit'), debit.length]].map(([k, label, n]) => (
             <button key={k} type="button" role="tab" aria-selected={kind === k} className={kind === k ? dk.segOn : ''} onClick={() => setKind(k)}>{label} · {n}</button>
           ))}
         </div>
 
-        <div className={dk.cards}>
+        <div className={`${dk.cards} ${desk ? '' : tab.cards}`}>
           {cards.map(c => {
             const x = tabletData?.info?.[c.id]
             return (
-              <div key={c.id} role="button" tabIndex={0} className={dk.card} aria-label={getBank(c.bank).name}
+              <div key={c.id} role="button" tabIndex={0} className={`${dk.card} ${desk ? '' : tab.card}`} aria-label={getBank(c.bank).name}
                 onClick={() => setSelectedId(c.id)}
                 onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setSelectedId(c.id) } }}>
                 <CreditCardVisual card={c} cutBadge={kind === 'credit' && cutsById[c.id] ? cutBadgeLabel(cutsById[c.id].cutDate, cutsById[c.id].daysLeft, t) : null} />
@@ -457,7 +306,42 @@ export function SettingsCardsPage({ profile, paymentMethods, personalPayments = 
 
         <CardFormModal open={formOpen} initial={editing} onSave={handleSave} onClose={() => setFormOpen(false)} />
         <ConfirmDeleteModal open={!!deleting} title={t('cards.deleteTitle')} message={t('cards.deleteMessage', { name: deletingName })} onConfirm={confirmDelete} onCancel={() => setDeleting(null)} />
-      </DeskPage>
+    </>)
+    if (desk) {
+      return (
+        <DeskPage>
+          <DeskSettingsHead
+            title={t('cards.title')}
+            description={t('cards.description')}
+            actions={<button type="button" className={deskStyles.btn} onClick={openAdd}><Plus size={16} />{t('cards.addButton')}</button>}
+          />
+          {body}
+        </DeskPage>
+      )
+    }
+    // Tablet vertical (v0.9.953): página completa, sin panel; encabezado con botón de
+    // regreso (sin paisaje) y píldora flotante «Agregar tarjeta».
+    return (
+      <>
+        <div className={`${slideClass} ${home.root} ${home.tablet} ${tab.vert}`}>
+          <header className={`${home.head} ${tb.headBar}`}>
+            <div className={`${home.headText} ${tb.headRow}`}>
+              <button type="button" className={tb.back} onClick={onBack} aria-label={t('buttons.back')}><ChevronLeft size={20} /></button>
+              <div>
+                <div className={home.date}>{t('cards.description')}</div>
+                <h1 className={home.hello}>{t('cards.title')}</h1>
+              </div>
+            </div>
+          </header>
+          <div className={tab.page}>{body}</div>
+        </div>
+        <div className={wd.pillRow}>
+          <button type="button" onClick={openAdd} className={wd.pill}>
+            <Plus size={19} strokeWidth={2.4} />
+            {t('cards.addButton')}
+          </button>
+        </div>
+      </>
     )
   }
 
@@ -487,98 +371,5 @@ export function SettingsCardsPage({ profile, paymentMethods, personalPayments = 
     )
   }
 
-  return (
-    <>
-      <div className={`${slideClass} ${styles.pageWrapper}`}>
-        <PageHero
-          icon={CreditCard}
-          title={t('cards.title')}
-          description={t('cards.description')}
-          onBack={onBack}
-        />
-
-        <div className={styles.content}>
-          {!isTablet && disclaimerEl}
-
-          {showSummary && (
-            <div className={styles.summary}>
-              {kind === 'credit' ? (<>
-                <div className={styles.sumItem}><span className={styles.sumLabel}>{t('cards.tablet.owed')}</span><span className={styles.sumValue}>{money(sm.owed)}</span></div>
-                <div className={styles.sumItem}><span className={styles.sumLabel}>{t('cards.tablet.nextCut')}</span><span className={`${styles.sumValue} ${sm.cutSoon ? styles.sumWarn : ''}`}>{!ld && sm.cut ? cap(sm.cut) : t('cards.tablet.none')}</span></div>
-                <div className={styles.sumItem}><span className={styles.sumLabel}>{t('cards.tablet.nextDue')}</span><span className={styles.sumValue}>{!ld && sm.due ? cap(sm.due) : t('cards.tablet.none')}</span></div>
-              </>) : (<>
-                <div className={styles.sumItem}><span className={styles.sumLabel}>{t('cards.tablet.spent')}</span><span className={styles.sumValue}>{money(sm.spent)}</span></div>
-                <div className={styles.sumItem}><span className={styles.sumLabel}>{t('cards.tablet.mostUsed')}</span><span className={styles.sumValue}>{(!ld && sm.top) || t('cards.tablet.none')}</span></div>
-                <div className={styles.sumItem}><span className={styles.sumLabel}>{t('cards.tablet.moves')}</span><span className={styles.sumValue}>{ld ? t('cards.tablet.none') : sm.moves}</span></div>
-              </>)}
-            </div>
-          )}
-
-          <SegmentedControl
-            value={kind}
-            onChange={setKind}
-            options={[
-              { value: 'credit', label: `${t('cards.kind.credit')} · ${credit.length}` },
-              { value: 'debit', label: `${t('cards.kind.debit')} · ${debit.length}` },
-            ]}
-          />
-
-          {/* "Por pagar" (v0.9.502, pedido de Johnatan): antes solo sumaba
-              los estados de cuenta YA generados — ahora, igual que la
-              pastilla del detalle, suma también el ciclo en curso de cada
-              tarjeta (`totalOwedOnCard`, una por tarjeta y luego sumadas). */}
-          {!isTablet && kind === 'credit' && (
-            <div className={styles.totalPill}>
-              <span>{t('cards.pendingCreditTotal')}</span>
-              <span className={styles.totalPillAmount}>
-                {personalPayments ? fmt(credit.reduce((s, c) => s + totalOwedOnCard(c, personalPayments), 0)) : t('cards.tablet.none')}
-              </span>
-            </div>
-          )}
-
-          {loaded && cards.length === 0 ? (
-            <div className={styles.empty}>
-              <EmptyState
-                icon={Plus}
-                title={t(kind === 'credit' ? 'cards.empty.creditTitle' : 'cards.empty.debitTitle')}
-                subtitle={t('cards.empty.subtitle')}
-                onClick={openAdd}
-              />
-            </div>
-          ) : (
-            // `key` por tipo: al cambiar de pila, la nueva entra escalonada.
-            isTablet
-              ? <TabletCards key={kind} cards={cards} kind={kind} onSelect={c => setSelectedId(c.id)} info={tabletData?.info || {}} loading={ld} cutsById={kind === 'credit' ? cutsById : {}} />
-              : <CardStack key={kind} cards={cards} onSelect={c => setSelectedId(c.id)} personalPayments={personalPayments} cutsById={kind === 'credit' ? cutsById : {}} />
-          )}
-
-          {isTablet && disclaimerEl}
-        </div>
-      </div>
-
-      {/* Mismo botón flotante que "Agregar categoría"/"Añadir meta" —
-          excepción documentada a la Regla 13 (RULES.md). */}
-      <div className={`${styles.addPillRow} ${desk ? styles.addPillRowDesk : ''}`}>
-        <button type="button" onClick={openAdd} className={styles.addPill}>
-          <Plus size={18} color="var(--surface)" />
-          {t('cards.addButton')}
-        </button>
-      </div>
-
-      <CardFormModal
-        open={formOpen}
-        initial={editing}
-        onSave={handleSave}
-        onClose={() => setFormOpen(false)}
-      />
-
-      <ConfirmDeleteModal
-        open={!!deleting}
-        title={t('cards.deleteTitle')}
-        message={t('cards.deleteMessage', { name: deletingName })}
-        onConfirm={confirmDelete}
-        onCancel={() => setDeleting(null)}
-      />
-    </>
-  )
+  return null
 }

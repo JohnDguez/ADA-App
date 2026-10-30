@@ -1,0 +1,14 @@
+/* Mis tarjetas — tablet vertical (v0.9.953): página completa sin panel. Mismo contenido
+   que el panel/escritorio, apilado: hero, vencimientos debajo, segmentado a todo el
+   ancho y mosaicos de 2 columnas sobre tarjeta blanca. Solo tokens. */
+.page { display: flex; flex-direction: column; gap: 14px; padding-bottom: 6.5rem; }
+.topCol.topCol { grid-template-columns: minmax(0, 1fr); }
+.hero.hero { min-height: 0; }
+.fill.fill { background: var(--desk-card); box-shadow: var(--desk-shadow); }
+.seg.seg { display: flex; margin-top: 0; background: var(--desk-card); box-shadow: var(--desk-shadow); }
+.seg.seg button { flex: 1; padding: 12px 22px; font-size: 14px; }
+.cards.cards { grid-template-columns: repeat(2, minmax(0, 1fr)); margin-top: 0; }
+.card.card { background: var(--desk-card); box-shadow: var(--desk-shadow); }
+@media (hover: hover) and (pointer: fine) {
+  .card.card:hover { background: var(--desk-chip); }
+}

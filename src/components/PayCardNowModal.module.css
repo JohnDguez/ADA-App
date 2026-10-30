@@ -99,3 +99,23 @@
 .quick { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.625rem; }
 .chip { border: 0; background: var(--desk-chip); color: var(--text); font: inherit; font-size: 0.75rem; font-weight: 600; padding: 0.4375rem 0.75rem; border-radius: 99px; cursor: pointer; }
 .chipOn { outline: 2px solid var(--accent); }
+
+/* Hoja de móvil (v0.9.953, mockup TarM1): ícono + título + cerrar, monto grande con "$",
+   atajo "Todo", "Se paga con" y Cancelar | Confirmar. Solo tokens. */
+.mHead { display: flex; align-items: center; gap: 12px; margin-bottom: 18px; }
+.mIco { width: 42px; height: 42px; border-radius: 13px; display: grid; place-items: center; flex: none; background: var(--accent); color: var(--on-color); }
+.mTxt { flex: 1; min-width: 0; }
+.mTitle { font-size: 18px; font-weight: 700; color: var(--text); line-height: 1.2; }
+.mSub { margin-top: 2px; font-size: 13px; color: var(--muted); line-height: 1.3; }
+.mClose { width: 36px; height: 36px; border: 0; border-radius: 50%; display: grid; place-items: center; flex: none; background: var(--desk-chip); color: var(--text); cursor: pointer; }
+.mCap { font-size: 11.5px; font-weight: 600; letter-spacing: 0.8px; text-transform: uppercase; color: var(--muted); margin: 0 2px 8px; }
+.mBox { display: flex; align-items: center; gap: 8px; height: 64px; padding: 0 18px; border-radius: 18px; background: var(--desk-card); border: 2px solid var(--accent); box-sizing: border-box; }
+.mBox span { font-size: 26px; color: var(--muted); }
+.mBox b { font-size: 30px; font-weight: 600; color: var(--text); }
+.mBox .mInput, .mInput { flex: 1; min-width: 0; border: 0; outline: 0; background: none; box-shadow: none; padding: 0; height: auto; font-size: 30px; font-weight: 600; color: var(--text); }
+.mField { margin: 18px 0 4px; }
+.mField :global(.field-label) { font-size: 11.5px; font-weight: 600; letter-spacing: 0.8px; text-transform: uppercase; color: var(--muted); margin: 0 2px 8px; }
+.mBtns { display: grid; grid-template-columns: 1fr 1.5fr; gap: 10px; margin-top: 8px; }
+.mCancel { height: 52px; border: 0; border-radius: 99px; background: var(--desk-chip); color: var(--text); font: inherit; font-size: 15px; font-weight: 700; cursor: pointer; }
+.mOk { height: 52px; margin: 0; }
+.mOk:disabled { opacity: 0.45; }

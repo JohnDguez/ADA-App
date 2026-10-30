@@ -125,7 +125,7 @@ export function CardFormModal({ open, initial, onSave, onClose, inline = false }
             </div>
             <div className={dk.help}>{t('cards.form.aliasHelper')}</div>
 
-            <div className={dk.row2}>
+            <div className={`${dk.row2} ${dk.stackT}`}>
               <div className={dk.grow}>
                 <label className={dk.lbl}>{t('cards.form.network')}</label>
                 <Segmented value={form.network} onChange={network => set({ network })}
@@ -155,7 +155,7 @@ export function CardFormModal({ open, initial, onSave, onClose, inline = false }
           description={t('cards.desk.formDesc')}
           actions={<button type="button" className={`${deskStyles.btn} ${deskStyles.btnSoft}`} onClick={onClose}><ChevronLeft size={16} />{t('buttons.back')}</button>}
         />
-        <div className={dk.layout}>
+        <div className={`${dk.layout} ${isDesk ? '' : dk.layoutT}`}>
           <div className={deskStyles.fill}>
             {deskFields}
           </div>
@@ -168,6 +168,35 @@ export function CardFormModal({ open, initial, onSave, onClose, inline = false }
           </div>
         </div>
       </DeskPage>
+    )
+  }
+
+  // Tablet vertical (768–1099px, v0.9.953, mockup aprobado): diálogo de dos columnas —
+  // campos a la izquierda; vista previa, Guardar y Cancelar a la derecha.
+  if (!isDesk && !isMobile) {
+    const ttl = initial ? t('cards.form.titleEdit') : t('cards.form.titleNew')
+    return createPortal(
+      <div onClick={e => e.target === e.currentTarget && onClose()} className={dkp.overlay} data-presence="overlay" data-closing={closing ? '' : undefined}>
+        <div className={`${dkp.dialog} ${dk.dlgT}`} role="dialog" aria-modal="true" aria-label={ttl} data-presence="panel" data-closing={closing ? '' : undefined}>
+          <div className={dkp.head}>
+            <div>
+              <h2 className={dkp.title}>{ttl}</h2>
+              <div className={dkp.sub}>{t('cards.desk.formDesc')}</div>
+            </div>
+            <button type="button" className={dkp.close} onClick={onClose} aria-label={t('buttons.cancel')}><XIcon size={16} /></button>
+          </div>
+          <div className={`${dk.layout} ${dk.layoutT}`}>
+            <div className={dk.dlgForm}>{deskFields}</div>
+            <div className={dk.side}>
+              <div className={dk.preview}><CreditCardVisual card={{ ...form, bank: form.bank || 'otro' }} /></div>
+              {error && <div className={dk.err}>{error}</div>}
+              <button type="button" className={`${deskStyles.btn} ${dk.full}`} onClick={handleSave}>{initial ? t('cards.form.saveEdit') : t('cards.form.saveNew')}</button>
+              <button type="button" className={`${deskStyles.btn} ${deskStyles.btnSoft} ${dk.full}`} onClick={onClose}>{t('buttons.cancel')}</button>
+            </div>
+          </div>
+        </div>
+      </div>,
+      document.body
     )
   }
 
