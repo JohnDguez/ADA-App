@@ -4,12 +4,10 @@ import { useTranslation } from 'react-i18next'
 // Ícono del encabezado vía Phosphor Icons (mismo patrón que las demás
 // sub-páginas ya migradas, v0.9.442-447) — import directo para tree-shaking real.
 import { Wallet } from '@phosphor-icons/react/dist/csr/Wallet'
-import { CalendarDots } from '@phosphor-icons/react/dist/csr/CalendarDots'
-import { CalendarDays, CalendarRange, CalendarCheck, Banknote, Coins, ChevronDown, ChevronRight } from 'lucide-react'
-import { PageHero } from '../../components/PageHero'
+import { CalendarDays, CalendarRange, CalendarCheck, Coins, ChevronDown, ChevronRight, ChevronLeft } from 'lucide-react'
 import { getWeekdaysShort, nextCobroDate } from '../../lib/utils'
 import { showToast } from '../../components/Toast'
-import { Card, Row, SectionLabel, Toggle } from '../../components/SettingsShared'
+import { Toggle } from '../../components/SettingsShared'
 import { CurrencySheet } from '../../components/CurrencySheet'
 import AmountInput from '../../components/AmountInput'
 import { getCurrency } from '../../lib/currency'
@@ -22,6 +20,10 @@ import dk from './SettingsCobroDesk.module.css'
 import mb from './SettingsCobroMobile.module.css'
 import { SubpageHeader } from '../../components/SubpageHeader'
 import { useIsMobile } from '../../hooks/useIsMobile'
+import { useIsDesktop } from '../../hooks/useIsDesktop'
+import { useHeaderBackground, HEADER_IMAGES } from '../../hooks/useHeaderBackground'
+import home from '../DeskHome.module.css'
+import tb from './SettingsCobroTab.module.css'
 
 const BIWEEKLY_PRESETS = [
   { d1: 1,  d2: 16 },
@@ -36,6 +38,8 @@ export function SettingsCobroPage({ profile, onUpdate, onBack, slideClass }) {
   const { t, i18n } = useTranslation()
   const desk = useDeskSettings()
   const isMobile = useIsMobile()
+  const isDesk1100 = useIsDesktop()
+  const { timeOfDay, mountedKeys } = useHeaderBackground(profile?.timezone)
   const [currencyOpen, setCurrencyOpen] = useState(false)
   const symbol = getCurrency(profile).symbol
   const [salaryAmount,   setSalaryAmount]   = useState(profile.salary_amount || '')
@@ -72,10 +76,6 @@ export function SettingsCobroPage({ profile, onUpdate, onBack, slideClass }) {
 
   const nextDateObj = nextCobroDate(profile)
   const locale = i18n.language?.startsWith('en') ? 'en-US' : 'es-MX'
-  const nextPayday = nextDateObj.toLocaleDateString(
-    i18n.language?.startsWith('en') ? 'en-US' : 'es-MX',
-    { weekday: 'short', day: 'numeric', month: 'short' },
-  )
   const nextLongRaw = nextDateObj.toLocaleDateString(locale, { weekday: 'long', day: 'numeric', month: 'long' })
   const nextLong = nextLongRaw.charAt(0).toUpperCase() + nextLongRaw.slice(1)
   const nextMonthShort = nextDateObj.toLocaleDateString(locale, { month: 'short' }).replace('.', '').toUpperCase()
@@ -83,7 +83,7 @@ export function SettingsCobroPage({ profile, onUpdate, onBack, slideClass }) {
 
   // Escritorio (v0.9.836, mockup aprobado): a la izquierda frecuencia, día(s)
   // de cobro e ingreso; a la derecha el próximo cobro (bloque azul) y la moneda.
-  if (desk) {
+  if (desk && isDesk1100) {
     const freq = profile.cobro_freq
     const dayCtl = v => Math.min(31, Math.max(1, parseInt(v) || 1))
     let curName = ''
@@ -296,146 +296,167 @@ export function SettingsCobroPage({ profile, onUpdate, onBack, slideClass }) {
     )
   }
 
-  return (
-    <div className={`${slideClass} ${styles.pageWrapper}`}>
-      <PageHero
-        icon={Wallet}
-        title={t('settingsCobro.title')}
-        description={t('settingsCobro.description')}
-        onBack={onBack}
-      />
+  // Tablet (768–1099px, v0.9.950, mockups «Periodo de cobro · Tablet vertical /
+  // horizontal» aprobados): vertical = página completa con cabecera y botón de
+  // regreso; horizontal (`desk`) = dentro del panel de detalle, en una columna.
+  const freq = profile.cobro_freq
+  const custom = isCustomBiweekly()
+  const land = desk
+  const dayCtl = v => Math.min(31, Math.max(1, parseInt(v) || 1))
+  const startOf = d => new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime()
+  const diffDays = Math.round((startOf(nextDateObj) - startOf(new Date())) / 86400000)
+  const countdown = diffDays <= 0 ? t('settingsCobro.mobile.today') : diffDays === 1 ? t('settingsCobro.mobile.tomorrow') : t('settingsCobro.mobile.inDays', { count: diffDays })
+  const salaryNum = parseFloat(salaryAmount)
+  const perMonth = { weekly: 4, biweekly: 2 }[freq]
+  const showEquiv = !!profile.salary_enabled && salaryNum > 0 && !!perMonth
+  const equiv = showEquiv ? `${symbol}${(salaryNum * perMonth).toLocaleString(locale, { maximumFractionDigits: 2 })}` : ''
+  let curName = ''
+  try { curName = new Intl.DisplayNames([locale], { type: 'currency' }).of(profile.currency) || '' } catch { /* sin soporte */ }
 
-      <div className={styles.content}>
-      {/* Periodo de cobro */}
-      <div className={styles.block}>
-      <div className={styles.blockHead}><span className={styles.blockIcon}><CalendarDays size={20} /></span><SectionLabel>{t('settingsCobro.periodSection')}</SectionLabel></div>
-      <Card>
-        <div className={styles.subSection}>
-          <div className={styles.subLabelMb10}>{t('settingsCobro.frequencyLabel')}</div>
-          <div className={styles.pillRow}>
-            {[['weekly',t('frequency.weekly')],['biweekly',t('frequency.biweekly')],['monthly',t('frequency.monthly')]].map(([val, label]) => {
-              const FIcon = FREQ_ICON[val]
-              return (
-                <button key={val} onClick={() => handleFreq(val)} className={`${styles.pill} ${profile.cobro_freq === val ? styles.pillActive : ''}`}>
-                  <span className={styles.pillIcon}><FIcon size={20} /></span>
-                  <span>{label}</span>
-                  <span className={styles.pillSub}>{t(`settingsCobro.freqSub.${val}`)}</span>
-                </button>
-              )
+  const hero = (
+    <div className={tb.hero}>
+      <div className={tb.heroCal}><i>{nextMonthShort}</i><b>{nextDateObj.getDate()}</b></div>
+      <div className={tb.heroTxt}>
+        <small>{t('settingsCobro.nextPaydayLabel')}</small>
+        <strong>{nextLong}</strong>
+        <span>{t('deskSettings.nextHelp')}</span>
+      </div>
+      <span className={tb.heroPill}>{countdown}</span>
+    </div>
+  )
+  const freqTiles = (
+    <div className={tb.freq} role="group" aria-label={t('settingsCobro.frequencyLabel')}>
+      {['weekly', 'biweekly', 'monthly'].map(val => (
+        <button key={val} type="button" aria-pressed={freq === val} onClick={() => handleFreq(val)} className={`${tb.fq} ${freq === val ? tb.fqOn : ''}`}>
+          <b>{t(`frequency.${val}`)}</b><span>{t(`settingsCobro.freqSub.${val}`)}</span>
+        </button>
+      ))}
+    </div>
+  )
+  const dayCtlBlock = (
+    <>
+      {freq === 'weekly' && (
+        <div className={tb.days}>
+          {getWeekdaysShort().map((day, i) => (
+            <button key={i} type="button" aria-pressed={profile.cobro_weekday === i} onClick={() => handleWeekday(i)} className={`${tb.chip} ${profile.cobro_weekday === i ? tb.chipOn : ''}`}>{day}</button>
+          ))}
+        </div>
+      )}
+      {freq === 'biweekly' && (
+        <>
+          <div className={tb.presets}>
+            {BIWEEKLY_PRESETS.map(pr => {
+              const on = !custom && profile.cobro_day1 === pr.d1 && profile.cobro_day2 === pr.d2
+              return <button key={`${pr.d1}-${pr.d2}`} type="button" aria-pressed={on} onClick={() => { onUpdate({ cobro_day1: pr.d1, cobro_day2: pr.d2 }); setBiweeklyCustom(false) }} className={`${tb.chip} ${tb.pre} ${on ? tb.chipOn : ''}`}>{t('settingsCobro.dayPair', { d1: pr.d1, d2: pr.d2 })}</button>
             })}
+            <button type="button" aria-pressed={custom} onClick={() => setBiweeklyCustom(true)} className={`${tb.chip} ${tb.pre} ${custom ? tb.chipOn : ''}`}>{t('settingsCobro.otherOption')}</button>
+          </div>
+          <Collapse open={custom}>
+            <div className={tb.custom}>
+              <label><span>{t('settingsCobro.day1Label')}</span>
+                <input aria-label={t('settingsCobro.day1Label')} type="number" min="1" max="31" defaultValue={profile.cobro_day1 ?? ''} onBlur={e => { const v = dayCtl(e.target.value); e.target.value = v; onUpdate({ cobro_day1: v }) }} placeholder={t('settingsCobro.day1Placeholder')} className="field-input" /></label>
+              <label><span>{t('settingsCobro.day2Label')}</span>
+                <input aria-label={t('settingsCobro.day2Label')} type="number" min="1" max="31" defaultValue={profile.cobro_day2 ?? ''} onBlur={e => { const v = dayCtl(e.target.value); e.target.value = v; onUpdate({ cobro_day2: v }) }} placeholder={t('settingsCobro.day2Placeholder')} className="field-input" /></label>
+            </div>
+          </Collapse>
+        </>
+      )}
+      {freq === 'monthly' && (
+        <>
+          <div className={tb.days}>
+            {Array.from({ length: 31 }, (_, i) => i + 1).map(d => (
+              <button key={d} type="button" aria-pressed={(profile.cobro_day1 ?? 1) === d} onClick={() => handleMonthlyDay(d)} className={`${tb.chip} ${(profile.cobro_day1 ?? 1) === d ? tb.chipOn : ''}`}>{d}</button>
+            ))}
+          </div>
+          <p className={tb.hint}>
+            {t('settingsCobro.monthlyHelperPrefix')} <strong>{profile.cobro_day1 ?? 1}</strong> {t('settingsCobro.monthlyHelperSuffix')}
+            {(profile.cobro_day1 ?? 1) >= 29 && ` ${t('settingsCobro.monthShortHint')}`}
+          </p>
+        </>
+      )}
+    </>
+  )
+  const incomeCard = (
+    <div className={tb.fill}>
+      <div {...switchProps(profile.salary_enabled)} onClick={handleSalaryToggle} className={tb.tgl}>
+        <div><b>{t('deskSettings.incomeOn')}</b><span>{t('settingsCobro.incomeSubtitle')}</span></div>
+        <Toggle on={profile.salary_enabled} />
+      </div>
+      <Collapse open={!!profile.salary_enabled}>
+        <div className={tb.amountBox}>
+          <span className={tb.cur}>{symbol}</span>
+          <AmountInput value={salaryAmount} onChange={e => setSalaryAmount(e.target.value)} onBlur={handleSalaryBlur} aria-label={t('settingsCobro.amountLabel')} placeholder="0.00" className={tb.amountIn} />
+        </div>
+        <div className={tb.meta}>
+          <span>{t(`settingsCobro.mobile.perPeriod.${freq}`)}</span>
+          {showEquiv && <em>{t('settingsCobro.mobile.monthEquiv', { amount: equiv })}</em>}
+        </div>
+      </Collapse>
+    </div>
+  )
+  const currencyCard = (
+    <div className={tb.fill}>
+      {land && <b className={tb.fillTitle}>{t('settingsCobro.currencyLabel')}</b>}
+      <p className={tb.curHelp}>{t('currency.noConvertHint')}</p>
+      <button type="button" className={tb.select} onClick={() => setCurrencyOpen(true)}>
+        <span>{profile.currency}{curName ? ` · ${curName.charAt(0).toUpperCase()}${curName.slice(1)}` : ''}</span><ChevronDown size={18} />
+      </button>
+    </div>
+  )
+  const sheet = <CurrencySheet open={currencyOpen} onClose={() => setCurrencyOpen(false)} value={profile.currency} onSelect={handleCurrency} />
+
+  if (land) {
+    return (
+      <DeskPage>
+        <DeskSettingsHead title={t('settingsCobro.title')} description={t('settingsCobro.description')} />
+        <div className={`${tb.body} ${tb.land}`}>
+          {hero}
+          <div>
+            <div className={tb.cap}>{t('settingsCobro.frequencyLabel')}</div>
+            {freqTiles}
+            <div className={tb.cap}>{freq === 'biweekly' ? t('settingsCobro.payDaysLabel') : t('settingsCobro.payDayLabel')}</div>
+            {dayCtlBlock}
+            <div className={tb.cap}>{t('settingsCobro.incomeSection')}</div>
+            {incomeCard}
+            <div className={tb.gap} />
+            {currencyCard}
           </div>
         </div>
+        {sheet}
+      </DeskPage>
+    )
+  }
 
-        <Collapse open={!!(profile.cobro_freq === 'weekly')}>
-          <div className={styles.subSection}>
-            <div className={styles.subLabelMb8}>{t('settingsCobro.payDayLabel')}</div>
-            <div className={styles.weekdayRow}>
-              {getWeekdaysShort().map((day, i) => (
-                <button key={i} onClick={() => handleWeekday(i)}
-                  className={`${styles.weekdayButton} ${profile.cobro_weekday === i ? styles.weekdayButtonActive : ''}`}>
-                  {day}
-                </button>
-              ))}
-            </div>
-          </div>
-        </Collapse>
-
-        <Collapse open={!!(profile.cobro_freq === 'biweekly')}>
-          <div className={styles.subSection}>
-            <div className={styles.subLabelMb8}>{t('settingsCobro.payDaysLabel')}</div>
-            <div className={styles.presetsRow}>
-              {BIWEEKLY_PRESETS.map(p => (
-                <button key={`${p.d1}-${p.d2}`} onClick={() => { onUpdate({ cobro_day1: p.d1, cobro_day2: p.d2 }); setBiweeklyCustom(false) }}
-                  className={`${styles.presetButton} ${!isCustomBiweekly() && profile.cobro_day1 === p.d1 && profile.cobro_day2 === p.d2 ? styles.presetButtonActive : ''}`}>
-                  {t('settingsCobro.dayPair', { d1: p.d1, d2: p.d2 })}
-                </button>
-              ))}
-              <button onClick={() => setBiweeklyCustom(true)}
-                className={`${styles.presetButton} ${isCustomBiweekly() ? styles.presetButtonActive : ''}`}>
-                {t('settingsCobro.otherOption')}
-              </button>
-            </div>
-            <Collapse open={!!(isCustomBiweekly())}>
-              <div className={styles.customDaysRow}>
-                <div className={styles.customDayField}>
-                  <label className={styles.customDayLabel}>{t('settingsCobro.day1Label')}</label>
-                  <input aria-label={t('settingsCobro.day1Label')} type="number" min="1" max="31" defaultValue={profile.cobro_day1 ?? ''} onBlur={e => { const v = Math.min(31, Math.max(1, parseInt(e.target.value)||1)); e.target.value=v; onUpdate({ cobro_day1: v }) }} placeholder={t('settingsCobro.day1Placeholder')} className="field-input" />
-                </div>
-                <div className={styles.customDayField}>
-                  <label className={styles.customDayLabel}>{t('settingsCobro.day2Label')}</label>
-                  <input aria-label={t('settingsCobro.day2Label')} type="number" min="1" max="31" defaultValue={profile.cobro_day2 ?? ''} onBlur={e => { const v = Math.min(31, Math.max(1, parseInt(e.target.value)||1)); e.target.value=v; onUpdate({ cobro_day2: v }) }} placeholder={t('settingsCobro.day2Placeholder')} className="field-input" />
-                </div>
-              </div>
-            </Collapse>
-          </div>
-        </Collapse>
-
-        <Collapse open={!!(profile.cobro_freq === 'monthly')}>
-          <div className={`${styles.subSection} ${styles.subSectionLast}`}>
-            <div className={styles.subLabelMb8}>{t('settingsCobro.payDayLabel')}</div>
-            <div className={styles.dayGrid}>
-              {Array.from({ length: 31 }, (_, i) => i + 1).map(d => (
-                <button key={d} onClick={() => handleMonthlyDay(d)}
-                  className={`${styles.dayButton} ${(profile.cobro_day1 ?? 1) === d ? styles.dayButtonActive : ''}`}>
-                  {d}
-                </button>
-              ))}
-            </div>
-            <div className={styles.monthlyHelperText}>
-              {t('settingsCobro.monthlyHelperPrefix')} <strong>{profile.cobro_day1 ?? 1}</strong> {t('settingsCobro.monthlyHelperSuffix')}
-              {(profile.cobro_day1 ?? 1) >= 29 && ` ${t('settingsCobro.monthShortHint')}`}
-            </div>
-          </div>
-        </Collapse>
-      </Card>
-
-      <div className={styles.nextPayday}>
-        <CalendarDots size={16} aria-hidden="true" />
-        <span>{t('settingsCobro.nextPayday', { date: nextPayday })}</span>
-      </div>
-      <div className={styles.nextCal}>
-        <div className={styles.nextCalDate}><i>{nextMonthShort}</i><b>{nextDateObj.getDate()}</b></div>
-        <div>
-          <div className={styles.nextCalLabel}>{t('settingsCobro.nextPaydayLabel')}</div>
-          <div className={styles.nextCalValue}>{nextLong}</div>
+  return (
+    <div className={`${slideClass} ${home.root} ${home.tablet}`}>
+      <header className={home.head}>
+        <div className={home.band} aria-hidden="true">
+          {mountedKeys.map(key => (
+            <img key={key} src={HEADER_IMAGES[key]} alt="" className={`${home.bandImg} ${timeOfDay === key ? home.bandImgOn : ''}`} />
+          ))}
         </div>
-      </div>
-      </div>
-
-      {/* Ingreso */}
-      <div className={styles.block}>
-      <div className={styles.blockHead}><span className={styles.blockIcon}><Banknote size={20} /></span><SectionLabel>{t('settingsCobro.incomeSection')}</SectionLabel></div>
-      <Card>
-        <div className={`${styles.toggleRowWrapper} ${!profile.salary_enabled ? styles.toggleRowWrapperNoBorder : ''}`}>
-          <div {...switchProps(profile.salary_enabled)} className={styles.toggleRow} onClick={handleSalaryToggle}>
-            <div>
-              <div className={styles.toggleLabel}>{t('settingsCobro.incomeLabel')}</div>
-              <div className={styles.toggleSubtitle}>{t('settingsCobro.incomeSubtitle')}</div>
-            </div>
-            <Toggle on={profile.salary_enabled} />
+        <div className={`${home.headText} ${tb.headRow}`}>
+          <button type="button" className={tb.back} onClick={onBack} aria-label={t('buttons.back')}><ChevronLeft size={20} /></button>
+          <div>
+            <div className={home.date}>{t('settingsCobro.description')}</div>
+            <h1 className={home.hello}>{t('settingsCobro.title')}</h1>
           </div>
         </div>
-        <Collapse open={!!(profile.salary_enabled)}>
-          <div className={styles.amountSection}>
-            <div className={`${styles.amountField} ${symbol.length >= 3 ? styles.amountFieldLong : symbol.length === 2 ? styles.amountFieldMid : ''}`}>
-              <span className={styles.amountPrefix}>{symbol}</span>
-              <AmountInput value={salaryAmount} onChange={e => setSalaryAmount(e.target.value)} onBlur={handleSalaryBlur} aria-label={t('settingsCobro.amountLabel')} placeholder="0.00" className={`field-input ${styles.amountInput}`} />
-            </div>
-          </div>
-        </Collapse>
-      </Card>
+      </header>
+      <div className={tb.body}>
+        {hero}
+        <div className={tb.card}>
+          <div className={`${tb.cap} ${tb.capFirst}`}>{t('settingsCobro.frequencyLabel')}</div>
+          {freqTiles}
+          <div className={tb.cap}>{freq === 'biweekly' ? t('settingsCobro.payDaysLabel') : t('settingsCobro.payDayLabel')}</div>
+          {dayCtlBlock}
+        </div>
+        <div className={tb.grid2}>
+          <div className={tb.box}><div className={tb.boxCap}>{t('settingsCobro.incomeSection')}</div>{incomeCard}</div>
+          <div className={tb.box}><div className={tb.boxCap}>{t('settingsCobro.currencySection')}</div>{currencyCard}</div>
+        </div>
       </div>
-
-      {/* Moneda — ajuste que casi no cambia: fila con hoja, no campo ancho */}
-      <div className={styles.block}>
-      <div className={styles.blockHead}><span className={styles.blockIcon}><Coins size={20} /></span><SectionLabel>{t('settingsCobro.currencySection')}</SectionLabel></div>
-      <Card>
-        <Row label={t('settingsCobro.currencyLabel')} value={profile.currency} onClick={() => setCurrencyOpen(true)} last />
-      </Card>
-      <div className={`${styles.monthlyHelperText} ${styles.currencyHint}`}>{t('currency.noConvertHint')}</div>
-      </div>
-      </div>
-      <CurrencySheet open={currencyOpen} onClose={() => setCurrencyOpen(false)} value={profile.currency} onSelect={handleCurrency} />
+      {sheet}
     </div>
   )
 }
