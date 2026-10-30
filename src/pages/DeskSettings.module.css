@@ -35,6 +35,7 @@
 
 /* Tablet horizontal (960–1099px, v0.9.949): menú más angosto, mismo maestro-detalle (mockup «Ajustes · Tablet horizontal»). */
 @media (max-width: 1099px) {
+  .tab.tab > header { min-height: 96px; margin-bottom: 10px; }
   .tab .body { grid-template-columns: 292px minmax(0, 1fr); gap: 12px; }
   .tab .profile { padding: 6px 14px 6px 6px; }
   .tab .content { padding-right: 8px; }

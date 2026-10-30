@@ -1,0 +1,33 @@
+/* Categorías — tablet y escritorio (v0.9.952): mosaicos con el mismo estilo del móvil
+   (tarjeta con ícono de color sólido). Vertical = página completa (.page); panel de
+   detalle y escritorio = dentro de la tarjeta de Ajustes (.pane). Solo tokens. */
+.page { display: flex; flex-direction: column; gap: 14px; padding-bottom: 6.5rem; }
+.searchRow { display: flex; align-items: center; gap: 12px; }
+.searchPill { flex: 1; min-width: 0; display: flex; align-items: center; gap: 10px; height: 50px; padding: 0 20px; border-radius: 99px; background: var(--desk-card); box-shadow: var(--desk-shadow); color: var(--muted); }
+.searchPill input { flex: 1; min-width: 0; border: 0; outline: 0; background: none; color: var(--text); font: inherit; font-size: 14.5px; }
+.hint { display: flex; align-items: center; gap: 7px; flex: none; font-size: 13px; color: var(--muted); }
+.cap { margin: 22px 4px 10px; font-size: 11px; font-weight: 600; letter-spacing: 0.8px; text-transform: uppercase; color: var(--muted); }
+.cap.capFirst { margin-top: 0; }
+.page .cap { margin: 8px 4px 0; }
+
+.grid { --tile-bg: var(--desk-panel); display: grid; grid-template-columns: repeat(auto-fill, minmax(124px, 1fr)); gap: 12px; }
+.pageGrid { --tile-bg: var(--desk-card); }
+.tile { border: 0; background: var(--tile-bg); color: var(--text); font: inherit; border-radius: 22px; padding: 16px 8px 14px; min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 10px; cursor: pointer; animation: catPop 0.4s cubic-bezier(0.22, 1, 0.36, 1) both; animation-delay: calc(var(--n, 0) * 25ms); transition: transform 0.15s, background-color 0.15s; }
+.pageGrid .tile { box-shadow: var(--desk-shadow); }
+.tile:active { transform: scale(0.96); }
+.tile span { font-size: 13.5px; font-weight: 600; line-height: 1.2; text-align: center; max-width: 96%; overflow-wrap: anywhere; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.ico { width: 52px; height: 52px; border-radius: 17px; display: grid; place-items: center; flex: none; }
+.add { background: none; box-shadow: none; border: 1.5px dashed var(--accent); color: var(--accent); }
+.pageGrid .add { box-shadow: none; }
+.add .ico { background: var(--accent); color: var(--on-color); }
+.empty { padding: 30px 0; color: var(--muted); font-size: 14px; }
+@keyframes catPop { from { opacity: 0; transform: translateY(0.5rem) scale(0.96); } to { opacity: 1; transform: none; } }
+
+.pillRow { position: fixed; left: 72px; right: 0; bottom: calc(1.5rem + env(safe-area-inset-bottom)); display: flex; justify-content: center; z-index: 95; pointer-events: none; }
+.pill { pointer-events: auto; display: inline-flex; align-items: center; gap: 8px; white-space: nowrap; border: 0; border-radius: 99px; background: var(--accent); color: var(--on-color); font: inherit; font-size: 15px; font-weight: 700; padding: 0.8125rem 1.5rem; box-shadow: var(--shadow-fab); cursor: pointer; animation: catPop 0.4s cubic-bezier(0.22, 1, 0.36, 1) both 0.2s; }
+
+@media (hover: hover) and (pointer: fine) {
+  .tile:not(.add):hover { background: var(--desk-chip); translate: none; filter: none; }
+  .add:hover, .pill:hover { translate: none; filter: none; opacity: 0.9; }
+}
+@media (prefers-reduced-motion: reduce) { .tile, .pill { animation: none; transition: none; } }

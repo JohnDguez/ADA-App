@@ -1,25 +1,25 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import i18n from '../../i18n'
-import { Plus, ChevronRight, Search, Pointer } from 'lucide-react'
+import { Plus, Search, Pointer, ChevronLeft } from 'lucide-react'
 // Ícono del encabezado vía Phosphor Icons (mismo patrón que Exportar/Cuenta,
 // v0.9.442-446) — import directo al archivo del ícono para tree-shaking real.
 import { Tag } from '@phosphor-icons/react/dist/csr/Tag'
-import { PageHero } from '../../components/PageHero'
 import { CATEGORIES, getCatColor, getCategoryLabel } from '../../lib/utils'
 import { catInk } from '../../lib/colorUtils'
 import { getCategoryIcon } from '../../lib/categoryIcons'
-import { Card } from '../../components/SettingsShared'
 import { CategoryFormModal } from '../../components/CategoryFormModal'
 import { useDeskSettings } from '../../components/DeskSettingsContext'
 import { DeskSettingsHead, DeskPage } from '../../components/DeskSettingsHead'
 import deskStyles from '../../components/SettingsDesk.module.css'
 import dk from './SettingsCategoriesDesk.module.css'
+import wd from './SettingsCategoriesWide.module.css'
+import home from '../DeskHome.module.css'
+import tb from './SettingsCobroTab.module.css'
 import styles from './SettingsCategoriesPage.module.css'
 import mb from './SettingsCategoriesMobile.module.css'
 import { SubpageHeader } from '../../components/SubpageHeader'
 import { useIsMobile } from '../../hooks/useIsMobile'
-import { kbd } from '../../lib/a11y'
 
 // Sub-página "Categorías" dentro de Ajustes — fase 3: modal completo
 // (nombre + ícono + color) para agregar y editar cualquier categoría.
@@ -74,77 +74,102 @@ export function SettingsCategoriesPage({ profile, onUpdate, onBack, slideClass }
     setModalOpen(true)
   }
 
-  function CategoryRow({ cat, isCustom, last }) {
-    const Icon  = getCategoryIcon(cat, categoryIcons)
-    const color = getCatColor(cat, customCats, categoryColors)
-    const noBorder = last
-
-    return (
-      <div>
-        <div {...kbd}
-          onClick={() => openEdit(cat, isCustom)}
-          className={`${styles.categoryRow} ${noBorder ? styles.categoryRowNoBorder : ''}`}
-        >
-          <div className={styles.iconWrapper} style={{ background: color, '--cat-color': color }}>
-            {Icon
-              ? <Icon size={18} color={catInk(color)} strokeWidth={2} />
-              : <span className={styles.fallbackDot} />
-            }
-          </div>
-          <div className={styles.categoryText}>
-            <span className={styles.categoryLabel}>{isCustom ? cat : getCategoryLabel(cat)}</span>
-          </div>
-          <ChevronRight size={14} color="var(--text)" />
-        </div>
-      </div>
-    )
-  }
-
   if (desk && modalOpen) {
     return <CategoryFormModal inline open onClose={() => setModalOpen(false)} editingCat={editingCat} profile={profile} onUpdate={onUpdate} />
   }
 
-  if (desk) {
+  // Tablet y escritorio (v0.9.952): mosaicos con el estilo del móvil. Vertical (sin
+  // panel) = página completa con píldora flotante; horizontal/escritorio = dentro
+  // del panel de Ajustes con buscador y «Nueva categoría» en el encabezado.
+  if (desk || !isMobile) {
     const q = query.trim().toLowerCase()
     const labelOf = c => (c.isCustom ? c.name : getCategoryLabel(c.name))
     const shown = sortedCats.filter(c => !q || labelOf(c).toLowerCase().includes(q))
     const defaults = shown.filter(c => !c.isCustom)
     const mine = shown.filter(c => c.isCustom)
-    const Tile = ({ c }) => {
+    let n = 0
+    const renderTile = c => {
       const Icon = getCategoryIcon(c.name, categoryIcons)
       const color = getCatColor(c.name, customCats, categoryColors)
       return (
-        <button type="button" className={dk.tile} style={{ '--cat': color }} onClick={() => openEdit(c.name, c.isCustom)}>
-          <i>{Icon ? <Icon size={26} color={color} strokeWidth={2} /> : null}</i>
-          {labelOf(c)}
-          <span>{c.isCustom ? t('settingsCategories.deskCustom') : t('settingsCategories.deskDefault')}</span>
+        <button key={c.name} type="button" className={wd.tile} style={{ '--n': Math.min(n++, 14) }} onClick={() => openEdit(c.name, c.isCustom)}>
+          <i className={wd.ico} style={{ background: color }}>{Icon ? <Icon size={25} color={catInk(color)} strokeWidth={2} /> : <span className={styles.fallbackDot} />}</i>
+          <span>{labelOf(c)}</span>
         </button>
       )
     }
+    const newTile = () => (
+      <button type="button" className={`${wd.tile} ${wd.add}`} style={{ '--n': Math.min(n++, 14) }} onClick={openAdd}>
+        <i className={wd.ico}><Plus size={25} strokeWidth={2.4} /></i>
+        <span>{t('settingsCategories.deskNewShort')}</span>
+      </button>
+    )
+    const sections = (gridCls) => (
+      <>
+        {shown.length === 0 && <div className={wd.empty}>{t('settingsCategories.deskNoResults')}</div>}
+        {(mine.length > 0 || !q) && (
+          <>
+            <div className={`${wd.cap} ${wd.capFirst}`}>{t('settingsCategories.deskMine', { count: mine.length })}</div>
+            <div className={`${wd.grid} ${gridCls}`}>{mine.map(renderTile)}{!q && newTile()}</div>
+          </>
+        )}
+        {defaults.length > 0 && (
+          <>
+            <div className={wd.cap}>{t('settingsCategories.deskDefaults', { count: defaults.length })}</div>
+            <div className={`${wd.grid} ${gridCls}`}>{defaults.map(renderTile)}</div>
+          </>
+        )}
+      </>
+    )
+    if (desk) {
+      return (
+        <DeskPage>
+          <DeskSettingsHead
+            title={t('settingsCategories.title')}
+            description={t('settingsCategories.description')}
+            actions={<>
+              <label className={dk.search}>
+                <Search size={16} />
+                <input value={query} onChange={e => setQuery(e.target.value)} placeholder={t('settingsCategories.deskSearch')} aria-label={t('settingsCategories.deskSearch')} />
+              </label>
+              <button type="button" className={deskStyles.btn} onClick={openAdd}><Plus size={16} />{t('settingsCategories.deskNew')}</button>
+            </>}
+          />
+          {sections('')}
+        </DeskPage>
+      )
+    }
     return (
-      <DeskPage>
-        <DeskSettingsHead
-          title={t('settingsCategories.title')}
-          description={t('settingsCategories.description')}
-          actions={<>
-            <label className={dk.search}>
-              <Search size={16} />
-              <input value={query} onChange={e => setQuery(e.target.value)} placeholder={t('settingsCategories.deskSearch')} aria-label={t('settingsCategories.deskSearch')} />
-            </label>
-            <button type="button" className={deskStyles.btn} onClick={openAdd}><Plus size={16} />{t('settingsCategories.deskNew')}</button>
-          </>}
-        />
-        {shown.length === 0 && <div className={dk.empty}>{t('settingsCategories.deskNoResults')}</div>}
-        {defaults.length > 0 && <>
-          <div className={`${deskStyles.sec} ${deskStyles.secFirst}`}>{t('settingsCategories.deskDefaults', { count: defaults.length })}</div>
-          <div className={dk.grid}>{defaults.map(c => <Tile key={c.name} c={c} />)}</div>
-        </>}
-        <div className={deskStyles.sec}>{t('settingsCategories.deskMine', { count: mine.length })}</div>
-        <div className={dk.grid}>
-          {mine.map(c => <Tile key={c.name} c={c} />)}
-          {!q && <button type="button" className={`${dk.tile} ${dk.add}`} onClick={openAdd}><i><Plus size={28} /></i>{t('settingsCategories.deskNewShort')}</button>}
+      <>
+        <div className={`${slideClass} ${home.root} ${home.tablet}`}>
+          <header className={`${home.head} ${tb.headBar}`}>
+            <div className={`${home.headText} ${tb.headRow}`}>
+              <button type="button" className={tb.back} onClick={onBack} aria-label={t('buttons.back')}><ChevronLeft size={20} /></button>
+              <div>
+                <div className={home.date}>{t('settingsCategories.description')}</div>
+                <h1 className={home.hello}>{t('settingsCategories.title')}</h1>
+              </div>
+            </div>
+          </header>
+          <div className={wd.page}>
+            <div className={wd.searchRow}>
+              <label className={wd.searchPill}>
+                <Search size={18} />
+                <input value={query} onChange={e => setQuery(e.target.value)} placeholder={t('settingsCategories.deskSearch')} aria-label={t('settingsCategories.deskSearch')} />
+              </label>
+              <span className={wd.hint}><Pointer size={15} strokeWidth={1.9} />{t('settingsCategories.mobile.tapHint')}</span>
+            </div>
+            {sections(wd.pageGrid)}
+          </div>
         </div>
-      </DeskPage>
+        <div className={wd.pillRow}>
+          <button type="button" onClick={openAdd} className={wd.pill}>
+            <Plus size={19} strokeWidth={2.4} />
+            {t('settingsCategories.addButton')}
+          </button>
+        </div>
+        <CategoryFormModal open={modalOpen} onClose={() => setModalOpen(false)} editingCat={editingCat} profile={profile} onUpdate={onUpdate} />
+      </>
     )
   }
 
@@ -216,46 +241,5 @@ export function SettingsCategoriesPage({ profile, onUpdate, onBack, slideClass }
     )
   }
 
-  return (
-    <>
-      <div className={`${slideClass} ${styles.pageWrapper}`}>
-        <PageHero
-          icon={Tag}
-          title={t('settingsCategories.title')}
-          description={t('settingsCategories.description')}
-          onBack={onBack}
-        />
-
-        <div className={styles.gridWrap}>
-          <Card>
-            {sortedCats.map((c, i) => (
-              <CategoryRow key={c.name} cat={c.name} isCustom={c.isCustom} last={i === sortedCats.length - 1} />
-            ))}
-          </Card>
-        </div>
-      </div>
-
-      {/* Pastilla flotante "Agregar categoría" — mismo patrón ya aprobado
-          en GoalsPage.jsx ("Añadir meta"), pedido explícito de Johnatan:
-          el botón + vivía solo en el encabezado, obligando a hacer scroll
-          hasta arriba para agregar una categoría nueva si la lista es
-          larga. EXCEPCIÓN DOCUMENTADA a la Regla 13 (radius 5px / pills
-          solo en segmentados de 2 posiciones) — ver RULES.md, ya aprobada
-          para este mismo tipo de botón en Metas. */}
-      <div className={`${styles.addPillRow} ${desk ? styles.addPillRowDesk : ''}`}>
-        <button type="button" onClick={openAdd} className={styles.addPill}>
-          <Plus size={18} color="var(--surface)" />
-          {t('settingsCategories.addButton')}
-        </button>
-      </div>
-
-      <CategoryFormModal
-        open={modalOpen}
-        onClose={() => setModalOpen(false)}
-        editingCat={editingCat}
-        profile={profile}
-        onUpdate={onUpdate}
-      />
-    </>
-  )
+  return null
 }

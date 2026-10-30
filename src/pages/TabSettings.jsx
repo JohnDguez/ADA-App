@@ -1,7 +1,6 @@
 import { useTranslation } from 'react-i18next'
 import { Camera, Crown, User, Tag, Calendar, Bell, SunMoon, HelpCircle, Users, MessageCircle, Download, Upload, CreditCard, Languages, LogOut, ChevronRight } from 'lucide-react'
 import { AvatarImg } from '../components/AvatarImg'
-import { useHeaderBackground, HEADER_IMAGES } from '../hooks/useHeaderBackground'
 import home from './DeskHome.module.css'
 import desk from './DeskSettings.module.css'
 import m from './MobileSettings.module.css'
@@ -36,15 +35,9 @@ function Group({ title, index, children }) {
 export function TabSettings({ d }) {
   const { t } = useTranslation()
   const { profile, user, initials, uploadingAvatar, onChangePhoto, onOpen, nav, onOpenPremium, onOpenImport, onOpenLanguage, onLogout, versionLabel, appName } = d
-  const { timeOfDay, mountedKeys } = useHeaderBackground(profile?.timezone)
   return (
     <div className={`${home.root} ${home.tablet}`}>
-      <header className={home.head}>
-        <div className={home.band} aria-hidden="true">
-          {mountedKeys.map(key => (
-            <img key={key} src={HEADER_IMAGES[key]} alt="" className={`${home.bandImg} ${timeOfDay === key ? home.bandImgOn : ''}`} />
-          ))}
-        </div>
+      <header className={`${home.head} ${styles.headBar}`}>
         <div className={home.headText}>
           <div className={home.date}>{t('settingsPage.subtitle')}</div>
           <h1 className={home.hello}>{t('settingsPage.headTitle')}</h1>

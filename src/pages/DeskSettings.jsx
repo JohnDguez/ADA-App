@@ -32,11 +32,13 @@ export function DeskSettings({ d, tablet = false }) {
   return (
     <div className={`${home.root} ${tablet ? home.tablet : ''} ${tablet ? styles.tab : ''}`}>
       <header className={home.head}>
-        <div className={home.band} aria-hidden="true">
-          {mountedKeys.map(key => (
-            <img key={key} src={HEADER_IMAGES[key]} alt="" className={`${home.bandImg} ${timeOfDay === key ? home.bandImgOn : ''}`} />
-          ))}
-        </div>
+        {!tablet && (
+          <div className={home.band} aria-hidden="true">
+            {mountedKeys.map(key => (
+              <img key={key} src={HEADER_IMAGES[key]} alt="" className={`${home.bandImg} ${timeOfDay === key ? home.bandImgOn : ''}`} />
+            ))}
+          </div>
+        )}
         <div className={home.headText}>
           <div className={home.date}>{t('settingsPage.subtitle')}</div>
           <h1 className={home.hello}>{t('settingsPage.headTitle')}</h1>
