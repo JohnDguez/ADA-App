@@ -308,7 +308,9 @@
         "title": "To the Monday after",
         "sub": "Saturday and Sunday are paid on Monday"
       },
-      "example": "{{date}} falls on a {{weekday}} · you get paid on {{shifted}}"
+      "example": "{{date}} falls on a {{weekday}} · you get paid on {{shifted}}",
+      "exampleSpace": "{{date}} falls on a {{weekday}} · the period starts on {{shifted}}",
+      "subtitleSpace": "If the payday falls on a Saturday or Sunday"
     }
   },
   "settingsNotifications": {

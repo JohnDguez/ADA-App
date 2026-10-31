@@ -1,53 +1,17 @@
 const { createClient } = require('@supabase/supabase-js')
 const applyCors = require('./_cors')
-const { todayInTz, dateStrInTz } = require('./_tz')
+const { cobroPeriod } = require('./_cobroPeriod')
+const { dateStrInTz } = require('./_tz')
 
-// Reimplementación fiel de cobroPeriod()/today()/dateToStr()/dateOf() de
+// cobroPeriod() vive en api/_cobroPeriod.js (v0.9.967, con el recorrido por
+// fin de semana del espacio). Reimplementación fiel de dateToStr()/dateOf() de
 // lib/utils.js — este endpoint corre en Node (CommonJS), no comparte el
 // bundle del cliente, así que no puede importarlas directo. Si algún día
 // cambia la lógica de periodos en utils.js, hay que replicar el cambio
 // aquí también (mismo caso que FREQ_LABEL en notify-space-change.js).
-function today(timezone) {
-  return todayInTz(timezone)
-}
 function dateToStr(d) {
   const y = d.getFullYear(), m = String(d.getMonth() + 1).padStart(2, '0'), day = String(d.getDate()).padStart(2, '0')
   return `${y}-${m}-${day}`
-}
-function addDays(date, n) { const d = new Date(date); d.setDate(d.getDate() + n); return d }
-
-function cobroPeriod(cfg) {
-  const t = today(cfg.timezone)
-  if (cfg.cobro_freq === 'weekly') {
-    const wd = cfg.cobro_weekday ?? 5; const td = t.getDay()
-    let diffNext = wd - td; if (diffNext <= 0) diffNext += 7
-    const nextCobro = addDays(t, diffNext); const prevCobro = addDays(nextCobro, -7)
-    return { start: prevCobro, end: addDays(nextCobro, -1) }
-  }
-  if (cfg.cobro_freq === 'biweekly') {
-    const d1 = cfg.cobro_day1 ?? 1; const d2 = cfg.cobro_day2 ?? 16
-    const [dayA, dayB] = d1 < d2 ? [d1, d2] : [d2, d1]
-    const y = t.getFullYear(); const m = t.getMonth()
-    const cobroDates = [
-      new Date(y, m - 1, dayA), new Date(y, m - 1, dayB),
-      new Date(y, m, dayA), new Date(y, m, dayB),
-      new Date(y, m + 1, dayA), new Date(y, m + 1, dayB),
-    ]
-    const past = cobroDates.filter(d => d <= t).sort((a, b) => b - a)
-    const future = cobroDates.filter(d => d > t).sort((a, b) => a - b)
-    const start = past[0] || new Date(y, m, dayA)
-    const nextCobro = future[0] || new Date(y, m + 1, dayA)
-    return { start, end: addDays(nextCobro, -1) }
-  }
-  if (cfg.cobro_freq === 'monthly') {
-    const d1 = cfg.cobro_day1 ?? 1; const y = t.getFullYear(); const m = t.getMonth()
-    const day = t.getDate()
-    let start, nextCobro
-    if (day >= d1) { start = new Date(y, m, d1); nextCobro = new Date(y, m + 1, d1) }
-    else { start = new Date(y, m - 1, d1); nextCobro = new Date(y, m, d1) }
-    return { start, end: addDays(nextCobro, -1) }
-  }
-  return { start: t, end: t }
 }
 
 const supabase = createClient(
@@ -71,7 +35,7 @@ module.exports = async function handler(req, res) {
   try {
     const { data: space, error: spaceErr } = await supabase
       .from('shared_spaces')
-      .select('id, owner_id, cobro_freq, cobro_day1, cobro_day2, cobro_weekday, salary_enabled, salary_amount')
+      .select('id, owner_id, cobro_freq, cobro_day1, cobro_day2, cobro_weekday, cobro_weekend_shift, salary_enabled, salary_amount')
       .eq('id', spaceId)
       .maybeSingle()
     if (spaceErr || !space) return res.status(404).json({ error: 'Espacio no encontrado' })

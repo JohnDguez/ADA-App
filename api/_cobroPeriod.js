@@ -1,7 +1,8 @@
 // Periodo de cobro del lado del servidor (v0.9.966). Puerto fiel de
 // cobroPeriod() de src/lib/utils.js (Regla 23: api/ es CommonJS y no importa
 // módulos del frontend). Lo usan manage-shared-fund.js y manage-shared-goal.js
-// para validar el disponible PERSONAL de quien aporta. Antes cada archivo
+// para validar el disponible PERSONAL de quien aporta, y migrate-shared-funds.js
+// con la configuración del ESPACIO (v0.9.967). Antes cada archivo
 // tenía su propia copia y se habían desviado (sin meses cortos; la de metas,
 // sin el caso mensual). Prefijo `_`: no cuenta como función de Vercel.
 const { todayInTz } = require('./_tz')

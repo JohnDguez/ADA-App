@@ -308,7 +308,9 @@
         "title": "Al lunes siguiente",
         "sub": "Sábado y domingo se pagan el lunes"
       },
-      "example": "El {{date}} cae en {{weekday}} · cobras el {{shifted}}"
+      "example": "El {{date}} cae en {{weekday}} · cobras el {{shifted}}",
+      "exampleSpace": "El {{date}} cae en {{weekday}} · el periodo empieza el {{shifted}}",
+      "subtitleSpace": "Si el día de pago cae sábado o domingo"
     }
   },
   "settingsNotifications": {

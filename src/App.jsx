@@ -530,6 +530,7 @@ export default function App() {
         cobro_day1: activeSpaceEntry.space.cobro_day1,
         cobro_day2: activeSpaceEntry.space.cobro_day2,
         cobro_weekday: activeSpaceEntry.space.cobro_weekday,
+        cobro_weekend_shift: activeSpaceEntry.space.cobro_weekend_shift ?? null,
         salary_enabled: activeSpaceEntry.space.salary_enabled || false,
         salary_amount: activeSpaceEntry.space.salary_amount || 0,
       }

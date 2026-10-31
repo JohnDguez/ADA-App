@@ -115,7 +115,7 @@ export function useSharedSpaces(userId) {
   // datos; aquí se revisa antes para dar un mensaje claro en vez de un error
   // crudo de Postgres).
   // ─────────────────────────────────────────────────────────────────────────
-  async function createSpace({ name, isPremium, currency, cobroFreq, cobroDay1, cobroDay2, cobroWeekday, salaryEnabled, salaryAmount }) {
+  async function createSpace({ name, isPremium, currency, cobroFreq, cobroDay1, cobroDay2, cobroWeekday, weekendShift, salaryEnabled, salaryAmount }) {
     if (!isPremium) return { error: 'Necesitas Premium para crear un Espacio Compartido' }
     if (spaces.some(s => s.membership.role === 'owner')) {
       return { error: 'Ya eres dueño de un Espacio Compartido — solo puedes tener uno' }
@@ -137,6 +137,9 @@ export function useSharedSpaces(userId) {
           cobro_day1: cobroDay1 ?? null,
           cobro_day2: cobroDay2 ?? null,
           cobro_weekday: cobroWeekday ?? null,
+          // Solo si se eligió: así crear un espacio no truena si la columna
+          // aún no existe (Regla 25, v0.9.967).
+          ...(weekendShift ? { cobro_weekend_shift: weekendShift } : {}),
           salary_enabled: salaryEnabled ?? false,
           salary_amount: salaryAmount ?? null,
         })
@@ -202,7 +205,7 @@ export function useSharedSpaces(userId) {
 
   // Actualiza la configuración del espacio (solo dueño — misma RLS que
   // regenerateCode). `updates` es un objeto parcial: periodo de cobro
-  // (cobro_freq/cobro_day1/cobro_day2/cobro_weekday) o ingreso por periodo
+  // (cobro_freq/cobro_day1/cobro_day2/cobro_weekday/cobro_weekend_shift) o ingreso por periodo
   // (salary_enabled/salary_amount) — mismo mecanismo genérico de UPDATE
   // para ambos, no hace falta una función separada por sección. (Antes se
   // llamaba `updateSpaceCobro`, renombrada al agregar ingreso porque ya no

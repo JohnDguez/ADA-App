@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { getWeekdaysShort } from '../lib/utils'
+import { WeekendShiftField } from './WeekendShiftField'
 import styles from './CobroPeriodFields.module.css'
 
 const BIWEEKLY_PRESETS = [
@@ -18,7 +19,10 @@ const BIWEEKLY_PRESETS = [
 // queda local es si se está mostrando el modo "Otro" (días quincenales
 // personalizados) — mismo patrón que el original, es solo un tema de qué
 // inputs mostrar, no del valor en sí.
-export function CobroPeriodFields({ freq, day1, day2, weekday, onChangeFreq, onChangeDay1, onChangeDay2, onChangeWeekday }) {
+// `weekendShift`/`onChangeWeekendShift` (v0.9.967): recorrer el día de pago
+// si cae en fin de semana, solo quincenal y mensual; si no se pasa el
+// handler, el bloque no aparece.
+export function CobroPeriodFields({ freq, day1, day2, weekday, onChangeFreq, onChangeDay1, onChangeDay2, onChangeWeekday, weekendShift, onChangeWeekendShift }) {
   const { t } = useTranslation()
   const isPresetBiweekly = BIWEEKLY_PRESETS.some(p => p.d1 === (day1 ?? 1) && p.d2 === (day2 ?? 16))
   const [forceCustom, setForceCustom] = useState(!isPresetBiweekly)
@@ -98,6 +102,10 @@ export function CobroPeriodFields({ freq, day1, day2, weekday, onChangeFreq, onC
             {(day1 ?? 1) >= 29 && ` ${t('settingsCobro.monthShortHint')}`}
           </div>
         </div>
+      )}
+
+      {freq !== 'weekly' && onChangeWeekendShift && (
+        <WeekendShiftField freq={freq} day1={day1} day2={day2} value={weekendShift} onChange={onChangeWeekendShift} exampleKey="settingsCobro.weekend.exampleSpace" subtitleKey="settingsCobro.weekend.subtitleSpace" />
       )}
     </div>
   )

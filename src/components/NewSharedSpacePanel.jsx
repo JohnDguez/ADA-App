@@ -33,6 +33,7 @@ export function NewSharedSpacePanel({ profile, sharedSpaces, onOpenPremium, onCr
   const [newDay1,     setNewDay1]     = useState(1)
   const [newDay2,     setNewDay2]     = useState(16)
   const [newWeekday,  setNewWeekday]  = useState(5)
+  const [newWeekendShift, setNewWeekendShift] = useState(null)
   const [createError, setCreateError] = useState('')
   const [createSaving,setCreateSaving]= useState(false)
 
@@ -49,6 +50,7 @@ export function NewSharedSpacePanel({ profile, sharedSpaces, onOpenPremium, onCr
       cobroDay1: newFreq !== 'weekly' ? newDay1 : undefined,
       cobroDay2: newFreq === 'biweekly' ? newDay2 : undefined,
       cobroWeekday: newFreq === 'weekly' ? newWeekday : undefined,
+      weekendShift: newFreq !== 'weekly' ? newWeekendShift : null,
     })
     setCreateSaving(false)
     if (error) setCreateError(typeof error === 'string' ? error : t('newSharedSpacePanel.createGenericError'))
@@ -125,6 +127,7 @@ export function NewSharedSpacePanel({ profile, sharedSpaces, onOpenPremium, onCr
                 <CobroPeriodFields
                   freq={newFreq} day1={newDay1} day2={newDay2} weekday={newWeekday}
                   onChangeFreq={setNewFreq} onChangeDay1={setNewDay1} onChangeDay2={setNewDay2} onChangeWeekday={setNewWeekday}
+                  weekendShift={newWeekendShift} onChangeWeekendShift={setNewWeekendShift}
                 />
               </div>
               {createError && <div className={dk.err}>{createError}</div>}
@@ -212,6 +215,7 @@ export function NewSharedSpacePanel({ profile, sharedSpaces, onOpenPremium, onCr
             <CobroPeriodFields
               freq={newFreq} day1={newDay1} day2={newDay2} weekday={newWeekday}
               onChangeFreq={setNewFreq} onChangeDay1={setNewDay1} onChangeDay2={setNewDay2} onChangeWeekday={setNewWeekday}
+                  weekendShift={newWeekendShift} onChangeWeekendShift={setNewWeekendShift}
             />
           </div>
 

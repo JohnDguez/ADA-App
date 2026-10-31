@@ -31,7 +31,8 @@
 }
 
 .example { display: flex; align-items: center; gap: 0.375rem; margin: 0.625rem 0.25rem 0; font-size: 0.75rem; color: var(--muted); min-width: 0; }
-.example span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.example { align-items: flex-start; line-height: 1.35; }
+.example svg { margin-top: 0.0625rem; }
 .example svg { flex-shrink: 0; }
 
 @media (prefers-reduced-motion: reduce) { .opt, .radio, .opt span { transition: none; } }

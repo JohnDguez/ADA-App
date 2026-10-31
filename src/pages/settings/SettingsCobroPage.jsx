@@ -4,8 +4,9 @@ import { useTranslation } from 'react-i18next'
 // Ícono del encabezado vía Phosphor Icons (mismo patrón que las demás
 // sub-páginas ya migradas, v0.9.442-447) — import directo para tree-shaking real.
 import { Wallet } from '@phosphor-icons/react/dist/csr/Wallet'
-import { CalendarDays, CalendarRange, CalendarCheck, CalendarClock, Coins, ChevronDown, ChevronRight, ChevronLeft } from 'lucide-react'
-import { getWeekdaysShort, nextCobroDate, clampedDate, shiftPayday, today, WEEKEND_SHIFTS } from '../../lib/utils'
+import { CalendarDays, CalendarRange, CalendarCheck, Coins, ChevronDown, ChevronRight, ChevronLeft } from 'lucide-react'
+import { getWeekdaysShort, nextCobroDate } from '../../lib/utils'
+import { WeekendShiftField } from '../../components/WeekendShiftField'
 import { showToast } from '../../components/Toast'
 import { Toggle } from '../../components/SettingsShared'
 import { CurrencySheet } from '../../components/CurrencySheet'
@@ -23,60 +24,13 @@ import { useIsMobile } from '../../hooks/useIsMobile'
 import { useIsDesktop } from '../../hooks/useIsDesktop'
 import home from '../DeskHome.module.css'
 import tb from './SettingsCobroTab.module.css'
-import wk from './SettingsCobroWeekend.module.css'
+import wk from '../../components/WeekendShiftField.module.css'
 
 const BIWEEKLY_PRESETS = [
   { d1: 1,  d2: 16 },
   { d1: 13, d2: 28 },
   { d1: 15, d2: 30 },
 ]
-
-// Siguiente fecha de cobro que cae en fin de semana (próximos 12 meses), sin
-// recorrer y ya recorrida, para la línea de ejemplo. null si no hay ninguna.
-function nextWeekendPayday(profile) {
-  const t = today()
-  const days = profile.cobro_freq === 'biweekly' ? [profile.cobro_day1 ?? 1, profile.cobro_day2 ?? 16] : [profile.cobro_day1 ?? 1]
-  const dates = []
-  for (let k = 0; k <= 12; k++) days.forEach(d => dates.push(clampedDate(t.getFullYear(), t.getMonth() + k, d)))
-  const hit = dates.filter(d => d > t && (d.getDay() === 0 || d.getDay() === 6)).sort((a, b) => a - b)[0]
-  return hit ? { date: hit, shifted: shiftPayday(hit, profile.cobro_weekend_shift) } : null
-}
-
-// "Recorrer en fin de semana" (v0.9.966, mockup aprobado): interruptor y,
-// encendido, las 3 formas de recorrer. Solo quincenal y mensual (en semanal
-// ya se elige el día). `variant`: 'card' (móvil, dentro de la tarjeta de días)
-// o 'fill' (tablet/escritorio, bloque relleno propio). Apagado = null.
-function WeekendShift({ profile, onUpdate, locale, variant }) {
-  const { t } = useTranslation()
-  const mode = WEEKEND_SHIFTS.includes(profile.cobro_weekend_shift) ? profile.cobro_weekend_shift : null
-  const ex = mode ? nextWeekendPayday(profile) : null
-  const fmtDay = d => d.toLocaleDateString(locale, { day: 'numeric', month: 'short' }).replace('.', '')
-  const fmtWd = d => d.toLocaleDateString(locale, { weekday: 'long' })
-  return (
-    <div className={`${wk.wrap} ${variant === 'fill' ? wk.inFill : wk.inCard}`}>
-      <div {...switchProps(!!mode)} onClick={() => onUpdate({ cobro_weekend_shift: mode ? null : 'near' })} className={wk.row}>
-        <div><b>{t('settingsCobro.weekend.title')}</b><span>{t('settingsCobro.weekend.subtitle')}</span></div>
-        <Toggle on={!!mode} />
-      </div>
-      <Collapse open={!!mode}>
-        <div className={wk.opts} role="radiogroup" aria-label={t('settingsCobro.weekend.title')}>
-          {WEEKEND_SHIFTS.map(m => (
-            <button key={m} type="button" role="radio" aria-checked={mode === m} onClick={() => mode !== m && onUpdate({ cobro_weekend_shift: m })} className={`${wk.opt} ${mode === m ? wk.optOn : ''}`}>
-              <i className={wk.radio} aria-hidden="true" />
-              <div><b>{t(`settingsCobro.weekend.${m}.title`)}</b><span>{t(`settingsCobro.weekend.${m}.sub`)}</span></div>
-            </button>
-          ))}
-          {ex && (
-            <div className={wk.example}>
-              <CalendarClock size={14} aria-hidden="true" />
-              <span>{t('settingsCobro.weekend.example', { date: fmtDay(ex.date), weekday: fmtWd(ex.date), shifted: `${fmtWd(ex.shifted)} ${ex.shifted.getDate()}` })}</span>
-            </div>
-          )}
-        </div>
-      </Collapse>
-    </div>
-  )
-}
 
 // Sub-página "Periodo de cobro e ingresos" dentro de Ajustes: Frecuencia,
 // Día(s) de cobro, Moneda, e Ingreso por periodo. Antes vivía todo esto
@@ -189,7 +143,7 @@ export function SettingsCobroPage({ profile, onUpdate, onBack, slideClass }) {
               </>
             )}
             {freq !== 'weekly' && (
-              <div className={`${deskStyles.fill} ${wk.fillBox}`}><WeekendShift profile={profile} onUpdate={onUpdate} locale={locale} variant="fill" /></div>
+              <div className={`${deskStyles.fill} ${wk.fillBox}`}><WeekendShiftField freq={freq} day1={profile.cobro_day1} day2={profile.cobro_day2} value={profile.cobro_weekend_shift} onChange={v => onUpdate({ cobro_weekend_shift: v })} variant="fill" /></div>
             )}
 
             <div className={deskStyles.sec}>{t('settingsCobro.incomeSection')}</div>
@@ -311,7 +265,7 @@ export function SettingsCobroPage({ profile, onUpdate, onBack, slideClass }) {
               {(profile.cobro_day1 ?? 1) >= 29 && <div className={mb.hint}>{t('settingsCobro.monthShortHint')}</div>}
             </>
           )}
-          {freq !== 'weekly' && <WeekendShift profile={profile} onUpdate={onUpdate} locale={locale} variant="card" />}
+          {freq !== 'weekly' && <WeekendShiftField freq={freq} day1={profile.cobro_day1} day2={profile.cobro_day2} value={profile.cobro_weekend_shift} onChange={v => onUpdate({ cobro_weekend_shift: v })} variant="card" />}
         </div>
 
         <div className={mb.cap} style={{ '--i': 5 }}>{t('settingsCobro.incomeSection')}</div>
@@ -425,7 +379,7 @@ export function SettingsCobroPage({ profile, onUpdate, onBack, slideClass }) {
         </>
       )}
       {freq !== 'weekly' && (
-        <div className={`${tb.fill} ${wk.fillBox}`}><WeekendShift profile={profile} onUpdate={onUpdate} locale={locale} variant="fill" /></div>
+        <div className={`${tb.fill} ${wk.fillBox}`}><WeekendShiftField freq={freq} day1={profile.cobro_day1} day2={profile.cobro_day2} value={profile.cobro_weekend_shift} onChange={v => onUpdate({ cobro_weekend_shift: v })} variant="fill" /></div>
       )}
     </>
   )
