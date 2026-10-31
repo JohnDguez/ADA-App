@@ -399,7 +399,7 @@ export function PremiumPage({ profile, onClose, refreshProfile, onSubscribed }) 
 
           <div className={dk.fine}>
             {t('premiumPage.restrictionsApply')}
-            {trialEligible && <> {t('premiumPage.trialFinePrint', { price: offer.prices[selectedPlan], suffix: priceSuffix(selectedPlan), days: trialDays })}</>}
+            {trialEligible && <> {t('premiumPage.trialFinePrint', { price: offer.promo[selectedPlan]?.price || offer.prices[selectedPlan], suffix: priceSuffix(selectedPlan), days: trialDays })}</>}
             {offer.promo[selectedPlan]?.fine && <> {offer.promo[selectedPlan].fine}</>}
             <div className={dk.safe}><ShieldCheck size={14} />{t('premiumPage.cancelAnytime')}</div>
             <div>
@@ -651,7 +651,7 @@ export function PremiumPage({ profile, onClose, refreshProfile, onSubscribed }) 
             {trialEligible && (<>
               <br />
               {t('premiumPage.trialFinePrint', {
-                price: offer.prices[selectedPlan],
+                price: offer.promo[selectedPlan]?.price || offer.prices[selectedPlan],
                 suffix: priceSuffix(selectedPlan),
                 days: trialDays,
               })}
