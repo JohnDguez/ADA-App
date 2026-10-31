@@ -26,6 +26,7 @@ import { DeskSettingsHead, DeskPage } from '../../components/DeskSettingsHead'
 import deskStyles from '../../components/SettingsDesk.module.css'
 import dk from './SettingsExportDesk.module.css'
 import styles from './SettingsExportPage.module.css'
+import { LoadingDots } from '../../components/LoadingDots'
 
 // Sub-página "Exportar datos" — Fases 1 y 2 del módulo de Reportes (ver
 // CONTEXT.md, pendiente "Rediseño de PremiumPage.jsx"). Deja elegir qué
@@ -1022,7 +1023,7 @@ export function SettingsExportPage({ profile, sharedSpaces, onOpenPremium, onBac
 
             <div className={`${deskStyles.blue} ${dk.sum}`}>
               <span className={dk.range}>{formatDateLabel(from)} – {formatDateLabel(to)}</span>
-              <div className={dk.n}>{counting ? '…' : (total ?? 0)}</div>
+              <div className={dk.n}>{counting ? <LoadingDots /> : (total ?? 0)}</div>
               <span className={dk.lab}>{t('settingsExport.recordsFound')}</span>
               {counts && (
                 <div className={dk.split}>
@@ -1135,7 +1136,7 @@ export function SettingsExportPage({ profile, sharedSpaces, onOpenPremium, onBac
               <div className={styles.countRange}>{formatDateLabel(from)} – {formatDateLabel(to)}</div>
               <div className={styles.countLabel}>{t('settingsExport.recordsFound')}</div>
             </div>
-            <span className={styles.countValue}>{counting ? '…' : (total ?? 0)}</span>
+            <span className={styles.countValue}>{counting ? <LoadingDots /> : (total ?? 0)}</span>
           </div>
 
           <button

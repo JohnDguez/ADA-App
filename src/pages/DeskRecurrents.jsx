@@ -14,6 +14,7 @@ import { getCategoryIcon } from '../lib/categoryIcons'
 import home from './DeskHome.module.css'
 import { DeskAddButton } from '../components/DeskAddButton'
 import styles from './DeskRecurrents.module.css'
+import { LoadingDots } from '../components/LoadingDots'
 
 // Gastos recurrentes de escritorio (≥1100px, v0.9.828) — diseño aprobado por
 // Johnatan con mockup. Misma estructura que DeskHome/DeskPayments: encabezado,
@@ -117,22 +118,22 @@ export function DeskRecurrents({ d, tablet = false }) {
                   <>
                     <div className={`${home.tile} ${home.tileHero}`}>
                       <span className={home.tileLabel}>{t('recurrentsPage.monthlySum')}</span>
-                      <span className={home.tileNum}>{dataLoading ? <Bone w={150} h={36} r={8} /> : <>≈{totInt}<small>{totCents}</small></>}</span>
+                      <span className={home.tileNum}>{dataLoading ? <LoadingDots /> : <>≈{totInt}<small>{totCents}</small></>}</span>
                       <span className={home.tileSub}>{t('recurrentsPage.monthlyPaymentsLabel')}</span>
                     </div>
                     <div className={home.tile}>
                       <span className={home.tileLabel}>{t('recurrentsPage.activeLabel')}</span>
-                      <span className={home.tileNum}>{dataLoading ? <Bone w={60} h={30} r={8} /> : totals.active}</span>
+                      <span className={home.tileNum}>{dataLoading ? <LoadingDots /> : totals.active}</span>
                       <span className={home.tileSub}>{dataLoading ? '' : t('deskRecurrents.ofTotal', { count: totals.all })}</span>
                     </div>
                     <div className={home.tile}>
                       <span className={home.tileLabel}>{t('deskRecurrents.pausedLabel')}</span>
-                      <span className={home.tileNum}>{dataLoading ? <Bone w={60} h={30} r={8} /> : totals.paused}</span>
+                      <span className={home.tileNum}>{dataLoading ? <LoadingDots /> : totals.paused}</span>
                       <span className={home.tileSub}>{t('deskRecurrents.pausedSub')}</span>
                     </div>
                     <div className={home.tile}>
                       <span className={home.tileLabel}>{t('deskRecurrents.installmentsLabel')}</span>
-                      <span className={home.tileNum}>{dataLoading ? <Bone w={60} h={30} r={8} /> : installments.count}</span>
+                      <span className={home.tileNum}>{dataLoading ? <LoadingDots /> : installments.count}</span>
                       <span className={home.tileSub}>{installments.count > 0 ? <><b>{t('recurrentsPage.remainingPayments', { count: installments.left })}</b> · {fmt(installments.leftAmount)}</> : t('deskRecurrents.noInstallments')}</span>
                     </div>
                   </>
@@ -140,22 +141,22 @@ export function DeskRecurrents({ d, tablet = false }) {
                   <>
 <div className={`${home.tile} ${home.tileHero}`}>
                   <span className={home.tileLabel}>{t('recurrentsPage.activeLabel')}</span>
-                  <span className={home.tileNum}>{dataLoading ? <Bone w={80} h={36} r={8} /> : totals.active}</span>
+                  <span className={home.tileNum}>{dataLoading ? <LoadingDots /> : totals.active}</span>
                   <span className={home.tileSub}>{dataLoading ? '' : t('deskRecurrents.ofTotal', { count: totals.all })}</span>
                 </div>
                 <div className={home.tile}>
                   <span className={home.tileLabel}>{t('deskRecurrents.pausedLabel')}</span>
-                  <span className={home.tileNum}>{dataLoading ? <Bone w={80} h={36} r={8} /> : totals.paused}</span>
+                  <span className={home.tileNum}>{dataLoading ? <LoadingDots /> : totals.paused}</span>
                   <span className={home.tileSub}>{t('deskRecurrents.pausedSub')}</span>
                 </div>
                 <div className={home.tile}>
                   <span className={home.tileLabel}>{t('recurrentsPage.monthlySum')}</span>
-                  <span className={home.tileNum}>{dataLoading ? <Bone w={150} h={36} r={8} /> : <>≈{totInt}<small>{totCents}</small></>}</span>
+                  <span className={home.tileNum}>{dataLoading ? <LoadingDots /> : <>≈{totInt}<small>{totCents}</small></>}</span>
                   <span className={home.tileSub}>{t('recurrentsPage.monthlyPaymentsLabel')}</span>
                 </div>
                 <div className={home.tile}>
                   <span className={home.tileLabel}>{t('deskRecurrents.installmentsLabel')}</span>
-                  <span className={home.tileNum}>{dataLoading ? <Bone w={80} h={36} r={8} /> : installments.count}</span>
+                  <span className={home.tileNum}>{dataLoading ? <LoadingDots /> : installments.count}</span>
                   <span className={home.tileSub}>{installments.count > 0 ? <><b>{t('recurrentsPage.remainingPayments', { count: installments.left })}</b> · {fmt(installments.leftAmount)}</> : t('deskRecurrents.noInstallments')}</span>
                 </div>
                                 </>

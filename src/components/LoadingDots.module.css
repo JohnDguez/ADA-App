@@ -1,0 +1,8 @@
+/* Puntos de carga (v0.9.974). Toman color y tamaño del texto (currentColor, em). */
+.dots { display: inline-flex; align-items: flex-end; gap: 0.18em; height: 0.8em; vertical-align: baseline; }
+.dots i { width: 0.2em; height: 0.2em; border-radius: 50%; background: currentColor; animation: ldJump 1.2s ease-in-out infinite; }
+.dots i:nth-child(2) { animation-delay: 0.15s; }
+.dots i:nth-child(3) { animation-delay: 0.3s; }
+@keyframes ldJump { 0%, 60%, 100% { transform: translateY(0); } 30% { transform: translateY(-0.25em); } }
+@keyframes ldBlink { 50% { opacity: 0.35; } }
+@media (prefers-reduced-motion: reduce) { .dots i { animation-name: ldBlink; } }

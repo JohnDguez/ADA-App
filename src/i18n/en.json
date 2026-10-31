@@ -2808,5 +2808,8 @@
     "text": "You changed <b>{{field}}</b> but didn't save it. If you leave now, it will be lost.",
     "stay": "Keep editing",
     "leave": "Leave without saving"
+  },
+  "common": {
+    "loading": "Loading"
   }
 }

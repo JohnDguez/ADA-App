@@ -15,6 +15,7 @@ import { fmt, getMonthsShort } from '../lib/utils'
 import home from './DeskHome.module.css'
 import styles from './DeskGoals.module.css'
 import { usePremiumCta } from '../lib/premiumOffer'
+import { LoadingDots } from '../components/LoadingDots'
 
 // Metas de escritorio (≥1100px, v0.9.831) — diseño aprobado por Johnatan con
 // mockup. Mismo esqueleto que DeskHome/DeskPayments/DeskRecurrents: la
@@ -122,9 +123,7 @@ export function DeskGoals({ d, tablet = false }) {
         <div className={`${home.fill} ${tablet ? styles.tabGrid : ''} ${spaceJustChanged ? 'content-slide-up' : ''}`}>
           {rawActiveSpaceId === 'new' ? (
             <NewSharedSpacePanel profile={profile} sharedSpaces={sharedSpaces} onOpenPremium={onOpenPremium} onCreated={onSpaceReady} onJoined={onSpaceReady} />
-          ) : goalsLoading ? (
-            <div data-coachmark="metas-resumen"><GoalCardSkeleton count={2} /></div>
-          ) : noGoalsAtAll ? (
+          ) : !goalsLoading && noGoalsAtAll ? (
             <div data-coachmark="metas-resumen" className={styles.emptyAll}>
               <EmptyState desk icon={PiggyBank} title={t('goalsPage.noGoalsAtAllTitle')} subtitle={t('goalsPage.noGoalsAtAllSubtitle')} onClick={onAdd} />
             </div>
@@ -133,18 +132,18 @@ export function DeskGoals({ d, tablet = false }) {
               <section className={`${home.tiles} ${styles.tiles3}`} data-coachmark="metas-resumen">
                 <div className={`${home.tile} ${home.tileHero}`}>
                   <span className={home.tileLabel}>{t('goalsPage.totalRemaining')}</span>
-                  <span className={home.tileNum}>{restInt}<small>{restCents}</small></span>
+                  <span className={home.tileNum}>{goalsLoading ? <LoadingDots /> : <>{restInt}<small>{restCents}</small></>}</span>
                   <span className={home.tileSub}>{tablet ? <>{overallPct} % {t('deskGoals.ofGoals')}<span className={styles.subSecond}>{t('deskGoals.total')} {fmt(totalTarget)}</span></> : t('deskGoals.toGo')}</span>
                   {tablet && <div className={styles.heroTrack}><i className={styles.heroFill} style={{ width: `${overallPct}%` }} /></div>}
                 </div>
                 <div className={home.tile}>
                   <span className={home.tileLabel}>{t('goalsPage.totalSaved')}</span>
-                  <span className={home.tileNum}>{savInt}<small>{savCents}</small></span>
+                  <span className={home.tileNum}>{goalsLoading ? <LoadingDots /> : <>{savInt}<small>{savCents}</small></>}</span>
                   <span className={home.tileSub}>{t('deskGoals.savedSub', { count: activeGoals.length })}</span>
                 </div>
                 <div className={home.tile}>
                   <span className={home.tileLabel}>{t('goalsPage.goalsCompleted')}</span>
-                  <span className={home.tileNum}>{completedGoals.length}<small>/{activeGoals.length + completedGoals.length}</small></span>
+                  <span className={home.tileNum}>{goalsLoading ? <LoadingDots /> : <>{completedGoals.length}<small>/{activeGoals.length + completedGoals.length}</small></>}</span>
                   <span className={home.tileSub}>{lastDone ? t('deskGoals.lastDone', { name: lastDone.name }) : t('deskGoals.noneDone')}</span>
                 </div>
               </section>
@@ -165,7 +164,9 @@ export function DeskGoals({ d, tablet = false }) {
                     )}
                   </div>
                   <div className={`${home.listBody} scroll-y`}>
-                    {showing.length === 0 ? (
+                    {goalsLoading ? (
+                      <GoalCardSkeleton count={2} />
+                    ) : showing.length === 0 ? (
                       goalsView === 'activas'
                         ? <EmptyState desk icon={PiggyBank} title={t('goalsPage.noActiveGoalsTitle')} subtitle={t('goalsPage.noActiveGoalsSubtitle')} onClick={onAdd} />
                         : <EmptyState desk icon={Target} title={t('goalsPage.noCompletedGoalsTitle')} subtitle={t('goalsPage.noCompletedGoalsSubtitle')} />
@@ -197,7 +198,7 @@ export function DeskGoals({ d, tablet = false }) {
                       {!tablet && <section className={home.card}>
                         <h2 className={home.cardTitle}>{t('deskGoals.overallTitle')}</h2>
                         <div className={styles.ring} style={{ background: `conic-gradient(var(--desk-deep) 0 ${overallPct}%, var(--desk-chip) ${overallPct}% 100%)` }}>
-                          <div><b>{overallPct}%</b><span>{t('deskGoals.ofGoals')}</span></div>
+                          <div><b>{goalsLoading ? <LoadingDots /> : `${overallPct}%`}</b><span>{t('deskGoals.ofGoals')}</span></div>
                         </div>
                         <div className={styles.st3}>
                           <div><span>{t('deskGoals.saved')}</span><b>{fmt(totalAhorrado)}</b></div>

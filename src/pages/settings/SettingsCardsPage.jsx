@@ -22,6 +22,8 @@ import tb from './SettingsCobroTab.module.css'
 import { markBackHandled, wasBackHandled } from '../../lib/backNav'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import { SettingsCardsMobile } from './SettingsCardsMobile'
+import { LoadingDots } from '../../components/LoadingDots'
+import { Bone } from '../../components/SkeletonLoader'
 
 // Mis tarjetas (v0.9.486, entrega A). Actualizado en v0.9.495 (mockups
 // confirmados con Johnatan): tocar una tarjeta ya NO la abre en la propia
@@ -161,7 +163,7 @@ export function SettingsCardsPage({ profile, paymentMethods, personalPayments = 
 
   const sm = tabletData?.summary
   const ld = !!tabletData?.loading
-  const money = n => (ld ? t('cards.tablet.none') : fmt(n))
+  const money = n => (ld ? <LoadingDots /> : fmt(n))
   const i18nLang = () => i18n.language
   const cap = str => (str ? str.charAt(0).toUpperCase() + str.slice(1) : str)
 
@@ -230,12 +232,12 @@ export function SettingsCardsPage({ profile, paymentMethods, personalPayments = 
               <div className={dk.big}>{money(kind === 'credit' ? sm.owed : sm.spent)}</div>
               <div className={dk.pills}>
                 {kind === 'credit' ? (<>
-                  <div><span>{t('cards.tablet.nextCut')}</span><b>{!ld && sm.cut ? cap(sm.cut) : t('cards.tablet.none')}</b></div>
-                  <div><span>{t('cards.tablet.nextDue')}</span><b>{!ld && sm.due ? cap(sm.due) : t('cards.tablet.none')}</b></div>
+                  <div><span>{t('cards.tablet.nextCut')}</span><b>{ld ? <Bone w={70} h={14} r={7} /> : sm.cut ? cap(sm.cut) : t('cards.tablet.none')}</b></div>
+                  <div><span>{t('cards.tablet.nextDue')}</span><b>{ld ? <Bone w={70} h={14} r={7} /> : sm.due ? cap(sm.due) : t('cards.tablet.none')}</b></div>
                   <div><span>{t('cards.desk.cardsCount')}</span><b>{credit.length}</b></div>
                 </>) : (<>
-                  <div><span>{t('cards.tablet.mostUsed')}</span><b>{(!ld && sm.top) || t('cards.tablet.none')}</b></div>
-                  <div><span>{t('cards.tablet.moves')}</span><b>{ld ? t('cards.tablet.none') : sm.moves}</b></div>
+                  <div><span>{t('cards.tablet.mostUsed')}</span><b>{ld ? <Bone w={70} h={14} r={7} /> : (sm.top || t('cards.tablet.none'))}</b></div>
+                  <div><span>{t('cards.tablet.moves')}</span><b>{ld ? <LoadingDots /> : sm.moves}</b></div>
                   <div><span>{t('cards.desk.cardsCount')}</span><b>{debit.length}</b></div>
                 </>)}
               </div>
@@ -282,7 +284,7 @@ export function SettingsCardsPage({ profile, paymentMethods, personalPayments = 
                   <div className={dk.info}>
                     <div className={dk.row}>
                       <span>{kind === 'credit' ? t('cards.tablet.owed') : t('cards.tablet.spent')}</span>
-                      <b>{ld ? t('cards.tablet.none') : fmt(kind === 'credit' ? x.owed : x.spent)}</b>
+                      <b>{ld ? <LoadingDots /> : fmt(kind === 'credit' ? x.owed : x.spent)}</b>
                     </div>
                     <div className={dk.bar}><i style={{ width: ld ? '0%' : `${Math.round(x.pct * 100)}%` }} /></div>
                     <div className={dk.sub}>

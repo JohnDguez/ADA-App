@@ -9,6 +9,7 @@ import { catInk } from '../lib/colorUtils'
 import { getCategoryIcon } from '../lib/categoryIcons'
 import { kbd } from '../lib/a11y'
 import styles from './MobileRecurrents.module.css'
+import { LoadingDots } from '../components/LoadingDots'
 
 // Gastos recurrentes móvil (<768px, v0.9.907) — diseño aprobado con mockup.
 // La lógica, el detalle y los modales siguen en RecurrentsPage.jsx: aquí solo
@@ -60,17 +61,17 @@ export function MobileRecurrents({ d }) {
 
       <section data-coachmark="recurrentes-stats" className={styles.card}>
         <div className={styles.label}>{t('recurrentsPage.monthlySum')}</div>
-        <div className={styles.bigNum}>{dataLoading ? <Bone w={150} h={36} r={8} /> : <>≈<Money text={fmt(totals.monthly)} /></>}</div>
+        <div className={styles.bigNum}>{dataLoading ? <LoadingDots /> : <>≈<Money text={fmt(totals.monthly)} /></>}</div>
         <div className={styles.sub}>{t('recurrentsPage.monthlyPaymentsLabel')}</div>
         <div className={styles.tiles}>
           <div className={styles.tile}>
             <span>{t('recurrentsPage.activeLabel')}</span>
-            <b>{dataLoading ? '…' : totals.active}</b>
+            <b>{dataLoading ? <LoadingDots /> : totals.active}</b>
             <em>{dataLoading ? '' : t('recurrentsPage.pausedCount', { count: totals.paused })}</em>
           </div>
           <div className={styles.tile}>
             <span>{t('deskRecurrents.installmentsLabel')}</span>
-            <b>{dataLoading ? '…' : installments.count}</b>
+            <b>{dataLoading ? <LoadingDots /> : installments.count}</b>
             <em>{dataLoading ? '' : installments.count > 0 ? t('recurrentsPage.remainingPayments', { count: installments.left }) : t('deskRecurrents.noInstallments')}</em>
           </div>
         </div>

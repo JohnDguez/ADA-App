@@ -111,4 +111,11 @@ describe('reglas del proyecto', () => {
     const src = readFileSync(join(root, 'src/components/CategoryFormModal.jsx'), 'utf8')
     expect(src).not.toMatch(/color="var\(--on-color\)"/)
   })
+
+  it('ninguna cifra muestra un "…" fijo mientras carga: se usa <LoadingDots /> — DISENO.md §7b', () => {
+    const bad = walk(join(root, 'src')).filter(f => /\.jsx$/.test(f))
+      .filter(f => /\?\s*'…'\s*:/.test(readFileSync(f, 'utf8')))
+      .map(f => relative(root, f))
+    expect(bad).toEqual([])
+  })
 })

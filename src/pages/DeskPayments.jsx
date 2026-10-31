@@ -16,6 +16,7 @@ import home from './DeskHome.module.css'
 import { DeskAddButton } from '../components/DeskAddButton'
 import { CategoryRing } from '../components/CategoryRing'
 import styles from './DeskPayments.module.css'
+import { LoadingDots } from '../components/LoadingDots'
 
 // Gastos e ingresos de escritorio (≥1100px, v0.9.825) — diseño aprobado por
 // Johnatan con mockup. Mismo lenguaje visual que DeskHome (encabezado con
@@ -164,7 +165,7 @@ export function DeskPayments({ d, tablet = false }) {
                     </>
                   ) : (
                     <>
-                      <span className={home.tileNum}>{balance.loading ? <Bone w={150} h={36} r={8} /> : <>{availInt}<small>{availCents}</small></>}</span>
+                      <span className={home.tileNum}>{balance.loading ? <LoadingDots /> : <>{availInt}<small>{availCents}</small></>}</span>
                       <div className={styles.heroTrack}><i className={`${styles.heroFill} ${tone}`} style={{ width: `${balance.loading ? 0 : balance.gastoPct}%` }} /></div>
                       <span className={home.tileSub}>{balance.loading ? '' : t('deskPayments.usedPct', { pct: Math.round(balance.gastoPct) })}{tablet && !balance.loading && <span className={styles.subSecond}>{t('paymentsPage.periodIncome')} {fmt(balance.ingresoTotal)}</span>}</span>
                     </>
@@ -174,7 +175,7 @@ export function DeskPayments({ d, tablet = false }) {
                 {/* Gastado */}
                 <div className={`${home.tile} ${styles.tSpent}`}>
                   <span className={home.tileLabel}>{t('paymentsPage.spent')}</span>
-                  <span className={home.tileNum}>{balance.loading ? <Bone w={150} h={36} r={8} /> : <>{spentInt}<small>{spentCents}</small></>}</span>
+                  <span className={home.tileNum}>{balance.loading ? <LoadingDots /> : <>{spentInt}<small>{spentCents}</small></>}</span>
                   <span className={home.tileSub}>{balance.loading || activeSpaceId ? '' : t('deskPayments.ofIncome', { amount: fmt(balance.ingresoTotal) })}</span>
                 </div>
 
@@ -189,7 +190,7 @@ export function DeskPayments({ d, tablet = false }) {
                   )}
                   <span className={home.tileLabel}>{activeSpaceId ? t('paymentsPage.sharedFund') : t('paymentsPage.extrasTitle')}</span>
                   <span className={home.tileNum}>
-                    {(activeSpaceId ? fund.loading : !incomes.loaded) ? <Bone w={130} h={36} r={8} /> : <>{extraInt}<small>{extraCents}</small></>}
+                    {(activeSpaceId ? fund.loading : !incomes.loaded) ? <LoadingDots /> : <>{extraInt}<small>{extraCents}</small></>}
                   </span>
                   <span className={home.tileSub}>
                     {activeSpaceId ? (
@@ -203,7 +204,7 @@ export function DeskPayments({ d, tablet = false }) {
                 {/* Promedio mensual */}
                 <div className={`${home.tile} ${styles.tAvg}`}>
                   <span className={home.tileLabel}>{t('paymentsPage.monthlyAverage')}</span>
-                  <span className={home.tileNum}>{dataLoading ? <Bone w={130} h={36} r={8} /> : avgInt}</span>
+                  <span className={home.tileNum}>{dataLoading ? <LoadingDots /> : avgInt}</span>
                   <span className={home.tileSub}>{dataLoading ? '' : <>{t('paymentsPage.totalMonths', { count: chart.monthsBack })} <b>{fmt(chart.grandTotal)}</b></>}</span>
                 </div>
               </section>

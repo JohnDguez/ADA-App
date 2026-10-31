@@ -10,6 +10,7 @@ import { catInk } from '../lib/colorUtils'
 import { fmt, getMonthsShort } from '../lib/utils'
 import styles from './MobileGoals.module.css'
 import { usePremiumCta } from '../lib/premiumOffer'
+import { LoadingDots } from '../components/LoadingDots'
 
 // Metas móvil (<768px, v0.9.910) — diseño aprobado con mockup. La lógica, el
 // detalle y los modales siguen en GoalsPage.jsx: aquí solo se pinta lo que
@@ -83,8 +84,7 @@ export function MobileGoals({ d }) {
   } = d
   const grown = useGrown(goalsView)
   const heroGrown = useGrown('hero')
-  if (goalsLoading) return <div className={styles.root} data-coachmark="metas-resumen"><GoalCardSkeleton count={2} /></div>
-  if (noGoalsAtAll) {
+  if (!goalsLoading && noGoalsAtAll) {
     return (
       <div className={styles.root} data-coachmark="metas-resumen">
         <EmptyState mobile icon={PiggyBank} title={t('goalsPage.noGoalsAtAllTitle')} subtitle={t('goalsPage.noGoalsAtAllSubtitle')} onClick={onAdd} />
@@ -101,18 +101,18 @@ export function MobileGoals({ d }) {
     <div className={styles.root}>
       <section data-coachmark="metas-resumen" className={styles.card}>
         <div className={styles.label}>{t('goalsPage.totalRemaining')}</div>
-        <div className={styles.bigNum}><Money text={fmt(totalRestante)} /></div>
+        <div className={styles.bigNum}>{goalsLoading ? <LoadingDots /> : <Money text={fmt(totalRestante)} />}</div>
         <div className={styles.track}><u style={{ width: heroGrown ? `${overallPct}%` : '0%' }} /></div>
         <div className={styles.sub}>{t('mobileGoals.overallPct', { pct: overallPct })}</div>
         <div className={styles.tiles}>
           <div className={styles.tile}>
             <span>{t('mobileGoals.savedTile')}</span>
-            <b><Money text={fmt(totalAhorrado)} /></b>
+            <b>{goalsLoading ? <LoadingDots /> : <Money text={fmt(totalAhorrado)} />}</b>
             <em>{t('deskGoals.savedSub', { count: activeGoals.length })}</em>
           </div>
           <div className={styles.tile}>
             <span>{t('mobileGoals.doneTile')}</span>
-            <b>{completedGoals.length}<small>/{activeGoals.length + completedGoals.length}</small></b>
+            <b>{goalsLoading ? <LoadingDots /> : <>{completedGoals.length}<small>/{activeGoals.length + completedGoals.length}</small></>}</b>
             <em>{lastDone ? t('deskGoals.lastDone', { name: lastDone.name }) : t('deskGoals.noneDone')}</em>
           </div>
         </div>
@@ -130,7 +130,9 @@ export function MobileGoals({ d }) {
       </div>
 
       <div key={goalsView} className={styles.list}>
-        {showing.length === 0 ? (
+        {goalsLoading ? (
+          <GoalCardSkeleton count={2} />
+        ) : showing.length === 0 ? (
           goalsView === 'activas'
             ? <EmptyState mobile icon={PiggyBank} title={t('goalsPage.noActiveGoalsTitle')} subtitle={t('goalsPage.noActiveGoalsSubtitle')} onClick={onAdd} />
             : <EmptyState mobile icon={Target} title={t('goalsPage.noCompletedGoalsTitle')} subtitle={t('goalsPage.noCompletedGoalsSubtitle')} />

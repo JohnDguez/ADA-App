@@ -19,6 +19,8 @@ import { SubpageHeader } from './SubpageHeader'
 import home from '../pages/DeskHome.module.css'
 import tb from '../pages/settings/SettingsCobroTab.module.css'
 import { CreditCard as CreditCardIcon } from '@phosphor-icons/react/dist/csr/CreditCard'
+import { LoadingDots } from './LoadingDots'
+import { PaymentRowSkeleton } from './SkeletonLoader'
 
 // Barra segmentada de "Por pagar" (v0.9.587, variante A elegida por Johnatan): un
 // tramo por cada parte de lo que se debe (estado de cuenta, ciclo en curso, planes
@@ -273,7 +275,7 @@ export function CardDetailPanel({ card, payments, onBack, onEdit, onDelete, onPa
               <div className={dd.owedHead}>
                 <div>
                   <div className={dd.key}>{t('cards.pendingCreditTotal')}</div>
-                  <div className={dd.big}>{fmt(totalOwed)}</div>
+                  <div className={dd.big}>{payments == null ? <LoadingDots /> : fmt(totalOwed)}</div>
                 </div>
                 {onPayNow && <button type="button" className={deskStyles.btn} onClick={() => onPayNow(card)}>{t('cards.payNow.button')}</button>}
               </div>
@@ -293,7 +295,7 @@ export function CardDetailPanel({ card, payments, onBack, onEdit, onDelete, onPa
           ) : (
             <div className={deskStyles.fill}>
               <div className={dd.key}>{t('cards.detail.paidWithCard')}</div>
-              <div className={dd.big}>{fmt(total)}</div>
+              <div className={dd.big}>{payments == null ? <LoadingDots /> : fmt(total)}</div>
               <div className={dd.hint}>{wide ? t('cards.desk.debitNote') : t('cards.desk.paidHint')}</div>
               {wide && spendByCat.length > 0 && (
                 <>
@@ -318,8 +320,8 @@ export function CardDetailPanel({ card, payments, onBack, onEdit, onDelete, onPa
                 <div className={dd.tlTrack} style={{ '--now': `${tl.nowPct}%` }}>
                   <i />
                   <span className={`${dd.tlDot} ${dd.tlDotOn}`} style={{ left: '0%' }} />
-                  {tl.due && <span className={dd.tlDot} style={{ left: `${tl.duePct}%` }} />}
-                  <span className={dd.tlDot} style={{ left: '100%' }} />
+                  {tl.due && <span className={`${dd.tlDot} ${tl.nowPct >= tl.duePct ? dd.tlDotOn : ''}`} style={{ left: `${tl.duePct}%` }} />}
+                  <span className={`${dd.tlDot} ${tl.nowPct >= 100 ? dd.tlDotOn : ''}`} style={{ left: '100%' }} />
                 </div>
                 <div className={dd.tlLabels}>
                   <div><b>{tl.prev}</b>{t('cards.tablet.cutLabel')}</div>
@@ -360,7 +362,8 @@ export function CardDetailPanel({ card, payments, onBack, onEdit, onDelete, onPa
           )}
         </div>
 
-        {groups.length === 0 && <div className={`${deskStyles.fill} ${dd.empty}`}>{t('cards.detail.noHistory')}</div>}
+        {payments == null && <PaymentRowSkeleton count={3} />}
+        {payments != null && groups.length === 0 && <div className={`${deskStyles.fill} ${dd.empty}`}>{t('cards.detail.noHistory')}</div>}
         {groups.map(g => (
           <div key={g.label}>
             <div className={deskStyles.sec}>{g.label}</div>
@@ -442,7 +445,7 @@ export function CardDetailPanel({ card, payments, onBack, onEdit, onDelete, onPa
       {card.kind === 'credit' ? (
         <div className={md.sum}>
           <div className={md.key}>{t('cards.pendingCreditTotal')}</div>
-          <div className={md.big}>{fmt(totalOwed)}</div>
+          <div className={md.big}>{payments == null ? <LoadingDots /> : fmt(totalOwed)}</div>
           <DebtBar debt={debt} label={t('cards.bento.donutLabel')} />
           {debtLegend}
           {tl && (
@@ -450,8 +453,8 @@ export function CardDetailPanel({ card, payments, onBack, onEdit, onDelete, onPa
               <div className={styles.tlTrack} style={{ '--now': `${tl.nowPct}%` }}>
                 <i />
                 <span className={`${styles.tlDot} ${styles.tlDotOn}`} style={{ left: '0%' }} />
-                {tl.due && <span className={styles.tlDot} style={{ left: `${tl.duePct}%` }} />}
-                <span className={styles.tlDot} style={{ left: '100%' }} />
+                {tl.due && <span className={`${styles.tlDot} ${tl.nowPct >= tl.duePct ? styles.tlDotOn : ''}`} style={{ left: `${tl.duePct}%` }} />}
+                <span className={`${styles.tlDot} ${tl.nowPct >= 100 ? styles.tlDotOn : ''}`} style={{ left: '100%' }} />
               </div>
               <div className={styles.tlLabels}>
                 <div className={styles.tlLabelStart}><b>{tl.prev}</b>{t('cards.tablet.cutLabel')}</div>
@@ -480,7 +483,7 @@ export function CardDetailPanel({ card, payments, onBack, onEdit, onDelete, onPa
       ) : (
         <div className={md.sum}>
           <div className={md.key}>{t('cards.detail.paidWithCard')}</div>
-          <div className={md.big}>{fmt(total)}</div>
+          <div className={md.big}>{payments == null ? <LoadingDots /> : fmt(total)}</div>
         </div>
       )}
 
@@ -492,7 +495,8 @@ export function CardDetailPanel({ card, payments, onBack, onEdit, onDelete, onPa
       </div>
 
       <div className={styles.historyList}>
-        {groups.length === 0 && (
+        {payments == null && <PaymentRowSkeleton count={3} />}
+        {payments != null && groups.length === 0 && (
           <div className={styles.empty}>{t('cards.detail.noHistory')}</div>
         )}
         {groups.map(g => (

@@ -15,6 +15,7 @@ import { useHeaderBackground, HEADER_IMAGES } from '../hooks/useHeaderBackground
 import { fmt, dateToStr, daysDiff } from '../lib/utils'
 import { PeriodGauge } from '../components/PeriodGauge'
 import styles from './DeskHome.module.css'
+import { LoadingDots } from '../components/LoadingDots'
 
 // Inicio de escritorio (≥1100px, v0.9.819) — diseño propio aprobado por
 // Johnatan con mockup: encabezado con saludo + imagen de fondo según la hora,
@@ -254,7 +255,7 @@ export function DeskHome({
                       <span className={styles.tileLabel}>{tile.label}</span>
                       {tile.onClick && <span className={styles.tileArrow} aria-hidden="true"><ArrowUpRight size={16} strokeWidth={1.8} /></span>}
                       <span className={styles.tileNum}>
-                        {dataLoading ? '…' : <>{tile.int}{tile.cents && <small>{tile.cents}</small>}{tile.unit && <small className={styles.unit}> {tile.unit}</small>}</>}
+                        {dataLoading ? <LoadingDots /> : <>{tile.int}{tile.cents && <small>{tile.cents}</small>}{tile.unit && <small className={styles.unit}> {tile.unit}</small>}</>}
                       </span>
                       <span className={styles.tileSub}>{dataLoading ? '' : tile.sub}</span>
                     </Wrap>
@@ -331,7 +332,7 @@ export function DeskHome({
                   <section className={`${styles.card} ${styles.nextCard}`}>
                     <h2 className={styles.cardTitle}>{t('deskHome.nextTitle')}</h2>
                     <div className={styles.range}>{nextRangeLabel}</div>
-                    <div className={styles.nextNum}>{dataLoading ? '…' : <>{nextInt}<small>{nextCents}</small></>}</div>
+                    <div className={styles.nextNum}>{dataLoading ? <LoadingDots /> : <>{nextInt}<small>{nextCents}</small></>}</div>
                     <div className={styles.range}><b>{t('deskHome.nextFixed', { count: nextFixed })}</b> · <b>{t('deskHome.nextVariable', { count: nextVariable })}</b></div>
                     {weekCount > 1 && (
                       <div className={styles.weekNav}>

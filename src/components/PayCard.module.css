@@ -581,7 +581,12 @@
   /* Monto variable sin monto: "+ Agregar monto" como texto de acento, sin caja */
   .desk .captureButton { background: none; color: var(--accent); border: 0; padding: 0; border-radius: 0; font-size: clamp(0.78rem, 3.3vw, 0.875rem); font-weight: 700; white-space: nowrap; }
   .desk .variableGroup { gap: 0.2rem; }
-  /* Sin hover en el celular: el check va verde desde el inicio (v0.9.898) */
+}
+
+/* Móvil Y tablet (<1100px, v0.9.974, DISENO.md §6): sin hover, el check de un
+   pago pendiente va verde desde el inicio; en escritorio sigue apagado y se
+   pone verde al pasar el cursor. */
+@media (max-width: 1099px) {
   .desk .markPaidButton:not(.markPaidLocked) { background: var(--paid); border-color: var(--paid); }
   .desk .markPaidButton:not(.markPaidLocked) svg { stroke: var(--pay-icon); }
 }

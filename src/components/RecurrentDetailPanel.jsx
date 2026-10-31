@@ -7,6 +7,8 @@ import { catInk } from '../lib/colorUtils'
 import { supabase } from '../lib/supabase'
 import styles from './RecurrentDetailPanel.module.css'
 import { useScrollLock } from '../lib/scrollLock'
+import { LoadingDots } from './LoadingDots'
+import { Bone } from './SkeletonLoader'
 
 function fmtDateFull(value) {
   const d = new Date(value)
@@ -74,14 +76,21 @@ export function RecurrentDetailPanel({
   // Lo que sí está en memoria gana (es lo más fresco, incluye cambios
   // optimistas); lo traído aparte solo rellena lo que falta.
   const [olderResolved, setOlderResolved] = useState([])
+  // v0.9.974 (DISENO.md §7b): mientras llega el historial completo, los totales
+  // muestran puntos de carga y la lista un esqueleto — antes aparecían pagos
+  // "de la nada" unos segundos después de abrir el detalle.
+  const [historyLoading, setHistoryLoading] = useState(true)
   useEffect(() => {
     let alive = true
+    setHistoryLoading(true)
     supabase.from('payments').select('*')
       .eq('parent_id', master.id)
       .or('is_paid.eq.true,is_postponed.eq.true')
-      .then(({ data }) => { if (alive && data) setOlderResolved(data) })
+      .then(({ data }) => { if (!alive) return; if (data) setOlderResolved(data); setHistoryLoading(false) },
+        () => { if (alive) setHistoryLoading(false) })
     return () => { alive = false }
   }, [master.id])
+  const HL = historyLoading
   const inMemory    = payments.filter(p => p.parent_id === master.id)
   const inMemoryIds = new Set(inMemory.map(p => p.id))
   const children    = [...inMemory, ...olderResolved.filter(p => !inMemoryIds.has(p.id))]
@@ -197,13 +206,13 @@ export function RecurrentDetailPanel({
         <div className={styles.dHero}>
           <div className={styles.dTop}>
             <span>{isInstallment ? t('recurrentDetailPanel.paidLabel') : t('recurrentDetailPanel.totalPaidLabel')}</span>
-            <span>{isInstallment ? `${installmentsPaid}/${totalInstallments} ${t('recurrentDetailPanel.paidSuffix')}` : getFrequencyLabel(master.recur_freq)}</span>
+            <span>{isInstallment ? (HL ? <LoadingDots /> : `${installmentsPaid}/${totalInstallments} ${t('recurrentDetailPanel.paidSuffix')}`) : getFrequencyLabel(master.recur_freq)}</span>
           </div>
-          <div className={styles.dBig}>{fmt(paidSum).replace(/\.\d+$/, '')}<small>{fmt(paidSum).match(/\.\d+$/)?.[0] || ''}</small></div>
+          <div className={styles.dBig}>{HL ? <LoadingDots /> : <>{fmt(paidSum).replace(/\.\d+$/, '')}<small>{fmt(paidSum).match(/\.\d+$/)?.[0] || ''}</small></>}</div>
           {isInstallment ? (
             <>
               <div className={styles.dOf}>{t('deskRecurrents.ofTarget', { amount: fmt(totalAmount), pct: percent })}</div>
-              <div className={styles.dTrack}><u style={{ width: `${percent}%`, background: catColor }} /></div>
+              <div className={styles.dTrack}><u style={{ width: `${HL ? 0 : percent}%`, background: catColor }} /></div>
               <div className={styles.dFoot}>
                 <span>{t('recurrentDetailPanel.nextLabel')}: {master.paused ? t('recurrentsPage.paused') : nextChild ? fmtDateShort(nextChild.due_date) : '—'}{abonadoAlProximo > 0 && ` · ${t('recurrentDetailPanel.alreadyAbonado', { amount: fmt(abonadoAlProximo) })}`}</span>
                 <span>{t('recurrentDetailPanel.referenceAmount', { amount: fmt(master.amount) })} · {getFrequencyLabel(master.recur_freq)}</span>
@@ -226,7 +235,7 @@ export function RecurrentDetailPanel({
         <>
           <div className={styles.ring} style={{ background: `conic-gradient(var(--accent) 0% ${percent}%, var(--border) ${percent}% 100%)` }}>
             <div className={styles.ringInner}>
-              <div className={styles.ringPercent}>{installmentsPaid}/{totalInstallments}</div>
+              <div className={styles.ringPercent}>{HL ? <LoadingDots /> : `${installmentsPaid}/${totalInstallments}`}</div>
               <div className={styles.ringSub}>{t('recurrentDetailPanel.paidSuffix')}</div>
             </div>
           </div>
@@ -237,7 +246,7 @@ export function RecurrentDetailPanel({
           <div className={styles.statsRow}>
             <div className={styles.statBox}>
               <div className={styles.statLabel}>{t('recurrentDetailPanel.paidLabel')}</div>
-              <div className={styles.statValue}>{fmt(paidSum)} <span className={styles.statValueMuted}>/ {fmt(totalAmount)}</span></div>
+              <div className={styles.statValue}>{HL ? <LoadingDots /> : fmt(paidSum)} <span className={styles.statValueMuted}>/ {fmt(totalAmount)}</span></div>
             </div>
             <div className={styles.statBox}>
               <div className={styles.statLabel}>{t('recurrentDetailPanel.nextLabel')}</div>
@@ -260,7 +269,7 @@ export function RecurrentDetailPanel({
         <>
           {/* Total pagado histórico (v0.9.740): grande, y debajo la frecuencia,
               categoría y (si aplica) el monto fijo. Un pospuesto no suma. */}
-          <div className={styles.bigAmount}>{fmt(paidSum)}</div>
+          <div className={styles.bigAmount}>{HL ? <LoadingDots /> : fmt(paidSum)}</div>
           <div className={styles.bigLabel}>{t('recurrentDetailPanel.totalPaidLabel')}</div>
           <div className={styles.subtext}>
             {!master.is_variable && <>{fmt(master.amount)} · </>}
@@ -271,7 +280,7 @@ export function RecurrentDetailPanel({
           <div className={styles.statsRow}>
             <div className={styles.statBox}>
               <div className={styles.statLabel}>{t('recurrentDetailPanel.completedLabel')}</div>
-              <div className={styles.statValue}>{paidCount}</div>
+              <div className={styles.statValue}>{HL ? <LoadingDots /> : paidCount}</div>
             </div>
             <div className={styles.statBox}>
               <div className={styles.statLabel}>{t('recurrentDetailPanel.nextLabel')}</div>
@@ -288,7 +297,11 @@ export function RecurrentDetailPanel({
       )}
 
       <div className={styles.historyTitle}>{t('goalDetailPanel.historyTitle')}</div>
-      {paidChildren.length === 0 ? (
+      {HL ? (
+        <div className={styles.historyList} aria-busy="true">
+          {[0, 1, 2].map(i => <div key={i} className={styles.historyRow}><Bone w="100%" h={40} r={12} /></div>)}
+        </div>
+      ) : paidChildren.length === 0 ? (
         <div className={styles.historyEmpty}>{t('recurrentDetailPanel.historyEmpty')}</div>
       ) : (
         <div className={`${styles.historyList} ${desk && !mobile ? 'scroll-y' : ''}`}>

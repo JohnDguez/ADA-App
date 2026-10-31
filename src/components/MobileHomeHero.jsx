@@ -4,6 +4,7 @@ import { PeriodGauge } from './PeriodGauge'
 import { Bone } from './SkeletonLoader'
 import { fmt, daysDiff } from '../lib/utils'
 import styles from './MobileHomeHero.module.css'
+import { LoadingDots } from './LoadingDots'
 
 function splitMoney(str) {
   const i = str.lastIndexOf('.')
@@ -33,13 +34,13 @@ export function MobileHomeHero({
     return (
       <div className={styles.card}>
         <div className={styles.label}>{t('deskHome.nextTitle')}</div>
-        <div className={styles.num}>{dataLoading ? '…' : <>{int}<small>{cents}</small></>}</div>
+        <div className={styles.num}>{dataLoading ? <LoadingDots /> : <>{int}<small>{cents}</small></>}</div>
         <div className={styles.sub}>{nextRangeLabel}</div>
         <PeriodGauge empty paidPct={0} label={t('deskHome.nextTitle')}
           center={<><span className={styles.smallTop}>{t('homePage.nextStartsLabel')}</span><b className={styles.centerText}>{t('homePage.nextStartsDays', { count: nextStartsInDays })}</b></>} />
         <div className={`${styles.tiles} ${styles.tilesTwo}`}>
-          <div className={styles.tile}><div className={styles.tileLabel}>{t('homePage.statPayments')}</div><div className={styles.tileNum}>{dataLoading ? '…' : nextFixed}</div></div>
-          <div className={styles.tile}><div className={styles.tileLabel}>{t('homePage.statToConfirm')}</div><div className={styles.tileNum}>{dataLoading ? '…' : nextVariable}</div></div>
+          <div className={styles.tile}><div className={styles.tileLabel}>{t('homePage.statPayments')}</div><div className={styles.tileNum}>{dataLoading ? <LoadingDots /> : nextFixed}</div></div>
+          <div className={styles.tile}><div className={styles.tileLabel}>{t('homePage.statToConfirm')}</div><div className={styles.tileNum}>{dataLoading ? <LoadingDots /> : nextVariable}</div></div>
         </div>
       </div>
     )
@@ -60,7 +61,7 @@ export function MobileHomeHero({
     <div className={styles.card}>
       <div className={styles.label}>{t('deskHome.totalLabel')}</div>
       <button type="button" className={styles.arrow} onClick={onGoPayments} aria-label={t('deskHome.goPayments')}><ArrowUpRight size={16} strokeWidth={1.8} /></button>
-      <div className={styles.num}>{dataLoading ? '…' : <>{totInt}<small>{totCents}</small></>}</div>
+      <div className={styles.num}>{dataLoading ? <LoadingDots /> : <>{totInt}<small>{totCents}</small></>}</div>
       <div className={styles.sub}>{dataLoading ? <Bone w={120} h={12} r={4} /> : `${periodRangeLabel} · ${t('homePage.periodDay', { day: periodDayNumber, total: periodDayTotal })}`}</div>
       <PeriodGauge empty={!hasPayments || dataLoading} paidPct={hasPayments && !dataLoading ? pctPagado : 0} overduePct={hasPayments && !dataLoading ? overduePct : 0}
         label={`${t('deskHome.gaugeTitle')}: ${pctPagado}%`} centerLabel={hasPayments ? t('deskHome.gaugePaid') : t('deskHome.gaugeEmpty')} />
@@ -69,11 +70,11 @@ export function MobileHomeHero({
       <div className={`${styles.tiles} ${styles.tilesTwo}`}>
         <div className={styles.tile}>
           <div className={styles.tileLabel}><i className={styles.dotPaid} />{t('deskHome.paidLabel')}</div>
-          <div className={`${styles.tileNum} ${tileSize(paidInt)}`}>{dataLoading ? '…' : paidInt}</div>
+          <div className={`${styles.tileNum} ${tileSize(paidInt)}`}>{dataLoading ? <LoadingDots /> : paidInt}</div>
         </div>
         <div className={styles.tile}>
           <div className={styles.tileLabel}><i className={styles.dotPending} />{t('deskHome.pendingLabel')}</div>
-          <div className={`${styles.tileNum} ${tileSize(pendInt)}`}>{dataLoading ? '…' : pendInt}</div>
+          <div className={`${styles.tileNum} ${tileSize(pendInt)}`}>{dataLoading ? <LoadingDots /> : pendInt}</div>
         </div>
       </div>
       {!dataLoading && (first ? (

@@ -2808,5 +2808,8 @@
     "text": "Cambiaste <b>{{field}}</b> pero no lo guardaste. Si sales ahora, se pierde.",
     "stay": "Seguir editando",
     "leave": "Salir sin guardar"
+  },
+  "common": {
+    "loading": "Cargando"
   }
 }

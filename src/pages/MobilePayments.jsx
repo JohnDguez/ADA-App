@@ -10,6 +10,7 @@ import { Bone, PaymentRowSkeleton, CategoryListSkeleton } from '../components/Sk
 import { getBank, bankColorVar } from '../lib/cardCatalog'
 import { fmt, getMonths, getMonthsShort, getCatColor, getCategoryLabel } from '../lib/utils'
 import styles from './MobilePayments.module.css'
+import { LoadingDots } from '../components/LoadingDots'
 
 // Gastos e ingresos móvil (<768px, v0.9.902) — opción A aprobada con mockup.
 // Toda la lógica y los modales siguen en PaymentsPage.jsx: aquí solo se pinta
@@ -54,11 +55,11 @@ function AvailableCard({ d }) {
   return (
     <div data-coachmark="gastos-disponible-card" className={styles.card}>
       <div className={styles.label}>{t('paymentsPage.availableThisPeriod')}</div>
-      {balance.loading ? <Bone w={140} h={36} r={8} style={{ marginTop: '0.5rem' }} /> : <div className={`${styles.bigNum} ${tone}`}><Money text={balance.amountText} /></div>}
+      <div className={`${styles.bigNum} ${balance.loading ? '' : tone}`}>{balance.loading ? <LoadingDots /> : <Money text={balance.amountText} />}</div>
       <div className={styles.track}><i className={`${styles.fill} ${tone}`} style={{ width: balance.loading || !grown ? '0%' : `${pct}%` }} /></div>
       <div className={styles.tiles}>
-        <div className={styles.tile}><span>{t('paymentsPage.spent')}</span><b>{balance.loading ? '…' : <Money text={fmt(balance.totalGastos)} />}</b></div>
-        <div className={styles.tile}><span>{t('paymentsPage.periodIncome')}</span><b>{balance.loading ? '…' : <Money text={fmt(balance.ingresoTotal)} />}</b></div>
+        <div className={styles.tile}><span>{t('paymentsPage.spent')}</span><b>{balance.loading ? <LoadingDots /> : <Money text={fmt(balance.totalGastos)} />}</b></div>
+        <div className={styles.tile}><span>{t('paymentsPage.periodIncome')}</span><b>{balance.loading ? <LoadingDots /> : <Money text={fmt(balance.ingresoTotal)} />}</b></div>
       </div>
       <div className={styles.linkRow}>
         <button type="button" data-coachmark="gastos-add-income-button" className={styles.linkBtn} onClick={incomes.onAdd}><Plus size={14} strokeWidth={2.4} />{t('paymentsPage.addIncome')}</button>
@@ -76,7 +77,7 @@ function FundCard({ d }) {
   return (
     <div className={styles.card}>
       <div className={styles.label}>{t('paymentsPage.sharedFund')}</div>
-      {fund.loading ? <Bone w={140} h={36} r={8} style={{ marginTop: '0.5rem' }} /> : <div className={styles.bigNum}><Money text={fmt(fund.balance)} /></div>}
+      <div className={styles.bigNum}>{fund.loading ? <LoadingDots /> : <Money text={fmt(fund.balance)} />}</div>
       <div className={styles.linkRow}>
         <button type="button" className={styles.linkBtn} onClick={fund.onAdd}><Plus size={14} strokeWidth={2.4} />{t('deskPayments.addShort')}</button>
         {fund.ledgerCount > 0 && <button type="button" className={styles.linkMuted} onClick={fund.onManage}>{t('paymentsPage.movementCount', { count: fund.ledgerCount })}</button>}
@@ -189,8 +190,8 @@ function AnalysisTab({ d }) {
     <>
       <div className={styles.card}>
         <div className={styles.twoCols}>
-          <div><span className={styles.label}>{t('paymentsPage.totalMonths', { count: chart.monthsBack })}</span><b className={styles.midNum}>{dataLoading ? <Bone w={110} h={28} r={6} /> : <Money text={fmt(chart.grandTotal)} />}</b></div>
-          <div><span className={styles.label}>{t('paymentsPage.monthlyAverage')}</span><b className={styles.midNum}>{dataLoading ? <Bone w={110} h={28} r={6} /> : whole(Math.round(chart.avgMonthly))}</b></div>
+          <div><span className={styles.label}>{t('paymentsPage.totalMonths', { count: chart.monthsBack })}</span><b className={styles.midNum}>{dataLoading ? <LoadingDots /> : <Money text={fmt(chart.grandTotal)} />}</b></div>
+          <div><span className={styles.label}>{t('paymentsPage.monthlyAverage')}</span><b className={styles.midNum}>{dataLoading ? <LoadingDots /> : whole(Math.round(chart.avgMonthly))}</b></div>
         </div>
       </div>
 

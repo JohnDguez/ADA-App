@@ -11,6 +11,7 @@ import { activePlansCount, nextCutPlansTotal, getPlans } from '../../lib/cardPla
 import { cutBadgeLabel, dayMonthShort } from '../../lib/cutLabels'
 import { fmt, today } from '../../lib/utils'
 import mb from './SettingsCardsMobile.module.css'
+import { LoadingDots } from '../../components/LoadingDots'
 
 // Mis tarjetas móvil (<768px, v0.9.922, opción B elegida por Johnatan):
 // carrusel de tarjetas con snap + resumen de la tarjeta enfocada debajo.
@@ -110,7 +111,7 @@ export function SettingsCardsMobile({
                 <div className={mb.head}>
                   <div className={mb.grow}>
                     <small>{t('cards.mobile.owedOf', { name: nameOf(card) })}</small>
-                    <b className={mb.big}>{ld ? dash : fmt(x.owed)}</b>
+                    <b className={mb.big}>{ld ? <LoadingDots /> : fmt(x.owed)}</b>
                   </div>
                   {cyc && (
                     <div className={mb.right}>
@@ -144,11 +145,11 @@ export function SettingsCardsMobile({
                 <div className={mb.head}>
                   <div className={mb.grow}>
                     <small>{t('cards.mobile.spentOf', { name: nameOf(card) })}</small>
-                    <b className={mb.big}>{ld ? dash : fmt(x.spent)}</b>
+                    <b className={mb.big}>{ld ? <LoadingDots /> : fmt(x.spent)}</b>
                   </div>
                   <div className={mb.right}>
                     <small>{t('cards.tablet.moves')}</small>
-                    <b>{ld ? dash : x.count}</b>
+                    <b>{ld ? <LoadingDots /> : x.count}</b>
                   </div>
                 </div>
                 <div className={mb.bar}><i style={{ width: ld ? '0%' : `${Math.round(x.pct * 100)}%` }} /></div>

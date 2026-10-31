@@ -2020,7 +2020,7 @@ export default function App() {
           // crédito" en Mis tarjetas necesitan los pagos PERSONALES. Si el
           // usuario está viendo un Espacio Compartido, `payments` trae los
           // de ESE espacio — se manda null en vez de un número equivocado.
-          personalPayments={cardPayments}
+          personalPayments={paymentsSpaceId === null && paymentsLoading ? null : cardPayments}
           onPayCardNow={setPayCardNowCard}
           onOpenImport={openImport}
           importProps={{ sharedActive: !!activeSpaceId, onFetchExisting: findExistingForImport, onImport: importPayments }}
