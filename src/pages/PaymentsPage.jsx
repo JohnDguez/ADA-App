@@ -52,57 +52,12 @@ function fmtChartAmount(n) {
 
 // ── Helpers de periodo anterior ───────────────────────────────────────────────
 function prevPeriod(profile) {
+  // El periodo anterior termina el día antes del inicio del actual y empieza
+  // donde cobroPeriod() lo ubique desde ese día (respeta meses cortos y el
+  // recorrido por fin de semana, v0.9.966).
   const { start } = cobroPeriod(profile)
-  // El periodo anterior termina el día antes del inicio del actual
   const prevEnd = addDays(start, -1)
-  // Para encontrar el inicio del periodo anterior, usamos un perfil "desplazado"
-  // Buscamos el periodo que contiene prevEnd
-  const fakeCfg = { ...profile }
-  // Ajustamos la fecha "today" simulando que estamos en prevEnd
-  // No podemos cambiar today() globalmente, así que calculamos manualmente
-  const t = prevEnd
-  const freq = profile.cobro_freq
-
-  if (freq === 'weekly') {
-    const wd = profile.cobro_weekday ?? 5
-    const td = t.getDay()
-    let diffPrev = td - wd
-    if (diffPrev < 0) diffPrev += 7
-    const prevStart = addDays(t, -diffPrev)
-    return { start: prevStart, end: prevEnd }
-  }
-
-  if (freq === 'biweekly') {
-    const d1 = profile.cobro_day1 ?? 1
-    const d2 = profile.cobro_day2 ?? 16
-    const [dayA, dayB] = d1 < d2 ? [d1, d2] : [d2, d1]
-    const y = t.getFullYear()
-    const m = t.getMonth()
-    const cobroDates = [
-      new Date(y, m - 1, dayA), new Date(y, m - 1, dayB),
-      new Date(y, m, dayA),     new Date(y, m, dayB),
-      new Date(y, m + 1, dayA), new Date(y, m + 1, dayB),
-    ]
-    const past = cobroDates.filter(d => d <= t).sort((a, b) => b - a)
-    const prevStart = past[0] || new Date(y, m, dayA)
-    return { start: prevStart, end: prevEnd }
-  }
-
-  if (freq === 'monthly') {
-    const d1 = profile.cobro_day1 ?? 1
-    const y = t.getFullYear()
-    const m = t.getMonth()
-    const day = t.getDate()
-    let prevStart
-    if (day >= d1) {
-      prevStart = new Date(y, m - 1, d1)
-    } else {
-      prevStart = new Date(y, m - 2, d1)
-    }
-    return { start: prevStart, end: prevEnd }
-  }
-
-  return { start: t, end: prevEnd }
+  return { start: cobroPeriod(profile, prevEnd).start, end: prevEnd }
 }
 
 // Fila de "Por método de pago" (v0.9.487): monto, barra proporcional y,

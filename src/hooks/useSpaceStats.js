@@ -79,7 +79,7 @@ export function useSpaceStats(userId, personalConfig, spaces) {
 
     setStats(Object.fromEntries(entries))
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [userId, personalConfig?.cobro_freq, personalConfig?.cobro_day1, personalConfig?.cobro_day2, personalConfig?.cobro_weekday, JSON.stringify(spaces.map(s => s.space.id))])
+  }, [userId, personalConfig?.cobro_freq, personalConfig?.cobro_day1, personalConfig?.cobro_day2, personalConfig?.cobro_weekday, personalConfig?.cobro_weekend_shift, JSON.stringify(spaces.map(s => s.space.id))])
 
   useEffect(() => { fetchStats() }, [fetchStats])
 

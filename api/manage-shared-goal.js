@@ -1,5 +1,6 @@
 const { createClient } = require('@supabase/supabase-js')
 const applyCors = require('./_cors')
+const { cobroPeriod } = require('./_cobroPeriod')
 const { todayInTz, dateStrInTz } = require('./_tz')
 const webpush = require('web-push')
 const { notifyUsers } = require('./_notifyLib')
@@ -33,7 +34,7 @@ function money(n) {
   return sign + '$' + Math.abs(num).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 }
 
-// Reimplementación fiel de cobroPeriod()/today()/dateToStr()/addDays() de
+// cobroPeriod() vive en api/_cobroPeriod.js (v0.9.966). Reimplementación fiel de today()/dateToStr() de
 // lib/utils.js — mismo motivo que en manage-shared-fund.js: este archivo
 // corre en Node/CommonJS y no comparte el bundle del cliente. Se necesita
 // para validar el disponible PERSONAL de quien aporta del lado del
@@ -44,31 +45,6 @@ function today(timezone) {
 function dateToStr(d) {
   const y = d.getFullYear(), m = String(d.getMonth() + 1).padStart(2, '0'), day = String(d.getDate()).padStart(2, '0')
   return `${y}-${m}-${day}`
-}
-function addDays(date, n) { const d = new Date(date); d.setDate(d.getDate() + n); return d }
-
-function cobroPeriod(cfg) {
-  const t = today(cfg.timezone)
-  if (cfg.cobro_freq === 'weekly') {
-    const wd = cfg.cobro_weekday ?? 5; const td = t.getDay()
-    let diffNext = wd - td; if (diffNext <= 0) diffNext += 7
-    const nextCobro = addDays(t, diffNext); const prevCobro = addDays(nextCobro, -7)
-    return { start: prevCobro, end: addDays(nextCobro, -1) }
-  }
-  if (cfg.cobro_freq === 'biweekly') {
-    const d1 = cfg.cobro_day1 ?? 1; const d2 = cfg.cobro_day2 ?? 16
-    const [dayA, dayB] = d1 < d2 ? [d1, d2] : [d2, d1]
-    const y = t.getFullYear(); const m = t.getMonth(); const day = t.getDate()
-    if (day < dayA) {
-      const prevMonth = new Date(y, m - 1, 1)
-      const lastDayPrev = new Date(prevMonth.getFullYear(), prevMonth.getMonth() + 1, 0).getDate()
-      return { start: new Date(prevMonth.getFullYear(), prevMonth.getMonth(), Math.min(dayB, lastDayPrev)), end: new Date(y, m, dayA - 1) }
-    }
-    if (day < dayB) return { start: new Date(y, m, dayA), end: new Date(y, m, dayB - 1) }
-    const lastDay = new Date(y, m + 1, 0).getDate()
-    return { start: new Date(y, m, Math.min(dayB, lastDay)), end: addDays(new Date(y, m + 1, dayA), -1) }
-  }
-  return { start: t, end: t }
 }
 
 async function getPersonalAvailable(userId) {

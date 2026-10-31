@@ -259,7 +259,7 @@ export function SettingsExportPage({ profile, sharedSpaces, onOpenPremium, onBac
     const extraRows = space === 'personal' ? buildSalaryRows() : await fetchFundDeposits(from, to)
     return [...rows, ...extraRows].sort((a, b) => a.period_start < b.period_start ? -1 : a.period_start > b.period_start ? 1 : 0)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [fetchIngresos, space, from, to, profile.salary_enabled, profile.salary_amount, profile.cobro_freq, profile.cobro_day1, profile.cobro_day2, profile.cobro_weekday])
+  }, [fetchIngresos, space, from, to, profile.salary_enabled, profile.salary_amount, profile.cobro_freq, profile.cobro_day1, profile.cobro_day2, profile.cobro_weekday, profile.cobro_weekend_shift])
 
   // Mapa user_id → nombre, para resolver quién aportó en un gasto de
   // Espacio Compartido (payment_contributions solo trae el user_id, no el

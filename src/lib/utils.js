@@ -293,6 +293,39 @@ export function getDeleteConfirmMessage(payment) {
 // Si se pasa, retorna el periodo de cobro que CONTIENE esa fecha — esto es lo
 // que permite ubicar en qué periodo cae el vencimiento de un pago futuro,
 // sin importar qué tan lejos esté (lo usa `projectPeriodImpact`).
+// Recorrer el día de cobro cuando cae en fin de semana (v0.9.966, pedido de
+// Johnatan con mockup aprobado). `cobro_weekend_shift` en el perfil:
+//   'near' → sábado al viernes, domingo al lunes (día hábil más cercano)
+//   'prev' → sábado y domingo al viernes anterior
+//   'next' → sábado y domingo al lunes siguiente
+//   null   → no se recorre (default; así estaba la app antes)
+// Solo aplica a quincenal y mensual: en semanal el usuario ya elige el día.
+export const WEEKEND_SHIFTS = ['near', 'prev', 'next']
+const SHIFT_DAYS = { near: { 6: -1, 0: 1 }, prev: { 6: -1, 0: -2 }, next: { 6: 2, 0: 1 } }
+export function shiftPayday(date, mode) {
+  if (!SHIFT_DAYS[mode]) return date
+  const delta = SHIFT_DAYS[mode][date.getDay()]
+  return delta ? addDays(date, delta) : date
+}
+
+// Días de cobro (ya ajustados a meses cortos y, si aplica, al fin de semana)
+// de dos meses antes a dos meses después de `t`, ordenados y sin repetidos.
+// El margen de ±2 meses cubre siempre el cobro anterior y el siguiente,
+// también cuando recorrer una fecha la cambia de mes (31 sáb → 30 vie).
+function cobroDatesAround(cfg, t) {
+  const y = t.getFullYear(); const m = t.getMonth()
+  const days = cfg.cobro_freq === 'biweekly'
+    ? [cfg.cobro_day1 ?? 1, cfg.cobro_day2 ?? 16]
+    : [cfg.cobro_day1 ?? 1]
+  const out = []
+  for (let k = -2; k <= 2; k++) {
+    days.forEach(d => out.push(shiftPayday(clampedDate(y, m + k, d), cfg.cobro_weekend_shift)))
+  }
+  return out
+    .sort((a, b) => a - b)
+    .filter((d, i, arr) => i === 0 || d.getTime() !== arr[i - 1].getTime())
+}
+
 export function cobroPeriod(cfg, refDate) {
   const t = refDate || today()
   if (cfg.cobro_freq === 'weekly') {
@@ -301,61 +334,21 @@ export function cobroPeriod(cfg, refDate) {
     const nextCobro = addDays(t, diffNext); const prevCobro = addDays(nextCobro, -7)
     return { start: prevCobro, end: addDays(nextCobro, -1), nextCobro }
   }
-  if (cfg.cobro_freq === 'biweekly') {
-    const d1 = cfg.cobro_day1 ?? 1; const d2 = cfg.cobro_day2 ?? 16
-    const [dayA, dayB] = d1 < d2 ? [d1, d2] : [d2, d1]
-    const y = t.getFullYear(); const m = t.getMonth()
-    const cobroDates = [
-      clampedDate(y, m-1, dayA), clampedDate(y, m-1, dayB),
-      clampedDate(y, m,   dayA), clampedDate(y, m,   dayB),
-      clampedDate(y, m+1, dayA), clampedDate(y, m+1, dayB),
-    ]
-    const past   = cobroDates.filter(d => d <= t).sort((a,b) => b-a)
-    const future = cobroDates.filter(d => d > t).sort((a,b) => a-b)
-    const start     = past[0]   || clampedDate(y, m, dayA)
-    const nextCobro = future[0] || clampedDate(y, m+1, dayA)
-    return { start, end: addDays(nextCobro, -1), nextCobro }
-  }
-  if (cfg.cobro_freq === 'monthly') {
-    const d1 = cfg.cobro_day1 ?? 1; const y = t.getFullYear(); const m = t.getMonth()
-    const day = t.getDate()
-    let start, nextCobro
-    // El día de cobro de ESTE mes ya ajustado (31 → 30/28 en meses cortos).
-    const thisCobro = clampedDate(y, m, d1)
-    if (day >= thisCobro.getDate()) { start = thisCobro;                nextCobro = clampedDate(y, m+1, d1) }
-    else                            { start = clampedDate(y, m-1, d1);  nextCobro = thisCobro }
+  if (cfg.cobro_freq === 'biweekly' || cfg.cobro_freq === 'monthly') {
+    const dates = cobroDatesAround(cfg, t)
+    const start     = dates.filter(d => d <= t).pop()
+    const nextCobro = dates.find(d => d > t)
     return { start, end: addDays(nextCobro, -1), nextCobro }
   }
   return { start: t, end: t, nextCobro: t }
 }
 
-// Retorna el inicio y fin del SIGUIENTE periodo de cobro
+// Retorna el inicio y fin del SIGUIENTE periodo de cobro: el periodo que
+// empieza justo en el próximo cobro (mismo cálculo, desde esa fecha).
 export function nextCobroPeriod(cfg) {
   const { nextCobro } = cobroPeriod(cfg)
-  const nextStart = nextCobro
-  const freq = cfg.cobro_freq || 'biweekly'
-
-  if (freq === 'weekly') return { start: nextStart, end: addDays(nextStart, 6) }
-
-  if (freq === 'monthly') {
-    const d1 = cfg.cobro_day1 ?? 1
-    const nextNext = clampedDate(nextStart.getFullYear(), nextStart.getMonth() + 1, d1)
-    return { start: nextStart, end: addDays(nextNext, -1) }
-  }
-
-  // Quincenal
-  const d1 = cfg.cobro_day1 ?? 1; const d2 = cfg.cobro_day2 ?? 16
-  const [dayA, dayB] = d1 < d2 ? [d1, d2] : [d2, d1]
-  const y = nextStart.getFullYear(); const m = nextStart.getMonth()
-  const cobroDates = [
-    clampedDate(y, m-1, dayA), clampedDate(y, m-1, dayB),
-    clampedDate(y, m,   dayA), clampedDate(y, m,   dayB),
-    clampedDate(y, m+1, dayA), clampedDate(y, m+1, dayB),
-    clampedDate(y, m+2, dayA),
-  ]
-  const future = cobroDates.filter(d => d > nextStart).sort((a,b) => a-b)
-  const nextNext = future[0] || addDays(nextStart, 15)
-  return { start: nextStart, end: addDays(nextNext, -1) }
+  const { end } = cobroPeriod(cfg, nextCobro)
+  return { start: nextCobro, end }
 }
 
 export function nextCobroDate(cfg) { return cobroPeriod(cfg).nextCobro }

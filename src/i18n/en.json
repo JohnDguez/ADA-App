@@ -292,6 +292,23 @@
       "monthEquiv": "≈ {{amount}} per month",
       "dayLabel": "Pay day",
       "frequency": "Frequency"
+    },
+    "weekend": {
+      "title": "Move weekend paydays",
+      "subtitle": "If your payday falls on a Saturday or Sunday",
+      "near": {
+        "title": "To the nearest weekday",
+        "sub": "Saturday to Friday, Sunday to Monday"
+      },
+      "prev": {
+        "title": "To the Friday before",
+        "sub": "Saturday and Sunday are paid on Friday"
+      },
+      "next": {
+        "title": "To the Monday after",
+        "sub": "Saturday and Sunday are paid on Monday"
+      },
+      "example": "{{date}} falls on a {{weekday}} · you get paid on {{shifted}}"
     }
   },
   "settingsNotifications": {

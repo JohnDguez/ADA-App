@@ -292,6 +292,23 @@
       "monthEquiv": "≈ {{amount}} al mes",
       "dayLabel": "Día de cobro",
       "frequency": "Frecuencia"
+    },
+    "weekend": {
+      "title": "Recorrer en fin de semana",
+      "subtitle": "Si tu día de cobro cae sábado o domingo",
+      "near": {
+        "title": "Al día hábil más cercano",
+        "sub": "Sábado al viernes, domingo al lunes"
+      },
+      "prev": {
+        "title": "Al viernes anterior",
+        "sub": "Sábado y domingo se pagan el viernes"
+      },
+      "next": {
+        "title": "Al lunes siguiente",
+        "sub": "Sábado y domingo se pagan el lunes"
+      },
+      "example": "El {{date}} cae en {{weekday}} · cobras el {{shifted}}"
     }
   },
   "settingsNotifications": {
