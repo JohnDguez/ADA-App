@@ -2798,5 +2798,11 @@
     "text": "This period keeps <b>{{old}}</b>. The new amount of <b>{{new}}</b> starts on {{date}}.",
     "next": "From the next period",
     "now": "From this period"
+  },
+  "unsavedChanges": {
+    "title": "You didn't save your changes",
+    "text": "You changed <b>{{field}}</b> but didn't save it. If you leave now, it will be lost.",
+    "stay": "Keep editing",
+    "leave": "Leave without saving"
   }
 }

@@ -20,6 +20,7 @@ import { SettingsExportPage } from './settings/SettingsExportPage'
 import { SettingsCardsPage } from './settings/SettingsCardsPage'
 import styles from './SettingsPage.module.css'
 import { markBackHandled, wasBackHandled } from '../lib/backNav'
+import { getUnsavedGuard, requestLeave } from '../lib/unsavedGuard'
 import { AvatarImg } from '../components/AvatarImg'
 import { Presence } from '../components/Presence'
 import dkp from '../components/PaymentDesk.module.css'
@@ -138,6 +139,13 @@ export function SettingsPage({ profile, user, onUpdate, onUploadAvatar, onDataDe
     }
     function handle() {
       markBackHandled()
+      // Cambios sin guardar en la sub-página (v0.9.969): se devuelve la
+      // entrada que el "atrás" acaba de consumir y se pregunta antes de salir.
+      if (getUnsavedGuard()) {
+        window.history.pushState({ settingsSection: sectionRef.current, lunaTab: 'settings' }, '')
+        requestLeave(() => window.history.back())
+        return
+      }
       if (shortcutReturnRef.current) {
         const returnTo = shortcutReturnRef.current
         shortcutReturnRef.current = null
@@ -184,12 +192,12 @@ export function SettingsPage({ profile, user, onUpdate, onUploadAvatar, onDataDe
   // El botón "atrás" propio de cada sub-página también pasa por history.back(),
   // no por setSection(null) directo — así el historial del navegador queda
   // sincronizado con el estado real de React (un tap = una entrada consumida).
-  const back = () => window.history.back()
+  const back = () => requestLeave(() => window.history.back())
 
   // Tocar la pestaña "Ajustes" del nav estando dentro de una sub-página regresa
   // al menú (alcanzable con el pulgar; ver App.jsx / BottomNav).
   useEffect(() => {
-    const goHome = () => { if (sectionRef.current) window.history.back() }
+    const goHome = () => { if (sectionRef.current) requestLeave(() => window.history.back()) }
     window.addEventListener('ada:settings-home', goHome)
     return () => window.removeEventListener('ada:settings-home', goHome)
   }, [])
@@ -258,7 +266,7 @@ export function SettingsPage({ profile, user, onUpdate, onUploadAvatar, onDataDe
   const deskCurrent = VALID_SECTIONS.includes(section) ? section : 'cobro'
   const deskData = !isMobile ? {
     profile, user, initials, current: deskCurrent,
-    onSelect: s => { shortcutReturnRef.current = null; setSection(s) },
+    onSelect: s => requestLeave(() => { shortcutReturnRef.current = null; setSection(s) }),
     content: sectionEl(deskCurrent, true),
     nav: {
       cobroValue: [FREQ_LABEL[profile.cobro_freq], profile.currency].filter(Boolean).join(' · '),

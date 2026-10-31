@@ -65,6 +65,8 @@ import { InstallmentAbonarModal } from './components/InstallmentAbonarModal'
 import { SplitContributionsModal } from './components/SplitContributionsModal'
 import { PatchNotesModal } from './components/PatchNotesModal'
 import { ConfirmExitModal } from './components/ConfirmExitModal'
+import { UnsavedChangesPrompt } from './components/UnsavedChangesPrompt'
+import { getUnsavedGuard, requestLeave } from './lib/unsavedGuard'
 import { FeedbackPromptModal } from './components/FeedbackPromptModal'
 import { Toast, showToast } from './components/Toast'
 import { SkeletonLoader } from './components/SkeletonLoader'
@@ -755,7 +757,16 @@ export default function App() {
     if (!navReady) return
     const cleanup = initBackNavigation({
       getTab: () => tabRef.current,
-      goToTab: (newTab) => applyTabRef.current?.(newTab),
+      // Con cambios sin guardar, el "atrás" del sistema no cambia de pestaña:
+      // se devuelve la entrada y se pregunta (v0.9.969).
+      goToTab: (newTab) => {
+        if (getUnsavedGuard()) {
+          window.history.pushState({ lunaTab: tabRef.current }, '')
+          requestLeave(() => window.history.back())
+          return
+        }
+        applyTabRef.current?.(newTab)
+      },
       onRootReached: () => setExitConfirmOpen(true),
     })
     let sub = null
@@ -1663,8 +1674,11 @@ export default function App() {
 
   function changeTab(newTab) {
     if (newTab === tab) return
-    if (navReadyRef.current) pushTabEntry(newTab)
-    applyTab(newTab)
+    // Cambios sin guardar en la pantalla actual: preguntar antes (v0.9.969).
+    requestLeave(() => {
+      if (navReadyRef.current) pushTabEntry(newTab)
+      applyTab(newTab)
+    })
   }
 
   // Abre PremiumPage — `auto` distingue el disparo automático diario (ver
@@ -2240,6 +2254,7 @@ export default function App() {
         onRemindLater={handleFeedbackRemindLater}
       />
       <ConfirmExitModal open={exitConfirmOpen} onConfirm={confirmExit} onCancel={cancelExit} />
+      <UnsavedChangesPrompt />
       <InviteCodeModal />
       <PremiumThanksModal info={premiumThanks} onClose={() => setPremiumThanks(null)} onAddPayment={handleThanksAddPayment} />
       <UpdatePrompt />

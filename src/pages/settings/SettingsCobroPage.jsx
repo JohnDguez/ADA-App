@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { Collapse } from '../../components/Collapse'
 import { useTranslation } from 'react-i18next'
 // Ícono del encabezado vía Phosphor Icons (mismo patrón que las demás
@@ -7,6 +7,7 @@ import { Wallet } from '@phosphor-icons/react/dist/csr/Wallet'
 import { CalendarDays, CalendarRange, CalendarCheck, Coins, ChevronDown, ChevronRight, ChevronLeft } from 'lucide-react'
 import { getWeekdaysShort, nextCobroDate, cobroPeriod, periodSalary, dateToStr, fmt } from '../../lib/utils'
 import { SalaryChangePrompt } from '../../components/SalaryChangePrompt'
+import { setUnsavedGuard } from '../../lib/unsavedGuard'
 import { WeekendShiftField } from '../../components/WeekendShiftField'
 import { showToast } from '../../components/Toast'
 import { Toggle } from '../../components/SettingsShared'
@@ -57,17 +58,27 @@ export function SettingsCobroPage({ profile, onUpdate, onBack, slideClass }) {
   async function handleWeekday(day) { await onUpdate({ cobro_weekday: day }) }
   async function handleSalaryToggle() { await onUpdate({ salary_enabled: !profile.salary_enabled }) }
   async function handleMonthlyDay(day) { await onUpdate({ cobro_day1: day }) }
-  // v0.9.624 — el monto se guarda al salir del campo (sin botón), y solo si
-  // cambió; si quedó vacío/inválido se restaura el último valor guardado.
+  // v0.9.969 (pedido de Johnatan) — el monto ya NO se guarda al salir del
+  // campo: aparece un botón "Guardar" mientras haya cambios, y Enter también
+  // guarda. Si el usuario intenta salir con el monto sin guardar, se pregunta
+  // (lib/unsavedGuard.js + UnsavedChangesPrompt en App.jsx).
   // v0.9.968 — si ya había un ingreso en el periodo actual, antes de guardar se
   // pregunta desde cuándo aplica (SalaryChangePrompt); "Desde el próximo
   // periodo" guarda el monto anterior y la fecha del siguiente cobro.
   const [salaryPrompt, setSalaryPrompt] = useState(null) // { oldVal, newVal }
   const amountRef = useRef(null)
-  async function handleSalaryBlur() {
+  const salaryDirty = !!profile.salary_enabled && (parseFloat(salaryAmount) || 0) !== Number(profile.salary_amount || 0)
+  const savedAmount = profile.salary_amount || ''
+  useEffect(() => {
+    setUnsavedGuard(salaryDirty ? { field: t('settingsCobro.incomeLabel'), discard: () => setSalaryAmount(savedAmount) } : null)
+    return () => setUnsavedGuard(null)
+  }, [salaryDirty, savedAmount, t])
+  function onSalaryKey(e) {
+    if (e.key === 'Enter') { e.preventDefault(); e.currentTarget.blur(); handleSalarySave() }
+  }
+  async function handleSalarySave() {
     const val = parseFloat(salaryAmount)
     if (isNaN(val)) {
-      setSalaryAmount(profile.salary_amount || '')
       showToast(t('settingsCobro.toast.invalidAmount'))
       return
     }
@@ -92,9 +103,9 @@ export function SettingsCobroPage({ profile, onUpdate, onBack, slideClass }) {
       : { salary_amount: newVal, ...clearPending() })
     showToast(t('settingsCobro.toast.salaryUpdated'))
   }
+  // Cerrar la pregunta no descarta lo escrito: el botón "Guardar" sigue ahí.
   function cancelSalary() {
     setSalaryPrompt(null)
-    setSalaryAmount(profile.salary_amount || '')
   }
   async function handleCurrency(code) {
     setCurrencyOpen(false)
@@ -190,8 +201,13 @@ export function SettingsCobroPage({ profile, onUpdate, onBack, slideClass }) {
               {profile.salary_enabled && (
                 <div ref={amountRef} className={`${styles.amountField} ${dk.amount} ${symbol.length >= 3 ? styles.amountFieldLong : symbol.length === 2 ? styles.amountFieldMid : ''}`}>
                   <span className={styles.amountPrefix}>{symbol}</span>
-                  <AmountInput value={salaryAmount} onChange={e => setSalaryAmount(e.target.value)} onBlur={handleSalaryBlur} aria-label={t('settingsCobro.amountLabel')} placeholder="0.00" className={`field-input ${styles.amountInput}`} />
+                  <AmountInput value={salaryAmount} onChange={e => setSalaryAmount(e.target.value)} onKeyDown={onSalaryKey} enterKeyHint="done" aria-label={t('settingsCobro.amountLabel')} placeholder="0.00" className={`field-input ${styles.amountInput}`} />
                 </div>
+              )}
+              {profile.salary_enabled && (
+                <Collapse open={salaryDirty}>
+                  <button type="button" className={styles.saveSalary} onClick={handleSalarySave}>{t('buttons.save')}</button>
+                </Collapse>
               )}
             </div>
           </div>
@@ -313,8 +329,11 @@ export function SettingsCobroPage({ profile, onUpdate, onBack, slideClass }) {
           <Collapse open={!!profile.salary_enabled}>
             <div className={`${styles.amountField} ${mb.amount} ${symbol.length >= 3 ? styles.amountFieldLong : symbol.length === 2 ? styles.amountFieldMid : ''}`}>
               <span className={styles.amountPrefix}>{symbol}</span>
-              <AmountInput value={salaryAmount} onChange={e => setSalaryAmount(e.target.value)} onBlur={handleSalaryBlur} aria-label={t('settingsCobro.amountLabel')} placeholder="0.00" className={`field-input ${styles.amountInput}`} />
+              <AmountInput value={salaryAmount} onChange={e => setSalaryAmount(e.target.value)} onKeyDown={onSalaryKey} enterKeyHint="done" aria-label={t('settingsCobro.amountLabel')} placeholder="0.00" className={`field-input ${styles.amountInput}`} />
             </div>
+            <Collapse open={salaryDirty}>
+              <button type="button" className={styles.saveSalary} onClick={handleSalarySave}>{t('buttons.save')}</button>
+            </Collapse>
             <div className={mb.amountMeta}>
               <span>{t(`settingsCobro.mobile.perPeriod.${freq}`)}</span>
               {showEquiv && <em>{t('settingsCobro.mobile.monthEquiv', { amount: equiv })}</em>}
@@ -429,8 +448,11 @@ export function SettingsCobroPage({ profile, onUpdate, onBack, slideClass }) {
       <Collapse open={!!profile.salary_enabled}>
         <div className={tb.amountBox}>
           <span className={tb.cur}>{symbol}</span>
-          <AmountInput value={salaryAmount} onChange={e => setSalaryAmount(e.target.value)} onBlur={handleSalaryBlur} aria-label={t('settingsCobro.amountLabel')} placeholder="0.00" className={tb.amountIn} />
+          <AmountInput value={salaryAmount} onChange={e => setSalaryAmount(e.target.value)} onKeyDown={onSalaryKey} enterKeyHint="done" aria-label={t('settingsCobro.amountLabel')} placeholder="0.00" className={tb.amountIn} />
         </div>
+        <Collapse open={salaryDirty}>
+          <button type="button" className={styles.saveSalary} onClick={handleSalarySave}>{t('buttons.save')}</button>
+        </Collapse>
         <div className={tb.meta}>
           <span>{t(`settingsCobro.mobile.perPeriod.${freq}`)}</span>
           {showEquiv && <em>{t('settingsCobro.mobile.monthEquiv', { amount: equiv })}</em>}

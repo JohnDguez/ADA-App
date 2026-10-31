@@ -1,14 +1,14 @@
 import { useTranslation, Trans } from 'react-i18next'
-import { CalendarCheck } from '@phosphor-icons/react/dist/csr/CalendarCheck'
-import { ModalSheet, SheetButton } from './ModalSheet'
+import { ConfirmSheet } from './ConfirmSheet'
 import { AnchoredPop } from './AnchoredPop'
 import styles from './SalaryChangePrompt.module.css'
 
 // "¿Desde cuándo cambia tu ingreso?" (v0.9.968, mockup aprobado). Sale al
 // cambiar el monto del ingreso por periodo: "Desde el próximo periodo" deja el
 // periodo actual con el monto anterior; "Desde este periodo" cambia al
-// instante. Cerrar sin elegir cancela el cambio. Móvil y tablet: hoja
-// (ModalSheet); escritorio: popover anclado al campo del monto (Regla 61).
+// instante. Cerrar sin elegir cancela el cambio. Móvil y tablet: hoja del
+// diseño nuevo (ConfirmSheet, v0.9.969); escritorio: popover anclado al campo
+// del monto (Regla 61).
 export function SalaryChangePrompt({ open, oldAmount, newAmount, nextDate, asPop, anchorRef, onNext, onNow, onCancel }) {
   const { t } = useTranslation()
   const title = t('salaryChange.title')
@@ -29,10 +29,11 @@ export function SalaryChangePrompt({ open, oldAmount, newAmount, nextDate, asPop
     )
   }
   return (
-    <ModalSheet open={open} icon={CalendarCheck} title={title} onBackdrop={onCancel}>
-      <ModalSheet.Text>{text}</ModalSheet.Text>
-      <SheetButton onClick={onNext}>{t('salaryChange.next')}</SheetButton>
-      <SheetButton variant="soft" onClick={onNow}>{t('salaryChange.now')}</SheetButton>
-    </ModalSheet>
+    <ConfirmSheet open={open} title={title} onClose={onCancel} actions={[
+      { label: t('salaryChange.next'), onClick: onNext },
+      { label: t('salaryChange.now'), onClick: onNow, variant: 'soft' },
+    ]}>
+      {text}
+    </ConfirmSheet>
   )
 }

@@ -2798,5 +2798,11 @@
     "text": "Este periodo se queda con <b>{{old}}</b>. El nuevo monto de <b>{{new}}</b> empieza el {{date}}.",
     "next": "Desde el próximo periodo",
     "now": "Desde este periodo"
+  },
+  "unsavedChanges": {
+    "title": "No guardaste los cambios",
+    "text": "Cambiaste <b>{{field}}</b> pero no lo guardaste. Si sales ahora, se pierde.",
+    "stay": "Seguir editando",
+    "leave": "Salir sin guardar"
   }
 }

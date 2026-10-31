@@ -299,3 +299,8 @@
   .nextCal { padding: 12px 14px; }
   .nextCalValue { font-size: 15px; }
 }
+
+/* Botón "Guardar" del ingreso por periodo (v0.9.969): aparece con Collapse
+   solo si el monto cambió. Acción principal del diseño nuevo (Regla 56). */
+.saveSalary { display: block; width: 100%; height: 3rem; margin-top: 0.75rem; border: 0; border-radius: 99px; background: var(--accent); color: var(--on-color); font: inherit; font-size: 0.9375rem; font-weight: 700; cursor: pointer; transition: filter 0.2s; }
+.saveSalary:active { filter: brightness(0.9); }
