@@ -30,7 +30,10 @@ export function useAnchor(open, payId = null) {
   return ref
 }
 
-export function AnchoredPop({ open, onClose, anchorRef, width = 420, label, children }) {
+// `side="right"` (v0.9.975): se abre a la DERECHA del ancla, con la flecha a
+// la izquierda y centrado en vertical sobre ella (p. ej. un botón del menú
+// lateral). `className` agrega estilos al panel.
+export function AnchoredPop({ open, onClose, anchorRef, width = 420, label, children, side = 'below', className = '' }) {
   const { render, closing } = usePresence(open)
   const panelRef = useRef(null)
   const [pos, setPos] = useState(null)
@@ -46,6 +49,15 @@ export function AnchoredPop({ open, onClose, anchorRef, width = 420, label, chil
         anchorRef.rect = r
       }
       if (!r) return
+      if (side === 'right') {
+        const w = Math.min(width, window.innerWidth - r.right - 30)
+        const maxH = window.innerHeight - 24
+        const h = Math.min(panelRef.current?.offsetHeight || 560, maxH)
+        const cy = r.top + r.height / 2
+        const top = Math.max(12, Math.min(cy - h / 2, window.innerHeight - h - 12))
+        setPos({ right: true, left: r.right + 14, width: w, maxH, top, arrowY: Math.max(28, Math.min(cy - top, h - 28)) })
+        return
+      }
       const w = Math.min(width, window.innerWidth - 24)
       // Centrado bajo el botón, sin salirse de la ventana.
       const left = Math.max(12, Math.min(r.left + r.width / 2 - w / 2, window.innerWidth - w - 12))
@@ -61,10 +73,13 @@ export function AnchoredPop({ open, onClose, anchorRef, width = 420, label, chil
       })
     }
     place()
+    // Con `side="right"` se vuelve a colocar al conocer la altura real del panel.
+    const ro = side === 'right' && typeof ResizeObserver !== 'undefined' ? new ResizeObserver(() => place()) : null
+    const raf = requestAnimationFrame(() => { place(); if (ro && panelRef.current) ro.observe(panelRef.current) })
     window.addEventListener('resize', place)
     window.addEventListener('scroll', place, true)
-    return () => { window.removeEventListener('resize', place); window.removeEventListener('scroll', place, true) }
-  }, [render, width, anchorRef])
+    return () => { cancelAnimationFrame(raf); ro?.disconnect(); window.removeEventListener('resize', place); window.removeEventListener('scroll', place, true) }
+  }, [render, width, anchorRef, side])
 
   useEffect(() => {
     if (!open) return undefined
@@ -96,8 +111,8 @@ export function AnchoredPop({ open, onClose, anchorRef, width = 420, label, chil
   if (!render || !pos) return null
   return createPortal(
     <div ref={panelRef} role="dialog" aria-label={label}
-      className={`${styles.pop} ${pos.up ? styles.popUp : ''} ${closing ? styles.popOut : ''}`}
-      style={{ left: pos.left, width: pos.width, maxHeight: pos.maxH, top: pos.top, bottom: pos.bottom, '--arrow': `${pos.arrow}px` }}>
+      className={`${styles.pop} ${pos.up ? styles.popUp : ''} ${pos.right ? styles.popRight : ''} ${closing ? styles.popOut : ''} ${className}`}
+      style={{ left: pos.left, width: pos.width, maxHeight: pos.maxH, top: pos.top, bottom: pos.bottom, '--arrow': `${pos.arrow}px`, '--arrow-y': `${pos.arrowY}px` }}>
       <div className={styles.scroll}>{children}</div>
     </div>,
     document.body

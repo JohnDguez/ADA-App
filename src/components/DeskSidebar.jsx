@@ -34,7 +34,7 @@ export function DeskSidebar({ active, onChange, profile, unreadCount, onOpenNoti
   const initials = (profile?.name || 'U').slice(0, 2).toUpperCase()
   const spaceItems = getSpaceItems(spaces, spaceSwitcherProfile, t)
   const iconFor = item => item.kind === 'personal' ? UserRound
-    : item.kind === 'new' ? (item.premiumLocked ? Crown : Plus)
+    : item.kind === 'new' ? Plus /* mismo ícono que el selector de móvil (v0.9.975) */
     : item.entry.membership.role === 'owner' ? Crown : UsersRound
 
   return (

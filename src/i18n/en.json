@@ -2811,5 +2811,13 @@
   },
   "common": {
     "loading": "Loading"
+  },
+  "newSpaceModal": {
+    "tabCreate": "Create space",
+    "tabJoin": "Join with a code",
+    "createTitle": "Create a space",
+    "joinTitle": "Join with a code",
+    "joinHint": "Enter the 6-digit code shared by the person who created the space.",
+    "ownedText": "You own “{{name}}”. You can join others as a guest."
   }
 }

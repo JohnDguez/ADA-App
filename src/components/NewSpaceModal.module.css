@@ -1,0 +1,67 @@
+/* «Nuevo espacio compartido» sin cambiar de página (v0.9.975). Solo tokens.
+   Capas (DISENO.md §5): contenedor --desk-panel → paneles blancos → controles
+   --desk-chip. Escritorio = AnchoredPop a la derecha del menú; tablet =
+   diálogo centrado; móvil = hoja con asa (estilos base de sp.ovl/sp.dlg). */
+
+/* Popover de escritorio: gris de fondo para que los paneles blancos se lean */
+.pop.pop { background: var(--desk-panel); padding: 24px 26px 22px; border-radius: 28px; }
+.pop.pop::before { background: var(--desk-panel); }
+.pop .head { margin-bottom: 18px; }
+
+/* Tablet / móvil */
+.ovl { z-index: 550; }
+.dlg.dlg { gap: 16px; }
+@media (max-width: 767px) { .dlg.dlg { max-height: calc(100dvh - 48px); } }
+@media (min-width: 768px) { .dlg.dlg { width: min(760px, calc(100vw - 48px)); padding: 26px 28px; border-radius: 32px; } }
+
+.head { display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; margin-top: 4px; }
+.headText { min-width: 0; }
+.title { margin: 0; font-size: 1.5rem; font-weight: 700; letter-spacing: -0.4px; line-height: 1.15; color: var(--text); }
+.sub { margin: 4px 0 0; font-size: 0.84375rem; line-height: 1.45; color: var(--muted); max-width: 34rem; }
+.close { width: 40px; height: 40px; flex: none; display: grid; place-items: center; border: 0; border-radius: 50%; background: var(--desk-card); box-shadow: var(--desk-shadow); color: var(--text); cursor: pointer; transition: background .15s; }
+@media (hover: hover) and (pointer: fine) { .close:hover { filter: none; background: var(--desk-hover-fill); } }
+.close:active { opacity: 0.8; }
+
+.two { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; align-items: start; }
+@media (max-width: 767px) { .two { grid-template-columns: 1fr; } }
+
+.pane { --field-desk-bg: var(--desk-chip); display: flex; flex-direction: column; gap: 14px; min-width: 0; padding: 18px 20px; border-radius: 24px; background: var(--desk-card); box-shadow: var(--desk-shadow); }
+.pane.pane.pane :global(.field-input) { background: var(--desk-chip); border: 0; border-radius: 16px; }
+.pane.pane.pane :global(.field-input):focus { box-shadow: inset 0 0 0 2px var(--accent); }
+.paneHead { display: flex; align-items: center; gap: 12px; }
+.ficha { width: 40px; height: 40px; flex: none; display: grid; place-items: center; border-radius: 12px; background: var(--desk-chip); color: var(--accent); }
+.fichaGold { background: var(--premium-gold); color: var(--premium-gold-text); }
+.paneText { min-width: 0; display: flex; flex-direction: column; }
+.paneText b { font-size: 0.96875rem; font-weight: 600; color: var(--text); }
+.paneText span { font-size: 0.78125rem; color: var(--muted); }
+.field { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.input { width: 100%; }
+.hint { margin: 0; font-size: 0.8125rem; line-height: 1.45; color: var(--muted); }
+.err { font-size: 0.8125rem; color: var(--danger); }
+.fine { font-size: 0.75rem; color: var(--muted); text-align: right; }
+.pane .cbox.cbox { flex: 1 1 0; width: auto; max-width: 3.25rem; height: 3.5rem; background: var(--desk-chip); }
+
+.perks { display: flex; flex-direction: column; gap: 8px; }
+.perk { display: flex; align-items: flex-start; gap: 10px; padding: 10px 14px; border-radius: 16px; background: var(--desk-chip); color: var(--accent); }
+.perk div { display: flex; flex-direction: column; min-width: 0; }
+.perk b { font-size: 0.84375rem; font-weight: 600; color: var(--text); }
+.perk span { font-size: 0.75rem; color: var(--muted); }
+
+.foot { display: flex; justify-content: flex-end; }
+.btn { height: 46px; padding: 0 22px; border: 0; border-radius: 99px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; font: inherit; font-size: 0.9375rem; font-weight: 600; cursor: pointer; transition: filter .12s, opacity .12s; }
+.btn:active { filter: brightness(0.9); }
+.btn:disabled { opacity: 0.6; cursor: default; }
+.btnPri { background: var(--accent); color: var(--on-color); }
+.btnGold { background: var(--premium-gold); color: var(--premium-gold-text); }
+.btnSoft { background: var(--desk-chip); color: var(--text); }
+@media (max-width: 767px) { .foot .btn { width: 100%; } }
+
+/* Segmentado Crear / Unirme (móvil): píldora deslizante */
+.seg { position: relative; display: grid; grid-template-columns: 1fr 1fr; padding: 4px; border-radius: 99px; background: var(--desk-card); box-shadow: var(--desk-shadow); }
+.seg::before { content: ""; position: absolute; top: 4px; bottom: 4px; left: 4px; width: calc(50% - 4px); border-radius: 99px; background: var(--desk-pill); transition: transform .35s cubic-bezier(0.22, 1, 0.36, 1); }
+.seg[data-i="1"]::before { transform: translateX(100%); }
+.seg button { position: relative; z-index: 1; height: 38px; border: 0; background: none; border-radius: 99px; font: inherit; font-size: 0.8125rem; font-weight: 600; color: var(--muted); cursor: pointer; transition: color .25s; }
+.seg .segOn { color: var(--desk-pill-ink); }
+.tabBody { animation: nsmIn .3s cubic-bezier(0.22, 1, 0.36, 1) both; }
+@keyframes nsmIn { from { opacity: 0; transform: translateY(6px); } }
+@media (prefers-reduced-motion: reduce) { .seg::before, .seg button { transition: none; } .tabBody { animation: none; } }

@@ -111,7 +111,7 @@ export function MobileSpaceChip({ activeSpaceId, sharedSpaces, profile, stats = 
             <button type="button" className={styles.cta} onClick={() => pick('new')}>
               <Plus size={17} strokeWidth={2.4} />{noSpaces ? t('spaceChip.create') : t('activeSpaceHeader.newSpaceName')}
             </button>
-            {noSpaces && <button type="button" className={styles.ctaAlt} onClick={() => pick('new')}>{t('spaceChip.haveCode')}</button>}
+            {noSpaces && <button type="button" className={styles.ctaAlt} onClick={() => pick('new:join')}>{t('spaceChip.haveCode')}</button>}
           </>
         )}
       </BottomSheet>

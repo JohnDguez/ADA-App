@@ -84,6 +84,7 @@ import { RateAppPrompt } from './components/RateAppPrompt'
 import { PullToRefresh } from './components/PullToRefresh'
 import { PremiumThanksModal } from './components/PremiumThanksModal'
 import { buildFeedbackUrl, FEEDBACK_PROMPT_AFTER_DAYS, FEEDBACK_REMIND_AFTER_DAYS } from './lib/feedback'
+import { NewSpaceModal } from './components/NewSpaceModal'
 
 function fmt(n) { return '$' + Number(n).toLocaleString('es-MX', { minimumFractionDigits: 0, maximumFractionDigits: 0 }) }
 
@@ -102,7 +103,13 @@ export default function App() {
   // usePayments necesita `activeSpaceId` — declararlo después causaba
   // "Cannot access 'activeSpaceId' before initialization" (TDZ de `const`).
   const [activeSpaceId, setActiveSpaceId] = useState(() => sessionStorage.getItem('ada_active_space') || null)
+  // «Nuevo espacio compartido» (v0.9.975): ya no es un "espacio" al que se
+  // cambia (antes `activeSpaceId = 'new'` cambiaba todas las páginas al
+  // formulario); abre NewSpaceModal encima de donde estés. 'new:join' abre
+  // directo en «Unirme con un código» (botón «Tengo un código» de móvil).
+  const [newSpaceTab, setNewSpaceTab] = useState(null)
   function switchSpace(spaceId) {
+    if (spaceId === 'new' || spaceId === 'new:join') { setNewSpaceTab(spaceId === 'new:join' ? 'join' : 'create'); return }
     setActiveSpaceId(spaceId)
     if (spaceId && spaceId !== 'new') sessionStorage.setItem('ada_active_space', spaceId)
     else sessionStorage.removeItem('ada_active_space')
@@ -2034,6 +2041,13 @@ export default function App() {
         </Suspense>
       )}
       </main>
+      <NewSpaceModal
+        open={!!newSpaceTab} initialTab={newSpaceTab || 'create'}
+        onClose={() => setNewSpaceTab(null)}
+        profile={profile} sharedSpaces={sharedSpaces}
+        onOpenPremium={() => { setNewSpaceTab(null); openPremiumPage(false) }}
+        onDone={spaceId => { setNewSpaceTab(null); switchSpace(spaceId) }}
+      />
 
       <BottomNav
         active={tab}

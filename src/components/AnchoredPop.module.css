@@ -24,6 +24,9 @@
   border-radius: 4px 0 0 0; box-shadow: -1px -1px 0 var(--desk-hair, var(--border));
 }
 .popUp::before { top: auto; bottom: -7px; border-radius: 0 0 4px 0; box-shadow: 1px 1px 0 var(--desk-hair, var(--border)); }
+.popRight { animation-name: apInR; }
+.popRight::before { top: var(--arrow-y, 40px); left: -7px; margin-left: 0; margin-top: -7px; border-radius: 0 0 0 4px; box-shadow: -1px 1px 0 var(--desk-hair, var(--border)); }
+@keyframes apInR { from { opacity: 0; transform: translateX(-6px); } }
 .popOut { animation: apOut .2s ease both; }
 .scroll { flex: 1 1 auto; min-height: 0; overflow-y: auto; margin: 0 -6px; padding: 0 6px; }
 .pop.pop :global(.field-input) { border: 1px solid var(--pfb); }

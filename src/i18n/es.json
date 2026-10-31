@@ -2811,5 +2811,13 @@
   },
   "common": {
     "loading": "Cargando"
+  },
+  "newSpaceModal": {
+    "tabCreate": "Crear espacio",
+    "tabJoin": "Unirme con un código",
+    "createTitle": "Crear un espacio",
+    "joinTitle": "Unirme con un código",
+    "joinHint": "Escribe el código de 6 dígitos que te compartió quien creó el espacio.",
+    "ownedText": "Eres dueño de «{{name}}». Puedes unirte a otros como invitado."
   }
 }

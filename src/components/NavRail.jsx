@@ -49,7 +49,7 @@ export function NavRail({ active, onChange, profile, unreadCount, onOpenNotifs, 
 
   const items = getSpaceItems(spaces, spaceSwitcherProfile, t)
   const iconFor = item => item.kind === 'personal' ? UserRound
-    : item.kind === 'new' ? (item.premiumLocked ? Crown : Plus)
+    : item.kind === 'new' ? Plus /* mismo ícono que el selector de móvil (v0.9.975) */
     : item.entry.membership.role === 'owner' ? Crown : UsersRound
   const activeItem = items.find(it => it.id === activeSpaceId) || (activeSpaceId === 'new' ? items.find(it => it.kind === 'new') : null) || items[0]
   const overdue = spaceStats[activeSpaceId && activeSpaceId !== 'new' ? activeSpaceId : 'personal']?.overdue || 0
