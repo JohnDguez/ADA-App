@@ -1400,13 +1400,17 @@
     "barTipCount_one": "{{count}} payment",
     "barTipCount_other": "{{count}} payments",
     "barTipMore": "and {{count}} more",
-    "barTipHint": "First 7 days of the next period",
-    "nextBarsLabel": "Payments per day, first 7 days of the next period",
+    "barTipHint": "Week {{n}} of the next period",
+    "nextBarsLabel": "Payments per day of the next period, week {{n}} of {{total}}",
     "tabletNotStarted": "Not started yet",
     "tabletVariablesLabel": "Variable",
     "tabletVariablesUnit": "to set",
     "tabletVariablesSome": "Amount still to set",
-    "tabletVariablesNone": "All fixed amounts"
+    "tabletVariablesNone": "All fixed amounts",
+    "barTipOutside": "Part of the following period",
+    "weekLabel": "Week {{n}}",
+    "prevWeek": "Previous week",
+    "nextWeek": "Next week"
   },
   "navRail": {
     "expand": "Expand menu",

@@ -189,6 +189,24 @@
 .barOn { background: var(--desk-deep); }
 .barMax { background: var(--desk-pill); }
 .barOff { background: repeating-linear-gradient(135deg, var(--desk-hatch) 0 1.5px, transparent 1.5px 6px); }
+/* Próximo periodo por semanas (v0.9.973): días que ya son del periodo
+   siguiente = contorno sin relleno; carrusel "Semana N" con flechas en ciclo,
+   puntos y swipe (touch-action deja pasar el scroll vertical). */
+.barOut { background: transparent; box-shadow: inset 0 0 0 1.5px var(--desk-chip); }
+.barLetterOut { color: color-mix(in srgb, var(--muted) 55%, var(--desk-card)); }
+.bars { touch-action: pan-y; }
+.barsFromRight { animation: weekInR .38s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.barsFromLeft { animation: weekInL .38s cubic-bezier(0.22, 1, 0.36, 1) both; }
+@keyframes weekInR { from { opacity: 0; transform: translateX(24px); } }
+@keyframes weekInL { from { opacity: 0; transform: translateX(-24px); } }
+.weekNav { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 14px; }
+.weekLabel { font-size: 14px; font-weight: 600; color: var(--text); }
+.weekBtn { width: 34px; height: 34px; border: 0; border-radius: 50%; background: var(--desk-chip); color: var(--text); display: grid; place-items: center; cursor: pointer; padding: 0; transition: background .15s; }
+.weekBtn:active { filter: brightness(.9); }
+.weekDots { display: flex; justify-content: center; gap: 6px; margin-top: 12px; }
+.weekDots i { width: 6px; height: 6px; border-radius: 99px; background: var(--desk-chip); transition: width .3s cubic-bezier(0.22, 1, 0.36, 1), background .3s; }
+.weekDots i.weekDotOn { width: 16px; background: var(--desk-pill); }
+@media (prefers-reduced-motion: reduce) { .barsFromRight, .barsFromLeft { animation: none; } .weekDots i { transition: none; } }
 
 /* Tooltip de las barras del próximo periodo (v0.9.823) */
 .barTip {

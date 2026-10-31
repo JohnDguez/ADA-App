@@ -1,6 +1,6 @@
 import { useState, useRef, useMemo, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Plus, ArrowUpRight, UserRound, Crown, UsersRound } from 'lucide-react'
+import { Plus, ArrowUpRight, UserRound, Crown, UsersRound, ChevronLeft, ChevronRight } from 'lucide-react'
 import { PayRail } from '../components/PayRail'
 import { PaidCollapse } from '../components/PaidCollapse'
 import { greeting } from '../components/PageHeader'
@@ -43,7 +43,7 @@ export function DeskHome({
   tablet = false, periodDayNumber, periodDayTotal, nextStartsInDays,
 }) {
   const { t, i18n } = useTranslation()
-  const { pagarEsteCobro, vencidos, delPeriodo, pagadosEstePeriodo, pagadoMonto, pendingAmt, totalConocido, pctPagado, upcoming, nextPeriodKnownTotal, nextStart, pendingVariableCount } = derived
+  const { pagarEsteCobro, vencidos, delPeriodo, pagadosEstePeriodo, pagadoMonto, pendingAmt, totalConocido, pctPagado, upcoming, nextPeriodKnownTotal, nextStart, nextEnd, pendingVariableCount } = derived
   const [tab, setTab] = useState(0) // 0 periodo actual · 1 próximo periodo
   const [paidExpanded, setPaidExpanded] = useState(false)
   // Cambio de periodo animado: el contenido actual sale (140 ms) y el nuevo entra
@@ -142,17 +142,51 @@ export function DeskHome({
     },
   ]
 
-  // Barras del próximo periodo: los primeros 7 días, altura según el monto de cada día.
+  // Barras del próximo periodo por semanas (v0.9.973, mockup aprobado por
+  // Johnatan): cada "semana" son 7 días seguidos desde el inicio del periodo.
+  // Quincenal/mensual = carrusel "Semana N" con flechas, puntos y swipe en
+  // tablet, en ciclo (de la última vuelve a la primera); semanal = sin
+  // carrusel. Los días que ya son del periodo siguiente se ven apagados.
+  const nextStartKey = dateToStr(new Date(nextStart))
+  const nextEndKey = nextEnd ? dateToStr(new Date(nextEnd)) : nextStartKey
+  const weekCount = useMemo(() => {
+    const a = new Date(nextStart); a.setHours(12, 0, 0, 0)
+    const z = new Date(nextEnd || nextStart); z.setHours(12, 0, 0, 0)
+    const days = Math.round((z - a) / 86400000) + 1
+    return Math.max(1, Math.ceil(days / 7))
+  }, [nextStartKey, nextEndKey]) // eslint-disable-line react-hooks/exhaustive-deps
+  const [week, setWeek] = useState(0)
+  const [weekDir, setWeekDir] = useState(0)
+  useEffect(() => { setWeek(0); setWeekDir(0) }, [nextStartKey, weekCount])
+  const weekIdx = Math.min(week, weekCount - 1)
+  function goWeek(step) {
+    if (weekCount < 2) return
+    setBarTip(null)
+    setWeekDir(step)
+    setWeek(w => (Math.min(w, weekCount - 1) + step + weekCount) % weekCount)
+  }
+  const swipeRef = useRef(null)
+  const onBarsPointerDown = e => { if (e.pointerType !== 'mouse') swipeRef.current = { x: e.clientX, y: e.clientY } }
+  const onBarsPointerUp = e => {
+    const s0 = swipeRef.current; swipeRef.current = null
+    if (!s0) return
+    const dx = e.clientX - s0.x, dy = e.clientY - s0.y
+    if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy)) goWeek(dx < 0 ? 1 : -1)
+  }
   const bars = useMemo(() => {
-    const days = Array.from({ length: 7 }, (_, i) => { const d = new Date(nextStart); d.setDate(d.getDate() + i); return d })
+    const days = Array.from({ length: 7 }, (_, i) => { const d = new Date(nextStart); d.setDate(d.getDate() + weekIdx * 7 + i); return d })
     const byDay = {}
     upcoming.forEach(p => { const k = p.due_date; byDay[k] = (byDay[k] || 0) + (Number(p.amount) || 0) })
-    const max = Math.max(0, ...days.map(d => byDay[dateToStr(d)] || 0))
+    const inside = d => dateToStr(d) <= nextEndKey
+    const max = Math.max(0, ...days.filter(inside).map(d => byDay[dateToStr(d)] || 0))
     return days.map(d => {
-      const amount = byDay[dateToStr(d)] || 0
-      return { key: dateToStr(d), long: d.toLocaleDateString(i18n.language, { weekday: 'long', day: 'numeric', month: 'short' }), items: upcoming.filter(p => p.due_date === dateToStr(d)), letter: d.toLocaleDateString(i18n.language, { weekday: 'narrow' }).toUpperCase(), amount, isMax: max > 0 && amount === max, filled: upcoming.some(p => p.due_date === dateToStr(d)), h: max > 0 ? 34 + Math.round((amount / max) * 40) : 34 }
+      const key = dateToStr(d)
+      const outside = !inside(d)
+      const amount = outside ? 0 : (byDay[key] || 0)
+      const items = outside ? [] : upcoming.filter(p => p.due_date === key)
+      return { key, outside, long: d.toLocaleDateString(i18n.language, { weekday: 'long', day: 'numeric', month: 'short' }), items, letter: d.toLocaleDateString(i18n.language, { weekday: 'narrow' }).toUpperCase(), amount, isMax: max > 0 && amount === max, filled: items.length > 0, h: max > 0 ? 34 + Math.round((amount / max) * 40) : 34 }
     })
-  }, [upcoming, nextStart, i18n.language])
+  }, [upcoming, nextStart, nextEndKey, weekIdx, i18n.language])
   const [barTip, setBarTip] = useState(null) // índice de la barra con tooltip
   const nextFixed = upcoming.filter(p => !p.is_variable).length
   const nextVariable = upcoming.filter(p => p.is_variable).length
@@ -299,13 +333,23 @@ export function DeskHome({
                     <div className={styles.range}>{nextRangeLabel}</div>
                     <div className={styles.nextNum}>{dataLoading ? '…' : <>{nextInt}<small>{nextCents}</small></>}</div>
                     <div className={styles.range}><b>{t('deskHome.nextFixed', { count: nextFixed })}</b> · <b>{t('deskHome.nextVariable', { count: nextVariable })}</b></div>
-                    <div className={styles.bars} role="img" aria-label={t('deskHome.nextBarsLabel')}>
+                    {weekCount > 1 && (
+                      <div className={styles.weekNav}>
+                        <button type="button" className={styles.weekBtn} onClick={() => goWeek(-1)} aria-label={t('deskHome.prevWeek')}><ChevronLeft size={16} /></button>
+                        <b className={styles.weekLabel}>{t('deskHome.weekLabel', { n: weekIdx + 1 })}</b>
+                        <button type="button" className={styles.weekBtn} onClick={() => goWeek(1)} aria-label={t('deskHome.nextWeek')}><ChevronRight size={16} /></button>
+                      </div>
+                    )}
+                    <div key={weekIdx} className={`${styles.bars} ${weekDir > 0 ? styles.barsFromRight : weekDir < 0 ? styles.barsFromLeft : ''}`} role="img" aria-label={t('deskHome.nextBarsLabel', { n: weekIdx + 1, total: weekCount })}
+                      onPointerDown={onBarsPointerDown} onPointerUp={onBarsPointerUp} onPointerCancel={() => { swipeRef.current = null }}>
                       {bars.map((b, i) => (
                         <div key={b.key} className={styles.barCol} tabIndex={0} onMouseEnter={() => setBarTip(i)} onMouseLeave={() => setBarTip(null)} onFocus={() => setBarTip(i)} onBlur={() => setBarTip(null)}>
                           {barTip === i && (
                             <div className={`${styles.barTip} ${i < 2 ? styles.barTipStart : i > 4 ? styles.barTipEnd : ''}`} role="tooltip">
                               <div className={styles.barTipDay}>{b.long}</div>
-                              {b.items.length === 0 ? (
+                              {b.outside ? (
+                                <div className={styles.barTipEmpty}>{t('deskHome.barTipOutside')}</div>
+                              ) : b.items.length === 0 ? (
                                 <div className={styles.barTipEmpty}>{t('deskHome.barTipEmpty')}</div>
                               ) : (
                                 <>
@@ -317,14 +361,19 @@ export function DeskHome({
                                   {b.items.length > 3 && <div className={styles.barTipMore}>{t('deskHome.barTipMore', { count: b.items.length - 3 })}</div>}
                                 </>
                               )}
-                              <div className={styles.barTipHint}>{t('deskHome.barTipHint')}</div>
+                              {weekCount > 1 && !b.outside && <div className={styles.barTipHint}>{t('deskHome.barTipHint', { n: weekIdx + 1 })}</div>}
                             </div>
                           )}
-                          <div className={`${styles.bar} ${b.filled ? (b.isMax ? styles.barMax : styles.barOn) : styles.barOff}`} style={{ height: b.filled ? b.h : 34 }} />
-                          <span>{b.letter}</span>
+                          <div className={`${styles.bar} ${b.outside ? styles.barOut : b.filled ? (b.isMax ? styles.barMax : styles.barOn) : styles.barOff}`} style={{ height: b.filled ? b.h : 34 }} />
+                          <span className={b.outside ? styles.barLetterOut : ''}>{b.letter}</span>
                         </div>
                       ))}
                     </div>
+                    {weekCount > 1 && (
+                      <div className={styles.weekDots} aria-hidden="true">
+                        {Array.from({ length: weekCount }, (_, k) => <i key={k} className={k === weekIdx ? styles.weekDotOn : ''} />)}
+                      </div>
+                    )}
                   </section>
 
                 </aside>
