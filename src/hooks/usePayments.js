@@ -5,6 +5,7 @@ import { notifySpaceChange as notifySpaceChangeShared } from '../lib/notifySpace
 import { showToast } from '../components/Toast'
 import { withRetry } from '../lib/withRetry'
 import { apiUrl } from '../lib/apiUrl'
+import { queueHorizon, planQueue, planRecurrentCopies, queueCopyId, MIN_PENDING } from '../lib/recurQueue'
 import i18n from '../i18n'
 
 // NOTA (Fase 5b): `activeSpaceName` ya no se usa dentro de este hook — el
@@ -345,6 +346,26 @@ export function usePayments(userId, activeSpaceId = null, activeSpaceName = null
   }
 
   const [loading, setLoading] = useState(true)
+
+  // Configuración de cobro efectiva (personal o del espacio activo) para la
+  // cola de copias (v0.9.972, ver lib/recurQueue.js). La pone App.jsx con
+  // setCobroConfig() en cuanto el perfil real terminó de cargar; mientras
+  // sea null la cola se comporta como antes (solo el mínimo de 2).
+  const cobroCfgRef = useRef(null)
+  const [cobroKey, setCobroKey] = useState('')
+  const setCobroConfig = useCallback(cfg => {
+    const key = cfg && cfg.cobro_freq
+      ? [cfg.cobro_freq, cfg.cobro_day1, cfg.cobro_day2, cfg.cobro_weekday, cfg.cobro_weekend_shift].join('|')
+      : ''
+    cobroCfgRef.current = key ? cfg : null
+    setCobroKey(key)
+  }, [])
+  const horizonNow = () => queueHorizon(cobroCfgRef.current)
+  // Cada carga exitosa avisa (loadTick) para rellenar las colas una vez por
+  // día, contexto (personal/espacio) y configuración de cobro.
+  const loadedCtxRef = useRef('')
+  const [loadTick, setLoadTick] = useState(0)
+  const topUpKeyRef = useRef('')
   // Candado de concurrencia: evita que ensureTwoAhead se ejecute 2 veces en
   // paralelo para el MISMO master (ej. doble tap al confirmar un pago, o dos
   // llamadas casi simultáneas antes de que la primera termine de insertar).
@@ -426,6 +447,8 @@ export function usePayments(userId, activeSpaceId = null, activeSpaceName = null
         }
         setPayments(applyPendingOps(rows))
         setLoading(false)
+        loadedCtxRef.current = `${userId}|${activeSpaceId || ''}`
+        setLoadTick(t => t + 1)
         return
       } catch (e) {
         lastError = e
@@ -769,8 +792,10 @@ export function usePayments(userId, activeSpaceId = null, activeSpaceName = null
         is_variable: !!r.isVariable, is_recurrent: true, recur_freq: r.freq, is_master: true,
         due_date: r.nextDate, is_paid: false, paid_at: null,
       })
-      inserts.push(mk({ due_date: r.nextDate }))
-      inserts.push(mk({ due_date: dateToStr(nextPeriodDate(r.nextDate, r.freq)) }))
+      // Cola por horizonte (v0.9.972). Importar siempre es personal: usa la
+      // configuración de cobro personal que tenga App en ese momento.
+      planQueue({ firstDate: r.nextDate, pending: 0, freq: r.freq, horizon: horizonNow() })
+        .forEach(({ due_date }) => inserts.push(mk({ due_date })))
     }
     if (!inserts.length) return { error: null }
 
@@ -794,65 +819,163 @@ export function usePayments(userId, activeSpaceId = null, activeSpaceName = null
     }
   }
 
+  // v0.9.972: la cola cubre el periodo de cobro actual + 2 siguientes (mínimo
+  // 2 pendientes) en vez de "siempre 2" — ver lib/recurQueue.js. Ids
+  // deterministas (master + fecha) y upsert que ignora duplicados: si otro
+  // dispositivo o miembro ya creó la misma copia, no se repite.
   async function ensureTwoAheadImpl(masterId, currentPayments) {
     const master = currentPayments.find(p => p.id === masterId)
     if (!master || master.paused) return []
+    // `!p.is_postponed` (agosto 2026): una copia pospuesta ya se resolvió y
+    // no cuenta como pendiente (planRecurrentCopies lo aplica).
+    const copies = currentPayments.filter(p => p.parent_id === masterId && !p.is_master)
+    const plan = planRecurrentCopies(copies, master.recur_freq || 'monthly', horizonNow())
+    return insertQueueRows(plan.map(({ due_date }) => ({
+      id:           queueCopyId(masterId, due_date),
+      user_id:      userId,
+      space_id:     activeSpaceId,
+      name:         master.name,
+      amount:       master.is_variable ? 0 : master.amount,
+      due_date,
+      category:     master.category,
+      is_variable:  master.is_variable,
+      is_recurrent: true,
+      recur_freq:   master.recur_freq,
+      is_master:    false,
+      parent_id:    masterId,
+      is_paid:      false,
+      paid_at:      null,
+      postponed:    false,
+      is_postponed: false,
+      postponed_at: null,
+      paused:       false,
+      is_installment: false,
+      ...methodFields(master),
+    })))
+  }
 
-    // `!p.is_postponed` (agosto 2026) — sin esto, una copia recién pospuesta
-    // (is_paid:false, is_postponed:true) se seguía contando como "pendiente"
-    // aquí, y la cola nunca generaba su reemplazo real — ver postponePayment()
-    // más abajo, que ahora depende de este mismo ensureTwoAhead para avanzar
-    // la cola, igual que markPaid.
-    const pending = currentPayments.filter(p =>
-      p.parent_id === masterId && !p.is_paid && !p.is_postponed && !p.is_master
-    )
-    if (pending.length >= 2) return []
+  // Parcialidad: misma cola por horizonte, numerada y sin pasar del total.
+  async function ensureInstallmentsAhead(masterId, currentPayments) {
+    if (ensureTwoAheadInFlight.current.has(masterId)) return []
+    ensureTwoAheadInFlight.current.add(masterId)
+    try {
+      const master = currentPayments.find(p => p.id === masterId)
+      if (!master || master.paused) return []
+      const total = Number(master.total_installments) || 0
+      if (!total) return []
+      const copies = currentPayments.filter(p => p.parent_id === masterId && !p.is_master)
+      const pending = copies.filter(p => !p.is_paid && !p.is_postponed)
+      const top = [...copies].sort((a, b) => Number(b.current_installment) - Number(a.current_installment))[0]
+      if (!top) return []
+      const montoRef = Number(master.amount)
+      const montoUltimo = master.total_amount != null
+        ? Math.round((Number(master.total_amount) - (total - 1) * montoRef) * 100) / 100
+        : montoRef
+      const plan = planQueue({
+        lastDate: top.due_date, lastNum: Number(top.current_installment),
+        pending: pending.length, freq: master.recur_freq || 'monthly', horizon: horizonNow(), total,
+      })
+      return insertQueueRows(plan.map(({ due_date, current_installment: n }) => ({
+        id: queueCopyId(masterId, `#${n}`), user_id: userId, space_id: activeSpaceId,
+        name: master.name, amount: n === total && montoUltimo > 0 ? montoUltimo : montoRef,
+        due_date, category: master.category, is_variable: false,
+        is_recurrent: true, recur_freq: master.recur_freq, is_master: false, parent_id: masterId,
+        is_paid: false, paid_at: null, postponed: false, is_postponed: false, postponed_at: null, paused: false,
+        is_installment: true, current_installment: n, total_installments: total,
+        ...methodFields(master),
+      })))
+    } finally {
+      ensureTwoAheadInFlight.current.delete(masterId)
+    }
+  }
 
-    // Encontrar la fecha más reciente entre pagadas y pendientes
-    const allCopies = currentPayments.filter(p => p.parent_id === masterId && !p.is_master)
-    allCopies.sort((a, b) => new Date(b.due_date) - new Date(a.due_date))
-    const baseDate = allCopies.length > 0 ? allCopies[0].due_date : todayStr()
-
-    const toCreate = []
-    let lastDate = baseDate
-    const needed = 2 - pending.length
-
-    for (let i = 0; i < needed; i++) {
-      const nextDate = nextPeriodDate(lastDate, master.recur_freq || 'monthly')
-      lastDate = dateToStr(nextDate)
-
-      // Evitar duplicar una fecha que ya existe
-      const exists = currentPayments.some(p => p.parent_id === masterId && p.due_date === lastDate && !p.is_paid)
-      if (!exists) {
-        toCreate.push({
-          user_id:      userId,
-          space_id:     activeSpaceId,
-          name:         master.name,
-          amount:       master.is_variable ? 0 : master.amount,
-          due_date:     lastDate,
-          category:     master.category,
-          is_variable:  master.is_variable,
-          is_recurrent: true,
-          recur_freq:   master.recur_freq,
-          is_master:    false,
-          parent_id:    masterId,
-          is_paid:      false,
-          paid_at:      null,
-          postponed:    false,
-          is_postponed: false,
-          postponed_at: null,
-          paused:       false,
-          is_installment: false,
-          ...methodFields(master),
-        })
+  // Rellenar todas las colas al cargar (v0.9.972). Antes la cola solo
+  // avanzaba al pagar; con el horizonte por periodos también tiene que
+  // completarse al abrir la app o al empezar un periodo nuevo, si no, quien
+  // no paga nada se queda sin las copias del tercer periodo. Un solo insert
+  // por pasada, ids deterministas (no duplica entre dispositivos/miembros).
+  async function topUpQueues(snapshot) {
+    const horizon = horizonNow()
+    if (!horizon) return
+    const masters = snapshot.filter(p => p.is_master && !p.paused)
+    const rows = []
+    for (const m of masters) {
+      if (ensureTwoAheadInFlight.current.has(m.id)) continue
+      const copies = snapshot.filter(p => p.parent_id === m.id && !p.is_master)
+      if (m.is_installment) {
+        const total = Number(m.total_installments) || 0
+        const top = [...copies].sort((a, b) => Number(b.current_installment) - Number(a.current_installment))[0]
+        if (!total || !top) continue
+        const montoRef = Number(m.amount)
+        const montoUltimo = m.total_amount != null
+          ? Math.round((Number(m.total_amount) - (total - 1) * montoRef) * 100) / 100
+          : montoRef
+        const pending = copies.filter(p => !p.is_paid && !p.is_postponed).length
+        planQueue({ lastDate: top.due_date, lastNum: Number(top.current_installment), pending, freq: m.recur_freq || 'monthly', horizon, total })
+          .forEach(({ due_date, current_installment: n }) => rows.push({
+            id: queueCopyId(m.id, `#${n}`), user_id: userId, space_id: activeSpaceId,
+            name: m.name, amount: n === total && montoUltimo > 0 ? montoUltimo : montoRef,
+            due_date, category: m.category, is_variable: false,
+            is_recurrent: true, recur_freq: m.recur_freq, is_master: false, parent_id: m.id,
+            is_paid: false, paid_at: null, postponed: false, is_postponed: false, postponed_at: null, paused: false,
+            is_installment: true, current_installment: n, total_installments: total,
+            ...methodFields(m),
+          }))
+      } else if (copies.length) {
+        // Sin ninguna copia es un master recién creado o en migración: lo
+        // atienden addRecurrentPayment/migrateRecurrents, no esta pasada.
+        planRecurrentCopies(copies, m.recur_freq || 'monthly', horizon)
+          .forEach(({ due_date }) => rows.push({
+            id: queueCopyId(m.id, due_date), user_id: userId, space_id: activeSpaceId,
+            name: m.name, amount: m.is_variable ? 0 : m.amount, due_date,
+            category: m.category, is_variable: m.is_variable,
+            is_recurrent: true, recur_freq: m.recur_freq, is_master: false, parent_id: m.id,
+            is_paid: false, paid_at: null, postponed: false, is_postponed: false, postponed_at: null, paused: false,
+            is_installment: false,
+            ...methodFields(m),
+          }))
       }
     }
+    addRowsToState(await insertQueueRows(rows))
+  }
 
-    if (toCreate.length > 0) {
-      const { data } = await supabase.from('payments').insert(toCreate).select()
-      return data || []
+  useEffect(() => {
+    const ctx = `${userId}|${activeSpaceId || ''}`
+    if (!userId || !cobroKey || loadedCtxRef.current !== ctx) return
+    const key = `${ctx}|${cobroKey}|${todayStr()}`
+    if (topUpKeyRef.current === key) return
+    topUpKeyRef.current = key
+    topUpQueues(payments)
+    // Solo al terminar una carga o al cambiar la configuración de cobro:
+    // `payments` se lee de este render a propósito (snapshot recién cargado).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loadTick, cobroKey])
+
+  // Inserta copias de la cola sin duplicar (upsert con ignoreDuplicates sobre
+  // el id determinista). Regresa solo las filas que de verdad entraron.
+  async function insertQueueRows(rows) {
+    if (!rows.length) return []
+    const { data, error } = await supabase.from('payments')
+      .upsert(rows, { onConflict: 'id', ignoreDuplicates: true }).select()
+    if (!error) return data || []
+    // Red de seguridad: si el upsert no se permite, insert normal fila por
+    // fila; un duplicado (23505, otra pestaña/miembro ya la creó) se ignora.
+    console.error('insertQueueRows (upsert)', error)
+    const out = []
+    for (const r of rows) {
+      const { data: d, error: e } = await supabase.from('payments').insert(r).select().single()
+      if (d) out.push(d)
+      else if (e && e.code !== '23505') console.error('insertQueueRows', e)
     }
-    return []
+    return out
+  }
+  function addRowsToState(rows) {
+    if (!rows?.length) return
+    setPayments(prev => {
+      const have = new Set(prev.map(p => p.id))
+      const fresh = rows.filter(r => !have.has(r.id))
+      return fresh.length ? [...prev, ...fresh] : prev
+    })
   }
 
   // ─────────────────────────────────────────────────────────────────────────
@@ -917,10 +1040,11 @@ export function usePayments(userId, activeSpaceId = null, activeSpaceName = null
       parent_id: masterRow.id, is_installment: true, total_installments: totalInstallments,
       payment_method_id, payment_method_kind,
     }
-    const pendingRows = [newCopyRow({ ...copyBase, current_installment: from, due_date: dateOfInstallment(from) })]
-    if (from + 1 <= totalInstallments) {
-      pendingRows.push(newCopyRow({ ...copyBase, current_installment: from + 1, due_date: dateOfInstallment(from + 1) }))
-    }
+    // Cola por horizonte (v0.9.972): periodo actual + 2 siguientes, mínimo 2.
+    const pendingRows = planQueue({
+      firstDate: dateOfInstallment(from), lastNum: from - 1, pending: 0,
+      freq: recurFreq, horizon: horizonNow(), total: totalInstallments,
+    }).map(({ due_date, current_installment }) => newCopyRow({ ...copyBase, current_installment, due_date }))
 
     // Pagos anteriores (1…from-1), ya pagados, cada uno con su fecha (v0.9.479).
     // Con `backfillAsExpense` en false van marcados `is_history_only`: se ven
@@ -1031,21 +1155,18 @@ export function usePayments(userId, activeSpaceId = null, activeSpaceName = null
     })
     updates.push({ id: master.id, fields: { total_installments: newTotal } })
 
-    // Cola de 2 pendientes (monto de referencia salvo el nuevo último pago)
-    let lastNum  = keep.length ? keep[keep.length - 1].current_installment : copy.current_installment
-    let lastDate = keep.length ? keep[keep.length - 1].due_date : copy.due_date
-    for (let i = keep.length; i < 2; i++) {
-      const nextNum = lastNum + 1
-      if (nextNum > newTotal) break
-      lastDate = dateToStr(nextPeriodDate(lastDate, master.recur_freq || 'monthly'))
-      lastNum  = nextNum
-      inserts.push(newCopyRow({
-        name: master.name, amount: nextNum === newTotal ? montoUltimo : montoRef,
-        due_date: lastDate, category: master.category, is_variable: false, recur_freq: master.recur_freq,
-        parent_id: master.id, is_installment: true, current_installment: nextNum, total_installments: newTotal,
-        ...methodFields(master),
-      }))
-    }
+    // Cola por horizonte (v0.9.972; monto de referencia salvo el nuevo último pago)
+    const lastNum  = keep.length ? keep[keep.length - 1].current_installment : copy.current_installment
+    const lastDate = keep.length ? keep[keep.length - 1].due_date : copy.due_date
+    planQueue({
+      lastDate, lastNum, pending: keep.length, freq: master.recur_freq || 'monthly',
+      horizon: horizonNow(), total: newTotal,
+    }).forEach(({ due_date, current_installment: nextNum }) => inserts.push(newCopyRow({
+      name: master.name, amount: nextNum === newTotal ? montoUltimo : montoRef,
+      due_date, category: master.category, is_variable: false, recur_freq: master.recur_freq,
+      parent_id: master.id, is_installment: true, current_installment: nextNum, total_installments: newTotal,
+      ...methodFields(master),
+    })))
 
     const res = await runOptimisticBatch({ subjectId: copyId, action: 'abonar', updates, deletes, inserts })
     if (!res.error) notifySpaceChange('marked_paid', { paymentId: copyId, paymentName: copy.name })
@@ -1117,10 +1238,12 @@ export function usePayments(userId, activeSpaceId = null, activeSpaceName = null
       payment_method_id, payment_method_kind,
     }
     const base = { name, amount: baseAmount, category, is_variable, recur_freq, parent_id: masterRow.id, is_installment: false, payment_method_id, payment_method_kind }
-    const date2 = dateToStr(nextPeriodDate(firstDate, recur_freq))
+    // Cola por horizonte (v0.9.972): desde `firstDate`, periodo actual + 2 siguientes, mínimo 2.
+    const copyRows = planQueue({ firstDate, pending: 0, freq: recur_freq, horizon: horizonNow() })
+      .map(({ due_date }) => newCopyRow({ ...base, due_date }))
     const res = await runOptimisticBatch({
       subject: masterRow, action: 'create',
-      inserts: [masterRow, newCopyRow({ ...base, due_date: firstDate }), newCopyRow({ ...base, due_date: date2 })],
+      inserts: [masterRow, ...copyRows],
     })
     if (!res.error) notifySpaceChange('added', { paymentName: name, amount: baseAmount, paymentType: 'recurrente', recurFreq: recur_freq, isVariable: is_variable })
     return res
@@ -1190,11 +1313,16 @@ export function usePayments(userId, activeSpaceId = null, activeSpaceName = null
       updates.push({ id: p.id, fields })
     })
 
-    // Si no queda NINGUNA pendiente (caso raro: la última se acaba de pagar
-    // y ensureTwoAhead todavía no corrió), se crea al menos 1.
-    const inserts = pending.length === 0
-      ? [newCopyRow({ name, amount: copyAmount, category, is_variable, recur_freq, parent_id: masterId, due_date: firstDate, is_installment: false, ...methodFields({ ...master, ...method }) })]
-      : []
+    // Completar la cola con la configuración nueva (v0.9.972): si la
+    // frecuencia ahora es más corta, faltan copias para cubrir el horizonte.
+    // Sin pendientes, la primera nueva toma `firstDate` tal cual.
+    const resultingPending = pending.map(p => {
+      const u = updates.find(x => x.id === p.id && x.fields.due_date)
+      return { ...p, due_date: u ? u.fields.due_date : p.due_date, is_paid: false, is_postponed: false }
+    })
+    const inserts = planRecurrentCopies(
+      [...history, ...resultingPending], recur_freq, horizonNow(), pending.length === 0 ? firstDate : null,
+    ).map(({ due_date }) => newCopyRow({ name, amount: copyAmount, category, is_variable, recur_freq, parent_id: masterId, due_date, is_installment: false, ...methodFields({ ...master, ...method }) }))
 
     return runOptimisticBatch({ subjectId: masterId, action: 'updateMaster', updates, inserts })
   }
@@ -1284,19 +1412,19 @@ export function usePayments(userId, activeSpaceId = null, activeSpaceName = null
       : (firstDate || [...paidCopies].sort((a, b) => dateOf(b.due_date) - dateOf(a.due_date))[0]?.due_date || todayStr())
     // Sin pendientes, la fecha del formulario ES la del próximo pago — el
     // primero que se cree la usa tal cual, sin avanzar un periodo.
-    let useDateAsIs = resultingPending.length === 0 && !!firstDate
-    for (let i = resultingPending.length; i < 2; i++) {
-      const nextNum = lastNum + 1
-      if (nextNum > newTotal) break
-      const due = useDateAsIs ? lastDate : dateToStr(nextPeriodDate(lastDate, recur_freq))
-      useDateAsIs = false
+    const useDateAsIs = resultingPending.length === 0 && !!firstDate
+    // Cola por horizonte (v0.9.972): periodo actual + 2 siguientes, mínimo 2.
+    planQueue({
+      lastDate: useDateAsIs ? null : lastDate, firstDate: useDateAsIs ? lastDate : null,
+      lastNum, pending: resultingPending.length, freq: recur_freq, horizon: horizonNow(), total: newTotal,
+    }).forEach(({ due_date, current_installment: nextNum }) => {
       inserts.push(newCopyRow({
-        name, amount: newRef, due_date: due, category, is_variable: false, recur_freq,
+        name, amount: newRef, due_date, category, is_variable: false, recur_freq,
         parent_id: masterId, is_installment: true, current_installment: nextNum, total_installments: newTotal,
         ...methodFields({ ...master, ...method }),
       }))
-      lastNum = nextNum; lastDate = due
-    }
+      lastNum = nextNum
+    })
 
     // 5) Master, con el total en dinero recalculado: lo ya pagado (copias +
     //    pagos que nunca tuvieron fila) + lo pendiente + lo que todavía no
@@ -1348,60 +1476,14 @@ export function usePayments(userId, activeSpaceId = null, activeSpaceName = null
       const updatedPayments = payments.map(p => p.id === id ? { ...p, ...data } : p)
       notifySpaceChange('marked_paid', { paymentId: id, paymentName: data.name })
 
-      // Recurrente: asegurar siempre 2 pendientes en cola
-      if (payment?.is_recurrent && !payment?.is_master && payment?.parent_id) {
-        const newCopies = await ensureTwoAhead(payment.parent_id, updatedPayments)
-        if (newCopies.length > 0) setPayments(prev => [...prev, ...newCopies])
+      // Recurrente: completar la cola (horizonte, mínimo 2 — v0.9.972)
+      if (payment?.is_recurrent && !payment?.is_master && payment?.parent_id && !payment?.is_installment) {
+        addRowsToState(await ensureTwoAhead(payment.parent_id, updatedPayments))
       }
 
-      // Parcialidad: asegurar siempre 2 pendientes en cola (hasta el límite total)
+      // Parcialidad: misma cola, numerada y hasta el total del plan
       if (payment?.is_installment && payment.parent_id) {
-        // Copias pendientes restantes DESPUÉS de marcar esta como pagada
-        const remainingPending = updatedPayments.filter(p =>
-          p.parent_id === payment.parent_id && !p.is_paid && !p.is_master
-        )
-        const pendingNums = new Set(remainingPending.map(p => p.current_installment))
-        const sortedPending = [...remainingPending].sort((a, b) => a.current_installment - b.current_installment)
-        const lastPending = sortedPending[sortedPending.length - 1]
-
-        let lastDate = lastPending?.due_date ?? payment.due_date
-        let lastNum  = lastPending?.current_installment ?? payment.current_installment
-
-        const needed = Math.max(0, 2 - remainingPending.length)
-        for (let i = 0; i < needed; i++) {
-          const nextNum = lastNum + 1
-          if (nextNum > payment.total_installments) break
-          if (pendingNums.has(nextNum)) { lastNum = nextNum; continue } // ya existe
-
-          const nextDate = nextPeriodDate(lastDate, payment.recur_freq || 'monthly')
-          lastDate = dateToStr(nextDate)
-          lastNum  = nextNum
-
-          const { data: next } = await supabase.from('payments').insert({
-            user_id:             userId,
-            space_id:            activeSpaceId,
-            name:                payment.name,
-            amount:              data?.amount ?? payment.amount,
-            due_date:            lastDate,
-            category:            payment.category,
-            is_variable:         false,
-            is_recurrent:        true,
-            recur_freq:          payment.recur_freq,
-            is_paid:             false,
-            paid_at:             null,
-            postponed:           false,
-            is_postponed: false,
-            postponed_at: null,
-            paused:              false,
-            is_master:           false,
-            parent_id:           payment.parent_id,
-            is_installment:      true,
-            current_installment: nextNum,
-            total_installments:  payment.total_installments,
-            ...methodFields(payment),
-          }).select().single()
-          if (next) setPayments(prev => [...prev, next])
-        }
+        addRowsToState(await ensureInstallmentsAhead(payment.parent_id, updatedPayments))
       }
     }
     // Se regresa tal cual (incluye `reverted`/`busy`) para que App.jsx no
@@ -1449,8 +1531,12 @@ export function usePayments(userId, activeSpaceId = null, activeSpaceName = null
       let pending = updatedPayments.filter(p => p.parent_id === payment.parent_id && !p.is_paid && !p.is_postponed && !p.is_master)
       const creationKey = p => p.created_at ? new Date(p.created_at).getTime() : dateOf(p.due_date).getTime()
       const removeIds = []
-      while (pending.length > 2) {
+      // v0.9.972: solo sobra lo que el mínimo de 2 creó FUERA del horizonte;
+      // lo que cae dentro de periodo actual + 2 siguientes se queda.
+      const hz = horizonNow()
+      while (pending.length > MIN_PENDING) {
         const last = pending.reduce((a, b) => (creationKey(b) > creationKey(a) ? b : a))
+        if (hz && last.due_date <= hz.end) break
         removeIds.push(last.id)
         pending = pending.filter(p => p.id !== last.id)
       }
@@ -1532,8 +1618,7 @@ export function usePayments(userId, activeSpaceId = null, activeSpaceName = null
       // Asegurar 2 en cola — mismo mecanismo que markPaid, ahora que
       // ensureTwoAheadImpl también excluye is_postponed de su conteo de
       // "pendientes" (ver ahí).
-      const newCopies = await ensureTwoAhead(payment.parent_id, updatedPayments)
-      if (newCopies.length > 0) setPayments(prev => [...prev, ...newCopies])
+      addRowsToState(await ensureTwoAhead(payment.parent_id, updatedPayments))
       return { error: null }
     }
 
@@ -1597,15 +1682,17 @@ export function usePayments(userId, activeSpaceId = null, activeSpaceName = null
     }
 
     const copyAmount = is_variable ? 0 : amount
-    const date2 = dateToStr(nextPeriodDate(firstDate, recur_freq))
     const method = payment_method_kind !== undefined
       ? { payment_method_id: payment_method_id ?? null, payment_method_kind: payment_method_kind || 'cash' }
       : methodFields(master)
     const base = { name, amount: copyAmount, category, is_variable, recur_freq, parent_id: masterId, is_installment: false, ...method }
+    // Cola por horizonte (v0.9.972) desde la fecha elegida al reactivar.
+    const inserts = planQueue({ firstDate, pending: 0, freq: recur_freq, horizon: horizonNow() })
+      .map(({ due_date }) => newCopyRow({ ...base, due_date }))
     return runOptimisticBatch({
       subjectId: masterId, action: 'resume',
       updates: [{ id: masterId, fields: { paused: false, name, amount, recur_freq, category, is_variable, ...method } }],
-      inserts: [newCopyRow({ ...base, due_date: firstDate }), newCopyRow({ ...base, due_date: date2 })],
+      inserts,
     })
   }
 
@@ -1762,7 +1849,7 @@ export function usePayments(userId, activeSpaceId = null, activeSpaceName = null
           ...items.map(p => ({ ...p, parent_id: master.id })),
           master,
         ]
-        const newCopies = await ensureTwoAhead(master.id, allNow)
+        const newCopies = await ensureTwoAhead(master.id, allNow) // cola por horizonte (v0.9.972)
         if (newCopies.length > 0) {
           setPayments(prev => [
             ...prev.map(p => ids.includes(p.id) ? { ...p, parent_id: master.id } : p),
@@ -1849,6 +1936,7 @@ export function usePayments(userId, activeSpaceId = null, activeSpaceName = null
     deletePayment, deleteRecurrent,
     deleteRecurrentFuture, deleteInstallmentFuture,
     migrateRecurrents,
+    setCobroConfig,
     refetch: fetchPayments,
     ensureMonthLoaded, oldestYear, oldestChecked,
     importPayments, findExistingForImport,

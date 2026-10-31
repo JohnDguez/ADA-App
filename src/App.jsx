@@ -185,6 +185,7 @@ export default function App() {
     deletePayment, deleteRecurrent,
     deleteRecurrentFuture, deleteInstallmentFuture,
     migrateRecurrents,
+    setCobroConfig,
     refetch,
     ensureMonthLoaded, oldestYear, oldestChecked,
     importPayments, findExistingForImport,
@@ -541,6 +542,21 @@ export default function App() {
         salary_change_from: null,
       }
     : profile
+
+  // Cola de copias de recurrentes por horizonte (v0.9.972): usePayments
+  // necesita la configuración de cobro efectiva (personal o del espacio
+  // activo). Solo cuando el perfil REAL ya cargó, para no rellenar colas con
+  // el perfil por defecto.
+  const cobroCfgKey = [effectiveProfile?.cobro_freq, effectiveProfile?.cobro_day1, effectiveProfile?.cobro_day2, effectiveProfile?.cobro_weekday, effectiveProfile?.cobro_weekend_shift].join('|')
+  useEffect(() => {
+    if (profileLoading || !effectiveProfile?.cobro_freq) return
+    setCobroConfig({
+      cobro_freq: effectiveProfile.cobro_freq, cobro_day1: effectiveProfile.cobro_day1,
+      cobro_day2: effectiveProfile.cobro_day2, cobro_weekday: effectiveProfile.cobro_weekday,
+      cobro_weekend_shift: effectiveProfile.cobro_weekend_shift ?? null,
+    })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [profileLoading, cobroCfgKey, setCobroConfig])
 
   // Ingresos Extras del periodo (v0.9.484) — a nivel de App para que
   // persistan entre pestañas y sean optimistas (ver usePeriodIncome.js).

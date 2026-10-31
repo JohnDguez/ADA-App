@@ -22,31 +22,39 @@
 // siempre componentes de fecha LOCALES) — Vercel corre este código en el
 // servidor, no en el navegador del usuario, así que ni siquiera es la misma
 // zona horaria que la que ya se cuidó del lado del cliente.
-function dateOf(str) {
-  if (!str) return new Date()
-  const [y, m, d] = str.split('-').map(Number)
-  return new Date(y, m - 1, d)
+// v0.9.972: la cola ya no es "siempre 2": cubre el periodo de cobro actual +
+// 2 siguientes (mínimo 2 pendientes). La lógica vive en `_recurQueue.js`
+// (copia fiel de src/lib/recurQueue.js). Ids deterministas + upsert con
+// ignoreDuplicates: si dos miembros rellenan la cola a la vez, no se duplica.
+const { queueHorizon, planQueue, planRecurrentCopies, queueCopyId } = require('./_recurQueue')
+
+const COBRO_COLS = 'cobro_freq, cobro_day1, cobro_day2, cobro_weekday, cobro_weekend_shift'
+
+// Configuración de cobro que manda sobre el master: la del espacio si es
+// compartido; si no, la del perfil de su dueño (con su zona horaria).
+async function loadCobroCfg(supabase, master) {
+  try {
+    if (master.space_id) {
+      const { data } = await supabase.from('shared_spaces').select(COBRO_COLS).eq('id', master.space_id).maybeSingle()
+      return data || null
+    }
+    const { data } = await supabase.from('profiles').select(`${COBRO_COLS}, timezone`).eq('id', master.user_id).maybeSingle()
+    return data || null
+  } catch (e) {
+    console.error('loadCobroCfg', e) // sin configuración la cola usa solo el mínimo de 2, como antes
+    return null
+  }
 }
-function dateToStr(d) {
-  const y = d.getFullYear(), m = String(d.getMonth() + 1).padStart(2, '0'), day = String(d.getDate()).padStart(2, '0')
-  return `${y}-${m}-${day}`
-}
-function todayStr() {
-  const now = new Date()
-  return dateToStr(new Date(now.getFullYear(), now.getMonth(), now.getDate()))
-}
-function addDays(date, n)   { const d = new Date(date); d.setDate(d.getDate() + n); return d }
-function addMonths(date, n) { const d = new Date(date); d.setMonth(d.getMonth() + n); return d }
-function nextPeriodDate(date, freq) {
-  const d = typeof date === 'string' ? dateOf(date) : new Date(date)
-  if (freq === 'weekly')     return addDays(d, 7)
-  if (freq === 'biweekly')   return addDays(d, 14)
-  if (freq === 'monthly')    return addMonths(d, 1)
-  if (freq === 'bimonthly')  return addMonths(d, 2)
-  if (freq === 'quarterly')  return addMonths(d, 3)
-  if (freq === 'semiannual') return addMonths(d, 6)
-  if (freq === 'annual')     return addMonths(d, 12)
-  return addMonths(d, 1)
+
+async function insertQueueRows(supabase, rows) {
+  if (!rows.length) return
+  const { error } = await supabase.from('payments').upsert(rows, { onConflict: 'id', ignoreDuplicates: true })
+  if (!error) return
+  console.error('insertQueueRows (upsert)', error)
+  for (const r of rows) {
+    const { error: e } = await supabase.from('payments').insert(r)
+    if (e && e.code !== '23505') console.error('insertQueueRows', e) // 23505: otro miembro ya la creó
+  }
 }
 
 // `supabase` — el cliente service role ya creado en register-contribution.js.
@@ -89,52 +97,32 @@ async function ensureTwoAheadServer(supabase, paidPaymentId) {
 
   const { data: allCopies } = await supabase
     .from('payments')
-    .select('id, due_date, is_paid')
+    .select('id, due_date, is_paid, is_postponed')
     .eq('parent_id', masterId)
     .eq('is_master', false)
 
-  const copies = allCopies || []
-  const pending = copies.filter(p => !p.is_paid)
-  if (pending.length >= 2) return
-
-  const sorted = [...copies].sort((a, b) => new Date(b.due_date) - new Date(a.due_date))
-  const baseDate = sorted.length > 0 ? sorted[0].due_date : todayStr()
-
-  const needed = 2 - pending.length
-  const toCreate = []
-  let lastDate = baseDate
-  for (let i = 0; i < needed; i++) {
-    const nextDate = nextPeriodDate(lastDate, master.recur_freq || 'monthly')
-    lastDate = dateToStr(nextDate)
-
-    // Evitar duplicar una fecha que ya existe entre las pendientes — mismo
-    // criterio que ensureTwoAheadImpl.
-    const exists = copies.some(p => p.due_date === lastDate && !p.is_paid)
-    if (!exists) {
-      toCreate.push({
-        user_id:        master.user_id,
-        space_id:       master.space_id,
-        name:           master.name,
-        amount:         master.is_variable ? 0 : master.amount,
-        due_date:       lastDate,
-        category:       master.category,
-        is_variable:    master.is_variable,
-        is_recurrent:   true,
-        recur_freq:     master.recur_freq,
-        is_master:      false,
-        parent_id:      masterId,
-        is_paid:        false,
-        paid_at:        null,
-        postponed:      false,
-        paused:         false,
-        is_installment: false,
-      })
-    }
-  }
-
-  if (toCreate.length > 0) {
-    await supabase.from('payments').insert(toCreate)
-  }
+  const horizon = queueHorizon(await loadCobroCfg(supabase, master))
+  const plan = planRecurrentCopies(allCopies || [], master.recur_freq || 'monthly', horizon)
+  await insertQueueRows(supabase, plan.map(({ due_date }) => ({
+    id:             queueCopyId(masterId, due_date),
+    user_id:        master.user_id,
+    space_id:       master.space_id,
+    name:           master.name,
+    amount:         master.is_variable ? 0 : master.amount,
+    due_date,
+    category:       master.category,
+    is_variable:    master.is_variable,
+    is_recurrent:   true,
+    recur_freq:     master.recur_freq,
+    is_master:      false,
+    parent_id:      masterId,
+    is_paid:        false,
+    paid_at:        null,
+    postponed:      false,
+    is_postponed:   false,
+    paused:         false,
+    is_installment: false,
+  })))
 }
 
 async function ensureTwoAheadInstallments(supabase, masterId) {
@@ -154,33 +142,27 @@ async function ensureTwoAheadInstallments(supabase, masterId) {
     .eq('is_master', false)
   const copies = allCopies || []
   const pending = copies.filter(p => !p.is_paid && !p.is_postponed)
-  if (pending.length >= 2) return
-
   const byNumber = [...copies].sort((a, b) => Number(b.current_installment) - Number(a.current_installment))
   if (!byNumber.length) return
-  let lastNum  = Number(byNumber[0].current_installment)
-  let lastDate = byNumber[0].due_date
   const montoRef = Number(master.amount)
   const montoUltimo = master.total_amount != null
     ? Math.round((Number(master.total_amount) - (total - 1) * montoRef) * 100) / 100
     : montoRef
 
-  const toCreate = []
-  for (let i = pending.length; i < 2; i++) {
-    const nextNum = lastNum + 1
-    if (nextNum > total) break
-    lastDate = dateToStr(nextPeriodDate(lastDate, master.recur_freq || 'monthly'))
-    lastNum = nextNum
-    toCreate.push({
-      user_id: master.user_id, space_id: master.space_id, name: master.name,
-      amount: nextNum === total && montoUltimo > 0 ? montoUltimo : montoRef,
-      due_date: lastDate, category: master.category, is_variable: false,
-      is_recurrent: true, recur_freq: master.recur_freq, is_master: false, parent_id: masterId,
-      is_paid: false, paid_at: null, postponed: false, paused: false,
-      is_installment: true, current_installment: nextNum, total_installments: total,
-    })
-  }
-  if (toCreate.length > 0) await supabase.from('payments').insert(toCreate)
+  const horizon = queueHorizon(await loadCobroCfg(supabase, master))
+  const plan = planQueue({
+    lastDate: byNumber[0].due_date, lastNum: Number(byNumber[0].current_installment),
+    pending: pending.length, freq: master.recur_freq || 'monthly', horizon, total,
+  })
+  await insertQueueRows(supabase, plan.map(({ due_date, current_installment: n }) => ({
+    id: queueCopyId(masterId, `#${n}`),
+    user_id: master.user_id, space_id: master.space_id, name: master.name,
+    amount: n === total && montoUltimo > 0 ? montoUltimo : montoRef,
+    due_date, category: master.category, is_variable: false,
+    is_recurrent: true, recur_freq: master.recur_freq, is_master: false, parent_id: masterId,
+    is_paid: false, paid_at: null, postponed: false, is_postponed: false, paused: false,
+    is_installment: true, current_installment: n, total_installments: total,
+  })))
 }
 
 module.exports = { ensureTwoAheadServer, ensureTwoAheadInstallments }
