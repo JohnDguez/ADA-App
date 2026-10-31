@@ -302,5 +302,11 @@
 
 /* Botón "Guardar" del ingreso por periodo (v0.9.969): aparece con Collapse
    solo si el monto cambió. Acción principal del diseño nuevo (Regla 56). */
-.saveSalary { display: block; width: 100%; height: 3rem; margin-top: 0.75rem; border: 0; border-radius: 99px; background: var(--accent); color: var(--on-color); font: inherit; font-size: 0.9375rem; font-weight: 700; cursor: pointer; transition: filter 0.2s; }
+.saveSalary { display: flex; align-items: center; justify-content: center; width: 100%; height: 3rem; margin-top: 0.75rem; border: 0; border-radius: 99px; background: var(--accent); color: var(--on-color); font: inherit; font-size: 0.9375rem; font-weight: 700; cursor: pointer; transition: filter 0.2s; }
 .saveSalary:active { filter: brightness(0.9); }
+/* Tablet y escritorio (v0.9.971, pedido de Johnatan): botón de tamaño normal,
+   alineado a la derecha como la acción principal de los pies (Regla 65), no a
+   todo el ancho del contenedor. En móvil sigue a todo el ancho (Regla 56). */
+@media (min-width: 768px) {
+  .saveSalary { width: auto; min-width: 8.5rem; height: 2.875rem; padding: 0 1.75rem; margin-left: auto; font-size: 0.90625rem; }
+}
