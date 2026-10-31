@@ -8,7 +8,7 @@ import { PaidByStack } from '../components/PaidByStack'
 import { Select } from '../components/Select'
 import { SegmentedControl } from '../components/SegmentedControl'
 import { getBank, bankColorVar } from '../lib/cardCatalog'
-import { fmt, dateOf, dateToStr, CATEGORIES, cobroPeriod, addDays, RECUR_FREQ, getDeleteConfirmMessage } from '../lib/utils'
+import { fmt, dateOf, dateToStr, CATEGORIES, cobroPeriod, periodSalary, addDays, RECUR_FREQ, getDeleteConfirmMessage } from '../lib/utils'
 import { supabase } from '../lib/supabase'
 import { showToast } from '../components/Toast'
 import { ConfirmDeleteModal } from '../components/ConfirmDeleteModal'
@@ -333,7 +333,7 @@ export function PaymentsPage({ payments, dataLoading = false, periodIncome, paym
       supabase.from('period_income').select('amount').is('space_id', null).eq('user_id', profile.id).eq('period_start', periodStartStr),
       supabase.from('payments').select('amount, paid_at').is('space_id', null).eq('user_id', profile.id).eq('is_paid', true).eq('is_history_only', false).neq('payment_method_kind', 'credit'),
     ])
-    const salario = personalProfile.salary_enabled ? Number(personalProfile.salary_amount || 0) : 0
+    const salario = periodSalary(personalProfile, start)
     const extras  = (incomes || []).reduce((a, i) => a + Number(i.amount), 0)
     const gastado = (paid || [])
       .filter(p => {
@@ -481,7 +481,7 @@ export function PaymentsPage({ payments, dataLoading = false, periodIncome, paym
     // Sin `|| 0` esto rompía para usuarios sin salario fijo: profile.salary_amount
     // llega null/undefined y Number(undefined) da NaN, no 0 — arrastraba NaN a
     // todo el cálculo del remanente y nunca mostraba el aviso.
-    const salario = profile.salary_enabled ? Number(profile.salary_amount || 0) : 0
+    const salario = periodSalary(profile, prev.start)
 
     // Sumar ingresos extras del periodo anterior (mismo filtro de espacio
     // que loadIncomes — ver nota ahí sobre por qué hace falta)
@@ -599,7 +599,7 @@ export function PaymentsPage({ payments, dataLoading = false, periodIncome, paym
   const totalGastos  = useMemo(() => gastosDelDisponible.reduce((a, p) => a + Number(p.amount), 0), [gastosDelDisponible])
   const totalCredito = useMemo(() => gastosPeriodo.filter(p => !p.is_postponed && p.payment_method_kind === 'credit').reduce((a, p) => a + Number(p.amount), 0), [gastosPeriodo])
   const totalExtras  = useMemo(() => periodIncomes.reduce((a, i) => a + Number(i.amount), 0), [periodIncomes])
-  const salario      = profile?.salary_enabled ? Number(profile?.salary_amount || 0) : 0
+  const salario      = profile ? periodSalary(profile, cobroPeriod(profile).start) : 0
   const ingresoTotal = salario + totalExtras
   const disponible   = ingresoTotal - totalGastos
   const sobrePasado  = totalGastos > ingresoTotal

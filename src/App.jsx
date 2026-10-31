@@ -533,6 +533,10 @@ export default function App() {
         cobro_weekend_shift: activeSpaceEntry.space.cobro_weekend_shift ?? null,
         salary_enabled: activeSpaceEntry.space.salary_enabled || false,
         salary_amount: activeSpaceEntry.space.salary_amount || 0,
+        // El cambio de ingreso "desde el próximo periodo" (v0.9.968) es solo
+        // del perfil personal: no debe colarse en el espacio.
+        salary_prev_amount: null,
+        salary_change_from: null,
       }
     : profile
 

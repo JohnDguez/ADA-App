@@ -1,11 +1,12 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { Collapse } from '../../components/Collapse'
 import { useTranslation } from 'react-i18next'
 // Ícono del encabezado vía Phosphor Icons (mismo patrón que las demás
 // sub-páginas ya migradas, v0.9.442-447) — import directo para tree-shaking real.
 import { Wallet } from '@phosphor-icons/react/dist/csr/Wallet'
 import { CalendarDays, CalendarRange, CalendarCheck, Coins, ChevronDown, ChevronRight, ChevronLeft } from 'lucide-react'
-import { getWeekdaysShort, nextCobroDate } from '../../lib/utils'
+import { getWeekdaysShort, nextCobroDate, cobroPeriod, periodSalary, dateToStr, fmt } from '../../lib/utils'
+import { SalaryChangePrompt } from '../../components/SalaryChangePrompt'
 import { WeekendShiftField } from '../../components/WeekendShiftField'
 import { showToast } from '../../components/Toast'
 import { Toggle } from '../../components/SettingsShared'
@@ -58,6 +59,11 @@ export function SettingsCobroPage({ profile, onUpdate, onBack, slideClass }) {
   async function handleMonthlyDay(day) { await onUpdate({ cobro_day1: day }) }
   // v0.9.624 — el monto se guarda al salir del campo (sin botón), y solo si
   // cambió; si quedó vacío/inválido se restaura el último valor guardado.
+  // v0.9.968 — si ya había un ingreso en el periodo actual, antes de guardar se
+  // pregunta desde cuándo aplica (SalaryChangePrompt); "Desde el próximo
+  // periodo" guarda el monto anterior y la fecha del siguiente cobro.
+  const [salaryPrompt, setSalaryPrompt] = useState(null) // { oldVal, newVal }
+  const amountRef = useRef(null)
   async function handleSalaryBlur() {
     const val = parseFloat(salaryAmount)
     if (isNaN(val)) {
@@ -66,7 +72,29 @@ export function SettingsCobroPage({ profile, onUpdate, onBack, slideClass }) {
       return
     }
     if (val === Number(profile.salary_amount)) return
-    await onUpdate({ salary_amount: val }); showToast(t('settingsCobro.toast.salaryUpdated'))
+    const current = periodSalary(profile, cobroPeriod(profile).start)
+    if (profile.salary_enabled && current > 0 && val !== current) {
+      setSalaryPrompt({ oldVal: current, newVal: val })
+      return
+    }
+    await onUpdate({ salary_amount: val, ...clearPending() }); showToast(t('settingsCobro.toast.salaryUpdated'))
+  }
+  // Limpia un cambio pendiente solo si existe (así guardar el monto no depende
+  // de las columnas nuevas si nunca se usaron).
+  function clearPending() {
+    return profile.salary_change_from || profile.salary_prev_amount != null ? { salary_prev_amount: null, salary_change_from: null } : {}
+  }
+  async function applySalary(fromNext) {
+    const { oldVal, newVal } = salaryPrompt
+    setSalaryPrompt(null)
+    await onUpdate(fromNext
+      ? { salary_amount: newVal, salary_prev_amount: oldVal, salary_change_from: dateToStr(nextCobroDate(profile)) }
+      : { salary_amount: newVal, ...clearPending() })
+    showToast(t('settingsCobro.toast.salaryUpdated'))
+  }
+  function cancelSalary() {
+    setSalaryPrompt(null)
+    setSalaryAmount(profile.salary_amount || '')
   }
   async function handleCurrency(code) {
     setCurrencyOpen(false)
@@ -80,6 +108,13 @@ export function SettingsCobroPage({ profile, onUpdate, onBack, slideClass }) {
   const nextLong = nextLongRaw.charAt(0).toUpperCase() + nextLongRaw.slice(1)
   const nextMonthShort = nextDateObj.toLocaleDateString(locale, { month: 'short' }).replace('.', '').toUpperCase()
   const FREQ_ICON = { weekly: CalendarDays, biweekly: CalendarRange, monthly: CalendarCheck }
+  const fmtPlain = n => fmt(n).replace(/\.00$/, '')
+  const nextFull = nextDateObj.toLocaleDateString(locale, { weekday: 'long', day: 'numeric', month: 'long' }).replace(',', '')
+  const salaryPromptEl = (
+    <SalaryChangePrompt open={!!salaryPrompt} asPop={!!desk && isDesk1100} anchorRef={amountRef}
+      oldAmount={salaryPrompt ? fmtPlain(salaryPrompt.oldVal) : ''} newAmount={salaryPrompt ? fmtPlain(salaryPrompt.newVal) : ''} nextDate={nextFull}
+      onNext={() => applySalary(true)} onNow={() => applySalary(false)} onCancel={cancelSalary} />
+  )
 
   // Escritorio (v0.9.836, mockup aprobado): a la izquierda frecuencia, día(s)
   // de cobro e ingreso; a la derecha el próximo cobro (bloque azul) y la moneda.
@@ -153,7 +188,7 @@ export function SettingsCobroPage({ profile, onUpdate, onBack, slideClass }) {
                 <Toggle on={profile.salary_enabled} />
               </div>
               {profile.salary_enabled && (
-                <div className={`${styles.amountField} ${dk.amount} ${symbol.length >= 3 ? styles.amountFieldLong : symbol.length === 2 ? styles.amountFieldMid : ''}`}>
+                <div ref={amountRef} className={`${styles.amountField} ${dk.amount} ${symbol.length >= 3 ? styles.amountFieldLong : symbol.length === 2 ? styles.amountFieldMid : ''}`}>
                   <span className={styles.amountPrefix}>{symbol}</span>
                   <AmountInput value={salaryAmount} onChange={e => setSalaryAmount(e.target.value)} onBlur={handleSalaryBlur} aria-label={t('settingsCobro.amountLabel')} placeholder="0.00" className={`field-input ${styles.amountInput}`} />
                 </div>
@@ -177,6 +212,7 @@ export function SettingsCobroPage({ profile, onUpdate, onBack, slideClass }) {
           </div>
         </div>
         <CurrencySheet open={currencyOpen} onClose={() => setCurrencyOpen(false)} value={profile.currency} onSelect={handleCurrency} />
+        {salaryPromptEl}
       </DeskPage>
     )
   }
@@ -296,6 +332,7 @@ export function SettingsCobroPage({ profile, onUpdate, onBack, slideClass }) {
           <div className={mb.note}>{t('currency.noConvertHint')}</div>
         </div>
         <CurrencySheet open={currencyOpen} onClose={() => setCurrencyOpen(false)} value={profile.currency} onSelect={handleCurrency} />
+        {salaryPromptEl}
       </div>
     )
   }
@@ -410,7 +447,7 @@ export function SettingsCobroPage({ profile, onUpdate, onBack, slideClass }) {
       </button>
     </div>
   )
-  const sheet = <CurrencySheet open={currencyOpen} onClose={() => setCurrencyOpen(false)} value={profile.currency} onSelect={handleCurrency} />
+  const sheet = <><CurrencySheet open={currencyOpen} onClose={() => setCurrencyOpen(false)} value={profile.currency} onSelect={handleCurrency} />{salaryPromptEl}</>
 
   if (land) {
     return (

@@ -1,6 +1,6 @@
 const { createClient } = require('@supabase/supabase-js')
 const applyCors = require('./_cors')
-const { cobroPeriod } = require('./_cobroPeriod')
+const { cobroPeriod, periodSalary } = require('./_cobroPeriod')
 const { todayInTz, dateStrInTz } = require('./_tz')
 const webpush = require('web-push')
 const { notifyUsers } = require('./_notifyLib')
@@ -56,7 +56,7 @@ async function getPersonalAvailable(userId) {
     supabase.from('period_income').select('amount').is('space_id', null).eq('user_id', userId).eq('period_start', periodStartStr),
     supabase.from('payments').select('amount, paid_at').is('space_id', null).eq('user_id', userId).eq('is_paid', true).eq('is_history_only', false).neq('payment_method_kind', 'credit'),
   ])
-  const salario = profile.salary_enabled ? Number(profile.salary_amount || 0) : 0
+  const salario = periodSalary(profile, start)
   const extras  = (incomes || []).reduce((s, r) => s + Number(r.amount), 0)
   const gastado = (paid || [])
     .filter(p => {

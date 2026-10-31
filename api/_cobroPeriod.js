@@ -55,4 +55,18 @@ function cobroPeriod(cfg, refDate) {
   return { start: t, end: t, nextCobro: t }
 }
 
-module.exports = { cobroPeriod, shiftPayday }
+// Ingreso fijo de UN periodo (v0.9.968), puerto fiel de periodSalary() de
+// src/lib/utils.js: si el ingreso cambió "desde el próximo periodo", los
+// periodos que empiezan antes de `salary_change_from` usan `salary_prev_amount`.
+function dateToStr(d) {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+}
+function periodSalary(cfg, periodStart) {
+  if (!cfg || !cfg.salary_enabled) return 0
+  const from = cfg.salary_change_from
+  const ps = typeof periodStart === 'string' ? periodStart : periodStart && dateToStr(periodStart)
+  if (from && cfg.salary_prev_amount != null && ps && ps < from) return Number(cfg.salary_prev_amount || 0)
+  return Number(cfg.salary_amount || 0)
+}
+
+module.exports = { cobroPeriod, shiftPayday, periodSalary }

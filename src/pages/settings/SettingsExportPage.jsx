@@ -15,7 +15,7 @@ import { OptionSheet } from '../../components/OptionSheet'
 import { BottomSheet } from '../../components/BottomSheet'
 import { Collapse } from '../../components/Collapse'
 import { DatePicker } from '../../components/DatePicker'
-import { dateToStr, todayStr, dateOf, fmt, getCategoryLabel, cobroPeriod, addDays, today, MONTHS_SHORT } from '../../lib/utils'
+import { dateToStr, todayStr, dateOf, fmt, getCategoryLabel, cobroPeriod, periodSalary, addDays, today, MONTHS_SHORT } from '../../lib/utils'
 import { buildCsv, downloadCsv } from '../../lib/exportCsv'
 import { generateReportPdf } from '../../lib/exportPdf'
 import { saveOrShareBlob } from '../../lib/nativeExport'
@@ -218,7 +218,7 @@ export function SettingsExportPage({ profile, sharedSpaces, onOpenPremium, onBac
   function buildSalaryRows() {
     if (space !== 'personal' || !profile.salary_enabled || !Number(profile.salary_amount)) return []
     return enumeratePeriodStartsInRange().map(periodStart => ({
-      period_start: periodStart, type: t('settingsExport.salaryType'), note: null, amount: Number(profile.salary_amount),
+      period_start: periodStart, type: t('settingsExport.salaryType'), note: null, amount: periodSalary(profile, periodStart),
     }))
   }
 
@@ -259,7 +259,7 @@ export function SettingsExportPage({ profile, sharedSpaces, onOpenPremium, onBac
     const extraRows = space === 'personal' ? buildSalaryRows() : await fetchFundDeposits(from, to)
     return [...rows, ...extraRows].sort((a, b) => a.period_start < b.period_start ? -1 : a.period_start > b.period_start ? 1 : 0)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [fetchIngresos, space, from, to, profile.salary_enabled, profile.salary_amount, profile.cobro_freq, profile.cobro_day1, profile.cobro_day2, profile.cobro_weekday, profile.cobro_weekend_shift])
+  }, [fetchIngresos, space, from, to, profile.salary_enabled, profile.salary_amount, profile.cobro_freq, profile.cobro_day1, profile.cobro_day2, profile.cobro_weekday, profile.cobro_weekend_shift, profile.salary_prev_amount, profile.salary_change_from])
 
   // Mapa user_id → nombre, para resolver quién aportó en un gasto de
   // Espacio Compartido (payment_contributions solo trae el user_id, no el
@@ -376,7 +376,7 @@ export function SettingsExportPage({ profile, sharedSpaces, onOpenPremium, onBac
     const ingresosReal = (ingresosRaw || []).map(i => ({ date: i.period_start, amount: Number(i.amount) }))
     const extraRows = space === 'personal'
       ? ((profile.salary_enabled && Number(profile.salary_amount))
-          ? enumeratePeriodStartsInRange(windowStart, toStr).map(ps => ({ date: ps, amount: Number(profile.salary_amount) }))
+          ? enumeratePeriodStartsInRange(windowStart, toStr).map(ps => ({ date: ps, amount: periodSalary(profile, ps) }))
           : [])
       : (await fetchFundDeposits(windowStart, toStr)).map(d => ({ date: d.period_start, amount: d.amount }))
 

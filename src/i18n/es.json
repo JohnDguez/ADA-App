@@ -2792,5 +2792,11 @@
     "doneTile": "Cumplidas",
     "sortAria": "Ordenar metas",
     "tapHint": "Toca una meta para ver su detalle"
+  },
+  "salaryChange": {
+    "title": "¿Desde cuándo cambia tu ingreso?",
+    "text": "Este periodo se queda con <b>{{old}}</b>. El nuevo monto de <b>{{new}}</b> empieza el {{date}}.",
+    "next": "Desde el próximo periodo",
+    "now": "Desde este periodo"
   }
 }

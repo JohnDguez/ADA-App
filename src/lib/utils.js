@@ -401,6 +401,23 @@ export function groupPayments(payments) {
     .sort((a, b) => dateOf(a.due_date) - dateOf(b.due_date))
 }
 
+// Ingreso fijo de UN periodo (v0.9.968). Si el usuario cambió su ingreso
+// "desde el próximo periodo", el perfil guarda el monto anterior
+// (`salary_prev_amount`) y la fecha del primer periodo con el monto nuevo
+// (`salary_change_from`, 'YYYY-MM-DD'): los periodos que empiezan antes de esa
+// fecha siguen usando el anterior. Sin esas columnas (espacios compartidos,
+// perfiles viejos) es el `salary_amount` de siempre. `periodStart`: Date o
+// 'YYYY-MM-DD'.
+export function periodSalary(cfg, periodStart) {
+  if (!cfg?.salary_enabled) return 0
+  const from = cfg.salary_change_from
+  const ps = typeof periodStart === 'string' ? periodStart : periodStart && dateToStr(periodStart)
+  if (from && cfg.salary_prev_amount != null && ps && ps < from) {
+    return Number(cfg.salary_prev_amount || 0)
+  }
+  return Number(cfg.salary_amount || 0)
+}
+
 // Proyecta el impacto de un pago (uno nuevo que se está armando en el
 // formulario) sobre el/los periodo(s) donde realmente cae — sin importar qué
 // tan lejos esté. Si es recurrente, incluye también el periodo de su 2da
@@ -421,7 +438,6 @@ export function groupPayments(payments) {
 export function projectPeriodImpact(payments, profile, candidate, periodIncomes = []) {
   if (!candidate?.dueDate || candidate.isVariable) return []
 
-  const salario = profile.salary_enabled ? Number(profile.salary_amount || 0) : 0
   const cur = cobroPeriod(profile)
   const extrasActual = periodIncomes.reduce((a, inc) => a + Number(inc.amount || 0), 0)
 
@@ -458,6 +474,7 @@ export function projectPeriodImpact(payments, profile, candidate, periodIncomes 
     const esActual = p.start.getTime() === cur.start.getTime()
     const { comprometido, pendientesCount, variablesPendientes } = pendienteEn(p.start, p.end, esActual)
 
+    const salario = periodSalary(profile, p.start)
     const disponibleAntes = esActual
       ? salario + extrasActual - pagadoEn(p.start, p.end) - comprometido
       : salario - comprometido

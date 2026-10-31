@@ -94,7 +94,9 @@
   width: 100%;
   padding: 15px;
   border: none;
-  border-radius: var(--radius);
+  /* v0.9.968: esquinas redondeadas del nuevo diseño (sin llegar a píldora,
+     pedido de Johnatan); en escritorio siguen en píldora (abajo). */
+  border-radius: 1rem;
   font-family: 'DM Sans', sans-serif;
   font-size: 15px;
   font-weight: 600;
@@ -108,7 +110,8 @@
 
 .btnPrimary { background: var(--accent); color: var(--surface); }
 .btnDanger  { background: var(--danger); color: var(--surface); }
-.btnSoft    { background: color-mix(in srgb, var(--label-variable) 16%, transparent); color: var(--text); }
+.btnSoft    { background: var(--desk-card); color: var(--text); box-shadow: var(--desk-shadow); } /* sólido y visible sobre la hoja, sin tinte translúcido (v0.9.968) */
+@media (hover: hover) and (pointer: fine) { .btnSoft:hover { filter: none; background: var(--desk-hover-fill); } }
 
 @keyframes sheetUp   { from { transform: translateY(100%); } to { transform: translateY(0); } }
 @keyframes sheetFade { from { opacity: 0; } }
@@ -161,5 +164,5 @@
   .btn { height: 48px; padding: 0; border-radius: 99px; }
   .btnPrimary { color: var(--desk-ink-text); }
   .btnDanger { color: var(--on-danger); }
-  .btnSoft { background: var(--desk-chip); }
+  .btnSoft { background: var(--desk-chip); box-shadow: none; }
 }

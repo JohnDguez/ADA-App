@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { createRequire } from 'node:module'
-import { dateToStr, cobroPeriod, nextCobroPeriod, shiftPayday } from '../src/lib/utils'
+import { dateToStr, cobroPeriod, nextCobroPeriod, shiftPayday, periodSalary } from '../src/lib/utils'
 
 // api/ es CommonJS (su propio package.json); se carga con require.
 const require = createRequire(import.meta.url)
@@ -53,5 +53,24 @@ describe('recorrer el día de cobro en fin de semana (v0.9.966)', () => {
     for (const [cfg, ref] of [[q('near'), new Date(2026, 10, 15)], [q('prev'), new Date(2026, 10, 14)], [q(null), new Date(2027, 0, 30)], [{ cobro_freq: 'monthly', cobro_day1: 31, cobro_weekend_shift: 'next' }, new Date(2026, 9, 20)]]) {
       expect(span(server.cobroPeriod(cfg, ref))).toEqual(span(cobroPeriod(cfg, ref)))
     }
+  })
+})
+
+describe('ingreso que cambia desde el próximo periodo (v0.9.968)', () => {
+  const p = { salary_enabled: true, salary_amount: 6000, salary_prev_amount: 1500, salary_change_from: '2026-11-16' }
+  it('los periodos que empiezan antes de la fecha usan el monto anterior', () => {
+    expect(periodSalary(p, new Date(2026, 9, 30))).toBe(1500)
+    expect(periodSalary(p, '2026-11-15')).toBe(1500)
+  })
+  it('desde la fecha usa el monto nuevo', () => {
+    expect(periodSalary(p, new Date(2026, 10, 16))).toBe(6000)
+    expect(periodSalary(p, '2026-12-01')).toBe(6000)
+  })
+  it('sin cambio pendiente o sin ingreso activado', () => {
+    expect(periodSalary({ salary_enabled: true, salary_amount: 6000 }, '2026-10-30')).toBe(6000)
+    expect(periodSalary({ ...p, salary_enabled: false }, '2026-10-30')).toBe(0)
+  })
+  it('el servidor calcula lo mismo', () => {
+    for (const d of ['2026-10-30', '2026-11-16']) expect(server.periodSalary(p, d)).toBe(periodSalary(p, d))
   })
 })
