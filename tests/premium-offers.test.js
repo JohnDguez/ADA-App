@@ -22,6 +22,10 @@ describe('Google Play: elección de oferta', () => {
   it('sin prueba, una promoción creada en Play Console se aplica sola', () => {
     expect(pickOffer({ offers: [base, trial, promo] }, { allowTrial: false }).id).toBe('promo')
   })
+  it('si dos ofertas empiezan gratis, gana la que cobra menos después (prueba + promoción)', () => {
+    const trialPromo = { id: 'launch', tags: [], pricingPhases: [phase(0, 'P7D', 1), phase(41.65, 'P1M', 3), phase(49, 'P1M', 0)] }
+    expect(pickOffer({ offers: [trial, trialPromo] }).id).toBe('launch')
+  })
   it('las ofertas etiquetadas lunapay-hidden no se eligen', () => {
     expect(pickOffer({ offers: [base, hidden] }).id).toBe('base')
   })

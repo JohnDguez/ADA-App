@@ -174,11 +174,19 @@ function periodUnit(iso) {
   return 'day'
 }
 
-// Lo que se cobra en el primer cobro real: fase gratis = 0, si no el precio
-// de la primera fase. Sirve para elegir la oferta más conveniente.
-function firstPaymentMicros(offer) {
-  const first = offer?.pricingPhases?.[0]
-  return first ? Number(first.priceMicros) : Infinity
+// Orden de conveniencia (v0.9.965): fase por fase, gana el cobro más bajo.
+// Así, entre "7 días gratis → $49" y "7 días gratis → $41.65 × 3 → $49",
+// gana la promoción aunque las dos empiecen gratis.
+function compareOffers(a, b) {
+  const pa = a?.pricingPhases || []
+  const pb = b?.pricingPhases || []
+  const n = Math.max(pa.length, pb.length)
+  for (let i = 0; i < n; i++) {
+    const x = pa[i] ? Number(pa[i].priceMicros) : Infinity
+    const y = pb[i] ? Number(pb[i].priceMicros) : Infinity
+    if (x !== y) return x - y
+  }
+  return 0
 }
 
 // Elige la oferta a ordenar (v0.9.961). Google solo devuelve las ofertas
@@ -191,7 +199,7 @@ export function pickOffer(product, { allowTrial = true } = {}) {
   const offers = (product?.offers || []).filter((o) => !(o.tags || []).includes(HIDDEN_OFFER_TAG))
   const pool = allowTrial ? offers : offers.filter((o) => !hasFreePhase(o))
   if (!pool.length) return null
-  return [...pool].sort((a, b) => firstPaymentMicros(a) - firstPaymentMicros(b))[0]
+  return [...pool].sort(compareOffers)[0]
 }
 
 // Resumen de una oferta para mostrar en la app.
