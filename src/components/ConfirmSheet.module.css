@@ -23,6 +23,8 @@
   .overlay { padding: 1rem; align-items: center; }
   .sheet { max-width: 27.5rem; border-radius: 1.75rem; }
   .ft { padding-bottom: 1rem; }
+  .handle { display: none; } /* centrada: no se arrastra, sin asa */
+  .hd { padding-top: 1rem; }
 }
 
 /* Escritorio (≥1100px): diálogo sólido del nuevo diseño (Regla 65). */
