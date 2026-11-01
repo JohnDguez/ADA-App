@@ -108,7 +108,7 @@
 .kv span { color: var(--muted); }
 .kv b { font-weight: 600; }
 .srow { display: flex; align-items: center; gap: 12px; padding: 10px 0; cursor: pointer; }
-.srow > div { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.srow > div:first-child { flex: 1; min-width: 0; display: flex; flex-direction: column; }
 .srow b { font-size: 0.875rem; font-weight: 600; }
 .srow span { font-size: 0.78125rem; color: var(--muted); }
 .rows { gap: 0; padding: 6px 16px; }
