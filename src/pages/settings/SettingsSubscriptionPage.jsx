@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Crown, Check, RefreshCw, Clock, Sparkles, Play, ExternalLink } from 'lucide-react'
+import { Crown, Check, RefreshCw, Clock, Sparkles, Play, ExternalLink, X, ArrowLeftRight } from 'lucide-react'
 // Ícono del encabezado vía Phosphor Icons (mismo patrón que las demás
 // sub-páginas ya migradas, v0.9.442-455) — import directo para tree-shaking real.
 import { Crown as CrownDuotone } from '@phosphor-icons/react/dist/csr/Crown'
@@ -10,7 +10,7 @@ import { ANDROID_PACKAGE_NAME } from '../../lib/constants'
 import { apiUrl } from '../../lib/apiUrl'
 import { showToast } from '../../components/Toast'
 import styles from './SettingsSubscriptionPage.module.css'
-import { Presence } from '../../components/Presence'
+import { Modal } from '../../components/Modal'
 import { SettingsSubLayout, SkSeg } from '../../components/SettingsSubLayout'
 import kit from '../../components/SettingsKit.module.css'
 import { Collapse } from '../../components/Collapse'
@@ -119,33 +119,20 @@ export function SettingsSubscriptionPage({ profile, onOpenPremium, onBack, slide
     return new Date(unixSeconds * 1000).toLocaleDateString(locale, { day: 'numeric', month: 'long', year: 'numeric' })
   }
 
+  // Confirmar cancelar / cambiar de plan (v0.9.988, Modal único).
   const confirmModal_ = (
-    <Presence show={!!(confirmModal)}>{() => (
-      <div className={styles.modalOverlay}>
-        <div className={styles.modal}>
-          <div className={styles.modalTitle}>
-            {confirmModal === 'cancel' ? t('settingsSubscription.cancelModal.title') : t('settingsSubscription.switchModal.title', { plan: t(`premiumPage.${otherPlan}`) })}
-          </div>
-          <div className={styles.modalDesc}>
-            {confirmModal === 'cancel'
-              ? t('settingsSubscription.cancelModal.description', { date: formatRenewDate(subscription.currentPeriodEnd) })
-              : t('settingsSubscription.switchModal.description', { plan: t(`premiumPage.${otherPlan}`) })}
-          </div>
-          <button
-            onClick={() => confirmModal === 'cancel' ? runAction('cancel') : runAction('change-plan', { newPlan: otherPlan })}
-            disabled={actionLoading}
-            className={`${confirmModal === 'cancel' ? 'btn-danger' : 'btn-primary'} ${styles.confirmSpacing}`}
-          >
-            {actionLoading
-              ? t('settingsSubscription.processing')
-              : confirmModal === 'cancel' ? t('settingsSubscription.cancelModal.confirm') : t('settingsSubscription.switchModal.confirm')}
-          </button>
-          <button onClick={() => setConfirmModal(null)} disabled={actionLoading} className="btn-ghost">
-            {t('settingsSubscription.keepButton')}
-          </button>
-        </div>
-      </div>
-    )}</Presence>
+    <Modal open={!!confirmModal} onClose={() => !actionLoading && setConfirmModal(null)} layout="confirm" width={440}
+      icon={confirmModal === 'cancel' ? X : ArrowLeftRight} tone={confirmModal === 'cancel' ? 'danger' : 'accent'}
+      title={confirmModal === 'cancel' ? t('settingsSubscription.cancelModal.title') : t('settingsSubscription.switchModal.title', { plan: t(`premiumPage.${otherPlan}`) })}
+      desc={confirmModal === 'cancel'
+        ? (subscription ? t('settingsSubscription.cancelModal.description', { date: formatRenewDate(subscription.currentPeriodEnd) }) : '')
+        : t('settingsSubscription.switchModal.description', { plan: t(`premiumPage.${otherPlan}`) })}
+      actions={[
+        { label: actionLoading ? t('settingsSubscription.processing') : confirmModal === 'cancel' ? t('settingsSubscription.cancelModal.confirm') : t('settingsSubscription.switchModal.confirm'),
+          onClick: () => (confirmModal === 'cancel' ? runAction('cancel') : runAction('change-plan', { newPlan: otherPlan })), disabled: actionLoading,
+          variant: confirmModal === 'cancel' ? 'danger' : 'primary' },
+        { label: t('settingsSubscription.keepButton'), onClick: () => setConfirmModal(null), disabled: actionLoading, variant: 'soft' },
+      ]} />
   )
 
   const loadingBlock = premiumSource === 'stripe' && subscription === undefined

@@ -654,15 +654,16 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onSaveC
       <>
         {addCategorySheet}
         <div onClick={e => e.target === e.currentTarget && onClose()} className={styles.overlay} data-presence="overlay" data-closing={closing ? '' : undefined}>
-          <div className={styles.panel} data-presence="panel" data-closing={closing ? '' : undefined}>
+          <div className={`${styles.panel} ${styles.instPanel}`} data-presence="panel" data-closing={closing ? '' : undefined}>
             <div className={styles.handle} />
 
-            {/* Contexto */}
-            <div className={styles.installmentHeaderRow}>
-              <div className={styles.installmentHeaderTitle}>{t('paymentModal.editInstallment.title')}</div>
+            {/* Encabezado del Modal único (v0.9.988): título + pago N de M + ✕ */}
+            <div className={styles.mHead}>
+              <h2>{t('paymentModal.editInstallment.title')}</h2>
               <div className={styles.installmentBadge}>
                 {t('paymentModal.editInstallment.badge', { current: installmentCurrent, total: initial.total_installments })}
               </div>
+              <button type="button" className={styles.mIcon} onClick={onClose} aria-label={t('buttons.close')}><XIcon size={18} /></button>
             </div>
 
             {error && <div className={styles.errorBox}>{error}</div>}
@@ -711,13 +712,15 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onSaveC
             </Field>
             </div>
 
-            <button onClick={handleEditInstallment} disabled={saving || !canWrite} className={`btn-primary ${styles.saveButtonSpacing} ${(saving || !canWrite) ? styles.dim70 : ''}`}>
-              {saving ? t('settingsCategories.saving') : t('paymentModal.editInstallment.saveButton')}
-            </button>
-            <button onClick={onClose} className={`btn-ghost ${styles.cancelButtonSpacing}`}>{t('buttons.cancel')}</button>
-            <button onClick={() => setConfirmDelete(true)} disabled={!canDelete} className={`btn-danger ${styles.deleteButtonSpacing} ${canDelete ? '' : styles.dim50}`}>
-              {t('paymentModal.editInstallment.cancelInstallments')}
-            </button>
+            <div className={styles.instFoot}>
+              <button onClick={() => setConfirmDelete(true)} disabled={!canDelete} className={`${mk.btn} ${mk.btnDanger} ${styles.instDel} ${canDelete ? '' : styles.dim50}`}>
+                {t('paymentModal.editInstallment.cancelInstallments')}
+              </button>
+              <button onClick={onClose} className={`${mk.btn} ${mk.btnSoft} ${styles.hideMobile}`}>{t('buttons.cancel')}</button>
+              <button onClick={handleEditInstallment} disabled={saving || !canWrite} className={`${mk.btn} ${mk.btnPri} ${styles.instSave}`}>
+                {saving ? t('settingsCategories.saving') : t('paymentModal.editInstallment.saveButton')}
+              </button>
+            </div>
           </div>
         </div>
         <ConfirmDeleteModal

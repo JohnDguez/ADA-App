@@ -731,3 +731,21 @@ button.spaceTag:hover { background: color-mix(in srgb, var(--accent) 22%, var(--
   .editCopyBanner { border: 0; border-radius: 16px; background: var(--desk-card); box-shadow: var(--desk-shadow); }
   .saveButtonSpacing { height: 50px; border-radius: 99px; }
 }
+
+/* Editar parcialidades (v0.9.988): mismo encabezado y pie que el Modal único.
+   Móvil: Guardar arriba y «Cancelar parcialidades» de borde rojo abajo, sin
+   «Cancelar». Tablet/escritorio: borde rojo a la izquierda, Cancelar +
+   Guardar a la derecha. */
+.mHead .installmentBadge { flex: none; }
+.instFoot { display: flex; align-items: center; gap: 10px; margin-top: 14px; }
+.instDel { margin-right: auto; }
+@media (max-width: 767px) {
+  .instFoot { flex-direction: column-reverse; align-items: stretch; gap: 8px; }
+  .instFoot > button { height: 50px; margin: 0; }
+}
+@media (min-width: 768px) {
+  .panel.instPanel { max-width: 560px; padding: 26px 28px; border-radius: 32px; }
+  .instPanel .handle { display: none; }
+  .instPanel .mHead h2 { font-size: 26px; letter-spacing: -0.5px; }
+  .instPanel :global(.field-input) { background: var(--desk-chip); border: 0; border-radius: 16px; }
+}

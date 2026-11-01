@@ -18,17 +18,16 @@ import { useDeskSettings } from '../../components/DeskSettingsContext'
 import { DeskSettingsHead, DeskPage } from '../../components/DeskSettingsHead'
 import deskStyles from '../../components/SettingsDesk.module.css'
 import dk from './SettingsSharedSpaceDesk.module.css'
-import dkp from '../../components/PaymentDesk.module.css'
 import sp from './SettingsSharedSpaceTab.module.css'
 import styles from './SettingsSharedSpacePage.module.css'
 import wd from './SettingsCategoriesWide.module.css'
 import home from '../DeskHome.module.css'
 import tb from './SettingsCobroTab.module.css'
 import { AvatarImg } from '../../components/AvatarImg'
-import { Presence } from '../../components/Presence'
-import { createPortal } from 'react-dom'
+import { Modal } from '../../components/Modal'
+import mk from '../../components/Modal.module.css'
+import { PasswordField } from '../../components/PasswordField'
 import { AnchoredPop, useAnchor } from '../../components/AnchoredPop'
-import { useBackClose } from '../../lib/backNav'
 import { CURRENCIES, CURRENCY_CODES } from '../../lib/currency'
 import { switchProps } from '../../lib/a11y'
 import { useIsMobile } from '../../hooks/useIsMobile'
@@ -67,27 +66,13 @@ function PermTile({ Icon, label, sub, on, onToggle }) {
 }
 
 
-// Diálogo del nuevo diseño: hoja inferior en móvil, diálogo centrado en tablet.
-function SpaceDialog({ open, onClose, icon: Icon, title, subtitle, children }) {
-  const { t } = useTranslation()
-  useBackClose(open, onClose)
-  return createPortal(
-    <Presence show={!!open}>{() => (
-      <div className={sp.ovl} onClick={e => e.target === e.currentTarget && onClose()}>
-        <div className={sp.dlg} role="dialog" aria-modal="true" aria-label={title}>
-          <div className={sp.dHead}>
-            <span className={sp.dIco}><Icon size={22} /></span>
-            <div className={sp.dText}>
-              <div className={sp.dTitle}>{title}</div>
-              {subtitle && <div className={sp.dSub}>{subtitle}</div>}
-            </div>
-            <button type="button" className={sp.dClose} onClick={onClose} aria-label={t('buttons.close', { defaultValue: 'Cerrar' })}><X size={16} /></button>
-          </div>
-          {children}
-        </div>
-      </div>
-    )}</Presence>,
-    document.body
+// Diálogo de Espacio compartido (v0.9.988): el Modal único con ficha +
+// título + contexto; el contenido (y sus botones) lo pone quien lo usa.
+function SpaceDialog({ open, onClose, icon, title, subtitle, children }) {
+  return (
+    <Modal open={!!open} onClose={onClose} layout="quick" icon={icon} title={title} desc={subtitle} width={480} bodyClassName={sp.dBody}>
+      {children}
+    </Modal>
   )
 }
 
@@ -501,7 +486,6 @@ const PERM_KEYS = [
 // ── Panel de administración del espacio propio ──────────────────────────────
 function OwnedSpacePanel({ entry, user, mode, onGoNotifications, regenerateCode, updateMemberPermissions, updateSpaceConfig, removeMember, deleteSpace, clearSpaceData }) {
   const { t } = useTranslation()
-  const desk = useDeskSettings()
   const [copied,        setCopied]        = useState(false)
   const [regenerating,  setRegenerating]  = useState(false)
   const [nameInput,     setNameInput]     = useState(entry.space.name)
@@ -586,36 +570,18 @@ function OwnedSpacePanel({ entry, user, mode, onGoNotifications, regenerateCode,
       {mode === 'wide'
         ? <CurrencySheet open={currencyOpen} onClose={() => setCurrencyOpen(false)} value={entry.space.currency} onSelect={handleCurrency} title={t('currency.spaceSheetTitle')} />
         : <CurrencyDialog open={currencyOpen} onClose={() => setCurrencyOpen(false)} value={entry.space.currency} onSelect={handleCurrency} title={t('currency.spaceSheetTitle')} />}
-      <Presence show={!!(dangerOpen)}>{() => (
-        <div onClick={e => e.target === e.currentTarget && setDangerOpen(false)} className={desk ? dkp.overlay : styles.deleteModalOverlay}>
-          <div className={desk ? `${dkp.dialog} ${dk.delDlg}` : styles.deleteModalSheet} role={desk ? 'dialog' : undefined} aria-modal={desk ? 'true' : undefined}>
-            {desk && <div className={dk.delIcon}><Trash2 size={22} /></div>}
-            <div className={desk ? dk.delTitle : styles.deleteModalTitle}>{t('activeSpaceHeader.deleteModal.title')}</div>
-            <div className={desk ? dk.delDesc : styles.deleteModalDescription}>
-              {t('activeSpaceHeader.deleteModal.description')}
-            </div>
-            <label className={`field-label ${styles.labelBlock}`}>{t('settingsAccount.dangerModal.confirmLabel')}</label>
-            <input aria-label={t('settingsAccount.dangerModal.confirmLabel')}
-              type="password" className={`field-input ${styles.deleteModalPasswordInput}`} value={dangerPassword}
-              autoFocus={desk}
-              onChange={e => setDangerPassword(e.target.value)}
-              onKeyDown={e => e.key === 'Enter' && handleDelete()}
-              placeholder="••••••••"
-            />
-            {dangerError && <div className={styles.errorText}>{dangerError}</div>}
-            <div className={desk ? dk.delFoot : undefined}>
-              <button
-                onClick={handleDelete}
-                disabled={dangerLoading || !dangerPassword}
-                className={desk ? dk.delBtn : `${styles.deleteModalConfirmButton} ${(dangerLoading || !dangerPassword) ? styles.savingOpacity : ''}`}
-              >
-                {dangerLoading ? t('settingsAccount.dangerModal.verifying') : t('activeSpaceHeader.deleteModal.confirmButton')}
-              </button>
-              <button onClick={() => { setDangerOpen(false); setDangerPassword('') }} className={desk ? dkp.cancel : 'btn-ghost'}>{t('buttons.cancel')}</button>
-            </div>
-          </div>
+      <Modal open={!!dangerOpen} onClose={() => { setDangerOpen(false); setDangerPassword('') }} layout="confirm" icon={Trash2} tone="danger" width={440}
+        title={t('activeSpaceHeader.deleteModal.title')} desc={t('activeSpaceHeader.deleteModal.description')}
+        actions={[
+          { label: dangerLoading ? t('settingsAccount.dangerModal.verifying') : t('activeSpaceHeader.deleteModal.confirmButton'), onClick: handleDelete, disabled: dangerLoading || !dangerPassword, variant: 'danger' },
+          { label: t('buttons.cancel'), onClick: () => { setDangerOpen(false); setDangerPassword('') }, variant: 'soft' },
+        ]}>
+        <div className={`${mk.pan} ${mk.panFlat}`}>
+          {dangerError && <div className={mk.err}>{dangerError}</div>}
+          <div className={mk.lab}><span>{t('settingsAccount.dangerModal.confirmLabel')}</span></div>
+          <PasswordField value={dangerPassword} onChange={setDangerPassword} label={t('settingsAccount.dangerModal.confirmLabel')} autoFocus onEnter={handleDelete} />
         </div>
-      )}</Presence>
+      </Modal>
     </>
   )
 

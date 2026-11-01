@@ -190,3 +190,8 @@
   .dClose:hover, .btnOut:hover { background: var(--desk-hover-fill); filter: none; translate: none; }
   .curOptOn:hover { filter: none; translate: none; }
 }
+
+/* Contenido de SpaceDialog dentro del Modal único (v0.9.988). */
+.dBody { --field-desk-bg: var(--desk-card); }
+.dBody .cbox { background: var(--desk-card); box-shadow: var(--desk-shadow); }
+.dBody :global(.field-input) { background: var(--desk-card); border: 0; border-radius: 16px; }

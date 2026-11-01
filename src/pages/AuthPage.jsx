@@ -7,9 +7,10 @@ import Logo from '../components/Logo'
 import { APP_NAME } from '../lib/constants'
 import { loadGoogleIdentityScript, generateNonce } from '../lib/googleAuth'
 import { isNativeAndroid, signInWithGoogleNative } from '../lib/nativeGoogleAuth'
-import { Presence } from '../components/Presence'
 import { kbd, switchProps } from '../lib/a11y'
 import styles from './AuthPage.module.css'
+import { Modal } from '../components/Modal'
+import mk from '../components/Modal.module.css'
 
 // Tablet (≥768px): sin sesión no existe el riel, así que se libera su margen
 // (index.css → html.auth-screen #root).
@@ -34,45 +35,24 @@ function useIsDesktop() {
 }
 
 // ── Modal de Términos y Condiciones ──────────────────────────────────────────
-function TermsModal({ onClose }) {
+// Términos de uso (v0.9.988, Modal único): el texto va en un panel blanco con
+// scroll dentro del modal; «Entendido» cierra.
+function TermsModal({ open, onClose }) {
   const { t } = useTranslation()
   return (
-    <div
-      onClick={e => e.target === e.currentTarget && onClose()}
-      className={styles.termsOverlay}
-    >
-      <div className={styles.termsSheet}>
-        <div className={styles.termsHeader}>
-          <div className={styles.termsTitle}>{t('termsModal.title')}</div>
-          <button onClick={onClose} aria-label={t('buttons.close')} className={styles.iconButton}>
-            <X size={20} color="var(--text)" />
-          </button>
-        </div>
-        <div className={styles.termsBody}>
-          <p className={styles.termsParagraph}>{t('termsModal.lastUpdated')}</p>
-          <p className={styles.termsParagraph}>{t('termsModal.intro', { appName: APP_NAME })}</p>
-          <Section title={t('termsModal.section1Title')}>{t('termsModal.section1Text', { appName: APP_NAME })}</Section>
-          <Section title={t('termsModal.section2Title')}>{t('termsModal.section2Text', { appName: APP_NAME })}</Section>
-          <Section title={t('termsModal.section3Title')}>{t('termsModal.section3Text', { appName: APP_NAME })}</Section>
-          <Section title={t('termsModal.section4Title')}>{t('termsModal.section4Text', { appName: APP_NAME })}</Section>
-          <Section title={t('termsModal.section5Title')}>{t('termsModal.section5Text', { appName: APP_NAME })}</Section>
-          <Section title={t('termsModal.section6Title')}>{t('termsModal.section6Text', { appName: APP_NAME })}</Section>
-          <Section title={t('termsModal.section7Title')}>{t('termsModal.section7Text', { appName: APP_NAME })}</Section>
-          <Section title={t('termsModal.section8Title')}>{t('termsModal.section8Text', { appName: APP_NAME })}</Section>
-          <Section title={t('termsModal.section9Title')}>{t('termsModal.section9Text', { appName: APP_NAME })}</Section>
-          <Section title={t('termsModal.section10Title')}>{t('termsModal.section10Text', { appName: APP_NAME })}</Section>
-          <p className={styles.termsClosing}>{t('termsModal.closing')}</p>
-          <p className={styles.termsLinkRow}>
-            <a href="/terminos.html" target="_blank" rel="noopener noreferrer" className={styles.link}>
-              {t('termsModal.viewFullVersion')}
-            </a>
-          </p>
-        </div>
-        <div className={styles.termsFooter}>
-          <button onClick={onClose} className="btn-primary">{t('buttons.understood')}</button>
-        </div>
+    <Modal open={open} onClose={onClose} title={t('termsModal.title')} desc={t('termsModal.lastUpdated')} width={600}
+      primary={{ label: t('buttons.understood'), onClick: onClose }} secondary={false}>
+      <div className={`${mk.pan} ${styles.termsBody}`}>
+        <p className={styles.termsParagraph}>{t('termsModal.intro', { appName: APP_NAME })}</p>
+        {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(n => (
+          <Section key={n} title={t(`termsModal.section${n}Title`)}>{t(`termsModal.section${n}Text`, { appName: APP_NAME })}</Section>
+        ))}
+        <p className={styles.termsClosing}>{t('termsModal.closing')}</p>
+        <p className={styles.termsLinkRow}>
+          <a href="/terminos.html" target="_blank" rel="noopener noreferrer" className={styles.link}>{t('termsModal.viewFullVersion')}</a>
+        </p>
       </div>
-    </div>
+    </Modal>
   )
 }
 
@@ -692,7 +672,7 @@ export function AuthPage() {
       </div>
       )}
 
-      <Presence show={showTerms}>{() => <TermsModal onClose={() => setShowTerms(false)} />}</Presence>
+      <TermsModal open={showTerms} onClose={() => setShowTerms(false)} />
     </div>
   )
 }

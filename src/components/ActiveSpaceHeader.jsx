@@ -6,7 +6,9 @@ import { MoreVertical, Pencil, Trash2, LogOut, Pin, UserRound, Crown, UsersRound
 import { showInviteCode } from './InviteCodeModal'
 import styles from './ActiveSpaceHeader.module.css'
 import { useScrollLock } from '../lib/scrollLock'
-import { Presence } from './Presence'
+import { Modal } from './Modal'
+import mk from './Modal.module.css'
+import { PasswordField } from './PasswordField'
 import { useIsMobile } from '../hooks/useIsMobile'
 import { MobileSpaceChip } from './MobileSpaceChip'
 import { kbd } from '../lib/a11y'
@@ -343,54 +345,29 @@ export function ActiveSpaceHeader({ activeSpaceId, sharedSpaces, onManage, onSwi
         document.body
       )}
 
-      {/* Portal — mismo motivo que el resto de los modales de esta función:
-          escapa del contexto de apilamiento del contenedor de la página. */}
-      {createPortal(<Presence show={dangerOpen}>{() => (
-        <div onClick={e => e.target === e.currentTarget && setDangerOpen(false)} className={styles.dangerOverlay}>
-          <div className={styles.dangerPanel}>
-            {isOwner ? (
+      {/* Eliminar / salir del espacio (v0.9.988, Modal único). */}
+      <Modal open={dangerOpen} onClose={() => setDangerOpen(false)} layout="confirm" tone="danger" width={440}
+        icon={isOwner ? Trash2 : LogOut}
+        title={isOwner ? t('activeSpaceHeader.deleteModal.title') : t('activeSpaceHeader.leaveModal.title')}
+        desc={isOwner ? t('activeSpaceHeader.deleteModal.description') : t('activeSpaceHeader.leaveModal.description', { name })}
+        actions={[
+          { label: isOwner ? (dangerLoading ? t('settingsAccount.dangerModal.verifying') : t('activeSpaceHeader.deleteModal.confirmButton'))
+              : (dangerLoading ? t('activeSpaceHeader.leaveModal.leaving') : t('activeSpaceHeader.leaveModal.confirmButton')),
+            onClick: handleDeleteOrLeave, disabled: dangerLoading || (isOwner && !dangerPassword), variant: 'danger' },
+          { label: t('buttons.cancel'), onClick: () => setDangerOpen(false), variant: 'soft' },
+        ]}>
+        {(isOwner || dangerError) && (
+          <div className={`${mk.pan} ${mk.panFlat}`}>
+            {dangerError && <div className={mk.err}>{dangerError}</div>}
+            {isOwner && (
               <>
-                <div className={styles.dangerTitle}>{t('activeSpaceHeader.deleteModal.title')}</div>
-                <div className={styles.dangerDescription}>
-                  {t('activeSpaceHeader.deleteModal.description')}
-                </div>
-                <label className={`field-label ${styles.label}`}>{t('settingsAccount.dangerModal.confirmLabel')}</label>
-                <input aria-label={t('settingsAccount.dangerModal.confirmLabel')}
-                  type="password" className={`field-input ${styles.passwordInput}`} value={dangerPassword}
-                  onChange={e => setDangerPassword(e.target.value)}
-                  onKeyDown={e => e.key === 'Enter' && handleDeleteOrLeave()}
-                  placeholder="••••••••"
-                />
-                {dangerError && <div className={styles.errorText}>{dangerError}</div>}
-                <button
-                  onClick={handleDeleteOrLeave}
-                  disabled={dangerLoading || !dangerPassword}
-                  className={styles.confirmButton}
-                >
-                  {dangerLoading ? t('settingsAccount.dangerModal.verifying') : t('activeSpaceHeader.deleteModal.confirmButton')}
-                </button>
-              </>
-            ) : (
-              <>
-                <div className={styles.dangerTitle}>{t('activeSpaceHeader.leaveModal.title')}</div>
-                <div className={styles.dangerDescription}>
-                  {t('activeSpaceHeader.leaveModal.description', { name })}
-                </div>
-                {dangerError && <div className={styles.errorText}>{dangerError}</div>}
-                <button
-                  onClick={handleDeleteOrLeave}
-                  disabled={dangerLoading}
-                  className={styles.confirmButton}
-                >
-                  {dangerLoading ? t('activeSpaceHeader.leaveModal.leaving') : t('activeSpaceHeader.leaveModal.confirmButton')}
-                </button>
+                <div className={mk.lab}><span>{t('settingsAccount.dangerModal.confirmLabel')}</span></div>
+                <PasswordField value={dangerPassword} onChange={setDangerPassword} label={t('settingsAccount.dangerModal.confirmLabel')} autoFocus onEnter={handleDeleteOrLeave} />
               </>
             )}
-            <button onClick={() => setDangerOpen(false)} className="btn-ghost">{t('buttons.cancel')}</button>
           </div>
-        </div>)}</Presence>,
-        document.body
-      )}
+        )}
+      </Modal>
     </div>
     </div>
   )
