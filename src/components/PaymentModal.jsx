@@ -35,6 +35,9 @@ import dk from './PaymentDesk.module.css'
 import ip from './PaymentImpactDesk.module.css'
 import ins from './PaymentInstallDesk.module.css'
 import ec from './PaymentEditCopyDesk.module.css'
+import { SkSeg } from './SettingsSubLayout'
+import { Modal } from './Modal'
+import mk from './Modal.module.css'
 import { isVoiceSupported, listenAll, stopListening } from '../lib/voiceInput'
 import { parseVoicePayment } from '../lib/parseVoicePayment'
 import { isTicketScanSupported, scanTicketText } from '../lib/ticketScan'
@@ -882,7 +885,7 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onSaveC
             <button onClick={handleSaveCopyAmount} disabled={saving || !canWrite} className={`btn-primary ${styles.saveButtonSpacing} ${(saving || !canWrite) ? styles.dim70 : ''}`}>
               {saving ? t('settingsCategories.saving') : t('paymentModal.save.saveChanges')}
             </button>
-            <button onClick={onClose} className={`btn-ghost ${styles.cancelButtonSpacing}`}>{t('buttons.cancel')}</button>
+            <button onClick={onClose} className={`btn-ghost ${styles.cancelButtonSpacing} ${styles.hideMobile}`}>{t('buttons.cancel')}</button>
           </div>
         </div>
         {methodsAvailable && <AddCardModal open={cardFormOpen} onClose={() => setCardFormOpen(false)} paymentMethods={paymentMethods} onAdded={setMethodId} />}
@@ -896,25 +899,22 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onSaveC
       ['recurrent',   ArrowsClockwise,  'recurrent'],
       ['installment', Rows,             'installment'],
     ]
+    // Móvil (v0.9.986): elegir el tipo con el Modal único (hoja con asa).
     return (
       <>
-        <div onClick={e => e.target === e.currentTarget && requestClose()} className={styles.overlay} data-presence="overlay" data-closing={closing ? '' : undefined}>
-          <div className={styles.panel} data-presence="panel" data-closing={closing ? '' : undefined}>
-            <div className={styles.handle} />
-            <div className={styles.modalTitle}>{t('paymentModal.typePicker.title')}</div>
-            <div className={styles.typePickerSub}>{t('paymentModal.typePicker.subtitle')}</div>
-            {types.map(([m, Icon, k]) => (
-              <button key={m} type="button" onClick={() => selectType(m)} className={`${styles.typeOption} ${mode === m && hadTypeRef.current ? styles.typeOptionCurrent : ''}`}>
-                <span className={styles.typeOptionIcon}><Icon size={24} /></span>
-                <span className={styles.typeOptionText}>
-                  <span className={styles.typeOptionTitle}>{t(`paymentModal.typePicker.${k}.title`)}</span>
-                  <span className={styles.typeOptionDesc}>{t(`paymentModal.typePicker.${k}.desc`)}</span>
-                </span>
-              </button>
-            ))}
-            <button onClick={requestClose} className={`btn-ghost ${styles.cancelButtonSpacing}`}>{t('buttons.cancel')}</button>
-          </div>
-        </div>
+        <Modal open={open} onClose={requestClose} title={t('paymentModal.desk.title')} desc={t('paymentModal.typePicker.title')} backClose={false}
+          headerExtra={voiceSupported && voiceState === 'idle' ? <button type="button" className={mk.x} onClick={() => { setTypeChosen(true); handleVoice() }} aria-label={t('addDropdown.voice')}><Microphone size={18} /></button> : null}>
+          {spaceTagFor(styles.spaceTag)}
+          {types.map(([m, Icon, k]) => (
+            <button key={m} type="button" onClick={() => selectType(m)} className={`${mk.pan} ${styles.typePick} ${mode === m && hadTypeRef.current ? styles.typePickOn : ''}`}>
+              <span className={mk.tile}><Icon size={22} /></span>
+              <span className={styles.typeOptionText}>
+                <span className={styles.typeOptionTitle}>{t(`paymentModal.typePicker.${k}.title`)}</span>
+                <span className={styles.typeOptionDesc}>{t(`paymentModal.typePicker.${k}.desc`)}</span>
+              </span>
+            </button>
+          ))}
+        </Modal>
         <ConfirmCloseModal open={confirmClose} onConfirm={() => { setConfirmClose(false); onClose() }} onCancel={() => setConfirmClose(false)} />
       </>
     )
@@ -1398,18 +1398,33 @@ const impactBlock = impactPreview && impactPreview.length > 0 ? (() => {
   // Editar pago (v0.9.929), escritorio: la misma hoja de siempre pero con el
   // lenguaje de Pagos de escritorio (ver `.editDesk` en el CSS).
   const editDesk = !!initial && deskLike
+  const editTitleText = initial?.is_master && initial?.paused ? t('paymentModal.title.reactivate') : initial?.is_master ? t('paymentModal.title.editRecurrent') : t('paymentModal.title.edit')
   return (
     <>
       <div onClick={e => e.target === e.currentTarget && requestClose()} className={`${styles.overlay} ${editDesk ? `${dk.overlay} ${styles.editDeskOverlay}` : ''}`} data-presence="overlay" data-closing={closing ? '' : undefined}>
         <div className={`${styles.panel} ${isFlat ? styles.panelWide : ''} ${editDesk ? styles.editDesk : ''}`} data-presence="panel" data-closing={closing ? '' : undefined} {...(editDesk ? { role: 'dialog', 'aria-modal': 'true' } : {})}>
           {!editDesk && <div className={styles.handle} />}
+          {/* Móvil (v0.9.986, Modal único): título + dictado + ✕, «Registrar
+              en» y el tipo como segmentado (se cambia sin volver atrás). */}
+          {!editDesk && (
+            <div className={styles.mHead}>
+              <h2>{initial ? editTitleText : t('paymentModal.desk.title')}</h2>
+              <div className={styles.mHeadEnd}>
+                {!initial && voiceSupported && voiceState === 'idle' && (
+                  <button type="button" className={styles.mIcon} onClick={handleVoice} aria-label={t('addDropdown.voice')}><Microphone size={18} /></button>
+                )}
+                <button type="button" className={styles.mIcon} onClick={requestClose} aria-label={t('buttons.close')}><XIcon size={18} /></button>
+              </div>
+            </div>
+          )}
           {!editDesk && spaceTagFor(styles.spaceTag)}
-
           {!initial && (
-            <div data-coachmark="modal-payment-type-tabs" className={styles.typeChip}>
-              {mode === 'installment' ? <Rows size={18} /> : mode === 'recurrent' ? <ArrowsClockwise size={18} /> : <NumberCircleOne size={18} />}
-              <span>{t(`paymentModal.tabs.${mode}`)}</span>
-              <button type="button" onClick={() => setTypeChosen(false)} className={styles.typeChipChange}>{t('paymentModal.typePicker.change')}</button>
+            <div data-coachmark="modal-payment-type-tabs" className={styles.mTypes}>
+              <SkSeg value={mode} onChange={selectType} options={[
+                { value: 'single', label: t('paymentModal.tabs.single') },
+                { value: 'recurrent', label: t('paymentModal.tabs.recurrent') },
+                { value: 'installment', label: t('paymentModal.tabs.installment') },
+              ]} />
             </div>
           )}
           {typeNote && <div className={styles.typeNote}>{typeNote}</div>}
@@ -1423,12 +1438,6 @@ const impactBlock = impactPreview && impactPreview.length > 0 ? (() => {
               <button type="button" className={dk.close} onClick={requestClose} aria-label={t('buttons.cancel')}><XIcon size={16} /></button>
             </div>
           )}
-          {initial && !editDesk && (
-            <div className={styles.modalTitle}>
-              {initial.is_master && initial.paused ? t('paymentModal.title.reactivate') : initial.is_master ? t('paymentModal.title.editRecurrent') : t('paymentModal.title.edit')}
-            </div>
-          )}
-
           {mode === 'installment' && !initial && (
             <>
               <div className={styles.stepsBar}><i className={styles.stepOn} /><i className={step === 2 ? styles.stepOn : ''} /></div>
@@ -1687,10 +1696,10 @@ const impactBlock = impactPreview && impactPreview.length > 0 ? (() => {
           {mode === 'installment' && !initial && step === 2 ? (
             <button onClick={() => setStep(1)} className={`btn-ghost ${styles.cancelButtonSpacing}`}>{t('paymentModal.steps.back')}</button>
           ) : (
-            <button onClick={requestClose} className={`btn-ghost ${styles.cancelButtonSpacing}`}>{t('buttons.cancel')}</button>
+            <button onClick={requestClose} className={`btn-ghost ${styles.cancelButtonSpacing} ${editDesk ? '' : styles.hideMobile}`}>{t('buttons.cancel')}</button>
           )}
           {initial && !isEditingInstallment && (
-            <button onClick={() => setConfirmDelete(true)} disabled={!canDelete} className={`btn-danger ${styles.deleteButtonSpacing} ${canDelete ? '' : styles.dim50}`}>{t('paymentModal.deletePayment')}</button>
+            <button onClick={() => setConfirmDelete(true)} disabled={!canDelete} className={`btn-danger ${styles.deleteButtonSpacing} ${styles.delOutline} ${canDelete ? '' : styles.dim50}`}>{t('paymentModal.deletePayment')}</button>
           )}
           </div>
         </div>

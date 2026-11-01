@@ -695,3 +695,39 @@ button.spaceTag:hover { background: color-mix(in srgb, var(--accent) 22%, var(--
   .editDesk .actions > button:nth-child(2):hover { filter: none; background: var(--desk-hover-fill); }
   .editDesk .actions > button:nth-child(3):hover { filter: none; background: var(--danger-soft); }
 }
+
+/* ══ Móvil con el lenguaje del Modal único (v0.9.986, mockup de modales) ══════
+   Hoja --desk-panel; encabezado título + dictado + ✕; «Registrar en»; tipo en
+   segmentado; el formulario en un panel blanco con campos --desk-chip sin
+   borde; sin «Cancelar» (cierran la ✕ y el fondo); Eliminar con borde rojo. */
+.typePick { flex-direction: row; align-items: center; gap: 12px; width: 100%; border: 0; text-align: left; font: inherit; color: var(--text); cursor: pointer; transition: box-shadow .2s; }
+.typePickOn { box-shadow: var(--desk-shadow), inset 0 0 0 2px var(--accent); }
+.typePick .typeOptionDesc { color: var(--muted); }
+.mHead { display: flex; align-items: center; gap: 12px; margin: 0 0 4px; }
+.mHead h2 { flex: 1; min-width: 0; margin: 0; font-size: 1.3125rem; font-weight: 700; letter-spacing: -0.3px; color: var(--text); }
+.mHeadEnd { display: flex; gap: 8px; }
+.mIcon { width: 40px; height: 40px; flex: none; display: grid; place-items: center; padding: 0; border: 0; border-radius: 50%; background: var(--desk-card); box-shadow: var(--desk-shadow); color: var(--text); cursor: pointer; }
+.mTypes { margin: 12px 0 12px; }
+.mTypes > div { background: var(--desk-card); box-shadow: var(--desk-shadow); }
+@media (max-width: 767px) {
+  .panel { padding: 0 16px calc(16px + env(safe-area-inset-bottom, 0px)); border-radius: 1.75rem 1.75rem 0 0; }
+  .handle { width: 2.5rem; height: 0.3125rem; margin: 0.625rem auto 0.5rem; border-radius: 9px; background: color-mix(in srgb, var(--text) 20%, var(--desk-panel)); }
+  .spaceTag { align-self: flex-start; margin: 6px 0 0; border: 0; background: var(--desk-card); box-shadow: var(--desk-shadow); color: var(--text); }
+  .spaceTag svg { color: var(--accent); }
+  .formWrapper, .formDisabled { padding: 16px; border-radius: 24px; background: var(--desk-card); box-shadow: var(--desk-shadow); }
+  .panel :global(.field-input) { background: var(--desk-chip); border: 0; border-radius: 16px; }
+  .panel :global(.field-input):focus { box-shadow: inset 0 0 0 2px var(--accent); }
+  .amountHero { margin: 0 0 14px; padding: 10px 14px 12px; border-radius: 18px; background: var(--desk-chip); }
+  .toggleWrapper { background: var(--desk-chip); }
+  .typeNote { border-radius: 14px; background: var(--desk-card); box-shadow: var(--desk-shadow); }
+  .actions { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
+  .actions > button { margin: 0; height: 50px; border-radius: 99px; }
+  .hideMobile { display: none; }
+  .delOutline.delOutline { background: transparent; border: 0; box-shadow: inset 0 0 0 1.5px var(--danger); color: var(--danger); }
+}
+@media (hover: hover) and (pointer: fine) { .mIcon:hover { background: var(--desk-hover-fill); filter: none; } }
+@media (max-width: 767px) {
+  .modalTitle { font-size: 1.3125rem; font-weight: 700; letter-spacing: -0.3px; }
+  .editCopyBanner { border: 0; border-radius: 16px; background: var(--desk-card); box-shadow: var(--desk-shadow); }
+  .saveButtonSpacing { height: 50px; border-radius: 99px; }
+}
