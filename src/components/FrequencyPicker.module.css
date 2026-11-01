@@ -22,22 +22,23 @@
 
 .pill {
   flex: 1;
-  padding: 8px 0;
-  border-radius: 5px;
-  border: 0.5px solid var(--field-border);
-  background: var(--field-bg);
+  padding: 10px 0;
+  border-radius: 99px;
+  border: 0;
+  background: var(--desk-chip);
   color: var(--text);
   font-size: 13px;
-  font-weight: 400;
+  font-weight: 500;
   font-family: 'DM Sans', sans-serif;
   cursor: pointer;
   white-space: nowrap;
+  transition: background .25s, color .25s;
 }
 
+/* Activo en negro (DISENO.md §6, v0.9.983) en todos los tamaños. */
 .pillActive {
-  border-color: var(--accent);
-  background: var(--accent);
-  color: var(--surface);
+  background: var(--desk-pill);
+  color: var(--desk-pill-ink);
   font-weight: 600;
 }
 
@@ -54,19 +55,14 @@
   padding: 2px 0;
 }
 
-/* Escritorio (v0.9.845): radios del nuevo diseño. */
-@media (min-width: 1100px) {
-  .pill { border-radius: 99px; }
-}
 @media (min-width: 1100px) {
   .pillGroup, .pillGroupExtra { gap: 8px; }
-  .pill { padding: 12px 0; border: 0; background: var(--field-desk-bg, var(--desk-card)); }
-  .pillActive { background: var(--accent); color: var(--desk-ink-text); }
+  .pill { padding: 12px 0; }
 }
 
 /* Hover de escritorio (v0.9.928): el aclarado global dejaba la píldora sin
    fondo sobre el diálogo; se sustituye por un relleno sólido definido. */
-@media (min-width: 1100px) and (hover: hover) and (pointer: fine) {
+@media (hover: hover) and (pointer: fine) {
   .pill:not(.pillActive):hover { filter: none; background: var(--desk-hover-fill); }
   .pillActive:hover { filter: none; }
 }

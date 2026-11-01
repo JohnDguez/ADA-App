@@ -70,3 +70,11 @@
 
 button.spaceTag { font-family: inherit; cursor: pointer; transition: background .15s; }
 button.spaceTag:hover { background: color-mix(in srgb, var(--accent) 22%, var(--surface)); }
+
+/* Tablet vertical (768–1099, v0.9.983, mockup de modales): el mismo diálogo en
+   una columna; el impacto/resumen va debajo del formulario. */
+.dialog.tab { width: 640px; padding: 26px 28px; gap: 16px; }
+.tab .body { grid-template-columns: minmax(0, 1fr); }
+.tab .tiles { gap: 8px; }
+.tab .tile { padding: 10px 12px; gap: 10px; }
+.tab .headActions { flex-wrap: wrap; justify-content: flex-end; }

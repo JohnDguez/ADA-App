@@ -125,6 +125,10 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onSaveC
   }, [])
   // Escritorio (≥1100px): diálogo de dos columnas con tipos arriba (v0.9.841)
   const isDesk = useIsDesktop()
+  // Tablet vertical (768–1099, v0.9.983, mockup de modales): el MISMO diálogo de
+  // escritorio en una columna (dk.tab / styles.editDesk), no el de móvil.
+  const deskLike = isDesk || isWide
+  const tabCls = !isDesk && isWide ? dk.tab : ''
   const [impactOpen,  setImpactOpen]  = useState(false)  // franja de proyección abierta
   const impactRef = useRef(null)
   const [typeNote,    setTypeNote]    = useState('')
@@ -747,7 +751,7 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onSaveC
 
     const master = payments?.find(p => p.id === initial.parent_id)
 
-    if (isDesk) {
+    if (deskLike) {
       const LockedDesk = ({ label, value }) => (
         <div className={ec.locked}>
           <span className={ec.lockedLabel}>{label}</span>
@@ -757,7 +761,7 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onSaveC
       return (
         <>
         <div onClick={e => e.target === e.currentTarget && onClose()} className={dk.overlay} data-presence="overlay" data-closing={closing ? '' : undefined}>
-          <div className={`${dk.dialog} ${ec.dialog}`} role="dialog" aria-modal="true" aria-label={t('paymentModal.editCopy.title')} data-presence="panel" data-closing={closing ? '' : undefined}>
+          <div className={`${dk.dialog} ${ec.dialog} ${tabCls}`} role="dialog" aria-modal="true" aria-label={t('paymentModal.editCopy.title')} data-presence="panel" data-closing={closing ? '' : undefined}>
             <div className={dk.head}>
               <div>
                 <h2 className={dk.title}>{t('paymentModal.editCopy.title')}</h2>
@@ -886,7 +890,7 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onSaveC
     )
   }
 
-  if (!initial && !typeChosen && !isDesk) {
+  if (!initial && !typeChosen && !deskLike) {
     const types = [
       ['single',      NumberCircleOne,  'single'],
       ['recurrent',   ArrowsClockwise,  'recurrent'],
@@ -1000,7 +1004,7 @@ const impactBlock = impactPreview && impactPreview.length > 0 ? (() => {
 })() : null
 
   // ── Escritorio · Nuevo pago (v0.9.841) ───────────────────────────────────
-  if (!initial && isDesk) {
+  if (!initial && deskLike) {
     const tiles = [['single', NumberCircleOne], ['recurrent', ArrowsClockwise], ['installment', Rows]]
     const symbol = getCurrencySymbol()
     // Panel «Impacto en tus finanzas» (v0.9.868). Sin Premium: bloqueo siempre
@@ -1151,7 +1155,7 @@ const impactBlock = impactPreview && impactPreview.length > 0 ? (() => {
     return (
       <>
         <div onClick={e => e.target === e.currentTarget && requestClose()} className={dk.overlay} data-presence="overlay" data-closing={closing ? '' : undefined}>
-          <div className={dk.dialog} role="dialog" aria-modal="true" aria-label={t('paymentModal.desk.title')} data-presence="panel" data-closing={closing ? '' : undefined}>
+          <div className={`${dk.dialog} ${tabCls}`} role="dialog" aria-modal="true" aria-label={t('paymentModal.desk.title')} data-presence="panel" data-closing={closing ? '' : undefined}>
             <div className={dk.head}>
               <div>
                 <h2 className={dk.title}>{t('paymentModal.desk.title')}</h2>
@@ -1393,7 +1397,7 @@ const impactBlock = impactPreview && impactPreview.length > 0 ? (() => {
 
   // Editar pago (v0.9.929), escritorio: la misma hoja de siempre pero con el
   // lenguaje de Pagos de escritorio (ver `.editDesk` en el CSS).
-  const editDesk = !!initial && isDesk
+  const editDesk = !!initial && deskLike
   return (
     <>
       <div onClick={e => e.target === e.currentTarget && requestClose()} className={`${styles.overlay} ${editDesk ? `${dk.overlay} ${styles.editDeskOverlay}` : ''}`} data-presence="overlay" data-closing={closing ? '' : undefined}>
