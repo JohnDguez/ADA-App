@@ -16,6 +16,8 @@
 .grid > .full { grid-column: 1 / -1; }
 .gridWide { grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr); }
 [data-sk="mobile"] .grid { grid-template-columns: minmax(0, 1fr); gap: 12px; }
+/* Tablet vertical (768–959 px): una columna; dos se veían apretadas (v0.9.979). */
+[data-sk="tablet"] .grid { grid-template-columns: minmax(0, 1fr); }
 .stretch { align-items: stretch; }
 
 /* Panel blanco */
