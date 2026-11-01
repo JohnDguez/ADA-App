@@ -3,9 +3,8 @@ import { useTranslation } from 'react-i18next'
 import { Copy, Check } from 'lucide-react'
 import { useBackClose } from '../lib/backNav'
 import { showToast } from './Toast'
-import styles from './InviteCodeModal.module.css'
-import { ModalSheet, SheetButton } from './ModalSheet'
-import { ShareNetwork } from '@phosphor-icons/react/dist/csr/ShareNetwork'
+import { Modal } from './Modal'
+import mk from './Modal.module.css'
 
 // Modal con el código de invitación de un espacio compartido. Se monta UNA
 // vez en App.jsx (mismo patrón que Toast) y se abre desde cualquier lado con
@@ -42,18 +41,19 @@ export function InviteCodeModal() {
     }
   }
 
+  // Diseño nuevo (v0.9.980): seis casillas con el código, «Copiar código» y
+  // «Listo» en el pie. Mismo componente <Modal> que los demás.
   return (
-    <ModalSheet open={!!info} icon={ShareNetwork} title={t('inviteCodeModal.title')} onBackdrop={close}>
-      <ModalSheet.Text>{t('inviteCodeModal.description')}</ModalSheet.Text>
-      <div className={styles.codeBox}>{shown.code}</div>
-      <SheetButton onClick={copy}>
-        <span className={styles.copyInner}>
-          {copied ? <Check size={16} /> : <Copy size={16} />}
-          {copied ? t('inviteCodeModal.copied') : t('inviteCodeModal.copy')}
-        </span>
-      </SheetButton>
-      <div className={styles.hint}>{t('inviteCodeModal.hint', { name: shown.name })}</div>
-      <SheetButton variant="soft" onClick={close}>{t('inviteCodeModal.close')}</SheetButton>
-    </ModalSheet>
+    <Modal open={!!info} onClose={close} title={t('inviteCodeModal.title')} desc={t('inviteCodeModal.description')}
+      width={440} backClose={false} primary={{ label: t('inviteCodeModal.close'), onClick: close }} secondary={false}>
+      <div className={mk.code} aria-label={shown.code}>
+        {String(shown.code).split('').map((c, i) => <span key={i}>{c}</span>)}
+      </div>
+      <button type="button" className={`${mk.btn} ${mk.btnSoft} ${mk.btnWide}`} onClick={copy}>
+        {copied ? <Check size={16} /> : <Copy size={16} />}
+        {copied ? t('inviteCodeModal.copied') : t('inviteCodeModal.copy')}
+      </button>
+      <div className={`${mk.note} ${mk.noteC}`}>{t('inviteCodeModal.hint', { name: shown.name })}</div>
+    </Modal>
   )
 }

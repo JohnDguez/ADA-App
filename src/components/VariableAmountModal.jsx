@@ -4,7 +4,8 @@ import { ConfirmCloseModal } from './ConfirmCloseModal'
 import AmountInput from './AmountInput'
 import styles from './VariableAmountModal.module.css'
 import { markBackHandled } from '../lib/backNav'
-import { ModalSheet, SheetButton } from './ModalSheet'
+import { Modal } from './Modal'
+import mk from './Modal.module.css'
 import { Coins } from '@phosphor-icons/react/dist/csr/Coins'
 import { AnchoredPop, useAnchor } from './AnchoredPop'
 import { useIsDesktop } from '../hooks/useIsDesktop'
@@ -85,27 +86,27 @@ export function VariableAmountModal({ open, payment, mode = 'pay', spacePermissi
     )
   }
 
+  // Móvil y tablet (v0.9.980): acción rápida con <Modal layout="quick">.
   return (
     <>
-      <ModalSheet open={open} icon={Coins} title={mode === 'estimate' ? t('variableAmountModal.titleEstimate') : t('variableAmountModal.titlePay')} onBackdrop={requestClose} zIndex={250}>
-        <div>
-          <ModalSheet.Text>
-            {payment.name} — {mode === 'estimate' ? t('variableAmountModal.descriptionEstimate') : t('variableAmountModal.descriptionPay')}
-          </ModalSheet.Text>
-          {!allowed && (
-            <div className={styles.warningBox}>
-              {t('paymentsPage.blockedAction', { action: mode === 'estimate' ? t('paymentsPage.actionEditPayments') : t('paymentsPage.actionMarkPayments') })}
-            </div>
-          )}
-          {error && <div className={styles.errorBox}>{error}</div>}
-          <div className={`${styles.formWrapper} ${!allowed ? styles.formDisabled : ''}`}>
-            <label className="field-label">{mode === 'estimate' ? t('variableAmountModal.amountLabelEstimate') : t('variableAmountModal.amountLabelPay')}</label>
-            <AmountInput autoFocus value={amount} onChange={e => setAmount(e.target.value)} placeholder="0.00" onKeyDown={e => e.key === 'Enter' && handleConfirm()} className={`field-input ${styles.input}`} />
-            <SheetButton onClick={handleConfirm} disabled={!allowed}>{mode === 'estimate' ? t('variableAmountModal.saveEstimate') : t('variableAmountModal.savePay')}</SheetButton>
+      <Modal open={open} onClose={requestClose} layout="quick" icon={Coins} zIndex={520} width={460} backClose={false}
+        title={mode === 'estimate' ? t('variableAmountModal.titleEstimate') : t('variableAmountModal.titlePay')}
+        desc={`${payment.name} · ${mode === 'estimate' ? t('variableAmountModal.descriptionEstimate') : t('variableAmountModal.descriptionPay')}`}
+        primary={{ label: mode === 'estimate' ? t('variableAmountModal.saveEstimate') : t('variableAmountModal.savePay'), onClick: handleConfirm, disabled: !allowed }}>
+        {!allowed && (
+          <div className={`${mk.info} ${mk.warnBox}`}>
+            {t('paymentsPage.blockedAction', { action: mode === 'estimate' ? t('paymentsPage.actionEditPayments') : t('paymentsPage.actionMarkPayments') })}
           </div>
-          <SheetButton variant="soft" onClick={requestClose}>{t('buttons.cancel')}</SheetButton>
+        )}
+        <div className={`${mk.pan} ${!allowed ? styles.formDisabled : ''}`}>
+          <div className={mk.lab}>{mode === 'estimate' ? t('variableAmountModal.amountLabelEstimate') : t('variableAmountModal.amountLabelPay')}</div>
+          <label className={mk.amount}>
+            <small>$</small>
+            <AmountInput autoFocus value={amount} onChange={e => { setAmount(e.target.value); setError('') }} placeholder="0.00" onKeyDown={e => e.key === 'Enter' && handleConfirm()} />
+          </label>
+          {error && <div className={mk.err}>{error}</div>}
         </div>
-      </ModalSheet>
+      </Modal>
       <ConfirmCloseModal open={confirmClose} onConfirm={() => { setConfirmClose(false); onClose() }} onCancel={() => setConfirmClose(false)} />
     </>
   )

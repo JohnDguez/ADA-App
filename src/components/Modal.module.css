@@ -1,0 +1,146 @@
+/* Modal único (v0.9.980). Toda la apariencia de los modales vive aquí: si
+   algo cambia, cambia en todos. Solo tokens. Capas (DISENO.md §5): fondo
+   --desk-panel → paneles blancos --desk-card → controles --desk-chip.
+   Entrada/salida: [data-presence] de index.css (hoja sube en móvil; fundido
+   + escala en tablet/escritorio). Regla 54: texto en rem en móvil. */
+
+/* ── Marco ─────────────────────────────────────────────────────────── */
+.overlay { position: fixed; inset: 0; z-index: 500; display: flex; justify-content: center; background: var(--scrim); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
+.isSheet { align-items: flex-end; }
+.isDialog { align-items: center; padding: 24px; }
+.panel { display: flex; flex-direction: column; max-width: 100%; background: var(--desk-panel); color: var(--text); box-shadow: var(--desk-pop-shadow); overflow: hidden; }
+.isSheet .panel { width: 100%; max-height: calc(100dvh - 24px - env(safe-area-inset-top, 0px)); border-radius: 1.75rem 1.75rem 0 0; }
+.isDialog .panel { max-height: calc(100dvh - 48px); border-radius: 32px; }
+.handle { flex: none; width: 2.5rem; height: 0.3125rem; margin: 0.625rem auto 0.25rem; border-radius: 9px; background: color-mix(in srgb, var(--text) 20%, var(--desk-panel)); }
+
+/* Encabezado de formulario */
+.hd { flex: none; display: flex; align-items: flex-start; gap: 12px; padding: 0.5rem 1rem 0.75rem; }
+.hdText { flex: 1; min-width: 0; }
+.hdText h2 { margin: 0; font-size: 1.3125rem; font-weight: 700; letter-spacing: -0.3px; line-height: 1.2; }
+.hdText p { margin: 0.1875rem 0 0; font-size: 0.8125rem; line-height: 1.4; color: var(--muted); }
+.hdEnd { display: flex; align-items: center; gap: 8px; flex: none; }
+.isDialog .hd { padding: 26px 28px 14px; }
+.isDialog .hdText h2 { font-size: 26px; letter-spacing: -0.5px; }
+.isDialog .hdText p { font-size: 13.5px; margin-top: 4px; }
+
+/* Encabezado de acción rápida: ficha + título + contexto */
+.qh { flex: none; display: flex; align-items: center; gap: 12px; padding: 0.5rem 1rem 0.75rem; }
+.qhText { flex: 1; min-width: 0; }
+.qhText h2 { margin: 0; font-size: 1.1875rem; font-weight: 700; letter-spacing: -0.3px; line-height: 1.2; }
+.qhText p { margin: 0.125rem 0 0; font-size: 0.78125rem; color: var(--muted); }
+.isDialog .qh { padding: 24px 24px 12px; }
+
+/* Confirmación: ficha grande centrada */
+.cf { flex: none; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 0.5rem; padding: 0.5rem 1.375rem 0.25rem; }
+.cfTitle { margin: 0.375rem 0 0; font-size: 1.25rem; font-weight: 700; letter-spacing: -0.3px; line-height: 1.25; text-wrap: balance; }
+.cfText { font-size: 0.84375rem; line-height: 1.45; color: var(--muted); }
+.cfText b, .cfText strong { color: var(--text); font-weight: 600; }
+.cfX { position: absolute; top: 14px; right: 14px; }
+.confirm { position: relative; }
+.isSheet .confirm .cfX { top: 18px; }
+.isDialog .confirm .cf { padding: 30px 28px 4px; }
+
+.x { width: 40px; height: 40px; flex: none; display: grid; place-items: center; padding: 0; border: 0; border-radius: 50%; background: var(--desk-card); box-shadow: var(--desk-shadow); color: var(--text); cursor: pointer; transition: background .15s; }
+
+/* Cuerpo y pie */
+.body { flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; display: flex; flex-direction: column; gap: 0.75rem; padding: 0 1rem 0.75rem; }
+.isDialog .body { padding: 0 28px 16px; gap: 14px; }
+.isDialog .confirm .body, .isDialog .qh + .body { padding-left: 24px; padding-right: 24px; }
+.ft { flex: none; padding: 0.75rem 1rem calc(1rem + env(safe-area-inset-bottom, 0px)); }
+.isSheet .ft { box-shadow: 0 -1px 0 var(--desk-hair); }
+.isDialog .ft { padding: 4px 28px 26px; }
+.isDialog .qh ~ .ft, .isDialog .confirm .ft { padding: 4px 24px 24px; }
+.stack { display: flex; flex-direction: column; gap: 8px; }
+.row { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.rowEnd { display: flex; gap: 10px; }
+
+/* Botones */
+.btn { height: 46px; padding: 0 22px; border: 0; border-radius: 99px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; font: inherit; font-size: 0.9375rem; font-weight: 600; white-space: nowrap; cursor: pointer; transition: filter .12s, opacity .15s, background .15s; }
+.btn:active { filter: brightness(0.92); }
+.btn:disabled { opacity: 0.5; cursor: default; }
+.big { width: 100%; height: 50px; font-size: 1rem; }
+.btnPri { background: var(--accent); color: var(--on-color); }
+.btnRed { background: var(--danger); color: var(--on-danger); }
+.btnSoft { background: var(--desk-chip); color: var(--text); }
+.btnGold { background: var(--premium-gold); color: var(--premium-gold-text); }
+.btnDanger { background: transparent; box-shadow: inset 0 0 0 1.5px var(--danger); color: var(--danger); }
+.btnWide { width: 100%; }
+.btnSm { height: 40px; padding: 0 16px; font-size: 0.84375rem; }
+
+/* Fichas de color */
+.ficha { width: 44px; height: 44px; flex: none; display: grid; place-items: center; border-radius: 14px; }
+.fichaBig { width: 56px; height: 56px; border-radius: 18px; }
+.toneA { background: var(--accent); color: var(--on-color); }
+.toneRed { background: var(--danger); color: var(--on-danger); }
+.toneGold { background: var(--premium-gold); color: var(--premium-gold-text); }
+.toneG { background: var(--paid); color: var(--on-color); }
+.pulse { animation: mkPulse 1.6s ease-out infinite; }
+@keyframes mkPulse { 0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent) 40%, transparent); } 100% { box-shadow: 0 0 0 22px color-mix(in srgb, var(--accent) 0%, transparent); } }
+
+/* ── Piezas de contenido ───────────────────────────────────────────── */
+.pan { flex: none; display: flex; flex-direction: column; gap: 0.5rem; padding: 1rem; border-radius: 24px; background: var(--desk-card); box-shadow: var(--desk-shadow); }
+.panFlat { background: var(--desk-chip); box-shadow: none; }
+.lab { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 0.25rem; font-size: 0.71875rem; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.lab:first-child { margin-top: 0; }
+.lab a, .lab button { padding: 0; border: 0; background: none; font: inherit; text-transform: none; letter-spacing: 0; font-size: 0.78125rem; color: var(--accent); cursor: pointer; }
+/* Campos: --desk-chip, sin borde, 16 px */
+.panel :global(.field-input) { height: 46px; background: var(--desk-chip); border: 0; border-radius: 16px; box-shadow: none; color: var(--text); }
+.panel :global(.field-input):focus { box-shadow: inset 0 0 0 2px var(--accent); outline: 0; }
+.panel :global(.field-label) { font-size: 0.71875rem; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.panFlat :global(.field-input) { background: var(--desk-card); }
+.amount { display: flex; align-items: center; gap: 6px; height: 64px; padding: 0 18px; border-radius: 18px; background: var(--desk-chip); cursor: text; transition: box-shadow .15s; }
+.amount:focus-within { box-shadow: inset 0 0 0 2px var(--accent); }
+.amount small { font-size: 1.125rem; color: var(--muted); }
+.amount input { flex: 1; min-width: 0; height: 100%; border: 0; outline: 0; background: none; color: var(--text); font: inherit; font-size: 2.125rem; font-weight: 600; letter-spacing: -1px; }
+.amount input::placeholder { color: var(--muted); opacity: .6; }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip { display: inline-flex; align-items: center; gap: 6px; padding: 7px 12px; border: 0; border-radius: 99px; background: var(--desk-chip); color: var(--text); font: inherit; font-size: 0.78125rem; font-weight: 600; cursor: pointer; transition: background .25s, color .25s; }
+.chipOn { background: var(--desk-pill); color: var(--desk-pill-ink); }
+.note { padding: 0 0.25rem; font-size: 0.78125rem; line-height: 1.45; color: var(--muted); }
+.noteC { text-align: center; }
+.info { flex: none; display: flex; align-items: flex-start; gap: 10px; padding: 12px 14px; border-radius: 16px; background: var(--desk-card); box-shadow: var(--desk-shadow); font-size: 0.8125rem; line-height: 1.45; color: var(--text); }
+.info svg { flex: none; margin-top: 2px; color: var(--accent); }
+.warnBox { background: var(--desk-chip); box-shadow: none; }
+.warnBox svg { color: var(--warn-tone); }
+.err { font-size: 0.78125rem; color: var(--danger); }
+.kv { display: flex; justify-content: space-between; gap: 10px; font-size: 0.84375rem; }
+.kv span { color: var(--muted); }
+.kv b { font-weight: 600; }
+.srow { display: flex; align-items: center; gap: 12px; padding: 10px 0; cursor: pointer; }
+.srow > div { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.srow b { font-size: 0.875rem; font-weight: 600; }
+.srow span { font-size: 0.78125rem; color: var(--muted); }
+.rows { gap: 0; padding: 6px 16px; }
+.sep { height: 1px; background: var(--desk-hair); }
+.list { gap: 2px; padding: 8px; }
+.opt { display: flex; align-items: center; gap: 12px; width: 100%; padding: 10px; border: 0; border-radius: 14px; background: transparent; color: var(--text); font: inherit; text-align: left; cursor: pointer; transition: background .2s; }
+.opt > div { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.opt b { font-size: 0.875rem; font-weight: 600; }
+.opt span { font-size: 0.75rem; color: var(--muted); }
+.optOn { background: var(--desk-chip); }
+.optAdd b { color: var(--accent); }
+.check { width: 22px; height: 22px; flex: none; display: grid; place-items: center; border-radius: 50%; background: var(--accent); color: var(--on-color); animation: mkPop .28s cubic-bezier(0.34, 1.56, 0.64, 1) both; }
+@keyframes mkPop { from { transform: scale(.4); opacity: 0; } }
+.tile { width: 38px; height: 38px; flex: none; display: grid; place-items: center; border-radius: 12px; background: var(--desk-chip); color: var(--accent); }
+.g2 { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 10px; }
+.g2 > div { display: flex; flex-direction: column; gap: 0.5rem; min-width: 0; }
+.link { align-self: flex-start; padding: 0; border: 0; background: none; font: inherit; font-size: 0.8125rem; font-weight: 600; color: var(--accent); cursor: pointer; }
+
+/* Animación de un bloque que cambia (paso, estado) */
+.swap { animation: mkSwap .3s cubic-bezier(0.22, 1, 0.36, 1) both; }
+@keyframes mkSwap { from { opacity: 0; transform: translateY(6px); } }
+
+@media (hover: hover) and (pointer: fine) {
+  .x:hover, .btnSoft:hover, .chip:not(.chipOn):hover, .opt:not(.optOn):hover { background: var(--desk-hover-fill); filter: none; }
+  .btnDanger:hover { background: var(--danger-soft); filter: none; }
+}
+@media (prefers-reduced-motion: reduce) { .pulse, .check, .swap { animation: none; } .btn, .chip, .opt { transition: none; } }
+
+/* Capa de ModalSheet: el texto va centrado arriba y los botones apilados al
+   final del cuerpo. */
+.sheetKids { gap: 0.5rem; padding-top: 0.25rem; padding-bottom: calc(1rem + env(safe-area-inset-bottom, 0px)); }
+.isDialog .sheetKids { padding-bottom: 24px; }
+.sheetText { text-align: center; margin: -0.25rem 0 0.5rem; }
+.sheetKids > .btn:first-of-type { margin-top: 0.5rem; }
+.code { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 8px; }
+.code span { height: 60px; display: grid; place-items: center; border-radius: 16px; background: var(--desk-card); box-shadow: var(--desk-shadow); font-size: 1.75rem; font-weight: 700; font-variant-numeric: tabular-nums; }
