@@ -5,8 +5,9 @@ import { ConfirmCloseModal } from './ConfirmCloseModal'
 import AmountInput from './AmountInput'
 import styles from './InstallmentAbonarModal.module.css'
 import { markBackHandled } from '../lib/backNav'
-import { usePresence } from '../lib/usePresence'
-import { useScrollLock } from '../lib/scrollLock'
+import { Stack } from '@phosphor-icons/react/dist/csr/Stack'
+import { Modal } from './Modal'
+import mk from './Modal.module.css'
 
 // Reemplaza el flujo de "Editar" para una copia individual de parcialidad —
 // nombre/monto de referencia/total de pagos ahora solo se editan desde el
@@ -36,8 +37,6 @@ export function InstallmentAbonarModal({ open, payment, payments, spacePermissio
     if (payment?.amount) setAmount(String(payment.amount))
   }, [open, payment])
 
-  const { render, closing } = usePresence(open)
-  useScrollLock(open)
 
   useEffect(() => {
     if (!open) return
@@ -59,7 +58,7 @@ export function InstallmentAbonarModal({ open, payment, payments, spacePermissio
     onConfirm(val)
   }
 
-  if (!render || !payment || !master) return null
+  if (!payment || !master) return null
 
   const montoRef = Number(master.amount)
   const totalAmount = master.total_amount != null ? Number(master.total_amount) : montoRef * master.total_installments
@@ -108,58 +107,46 @@ export function InstallmentAbonarModal({ open, payment, payments, spacePermissio
     }
   }
 
+  // Diseño nuevo (v0.9.980): acción rápida con <Modal layout="quick">; el
+  // plan de pagos va en chips que se recalculan mientras escribes.
   return (
     <>
-      <div onClick={e => e.target === e.currentTarget && requestClose()} className={styles.overlay} data-presence="overlay" data-closing={closing ? '' : undefined}>
-        <div className={styles.modal} data-presence="panel" data-closing={closing ? '' : undefined}>
-          <div className={styles.handle} />
-          <div className={styles.headerRow}>
-            <span className={styles.title}>{t('installmentAbonarModal.title')}</span>
-            <span className={styles.badge}>{t('installmentAbonarModal.badge', { current: payment.current_installment, total: badgeTotal })}</span>
+      <Modal open={open} onClose={requestClose} layout="quick" icon={Stack} width={480} backClose={false} zIndex={520}
+        title={t('installmentAbonarModal.title')}
+        desc={`${payment.name} · ${t('installmentAbonarModal.badge', { current: payment.current_installment, total: badgeTotal })}`}
+        primary={{ label: t('installmentAbonarModal.confirmButton'), onClick: handleConfirm, disabled: !allowed }}>
+        {!allowed && (
+          <div className={`${mk.info} ${mk.warnBox}`}>{t('paymentsPage.blockedAction', { action: t('paymentsPage.actionRegisterContributions') })}</div>
+        )}
+        <div className={`${mk.pan} ${!allowed ? styles.formDisabled : ''}`}>
+          <div className={mk.lab}>{t('installmentAbonarModal.amountLabel')}</div>
+          <label className={mk.amount}>
+            <small>$</small>
+            <AmountInput autoFocus value={amount} onChange={e => { setAmount(e.target.value); setError('') }} placeholder="0.00" onKeyDown={e => e.key === 'Enter' && handleConfirm()} />
+          </label>
+          <div className={mk.chips}>
+            <button type="button" className={`${mk.chip} ${parseFloat(amount) === montoRef ? mk.chipOn : ''}`} onClick={() => setAmount(String(montoRef))}>
+              {t('installmentAbonarModal.referenceAmount')} {fmt(montoRef)}
+            </button>
           </div>
-          <div className={styles.description}>{payment.name}</div>
-
-          <div className={styles.refRow}>
-            <span>{t('installmentAbonarModal.referenceAmount')}</span>
-            <span className={styles.refAmount}>{fmt(montoRef)}</span>
-          </div>
-          <div className={`${styles.refRow} ${styles.refRowNoTop}`}>
-            <span>{t('installmentAbonarModal.totalDebt')}</span>
-            <span className={styles.refAmount}>{fmt(totalPagadoConAbono)} / {fmt(totalAmount)}</span>
-          </div>
-
-          {!allowed && (
-            <div className={styles.warningBox}>
-              {t('paymentsPage.blockedAction', { action: t('paymentsPage.actionRegisterContributions') })}
-            </div>
-          )}
-          {error && <div className={styles.errorBox}>{error}</div>}
-
-          <div className={`${styles.formWrapper} ${!allowed ? styles.formDisabled : ''}`}>
-            <label className="field-label">{t('installmentAbonarModal.amountLabel')}</label>
-            <AmountInput autoFocus value={amount} onChange={e => setAmount(e.target.value)} placeholder="0.00" onKeyDown={e => e.key === 'Enter' && handleConfirm()} className={`field-input ${styles.input}`} />
-
-            {previewText && <div className={`${styles.preview} ${previewClass}`}>{previewText}</div>}
-
-            {pills.length > 0 && (
-              <>
-                <label className="field-label">{t('installmentAbonarModal.paymentPlan')}</label>
-                <div className={styles.plan}>
-                  {pills.map(p => (
-                    <div key={p.n} className={`${styles.pill} ${styles['pill_' + p.state]}`}>
-                      {p.n}
-                      <span className={styles.pillAmount}>{fmt(p.amt)}</span>
-                    </div>
-                  ))}
-                </div>
-              </>
-            )}
-
-            <button onClick={handleConfirm} disabled={!allowed} className={`btn-primary ${styles.confirmButton}`}>{t('installmentAbonarModal.confirmButton')}</button>
-          </div>
-          <button onClick={requestClose} className="btn-ghost">{t('buttons.cancel')}</button>
+          {error && <div className={mk.err}>{error}</div>}
+          <div className={mk.kv}><span>{t('installmentAbonarModal.totalDebt')}</span><b>{fmt(totalPagadoConAbono)} / {fmt(totalAmount)}</b></div>
         </div>
-      </div>
+        {previewText && <div key={previewText} className={`${mk.info} ${mk.swap} ${previewClass}`}>{previewText}</div>}
+        {pills.length > 0 && (
+          <div className={mk.pan}>
+            <div className={mk.lab}>{t('installmentAbonarModal.paymentPlan')}</div>
+            <div className={styles.plan}>
+              {pills.map(p => (
+                <div key={p.n} className={`${styles.pill} ${styles['pill_' + p.state]}`}>
+                  {p.n}
+                  <span className={styles.pillAmount}>{fmt(p.amt)}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </Modal>
       <ConfirmCloseModal open={confirmClose} onConfirm={() => { setConfirmClose(false); onClose() }} onCancel={() => setConfirmClose(false)} />
     </>
   )

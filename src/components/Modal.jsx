@@ -5,6 +5,8 @@ import { usePresence } from '../lib/usePresence'
 import { useScrollLock } from '../lib/scrollLock'
 import { useBackClose } from '../lib/backNav'
 import { useIsMobile } from '../hooks/useIsMobile'
+import { useIsDesktop } from '../hooks/useIsDesktop'
+import { AnchoredPop } from './AnchoredPop'
 import mk from './Modal.module.css'
 
 // ── Modal único de LunaPay (v0.9.980, mockup de modales aprobado) ─────────
@@ -27,7 +29,7 @@ export function Modal({
   open, onClose, title, desc, icon: Icon, tone = 'accent', layout = 'form',
   headerExtra, children, width = 480, zIndex,
   primary, secondary, danger, footer, actions,
-  backClose = true, pulse = false, className = '', bodyClassName = '', closeButton = true,
+  backClose = true, pulse = false, className = '', bodyClassName = '', closeButton = true, iconStyle,
 }) {
   const { t } = useTranslation()
   const isMobile = useIsMobile()
@@ -69,7 +71,7 @@ export function Modal({
   if (layout === 'confirm') {
     head = (
       <div className={mk.cf}>
-        {Icon && <span className={`${mk.ficha} ${mk.fichaBig} ${toneCls} ${pulse ? mk.pulse : ''}`}><Icon size={26} /></span>}
+        {Icon && <span className={`${mk.ficha} ${mk.fichaBig} ${toneCls} ${pulse ? mk.pulse : ''}`} style={iconStyle}><Icon size={26} /></span>}
         {title && <h2 className={mk.cfTitle}>{title}</h2>}
         {desc && <div className={mk.cfText}>{desc}</div>}
       </div>
@@ -77,7 +79,7 @@ export function Modal({
   } else if (layout === 'quick') {
     head = (
       <div className={mk.qh}>
-        {Icon && <span className={`${mk.ficha} ${toneCls}`}><Icon size={20} /></span>}
+        {Icon && <span className={`${mk.ficha} ${toneCls}`} style={iconStyle}><Icon size={20} /></span>}
         <div className={mk.qhText}><h2>{title}</h2>{desc && <p>{desc}</p>}</div>
         {headerExtra}{x}
       </div>
@@ -117,5 +119,40 @@ export function ModalAmount({ value, onChange, placeholder = '0.00', autoFocus, 
       <input inputMode="decimal" value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder} autoFocus={autoFocus}
         onKeyDown={e => e.key === 'Enter' && onEnter?.()} {...rest} />
     </label>
+  )
+}
+
+// Acción rápida (formulario corto): en escritorio, si hay ancla, popover
+// anclado (AnchoredPop) con el mismo contenido; si no, <Modal layout="quick">
+// (hoja en móvil, diálogo en tablet). DISENO.md §7 (formulario corto).
+export function QuickModal({ open, onClose, anchorRef, icon: Icon, tone = 'accent', title, desc, primary, width = 460, popWidth = 400, children, zIndex, backClose }) {
+  const { t } = useTranslation()
+  const desk = useIsDesktop()
+  if (desk && anchorRef?.current) {
+    const toneCls = { accent: mk.toneA, danger: mk.toneRed, gold: mk.toneGold, paid: mk.toneG }[tone] || mk.toneA
+    return (
+      <AnchoredPop open={!!open} onClose={onClose} anchorRef={anchorRef} width={popWidth} label={title}>
+        <div className={mk.popWrap}>
+          <div className={mk.popHead}>
+            {Icon && <span className={`${mk.ficha} ${toneCls}`}><Icon size={20} /></span>}
+            <div className={mk.qhText}><h2>{title}</h2>{desc && <p>{desc}</p>}</div>
+          </div>
+          {children}
+          <div className={mk.row}>
+            <span />
+            <div className={mk.rowEnd}>
+              <button type="button" className={`${mk.btn} ${mk.btnSoft}`} onClick={onClose}>{t('buttons.cancel')}</button>
+              {primary && <button type="button" className={`${mk.btn} ${mk.btnPri}`} onClick={primary.onClick} disabled={primary.disabled}>{primary.label}</button>}
+            </div>
+          </div>
+        </div>
+      </AnchoredPop>
+    )
+  }
+  return (
+    <Modal open={open} onClose={onClose} layout="quick" icon={Icon} tone={tone} title={title} desc={desc}
+      primary={primary} width={width} zIndex={zIndex} backClose={backClose}>
+      {children}
+    </Modal>
   )
 }

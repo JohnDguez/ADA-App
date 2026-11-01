@@ -1,12 +1,11 @@
 import { useRef } from 'react'
-import { createPortal } from 'react-dom'
 import { useTranslation } from 'react-i18next'
 import { X } from 'lucide-react'
 import AmountInput from './AmountInput'
 import { PaymentMethodField } from './PaymentMethodField'
 import { AnchoredPop, useAnchor } from './AnchoredPop'
-import { usePresence } from '../lib/usePresence'
-import { useScrollLock } from '../lib/scrollLock'
+import { Modal } from './Modal'
+import mk from './Modal.module.css'
 import { useIsMobile } from '../hooks/useIsMobile'
 import { getIconComponent } from '../lib/categoryIcons'
 import { catInk } from '../lib/colorUtils'
@@ -27,8 +26,6 @@ export function GoalAmountModal({ open, kind, goal, amount, setAmount, methodId,
   if (kind) lastKind.current = kind
   const k = kind || lastKind.current
   const withdraw = k === 'retirar'
-  const sheet = usePresence(!!open && !asPop)
-  useScrollLock(!!open && !asPop)
   if (!goal) return null
 
   const Icon = getIconComponent(goal.icon)
@@ -85,16 +82,22 @@ export function GoalAmountModal({ open, kind, goal, amount, setAmount, methodId,
       </AnchoredPop>
     )
   }
-  if (!sheet.render) return null
-  return createPortal(
-    <div className={styles.overlay} data-presence="overlay" data-closing={sheet.closing ? '' : undefined}
-      onClick={e => e.target === e.currentTarget && onClose()}>
-      <div className={styles.sheet} data-presence="panel" data-closing={sheet.closing ? '' : undefined} role="dialog" aria-modal="true" aria-label={title}>
-        <div className={styles.handle} />
-        {head}
-        {body}
+  // Móvil (y tablet sin ancla): <Modal layout="quick"> (v0.9.980).
+  return (
+    <Modal open={!!open && !asPop} onClose={onClose} layout="quick" icon={Icon || undefined} iconStyle={{ background: goal.color, color: catInk(goal.color) }}
+      title={title} desc={`${goal.name} · ${fmt(goal.currentAmount)} / ${fmt(goal.target_amount)}`} width={460}
+      primary={{ label: saving ? t('goalDetailPanel.saving') : t('goalDetailPanel.confirm'), onClick: onConfirm, disabled: saving || !canConfirm }}>
+      <div className={mk.pan}>
+        <div className={mk.lab}>{withdraw ? t('goalDetailPanel.amountToWithdraw') : t('goalDetailPanel.amountToContribute')}</div>
+        <label className={mk.amount}>
+          <small>$</small>
+          <AmountInput autoFocus value={amount} onChange={e => setAmount(e.target.value)} placeholder="0.00" onKeyDown={e => e.key === 'Enter' && onConfirm()} />
+        </label>
+        <div className={mk.note}>{hint}</div>
+        {!withdraw && paymentMethods && (
+          <PaymentMethodField methods={paymentMethods.methods} value={methodId} onChange={setMethodId} onAddCard={onAddCard} allowCredit={false} />
+        )}
       </div>
-    </div>,
-    document.body,
+    </Modal>
   )
 }

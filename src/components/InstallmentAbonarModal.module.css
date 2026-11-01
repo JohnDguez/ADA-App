@@ -123,17 +123,14 @@
 }
 
 .previewNeutral {
-  background: var(--bg);
   color: var(--text);
 }
 
 .previewAccent {
-  background: var(--bg);
   color: var(--accent);
 }
 
 .previewSuccess {
-  background: var(--bg);
   color: var(--paid);
 }
 
