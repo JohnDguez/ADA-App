@@ -20,7 +20,6 @@ const AuthPage = lazy(() => import('./pages/AuthPage').then(m => ({ default: m.A
 const ResetPasswordPage = lazy(() => import('./pages/AuthPage').then(m => ({ default: m.ResetPasswordPage })))
 const OnboardingPage = lazy(() => import('./pages/OnboardingPage').then(m => ({ default: m.OnboardingPage })))
 const SettingsPage = lazy(() => import('./pages/SettingsPage').then(m => ({ default: m.SettingsPage })))
-const ImportModal = lazy(() => import('./components/ImportModal').then(m => ({ default: m.ImportModal })))
 const PasswordSetupModal = lazy(() => import('./components/PasswordSetupModal').then(m => ({ default: m.PasswordSetupModal })))
 const PremiumPage = lazy(() => import('./pages/PremiumPage').then(m => ({ default: m.PremiumPage })))
 const PaymentsPage = lazy(() => import('./pages/PaymentsPage').then(m => ({ default: m.PaymentsPage })))
@@ -737,9 +736,8 @@ export default function App() {
   const [payCardNowCard, setPayCardNowCard] = useState(null)
   // Importar desde un CSV (v0.9.802): gratis para todos; se abre desde Ajustes
   // y desde el estado vacío de una cuenta nueva (sin ningún pago).
-  const [importOpen, setImportOpen] = useState(false)
-  const [importMounted, setImportMounted] = useState(false) // el modal se descarga la primera vez que se abre y se queda montado (animación de salida)
-  const openImport = () => { setImportMounted(true); setImportOpen(true) }
+  // v0.9.978: ya no es modal — es la subpágina Ajustes › Importar en los 3 tamaños.
+  const openImport = () => goToSettingsSection('import')
   const showImportLink = oldestChecked && oldestYear === null && !activeSpaceId && !paymentsLoading && payments.length === 0
   // "Liquidar plan" (v0.9.587): { card, plan } mientras el modal está abierto
   const [settleTarget, setSettleTarget] = useState(null)
@@ -2029,7 +2027,6 @@ export default function App() {
           // de ESE espacio — se manda null en vez de un número equivocado.
           personalPayments={paymentsSpaceId === null && paymentsLoading ? null : cardPayments}
           onPayCardNow={setPayCardNowCard}
-          onOpenImport={openImport}
           importProps={{ sharedActive: !!activeSpaceId, onFetchExisting: findExistingForImport, onImport: importPayments }}
           onSettlePlan={(card, plan) => setSettleTarget({ card, plan })}
           initialSection={settingsInitialSection}
@@ -2148,18 +2145,6 @@ export default function App() {
         onClose={() => { sharedPay?.resolver?.(null); setSharedPay(null) }}
       />
 
-      {importMounted && (
-        <Suspense fallback={null}>
-          <ImportModal
-            open={importOpen}
-            onClose={() => setImportOpen(false)}
-            profile={profile}
-            sharedActive={!!activeSpaceId}
-            onFetchExisting={findExistingForImport}
-            onImport={importPayments}
-          />
-        </Suspense>
-      )}
 
       <DeskTooltip />
 

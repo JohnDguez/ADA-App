@@ -66,7 +66,6 @@
 .tile b { font-size: 14px; font-weight: 600; color: var(--text); }
 .tile span { font-size: 12px; color: var(--muted); }
 .tileSw { position: absolute; right: 12px; top: 12px; }
-.tile :global(.toggle-track:not(.is-on)), .onChip :global(.toggle-track:not(.is-on)) { background: var(--desk-card); }
 
 /* Chips (activo = --desk-pill) */
 .chips { display: flex; gap: 8px; flex-wrap: wrap; }

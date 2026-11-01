@@ -1,11 +1,13 @@
 import { useState, useMemo, useRef, useEffect, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
-import { X, Upload, FileSpreadsheet, CheckCircle2, AlertTriangle, XCircle, Search, ChevronLeft, ChevronDown, Repeat, Check } from 'lucide-react'
-import { Presence } from './Presence'
+import { Upload, FileSpreadsheet, Search, ChevronLeft, ChevronDown, Repeat, Check } from 'lucide-react'
+import { UploadSimple } from '@phosphor-icons/react/dist/csr/UploadSimple'
 import { BottomSheet } from './BottomSheet'
 import { Select } from './Select'
-import { SegmentedControl } from './SegmentedControl'
-import { useBackClose } from '../lib/backNav'
+import { Collapse } from './Collapse'
+import { Toggle } from './SettingsShared'
+import { LoadingDots } from './LoadingDots'
+import { switchProps } from '../lib/a11y'
 import { showToast } from './Toast'
 import {
   decodeCsvBuffer, detectDelimiter, parseCsv, detectHeaderRow, guessMapping, isOwnExport,
@@ -15,22 +17,21 @@ import {
 import { CATEGORIES, getCategoryLabel, getCatColor, fmt, cobroPeriod, dateToStr, dateOf, getMonths, intlLocale } from '../lib/utils'
 import { catInk } from '../lib/colorUtils'
 import { getCategoryIcon } from '../lib/categoryIcons'
-import { DeskSettingsHead, DeskPage } from './DeskSettingsHead'
-import deskStyles from './SettingsDesk.module.css'
+import { SettingsSubLayout, SkSeg, useSettingsMode } from './SettingsSubLayout'
+import kit from './SettingsKit.module.css'
 import styles from './ImportModal.module.css'
 
-// Importar desde un CSV (v0.9.802) — modal de hasta 4 pasos (Archivo ·
-// Columnas · Revisión · Pagos que se repiten). Mockups aprobados con Johnatan.
-// Móvil: hoja casi a pantalla completa. ≥768px: diálogo centrado de 2
-// columnas, con el panel de resumen FIJO a la derecha (Regla 48) y la lista
-// en formato fila (Regla 47). Las listas hacen scroll por dentro (.scroll-y):
-// nunca hacen crecer el contenedor. Todo se procesa en el dispositivo.
+// Importar desde un CSV (v0.9.802; subpágina de Ajustes en los 3 tamaños
+// desde v0.9.978) — hasta 4 pasos (Archivo · Columnas · Revisión · Pagos que
+// se repiten). En tablet/escritorio el resumen va FIJO a la derecha (Regla 48)
+// y la lista en formato fila (Regla 47). La lista hace scroll por dentro:
+// nunca hace crecer la página. Todo se procesa en el dispositivo.
 
 const MAX_ROWS = 5000
 const MAX_BYTES = 5 * 1024 * 1024
 const MAP_KEY = 'lunapay_import_maps_v1'
-const ITEM_H_PHONE = 60
-const ITEM_H_TABLET = 48
+const ITEM_H_PHONE = 62
+const ITEM_H_WIDE = 56
 const OVERSCAN = 6
 
 // El mapeo confirmado se recuerda por firma de cabeceras (mismo banco/app =
@@ -47,19 +48,8 @@ function writeSavedMap(sig, value) {
   } catch { /* sin almacenamiento disponible: solo se pierde la comodidad de recordar */ }
 }
 
-function useIsTablet() {
-  const [v, setV] = useState(() => typeof window !== 'undefined' && window.matchMedia('(min-width: 768px)').matches)
-  useEffect(() => {
-    const mq = window.matchMedia('(min-width: 768px)')
-    const on = e => setV(e.matches)
-    mq.addEventListener('change', on)
-    return () => mq.removeEventListener('change', on)
-  }, [])
-  return v
-}
-
-function fmtDate(str) {
-  return dateOf(str).toLocaleDateString(intlLocale(), { day: 'numeric', month: 'short', year: 'numeric' })
+function fmtShort(str) {
+  return dateOf(str).toLocaleDateString(intlLocale(), { day: '2-digit', month: 'short' }).replace('.', '').replace('-', ' ')
 }
 
 // Lista con ventana: solo se pintan las filas visibles (+ colchón). Todas las
@@ -89,20 +79,21 @@ function VirtualList({ items, itemH, renderItem, resetKey }) {
   )
 }
 
-function CategoryChip({ cat, profile, customCategories }) {
+function CategoryChip({ cat, profile, customCategories, big = false }) {
   const color = getCatColor(cat, customCategories, profile?.category_colors)
   const Icon = getCategoryIcon(cat, profile?.category_icons)
   return (
-    <span className={styles.catSquare} style={{ background: color }}>
-      {Icon ? <Icon size={13} color={catInk(color)} strokeWidth={2} /> : <span className={styles.catDot} />}
+    <span className={`${styles.catSquare} ${big ? styles.catBig : ''}`} style={{ background: color }}>
+      {Icon ? <Icon size={big ? 18 : 13} color={catInk(color)} strokeWidth={2} /> : <span className={styles.catDot} />}
     </span>
   )
 }
 
 // ── Contenido (se monta dentro de <Presence>: su estado se reinicia al cerrar) ──
-function ImportBody({ profile, sharedActive, onClose, onImport, onFetchExisting, inline = false }) {
+function ImportBody({ profile, sharedActive, onClose, onImport, onFetchExisting, onBack, slideClass }) {
   const { t } = useTranslation()
-  const isTablet = useIsTablet()
+  const mode = useSettingsMode()
+  const itemH = mode === 'mobile' ? ITEM_H_PHONE : ITEM_H_WIDE
   const customCategories = profile?.custom_categories || []
   const fileRef = useRef(null)
 
@@ -316,45 +307,61 @@ function ImportBody({ profile, sharedActive, onClose, onImport, onFetchExisting,
     else doImport()
   }
 
-  // ── Render de cada paso ──────────────────────────────────────────────────
+  const stepper = mode === 'mobile' ? (
+    <div className={styles.stpm}>
+      <b>{t('importCsv.stepOf', { n: stepNo, total: visibleSteps.length })} · {t(`importCsv.steps.${step}`)}</b>
+      <div className={styles.bars} style={{ gridTemplateColumns: `repeat(${visibleSteps.length}, 1fr)` }}>
+        {visibleSteps.map((st, i) => <i key={st} className={i < stepNo ? styles.barOn : ''} />)}
+      </div>
+    </div>
+  ) : (
+    <ol className={styles.stp}>
+      {visibleSteps.map((st, i) => (
+        <li key={st} className={`${i + 1 === stepNo ? styles.stpOn : ''} ${i + 1 < stepNo ? styles.stpDone : ''}`} aria-current={i + 1 === stepNo ? 'step' : undefined}>
+          {i + 1 < stepNo ? <Check size={14} strokeWidth={3} /> : <span>{i + 1}</span>}{t(`importCsv.steps.${st}`)}
+        </li>
+      ))}
+    </ol>
+  )
+
+  // ── Paso 1 ───────────────────────────────────────────────────────────────
   function renderFile() {
     return (
-      <div className={styles.bodyPad}>
-        <div className={styles.stepTitle}>{t('importCsv.file.title')}</div>
-        <div className={styles.stepSub}>{t('importCsv.file.subtitle')}</div>
-        <div
-          className={`${styles.drop} ${dragOver ? styles.dropOver : ''}`}
+      <>
+        <section
+          className={`${kit.panel} ${styles.drop} ${dragOver ? styles.dropOver : ''}`}
           onDragOver={e => { e.preventDefault(); setDragOver(true) }}
           onDragLeave={() => setDragOver(false)}
           onDrop={e => { e.preventDefault(); setDragOver(false); handleFile(e.dataTransfer.files?.[0]) }}
         >
-          <FileSpreadsheet size={34} color="var(--accent)" strokeWidth={1.5} />
+          <span className={styles.dic}><FileSpreadsheet size={26} strokeWidth={1.8} /></span>
+          <b>{t('importCsv.file.title')}</b>
+          <span className={styles.dropSub}>{t('importCsv.file.subtitle')}</span>
           {loading
-            ? <div className={styles.dropText}>{t('importCsv.file.reading')}</div>
-            : <>
-                <button type="button" className="btn-primary" onClick={() => fileRef.current?.click()}>
-                  <Upload size={15} className={styles.btnIcon} />{t('importCsv.file.pick')}
-                </button>
-                <div className={styles.dropText}>{t('importCsv.file.drop')}</div>
-              </>}
-          {fileName && !loading && !error && <div className={styles.fileName}>{fileName}</div>}
+            ? <span className={styles.dropSub}><LoadingDots /> {t('importCsv.file.reading')}</span>
+            : <button type="button" className={`${kit.btn} ${kit.btnLg} ${kit.btnPri}`} onClick={() => fileRef.current?.click()}>
+                <Upload size={16} />{t('importCsv.file.pick')}
+              </button>}
+          {mode !== 'mobile' && !loading && <em className={styles.dropHint}>{t('importCsv.file.drop')}</em>}
+          {fileName && !loading && !error && <em className={styles.dropHint}>{fileName}</em>}
           <input ref={fileRef} type="file" accept=".csv,.txt,text/csv,text/plain" hidden
             onChange={e => { handleFile(e.target.files?.[0]); e.target.value = '' }} />
-        </div>
-        {error && <div className={styles.errorText} role="alert">{error}</div>}
-        {sharedActive && <div className={styles.note}>{t('importCsv.personalNote')}</div>}
-      </div>
+          {error && <div className={styles.errorText} role="alert">{error}</div>}
+        </section>
+        {sharedActive && <div className={kit.notice}><span>{t('importCsv.personalNote')}</span></div>}
+      </>
     )
   }
 
+  // ── Paso 2 ───────────────────────────────────────────────────────────────
   function renderColumns() {
     const opts = [{ value: '', label: t('importCsv.columns.none') }, ...headers.map((h, i) => ({ value: String(i), label: h || `#${i + 1}` }))]
     const set = key => v => setMapping(m => ({ ...m, [key]: v === '' ? -1 : Number(v) }))
     const val = key => (mapping[key] >= 0 ? String(mapping[key]) : '')
     const field = (key, label) => (
-      <div className={styles.field}>
-        <label className="field-label">{label}</label>
-        <Select value={val(key)} onChange={set(key)} options={opts} placeholder={t('importCsv.columns.choose')} />
+      <div className={styles.crow}>
+        <span>{label}</span>
+        <div className={styles.fsel}><Select value={val(key)} onChange={set(key)} options={opts} placeholder={t('importCsv.columns.choose')} /></div>
       </div>
     )
     const amountOk = amountMode === 'single' ? mapping.amount >= 0 : (mapping.debit >= 0 || mapping.credit >= 0)
@@ -364,81 +371,66 @@ function ImportBody({ profile, sharedActive, onClose, onImport, onFetchExisting,
       return { i, d, c: String(r[mapping.concept] ?? ''), a: amountMode === 'single' ? r[mapping.amount] : (r[mapping.debit] || r[mapping.credit]) }
     })
     return (
-      <>
-        <div className={`scroll-y ${styles.bodyPad}`}>
-          <div className={styles.stepTitle}>{t('importCsv.columns.title')}</div>
-          <div className={styles.stepSub}>{t('importCsv.columns.subtitle')}</div>
+      <div className={`${kit.grid} ${kit.gridWide}`}>
+        <section className={kit.panel}>
+          <div className={kit.pt}><b>{t('importCsv.columns.title')}</b><span>{t('importCsv.columns.subtitle')}</span></div>
           {field('date', t('importCsv.columns.date'))}
           {field('concept', t('importCsv.columns.concept'))}
-          <div className={styles.field}>
-            <SegmentedControl
-              value={amountMode}
-              onChange={v => {
-                setAmountMode(v)
-                setMapping(m => v === 'single' ? { ...m, debit: -1, credit: -1 } : { ...m, amount: -1 })
-              }}
-              options={[{ value: 'single', label: t('importCsv.columns.modeSingle') }, { value: 'double', label: t('importCsv.columns.modeDouble') }]}
-            />
-          </div>
+          <SkSeg value={amountMode}
+            onChange={v => {
+              setAmountMode(v)
+              setMapping(m => v === 'single' ? { ...m, debit: -1, credit: -1 } : { ...m, amount: -1 })
+            }}
+            options={[{ value: 'single', label: t('importCsv.columns.modeSingle') }, { value: 'double', label: t('importCsv.columns.modeDouble') }]} />
           {amountMode === 'single'
             ? field('amount', t('importCsv.columns.amount'))
             : <>{field('debit', t('importCsv.columns.debit'))}{field('credit', t('importCsv.columns.credit'))}</>}
           {field('category', t('importCsv.columns.category'))}
-
-          <div className={styles.field}>
-            <label className="field-label">{t('importCsv.columns.dateFormat')}</label>
-            <SegmentedControl
-              value={dateFormat}
-              onChange={v => { setDateFormat(v); setDateAmbiguous(false) }}
-              options={[{ value: 'DMY', label: 'DD/MM/AAAA' }, { value: 'MDY', label: 'MM/DD/AAAA' }, { value: 'YMD', label: 'AAAA-MM-DD' }]}
-            />
+          <div className={styles.crow}>
+            <span>{t('importCsv.columns.dateFormat')}</span>
+            <SkSeg value={dateFormat} onChange={v => { setDateFormat(v); setDateAmbiguous(false) }}
+              options={[{ value: 'DMY', label: 'DD/MM/AAAA' }, { value: 'MDY', label: 'MM/DD/AAAA' }, { value: 'YMD', label: 'AAAA-MM-DD' }]} />
             {dateAmbiguous && <div className={styles.warnText}>{t('importCsv.columns.dateAmbiguous')}</div>}
           </div>
-
-          {amountMode === 'single' && (
-            <div className={styles.toggleRow} role="button" tabIndex={0}
-              onClick={() => setNegativeIsExpense(v => !v)}
-              onKeyDown={e => (e.key === 'Enter' || e.key === ' ') && (e.preventDefault(), setNegativeIsExpense(v => !v))}>
-              <div className={styles.toggleText}>
-                <div className={styles.toggleLabel}>{t('importCsv.columns.negative')}</div>
-                <div className={styles.toggleHint}>{t('importCsv.columns.negativeHint')}</div>
-              </div>
-              <div className={`toggle-track${negativeIsExpense ? ' is-on' : ''}`}><div className={`toggle-thumb${negativeIsExpense ? ' is-on' : ''}`} /></div>
+          <Collapse open={amountMode === 'single'}>
+            <div {...switchProps(negativeIsExpense)} className={`${kit.row} ${kit.clickable} ${styles.negRow}`} onClick={() => setNegativeIsExpense(v => !v)}>
+              <div className={kit.rowText}><b>{t('importCsv.columns.negative')}</b><span>{t('importCsv.columns.negativeHint')}</span></div>
+              <Toggle on={negativeIsExpense} />
             </div>
-          )}
-
-          <div className={styles.previewBox}>
-            <div className="field-label">{t('importCsv.columns.preview')}</div>
-            {preview.map(p => (
-              <div key={p.i} className={styles.previewRow}>
-                <span className={p.d ? styles.previewDate : styles.previewBad}>{p.d ? fmtDate(p.d) : t('importCsv.columns.previewBad')}</span>
-                <span className={styles.previewConcept}>{p.c}</span>
-                <span className={styles.previewAmount}>{p.a}</span>
-              </div>
-            ))}
-          </div>
+          </Collapse>
+        </section>
+        <section className={kit.panel}>
+          <div className={kit.pt}><b>{t('importCsv.columns.preview')}</b></div>
+          {preview.map(p => (
+            <div key={p.i} className={styles.prow}>
+              <span className={p.d ? '' : styles.bad}>{p.d ? fmtShort(p.d) : t('importCsv.columns.previewBad')}</span>
+              <b>{p.c}</b>
+              <em>{p.a}</em>
+            </div>
+          ))}
           {!ready && <div className={styles.errorText}>{t('importCsv.columns.needFields')}</div>}
-        </div>
-        <div className={styles.footer}>
-          <button type="button" className="btn-primary" disabled={!ready || loading} onClick={() => goReview()}>
-            {loading ? t('importCsv.file.reading') : t('importCsv.columns.continue')}
-          </button>
-        </div>
-      </>
+          <div className={`${kit.foot} ${kit.footEnd}`}>
+            <button type="button" className={`${kit.btn} ${kit.btnLg} ${kit.btnPri}`} disabled={!ready || loading} onClick={() => goReview()}>
+              {loading ? t('importCsv.file.reading') : t('importCsv.columns.continue')}
+            </button>
+          </div>
+        </section>
+      </div>
     )
   }
 
+  // ── Paso 3 ───────────────────────────────────────────────────────────────
   function renderRow(item) {
     if (item.k === 'h') {
       const g = item.g
       const sel = g.rows.filter(r => r.status !== 'err')
       const on = sel.length > 0 && sel.every(r => selected.has(r.id))
+      const sum = g.rows.reduce((acc, r) => acc + (r.status === 'err' ? 0 : r.amount), 0)
       return (
-        <div key={item.id} className={styles.groupHead} style={{ height: isTablet ? ITEM_H_TABLET : ITEM_H_PHONE }}>
-          <div className={styles.groupTitle}>
-            <span className={styles.groupLabel}>{g.label}</span>
-            {g.repeat && <span className={styles.repeatTag}><Repeat size={11} />{t('importCsv.review.repeats', { freq: t(`importCsv.recurring.freq.${g.repeat.freq}`).toLowerCase() })}</span>}
-            <span className={styles.groupCount}>{g.rows.length}</span>
+        <div key={item.id} className={styles.mhead} style={{ height: itemH }}>
+          <div className={styles.mheadText}>
+            <b>{g.label}{g.repeat && <span className={styles.repeatTag}><Repeat size={11} />{t(`importCsv.recurring.freq.${g.repeat.freq}`)}</span>}</b>
+            <span>{t('importCsv.review.groupMeta', { count: g.rows.length, amount: fmt(sum) })}</span>
           </div>
           <div className={styles.groupActions}>
             {groupBy === 'concept' && filter !== 'err' && (
@@ -448,7 +440,7 @@ function ImportBody({ profile, sharedActive, onClose, onImport, onFetchExisting,
             )}
             {sel.length > 0 && (
               <button type="button" className={styles.linkBtn} onClick={() => setMany(g.rows, !on)}>
-                {on ? t('importCsv.review.clearGroup') : t('importCsv.review.selectGroup', { count: sel.length })}
+                {on ? t('importCsv.review.clearGroupShort') : t('importCsv.review.selectGroupShort')}
               </button>
             )}
           </div>
@@ -460,187 +452,151 @@ function ImportBody({ profile, sharedActive, onClose, onImport, onFetchExisting,
     const err = r.status === 'err'
     const reason = r.reasons[0]
     return (
-      <div key={item.id} className={`${styles.row} ${on ? styles.rowOn : ''}`} style={{ height: isTablet ? ITEM_H_TABLET : ITEM_H_PHONE }}>
+      <div key={item.id} className={styles.irow} style={{ height: itemH }}>
         <div
-          className={`${styles.check} ${on ? styles.checkOn : ''} ${err ? styles.checkOff : ''}`}
+          className={`${styles.cbx} ${on ? styles.cbxOn : ''} ${err ? styles.cbxOff : ''}`}
           role="checkbox" aria-checked={on} aria-disabled={err} tabIndex={err ? -1 : 0}
           onClick={() => !err && toggle(r.id)}
           onKeyDown={e => { if (!err && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); toggle(r.id) } }}
-        >{on && <Check size={13} color="var(--surface)" strokeWidth={3} />}</div>
-        <div className={styles.rowMain}>
-          <div className={styles.rowConcept}>{r.concept || t('importCsv.review.noConcept')}</div>
-          <div className={styles.rowMeta}>
+        >{on && <Check size={14} strokeWidth={3} />}</div>
+        <div className={styles.irowMain}>
+          <b>{r.concept || t('importCsv.review.noConcept')}</b>
+          <span>
             {err && reason ? <span className={styles.metaErr}>{t(`importCsv.review.reason.${reason}`)} · {t('importCsv.review.line', { n: r.line })}</span>
               : <>
-                  <span>{r.date ? fmtDate(r.date) : '—'}</span>
-                  {reason && r.status === 'rev' && <span className={styles.metaWarn}>{t(`importCsv.review.reason.${reason}`)}</span>}
+                  {r.date ? fmtShort(r.date) : '—'}
+                  {r.category && <> · {getCategoryLabel(r.category)}</>}
+                  {reason && r.status === 'rev' && <> · <span className={styles.metaWarn}>{t(`importCsv.review.reason.${reason}`)}</span></>}
                 </>}
-          </div>
+          </span>
         </div>
         {!err && (
-          <div
-            className={styles.catBtn} role="button" tabIndex={0}
-            onClick={() => setPicker({ ids: [r.id], current: r.category })}
-            onKeyDown={e => (e.key === 'Enter' || e.key === ' ') && (e.preventDefault(), setPicker({ ids: [r.id], current: r.category }))}
-          >
+          <button type="button" className={styles.catBtn} aria-label={t('importCsv.review.categoryTitle')}
+            onClick={() => setPicker({ ids: [r.id], current: r.category })}>
             {r.category ? <CategoryChip cat={r.category} profile={profile} customCategories={customCategories} /> : <span className={styles.catEmpty} />}
-            {isTablet && <span className={styles.catName}>{r.category ? getCategoryLabel(r.category) : t('importCsv.review.noCategory')}</span>}
-            <ChevronDown size={13} color="var(--muted)" />
-          </div>
+            <ChevronDown size={13} />
+          </button>
         )}
-        <div className={styles.rowAmount}>{err ? '' : fmt(r.amount)}</div>
+        <em className={styles.irowAmt}>{err ? '' : fmt(r.amount)}</em>
       </div>
     )
   }
 
-  function renderSummary(compact) {
-    return (
-      <div className={compact ? styles.footer : styles.sidePanel}>
-        {!compact && <div className="field-label">{t('importCsv.review.summary')}</div>}
-        {!compact && (
-          <>
-            <div className={styles.sideStat}><span>{t('importCsv.review.selected', { count: chosen.length })}</span></div>
-            <div className={styles.sideTotal}>{fmt(total)}</div>
-          </>
-        )}
-        {inPeriod.count > 0 && (
-          <div className={styles.warnBox}>
-            {t('importCsv.review.periodWarn', { count: inPeriod.count, amount: fmt(inPeriod.sum) })}
-          </div>
-        )}
-        {!compact && (built.skipped.income > 0 || built.skipped.unpaid > 0 || counts.err > 0) && (
-          <div className={styles.skipList}>
-            {built.skipped.income > 0 && <div>{t('importCsv.review.skippedIncome', { count: built.skipped.income })}</div>}
-            {built.skipped.unpaid > 0 && <div>{t('importCsv.review.skippedUnpaid', { count: built.skipped.unpaid })}</div>}
-            {counts.err > 0 && <div>{t('importCsv.review.errNote')}</div>}
-          </div>
-        )}
-        {compact && (
-          <div className={styles.footerTotals}>
-            <span>{t('importCsv.review.selected', { count: chosen.length })}</span>
-            <span className={styles.footerAmount}>{fmt(total)}</span>
-          </div>
-        )}
-        <button type="button" className="btn-primary" disabled={!chosen.length || saving}
-          onClick={goNext}>
-          {saving ? t('importCsv.review.importing')
-            : suggestions.length ? t('importCsv.columns.continue')
-            : t('importCsv.review.import', { count: chosen.length })}
-        </button>
-      </div>
-    )
-  }
+  const importLabel = saving ? t('importCsv.review.importing')
+    : suggestions.length ? t('importCsv.columns.continue')
+    : t('importCsv.review.import', { count: chosen.length })
 
   function renderReview() {
-    const tile = (key, Icon, color) => (
-      <div
-        className={`${styles.tile} ${filter === key ? styles.tileOn : ''}`}
-        role="button" tabIndex={0} aria-pressed={filter === key}
-        onClick={() => setFilter(key)}
-        onKeyDown={e => (e.key === 'Enter' || e.key === ' ') && (e.preventDefault(), setFilter(key))}
-      >
-        <span className={styles.tileCount}>
-          <Icon size={16} color={filter === key ? 'var(--surface)' : color} />
-          {counts[key]}
-        </span>
-        <span className={styles.tileLabel}>{t(`importCsv.review.${key}`)}</span>
-      </div>
+    const sum = key => (
+      <button key={key} type="button" aria-pressed={filter === key} onClick={() => setFilter(key)}
+        className={`${styles.sm} ${filter === key ? styles.smOn : ''}`}>
+        <b>{counts[key]}</b><span>{t(`importCsv.review.${key}`)}</span>
+      </button>
     )
-    return (
-      <div className={styles.reviewWrap}>
-        <div className={styles.reviewMain}>
-          <div className={styles.tiles}>
-            {tile('ok', CheckCircle2, 'var(--paid)')}
-            {tile('rev', AlertTriangle, 'var(--warn-tone)')}
-            {tile('err', XCircle, 'var(--danger)')}
+    const skipped = (built.skipped.income > 0 || built.skipped.unpaid > 0)
+    const main = (
+      <section className={`${kit.panel} ${styles.reviewMain}`}>
+        <div className={styles.sums}>{['ok', 'rev', 'err'].map(sum)}</div>
+        <div className={styles.tools}>
+          <div className={styles.searchBox}>
+            <Search size={15} />
+            <input className={styles.searchInput} value={query} onChange={e => setQuery(e.target.value)} placeholder={t('importCsv.review.search')} aria-label={t('importCsv.review.search')} />
           </div>
-          <div className={styles.tools}>
-            <div className={styles.searchBox}>
-              <Search size={14} color="var(--muted)" />
-              <input className={styles.searchInput} value={query} onChange={e => setQuery(e.target.value)} placeholder={t('importCsv.review.search')} aria-label={t('importCsv.review.search')} />
-            </div>
-            <div className={styles.segWrap}>
-              <SegmentedControl value={groupBy} onChange={setGroupBy}
-                options={[{ value: 'month', label: t('importCsv.review.byMonth') }, { value: 'concept', label: t('importCsv.review.byConcept') }]} />
-            </div>
-          </div>
-          {selectableShown.length > 0 && (
-            <div className={styles.bulkBar}>
-              <button type="button" className={styles.linkBtn} onClick={() => setMany(shown, !allShownOn)}>
-                {allShownOn ? t('importCsv.review.clearView') : t('importCsv.review.selectView', { count: selectableShown.length })}
-              </button>
-            </div>
-          )}
-          {items.length === 0
-            ? <div className={styles.emptyList}>{t('importCsv.review.empty')}</div>
-            : <VirtualList items={items} itemH={isTablet ? ITEM_H_TABLET : ITEM_H_PHONE} renderItem={renderRow} resetKey={`${filter}|${groupBy}|${query}`} />}
-          {!isTablet && (built.skipped.income > 0 || built.skipped.unpaid > 0) && (
-            <div className={styles.skipInline}>
-              {[built.skipped.income > 0 && t('importCsv.review.skippedIncome', { count: built.skipped.income }), built.skipped.unpaid > 0 && t('importCsv.review.skippedUnpaid', { count: built.skipped.unpaid })].filter(Boolean).join(' · ')}
-            </div>
-          )}
+          <SkSeg className={styles.groupSeg} value={groupBy} onChange={setGroupBy}
+            options={[{ value: 'month', label: t('importCsv.review.byMonth') }, { value: 'concept', label: t('importCsv.review.byConcept') }]} />
         </div>
-        {isTablet ? renderSummary(false) : renderSummary(true)}
+        {selectableShown.length > 0 && (
+          <button type="button" className={`${styles.linkBtn} ${styles.bulk}`} onClick={() => setMany(shown, !allShownOn)}>
+            {allShownOn ? t('importCsv.review.clearView') : t('importCsv.review.selectView', { count: selectableShown.length })}
+          </button>
+        )}
+        {items.length === 0
+          ? <div className={styles.emptyList}>{t('importCsv.review.empty')}</div>
+          : <VirtualList items={items} itemH={itemH} renderItem={renderRow} resetKey={`${filter}|${groupBy}|${query}`} />}
+        {mode === 'mobile' && skipped && (
+          <div className={kit.sub2}>
+            {[built.skipped.income > 0 && t('importCsv.review.skippedIncome', { count: built.skipped.income }), built.skipped.unpaid > 0 && t('importCsv.review.skippedUnpaid', { count: built.skipped.unpaid })].filter(Boolean).join(' · ')}
+          </div>
+        )}
+      </section>
+    )
+    if (mode === 'mobile') {
+      return (
+        <>
+          {main}
+          {inPeriod.count > 0 && <div className={kit.notice}><span>{t('importCsv.review.periodWarn', { count: inPeriod.count, amount: fmt(inPeriod.sum) })}</span></div>}
+          <div className={styles.ifoot}>
+            <span>{t('importCsv.review.selected', { count: chosen.length })} · {fmt(total)}</span>
+            <button type="button" className={`${kit.btn} ${kit.btnLg} ${kit.btnPri}`} disabled={!chosen.length || saving} onClick={goNext}>{importLabel}</button>
+          </div>
+        </>
+      )
+    }
+    return (
+      <div className={`${kit.grid} ${styles.rv}`}>
+        {main}
+        <section className={`${kit.panel} ${styles.side}`}>
+          <div className={kit.pt}><b>{t('importCsv.review.summary')}</b></div>
+          <div className={styles.kv}><span>{t('importCsv.review.selected', { count: chosen.length })}</span><b>{fmt(total)}</b></div>
+          {built.skipped.income > 0 && <div className={styles.kv}><span>{t('importCsv.review.skippedIncomeLabel')}</span><b>{built.skipped.income}</b></div>}
+          {built.skipped.unpaid > 0 && <div className={styles.kv}><span>{t('importCsv.review.skippedUnpaidLabel')}</span><b>{built.skipped.unpaid}</b></div>}
+          {inPeriod.count > 0 && <div className={styles.warn}>{t('importCsv.review.periodWarn', { count: inPeriod.count, amount: fmt(inPeriod.sum) })}</div>}
+          {counts.err > 0 && <div className={kit.sub2}>{t('importCsv.review.errNote')}</div>}
+          <button type="button" className={`${kit.btn} ${kit.btnLg} ${kit.btnPri} ${kit.btnFull}`} disabled={!chosen.length || saving} onClick={goNext}>{importLabel}</button>
+        </section>
       </div>
     )
   }
 
+  // ── Paso 4 ───────────────────────────────────────────────────────────────
   function renderRecurring() {
     const n = acceptedList.length
+    const flip = key => setAccepted(prev => { const nx = new Set(prev); nx.has(key) ? nx.delete(key) : nx.add(key); return nx })
+    const cta = saving ? t('importCsv.review.importing') : n ? t('importCsv.recurring.cta', { count: n }) : t('importCsv.review.import', { count: chosen.length })
     return (
       <>
-        <div className={`scroll-y ${styles.bodyPad}`}>
-          <div className={styles.stepTitle}>{t('importCsv.recurring.title')}</div>
-          <div className={styles.stepSub}>{t('importCsv.recurring.subtitle')}</div>
+        <section className={kit.panel}>
+          <div className={kit.pt}><b>{t('importCsv.recurring.title')}</b><span>{t('importCsv.recurring.subtitle')}</span></div>
           {suggestions.map(s => {
             const on = accepted.has(s.key)
             const open = expanded === s.key
             return (
-              <div key={s.key} className={styles.sugg}>
-                <div className={styles.suggTop}>
-                  <div className={styles.suggMain} role="button" tabIndex={0}
-                    onClick={() => setExpanded(open ? null : s.key)}
-                    onKeyDown={e => (e.key === 'Enter' || e.key === ' ') && (e.preventDefault(), setExpanded(open ? null : s.key))}>
-                    <CategoryChip cat={s.category || 'Otros'} profile={profile} customCategories={customCategories} />
-                    <div className={styles.suggText}>
-                      <div className={styles.rowConcept}>{s.name}</div>
-                      <div className={styles.rowMeta}>
-                        {t(`importCsv.recurring.freq.${s.freq}`)} · {s.isVariable ? t('importCsv.recurring.variable') : t('importCsv.recurring.fixed')} · {fmt(s.amount)}
-                      </div>
-                    </div>
-                    <ChevronDown size={15} color="var(--muted)" className={open ? styles.chevOpen : ''} />
-                  </div>
-                  <div
-                    className={`toggle-track${on ? ' is-on' : ''}`} role="switch" aria-checked={on}
-                    aria-label={t('importCsv.recurring.toggle')} tabIndex={0}
-                    onClick={() => setAccepted(prev => { const nx = new Set(prev); nx.has(s.key) ? nx.delete(s.key) : nx.add(s.key); return nx })}
-                    onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setAccepted(prev => { const nx = new Set(prev); nx.has(s.key) ? nx.delete(s.key) : nx.add(s.key); return nx }) } }}
-                  ><div className={`toggle-thumb${on ? ' is-on' : ''}`} /></div>
+              <div key={s.key} className={styles.rrowWrap}>
+                <div className={styles.rrow}>
+                  <button type="button" className={styles.rrowMain} aria-expanded={open} onClick={() => setExpanded(open ? null : s.key)}>
+                    <CategoryChip cat={s.category || 'Otros'} profile={profile} customCategories={customCategories} big />
+                    <span className={styles.rrowText}>
+                      <b>{s.name}</b>
+                      <span>{t(`importCsv.recurring.freq.${s.freq}`)} · {s.isVariable ? t('importCsv.recurring.variable') : t('importCsv.recurring.fixed')} · {t('importCsv.recurring.next', { date: fmtShort(s.nextDate) })}</span>
+                    </span>
+                    <em>{s.isVariable ? '≈' : ''}{fmt(s.amount)}</em>
+                  </button>
+                  <div {...switchProps(on)} aria-label={t('importCsv.recurring.toggle')} className={kit.clickable} onClick={() => flip(s.key)}><Toggle on={on} /></div>
                 </div>
-                {open && (
-                  <div className={styles.suggDetail}>
-                    <div className={styles.rowMeta}>{t('importCsv.recurring.next', { date: fmtDate(s.nextDate) })} · {t('importCsv.recurring.detected', { count: s.count })}</div>
-                    <div className={styles.detailList}>
-                      {s.ids.map(id => {
-                        const r = rows.find(x => x.id === id)
-                        return r ? <div key={id} className={styles.previewRow}><span className={styles.previewDate}>{fmtDate(r.date)}</span><span className={styles.previewAmount}>{fmt(r.amount)}</span></div> : null
-                      })}
-                    </div>
+                <Collapse open={open}>
+                  <div className={styles.detail}>
+                    <span>{t('importCsv.recurring.detected', { count: s.count })}</span>
+                    {s.ids.map(id => {
+                      const r = rows.find(x => x.id === id)
+                      return r ? <div key={id} className={styles.prow}><span>{fmtShort(r.date)}</span><b /><em>{fmt(r.amount)}</em></div> : null
+                    })}
                   </div>
-                )}
+                </Collapse>
               </div>
             )
           })}
-        </div>
-        <div className={styles.footer}>
-          <div className={styles.footerTotals}>
-            <span>{t('importCsv.review.selected', { count: chosen.length })}</span>
-            <span className={styles.footerAmount}>{fmt(total)}</span>
+          {mode !== 'mobile' && (
+            <div className={`${kit.foot} ${kit.footEnd}`}>
+              <button type="button" className={`${kit.btn} ${kit.btnLg} ${kit.btnPri}`} disabled={saving || !chosen.length} onClick={doImport}>{cta}</button>
+            </div>
+          )}
+        </section>
+        {mode === 'mobile' && (
+          <div className={styles.ifoot}>
+            <span>{t('importCsv.review.selected', { count: chosen.length })} · {fmt(total)}</span>
+            <button type="button" className={`${kit.btn} ${kit.btnLg} ${kit.btnPri}`} disabled={saving || !chosen.length} onClick={doImport}>{cta}</button>
           </div>
-          <button type="button" className="btn-primary" disabled={saving || !chosen.length} onClick={doImport}>
-            {saving ? t('importCsv.review.importing') : n ? t('importCsv.recurring.cta', { count: n }) : t('importCsv.review.import', { count: chosen.length })}
-          </button>
-        </div>
+        )}
       </>
     )
   }
@@ -649,105 +605,55 @@ function ImportBody({ profile, sharedActive, onClose, onImport, onFetchExisting,
     if (step === 'recurring') setStep('review')
     else if (step === 'review') setStep(own ? 'file' : 'columns')
     else if (step === 'columns') setStep('file')
+    else onBack?.()
   }
 
   const categoryOptions = [...CATEGORIES, ...customCategories.map(c => (typeof c === 'string' ? c : c?.value)).filter(Boolean)]
 
-  const stepsContent = (
-    <>
-      {step === 'file' && renderFile()}
-      {step === 'columns' && mapping && renderColumns()}
-      {step === 'review' && renderReview()}
-      {step === 'recurring' && renderRecurring()}
-    </>
-  )
-
   const pickerSheet = (
-      <BottomSheet
-        open={!!picker}
-        title={t('importCsv.review.categoryTitle')}
-        onClose={() => setPicker(null)}
-        header={picker && picker.ids.length > 1 ? <div className={styles.pickerSub}>{t('importCsv.review.categoryApply', { count: picker.ids.length })}</div> : null}
-      >
-        {categoryOptions.map(c => (
-          <div key={c} className={`${styles.pickerRow} ${picker?.current === c ? styles.pickerRowOn : ''}`} role="button" tabIndex={0}
-            data-selected={picker?.current === c ? 'true' : undefined}
-            onClick={() => applyCategory(c)}
-            onKeyDown={e => (e.key === 'Enter' || e.key === ' ') && (e.preventDefault(), applyCategory(c))}>
-            <CategoryChip cat={c} profile={profile} customCategories={customCategories} />
-            <span>{getCategoryLabel(c)}</span>
-          </div>
-        ))}
-      </BottomSheet>
+    <BottomSheet
+      open={!!picker}
+      title={t('importCsv.review.categoryTitle')}
+      onClose={() => setPicker(null)}
+      header={picker && picker.ids.length > 1 ? <div className={styles.pickerSub}>{t('importCsv.review.categoryApply', { count: picker.ids.length })}</div> : null}
+    >
+      {categoryOptions.map(c => (
+        <div key={c} className={`${styles.pickerRow} ${picker?.current === c ? styles.pickerRowOn : ''}`} role="button" tabIndex={0}
+          data-selected={picker?.current === c ? 'true' : undefined}
+          onClick={() => applyCategory(c)}
+          onKeyDown={e => (e.key === 'Enter' || e.key === ' ') && (e.preventDefault(), applyCategory(c))}>
+          <CategoryChip cat={c} profile={profile} customCategories={customCategories} />
+          <span>{getCategoryLabel(c)}</span>
+          {picker?.current === c && <Check size={16} />}
+        </div>
+      ))}
+    </BottomSheet>
   )
 
-  // Escritorio (v0.9.836): página dentro del panel de Ajustes, sin modal.
-  if (inline) {
-    return (
-      <DeskPage>
-        <DeskSettingsHead
-          title={t('importCsv.title')}
-          description={t('importCsv.desk.description')}
-          actions={step !== 'file' ? <button type="button" className={`${deskStyles.btn} ${deskStyles.btnSoft}`} onClick={back}><ChevronLeft size={16} />{t('buttons.back')}</button> : null}
-        />
-        <div className={styles.inl}>
-          <ol className={styles.stp}>
-            {visibleSteps.map((st, i) => (
-              <li key={st} className={`${styles.stpItem} ${i + 1 === stepNo ? styles.stpOn : ''} ${i + 1 < stepNo ? styles.stpDone : ''}`} aria-current={i + 1 === stepNo ? 'step' : undefined}>
-                <i>{i + 1 < stepNo ? <Check size={14} strokeWidth={3} /> : i + 1}</i>{t(`importCsv.steps.${st}`)}
-              </li>
-            ))}
-          </ol>
-          <div className={styles.inlBody}>{stepsContent}</div>
-        </div>
-        {pickerSheet}
-      </DeskPage>
-    )
-  }
-
+  // Subpágina en los tres tamaños (v0.9.978, mockup aprobado; antes era un
+  // modal en móvil/tablet). «Atrás» regresa un paso; en el paso 1 sale.
   return (
-    <>
-      <div className={styles.head}>
-        {step !== 'file'
-          ? <button type="button" className={styles.iconBtn} onClick={back} aria-label={t('buttons.back')}><ChevronLeft size={20} color="var(--text)" /></button>
-          : <span className={styles.iconSpacer} />}
-        <div className={styles.headCenter}>
-          <div className={styles.headTitle}>{t('importCsv.title')}</div>
-          <div className={styles.headStep}>{t('importCsv.stepOf', { n: stepNo, total: visibleSteps.length })} · {t(`importCsv.steps.${step}`)}</div>
-        </div>
-        <button type="button" className={styles.iconBtn} onClick={onClose} aria-label={t('buttons.close')}><X size={20} color="var(--text)" /></button>
+    <SettingsSubLayout title={t('importCsv.title')} description={t('importCsv.desk.description')}
+      icon={UploadSimple} onBack={back} slideClass={slideClass}
+      actions={mode === 'desk' && step !== 'file' ? <button type="button" className={`${kit.btn} ${kit.btnSoft}`} onClick={back}><ChevronLeft size={16} />{t('buttons.back')}</button> : null}
+      after={pickerSheet}>
+      {stepper}
+      <div key={step} className={styles.stepBody}>
+        {step === 'file' && renderFile()}
+        {step === 'columns' && mapping && renderColumns()}
+        {step === 'review' && renderReview()}
+        {step === 'recurring' && renderRecurring()}
       </div>
-      <div className={styles.dots} aria-hidden="true">
-        {visibleSteps.map((s, i) => <span key={s} className={`${styles.dot} ${i < stepNo ? styles.dotOn : ''}`} />)}
-      </div>
-      <div className={styles.content}>{stepsContent}</div>
-
-      {pickerSheet}
-    </>
+    </SettingsSubLayout>
   )
 }
 
-// Versión en línea (escritorio): se monta dentro del panel de Ajustes. Al
-// terminar de importar se remonta (key) para volver al paso 1 con todo limpio.
-export function ImportInline({ profile, sharedActive, onImport, onFetchExisting }) {
+// Subpágina «Importar datos». Al terminar de importar se remonta (key) para
+// volver al paso 1 con todo limpio y se sale (móvil/tablet) con onBack.
+export function ImportPage({ profile, sharedActive, onImport, onFetchExisting, onBack, slideClass }) {
   const [k, setK] = useState(0)
-  return <ImportBody key={k} inline profile={profile} sharedActive={sharedActive} onImport={onImport} onFetchExisting={onFetchExisting} onClose={() => setK(n => n + 1)} />
-}
-
-export function ImportModal({ open, onClose, profile, onImport, onFetchExisting, sharedActive = false }) {
-  useBackClose(open, onClose)
   return (
-    <Presence show={open}>
-      {() => (
-        <div className={styles.overlay} data-presence="overlay" onClick={e => e.target === e.currentTarget && onClose()}>
-          <div className={styles.panel} data-presence="panel" role="dialog" aria-modal="true">
-            <ImportBody
-              profile={profile} sharedActive={sharedActive}
-              onClose={onClose} onImport={onImport} onFetchExisting={onFetchExisting}
-            />
-          </div>
-        </div>
-      )}
-    </Presence>
+    <ImportBody key={k} profile={profile} sharedActive={sharedActive} onImport={onImport} onFetchExisting={onFetchExisting}
+      onBack={onBack} slideClass={slideClass} onClose={() => { setK(n => n + 1); onBack?.() }} />
   )
 }

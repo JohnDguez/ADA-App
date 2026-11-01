@@ -2712,7 +2712,13 @@
       "import": "Importar {{count}} movimientos",
       "importing": "Importando…",
       "summary": "Resumen",
-      "errNote": "Los errores no se importan. Corrige el archivo y vuelve a cargarlo si los necesitas."
+      "errNote": "Los errores no se importan. Corrige el archivo y vuelve a cargarlo si los necesitas.",
+      "groupMeta_one": "{{count}} movimiento · {{amount}}",
+      "groupMeta_other": "{{count}} movimientos · {{amount}}",
+      "clearGroupShort": "Quitar",
+      "selectGroupShort": "Seleccionar",
+      "skippedIncomeLabel": "Ingresos o abonos omitidos",
+      "skippedUnpaidLabel": "Pagos pendientes omitidos"
     },
     "recurring": {
       "title": "Pagos que se repiten",

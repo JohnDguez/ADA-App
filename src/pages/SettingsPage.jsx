@@ -32,7 +32,7 @@ import { TabSettings } from './TabSettings'
 import { MobileSettings } from './MobileSettings'
 import { useIsMobile } from '../hooks/useIsMobile'
 
-const ImportInline = lazy(() => import('../components/ImportModal').then(m => ({ default: m.ImportInline })))
+const ImportPage = lazy(() => import('../components/ImportModal').then(m => ({ default: m.ImportPage })))
 
 // Menú principal de "Perfil"/Ajustes. Cada renglón navega a su propia
 // sub-página (ver ./settings/). Antes todo esto vivía junto en un solo
@@ -48,7 +48,7 @@ function readSavedSection() {
   } catch { return null }
 }
 
-export function SettingsPage({ profile, user, onUpdate, onUploadAvatar, onDataDeleted, slideClass, theme, onThemeChange, onOpenPremium, sharedSpaces, paymentMethods, personalPayments = null, onPayCardNow, onSettlePlan, onOpenImport, importProps, initialSection, onConsumeInitialSection, returnTab, onReturnToTab, headerProps }) {
+export function SettingsPage({ profile, user, onUpdate, onUploadAvatar, onDataDeleted, slideClass, theme, onThemeChange, onOpenPremium, sharedSpaces, paymentMethods, personalPayments = null, onPayCardNow, onSettlePlan, importProps, initialSection, onConsumeInitialSection, returnTab, onReturnToTab, headerProps }) {
   const { t } = useTranslation()
   const isDesktop = useIsDesktop()
   const isMobile = useIsMobile()
@@ -246,7 +246,7 @@ export function SettingsPage({ profile, user, onUpdate, onUploadAvatar, onDataDe
   const noop = () => {}
   function sectionEl(s, desk) {
     if (s === 'language') return <SettingsLanguagePage profile={profile} onUpdate={onUpdate} onBack={desk ? noop : back} slideClass={desk ? '' : slideClass} />
-    if (desk && s === 'import') return <Suspense fallback={null}><ImportInline profile={profile} {...importProps} /></Suspense>
+    if (s === 'import') return <Suspense fallback={null}><ImportPage profile={profile} {...importProps} onBack={desk ? noop : back} slideClass={desk ? '' : slideClass} /></Suspense>
     if (s === 'account') return <SettingsAccountPage onChangePhoto={desk ? () => setAvatarModal('choice') : undefined} uploadingAvatar={uploadingAvatar} profile={profile} user={user} onUpdate={onUpdate} onDataDeleted={onDataDeleted} onBack={desk ? noop : back} onGoSubscription={() => openSection('subscription')} slideClass={desk ? '' : slideClass} />
     if (s === 'categories') return <SettingsCategoriesPage profile={profile} onUpdate={onUpdate} onBack={desk ? noop : back} slideClass={desk ? '' : slideClass} />
     if (s === 'cobro') return <SettingsCobroPage profile={profile} onUpdate={onUpdate} onBack={desk ? noop : back} slideClass={desk ? '' : slideClass} />
@@ -285,7 +285,7 @@ export function SettingsPage({ profile, user, onUpdate, onUploadAvatar, onDataDe
           PageHero: no tiene botón de regreso, es la raíz del tab). */}
       
       {isDeskLike && <DeskSettings d={deskData} tablet={!isDesktop} />}
-      {isTabPortrait && <TabSettings d={{ ...deskData, onOpen: openSection, uploadingAvatar, onChangePhoto: () => setAvatarModal('choice'), onOpenImport, onOpenLanguage: () => openSection('language') }} />}
+      {isTabPortrait && <TabSettings d={{ ...deskData, onOpen: openSection, uploadingAvatar, onChangePhoto: () => setAvatarModal('choice'), onOpenImport: () => openSection('import'), onOpenLanguage: () => openSection('language') }} />}
       {!isMobile && <input ref={fileRef} type="file" accept="image/*" hidden onChange={handleAvatarChange} />}
 
       {isMobile && (
@@ -297,7 +297,7 @@ export function SettingsPage({ profile, user, onUpdate, onUploadAvatar, onDataDe
             cobroValue={[FREQ_LABEL[profile.cobro_freq], profile.currency].filter(Boolean).join(' · ')}
             themeValue={THEME_LABEL[theme] || ''}
             languageValue={languageOptions.find(o => o.id === (profile.language || 'system'))?.label}
-            onOpen={openSection} onOpenPremium={onOpenPremium} onOpenImport={onOpenImport} onOpenLanguage={() => openSection('language')}
+            onOpen={openSection} onOpenPremium={onOpenPremium} onOpenImport={() => openSection('import')} onOpenLanguage={() => openSection('language')}
             onTutorial={() => onUpdate({ coachmarks_seen: {} })} onFeedback={handleGiveFeedback} onLogout={handleLogout}
             versionLabel={versionLabel} appName={APP_NAME} />
         </>

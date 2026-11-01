@@ -23,6 +23,11 @@
   --bg: #F2F2F2;
   --surface: #FFFFFF;
   --border: #E4E2DC;
+  /* Interruptores (v0.9.978): riel apagado visible sobre blanco y sobre --desk-chip */
+  --switch-off:   #C3C8D1;
+  --switch-on:    var(--accent);
+  --switch-thumb: #FFFFFF;
+  --switch-thumb-shadow: 0 1px 3px rgba(11, 18, 32, 0.25);
   --border-mid: #C8C5BE;
 
   --text: #020A1F;
@@ -330,6 +335,9 @@
   --bg: #0F1117;
   --surface: #1A1D27;
   --border: #2A2D3A;
+  --switch-off:   #464B5E;
+  --switch-thumb: #FFFFFF;
+  --switch-thumb-shadow: 0 1px 3px rgba(0, 0, 0, 0.45);
   --border-mid: #3A3D4E;
 
   --text: #E8EAF0;
@@ -415,6 +423,9 @@
       --bg: #0F1117;
     --surface: #1A1D27;
     --border: #2A2D3A;
+    --switch-off:   #464B5E;
+    --switch-thumb: #FFFFFF;
+    --switch-thumb-shadow: 0 1px 3px rgba(0, 0, 0, 0.45);
     --border-mid: #3A3D4E;
     --text: #E8EAF0;
     --muted: #9AA0B0;  /* v0.9.727: 6.4–7.2:1 (antes #6B7280, 3.5–3.9:1, bajo AA) */
@@ -724,7 +735,7 @@ a { color: inherit; text-decoration: none; }
   border-radius: 11px;
   position: relative;
   flex-shrink: 0;
-  background: var(--border);
+  background: var(--switch-off);
   transition: background .2s;
 }
 .toggle-thumb {
@@ -734,11 +745,12 @@ a { color: inherit; text-decoration: none; }
   width: 16px;
   height: 16px;
   border-radius: 50%;
-  background: var(--surface);
+  background: var(--switch-thumb);
+  box-shadow: var(--switch-thumb-shadow);
   transition: left .2s;
 }
 /* Estado encendido y sin animación (antes `style` inline en cada uso) */
-.toggle-track.is-on { background: var(--accent); }
+.toggle-track.is-on { background: var(--switch-on); }
 .toggle-thumb.is-on { left: 19px; }
 .toggle-track.is-instant,
 .toggle-thumb.is-instant { transition: none; }

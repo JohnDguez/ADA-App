@@ -2712,7 +2712,13 @@
       "import": "Import {{count}} entries",
       "importing": "Importing…",
       "summary": "Summary",
-      "errNote": "Errors are not imported. Fix the file and upload it again if you need them."
+      "errNote": "Errors are not imported. Fix the file and upload it again if you need them.",
+      "groupMeta_one": "{{count}} transaction · {{amount}}",
+      "groupMeta_other": "{{count}} transactions · {{amount}}",
+      "clearGroupShort": "Clear",
+      "selectGroupShort": "Select",
+      "skippedIncomeLabel": "Income or credits skipped",
+      "skippedUnpaidLabel": "Pending payments skipped"
     },
     "recurring": {
       "title": "Repeating payments",
