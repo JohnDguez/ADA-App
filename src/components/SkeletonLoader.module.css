@@ -213,7 +213,7 @@
   max-width: 388px;
   height: 56px;
   border-radius: 10px;
-  background: var(--nav-bg);
+  background: var(--bottom-nav-bg);
   display: flex;
   align-items: center;
   justify-content: space-around;

@@ -12,7 +12,7 @@
   align-items: flex-start;
   justify-content: space-around;
   padding: 12px 12px calc(14px + env(safe-area-inset-bottom));
-  background: var(--nav-bg);
+  background: var(--bottom-nav-bg);
   z-index: 100;
 }
 .nav::before,
@@ -24,8 +24,8 @@
   height: var(--nav-fillet);
   pointer-events: none;
 }
-.nav::before { left: 0;  background: radial-gradient(circle at 100% 0, transparent calc(var(--nav-fillet) - 1px), var(--nav-bg) var(--nav-fillet)); }
-.nav::after  { right: 0; background: radial-gradient(circle at 0 0,    transparent calc(var(--nav-fillet) - 1px), var(--nav-bg) var(--nav-fillet)); }
+.nav::before { left: 0;  background: radial-gradient(circle at 100% 0, transparent calc(var(--nav-fillet) - 1px), var(--bottom-nav-bg) var(--nav-fillet)); }
+.nav::after  { right: 0; background: radial-gradient(circle at 0 0,    transparent calc(var(--nav-fillet) - 1px), var(--bottom-nav-bg) var(--nav-fillet)); }
 
 /* Botón "+" flotante, arriba a la derecha de la barra */
 .fab {
@@ -72,7 +72,7 @@
 .tabButton:active { opacity: 0.8; }
 .tabButtonActive {
   background: var(--nav-icon);
-  color: var(--nav-bg);
+  color: var(--bottom-nav-ink);
   padding: 0 clamp(0.625rem, 3.4vw, 1rem) 0 clamp(0.5rem, 2.6vw, 0.75rem);
 }
 .tabIcon { flex: none; }

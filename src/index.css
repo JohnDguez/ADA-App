@@ -84,6 +84,8 @@
   /* Colores semánticos (antes hardcodeados) */
   --nav-bg:           #014BA3;
   --nav-icon:         #F2F2F2;
+  --bottom-nav-bg:    #0B1220; /* v0.9.994: barra inferior móvil negra (mockup B aprobado) */
+  --bottom-nav-ink:   #0B1220; /* texto/ícono sobre la píldora activa */
   --nav-bg-opacity:   90%; /* tema claro: más opaco para que no se lave sobre fondo blanco */
   --header-text:      #FFFFFF;
   --pay-icon:         #F2F2F2;
@@ -367,6 +369,8 @@
   /* Colores semánticos en dark */
   --nav-bg:          #014BA3;
   --nav-icon:        #F2F2F2;
+  --bottom-nav-bg:   #232733; /* oscuro: superficie elevada (mockup C aprobado) */
+  --bottom-nav-ink:  #0F1117;
   --nav-bg-opacity:  72%;
   --header-text:     #FFFFFF;
   --pay-icon:        #F2F2F2;
@@ -447,6 +451,8 @@
     --impact-warning-text: #241C00;
     --nav-bg:          #014BA3;
     --nav-icon:        #F2F2F2;
+    --bottom-nav-bg:   #232733;
+    --bottom-nav-ink:  #0F1117;
   --nav-bg-opacity:  72%;
     --header-text:     #FFFFFF;
     --pay-icon:        #F2F2F2;
