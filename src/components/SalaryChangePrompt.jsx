@@ -1,4 +1,5 @@
 import { useTranslation, Trans } from 'react-i18next'
+import { Wallet } from 'lucide-react'
 import { ConfirmSheet } from './ConfirmSheet'
 import { AnchoredPop } from './AnchoredPop'
 import styles from './SalaryChangePrompt.module.css'
@@ -29,7 +30,7 @@ export function SalaryChangePrompt({ open, oldAmount, newAmount, nextDate, asPop
     )
   }
   return (
-    <ConfirmSheet open={open} title={title} onClose={onCancel} actions={[
+    <ConfirmSheet open={open} icon={Wallet} title={title} onClose={onCancel} actions={[
       { label: t('salaryChange.next'), onClick: onNext },
       { label: t('salaryChange.now'), onClick: onNow, variant: 'soft' },
     ]}>

@@ -324,3 +324,21 @@
   .presetButton { border-radius: 99px; }
   .payButton { border-radius: 99px; }
 }
+
+/* Móvil y tablet dentro del Modal único (v0.9.984): tarjetas blancas sobre el
+   fondo gris del modal, mismo lenguaje que el popover de escritorio. */
+.mkBody { display: flex; flex-direction: column; gap: 10px; color: var(--text); }
+.mkBody .progress, .mkBody .memberCard, .mkBody .fundInsufficientNotice, .mkBody .errorBox { margin: 0; border: 0; border-radius: 18px; background: var(--desk-card); box-shadow: var(--desk-shadow); }
+.mkBody .progress { padding: 14px 16px; }
+.mkBody .progressAmounts { font-size: 1.25rem; letter-spacing: -0.4px; }
+.mkBody .progressStatus { font-size: 0.75rem; color: var(--muted); opacity: 1; }
+.mkBody .progressDone .progressStatus { color: var(--paid); }
+.mkBody .bar { background: var(--desk-chip); }
+.mkBody .members { gap: 8px; }
+.mkBody .memberRow { padding: 12px 14px; }
+.mkBody .memberName { font-size: 0.875rem; font-weight: 600; }
+.mkBody .memberAmount { font-size: 0.875rem; font-weight: 700; }
+.mkBody .memberEmpty { font-size: 0.78125rem; color: var(--muted); opacity: 1; }
+.mkBody .presetButton, .mkBody .fillButton { border: 0; background: var(--desk-chip); border-radius: 99px; }
+.mkBody :global(.field-input) { background: var(--desk-chip); border: 0; border-radius: 14px; }
+.mkBody .editRow :global(.btn-primary) { border-radius: 99px; }

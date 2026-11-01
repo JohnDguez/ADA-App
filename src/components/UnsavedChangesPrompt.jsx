@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useTranslation, Trans } from 'react-i18next'
+import { TriangleAlert } from 'lucide-react'
 import { ConfirmSheet } from './ConfirmSheet'
 import { discardAndLeave } from '../lib/unsavedGuard'
 
@@ -19,7 +20,7 @@ export function UnsavedChangesPrompt() {
   const stay = () => setOpen(false)
   const leave = () => { setOpen(false); if (pending) discardAndLeave(pending.proceed) }
   return (
-    <ConfirmSheet open={open} title={t('unsavedChanges.title')} onClose={stay} actions={[
+    <ConfirmSheet open={open} icon={TriangleAlert} tone="danger" title={t('unsavedChanges.title')} onClose={stay} actions={[
       { label: t('unsavedChanges.stay'), onClick: stay },
       { label: t('unsavedChanges.leave'), onClick: leave, variant: 'soft' },
     ]}>

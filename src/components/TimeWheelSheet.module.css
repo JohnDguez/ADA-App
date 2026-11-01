@@ -12,8 +12,8 @@
   right: 24px;
   top: 60px;
   height: 40px;
-  border-radius: 10px;
-  background: var(--accent-soft);
+  border-radius: 14px;
+  background: var(--desk-chip);
   pointer-events: none;
 }
 .wheel {
@@ -44,17 +44,4 @@
   color: var(--text);
   font-size: 22px;
   font-weight: 600;
-}
-.done {
-  width: 100%;
-  height: 46px;
-  margin-top: 14px;
-  border: none;
-  border-radius: var(--radius);
-  background: var(--accent);
-  color: var(--surface);
-  font-family: inherit;
-  font-size: 15px;
-  font-weight: 600;
-  cursor: pointer;
 }

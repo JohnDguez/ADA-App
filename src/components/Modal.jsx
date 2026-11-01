@@ -47,7 +47,11 @@ export function Modal({
 
   let foot = footer
   if (!foot && actions) {
-    foot = <div className={mk.stack}>{actions.map(a => <button key={a.label} type="button" className={`${mk.btn} ${mk.big} ${variantCls(a.variant)}`} onClick={a.onClick} disabled={a.disabled}>{a.icon}{a.label}</button>)}</div>
+    // Móvil: apilados (el primero es el principal). Tablet/escritorio: en
+    // fila a la derecha, con el principal al final (mockup de confirmaciones).
+    foot = isMobile
+      ? <div className={mk.stack}>{actions.map(a => <button key={a.label} type="button" className={`${mk.btn} ${mk.big} ${variantCls(a.variant)}`} onClick={a.onClick} disabled={a.disabled}>{a.icon}{a.label}</button>)}</div>
+      : <div className={`${mk.rowEnd} ${mk.rowRight}`}>{[...actions].reverse().map(a => <button key={a.label} type="button" className={`${mk.btn} ${variantCls(a.variant)}`} onClick={a.onClick} disabled={a.disabled}>{a.icon}{a.label}</button>)}</div>
   } else if (!foot && (primary || secondary || danger)) {
     foot = isMobile
       ? <div className={mk.stack}>{btn(primary && { ...primary }, `${mk.big} ${variantCls(primary?.variant)}`)}</div>

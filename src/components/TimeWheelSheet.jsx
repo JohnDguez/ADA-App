@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { BottomSheet } from './BottomSheet'
+import { Clock } from 'lucide-react'
+import { QuickModal } from './Modal'
 import styles from './TimeWheelSheet.module.css'
 
 // Hoja de selección de hora (solo horas en punto) con dos ruedas: hora 1–12 y
@@ -43,10 +44,17 @@ function Wheel({ items, index, onChange, label }) {
   )
 }
 
-function Content({ value, onSelect, onClose }) {
+// Diseño nuevo (v0.9.984, Modal único): hoja en móvil, diálogo en tablet y
+// popover anclado al chip de la hora en escritorio (QuickModal + anchorRef).
+export function TimeWheelSheet({ open, onClose, value, onSelect, anchorRef }) {
   const { t } = useTranslation()
   const [hourIdx, setHourIdx] = useState((value % 12 || 12) - 1)
   const [pm, setPm] = useState(value >= 12 ? 1 : 0)
+  // Si se cierra sin confirmar, la rueda vuelve a la hora guardada.
+  function cancel() {
+    setHourIdx((value % 12 || 12) - 1); setPm(value >= 12 ? 1 : 0)
+    onClose()
+  }
 
   function confirm() {
     onSelect((hourIdx + 1) % 12 + (pm ? 12 : 0))
@@ -54,22 +62,15 @@ function Content({ value, onSelect, onClose }) {
   }
 
   return (
-    <>
-      <div className={styles.wheels}>
-        <div className={styles.band} />
-        <Wheel items={HOURS} index={hourIdx} onChange={setHourIdx} label={t('settingsNotifications.hourSheetTitle')} />
-        <Wheel items={MERIDIEMS} index={pm} onChange={setPm} label="am/pm" />
-      </div>
-      <button type="button" className={styles.done} onClick={confirm}>{t('settingsNotifications.hourDone')}</button>
-    </>
-  )
-}
-
-export function TimeWheelSheet({ open, onClose, value, onSelect }) {
-  const { t } = useTranslation()
-  return (
-    <BottomSheet open={open} title={t('settingsNotifications.hourSheetTitle')} onClose={onClose}>
-      <Content value={value} onSelect={onSelect} onClose={onClose} />
-    </BottomSheet>
+    <QuickModal open={open} onClose={cancel} anchorRef={anchorRef} icon={Clock} title={t('settingsNotifications.hourSheetTitle')}
+      primary={{ label: t('settingsNotifications.hourDone'), onClick: confirm }} width={380} popWidth={320}>
+      {open && (
+        <div className={styles.wheels}>
+          <div className={styles.band} />
+          <Wheel items={HOURS} index={hourIdx} onChange={setHourIdx} label={t('settingsNotifications.hourSheetTitle')} />
+          <Wheel items={MERIDIEMS} index={pm} onChange={setPm} label="am/pm" />
+        </div>
+      )}
+    </QuickModal>
   )
 }

@@ -7,10 +7,11 @@ import { PaymentMethodField } from './PaymentMethodField'
 import styles from './SplitContributionsModal.module.css'
 import { AvatarImg } from './AvatarImg'
 import { usePresence } from '../lib/usePresence'
-import { useScrollLock } from '../lib/scrollLock'
 import { kbd } from '../lib/a11y'
 import { AnchoredPop, useAnchor } from './AnchoredPop'
 import { useIsDesktop } from '../hooks/useIsDesktop'
+import { Modal } from './Modal'
+import mk from './Modal.module.css'
 
 // Registro de "quién puso cuánto" en un gasto del Espacio Compartido —
 // deliberadamente NO es un split planeado de antemano (montos fijos por
@@ -89,8 +90,7 @@ export function SplitContributionsModal({ open, payment: paymentProp, spaceMembe
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [liveKey])
 
-  const { render, closing } = usePresence(open)
-  useScrollLock(open && !asPop)
+  const { render } = usePresence(open)
   if (!render || !payment) return null
 
   async function handleSaveTotal() {
@@ -197,8 +197,21 @@ export function SplitContributionsModal({ open, payment: paymentProp, spaceMembe
     onCommit(payment.id, { rows, fund: stagedFund })
   }
 
+  const actionFor = cls => hasChanges
+    ? <button onClick={handleConfirm} className={cls}>{t('splitContributionsModal.confirm')}</button>
+    : (done && !payment.is_paid)
+      ? <button onClick={handlePagar} disabled={settling} className={cls}>{settling ? t('splitContributionsModal.marking') : t('splitContributionsModal.pay')}</button>
+      : null
+  const actionBtn = actionFor(styles.payButton)
+  const footEl = asPop ? (
+    <div className={styles.deskFoot}>
+      <button onClick={onClose} className={styles.deskCancel}>{hasChanges ? t('buttons.cancel') : t('buttons.close')}</button>
+      {actionBtn}
+    </div>
+  ) : null
+
   const body = (
-    <div className={asPop ? styles.deskRoot : undefined}>
+    <div className={asPop ? styles.deskRoot : styles.mkBody}>
         {asPop ? (
           <div className={styles.deskHead}>
             <div>
@@ -207,13 +220,7 @@ export function SplitContributionsModal({ open, payment: paymentProp, spaceMembe
             </div>
             <button type="button" className={styles.deskClose} onClick={onClose} aria-label={t('buttons.close')}><XIcon size={16} /></button>
           </div>
-        ) : (
-          <>
-            <div className={styles.handle} />
-            <div className={styles.title}>{t('paymentsPage.menuSplit')}</div>
-            <div className={styles.description}>{payment.name}</div>
-          </>
-        )}
+        ) : null}
 
         {payment.is_variable && (
           <>
@@ -237,7 +244,7 @@ export function SplitContributionsModal({ open, payment: paymentProp, spaceMembe
           <div className={`${styles.progress} ${done ? styles.progressDone : ''}`}>
             <div className={styles.progressAmounts}>{fmt(registrado)} / {fmt(total)}</div>
             <div className={styles.progressStatus}>{done ? t('splitContributionsModal.complete') : t('splitContributionsModal.remaining', { amount: fmt(restan) })}</div>
-            {asPop && <div className={styles.bar}><i style={{ width: `${total > 0 ? Math.min(100, Math.max(0, (registrado / total) * 100)) : 0}%` }} /></div>}
+            {<div className={styles.bar}><i style={{ width: `${total > 0 ? Math.min(100, Math.max(0, (registrado / total) * 100)) : 0}%` }} /></div>}
           </div>
         )}
 
@@ -349,20 +356,7 @@ export function SplitContributionsModal({ open, payment: paymentProp, spaceMembe
           </>
         )}
 
-        <div className={asPop ? styles.deskFoot : undefined}>
-          {asPop && <button onClick={onClose} className={styles.deskCancel}>{hasChanges ? t('buttons.cancel') : t('buttons.close')}</button>}
-          {hasChanges && (
-            <button onClick={handleConfirm} className={styles.payButton}>
-              {t('splitContributionsModal.confirm')}
-            </button>
-          )}
-          {!hasChanges && done && !payment.is_paid && (
-            <button onClick={handlePagar} disabled={settling} className={styles.payButton}>
-              {settling ? t('splitContributionsModal.marking') : t('splitContributionsModal.pay')}
-            </button>
-          )}
-          {!asPop && <button onClick={onClose} className="btn-ghost">{hasChanges ? t('buttons.cancel') : t('buttons.close')}</button>}
-        </div>
+        {asPop && footEl}
     </div>
   )
 
@@ -370,11 +364,12 @@ export function SplitContributionsModal({ open, payment: paymentProp, spaceMembe
     return <AnchoredPop open={!!open} onClose={onClose} anchorRef={anchorRef} width={420} label={t('paymentsPage.menuSplit')}>{body}</AnchoredPop>
   }
 
+  // Móvil y tablet (v0.9.984): Modal único; el pie solo lleva la acción
+  // (Confirmar / Pagar) cuando la hay — sin «Cancelar» en móvil.
   return (
-    <div onClick={e => e.target === e.currentTarget && onClose()} className={styles.overlay} data-presence="overlay" data-closing={closing ? '' : undefined}>
-      <div className={styles.modal} data-presence="panel" data-closing={closing ? '' : undefined}>
-        {body}
-      </div>
-    </div>
+    <Modal open={open} onClose={onClose} title={t('paymentsPage.menuSplit')} desc={payment.name} width={520}
+      footer={actionBtn ? <div className={mk.stack}>{actionFor(`${mk.btn} ${mk.big} ${mk.btnPri}`)}</div> : null}>
+      {body}
+    </Modal>
   )
 }

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Bell, BellOff, TriangleAlert, ChevronDown } from 'lucide-react'
 // Ícono del encabezado vía Phosphor Icons (mismo patrón que las demás
@@ -40,6 +40,7 @@ export function SettingsNotificationsPage({ profile, user, onUpdate, onBack, sli
   const readBlocked = () => typeof Notification !== 'undefined' && Notification.permission === 'denied'
   const [blocked, setBlocked] = useState(readBlocked)
   const [hourOpen, setHourOpen] = useState(false)
+  const hourRef = useRef(null)
   // iPhone/iPad sin instalar: se muestran los pasos en vez de intentar activar.
   const installNeeded = needsPwaInstall()
   const hour = profile.notif_hour ?? 8
@@ -84,7 +85,7 @@ export function SettingsNotificationsPage({ profile, user, onUpdate, onBack, sli
   return (
     <SettingsSubLayout title={t('settingsNotifications.title')} description={t('settingsNotifications.description')}
       icon={BellDuotone} onBack={onBack} slideClass={slideClass}
-      after={<TimeWheelSheet open={hourOpen} onClose={() => setHourOpen(false)} value={hour}
+      after={<TimeWheelSheet open={hourOpen} anchorRef={hourRef} onClose={() => setHourOpen(false)} value={hour}
         onSelect={h => onUpdate({ notif_hour: h, notif_last_sent: null })} />}>
       <div className={`${kit.grid} ${kit.stretch}`}>
         <section {...switchProps(subscribed)} className={`${kit.hero} ${kit.clickable}`} onClick={handlePushToggle}>
@@ -100,7 +101,7 @@ export function SettingsNotificationsPage({ profile, user, onUpdate, onBack, sli
             <b>{t('settingsNotifications.notifyAt')}</b>
             {!subscribed && <span>{t('settingsNotifications.hourNeedsOn')}</span>}
           </div>
-          <button type="button" className={kit.chipBig} disabled={!subscribed} onClick={() => setHourOpen(true)}>
+          <button ref={hourRef} type="button" className={kit.chipBig} disabled={!subscribed} onClick={() => setHourOpen(true)}>
             {HOUR_LABELS[hour]}<ChevronDown size={18} />
           </button>
         </section>

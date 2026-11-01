@@ -1,10 +1,10 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Lock, Eye, EyeOff } from 'lucide-react'
+import { Lock } from 'lucide-react'
 import { supabase } from '../lib/supabase'
-import { RequirementRow } from './RequirementRow'
-import styles from './PasswordSetupModal.module.css'
-import { useScrollLock } from '../lib/scrollLock'
+import { Modal } from './Modal'
+import { PasswordField, PasswordReqs } from './PasswordField'
+import mk from './Modal.module.css'
 
 // ── Validador de fortaleza de contraseña ─────────────────────────────────────
 export function passwordRequirements(pwd) {
@@ -26,16 +26,11 @@ export function PasswordSetupModal({ userId, onDone }) {
   const { t } = useTranslation()
   const [password, setPassword] = useState('')
   const [confirm,  setConfirm]  = useState('')
-  const [showPass, setShowPass] = useState(false)
-  const [showConf, setShowConf] = useState(false)
   const [loading,  setLoading]  = useState(false)
   const [error,    setError]    = useState('')
 
-  const reqs   = passwordRequirements(password)
   const strong = isPasswordStrong(password)
   const match  = password && confirm && password === confirm
-
-  useScrollLock(true)
 
   async function handleSave() {
     setError('')
@@ -51,92 +46,21 @@ export function PasswordSetupModal({ userId, onDone }) {
     onDone()
   }
 
+  // Diseño nuevo (v0.9.984): <Modal> sin ✕ ni cierre por fondo (es
+  // obligatorio crearla para seguir).
   return (
-    <div className={styles.overlay}>
-      <div className={styles.modal}>
-        {/* Encabezado */}
-        <div className={styles.header}>
-          <div className={styles.headerTitle}>
-            {t('passwordSetupModal.title')}
-          </div>
-          <div className={styles.headerDescription}>
-            {t('passwordSetupModal.description')}
-          </div>
-        </div>
-
-        {error && (
-          <div className={styles.errorBox}>
-            {error}
-          </div>
-        )}
-
-        {/* Campo contraseña */}
-        <div className={styles.passwordField}>
-          <label className={`field-label ${styles.fieldLabel}`}>
-            {t('passwordSetupModal.passwordLabel')}
-          </label>
-          <div className={styles.inputWrapper}>
-            <div className={styles.inputIconLeft}>
-              <Lock size={15} color="var(--text)" />
-            </div>
-            <input aria-label={t('passwordSetupModal.passwordLabel')}
-              autoFocus
-              type={showPass ? 'text' : 'password'}
-              value={password}
-              onChange={e => setPassword(e.target.value)}
-              placeholder="••••••••"
-              className={`field-input ${styles.input}`}
-            />
-            <button type="button" onClick={() => setShowPass(v => !v)} className={styles.toggleVisibilityButton}>
-              {showPass ? <EyeOff size={16} color="var(--text)" /> : <Eye size={16} color="var(--text)" />}
-            </button>
-          </div>
-        </div>
-
-        {/* Requisitos */}
-        {password.length > 0 && (
-          <div className={styles.requirementsBox}>
-            <RequirementRow met={reqs.length}    label={t('settingsAccount.editModal.requirementLength')} />
-            <RequirementRow met={reqs.uppercase} label={t('settingsAccount.editModal.requirementUppercase')} />
-            <RequirementRow met={reqs.number}    label={t('settingsAccount.editModal.requirementNumber')} />
-            <RequirementRow met={reqs.symbol}    label={t('settingsAccount.editModal.requirementSymbol')} />
-          </div>
-        )}
-
-        {/* Campo confirmar */}
-        <div className={styles.confirmField}>
-          <label className={`field-label ${styles.fieldLabel}`}>
-            {t('passwordSetupModal.confirmLabel')}
-          </label>
-          <div className={styles.inputWrapper}>
-            <div className={styles.inputIconLeft}>
-              <Lock size={15} color="var(--text)" />
-            </div>
-            <input aria-label={t('passwordSetupModal.confirmLabel')}
-              type={showConf ? 'text' : 'password'}
-              value={confirm}
-              onChange={e => setConfirm(e.target.value)}
-              placeholder={t('passwordSetupModal.confirmPlaceholder')}
-              className={`field-input ${styles.input} ${confirm && !match ? styles.inputError : ''}`}
-              onKeyDown={e => e.key === 'Enter' && handleSave()}
-            />
-            <button type="button" onClick={() => setShowConf(v => !v)} className={styles.toggleVisibilityButton}>
-              {showConf ? <EyeOff size={16} color="var(--text)" /> : <Eye size={16} color="var(--text)" />}
-            </button>
-          </div>
-          {confirm && !match && (
-            <div className={styles.matchError}>{t('settingsAccount.editModal.passwordMismatch')}</div>
-          )}
-        </div>
-
-        <button
-          onClick={handleSave}
-          disabled={loading || !strong || !match}
-          className="btn-primary"
-        >
-          {loading ? t('settingsCategories.saving') : t('passwordSetupModal.submit')}
-        </button>
+    <Modal open onClose={null} layout="confirm" icon={Lock} title={t('passwordSetupModal.title')} desc={t('passwordSetupModal.description')}
+      width={460} backClose={false} closeButton={false}
+      actions={[{ label: loading ? t('settingsCategories.saving') : t('passwordSetupModal.submit'), onClick: handleSave, disabled: loading || !strong || !match }]}>
+      <div className={`${mk.pan} ${mk.panFlat}`}>
+        {error && <div className={mk.err}>{error}</div>}
+        <div className={mk.lab}><span>{t('passwordSetupModal.passwordLabel')}</span></div>
+        <PasswordField value={password} onChange={setPassword} label={t('passwordSetupModal.passwordLabel')} autoFocus />
+        {password.length > 0 && <PasswordReqs password={password} />}
+        <div className={mk.lab}><span>{t('passwordSetupModal.confirmLabel')}</span></div>
+        <PasswordField value={confirm} onChange={setConfirm} label={t('passwordSetupModal.confirmLabel')} placeholder={t('passwordSetupModal.confirmPlaceholder')} bad={!!confirm && !match} onEnter={handleSave} />
+        {confirm && !match && <div className={mk.err}>{t('settingsAccount.editModal.passwordMismatch')}</div>}
       </div>
-    </div>
+    </Modal>
   )
 }

@@ -53,6 +53,7 @@
 .stack { display: flex; flex-direction: column; gap: 8px; }
 .row { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
 .rowEnd { display: flex; gap: 10px; }
+.rowRight { justify-content: flex-end; flex-wrap: wrap; }
 
 /* Botones */
 .btn { height: 46px; padding: 0 22px; border: 0; border-radius: 99px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; font: inherit; font-size: 0.9375rem; font-weight: 600; white-space: nowrap; cursor: pointer; transition: filter .12s, opacity .15s, background .15s; }
@@ -153,3 +154,14 @@
 .popWrap :global(.field-input) { height: 46px; background: var(--desk-chip); border: 0 !important; border-radius: 16px; }
 .popWrap .info { background: var(--desk-chip); box-shadow: none; }
 .swatch { width: 38px; height: 26px; flex: none; margin: 0 0; border-radius: 6px; background: var(--sw, var(--desk-chip)); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--text) 8%, transparent); }
+
+/* Contraseña con ojo y requisitos en chips (v0.9.984) */
+.pwd { position: relative; display: flex; }
+.pwd :global(.field-input) { width: 100%; padding-right: 46px; }
+.pwdEye { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); width: 36px; height: 36px; display: grid; place-items: center; padding: 0; border: 0; border-radius: 50%; background: none; color: var(--muted); cursor: pointer; }
+.pwdBad :global(.field-input) { box-shadow: inset 0 0 0 2px var(--danger); }
+.reqs { display: flex; flex-wrap: wrap; gap: 6px; }
+.req { display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; border-radius: 99px; background: var(--desk-chip); font-size: 0.75rem; color: var(--muted); transition: color .25s; }
+.reqOk { color: var(--paid); }
+.panFlat .req { background: var(--desk-card); }
+@media (hover: hover) and (pointer: fine) { .pwdEye:hover { background: var(--desk-hover-fill); filter: none; } }
