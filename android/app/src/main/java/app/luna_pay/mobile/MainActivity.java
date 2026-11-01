@@ -18,6 +18,7 @@ public class MainActivity extends BridgeActivity {
     public void onCreate(Bundle savedInstanceState) {
         // Plugin local del widget de Luna — se registra ANTES de super.onCreate().
         registerPlugin(LunaWidgetPlugin.class);
+        registerPlugin(NavBarColorPlugin.class);
         super.onCreate(savedInstanceState);
         setupEdgeToEdgeTop();
     }

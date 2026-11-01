@@ -10,9 +10,23 @@ function isDark() {
   return window.matchMedia('(prefers-color-scheme: dark)').matches
 }
 
+// Franja de la barra de navegación del sistema (botones/gestos): mismo color
+// que la barra inferior de la app en móvil (--bottom-nav-bg); en tablet y
+// escritorio no hay barra inferior, así que usa el fondo (--bg).
+// Plugin nativo NavBarColorPlugin.java (necesita app reconstruida).
+function applyNavBarColor() {
+  const cs = getComputedStyle(document.documentElement)
+  const token = window.matchMedia('(min-width: 768px)').matches ? '--bg' : '--bottom-nav-bg'
+  const color = cs.getPropertyValue(token).trim()
+  if (!/^#[0-9a-f]{6}$/i.test(color)) return
+  window.Capacitor?.registerPlugin?.('NavBarColor')?.set({ color })?.catch?.(() => { /* cosmético: si el plugin no está (app vieja), no pasa nada */ })
+}
+
 function apply() {
   // Dark = iconos claros (tema oscuro); Light = iconos oscuros (tema claro).
-  SystemBars.setStyle({ style: isDark() ? SystemBarsStyle.Dark : SystemBarsStyle.Light }).catch(() => { /* estilo de barras es cosmético: si falla, se queda el actual */ })
+  SystemBars.setStyle({ style: isDark() ? SystemBarsStyle.Dark : SystemBarsStyle.Light })
+    .catch(() => { /* estilo de barras es cosmético: si falla, se queda el actual */ })
+    .finally(applyNavBarColor) // después: setStyle también toca los iconos de la barra de navegación
 }
 
 // Fondo de la barra de estado al hacer scroll: arriba del todo es transparente
@@ -41,4 +55,5 @@ export function initSystemBars() {
     attributeFilter: ['data-theme'],
   })
   window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', apply)
+  window.matchMedia('(min-width: 768px)').addEventListener('change', applyNavBarColor)
 }
