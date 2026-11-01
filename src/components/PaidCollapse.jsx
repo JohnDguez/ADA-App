@@ -24,7 +24,7 @@ const UNMARK_EXIT_MS = 320
 // dispara HASTA que la animación de salida terminó, nunca antes, para que
 // la fila nunca desaparezca del arreglo (y se desmonte) a la mitad de su
 // propia animación.
-function PaidCollapseItem({ p, onMarkUnpaid, onKeep, onRelease, onViewSource, spaceMembers, onSelect, selected, paymentMethodsList = [] }) {
+function PaidCollapseItem({ p, isNew = false, onMarkUnpaid, onKeep, onRelease, onViewSource, spaceMembers, onSelect, selected, paymentMethodsList = [] }) {
   const { t } = useTranslation()
   const [phase, setPhase] = useState('idle') // idle | filling | labeled | exiting
   const wrapperRef = useRef(null)
@@ -91,7 +91,7 @@ function PaidCollapseItem({ p, onMarkUnpaid, onKeep, onRelease, onViewSource, sp
   const pd = new Date(p.paid_at || p.postponed_at || p.due_date)
 
   return (
-    <div ref={wrapperRef} className={styles.paidCollapseItemWrapper}>
+    <div ref={wrapperRef} className={`${styles.paidCollapseItemWrapper} ${isNew ? 'list-enter' : ''}`}>
       <div {...kbdIf(!!onSelect)}
         data-payment-id={p.id}
         onClick={onSelect ? () => onSelect(p.id) : undefined}
@@ -180,6 +180,12 @@ export function PaidCollapse({ payments, expanded, onToggle, onMarkUnpaid, onVie
   const [leaving, setLeaving] = useState({})
   const { render: listRender, closing: listClosing } = usePresence(expanded, 260)
   const keepRow = row => setLeaving(prev => ({ ...prev, [row.id]: row }))
+  // Un pago recién marcado como pagado entra a esta lista suavemente
+  // (v0.9.976); al abrir la lista no anima fila por fila.
+  const seenRef = useRef(null)
+  const ids = payments.map(p => p.id)
+  const newIds = listRender && seenRef.current ? new Set(ids.filter(id => !seenRef.current.has(id))) : new Set()
+  useEffect(() => { seenRef.current = listRender ? new Set(ids) : null })
   const releaseRow = id => setLeaving(prev => { if (!(id in prev)) return prev; const { [id]: _gone, ...rest } = prev; return rest })
   return (
     <div className={styles.paidCollapseRoot}>
@@ -225,7 +231,7 @@ export function PaidCollapse({ payments, expanded, onToggle, onMarkUnpaid, onVie
           <div className={`${styles.paidCollapseAnim} ${listClosing ? styles.paidCollapseAnimOut : ''}`}>
           <div className={styles.paidCollapseList}>
             {sorted.map(p => (
-              <PaidCollapseItem key={p.id} p={p} onMarkUnpaid={onMarkUnpaid} onKeep={keepRow} onRelease={releaseRow} onViewSource={onViewSource} spaceMembers={spaceMembers} onSelect={onSelect} selected={selectedId === p.id} paymentMethodsList={paymentMethodsList} />
+              <PaidCollapseItem key={p.id} p={p} isNew={newIds.has(p.id)} onMarkUnpaid={onMarkUnpaid} onKeep={keepRow} onRelease={releaseRow} onViewSource={onViewSource} spaceMembers={spaceMembers} onSelect={onSelect} selected={selectedId === p.id} paymentMethodsList={paymentMethodsList} />
             ))}
           </div>
           </div>

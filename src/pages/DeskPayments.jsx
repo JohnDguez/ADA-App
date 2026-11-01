@@ -17,6 +17,7 @@ import { DeskAddButton } from '../components/DeskAddButton'
 import { CategoryRing } from '../components/CategoryRing'
 import styles from './DeskPayments.module.css'
 import { LoadingDots } from '../components/LoadingDots'
+import { useListPresence, listAnimClass } from '../lib/useListPresence'
 
 // Gastos e ingresos de escritorio (≥1100px, v0.9.825) — diseño aprobado por
 // Johnatan con mockup. Mismo lenguaje visual que DeskHome (encabezado con
@@ -50,6 +51,10 @@ export function DeskPayments({ d, tablet = false }) {
   const catColor = c => getCatColor(c, profile.custom_categories, profile.category_colors)
   const selectedLabel = selectedCat ? getCategoryLabel(selectedCat) : null
   const visibleRows = useMemo(() => selectedCat ? rows.filter(p => p.category === selectedCat) : rows, [rows, selectedCat])
+  // Filas con entrada/salida suave (v0.9.976): desmarcar, borrar o agregar un
+  // pago ya no lo hace aparecer o desaparecer de golpe. Cambiar de vista,
+  // mes, categoría o espacio no anima fila por fila.
+  const animRows = useListPresence(visibleRows, p => p.id, `${view.mode}|${view.month}|${view.year}|${selectedCat || ''}|${activeSpaceId || ''}`)
   const visibleTotal = selectedCat ? visibleRows.filter(p => !p.is_postponed).reduce((a, p) => a + Number(p.amount), 0) : totalInView
 
   const totalCats = catData.reduce((a, c) => a + c.total, 0)
@@ -277,11 +282,11 @@ export function DeskPayments({ d, tablet = false }) {
                         <span />
                       </div>
                       <div className={`${home.listBody} scroll-y ${styles.rowsBody}`}>
-                        {visibleRows.map(p => {
+                        {animRows.map(p => {
                           const when = p.paid_at ? new Date(p.paid_at) : new Date(p.postponed_at || p.due_date)
                           const CatIcon = getCategoryIcon(p.category, profile.category_icons)
                           return (
-                            <div key={p.id} data-payment-id={p.id} className={styles.tr} onContextMenu={e => openRowMenuOnRightClick(e, p)}>
+                            <div key={p.id} data-payment-id={p.id} className={`${styles.tr} ${listAnimClass(p)}`} onContextMenu={e => openRowMenuOnRightClick(e, p)}>
                               <div className={styles.dt}><s>{getMonthsShort()[when.getMonth()]}</s><b>{when.getDate()}</b></div>
                               <div className={styles.name} title={p.name}>
                                 <span className={styles.nameText}>{p.name}</span>

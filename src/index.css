@@ -1145,3 +1145,13 @@ html[data-desk-sidebar] .field-input {
   padding-right: 16px;
 }
 html[data-desk-sidebar] .field-input:focus { box-shadow: 0 0 0 2px var(--accent); }
+
+/* ── Entrada y salida de filas de lista (v0.9.976, DISENO.md §8) ──────────────
+   Las aplica useListPresence (lib/useListPresence.js): una fila nueva entra
+   deslizándose y abriendo su espacio; una que se va se desvanece y cierra su
+   espacio en vez de desaparecer de golpe. 280 ms = LIST_EXIT_MS (Regla 30). */
+.list-enter { animation: listIn .32s cubic-bezier(0.22, 1, 0.36, 1) backwards; }
+.list-exit { animation: listOut .28s cubic-bezier(0.22, 1, 0.36, 1) forwards; overflow: hidden; pointer-events: none; }
+@keyframes listIn { from { opacity: 0; transform: translateY(-6px); max-height: 0; overflow: hidden; } to { opacity: 1; transform: none; max-height: 160px; } }
+@keyframes listOut { from { opacity: 1; max-height: 160px; } to { opacity: 0; max-height: 0; padding-top: 0; padding-bottom: 0; margin-top: 0; margin-bottom: 0; } }
+@media (prefers-reduced-motion: reduce) { .list-enter, .list-exit { animation-duration: 1ms; } }

@@ -16,79 +16,23 @@
   margin-bottom: 8px;
 }
 
-.pillRow {
-  display: flex;
-  gap: 6px;
+/* Chips del periodo (v0.9.976, DISENO.md §6): píldoras; inactivo gris de
+   control, ACTIVO --desk-pill (negro en claro, blanco en oscuro), nunca azul.
+   Cambio de estado con transición (R53). */
+.pillRow { display: flex; gap: 8px; }
+.pill, .weekdayButton, .presetButton, .dayButton {
+  border: none; border-radius: 99px; cursor: pointer;
+  background: var(--field-desk-bg, var(--desk-chip)); color: var(--text);
+  font-family: 'DM Sans', sans-serif; font-weight: 500; font-size: 0.8125rem;
+  transition: background-color .25s cubic-bezier(0.22, 1, 0.36, 1), color .25s cubic-bezier(0.22, 1, 0.36, 1);
 }
-
-.pill {
-  flex: 1;
-  padding: 8px 0;
-  border-radius: 5px;
-  border: none;
-  background: var(--bg);
-  color: var(--text);
-  font-weight: 400;
-  font-size: 13px;
-  font-family: 'DM Sans', sans-serif;
-  cursor: pointer;
-}
-
-.pillActive {
-  background: var(--accent);
-  color: var(--surface);
-  font-weight: 600;
-}
-
-.weekdayRow {
-  display: flex;
-  gap: 6px;
-  flex-wrap: wrap;
-}
-
-.weekdayButton {
-  width: 38px;
-  height: 38px;
-  border-radius: 5px;
-  border: none;
-  background: var(--bg);
-  color: var(--text);
-  font-weight: 400;
-  font-size: 13px;
-  font-family: 'DM Sans', sans-serif;
-  cursor: pointer;
-}
-
-.weekdayButtonActive {
-  background: var(--accent);
-  color: var(--surface);
-  font-weight: 600;
-}
-
-.presetsRow {
-  display: flex;
-  gap: 6px;
-  margin-bottom: 8px;
-  flex-wrap: wrap;
-}
-
-.presetButton {
-  padding: 7px 12px;
-  border-radius: 5px;
-  border: none;
-  background: var(--bg);
-  color: var(--text);
-  font-weight: 400;
-  font-size: 13px;
-  font-family: 'DM Sans', sans-serif;
-  cursor: pointer;
-}
-
-.presetButtonActive {
-  background: var(--accent);
-  color: var(--surface);
-  font-weight: 600;
-}
+.pill { flex: 1; padding: 0.75rem 0; }
+.pillActive, .weekdayButtonActive, .presetButtonActive, .dayButtonActive { background: var(--desk-pill); color: var(--desk-pill-ink); font-weight: 600; }
+.weekdayRow { display: flex; gap: 8px; flex-wrap: wrap; }
+.weekdayButton { width: 2.75rem; height: 2.75rem; }
+.presetsRow { display: flex; gap: 8px; margin-bottom: 8px; flex-wrap: wrap; }
+.presetButton { padding: 0.6875rem 1rem; }
+.pill:active, .weekdayButton:active, .presetButton:active, .dayButton:active { filter: brightness(0.9); }
 
 .customDaysRow {
   display: flex;
@@ -107,29 +51,8 @@
   margin-bottom: 4px;
 }
 
-.dayGrid {
-  display: grid;
-  grid-template-columns: repeat(7, minmax(0, 1fr));
-  gap: 6px;
-}
-
-.dayButton {
-  height: 36px;
-  border-radius: 5px;
-  border: none;
-  background: var(--bg);
-  color: var(--text);
-  font-weight: 400;
-  font-size: 13px;
-  font-family: 'DM Sans', sans-serif;
-  cursor: pointer;
-}
-
-.dayButtonActive {
-  background: var(--accent);
-  color: var(--surface);
-  font-weight: 600;
-}
+.dayGrid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 8px; }
+.dayButton { height: 2.625rem; }
 
 .monthlyHelperText {
   font-size: 12px;
@@ -138,27 +61,7 @@
   margin-top: 6px;
 }
 
-/* Nuevo diseño: chips redondeados en tablet/escritorio (v0.9.845, ≥768px desde v0.9.954) y,
-   en móvil, dentro de un contenedor con data-newchips. El fondo del chip viene de
-   --field-desk-bg (gris sobre panel blanco); el hover usa un relleno más oscuro. */
-@media (min-width: 768px) {
-  .pillRow, .weekdayRow, .presetsRow { gap: 8px; }
-  .dayGrid { gap: 8px; }
-  .pill, .weekdayButton, .presetButton, .dayButton { border-radius: 16px; background: var(--field-desk-bg, var(--desk-card)); }
-  .pill { padding: 13px 0; }
-  .weekdayButton { width: 46px; height: 46px; }
-  .presetButton { padding: 11px 16px; }
-  .dayButton { height: 42px; }
-  .pillActive, .weekdayButtonActive, .presetButtonActive, .dayButtonActive { background: var(--accent); color: var(--desk-ink-text); }
-}
-:global([data-newchips]) .pillRow, :global([data-newchips]) .weekdayRow, :global([data-newchips]) .presetsRow { gap: 8px; }
-:global([data-newchips]) .dayGrid { gap: 8px; }
-:global([data-newchips]) .pill, :global([data-newchips]) .weekdayButton, :global([data-newchips]) .presetButton, :global([data-newchips]) .dayButton { border-radius: 16px; background: var(--field-desk-bg, var(--desk-card)); }
-:global([data-newchips]) .pill { padding: 13px 0; }
-:global([data-newchips]) .weekdayButton { width: 44px; height: 44px; }
-:global([data-newchips]) .presetButton { padding: 11px 16px; }
-:global([data-newchips]) .dayButton { height: 42px; }
-:global([data-newchips]) .pillActive, :global([data-newchips]) .weekdayButtonActive, :global([data-newchips]) .presetButtonActive, :global([data-newchips]) .dayButtonActive { background: var(--accent); color: var(--on-color); }
+@media (prefers-reduced-motion: reduce) { .pill, .weekdayButton, .presetButton, .dayButton { transition: none; } }
 @media (hover: hover) and (pointer: fine) {
   .pill:not(.pillActive):hover, .weekdayButton:not(.weekdayButtonActive):hover, .presetButton:not(.presetButtonActive):hover, .dayButton:not(.dayButtonActive):hover { background: var(--desk-hover-fill); filter: none; }
 }

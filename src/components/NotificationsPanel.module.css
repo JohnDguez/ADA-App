@@ -249,8 +249,8 @@
 
 /* ── Escritorio (v0.9.844): popover anclado a la campana + lista de la página ─ */
 .filters { display: flex; flex-wrap: wrap; gap: 8px; padding: 0 24px 14px; flex-shrink: 0; }
-.filter { height: 36px; padding: 0 16px; border: 0; border-radius: 99px; background: var(--desk-chip); color: var(--text); font-family: inherit; font-size: 13.5px; font-weight: 600; cursor: pointer; }
-.filterOn { background: var(--accent); color: var(--desk-ink-text); }
+.filter { height: 36px; padding: 0 16px; border: 0; border-radius: 99px; background: var(--desk-chip); color: var(--text); font-family: inherit; font-size: 13.5px; font-weight: 600; cursor: pointer; transition: background-color .25s cubic-bezier(0.22, 1, 0.36, 1), color .25s cubic-bezier(0.22, 1, 0.36, 1); }
+.filterOn { background: var(--desk-pill); color: var(--desk-pill-ink); }
 .footer { display: flex; align-items: center; justify-content: space-between; padding: 14px 24px; border-top: 1px solid var(--desk-hair); font-size: 13.5px; color: var(--muted); flex-shrink: 0; }
 .viewAll { border: 0; background: none; padding: 0; color: var(--accent); font-family: inherit; font-size: 13.5px; font-weight: 600; cursor: pointer; }
 

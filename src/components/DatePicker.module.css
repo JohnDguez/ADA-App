@@ -152,7 +152,7 @@
 .quickChip {
   padding: 8px 12px; border: none; border-radius: 99px; cursor: pointer;
   background: var(--surface); color: var(--text);
-  font-family: 'DM Sans', sans-serif; font-size: 12.5px; font-weight: 600;
+  font-family: 'DM Sans', sans-serif; font-size: 12.5px; font-weight: 600;  transition: background-color .25s cubic-bezier(0.22, 1, 0.36, 1), color .25s cubic-bezier(0.22, 1, 0.36, 1);
 }
-.quickChipOn { background: var(--accent); color: var(--surface); }
+.quickChipOn { background: var(--desk-pill); color: var(--desk-pill-ink); }
 .sheetCalendar { background: var(--surface); border-radius: 16px; padding: 12px; }

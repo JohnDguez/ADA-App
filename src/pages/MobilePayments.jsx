@@ -11,6 +11,7 @@ import { getBank, bankColorVar } from '../lib/cardCatalog'
 import { fmt, getMonths, getMonthsShort, getCatColor, getCategoryLabel } from '../lib/utils'
 import styles from './MobilePayments.module.css'
 import { LoadingDots } from '../components/LoadingDots'
+import { useListPresence, listAnimClass } from '../lib/useListPresence'
 
 // Gastos e ingresos móvil (<768px, v0.9.902) — opción A aprobada con mockup.
 // Toda la lógica y los modales siguen en PaymentsPage.jsx: aquí solo se pinta
@@ -90,6 +91,10 @@ function PaymentsTab({ d }) {
   const { t } = useTranslation()
   const { profile, dataLoading, activeSpaceId, spaceMembers, paymentMethodsList, onAdd, onViewSource, view, rows, totalInView, selectedCat, setSelectedCat, openMenu, setOpenMenu } = d
   const visibleRows = useMemo(() => (selectedCat ? rows.filter(p => p.category === selectedCat) : rows), [rows, selectedCat])
+  // Filas con entrada/salida suave (v0.9.976): desmarcar, borrar o agregar un
+  // pago ya no lo hace aparecer o desaparecer de golpe. Cambiar de vista,
+  // mes, categoría o espacio no anima fila por fila.
+  const animRows = useListPresence(visibleRows, p => p.id, `${view.mode}|${view.month}|${view.year}|${selectedCat || ''}|${activeSpaceId || ''}`)
   const visibleTotal = selectedCat ? visibleRows.filter(p => !p.is_postponed).reduce((a, p) => a + Number(p.amount), 0) : totalInView
 
   const supportLine = p => {
@@ -144,10 +149,10 @@ function PaymentsTab({ d }) {
         )
       ) : (
         <div className={styles.list}>
-          {visibleRows.map(p => {
+          {animRows.map(p => {
             const when = p.paid_at ? new Date(p.paid_at) : new Date(p.postponed_at || p.due_date)
             return (
-              <div key={p.id} data-payment-id={p.id} className={styles.row}>
+              <div key={p.id} data-payment-id={p.id} className={`${styles.row} ${listAnimClass(p)}`}>
                 <div className={styles.date}><s>{getMonthsShort()[when.getMonth()]}</s><b>{when.getDate()}</b></div>
                 <div className={styles.info}>
                   <b>{p.name}</b>
