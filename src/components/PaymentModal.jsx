@@ -757,140 +757,57 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onSaveC
 
     const master = payments?.find(p => p.id === initial.parent_id)
 
-    if (deskLike) {
-      const LockedDesk = ({ label, value }) => (
-        <div className={ec.locked}>
-          <span className={ec.lockedLabel}>{label}</span>
-          <div className={ec.lockedValue}><span>{value}</span><PhLock size={15} weight="duotone" className={ec.lockedIcon} /></div>
-        </div>
-      )
-      return (
-        <>
-        <div onClick={e => e.target === e.currentTarget && onClose()} className={dk.overlay} data-presence="overlay" data-closing={closing ? '' : undefined}>
-          <div className={`${dk.dialog} ${ec.dialog} ${tabCls}`} role="dialog" aria-modal="true" aria-label={t('paymentModal.editCopy.title')} data-presence="panel" data-closing={closing ? '' : undefined}>
-            <div className={dk.head}>
-              <div>
-                <h2 className={dk.title}>{t('paymentModal.editCopy.title')}</h2>
-                <div className={dk.sub}>{initial.name} · {t('paymentModal.editCopy.dueDate', { date: formatDueDate(initial.due_date) })}</div>
-              </div>
-              <button type="button" className={dk.close} onClick={onClose} aria-label={t('buttons.cancel')}><XIcon size={16} /></button>
-            </div>
-
-            {error && <div className={styles.errorBox}>{error}</div>}
-            {lockedMessage && <div className={styles.warningBox}>{lockedMessage}</div>}
-
-            <div className={ec.banner}>
-              <Info size={16} className={ec.bannerIcon} />
-              <div className={ec.bannerBody}>
-                <div className={ec.bannerText}>{t('paymentModal.editCopy.banner')}</div>
-                {master && (
-                  <button type="button" onClick={() => onEditMaster && onEditMaster(master)} className={ec.masterBtn}>
-                    <Repeat size={13} /> {t('paymentModal.editCopy.editMasterButton')}
-                  </button>
-                )}
-              </div>
-            </div>
-
-            <LockedDesk label={t('paymentModal.fields.name')} value={initial.name} />
-            <div className={ec.row2}>
-              <LockedDesk label={t('paymentModal.fields.category')} value={getCategoryLabel(initial.category)} />
-              <LockedDesk label={t('settingsCobro.frequencyLabel')} value={getFrequencyLabel(initial.recur_freq)} />
-            </div>
-            <LockedDesk label={t('paymentModal.dueDate')} value={formatDueDate(initial.due_date)} />
-
-            <div className={`${ec.fields} ${canWrite ? '' : styles.formDisabled}`}>
-              <div className={dk.amount} onClick={e => e.currentTarget.querySelector('input')?.focus()}>
-                <span className={dk.amountLabel}>{t('paymentModal.amountLabel')}</span>
-                <div className={dk.amountRow}>
-                  <span className={dk.amountSym}>{getCurrencySymbol()}</span>
-                  <AmountInput className={dk.amountInput} value={amount} onChange={e => setAmount(e.target.value)} placeholder="0.00" autoFocus />
-                </div>
-              </div>
-              {initial.is_paid && (
-                <Field label={t('paymentModal.paidDateLabel')}>
-                  <DatePicker value={paidAt} onChange={setPaidAt} sheet sheetTitle={t('paymentModal.paidDateLabel')} />
-                </Field>
-              )}
-              {methodsAvailable && (
-                <div>
-                  <PaymentMethodField methods={paymentMethods.methods} value={methodId} onChange={setMethodId} payDate={paidAt || null} onAddCard={openAddCard} />
-                </div>
-              )}
-            </div>
-
-            <div className={dk.foot}>
-              <button type="button" onClick={onClose} className={dk.cancel}>{t('buttons.cancel')}</button>
-              <button type="button" onClick={handleSaveCopyAmount} disabled={saving || !canWrite} className={`btn-primary ${dk.save}`}>
-                {saving ? t('settingsCategories.saving') : t('paymentModal.save.saveChanges')}
-              </button>
-            </div>
-          </div>
-        </div>
-        {methodsAvailable && <AddCardModal open={cardFormOpen} onClose={() => setCardFormOpen(false)} paymentMethods={paymentMethods} onAdded={setMethodId} />}
-        </>
-      )
-    }
-
+    const Locked = ({ label, value }) => (
+      <div className={ec.locked}>
+        <span className={mk.lab}>{label}</span>
+        <div className={ec.lockedValue}><span>{value}</span><PhLock size={15} weight="duotone" className={ec.lockedIcon} /></div>
+      </div>
+    )
+    // Modal único (v0.9.990): una sola vista para los tres tamaños.
     return (
       <>
-        <div onClick={e => e.target === e.currentTarget && onClose()} className={styles.overlay} data-presence="overlay" data-closing={closing ? '' : undefined}>
-          <div className={styles.panel} data-presence="panel" data-closing={closing ? '' : undefined}>
-            <div className={styles.handle} />
+        <Modal open={open} onClose={onClose} width={480} backClose={false}
+          title={t('paymentModal.editCopy.title')}
+          desc={`${initial.name} · ${t('paymentModal.editCopy.dueDate', { date: formatDueDate(initial.due_date) })}`}
+          primary={{ label: saving ? t('settingsCategories.saving') : t('paymentModal.save.saveChanges'), onClick: handleSaveCopyAmount, disabled: saving || !canWrite }}>
+          {error && <div className={styles.errorBox}>{error}</div>}
+          {lockedMessage && <div className={styles.warningBox}>{lockedMessage}</div>}
 
-            <div className={styles.modalTitle}>{t('paymentModal.editCopy.title')}</div>
-            <div className={styles.editCopySubtitle}>
-              {initial.name} · {t('paymentModal.editCopy.dueDate', { date: formatDueDate(initial.due_date) })}
-            </div>
-
-            {error && <div className={styles.errorBox}>{error}</div>}
-            {lockedMessage && <div className={styles.warningBox}>{lockedMessage}</div>}
-
-            <div className={styles.editCopyBanner}>
-              <Info size={16} className={styles.editCopyBannerIcon} />
-              <div className={styles.editCopyBannerContent}>
-                <div className={styles.editCopyBannerText}>{t('paymentModal.editCopy.banner')}</div>
-                {master && (
-                  <button type="button" onClick={() => onEditMaster && onEditMaster(master)} className={styles.editMasterButton}>
-                    <Repeat size={13} /> {t('paymentModal.editCopy.editMasterButton')}
-                  </button>
-                )}
-              </div>
-            </div>
-
-            <LockedField label={t('paymentModal.fields.name')} value={initial.name} />
-            <div className={styles.lockedFieldRow2}>
-              <LockedField label={t('paymentModal.fields.category')} value={getCategoryLabel(initial.category)} />
-              <LockedField label={t('settingsCobro.frequencyLabel')} value={getFrequencyLabel(initial.recur_freq)} />
-            </div>
-            <LockedField label={t('paymentModal.dueDate')} value={formatDueDate(initial.due_date)} />
-
-            <div className={canWrite ? styles.formWrapper : styles.formDisabled}>
-              <Field label={t('paymentModal.amountLabel')}>
-                <AmountInput className="field-input" value={amount} onChange={e => setAmount(e.target.value)} placeholder="0.00" />
-              </Field>
-              {/* Fecha de pago (v0.9.494) — solo si esta copia YA está
-                  pagada; una pendiente no tiene una que corregir todavía. */}
-              {initial.is_paid && (
-                <Field label={t('paymentModal.paidDateLabel')}>
-                  <DatePicker value={paidAt} onChange={setPaidAt} sheet sheetTitle={t('paymentModal.paidDateLabel')} />
-                </Field>
-              )}
-              {/* Se paga con (v0.9.494) — mismo campo que el resto del
-                  formulario; oculto en Espacio Compartido. Sin `Field`:
-                  `PaymentMethodField` ya trae su propio label. */}
-              {methodsAvailable && (
-                <div className={styles.fieldGroup}>
-                  <PaymentMethodField methods={paymentMethods.methods} value={methodId} onChange={setMethodId} payDate={paidAt || null} onAddCard={openAddCard} />
-                </div>
+          <div className={mk.info}>
+            <Info size={16} />
+            <div className={ec.bannerBody}>
+              <span>{t('paymentModal.editCopy.banner')}</span>
+              {master && (
+                <button type="button" onClick={() => onEditMaster && onEditMaster(master)} className={`${mk.btn} ${mk.btnSoft} ${mk.btnSm}`}>
+                  <Repeat size={14} /> {t('paymentModal.editCopy.editMasterButton')}
+                </button>
               )}
             </div>
-
-            <button onClick={handleSaveCopyAmount} disabled={saving || !canWrite} className={`btn-primary ${styles.saveButtonSpacing} ${(saving || !canWrite) ? styles.dim70 : ''}`}>
-              {saving ? t('settingsCategories.saving') : t('paymentModal.save.saveChanges')}
-            </button>
-            <button onClick={onClose} className={`btn-ghost ${styles.cancelButtonSpacing} ${styles.hideMobile}`}>{t('buttons.cancel')}</button>
           </div>
-        </div>
+
+          <div className={mk.pan}>
+            <Locked label={t('paymentModal.fields.name')} value={initial.name} />
+            <div className={mk.g2}>
+              <Locked label={t('paymentModal.fields.category')} value={getCategoryLabel(initial.category)} />
+              <Locked label={t('settingsCobro.frequencyLabel')} value={getFrequencyLabel(initial.recur_freq)} />
+            </div>
+            <Locked label={t('paymentModal.dueDate')} value={formatDueDate(initial.due_date)} />
+          </div>
+
+          <div className={`${mk.pan} ${canWrite ? '' : styles.formDisabled}`}>
+            <span className={mk.lab}>{t('paymentModal.amountLabel')}</span>
+            <AmountInput className={ec.amountInput} value={amount} onChange={e => setAmount(e.target.value)} placeholder="0.00" autoFocus={deskLike} />
+            {initial.is_paid && (
+              <>
+                <span className={mk.lab}>{t('paymentModal.paidDateLabel')}</span>
+                <DatePicker value={paidAt} onChange={setPaidAt} sheet sheetTitle={t('paymentModal.paidDateLabel')} />
+              </>
+            )}
+            {methodsAvailable && (
+              <PaymentMethodField methods={paymentMethods.methods} value={methodId} onChange={setMethodId} payDate={paidAt || null} onAddCard={openAddCard} />
+            )}
+          </div>
+        </Modal>
         {methodsAvailable && <AddCardModal open={cardFormOpen} onClose={() => setCardFormOpen(false)} paymentMethods={paymentMethods} onAdded={setMethodId} />}
       </>
     )

@@ -81,32 +81,6 @@
   font-family: 'DM Sans', sans-serif;
 }
 
-.addCategoryRow {
-  margin-top: 8px;
-  display: flex;
-  gap: 6px;
-}
-
-.addCategoryInput {
-  flex: 1;
-}
-
-.addCategorySubmitButton {
-  padding: 0 14px;
-  border-radius: var(--radius-sm);
-  border: none;
-  background: var(--accent);
-  color: var(--surface);
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  font-family: 'DM Sans', sans-serif;
-}
-
-.addCategorySubmitButton:disabled {
-  opacity: 0.5;
-}
-
 .helperText {
   font-size: 11px;
   color: var(--text);
@@ -124,62 +98,7 @@
 .deleteButtonSpacing {
   margin-top: 6px;
 }
-
 /* ── Rama "Editar solo esta copia" (recurrente, no master, no parcialidad) ── */
-.editCopySubtitle {
-  font-size: 12px;
-  color: var(--muted);
-  margin-bottom: 14px;
-}
-
-.editCopyBanner {
-  background: var(--accent-soft);
-  border: 0.5px solid var(--accent-border);
-  border-radius: var(--radius-sm);
-  padding: 10px 12px;
-  margin-bottom: 16px;
-  display: flex;
-  gap: 8px;
-  align-items: flex-start;
-}
-
-.editCopyBannerIcon {
-  color: var(--accent);
-  flex-shrink: 0;
-  margin-top: 1px;
-}
-
-.editCopyBannerContent {
-  flex: 1;
-}
-
-.editCopyBannerText {
-  font-size: 12px;
-  color: var(--text);
-  line-height: 1.5;
-}
-
-.editMasterButton {
-  margin-top: 8px;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 10px;
-  border-radius: var(--radius-sm);
-  border: none;
-  background: var(--accent);
-  color: var(--surface);
-  font-size: 12px;
-  font-weight: 600;
-  font-family: 'DM Sans', sans-serif;
-  cursor: pointer;
-}
-
-.lockedFieldRow2 {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
-}
 
 .lockedFieldValue {
   width: 100%;
@@ -198,20 +117,7 @@
   color: var(--muted);
   flex-shrink: 0;
 }
-
 /* ── Rama "Editar parcialidades" ─────────────────────────────────────────── */
-.installmentHeaderRow {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 16px;
-}
-
-.installmentHeaderTitle {
-  font-size: 16px;
-  font-weight: 600;
-  color: var(--text);
-}
 
 .installmentBadge {
   font-size: 12px;
@@ -247,42 +153,7 @@
   color: var(--text);
   font-weight: 400;
 }
-
 /* ── Parte 2: tabs de tipo de pago, título, banner informativo ──────────── */
-.paymentTypeTabs {
-  display: flex;
-  background: var(--bg);
-  border-radius: 10px;
-  padding: 3px;
-  margin-bottom: 16px;
-  border: 0.5px solid var(--border);
-}
-
-.paymentTypeTab {
-  flex: 1;
-  padding: 8px 0;
-  border-radius: 8px;
-  border: none;
-  background: transparent;
-  color: var(--text);
-  font-weight: 400;
-  font-size: 12px;
-  font-family: 'DM Sans', sans-serif;
-  cursor: pointer;
-}
-
-.paymentTypeTabActive {
-  background: var(--accent);
-  color: var(--surface);
-  font-weight: 600;
-}
-
-.modalTitle {
-  font-size: 16px;
-  font-weight: 600;
-  color: var(--text);
-  margin-bottom: 14px;
-}
 
 /* ── Parte 3: resumen de parcialidades ────────────────────────────────────── */
 .summaryBox {
@@ -305,23 +176,7 @@
   color: var(--text);
   line-height: 1.7;
 }
-
 /* ── Parte 4: selector de fecha, "Ya lo pagué", weekday/biweekly, nota ──── */
-:global(.field-label).dueDateLabelNoMargin {
-  margin-bottom: 0;
-}
-
-.alreadyPaidToggle {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  cursor: pointer;
-}
-
-.alreadyPaidLabel {
-  font-size: 11px;
-  font-weight: 600;
-}
 
 .helperTextMt6 {
   font-size: 11px;
@@ -355,17 +210,6 @@
 /* ── Parte 5: simulador "Impacto en tus finanzas" ─────────────────────────── */
 .impactWrapper {
   margin-bottom: 16px;
-}
-
-.impactLabel {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  color: var(--accent);
-  font-size: 12.5px;
-  font-weight: 600;
-  margin-left: 4px;
-  margin-bottom: 8px;
 }
 
 .impactCard {
@@ -480,69 +324,15 @@
   border-radius: 50%;
   background: var(--on-color);
 }
-
 /* Dictado por voz (v0.9.577) */
-.voiceBlock { margin-bottom: 14px; }
-.voiceButton {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 10px;
-  background: var(--accent-soft);
-  color: var(--accent);
-  border: none;
-  border-radius: var(--radius-sm);
-  font-size: 14px;
-  font-weight: 600;
-  font-family: 'DM Sans', sans-serif;
-  cursor: pointer;
-}
-.voiceButtonListening { background: var(--danger-soft); color: var(--danger); }
-.voiceIconPulse { animation: voicePulse 1s ease-in-out infinite; }
 @keyframes voicePulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: .5; transform: scale(1.2); } }
 .voiceNote { margin-top: 8px; font-size: 12px; font-weight: 400; color: var(--text); }
 .voiceNoteError { margin-top: 8px; font-size: 12px; font-weight: 500; color: var(--danger); }
-
-.voiceRow { display: flex; gap: 8px; flex-wrap: wrap; }
-.voiceRow .voiceButton { flex: 1 1 140px; justify-content: center; }
-.voiceButton:disabled { opacity: .6; cursor: default; }
-.voiceMeta { display: flex; justify-content: space-between; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
-.voiceLink { display: inline-flex; align-items: center; gap: 4px; background: none; border: none; padding: 0; font: inherit; font-size: 12px; font-weight: 500; color: var(--accent); cursor: pointer; }
-.voiceHelp { margin-top: 8px; padding: 10px 12px; border-radius: 10px; background: var(--accent-soft); font-size: 12px; font-weight: 400; color: var(--text); line-height: 1.45; }
-.voiceHelp ul { margin: 6px 0; padding-left: 18px; }
-.voiceHelp li { margin-bottom: 3px; }
 .scanDisclaimer { margin-top: 8px; font-size: 11px; font-weight: 400; color: var(--muted); line-height: 1.4; }
-
-
 /* ── Flujo por tipo (v0.9.604) ─────────────────────────────────────────── */
-.typePickerSub { font-size: 13px; line-height: 1.5; color: var(--label-variable); margin: 2px 0 14px; }
-.typeOption {
-  display: flex; align-items: center; gap: 12px; width: 100%;
-  background: var(--surface); border: none; border-radius: 16px;
-  padding: 14px; margin-bottom: 10px; text-align: left;
-  font-family: 'DM Sans', sans-serif; color: var(--text); cursor: pointer;
-}
-.typeOptionCurrent { box-shadow: inset 0 0 0 2px var(--accent); }
-.typeOptionIcon {
-  width: 46px; height: 46px; border-radius: 14px; flex: none;
-  display: flex; align-items: center; justify-content: center;
-  color: var(--accent); background: color-mix(in srgb, var(--accent) 16%, transparent);
-}
 .typeOptionText { display: flex; flex-direction: column; gap: 2px; }
 .typeOptionTitle { font-size: 15px; font-weight: 700; }
 .typeOptionDesc { font-size: 12.5px; line-height: 1.4; color: var(--label-variable); }
-.typeChip {
-  display: flex; align-items: center; gap: 8px; margin-bottom: 12px;
-  padding: 8px 12px; border-radius: 12px; font-size: 13px; font-weight: 700;
-  color: var(--accent); background: color-mix(in srgb, var(--accent) 13%, transparent);
-}
-.typeChipChange {
-  margin-left: auto; background: none; border: none; padding: 0; cursor: pointer;
-  font-family: 'DM Sans', sans-serif; font-size: 12px; font-weight: 600;
-  color: var(--accent); text-decoration: underline;
-}
 .typeNote {
   margin-bottom: 12px; padding: 9px 12px; border-radius: 12px;
   font-size: 12px; line-height: 1.4; color: var(--text);
@@ -631,7 +421,6 @@ button.dim50:disabled { opacity: 0.5; }
 /* Escritorio (v0.9.845): radios del nuevo diseño. */
 @media (min-width: 1100px) {
   .paymentTypeTabs { border-radius: 99px; }
-  .paymentTypeTab { border-radius: 99px; }
   .impactChip { border-radius: 99px; }
 }
 
@@ -728,7 +517,6 @@ button.spaceTag:hover { background: color-mix(in srgb, var(--accent) 22%, var(--
 @media (hover: hover) and (pointer: fine) { .mIcon:hover { background: var(--desk-hover-fill); filter: none; } }
 @media (max-width: 767px) {
   .modalTitle { font-size: 1.3125rem; font-weight: 700; letter-spacing: -0.3px; }
-  .editCopyBanner { border: 0; border-radius: 16px; background: var(--desk-card); box-shadow: var(--desk-shadow); }
   .saveButtonSpacing { height: 50px; border-radius: 99px; }
 }
 
