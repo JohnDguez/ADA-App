@@ -1,233 +1,43 @@
-.pageWrapper {
-  /* Se extiende detrás de la barra de estado transparente (--sat). */
-  margin-top: calc(-1 * var(--sat, 0px));
-  padding-top: var(--sat, 0px);
-  padding-bottom: 120px;
-  background: var(--bg);
-  min-height: 100vh;
-  position: relative;
-  overflow: hidden;
-}
+/* Apariencia (v0.9.977, mockup aprobado). Solo tokens: las miniaturas usan
+   --preview-* (colores REALES de cada tema, fijos aunque la app esté en el
+   otro; excepción documentada en index.css). */
 
-/* ── Carrusel ──────────────────────────────────────────────────────────────
-   scroll-snap nativo — sin librería nueva. El padding lateral del track es
-   lo que deja "asomar" las tarjetas vecinas (en vez de puntos de
-   paginación, que Johnatan pidió evitar): cada tarjeta ocupa
-   `calc(100% - 2*peek - 2*gap)`, así que el resto del ancho lo llenan los
-   bordes de las tarjetas de al lado, ya reales — no cajas simuladas. */
-.carousel {
-  display: flex;
-  gap: 10px;
-  padding: 0 34px;
-  overflow-x: auto;
-  scroll-snap-type: x mandatory;
-  overscroll-behavior-x: contain;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: none;
-}
-.carousel::-webkit-scrollbar {
-  display: none;
-}
+/* ── Miniatura suave ── */
+.prev { --pb: var(--preview-light-bg); --pc: var(--preview-light-card); --pl: var(--preview-light-line); --ph: var(--preview-light-hero);
+  position: relative; overflow: hidden; aspect-ratio: 4 / 3; display: flex; flex-direction: column; gap: 6%; padding: 8%; border-radius: 12px; background: var(--pb); }
+.dark { --pb: var(--preview-dark-bg); --pc: var(--preview-dark-card); --pl: var(--preview-dark-line); --ph: var(--preview-dark-hero); }
+.pl { flex: none; height: 5px; width: 55%; border-radius: 9px; background: var(--pl); }
+.pl.s { width: 32%; }
+.ph { flex: none; height: 22%; border-radius: 7px; background: var(--ph); opacity: .9; }
+.pg { flex: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.pg i { border-radius: 7px; background: var(--pc); }
+/* Sistema: mitad claro / mitad oscuro, corte vertical */
+.sys { display: grid; grid-template-columns: 1fr 1fr; gap: 0; padding: 0; }
+.half { display: flex; flex-direction: column; gap: 6%; padding: 14% 6% 14% 14%; background: var(--pb); min-width: 0; }
+.half.dark { padding: 14% 14% 14% 6%; }
+.half .pg { grid-template-columns: 1fr; }
 
-.carouselCard {
-  flex: 0 0 calc(100% - 68px);
-  scroll-snap-align: center;
-  scroll-snap-stop: always; /* v0.9.613 — un swipe fuerte no se salta opciones */
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 14px;
-  padding: 18px 14px;
-  border-radius: 14px;
-  border: 1px solid var(--border);
-  background: var(--surface);
-}
+/* ── Tablet / escritorio: 3 mosaicos ── */
+.themes { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.theme { display: flex; flex-direction: column; gap: 10px; padding: 10px; border: 0; border-radius: 20px; background: var(--desk-chip); color: var(--text); font: inherit; text-align: left; cursor: pointer; transition: box-shadow .25s, background .15s; }
+.theme.on { box-shadow: inset 0 0 0 2px var(--accent); }
+.tl { display: flex; align-items: center; gap: 8px; padding: 0 4px 2px; font-size: 13.5px; }
+.tl b { flex: 1; font-weight: 600; display: flex; align-items: center; gap: 6px; }
+.tl b svg { color: var(--muted); }
+.on .tl b svg { color: var(--accent); }
+@media (hover: hover) and (pointer: fine) { .theme:not(.on):hover { background: var(--desk-hover-fill); filter: none; } }
 
-.carouselCardActive {
-  border: 2px solid var(--accent);
-}
-
-.carouselCardLabel {
-  font-size: 16px;
-  font-weight: 700;
-  color: var(--text);
-}
-
-.carouselCardLabelActive {
-  color: var(--accent);
-}
-
-.swipeHint {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  padding: 14px 0 24px;
-  font-size: 12px;
-  color: var(--text);
-  opacity: 0.6;
-}
-
-/* ── Esqueleto tipo teléfono dentro de cada tarjeta ───────────────────────
-   EXCEPCIÓN DOCUMENTADA a la Regla 11 (no colores hardcodeados): esta
-   tarjeta existe precisamente para mostrar cómo se ve CADA tema, sin
-   importar cuál esté activo en este momento — por diseño, la de "Claro"
-   siempre debe verse clara y la de "Oscuro" siempre oscura, así que sus
-   colores NO pueden depender de var(--bg)/var(--text) (esas cambian con
-   el tema activo, lo que arruinaría la vista previa). Los valores son
-   literales de los mismos temas reales de la app (ver index.css: light
-   bg #F2F2F2/border-mid #C8C5BE/accent #2F8CFA; dark bg #0F1117/border-mid
-   #3A3D4E/accent #3B9EFF) — no colores inventados. */
-.skeletonPreview {
-  width: 100%;
-  max-width: 160px;
-  aspect-ratio: 9 / 17;
-  border-radius: 14px;
-  position: relative;
-  padding: 12px;
-  box-sizing: border-box;
-}
-
-.skeletonBarLeft {
-  width: 36%;
-  height: 6px;
-  border-radius: 3px;
-  margin-bottom: 6px;
-}
-
-.skeletonBarRight {
-  width: 20%;
-  height: 6px;
-  border-radius: 3px;
-  margin-bottom: 18px;
-}
-
-.skeletonAccentBar {
-  width: 100%;
-  height: 18px;
-  border-radius: 4px;
-  margin-bottom: 8px;
-}
-
-.skeletonMutedBar {
-  width: 70%;
-  height: 9px;
-  border-radius: 3px;
-}
-
-.skeleton_light {
-  background: var(--preview-light-bg);
-}
-.skeleton_light .skeletonBarLeft,
-.skeleton_light .skeletonBarRight,
-.skeleton_light .skeletonMutedBar {
-  background: var(--preview-light-bar);
-}
-.skeleton_light .skeletonAccentBar {
-  background: var(--preview-light-accent);
-}
-
-.skeleton_dark {
-  background: var(--preview-dark-bg);
-}
-.skeleton_dark .skeletonBarLeft,
-.skeleton_dark .skeletonBarRight,
-.skeleton_dark .skeletonMutedBar {
-  background: var(--preview-dark-bar);
-}
-.skeleton_dark .skeletonAccentBar {
-  background: var(--preview-dark-accent);
-}
-
-/* "Sistema" — mitad clara / mitad oscura, para representar visualmente
-   que se adapta solo al dispositivo. Cada barra toma el tono muted de SU
-   mitad (izquierda = claro, derecha = oscuro), mismo criterio que las
-   otras 2 tarjetas. */
-.skeleton_sistema {
-  background: linear-gradient(160deg, var(--preview-light-bg) 50%, var(--preview-dark-bg) 50%);
-}
-.skeleton_sistema .skeletonBarLeft,
-.skeleton_sistema .skeletonBarRight {
-  background: var(--preview-light-bar);
-}
-.skeleton_sistema .skeletonAccentBar {
-  background: var(--preview-light-accent);
-}
-.skeleton_sistema .skeletonMutedBar {
-  background: var(--preview-dark-bar);
-}
-
-/* ── Vista previa de tablet (solo ≥768px) ─────────────────────────────────
-   Mismos valores `--preview-*` que el esqueleto de teléfono (misma excepción
-   a la Regla 11: cada vista previa muestra SU tema sin importar el activo). */
-.tabPreview { display: none; }
-
-@media (min-width: 768px) {
-  .pageWrapper { padding-bottom: 140px; }
-  .carousel { gap: 20px; padding: 50px calc(50% - 215px) 30px; }
-  .carouselCard {
-    flex: 0 0 430px;
-    gap: 16px;
-    padding: 22px 18px 18px;
-    border-radius: 16px;
-    opacity: 0.55;
-    transform: scale(0.94);
-    transition: transform .3s cubic-bezier(0.22, 1, 0.36, 1), opacity .3s ease, box-shadow .3s ease;
-  }
-  .carouselCardActive { opacity: 1; transform: scale(1.04); box-shadow: var(--shadow-popover); }
-  .carouselCardLabel { font-size: 20px; }
-
-  .skeletonPreview { display: none; }
-  .tabPreview {
-    display: flex;
-    gap: 8px;
-    width: 100%;
-    max-width: 370px;
-    aspect-ratio: 3 / 4;
-    border-radius: 12px;
-    padding: 8px;
-    box-sizing: border-box;
-    overflow: hidden;
-    position: relative;
-  }
-  .tabRail { width: 12%; flex: none; border-radius: 8px; background: var(--nav-bg); }
-  .tabBody { flex: 1; min-width: 0; padding: 6px 2px; }
-  .tabBody i { display: block; height: 9px; border-radius: 4px; }
-  .tabBar1 { width: 34%; }
-  .tabBar2 { width: 20%; margin-top: 6px; }
-  .tabAccent { height: 30px !important; border-radius: 7px !important; margin-top: 22px; }
-  .tabGrid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 16px; }
-  .tabGrid b { display: block; height: 84px; border-radius: 8px; }
-  .tabList { display: flex; flex-direction: column; gap: 10px; margin-top: 18px; }
-  .tabList b { display: block; height: 46px; border-radius: 8px; }
-
-  .tab_light { background: var(--preview-light-bg); }
-  .tab_light .tabBody i { background: var(--preview-light-bar); }
-  .tab_light .tabAccent { background: var(--preview-light-accent); }
-  .tab_light .tabGrid b, .tab_light .tabList b { background: color-mix(in srgb, var(--preview-light-bar) 40%, transparent); }
-
-  .tab_dark { background: var(--preview-dark-bg); }
-  .tab_dark .tabBody i { background: var(--preview-dark-bar); }
-  .tab_dark .tabAccent { background: var(--preview-dark-accent); }
-  .tab_dark .tabGrid b, .tab_dark .tabList b { background: color-mix(in srgb, var(--preview-dark-bar) 45%, transparent); }
-
-  .tab_sistema { background: linear-gradient(160deg, var(--preview-light-bg) 50%, var(--preview-dark-bg) 50%); }
-  .tab_sistema .tabBody i { background: var(--preview-light-bar); }
-  .tab_sistema .tabAccent { background: var(--preview-light-accent); }
-  .tab_sistema .tabGrid b:nth-child(odd), .tab_sistema .tabList b:nth-child(odd) { background: color-mix(in srgb, var(--preview-light-bar) 40%, transparent); }
-  .tab_sistema .tabGrid b:nth-child(even), .tab_sistema .tabList b:nth-child(even) { background: color-mix(in srgb, var(--preview-dark-bar) 45%, transparent); }
-}
-
-/* Escritorio (v0.9.836) */
-.deskGrid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; }
-.deskCard { display: flex; flex-direction: column; gap: 16px; padding: 18px; border: 0; border-radius: 28px; background: var(--desk-chip); color: var(--text); text-align: left; }
-.deskCardOn { background: var(--accent-soft); color: var(--accent); }
-.deskPrev { display: flex; height: 250px; border-radius: 20px; overflow: hidden; }
-.deskLabel { display: flex; align-items: center; justify-content: space-between; padding: 0 4px; font-size: 16px; font-weight: 600; }
-.deskName { display: inline-flex; align-items: center; gap: 10px; }
-.deskChk { width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; background: var(--desk-card); color: var(--desk-ink-text); }
-.deskCardOn .deskChk { background: var(--accent); }
-@media (hover: hover) and (pointer: fine) {
-  .deskCard:hover:not(.deskCardOn) { background: var(--desk-hair); translate: none; filter: none; }
-  .deskCardOn:hover { translate: none; filter: none; }
-}
+/* ── Móvil: carrusel deslizable ── */
+.car { display: flex; flex-direction: column; align-items: center; gap: 12px; margin: 0 -16px; padding: 6px 0; }
+.track { display: flex; gap: 14px; width: 100%; overflow-x: auto; scroll-snap-type: x mandatory; padding: 10px calc(50% - 120px); scrollbar-width: none; }
+.track::-webkit-scrollbar { display: none; }
+.cc { flex: none; width: 240px; scroll-snap-align: center; display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 14px; border-radius: 26px; background: var(--desk-card); box-shadow: var(--desk-shadow); cursor: pointer; transform: scale(.9); opacity: .75; transition: transform .35s cubic-bezier(0.22, 1, 0.36, 1), opacity .35s, box-shadow .25s; }
+.cc .prev { width: 100%; aspect-ratio: 3 / 4; }
+.cc b { font-size: 16px; font-weight: 600; color: var(--text); transition: color .25s; }
+.cc.on { transform: none; opacity: 1; box-shadow: var(--desk-shadow), inset 0 0 0 2px var(--accent); }
+.cc.on b { color: var(--accent); }
+.dots { display: flex; gap: 6px; }
+.dots button { width: 6px; height: 6px; padding: 0; border: 0; border-radius: 99px; background: color-mix(in srgb, var(--text) 20%, var(--desk-panel)); cursor: pointer; transition: width .3s cubic-bezier(0.22, 1, 0.36, 1), background .3s; }
+.dots button.dotOn { width: 16px; background: var(--desk-pill); }
+.hint { display: flex; align-items: center; gap: 6px; font-size: 12.5px; color: var(--muted); }
+@media (prefers-reduced-motion: reduce) { .cc, .dots button, .theme { transition: none; } }

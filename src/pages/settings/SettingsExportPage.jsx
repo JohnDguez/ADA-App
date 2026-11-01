@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Receipt, Wallet, Download, FileSpreadsheet, FileText, Target, Check, ChevronRight, ChevronDown, CalendarDays, CreditCard, Users } from 'lucide-react'
+import { Download, FileSpreadsheet, FileText, Check, ChevronRight, ChevronDown, CalendarDays, CreditCard, Users } from 'lucide-react'
 // Ícono del encabezado vía Phosphor Icons, peso "duotone" — Lucide se
 // siente muy plano para un ícono ancla de página completa (pedido de
 // Johnatan); el resto de la app se queda 100% en lucide-react, sin cambios.
@@ -8,7 +8,6 @@ import { Receipt, Wallet, Download, FileSpreadsheet, FileText, Target, Check, Ch
 // para garantizar que el bundle final solo incluya este ícono, no los 9,000+
 // del paquete completo (58MB en disco sin tree-shaking).
 import { FileXls } from '@phosphor-icons/react/dist/csr/FileXls'
-import { PageHero } from '../../components/PageHero'
 import { supabase } from '../../lib/supabase'
 import { PremiumLock } from '../../components/PremiumLock'
 import { OptionSheet } from '../../components/OptionSheet'
@@ -22,8 +21,8 @@ import { saveOrShareBlob } from '../../lib/nativeExport'
 import { getBank } from '../../lib/cardCatalog'
 import { showToast } from '../../components/Toast'
 import { useDeskSettings } from '../../components/DeskSettingsContext'
-import { DeskSettingsHead, DeskPage } from '../../components/DeskSettingsHead'
-import deskStyles from '../../components/SettingsDesk.module.css'
+import { SettingsSubLayout, SkSeg } from '../../components/SettingsSubLayout'
+import kit from '../../components/SettingsKit.module.css'
 import dk from './SettingsExportDesk.module.css'
 import styles from './SettingsExportPage.module.css'
 import { LoadingDots } from '../../components/LoadingDots'
@@ -957,203 +956,73 @@ export function SettingsExportPage({ profile, sharedSpaces, onOpenPremium, onBac
     </>
   )
 
-  if (desk) {
-    const spaceLabelNow = spaceOptions.find(o => o.value === space)?.label
-    const showMethod = space === 'personal' && includeGastos
-    return (
-      <DeskPage>
-        <DeskSettingsHead title={t('settingsExport.title')} description={t('settingsExport.intro')} />
-        <PremiumLock isPremium={profile?.is_premium} message={t('settingsExport.premiumMessage')} onUpgradeClick={onOpenPremium}>
-          <div className={dk.grid}>
-            <div>
-              <div className={`${deskStyles.sec} ${deskStyles.secFirst}`}>{t('settingsExport.desk.format')}</div>
-              <div className={dk.fmt}>
-                {[['csv', FileText, 'CSV', t('settingsExport.desk.csvSub')], ['pdf', FileSpreadsheet, 'PDF', t('settingsExport.desk.pdfSub')]].map(([k, Icon, name, sub]) => (
-                  <button key={k} type="button" onClick={() => setFormat(k)} className={`${dk.fmtBtn} ${format === k ? dk.fmtOn : ''}`}>
-                    <span className={deskStyles.ic}><Icon size={20} /></span>
-                    <span><b>{name}</b><span className={dk.s}>{sub}</span></span>
-                  </button>
-                ))}
-              </div>
+  const spaceLabelNow = spaceOptions.find(o => o.value === space)?.label
+  const showMethod = space === 'personal' && includeGastos
+  // Escritorio: popover anclado al filtro; tablet/móvil: hoja inferior.
+  const openFilter = (key, e) => (desk ? togglePop(key, e) : setOpenSheet(key))
+  const filterRow = (key, Icon, label, value, pop, end = false) => (
+    <div className={`${dk.anchor} ${end ? dk.anchorEnd : ''}`}>
+      <button type="button" className={dk.frow} aria-haspopup="dialog" aria-expanded={openSheet === key} onClick={e => openFilter(key, e)}>
+        <span className={kit.lico}><Icon size={18} /></span>
+        <span className={dk.ftext}><span>{label}</span><b>{value}</b></span>
+        {desk ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+      </button>
+      {desk && openSheet === key && pop}
+    </div>
+  )
+  const includeChip = (on, toggle, label) => (
+    <button type="button" aria-pressed={on} onClick={toggle} className={`${kit.chip} ${on ? kit.chipOn : ''}`}>
+      {on && <Check size={14} strokeWidth={3} />}{label}
+    </button>
+  )
 
-              <div className={deskStyles.sec}>{t('settingsExport.dataToInclude')}</div>
-              <div className={dk.chips}>
-                <button type="button" onClick={() => setIncludeGastos(v => !v)} className={`${dk.chip} ${includeGastos ? dk.chipOn : ''}`}>
-                  <span>{t('settingsExport.expenses')}</span>{includeGastos ? <Check size={18} /> : <Receipt size={18} />}
-                </button>
-                <button type="button" onClick={() => setIncludeIngresos(v => !v)} className={`${dk.chip} ${includeIngresos ? dk.chipOn : ''}`}>
-                  <span>{t('settingsExport.income')}</span>{includeIngresos ? <Check size={18} /> : <Wallet size={18} />}
-                </button>
-                {format === 'pdf' && (
-                  <button type="button" onClick={() => setIncludeGoals(v => !v)} className={`${dk.chip} ${includeGoals ? dk.chipOn : ''}`}>
-                    <span>{t('settingsExport.pdf.goalsTitle')}</span>{includeGoals ? <Check size={18} /> : <Target size={18} />}
-                  </button>
-                )}
-              </div>
-
-              <div className={deskStyles.sec}>{t('settingsExport.filters')}</div>
-              <div className={dk.filters} ref={filtersRef}>
-                <div className={dk.anchor}>
-                  <button type="button" className={dk.filter} aria-haspopup="dialog" aria-expanded={openSheet === 'period'} onClick={e => togglePop('period', e)}>
-                    <span className={dk.filterHead}><span className={deskStyles.ic}><CalendarDays size={18} /></span>{t('settingsExport.period')}</span>
-                    <b>{periodValueLabel}<ChevronDown size={16} /></b>
-                  </button>
-                  {openSheet === 'period' && periodPop}
-                </div>
-                {showMethod && (
-                  <div className={dk.anchor}>
-                    <button type="button" className={dk.filter} aria-haspopup="dialog" aria-expanded={openSheet === 'method'} onClick={e => togglePop('method', e)}>
-                      <span className={dk.filterHead}><span className={deskStyles.ic}><CreditCard size={18} /></span>{t('settingsExport.method.label')}</span>
-                      <b>{methodFilters.find(f => f.value === methodFilter)?.label}<ChevronDown size={16} /></b>
-                    </button>
-                    {openSheet === 'method' && optionPop(t('settingsExport.method.label'), methodFilters, methodFilter, setMethodFilter)}
-                  </div>
-                )}
-                {spaces.length > 0 && (
-                  <div className={`${dk.anchor} ${dk.anchorEnd}`}>
-                    <button type="button" className={dk.filter} aria-haspopup="dialog" aria-expanded={openSheet === 'space'} onClick={e => togglePop('space', e)}>
-                      <span className={dk.filterHead}><span className={deskStyles.ic}><Users size={18} /></span>{t('settingsExport.spaceLabel')}</span>
-                      <b>{spaceLabelNow}<ChevronDown size={16} /></b>
-                    </button>
-                    {openSheet === 'space' && optionPop(t('settingsExport.spaceLabel'), spaceOptions, space, setSpace)}
-                  </div>
-                )}
-              </div>
-            </div>
-
-            <div className={`${deskStyles.blue} ${dk.sum}`}>
-              <span className={dk.range}>{formatDateLabel(from)} – {formatDateLabel(to)}</span>
-              <div className={dk.n}>{counting ? <LoadingDots /> : (total ?? 0)}</div>
-              <span className={dk.lab}>{t('settingsExport.recordsFound')}</span>
-              {counts && (
-                <div className={dk.split}>
-                  <div>{t('settingsExport.expenses')}<b>{counts.gastos}</b></div>
-                  <div>{t('settingsExport.income')}<b>{counts.ingresos}</b></div>
-                </div>
-              )}
-              <div className={dk.spacer} />
-              <button type="button" onClick={handleGenerate}
-                disabled={noneSelected || downloading || counting || (format === 'csv' && total === 0)}
-                className={`${deskStyles.btn} ${deskStyles.btnWhite} ${dk.dl}`}>
-                <Download size={16} />
-                {downloading ? t('settingsExport.downloading') : format === 'csv' ? t('settingsExport.downloadCsv') : t('settingsExport.pdf.generate')}
-              </button>
-            </div>
-          </div>
-        </PremiumLock>
-      </DeskPage>
-    )
-  }
-
+  // Misma composición en los tres tamaños (v0.9.977, mockup aprobado):
+  // panel de opciones (formato, qué incluir, filtros) + héroe azul con el
+  // rango, el conteo y el botón de descarga.
   return (
-    <div className={`${slideClass} ${styles.pageWrapper}`}>
-      <PageHero
-        icon={FileXls}
-        title={t('settingsExport.title')}
-        description={t('settingsExport.intro')}
-        onBack={onBack}
-      />
-
-      <PremiumLock
-        isPremium={profile?.is_premium}
-        message={t('settingsExport.premiumMessage')}
-        onUpgradeClick={onOpenPremium}
-      >
-        <div className={styles.content}>
-          <div className={styles.optionsCol}>
-          <div className={styles.segmented}>
-            <button type="button" onClick={() => setFormat('csv')}
-              className={`${styles.segment} ${format === 'csv' ? styles.segmentActive : ''}`}>
-              <FileText size={18} />
-              <span>CSV</span>
-            </button>
-            <button type="button" onClick={() => setFormat('pdf')}
-              className={`${styles.segment} ${format === 'pdf' ? styles.segmentActive : ''}`}>
-              <FileSpreadsheet size={18} />
-              <span>PDF</span>
-            </button>
-          </div>
-
-          <div className={styles.sectionLabel}>{t('settingsExport.dataToInclude')}</div>
-          <div className={styles.chipRow}>
-            <button type="button" onClick={() => setIncludeGastos(v => !v)}
-              className={`${styles.chip} ${includeGastos ? styles.chipActive : ''}`}>
-              {includeGastos ? <Check size={16} /> : <Receipt size={16} />}
-              <span>{t('settingsExport.expenses')}</span>
-            </button>
-            <button type="button" onClick={() => setIncludeIngresos(v => !v)}
-              className={`${styles.chip} ${includeIngresos ? styles.chipActive : ''}`}>
-              {includeIngresos ? <Check size={16} /> : <Wallet size={16} />}
-              <span>{t('settingsExport.income')}</span>
-            </button>
-            {format === 'pdf' && (
-              <button type="button" onClick={() => setIncludeGoals(v => !v)}
-                className={`${styles.chip} ${includeGoals ? styles.chipActive : ''}`}>
-                {includeGoals ? <Check size={16} /> : <Target size={16} />}
-                <span>{t('settingsExport.pdf.goalsTitle')}</span>
-              </button>
-            )}
-          </div>
-
-          <div className={styles.sectionLabel}>{t('settingsExport.filters')}</div>
-          <div className={styles.filterCard}>
-            <button type="button" className={styles.filterRow} onClick={() => setOpenSheet('period')}>
-              <span>{t('settingsExport.period')}</span>
-              <span className={styles.filterValue}>
-                <span className={styles.filterValueText}>{periodValueLabel}</span>
-                <ChevronRight size={14} />
-              </span>
-            </button>
-            {/* Método de pago (entrega C, v0.9.490) — solo Personal: en un
-                Espacio Compartido las tarjetas no aplican. */}
-            <Collapse open={space === 'personal' && includeGastos}>
-              <button type="button" className={styles.filterRow} onClick={() => setOpenSheet('method')}>
-                <span>{t('settingsExport.method.label')}</span>
-                <span className={styles.filterValue}>
-                  <span className={styles.filterValueText}>{methodFilters.find(f => f.value === methodFilter)?.label}</span>
-                  <ChevronRight size={14} />
-                </span>
-              </button>
-            </Collapse>
-            {spaces.length > 0 && (
-              <button type="button" className={styles.filterRow} onClick={() => setOpenSheet('space')}>
-                <span>{t('settingsExport.spaceLabel')}</span>
-                <span className={styles.filterValue}>
-                  <span className={styles.filterValueText}>{spaceOptions.find(o => o.value === space)?.label}</span>
-                  <ChevronRight size={14} />
-                </span>
-              </button>
-            )}
-          </div>
-
-          </div>
-
-          {/* Tablet (≥768px): tarjeta de resumen a la derecha con el conteo y
-              el botón; en móvil es un contenedor transparente (v0.9.805). */}
-          <div className={styles.summaryCol}>
-          <div className={styles.countCard}>
-            <div className={styles.countText}>
-              <div className={styles.countRange}>{formatDateLabel(from)} – {formatDateLabel(to)}</div>
-              <div className={styles.countLabel}>{t('settingsExport.recordsFound')}</div>
+    <SettingsSubLayout title={t('settingsExport.title')} description={t('settingsExport.intro')}
+      icon={FileXls} onBack={onBack} slideClass={slideClass} after={!desk && sheets}>
+      <PremiumLock isPremium={profile?.is_premium} message={t('settingsExport.premiumMessage')} onUpgradeClick={onOpenPremium}>
+        <div className={`${kit.grid} ${kit.gridWide}`}>
+          <section className={kit.panel}>
+            <div className={kit.pt}><b>{t('settingsExport.desk.format')}</b></div>
+            <SkSeg value={format} onChange={setFormat} options={[
+              { value: 'csv', label: <><FileText size={16} />CSV</> },
+              { value: 'pdf', label: <><FileSpreadsheet size={16} />PDF</> },
+            ]} />
+            <div className={kit.pt}><b>{t('settingsExport.dataToInclude')}</b></div>
+            <div className={kit.chips}>
+              {includeChip(includeGastos, () => setIncludeGastos(v => !v), t('settingsExport.expenses'))}
+              {includeChip(includeIngresos, () => setIncludeIngresos(v => !v), t('settingsExport.income'))}
+              {format === 'pdf' && includeChip(includeGoals, () => setIncludeGoals(v => !v), t('settingsExport.pdf.goalsTitle'))}
             </div>
-            <span className={styles.countValue}>{counting ? <LoadingDots /> : (total ?? 0)}</span>
-          </div>
+            <div className={kit.pt}><b>{t('settingsExport.filters')}</b></div>
+            <div className={dk.filters} ref={filtersRef}>
+              {filterRow('period', CalendarDays, t('settingsExport.period'), periodValueLabel, periodPop)}
+              {/* Método de pago (v0.9.490) — solo Personal: en un Espacio
+                  Compartido las tarjetas no aplican. */}
+              <Collapse open={showMethod}>
+                {filterRow('method', CreditCard, t('settingsExport.method.label'), methodFilters.find(f => f.value === methodFilter)?.label,
+                  optionPop(t('settingsExport.method.label'), methodFilters, methodFilter, setMethodFilter))}
+              </Collapse>
+              {spaces.length > 0 && filterRow('space', Users, t('settingsExport.spaceLabel'), spaceLabelNow,
+                optionPop(t('settingsExport.spaceLabel'), spaceOptions, space, setSpace))}
+            </div>
+          </section>
 
-          <button
-            onClick={handleGenerate}
-            disabled={noneSelected || downloading || counting || (format === 'csv' && total === 0)}
-            className={styles.downloadButton}
-          >
-            <Download size={16} />
-            {downloading
-              ? t('settingsExport.downloading')
-              : format === 'csv' ? t('settingsExport.downloadCsv') : t('settingsExport.pdf.generate')}
-          </button>
-          </div>
+          <section className={`${kit.hero} ${kit.heroCol} ${dk.sum}`}>
+            <span className={dk.range}>{formatDateLabel(from)} – {formatDateLabel(to)}</span>
+            <b className={kit.huge}>{counting ? <LoadingDots /> : (total ?? 0)}</b>
+            <span className={dk.lab}>{t('settingsExport.recordsFound')}</span>
+            <button type="button" onClick={handleGenerate}
+              disabled={noneSelected || downloading || counting || (format === 'csv' && total === 0)}
+              className={`${kit.btn} ${kit.btnLg} ${kit.btnWhite} ${dk.dl}`}>
+              <Download size={16} />
+              {downloading ? t('settingsExport.downloading') : format === 'csv' ? t('settingsExport.downloadCsv') : t('settingsExport.pdf.generate')}
+            </button>
+          </section>
         </div>
       </PremiumLock>
-
-      {sheets}
-    </div>
+    </SettingsSubLayout>
   )
 }

@@ -144,7 +144,10 @@
       "playTitle": "Se gestiona en Google Play",
       "playSub": "Tu suscripción no se puede editar desde aquí",
       "reactivateSub": "Vuelve a renovarse automáticamente"
-    }
+    },
+    "includesTitle": "Lo que incluye tu plan",
+    "planName": "Premium {{plan}}",
+    "saveShort": "Ahorra {{amount}}"
   },
   "settingsAccount": {
     "title": "Cuenta",
@@ -160,9 +163,11 @@
     "dangerZone": {
       "label": "Zona de peligro",
       "deleteDataTitle": "Borrar mis datos",
-      "deleteDataSubtitle": "Borra tus pagos e ingresos",
+      "deleteDataSubtitle": "Borra tus pagos e ingresos. Tu cuenta se queda.",
       "deleteAccountTitle": "Eliminar mi cuenta",
-      "deleteAccountSubtitle": "Elimina tu cuenta y todo lo que hay en ella"
+      "deleteAccountSubtitle": "Elimina tu cuenta y todo lo que hay en ella. No se puede deshacer.",
+      "deleteDataBtn": "Borrar datos",
+      "deleteAccountBtn": "Eliminar cuenta"
     },
     "dangerModal": {
       "titleData": "Eliminar todos los datos",
@@ -241,7 +246,8 @@
       "yourData": "Tus datos",
       "edit": "Editar",
       "changePhoto": "Cambiar foto",
-      "uploading": "Subiendo…"
+      "uploading": "Subiendo…",
+      "change": "Cambiar"
     }
   },
   "settingsCobro": {
@@ -361,7 +367,10 @@
       "enableError": "Error al activar notificaciones",
       "enabled": "Notificaciones activadas"
     },
-    "hourNeedsOn": "Activa primero las notificaciones para elegir la hora."
+    "hourNeedsOn": "Activa primero las notificaciones para elegir la hora.",
+    "daysChip_one": "{{count}} día",
+    "daysChip_other": "{{count}} días",
+    "daysForShort": "Días de anticipación · para próximos pagos y tarjetas"
   },
   "settingsAppearance": {
     "title": "Apariencia",

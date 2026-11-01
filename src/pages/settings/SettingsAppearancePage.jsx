@@ -4,11 +4,10 @@ import { MonitorSmartphone, Sun, Moon, MoveHorizontal, Check } from 'lucide-reac
 // Ícono del encabezado vía Phosphor Icons (mismo patrón que las demás
 // sub-páginas ya migradas, v0.9.442-452) — import directo para tree-shaking real.
 import { MoonStars } from '@phosphor-icons/react/dist/csr/MoonStars'
-import { PageHero } from '../../components/PageHero'
 import styles from './SettingsAppearancePage.module.css'
+import kit from '../../components/SettingsKit.module.css'
 import { kbd } from '../../lib/a11y'
-import { useDeskSettings } from '../../components/DeskSettingsContext'
-import { DeskSettingsHead, DeskPage } from '../../components/DeskSettingsHead'
+import { SettingsSubLayout, useSettingsMode } from '../../components/SettingsSubLayout'
 
 // Los 3 íconos de las tarjetas SÍ son de Lucide (no Phosphor) — a
 // diferencia del ícono del encabezado, estos son la propia ACCIÓN
@@ -35,7 +34,7 @@ const OPTIONS = [
 // tocarla aparte.
 export function SettingsAppearancePage({ theme, onThemeChange, onBack, slideClass }) {
   const { t } = useTranslation()
-  const desk = useDeskSettings()
+  const mode = useSettingsMode()
   const trackRef = useRef(null)
   const settleTimeout = useRef(null)
 
@@ -86,76 +85,64 @@ export function SettingsAppearancePage({ theme, onThemeChange, onBack, slideClas
     track.scrollTo({ left: card.offsetLeft - (track.clientWidth - card.offsetWidth) / 2, behavior: 'smooth' })
   }
 
-  // Escritorio (v0.9.836): 3 tarjetas grandes con vista previa, lado a lado.
-  if (desk) {
-    return (
-      <DeskPage>
-        <DeskSettingsHead title={t('settingsAppearance.title')} description={t('settingsAppearance.description')} />
-        <div className={styles.deskGrid} role="radiogroup" aria-label={t('settingsAppearance.title')}>
-          {OPTIONS.map(({ id, icon: Icon }) => (
-            <button key={id} type="button" role="radio" aria-checked={theme === id} onClick={() => onThemeChange(id)} className={`${styles.deskCard} ${theme === id ? styles.deskCardOn : ''}`}>
-              <div className={`${styles.deskPrev} ${styles['tab_' + id]}`}>
-                <div className={styles.tabRail} />
-                <div className={styles.tabBody}>
-                  <i className={styles.tabBar1} />
-                  <i className={styles.tabBar2} />
-                  <i className={styles.tabAccent} />
-                  <div className={styles.tabGrid}><b /><b /><b /><b /></div>
-                </div>
+  const label = id => t(`theme.${id === 'sistema' ? 'system' : id}`)
+  const activeIdx = Math.max(0, OPTIONS.findIndex(o => o.id === theme))
+
+  // Móvil: carrusel deslizable (la tarjeta centrada es la elegida) con
+  // puntos e indicación; tablet/escritorio: 3 mosaicos en un panel
+  // (v0.9.977, mockup aprobado).
+  return (
+    <SettingsSubLayout title={t('settingsAppearance.title')} description={t('settingsAppearance.description')}
+      icon={MoonStars} onBack={onBack} slideClass={slideClass}>
+      {mode === 'mobile' ? (
+        <div className={styles.car}>
+          <div ref={trackRef} onScroll={handleScroll} className={styles.track} role="radiogroup" aria-label={t('settingsAppearance.title')}>
+            {OPTIONS.map(({ id }, idx) => (
+              <div {...kbd} key={id} role="radio" aria-checked={theme === id} onClick={() => centerCard(idx)}
+                className={`${styles.cc} ${theme === id ? styles.on : ''}`}>
+                <ThemePreview id={id} />
+                <b>{label(id)}</b>
               </div>
-              <span className={styles.deskLabel}>
-                <span className={styles.deskName}><Icon size={18} />{t(`theme.${id === 'sistema' ? 'system' : id}`)}</span>
-                <span className={styles.deskChk}>{theme === id && <Check size={15} strokeWidth={3} />}</span>
-              </span>
-            </button>
-          ))}
+            ))}
+          </div>
+          <div className={styles.dots}>
+            {OPTIONS.map(({ id }, idx) => (
+              <button key={id} type="button" aria-label={label(id)} className={idx === activeIdx ? styles.dotOn : ''} onClick={() => centerCard(idx)} />
+            ))}
+          </div>
+          <div className={styles.hint}><MoveHorizontal size={14} />{t('settingsAppearance.swipeHint')}</div>
         </div>
-      </DeskPage>
+      ) : (
+        <section className={kit.panel}>
+          <div className={styles.themes} role="radiogroup" aria-label={t('settingsAppearance.title')}>
+            {OPTIONS.map(({ id, icon: Icon }) => (
+              <button key={id} type="button" role="radio" aria-checked={theme === id} onClick={() => onThemeChange(id)}
+                className={`${styles.theme} ${theme === id ? styles.on : ''}`}>
+                <ThemePreview id={id} />
+                <span className={styles.tl}>
+                  <b><Icon size={16} />{label(id)}</b>
+                  {theme === id ? <span className={kit.check}><Check size={13} strokeWidth={3} /></span> : <span className={kit.radio} />}
+                </span>
+              </button>
+            ))}
+          </div>
+        </section>
+      )}
+    </SettingsSubLayout>
+  )
+}
+
+// Miniatura suave del tema: líneas, franja azul y dos tarjetas. «Sistema»
+// parte la miniatura en vertical: mitad clara, mitad oscura.
+function ThemePreview({ id }) {
+  const inner = <><i className={styles.pl} /><i className={`${styles.pl} ${styles.s}`} /><i className={styles.ph} /><div className={styles.pg}><i /><i /></div></>
+  if (id === 'sistema') {
+    return (
+      <div className={`${styles.prev} ${styles.sys}`} aria-hidden="true">
+        <div className={styles.half}>{inner}</div>
+        <div className={`${styles.half} ${styles.dark}`}>{inner}</div>
+      </div>
     )
   }
-
-  return (
-    <div className={`${slideClass} ${styles.pageWrapper}`}>
-      <PageHero
-        icon={MoonStars}
-        title={t('settingsAppearance.title')}
-        description={t('settingsAppearance.description')}
-        onBack={onBack}
-      />
-
-      <div ref={trackRef} onScroll={handleScroll} className={styles.carousel}>
-        {OPTIONS.map(({ id, icon: Icon }, idx) => (
-          <div {...kbd} key={id} onClick={() => centerCard(idx)} className={`${styles.carouselCard} ${theme === id ? styles.carouselCardActive : ''}`}>
-            <Icon size={24} color={theme === id ? 'var(--accent)' : 'var(--text)'} />
-            <div className={`${styles.skeletonPreview} ${styles['skeleton_' + id]}`}>
-              <div className={styles.skeletonBarLeft} />
-              <div className={styles.skeletonBarRight} />
-              <div className={styles.skeletonAccentBar} />
-              <div className={styles.skeletonMutedBar} />
-            </div>
-            {/* Tablet (≥768px): vista previa en forma de tablet, con riel y
-                bloques (el esqueleto de teléfono de arriba se oculta). */}
-            <div className={`${styles.tabPreview} ${styles['tab_' + id]}`}>
-              <div className={styles.tabRail} />
-              <div className={styles.tabBody}>
-                <i className={styles.tabBar1} />
-                <i className={styles.tabBar2} />
-                <i className={styles.tabAccent} />
-                <div className={styles.tabGrid}><b /><b /><b /><b /></div>
-                <div className={styles.tabList}><b /><b /><b /><b /></div>
-              </div>
-            </div>
-            <span className={`${styles.carouselCardLabel} ${theme === id ? styles.carouselCardLabelActive : ''}`}>
-              {t(`theme.${id === 'sistema' ? 'system' : id}`)}
-            </span>
-          </div>
-        ))}
-      </div>
-
-      <div className={styles.swipeHint}>
-        <MoveHorizontal size={14} color="var(--text)" />
-        <span>{t('settingsAppearance.swipeHint')}</span>
-      </div>
-    </div>
-  )
+  return <div className={`${styles.prev} ${id === 'dark' ? styles.dark : ''}`} aria-hidden="true">{inner}</div>
 }

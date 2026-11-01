@@ -309,12 +309,19 @@
   /* Miniaturas de tema en Ajustes › Apariencia: muestran los colores REALES
      de cada tema, fijos aunque la app esté en el otro. Mismos valores que
      --bg/--border-mid/--accent de cada tema. */
-  --preview-light-bg:     #F2F2F2;
+  --preview-light-bg:     #F4F5F7;
   --preview-light-bar:    #C8C5BE;
   --preview-light-accent: #2F8CFA;
   --preview-dark-bg:      #0F1117;
   --preview-dark-bar:     #3A3D4E;
   --preview-dark-accent:  #3B9EFF;
+  /* Miniaturas suaves de Apariencia (v0.9.977): tarjetas, líneas y franja azul */
+  --preview-light-card:   #FFFFFF;
+  --preview-light-line:   #DFE3EA;
+  --preview-light-hero:   #014BA3;
+  --preview-dark-card:    #1A1D27;
+  --preview-dark-line:    #2B3040;
+  --preview-dark-hero:    #3B6FD8;
 }
 
 /* ── Tema oscuro manual ([data-theme="dark"] en <html>) ───────────────────── */

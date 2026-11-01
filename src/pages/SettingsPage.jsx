@@ -24,8 +24,8 @@ import { getUnsavedGuard, requestLeave } from '../lib/unsavedGuard'
 import { AvatarImg } from '../components/AvatarImg'
 import { Presence } from '../components/Presence'
 import dkp from '../components/PaymentDesk.module.css'
-import { LanguageSheet, useLanguageOptions } from '../components/LanguageSheet'
-import { SettingsLanguageDesk } from './settings/SettingsLanguageDesk'
+import { useLanguageOptions } from '../components/LanguageSheet'
+import { SettingsLanguagePage } from './settings/SettingsLanguagePage'
 import { useIsDesktop } from '../hooks/useIsDesktop'
 import { DeskSettings } from './DeskSettings'
 import { TabSettings } from './TabSettings'
@@ -52,7 +52,6 @@ export function SettingsPage({ profile, user, onUpdate, onUploadAvatar, onDataDe
   const { t } = useTranslation()
   const isDesktop = useIsDesktop()
   const isMobile = useIsMobile()
-  const [languageOpen, setLanguageOpen] = useState(false)
   // Tablet horizontal (≥960px): menú + detalle como en escritorio. Vertical: página
   // de tarjetas con las sub-páginas a pantalla completa (v0.9.949).
   const [isWide, setIsWide] = useState(() => typeof window !== 'undefined' && window.matchMedia('(min-width: 960px)').matches)
@@ -246,7 +245,7 @@ export function SettingsPage({ profile, user, onUpdate, onUploadAvatar, onDataDe
   // panel derecho: sin «atrás» ni animación de entrada propia.
   const noop = () => {}
   function sectionEl(s, desk) {
-    if (desk && s === 'language') return <SettingsLanguageDesk profile={profile} onUpdate={onUpdate} />
+    if (s === 'language') return <SettingsLanguagePage profile={profile} onUpdate={onUpdate} onBack={desk ? noop : back} slideClass={desk ? '' : slideClass} />
     if (desk && s === 'import') return <Suspense fallback={null}><ImportInline profile={profile} {...importProps} /></Suspense>
     if (s === 'account') return <SettingsAccountPage onChangePhoto={desk ? () => setAvatarModal('choice') : undefined} uploadingAvatar={uploadingAvatar} profile={profile} user={user} onUpdate={onUpdate} onDataDeleted={onDataDeleted} onBack={desk ? noop : back} onGoSubscription={() => openSection('subscription')} slideClass={desk ? '' : slideClass} />
     if (s === 'categories') return <SettingsCategoriesPage profile={profile} onUpdate={onUpdate} onBack={desk ? noop : back} slideClass={desk ? '' : slideClass} />
@@ -286,7 +285,7 @@ export function SettingsPage({ profile, user, onUpdate, onUploadAvatar, onDataDe
           PageHero: no tiene botón de regreso, es la raíz del tab). */}
       
       {isDeskLike && <DeskSettings d={deskData} tablet={!isDesktop} />}
-      {isTabPortrait && <TabSettings d={{ ...deskData, onOpen: openSection, uploadingAvatar, onChangePhoto: () => setAvatarModal('choice'), onOpenImport, onOpenLanguage: () => setLanguageOpen(true) }} />}
+      {isTabPortrait && <TabSettings d={{ ...deskData, onOpen: openSection, uploadingAvatar, onChangePhoto: () => setAvatarModal('choice'), onOpenImport, onOpenLanguage: () => openSection('language') }} />}
       {!isMobile && <input ref={fileRef} type="file" accept="image/*" hidden onChange={handleAvatarChange} />}
 
       {isMobile && (
@@ -298,13 +297,12 @@ export function SettingsPage({ profile, user, onUpdate, onUploadAvatar, onDataDe
             cobroValue={[FREQ_LABEL[profile.cobro_freq], profile.currency].filter(Boolean).join(' · ')}
             themeValue={THEME_LABEL[theme] || ''}
             languageValue={languageOptions.find(o => o.id === (profile.language || 'system'))?.label}
-            onOpen={openSection} onOpenPremium={onOpenPremium} onOpenImport={onOpenImport} onOpenLanguage={() => setLanguageOpen(true)}
+            onOpen={openSection} onOpenPremium={onOpenPremium} onOpenImport={onOpenImport} onOpenLanguage={() => openSection('language')}
             onTutorial={() => onUpdate({ coachmarks_seen: {} })} onFeedback={handleGiveFeedback} onLogout={handleLogout}
             versionLabel={versionLabel} appName={APP_NAME} />
         </>
       )}
 
-      <LanguageSheet open={languageOpen} onClose={() => setLanguageOpen(false)} profile={profile} onUpdate={onUpdate} />
 
 
       {/* Modal: elegir "Subir foto" o "Elegir avatar" — 2 tarjetas con ícono

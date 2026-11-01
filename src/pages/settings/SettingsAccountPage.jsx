@@ -1,23 +1,21 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { supabase } from '../../lib/supabase'
-import { ChevronRight, AlertTriangle, Eye, EyeOff, User, Lock, Trash2, Mail, Camera } from 'lucide-react'
+import { AlertTriangle, Eye, EyeOff, User, Lock, Mail, Camera } from 'lucide-react'
 // Ícono del encabezado vía Phosphor Icons (mismo patrón que SettingsExportPage.jsx,
 // v0.9.442-445) — import directo al archivo del ícono para tree-shaking real.
 import { UserCircle } from '@phosphor-icons/react/dist/csr/UserCircle'
 import { Crown } from '@phosphor-icons/react/dist/csr/Crown'
-import { PageHero } from '../../components/PageHero'
 import { showToast } from '../../components/Toast'
 import { passwordRequirements, isPasswordStrong } from '../../components/PasswordSetupModal'
 import { RequirementRow } from '../../components/RequirementRow'
-import { Card, Row, SectionLabel } from '../../components/SettingsShared'
 import { apiUrl } from '../../lib/apiUrl'
 import { ANDROID_PACKAGE_NAME } from '../../lib/constants'
 import { getPremiumSource } from '../../lib/utils'
 import { AvatarImg } from '../../components/AvatarImg'
 import { useDeskSettings } from '../../components/DeskSettingsContext'
-import { DeskSettingsHead, DeskPage } from '../../components/DeskSettingsHead'
-import deskStyles from '../../components/SettingsDesk.module.css'
+import { SettingsSubLayout, useSettingsMode } from '../../components/SettingsSubLayout'
+import kit from '../../components/SettingsKit.module.css'
 import dk from './SettingsAccountDesk.module.css'
 import dkp from '../../components/PaymentDesk.module.css'
 import styles from './SettingsAccountPage.module.css'
@@ -30,6 +28,7 @@ import { BottomSheet } from '../../components/BottomSheet'
 export function SettingsAccountPage({ onChangePhoto, uploadingAvatar, profile, user, onUpdate, onDataDeleted, onBack, onGoSubscription, slideClass }) {
   const { t, i18n } = useTranslation()
   const desk = useDeskSettings()
+  const mode = useSettingsMode()
   const [editSection, setEditSection] = useState(null)
   const [fieldVal,    setFieldVal]    = useState('')
   const [fieldVal2,   setFieldVal2]   = useState('')
@@ -49,16 +48,6 @@ export function SettingsAccountPage({ onChangePhoto, uploadingAvatar, profile, u
   // v0.9.795: aviso "primero cancela tu suscripción" (null | { source, trial?, plan?, date? }).
   const [subBlock,       setSubBlock]       = useState(null)
   const [checkingSub,    setCheckingSub]    = useState(false)
-
-  // v0.9.799 — tablet (≥768px): columna de 600px con Perfil/Seguridad en
-  // tarjetas con título + ícono y la zona de peligro en dos mitades. Móvil intacto.
-  const [isTablet, setIsTablet] = useState(() => typeof window !== 'undefined' && window.matchMedia('(min-width: 768px)').matches)
-  useEffect(() => {
-    const mq = window.matchMedia('(min-width: 768px)')
-    const onChange = () => setIsTablet(mq.matches)
-    mq.addEventListener('change', onChange)
-    return () => mq.removeEventListener('change', onChange)
-  }, [])
 
   const isGoogle = user?.app_metadata?.provider === 'google'
   const premiumSource = getPremiumSource(profile)
@@ -220,135 +209,80 @@ export function SettingsAccountPage({ onChangePhoto, uploadingAvatar, profile, u
     await supabase.auth.signOut()
   }
 
-  const deskBody = (
-    <DeskPage>
-      <DeskSettingsHead title={t('settingsAccount.title')} description={t('settingsAccount.description')} />
-      <div className={deskStyles.blue}>
-        <div className={dk.who}>
-          <div className={dk.avatar}><AvatarImg src={profile.avatar_url} className={dk.img} fallback={<div className={dk.avatarFb}>{(profile.name || user?.email || '?').slice(0, 1).toUpperCase()}</div>} /></div>
-          <div>
-            <span>{profile.is_premium ? t('settingsPage.premiumBadge') : t('settingsAccount.desk.freePlan')}</span>
-            <h3>{profile.name}</h3>
-            <span>{user?.email}</span>
+  const openDanger = kind => { setDangerModal(kind); setDangerPassword(''); setDangerError('') }
+  const dataItems = [
+    { key: 'name', Icon: User, k: t('settingsAccount.row.name'), v: profile.name, btn: t('settingsAccount.desk.edit'), onClick: () => openEdit('name') },
+    isGoogle
+      ? { key: 'google', Icon: Mail, k: t('settingsAccount.row.google'), v: user?.email }
+      : { key: 'email', Icon: Mail, k: t('settingsAccount.row.email'), v: user?.email, btn: t('settingsAccount.desk.edit'), onClick: () => openEdit('email') },
+    { key: 'password', Icon: Lock, k: t('settingsAccount.row.password'), v: '••••••••', btn: t('settingsAccount.desk.change'), onClick: () => openEdit('password') },
+  ]
+  const initial = (profile.name || user?.email || '?').slice(0, 1).toUpperCase()
+
+  // Misma composición en los tres tamaños (v0.9.977, mockup aprobado):
+  // héroe azul con avatar y plan; «Tus datos» en filas (móvil) o mosaicos
+  // (tablet/escritorio); zona de peligro con «Borrar datos» en contorno rojo
+  // y «Eliminar cuenta» —la más grave e irreversible— en rojo sólido.
+  const page = (
+    <SettingsSubLayout title={t('settingsAccount.title')} description={t('settingsAccount.description')}
+      icon={UserCircle} onBack={onBack} slideClass={slideClass}>
+      <section className={`${kit.hero} ${dk.who}`}>
+        <div className={dk.avatar}><AvatarImg src={profile.avatar_url} className={dk.img} fallback={<div className={dk.avatarFb}>{initial}</div>} /></div>
+        <div className={kit.heroText}>
+          {profile.is_premium
+            ? <em className={dk.badge}><Crown size={12} weight="fill" />{t('settingsPage.premiumBadge')}</em>
+            : <em className={`${dk.badge} ${dk.badgeFree}`}>{t('settingsAccount.desk.freePlan')}</em>}
+          <b className={dk.name}>{profile.name}</b>
+          <span>{user?.email}</span>
+        </div>
+        {onChangePhoto && (
+          <button type="button" className={`${kit.btn} ${kit.btnWhite} ${dk.photoBtn}`} onClick={onChangePhoto} disabled={uploadingAvatar}>
+            <Camera size={16} />{uploadingAvatar ? t('settingsAccount.desk.uploading') : t('settingsAccount.desk.changePhoto')}
+          </button>
+        )}
+      </section>
+
+      <section className={kit.panel}>
+        <div className={kit.pt}><b>{t('settingsAccount.desk.yourData')}</b></div>
+        {mode === 'mobile' ? dataItems.map(({ key, Icon, k, v, btn, onClick }) => (
+          <div key={key} className={kit.row}>
+            <span className={kit.lico}><Icon size={18} /></span>
+            <div className={`${kit.rowText} ${dk.kv}`}><span>{k}</span><b>{v}</b></div>
+            {btn && <button type="button" className={`${kit.btn} ${kit.btnSm} ${kit.btnSoft}`} onClick={onClick}>{btn}</button>}
           </div>
-          {onChangePhoto && (
-            <button type="button" className={`${deskStyles.btn} ${deskStyles.btnWhite} ${dk.photoBtn}`} onClick={onChangePhoto} disabled={uploadingAvatar}>
-              <Camera size={16} />{uploadingAvatar ? t('settingsAccount.desk.uploading') : t('settingsAccount.desk.changePhoto')}
-            </button>
-          )}
-        </div>
-      </div>
+        )) : (
+          <div className={kit.tiles3}>
+            {dataItems.map(({ key, Icon, k, v, btn, onClick }) => (
+              <div key={key} className={dk.dtile}>
+                <span className={kit.lico}><Icon size={18} /></span>
+                <span className={dk.k}>{k}</span>
+                <b>{v}</b>
+                {btn && <button type="button" className={`${kit.btn} ${kit.btnSm} ${dk.tileBtn}`} onClick={onClick}>{btn}</button>}
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
 
-      <div className={deskStyles.sec}>{t('settingsAccount.desk.yourData')}</div>
-      <div className={dk.data}>
-        <div className={dk.item}>
-          <div className={dk.itemHead}><span className={deskStyles.ic}><User size={18} /></span>{t('settingsAccount.row.name')}</div>
-          <div className={dk.val}>{profile.name}</div>
-          <button type="button" className={dk.edit} onClick={() => openEdit('name')}>{t('settingsAccount.desk.edit')}</button>
+      <section className={kit.panel}>
+        <div className={kit.pt}><b>{t('settingsAccount.dangerZone.label')}</b></div>
+        <div className={`${kit.row} ${kit.rowWrap}`}>
+          <div className={kit.rowText}><b>{t('settingsAccount.dangerZone.deleteDataTitle')}</b><span>{t('settingsAccount.dangerZone.deleteDataSubtitle')}</span></div>
+          <button type="button" className={`${kit.btn} ${kit.btnDanger}`} onClick={() => openDanger('data')}>{t('settingsAccount.dangerZone.deleteDataBtn')}</button>
         </div>
-        <div className={dk.item}>
-          <div className={dk.itemHead}><span className={deskStyles.ic}><Mail size={18} /></span>{isGoogle ? t('settingsAccount.row.google') : t('settingsAccount.row.email')}</div>
-          <div className={dk.val}>{user?.email}</div>
-          {!isGoogle && <button type="button" className={dk.edit} onClick={() => openEdit('email')}>{t('settingsAccount.desk.edit')}</button>}
+        <div className={kit.sep} />
+        <div className={`${kit.row} ${kit.rowWrap}`}>
+          <span className={`${kit.lico} ${kit.licoDanger}`}><AlertTriangle size={18} /></span>
+          <div className={kit.rowText}><b className={kit.dred}>{t('settingsAccount.dangerZone.deleteAccountTitle')}</b><span>{t('settingsAccount.dangerZone.deleteAccountSubtitle')}</span></div>
+          <button type="button" className={`${kit.btn} ${kit.btnDangerSolid}`} onClick={requestDeleteAccount} disabled={checkingSub}>{t('settingsAccount.dangerZone.deleteAccountBtn')}</button>
         </div>
-        <div className={dk.item}>
-          <div className={dk.itemHead}><span className={deskStyles.ic}><Lock size={18} /></span>{t('settingsAccount.row.password')}</div>
-          <div className={dk.val}>••••••••</div>
-          <button type="button" className={dk.edit} onClick={() => openEdit('password')}>{t('settingsAccount.desk.edit')}</button>
-        </div>
-      </div>
-
-      <div className={deskStyles.sec}>{t('settingsAccount.dangerZone.label')}</div>
-      <div className={dk.danger}>
-        <button type="button" className={dk.dz} onClick={() => { setDangerModal('data'); setDangerPassword(''); setDangerError('') }}>
-          <span className={deskStyles.ic}><Trash2 size={18} /></span>
-          <div className={dk.t}><b>{t('settingsAccount.dangerZone.deleteDataTitle')}</b><span>{t('settingsAccount.dangerZone.deleteDataSubtitle')}</span></div>
-          <ChevronRight size={16} />
-        </button>
-        <button type="button" className={`${dk.dz} ${dk.dzRed}`} onClick={requestDeleteAccount} disabled={checkingSub}>
-          <span className={deskStyles.ic}><AlertTriangle size={18} /></span>
-          <div className={dk.t}><b>{t('settingsAccount.dangerZone.deleteAccountTitle')}</b><span>{t('settingsAccount.dangerZone.deleteAccountSubtitle')}</span></div>
-          <ChevronRight size={16} color="var(--danger)" />
-        </button>
-      </div>
-    </DeskPage>
+      </section>
+    </SettingsSubLayout>
   )
 
   return (
     <>
-      {desk ? deskBody : (
-      <div className={`${slideClass} ${styles.pageWrapper}`}>
-        <PageHero
-          icon={UserCircle}
-          title={t('settingsAccount.title')}
-          description={t('settingsAccount.description')}
-          onBack={onBack}
-        />
-
-        <div className={styles.tabCol}>
-        {isTablet ? (
-          <>
-            <div className={styles.tabBlock}>
-              <div className={styles.tabBlockHead}><User size={18} />{t('settingsAccount.tablet.profile')}</div>
-              <Card>
-                <Row label={t('settingsAccount.row.name')} value={profile.name} onClick={() => openEdit('name')} />
-                {isGoogle
-                  ? <Row label={t('settingsAccount.row.google')} value={user?.email} last />
-                  : <Row label={t('settingsAccount.row.email')} value={user?.email} onClick={() => openEdit('email')} last />}
-              </Card>
-            </div>
-            <div className={styles.tabBlock}>
-              <div className={styles.tabBlockHead}><Lock size={18} />{t('settingsAccount.tablet.security')}</div>
-              <Card>
-                <Row label={t('settingsAccount.row.password')} value="••••••••" onClick={() => openEdit('password')} last />
-              </Card>
-            </div>
-          </>
-        ) : (
-          <Card>
-            <Row label={t('settingsAccount.row.name')} value={profile.name} onClick={() => openEdit('name')} />
-            {isGoogle
-              ? <>
-                  <Row label={t('settingsAccount.row.google')} value={user?.email} />
-                  <Row label={t('settingsAccount.row.password')} value="••••••••" onClick={() => openEdit('password')} last />
-                </>
-              : <>
-                  <Row label={t('settingsAccount.row.email')} value={user?.email} onClick={() => openEdit('email')} />
-                  <Row label={t('settingsAccount.row.password')} value="••••••••" onClick={() => openEdit('password')} last />
-                </>
-            }
-          </Card>
-        )}
-
-        <SectionLabel>{t('settingsAccount.dangerZone.label')}</SectionLabel>
-        <div className={styles.tabDanger}>
-          <Card>
-            <button onClick={() => { setDangerModal('data'); setDangerPassword(''); setDangerError('') }} className={styles.dangerButtonLast}>
-              <div className={styles.dangerLeft}>
-                {isTablet && <Trash2 size={20} color="var(--text)" />}
-                <div className={styles.dangerButtonText}>
-                  <div className={styles.dangerButtonTitleNeutral}>{t('settingsAccount.dangerZone.deleteDataTitle')}</div>
-                  <div className={styles.dangerButtonSubtitle}>{t('settingsAccount.dangerZone.deleteDataSubtitle')}</div>
-                </div>
-              </div>
-              <ChevronRight size={14} color="var(--text)" />
-            </button>
-          </Card>
-
-          <button onClick={requestDeleteAccount} disabled={checkingSub} className={styles.dangerCard}>
-            <div className={styles.dangerLeft}>
-              {isTablet && <AlertTriangle size={20} color="var(--danger)" />}
-              <div className={styles.dangerButtonText}>
-                <div className={styles.dangerCardTitle}>{t('settingsAccount.dangerZone.deleteAccountTitle')}</div>
-                <div className={styles.dangerButtonSubtitle}>{t('settingsAccount.dangerZone.deleteAccountSubtitle')}</div>
-              </div>
-            </div>
-            <ChevronRight size={14} color="var(--danger)" />
-          </button>
-        </div>
-        </div>
-      </div>
-      )}
+      {page}
 
       <Presence show={!!dangerModal}>{() => (
         <div onClick={e => e.target === e.currentTarget && setDangerModal(null)} className={deskMode ? dkp.overlay : styles.dangerOverlay}>

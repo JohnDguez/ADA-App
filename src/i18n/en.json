@@ -144,7 +144,10 @@
       "playTitle": "Managed in Google Play",
       "playSub": "Your subscription can't be edited from here",
       "reactivateSub": "Renews automatically again"
-    }
+    },
+    "includesTitle": "What your plan includes",
+    "planName": "Premium {{plan}}",
+    "saveShort": "Save {{amount}}"
   },
   "settingsAccount": {
     "title": "Account",
@@ -160,9 +163,11 @@
     "dangerZone": {
       "label": "Danger zone",
       "deleteDataTitle": "Delete my data",
-      "deleteDataSubtitle": "Erases your payments and income",
+      "deleteDataSubtitle": "Erases your payments and income. Your account stays.",
       "deleteAccountTitle": "Delete my account",
-      "deleteAccountSubtitle": "Deletes your account and everything in it"
+      "deleteAccountSubtitle": "Deletes your account and everything in it. This can't be undone.",
+      "deleteDataBtn": "Erase data",
+      "deleteAccountBtn": "Delete account"
     },
     "dangerModal": {
       "titleData": "Delete all data",
@@ -241,7 +246,8 @@
       "yourData": "Your data",
       "edit": "Edit",
       "changePhoto": "Change photo",
-      "uploading": "Uploading…"
+      "uploading": "Uploading…",
+      "change": "Change"
     }
   },
   "settingsCobro": {
@@ -361,7 +367,10 @@
       "enableError": "Error enabling notifications",
       "enabled": "Notifications enabled"
     },
-    "hourNeedsOn": "Turn on notifications first to choose a time."
+    "hourNeedsOn": "Turn on notifications first to choose a time.",
+    "daysChip_one": "{{count}} day",
+    "daysChip_other": "{{count}} days",
+    "daysForShort": "Days ahead · for upcoming payments and cards"
   },
   "settingsAppearance": {
     "title": "Appearance",

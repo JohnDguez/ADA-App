@@ -1,0 +1,19 @@
+/* Idioma (v0.9.977, mockup aprobado): filas con check en móvil, 3 mosaicos
+   en tablet/escritorio. Solo tokens. */
+.ab { font-size: 14px; font-weight: 700; color: var(--text); }
+.list { display: flex; flex-direction: column; gap: 2px; padding: 8px; }
+.lrow { display: flex; align-items: center; gap: 12px; padding: 10px; border: 0; border-radius: 16px; background: transparent; color: var(--text); font: inherit; text-align: left; cursor: pointer; transition: background .25s; }
+.lrow.on { background: var(--desk-chip); }
+.txt { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.txt b { font-size: 14.5px; font-weight: 600; }
+.txt .sub { font-size: 12px; color: var(--muted); }
+.tiles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.ltile { position: relative; display: flex; flex-direction: column; align-items: flex-start; gap: 4px; padding: 16px; border: 0; border-radius: 20px; background: var(--desk-chip); color: var(--text); font: inherit; text-align: left; cursor: pointer; transition: box-shadow .25s, background .15s; }
+.ltile.on { box-shadow: inset 0 0 0 2px var(--accent); }
+.ltile .ico { background: var(--desk-card); margin-bottom: 8px; }
+.ltile b { font-size: 16px; font-weight: 600; }
+.ltile .sub { font-size: 12.5px; color: var(--muted); }
+.ltile .ck { position: absolute; right: 12px; top: 12px; }
+@media (hover: hover) and (pointer: fine) {
+  .lrow:not(.on):hover, .ltile:not(.on):hover { background: var(--desk-hover-fill); filter: none; }
+}
