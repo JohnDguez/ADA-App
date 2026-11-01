@@ -1993,12 +1993,21 @@
   },
   "patchNotes": {
     "v0_9_991": {
-      "item0": "Nuevo diseño en toda la app: ventanas, formularios y confirmaciones renovados en celular, tablet y computadora, con tema claro y oscuro.",
-      "item1": "Ajustes rediseñados: Notificaciones, Apariencia, Idioma, Cuenta, Exportar y una nueva página completa para Importar tus pagos.",
-      "item2": "Premium renovado: pantalla de planes más clara, con la prueba gratis y las promociones bien a la vista.",
-      "item3": "Al suscribirte a Premium, te mostramos cómo quedaría el pago para que lo agregues a tus recordatorios con un toque.",
-      "item4": "Los interruptores apagados ahora se ven bien en tema claro y oscuro, y se corrigió la lectura de «Recorrer en fin de semana» en tema oscuro.",
-      "item5": "Animaciones de entrada y salida más fluidas al abrir y cerrar ventanas."
+      "item0": "Nuevo diseño en toda la app: Inicio, Gastos, Recurrentes, Metas y Ajustes rehechos para celular, tablet y computadora, con tema claro y oscuro.",
+      "item1": "Celular: Inicio nuevo, barra inferior con Ajustes, selector de espacios renovado y filas de pago más limpias.",
+      "item2": "Tablet: barra lateral con todos tus espacios y pantallas pensadas para tablet vertical y horizontal.",
+      "item3": "Computadora: pantalla completa con menú lateral, menú «⋮» en cada pago (también con clic derecho), notificaciones en ventana flotante y mensajes de ayuda al pasar el mouse.",
+      "item4": "Todas las ventanas (nuevo pago, tarjetas, categorías, metas, confirmaciones, hora del aviso, cuenta…) comparten ahora el mismo estilo: hoja en el celular y cuadro de diálogo en tablet y computadora.",
+      "item5": "Nuevo: «Recorrer en fin de semana». Si tu día de cobro cae en sábado o domingo, elige moverlo al día hábil más cercano, al viernes anterior o al lunes siguiente (también en espacios compartidos).",
+      "item6": "Al cambiar tu ingreso, la app te pregunta desde cuándo aplica el cambio.",
+      "item7": "Espacio Compartido rediseñado: permisos de cada invitado como fichas, crear un espacio nuevo sin salir de la pantalla y moneda en selector.",
+      "item8": "Ajustes rediseñados: Notificaciones, Apariencia, Idioma, Cuenta, Exportar y una nueva página completa para Importar tus pagos.",
+      "item9": "Pagos recurrentes y a parcialidades: ahora siempre ves los del periodo actual y los dos siguientes, sin importar si cobras por semana, quincena o mes.",
+      "item10": "Gráfica del próximo periodo por semanas y medidor «Avance del periodo» corregido.",
+      "item11": "Premium renovado: planes más claros, prueba gratis y promociones a la vista, y precios tomados directo de la tienda. Al suscribirte te mostramos cómo quedaría el pago para agregarlo a tus recordatorios.",
+      "item12": "Compras con Google Play más confiables: se corrigieron suscripciones que quedaban sin confirmar.",
+      "item13": "Para eliminar tu cuenta con una suscripción vigente, la app ahora te pide cancelarla primero.",
+      "item14": "Pantallas de carga con esqueletos, interruptores que se ven bien en claro y oscuro, y animaciones de entrada y salida más fluidas."
     },
     "v0_9_183": {
       "item0": "Nuevo: fija tu pestaña principal. Toca el ícono de pin junto al nombre de Personal o de un Espacio Compartido para que esa sea la primera que veas cada vez que abras o recargues la app."

@@ -1993,12 +1993,21 @@
   },
   "patchNotes": {
     "v0_9_991": {
-      "item0": "New design across the app: windows, forms and confirmations refreshed on phone, tablet and desktop, with light and dark themes.",
-      "item1": "Redesigned Settings: Notifications, Appearance, Language, Account, Export and a new full page to Import your payments.",
-      "item2": "Premium refreshed: a clearer plans screen with the free trial and promotions front and center.",
-      "item3": "When you subscribe to Premium, we show you how the payment would look so you can add it to your reminders in one tap.",
-      "item4": "Switches that are off now look right in light and dark themes, and \"Move weekend paydays\" is readable again in dark theme.",
-      "item5": "Smoother enter and exit animations when opening and closing windows."
+      "item0": "New design across the app: Home, Payments, Recurring, Goals and Settings rebuilt for phone, tablet and desktop, with light and dark themes.",
+      "item1": "Phone: new Home, a bottom bar with Settings, a refreshed space picker and cleaner payment rows.",
+      "item2": "Tablet: a side rail with all your spaces and screens made for portrait and landscape tablets.",
+      "item3": "Desktop: full-screen layout with a side menu, a \"⋮\" menu on every payment (also with right click), notifications in a floating panel and hover tooltips.",
+      "item4": "All windows (new payment, cards, categories, goals, confirmations, reminder time, account…) now share one style: a sheet on phone and a dialog on tablet and desktop.",
+      "item5": "New: \"Move weekend paydays\". If your payday falls on a Saturday or Sunday, move it to the nearest weekday, the Friday before or the Monday after (also in shared spaces).",
+      "item6": "When you change your income, the app asks you from when the change applies.",
+      "item7": "Shared Space redesigned: each guest's permissions as chips, create a new space without leaving the screen, and currency in a picker.",
+      "item8": "Redesigned Settings: Notifications, Appearance, Language, Account, Export and a new full page to Import your payments.",
+      "item9": "Recurring and installment payments: you now always see the current period and the next two, whether you get paid weekly, biweekly or monthly.",
+      "item10": "Next-period chart by weeks, and the \"Period progress\" gauge fixed.",
+      "item11": "Premium refreshed: clearer plans, free trial and promotions up front, and prices taken straight from the store. When you subscribe we show how the payment would look so you can add it to your reminders.",
+      "item12": "More reliable Google Play purchases: subscriptions that were left unconfirmed are fixed.",
+      "item13": "To delete your account with an active subscription, the app now asks you to cancel it first.",
+      "item14": "Skeleton loading screens, switches that look right in light and dark, and smoother enter and exit animations."
     },
     "v0_9_183": {
       "item0": "New: pin your main tab. Tap the pin icon next to Personal or a Shared Space's name so it's the first thing you see every time you open or reload the app."
