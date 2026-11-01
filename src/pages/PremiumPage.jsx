@@ -17,7 +17,7 @@ import { apiUrl } from '../lib/apiUrl'
 import styles from './PremiumPage.module.css'
 import { useScrollLock } from '../lib/scrollLock'
 import { useIsDesktop } from '../hooks/useIsDesktop'
-import dk from './PremiumDesk.module.css'
+import { useIsMobile } from '../hooks/useIsMobile'
 
 // Módulo, no dentro del componente — loadStripe() cachea la promesa
 // internamente, pero de todas formas no tiene sentido recrearla en cada
@@ -29,13 +29,6 @@ import dk from './PremiumDesk.module.css'
 // should be a string" en la consola (v0.9.600).
 const stripeKey = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY
 const stripePromise = (isAndroidBilling() || !stripeKey) ? null : loadStripe(stripeKey)
-
-// Misma curva que el borde inferior de cada "escena" de OnboardingPage.jsx
-// (WAVE_PATH ahí) — pedido explícito de Johnatan: "una onda como en los
-// fondos del onboarding" para el borde inferior del hero de Premium.
-// Duplicada a propósito (no extraída a lib/utils): es solo un string SVG,
-// y son 2 usos independientes que no necesitan compartir una fuente.
-const WAVE_PATH = 'M0,110 L0,20 C30,-19 60,38 95,38 C135,36 150,73 195,64 C238,58 255,101 300,80 L300,110 Z'
 
 // Debe coincidir con la duración de `.entering`/`.closing` en el .module.css
 // (Regla 30, "JS/CSS timing sync") — mismo patrón que ANIM_MS en
@@ -53,6 +46,7 @@ const ANIM_MS = 200
 export function PremiumPage({ profile, onClose, refreshProfile, onSubscribed }) {
   const { t } = useTranslation()
   const isDesktop = useIsDesktop()
+  const isMobile = useIsMobile()
 
   // Precios y prueba gratis (v0.9.960): salen de lib/premiumOffer.js — en
   // Android del catálogo real de Google Play (cambian en Play Console sin
@@ -187,10 +181,10 @@ export function PremiumPage({ profile, onClose, refreshProfile, onSubscribed }) 
   // `git log --all --diff-filter=A`, de ahí el ícono de "imagen rota"
   // idéntico en las 4 tarjetas).
   const BENEFITS = [
-    { key: 'simulator', icon: ChartLineUp, title: t('premiumPage.benefits.simulatorTitle'), desc: t('premiumPage.benefits.simulatorShort') },
-    { key: 'shared',    icon: UsersThree,  title: t('premiumPage.benefits.sharedTitle'),    desc: t('premiumPage.benefits.sharedShort') },
-    { key: 'goals',     icon: Target,      title: t('premiumPage.benefits.goalsTitle'),     desc: t('premiumPage.benefits.goalsShort') },
-    { key: 'reports',   icon: FilePdf,     title: t('premiumPage.benefits.reportsTitle'),   desc: t('premiumPage.benefits.reportsShort') },
+    { key: 'simulator', icon: ChartLineUp, title: t('premiumPage.benefits.simulatorTitle'), desc: t('premiumPage.benefits.simulatorShort'), long: t('premiumPage.benefits.simulatorDesc') },
+    { key: 'shared',    icon: UsersThree,  title: t('premiumPage.benefits.sharedTitle'),    desc: t('premiumPage.benefits.sharedShort'), long: t('premiumPage.benefits.sharedDesc') },
+    { key: 'goals',     icon: Target,      title: t('premiumPage.benefits.goalsTitle'),     desc: t('premiumPage.benefits.goalsShort'), long: t('premiumPage.benefits.goalsDesc') },
+    { key: 'reports',   icon: FilePdf,     title: t('premiumPage.benefits.reportsTitle'),   desc: t('premiumPage.benefits.reportsShort'), long: t('premiumPage.benefits.reportsDesc') },
   ]
 
   // Pide el client_secret a create-checkout-session.js y abre el checkout
@@ -288,412 +282,242 @@ export function PremiumPage({ profile, onClose, refreshProfile, onSubscribed }) 
     // refreshProfile/onClose (props), no hace falta recomputar por eso.
   ), [clientSecret])
 
-  // ── Escritorio (v0.9.842): pantalla completa, beneficios a la izquierda y
-  // compra a la derecha. Mockup B aprobado; solo colores sólidos (nada de
-  // fondos con opacidad). Misma lógica de compra que la versión móvil. ──
-  if (isDesktop) {
-    const annual = selectedPlan === 'annual'
-    const buyBtn = (
-      <button onClick={isAndroid ? startAndroidPurchase : startCheckout}
-        disabled={!termsAccepted || androidPurchaseState === 'processing'}
-        className={`btn-primary premium-fx ${dk.cta}`}>
-        <Crown size={18} />
-        {androidPurchaseState === 'processing'
-          ? t('premiumPage.androidPurchaseProcessing')
-          : (trialEligible ? t('premiumPage.startTrial', { days: trialDays }) : t('premiumPage.continueWithPlan', { plan: t(`premiumPage.${selectedPlan}`) }))}
+  // ── Interfaz (v0.9.989): una sola estructura para los tres tamaños; el CSS
+  // (`data-pm`) cambia la distribución. Móvil = hoja gris con héroe dorado y
+  // pie fijo; tablet vertical = columna de 640 px con panel de planes;
+  // escritorio = beneficios a la izquierda y compra a la derecha. ──
+  const mode = isDesktop ? 'desk' : isMobile ? 'mobile' : 'tablet'
+  const backFromCheckout = checkoutOpen && !isAndroid
+  const buyLabel = androidPurchaseState === 'processing'
+    ? t('premiumPage.androidPurchaseProcessing')
+    : (trialEligible ? t('premiumPage.startTrial', { days: trialDays }) : t('premiumPage.continueWithPlan', { plan: t(`premiumPage.${selectedPlan}`) }))
+  const buyDisabled = !termsAccepted || androidPurchaseState === 'processing'
+  const buyBtn = (
+    <button type="button" onClick={isAndroid ? startAndroidPurchase : startCheckout} disabled={buyDisabled}
+      className={`premium-fx ${styles.cta}`}>
+      <Crown size={20} />{buyLabel}
+    </button>
+  )
+
+  function planButton(plan) {
+    const on = selectedPlan === plan
+    const promo = offer.promo[plan]
+    const sub = promo ? promo.label : (plan === 'annual' ? savingText : null)
+    return (
+      <button type="button" key={plan} onClick={() => setSelectedPlan(plan)} aria-pressed={on}
+        className={`${styles.plan} ${on ? styles.planOn : ''} ${sub ? '' : styles.noSub}`}>
+        {plan === 'annual' && <span className={styles.star}>★ {t('premiumPage.mostPopular')}</span>}
+        <i className={styles.radio} />
+        <span className={styles.planName}>{t(`premiumPage.${plan}`)}</span>
+        {sub && <span className={styles.planSub}>{sub}</span>}
+        <span className={styles.planPrice}>
+          {promo && (
+            <span className={styles.old}>
+              <span className={styles.promoChip}>-{promo.pct}%</span>
+              <span className={styles.planRegular}>{promo.regular}</span>
+            </span>
+          )}
+          <b>{promo ? promo.price : offer.prices[plan]}</b>
+          <small>{priceSuffix(plan)}</small>
+        </span>
       </button>
     )
+  }
+
+  const banners = (
+    <>
+      {isSamePlatform && <div className={styles.banner}><span className={styles.bannerIc}><Crown size={20} /></span><span>{t('premiumPage.alreadyPremiumSamePlatform')}</span></div>}
+      {isOtherPlatform && <div className={styles.banner}><span className={styles.bannerIc}><Crown size={20} /></span><span>{premiumSource === 'stripe' ? t('premiumPage.alreadyPremiumViaStripe') : t('premiumPage.alreadyPremiumViaGooglePlay')}</span></div>}
+      {isAdminGranted && <div className={`${styles.banner} ${styles.bannerFlat}`}><span>{t('premiumPage.adminGrantedBanner')}</span></div>}
+    </>
+  )
+
+  const trialPill = trialEligible && <div className={styles.trial}><Gift size={16} />{t('premiumPage.trialPill', { days: trialDays })}</div>
+
+  const plansBlock = (
+    <>
+      {mode === 'mobile' && <div className={styles.lab}>{t('premiumPage.choosePlan')}</div>}
+      <div className={styles.plans}>
+        {planButton('monthly')}
+        {planButton('annual')}
+      </div>
+      <label className={styles.terms}>
+        <input type="checkbox" className={styles.checkbox} checked={termsAccepted} onChange={e => setTermsAccepted(e.target.checked)} />
+        <span>{trialEligible ? t('premiumPage.termsAcceptTrial', { days: trialDays }) : t('premiumPage.termsAccept')}</span>
+      </label>
+    </>
+  )
+
+  const androidError = isAndroid && androidPurchaseState === 'error' && (
+    <div className={styles.status}>
+      {t('premiumPage.androidPurchaseError')}
+      {androidPurchaseDetail && <div className={styles.detail}>{androidPurchaseDetail}</div>}
+      <button type="button" onClick={startAndroidPurchase} className={styles.retry}>{t('premiumPage.checkoutRetry')}</button>
+    </div>
+  )
+
+  const checkoutBlock = !isAndroid && checkoutOpen && (
+    <div className={styles.pay}>
+      <h2 className={styles.payTitle}>{t('premiumPage.checkoutTitle')}</h2>
+      {checkoutState === 'loading' && <div className={styles.status}>{t('premiumPage.checkoutLoading')}</div>}
+      {checkoutState === 'confirming' && <div className={styles.status}>{t('premiumPage.checkoutConfirming')}</div>}
+      {checkoutState === 'error' && (
+        <div className={styles.status}>
+          {t('premiumPage.checkoutError')}
+          <button type="button" onClick={startCheckout} className={styles.retry}>{t('premiumPage.checkoutRetry')}</button>
+        </div>
+      )}
+      {checkoutState === 'idle' && clientSecret && (
+        <div className={styles.stripeBox}>
+          <EmbeddedCheckoutProvider stripe={stripePromise} options={checkoutOptions}>
+            <EmbeddedCheckout />
+          </EmbeddedCheckoutProvider>
+        </div>
+      )}
+    </div>
+  )
+
+  const finePrint = (
+    <div className={styles.fine}>
+      {t('premiumPage.restrictionsApply')}
+      {trialEligible && <> {t('premiumPage.trialFinePrint', { price: offer.promo[selectedPlan]?.price || offer.prices[selectedPlan], suffix: priceSuffix(selectedPlan), days: trialDays })}</>}
+      {offer.promo[selectedPlan]?.fine && <> {offer.promo[selectedPlan].fine}</>}
+      <div className={styles.safe}><ShieldCheck size={14} />{t('premiumPage.cancelAnytime')}</div>
+      <div>
+        {isAndroid && <button type="button" onClick={handleRestorePurchases} disabled={restoreState === 'restoring'} className={styles.link}>{t('premiumPage.restorePurchases')}</button>}{isAndroid && ' '}
+        <a href="/terminos.html" target="_blank" rel="noopener noreferrer" className={styles.link}>{t('authPage.termsLink')}</a>
+      </div>
+      {isAndroid && restoreState !== 'idle' && (
+        <div className={restoreState === 'error' ? styles.restoreErr : undefined}>
+          {restoreState === 'restoring' && t('premiumPage.restoringPurchases')}
+          {restoreState === 'success' && t('premiumPage.restoreSuccess')}
+          {restoreState === 'empty' && t('premiumPage.restoreEmpty')}
+          {restoreState === 'error' && t('premiumPage.restoreError')}
+        </div>
+      )}
+    </div>
+  )
+
+  const benefitsEl = (
+    <div className={styles.benefits}>
+      {BENEFITS.map(b => (
+        <div key={b.key} className={styles.benefit}>
+          <span className={styles.benefitIc}><b.icon size={24} weight="duotone" color="var(--desk-gold-text)" /></span>
+          <div>
+            <div className={styles.benefitTitle}>{b.title}</div>
+            <div className={styles.benefitShort}>{b.desc}</div>
+            <div className={styles.benefitLong}>{b.long}</div>
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+
+  const purchase = !checkoutOpen && !hidePurchaseFlow
+
+  const heroEl = (
+    <div className={styles.hero}>
+      <div className={styles.heroGlow} aria-hidden="true" />
+      <Sparkle weight="fill" size={16} className={`${styles.spark} ${styles.spark1}`} aria-hidden="true" />
+      <Sparkle weight="fill" size={11} className={`${styles.spark} ${styles.spark2}`} aria-hidden="true" />
+      <Sparkle weight="fill" size={9} className={`${styles.spark} ${styles.spark3}`} aria-hidden="true" />
+      <button type="button" onClick={handleClose} className={styles.heroClose} aria-label={t('buttons.close')}><X size={18} /></button>
+      <span className={styles.crown}><CrownDuotone size={36} weight="duotone" color="var(--premium-hero-ink)" /></span>
+      <div className={styles.heroText}>
+        <h1 className={styles.heroTitle}>{t('premiumPage.title')}</h1>
+        <p className={styles.heroSub}>{t('premiumPage.subtitle')}</p>
+      </div>
+    </div>
+  )
+
+  const backPill = (
+    <button type="button" className={styles.back} onClick={backToPlans}>
+      <ArrowLeft size={16} />{t('premiumPage.backToPlans')}
+    </button>
+  )
+
+  const cls = `${styles.page} ${entering ? styles.entering : ''} ${closing ? styles.closing : ''}`
+
+  if (mode === 'desk') {
     return (
-      <div className={`${dk.page} ${entering ? styles.entering : ''} ${closing ? styles.closing : ''}`}>
-        <div className={dk.top}>
-          <button type="button" className={dk.back} onClick={checkoutOpen && !isAndroid ? backToPlans : handleClose}>
-            <ArrowLeft size={16} />{checkoutOpen && !isAndroid ? t('premiumPage.backToPlans') : t('premiumPage.back')}
+      <div className={cls} data-pm="desk">
+        <div className={styles.top}>
+          <button type="button" className={styles.deskBack} onClick={backFromCheckout ? backToPlans : handleClose}>
+            <ArrowLeft size={16} />{backFromCheckout ? t('premiumPage.backToPlans') : t('premiumPage.back')}
           </button>
-          <button type="button" className={dk.close} onClick={handleClose} aria-label={t('buttons.close')}><X size={18} /></button>
+          <button type="button" className={styles.deskClose} onClick={handleClose} aria-label={t('buttons.close')}><X size={18} /></button>
         </div>
-
-        <div className={dk.left}>
-          <div className={dk.titleRow}>
-            <span className={dk.crown}><CrownDuotone size={34} weight="duotone" color="var(--premium-gold-text)" /></span>
-            <h1 className={dk.title}>{t('premiumPage.titleLead')} <span>Premium</span></h1>
+        <div className={styles.left}>
+          <div className={styles.titleRow}>
+            <span className={styles.crownTile}><CrownDuotone size={34} weight="duotone" color="var(--premium-gold-text)" /></span>
+            <h1 className={styles.title}>{t('premiumPage.titleLead')} <span>Premium</span></h1>
           </div>
-          <p className={dk.subtitle}>{t('premiumPage.subtitle')}</p>
-          <div className={dk.benefits}>
-            {BENEFITS.map(b => (
-              <div key={b.key} className={dk.benefit}>
-                <span className={dk.benefitIcon}><b.icon size={26} weight="duotone" color="var(--desk-gold-text)" /></span>
-                <div>
-                  <div className={dk.benefitTitle}>{b.title}</div>
-                  <div className={dk.benefitDesc}>{t(`premiumPage.benefits.${b.key === 'simulator' ? 'simulatorDesc' : b.key === 'shared' ? 'sharedDesc' : b.key === 'goals' ? 'goalsDesc' : 'reportsDesc'}`)}</div>
-                </div>
-              </div>
-            ))}
-          </div>
+          <p className={styles.subtitle}>{t('premiumPage.subtitle')}</p>
+          {benefitsEl}
         </div>
-
-        <div className={dk.right}>
-          {isSamePlatform && <div className={dk.banner}>{t('premiumPage.alreadyPremiumSamePlatform')}</div>}
-          {isOtherPlatform && <div className={dk.banner}>{premiumSource === 'stripe' ? t('premiumPage.alreadyPremiumViaStripe') : t('premiumPage.alreadyPremiumViaGooglePlay')}</div>}
-          {isAdminGranted && <div className={dk.banner}>{t('premiumPage.adminGrantedBanner')}</div>}
-
-          {!checkoutOpen && !hidePurchaseFlow && (
+        <div className={styles.right}>
+          {banners}
+          {purchase && (
             <>
-              {trialEligible && <div className={dk.trial}><Gift size={16} />{t('premiumPage.trialPill', { days: trialDays })}</div>}
-              <h2 className={dk.rightTitle}>{t('premiumPage.choosePlan')}</h2>
-              <div className={dk.plans}>
-                <button type="button" onClick={() => setSelectedPlan('monthly')} className={`${dk.plan} ${!annual ? dk.planOn : ''}`} aria-pressed={!annual}>
-                  <span className={dk.radio} />
-                  <span className={dk.planName}>{t('premiumPage.monthly')}</span>
-                  {offer.promo.monthly && <span className={dk.promoChip}>-{offer.promo.monthly.pct}%</span>}
-                  {offer.promo.monthly && <span className={dk.planRegular}>{offer.promo.monthly.regular}</span>}
-                  <span className={dk.planPrice}>{offer.promo.monthly ? offer.promo.monthly.price : offer.prices.monthly} <small>{priceSuffix('monthly')}</small></span>
-                  {offer.promo.monthly && <span className={dk.planSaving}>{offer.promo.monthly.label}</span>}
-                </button>
-                <button type="button" onClick={() => setSelectedPlan('annual')} className={`${dk.plan} ${annual ? dk.planOn : ''}`} aria-pressed={annual}>
-                  <span className={dk.badge}>★ {t('premiumPage.mostPopular')}</span>
-                  <span className={dk.radio} />
-                  <span className={dk.planName}>{t('premiumPage.annual')}</span>
-                  {offer.promo.annual && <span className={dk.promoChip}>-{offer.promo.annual.pct}%</span>}
-                  {offer.promo.annual && <span className={dk.planRegular}>{offer.promo.annual.regular}</span>}
-                  <span className={dk.planPrice}>{offer.promo.annual ? offer.promo.annual.price : offer.prices.annual} <small>{priceSuffix('annual')}</small></span>
-                  {offer.promo.annual
-                    ? <span className={dk.planSaving}>{offer.promo.annual.label}</span>
-                    : savingText && <span className={dk.planSaving}>{savingText}</span>}
-                </button>
-              </div>
-              <label className={dk.terms}>
-                <input type="checkbox" className={dk.checkbox} checked={termsAccepted} onChange={e => setTermsAccepted(e.target.checked)} />
-                <span>{trialEligible ? t('premiumPage.termsAcceptTrial', { days: trialDays }) : t('premiumPage.termsAccept')}</span>
-              </label>
+              {trialPill}
+              <h2 className={styles.rightTitle}>{t('premiumPage.choosePlan')}</h2>
+              {plansBlock}
               {buyBtn}
-              {isAndroid && androidPurchaseState === 'error' && (
-                <div className={dk.status}>
-                  {t('premiumPage.androidPurchaseError')}
-                  {androidPurchaseDetail && <div className={styles.checkoutDetail}>{androidPurchaseDetail}</div>}
-                  <button type="button" onClick={startAndroidPurchase} className={`btn-primary ${dk.retry}`}>{t('premiumPage.checkoutRetry')}</button>
-                </div>
-              )}
+              {androidError}
             </>
           )}
+          {checkoutBlock}
+          {finePrint}
+        </div>
+      </div>
+    )
+  }
 
-          {!isAndroid && checkoutOpen && (
-            <div className={dk.checkout}>
-              <h2 className={dk.rightTitle}>{t('premiumPage.checkoutTitle')}</h2>
-              {checkoutState === 'loading' && <div className={dk.status}>{t('premiumPage.checkoutLoading')}</div>}
-              {checkoutState === 'confirming' && <div className={dk.status}>{t('premiumPage.checkoutConfirming')}</div>}
-              {checkoutState === 'error' && (
-                <div className={dk.status}>
-                  {t('premiumPage.checkoutError')}
-                  <button type="button" onClick={startCheckout} className={`btn-primary ${dk.retry}`}>{t('premiumPage.checkoutRetry')}</button>
-                </div>
-              )}
-              {checkoutState === 'idle' && clientSecret && (
-                <div className={dk.stripeBox}>
-                  <EmbeddedCheckoutProvider stripe={stripePromise} options={checkoutOptions}>
-                    <EmbeddedCheckout />
-                  </EmbeddedCheckoutProvider>
-                </div>
-              )}
+  if (mode === 'tablet') {
+    return (
+      <div className={cls} data-pm="tablet">
+        <div className={styles.col}>
+          {heroEl}
+          {!checkoutOpen && benefitsEl}
+          {banners}
+          {backFromCheckout && backPill}
+          {purchase && (
+            <div className={styles.panel}>
+              <div className={styles.panelHead}>
+                <h2 className={styles.rightTitle}>{t('premiumPage.choosePlan')}</h2>
+                {trialPill}
+              </div>
+              {plansBlock}
+              {buyBtn}
+              {androidError}
+              {finePrint}
             </div>
           )}
-
-          <div className={dk.fine}>
-            {t('premiumPage.restrictionsApply')}
-            {trialEligible && <> {t('premiumPage.trialFinePrint', { price: offer.promo[selectedPlan]?.price || offer.prices[selectedPlan], suffix: priceSuffix(selectedPlan), days: trialDays })}</>}
-            {offer.promo[selectedPlan]?.fine && <> {offer.promo[selectedPlan].fine}</>}
-            <div className={dk.safe}><ShieldCheck size={14} />{t('premiumPage.cancelAnytime')}</div>
-            <div>
-              {isAndroid && <button type="button" onClick={handleRestorePurchases} disabled={restoreState === 'restoring'} className={dk.link}>{t('premiumPage.restorePurchases')}</button>}{isAndroid && ' '}
-              <a href="/terminos.html" target="_blank" rel="noopener noreferrer" className={dk.link}>{t('authPage.termsLink')}</a>
-            </div>
-            {isAndroid && restoreState !== 'idle' && (
-              <div className={restoreState === 'error' ? dk.restoreErr : undefined}>
-                {restoreState === 'restoring' && t('premiumPage.restoringPurchases')}
-                {restoreState === 'success' && t('premiumPage.restoreSuccess')}
-                {restoreState === 'empty' && t('premiumPage.restoreEmpty')}
-                {restoreState === 'error' && t('premiumPage.restoreError')}
-              </div>
-            )}
-          </div>
+          {checkoutBlock}
+          {checkoutOpen && finePrint}
+          {hidePurchaseFlow && finePrint}
         </div>
       </div>
     )
   }
 
   return (
-    <div
-      className={`${styles.page} ${entering ? styles.entering : ''} ${closing ? styles.closing : ''}`}
-    >
-
-      {/* Hero — v0.9.505: antes eran 2 <img> a /premium-hero-bg.png y
-          /premium-hero-crown.png que NUNCA existieron en el repo (hero
-          vacío en producción, confirmado con git log). Ahora degradado
-          radial vía var(--premium-hero-bg) — EXCEPCIÓN NUEVA Y
-          DOCUMENTADA a la Regla 18 ("Sin gradientes"), solo para este
-          hero, pedido explícito de Johnatan ("algo más llamativo y
-          sorprendente, con degradados"). El degradado SÍ reacciona al
-          tema (--premium-hero-bg tiene su propio valor en claro y en
-          oscuro, ver index.css) — a diferencia del resto del tratamiento
-          Premium (--premium-text), que es fijo a
-          propósito: aquí Johnatan pidió explícitamente que el tono
-          cambiara con el tema. Onda inferior: misma curva (WAVE_PATH,
-          arriba) que el borde de cada escena de OnboardingPage.jsx —
-          pedido explícito ("una onda como en los fondos del
-          onboarding") — rellena con var(--bg), así se funde con el
-          cuerpo de la página de abajo en cualquiera de los 2 temas. */}
-      <div className={styles.hero}>
-        <div className={styles.heroGlow} aria-hidden="true" />
-        <Sparkle weight="fill" size={16} className={`${styles.heroSparkle} ${styles.heroSparkle1}`} aria-hidden="true" />
-        <Sparkle weight="fill" size={11} className={`${styles.heroSparkle} ${styles.heroSparkle2}`} aria-hidden="true" />
-        <Sparkle weight="fill" size={9}  className={`${styles.heroSparkle} ${styles.heroSparkle3}`} aria-hidden="true" />
-        <button onClick={handleClose} className={styles.heroCloseButton} aria-label={t('buttons.close')}>
-          <X size={18} color="var(--on-color)" />
-        </button>
-        <div className={styles.heroCrownWrap}>
-          <CrownDuotone size={34} weight="duotone" color="var(--premium-hero-ink)" />
-        </div>
-        <div className={styles.heroTitle}>{t('premiumPage.title')}</div>
-        <div className={styles.heroSubtitle}>{t('premiumPage.subtitle')}</div>
-        <svg className={styles.heroWave} viewBox="0 0 300 110" preserveAspectRatio="none" aria-hidden="true">
-          <path d={WAVE_PATH} fill="var(--bg)" />
-        </svg>
+    <div className={cls} data-pm="mobile">
+      <div className={styles.col}>
+        {!checkoutOpen && heroEl}
+        {backFromCheckout && backPill}
+        {!checkoutOpen && banners}
+        {!checkoutOpen && benefitsEl}
+        {purchase && (<>{trialPill}{plansBlock}{finePrint}</>)}
+        {checkoutBlock}
+        {(checkoutOpen || hidePurchaseFlow) && finePrint}
       </div>
-
-      <div className={styles.content}>
-
-        {/* Beneficios — tarjetas sobre var(--surface) (antes var(--accent)
-            sólido de borde a borde; Johnatan: "no se lee bien el texto") +
-            chip circular dorado con el ícono, coherente con el hero. */}
-        <div className={styles.benefitsList}>
-          {BENEFITS.map(b => (
-            <div key={b.key} className={styles.benefitCard}>
-              <div className={styles.benefitIconChip}>
-                <b.icon size={18} weight="duotone" color="var(--premium-gold-text)" />
-              </div>
-              <div>
-                <div className={styles.benefitTitle}>{b.title}</div>
-                <div className={styles.benefitDesc}>{b.desc}</div>
-              </div>
-            </div>
-          ))}
+      {purchase && (
+        <div className={styles.foot}>
+          {buyBtn}
+          {androidError}
         </div>
-
-        {/* NUEVO (v0.9.526) — avisos de origen de suscripción, ver comentario
-            de premiumSource/isOtherPlatform/isSamePlatform/isAdminGranted
-            arriba. Los 3 son mutuamente excluyentes (getPremiumSource solo
-            devuelve un valor). */}
-        {isSamePlatform && (
-          <div className={styles.sourceBanner}>
-            {t('premiumPage.alreadyPremiumSamePlatform')}
-          </div>
-        )}
-
-        {isOtherPlatform && (
-          <div className={styles.sourceBanner}>
-            {premiumSource === 'stripe'
-              ? t('premiumPage.alreadyPremiumViaStripe')
-              : t('premiumPage.alreadyPremiumViaGooglePlay')}
-          </div>
-        )}
-
-        {isAdminGranted && (
-          <div className={styles.sourceBanner}>
-            {t('premiumPage.adminGrantedBanner')}
-          </div>
-        )}
-
-        {/* Planes + checkbox de términos + CTA — ocultos mientras el checkout
-            embebido está abierto (para no competir por espacio/atención) o
-            cuando ya hay una suscripción real activa en esta misma
-            plataforma o en la otra (v0.9.526, evita ofrecer un segundo
-            cobro) — sí se muestran si es 'admin' (puede apoyar el proyecto
-            con un pago real) o si no es Premium ('none'). */}
-        {!checkoutOpen && !hidePurchaseFlow && (
-          <>
-            {trialEligible && (
-              <div className={styles.trialPill}>
-                <Gift size={16} color="var(--premium-gold)" />
-                {t('premiumPage.trialPill', { days: trialDays })}
-              </div>
-            )}
-
-            <div className={styles.choosePlanTitle}>
-              {t('premiumPage.choosePlan')}
-            </div>
-
-            <div className={styles.plansWrap}>
-              <button
-                type="button"
-                onClick={() => setSelectedPlan('monthly')}
-                className={`card ${styles.planCard} ${selectedPlan === 'monthly' ? styles.planCardActive : ''}`}
-              >
-                {offer.promo.monthly && <div className={styles.promoChip}>-{offer.promo.monthly.pct}%</div>}
-                <div className={styles.planName}>{t('premiumPage.monthly')}</div>
-                {offer.promo.monthly && <div className={styles.planRegular}>{offer.promo.monthly.regular}</div>}
-                <div className={styles.planPrice}>
-                  {offer.promo.monthly ? offer.promo.monthly.price : offer.prices.monthly} <span className={styles.planPriceSuffix}>{priceSuffix('monthly')}</span>
-                </div>
-                {offer.promo.monthly && <div className={styles.planSaving}>{offer.promo.monthly.label}</div>}
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setSelectedPlan('annual')}
-                className={`card ${styles.planCard} ${selectedPlan === 'annual' ? styles.planCardActive : ''}`}
-              >
-                <div className={styles.popularBadge}>★ {t('premiumPage.mostPopular')}</div>
-                {offer.promo.annual && <div className={styles.promoChip}>-{offer.promo.annual.pct}%</div>}
-                <div className={styles.planName}>{t('premiumPage.annual')}</div>
-                {offer.promo.annual && <div className={styles.planRegular}>{offer.promo.annual.regular}</div>}
-                <div className={styles.planPrice}>
-                  {offer.promo.annual ? offer.promo.annual.price : offer.prices.annual} <span className={styles.planPriceSuffix}>{priceSuffix('annual')}</span>
-                </div>
-                {offer.promo.annual
-                  ? <div className={styles.planSaving}>{offer.promo.annual.label}</div>
-                  : savingText && <div className={styles.planSaving}>{savingText}</div>}
-              </button>
-            </div>
-
-            <label className={styles.termsRow}>
-              <input
-                type="checkbox"
-                className={styles.termsCheckbox}
-                checked={termsAccepted}
-                onChange={e => setTermsAccepted(e.target.checked)}
-              />
-              <span className={styles.termsText}>
-                {trialEligible ? t('premiumPage.termsAcceptTrial', { days: trialDays }) : t('premiumPage.termsAccept')}
-              </span>
-            </label>
-
-            <button
-              onClick={isAndroid ? startAndroidPurchase : startCheckout}
-              disabled={!termsAccepted || androidPurchaseState === 'processing'}
-              className={`btn-primary premium-fx ${styles.ctaButton} ${styles.ctaGold}`}
-            >
-              <Crown size={16} />
-              {androidPurchaseState === 'processing'
-                ? t('premiumPage.androidPurchaseProcessing')
-                : (trialEligible ? t('premiumPage.startTrial', { days: trialDays }) : t('premiumPage.continueWithPlan', { plan: t(`premiumPage.${selectedPlan}`) }))}
-            </button>
-
-            {/* Android no abre ningún checkoutBox (Google muestra su propia
-                hoja de compra nativa) — solo un mensaje de error inline con
-                reintento, si algo falla antes/después de esa hoja. */}
-            {isAndroid && androidPurchaseState === 'error' && (
-              <div className={`${styles.checkoutStatus} ${styles.checkoutStatusSpaced}`}>
-                {t('premiumPage.androidPurchaseError')}
-                {androidPurchaseDetail && (
-                  <div className={styles.checkoutDetail}>
-                    {androidPurchaseDetail}
-                  </div>
-                )}
-                <div className={styles.retryRow}>
-                  <button type="button" onClick={startAndroidPurchase} className="btn-primary">
-                    {t('premiumPage.checkoutRetry')}
-                  </button>
-                </div>
-              </div>
-            )}
-          </>
-        )}
-
-        {/* Checkout embebido de Stripe — SOLO web/PWA (nunca en Android, ver
-            startAndroidPurchase()); el formulario real se monta dentro de
-            .checkoutBox, sin salir nunca de esta página */}
-        {!isAndroid && checkoutOpen && (
-          <div className={styles.checkoutBox}>
-            <button type="button" onClick={backToPlans} className={styles.backLink}>
-              <ArrowLeft size={14} />
-              {t('premiumPage.backToPlans')}
-            </button>
-
-            {checkoutState === 'loading' && (
-              <div className={styles.checkoutStatus}>{t('premiumPage.checkoutLoading')}</div>
-            )}
-
-            {checkoutState === 'confirming' && (
-              <div className={styles.checkoutStatus}>{t('premiumPage.checkoutConfirming')}</div>
-            )}
-
-            {checkoutState === 'error' && (
-              <div className={styles.checkoutStatus}>
-                {t('premiumPage.checkoutError')}
-                <div className={styles.retryRow}>
-                  <button type="button" onClick={startCheckout} className="btn-primary">
-                    {t('premiumPage.checkoutRetry')}
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {checkoutState === 'idle' && clientSecret && (
-              <EmbeddedCheckoutProvider stripe={stripePromise} options={checkoutOptions}>
-                <EmbeddedCheckout />
-              </EmbeddedCheckoutProvider>
-            )}
-          </div>
-        )}
-
-        {/* Referidos — quitado en v0.9.505 (pedido de Johnatan): no tenía
-            lógica real (`onClick={() => {}}`), un CTA de "invita amigos"
-            que no hace nada al tocarlo se siente roto. Vuelve a agregarse
-            cuando exista el sistema real de referidos. */}
-
-        {/* Letra pequeña — la mención de la prueba de 7 días (v0.9.506) solo
-            aparece para quien de verdad califica (trialEligible); quien ya
-            se suscribió antes no la ve, porque no aplica para él. Precio
-            dinámico según el plan elegido — antes decía "$50 MXN al mes"
-            fijo aunque el usuario hubiera elegido Anual. */}
-        <div className={styles.finePrint}>
-          <div className={styles.finePrintText}>
-            {t('premiumPage.restrictionsApply')}
-            {trialEligible && (<>
-              <br />
-              {t('premiumPage.trialFinePrint', {
-                price: offer.promo[selectedPlan]?.price || offer.prices[selectedPlan],
-                suffix: priceSuffix(selectedPlan),
-                days: trialDays,
-              })}
-            </>)}
-            {offer.promo[selectedPlan]?.fine && (<>
-              <br />
-              {offer.promo[selectedPlan].fine}
-            </>)}
-          </div>
-          <div className={styles.cancelAnytime}>
-            <ShieldCheck size={13} color="var(--paid)" />
-            {t('premiumPage.cancelAnytime')}
-          </div>
-          <div className={styles.restoreRow}>
-            {/* "Restaurar compras" solo tiene sentido en la app de Android
-                (Google Play Billing) — en web/PWA el cobro es por Stripe,
-                que ya tiene su propia pantalla de gestión de suscripción
-                (SettingsSubscriptionPage.jsx), así que ahí este texto no se
-                muestra en vez de quedarse como enlace muerto (v0.9.525). */}
-            {isAndroid && (
-              <button
-                type="button"
-                onClick={handleRestorePurchases}
-                disabled={restoreState === 'restoring'}
-                className={styles.restoreLink}
-              >
-                {t('premiumPage.restorePurchases')}
-              </button>
-            )}{isAndroid && ' '}
-            <a href="/terminos.html" target="_blank" rel="noopener noreferrer" className={styles.termsAnchor}>{t('authPage.termsLink')}</a>
-          </div>
-          {isAndroid && restoreState !== 'idle' && (
-            <div className={`${styles.restoreStatus} ${restoreState === 'error' ? styles.restoreStatusError : ''}`}>
-              {restoreState === 'restoring' && t('premiumPage.restoringPurchases')}
-              {restoreState === 'success' && t('premiumPage.restoreSuccess')}
-              {restoreState === 'empty' && t('premiumPage.restoreEmpty')}
-              {restoreState === 'error' && t('premiumPage.restoreError')}
-            </div>
-          )}
-        </div>
-
-      </div>
+      )}
     </div>
   )
 }

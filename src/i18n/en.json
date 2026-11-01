@@ -2469,13 +2469,16 @@
   "premiumThanks": {
     "title": "Thanks for subscribing!",
     "subtitle": "You're Premium now. Enjoy every LunaPay feature.",
-    "planLine": "{{plan}} plan",
-    "activeLine": "Subscription active since {{date}}",
-    "trialLine": "Your free trial ends on {{date}}, when your first charge is made",
     "question": "Want to keep track of this payment?",
     "hint": "Add it as a recurring payment so LunaPay reminds you when it renews. You can change the details before saving.",
     "addPayment": "Add as a new payment",
-    "later": "Not now"
+    "later": "Not now",
+    "previewTitle": "How your payment would look",
+    "category": "Subscriptions",
+    "repeatsMonthly": "Repeats every month",
+    "repeatsAnnual": "Repeats every year",
+    "firstCharge": "First charge",
+    "nextRenewal": "Next renewal"
   },
   "rateApp": {
     "title": "Enjoying LunaPay?",

@@ -1,466 +1,151 @@
-/* Solo las clases nuevas de esta sesión (selección de plan, checkbox de
-   términos, contenedor del checkout embebido, hero y beneficios de
-   v0.9.505). El resto de PremiumPage.jsx sigue con estilos inline a
-   propósito — archivo excluido de la migración a CSS Modules desde antes
-   de esta sesión (ver CONTEXT.md), fuera de alcance de este cambio. */
+/* Premium (v0.9.989). Una sola estructura para móvil, tablet vertical y
+   escritorio; `data-pm` (desk | tablet | mobile) cambia la distribución.
+   Capas de DISENO.md: gris → blanco (--desk-card + sombra) → gris claro
+   (--desk-chip). Dorado solo para lo Premium. Solo tokens. */
 
-/* ── Hero (v0.9.505) ──────────────────────────────────────────────────────
-   Degradado vía var(--premium-hero-bg) — EXCEPCIÓN NUEVA a la Regla 18
-   ("Sin gradientes"), documentada ahí, solo para este hero. A diferencia
-   del resto de --premium-*, este SÍ tiene un valor distinto por tema (ver
-   index.css) — pedido explícito de Johnatan. */
-/* Entrada y salida (Regla 29) — fade simple, mismo criterio que el resto de
-   "pantallas empujadas a pantalla completa" de la app (GoalDetailPanel.jsx/
-   RecurrentDetailPanel.jsx usan el mismo `fadeIn .2s ease`); aquí además con
-   su contraparte de salida, que a esos 2 les falta (fuera de alcance de
-   este cambio arreglarlos, no se tocaron). Duración en `ANIM_MS`
-   (PremiumPage.jsx, Regla 30). */
-.entering {
-  animation: pageFadeIn 0.2s ease both;
-}
+.page { position: fixed; inset: 0; z-index: 600; background: var(--desk-panel); overflow-y: auto; color: var(--text); }
+.entering { animation: pageIn 0.2s ease both; }
+.closing { animation: pageOut 0.2s ease both; }
+@keyframes pageIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes pageOut { from { opacity: 1; } to { opacity: 0; } }
 
-.closing {
-  animation: pageFadeOut 0.2s ease both;
-}
+/* Columna central (móvil y tablet) */
+.col { display: flex; flex-direction: column; gap: 0.875rem; margin: 0 auto; padding: 1rem 1rem 1.5rem; max-width: 40rem; }
+[data-pm="mobile"] .col { padding-bottom: 9.5rem; }
+[data-pm="tablet"] .col { padding-top: 1.75rem; padding-bottom: 3rem; }
 
-@keyframes pageFadeIn {
-  from { opacity: 0; }
-  to   { opacity: 1; }
-}
+/* Héroe dorado (excepción R18 aprobada: hero dorado de Premium) */
+.hero { position: relative; overflow: hidden; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 0.875rem; padding: 3.875rem 1.375rem 1.625rem; border-radius: 1.75rem; background: var(--premium-hero-bg); color: var(--premium-hero-ink); flex: none; }
+[data-pm="tablet"] .hero { flex-direction: row; text-align: left; gap: 1.375rem; padding: 2.125rem 2.125rem 2.125rem 5.75rem; min-height: 9.375rem; }
+.heroGlow { position: absolute; top: 1rem; left: 50%; width: 10.5rem; height: 10.5rem; border-radius: 50%; background: var(--premium-hero-glow); transform: translateX(-50%); animation: glow 3s ease-in-out infinite; pointer-events: none; }
+[data-pm="tablet"] .heroGlow { left: 9rem; top: -0.5rem; }
+.heroClose { position: absolute; top: 0.875rem; left: 0.875rem; z-index: 1; width: 2.5rem; height: 2.5rem; display: grid; place-items: center; border: 0; border-radius: 50%; background: var(--desk-card); box-shadow: var(--desk-shadow); color: var(--text); cursor: pointer; }
+[data-pm="tablet"] .heroClose { top: 50%; left: 1.375rem; transform: translateY(-50%); }
+.crown { position: relative; flex: none; display: grid; place-items: center; width: 4.75rem; height: 4.75rem; border-radius: 50%; background: var(--premium-hero-crown-bg); box-shadow: 0 0.5rem 1.5rem var(--premium-hero-crown-shadow); animation: float 3s ease-in-out infinite; }
+[data-pm="tablet"] .crown { width: 5.25rem; height: 5.25rem; }
+.heroText { position: relative; }
+.heroTitle { margin: 0; font-size: 1.625rem; font-weight: 800; letter-spacing: -0.04em; }
+[data-pm="tablet"] .heroTitle { font-size: 2rem; }
+.heroSub { margin: 0.375rem auto 0; max-width: 30ch; font-size: 0.84375rem; font-weight: 500; line-height: 1.45; }
+[data-pm="tablet"] .heroSub { margin-left: 0; max-width: 46ch; font-size: 0.9375rem; }
+.spark { position: absolute; color: var(--premium-hero-sparkle); filter: var(--premium-hero-sparkle-filter); }
+.spark1 { top: 1.375rem; right: 2.875rem; animation: sparkle 2.6s ease-in-out infinite; }
+.spark2 { top: 3.625rem; right: 1.5rem; animation: sparkle 2.6s ease-in-out 0.6s infinite; }
+.spark3 { top: 5.375rem; left: 2.5rem; animation: sparkle 2.6s ease-in-out 1.2s infinite; }
+@keyframes glow { 0%, 100% { opacity: 0.6; transform: translateX(-50%) scale(1); } 50% { opacity: 0.9; transform: translateX(-50%) scale(1.08); } }
+@keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-0.4rem); } }
+@keyframes sparkle { 0%, 100% { opacity: 0; transform: scale(0.4) rotate(0deg); } 50% { opacity: 1; transform: scale(1) rotate(15deg); } }
 
-@keyframes pageFadeOut {
-  from { opacity: 1; }
-  to   { opacity: 0; }
-}
+/* Beneficios */
+.benefits { display: flex; flex-direction: column; flex: none; padding: 0.25rem 1.125rem; border-radius: 1.5rem; background: var(--desk-card); box-shadow: var(--desk-shadow); }
+.benefit { display: flex; align-items: center; gap: 0.875rem; padding: 0.8125rem 0; border-top: 1px solid var(--desk-hair); }
+.benefit:first-child { border-top: 0; }
+.benefitIc { width: 2.625rem; height: 2.625rem; flex: none; display: grid; place-items: center; border-radius: 0.875rem; background: var(--desk-chip); }
+.benefitTitle { font-size: 0.9375rem; font-weight: 600; color: var(--text); }
+.benefitShort, .benefitLong { margin-top: 0.0625rem; font-size: 0.78125rem; line-height: 1.4; color: var(--muted); }
+.benefitLong { display: none; }
+[data-pm="tablet"] .benefits { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.75rem; padding: 0; background: none; box-shadow: none; }
+[data-pm="tablet"] .benefit { flex-direction: column; align-items: flex-start; gap: 0.625rem; padding: 1.125rem; border: 0; border-radius: 1.5rem; background: var(--desk-card); box-shadow: var(--desk-shadow); }
+[data-pm="tablet"] .benefitIc { width: 3rem; height: 3rem; border-radius: 1rem; }
+[data-pm="tablet"] .benefitTitle { font-size: 1rem; }
+[data-pm="tablet"] .benefitShort { display: none; }
+[data-pm="tablet"] .benefitLong, [data-pm="desk"] .benefitLong { display: block; font-size: 0.8125rem; }
+[data-pm="desk"] .benefitShort { display: none; }
 
-.hero {
-  position: relative;
-  padding: 48px 20px 40px;
-  text-align: center;
-  overflow: hidden;
-  background: var(--premium-hero-bg);
-}
+/* Avisos */
+.banner { display: flex; align-items: flex-start; gap: 0.875rem; padding: 1.125rem; border-radius: 1.5rem; background: var(--desk-card); box-shadow: var(--desk-shadow); font-size: 0.875rem; line-height: 1.5; flex: none; }
+.bannerIc { width: 2.625rem; height: 2.625rem; flex: none; display: grid; place-items: center; border-radius: 0.875rem; background: var(--premium-gold); color: var(--premium-gold-text); }
+.bannerFlat { background: var(--desk-chip); box-shadow: none; font-size: 0.84375rem; }
 
-.heroGlow {
-  position: absolute;
-  top: 14px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 170px;
-  height: 170px;
-  border-radius: 50%;
-  background: var(--premium-hero-glow);
-  animation: heroGlowPulse 3s ease-in-out infinite;
-  pointer-events: none;
-}
+/* Prueba y etiqueta */
+.trial { align-self: flex-start; display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.5rem 0.875rem; border-radius: 99px; background: var(--premium-gold); color: var(--premium-gold-text); font-size: 0.8125rem; font-weight: 700; flex: none; }
+.lab { margin: 0.375rem 0.25rem -0.25rem; font-size: 0.71875rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
 
-.heroCloseButton {
-  position: absolute;
-  top: 16px;
-  left: 16px;
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  background: var(--premium-back-btn-bg);
-  border: none;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-}
+/* Planes: filas en móvil, dos tarjetas en tablet y escritorio */
+.plans { display: flex; flex-direction: column; gap: 0.625rem; flex: none; }
+.plan { position: relative; display: grid; grid-template-columns: auto 1fr auto; grid-template-areas: "rad name price" "rad sub price"; align-items: center; column-gap: 0.875rem; row-gap: 0.0625rem; padding: 1rem 1rem 1rem 1.125rem; border: 0; border-radius: 1.375rem; background: var(--desk-card); box-shadow: var(--desk-shadow); color: var(--text); font: inherit; text-align: left; cursor: pointer; transition: box-shadow 0.2s; }
+.planOn { box-shadow: var(--desk-shadow), inset 0 0 0 2px var(--premium-gold); }
+.radio { grid-area: rad; width: 1.375rem; height: 1.375rem; box-sizing: border-box; border-radius: 50%; border: 2px solid var(--desk-hatch); }
+.planOn .radio { border-color: var(--premium-gold); background: radial-gradient(circle, var(--premium-gold) 0 45%, transparent 50%); }
+.planName { grid-area: name; font-size: 0.96875rem; font-weight: 600; align-self: end; }
+.planSub { grid-area: sub; font-size: 0.78125rem; color: var(--muted); align-self: start; }
+.noSub .planName { grid-row: 1 / 3; align-self: center; }
+.planPrice { grid-area: price; display: flex; flex-direction: column; align-items: flex-end; line-height: 1.1; }
+.planPrice b { font-size: 1.5rem; font-weight: 700; letter-spacing: -0.04em; }
+.planPrice small { font-size: 0.71875rem; font-weight: 500; color: var(--muted); }
+.old { display: flex; align-items: center; gap: 0.375rem; margin-bottom: 0.125rem; }
+.promoChip { padding: 0.1875rem 0.5rem; border-radius: 99px; background: var(--danger); color: var(--on-color); font-size: 0.6875rem; font-weight: 700; line-height: 1.2; animation: chipIn 0.3s cubic-bezier(0.22, 1, 0.36, 1) backwards; }
+.planRegular { font-size: 0.78125rem; color: var(--muted); text-decoration: line-through; }
+.star { position: absolute; top: -0.5rem; left: 3.25rem; z-index: 1; padding: 0.125rem 0.5rem; border-radius: 99px; background: var(--premium-gold); color: var(--premium-gold-text); font-size: 0.65625rem; font-weight: 700; }
+@keyframes chipIn { from { opacity: 0; transform: translateY(-0.25rem); } }
 
-.heroCrownWrap {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 84px;
-  height: 84px;
-  border-radius: 50%;
-  background: var(--premium-hero-crown-bg);
-  box-shadow: 0 8px 24px var(--premium-hero-crown-shadow);
-  animation: heroCrownFloat 3s ease-in-out infinite;
-}
+[data-pm="tablet"] .plans, [data-pm="desk"] .plans { flex-direction: row; gap: 0.875rem; }
+[data-pm="tablet"] .plan, [data-pm="desk"] .plan { flex: 1; min-width: 0; grid-template-columns: 1fr; grid-template-areas: "name" "price" "sub"; justify-items: start; row-gap: 0.25rem; padding: 1.5rem 1.375rem; background: var(--desk-chip); box-shadow: none; }
+[data-pm="tablet"] .planOn, [data-pm="desk"] .planOn { box-shadow: inset 0 0 0 2px var(--premium-gold); }
+[data-pm="tablet"] .noSub .planName, [data-pm="desk"] .noSub .planName { grid-row: auto; }
+[data-pm="tablet"] .radio, [data-pm="desk"] .radio { position: absolute; top: 1.25rem; right: 1.25rem; }
+[data-pm="tablet"] .star, [data-pm="desk"] .star { top: -0.75rem; left: 1.25rem; padding: 0.25rem 0.625rem; }
+[data-pm="tablet"] .planName, [data-pm="desk"] .planName { align-self: auto; font-size: 0.875rem; color: var(--muted); }
+[data-pm="tablet"] .planPrice, [data-pm="desk"] .planPrice { align-items: flex-start; }
+[data-pm="tablet"] .planPrice b, [data-pm="desk"] .planPrice b { font-size: 2.125rem; letter-spacing: -0.05em; }
+[data-pm="tablet"] .planSub, [data-pm="desk"] .planSub { align-self: auto; }
+[data-pm="tablet"] .old, [data-pm="desk"] .old { margin-bottom: 0; }
+[data-pm="tablet"] .promoChip, [data-pm="desk"] .promoChip { position: absolute; top: 1.125rem; right: 3.25rem; }
 
-.heroTitle {
-  margin-top: 16px;
-  font-size: 22px;
-  font-weight: 800;
-  color: var(--premium-hero-ink);
-  position: relative;
-}
+/* Términos y botón */
+.terms { display: flex; align-items: flex-start; gap: 0.75rem; padding: 0.125rem 0.25rem; font-size: 0.78125rem; line-height: 1.5; color: var(--muted); flex: none; }
+.checkbox { width: 1.375rem; height: 1.375rem; flex: none; margin: 0; accent-color: var(--premium-gold); }
+.cta { display: flex; align-items: center; justify-content: center; gap: 0.625rem; width: 100%; height: 3.5rem; margin: 0; padding: 0 1rem; border: 0; border-radius: 99px; background: var(--premium-gold); color: var(--premium-gold-text); font: inherit; font-size: 1rem; font-weight: 700; cursor: pointer; flex: none; }
+.cta:disabled { background: var(--desk-chip); color: var(--muted); cursor: default; }
+[data-pm="desk"] .cta { height: 3.75rem; font-size: 1.0625rem; }
 
-.heroSubtitle {
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--premium-hero-ink);
-  margin-top: 6px;
-  line-height: 1.5;
-  position: relative;
-}
+/* Pie fijo (móvil) */
+.foot { position: fixed; left: 0; right: 0; bottom: 0; z-index: 1; display: flex; flex-direction: column; gap: 0.5rem; padding: 0.75rem 1rem max(1.5rem, env(safe-area-inset-bottom)); background: var(--desk-panel); box-shadow: 0 -1px 0 var(--desk-hair); }
 
-/* Onda inferior — misma curva que cada "escena" de OnboardingPage.jsx
-   (WAVE_PATH, definida en PremiumPage.jsx), pedido explícito de Johnatan.
-   Rellena con var(--bg): funde el hero con el cuerpo de la página. */
-.heroWave {
-  position: absolute;
-  bottom: -1px;
-  left: 0;
-  width: 100%;
-  height: 42px;
-  display: block;
-}
+/* Panel de planes (tablet) */
+.panel { display: flex; flex-direction: column; gap: 0.875rem; padding: 1.375rem; border-radius: 1.75rem; background: var(--desk-card); box-shadow: var(--desk-shadow); flex: none; }
+.panelHead { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; flex-wrap: wrap; }
+.rightTitle { margin: 0; font-size: 1.375rem; font-weight: 700; letter-spacing: -0.03em; color: var(--text); }
 
-.heroSparkle {
-  position: absolute;
-  color: var(--premium-hero-sparkle);
-  filter: var(--premium-hero-sparkle-filter);
-}
+/* Letra pequeña */
+.fine { flex: none; padding: 0 0.25rem; font-size: 0.75rem; line-height: 1.6; color: var(--muted); }
+.safe { display: flex; align-items: center; gap: 0.375rem; margin-top: 0.25rem; color: var(--paid); }
+.link { padding: 0; border: 0; background: none; color: var(--accent); font: inherit; text-decoration: underline; cursor: pointer; }
+.restoreErr { color: var(--danger); }
+[data-pm="mobile"] .foot .safe { display: none; }
 
-.heroSparkle1 { top: 24px;  right: 48px; animation: heroSparkle 2.6s ease-in-out infinite; }
-.heroSparkle2 { top: 70px;  left: 40px;  animation: heroSparkle 2.6s ease-in-out 0.6s infinite; }
-.heroSparkle3 { top: 110px; right: 80px; animation: heroSparkle 2.6s ease-in-out 1.2s infinite; }
+/* Pago de Stripe */
+.back { align-self: flex-start; display: inline-flex; align-items: center; gap: 0.5rem; height: 2.5rem; padding: 0 1rem 0 0.75rem; border: 0; border-radius: 99px; background: var(--desk-card); box-shadow: var(--desk-shadow); color: var(--text); font: inherit; font-size: 0.84375rem; font-weight: 600; cursor: pointer; flex: none; }
+.pay { display: flex; flex-direction: column; gap: 0.875rem; padding: 1.25rem; border-radius: 1.5rem; background: var(--desk-card); box-shadow: var(--desk-shadow); flex: none; }
+.payTitle { margin: 0; font-size: 1.25rem; font-weight: 700; color: var(--text); }
+[data-pm="desk"] .pay { padding: 0; background: none; box-shadow: none; flex: 1; }
+[data-pm="desk"] .payTitle { font-size: 1.625rem; }
+.stripeBox { width: 100%; max-width: 35rem; margin: 0 auto; border-radius: 1.25rem; overflow: hidden; }
+.status { display: flex; flex-direction: column; align-items: flex-start; gap: 0.75rem; padding: 1.125rem 1.25rem; border-radius: 1.25rem; background: var(--desk-chip); color: var(--text); font-size: 0.90625rem; line-height: 1.5; flex: none; }
+.detail { font-size: 0.6875rem; opacity: 0.7; word-break: break-word; }
+.retry { height: 2.5rem; padding: 0 1.25rem; border: 0; border-radius: 99px; background: var(--accent); color: var(--on-color); font: inherit; font-weight: 600; cursor: pointer; }
 
-@keyframes heroGlowPulse {
-  0%, 100% { opacity: 0.6;  transform: translateX(-50%) scale(1); }
-  50%      { opacity: 0.9;  transform: translateX(-50%) scale(1.08); }
-}
-
-@keyframes heroCrownFloat {
-  0%, 100% { transform: translateY(0); }
-  50%      { transform: translateY(-8px); }
-}
-
-@keyframes heroSparkle {
-  0%, 100% { opacity: 0;   transform: scale(0.4) rotate(0deg); }
-  50%      { opacity: 1;   transform: scale(1) rotate(15deg); }
-}
-
-/* ── Beneficios (v0.9.505) ────────────────────────────────────────────────
-   Antes: bloque sólido var(--accent) de borde a borde — Johnatan: "no se
-   lee bien el texto". Ahora: misma superficie que cualquier .card de la
-   app (var(--surface), Regla de contraste normal en los 2 temas) + chip
-   circular dorado con el ícono, coherente con el hero. */
-.benefitsList {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.benefitCard {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  background: var(--surface);
-  border-radius: var(--radius);
-  padding: 12px;
-}
-
-.benefitIconChip {
-  width: 38px;
-  height: 38px;
-  border-radius: 50%;
-  background: var(--premium-gold);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.benefitTitle {
-  font-size: 14px;
-  font-weight: 700;
-  color: var(--text);
-}
-
-.benefitDesc {
-  font-size: 12px;
-  font-weight: 400;
-  color: var(--muted);
-  margin-top: 2px;
-  line-height: 1.4;
-}
-
-.plansWrap {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px;
-  padding-top: 8px;
-}
-
-.planCard {
-  text-align: left;
-  cursor: pointer;
-  width: 100%;
-  padding: 16px 14px 14px;
-  font-family: inherit;
-  position: relative;
-  border-width: 1.5px;
-  border-style: solid;
-  border-color: transparent;
-}
-
-/* Regla 20: clase local + global (`card`) para sobreescribir el borde que
-   `.card` ya define — nunca un selector plano de igual especificidad. */
-:global(.card).planCardActive {
-  border-color: var(--accent);
-}
-
-.popularBadge {
-  position: absolute;
-  top: -10px;
-  left: 14px;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  background: var(--premium-gold);
-  color: var(--premium-gold-text);
-  font-size: 10.5px;
-  font-weight: 700;
-  padding: 3px 10px;
-  border-radius: var(--radius-full);
-}
-
-.planName {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--text);
-}
-
-.planPrice {
-  font-size: 24px;
-  font-weight: 700;
-  color: var(--text);
-  margin-top: 4px;
-}
-
-/* Promoción (v0.9.962, variante B aprobada por Johnatan): chip rojo sólido
-   con el % en la esquina, precio normal tachado y precio de promoción grande. */
-.promoChip {
-  position: absolute;
-  top: 0.75rem;
-  right: 0.75rem;
-  padding: 0.1875rem 0.5625rem;
-  border-radius: 99px;
-  background: var(--danger);
-  color: var(--on-color);
-  font-size: 0.75rem;
-  font-weight: 700;
-  line-height: 1.2;
-  animation: promoIn 300ms cubic-bezier(0.22, 1, 0.36, 1) backwards;
-}
-
-.planRegular {
-  margin-top: 0.25rem;
-  font-size: 0.875rem;
-  font-weight: 500;
-  color: var(--muted);
-  text-decoration: line-through;
-}
-
-@keyframes promoIn {
-  from { opacity: 0; transform: translateY(-0.25rem); }
-}
+/* Escritorio: beneficios a la izquierda, compra a la derecha */
+[data-pm="desk"].page { display: grid; grid-template-columns: minmax(0, 56fr) minmax(0, 44fr); grid-template-rows: auto 1fr; }
+.top { grid-column: 1 / -1; display: flex; align-items: center; justify-content: space-between; padding: 1.375rem 3rem; }
+.deskBack { display: inline-flex; align-items: center; gap: 0.625rem; height: 2.75rem; padding: 0 1.25rem 0 1rem; border: 0; border-radius: 99px; background: var(--desk-chip); color: var(--text); font: inherit; font-size: 0.9375rem; font-weight: 600; cursor: pointer; }
+.deskClose { width: 2.75rem; height: 2.75rem; display: grid; place-items: center; border: 0; border-radius: 50%; background: var(--desk-chip); color: var(--text); cursor: pointer; }
+.left { display: flex; flex-direction: column; gap: 1.375rem; min-width: 0; padding: 1.5rem 5rem 3.75rem 7.5rem; }
+.titleRow { display: flex; align-items: center; gap: 1.125rem; }
+.crownTile { width: 4rem; height: 4rem; flex: none; display: grid; place-items: center; border-radius: 1.375rem; background: var(--premium-gold); }
+.title { margin: 0; font-size: 2.75rem; letter-spacing: -0.04em; color: var(--text); }
+.title span { color: var(--desk-gold-text); }
+.subtitle { margin: 0; max-width: 35rem; font-size: 1.125rem; line-height: 1.5; color: var(--muted); }
+[data-pm="desk"] .benefits { margin-top: 0.625rem; padding: 0; background: none; box-shadow: none; border-radius: 0; }
+[data-pm="desk"] .benefit { align-items: flex-start; gap: 1.125rem; padding: 1.25rem 0; }
+[data-pm="desk"] .benefitIc { width: 3.25rem; height: 3.25rem; border-radius: 1.125rem; }
+[data-pm="desk"] .benefitTitle { font-size: 1.1875rem; font-weight: 700; }
+[data-pm="desk"] .benefitLong { max-width: 32.5rem; margin-top: 0.25rem; font-size: 0.90625rem; line-height: 1.5; }
+.right { display: flex; flex-direction: column; gap: 1.25rem; min-width: 0; margin: 0 3rem 2.25rem 0; padding: 2.75rem 3rem; border-radius: 2.25rem; background: var(--desk-card); box-shadow: var(--desk-shadow); }
+[data-pm="desk"] .rightTitle { font-size: 1.75rem; }
+[data-pm="desk"] .right .banner { background: var(--desk-chip); box-shadow: none; }
+[data-pm="desk"] .fine { margin-top: auto; }
 
 @media (prefers-reduced-motion: reduce) {
-  .promoChip { animation: none; }
-}
-
-.planPriceSuffix {
-  font-size: 13px;
-  font-weight: 500;
-}
-
-.termsRow {
-  display: flex;
-  align-items: flex-start;
-  gap: 8px;
-  margin-top: 16px;
-  cursor: pointer;
-}
-
-.termsCheckbox {
-  margin-top: 2px;
-  width: 16px;
-  height: 16px;
-  flex-shrink: 0;
-  accent-color: var(--accent);
-  cursor: pointer;
-}
-
-.termsText {
-  font-size: 11.5px;
-  color: var(--text);
-  opacity: 0.85;
-  line-height: 1.5;
-}
-
-.ctaButton:disabled {
-  opacity: 0.45;
-  cursor: not-allowed;
-}
-
-.checkoutBox {
-  margin-top: 16px;
-  background: var(--surface);
-  border-radius: var(--radius);
-  padding: 20px 16px;
-}
-
-.backLink {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 12.5px;
-  font-weight: 600;
-  color: var(--accent);
-  cursor: pointer;
-  background: none;
-  border: none;
-  padding: 0;
-  margin-bottom: 14px;
-  font-family: inherit;
-}
-
-.checkoutStatus {
-  text-align: center;
-  font-size: 12.5px;
-  color: var(--text);
-  opacity: 0.8;
-  padding: 24px 0;
-}
-
-/* Restaurar compras (Google Play Billing, Android) — NUEVO (v0.9.525).
-   Mismo criterio que .backLink: botón real, sin apariencia de botón,
-   heredando tipografía del texto que lo rodea (footer de restricciones). */
-.restoreLink {
-  background: none;
-  border: none;
-  padding: 0;
-  margin: 0;
-  font: inherit;
-  font-size: inherit;
-  font-weight: inherit;
-  color: inherit;
-  text-decoration: underline;
-  cursor: pointer;
-}
-
-.restoreLink:disabled {
-  cursor: not-allowed;
-  opacity: 0.6;
-}
-
-/* Avisos de origen de suscripción (v0.9.526) — mismo criterio de superficie
-   que .benefitCard (var(--surface), sin colores hardcodeados), pero con un
-   borde izquierdo dorado para diferenciarlo visualmente de una tarjeta de
-   beneficio normal (es información de estado, no un beneficio más). Se
-   muestra arriba de los planes/CTA (o en su lugar, cuando hidePurchaseFlow
-   los oculta) — ver PremiumPage.jsx. */
-.sourceBanner {
-  background: var(--surface);
-  border-radius: var(--radius);
-  padding: 12px 14px;
-  margin-top: 16px;
-  font-size: 12.5px;
-  font-weight: 500;
-  color: var(--text);
-  line-height: 1.5;
-}
-
-
-/* "7 días gratis" visible antes de los planes */
-.trialPill {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-top: 18px;
-  padding: 0 2px;
-  color: var(--text);
-  font-size: 13px;
-  font-weight: 500;
-}
-.planSaving {
-  margin-top: 6px;
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--accent);
-  line-height: 1.35;
-}
-
-/* ── Antes `style={{}}` inline en PremiumPage.jsx (v0.9.724, Regla 12) ───── */
-.page {
-  position: fixed;
-  inset: 0;
-  z-index: 600;
-  background: var(--bg);
-  overflow-y: auto;
-}
-.content { max-width: 420px; margin: 0 auto; padding: 20px 20px 40px; }
-.choosePlanTitle {
-  font-size: 17px;
-  font-weight: 700;
-  color: var(--text);
-  margin-top: 18px;
-  margin-bottom: 12px;
-}
-/* Clase global + local (Regla 20): el inline anterior ganaba sobre .btn-primary */
-:global(.btn-primary).ctaGold {
-  margin-top: 14px;
-  background: var(--premium-gold);
-  color: var(--premium-gold-text);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-}
-.checkoutStatusSpaced { margin-top: 10px; }
-.checkoutDetail { margin-top: 8px; font-size: 11px; opacity: 0.7; word-break: break-word; }
-.retryRow { margin-top: 12px; }
-.finePrint { text-align: center; margin-top: 16px; }
-.finePrintText {
-  font-size: 10.5px;
-  font-weight: 400;
-  color: var(--text);
-  opacity: 0.7;
-  line-height: 1.6;
-}
-.cancelAnytime {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 5px;
-  margin-top: 10px;
-  font-size: 11.5px;
-  font-weight: 500;
-  color: var(--text);
-}
-.restoreRow {
-  font-size: 10.5px;
-  font-weight: 400;
-  color: var(--text);
-  opacity: 0.6;
-  margin-top: 10px;
-}
-.termsAnchor { color: var(--accent); opacity: 1; }
-.restoreStatus {
-  font-size: 10.5px;
-  font-weight: 500;
-  text-align: center;
-  margin-top: 6px;
-  color: var(--text);
-}
-.restoreStatusError { color: var(--danger); }
-
-/* ── Tablet vertical (≥768px, v0.9.809): cabecera más amplia, beneficios en
-   cuadrícula de 2×2 y el resto en una sola columna de 632px. ─────────── */
-@media (min-width: 768px) {
-  .hero { padding: 56px 20px 64px; }
-  .heroTitle { font-size: 26px; }
-  .heroSubtitle { font-size: 14px; }
-  .content { max-width: 632px; }
-  .benefitsList {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
+  .entering, .closing, .heroGlow, .crown, .spark, .promoChip { animation: none; }
 }
