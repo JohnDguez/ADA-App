@@ -28,10 +28,11 @@
 .panelExiting { animation: bsDown .2s ease both; }
 
 .handle {
-  width: 38px; height: 4px; border-radius: 2px;
-  background: var(--label-variable); opacity: 0.4; margin: 0 auto 14px;
+  /* Mismo asa y título que el Modal único (v0.9.987). */
+  width: 2.5rem; height: 0.3125rem; border-radius: 9px;
+  background: color-mix(in srgb, var(--text) 20%, var(--desk-panel)); margin: 0 auto 12px;
 }
-.title { font-size: 17px; font-weight: 700; color: var(--text); margin-bottom: 12px; }
+.title { font-size: 1.3125rem; font-weight: 700; letter-spacing: -0.3px; color: var(--text); margin-bottom: 12px; }
 
 @keyframes bsUp      { from { transform: translateY(100%); } to { transform: translateY(0); } }
 @keyframes bsDown    { to   { transform: translateY(100%); } }

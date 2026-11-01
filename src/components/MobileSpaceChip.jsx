@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import i18n from '../i18n'
 import { Plus, UserRound, Crown, UsersRound, ChevronDown, Bell } from 'lucide-react'
-import { BottomSheet } from './BottomSheet'
+import { Modal } from './Modal'
 import styles from './MobileSpaceChip.module.css'
 
 // Selector de espacio en móvil (v0.9.887, mockup aprobado): un chip con la
@@ -81,8 +81,9 @@ export function MobileSpaceChip({ activeSpaceId, sharedSpaces, profile, stats = 
         {children}
       </div>
 
-      <BottomSheet open={open} title={noSpaces ? t('spaceChip.newTitle') : t('spaceChip.sheetTitle')} onClose={() => setOpen(false)} modal>
-        <p className={styles.intro}>{noSpaces ? t('spaceChip.newIntro') : t('spaceChip.sheetIntro')}</p>
+      {/* Modal único (v0.9.987): hoja con asa, título + ✕ y la lista en panel. */}
+      <Modal open={open} onClose={() => setOpen(false)} title={noSpaces ? t('spaceChip.newTitle') : t('spaceChip.sheetTitle')}
+        desc={noSpaces ? t('spaceChip.newIntro') : t('spaceChip.sheetIntro')}>
         {noSpaces && (
           <div className={styles.perks}>
             <div className={styles.perk}><span className={styles.perkIc}><UsersRound size={16} /></span><div><b>{t('spaceChip.perk1Title')}</b>{t('spaceChip.perk1Text')}</div></div>
@@ -114,7 +115,7 @@ export function MobileSpaceChip({ activeSpaceId, sharedSpaces, profile, stats = 
             {noSpaces && <button type="button" className={styles.ctaAlt} onClick={() => pick('new:join')}>{t('spaceChip.haveCode')}</button>}
           </>
         )}
-      </BottomSheet>
+      </Modal>
     </>
   )
 }
