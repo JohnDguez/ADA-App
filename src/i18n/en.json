@@ -1992,6 +1992,14 @@
     }
   },
   "patchNotes": {
+    "v0_9_991": {
+      "item0": "New design across the app: windows, forms and confirmations refreshed on phone, tablet and desktop, with light and dark themes.",
+      "item1": "Redesigned Settings: Notifications, Appearance, Language, Account, Export and a new full page to Import your payments.",
+      "item2": "Premium refreshed: a clearer plans screen with the free trial and promotions front and center.",
+      "item3": "When you subscribe to Premium, we show you how the payment would look so you can add it to your reminders in one tap.",
+      "item4": "Switches that are off now look right in light and dark themes, and \"Move weekend paydays\" is readable again in dark theme.",
+      "item5": "Smoother enter and exit animations when opening and closing windows."
+    },
     "v0_9_183": {
       "item0": "New: pin your main tab. Tap the pin icon next to Personal or a Shared Space's name so it's the first thing you see every time you open or reload the app."
     },

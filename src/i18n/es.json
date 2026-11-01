@@ -1992,6 +1992,14 @@
     }
   },
   "patchNotes": {
+    "v0_9_991": {
+      "item0": "Nuevo diseño en toda la app: ventanas, formularios y confirmaciones renovados en celular, tablet y computadora, con tema claro y oscuro.",
+      "item1": "Ajustes rediseñados: Notificaciones, Apariencia, Idioma, Cuenta, Exportar y una nueva página completa para Importar tus pagos.",
+      "item2": "Premium renovado: pantalla de planes más clara, con la prueba gratis y las promociones bien a la vista.",
+      "item3": "Al suscribirte a Premium, te mostramos cómo quedaría el pago para que lo agregues a tus recordatorios con un toque.",
+      "item4": "Los interruptores apagados ahora se ven bien en tema claro y oscuro, y se corrigió la lectura de «Recorrer en fin de semana» en tema oscuro.",
+      "item5": "Animaciones de entrada y salida más fluidas al abrir y cerrar ventanas."
+    },
     "v0_9_183": {
       "item0": "Nuevo: fija tu pestaña principal. Toca el ícono de pin junto al nombre de Personal o de un Espacio Compartido para que esa sea la primera que veas cada vez que abras o recargues la app."
     },
