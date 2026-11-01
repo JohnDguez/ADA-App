@@ -23,8 +23,8 @@
 .radio { width: 1.125rem; height: 1.125rem; border-radius: 50%; border: 2px solid var(--border-mid); flex-shrink: 0; transition: border 0.3s cubic-bezier(0.22, 1, 0.36, 1); }
 
 .opt.optOn { background: var(--desk-pill); color: var(--desk-pill-ink); }
-.opt.optOn span { color: var(--on-color); }
-.opt.optOn .radio { border: 5px solid var(--on-color); }
+.opt.optOn span { color: var(--desk-pill-ink); }
+.opt.optOn .radio { border: 5px solid var(--desk-pill-ink); }
 
 @media (hover: hover) and (pointer: fine) {
   .inFill .opt:not(.optOn):hover { filter: none; background: var(--desk-hover-fill); }
