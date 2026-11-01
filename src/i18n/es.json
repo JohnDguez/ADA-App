@@ -567,7 +567,8 @@
         "exceedsAvailable": "No puedes aportar más de lo que tienes disponible ({{amount}})",
         "error": "Error al aportar al Fondo",
         "success": "Aportación registrada"
-      }
+      },
+      "availableLabel": "Tu disponible personal"
     },
     "manageFundModal": {
       "title": "Aportaciones al Fondo",

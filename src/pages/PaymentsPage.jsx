@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useMemo, useLayoutEffect } from 'react'
 import { useTranslation } from 'react-i18next'
-import { ChevronLeft, ChevronRight, MoreVertical, Plus, CircleDollarSign, ChevronDown, ChevronUp, Pencil, RotateCcw, Trash2, Check, Eye, Users, ArrowUp, ArrowDown, ArrowUpLeft, PiggyBank, Loader2, CreditCard } from 'lucide-react'
+import { ChevronLeft, ChevronRight, MoreVertical, Plus, CircleDollarSign, Pencil, RotateCcw, Trash2, Check, Eye, Users, ArrowUp, ArrowDown, ArrowUpLeft, PiggyBank, Loader2, CreditCard, Wallet } from 'lucide-react'
 import { PageHeader } from '../components/PageHeader'
 import { NewSharedSpacePanel } from '../components/NewSharedSpacePanel'
 import { EmptyState } from '../components/EmptyState'
@@ -13,18 +13,19 @@ import { supabase } from '../lib/supabase'
 import { showToast } from '../components/Toast'
 import { ConfirmDeleteModal } from '../components/ConfirmDeleteModal'
 import { CategoryListSkeleton, PaymentRowSkeleton, Bone } from '../components/SkeletonLoader'
-import AmountInput from '../components/AmountInput'
 import { PaymentMethodField } from '../components/PaymentMethodField'
 import { AddCardModal } from '../components/AddCardModal'
 import { DeskPayments } from './DeskPayments'
 import { useIsDesktop } from '../hooks/useIsDesktop'
 import { useIsMobile } from '../hooks/useIsMobile'
 import { MobilePayments } from './MobilePayments'
-import { AnchoredPop, useAnchor } from '../components/AnchoredPop'
+import { useAnchor } from '../components/AnchoredPop'
 import styles from './PaymentsPage.module.css'
-import dkp from '../components/PaymentDesk.module.css'
-import { Presence } from '../components/Presence'
 import { Collapse } from '../components/Collapse'
+import { Modal, QuickModal, ModalAmount } from '../components/Modal'
+import mk from '../components/Modal.module.css'
+import { Toggle } from '../components/SettingsShared'
+import { switchProps } from '../lib/a11y'
 import { usePresence } from '../lib/usePresence'
 import { useScrollLock } from '../lib/scrollLock'
 
@@ -125,20 +126,15 @@ function MethodRow({ label, amount, total, barClass, cards = [] }) {
 // Modales cortos de Pagos: en escritorio (≥1100px) se abren como popover
 // anclado al botón que los abrió; en móvil/tablet (o sin ancla) siguen como
 // hoja/modal. `children` va como función para evaluarse solo si hay algo que dibujar.
-function ModalOrPop({ show, onClose, manage = false, width, children }) {
-  const desk = useIsDesktop()
+function ModalOrPop({ show, onClose, width = 460, title, desc, icon, tone, primary, children }) {
+  // v0.9.985: Modal único — popover anclado en escritorio, hoja en móvil y
+  // diálogo en tablet (QuickModal). `children` va como función.
   const anchorRef = useAnchor(show)
-  if (desk && anchorRef.current) {
-    return <AnchoredPop open={!!show} onClose={onClose} anchorRef={anchorRef} width={width}>{children()}</AnchoredPop>
-  }
   return (
-    <Presence show={!!show}>{() => (
-      <div onClick={onClose} className={styles.modalOverlayBottom}>
-        <div onClick={e => e.stopPropagation()} className={`${styles.modalPanelBottom} ${manage ? styles.manageModalPanelExtra : ''}`}>
-          {children()}
-        </div>
-      </div>
-    )}</Presence>
+    <QuickModal open={!!show} onClose={onClose} anchorRef={anchorRef} icon={icon} tone={tone} title={title} desc={desc}
+      primary={primary} width={width} popWidth={Math.min(width, 440)}>
+      {show ? children() : null}
+    </QuickModal>
   )
 }
 
@@ -895,367 +891,153 @@ export function PaymentsPage({ payments, dataLoading = false, periodIncome, paym
         </div>
       )}
 
-      {/* ── Modal Remanente ── */}
-      <Presence show={!!(remModal)}>{() => (
-        <div
-          onClick={() => { setRemModal(false); setRemCustomOpen(false) }}
-          className={isDesktop ? dkp.overlay : styles.modalOverlayBottom}
-        >
-          <div
-            onClick={e => e.stopPropagation()}
-            className={isDesktop ? `${dkp.dialog} ${styles.remDlg}` : styles.modalPanelBottom}
-            role={isDesktop ? 'dialog' : undefined}
-            aria-modal={isDesktop ? 'true' : undefined}
-          >
-            <div className={styles.remanenteHeader}>
-              <div className={styles.remanenteIconWrapper}>
-                <CircleDollarSign size={36} color="var(--paid)" strokeWidth={1.8} className={styles.remanenteIcon} />
-              </div>
-              <div className={styles.remanenteTitle}>
-                {t('paymentsPage.remanente.title')}
-              </div>
-              <div className={styles.remanenteAmount}>
-                {fmt(remAmount)}
-              </div>
-              <div className={styles.remanenteQuestion}>
-                {t('paymentsPage.remanente.question')}
-              </div>
-            </div>
-
-            <div className={styles.remanenteActionsRow}>
-              <button
-                onClick={() => handleAddRemanente(remAmount)}
-                disabled={savingRem}
-                className={styles.remanenteConfirmButton}
-              >
-                {t('paymentsPage.remanente.confirm')}
-              </button>
-              <button
-                onClick={() => { setRemModal(false); setRemCustomOpen(false) }}
-                className={styles.remanenteCancelButton}
-              >
-                {t('paymentsPage.remanente.no')}
-              </button>
-            </div>
-
-            {/* Monto personalizado */}
-            <button
-              onClick={() => setRemCustomOpen(!remCustomOpen)}
-              className={styles.remanenteCustomToggle}
-            >
-              {remCustomOpen ? <ChevronUp size={15} /> : <ChevronDown size={15} />}
-              {t('paymentsPage.remanente.customToggle')}
-            </button>
-
-            {remCustomOpen && (
-              <div className={styles.remanenteCustomRow}>
-                <AmountInput
-                  placeholder={t('paymentsPage.remanente.customPlaceholder')}
-                  value={remCustomAmount}
-                  onChange={e => setRemCustomAmount(e.target.value)}
-                  className={styles.remanenteCustomInput}
-                />
-                <button
-                  onClick={() => {
-                    const amt = parseFloat(remCustomAmount)
-                    if (amt > 0) handleAddRemanente(amt)
-                  }}
-                  disabled={savingRem || !remCustomAmount || parseFloat(remCustomAmount) <= 0}
-                  className={`${styles.remanenteCustomButton} ${savingRem ? styles.remanenteCustomButtonDim : ''}`}
-                >
-                  {t('paymentsPage.remanente.add')}
-                </button>
-              </div>
-            )}
+      {/* ── Remanente del periodo anterior (v0.9.985, Modal único) ── */}
+      <Modal open={!!remModal} onClose={() => { setRemModal(false); setRemCustomOpen(false) }} layout="confirm" icon={CircleDollarSign} tone="paid" width={440}
+        title={t('paymentsPage.remanente.title')}
+        desc={<><b className={styles.remBig}>{fmt(remAmount)}</b><br />{t('paymentsPage.remanente.question')}</>}
+        actions={[
+          { label: t('paymentsPage.remanente.confirm'), onClick: () => handleAddRemanente(remAmount), disabled: savingRem },
+          { label: t('paymentsPage.remanente.no'), onClick: () => { setRemModal(false); setRemCustomOpen(false) }, variant: 'soft' },
+        ]}>
+        <div className={`${mk.pan} ${mk.rows}`}>
+          <div className={mk.srow} {...switchProps(remCustomOpen)} onClick={() => setRemCustomOpen(v => !v)}>
+            <div><b>{t('paymentsPage.remanente.customToggle')}</b></div>
+            <Toggle on={remCustomOpen} />
           </div>
         </div>
-      )}</Presence>
+        <Collapse open={remCustomOpen}>
+          <div className={styles.remCustom}>
+            <ModalAmount value={remCustomAmount} onChange={setRemCustomAmount} placeholder="0.00"
+              onEnter={() => { const amt = parseFloat(remCustomAmount); if (amt > 0) handleAddRemanente(amt) }} />
+            <button type="button" className={`${mk.btn} ${mk.btnPri}`} disabled={savingRem || !remCustomAmount || parseFloat(remCustomAmount) <= 0}
+              onClick={() => { const amt = parseFloat(remCustomAmount); if (amt > 0) handleAddRemanente(amt) }}>{t('paymentsPage.remanente.add')}</button>
+          </div>
+        </Collapse>
+      </Modal>
 
-      {/* ── Modal Añadir Ingreso ── */}
-      <ModalOrPop show={!!(incomeModal)} onClose={() => setIncomeModal(false)} width={420}>{() => (
-        <>
-            <div className={styles.incomeModalTitle}>
-              {t('paymentsPage.incomeModal.title')}
-            </div>
-
-            {/* Tipo */}
-            <div className={styles.incomeFieldGroup}>
-              <div className={`field-label ${styles.incomeLabelMb8}`}>{t('paymentsPage.incomeModal.typeLabel')}</div>
-              <div className={styles.incomeTypeRow}>
-                {INCOME_TYPES.map(t2 => (
-                  <button
-                    key={t2}
-                    onClick={() => setIncomeType(t2)}
-                    className={`${styles.incomeTypeButton} ${incomeType === t2 ? styles.incomeTypeButtonActive : ''}`}
-                  >
-                    {t2}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Monto */}
-            <div className={styles.incomeFieldGroup}>
-              <div className={`field-label ${styles.incomeLabelMb6}`}>{t('paymentsPage.incomeModal.amountLabel')}</div>
-              <AmountInput
-                placeholder="$0"
-                value={incomeAmount}
-                onChange={e => setIncomeAmount(e.target.value)}
-                autoFocus
-                className={styles.incomeInput}
-              />
-            </div>
-
-            {/* Nota opcional */}
-            <div className={styles.incomeFieldGroupLast}>
-              <div className={`field-label ${styles.incomeLabelMb6}`}>{t('paymentsPage.noteOptional')}</div>
-              <input aria-label={t('paymentsPage.noteOptional')}
-                type="text"
-                placeholder={t('paymentsPage.incomeModal.notePlaceholder')}
-                value={incomeNote}
-                onChange={e => setIncomeNote(e.target.value)}
-                className={styles.incomeInput}
-              />
-            </div>
-
-            <div className={styles.dialogFoot}>
-              <button
-                onClick={handleAddIncome}
-                disabled={savingIncome || !incomeAmount || parseFloat(incomeAmount) <= 0}
-                className={styles.incomeSaveButton}
-              >
-                {savingIncome ? t('paymentsPage.incomeModal.saving') : t('paymentsPage.incomeModal.save')}
-              </button>
-              <button
-                onClick={() => setIncomeModal(false)}
-                className={styles.incomeCancelButton}
-              >
-                {t('buttons.cancel')}
-              </button>
-            </div>
-        </>
+      {/* ── Añadir ingreso ── */}
+      <ModalOrPop show={!!(incomeModal)} onClose={() => setIncomeModal(false)} icon={Wallet} title={t('paymentsPage.incomeModal.title')}
+        primary={{ label: savingIncome ? t('paymentsPage.incomeModal.saving') : t('paymentsPage.incomeModal.save'), onClick: handleAddIncome, disabled: savingIncome || !incomeAmount || parseFloat(incomeAmount) <= 0 }}>{() => (
+        <div className={mk.pan}>
+          <div className={mk.lab}><span>{t('paymentsPage.incomeModal.typeLabel')}</span></div>
+          <div className={mk.chips}>
+            {INCOME_TYPES.map(t2 => (
+              <button key={t2} type="button" onClick={() => setIncomeType(t2)} aria-pressed={incomeType === t2} className={`${mk.chip} ${incomeType === t2 ? mk.chipOn : ''}`}>{t2}</button>
+            ))}
+          </div>
+          <div className={mk.lab}><span>{t('paymentsPage.incomeModal.amountLabel')}</span></div>
+          <ModalAmount value={incomeAmount} onChange={setIncomeAmount} autoFocus onEnter={handleAddIncome} />
+          <div className={mk.lab}><span>{t('paymentsPage.noteOptional')}</span></div>
+          <input aria-label={t('paymentsPage.noteOptional')} type="text" className="field-input" placeholder={t('paymentsPage.incomeModal.notePlaceholder')} value={incomeNote} onChange={e => setIncomeNote(e.target.value)} />
+        </div>
       )}</ModalOrPop>
 
-      {/* ── Modal Gestionar Ingresos Extras (editar / eliminar) ── */}
-      <ModalOrPop show={!!(manageIncomeModal)} onClose={() => { setManageIncomeModal(false); cancelEditIncome(); setConfirmDeleteIncomeId(null) }} manage width={460}>{() => (
-        <>
-            <div className={styles.manageModalTitle}>
-              {t('paymentsPage.manageIncomeModal.title')}
-            </div>
-
-            {periodIncomes.length === 0 ? (
-              <div className={styles.manageEmptyText}>
-                {t('paymentsPage.manageIncomeModal.empty')}
-              </div>
-            ) : (
-              <div className={styles.manageList}>
-                {periodIncomes.map(inc => (
-                  <div key={inc.id} className={styles.manageListItem}>
-                    {editingIncomeId === inc.id ? (
-                      <>
-                        <div className={styles.editTypeRow}>
-                          {INCOME_TYPES.map(t2 => (
-                            <button
-                              key={t2}
-                              onClick={() => setEditIncomeType(t2)}
-                              className={`${styles.editTypeButton} ${editIncomeType === t2 ? styles.editTypeButtonActive : ''}`}
-                            >
-                              {t2}
-                            </button>
-                          ))}
-                        </div>
-                        <AmountInput
-                          placeholder="$0"
-                          value={editIncomeAmount}
-                          onChange={e => setEditIncomeAmount(e.target.value)}
-                          className={styles.editInput}
-                        />
-                        <input aria-label={t('paymentsPage.noteOptional')}
-                          type="text"
-                          placeholder={t('paymentsPage.noteOptional')}
-                          value={editIncomeNote}
-                          onChange={e => setEditIncomeNote(e.target.value)}
-                          className={styles.editInputMb10}
-                        />
-                        <div className={styles.editActionsRow}>
-                          <button
-                            onClick={() => handleUpdateIncome(inc.id)}
-                            disabled={savingEditIncome || !editIncomeAmount || parseFloat(editIncomeAmount) <= 0}
-                            className={styles.editSaveButton}
-                          >
-                            {savingEditIncome ? t('paymentsPage.manageIncomeModal.saving') : t('buttons.save')}
-                          </button>
-                          <button
-                            onClick={cancelEditIncome}
-                            className={styles.editCancelButton}
-                          >
-                            {t('buttons.cancel')}
-                          </button>
-                        </div>
-                      </>
-                    ) : confirmDeleteIncomeId === inc.id ? (
-                      <div>
-                        <div className={styles.confirmDeleteText}>
-                          {t('paymentsPage.manageIncomeModal.confirmDelete')}
-                        </div>
-                        <div className={styles.confirmDeleteRow}>
-                          <button
-                            onClick={() => handleDeleteIncome(inc.id)}
-                            className={styles.confirmDeleteButton}
-                          >
-                            {t('paymentsPage.confirmDeleteYes')}
-                          </button>
-                          <button
-                            onClick={() => setConfirmDeleteIncomeId(null)}
-                            className={styles.confirmDeleteCancelButton}
-                          >
-                            {t('buttons.cancel')}
-                          </button>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className={styles.incomeRow}>
-                        <div>
-                          <div className={styles.incomeRowType}>{inc.type}</div>
-                          {inc.note && <div className={styles.incomeRowNote}>{inc.note}</div>}
-                        </div>
-                        <div className={styles.incomeRowActions}>
-                          <span className={styles.incomeRowAmount}>+{fmt(inc.amount)}</span>
-                          <Pencil size={15} color="var(--text)" className={styles.iconButtonCursor} onClick={() => startEditIncome(inc)} />
-                          <Trash2 size={15} color="var(--danger)" className={styles.iconButtonCursor} onClick={() => setConfirmDeleteIncomeId(inc.id)} />
-                        </div>
-                      </div>
-                    )}
+      {/* ── Ingresos del periodo (editar / eliminar) ── */}
+      <ModalOrPop show={!!(manageIncomeModal)} onClose={() => { setManageIncomeModal(false); cancelEditIncome(); setConfirmDeleteIncomeId(null) }} width={480}
+        icon={Wallet} title={t('paymentsPage.manageIncomeModal.title')}>{() => (
+        periodIncomes.length === 0 ? (
+          <div className={`${mk.note} ${mk.noteC}`}>{t('paymentsPage.manageIncomeModal.empty')}</div>
+        ) : (
+          <div className={`${mk.pan} ${mk.list}`}>
+            {periodIncomes.map(inc => (
+              <div key={inc.id} className={styles.mRow}>
+                {editingIncomeId === inc.id ? (
+                  <div className={styles.mEdit}>
+                    <div className={mk.chips}>
+                      {INCOME_TYPES.map(t2 => (
+                        <button key={t2} type="button" onClick={() => setEditIncomeType(t2)} className={`${mk.chip} ${editIncomeType === t2 ? mk.chipOn : ''}`}>{t2}</button>
+                      ))}
+                    </div>
+                    <ModalAmount value={editIncomeAmount} onChange={setEditIncomeAmount} />
+                    <input aria-label={t('paymentsPage.noteOptional')} type="text" className="field-input" placeholder={t('paymentsPage.noteOptional')} value={editIncomeNote} onChange={e => setEditIncomeNote(e.target.value)} />
+                    <div className={mk.rowEnd}>
+                      <button type="button" className={`${mk.btn} ${mk.btnSm} ${mk.btnSoft}`} onClick={cancelEditIncome}>{t('buttons.cancel')}</button>
+                      <button type="button" className={`${mk.btn} ${mk.btnSm} ${mk.btnPri}`} onClick={() => handleUpdateIncome(inc.id)}
+                        disabled={savingEditIncome || !editIncomeAmount || parseFloat(editIncomeAmount) <= 0}>{savingEditIncome ? t('paymentsPage.manageIncomeModal.saving') : t('buttons.save')}</button>
+                    </div>
                   </div>
-                ))}
-              </div>
-            )}
-
-            <button
-              onClick={() => { setManageIncomeModal(false); cancelEditIncome(); setConfirmDeleteIncomeId(null) }}
-              className={styles.manageCloseButton}
-            >
-              {t('buttons.close')}
-            </button>
-        </>
-      )}</ModalOrPop>
-
-      {/* ── Modal Añadir fondos ── */}
-      <ModalOrPop show={!!(addFundModal)} onClose={() => { setAddFundModal(false); setPersonalAvailable(null) }} width={420}>{() => (
-        <>
-            <div className={styles.manageModalTitle}>{t('paymentsPage.addFundModal.title')}</div>
-            <div className={styles.fundInfoText}>
-              {t('paymentsPage.addFundModal.info')}
-            </div>
-            <div className={styles.incomeFieldGroup}>
-              <div className={styles.fundAmountLabelRow}>
-                <div className={`field-label ${styles.incomeLabelMb6} ${styles.incomeLabelFlush}`}>{t('paymentsPage.incomeModal.amountLabel')}</div>
-                {activeSpaceId && !loadingPersonalAvailable && personalAvailable != null && (
-                  <div className={styles.fundAvailableTag}>{t('paymentsPage.addFundModal.available', { amount: fmt(personalAvailable) })}</div>
+                ) : confirmDeleteIncomeId === inc.id ? (
+                  <div className={styles.mConfirm}>
+                    <span>{t('paymentsPage.manageIncomeModal.confirmDelete')}</span>
+                    <div className={mk.rowEnd}>
+                      <button type="button" className={`${mk.btn} ${mk.btnSm} ${mk.btnSoft}`} onClick={() => setConfirmDeleteIncomeId(null)}>{t('buttons.cancel')}</button>
+                      <button type="button" className={`${mk.btn} ${mk.btnSm} ${mk.btnRed}`} onClick={() => handleDeleteIncome(inc.id)}>{t('paymentsPage.confirmDeleteYes')}</button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className={styles.mLine}>
+                    <span className={mk.tile}><Wallet size={16} /></span>
+                    <div><b>{inc.type}</b>{inc.note && <span>{inc.note}</span>}</div>
+                    <em>+{fmt(inc.amount)}</em>
+                    <button type="button" className={styles.mIb} onClick={() => startEditIncome(inc)} aria-label={t('buttons.edit')}><Pencil size={14} /></button>
+                    <button type="button" className={`${styles.mIb} ${styles.mIbRed}`} onClick={() => setConfirmDeleteIncomeId(inc.id)} aria-label={t('buttons.delete')}><Trash2 size={14} /></button>
+                  </div>
                 )}
               </div>
-              <AmountInput
-                placeholder="$0" value={fundAmount}
-                onChange={e => setFundAmount(e.target.value)} autoFocus
-                className={styles.incomeInput}
-              />
-              {(() => {
-                const numAmt = parseFloat(fundAmount) || 0
-                if (personalAvailable == null || numAmt <= 0) return null
-                const excede = numAmt > personalAvailable
-                if (excede) {
-                  return <div className={styles.fundExceedsError}>{t('paymentsPage.addFundModal.exceeds', { amount: fmt(personalAvailable) })}</div>
-                }
-                return <div className={styles.fundRemainingHint}>{t('paymentsPage.addFundModal.remaining', { amount: fmt(personalAvailable - numAmt) })}</div>
-              })()}
-            </div>
-            {paymentMethods && (
-              <div className={styles.incomeFieldGroup}>
-                <PaymentMethodField
-                  methods={paymentMethods.methods}
-                  value={fundMethodId}
-                  onChange={setFundMethodId}
-                  onAddCard={() => setFundCardFormOpen(true)}
-                  allowCredit={false}
-                />
-              </div>
+            ))}
+          </div>
+        )
+      )}</ModalOrPop>
+
+      {/* ── Aportar al fondo compartido ── */}
+      <ModalOrPop show={!!(addFundModal)} onClose={() => { setAddFundModal(false); setPersonalAvailable(null) }} icon={PiggyBank} title={t('paymentsPage.addFundModal.title')}
+        primary={{ label: savingFund ? t('paymentsPage.addFundModal.saving') : t('paymentsPage.addFundModal.save'), onClick: handleAddFund,
+          disabled: savingFund || !fundAmount || parseFloat(fundAmount) <= 0 || (personalAvailable != null && (personalAvailable <= 0 || parseFloat(fundAmount) > personalAvailable)) }}>{() => (
+        <>
+          <div className={mk.pan}>
+            {activeSpaceId && !loadingPersonalAvailable && personalAvailable != null && (
+              <div className={mk.kv}><span>{t('paymentsPage.addFundModal.availableLabel')}</span><b>{fmt(personalAvailable)}</b></div>
             )}
-            <div className={styles.incomeFieldGroupLast}>
-              <div className={`field-label ${styles.incomeLabelMb6}`}>{t('paymentsPage.noteOptional')}</div>
-              <input aria-label={t('paymentsPage.noteOptional')}
-                type="text" placeholder={t('paymentsPage.addFundModal.notePlaceholder')} value={fundNote}
-                onChange={e => setFundNote(e.target.value)}
-                className={styles.incomeInput}
-              />
-            </div>
-            <div className={styles.dialogFoot}>
-              <button
-                onClick={handleAddFund}
-                disabled={
-                  savingFund || !fundAmount || parseFloat(fundAmount) <= 0 ||
-                  (personalAvailable != null && (personalAvailable <= 0 || parseFloat(fundAmount) > personalAvailable))
-                }
-                className={styles.incomeSaveButton}
-              >
-                {savingFund ? t('paymentsPage.addFundModal.saving') : t('paymentsPage.addFundModal.save')}
-              </button>
-              <button onClick={() => { setAddFundModal(false); setPersonalAvailable(null) }} className={styles.incomeCancelButton}>
-                {t('buttons.cancel')}
-              </button>
-            </div>
+            <div className={mk.lab}><span>{t('paymentsPage.incomeModal.amountLabel')}</span></div>
+            <ModalAmount value={fundAmount} onChange={setFundAmount} autoFocus onEnter={handleAddFund} />
+            {(() => {
+              const numAmt = parseFloat(fundAmount) || 0
+              if (personalAvailable == null || numAmt <= 0) return null
+              if (numAmt > personalAvailable) return <div className={mk.err}>{t('paymentsPage.addFundModal.exceeds', { amount: fmt(personalAvailable) })}</div>
+              return <div className={mk.note}>{t('paymentsPage.addFundModal.remaining', { amount: fmt(personalAvailable - numAmt) })}</div>
+            })()}
             {paymentMethods && (
-              <AddCardModal
-                open={fundCardFormOpen}
-                onClose={() => setFundCardFormOpen(false)}
-                paymentMethods={paymentMethods}
-                onAdded={setFundMethodId}
-                selectableKinds={['debit']}
-              />
+              <PaymentMethodField methods={paymentMethods.methods} value={fundMethodId} onChange={setFundMethodId} onAddCard={() => setFundCardFormOpen(true)} allowCredit={false} />
             )}
+            <div className={mk.lab}><span>{t('paymentsPage.noteOptional')}</span></div>
+            <input aria-label={t('paymentsPage.noteOptional')} type="text" className="field-input" placeholder={t('paymentsPage.addFundModal.notePlaceholder')} value={fundNote} onChange={e => setFundNote(e.target.value)} />
+          </div>
+          <div className={mk.note}>{t('paymentsPage.addFundModal.info')}</div>
+          {paymentMethods && (
+            <AddCardModal open={fundCardFormOpen} onClose={() => setFundCardFormOpen(false)} paymentMethods={paymentMethods} onAdded={setFundMethodId} selectableKinds={['debit']} />
+          )}
         </>
       )}</ModalOrPop>
 
-      {/* ── Modal Gestionar Fondo (eliminar una aportación equivocada) ── */}
-      <ModalOrPop show={!!(manageFundModal)} onClose={() => { setManageFundModal(false); setConfirmDeleteFundId(null) }} manage width={460}>{() => (
-        <>
-            <div className={styles.manageModalTitle}>{t('paymentsPage.manageFundModal.title')}</div>
-            {sharedFund.ledger.filter(e => e.type === 'deposit').length === 0 ? (
-              <div className={styles.manageEmptyText}>{t('paymentsPage.manageFundModal.empty')}</div>
-            ) : (
-              <div className={styles.manageList}>
-                {sharedFund.ledger.filter(e => e.type === 'deposit').map(entry => (
-                  <div key={entry.id} className={styles.manageListItem}>
-                    {confirmDeleteFundId === entry.id ? (
-                      <div>
-                        <div className={styles.confirmDeleteText}>{t('paymentsPage.manageFundModal.confirmDelete')}</div>
-                        <div className={styles.confirmDeleteRow}>
-                          <button onClick={() => handleDeleteFundEntry(entry.id)} disabled={deletingFundId === entry.id} className={styles.confirmDeleteButton}>
-                            {t('paymentsPage.confirmDeleteYes')}
-                          </button>
-                          <button onClick={() => setConfirmDeleteFundId(null)} className={styles.confirmDeleteCancelButton}>
-                            {t('buttons.cancel')}
-                          </button>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className={styles.incomeRow}>
-                        <div>
-                          <div className={styles.incomeRowType}>{t('paymentsPage.manageFundModal.entryTypes.deposit')}{entry.note ? ` — ${entry.note}` : ''}</div>
-                        </div>
-                        <div className={styles.incomeRowActions}>
-                          <span className={styles.incomeRowAmount}>+{fmt(entry.amount)}</span>
-                          <Trash2 size={15} color="var(--danger)" className={styles.iconButtonCursor} onClick={() => setConfirmDeleteFundId(entry.id)} />
-                        </div>
-                      </div>
-                    )}
+      {/* ── Aportaciones al fondo (eliminar una equivocada) ── */}
+      <ModalOrPop show={!!(manageFundModal)} onClose={() => { setManageFundModal(false); setConfirmDeleteFundId(null) }} width={480}
+        icon={PiggyBank} title={t('paymentsPage.manageFundModal.title')}>{() => (
+        sharedFund.ledger.filter(e => e.type === 'deposit').length === 0 ? (
+          <div className={`${mk.note} ${mk.noteC}`}>{t('paymentsPage.manageFundModal.empty')}</div>
+        ) : (
+          <div className={`${mk.pan} ${mk.list}`}>
+            {sharedFund.ledger.filter(e => e.type === 'deposit').map(entry => (
+              <div key={entry.id} className={styles.mRow}>
+                {confirmDeleteFundId === entry.id ? (
+                  <div className={styles.mConfirm}>
+                    <span>{t('paymentsPage.manageFundModal.confirmDelete')}</span>
+                    <div className={mk.rowEnd}>
+                      <button type="button" className={`${mk.btn} ${mk.btnSm} ${mk.btnSoft}`} onClick={() => setConfirmDeleteFundId(null)}>{t('buttons.cancel')}</button>
+                      <button type="button" className={`${mk.btn} ${mk.btnSm} ${mk.btnRed}`} onClick={() => handleDeleteFundEntry(entry.id)} disabled={deletingFundId === entry.id}>{t('paymentsPage.confirmDeleteYes')}</button>
+                    </div>
                   </div>
-                ))}
+                ) : (
+                  <div className={styles.mLine}>
+                    <span className={mk.tile}><PiggyBank size={16} /></span>
+                    <div><b>{t('paymentsPage.manageFundModal.entryTypes.deposit')}</b>{entry.note && <span>{entry.note}</span>}</div>
+                    <em>+{fmt(entry.amount)}</em>
+                    <button type="button" className={`${styles.mIb} ${styles.mIbRed}`} onClick={() => setConfirmDeleteFundId(entry.id)} aria-label={t('buttons.delete')}><Trash2 size={14} /></button>
+                  </div>
+                )}
               </div>
-            )}
-            <button onClick={() => { setManageFundModal(false); setConfirmDeleteFundId(null) }} className={styles.manageCloseButton}>
-              {t('buttons.close')}
-            </button>
-        </>
+            ))}
+          </div>
+        )
       )}</ModalOrPop>
 
       {/* v0.9.388 — mismo tratamiento que HomePage.jsx (v0.9.365): oculto

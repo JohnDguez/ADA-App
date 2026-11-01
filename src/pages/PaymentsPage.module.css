@@ -2131,3 +2131,21 @@
 @media (hover: hover) and (pointer: fine) {
   .editCancelButton:hover, .confirmDeleteCancelButton:hover { filter: none; background: var(--desk-hover-fill); }
 }
+
+/* Modales de ingresos, fondo y remanente con el Modal único (v0.9.985). */
+.remBig { display: inline-block; margin: 4px 0; font-size: 1.75rem; font-weight: 700; letter-spacing: -0.6px; color: var(--paid); }
+.remCustom { display: flex; gap: 8px; align-items: center; padding: 2px 0 4px; }
+.remCustom > label { flex: 1; min-width: 0; }
+.mRow { border-radius: 14px; }
+.mLine { display: flex; align-items: center; gap: 10px; padding: 8px; }
+.mLine > div { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.mLine b { font-size: 0.875rem; font-weight: 600; color: var(--text); }
+.mLine > div > span { font-size: 0.75rem; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mLine em { font-style: normal; font-size: 0.875rem; font-weight: 700; color: var(--paid); white-space: nowrap; }
+.mIb { width: 32px; height: 32px; flex: none; display: grid; place-items: center; padding: 0; border: 0; border-radius: 50%; background: var(--desk-chip); color: var(--muted); cursor: pointer; }
+.mIbRed { color: var(--danger); }
+.mEdit, .mConfirm { display: flex; flex-direction: column; gap: 8px; padding: 10px; border-radius: 14px; background: var(--desk-chip); }
+.mEdit :global(.field-input) { background: var(--desk-card); }
+.mEdit label { background: var(--desk-card); }
+.mConfirm > span { font-size: 0.84375rem; color: var(--text); }
+@media (hover: hover) and (pointer: fine) { .mIb:hover { background: var(--desk-hover-fill); filter: none; } }

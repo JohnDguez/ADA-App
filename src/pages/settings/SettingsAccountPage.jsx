@@ -1,48 +1,40 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { supabase } from '../../lib/supabase'
-import { AlertTriangle, Eye, EyeOff, User, Lock, Mail, Camera } from 'lucide-react'
+import { AlertTriangle, User, Lock, Mail, Camera } from 'lucide-react'
 // Ícono del encabezado vía Phosphor Icons (mismo patrón que SettingsExportPage.jsx,
 // v0.9.442-445) — import directo al archivo del ícono para tree-shaking real.
 import { UserCircle } from '@phosphor-icons/react/dist/csr/UserCircle'
 import { Crown } from '@phosphor-icons/react/dist/csr/Crown'
 import { showToast } from '../../components/Toast'
-import { passwordRequirements, isPasswordStrong } from '../../components/PasswordSetupModal'
-import { RequirementRow } from '../../components/RequirementRow'
+import { isPasswordStrong } from '../../components/PasswordSetupModal'
+import { PasswordField, PasswordReqs } from '../../components/PasswordField'
+import { Modal } from '../../components/Modal'
+import mk from '../../components/Modal.module.css'
 import { apiUrl } from '../../lib/apiUrl'
 import { ANDROID_PACKAGE_NAME } from '../../lib/constants'
 import { getPremiumSource } from '../../lib/utils'
 import { AvatarImg } from '../../components/AvatarImg'
-import { useDeskSettings } from '../../components/DeskSettingsContext'
 import { SettingsSubLayout, useSettingsMode } from '../../components/SettingsSubLayout'
 import kit from '../../components/SettingsKit.module.css'
 import dk from './SettingsAccountDesk.module.css'
-import dkp from '../../components/PaymentDesk.module.css'
-import styles from './SettingsAccountPage.module.css'
-import { Presence } from '../../components/Presence'
-import { BottomSheet } from '../../components/BottomSheet'
 
 // Sub-página "Cuenta" dentro de Ajustes: Nombre, Correo/Google, Contraseña,
 // Idioma, y la zona de peligro (Eliminar mis datos / Eliminar mi cuenta).
 // Antes vivía todo esto (menos Idioma) mezclado directo en SettingsPage.jsx.
 export function SettingsAccountPage({ onChangePhoto, uploadingAvatar, profile, user, onUpdate, onDataDeleted, onBack, onGoSubscription, slideClass }) {
   const { t, i18n } = useTranslation()
-  const desk = useDeskSettings()
   const mode = useSettingsMode()
   const [editSection, setEditSection] = useState(null)
   const [fieldVal,    setFieldVal]    = useState('')
   const [fieldVal2,   setFieldVal2]   = useState('')
   const [fieldVal3,   setFieldVal3]   = useState('')
-  const [showPass,    setShowPass]    = useState(false)
-  const [showPass2,   setShowPass2]   = useState(false)
-  const [showPass3,   setShowPass3]   = useState(false)
   const [saving,      setSaving]      = useState(false)
   const [editError,   setEditError]   = useState('')
   const [forgotSent,  setForgotSent]  = useState(false)
 
   const [dangerModal,    setDangerModal]    = useState(null)
   const [dangerPassword, setDangerPassword] = useState('')
-  const [showDangerPass, setShowDangerPass] = useState(false)
   const [dangerLoading,  setDangerLoading]  = useState(false)
   const [dangerError,    setDangerError]    = useState('')
   // v0.9.795: aviso "primero cancela tu suscripción" (null | { source, trial?, plan?, date? }).
@@ -85,11 +77,9 @@ export function SettingsAccountPage({ onChangePhoto, uploadingAvatar, profile, u
     setDangerModal('account'); setDangerPassword(''); setDangerError('')
   }
 
-  const deskMode = !!desk
   const editTitle = editSection === 'name' ? t('settingsAccount.editModal.titleName')
     : editSection === 'email' ? t('settingsAccount.editModal.titleEmail')
     : t('settingsAccount.editModal.titlePassword')
-  const newPassReqs   = passwordRequirements(fieldVal)
   const newPassStrong = isPasswordStrong(fieldVal)
   const newPassMatch  = fieldVal && fieldVal2 && fieldVal === fieldVal2
 
@@ -105,7 +95,6 @@ export function SettingsAccountPage({ onChangePhoto, uploadingAvatar, profile, u
     setEditSection(section)
     setFieldVal(section === 'name' ? profile.name || '' : section === 'email' ? user?.email || '' : '')
     setFieldVal2(''); setFieldVal3(''); setEditError(''); setForgotSent(false)
-    setShowPass(false); setShowPass2(false); setShowPass3(false)
   }
 
   async function handleEditSave() {
@@ -284,256 +273,83 @@ export function SettingsAccountPage({ onChangePhoto, uploadingAvatar, profile, u
     <>
       {page}
 
-      <Presence show={!!dangerModal}>{() => (
-        <div onClick={e => e.target === e.currentTarget && setDangerModal(null)} className={deskMode ? dkp.overlay : styles.dangerOverlay}>
-          <div className={deskMode ? `${dkp.dialog} ${dk.dangerDlg}` : styles.modalPanel} role={deskMode ? 'dialog' : undefined} aria-modal={deskMode ? 'true' : undefined}>
-            {!deskMode && <div className={styles.handle} />}
-            <div className={styles.dangerIconWrapper}>
-              <AlertTriangle size={22} color="var(--danger)" />
-            </div>
-            <div className={styles.dangerTitle}>
-              {dangerModal === 'data' ? t('settingsAccount.dangerModal.titleData') : t('settingsAccount.dangerModal.titleAccount')}
-            </div>
-            <div className={styles.dangerDescription}>
-              {dangerModal === 'data'
-                ? t('settingsAccount.dangerModal.descriptionData')
-                : t('settingsAccount.dangerModal.descriptionAccount')
-              }
-            </div>
-            {dangerError && (
-              <div className={styles.errorBox}>
-                {dangerError}
-              </div>
-            )}
-            <label className={`field-label ${styles.label}`}>{t('settingsAccount.dangerModal.confirmLabel')}</label>
-            <div className={styles.inputWrapperSpaced}>
-              <input aria-label={t('settingsAccount.dangerModal.confirmLabel')}
-                autoFocus
-                type={showDangerPass ? 'text' : 'password'}
-                className={`field-input ${styles.dangerPasswordInput}`}
-                value={dangerPassword}
-                onChange={e => setDangerPassword(e.target.value)}
-                placeholder="••••••••"
-                onKeyDown={e => e.key === 'Enter' && (dangerModal === 'data' ? handleDeleteData() : handleDeleteAccount())}
-              />
-              <button type="button" onClick={() => setShowDangerPass(v => !v)} className={styles.toggleVisibilityButton}>
-                {showDangerPass ? <EyeOff size={16} color="var(--text)" /> : <Eye size={16} color="var(--text)" />}
-              </button>
-            </div>
-            <div className={deskMode ? dk.dangerFoot : undefined}>
-              <button
-                onClick={dangerModal === 'data' ? handleDeleteData : handleDeleteAccount}
-                disabled={dangerLoading || !dangerPassword}
-                className={deskMode ? dk.dangerBtn : styles.deleteConfirmButton}>
-                {dangerLoading ? t('settingsAccount.dangerModal.verifying') : dangerModal === 'data' ? t('settingsAccount.dangerModal.deleteDataButton') : t('settingsAccount.dangerModal.deleteAccountButton')}
-              </button>
-              <button onClick={() => { setDangerModal(null); setDangerPassword('') }} className={deskMode ? dkp.cancel : 'btn-ghost'}>{t('buttons.cancel')}</button>
-            </div>
-          </div>
+      {/* Modales con el Modal único (v0.9.985, mockup de modales aprobado). */}
+      <Modal open={!!dangerModal} onClose={() => setDangerModal(null)} layout="confirm" icon={AlertTriangle} tone="danger" width={440}
+        title={dangerModal === 'data' ? t('settingsAccount.dangerModal.titleData') : t('settingsAccount.dangerModal.titleAccount')}
+        desc={dangerModal === 'data' ? t('settingsAccount.dangerModal.descriptionData') : t('settingsAccount.dangerModal.descriptionAccount')}
+        actions={[
+          { label: dangerLoading ? t('settingsAccount.dangerModal.verifying') : dangerModal === 'data' ? t('settingsAccount.dangerModal.deleteDataButton') : t('settingsAccount.dangerModal.deleteAccountButton'),
+            onClick: dangerModal === 'data' ? handleDeleteData : handleDeleteAccount, disabled: dangerLoading || !dangerPassword, variant: 'danger' },
+          { label: t('buttons.cancel'), onClick: () => { setDangerModal(null); setDangerPassword('') }, variant: 'soft' },
+        ]}>
+        <div className={`${mk.pan} ${mk.panFlat}`}>
+          {dangerError && <div className={mk.err}>{dangerError}</div>}
+          <div className={mk.lab}><span>{t('settingsAccount.dangerModal.confirmLabel')}</span></div>
+          <PasswordField value={dangerPassword} onChange={setDangerPassword} label={t('settingsAccount.dangerModal.confirmLabel')} autoFocus
+            onEnter={() => (dangerModal === 'data' ? handleDeleteData() : handleDeleteAccount())} />
         </div>
-      )}</Presence>
+      </Modal>
 
-      <Presence show={!!subBlock}>{() => (
-        <div onClick={e => e.target === e.currentTarget && setSubBlock(null)} className={deskMode ? dkp.overlay : styles.dangerOverlay}>
-          <div className={deskMode ? `${dkp.dialog} ${dk.dangerDlg}` : styles.modalPanel} role={deskMode ? 'dialog' : undefined} aria-modal={deskMode ? 'true' : undefined}>
-            {!deskMode && <div className={styles.handle} />}
-            <div className={styles.blockIconWrapper}>
-              <Crown size={28} color="var(--warning)" />
-            </div>
-            <div className={styles.blockTitle}>{t('settingsAccount.subscriptionBlock.title')}</div>
-            <div className={styles.dangerDescription}>
-              {subBlock.source === 'google_play'
-                ? t('settingsAccount.subscriptionBlock.descriptionPlay')
-                : subBlock.trial
-                  ? t('settingsAccount.subscriptionBlock.descriptionTrial')
-                  : t('settingsAccount.subscriptionBlock.descriptionStripe')}
-            </div>
-            <div className={styles.blockPlan}>
-              <div className={styles.blockPlanIcon}><Crown size={18} color="var(--accent)" /></div>
+      <Modal open={!!subBlock} onClose={() => setSubBlock(null)} layout="confirm" icon={Crown} tone="gold" width={440}
+        title={t('settingsAccount.subscriptionBlock.title')}
+        desc={subBlock && (subBlock.source === 'google_play' ? t('settingsAccount.subscriptionBlock.descriptionPlay')
+          : subBlock.trial ? t('settingsAccount.subscriptionBlock.descriptionTrial') : t('settingsAccount.subscriptionBlock.descriptionStripe'))}
+        actions={[
+          { label: subBlock?.source === 'google_play' ? t('settingsAccount.subscriptionBlock.openPlay') : t('settingsAccount.subscriptionBlock.goSubscription'),
+            onClick: () => { if (subBlock?.source === 'google_play') window.open(playStoreUrl, '_blank'); else { setSubBlock(null); onGoSubscription?.() } } },
+          { label: t('settingsAccount.subscriptionBlock.understood'), onClick: () => setSubBlock(null), variant: 'soft' },
+        ]}>
+        {subBlock && (
+          <div className={mk.pan}>
+            <div className={dk.planRow}>
+              <span className={`${mk.tile} ${dk.planIco}`}><Crown size={16} /></span>
               <div>
-                <div className={styles.blockPlanName}>
-                  {subBlock.source === 'google_play'
-                    ? t('settingsAccount.subscriptionBlock.planPlay')
-                    : subBlock.trial
-                      ? t('settingsAccount.subscriptionBlock.planTrial')
-                      : subBlock.plan
-                        ? t(`settingsAccount.subscriptionBlock.plan_${subBlock.plan}`)
-                        : t('settingsAccount.subscriptionBlock.planGeneric')}
-                </div>
-                <div className={styles.blockPlanSub}>
-                  {subBlock.source === 'google_play'
-                    ? t('settingsAccount.subscriptionBlock.playManaged')
-                    : subBlock.date
-                      ? t(subBlock.trial ? 'settingsAccount.subscriptionBlock.trialEnds' : 'settingsAccount.subscriptionBlock.renewsOn', { date: formatDate(subBlock.date) })
-                      : t('settingsAccount.subscriptionBlock.stripeManaged')}
-                </div>
+                <b>{subBlock.source === 'google_play' ? t('settingsAccount.subscriptionBlock.planPlay')
+                  : subBlock.trial ? t('settingsAccount.subscriptionBlock.planTrial')
+                  : subBlock.plan ? t(`settingsAccount.subscriptionBlock.plan_${subBlock.plan}`) : t('settingsAccount.subscriptionBlock.planGeneric')}</b>
+                <span>{subBlock.source === 'google_play' ? t('settingsAccount.subscriptionBlock.playManaged')
+                  : subBlock.date ? t(subBlock.trial ? 'settingsAccount.subscriptionBlock.trialEnds' : 'settingsAccount.subscriptionBlock.renewsOn', { date: formatDate(subBlock.date) })
+                  : t('settingsAccount.subscriptionBlock.stripeManaged')}</span>
               </div>
             </div>
-            <div className={deskMode ? dk.dangerFoot : undefined}>
-              <button
-                onClick={() => {
-                  if (subBlock.source === 'google_play') { window.open(playStoreUrl, '_blank') }
-                  else { setSubBlock(null); onGoSubscription?.() }
-                }}
-                className={deskMode ? `btn-primary ${dk.primaryBtn}` : 'btn-primary'}>
-                {subBlock.source === 'google_play' ? t('settingsAccount.subscriptionBlock.openPlay') : t('settingsAccount.subscriptionBlock.goSubscription')}
-              </button>
-              <button onClick={() => setSubBlock(null)} className={deskMode ? dkp.cancel : 'btn-ghost'}>{t('settingsAccount.subscriptionBlock.understood')}</button>
+          </div>
+        )}
+      </Modal>
+
+      <Modal open={!!editSection} onClose={() => setEditSection(null)} title={editTitle} width={480}
+        primary={{ label: saving ? t('settingsAccount.editModal.saving') : t('buttons.save'), onClick: handleEditSave, disabled: saving }}>
+        {editError && <div className={`${mk.info} ${mk.warnBox}`}><AlertTriangle size={16} /><span>{editError}</span></div>}
+        {forgotSent && <div className={mk.info}><Mail size={16} /><span>{t('settingsAccount.editModal.resetLinkSent', { email: user?.email })}</span></div>}
+        {editSection === 'name' && (
+          <div className={mk.pan}>
+            <div className={mk.lab}><span>{t('settingsAccount.editModal.nameLabel')}</span></div>
+            <input aria-label={t('settingsAccount.editModal.nameLabel')} autoFocus className="field-input" value={fieldVal} onChange={e => setFieldVal(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleEditSave()} />
+          </div>
+        )}
+        {editSection === 'email' && (
+          <div className={mk.pan}>
+            <div className={mk.lab}><span>{t('settingsAccount.editModal.emailLabel')}</span></div>
+            <input aria-label={t('settingsAccount.editModal.emailLabel')} autoFocus className="field-input" type="email" value={fieldVal} onChange={e => setFieldVal(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleEditSave()} />
+          </div>
+        )}
+        {editSection === 'password' && (
+          <>
+            <div className={mk.pan}>
+              <div className={mk.lab}><span>{t('settingsAccount.editModal.currentPasswordLabel')}</span></div>
+              <PasswordField value={fieldVal3} onChange={setFieldVal3} label={t('settingsAccount.editModal.currentPasswordLabel')} autoFocus />
+              <button type="button" className={mk.link} onClick={handleForgotPassword}>{t('settingsAccount.editModal.forgotPassword')}</button>
             </div>
-          </div>
-        </div>
-      )}</Presence>
-
-      {deskMode ? (
-        <BottomSheet open={!!editSection} title={editTitle} onClose={() => setEditSection(null)}>
-          <div className={styles.deskEditBody}>
-            {editError  && <div className={styles.errorBox}>{editError}</div>}
-            {forgotSent && <div className={styles.successBox}>{t('settingsAccount.editModal.resetLinkSent', { email: user?.email })}</div>}
-
-            {editSection === 'name' && (
-              <div className={styles.fieldGroup}>
-                <label className="field-label">{t('settingsAccount.editModal.nameLabel')}</label>
-                <input aria-label={t('settingsAccount.editModal.nameLabel')} autoFocus className="field-input" value={fieldVal} onChange={e => setFieldVal(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleEditSave()} />
-              </div>
-            )}
-
-            {editSection === 'email' && (
-              <div className={styles.fieldGroup}>
-                <label className="field-label">{t('settingsAccount.editModal.emailLabel')}</label>
-                <input aria-label={t('settingsAccount.editModal.emailLabel')} autoFocus className="field-input" type="email" value={fieldVal} onChange={e => setFieldVal(e.target.value)} />
-              </div>
-            )}
-
-            {editSection === 'password' && (<>
-              <div className={styles.fieldGroupSm}>
-                <label className="field-label">{t('settingsAccount.editModal.currentPasswordLabel')}</label>
-                <div className={styles.inputWrapper}>
-                  <input aria-label={t('settingsAccount.editModal.currentPasswordLabel')} autoFocus className={`field-input ${styles.inputWithToggle}`} type={showPass3 ? 'text' : 'password'} value={fieldVal3} onChange={e => setFieldVal3(e.target.value)} placeholder="••••••••" />
-                  <button type="button" onClick={() => setShowPass3(v => !v)} className={styles.toggleVisibilityButton}>
-                    {showPass3 ? <EyeOff size={16} color="var(--text)" /> : <Eye size={16} color="var(--text)" />}
-                  </button>
-                </div>
-                <button onClick={handleForgotPassword} className={styles.forgotPasswordLink}>
-                  {t('settingsAccount.editModal.forgotPassword')}
-                </button>
-              </div>
-
-              <div className={styles.fieldGroupXs}>
-                <label className="field-label">{t('settingsAccount.editModal.newPasswordLabel')}</label>
-                <div className={styles.inputWrapper}>
-                  <input aria-label={t('settingsAccount.editModal.newPasswordLabel')} className={`field-input ${styles.inputWithToggle}`} type={showPass ? 'text' : 'password'} value={fieldVal} onChange={e => setFieldVal(e.target.value)} placeholder="••••••••" />
-                  <button type="button" onClick={() => setShowPass(v => !v)} className={styles.toggleVisibilityButton}>
-                    {showPass ? <EyeOff size={16} color="var(--text)" /> : <Eye size={16} color="var(--text)" />}
-                  </button>
-                </div>
-              </div>
-
-              {fieldVal.length > 0 && (
-                <div className={styles.requirementsBox}>
-                  <RequirementRow met={newPassReqs.length}    label={t('settingsAccount.editModal.requirementLength')} />
-                  <RequirementRow met={newPassReqs.uppercase} label={t('settingsAccount.editModal.requirementUppercase')} />
-                  <RequirementRow met={newPassReqs.number}    label={t('settingsAccount.editModal.requirementNumber')} />
-                  <RequirementRow met={newPassReqs.symbol}    label={t('settingsAccount.editModal.requirementSymbol')} />
-                </div>
-              )}
-
-              <div className={styles.fieldGroup}>
-                <label className="field-label">{t('settingsAccount.editModal.confirmPasswordLabel')}</label>
-                <div className={styles.inputWrapper}>
-                  <input aria-label={t('settingsAccount.editModal.confirmPasswordLabel')} className={`field-input ${styles.inputWithToggle} ${fieldVal2 && !newPassMatch ? styles.inputError : ''}`} type={showPass2 ? 'text' : 'password'} value={fieldVal2} onChange={e => setFieldVal2(e.target.value)} placeholder="••••••••" />
-                  <button type="button" onClick={() => setShowPass2(v => !v)} className={styles.toggleVisibilityButton}>
-                    {showPass2 ? <EyeOff size={16} color="var(--text)" /> : <Eye size={16} color="var(--text)" />}
-                  </button>
-                </div>
-                {fieldVal2 && !newPassMatch && <div className={styles.matchError}>{t('settingsAccount.editModal.passwordMismatch')}</div>}
-              </div>
-            </>)}
-
-            <button onClick={handleEditSave} disabled={saving} className={`btn-primary ${styles.saveButton}`}>
-              {saving ? t('settingsAccount.editModal.saving') : t('buttons.save')}
-            </button>
-            <button onClick={() => setEditSection(null)} className="btn-ghost">{t('buttons.cancel')}</button>
-          </div>
-        </BottomSheet>
-      ) : (
-      <Presence show={!!editSection}>{() => (
-        <div onClick={e => e.target === e.currentTarget && setEditSection(null)} className={styles.editOverlay}>
-          <div className={styles.modalPanel}>
-            <div className={styles.handle} />
-            <div className={styles.editTitle}>
-              {editTitle}
+            <div className={mk.pan}>
+              <div className={mk.lab}><span>{t('settingsAccount.editModal.newPasswordLabel')}</span></div>
+              <PasswordField value={fieldVal} onChange={setFieldVal} label={t('settingsAccount.editModal.newPasswordLabel')} />
+              {fieldVal.length > 0 && <PasswordReqs password={fieldVal} />}
+              <div className={mk.lab}><span>{t('settingsAccount.editModal.confirmPasswordLabel')}</span></div>
+              <PasswordField value={fieldVal2} onChange={setFieldVal2} label={t('settingsAccount.editModal.confirmPasswordLabel')} bad={!!fieldVal2 && !newPassMatch} onEnter={handleEditSave} />
+              {fieldVal2 && !newPassMatch && <div className={mk.err}>{t('settingsAccount.editModal.passwordMismatch')}</div>}
             </div>
-
-            {editError  && <div className={styles.errorBox}>{editError}</div>}
-            {forgotSent && <div className={styles.successBox}>{t('settingsAccount.editModal.resetLinkSent', { email: user?.email })}</div>}
-
-            {editSection === 'name' && (
-              <div className={styles.fieldGroup}>
-                <label className="field-label">{t('settingsAccount.editModal.nameLabel')}</label>
-                <input aria-label={t('settingsAccount.editModal.nameLabel')} autoFocus className="field-input" value={fieldVal} onChange={e => setFieldVal(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleEditSave()} />
-              </div>
-            )}
-
-            {editSection === 'email' && (
-              <div className={styles.fieldGroup}>
-                <label className="field-label">{t('settingsAccount.editModal.emailLabel')}</label>
-                <input aria-label={t('settingsAccount.editModal.emailLabel')} autoFocus className="field-input" type="email" value={fieldVal} onChange={e => setFieldVal(e.target.value)} />
-              </div>
-            )}
-
-            {editSection === 'password' && (<>
-              <div className={styles.fieldGroupSm}>
-                <label className="field-label">{t('settingsAccount.editModal.currentPasswordLabel')}</label>
-                <div className={styles.inputWrapper}>
-                  <input aria-label={t('settingsAccount.editModal.currentPasswordLabel')} autoFocus className={`field-input ${styles.inputWithToggle}`} type={showPass3 ? 'text' : 'password'} value={fieldVal3} onChange={e => setFieldVal3(e.target.value)} placeholder="••••••••" />
-                  <button type="button" onClick={() => setShowPass3(v => !v)} className={styles.toggleVisibilityButton}>
-                    {showPass3 ? <EyeOff size={16} color="var(--text)" /> : <Eye size={16} color="var(--text)" />}
-                  </button>
-                </div>
-                <button onClick={handleForgotPassword} className={styles.forgotPasswordLink}>
-                  {t('settingsAccount.editModal.forgotPassword')}
-                </button>
-              </div>
-
-              <div className={styles.fieldGroupXs}>
-                <label className="field-label">{t('settingsAccount.editModal.newPasswordLabel')}</label>
-                <div className={styles.inputWrapper}>
-                  <input aria-label={t('settingsAccount.editModal.newPasswordLabel')} className={`field-input ${styles.inputWithToggle}`} type={showPass ? 'text' : 'password'} value={fieldVal} onChange={e => setFieldVal(e.target.value)} placeholder="••••••••" />
-                  <button type="button" onClick={() => setShowPass(v => !v)} className={styles.toggleVisibilityButton}>
-                    {showPass ? <EyeOff size={16} color="var(--text)" /> : <Eye size={16} color="var(--text)" />}
-                  </button>
-                </div>
-              </div>
-
-              {fieldVal.length > 0 && (
-                <div className={styles.requirementsBox}>
-                  <RequirementRow met={newPassReqs.length}    label={t('settingsAccount.editModal.requirementLength')} />
-                  <RequirementRow met={newPassReqs.uppercase} label={t('settingsAccount.editModal.requirementUppercase')} />
-                  <RequirementRow met={newPassReqs.number}    label={t('settingsAccount.editModal.requirementNumber')} />
-                  <RequirementRow met={newPassReqs.symbol}    label={t('settingsAccount.editModal.requirementSymbol')} />
-                </div>
-              )}
-
-              <div className={styles.fieldGroup}>
-                <label className="field-label">{t('settingsAccount.editModal.confirmPasswordLabel')}</label>
-                <div className={styles.inputWrapper}>
-                  <input aria-label={t('settingsAccount.editModal.confirmPasswordLabel')} className={`field-input ${styles.inputWithToggle} ${fieldVal2 && !newPassMatch ? styles.inputError : ''}`} type={showPass2 ? 'text' : 'password'} value={fieldVal2} onChange={e => setFieldVal2(e.target.value)} placeholder="••••••••" />
-                  <button type="button" onClick={() => setShowPass2(v => !v)} className={styles.toggleVisibilityButton}>
-                    {showPass2 ? <EyeOff size={16} color="var(--text)" /> : <Eye size={16} color="var(--text)" />}
-                  </button>
-                </div>
-                {fieldVal2 && !newPassMatch && <div className={styles.matchError}>{t('settingsAccount.editModal.passwordMismatch')}</div>}
-              </div>
-            </>)}
-
-            <button onClick={handleEditSave} disabled={saving} className={`btn-primary ${styles.saveButton}`}>
-              {saving ? t('settingsAccount.editModal.saving') : t('buttons.save')}
-            </button>
-            <button onClick={() => setEditSection(null)} className="btn-ghost">{t('buttons.cancel')}</button>
-          </div>
-        </div>
-      )}</Presence>
-      )}
+          </>
+        )}
+      </Modal>
     </>
   )
 }
