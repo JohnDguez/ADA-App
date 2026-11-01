@@ -94,8 +94,13 @@ async function handleVerify(req, res) {
   } catch (e) {
     // (v0.9.959) Se loggea el error real: antes solo viajaba al cliente y en
     // Vercel no quedaba rastro de por qué fallaba la verificación.
-    console.error('[verify-play-purchase] Error verificando contra Google Play:', e.message, '| productId:', productId)
-    return res.status(500).json({ error: e.message || 'No se pudo verificar la compra con Google Play' })
+    // (v0.9.997) Con el estado y el mensaje que devuelve Google (permisos de la
+    // cuenta de servicio, token inválido, API sin habilitar…), no solo el
+    // genérico de la librería.
+    const gStatus = e.response?.status
+    const gMsg = e.response?.data?.error?.message
+    console.error('[verify-play-purchase] Error verificando contra Google Play:', e.message, '| google:', gStatus, gMsg, '| productId:', productId)
+    return res.status(500).json({ error: gMsg ? `Google Play (${gStatus}): ${gMsg}` : (e.message || 'No se pudo verificar la compra con Google Play') })
   }
 }
 

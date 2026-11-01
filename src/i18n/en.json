@@ -1708,6 +1708,7 @@
     "restoreSuccess": "All set! Your Premium is now active.",
     "restoreEmpty": "We couldn't find any purchases to restore on this Google account.",
     "restoreError": "Couldn't restore your purchases. Try again.",
+    "restoreErrorDetail": "Details: {{detail}}",
     "alreadyPremiumSamePlatform": "You're already Premium. Manage your subscription from Settings > My subscription.",
     "alreadyPremiumViaStripe": "You already have Premium active, managed on the web (Stripe).",
     "alreadyPremiumViaGooglePlay": "You already have Premium active, managed through Google Play Store in the app.",

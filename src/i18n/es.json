@@ -1708,6 +1708,7 @@
     "restoreSuccess": "¡Listo! Tu Premium ya está activo.",
     "restoreEmpty": "No encontramos compras que restaurar en esta cuenta de Google.",
     "restoreError": "No se pudieron restaurar tus compras. Intenta de nuevo.",
+    "restoreErrorDetail": "Detalle: {{detail}}",
     "alreadyPremiumSamePlatform": "Ya eres Premium. Administra tu suscripción desde Ajustes > Mi suscripción.",
     "alreadyPremiumViaStripe": "Ya tienes Premium activo, gestionado desde la web (Stripe).",
     "alreadyPremiumViaGooglePlay": "Ya tienes Premium activo, gestionado desde Google Play Store en la app.",

@@ -107,6 +107,7 @@ export function PremiumPage({ profile, onClose, refreshProfile, onSubscribed }) 
   const isAndroid = useMemo(() => isAndroidBilling(), [])
   // 'idle' | 'restoring' | 'success' | 'empty' | 'error'
   const [restoreState, setRestoreState] = useState('idle')
+  const [restoreDetail, setRestoreDetail] = useState('')
   // Compra NUEVA por Google Play Billing (Android) — separada de
   // checkoutState (ese es 100% Stripe/web). 'idle' | 'processing' | 'error'
   const [androidPurchaseState, setAndroidPurchaseState] = useState('idle')
@@ -145,6 +146,7 @@ export function PremiumPage({ profile, onClose, refreshProfile, onSubscribed }) 
   // basta, sin necesidad de reintentar en bucle.
   async function handleRestorePurchases() {
     setRestoreState('restoring')
+    setRestoreDetail('')
     try {
       const { data: { session } } = await supabase.auth.getSession()
       if (!session) { setRestoreState('error'); return }
@@ -162,6 +164,8 @@ export function PremiumPage({ profile, onClose, refreshProfile, onSubscribed }) 
       // dice si Google Play no encontró ninguna compra, si falló la
       // llamada al backend, o algo más.
       console.error('[Google Play Billing] Error en restorePurchases:', e?.message, e)
+      // v0.9.997: se muestra la causa real (servidor/Google) bajo el mensaje genérico.
+      setRestoreDetail(String(e?.message || '').slice(0, 220))
       setRestoreState('error')
     }
   }
@@ -393,6 +397,7 @@ export function PremiumPage({ profile, onClose, refreshProfile, onSubscribed }) 
           {restoreState === 'success' && t('premiumPage.restoreSuccess')}
           {restoreState === 'empty' && t('premiumPage.restoreEmpty')}
           {restoreState === 'error' && t('premiumPage.restoreError')}
+          {restoreState === 'error' && restoreDetail && <div className={styles.restoreDetail}>{t('premiumPage.restoreErrorDetail', { detail: restoreDetail })}</div>}
         </div>
       )}
     </div>
