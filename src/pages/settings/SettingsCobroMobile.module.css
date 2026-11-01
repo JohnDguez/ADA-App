@@ -53,8 +53,8 @@
 .heroTxt { min-width: 0; display: flex; flex-direction: column; align-items: flex-start; }
 .heroTxt small { font-size: 0.6875rem; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; opacity: 0.85; }
 .heroTxt b { font-size: clamp(1.375rem, 6.8vw, 1.625rem); font-weight: 700; line-height: 1.1; margin-top: 0.25rem; }
-.heroPill { margin-top: 0.625rem; background: var(--desk-card); color: var(--desk-deep); font-size: 0.6875rem; font-weight: 700; padding: 0.25rem 0.625rem; border-radius: 99px; }
-.heroCal { width: 3.375rem; border-radius: 0.75rem; overflow: hidden; text-align: center; background: var(--desk-card); color: var(--text); flex-shrink: 0; }
+.heroPill { margin-top: 0.625rem; background: var(--desk-ink-text); color: var(--desk-deep); font-size: 0.6875rem; font-weight: 700; padding: 0.25rem 0.625rem; border-radius: 99px; }
+.heroCal { width: 3.375rem; border-radius: 0.75rem; overflow: hidden; text-align: center; background: var(--desk-ink-text); color: var(--desk-deep); flex-shrink: 0; }
 .heroCal i { display: block; background: var(--danger); color: var(--on-danger); font-size: 0.59375rem; font-weight: 800; font-style: normal; padding: 0.125rem 0; }
 .heroCal b { display: block; font-size: 1.5rem; font-weight: 700; padding: 0.25rem 0; color: var(--desk-deep); }
 
