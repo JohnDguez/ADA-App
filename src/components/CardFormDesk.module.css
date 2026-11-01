@@ -28,3 +28,10 @@
 .layoutT .side { gap: 10px; }
 .layoutT .preview > * { width: 100%; }
 .layoutT .stackT { flex-direction: column; gap: 0; }
+
+/* Tablet vertical en <Modal> (v0.9.982): tarjeta centrada arriba y campos en
+   un panel blanco; los segmentados van sobre --desk-chip. */
+.tabPrev { display: flex; justify-content: center; flex: none; }
+.tabPrev > * { width: min(320px, 100%); }
+.tabForm { gap: 10px; }
+.tabForm .input { background: var(--desk-chip); }

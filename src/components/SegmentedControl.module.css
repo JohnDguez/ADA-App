@@ -24,7 +24,7 @@
   left: var(--seg-left);
   width: var(--seg-width);
   border-radius: var(--radius-full);
-  background: var(--accent);
+  background: var(--desk-pill); /* activo en negro (DISENO.md §6, v0.9.982) */
   transition: left .3s cubic-bezier(0.22, 1, 0.36, 1), width .3s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
@@ -52,7 +52,7 @@
 }
 
 .segOptionOn {
-  color: var(--surface);
+  color: var(--desk-pill-ink);
   font-weight: 600;
 }
 
@@ -63,8 +63,5 @@
 .segPage .segOption { padding: 10px 0; font-weight: 400; }
 .segPage .segOptionOn { font-weight: 500; }
 
-/* Escritorio (v0.9.845): pista y opción activa del nuevo diseño. */
-@media (min-width: 1100px) {
-  .seg { background: var(--desk-chip); }
-  .segOptionOn { color: var(--desk-ink-text); }
-}
+/* Pista del diseño nuevo en todos los tamaños (v0.9.982). */
+.seg:not(.segPage) { background: var(--desk-chip); }

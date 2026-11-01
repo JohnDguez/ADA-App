@@ -7,6 +7,7 @@ import AmountInput from './AmountInput'
 import { X } from 'lucide-react'
 import { fmt, dateOf, getMonthsShort } from '../lib/utils'
 import { useIsMobile } from '../hooks/useIsMobile'
+import { useIsDesktop } from '../hooks/useIsDesktop'
 import { ColorPickerPanel } from './ColorPickerPanel'
 import { catInk, isHexColor, colorToHex } from '../lib/colorUtils'
 import cf from './CategoryFormDesk.module.css'
@@ -32,6 +33,8 @@ export function GoalFormModal({ open, initial, onSave, onClose }) {
   const isMobile = useIsMobile()
   // Escritorio y tablet usan el diálogo con vista previa; móvil, la hoja.
   const isDesk = !isMobile
+  // Tablet vertical (v0.9.982): mismo diálogo en una columna, vista previa arriba.
+  const isDesktop = useIsDesktop()
   const [name, setName] = useState('')
   const [notes, setNotes] = useState('')
   const [icon, setIcon] = useState('PiggyBank')
@@ -129,7 +132,7 @@ export function GoalFormModal({ open, initial, onSave, onClose }) {
     const target = parseFloat(targetAmount) || 0
     return (
       <div onClick={e => e.target === e.currentTarget && onClose()} className={`${gd.overlay} ${closing ? styles.overlayClosing : ''}`}>
-        <div className={gd.dialog} role="dialog" aria-modal="true" aria-label={initial ? t('goalFormModal.titleEdit') : t('goalFormModal.titleNew')}>
+        <div className={`${gd.dialog} ${isDesktop ? '' : gd.dialogTab}`} data-presence="panel" data-closing={closing ? '' : undefined} role="dialog" aria-modal="true" aria-label={initial ? t('goalFormModal.titleEdit') : t('goalFormModal.titleNew')}>
           <div className={gd.head}>
             <div>
               <h2 className={gd.title}>{initial ? t('goalFormModal.titleEdit') : t('goalFormModal.titleNew')}</h2>

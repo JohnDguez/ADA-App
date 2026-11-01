@@ -50,3 +50,15 @@ input.input:focus { box-shadow: inset 0 0 0 2px var(--accent); }
   .pi { width: 84px; height: 84px; border-radius: 26px; }
   .preview b { font-size: 17px; }
 }
+
+/* Tablet vertical en <Modal> (v0.9.982) */
+.tabPrev { flex: none; display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: 20px; background: var(--desk-card); box-shadow: var(--desk-shadow); }
+.tabPrev > div { display: flex; flex-direction: column; min-width: 0; }
+.tabPrev b { font-size: 16px; font-weight: 600; color: var(--text); }
+.tabPrev > div > span { font-size: 12.5px; color: var(--muted); }
+.tabPi { width: 46px; height: 46px; flex: none; display: grid; place-items: center; border-radius: 14px; transition: background .25s; }
+.tabForm { gap: 10px; }
+.tabForm .input, .tabForm .search { background: var(--desk-chip); }
+.tabForm .groups { max-height: 260px; }
+.tabDel { display: flex; flex-direction: column; gap: 10px; }
+.tabForm .ib { background: var(--desk-chip); }

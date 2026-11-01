@@ -16,6 +16,9 @@ import mm from './CategoryFormMobile.module.css'
 import { ColorPickerPanel } from './ColorPickerPanel'
 import { catInk, isHexColor, colorToHex } from '../lib/colorUtils'
 import { useIsMobile } from '../hooks/useIsMobile'
+import { useIsDesktop } from '../hooks/useIsDesktop'
+import { Modal } from './Modal'
+import mk from './Modal.module.css'
 import dkp from './PaymentDesk.module.css'
 
 export const CATEGORY_PALETTE = Array.from({ length: 16 }, (_, i) => `var(--palette-${i + 1})`)
@@ -39,6 +42,7 @@ export function CategoryFormModal({ open, onClose, editingCat = null, profile, o
   const [confirmingDelete, setConfirmingDelete] = useState(false)
   const [deleting,  setDeleting]    = useState(false)
   const isMobile = useIsMobile()
+  const isDesktop = useIsDesktop()
   const [deleteCount, setDeleteCount] = useState(null) // pagos que se reasignarán, o null mientras carga
 
   const customCats     = profile.custom_categories || []
@@ -152,9 +156,8 @@ export function CategoryFormModal({ open, onClose, editingCat = null, profile, o
     const previewName = formName ? getCategoryLabel(formName) : t('settingsCategories.namePlaceholder')
     const customOn = isHexColor(formColor)
     const deskTitle = editingCat ? t('settingsCategories.addModalTitleEdit') : t('settingsCategories.addModalTitleNew')
-    const deskBody = (
-        <div className={dk.layout}>
-          <div className={deskStyles.fill}>
+    const fieldsEl = (
+      <>
             <label className={dk.lbl}>{t('settingsCategories.nameLabel')}</label>
             {editingCat && !editingCat.isCustom ? (
               <>
@@ -207,16 +210,10 @@ export function CategoryFormModal({ open, onClose, editingCat = null, profile, o
               </button>
             </div>
             {customOn && <ColorPickerPanel value={formColor} onChange={setFormColor} />}
-          </div>
-
-          <div className={dk.side}>
-            <div className={dk.preview} style={{ '--tint': tint }}>
-              <span className={dk.pi} style={{ color: catInk(tint) }}>{PreviewIcon ? <PreviewIcon size={40} /> : <span className={dk.dot} />}</span>
-              <b>{previewName}</b>
-              <span>{t('settingsCategories.desk.previewHint')}</span>
-            </div>
-            <button type="button" className={`${deskStyles.btn} ${dk.full}`} onClick={handleSave} disabled={saving}>{saving ? t('settingsCategories.saving') : t('buttons.save')}</button>
-            <button type="button" className={`${deskStyles.btn} ${deskStyles.btnSoft} ${dk.full}`} onClick={onClose}>{t('buttons.cancel')}</button>
+      </>
+    )
+    const deleteEl = (
+      <>
             {editingCat?.isCustom && (confirmingDelete ? (
               <div ref={confirmRef} className={deskStyles.fill}>
                 <div className={dk.confirm}>
@@ -234,9 +231,41 @@ export function CategoryFormModal({ open, onClose, editingCat = null, profile, o
             ) : (
               <button type="button" className={`${dk.delete} ${dk.full}`} onClick={askDelete}><Trash2 size={16} />{t('settingsCategories.deleteCategory')}</button>
             ))}
+      </>
+    )
+    const deskBody = (
+        <div className={dk.layout}>
+          <div className={deskStyles.fill}>
+            {fieldsEl}
+          </div>
+
+          <div className={dk.side}>
+            <div className={dk.preview} style={{ '--tint': tint }}>
+              <span className={dk.pi} style={{ color: catInk(tint) }}>{PreviewIcon ? <PreviewIcon size={40} /> : <span className={dk.dot} />}</span>
+              <b>{previewName}</b>
+              <span>{t('settingsCategories.desk.previewHint')}</span>
+            </div>
+            <button type="button" className={`${deskStyles.btn} ${dk.full}`} onClick={handleSave} disabled={saving}>{saving ? t('settingsCategories.saving') : t('buttons.save')}</button>
+            <button type="button" className={`${deskStyles.btn} ${deskStyles.btnSoft} ${dk.full}`} onClick={onClose}>{t('buttons.cancel')}</button>
+            {deleteEl}
           </div>
         </div>
     )
+    // Tablet vertical (v0.9.982, mockup de modales): <Modal> de una columna con
+    // la vista previa en fila arriba; Cancelar + Guardar en el pie.
+    if (!inline && !isDesktop) {
+      return (
+        <Modal open={open} onClose={onClose} title={deskTitle} desc={t('settingsCategories.desk.formDesc')} width={620} zIndex={zIndex || 520}
+          primary={{ label: saving ? t('settingsCategories.saving') : t('buttons.save'), onClick: handleSave, disabled: saving }}>
+          <div className={dk.tabPrev}>
+            <span className={dk.tabPi} style={{ background: tint, color: catInk(tint) }}>{PreviewIcon ? <PreviewIcon size={24} /> : <span className={dk.dot} />}</span>
+            <div><b>{previewName}</b><span>{t('settingsCategories.desk.previewHint')}</span></div>
+          </div>
+          <div className={`${mk.pan} ${dk.tabForm}`}>{fieldsEl}</div>
+          {editingCat?.isCustom && <div className={dk.tabDel}>{deleteEl}</div>}
+        </Modal>
+      )
+    }
     if (inline) {
       return (
         <DeskPage>

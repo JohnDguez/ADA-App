@@ -14,6 +14,8 @@ import dk from './CardFormDesk.module.css'
 import dkp from './PaymentDesk.module.css'
 import { useIsDesktop } from '../hooks/useIsDesktop'
 import { useIsMobile } from '../hooks/useIsMobile'
+import { Modal } from './Modal'
+import mk from './Modal.module.css'
 import mm from './CardFormMobile.module.css'
 import { ChevronLeft, X as XIcon } from 'lucide-react'
 import { markBackHandled } from '../lib/backNav'
@@ -171,32 +173,16 @@ export function CardFormModal({ open, initial, onSave, onClose, inline = false }
     )
   }
 
-  // Tablet vertical (768–1099px, v0.9.953, mockup aprobado): diálogo de dos columnas —
-  // campos a la izquierda; vista previa, Guardar y Cancelar a la derecha.
+  // Tablet vertical (768–1099px, v0.9.982, mockup de modales): diálogo de UNA
+  // columna con <Modal>: tarjeta arriba, campos y pie Cancelar + Guardar.
   if (!isDesk && !isMobile) {
-    const ttl = initial ? t('cards.form.titleEdit') : t('cards.form.titleNew')
-    return createPortal(
-      <div onClick={e => e.target === e.currentTarget && onClose()} className={dkp.overlay} data-presence="overlay" data-closing={closing ? '' : undefined}>
-        <div className={`${dkp.dialog} ${dk.dlgT}`} role="dialog" aria-modal="true" aria-label={ttl} data-presence="panel" data-closing={closing ? '' : undefined}>
-          <div className={dkp.head}>
-            <div>
-              <h2 className={dkp.title}>{ttl}</h2>
-              <div className={dkp.sub}>{t('cards.desk.formDesc')}</div>
-            </div>
-            <button type="button" className={dkp.close} onClick={onClose} aria-label={t('buttons.cancel')}><XIcon size={16} /></button>
-          </div>
-          <div className={`${dk.layout} ${dk.layoutT}`}>
-            <div className={dk.dlgForm}>{deskFields}</div>
-            <div className={dk.side}>
-              <div className={dk.preview}><CreditCardVisual card={{ ...form, bank: form.bank || 'otro' }} /></div>
-              {error && <div className={dk.err}>{error}</div>}
-              <button type="button" className={`${deskStyles.btn} ${dk.full}`} onClick={handleSave}>{initial ? t('cards.form.saveEdit') : t('cards.form.saveNew')}</button>
-              <button type="button" className={`${deskStyles.btn} ${deskStyles.btnSoft} ${dk.full}`} onClick={onClose}>{t('buttons.cancel')}</button>
-            </div>
-          </div>
-        </div>
-      </div>,
-      document.body
+    return (
+      <Modal open={open} onClose={onClose} title={initial ? t('cards.form.titleEdit') : t('cards.form.titleNew')} desc={t('cards.desk.formDesc')}
+        width={620} primary={{ label: initial ? t('cards.form.saveEdit') : t('cards.form.saveNew'), onClick: handleSave }}>
+        <div className={dk.tabPrev}><CreditCardVisual card={{ ...form, bank: form.bank || 'otro' }} /></div>
+        <div className={`${mk.pan} ${dk.tabForm}`}>{deskFields}</div>
+        {error && <div className={mk.err}>{error}</div>}
+      </Modal>
     )
   }
 

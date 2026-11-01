@@ -35,3 +35,9 @@
   .body { grid-template-columns: minmax(0, 1fr) 250px; gap: 20px; }
   .side { padding: 16px; }
 }
+
+/* Tablet vertical (v0.9.982, mockup de modales): una columna, vista previa arriba. */
+.dialogTab { width: 620px; padding: 26px 28px; }
+.dialogTab .body { grid-template-columns: minmax(0, 1fr); }
+.dialogTab .side { order: -1; position: static; }
+.dialogTab .groups { max-height: 240px; }
