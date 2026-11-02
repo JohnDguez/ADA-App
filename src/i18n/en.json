@@ -2720,7 +2720,8 @@
         "dmy": "Day / Month / Year",
         "mdy": "Month / Day / Year",
         "ymd": "Year-Month-Day"
-      }
+      },
+      "dateTitle": "Date format"
     },
     "review": {
       "ok": "Ready",

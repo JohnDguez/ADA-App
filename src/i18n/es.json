@@ -2720,7 +2720,8 @@
         "dmy": "Día / Mes / Año",
         "mdy": "Mes / Día / Año",
         "ymd": "Año-Mes-Día"
-      }
+      },
+      "dateTitle": "Formato de las fechas"
     },
     "review": {
       "ok": "Correctos",

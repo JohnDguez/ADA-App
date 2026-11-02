@@ -414,24 +414,44 @@ function ImportBody({ profile, sharedActive, onClose, onImport, onFetchExisting,
             })}
           </div>
           <div className={kit.sep} />
-          <div className={kit.pt}><b>{t('importCsv.columns.dateQ')}</b></div>
-          <div className={styles.fmts} role="radiogroup" aria-label={t('importCsv.columns.dateQ')}>
-            {fmtOpts.map(([v, k]) => {
-              // parseDate acepta ISO con cualquier formato: solo se "lee" si el texto tiene la forma de ese formato.
+          <div className={kit.pt}><b>{t('importCsv.columns.dateTitle')}</b></div>
+          {(() => {
+            // parseDate acepta ISO con cualquier formato: solo se "lee" si el texto tiene la forma de ese formato.
+            const reads = v => {
               const shapeOk = v === 'YMD' ? /^\d{4}[/.-]\d{1,2}[/.-]\d{1,2}/.test(rawDate) : /^\d{1,2}[/.-]\d{1,2}[/.-]\d{2,4}/.test(rawDate)
-              const d = rawDate && shapeOk ? parseDate(rawDate, v) : null
-              if (rawDate && !d && dateFormat !== v && fmtOpts.some(([w]) => w !== v && (w === 'YMD' ? /^\d{4}[/.-]/.test(rawDate) : /^\d{1,2}[/.-]/.test(rawDate)))) return null
+              return rawDate && shapeOk ? parseDate(rawDate, v) : null
+            }
+            const show = d => dateOf(d).toLocaleDateString(intlLocale(), { day: 'numeric', month: 'short', year: 'numeric' })
+            const ok = fmtOpts.filter(([v]) => reads(v))
+            // Una sola lectura posible y sin duda: no hay nada que elegir, solo se confirma.
+            if (ok.length === 1 && !dateAmbiguous) {
+              const [v, k] = ok[0]
               return (
-                <button key={v} type="button" role="radio" aria-checked={dateFormat === v}
-                  className={`${styles.fmt} ${dateFormat === v ? styles.fmtOn : ''}`}
-                  onClick={() => { setDateFormat(v); setDateAmbiguous(false) }}>
-                  <i aria-hidden="true" />
+                <div className={styles.fmtInfo}>
+                  <Check size={16} />
                   <b>{t(`importCsv.columns.fmt.${k}`)}</b>
-                  <em>{d ? dateOf(d).toLocaleDateString(intlLocale(), { day: 'numeric', month: 'short', year: 'numeric' }) : ''}</em>
-                </button>
+                  <em>{show(reads(v))}</em>
+                </div>
               )
-            })}
-          </div>
+            }
+            // Hay duda (o no se pudo leer): se elige entre las lecturas posibles.
+            return (
+              <div className={styles.fmts} role="radiogroup" aria-label={t('importCsv.columns.dateQ')}>
+                {(ok.length ? ok : fmtOpts).map(([v, k]) => {
+                  const d = reads(v)
+                  return (
+                    <button key={v} type="button" role="radio" aria-checked={dateFormat === v}
+                      className={`${styles.fmt} ${dateFormat === v ? styles.fmtOn : ''}`}
+                      onClick={() => { setDateFormat(v); setDateAmbiguous(false) }}>
+                      <i aria-hidden="true" />
+                      <b>{t(`importCsv.columns.fmt.${k}`)}</b>
+                      <em>{d ? show(d) : t('importCsv.columns.dateNo')}</em>
+                    </button>
+                  )
+                })}
+              </div>
+            )
+          })()}
           {dateAmbiguous && <div className={styles.warnText}>{t('importCsv.columns.dateAmbiguous')}</div>}
           <Collapse open={amountMode === 'single'}>
             <div {...switchProps(negativeIsExpense)} className={`${kit.row} ${kit.clickable} ${styles.negRow}`} onClick={() => setNegativeIsExpense(v => !v)}>
