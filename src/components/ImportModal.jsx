@@ -377,7 +377,7 @@ function ImportBody({ profile, sharedActive, onClose, onImport, onFetchExisting,
   function renderColumns() {
     const roleOf = i => ROLE_LIST.find(k => k !== 'none' && mapping[k] === i) || 'none'
     const sample = i => {
-      const vals = table.map(r => String(r[i] ?? '').trim()).filter(Boolean).slice(0, 3)
+      const vals = table.map(r => String(r[i] ?? '').trim()).filter(Boolean).slice(0, 2)
       return vals.length ? vals.join(', ') : t('importCsv.columns.emptyCol')
     }
     const amountOk = amountMode === 'single' ? mapping.amount >= 0 : (mapping.debit >= 0 || mapping.credit >= 0)
@@ -393,21 +393,20 @@ function ImportBody({ profile, sharedActive, onClose, onImport, onFetchExisting,
         <section className={kit.panel}>
           <div className={`${kit.notice} ${styles.okBox}`}>
             <Check size={18} style={{ color: 'var(--paid)' }} />
-            <div className={styles.okText}><b>{t('importCsv.columns.okTitle')}</b><span>{t('importCsv.columns.okSub')}</span></div>
+            <div className={styles.okText}><b>{t('importCsv.columns.okTitle')}</b></div>
           </div>
-          <div className={kit.pt}><b>{t('importCsv.columns.title')}</b><span>{t('importCsv.columns.subtitle')}</span></div>
+          <p className={styles.hint}>{t('importCsv.columns.subtitle')}</p>
           <div className={styles.cols}>
             {headers.map((h, i) => {
               const role = roleOf(i)
               return (
                 <div key={i} className={styles.col}>
                   <div className={styles.colInfo}>
-                    <small>{t('importCsv.columns.fileCol')}</small>
                     <b>{h || t('importCsv.columns.colFallback', { n: i + 1 })}</b>
-                    <span>{t('importCsv.columns.example', { v: sample(i) })}</span>
+                    <span>{sample(i)}</span>
                   </div>
-                  <button type="button" className={`${styles.role} ${role === 'none' ? styles.roleOff : ''}`} onClick={() => setRolePick(i)}>
-                    <span><small>{t('importCsv.columns.usedAs')}</small><b>{t(`importCsv.columns.roles.${role}`)}</b></span>
+                  <button type="button" className={`${styles.role} ${role === 'none' ? styles.roleOff : ''}`} onClick={() => setRolePick(i)} aria-label={t('importCsv.columns.usedAs')}>
+                    <b>{t(`importCsv.columns.roles.${role}`)}</b>
                     <ChevronDown size={16} />
                   </button>
                 </div>
@@ -415,18 +414,20 @@ function ImportBody({ profile, sharedActive, onClose, onImport, onFetchExisting,
             })}
           </div>
           <div className={kit.sep} />
-          <div className={kit.pt}><b>{t('importCsv.columns.dateQ')}</b>{rawDate && <span>{t('importCsv.columns.dateSeen', { v: rawDate })}</span>}</div>
+          <div className={kit.pt}><b>{t('importCsv.columns.dateQ')}</b></div>
           <div className={styles.fmts} role="radiogroup" aria-label={t('importCsv.columns.dateQ')}>
             {fmtOpts.map(([v, k]) => {
-              // parseDate acepta ISO con cualquier formato: aquí solo se "lee" si el texto tiene la forma de ese formato.
+              // parseDate acepta ISO con cualquier formato: solo se "lee" si el texto tiene la forma de ese formato.
               const shapeOk = v === 'YMD' ? /^\d{4}[/.-]\d{1,2}[/.-]\d{1,2}/.test(rawDate) : /^\d{1,2}[/.-]\d{1,2}[/.-]\d{2,4}/.test(rawDate)
               const d = rawDate && shapeOk ? parseDate(rawDate, v) : null
+              if (rawDate && !d && dateFormat !== v && fmtOpts.some(([w]) => w !== v && (w === 'YMD' ? /^\d{4}[/.-]/.test(rawDate) : /^\d{1,2}[/.-]/.test(rawDate)))) return null
               return (
                 <button key={v} type="button" role="radio" aria-checked={dateFormat === v}
                   className={`${styles.fmt} ${dateFormat === v ? styles.fmtOn : ''}`}
                   onClick={() => { setDateFormat(v); setDateAmbiguous(false) }}>
                   <i aria-hidden="true" />
-                  <span><b>{t(`importCsv.columns.fmt.${k}`)}</b><em>{rawDate ? (d ? t('importCsv.columns.dateReads', { v: rawDate, d: dateOf(d).toLocaleDateString(intlLocale(), { day: 'numeric', month: 'long', year: 'numeric' }) }) : t('importCsv.columns.dateNo')) : ''}</em></span>
+                  <b>{t(`importCsv.columns.fmt.${k}`)}</b>
+                  <em>{d ? dateOf(d).toLocaleDateString(intlLocale(), { day: 'numeric', month: 'short', year: 'numeric' }) : ''}</em>
                 </button>
               )
             })}
@@ -440,7 +441,7 @@ function ImportBody({ profile, sharedActive, onClose, onImport, onFetchExisting,
           </Collapse>
         </section>
         <section className={kit.panel}>
-          <div className={kit.pt}><b>{t('importCsv.columns.preview')}</b><span>{t('importCsv.columns.previewSub')}</span></div>
+          <div className={kit.pt}><b>{t('importCsv.columns.preview')}</b></div>
           {preview.map(p => (
             <div key={p.i} className={styles.prow}>
               <span className={p.d ? '' : styles.bad}>{p.d ? fmtShort(p.d) : t('importCsv.columns.previewBad')}</span>

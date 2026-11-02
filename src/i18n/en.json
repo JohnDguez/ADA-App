@@ -2681,17 +2681,15 @@
     },
     "columns": {
       "title": "What each column is used for",
-      "subtitle": "These are the columns in your file. Tap the use of any column if it isn't right.",
+      "subtitle": "Tap a column’s use if it isn’t right.",
       "dateAmbiguous": "The dates in your file can be read two ways. We chose day/month/year; change it if the preview does not match.",
       "negative": "Do your expenses have a minus sign (−)?",
-      "negativeHint": "E.g.: −320.00 is a $320 expense. If not, every amount is taken as an expense and positive ones that are income are skipped.",
+      "negativeHint": "E.g.: −320.00 is a $320 expense.",
       "preview": "How it will be read",
       "previewBad": "Could not be read",
       "needFields": "Choose at least the date, concept and amount columns.",
       "continue": "Continue",
       "okTitle": "We recognized your columns",
-      "okSub": "Check what each one is used for. Change only what doesn't match.",
-      "fileCol": "Column in your file",
       "usedAs": "LunaPay uses it as",
       "example": "E.g.: {{v}}",
       "emptyCol": "(empty)",
@@ -2716,15 +2714,13 @@
         "none": "Ignore this column"
       },
       "dateQ": "How are the dates written?",
-      "dateSeen": "Your file has dates like {{v}}.",
       "dateReads": "{{v}} → {{d}}",
       "dateNo": "Can't be read this way",
       "fmt": {
         "dmy": "Day / Month / Year",
         "mdy": "Month / Day / Year",
         "ymd": "Year-Month-Day"
-      },
-      "previewSub": "This is how your first transactions will be saved."
+      }
     },
     "review": {
       "ok": "Ready",

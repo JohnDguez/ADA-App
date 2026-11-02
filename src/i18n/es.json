@@ -2681,17 +2681,15 @@
     },
     "columns": {
       "title": "Para qué se usa cada columna",
-      "subtitle": "Estas son las columnas de tu archivo. Toca el uso de cada una si no es el correcto.",
+      "subtitle": "Toca el uso de una columna si no es el correcto.",
       "dateAmbiguous": "Las fechas de tu archivo se pueden leer de dos maneras. Elegimos día/mes/año; cámbialo si la vista previa no coincide.",
       "negative": "¿Tus gastos traen signo menos (−)?",
-      "negativeHint": "Ej.: −320.00 es un gasto de $320. Si no, todos los montos se toman como gastos y los positivos que sean ingresos se omiten.",
+      "negativeHint": "Ej.: −320.00 es un gasto de $320.",
       "preview": "Así se leerá",
       "previewBad": "No se pudo leer",
       "needFields": "Elige al menos las columnas de fecha, concepto y monto.",
       "continue": "Continuar",
       "okTitle": "Reconocimos tus columnas",
-      "okSub": "Revisa para qué se usa cada una. Cambia solo lo que no coincida.",
-      "fileCol": "Columna de tu archivo",
       "usedAs": "LunaPay la usa como",
       "example": "Ej.: {{v}}",
       "emptyCol": "(vacía)",
@@ -2716,15 +2714,13 @@
         "none": "Ignorar esta columna"
       },
       "dateQ": "¿Cómo están escritas las fechas?",
-      "dateSeen": "Tu archivo trae fechas como {{v}}.",
       "dateReads": "{{v}} → {{d}}",
       "dateNo": "No se puede leer así",
       "fmt": {
         "dmy": "Día / Mes / Año",
         "mdy": "Mes / Día / Año",
         "ymd": "Año-Mes-Día"
-      },
-      "previewSub": "Así se guardarán tus primeros movimientos."
+      }
     },
     "review": {
       "ok": "Correctos",
