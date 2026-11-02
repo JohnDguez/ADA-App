@@ -3,7 +3,6 @@ import { useTranslation } from 'react-i18next'
 import { Upload, FileSpreadsheet, Search, ChevronLeft, ChevronDown, Repeat, Check } from 'lucide-react'
 import { UploadSimple } from '@phosphor-icons/react/dist/csr/UploadSimple'
 import { BottomSheet } from './BottomSheet'
-import { Select } from './Select'
 import { Collapse } from './Collapse'
 import { Toggle } from './SettingsShared'
 import { LoadingDots } from './LoadingDots'
@@ -28,6 +27,7 @@ import styles from './ImportModal.module.css'
 // nunca hace crecer la página. Todo se procesa en el dispositivo.
 
 const MAX_ROWS = 5000
+const ROLE_LIST = ['date', 'concept', 'amount', 'debit', 'credit', 'category', 'none']
 const MAX_BYTES = 5 * 1024 * 1024
 const MAP_KEY = 'lunapay_import_maps_v1'
 const ITEM_H_PHONE = 62
@@ -115,6 +115,7 @@ function ImportBody({ profile, sharedActive, onClose, onImport, onFetchExisting,
   const [dateFormat, setDateFormat] = useState('DMY')
   const [dateAmbiguous, setDateAmbiguous] = useState(false)
   const [negativeIsExpense, setNegativeIsExpense] = useState(false)
+  const [rolePick, setRolePick] = useState(null) // índice de la columna cuyo uso se elige
 
   // Revisión
   const [existing, setExisting] = useState([])
@@ -353,19 +354,34 @@ function ImportBody({ profile, sharedActive, onClose, onImport, onFetchExisting,
     )
   }
 
+  // Cada columna del archivo se asigna a UN uso; un uso solo puede tener una columna.
+  function applyRole(role) {
+    const i = rolePick
+    if (i == null) return
+    setMapping(m => {
+      const next = { ...m }
+      for (const k of ROLE_LIST) if (k !== 'none' && next[k] === i) next[k] = -1
+      if (role !== 'none') next[role] = i
+      if (role === 'amount') { next.debit = -1; next.credit = -1 }
+      if (role === 'debit' || role === 'credit') next.amount = -1
+      return next
+    })
+    if (role === 'amount') setAmountMode('single')
+    if (role === 'debit' || role === 'credit') setAmountMode('double')
+    setRolePick(null)
+  }
+
   // ── Paso 2 ───────────────────────────────────────────────────────────────
   function renderColumns() {
-    const opts = [{ value: '', label: t('importCsv.columns.none') }, ...headers.map((h, i) => ({ value: String(i), label: h || `#${i + 1}` }))]
-    const set = key => v => setMapping(m => ({ ...m, [key]: v === '' ? -1 : Number(v) }))
-    const val = key => (mapping[key] >= 0 ? String(mapping[key]) : '')
-    const field = (key, label) => (
-      <div className={styles.crow}>
-        <span>{label}</span>
-        <div className={styles.fsel}><Select value={val(key)} onChange={set(key)} options={opts} placeholder={t('importCsv.columns.choose')} /></div>
-      </div>
-    )
+    const roleOf = i => ROLE_LIST.find(k => k !== 'none' && mapping[k] === i) || 'none'
+    const sample = i => {
+      const vals = table.map(r => String(r[i] ?? '').trim()).filter(Boolean).slice(0, 3)
+      return vals.length ? vals.join(', ') : t('importCsv.columns.emptyCol')
+    }
     const amountOk = amountMode === 'single' ? mapping.amount >= 0 : (mapping.debit >= 0 || mapping.credit >= 0)
     const ready = mapping.date >= 0 && mapping.concept >= 0 && amountOk
+    const rawDate = mapping.date >= 0 ? String((table.find(r => String(r[mapping.date] ?? '').trim()) || [])[mapping.date] ?? '').trim() : ''
+    const fmtOpts = [['DMY', 'dmy'], ['MDY', 'mdy'], ['YMD', 'ymd']]
     const preview = table.slice(0, 3).map((r, i) => {
       const d = parseDate(r[mapping.date], dateFormat)
       return { i, d, c: String(r[mapping.concept] ?? ''), a: amountMode === 'single' ? r[mapping.amount] : (r[mapping.debit] || r[mapping.credit]) }
@@ -373,25 +389,47 @@ function ImportBody({ profile, sharedActive, onClose, onImport, onFetchExisting,
     return (
       <div className={`${kit.grid} ${kit.gridWide}`}>
         <section className={kit.panel}>
-          <div className={kit.pt}><b>{t('importCsv.columns.title')}</b><span>{t('importCsv.columns.subtitle')}</span></div>
-          {field('date', t('importCsv.columns.date'))}
-          {field('concept', t('importCsv.columns.concept'))}
-          <SkSeg value={amountMode}
-            onChange={v => {
-              setAmountMode(v)
-              setMapping(m => v === 'single' ? { ...m, debit: -1, credit: -1 } : { ...m, amount: -1 })
-            }}
-            options={[{ value: 'single', label: t('importCsv.columns.modeSingle') }, { value: 'double', label: t('importCsv.columns.modeDouble') }]} />
-          {amountMode === 'single'
-            ? field('amount', t('importCsv.columns.amount'))
-            : <>{field('debit', t('importCsv.columns.debit'))}{field('credit', t('importCsv.columns.credit'))}</>}
-          {field('category', t('importCsv.columns.category'))}
-          <div className={styles.crow}>
-            <span>{t('importCsv.columns.dateFormat')}</span>
-            <SkSeg value={dateFormat} onChange={v => { setDateFormat(v); setDateAmbiguous(false) }}
-              options={[{ value: 'DMY', label: 'DD/MM/AAAA' }, { value: 'MDY', label: 'MM/DD/AAAA' }, { value: 'YMD', label: 'AAAA-MM-DD' }]} />
-            {dateAmbiguous && <div className={styles.warnText}>{t('importCsv.columns.dateAmbiguous')}</div>}
+          <div className={`${kit.notice} ${styles.okBox}`}>
+            <Check size={18} style={{ color: 'var(--paid)' }} />
+            <div className={styles.okText}><b>{t('importCsv.columns.okTitle')}</b><span>{t('importCsv.columns.okSub')}</span></div>
           </div>
+          <div className={kit.pt}><b>{t('importCsv.columns.title')}</b><span>{t('importCsv.columns.subtitle')}</span></div>
+          <div className={styles.cols}>
+            {headers.map((h, i) => {
+              const role = roleOf(i)
+              return (
+                <div key={i} className={styles.col}>
+                  <div className={styles.colInfo}>
+                    <small>{t('importCsv.columns.fileCol')}</small>
+                    <b>{h || t('importCsv.columns.colFallback', { n: i + 1 })}</b>
+                    <span>{t('importCsv.columns.example', { v: sample(i) })}</span>
+                  </div>
+                  <button type="button" className={`${styles.role} ${role === 'none' ? styles.roleOff : ''}`} onClick={() => setRolePick(i)}>
+                    <span><small>{t('importCsv.columns.usedAs')}</small><b>{t(`importCsv.columns.roles.${role}`)}</b></span>
+                    <ChevronDown size={16} />
+                  </button>
+                </div>
+              )
+            })}
+          </div>
+          <div className={kit.sep} />
+          <div className={kit.pt}><b>{t('importCsv.columns.dateQ')}</b>{rawDate && <span>{t('importCsv.columns.dateSeen', { v: rawDate })}</span>}</div>
+          <div className={styles.fmts} role="radiogroup" aria-label={t('importCsv.columns.dateQ')}>
+            {fmtOpts.map(([v, k]) => {
+              // parseDate acepta ISO con cualquier formato: aquí solo se "lee" si el texto tiene la forma de ese formato.
+              const shapeOk = v === 'YMD' ? /^\d{4}[/.-]\d{1,2}[/.-]\d{1,2}/.test(rawDate) : /^\d{1,2}[/.-]\d{1,2}[/.-]\d{2,4}/.test(rawDate)
+              const d = rawDate && shapeOk ? parseDate(rawDate, v) : null
+              return (
+                <button key={v} type="button" role="radio" aria-checked={dateFormat === v}
+                  className={`${styles.fmt} ${dateFormat === v ? styles.fmtOn : ''}`}
+                  onClick={() => { setDateFormat(v); setDateAmbiguous(false) }}>
+                  <i aria-hidden="true" />
+                  <span><b>{t(`importCsv.columns.fmt.${k}`)}</b><em>{rawDate ? (d ? t('importCsv.columns.dateReads', { v: rawDate, d: dateOf(d).toLocaleDateString(intlLocale(), { day: 'numeric', month: 'long', year: 'numeric' }) }) : t('importCsv.columns.dateNo')) : ''}</em></span>
+                </button>
+              )
+            })}
+          </div>
+          {dateAmbiguous && <div className={styles.warnText}>{t('importCsv.columns.dateAmbiguous')}</div>}
           <Collapse open={amountMode === 'single'}>
             <div {...switchProps(negativeIsExpense)} className={`${kit.row} ${kit.clickable} ${styles.negRow}`} onClick={() => setNegativeIsExpense(v => !v)}>
               <div className={kit.rowText}><b>{t('importCsv.columns.negative')}</b><span>{t('importCsv.columns.negativeHint')}</span></div>
@@ -400,7 +438,7 @@ function ImportBody({ profile, sharedActive, onClose, onImport, onFetchExisting,
           </Collapse>
         </section>
         <section className={kit.panel}>
-          <div className={kit.pt}><b>{t('importCsv.columns.preview')}</b></div>
+          <div className={kit.pt}><b>{t('importCsv.columns.preview')}</b><span>{t('importCsv.columns.previewSub')}</span></div>
           {preview.map(p => (
             <div key={p.i} className={styles.prow}>
               <span className={p.d ? '' : styles.bad}>{p.d ? fmtShort(p.d) : t('importCsv.columns.previewBad')}</span>
@@ -630,13 +668,33 @@ function ImportBody({ profile, sharedActive, onClose, onImport, onFetchExisting,
     </BottomSheet>
   )
 
+  const roleNow = rolePick == null || !mapping ? null : (ROLE_LIST.find(k => k !== 'none' && mapping[k] === rolePick) || 'none')
+  const roleSheet = (
+    <BottomSheet
+      open={rolePick != null}
+      title={rolePick != null ? t('importCsv.columns.pickTitle', { col: headers[rolePick] || t('importCsv.columns.colFallback', { n: rolePick + 1 }) }) : ''}
+      onClose={() => setRolePick(null)}
+      header={rolePick != null ? <div className={styles.pickerSub}>{t('importCsv.columns.example', { v: table.map(r => String(r[rolePick] ?? '').trim()).filter(Boolean).slice(0, 3).join(', ') || t('importCsv.columns.emptyCol') })}</div> : null}
+    >
+      {ROLE_LIST.map(k => (
+        <div key={k} className={`${styles.pickerRow} ${roleNow === k ? styles.pickerRowOn : ''}`} role="button" tabIndex={0}
+          data-selected={roleNow === k ? 'true' : undefined}
+          onClick={() => applyRole(k)}
+          onKeyDown={e => (e.key === 'Enter' || e.key === ' ') && (e.preventDefault(), applyRole(k))}>
+          <span className={styles.roleTxt}><b>{t(`importCsv.columns.roles.${k}`)}</b><em>{t(`importCsv.columns.roleHint.${k}`)}</em></span>
+          {roleNow === k && <Check size={16} />}
+        </div>
+      ))}
+    </BottomSheet>
+  )
+
   // Subpágina en los tres tamaños (v0.9.978, mockup aprobado; antes era un
   // modal en móvil/tablet). «Atrás» regresa un paso; en el paso 1 sale.
   return (
     <SettingsSubLayout title={t('importCsv.title')} description={t('importCsv.desk.description')}
       icon={UploadSimple} onBack={back} slideClass={slideClass}
       actions={mode === 'desk' && step !== 'file' ? <button type="button" className={`${kit.btn} ${kit.btnSoft}`} onClick={back}><ChevronLeft size={16} />{t('buttons.back')}</button> : null}
-      after={pickerSheet}>
+      after={<>{pickerSheet}{roleSheet}</>}>
       {stepper}
       <div key={step} className={styles.stepBody}>
         {step === 'file' && renderFile()}
