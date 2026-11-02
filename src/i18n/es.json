@@ -2765,7 +2765,8 @@
       "clearGroupShort": "Quitar",
       "selectGroupShort": "Seleccionar",
       "skippedIncomeLabel": "Ingresos o abonos omitidos",
-      "skippedUnpaidLabel": "Pagos pendientes omitidos"
+      "skippedUnpaidLabel": "Pagos pendientes omitidos",
+      "futureNote": "{{count}} movimientos tienen fecha futura: se guardarán como pendientes, no como pagados. Los de hoy o antes se guardan como pagados."
     },
     "recurring": {
       "title": "Pagos que se repiten",

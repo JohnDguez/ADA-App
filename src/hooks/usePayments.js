@@ -774,11 +774,18 @@ export function usePayments(userId, activeSpaceId = null, activeSpaceName = null
       is_installment: false, is_history_only: false,
       payment_method_id: null, payment_method_kind: 'cash',
     }
-    const inserts = items.map(it => ({
-      ...base, id: newId(), name: it.name, amount: it.amount, category: it.category || 'Otros',
-      due_date: it.date, is_variable: false, is_recurrent: false,
-      is_paid: true, paid_at: paidAtFor(it.date),
-    }))
+    // Un movimiento con fecha de hoy o anterior ya ocurrió → pagado. Con fecha
+    // futura es un pago por venir → pendiente (antes todo se guardaba como
+    // pagado, incluso con fecha de dentro de semanas).
+    const today = todayStr()
+    const inserts = items.map(it => {
+      const paid = it.date <= today
+      return {
+        ...base, id: newId(), name: it.name, amount: it.amount, category: it.category || 'Otros',
+        due_date: it.date, is_variable: false, is_recurrent: false,
+        is_paid: paid, paid_at: paid ? paidAtFor(it.date) : null,
+      }
+    })
     for (const r of recurrents) {
       const amount = r.isVariable ? 0 : r.amount
       const masterId = newId()

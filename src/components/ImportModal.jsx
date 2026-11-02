@@ -13,7 +13,7 @@ import {
   detectDateFormat, parseDate, buildImportRows, guessNegativeIsExpense, detectRecurring,
   groupByConcept, headerSignature, strip,
 } from '../lib/importCsv'
-import { CATEGORIES, getCategoryLabel, getCatColor, fmt, cobroPeriod, dateToStr, dateOf, getMonths, intlLocale } from '../lib/utils'
+import { CATEGORIES, getCategoryLabel, getCatColor, fmt, todayStr, cobroPeriod, dateToStr, dateOf, getMonths, intlLocale } from '../lib/utils'
 import { catInk } from '../lib/colorUtils'
 import { getCategoryIcon } from '../lib/categoryIcons'
 import { SettingsSubLayout, SkSeg, useSettingsMode } from './SettingsSubLayout'
@@ -161,9 +161,11 @@ function ImportBody({ profile, sharedActive, onClose, onImport, onFetchExisting,
   }, [profile])
   const inPeriod = useMemo(() => {
     if (!period) return { count: 0, sum: 0 }
-    const list = chosen.filter(r => r.date >= period.start && r.date <= period.end)
+    // Solo los que ya ocurrieron (hoy o antes) bajan el disponible: los de fecha futura entran como pendientes.
+    const list = chosen.filter(r => r.date >= period.start && r.date <= period.end && r.date <= todayStr())
     return { count: list.length, sum: list.reduce((s, r) => s + r.amount, 0) }
   }, [chosen, period])
+  const futureCount = useMemo(() => chosen.filter(r => r.date > todayStr()).length, [chosen])
 
   const suggestions = useMemo(() => (step === 'review' || step === 'recurring') ? detectRecurring(chosen) : [], [chosen, step])
   const repeatsByConcept = useMemo(() => {
@@ -563,6 +565,7 @@ function ImportBody({ profile, sharedActive, onClose, onImport, onFetchExisting,
         <>
           {main}
           {inPeriod.count > 0 && <div className={kit.notice}><span>{t('importCsv.review.periodWarn', { count: inPeriod.count, amount: fmt(inPeriod.sum) })}</span></div>}
+          {futureCount > 0 && <div className={kit.notice}><span>{t('importCsv.review.futureNote', { count: futureCount })}</span></div>}
           <div className={styles.ifoot}>
             <span>{t('importCsv.review.selected', { count: chosen.length })} · {fmt(total)}</span>
             <button type="button" className={`${kit.btn} ${kit.btnLg} ${kit.btnPri}`} disabled={!chosen.length || saving} onClick={goNext}>{importLabel}</button>
@@ -579,6 +582,7 @@ function ImportBody({ profile, sharedActive, onClose, onImport, onFetchExisting,
           {built.skipped.income > 0 && <div className={styles.kv}><span>{t('importCsv.review.skippedIncomeLabel')}</span><b>{built.skipped.income}</b></div>}
           {built.skipped.unpaid > 0 && <div className={styles.kv}><span>{t('importCsv.review.skippedUnpaidLabel')}</span><b>{built.skipped.unpaid}</b></div>}
           {inPeriod.count > 0 && <div className={styles.warn}>{t('importCsv.review.periodWarn', { count: inPeriod.count, amount: fmt(inPeriod.sum) })}</div>}
+          {futureCount > 0 && <div className={styles.warn}>{t('importCsv.review.futureNote', { count: futureCount })}</div>}
           {counts.err > 0 && <div className={kit.sub2}>{t('importCsv.review.errNote')}</div>}
           <button type="button" className={`${kit.btn} ${kit.btnLg} ${kit.btnPri} ${kit.btnFull}`} disabled={!chosen.length || saving} onClick={goNext}>{importLabel}</button>
         </section>
