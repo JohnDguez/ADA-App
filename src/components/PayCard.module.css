@@ -574,7 +574,7 @@
   .desk .methodLabel { gap: 5px; }
   .desk .amountSection { flex: none; padding: 0 4px; }
   .desk .amountText { font-size: clamp(0.875rem, 3.9vw, 1rem); }
-  .desk .statusLabel { font-size: clamp(0.6875rem, 3vw, 0.78rem); max-width: 5.25rem; line-height: 1.2; }
+  .desk .statusLabel { font-size: clamp(0.6875rem, 3vw, 0.78rem); max-width: 6.5rem; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .desk .actionsSection { padding: 0; gap: 2px; }
   .desk .markPaidButton, .desk .paidIndicator { width: clamp(2.1rem, 9.5vw, 2.4rem); height: clamp(2.1rem, 9.5vw, 2.4rem); }
   .desk .menuTriggerButton { width: 1.5rem; }
