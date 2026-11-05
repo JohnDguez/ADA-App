@@ -120,6 +120,7 @@ export function HomePage({ payments, dataLoading = false, profile, spaceSwitcher
   // activo).
   const actualPanelRef = useRef(null)
   const nextPanelRef   = useRef(null)
+  const afterPanelRef  = useRef(null)
   const [swipeHeight, setSwipeHeight] = useState(null)
 
   // Alto del carrusel de tarjetas = el de la tarjeta ACTIVA. Sin esto las dos
@@ -138,7 +139,7 @@ export function HomePage({ payments, dataLoading = false, profile, spaceSwitcher
   }, [activeCard])
 
   useEffect(() => {
-    const el = activeCard === 0 ? actualPanelRef.current : nextPanelRef.current
+    const el = [actualPanelRef, nextPanelRef, afterPanelRef][activeCard]?.current
     if (!el) return
     const ro = new ResizeObserver(entries => {
       for (const entry of entries) setSwipeHeight(entry.contentRect.height)
@@ -329,7 +330,6 @@ export function HomePage({ payments, dataLoading = false, profile, spaceSwitcher
     t('homePage.tabs.nextWithRange', { range: nextPeriodRange(profile) }),
     nextPeriodRange(profile, 2),
   ]
-  const shownUpcoming = activeCard === 2 ? afterUpcoming : upcoming
   const lunaState = getLunaState({ pagarEsteCobro, vencidos, delPeriodo, pagadosEstePeriodo })
 
   // Widget de Luna en la pantalla de inicio de Android: se le manda la "foto"
@@ -647,7 +647,7 @@ export function HomePage({ payments, dataLoading = false, profile, spaceSwitcher
               check de cada pago pida confirmación antes de marcarlo pagado
               (ver ConfirmNextPeriodPayModal). */}
           <div className={styles.contentSwipeWrap} style={{ height: swipeHeight != null ? swipeHeight : 'auto' }}>
-            <div ref={actualPanelRef} className={`${styles.contentPanel} ${activeCard === 0 ? '' : styles.panelOff}`} style={{ transform: `translateX(${activeCard === 0 ? 0 : -100}%)` }}>
+            <div ref={actualPanelRef} className={`${styles.contentPanel} ${activeCard === 0 ? '' : styles.panelOff}`} style={{ transform: `translateX(${(0 - activeCard) * 100}%)` }}>
               {pagadosEstePeriodo.length > 0 && (
                 <div data-coachmark="home-paid-collapse" className={styles.paidCollapseWrapper}>
                   <PaidCollapse
@@ -726,11 +726,20 @@ export function HomePage({ payments, dataLoading = false, profile, spaceSwitcher
               </div>
             </div>
 
-            <div ref={nextPanelRef} className={`${styles.contentPanel} ${activeCard >= 1 ? '' : styles.panelOff}`} style={{ transform: `translateX(${activeCard === 0 ? 100 : 0}%)` }}>
+            <div ref={nextPanelRef} className={`${styles.contentPanel} ${activeCard === 1 ? '' : styles.panelOff}`} style={{ transform: `translateX(${(1 - activeCard) * 100}%)` }}>
               <div className={styles.periodSection}>
-                {shownUpcoming.length === 0
-                  ? (dataLoading ? <RailSkeleton count={2} /> : <EmptyState mobile={isMobile} title={t(activeCard === 2 ? 'homePage.emptyState.afterPeriodTitle' : 'homePage.emptyState.nextPeriodTitle')} subtitle={t('homePage.emptyState.subtitle')} onClick={onAdd} />)
-                  : <MobList isMobile={isMobile}><PayRail key={activeCard} payments={shownUpcoming} cfg={profile} dotColor="var(--accent)" dotTextColor="var(--bg)" handlers={handlers} permissions={spacePermissions} nextPeriodMode spaceMembers={spaceMembers} deskMode={isMobile} compact={isMobile} /></MobList>
+                {upcoming.length === 0
+                  ? (dataLoading ? <RailSkeleton count={2} /> : <EmptyState mobile={isMobile} title={t('homePage.emptyState.nextPeriodTitle')} subtitle={t('homePage.emptyState.subtitle')} onClick={onAdd} />)
+                  : <MobList isMobile={isMobile}><PayRail payments={upcoming} cfg={profile} dotColor="var(--accent)" dotTextColor="var(--bg)" handlers={handlers} permissions={spacePermissions} nextPeriodMode spaceMembers={spaceMembers} deskMode={isMobile} compact={isMobile} /></MobList>
+                }
+              </div>
+            </div>
+
+            <div ref={afterPanelRef} className={`${styles.contentPanel} ${activeCard === 2 ? '' : styles.panelOff}`} style={{ transform: `translateX(${(2 - activeCard) * 100}%)` }}>
+              <div className={styles.periodSection}>
+                {afterUpcoming.length === 0
+                  ? (dataLoading ? <RailSkeleton count={2} /> : <EmptyState mobile={isMobile} title={t('homePage.emptyState.afterPeriodTitle')} subtitle={t('homePage.emptyState.subtitle')} onClick={onAdd} />)
+                  : <MobList isMobile={isMobile}><PayRail payments={afterUpcoming} cfg={profile} dotColor="var(--accent)" dotTextColor="var(--bg)" handlers={handlers} permissions={spacePermissions} nextPeriodMode spaceMembers={spaceMembers} deskMode={isMobile} compact={isMobile} /></MobList>
                 }
               </div>
             </div>
