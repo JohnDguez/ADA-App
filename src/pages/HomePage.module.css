@@ -341,3 +341,7 @@
   cursor: pointer;
 }
 .mobChipOn { background: var(--accent); color: var(--on-color); }
+
+/* Móvil: selector de periodo (carrusel) arriba de la tarjeta principal */
+.mobPeriod { padding-top: 12px; }
+.mobPeriod > :first-child { padding: 0 14px; }

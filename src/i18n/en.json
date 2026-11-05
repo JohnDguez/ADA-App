@@ -436,9 +436,9 @@
     "tabs": {
       "currentPeriod": "Current period",
       "nextPeriod": "Next period",
-      "currentShort": "Current",
-      "nextShort": "Next",
-      "afterShort": "Following"
+      "nextWithRange": "Next · {{range}}",
+      "prev": "Previous period",
+      "next": "Following period"
     },
     "periodDay": "Day {{day}} of {{total}}",
     "statPaid": "Paid",

@@ -436,9 +436,9 @@
     "tabs": {
       "currentPeriod": "Periodo actual",
       "nextPeriod": "Próximo periodo",
-      "currentShort": "Actual",
-      "nextShort": "Próximo",
-      "afterShort": "Siguiente"
+      "nextWithRange": "Próximo · {{range}}",
+      "prev": "Periodo anterior",
+      "next": "Periodo siguiente"
     },
     "periodDay": "Día {{day}} de {{total}}",
     "statPaid": "Pagado",

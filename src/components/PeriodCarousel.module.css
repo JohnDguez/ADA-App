@@ -1,0 +1,20 @@
+/* Selector de periodo (carrusel). Solo tokens del tema. */
+.root { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-width: 0; }
+.mid { flex: 1; min-width: 0; text-align: center; }
+.title { display: block; font-size: 15px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.arrow {
+  flex: none; width: 38px; height: 38px; border-radius: 50%; border: none;
+  display: grid; place-items: center; cursor: pointer;
+  background: var(--desk-card); color: var(--text); box-shadow: var(--desk-shadow);
+}
+.toneChip .arrow { background: var(--desk-chip); box-shadow: none; width: 34px; height: 34px; }
+.arrow:disabled { opacity: 0.35; cursor: default; }
+.arrow:not(:disabled):active { opacity: 0.8; }
+.dots { display: flex; justify-content: center; gap: 6px; margin-top: 7px; }
+/* Área de toque amplia con punto pequeño dibujado en ::after */
+.dot { position: relative; width: 7px; height: 7px; padding: 0; border: none; background: transparent; cursor: pointer; }
+.dot::before { content: ''; position: absolute; inset: -8px -3px; }
+.dot::after { content: ''; position: absolute; inset: 0; border-radius: 99px; background: var(--desk-hair); transition: width 0.2s, background 0.2s; }
+.dotOn { width: 20px; }
+.dotOn::after { background: var(--desk-pill); }
+@media (prefers-reduced-motion: reduce) { .dot::after { transition: none; } }

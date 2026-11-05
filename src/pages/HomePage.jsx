@@ -21,6 +21,7 @@ import { Bone, RailSkeleton } from '../components/SkeletonLoader'
 import { getLunaState } from '../lib/lunaState'
 import { syncLunaWidget } from '../lib/lunaWidget'
 import { fmt, today, cobroPeriod, nextCobroPeriod, getPagarEsteCobro, daysDiff, dateOf, dateToStr, getMonths, getMonthsShort } from '../lib/utils'
+import { PeriodCarousel } from '../components/PeriodCarousel'
 import styles from './HomePage.module.css'
 
 // Montos largos (ej. $300,000.80) bajan de tamaño por escalones para caber en
@@ -323,6 +324,11 @@ export function HomePage({ payments, dataLoading = false, profile, spaceSwitcher
   // trivial sobre listas ya memoizadas en `derived` (Regla 37) — no necesita
   // useMemo propio, y así la hora (estado "dormida") se lee fresca en cada
   // render en vez de quedarse congelada hasta que cambien los pagos.
+  const periodTitles = [
+    t('homePage.tabs.currentPeriod'),
+    t('homePage.tabs.nextWithRange', { range: nextPeriodRange(profile) }),
+    nextPeriodRange(profile, 2),
+  ]
   const shownUpcoming = activeCard === 2 ? afterUpcoming : upcoming
   const lunaState = getLunaState({ pagarEsteCobro, vencidos, delPeriodo, pagadosEstePeriodo })
 
@@ -433,7 +439,16 @@ export function HomePage({ payments, dataLoading = false, profile, spaceSwitcher
             posiciones que se agregue después (ej. futuros toggles en
             Ajustes) — no repetir el estilo viejo de 5px para eso. */}
         {isMobile ? (
-          <div data-coachmark="home-metric-card">
+          <div data-coachmark="home-metric-card" className={styles.mobPeriod}
+            onTouchStart={e => setTouchStartX(e.touches[0].clientX)}
+            onTouchEnd={e => {
+              if (touchStartX === null) return
+              const dx = e.changedTouches[0].clientX - touchStartX
+              setTouchStartX(null)
+              if (dx < -50) setActiveCard(c => Math.min(2, c + 1))
+              else if (dx > 50) setActiveCard(c => Math.max(0, c - 1))
+            }}>
+            <PeriodCarousel index={activeCard} onChange={setActiveCard} titles={periodTitles} />
             <MobileHomeHero
               activeCard={activeCard} dataLoading={dataLoading}
               periodRangeLabel={periodRange(profile)} nextRangeLabel={activeCard === 2 ? nextPeriodRange(profile, 2) : nextPeriodRange(profile)}
@@ -446,11 +461,6 @@ export function HomePage({ payments, dataLoading = false, profile, spaceSwitcher
               nextVariable={activeCard === 2 ? derived.afterPeriodPendingVariableCount : nextPeriodPendingVariableCount}
               onGoPayments={() => onGoTab?.('payments')}
             />
-            <div className={styles.mobChips} role="tablist">
-              <button type="button" role="tab" aria-selected={activeCard === 0} className={`${styles.mobChip} ${activeCard === 0 ? styles.mobChipOn : ''}`} onClick={() => setActiveCard(0)}>{t('homePage.tabs.currentShort')}</button>
-              <button type="button" role="tab" aria-selected={activeCard === 1} className={`${styles.mobChip} ${activeCard === 1 ? styles.mobChipOn : ''}`} onClick={() => setActiveCard(1)}>{t('homePage.tabs.nextShort')}</button>
-              <button type="button" role="tab" aria-selected={activeCard === 2} className={`${styles.mobChip} ${activeCard === 2 ? styles.mobChipOn : ''}`} onClick={() => setActiveCard(2)}>{t('homePage.tabs.afterShort')}</button>
-            </div>
           </div>
         ) : (
         <div data-coachmark="home-metric-card" className={styles.metricCardSection}>

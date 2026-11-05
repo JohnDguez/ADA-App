@@ -14,6 +14,7 @@ import { RailSkeleton } from '../components/SkeletonLoader'
 import { useHeaderBackground, HEADER_IMAGES } from '../hooks/useHeaderBackground'
 import { fmt, dateToStr, daysDiff } from '../lib/utils'
 import { PeriodGauge } from '../components/PeriodGauge'
+import { PeriodCarousel } from '../components/PeriodCarousel'
 import styles from './DeskHome.module.css'
 import { LoadingDots } from '../components/LoadingDots'
 
@@ -275,11 +276,8 @@ export function DeskHome({
                 <section ref={listRef} className={styles.list} data-coachmark="home-rail">
                   <div className={styles.listHead}>
                     <h2 className={styles.cardTitle}>{t('deskHome.periodTitle')}</h2>
-                    <div className={styles.chips} role="tablist">
-                      <button type="button" role="tab" aria-selected={chipTab === 0} className={`${styles.chip} ${chipTab === 0 ? styles.chipOn : ''}`} onClick={() => changeTab(0)}>{t('homePage.tabs.currentShort')}</button>
-                      <button type="button" role="tab" aria-selected={chipTab === 1} className={`${styles.chip} ${chipTab === 1 ? styles.chipOn : ''}`} onClick={() => changeTab(1)}>{t('homePage.tabs.nextShort')}</button>
-                      <button type="button" role="tab" aria-selected={chipTab === 2} className={`${styles.chip} ${chipTab === 2 ? styles.chipOn : ''}`} onClick={() => changeTab(2)}>{t('homePage.tabs.afterShort')}</button>
-                    </div>
+                    <PeriodCarousel tone="chip" className={styles.carousel} index={chipTab} onChange={changeTab}
+                      titles={[t('homePage.tabs.currentPeriod'), t('homePage.tabs.nextWithRange', { range: nextRangeLabel }), afterRangeLabel]} />
                   </div>
 
                   {tab === 0 ? (
