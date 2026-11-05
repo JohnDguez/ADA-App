@@ -40,8 +40,8 @@ function periodRange(cfg) {
   return `${start.getDate()} ${monthsShort[start.getMonth()]} – ${end.getDate()} ${months[end.getMonth()]}`
 }
 
-function nextPeriodRange(cfg) {
-  const { start, end } = nextCobroPeriod(cfg)
+function nextPeriodRange(cfg, n = 1) {
+  const { start, end } = nextCobroPeriod(cfg, n)
   const months = getMonths(), monthsShort = getMonthsShort()
   const sameMonth = start.getMonth() === end.getMonth()
   if (sameMonth) return `${start.getDate()} – ${end.getDate()} ${months[end.getMonth()]}`
@@ -162,6 +162,7 @@ export function HomePage({ payments, dataLoading = false, profile, spaceSwitcher
   const derived = useMemo(() => {
     const { start, end } = cobroPeriod(profile)
     const { start: nextStart, end: nextEnd } = nextCobroPeriod(profile)
+    const { start: afterStart, end: afterEnd } = nextCobroPeriod(profile, 2)
 
     const pagarEsteCobro = getPagarEsteCobro(payments, profile)
     const vencidos   = pagarEsteCobro.filter(p => daysDiff(p.due_date) < 0).sort((a, b) => dateOf(a.due_date) - dateOf(b.due_date))
@@ -255,6 +256,17 @@ export function HomePage({ payments, dataLoading = false, profile, spaceSwitcher
       return d >= nextStart && d <= nextEnd
     }).sort((a, b) => dateOf(a.due_date) - dateOf(b.due_date))
 
+    // Tercer periodo (el siguiente al próximo): mismo criterio que `upcoming`.
+    const afterUpcoming = payments.filter(p => {
+      if (p.is_paid || p.paused || p.postponed || p.is_postponed || p.is_master) return false
+      const d = dateOf(p.due_date)
+      return d >= afterStart && d <= afterEnd
+    }).sort((a, b) => dateOf(a.due_date) - dateOf(b.due_date))
+    const afterKnown = afterUpcoming.filter(p => !p.is_variable || p.amount > 0)
+    const afterPeriodKnownTotal = afterKnown.reduce((a, p) => a + Number(p.amount), 0)
+    const afterPeriodFixedCount = afterKnown.length
+    const afterPeriodPendingVariableCount = afterUpcoming.filter(p => p.is_variable && !p.amount).length
+
     // Card 2 de la tarjeta de métricas — antes mostraba "Mes actual"
     // (totales del mes calendario) para periodo Semanal/Quincenal, y solo
     // pasaba a "Próximo periodo" para Mensual. Unificado: ahora SIEMPRE es
@@ -271,7 +283,8 @@ export function HomePage({ payments, dataLoading = false, profile, spaceSwitcher
     const nextPeriodPendingVariableCount = upcoming.filter(p => p.is_variable && !p.amount).length
 
     return {
-      start, end, nextStart, nextEnd,
+      start, end, nextStart, nextEnd, afterStart, afterEnd,
+      afterUpcoming, afterPeriodKnownTotal, afterPeriodFixedCount, afterPeriodPendingVariableCount,
       pagarEsteCobro, vencidos, delPeriodo, pendingAmt, pendingVariableCount,
       pagadosEstePeriodo, pagadoMonto, totalConocido, pctPagado,
       upcoming, nextPeriodKnownTotal, nextPeriodFixedCount, nextPeriodPendingVariableCount,
@@ -297,9 +310,10 @@ export function HomePage({ payments, dataLoading = false, profile, spaceSwitcher
 
   // Días que faltan para que empiece el próximo periodo (mínimo 1).
   const nextStartsInDays = Math.max(1, Math.round((derived.nextStart - todayMid) / DAY_MS))
+  const afterStartsInDays = Math.max(1, Math.round((derived.afterStart - todayMid) / DAY_MS))
 
   const {
-    start, end, nextStart, nextEnd,
+    start, end, nextStart, nextEnd, afterUpcoming,
     pagarEsteCobro, vencidos, delPeriodo, pendingAmt, pendingVariableCount,
     pagadosEstePeriodo, pagadoMonto, totalConocido, pctPagado,
     upcoming, nextPeriodKnownTotal, nextPeriodFixedCount, nextPeriodPendingVariableCount,
@@ -309,6 +323,7 @@ export function HomePage({ payments, dataLoading = false, profile, spaceSwitcher
   // trivial sobre listas ya memoizadas en `derived` (Regla 37) — no necesita
   // useMemo propio, y así la hora (estado "dormida") se lee fresca en cada
   // render en vez de quedarse congelada hasta que cambien los pagos.
+  const shownUpcoming = activeCard === 2 ? afterUpcoming : upcoming
   const lunaState = getLunaState({ pagarEsteCobro, vencidos, delPeriodo, pagadosEstePeriodo })
 
   // Widget de Luna en la pantalla de inicio de Android: se le manda la "foto"
@@ -341,7 +356,7 @@ export function HomePage({ payments, dataLoading = false, profile, spaceSwitcher
         profile={profile} dataLoading={dataLoading} activeSpaceId={activeSpaceId} spaceMembers={spaceMembers}
         sharedSpaces={sharedSpaces} spacePermissions={spacePermissions} derived={derived} lunaState={lunaState} handlers={handlers}
         cutsInPeriod={cutsInPeriod} cutPeriodKey={cutPeriodKey} paymentMethodsList={paymentMethodsList}
-        periodRangeLabel={periodRange(profile)} nextRangeLabel={nextPeriodRange(profile)}
+        periodRangeLabel={periodRange(profile)} nextRangeLabel={nextPeriodRange(profile)} afterRangeLabel={nextPeriodRange(profile, 2)} afterStartsInDays={afterStartsInDays}
         slideClass={slideClass} spaceJustChanged={spaceJustChanged}
         onOpenPremium={onOpenPremium} onSpaceReady={onSpaceReady} onAdd={onAdd} onImport={onImport} onStartAdd={onStartAdd}
         onGoTab={onGoTab} onGoSettingsSection={onGoSettingsSection} onMarkUnpaid={onMarkUnpaid} onViewSource={onViewSource}
@@ -421,17 +436,20 @@ export function HomePage({ payments, dataLoading = false, profile, spaceSwitcher
           <div data-coachmark="home-metric-card">
             <MobileHomeHero
               activeCard={activeCard} dataLoading={dataLoading}
-              periodRangeLabel={periodRange(profile)} nextRangeLabel={nextPeriodRange(profile)}
-              periodDayNumber={periodDayNumber} periodDayTotal={periodDayTotal} nextStartsInDays={nextStartsInDays}
+              periodRangeLabel={periodRange(profile)} nextRangeLabel={activeCard === 2 ? nextPeriodRange(profile, 2) : nextPeriodRange(profile)}
+              periodDayNumber={periodDayNumber} periodDayTotal={periodDayTotal} nextStartsInDays={activeCard === 2 ? afterStartsInDays : nextStartsInDays}
               hasPayments={pagarEsteCobro.length > 0 || pagadosEstePeriodo.length > 0}
               totalConocido={totalConocido} pagadoMonto={pagadoMonto} pendingAmt={pendingAmt} pctPagado={pctPagado}
               vencidos={vencidos} delPeriodo={delPeriodo} pagadosCount={pagadosEstePeriodo.filter(p => !p.is_postponed).length}
-              nextTotal={nextPeriodKnownTotal} nextFixed={nextPeriodFixedCount} nextVariable={nextPeriodPendingVariableCount}
+              nextTotal={activeCard === 2 ? derived.afterPeriodKnownTotal : nextPeriodKnownTotal}
+              nextFixed={activeCard === 2 ? derived.afterPeriodFixedCount : nextPeriodFixedCount}
+              nextVariable={activeCard === 2 ? derived.afterPeriodPendingVariableCount : nextPeriodPendingVariableCount}
               onGoPayments={() => onGoTab?.('payments')}
             />
             <div className={styles.mobChips} role="tablist">
-              <button type="button" role="tab" aria-selected={activeCard === 0} className={`${styles.mobChip} ${activeCard === 0 ? styles.mobChipOn : ''}`} onClick={() => setActiveCard(0)}>{t('homePage.tabs.currentPeriod')}</button>
-              <button type="button" role="tab" aria-selected={activeCard === 1} className={`${styles.mobChip} ${activeCard === 1 ? styles.mobChipOn : ''}`} onClick={() => setActiveCard(1)}>{t('homePage.tabs.nextPeriod')}</button>
+              <button type="button" role="tab" aria-selected={activeCard === 0} className={`${styles.mobChip} ${activeCard === 0 ? styles.mobChipOn : ''}`} onClick={() => setActiveCard(0)}>{t('homePage.tabs.currentShort')}</button>
+              <button type="button" role="tab" aria-selected={activeCard === 1} className={`${styles.mobChip} ${activeCard === 1 ? styles.mobChipOn : ''}`} onClick={() => setActiveCard(1)}>{t('homePage.tabs.nextShort')}</button>
+              <button type="button" role="tab" aria-selected={activeCard === 2} className={`${styles.mobChip} ${activeCard === 2 ? styles.mobChipOn : ''}`} onClick={() => setActiveCard(2)}>{t('homePage.tabs.afterShort')}</button>
             </div>
           </div>
         ) : (
@@ -698,11 +716,11 @@ export function HomePage({ payments, dataLoading = false, profile, spaceSwitcher
               </div>
             </div>
 
-            <div ref={nextPanelRef} className={`${styles.contentPanel} ${activeCard === 1 ? '' : styles.panelOff}`} style={{ transform: `translateX(${activeCard === 0 ? 100 : 0}%)` }}>
+            <div ref={nextPanelRef} className={`${styles.contentPanel} ${activeCard >= 1 ? '' : styles.panelOff}`} style={{ transform: `translateX(${activeCard === 0 ? 100 : 0}%)` }}>
               <div className={styles.periodSection}>
-                {upcoming.length === 0
-                  ? (dataLoading ? <RailSkeleton count={2} /> : <EmptyState mobile={isMobile} title={t('homePage.emptyState.nextPeriodTitle')} subtitle={t('homePage.emptyState.subtitle')} onClick={onAdd} />)
-                  : <MobList isMobile={isMobile}><PayRail payments={upcoming} cfg={profile} dotColor="var(--accent)" dotTextColor="var(--bg)" handlers={handlers} permissions={spacePermissions} nextPeriodMode spaceMembers={spaceMembers} deskMode={isMobile} compact={isMobile} /></MobList>
+                {shownUpcoming.length === 0
+                  ? (dataLoading ? <RailSkeleton count={2} /> : <EmptyState mobile={isMobile} title={t(activeCard === 2 ? 'homePage.emptyState.afterPeriodTitle' : 'homePage.emptyState.nextPeriodTitle')} subtitle={t('homePage.emptyState.subtitle')} onClick={onAdd} />)
+                  : <MobList isMobile={isMobile}><PayRail key={activeCard} payments={shownUpcoming} cfg={profile} dotColor="var(--accent)" dotTextColor="var(--bg)" handlers={handlers} permissions={spacePermissions} nextPeriodMode spaceMembers={spaceMembers} deskMode={isMobile} compact={isMobile} /></MobList>
                 }
               </div>
             </div>

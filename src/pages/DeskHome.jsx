@@ -39,13 +39,13 @@ function splitMoney(str) {
 
 export function DeskHome({
   profile, dataLoading, activeSpaceId, spaceMembers, sharedSpaces, spacePermissions, derived, lunaState, handlers,
-  cutsInPeriod, cutPeriodKey, paymentMethodsList, periodRangeLabel, nextRangeLabel, slideClass, spaceJustChanged,
+  cutsInPeriod, cutPeriodKey, paymentMethodsList, periodRangeLabel, nextRangeLabel, afterRangeLabel, afterStartsInDays, slideClass, spaceJustChanged,
   onOpenPremium, onSpaceReady, onAdd, onImport, onStartAdd, onGoTab, onGoSettingsSection, onMarkUnpaid, onViewSource,
   tablet = false, periodDayNumber, periodDayTotal, nextStartsInDays,
 }) {
   const { t, i18n } = useTranslation()
-  const { pagarEsteCobro, vencidos, delPeriodo, pagadosEstePeriodo, pagadoMonto, pendingAmt, totalConocido, pctPagado, upcoming, nextPeriodKnownTotal, nextStart, nextEnd, pendingVariableCount } = derived
-  const [tab, setTab] = useState(0) // 0 periodo actual · 1 próximo periodo
+  const { pagarEsteCobro, vencidos, delPeriodo, pagadosEstePeriodo, pagadoMonto, pendingAmt, totalConocido, pctPagado, upcoming, nextPeriodKnownTotal, nextStart, nextEnd, pendingVariableCount, afterUpcoming, afterPeriodKnownTotal } = derived
+  const [tab, setTab] = useState(0) // 0 periodo actual · 1 próximo periodo · 2 el siguiente al próximo
   const [paidExpanded, setPaidExpanded] = useState(false)
   // Cambio de periodo animado: el contenido actual sale (140 ms) y el nuevo entra
   // desde el lado del chip elegido. `chipTab` marca el chip al instante.
@@ -192,17 +192,25 @@ export function DeskHome({
   const nextFixed = upcoming.filter(p => !p.is_variable).length
   const nextVariable = upcoming.filter(p => p.is_variable).length
   const [nextInt, nextCents] = splitMoney(fmt(nextPeriodKnownTotal))
-  // Tablet, pestaña «Próximo periodo»: las fichas hablan del próximo periodo.
-  const tabletNext = tablet && tab === 1
+  // Pestaña 2 («Siguiente»): la lista, las fichas y el medidor hablan del periodo
+  // después del próximo; la tarjeta lateral «Próximo periodo» no cambia.
+  const shownUpcoming = tab === 2 ? afterUpcoming : upcoming
+  const shownRange = tab === 2 ? afterRangeLabel : nextRangeLabel
+  const shownFixed = tab === 2 ? afterUpcoming.filter(p => !p.is_variable).length : nextFixed
+  const shownVariable = tab === 2 ? afterUpcoming.filter(p => p.is_variable).length : nextVariable
+  const [shownInt, shownCents] = splitMoney(fmt(tab === 2 ? afterPeriodKnownTotal : nextPeriodKnownTotal))
+  const shownDays = tab === 2 ? afterStartsInDays : nextStartsInDays
+  // Tablet, pestañas «Próximo»/«Siguiente»: las fichas hablan de ese periodo.
+  const tabletNext = tablet && tab >= 1
   const [zeroInt, zeroCents] = splitMoney(fmt(0))
   const shownTiles = !tabletNext ? tiles : [
-    { key: 'total', hero: true, label: t('deskHome.totalLabel'), int: nextInt, cents: nextCents,
-      sub: <>{nextRangeLabel}<span className={styles.subSep}> · </span><span className={styles.subLine}>{t('deskHome.nextFixed', { count: nextFixed })} · {t('deskHome.nextVariable', { count: nextVariable })}</span></>,
+    { key: 'total', hero: true, label: t('deskHome.totalLabel'), int: shownInt, cents: shownCents,
+      sub: <>{shownRange}<span className={styles.subSep}> · </span><span className={styles.subLine}>{t('deskHome.nextFixed', { count: shownFixed })} · {t('deskHome.nextVariable', { count: shownVariable })}</span></>,
       onClick: () => onGoTab?.('payments'), aria: t('deskHome.goPayments') },
     { key: 'paid', label: t('deskHome.paidLabel'), int: zeroInt, cents: zeroCents, sub: t('deskHome.tabletNotStarted') },
-    { key: 'pending', label: t('deskHome.pendingLabel'), int: nextInt, cents: nextCents, sub: t('deskHome.pendingSub', { count: upcoming.length }) },
-    { key: 'overdue', label: t('deskHome.tabletVariablesLabel'), int: String(nextVariable), unit: t('deskHome.tabletVariablesUnit'),
-      sub: nextVariable > 0 ? t('deskHome.tabletVariablesSome') : t('deskHome.tabletVariablesNone') },
+    { key: 'pending', label: t('deskHome.pendingLabel'), int: shownInt, cents: shownCents, sub: t('deskHome.pendingSub', { count: shownUpcoming.length }) },
+    { key: 'overdue', label: t('deskHome.tabletVariablesLabel'), int: String(shownVariable), unit: t('deskHome.tabletVariablesUnit'),
+      sub: shownVariable > 0 ? t('deskHome.tabletVariablesSome') : t('deskHome.tabletVariablesNone') },
   ]
 
   function pickAdd(kind) { setAddOpen(false); if (kind) onStartAdd?.(kind); else onAdd?.() }
@@ -268,8 +276,9 @@ export function DeskHome({
                   <div className={styles.listHead}>
                     <h2 className={styles.cardTitle}>{t('deskHome.periodTitle')}</h2>
                     <div className={styles.chips} role="tablist">
-                      <button type="button" role="tab" aria-selected={chipTab === 0} className={`${styles.chip} ${chipTab === 0 ? styles.chipOn : ''}`} onClick={() => changeTab(0)}>{t('homePage.tabs.currentPeriod')}</button>
-                      <button type="button" role="tab" aria-selected={chipTab === 1} className={`${styles.chip} ${chipTab === 1 ? styles.chipOn : ''}`} onClick={() => changeTab(1)}>{t('homePage.tabs.nextPeriod')}</button>
+                      <button type="button" role="tab" aria-selected={chipTab === 0} className={`${styles.chip} ${chipTab === 0 ? styles.chipOn : ''}`} onClick={() => changeTab(0)}>{t('homePage.tabs.currentShort')}</button>
+                      <button type="button" role="tab" aria-selected={chipTab === 1} className={`${styles.chip} ${chipTab === 1 ? styles.chipOn : ''}`} onClick={() => changeTab(1)}>{t('homePage.tabs.nextShort')}</button>
+                      <button type="button" role="tab" aria-selected={chipTab === 2} className={`${styles.chip} ${chipTab === 2 ? styles.chipOn : ''}`} onClick={() => changeTab(2)}>{t('homePage.tabs.afterShort')}</button>
                     </div>
                   </div>
 
@@ -303,9 +312,9 @@ export function DeskHome({
                     </div>
                   ) : (
                     <div ref={listBodyRef} className={`${styles.listBody} ${tabAnimCls} scroll-y`}>
-                      {dataLoading ? <RailSkeleton count={2} /> : upcoming.length === 0
-                        ? <EmptyState desk title={t('homePage.emptyState.nextPeriodTitle')} subtitle={t('homePage.emptyState.subtitle')} onClick={onAdd} />
-                        : <PayRail deskMode compact payments={upcoming} cfg={profile} handlers={handlers} permissions={spacePermissions} spaceMembers={spaceMembers} nextPeriodMode />}
+                      {dataLoading ? <RailSkeleton count={2} /> : shownUpcoming.length === 0
+                        ? <EmptyState desk title={t(tab === 2 ? 'homePage.emptyState.afterPeriodTitle' : 'homePage.emptyState.nextPeriodTitle')} subtitle={t('homePage.emptyState.subtitle')} onClick={onAdd} />
+                        : <PayRail key={tab} deskMode compact payments={shownUpcoming} cfg={profile} handlers={handlers} permissions={spacePermissions} spaceMembers={spaceMembers} nextPeriodMode />}
                     </div>
                   )}
                   <div className={styles.tipSlot}>{tipEl}</div>
@@ -316,8 +325,8 @@ export function DeskHome({
                   <section className={`${styles.card} ${styles.gaugeCard} ${tablet ? tabAnimCls : ''}`}>
                     <h2 className={styles.cardTitle}>{t('deskHome.gaugeTitle')}</h2>
                     {tabletNext ? (
-                      <PeriodGauge empty paidPct={0} label={t('deskHome.nextTitle')}
-                        center={<><span className={styles.gaugeSmall}>{t('homePage.nextStartsLabel')}</span><b className={styles.gaugeText}>{t('homePage.nextStartsDays', { count: nextStartsInDays })}</b></>} />
+                      <PeriodGauge empty paidPct={0} label={t(tab === 2 ? 'deskHome.afterTitle' : 'deskHome.nextTitle')}
+                        center={<><span className={styles.gaugeSmall}>{t('homePage.nextStartsLabel')}</span><b className={styles.gaugeText}>{t('homePage.nextStartsDays', { count: shownDays })}</b></>} />
                     ) : (
                     <PeriodGauge large={!tablet} empty={!hasPayments || dataLoading} paidPct={hasPayments && !dataLoading ? pctPagado : 0} overduePct={hasPayments && !dataLoading ? overduePct : 0}
                       label={`${t('deskHome.gaugeTitle')}: ${pctPagado}%`} centerLabel={hasPayments ? t('deskHome.gaugePaid') : t('deskHome.gaugeEmpty')} />

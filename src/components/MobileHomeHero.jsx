@@ -20,7 +20,7 @@ function tileSize(str) {
 
 // Tarjeta principal del Inicio móvil (v0.9.885, mockup B aprobado): total del
 // periodo, medidor y tres datos en una sola tarjeta. `activeCard` 0 = periodo
-// actual, 1 = próximo periodo (el mismo switch que decide la lista de abajo).
+// actual, 1 = próximo periodo, 2 = el siguiente al próximo (el mismo switch que decide la lista de abajo).
 // Los números ya vienen calculados por HomePage (`derived`).
 export function MobileHomeHero({
   activeCard, dataLoading, periodRangeLabel, nextRangeLabel, periodDayNumber, periodDayTotal, nextStartsInDays,
@@ -29,14 +29,15 @@ export function MobileHomeHero({
 }) {
   const { t } = useTranslation()
 
-  if (activeCard === 1) {
+  if (activeCard >= 1) {
     const [int, cents] = splitMoney(fmt(nextTotal))
+    const title = t(activeCard === 2 ? 'deskHome.afterTitle' : 'deskHome.nextTitle')
     return (
       <div className={styles.card}>
-        <div className={styles.label}>{t('deskHome.nextTitle')}</div>
+        <div className={styles.label}>{title}</div>
         <div className={styles.num}>{dataLoading ? <LoadingDots /> : <>{int}<small>{cents}</small></>}</div>
         <div className={styles.sub}>{nextRangeLabel}</div>
-        <PeriodGauge empty paidPct={0} label={t('deskHome.nextTitle')}
+        <PeriodGauge empty paidPct={0} label={title}
           center={<><span className={styles.smallTop}>{t('homePage.nextStartsLabel')}</span><b className={styles.centerText}>{t('homePage.nextStartsDays', { count: nextStartsInDays })}</b></>} />
         <div className={`${styles.tiles} ${styles.tilesTwo}`}>
           <div className={styles.tile}><div className={styles.tileLabel}>{t('homePage.statPayments')}</div><div className={styles.tileNum}>{dataLoading ? <LoadingDots /> : nextFixed}</div></div>

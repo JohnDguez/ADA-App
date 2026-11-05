@@ -435,7 +435,10 @@
   "homePage": {
     "tabs": {
       "currentPeriod": "Periodo actual",
-      "nextPeriod": "Próximo periodo"
+      "nextPeriod": "Próximo periodo",
+      "currentShort": "Actual",
+      "nextShort": "Próximo",
+      "afterShort": "Siguiente"
     },
     "periodDay": "Día {{day}} de {{total}}",
     "statPaid": "Pagado",
@@ -466,6 +469,7 @@
     "pendingSectionTitle": "Pagos pendientes",
     "emptyState": {
       "currentPeriodTitle": "Sin pagos pendientes para este periodo",
+      "afterPeriodTitle": "Sin pagos registrados para el periodo siguiente",
       "nextPeriodTitle": "Sin pagos registrados para el próximo periodo",
       "subtitle": "Toca aquí o el botón + de abajo para añadir uno"
     },
@@ -1382,6 +1386,7 @@
     "legendPaid": "Pagado",
     "legendPending": "Pendiente",
     "legendOverdue": "Vencido",
+    "afterTitle": "Periodo siguiente",
     "nextTitle": "Próximo periodo",
     "nextFixed_one": "{{count}} fijo",
     "nextFixed_other": "{{count}} fijos",

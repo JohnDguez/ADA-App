@@ -435,7 +435,10 @@
   "homePage": {
     "tabs": {
       "currentPeriod": "Current period",
-      "nextPeriod": "Next period"
+      "nextPeriod": "Next period",
+      "currentShort": "Current",
+      "nextShort": "Next",
+      "afterShort": "Following"
     },
     "periodDay": "Day {{day}} of {{total}}",
     "statPaid": "Paid",
@@ -466,6 +469,7 @@
     "pendingSectionTitle": "Pending payments",
     "emptyState": {
       "currentPeriodTitle": "No pending payments for this period",
+      "afterPeriodTitle": "No payments recorded for the following period",
       "nextPeriodTitle": "No payments recorded for the next period",
       "subtitle": "Tap here or the + button below to add one"
     },
@@ -1382,6 +1386,7 @@
     "legendPaid": "Paid",
     "legendPending": "Pending",
     "legendOverdue": "Overdue",
+    "afterTitle": "Following period",
     "nextTitle": "Next period",
     "nextFixed_one": "{{count}} fixed",
     "nextFixed_other": "{{count}} fixed",

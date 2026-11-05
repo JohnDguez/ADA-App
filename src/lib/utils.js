@@ -345,8 +345,10 @@ export function cobroPeriod(cfg, refDate) {
 
 // Retorna el inicio y fin del SIGUIENTE periodo de cobro: el periodo que
 // empieza justo en el próximo cobro (mismo cálculo, desde esa fecha).
-export function nextCobroPeriod(cfg) {
-  const { nextCobro } = cobroPeriod(cfg)
+// `n` = cuántos periodos adelante (1 = próximo, 2 = el siguiente al próximo).
+export function nextCobroPeriod(cfg, n = 1) {
+  let { nextCobro } = cobroPeriod(cfg)
+  for (let i = 1; i < n; i++) nextCobro = cobroPeriod(cfg, nextCobro).nextCobro
   const { end } = cobroPeriod(cfg, nextCobro)
   return { start: nextCobro, end }
 }
