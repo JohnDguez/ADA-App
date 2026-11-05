@@ -127,9 +127,11 @@
 .list { display: flex; flex-direction: column; min-width: 0; min-height: 0; overflow: hidden; }
 .list .listBody { overscroll-behavior: auto; }
 .cardTitle { font-size: 18px; font-weight: 600; margin: 0 0 12px; color: var(--text); }
-.listHead { display: contents; }
+/* Título "Pagos" a la izquierda y selector de periodo pegado a la derecha, en un solo renglón */
+.listHead { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
+.listHead .cardTitle { margin: 0; }
 .chips { display: flex; gap: 8px; margin-bottom: 16px; }
-.carousel { margin-bottom: 16px; }
+.carousel { margin-bottom: 0; width: 290px; max-width: 100%; }
 /* Cambio de periodo: sale hacia el lado contrario al chip elegido y entra desde él. */
 .tabOutL { animation: tabOutL .14s ease-in both; }
 .tabOutR { animation: tabOutR .14s ease-in both; }
@@ -350,7 +352,6 @@
   .tablet .listHead { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 14px; }
   .tablet .listHead .cardTitle { margin: 0; }
   .tablet .listHead .chips { margin-bottom: 0; }
-  .tablet .listHead .carousel { margin-bottom: 0; width: min(100%, 320px); }
   .tablet .listHead .chip { height: 34px; padding: 0 14px; font-size: 13px; }
 }
 
