@@ -21,9 +21,7 @@
 .presets { display: flex; flex-wrap: wrap; gap: 0.375rem; margin-top: 0.875rem; }
 .pre { border: 0; background: var(--desk-chip); color: var(--text); font: inherit; font-size: 0.78125rem; font-weight: 600; padding: 0.5625rem 0.875rem; border-radius: 99px; cursor: pointer; transition: background 0.25s ease, color 0.2s; }
 .preOn { background: var(--accent); color: var(--on-color); }
-.custom { display: grid; grid-template-columns: 1fr 1fr; gap: 0.625rem; margin-top: 0.75rem; }
-.custom label { display: flex; flex-direction: column; gap: 0.25rem; min-width: 0; }
-.custom span { font-size: 0.71875rem; color: var(--muted); }
+.custom { margin-top: 0.75rem; }
 
 .next { display: flex; align-items: center; gap: 0.75rem; margin-top: 0.875rem; padding-top: 0.875rem; border-top: 1px solid var(--desk-hair); }
 .cal { width: 2.875rem; border-radius: 0.625rem; overflow: hidden; text-align: center; background: var(--desk-chip); flex-shrink: 0; }

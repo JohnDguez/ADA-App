@@ -27,6 +27,7 @@ import { useIsDesktop } from '../../hooks/useIsDesktop'
 import home from '../DeskHome.module.css'
 import tb from './SettingsCobroTab.module.css'
 import wk from '../../components/WeekendShiftField.module.css'
+import { BiweeklyDaysPicker } from '../../components/BiweeklyDaysPicker'
 
 const BIWEEKLY_PRESETS = [
   { d1: 1,  d2: 16 },
@@ -131,7 +132,6 @@ export function SettingsCobroPage({ profile, onUpdate, onBack, slideClass }) {
   // de cobro e ingreso; a la derecha el próximo cobro (bloque azul) y la moneda.
   if (desk && isDesk1100) {
     const freq = profile.cobro_freq
-    const dayCtl = v => Math.min(31, Math.max(1, parseInt(v) || 1))
     let curName = ''
     try { curName = new Intl.DisplayNames([locale], { type: 'currency' }).of(profile.currency) || '' } catch { /* sin soporte */ }
     return (
@@ -166,12 +166,7 @@ export function SettingsCobroPage({ profile, onUpdate, onBack, slideClass }) {
                   <button type="button" aria-pressed={isCustomBiweekly()} onClick={() => setBiweeklyCustom(true)} className={`${dk.chip} ${isCustomBiweekly() ? dk.chipOn : ''}`}>{t('settingsCobro.otherOption')}</button>
                 </div>
                 {isCustomBiweekly() && (
-                  <div className={`${deskStyles.fill} ${dk.custom}`}>
-                    <label><span>{t('settingsCobro.day1Label')}</span>
-                      <input aria-label={t('settingsCobro.day1Label')} type="number" min="1" max="31" defaultValue={profile.cobro_day1 ?? ''} onBlur={e => { const v = dayCtl(e.target.value); e.target.value = v; onUpdate({ cobro_day1: v }) }} placeholder={t('settingsCobro.day1Placeholder')} className="field-input" /></label>
-                    <label><span>{t('settingsCobro.day2Label')}</span>
-                      <input aria-label={t('settingsCobro.day2Label')} type="number" min="1" max="31" defaultValue={profile.cobro_day2 ?? ''} onBlur={e => { const v = dayCtl(e.target.value); e.target.value = v; onUpdate({ cobro_day2: v }) }} placeholder={t('settingsCobro.day2Placeholder')} className="field-input" /></label>
-                  </div>
+                  <div className={dk.custom}><BiweeklyDaysPicker variant="pop" day1={profile.cobro_day1} day2={profile.cobro_day2} onChange={(d1, d2) => onUpdate({ cobro_day1: d1, cobro_day2: d2 })} /></div>
                 )}
               </>
             )}
@@ -240,7 +235,6 @@ export function SettingsCobroPage({ profile, onUpdate, onBack, slideClass }) {
   if (isMobile && !desk) {
     const freq = profile.cobro_freq
     const custom = isCustomBiweekly()
-    const dayCtl = v => Math.min(31, Math.max(1, parseInt(v) || 1))
     const startOf = d => new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime()
     const diffDays = Math.round((startOf(nextDateObj) - startOf(new Date())) / 86400000)
     const countdown = diffDays <= 0 ? t('settingsCobro.mobile.today') : diffDays === 1 ? t('settingsCobro.mobile.tomorrow') : t('settingsCobro.mobile.inDays', { count: diffDays })
@@ -298,12 +292,7 @@ export function SettingsCobroPage({ profile, onUpdate, onBack, slideClass }) {
                 <button type="button" aria-pressed={custom} onClick={() => setBiweeklyCustom(true)} className={`${mb.pre} ${custom ? mb.preOn : ''}`}>{t('settingsCobro.otherOption')}</button>
               </div>
               <Collapse open={custom}>
-                <div className={mb.custom}>
-                  <label><span>{t('settingsCobro.day1Label')}</span>
-                    <input aria-label={t('settingsCobro.day1Label')} type="number" min="1" max="31" defaultValue={profile.cobro_day1 ?? ''} onBlur={e => { const v = dayCtl(e.target.value); e.target.value = v; onUpdate({ cobro_day1: v }) }} placeholder={t('settingsCobro.day1Placeholder')} className="field-input" /></label>
-                  <label><span>{t('settingsCobro.day2Label')}</span>
-                    <input aria-label={t('settingsCobro.day2Label')} type="number" min="1" max="31" defaultValue={profile.cobro_day2 ?? ''} onBlur={e => { const v = dayCtl(e.target.value); e.target.value = v; onUpdate({ cobro_day2: v }) }} placeholder={t('settingsCobro.day2Placeholder')} className="field-input" /></label>
-                </div>
+                <div className={mb.custom}><BiweeklyDaysPicker variant="inline" day1={profile.cobro_day1} day2={profile.cobro_day2} onChange={(d1, d2) => onUpdate({ cobro_day1: d1, cobro_day2: d2 })} /></div>
               </Collapse>
             </>
           )}
@@ -362,7 +351,6 @@ export function SettingsCobroPage({ profile, onUpdate, onBack, slideClass }) {
   const freq = profile.cobro_freq
   const custom = isCustomBiweekly()
   const land = desk
-  const dayCtl = v => Math.min(31, Math.max(1, parseInt(v) || 1))
   const startOf = d => new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime()
   const diffDays = Math.round((startOf(nextDateObj) - startOf(new Date())) / 86400000)
   const countdown = diffDays <= 0 ? t('settingsCobro.mobile.today') : diffDays === 1 ? t('settingsCobro.mobile.tomorrow') : t('settingsCobro.mobile.inDays', { count: diffDays })
@@ -412,12 +400,7 @@ export function SettingsCobroPage({ profile, onUpdate, onBack, slideClass }) {
             <button type="button" aria-pressed={custom} onClick={() => setBiweeklyCustom(true)} className={`${tb.chip} ${tb.pre} ${custom ? tb.chipOn : ''}`}>{t('settingsCobro.otherOption')}</button>
           </div>
           <Collapse open={custom}>
-            <div className={tb.custom}>
-              <label><span>{t('settingsCobro.day1Label')}</span>
-                <input aria-label={t('settingsCobro.day1Label')} type="number" min="1" max="31" defaultValue={profile.cobro_day1 ?? ''} onBlur={e => { const v = dayCtl(e.target.value); e.target.value = v; onUpdate({ cobro_day1: v }) }} placeholder={t('settingsCobro.day1Placeholder')} className="field-input" /></label>
-              <label><span>{t('settingsCobro.day2Label')}</span>
-                <input aria-label={t('settingsCobro.day2Label')} type="number" min="1" max="31" defaultValue={profile.cobro_day2 ?? ''} onBlur={e => { const v = dayCtl(e.target.value); e.target.value = v; onUpdate({ cobro_day2: v }) }} placeholder={t('settingsCobro.day2Placeholder')} className="field-input" /></label>
-            </div>
+            <div className={tb.custom}><BiweeklyDaysPicker variant="pop" day1={profile.cobro_day1} day2={profile.cobro_day2} onChange={(d1, d2) => onUpdate({ cobro_day1: d1, cobro_day2: d2 })} /></div>
           </Collapse>
         </>
       )}
