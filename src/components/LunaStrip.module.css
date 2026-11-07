@@ -278,18 +278,18 @@
 /* Entrada (v0.9.1022): primero Luna sube y aparece; 0.28 s después el globo salta desde
    donde está ella. Se repite cada vez que Inicio se monta (entrar a la app o volver a la página). */
 .deskImg, .peekImg { animation: lunaIn 0.5s cubic-bezier(0.22, 1, 0.36, 1) both; }
-.deskText { transform-origin: 0% 85%; animation: bubbleIn 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) 0.28s backwards; }
-.peekText { transform-origin: 100% 85%; animation: bubbleInR 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) 0.28s backwards; }
+.deskText { transform-origin: 0% 85%; animation: bubbleIn 0.6s cubic-bezier(0.22, 1, 0.36, 1) 0.28s backwards; }
+.peekText { transform-origin: 100% 85%; animation: bubbleInR 0.6s cubic-bezier(0.22, 1, 0.36, 1) 0.28s backwards; }
 @keyframes lunaIn { from { opacity: 0; transform: translateY(16px) scale(0.94); } to { opacity: 1; transform: none; } }
-@keyframes bubbleIn { from { opacity: 0; transform: scale(0.82) translateX(-8px); } to { opacity: 1; transform: none; } }
-@keyframes bubbleInR { from { opacity: 0; transform: scale(0.82) translateX(8px); } to { opacity: 1; transform: none; } }
-/* Globo tocable (v0.9.1026): al presionar se hunde como burbuja y al soltar rebota. */
+@keyframes bubbleIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: none; } }
+@keyframes bubbleInR { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: none; } }
+/* Globo tocable (v0.9.1026): al presionar se hunde suave y al soltar vuelve flotando, sin rebasar su caja (el contenedor recorta). */
 .tappable {
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
-  transition: transform 0.5s cubic-bezier(0.34, 1.7, 0.64, 1);
+  transition: transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
 }
-.tappable:active { transform: scale(0.94); transition-duration: 0.12s; }
+.tappable:active { transform: scale(0.97); transition: transform 0.35s cubic-bezier(0.25, 0.8, 0.35, 1); }
 .tappable:focus-visible { outline: 2px solid var(--tint); outline-offset: 3px; }
 @media (prefers-reduced-motion: reduce) {
   .tappable, .tappable:active { transition: none; }
