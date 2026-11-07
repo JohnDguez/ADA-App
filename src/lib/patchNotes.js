@@ -4,7 +4,7 @@ import { getMonths } from './utils'
 // Fuente única de verdad para la versión visible al usuario (footer de SettingsPage,
 // modal de Novedades). No confundir con el historial técnico completo en CONTEXT.md:
 // aquí solo van cambios que le sirven o interesan al usuario final.
-export const APP_VERSION = '0.9.1004'
+export const APP_VERSION = '0.9.1036'
 
 // getPatchNotes() en vez de un arreglo exportado directo — mismo motivo que
 // getCoachmarkSteps()/getMonths(): un arreglo a nivel de módulo se evalúa
@@ -27,6 +27,20 @@ export function getPatchNotes() {
   const dateOf = (monthIndex, year) => `${months[monthIndex]} ${year}`
 
   return [
+    {
+      version: '0.9.1036',
+      date: dateOf(10, 2026), // Noviembre
+      items: [
+        t('patchNotes.v0_9_1036.item0'),
+        t('patchNotes.v0_9_1036.item1'),
+        t('patchNotes.v0_9_1036.item2'),
+        t('patchNotes.v0_9_1036.item3'),
+        t('patchNotes.v0_9_1036.item4'),
+        t('patchNotes.v0_9_1036.item5'),
+        t('patchNotes.v0_9_1036.item6'),
+        t('patchNotes.v0_9_1036.item7'),
+      ],
+    },
     {
       version: '0.9.1004',
       date: dateOf(10, 2026), // Noviembre

@@ -2003,6 +2003,16 @@
     }
   },
   "patchNotes": {
+    "v0_9_1036": {
+      "item0": "Home: you now see three periods in a carousel (current, next and following), with arrows and dots to move between them.",
+      "item1": "Redesigned cards: the detail shows «Next cut-off» and «Total debt» with a clear breakdown, and your payments appear applied to your installment purchases.",
+      "item2": "If a payment covers the whole cut-off, the card closes the cycle and the remainder stays as credit for the next one.",
+      "item3": "Luna now has a glass bubble: tap it to jump to your pending or overdue payments.",
+      "item4": "New app onboarding for phone and tablet, with the «Shift on weekends» option.",
+      "item5": "Settings › Pay period: pick your two twice-monthly pay days from a 1–31 table instead of typing them.",
+      "item6": "Import: movements that make up a recurring payment are now linked to its history, including future payments.",
+      "item7": "Goals and Recurring on phone: you can now scroll to the end of the history in the detail view."
+    },
     "v0_9_991": {
       "item0": "New design across the app: Home, Payments, Recurring, Goals and Settings rebuilt for phone, tablet and desktop, with light and dark themes.",
       "item1": "Phone: new Home, a bottom bar with Settings, a refreshed space picker and cleaner payment rows.",

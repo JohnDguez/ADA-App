@@ -2003,6 +2003,16 @@
     }
   },
   "patchNotes": {
+    "v0_9_1036": {
+      "item0": "Inicio: ahora ves tres periodos en un carrusel (actual, próximo y siguiente) con flechas y puntos para deslizar entre ellos.",
+      "item1": "Tarjetas rediseñadas: el detalle muestra «Próximo corte» y «Deuda total» con un desglose claro, y tus abonos se ven aplicados a las cuotas de compras a meses.",
+      "item2": "Si un abono cubre el corte completo, la tarjeta cierra el ciclo y el sobrante queda a tu favor para el siguiente.",
+      "item3": "Luna con globo de cristal: al tocarlo te lleva a tus pagos pendientes o vencidos.",
+      "item4": "Nuevo inicio de la app (onboarding) para celular y tablet, con la opción «Recorrer en fin de semana».",
+      "item5": "Ajustes › Periodo de cobro: elige tus dos días de cobro quincenal en una tabla del 1 al 31, en lugar de escribirlos.",
+      "item6": "Importar: los movimientos que forman un pago recurrente quedan ligados a su historial, con los pagos futuros incluidos.",
+      "item7": "Metas y Recurrentes en celular: ya puedes desplazarte hasta el final del historial en el detalle."
+    },
     "v0_9_991": {
       "item0": "Nuevo diseño en toda la app: Inicio, Gastos, Recurrentes, Metas y Ajustes rehechos para celular, tablet y computadora, con tema claro y oscuro.",
       "item1": "Celular: Inicio nuevo, barra inferior con Ajustes, selector de espacios renovado y filas de pago más limpias.",
