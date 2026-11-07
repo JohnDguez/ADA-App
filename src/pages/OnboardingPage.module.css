@@ -836,7 +836,11 @@
    completo lleva el color del paso; los pasos van en una tarjeta blanca y la
    ilustración abajo.
    ═════════════════════════════════════════════════════════════════════════════ */
-.tabH .deskShell { padding: 0.875rem; border-radius: 1.75rem; }
+.tabH.deskRoot { height: 100dvh; min-height: 0; overflow: hidden; }
+.tabH .deskShell { padding: 0.875rem; border-radius: 1.75rem; min-height: 0; height: calc(100dvh - 32px); }
+.tabH .rail { overflow: hidden; }
+/* Riel fijo; solo la tarjeta de la derecha se desplaza. */
+.tabH .deskMain { min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
 .tabH .rail { width: 18.75rem; padding: 1.25rem 0.875rem 0; border-radius: 1.5rem; transition: background 0.3s ease; }
 .tabH .railBrand { margin-bottom: 0.875rem; padding: 0.5rem 0.875rem; border-radius: var(--radius-full); background: var(--desk-card); box-shadow: var(--desk-shadow); font-size: 1rem; }
 .tabH .railLogo { width: 1.75rem; height: 1.75rem; border-radius: 0.625rem; }
@@ -846,8 +850,8 @@
 .tabH .railScene { flex: 1; height: auto; min-height: 14rem; margin-top: 0; }
 .tabH .sceneBlock { background: transparent; }
 .tabH .sceneImg { width: auto; }
-.tabH .deskMain { align-items: stretch; padding: 0.375rem 0.375rem 0.375rem 0.875rem; }
-.tabH .deskCard { flex: 1; min-height: 0; padding: 2.75rem 3rem 2rem; border-radius: 1.5rem; }
+.tabH .deskMain { align-items: flex-start; padding: 0.375rem 0.375rem 0.375rem 0.875rem; }
+.tabH .deskCard { flex: 1; align-self: flex-start; min-height: 100%; padding: 2.75rem 3rem 2rem; border-radius: 1.5rem; }
 .tabH .deskBody .title { font-size: 2.375rem; letter-spacing: -0.03em; }
 .tabH .deskViewport { display: grid; align-content: center; }
 .tabH .panelWrap { grid-area: 1 / 1; }
