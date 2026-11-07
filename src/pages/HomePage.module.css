@@ -198,6 +198,7 @@
    contenedor se anima vía JS (ResizeObserver, ver HomePage.jsx) hacia el
    alto real del panel activo — mismo momento/duración que el translateX. */
 .contentSwipeWrap {
+  scroll-margin-top: 12px;
   position: relative;
   overflow: hidden;
   transition: height 0.32s cubic-bezier(0.25, 0.46, 0.45, 0.94);

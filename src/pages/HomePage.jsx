@@ -98,6 +98,7 @@ export function HomePage({ payments, dataLoading = false, profile, spaceSwitcher
   // dejaba claro de qué periodo era cada pago — ahora solo se ve un bloque
   // a la vez, el que indique el switch de arriba.
   const [activeCard,     setActiveCard]     = useState(0)
+  const listWrapRef = useRef(null)
   // Escritorio (≥1100px, v0.9.812): layout propio (lista + resumen fijo), no
   // el de móvil reacomodado — decide qué se renderiza, no solo el CSS.
   const isDesktop = useIsDesktop()
@@ -426,7 +427,7 @@ export function HomePage({ payments, dataLoading = false, profile, spaceSwitcher
             lugar de ellas (mockup confirmado con Johnatan, octubre 2026).
             Fuera de `metricCardSection` a propósito: ese contenedor lleva el
             coachmark `home-metric-card`, y Luna no debe ensanchar su resaltado. */}
-        <LunaStrip variant={isMobile ? 'desk' : undefined} lunaState={lunaState} loading={dataLoading} />
+        <LunaStrip variant={isMobile ? 'desk' : undefined} lunaState={lunaState} loading={dataLoading} onTap={() => { setActiveCard(0); setTimeout(() => listWrapRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 60) }} />
 
         {/* Tabs Periodo / Mes — switch deslizante real (track + thumb que se
             mueve), no 2 botones que solo cambian de color. Excepción
@@ -646,7 +647,7 @@ export function HomePage({ payments, dataLoading = false, profile, spaceSwitcher
               solo su lista, con `nextPeriodMode` en el PayRail para que el
               check de cada pago pida confirmación antes de marcarlo pagado
               (ver ConfirmNextPeriodPayModal). */}
-          <div className={styles.contentSwipeWrap} style={{ height: swipeHeight != null ? swipeHeight : 'auto' }}>
+          <div ref={listWrapRef} className={styles.contentSwipeWrap} style={{ height: swipeHeight != null ? swipeHeight : 'auto' }}>
             <div ref={actualPanelRef} className={`${styles.contentPanel} ${activeCard === 0 ? '' : styles.panelOff}`} style={{ transform: `translateX(${(0 - activeCard) * 100}%)` }}>
               {pagadosEstePeriodo.length > 0 && (
                 <div data-coachmark="home-paid-collapse" className={styles.paidCollapseWrapper}>

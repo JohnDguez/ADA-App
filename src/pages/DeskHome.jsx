@@ -99,6 +99,9 @@ export function DeskHome({
   }, 0)
   const overduePct = totalConocido > 0 ? (overdueAmt / totalConocido) * 100 : 0
 
+  // Globo de Luna: lleva a vencidos si hay, si no a los pagos por pagar.
+  const goToList = () => goto(vencidos.length > 0 ? overdueRef : toPayRef)
+
   function goto(ref, { tabIndex = 0, expandPaid = false } = {}) {
     if (tab !== tabIndex) { setTab(tabIndex); setChipTab(tabIndex) }
     if (expandPaid) setPaidExpanded(true)
@@ -235,7 +238,7 @@ export function DeskHome({
           <h1 className={styles.hello}>{greeting().replace(/[¡!]/g, '').trim()}{firstName ? `, ${firstName}` : ''}</h1>
         </div>
         {tablet ? (
-          <div className={styles.lunaPeek}><LunaStrip variant="peek" lunaState={lunaState} loading={dataLoading} /></div>
+          <div className={styles.lunaPeek}><LunaStrip variant="peek" lunaState={lunaState} loading={dataLoading} onTap={goToList} /></div>
         ) : (
         <div className={styles.actions}>
           <div className={styles.addWrap}>
@@ -319,7 +322,7 @@ export function DeskHome({
                 </section>
 
                 <aside className={styles.side}>
-                  {!tablet && <LunaStrip variant="desk" lunaState={lunaState} loading={dataLoading} />}
+                  {!tablet && <LunaStrip variant="desk" lunaState={lunaState} loading={dataLoading} onTap={goToList} />}
                   <section className={`${styles.card} ${styles.gaugeCard} ${tablet ? tabAnimCls : ''}`}>
                     <h2 className={styles.cardTitle}>{t('deskHome.gaugeTitle')}</h2>
                     {tabletNext ? (

@@ -30,7 +30,7 @@ const RING_C = 2 * Math.PI * 18
 
 // `variant="desk"` (v0.9.819): tarjeta oscura con degradado del nuevo Inicio de
 // escritorio; `onArrow` lleva a la sección que Luna menciona.
-export function LunaStrip({ lunaState, loading = false, variant, onArrow }) {
+export function LunaStrip({ lunaState, loading = false, variant, onArrow, onTap }) {
   const { t } = useTranslation()
 
   if (loading) {
@@ -81,12 +81,22 @@ export function LunaStrip({ lunaState, loading = false, variant, onArrow }) {
 
   const pct = total > 0 ? done / total : 0
 
+  // Globo tocable (v0.9.1026): solo cuando hay algo que ver abajo (vencidos o pagos
+  // pendientes). Un saludo o "Periodo completado" no lleva a ningún lado.
+  const tappable = !!onTap && ['worried', 'attentive', 'happy', 'sleeping'].includes(key) && (overdueCount > 0 || !!next)
+  const bubbleProps = tappable
+    ? {
+        role: 'button', tabIndex: 0, onClick: onTap,
+        onKeyDown: (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onTap() } },
+      }
+    : {}
+
   // `variant="peek"` (tablet, v0.9.937): globo + Luna asomándose por el borde
   // inferior del encabezado, sobre las tarjetas de abajo.
   if (variant === 'peek') {
     return (
       <section className={`${styles.peek} ${styles['desk_' + key] || ''}`} aria-label={`${title}. ${sub}`}>
-        <div className={styles.peekText}>
+        <div className={`${styles.peekText} ${tappable ? styles.tappable : ''}`} {...bubbleProps}>
           <div className={styles.deskTitle}>{title}</div>
           <div className={styles.deskSub}>{sub}</div>
         </div>
@@ -99,7 +109,7 @@ export function LunaStrip({ lunaState, loading = false, variant, onArrow }) {
     return (
       <section className={`${styles.deskStrip} ${styles['desk_' + key] || ''}`} aria-label={`${title}. ${sub}`}>
         <img className={`${styles.deskImg} ${key === 'sleeping' ? styles.deskImgWide : ''}`} src={img.src} width={img.w} height={img.h} alt="" decoding="async" />
-        <div className={styles.deskText}>
+        <div className={`${styles.deskText} ${tappable ? styles.tappable : ''}`} {...bubbleProps}>
           <div className={styles.deskTitle}>{title}</div>
           <div className={styles.deskSub}>{sub}</div>
         </div>
