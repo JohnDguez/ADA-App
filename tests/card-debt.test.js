@@ -38,3 +38,12 @@ it('reparte el abono por cuotas: 1,920 llena la 1 y 17.6% de la 2', async () => 
   expect(a.fills[1]).toBeCloseTo(286.67 / 1633.33, 3)
   expect(a.fills[2]).toBe(0)
 })
+
+it('próximo corte: gastos 245 + cuota 1,633.33 − abono 2,165 = 0 y sobran 286.67', () => {
+  const d = debtBreakdown({ statement: 0, cycleSpend: 245, carry: -2165, card })
+  expect(d.nextCut.total).toBe(0)
+  expect(d.nextCut.favor).toBeCloseTo(286.67, 2)
+  expect(d.total).toBe(7880)
+  const e = debtBreakdown({ statement: 0, cycleSpend: 245, carry: 0, card })
+  expect(e.nextCut.total).toBeCloseTo(1878.33, 2)
+})

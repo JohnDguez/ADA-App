@@ -2265,7 +2265,13 @@
     "statementPaymentName": "Pago tarjeta {{name}}",
     "statementBadge": "Estado de cuenta",
     "cycleSpend": "Gastado en este corte: {{amount}}",
-    "pendingCreditTotal": "Por pagar",
+    "pendingCreditTotal": "Deuda total",
+    "nextCut": {
+      "title": "Pagas en el próximo corte · {{date}}",
+      "plansRow": "Mensualidades de compras a meses",
+      "covered": "Tu abono cubre el corte completo. Te sobran {{amount}} para el siguiente.",
+      "dueNote": "Es lo que te cobrará el estado de cuenta de ese corte."
+    },
     "tablet": {
       "nextCut": "Próximo corte",
       "nextDue": "Próximo pago",
@@ -2334,6 +2340,7 @@
       "statement": "Estado de cuenta",
       "cycle": "Ciclo en curso",
       "plans": "Planes por venir",
+      "totalHint": "Incluye todas las mensualidades de tus compras a meses; no se paga de golpe.",
       "abonosApplied": "Abonos aplicados",
       "totalOwed": "Total por pagar",
       "favorNote": "Te sobran {{amount}} de abono; quedan a tu favor y se aplicarán a tus próximos cortes.",

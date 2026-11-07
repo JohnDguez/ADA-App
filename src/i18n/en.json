@@ -2265,7 +2265,13 @@
     "statementPaymentName": "{{name}} card payment",
     "statementBadge": "Card statement",
     "cycleSpend": "Spent this cycle: {{amount}}",
-    "pendingCreditTotal": "Owed",
+    "pendingCreditTotal": "Total owed",
+    "nextCut": {
+      "title": "You pay at the next cut · {{date}}",
+      "plansRow": "Installment purchases (monthly)",
+      "covered": "Your payment covers the whole statement. {{amount}} is left for the next one.",
+      "dueNote": "This is what that statement will charge you."
+    },
     "tablet": {
       "nextCut": "Next cut",
       "nextDue": "Next payment",
@@ -2334,6 +2340,7 @@
       "statement": "Statement",
       "cycle": "Current cycle",
       "plans": "Upcoming installments",
+      "totalHint": "Includes every monthly installment of your installment purchases; it isn't paid all at once.",
       "abonosApplied": "Payments applied",
       "totalOwed": "Total owed",
       "favorNote": "You have {{amount}} of payment left over; it stays as credit and will apply to your next statements.",

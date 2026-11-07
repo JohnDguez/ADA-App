@@ -161,7 +161,18 @@ export function debtBreakdown({ statement, cycleSpend, carry, card }) {
   const abonos = r2(Math.max(0, -carryN))
   const abonosApplied = r2(Math.min(abonos, cycleGross + plansGross))
   const planCredit = r2(plansGross - plans) // parte del abono que bajó las compras a meses
+  // Lo que realmente se paga en el próximo corte: estado de cuenta pendiente + gastos
+  // del ciclo + UNA cuota por plan activo − el crédito a favor. Si el crédito sobra,
+  // lo que queda se aplica al corte siguiente (`favor`).
+  const ncPlans = nextCutPlansTotal(card)
+  const ncGross = r2(statement + cycleGross + ncPlans)
+  const ncCredit = r2(Math.min(abonos, ncGross))
+  const nextCut = {
+    statement: r2(statement), spend: cycleGross, plans: ncPlans,
+    credit: ncCredit, total: r2(ncGross - ncCredit), favor: r2(Math.max(0, abonos - ncGross)),
+  }
   return {
+    nextCut,
     statement: r2(statement), cycle, plans, total: r2(statement + cycle + plans),
     cycleGross, plansGross, abonos, abonosApplied, planCredit, favor: r2(Math.max(0, abonos - abonosApplied)),
   }

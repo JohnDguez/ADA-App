@@ -199,6 +199,28 @@ export function CardDetailPanel({ card, payments, onBack, onEdit, onDelete, onPa
 
   // Desglose (v0.9.1013): gastos + compras a meses − abonos = total, para que se vea
   // a dónde fue cada abono. Las cifras netas (debt.cycle/plans) siguen alimentando la barra.
+  // "Pagas en el próximo corte" (v0.9.1015): lo que de verdad toca pagar, aparte de la
+  // deuda total (que incluye todas las mensualidades de las compras a meses).
+  const nextCutBlock = (cls) => debt && cycleInfo && (
+    <div className={cls.box}>
+      <div className={cls.key}>{t('cards.nextCut.title', { date: `${cycleInfo.nextCut.getDate()} ${getMonthsShort()[cycleInfo.nextCut.getMonth()].toLowerCase()}` })}</div>
+      <div className={cls.big}>{fmt(debt.nextCut.total)}</div>
+      {[
+        [debt.nextCut.statement, t('cards.bento.statement')],
+        [debt.nextCut.spend, t('cards.bento.cycle')],
+        [debt.nextCut.plans, t('cards.nextCut.plansRow')],
+      ].filter(([v]) => v > 0).map(([v, label]) => (
+        <div key={label} className={cls.row}><span>{label}</span><b>{fmt(v)}</b></div>
+      ))}
+      {debt.nextCut.credit > 0 && <div className={cls.row}><span>{t('cards.bento.abonosApplied')}</span><b>−{fmt(debt.nextCut.credit)}</b></div>}
+      <div className={cls.note}>
+        {debt.nextCut.total === 0 && debt.nextCut.credit > 0
+          ? t('cards.nextCut.covered', { amount: fmt(debt.nextCut.favor) })
+          : t('cards.nextCut.dueNote')}
+      </div>
+    </div>
+  )
+
   const debtLegend = debt && (
     <div className={styles.legend}>
       {[
@@ -291,10 +313,12 @@ export function CardDetailPanel({ card, payments, onBack, onEdit, onDelete, onPa
           <div className={dd.cardWrap}><CreditCardVisual card={card} /></div>
           {isCredit ? (
             <div className={deskStyles.fill}>
+              {nextCutBlock({ box: dd.nextCut, key: dd.key, big: dd.ncBig, row: dd.ncRow, note: dd.ncNote })}
               <div className={dd.owedHead}>
                 <div>
                   <div className={dd.key}>{t('cards.pendingCreditTotal')}</div>
                   <div className={dd.big}>{payments == null ? <LoadingDots /> : fmt(totalOwed)}</div>
+                  {hasPlans && <div className={dd.hint}>{t('cards.bento.totalHint')}</div>}
                 </div>
                 {onPayNow && <button type="button" className={deskStyles.btn} onClick={() => onPayNow(card)}>{t('cards.payNow.button')}</button>}
               </div>
@@ -403,7 +427,7 @@ export function CardDetailPanel({ card, payments, onBack, onEdit, onDelete, onPa
                     <span className={dd.name}>{p.name}</span>
                     <span>{label}{p.is_postponed && ` · ${t('payCard.status.postponed')}`}</span>
                     <span className={dd.name}>{p.source_space_id ? (spaceNames[p.source_space_id] || t('cards.detail.sharedSpaceFallback')) : '—'}</span>
-                    <span className={`${dd.right} ${dd.amt} ${isIncome ? dd.inc : ''}`}>−{fmt(p.amount)}</span>
+                    <span className={`${dd.right} ${dd.amt} ${isIncome ? dd.inc : ''}`}>{isIncome ? '' : '−'}{fmt(p.amount)}</span>
                   </div>
                 )
               })}
@@ -464,10 +488,12 @@ export function CardDetailPanel({ card, payments, onBack, onEdit, onDelete, onPa
       {/* Resumen en bento (v0.9.587, variante A elegida por Johnatan): "Por pagar" con
           su barra (de dónde sale el número), lo pagado con la tarjeta, las compras a
           meses (abren su pantalla aparte) y el avance del ciclo. */}
-      {card.kind === 'credit' ? (
+      {card.kind === 'credit' ? (<>
+        {nextCutBlock({ box: `${md.sum} ${md.nextCut}`, key: md.key, big: md.big, row: md.ncRow, note: md.ncNote })}
         <div className={md.sum}>
           <div className={md.key}>{t('cards.pendingCreditTotal')}</div>
           <div className={md.big}>{payments == null ? <LoadingDots /> : fmt(totalOwed)}</div>
+          {hasPlans && <div className={md.hint}>{t('cards.bento.totalHint')}</div>}
           <DebtBar debt={debt} label={t('cards.bento.donutLabel')} />
           {debtLegend}
           {tl && (
@@ -502,7 +528,7 @@ export function CardDetailPanel({ card, payments, onBack, onEdit, onDelete, onPa
             </button>
           )}
         </div>
-      ) : (
+      </>) : (
         <div className={md.sum}>
           <div className={md.key}>{t('cards.detail.paidWithCard')}</div>
           <div className={md.big}>{payments == null ? <LoadingDots /> : fmt(total)}</div>
@@ -562,7 +588,7 @@ export function CardDetailPanel({ card, payments, onBack, onEdit, onDelete, onPa
                     )}
                   </div>
                   <div className={`${styles.rowAmount} ${isIncome ? styles.rowAmountIncome : ''}`}>
-                    −{fmt(p.amount)}
+                    {isIncome ? '' : '−'}{fmt(p.amount)}
                   </div>
                 </div>
               )
