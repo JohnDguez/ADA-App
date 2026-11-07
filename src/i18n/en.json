@@ -2295,7 +2295,7 @@
       "paidWithCard": "Paid with this card",
       "sharedSpaceFallback": "Shared space",
       "noHistory": "No payments in this period",
-      "abono": "Payment",
+      "abono": "Card payment",
       "owedThisPeriod": "You owe this period"
     },
     "alreadyAbonado": "Already paid {{amount}}",
@@ -2322,6 +2322,7 @@
       "amountError": "Enter an amount greater than $0.",
       "noteFull": "You're paying everything spent so far. If you don't use the card again before the closing date, no statement will be generated.",
       "notePartial": "You're paying part of it. The closing date will only bill the remaining {{amount}}, plus anything you spend before then.",
+      "noteFavor": "That's more than you owe ({{owed}}). {{favor}} will stay as credit for your next statements.",
       "noteOver": "You're paying more than owed — the extra will be subtracted from your next statement.",
       "confirm": "Confirm payment",
       "success": "You paid {{amount}} to {{name}}"
@@ -2333,6 +2334,9 @@
       "statement": "Statement",
       "cycle": "Current cycle",
       "plans": "Upcoming installments",
+      "abonosApplied": "Payments applied",
+      "totalOwed": "Total owed",
+      "favorNote": "You have {{amount}} of payment left over; it stays as credit and will apply to your next statements.",
       "noDebt": "Nothing owed",
       "plansTitle": "Installment purchases",
       "plansCount_one": "{{count}} plan",
@@ -2344,6 +2348,7 @@
     },
     "plans": {
       "settleName": "Payoff {{name}}",
+      "coveredByAbono": "Covered by your payment: {{amount}}",
       "settleTitle": "Pay off {{name}}",
       "settleSubtitle": "Pays now the installments that are not on a statement yet. The plan will not add more installments.",
       "settled": "\"{{name}}\" paid off: {{amount}}",

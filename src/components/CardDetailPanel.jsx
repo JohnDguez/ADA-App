@@ -197,20 +197,37 @@ export function CardDetailPanel({ card, payments, onBack, onEdit, onDelete, onPa
     onDelete()
   }
 
+  // Desglose (v0.9.1013): gastos + compras a meses − abonos = total, para que se vea
+  // a dónde fue cada abono. Las cifras netas (debt.cycle/plans) siguen alimentando la barra.
   const debtLegend = debt && (
     <div className={styles.legend}>
       {[
-        ['statement', 'var(--warning)', t('cards.bento.statement')],
-        ['cycle', 'var(--accent)', t('cards.bento.cycle')],
-        ['plans', 'var(--label-variable)', t('cards.bento.plans')],
-      ].filter(([k]) => debt[k] > 0).map(([k, color, label]) => (
-        <div key={k} className={styles.legendRow}>
+        [debt.statement, 'var(--warning)', t('cards.bento.statement')],
+        [debt.cycleGross, 'var(--accent)', t('cards.bento.cycle')],
+        [debt.plansGross, 'var(--label-variable)', t('cards.bento.plansTitle')],
+      ].filter(([v]) => v > 0).map(([v, color, label]) => (
+        <div key={label} className={styles.legendRow}>
           <span className={styles.legendDot} style={{ background: color }} />
           <span>{label}</span>
-          <b>{fmt(debt[k])}</b>
+          <b>{fmt(v)}</b>
         </div>
       ))}
-      {debt.total <= 0 && <div className={styles.legendRow}><span>{t('cards.bento.noDebt')}</span></div>}
+      {debt.abonosApplied > 0 && (
+        <div className={styles.legendRow}>
+          <span className={styles.legendDot} style={{ background: 'var(--paid)' }} />
+          <span>{t('cards.bento.abonosApplied')}</span>
+          <b>−{fmt(debt.abonosApplied)}</b>
+        </div>
+      )}
+      {debt.total <= 0
+        ? <div className={styles.legendRow}><span>{t('cards.bento.noDebt')}</span></div>
+        : debt.abonosApplied > 0 && (
+          <div className={`${styles.legendRow} ${styles.legendTotal}`}>
+            <span>{t('cards.bento.totalOwed')}</span>
+            <b>{fmt(debt.total)}</b>
+          </div>
+        )}
+      {debt.favor > 0 && <div className={styles.legendNote}>{t('cards.bento.favorNote', { amount: fmt(debt.favor) })}</div>}
     </div>
   )
   const payNowBtn = card.kind === 'credit' && onPayNow && (
@@ -241,6 +258,7 @@ export function CardDetailPanel({ card, payments, onBack, onEdit, onDelete, onPa
     return (
       <CardPlansPanel
         card={card}
+        planCredit={debt ? debt.planCredit : 0}
         desk={desk}
         onBack={() => window.history.back()}
         onSettle={plan => onSettlePlan?.(card, plan)}
@@ -262,11 +280,12 @@ export function CardDetailPanel({ card, payments, onBack, onEdit, onDelete, onPa
       return [...m.entries()].sort((a, b) => b[1] - a[1]).slice(0, 4)
     })()
     const maxCat = spendByCat.length ? spendByCat[0][1] : 1
+    // Cifras brutas para el desglose; los tramos de la barra usan las netas (debt[k]).
     const parts = debt ? [
-      ['statement', 'var(--warning)', t('cards.bento.statement')],
-      ['cycle', 'var(--accent)', t('cards.bento.cycle')],
-      ['plans', 'var(--label-variable)', t('cards.bento.plans')],
-    ].filter(([k]) => debt[k] > 0) : []
+      ['statement', 'var(--warning)', t('cards.bento.statement'), debt.statement],
+      ['cycle', 'var(--accent)', t('cards.bento.cycle'), debt.cycleGross],
+      ['plans', 'var(--label-variable)', t('cards.bento.plansTitle'), debt.plansGross],
+    ].filter(([k]) => debt[k] > 0 || (k !== 'statement' && debt[k === 'cycle' ? 'cycleGross' : 'plansGross'] > 0)) : []
     const body = (<>
         <div className={`${dd.top} ${desk ? '' : dd.topV}`}>
           <div className={dd.cardWrap}><CreditCardVisual card={card} /></div>
@@ -279,15 +298,18 @@ export function CardDetailPanel({ card, payments, onBack, onEdit, onDelete, onPa
                 </div>
                 {onPayNow && <button type="button" className={deskStyles.btn} onClick={() => onPayNow(card)}>{t('cards.payNow.button')}</button>}
               </div>
-              {parts.length > 0 ? (
+              {(parts.length > 0 && debt.total > 0) ? (
                 <>
                   <div className={dd.segBar} role="img" aria-label={t('cards.bento.donutLabel')}>
-                    {parts.map(([k, color]) => <i key={k} style={{ flexGrow: debt[k], background: color }} />)}
+                    {parts.filter(([k]) => debt[k] > 0).map(([k, color]) => <i key={k} style={{ flexGrow: debt[k], background: color }} />)}
                   </div>
                   <div className={dd.legend}>
-                    {parts.map(([k, color, label]) => (
-                      <div key={k}><em style={{ background: color }} /><span>{label}</span><b>{fmt(debt[k])}</b></div>
+                    {parts.map(([k, color, label, gross]) => (
+                      <div key={k}><em style={{ background: color }} /><span>{label}</span><b>{fmt(gross)}</b></div>
                     ))}
+                    {debt.abonosApplied > 0 && <div><em style={{ background: 'var(--paid)' }} /><span>{t('cards.bento.abonosApplied')}</span><b>−{fmt(debt.abonosApplied)}</b></div>}
+                    {debt.abonosApplied > 0 && debt.total > 0 && <div className={dd.legendTotal}><span>{t('cards.bento.totalOwed')}</span><b>{fmt(debt.total)}</b></div>}
+                    {debt.favor > 0 && <div className={dd.legendNote}>{t('cards.bento.favorNote', { amount: fmt(debt.favor) })}</div>}
                   </div>
                 </>
               ) : <div className={dd.ok}>{t('cards.desk.noDebt')}</div>}
@@ -381,7 +403,7 @@ export function CardDetailPanel({ card, payments, onBack, onEdit, onDelete, onPa
                     <span className={dd.name}>{p.name}</span>
                     <span>{label}{p.is_postponed && ` · ${t('payCard.status.postponed')}`}</span>
                     <span className={dd.name}>{p.source_space_id ? (spaceNames[p.source_space_id] || t('cards.detail.sharedSpaceFallback')) : '—'}</span>
-                    <span className={`${dd.right} ${dd.amt} ${isIncome ? dd.inc : ''}`}>{isIncome ? '+' : '−'}{fmt(p.amount)}</span>
+                    <span className={`${dd.right} ${dd.amt} ${isIncome ? dd.inc : ''}`}>−{fmt(p.amount)}</span>
                   </div>
                 )
               })}
@@ -540,7 +562,7 @@ export function CardDetailPanel({ card, payments, onBack, onEdit, onDelete, onPa
                     )}
                   </div>
                   <div className={`${styles.rowAmount} ${isIncome ? styles.rowAmountIncome : ''}`}>
-                    {isIncome ? '+' : '−'}{fmt(p.amount)}
+                    −{fmt(p.amount)}
                   </div>
                 </div>
               )

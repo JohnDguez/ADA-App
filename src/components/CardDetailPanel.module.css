@@ -248,7 +248,7 @@
    estado de cuenta o abono manual. Reutiliza el verde ya usado para
    pagados en el resto de la app (var(--paid)), sin inventar un color. */
 .rowAmountIncome {
-  color: var(--paid);
+  color: var(--accent);
 }
 
 /* "Pagar ahora" (v0.9.497) — mismo look que un botón secundario ya usado
@@ -354,6 +354,19 @@
 .legendRow b {
   margin-left: auto;
   font-weight: 600;
+}
+
+.legendTotal {
+  margin-top: 3px;
+  padding-top: 6px;
+  border-top: 1px dashed var(--border);
+  font-weight: 700;
+}
+
+.legendNote {
+  font-size: 11px;
+  color: var(--muted);
+  line-height: 1.35;
 }
 
 .legendDot {

@@ -21,3 +21,10 @@
 .empty { text-align: center; color: var(--muted); font-size: 0.8125rem; padding: 2rem 1rem; }
 @keyframes plIn { from { opacity: 0; transform: translateY(0.5rem); } to { opacity: 1; } }
 @media (prefers-reduced-motion: reduce) { .hero, .plan { animation: none; } }
+
+.covered {
+  display: block;
+  margin-top: 4px;
+  font-size: 0.75rem;
+  color: var(--accent);
+}

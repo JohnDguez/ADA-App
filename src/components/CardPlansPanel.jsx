@@ -18,7 +18,7 @@ import tb from '../pages/settings/SettingsCobroTab.module.css'
 // Pantalla aparte de "Compras a meses" de una tarjeta (v0.9.587). Se abre desde
 // el bento del detalle de la tarjeta (CardDetailPanel.jsx) — una sola fila ahí,
 // la lista completa aquí, para que no alargue el detalle con muchas compras.
-export function CardPlansPanel({ card, onBack, onSettle, onDelete, desk = false }) {
+export function CardPlansPanel({ card, onBack, onSettle, onDelete, desk = false, planCredit = 0 }) {
   const { t } = useTranslation()
   const isMobile = useIsMobile()
   const [deleting, setDeleting] = useState(null)
@@ -41,7 +41,8 @@ export function CardPlansPanel({ card, onBack, onSettle, onDelete, desk = false 
         <div className={`${dd.sumRow} ${desk ? '' : dd.sumRowV}`}>
           <div className={deskStyles.fill}>
             <div className={dd.key}>{t('cards.plans.owed')}</div>
-            <div className={dd.big}>{fmt(plansRemainingTotal(card))}</div>
+            <div className={dd.big}>{fmt(Math.max(0, plansRemainingTotal(card) - planCredit))}</div>
+            {planCredit > 0 && <div className={dd.hint}>{t('cards.plans.coveredByAbono', { amount: fmt(planCredit) })}</div>}
           </div>
           <div className={deskStyles.fill}>
             <div className={dd.key}>{t('cards.plans.nextCutShort')}</div>
@@ -122,7 +123,8 @@ export function CardPlansPanel({ card, onBack, onSettle, onDelete, desk = false 
         <div className={pm.hero}>
           <div>
             <small>{t('cards.plans.owed')}</small>
-            <b className={pm.heroBig}>{fmt(plansRemainingTotal(card))}</b>
+            <b className={pm.heroBig}>{fmt(Math.max(0, plansRemainingTotal(card) - planCredit))}</b>
+            {planCredit > 0 && <span className={pm.covered}>{t('cards.plans.coveredByAbono', { amount: fmt(planCredit) })}</span>}
           </div>
           {nextCutPlansTotal(card) > 0 && (
             <div className={pm.heroR}>

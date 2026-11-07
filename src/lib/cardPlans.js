@@ -154,7 +154,17 @@ export function debtBreakdown({ statement, cycleSpend, carry, card }) {
   // debe. Antes ese sobrante se perdía de la vista y "Por pagar" no cambiaba.
   const credit = Math.max(0, -raw)
   const plans = r2(Math.max(0, plansFutureTotal(card) - credit))
-  return { statement: r2(statement), cycle, plans, total: r2(statement + cycle + plans) }
+  // Para el desglose en pantalla (v0.9.1013): cifras brutas y el abono aplicado.
+  const carryN = Number(carry) || 0
+  const cycleGross = r2(Math.max(0, cycleSpend + Math.max(0, carryN)))
+  const plansGross = plansFutureTotal(card)
+  const abonos = r2(Math.max(0, -carryN))
+  const abonosApplied = r2(Math.min(abonos, cycleGross + plansGross))
+  const planCredit = r2(plansGross - plans) // parte del abono que bajó las compras a meses
+  return {
+    statement: r2(statement), cycle, plans, total: r2(statement + cycle + plans),
+    cycleGross, plansGross, abonos, abonosApplied, planCredit, favor: r2(Math.max(0, abonos - abonosApplied)),
+  }
 }
 
 // Deuda total en planes activos (facturado sin pagar + por venir).

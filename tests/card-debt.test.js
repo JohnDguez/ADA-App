@@ -18,3 +18,14 @@ describe('debtBreakdown · crédito a favor', () => {
     expect(debtBreakdown({ statement: 0, cycleSpend: 0, carry: -50000, card }).total).toBe(0)
   })
 })
+
+// v0.9.1013: desglose para la pantalla (brutos + abono aplicado)
+it('desglose: abono 2000 cubre gastos 245 y baja el plan', () => {
+  const d = debtBreakdown({ statement: 0, cycleSpend: 245, carry: -2000, card })
+  expect(d.cycleGross).toBe(245)
+  expect(d.plansGross).toBe(9800)
+  expect(d.abonosApplied).toBe(2000)
+  expect(d.planCredit).toBe(1755)
+  expect(d.total).toBe(8045)
+  expect(d.favor).toBe(0)
+})

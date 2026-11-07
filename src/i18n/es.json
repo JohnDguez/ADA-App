@@ -2295,7 +2295,7 @@
       "paidWithCard": "Pagado con esta tarjeta",
       "sharedSpaceFallback": "Espacio compartido",
       "noHistory": "Sin pagos en este periodo",
-      "abono": "Abono",
+      "abono": "Abono a tarjeta",
       "owedThisPeriod": "Debes en este periodo"
     },
     "alreadyAbonado": "Ya abonaste {{amount}}",
@@ -2322,6 +2322,7 @@
       "amountError": "Escribe un monto mayor a $0.",
       "noteFull": "Pagas todo lo gastado hasta hoy. Si no vuelves a usar la tarjeta antes del corte, no se genera ningún estado de cuenta.",
       "notePartial": "Pagas una parte. El corte solo te cobrará los {{amount}} restantes, más lo que gastes de aquí a esa fecha.",
+      "noteFavor": "Es más de lo que debes ({{owed}}). Te quedarán {{favor}} a favor, que se aplicarán a tus próximos cortes.",
       "noteOver": "Pagas de más — el excedente se resta de tu siguiente estado de cuenta.",
       "confirm": "Confirmar pago",
       "success": "Pagaste {{amount}} a {{name}}"
@@ -2333,6 +2334,9 @@
       "statement": "Estado de cuenta",
       "cycle": "Ciclo en curso",
       "plans": "Planes por venir",
+      "abonosApplied": "Abonos aplicados",
+      "totalOwed": "Total por pagar",
+      "favorNote": "Te sobran {{amount}} de abono; quedan a tu favor y se aplicarán a tus próximos cortes.",
       "noDebt": "Sin adeudo",
       "plansTitle": "Compras a meses",
       "plansCount_one": "{{count}} plan",
@@ -2344,6 +2348,7 @@
     },
     "plans": {
       "settleName": "Liquidación {{name}}",
+      "coveredByAbono": "Cubierto con tu abono: {{amount}}",
       "settleTitle": "Liquidar {{name}}",
       "settleSubtitle": "Paga de una vez las cuotas que aún no entran a tu estado de cuenta. El plan ya no sumará más cuotas.",
       "settled": "«{{name}}» liquidada: {{amount}}",

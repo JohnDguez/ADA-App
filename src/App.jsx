@@ -35,7 +35,7 @@ import { usePeriodIncome } from './hooks/usePeriodIncome'
 import { usePaymentMethods } from './hooks/usePaymentMethods'
 import { supabase } from './lib/supabase'
 import { getFreshSession } from './lib/freshSession'
-import { computeMissingStatements, currentCycleSpend } from './lib/cardStatements'
+import { computeMissingStatements, currentCycleSpend, cardDebt } from './lib/cardStatements'
 import { useDayKey } from './lib/useDayKey'
 import { planFuture, getPlans, newPlan, applyCharged, applyPaid, revertPaid, revertCharged, applySettle, revertSettle, itemsTotal } from './lib/cardPlans'
 import { findAutoChargeCandidate, readAutoChargeSkip, addAutoChargeSkip, isCreditInstallmentCopy, dueDateNoon } from './lib/installmentCharge'
@@ -2157,6 +2157,7 @@ export default function App() {
               p.payment_method_id === payCardNowCard.id && p.payment_method_kind === 'credit' && p.is_paid
             ))
           : 0}
+        owed={payCardNowCard && cardPayments ? cardDebt(payCardNowCard, cardPayments).total : null}
         methods={paymentMethods.methods}
         onSave={fields => handlePayCardNow(payCardNowCard, fields)}
         onClose={() => setPayCardNowCard(null)}
