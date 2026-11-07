@@ -2297,6 +2297,7 @@
     },
     "detail": {
       "paidWithCard": "Paid with this card",
+      "personalSpace": "Personal",
       "sharedSpaceFallback": "Shared space",
       "noHistory": "No payments in this period",
       "abono": "Card payment",

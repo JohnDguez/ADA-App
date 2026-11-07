@@ -303,7 +303,7 @@ export function CardDetailPanel({ card, payments, onBack, onEdit, onDelete, onPa
                   {parts.filter(([k]) => debt[k] > 0).map(([k, color]) => <i key={k} style={{ flexGrow: debt[k], background: color }} />)}
                 </div>
               )}
-              {breakdownToggle({ more: dd.more, table: dd.table, sum: dd.tableSum })}
+              {breakdownToggle({ more: dd.more, table: dd.bdTable, sum: dd.bdSum })}
             </div>
           ) : (
             <div className={deskStyles.fill}>
@@ -393,7 +393,7 @@ export function CardDetailPanel({ card, payments, onBack, onEdit, onDelete, onPa
                     <span>{d.getDate()} {getMonthsShort()[d.getMonth()]}</span>
                     <span className={dd.name}>{p.name}</span>
                     <span>{label}{p.is_postponed && ` · ${t('payCard.status.postponed')}`}</span>
-                    <span className={dd.name}>{p.source_space_id ? (spaceNames[p.source_space_id] || t('cards.detail.sharedSpaceFallback')) : '—'}</span>
+                    <span className={dd.name}>{p.source_space_id ? (spaceNames[p.source_space_id] || t('cards.detail.sharedSpaceFallback')) : t('cards.detail.personalSpace')}</span>
                     <span className={`${dd.right} ${dd.amt} ${isIncome ? dd.inc : ''}`}>{isIncome ? '' : '−'}{fmt(p.amount)}</span>
                   </div>
                 )

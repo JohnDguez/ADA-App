@@ -2297,6 +2297,7 @@
     },
     "detail": {
       "paidWithCard": "Pagado con esta tarjeta",
+      "personalSpace": "Personal",
       "sharedSpaceFallback": "Espacio compartido",
       "noHistory": "Sin pagos en este periodo",
       "abono": "Abono a tarjeta",

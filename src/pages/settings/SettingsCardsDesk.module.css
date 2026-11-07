@@ -36,3 +36,15 @@
   .seg button:not(.segOn):hover { background: var(--desk-hair); translate: none; filter: none; }
   .addCard:hover { opacity: 0.85; translate: none; filter: none; }
 }
+
+/* Escritorio angosto / tablet horizontal (v0.9.1017): el panel de contenido queda
+   estrecho junto al menú de Ajustes, así que el resumen y los vencimientos se apilan
+   a todo el ancho y los datos del resumen van en una sola fila. */
+@media (max-width: 1299px) {
+  .top { grid-template-columns: minmax(0, 1fr); }
+  .hero { min-height: 0; }
+  .big { font-size: 44px; letter-spacing: -1.5px; padding-bottom: 14px; }
+  .pills { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+  .pills > div { padding: 8px 12px; min-width: 0; }
+  .pills b { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+}
