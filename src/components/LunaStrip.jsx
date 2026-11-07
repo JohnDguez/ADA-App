@@ -84,10 +84,18 @@ export function LunaStrip({ lunaState, loading = false, variant, onArrow, onTap 
   // Globo tocable (v0.9.1026): solo cuando hay algo que ver abajo (vencidos o pagos
   // pendientes). Un saludo o "Periodo completado" no lleva a ningún lado.
   const tappable = !!onTap && ['worried', 'attentive', 'happy', 'sleeping'].includes(key) && (overdueCount > 0 || !!next)
+  // Al tocar, el globo "respira" (animación CSS reiniciable, sin hundirse de golpe).
+  const breathe = (el) => {
+    el.classList.remove(styles.breathe)
+    void el.offsetWidth
+    el.classList.add(styles.breathe)
+  }
   const bubbleProps = tappable
     ? {
         role: 'button', tabIndex: 0, onClick: onTap,
-        onKeyDown: (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onTap() } },
+        onPointerDown: (e) => breathe(e.currentTarget),
+        onAnimationEnd: (e) => e.currentTarget.classList.remove(styles.breathe),
+        onKeyDown: (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); breathe(e.currentTarget); onTap() } },
       }
     : {}
 
