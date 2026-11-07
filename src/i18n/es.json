@@ -987,7 +987,6 @@
       "notifs": "Notificaciones"
     },
     "desk": {
-      "namePreview": "Así te verán en tu perfil y en los espacios compartidos",
       "incomeSummary": "Tu ingreso por periodo, con cobro {{freq}}",
       "benefit": {
         "cobro": {
@@ -1004,6 +1003,7 @@
         }
       },
       "avatar": {
+        "title": "Imagen de perfil",
         "upload": "Subir foto",
         "uploading": "Subiendo…",
         "remove": "Quitar",

@@ -987,7 +987,6 @@
       "notifs": "Notifications"
     },
     "desk": {
-      "namePreview": "This is how you will appear on your profile and in shared spaces",
       "incomeSummary": "Your income per period, paid {{freq}}",
       "benefit": {
         "cobro": {
@@ -1004,6 +1003,7 @@
         }
       },
       "avatar": {
+        "title": "Profile picture",
         "upload": "Upload photo",
         "uploading": "Uploading…",
         "remove": "Remove",

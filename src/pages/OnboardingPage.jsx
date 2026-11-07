@@ -254,8 +254,7 @@ export function OnboardingPage({ userId, onDone }) {
                   </button>
                 </div>
                 <div className={styles.avatarSide}>
-                  <div className={styles.extraTitle}>{name.trim() || t('onboardingPage.step1.namePlaceholder')}</div>
-                  <div className={styles.extraSub}>{t('onboardingPage.desk.namePreview')}</div>
+                  <div className={styles.extraTitle}>{t('onboardingPage.desk.avatar.title')}</div>
                   <div className={styles.avatarActions}>
                     <button type="button" className={styles.avatarBtn} onClick={() => fileRef.current?.click()} disabled={avatarUploading}>
                       <Camera size={15} />{avatarUploading ? t('onboardingPage.desk.avatar.uploading') : t('onboardingPage.desk.avatar.upload')}
