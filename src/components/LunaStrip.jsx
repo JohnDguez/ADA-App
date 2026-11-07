@@ -84,18 +84,29 @@ export function LunaStrip({ lunaState, loading = false, variant, onArrow, onTap 
   // Globo tocable (v0.9.1026): solo cuando hay algo que ver abajo (vencidos o pagos
   // pendientes). Un saludo o "Periodo completado" no lleva a ningún lado.
   const tappable = !!onTap && ['worried', 'attentive', 'happy', 'sleeping'].includes(key) && (overdueCount > 0 || !!next)
-  // Al tocar, el globo "respira" (animación CSS reiniciable, sin hundirse de golpe).
+  // Al tocar, el globo "respira" con la Web Animations API: no toca la propiedad CSS
+  // `animation`, así que no vuelve a disparar la animación de entrada (el globo
+  // desaparecía y reaparecía). Solo se encoge (escala <= 1) para que el contenedor
+  // no lo recorte.
   const breathe = (el) => {
-    el.classList.remove(styles.breathe)
-    void el.offsetWidth
-    el.classList.add(styles.breathe)
+    if (!el.animate || window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return
+    el.animate(
+      [
+        { transform: 'none' },
+        { transform: 'scale(0.982, 0.992)', offset: 0.28 },
+        { transform: 'scale(0.995, 0.998)', offset: 0.6 },
+        { transform: 'none' },
+      ],
+      { duration: 800, easing: 'cubic-bezier(0.4, 0, 0.2, 1)' },
+    )
   }
+  // Primero respira y luego baja: el scroll espera a que termine lo principal del gesto.
+  const tapAfterBreath = () => setTimeout(onTap, 420)
   const bubbleProps = tappable
     ? {
-        role: 'button', tabIndex: 0, onClick: onTap,
+        role: 'button', tabIndex: 0, onClick: tapAfterBreath,
         onPointerDown: (e) => breathe(e.currentTarget),
-        onAnimationEnd: (e) => e.currentTarget.classList.remove(styles.breathe),
-        onKeyDown: (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); breathe(e.currentTarget); onTap() } },
+        onKeyDown: (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); breathe(e.currentTarget); tapAfterBreath() } },
       }
     : {}
 

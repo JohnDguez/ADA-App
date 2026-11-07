@@ -283,21 +283,13 @@
 @keyframes lunaIn { from { opacity: 0; transform: translateY(16px) scale(0.94); } to { opacity: 1; transform: none; } }
 @keyframes bubbleIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: none; } }
 @keyframes bubbleInR { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: none; } }
-/* Globo tocable (v0.9.1028, opción C del mockup): al tocar "respira" — se ensancha y estira
-   apenas, como burbuja de jabón. Sin hundirse de golpe y sin rebasar su caja. */
+/* Globo tocable (v0.9.1028, opción C del mockup): al tocar "respira" (se encoge apenas y
+   vuelve, hecho en JS con Web Animations). Sin hundirse de golpe y sin rebasar su caja. */
 .tappable {
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
 }
 .tappable:focus-visible { outline: 2px solid var(--tint); outline-offset: 3px; }
-.tappable.breathe { animation: breathe 1.3s cubic-bezier(0.4, 0, 0.2, 1); }
-@keyframes breathe {
-  0%   { transform: none; }
-  25%  { transform: scale(1.015, 0.982); }
-  55%  { transform: scale(0.995, 1.01) translateY(-2px); }
-  100% { transform: none; }
-}
 @media (prefers-reduced-motion: reduce) {
-  .tappable.breathe { animation: none; }
   .deskImg, .peekImg, .deskText, .peekText { animation: none; }
 }
