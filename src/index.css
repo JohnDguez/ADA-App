@@ -260,6 +260,9 @@
   --onboarding-step2-bg: #EFC822;
   --onboarding-step3-bg: #E09613;
   --onboarding-step4-bg: #8BD130;
+  /* Tinta del texto que va SOBRE el color del paso (tablet vertical): casi negra, fija en claro y
+     oscuro como los fondos de paso. Cumple AA (≥4.5:1) sobre los cuatro colores. */
+  --onboarding-ink: #1B1400;
 
   /* ── Colores fijos reutilizables (v0.9.722) ───────────────────────────────
      Antes estos valores estaban repetidos a mano en los .module.css/JSX

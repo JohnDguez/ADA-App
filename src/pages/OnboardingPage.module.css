@@ -1,117 +1,4 @@
-.page {
-  min-height: 100vh;
-  background: var(--bg);
-  display: flex;
-  flex-direction: column;
-  position: relative;
-}
-
-/* ── Escena de color por paso (dentro del panel que se desliza) ──────────────
-   Cada paso trae su propio bloque de color de altura fija, con la onda
-   inclinada como borde inferior (fundida con var(--bg)) y la ilustración a
-   caballo entre el color y el fondo. Se desliza junto con el resto del
-   contenido del paso (título/formulario) cuando se avanza/retrocede. */
-.scene {
-  position: relative;
-  height: 310px;
-  flex-shrink: 0;
-}
-
-.wave {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  width: 100%;
-  height: 95px;
-  display: block;
-}
-
-/* Ilustración a caballo entre el color y el fondo: su mitad de arriba sobre
-   el azul, su mitad de abajo ya sobre var(--bg). Sale un poco por debajo de
-   la escena (por eso el margen inferior negativo del contenedor no hace
-   falta — basta con posicionarla baja dentro de la escena). */
-.illustration {
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
-  object-fit: contain;
-  z-index: 2;
-  pointer-events: none;
-}
-
-/* ── Stepper — píldora blanca fija, flotando sobre la escena de color ─────────
-   position absolute anclada arriba de todo (sobre .scene, sin deslizarse con
-   los pasos). Íconos unidos por líneas dentro de una sola cápsula. Padding
-   igual en los 4 lados (antes 6px/14px asimétrico, reportado por Johnatan). */
-.stepper {
-  position: absolute;
-  top: 16px;
-  left: 24px;
-  right: 24px;
-  z-index: 5;
-  display: flex;
-  align-items: center;
-  background: var(--surface);
-  border-radius: var(--radius-full);
-  padding: 10px;
-}
-
-.stepperItem {
-  display: flex;
-  align-items: center;
-  flex: 1;
-}
-
-.stepperItem:last-child {
-  flex: 0 0 auto;
-}
-
-.stepperDot {
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  transition: background .2s;
-}
-
-.dotDone    { background: var(--paid); }
-.dotActive  { background: var(--accent); }
-.dotUpcoming { background: var(--border); }
-
-.stepperIcon {
-  color: var(--surface);
-}
-
-.dotUpcoming .stepperIcon {
-  color: var(--muted);
-}
-
-.stepperLine {
-  flex: 1;
-  height: 2px;
-  background: var(--border);
-  transition: background .2s;
-}
-
-.lineDone {
-  background: var(--paid);
-}
-
-/* ── Viewport de pasos (contiene el panel que entra y el que sale) ──────────
-   Regla 29: toda animación de aparición necesita entrada Y salida. El panel
-   que sale se monta con position absolute encima del que entra (que sigue
-   en flujo normal, así el contenedor toma su altura), y se desmonta con
-   setTimeout en el JSX cuando termina su animación (Regla 30: el timeout
-   del JS y la duración de aquí deben coincidir EXACTO, ambas a 0.3s). */
-.viewport {
-  position: relative;
-  overflow-x: hidden;
-  flex: 1;
-}
-
+/* Viewport/pasos: ver .panelWrap y las animaciones de entrada/salida (Reglas 29/30). */
 .panelWrap {
   width: 100%;
 }
@@ -144,17 +31,6 @@
 .enterFromLeft  { animation: stepEnterFromLeft  0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) both; }
 .exitToLeft     { animation: stepExitToLeft      0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) both; }
 .exitToRight    { animation: stepExitToRight     0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) both; }
-
-/* ── Panel de un paso (escena + título + formulario) ─────────────────────────── */
-.stepPanel {
-  display: flex;
-  flex-direction: column;
-}
-
-.body {
-  flex: 1;
-  padding: 0 24px 0;
-}
 
 .title {
   font-size: 36px;
@@ -399,27 +275,11 @@
   padding-left: 34px;
 }
 
-/* ── Botones ─────────────────────────────────────────────────────────────────── */
-.actions {
-  padding: 24px 24px 40px;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
 .continueBtn {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
-}
-
-.finishError {
-  margin: 0;
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--danger);
-  text-align: center;
 }
 
 /* ── Antes `style={{}}` inline en OnboardingPage.jsx (v0.9.724, Regla 12) ── */
@@ -816,4 +676,187 @@
 /* Hover sólido (Regla 64) */
 @media (hover: hover) and (pointer: fine) {
   .avatarBtn:hover { filter: none; background: var(--desk-hover-fill); }
+}
+
+
+/* ═════════════════════════════════════════════════════════════════════════════
+   RECORRER EN FIN DE SEMANA (paso 2, todos los tamaños) — v0.9.1030
+   El mismo bloque de Ajustes → Cobro, dentro de un relleno --desk-chip.
+   ═════════════════════════════════════════════════════════════════════════════ */
+.weekendBox {
+  margin-top: 0.875rem;
+  padding: 1rem 1.25rem;
+  border-radius: 1.25rem;
+  background: var(--desk-chip);
+}
+
+/* ═════════════════════════════════════════════════════════════════════════════
+   MÓVIL (<768) y TABLET VERTICAL (768–959) — v0.9.1030 (mockup B aprobado)
+   Cabecera de color a sangre (el color del paso llena el borde superior) + hoja
+   blanca con esquinas grandes que sube sobre ella. Progreso en una píldora
+   flotante. En tablet vertical la ilustración va a la izquierda (asoma sobre la
+   hoja) y el título + descripción a su derecha, sobre el color.
+   ═════════════════════════════════════════════════════════════════════════════ */
+.sheetRoot {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+  overflow-x: hidden;
+  /* los campos dentro de la hoja (sobre --desk-card) van en --desk-chip */
+  --field-desk-bg: var(--desk-chip);
+}
+
+.band { position: relative; flex: none; transition: background 0.3s ease; }
+
+.stepsBar {
+  position: absolute;
+  z-index: 4;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: var(--desk-card);
+  border-radius: var(--radius-full);
+  box-shadow: var(--desk-shadow);
+}
+.pillName { flex: 1; min-width: 0; font-size: 0.875rem; font-weight: 700; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dots { display: flex; align-items: center; gap: 0.375rem; }
+.dots i { width: 0.5rem; height: 0.5rem; border-radius: 50%; background: var(--desk-chip); transition: width 0.25s ease, background 0.25s ease; }
+.dots .dotDone { background: var(--paid); }
+.dots .dotOn { width: 1.625rem; border-radius: var(--radius-full); background: var(--accent); }
+.pillCount { font-size: 0.78rem; font-weight: 700; color: var(--muted); background: var(--desk-chip); border-radius: var(--radius-full); padding: 0.5rem 0.75rem; }
+
+.pillBrand { display: flex; align-items: center; gap: 0.625rem; flex: 1; font-size: 1.0625rem; font-weight: 700; letter-spacing: -0.3px; color: var(--text); }
+.pillLogo { width: 1.75rem; height: 1.75rem; border-radius: 0.625rem; }
+.pillSteps { display: flex; align-items: center; gap: 0.5rem; margin: 0; padding: 0; list-style: none; }
+.pillStep {
+  display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;
+  min-width: 2.25rem; height: 2.25rem; border-radius: var(--radius-full);
+  background: var(--desk-chip); color: var(--muted); font-size: 0.84rem; font-weight: 700;
+  transition: background 0.25s ease, color 0.25s ease;
+}
+.pillDone { background: var(--paid); color: var(--on-color); }
+.pillActive { background: var(--accent); color: var(--on-color); padding: 0 1rem 0 0.25rem; }
+.pillNum { width: 1.75rem; height: 1.75rem; border-radius: 50%; background: var(--on-color); color: var(--accent); display: grid; place-items: center; font-size: 0.8125rem; }
+
+.bandRow { position: absolute; inset: 0; }
+.artBox { position: absolute; }
+.art { position: absolute; bottom: 0; width: auto; opacity: 0; transition: opacity 0.3s ease; pointer-events: none; z-index: 3; }
+.artOn { opacity: 1; }
+
+.sheet {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background: var(--desk-card);
+  box-shadow: var(--desk-shadow);
+}
+.sheetViewport { position: relative; flex: 1; }
+
+/* Entrada/salida por paso: mismo fundido con desplazamiento corto que el escritorio (0.3 s = STEP_TRANSITION_MS). */
+.sheetViewport .enterFromRight, .bandText .enterFromRight { --desk-shift: 28px;  animation: deskIn  0.3s ease both; }
+.sheetViewport .enterFromLeft,  .bandText .enterFromLeft  { --desk-shift: -28px; animation: deskIn  0.3s ease both; }
+.sheetViewport .exitToLeft,     .bandText .exitToLeft     { --desk-shift: 28px;  animation: deskOut 0.3s ease both; }
+.sheetViewport .exitToRight,    .bandText .exitToRight    { --desk-shift: -28px; animation: deskOut 0.3s ease both; }
+
+.sheetActions {
+  position: sticky;
+  bottom: 0;
+  z-index: 2;
+  background: var(--desk-card);
+  padding-top: 1.375rem;
+  padding-bottom: calc(1.625rem + env(safe-area-inset-bottom));
+}
+.sheetActionsRow { display: flex; align-items: center; gap: 0.625rem; }
+.sheetError { margin: 0 0 0.75rem; font-size: 0.8125rem; font-weight: 600; color: var(--danger); text-align: center; }
+.roundBack { flex: none; width: 3.125rem; height: 3.125rem; border-radius: 50%; background: var(--desk-chip); color: var(--text); display: grid; place-items: center; }
+.roundBack:active { opacity: 0.8; }
+.continueMob { flex: 1; height: 3.125rem; font-size: 1rem; }
+
+/* Activo = píldora negra (DISENO.md §6), no azul. */
+.sheetBody .chipActive { background: var(--desk-pill); color: var(--desk-pill-ink); }
+.sheetBody .chipActive .chipSub { color: var(--desk-pill-ink); }
+.sheetBody .dayButtonActive { background: var(--desk-pill); color: var(--desk-pill-ink); }
+
+/* ── Móvil ── */
+.mob .band { height: 16.375rem; }
+.mob .stepsBar { left: 1.125rem; right: 1.125rem; top: 1.25rem; padding: 0.5rem 0.5rem 0.5rem 1rem; }
+.mob .artBox { left: 0; right: 0; bottom: 1.875rem; height: 0; }
+.mob .art { left: 50%; transform: translateX(-50%); }
+.mob .sheet { margin-top: -1.5rem; border-radius: 2rem 2rem 0 0; padding: 1.625rem 1.25rem 0; }
+.mob .deskBody .title { font-size: 1.875rem; letter-spacing: -0.03em; line-height: 1.08; }
+.mob .deskBody .desc { font-size: 0.875rem; line-height: 1.45; margin-top: 0.5rem; }
+.mob .deskBody :global(.field-label) { margin: 1.125rem 0 0.5rem; }
+.mob .deskBody :global(.field-input) { min-height: 3.25rem; font-size: 1rem; }
+.mob .deskBody .freqRow { flex-direction: column; gap: 0.5rem; }
+.mob .deskBody .chipFlex { flex: none; flex-direction: row; align-items: baseline; justify-content: space-between; padding: 0.875rem 1.125rem; border-radius: 1.25rem; font-size: 1rem; }
+.mob .deskBody .presetChip { padding: 0.6875rem 0.5rem; font-size: 0.8125rem; flex: 1; text-align: center; }
+.mob .deskBody .weekdayRow { gap: 0.375rem; }
+.mob .deskBody .weekdayChip { height: 2.625rem; border-radius: var(--radius-full); font-size: 0.84rem; }
+.mob .deskBody .dayGrid { gap: 0.375rem; }
+.mob .deskBody .dayButton { height: 2.5rem; border-radius: 0.75rem; font-size: 0.875rem; }
+.mob .deskBody .hintCard { margin-top: 0.875rem; padding: 0.75rem 1rem; gap: 0.75rem; font-size: 0.875rem; }
+.mob .deskBody .hintIcon { padding: 0.5rem; border-radius: 0.75rem; }
+.mob .deskBody .toggleRow { margin-top: 0.875rem; padding: 1rem 1.125rem; }
+.mob .avatarBlock { gap: 0.875rem; margin-top: 1.125rem; padding: 1rem; }
+.mob .avatarBig { width: 4.25rem; height: 4.25rem; }
+.mob .avatarInitial { font-size: 1.625rem; }
+.mob .avatarCam { width: 1.875rem; height: 1.875rem; }
+.mob .avatarSide .extraSub { display: none; }
+.mob .avatarBtn { height: 2.5rem; }
+.mob .avatarGrid { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0.625rem; }
+.mob .benefits .extraCard { margin-top: 0.5rem; padding: 0.75rem 1rem; gap: 0.75rem; }
+.mob .benefits .extraSub { display: none; }
+.mob .benefits .extraIcon { width: 2.25rem; height: 2.25rem; border-radius: 0.75rem; }
+
+/* ── Tablet vertical ── */
+.tabV .band { height: clamp(18.75rem, 34vh, 26.875rem); }
+.tabV .stepsBar { left: 3rem; right: 3rem; top: 2.125rem; padding: 0.5rem 0.625rem 0.5rem 1.25rem; }
+.tabV .bandRow { left: 3.5rem; right: 3.5rem; top: 6.5rem; bottom: 2.125rem; display: flex; align-items: center; gap: 2.25rem; z-index: 3; }
+.tabV .artBox { position: relative; align-self: stretch; flex: none; width: 19rem; }
+.tabV .art { left: 0; bottom: -2.5rem; }
+.bandText { position: relative; flex: 1; min-width: 0; color: var(--onboarding-ink); }
+.bandHead .title { margin: 0; font-size: clamp(2.5rem, 6vw, 3.125rem); font-weight: 700; letter-spacing: -0.03em; line-height: 1.06; color: var(--onboarding-ink); }
+.bandHead .desc { margin: 0.625rem 0 0; font-size: 1rem; line-height: 1.45; font-weight: 500; color: var(--onboarding-ink); }
+.tabV .sheet { margin-top: -2.125rem; border-radius: 2.5rem 2.5rem 0 0; padding: 3.5rem 3.5rem 0; }
+.tabV .sheetViewport { display: grid; align-content: center; }
+.tabV .panelWrap { grid-area: 1 / 1; }
+.tabV .exiting { position: static; }
+.tabV .sheetActionsRow { justify-content: space-between; }
+.tabV .sheetActionsRow .continueTab { margin-left: auto; width: auto; height: 3.125rem; padding: 0 2.125rem; font-size: 0.97rem; }
+.tabV .sheetActionsRow :global(.btn-ghost) { width: auto; height: 3.125rem; padding: 0 1.75rem; font-size: 0.97rem; background: var(--desk-chip); }
+.tabV .deskBody :global(.field-input) { min-height: 3.5rem; }
+.tabV .deskBody :global(.field-label) { margin-top: 1.5rem; }
+
+/* ═════════════════════════════════════════════════════════════════════════════
+   TABLET HORIZONTAL (960–1099) — v0.9.1030: el riel del escritorio, pero el panel
+   completo lleva el color del paso; los pasos van en una tarjeta blanca y la
+   ilustración abajo.
+   ═════════════════════════════════════════════════════════════════════════════ */
+.tabH .deskShell { padding: 0.875rem; border-radius: 1.75rem; }
+.tabH .rail { width: 18.75rem; padding: 1.25rem 0.875rem 0; border-radius: 1.5rem; transition: background 0.3s ease; }
+.tabH .railBrand { margin-bottom: 0.875rem; padding: 0.5rem 0.875rem; border-radius: var(--radius-full); background: var(--desk-card); box-shadow: var(--desk-shadow); font-size: 1rem; }
+.tabH .railLogo { width: 1.75rem; height: 1.75rem; border-radius: 0.625rem; }
+.tabH .railSteps { padding: 0.625rem; border-radius: 1.5rem; background: var(--desk-card); box-shadow: var(--desk-shadow); gap: 0.25rem; }
+.tabH .railStep { padding: 0.75rem; }
+.tabH .railActive { background: var(--desk-chip); }
+.tabH .railScene { flex: 1; height: auto; min-height: 14rem; margin-top: 0; }
+.tabH .sceneBlock { background: transparent; }
+.tabH .sceneImg { width: auto; }
+.tabH .deskMain { align-items: stretch; padding: 0.375rem 0.375rem 0.375rem 0.875rem; }
+.tabH .deskCard { flex: 1; min-height: 0; padding: 2.75rem 3rem 2rem; border-radius: 1.5rem; }
+.tabH .deskBody .title { font-size: 2.375rem; letter-spacing: -0.03em; }
+.tabH .deskViewport { display: grid; align-content: center; }
+.tabH .panelWrap { grid-area: 1 / 1; }
+.tabH .exiting { position: static; }
+.tabH .deskBody .chipActive { background: var(--desk-pill); color: var(--desk-pill-ink); }
+.tabH .deskBody .chipActive .chipSub { color: var(--desk-pill-ink); }
+.tabH .deskBody .dayButtonActive { background: var(--desk-pill); color: var(--desk-pill-ink); }
+
+@media (prefers-reduced-motion: reduce) {
+  .band, .art, .dots i, .pillStep, .tabH .rail { transition: none; }
+  .sheetViewport .enterFromRight, .sheetViewport .enterFromLeft, .sheetViewport .exitToLeft, .sheetViewport .exitToRight,
+  .bandText .enterFromRight, .bandText .enterFromLeft, .bandText .exitToLeft, .bandText .exitToRight { animation-duration: 0.01s; }
 }

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import i18n from '../i18n'
-import { User, CalendarCheck, Wallet, BellRing, UserRound, ArrowRight, Check, AlarmClock, TriangleAlert, Camera, X } from 'lucide-react'
+import { User, CalendarCheck, Wallet, BellRing, UserRound, ArrowRight, ArrowLeft, Check, AlarmClock, TriangleAlert, Camera, X } from 'lucide-react'
 import { getWeekdays, getWeekdaysShort } from '../lib/utils'
 import { supabase } from '../lib/supabase'
 import { usePushNotifications } from '../hooks/usePushNotifications'
@@ -11,40 +11,32 @@ import { getCurrencySymbol } from '../lib/currency'
 import styles from './OnboardingPage.module.css'
 import { switchProps } from '../lib/a11y'
 import { useIsDesktop } from '../hooks/useIsDesktop'
+import { useMinWidth } from '../hooks/useMinWidth'
+import { WeekendShiftField } from '../components/WeekendShiftField'
 import { AvatarImg } from '../components/AvatarImg'
 import { PRESET_AVATARS, uploadAvatarFile } from '../lib/avatars'
 
-// illustrationSize / illustrationBottom / bodyPaddingTop: mismos defaults
-// para los 4 (los que ya se habían ajustado), pero cada paso puede
-// sobreescribirlos — no todas las ilustraciones tienen las mismas
-// proporciones, y cuando una ilustración sube, el título debe subir la
-// misma cantidad para no dejar un hueco vacío entre los dos (pedido
-// explícito de Johnatan).
+// Cada paso: color de fondo (token fijo, igual en claro y oscuro), ilustración 3D y,
+// solo para el riel de escritorio, tamaño/posición propios (deskSize / deskBottom).
 const STEP_META = [
-  { key: 'name',   label: 'Tu nombre',           Icon: User,          bg: 'var(--onboarding-step1-bg)', illustration: '/onboarding-illustration-1.png', illustrationBottom: -65, bodyPaddingTop: 85 },
-  { key: 'cobro',  label: 'Frecuencia de cobro', Icon: CalendarCheck, bg: 'var(--onboarding-step2-bg)', illustration: '/onboarding-illustration-2.png', illustrationBottom: -55, bodyPaddingTop: 60, deskSize: 280, deskBottom: 4 },
-  { key: 'income', label: 'Tu ingreso',          Icon: Wallet,        bg: 'var(--onboarding-step3-bg)', illustration: '/onboarding-illustration-3.png', illustrationBottom: -65, bodyPaddingTop: 85, illustrationSize: 270 },
-  { key: 'notifs',  label: 'Notificaciones',      Icon: BellRing, optional: true,      bg: 'var(--onboarding-step4-bg)', illustration: '/onboarding-illustration-4.png', illustrationBottom: -50, bodyPaddingTop: 60, deskSize: 260, deskBottom: 6 },
+  { key: 'name',   Icon: User,          bg: 'var(--onboarding-step1-bg)', illustration: '/onboarding-illustration-1.png' },
+  { key: 'cobro',  Icon: CalendarCheck, bg: 'var(--onboarding-step2-bg)', illustration: '/onboarding-illustration-2.png', deskSize: 280, deskBottom: 4 },
+  { key: 'income', Icon: Wallet,        bg: 'var(--onboarding-step3-bg)', illustration: '/onboarding-illustration-3.png' },
+  { key: 'notifs', Icon: BellRing, optional: true, bg: 'var(--onboarding-step4-bg)', illustration: '/onboarding-illustration-4.png', deskSize: 260, deskBottom: 6 },
 ]
-
-// Defaults (para cualquier paso que no traiga su propio override arriba).
-const DEFAULT_ILLUSTRATION_SIZE = 280
-const DEFAULT_ILLUSTRATION_BOTTOM = -100
-const DEFAULT_BODY_PADDING_TOP = 135
 
 // Escritorio: tamaño/posición de la ilustración que asoma sobre el bloque de
 // color del riel (cada paso puede sobreescribir deskSize / deskBottom).
 const DESK_ILLUSTRATION_SIZE = 230
 const DESK_ILLUSTRATION_BOTTOM = 8
 
-const TOTAL_STEPS = STEP_META.length
+// Alto (px) de la ilustración de cada paso según el tamaño. Las 4 imágenes tienen
+// proporciones distintas, por eso cada una lleva su alto.
+const MOB_ART  = [150, 130, 152, 130]   // móvil (<768)
+const TABV_ART = [280, 220, 286, 220]   // tablet vertical
+const TABH_ART = [250, 200, 254, 200]   // tablet horizontal (riel)
 
-// Onda inclinada (cae en diagonal de izquierda a derecha, con crestas y
-// valles marcados) — es el borde inferior del bloque de color de cada paso.
-// Misma forma para los 4 pasos, solo cambia el color de fondo detrás
-// (STEP_META[].bg). viewBox 300x110; el relleno es var(--bg) para que la
-// parte de abajo se funda con el fondo real de la app (claro u oscuro).
-const WAVE_PATH = 'M0,110 L0,20 C30,-19 60,38 95,38 C135,36 150,73 195,64 C238,58 255,101 300,80 L300,110 Z'
+const TOTAL_STEPS = STEP_META.length
 
 // Regla 30 (JS/CSS timing sync): este valor debe coincidir EXACTO con la
 // duración definida en OnboardingPage.module.css para .enterFromRight,
@@ -68,6 +60,8 @@ export function OnboardingPage({ userId, onDone }) {
   const [cobroDay1,      setCobroDay1]      = useState(1)
   const [cobroDay2,      setCobroDay2]      = useState(16)
   const [biweeklyCustom, setBiweeklyCustom] = useState(false)
+  // Recorrer el cobro si cae en fin de semana (null = apagado). Solo aplica a quincenal y mensual.
+  const [cobroWeekendShift, setCobroWeekendShift] = useState(null)
   const [salaryEnabled,  setSalaryEnabled]  = useState(false)
   const [salaryAmount,   setSalaryAmount]   = useState('')
   // Quincenal personalizado: el 1.er toque elige el primer día, el 2.º el segundo.
@@ -80,7 +74,14 @@ export function OnboardingPage({ userId, onDone }) {
   const [saving,         setSaving]         = useState(false)
   const [finishError,    setFinishError]    = useState('')
 
+  // Tamaños (v0.9.1030): escritorio ≥1100 · tablet horizontal 960–1099 (riel de color) ·
+  // tablet vertical 768–959 y móvil <768 (cabecera de color a sangre + hoja blanca).
   const isDesk = useIsDesktop()
+  const wide960 = useMinWidth(960)
+  const wide768 = useMinWidth(768)
+  const isTabH = !isDesk && wide960
+  const isSheet = !isDesk && !wide960
+  const isTabV = isSheet && wide768
   const { subscribe, subscribed } = usePushNotifications(userId)
   const exitTimeoutRef = useRef(null)
 
@@ -90,13 +91,12 @@ export function OnboardingPage({ userId, onDone }) {
   // de sidebar) para heredar radios, campos con fondo y botones en píldora
   // de index.css sin duplicarlos aquí.
   useEffect(() => {
-    if (!isDesk) return
     const root = document.documentElement
     root.dataset.deskSidebar = 'onboarding'
     // Sin sesión de app todavía no hay riel: no se reserva su margen izquierdo.
     root.classList.add('auth-screen')
     return () => { delete root.dataset.deskSidebar; root.classList.remove('auth-screen') }
-  }, [isDesk])
+  }, [])
 
   function pickBiweeklyDay(d) {
     if (biweeklyPick === 0) { setCobroDay1(d); setCobroDay2(null); setBiweeklyPick(1); return }
@@ -129,6 +129,7 @@ export function OnboardingPage({ userId, onDone }) {
       currency,
       cobro_freq:    cobroFreq,
       cobro_weekday: cobroFreq === 'weekly' ? cobroWeekday : null,
+      cobro_weekend_shift: cobroFreq !== 'weekly' ? cobroWeekendShift : null,
       cobro_day1:    cobroFreq !== 'weekly' ? (cobroDay1 ?? 1) : null,
       cobro_day2:    cobroFreq === 'biweekly' ? (cobroDay2 ?? (cobroDay1 === 16 ? 1 : 16)) : null,
       salary_enabled: salaryEnabled,
@@ -200,13 +201,29 @@ export function OnboardingPage({ userId, onDone }) {
 
   const currencySymbol = getCurrencySymbol(currency || undefined)
 
-  function renderForm(n) {
+  // Título + descripción del paso. En tablet vertical viven en la cabecera de color
+  // (renderHead se pinta ahí y renderForm(n, { head: false }) los omite).
+  function renderHead(n) {
+    if (n === 1) return (
+      <>
+        <h2 className={styles.title}>{isDesk || isTabH ? <>{t('onboardingPage.step1.titleLine1')}<br />{t('onboardingPage.step1.titleLine2')}</> : `${t('onboardingPage.step1.titleLine1')} ${t('onboardingPage.step1.titleLine2')}`}</h2>
+        <p className={styles.desc}>{t('onboardingPage.step1.desc')}</p>
+      </>
+    )
+    return (
+      <>
+        <h2 className={styles.title}>{t(`onboardingPage.step${n}.title`)}</h2>
+        <p className={styles.desc}>{t(`onboardingPage.step${n}.desc`)}</p>
+      </>
+    )
+  }
+
+  function renderForm(n, { head = true } = {}) {
     return (
       <>
       {n === 1 && (
         <>
-          <h2 className={styles.title}>{t('onboardingPage.step1.titleLine1')}<br />{t('onboardingPage.step1.titleLine2')}</h2>
-          <p className={styles.desc}>{t('onboardingPage.step1.desc')}</p>
+          {head && renderHead(1)}
           <label className="field-label">{t('onboardingPage.step1.nameLabel')}</label>
           <div className={styles.inputWithIcon}>
             <UserRound size={18} className={styles.inputIcon} />
@@ -222,7 +239,7 @@ export function OnboardingPage({ userId, onDone }) {
             />
           </div>
           {nameError && <div className={styles.errorText}>{nameError}</div>}
-          {isDesk && (
+          {(
             <>
               <div className={styles.avatarBlock}>
                 <div className={styles.avatarBigWrap}>
@@ -270,11 +287,10 @@ export function OnboardingPage({ userId, onDone }) {
 
       {n === 2 && (
         <>
-          <h2 className={styles.title}>{t('onboardingPage.step2.title')}</h2>
-          <p className={styles.desc}>{t('onboardingPage.step2.desc')}</p>
+          {head && renderHead(2)}
 
           <label className="field-label">{t('settingsCobro.frequencyLabel')}</label>
-          <div className={styles.chipRow}>
+          <div className={`${styles.chipRow} ${styles.freqRow}`}>
             {[['weekly',t('frequency.weekly')],['biweekly',t('frequency.biweekly')],['monthly',t('frequency.monthly')]].map(([val, label]) => (
               <button
                 key={val}
@@ -355,6 +371,7 @@ export function OnboardingPage({ userId, onDone }) {
                   </div>
                 </div>
               )}
+              <div className={styles.weekendBox}><WeekendShiftField freq="biweekly" day1={cobroDay1} day2={cobroDay2} value={cobroWeekendShift} onChange={setCobroWeekendShift} variant="fill" /></div>
             </div>
           )}
 
@@ -378,6 +395,7 @@ export function OnboardingPage({ userId, onDone }) {
                   </div>
                 </div>
               )}
+              <div className={styles.weekendBox}><WeekendShiftField freq="monthly" day1={cobroDay1} value={cobroWeekendShift} onChange={setCobroWeekendShift} variant="fill" /></div>
             </div>
           )}
         </>
@@ -385,8 +403,7 @@ export function OnboardingPage({ userId, onDone }) {
 
       {n === 3 && (
         <>
-          <h2 className={styles.title}>{t('onboardingPage.step3.title')}</h2>
-          <p className={styles.desc}>{t('onboardingPage.step3.desc')}</p>
+          {head && renderHead(3)}
           <label className="field-label">{t('currency.onbLabel')}</label>
           <div className={styles.currencyField}>
                 <CurrencySelect value={currency} onChange={v => { setCurrency(v); setCurrencyError('') }} />
@@ -431,8 +448,7 @@ export function OnboardingPage({ userId, onDone }) {
 
       {n === 4 && (
         <>
-          <h2 className={styles.title}>{t('onboardingPage.step4.title')}</h2>
-          <p className={styles.desc}>{t('onboardingPage.step4.desc')}</p>
+          {head && renderHead(4)}
           <div {...switchProps(subscribed)}
             onClick={async () => { if (!subscribed) await subscribe() }}
             className={`${styles.toggleRow} ${subscribed ? styles.toggleRowStatic : ''}`}
@@ -449,7 +465,7 @@ export function OnboardingPage({ userId, onDone }) {
               <div className={`toggle-thumb${subscribed ? ' is-on' : ''}`} />
             </div>
           </div>
-          {isDesk && (
+          {(
             <div className={styles.benefits}>
               {[[CalendarCheck, 'cobro'], [AlarmClock, 'soon'], [TriangleAlert, 'overdue']].map(([Ico, k]) => (
                 <div key={k} className={styles.extraCard}>
@@ -474,38 +490,11 @@ export function OnboardingPage({ userId, onDone }) {
     )
   }
 
-  function renderStep(n) {
-    const meta = STEP_META[n - 1]
+  if (isDesk || isTabH) {
     return (
-      <div className={styles.stepPanel}>
-        <div className={styles.scene} style={{ background: meta.bg }}>
-          <svg className={styles.wave} viewBox="0 0 300 110" preserveAspectRatio="none">
-            <path d={WAVE_PATH} fill="var(--bg)" />
-          </svg>
-          <img
-            className={styles.illustration}
-            src={meta.illustration}
-            alt=""
-            style={{
-              width: meta.illustrationSize ?? DEFAULT_ILLUSTRATION_SIZE,
-              height: meta.illustrationSize ?? DEFAULT_ILLUSTRATION_SIZE,
-              bottom: meta.illustrationBottom ?? DEFAULT_ILLUSTRATION_BOTTOM,
-            }}
-          />
-        </div>
-
-        <div className={styles.body} style={{ paddingTop: meta.bodyPaddingTop ?? DEFAULT_BODY_PADDING_TOP }}>
-          {renderForm(n)}
-        </div>
-      </div>
-    )
-  }
-
-  if (isDesk) {
-    return (
-      <div className={styles.deskRoot}>
+      <div className={`${styles.deskRoot} ${isTabH ? styles.tabH : ''}`}>
         <div className={styles.deskShell}>
-          <aside className={styles.rail}>
+          <aside className={styles.rail} style={isTabH ? { background: STEP_META[step - 1].bg } : undefined}>
             <div className={styles.railBrand}>
               <img src="/favicon.svg" alt="" className={styles.railLogo} />
               <span>LunaPay</span>
@@ -539,9 +528,11 @@ export function OnboardingPage({ userId, onDone }) {
                 así hay entrada y salida (Regla 29). */}
             <div className={styles.railScene} aria-hidden="true">
               {STEP_META.map((meta, i) => (
-                <div key={meta.key} className={`${styles.sceneBlock} ${i + 1 === step ? styles.sceneBlockOn : ''}`} style={{ background: meta.bg }}>
+                <div key={meta.key} className={`${styles.sceneBlock} ${i + 1 === step ? styles.sceneBlockOn : ''}`} style={{ background: isTabH ? 'transparent' : meta.bg }}>
                   <img className={styles.sceneImg} src={meta.illustration} alt=""
-                    style={{ width: meta.deskSize ?? DESK_ILLUSTRATION_SIZE, bottom: meta.deskBottom ?? DESK_ILLUSTRATION_BOTTOM }} />
+                    style={isTabH
+                      ? { height: TABH_ART[i], bottom: 8 }
+                      : { width: meta.deskSize ?? DESK_ILLUSTRATION_SIZE, bottom: meta.deskBottom ?? DESK_ILLUSTRATION_BOTTOM }} />
                 </div>
               ))}
             </div>
@@ -584,57 +575,88 @@ export function OnboardingPage({ userId, onDone }) {
     )
   }
 
-  return (
-    <div className={styles.page}>
+  // ── Móvil (<768) y tablet vertical (768–959): cabecera de color a sangre + hoja blanca ──
+  const meta = STEP_META[step - 1]
+  const artH = isTabV ? TABV_ART : MOB_ART
+  const stepName = t(`onboardingPage.stepNames.${meta.key}`)
 
-      {/* Stepper — píldora fija flotando sobre la escena de color (que vive en
-          renderStep y se desliza por paso). El stepper NO se desliza: siempre
-          en la misma posición, solo cambian los colores de sus dots según el
-          paso activo. */}
-      <div className={styles.stepper}>
-        {STEP_META.map(({ label, Icon }, i) => {
-          const s = i + 1
-          const done   = s < step
-          const active = s === step
-          return (
-            <div key={s} className={styles.stepperItem}>
-              <div className={`${styles.stepperDot} ${done ? styles.dotDone : active ? styles.dotActive : styles.dotUpcoming}`}>
-                <Icon size={15} strokeWidth={2} className={styles.stepperIcon} />
-              </div>
-              {i < TOTAL_STEPS - 1 && (
-                <div className={`${styles.stepperLine} ${s < step ? styles.lineDone : ''}`} />
-              )}
-            </div>
-          )
-        })}
+  const panels = (renderFn, cls) => (
+    <>
+      {exitingStep !== null && (
+        <div key={`exit-${transitionId}`} className={`${styles.panelWrap} ${styles.exiting} ${direction === 'forward' ? styles.exitToLeft : styles.exitToRight}`}>
+          <div className={cls}>{renderFn(exitingStep)}</div>
+        </div>
+      )}
+      <div key={`enter-${transitionId}`} className={`${styles.panelWrap} ${!initial ? (direction === 'forward' ? styles.enterFromRight : styles.enterFromLeft) : ''}`}>
+        <div className={cls}>{renderFn(step)}</div>
       </div>
+    </>
+  )
 
-      {/* Contenido con animación de entrada/salida por paso (Regla 29) */}
-      <div className={styles.viewport}>
-        {exitingStep !== null && (
-          <div key={`exit-${transitionId}`} className={`${styles.panelWrap} ${styles.exiting} ${direction === 'forward' ? styles.exitToLeft : styles.exitToRight}`}>
-            {renderStep(exitingStep)}
+  return (
+    <div className={`${styles.sheetRoot} ${isTabV ? styles.tabV : styles.mob}`}>
+      <header className={styles.band} style={{ background: meta.bg }}>
+        {isTabV ? (
+          <nav className={styles.stepsBar} aria-label={t('onboardingPage.stepsAria')}>
+            <span className={styles.pillBrand}><img src="/favicon.svg" alt="" className={styles.pillLogo} />LunaPay</span>
+            <ol className={styles.pillSteps}>
+              {STEP_META.map(({ key }, i) => {
+                const s = i + 1
+                const done = s < step
+                const active = s === step
+                return (
+                  <li key={key} aria-current={active ? 'step' : undefined} className={`${styles.pillStep} ${done ? styles.pillDone : ''} ${active ? styles.pillActive : ''}`}>
+                    {active
+                      ? <><span className={styles.pillNum}>{s}</span>{t(`onboardingPage.stepNames.${key}`)}</>
+                      : done ? <Check size={16} strokeWidth={3} aria-label={t('onboardingPage.state.done')} /> : s}
+                  </li>
+                )
+              })}
+            </ol>
+          </nav>
+        ) : (
+          <div className={styles.stepsBar} role="group" aria-label={t('onboardingPage.stepsAria')}>
+            <b className={styles.pillName}>{stepName}</b>
+            <span className={styles.dots} aria-hidden="true">
+              {STEP_META.map((m, i) => <i key={m.key} className={i + 1 < step ? styles.dotDone : i + 1 === step ? styles.dotOn : ''} />)}
+            </span>
+            <span className={styles.pillCount}>{t('onboardingPage.progressShort', { n: step, total: TOTAL_STEPS })}</span>
           </div>
         )}
-        <div key={`enter-${transitionId}`} className={`${styles.panelWrap} ${!initial ? (direction === 'forward' ? styles.enterFromRight : styles.enterFromLeft) : ''}`}>
-          {renderStep(step)}
-        </div>
-      </div>
 
-      {/* Botones */}
-      <div className={styles.actions}>
-        {finishError && <p className={styles.finishError}>{finishError}</p>}
-        <button onClick={nextStep} disabled={saving} className={`btn-primary ${styles.continueBtn}`}>
-          {saving
-            ? t('settingsCategories.saving')
-            : step < TOTAL_STEPS
-              ? <>{t('onboardingPage.continue')} <ArrowRight size={17} strokeWidth={2.2} /></>
-              : t('onboardingPage.start')}
-        </button>
-        {step > 1 && (
-          <button onClick={prevStep} className="btn-ghost">{t('onboardingPage.back')}</button>
-        )}
-      </div>
+        <div className={styles.bandRow}>
+          <div className={styles.artBox} aria-hidden="true">
+            {STEP_META.map((m, i) => (
+              <img key={m.key} className={`${styles.art} ${i + 1 === step ? styles.artOn : ''}`} src={m.illustration} alt="" style={{ height: artH[i] }} />
+            ))}
+          </div>
+          {isTabV && <div className={styles.bandText}>{panels(renderHead, styles.bandHead)}</div>}
+        </div>
+      </header>
+
+      <section className={styles.sheet}>
+        <div className={styles.sheetViewport}>
+          {panels(n => renderForm(n, { head: !isTabV }), `${styles.deskBody} ${styles.sheetBody}`)}
+        </div>
+
+        <div className={styles.sheetActions}>
+          {finishError && <p className={styles.sheetError}>{finishError}</p>}
+          <div className={styles.sheetActionsRow}>
+            {step > 1 && (
+              isTabV
+                ? <button type="button" onClick={prevStep} className="btn-ghost">{t('onboardingPage.back')}</button>
+                : <button type="button" onClick={prevStep} className={styles.roundBack} aria-label={t('onboardingPage.back')}><ArrowLeft size={19} strokeWidth={2.2} /></button>
+            )}
+            <button onClick={nextStep} disabled={saving} className={`btn-primary ${styles.continueBtn} ${isTabV ? styles.continueTab : styles.continueMob}`}>
+              {saving
+                ? t('settingsCategories.saving')
+                : step < TOTAL_STEPS
+                  ? <>{t('onboardingPage.continue')} <ArrowRight size={17} strokeWidth={2.2} /></>
+                  : t('onboardingPage.start')}
+            </button>
+          </div>
+        </div>
+      </section>
     </div>
   )
 }

@@ -1012,7 +1012,8 @@
         "errorType": "Only JPG, PNG or WebP images are allowed",
         "errorUpload": "We could not upload the photo. Try again."
       }
-    }
+    },
+    "progressShort": "{{n}}/{{total}}"
   },
   "paymentModal": {
     "nameError": "Enter the payment's name",
