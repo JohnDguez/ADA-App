@@ -146,8 +146,14 @@ export function revertSettle(plans, items) {
 //  - cycle:     lo gastado en el ciclo en curso más el arrastre (nunca negativo)
 //  - plans:     cuotas de planes que todavía no entran a ningún estado de cuenta
 export function debtBreakdown({ statement, cycleSpend, carry, card }) {
-  const cycle = Math.max(0, r2(cycleSpend + (Number(carry) || 0)))
-  const plans = plansFutureTotal(card)
+  const raw = r2(cycleSpend + (Number(carry) || 0))
+  const cycle = Math.max(0, raw)
+  // Crédito a favor (abonos "Pagar ahora"): primero cubre lo gastado en el ciclo;
+  // lo que sobra se aplicará a las cuotas de planes en los próximos cortes (el
+  // estado de cuenta suma gasto + arrastre + cuota), así que ya baja lo que se
+  // debe. Antes ese sobrante se perdía de la vista y "Por pagar" no cambiaba.
+  const credit = Math.max(0, -raw)
+  const plans = r2(Math.max(0, plansFutureTotal(card) - credit))
   return { statement: r2(statement), cycle, plans, total: r2(statement + cycle + plans) }
 }
 
