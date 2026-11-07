@@ -34,6 +34,7 @@ import { useLocalNotifications, isLocalNotification } from './hooks/useLocalNoti
 import { usePeriodIncome } from './hooks/usePeriodIncome'
 import { usePaymentMethods } from './hooks/usePaymentMethods'
 import { supabase } from './lib/supabase'
+import { getFreshSession } from './lib/freshSession'
 import { computeMissingStatements, currentCycleSpend } from './lib/cardStatements'
 import { useDayKey } from './lib/useDayKey'
 import { planFuture, getPlans, newPlan, applyCharged, applyPaid, revertPaid, revertCharged, applySettle, revertSettle, itemsTotal } from './lib/cardPlans'
@@ -207,7 +208,7 @@ export default function App() {
   useEffect(() => {
     if (!user?.id) return
     startPlayBillingSync(
-      async () => (await supabase.auth.getSession()).data.session?.access_token || null,
+      async () => (await getFreshSession())?.access_token || null,
       () => fetchProfile?.(),
     )
     return () => stopPlayBillingSync()

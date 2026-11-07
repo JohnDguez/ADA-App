@@ -10,6 +10,7 @@ import { Target } from '@phosphor-icons/react/dist/csr/Target'
 import { loadStripe } from '@stripe/stripe-js'
 import { EmbeddedCheckoutProvider, EmbeddedCheckout } from '@stripe/react-stripe-js'
 import { supabase } from '../lib/supabase'
+import { getFreshSession } from '../lib/freshSession'
 import { isAndroidBilling, restorePurchases, purchasePremium, initPlayBilling } from '../lib/playBilling'
 import { usePremiumOffer } from '../lib/premiumOffer'
 import { getPremiumSource } from '../lib/utils'
@@ -148,7 +149,7 @@ export function PremiumPage({ profile, onClose, refreshProfile, onSubscribed }) 
     setRestoreState('restoring')
     setRestoreDetail('')
     try {
-      const { data: { session } } = await supabase.auth.getSession()
+      const session = await getFreshSession()
       if (!session) { setRestoreState('error'); return }
       const { restored } = await restorePurchases(session.access_token)
       if (restored > 0) {
@@ -201,7 +202,7 @@ export function PremiumPage({ profile, onClose, refreshProfile, onSubscribed }) 
     setCheckoutOpen(true)
     setCheckoutState('loading')
     try {
-      const { data: { session } } = await supabase.auth.getSession()
+      const session = await getFreshSession()
       if (!session) { setCheckoutState('error'); return }
       const res = await fetch(apiUrl('/api/create-checkout-session'), {
         method: 'POST',
@@ -231,7 +232,7 @@ export function PremiumPage({ profile, onClose, refreshProfile, onSubscribed }) 
     setAndroidPurchaseState('processing')
     setAndroidPurchaseDetail('')
     try {
-      const { data: { session } } = await supabase.auth.getSession()
+      const session = await getFreshSession()
       if (!session) { setAndroidPurchaseState('error'); return }
       await purchasePremium(selectedPlan, session.access_token, session.user.id, { allowTrial: !profile?.has_subscribed_before })
       await refreshProfile?.()
