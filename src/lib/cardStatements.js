@@ -153,6 +153,7 @@ export function computeMissingStatements(card, creditPayments, todayDate) {
   let carryLeft = Number(card.carry_over) || 0
   const planState = getPlans(card).map(p => ({ ...p }))
   let firstCycle = true
+  let carryCarried = 0
   let guard = 0 // red de seguridad: nunca más de 60 ciclos en una sola pasada
 
   while (guard++ < 60) {
@@ -168,7 +169,9 @@ export function computeMissingStatements(card, creditPayments, todayDate) {
       })
       .reduce((s, p) => s + Number(p.amount), 0)
 
-    const carryThis = firstCycle ? carryLeft : 0
+    // El crédito a favor que sobra de un corte cubierto por el abono (ver más abajo)
+    // pasa al siguiente corte de esta misma pasada (v0.9.1021).
+    const carryThis = firstCycle ? carryLeft : carryCarried
 
     // Compras a meses ligadas a la tarjeta (v0.9.587): cada plan activo mete
     // UNA cuota a este estado de cuenta, desde el primer corte DESPUÉS de la
@@ -191,8 +194,19 @@ export function computeMissingStatements(card, creditPayments, todayDate) {
         cycleStart: dateToStr(cycleStart), cycleEnd: dateToStr(cycleEnd), dueDate: dateToStr(dueDate),
         amount, carryConsumed: carryThis !== 0, planItems,
       })
+      carryCarried = 0
+    } else if (spend > 0 || planItems.length || carryThis !== 0) {
+      // Corte CUBIERTO por el crédito a favor (v0.9.1021): no hay nada que pagar, así
+      // que no se crea pago en Inicio, pero el ciclo SÍ se cierra: los gastos y las
+      // cuotas se absorben con el crédito, las cuotas cuentan como pagadas y lo que
+      // sobra (`amount`, ≤ 0) queda como crédito para el siguiente corte. Antes no se
+      // cerraba: el crédito se quedaba sin aplicarse y la cuota se "devolvía".
+      cycles.push({
+        cycleStart: dateToStr(cycleStart), cycleEnd: dateToStr(cycleEnd), dueDate: dateToStr(dueDate),
+        amount: 0, covered: true, carryAfter: Math.min(0, amount), carryConsumed: true, planItems,
+      })
+      carryCarried = Math.min(0, amount)
     } else if (planItems.length) {
-      // (no debería pasar: una cuota siempre es > 0) — se deshace el avance
       for (const it of planItems) { const pl = planState.find(x => x.id === it.plan_id); if (pl) pl.charged = it.n - 1 }
     }
     if (firstCycle) firstCycle = false

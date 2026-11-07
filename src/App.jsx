@@ -670,6 +670,17 @@ export default function App() {
         // ciclo siguiente partiría del mismo punto de nuevo).
         let plansNow = getPlans(card)
         for (const cycle of cycles) {
+          // Corte cubierto por el crédito a favor: sin pago en Inicio; se cierra el ciclo,
+          // las cuotas cuentan como pagadas y el sobrante queda como crédito (v0.9.1021).
+          if (cycle.covered) {
+            plansNow = applyPaid(applyCharged(plansNow, cycle.planItems), cycle.planItems)
+            await paymentMethods.updateStatementFields(card.id, {
+              last_statement_cut: cycle.cycleEnd,
+              carry_over: cycle.carryAfter,
+              ...(cycle.planItems?.length ? { plans: plansNow } : {}),
+            })
+            continue
+          }
           const bankName = getBank(card.bank).id === 'otro' ? t('cards.otherBank') : getBank(card.bank).name
           const label = [bankName, card.alias].filter(Boolean).join(' ')
           const { error } = await addPayment({

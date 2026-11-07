@@ -99,3 +99,26 @@ describe('por pagar: compra del día del corte, después de pagar el estado de c
     expect(cardDebt({ ...after, carry_over: -1000 }, [stmt, refl()]).total).toBe(0)
   })
 })
+
+describe('corte cubierto por el crédito a favor (v0.9.1021)', () => {
+  const plan = { id: 'p1', n: 6, total: 9800, cuota: 1633.33, charged: 0, paid: 0, start: '2026-10-01' }
+  it('no crea pago, cierra el ciclo y deja el sobrante como crédito', () => {
+    const c = card({ carry_over: -2165, plans: [plan] })
+    const cycles = computeMissingStatements(c, [pay('2026-10-10', 245)], todayDate())
+    expect(cycles).toHaveLength(1)
+    expect(cycles[0].covered).toBe(true)
+    expect(cycles[0].amount).toBe(0)
+    expect(cycles[0].carryAfter).toBeCloseTo(-286.67, 2)
+    expect(cycles[0].planItems).toHaveLength(1)
+  })
+  it('un solo centavo de deuda sí genera el pago', () => {
+    const c = card({ carry_over: -(245 + 1633.33) + 0.01, plans: [plan] })
+    const cycles = computeMissingStatements(c, [pay('2026-10-10', 245)], todayDate())
+    expect(cycles).toHaveLength(1)
+    expect(cycles[0].covered).toBeUndefined()
+    expect(cycles[0].amount).toBeCloseTo(0.01, 2)
+  })
+  it('sin gastos, sin planes y sin crédito no hace nada', () => {
+    expect(computeMissingStatements(card(), [], todayDate())).toHaveLength(0)
+  })
+})
