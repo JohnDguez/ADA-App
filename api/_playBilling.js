@@ -1,4 +1,5 @@
 const { JWT } = require('google-auth-library')
+const { parseServiceAccountKey } = require('./_serviceAccountKey')
 
 // Helper compartido dentro de api/verify-play-purchase.js, entre su rama
 // handleVerify (verificación directa, disparada por el cliente tras una
@@ -27,15 +28,14 @@ const ACTIVE_STATES = ['SUBSCRIPTION_STATE_ACTIVE', 'SUBSCRIPTION_STATE_IN_GRACE
 function getServiceAccountClient() {
   const raw = process.env.GOOGLE_SERVICE_ACCOUNT_KEY
   if (!raw) throw new Error('Falta configurar GOOGLE_SERVICE_ACCOUNT_KEY en el servidor')
-  let credentials
-  try {
-    credentials = JSON.parse(raw)
-  } catch (e) {
-    throw new Error('GOOGLE_SERVICE_ACCOUNT_KEY no es un JSON válido')
+  const credentials = parseServiceAccountKey(raw)
+  if (!credentials) throw new Error('GOOGLE_SERVICE_ACCOUNT_KEY no es un JSON válido')
+  if (!credentials.client_email || !credentials.private_key) {
+    throw new Error('GOOGLE_SERVICE_ACCOUNT_KEY no trae client_email o private_key')
   }
   return new JWT({
     email: credentials.client_email,
-    key: credentials.private_key,
+    key: String(credentials.private_key).replace(/\\n/g, '\n'),
     scopes: ['https://www.googleapis.com/auth/androidpublisher'],
   })
 }
