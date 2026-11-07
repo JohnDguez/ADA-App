@@ -211,7 +211,7 @@ export function GoalsPage({
                   <NewSharedSpacePanel profile={profile} sharedSpaces={sharedSpaces} onOpenPremium={onOpenPremium} onCreated={onSpaceReady} onJoined={onSpaceReady} />
                 </div>
               ) : selectedGoal ? (
-                <GoalDetailPanel key={selectedGoal.id} goal={selectedGoal} mobile {...deskData.detailProps} />
+                <div className={styles.detailWrap}><GoalDetailPanel key={selectedGoal.id} goal={selectedGoal} mobile {...deskData.detailProps} /></div>
               ) : (
                 <MobileGoals d={deskData} />
               )}

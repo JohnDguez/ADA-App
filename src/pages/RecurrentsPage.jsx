@@ -221,13 +221,13 @@ export function RecurrentsPage({ payments, dataLoading = false, profile, spaceSw
                   <NewSharedSpacePanel profile={profile} sharedSpaces={sharedSpaces} onOpenPremium={onOpenPremium} onCreated={onSpaceReady} onJoined={onSpaceReady} />
                 </div>
               ) : selectedMaster ? (
-                <RecurrentDetailPanel
+                <div className={styles.detailWrap}><RecurrentDetailPanel
                   master={selectedMaster} payments={payments} profile={profile} canEdit={canEdit} canDelete={canDelete} blocked={blocked} mobile
                   onBack={() => setSelectedMasterId(null)}
                   onEdit={() => onEdit && onEdit(selectedMaster)}
                   onPause={() => onPause(selectedMaster.id)}
                   onResume={() => onResume(selectedMaster.id)}
-                  onDelete={() => { onDelete && onDelete(selectedMaster.id, selectedMaster); setSelectedMasterId(null) }} />
+                  onDelete={() => { onDelete && onDelete(selectedMaster.id, selectedMaster); setSelectedMasterId(null) }} /></div>
               ) : (
                 <MobileRecurrents d={deskData} />
               )}

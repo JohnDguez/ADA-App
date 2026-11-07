@@ -451,3 +451,6 @@
 }
 @keyframes pillIn { from { opacity: 0; transform: translateY(0.75rem) scale(0.96); } to { opacity: 1; transform: none; } }
 @media (prefers-reduced-motion: reduce) { .addPill { animation: none !important; } }
+
+/* Móvil: holgura al final del detalle con padding (no margin) para que siempre cuente en el alto del documento y el historial quede por encima de la barra */
+.detailWrap { padding-bottom: calc(10rem + env(safe-area-inset-bottom)); }

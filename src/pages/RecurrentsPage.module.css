@@ -705,3 +705,6 @@
 
 /* v0.9.909 — en móvil el espacio inferior lo da el contenido (10rem: barra + botón +); sin sumarle los 120px de antes. */
 @media (max-width: 767px) { .pageRoot { padding-bottom: 0; } }
+
+/* Móvil: holgura al final del detalle con padding (no margin) para que siempre cuente en el alto del documento y el historial quede por encima de la barra */
+.detailWrap { padding-bottom: calc(10rem + env(safe-area-inset-bottom)); }
