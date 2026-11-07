@@ -171,3 +171,27 @@ export function debtBreakdown({ statement, cycleSpend, carry, card }) {
 export function plansRemainingTotal(card) {
   return r2(getPlans(card).filter(planIsActive).reduce((s, p) => s + planRemaining(p), 0))
 }
+
+// Reparte el crédito a favor (abonos) entre las cuotas por venir de los planes, en
+// orden: llena la cuota 1 de un plan, luego la 2, etc. Devuelve
+// { [planId]: { covered, fills } } con `fills[i]` = fracción (0..1) cubierta de la
+// cuota i (0-based). Las cuotas ya facturadas no se tocan (ya viajan en su estado de cuenta).
+export function planCreditAlloc(card, credit) {
+  let left = Math.max(0, Number(credit) || 0)
+  const out = {}
+  for (const p of getPlans(card)) {
+    const fills = Array(p.n).fill(0)
+    let covered = 0
+    if (!p.settled) {
+      for (let k = p.charged + 1; k <= p.n && left > 0; k++) {
+        const amt = cuotaAmount(p, k)
+        const use = Math.min(left, amt)
+        fills[k - 1] = amt > 0 ? use / amt : 0
+        covered = r2(covered + use)
+        left = r2(left - use)
+      }
+    }
+    out[p.id] = { covered, fills }
+  }
+  return out
+}

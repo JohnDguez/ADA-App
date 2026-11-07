@@ -29,3 +29,12 @@ it('desglose: abono 2000 cubre gastos 245 y baja el plan', () => {
   expect(d.total).toBe(8045)
   expect(d.favor).toBe(0)
 })
+
+it('reparte el abono por cuotas: 1,920 llena la 1 y 17.6% de la 2', async () => {
+  const { planCreditAlloc } = await import('../src/lib/cardPlans.js')
+  const a = planCreditAlloc(card, 1920).p1
+  expect(a.covered).toBe(1920)
+  expect(a.fills[0]).toBe(1)
+  expect(a.fills[1]).toBeCloseTo(286.67 / 1633.33, 3)
+  expect(a.fills[2]).toBe(0)
+})

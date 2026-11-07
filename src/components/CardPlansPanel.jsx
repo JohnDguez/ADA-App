@@ -6,7 +6,7 @@ import deskStyles from './SettingsDesk.module.css'
 import dd from './CardDetailDesk.module.css'
 import { fmt } from '../lib/utils'
 import { ConfirmDeleteModal } from './ConfirmDeleteModal'
-import { getPlans, planIsActive, planRemaining, planFuture, plansRemainingTotal, nextCutPlansTotal, cuotaAmount } from '../lib/cardPlans'
+import { getPlans, planIsActive, planRemaining, planFuture, plansRemainingTotal, nextCutPlansTotal, cuotaAmount, planCreditAlloc } from '../lib/cardPlans'
 import { useIsMobile } from '../hooks/useIsMobile'
 import { SubpageHeader } from './SubpageHeader'
 import { Repeat as RepeatIcon } from '@phosphor-icons/react/dist/csr/Repeat'
@@ -24,6 +24,13 @@ export function CardPlansPanel({ card, onBack, onSettle, onDelete, desk = false,
   const [deleting, setDeleting] = useState(null)
   const plans = getPlans(card)
   const active = plans.filter(planIsActive)
+  const alloc = planCreditAlloc(card, planCredit)
+  // Cada cuota por venir se pinta de verde hasta donde la cubre el abono (parcial incluido).
+  const segStyle = (p, i, color) => {
+    const f = alloc[p.id]?.fills[i] || 0
+    if (f > 0) return { backgroundImage: `linear-gradient(to right, var(--paid) ${Math.round(f * 100)}%, transparent ${Math.round(f * 100)}%)` }
+    return color ? { background: color } : undefined
+  }
   const done = plans.filter(p => !planIsActive(p))
 
   if (desk || !isMobile) {
@@ -60,12 +67,13 @@ export function CardPlansPanel({ card, onBack, onSettle, onDelete, desk = false,
             const segs = Array.from({ length: p.n }, (_, i) => (i < p.paid ? 'var(--accent)' : i < p.charged ? 'var(--warning)' : null))
             return (
               <div key={p.id} className={`${deskStyles.fill} ${dd.plan}`}>
-                <div className={dd.planTop}><span>{p.name}</span><span>{fmt(planRemaining(p))}</span></div>
+                <div className={dd.planTop}><span>{p.name}</span><span>{fmt(Math.max(0, planRemaining(p) - (alloc[p.id]?.covered || 0)))}</span></div>
                 <div className={dd.planMeta}>
                   {p.charged > 0 ? t('cards.plans.cuotaN', { n: p.charged, total: p.n }) : t('cards.plans.startsNext')}
                   {p.settled && ` · ${t('cards.plans.settledTag')}`}
+                  {alloc[p.id]?.covered > 0 && ` · ${t('cards.plans.coveredByAbono', { amount: fmt(alloc[p.id].covered) })}`}
                 </div>
-                <div className={dd.segs}>{segs.map((color, i) => <i key={i} style={color ? { background: color } : undefined} />)}</div>
+                <div className={dd.segs}>{segs.map((color, i) => <i key={i} style={segStyle(p, i, color)} />)}</div>
                 <div className={dd.planBottom}><span>{t('cards.plans.perMonthLong', { amount: fmt(cuotaAmount(p, Math.min(p.n, p.charged + 1))) })}</span></div>
                 <div className={dd.planActions}>
                   {future > 0 && <button type="button" className={`${deskStyles.btn} ${dd.soft}`} onClick={() => onSettle(p)}>{t('cards.plans.settleMenu', { amount: fmt(future) })}</button>}
@@ -142,14 +150,15 @@ export function CardPlansPanel({ card, onBack, onSettle, onDelete, desk = false,
             <div key={p.id} className={pm.plan} style={{ '--n': Math.min(i, 8) }}>
               <div className={pm.top}>
                 <span className={pm.name}>{p.name}</span>
-                <span className={pm.amt}>{fmt(planRemaining(p))}</span>
+                <span className={pm.amt}>{fmt(Math.max(0, planRemaining(p) - (alloc[p.id]?.covered || 0)))}</span>
               </div>
               <div className={pm.meta}>
                 {p.charged > 0 ? t('cards.plans.cuotaN', { n: p.charged, total: p.n }) : t('cards.plans.startsNext')}
                 {p.settled && ` · ${t('cards.plans.settledTag')}`}
+                {alloc[p.id]?.covered > 0 && ` · ${t('cards.plans.coveredByAbono', { amount: fmt(alloc[p.id].covered) })}`}
               </div>
               <div className={`${pm.segs} ${p.n > 24 ? pm.segsTight : ''}`}>
-                {segs.map((color, k) => <i key={k} style={color ? { background: color } : undefined} />)}
+                {segs.map((color, k) => <i key={k} style={segStyle(p, k, color)} />)}
               </div>
               <div className={pm.foot}>
                 <span>{t('cards.plans.perMonthLong', { amount: fmt(cuotaAmount(p, Math.min(p.n, p.charged + 1))) })}</span>
