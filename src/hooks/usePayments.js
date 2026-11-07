@@ -778,17 +778,31 @@ export function usePayments(userId, activeSpaceId = null, activeSpaceName = null
     // futura es un pago por venir → pendiente (antes todo se guardaba como
     // pagado, incluso con fecha de dentro de semanas).
     const today = todayStr()
-    const inserts = items.map(it => {
+    // Los movimientos que dieron origen a un recurrente aceptado quedan LIGADOS
+    // a su master (historial del detalle): antes se guardaban sueltos y el
+    // detalle decía "Completados 0 / Todavía no hay pagos registrados".
+    const masterIdByRowId = new Map()
+    const recurByRowId = new Map()
+    const masterIds = recurrents.map(r => {
+      const id = newId()
+      ;(r.ids || []).forEach(rowId => { masterIdByRowId.set(rowId, id); recurByRowId.set(rowId, r) })
+      return id
+    })
+    const itemRows = items.map(it => {
       const paid = it.date <= today
+      const link = it.rowId != null ? masterIdByRowId.get(it.rowId) : null
+      const rec = link ? recurByRowId.get(it.rowId) : null
       return {
         ...base, id: newId(), name: it.name, amount: it.amount, category: it.category || 'Otros',
-        due_date: it.date, is_variable: false, is_recurrent: false,
+        due_date: it.date, is_variable: rec ? !!rec.isVariable : false, is_recurrent: !!rec,
+        ...(rec ? { recur_freq: rec.freq, parent_id: link } : {}),
         is_paid: paid, paid_at: paid ? paidAtFor(it.date) : null,
       }
     })
-    for (const r of recurrents) {
+    const inserts = []
+    for (const [ri, r] of recurrents.entries()) {
       const amount = r.isVariable ? 0 : r.amount
-      const masterId = newId()
+      const masterId = masterIds[ri]
       const mk = fields => ({
         ...base, id: newId(), name: r.name, amount, category: r.category || 'Otros',
         is_variable: !!r.isVariable, is_recurrent: true, recur_freq: r.freq,
@@ -804,6 +818,8 @@ export function usePayments(userId, activeSpaceId = null, activeSpaceName = null
       planQueue({ firstDate: r.nextDate, pending: 0, freq: r.freq, horizon: horizonNow() })
         .forEach(({ due_date }) => inserts.push(mk({ due_date })))
     }
+    // Primero masters y colas, luego el historial ligado: así el padre existe antes que sus hijos.
+    inserts.push(...itemRows)
     if (!inserts.length) return { error: null }
 
     if (activeSpaceId) {

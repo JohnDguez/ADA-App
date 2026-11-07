@@ -290,11 +290,11 @@ function ImportBody({ profile, sharedActive, onClose, onImport, onFetchExisting,
     setSaving(true)
     const items = chosen.map(r => ({
       name: (r.concept || t('importCsv.review.noConcept')).slice(0, 80),
-      amount: r.amount, category: r.category || 'Otros', date: r.date,
+      amount: r.amount, category: r.category || 'Otros', date: r.date, rowId: r.id,
     }))
     const recurrents = acceptedList.map(s => ({
       name: (s.name || t('importCsv.review.noConcept')).slice(0, 80), amount: s.amount, category: s.category || 'Otros',
-      freq: s.freq, isVariable: s.isVariable, nextDate: s.nextDate,
+      freq: s.freq, isVariable: s.isVariable, nextDate: s.nextDate, ids: s.ids,
     }))
     const { error: err } = await onImport(items, recurrents)
     setSaving(false)
