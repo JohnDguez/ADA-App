@@ -194,30 +194,43 @@
 
 .deskText {
   position: relative;
+  isolation: isolate;
   flex: 1;
   min-width: 0;
   margin-bottom: 20px;
-  padding: 16px 20px;
-  border-radius: 22px;
+  padding: 14px 20px;
+  border-radius: 24px;
   color: var(--text);
-  background: color-mix(in srgb, var(--tint) 16%, var(--desk-card));
-  border: 1px solid color-mix(in srgb, var(--tint) 45%, var(--desk-card));
+  /* Cristal líquido teñido (v0.9.1022, mockup L2): vidrio translúcido con el color del
+     estado dentro, filo de luz arriba-izquierda y brillo del color en la base. */
+  background:
+    linear-gradient(135deg, var(--glass-hi), var(--glass-lo) 50%, color-mix(in srgb, var(--tint) 32%, transparent) 130%),
+    linear-gradient(180deg, transparent 55%, color-mix(in srgb, var(--tint) 26%, transparent));
+  -webkit-backdrop-filter: blur(16px) saturate(2) brightness(1.04);
+  backdrop-filter: blur(16px) saturate(2) brightness(1.04);
+  box-shadow:
+    inset 1.5px 1.5px 0 var(--glass-rim-a),
+    inset -1px -1px 0 var(--glass-rim-b),
+    inset 0 -10px 18px -6px color-mix(in srgb, var(--tint) 45%, transparent),
+    0 12px 28px color-mix(in srgb, var(--tint) 28%, transparent),
+    0 2px 6px color-mix(in srgb, var(--text) 10%, transparent);
 }
 .deskText::before {
   content: "";
   position: absolute;
-  left: -8px;
+  z-index: -1;
+  left: -7px;
   bottom: 22px;
   width: 14px;
   height: 14px;
   transform: rotate(45deg);
-  border-radius: 0 0 0 4px;
-  background: color-mix(in srgb, var(--tint) 16%, var(--desk-card));
-  border-left: 1px solid color-mix(in srgb, var(--tint) 45%, var(--desk-card));
-  border-bottom: 1px solid color-mix(in srgb, var(--tint) 45%, var(--desk-card));
+  border-radius: 0 0 0 5px;
+  background: color-mix(in srgb, var(--tint) 24%, var(--glass-hi));
+  border-left: 1px solid var(--glass-rim-a);
+  border-bottom: 1px solid var(--glass-rim-b);
 }
 .deskTitle { font-size: 15.5px; font-weight: 700; line-height: 1.25; color: var(--text); }
-.deskSub { font-size: 13px; line-height: 1.35; margin-top: 4px; color: var(--muted); }
+.deskSub { font-size: 13px; line-height: 1.35; margin-top: 3px; color: color-mix(in srgb, var(--text) 74%, transparent); }
 .deskArrow {
   position: relative;
   z-index: 1;
@@ -254,26 +267,49 @@
 }
 .peekText {
   position: relative;
+  isolation: isolate;
   max-width: 290px;
   margin-bottom: 34px;
   padding: 10px 16px;
-  border-radius: 18px;
+  border-radius: 20px;
   color: var(--text);
-  background: color-mix(in srgb, var(--tint) 16%, var(--desk-card));
-  border: 1px solid color-mix(in srgb, var(--tint) 45%, var(--desk-card));
+  background:
+    linear-gradient(135deg, var(--glass-hi), var(--glass-lo) 50%, color-mix(in srgb, var(--tint) 32%, transparent) 130%),
+    linear-gradient(180deg, transparent 55%, color-mix(in srgb, var(--tint) 26%, transparent));
+  -webkit-backdrop-filter: blur(16px) saturate(2) brightness(1.04);
+  backdrop-filter: blur(16px) saturate(2) brightness(1.04);
+  box-shadow:
+    inset 1.5px 1.5px 0 var(--glass-rim-a),
+    inset -1px -1px 0 var(--glass-rim-b),
+    inset 0 -10px 18px -6px color-mix(in srgb, var(--tint) 45%, transparent),
+    0 12px 28px color-mix(in srgb, var(--tint) 28%, transparent),
+    0 2px 6px color-mix(in srgb, var(--text) 10%, transparent);
 }
 .peekText::after {
   content: "";
   position: absolute;
-  right: -8px;
+  z-index: -1;
+  right: -7px;
   bottom: 14px;
   width: 14px;
   height: 14px;
   transform: rotate(-45deg);
-  border-radius: 0 0 4px 0;
-  background: color-mix(in srgb, var(--tint) 16%, var(--desk-card));
-  border-right: 1px solid color-mix(in srgb, var(--tint) 45%, var(--desk-card));
-  border-bottom: 1px solid color-mix(in srgb, var(--tint) 45%, var(--desk-card));
+  border-radius: 0 0 5px 0;
+  background: color-mix(in srgb, var(--tint) 24%, var(--glass-hi));
+  border-right: 1px solid var(--glass-rim-b);
+  border-bottom: 1px solid var(--glass-rim-b);
 }
 .peekImg { flex: none; height: 112px; width: auto; margin-bottom: -26px; pointer-events: none; }
 .peekImgWide { height: 76px; margin-bottom: -8px; }
+
+/* Entrada (v0.9.1022): primero Luna sube y aparece; 0.28 s después el globo salta desde
+   donde está ella. Se repite cada vez que Inicio se monta (entrar a la app o volver a la página). */
+.deskImg, .peekImg { animation: lunaIn 0.5s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.deskText { transform-origin: 0% 85%; animation: bubbleIn 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) 0.28s both; }
+.peekText { transform-origin: 100% 85%; animation: bubbleInR 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) 0.28s both; }
+@keyframes lunaIn { from { opacity: 0; transform: translateY(16px) scale(0.94); } to { opacity: 1; transform: none; } }
+@keyframes bubbleIn { from { opacity: 0; transform: scale(0.82) translateX(-8px); } to { opacity: 1; transform: none; } }
+@keyframes bubbleInR { from { opacity: 0; transform: scale(0.82) translateX(8px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) {
+  .deskImg, .peekImg, .deskText, .peekText { animation: none; }
+}

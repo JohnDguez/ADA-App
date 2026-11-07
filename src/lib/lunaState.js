@@ -47,5 +47,5 @@ export function getLunaState({ pagarEsteCobro, vencidos, delPeriodo, pagadosEste
   else if (hour >= LUNA_NIGHT_FROM || hour < LUNA_NIGHT_UNTIL) key = 'sleeping'
   else                                                   key = 'happy'
 
-  return { key, done, total, next, nextDays, moreThisWeek, overdueCount: vencidos.length }
+  return { key, done, total, next, nextDays, moreThisWeek, overdueCount: vencidos.length, overdueNames: vencidos.slice(0, 2).map(p => p.name) }
 }

@@ -333,6 +333,10 @@
 
 /* ── Tema oscuro manual ([data-theme="dark"] en <html>) ───────────────────── */
 [data-theme="dark"] {
+  --glass-rim-a: rgba(255, 255, 255, 0.5);
+  --glass-rim-b: rgba(255, 255, 255, 0.12);
+  --glass-hi: rgba(255, 255, 255, 0.16);
+  --glass-lo: rgba(255, 255, 255, 0.04);
   --hover-brightness: 1.12;
   --bg: #0F1117;
   --surface: #1A1D27;
@@ -423,6 +427,10 @@
 /* ── Tema oscuro automático (preferencia del sistema) ─────────────────────── */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
+  --glass-rim-a: rgba(255, 255, 255, 0.5);
+  --glass-rim-b: rgba(255, 255, 255, 0.12);
+  --glass-hi: rgba(255, 255, 255, 0.16);
+  --glass-lo: rgba(255, 255, 255, 0.04);
       --hover-brightness: 1.12;
       --bg: #0F1117;
     --surface: #1A1D27;
@@ -1062,6 +1070,11 @@ a:focus-visible {
   --desk-chip:    #EEF0F3;
   --desk-hair:    rgba(11, 18, 32, 0.09);
   --desk-hatch:   rgba(11, 18, 32, 0.28);
+  /* Cristal líquido del globo de Luna (v0.9.1022): filo de luz y brillo interior */
+  --glass-rim-a: rgba(255, 255, 255, 0.95);
+  --glass-rim-b: rgba(255, 255, 255, 0.4);
+  --glass-hi: rgba(255, 255, 255, 0.5);
+  --glass-lo: rgba(255, 255, 255, 0.12);
   /* Fondo de TODAS las barras de avance (v0.9.1016): rayas diagonales; el avance va sólido encima. */
   --hatch-bg: repeating-linear-gradient(135deg, var(--desk-hatch) 0 1.5px, transparent 1.5px 6px);
   --hatch-bg-on-ink: repeating-linear-gradient(135deg, rgba(255, 255, 255, 0.42) 0 1.5px, transparent 1.5px 6px);

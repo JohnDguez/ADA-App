@@ -41,7 +41,7 @@ export function LunaStrip({ lunaState, loading = false, variant, onArrow }) {
     )
   }
 
-  const { key, done, total, next, nextDays, moreThisWeek, overdueCount } = lunaState
+  const { key, done, total, next, nextDays, moreThisWeek, overdueCount, overdueNames = [] } = lunaState
   const img = IMAGES[key]
 
   const whenText = (days) => {
@@ -62,7 +62,9 @@ export function LunaStrip({ lunaState, loading = false, variant, onArrow }) {
       break
     case 'worried':
       title = t('luna.worried.title', { count: overdueCount })
-      sub   = t('luna.worried.sub')
+      sub   = overdueNames.length === 0 ? '' : overdueCount > overdueNames.length
+        ? t('luna.worried.subMore', { names: overdueNames.join(' · '), count: overdueCount - overdueNames.length })
+        : overdueNames.join(' · ')
       break
     case 'celebrating':
       title = t('luna.celebrating.title')

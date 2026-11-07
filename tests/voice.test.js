@@ -60,3 +60,13 @@ describe('getLunaState', () => {
     expect(getLunaState({ ...args, hour: 14 }).key).toBe('happy')
   })
 })
+
+describe('getLunaState: nombres de vencidos (v0.9.1022)', () => {
+  it('devuelve hasta 2 nombres de pagos vencidos', () => {
+    const v = [{ name: 'Renta' }, { name: 'Internet' }, { name: 'Luz' }]
+    const s = getLunaState({ pagarEsteCobro: v, vencidos: v, delPeriodo: [], pagadosEstePeriodo: [] })
+    expect(s.key).toBe('worried')
+    expect(s.overdueCount).toBe(3)
+    expect(s.overdueNames).toEqual(['Renta', 'Internet'])
+  })
+})

@@ -2457,34 +2457,34 @@
       "inDays_one": "en {{count}} día",
       "inDays_other": "en {{count}} días"
     },
-    "nextPayment": "Próximo: {{name}}, {{when}}",
+    "nextPayment": "Próximo: {{name}} · {{when}}",
     "progress": "{{done}} de {{total}} pagos",
     "happy": {
-      "title": "¡Vas al corriente!"
+      "title": "Al corriente"
     },
     "attentive": {
       "titleToday": "Hoy vence {{name}}",
       "titleTomorrow": "Mañana vence {{name}}",
-      "subMore_one": "Y {{count}} pago más esta semana",
-      "subMore_other": "Y {{count}} pagos más esta semana",
-      "subNone": "Luna vigila tus pagos"
+      "subMore_one": "+{{count}} pago esta semana",
+      "subMore_other": "+{{count}} pagos esta semana",
+      "subNone": "Sin más pagos esta semana"
     },
     "worried": {
       "title_one": "{{count}} pago vencido",
       "title_other": "{{count}} pagos vencidos",
-      "sub": "Luna te necesita"
+      "subMore": "{{names}} y {{count}} más"
     },
     "celebrating": {
-      "title": "¡Periodo completado!",
-      "sub": "Pagaste todo. ¡Buen trabajo!"
+      "title": "Periodo completado",
+      "sub": "Pagaste todo"
     },
     "sleeping": {
       "title": "Todo en calma",
-      "sub": "Luna descansa. Próximo: {{name}}, {{when}}"
+      "sub": "Próximo: {{name}} · {{when}}"
     },
     "waving": {
-      "title": "¡Hola, soy Luna!",
-      "sub": "Agrega tus pagos para empezar"
+      "title": "Hola, soy Luna",
+      "sub": "Agrega tu primer pago"
     }
   },
   "inviteCodeModal": {

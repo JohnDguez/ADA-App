@@ -2457,34 +2457,34 @@
       "inDays_one": "in {{count}} day",
       "inDays_other": "in {{count}} days"
     },
-    "nextPayment": "Next: {{name}}, {{when}}",
+    "nextPayment": "Next: {{name}} · {{when}}",
     "progress": "{{done}} of {{total}} payments",
     "happy": {
-      "title": "You're on track!"
+      "title": "On track"
     },
     "attentive": {
       "titleToday": "{{name}} is due today",
       "titleTomorrow": "{{name}} is due tomorrow",
-      "subMore_one": "And {{count}} more payment this week",
-      "subMore_other": "And {{count}} more payments this week",
-      "subNone": "Luna is keeping an eye on your payments"
+      "subMore_one": "+{{count}} payment this week",
+      "subMore_other": "+{{count}} payments this week",
+      "subNone": "Nothing else this week"
     },
     "worried": {
       "title_one": "{{count}} overdue payment",
       "title_other": "{{count}} overdue payments",
-      "sub": "Luna needs you"
+      "subMore": "{{names}} and {{count}} more"
     },
     "celebrating": {
-      "title": "Period complete!",
-      "sub": "You paid everything. Great job!"
+      "title": "Period complete",
+      "sub": "You paid everything"
     },
     "sleeping": {
       "title": "All calm",
-      "sub": "Luna is resting. Next: {{name}}, {{when}}"
+      "sub": "Next: {{name}} · {{when}}"
     },
     "waving": {
-      "title": "Hi, I'm Luna!",
-      "sub": "Add your payments to get started"
+      "title": "Hi, I'm Luna",
+      "sub": "Add your first payment"
     }
   },
   "inviteCodeModal": {
