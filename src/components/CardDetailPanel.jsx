@@ -286,10 +286,12 @@ export function CardDetailPanel({ card, payments, onBack, onEdit, onDelete, onPa
     ].filter(([k]) => debt[k] > 0 || (k !== 'statement' && debt[k === 'cycle' ? 'cycleGross' : 'plansGross'] > 0)) : []
     const body = (<>
         <div className={`${dd.top} ${desk ? '' : dd.topV}`}>
-          <div className={dd.cardWrap}><CreditCardVisual card={card} /></div>
+          <div className={dd.cardWrap}>
+            <CreditCardVisual card={card} />
+            {isCredit && onPayNow && <button type="button" className={`${deskStyles.btn} ${dd.payUnder}`} onClick={() => onPayNow(card)}>{t('cards.payNow.button')}</button>}
+          </div>
           {isCredit ? (
             <div className={`${deskStyles.fill} ${dd.owedCard}`}>
-              {onPayNow && <button type="button" className={`${deskStyles.btn} ${dd.payBtn}`} onClick={() => onPayNow(card)}>{t('cards.payNow.button')}</button>}
               <div className={dd.cols}>
                 {nextCutCol({ col: '', key: dd.key, big: dd.big, hint: dd.hint })}
                 <div className={dd.colSep}>
@@ -519,6 +521,7 @@ export function CardDetailPanel({ card, payments, onBack, onEdit, onDelete, onPa
         {groups.map(g => (
           <div key={g.label}>
             <div className={styles.monthLabel}>{g.label}</div>
+            <div className={styles.histCard}>
             {g.rows.map(p => {
               const d = new Date(p.paid_at || p.due_date)
               // Estilo "como los bancos" (v0.9.497, pedido de Johnatan):
@@ -562,6 +565,7 @@ export function CardDetailPanel({ card, payments, onBack, onEdit, onDelete, onPa
                 </div>
               )
             })}
+            </div>
           </div>
         ))}
       </div>

@@ -456,3 +456,11 @@
 @media (max-width: 767px) {
   .payNowButton { border-radius: 99px; margin-bottom: 0.875rem; }
 }
+
+/* Movimientos en móvil sobre tarjeta (v0.9.1018) */
+.histCard {
+  background: var(--desk-card);
+  box-shadow: var(--desk-shadow);
+  border-radius: 1.375rem;
+  padding: 0.25rem 1rem;
+}

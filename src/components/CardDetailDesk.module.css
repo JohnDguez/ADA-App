@@ -96,19 +96,21 @@
 .sumRowV { grid-template-columns: 1.4fr 1fr 0.8fr; gap: 12px; }
 .planActions .danger { background: var(--desk-card); }
 
-/* Pagas en el próximo corte + Deuda total (v0.9.1016, mockup v3) */
-.owedCard { position: relative; }
-.payBtn { position: absolute; top: 20px; right: 22px; }
-.cols { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; padding-right: 150px; }
+/* Pagas en el próximo corte + Deuda total (v0.9.1016, mockup v3; v0.9.1018: "Pagar ahora"
+   bajo la tarjeta y apilado según el ANCHO de la propia tarjeta, no de la pantalla) */
+.owedCard { container-type: inline-size; }
+.payUnder { width: 100%; margin-top: 16px; justify-content: center; }
+.cols { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; }
+.cols > * { min-width: 0; }
 .colSep { border-left: 1.5px solid var(--desk-hair); padding-left: 28px; }
 .more { margin-top: 12px; padding: 0; border: 0; background: none; color: var(--accent); font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; }
 .bdTable { margin-top: 10px; display: grid; gap: 8px; font-size: 14px; max-width: 460px; }
 .bdTable div { display: flex; justify-content: space-between; gap: 16px; }
 .bdTable b { font-weight: 700; }
 .bdSum { border-top: 1px dashed var(--desk-hair); padding-top: 8px; }
-@media (max-width: 1099px) { .cols { padding-right: 0; padding-top: 52px; } }
-
-/* Tablet vertical: las dos cifras se apilan para que el total no se salga. */
-.topV .cols { grid-template-columns: 1fr; gap: 16px; padding-right: 0; padding-top: 52px; }
-.topV .colSep { border-left: 0; padding-left: 0; border-top: 1.5px solid var(--desk-hair); padding-top: 16px; }
-.cols > * { min-width: 0; }
+@container (max-width: 560px) {
+  .cols { grid-template-columns: minmax(0, 1fr); gap: 14px; }
+  .colSep { border-left: 0; padding-left: 0; border-top: 1.5px solid var(--desk-hair); padding-top: 14px; }
+  .cols .big { font-size: 32px; letter-spacing: -1px; margin-top: 4px; }
+  .owedCard .segBar { display: none; }
+}
