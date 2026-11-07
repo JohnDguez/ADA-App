@@ -55,7 +55,7 @@
    la barra de avance, 2 fichas, lista de metas (2 columnas) y Próximas fechas
    al final. Horizontal: fila de 3 fichas y lista + Próximas fechas a la
    derecha. El detalle abre siempre como panel lateral animado. */
-.heroTrack { height: 8px; border-radius: 99px; background: var(--white-a16); overflow: hidden; }
+.heroTrack { height: 8px; border-radius: 99px; background: var(--hatch-bg-on-ink); overflow: hidden; }
 .heroFill { display: block; height: 100%; min-width: 8px; border-radius: 99px; background: var(--desk-ink-text); transition: width .5s cubic-bezier(0.22, 1, 0.36, 1); }
 .subSecond { display: block; }
 .barTab { margin-bottom: 14px; }

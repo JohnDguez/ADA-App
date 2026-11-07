@@ -569,7 +569,7 @@
 
 .categoryProgressTrack {
   height: 6px;
-  background: var(--border);
+  background: var(--hatch-bg);
   border-radius: var(--radius-full);
   overflow: hidden;
 }
@@ -1855,7 +1855,7 @@
 .methodBarTrack {
   height: 6px;
   border-radius: 3px;
-  background: var(--section-bg-soft);
+  background: var(--hatch-bg);
   overflow: hidden;
 }
 

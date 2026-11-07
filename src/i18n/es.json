@@ -2267,10 +2267,8 @@
     "cycleSpend": "Gastado en este corte: {{amount}}",
     "pendingCreditTotal": "Deuda total",
     "nextCut": {
-      "title": "Pagas en el próximo corte · {{date}}",
-      "plansRow": "Mensualidades de compras a meses",
-      "covered": "Tu abono cubre el corte completo. Te sobran {{amount}} para el siguiente.",
-      "dueNote": "Es lo que te cobrará el estado de cuenta de ese corte."
+      "title": "Próximo corte · {{date}}",
+      "covered": "Cubierto · te sobran {{amount}}"
     },
     "tablet": {
       "nextCut": "Próximo corte",
@@ -2323,15 +2321,16 @@
       "button": "Pagar ahora",
       "title": "Pagar {{name}} ahora",
       "subtitle": "Llevas {{amount}} gastados en este corte.",
-      "subtitleZero": "Aún no llevas gastos en este corte. Puedes adelantar un pago de todos modos.",
+      "subtitleZero": "Sin gastos en este corte.",
       "amountLabel": "Monto a pagar",
       "amountError": "Escribe un monto mayor a $0.",
-      "noteFull": "Pagas todo lo gastado hasta hoy. Si no vuelves a usar la tarjeta antes del corte, no se genera ningún estado de cuenta.",
-      "notePartial": "Pagas una parte. El corte solo te cobrará los {{amount}} restantes, más lo que gastes de aquí a esa fecha.",
-      "noteFavor": "Es más de lo que debes ({{owed}}). Te quedarán {{favor}} a favor, que se aplicarán a tus próximos cortes.",
-      "noteOver": "Pagas de más — el excedente se resta de tu siguiente estado de cuenta.",
+      "noteFull": "Pagas todo lo gastado hasta hoy.",
+      "notePartial": "Quedan {{amount}} para el corte.",
+      "noteFavor": "Debes {{owed}}; los {{favor}} restantes quedan a tu favor.",
+      "noteOver": "El excedente queda a tu favor.",
       "confirm": "Confirmar pago",
-      "success": "Pagaste {{amount}} a {{name}}"
+      "success": "Pagaste {{amount}} a {{name}}",
+      "subtitleCovered": "Tu abono ya cubre este corte."
     },
     "owedThisPeriodChip": "Debes este periodo: {{amount}}",
     "owedChip": "Por pagar: {{amount}}",
@@ -2340,10 +2339,9 @@
       "statement": "Estado de cuenta",
       "cycle": "Ciclo en curso",
       "plans": "Planes por venir",
-      "totalHint": "Incluye todas las mensualidades de tus compras a meses; no se paga de golpe.",
-      "abonosApplied": "Abonos aplicados",
+      "totalHint": "Incluye todas tus mensualidades",
+      "abonosApplied": "Abonos",
       "totalOwed": "Total por pagar",
-      "favorNote": "Te sobran {{amount}} de abono; quedan a tu favor y se aplicarán a tus próximos cortes.",
       "noDebt": "Sin adeudo",
       "plansTitle": "Compras a meses",
       "plansCount_one": "{{count}} plan",
@@ -2351,11 +2349,13 @@
       "nextCutPlans": "próximo corte {{amount}}",
       "nextCut": "Próximo corte: {{day}} {{month}}",
       "cycleDay": "Día {{day}} de {{total}} del ciclo",
-      "dueOn": "Vence: {{day}} {{month}}"
+      "dueOn": "Vence: {{day}} {{month}}",
+      "showBreakdown": "Ver desglose",
+      "hideBreakdown": "Ocultar desglose"
     },
     "plans": {
       "settleName": "Liquidación {{name}}",
-      "coveredByAbono": "Cubierto con tu abono: {{amount}}",
+      "coveredByAbono": "Abono aplicado: {{amount}}",
       "settleTitle": "Liquidar {{name}}",
       "settleSubtitle": "Paga de una vez las cuotas que aún no entran a tu estado de cuenta. El plan ya no sumará más cuotas.",
       "settled": "«{{name}}» liquidada: {{amount}}",

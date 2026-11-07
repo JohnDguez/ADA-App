@@ -356,19 +356,6 @@
   font-weight: 600;
 }
 
-.legendTotal {
-  margin-top: 3px;
-  padding-top: 6px;
-  border-top: 1px dashed var(--border);
-  font-weight: 700;
-}
-
-.legendNote {
-  font-size: 11px;
-  color: var(--muted);
-  line-height: 1.35;
-}
-
 .legendDot {
   width: 8px;
   height: 8px;

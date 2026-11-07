@@ -292,7 +292,7 @@
 .deskRoot .progressAmounts { font-size: 20px; letter-spacing: -0.4px; }
 .deskRoot .progressStatus { font-size: 12px; color: var(--muted); opacity: 1; }
 .deskRoot .progressDone .progressStatus { color: var(--paid); }
-.bar { height: 6px; border-radius: 9px; background: var(--desk-card); margin-top: 10px; overflow: hidden; }
+.bar { height: 6px; border-radius: 9px; background: var(--hatch-bg); margin-top: 10px; overflow: hidden; }
 .bar i { display: block; height: 100%; border-radius: 9px; background: var(--accent); transition: width .4s cubic-bezier(0.22, 1, 0.36, 1); }
 .progressDone .bar i { background: var(--paid); }
 .deskRoot .errorBox { border: 0; border-radius: 14px; background: var(--desk-chip); }

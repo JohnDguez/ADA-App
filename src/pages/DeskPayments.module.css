@@ -4,7 +4,7 @@
 
 /* ── Tarjetas de totales ─────────────────────────────────────────────── */
 .heroNeg.heroNeg { background: var(--desk-hero-bg-neg); }
-.heroTrack { height: 8px; border-radius: 99px; background: var(--white-a16); margin-top: 12px; overflow: hidden; }
+.heroTrack { height: 8px; border-radius: 99px; background: var(--hatch-bg-on-ink); margin-top: 12px; overflow: hidden; }
 .heroFill { display: block; height: 100%; border-radius: 99px; background: var(--desk-ink-text); transition: width .5s cubic-bezier(0.22, 1, 0.36, 1); }
 .fillWarn { background: var(--desk-date-warn); }
 .fillOver { background: var(--desk-date-red); }

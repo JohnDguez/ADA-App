@@ -1062,6 +1062,9 @@ a:focus-visible {
   --desk-chip:    #EEF0F3;
   --desk-hair:    rgba(11, 18, 32, 0.09);
   --desk-hatch:   rgba(11, 18, 32, 0.28);
+  /* Fondo de TODAS las barras de avance (v0.9.1016): rayas diagonales; el avance va sólido encima. */
+  --hatch-bg: repeating-linear-gradient(135deg, var(--desk-hatch) 0 1.5px, transparent 1.5px 6px);
+  --hatch-bg-on-ink: repeating-linear-gradient(135deg, rgba(255, 255, 255, 0.42) 0 1.5px, transparent 1.5px 6px);
   --desk-pill:    #0B1220;
   --desk-pill-ink: #FFFFFF;
   --desk-deep:    #014BA3;

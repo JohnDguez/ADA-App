@@ -28,7 +28,7 @@ export function CardPlansPanel({ card, onBack, onSettle, onDelete, desk = false,
   // Cada cuota por venir se pinta de verde hasta donde la cubre el abono (parcial incluido).
   const segStyle = (p, i, color) => {
     const f = alloc[p.id]?.fills[i] || 0
-    if (f > 0) return { backgroundImage: `linear-gradient(to right, var(--paid) ${Math.round(f * 100)}%, transparent ${Math.round(f * 100)}%)` }
+    if (f > 0) return { backgroundImage: `linear-gradient(to right, var(--paid) ${Math.round(f * 100)}%, transparent ${Math.round(f * 100)}%), var(--hatch-bg)` }
     return color ? { background: color } : undefined
   }
   const done = plans.filter(p => !planIsActive(p))
@@ -71,7 +71,6 @@ export function CardPlansPanel({ card, onBack, onSettle, onDelete, desk = false,
                 <div className={dd.planMeta}>
                   {p.charged > 0 ? t('cards.plans.cuotaN', { n: p.charged, total: p.n }) : t('cards.plans.startsNext')}
                   {p.settled && ` · ${t('cards.plans.settledTag')}`}
-                  {alloc[p.id]?.covered > 0 && ` · ${t('cards.plans.coveredByAbono', { amount: fmt(alloc[p.id].covered) })}`}
                 </div>
                 <div className={dd.segs}>{segs.map((color, i) => <i key={i} style={segStyle(p, i, color)} />)}</div>
                 <div className={dd.planBottom}><span>{t('cards.plans.perMonthLong', { amount: fmt(cuotaAmount(p, Math.min(p.n, p.charged + 1))) })}</span></div>
@@ -155,7 +154,6 @@ export function CardPlansPanel({ card, onBack, onSettle, onDelete, desk = false,
               <div className={pm.meta}>
                 {p.charged > 0 ? t('cards.plans.cuotaN', { n: p.charged, total: p.n }) : t('cards.plans.startsNext')}
                 {p.settled && ` · ${t('cards.plans.settledTag')}`}
-                {alloc[p.id]?.covered > 0 && ` · ${t('cards.plans.coveredByAbono', { amount: fmt(alloc[p.id].covered) })}`}
               </div>
               <div className={`${pm.segs} ${p.n > 24 ? pm.segsTight : ''}`}>
                 {segs.map((color, k) => <i key={k} style={segStyle(p, k, color)} />)}

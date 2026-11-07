@@ -17,7 +17,7 @@ import { useIsMobile } from '../hooks/useIsMobile'
 // Efectivo o Débito — pagar una tarjeta de crédito con otra no tiene
 // sentido en este modelo (el crédito nunca baja el disponible).
 
-export function PayCardNowModal({ open, card, cycleSpend, owed = null, methods, onSave, onClose, title = null, subtitle = null, fixedAmount = false }) {
+export function PayCardNowModal({ open, card, cycleSpend, covered = false, owed = null, methods, onSave, onClose, title = null, subtitle = null, fixedAmount = false }) {
   const { t } = useTranslation()
   // Móvil: hoja; tablet: diálogo; escritorio: popover anclado al botón que lo
   // abrió (sin ancla, diálogo). Todo con <QuickModal> (v0.9.980). El monto
@@ -58,7 +58,7 @@ export function PayCardNowModal({ open, card, cycleSpend, owed = null, methods, 
   return (
     <QuickModal open={open} onClose={onClose} anchorRef={anchorRef} icon={CardIc}
       title={title || t('cards.payNow.title', { name: c.alias || t(`cards.kind.${c.kind}`) })}
-      desc={subtitle || (cycleSpend > 0 ? t('cards.payNow.subtitle', { amount: fmt(cycleSpend) }) : t('cards.payNow.subtitleZero'))}
+      desc={subtitle || (cycleSpend > 0 ? t('cards.payNow.subtitle', { amount: fmt(cycleSpend) }) : t(covered ? 'cards.payNow.subtitleCovered' : 'cards.payNow.subtitleZero'))}
       primary={{ label: t('cards.payNow.confirm'), onClick: handleSave, disabled: isZero }}>
       <div className={mk.pan}>
         <div className={mk.lab}>{t('cards.payNow.amountLabel')}</div>

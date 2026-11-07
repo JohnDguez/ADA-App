@@ -14,7 +14,7 @@
 i.toneWarn { background: var(--warn-tone); }
 i.toneOver { background: var(--danger); }
 
-.track { height: 0.5rem; border-radius: 99px; background: var(--desk-chip); margin: 0.875rem 0; overflow: hidden; }
+.track { height: 0.5rem; border-radius: 99px; background: var(--hatch-bg); margin: 0.875rem 0; overflow: hidden; }
 .fill { display: block; height: 100%; border-radius: 99px; background: var(--accent); transition: width 0.9s cubic-bezier(0.22, 1, 0.36, 1); }
 .tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 0.625rem; }
 .tile { background: var(--desk-chip); border-radius: 0.875rem; padding: 0.625rem 0.75rem; display: flex; flex-direction: column; gap: 0.125rem; min-width: 0; }

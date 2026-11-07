@@ -263,7 +263,7 @@
 
 .progressTrack {
   height: 6px;
-  background: var(--border);
+  background: var(--hatch-bg);
   border-radius: var(--radius-full);
   overflow: hidden;
   margin-bottom: 10px;

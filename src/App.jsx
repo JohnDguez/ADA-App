@@ -35,7 +35,7 @@ import { usePeriodIncome } from './hooks/usePeriodIncome'
 import { usePaymentMethods } from './hooks/usePaymentMethods'
 import { supabase } from './lib/supabase'
 import { getFreshSession } from './lib/freshSession'
-import { computeMissingStatements, currentCycleSpend, cardDebt } from './lib/cardStatements'
+import { computeMissingStatements, cardDebt } from './lib/cardStatements'
 import { useDayKey } from './lib/useDayKey'
 import { planFuture, getPlans, newPlan, applyCharged, applyPaid, revertPaid, revertCharged, applySettle, revertSettle, itemsTotal } from './lib/cardPlans'
 import { findAutoChargeCandidate, readAutoChargeSkip, addAutoChargeSkip, isCreditInstallmentCopy, dueDateNoon } from './lib/installmentCharge'
@@ -2153,10 +2153,9 @@ export default function App() {
         open={!!payCardNowCard}
         card={payCardNowCard}
         cycleSpend={payCardNowCard && cardPayments
-          ? currentCycleSpend(payCardNowCard, cardPayments.filter(p =>
-              p.payment_method_id === payCardNowCard.id && p.payment_method_kind === 'credit' && p.is_paid
-            ))
+          ? (() => { const d = cardDebt(payCardNowCard, cardPayments); return Math.max(0, Math.round((d.cycleGross - d.abonos) * 100) / 100) })()
           : 0}
+        covered={!!(payCardNowCard && cardPayments && cardDebt(payCardNowCard, cardPayments).abonos > 0)}
         owed={payCardNowCard && cardPayments ? cardDebt(payCardNowCard, cardPayments).total : null}
         methods={paymentMethods.methods}
         onSave={fields => handlePayCardNow(payCardNowCard, fields)}

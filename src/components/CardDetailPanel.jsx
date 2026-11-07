@@ -58,6 +58,7 @@ function DebtBar({ debt, label }) {
 export function CardDetailPanel({ card, payments, onBack, onEdit, onDelete, onPayNow, onSettlePlan, onDeletePlan, spaceNames = {}, canEdit = true, canDelete = true, blocked, desk = false, initialPlansOpen = false }) {
   const { t } = useTranslation()
   const [menuOpen, setMenuOpen] = useState(false)
+  const [showBreak, setShowBreak] = useState(false)
   const wide = useIsDesktop()
   useScrollLock(menuOpen)
   const menuRef = useRef(null)
@@ -197,60 +198,35 @@ export function CardDetailPanel({ card, payments, onBack, onEdit, onDelete, onPa
     onDelete()
   }
 
-  // Desglose (v0.9.1013): gastos + compras a meses − abonos = total, para que se vea
-  // a dónde fue cada abono. Las cifras netas (debt.cycle/plans) siguen alimentando la barra.
-  // "Pagas en el próximo corte" (v0.9.1015): lo que de verdad toca pagar, aparte de la
-  // deuda total (que incluye todas las mensualidades de las compras a meses).
-  const nextCutBlock = (cls) => debt && cycleInfo && (
-    <div className={cls.box}>
-      <div className={cls.key}>{t('cards.nextCut.title', { date: `${cycleInfo.nextCut.getDate()} ${getMonthsShort()[cycleInfo.nextCut.getMonth()].toLowerCase()}` })}</div>
-      <div className={cls.big}>{fmt(debt.nextCut.total)}</div>
-      {[
-        [debt.nextCut.statement, t('cards.bento.statement')],
-        [debt.nextCut.spend, t('cards.bento.cycle')],
-        [debt.nextCut.plans, t('cards.nextCut.plansRow')],
-      ].filter(([v]) => v > 0).map(([v, label]) => (
-        <div key={label} className={cls.row}><span>{label}</span><b>{fmt(v)}</b></div>
-      ))}
-      {debt.nextCut.credit > 0 && <div className={cls.row}><span>{t('cards.bento.abonosApplied')}</span><b>−{fmt(debt.nextCut.credit)}</b></div>}
-      <div className={cls.note}>
-        {debt.nextCut.total === 0 && debt.nextCut.credit > 0
-          ? t('cards.nextCut.covered', { amount: fmt(debt.nextCut.favor) })
-          : t('cards.nextCut.dueNote')}
-      </div>
+  // v0.9.1016 (mockup v3): dos cifras — lo que se paga en el próximo corte y la deuda
+  // total (incluye todas las mensualidades) — y el desglose detrás de "Ver desglose".
+  const nextCutDate = cycleInfo ? `${cycleInfo.nextCut.getDate()} ${getMonthsShort()[cycleInfo.nextCut.getMonth()].toLowerCase()}` : ''
+  const nextCutCol = (cls) => debt && (
+    <div className={cls.col}>
+      <div className={cls.key}>{t('cards.nextCut.title', { date: nextCutDate })}</div>
+      <div className={cls.big}>{payments == null ? <LoadingDots /> : fmt(debt.nextCut.total)}</div>
+      {debt.nextCut.total === 0 && debt.nextCut.credit > 0 && (
+        <div className={cls.hint}>{t('cards.nextCut.covered', { amount: fmt(debt.nextCut.favor) })}</div>
+      )}
     </div>
   )
-
-  const debtLegend = debt && (
-    <div className={styles.legend}>
-      {[
-        [debt.statement, 'var(--warning)', t('cards.bento.statement')],
-        [debt.cycleGross, 'var(--accent)', t('cards.bento.cycle')],
-        [debt.plansGross, 'var(--label-variable)', t('cards.bento.plansTitle')],
-      ].filter(([v]) => v > 0).map(([v, color, label]) => (
-        <div key={label} className={styles.legendRow}>
-          <span className={styles.legendDot} style={{ background: color }} />
-          <span>{label}</span>
-          <b>{fmt(v)}</b>
-        </div>
-      ))}
-      {debt.abonosApplied > 0 && (
-        <div className={styles.legendRow}>
-          <span className={styles.legendDot} style={{ background: 'var(--paid)' }} />
-          <span>{t('cards.bento.abonosApplied')}</span>
-          <b>−{fmt(debt.abonosApplied)}</b>
+  const breakdownToggle = (cls) => debt && (
+    <>
+      <button type="button" className={cls.more} aria-expanded={showBreak} onClick={() => setShowBreak(v => !v)}>
+        {showBreak ? t('cards.bento.hideBreakdown') : t('cards.bento.showBreakdown')}
+      </button>
+      {showBreak && (
+        <div className={cls.table}>
+          {[
+            [debt.statement, t('cards.bento.statement')],
+            [debt.cycleGross, t('cards.bento.cycle')],
+            [debt.plansGross, t('cards.bento.plansTitle')],
+          ].filter(([v]) => v > 0).map(([v, label]) => <div key={label}><span>{label}</span><b>{fmt(v)}</b></div>)}
+          {debt.abonosApplied > 0 && <div><span>{t('cards.bento.abonosApplied')}</span><b>−{fmt(debt.abonosApplied)}</b></div>}
+          <div className={cls.sum}><span>{t('cards.bento.totalOwed')}</span><b>{fmt(debt.total)}</b></div>
         </div>
       )}
-      {debt.total <= 0
-        ? <div className={styles.legendRow}><span>{t('cards.bento.noDebt')}</span></div>
-        : debt.abonosApplied > 0 && (
-          <div className={`${styles.legendRow} ${styles.legendTotal}`}>
-            <span>{t('cards.bento.totalOwed')}</span>
-            <b>{fmt(debt.total)}</b>
-          </div>
-        )}
-      {debt.favor > 0 && <div className={styles.legendNote}>{t('cards.bento.favorNote', { amount: fmt(debt.favor) })}</div>}
-    </div>
+    </>
   )
   const payNowBtn = card.kind === 'credit' && onPayNow && (
     <button type="button" onClick={() => onPayNow(card)} className={`btn-primary ${styles.payNowButton}`}>
@@ -312,31 +288,22 @@ export function CardDetailPanel({ card, payments, onBack, onEdit, onDelete, onPa
         <div className={`${dd.top} ${desk ? '' : dd.topV}`}>
           <div className={dd.cardWrap}><CreditCardVisual card={card} /></div>
           {isCredit ? (
-            <div className={deskStyles.fill}>
-              {nextCutBlock({ box: dd.nextCut, key: dd.key, big: dd.ncBig, row: dd.ncRow, note: dd.ncNote })}
-              <div className={dd.owedHead}>
-                <div>
+            <div className={`${deskStyles.fill} ${dd.owedCard}`}>
+              {onPayNow && <button type="button" className={`${deskStyles.btn} ${dd.payBtn}`} onClick={() => onPayNow(card)}>{t('cards.payNow.button')}</button>}
+              <div className={dd.cols}>
+                {nextCutCol({ col: '', key: dd.key, big: dd.big, hint: dd.hint })}
+                <div className={dd.colSep}>
                   <div className={dd.key}>{t('cards.pendingCreditTotal')}</div>
                   <div className={dd.big}>{payments == null ? <LoadingDots /> : fmt(totalOwed)}</div>
                   {hasPlans && <div className={dd.hint}>{t('cards.bento.totalHint')}</div>}
                 </div>
-                {onPayNow && <button type="button" className={deskStyles.btn} onClick={() => onPayNow(card)}>{t('cards.payNow.button')}</button>}
               </div>
-              {(parts.length > 0 && debt.total > 0) ? (
-                <>
-                  <div className={dd.segBar} role="img" aria-label={t('cards.bento.donutLabel')}>
-                    {parts.filter(([k]) => debt[k] > 0).map(([k, color]) => <i key={k} style={{ flexGrow: debt[k], background: color }} />)}
-                  </div>
-                  <div className={dd.legend}>
-                    {parts.map(([k, color, label, gross]) => (
-                      <div key={k}><em style={{ background: color }} /><span>{label}</span><b>{fmt(gross)}</b></div>
-                    ))}
-                    {debt.abonosApplied > 0 && <div><em style={{ background: 'var(--paid)' }} /><span>{t('cards.bento.abonosApplied')}</span><b>−{fmt(debt.abonosApplied)}</b></div>}
-                    {debt.abonosApplied > 0 && debt.total > 0 && <div className={dd.legendTotal}><span>{t('cards.bento.totalOwed')}</span><b>{fmt(debt.total)}</b></div>}
-                    {debt.favor > 0 && <div className={dd.legendNote}>{t('cards.bento.favorNote', { amount: fmt(debt.favor) })}</div>}
-                  </div>
-                </>
-              ) : <div className={dd.ok}>{t('cards.desk.noDebt')}</div>}
+              {debt && debt.total > 0 && (
+                <div className={dd.segBar} role="img" aria-label={t('cards.bento.donutLabel')}>
+                  {parts.filter(([k]) => debt[k] > 0).map(([k, color]) => <i key={k} style={{ flexGrow: debt[k], background: color }} />)}
+                </div>
+              )}
+              {breakdownToggle({ more: dd.more, table: dd.table, sum: dd.tableSum })}
             </div>
           ) : (
             <div className={deskStyles.fill}>
@@ -489,13 +456,15 @@ export function CardDetailPanel({ card, payments, onBack, onEdit, onDelete, onPa
           su barra (de dónde sale el número), lo pagado con la tarjeta, las compras a
           meses (abren su pantalla aparte) y el avance del ciclo. */}
       {card.kind === 'credit' ? (<>
-        {nextCutBlock({ box: `${md.sum} ${md.nextCut}`, key: md.key, big: md.big, row: md.ncRow, note: md.ncNote })}
+        <div className={`${md.sum} ${md.nextCut}`}>
+          {nextCutCol({ col: '', key: md.key, big: md.big, hint: md.hint })}
+        </div>
         <div className={md.sum}>
           <div className={md.key}>{t('cards.pendingCreditTotal')}</div>
           <div className={md.big}>{payments == null ? <LoadingDots /> : fmt(totalOwed)}</div>
           {hasPlans && <div className={md.hint}>{t('cards.bento.totalHint')}</div>}
           <DebtBar debt={debt} label={t('cards.bento.donutLabel')} />
-          {debtLegend}
+          {breakdownToggle({ more: md.more, table: md.table, sum: md.tableSum })}
           {tl && (
             <div className={md.tl}>
               <div className={styles.tlTrack} style={{ '--now': `${tl.nowPct}%` }}>

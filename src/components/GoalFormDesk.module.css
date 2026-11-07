@@ -18,7 +18,7 @@
 .pName { font-size: 16px; min-width: 0; overflow-wrap: anywhere; }
 .pAmount { font-size: 30px; font-weight: 700; letter-spacing: -0.8px; }
 .pMeta { font-size: 13px; color: var(--muted); }
-.bar { height: 10px; border-radius: 99px; background: var(--desk-chip); overflow: hidden; }
+.bar { height: 10px; border-radius: 99px; background: var(--hatch-bg); overflow: hidden; }
 .bar i { display: block; width: 0; height: 100%; background: var(--tint); border-radius: 99px; }
 .hint { font-size: 13px; color: var(--muted); }
 .foot { display: flex; align-items: center; justify-content: flex-end; gap: 12px; }
