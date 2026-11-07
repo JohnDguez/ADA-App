@@ -206,9 +206,9 @@ export function computeMissingStatements(card, creditPayments, todayDate) {
         amount: 0, covered: true, carryAfter: Math.min(0, amount), carryConsumed: true, planItems,
       })
       carryCarried = Math.min(0, amount)
-    } else if (planItems.length) {
-      for (const it of planItems) { const pl = planState.find(x => x.id === it.plan_id); if (pl) pl.charged = it.n - 1 }
     }
+    // (Si no hay gasto, cuotas ni crédito el ciclo no se cierra y no queda nada que revertir:
+    // la antigua rama que devolvía las cuotas quedó inalcanzable desde v0.9.1021.)
     if (firstCycle) firstCycle = false
     cursor = cycleEnd
     windowStart = cycleEnd
