@@ -815,8 +815,17 @@ export function usePayments(userId, activeSpaceId = null, activeSpaceName = null
       })
       // Cola por horizonte (v0.9.972). Importar siempre es personal: usa la
       // configuración de cobro personal que tenga App en ese momento.
-      planQueue({ firstDate: r.nextDate, pending: 0, freq: r.freq, horizon: horizonNow() })
-        .forEach(({ due_date }) => inserts.push(mk({ due_date })))
+      // Si el archivo ya trae movimientos de este recurrente (pasados y también
+      // FUTUROS: p. ej. gasolina cada semana hasta fin de mes), la cola sigue
+      // después del último y cuenta los futuros como pendientes. Sin eso, la cola
+      // arrancaba en `nextDate` y los pagos entre hoy y esa fecha se perdían o
+      // quedaban sueltos ("Semanal" con próximo pago un mes después).
+      const linked = itemRows.filter(x => x.parent_id === masterId)
+      const lastLinked = linked.reduce((m, x) => (!m || x.due_date > m ? x.due_date : m), null)
+      const plan = linked.length
+        ? planQueue({ lastDate: lastLinked, pending: linked.filter(x => !x.is_paid).length, freq: r.freq, horizon: horizonNow() })
+        : planQueue({ firstDate: r.nextDate, pending: 0, freq: r.freq, horizon: horizonNow() })
+      plan.forEach(({ due_date }) => inserts.push(mk({ due_date })))
     }
     // Primero masters y colas, luego el historial ligado: así el padre existe antes que sus hijos.
     inserts.push(...itemRows)
