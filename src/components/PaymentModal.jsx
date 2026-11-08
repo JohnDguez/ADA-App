@@ -32,6 +32,7 @@ import { Microphone } from '@phosphor-icons/react/dist/csr/Microphone'
 import { ScanLine, X as XIcon } from 'lucide-react'
 import { useIsDesktop } from '../hooks/useIsDesktop'
 import dk from './PaymentDesk.module.css'
+import AmountKindSwitch from './AmountKindSwitch'
 import ip from './PaymentImpactDesk.module.css'
 import ins from './PaymentInstallDesk.module.css'
 import ec from './PaymentEditCopyDesk.module.css'
@@ -579,13 +580,12 @@ export function PaymentModal({ open, onClose, onSave, onSaveInstallment, onSaveC
   const isFlat       = mode !== 'installment'                         // Único / Recurrente: una sola pantalla
   const showDataStep = isFlat || !!initial || step === 1              // nombre + categoría
   const moreVisible  = !!initial || moreOpen || isWide
-  const moreActive   = (methodId ? 1 : 0) + (mode === 'single' && isVariable ? 1 : 0) + (alreadyPaid ? 1 : 0)
+  const moreActive   = (methodId ? 1 : 0) + (alreadyPaid ? 1 : 0)
   // Espacio compartido: no hay método de pago ni estado "ya pagado"; si solo
   // queda el interruptor de variable, se muestra directo sin "Más opciones".
   const hasMoreOptions = methodsAvailable || (mode === 'single' && !isSharedSpace)
   const moreSummary  = [
     methodsAvailable ? (selectedCard ? cardLabel(selectedCard, t) : t('paymentMethod.cash')) : null,
-    mode === 'single' ? t(isVariable ? 'paymentModal.more.variable' : 'paymentModal.more.fixed') : null,
     mode === 'single' && !isSharedSpace ? t(alreadyPaid ? 'paymentModal.more.paid' : 'paymentModal.more.unpaid') : null,
   ].filter(Boolean).join(' · ')
   function goNextStep() {
@@ -1122,13 +1122,20 @@ const impactBlock = impactPreview && impactPreview.length > 0 ? (() => {
               <div className={dk.form}>
                 {mode === 'recurrent' && <FrequencyPicker value={recurFreq} onChange={setRecurFreq} />}
 
-                {mode !== 'installment' && !isVariable && (
+                {mode !== 'installment' && (
                   <div className={dk.amount} onClick={e => e.currentTarget.querySelector('input')?.focus()}>
-                    <span className={dk.amountLabel}>{t('paymentModal.amountLabel')}</span>
-                    <div className={dk.amountRow}>
-                      <span className={dk.amountSym}>{symbol}</span>
-                      <CentsAmountInput className={dk.amountInput} emptyClassName={dk.amountEmpty} value={amount} onChange={e => setAmount(e.target.value)} autoFocus={!initial} onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); nameRef.current?.focus() } }} />
+                    <div className={dk.amountHead}>
+                      <span className={dk.amountLabel}>{t('paymentModal.amountLabel')}</span>
+                      <AmountKindSwitch value={isVariable} onChange={setIsVariable} disabled={!canWrite} />
                     </div>
+                    {isVariable ? (
+                      <div className={dk.amountVariable}>{t('paymentModal.amountVariableTitle')}</div>
+                    ) : (
+                      <div className={dk.amountRow}>
+                        <span className={dk.amountSym}>{symbol}</span>
+                        <CentsAmountInput className={dk.amountInput} emptyClassName={dk.amountEmpty} value={amount} onChange={e => setAmount(e.target.value)} autoFocus={!initial} onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); nameRef.current?.focus() } }} />
+                      </div>
+                    )}
                   </div>
                 )}
 
@@ -1202,9 +1209,6 @@ const impactBlock = impactPreview && impactPreview.length > 0 ? (() => {
                       </div>
                     )}
                     <div className={dk.toggles}>
-                      <div data-coachmark="modal-variable-toggle">
-                        <Toggle label={t('paymentModal.variableToggleLabel')} sub={t('paymentModal.variableToggleSub')} value={isVariable} onChange={setIsVariable} />
-                      </div>
                       {mode === 'single' && !isVariable && !isSharedSpace && (
                         <Toggle label={t('paymentModal.alreadyPaidToggle')} sub={t('paymentModal.alreadyPaidSub')} value={alreadyPaid} onChange={setAlreadyPaid} />
                       )}
@@ -1378,13 +1382,20 @@ const impactBlock = impactPreview && impactPreview.length > 0 ? (() => {
           )}
           {!initial && scanned && <div className={styles.scanDisclaimer}>{t('paymentModal.scan.disclaimer')}</div>}
 
-          {isFlat && !isVariable && (
+          {isFlat && (
             <div className={styles.amountHero} onClick={e => e.currentTarget.querySelector('input')?.focus()}>
-              <div className={styles.amountHeroLabel}>{t('paymentModal.amountLabel')}</div>
-              <div className={styles.amountHeroRow}>
-                <span className={styles.amountHeroSymbol}>{getCurrencySymbol()}</span>
-                <CentsAmountInput className={styles.amountHeroInput} emptyClassName={styles.amountHeroEmpty} value={amount} onChange={e => setAmount(e.target.value)} autoFocus={!initial && !voiceSupported && !scanSupported} onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); nameRef.current?.focus() } }} />
+              <div className={styles.amountHeroHead}>
+                <span className={styles.amountHeroLabel}>{t('paymentModal.amountLabel')}</span>
+                <AmountKindSwitch value={isVariable} onChange={setIsVariable} disabled={!canWrite} />
               </div>
+              {isVariable ? (
+                <div className={styles.amountHeroVariable}>{t('paymentModal.amountVariableTitle')}</div>
+              ) : (
+                <div className={styles.amountHeroRow}>
+                    <span className={styles.amountHeroSymbol}>{getCurrencySymbol()}</span>
+                    <CentsAmountInput className={styles.amountHeroInput} emptyClassName={styles.amountHeroEmpty} value={amount} onChange={e => setAmount(e.target.value)} autoFocus={!initial && !voiceSupported && !scanSupported} onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); nameRef.current?.focus() } }} />
+                  </div>
+              )}
             </div>
           )}
           {isFlat && !isVariable && impactWarnChip && (
@@ -1479,13 +1490,6 @@ const impactBlock = impactPreview && impactPreview.length > 0 ? (() => {
             </Field>
           )}
 
-          {/* Pago variable: en Recurrente va visible (luz, agua…); en Único queda en "Más opciones" */}
-          {mode === 'recurrent' && (
-            <div data-coachmark="modal-variable-toggle">
-              <Toggle label={t('paymentModal.variableToggleLabel')} sub={t('paymentModal.variableToggleSub')} value={isVariable} onChange={setIsVariable} />
-            </div>
-          )}
-
           {mode === 'recurrent' && (
             <div className={styles.recurrentNote}>
               {t('paymentModal.recurrentNote', { interval: t(`paymentModal.recurrentIntervals.${recurFreq === 'weekly' ? 'weekly' : recurFreq === 'biweekly' ? 'biweekly' : 'monthly'}`) })}
@@ -1501,21 +1505,11 @@ const impactBlock = impactPreview && impactPreview.length > 0 ? (() => {
               {!moreOpen && <span className={styles.moreSummary}>{moreSummary}</span>}
             </button>
           )}
-          {isFlat && !hasMoreOptions && mode === 'single' && (
-            <div data-coachmark="modal-variable-toggle">
-              <Toggle label={t('paymentModal.variableToggleLabel')} sub={t('paymentModal.variableToggleSub')} value={isVariable} onChange={setIsVariable} />
-            </div>
-          )}
           <Collapse open={isFlat && hasMoreOptions && moreVisible}>
             <>
               {methodsAvailable && (
                 <div className={styles.fieldGroup}>
                   <PaymentMethodField methods={paymentMethods.methods} value={methodId} onChange={setMethodId} payDate={paidAt || null} onAddCard={openAddCard} sheet />
-                </div>
-              )}
-              {mode === 'single' && (
-                <div data-coachmark="modal-variable-toggle">
-                  <Toggle label={t('paymentModal.variableToggleLabel')} sub={t('paymentModal.variableToggleSub')} value={isVariable} onChange={setIsVariable} />
                 </div>
               )}
               {mode === 'single' && !initial && !isVariable && !isSharedSpace && (

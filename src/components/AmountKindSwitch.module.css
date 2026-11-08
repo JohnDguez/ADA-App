@@ -1,0 +1,13 @@
+/* Selector «Monto fijo | Monto variable». Regla 71: la pastilla va una capa por encima de
+   la tarjeta del monto (--desk-chip → --desk-card). Activo = --desk-pill (DISENO §6).
+   Reglas 53/54: rem y transiciones; Regla 64: hover visible; Regla 70: sin escala al presionar. */
+.switch { display: inline-flex; gap: 0.125rem; padding: 0.1875rem; border-radius: 999px; background: var(--desk-card); }
+.opt {
+  border: 0; border-radius: 999px; padding: 0.375rem 1rem; background: transparent; color: var(--muted);
+  font: inherit; font-size: 0.8125rem; font-weight: 700; cursor: pointer; white-space: nowrap;
+  transition: background 0.3s cubic-bezier(0.22, 1, 0.36, 1), color 0.2s;
+}
+.opt.on { background: var(--desk-pill); color: var(--desk-pill-ink); }
+.opt:disabled { cursor: default; }
+@media (hover: hover) and (pointer: fine) { .opt:not(.on):not(:disabled):hover { background: var(--desk-hover-fill); color: var(--text); } }
+@media (prefers-reduced-motion: reduce) { .opt { transition: none; } }

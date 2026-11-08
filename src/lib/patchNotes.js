@@ -39,6 +39,7 @@ export function getPatchNotes() {
         t('patchNotes.v0_9_1036.item5'),
         t('patchNotes.v0_9_1036.item6'),
         t('patchNotes.v0_9_1036.item7'),
+        t('patchNotes.v0_9_1036.item8'),
       ],
     },
     {

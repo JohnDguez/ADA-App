@@ -1067,6 +1067,8 @@
       "new": "New payment"
     },
     "namePlaceholder": "e.g. Netflix, Rent, Electricity…",
+    "amountKind": { "fixed": "Fixed amount", "variable": "Variable amount", "label": "Amount type" },
+    "amountVariableTitle": "Entered when you pay",
     "variableToggleLabel": "Variable payment",
     "variableToggleSub": "The amount changes each time you pay",
     "amountLabel": "Amount",
@@ -1790,8 +1792,8 @@
         "text": "Each category has its own icon and color — you can customize them later from Settings."
       },
       "variable": {
-        "title": "Does the amount change every time?",
-        "text": "Turn this on for payments like electricity or water, where you don't know the exact amount until the bill arrives."
+        "title": "Choose “Variable amount”",
+        "text": "Use it for payments like electricity or water, where the exact amount is only known when the bill arrives."
       }
     },
     "gastos": {
@@ -2011,7 +2013,8 @@
       "item4": "New app onboarding for phone and tablet, with the «Shift on weekends» option.",
       "item5": "Settings › Pay period: pick your two twice-monthly pay days from a 1–31 table instead of typing them.",
       "item6": "Import: movements that make up a recurring payment are now linked to its history, including future payments.",
-      "item7": "Goals and Recurring on phone: you can now scroll to the end of the history in the detail view."
+      "item7": "Goals and Recurring on phone: you can now scroll to the end of the history in the detail view.",
+      "item8": "New payment: choose “Fixed amount” or “Variable amount” right next to the amount, no more digging in “More options”."
     },
     "v0_9_991": {
       "item0": "New design across the app: Home, Payments, Recurring, Goals and Settings rebuilt for phone, tablet and desktop, with light and dark themes.",

@@ -1067,6 +1067,8 @@
       "new": "Nuevo pago"
     },
     "namePlaceholder": "Ej. Netflix, Renta, Luz…",
+    "amountKind": { "fixed": "Monto fijo", "variable": "Monto variable", "label": "Tipo de monto" },
+    "amountVariableTitle": "Se indicará al pagar",
     "variableToggleLabel": "Pago variable",
     "variableToggleSub": "El monto cambia cada vez que pagas",
     "amountLabel": "Monto",
@@ -1790,8 +1792,8 @@
         "text": "Cada categoría trae su propio ícono y color — puedes personalizarlos después desde Ajustes."
       },
       "variable": {
-        "title": "¿El monto cambia cada vez?",
-        "text": "Actívalo para pagos como luz o agua, donde no sabes el monto exacto hasta que llega el recibo."
+        "title": "Elige «Monto variable»",
+        "text": "Úsalo en pagos como luz o agua, donde el monto exacto se conoce hasta que llega el recibo."
       }
     },
     "gastos": {
@@ -2011,7 +2013,8 @@
       "item4": "Nuevo inicio de la app (onboarding) para celular y tablet, con la opción «Recorrer en fin de semana».",
       "item5": "Ajustes › Periodo de cobro: elige tus dos días de cobro quincenal en una tabla del 1 al 31, en lugar de escribirlos.",
       "item6": "Importar: los movimientos que forman un pago recurrente quedan ligados a su historial, con los pagos futuros incluidos.",
-      "item7": "Metas y Recurrentes en celular: ya puedes desplazarte hasta el final del historial en el detalle."
+      "item7": "Metas y Recurrentes en celular: ya puedes desplazarte hasta el final del historial en el detalle.",
+      "item8": "Nuevo pago: elige «Monto fijo» o «Monto variable» junto al monto, sin buscarlo en «Más opciones»."
     },
     "v0_9_991": {
       "item0": "Nuevo diseño en toda la app: Inicio, Gastos, Recurrentes, Metas y Ajustes rehechos para celular, tablet y computadora, con tema claro y oscuro.",
