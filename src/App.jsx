@@ -67,6 +67,7 @@ import { PatchNotesModal } from './components/PatchNotesModal'
 import { ConfirmExitModal } from './components/ConfirmExitModal'
 import { UnsavedChangesPrompt } from './components/UnsavedChangesPrompt'
 import { getUnsavedGuard, requestLeave } from './lib/unsavedGuard'
+import { requestCobroFocus } from './lib/cobroFocus'
 import { FeedbackPromptModal } from './components/FeedbackPromptModal'
 import { Toast, showToast } from './components/Toast'
 import { SkeletonLoader } from './components/SkeletonLoader'
@@ -999,7 +1000,7 @@ export default function App() {
   // `changeTab` comparaba contra la pestaña vieja y a veces no hacía nada.
   const goSettingsRef = useRef(null)
   useEffect(() => {
-    const go = () => goSettingsRef.current?.('cobro')
+    const go = () => { requestCobroFocus(); goSettingsRef.current?.('cobro') }
     window.addEventListener('cobro-adjust:settings', go)
     return () => window.removeEventListener('cobro-adjust:settings', go)
   }, [])

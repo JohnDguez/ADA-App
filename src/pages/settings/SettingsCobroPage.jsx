@@ -10,6 +10,7 @@ import { SalaryChangePrompt } from '../../components/SalaryChangePrompt'
 import { setUnsavedGuard } from '../../lib/unsavedGuard'
 import { WeekendShiftField } from '../../components/WeekendShiftField'
 import { NextCobroRow } from '../../components/AdjustCobroDate'
+import { consumeCobroFocus } from '../../lib/cobroFocus'
 import { showToast } from '../../components/Toast'
 import { Toggle } from '../../components/SettingsShared'
 import { CurrencySheet } from '../../components/CurrencySheet'
@@ -69,6 +70,17 @@ export function SettingsCobroPage({ profile, onUpdate, onBack, slideClass }) {
   // periodo" guarda el monto anterior y la fecha del siguiente cobro.
   const [salaryPrompt, setSalaryPrompt] = useState(null) // { oldVal, newVal }
   const amountRef = useRef(null)
+  // «Cámbialo en Ajustes» (ventana «Mover este cobro»): baja hasta la sección del día de cobro y la resalta un momento.
+  const [flash, setFlash] = useState(false)
+  useEffect(() => {
+    if (!consumeCobroFocus()) return undefined
+    const t1 = setTimeout(() => {
+      document.querySelector('[data-cobro-focus]')?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      setFlash(true)
+    }, 450)
+    const t2 = setTimeout(() => setFlash(false), 3200)
+    return () => { clearTimeout(t1); clearTimeout(t2) }
+  }, [])
   const salaryDirty = !!profile.salary_enabled && (parseFloat(salaryAmount) || 0) !== Number(profile.salary_amount || 0)
   const savedAmount = profile.salary_amount || ''
   useEffect(() => {
@@ -149,6 +161,7 @@ export function SettingsCobroPage({ profile, onUpdate, onBack, slideClass }) {
               ))}
             </div>
 
+            <div className={`${styles.focusBox} ${flash ? styles.flash : ''}`} data-cobro-focus>
             <div className={deskStyles.sec}>{freq === 'biweekly' ? t('settingsCobro.payDaysLabel') : t('settingsCobro.payDayLabel')}</div>
             {freq === 'weekly' && (
               <div className={dk.weekdays}>
@@ -187,7 +200,8 @@ export function SettingsCobroPage({ profile, onUpdate, onBack, slideClass }) {
             {freq !== 'weekly' && (
               <div className={`${deskStyles.fill} ${wk.fillBox}`}><WeekendShiftField freq={freq} day1={profile.cobro_day1} day2={profile.cobro_day2} value={profile.cobro_weekend_shift} onChange={v => onUpdate({ cobro_weekend_shift: v })} variant="fill" /></div>
             )}
-            <div className={deskStyles.fill}><NextCobroRow profile={profile} onSave={map => onUpdate({ cobro_overrides: map })} /></div>
+            <div className={`${deskStyles.fill} ${styles.gapTop}`}><NextCobroRow profile={profile} onSave={map => onUpdate({ cobro_overrides: map })} /></div>
+            </div>
 
             <div className={deskStyles.sec}>{t('settingsCobro.incomeSection')}</div>
             <div className={deskStyles.fill}>
@@ -275,41 +289,43 @@ export function SettingsCobroPage({ profile, onUpdate, onBack, slideClass }) {
           })}
         </div>
 
-        <div className={mb.cap} style={{ '--i': 3 }}>{t('settingsCobro.mobile.dayLabel')}</div>
-        <div className={mb.card} style={{ '--i': 4 }}>
-          {freq === 'weekly' && (
-            <div className={mb.weekdays}>
-              {getWeekdaysShort().map((day, i) => (
-                <button key={i} type="button" aria-pressed={profile.cobro_weekday === i} onClick={() => handleWeekday(i)} className={`${mb.dot} ${profile.cobro_weekday === i ? mb.dotOn : ''}`}>{day}</button>
-              ))}
-            </div>
-          )}
-          {freq === 'biweekly' && (
-            <>
-              <div className={mb.presets}>
-                {BIWEEKLY_PRESETS.map(pr => {
-                  const on = !custom && profile.cobro_day1 === pr.d1 && profile.cobro_day2 === pr.d2
-                  return <button key={`${pr.d1}-${pr.d2}`} type="button" aria-pressed={on} onClick={() => { onUpdate({ cobro_day1: pr.d1, cobro_day2: pr.d2 }); setBiweeklyCustom(false) }} className={`${mb.pre} ${on ? mb.preOn : ''}`}>{t('settingsCobro.dayPair', { d1: pr.d1, d2: pr.d2 })}</button>
-                })}
-                <button type="button" aria-pressed={custom} onClick={() => setBiweeklyCustom(true)} className={`${mb.pre} ${custom ? mb.preOn : ''}`}>{t('settingsCobro.otherOption')}</button>
-              </div>
-              <Collapse open={custom}>
-                <div className={mb.custom}><BiweeklyDaysPicker variant="inline" day1={profile.cobro_day1} day2={profile.cobro_day2} onChange={(d1, d2) => onUpdate({ cobro_day1: d1, cobro_day2: d2 })} /></div>
-              </Collapse>
-            </>
-          )}
-          {freq === 'monthly' && (
-            <>
-              <div className={mb.grid}>
-                {Array.from({ length: 31 }, (_, i) => i + 1).map(d => (
-                  <button key={d} type="button" aria-pressed={(profile.cobro_day1 ?? 1) === d} onClick={() => handleMonthlyDay(d)} className={`${mb.dot} ${(profile.cobro_day1 ?? 1) === d ? mb.dotOn : ''}`}>{d}</button>
+        <div className={`${styles.focusBox} ${flash ? styles.flash : ''}`} data-cobro-focus>
+          <div className={mb.cap} style={{ '--i': 3 }}>{t('settingsCobro.mobile.dayLabel')}</div>
+          <div className={mb.card} style={{ '--i': 4 }}>
+            {freq === 'weekly' && (
+              <div className={mb.weekdays}>
+                {getWeekdaysShort().map((day, i) => (
+                  <button key={i} type="button" aria-pressed={profile.cobro_weekday === i} onClick={() => handleWeekday(i)} className={`${mb.dot} ${profile.cobro_weekday === i ? mb.dotOn : ''}`}>{day}</button>
                 ))}
               </div>
-              {(profile.cobro_day1 ?? 1) >= 29 && <div className={mb.hint}>{t('settingsCobro.monthShortHint')}</div>}
-            </>
-          )}
-          {freq !== 'weekly' && <WeekendShiftField freq={freq} day1={profile.cobro_day1} day2={profile.cobro_day2} value={profile.cobro_weekend_shift} onChange={v => onUpdate({ cobro_weekend_shift: v })} variant="card" />}
-          <NextCobroRow profile={profile} onSave={map => onUpdate({ cobro_overrides: map })} />
+            )}
+            {freq === 'biweekly' && (
+              <>
+                <div className={mb.presets}>
+                  {BIWEEKLY_PRESETS.map(pr => {
+                    const on = !custom && profile.cobro_day1 === pr.d1 && profile.cobro_day2 === pr.d2
+                    return <button key={`${pr.d1}-${pr.d2}`} type="button" aria-pressed={on} onClick={() => { onUpdate({ cobro_day1: pr.d1, cobro_day2: pr.d2 }); setBiweeklyCustom(false) }} className={`${mb.pre} ${on ? mb.preOn : ''}`}>{t('settingsCobro.dayPair', { d1: pr.d1, d2: pr.d2 })}</button>
+                  })}
+                  <button type="button" aria-pressed={custom} onClick={() => setBiweeklyCustom(true)} className={`${mb.pre} ${custom ? mb.preOn : ''}`}>{t('settingsCobro.otherOption')}</button>
+                </div>
+                <Collapse open={custom}>
+                  <div className={mb.custom}><BiweeklyDaysPicker variant="inline" day1={profile.cobro_day1} day2={profile.cobro_day2} onChange={(d1, d2) => onUpdate({ cobro_day1: d1, cobro_day2: d2 })} /></div>
+                </Collapse>
+              </>
+            )}
+            {freq === 'monthly' && (
+              <>
+                <div className={mb.grid}>
+                  {Array.from({ length: 31 }, (_, i) => i + 1).map(d => (
+                    <button key={d} type="button" aria-pressed={(profile.cobro_day1 ?? 1) === d} onClick={() => handleMonthlyDay(d)} className={`${mb.dot} ${(profile.cobro_day1 ?? 1) === d ? mb.dotOn : ''}`}>{d}</button>
+                  ))}
+                </div>
+                {(profile.cobro_day1 ?? 1) >= 29 && <div className={mb.hint}>{t('settingsCobro.monthShortHint')}</div>}
+              </>
+            )}
+            {freq !== 'weekly' && <WeekendShiftField freq={freq} day1={profile.cobro_day1} day2={profile.cobro_day2} value={profile.cobro_weekend_shift} onChange={v => onUpdate({ cobro_weekend_shift: v })} variant="card" />}
+            <NextCobroRow profile={profile} onSave={map => onUpdate({ cobro_overrides: map })} />
+          </div>
         </div>
 
         <div className={mb.cap} style={{ '--i': 5 }}>{t('settingsCobro.incomeSection')}</div>
@@ -423,7 +439,7 @@ export function SettingsCobroPage({ profile, onUpdate, onBack, slideClass }) {
       {freq !== 'weekly' && (
         <div className={`${tb.fill} ${wk.fillBox}`}><WeekendShiftField freq={freq} day1={profile.cobro_day1} day2={profile.cobro_day2} value={profile.cobro_weekend_shift} onChange={v => onUpdate({ cobro_weekend_shift: v })} variant="fill" /></div>
       )}
-      <div className={tb.fill}><NextCobroRow profile={profile} onSave={map => onUpdate({ cobro_overrides: map })} /></div>
+      <div className={`${tb.fill} ${styles.gapTop}`}><NextCobroRow profile={profile} onSave={map => onUpdate({ cobro_overrides: map })} /></div>
     </>
   )
   const incomeCard = (
@@ -467,8 +483,10 @@ export function SettingsCobroPage({ profile, onUpdate, onBack, slideClass }) {
           <div>
             <div className={tb.cap}>{t('settingsCobro.frequencyLabel')}</div>
             {freqTiles}
-            <div className={tb.cap}>{freq === 'biweekly' ? t('settingsCobro.payDaysLabel') : t('settingsCobro.payDayLabel')}</div>
-            {dayCtlBlock}
+            <div className={`${styles.focusBox} ${flash ? styles.flash : ''}`} data-cobro-focus>
+              <div className={tb.cap}>{freq === 'biweekly' ? t('settingsCobro.payDaysLabel') : t('settingsCobro.payDayLabel')}</div>
+              {dayCtlBlock}
+            </div>
             <div className={tb.cap}>{t('settingsCobro.incomeSection')}</div>
             {incomeCard}
             <div className={tb.gap} />
@@ -496,8 +514,10 @@ export function SettingsCobroPage({ profile, onUpdate, onBack, slideClass }) {
         <div className={tb.card}>
           <div className={`${tb.cap} ${tb.capFirst}`}>{t('settingsCobro.frequencyLabel')}</div>
           {freqTiles}
-          <div className={tb.cap}>{freq === 'biweekly' ? t('settingsCobro.payDaysLabel') : t('settingsCobro.payDayLabel')}</div>
-          {dayCtlBlock}
+          <div className={`${styles.focusBox} ${flash ? styles.flash : ''}`} data-cobro-focus>
+            <div className={tb.cap}>{freq === 'biweekly' ? t('settingsCobro.payDaysLabel') : t('settingsCobro.payDayLabel')}</div>
+            {dayCtlBlock}
+          </div>
         </div>
         <div className={tb.grid2}>
           <div className={tb.box}><div className={tb.boxCap}>{t('settingsCobro.incomeSection')}</div>{incomeCard}</div>

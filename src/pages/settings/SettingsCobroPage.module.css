@@ -310,3 +310,14 @@
 @media (min-width: 768px) {
   .saveSalary { width: auto; min-width: 8.5rem; height: 2.875rem; padding: 0 1.75rem; margin-left: auto; font-size: 0.90625rem; }
 }
+
+/* Sección del día de cobro: separación entre bloques y resaltado al llegar desde «Cámbialo en Ajustes». */
+.gapTop { margin-top: 14px; }
+.focusBox { border-radius: 24px; }
+.flash { animation: cobroFlash 2.6s ease both; }
+@keyframes cobroFlash {
+  0%, 70% { outline: 3px solid var(--accent); outline-offset: 8px; }
+  100% { outline: 3px solid transparent; outline-offset: 8px; }
+}
+@media (prefers-reduced-motion: reduce) { .flash { animation-duration: 0.01s; outline: 3px solid var(--accent); outline-offset: 8px; } }
+
