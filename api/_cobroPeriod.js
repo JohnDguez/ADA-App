@@ -23,6 +23,17 @@ function shiftPayday(date, mode) {
   return delta ? addDays(date, delta) : date
 }
 
+// Ajuste de UNA sola fecha de cobro (v0.9.1041); espejo de applyCobroOverride()
+// de src/lib/utils.js: cfg.cobro_overrides = { programada: real } (AAAA-MM-DD).
+function applyCobroOverride(date, cfg) {
+  const map = cfg && cfg.cobro_overrides
+  if (!map) return date
+  const to = map[dateToStr(date)]
+  if (!to) return date
+  const [y, m, d] = to.split('-').map(Number)
+  return new Date(y, m - 1, d)
+}
+
 function cobroDatesAround(cfg, t) {
   const y = t.getFullYear(); const m = t.getMonth()
   const days = cfg.cobro_freq === 'biweekly'
@@ -30,7 +41,7 @@ function cobroDatesAround(cfg, t) {
     : [cfg.cobro_day1 ?? 1]
   const out = []
   for (let k = -2; k <= 2; k++) {
-    days.forEach(d => out.push(shiftPayday(clampedDate(y, m + k, d), cfg.cobro_weekend_shift)))
+    days.forEach(d => out.push(applyCobroOverride(shiftPayday(clampedDate(y, m + k, d), cfg.cobro_weekend_shift), cfg)))
   }
   return out
     .sort((a, b) => a - b)

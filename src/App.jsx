@@ -541,6 +541,8 @@ export default function App() {
         cobro_day2: activeSpaceEntry.space.cobro_day2,
         cobro_weekday: activeSpaceEntry.space.cobro_weekday,
         cobro_weekend_shift: activeSpaceEntry.space.cobro_weekend_shift ?? null,
+        // El ajuste de fecha de cobro es solo de la cuenta personal (v0.9.1041).
+        cobro_overrides: null,
         salary_enabled: activeSpaceEntry.space.salary_enabled || false,
         salary_amount: activeSpaceEntry.space.salary_amount || 0,
         // El cambio de ingreso "desde el próximo periodo" (v0.9.968) es solo
@@ -554,13 +556,14 @@ export default function App() {
   // necesita la configuración de cobro efectiva (personal o del espacio
   // activo). Solo cuando el perfil REAL ya cargó, para no rellenar colas con
   // el perfil por defecto.
-  const cobroCfgKey = [effectiveProfile?.cobro_freq, effectiveProfile?.cobro_day1, effectiveProfile?.cobro_day2, effectiveProfile?.cobro_weekday, effectiveProfile?.cobro_weekend_shift].join('|')
+  const cobroCfgKey = [effectiveProfile?.cobro_freq, effectiveProfile?.cobro_day1, effectiveProfile?.cobro_day2, effectiveProfile?.cobro_weekday, effectiveProfile?.cobro_weekend_shift, JSON.stringify(effectiveProfile?.cobro_overrides || null)].join('|')
   useEffect(() => {
     if (profileLoading || !effectiveProfile?.cobro_freq) return
     setCobroConfig({
       cobro_freq: effectiveProfile.cobro_freq, cobro_day1: effectiveProfile.cobro_day1,
       cobro_day2: effectiveProfile.cobro_day2, cobro_weekday: effectiveProfile.cobro_weekday,
       cobro_weekend_shift: effectiveProfile.cobro_weekend_shift ?? null,
+      cobro_overrides: effectiveProfile.cobro_overrides ?? null,
     })
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [profileLoading, cobroCfgKey, setCobroConfig])

@@ -1067,7 +1067,11 @@
       "new": "New payment"
     },
     "namePlaceholder": "e.g. Netflix, Rent, Electricity…",
-    "amountKind": { "fixed": "Fixed amount", "variable": "Variable amount", "label": "Amount type" },
+    "amountKind": {
+      "fixed": "Fixed amount",
+      "variable": "Variable amount",
+      "label": "Amount type"
+    },
     "amountVariableTitle": "Entered when you pay",
     "variableToggleLabel": "Variable payment",
     "variableToggleSub": "The amount changes each time you pay",
@@ -2915,5 +2919,29 @@
     "joinTitle": "Join with a code",
     "joinHint": "Enter the 6-digit code shared by the person who created the space.",
     "ownedText": "You own “{{name}}”. You can join others as a guest."
+  },
+  "cobroAdjust": {
+    "chip": "Adjust date",
+    "done": "Date adjusted",
+    "remove": "Remove the date adjustment",
+    "next": "Next payday",
+    "wasScheduled": "Scheduled: {{date}}",
+    "title": "Adjust payday date",
+    "scheduledFor": "Scheduled for {{date}}",
+    "newDate": "New payday date",
+    "otherDate": "Other date",
+    "invalid": "Pick a date within this period.",
+    "toast": {
+      "saved": "Payday date adjusted",
+      "removed": "Adjustment removed"
+    },
+    "notice": {
+      "title": "Your payday falls on {{weekday}} ({{date}})",
+      "question": "Do you want to adjust your payday date?"
+    },
+    "push": {
+      "title": "Your payday falls on {{weekday}}",
+      "body": "On {{date}}. Do you want to adjust your payday date?"
+    }
   }
 }

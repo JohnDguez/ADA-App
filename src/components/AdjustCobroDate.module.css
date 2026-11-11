@@ -1,0 +1,27 @@
+/* «Ajustar fecha de cobro»: fila de Ajustes, chip discreto y aviso de Gastos.
+   Solo tokens del tema (capas card → chip, sin bordes). */
+.row { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 44px; margin-top: 0.75rem; }
+.rowText { display: flex; flex-direction: column; min-width: 0; }
+.rowText small { font-size: 0.75rem; color: var(--muted); }
+.rowText b { font-size: 0.875rem; font-weight: 600; color: var(--text); }
+.rowText b::first-letter { text-transform: uppercase; }
+.rowText span { font-size: 0.75rem; color: var(--muted); }
+
+.mini { display: inline-flex; align-items: center; gap: 6px; flex-shrink: 0; height: 32px; padding: 0 12px; border: 0; border-radius: 99px; background: var(--desk-chip); color: var(--text); font: inherit; font-size: 0.75rem; font-weight: 500; white-space: nowrap; cursor: pointer; transition: filter .15s; }
+.mini:hover { filter: brightness(0.96); }
+.mini:active { filter: brightness(0.9); }
+
+.notice { display: flex; align-items: flex-start; gap: 12px; margin-top: 0.75rem; padding: 12px 14px; border-radius: 16px; background: var(--desk-chip); }
+.noticeIc { flex: none; width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; background: var(--desk-card); color: var(--text); }
+.noticeTx { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: flex-start; gap: 6px; font-size: 0.8125rem; }
+.noticeTx b { font-weight: 600; color: var(--text); }
+.noticeTx b::first-letter { text-transform: uppercase; }
+.noticeTx span { font-size: 0.78125rem; color: var(--muted); }
+.noticeGo { height: 34px; padding: 0 14px; border: 0; border-radius: 99px; background: var(--desk-card); color: var(--text); font: inherit; font-size: 0.78125rem; font-weight: 600; cursor: pointer; }
+.noticeX { flex: none; width: 28px; height: 28px; border: 0; border-radius: 50%; display: grid; place-items: center; background: none; color: var(--muted); cursor: pointer; }
+
+/* Aviso de ancho completo (escritorio y tablet, sobre las tarjetas de totales). */
+.wide { margin: 0 0 14px; padding: 12px 16px; border-radius: 22px; background: var(--desk-card); box-shadow: var(--desk-shadow); align-items: center; }
+.wide .noticeIc { background: var(--desk-chip); }
+.wide .noticeTx { flex-direction: row; align-items: center; flex-wrap: wrap; gap: 6px 14px; }
+.wide .noticeGo { background: var(--desk-chip); }

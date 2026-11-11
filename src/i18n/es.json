@@ -1067,7 +1067,11 @@
       "new": "Nuevo pago"
     },
     "namePlaceholder": "Ej. Netflix, Renta, Luz…",
-    "amountKind": { "fixed": "Monto fijo", "variable": "Monto variable", "label": "Tipo de monto" },
+    "amountKind": {
+      "fixed": "Monto fijo",
+      "variable": "Monto variable",
+      "label": "Tipo de monto"
+    },
     "amountVariableTitle": "Se indicará al pagar",
     "variableToggleLabel": "Pago variable",
     "variableToggleSub": "El monto cambia cada vez que pagas",
@@ -2915,5 +2919,29 @@
     "joinTitle": "Unirme con un código",
     "joinHint": "Escribe el código de 6 dígitos que te compartió quien creó el espacio.",
     "ownedText": "Eres dueño de «{{name}}». Puedes unirte a otros como invitado."
+  },
+  "cobroAdjust": {
+    "chip": "Ajustar fecha",
+    "done": "Fecha ajustada",
+    "remove": "Quitar el ajuste de fecha",
+    "next": "Próximo cobro",
+    "wasScheduled": "Programado: {{date}}",
+    "title": "Ajustar fecha de cobro",
+    "scheduledFor": "Programado para el {{date}}",
+    "newDate": "Nueva fecha de cobro",
+    "otherDate": "Otra fecha",
+    "invalid": "Elige una fecha dentro de este periodo.",
+    "toast": {
+      "saved": "Fecha de cobro ajustada",
+      "removed": "Ajuste quitado"
+    },
+    "notice": {
+      "title": "Tu cobro cae en {{weekday}} ({{date}})",
+      "question": "¿Quieres ajustar la fecha de tu cobro?"
+    },
+    "push": {
+      "title": "Tu cobro cae en {{weekday}}",
+      "body": "El {{date}}. ¿Quieres ajustar la fecha de tu cobro?"
+    }
   }
 }

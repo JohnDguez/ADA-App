@@ -39,6 +39,7 @@ function sanitizeProfile(data) {
     category_icons: data.category_icons ?? DEFAULT_PROFILE.category_icons,
     category_colors: data.category_colors ?? DEFAULT_PROFILE.category_colors,
     coachmarks_seen: data.coachmarks_seen ?? {},
+    cobro_overrides: data.cobro_overrides ?? null,
   }
 }
 

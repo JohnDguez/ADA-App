@@ -74,3 +74,47 @@ describe('ingreso que cambia desde el próximo periodo (v0.9.968)', () => {
     for (const d of ['2026-10-30', '2026-11-16']) expect(server.periodSalary(p, d)).toBe(periodSalary(p, d))
   })
 })
+
+describe('ajustar la fecha de UN cobro (v0.9.1041)', () => {
+  const cfg = { ...q(null), cobro_overrides: { '2026-11-15': '2026-11-13' } }
+  it('ese cobro se adelanta al viernes 13 y el periodo anterior termina el 12', () => {
+    expect(span(cobroPeriod(cfg, new Date(2026, 10, 10)))).toEqual(['2026-10-30', '2026-11-12', '2026-11-13'])
+  })
+  it('el periodo siguiente empieza el 13 y sigue hasta el cobro normal del 30', () => {
+    expect(span(cobroPeriod(cfg, new Date(2026, 10, 14)))).toEqual(['2026-11-13', '2026-11-29', '2026-11-30'])
+  })
+  it('solo ese cobro: el del 30 nov y los demás quedan como siempre', () => {
+    expect(span(cobroPeriod(cfg, new Date(2026, 11, 5)))).toEqual(['2026-11-30', '2026-12-14', '2026-12-15'])
+  })
+  it('sin ajuste (o vacío) no cambia nada', () => {
+    expect(span(cobroPeriod({ ...q(null), cobro_overrides: {} }, new Date(2026, 10, 10)))).toEqual(['2026-10-30', '2026-11-14', '2026-11-15'])
+  })
+  it('se aplica sobre la fecha ya recorrida por fin de semana', () => {
+    const c = { ...q('near'), cobro_overrides: { '2026-11-16': '2026-11-13' } }
+    expect(span(cobroPeriod(c, new Date(2026, 10, 10)))).toEqual(['2026-10-30', '2026-11-12', '2026-11-13'])
+  })
+  it('el servidor calcula lo mismo', () => {
+    for (const d of [new Date(2026, 10, 10), new Date(2026, 10, 14), new Date(2026, 11, 5)])
+      expect(span(server.cobroPeriod(cfg, d))).toEqual(span(cobroPeriod(cfg, d)))
+  })
+})
+
+describe('adjustableCobro / withCobroOverride (v0.9.1041)', () => {
+  it('detecta el próximo cobro, el programado y el rango', async () => {
+    const { adjustableCobro } = await import('../src/lib/utils')
+    vi.setSystemTime(new Date(2026, 10, 10, 10))
+    const a = adjustableCobro({ ...q(null), cobro_overrides: { '2026-11-15': '2026-11-13' } })
+    expect([dateToStr(a.actual), dateToStr(a.scheduled), a.adjusted]).toEqual(['2026-11-13', '2026-11-15', true])
+    vi.setSystemTime(new Date(2026, 9, 16, 10))
+    const b = adjustableCobro(q(null))
+    expect([dateToStr(b.actual), dateToStr(b.scheduled), b.adjusted, dateToStr(b.min), dateToStr(b.max)]).toEqual(['2026-10-30', '2026-10-30', false, '2026-10-16', '2026-11-14'])
+    expect(adjustableCobro({ cobro_freq: 'weekly' })).toBe(null)
+  })
+  it('agrega, quita y limpia ajustes viejos', async () => {
+    const { withCobroOverride } = await import('../src/lib/utils')
+    const d = (y, m, dd) => new Date(y, m - 1, dd)
+    expect(withCobroOverride(null, d(2026, 11, 15), d(2026, 11, 13))).toEqual({ '2026-11-15': '2026-11-13' })
+    expect(withCobroOverride({ '2026-11-15': '2026-11-13' }, d(2026, 11, 15), d(2026, 11, 15))).toBe(null)
+    expect(withCobroOverride({ '2026-01-15': '2026-01-14' }, d(2026, 11, 15), d(2026, 11, 13))).toEqual({ '2026-11-15': '2026-11-13' })
+  })
+})

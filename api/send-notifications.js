@@ -1,10 +1,11 @@
 const webpush = require('web-push')
 const { createClient } = require('@supabase/supabase-js')
 const {
-  resolveLang, overdueText, dueTodayText, upcomingText, cobroDayText, goalDeadlineText, trialEndingText,
+  resolveLang, overdueText, dueTodayText, upcomingText, cobroDayText, cobroWeekendText, goalDeadlineText, trialEndingText,
   cardDateLabel, cardCutText, cardReminderText, cardDueText,
 } = require('./_notifyText')
 const { cardAlerts, cardName } = require('./_cardAlerts')
+const { cobroPeriod } = require('./_cobroPeriod')
 const { sendFcm, isFcmConfigured, getFcmInitError } = require('./_fcm')
 const applyCors = require('./_cors')
 
@@ -208,6 +209,34 @@ async function collectCardReminders(userId, profile, todayStr, lang) {
     })
   }
   return notifications
+}
+
+// Cobro en fin de semana (v0.9.1041): UN aviso, 4 días antes de un cobro
+// quincenal/mensual que cae en sábado o domingo (p. ej. el miércoles para un
+// domingo), para que el usuario pueda ajustar la fecha si le pagan otro día.
+// Solo cuenta personal. Respeta `notif_cobro_day`. Si el cobro ya está
+// ajustado no avisa. Lee sus columnas aparte: si aún no existen (SQL sin
+// correr) la consulta falla y simplemente no se manda nada.
+async function collectCobroWeekendReminder(userId, profile, todayStr, lang) {
+  if (profile.notif_cobro_day === false) return []
+  if (profile.cobro_freq !== 'biweekly' && profile.cobro_freq !== 'monthly') return []
+  const { data: cfg, error } = await supabase
+    .from('profiles').select('cobro_day1, cobro_day2, cobro_weekend_shift, cobro_overrides').eq('id', userId).maybeSingle()
+  if (error || !cfg) return []
+  const [y, m, d] = todayStr.split('-').map(Number)
+  const today = new Date(y, m - 1, d)
+  const full = { ...profile, ...cfg }
+  const next = cobroPeriod(full, today).nextCobro
+  const wd = next.getDay()
+  if (wd !== 0 && wd !== 6) return []
+  if (Math.round((next - today) / 86400000) !== 4) return []
+  const key = `${next.getFullYear()}-${String(next.getMonth() + 1).padStart(2, '0')}-${String(next.getDate()).padStart(2, '0')}`
+  if (Object.values(cfg.cobro_overrides || {}).includes(key)) return []
+  const loc = lang === 'en' ? 'en-US' : 'es-MX'
+  const weekday = new Intl.DateTimeFormat(loc, { weekday: 'long', timeZone: 'UTC' }).format(new Date(Date.UTC(next.getFullYear(), next.getMonth(), next.getDate())))
+  const dateLabel = cardDateLabel(lang, key)
+  const { title, body } = cobroWeekendText(lang, weekday, dateLabel)
+  return [{ type: 'cobro_weekend', title, body, tag: `cobro-weekend-${key}`, urgent: false, url: '/', space_name: null }]
 }
 
 // Mismo formato de moneda que `fmt()` en lib/utils.js, replicado aquí
@@ -530,6 +559,9 @@ module.exports = async function handler(req, res) {
 
       // Tarjetas de crédito: corte, recordatorio y vencimiento (v0.9.740).
       notifications = notifications.concat(await collectCardReminders(userId, profile, todayStr, lang))
+
+      // Cobro en fin de semana: aviso para ajustar la fecha (v0.9.1041).
+      notifications = notifications.concat(await collectCobroWeekendReminder(userId, profile, todayStr, lang))
 
       // Prueba de 7 días — aviso único de "termina en 2 días" (v0.9.508).
       // No depende de ninguna preferencia de notificaciones (mismo criterio

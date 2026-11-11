@@ -54,6 +54,13 @@ function cobroDayText(lang, count) {
   return { title: 'Hoy es tu día de cobro', body: `Tienes ${count} pago${n} pendiente${n} por cubrir` }
 }
 
+// Aviso previo de un cobro que cae en fin de semana (v0.9.1041).
+function cobroWeekendText(lang, weekday, dateLabel) {
+  return lang === 'en'
+    ? { title: `Your payday falls on ${weekday}`, body: `On ${dateLabel}. Do you want to adjust your payday date?` }
+    : { title: `Tu cobro cae en ${weekday}`, body: `El ${dateLabel}. ¿Quieres ajustar la fecha de tu cobro?` }
+}
+
 function goalDeadlineText(lang, name, days, remainingMoney) {
   if (lang === 'en') {
     const cuando = days === 0 ? 'Your goal is due today' : `${days} day${days > 1 ? 's' : ''} left`
@@ -274,7 +281,7 @@ function contributionForYouText(lang, actorName, paymentName, amountStr) {
 
 module.exports = {
   resolveLang,
-  overdueText, dueTodayText, upcomingText, cobroDayText, goalDeadlineText, trialEndingText,
+  overdueText, dueTodayText, upcomingText, cobroDayText, cobroWeekendText, goalDeadlineText, trialEndingText,
   cardDateLabel, cardCutText, cardReminderText, cardDueText,
   paymentTitleText, paymentBodyText,
   joinedText, leftText, removedBroadcastText, removedTargetText,

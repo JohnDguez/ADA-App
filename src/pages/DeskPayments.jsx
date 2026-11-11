@@ -1,3 +1,4 @@
+import { AdjustCobroChip, CobroWeekendNotice } from '../components/AdjustCobroDate'
 import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Plus, ChevronRight, ChevronDown, MoreVertical, Eye, Loader2, Pencil } from 'lucide-react'
@@ -43,7 +44,7 @@ export function DeskPayments({ d, tablet = false }) {
   const {
     profile, dataLoading, activeSpaceId, rawActiveSpaceId, sharedSpaces, spacePermissions, spaceMembers, paymentMethodsList,
     slideClass, spaceJustChanged, onOpenPremium, onSpaceReady, onAdd, onStartAdd, onGoCards,
-    balance, incomes, fund, chart, selectedCat, setSelectedCat, catData, view, rows, totalInView, methodData, openMenu, setOpenMenu, onViewSource,
+    balance, incomes, cobro, fund, chart, selectedCat, setSelectedCat, catData, view, rows, totalInView, methodData, openMenu, setOpenMenu, onViewSource,
   } = d
 
   const { timeOfDay, mountedKeys } = useHeaderBackground(profile?.timezone)
@@ -159,10 +160,12 @@ export function DeskPayments({ d, tablet = false }) {
             <NewSharedSpacePanel profile={profile} sharedSpaces={sharedSpaces} onOpenPremium={onOpenPremium} onCreated={onSpaceReady} onJoined={onSpaceReady} />
           ) : (
             <>
+              {cobro && <CobroWeekendNotice profile={cobro.profile} userId={cobro.profile?.id} wide />}
               <section className={`${home.tiles} ${activeSpaceId ? home.tiles3 : ''}`}>
                 {/* Disponible este periodo — no aplica en un Espacio Compartido (no tiene ingreso fijo) */}
                 {!activeSpaceId && <div data-coachmark="gastos-disponible-card" className={`${home.tile} ${home.tileHero} ${styles.tHero} ${!balance.loading && !balance.noIncomeYet && balance.sobrePasado ? styles.heroNeg : ''}`}>
                   <span className={home.tileLabel}>{t('paymentsPage.availableThisPeriod')}</span>
+                  {cobro && !balance.noIncomeYet && <AdjustCobroChip profile={cobro.profile} className={styles.heroChip} />}
                   {balance.noIncomeYet ? (
                     <>
                       <span className={styles.noIncomeText}>{t('paymentsPage.noIncomeText')}</span>

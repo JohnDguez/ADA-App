@@ -6,6 +6,9 @@
 @keyframes panelIn { from { opacity: 0; transform: translateY(0.5rem); } to { opacity: 1; transform: none; } }
 
 .card { background: var(--desk-card); border-radius: clamp(1rem, 5vw, 1.25rem); box-shadow: var(--desk-shadow); padding: clamp(1rem, 4.5vw, 1.25rem); text-align: left; color: var(--text); min-width: 0; }
+/* Título de la tarjeta + chip «Ajustar fecha» (v0.9.1041). */
+.labelRow { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; min-height: 32px; margin-bottom: 0.25rem; }
+.labelRow .label { flex: 1; min-width: 0; }
 .label { font-size: 0.75rem; font-weight: 500; color: var(--muted); display: block; }
 .bigNum { font-size: clamp(1.875rem, 9.5vw, 2.375rem); font-weight: 600; letter-spacing: -0.02em; line-height: 1.1; margin-top: 0.25rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .midNum { display: block; font-size: clamp(1.125rem, 5.4vw, 1.375rem); font-weight: 600; margin-top: 0.25rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

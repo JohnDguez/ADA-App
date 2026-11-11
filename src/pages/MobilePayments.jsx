@@ -1,3 +1,4 @@
+import { AdjustCobroChip, CobroWeekendNotice } from '../components/AdjustCobroDate'
 import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Plus, ChevronRight, MoreVertical, Eye, Loader2, X } from 'lucide-react'
@@ -39,7 +40,7 @@ function useGrown() {
 
 function AvailableCard({ d }) {
   const { t } = useTranslation()
-  const { balance, incomes } = d
+  const { balance, incomes, cobro } = d
   const grown = useGrown()
   if (balance.noIncomeYet) {
     return (
@@ -55,7 +56,10 @@ function AvailableCard({ d }) {
   const pct = Math.min(100, Math.max(0, balance.gastoPct || 0))
   return (
     <div data-coachmark="gastos-disponible-card" className={styles.card}>
-      <div className={styles.label}>{t('paymentsPage.availableThisPeriod')}</div>
+      <div className={styles.labelRow}>
+        <div className={styles.label}>{t('paymentsPage.availableThisPeriod')}</div>
+        {cobro && <AdjustCobroChip profile={cobro.profile} />}
+      </div>
       <div className={`${styles.bigNum} ${balance.loading ? '' : tone}`}>{balance.loading ? <LoadingDots /> : <Money text={balance.amountText} />}</div>
       <div className={styles.track}><i className={`${styles.fill} ${tone}`} style={{ width: balance.loading || !grown ? '0%' : `${pct}%` }} /></div>
       <div className={styles.tiles}>
@@ -68,6 +72,7 @@ function AvailableCard({ d }) {
           <button type="button" className={styles.linkMuted} onClick={incomes.onManage}>{t('paymentsPage.incomeCount', { count: incomes.count })} · +{whole(incomes.total)} · <b>{t('buttons.edit')}</b></button>
         )}
       </div>
+      {cobro && <CobroWeekendNotice profile={cobro.profile} userId={cobro.profile?.id} />}
     </div>
   )
 }

@@ -9,6 +9,7 @@ import { getWeekdaysShort, nextCobroDate, cobroPeriod, periodSalary, dateToStr, 
 import { SalaryChangePrompt } from '../../components/SalaryChangePrompt'
 import { setUnsavedGuard } from '../../lib/unsavedGuard'
 import { WeekendShiftField } from '../../components/WeekendShiftField'
+import { NextCobroRow } from '../../components/AdjustCobroDate'
 import { showToast } from '../../components/Toast'
 import { Toggle } from '../../components/SettingsShared'
 import { CurrencySheet } from '../../components/CurrencySheet'
@@ -186,6 +187,7 @@ export function SettingsCobroPage({ profile, onUpdate, onBack, slideClass }) {
             {freq !== 'weekly' && (
               <div className={`${deskStyles.fill} ${wk.fillBox}`}><WeekendShiftField freq={freq} day1={profile.cobro_day1} day2={profile.cobro_day2} value={profile.cobro_weekend_shift} onChange={v => onUpdate({ cobro_weekend_shift: v })} variant="fill" /></div>
             )}
+            <div className={deskStyles.fill}><NextCobroRow profile={profile} onSave={map => onUpdate({ cobro_overrides: map })} /></div>
 
             <div className={deskStyles.sec}>{t('settingsCobro.incomeSection')}</div>
             <div className={deskStyles.fill}>
@@ -307,6 +309,7 @@ export function SettingsCobroPage({ profile, onUpdate, onBack, slideClass }) {
             </>
           )}
           {freq !== 'weekly' && <WeekendShiftField freq={freq} day1={profile.cobro_day1} day2={profile.cobro_day2} value={profile.cobro_weekend_shift} onChange={v => onUpdate({ cobro_weekend_shift: v })} variant="card" />}
+          <NextCobroRow profile={profile} onSave={map => onUpdate({ cobro_overrides: map })} />
         </div>
 
         <div className={mb.cap} style={{ '--i': 5 }}>{t('settingsCobro.incomeSection')}</div>
@@ -420,6 +423,7 @@ export function SettingsCobroPage({ profile, onUpdate, onBack, slideClass }) {
       {freq !== 'weekly' && (
         <div className={`${tb.fill} ${wk.fillBox}`}><WeekendShiftField freq={freq} day1={profile.cobro_day1} day2={profile.cobro_day2} value={profile.cobro_weekend_shift} onChange={v => onUpdate({ cobro_weekend_shift: v })} variant="fill" /></div>
       )}
+      <div className={tb.fill}><NextCobroRow profile={profile} onSave={map => onUpdate({ cobro_overrides: map })} /></div>
     </>
   )
   const incomeCard = (

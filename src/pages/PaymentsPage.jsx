@@ -23,6 +23,7 @@ import { useAnchor } from '../components/AnchoredPop'
 import styles from './PaymentsPage.module.css'
 import { Collapse } from '../components/Collapse'
 import { Modal, QuickModal, ModalAmount } from '../components/Modal'
+import { AdjustCobroModal } from '../components/AdjustCobroDate'
 import mk from '../components/Modal.module.css'
 import { Toggle } from '../components/SettingsShared'
 import { switchProps } from '../lib/a11y'
@@ -850,6 +851,7 @@ export function PaymentsPage({ payments, dataLoading = false, periodIncome, paym
     profile, dataLoading, activeSpaceId, rawActiveSpaceId, sharedSpaces, spacePermissions, spaceMembers, paymentMethodsList,
     slideClass, spaceJustChanged, onOpenPremium, onSpaceReady, onAdd, onStartAdd, onGoCards, onGoCategories, onViewSource,
     balance: { loading: balanceLoading, amountText: balanceAmountText, gastoPct, totalGastos, ingresoTotal, sobrePasado, noIncomeYet },
+    cobro: activeSpaceId ? null : { profile },
     incomes: { total: totalExtras, count: periodIncomes.length, loaded: incomesLoaded, onAdd: () => setIncomeModal(true), onManage: () => setManageIncomeModal(true) },
     fund: { balance: sharedFund?.balance ?? 0, loading: !!sharedFund?.loading, ledgerCount: sharedFund?.ledger?.length || 0, onAdd: () => setAddFundModal(true), onManage: () => setManageFundModal(true) },
     chart: { monthsBack, setMonthsBack, months: chartMonths, totals: chartTotals, max: maxChart, grandTotal, avgMonthly, now },
@@ -914,6 +916,9 @@ export function PaymentsPage({ payments, dataLoading = false, periodIncome, paym
           </div>
         </Collapse>
       </Modal>
+
+      {/* ── Ajustar fecha de cobro (solo cuenta personal) ── */}
+      {!activeSpaceId && <AdjustCobroModal profile={profile} onSave={map => onUpdateProfile({ cobro_overrides: map })} />}
 
       {/* ── Añadir ingreso ── */}
       <ModalOrPop show={!!(incomeModal)} onClose={() => setIncomeModal(false)} icon={Wallet} title={t('paymentsPage.incomeModal.title')}

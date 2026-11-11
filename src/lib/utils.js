@@ -312,6 +312,16 @@ export function shiftPayday(date, mode) {
 // de dos meses antes a dos meses después de `t`, ordenados y sin repetidos.
 // El margen de ±2 meses cubre siempre el cobro anterior y el siguiente,
 // también cuando recorrer una fecha la cambia de mes (31 sáb → 30 vie).
+// Ajuste de UNA sola fecha de cobro (v0.9.1041): `cfg.cobro_overrides` es un
+// objeto { 'AAAA-MM-DD' programada: 'AAAA-MM-DD' real }. Solo mueve ese cobro;
+// al pasar, el calendario normal sigue igual. Sin entrada = sin cambio.
+export function applyCobroOverride(date, cfg) {
+  const map = cfg && cfg.cobro_overrides
+  if (!map) return date
+  const to = map[dateToStr(date)]
+  return to ? dateOf(to) : date
+}
+
 function cobroDatesAround(cfg, t) {
   const y = t.getFullYear(); const m = t.getMonth()
   const days = cfg.cobro_freq === 'biweekly'
@@ -319,7 +329,7 @@ function cobroDatesAround(cfg, t) {
     : [cfg.cobro_day1 ?? 1]
   const out = []
   for (let k = -2; k <= 2; k++) {
-    days.forEach(d => out.push(shiftPayday(clampedDate(y, m + k, d), cfg.cobro_weekend_shift)))
+    days.forEach(d => out.push(applyCobroOverride(shiftPayday(clampedDate(y, m + k, d), cfg.cobro_weekend_shift), cfg)))
   }
   return out
     .sort((a, b) => a - b)
@@ -341,6 +351,34 @@ export function cobroPeriod(cfg, refDate) {
     return { start, end: addDays(nextCobro, -1), nextCobro }
   }
   return { start: t, end: t, nextCobro: t }
+}
+
+// Próximo cobro para la UI de «Ajustar fecha» (v0.9.1041). Solo quincenal y
+// mensual (en semanal el usuario ya elige el día). Devuelve la fecha real
+// (`actual`), la programada sin ajuste (`scheduled`) y si está ajustada, más
+// el rango en que puede moverse: después del inicio del periodo en curso y
+// antes del cobro siguiente.
+export function adjustableCobro(cfg) {
+  if (!cfg || (cfg.cobro_freq !== 'biweekly' && cfg.cobro_freq !== 'monthly')) return null
+  const cur = cobroPeriod(cfg)
+  const actual = cur.nextCobro
+  const ov = cfg.cobro_overrides || {}
+  const key = Object.keys(ov).find(k => ov[k] === dateToStr(actual))
+  const scheduled = key ? dateOf(key) : actual
+  const after = cobroPeriod(cfg, actual).nextCobro
+  const min = addDays(cur.start, 1) > today() ? addDays(cur.start, 1) : today()
+  return { actual, scheduled, adjusted: !!key, min, max: addDays(after, -1) }
+}
+
+// Mapa de ajustes con la fecha `scheduled` puesta en `chosen` (o quitada si
+// vuelve a la programada). Descarta ajustes ya pasados para que no crezca.
+export function withCobroOverride(map, scheduled, chosen) {
+  const t = dateToStr(addDays(today(), -45))
+  const next = {}
+  for (const [k, v] of Object.entries(map || {})) if (k >= t || v >= t) next[k] = v
+  const sk = dateToStr(scheduled), ck = dateToStr(chosen)
+  if (sk === ck) delete next[sk]; else next[sk] = ck
+  return Object.keys(next).length ? next : null
 }
 
 // Retorna el inicio y fin del SIGUIENTE periodo de cobro: el periodo que

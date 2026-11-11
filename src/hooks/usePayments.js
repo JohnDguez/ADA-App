@@ -355,7 +355,7 @@ export function usePayments(userId, activeSpaceId = null, activeSpaceName = null
   const [cobroKey, setCobroKey] = useState('')
   const setCobroConfig = useCallback(cfg => {
     const key = cfg && cfg.cobro_freq
-      ? [cfg.cobro_freq, cfg.cobro_day1, cfg.cobro_day2, cfg.cobro_weekday, cfg.cobro_weekend_shift].join('|')
+      ? [cfg.cobro_freq, cfg.cobro_day1, cfg.cobro_day2, cfg.cobro_weekday, cfg.cobro_weekend_shift, JSON.stringify(cfg.cobro_overrides || null)].join('|')
       : ''
     cobroCfgRef.current = key ? cfg : null
     setCobroKey(key)

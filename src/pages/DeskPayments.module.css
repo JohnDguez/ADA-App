@@ -23,6 +23,8 @@
   font-size: 13.5px;
   font-weight: 600;
 }
+/* Chip «Ajustar fecha» sobre la tarjeta azul y aviso de cobro en fin de semana (v0.9.1041). */
+.heroChip.heroChip { position: absolute; top: 14px; right: 14px; background: color-mix(in srgb, var(--desk-ink-text) 18%, transparent); color: var(--desk-ink-text); }
 .tileAdd {
   position: absolute;
   top: 14px;

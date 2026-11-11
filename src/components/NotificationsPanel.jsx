@@ -28,7 +28,7 @@ function NotifIcon({ type }) {
   // Tarjetas de crédito (v0.9.740): corte y recordatorio en ámbar, vencimiento en rojo.
   if (type === 'card_cut' || type === 'card_reminder') return <CreditCard size={16} color="var(--soon-color)" />
   if (type === 'card_due')      return <CreditCard size={16} color="var(--danger)" />
-  if (type === 'cobro_day')     return <Bell size={16} color="var(--accent)" />
+  if (type === 'cobro_day' || type === 'cobro_weekend') return <Bell size={16} color="var(--accent)" />
   if (type === 'goal_deadline') return <Goal size={16} color="var(--soon-color)" />
   // Prueba de 7 días por terminar (v0.9.508) — mismo dorado que el resto
   // del tratamiento visual de Premium (var(--premium-gold)).
