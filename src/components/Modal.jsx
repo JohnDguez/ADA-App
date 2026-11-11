@@ -7,6 +7,7 @@ import { useBackClose } from '../lib/backNav'
 import { useIsMobile } from '../hooks/useIsMobile'
 import { useIsDesktop } from '../hooks/useIsDesktop'
 import { AnchoredPop } from './AnchoredPop'
+import AmountInput from './AmountInput'
 import mk from './Modal.module.css'
 
 // ── Modal único de LunaPay (v0.9.980, mockup de modales aprobado) ─────────
@@ -115,12 +116,13 @@ export function Modal({
   )
 }
 
-// Monto grande editable (las cifras en grande del mockup).
+// Monto grande editable (las cifras en grande del mockup), con separador de
+// miles en vivo (AmountInput); onChange recibe el texto limpio, sin separadores.
 export function ModalAmount({ value, onChange, placeholder = '0.00', autoFocus, onEnter, prefix = '$', ...rest }) {
   return (
     <label className={mk.amount}>
       <small>{prefix}</small>
-      <input inputMode="decimal" value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder} autoFocus={autoFocus}
+      <AmountInput value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder} autoFocus={autoFocus}
         onKeyDown={e => e.key === 'Enter' && onEnter?.()} {...rest} />
     </label>
   )
