@@ -74,7 +74,7 @@ export function AdjustCobroModal({ profile, onSave }) {
             })}
             <button type="button" aria-pressed={!!onOther} onClick={() => setOther(true)} className={`${mk.chip} ${onOther ? mk.chipOn : ''}`}><CalendarDays size={14} />{t('cobroAdjust.otherDate')}</button>
           </div>
-          {onOther && <DatePicker value={pick || ''} onChange={v => setPick(v)} />}
+          {onOther && <DatePicker inline value={pick || ''} onChange={v => setPick(v)} min={dateToStr(info.min)} max={dateToStr(info.max)} />}
           {pick && !valid && <div className={mk.err}>{t('cobroAdjust.invalid')}</div>}
         </div>
       ) : null}

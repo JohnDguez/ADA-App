@@ -26,10 +26,14 @@ const PANEL_HEIGHT = 300
 // v0.9.605 — `sheet`: abre una hoja inferior con atajos (Hoy, Mañana, Fin de
 // mes, +1 mes) y el calendario debajo; `sheetTitle` = encabezado. Sin `sheet`
 // se comporta igual que siempre (desplegable).
-export function DatePicker({ value, onChange, placeholder, sheet = false, sheetTitle = '' }) {
+// `inline`: el calendario va siempre abierto dentro del contenido (sin botón ni
+// desplegable), para usarlo dentro de hojas y popovers donde un panel flotante
+// se cortaría. `min`/`max` ('AAAA-MM-DD') apagan los días fuera de rango.
+export function DatePicker({ value, onChange, placeholder, sheet = false, sheetTitle = '', inline = false, min = null, max = null }) {
   const { t } = useTranslation()
-  const [open, setOpen] = useState(false)
-  useScrollLock(open && !sheet)
+  const [openState, setOpen] = useState(false)
+  const open = inline || openState
+  useScrollLock(open && !sheet && !inline)
   const [dropUp, setDropUp] = useState(false)
   const [mode, setMode] = useState('days') // 'days' | 'monthYear'
   const [viewDate, setViewDate] = useState(() => value ? dateOf(value) : new Date())
@@ -89,17 +93,17 @@ export function DatePicker({ value, onChange, placeholder, sheet = false, sheetT
 
   return (
     <div ref={ref} className={styles.wrapper}>
-      <button
+      {!inline && <button
         type="button"
         onClick={toggleOpen}
         className={`field-input ${styles.trigger}`}
       >
         <span className={selected ? styles.triggerLabelFilled : styles.triggerLabelPlaceholder}>{label}</span>
         <Calendar size={20} color="var(--accent)" strokeWidth={2} className={styles.calendarIcon} />
-      </button>
+      </button>}
 
       {!sheet && open && (
-        <div className={`${styles.panel} ${dropUp ? styles.panelUp : styles.panelDown}`}>
+        <div className={`${styles.panel} ${inline ? styles.panelInline : dropUp ? styles.panelUp : styles.panelDown}`}>
           {mode === 'days' ? (
             <>
               <div className={styles.navRow}>
@@ -131,6 +135,7 @@ export function DatePicker({ value, onChange, placeholder, sheet = false, sheetT
                       type="button"
                       key={i}
                       onClick={() => pick(c.dateObj)}
+                      disabled={(min && toStr(c.dateObj) < min) || (max && toStr(c.dateObj) > max)}
                       className={`${styles.dayCell} ${isSel ? styles.dayCellSelected : c.muted ? styles.dayCellMuted : ''}`}
                     >
                       {c.day}

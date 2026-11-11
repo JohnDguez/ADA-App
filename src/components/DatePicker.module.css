@@ -156,3 +156,7 @@
 }
 .quickChipOn { background: var(--desk-pill); color: var(--desk-pill-ink); }
 .sheetCalendar { background: var(--surface); border-radius: 16px; padding: 12px; }
+
+/* Calendario siempre abierto dentro de una hoja o popover (`inline`). */
+.panelInline { position: static; margin-top: 4px; background: var(--desk-chip); border: 0; box-shadow: none; border-radius: 18px; }
+.dayCell:disabled { opacity: 0.3; cursor: default; }
