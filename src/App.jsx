@@ -995,11 +995,14 @@ export default function App() {
   }, [])
 
   // «Cámbialo en Ajustes» de la ventana «Mover este cobro» (v0.9.1049)
+  // Usa una ref: el listener se registra una sola vez y, con la función de ese primer render,
+  // `changeTab` comparaba contra la pestaña vieja y a veces no hacía nada.
+  const goSettingsRef = useRef(null)
   useEffect(() => {
-    const go = () => goToSettingsSection('cobro')
+    const go = () => goSettingsRef.current?.('cobro')
     window.addEventListener('cobro-adjust:settings', go)
     return () => window.removeEventListener('cobro-adjust:settings', go)
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [])
 
   if (authLoading || (user && profileLoading)) return <SkeletonLoader />
   if (isRecovery) return <Suspense fallback={<SkeletonLoader />}><ResetPasswordPage onDone={() => setIsRecovery(false)} /></Suspense>
@@ -1793,6 +1796,7 @@ export default function App() {
     setSettingsInitialSection(section)
     changeTab('settings')
   }
+  goSettingsRef.current = goToSettingsSection
 
   function goToCategories() {
     setSettingsReturnTab(tab)
