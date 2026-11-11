@@ -2666,6 +2666,11 @@
       "text": "Log a purchase in installments and see what you pay each month and how many payments remain.",
       "action": "Log installment purchase"
     },
+    "cobroDate": {
+      "title": "Change a payday's date",
+      "text": "If you get paid earlier or later than usual, adjust the date of just that payday. Your usual day comes back after.",
+      "action": "Adjust payday date"
+    },
     "spaceSplit": {
       "title": "Split a payment between members",
       "text": "On a shared payment you can split the amount so each person puts in their part. Everyone sees who has already paid."

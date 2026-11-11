@@ -2666,6 +2666,11 @@
       "text": "Registra una compra a meses y ve cuánto pagas cada mes y cuántos pagos faltan.",
       "action": "Registrar compra a meses"
     },
+    "cobroDate": {
+      "title": "Cambia la fecha de un cobro",
+      "text": "Si te pagan antes o después de lo normal, ajusta la fecha solo de ese cobro. Después vuelve tu día de siempre.",
+      "action": "Ajustar fecha de cobro"
+    },
     "spaceSplit": {
       "title": "Divide un pago entre miembros",
       "text": "En un pago compartido puedes repartir el monto y que cada quien ponga su parte. Todos ven quién ya pagó."

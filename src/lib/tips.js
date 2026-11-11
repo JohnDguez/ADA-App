@@ -23,6 +23,7 @@ export const TIPS = [
   { id: 'shared',       kind: 'feature',  action: 'settings:sharedspace', scope: 'personal' },
   { id: 'export',       kind: 'feature',  action: 'settings:export', scope: 'personal' },
   { id: 'installments', kind: 'feature',  action: 'add' },
+  { id: 'cobroDate',    kind: 'feature',  action: 'settings:cobro', scope: 'personal' },
   // Solo en un Espacio Compartido (v0.9.705)
   { id: 'spaceSplit',   kind: 'feature',  action: null, scope: 'space', needs: 'can_mark_paid' },
   { id: 'spaceInvite',  kind: 'feature',  action: 'settings:sharedspace', scope: 'space', needs: 'owner' },
