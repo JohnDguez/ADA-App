@@ -147,9 +147,9 @@ export function DeskPayments({ d, tablet = false }) {
           <div className={home.date}>{dateStr}</div>
           <h1 className={home.hello}>{t('paymentsPage.title')}</h1>
         </div>
-        {((cobro && tablet) || !tablet) && (
+        {(cobro || !tablet) && (
           <div className={home.actions}>
-            {cobro && tablet && <AdjustCobroChip profile={cobro.profile} className={styles.headChip} long />}
+            {cobro && <AdjustCobroChip profile={cobro.profile} className={styles.headChip} long />}
             {!tablet && <DeskAddButton onAdd={onAdd} onStartAdd={onStartAdd} />}
           </div>
         )}

@@ -23,7 +23,7 @@
   font-size: 13.5px;
   font-weight: 600;
 }
-/* Chip del próximo cobro (v0.9.1047): en tablet vive en el encabezado (sin botón «Agregar»); en escritorio vive en «Próximo periodo» de Inicio (v0.9.1048). */
+/* Chip del próximo cobro (v0.9.1047): vive en el encabezado de Gastos en escritorio (a la izquierda de «Agregar») y en tablet; en escritorio además hay «Mover este cobro» en «Próximo periodo» de Inicio (v0.9.1050). */
 .headChip.headChip { height: 34px; padding: 0 14px; font-size: 0.8125rem; font-weight: 600; background: var(--desk-card); box-shadow: var(--desk-shadow); }
 .tileAdd {
   position: absolute;
