@@ -165,7 +165,6 @@ export function DeskPayments({ d, tablet = false }) {
                 {/* Disponible este periodo — no aplica en un Espacio Compartido (no tiene ingreso fijo) */}
                 {!activeSpaceId && <div data-coachmark="gastos-disponible-card" className={`${home.tile} ${home.tileHero} ${styles.tHero} ${!balance.loading && !balance.noIncomeYet && balance.sobrePasado ? styles.heroNeg : ''}`}>
                   <span className={home.tileLabel}>{t('paymentsPage.availableThisPeriod')}</span>
-                  {cobro && !balance.noIncomeYet && <AdjustCobroChip profile={cobro.profile} className={styles.heroChip} />}
                   {balance.noIncomeYet ? (
                     <>
                       <span className={styles.noIncomeText}>{t('paymentsPage.noIncomeText')}</span>
@@ -175,7 +174,10 @@ export function DeskPayments({ d, tablet = false }) {
                     <>
                       <span className={home.tileNum}>{balance.loading ? <LoadingDots /> : <>{availInt}<small>{availCents}</small></>}</span>
                       <div className={styles.heroTrack}><i className={`${styles.heroFill} ${tone}`} style={{ width: `${balance.loading ? 0 : balance.gastoPct}%` }} /></div>
-                      <span className={home.tileSub}>{balance.loading ? '' : t('deskPayments.usedPct', { pct: Math.round(balance.gastoPct) })}{tablet && !balance.loading && <span className={styles.subSecond}>{t('paymentsPage.periodIncome')} {fmt(balance.ingresoTotal)}</span>}</span>
+                      <span className={styles.heroFoot}>
+                        <span className={home.tileSub}>{balance.loading ? '' : t('deskPayments.usedPct', { pct: Math.round(balance.gastoPct) })}{tablet && !balance.loading && <span className={styles.subSecond}>{t('paymentsPage.periodIncome')} {fmt(balance.ingresoTotal)}</span>}</span>
+                        {cobro && <AdjustCobroChip profile={cobro.profile} className={styles.heroChip} />}
+                      </span>
                     </>
                   )}
                 </div>}
