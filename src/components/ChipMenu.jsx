@@ -1,6 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { ChevronDown, Check } from 'lucide-react'
+import { placePopover } from '../lib/popPlace'
 import styles from './ChipMenu.module.css'
 
 // Chip que abre un popover con opciones (v0.9.907, móvil). Mismo lenguaje que
@@ -12,14 +13,11 @@ export function ChipMenu({ label, options, value, onChange, className = '', aria
   const btnRef = useRef(null)
   const popRef = useRef(null)
   const [open, setOpen] = useState(false)
-  const [pos, setPos] = useState({ left: 16, top: 0, width: W, arrow: 24 })
+  const [pos, setPos] = useState({ left: 16, top: 0, width: W, arrow: 24, up: false })
 
   useLayoutEffect(() => {
     if (!open || !btnRef.current) return
-    const r = btnRef.current.getBoundingClientRect()
-    const w = Math.min(W, window.innerWidth - 32)
-    const left = Math.max(16, Math.min(r.right - w, window.innerWidth - w - 16))
-    setPos({ left, top: r.bottom + 10, width: w, arrow: Math.max(18, Math.min(r.left + r.width / 2 - left, w - 18)) })
+    setPos(placePopover(btnRef.current, popRef.current, W, true))
   }, [open])
 
   useEffect(() => {
@@ -47,7 +45,7 @@ export function ChipMenu({ label, options, value, onChange, className = '', aria
         <ChevronDown size={14} strokeWidth={2.4} className={`${styles.chev} ${open ? styles.chevOpen : ''}`} />
       </button>
       {open && createPortal(
-        <div ref={popRef} role="listbox" className={styles.pop} style={{ left: pos.left, top: pos.top, width: pos.width, '--arrow': `${pos.arrow}px` }} onClick={e => e.stopPropagation()}>
+        <div ref={popRef} role="listbox" className={`${styles.pop} ${pos.up ? styles.up : ''}`} style={{ left: pos.left, top: pos.top, width: pos.width, maxHeight: pos.maxHeight, overflowY: pos.clamped ? 'auto' : undefined, '--arrow': `${pos.arrow}px` }} onClick={e => e.stopPropagation()}>
           {options.map((o, i) => (
             <button key={o.value} type="button" role="option" aria-selected={o.value === value} style={{ '--i': i }}
               className={`${styles.opt} ${o.value === value ? styles.optOn : ''}`}

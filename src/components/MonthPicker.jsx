@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom'
 import { useTranslation } from 'react-i18next'
 import { ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react'
 import { getMonthsShort } from '../lib/utils'
+import { placePopover } from '../lib/popPlace'
 import styles from './MonthPicker.module.css'
 
 // Selector de mes y año en popover (v0.9.904, móvil). Reemplaza los dos
@@ -17,7 +18,7 @@ export function MonthPicker({ month, year, years, onChange, className = '' }) {
   const popRef = useRef(null)
   const [open, setOpen] = useState(false)
   const [shownYear, setShownYear] = useState(year)
-  const [pos, setPos] = useState({ left: 16, top: 0, arrow: 24 })
+  const [pos, setPos] = useState({ left: 16, top: 0, arrow: 24, up: false })
   const now = new Date()
   const minYear = Math.min(...years, year)
   const maxYear = now.getFullYear()
@@ -31,10 +32,7 @@ export function MonthPicker({ month, year, years, onChange, className = '' }) {
 
   useLayoutEffect(() => {
     if (!open || !btnRef.current) return
-    const r = btnRef.current.getBoundingClientRect()
-    const w = Math.min(W, window.innerWidth - 32)
-    const left = Math.max(16, Math.min(r.left, window.innerWidth - w - 16))
-    setPos({ left, top: r.bottom + 10, width: w, arrow: Math.max(18, Math.min(r.left + r.width / 2 - left, w - 18)) })
+    setPos(placePopover(btnRef.current, popRef.current, W))
   }, [open])
 
   useEffect(() => {
@@ -63,7 +61,7 @@ export function MonthPicker({ month, year, years, onChange, className = '' }) {
         <ChevronDown size={14} strokeWidth={2.4} className={`${styles.chev} ${open ? styles.chevOpen : ''}`} />
       </button>
       {open && createPortal(
-        <div ref={popRef} role="dialog" aria-label={t('monthPicker.label')} className={styles.pop} style={{ left: pos.left, top: pos.top, width: pos.width, '--arrow': `${pos.arrow}px` }} onClick={e => e.stopPropagation()}>
+        <div ref={popRef} role="dialog" aria-label={t('monthPicker.label')} className={`${styles.pop} ${pos.up ? styles.up : ''}`} style={{ left: pos.left, top: pos.top, width: pos.width, maxHeight: pos.maxHeight, overflowY: pos.clamped ? 'auto' : undefined, '--arrow': `${pos.arrow}px` }} onClick={e => e.stopPropagation()}>
           <div className={styles.year}>
             <button type="button" className={styles.nav} disabled={shownYear <= minYear} onClick={() => setShownYear(y => y - 1)} aria-label={t('monthPicker.prevYear')}><ChevronLeft size={16} strokeWidth={2.2} /></button>
             <b>{shownYear}</b>
