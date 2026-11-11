@@ -316,8 +316,8 @@
 .focusBox { border-radius: 24px; }
 .flash { animation: cobroFlash 2.6s ease both; }
 @keyframes cobroFlash {
-  0%, 70% { outline: 3px solid var(--accent); outline-offset: 8px; }
-  100% { outline: 3px solid transparent; outline-offset: 8px; }
+  0%, 70% { outline: 3px solid var(--accent); outline-offset: -3px; }
+  100% { outline: 3px solid transparent; outline-offset: -3px; }
 }
-@media (prefers-reduced-motion: reduce) { .flash { animation-duration: 0.01s; outline: 3px solid var(--accent); outline-offset: 8px; } }
+@media (prefers-reduced-motion: reduce) { .flash { animation-duration: 0.01s; outline: 3px solid var(--accent); outline-offset: -3px; } }
 
