@@ -2948,6 +2948,7 @@
       "title": "Tu cobro cae en {{weekday}}",
       "body": "El {{date}}. ¿Quieres cambiar la fecha de este cobro?"
     },
-    "chipDate": "Cobro · {{date}}"
+    "chipDate": "Cobro · {{date}}",
+    "chipDateLong": "Próximo cobro · {{date}}"
   }
 }

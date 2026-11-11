@@ -147,9 +147,10 @@ export function DeskPayments({ d, tablet = false }) {
           <div className={home.date}>{dateStr}</div>
           <h1 className={home.hello}>{t('paymentsPage.title')}</h1>
         </div>
-        {!tablet && (
+        {(cobro || !tablet) && (
           <div className={home.actions}>
-            <DeskAddButton onAdd={onAdd} onStartAdd={onStartAdd} />
+            {cobro && <AdjustCobroChip profile={cobro.profile} className={styles.headChip} long />}
+            {!tablet && <DeskAddButton onAdd={onAdd} onStartAdd={onStartAdd} />}
           </div>
         )}
       </header>
@@ -174,10 +175,7 @@ export function DeskPayments({ d, tablet = false }) {
                     <>
                       <span className={home.tileNum}>{balance.loading ? <LoadingDots /> : <>{availInt}<small>{availCents}</small></>}</span>
                       <div className={styles.heroTrack}><i className={`${styles.heroFill} ${tone}`} style={{ width: `${balance.loading ? 0 : balance.gastoPct}%` }} /></div>
-                      <span className={styles.heroFoot}>
-                        <span className={home.tileSub}>{balance.loading ? '' : t('deskPayments.usedPct', { pct: Math.round(balance.gastoPct) })}{tablet && !balance.loading && <span className={styles.subSecond}>{t('paymentsPage.periodIncome')} {fmt(balance.ingresoTotal)}</span>}</span>
-                        {cobro && <AdjustCobroChip profile={cobro.profile} className={styles.heroChip} />}
-                      </span>
+                      <span className={home.tileSub}>{balance.loading ? '' : t('deskPayments.usedPct', { pct: Math.round(balance.gastoPct) })}{tablet && !balance.loading && <span className={styles.subSecond}>{t('paymentsPage.periodIncome')} {fmt(balance.ingresoTotal)}</span>}</span>
                     </>
                   )}
                 </div>}

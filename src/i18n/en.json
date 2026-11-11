@@ -2948,6 +2948,7 @@
       "title": "Your payday falls on {{weekday}}",
       "body": "On {{date}}. Do you want to change the date of this payday?"
     },
-    "chipDate": "Payday · {{date}}"
+    "chipDate": "Payday · {{date}}",
+    "chipDateLong": "Next payday · {{date}}"
   }
 }

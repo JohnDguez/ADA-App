@@ -23,12 +23,8 @@
   font-size: 13.5px;
   font-weight: 600;
 }
-/* Pie de la tarjeta azul (v0.9.1046): texto de uso a la izquierda y chip del cobro a la derecha,
-   en el flujo normal (antes iba absoluto y se encimaba). Es un <span> para no heredar
-   `.payTab .tileHero > div { grid-area: track }`; en tablet ocupa el área `sub` y apila. */
-.heroFoot { display: flex; align-items: center; justify-content: space-between; gap: 8px 10px; flex-wrap: wrap; margin-top: 8px; }
-.heroFoot > span:first-child { margin: 0; min-height: 0; }
-.heroChip.heroChip { background: color-mix(in srgb, var(--desk-ink-text) 18%, transparent); color: var(--desk-ink-text); }
+/* Chip del próximo cobro (v0.9.1047): vive en el encabezado, junto a «Agregar», para no agrandar las tarjetas. */
+.headChip.headChip { height: 34px; padding: 0 14px; font-size: 0.8125rem; font-weight: 600; background: var(--desk-card); box-shadow: var(--desk-shadow); }
 .tileAdd {
   position: absolute;
   top: 14px;
@@ -150,7 +146,6 @@
   .tabPay .tileAdd + * { padding-right: 86px; }
 }
 @media (max-width: 959px) {
-  .tabPay .heroFoot { grid-area: sub; flex-direction: column; align-items: flex-end; gap: 8px; margin-top: 0; }
   /* 60 columnas: permite las proporciones del mockup (fichas 19/22/19, gráficas
      30/30, método/tarjetas 35/25). El hueco de 14px se logra con 7px de margen
      a cada lado de cada elemento (y -7px en el contenedor). */

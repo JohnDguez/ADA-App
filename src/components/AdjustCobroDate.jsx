@@ -108,13 +108,13 @@ export function NextCobroRow({ profile, onSave }) {
 }
 
 // Chip suelto para la tarjeta «Disponible este periodo» (Gastos).
-export function AdjustCobroChip({ profile, className = '' }) {
+export function AdjustCobroChip({ profile, className = '', long = false }) {
   const { t } = useTranslation()
   const info = adjustableCobro(profile)
   if (!info) return null
   return (
     <button type="button" className={`${styles.mini} ${className}`} onClick={openAdjustCobro} aria-label={t('cobroAdjust.title')}>
-      {t('cobroAdjust.chipDate', { date: fmtDay(info.actual, { weekday: 'short', day: 'numeric', month: 'short' }) })}<Pencil size={13} />
+      {t(long ? 'cobroAdjust.chipDateLong' : 'cobroAdjust.chipDate', { date: fmtDay(info.actual, { weekday: 'short', day: 'numeric', month: 'short' }) })}<Pencil size={13} />
     </button>
   )
 }
