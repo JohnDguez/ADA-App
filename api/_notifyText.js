@@ -57,8 +57,8 @@ function cobroDayText(lang, count) {
 // Aviso previo de un cobro que cae en fin de semana (v0.9.1041).
 function cobroWeekendText(lang, weekday, dateLabel) {
   return lang === 'en'
-    ? { title: `Your payday falls on ${weekday}`, body: `On ${dateLabel}. Do you want to adjust your payday date?` }
-    : { title: `Tu cobro cae en ${weekday}`, body: `El ${dateLabel}. ¿Quieres ajustar la fecha de tu cobro?` }
+    ? { title: `Your payday falls on ${weekday}`, body: `On ${dateLabel}. Do you want to change the date of this payday?` }
+    : { title: `Tu cobro cae en ${weekday}`, body: `El ${dateLabel}. ¿Quieres cambiar la fecha de este cobro?` }
 }
 
 function goalDeadlineText(lang, name, days, remainingMoney) {

@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
-import { CalendarClock, CalendarDays, X } from 'lucide-react'
+import { CalendarClock, CalendarDays, Pencil, X } from 'lucide-react'
 import { QuickModal } from './Modal'
 import { useAnchor } from './AnchoredPop'
 import { DatePicker } from './DatePicker'
@@ -113,8 +113,8 @@ export function AdjustCobroChip({ profile, className = '' }) {
   const info = adjustableCobro(profile)
   if (!info) return null
   return (
-    <button type="button" className={`${styles.mini} ${className}`} onClick={openAdjustCobro}>
-      <CalendarClock size={14} />{info.adjusted ? t('cobroAdjust.done') : t('cobroAdjust.chip')}
+    <button type="button" className={`${styles.mini} ${className}`} onClick={openAdjustCobro} aria-label={t('cobroAdjust.title')}>
+      {t('cobroAdjust.chipDate', { date: fmtDay(info.actual, { weekday: 'short', day: 'numeric', month: 'short' }) })}<Pencil size={13} />
     </button>
   )
 }

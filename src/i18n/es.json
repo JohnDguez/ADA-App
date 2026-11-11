@@ -2937,11 +2937,12 @@
     },
     "notice": {
       "title": "Tu cobro cae en {{weekday}} ({{date}})",
-      "question": "¿Quieres ajustar la fecha de tu cobro?"
+      "question": "¿Quieres cambiar la fecha de este cobro?"
     },
     "push": {
       "title": "Tu cobro cae en {{weekday}}",
-      "body": "El {{date}}. ¿Quieres ajustar la fecha de tu cobro?"
-    }
+      "body": "El {{date}}. ¿Quieres cambiar la fecha de este cobro?"
+    },
+    "chipDate": "Cobro · {{date}}"
   }
 }
