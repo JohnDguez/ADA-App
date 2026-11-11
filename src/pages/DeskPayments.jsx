@@ -265,7 +265,7 @@ export function DeskPayments({ d, tablet = false }) {
 
                   {visibleRows.length === 0 ? (
                     <div className={`${home.listBody} scroll-y`}>
-                      {dataLoading ? <PaymentRowSkeleton count={4} /> : (
+                      {dataLoading ? <PaymentRowSkeleton count={4} bare /> : (
                         <EmptyState desk
                           title={selectedCat ? t('deskPayments.noPaymentsInCategory', { cat: selectedLabel }) : view.mode === 'periodo' ? t('paymentsPage.noPaymentsCurrentPeriod') : t('paymentsPage.noPaymentsInMonth', { month: getMonths()[view.month], year: view.year })}
                           subtitle={t('homePage.emptyState.subtitle')} onClick={onAdd} />

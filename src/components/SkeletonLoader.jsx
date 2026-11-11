@@ -1,399 +1,476 @@
 // ── SkeletonLoader ────────────────────────────────────────────────────────────
-// Pantalla de carga ghost que imita el layout real de la app.
-// Se muestra mientras authLoading || profileLoading en App.jsx.
-// Actualizado en v0.9.153 para reflejar el rediseño de Espacio Compartido
-// (v0.9.133+): el switcher de espacios (tarjeta apilada, "Personal"/espacios
-// compartidos) ahora vive justo debajo del header, antes de las tabs
-// Periodo/Mes — antes no existía y las tabs quedaban pegadas al header.
-// Actualizado de nuevo tras el rediseño de la tarjeta "Pagos de este
-// periodo"/"Por pagar este mes" (medio anillo tipo gauge, confirmado con
-// Johnatan después de descartar el anillo completo y la tarjeta-relleno) y
-// el switch Periodo/Mes (ahora píldora deslizante, no 2 botones cuadrados) —
-// el esqueleto ya no debe mostrar la barra horizontal ni el toggle de 5px,
-// que ya no existen en la pantalla real.
+// Esqueleto del arranque (mientras authLoading || profileLoading en App.jsx) y
+// piezas de carga por sección. Rediseñado en v0.9.1038 para reflejar el
+// diseño actual en móvil, tablet vertical, tablet horizontal y escritorio
+// (mockup aprobado por Johnatan).
+//
+// Reglas del esqueleto:
+//  · Solo grises derivados de los tokens del tema (--sk, --sk-hi, --sk-strong
+//    en index.css), claro y oscuro; nunca azul, dorado ni verde.
+//  · El chrome fijo (riel, barra inferior, botones del encabezado) va quieto
+//    (`fixed`); solo los datos animan con shimmer.
+//  · El shimmer se detiene con prefers-reduced-motion (index.css).
+//
+// Los cuatro marcos se renderizan a la vez y el CSS muestra solo el que
+// corresponde al ancho (mismos cortes que el Inicio real: 768 / 960 / 1100),
+// así no hay parpadeo ni dependencia de JS mientras carga la sesión.
 import styles from './SkeletonLoader.module.css'
-import dk from './SkeletonDesk.module.css'
-import { useIsDesktop } from '../hooks/useIsDesktop'
 
-// `Bone` y `RailSkeleton` se exportan (antes solo vivían aquí, para el
-// gate de pantalla completa de App.jsx) — Fase 1 del sistema de carga por
-// sección (agosto 2026): cualquier pantalla puede pedir el mismo bone o el
-// mismo esqueleto de riel para reemplazar un hueco en blanco durante
-// `dataLoading`, en vez de inventar su propia versión. Ver HomePage.jsx
-// para el primer uso real.
-export function Bone({ w, h, r, dark, style }) {
+// `Bone` se exporta para que cualquier pantalla pida el mismo hueso durante
+// `dataLoading` en vez de inventar el suyo. `fixed`: hueso de chrome, sin brillo.
+export function Bone({ w, h, r, fixed, style }) {
   return (
     <div
-      className={dark ? 'skeleton-bone-dark' : 'skeleton-bone'}
+      className={fixed ? 'skeleton-bone-fixed' : 'skeleton-bone'}
       style={{ width: w, height: h, borderRadius: r ?? 6, flexShrink: 0, ...style }}
     />
   )
 }
 
-// Esqueleto de un riel de pagos (mismas clases que ya usaba el gate de
-// pantalla completa, `.railWrapper`/`.railLine`/`.railItem`/`.railItemCard`)
-// — reutilizable en cualquier lista que hoy muestre un hueco en blanco
-// mientras `dataLoading` es true (HomePage, PaymentsPage, etc.).
-// `count`: cuántas filas fantasma mostrar (por defecto 3, mismo criterio
-// visual que ya traía el gate de pantalla completa).
-export function RailSkeleton({ count = 3 }) {
+const Col = ({ gap = 0, className = '', style, children }) => (
+  <div className={`${styles.col} ${className}`} style={{ gap, ...style }}>{children}</div>
+)
+const Row = ({ gap = 0, className = '', style, children }) => (
+  <div className={`${styles.rw} ${className}`} style={{ gap, ...style }}>{children}</div>
+)
+
+// Puntos del selector de periodo (activo alargado + 2).
+const Dots = () => (
+  <Row gap={5}><Bone w={22} h={6} r={3} /><Bone w={6} h={6} r={3} /><Bone w={6} h={6} r={3} /></Row>
+)
+
+// Selector de periodo: flecha, etiqueta con puntos, flecha.
+const Selector = ({ labelW = 110, style }) => (
+  <Row className={styles.sp} style={style}>
+    <Bone w={36} h={36} r="50%" />
+    <Col gap={10} className={styles.ctr}><Bone w={labelW} h={15} r={5} /><Dots /></Col>
+    <Bone w={36} h={36} r="50%" />
+  </Row>
+)
+
+// Medio anillo del medidor (aro gris + tramo con brillo) con total al centro.
+function Gauge({ w, h, children, gap = 8, bottom = 8 }) {
   return (
-    <div className={styles.railWrapper}>
-      <div className={styles.railLine} />
-      {Array.from({ length: count }).map((_, i) => (
-        <div key={i} className={styles.railItem}>
-          <Bone w={24} h={24} r="50%" />
-          <div className={styles.railItemCard}>
-            <Bone w="55%" h={13} r={4} />
-            <Bone w="30%" h={10} r={4} />
-          </div>
-        </div>
-      ))}
+    <div className={styles.gaugeBox}>
+      <svg width={w} height={h} viewBox="0 -4 300 172" aria-hidden="true" className={styles.gauge}>
+        <path className={styles.gt} d="M20,140 A130,130 0 0 1 280,140" />
+        <path className={styles.gf} d="M20,140 A130,130 0 0 1 140,10" />
+      </svg>
+      <Col gap={gap} className={`${styles.ctr} ${styles.gaugeCenter}`} style={{ bottom }}>{children}</Col>
     </div>
   )
 }
 
-// Esqueleto de "Por categoría" (mismo layout que `.categoryListItem` de
-// PaymentsPage: ícono cuadrado + nombre/monto + barra de progreso) — usado
-// mientras `dataLoading` es true, en vez del hueco en blanco que había
-// antes en esa sección.
-export function CategoryListSkeleton({ count = 4 }) {
+// Fila de pago: ficha de fecha, nombre + apoyo, monto y botón de menú.
+function PayRow({ big }) {
+  const s = big ? 48 : 44
   return (
-    <div className={styles.categoryListSkelWrapper}>
-      {Array.from({ length: count }).map((_, i) => (
-        <div key={i} className={styles.categoryListSkelItem}>
-          <Bone w={36} h={36} r={8} />
-          <div className={styles.categoryListSkelContent}>
-            <div className={styles.categoryListSkelRow}>
-              <Bone w={90} h={13} r={4} />
-              <Bone w={50} h={13} r={4} />
+    <Row gap={14} style={{ padding: big ? '12px 0' : '10px 0' }}>
+      <Bone w={s} h={s + 6} r={16} />
+      <Col gap={9} style={{ flex: 1 }}><Bone w="42%" h={14} r={5} /><Bone w="22%" h={11} r={5} /></Col>
+      <Bone w={big ? 70 : 60} h={15} r={5} />
+      <Bone w={big ? 40 : 36} h={big ? 40 : 36} r="50%" />
+    </Row>
+  )
+}
+
+// Consejo (tarjeta gris con avatar, 3 líneas y acciones).
+const Tip = () => (
+  <div className={`${styles.chip} ${styles.rw} sk-onchip`} style={{ gap: 14, padding: 16 }}>
+    <Bone w={38} h={38} r="50%" />
+    <Col gap={9} style={{ flex: 1 }}><Bone w={170} h={13} r={5} /><Bone w="80%" h={10} r={5} /><Bone w={110} h={10} r={5} /></Col>
+    <Bone w={36} h={12} r={5} />
+    <Bone w={34} h={34} r="50%" />
+  </div>
+)
+
+// Luna con su globo de mensaje.
+const LunaBubble = ({ ls, bw = '100%', bh, style }) => (
+  <Row gap={10} style={style}>
+    <Bone w={ls} h={ls} r="32%" />
+    <Bone w={bw} h={bh} r={20} style={{ flex: 1 }} />
+  </Row>
+)
+
+const Bars = ({ heights, w, scale = 1, gap = 12 }) => (
+  <Row gap={gap} style={{ alignItems: 'flex-end' }}>
+    {heights.map((hh, i) => <Bone key={i} w={w} h={Math.round(hh * scale)} r={8} />)}
+  </Row>
+)
+const BAR_H = [44, 66, 32, 80, 52, 38, 70]
+
+// Riel flotante de 72px de tablet (chrome fijo).
+function Rail() {
+  const ico = (k) => <div key={k} style={{ marginBottom: 26 }}><Bone fixed w={24} h={24} r={8} /></div>
+  return (
+    <div className={styles.rail}>
+      <Bone fixed w={44} h={44} r={14} />
+      <div style={{ height: 12 }} />
+      <Bone fixed w={32} h={32} r="50%" />
+      <div style={{ height: 30 }} />
+      {[0, 1, 2, 3].map(ico)}
+      <div className={styles.railSep} />
+      {[4, 5].map(ico)}
+      <Col className={styles.ctr} style={{ marginTop: 'auto' }}>
+        {[6, 7].map(ico)}
+        <Bone fixed w={44} h={44} r="50%" />
+      </Col>
+    </div>
+  )
+}
+
+// ── Móvil (<768) ──
+function MobileFrame() {
+  return (
+    <div className={`${styles.frame} ${styles.fMobile}`}>
+      <Col gap={14} style={{ padding: '18px 16px 0' }}>
+        <Row className={styles.sp} style={{ alignItems: 'flex-start' }}>
+          <Col gap={9} style={{ paddingTop: 4 }}>
+            <Bone w={120} h={11} r={4} />
+            <Bone w={176} h={22} r={6} />
+            <Bone w={124} h={22} r={6} />
+            <Bone w={112} h={28} r={14} style={{ marginTop: 4 }} />
+          </Col>
+          <Row gap={8}><Bone fixed w={46} h={46} r="50%" /><Bone fixed w={52} h={52} r="50%" /></Row>
+        </Row>
+        <LunaBubble ls={100} bh={58} style={{ gap: 12 }} />
+        <Selector style={{ width: '100%' }} />
+        <div className={`${styles.card} ${styles.col}`} style={{ padding: '18px 18px 16px' }}>
+          <Row className={styles.sp} style={{ alignItems: 'flex-start' }}>
+            <Col gap={10}><Bone w={86} h={13} r={5} /><Bone w={172} h={38} r={8} /><Bone w={190} h={11} r={5} /></Col>
+            <Bone fixed w={34} h={34} r="50%" />
+          </Row>
+          <div style={{ alignSelf: 'center', marginTop: 14 }}>
+            <Gauge w={250} h={138} bottom={6}><Bone w={78} h={30} r={8} /><Bone w={38} h={10} r={4} /></Gauge>
+          </div>
+          <Row gap={10} style={{ marginTop: 10 }}>
+            {[0, 1].map(i => (
+              <Col key={i} gap={9} className={`${styles.chip} sk-onchip`} style={{ flex: 1, padding: 14 }}>
+                <Bone w={54} h={10} r={4} /><Bone w={70} h={20} r={6} />
+              </Col>
+            ))}
+          </Row>
+          <Row gap={10} className={`${styles.chip} sk-onchip`} style={{ padding: '0 16px', height: 40, marginTop: 10 }}>
+            <Bone w={10} h={10} r="50%" /><Bone w={84} h={11} r={4} />
+          </Row>
+        </div>
+        <Row gap={8} style={{ marginTop: 2 }}><Bone w={124} h={13} r={5} /><Bone w={22} h={18} r={9} /></Row>
+      </Col>
+      <div className={styles.navb}>
+        <Bone fixed w={92} h={46} r={23} style={{ background: 'var(--desk-chip)' }} />
+        {[0, 1, 2, 3].map(i => <Bone key={i} fixed w={24} h={24} r={8} />)}
+      </div>
+    </div>
+  )
+}
+
+// ── Tablet vertical (768–959) ──
+function TabletVFrame() {
+  return (
+    <div className={`${styles.frame} ${styles.fTabV}`}>
+      <Rail />
+      <Col gap={14} className={styles.tabContentV}>
+        <Row className={styles.sp} style={{ height: 150, padding: '34px 8px 0', alignItems: 'flex-start' }}>
+          <Col gap={12}><Bone w={188} h={11} r={4} /><Bone w={300} h={34} r={8} /><Bone w={140} h={34} r={8} /></Col>
+          <Row style={{ alignItems: 'flex-start' }}>
+            <Bone w={150} h={78} r={20} />
+            <div style={{ marginLeft: -6, marginTop: 20 }}><Bone w={96} h={96} r="32%" /></div>
+          </Row>
+        </Row>
+        <Row className={`${styles.sp} ${styles.strong} sk-onstrong`} style={{ height: 106, padding: '0 24px' }}>
+          <Col gap={12}><Bone w={90} h={12} r={4} /><Bone w={188} h={38} r={8} /></Col>
+          <Row gap={16}>
+            <Col gap={10} style={{ alignItems: 'flex-end' }}><Bone w={130} h={12} r={4} /><Bone w={100} h={12} r={4} /></Col>
+            <Bone fixed w={40} h={40} r="50%" />
+          </Row>
+        </Row>
+        <Row gap={14} style={{ alignItems: 'stretch' }}>
+          <div className={`${styles.card} ${styles.col}`} style={{ flex: 1.15, padding: 20, height: 328 }}>
+            <Bone w={130} h={18} r={6} />
+            <div style={{ margin: 'auto' }}>
+              <Gauge w={300} h={165} bottom={12}><Bone w={84} h={32} r={8} /><Bone w={40} h={10} r={4} /></Gauge>
             </div>
-            <Bone w="100%" h={6} r={999} />
+            <Row gap={18} className={styles.jc} style={{ marginTop: 16 }}>
+              {[0, 1, 2].map(i => <Bone key={i} w={66} h={11} r={4} />)}
+            </Row>
           </div>
+          <Col gap={14} style={{ flex: 1 }}>
+            {[0, 1, 2].map(i => (
+              <Col key={i} gap={10} className={styles.card} style={{ padding: '18px 20px', flex: 1 }}>
+                <Bone w={54} h={12} r={4} /><Bone w={124} h={26} r={7} /><Bone w={112} h={10} r={4} />
+              </Col>
+            ))}
+          </Col>
+        </Row>
+        <div className={`${styles.card} ${styles.col}`} style={{ padding: '20px 22px' }}>
+          <Row className={styles.sp}>
+            <Bone w={110} h={20} r={6} />
+            <Row gap={28}><Bone w={34} h={34} r="50%" /><Col gap={10} className={styles.ctr}><Bone w={100} h={14} r={5} /><Dots /></Col><Bone w={34} h={34} r="50%" /></Row>
+          </Row>
+          <Row gap={8} style={{ margin: '22px 0 4px' }}><Bone w={48} h={12} r={4} /><Bone w={22} h={18} r={9} /></Row>
+          <PayRow big /><div className={styles.hair} /><PayRow big />
+          <div style={{ marginTop: 16 }}><Tip /></div>
         </div>
-      ))}
+      </Col>
     </div>
   )
 }
 
-// Esqueleto de una fila de "Pagos realizados" (mismo layout que
-// `.paymentRow` de PaymentsPage: fecha + divisor + nombre/categoría +
-// monto) — reemplaza el hueco en blanco de esa lista durante `dataLoading`.
-export function PaymentRowSkeleton({ count = 4 }) {
+// ── Tablet horizontal (960–1099) ──
+function TabletHFrame() {
+  const Tile = ({ strong }) => (
+    <Col gap={10} className={strong ? `${styles.strong} sk-onstrong` : styles.card}
+      style={{ flex: 1, padding: '16px 18px', height: 112, justifyContent: 'space-between' }}>
+      <Bone w={70} h={13} r={4} /><Bone w={strong ? 120 : 110} h={30} r={8} /><Bone w={strong ? 140 : 104} h={10} r={4} />
+    </Col>
+  )
   return (
-    <div className={styles.paymentRowSkelWrapper}>
-      {Array.from({ length: count }).map((_, i) => (
-        <div key={i} className={styles.paymentRowSkelItem}>
-          <div className={styles.paymentRowSkelDate}>
-            <Bone w={20} h={16} r={4} />
-            <Bone w={24} h={8} r={3} style={{ marginTop: 4 }} />
+    <div className={`${styles.frame} ${styles.fTabH}`}>
+      <Rail />
+      <Col gap={14} className={styles.tabContentH}>
+        <Row className={styles.sp} style={{ height: 112, padding: '34px 12px 0', alignItems: 'flex-start' }}>
+          <Col gap={12}><Bone w={188} h={11} r={4} /><Bone w={380} h={34} r={8} /></Col>
+          <Row style={{ alignItems: 'flex-start' }}>
+            <Bone w={160} h={44} r={18} />
+            <div style={{ marginLeft: -6, marginTop: -4 }}><Bone w={76} h={76} r="32%" /></div>
+          </Row>
+        </Row>
+        <Row gap={12} style={{ marginTop: -6 }}><Tile strong /><Tile /><Tile /><Tile /></Row>
+        <Row gap={14} style={{ alignItems: 'flex-start' }}>
+          <div className={`${styles.card} ${styles.col}`} style={{ flex: 1.35, padding: '20px 22px', height: 482 }}>
+            <Row className={styles.sp}>
+              <Bone w={110} h={20} r={6} />
+              <Row gap={22}><Bone w={34} h={34} r="50%" /><Col gap={10} className={styles.ctr}><Bone w={100} h={14} r={5} /><Dots /></Col><Bone w={34} h={34} r="50%" /></Row>
+            </Row>
+            <Row gap={8} style={{ margin: '22px 0 4px' }}><Bone w={48} h={12} r={4} /><Bone w={22} h={18} r={9} /></Row>
+            <PayRow big /><div className={styles.hair} /><PayRow big />
+            <div style={{ marginTop: 'auto' }}><Tip /></div>
           </div>
-          <div className={styles.paymentRowSkelDivider} />
-          <div className={styles.paymentRowSkelInfo}>
-            <Bone w="60%" h={13} r={4} />
-            <Bone w="35%" h={11} r={4} style={{ marginTop: 6 }} />
-          </div>
-          <Bone w={54} h={14} r={4} />
-        </div>
-      ))}
+          <Col gap={14} style={{ flex: 1 }}>
+            <div className={`${styles.card} ${styles.col}`} style={{ padding: '18px 20px', height: 240 }}>
+              <Bone w={130} h={18} r={6} />
+              <div style={{ margin: 'auto' }}>
+                <Gauge w={230} h={126} gap={7}><Bone w={64} h={26} r={7} /><Bone w={34} h={10} r={4} /></Gauge>
+              </div>
+              <Row gap={14} className={styles.jc} style={{ marginTop: 10 }}>{[0, 1, 2].map(i => <Bone key={i} w={54} h={10} r={4} />)}</Row>
+            </div>
+            <Col gap={10} className={styles.card} style={{ padding: '18px 20px', height: 228 }}>
+              <Bone w={110} h={16} r={6} /><Bone w={130} h={11} r={4} /><Bone w={110} h={26} r={7} /><Bone w={100} h={10} r={4} />
+              <div style={{ flex: 1, display: 'flex', alignItems: 'flex-end', marginTop: 4 }}><Bars heights={BAR_H} w={30} /></div>
+            </Col>
+          </Col>
+        </Row>
+      </Col>
     </div>
   )
 }
 
-// Esqueleto de la tarjeta de stats (2 bloques lado a lado — usada en
-// Recurrentes hoy, reutilizable en cualquier pantalla con el mismo layout).
-export function StatsCardSkeleton() {
-  return (
-    <div className={styles.statsCardSkelWrapper}>
-      <div className={styles.statsCardSkelBlock}>
-        <Bone w={60} h={10} r={3} />
-        <Bone w={40} h={22} r={4} style={{ marginTop: 5 }} />
-        <Bone w={70} h={11} r={4} style={{ marginTop: 4 }} />
-      </div>
-      <div className={styles.statsCardSkelBlock}>
-        <Bone w={80} h={10} r={3} />
-        <Bone w={70} h={22} r={4} style={{ marginTop: 5 }} />
-        <Bone w={90} h={11} r={4} style={{ marginTop: 4 }} />
-      </div>
-    </div>
+// ── Escritorio (≥1100) ──
+function DesktopFrame() {
+  const Tile = ({ strong }) => (
+    <Col className={strong ? `${styles.strong} sk-onstrong` : styles.card}
+      style={{ flex: 1, padding: '18px 20px', height: 146, justifyContent: 'space-between' }}>
+      <Row className={styles.sp}><Bone w={80} h={14} r={5} />{strong && <Bone fixed w={34} h={34} r="50%" />}</Row>
+      <Bone w={strong ? 170 : 150} h={40} r={10} />
+      <Bone w={strong ? 150 : 120} h={11} r={4} />
+    </Col>
   )
-}
-
-// Esqueleto de un acordeón de categoría cerrado (mismo layout que
-// `.categoryHeader` de RecurrentsPage: ícono redondo + nombre/meta + hueco
-// del chevron) — usado mientras `dataLoading` es true, en vez del hueco en
-// blanco/EmptyState prematuro que había antes en esa lista.
-export function CategoryAccordionSkeleton({ count = 3 }) {
-  return (
-    <div className={styles.categoryAccordionSkelWrapper}>
-      {Array.from({ length: count }).map((_, i) => (
-        <div key={i} className={styles.categoryAccordionSkelItem}>
-          <Bone w={36} h={36} r={8} />
-          <div className={styles.categoryAccordionSkelContent}>
-            <Bone w={110} h={14} r={4} />
-            <Bone w={80} h={11} r={4} style={{ marginTop: 5 }} />
-          </div>
-          <Bone w={18} h={18} r={4} />
-        </div>
-      ))}
-    </div>
+  const Item = ({ on }) => (
+    <Row gap={12} className={on ? 'sk-onchip' : ''}
+      style={{ padding: '10px 12px', borderRadius: 99, background: on ? 'var(--desk-chip)' : undefined }}>
+      <Bone fixed w={22} h={22} r={7} /><Bone fixed w={on ? 70 : 96} h={13} r={5} />
+    </Row>
   )
-}
-
-// Esqueleto de una tarjeta de meta (mismo layout que `.card`/`GoalCard` de
-// GoalsPage: ícono + nombre/monto meta, barra de progreso, fila inferior) —
-// usado mientras `goalsData.loading` es true, en vez del EmptyState "Sin
-// metas" prematuro que se mostraría con `activeGoals`/`completedGoals`
-// vacíos a propósito durante la carga.
-export function GoalCardSkeleton({ count = 2 }) {
   return (
-    <div className={styles.goalCardSkelWrapper}>
-      {Array.from({ length: count }).map((_, i) => (
-        <div key={i} className={styles.goalCardSkelItem}>
-          <div className={styles.goalCardSkelTop}>
-            <Bone w={36} h={36} r={8} />
-            <Bone w={110} h={15} r={4} />
-            <Bone w={60} h={14} r={4} style={{ marginLeft: 'auto' }} />
-          </div>
-          <Bone w="100%" h={6} r={999} style={{ marginTop: 12 }} />
-          <Bone w={130} h={12} r={4} style={{ marginTop: 10 }} />
-        </div>
-      ))}
-    </div>
-  )
-}
-
-// Hueso del esqueleto de escritorio (huesos sólidos con brillo; ver SkeletonDesk.module.css).
-function DBone({ w, h, r = 8, style }) {
-  return <span className={dk.bone} style={{ width: w, height: h, borderRadius: r, ...style }} />
-}
-
-// Esqueleto de escritorio (≥1100px): sidebar + Inicio de escritorio (3 tarjetas
-// de totales, lista de pagos, anillo y barras de 7 días) — aprobado con mockup
-// B "fantasma detallado" (v0.9.852).
-function DeskSkeleton() {
-  const rows = [0, 1, 2, 3, 4]
-  return (
-    <div className={dk.root} aria-busy="true">
-      <aside className={dk.side}>
-        <div className={dk.sideTop}><DBone w={34} h={34} r={10} /><DBone w={90} h={16} r={5} /></div>
-        <div className={dk.sideLabel}><DBone w={44} h={10} r={4} /></div>
-        {[90, 110, 90, 110, 90].map((w, i) => (
-          <div key={i} className={dk.sideItem}><DBone w={22} h={22} r={7} /><DBone w={w} h={13} r={5} /></div>
-        ))}
-        <div className={dk.sideLabel2}><DBone w={60} h={10} r={4} /></div>
-        <div className={dk.sideItem}><DBone w={24} h={24} r="50%" /><DBone w={100} h={13} r={5} /></div>
-        <div className={dk.sideBottom}>
-          <DBone w="100%" h={44} r={22} />
-          <div className={dk.sideUser}>
-            <DBone w={38} h={38} r="50%" />
-            <div className={dk.stack7}><DBone w={90} h={12} r={5} /><DBone w={60} h={10} r={5} /></div>
-          </div>
-        </div>
+    <div className={`${styles.frame} ${styles.fDesk}`}>
+      <aside className={styles.side}>
+        <Row className={styles.sp} style={{ padding: '0 6px 20px' }}>
+          <Row gap={10}><Bone fixed w={34} h={34} r={10} /><Bone fixed w={84} h={16} r={5} /></Row>
+          <Bone fixed w={22} h={22} r={7} />
+        </Row>
+        <div style={{ padding: '0 10px 8px' }}><Bone fixed w={40} h={10} r={4} /></div>
+        <Item on /><Item /><Item /><Item />
+        <div style={{ padding: '16px 10px 8px' }}><Bone fixed w={54} h={10} r={4} /></div>
+        <Item on /><Item />
+        <Col gap={10} className={`${styles.strong} sk-onstrong`} style={{ marginTop: 'auto', padding: 16, height: 158 }}>
+          <Bone w={150} h={15} r={5} /><Bone w={120} h={15} r={5} /><Bone w="90%" h={10} r={4} /><Bone w="70%" h={10} r={4} />
+          <div style={{ marginTop: 'auto' }}><Bone fixed w="100%" h={40} r={20} style={{ background: 'var(--sk-hi)' }} /></div>
+        </Col>
+        <div style={{ marginTop: 8 }}><Item /><Item /></div>
+        <Row gap={4} className={styles.chip} style={{ padding: 4, marginTop: 8, borderRadius: 99, height: 44 }}>
+          <Bone fixed w={68} h={36} r={18} style={{ background: 'var(--desk-card)' }} />
+          <Bone fixed w={62} h={36} r={18} style={{ background: 'transparent' }} />
+          <Bone fixed w={62} h={36} r={18} style={{ background: 'transparent' }} />
+        </Row>
+        <Row gap={10} className={styles.card} style={{ padding: 10, marginTop: 10, borderRadius: 18 }}>
+          <Bone fixed w={36} h={36} r="50%" />
+          <Col gap={7}><Bone fixed w={80} h={12} r={4} /><Bone fixed w={56} h={10} r={4} /></Col>
+        </Row>
       </aside>
 
-      <main className={dk.main}>
-        <div className={dk.head}>
-          <div className={dk.headText}><DBone w={160} h={13} r={5} /><DBone w={380} h={40} r={12} /></div>
-          <DBone w={150} h={46} r={23} />
-        </div>
-
-        <div className={dk.tiles}>
-          {[0, 1, 2].map(i => (
-            <div key={i} className={dk.tile}>
-              <DBone w={90} h={14} r={5} />
-              <div className={dk.tileNum}><DBone w={190} h={40} r={10} /></div>
-              <div className={dk.tileSub}><DBone w={120} h={12} r={5} /></div>
-            </div>
-          ))}
-        </div>
-
-        <div className={dk.body}>
-          <section className={dk.card}>
-            <DBone w={190} h={20} r={6} />
-            <div className={dk.chips}>{[0, 1, 2].map(i => <DBone key={i} w={96} h={36} r={18} />)}</div>
-            <div className={dk.secHead}><DBone w={16} h={16} r={5} /><DBone w={150} h={14} r={5} /><DBone w={26} h={18} r={9} /></div>
-            {rows.map(i => (
-              <div key={i}>
-                <div className={dk.row}>
-                  <DBone w={40} h={40} r="50%" />
-                  <div className={dk.rowText}><DBone w={i % 2 ? '46%' : '38%'} h={14} r={5} /><DBone w="22%" h={11} r={5} /></div>
-                  <DBone w={80} h={16} r={5} />
-                </div>
-                {i < rows.length - 1 && <div className={dk.hair} />}
-              </div>
-            ))}
-          </section>
-
-          <div className={dk.side2}>
-            <section className={`${dk.card} ${dk.cardGauge}`}>
-              <DBone w={150} h={20} r={6} />
-              <svg className={dk.gauge} viewBox="0 0 300 165" aria-hidden="true">
-                <path className={dk.gTrack} d="M20,140 A130,130 0 0 1 280,140" />
-                <path className={dk.gFill} d="M20,140 A130,130 0 0 1 140,10" />
-              </svg>
-              <div className={dk.legend}>{[0, 1, 2].map(i => <DBone key={i} w={80} h={11} r={5} />)}</div>
-            </section>
-            <section className={`${dk.card} ${dk.cardNext}`}>
-              <DBone w={150} h={20} r={6} />
-              <div style={{ height: 12 }} />
-              <DBone w={170} h={38} r={10} />
-              <div style={{ height: 10 }} />
-              <DBone w={220} h={11} r={5} />
-              <div className={dk.bars}>
-                {[45, 70, 30, 85, 55, 40, 65].map((h, i) => <span key={i} className={dk.bone} style={{ height: `${h}%` }} />)}
-              </div>
-            </section>
+      <Col gap={14} className={styles.deskMain}>
+        <Row className={styles.sp} style={{ height: 104, alignItems: 'flex-end', paddingBottom: 6 }}>
+          <Col gap={12}><Bone w={150} h={12} r={4} /><Bone w={430} h={40} r={10} /></Col>
+          <Bone w={164} h={46} r={23} />
+        </Row>
+        <Row gap={14}><Tile strong /><Tile /><Tile /><Tile /></Row>
+        <Row gap={14} style={{ flex: 1, alignItems: 'stretch', minHeight: 0 }}>
+          <div className={`${styles.card} ${styles.col}`} style={{ flex: 1, padding: '22px 24px', minWidth: 0 }}>
+            <Row className={styles.sp}>
+              <Bone w={110} h={20} r={6} />
+              <Row gap={34}><Bone w={34} h={34} r="50%" /><Col gap={10} className={styles.ctr}><Bone w={110} h={14} r={5} /><Dots /></Col><Bone w={34} h={34} r="50%" /></Row>
+            </Row>
+            <Row gap={8} style={{ margin: '22px 0 4px' }}><Bone w={48} h={12} r={4} /><Bone w={22} h={18} r={9} /></Row>
+            <PayRow big /><div className={styles.hair} /><PayRow big /><div className={styles.hair} /><PayRow big />
+            <div style={{ marginTop: 'auto' }}><Tip /></div>
           </div>
-        </div>
-      </main>
+          <Col gap={14} style={{ width: 400 }}>
+            <LunaBubble ls={110} bh={62} style={{ padding: '0 4px', gap: 12 }} />
+            <div className={`${styles.card} ${styles.col}`} style={{ padding: '20px 22px', height: 262 }}>
+              <Bone w={140} h={18} r={6} />
+              <div style={{ margin: 'auto' }}>
+                <Gauge w={250} h={138} gap={7}><Bone w={70} h={28} r={7} /><Bone w={36} h={10} r={4} /></Gauge>
+              </div>
+              <Row gap={16} className={styles.jc} style={{ marginTop: 10 }}>{[0, 1, 2].map(i => <Bone key={i} w={60} h={10} r={4} />)}</Row>
+            </div>
+            <Col gap={10} className={styles.card} style={{ padding: '20px 22px', flex: 1, minHeight: 0 }}>
+              <Bone w={110} h={18} r={6} /><Bone w={130} h={11} r={4} /><Bone w={130} h={28} r={8} />
+              <div style={{ marginTop: 'auto', height: 84, display: 'flex', alignItems: 'flex-end' }}><Bars heights={BAR_H} w={40} scale={0.8} gap={14} /></div>
+            </Col>
+          </Col>
+        </Row>
+      </Col>
     </div>
   )
 }
 
 export function SkeletonLoader() {
-  const isDesk = useIsDesktop()
-  if (isDesk) return <DeskSkeleton />
   return (
-    <div className={styles.pageRoot}>
+    <div className={styles.root} aria-busy="true" role="status">
+      <MobileFrame />
+      <TabletVFrame />
+      <TabletHFrame />
+      <DesktopFrame />
+    </div>
+  )
+}
 
-      {/* ── Riel lateral — solo ≥768px (tablet/escritorio): ahí no existen el
-           header ni el BottomNav, el chrome es NavRail.jsx (72px colapsado). ── */}
-      <div className={styles.railSkel}>
-        <Bone w={36} h={36} r={10} dark />
-        <div className={styles.railSkelItems}>
-          {[0, 1, 2, 3, 4].map(i => <Bone key={i} w={24} h={24} r={7} dark />)}
+// ── Piezas por sección (mismas formas que las tarjetas reales) ───────────────
+
+// Filas de pago de Inicio: ficha de fecha, nombre + apoyo, monto y menú, con
+// separador fino. Va dentro de la tarjeta que ya envuelve la lista real.
+// `count`: cuántas filas fantasma (3 por defecto).
+export function RailSkeleton({ count = 3 }) {
+  return (
+    <div className={styles.rows}>
+      {Array.from({ length: count }).map((_, i) => (
+        <div key={i} className={styles.row}>
+          <Bone w={44} h={50} r={16} />
+          <div className={styles.rowInfo}>
+            <Bone w={i % 2 ? '46%' : '38%'} h={14} r={5} />
+            <Bone w="22%" h={11} r={5} />
+          </div>
+          <Bone w={58} h={15} r={5} />
         </div>
-        <Bone w={36} h={36} r="50%" dark />
+      ))}
+    </div>
+  )
+}
+
+// "Por categoría": punto de color + nombre + porcentaje + monto, con
+// separador fino (mismo patrón que la leyenda real).
+export function CategoryListSkeleton({ count = 4 }) {
+  return (
+    <div className={styles.rows}>
+      {Array.from({ length: count }).map((_, i) => (
+        <div key={i} className={styles.legendRow}>
+          <Bone w={8} h={8} r="50%" />
+          <Bone w={i % 2 ? 90 : 110} h={13} r={5} style={{ marginRight: 'auto' }} />
+          <Bone w={28} h={11} r={4} />
+          <Bone w={54} h={14} r={5} />
+        </div>
+      ))}
+    </div>
+  )
+}
+
+// Filas de "Pagos realizados": fecha (mes + día), nombre + apoyo, monto y
+// menú. Por defecto va dentro de su propia tarjeta (como `.list` de Pagos en
+// móvil); con `bare` solo pinta las filas, para usarlo dentro de otra tarjeta.
+export function PaymentRowSkeleton({ count = 4, bare }) {
+  const rows = (
+    <div className={styles.rows}>
+      {Array.from({ length: count }).map((_, i) => (
+        <div key={i} className={styles.row}>
+          <div className={styles.dateCol}>
+            <Bone w={22} h={9} r={3} />
+            <Bone w={20} h={16} r={4} />
+          </div>
+          <div className={styles.rowInfo}>
+            <Bone w={i % 2 ? '46%' : '38%'} h={14} r={5} />
+            <Bone w="24%" h={11} r={5} />
+          </div>
+          <Bone w={54} h={15} r={5} />
+          <Bone w={16} h={16} r="50%" />
+        </div>
+      ))}
+    </div>
+  )
+  return bare ? rows : <div className={styles.cardWrap}>{rows}</div>
+}
+
+// Tarjeta de totales (2 bloques lado a lado — usada en Recurrentes).
+export function StatsCardSkeleton() {
+  return (
+    <div className={`${styles.cardWrap} ${styles.statsRow}`}>
+      <div className={styles.statsBlock}>
+        <Bone w={60} h={10} r={4} />
+        <Bone w={40} h={22} r={6} style={{ marginTop: 6 }} />
+        <Bone w={70} h={11} r={4} style={{ marginTop: 6 }} />
       </div>
-
-      {/* ── Header ── */}
-      <div className={styles.header}>
-        <div className={styles.headerInner}>
-
-          {/* Avatar + nombre */}
-          <div className={styles.headerLeft}>
-            <Bone w={52} h={52} r="50%" dark />
-            <div className={styles.headerTextCol}>
-              <Bone w={72} h={11} r={4} dark />
-              <Bone w={110} h={17} r={4} dark />
-            </div>
-          </div>
-
-          {/* Engrane + campana — 2 botones reales (antes solo se
-              representaba 1), mismo orden y tamaño que PageHeader.jsx. */}
-          <div className={styles.headerActionsSkel}>
-            <div className={styles.settingsButtonSkel} />
-            <div className={styles.bellButtonSkel} />
-          </div>
-        </div>
+      <div className={styles.statsBlock}>
+        <Bone w={80} h={10} r={4} />
+        <Bone w={70} h={22} r={6} style={{ marginTop: 6 }} />
+        <Bone w={90} h={11} r={4} style={{ marginTop: 6 }} />
       </div>
+    </div>
+  )
+}
 
-      {/* ── Switcher de espacios — tarjeta "Personal" por default (caso más
-           común: la mayoría de las cargas no tienen espacios compartidos
-           activos todavía). Esquinas redondeadas arriba, fundida con el
-           contenido de abajo, igual que la tarjeta activa real. ── */}
-      <div className={styles.roundedWrapper}>
-        <div className={styles.switcherPlaceholder}>
-          <Bone w={90} h={17} r={4} />
-        </div>
-
-        <div className={styles.contentPadding}>
-
-        {/* ── Switch Periodo / Mes — píldora deslizante (border-radius: 999),
-             ya no el toggle cuadrado de 5px que tenía antes. */}
-        <div className={styles.tabsRow}>
-          <Bone w="50%" h={30} r={999} />
-          <Bone w="50%" h={30} r={999} />
-        </div>
-
-        {/* ── Card de métricas — medio anillo tipo gauge (ya no la barra
-             horizontal de antes). Fecha arriba a la derecha, el medio
-             anillo centrado (un domo con OTRO domo más chico encima, del
-             color de la propia tarjeta, "perforando" el hueco — un domo
-             sólido sin el hueco se veía como medio círculo relleno, no como
-             un anillo, Johnatan lo notó probando en su teléfono), pagado/
-             pendiente pegado abajo del anillo, y título/monto/estatus
-             debajo. */}
-        <div className={styles.metricCard}>
-          <div className={styles.metricCardDateRow}>
-            <Bone w={100} h={20} r={5} />
+// Acordeón de categoría cerrado: ícono redondo + nombre/meta + chevron, en su
+// propia tarjeta (mismo patrón que `.group` de Recurrentes).
+export function CategoryAccordionSkeleton({ count = 3 }) {
+  return (
+    <div className={styles.stack}>
+      {Array.from({ length: count }).map((_, i) => (
+        <div key={i} className={`${styles.cardWrap} ${styles.accItem}`}>
+          <Bone w={40} h={40} r="50%" />
+          <div className={styles.accText}>
+            <Bone w={110} h={14} r={5} />
+            <Bone w={80} h={11} r={5} />
           </div>
-          <div className={styles.ringWrapper}>
-            <div className={styles.ringOuter}>
-              <Bone w={180} h={90} r="90px 90px 0 0" style={{ position: 'absolute', top: 0, left: 0 }} />
-              <div className={styles.ringInnerCut} />
-            </div>
+          <Bone w={18} h={18} r={5} />
+        </div>
+      ))}
+    </div>
+  )
+}
+
+// Tarjeta de meta: ícono + nombre + monto, barra de progreso y fila inferior.
+export function GoalCardSkeleton({ count = 2 }) {
+  return (
+    <div className={styles.stack}>
+      {Array.from({ length: count }).map((_, i) => (
+        <div key={i} className={`${styles.cardWrap} ${styles.goalItem}`}>
+          <div className={styles.goalTop}>
+            <Bone w={40} h={40} r="50%" />
+            <Bone w={110} h={15} r={5} />
+            <Bone w={60} h={14} r={5} style={{ marginLeft: 'auto' }} />
           </div>
-          <div className={styles.metricPaidPendingRow}>
-            <Bone w={90} h={11} r={4} />
-            <Bone w={90} h={11} r={4} />
-          </div>
-          <div className={styles.metricCenterRowMb6}>
-            <Bone w={120} h={11} r={4} />
-          </div>
-          <div className={styles.metricCenterRowMb8}>
-            <Bone w={140} h={26} r={4} />
-          </div>
-          <div className={styles.metricCenterRow}>
-            <Bone w={160} h={11} r={4} />
-          </div>
+          <Bone w="100%" h={8} r={99} style={{ marginTop: 14 }} />
+          <Bone w={130} h={12} r={5} style={{ marginTop: 10 }} />
         </div>
-
-        {/* ── Sección "Próximos a vencer" ── */}
-        <div className={styles.sectionHeaderRow}>
-          <Bone w={130} h={13} r={4} />
-          <Bone w={80}  h={13} r={4} />
-        </div>
-
-        {/* ── Colapsable de pagados ── */}
-        <Bone w="100%" h={40} r={8} style={{ marginBottom: 20 }} />
-
-        {/* ── Sección "Próximos a vencer" (riel vertical) ── */}
-        <div className={styles.sectionHeaderRow}>
-          <Bone w={130} h={13} r={4} />
-          <Bone w={80}  h={13} r={4} />
-        </div>
-        <div className={styles.railWrapper}>
-          <div className={styles.railLine} />
-          {[0, 1, 2].map(i => (
-            <div key={i} className={styles.railItem}>
-              <Bone w={24} h={24} r="50%" />
-              <div className={styles.railItemCard}>
-                <Bone w="55%" h={13} r={4} />
-                <Bone w="30%" h={10} r={4} />
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {/* ── Sección "Próximo periodo" (riel vertical) ── */}
-        <div className={styles.sectionHeaderRow}>
-          <Bone w={120} h={13} r={4} />
-          <Bone w={38}  h={20} r={11} />
-        </div>
-        <div className={styles.railWrapperNoMb}>
-          <div className={styles.railLine} />
-          {[0, 1].map(i => (
-            <div key={i} className={styles.railItem}>
-              <Bone w={24} h={24} r="50%" />
-              <div className={styles.railItemCard}>
-                <Bone w="45%" h={13} r={4} />
-                <Bone w="30%" h={10} r={4} />
-              </div>
-            </div>
-          ))}
-        </div>
-        </div>
-      </div>
-
-      {/* ── BottomNav skeleton ── */}
-      <div className={styles.bottomNavSkeleton}>
-        {[0, 1, 2, 3, 4].map(i => (
-          <Bone key={i} w={i === 2 ? 40 : 22} h={i === 2 ? 40 : 22} r={i === 2 ? '50%' : 6} dark />
-        ))}
-      </div>
-
+      ))}
     </div>
   )
 }

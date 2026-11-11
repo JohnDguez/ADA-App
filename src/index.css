@@ -284,9 +284,6 @@
   --white-a60: rgba(255, 255, 255, 0.6);
   --white-a70: rgba(255, 255, 255, 0.7);
 
-  --shimmer-edge: rgba(255, 255, 255, 0.12);  /* skeleton: extremos del brillo */
-  --shimmer-mid:  rgba(255, 255, 255, 0.28);  /* skeleton: centro del brillo */
-
   --scrim-strong: rgba(2, 10, 31, 0.5);       /* fondo de paneles/modales centrados */
   --scrim-coach:  rgba(2, 10, 31, 0.92);      /* oscurecido de Coachmarks */
   --scrim-coach-desk: rgba(2, 10, 31, 0.78);  /* oscurecido de Coachmarks en escritorio (más suave: se ve la app detrás) */
@@ -888,26 +885,37 @@ html [data-presence-wrap][data-closing] > * { animation: presenceFadeOut .22s ea
   100% { background-position:  400px 0; }
 }
 
+/* Tonos del esqueleto: solo grises derivados de los tokens del tema (claro y
+   oscuro), sin azul, dorado ni verde. `--sk` es el hueso, `--sk-hi` el brillo
+   del shimmer y `--sk-strong` el fondo de las fichas de total / tarjeta
+   Premium. `.sk-onchip` y `.sk-onstrong` reajustan los huesos que quedan
+   sobre una ficha gris o sobre una ficha fuerte, para que no se pierdan. */
+:root {
+  --sk: var(--desk-chip);
+  --sk-hi: color-mix(in srgb, var(--text) 9%, var(--desk-chip));
+  --sk-strong: color-mix(in srgb, var(--text) 11%, var(--desk-card));
+}
+.sk-onchip {
+  --sk: color-mix(in srgb, var(--text) 8%, var(--desk-chip));
+  --sk-hi: color-mix(in srgb, var(--text) 13%, var(--desk-chip));
+}
+.sk-onstrong {
+  --sk: color-mix(in srgb, var(--text) 16%, var(--desk-card));
+  --sk-hi: color-mix(in srgb, var(--text) 22%, var(--desk-card));
+}
+
+/* Hueso de datos: anima con shimmer. */
 .skeleton-bone {
-  background: linear-gradient(
-    90deg,
-    var(--border) 25%,
-    var(--bg)     50%,
-    var(--border) 75%
-  );
+  background: linear-gradient(90deg, var(--sk) 25%, var(--sk-hi) 50%, var(--sk) 75%);
   background-size: 400px 100%;
   animation: shimmer 1.5s ease-in-out infinite;
 }
 
-.skeleton-bone-dark {
-  background: linear-gradient(
-    90deg,
-    var(--shimmer-edge) 25%,
-    var(--shimmer-mid) 50%,
-    var(--shimmer-edge) 75%
-  );
-  background-size: 400px 100%;
-  animation: shimmer 1.5s ease-in-out infinite;
+/* Hueso de chrome fijo (riel, barra inferior, botones): quieto, sin brillo. */
+.skeleton-bone-fixed { background: var(--sk); }
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton-bone { animation: none; }
 }
 
 /* ── Paleta de colores para categorías (selector libre) — ver arriba, ya

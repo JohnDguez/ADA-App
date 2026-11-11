@@ -36,7 +36,14 @@ export function LunaStrip({ lunaState, loading = false, variant, onArrow, onTap 
   if (loading) {
     return (
       <div className={styles.wrap}>
-        {variant === 'peek' ? <Bone w={240} h={64} r={18} /> : <Bone w="100%" h={variant === 'desk' ? 84 : 112} r={variant === 'desk' ? 24 : 12} />}
+        {variant === 'peek'
+          ? <Bone w={240} h={64} r={18} />
+          : (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, width: '100%' }}>
+              <Bone w={variant === 'desk' ? 110 : 100} h={variant === 'desk' ? 110 : 100} r="32%" />
+              <Bone w="100%" h={variant === 'desk' ? 62 : 58} r={20} style={{ flex: 1 }} />
+            </div>
+          )}
       </div>
     )
   }

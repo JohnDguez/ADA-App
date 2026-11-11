@@ -1,368 +1,125 @@
-.pageRoot {
-  background: var(--bg);
-  min-height: 100vh;
-  padding-bottom: 120px;
-}
-
-.header {
-  /* Antes #020A1F fijo (se veía oscuro sin importar el tema). Se probó
-     var(--nav-bg) (azul de marca) en la ronda anterior, pero introducía
-     COLOR real a un esqueleto que siempre había sido monocromático (gris
-     neutro, sin importar qué tan colorido vaya a ser el contenido real) —
-     Johnatan lo notó con captura y tiene razón: un esqueleto no debe
-     "adelantar" el color de marca, solo la forma. Ahora usa
-     var(--section-bg): gris puro en tema claro (#D9D9D9), gris oscuro
-     neutro en tema oscuro (#1E2130, de la misma familia que --bg/--border
-     del resto del esqueleto, no un color nuevo) — mantiene el contraste
-     que necesita el recorte redondeado de `.roundedWrapper` contra
-     var(--bg) de abajo, en los 2 temas, sin dejar de ser monocromático. */
-  background: var(--section-bg);
-  height: 140px;
-  display: flex;
-  align-items: center;
-  padding: 0 20px 24px;
-}
-
-.headerInner {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  width: 100%;
-}
-
-.headerLeft {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.headerTextCol {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-/* ── Botones del header (agosto 2026) — antes solo había UN bone genérico
-     representando "la campana"; PageHeader.jsx real tiene 2 botones
-     (engrane + campana, ver headerActions). Estos NO llevan shimmer: a
-     diferencia del avatar/saludo/nombre (que sí dependen del perfil sin
-     cargar todavía), estos 2 botones son chrome fijo — su color y tamaño
-     no cambian una vez que el perfil llega, así que mostrarlos ya
-     "resueltos" es más preciso que animarlos como si fueran datos en
-     camino. */
-.headerActionsSkel {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.settingsButtonSkel {
-  width: 40px;
-  height: 40px;
-  border-radius: 12px;
-  background: var(--surface);
-  border: 1px solid var(--border-mid);
-  flex-shrink: 0;
-}
-
-.bellButtonSkel {
-  /* Antes var(--accent) (azul) — mismo problema que el header: un
-     esqueleto no debe mostrar el color real del botón (que además solo se
-     confirma cuando el perfil carga), solo su forma. Gris neutro, misma
-     familia que .settingsButtonSkel de al lado. */
-  width: 40px;
-  height: 40px;
-  border-radius: 12px;
-  background: var(--border-mid);
-  flex-shrink: 0;
-}
-
-.roundedWrapper {
-  background: var(--bg);
-  border-radius: 24px 24px 0 0;
-  margin-top: -24px;
-  position: relative;
-  z-index: 10;
-}
-
-.switcherPlaceholder {
-  padding: 16px 18px 14px;
-  border-bottom: 1px solid var(--border);
-}
-
-.contentPadding {
-  padding: 0 16px;
-}
-
-.tabsRow {
-  display: flex;
-  gap: 3px;
-  background: var(--section-bg);
-  border-radius: 999px;
-  padding: 4px;
-  margin-top: 20px;
-  margin-bottom: 10px;
-}
-
-.metricCard {
-  background: var(--surface);
-  border-radius: 12px;
-  padding: 14px 16px;
-  margin-bottom: 20px;
-}
-
-.metricCardDateRow {
-  display: flex;
-  justify-content: flex-end;
-  margin-bottom: 8px;
-}
-
-.ringWrapper {
-  display: flex;
-  justify-content: center;
-  margin-bottom: 10px;
-}
-
-.ringOuter {
-  position: relative;
-  width: 180px;
-  height: 90px;
-}
-
-.ringInnerCut {
-  position: absolute;
-  bottom: 0;
-  left: 24px;
-  width: 132px;
-  height: 66px;
-  border-radius: 66px 66px 0 0;
-  background: var(--surface);
-}
-
-.metricPaidPendingRow {
-  display: flex;
-  justify-content: center;
-  gap: 16px;
-  margin-bottom: 14px;
-}
-
-.metricCenterRowMb6 {
-  display: flex;
-  justify-content: center;
-  margin-bottom: 6px;
-}
-
-.metricCenterRowMb8 {
-  display: flex;
-  justify-content: center;
-  margin-bottom: 8px;
-}
-
-.metricCenterRow {
-  display: flex;
-  justify-content: center;
-}
-
-.sectionHeaderRow {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 12px;
-}
-
-.railWrapper {
-  position: relative;
-  margin-bottom: 20px;
-}
-
-.railWrapperNoMb {
-  position: relative;
-}
-
-.railLine {
-  position: absolute;
-  left: 11px;
-  top: 6px;
-  bottom: 6px;
-  width: 2px;
-  background: var(--border);
-}
-
-.railItem {
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
-  margin-bottom: 10px;
-}
-
-.railItemCard {
-  flex: 1;
-  background: var(--surface);
-  border-radius: 8px;
-  padding: 11px 12px;
-  display: flex;
-  flex-direction: column;
-  gap: 7px;
-}
-
-.bottomNavSkeleton {
+/* Esqueleto del arranque (móvil, tablet vertical, tablet horizontal y
+   escritorio) y piezas por sección. Solo tokens del tema: capas
+   --desk-outer → --desk-panel → --desk-card → --desk-chip y los grises
+   --sk / --sk-hi / --sk-strong de index.css (claro y oscuro). Pantalla
+   completa autocontenida: no depende del margen de #root ni de
+   html[data-desk-sidebar], que aún no existen mientras carga la sesión. */
+.root {
   position: fixed;
-  bottom: 16px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: calc(100% - 32px);
-  max-width: 388px;
-  height: 56px;
-  border-radius: 10px;
-  background: var(--bottom-nav-bg);
+  inset: 0;
+  z-index: 50;
+  overflow: hidden;
+  background: var(--desk-outer);
+}
+
+/* Cuatro marcos; solo se ve el del ancho actual (cortes del Inicio real). */
+.frame { position: absolute; inset: 0; display: none; overflow: hidden; }
+.fMobile { display: block; background: var(--desk-panel); }
+.fTabV, .fTabH, .fDesk { background: var(--desk-outer); }
+@media (min-width: 768px)  { .fMobile { display: none; } .fTabV { display: block; } }
+@media (min-width: 960px)  { .fTabV { display: none; } .fTabH { display: block; } }
+@media (min-width: 1100px) { .fTabH { display: none; } .fDesk { display: block; } }
+
+/* ── Utilidades de layout ── */
+.col { display: flex; flex-direction: column; }
+.rw { display: flex; align-items: center; }
+.sp { justify-content: space-between; }
+.ctr { align-items: center; }
+.jc { justify-content: center; }
+.hair { height: 1px; background: var(--desk-hair); }
+
+/* ── Capas ── */
+.card { background: var(--desk-card); border-radius: 24px; box-shadow: var(--desk-shadow); }
+.chip { background: var(--desk-chip); border-radius: 18px; }
+.strong { background: var(--sk-strong); border-radius: 24px; }
+
+/* ── Chrome fijo ── */
+.rail {
+  position: absolute;
+  left: 12px;
+  top: 12px;
+  bottom: 12px;
+  width: 72px;
+  box-sizing: border-box;
+  border-radius: 26px;
+  background: var(--desk-panel);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 14px 0;
+}
+.railSep { width: 30px; height: 1px; background: var(--desk-hair); margin: 2px 0 26px; }
+
+.navb {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 86px;
+  box-sizing: border-box;
+  background: var(--desk-card);
+  border-radius: 28px 28px 0 0;
+  box-shadow: var(--desk-shadow);
   display: flex;
   align-items: center;
   justify-content: space-around;
-  padding: 0 16px;
+  padding: 0 14px 8px;
 }
 
-/* ── Piezas nuevas (agosto 2026) — sistema de carga por sección, PaymentsPage ── */
-.categoryListSkelWrapper {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
-
-.categoryListSkelItem {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.categoryListSkelContent {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-}
-
-.categoryListSkelRow {
-  display: flex;
-  justify-content: space-between;
-}
-
-.paymentRowSkelWrapper {
+.side {
+  position: absolute;
+  left: 14px;
+  top: 14px;
+  bottom: 14px;
+  width: 248px;
+  box-sizing: border-box;
+  border-radius: 26px;
+  background: var(--desk-panel);
+  padding: 20px 14px 14px;
   display: flex;
   flex-direction: column;
 }
 
-.paymentRowSkelItem {
-  display: flex;
-  align-items: center;
-  padding: 10px 14px;
-  border-bottom: 0.5px solid var(--bg);
-  gap: 10px;
-}
-
-.paymentRowSkelDate {
-  text-align: center;
-  min-width: 28px;
-  flex-shrink: 0;
-}
-
-.paymentRowSkelDivider {
-  width: 1px;
-  height: 28px;
-  background: var(--border);
-  flex-shrink: 0;
-}
-
-.paymentRowSkelInfo {
-  flex: 1;
-  min-width: 0;
-}
-
-/* ── Piezas nuevas (agosto 2026) — sistema de carga por sección, RecurrentsPage ── */
-.statsCardSkelWrapper {
-  display: flex;
-  background: var(--surface);
-  border-radius: var(--radius);
-  padding: 14px 16px;
-  gap: 14px;
-}
-
-.statsCardSkelBlock {
-  flex: 1;
-}
-
-.categoryAccordionSkelWrapper {
+/* ── Contenido ── */
+.tabContentV { position: absolute; left: 116px; right: 12px; top: 12px; }
+.tabContentH { position: absolute; left: 100px; right: 12px; top: 12px; }
+.deskMain {
+  position: absolute;
+  left: 276px;
+  right: 14px;
+  top: 0;
+  bottom: 0;
+  padding: 24px 0 14px;
+  box-sizing: border-box;
   display: flex;
   flex-direction: column;
-  gap: 8px;
 }
 
-.categoryAccordionSkelItem {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  background: var(--surface);
-  border-radius: var(--radius);
-  padding: 14px;
-  min-height: 58px;
+/* ── Medidor ── */
+.gaugeBox { position: relative; }
+.gauge { display: block; }
+.gt { fill: none; stroke: var(--sk); stroke-width: 26; stroke-linecap: round; }
+.gf { fill: none; stroke: var(--sk-hi); stroke-width: 26; stroke-linecap: round; }
+.gaugeCenter { position: absolute; left: 0; right: 0; }
+
+/* ── Piezas por sección ── */
+.cardWrap {
+  background: var(--desk-card);
+  border-radius: clamp(1rem, 5vw, 1.25rem);
+  box-shadow: var(--desk-shadow);
+  padding: 0.25rem clamp(0.75rem, 3.6vw, 1rem);
 }
+.rows { display: flex; flex-direction: column; }
+.row { display: flex; align-items: center; gap: 12px; padding: 12px 0; min-width: 0; }
+.row + .row, .legendRow + .legendRow { border-top: 1px solid var(--desk-hair); }
+.rowInfo { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 9px; }
+.dateCol { width: 28px; flex-shrink: 0; display: flex; flex-direction: column; align-items: center; gap: 5px; }
+.legendRow { display: flex; align-items: center; gap: 10px; padding: 10px 0; min-width: 0; }
 
-.categoryAccordionSkelContent {
-  flex: 1;
-  min-width: 0;
-}
-
-/* ── Piezas nuevas (agosto 2026) — sistema de carga por sección, GoalsPage ── */
-.goalCardSkelWrapper {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.goalCardSkelItem {
-  background: var(--surface);
-  border-radius: var(--radius);
-  padding: 16px;
-}
-
-.goalCardSkelTop {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-/* ── Tablet/escritorio (≥768px, v0.9.788) ─────────────────────────────────
-   Mismo layout que Home en este breakpoint: riel lateral de 72px, sin
-   header ni BottomNav, el contenido a todo el ancho (#root ya deja el
-   margen del riel, index.css) y sin el switcher de espacios (vive en el
-   riel). En móvil nada de esto aplica. */
-.railSkel { display: none; }
-
-@media (min-width: 768px) {
-  .railSkel {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: space-between;
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 72px;
-    height: 100vh;
-    height: 100dvh;
-    padding: 20px 0;
-    box-sizing: border-box;
-    /* Gris neutro como .header (nunca el azul de marca: un esqueleto solo
-       muestra la forma, no el color). */
-    background: var(--section-bg);
-  }
-  .railSkelItems { display: flex; flex-direction: column; align-items: center; gap: 28px; }
-
-  .pageRoot { padding-bottom: 40px; }
-  .header,
-  .bottomNavSkeleton,
-  .switcherPlaceholder { display: none; }
-  .roundedWrapper { margin-top: 0; border-radius: 0; }
-  .contentPadding { padding: 28px 24px 0; }
-  .tabsRow { margin-top: 0; }
-  .metricCard { padding: 20px 24px; }
-}
+.stack { display: flex; flex-direction: column; gap: 10px; }
+.statsRow { display: flex; gap: 14px; padding: 14px 16px; }
+.statsBlock { flex: 1; }
+.accItem { display: flex; align-items: center; gap: 12px; padding: 14px 16px; }
+.accText { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 6px; }
+.goalItem { padding: 16px; }
+.goalTop { display: flex; align-items: center; gap: 10px; }
