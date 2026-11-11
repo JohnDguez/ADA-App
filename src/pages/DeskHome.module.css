@@ -184,6 +184,8 @@
 
 .range { font-size: 13px; color: var(--muted); }
 .range b { color: var(--text); font-weight: 600; }
+/* Rango del próximo periodo + «Ajustar fecha» (v0.9.1048): comparten renglón para no agregar altura. */
+.rangeRow { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 32px; }
 .nextNum { font-size: 36px; font-weight: 500; letter-spacing: -1.2px; margin: 4px 0 2px; }
 .nextNum small { font-size: 18px; opacity: 0.55; letter-spacing: 0; }
 .bars { display: flex; gap: 10px; align-items: flex-end; margin-top: 16px; }

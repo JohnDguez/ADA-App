@@ -1883,6 +1883,7 @@ export default function App() {
       <main>
       {tab === 'home' && (
         <HomePage
+          onUpdateProfile={updateProfile}
           payments={visiblePayments}
           dataLoading={paymentsLoading}
           profile={effectiveProfile}

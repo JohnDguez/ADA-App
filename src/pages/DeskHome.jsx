@@ -1,5 +1,6 @@
 import { useState, useRef, useMemo, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
+import { AdjustCobroChip, AdjustCobroModal } from '../components/AdjustCobroDate'
 import { Plus, ArrowUpRight, UserRound, Crown, UsersRound, ChevronLeft, ChevronRight } from 'lucide-react'
 import { PayRail } from '../components/PayRail'
 import { PaidCollapse } from '../components/PaidCollapse'
@@ -42,7 +43,7 @@ export function DeskHome({
   profile, dataLoading, activeSpaceId, spaceMembers, sharedSpaces, spacePermissions, derived, lunaState, handlers,
   cutsInPeriod, cutPeriodKey, paymentMethodsList, periodRangeLabel, nextRangeLabel, afterRangeLabel, afterStartsInDays, slideClass, spaceJustChanged,
   onOpenPremium, onSpaceReady, onAdd, onImport, onStartAdd, onGoTab, onGoSettingsSection, onMarkUnpaid, onViewSource,
-  tablet = false, periodDayNumber, periodDayTotal, nextStartsInDays,
+  tablet = false, periodDayNumber, periodDayTotal, nextStartsInDays, onUpdateProfile,
 }) {
   const { t, i18n } = useTranslation()
   const { pagarEsteCobro, vencidos, delPeriodo, pagadosEstePeriodo, pagadoMonto, pendingAmt, totalConocido, pctPagado, upcoming, nextPeriodKnownTotal, nextStart, nextEnd, pendingVariableCount, afterUpcoming, afterPeriodKnownTotal } = derived
@@ -341,7 +342,10 @@ export function DeskHome({
 
                   <section className={`${styles.card} ${styles.nextCard}`}>
                     <h2 className={styles.cardTitle}>{t('deskHome.nextTitle')}</h2>
-                    <div className={styles.range}>{nextRangeLabel}</div>
+                    <div className={styles.rangeRow}>
+                      <div className={styles.range}>{nextRangeLabel}</div>
+                      {!activeSpaceId && <AdjustCobroChip profile={profile} label />}
+                    </div>
                     <div className={styles.nextNum}>{dataLoading ? <LoadingDots /> : <>{nextInt}<small>{nextCents}</small></>}</div>
                     <div className={styles.range}><b>{t('deskHome.nextFixed', { count: nextFixed })}</b> · <b>{t('deskHome.nextVariable', { count: nextVariable })}</b></div>
                     {weekCount > 1 && (
@@ -393,6 +397,7 @@ export function DeskHome({
           )}
         </div>
       </div>
+      {!activeSpaceId && !tablet && onUpdateProfile && <AdjustCobroModal profile={profile} onSave={map => onUpdateProfile({ cobro_overrides: map })} />}
     </div>
   )
 }
