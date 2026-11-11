@@ -2669,7 +2669,7 @@
     "cobroDate": {
       "title": "Change a payday's date",
       "text": "If you get paid earlier or later than usual, adjust the date of just that payday. Your usual day comes back after.",
-      "action": "Adjust payday date"
+      "action": "Move this payday"
     },
     "spaceSplit": {
       "title": "Split a payment between members",
@@ -2926,12 +2926,16 @@
     "ownedText": "You own “{{name}}”. You can join others as a guest."
   },
   "cobroAdjust": {
+    "moveCobro": "Move this payday",
+    "onlyThis": "This only changes this payday. Your usual day comes back afterwards.",
+    "permanentAsk": "Did your payday change for good?",
+    "permanentGo": "Change it in Settings",
     "chip": "Adjust date",
     "done": "Date adjusted",
     "remove": "Remove the date adjustment",
     "next": "Next payday",
     "wasScheduled": "Scheduled: {{date}}",
-    "title": "Adjust payday date",
+    "title": "Move this payday",
     "scheduledFor": "Scheduled for {{date}}",
     "newDate": "New payday date",
     "otherDate": "Other date",

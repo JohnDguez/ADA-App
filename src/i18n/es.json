@@ -2669,7 +2669,7 @@
     "cobroDate": {
       "title": "Cambia la fecha de un cobro",
       "text": "Si te pagan antes o después de lo normal, ajusta la fecha solo de ese cobro. Después vuelve tu día de siempre.",
-      "action": "Ajustar fecha de cobro"
+      "action": "Mover este cobro"
     },
     "spaceSplit": {
       "title": "Divide un pago entre miembros",
@@ -2926,12 +2926,16 @@
     "ownedText": "Eres dueño de «{{name}}». Puedes unirte a otros como invitado."
   },
   "cobroAdjust": {
+    "moveCobro": "Mover este cobro",
+    "onlyThis": "Solo cambia este cobro. Después vuelve tu día de siempre.",
+    "permanentAsk": "¿Cambió tu día de cobro para siempre?",
+    "permanentGo": "Cámbialo en Ajustes",
     "chip": "Ajustar fecha",
     "done": "Fecha ajustada",
     "remove": "Quitar el ajuste de fecha",
     "next": "Próximo cobro",
     "wasScheduled": "Programado: {{date}}",
-    "title": "Ajustar fecha de cobro",
+    "title": "Mover este cobro",
     "scheduledFor": "Programado para el {{date}}",
     "newDate": "Nueva fecha de cobro",
     "otherDate": "Otra fecha",

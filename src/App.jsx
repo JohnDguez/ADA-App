@@ -994,6 +994,13 @@ export default function App() {
     return () => { sub?.remove() }
   }, [])
 
+  // «Cámbialo en Ajustes» de la ventana «Mover este cobro» (v0.9.1049)
+  useEffect(() => {
+    const go = () => goToSettingsSection('cobro')
+    window.addEventListener('cobro-adjust:settings', go)
+    return () => window.removeEventListener('cobro-adjust:settings', go)
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
   if (authLoading || (user && profileLoading)) return <SkeletonLoader />
   if (isRecovery) return <Suspense fallback={<SkeletonLoader />}><ResetPasswordPage onDone={() => setIsRecovery(false)} /></Suspense>
   if (!user) return <Suspense fallback={<SkeletonLoader />}><AuthPage /></Suspense>

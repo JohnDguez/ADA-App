@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
-import { CalendarClock, CalendarDays, Pencil, X } from 'lucide-react'
+import { CalendarClock, CalendarDays, ChevronRight, Pencil, X } from 'lucide-react'
 import { QuickModal } from './Modal'
 import { useAnchor } from './AnchoredPop'
 import { DatePicker } from './DatePicker'
@@ -21,7 +21,7 @@ function fmtDay(d, opts = { weekday: 'short', day: 'numeric', month: 'short' }) 
   return d.toLocaleDateString(intlLocale(), opts).replace(/\./g, '')
 }
 
-export function AdjustCobroModal({ profile, onSave }) {
+export function AdjustCobroModal({ profile, onSave, fromSettings = false }) {
   const { t } = useTranslation()
   const [open, setOpen] = useState(false)
   const [pick, setPick] = useState(null)      // 'AAAA-MM-DD'
@@ -66,6 +66,7 @@ export function AdjustCobroModal({ profile, onSave }) {
       primary={{ label: t('buttons.save'), onClick: save, disabled: !valid }} width={440} popWidth={380}>
       {open ? (
         <div className={mk.pan}>
+          <div className={styles.solo}>{t('cobroAdjust.onlyThis')}</div>
           <div className={mk.lab}><span>{t('cobroAdjust.newDate')}</span></div>
           <div className={mk.chips}>
             {days.map(d => {
@@ -76,6 +77,12 @@ export function AdjustCobroModal({ profile, onSave }) {
           </div>
           {onOther && <DatePicker inline value={pick || ''} onChange={v => setPick(v)} min={dateToStr(info.min)} max={dateToStr(info.max)} />}
           {pick && !valid && <div className={mk.err}>{t('cobroAdjust.invalid')}</div>}
+          {!fromSettings && (
+            <div className={styles.perm}>
+              <span>{t('cobroAdjust.permanentAsk')}</span>
+              <button type="button" onClick={() => { setOpen(false); window.dispatchEvent(new Event('cobro-adjust:settings')) }}>{t('cobroAdjust.permanentGo')}<ChevronRight size={14} /></button>
+            </div>
+          )}
         </div>
       ) : null}
     </QuickModal>
@@ -101,8 +108,8 @@ export function NextCobroRow({ profile, onSave }) {
       </div>
       {info.adjusted
         ? <button type="button" className={styles.mini} onClick={clear} aria-label={t('cobroAdjust.remove')}>{t('cobroAdjust.done')}<X size={14} /></button>
-        : <button type="button" className={styles.mini} onClick={openAdjustCobro}><CalendarClock size={14} />{t('cobroAdjust.chip')}</button>}
-      <AdjustCobroModal profile={profile} onSave={onSave} />
+        : <button type="button" className={styles.mini} onClick={openAdjustCobro}><CalendarClock size={14} />{t('cobroAdjust.moveCobro')}</button>}
+      <AdjustCobroModal profile={profile} onSave={onSave} fromSettings />
     </div>
   )
 }
@@ -114,7 +121,7 @@ export function AdjustCobroChip({ profile, className = '', long = false, label =
   if (!info) return null
   return (
     <button type="button" className={`${styles.mini} ${className}`} onClick={openAdjustCobro} aria-label={t('cobroAdjust.title')}>
-      {label ? t('cobroAdjust.chip') : t(long ? 'cobroAdjust.chipDateLong' : 'cobroAdjust.chipDate', { date: fmtDay(info.actual, { weekday: 'short', day: 'numeric', month: 'short' }) })}<Pencil size={13} />
+      {label ? t('cobroAdjust.moveCobro') : t(long ? 'cobroAdjust.chipDateLong' : 'cobroAdjust.chipDate', { date: fmtDay(info.actual, { weekday: 'short', day: 'numeric', month: 'short' }) })}<Pencil size={13} />
     </button>
   )
 }
@@ -147,7 +154,7 @@ export function CobroWeekendNotice({ profile, userId, wide = false }) {
       <div className={styles.noticeTx}>
         <b>{t('cobroAdjust.notice.title', { weekday: fmtDay(info.actual, { weekday: 'long' }), date: fmtDay(info.actual, { day: 'numeric', month: 'short' }) })}</b>
         <span>{t('cobroAdjust.notice.question')}</span>
-        <button type="button" className={styles.noticeGo} onClick={openAdjustCobro}>{t('cobroAdjust.chip')}</button>
+        <button type="button" className={styles.noticeGo} onClick={openAdjustCobro}>{t('cobroAdjust.moveCobro')}</button>
       </div>
       <button type="button" className={styles.noticeX} onClick={close} aria-label={t('buttons.close')}><X size={16} /></button>
     </div>
