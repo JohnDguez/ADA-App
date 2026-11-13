@@ -31,3 +31,6 @@
   .add:hover, .pill:hover { translate: none; filter: none; opacity: 0.9; }
 }
 @media (prefers-reduced-motion: reduce) { .tile, .pill { animation: none; transition: none; } }
+
+/* Total de los últimos 6 meses bajo el nombre (v0.9.1055) */
+.sub { font-size: 12px; line-height: 1.2; color: var(--muted); font-feature-settings: 'tnum'; min-height: 1.2em; }

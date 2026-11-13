@@ -29,6 +29,7 @@ import { Toggle } from '../components/SettingsShared'
 import { switchProps } from '../lib/a11y'
 import { usePresence } from '../lib/usePresence'
 import { useScrollLock } from '../lib/scrollLock'
+import { getScheduled } from '../lib/scheduled'
 
 const INCOME_TYPES = ['Bono', 'Préstamo', 'Pago', 'Comisión', 'Otro']
 
@@ -139,7 +140,7 @@ function ModalOrPop({ show, onClose, width = 460, title, desc, icon, tone, prima
   )
 }
 
-export function PaymentsPage({ payments, dataLoading = false, periodIncome, paymentMethodsList = [], paymentMethods = null, onChangeMethod, profile, spaceSwitcher, activeSpaceHeader, activeSpaceId = null, rawActiveSpaceId = null, sharedSpaces, spacePermissions, onOpenPremium, onSpaceReady, unreadCount, onOpenNotifs, onGoSettings, onMarkUnpaid, onDelete, onDeleteDirect, onUpdateProfile, onEdit, onViewSource, onSplit, onAdd, onStartAdd, onImport, onGoCategories, onGoCards, sharedFund, slideClass, ensureMonthLoaded, oldestPaymentYear = null }) {
+export function PaymentsPage({ payments, dataLoading = false, periodIncome, paymentMethodsList = [], paymentMethods = null, onChangeMethod, profile, spaceSwitcher, activeSpaceHeader, activeSpaceId = null, rawActiveSpaceId = null, sharedSpaces, spacePermissions, onOpenPremium, onSpaceReady, unreadCount, onOpenNotifs, onGoSettings, onMarkUnpaid, onDelete, onDeleteDirect, onUpdateProfile, onEdit, onViewSource, onSplit, onAdd, onStartAdd, onAddPrefilled, onMarkPaid, onGoRecurrents, onGoCategoryHistory, onImport, onGoCategories, onGoCards, sharedFund, slideClass, ensureMonthLoaded, oldestPaymentYear = null }) {
   const { t } = useTranslation()
   const isDesktop = useIsDesktop()
   const isMobile = useIsMobile()
@@ -231,6 +232,8 @@ export function PaymentsPage({ payments, dataLoading = false, periodIncome, paym
   const [viewMonth,   setViewMonth]   = useState(now.getMonth())
   const [viewYear,    setViewYear]    = useState(now.getFullYear())
   const [viewMode,    setViewMode]    = useState('periodo')  // 'mes' | 'periodo'
+  // «Programados» (v0.9.1055): en tablet/escritorio es un chip que reemplaza la lista de pagos; en móvil, la pestaña 'programados'.
+  const [showScheduled, setShowScheduled] = useState(false)
 
   // Carga bajo demanda (v0.9.281): usePayments solo trae de entrada los
   // pagados de los últimos 3 meses — al elegir un mes más viejo en "Por
@@ -729,6 +732,20 @@ export function PaymentsPage({ payments, dataLoading = false, periodIncome, paym
 
   const maxCat = Math.max(...catData.map(d => d.total), 1)
 
+  // Programados (v0.9.1055): pagos únicos pendientes con fecha posterior al
+  // periodo actual. Solo cuenta personal; si no hay ninguno, el chip/pestaña
+  // desaparece y se regresa a la vista normal.
+  const scheduledRows = useMemo(
+    () => (activeSpaceId || !profile ? [] : getScheduled(payments, profile)),
+    [payments, profile, activeSpaceId],
+  )
+  const hasScheduled = scheduledRows.length > 0
+  useEffect(() => {
+    if (hasScheduled) return
+    if (showScheduled) setShowScheduled(false)
+    if (pageTab === 'programados') setPageTab('pagos')
+  }, [hasScheduled, showScheduled, pageTab])
+
   // ── Pagos realizados ──────────────────────────────────────────────────────
   // v0.9.281: el selector de años ya no se arma a partir de los pagos
   // CARGADOS (con la ventana de carga, los años viejos no están en memoria
@@ -855,6 +872,16 @@ export function PaymentsPage({ payments, dataLoading = false, periodIncome, paym
     incomes: { total: totalExtras, count: periodIncomes.length, loaded: incomesLoaded, onAdd: () => setIncomeModal(true), onManage: () => setManageIncomeModal(true) },
     fund: { balance: sharedFund?.balance ?? 0, loading: !!sharedFund?.loading, ledgerCount: sharedFund?.ledger?.length || 0, onAdd: () => setAddFundModal(true), onManage: () => setManageFundModal(true) },
     chart: { monthsBack, setMonthsBack, months: chartMonths, totals: chartTotals, max: maxChart, grandTotal, avgMonthly, now },
+    scheduled: {
+      rows: scheduledRows, payments, active: showScheduled && hasScheduled, setActive: setShowScheduled,
+      canEdit: !spacePermissions || spacePermissions.can_edit !== false,
+      onEdit: p => onEdit && onEdit(p),
+      onMarkPaid: p => { if (!canMarkPaid) { blocked(t('paymentsPage.actionMarkPayments')); return } onMarkPaid && onMarkPaid(p) },
+      onDelete: p => handleMenuAction('delete', p),
+      onGoRecurrents,
+      onAddRecurrent: () => onAddPrefilled && onAddPrefilled({ recur_freq: 'monthly' }),
+    },
+    onGoCategoryHistory: activeSpaceId ? null : onGoCategoryHistory,
     selectedCat, setSelectedCat, catData,
     view: { mode: viewMode, setMode: setViewMode, month: viewMonth, setMonth: setViewMonth, year: viewYear, setYear: setViewYear, years: availableYears },
     rows: paidInView, totalInView, methodData, openMenu, setOpenMenu,

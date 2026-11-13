@@ -1050,6 +1050,10 @@ export default function App() {
   // editable el monto, con un botón propio para ir a editar el master
   // explícitamente (`onEditMaster`, ver abajo).
   function openEdit(p) { setEditPayment(p); setModalOpen(true) }
+  // Nuevo pago ya rellenado (v0.9.1055): categoría (historial de categoría) o
+  // frecuencia (consejo «Agregar pago recurrente» de Programados). `prefill`
+  // acepta category / recur_freq / due_date — ver PaymentModal.
+  function openAddPrefilled(prefill) { setAddMenuOpen(false); setEditPayment(null); setAddAutoStart(null); setPaymentPrefill(prefill || null); setModalOpen(true) }
   // Editar el master explícitamente — usado por PaymentModal.jsx cuando
   // el usuario, estando en la vista de "editar solo esta copia", pulsa
   // "Editar recurrente completo".
@@ -1969,6 +1973,10 @@ export default function App() {
             onSplit={openSplitModal}
             onAdd={openAdd}
             onStartAdd={startAdd}
+            onAddPrefilled={openAddPrefilled}
+            onMarkPaid={handleMarkPaid}
+            onGoRecurrents={() => changeTab('recurrents')}
+            onGoCategoryHistory={goToCategories}
             onGoCategories={goToCategories}
             onImport={showImportLink ? openImport : undefined}
             onGoCards={goToCards}
@@ -2059,6 +2067,8 @@ export default function App() {
           onSettlePlan={(card, plan) => setSettleTarget({ card, plan })}
           initialSection={settingsInitialSection}
           onConsumeInitialSection={() => setSettingsInitialSection(null)}
+          onAddPayment={openAddPrefilled}
+          onGoRecurrents={() => changeTab('recurrents')}
           returnTab={settingsReturnTab}
           onReturnToTab={returnFromSettingsShortcut}
           headerProps={headerProps}

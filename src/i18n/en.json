@@ -425,7 +425,7 @@
       "previewHint": "Preview"
     },
     "mobile": {
-      "tapHint": "Tap a category to edit it",
+      "tapHint": "Tap a category to see its history",
       "noResults": "No categories match your search.",
       "previewSub": "How it will look on your payments",
       "hueLabel": "Hue",
@@ -605,7 +605,8 @@
     "myCards": "My cards",
     "myCardsCount_one": "{{count}} card saved",
     "myCardsCount_other": "{{count}} cards saved",
-    "myCardsEmpty": "Add your first card"
+    "myCardsEmpty": "Add your first card",
+    "tabScheduled": "Scheduled"
   },
   "recurrentsPage": {
     "title": "Recurring expenses",
@@ -2954,5 +2955,42 @@
     },
     "chipDate": "Payday · {{date}}",
     "chipDateLong": "Next payday · {{date}}"
+  },
+  "categoryHistory": {
+    "totalLabel": "Total in {{count}} months",
+    "lastMonths": "Last {{count}} months",
+    "singlesTile": "One-time payments",
+    "recurringTile": "Recurring",
+    "singlesSub": "{{category}} · {{amount}} in one-time payments",
+    "scheduledTitle": "Scheduled",
+    "monthSummary_one": "{{count}} payment · {{total}}",
+    "monthSummary_other": "{{count}} payments · {{total}}",
+    "noPaymentsTitle": "No payments here yet",
+    "noPaymentsText": "Log a payment in {{category}} and it will show up in this history.",
+    "addPayment": "Add payment",
+    "menuEdit": "Edit category",
+    "menuExport": "Export report",
+    "olderHint": "To see more than {{count}} months, export a report.",
+    "olderAction": "Export report",
+    "viewHistory": "View history",
+    "viewHistoryAria": "View the history of {{category}}",
+    "noSpending": "No spending",
+    "loadError": "Couldn't load the history.",
+    "retry": "Retry",
+    "postponed": "Postponed",
+    "perMonthFmt": "{{month}} {{year}}"
+  },
+  "scheduled": {
+    "title": "Scheduled one-time payments",
+    "empty": "No scheduled payments",
+    "menuAria": "Payment options",
+    "menuEdit": "Edit",
+    "menuMarkPaid": "Mark as paid",
+    "menuDelete": "Delete",
+    "recurringLinkText": "Looking for payments that repeat?",
+    "recurringLinkAction": "Go to Recurring",
+    "tipText": "You can schedule recurring payments so you don't have to add them by hand every time.",
+    "tipAction": "Add recurring payment",
+    "total": "Total"
   }
 }

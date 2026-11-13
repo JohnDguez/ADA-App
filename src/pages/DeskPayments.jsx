@@ -16,6 +16,8 @@ import { getCategoryIcon } from '../lib/categoryIcons'
 import home from './DeskHome.module.css'
 import { DeskAddButton } from '../components/DeskAddButton'
 import { CategoryRing } from '../components/CategoryRing'
+import { ScheduledList } from '../components/ScheduledList'
+import { CategoryHistoryShortcut } from '../components/CategoryHistoryShortcut'
 import styles from './DeskPayments.module.css'
 import { LoadingDots } from '../components/LoadingDots'
 import { useListPresence, listAnimClass } from '../lib/useListPresence'
@@ -43,7 +45,7 @@ export function DeskPayments({ d, tablet = false }) {
   const { t, i18n } = useTranslation()
   const {
     profile, dataLoading, activeSpaceId, rawActiveSpaceId, sharedSpaces, spacePermissions, spaceMembers, paymentMethodsList,
-    slideClass, spaceJustChanged, onOpenPremium, onSpaceReady, onAdd, onStartAdd, onGoCards,
+    slideClass, spaceJustChanged, onOpenPremium, onSpaceReady, onAdd, onStartAdd, onGoCards, scheduled, onGoCategoryHistory,
     balance, incomes, cobro, fund, chart, selectedCat, setSelectedCat, catData, view, rows, totalInView, methodData, openMenu, setOpenMenu, onViewSource,
   } = d
 
@@ -59,6 +61,14 @@ export function DeskPayments({ d, tablet = false }) {
   const visibleTotal = selectedCat ? visibleRows.filter(p => !p.is_postponed).reduce((a, p) => a + Number(p.amount), 0) : totalInView
 
   const totalCats = catData.reduce((a, c) => a + c.total, 0)
+  // «Programados» (v0.9.1055): chip extra que cambia la lista por los pagos únicos con fecha futura.
+  const schedOn = !!scheduled?.active
+  const hasSched = (scheduled?.rows?.length || 0) > 0
+  const modeOn = m => view.mode === m && !schedOn
+  const pickMode = m => { scheduled?.setActive(false); view.setMode(m) }
+  const schedChip = hasSched && (
+    <button type="button" role="tab" aria-selected={schedOn} className={`${home.chip} ${schedOn ? home.chipOn : ''}`} onClick={() => scheduled.setActive(true)}>{t('paymentsPage.tabScheduled')}</button>
+  )
   const selTotal = selectedCat ? (catData.find(c => c.cat === selectedCat)?.total || 0) : 0
   const centerAmount = selectedCat ? fmt(selTotal).replace(/\.\d+$/, '') : fmt(totalCats).replace(/\.\d+$/, '')
   const centerLabel = selectedCat ? `${selectedLabel} · ${totalCats > 0 ? Math.round((selTotal / totalCats) * 100) : 0}%` : t('deskPayments.spentCenter')
@@ -223,8 +233,8 @@ export function DeskPayments({ d, tablet = false }) {
                   {tablet ? (
                     <div className={styles.tabListTop}>
                       <div>
-                        <h2 className={home.cardTitle}>{selectedLabel ? t('deskPayments.paymentsIn', { cat: selectedLabel }) : t('paymentsPage.paymentsTitle')}</h2>
-                        {visibleRows.length > 0 && (
+                        <h2 className={home.cardTitle}>{schedOn ? t('scheduled.title') : selectedLabel ? t('deskPayments.paymentsIn', { cat: selectedLabel }) : t('paymentsPage.paymentsTitle')}</h2>
+                        {!schedOn && visibleRows.length > 0 && (
                           <span className={styles.totalText}>
                             {t('paymentsPage.total')} <b>{fmt(visibleTotal)}</b>
                             {selectedCat && <> · <button type="button" className={styles.linkBtn} onClick={() => setSelectedCat(null)}>{t('deskPayments.clearFilter')}</button></>}
@@ -232,17 +242,18 @@ export function DeskPayments({ d, tablet = false }) {
                         )}
                       </div>
                       <div className={home.chips} role="tablist">
-                        <button type="button" role="tab" aria-selected={view.mode === 'periodo'} className={`${home.chip} ${view.mode === 'periodo' ? home.chipOn : ''}`} onClick={() => view.setMode('periodo')}>{t('homePage.tabs.currentPeriod')}</button>
-                        {view.mode === 'mes'
+                        <button type="button" role="tab" aria-selected={modeOn('periodo')} className={`${home.chip} ${modeOn('periodo') ? home.chipOn : ''}`} onClick={() => pickMode('periodo')}>{t('homePage.tabs.currentPeriod')}</button>
+                        {modeOn('mes')
                           ? <MonthPicker month={view.month} year={view.year} years={view.years} className={`${home.chip} ${home.chipOn}`} onChange={(m, y) => { view.setMonth(m); view.setYear(y) }} />
-                          : <button type="button" role="tab" aria-selected={false} className={home.chip} onClick={() => view.setMode('mes')}>{t('paymentsPage.byMonth')}</button>}
+                          : <button type="button" role="tab" aria-selected={false} className={home.chip} onClick={() => pickMode('mes')}>{t('paymentsPage.byMonth')}</button>}
+                        {schedChip}
                       </div>
                     </div>
                   ) : (
                   <>
                   <div className={styles.listTop}>
-                    <h2 className={home.cardTitle}>{selectedLabel ? t('deskPayments.paymentsIn', { cat: selectedLabel }) : t('paymentsPage.paymentsTitle')}</h2>
-                    {visibleRows.length > 0 && (
+                    <h2 className={home.cardTitle}>{schedOn ? t('scheduled.title') : selectedLabel ? t('deskPayments.paymentsIn', { cat: selectedLabel }) : t('paymentsPage.paymentsTitle')}</h2>
+                    {!schedOn && visibleRows.length > 0 && (
                       <span className={styles.totalText}>
                         {t('paymentsPage.total')} <b>{fmt(visibleTotal)}</b>
                         {selectedCat && <> · <button type="button" className={styles.linkBtn} onClick={() => setSelectedCat(null)}>{t('deskPayments.clearFilter')}</button></>}
@@ -252,10 +263,11 @@ export function DeskPayments({ d, tablet = false }) {
                   <div className={styles.filters}>
                     <div className={home.chips} role="tablist">
                       {[['periodo', t('homePage.tabs.currentPeriod')], ['mes', t('paymentsPage.byMonth')]].map(([val, label]) => (
-                        <button key={val} type="button" role="tab" aria-selected={view.mode === val} className={`${home.chip} ${view.mode === val ? home.chipOn : ''}`} onClick={() => view.setMode(val)}>{label}</button>
+                        <button key={val} type="button" role="tab" aria-selected={modeOn(val)} className={`${home.chip} ${modeOn(val) ? home.chipOn : ''}`} onClick={() => pickMode(val)}>{label}</button>
                       ))}
+                      {schedChip}
                     </div>
-                    {view.mode === 'mes' && (
+                    {modeOn('mes') && (
                       <div className={styles.monthYear}>
                         <div className={styles.selBox}><Select value={getMonths()[view.month]} onChange={name => view.setMonth(getMonths().indexOf(name))} options={getMonths()} /></div>
                         <div className={styles.selBoxYear}><Select value={String(view.year)} onChange={y => view.setYear(Number(y))} options={view.years.map(String)} /></div>
@@ -266,7 +278,13 @@ export function DeskPayments({ d, tablet = false }) {
                   </>
                   )}
 
-                  {visibleRows.length === 0 ? (
+                  {schedOn ? (
+                    <div className={`${home.listBody} scroll-y`}>
+                      <ScheduledList rows={scheduled.rows} payments={scheduled.payments} canEdit={scheduled.canEdit}
+                        onEdit={scheduled.onEdit} onMarkPaid={scheduled.onMarkPaid} onDelete={scheduled.onDelete}
+                        onGoRecurrents={scheduled.onGoRecurrents} onAddRecurrent={scheduled.onAddRecurrent} />
+                    </div>
+                  ) : visibleRows.length === 0 ? (
                     <div className={`${home.listBody} scroll-y`}>
                       {dataLoading ? <PaymentRowSkeleton count={4} bare /> : (
                         <EmptyState desk
@@ -415,6 +433,7 @@ export function DeskPayments({ d, tablet = false }) {
                           ))}
                         </div>
                         )}
+                        <CategoryHistoryShortcut category={selectedCat} total={selTotal} onGo={onGoCategoryHistory} />
                       </>
                     )}
                   </section>

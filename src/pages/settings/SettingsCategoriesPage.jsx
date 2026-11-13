@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
+import { createPortal } from 'react-dom'
 import { useTranslation } from 'react-i18next'
 import i18n from '../../i18n'
 import { Plus, Search, Pointer, ChevronLeft } from 'lucide-react'
@@ -9,6 +10,13 @@ import { CATEGORIES, getCatColor, getCategoryLabel } from '../../lib/utils'
 import { catInk } from '../../lib/colorUtils'
 import { getCategoryIcon } from '../../lib/categoryIcons'
 import { CategoryFormModal } from '../../components/CategoryFormModal'
+import { CategoryHistoryPanel } from '../../components/CategoryHistoryPanel'
+import { consumeCategoryHistory } from '../../lib/categoryFocus'
+import { fetchCategoryTotals, HISTORY_MONTHS } from '../../lib/categoryTotals'
+import { markBackHandled, wasBackHandled } from '../../lib/backNav'
+import { usePresence } from '../../lib/usePresence'
+import { fmt } from '../../lib/utils'
+import hp from '../../components/CategoryHistoryPanel.module.css'
 import { useDeskSettings } from '../../components/DeskSettingsContext'
 import { DeskSettingsHead, DeskPage } from '../../components/DeskSettingsHead'
 import deskStyles from '../../components/SettingsDesk.module.css'
@@ -35,15 +43,97 @@ import { useIsMobile } from '../../hooks/useIsMobile'
 // match en toda la app. Traducirlos requeriría desacoplar el nombre
 // visible del valor guardado — cambio de arquitectura aparte, no de esta
 // pasada de extracción de texto.
-export function SettingsCategoriesPage({ profile, onUpdate, onBack, slideClass }) {
+export function SettingsCategoriesPage({ profile, onUpdate, onBack, slideClass, onAddPayment, onGoRecurrents, onGoExport }) {
   const { t } = useTranslation()
   const desk = useDeskSettings()
   const isMobile = useIsMobile()
   const [modalOpen,   setModalOpen]   = useState(false)
   const [editingCat,  setEditingCat]  = useState(null) // { name, isCustom } | null (null = agregar nueva)
   const [query,        setQuery]       = useState('')
+  // Historial por categoría (v0.9.1055): tocar un mosaico abre su historial; la
+  // edición pasa al menú ⋮ del panel. `viaShortcut` = se llegó desde «Ver
+  // historial» en Gastos (la flecha regresa a Gastos).
+  const [detail, setDetail] = useState(null) // { name, isCustom, viaShortcut } | null
+  const [totals, setTotals] = useState(null)
+  const [totalsKey, setTotalsKey] = useState(0)
+  const focusDone = useRef(false)
 
   const customCats     = profile.custom_categories || []
+  const customRef = useRef(customCats)
+  customRef.current = customCats
+
+  useEffect(() => {
+    if (focusDone.current) return
+    focusDone.current = true
+    const name = consumeCategoryHistory()
+    if (name) setDetail({ name, isCustom: customRef.current.includes(name), viaShortcut: true })
+  }, [])
+
+  useEffect(() => {
+    let alive = true
+    fetchCategoryTotals(profile.id, HISTORY_MONTHS).then(
+      t0 => { if (alive) setTotals(t0) },
+      () => { if (alive) setTotals({}) },
+    )
+    return () => { alive = false }
+  }, [profile.id, totalsKey])
+
+  // Detalle abierto con un toque: empuja una entrada al historial para que
+  // «atrás» (teléfono o flecha) lo cierre y no salga de Ajustes. Con atajo
+  // desde Gastos no se empuja nada: «atrás» regresa a Gastos.
+  const tapDetail = !!detail && !detail.viaShortcut
+  useEffect(() => {
+    if (!tapDetail) return undefined
+    const handler = () => {
+      setTimeout(() => {
+        if (wasBackHandled()) return
+        markBackHandled()
+        setDetail(null)
+      }, 0)
+    }
+    window.history.pushState(null, '', window.location.href)
+    window.addEventListener('popstate', handler)
+    return () => window.removeEventListener('popstate', handler)
+  }, [tapDetail])
+
+  const closeFloating = () => { if (detail?.viaShortcut) setDetail(null); else window.history.back() }
+  const goBackFromDetail = () => window.history.back()
+  const wasOpen = useRef(false)
+  useEffect(() => {
+    // Al cerrar el detalle se refrescan los totales (pudo agregarse un pago).
+    if (wasOpen.current && !detail) setTotalsKey(k => k + 1)
+    wasOpen.current = !!detail
+  }, [detail])
+  const lastDetail = useRef(null)
+  if (detail) lastDetail.current = detail
+  const floatingPresence = usePresence(!!detail, 280)
+  const shownDetail = detail || lastDetail.current
+  useEffect(() => {
+    if (!detail) return undefined
+    const onKey = e => { if (e.key === 'Escape') closeFloating() }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [detail])
+
+  const panelProps = d => ({
+    category: d.name, isCustom: d.isCustom, profile,
+    onBack: goBackFromDetail,
+    onEdit: () => { const { name, isCustom } = d; setDetail(null); openEdit(name, isCustom) },
+    onExport: () => { setDetail(null); onGoExport?.() },
+    onGoRecurrents: () => { setDetail(null); onGoRecurrents?.() },
+    onAddPayment: opts => { setDetail(null); onAddPayment?.(opts) },
+  })
+  const floating = floatingPresence.render && shownDetail && createPortal(
+    <>
+      <div className={`${hp.scrim} ${floatingPresence.closing ? hp.scrimOut : ''}`} onClick={closeFloating} />
+      <aside className={`${hp.drawer} ${floatingPresence.closing ? hp.drawerOut : ''}`} aria-label={shownDetail.name}>
+        <CategoryHistoryPanel {...panelProps(shownDetail)} />
+      </aside>
+    </>,
+    document.body,
+  )
+  const tileSub = name => (totals == null ? '\u00A0' : totals[name] > 0 ? fmt(totals[name]).replace(/\.\d+$/, '') : t('categoryHistory.noSpending'))
   const categoryIcons  = profile.category_icons || {}
   const categoryColors = profile.category_colors || {}
 
@@ -92,9 +182,10 @@ export function SettingsCategoriesPage({ profile, onUpdate, onBack, slideClass }
       const Icon = getCategoryIcon(c.name, categoryIcons)
       const color = getCatColor(c.name, customCats, categoryColors)
       return (
-        <button key={c.name} type="button" className={wd.tile} style={{ '--n': Math.min(n++, 14) }} onClick={() => openEdit(c.name, c.isCustom)}>
+        <button key={c.name} type="button" className={wd.tile} style={{ '--n': Math.min(n++, 14) }} onClick={() => setDetail({ name: c.name, isCustom: c.isCustom })}>
           <i className={wd.ico} style={{ background: color }}>{Icon ? <Icon size={25} color={catInk(color)} strokeWidth={2} /> : <span className={styles.fallbackDot} />}</i>
           <span>{labelOf(c)}</span>
+          <small className={wd.sub}>{tileSub(c.name)}</small>
         </button>
       )
     }
@@ -136,6 +227,7 @@ export function SettingsCategoriesPage({ profile, onUpdate, onBack, slideClass }
             </>}
           />
           {sections('')}
+          {floating}
         </DeskPage>
       )
     }
@@ -169,6 +261,7 @@ export function SettingsCategoriesPage({ profile, onUpdate, onBack, slideClass }
           </button>
         </div>
         <CategoryFormModal open={modalOpen} onClose={() => setModalOpen(false)} editingCat={editingCat} profile={profile} onUpdate={onUpdate} />
+        {floating}
       </>
     )
   }
@@ -189,10 +282,19 @@ export function SettingsCategoriesPage({ profile, onUpdate, onBack, slideClass }
       const Icon = getCategoryIcon(c.name, categoryIcons)
       const color = getCatColor(c.name, customCats, categoryColors)
       return (
-        <button key={c.name} type="button" className={mb.tile} style={{ '--n': Math.min(n++, 14) }} onClick={() => openEdit(c.name, c.isCustom)}>
+        <button key={c.name} type="button" className={mb.tile} style={{ '--n': Math.min(n++, 14) }} onClick={() => setDetail({ name: c.name, isCustom: c.isCustom })}>
           <i className={mb.ico} style={{ background: color }}>{Icon ? <Icon size={22} color={catInk(color)} strokeWidth={2} /> : <span className={styles.fallbackDot} />}</i>
           <span>{labelOf(c)}</span>
+          <small className={mb.sub}>{tileSub(c.name)}</small>
         </button>
+      )
+    }
+    // Detalle de una categoría: pantalla completa (aprovecha el alto del móvil).
+    if (detail) {
+      return (
+        <div className={`${slideClass} ${mb.root}`}>
+          <CategoryHistoryPanel mobile {...panelProps(detail)} />
+        </div>
       )
     }
     return (

@@ -3,6 +3,8 @@ import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Plus, ChevronRight, MoreVertical, Eye, Loader2, X } from 'lucide-react'
 import { SegmentedControl } from '../components/SegmentedControl'
+import { ScheduledList } from '../components/ScheduledList'
+import { CategoryHistoryShortcut } from '../components/CategoryHistoryShortcut'
 import { CategoryRing } from '../components/CategoryRing'
 import { EmptyState } from '../components/EmptyState'
 import { PaidByStack } from '../components/PaidByStack'
@@ -266,6 +268,7 @@ function AnalysisTab({ d }) {
                 </button>
               ))}
             </div>
+            <CategoryHistoryShortcut category={selectedCat} total={selTotal} onGo={d.onGoCategoryHistory} />
           </>
         )}
       </section>
@@ -302,16 +305,29 @@ function shortMoney(n) {
   return `$${num.toLocaleString('es-MX', { maximumFractionDigits: 0 })}`
 }
 
+function ScheduledTab({ d }) {
+  const { scheduled } = d
+  return (
+    <ScheduledList mobile rows={scheduled.rows} payments={scheduled.payments} canEdit={scheduled.canEdit}
+      onEdit={scheduled.onEdit} onMarkPaid={scheduled.onMarkPaid} onDelete={scheduled.onDelete}
+      onGoRecurrents={scheduled.onGoRecurrents} onAddRecurrent={scheduled.onAddRecurrent} />
+  )
+}
+
 export function MobilePayments({ d, tab }) {
   const { t } = useTranslation()
+  // «Programados» (v0.9.1055): tercera pestaña, solo si hay pagos únicos con fecha futura.
+  const hasSched = (d.scheduled?.rows?.length || 0) > 0
+  const options = [{ value: 'pagos', label: t('paymentsPage.tabPayments') }, { value: 'analisis', label: t('paymentsPage.tabAnalysis') }]
+  if (hasSched) options.push({ value: 'programados', label: t('paymentsPage.tabScheduled') })
   return (
     <div className={styles.root}>
       <div className={styles.seg}>
         <SegmentedControl variant="page" value={tab.pending ?? tab.value} onChange={tab.change}
-          options={[{ value: 'pagos', label: t('paymentsPage.tabPayments') }, { value: 'analisis', label: t('paymentsPage.tabAnalysis') }]} />
+          options={options} />
       </div>
       <div key={tab.value} className={`${styles.panel} ${tab.pending ? styles.panelOut : ''}`}>
-        {tab.value === 'pagos' ? <PaymentsTab d={d} /> : <AnalysisTab d={d} />}
+        {tab.value === 'pagos' ? <PaymentsTab d={d} /> : tab.value === 'programados' ? <ScheduledTab d={d} /> : <AnalysisTab d={d} />}
       </div>
     </div>
   )

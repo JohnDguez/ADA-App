@@ -425,7 +425,7 @@
       "previewHint": "Vista previa"
     },
     "mobile": {
-      "tapHint": "Toca una categoría para editarla",
+      "tapHint": "Toca una categoría para ver su historial",
       "noResults": "Ninguna categoría coincide con tu búsqueda.",
       "previewSub": "Así se verá en tus pagos",
       "hueLabel": "Tono",
@@ -605,7 +605,8 @@
     "myCards": "Mis tarjetas",
     "myCardsCount_one": "{{count}} tarjeta registrada",
     "myCardsCount_other": "{{count}} tarjetas registradas",
-    "myCardsEmpty": "Agrega tu primera tarjeta"
+    "myCardsEmpty": "Agrega tu primera tarjeta",
+    "tabScheduled": "Programados"
   },
   "recurrentsPage": {
     "title": "Gastos recurrentes",
@@ -2954,5 +2955,42 @@
     },
     "chipDate": "Cobro · {{date}}",
     "chipDateLong": "Próximo cobro · {{date}}"
+  },
+  "categoryHistory": {
+    "totalLabel": "Total en {{count}} meses",
+    "lastMonths": "Últimos {{count}} meses",
+    "singlesTile": "Pagos únicos",
+    "recurringTile": "Recurrentes",
+    "singlesSub": "{{category}} · {{amount}} en pagos únicos",
+    "scheduledTitle": "Programados",
+    "monthSummary_one": "{{count}} pago · {{total}}",
+    "monthSummary_other": "{{count}} pagos · {{total}}",
+    "noPaymentsTitle": "Aún no hay pagos aquí",
+    "noPaymentsText": "Registra un pago en {{category}} y lo verás en este historial.",
+    "addPayment": "Agregar pago",
+    "menuEdit": "Editar categoría",
+    "menuExport": "Exportar reporte",
+    "olderHint": "Para ver más de {{count}} meses, exporta un reporte.",
+    "olderAction": "Exportar reporte",
+    "viewHistory": "Ver historial",
+    "viewHistoryAria": "Ver el historial de {{category}}",
+    "noSpending": "Sin gastos",
+    "loadError": "No se pudo cargar el historial.",
+    "retry": "Reintentar",
+    "postponed": "Pospuesto",
+    "perMonthFmt": "{{month}} {{year}}"
+  },
+  "scheduled": {
+    "title": "Pagos únicos programados",
+    "empty": "Sin pagos programados",
+    "menuAria": "Opciones del pago",
+    "menuEdit": "Editar",
+    "menuMarkPaid": "Marcar como pagado",
+    "menuDelete": "Eliminar",
+    "recurringLinkText": "¿Buscas pagos que se repiten?",
+    "recurringLinkAction": "Ir a Recurrentes",
+    "tipText": "Puedes programar pagos recurrentes para no tener que agregarlos a mano cada vez.",
+    "tipAction": "Agregar pago recurrente",
+    "total": "Total"
   }
 }

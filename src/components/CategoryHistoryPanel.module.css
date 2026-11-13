@@ -1,0 +1,38 @@
+/* Historial de categoría (v0.9.1055) — extiende RecurrentDetailPanel.module.css
+   (mismo encabezado, total grande y filas). Solo tokens, sin bordes. */
+.tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 16px; }
+.tile { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; min-height: 58px; padding: 10px 6px; border: 0; border-radius: 16px; background: var(--desk-chip); color: var(--text); font: inherit; text-align: center; }
+.tile span { font-size: 11.5px; color: var(--muted); }
+.tile b { font-size: 15px; font-weight: 600; }
+.tileLink { cursor: pointer; }
+.tileChev { position: absolute; right: 10px; top: 50%; translate: 0 -50%; color: var(--muted); }
+.body { flex: 1; min-height: 0; overflow-y: auto; }
+.monthHead { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; padding: 14px 0 4px; }
+.monthHead b { font-size: 14px; font-weight: 600; color: var(--text); }
+.monthHead small { font-size: 12px; color: var(--muted); }
+.error { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 14px; border-radius: 16px; background: var(--desk-chip); color: var(--muted); font-size: 13px; }
+.error button { border: 0; background: none; color: var(--accent); font: inherit; font-weight: 600; cursor: pointer; }
+.older { margin-top: 14px; display: flex; align-items: center; justify-content: space-between; gap: 10px; width: 100%; padding: 12px 14px; border: 0; border-radius: 16px; background: var(--desk-chip); color: var(--muted); font: inherit; font-size: 12.5px; text-align: left; cursor: pointer; }
+.older em { display: inline-flex; align-items: center; gap: 2px; font-style: normal; font-weight: 600; color: var(--accent); white-space: nowrap; }
+.empty { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; padding: 28px 16px; text-align: center; }
+.emptyIcon { width: 64px; height: 64px; border-radius: 20px; display: grid; place-items: center; margin-bottom: 6px; }
+.empty b { font-size: 16px; font-weight: 600; }
+.empty p { margin: 0; max-width: 28ch; font-size: 13px; line-height: 1.4; color: var(--muted); }
+.cta { margin-top: 10px; display: inline-flex; align-items: center; gap: 8px; height: 44px; padding: 0 22px; border: 0; border-radius: 99px; background: var(--accent); color: var(--on-color); font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; }
+@media (hover: hover) and (pointer: fine) {
+  .tileLink:hover, .older:hover { filter: brightness(0.97); }
+  .cta:hover { opacity: 0.9; }
+}
+
+/* Detalle flotante (tablet y escritorio, v0.9.1055): aparece por encima de la
+   página con fondo atenuado; no empuja ni achica nada. Mismo patrón que el
+   cajón de Recurrentes en tablet vertical. */
+.scrim { position: fixed; inset: 0; z-index: 119; background: var(--scrim); animation: scrimIn .24s ease both; }
+.scrimOut { animation: scrimOut .26s ease both; }
+.drawer { position: fixed; top: 12px; right: 12px; bottom: 12px; z-index: 120; width: min(430px, calc(100vw - 24px)); display: flex; flex-direction: column; background: var(--desk-card); border-radius: 24px; box-shadow: var(--desk-pop-shadow); overflow: hidden; animation: drawerIn .32s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.drawerOut { animation: drawerOut .26s cubic-bezier(0.4, 0, 1, 1) both; }
+@keyframes scrimIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes scrimOut { to { opacity: 0; } }
+@keyframes drawerIn { from { opacity: 0; transform: translateX(36px); } to { opacity: 1; transform: none; } }
+@keyframes drawerOut { to { opacity: 0; transform: translateX(36px); } }
+@media (prefers-reduced-motion: reduce) { .scrim, .scrimOut, .drawer, .drawerOut { animation-duration: .01ms; } }
