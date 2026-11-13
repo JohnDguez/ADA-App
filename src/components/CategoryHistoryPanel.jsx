@@ -2,11 +2,11 @@ import { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ChevronLeft, ChevronRight, MoreVertical, Pencil, FileDown, Check, Clock, Plus } from 'lucide-react'
 import { getCategoryIcon } from '../lib/categoryIcons'
-import { fmt, dateOf, today, cobroPeriod, getCatColor, getCategoryLabel, getMonths, getMonthsShort } from '../lib/utils'
+import { fmt, dateOf, cobroPeriod, getCatColor, getCategoryLabel, getMonths, getMonthsShort } from '../lib/utils'
 import { groupByMonth } from '../lib/scheduled'
 import { catInk } from '../lib/colorUtils'
 import { supabase } from '../lib/supabase'
-import { historyStart, HISTORY_MONTHS } from '../lib/categoryTotals'
+import { fetchHistoryRows, hasOlderHistory, HISTORY_MONTHS } from '../lib/categoryHistory'
 import { LoadingDots } from './LoadingDots'
 import { Bone } from './SkeletonLoader'
 import { useScrollLock } from '../lib/scrollLock'
@@ -32,7 +32,7 @@ function fmtDateFull(value) {
 // allá de 6 meses se invita a exportar un reporte.
 export function CategoryHistoryPanel({
   category, isCustom = false, profile, mobile = false,
-  onBack, onEdit, onExport, onGoRecurrents, onAddPayment,
+  onBack, onEdit, onExport, onAddPayment,
 }) {
   const { t } = useTranslation()
   const [menuOpen, setMenuOpen] = useState(false)
@@ -50,20 +50,22 @@ export function CategoryHistoryPanel({
   }, [menuOpen])
 
   const load = useCallback(async () => {
-    const t0 = today()
-    const startIso = historyStart(HISTORY_MONTHS, t0).toISOString()
     const periodEnd = cobroPeriod(profile).end
     const endStr = `${periodEnd.getFullYear()}-${String(periodEnd.getMonth() + 1).padStart(2, '0')}-${String(periodEnd.getDate()).padStart(2, '0')}`
-    // Construcción nueva por consulta (un builder no se reutiliza).
-    const base = cols => supabase.from('payments').select(cols)
-      .eq('user_id', profile.id).is('space_id', null).eq('category', category).or('is_master.is.null,is_master.eq.false')
-    const [paidQ, schedQ, olderQ] = await Promise.all([
-      base('id,name,amount,paid_at,due_date,parent_id,is_postponed,is_paid').eq('is_paid', true).gte('paid_at', startIso).order('paid_at', { ascending: false }),
-      base('id,name,amount,due_date,category').eq('is_paid', false).eq('is_postponed', false).is('parent_id', null).not('is_recurrent', 'is', true).not('is_installment', 'is', true).gt('due_date', endStr).order('due_date', { ascending: true }),
-      base('id').eq('is_paid', true).lt('paid_at', startIso).limit(1),
+    // Pagado (personal + lo que me toca de mis espacios, ver categoryHistory.js)
+    // y programados (únicos pendientes de la cuenta personal con fecha futura).
+    const [paid, schedQ, older] = await Promise.all([
+      fetchHistoryRows(profile.id, category, HISTORY_MONTHS),
+      supabase.from('payments').select('id,name,amount,due_date,category')
+        .eq('user_id', profile.id).is('space_id', null).eq('category', category)
+        .or('is_master.is.null,is_master.eq.false')
+        .eq('is_paid', false).eq('is_postponed', false).is('parent_id', null)
+        .not('is_recurrent', 'is', true).not('is_installment', 'is', true)
+        .gt('due_date', endStr).order('due_date', { ascending: true }),
+      hasOlderHistory(profile.id, category, HISTORY_MONTHS),
     ])
-    if (paidQ.error || schedQ.error) throw paidQ.error || schedQ.error
-    return { paid: paidQ.data || [], scheduled: schedQ.data || [], older: (olderQ.data || []).length > 0 }
+    if (schedQ.error) throw schedQ.error
+    return { paid, scheduled: schedQ.data || [], older }
   }, [category, profile])
 
   useEffect(() => {
@@ -77,8 +79,8 @@ export function CategoryHistoryPanel({
   }, [load, attempt])
 
   const { loading, error, paid, scheduled, older } = state
-  const singles = useMemo(() => paid.filter(p => !p.parent_id && !p.is_postponed), [paid])
-  const recurring = useMemo(() => paid.filter(p => p.parent_id && !p.is_postponed), [paid])
+  const singles = useMemo(() => paid.filter(p => !p.parent_id), [paid])
+  const recurring = useMemo(() => paid.filter(p => p.parent_id), [paid])
   const singlesTotal = singles.reduce((s, p) => s + Number(p.amount), 0)
   const recurringTotal = recurring.reduce((s, p) => s + Number(p.amount), 0)
   const grand = singlesTotal + recurringTotal
@@ -141,11 +143,10 @@ export function CategoryHistoryPanel({
                 <span>{t('categoryHistory.singlesTile')}</span>
                 <b>{loading ? <LoadingDots /> : singles.length}</b>
               </div>
-              <button type="button" className={`${styles.tile} ${styles.tileLink}`} onClick={onGoRecurrents}>
+              <div className={styles.tile}>
                 <span>{t('categoryHistory.recurringTile')}</span>
                 <b>{loading ? <LoadingDots /> : whole(recurringTotal)}</b>
-                <ChevronRight size={16} strokeWidth={2} className={styles.tileChev} />
-              </button>
+              </div>
             </div>
           </div>
 
@@ -185,7 +186,7 @@ export function CategoryHistoryPanel({
                         <Check size={16} color="var(--paid)" className={r.historyIcon} />
                         <div className={r.historyInfo}>
                           <div className={r.historyDate}>{fmtDateFull(p.paid_at)}</div>
-                          <div className={r.historyNote}>{p.name}</div>
+                          <div className={r.historyNote}>{p.name}{p.shared ? ` · ${t('homePage.shared')}` : ''}</div>
                         </div>
                         <div className={r.historyAmount}>{fmt(p.amount)}</div>
                       </div>

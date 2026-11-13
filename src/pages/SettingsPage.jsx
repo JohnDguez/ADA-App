@@ -47,7 +47,7 @@ function readSavedSection() {
   } catch { return null }
 }
 
-export function SettingsPage({ profile, user, onUpdate, onUploadAvatar, onDataDeleted, slideClass, theme, onThemeChange, onOpenPremium, sharedSpaces, paymentMethods, personalPayments = null, onPayCardNow, onSettlePlan, importProps, initialSection, onConsumeInitialSection, returnTab, onReturnToTab, headerProps, onAddPayment, onGoRecurrents }) {
+export function SettingsPage({ profile, user, onUpdate, onUploadAvatar, onDataDeleted, slideClass, theme, onThemeChange, onOpenPremium, sharedSpaces, paymentMethods, personalPayments = null, onPayCardNow, onSettlePlan, importProps, initialSection, onConsumeInitialSection, returnTab, onReturnToTab, headerProps, onAddPayment }) {
   const { t } = useTranslation()
   const isDesktop = useIsDesktop()
   const isMobile = useIsMobile()
@@ -247,7 +247,7 @@ export function SettingsPage({ profile, user, onUpdate, onUploadAvatar, onDataDe
     if (s === 'language') return <SettingsLanguagePage profile={profile} onUpdate={onUpdate} onBack={desk ? noop : back} slideClass={desk ? '' : slideClass} />
     if (s === 'import') return <Suspense fallback={null}><ImportPage profile={profile} {...importProps} onBack={desk ? noop : back} slideClass={desk ? '' : slideClass} /></Suspense>
     if (s === 'account') return <SettingsAccountPage onChangePhoto={desk ? () => setAvatarModal('choice') : undefined} uploadingAvatar={uploadingAvatar} profile={profile} user={user} onUpdate={onUpdate} onDataDeleted={onDataDeleted} onBack={desk ? noop : back} onGoSubscription={() => openSection('subscription')} slideClass={desk ? '' : slideClass} />
-    if (s === 'categories') return <SettingsCategoriesPage profile={profile} onUpdate={onUpdate} onBack={desk ? noop : back} slideClass={desk ? '' : slideClass} onAddPayment={onAddPayment} onGoRecurrents={onGoRecurrents} onGoExport={() => openSection('export')} />
+    if (s === 'categories') return <SettingsCategoriesPage profile={profile} onUpdate={onUpdate} onBack={desk ? noop : back} slideClass={desk ? '' : slideClass} onAddPayment={onAddPayment} onGoExport={() => openSection('export')} />
     if (s === 'cobro') return <SettingsCobroPage profile={profile} onUpdate={onUpdate} onBack={desk ? noop : back} slideClass={desk ? '' : slideClass} />
     if (s === 'notifications') return <SettingsNotificationsPage profile={profile} user={user} onUpdate={onUpdate} onBack={desk ? noop : back} slideClass={desk ? '' : slideClass} />
     if (s === 'appearance') return <SettingsAppearancePage theme={theme} onThemeChange={onThemeChange} onBack={desk ? noop : back} slideClass={desk ? '' : slideClass} />

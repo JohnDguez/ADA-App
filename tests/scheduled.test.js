@@ -1,4 +1,6 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
+
+vi.mock('../src/lib/supabase', () => ({ supabase: {} }))
 import { getScheduled, groupByMonth, usesRecurring } from '../src/lib/scheduled'
 import { today, dateToStr, addDays } from '../src/lib/utils'
 
@@ -46,5 +48,16 @@ describe('usesRecurring', () => {
     expect(usesRecurring([{ ...base }])).toBe(false)
     expect(usesRecurring([{ ...base, is_master: true }])).toBe(true)
     expect(usesRecurring([{ ...base, parent_id: 'm' }])).toBe(true)
+  })
+})
+
+import { totalsByCategory } from '../src/lib/categoryHistory'
+describe('totalsByCategory', () => {
+  it('suma por categoría (en espacios compartidos ya viene solo la parte propia)', () => {
+    expect(totalsByCategory([
+      { category: 'Servicios', amount: 100 },
+      { category: 'Servicios', amount: 500 },
+      { category: 'Otros', amount: 20 },
+    ])).toEqual({ Servicios: 600, Otros: 20 })
   })
 })

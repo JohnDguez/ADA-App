@@ -2068,7 +2068,6 @@ export default function App() {
           initialSection={settingsInitialSection}
           onConsumeInitialSection={() => setSettingsInitialSection(null)}
           onAddPayment={openAddPrefilled}
-          onGoRecurrents={() => changeTab('recurrents')}
           returnTab={settingsReturnTab}
           onReturnToTab={returnFromSettingsShortcut}
           headerProps={headerProps}

@@ -733,11 +733,11 @@ export function PaymentsPage({ payments, dataLoading = false, periodIncome, paym
   const maxCat = Math.max(...catData.map(d => d.total), 1)
 
   // Programados (v0.9.1055): pagos únicos pendientes con fecha posterior al
-  // periodo actual. Solo cuenta personal; si no hay ninguno, el chip/pestaña
-  // desaparece y se regresa a la vista normal.
+  // periodo actual, de la cuenta personal o del Espacio Compartido activo; si no
+  // hay ninguno, el chip/pestaña desaparece y se regresa a la vista normal.
   const scheduledRows = useMemo(
-    () => (activeSpaceId || !profile ? [] : getScheduled(payments, profile)),
-    [payments, profile, activeSpaceId],
+    () => (profile ? getScheduled(payments, profile) : []),
+    [payments, profile],
   )
   const hasScheduled = scheduledRows.length > 0
   useEffect(() => {
@@ -881,7 +881,7 @@ export function PaymentsPage({ payments, dataLoading = false, periodIncome, paym
       onGoRecurrents,
       onAddRecurrent: () => onAddPrefilled && onAddPrefilled({ recur_freq: 'monthly' }),
     },
-    onGoCategoryHistory: activeSpaceId ? null : onGoCategoryHistory,
+    onGoCategoryHistory,
     selectedCat, setSelectedCat, catData,
     view: { mode: viewMode, setMode: setViewMode, month: viewMonth, setMonth: setViewMonth, year: viewYear, setYear: setViewYear, years: availableYears },
     rows: paidInView, totalInView, methodData, openMenu, setOpenMenu,

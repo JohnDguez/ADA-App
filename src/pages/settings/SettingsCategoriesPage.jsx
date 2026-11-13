@@ -12,7 +12,7 @@ import { getCategoryIcon } from '../../lib/categoryIcons'
 import { CategoryFormModal } from '../../components/CategoryFormModal'
 import { CategoryHistoryPanel } from '../../components/CategoryHistoryPanel'
 import { consumeCategoryHistory } from '../../lib/categoryFocus'
-import { fetchCategoryTotals, HISTORY_MONTHS } from '../../lib/categoryTotals'
+import { fetchHistoryRows, totalsByCategory, HISTORY_MONTHS } from '../../lib/categoryHistory'
 import { markBackHandled, wasBackHandled } from '../../lib/backNav'
 import { usePresence } from '../../lib/usePresence'
 import { fmt } from '../../lib/utils'
@@ -43,7 +43,7 @@ import { useIsMobile } from '../../hooks/useIsMobile'
 // match en toda la app. Traducirlos requeriría desacoplar el nombre
 // visible del valor guardado — cambio de arquitectura aparte, no de esta
 // pasada de extracción de texto.
-export function SettingsCategoriesPage({ profile, onUpdate, onBack, slideClass, onAddPayment, onGoRecurrents, onGoExport }) {
+export function SettingsCategoriesPage({ profile, onUpdate, onBack, slideClass, onAddPayment, onGoExport }) {
   const { t } = useTranslation()
   const desk = useDeskSettings()
   const isMobile = useIsMobile()
@@ -71,8 +71,8 @@ export function SettingsCategoriesPage({ profile, onUpdate, onBack, slideClass, 
 
   useEffect(() => {
     let alive = true
-    fetchCategoryTotals(profile.id, HISTORY_MONTHS).then(
-      t0 => { if (alive) setTotals(t0) },
+    fetchHistoryRows(profile.id, null, HISTORY_MONTHS).then(
+      rows => { if (alive) setTotals(totalsByCategory(rows)) },
       () => { if (alive) setTotals({}) },
     )
     return () => { alive = false }
@@ -121,7 +121,6 @@ export function SettingsCategoriesPage({ profile, onUpdate, onBack, slideClass, 
     onBack: goBackFromDetail,
     onEdit: () => { const { name, isCustom } = d; setDetail(null); openEdit(name, isCustom) },
     onExport: () => { setDetail(null); onGoExport?.() },
-    onGoRecurrents: () => { setDetail(null); onGoRecurrents?.() },
     onAddPayment: opts => { setDetail(null); onAddPayment?.(opts) },
   })
   const floating = floatingPresence.render && shownDetail && createPortal(
