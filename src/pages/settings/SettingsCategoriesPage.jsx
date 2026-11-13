@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useLayoutEffect, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import { useTranslation } from 'react-i18next'
 import i18n from '../../i18n'
@@ -57,6 +57,9 @@ export function SettingsCategoriesPage({ profile, onUpdate, onBack, slideClass, 
   const [totals, setTotals] = useState(null)
   const [totalsKey, setTotalsKey] = useState(0)
   const focusDone = useRef(false)
+  // Al volver del detalle (móvil, pantalla completa) la lista recupera su scroll.
+  const listScrollRef = useRef(0)
+  const openDetail = d => { listScrollRef.current = window.scrollY; setDetail(d) }
 
   const customCats     = profile.custom_categories || []
   const customRef = useRef(customCats)
@@ -95,6 +98,13 @@ export function SettingsCategoriesPage({ profile, onUpdate, onBack, slideClass, 
     window.addEventListener('popstate', handler)
     return () => window.removeEventListener('popstate', handler)
   }, [tapDetail])
+
+  const fullScreenDetail = isMobile && !desk
+  const hadDetail = useRef(false)
+  useLayoutEffect(() => {
+    if (fullScreenDetail && hadDetail.current && !detail) window.scrollTo(0, listScrollRef.current)
+    hadDetail.current = !!detail
+  }, [detail, fullScreenDetail])
 
   const closeFloating = () => { if (detail?.viaShortcut) setDetail(null); else window.history.back() }
   const goBackFromDetail = () => window.history.back()
@@ -181,7 +191,7 @@ export function SettingsCategoriesPage({ profile, onUpdate, onBack, slideClass, 
       const Icon = getCategoryIcon(c.name, categoryIcons)
       const color = getCatColor(c.name, customCats, categoryColors)
       return (
-        <button key={c.name} type="button" className={wd.tile} style={{ '--n': Math.min(n++, 14) }} onClick={() => setDetail({ name: c.name, isCustom: c.isCustom })}>
+        <button key={c.name} type="button" className={wd.tile} style={{ '--n': Math.min(n++, 14) }} onClick={() => openDetail({ name: c.name, isCustom: c.isCustom })}>
           <i className={wd.ico} style={{ background: color }}>{Icon ? <Icon size={25} color={catInk(color)} strokeWidth={2} /> : <span className={styles.fallbackDot} />}</i>
           <span>{labelOf(c)}</span>
           <small className={wd.sub}>{tileSub(c.name)}</small>
@@ -281,7 +291,7 @@ export function SettingsCategoriesPage({ profile, onUpdate, onBack, slideClass, 
       const Icon = getCategoryIcon(c.name, categoryIcons)
       const color = getCatColor(c.name, customCats, categoryColors)
       return (
-        <button key={c.name} type="button" className={mb.tile} style={{ '--n': Math.min(n++, 14) }} onClick={() => setDetail({ name: c.name, isCustom: c.isCustom })}>
+        <button key={c.name} type="button" className={mb.tile} style={{ '--n': Math.min(n++, 14) }} onClick={() => openDetail({ name: c.name, isCustom: c.isCustom })}>
           <i className={mb.ico} style={{ background: color }}>{Icon ? <Icon size={22} color={catInk(color)} strokeWidth={2} /> : <span className={styles.fallbackDot} />}</i>
           <span>{labelOf(c)}</span>
           <small className={mb.sub}>{tileSub(c.name)}</small>

@@ -10,6 +10,7 @@ import { GoalAmountModal } from './GoalAmountModal'
 import { AddCardModal } from './AddCardModal'
 import styles from './GoalDetailPanel.module.css'
 import { useScrollLock } from '../lib/scrollLock'
+import { useScrollTopOnOpen } from '../lib/scrollTop'
 
 function fmtDate(iso) {
   const d = new Date(iso)
@@ -29,6 +30,7 @@ export function GoalDetailPanel({
 }) {
   // v0.9.910 — en móvil se usa el diseño de escritorio dentro de una tarjeta.
   if (mobile) desk = true
+  useScrollTopOnOpen(mobile)
   const { t } = useTranslation()
   const [menuOpen, setMenuOpen] = useState(false)
   useScrollLock(menuOpen)

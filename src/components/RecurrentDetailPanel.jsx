@@ -7,6 +7,7 @@ import { catInk } from '../lib/colorUtils'
 import { supabase } from '../lib/supabase'
 import styles from './RecurrentDetailPanel.module.css'
 import { useScrollLock } from '../lib/scrollLock'
+import { useScrollTopOnOpen } from '../lib/scrollTop'
 import { LoadingDots } from './LoadingDots'
 import { Bone } from './SkeletonLoader'
 
@@ -43,6 +44,7 @@ export function RecurrentDetailPanel({
   // v0.9.908 — en móvil se usa el mismo diseño que escritorio (`desk`), dentro
   // de una tarjeta y con el historial a lo largo de la página.
   if (mobile) desk = true
+  useScrollTopOnOpen(mobile)
   const { t } = useTranslation()
   const [menuOpen, setMenuOpen] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)

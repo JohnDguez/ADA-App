@@ -11,6 +11,7 @@ import { useBackClose } from '../lib/backNav'
 import { useIsDesktop } from '../hooks/useIsDesktop'
 import styles from './CardDetailPanel.module.css'
 import { useScrollLock } from '../lib/scrollLock'
+import { useScrollTopOnOpen } from '../lib/scrollTop'
 import { DeskSettingsHead, DeskPage } from './DeskSettingsHead'
 import deskStyles from './SettingsDesk.module.css'
 import dd from './CardDetailDesk.module.css'
@@ -57,6 +58,7 @@ function DebtBar({ debt, label }) {
 // Los pospuestos no cuentan en el total, mismo criterio que Gastos.
 export function CardDetailPanel({ card, payments, onBack, onEdit, onDelete, onPayNow, onSettlePlan, onDeletePlan, spaceNames = {}, canEdit = true, canDelete = true, blocked, desk = false, initialPlansOpen = false }) {
   const { t } = useTranslation()
+  useScrollTopOnOpen(!desk)
   const [menuOpen, setMenuOpen] = useState(false)
   const [showBreak, setShowBreak] = useState(false)
   const wide = useIsDesktop()

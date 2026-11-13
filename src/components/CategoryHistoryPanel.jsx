@@ -10,6 +10,7 @@ import { fetchHistoryRows, hasOlderHistory, HISTORY_MONTHS } from '../lib/catego
 import { LoadingDots } from './LoadingDots'
 import { Bone } from './SkeletonLoader'
 import { useScrollLock } from '../lib/scrollLock'
+import { useScrollTopOnOpen } from '../lib/scrollTop'
 import r from './RecurrentDetailPanel.module.css'
 import styles from './CategoryHistoryPanel.module.css'
 
@@ -35,6 +36,7 @@ export function CategoryHistoryPanel({
   onBack, onEdit, onExport, onAddPayment,
 }) {
   const { t } = useTranslation()
+  useScrollTopOnOpen(mobile)
   const [menuOpen, setMenuOpen] = useState(false)
   useScrollLock(menuOpen)
   const menuRef = useRef(null)

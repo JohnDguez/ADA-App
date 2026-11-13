@@ -118,4 +118,11 @@ describe('reglas del proyecto', () => {
       .map(f => relative(root, f))
     expect(bad).toEqual([])
   })
+
+  it('todo panel de detalle sube al inicio al abrirse (useScrollTopOnOpen) — Regla 77', () => {
+    const bad = walk(join(root, 'src/components')).filter(f => /DetailPanel\.jsx$|HistoryPanel\.jsx$/.test(f))
+      .filter(f => !/useScrollTopOnOpen\(/.test(readFileSync(f, 'utf8')))
+      .map(f => relative(root, f))
+    expect(bad).toEqual([])
+  })
 })
