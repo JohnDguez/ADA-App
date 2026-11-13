@@ -2978,6 +2978,8 @@
     "loadError": "No se pudo cargar el historial.",
     "retry": "Reintentar",
     "postponed": "Pospuesto",
+    "tagRecurrent": "Recurrente",
+    "tagInstallment": "Parcialidad",
     "perMonthFmt": "{{month}} {{year}}"
   },
   "scheduled": {

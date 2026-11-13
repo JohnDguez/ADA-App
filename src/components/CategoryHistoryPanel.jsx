@@ -28,8 +28,8 @@ function fmtDateFull(value) {
 // categoría sin gastos en el periodo actual también muestra su historial.
 //
 // Reglas: los meses se agrupan por FECHA DE PAGO y solo salen los que tienen
-// pagos; los pospuestos no suman; los recurrentes y parcialidades se resumen en
-// un mosaico que lleva a Recurrentes (no se mezclan con los pagos únicos); más
+// pagos; los pospuestos no suman; la lista incluye pagos únicos, recurrentes y
+// parcialidades (etiquetados), y los mosaicos los resumen por separado; más
 // allá de 6 meses se invita a exportar un reporte.
 export function CategoryHistoryPanel({
   category, isCustom = false, profile, mobile = false,
@@ -86,9 +86,11 @@ export function CategoryHistoryPanel({
   const singlesTotal = singles.reduce((s, p) => s + Number(p.amount), 0)
   const recurringTotal = recurring.reduce((s, p) => s + Number(p.amount), 0)
   const grand = singlesTotal + recurringTotal
-  const groups = useMemo(() => groupByMonth(singles, 'paid_at'), [singles])
+  // La lista mezcla pagos únicos, recurrentes y parcialidades (se distinguen con una etiqueta).
+  const groups = useMemo(() => groupByMonth(paid, 'paid_at'), [paid])
   const months = getMonths()
-  const isEmpty = !loading && !error && singles.length === 0 && recurring.length === 0 && scheduled.length === 0
+  const kindTag = p => (!p.parent_id ? '' : p.is_installment ? t('categoryHistory.tagInstallment') : t('categoryHistory.tagRecurrent'))
+  const isEmpty = !loading && !error && paid.length === 0 && scheduled.length === 0
 
   const CatIcon = getCategoryIcon(category, profile.category_icons)
   const catColor = getCatColor(category, profile.custom_categories, profile.category_colors)
@@ -188,7 +190,7 @@ export function CategoryHistoryPanel({
                         <Check size={16} color="var(--paid)" className={r.historyIcon} />
                         <div className={r.historyInfo}>
                           <div className={r.historyDate}>{fmtDateFull(p.paid_at)}</div>
-                          <div className={r.historyNote}>{p.name}{p.shared ? ` · ${t('homePage.shared')}` : ''}</div>
+                          <div className={r.historyNote}>{p.name}{kindTag(p) ? ` · ${kindTag(p)}` : ''}{p.shared ? ` · ${t('homePage.shared')}` : ''}</div>
                         </div>
                         <div className={r.historyAmount}>{fmt(p.amount)}</div>
                       </div>

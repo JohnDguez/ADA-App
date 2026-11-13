@@ -2978,6 +2978,8 @@
     "loadError": "Couldn't load the history.",
     "retry": "Retry",
     "postponed": "Postponed",
+    "tagRecurrent": "Recurring",
+    "tagInstallment": "Installment",
     "perMonthFmt": "{{month}} {{year}}"
   },
   "scheduled": {

@@ -30,7 +30,7 @@ async function pageAll(build) {
   return out
 }
 
-const COLS = 'id,name,category,amount,paid_at,parent_id'
+const COLS = 'id,name,category,amount,paid_at,parent_id,is_recurrent,is_installment'
 
 async function fetchPersonal(userId, category, startIso) {
   const rows = await pageAll(() => {
