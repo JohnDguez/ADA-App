@@ -24,3 +24,7 @@
 
 /* Total de los últimos 6 meses bajo el nombre (v0.9.1055) */
 .sub { font-size: 0.6875rem; line-height: 1.2; color: var(--muted); font-feature-settings: 'tnum'; min-height: 1.2em; }
+
+/* Detalle de categoría a pantalla completa (v0.9.1056): el panel ya trae su propio
+   margen lateral, así que la raíz no suma otro (antes se veía angosto). */
+.detailRoot { padding: 0.75rem 0 calc(9.5rem + env(safe-area-inset-bottom)); }

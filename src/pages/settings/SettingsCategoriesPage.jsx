@@ -292,7 +292,7 @@ export function SettingsCategoriesPage({ profile, onUpdate, onBack, slideClass, 
     // Detalle de una categoría: pantalla completa (aprovecha el alto del móvil).
     if (detail) {
       return (
-        <div className={`${slideClass} ${mb.root}`}>
+        <div className={`${slideClass} ${mb.detailRoot}`}>
           <CategoryHistoryPanel mobile {...panelProps(detail)} />
         </div>
       )
