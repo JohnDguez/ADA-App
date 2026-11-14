@@ -5,7 +5,7 @@
 .img { display: block; width: 100%; height: 100%; object-fit: cover; }
 .badge { align-self: flex-start; display: inline-flex; align-items: center; gap: 5px; margin-bottom: 4px; padding: 3px 10px; border-radius: 99px; background: var(--premium-gold); color: var(--premium-gold-text); font-style: normal; font-size: 11.5px; font-weight: 700; }
 .badgeFree { background: color-mix(in srgb, var(--desk-ink-text) 18%, transparent); color: var(--desk-ink-text); }
-.who .name { font-size: 24px; font-weight: 700; letter-spacing: -0.4px; overflow-wrap: anywhere; }
+.who .name { font-size: 24px; font-family: var(--font-display); font-weight: 700; letter-spacing: -0.4px; overflow-wrap: anywhere; }
 .photoBtn { margin-left: auto; flex: none; }
 [data-sk="mobile"] .photoBtn { display: none; }
 /* Fila de dato (móvil): etiqueta arriba, valor abajo */

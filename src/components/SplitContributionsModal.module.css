@@ -282,14 +282,14 @@
    campos y filas rellenos (--desk-chip), píldoras, acciones a la derecha. */
 .deskRoot { color: var(--text); }
 .deskHead { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 4px; }
-.deskTitle { margin: 0; font-size: 19px; font-weight: 700; letter-spacing: -0.3px; }
+.deskTitle { margin: 0; font-size: 19px; font-family: var(--font-display); font-weight: 700; letter-spacing: -0.3px; }
 .deskSub { margin-top: 2px; font-size: 13px; color: var(--muted); }
 .deskClose { width: 36px; height: 36px; flex: none; border: 0; border-radius: 50%; background: var(--desk-chip); color: var(--text); display: grid; place-items: center; cursor: pointer; }
 .deskRoot .progress,
 .deskRoot .memberCard,
 .deskRoot .fundInsufficientNotice { background: var(--desk-chip); border-radius: 18px; }
 .deskRoot .progress { padding: 14px 16px; margin: 14px 0; }
-.deskRoot .progressAmounts { font-size: 20px; letter-spacing: -0.4px; }
+.deskRoot .progressAmounts { font-size: 20px; font-family: var(--font-display); letter-spacing: -0.4px; }
 .deskRoot .progressStatus { font-size: 12px; color: var(--muted); opacity: 1; }
 .deskRoot .progressDone .progressStatus { color: var(--paid); }
 .bar { height: 6px; border-radius: 9px; background: var(--hatch-bg); margin-top: 10px; overflow: hidden; }
@@ -330,7 +330,7 @@
 .mkBody { display: flex; flex-direction: column; gap: 10px; color: var(--text); }
 .mkBody .progress, .mkBody .memberCard, .mkBody .fundInsufficientNotice, .mkBody .errorBox { margin: 0; border: 0; border-radius: 18px; background: var(--desk-card); box-shadow: var(--desk-shadow); }
 .mkBody .progress { padding: 14px 16px; }
-.mkBody .progressAmounts { font-size: 1.25rem; letter-spacing: -0.4px; }
+.mkBody .progressAmounts { font-size: 1.25rem; font-family: var(--font-display); letter-spacing: -0.4px; }
 .mkBody .progressStatus { font-size: 0.75rem; color: var(--muted); opacity: 1; }
 .mkBody .progressDone .progressStatus { color: var(--paid); }
 .mkBody .bar { background: var(--desk-chip); }

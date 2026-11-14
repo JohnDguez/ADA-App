@@ -44,7 +44,7 @@
 }
 
 .titleHeading {
-  font-size: 22px;
+  font-size: 22px; font-family: var(--font-display);
   font-weight: 700;
   color: var(--text);
 }
@@ -107,7 +107,7 @@
 }
 
 .statsValue {
-  font-size: 22px;
+  font-size: 22px; font-family: var(--font-display);
   font-weight: 700;
   color: var(--text);
 }
@@ -468,7 +468,7 @@
     min-width: 0;
     padding: 8px 0 20px;
   }
-  .titleHeading { font-size: 26px; }
+  .titleHeading { font-size: 26px; font-family: var(--font-display); }
   .searchWrapper {
     flex: 0 0 260px;
     padding: 0 0 12px;

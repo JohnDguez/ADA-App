@@ -56,7 +56,7 @@
 
 .handle { width: 44px; height: 5px; flex: none; border-radius: 99px; background: var(--desk-hair); margin: 10px auto 6px; }
 .head { flex: none; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 0 18px 12px; }
-.title { font-size: 22px; font-weight: 600; letter-spacing: -0.4px; color: var(--text); }
+.title { font-size: 22px; font-family: var(--font-display); font-weight: 600; letter-spacing: -0.4px; color: var(--text); }
 .close { width: 34px; height: 34px; border: 0; border-radius: 50%; background: var(--desk-chip); color: var(--text); display: grid; place-items: center; flex: none; }
 
 .body { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 0 18px 18px; display: flex; flex-direction: column; gap: 12px; }
@@ -71,7 +71,7 @@
 .pTop { display: flex; align-items: center; gap: 10px; }
 .pIcon { width: 34px; height: 34px; flex: none; border-radius: 11px; display: grid; place-items: center; background: var(--tint); }
 .pName { font-size: 15px; font-weight: 600; min-width: 0; overflow-wrap: anywhere; }
-.pAmount { font-size: 26px; font-weight: 500; letter-spacing: -1px; }
+.pAmount { font-size: 26px; font-family: var(--font-display); font-weight: 600; letter-spacing: -1px; }
 .pMeta { font-size: 12px; color: var(--muted); min-height: 15px; }
 .bar { position: relative; height: 8px; border-radius: 99px; background: repeating-linear-gradient(135deg, var(--desk-hatch) 0 1.5px, transparent 1.5px 6px); }
 .bar i { position: absolute; left: 0; top: 0; bottom: 0; width: 2%; border-radius: 99px; background: var(--tint); }

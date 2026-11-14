@@ -1,6 +1,6 @@
 /* «Nuevo espacio compartido» en escritorio (v0.9.871), mockup aprobado. Solo tokens, colores sólidos. */
 .wrap { padding: 4px 4px 24px; display: flex; flex-direction: column; gap: 20px; }
-.h2 { font-size: 26px; letter-spacing: -0.6px; margin: 0; color: var(--text); }
+.h2 { font-size: 26px; font-family: var(--font-display); letter-spacing: -0.6px; margin: 0; color: var(--text); }
 .p { margin-top: 4px; font-size: 14px; color: var(--muted); }
 .cols { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); gap: 18px; align-items: start; }
 .card { display: flex; flex-direction: column; gap: 16px; padding: 26px 28px; border-radius: 26px; background: var(--desk-card); min-width: 0; }

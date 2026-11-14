@@ -16,23 +16,23 @@
 /* Encabezado de formulario */
 .hd { flex: none; display: flex; align-items: flex-start; gap: 12px; padding: 0.5rem 1rem 0.75rem; }
 .hdText { flex: 1; min-width: 0; }
-.hdText h2 { margin: 0; font-size: 1.3125rem; font-weight: 700; letter-spacing: -0.3px; line-height: 1.2; }
+.hdText h2 { margin: 0; font-size: 1.3125rem; font-family: var(--font-display); font-weight: 700; letter-spacing: -0.3px; line-height: 1.2; }
 .hdText p { margin: 0.1875rem 0 0; font-size: 0.8125rem; line-height: 1.4; color: var(--muted); }
 .hdEnd { display: flex; align-items: center; gap: 8px; flex: none; }
 .isDialog .hd { padding: 26px 28px 14px; }
-.isDialog .hdText h2 { font-size: 26px; letter-spacing: -0.5px; }
+.isDialog .hdText h2 { font-size: 26px; font-family: var(--font-display); letter-spacing: -0.5px; }
 .isDialog .hdText p { font-size: 13.5px; margin-top: 4px; }
 
 /* Encabezado de acción rápida: ficha + título + contexto */
 .qh { flex: none; display: flex; align-items: center; gap: 12px; padding: 0.5rem 1rem 0.75rem; }
 .qhText { flex: 1; min-width: 0; }
-.qhText h2 { margin: 0; font-size: 1.1875rem; font-weight: 700; letter-spacing: -0.3px; line-height: 1.2; }
+.qhText h2 { margin: 0; font-size: 1.1875rem; font-family: var(--font-display); font-weight: 700; letter-spacing: -0.3px; line-height: 1.2; }
 .qhText p { margin: 0.125rem 0 0; font-size: 0.78125rem; color: var(--muted); }
 .isDialog .qh { padding: 24px 24px 12px; }
 
 /* Confirmación: ficha grande centrada */
 .cf { flex: none; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 0.5rem; padding: 0.5rem 1.375rem 0.25rem; }
-.cfTitle { margin: 0.375rem 0 0; font-size: 1.25rem; font-weight: 700; letter-spacing: -0.3px; line-height: 1.25; text-wrap: balance; }
+.cfTitle { margin: 0.375rem 0 0; font-size: 1.25rem; font-family: var(--font-display); font-weight: 700; letter-spacing: -0.3px; line-height: 1.25; text-wrap: balance; }
 .cfText { font-size: 0.84375rem; line-height: 1.45; color: var(--muted); }
 .cfText b, .cfText strong { color: var(--text); font-weight: 600; }
 .cfX { position: absolute; top: 14px; right: 14px; }

@@ -5,7 +5,7 @@
 .head { display: flex; align-items: center; gap: 12px; margin-bottom: 4px; }
 .icon { width: 40px; height: 40px; flex: none; border-radius: 13px; display: grid; place-items: center; }
 .headText { flex: 1; min-width: 0; }
-.title { margin: 0; font-size: 19px; font-weight: 600; letter-spacing: -0.3px; color: var(--text); }
+.title { margin: 0; font-size: 19px; font-family: var(--font-display); font-weight: 600; letter-spacing: -0.3px; color: var(--text); }
 .sub { margin-top: 2px; font-size: 13px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .close { width: 34px; height: 34px; flex: none; border: 0; border-radius: 50%; background: var(--bg); color: var(--text); display: grid; place-items: center; }
 .field { margin-top: 14px; }

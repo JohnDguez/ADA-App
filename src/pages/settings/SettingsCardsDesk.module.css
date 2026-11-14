@@ -1,7 +1,7 @@
 /* Mis tarjetas — escritorio (v0.9.835). */
 .top { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); gap: 16px; }
 .hero { display: flex; flex-direction: column; min-height: 230px; }
-.big { margin: 6px 0 auto; font-size: 52px; font-weight: 700; letter-spacing: -2px; line-height: 1; padding-bottom: 16px; }
+.big { margin: 6px 0 auto; font-size: 52px; font-family: var(--font-display); font-weight: 700; letter-spacing: -2px; line-height: 1; padding-bottom: 16px; }
 .pills { display: flex; flex-wrap: wrap; gap: 10px; }
 .pills > div { padding: 8px 13px; border-radius: 14px; background: color-mix(in srgb, var(--desk-ink-text) 18%, transparent); }
 .pills span { display: block; font-size: 11.5px; opacity: 0.8; }
@@ -43,7 +43,7 @@
 @media (max-width: 1299px) {
   .top { grid-template-columns: minmax(0, 1fr); }
   .hero { min-height: 0; }
-  .big { font-size: 44px; letter-spacing: -1.5px; padding-bottom: 14px; }
+  .big { font-size: 44px; font-family: var(--font-display); letter-spacing: -1.5px; padding-bottom: 14px; }
   .pills { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
   .pills > div { padding: 8px 12px; min-width: 0; }
   .pills b { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }

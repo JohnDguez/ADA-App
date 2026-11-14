@@ -188,7 +188,7 @@
   text-transform: uppercase;
   color: var(--accent);
 }
-.deskTitle { margin-top: 8px; padding-right: 40px; font-size: 21px; font-weight: 700; letter-spacing: -0.4px; color: var(--text); }
+.deskTitle { margin-top: 8px; padding-right: 40px; font-size: 21px; font-family: var(--font-display); font-weight: 700; letter-spacing: -0.4px; color: var(--text); }
 .deskText { margin-top: 6px; font-size: 14.5px; line-height: 1.5; color: var(--muted); }
 .deskFooter { display: flex; align-items: center; justify-content: space-between; margin-top: 20px; }
 .deskDot { width: 7px; height: 7px; border-radius: 7px; background: var(--desk-chip); transition: width .2s, background .2s; }

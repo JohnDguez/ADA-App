@@ -19,7 +19,7 @@
 .custom { margin-top: 14px; }
 .amount { margin: 14px 0 0; }
 .next { display: flex; align-items: center; gap: 20px; margin-top: 14px; }
-.next strong { display: block; font-size: 24px; font-weight: 700; letter-spacing: -0.5px; line-height: 1.15; }
+.next strong { display: block; font-size: 24px; font-family: var(--font-display); font-weight: 700; letter-spacing: -0.5px; line-height: 1.15; }
 .cal { width: 84px; border-radius: 20px; background: var(--desk-ink-text); text-align: center; overflow: hidden; flex-shrink: 0; }
 .cal i { display: block; background: var(--danger); color: var(--on-danger); font-size: 12px; font-style: normal; font-weight: 700; padding: 4px 0; }
 .cal b { display: block; font-size: 38px; padding: 6px 0 8px; color: var(--desk-deep); }

@@ -46,7 +46,7 @@
 .bandImgOn { opacity: var(--desk-img-opacity); }
 .headText, .actions { position: relative; z-index: 2; }
 .date { font-size: 13.5px; color: var(--muted); margin-bottom: 4px; }
-.hello { font-size: 42px; font-weight: 500; letter-spacing: -1.4px; line-height: 1.05; margin: 0; color: var(--text); }
+.hello { font-size: 42px; font-family: var(--font-display); font-weight: 600; letter-spacing: -1.4px; line-height: 1.05; margin: 0; color: var(--text); }
 .actions { display: flex; gap: 10px; align-items: center; padding-bottom: 6px; }
 .addWrap { position: relative; }
 .addBtn {
@@ -106,9 +106,9 @@
   color: var(--text);
 }
 .tileHero .tileArrow { border-color: transparent; }
-.tileNum { margin-top: auto; font-size: 46px; font-weight: 500; letter-spacing: -1.6px; line-height: 1; white-space: nowrap; }
-.tileNum small { font-size: 22px; letter-spacing: 0; opacity: 0.55; font-weight: 500; }
-.tileNum .unit { font-size: 20px; }
+.tileNum { margin-top: auto; font-size: 46px; font-family: var(--font-display); font-weight: 600; letter-spacing: -1.6px; line-height: 1; white-space: nowrap; }
+.tileNum small { font-size: 22px; font-family: var(--font-display); letter-spacing: 0; opacity: 0.55; font-weight: 500; }
+.tileNum .unit { font-size: 20px; font-family: var(--font-display); }
 .tileSub { margin-top: 10px; font-size: 13px; color: var(--muted); min-height: 17px; }
 .tileHero .tileSub { color: var(--desk-ink-text); opacity: 0.85; }
 .tileSub b { font-weight: 600; color: var(--text); }
@@ -186,7 +186,7 @@
 .range b { color: var(--text); font-weight: 600; }
 /* Rango del próximo periodo + «Ajustar fecha» (v0.9.1048): comparten renglón para no agregar altura. */
 .rangeRow { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 32px; }
-.nextNum { font-size: 36px; font-weight: 500; letter-spacing: -1.2px; margin: 4px 0 2px; }
+.nextNum { font-size: 36px; font-family: var(--font-display); font-weight: 600; letter-spacing: -1.2px; margin: 4px 0 2px; }
 .nextNum small { font-size: 18px; opacity: 0.55; letter-spacing: 0; }
 .bars { display: flex; gap: 10px; align-items: flex-end; margin-top: 16px; }
 .barCol { position: relative; outline: none; cursor: default; flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6px; font-size: 11px; color: var(--muted); }
@@ -238,7 +238,7 @@
 .barTipEnd { left: auto; right: 0; translate: 0 0; }
 .barTipEnd::after { left: auto; right: 24px; translate: 0 0; }
 .barTipDay { font-weight: 600; text-transform: capitalize; opacity: 0.8; }
-.barTipAmount { font-size: 22px; font-weight: 600; letter-spacing: -0.5px; margin-top: 2px; }
+.barTipAmount { font-size: 22px; font-family: var(--font-display); font-weight: 600; letter-spacing: -0.5px; margin-top: 2px; }
 .barTipCount { opacity: 0.8; margin-bottom: 6px; }
 .barTipEmpty { margin-top: 2px; font-size: 13px; font-weight: 500; }
 .barTipList { list-style: none; margin: 0; padding: 6px 0 0; border-top: 1px solid var(--white-a16); display: flex; flex-direction: column; gap: 3px; }
@@ -267,7 +267,7 @@
 .tablet .head { margin: -20px -20px 14px; padding: 0 28px; min-height: 150px; align-items: flex-end; }
 .tablet .headText { padding-bottom: 14px; }
 .tablet .date { display: flex; align-items: center; gap: 6px; }
-.tablet .hello { font-size: 36px; letter-spacing: -1.2px; }
+.tablet .hello { font-size: 36px; font-family: var(--font-display); letter-spacing: -1.2px; }
 .lunaPeek { position: relative; z-index: 2; height: 136px; margin-bottom: -14px; min-width: 0; display: flex; align-items: flex-end; }
 
 .tablet .tile { padding: 18px 20px; }
@@ -303,8 +303,8 @@
     padding: 20px 24px;
   }
   .tablet .tile_total .tileLabel { grid-area: label; align-self: end; font-weight: 400; font-size: 14px; opacity: 0.8; }
-  .tablet .tile_total .tileNum { grid-area: num; margin-top: 6px; align-self: start; font-size: 44px; }
-  .tablet .tile_total .tileNum small { font-size: 24px; }
+  .tablet .tile_total .tileNum { grid-area: num; margin-top: 6px; align-self: start; font-size: 44px; font-family: var(--font-display); }
+  .tablet .tile_total .tileNum small { font-size: 24px; font-family: var(--font-display); }
   .tablet .tile_total .tileSub { grid-area: sub; margin: 0; min-height: 0; text-align: right; line-height: 1.5; font-size: 14px; }
   .tablet .tile_total .tileArrow { position: static; grid-area: arrow; width: 40px; height: 40px; }
 
@@ -312,7 +312,7 @@
   .tablet .tile_paid, .tablet .tile_pending, .tablet .tile_overdue { min-height: 0; padding: 14px 18px; justify-content: center; gap: 2px; }
   .tablet .tile_paid .tileLabel, .tablet .tile_pending .tileLabel, .tablet .tile_overdue .tileLabel { font-size: 14px; font-weight: 400; color: var(--muted); display: flex; align-items: center; }
   .tablet .tile_paid .tileArrow, .tablet .tile_pending .tileArrow, .tablet .tile_overdue .tileArrow { display: none; }
-  .tablet .tile_paid .tileNum, .tablet .tile_pending .tileNum, .tablet .tile_overdue .tileNum { margin-top: 0; font-size: 28px; letter-spacing: -1px; line-height: 1.1; }
+  .tablet .tile_paid .tileNum, .tablet .tile_pending .tileNum, .tablet .tile_overdue .tileNum { margin-top: 0; font-size: 28px; font-family: var(--font-display); letter-spacing: -1px; line-height: 1.1; }
   .tablet .tile_paid .tileNum small, .tablet .tile_pending .tileNum small, .tablet .tile_overdue .tileNum small { font-size: 16px; }
   .tablet .tile_paid .tileSub, .tablet .tile_pending .tileSub, .tablet .tile_overdue .tileSub { margin-top: 0; min-height: 0; }
   .tablet .tileDot .tileLabel::before { content: ""; width: 9px; height: 9px; border-radius: 50%; background: var(--danger); margin-right: 8px; flex: none; }
@@ -322,21 +322,21 @@
   .tablet .gaugeCard { padding: 22px 16px 18px; display: flex; flex-direction: column; justify-content: space-between; }
   .tablet .gaugeCard > div:not(.legend) { width: 100%; max-width: 340px; margin: auto; padding-top: 8px; }
   .tablet .gaugeCard .cardTitle { font-size: 16px; margin-bottom: 0; padding-left: 4px; }
-  .tablet .gaugeCard .gaugeText { font-size: 26px; line-height: 1.1; letter-spacing: -0.8px; }
+  .tablet .gaugeCard .gaugeText { font-size: 26px; font-family: var(--font-display); line-height: 1.1; letter-spacing: -0.8px; }
   .tablet .tipSlot { margin-top: 0; padding-top: 14px; }
 }
 
 @media (min-width: 960px) {
   .root.tablet { height: calc(100dvh - 24px); padding: 16px; }
   .tablet .head { margin: -16px -16px 12px; min-height: 112px; }
-  .tablet .hello { font-size: 34px; }
+  .tablet .hello { font-size: 34px; font-family: var(--font-display); }
   .lunaPeek { height: 98px; }
   .tablet .subSep { display: inline; }
   .tablet .subLine { display: inline; }
   .tablet .tiles { gap: 12px; margin-bottom: 12px; }
   .tablet .tile { min-height: 112px; padding: 16px 18px; }
   .tablet .tileLabel { font-size: 14px; }
-  .tablet .tileNum { font-size: 30px; letter-spacing: -1px; }
+  .tablet .tileNum { font-size: 30px; font-family: var(--font-display); letter-spacing: -1px; }
   .tablet .tileNum small { font-size: 17px; }
   .tablet .tileSub { margin-top: 4px; font-size: 12px; min-height: 0; }
   .tablet .tileArrow { display: none; }
@@ -345,8 +345,8 @@
   .tablet .side { gap: 12px; }
   .tablet .list, .tablet .card { padding: 18px 20px; }
   .tablet .gaugeCard .cardTitle, .tablet .nextCard .cardTitle { font-size: 16px; margin-bottom: 6px; }
-  .tablet .gaugeCard .gaugeText { font-size: 24px; line-height: 1.1; }
-  .tablet .nextNum { font-size: 28px; }
+  .tablet .gaugeCard .gaugeText { font-size: 24px; font-family: var(--font-display); line-height: 1.1; }
+  .tablet .nextNum { font-size: 28px; font-family: var(--font-display); }
 }
 
 /* Tablet: pastillas de periodo a la derecha del título «Pagos» (mockup aprobado). */
@@ -376,13 +376,13 @@
     padding: 20px 24px;
   }
   .payTab .tileHero .tileLabel { grid-area: label; align-self: end; font-weight: 400; font-size: 14px; opacity: 0.8; }
-  .payTab .tileHero .tileNum { grid-area: num; margin-top: 6px; align-self: start; font-size: 44px; }
-  .payTab .tileHero .tileNum small { font-size: 24px; }
+  .payTab .tileHero .tileNum { grid-area: num; margin-top: 6px; align-self: start; font-size: 44px; font-family: var(--font-display); }
+  .payTab .tileHero .tileNum small { font-size: 24px; font-family: var(--font-display); }
   .payTab .tileHero .tileSub { grid-area: sub; margin: 0; min-height: 0; text-align: right; line-height: 1.5; font-size: 14px; }
   .payTab .tileHero > div { grid-area: track; }
   .payTab .tile:not(.tileHero) { min-height: 0; padding: 16px 18px; justify-content: center; gap: 3px; }
   .payTab .tile:not(.tileHero) .tileLabel { font-size: 14px; font-weight: 400; color: var(--muted); }
-  .payTab .tile:not(.tileHero) .tileNum { margin-top: 0; font-size: 27px; letter-spacing: -1px; line-height: 1.1; }
+  .payTab .tile:not(.tileHero) .tileNum { margin-top: 0; font-size: 27px; font-family: var(--font-display); letter-spacing: -1px; line-height: 1.1; }
   .payTab .tile:not(.tileHero) .tileNum small { font-size: 15px; }
   .payTab .tile:not(.tileHero) .tileSub { margin-top: 0; min-height: 0; font-size: 12px; }
 }
@@ -400,12 +400,12 @@
     align-items: center; column-gap: 16px; min-height: 0; padding: 20px 24px;
   }
   .recTab .tileHero .tileLabel { grid-area: label; align-self: end; font-weight: 400; font-size: 14px; opacity: 0.8; }
-  .recTab .tileHero .tileNum { grid-area: num; margin-top: 6px; align-self: start; font-size: 44px; }
-  .recTab .tileHero .tileNum small { font-size: 24px; }
+  .recTab .tileHero .tileNum { grid-area: num; margin-top: 6px; align-self: start; font-size: 44px; font-family: var(--font-display); }
+  .recTab .tileHero .tileNum small { font-size: 24px; font-family: var(--font-display); }
   .recTab .tileHero .tileSub { grid-area: sub; margin: 0; min-height: 0; max-width: 140px; text-align: right; line-height: 1.4; font-size: 14px; }
   .recTab .tile:not(.tileHero) { grid-column: span 2; grid-row: 2; min-height: 0; padding: 16px 18px; justify-content: center; gap: 3px; }
   .recTab .tile:not(.tileHero) .tileLabel { font-size: 14px; font-weight: 400; color: var(--muted); }
-  .recTab .tile:not(.tileHero) .tileNum { margin-top: 0; font-size: 27px; letter-spacing: -1px; line-height: 1.1; }
+  .recTab .tile:not(.tileHero) .tileNum { margin-top: 0; font-size: 27px; font-family: var(--font-display); letter-spacing: -1px; line-height: 1.1; }
   .recTab .tile:not(.tileHero) .tileNum small { font-size: 15px; }
   .recTab .tile:not(.tileHero) .tileSub { margin-top: 0; min-height: 0; font-size: 12px; }
   .recTab .list { grid-area: 3 / 1 / 4 / -1; overflow: visible; }
@@ -418,8 +418,8 @@
 @media (min-width: 960px) and (max-width: 1099px) {
   .recTab .tiles { grid-template-columns: 1.3fr 1fr 1fr 1fr; gap: 12px; }
   .recTab .tileHero .tileSub { margin-top: 4px; }
-  .recTab .tileHero .tileNum { font-size: 34px; }
-  .recTab .tileHero .tileNum small { font-size: 19px; }
+  .recTab .tileHero .tileNum { font-size: 34px; font-family: var(--font-display); }
+  .recTab .tileHero .tileNum small { font-size: 19px; font-family: var(--font-display); }
   .recTab .tileHero .tileLabel { font-weight: 400; font-size: 14px; opacity: 0.8; }
   .recTab .tile:not(.tileHero) .tileLabel { font-weight: 400; color: var(--muted); }
   .recTab .chip { height: 32px; padding: 0 9px; font-size: 12px; }
@@ -436,13 +436,13 @@
     align-items: center; column-gap: 16px; row-gap: 0; min-height: 0; padding: 20px 24px;
   }
   .metTab .tileHero .tileLabel { grid-area: label; align-self: end; font-weight: 400; font-size: 14px; opacity: 0.8; }
-  .metTab .tileHero .tileNum { grid-area: num; margin-top: 6px; align-self: start; font-size: 44px; }
-  .metTab .tileHero .tileNum small { font-size: 24px; }
+  .metTab .tileHero .tileNum { grid-area: num; margin-top: 6px; align-self: start; font-size: 44px; font-family: var(--font-display); }
+  .metTab .tileHero .tileNum small { font-size: 24px; font-family: var(--font-display); }
   .metTab .tileHero .tileSub { grid-area: sub; margin: 0; min-height: 0; text-align: right; line-height: 1.5; font-size: 14px; }
   .metTab .tileHero > div { grid-area: track; margin-top: 14px; height: 10px; }
   .metTab .tile:not(.tileHero) { grid-row: 2; min-height: 0; padding: 16px 18px; justify-content: center; gap: 3px; }
   .metTab .tile:not(.tileHero) .tileLabel { font-size: 14px; font-weight: 400; color: var(--muted); }
-  .metTab .tile:not(.tileHero) .tileNum { margin-top: 0; font-size: 27px; letter-spacing: -1px; line-height: 1.1; }
+  .metTab .tile:not(.tileHero) .tileNum { margin-top: 0; font-size: 27px; font-family: var(--font-display); letter-spacing: -1px; line-height: 1.1; }
   .metTab .tile:not(.tileHero) .tileNum small { font-size: 15px; }
   .metTab .tile:not(.tileHero) .tileSub { margin-top: 0; min-height: 0; font-size: 12px; }
   .metTab .list { grid-area: 3 / 1 / 4 / -1; overflow: visible; }
@@ -452,8 +452,8 @@
 @media (min-width: 960px) and (max-width: 1099px) {
   .metTab .tileHero { display: grid; grid-template-columns: minmax(0, 1fr); grid-template-areas: "label" "num" "sub" "track"; align-content: center; padding: 14px 20px; }
   .metTab .tileHero .tileLabel { grid-area: label; font-weight: 400; font-size: 14px; opacity: 0.8; }
-  .metTab .tileHero .tileNum { grid-area: num; font-size: 34px; margin-top: 4px; }
-  .metTab .tileHero .tileNum small { font-size: 19px; }
+  .metTab .tileHero .tileNum { grid-area: num; font-size: 34px; font-family: var(--font-display); margin-top: 4px; }
+  .metTab .tileHero .tileNum small { font-size: 19px; font-family: var(--font-display); }
   .metTab .tileHero .tileSub { grid-area: sub; display: none; }
   .metTab .tileHero > div { grid-area: track; margin-top: 8px; height: 8px; }
   .metTab .tile:not(.tileHero) .tileLabel { font-weight: 400; color: var(--muted); }

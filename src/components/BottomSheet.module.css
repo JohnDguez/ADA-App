@@ -32,7 +32,7 @@
   width: 2.5rem; height: 0.3125rem; border-radius: 9px;
   background: color-mix(in srgb, var(--text) 20%, var(--desk-panel)); margin: 0 auto 12px;
 }
-.title { font-size: 1.3125rem; font-weight: 700; letter-spacing: -0.3px; color: var(--text); margin-bottom: 12px; }
+.title { font-size: 1.3125rem; font-family: var(--font-display); font-weight: 700; letter-spacing: -0.3px; color: var(--text); margin-bottom: 12px; }
 
 @keyframes bsUp      { from { transform: translateY(100%); } to { transform: translateY(0); } }
 @keyframes bsDown    { to   { transform: translateY(100%); } }

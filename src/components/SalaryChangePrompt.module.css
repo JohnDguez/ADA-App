@@ -1,7 +1,7 @@
 /* Popover de escritorio de "¿Desde cuándo cambia tu ingreso?" (v0.9.968).
    Lenguaje de la Regla 65: título 19px, botones en píldora, hover propio
    del botón suave (Regla 64). */
-.title { margin: 0 0 0.5rem; font-size: 1.1875rem; font-weight: 600; letter-spacing: -0.3px; color: var(--text); }
+.title { margin: 0 0 0.5rem; font-size: 1.1875rem; font-family: var(--font-display); font-weight: 600; letter-spacing: -0.3px; color: var(--text); }
 .text { margin: 0 0 1.125rem; font-size: 0.875rem; line-height: 1.5; color: var(--muted); }
 .text strong { color: var(--text); font-weight: 600; }
 .btns { display: flex; flex-direction: column; gap: 0.5rem; }

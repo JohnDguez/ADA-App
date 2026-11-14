@@ -106,8 +106,8 @@
 }
 
 .ringPercent {
-  font-size: 21px;
-  font-weight: 500;
+  font-size: 21px; font-family: var(--font-display);
+  font-weight: 600;
   color: var(--text);
 }
 
@@ -301,7 +301,7 @@
 
   .header { gap: 12px; margin-bottom: 18px; }
   .headerIcon { width: 36px; height: 36px; }
-  .headerTitle { font-size: 22px; font-weight: 700; }
+  .headerTitle { font-size: 22px; font-family: var(--font-display); font-weight: 700; }
 
   .body {
     display: grid;
@@ -324,7 +324,7 @@
 
   .ring { width: 170px; height: 170px; margin-bottom: 14px; }
   .ringInner { width: 134px; height: 134px; background: var(--surface); }
-  .ringPercent { font-size: 30px; font-weight: 700; }
+  .ringPercent { font-size: 30px; font-family: var(--font-display); font-weight: 700; }
   .ringAmounts { display: none; }
   .ringSub { display: block; font-size: 12px; color: var(--muted); }
 
@@ -426,7 +426,7 @@
 .desk .firstContribution { display: none; }
 .desk .ring { width: 150px; height: 150px; margin: 0 auto 10px; }
 .desk .ringInner { width: 116px; height: 116px; background: var(--desk-card); }
-.desk .ringPercent { font-size: 28px; font-weight: 600; letter-spacing: -0.6px; }
+.desk .ringPercent { font-size: 28px; font-family: var(--font-display); font-weight: 600; letter-spacing: -0.6px; }
 .desk .ringSub { color: var(--muted); }
 .desk .metaRow { text-align: center; }
 .desk .createdAt, .desk .notes { text-align: center; color: var(--muted); }
@@ -450,7 +450,7 @@
 .dHero { margin: 6px 0 0; }
 .dTop { display: flex; justify-content: space-between; font-size: 13px; color: var(--muted); margin-top: 10px; }
 .dLate { color: var(--danger); }
-.dBig { font-size: 42px; font-weight: 500; letter-spacing: -1.5px; line-height: 1.05; margin-top: 6px; color: var(--text); white-space: nowrap; }
+.dBig { font-size: 42px; font-family: var(--font-display); font-weight: 600; letter-spacing: -1.5px; line-height: 1.05; margin-top: 6px; color: var(--text); white-space: nowrap; }
 .dBig small { font-size: 18px; opacity: 0.55; letter-spacing: 0; }
 .dOf { font-size: 13px; color: var(--muted); margin-top: 2px; }
 .dTrack { height: 10px; border-radius: 99px; margin-top: 14px; overflow: hidden; background: repeating-linear-gradient(135deg, var(--desk-hatch) 0 1.5px, transparent 1.5px 6px); }

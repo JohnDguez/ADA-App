@@ -138,7 +138,7 @@
 
 .statBoxesTwo { grid-template-columns: repeat(2, 1fr); }
 .halfRingCenterSmallHome { display: block; font-size: 12px; font-weight: 400; color: var(--text); }
-.halfRingCenterBigHome { display: block; font-size: 20px; font-weight: 700; color: var(--text); }
+.halfRingCenterBigHome { display: block; font-size: 20px; font-family: var(--font-display); font-weight: 700; color: var(--text); }
 .statBoxValueLong { font-size: 13px; }
 .statBoxValueLonger { font-size: 12px; }
 .statBoxValueLongest { font-size: 11px; }

@@ -114,8 +114,8 @@
 }
 
 .ringPercent {
-  font-size: 19px;
-  font-weight: 500;
+  font-size: 19px; font-family: var(--font-display);
+  font-weight: 600;
   color: var(--text);
 }
 
@@ -127,7 +127,7 @@
 /* ── Recurrente: monto grande ────────────────────────────────────────────── */
 .bigAmount {
   text-align: center;
-  font-size: 30px;
+  font-size: 30px; font-family: var(--font-display);
   font-weight: 600;
   line-height: 1.1;
   color: var(--text);
@@ -325,9 +325,9 @@
 .desk .menuItem { border: 0; border-radius: 12px; padding: 10px 12px; }
 .desk .ring { width: 150px; height: 150px; flex-shrink: 0; }
 .desk .ringInner { width: 116px; height: 116px; background: var(--desk-card); }
-.desk .ringPercent { font-size: 26px; font-weight: 600; letter-spacing: -0.5px; }
+.desk .ringPercent { font-size: 26px; font-family: var(--font-display); font-weight: 600; letter-spacing: -0.5px; }
 .desk .ringSub { color: var(--muted); }
-.desk .bigAmount { font-size: 38px; font-weight: 500; letter-spacing: -1.2px; margin-top: 2px; }
+.desk .bigAmount { font-size: 38px; font-family: var(--font-display); font-weight: 600; letter-spacing: -1.2px; margin-top: 2px; }
 .desk .bigLabel, .desk .subtext { color: var(--muted); }
 .desk .subtext { margin-bottom: 18px; }
 .desk .statsRow { flex-shrink: 0; margin-bottom: 18px; }
@@ -335,7 +335,7 @@
 .desk .statLabel { color: var(--muted); font-size: 12px; margin-bottom: 4px; }
 .desk .statValue { font-size: 18px; font-weight: 600; }
 .desk .statValueMuted, .desk .statSub { color: var(--muted); }
-.desk .statValueAccent { font-size: 20px; color: var(--accent); }
+.desk .statValueAccent { font-size: 20px; font-family: var(--font-display); color: var(--accent); }
 .desk .historyTitle { font-size: 15px; font-weight: 600; flex-shrink: 0; margin-bottom: 4px; }
 .desk .historyList { flex: 1; min-height: 0; overflow-y: auto; }
 .desk .historyRow { border-top: 1px solid var(--desk-hair); padding: 12px 0; }
@@ -352,7 +352,7 @@
 .desk { border-radius: 24px; }
 .dHero { margin: 6px 0 14px; }
 .dTop { display: flex; justify-content: space-between; font-size: 13px; color: var(--muted); margin-top: 10px; }
-.dBig { font-size: 42px; font-weight: 500; letter-spacing: -1.5px; line-height: 1.05; margin-top: 6px; color: var(--text); white-space: nowrap; }
+.dBig { font-size: 42px; font-family: var(--font-display); font-weight: 600; letter-spacing: -1.5px; line-height: 1.05; margin-top: 6px; color: var(--text); white-space: nowrap; }
 .dBig small { font-size: 18px; opacity: 0.55; letter-spacing: 0; }
 .dOf { font-size: 13px; color: var(--muted); margin-top: 2px; }
 .dTrack { height: 10px; border-radius: 99px; margin-top: 14px; overflow: hidden; background: repeating-linear-gradient(135deg, var(--desk-hatch) 0 1.5px, transparent 1.5px 6px); }

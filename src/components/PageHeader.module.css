@@ -326,7 +326,7 @@
 .homeText { min-width: 0; }
 /* Fecha discreta y saludo más liviano: menos peso visual (v0.9.892) */
 .homeDate { font-size: 12px; font-weight: 500; color: var(--text); text-shadow: 0 1px 3px color-mix(in srgb, var(--bg) 90%, transparent), 0 0 12px color-mix(in srgb, var(--bg) 75%, transparent); }
-.homeHello { margin-top: 2px; font-size: 20px; font-weight: 600; letter-spacing: -0.3px; line-height: 1.2; color: var(--text); overflow-wrap: anywhere; text-shadow: 0 1px 3px color-mix(in srgb, var(--bg) 90%, transparent), 0 0 12px color-mix(in srgb, var(--bg) 75%, transparent); }
+.homeHello { margin-top: 2px; font-size: 20px; font-family: var(--font-display); font-weight: 600; letter-spacing: -0.3px; line-height: 1.2; color: var(--text); overflow-wrap: anywhere; text-shadow: 0 1px 3px color-mix(in srgb, var(--bg) 90%, transparent), 0 0 12px color-mix(in srgb, var(--bg) 75%, transparent); }
 .homeActions { flex-shrink: 0; display: flex; align-items: center; gap: 8px; }
 .homeCircle {
   width: 46px;

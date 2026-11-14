@@ -2,7 +2,7 @@
 .overlay { position: fixed; inset: 0; z-index: 550; display: grid; place-items: center; padding: 24px; background: var(--scrim); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
 .dialog { --field-desk-bg: var(--desk-chip); width: 980px; max-width: 100%; max-height: calc(100vh - 48px); overflow-y: auto; display: flex; flex-direction: column; gap: 18px; padding: 30px 34px; border-radius: 32px; background: var(--desk-panel); color: var(--text); box-shadow: var(--desk-pop-shadow); }
 .head { display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; }
-.title { margin: 0; font-size: 26px; letter-spacing: -0.6px; }
+.title { margin: 0; font-size: 26px; font-family: var(--font-display); letter-spacing: -0.6px; }
 .sub { margin-top: 4px; font-size: 13.5px; color: var(--muted); }
 .close { width: 40px; height: 40px; border: 0; border-radius: 50%; background: var(--desk-chip); color: var(--text); display: grid; place-items: center; }
 .body { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); gap: 20px; align-items: start; }
@@ -16,7 +16,7 @@
 .pTop { display: flex; align-items: center; gap: 12px; }
 .pIcon { width: 46px; height: 46px; flex: none; border-radius: 15px; display: grid; place-items: center; background: var(--tint); color: var(--on-color); }
 .pName { font-size: 16px; min-width: 0; overflow-wrap: anywhere; }
-.pAmount { font-size: 30px; font-weight: 700; letter-spacing: -0.8px; }
+.pAmount { font-size: 30px; font-family: var(--font-display); font-weight: 700; letter-spacing: -0.8px; }
 .pMeta { font-size: 13px; color: var(--muted); }
 .bar { height: 10px; border-radius: 99px; background: var(--hatch-bg); overflow: hidden; }
 .bar i { display: block; width: 0; height: 100%; background: var(--tint); border-radius: 99px; }
@@ -31,7 +31,7 @@
 /* Tablet (<1100px): diálogo de 720px, formulario + vista previa de 250px (mockup «Nueva meta · Tablet»). */
 @media (max-width: 1099px) {
   .dialog { width: 720px; padding: 26px 28px; gap: 14px; }
-  .title { font-size: 24px; }
+  .title { font-size: 24px; font-family: var(--font-display); }
   .body { grid-template-columns: minmax(0, 1fr) 250px; gap: 20px; }
   .side { padding: 16px; }
 }

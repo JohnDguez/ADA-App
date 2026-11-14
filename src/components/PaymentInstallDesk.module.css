@@ -1,7 +1,7 @@
 /* Resumen de parcialidades en escritorio (v0.9.873), mockup aprobado. Solo tokens, colores sólidos. */
 .hero { border-radius: 22px; padding: 20px; background: var(--accent); color: var(--on-color); }
 .lbl { font-size: 12px; font-weight: 600; letter-spacing: 0.04em; }
-.bigAmt { margin: 4px 0 6px; font-size: 42px; font-weight: 800; letter-spacing: -0.02em; line-height: 1.05; overflow-wrap: anywhere; }
+.bigAmt { margin: 4px 0 6px; font-size: 42px; font-family: var(--font-display); font-weight: 800; letter-spacing: -0.02em; line-height: 1.05; overflow-wrap: anywhere; }
 .sub { font-size: 13px; font-weight: 500; }
 .prog { height: 8px; margin: 14px 0 6px; border-radius: 99px; overflow: hidden; background: color-mix(in srgb, var(--on-color) 28%, var(--accent)); }
 .prog i { display: block; height: 100%; border-radius: 99px; background: var(--on-color); transition: width 0.3s ease; }

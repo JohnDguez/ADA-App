@@ -16,7 +16,7 @@
 
 .head { display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; margin-top: 4px; }
 .headText { min-width: 0; }
-.title { margin: 0; font-size: 1.5rem; font-weight: 700; letter-spacing: -0.4px; line-height: 1.15; color: var(--text); }
+.title { margin: 0; font-size: 1.5rem; font-family: var(--font-display); font-weight: 700; letter-spacing: -0.4px; line-height: 1.15; color: var(--text); }
 .sub { margin: 4px 0 0; font-size: 0.84375rem; line-height: 1.45; color: var(--muted); max-width: 34rem; }
 .close { width: 40px; height: 40px; flex: none; display: grid; place-items: center; border: 0; border-radius: 50%; background: var(--desk-card); box-shadow: var(--desk-shadow); color: var(--text); cursor: pointer; transition: background .15s; }
 @media (hover: hover) and (pointer: fine) { .close:hover { filter: none; background: var(--desk-hover-fill); } }

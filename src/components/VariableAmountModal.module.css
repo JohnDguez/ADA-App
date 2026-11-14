@@ -34,7 +34,7 @@
 }
 
 /* Popover de escritorio (v0.9.928) */
-.deskTitle { margin: 0; font-size: 19px; font-weight: 700; letter-spacing: -0.3px; color: var(--text); }
+.deskTitle { margin: 0; font-size: 19px; font-family: var(--font-display); font-weight: 700; letter-spacing: -0.3px; color: var(--text); }
 .deskSub { margin-top: 2px; font-size: 13px; color: var(--muted); }
 .deskBox { margin-top: 12px; padding: 10px 14px; border-radius: 14px; background: var(--desk-chip); font-size: 13px; color: var(--text); }
 .deskField { margin-top: 16px; }

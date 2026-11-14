@@ -125,4 +125,12 @@ describe('reglas del proyecto', () => {
       .map(f => relative(root, f))
     expect(bad).toEqual([])
   })
+  it('la tipografía de títulos (Bricolage Grotesque) está cargada y es un token — Regla 78', () => {
+    expect(readFileSync(join(root, 'index.html'), 'utf8')).toMatch(/family=Bricolage\+Grotesque/)
+    expect(readFileSync(join(root, 'src/index.css'), 'utf8')).toMatch(/--font-display:\s*'Bricolage Grotesque'/)
+    // Ningún módulo escribe el nombre de la fuente de títulos a mano: se usa var(--font-display).
+    const bad = walk(join(root, 'src')).filter(f => /\.css$/.test(f) && !/index\.css$/.test(f))
+      .filter(f => /Bricolage/.test(readFileSync(f, 'utf8'))).map(f => relative(root, f))
+    expect(bad).toEqual([])
+  })
 })

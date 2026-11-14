@@ -39,7 +39,7 @@
 .hero :global(.toggle-track.is-on) { background: var(--desk-ink-text); }
 .hero :global(.toggle-thumb.is-on) { background: var(--desk-deep); }
 .clickable { cursor: pointer; }
-.huge { font-size: 46px; font-weight: 500; letter-spacing: -1.6px; line-height: 1.05; }
+.huge { font-size: 46px; font-family: var(--font-display); font-weight: 600; letter-spacing: -1.6px; line-height: 1.05; }
 .huge small { font-size: 16px; letter-spacing: 0; opacity: 0.7; }
 
 /* Fila de ajuste: texto + control a la derecha */

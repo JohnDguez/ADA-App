@@ -78,7 +78,7 @@
 }
 
 .heroTitle {
-  font-size: 19px;
+  font-size: 19px; font-family: var(--font-display);
   font-weight: 700;
   color: var(--text);
   margin-bottom: 6px;
@@ -95,16 +95,16 @@
    aún mayor. */
 .heroIconCircle { width: 64px; height: 64px; }
 .heroIconCircle svg { width: 28px; height: 28px; }
-.heroTitle { font-size: 21px; }
+.heroTitle { font-size: 21px; font-family: var(--font-display); }
 .hero { padding-bottom: 8px; }
 @media (min-width: 768px) {
   .header { padding-top: 34px; }
   .heroIconCircle { width: 72px; height: 72px; }
   .heroIconCircle svg { width: 32px; height: 32px; }
-  .heroTitle { font-size: 24px; }
+  .heroTitle { font-size: 24px; font-family: var(--font-display); }
 }
 
 /* Escritorio (v0.9.834): título a la izquierda, sin resplandor ni regreso */
 .deskHead { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 18px; }
-.deskTitle { margin: 0; font-size: 22px; font-weight: 700; letter-spacing: -0.4px; color: var(--text); }
+.deskTitle { margin: 0; font-size: 22px; font-family: var(--font-display); font-weight: 700; letter-spacing: -0.4px; color: var(--text); }
 .deskDesc { margin: 4px 0 0; font-size: 13.5px; line-height: 1.45; color: var(--muted); max-width: 640px; }

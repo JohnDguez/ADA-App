@@ -281,7 +281,7 @@
 /* ── Tablet (≥768px): encabezado con perfil, suscripción destacada y tarjetas ── */
 .tabletWrap { position: relative; z-index: 1; max-width: 90vw; margin: 0 auto; padding: 28px 24px 0; }
 .headCard { display: flex; align-items: center; gap: 18px; background: var(--surface); border-radius: 20px; padding: 22px; }
-.headTitle { font-size: 24px; font-weight: 700; color: var(--text); }
+.headTitle { font-size: 24px; font-family: var(--font-display); font-weight: 700; color: var(--text); }
 .headSub { font-size: 13px; color: var(--text); opacity: 0.7; margin-top: 4px; }
 .headProfile { margin-left: auto; display: flex; align-items: center; gap: 14px; background: color-mix(in srgb, var(--accent) 8%, transparent); border-radius: 16px; padding: 12px 14px; }
 .headProfile .avatarImg, .headProfile .avatarInitials { width: 56px; height: 56px; font-size: 20px; }
@@ -315,7 +315,7 @@
 .avTop { display: flex; align-items: center; gap: 20px; }
 .avPreview { width: 84px; height: 84px; border-radius: 50%; overflow: hidden; flex-shrink: 0; background: var(--accent); color: var(--on-color); display: grid; place-items: center; }
 .avPreviewImg { width: 100%; height: 100%; object-fit: cover; display: block; }
-.avPreviewFb { font-size: 38px; font-weight: 700; }
+.avPreviewFb { font-size: 38px; font-family: var(--font-display); font-weight: 700; }
 .avUpload.avUpload { width: auto; height: 46px; padding: 0 24px; display: inline-flex; align-items: center; gap: 10px; font-size: 15px; }
 .avHint { margin-top: 10px; font-size: 13px; color: var(--muted); }
 .avLabel { margin-bottom: -8px; font-size: 12px; font-weight: 600; letter-spacing: 0.8px; text-transform: uppercase; color: var(--muted); }

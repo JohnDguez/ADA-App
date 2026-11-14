@@ -5,7 +5,7 @@
 .side { align-self: start; display: flex; flex-direction: column; gap: 4px; padding: 24px; border-radius: 28px; background: var(--desk-card); box-shadow: var(--desk-shadow); }
 .sideTitle { font-size: 12px; font-weight: 600; letter-spacing: 0.8px; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
 .kv { display: flex; align-items: center; justify-content: space-between; padding: 14px 0; border-bottom: 1px solid var(--desk-hair); font-size: 15px; color: var(--text); }
-.kv b { font-size: 22px; letter-spacing: -0.5px; }
+.kv b { font-size: 22px; font-family: var(--font-display); letter-spacing: -0.5px; }
 .red { color: var(--danger); }
 .amber { color: var(--soon-color); }
 .go { margin-top: 18px; height: 48px; border: 0; border-radius: 99px; background: var(--accent); color: var(--desk-ink-text); font-size: 15px; font-weight: 600; }

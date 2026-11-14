@@ -82,8 +82,8 @@
 }
 
 .headerTitle {
-  font-size: 19px;
-  font-weight: 500;
+  font-size: 19px; font-family: var(--font-display);
+  font-weight: 600;
   color: var(--text);
 }
 
@@ -395,7 +395,7 @@
 
   .header { gap: 16px; }
   .headerText { flex: 1; }
-  .headerTitle { font-size: 26px; font-weight: 700; }
+  .headerTitle { font-size: 26px; font-family: var(--font-display); font-weight: 700; }
   .headerSubtitle {
     display: block;
     margin-top: 4px;
@@ -423,7 +423,7 @@
   .summaryBoxTablet { display: block; }
   .summaryBox { padding: 14px 16px; }
   .summaryLabel { font-size: 13px; margin-bottom: 3px; }
-  .summaryValue { font-size: 22px; font-weight: 700; }
+  .summaryValue { font-size: 22px; font-family: var(--font-display); font-weight: 700; }
   .summaryValueSaved { color: var(--paid); }
 
   .list {

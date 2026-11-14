@@ -127,7 +127,7 @@
 }
 
 .balanceAmount {
-  font-size: 26px;
+  font-size: 26px; font-family: var(--font-display);
   font-weight: 700;
   line-height: 1;
 }
@@ -150,8 +150,8 @@
   align-self: flex-end;
 }
 
-.balanceAmountLong { font-size: 22px; }
-.balanceAmountLonger { font-size: 19px; }
+.balanceAmountLong { font-size: 22px; font-family: var(--font-display); }
+.balanceAmountLonger { font-size: 19px; font-family: var(--font-display); }
 .balanceAmountLongest { font-size: 16px; }
 
 .balanceStats {
@@ -402,7 +402,7 @@
 }
 
 .statsValueLarge {
-  font-size: 28px;
+  font-size: 28px; font-family: var(--font-display);
   font-weight: 700;
   color: var(--text);
   line-height: 1.1;
@@ -413,7 +413,7 @@
 }
 
 .statsValue {
-  font-size: 20px;
+  font-size: 20px; font-family: var(--font-display);
   font-weight: 700;
   color: var(--text);
   line-height: 1.1;
@@ -620,7 +620,7 @@
 }
 
 .remanenteAmount {
-  font-size: 28px;
+  font-size: 28px; font-family: var(--font-display);
   font-weight: 700;
   color: var(--paid);
   margin-bottom: 6px;
@@ -1022,7 +1022,7 @@
 }
 
 .fundBalance {
-  font-size: 22px;
+  font-size: 22px; font-family: var(--font-display);
   font-weight: 700;
   color: var(--text);
   margin-bottom: 10px;
@@ -1112,7 +1112,7 @@
 }
 
 .titleSectionHeading {
-  font-size: 22px;
+  font-size: 22px; font-family: var(--font-display);
   font-weight: 700;
   color: var(--text);
 }
@@ -1467,7 +1467,7 @@
      columna del 60% a ese ancho. Reducido para que ambos números quepan
      completos sin depender del respaldo de "…". */
   .statsValueLarge {
-    font-size: 19px;
+    font-size: 19px; font-family: var(--font-display);
   }
 
   .statsValue {
@@ -1736,14 +1736,14 @@
    antes de decidir si se replica en el resto de las pantallas. */
 @media (min-width: 1200px) {
   /* Encabezado de la página */
-  .titleSectionHeading { font-size: 28px; }
+  .titleSectionHeading { font-size: 28px; font-family: var(--font-display); }
   .titleSectionSubtext { font-size: 15px; }
-  .paymentsSectionTitle { font-size: 19px; }
-  .categorySectionTitleText { font-size: 19px; }
+  .paymentsSectionTitle { font-size: 19px; font-family: var(--font-display); }
+  .categorySectionTitleText { font-size: 19px; font-family: var(--font-display); }
 
   /* Balance del periodo */
   .balanceLabel { font-size: 12px; }
-  .balanceAmount { font-size: 36px; }
+  .balanceAmount { font-size: 36px; font-family: var(--font-display); }
   .balanceStatLabel { font-size: 12px; }
   .balanceStatValue { font-size: 17px; }
   .addIncomeButton { font-size: 14px; }
@@ -1757,7 +1757,7 @@
   .extrasItemMonth { font-size: 11px; }
 
   /* Fondo Compartido */
-  .fundBalance { font-size: 28px; }
+  .fundBalance { font-size: 28px; font-family: var(--font-display); }
   .fundInfoText,
   .fundExceedsError,
   .fundRemainingHint { font-size: 14px; }
@@ -1768,8 +1768,8 @@
      Sin llegar al 28/20px de mobile: ahí el bloque ocupa el ancho completo
      del teléfono. */
   .statsLabel { font-size: 12px; }
-  .statsValueLarge { font-size: 26px; }
-  .statsValue { font-size: 19px; }
+  .statsValueLarge { font-size: 26px; font-family: var(--font-display); }
+  .statsValue { font-size: 19px; font-family: var(--font-display); }
 
   /* Gráfica — más alta y con etiquetas legibles; `--chart-label-space` sube
      junto con el tamaño de letra de la etiqueta (ver .chartCard). */
@@ -2013,7 +2013,7 @@
     animation: none;
   }
 
-  .incomeModalTitle, .manageModalTitle { margin-bottom: 20px; font-size: 24px; letter-spacing: -0.5px; }
+  .incomeModalTitle, .manageModalTitle { margin-bottom: 20px; font-size: 24px; font-family: var(--font-display); letter-spacing: -0.5px; }
   .incomeFieldGroup { margin-bottom: 18px; }
   .incomeFieldGroupLast { margin-bottom: 24px; }
   :global(.field-label).incomeLabelMb8, :global(.field-label).incomeLabelMb6 { margin-bottom: 10px; font-size: 12px; font-weight: 600; letter-spacing: 0.8px; text-transform: uppercase; color: var(--muted); }
@@ -2093,7 +2093,7 @@
   .remDlg.remDlg { width: 480px; gap: 0; padding: 32px 34px 26px; }
   .remDlg .remanenteHeader { margin-bottom: 24px; }
   .remDlg .remanenteTitle { font-size: 18px; }
-  .remDlg .remanenteAmount { font-size: 36px; }
+  .remDlg .remanenteAmount { font-size: 36px; font-family: var(--font-display); }
   .remDlg .remanenteQuestion { font-size: 14px; color: var(--muted); font-weight: 500; }
   .remDlg .remanenteActionsRow { gap: 12px; }
   .remDlg .remanenteConfirmButton,
@@ -2133,7 +2133,7 @@
 }
 
 /* Modales de ingresos, fondo y remanente con el Modal único (v0.9.985). */
-.remBig { display: inline-block; margin: 4px 0; font-size: 1.75rem; font-weight: 700; letter-spacing: -0.6px; color: var(--paid); }
+.remBig { display: inline-block; margin: 4px 0; font-size: 1.75rem; font-family: var(--font-display); font-weight: 700; letter-spacing: -0.6px; color: var(--paid); }
 .remCustom { display: flex; gap: 8px; align-items: center; padding: 2px 0 4px; }
 .remCustom > label { flex: 1; min-width: 0; }
 .mRow { border-radius: 14px; }

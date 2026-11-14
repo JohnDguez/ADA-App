@@ -4,7 +4,7 @@
 .owedHead { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
 .key { font-size: 12px; font-weight: 600; letter-spacing: 0.8px; text-transform: uppercase; color: var(--muted); }
 .keyGap { margin-top: 22px; }
-.big { margin-top: 6px; font-size: 40px; font-weight: 700; letter-spacing: -1.2px; color: var(--text); }
+.big { margin-top: 6px; font-size: 40px; font-family: var(--font-display); font-weight: 700; letter-spacing: -1.2px; color: var(--text); }
 .hint { margin-top: 8px; font-size: 13px; color: var(--muted); }
 .ok { margin-top: 16px; font-size: 14px; color: var(--muted); }
 .segBar { display: flex; gap: 4px; height: 12px; margin: 18px 0 14px; border-radius: 99px; overflow: hidden; }
@@ -20,7 +20,7 @@
 .mid { display: grid; gap: 18px; margin-top: 18px; }
 .mid3 { grid-template-columns: 1.6fr 1fr 1fr; }
 .mid2 { grid-template-columns: 2fr 1fr; }
-.mid2v { margin-top: 8px; font-size: 30px; font-weight: 700; letter-spacing: -0.8px; color: var(--text); }
+.mid2v { margin-top: 8px; font-size: 30px; font-family: var(--font-display); font-weight: 700; letter-spacing: -0.8px; color: var(--text); }
 .linkTile { position: relative; border: 0; text-align: left; font-family: inherit; display: flex; flex-direction: column; align-items: flex-start; justify-content: flex-start; }
 .chev { position: absolute; right: 20px; top: 50%; margin-top: -10px; color: var(--muted); }
 .tlTrack { position: relative; height: 16px; margin: 22px 8px 12px; }
@@ -68,7 +68,7 @@
    del ciclo a todo el ancho, como en el mockup. */
 @media (max-width: 1099px) {
   .top { grid-template-columns: 230px minmax(0, 1fr); }
-  .big { font-size: 30px; }
+  .big { font-size: 30px; font-family: var(--font-display); }
   .owedHead { flex-wrap: wrap; gap: 10px; }
   .mid3 { grid-template-columns: 1fr 1fr; }
   .mid3 > :first-child { grid-column: 1 / -1; }
@@ -87,7 +87,7 @@
 .headRow.headRow { justify-content: space-between; width: 100%; }
 .headTxt { flex: 1; min-width: 0; }
 .topV { grid-template-columns: 300px minmax(0, 1fr); }
-.topV .big { font-size: 34px; }
+.topV .big { font-size: 34px; font-family: var(--font-display); }
 .midV2 { grid-template-columns: 1.6fr 1fr; }
 .midVP { grid-template-columns: 1fr 1fr; }
 .midVP > :first-child { grid-column: 1 / -1; }

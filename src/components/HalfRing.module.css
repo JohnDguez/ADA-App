@@ -12,7 +12,7 @@
 }
 
 .halfRingPercentText {
-  font-size: 26px;
+  font-size: 26px; font-family: var(--font-display);
   font-weight: 700;
   color: var(--text);
 }

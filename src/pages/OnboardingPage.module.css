@@ -33,7 +33,7 @@
 .exitToRight    { animation: stepExitToRight     0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) both; }
 
 .title {
-  font-size: 36px;
+  font-size: 36px; font-family: var(--font-display);
   font-weight: 800;
   color: var(--text);
   line-height: 1.15;
@@ -448,7 +448,7 @@
 .deskBody { max-width: none; }
 
 .deskBody .title {
-  font-size: 44px;
+  font-size: 44px; font-family: var(--font-display);
   letter-spacing: -1.4px;
   line-height: 1.08;
   margin-bottom: 0;
@@ -786,7 +786,7 @@
 .mob .artBox { left: 0; right: 0; bottom: 1.875rem; height: 0; }
 .mob .art { left: 50%; transform: translateX(-50%); }
 .mob .sheet { margin-top: -1.5rem; border-radius: 2rem 2rem 0 0; padding: 1.625rem 1.25rem 0; }
-.mob .deskBody .title { font-size: 1.875rem; letter-spacing: -0.03em; line-height: 1.08; }
+.mob .deskBody .title { font-size: 1.875rem; font-family: var(--font-display); letter-spacing: -0.03em; line-height: 1.08; }
 .mob .deskBody .desc { font-size: 0.875rem; line-height: 1.45; margin-top: 0.5rem; }
 .mob .deskBody :global(.field-label) { margin: 1.125rem 0 0.5rem; }
 .mob .deskBody :global(.field-input) { min-height: 3.25rem; font-size: 1rem; }
@@ -852,7 +852,7 @@
 .tabH .sceneImg { width: auto; }
 .tabH .deskMain { align-items: flex-start; padding: 0.375rem 0.375rem 0.375rem 0.875rem; }
 .tabH .deskCard { flex: 1; align-self: flex-start; min-height: 100%; padding: 2.75rem 3rem 2rem; border-radius: 1.5rem; }
-.tabH .deskBody .title { font-size: 2.375rem; letter-spacing: -0.03em; }
+.tabH .deskBody .title { font-size: 2.375rem; font-family: var(--font-display); letter-spacing: -0.03em; }
 .tabH .deskViewport { display: grid; align-content: center; }
 .tabH .panelWrap { grid-area: 1 / 1; }
 .tabH .exiting { position: static; }
