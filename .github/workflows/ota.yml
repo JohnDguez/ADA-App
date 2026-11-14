@@ -1,0 +1,62 @@
+name: Actualización OTA (HotCodePush)
+
+# Publica la web compilada como actualización por aire para la app de Android.
+# No hace nada hasta que existan los secretos HOTCODEPUSH_TOKEN y
+# HOTCODEPUSH_SIGNING_KEY (se agregan después de subir la versión 1.14 a Play).
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: ota
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    env:
+      HOTCODEPUSH_TOKEN: ${{ secrets.HOTCODEPUSH_TOKEN }}
+      HOTCODEPUSH_SIGNING_KEY: ${{ secrets.HOTCODEPUSH_SIGNING_KEY }}
+      HOTCODEPUSH_TELEMETRY_DISABLED: '1'
+      VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+      VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+      VITE_GOOGLE_CLIENT_ID: ${{ secrets.VITE_GOOGLE_CLIENT_ID }}
+      VITE_STRIPE_PUBLISHABLE_KEY: ${{ secrets.VITE_STRIPE_PUBLISHABLE_KEY }}
+      VITE_VAPID_PUBLIC_KEY: ${{ secrets.VITE_VAPID_PUBLIC_KEY }}
+    steps:
+      - name: Revisar secretos
+        id: gate
+        run: |
+          if [ -z "$HOTCODEPUSH_TOKEN" ] || [ -z "$HOTCODEPUSH_SIGNING_KEY" ] || [ -z "$VITE_SUPABASE_URL" ] || [ -z "$VITE_SUPABASE_ANON_KEY" ]; then
+            echo "Faltan secretos: no se publica la actualización OTA."
+            echo "run=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "run=true" >> "$GITHUB_OUTPUT"
+          fi
+      - uses: actions/checkout@v4
+        if: steps.gate.outputs.run == 'true'
+      - uses: actions/setup-node@v4
+        if: steps.gate.outputs.run == 'true'
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+        if: steps.gate.outputs.run == 'true'
+      - name: Lint y pruebas
+        if: steps.gate.outputs.run == 'true'
+        run: |
+          npm run lint
+          npm test
+      - name: Compilar
+        if: steps.gate.outputs.run == 'true'
+        env:
+          # Misma huella que usa Vercel, para que el aviso de «nueva versión» coincida.
+          VERCEL_GIT_COMMIT_SHA: ${{ github.sha }}
+        run: npm run build
+      - name: Publicar actualización
+        if: steps.gate.outputs.run == 'true'
+        env:
+          # Por variable de entorno (nunca dentro del script) para que un mensaje de commit no pueda inyectar comandos.
+          RELEASE_NOTES: ${{ github.event.head_commit.message || 'Publicación manual' }}
+        run: npx hotcodepush release create --no-input --notes "$RELEASE_NOTES"
