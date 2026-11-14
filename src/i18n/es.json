@@ -2290,7 +2290,6 @@
     "cycleSpend": "Gastado en este corte: {{amount}}",
     "pendingCreditTotal": "Deuda total",
     "nextCut": {
-      "title": "Próximo corte · {{date}}",
       "covered": "Cubierto · te sobran {{amount}}"
     },
     "tablet": {
@@ -2360,7 +2359,7 @@
     "owedChip": "Por pagar: {{amount}}",
     "bento": {
       "donutLabel": "Distribución de lo que debes",
-      "statement": "Estado de cuenta",
+      "statement": "Pendiente de cortes anteriores",
       "cycle": "Ciclo en curso",
       "plans": "Planes por venir",
       "totalHint": "Incluye todas tus mensualidades",

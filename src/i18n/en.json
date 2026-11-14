@@ -2290,7 +2290,6 @@
     "cycleSpend": "Spent this cycle: {{amount}}",
     "pendingCreditTotal": "Total owed",
     "nextCut": {
-      "title": "Next cut · {{date}}",
       "covered": "Covered · {{amount}} left over"
     },
     "tablet": {
@@ -2360,7 +2359,7 @@
     "owedChip": "Owed: {{amount}}",
     "bento": {
       "donutLabel": "Breakdown of what you owe",
-      "statement": "Statement",
+      "statement": "Pending from previous statements",
       "cycle": "Current cycle",
       "plans": "Upcoming installments",
       "totalHint": "Includes all your installments",
