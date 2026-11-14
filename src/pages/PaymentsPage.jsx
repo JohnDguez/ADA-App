@@ -455,8 +455,12 @@ export function PaymentsPage({ payments, dataLoading = false, periodIncome, paym
       lastSeen = profile.last_seen_period_start
     }
 
-    // Si ya vio este periodo (en este contexto), no mostrar modal
-    if (lastSeen === currentPeriodStart) return
+    // Si ya vio este periodo (o uno más reciente) en este contexto, no mostrar
+    // modal ni escribir nada. «O uno más reciente» importa cuando dos
+    // dispositivos calculan el periodo distinto (p. ej. una app que aún no
+    // conoce un cobro movido): el que va atrasado ya no pisa el valor del otro
+    // ni vuelve a mostrar un remanente que el otro ya mostró.
+    if (lastSeen && lastSeen >= currentPeriodStart) return
 
     // Calcular remanente del periodo anterior
     const prev = prevPeriod(profile)
