@@ -10,8 +10,8 @@
 .labelRow { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; min-height: 32px; margin-bottom: 0.25rem; }
 .labelRow .label { flex: 1; min-width: 0; }
 .label { font-size: 0.75rem; font-weight: 500; color: var(--muted); display: block; }
-.bigNum { font-size: clamp(1.875rem, 9.5vw, 2.375rem); font-weight: 600; letter-spacing: -0.02em; line-height: 1.1; margin-top: 0.25rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.midNum { display: block; font-size: clamp(1.125rem, 5.4vw, 1.375rem); font-weight: 600; margin-top: 0.25rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bigNum { font-size: clamp(1.875rem, 9.5vw, 2.375rem); font-family: var(--font-display); font-weight: 600; letter-spacing: -0.02em; line-height: 1.1; margin-top: 0.25rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.midNum { display: block; font-size: clamp(1.125rem, 5.4vw, 1.375rem); font-family: var(--font-display); font-weight: 600; margin-top: 0.25rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .toneWarn { color: var(--warn-tone); }
 .toneOver { color: var(--danger); }
 i.toneWarn { background: var(--warn-tone); }
@@ -22,7 +22,7 @@ i.toneOver { background: var(--danger); }
 .tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 0.625rem; }
 .tile { background: var(--desk-chip); border-radius: 0.875rem; padding: 0.625rem 0.75rem; display: flex; flex-direction: column; gap: 0.125rem; min-width: 0; }
 .tile span { font-size: 0.6875rem; color: var(--muted); }
-.tile b { font-size: clamp(0.9375rem, 4.4vw, 1.0625rem); font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tile b { font-size: clamp(0.9375rem, 4.4vw, 1.0625rem); font-family: var(--font-display); font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .linkRow { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; margin-top: 0.75rem; min-width: 0; }
 .linkBtn { display: inline-flex; align-items: center; gap: 0.25rem; background: none; border: 0; padding: 0.25rem 0; font: inherit; font-size: 0.8125rem; font-weight: 600; color: var(--accent); cursor: pointer; flex-shrink: 0; }
 .linkMuted { background: none; border: 0; padding: 0.25rem 0; font: inherit; font-size: 0.75rem; color: var(--muted); cursor: pointer; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

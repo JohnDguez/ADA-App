@@ -819,7 +819,7 @@
 .tabV .artBox { position: relative; align-self: stretch; flex: none; width: 19rem; }
 .tabV .art { left: 0; bottom: -2.5rem; max-height: calc(100% + 2.5rem); }
 .bandText { position: relative; flex: 1; min-width: 0; color: var(--onboarding-ink); }
-.bandHead .title { margin: 0; font-size: clamp(2.5rem, 6vw, 3.125rem); font-weight: 700; letter-spacing: -0.03em; line-height: 1.06; color: var(--onboarding-ink); }
+.bandHead .title { margin: 0; font-size: clamp(2.5rem, 6vw, 3.125rem); font-family: var(--font-display); font-weight: 700; letter-spacing: -0.03em; line-height: 1.06; color: var(--onboarding-ink); }
 .bandHead .desc { margin: 0.625rem 0 0; font-size: 1rem; line-height: 1.45; font-weight: 500; color: var(--onboarding-ink); }
 .tabV .sheet { margin-top: -2.125rem; border-radius: 2.5rem 2.5rem 0 0; padding: 2.25rem 3.5rem 0; }
 .tabV .sheetViewport { display: grid; align-content: start; }

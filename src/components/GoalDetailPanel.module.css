@@ -510,7 +510,7 @@
 .mobile .historyList { flex: none; overflow: visible; }
 .mobile .historyEmptyBlock { flex: none; overflow: visible; padding: 1rem 0; }
 .mobile .headerTitle { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.mobile .dBig { font-size: clamp(2.125rem, 11.5vw, 2.75rem); overflow: hidden; text-overflow: ellipsis; }
+.mobile .dBig { font-size: clamp(2.125rem, 11.5vw, 2.75rem); font-family: var(--font-display); overflow: hidden; text-overflow: ellipsis; }
 .mobile .dBig small { font-size: 0.45em; }
 .mobile .dFoot { flex-wrap: wrap; font-size: 0.75rem; }
 .mobile .actionBtn { background: var(--accent); color: var(--on-color); }
