@@ -59,4 +59,4 @@ jobs:
         env:
           # Por variable de entorno (nunca dentro del script) para que un mensaje de commit no pueda inyectar comandos.
           RELEASE_NOTES: ${{ github.event.head_commit.message || 'Publicación manual' }}
-        run: npx hotcodepush release create --no-input --notes "$RELEASE_NOTES"
+        run: npx hotcodepush release create --channel production --bundle-version "$(git rev-parse --short HEAD)" --notes "$RELEASE_NOTES" --yes
