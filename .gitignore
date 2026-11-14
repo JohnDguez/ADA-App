@@ -4,3 +4,4 @@ dist
 .env.local
 android/.idea/
 HISTORIAL.md
+hotcodepush-private-key.pem

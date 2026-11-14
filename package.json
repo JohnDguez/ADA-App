@@ -26,6 +26,7 @@
     "@capacitor/share": "^8.0.3",
     "@capawesome/capacitor-app-update": "^8.1.0",
     "@capgo/capacitor-document-scanner": "^8.4.8",
+    "@hotcodepush/capacitor-live-updates": "0.1.0",
     "@phosphor-icons/react": "^2.1.10",
     "@stripe/react-stripe-js": "^2.9.0",
     "@stripe/stripe-js": "^4.10.0",
