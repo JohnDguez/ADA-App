@@ -74,7 +74,8 @@ function dateToStr(d) {
 }
 function periodSalary(cfg, periodStart) {
   if (!cfg || !cfg.salary_enabled) return 0
-  const from = cfg.salary_change_from
+  // Si ese cobro se movió (cobro_overrides), el cambio de ingreso se mueve con él.
+  const from = cfg.salary_change_from && ((cfg.cobro_overrides && cfg.cobro_overrides[cfg.salary_change_from]) || cfg.salary_change_from)
   const ps = typeof periodStart === 'string' ? periodStart : periodStart && dateToStr(periodStart)
   if (from && cfg.salary_prev_amount != null && ps && ps < from) return Number(cfg.salary_prev_amount || 0)
   return Number(cfg.salary_amount || 0)

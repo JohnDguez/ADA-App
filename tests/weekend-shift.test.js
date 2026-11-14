@@ -70,6 +70,12 @@ describe('ingreso que cambia desde el próximo periodo (v0.9.968)', () => {
     expect(periodSalary({ salary_enabled: true, salary_amount: 6000 }, '2026-10-30')).toBe(6000)
     expect(periodSalary({ ...p, salary_enabled: false }, '2026-10-30')).toBe(0)
   })
+  it('si el cobro del cambio se movió, el cambio de ingreso se mueve con él', () => {
+    const moved = { ...p, cobro_overrides: { '2026-11-16': '2026-11-13' } }
+    expect(periodSalary(moved, '2026-11-13')).toBe(6000)
+    expect(periodSalary(moved, '2026-11-12')).toBe(1500)
+    expect(server.periodSalary(moved, '2026-11-13')).toBe(6000)
+  })
   it('el servidor calcula lo mismo', () => {
     for (const d of ['2026-10-30', '2026-11-16']) expect(server.periodSalary(p, d)).toBe(periodSalary(p, d))
   })

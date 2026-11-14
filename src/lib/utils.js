@@ -450,7 +450,9 @@ export function groupPayments(payments) {
 // 'YYYY-MM-DD'.
 export function periodSalary(cfg, periodStart) {
   if (!cfg?.salary_enabled) return 0
-  const from = cfg.salary_change_from
+  // La fecha del cambio es un cobro: si ese cobro se movió con «Mover este cobro»
+  // (cobro_overrides), el cambio de ingreso se mueve con él.
+  const from = cfg.salary_change_from && ((cfg.cobro_overrides && cfg.cobro_overrides[cfg.salary_change_from]) || cfg.salary_change_from)
   const ps = typeof periodStart === 'string' ? periodStart : periodStart && dateToStr(periodStart)
   if (from && cfg.salary_prev_amount != null && ps && ps < from) {
     return Number(cfg.salary_prev_amount || 0)
