@@ -46,11 +46,19 @@ function sanitizeProfile(data) {
 export function useProfile(userId) {
   const [profile, setProfile] = useState(DEFAULT_PROFILE)
   const [loading, setLoading] = useState(true)
+  // v0.9.1066: si la lectura del perfil FALLA (red lenta, sesión aún no lista al abrir
+  // la app, p. ej. justo después de una actualización por aire), `profile` se queda con
+  // DEFAULT_PROFILE, sin `onboarding_completed`, y la app lo tomaba por una cuenta nueva
+  // y mostraba el onboarding de nuevo. `loadError` distingue «no se pudo leer» de
+  // «no existe la fila» para que la app no muestre el onboarding por un fallo.
+  const [loadError, setLoadError] = useState(false)
 
   const fetchProfile = useCallback(async () => {
     if (!userId) return null
-    const { data, error } = await supabase
-      .from('profiles').select('*').eq('id', userId).single()
+    const { data, error } = await withRetry(() => supabase
+      .from('profiles').select('*').eq('id', userId).single())
+    // PGRST116 = no hay fila (cuenta realmente nueva): eso sí sigue al onboarding.
+    setLoadError(!!error && error.code !== 'PGRST116')
     if (!error && data) {
       setProfile({ ...DEFAULT_PROFILE, ...sanitizeProfile(data) })
       // El idioma vive en la cuenta (profiles.language) y es la fuente de
@@ -109,5 +117,5 @@ export function useProfile(userId) {
     return { url, error: null }
   }
 
-  return { profile, loading, updateProfile, uploadAvatar }
+  return { profile, loading, loadError, updateProfile, uploadAvatar }
 }

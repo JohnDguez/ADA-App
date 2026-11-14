@@ -198,7 +198,7 @@ export default function App() {
     ensureMonthLoaded, oldestYear, oldestChecked,
     importPayments, findExistingForImport,
   } = usePayments(user?.id, paymentsSpaceId, activeSpaceEntry?.space?.name)
-  const { profile, loading: profileLoading, updateProfile, uploadAvatar, fetchProfile } = useProfile(user?.id)
+  const { profile, loading: profileLoading, loadError: profileLoadError, updateProfile, uploadAvatar, fetchProfile } = useProfile(user?.id)
   // Fuente única de precios/prueba de Premium (v0.9.960): los botones de
   // Premium de toda la app leen si este usuario ya se suscribió alguna vez.
   useEffect(() => { setPremiumOfferProfile(!!profile?.has_subscribed_before) }, [profile?.has_subscribed_before])
@@ -1006,6 +1006,9 @@ export default function App() {
   }, [])
 
   if (authLoading || (user && profileLoading)) return <SkeletonLoader />
+  // v0.9.1066: un fallo al leer el perfil NO es una cuenta nueva: se deja que el ErrorBoundary
+  // muestre «Recargar» en vez de mandar a la persona al onboarding otra vez.
+  if (user && profileLoadError) throw new Error('profile-load-failed')
   if (isRecovery) return <Suspense fallback={<SkeletonLoader />}><ResetPasswordPage onDone={() => setIsRecovery(false)} /></Suspense>
   if (!user) return <Suspense fallback={<SkeletonLoader />}><AuthPage /></Suspense>
   if (user && !profile.onboarding_completed) return <Suspense fallback={<SkeletonLoader />}><OnboardingPage userId={user.id} onDone={updateProfile} /></Suspense>
