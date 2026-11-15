@@ -133,4 +133,8 @@ describe('reglas del proyecto', () => {
       .filter(f => /Bricolage/.test(readFileSync(f, 'utf8'))).map(f => relative(root, f))
     expect(bad).toEqual([])
   })
+  it('los campos de monto (AmountInput) usan la tipografía de cifras — Regla 78', () => {
+    expect(readFileSync(join(root, 'src/components/AmountInput.jsx'), 'utf8').match(/data-amount/g)).toHaveLength(2)
+    expect(readFileSync(join(root, 'src/index.css'), 'utf8')).toMatch(/input\[inputmode\]\[data-amount\][^{]*\{\s*font-family:\s*var\(--font-display\)/)
+  })
 })

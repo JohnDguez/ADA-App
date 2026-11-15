@@ -68,6 +68,7 @@ export default function AmountInput({ value, onChange, ...rest }) {
       ref={inputRef}
       type="text"
       inputMode="decimal"
+      data-amount
       value={displayValue}
       onChange={handleChange}
     />
@@ -110,6 +111,7 @@ export function CentsAmountInput({ value, onChange, className, emptyClassName, .
       ref={inputRef}
       type="text"
       inputMode="numeric"
+      data-amount
       className={`${className || ''} ${cents === 0 ? emptyClassName || '' : ''}`}
       style={{ ...(rest.style || {}), width: `${text.length - seps * 0.45 + 0.6}ch` }}
       value={text}

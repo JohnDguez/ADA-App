@@ -1213,3 +1213,6 @@ html[data-desk-sidebar] .field-input:focus { box-shadow: 0 0 0 2px var(--accent)
 
 /* R78: encabezados en la tipografía de títulos */
 h1, h2, h3 { font-family: var(--font-display); }
+
+/* R78: los montos que se teclean usan la tipografía de cifras (el resto de campos sigue en DM Sans). */
+input[inputmode][data-amount], input[inputmode][data-amount]::placeholder { font-family: var(--font-display); }
