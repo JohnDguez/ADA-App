@@ -516,3 +516,8 @@
 .mobile .actionBtn { background: var(--accent); color: var(--on-color); }
 .mobile .actionBtnGhost { background: none; color: var(--text); }
 @media (prefers-reduced-motion: reduce) { .mobile { animation: none; } }
+
+/* Descuento automático (v0.9.1071): pausar o reanudar desde el detalle. */
+.autoToggle { display: inline-flex; align-items: center; gap: 0.4375rem; align-self: flex-start; margin-top: 0.625rem; padding: 0.5625rem 1rem; border: 0; border-radius: 999px; background: var(--desk-chip); color: var(--text); font: inherit; font-size: 0.8125rem; font-weight: 600; cursor: pointer; transition: background 0.3s cubic-bezier(0.22, 1, 0.36, 1); }
+@media (hover: hover) and (pointer: fine) { .autoToggle:hover { background: var(--desk-hover-fill); } }
+@media (prefers-reduced-motion: reduce) { .autoToggle { transition: none; } }

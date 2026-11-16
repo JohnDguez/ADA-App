@@ -100,7 +100,7 @@ export function GoalsPage({
   }, [selectedGoalId, formOpen])
 
   const sortedGoals = [...activeGoals].sort((a, b) =>
-    sortBy === 'nombre' ? a.name.localeCompare(b.name) : b.target_amount - a.target_amount
+    sortBy === 'nombre' ? a.name.localeCompare(b.name) : Number(b.target_amount || 0) - Number(a.target_amount || 0)
   )
   const selectedGoal = selectedGoalId
     ? [...activeGoals, ...completedGoals].find(g => g.id === selectedGoalId)
@@ -129,6 +129,13 @@ export function GoalsPage({
   // Personal (v0.9.483): el cambio ya se ve al instante (useGoals optimista),
   // así que el formulario cierra sin esperar al servidor. Compartida: espera
   // al endpoint, como siempre.
+  // Columnas del descuento automático a escribir al editar (solo si cambió algo).
+  function autoFields(values) {
+    if (values.autoClear) return { auto_amount: null, auto_every: null, auto_next: null, auto_active: true }
+    if (!values.auto) return {}
+    return { auto_amount: values.auto.amount, auto_every: values.auto.every, auto_next: values.auto.next, auto_active: values.auto.active }
+  }
+
   async function handleFormSave(values) {
     if (!isShared) {
       if (editingGoal) {
@@ -139,9 +146,10 @@ export function GoalsPage({
           color: values.color,
           target_amount: values.targetAmount,
           target_date: values.targetDate || null,
+          ...autoFields(values),
         })
       } else {
-        addGoal(values)
+        addGoal(values.auto ? { ...values, auto: { amount: values.auto.amount, every: values.auto.every, next: values.auto.next } } : values)
       }
       setFormOpen(false)
       return
@@ -180,6 +188,7 @@ export function GoalsPage({
       paymentMethods,
       onRetirar: amount => retirar(selectedGoal.id, amount, selectedGoal.name),
       onRevert: transactionId => revertirAporte(transactionId),
+      onToggleAuto: isShared ? null : () => updateGoal(selectedGoal.id, { auto_active: selectedGoal.auto_active === false }),
       onMarkCompleted: completed => markCompleted(selectedGoal.id, completed),
       onDelete: resolution => { deleteGoal(selectedGoal.id, resolution); setSelectedGoalId(null) },
     } : null,
@@ -232,6 +241,8 @@ export function GoalsPage({
       <GoalFormModal
         open={formOpen}
         initial={editingGoal}
+        profile={profile}
+        isShared={isShared}
         onSave={handleFormSave}
         onClose={() => setFormOpen(false)}
       />

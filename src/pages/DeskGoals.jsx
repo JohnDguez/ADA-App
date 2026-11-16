@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import { useTranslation } from 'react-i18next'
+import { hasAuto, autoLabel, autoTotalPerPeriod } from '../lib/savings'
 import { usePresence } from '../lib/usePresence'
 import { Plus, Crown, PiggyBank, Target, Check, Loader2, ArrowDownUp } from 'lucide-react'
 import { NewSharedSpacePanel } from '../components/NewSharedSpacePanel'
@@ -58,12 +59,14 @@ function GoalTile({ goal, selected, isShared, spaceMembers, onClick }) {
           : <span className={styles.badge}>{goal.target_date ? t('goalsPage.card.daysRemaining', { count: goal.daysRemaining }) : t('deskGoals.noDeadline')}</span>)}
       </div>
       <div className={styles.gcAmt}>{int}<small>{cents}</small></div>
-      <div className={styles.gcSub}>{t('deskGoals.depositedOf', { amount: fmt(goal.target_amount), pct })}</div>
-      <div className={styles.pb}><u style={{ width: `${pct}%` }} /></div>
+      <div className={styles.gcSub}>{goal.isSavings ? (hasAuto(goal) ? autoLabel(t, goal) : t('goalsPage.card.savingsSub')) : t('deskGoals.depositedOf', { amount: fmt(goal.target_amount), pct })}</div>
+      {!goal.isSavings && <div className={styles.pb}><u style={{ width: `${pct}%` }} /></div>}
       <div className={styles.gcFoot}>
         {done
           ? <span className={styles.doneTxt}><Check size={14} color="var(--paid)" />{t('goalsPage.card.completedOn', { date: goal.completed_at ? shortDate(goal.completed_at) : '' })}</span>
-          : <span>{t('goalsPage.card.remaining', { amount: fmt(goal.remaining) })}</span>}
+          : goal.isSavings
+            ? <span>{hasAuto(goal) ? t('goalsPage.card.savingsFoot') : t('goalsPage.card.savingsFootFree')}</span>
+            : <span>{hasAuto(goal) ? `${autoLabel(t, goal)} · ` : ''}{t('goalsPage.card.remaining', { amount: fmt(goal.remaining) })}</span>}
         {contributors.length > 0 && <PaidByStack contributors={contributors} members={spaceMembers} size={20} inline />}
       </div>
     </button>
@@ -83,6 +86,7 @@ export function DeskGoals({ d, tablet = false }) {
   const [restInt, restCents] = splitMoney(fmt(totalRestante))
   const [savInt, savCents] = splitMoney(fmt(totalAhorrado))
   const totalTarget = activeGoals.reduce((s, g) => s + Number(g.target_amount || 0), 0)
+  const autoPer = autoTotalPerPeriod(activeGoals)
   const overallPct = totalTarget > 0 ? Math.min(100, Math.round((totalAhorrado / totalTarget) * 100)) : 0
   const lastDone = [...completedGoals].sort((a, b) => new Date(b.completed_at || 0) - new Date(a.completed_at || 0))[0]
   const upcoming = activeGoals.filter(g => g.target_date).sort((a, b) => new Date(a.target_date) - new Date(b.target_date)).slice(0, 4)
@@ -139,7 +143,7 @@ export function DeskGoals({ d, tablet = false }) {
                 <div className={home.tile}>
                   <span className={home.tileLabel}>{t('goalsPage.totalSaved')}</span>
                   <span className={home.tileNum}>{goalsLoading ? <LoadingDots /> : <>{savInt}<small>{savCents}</small></>}</span>
-                  <span className={home.tileSub}>{t('deskGoals.savedSub', { count: activeGoals.length })}</span>
+                  <span className={home.tileSub}>{autoPer > 0 ? t('goalsPage.auto.heroLine', { amount: fmt(autoPer) }) : t('deskGoals.savedSub', { count: activeGoals.length })}</span>
                 </div>
                 <div className={home.tile}>
                   <span className={home.tileLabel}>{t('goalsPage.goalsCompleted')}</span>

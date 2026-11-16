@@ -5,7 +5,9 @@ import { CATEGORY_ICON_GROUPS, getIconComponent } from '../lib/categoryIcons'
 import { DatePicker } from './DatePicker'
 import AmountInput from './AmountInput'
 import { X } from 'lucide-react'
-import { fmt, dateOf, getMonthsShort } from '../lib/utils'
+import { fmt, dateOf, getMonthsShort, today } from '../lib/utils'
+import { GoalKindSwitch, GoalAutoFields } from './GoalAutoFields'
+import { hasAuto, isSaving, firstAutoDate, suggestedPerPeriod } from '../lib/savings'
 import { useIsMobile } from '../hooks/useIsMobile'
 import { useIsDesktop } from '../hooks/useIsDesktop'
 import { ColorPickerPanel } from './ColorPickerPanel'
@@ -27,7 +29,7 @@ const ANIM_MS = 320
 // Crear y editar una meta comparten el mismo formulario — `initial` viene
 // null para crear, o el objeto de la meta para editar (mismo criterio que
 // el resto de modales de edición de la app, ej. PaymentModal).
-export function GoalFormModal({ open, initial, onSave, onClose }) {
+export function GoalFormModal({ open, initial, onSave, onClose, profile = null, isShared = false }) {
   useScrollLock(open)
   const { t } = useTranslation()
   const isMobile = useIsMobile()
@@ -41,6 +43,10 @@ export function GoalFormModal({ open, initial, onSave, onClose }) {
   const [color, setColor] = useState(PALETTE[0])
   const [targetAmount, setTargetAmount] = useState('')
   const [targetDate, setTargetDate] = useState('')
+  // Meta (con monto) o ahorro libre (sin monto) + descuento automático (v0.9.1071).
+  const [kind, setKind] = useState('goal')
+  const [auto, setAuto] = useState({ on: false, amount: '', every: 'period' })
+  const [autoPaused, setAutoPaused] = useState(false)
   const [iconSearch, setIconSearch] = useState('')
   const [error, setError] = useState('')
   const [saving, setSaving] = useState(false)
@@ -77,6 +83,11 @@ export function GoalFormModal({ open, initial, onSave, onClose }) {
     setColor(initial?.color || PALETTE[0])
     setTargetAmount(initial?.target_amount != null ? String(initial.target_amount) : '')
     setTargetDate(initial?.target_date || '')
+    setKind(initial && isSaving(initial) ? 'saving' : 'goal')
+    setAuto(initial && hasAuto(initial)
+      ? { on: true, amount: String(initial.auto_amount), every: initial.auto_every }
+      : { on: false, amount: '', every: 'period' })
+    setAutoPaused(!!initial && hasAuto(initial) && initial.auto_active === false)
     setIconSearch('')
     setError('')
   }, [open, initial])
@@ -94,12 +105,33 @@ export function GoalFormModal({ open, initial, onSave, onClose }) {
 
   async function handleSave() {
     if (!name.trim()) { setError(t('goalFormModal.errors.emptyName')); return }
-    const amountVal = parseFloat(targetAmount)
-    if (!amountVal || amountVal <= 0) { setError(t('goalFormModal.errors.invalidAmount')); return }
+    const amountVal = kind === 'goal' ? parseFloat(targetAmount) : null
+    if (kind === 'goal' && (!amountVal || amountVal <= 0)) { setError(t('goalFormModal.errors.invalidAmount')); return }
+    const autoVal = parseFloat(auto.amount)
+    if (autoOn && (!autoVal || autoVal <= 0)) { setError(t('goalFormModal.errors.invalidAuto')); return }
+    // Al editar: se conserva la fecha de aplicación si no cambió la frecuencia.
+    const keepNext = initial && hasAuto(initial) && initial.auto_every === auto.every
+    const autoPayload = autoOn
+      ? { amount: autoVal, every: auto.every, next: keepNext ? initial.auto_next : autoNext, active: !autoPaused }
+      : null
     setSaving(true)
-    await onSave({ name, notes, icon, color, targetAmount: amountVal, targetDate: targetDate || null })
+    await onSave({ name, notes, icon, color, targetAmount: amountVal, targetDate: targetDate || null, auto: autoPayload, autoClear: !autoOn && !!initial && hasAuto(initial) })
     setSaving(false)
   }
+
+  const autoOn = auto.on && !isShared
+  const autoNext = firstAutoDate(profile, auto.every, today())
+  const keepNextShown = initial && hasAuto(initial) && initial.auto_every === auto.every
+  const suggested = kind === 'goal' && targetDate
+    ? suggestedPerPeriod({ target_amount: parseFloat(targetAmount), target_date: targetDate, current: initial?.currentAmount || 0 }, profile, today())
+    : null
+  const autoBlock = isShared ? null : (
+    <GoalAutoFields value={auto} onChange={setAuto} suggested={suggested}
+      nextDate={autoPaused ? null : (keepNextShown ? initial.auto_next : autoNext)}
+      paused={autoPaused} onTogglePause={initial && hasAuto(initial) ? () => setAutoPaused(p => !p) : undefined} />
+  )
+  const titleNew = kind === 'saving' ? t('goalFormModal.titleNewSaving') : t('goalFormModal.titleNew')
+  const titleEdit = kind === 'saving' ? t('goalFormModal.titleEditSaving') : t('goalFormModal.titleEdit')
 
   const search = iconSearch.trim().toLowerCase()
   const filteredGroups = CATEGORY_ICON_GROUPS
@@ -132,16 +164,17 @@ export function GoalFormModal({ open, initial, onSave, onClose }) {
     const target = parseFloat(targetAmount) || 0
     return (
       <div onClick={e => e.target === e.currentTarget && onClose()} className={`${gd.overlay} ${closing ? styles.overlayClosing : ''}`}>
-        <div className={`${gd.dialog} ${isDesktop ? '' : gd.dialogTab}`} data-presence="panel" data-closing={closing ? '' : undefined} role="dialog" aria-modal="true" aria-label={initial ? t('goalFormModal.titleEdit') : t('goalFormModal.titleNew')}>
+        <div className={`${gd.dialog} ${isDesktop ? '' : gd.dialogTab}`} data-presence="panel" data-closing={closing ? '' : undefined} role="dialog" aria-modal="true" aria-label={initial ? titleEdit : titleNew}>
           <div className={gd.head}>
             <div>
-              <h2 className={gd.title}>{initial ? t('goalFormModal.titleEdit') : t('goalFormModal.titleNew')}</h2>
+              <h2 className={gd.title}>{initial ? titleEdit : titleNew}</h2>
               <div className={gd.sub}>{t('goalsPage.desk.newDesc')}</div>
             </div>
             <button type="button" className={gd.close} onClick={onClose} aria-label={t('buttons.cancel')}><X size={16} /></button>
           </div>
           <div className={gd.body}>
             <div className={gd.form}>
+              <GoalKindSwitch value={kind} onChange={setKind} />
               <div>
                 <label className="field-label">{t('goalFormModal.nameLabel')}</label>
                 <input aria-label={t('goalFormModal.nameLabel')} autoFocus className="field-input" value={name}
@@ -152,16 +185,17 @@ export function GoalFormModal({ open, initial, onSave, onClose }) {
                 <input aria-label={t('goalFormModal.notesLabel')} className="field-input" value={notes}
                   onChange={e => setNotes(e.target.value)} placeholder={t('goalFormModal.notesPlaceholder')} />
               </div>
-              <div className={gd.row2}>
-                <div>
+              <div className={kind === 'goal' ? gd.row2 : undefined}>
+                {kind === 'goal' && <div>
                   <label className="field-label">{t('goalFormModal.amountLabel')}</label>
                   <AmountInput className="field-input" value={targetAmount} onChange={e => { setTargetAmount(e.target.value); setError('') }} placeholder="$0.00" />
-                </div>
+                </div>}
                 <div>
                   <label className="field-label">{t('goalFormModal.deadlineLabel')}</label>
                   <DatePicker value={targetDate} onChange={setTargetDate} placeholder={t('goalFormModal.deadlinePlaceholder')} sheet sheetTitle={t('goalFormModal.deadlineLabel')} />
                 </div>
               </div>
+              {autoBlock}
               <div>
                 <label className="field-label">{t('goalFormModal.iconColorLabel')}</label>
                 <div className={cf.search}>
@@ -197,7 +231,7 @@ export function GoalFormModal({ open, initial, onSave, onClose }) {
                   <b className={gd.pName}>{name.trim() || t('goalsPage.desk.previewName')}</b>
                 </div>
                 <div className={gd.pAmount}>{fmt(0)}</div>
-                <div className={gd.pMeta}>{target > 0 ? `${t('goalsPage.desk.previewLeft')} ${fmt(target)}` : ' '}</div>
+                <div className={gd.pMeta}>{kind === 'saving' ? t('goalFormModal.previewSaving') : target > 0 ? `${t('goalsPage.desk.previewLeft')} ${fmt(target)}` : ' '}</div>
                 <div className={gd.bar}><i /></div>
                 <div className={gd.pMeta}>{targetDate ? prettyDate(targetDate) : t('goalsPage.desk.previewNoDate')}</div>
               </div>
@@ -223,7 +257,7 @@ export function GoalFormModal({ open, initial, onSave, onClose }) {
       <div className={`${styles.modal} ${entering ? styles.modalEntering : ''} ${closing ? styles.modalClosing : ''}`} role="dialog" aria-modal="true">
         <div className={styles.handle} />
         <div className={styles.head}>
-          <div className={styles.title}>{initial ? t('goalFormModal.titleEdit') : t('goalFormModal.titleNew')}</div>
+          <div className={styles.title}>{initial ? titleEdit : titleNew}</div>
           <button type="button" className={styles.close} onClick={onClose} aria-label={t('buttons.cancel')}><X size={16} /></button>
         </div>
 
@@ -236,11 +270,13 @@ export function GoalFormModal({ open, initial, onSave, onClose }) {
                 <b className={styles.pName}>{name.trim() || t('goalsPage.desk.previewName')}</b>
               </div>
               <div className={styles.pAmount}>{fmt(0)}</div>
-              <div className={styles.pMeta}>{mobTarget > 0 ? `${t('goalsPage.desk.previewLeft')} ${fmt(mobTarget)}` : ' '}</div>
+              <div className={styles.pMeta}>{kind === 'saving' ? t('goalFormModal.previewSaving') : mobTarget > 0 ? `${t('goalsPage.desk.previewLeft')} ${fmt(mobTarget)}` : ' '}</div>
               <div className={styles.bar}><i /></div>
               <div className={styles.pMeta}>{targetDate ? prettyDate(targetDate) : t('goalsPage.desk.previewNoDate')}</div>
             </div>
           </div>
+
+          <GoalKindSwitch value={kind} onChange={setKind} />
 
           <div>
             <label className={styles.lbl}>{t('goalFormModal.nameLabel')}</label>
@@ -254,17 +290,19 @@ export function GoalFormModal({ open, initial, onSave, onClose }) {
               onChange={e => setNotes(e.target.value)} placeholder={t('goalFormModal.notesPlaceholder')} />
           </div>
 
-          <div className={styles.row2}>
-            <div>
+          <div className={kind === 'goal' ? styles.row2 : undefined}>
+            {kind === 'goal' && <div>
               <label className={styles.lbl}>{t('goalFormModal.amountLabel')}</label>
               <AmountInput className="field-input" value={targetAmount}
                 onChange={e => { setTargetAmount(e.target.value); setError('') }} placeholder="$0.00" />
-            </div>
+            </div>}
             <div>
               <label className={styles.lbl}>{t('goalFormModal.deadlineLabel')}</label>
               <DatePicker value={targetDate} onChange={setTargetDate} placeholder={t('goalFormModal.deadlinePlaceholder')} sheet sheetTitle={t('goalFormModal.deadlineLabel')} />
             </div>
           </div>
+
+          {autoBlock}
 
           <div>
             <label className={styles.lbl}>{t('goalFormModal.iconColorLabel')}</label>

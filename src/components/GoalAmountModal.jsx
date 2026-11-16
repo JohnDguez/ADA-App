@@ -32,14 +32,14 @@ export function GoalAmountModal({ open, kind, goal, amount, setAmount, methodId,
   const title = withdraw ? t('goalDetailPanel.withdrawTitle') : t('goalDetailPanel.contributeTitle')
   const hint = withdraw
     ? t('goalDetailPanel.availableHint', { amount: fmt(goal.currentAmount) })
-    : t('goalDetailPanel.remainingHint', { amount: fmt(goal.remaining) })
+    : goal.isSavings ? '' : t('goalDetailPanel.remainingHint', { amount: fmt(goal.remaining) })
 
   const head = (
     <div className={styles.head}>
       <i className={styles.icon} style={{ background: goal.color, color: catInk(goal.color) }}>{Icon && <Icon size={20} />}</i>
       <div className={styles.headText}>
         <h2 className={styles.title}>{title}</h2>
-        <div className={styles.sub}>{goal.name} · {fmt(goal.currentAmount)} / {fmt(goal.target_amount)}</div>
+        <div className={styles.sub}>{goal.name} · {fmt(goal.currentAmount)}{goal.isSavings ? '' : ` / ${fmt(goal.target_amount)}`}</div>
       </div>
       {!asPop && <button type="button" className={styles.close} onClick={onClose} aria-label={t('buttons.cancel')}><X size={16} /></button>}
     </div>
@@ -58,7 +58,7 @@ export function GoalAmountModal({ open, kind, goal, amount, setAmount, methodId,
               onKeyDown={e => e.key === 'Enter' && onConfirm()} className={styles.amountIn} />
           </div>
         )}
-        <div className={styles.hint}>{hint}</div>
+        {hint && <div className={styles.hint}>{hint}</div>}
       </div>
       {!withdraw && paymentMethods && (
         <div className={styles.field}>
@@ -85,7 +85,7 @@ export function GoalAmountModal({ open, kind, goal, amount, setAmount, methodId,
   // Móvil (y tablet sin ancla): <Modal layout="quick"> (v0.9.980).
   return (
     <Modal open={!!open && !asPop} onClose={onClose} layout="quick" icon={Icon || undefined} iconStyle={{ background: goal.color, color: catInk(goal.color) }}
-      title={title} desc={`${goal.name} · ${fmt(goal.currentAmount)} / ${fmt(goal.target_amount)}`} width={460}
+      title={title} desc={`${goal.name} · ${fmt(goal.currentAmount)}${goal.isSavings ? '' : ` / ${fmt(goal.target_amount)}`}`} width={460}
       primary={{ label: saving ? t('goalDetailPanel.saving') : t('goalDetailPanel.confirm'), onClick: onConfirm, disabled: saving || !canConfirm }}>
       <div className={mk.pan}>
         <div className={mk.lab}>{withdraw ? t('goalDetailPanel.amountToWithdraw') : t('goalDetailPanel.amountToContribute')}</div>
@@ -93,7 +93,7 @@ export function GoalAmountModal({ open, kind, goal, amount, setAmount, methodId,
           <small>$</small>
           <AmountInput autoFocus value={amount} onChange={e => setAmount(e.target.value)} placeholder="0.00" onKeyDown={e => e.key === 'Enter' && onConfirm()} />
         </label>
-        <div className={mk.note}>{hint}</div>
+        {hint && <div className={mk.note}>{hint}</div>}
         {!withdraw && paymentMethods && (
           <PaymentMethodField methods={paymentMethods.methods} value={methodId} onChange={setMethodId} onAddCard={onAddCard} allowCredit={false} />
         )}

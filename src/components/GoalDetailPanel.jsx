@@ -1,9 +1,10 @@
 import { useState, useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
-import { ChevronLeft, MoreVertical, ArrowUp, ArrowDown, Check, ArrowUpCircle, ArrowDownCircle, Pencil, Trash2, RotateCcw } from 'lucide-react'
+import { ChevronLeft, MoreVertical, ArrowUp, ArrowDown, Check, ArrowUpCircle, ArrowDownCircle, Pencil, Trash2, RotateCcw, Repeat, Pause, Play } from 'lucide-react'
+import { hasAuto, autoLabel } from '../lib/savings'
 import { getIconComponent } from '../lib/categoryIcons'
 import { catInk } from '../lib/colorUtils'
-import { fmt, getMonthsShort } from '../lib/utils'
+import { fmt, getMonthsShort, dateOf } from '../lib/utils'
 import { showToast } from './Toast'
 import { DeleteGoalModal } from './DeleteGoalModal'
 import { GoalAmountModal } from './GoalAmountModal'
@@ -13,7 +14,7 @@ import { useScrollLock } from '../lib/scrollLock'
 import { useScrollTopOnOpen } from '../lib/scrollTop'
 
 function fmtDate(iso) {
-  const d = new Date(iso)
+  const d = /^\d{4}-\d{2}-\d{2}$/.test(iso) ? dateOf(iso) : new Date(iso)
   return `${d.getDate()} ${getMonthsShort()[d.getMonth()]} ${d.getFullYear()}`
 }
 
@@ -26,7 +27,7 @@ function fmtDate(iso) {
 export function GoalDetailPanel({
   goal, onBack, onEdit, onAportar, onRetirar, onRevert, onMarkCompleted, onDelete,
   isShared = false, canContribute = true, canWithdraw = true, canEdit = true, canDelete = true, currentUserId = null, spaceMembers = [],
-  hasIncome = true, paymentMethods = null, desk = false, mobile = false,
+  hasIncome = true, paymentMethods = null, desk = false, mobile = false, onToggleAuto = null,
 }) {
   // v0.9.910 — en móvil se usa el diseño de escritorio dentro de una tarjeta.
   if (mobile) desk = true
@@ -189,10 +190,10 @@ export function GoalDetailPanel({
             {!goal.is_completed && goal.target_date && <span className={goal.isOverdue ? styles.dLate : ''}>{goal.isOverdue ? t('goalsPage.card.overdue') : t('goalsPage.card.daysRemaining', { count: goal.daysRemaining })}</span>}
           </div>
           <div className={styles.dBig}>{fmt(goal.currentAmount).replace(/\.\d+$/, '')}<small>{fmt(goal.currentAmount).match(/\.\d+$/)?.[0] || ''}</small></div>
-          <div className={styles.dOf}>{t('deskGoals.ofTarget', { amount: fmt(goal.target_amount), pct: (goal.is_completed ? 100 : goal.percent) })}</div>
-          <div className={styles.dTrack}><u style={{ width: `${(goal.is_completed ? 100 : goal.percent)}%`, background: goal.color }} /></div>
+          <div className={styles.dOf}>{goal.isSavings ? t('goalsPage.card.savingsSub') : t('deskGoals.ofTarget', { amount: fmt(goal.target_amount), pct: (goal.is_completed ? 100 : goal.percent) })}</div>
+          {!goal.isSavings && <div className={styles.dTrack}><u style={{ width: `${(goal.is_completed ? 100 : goal.percent)}%`, background: goal.color }} /></div>}
           <div className={styles.dFoot}>
-            <span>{t('goalsPage.card.remaining', { amount: fmt(goal.remaining) })}</span>
+            <span>{goal.isSavings ? t('goalsPage.card.savingsFootFree') : t('goalsPage.card.remaining', { amount: fmt(goal.remaining) })}</span>
             <span>{t('goalDetailPanel.createdOn', { date: fmtDate(goal.created_at) })}</span>
           </div>
         </div>
@@ -200,9 +201,9 @@ export function GoalDetailPanel({
       <>
       <div className={styles.ring} style={{ background: `conic-gradient(${desk ? 'var(--accent)' : 'var(--paid)'} 0% ${goal.percent}%, ${desk ? 'var(--desk-chip)' : 'var(--border)'} ${goal.percent}% 100%)` }}>
         <div className={styles.ringInner}>
-          <div className={styles.ringPercent}>{goal.percent}%</div>
-          <div className={styles.ringAmounts}>{fmt(goal.currentAmount)} / {fmt(goal.target_amount)}</div>
-          <div className={styles.ringSub}>{t('goalDetailPanel.completedLabel')}</div>
+          <div className={styles.ringPercent}>{goal.isSavings ? fmt(goal.currentAmount) : `${goal.percent}%`}</div>
+          {!goal.isSavings && <div className={styles.ringAmounts}>{fmt(goal.currentAmount)} / {fmt(goal.target_amount)}</div>}
+          <div className={styles.ringSub}>{goal.isSavings ? t('goalsPage.card.savingsSub') : t('goalDetailPanel.completedLabel')}</div>
         </div>
       </div>
 
@@ -221,9 +222,24 @@ export function GoalDetailPanel({
       {/* Desglose — solo tablet (en teléfono los montos van dentro del anillo) */}
       <div className={styles.statsList}>
         <div className={styles.statRow}><span>{t('goalDetailPanel.savedLabel')}</span><b className={styles.statSaved}>{fmt(goal.currentAmount)}</b></div>
-        <div className={styles.statRow}><span>{t('goalDetailPanel.remainingLabel')}</span><b>{fmt(goal.remaining)}</b></div>
-        <div className={styles.statRow}><span>{t('goalDetailPanel.targetLabel')}</span><b>{fmt(goal.target_amount)}</b></div>
+        {!goal.isSavings && <div className={styles.statRow}><span>{t('goalDetailPanel.remainingLabel')}</span><b>{fmt(goal.remaining)}</b></div>}
+        {!goal.isSavings && <div className={styles.statRow}><span>{t('goalDetailPanel.targetLabel')}</span><b>{fmt(goal.target_amount)}</b></div>}
+        {hasAuto(goal) && (
+          <div className={styles.statRow}>
+            <span><Repeat size={13} /> {t('goalFormModal.autoTitle')}</span>
+            <b>{autoLabel(t, goal)}</b>
+          </div>
+        )}
+        {hasAuto(goal) && goal.auto_active !== false && !goal.is_completed && (
+          <div className={styles.statRow}><span>{t('goalDetailPanel.autoNextLabel')}</span><b>{fmtDate(goal.auto_next)}</b></div>
+        )}
       </div>
+      {hasAuto(goal) && !goal.is_completed && canEdit && onToggleAuto && (
+        <button type="button" onClick={onToggleAuto} className={styles.autoToggle}>
+          {goal.auto_active === false ? <Play size={14} /> : <Pause size={14} />}
+          {goal.auto_active === false ? t('goalFormModal.autoResume') : t('goalFormModal.autoPause')}
+        </button>
+      )}
 
         <div className={styles.buttonsRow}>
           <button type="button" onClick={() => openAction('aportar')} className={`${styles.actionBtn} ${!canContribute ? styles.actionBtnBlocked : ''}`}>
@@ -296,7 +312,7 @@ export function GoalDetailPanel({
                 <div className={styles.historyLeft}>
                   <TxIcon size={16} color={isAporte ? 'var(--paid)' : 'var(--soon-color)'} />
                   <span>
-                    {authorName ? `${authorName} ${isAporte ? t('goalDetailPanel.contributedVerb') : t('goalDetailPanel.withdrewVerb')}` : (isAporte ? t('goalDetailPanel.contributionLabel') : t('goalDetailPanel.withdrawalLabel'))} · {fmtDate(tx.created_at)}
+                    {tx.auto ? t('goalDetailPanel.autoContributionLabel') : authorName ? `${authorName} ${isAporte ? t('goalDetailPanel.contributedVerb') : t('goalDetailPanel.withdrewVerb')}` : (isAporte ? t('goalDetailPanel.contributionLabel') : t('goalDetailPanel.withdrawalLabel'))} · {fmtDate(tx.created_at)}
                   </span>
                 </div>
                 <div className={styles.historyRight}>

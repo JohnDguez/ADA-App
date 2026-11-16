@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect, useRef } from 'react'
 import { supabase } from '../lib/supabase'
-import { daysDiff, cobroPeriod, dateToStr, todayStr } from '../lib/utils'
+import { daysDiff, cobroPeriod, dateToStr, dateOf, todayStr, today } from '../lib/utils'
+import { hasAuto, dueAutoDates, isSaving } from '../lib/savings'
 import { withRetry } from '../lib/withRetry'
 import { apiUrl } from '../lib/apiUrl'
 import i18n from '../i18n'
@@ -156,11 +157,14 @@ export function useGoals(userId, profile, spaceId = null, onPaymentsChanged = nu
   const goals = rawGoals.map(g => {
     const goalTx = transactions.filter(t => t.goal_id === g.id)
     const current = goalTx.reduce((sum, t) => sum + (t.type === 'aporte' ? Number(t.amount) : -Number(t.amount)), 0)
-    const remaining = Math.max(g.target_amount - current, 0)
-    const percent = g.target_amount > 0 ? Math.min(Math.round((current / g.target_amount) * 100), 100) : 0
+    // Ahorro libre (v0.9.1071): sin monto objetivo → sin restante ni %.
+    const saving = isSaving(g)
+    const remaining = saving ? 0 : Math.max(g.target_amount - current, 0)
+    const percent = !saving ? Math.min(Math.round((current / g.target_amount) * 100), 100) : 0
     const daysRemaining = g.target_date ? daysDiff(g.target_date) : null
     return {
       ...g,
+      isSavings: saving,
       currentAmount: current,
       remaining,
       percent,
@@ -275,9 +279,30 @@ export function useGoals(userId, profile, spaceId = null, onPaymentsChanged = nu
     }
   }
 
-  async function addGoal({ name, notes, icon, color, targetAmount, targetDate }) {
+  // Columnas del descuento automático (v0.9.1071). Se escriben directo en
+  // `goals` (RLS ya permite UPDATE/INSERT propio) y no por apply_batch, cuya
+  // lista de columnas permitidas no incluye estas.
+  const AUTO_COLS = ['auto_amount', 'auto_every', 'auto_next', 'auto_active']
+  const splitAuto = fields => {
+    const auto = {}, rest = {}
+    Object.entries(fields).forEach(([k, v]) => { (AUTO_COLS.includes(k) ? auto : rest)[k] = v })
+    return { auto, rest }
+  }
+
+  async function addGoal({ name, notes, icon, color, targetAmount, targetDate, auto = null }) {
     if (spaceId) {
-      return callSharedApi('create', { payload: { name, notes, icon, color, targetAmount, targetDate } })
+      return callSharedApi('create', { payload: { name, notes, icon, color, targetAmount: targetAmount || null, targetDate } })
+    }
+    if (auto) {
+      const row = {
+        user_id: userId, space_id: null, name: name.trim(), notes: notes?.trim() || null, icon, color,
+        target_amount: targetAmount || null, target_date: targetDate || null,
+        auto_amount: auto.amount, auto_every: auto.every, auto_next: auto.next, auto_active: true,
+      }
+      const { error } = await withRetry(() => supabase.from('goals').insert(row))
+      if (error) return { error }
+      await fetchAll({ silent: true })
+      return { error: null }
     }
     // Optimista (v0.9.483): la meta aparece al instante con id temporal.
     const row = {
@@ -287,7 +312,7 @@ export function useGoals(userId, profile, spaceId = null, onPaymentsChanged = nu
       notes: notes?.trim() || null,
       icon,
       color,
-      target_amount: targetAmount,
+      target_amount: targetAmount || null,
       target_date: targetDate || null,
     }
     const id = tempId()
@@ -312,10 +337,17 @@ export function useGoals(userId, profile, spaceId = null, onPaymentsChanged = nu
       })
     }
     const goal = rawGoals.find(g => g.id === goalId)
+    const { auto, rest } = splitAuto(updates)
+    if (Object.keys(auto).length) {
+      const { error } = await withRetry(() => supabase.from('goals').update(auto).eq('id', goalId).eq('user_id', userId))
+      if (error) return { error }
+      setRawGoals(prev => prev.map(g => g.id === goalId ? { ...g, ...auto } : g))
+      if (!Object.keys(rest).length) return { error: null }
+    }
     return runGoalBatch({
       goalId, goalName: updates.name || goal?.name, action: 'goalUpdate',
-      serverOps: [{ table: 'goals', op: 'update', id: goalId, fields: updates }],
-      local: { goalUpdates: [{ id: goalId, fields: updates }] },
+      serverOps: [{ table: 'goals', op: 'update', id: goalId, fields: rest }],
+      local: { goalUpdates: [{ id: goalId, fields: rest }] },
     })
   }
 
@@ -508,6 +540,63 @@ export function useGoals(userId, profile, spaceId = null, onPaymentsChanged = nu
       afterConfirm: serverOps.length > 1 ? notifyPaymentsChanged : undefined,
     })
   }
+
+  // ── Descuento automático (v0.9.1071) ──────────────────────────────────
+  // Aplica los descuentos vencidos (día de cobro ya llegado) de las metas y
+  // ahorros PERSONALES activos, también los atrasados si la app no se abrió
+  // ese día: cada uno con la fecha de su cobro. Primero «reclama» la fecha
+  // (UPDATE condicionado a auto_next, así dos pestañas o dos dispositivos no
+  // duplican) y luego escribe el aporte (goal_transactions.auto = true) y su
+  // pago reflejo pagado (categoría Ahorro, baja el Disponible aunque quede en
+  // negativo: no se valida saldo). Si el aporte falla se devuelve la fecha.
+  const rawGoalsRef = useRef(rawGoals)
+  rawGoalsRef.current = rawGoals
+  const autoBusyRef = useRef(false)
+  const profileRef = useRef(profile)
+  profileRef.current = profile
+  const runAutoSavings = useCallback(async () => {
+    if (!userId || spaceId || autoBusyRef.current || !profileRef.current) return
+    autoBusyRef.current = true
+    let applied = 0
+    try {
+      for (const g of rawGoalsRef.current) {
+        if (g.is_completed || String(g.id).startsWith('tmp-') || !hasAuto(g) || g.auto_active === false) continue
+        const { dates, next } = dueAutoDates(g, profileRef.current, today())
+        if (!dates.length) continue
+        const { data: claimed, error: claimErr } = await supabase.from('goals')
+          .update({ auto_next: next }).eq('id', g.id).eq('user_id', userId).eq('auto_next', g.auto_next).select('id')
+        if (claimErr || !claimed?.length) continue
+        const noon = ds => { const d = dateOf(ds); d.setHours(12, 0, 0, 0); return d.toISOString() }
+        const txRows = dates.map(ds => ({ goal_id: g.id, user_id: userId, space_id: null, amount: g.auto_amount, type: 'aporte', auto: true, created_at: noon(ds) }))
+        const payRows = dates.map(ds => ({
+          user_id: userId, space_id: null, name: `Ahorro automático: ${g.name}`, amount: g.auto_amount,
+          category: 'Ahorro', due_date: ds, is_variable: false, is_recurrent: false, recur_freq: null,
+          is_master: false, parent_id: null, is_paid: true, paid_at: noon(ds), postponed: false,
+          is_postponed: false, paused: false, is_installment: false,
+        }))
+        const r1 = await supabase.from('goal_transactions').insert(txRows)
+        const r2 = r1.error ? r1 : await supabase.from('payments').insert(payRows)
+        if (r1.error || r2.error) {
+          if (!r1.error) await supabase.from('goal_transactions').delete().eq('goal_id', g.id).eq('auto', true).in('created_at', txRows.map(t => t.created_at))
+          await supabase.from('goals').update({ auto_next: g.auto_next }).eq('id', g.id).eq('user_id', userId)
+          continue
+        }
+        applied += dates.length
+      }
+    } finally {
+      autoBusyRef.current = false
+    }
+    if (applied) { await fetchAll({ silent: true }); notifyPaymentsChanged() }
+  }, [userId, spaceId, fetchAll])
+
+  // Una vez cargadas las metas y cada vez que la app vuelve a primer plano.
+  useEffect(() => {
+    if (loading || !userId || spaceId) return
+    runAutoSavings()
+    const onVis = () => { if (document.visibilityState === 'visible') runAutoSavings() }
+    document.addEventListener('visibilitychange', onVis)
+    return () => document.removeEventListener('visibilitychange', onVis)
+  }, [loading, userId, spaceId, runAutoSavings])
 
   return {
     goals, activeGoals, completedGoals, totalRestante,

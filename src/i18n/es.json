@@ -670,7 +670,7 @@
     "alreadyAbonado": "Ya abonaste {{amount}}"
   },
   "goalsPage": {
-    "title": "Metas",
+    "title": "Metas y ahorros",
     "noGoalsAtAllTitle": "Aún no tienes ninguna meta",
     "noGoalsAtAllSubtitle": "Crea una para empezar a apartar dinero de tu nómina",
     "totalRemaining": "Total restante",
@@ -703,7 +703,10 @@
       "remaining": "Queda: {{amount}}",
       "daysRemaining_one": "Queda {{count}} día",
       "daysRemaining_other": "Quedan {{count}} días",
-      "overdue": "Fecha vencida"
+      "overdue": "Fecha vencida",
+      "savingsSub": "Ahorro libre",
+      "savingsFoot": "Ahorro automático",
+      "savingsFootFree": "Sin monto objetivo"
     },
     "subtitle": "Ahorra con propósito, una meta a la vez.",
     "totalSaved": "Total ahorrado",
@@ -715,6 +718,11 @@
       "previewNoDate": "Sin fecha límite",
       "previewLeft": "Quedan",
       "previewHint": "Podrás aportar desde Metas cuando quieras."
+    },
+    "auto": {
+      "paused": "Descuento en pausa",
+      "line": "{{amount}} {{every}}",
+      "heroLine": "Apartas {{amount}} por periodo"
     }
   },
   "goalDetailPanel": {
@@ -768,7 +776,9 @@
     "contributeTitle": "Aportar a la meta",
     "withdrawTitle": "Retirar de la meta",
     "remainingHint": "Faltan {{amount}} para tu meta",
-    "availableHint": "Disponible para retirar: {{amount}}"
+    "availableHint": "Disponible para retirar: {{amount}}",
+    "autoNextLabel": "Próximo descuento",
+    "autoContributionLabel": "Descuento automático"
   },
   "goalFormModal": {
     "titleEdit": "Editar meta",
@@ -783,8 +793,31 @@
     "deadlinePlaceholder": "Sin fecha límite",
     "errors": {
       "emptyName": "Ponle un nombre a tu meta",
-      "invalidAmount": "Ingresa cuánto quieres ahorrar"
-    }
+      "invalidAmount": "Ingresa cuánto quieres ahorrar",
+      "invalidAuto": "Ingresa el monto del descuento automático"
+    },
+    "titleNewSaving": "Nuevo ahorro",
+    "titleEditSaving": "Editar ahorro",
+    "kindLabel": "Tipo",
+    "kindGoal": "Meta",
+    "kindSaving": "Ahorro libre",
+    "previewSaving": "Ahorro libre, sin monto objetivo",
+    "autoTitle": "Descuento automático",
+    "autoSub": "Aparta una cantidad el día de cobro",
+    "autoAmount": "Monto a apartar",
+    "autoEvery": "Frecuencia",
+    "every": {
+      "period": "Cada periodo",
+      "2periods": "Cada 2 periodos",
+      "week": "Cada semana",
+      "month": "Cada mes"
+    },
+    "autoNext": "Próximo descuento: {{date}}",
+    "autoPayday": "Se descuenta el día de cobro.",
+    "autoPause": "Pausar descuento",
+    "autoResume": "Reanudar descuento",
+    "suggested": "Sugerido: {{amount}} por periodo.",
+    "suggestedUse": "Usar"
   },
   "variableAmountModal": {
     "titleEstimate": "Monto a pagar",
@@ -1346,7 +1379,7 @@
   },
   "deskGoals": {
     "ofTarget": "de {{amount}} · {{pct}}%",
-    "listTitle": "Mis metas",
+    "listTitle": "Mis metas y ahorros",
     "toGo": "para cumplir todas tus metas",
     "savedSub_one": "en {{count}} meta activa",
     "savedSub_other": "en {{count}} metas activas",

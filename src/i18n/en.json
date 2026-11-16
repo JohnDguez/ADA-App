@@ -670,7 +670,7 @@
     "alreadyAbonado": "Already paid {{amount}}"
   },
   "goalsPage": {
-    "title": "Goals",
+    "title": "Goals & savings",
     "noGoalsAtAllTitle": "You don't have any goals yet",
     "noGoalsAtAllSubtitle": "Create one to start setting money aside from your income",
     "totalRemaining": "Total remaining",
@@ -703,7 +703,10 @@
       "remaining": "Remaining: {{amount}}",
       "daysRemaining_one": "{{count}} day left",
       "daysRemaining_other": "{{count}} days left",
-      "overdue": "Past due date"
+      "overdue": "Past due date",
+      "savingsSub": "Free savings",
+      "savingsFoot": "Automatic savings",
+      "savingsFootFree": "No target amount"
     },
     "subtitle": "Save with purpose, one goal at a time.",
     "totalSaved": "Total saved",
@@ -715,6 +718,11 @@
       "previewNoDate": "No deadline",
       "previewLeft": "Left",
       "previewHint": "You can contribute from Goals whenever you want."
+    },
+    "auto": {
+      "paused": "Deduction paused",
+      "line": "{{amount}} {{every}}",
+      "heroLine": "You set aside {{amount}} per period"
     }
   },
   "goalDetailPanel": {
@@ -768,7 +776,9 @@
     "contributeTitle": "Contribute to goal",
     "withdrawTitle": "Withdraw from goal",
     "remainingHint": "{{amount}} left to reach your goal",
-    "availableHint": "Available to withdraw: {{amount}}"
+    "availableHint": "Available to withdraw: {{amount}}",
+    "autoNextLabel": "Next deduction",
+    "autoContributionLabel": "Automatic deduction"
   },
   "goalFormModal": {
     "titleEdit": "Edit goal",
@@ -783,8 +793,31 @@
     "deadlinePlaceholder": "No deadline",
     "errors": {
       "emptyName": "Give your goal a name",
-      "invalidAmount": "Enter how much you want to save"
-    }
+      "invalidAmount": "Enter how much you want to save",
+      "invalidAuto": "Enter the automatic deduction amount"
+    },
+    "titleNewSaving": "New savings",
+    "titleEditSaving": "Edit savings",
+    "kindLabel": "Type",
+    "kindGoal": "Goal",
+    "kindSaving": "Free savings",
+    "previewSaving": "Free savings, no target amount",
+    "autoTitle": "Automatic deduction",
+    "autoSub": "Sets an amount aside on payday",
+    "autoAmount": "Amount to set aside",
+    "autoEvery": "Frequency",
+    "every": {
+      "period": "Every period",
+      "2periods": "Every 2 periods",
+      "week": "Every week",
+      "month": "Every month"
+    },
+    "autoNext": "Next deduction: {{date}}",
+    "autoPayday": "Applied on payday.",
+    "autoPause": "Pause deduction",
+    "autoResume": "Resume deduction",
+    "suggested": "Suggested: {{amount}} per period.",
+    "suggestedUse": "Use"
   },
   "variableAmountModal": {
     "titleEstimate": "Amount to pay",
@@ -1346,7 +1379,7 @@
   },
   "deskGoals": {
     "ofTarget": "of {{amount}} · {{pct}}%",
-    "listTitle": "My goals",
+    "listTitle": "My goals & savings",
     "toGo": "to reach all your goals",
     "savedSub_one": "in {{count}} active goal",
     "savedSub_other": "in {{count}} active goals",

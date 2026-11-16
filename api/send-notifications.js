@@ -281,6 +281,7 @@ async function collectGoalDeadlineReminders(userId, todayStr, lang, currency) {
     .is('space_id', null)
     .eq('is_completed', false)
     .eq('deadline_notif_sent', false)
+    .not('target_amount', 'is', null)
     .not('target_date', 'is', null)
     .gte('target_date', todayStr)
     .lte('target_date', limitStr)

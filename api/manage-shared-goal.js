@@ -147,8 +147,10 @@ module.exports = async function handler(req, res) {
       if (!can('can_add_goals')) return res.status(403).json({ error: 'No tienes permiso para crear metas' })
       const p = payload || {}
       if (!p.name || !String(p.name).trim()) return res.status(400).json({ error: 'Falta el nombre' })
-      const targetAmount = Number(p.targetAmount)
-      if (!Number.isFinite(targetAmount) || targetAmount <= 0 || targetAmount > 1e9) return res.status(400).json({ error: 'Monto inválido' })
+      // Ahorro compartido (v0.9.1071): sin monto objetivo → target_amount null.
+      const hasTarget = p.targetAmount !== null && p.targetAmount !== undefined && p.targetAmount !== ''
+      const targetAmount = hasTarget ? Number(p.targetAmount) : null
+      if (hasTarget && (!Number.isFinite(targetAmount) || targetAmount <= 0 || targetAmount > 1e9)) return res.status(400).json({ error: 'Monto inválido' })
 
       const { data: created, error } = await supabase.from('goals').insert({
         user_id: actorId, space_id: spaceId,
@@ -160,7 +162,7 @@ module.exports = async function handler(req, res) {
 
       await notifyAllSpaceMembers(spaceId, actorId, name => ({
         title: `Nueva meta en ${space.name}`,
-        body: `${name} creó "${created.name}" — objetivo ${money(created.target_amount)}`,
+        body: created.target_amount ? `${name} creó "${created.name}" — objetivo ${money(created.target_amount)}` : `${name} creó el ahorro "${created.name}"`,
       }))
       return res.json({ goal: created })
     }
@@ -181,9 +183,13 @@ module.exports = async function handler(req, res) {
       if (p.icon !== undefined)         updates.icon = p.icon
       if (p.color !== undefined)        updates.color = p.color
       if (p.targetAmount !== undefined) {
-        const ta = Number(p.targetAmount)
-        if (!Number.isFinite(ta) || ta <= 0 || ta > 1e9) return res.status(400).json({ error: 'Monto inválido' })
-        updates.target_amount = ta
+        if (p.targetAmount === null || p.targetAmount === '') {
+          updates.target_amount = null // se vuelve ahorro libre
+        } else {
+          const ta = Number(p.targetAmount)
+          if (!Number.isFinite(ta) || ta <= 0 || ta > 1e9) return res.status(400).json({ error: 'Monto inválido' })
+          updates.target_amount = ta
+        }
       }
       if (p.targetDate !== undefined)   updates.target_date = p.targetDate || null
       if (p.isCompleted !== undefined) {
@@ -203,7 +209,7 @@ module.exports = async function handler(req, res) {
       // cumplida.
       if (p.isCompleted === true && !goal.is_completed) {
         const currentAmount = await goalBalance(goal.id)
-        const remaining = Number(goal.target_amount) - currentAmount
+        const remaining = goal.target_amount ? Number(goal.target_amount) - currentAmount : 0
         if (remaining > 0.001) {
           if (await actorHasIncome(actorId)) {
             const personalAvailable = await getPersonalAvailable(actorId)

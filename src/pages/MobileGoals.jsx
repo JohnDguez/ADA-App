@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { hasAuto, autoLabel, autoTotalPerPeriod } from '../lib/savings'
 import { Crown, PiggyBank, Target, Check, Loader2, Pointer } from 'lucide-react'
 import { EmptyState } from '../components/EmptyState'
 import { ChipMenu } from '../components/ChipMenu'
@@ -62,12 +63,14 @@ function GoalTile({ goal, index, grown, isShared, spaceMembers, onClick }) {
           : <span className={styles.badge}>{goal.target_date ? t('goalsPage.card.daysRemaining', { count: goal.daysRemaining }) : t('deskGoals.noDeadline')}</span>)}
       </div>
       <div className={styles.gAmt}><Money text={fmt(goal.currentAmount)} /></div>
-      <div className={styles.gSub}>{t('deskGoals.depositedOf', { amount: fmt(goal.target_amount), pct })}</div>
-      <div className={styles.pb}><u style={{ width: grown ? `${pct}%` : '0%', background: goal.color }} /></div>
+      <div className={styles.gSub}>{goal.isSavings ? (hasAuto(goal) ? autoLabel(t, goal) : t('goalsPage.card.savingsSub')) : t('deskGoals.depositedOf', { amount: fmt(goal.target_amount), pct })}</div>
+      {!goal.isSavings && <div className={styles.pb}><u style={{ width: grown ? `${pct}%` : '0%', background: goal.color }} /></div>}
       <div className={styles.gFoot}>
         {done
           ? <span className={styles.doneTxt}><Check size={14} color="var(--paid)" />{t('goalsPage.card.completedOn', { date: goal.completed_at ? shortDate(goal.completed_at) : '' })}</span>
-          : <span>{t('goalsPage.card.remaining', { amount: fmt(goal.remaining) })}</span>}
+          : goal.isSavings
+            ? <span>{hasAuto(goal) ? t('goalsPage.card.savingsFoot') : t('goalsPage.card.savingsFootFree')}</span>
+            : <span>{hasAuto(goal) ? `${autoLabel(t, goal)} · ` : ''}{t('goalsPage.card.remaining', { amount: fmt(goal.remaining) })}</span>}
         {contributors.length > 0 && <PaidByStack contributors={contributors} members={spaceMembers} size={20} inline />}
       </div>
     </button>
@@ -92,6 +95,7 @@ export function MobileGoals({ d }) {
     )
   }
   const totalTarget = activeGoals.reduce((s, g) => s + Number(g.target_amount || 0), 0)
+  const autoPer = autoTotalPerPeriod(activeGoals)
   const overallPct = totalTarget > 0 ? Math.min(100, Math.round((totalAhorrado / totalTarget) * 100)) : 0
   const lastDone = [...completedGoals].sort((a, b) => new Date(b.completed_at || 0) - new Date(a.completed_at || 0))[0]
   const showing = goalsView === 'activas' ? sortedGoals : completedGoals
@@ -103,7 +107,7 @@ export function MobileGoals({ d }) {
         <div className={styles.label}>{t('goalsPage.totalRemaining')}</div>
         <div className={styles.bigNum}>{goalsLoading ? <LoadingDots /> : <Money text={fmt(totalRestante)} />}</div>
         <div className={styles.track}><u style={{ width: heroGrown ? `${overallPct}%` : '0%' }} /></div>
-        <div className={styles.sub}>{t('mobileGoals.overallPct', { pct: overallPct })}</div>
+        <div className={styles.sub}>{autoPer > 0 ? t('goalsPage.auto.heroLine', { amount: fmt(autoPer) }) : t('mobileGoals.overallPct', { pct: overallPct })}</div>
         <div className={styles.tiles}>
           <div className={styles.tile}>
             <span>{t('mobileGoals.savedTile')}</span>
