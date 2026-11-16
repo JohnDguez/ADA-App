@@ -3028,5 +3028,42 @@
     "tipText": "You can schedule recurring payments so you don't have to add them by hand every time.",
     "tipAction": "Add recurring payment",
     "total": "Total"
+  },
+  "announcements": {
+    "title": "What's new",
+    "description": "What's new and improved in LunaPay.",
+    "new": "New",
+    "view": "See what's new",
+    "dismiss": "Dismiss",
+    "later": "Later",
+    "next": "Next",
+    "try": "Try it now",
+    "empty": "Nothing new yet.",
+    "kind": {
+      "nov": "New",
+      "mej": "Improved",
+      "avi": "Notice"
+    },
+    "items": {
+      "ahorros-1071": {
+        "title": "Save without thinking",
+        "text": "You can now set money aside without a goal amount and let LunaPay do it for you every payday.",
+        "cta": "Try it now",
+        "rows": [
+          {
+            "title": "Free savings",
+            "text": "Save with no target amount."
+          },
+          {
+            "title": "Automatic deduction",
+            "text": "Set aside on every payday."
+          },
+          {
+            "title": "Pause anytime",
+            "text": "Turn it on or off in a tap."
+          }
+        ]
+      }
+    }
   }
 }

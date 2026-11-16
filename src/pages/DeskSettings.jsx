@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next'
-import { Crown, User, Tag, Calendar, Bell, SunMoon, HelpCircle, Users, MessageCircle, Download, Upload, CreditCard, Languages, LogOut } from 'lucide-react'
+import { Crown, User, Tag, Calendar, Bell, SunMoon, HelpCircle, Sparkles, Users, MessageCircle, Download, Upload, CreditCard, Languages, LogOut } from 'lucide-react'
 import { AvatarImg } from '../components/AvatarImg'
 import { DeskSettingsContext } from '../components/DeskSettingsContext'
 import { useHeaderBackground, HEADER_IMAGES } from '../hooks/useHeaderBackground'
@@ -80,6 +80,7 @@ export function DeskSettings({ d, tablet = false }) {
               <Row id="export" icon={Download} label={t('settingsPage.menu.export')} />
 
               <div className={styles.gl}>{t('settingsPage.sections.help')}</div>
+              <Row id="news" icon={Sparkles} label={t('announcements.title')} />
               <NavItem icon={HelpCircle} label={t('settingsPage.tutorialAgain')} onClick={nav.onTutorial} />
               <NavItem icon={MessageCircle} label={t('settingsPage.feedbackLabel')} onClick={nav.onFeedback} />
 

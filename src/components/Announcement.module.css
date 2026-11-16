@@ -1,0 +1,83 @@
+/* Novedades (v0.9.1073, mockup opción A aprobado): tarjeta completa con
+   degradado por tipo. Solo tokens: el degradado sale de --ann-* (R18) y el
+   blanco de --desk-ink-text. Misma pieza (.gc) en modal, tarjeta de Inicio y
+   historial. */
+.gc { position: relative; overflow: hidden; color: var(--desk-ink-text); background: linear-gradient(135deg, var(--c1), var(--c2)); box-shadow: var(--desk-pop-shadow); }
+.nov { --c1: var(--ann-nov-1); --c2: var(--ann-nov-2); }
+.mej { --c1: var(--ann-mej-1); --c2: var(--ann-mej-2); }
+.avi { --c1: var(--ann-avi-1); --c2: var(--ann-avi-2); }
+.gc > * { position: relative; }
+.o1, .o2 { position: absolute !important; border-radius: 999px; background: color-mix(in srgb, var(--c2) 60%, var(--desk-ink-text) 40%); opacity: 0.28; pointer-events: none; }
+.o1 { width: 220px; height: 220px; top: -90px; right: -70px; }
+.o2 { width: 150px; height: 150px; bottom: -70px; left: -40px; opacity: 0.18; }
+
+.tile { width: 64px; height: 64px; flex: none; display: grid; place-items: center; border-radius: 20px; background: var(--desk-ink-text); color: var(--c2); box-shadow: var(--desk-pop-shadow); }
+.pill { display: inline-flex; align-items: center; gap: 6px; height: 26px; padding: 0 11px; border-radius: 999px; background: var(--desk-ink-text); color: var(--c2); font-size: 12.5px; font-weight: 700; }
+.ver { font-size: 13px; opacity: 0.9; }
+.title { margin: 0; font-family: var(--font-display); font-weight: 700; letter-spacing: -0.6px; line-height: 1.08; }
+.desc { margin: 0; font-size: 15px; line-height: 1.45; opacity: 0.95; }
+.rows { display: flex; flex-direction: column; gap: 12px; }
+.row { display: flex; align-items: center; gap: 12px; }
+.row i { width: 38px; height: 38px; flex: none; display: grid; place-items: center; border-radius: 12px; background: color-mix(in srgb, var(--desk-ink-text) 24%, var(--c1)); }
+.row b { display: block; font-weight: 600; font-size: 14.5px; }
+.row span { display: block; font-size: 13px; opacity: 0.9; }
+
+.btn { height: 48px; padding: 0 24px; border: 0; border-radius: 999px; background: var(--desk-ink-text); color: var(--c2); font: 700 15px var(--font-body, 'DM Sans', sans-serif); display: inline-flex; align-items: center; justify-content: center; gap: 8px; white-space: nowrap; cursor: pointer; }
+.btnSoft { background: color-mix(in srgb, var(--desk-ink-text) 22%, var(--c1)); color: var(--desk-ink-text); }
+.x { width: 42px; height: 42px; flex: none; display: grid; place-items: center; border: 0; border-radius: 999px; background: color-mix(in srgb, var(--desk-ink-text) 22%, var(--c1)); color: var(--desk-ink-text); cursor: pointer; }
+.dots { display: flex; gap: 6px; align-items: center; }
+.dots button { width: 8px; height: 8px; padding: 0; border: 0; border-radius: 999px; background: color-mix(in srgb, var(--desk-ink-text) 40%, var(--c1)); cursor: pointer; transition: width .2s; }
+.dots button.on { width: 22px; background: var(--desk-ink-text); }
+@media (hover: hover) and (pointer: fine) {
+  .btn:hover { filter: none; background: color-mix(in srgb, var(--desk-ink-text) 86%, var(--c2)); }
+  .x:hover, .dots button:hover { filter: none; background: color-mix(in srgb, var(--desk-ink-text) 34%, var(--c1)); }
+  .dots button.on:hover { background: var(--desk-ink-text); }
+  .btnSoft:hover { background: color-mix(in srgb, var(--desk-ink-text) 34%, var(--c1)); color: var(--desk-ink-text); }
+}
+
+/* ── Modal ── */
+.overlay { position: fixed; inset: 0; z-index: 520; display: flex; justify-content: center; background: var(--scrim); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
+.isSheet { align-items: flex-end; padding: 12px 12px calc(12px + env(safe-area-inset-bottom, 0px)); }
+.isDialog { align-items: center; padding: 24px; }
+.modal { width: 100%; max-height: calc(100dvh - 24px); overflow-y: auto; display: flex; flex-direction: column; gap: 18px; }
+.isSheet .modal { border-radius: 34px; padding: 26px 22px 22px; }
+.isDialog .modal { max-width: 760px; border-radius: 36px; padding: 36px 40px; gap: 22px; }
+.top { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.meta { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.isSheet .tile { width: 72px; height: 72px; }
+.isSheet .modal .title { font-size: 32px; }
+.isDialog .tile { width: 84px; height: 84px; border-radius: 26px; }
+.isDialog .modal .title { font-size: 40px; }
+.isDialog .modal .desc { font-size: 17px; }
+.isDialog .rows { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+.isDialog .row { align-items: flex-start; }
+.foot { display: flex; align-items: center; justify-content: flex-end; gap: 12px; }
+.isSheet .foot { flex-direction: column; align-items: stretch; }
+.isSheet .foot .btn { height: 52px; }
+.isSheet .dots { justify-content: center; }
+.isDialog .foot .dots { margin-right: auto; }
+.next { background: none; border: 0; color: var(--desk-ink-text); font: 600 14px var(--font-body, 'DM Sans', sans-serif); cursor: pointer; padding: 8px; }
+
+/* ── Tarjeta de Inicio ── */
+.banner { display: flex; align-items: center; gap: 14px; padding: 14px 16px; border-radius: 24px; width: 100%; text-align: left; border: 0; font: inherit; cursor: pointer; margin-bottom: 12px; }
+.banner .tile { width: 52px; height: 52px; border-radius: 17px; }
+.bt { flex: 1; min-width: 0; }
+.bt .pill { height: 22px; padding: 0 9px; font-size: 11.5px; margin-bottom: 5px; }
+.bt b { display: block; font-family: var(--font-display); font-weight: 700; font-size: 19px; letter-spacing: -0.4px; line-height: 1.15; }
+.bt span.t2 { display: block; font-size: 13px; opacity: 0.95; margin-top: 3px; }
+.bt span.t2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.deskBanner .bt span.t2 { -webkit-line-clamp: 1; }
+.go { display: none; }
+.deskBanner .go { display: inline-flex; height: 40px; }
+.deskBanner { padding: 16px 20px; }
+.deskBanner .tile { width: 56px; height: 56px; }
+@media (hover: hover) and (pointer: fine) { .banner:hover { filter: none; box-shadow: var(--desk-pop-shadow), inset 0 0 0 999px color-mix(in srgb, var(--desk-ink-text) 6%, transparent); } }
+
+/* ── Historial ── */
+.hist { display: flex; flex-direction: column; gap: 14px; }
+.hCard { display: flex; flex-direction: column; gap: 12px; padding: 20px 22px; border-radius: 28px; text-align: left; }
+.hCard .title { font-size: 24px; }
+.hCard .head { display: flex; align-items: center; gap: 14px; }
+.hCard .btn { align-self: flex-start; height: 42px; }
+.empty { text-align: center; color: var(--muted); padding: 40px 20px; font-size: 14px; }
+@media (prefers-reduced-motion: reduce) { .dots button { transition: none; } }

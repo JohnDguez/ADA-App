@@ -64,6 +64,7 @@ import { ConfirmNextPeriodPayModal } from './components/ConfirmNextPeriodPayModa
 import { InstallmentAbonarModal } from './components/InstallmentAbonarModal'
 import { SplitContributionsModal } from './components/SplitContributionsModal'
 import { PatchNotesModal } from './components/PatchNotesModal'
+import { AnnouncementHost } from './components/Announcement'
 import { ConfirmExitModal } from './components/ConfirmExitModal'
 import { UnsavedChangesPrompt } from './components/UnsavedChangesPrompt'
 import { getUnsavedGuard, requestLeave } from './lib/unsavedGuard'
@@ -1902,6 +1903,7 @@ export default function App() {
       <main>
       {tab === 'home' && (
         <HomePage
+          annUser={user}
           onUpdateProfile={updateProfile}
           payments={visiblePayments}
           dataLoading={paymentsLoading}
@@ -2303,6 +2305,8 @@ export default function App() {
         notes={patchNotesToShow}
         onClose={handleClosePatchNotes}
       />
+      <AnnouncementHost userId={user?.id} createdAt={user?.created_at} enabled={tab === 'home' && !!profile && !profileLoading && !patchNotesOpen && !feedbackPromptOpen}
+        onAction={a => a.startsWith('settings:') ? goToSettingsSection(a.slice(9)) : a.startsWith('tab:') ? changeTab(a.slice(4)) : undefined} />
       <FeedbackPromptModal
         open={feedbackPromptOpen}
         onGiveFeedback={handleFeedbackGiveFeedback}

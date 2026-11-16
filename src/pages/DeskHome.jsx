@@ -8,6 +8,7 @@ import { greeting } from '../components/PageHeader'
 import { NewSharedSpacePanel } from '../components/NewSharedSpacePanel'
 import { EmptyState } from '../components/EmptyState'
 import { TipCard } from '../components/TipCard'
+import { AnnouncementBanner } from '../components/Announcement'
 import { LunaStrip } from '../components/LunaStrip'
 import { CutNotice } from '../components/CutNotice'
 import { AddDropdown, addDropdownHasExtras } from '../components/AddDropdown'
@@ -43,7 +44,7 @@ export function DeskHome({
   profile, dataLoading, activeSpaceId, spaceMembers, sharedSpaces, spacePermissions, derived, lunaState, handlers,
   cutsInPeriod, cutPeriodKey, paymentMethodsList, periodRangeLabel, nextRangeLabel, afterRangeLabel, afterStartsInDays, slideClass, spaceJustChanged,
   onOpenPremium, onSpaceReady, onAdd, onImport, onStartAdd, onGoTab, onGoSettingsSection, onMarkUnpaid, onViewSource,
-  tablet = false, periodDayNumber, periodDayTotal, nextStartsInDays, onUpdateProfile,
+  annUser, tablet = false, periodDayNumber, periodDayTotal, nextStartsInDays, onUpdateProfile,
 }) {
   const { t, i18n } = useTranslation()
   const { pagarEsteCobro, vencidos, delPeriodo, pagadosEstePeriodo, pagadoMonto, pendingAmt, totalConocido, pctPagado, upcoming, nextPeriodKnownTotal, nextStart, nextEnd, pendingVariableCount, afterUpcoming, afterPeriodKnownTotal } = derived
@@ -291,6 +292,7 @@ export function DeskHome({
                           <PaidCollapse payments={pagadosEstePeriodo} expanded={paidExpanded} onToggle={() => setPaidExpanded(v => !v)} onMarkUnpaid={onMarkUnpaid} onViewSource={onViewSource} spaceMembers={spaceMembers} paymentMethodsList={paymentMethodsList} />
                         </div>
                       )}
+                      <AnnouncementBanner desk userId={annUser?.id} createdAt={annUser?.created_at} />
                       <CutNotice cuts={cutsInPeriod} periodKey={cutPeriodKey} onOpen={() => onGoSettingsSection?.('cards')} />
                       {dataLoading ? <RailSkeleton count={3} /> : (
                         <>

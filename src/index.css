@@ -1097,6 +1097,10 @@ a:focus-visible {
   --desk-deep:    #014BA3;
   --desk-ink:     #0B1220;
   --desk-ink-text: #FFFFFF;
+  /* Novedades (v0.9.1073): degradado de la tarjeta por tipo (R18). */
+  --ann-nov-1: #2F8CFA; --ann-nov-2: #6B2BEA;
+  --ann-mej-1: #0FB89B; --ann-mej-2: #2F8CFA;
+  --ann-avi-1: #FF8A3D; --ann-avi-2: #E82E47;
   --desk-shadow:  0 1px 2px rgba(11, 18, 32, 0.04), 0 10px 28px -14px rgba(11, 18, 32, 0.16);
   --desk-pop-shadow: 0 24px 60px -16px rgba(11, 18, 32, 0.45);
   --desk-hero-bg: radial-gradient(120% 90% at 0 0, rgba(255, 255, 255, 0.14), transparent 55%), #014BA3;
@@ -1129,6 +1133,9 @@ a:focus-visible {
   --desk-ink:     #080A10;
   --desk-shadow:  0 1px 2px rgba(0, 0, 0, 0.3), 0 10px 28px -14px rgba(0, 0, 0, 0.6);
   --desk-pop-shadow: 0 24px 60px -16px rgba(0, 0, 0, 0.8);
+  --ann-nov-1: #2A6FD1; --ann-nov-2: #5321B8;
+  --ann-mej-1: #0C927B; --ann-mej-2: #2A6FD1;
+  --ann-avi-1: #D96E2A; --ann-avi-2: #C02238;
   --desk-img-opacity:   0.5;
   --desk-btn-ring:      0 0 0 1.5px rgba(255, 255, 255, 0.4), 0 6px 16px -6px rgba(0, 0, 0, 0.7);
   --desk-gold-text:     #F5C242;
@@ -1146,6 +1153,9 @@ a:focus-visible {
   --desk-ink:     #080A10;
   --desk-shadow:  0 1px 2px rgba(0, 0, 0, 0.3), 0 10px 28px -14px rgba(0, 0, 0, 0.6);
   --desk-pop-shadow: 0 24px 60px -16px rgba(0, 0, 0, 0.8);
+  --ann-nov-1: #2A6FD1; --ann-nov-2: #5321B8;
+  --ann-mej-1: #0C927B; --ann-mej-2: #2A6FD1;
+  --ann-avi-1: #D96E2A; --ann-avi-2: #C02238;
   --desk-img-opacity:   0.5;
   --desk-btn-ring:      0 0 0 1.5px rgba(255, 255, 255, 0.4), 0 6px 16px -6px rgba(0, 0, 0, 0.7);
   --desk-gold-text:     #F5C242;

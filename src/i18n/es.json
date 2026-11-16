@@ -3028,5 +3028,42 @@
     "tipText": "Puedes programar pagos recurrentes para no tener que agregarlos a mano cada vez.",
     "tipAction": "Agregar pago recurrente",
     "total": "Total"
+  },
+  "announcements": {
+    "title": "Novedades",
+    "description": "Lo nuevo y lo que mejoró en LunaPay.",
+    "new": "Nuevo",
+    "view": "Ver novedad",
+    "dismiss": "Descartar",
+    "later": "Más tarde",
+    "next": "Siguiente",
+    "try": "Probar ahora",
+    "empty": "Aún no hay novedades.",
+    "kind": {
+      "nov": "Novedad",
+      "mej": "Mejora",
+      "avi": "Aviso"
+    },
+    "items": {
+      "ahorros-1071": {
+        "title": "Ahorra sin pensarlo",
+        "text": "Ahora puedes apartar dinero sin fijar una meta y dejar que LunaPay lo haga por ti cada día de cobro.",
+        "cta": "Probar ahora",
+        "rows": [
+          {
+            "title": "Ahorro libre",
+            "text": "Guarda sin monto objetivo."
+          },
+          {
+            "title": "Descuento automático",
+            "text": "Se aparta solo en cada cobro."
+          },
+          {
+            "title": "Pausa cuando quieras",
+            "text": "Actívalo o detenlo en un toque."
+          }
+        ]
+      }
+    }
   }
 }

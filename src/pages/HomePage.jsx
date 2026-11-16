@@ -13,6 +13,7 @@ import { NotificationsPanel } from '../components/NotificationsPanel'
 import { NewSharedSpacePanel } from '../components/NewSharedSpacePanel'
 import { EmptyState } from '../components/EmptyState'
 import { TipCard } from '../components/TipCard'
+import { AnnouncementBanner } from '../components/Announcement'
 import { HalfRing } from '../components/HalfRing'
 import { LunaStrip } from '../components/LunaStrip'
 import { CutNotice } from '../components/CutNotice'
@@ -59,7 +60,7 @@ function MobList({ isMobile, children }) {
   return isMobile ? <div className={styles.mobCard}>{children}</div> : children
 }
 
-export function HomePage({ payments, dataLoading = false, profile, spaceSwitcher, activeSpaceHeader, activeSpaceId, sharedSpaces, spacePermissions, onOpenPremium, onSpaceReady, onAdd, onImport, onStartAdd, onGoTab, onGoSettingsSection, onOpenAddMenu, onMarkPaid, onRequestVariableAmount, onConfirmVariablePaid, onRequestNextPeriodConfirm, onRequestMethod, onMarkUnpaid, onCaptureAmount, onEdit, onAbonar, onSplit, onPayFromFund, fundBalance, onViewSource, onDelete, onPostpone, onAdvance, onGoSettings, paymentMethodsList = [], onChangeMethod, notifications, unreadCount, onMarkAsRead, onMarkAllAsRead, onDeleteNotif, onClearAllNotifs, onNavigateNotif, slideClass, onUpdateProfile }) {
+export function HomePage({ annUser, payments, dataLoading = false, profile, spaceSwitcher, activeSpaceHeader, activeSpaceId, sharedSpaces, spacePermissions, onOpenPremium, onSpaceReady, onAdd, onImport, onStartAdd, onGoTab, onGoSettingsSection, onOpenAddMenu, onMarkPaid, onRequestVariableAmount, onConfirmVariablePaid, onRequestNextPeriodConfirm, onRequestMethod, onMarkUnpaid, onCaptureAmount, onEdit, onAbonar, onSplit, onPayFromFund, fundBalance, onViewSource, onDelete, onPostpone, onAdvance, onGoSettings, paymentMethodsList = [], onChangeMethod, notifications, unreadCount, onMarkAsRead, onMarkAllAsRead, onDeleteNotif, onClearAllNotifs, onNavigateNotif, slideClass, onUpdateProfile }) {
   const { t, i18n } = useTranslation()
   // Detecta un cambio REAL de espacio activo (no el primer montaje de la
   // página, que también dispararía un `key` remontado sin querer) — antes
@@ -367,7 +368,7 @@ export function HomePage({ payments, dataLoading = false, profile, spaceSwitcher
         slideClass={slideClass} spaceJustChanged={spaceJustChanged}
         onOpenPremium={onOpenPremium} onSpaceReady={onSpaceReady} onAdd={onAdd} onImport={onImport} onStartAdd={onStartAdd}
         onGoTab={onGoTab} onGoSettingsSection={onGoSettingsSection} onMarkUnpaid={onMarkUnpaid} onViewSource={onViewSource}
-        onUpdateProfile={onUpdateProfile}
+        onUpdateProfile={onUpdateProfile} annUser={annUser}
       />
     )
   }
@@ -667,6 +668,7 @@ export function HomePage({ payments, dataLoading = false, profile, spaceSwitcher
               {/* Recordatorio de corte de tarjetas (v0.9.738): entre los pagados y
                   las secciones pendientes — arriba de Vencidos si los hay, y si
                   no, arriba de los pendientes del periodo. */}
+              <AnnouncementBanner userId={annUser?.id} createdAt={annUser?.created_at} />
               <CutNotice cuts={cutsInPeriod} periodKey={cutPeriodKey} onOpen={() => onGoSettingsSection?.('cards')} />
 
               {/* Bug real corregido (agosto 2026): esta sección era la única

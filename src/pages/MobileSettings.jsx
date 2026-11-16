@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next'
-import { Camera, Crown, User, Tag, Calendar, Bell, SunMoon, HelpCircle, Users, MessageCircle, Download, Upload, CreditCard, Languages, LogOut, ChevronRight } from 'lucide-react'
+import { Camera, Crown, User, Tag, Calendar, Bell, SunMoon, HelpCircle, Sparkles, Users, MessageCircle, Download, Upload, CreditCard, Languages, LogOut, ChevronRight } from 'lucide-react'
 import { PageHeader } from '../components/PageHeader'
 import { AvatarImg } from '../components/AvatarImg'
 import styles from './MobileSettings.module.css'
@@ -87,6 +87,7 @@ export function MobileSettings({
         </Group>
 
         <Group index={5} title={t('settingsPage.sections.help')}>
+          <Item icon={Sparkles} label={t('announcements.title')} onClick={() => onOpen('news')} />
           <Item icon={HelpCircle} label={t('settingsPage.tutorialAgain')} onClick={onTutorial} />
           <Item icon={MessageCircle} label={t('settingsPage.feedbackLabel')} onClick={onFeedback} />
         </Group>

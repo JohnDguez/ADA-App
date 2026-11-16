@@ -25,6 +25,7 @@ import { Modal } from '../components/Modal'
 import mk from '../components/Modal.module.css'
 import { useLanguageOptions } from '../components/LanguageSheet'
 import { SettingsLanguagePage } from './settings/SettingsLanguagePage'
+import { SettingsNewsPage } from './settings/SettingsNewsPage'
 import { useIsDesktop } from '../hooks/useIsDesktop'
 import { DeskSettings } from './DeskSettings'
 import { TabSettings } from './TabSettings'
@@ -39,7 +40,7 @@ const ImportPage = lazy(() => import('../components/ImportModal').then(m => ({ d
 // (Categorías, y lo que venga después, no compiten por espacio con todo
 // lo demás).
 const SECTION_KEY = 'ada_settings_section'
-const VALID_SECTIONS = ['account', 'categories', 'cobro', 'notifications', 'appearance', 'sharedspace', 'subscription', 'export', 'cards', 'language', 'import']
+const VALID_SECTIONS = ['account', 'categories', 'cobro', 'notifications', 'appearance', 'sharedspace', 'subscription', 'export', 'cards', 'language', 'import', 'news']
 function readSavedSection() {
   try {
     const v = sessionStorage.getItem(SECTION_KEY)
@@ -244,6 +245,7 @@ export function SettingsPage({ profile, user, onUpdate, onUploadAvatar, onDataDe
   // panel derecho: sin «atrás» ni animación de entrada propia.
   const noop = () => {}
   function sectionEl(s, desk) {
+    if (s === 'news') return <SettingsNewsPage user={user} onBack={desk ? noop : back} slideClass={desk ? '' : slideClass} />
     if (s === 'language') return <SettingsLanguagePage profile={profile} onUpdate={onUpdate} onBack={desk ? noop : back} slideClass={desk ? '' : slideClass} />
     if (s === 'import') return <Suspense fallback={null}><ImportPage profile={profile} {...importProps} onBack={desk ? noop : back} slideClass={desk ? '' : slideClass} /></Suspense>
     if (s === 'account') return <SettingsAccountPage onChangePhoto={desk ? () => setAvatarModal('choice') : undefined} uploadingAvatar={uploadingAvatar} profile={profile} user={user} onUpdate={onUpdate} onDataDeleted={onDataDeleted} onBack={desk ? noop : back} onGoSubscription={() => openSection('subscription')} slideClass={desk ? '' : slideClass} />

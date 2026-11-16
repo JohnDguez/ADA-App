@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next'
-import { Camera, Crown, User, Tag, Calendar, Bell, SunMoon, HelpCircle, Users, MessageCircle, Download, Upload, CreditCard, Languages, LogOut, ChevronRight } from 'lucide-react'
+import { Camera, Crown, User, Tag, Calendar, Bell, SunMoon, HelpCircle, Sparkles, Users, MessageCircle, Download, Upload, CreditCard, Languages, LogOut, ChevronRight } from 'lucide-react'
 import { AvatarImg } from '../components/AvatarImg'
 import home from './DeskHome.module.css'
 import desk from './DeskSettings.module.css'
@@ -77,6 +77,7 @@ export function TabSettings({ d }) {
               <Item icon={Users} label={t('settingsPage.menu.sharedSpace')} onClick={() => onOpen('sharedspace')} />
             </Group>
             <Group index={3} title={t('settingsPage.sections.help')}>
+              <Item icon={Sparkles} label={t('announcements.title')} onClick={() => onOpen('news')} />
               <Item icon={HelpCircle} label={t('settingsPage.tutorialAgain')} onClick={nav.onTutorial} />
               <Item icon={MessageCircle} label={t('settingsPage.feedbackLabel')} onClick={nav.onFeedback} />
             </Group>
