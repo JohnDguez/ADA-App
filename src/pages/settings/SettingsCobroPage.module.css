@@ -217,6 +217,7 @@
 }
 
 .amountPrefix {
+  font-family: var(--font-display);
   position: absolute;
   left: 12px;
   top: 50%;

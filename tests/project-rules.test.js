@@ -133,6 +133,10 @@ describe('reglas del proyecto', () => {
       .filter(f => /Bricolage/.test(readFileSync(f, 'utf8'))).map(f => relative(root, f))
     expect(bad).toEqual([])
   })
+  it('los símbolos de moneda junto al monto usan la tipografía de cifras — Regla 78', () => {
+    const chk = [['src/components/PaymentModal.module.css', /\.amountHeroSymbol\s*\{[^}]*--font-display/], ['src/components/PaymentDesk.module.css', /\.amountSym\s*\{[^}]*--font-display/], ['src/components/Modal.module.css', /\.amount small\s*\{[^}]*--font-display/], ['src/pages/settings/SettingsCobroTab.module.css', /\.cur\s*\{[^}]*--font-display/], ['src/pages/settings/SettingsCobroPage.module.css', /\.amountPrefix\s*\{[^}]*--font-display/], ['src/pages/OnboardingPage.module.css', /\.currencyPrefix\s*\{[^}]*--font-display/]]
+    for (const [f, re] of chk) expect(readFileSync(join(root, f), 'utf8'), f).toMatch(re)
+  })
   it('los campos de monto (AmountInput) usan la tipografía de cifras — Regla 78', () => {
     expect(readFileSync(join(root, 'src/components/AmountInput.jsx'), 'utf8').match(/data-amount/g)).toHaveLength(2)
     expect(readFileSync(join(root, 'src/index.css'), 'utf8')).toMatch(/input\[inputmode\]\[data-amount\][^{]*\{\s*font-family:\s*var\(--font-display\)/)
