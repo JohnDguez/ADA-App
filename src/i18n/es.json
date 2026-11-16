@@ -695,7 +695,8 @@
     },
     "addGoal": "Añadir meta",
     "toast": {
-      "noPermissionAdd": "No tienes permiso para crear metas en este espacio"
+      "noPermissionAdd": "No tienes permiso para crear metas en este espacio",
+      "saveError": "No se pudo guardar. Inténtalo de nuevo."
     },
     "card": {
       "deposited": "{{amount}} abonado",
@@ -2933,7 +2934,8 @@
     "savedTile": "Ahorrado",
     "doneTile": "Cumplidas",
     "sortAria": "Ordenar metas",
-    "tapHint": "Toca una meta para ver su detalle"
+    "tapHint": "Toca una meta para ver su detalle",
+    "leftTile": "Por alcanzar"
   },
   "salaryChange": {
     "title": "¿Desde cuándo cambia tu ingreso?",

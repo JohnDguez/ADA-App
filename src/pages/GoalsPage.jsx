@@ -138,6 +138,19 @@ export function GoalsPage({
 
   async function handleFormSave(values) {
     if (!isShared) {
+      // Con descuento automático el guardado va directo a la base: se espera
+      // y, si falla, se avisa y el formulario queda abierto.
+      if (values.auto || values.autoClear) {
+        const res = editingGoal
+          ? await updateGoal(editingGoal.id, {
+              name: values.name.trim(), notes: values.notes?.trim() || null, icon: values.icon, color: values.color,
+              target_amount: values.targetAmount, target_date: values.targetDate || null, ...autoFields(values),
+            })
+          : await addGoal({ ...values, auto: { amount: values.auto.amount, every: values.auto.every, next: values.auto.next } })
+        if (res?.error) { showToast(t('goalsPage.toast.saveError')); return }
+        setFormOpen(false)
+        return
+      }
       if (editingGoal) {
         updateGoal(editingGoal.id, {
           name: values.name.trim(),

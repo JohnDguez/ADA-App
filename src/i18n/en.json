@@ -695,7 +695,8 @@
     },
     "addGoal": "Add goal",
     "toast": {
-      "noPermissionAdd": "You don't have permission to create goals in this space"
+      "noPermissionAdd": "You don't have permission to create goals in this space",
+      "saveError": "Could not save. Please try again."
     },
     "card": {
       "deposited": "{{amount}} deposited",
@@ -2933,7 +2934,8 @@
     "savedTile": "Saved",
     "doneTile": "Completed",
     "sortAria": "Sort goals",
-    "tapHint": "Tap a goal to see its details"
+    "tapHint": "Tap a goal to see its details",
+    "leftTile": "To reach"
   },
   "salaryChange": {
     "title": "When does your income change?",

@@ -104,14 +104,14 @@ export function MobileGoals({ d }) {
   return (
     <div className={styles.root}>
       <section data-coachmark="metas-resumen" className={styles.card}>
-        <div className={styles.label}>{t('goalsPage.totalRemaining')}</div>
-        <div className={styles.bigNum}>{goalsLoading ? <LoadingDots /> : <Money text={fmt(totalRestante)} />}</div>
+        <div className={styles.label}>{t('goalsPage.totalSaved')}</div>
+        <div className={styles.bigNum}>{goalsLoading ? <LoadingDots /> : <Money text={fmt(totalAhorrado)} />}</div>
         <div className={styles.track}><u style={{ width: heroGrown ? `${overallPct}%` : '0%' }} /></div>
         <div className={styles.sub}>{autoPer > 0 ? t('goalsPage.auto.heroLine', { amount: fmt(autoPer) }) : t('mobileGoals.overallPct', { pct: overallPct })}</div>
         <div className={styles.tiles}>
           <div className={styles.tile}>
-            <span>{t('mobileGoals.savedTile')}</span>
-            <b>{goalsLoading ? <LoadingDots /> : <Money text={fmt(totalAhorrado)} />}</b>
+            <span>{t('mobileGoals.leftTile')}</span>
+            <b>{goalsLoading ? <LoadingDots /> : <Money text={fmt(totalRestante)} />}</b>
             <em>{t('deskGoals.savedSub', { count: activeGoals.length })}</em>
           </div>
           <div className={styles.tile}>

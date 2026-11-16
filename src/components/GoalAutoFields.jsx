@@ -35,7 +35,7 @@ export function GoalAutoFields({ value, onChange, suggested = null, nextDate = n
     <div className={ga.box}>
       <div {...switchProps(!!value.on)} onClick={() => set({ on: !value.on })} className={ga.row}>
         <span className={ga.ico} aria-hidden="true"><Repeat size={17} /></span>
-        <div><b>{t('goalFormModal.autoTitle')}</b><span>{t('goalFormModal.autoSub')}</span></div>
+        <div className={ga.txt}><b>{t('goalFormModal.autoTitle')}</b><span>{t('goalFormModal.autoSub')}</span></div>
         <Toggle on={!!value.on} />
       </div>
       <Collapse open={!!value.on}>
