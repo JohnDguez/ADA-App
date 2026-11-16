@@ -7,7 +7,8 @@
 .mej { --c1: var(--ann-mej-1); --c2: var(--ann-mej-2); }
 .avi { --c1: var(--ann-avi-1); --c2: var(--ann-avi-2); }
 .gc > * { position: relative; }
-.o1, .o2 { position: absolute !important; border-radius: 999px; background: color-mix(in srgb, var(--c2) 60%, var(--desk-ink-text) 40%); opacity: 0.28; pointer-events: none; }
+.deco { position: absolute !important; inset: 0; overflow: hidden; border-radius: inherit; pointer-events: none; }
+.o1, .o2 { position: absolute; border-radius: 999px; background: color-mix(in srgb, var(--c2) 60%, var(--desk-ink-text) 40%); opacity: 0.28; pointer-events: none; }
 .o1 { width: 220px; height: 220px; top: -90px; right: -70px; }
 .o2 { width: 150px; height: 150px; bottom: -70px; left: -40px; opacity: 0.18; }
 

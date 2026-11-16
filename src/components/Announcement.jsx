@@ -31,7 +31,7 @@ function useAnnText(a) {
   }
 }
 
-function Deco() { return <><span className={s.o1} aria-hidden="true" /><span className={s.o2} aria-hidden="true" /></> }
+function Deco() { return <span className={s.deco} aria-hidden="true"><span className={s.o1} /><span className={s.o2} /></span> }
 
 // ── Modal ────────────────────────────────────────────────────────────────
 function AnnouncementModal({ items, open, onClose, onAction }) {
