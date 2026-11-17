@@ -104,7 +104,7 @@ export function TabSettings({ d }) {
             </button>
           </div>
         </section>
-        <div className={m.version}>{appName} {versionLabel} — {t('settingsPage.versionSuffix')}</div>
+        <div className={m.version}>{appName} {versionLabel}</div>
       </div>
     </div>
   )

@@ -23,7 +23,7 @@ function useAnnText(a) {
   const date = d.toLocaleDateString(i18n.language, { day: 'numeric', month: 'short' }).replace('.', '')
   return {
     kind: t(`announcements.kind.${a.kind}`),
-    meta: `v${a.version} · ${date}`,
+    meta: date,
     title: t(`${base}.title`),
     text: t(`${base}.text`),
     cta: a.action ? t(`${base}.cta`, { defaultValue: t('announcements.try') }) : t('buttons.understood'),

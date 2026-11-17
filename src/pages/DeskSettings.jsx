@@ -86,7 +86,7 @@ export function DeskSettings({ d, tablet = false }) {
 
               <div className={styles.gl} />
               <NavItem icon={LogOut} label={t('settingsPage.logout')} danger onClick={onLogout} />
-              <div className={styles.version}>{appName} {versionLabel} — {t('settingsPage.versionSuffix')}</div>
+              <div className={styles.version}>{appName} {versionLabel}</div>
             </div>
           </section>
 

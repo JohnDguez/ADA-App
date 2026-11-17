@@ -99,7 +99,7 @@ export function MobileSettings({
           </button>
         </Group>
 
-        <div className={styles.version}>{appName} {versionLabel} — {t('settingsPage.versionSuffix')}</div>
+        <div className={styles.version}>{appName} {versionLabel}</div>
       </div>
     </div>
   )
