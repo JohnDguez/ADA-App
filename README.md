@@ -8,8 +8,7 @@
 
   App de control de pagos y recordatorios financieros, organizada por tu periodo de cobro — no por el mes calendario.
 
-  ![Version](https://img.shields.io/badge/version-0.9.555-blue)
-  ![Status](https://img.shields.io/badge/status-Alpha-orange)
+  ![Version](https://img.shields.io/badge/version-0.9.1075-blue)
   ![Stack](https://img.shields.io/badge/stack-React%20%2B%20Supabase-green)
   ![Android](https://img.shields.io/badge/Android-Capacitor-3DDC84)
 
@@ -96,8 +95,12 @@ Crea tu propio Espacio Compartido con periodo de cobro propio (sin Premium, pued
 
 ### Tarjetas, metas y exportación
 - **Mis tarjetas** — tus tarjetas de crédito y débito, con sus estados de cuenta y pagos
+- **Metas y ahorros** — metas con monto objetivo y fecha, o **ahorro libre** sin monto. Cada ahorro puede tener un **descuento automático**: la app aparta una cantidad fija el día de cobro (cada periodo, cada 2 periodos, semanal o mensual), se puede pausar en un toque y baja tu Disponible como un aporte normal
 - **Metas compartidas** y Fondo Compartido dentro de un Espacio
 - **Exportar tus datos** en CSV o PDF
+
+### Novedades
+Cuando sale algo nuevo, LunaPay lo avisa con una tarjeta de degradado (Novedad, Mejora o Aviso): un modal al abrir Inicio, una tarjeta descartable en Inicio y el historial completo en Ajustes → Novedades. Como las actualizaciones llegan solas, así nadie se queda sin enterarse de qué cambió.
 
 ### Español e inglés
 Toda la app está en español e inglés (i18next), incluidas las notificaciones.
@@ -115,7 +118,7 @@ Además de la PWA, LunaPay tiene app nativa de Android (Capacitor), hoy en prueb
 | | Tecnología |
 |---|---|
 | **Frontend** | React 18 + Vite 5 |
-| **Estilos** | CSS Variables + CSS Modules (DM Sans, Lucide React) |
+| **Estilos** | CSS Variables + CSS Modules (DM Sans + Bricolage Grotesque, Lucide React) |
 | **Base de datos** | Supabase (PostgreSQL + Row Level Security) |
 | **Autenticación** | Supabase Auth (Email + Google OAuth; Google nativo en Android vía Firebase Authentication) |
 | **Storage** | Supabase Storage |
