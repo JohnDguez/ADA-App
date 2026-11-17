@@ -10,7 +10,9 @@
 
   ![Version](https://img.shields.io/badge/version-0.9.1075-blue)
   ![Stack](https://img.shields.io/badge/stack-React%20%2B%20Supabase-green)
-  ![Android](https://img.shields.io/badge/Android-Capacitor-3DDC84)
+  [![Android](https://img.shields.io/badge/Google%20Play-descargar-3DDC84?logo=googleplay&logoColor=white)](https://play.google.com/store/apps/details?id=app.luna_pay.mobile)
+
+  [**Descargar en Google Play**](https://play.google.com/store/apps/details?id=app.luna_pay.mobile) · [Abrir la web](https://my.luna-pay.app)
 
 </div>
 
@@ -18,13 +20,14 @@
 
 ## ¿Qué es LunaPay?
 
-LunaPay es una PWA (Progressive Web App) —y también app de Android— de control financiero personal, pensada para quien cobra semanal, quincenal o mensual — el trabajador "godín" mexicano, no el mes de calendario. Te ayuda a:
+LunaPay es una PWA (Progressive Web App) —y también app de Android, [disponible en Google Play](https://play.google.com/store/apps/details?id=app.luna_pay.mobile)— de control financiero personal, pensada para quien cobra semanal, quincenal o mensual — el trabajador "godín" mexicano, no el mes de calendario. Te ayuda a:
 
 - **Registrar** todos tus compromisos de pago (únicos, recurrentes, en parcialidades o de monto variable)
 - **Organizar** los pagos según tu periodo de cobro, no según el mes
 - **Ver de un vistazo** qué está vencido, qué falta por pagar este periodo, y qué se viene en el próximo
 - **Compartir cuentas** con tu pareja o roomie en un Espacio Compartido aparte de tu cuenta Personal
 - **Recibir avisos** push y dentro de la app antes de que algo se venza
+- **Apartar ahorros** en metas o en ahorro libre, incluso de forma automática cada día de cobro
 
 ---
 
@@ -64,6 +67,9 @@ Junto a Luna, un mini anillo muestra cuántos pagos llevas del periodo. En el **
 ### Periodo de cobro inteligente
 La app organiza tus pagos según tu día de cobro (semanal, quincenal o mensual), no según el mes de calendario. Un switch en Inicio separa claramente **Periodo actual** (vencidos, pendientes y ya pagados) de **Próximo periodo** — sin mezclar los dos.
 
+### Registrar rápido: manual, por voz o con foto
+Agrega un pago escribiéndolo, dictándolo ("pagué 350 de luz") o escaneando el ticket. La app adivina la categoría por las palabras del pago, empezando por tus categorías propias. En Inicio, cuando no hay pendientes, rota consejos cortos sobre funciones que quizá no conocías.
+
 ### Onboarding guiado
 Un asistente de 4 pasos recibe a cada usuario nuevo antes de entrar a la app: nombre, frecuencia y día de cobro, ingreso por periodo (opcional) y activación de notificaciones — todo editable después desde Ajustes.
 
@@ -86,6 +92,7 @@ Lleva las cuentas de la casa, la renta o el súper junto con tu pareja o roomie,
 - Notificaciones in-app y push (nativas del sistema) para todo lo anterior, más los eventos de Espacio Compartido
 
 ### Personalización
+- Moneda propia (MXN, USD, EUR, COP, ARS, CLP, PEN) para tu cuenta y, aparte, para cada Espacio Compartido — cambia el símbolo, no convierte montos
 - Categorías propias, con ícono y color a elegir (además de las 11 predefinidas)
 - Foto de perfil — sube la tuya o elige uno de los 8 avatares prediseñados
 - Tema claro, oscuro, o según el sistema
@@ -94,10 +101,11 @@ Lleva las cuentas de la casa, la renta o el súper junto con tu pareja o roomie,
 Crea tu propio Espacio Compartido con periodo de cobro propio (sin Premium, puedes unirte a hasta 3 con un código). Planes mensual y anual, con Stripe en la web y Google Play Billing en la app de Android.
 
 ### Tarjetas, metas y exportación
-- **Mis tarjetas** — tus tarjetas de crédito y débito, con sus estados de cuenta y pagos
+- **Mis tarjetas** — tus tarjetas de crédito y débito, con su día de corte, estados de cuenta, pagos y avisos antes del corte
 - **Metas y ahorros** — metas con monto objetivo y fecha, o **ahorro libre** sin monto. Cada ahorro puede tener un **descuento automático**: la app aparta una cantidad fija el día de cobro (cada periodo, cada 2 periodos, semanal o mensual), se puede pausar en un toque y baja tu Disponible como un aporte normal
 - **Metas compartidas** y Fondo Compartido dentro de un Espacio
-- **Exportar tus datos** en CSV o PDF
+- **Análisis** de tus gastos e ingresos por periodo y categoría
+- **Importar** tus pagos de otra hoja o app, y **exportar tus datos** en CSV o PDF
 
 ### Novedades
 Cuando sale algo nuevo, LunaPay lo avisa con una tarjeta de degradado (Novedad, Mejora o Aviso): un modal al abrir Inicio, una tarjeta descartable en Inicio y el historial completo en Ajustes → Novedades. Como las actualizaciones llegan solas, así nadie se queda sin enterarse de qué cambió.
@@ -105,11 +113,14 @@ Cuando sale algo nuevo, LunaPay lo avisa con una tarjeta de degradado (Novedad, 
 ### Español e inglés
 Toda la app está en español e inglés (i18next), incluidas las notificaciones.
 
+### Un diseño para cada pantalla
+La interfaz se adapta a móvil, tablet (vertical y horizontal) y escritorio, con modo claro y oscuro. Los títulos y las cifras grandes usan Bricolage Grotesque; el resto, DM Sans.
+
 ### PWA instalable
 Instálala en tu celular como una app nativa — ícono, splash screen y notificaciones push incluidos, sin pasar por ninguna tienda de aplicaciones.
 
 ### App de Android
-Además de la PWA, LunaPay tiene app nativa de Android (Capacitor), hoy en prueba cerrada en Google Play. Trae login de Google nativo, notificaciones push por FCM, compra de Premium con Google Play Billing, exportación de archivos con la hoja de compartir del sistema y, en camino, el widget de Luna para la pantalla de inicio.
+Además de la PWA, LunaPay tiene app nativa de Android (Capacitor), disponible en [Google Play](https://play.google.com/store/apps/details?id=app.luna_pay.mobile). Trae login de Google nativo, notificaciones push por FCM, compra de Premium con Google Play Billing, exportación de archivos con la hoja de compartir del sistema y, en camino, el widget de Luna para la pantalla de inicio. Las mejoras de la web llegan a la app solas, por actualización en el aire (OTA), sin pasar por una versión nueva de la tienda.
 
 ---
 
@@ -127,7 +138,7 @@ Además de la PWA, LunaPay tiene app nativa de Android (Capacitor), hoy en prueb
 | **App nativa** | Capacitor 8 (Android) + widget nativo en Java |
 | **Pagos de Premium** | Stripe (web) · Google Play Billing (Android) |
 | **Idiomas** | i18next (español / inglés) |
-| **Automatización** | GitHub Actions (cron de recordatorios) |
+| **Automatización** | GitHub Actions (cron de recordatorios, pruebas y lint en cada push, publicación OTA de la app) |
 | **PWA** | Service Worker + Web App Manifest |
 
 ---
@@ -138,7 +149,8 @@ Además de la PWA, LunaPay tiene app nativa de Android (Capacitor), hoy en prueb
 ├── public/          # Assets estáticos, Service Worker, manifest, imágenes de Luna (public/luna)
 ├── api/             # Vercel serverless functions
 ├── android/         # Proyecto nativo de Android (Capacitor) + widget de Luna
-├── .github/         # GitHub Actions (cron de notificaciones)
+├── tests/           # Pruebas (Vitest)
+├── .github/         # GitHub Actions (CI, cron de notificaciones, publicación OTA)
 └── src/
     ├── components/  # Componentes reutilizables
     ├── hooks/       # Custom hooks (datos, notificaciones, espacios compartidos, etc.)
@@ -181,6 +193,8 @@ VITE_VAPID_PUBLIC_KEY=
 ```bash
 npm run dev
 ```
+
+Para revisar antes de subir cambios: `npx eslint src`, `npx vitest run` y `npx vite build`.
 
 ### App de Android
 
