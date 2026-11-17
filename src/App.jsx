@@ -65,6 +65,7 @@ import { InstallmentAbonarModal } from './components/InstallmentAbonarModal'
 import { SplitContributionsModal } from './components/SplitContributionsModal'
 import { PatchNotesModal } from './components/PatchNotesModal'
 import { AnnouncementHost } from './components/Announcement'
+import { annInit } from './lib/announcements'
 import { ConfirmExitModal } from './components/ConfirmExitModal'
 import { UnsavedChangesPrompt } from './components/UnsavedChangesPrompt'
 import { getUnsavedGuard, requestLeave } from './lib/unsavedGuard'
@@ -958,6 +959,12 @@ export default function App() {
     autoPremiumPromptRef.current = true
     setPremiumPageOpen(true)
   }, [user, profileLoading, profile.onboarding_completed, profile.coachmarks_seen, profile.is_premium])
+
+  // Novedades: carga el estado de la cola del usuario (profiles.ann_state) una vez.
+  useEffect(() => {
+    if (user?.id && !profileLoading) annInit(user.id, profile.ann_state, updateProfile)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id, profileLoading])
 
   // Pin de "espacio principal" (ActiveSpaceHeader.jsx): aplica el default
   // guardado en profiles.default_space_id al abrir o recargar la app — pero
@@ -1903,7 +1910,6 @@ export default function App() {
       <main>
       {tab === 'home' && (
         <HomePage
-          annUser={user}
           onUpdateProfile={updateProfile}
           payments={visiblePayments}
           dataLoading={paymentsLoading}
@@ -2305,7 +2311,7 @@ export default function App() {
         notes={patchNotesToShow}
         onClose={handleClosePatchNotes}
       />
-      <AnnouncementHost userId={user?.id} createdAt={user?.created_at} enabled={tab === 'home' && !!profile && !profileLoading && !patchNotesOpen && !feedbackPromptOpen}
+      <AnnouncementHost createdAt={user?.created_at} ready={!!profile.onboarding_completed && !!profile.coachmarks_seen?.home} enabled={tab === 'home' && !!profile && !profileLoading && !patchNotesOpen && !feedbackPromptOpen && !premiumPageOpen && !modalOpen}
         onAction={a => a.startsWith('settings:') ? goToSettingsSection(a.slice(9)) : a.startsWith('tab:') ? changeTab(a.slice(4)) : a === 'addmenu' ? openAddMenu() : undefined} />
       <FeedbackPromptModal
         open={feedbackPromptOpen}

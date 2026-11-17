@@ -1,26 +1,47 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useTranslation } from 'react-i18next'
-import { Sparkles, PiggyBank, Zap, Pause, Wrench, Bell, Target, Clock, Users, ShieldCheck, Repeat, PencilLine, CheckCircle2, BarChart3, FileUp, FileSpreadsheet, FileText, Coins, Mic, ScanLine, CreditCard, Infinity as InfinityIcon, X, ChevronRight } from 'lucide-react'
+import { X } from 'lucide-react'
+import { Sparkle } from '@phosphor-icons/react/dist/csr/Sparkle'
+import { PiggyBank } from '@phosphor-icons/react/dist/csr/PiggyBank'
+import { Lightning } from '@phosphor-icons/react/dist/csr/Lightning'
+import { Pause } from '@phosphor-icons/react/dist/csr/Pause'
+import { Bell } from '@phosphor-icons/react/dist/csr/Bell'
+import { Target } from '@phosphor-icons/react/dist/csr/Target'
+import { Clock } from '@phosphor-icons/react/dist/csr/Clock'
+import { Microphone } from '@phosphor-icons/react/dist/csr/Microphone'
+import { Scan } from '@phosphor-icons/react/dist/csr/Scan'
+import { CreditCard } from '@phosphor-icons/react/dist/csr/CreditCard'
+import { UsersThree } from '@phosphor-icons/react/dist/csr/UsersThree'
+import { ShieldCheck } from '@phosphor-icons/react/dist/csr/ShieldCheck'
+import { ArrowsClockwise } from '@phosphor-icons/react/dist/csr/ArrowsClockwise'
+import { PencilSimpleLine } from '@phosphor-icons/react/dist/csr/PencilSimpleLine'
+import { CheckCircle } from '@phosphor-icons/react/dist/csr/CheckCircle'
+import { ChartBar } from '@phosphor-icons/react/dist/csr/ChartBar'
+import { FileArrowUp } from '@phosphor-icons/react/dist/csr/FileArrowUp'
+import { FileCsv } from '@phosphor-icons/react/dist/csr/FileCsv'
+import { FilePdf } from '@phosphor-icons/react/dist/csr/FilePdf'
+import { Coins } from '@phosphor-icons/react/dist/csr/Coins'
+import { CaretRight } from '@phosphor-icons/react/dist/csr/CaretRight'
 import { usePresence } from '../lib/usePresence'
 import { useScrollLock } from '../lib/scrollLock'
 import { useBackClose } from '../lib/backNav'
 import { useIsMobile } from '../hooks/useIsMobile'
-import { useAnnouncements, useViewingAnnouncement, closeViewing, openAnnouncement } from '../lib/announcements'
+import { ANNOUNCEMENTS, useAnnouncements, useViewingAnnouncement, closeViewing, openAnnouncement, annArm, annShow, annDismiss, annState, pickNext } from '../lib/announcements'
 import s from './Announcement.module.css'
 
 // Novedades (v0.9.1073): modal al abrir Inicio con lo nuevo, tarjeta con
 // degradado en Inicio y tarjetas del historial (Ajustes → Novedades). El
 // catálogo y su estado viven en lib/announcements.js.
-const ICONS = { spark: Sparkles, piggy: PiggyBank, zap: Zap, pause: Pause, wrench: Wrench, bell: Bell, target: Target, clock: Clock, mic: Mic, users: Users, shield: ShieldCheck, repeat: Repeat, edit: PencilLine, check: CheckCircle2, chart: BarChart3, import: FileUp, sheet: FileSpreadsheet, file: FileText, coins: Coins, scan: ScanLine, card: CreditCard, infinity: InfinityIcon }
+const ICONS = { spark: Sparkle, piggy: PiggyBank, zap: Lightning, pause: Pause, bell: Bell, target: Target, clock: Clock, mic: Microphone, scan: Scan, card: CreditCard, users: UsersThree, shield: ShieldCheck, repeat: ArrowsClockwise, edit: PencilSimpleLine, check: CheckCircle, chart: ChartBar, import: FileArrowUp, sheet: FileCsv, file: FilePdf, coins: Coins }
 const KIND = { nov: s.nov, mej: s.mej, avi: s.avi }
-const Ico = ({ name, size = 28 }) => { const C = ICONS[name] || Sparkles; return <C size={size} strokeWidth={1.9} /> }
+const Ico = ({ name, size = 28 }) => { const C = ICONS[name] || Sparkle; return <C size={size} weight="duotone" /> }
 
-function useAnnText(a) {
+// shownAt: cuándo se le mostró a este usuario (ISO) o null si aún no le toca.
+function useAnnText(a, shownAt) {
   const { t, i18n } = useTranslation()
   const base = `announcements.items.${a.id}`
-  const d = new Date(`${a.date}T12:00:00`)
-  const date = d.toLocaleDateString(i18n.language, { day: 'numeric', month: 'short' }).replace('.', '')
+  const date = shownAt ? new Date(shownAt).toLocaleDateString(i18n.language, { day: 'numeric', month: 'short' }).replace('.', '') : ''
   return {
     kind: t(`announcements.kind.${a.kind}`),
     meta: date,
@@ -43,7 +64,7 @@ function AnnouncementModal({ items, open, onClose, onAction }) {
   useScrollLock(open)
   useBackClose(open, () => onClose())
   const a = items[Math.min(i, items.length - 1)]
-  const tx = useAnnText(a || { id: '', kind: 'nov', version: '', date: '2000-01-01' })
+  const tx = useAnnText(a || { id: '', kind: 'nov' }, a ? annState().shown[a.id] : null)
   if (!render || !a) return null
   const last = i >= items.length - 1
   const go = () => { onClose(); if (a.action) onAction?.(a.action) }
@@ -58,7 +79,7 @@ function AnnouncementModal({ items, open, onClose, onAction }) {
           <span className={s.tile}><Ico name={a.icon} size={isMobile ? 34 : 40} /></span>
           <button type="button" className={s.x} onClick={onClose} aria-label={t('buttons.close')}><X size={18} /></button>
         </div>
-        <div className={s.meta}><span className={s.pill}>{tx.kind}</span><span className={s.ver}>{tx.meta}</span></div>
+        <div className={s.meta}><span className={s.pill}>{tx.kind}</span>{tx.meta && <span className={s.ver}>{tx.meta}</span>}</div>
         <h2 className={s.title}>{tx.title}</h2>
         <p className={s.desc}>{tx.text}</p>
         {a.rows?.length > 0 && (
@@ -86,43 +107,48 @@ function AnnouncementModal({ items, open, onClose, onAction }) {
   )
 }
 
-// Anfitrión (una sola vez, en App.jsx): abre el modal al entrar a Inicio si hay
-// novedades sin ver, o cuando se pide «Ver novedad» de una en concreto.
-export function AnnouncementHost({ userId, createdAt, enabled, onAction }) {
-  const ann = useAnnouncements(userId, createdAt)
+// Anfitrión (una sola vez, en App.jsx): cada vez que se entra a Inicio revisa si
+// le toca una novedad a este usuario (cola, intervalo y margen en lib/announcements)
+// y abre el modal; también atiende «Ver novedad» de una en concreto. `ready` =
+// onboarding y tutorial de Inicio terminados. No abre si ya hay otro diálogo en pantalla.
+export function AnnouncementHost({ createdAt, ready, enabled, onAction }) {
+  const ann = useAnnouncements()
   const viewing = useViewingAnnouncement()
   const [items, setItems] = useState([])
   const [open, setOpen] = useState(false)
-  const unseenKey = ann.unseen.map(a => a.id).join(',')
 
   useEffect(() => {
-    if (open || !enabled || !unseenKey) return undefined
-    const id = setTimeout(() => { setItems(ann.unseen); setOpen(true) }, 900)
+    if (open || !enabled) return undefined
+    annArm(ready, createdAt)
+    const next = pickNext(annState(), new Date(), ANNOUNCEMENTS, ready)
+    if (!next) return undefined
+    const id = setTimeout(() => {
+      if (document.querySelector('[role="dialog"]')) return
+      annShow(next.id)
+      setItems([next]); setOpen(true)
+    }, 1500)
     return () => clearTimeout(id)
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [enabled, unseenKey, open])
+  }, [enabled, ready, createdAt, open, ann.version])
 
   useEffect(() => {
     if (!viewing) return
-    const one = ann.list.find(a => a.id === viewing)
+    const one = ANNOUNCEMENTS.find(a => a.id === viewing)
     if (one) { setItems([one]); setOpen(true) }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [viewing])
 
   function close() {
     setOpen(false)
-    ann.markSeen(items.map(a => a.id))
     if (viewing) closeViewing()
   }
   return <AnnouncementModal items={items} open={open} onClose={close} onAction={onAction} />
 }
 
 // ── Tarjeta de Inicio ────────────────────────────────────────────────────
-export function AnnouncementBanner({ userId, createdAt, desk = false }) {
+export function AnnouncementBanner({ desk = false }) {
   const { t } = useTranslation()
-  const ann = useAnnouncements(userId, createdAt)
-  const a = ann.banner[0]
-  const tx = useAnnText(a || { id: '', kind: 'nov', version: '', date: '2000-01-01' })
+  const ann = useAnnouncements()
+  const a = ann.banner
+  const tx = useAnnText(a || { id: '', kind: 'nov' }, a ? ann.state.shown[a.id] : null)
   if (!a) return null
   return (
     <div className={`${s.gc} ${s.banner} ${desk ? s.deskBanner : ''} ${KIND[a.kind]}`} role="button" tabIndex={0}
@@ -134,35 +160,32 @@ export function AnnouncementBanner({ userId, createdAt, desk = false }) {
         <b>{tx.title}</b>
         <span className={s.t2}>{tx.text}</span>
       </div>
-      {desk && <span className={`${s.btn} ${s.go}`}>{t('announcements.view')}<ChevronRight size={16} /></span>}
+      {desk && <span className={`${s.btn} ${s.go}`}>{t('announcements.view')}<CaretRight size={16} /></span>}
       <button type="button" className={s.x} aria-label={t('announcements.dismiss')}
-        onClick={e => { e.stopPropagation(); ann.dismiss([a.id]) }}><X size={18} /></button>
+        onClick={e => { e.stopPropagation(); annDismiss(a.id) }}><X size={18} /></button>
     </div>
   )
 }
 
-// ── Historial (Ajustes → Novedades) ──────────────────────────────────────
-export function AnnouncementHistory({ userId, createdAt }) {
-  const { t } = useTranslation()
-  const ann = useAnnouncements(userId, createdAt)
-  const wrap = useRef(null)
-  if (ann.list.length === 0) return <div className={s.empty}>{t('announcements.empty')}</div>
+// ── Historial (Ajustes → Novedades): todo lo publicado ──────────────────
+export function AnnouncementHistory() {
+  const ann = useAnnouncements()
   return (
-    <div className={s.hist} ref={wrap}>
-      {ann.list.map(a => <HistoryCard key={a.id} a={a} />)}
+    <div className={s.hist}>
+      {ann.history.map(({ a, shownAt }) => <HistoryCard key={a.id} a={a} shownAt={shownAt} />)}
     </div>
   )
 }
 
-function HistoryCard({ a }) {
+function HistoryCard({ a, shownAt }) {
   const { t } = useTranslation()
-  const tx = useAnnText(a)
+  const tx = useAnnText(a, shownAt)
   return (
     <div className={`${s.gc} ${s.hCard} ${KIND[a.kind]}`}>
       <Deco />
       <div className={s.head}>
         <span className={s.tile}><Ico name={a.icon} size={28} /></span>
-        <div className={s.meta}><span className={s.pill}>{tx.kind}</span><span className={s.ver}>{tx.meta}</span></div>
+        <div className={s.meta}><span className={s.pill}>{tx.kind}</span>{tx.meta && <span className={s.ver}>{tx.meta}</span>}</div>
       </div>
       <h3 className={s.title}>{tx.title}</h3>
       <p className={s.desc}>{tx.text}</p>

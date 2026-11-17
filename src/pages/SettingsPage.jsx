@@ -245,7 +245,7 @@ export function SettingsPage({ profile, user, onUpdate, onUploadAvatar, onDataDe
   // panel derecho: sin «atrás» ni animación de entrada propia.
   const noop = () => {}
   function sectionEl(s, desk) {
-    if (s === 'news') return <SettingsNewsPage user={user} onBack={desk ? noop : back} slideClass={desk ? '' : slideClass} />
+    if (s === 'news') return <SettingsNewsPage onBack={desk ? noop : back} slideClass={desk ? '' : slideClass} />
     if (s === 'language') return <SettingsLanguagePage profile={profile} onUpdate={onUpdate} onBack={desk ? noop : back} slideClass={desk ? '' : slideClass} />
     if (s === 'import') return <Suspense fallback={null}><ImportPage profile={profile} {...importProps} onBack={desk ? noop : back} slideClass={desk ? '' : slideClass} /></Suspense>
     if (s === 'account') return <SettingsAccountPage onChangePhoto={desk ? () => setAvatarModal('choice') : undefined} uploadingAvatar={uploadingAvatar} profile={profile} user={user} onUpdate={onUpdate} onDataDeleted={onDataDeleted} onBack={desk ? noop : back} onGoSubscription={() => openSection('subscription')} slideClass={desk ? '' : slideClass} />

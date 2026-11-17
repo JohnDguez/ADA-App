@@ -44,7 +44,7 @@ export function DeskHome({
   profile, dataLoading, activeSpaceId, spaceMembers, sharedSpaces, spacePermissions, derived, lunaState, handlers,
   cutsInPeriod, cutPeriodKey, paymentMethodsList, periodRangeLabel, nextRangeLabel, afterRangeLabel, afterStartsInDays, slideClass, spaceJustChanged,
   onOpenPremium, onSpaceReady, onAdd, onImport, onStartAdd, onGoTab, onGoSettingsSection, onMarkUnpaid, onViewSource,
-  annUser, tablet = false, periodDayNumber, periodDayTotal, nextStartsInDays, onUpdateProfile,
+  tablet = false, periodDayNumber, periodDayTotal, nextStartsInDays, onUpdateProfile,
 }) {
   const { t, i18n } = useTranslation()
   const { pagarEsteCobro, vencidos, delPeriodo, pagadosEstePeriodo, pagadoMonto, pendingAmt, totalConocido, pctPagado, upcoming, nextPeriodKnownTotal, nextStart, nextEnd, pendingVariableCount, afterUpcoming, afterPeriodKnownTotal } = derived
@@ -292,7 +292,7 @@ export function DeskHome({
                           <PaidCollapse payments={pagadosEstePeriodo} expanded={paidExpanded} onToggle={() => setPaidExpanded(v => !v)} onMarkUnpaid={onMarkUnpaid} onViewSource={onViewSource} spaceMembers={spaceMembers} paymentMethodsList={paymentMethodsList} />
                         </div>
                       )}
-                      <AnnouncementBanner desk userId={annUser?.id} createdAt={annUser?.created_at} />
+                      <AnnouncementBanner desk />
                       <CutNotice cuts={cutsInPeriod} periodKey={cutPeriodKey} onOpen={() => onGoSettingsSection?.('cards')} />
                       {dataLoading ? <RailSkeleton count={3} /> : (
                         <>

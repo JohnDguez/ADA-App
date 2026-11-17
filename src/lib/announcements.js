@@ -1,89 +1,138 @@
 import { useEffect, useState } from 'react'
 
-// ── Novedades (v0.9.1073) ────────────────────────────────────────────────
-// Comunicados de actualización. Se publican AGREGANDO una entrada a
-// ANNOUNCEMENTS (arriba = la más nueva) y haciendo push: sin SQL.
-// Los textos viven en i18n: announcements.items.<id>.{title,text,cta,rows.N.title|text}.
+// ── Novedades (v0.9.1079): cola por usuario ──────────────────────────────
+// Los comunicados de actualización se muestran UNO A LA VEZ, cada GAP_DAYS días,
+// empezando QUIET_HOURS horas después de que el usuario terminó el onboarding y
+// el tutorial de Inicio. El orden es el de ANNOUNCEMENTS (arriba = el siguiente).
+// El reloj es de cada usuario (no hay fechas fijas): cuenta desde la última vez
+// que se le mostró uno, así quien tarda días en abrir la app no recibe varios
+// juntos. El historial de Ajustes → Novedades muestra TODO desde el día 1.
+//
+// PUBLICAR un comunicado = agregar la entrada (arriba si debe ser el siguiente)
+// + sus textos en announcements.items.<id> (es/en) y hacer push.
 //   kind:    'nov' (Novedad) | 'mej' (Mejora) | 'avi' (Aviso)
-//   icon:    clave de ICONS en AnnouncementCard.jsx
-//   date:    'AAAA-MM-DD' = día en que SALE (orden, historial y fecha mostrada).
-//            Una fecha futura queda programada: no aparece hasta ese día, así
-//            se escalonan los comunicados para no saturar al usuario.
-//            Modal y tarjeta de Inicio: solo lo publicado desde que existe la cuenta;
-//            el historial de Ajustes muestra todo lo ya publicado.
-//   action:  null | 'tab:<pestaña>' | 'settings:<sección>' | 'addmenu' (CTA «Probar ahora»)
+//   icon:    clave de ICONS en Announcement.jsx (íconos Phosphor)
+//   action:  null | 'tab:<pestaña>' | 'settings:<sección>' | 'addmenu' (CTA)
 //   rows:    iconos de hasta 3 filas de detalle
-// Estado por dispositivo y usuario en localStorage (sin SQL): ids vistos
-// (el modal ya los mostró) y ids descartados de la tarjeta de Inicio.
+//   urgent:  true = se salta la cola, el arranque y el intervalo (avisos)
+// Estado: profiles.ann_state (jsonb) — SQL: ver HISTORIAL v0.9.1079 — con
+// espejo en localStorage por si aún no existe la columna.
 export const ANNOUNCEMENTS = [
-  { id: 'voz-foto-1073', kind: 'nov', icon: 'mic', version: '0.9.1073', date: '2026-11-18', action: 'addmenu', rows: ['mic', 'scan', 'spark'] },
-  { id: 'tarjetas-1073', kind: 'nov', icon: 'card', version: '0.9.1073', date: '2026-11-20', action: 'settings:cards', rows: ['clock', 'bell', 'card'] },
-  { id: 'espacios-1078', kind: 'nov', icon: 'users', version: '0.9.1078', date: '2026-11-23', action: 'settings:sharedspace', rows: ['piggy', 'users', 'shield'] },
-  { id: 'variables-1078', kind: 'nov', icon: 'repeat', version: '0.9.1078', date: '2026-11-26', action: 'addmenu', rows: ['repeat', 'edit', 'check'] },
-  { id: 'analisis-1078', kind: 'nov', icon: 'chart', version: '0.9.1078', date: '2026-11-29', action: 'tab:payments', rows: ['chart', 'target', 'spark'] },
-  { id: 'datos-1078', kind: 'nov', icon: 'import', version: '0.9.1078', date: '2026-12-02', action: 'settings:import', rows: ['import', 'sheet', 'file'] },
-  { id: 'ajustes-1078', kind: 'mej', icon: 'coins', version: '0.9.1078', date: '2026-12-05', action: 'settings:notifications', rows: ['coins', 'clock', 'bell'] },
-  { id: 'ahorros-1071', kind: 'nov', icon: 'piggy', version: '0.9.1071', date: '2026-11-16', action: 'tab:goals', rows: ['piggy', 'zap', 'pause'] },
+  { id: 'voz-foto-1073', kind: 'nov', icon: 'mic', action: 'addmenu', rows: ['mic', 'scan', 'spark'] },
+  { id: 'ahorros-1071', kind: 'nov', icon: 'piggy', action: 'tab:goals', rows: ['piggy', 'zap', 'pause'] },
+  { id: 'tarjetas-1073', kind: 'nov', icon: 'card', action: 'settings:cards', rows: ['clock', 'bell', 'card'] },
+  { id: 'espacios-1078', kind: 'nov', icon: 'users', action: 'settings:sharedspace', rows: ['piggy', 'users', 'shield'] },
+  { id: 'variables-1078', kind: 'nov', icon: 'repeat', action: 'addmenu', rows: ['repeat', 'edit', 'check'] },
+  { id: 'analisis-1078', kind: 'nov', icon: 'chart', action: 'tab:payments', rows: ['chart', 'target', 'spark'] },
+  { id: 'datos-1078', kind: 'nov', icon: 'import', action: 'settings:import', rows: ['import', 'sheet', 'file'] },
+  { id: 'ajustes-1078', kind: 'mej', icon: 'coins', action: 'settings:notifications', rows: ['coins', 'clock', 'bell'] },
 ]
 
-export const FIRST_RUN_DAYS = 14 // en un dispositivo nuevo solo salen los de las últimas 2 semanas
-const key = uid => `ada_ann_${uid}`
+export const GAP_DAYS = 2        // intervalo entre una novedad y la siguiente
+export const QUIET_HOURS = 3     // margen tras onboarding + tutorial
+export const OLD_ACCOUNT_HOURS = 24 // cuentas más viejas no esperan el margen
+
+const H = 3600000
+export const emptyState = () => ({ armed: null, last: null, shown: {}, dismissed: [] })
+
+// Estado guardado → estado válido. Migra el formato anterior de localStorage
+// ({ seen, dismissed } de v0.9.1073-1078) dándole a lo ya visto la hora de hoy.
+export function normalizeState(raw, legacy, now = new Date()) {
+  if (raw && typeof raw === 'object' && raw.shown && typeof raw.shown === 'object') {
+    return { ...emptyState(), ...raw, dismissed: Array.isArray(raw.dismissed) ? raw.dismissed : [] }
+  }
+  if (legacy && Array.isArray(legacy.seen)) {
+    const iso = now.toISOString()
+    const shown = Object.fromEntries(legacy.seen.map(id => [id, iso]))
+    return { armed: new Date(now.getTime() - QUIET_HOURS * H).toISOString(), last: legacy.seen.length ? iso : null, shown, dismissed: Array.isArray(legacy.dismissed) ? legacy.dismissed : [] }
+  }
+  return emptyState()
+}
+
+// Primera vez que se cumple «onboarding + tutorial hechos»: se arma el margen.
+// Una cuenta con más de OLD_ACCOUNT_HOURS no espera (ya conoce la app).
+export function armedAt(createdAt, now = new Date()) {
+  const old = createdAt && now.getTime() - new Date(createdAt).getTime() > OLD_ACCOUNT_HOURS * H
+  return new Date(now.getTime() - (old ? QUIET_HOURS * H : 0)).toISOString()
+}
+
+// Siguiente comunicado que toca mostrar ahora (o null).
+export function pickNext(state, now = new Date(), catalog = ANNOUNCEMENTS, ready = true) {
+  const urgent = catalog.find(a => a.urgent && !state.shown[a.id])
+  if (urgent) return urgent
+  if (!ready || !state.armed) return null
+  if (now.getTime() - new Date(state.armed).getTime() < QUIET_HOURS * H) return null
+  if (state.last && now.getTime() - new Date(state.last).getTime() < GAP_DAYS * 24 * H) return null
+  return catalog.find(a => !a.urgent && !state.shown[a.id]) || null
+}
+
+// Tarjeta de Inicio: el último comunicado mostrado que no se descartó.
+export function bannerItem(state, catalog = ANNOUNCEMENTS) {
+  return catalog
+    .filter(a => state.shown[a.id] && !state.dismissed.includes(a.id))
+    .sort((a, b) => (state.shown[a.id] < state.shown[b.id] ? 1 : -1))[0] || null
+}
+
+// Historial: primero lo ya mostrado (lo más reciente arriba) y luego, en el
+// orden de la cola, lo que aún no le toca (sin fecha).
+export function historyList(state, catalog = ANNOUNCEMENTS) {
+  const done = catalog.filter(a => state.shown[a.id]).sort((a, b) => (state.shown[a.id] < state.shown[b.id] ? 1 : -1))
+  const todo = catalog.filter(a => !state.shown[a.id])
+  return [...done, ...todo].map(a => ({ a, shownAt: state.shown[a.id] || null }))
+}
+
+// ── Almacén compartido (modal, tarjeta de Inicio e historial) ────────────
+const mirrorKey = uid => `ada_ann2_${uid}`
+const legacyKey = uid => `ada_ann_${uid}`
+let S = { uid: null, state: emptyState(), persist: null, version: 0 }
 const listeners = new Set()
+const emit = () => { S.version++; listeners.forEach(f => f()) }
+const jget = k => { try { return JSON.parse(localStorage.getItem(k) || 'null') } catch { return null } }
 
-function read(uid) {
-  try {
-    const v = JSON.parse(localStorage.getItem(key(uid)) || 'null')
-    if (v && Array.isArray(v.seen) && Array.isArray(v.dismissed)) return v
-  } catch { /* sin almacenamiento */ }
-  return null
-}
-function write(uid, v) {
-  try { localStorage.setItem(key(uid), JSON.stringify(v)) } catch { /* sin almacenamiento */ }
-  listeners.forEach(f => f())
+function commit() {
+  try { localStorage.setItem(mirrorKey(S.uid), JSON.stringify(S.state)) } catch { /* sin almacenamiento */ }
+  try { Promise.resolve(S.persist?.({ ann_state: S.state })).catch(() => {}) } catch { /* columna aún no creada */ }
+  emit()
 }
 
-const dayStr = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
-
-// Historial: todos los ya publicados (fecha ≤ hoy), de la más nueva a la más vieja.
-// Un usuario nuevo los ve todos en Ajustes → Novedades, aunque sean anteriores a su cuenta.
-export function visibleAnnouncements(catalog = ANNOUNCEMENTS, now = new Date()) {
-  const today = dayStr(now)
-  return [...catalog].filter(a => a.date <= today).sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0))
+// Una vez por usuario al cargar su perfil. raw = profile.ann_state.
+export function annInit(uid, raw, persist) {
+  if (!uid || S.uid === uid) return
+  S.uid = uid
+  S.persist = persist
+  const fromDb = raw && raw.shown ? raw : null
+  const mirror = fromDb ? null : jget(mirrorKey(uid))
+  const legacy = fromDb || mirror ? null : jget(legacyKey(uid))
+  S.state = normalizeState(fromDb || mirror, legacy)
+  if (!fromDb && (mirror || legacy)) commit(); else emit()
+}
+export const annState = () => S.state
+export function annArm(ready, createdAt, now = new Date()) {
+  if (!S.uid || !ready || S.state.armed) return
+  S.state = { ...S.state, armed: armedAt(createdAt, now) }
+  commit()
+}
+export function annShow(id, now = new Date()) {
+  if (!S.uid || S.state.shown[id]) return
+  const iso = now.toISOString()
+  S.state = { ...S.state, last: iso, shown: { ...S.state.shown, [id]: iso } }
+  commit()
+}
+export function annDismiss(id) {
+  if (!S.uid || S.state.dismissed.includes(id)) return
+  S.state = { ...S.state, dismissed: [...S.state.dismissed, id] }
+  commit()
 }
 
-// Para el modal y la tarjeta de Inicio: solo lo publicado desde que existe la
-// cuenta (a un usuario nuevo no se le «anuncia» lo que ya estaba cuando llegó).
-export function freshAnnouncements(list, createdAt) {
-  const since = createdAt ? dayStr(new Date(createdAt)) : ''
-  return since ? list.filter(a => a.date >= since) : list
-}
-
-export function computeState(stored, list, now = new Date(), catalog = ANNOUNCEMENTS) {
-  if (stored) return stored
-  const limit = dayStr(new Date(now.getTime() - FIRST_RUN_DAYS * 86400000))
-  const old = catalog.filter(a => a.date < limit).map(a => a.id)
-  return { seen: old, dismissed: old }
-}
-
-export function useAnnouncements(userId, createdAt) {
+export function useAnnouncements() {
   const [, tick] = useState(0)
   useEffect(() => { const f = () => tick(n => n + 1); listeners.add(f); return () => listeners.delete(f) }, [])
-  if (!userId) return { list: [], unseen: [], banner: [], markSeen() {}, dismiss() {} }
-  const list = visibleAnnouncements()
-  const fresh = freshAnnouncements(list, createdAt)
-  const st = computeState(read(userId), list)
-  const unseen = fresh.filter(a => !st.seen.includes(a.id))
-  const banner = fresh.filter(a => !st.dismissed.includes(a.id))
-  const save = patch => write(userId, { ...st, ...patch })
-  return {
-    list, unseen, banner,
-    markSeen: ids => save({ seen: [...new Set([...st.seen, ...ids])] }),
-    dismiss: ids => save({ dismissed: [...new Set([...st.dismissed, ...ids])], seen: [...new Set([...st.seen, ...ids])] }),
-  }
+  const state = S.state
+  return { state, version: S.version, banner: bannerItem(state), history: historyList(state) }
 }
 
 // «Ver novedad» desde la tarjeta de Inicio o el historial: abre el modal con
-// ese anuncio (aunque ya esté visto). Un solo anfitrión (App.jsx) lo escucha.
+// ese anuncio (aunque ya esté visto o aún no le toque). Un solo anfitrión (App.jsx) lo escucha.
 let viewing = null
 const viewListeners = new Set()
 export function openAnnouncement(id) { viewing = id; viewListeners.forEach(f => f()) }
