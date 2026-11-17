@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { ANNOUNCEMENTS, computeState, visibleAnnouncements, FIRST_RUN_DAYS } from '../src/lib/announcements'
+import { ANNOUNCEMENTS, computeState, visibleAnnouncements, freshAnnouncements, FIRST_RUN_DAYS } from '../src/lib/announcements'
 import es from '../src/i18n/es.json'
 import en from '../src/i18n/en.json'
 
@@ -8,14 +8,19 @@ const cat = [
 ]
 
 describe('novedades', () => {
-  it('ordena de la más nueva a la más vieja y omite las anteriores a la cuenta', () => {
-    expect(visibleAnnouncements(null, cat, new Date('2026-11-17T12:00:00')).map(a => a.id)).toEqual(['a', 'b', 'c'])
-    expect(visibleAnnouncements('2026-10-15T10:00:00', cat, new Date('2026-11-17T12:00:00')).map(a => a.id)).toEqual(['a'])
+  it('el historial ordena de la más nueva a la más vieja', () => {
+    expect(visibleAnnouncements(cat, new Date('2026-11-17T12:00:00')).map(a => a.id)).toEqual(['a', 'b', 'c'])
+  })
+  it('modal y tarjeta de Inicio omiten lo anterior a la cuenta; el historial no', () => {
+    const list = visibleAnnouncements(cat, new Date('2026-11-17T12:00:00'))
+    expect(freshAnnouncements(list, '2026-10-15T10:00:00').map(a => a.id)).toEqual(['a'])
+    expect(freshAnnouncements(list, null).length).toBe(3)
+    expect(list.length).toBe(3)
   })
   it('una fecha futura queda programada y no se muestra todavía', () => {
     const now = new Date('2026-11-17T12:00:00')
-    expect(visibleAnnouncements(null, [{ id: 'f', date: '2026-11-18' }, ...cat], now).map(a => a.id)).toEqual(['a', 'b', 'c'])
-    expect(visibleAnnouncements(null, [{ id: 'f', date: '2026-11-18' }, ...cat], new Date('2026-11-18T08:00:00')).map(a => a.id)[0]).toBe('f')
+    expect(visibleAnnouncements([{ id: 'f', date: '2026-11-18' }, ...cat], now).map(a => a.id)).toEqual(['a', 'b', 'c'])
+    expect(visibleAnnouncements([{ id: 'f', date: '2026-11-18' }, ...cat], new Date('2026-11-18T08:00:00')).map(a => a.id)[0]).toBe('f')
   })
   it('en un dispositivo nuevo solo quedan sin ver las recientes', () => {
     const st = computeState(null, [], new Date('2026-11-17T12:00:00'), cat)

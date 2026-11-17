@@ -9,6 +9,8 @@ import { useEffect, useState } from 'react'
 //   date:    'AAAA-MM-DD' = día en que SALE (orden, historial y fecha mostrada).
 //            Una fecha futura queda programada: no aparece hasta ese día, así
 //            se escalonan los comunicados para no saturar al usuario.
+//            Modal y tarjeta de Inicio: solo lo publicado desde que existe la cuenta;
+//            el historial de Ajustes muestra todo lo ya publicado.
 //   action:  null | 'tab:<pestaña>' | 'settings:<sección>' | 'addmenu' (CTA «Probar ahora»)
 //   rows:    iconos de hasta 3 filas de detalle
 // Estado por dispositivo y usuario en localStorage (sin SQL): ids vistos
@@ -16,6 +18,11 @@ import { useEffect, useState } from 'react'
 export const ANNOUNCEMENTS = [
   { id: 'voz-foto-1073', kind: 'nov', icon: 'mic', version: '0.9.1073', date: '2026-11-18', action: 'addmenu', rows: ['mic', 'scan', 'spark'] },
   { id: 'tarjetas-1073', kind: 'nov', icon: 'card', version: '0.9.1073', date: '2026-11-20', action: 'settings:cards', rows: ['clock', 'bell', 'card'] },
+  { id: 'espacios-1078', kind: 'nov', icon: 'users', version: '0.9.1078', date: '2026-11-23', action: 'settings:sharedspace', rows: ['piggy', 'users', 'shield'] },
+  { id: 'variables-1078', kind: 'nov', icon: 'repeat', version: '0.9.1078', date: '2026-11-26', action: 'addmenu', rows: ['repeat', 'edit', 'check'] },
+  { id: 'analisis-1078', kind: 'nov', icon: 'chart', version: '0.9.1078', date: '2026-11-29', action: 'tab:payments', rows: ['chart', 'target', 'spark'] },
+  { id: 'datos-1078', kind: 'nov', icon: 'import', version: '0.9.1078', date: '2026-12-02', action: 'settings:import', rows: ['import', 'sheet', 'file'] },
+  { id: 'ajustes-1078', kind: 'mej', icon: 'coins', version: '0.9.1078', date: '2026-12-05', action: 'settings:notifications', rows: ['coins', 'clock', 'bell'] },
   { id: 'ahorros-1071', kind: 'nov', icon: 'piggy', version: '0.9.1071', date: '2026-11-16', action: 'tab:goals', rows: ['piggy', 'zap', 'pause'] },
 ]
 
@@ -37,12 +44,18 @@ function write(uid, v) {
 
 const dayStr = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 
-// Anuncios aplicables a este usuario: no anteriores a su cuenta; en un
-// dispositivo sin estado, solo los recientes (los viejos se dan por vistos).
-export function visibleAnnouncements(createdAt, catalog = ANNOUNCEMENTS, now = new Date()) {
-  const since = createdAt ? dayStr(new Date(createdAt)) : ''
+// Historial: todos los ya publicados (fecha ≤ hoy), de la más nueva a la más vieja.
+// Un usuario nuevo los ve todos en Ajustes → Novedades, aunque sean anteriores a su cuenta.
+export function visibleAnnouncements(catalog = ANNOUNCEMENTS, now = new Date()) {
   const today = dayStr(now)
-  return [...catalog].filter(a => a.date <= today && (!since || a.date >= since)).sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0))
+  return [...catalog].filter(a => a.date <= today).sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0))
+}
+
+// Para el modal y la tarjeta de Inicio: solo lo publicado desde que existe la
+// cuenta (a un usuario nuevo no se le «anuncia» lo que ya estaba cuando llegó).
+export function freshAnnouncements(list, createdAt) {
+  const since = createdAt ? dayStr(new Date(createdAt)) : ''
+  return since ? list.filter(a => a.date >= since) : list
 }
 
 export function computeState(stored, list, now = new Date(), catalog = ANNOUNCEMENTS) {
@@ -56,10 +69,11 @@ export function useAnnouncements(userId, createdAt) {
   const [, tick] = useState(0)
   useEffect(() => { const f = () => tick(n => n + 1); listeners.add(f); return () => listeners.delete(f) }, [])
   if (!userId) return { list: [], unseen: [], banner: [], markSeen() {}, dismiss() {} }
-  const list = visibleAnnouncements(createdAt)
+  const list = visibleAnnouncements()
+  const fresh = freshAnnouncements(list, createdAt)
   const st = computeState(read(userId), list)
-  const unseen = list.filter(a => !st.seen.includes(a.id))
-  const banner = list.filter(a => !st.dismissed.includes(a.id))
+  const unseen = fresh.filter(a => !st.seen.includes(a.id))
+  const banner = fresh.filter(a => !st.dismissed.includes(a.id))
   const save = patch => write(userId, { ...st, ...patch })
   return {
     list, unseen, banner,

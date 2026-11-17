@@ -3100,6 +3100,101 @@
             "text": "Choose which card paid each expense."
           }
         ]
+      },
+      "espacios-1078": {
+        "title": "Household accounts, made clear",
+        "text": "Share rent and groceries with your partner or roommate in a Space separate from your personal account.",
+        "cta": "See Spaces",
+        "rows": [
+          {
+            "title": "Shared Fund",
+            "text": "A common pot you can pay from together."
+          },
+          {
+            "title": "Split expenses",
+            "text": "Everyone pays their share."
+          },
+          {
+            "title": "You set the rules",
+            "text": "Decide what each guest can do."
+          }
+        ]
+      },
+      "variables-1078": {
+        "title": "Payments that change every month",
+        "text": "Electricity, water or credit card: log it as variable and enter the amount when the bill arrives.",
+        "cta": "Create one",
+        "rows": [
+          {
+            "title": "Repeats on its own",
+            "text": "Shows up every period with no re-entry."
+          },
+          {
+            "title": "Enter the amount",
+            "text": "One tap once you know it."
+          },
+          {
+            "title": "Past stays untouched",
+            "text": "Earlier and later payments don't change."
+          }
+        ]
+      },
+      "analisis-1078": {
+        "title": "See where your money goes",
+        "text": "Analysis shows your expenses and income by period and by category.",
+        "cta": "See Payments",
+        "rows": [
+          {
+            "title": "By period",
+            "text": "Your expenses and income for each payday."
+          },
+          {
+            "title": "By category",
+            "text": "Find out what you spend most on."
+          },
+          {
+            "title": "Always up to date",
+            "text": "Updates with every payment."
+          }
+        ]
+      },
+      "datos-1078": {
+        "title": "Your data, your way",
+        "text": "Import your payments from another sheet or app, and export yours whenever you want.",
+        "cta": "Try it now",
+        "rows": [
+          {
+            "title": "Import",
+            "text": "Bring your payments without typing each one."
+          },
+          {
+            "title": "Export to CSV",
+            "text": "Your data in a spreadsheet."
+          },
+          {
+            "title": "Export to PDF",
+            "text": "A report ready to share."
+          }
+        ]
+      },
+      "ajustes-1078": {
+        "title": "Make LunaPay yours",
+        "text": "Pick your currency, the time of your alerts and how far ahead you want to be reminded.",
+        "cta": "See settings",
+        "rows": [
+          {
+            "title": "Your currency",
+            "text": "MXN, USD, EUR and more."
+          },
+          {
+            "title": "Alert time",
+            "text": "When to get your notifications."
+          },
+          {
+            "title": "Early reminder",
+            "text": "1, 2, 3, 5 or 7 days before."
+          }
+        ]
       }
     }
   }

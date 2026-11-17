@@ -3100,6 +3100,101 @@
             "text": "Elige con cuál pagaste cada gasto."
           }
         ]
+      },
+      "espacios-1078": {
+        "title": "Cuentas claras en casa",
+        "text": "Comparte la renta y las compras de la casa con tu pareja o con quien vivas, en un Espacio aparte de tu cuenta personal.",
+        "cta": "Ver Espacios",
+        "rows": [
+          {
+            "title": "Fondo Compartido",
+            "text": "Un ahorro común del que pueden pagar juntos."
+          },
+          {
+            "title": "Divide gastos",
+            "text": "Cada quien abona su parte."
+          },
+          {
+            "title": "Tú pones las reglas",
+            "text": "Decide qué puede hacer cada invitado."
+          }
+        ]
+      },
+      "variables-1078": {
+        "title": "Pagos que cambian cada mes",
+        "text": "Luz, agua o tarjeta: registra el pago como variable y captura el monto cuando llegue el recibo.",
+        "cta": "Crear uno",
+        "rows": [
+          {
+            "title": "Se repite solo",
+            "text": "Aparece cada periodo sin volver a crearlo."
+          },
+          {
+            "title": "Captura el monto",
+            "text": "Un toque cuando ya lo sabes."
+          },
+          {
+            "title": "Sin tocar el pasado",
+            "text": "Los pagos anteriores y futuros no cambian."
+          }
+        ]
+      },
+      "analisis-1078": {
+        "title": "Mira a dónde se va tu dinero",
+        "text": "El Análisis te muestra tus gastos e ingresos por periodo y por categoría.",
+        "cta": "Ver Gastos",
+        "rows": [
+          {
+            "title": "Por periodo",
+            "text": "Tus gastos e ingresos de cada cobro."
+          },
+          {
+            "title": "Por categoría",
+            "text": "Descubre en qué gastas más."
+          },
+          {
+            "title": "Siempre al día",
+            "text": "Se actualiza con cada pago."
+          }
+        ]
+      },
+      "datos-1078": {
+        "title": "Tus datos, a tu manera",
+        "text": "Importa tus pagos desde otra hoja o app, y exporta lo tuyo cuando quieras.",
+        "cta": "Probar ahora",
+        "rows": [
+          {
+            "title": "Importar",
+            "text": "Pasa tus pagos sin capturarlos uno por uno."
+          },
+          {
+            "title": "Exportar a CSV",
+            "text": "Tus datos en una hoja de cálculo."
+          },
+          {
+            "title": "Exportar a PDF",
+            "text": "Un reporte listo para compartir."
+          }
+        ]
+      },
+      "ajustes-1078": {
+        "title": "Ajusta LunaPay a ti",
+        "text": "Elige tu moneda, la hora de tus avisos y con cuánta anticipación quieres que te recordemos.",
+        "cta": "Ver ajustes",
+        "rows": [
+          {
+            "title": "Tu moneda",
+            "text": "MXN, USD, EUR y más."
+          },
+          {
+            "title": "Hora de avisos",
+            "text": "Cuándo recibir tus notificaciones."
+          },
+          {
+            "title": "Aviso anticipado",
+            "text": "1, 2, 3, 5 o 7 días antes."
+          }
+        ]
       }
     }
   }
