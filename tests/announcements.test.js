@@ -9,8 +9,13 @@ const cat = [
 
 describe('novedades', () => {
   it('ordena de la más nueva a la más vieja y omite las anteriores a la cuenta', () => {
-    expect(visibleAnnouncements(null, cat).map(a => a.id)).toEqual(['a', 'b', 'c'])
-    expect(visibleAnnouncements('2026-10-15T10:00:00', cat).map(a => a.id)).toEqual(['a'])
+    expect(visibleAnnouncements(null, cat, new Date('2026-11-17T12:00:00')).map(a => a.id)).toEqual(['a', 'b', 'c'])
+    expect(visibleAnnouncements('2026-10-15T10:00:00', cat, new Date('2026-11-17T12:00:00')).map(a => a.id)).toEqual(['a'])
+  })
+  it('una fecha futura queda programada y no se muestra todavía', () => {
+    const now = new Date('2026-11-17T12:00:00')
+    expect(visibleAnnouncements(null, [{ id: 'f', date: '2026-11-18' }, ...cat], now).map(a => a.id)).toEqual(['a', 'b', 'c'])
+    expect(visibleAnnouncements(null, [{ id: 'f', date: '2026-11-18' }, ...cat], new Date('2026-11-18T08:00:00')).map(a => a.id)[0]).toBe('f')
   })
   it('en un dispositivo nuevo solo quedan sin ver las recientes', () => {
     const st = computeState(null, [], new Date('2026-11-17T12:00:00'), cat)

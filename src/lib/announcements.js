@@ -6,14 +6,16 @@ import { useEffect, useState } from 'react'
 // Los textos viven en i18n: announcements.items.<id>.{title,text,cta,rows.N.title|text}.
 //   kind:    'nov' (Novedad) | 'mej' (Mejora) | 'avi' (Aviso)
 //   icon:    clave de ICONS en AnnouncementCard.jsx
-//   date:    'AAAA-MM-DD' (orden e historial)
+//   date:    'AAAA-MM-DD' = día en que SALE (orden, historial y fecha mostrada).
+//            Una fecha futura queda programada: no aparece hasta ese día, así
+//            se escalonan los comunicados para no saturar al usuario.
 //   action:  null | 'tab:<pestaña>' | 'settings:<sección>' | 'addmenu' (CTA «Probar ahora»)
 //   rows:    iconos de hasta 3 filas de detalle
 // Estado por dispositivo y usuario en localStorage (sin SQL): ids vistos
 // (el modal ya los mostró) y ids descartados de la tarjeta de Inicio.
 export const ANNOUNCEMENTS = [
-  { id: 'voz-foto-1073', kind: 'nov', icon: 'mic', version: '0.9.1073', date: '2026-11-16', action: 'addmenu', rows: ['mic', 'scan', 'spark'] },
-  { id: 'tarjetas-1073', kind: 'nov', icon: 'card', version: '0.9.1073', date: '2026-11-16', action: 'settings:cards', rows: ['clock', 'bell', 'card'] },
+  { id: 'voz-foto-1073', kind: 'nov', icon: 'mic', version: '0.9.1073', date: '2026-11-18', action: 'addmenu', rows: ['mic', 'scan', 'spark'] },
+  { id: 'tarjetas-1073', kind: 'nov', icon: 'card', version: '0.9.1073', date: '2026-11-20', action: 'settings:cards', rows: ['clock', 'bell', 'card'] },
   { id: 'ahorros-1071', kind: 'nov', icon: 'piggy', version: '0.9.1071', date: '2026-11-16', action: 'tab:goals', rows: ['piggy', 'zap', 'pause'] },
 ]
 
@@ -37,9 +39,10 @@ const dayStr = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '
 
 // Anuncios aplicables a este usuario: no anteriores a su cuenta; en un
 // dispositivo sin estado, solo los recientes (los viejos se dan por vistos).
-export function visibleAnnouncements(createdAt, catalog = ANNOUNCEMENTS) {
+export function visibleAnnouncements(createdAt, catalog = ANNOUNCEMENTS, now = new Date()) {
   const since = createdAt ? dayStr(new Date(createdAt)) : ''
-  return [...catalog].filter(a => !since || a.date >= since).sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0))
+  const today = dayStr(now)
+  return [...catalog].filter(a => a.date <= today && (!since || a.date >= since)).sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0))
 }
 
 export function computeState(stored, list, now = new Date(), catalog = ANNOUNCEMENTS) {
