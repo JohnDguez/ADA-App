@@ -3062,6 +3062,44 @@
             "text": "Actívalo o detenlo en un toque."
           }
         ]
+      },
+      "voz-foto-1073": {
+        "title": "Registra sin escribir",
+        "text": "Dicta el pago o toma una foto del ticket y LunaPay llena el formulario por ti.",
+        "cta": "Probar ahora",
+        "rows": [
+          {
+            "title": "Por voz",
+            "text": "Di «pagué 350 de luz» y listo."
+          },
+          {
+            "title": "Con foto",
+            "text": "Escanea el ticket y revisa los datos."
+          },
+          {
+            "title": "Categoría automática",
+            "text": "La app la adivina; tú la corriges."
+          }
+        ]
+      },
+      "tarjetas-1073": {
+        "title": "Tus tarjetas, bajo control",
+        "text": "Registra tus tarjetas de crédito y débito para que no se te pase ni el corte ni el pago.",
+        "cta": "Ver mis tarjetas",
+        "rows": [
+          {
+            "title": "Día de corte",
+            "text": "Sabe cuándo cierra cada estado de cuenta."
+          },
+          {
+            "title": "Avisos a tiempo",
+            "text": "Te avisamos antes del corte y del pago."
+          },
+          {
+            "title": "Pagos con tarjeta",
+            "text": "Elige con cuál pagaste cada gasto."
+          }
+        ]
       }
     }
   }

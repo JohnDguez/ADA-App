@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useTranslation } from 'react-i18next'
-import { Sparkles, PiggyBank, Zap, Pause, Wrench, Bell, Target, Clock, Infinity as InfinityIcon, X, ChevronRight } from 'lucide-react'
+import { Sparkles, PiggyBank, Zap, Pause, Wrench, Bell, Target, Clock, Mic, ScanLine, CreditCard, Infinity as InfinityIcon, X, ChevronRight } from 'lucide-react'
 import { usePresence } from '../lib/usePresence'
 import { useScrollLock } from '../lib/scrollLock'
 import { useBackClose } from '../lib/backNav'
@@ -12,7 +12,7 @@ import s from './Announcement.module.css'
 // Novedades (v0.9.1073): modal al abrir Inicio con lo nuevo, tarjeta con
 // degradado en Inicio y tarjetas del historial (Ajustes → Novedades). El
 // catálogo y su estado viven en lib/announcements.js.
-const ICONS = { spark: Sparkles, piggy: PiggyBank, zap: Zap, pause: Pause, wrench: Wrench, bell: Bell, target: Target, clock: Clock, infinity: InfinityIcon }
+const ICONS = { spark: Sparkles, piggy: PiggyBank, zap: Zap, pause: Pause, wrench: Wrench, bell: Bell, target: Target, clock: Clock, mic: Mic, scan: ScanLine, card: CreditCard, infinity: InfinityIcon }
 const KIND = { nov: s.nov, mej: s.mej, avi: s.avi }
 const Ico = ({ name, size = 28 }) => { const C = ICONS[name] || Sparkles; return <C size={size} strokeWidth={1.9} /> }
 

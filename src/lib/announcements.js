@@ -7,11 +7,13 @@ import { useEffect, useState } from 'react'
 //   kind:    'nov' (Novedad) | 'mej' (Mejora) | 'avi' (Aviso)
 //   icon:    clave de ICONS en AnnouncementCard.jsx
 //   date:    'AAAA-MM-DD' (orden e historial)
-//   action:  null | 'tab:<pestaña>' | 'settings:<sección>' (CTA «Probar ahora»)
+//   action:  null | 'tab:<pestaña>' | 'settings:<sección>' | 'addmenu' (CTA «Probar ahora»)
 //   rows:    iconos de hasta 3 filas de detalle
 // Estado por dispositivo y usuario en localStorage (sin SQL): ids vistos
 // (el modal ya los mostró) y ids descartados de la tarjeta de Inicio.
 export const ANNOUNCEMENTS = [
+  { id: 'voz-foto-1073', kind: 'nov', icon: 'mic', version: '0.9.1073', date: '2026-11-16', action: 'addmenu', rows: ['mic', 'scan', 'spark'] },
+  { id: 'tarjetas-1073', kind: 'nov', icon: 'card', version: '0.9.1073', date: '2026-11-16', action: 'settings:cards', rows: ['clock', 'bell', 'card'] },
   { id: 'ahorros-1071', kind: 'nov', icon: 'piggy', version: '0.9.1071', date: '2026-11-16', action: 'tab:goals', rows: ['piggy', 'zap', 'pause'] },
 ]
 

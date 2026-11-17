@@ -3062,6 +3062,44 @@
             "text": "Turn it on or off in a tap."
           }
         ]
+      },
+      "voz-foto-1073": {
+        "title": "Log without typing",
+        "text": "Dictate the payment or snap a photo of the receipt and LunaPay fills in the form for you.",
+        "cta": "Try it now",
+        "rows": [
+          {
+            "title": "By voice",
+            "text": "Say “paid 350 for electricity” and done."
+          },
+          {
+            "title": "With a photo",
+            "text": "Scan the receipt and review the details."
+          },
+          {
+            "title": "Automatic category",
+            "text": "The app guesses it; you can fix it."
+          }
+        ]
+      },
+      "tarjetas-1073": {
+        "title": "Your cards, under control",
+        "text": "Add your credit and debit cards so you never miss a statement cut-off or a payment.",
+        "cta": "See my cards",
+        "rows": [
+          {
+            "title": "Cut-off day",
+            "text": "Know when each statement closes."
+          },
+          {
+            "title": "Timely alerts",
+            "text": "We remind you before the cut-off and the due date."
+          },
+          {
+            "title": "Pay with a card",
+            "text": "Choose which card paid each expense."
+          }
+        ]
       }
     }
   }

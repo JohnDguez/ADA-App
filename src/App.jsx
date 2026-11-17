@@ -2306,7 +2306,7 @@ export default function App() {
         onClose={handleClosePatchNotes}
       />
       <AnnouncementHost userId={user?.id} createdAt={user?.created_at} enabled={tab === 'home' && !!profile && !profileLoading && !patchNotesOpen && !feedbackPromptOpen}
-        onAction={a => a.startsWith('settings:') ? goToSettingsSection(a.slice(9)) : a.startsWith('tab:') ? changeTab(a.slice(4)) : undefined} />
+        onAction={a => a.startsWith('settings:') ? goToSettingsSection(a.slice(9)) : a.startsWith('tab:') ? changeTab(a.slice(4)) : a === 'addmenu' ? openAddMenu() : undefined} />
       <FeedbackPromptModal
         open={feedbackPromptOpen}
         onGiveFeedback={handleFeedbackGiveFeedback}
