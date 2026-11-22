@@ -20,7 +20,7 @@ import { CaretUp } from '@phosphor-icons/react/dist/csr/CaretUp'
 import { Lock as PhLock } from '@phosphor-icons/react/dist/csr/Lock'
 import { nextCutAfter } from '../lib/cardStatements'
 import { DatePicker } from './DatePicker'
-import AmountInput, { CentsAmountInput } from './AmountInput'
+import AmountInput, { HeroAmountInput } from './AmountInput'
 import { Collapse } from './Collapse'
 import { CategoryFormModal } from './CategoryFormModal'
 import { getCurrencySymbol } from '../lib/currency'
@@ -1133,7 +1133,7 @@ const impactBlock = impactPreview && impactPreview.length > 0 ? (() => {
                     ) : (
                       <div className={dk.amountRow}>
                         <span className={dk.amountSym}>{symbol}</span>
-                        <CentsAmountInput className={dk.amountInput} emptyClassName={dk.amountEmpty} value={amount} onChange={e => setAmount(e.target.value)} autoFocus={!initial} onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); nameRef.current?.focus() } }} />
+                        <HeroAmountInput className={dk.amountInput} emptyClassName={dk.amountEmpty} value={amount} onChange={e => setAmount(e.target.value)} autoFocus={!initial} onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); nameRef.current?.focus() } }} />
                       </div>
                     )}
                   </div>
@@ -1393,7 +1393,7 @@ const impactBlock = impactPreview && impactPreview.length > 0 ? (() => {
               ) : (
                 <div className={styles.amountHeroRow}>
                     <span className={styles.amountHeroSymbol}>{getCurrencySymbol()}</span>
-                    <CentsAmountInput className={styles.amountHeroInput} emptyClassName={styles.amountHeroEmpty} value={amount} onChange={e => setAmount(e.target.value)} autoFocus={!initial && !voiceSupported && !scanSupported} onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); nameRef.current?.focus() } }} />
+                    <HeroAmountInput className={styles.amountHeroInput} emptyClassName={styles.amountHeroEmpty} value={amount} onChange={e => setAmount(e.target.value)} autoFocus={!initial} onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); nameRef.current?.focus() } }} />
                   </div>
               )}
             </div>
