@@ -425,6 +425,7 @@ export default function App() {
   }))
   // Novedad como notificación (v0.9.1081, solo escritorio): la última novedad
   // mostrada. Ids `ann-<id>`; su estado vive en lib/announcements.js.
+  const isDesktop = useIsDesktop()
   const annNotif = useAnnouncements().notification
   const annItem = isDesktop && annNotif ? {
     id: `ann-${annNotif.a.id}`, type: 'announcement', ann_id: annNotif.a.id, ann_kind: annNotif.a.kind,
@@ -532,7 +533,6 @@ export default function App() {
     highlightPaymentWhenVisible(n.payment_id || n.goal_id)
   }
   const { theme, setTheme } = useTheme()
-  const isDesktop = useIsDesktop()
 
   // "Perfil efectivo": en modo espacio, el periodo de cobro y el ingreso
   // por periodo cambian a los del espacio (tiene los suyos propios,
