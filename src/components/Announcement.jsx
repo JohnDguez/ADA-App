@@ -27,7 +27,7 @@ import { usePresence } from '../lib/usePresence'
 import { useScrollLock } from '../lib/scrollLock'
 import { useBackClose } from '../lib/backNav'
 import { useIsMobile } from '../hooks/useIsMobile'
-import { ANNOUNCEMENTS, useAnnouncements, useViewingAnnouncement, closeViewing, openAnnouncement, annArm, annShow, annDismiss, annState, pickNext } from '../lib/announcements'
+import { ANNOUNCEMENTS, useAnnouncements, useViewingAnnouncement, closeViewing, openAnnouncement, annArm, annShow, annDismiss, annState, pickNext, annNotifRead, annLater, annIsLater } from '../lib/announcements'
 import s from './Announcement.module.css'
 
 // Novedades (v0.9.1073): modal al abrir Inicio con lo nuevo, tarjeta con
@@ -111,7 +111,7 @@ function AnnouncementModal({ items, open, onClose, onAction }) {
 // le toca una novedad a este usuario (cola, intervalo y margen en lib/announcements)
 // y abre el modal; también atiende «Ver novedad» de una en concreto. `ready` =
 // onboarding y tutorial de Inicio terminados. No abre si ya hay otro diálogo en pantalla.
-export function AnnouncementHost({ createdAt, ready, enabled, onAction }) {
+export function AnnouncementHost({ createdAt, ready, enabled, toast = false, onAction }) {
   const ann = useAnnouncements()
   const viewing = useViewingAnnouncement()
   const [items, setItems] = useState([])
@@ -140,27 +140,60 @@ export function AnnouncementHost({ createdAt, ready, enabled, onAction }) {
     setOpen(false)
     if (viewing) closeViewing()
   }
-  return <AnnouncementModal items={items} open={open} onClose={close} onAction={onAction} />
+  return (
+    <>
+      <AnnouncementModal items={items} open={open} onClose={close} onAction={onAction} />
+      {toast && enabled && !open && !viewing && <AnnouncementToast />}
+    </>
+  )
+}
+
+// ── Aviso flotante de escritorio (v0.9.1081) ─────────────────────────────
+// Recordatorio compacto abajo a la derecha: queda la última novedad mostrada
+// hasta que se abre, se cierra (X) o se pospone (Más tarde, solo esta sesión).
+function AnnouncementToast() {
+  const { t } = useTranslation()
+  const ann = useAnnouncements()
+  const a = ann.banner
+  const tx = useAnnText(a || { id: '', kind: 'nov' }, null)
+  if (!a || annIsLater(a.id)) return null
+  const open = () => { annNotifRead(a.id); annDismiss(a.id); openAnnouncement(a.id) }
+  return createPortal(
+    <div className={`${s.gc} ${s.toast} ${KIND[a.kind]}`} role="status" aria-label={tx.title}>
+      <Deco />
+      <span className={s.tile}><Ico name={a.icon} size={26} /></span>
+      <div className={s.bt}>
+        <span className={s.pill}>{t('announcements.new')}</span>
+        <b>{tx.title}</b>
+        <span className={s.t2}>{tx.text}</span>
+        <div className={s.toastActs}>
+          <button type="button" className={s.btn} onClick={open}>{t('announcements.view')}<CaretRight size={16} /></button>
+          <button type="button" className={`${s.btn} ${s.btnSoft}`} onClick={() => annLater(a.id)}>{t('announcements.later')}</button>
+        </div>
+      </div>
+      <button type="button" className={`${s.x} ${s.toastX}`} aria-label={t('announcements.dismiss')} onClick={() => annDismiss(a.id)}><X size={16} /></button>
+    </div>,
+    document.body
+  )
 }
 
 // ── Tarjeta de Inicio ────────────────────────────────────────────────────
-export function AnnouncementBanner({ desk = false }) {
+export function AnnouncementBanner() {
   const { t } = useTranslation()
   const ann = useAnnouncements()
   const a = ann.banner
   const tx = useAnnText(a || { id: '', kind: 'nov' }, a ? ann.state.shown[a.id] : null)
   if (!a) return null
   return (
-    <div className={`${s.gc} ${s.banner} ${desk ? s.deskBanner : ''} ${KIND[a.kind]}`} role="button" tabIndex={0}
+    <div className={`${s.gc} ${s.banner} ${KIND[a.kind]}`} role="button" tabIndex={0}
       onClick={() => openAnnouncement(a.id)} onKeyDown={e => (e.key === 'Enter' || e.key === ' ') && openAnnouncement(a.id)}>
       <Deco />
-      <span className={s.tile}><Ico name={a.icon} size={desk ? 28 : 25} /></span>
+      <span className={s.tile}><Ico name={a.icon} size={25} /></span>
       <div className={s.bt}>
         <span className={s.pill}>{t('announcements.new')}</span>
         <b>{tx.title}</b>
         <span className={s.t2}>{tx.text}</span>
       </div>
-      {desk && <span className={`${s.btn} ${s.go}`}>{t('announcements.view')}<CaretRight size={16} /></span>}
       <button type="button" className={s.x} aria-label={t('announcements.dismiss')}
         onClick={e => { e.stopPropagation(); annDismiss(a.id) }}><X size={18} /></button>
     </div>

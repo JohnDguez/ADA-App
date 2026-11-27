@@ -73,6 +73,16 @@ export function bannerItem(state, catalog = ANNOUNCEMENTS) {
     .sort((a, b) => (state.shown[a.id] < state.shown[b.id] ? 1 : -1))[0] || null
 }
 
+// Notificación de escritorio (v0.9.1081): la última novedad mostrada, mientras
+// no se haya quitado de la lista. Su estado (leída / quitada) es aparte del de
+// la tarjeta flotante, para que cerrar el aviso no borre la notificación.
+export function notificationItem(state, ns, catalog = ANNOUNCEMENTS) {
+  const a = catalog
+    .filter(x => state.shown[x.id] && !ns.removed.includes(x.id))
+    .sort((x, y) => (state.shown[x.id] < state.shown[y.id] ? 1 : -1))[0]
+  return a ? { a, shownAt: state.shown[a.id], read: ns.read.includes(a.id) } : null
+}
+
 // Historial: primero lo ya mostrado (lo más reciente arriba) y luego, en el
 // orden de la cola, lo que aún no le toca (sin fecha).
 export function historyList(state, catalog = ANNOUNCEMENTS) {
@@ -124,11 +134,30 @@ export function annDismiss(id) {
   commit()
 }
 
+const nKey = uid => `ada_ann_notif_${uid}`
+function annNs() {
+  const v = S.uid ? jget(nKey(S.uid)) : null
+  return { read: Array.isArray(v?.read) ? v.read : [], removed: Array.isArray(v?.removed) ? v.removed : [] }
+}
+function annNsSave(ns) {
+  try { localStorage.setItem(nKey(S.uid), JSON.stringify(ns)) } catch { /* sin almacenamiento */ }
+  emit()
+}
+export function annNotifRead(id) { const ns = annNs(); if (S.uid && !ns.read.includes(id)) annNsSave({ ...ns, read: [...ns.read, id] }) }
+export function annNotifReadAll() { Object.keys(S.state.shown).forEach(annNotifRead) }
+export function annNotifRemove(id) { const ns = annNs(); if (S.uid && !ns.removed.includes(id)) annNsSave({ ...ns, removed: [...ns.removed, id] }) }
+export function annNotifClear() { Object.keys(S.state.shown).forEach(annNotifRemove) }
+
+// «Más tarde» de la tarjeta flotante: la oculta solo en esta sesión.
+const later = new Set()
+export function annLater(id) { later.add(id); emit() }
+export const annIsLater = id => later.has(id)
+
 export function useAnnouncements() {
   const [, tick] = useState(0)
   useEffect(() => { const f = () => tick(n => n + 1); listeners.add(f); return () => listeners.delete(f) }, [])
   const state = S.state
-  return { state, version: S.version, banner: bannerItem(state), history: historyList(state) }
+  return { state, version: S.version, banner: bannerItem(state), notification: notificationItem(state, annNs()), history: historyList(state) }
 }
 
 // «Ver novedad» desde la tarjeta de Inicio o el historial: abre el modal con

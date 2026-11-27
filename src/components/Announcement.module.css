@@ -67,12 +67,18 @@
 .bt b { display: block; font-family: var(--font-display); font-weight: 700; font-size: 19px; letter-spacing: -0.4px; line-height: 1.15; }
 .bt span.t2 { display: block; font-size: 13px; opacity: 0.95; margin-top: 3px; }
 .bt span.t2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-.deskBanner .bt span.t2 { -webkit-line-clamp: 1; }
-.go { display: none; }
-.deskBanner .go { display: inline-flex; height: 40px; }
-.deskBanner { padding: 16px 20px; }
-.deskBanner .tile { width: 56px; height: 56px; }
 @media (hover: hover) and (pointer: fine) { .banner:hover { filter: none; box-shadow: var(--desk-pop-shadow), inset 0 0 0 999px color-mix(in srgb, var(--desk-ink-text) 6%, transparent); } }
+
+/* ── Aviso flotante de escritorio (v0.9.1081) ── */
+.toast { position: fixed; right: 24px; bottom: 24px; z-index: 300; width: 360px; max-width: calc(100vw - 48px); display: flex; gap: 14px; align-items: flex-start; padding: 18px 18px 18px 18px; border-radius: 28px; animation: toastIn .28s ease-out both; }
+.toast .tile { width: 52px; height: 52px; border-radius: 17px; }
+.toast .bt { padding-right: 26px; }
+.toast .bt .t2 { -webkit-line-clamp: 3; }
+.toastActs { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+.toastActs .btn { height: 38px; padding: 0 16px; font-size: 14px; }
+.toastX { position: absolute !important; top: 12px; right: 12px; width: 32px; height: 32px; }
+@keyframes toastIn { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .toast { animation: none; } }
 
 /* ── Historial ── */
 .hist { display: flex; flex-direction: column; gap: 14px; }

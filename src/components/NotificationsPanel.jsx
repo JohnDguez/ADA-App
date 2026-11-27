@@ -1,7 +1,7 @@
 import { useState, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import i18n from '../i18n'
-import { AlertCircle, Clock, Bell, Trash2, CheckCheck, X, Goal, AlertTriangle, Crown, ChevronRight, ChevronDown, CreditCard } from 'lucide-react'
+import { AlertCircle, Clock, Bell, Trash2, CheckCheck, X, Goal, AlertTriangle, Crown, ChevronRight, ChevronDown, CreditCard, Sparkles } from 'lucide-react'
 import { getMonthsShort } from '../lib/utils'
 import styles from './NotificationsPanel.module.css'
 import { AvatarImg } from './AvatarImg'
@@ -23,6 +23,7 @@ function timeAgo(dateStr) {
 }
 
 function NotifIcon({ type }) {
+  if (type === 'announcement')  return <Sparkles size={16} color="var(--desk-ink-text)" />
   if (type === 'overdue')       return <AlertCircle size={16} color="var(--danger)" />
   if (type === 'due_today')     return <Clock size={16} color="var(--soon-color)" />
   // Tarjetas de crédito (v0.9.740): corte y recordatorio en ámbar, vencimiento en rojo.
@@ -194,7 +195,8 @@ export function NotificationsList({ notifications, onMarkAsRead, onDelete, onNav
           className={`${styles.notifRow} ${!n.read ? styles.notifRowUnread : ''}`}
           style={accent ? { boxShadow: `inset 3px 0 0 ${accent}` } : undefined}
         >
-          <div className={`${styles.notifIconWrapper} ${accent === 'var(--danger)' ? styles.iconDanger : accent ? styles.iconSoon : ''}`}>
+          <div style={n.type === 'announcement' ? { background: `linear-gradient(135deg, var(--ann-${n.ann_kind}-1), var(--ann-${n.ann_kind}-2))` } : undefined}
+            className={`${styles.notifIconWrapper} ${n.type === 'announcement' ? styles.iconAnn : ''} ${accent === 'var(--danger)' ? styles.iconDanger : accent ? styles.iconSoon : ''}`}>
             {n.type === 'space_change'
               ? <ActorAvatar name={n.actor_name} avatarUrl={n.actor_avatar_url} />
               : <NotifIcon type={n.type} />
@@ -205,6 +207,7 @@ export function NotificationsList({ notifications, onMarkAsRead, onDelete, onNav
               <div className={`${styles.notifTitle} ${!n.read ? styles.notifTitleUnread : ''}`}>{n.title}</div>
               <span className={styles.notifTime}>{timeAgo(n.created_at)}</span>
             </div>
+            {n.type === 'announcement' && <span className={styles.annTag}>{t(`announcements.kind.${n.ann_kind}`)}</span>}
             <div className={styles.notifBody}>{n.body}</div>
             {n.space_name && <div className={styles.notifMeta}><span className={styles.notifSpaceName}>{n.space_name}</span></div>}
           </div>

@@ -291,3 +291,6 @@
   .filter:not(.filterOn):hover { background: var(--desk-hair); translate: none; filter: none; }
 }
 .panelDesk .swipeBg, .deskList .swipeBg { display: none; }
+
+/* Novedad como notificación (v0.9.1081): icono con el degradado del tipo (inline) y etiqueta. */
+.annTag { display: inline-flex; align-items: center; height: 20px; padding: 0 9px; margin: 2px 0 3px; border-radius: 999px; background: var(--accent); color: var(--desk-ink-text); font-size: 11px; font-weight: 700; }

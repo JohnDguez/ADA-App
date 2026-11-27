@@ -65,6 +65,7 @@ import { InstallmentAbonarModal } from './components/InstallmentAbonarModal'
 import { SplitContributionsModal } from './components/SplitContributionsModal'
 import { PatchNotesModal } from './components/PatchNotesModal'
 import { AnnouncementHost } from './components/Announcement'
+import { useAnnouncements, openAnnouncement, annNotifRead, annNotifReadAll, annNotifRemove, annNotifClear } from './lib/announcements'
 import { annInit } from './lib/announcements'
 import { ConfirmExitModal } from './components/ConfirmExitModal'
 import { UnsavedChangesPrompt } from './components/UnsavedChangesPrompt'
@@ -422,13 +423,22 @@ export default function App() {
     body: t(`sync.body.${n.action}`, { name: n.payment_name }),
     space_name: n.space_id ? (sharedSpaces.spaces.find(e => e.space.id === n.space_id)?.space?.name || null) : null,
   }))
-  const allNotifications = [...localNotifItems, ...notifications]
+  // Novedad como notificación (v0.9.1081, solo escritorio): la última novedad
+  // mostrada. Ids `ann-<id>`; su estado vive en lib/announcements.js.
+  const annNotif = useAnnouncements().notification
+  const annItem = isDesktop && annNotif ? {
+    id: `ann-${annNotif.a.id}`, type: 'announcement', ann_id: annNotif.a.id, ann_kind: annNotif.a.kind,
+    title: t(`announcements.items.${annNotif.a.id}.title`), body: t(`announcements.items.${annNotif.a.id}.text`),
+    created_at: annNotif.shownAt, read: annNotif.read,
+  } : null
+  const allNotifications = [...(annItem ? [annItem] : []), ...localNotifItems, ...notifications]
     .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
-  const allUnreadCount = unreadCount + localNotifs.unreadCount
-  function handleNotifMarkAsRead(id)  { isLocalNotification(id) ? localNotifs.markAsRead(id) : markAsRead(id) }
-  function handleNotifMarkAllAsRead() { localNotifs.markAllAsRead(); markAllAsRead() }
-  function handleNotifDelete(id)      { isLocalNotification(id) ? localNotifs.remove(id) : deleteNotification(id) }
-  function handleNotifClearAll()      { localNotifs.clear(); clearAll() }
+  const allUnreadCount = unreadCount + localNotifs.unreadCount + (annItem && !annItem.read ? 1 : 0)
+  const isAnnNotif = id => typeof id === 'string' && id.startsWith('ann-')
+  function handleNotifMarkAsRead(id)  { isAnnNotif(id) ? annNotifRead(id.slice(4)) : isLocalNotification(id) ? localNotifs.markAsRead(id) : markAsRead(id) }
+  function handleNotifMarkAllAsRead() { localNotifs.markAllAsRead(); annNotifReadAll(); markAllAsRead() }
+  function handleNotifDelete(id)      { isAnnNotif(id) ? annNotifRemove(id.slice(4)) : isLocalNotification(id) ? localNotifs.remove(id) : deleteNotification(id) }
+  function handleNotifClearAll()      { localNotifs.clear(); annNotifClear(); clearAll() }
   // Tocar una notificación lleva al lugar del aviso: cambia al espacio al que
   // pertenece (si hace falta), abre Inicio y resalta el pago cuando la fila
   // trae `payment_id`. Las filas anteriores a v0.9.675 no traen `space_id`:
@@ -490,6 +500,7 @@ export default function App() {
   }
   function handleNotifNavigate(n) {
     if (!n) return
+    if (n.type === 'announcement') { openAnnouncement(n.ann_id); return }
     // Avisos de tarjeta (v0.9.740): llevan a Mis tarjetas, sin importar el espacio activo.
     if (n.type?.startsWith('card_')) { window.scrollTo(0, 0); goToCards(); return }
     if (n.type !== 'sync_error') {
@@ -2311,7 +2322,7 @@ export default function App() {
         notes={patchNotesToShow}
         onClose={handleClosePatchNotes}
       />
-      <AnnouncementHost createdAt={user?.created_at} ready={!!profile.onboarding_completed && !!profile.coachmarks_seen?.home} enabled={tab === 'home' && !!profile && !profileLoading && !patchNotesOpen && !feedbackPromptOpen && !premiumPageOpen && !modalOpen}
+      <AnnouncementHost createdAt={user?.created_at} ready={!!profile.onboarding_completed && !!profile.coachmarks_seen?.home} toast={isDesktop} enabled={tab === 'home' && !!profile && !profileLoading && !patchNotesOpen && !feedbackPromptOpen && !premiumPageOpen && !modalOpen}
         onAction={a => a.startsWith('settings:') ? goToSettingsSection(a.slice(9)) : a.startsWith('tab:') ? changeTab(a.slice(4)) : a === 'addmenu' ? openAddMenu() : undefined} />
       <FeedbackPromptModal
         open={feedbackPromptOpen}

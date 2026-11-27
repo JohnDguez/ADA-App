@@ -8,7 +8,6 @@ import { greeting } from '../components/PageHeader'
 import { NewSharedSpacePanel } from '../components/NewSharedSpacePanel'
 import { EmptyState } from '../components/EmptyState'
 import { TipCard } from '../components/TipCard'
-import { AnnouncementBanner } from '../components/Announcement'
 import { LunaStrip } from '../components/LunaStrip'
 import { CutNotice } from '../components/CutNotice'
 import { AddDropdown, addDropdownHasExtras } from '../components/AddDropdown'
@@ -292,7 +291,6 @@ export function DeskHome({
                           <PaidCollapse payments={pagadosEstePeriodo} expanded={paidExpanded} onToggle={() => setPaidExpanded(v => !v)} onMarkUnpaid={onMarkUnpaid} onViewSource={onViewSource} spaceMembers={spaceMembers} paymentMethodsList={paymentMethodsList} />
                         </div>
                       )}
-                      <AnnouncementBanner desk />
                       <CutNotice cuts={cutsInPeriod} periodKey={cutPeriodKey} onOpen={() => onGoSettingsSection?.('cards')} />
                       {dataLoading ? <RailSkeleton count={3} /> : (
                         <>
